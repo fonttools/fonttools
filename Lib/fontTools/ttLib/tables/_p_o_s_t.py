@@ -123,23 +123,28 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 		glyphOrder = ttFont.getGlyphOrder()
 		assert len(glyphOrder) == numGlyphs
 		indices = array.array("H")
+		extraDict = {}
+		extraNames = self.extraNames
+		for i in range(len(extraNames)):
+			extraDict[extraNames[i]] = i
 		for glyphID in range(numGlyphs):
 			glyphName = glyphOrder[glyphID]
 			if self.mapping.has_key(glyphName):
 				psName = self.mapping[glyphName]
 			else:
 				psName = glyphName
-			if psName in self.extraNames:
-				index = 258 + self.extraNames.index(psName)
+			if extraDict.has_key(psName):
+				index = 258 + extraDict[psName]
 			elif psName in standardGlyphOrder:
 				index = standardGlyphOrder.index(psName)
 			else:
-				index = 258 + len(self.extraNames)
-				self.extraNames.append(psName)
+				index = 258 + len(extraNames)
+				extraDict[psName] = len(extraNames)
+				extraNames.append(psName)
 			indices.append(index)
 		if ttLib.endian <> "big":
 			indices.byteswap()
-		return struct.pack(">H", numGlyphs) + indices.tostring() + packPStrings(self.extraNames)
+		return struct.pack(">H", numGlyphs) + indices.tostring() + packPStrings(extraNames)
 	
 	def toXML(self, writer, ttFont):
 		formatstring, names, fixes = sstruct.getformat(postFormat)
