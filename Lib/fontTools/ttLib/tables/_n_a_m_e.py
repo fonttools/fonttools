@@ -30,6 +30,9 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 		data = data[6:]
 		self.names = []
 		for i in range(n):
+			if len(data) < 12:
+				# compensate for buggy font
+				break
 			name, data = sstruct.unpack2(nameRecordFormat, data, NameRecord())
 			name.string = stringData[name.offset:name.offset+name.length]
 			assert len(name.string) == name.length
