@@ -23,7 +23,7 @@ class TransformPen(AbstractPen):
 		self._outPen.moveTo(self._transformPoint(pt))
 
 	def lineTo(self, pt):
-		self._outPen.moveTo(self._transformPoint(pt))
+		self._outPen.lineTo(self._transformPoint(pt))
 
 	def curveTo(self, *points):
 		self._outPen.curveTo(*self._transformPoints(points))
