@@ -39,3 +39,7 @@ else:
 tt = ttLib.TTFont(ttInFile, recalcBBoxes=recalcBBoxes, verbose=verbose)
 tt.importXML(xmlPath)
 tt.save(ttPath)
+del tt
+if verbose:
+	import time
+	print "%s finished at" % sys.argv[0], time.strftime("%H:%M:%S", time.localtime(time.time()))
