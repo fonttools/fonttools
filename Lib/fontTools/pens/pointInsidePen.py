@@ -1,0 +1,146 @@
+from fontTools.pens.basePen import BasePen
+from fontTools.misc.bezierTools import solveQuadratic, solveCubic
+
+
+__all__ = ["PointInsidePen"]
+
+
+class PointInsidePen(BasePen):
+	
+	def __init__(self, glyphSet, testPoint, evenOdd=0):
+		BasePen.__init__(self, glyphSet)
+		self.setTestPoint(testPoint, evenOdd)
+	
+	def setTestPoint(self, testPoint, evenOdd=0):
+		self.testPoint = testPoint
+		self.evenOdd = evenOdd
+		self.firstPoint = None
+		self.intersectionCount = 0
+
+	def getResult(self):
+		if self.firstPoint is not None:
+			self.closePath()
+		if self.evenOdd:
+			result = self.intersectionCount % 2
+		else:
+			result = self.intersectionCount
+		return not not result
+	
+	def _addIntersection(self, goingUp):
+		if self.evenOdd or goingUp:
+			self.intersectionCount += 1
+		else:
+			self.intersectionCount -= 1
+	
+	def _moveTo(self, point):
+		if self.firstPoint is not None:
+			self.closePath()
+		self.firstPoint = point
+	
+	def _lineTo(self, point):
+		# An amazingly clear explanation of the problem:
+		# http://graphics.cs.ucdavis.edu/~okreylos/TAship/Spring2000/PointInPolygon.html
+		x, y = self.testPoint
+		x1, y1 = self._getCurrentPoint()
+		x2, y2 = point
+
+		if x1 < x and x2 < x:
+			return
+		if y1 < y and y2 < y:
+			return
+		if y1 >= y and y2 >= y:
+			return
+		
+		dx = x2 - x1
+		dy = y2 - y1
+		t = float(y - y1) / dy
+		ix = dx * t + x1
+		if ix < x:
+			return
+		self._addIntersection(y2 > y1)
+
+	def _curveToOne(self, bcp1, bcp2, point):
+		x, y = self.testPoint
+		x1, y1 = self._getCurrentPoint()
+		x2, y2 = bcp1
+		x3, y3 = bcp2
+		x4, y4 = point
+
+		if x1 < x and x2 < x and x3 < x and x4 < x:
+			return
+		if y1 < y and y2 < y and y3 < y and y4 < y:
+			return
+		if y1 >= y and y2 >= y and y3 >= y and y4 >= y:
+			return
+		
+		dy = y1
+		cy = (y2 - dy) * 3.0
+		by = (y3 - y2) * 3.0 - cy
+		ay = y4 - dy - cy - by
+		solutions = solveCubic(ay, by, cy, dy - y)
+		solutions.sort()
+		solutions = [t for t in solutions if 0 <= t <= 1]
+		if not solutions:
+			return
+
+		dx = x1
+		cx = (x2 - dx) * 3.0
+		bx = (x3 - x2) * 3.0 - cx
+		ax = x4 - dx - cx - bx
+		
+		above = y1 >= y
+		lastT = None
+		for t in solutions:
+			if t == lastT:
+				continue
+			lastT = t
+			t2 = t * t
+			t3 = t2 * t
+
+			direction = 3*ay*t2 + 2*by*t + cy
+			if direction == 0.0:
+				direction = 6*ay*t + 2*by
+				if direction == 0.0:
+					direction = ay
+			goingUp = direction > 0.0
+
+			xt = ax*t3 + bx*t2 + cx*t + dx
+			if xt < x:
+				above = goingUp
+				continue
+
+			if t == 0.0:
+				if not goingUp:
+					self._addIntersection(goingUp)
+			elif t == 1.0:
+				if not above:
+					self._addIntersection(goingUp)
+			else:
+				if above != goingUp:
+					self._addIntersection(goingUp)
+				#else:
+				#   we're not really intersecting, merely touching the 'top'
+			above = goingUp
+
+	def _qCurveToOne_unfinished(self, bcp, point):
+		# XXX need to finish this, for now doing it through a cubic
+		# (BasePen implements _qCurveTo in terms of a cubic) will
+		# have to do.
+		x, y = self.testPoint
+		x1, y1 = self._getCurrentPoint()
+		x2, y2 = bcp
+		x3, y3 = point
+		c = y1
+		b = (y2 - c) * 2.0
+		a = y3 - c - b
+		solutions = solveQuadratic(a, b, c - y)
+		solutions.sort()
+		solutions = [t for t in solutions if 0 <= t <= 1]
+		if not solutions:
+			return
+		XXX
+	
+	def _closePath(self):
+		if self._getCurrentPoint() != self.firstPoint:
+			self.lineTo(self.firstPoint)
+		self.firstPoint = None
