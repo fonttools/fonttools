@@ -1,7 +1,7 @@
 """cffLib.py -- read/write tools for Adobe CFF fonts."""
 
 #
-# $Id: cffLib.py,v 1.25 2002-05-24 11:55:37 jvr Exp $
+# $Id: cffLib.py,v 1.26 2002-07-23 16:42:11 jvr Exp $
 #
 
 import struct, sstruct
@@ -463,6 +463,9 @@ class CharStrings:
 	def toXML(self, xmlWriter, progress):
 		names = self.keys()
 		names.sort()
+		i = 0
+		step = 10
+		numGlyphs = len(names)
 		for name in names:
 			charStr, fdSelect = self.getItemAndSelector(name)
 			if charStr.needsDecompilation():
@@ -478,6 +481,10 @@ class CharStrings:
 			charStr.toXML(xmlWriter)
 			xmlWriter.endtag("CharString")
 			xmlWriter.newline()
+			if not i % step and progress is not None:
+				progress.setLabel("Dumping 'CFF ' table... (%s)" % name)
+				progress.increment(step / float(numGlyphs))
+			i = i + 1
 	
 	def fromXML(self, (name, attrs, content)):
 		for element in content:
@@ -557,7 +564,7 @@ class SimpleConverter:
 		return value
 	def write(self, parent, value):
 		return value
-	def xmlWrite(self, xmlWriter, name, value):
+	def xmlWrite(self, xmlWriter, name, value, progress):
 		xmlWriter.simpletag(name, value=value)
 		xmlWriter.newline()
 	def xmlRead(self, (name, attrs, content), parent):
@@ -575,7 +582,7 @@ class NumberConverter(SimpleConverter):
 		return parseNum(attrs["value"])
 
 class ArrayConverter(SimpleConverter):
-	def xmlWrite(self, xmlWriter, name, value):
+	def xmlWrite(self, xmlWriter, name, value, progress):
 		value = map(str, value)
 		xmlWriter.simpletag(name, value=" ".join(value))
 		xmlWriter.newline()
@@ -584,10 +591,10 @@ class ArrayConverter(SimpleConverter):
 		return map(parseNum, values)
 
 class TableConverter(SimpleConverter):
-	def xmlWrite(self, xmlWriter, name, value):
+	def xmlWrite(self, xmlWriter, name, value, progress):
 		xmlWriter.begintag(name)
 		xmlWriter.newline()
-		value.toXML(xmlWriter, None)
+		value.toXML(xmlWriter, progress)
 		xmlWriter.endtag(name)
 		xmlWriter.newline()
 	def xmlRead(self, (name, attrs, content), parent):
@@ -682,7 +689,7 @@ class CharsetConverter:
 		return charset
 	def write(self, parent, value):
 		return 0  # dummy value
-	def xmlWrite(self, xmlWriter, name, value):
+	def xmlWrite(self, xmlWriter, name, value, progress):
 		# XXX only write charset when not in OT/TTX context, where we
 		# dump charset as a separate "GlyphOrder" table.
 		##xmlWriter.simpletag("charset")
@@ -816,12 +823,12 @@ class FDSelectConverter:
 		else:
 			assert 0, "unsupported FDSelect format: %s" % format
 		return fdSelect
-	def xmlWrite(self, xmlWriter, name, value):
+	def xmlWrite(self, xmlWriter, name, value, progress):
 		pass
 
 
 class ROSConverter(SimpleConverter):
-	def xmlWrite(self, xmlWriter, name, value):
+	def xmlWrite(self, xmlWriter, name, value, progress):
 		registry, order, supplement = value
 		xmlWriter.simpletag(name, [('Registry', registry), ('Order', order),
 			('Supplement', supplement)])
@@ -1079,7 +1086,7 @@ class BaseDict:
 			if value is None:
 				continue
 			conv = self.converters[name]
-			conv.xmlWrite(xmlWriter, name, value)
+			conv.xmlWrite(xmlWriter, name, value, progress)
 	
 	def fromXML(self, (name, attrs, content)):
 		conv = self.converters[name]
@@ -1112,7 +1119,7 @@ class TopDict(BaseDict):
 	
 	def toXML(self, xmlWriter, progress):
 		if hasattr(self, "CharStrings"):
-			self.decompileAllCharStrings()
+			self.decompileAllCharStrings(progress)
 		if not hasattr(self, "ROS") or not hasattr(self, "CharStrings"):
 			# these values have default values, but I only want them to show up
 			# in CID fonts.
@@ -1120,10 +1127,14 @@ class TopDict(BaseDict):
 					'CIDCount']
 		BaseDict.toXML(self, xmlWriter, progress)
 	
-	def decompileAllCharStrings(self):
+	def decompileAllCharStrings(self, progress):
 		# XXX only when doing ttdump -i?
+		i = 0
 		for charString in self.CharStrings.values():
 			charString.decompile()
+			if not i % 30 and progress:
+				progress.increment(0)  # update
+			i = i + 1
 
 
 class PrivateDict(BaseDict):
