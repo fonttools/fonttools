@@ -23,15 +23,18 @@ static PyObject *
 eexec_decrypt(PyObject *self, PyObject *args)
 {
 	PyObject *_res = NULL;
-	unsigned short int R;
-	unsigned short int c1 = 52845;
-	unsigned short int c2 = 22719;
+	unsigned short R;
+	int tempR;  /* can't portably use unsigned shorts between Python versions */
+	unsigned short c1 = 52845;
+	unsigned short c2 = 22719;
 	unsigned char * inbuf;
 	unsigned char * outbuf;
 	unsigned long counter, insize;
 	
-	if (!PyArg_ParseTuple(args, "s#H", &inbuf, &insize, &R))
+	if (!PyArg_ParseTuple(args, "s#i", &inbuf, &insize, &tempR))
 		return NULL;
+	
+	R = (unsigned short)tempR;
 	
 	if ((outbuf = malloc(insize)) == NULL)
 	{
@@ -56,15 +59,18 @@ static PyObject *
 eexec_encrypt(PyObject *self, PyObject *args)
 {
 	PyObject *_res = NULL;
-	unsigned short int R;
-	unsigned short int c1 = 52845;
-	unsigned short int c2 = 22719;
+	unsigned short R;
+	int tempR;  /* can't portably use unsigned shorts between Python versions */
+	unsigned short c1 = 52845;
+	unsigned short c2 = 22719;
 	unsigned char * inbuf;
 	unsigned char * outbuf;
 	unsigned long counter, insize;
 	
-	if (!PyArg_ParseTuple(args, "s#H", &inbuf, &insize, &R))
+	if (!PyArg_ParseTuple(args, "s#i", &inbuf, &insize, &tempR))
 		return NULL;
+	
+	R = (unsigned short)tempR;
 	
 	if ((outbuf = malloc(insize)) == NULL)
 	{
