@@ -1,7 +1,8 @@
 """cffLib.py -- read/write tools for Adobe CFF fonts."""
 
-__version__ = "$Id: cffLib.py,v 1.2 1999-12-20 21:59:49 Just Exp $"
-__author__ = "jvr"
+#
+# $Id: cffLib.py,v 1.3 1999-12-20 22:02:10 Just Exp $"
+#
 
 import struct, sstruct
 import string
