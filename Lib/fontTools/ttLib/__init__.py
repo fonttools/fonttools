@@ -42,7 +42,7 @@ Dumping 'prep' table...
 """
 
 #
-# $Id: __init__.py,v 1.14 2000-02-13 16:23:28 Just Exp $
+# $Id: __init__.py,v 1.15 2000-08-23 12:31:52 Just Exp $
 #
 
 __version__ = "1.0a6"
@@ -346,7 +346,7 @@ class TTFont:
 			if self.has_key('CFF '):
 				# CFF OpenType font
 				self.glyphOrder = self['CFF '].getGlyphOrder()
-			else:
+			elif self.has_key('post'):
 				# TrueType font
 				glyphOrder = self['post'].getGlyphOrder()
 				if glyphOrder is None:
@@ -358,6 +358,8 @@ class TTFont:
 					self._getGlyphNamesFromCmap()
 				else:
 					self.glyphOrder = glyphOrder
+			else:
+				self._getGlyphNamesFromCmap()
 			# XXX what if a font contains 'glyf'/'post' table *and* CFF?
 		return self.glyphOrder
 	
@@ -522,7 +524,7 @@ def getTableClass(tag):
 	return tableclass
 
 
-def newtable(tag):
+def getNewTable(tag):
 	"""Return a new instance of a table."""
 	tableclass = getTableClass(tag)
 	return tableclass(tag)
