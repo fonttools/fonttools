@@ -26,7 +26,7 @@ class ExpatParser:
 	
 	def parseFile(self, file):
 		from xml.parsers.expat import ParserCreate
-		parser = ParserCreate()
+		parser = ParserCreate("latin1")
 		parser.returns_unicode = 0
 		parser.StartElementHandler = self.startElementHandler
 		parser.EndElementHandler = self.endElementHandler
