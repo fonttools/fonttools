@@ -341,7 +341,7 @@ otData = [
 		('uint16', 'LookAheadGlyphCount', None, None, 'Total number of classes in the look ahead sequence (number of classes to be matched after the input sequence)'),
 		('uint16', 'LookAhead', 'LookAheadGlyphCount', 0, 'Array of lookahead classes(to be matched after the input sequence)'),
 		('uint16', 'PosCount', None, None, 'Number of PosLookupRecords'),
-		('struct', 'PosLookupRecord', 'ChainPosCount', 0, 'Array of PosLookupRecords (in design order)'),
+		('struct', 'PosLookupRecord', 'PosCount', 0, 'Array of PosLookupRecords (in design order)'),
 	]),
 
 	('ChainContextPosFormat3', [
