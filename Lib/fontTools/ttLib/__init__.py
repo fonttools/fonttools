@@ -42,7 +42,7 @@ Dumping 'prep' table...
 """
 
 #
-# $Id: __init__.py,v 1.20 2002-05-04 22:04:02 jvr Exp $
+# $Id: __init__.py,v 1.21 2002-05-05 09:48:31 jvr Exp $
 #
 
 import os
@@ -324,25 +324,27 @@ class TTFont:
 			self['glyf'].setGlyphOrder(glyphOrder)
 	
 	def getGlyphOrder(self):
-		if not hasattr(self, "glyphOrder"):
-			if self.has_key('CFF '):
-				# CFF OpenType font
-				self.glyphOrder = self['CFF '].getGlyphOrder()
-			elif self.has_key('post'):
-				# TrueType font
-				glyphOrder = self['post'].getGlyphOrder()
-				if glyphOrder is None:
-					#
-					# No names found in the 'post' table.
-					# Try to create glyph names from the unicode cmap (if available) 
-					# in combination with the Adobe Glyph List (AGL).
-					#
-					self._getGlyphNamesFromCmap()
-				else:
-					self.glyphOrder = glyphOrder
-			else:
+		try:
+			return self.glyphOrder
+		except AttributeError:
+			pass
+		if self.has_key('CFF '):
+			# CFF OpenType font
+			self.glyphOrder = self['CFF '].getGlyphOrder()
+		elif self.has_key('post'):
+			# TrueType font
+			glyphOrder = self['post'].getGlyphOrder()
+			if glyphOrder is None:
+				#
+				# No names found in the 'post' table.
+				# Try to create glyph names from the unicode cmap (if available) 
+				# in combination with the Adobe Glyph List (AGL).
+				#
 				self._getGlyphNamesFromCmap()
-			# XXX what if a font contains 'glyf'/'post' table *and* CFF?
+			else:
+				self.glyphOrder = glyphOrder
+		else:
+			self._getGlyphNamesFromCmap()
 		return self.glyphOrder
 	
 	def _getGlyphNamesFromCmap(self):
@@ -444,15 +446,14 @@ class TTFont:
 					self._writeTable(masterTable, writer, done)
 				else:
 					done.append(masterTable)
-		tabledata = self._getTableData(tag)
+		tabledata = self.getTableData(tag)
 		if self.verbose:
 			debugmsg("writing '%s' table to disk" % tag)
 		writer[tag] = tabledata
 		done.append(tag)
 	
-	def _getTableData(self, tag):
-		"""Internal helper function. Returns raw table data,
-		whether compiled or directly read from disk.
+	def getTableData(self, tag):
+		"""Returns raw table data, whether compiled or directly read from disk.
 		"""
 		if self.isLoaded(tag):
 			if self.verbose:
