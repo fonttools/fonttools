@@ -99,7 +99,7 @@ class SingleSubst(FormatSwitchingBaseTable):
 
 	def postRead(self, rawTable, font):
 		mapping = {}
-		input = rawTable["Coverage"].glyphs
+		input = _getGlyphsFromCoverageTable(rawTable["Coverage"])
 		if self.Format == 1:
 			delta = rawTable["DeltaGlyphID"]
 			for inGlyph in input:
@@ -236,7 +236,7 @@ class AlternateSubst(FormatSwitchingBaseTable):
 	def postRead(self, rawTable, font):
 		alternates = {}
 		if self.Format == 1:
-			input = rawTable["Coverage"].glyphs
+			input = _getGlyphsFromCoverageTable(rawTable["Coverage"])
 			alts = rawTable["AlternateSet"]
 			assert len(input) == len(alts)
 			for i in range(len(input)):
@@ -295,7 +295,7 @@ class LigatureSubst(FormatSwitchingBaseTable):
 	def postRead(self, rawTable, font):
 		ligatures = {}
 		if self.Format == 1:
-			input = rawTable["Coverage"].glyphs
+			input = _getGlyphsFromCoverageTable(rawTable["Coverage"])
 			ligSets = rawTable["LigatureSet"]
 			assert len(input) == len(ligSets)
 			for i in range(len(input)):
@@ -461,3 +461,11 @@ def _buildClasses():
 
 
 _buildClasses()
+
+
+def _getGlyphsFromCoverageTable(coverage):
+	if coverage is None:
+		# empty coverage table
+		return []
+	else:
+		return coverage.glyphs
