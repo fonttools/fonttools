@@ -797,7 +797,6 @@ class T1OutlineExtractor(T2OutlineExtractor):
 class DictDecompiler(ByteCodeDecompilerBase):
 	
 	operandEncoding = cffDictOperandEncoding
-	dictDefaults = {}
 	
 	def __init__(self, strings):
 		self.stack = []
@@ -863,7 +862,7 @@ class DictDecompiler(ByteCodeDecompilerBase):
 		out = []
 		current = 0
 		for v in self.popall():
-			current = v + current
+			current = current + v
 			out.append(current)
 		return out
 
