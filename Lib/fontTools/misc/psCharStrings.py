@@ -262,7 +262,7 @@ class T1CharString(T2CharString):
 	operators = _buildOperatorDict(t1Operators)
 	
 	def decompile(self):
-		if hasattr(self, "program"):
+		if self.program is not None:
 			return
 		program = []
 		index = 0

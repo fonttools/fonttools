@@ -167,11 +167,12 @@ class PSInterpreter(PSOperators):
 			self.tokenizer = None
 		finally:
 			if self.tokenizer is not None:
-				print 'ps error:\n- - - - - - -'
-				print self.tokenizer.buf[self.tokenizer.pos-50:self.tokenizer.pos]
-				print '>>>'
-				print self.tokenizer.buf[self.tokenizer.pos:self.tokenizer.pos+50]
-				print '- - - - - - -'
+				if 0:
+					print 'ps error:\n- - - - - - -'
+					print self.tokenizer.buf[self.tokenizer.pos-50:self.tokenizer.pos]
+					print '>>>'
+					print self.tokenizer.buf[self.tokenizer.pos:self.tokenizer.pos+50]
+					print '- - - - - - -'
 	
 	def handle_object(self, object):
 		if not (self.proclevel or object.literal or object.type == 'proceduretype'):
