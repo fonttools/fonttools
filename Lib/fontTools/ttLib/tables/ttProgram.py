@@ -184,6 +184,9 @@ _token = "(%s)|(%s)|(%s)" % (_instruction, _number, _comment)
 _tokenRE = re.compile(_token)
 _whiteRE = re.compile(r"\s*")
 
+_pushCountPat = re.compile(r"[A-Z][A-Z0-9]*\s*\[.*?\]\s*/\* ([0-9]*).*?\*/")
+
+
 def _skipWhite(data, pos, _whiteRE=_whiteRE):
 	m = _whiteRE.match(data, pos)
 	newPos = m.regs[0][1]
