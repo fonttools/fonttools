@@ -99,15 +99,15 @@ class T1Font:
 
 # low level T1 data read and write functions
 
-def read(path):
+def read(path, onlyHeader=0):
 	"""reads any Type 1 font file, returns raw data"""
 	normpath = string.lower(path)
 	if haveMacSupport:
 		creator, type = MacOS.GetCreatorAndType(path)
 		if type == 'LWFN':
-			return readLWFN(path), 'LWFN'
+			return readLWFN(path, onlyHeader), 'LWFN'
 	if normpath[-4:] == '.pfb':
-		return readPFB(path), 'PFB'
+		return readPFB(path, onlyHeader), 'PFB'
 	else:
 		return readOther(path), 'OTHER'
 
