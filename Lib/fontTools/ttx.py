@@ -173,6 +173,14 @@ def guessFileType(fileName):
 		f = open(fileName, "rb")
 	except IOError:
 		return None
+	try:
+		import macfs
+	except ImportError:
+		pass
+	else:
+		cr, tp = macfs.FSSpec(fileName).GetCreatorType()
+		if tp == "FFIL":
+			return "TTF"
 	header = f.read(256)
 	head = header[:4]
 	if head == "OTTO":
@@ -184,7 +192,6 @@ def guessFileType(fileName):
 			return "OTX"
 		else:
 			return "TTX"
-	# XXX Mac suitcase!
 	return None
 
 
