@@ -623,6 +623,16 @@ class T2OutlineExtractor(SimpleT2Decompiler):
 		self.closePath()
 		self.rMoveTo((0, self.popallWidth(1)[0]))
 	def op_endchar(self, index):
+		args = self.popallWidth()
+		if args:
+			from fontTools.encodings.StandardEncoding import StandardEncoding
+			# endchar can do seac accent bulding; The T2 spec says it's deprecated,
+			# but recent software that shall remain nameless does output it.
+			adx, ady, bchar, achar = args
+			baseGlyph = StandardEncoding[bchar]
+			self.pen.addComponent(baseGlyph, (1, 0, 0, 1, 0, 0))
+			accentGlyph = StandardEncoding[achar]
+			self.pen.addComponent(accentGlyph, (1, 0, 0, 1, adx, ady))
 		self.closePath()
 	
 	#
