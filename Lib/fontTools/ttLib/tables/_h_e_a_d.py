@@ -7,23 +7,23 @@ from fontTools.misc.textTools import safeEval, num2binary, binary2num
 
 headFormat = """
 		>	# big endian
-		tableVersion:		16.16F
-		fontRevision:		16.16F
-		checkSumAdjustment:	I
-		magicNumber:		I
-		flags:				H
-		unitsPerEm:			H
-		created:			8s
-		modified:			8s
-		xMin:				h
-		yMin:				h
-		xMax:				h
-		yMax:				h
-		macStyle:			H
-		lowestRecPPEM:		H
-		fontDirectionHint:	h
-		indexToLocFormat:	h
-		glyphDataFormat:	h
+		tableVersion:       16.16F
+		fontRevision:       16.16F
+		checkSumAdjustment: I
+		magicNumber:        I
+		flags:              H
+		unitsPerEm:         H
+		created:            8s
+		modified:           8s
+		xMin:               h
+		yMin:               h
+		xMax:               h
+		yMax:               h
+		macStyle:           H
+		lowestRecPPEM:      H
+		fontDirectionHint:  h
+		indexToLocFormat:   h
+		glyphDataFormat:    h
 """
 
 class table__h_e_a_d(DefaultTable.DefaultTable):
