@@ -392,9 +392,8 @@ class BaseTable:
 			raise    # XXX on KeyError, raise nice error
 		value = conv.xmlRead(attrs, content, font)
 		if conv.repeat:
-			try:
-				seq = getattr(self, conv.name)
-			except AttributeError:
+			seq = getattr(self, conv.name, None)
+			if seq is None:
 				seq = []
 				setattr(self, conv.name, seq)
 			seq.append(value)

@@ -142,10 +142,11 @@ class Struct(BaseConverter):
 		if Format is not None:
 			table.Format = int(Format)
 		for element in content:
-			if type(element) <> TupleType:
-				continue
-			name, attrs, content = element
-			table.fromXML((name, attrs, content), font)
+			if type(element) == TupleType:
+				name, attrs, content = element
+				table.fromXML((name, attrs, content), font)
+			else:
+				pass
 		return table
 
 
