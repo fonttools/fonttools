@@ -2,7 +2,10 @@ from types import TupleType
 from fontTools.misc.textTools import safeEval
 
 
-def buildConverterList(tableSpec, tableNamespace):
+def buildConverters(tableSpec, tableNamespace):
+	"""Given a table spec from otData.py, build a converter object for each
+	field of the table. This is called for each table in otData.py, and
+	the results are assigned to the corresponding class in otTables.py."""
 	converters = []
 	convertersByName = {}
 	for tp, name, repeat, repeatOffset, descr in tableSpec:
@@ -35,6 +38,9 @@ def buildConverterList(tableSpec, tableNamespace):
 
 class BaseConverter:
 	
+	"""Base class for converter objects. Apart from the constructor, this
+	is an abstract class."""
+	
 	def __init__(self, name, repeat, repeatOffset, tableClass):
 		self.name = name
 		self.repeat = repeat
@@ -43,15 +49,19 @@ class BaseConverter:
 		self.isCount = name.endswith("Count")
 	
 	def read(self, reader, font, tableStack):
+		"""Read a value from the reader."""
 		raise NotImplementedError, self
 	
 	def write(self, writer, font, tableStack, value):
-		raise NotImplementedError, self
-	
-	def xmlWrite(self, xmlWriter, font, value, name, attrs):
+		"""Write a value to the writer."""
 		raise NotImplementedError, self
 	
 	def xmlRead(self, attrs, content, font):
+		"""Read a value from XML."""
+		raise NotImplementedError, self
+	
+	def xmlWrite(self, xmlWriter, font, value, name, attrs):
+		"""Write a value to XML."""
 		raise NotImplementedError, self
 
 
@@ -240,6 +250,7 @@ class DeltaValue(BaseConverter):
 			writer.writeUShort(tmp)
 	
 	def xmlWrite(self, xmlWriter, font, value, name, attrs):
+		# XXX this could do with a nicer format
 		xmlWriter.simpletag(name, attrs + [("value", value)])
 		xmlWriter.newline()
 	

@@ -6,6 +6,10 @@ from types import TupleType
 
 class BaseTTXConverter(DefaultTable):
 	
+	"""Generic base class for TTX table converters. Functions as an adapter
+	between the TTX (ttLib actually) table model and the model we use for
+	OpenType tables, which is neccesarily subtly different."""
+	
 	def decompile(self, data, font):
 		import otTables
 		reader = OTTableReader(data, self.tableTag)
@@ -30,6 +34,8 @@ class BaseTTXConverter(DefaultTable):
 
 
 class OTTableReader:
+	
+	"""Helper class to retrieve data from an OpenType table."""
 	
 	def __init__(self, data, tableType, offset=0, valueFormat=None, cachingStats=None):
 		self.data = data
@@ -102,6 +108,8 @@ class OTTableReader:
 
 class OTTableWriter:
 	
+	"""Helper class to gather and assemble data for OpenType tables."""
+	
 	def __init__(self, tableType, valueFormat=None):
 		self.items = []
 		self.tableType = tableType
@@ -169,6 +177,7 @@ class OTTableWriter:
 
 
 class CountReference:
+	"""A reference to a Count value, not a count of a reference."""
 	def __init__(self, table, name):
 		self.table = table
 		self.name = name
@@ -176,13 +185,41 @@ class CountReference:
 		return packUShort(self.table[self.name])
 
 
-def packUShort(offset):
-	assert 0 <= offset < 0x10000
-	return struct.pack(">H", offset)
+def packUShort(value):
+	assert 0 <= value < 0x10000
+	return struct.pack(">H", value)
 
+
+
+class TableStack:
+	"""A stack of table dicts, working as a stack of namespaces so we can
+	retrieve values from (and store values to) tables higher up the stack."""
+	def __init__(self):
+		self.stack = []
+	def push(self, table):
+		self.stack.insert(0, table)
+	def pop(self):
+		self.stack.pop(0)
+	def getTop(self):
+		return self.stack[0]
+	def getValue(self, name):
+		return self.__findTable(name)[name]
+	def storeValue(self, name, value):
+		table = self.__findTable(name)
+		if table[name] is None:
+			table[name] = value
+		else:
+			assert table[name] == value, (table[name], value)
+	def __findTable(self, name):
+		for table in self.stack:
+			if table.has_key(name):
+				return table
+		raise KeyError, name
 
 
 class BaseTable:
+	
+	"""Generic base class for all OpenType (sub)tables."""
 	
 	def getConverters(self):
 		return self.converters
@@ -220,7 +257,7 @@ class BaseTable:
 			value = table.get(conv.name)
 			if conv.repeat:
 				if value is None:
-					value = []  # XXXXXX
+					value = []
 				tableStack.storeValue(conv.repeat, len(value) - conv.repeatOffset)
 				for item in value:
 					conv.write(writer, font, tableStack, item)
@@ -249,7 +286,7 @@ class BaseTable:
 		if attrs is None:
 			attrs = []
 		if hasattr(self, "Format"):
-			attrs = attrs + [("Format", str(self.Format))]
+			attrs = attrs + [("Format", self.Format)]
 		xmlWriter.begintag(tableName, attrs)
 		xmlWriter.newline()
 		self.toXML2(xmlWriter, font)
@@ -262,30 +299,30 @@ class BaseTable:
 		# do it ourselves. I think I'm getting schizophrenic...
 		for conv in self.getConverters():
 			value = getattr(self, conv.name)
-			if not conv.repeat:
-				conv.xmlWrite(xmlWriter, font, value, conv.name, [])
-			else:
+			if conv.repeat:
 				for i in range(len(value)):
 					item = value[i]
-					conv.xmlWrite(xmlWriter, font, item, conv.name, [("index", i)])
+					conv.xmlWrite(xmlWriter, font, item, conv.name,
+							[("index", i)])
+			else:
+				conv.xmlWrite(xmlWriter, font, value, conv.name, [])
 	
 	def fromXML(self, (name, attrs, content), font):
 		try:
 			conv = self.getConverterByName(name)
 		except KeyError:
-			print self, name, attrs, content
+##			print self, name, attrs, content
 			raise    # XXX on KeyError, raise nice error
 		value = conv.xmlRead(attrs, content, font)
-		name = conv.name
 		if conv.repeat:
 			try:
-				seq = getattr(self, name)
+				seq = getattr(self, conv.name)
 			except AttributeError:
 				seq = []
-				setattr(self, name, seq)
+				setattr(self, conv.name, seq)
 			seq.append(value)
 		else:
-			setattr(self, name, value)
+			setattr(self, conv.name, value)
 	
 	def __cmp__(self, other):
 		# this is only for debugging, so it's ok to barf
@@ -299,6 +336,9 @@ class BaseTable:
 
 
 class FormatSwitchingBaseTable(BaseTable):
+	
+	"""Small specialization of BaseTable, for tables that have multiple
+	formats, eg. CoverageFormat1 vs. CoverageFormat2."""
 	
 	def getConverters(self):
 		return self.converters[self.Format]
@@ -315,6 +355,14 @@ class FormatSwitchingBaseTable(BaseTable):
 		writer.writeUShort(self.Format)
 		BaseTable.compile(self, writer, font, tableStack)
 
+
+#
+# Support for ValueRecords
+#
+# This data type is so different from all other OpenType data types that
+# it requires quite a bit of code for itself. It even has special support
+# in OTTableReader and OTTableWriter...
+#
 
 valueRecordFormat = [
 #	Mask	 Name            isDevice  signed
@@ -347,6 +395,8 @@ valueRecordFormatDict = _buildDict()
 
 
 class ValueRecordFactory:
+	
+	"""Given a format code, this object convert ValueRecords."""
 	
 	def setFormat(self, valueFormat):
 		format = []
@@ -452,28 +502,4 @@ class ValueRecord:
 			return rv
 		else:
 			return rv
-
-
-class TableStack:
-	def __init__(self):
-		self.stack = []
-	def push(self, table):
-		self.stack.insert(0, table)
-	def pop(self):
-		self.stack.pop(0)
-	def getTop(self):
-		return self.stack[0]
-	def getValue(self, name):
-		return self.__findTable(name)[name]
-	def storeValue(self, name, value):
-		table = self.__findTable(name)
-		if table[name] is None:
-			table[name] = value
-		else:
-			assert table[name] == value, (table[name], value)
-	def __findTable(self, name):
-		for table in self.stack:
-			if table.has_key(name):
-				return table
-		raise KeyError, name
 

@@ -1,8 +1,8 @@
 """fontTools.ttLib.tables.otTables -- A collection of classes representing the various
 OpenType subtables.
 
-Most are constructed upon import from data in otData.py. Most smartness is contained
-in otBase.BaseTable.
+Most are constructed upon import from data in otData.py, all are populated with
+converter objects from otConverters.py.
 """
 
 from otBase import BaseTable, FormatSwitchingBaseTable
@@ -15,28 +15,35 @@ class FeatureParams(BaseTable):
 	"""Dummy class; this table isn't defined, but is used, and is always NULL."""
 
 
-_equivalents = [
-	('MarkArray', ("Mark1Array",)),
-	('LangSys', ('DefaultLangSys',)),
-	('Coverage', ('MarkCoverage', 'BaseCoverage', 'LigatureCoverage', 'Mark1Coverage',
+#
+# For each subtable format there is a class. However, we don't really distinguish
+# between "field name" and "format name": often these are the same. Yet there's
+# a whole bunch of fields with different names. The following dict is a mapping
+# from "format name" to "field name". _buildClasses() uses this to create a
+# subclass for each alternate field name.
+#
+_equivalents = {
+	'MarkArray': ("Mark1Array",),
+	'LangSys': ('DefaultLangSys',),
+	'Coverage': ('MarkCoverage', 'BaseCoverage', 'LigatureCoverage', 'Mark1Coverage',
 			'Mark2Coverage', 'BacktrackCoverage', 'InputCoverage',
-			'LookaheadCoverage')),
-	('ClassDef', ('ClassDef1', 'ClassDef2', 'BacktrackClassDef', 'InputClassDef',
-			'LookaheadClassDef', 'GlyphClassDef', 'MarkAttachClassDef')),
-	('Anchor', ('EntryAnchor', 'ExitAnchor', 'BaseAnchor', 'LigatureAnchor',
-			'Mark2Anchor', 'MarkAnchor')),
-	('Device', ('XPlaDevice', 'YPlaDevice', 'XAdvDevice', 'YAdvDevice',
-			'XDeviceTable', 'YDeviceTable', 'DeviceTable')),
-	('Axis', ('HorizAxis', 'VertAxis',)),
-	('MinMax', ('DefaultMinMax',)),
-	('BaseCoord', ('MinCoord', 'MaxCoord',)),
-	('JstfLangSys', ('DefJstfLangSys',)),
-	('JstfGSUBModList', ('ShrinkageEnableGSUB', 'ShrinkageDisableGSUB', 'ExtensionEnableGSUB',
-			'ExtensionDisableGSUB',)),
-	('JstfGPOSModList', ('ShrinkageEnableGPOS', 'ShrinkageDisableGPOS', 'ExtensionEnableGPOS',
-			'ExtensionDisableGPOS',)),
-	('JstfMax', ('ShrinkageJstfMax', 'ExtensionJstfMax',)),
-]
+			'LookaheadCoverage'),
+	'ClassDef': ('ClassDef1', 'ClassDef2', 'BacktrackClassDef', 'InputClassDef',
+			'LookaheadClassDef', 'GlyphClassDef', 'MarkAttachClassDef'),
+	'Anchor': ('EntryAnchor', 'ExitAnchor', 'BaseAnchor', 'LigatureAnchor',
+			'Mark2Anchor', 'MarkAnchor'),
+	'Device': ('XPlaDevice', 'YPlaDevice', 'XAdvDevice', 'YAdvDevice',
+			'XDeviceTable', 'YDeviceTable', 'DeviceTable'),
+	'Axis': ('HorizAxis', 'VertAxis',),
+	'MinMax': ('DefaultMinMax',),
+	'BaseCoord': ('MinCoord', 'MaxCoord',),
+	'JstfLangSys': ('DefJstfLangSys',),
+	'JstfGSUBModList': ('ShrinkageEnableGSUB', 'ShrinkageDisableGSUB', 'ExtensionEnableGSUB',
+			'ExtensionDisableGSUB',),
+	'JstfGPOSModList': ('ShrinkageEnableGPOS', 'ShrinkageDisableGPOS', 'ExtensionEnableGPOS',
+			'ExtensionDisableGPOS',),
+	'JstfMax': ('ShrinkageJstfMax', 'ExtensionJstfMax',),
+}
 
 
 def _buildClasses():
@@ -55,10 +62,11 @@ def _buildClasses():
 			name = m.group(1)
 			baseClass = FormatSwitchingBaseTable
 		if not namespace.has_key(name):
+			# the class doesn't exist yet, so the base implementation is used.
 			cls = new.classobj(name, (baseClass,), {})
 			namespace[name] = cls
 	
-	for base, alts in _equivalents:
+	for base, alts in _equivalents.items():
 		base = namespace[base]
 		for alt in alts:
 			namespace[alt] = new.classobj(alt, (base,), {})
@@ -87,9 +95,12 @@ def _buildClasses():
 		},
 	}
 	lookupTypes['JSTF'] = lookupTypes['GPOS']  # JSTF contains GPOS
+	for lookupEnum in lookupTypes.values():
+		for enum, cls in lookupEnum.items():
+			cls.LookupType = enum
 	
 	# add converters to classes
-	from otConverters import buildConverterList
+	from otConverters import buildConverters
 	for name, table in otData:
 		m = formatPat.match(name)
 		if m:
@@ -100,12 +111,12 @@ def _buildClasses():
 			if not hasattr(cls, "converters"):
 				cls.converters = {}
 				cls.convertersByName = {}
-			converters, convertersByName = buildConverterList(table[1:], namespace)
+			converters, convertersByName = buildConverters(table[1:], namespace)
 			cls.converters[format] = converters
 			cls.convertersByName[format] = convertersByName
 		else:
 			cls = namespace[name]
-			cls.converters, cls.convertersByName = buildConverterList(table, namespace)
+			cls.converters, cls.convertersByName = buildConverters(table, namespace)
 
 
 _buildClasses()
