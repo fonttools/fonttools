@@ -199,7 +199,7 @@ class T2CharString(ByteCodeDecompilerBase):
 		return operator, index
 	
 	def toXML(self, xmlWriter):
-		from misc.textTools import num2binary
+		from fontTools.misc.textTools import num2binary
 		if self.bytecode is not None:
 			xmlWriter.dumphex(self.bytecode)
 		else:
