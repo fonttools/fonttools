@@ -41,7 +41,7 @@ Dumping 'prep' table...
 """
 
 __author__ = "Just van Rossum, just@letterror.com"
-__version__ = "$Id: __init__.py,v 1.2 1999-12-17 12:51:21 Just Exp $"
+__version__ = "$Id: __init__.py,v 1.3 1999-12-17 12:54:19 Just Exp $"
 __release__ = "1.0a6"
 
 import os
@@ -147,8 +147,7 @@ class TTFont:
 		writer.close()
 	
 	def saveXML(self, file, progress=None, tables=None):
-		"""Export the font as an XML-based text file.
-		"""
+		"""Export the font as an XML-based text file."""
 		import xmlWriter
 		writer = xmlWriter.XMLWriter(file)
 		writer.begintag("ttFont", sfntVersion=`self.sfntVersion`[1:-1], 
@@ -347,7 +346,9 @@ class TTFont:
 		return glyphNames
 	
 	def getGlyphNames2(self):
-		"""Get a list of glyph names, sorted alphabetically, but not case sensitive."""
+		"""Get a list of glyph names, sorted alphabetically, 
+		but not case sensitive.
+		"""
 		from fontTools.misc import textTools
 		return textTools.caselessSort(self.getGlyphOrder())
 	
