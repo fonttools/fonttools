@@ -543,8 +543,11 @@ class Glyph:
 	
 	def recalcBounds(self, glyfTable):
 		coordinates, endPts, flags = self.getCoordinates(glyfTable)
-		self.xMin, self.yMin = Numeric.minimum.reduce(coordinates)
-		self.xMax, self.yMax = Numeric.maximum.reduce(coordinates)
+		if len(coordinates) > 0:
+			self.xMin, self.yMin = Numeric.minimum.reduce(coordinates)
+			self.xMax, self.yMax = Numeric.maximum.reduce(coordinates)
+		else:
+			self.xMin, self.yMin, self.xMax, self.yMax = (0, 0, 0, 0)
 	
 	def isComposite(self):
 		return self.numberOfContours == -1
@@ -660,7 +663,7 @@ class GlyphComponent:
 			if self.flags & ARGS_ARE_XY_VALUES:
 				self.x, self.y = struct.unpack(">bb", data[:2])
 			else:
-				x, y = struct.unpack(">BB", data[:4])
+				x, y = struct.unpack(">BB", data[:2])
 				self.firstPt, self.secondPt = int(x), int(y)
 			data = data[2:]
 		
