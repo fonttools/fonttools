@@ -3,7 +3,7 @@
 
 [Setup]
 AppName=TTX
-AppVerName=TTX 2.0b1
+AppVerName=TTX 2.0b2
 AppPublisher=Just van Rossum
 AppPublisherURL=http://fonttools.sourceforge.net/
 AppSupportURL=http://fonttools.sourceforge.net/
