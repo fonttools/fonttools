@@ -1,7 +1,7 @@
 """cffLib.py -- read/write tools for Adobe CFF fonts."""
 
 #
-# $Id: cffLib.py,v 1.27 2002-09-09 14:18:39 jvr Exp $
+# $Id: cffLib.py,v 1.28 2003-01-03 20:56:01 jvr Exp $
 #
 
 import struct, sstruct
@@ -670,7 +670,7 @@ class CharsetConverter:
 				print "loading charset at %s" % value
 			format = readCard8(file)
 			if format == 0:
-				charset =parseCharset0(numGlyphs, file, parent.strings)
+				charset = parseCharset0(numGlyphs, file, parent.strings)
 			elif format == 1 or format == 2:
 				charset = parseCharset(numGlyphs, file, parent.strings, isCID, format)
 			else:
@@ -793,6 +793,168 @@ def parseCharset(numGlyphs, file, strings, isCID, format):
 	return charset
 
 
+class EncodingCompiler:
+
+	def __init__(self, strings, encoding, parent):
+		assert not isinstance(encoding, StringType)
+		data0 = packEncoding0(parent.dictObj.charset, encoding, parent.strings)
+		data1 = packEncoding1(parent.dictObj.charset, encoding, parent.strings)
+		if len(data0) < len(data1):
+			self.data = data0
+		else:
+			self.data = data1
+		self.parent = parent
+
+	def setPos(self, pos, endPos):
+		self.parent.rawDict["Encoding"] = pos
+	
+	def getDataLength(self):
+		return len(self.data)
+	
+	def toFile(self, file):
+		file.write(self.data)
+
+
+class EncodingConverter(SimpleConverter):
+
+	def read(self, parent, value):
+		if value == 0:
+			return "StandardEncoding"
+		elif value == 1:
+			return "ExpertEncoding"
+		else:
+			assert value > 1
+			file = parent.file
+			file.seek(value)
+			if DEBUG:
+				print "loading Encoding at %s" % value
+			format = readCard8(file)
+			haveSupplement = format & 0x80
+			if haveSupplement:
+				raise NotImplementedError, "Encoding supplements are not yet supported"
+			format = format & 0x7f
+			if format == 0:
+				encoding = parseEncoding0(parent.charset, file, haveSupplement,
+						parent.strings)
+			elif format == 1:
+				encoding = parseEncoding1(parent.charset, file, haveSupplement,
+						parent.strings)
+			return encoding
+
+	def write(self, parent, value):
+		if value == "StandardEncoding":
+			return 0
+		elif value == "ExpertEncoding":
+			return 1
+		return 0  # dummy value
+
+	def xmlWrite(self, xmlWriter, name, value, progress):
+		if value in ("StandardEncoding", "ExpertEncoding"):
+			xmlWriter.simpletag(name, name=value)
+			xmlWriter.newline()
+			return
+		xmlWriter.begintag(name)
+		xmlWriter.newline()
+		for code in range(len(value)):
+			glyphName = value[code]
+			if glyphName != ".notdef":
+				xmlWriter.simpletag("map", code=hex(code), name=glyphName)
+				xmlWriter.newline()
+		xmlWriter.endtag(name)
+		xmlWriter.newline()
+
+	def xmlRead(self, (name, attrs, content), parent):
+		if attrs.has_key("name"):
+			return attrs["name"]
+		encoding = [".notdef"] * 256
+		for element in content:
+			if isinstance(element, StringType):
+				continue
+			name, attrs, content = element
+			code = safeEval(attrs["code"])
+			glyphName = attrs["name"]
+			encoding[code] = glyphName
+		return encoding
+
+
+def parseEncoding0(charset, file, haveSupplement, strings):
+	nCodes = readCard8(file)
+	encoding = [".notdef"] * 256
+	for glyphID in range(1, nCodes + 1):
+		code = readCard8(file)
+		if code != 0:
+			encoding[code] = charset[glyphID]
+	return encoding
+
+def parseEncoding1(charset, file, haveSupplement, strings):
+	nRanges = readCard8(file)
+	encoding = [".notdef"] * 256
+	glyphID = 1
+	for i in range(nRanges):
+		code = readCard8(file)
+		nLeft = readCard8(file)
+		for glyphID in range(glyphID, glyphID + nLeft + 1):
+			encoding[code] = charset[glyphID]
+			code = code + 1
+		glyphID = glyphID + 1
+	return encoding
+
+def packEncoding0(charset, encoding, strings):
+	format = 0
+	m = {}
+	for code in range(len(encoding)):
+		name = encoding[code]
+		if name != ".notdef":
+			m[name] = code
+	codes = []
+	for name in charset[1:]:
+		code = m.get(name)
+		codes.append(code)
+	
+	while codes and codes[-1] is None:
+		codes.pop()
+
+	data = [packCard8(format), packCard8(len(codes))]
+	for code in codes:
+		if code is None:
+			code = 0
+		data.append(packCard8(code))
+	return "".join(data)
+
+def packEncoding1(charset, encoding, strings):
+	format = 1
+	m = {}
+	for code in range(len(encoding)):
+		name = encoding[code]
+		if name != ".notdef":
+			m[name] = code
+	ranges = []
+	first = None
+	end = 0
+	for name in charset[1:]:
+		code = m.get(name, -1)
+		if first is None:
+			first = code
+		elif end + 1 <> code:
+			nLeft = end - first
+			ranges.append((first, nLeft))
+			first = code
+		end = code
+	nLeft = end - first
+	ranges.append((first, nLeft))
+	
+	# remove unencoded glyphs at the end.
+	while ranges and ranges[-1][0] == -1:
+		ranges.pop()
+
+	data = [packCard8(format), packCard8(len(ranges))]
+	for first, nLeft in ranges:
+		if first == -1:  # unencoded
+			first = 0
+		data.append(packCard8(first) + packCard8(nLeft))
+	return "".join(data)
+
+
 class FDArrayConverter(TableConverter):
 	def read(self, parent, value):
 		file = parent.file
@@ -873,7 +1035,7 @@ topDictOperators = [
 	((12, 33), 'CIDFontType',        'number',       0,         None),
 	((12, 34), 'CIDCount',           'number',       8720,      None),
 	((12, 35), 'UIDBase',            'number',       None,      None),
-	(16,       'Encoding',           'number',       0,         None), # XXX
+	(16,       'Encoding',           'number',       0,         EncodingConverter()),
 	((12, 36), 'FDArray',            'number',       None,      FDArrayConverter()),
 	((12, 37), 'FDSelect',           'number',       None,      FDSelectConverter()),
 	(18,       'Private',       ('number','number'), None,      PrivateDictConverter()),
@@ -1019,6 +1181,10 @@ class TopDictCompiler(DictCompiler):
 		children = []
 		if hasattr(self.dictObj, "charset"):
 			children.append(CharsetCompiler(strings, self.dictObj.charset, self))
+		if hasattr(self.dictObj, "Encoding"):
+			encoding = self.dictObj.Encoding
+			if not isinstance(encoding, StringType):
+				children.append(EncodingCompiler(strings, encoding, self))
 		if hasattr(self.dictObj, "CharStrings"):
 			items = []
 			charStrings = self.dictObj.CharStrings
