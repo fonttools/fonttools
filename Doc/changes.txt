@@ -1,5 +1,8 @@
 TTX/FontTools Version 2.0 beta 2 (released ??? 2002)
 
+- Be "forgiving" when interpreting the maxp table version field:
+  interpret any value as 1.0 if it's not 0.5. Fixes dumping of these
+  GPL fonts: http://www.freebsd.org/cgi/pds.cgi?ports/chinese/wangttf
 - Fixed ttx -l: it turned out this part of the code didn't work with
   Python 2.2.1 and earlier. My bad to do most of my testing with a
   different version than I shipped TTX with :-(
