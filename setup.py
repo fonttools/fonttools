@@ -36,15 +36,44 @@ class build_ext_optional(build_ext):
 				(ext.name, sys.exc_info()[1]))
 
 
+if sys.version_info > (2, 3, 0, 'alpha', 1):
+	# Trove classifiers for PyPI
+	classifiers = {"classifiers": [
+		"Development Status :: 4 - Beta",
+		"Environment :: Console",
+		"Environment :: Other Environment",
+		"Intended Audience :: Developers",
+		"Intended Audience :: End Users/Desktop",
+		"License :: OSI Approved :: BSD License",
+		"Natural Language :: English",
+		"Operating System :: OS Independent",
+		"Programming Language :: Python",
+		"Topic :: Multimedia :: Graphics",
+		"Topic :: Multimedia :: Graphics :: Graphics Conversion",
+	]}
+else:
+	classifiers = {}
+
+long_description = """\
+FontTools/TTX is a library to manipulate font files from Python.
+It supports reading and writing of TrueType/OpenType fonts, reading
+and writing of AFM files, reading (and partially writing) of PS Type 1
+fonts. The package also contains a tool called "TTX" which converts
+TrueType/OpenType fonts to and from an XML-based format.
+"""
+
 setup(
-		name = "FontTools",
-		version = "1.0",
-		description = "Python FontTools",
+		name = "FontTools-TTX",
+		version = "2.0b1",
+		description = "Tools to manipulate font files",
 		author = "Just van Rossum",
 		author_email = "just@letterror.com",
 		maintainer = "Just van Rossum",
 		maintainer_email = "just@letterror.com",
 		url = "http://fonttools.sourceforge.net/",
+		license = "OpenSource, BSD-style",
+		platforms = ["Any"],
+		long_description = long_description,
 		
 		packages = [
 			"",
@@ -68,6 +97,6 @@ setup(
 			)
 		],
 		scripts = ["Tools/ttx"],
-		cmdclass = {"build_ext": build_ext_optional}
+		cmdclass = {"build_ext": build_ext_optional},
+		**classifiers
 	)
-
