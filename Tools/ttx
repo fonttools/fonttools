@@ -1,0 +1,181 @@
+#! /usr/bin/env python
+
+"""\
+XXX
+"""
+
+
+import sys
+import os
+import getopt
+from fontTools.ttLib import TTFont
+
+
+def usage():
+	print __doc__
+	sys.exit(2)
+
+
+def makeOutputFileName(input, outputDir, extension):
+	dir, file = os.path.split(input)
+	file, ext = os.path.splitext(file)
+	if outputDir:
+		dir = outputDir
+	output = os.path.join(dir, file + extension)
+	n = 1
+	while os.path.exists(output):
+		output = os.path.join(dir, file + "#" + repr(n) + extension)
+		n = n + 1
+	return output
+
+
+class Options:
+
+	listTables = 0
+	outputDir = None
+	verbose = 0
+	forceOverwrite = 0
+	splitTables = 0
+	disassembleInstructions = 1
+	mergeFile = None
+	recalcBBoxes = 1
+	
+	def __init__(self, rawOptions, numFiles):
+		self.onlyTables = []
+		self.skipTables = []
+		for option, value in rawOptions:
+			# meta option
+			if option == "-l":
+				self.listTables = 1
+			# common options
+			elif option == "-d":
+				if not os.path.isdir(value):
+					print "The -d option value must be an existing directory"
+					sys.exit(2)
+				self.outputDir = value
+			elif option == "-v":
+				self.verbose = 1
+			elif option == "-f":
+				self.forceOverwrite = 1
+			elif option == "-h":
+				print __doc__
+				sys.exit(0)
+			# dump options
+			elif option == "-t":
+				self.onlyTables.append(value)
+			elif option == "-x":
+				self.skipTables.append(value)
+			elif option == "-s":
+				self.splitTables = 1
+			elif option == "-i":
+				self.disassembleInstructions = 0
+			# compile options
+			elif option == "-m":
+				self.mergeFile = value
+			elif option == "-b":
+				self.recalcBBoxes = 0
+		if self.onlyTables and self.skipTables:
+			print "-t and -x options are mutually exlusive"
+			sys.exit(2)
+		if self.mergeFile and numFiles > 1:
+			print "Must specify exactly one TTX source file when using -i"
+			sys.exit(2)
+
+
+def ttList(input, extension, options):
+	ttf = TTFont(input)
+	reader = ttf.reader
+	tags = reader.keys()
+	tags.sort()
+	print 'Listing table info for "%s":' % input
+	format = "    %4s  %10s  %7s  %7s"
+	print format % ("tag ", "  checksum", " length", " offset")
+	print format % ("----", "----------", "-------", "-------")
+	for tag in tags:
+		entry = reader.tables[tag]
+		checksum = "0x" + hex(entry.checkSum)[2:].zfill(8)
+		print format % (tag, checksum, entry.length, entry.offset)
+	print
+	ttf.close()
+
+
+def ttDump(input, extension, options):
+	output = makeOutputFileName(input, options.outputDir, extension)
+	print 'Dumping "%s" to "%s"...' % (input, output)
+	ttf = TTFont(input, 0, verbose=options.verbose)
+	ttf.saveXML(output,
+			tables=options.onlyTables,
+			skipTables=options.skipTables, 
+			splitTables=options.splitTables,
+			disassembleInstructions=options.disassembleInstructions)
+	ttf.close()
+
+
+def ttCompile(input, extension, options):
+	output = makeOutputFileName(input, options.outputDir, extension)
+	print 'Compiling "%s" to "%s"...' % (input, output)
+	ttf = TTFont(options.mergeFile,
+			recalcBBoxes=options.recalcBBoxes,
+			verbose=options.verbose)
+	ttf.importXML(input)
+	ttf.save(output)
+
+	if options.verbose:
+		import time
+		print "%s finished at" % sys.argv[0], time.strftime("%H:%M:%S", time.localtime(time.time()))
+
+
+def guessFileType(fileName):
+	try:
+		f = open(fileName, "rb")
+	except IOError:
+		return None
+	header = f.read(256)
+	head = header[:4]
+	if head == "OTTO":
+		return "OTF"
+	elif head in ("\0\1\0\0", "true"):
+		return "TTF"
+	elif head.lower() == "<?xm":
+		if header.find('sfntVersion="OTTO"') > 0:
+			return "OTX"
+		else:
+			return "TTX"
+	# XXX Mac suitcase!
+	return None
+
+
+def main(args):
+	try:
+		rawOptions, files = getopt.getopt(args, "ld:vfht:x:sim:b")
+	except getopt.GetoptError:
+		usage()
+	
+	if not files:
+		usage()
+	
+	options = Options(rawOptions, len(files))
+	
+	for input in files:
+		tp = guessFileType(input)
+		if tp in ("OTF", "TTF"):
+			extension = ".ttx"
+			if options.listTables:
+				action = ttList
+			else:
+				action = ttDump
+		elif tp == "TTX":
+			extension = ".ttf"
+			action = ttCompile
+		elif tp == "OTX":
+			extension = ".otf"
+			action = ttCompile
+		else:
+			print 'Unknown file type: "%s"' % input
+			continue
+		
+		action(input, extension, options)
+
+
+if __name__ == "__main__":
+	main(sys.argv[1:])
