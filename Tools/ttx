@@ -222,16 +222,29 @@ def main(args):
 		action(input, extension, options)
 
 
+def waitForKeyPress():
+	"""Force the DOS Prompt window to stay open so the user gets
+	a chance to see what's wrong."""
+	import msvcrt
+	print '(Hit any key to exit)'
+	while not msvcrt.kbhit():
+		pass
+
+
 if __name__ == "__main__":
 	try:
 		main(sys.argv[1:])
 	except KeyboardInterrupt:
 		print "(Cancelled.)"
-	except:
-		import traceback
-		traceback.print_exc()
+	except SystemExit:
 		if sys.platform == "win32":
-			import msvcrt
-			print '(Hit any key to exit)'
-			while not msvcrt.kbhit():
-				pass
+			waitForKeyPress()
+		else:
+			raise
+	except:
+		if sys.platform == "win32":
+			import traceback
+			traceback.print_exc()
+			waitForKeyPress()
+		else:
+			raise
