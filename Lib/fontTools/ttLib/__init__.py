@@ -41,8 +41,8 @@ Dumping 'prep' table...
 """
 
 __author__ = "Just van Rossum, just@letterror.com"
-__version__ = "1.0a5"
-
+__version__ = "$Id: __init__.py,v 1.2 1999-12-17 12:51:21 Just Exp $"
+__release__ = "1.0a6"
 
 import os
 import stat
@@ -152,7 +152,7 @@ class TTFont:
 		import xmlWriter
 		writer = xmlWriter.XMLWriter(file)
 		writer.begintag("ttFont", sfntVersion=`self.sfntVersion`[1:-1], 
-				ttlibVersion=__version__)
+				ttLibVersion=__release__)
 		writer.newline()
 		writer.newline()
 		if not tables:
