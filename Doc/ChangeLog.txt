@@ -1,4 +1,162 @@
 ----------------------------
+2003/08/25 13:15:50 jvr Lib/fontTools/ttLib/__init__.py 1.39
+TTFont now has a getGlyphSet() method, which will return a generic
+GlyphSet. A GlyphSet is simply a dict-like object mapping glyph names
+to glyphs. The glyphs in a GlyphSet have a .draw(pen) method and a
+.width attribute. This provides a generic interface for drawing glyphs
+or extracting outlines, and works both for CFF-based fonts and TT fonts.
+
+See also fontTools.pens.basePen for a description of what makes a Pen
+a Pen.
+----------------------------
+2003/08/25 12:23:01 jvr Lib/fontTools/ttLib/tables/_g_l_y_f.py 1.19
+add some more dict-like stuff to the glyf table
+----------------------------
+2003/08/25 07:37:25 jvr Lib/fontTools/cffLib.py 1.31
+small nits
+----------------------------
+2003/08/24 19:56:16 jvr Lib/fontTools/t1Lib.py 1.17
+2003/08/24 19:56:16 jvr Lib/fontTools/misc/psCharStrings.py 1.16
+2003/08/24 19:56:16 jvr Lib/fontTools/cffLib.py 1.30
+Refactored outline extraction for CharStrings. The interface to
+T{1,2}OutlineExtractor is not backwards compatible and this change
+basically makes them private classes: CharStrings now have a .draw()
+method that takes a Pen object (see fontTools.pens.*), so you never
+have to deal with the extractor objects yourself. Only lightly tested.
+----------------------------
+2003/08/24 19:52:03 jvr Lib/fontTools/ttx.py 1.6
+don't use macfs, it's deprecated
+----------------------------
+2003/08/24 17:23:34 jvr Lib/fontTools/pens/basePen.py 1.3
+small tweak
+----------------------------
+2003/08/24 16:25:12 jvr Lib/fontTools/misc/psCharStrings.py 1.15
+added and tweaked some asserts
+----------------------------
+2003/08/24 16:17:11 jvr Lib/fontTools/misc/transform.py 1.2
+remove trailing whitespace
+----------------------------
+2003/08/24 09:48:49 jvr Lib/fontTools/pens/transformPen.py 1.2
+ugh, lineTo != moveTo...
+----------------------------
+2003/08/23 20:24:42 jvr Lib/fontTools/pens/boundsPen.py 1.2
+2003/08/23 20:24:42 jvr Lib/fontTools/pens/basePen.py 1.2
+wrapped some long lines
+----------------------------
+2003/08/23 20:19:33 jvr Lib/fontTools/pens/transformPen.py 1.1
+2003/08/23 20:19:33 jvr Lib/fontTools/pens/boundsPen.py 1.1
+2003/08/23 20:19:33 jvr Lib/fontTools/pens/basePen.py 1.1
+2003/08/23 20:19:33 jvr Lib/fontTools/pens/__init__.py 1.1
+Pen stuff, see http://just.letterror.com/cgi-bin/wypy?PenProtocol
+Only lightly tested, component support is not tested at all.
+----------------------------
+2003/08/22 20:21:08 jvr Lib/fontTools/ttLib/tables/otData.py 1.3
+some fixes from klchxbec
+----------------------------
+2003/08/22 20:02:25 jvr Lib/fontTools/ttLib/tables/V_O_R_G_.py 1.1
+VORG support by rroberts.
+----------------------------
+2003/08/22 19:53:32 jvr Lib/fontTools/cffLib.py 1.29
+Lots of CID work by rroberts.
+----------------------------
+2003/08/22 19:44:08 jvr Lib/fontTools/ttLib/__init__.py 1.38
+- attempted to sort tables in order recommended by spec.
+  TODO: need to fix table dependency order to complete this.
+  (Read: would you mind posting a bug report regarding this?)
+----------------------------
+2003/08/22 19:38:37 jvr Lib/fontTools/ttLib/sfnt.py 1.11
+support for CEF fonts: don't depend on the head table being available
+----------------------------
+2003/08/22 19:34:48 jvr Lib/fontTools/ttLib/tables/_m_a_x_p.py 1.6
+recalc numGlyphs upon writing
+----------------------------
+2003/08/22 18:56:01 jvr Lib/fontTools/ttLib/macUtils.py 1.6
+update macUtils to current day MacPython
+----------------------------
+2003/08/22 18:53:29 jvr Lib/fontTools/nfntLib.py 1.4
+attempt to set the value for fRectWidth 'more correctly'
+----------------------------
+2003/08/22 18:52:22 jvr Lib/fontTools/ttLib/__init__.py 1.37
+some modernizations
+----------------------------
+2003/08/22 18:50:44 jvr Lib/fontTools/ttx.py 1.5
+Jaguar Python 2.2 workaround
+----------------------------
+2003/08/22 14:56:48 jvr Lib/fontTools/misc/transform.py 1.1
+this module has been included in so many (in house) packages that it's time it gets a more central place.
+----------------------------
+2003/06/29 19:25:05 jvr Lib/fontTools/misc/bezierTools.py 1.3
+- optimized a couple of invariant expressions
+- made sure solveCubic() also works when called with integer arguments
+----------------------------
+2003/06/29 18:32:00 jvr Lib/fontTools/misc/bezierTools.py 1.2
+splitLine(): make sure the split is between the end points
+----------------------------
+2003/06/29 18:25:07 jvr Lib/fontTools/misc/bezierTools.py 1.1
+new module bezierTools.py
+----------------------------
+2003/06/29 18:18:54 jvr Lib/fontTools/misc/arrayTools.py 1.6
+two new functions
+----------------------------
+2003/06/07 15:15:51 jvr Lib/fontTools/t1Lib.py 1.16
+avoid FSSpec on MacOS
+----------------------------
+2003/05/24 12:50:47 jvr Lib/fontTools/afmLib.py 1.6
+add default _attrs value so pickling AFM objects doesn't blow up
+----------------------------
+2003/05/24 12:34:11 jvr Lib/fontTools/t1Lib.py 1.15
+updated for MacPython2.3
+----------------------------
+2003/02/23 19:40:07 jvr Lib/fontTools/ttLib/tables/_h_e_a_d.py 1.14
+Fix for bug #691744; calc_mac_epoch_diff() was broken when the timezone
+was GMT (or perhaps other situations; it's not entirely clear).
+----------------------------
+2003/02/08 10:45:23 jvr Lib/fontTools/ttLib/tables/_c_m_a_p.py 1.10
+cmap format 12 support, donated by rroberts: thanks!
+----------------------------
+2003/01/25 18:20:22 jvr Lib/fontTools/ttLib/tables/_n_a_m_e.py 1.10
+second try to work around bogus stringOffset value
+----------------------------
+2003/01/25 11:15:42 jvr Lib/fontTools/ttLib/tables/_n_a_m_e.py 1.9
+renamed stringoffset to stringOffset as per spec
+----------------------------
+2003/01/25 11:14:59 jvr Lib/fontTools/ttLib/tables/_n_a_m_e.py 1.8
+gracefully handle bogus stringOffset values (thanks to Anthony Fok)
+----------------------------
+2003/01/10 22:34:13 jvr Lib/fontTools/ttLib/tables/_h_e_a_d.py 1.13
+clean up checkSumAdjustment XML output: suppress trialing 'L'
+----------------------------
+2003/01/10 22:23:46 jvr Lib/fontTools/ttLib/tables/_h_e_a_d.py 1.12
+fix from Owen Taylor that fixes my previous patch; thanks!
+----------------------------
+2003/01/03 21:29:23 jvr Lib/fontTools/ttLib/tables/_h_e_a_d.py 1.11
+detab table string literal
+----------------------------
+2003/01/03 21:23:04 jvr Lib/fontTools/ttLib/tables/_h_e_a_d.py 1.10
+make two fields unsigned, to conform to the spec but also to suppress Python 2.3 warnings for hex(negativenumber).
+----------------------------
+2003/01/03 21:01:07 jvr setup.py 1.10
+edited meta info, added trove classification
+----------------------------
+2003/01/03 20:57:04 jvr Lib/fontTools/ttLib/sfnt.py 1.10
+suppres Python 2.3 warning
+----------------------------
+2003/01/03 20:56:01 jvr Lib/fontTools/cffLib.py 1.28
+Added support for the Encoding field. (Adam, please let me know if this
+works for you.)
+----------------------------
+2003/01/03 20:54:31 jvr Lib/fontTools/ttLib/tables/otTables.py 1.11
+make sure Coverage instances have a 'glyphs' attribute
+----------------------------
+2003/01/03 20:52:42 jvr Lib/fontTools/ttLib/tables/O_S_2f_2.py 1.6
+allow OS/2 tables containing too much data
+----------------------------
+2002/11/26 14:09:52 jvr Lib/fontTools/afmLib.py 1.5
+allow negative advance widths
+----------------------------
+2002/10/29 15:51:38 jvr Doc/ChangeLog.txt 1.5
+it's been a while.
+----------------------------
 2002/10/29 15:49:25 jvr Lib/fontTools/fondLib.py 1.4
 try Carbon.Res first.
 ----------------------------
