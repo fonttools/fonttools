@@ -8,7 +8,7 @@ import re
 import string
 import types
 
-__version__ = "$Id: afmLib.py,v 1.5 2002-11-26 14:09:52 jvr Exp $"
+__version__ = "$Id: afmLib.py,v 1.6 2003-05-24 12:50:47 jvr Exp $"
 
 
 # every single line starts with a "word"
@@ -84,6 +84,8 @@ class error(Exception): pass
 
 
 class AFM:
+	
+	_attrs = None
 	
 	_keywords = ['StartFontMetrics',
 			'EndFontMetrics',
