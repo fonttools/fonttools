@@ -579,6 +579,11 @@ class T2OutlineExtractor(SimpleT2Decompiler):
 			self.pen.closePath()
 		self.sawMoveTo = 0
 	
+	def endPath(self):
+		# In T2 there are no open paths, so always do a closePath when
+		# finishing a sub path.
+		self.closePath()
+
 	def popallWidth(self, evenOdd=0):
 		args = self.popall()
 		if not self.gotWidth:
@@ -614,16 +619,16 @@ class T2OutlineExtractor(SimpleT2Decompiler):
 	# path constructors, moveto
 	#
 	def op_rmoveto(self, index):
-		self.closePath()
+		self.endPath()
 		self.rMoveTo(self.popallWidth())
 	def op_hmoveto(self, index):
-		self.closePath()
+		self.endPath()
 		self.rMoveTo((self.popallWidth(1)[0], 0))
 	def op_vmoveto(self, index):
-		self.closePath()
+		self.endPath()
 		self.rMoveTo((0, self.popallWidth(1)[0]))
 	def op_endchar(self, index):
-		self.closePath()
+		self.endPath()
 		args = self.popallWidth()
 		if args:
 			from fontTools.encodings.StandardEncoding import StandardEncoding
@@ -842,6 +847,11 @@ class T1OutlineExtractor(T2OutlineExtractor):
 		self.sbx = 0
 		T2OutlineExtractor.reset(self)
 	
+	def endPath(self):
+		if self.sawMoveTo:
+			self.pen.endPath()
+		self.sawMoveTo = 0
+
 	def popallWidth(self, evenOdd=0):
 		return self.popall()
 	
@@ -853,6 +863,7 @@ class T1OutlineExtractor(T2OutlineExtractor):
 	# path constructors
 	#
 	def op_rmoveto(self, index):
+		self.endPath()
 		if self.flexing:
 			return
 		self.rMoveTo(self.popall())
@@ -861,6 +872,7 @@ class T1OutlineExtractor(T2OutlineExtractor):
 			# We must add a parameter to the stack if we are flexing
 			self.push(0)
 			return
+		self.endPath()
 		self.rMoveTo((self.popall()[0], 0))
 	def op_vmoveto(self, index):
 		if self.flexing:
@@ -868,6 +880,7 @@ class T1OutlineExtractor(T2OutlineExtractor):
 			self.push(0)
 			self.exch()
 			return
+		self.endPath()
 		self.rMoveTo((0, self.popall()[0]))
 	def op_closepath(self, index):
 		self.closePath()
@@ -877,7 +890,7 @@ class T1OutlineExtractor(T2OutlineExtractor):
 		self.currentPoint = x, y
 	
 	def op_endchar(self, index):
-		self.closePath()
+		self.endPath()
 	
 	def op_hsbw(self, index):
 		sbx, wx = self.popall()
