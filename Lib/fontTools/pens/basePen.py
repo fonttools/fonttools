@@ -162,8 +162,10 @@ class BasePen(AbstractPen):
 		of the base glyph and draws it onto self.
 		"""
 		from fontTools.pens.transformPen import TransformPen
-		tPen = TransformPen(self, transformation)
-		self.glyphSet[glyphName].draw(tPen)
+		glyph = self.glyphSet.get(glyphName)
+		if glyph is not None:
+			tPen = TransformPen(self, transformation)
+			glyph.draw(tPen)
 
 	# don't override
 
