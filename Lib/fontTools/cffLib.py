@@ -1,7 +1,7 @@
 """cffLib.py -- read/write tools for Adobe CFF fonts."""
 
 #
-# $Id: cffLib.py,v 1.10 2002-05-14 12:37:36 jvr Exp $
+# $Id: cffLib.py,v 1.11 2002-05-14 13:51:51 jvr Exp $
 #
 
 import struct, sstruct
@@ -35,8 +35,8 @@ class CFFFontSet:
 		
 		for i in range(len(topDicts)):
 			font = self.fonts[self.fontNames[i]] = CFFFont()
-			font.GlobalSubrs = self.GlobalSubrs  # Hmm.
-			file.seek(0, 0)
+			font.GlobalSubrs = self.GlobalSubrs
+			file.seek(0)
 			font.decompile(file, topDicts[i], strings, self)  # maybe only 'on demand'?
 	
 	def compile(self):
@@ -103,23 +103,33 @@ class CFFFont:
 		if hasattr(self, "ROS"):
 			isCID = 1
 			# XXX CID subFonts
+			offset = self.FDArray
+			file.seek(offset)
+			fontDicts = readINDEX(file)
+			subFonts = self.subFonts = []
+			for topDictData in fontDicts:
+				subFont = CFFFont()
+				subFonts.append(subFont)
+				subFont.decompile(file, topDictData, strings, None)
+			# XXX
 		else:
 			isCID = 0
 			size, offset = self.Private
-			file.seek(offset, 0)
+			file.seek(offset)
 			privateData = file.read(size)
-			file.seek(offset, 0)
+			file.seek(offset)
 			assert len(privateData) == size
 			self.Private = PrivateDict()
 			self.Private.decompile(file, privateData, strings)
 		
-		file.seek(self.CharStrings)
-		rawCharStrings = readINDEX(file)
-		nGlyphs = len(rawCharStrings)
+		if hasattr(self, "CharStrings"):
+			file.seek(self.CharStrings)
+			rawCharStrings = readINDEX(file)
+			nGlyphs = len(rawCharStrings)
 		
 		# get charset (or rather: get glyphNames)
 		if self.charset == 0:
-			xxx  # standard charset
+			pass  # XXX standard charset
 		else:
 			file.seek(self.charset)
 			format = ord(file.read(1))
@@ -133,19 +143,23 @@ class CFFFont:
 				xxx
 			else:
 				xxx
-		self.charset = charset
+			self.charset = charset
+			assert len(charset) == nGlyphs
 		
-		assert len(charset) == nGlyphs
-		self.CharStrings = charStrings = {}
-		if self.CharstringType == 2:
-			# Type 2 CharStrings
-			charStringClass = psCharStrings.T2CharString
+		if self.charset <> 0:
+			self.CharStrings = charStrings = {}
+			if self.CharstringType == 2:
+				# Type 2 CharStrings
+				charStringClass = psCharStrings.T2CharString
+			else:
+				# Type 1 CharStrings
+				charStringClass = psCharStrings.T1CharString
+			
+			for i in range(nGlyphs):
+				charStrings[charset[i]] = charStringClass(rawCharStrings[i])
+			assert len(charStrings) == nGlyphs
 		else:
-			# Type 1 CharStrings
-			charStringClass = psCharStrings.T1CharString
-		for i in range(nGlyphs):
-			charStrings[charset[i]] = charStringClass(rawCharStrings[i])
-		assert len(charStrings) == nGlyphs
+			assert not hasattr(self, "CharStrings")
 		
 		# XXX Encoding!
 		encoding = self.Encoding
@@ -260,7 +274,6 @@ class PrivateDict:
 		self.fromDict(p.getDict())
 		
 		# get local subrs
-		#print "YYY Private.Subrs:", self.Subrs
 		if hasattr(self, "Subrs"):
 			file.seek(self.Subrs, 1)
 			localSubrs = readINDEX(file)
