@@ -1,7 +1,5 @@
 # ttx_shellext_win32
-# v1.03 matches ttLib 1.0a6
-
-#! /usr/bin/env python
+# v1.04 matches ttLib 1.0a6
 
 # This script installs a Windows 9x/NT shell extension for TTX
 # After installing it, click with the right mouse button on a TrueType file
@@ -14,6 +12,7 @@
 # v1.0 written 26.08.1999 by Adam Twardoch <twardoch@font.org>
 # v1.01 revised 26.01.2000 by Adam Twardoch <twardoch@font.org>
 # v1.03 revised 16.02.2000 to match ttLib 1.0a6
+# v1.04 revised 29.04.2000 to match FontTools.pth
 
 import sys, os, string, tempfile
 
@@ -25,7 +24,7 @@ if not sys.platform == 'win32':
 pythondir = sys.exec_prefix
 
 # get the folder where the TTX scripts reside
-pth_file = open(os.path.join(sys.exec_prefix, "ttlib.pth"))
+pth_file = open(os.path.join(sys.exec_prefix, "FontTools.pth"))
 ttxdir = os.path.dirname(pth_file.read())
 pth_file.close()
 
