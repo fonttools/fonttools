@@ -61,8 +61,8 @@ class T1Font:
 			return self.font[key]
 	
 	def parse(self):
-		import psLib
-		import psCharStrings
+		from fontTools.misc import psLib
+		from fontTools.misc import psCharStrings
 		self.font = psLib.suckfont(self.data)
 		charStrings = self.font["CharStrings"]
 		lenIV = self.font["Private"].get("lenIV", 4)

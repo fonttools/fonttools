@@ -1,13 +1,13 @@
 """cffLib.py -- read/write tools for Adobe CFF fonts."""
 
 #
-# $Id: cffLib.py,v 1.3 1999-12-20 22:02:10 Just Exp $"
+# $Id: cffLib.py,v 1.4 2000-01-16 22:14:02 Just Exp $"
 #
 
 import struct, sstruct
 import string
 import types
-import psCharStrings
+from fontTools.misc import psCharStrings
 
 
 cffHeaderFormat = """
