@@ -1,13 +1,16 @@
 """cffLib.py -- read/write tools for Adobe CFF fonts."""
 
 #
-# $Id: cffLib.py,v 1.14 2002-05-16 18:38:03 jvr Exp $
+# $Id: cffLib.py,v 1.15 2002-05-17 07:06:32 jvr Exp $
 #
 
 import struct, sstruct
 import string
 import types
 from fontTools.misc import psCharStrings
+
+
+DEBUG = 0
 
 
 cffHeaderFormat = """
@@ -27,10 +30,10 @@ class CFFFontSet:
 		assert self.major == 1 and self.minor == 0, \
 				"unknown CFF format: %d.%d" % (self.major, self.minor)
 		
-		self.fontNames = list(Index(file))
+		self.fontNames = list(Index(file, "fontNames"))
 		self.topDictIndex = TopDictIndex(file)
-		self.strings = IndexedStrings(list(Index(file)))
-		self.GlobalSubrs = SubrsIndex(file)
+		self.strings = IndexedStrings(file)
+		self.GlobalSubrs = CharStringIndex(file, "GlobalSubrsIndex")
 		self.topDictIndex.strings = self.strings
 		self.topDictIndex.GlobalSubrs = self.GlobalSubrs
 	
@@ -39,6 +42,9 @@ class CFFFontSet:
 	
 	def keys(self):
 		return self.fontNames[:]
+	
+	def values(self):
+		return self.topDictIndex
 	
 	def __getitem__(self, name):
 		try:
@@ -76,7 +82,11 @@ class Index:
 	
 	"""This class represents what the CFF spec calls an INDEX."""
 	
-	def __init__(self, file):
+	def __init__(self, file, name=None):
+		if name is None:
+			name = self.__class__.__name__
+		if DEBUG:
+			print "loading %s at %s" % (name, file.tell())
 		self.file = file
 		count, = struct.unpack(">H", file.read(2))
 		self.count = count
@@ -85,6 +95,9 @@ class Index:
 			self.offsets = []
 			return
 		offSize = ord(file.read(1))
+		if DEBUG:
+			print "index count: %s offSize: %s" % (count, offSize)
+		assert offSize <= 4, "offSize too large: %s" % offSize
 		self.offsets = offsets = []
 		pad = '\0' * (4 - offSize)
 		for index in range(count+1):
@@ -116,7 +129,7 @@ class Index:
 		return data
 
 
-class SubrsIndex(Index):
+class CharStringIndex(Index):
 	
 	def produceItem(self, data, file, offset, size):
 		return psCharStrings.T2CharString(data)
@@ -130,10 +143,17 @@ class SubrsIndex(Index):
 			xmlWriter.newline()
 
 
+class TopDictIndex(Index):
+	def produceItem(self, data, file, offset, size):
+		top = TopDict(self.strings, file, offset, self.GlobalSubrs)
+		top.decompile(data)
+		return top
+
+
 class CharStrings:
 	
 	def __init__(self, file, charset):
-		self.charStringsIndex = SubrsIndex(file)
+		self.charStringsIndex = CharStringIndex(file)
 		self.nameToIndex = nameToIndex = {}
 		for i in range(len(charset)):
 			nameToIndex[charset[i]] = i
@@ -142,10 +162,13 @@ class CharStrings:
 		return self.nameToIndex.keys()
 	
 	def values(self):
-		return list(self.charStringsIndex)
+		return self.charStringsIndex
 	
 	def has_key(self, name):
 		return self.nameToIndex.has_key(name)
+	
+	def __len__(self):
+		return len(self.charStringsIndex)
 	
 	def __getitem__(self, name):
 		index = self.nameToIndex[name]
@@ -160,13 +183,6 @@ class CharStrings:
 			self[name].toXML(xmlWriter)
 			xmlWriter.endtag("CharString")
 			xmlWriter.newline()
-
-
-class TopDictIndex(Index):
-	def produceItem(self, data, file, offset, size):
-		top = TopDict(self.strings, file, offset, self.GlobalSubrs)
-		top.decompile(data)
-		return top
 
 
 def buildOperatorDict(table):
@@ -216,13 +232,14 @@ class SubrsConverter(PrivateDictConverter):
 	def read(self, parent, value):
 		file = parent.file
 		file.seek(parent.offset + value)  # Offset(self)
-		return SubrsIndex(file)
+		return CharStringIndex(file, "SubrsIndex")
 
 class CharStringsConverter(PrivateDictConverter):
 	def read(self, parent, value):
 		file = parent.file
+		charset = parent.charset
 		file.seek(value)  # Offset(0)
-		return CharStrings(file, parent.charset)
+		return CharStrings(file, charset)
 
 class CharsetConverter:
 	def read(self, parent, value):
@@ -359,6 +376,8 @@ class BaseDict:
 	
 	def __init__(self, strings, file, offset):
 		self.rawDict = {}
+		if DEBUG:
+			print "loading %s at %s" % (self, offset)
 		self.file = file
 		self.offset = offset
 		self.strings = strings
@@ -424,14 +443,20 @@ class TopDict(BaseDict):
 	def toXML(self, xmlWriter, progress):
 		self.decompileAllCharStrings()
 		BaseDict.toXML(self, xmlWriter, progress)
+	
 	def decompileAllCharStrings(self):
 		if self.CharstringType == 2:
 			# Type 2 CharStrings
-			decompiler = psCharStrings.SimpleT2Decompiler(self.Private.Subrs, self.GlobalSubrs)
+			if hasattr(self.Private, "Subrs"):
+				Subrs = self.Private.Subrs
+			else:
+				Subrs = []
+			decompiler = psCharStrings.SimpleT2Decompiler(Subrs, self.GlobalSubrs)
 			for charString in self.CharStrings.values():
 				if charString.needsDecompilation():
 					decompiler.reset()
 					decompiler.execute(charString)
+				charString.compile()
 		else:
 			# Type 1 CharStrings
 			for charString in self.CharStrings.values():
@@ -445,14 +470,15 @@ class PrivateDict(BaseDict):
 	decompiler = PrivateDictDecompiler
 
 
-
-# SID
-
 class IndexedStrings:
 	
-	def __init__(self, strings=None):
-		if strings is None:
+	"""SID -> string mapping."""
+	
+	def __init__(self, file=None):
+		if file is None:
 			strings = []
+		else:
+			strings = list(Index(file, "IndexedStrings"))
 		self.strings = strings
 	
 	def __getitem__(self, SID):
