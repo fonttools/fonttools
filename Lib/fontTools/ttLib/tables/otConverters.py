@@ -1,0 +1,265 @@
+from types import TupleType
+from fontTools.misc.textTools import safeEval
+
+
+def buildConverterList(tableSpec, tableNamespace):
+	converters = []
+	convertersByName = {}
+	for tp, name, repeat, repeatOffset, descr in tableSpec:
+		if name.startswith("ValueFormat"):
+			assert tp == "uint16"
+			converterClass = ValueFormat
+		elif name == "DeltaValue":
+			assert tp == "uint16"
+			converterClass = DeltaValue
+		elif name.endswith("Count"):
+			assert tp == "uint16"
+			converterClass = Count
+		elif name == "SubTable":
+			converterClass = SubTable
+		else:
+			converterClass = converterMapping[tp]
+		tableClass = tableNamespace.get(name)
+		conv = converterClass(name, repeat, repeatOffset, tableClass)
+		if name == "SubTable":
+			conv.lookupTypes = tableNamespace['lookupTypes']
+			# also create reverse mapping
+			for t in conv.lookupTypes.values():
+				for cls in t.values():
+					convertersByName[cls.__name__] = Table("SubTable", repeat, repeatOffset, cls)
+		converters.append(conv)
+		assert not convertersByName.has_key(name)
+		convertersByName[name] = conv
+	return converters, convertersByName
+
+
+class BaseConverter:
+	
+	def __init__(self, name, repeat, repeatOffset, tableClass):
+		self.name = name
+		self.repeat = repeat
+		self.repeatOffset = repeatOffset
+		self.tableClass = tableClass
+		self.isCount = name.endswith("Count")
+	
+	def read(self, reader, font, tableStack):
+		raise NotImplementedError, self
+	
+	def write(self, writer, font, tableStack, value):
+		raise NotImplementedError, self
+	
+	def xmlWrite(self, xmlWriter, font, value, name, attrs):
+		raise NotImplementedError, self
+	
+	def xmlRead(self, attrs, content, font):
+		raise NotImplementedError, self
+
+
+class SimpleValue(BaseConverter):
+	def xmlWrite(self, xmlWriter, font, value, name, attrs):
+		xmlWriter.simpletag(name, attrs + [("value", value)])
+		xmlWriter.newline()
+	def xmlRead(self, attrs, content, font):
+		return attrs["value"]
+
+class IntValue(SimpleValue):
+	def xmlRead(self, attrs, content, font):
+		return int(attrs["value"])
+
+class Long(IntValue):
+	def read(self, reader, font, tableStack):
+		return reader.readLong()
+	def write(self, writer, font, tableStack, value):
+		writer.writeLong(value)
+
+class Short(IntValue):
+	def read(self, reader, font, tableStack):
+		return reader.readShort()
+	def write(self, writer, font, tableStack, value):
+		writer.writeShort(value)
+
+class UShort(IntValue):
+	def read(self, reader, font, tableStack):
+		return reader.readUShort()
+	def write(self, writer, font, tableStack, value):
+		writer.writeUShort(value)
+
+class Count(Short):
+	def xmlWrite(self, xmlWriter, font, value, name, attrs):
+		xmlWriter.comment("%s=%s" % (name, value))
+		xmlWriter.newline()
+
+class Tag(SimpleValue):
+	def read(self, reader, font, tableStack):
+		return reader.readTag()
+	def write(self, writer, font, tableStack, value):
+		writer.writeTag(value)
+
+class GlyphID(SimpleValue):
+	def read(self, reader, font, tableStack):
+		return font.getGlyphName(reader.readUShort())
+	def write(self, writer, font, tableStack, value):
+		writer.writeUShort(font.getGlyphID(value))
+
+class Struct(BaseConverter):
+	
+	def read(self, reader, font, tableStack):
+		table = self.tableClass()
+		table.decompile(reader, font, tableStack)
+		return table
+	
+	def write(self, writer, font, tableStack, value):
+		value.compile(writer, font, tableStack)
+	
+	def xmlWrite(self, xmlWriter, font, value, name, attrs):
+		if value is None:
+			pass  # NULL table, ignore
+		else:
+			value.toXML(xmlWriter, font, attrs)
+	
+	def xmlRead(self, attrs, content, font):
+		table = self.tableClass()
+		Format = attrs.get("Format")
+		if Format is not None:
+			table.Format = int(Format)
+		for element in content:
+			if type(element) <> TupleType:
+				continue
+			name, attrs, content = element
+			table.fromXML((name, attrs, content), font)
+		return table
+
+
+class Table(Struct):
+	
+	def read(self, reader, font, tableStack):
+		offset = reader.readUShort()
+		if offset == 0:
+			return None
+		if offset <= 3:
+			# XXX hack to work around buggy pala.ttf
+			print "*** Warning: offset is not 0, yet suspiciously low (%s). table: %s" \
+					% (offset, self.tableClass.__name__)
+			return None
+		subReader = reader.getSubReader(offset)
+		table = self.tableClass()
+		table.decompile(subReader, font, tableStack)
+		return table
+	
+	def write(self, writer, font, tableStack, value):
+		if value is None:
+			writer.writeUShort(0)
+		else:
+			subWriter = writer.getSubWriter()
+			writer.writeSubTable(subWriter)
+			value.compile(subWriter, font, tableStack)
+
+
+class SubTable(Table):
+	def getConverter(self, tableType, lookupType):
+		lookupTypes = self.lookupTypes[tableType]
+		tableClass = lookupTypes[lookupType]
+		return Table(self.name, self.repeat, self.repeatOffset, tableClass)
+
+
+class ValueFormat(IntValue):
+	def __init__(self, name, repeat, repeatOffset, tableClass):
+		BaseConverter.__init__(self, name, repeat, repeatOffset, tableClass)
+		self.which = name[-1] == "2"
+	def read(self, reader, font, tableStack):
+		format = reader.readUShort()
+		reader.setValueFormat(format, self.which)
+		return format
+	def write(self, writer, font, tableStack, format):
+		writer.writeUShort(format)
+		writer.setValueFormat(format, self.which)
+
+class ValueRecord(ValueFormat):
+	def read(self, reader, font, tableStack):
+		return reader.readValueRecord(font, self.which)
+	def write(self, writer, font, tableStack, value):
+		writer.writeValueRecord(value, font, self.which)
+	def xmlWrite(self, xmlWriter, font, value, name, attrs):
+		if value is None:
+			pass  # NULL table, ignore
+		else:
+			value.toXML(xmlWriter, font, self.name, attrs)
+	def xmlRead(self, attrs, content, font):
+		from otBase import ValueRecord
+		value = ValueRecord()
+		value.fromXML((None, attrs, content), font)
+		return value
+
+
+class DeltaValue(BaseConverter):
+	
+	def read(self, reader, font, tableStack):
+		table = tableStack.getTop()
+		StartSize = table["StartSize"]
+		EndSize = table["EndSize"]
+		DeltaFormat = table["DeltaFormat"]
+		assert DeltaFormat in (1, 2, 3), "illegal DeltaFormat"
+		nItems = EndSize - StartSize + 1
+		nBits = 1 << DeltaFormat
+		minusOffset = 1 << nBits
+		mask = (1 << nBits) - 1
+		signMask = 1 << (nBits - 1)
+		
+		DeltaValue = []
+		tmp, shift = 0, 0
+		for i in range(nItems):
+			if shift == 0:
+				tmp, shift = reader.readUShort(), 16
+			shift = shift - nBits
+			value = (tmp >> shift) & mask
+			if value & signMask:
+				value = value - minusOffset
+			DeltaValue.append(value)
+		return DeltaValue
+	
+	def write(self, writer, font, tableStack, value):
+		table = tableStack.getTop()
+		StartSize = table["StartSize"]
+		EndSize = table["EndSize"]
+		DeltaFormat = table["DeltaFormat"]
+		DeltaValue = table["DeltaValue"]
+		assert DeltaFormat in (1, 2, 3), "illegal DeltaFormat"
+		nItems = EndSize - StartSize + 1
+		nBits = 1 << DeltaFormat
+		assert len(DeltaValue) == nItems
+		mask = (1 << nBits) - 1
+		
+		tmp, shift = 0, 16
+		for value in DeltaValue:
+			shift = shift - nBits
+			tmp = tmp | ((value & mask) << shift)
+			if shift == 0:
+				writer.writeUShort(tmp)
+				tmp, shift = 0, 16
+		if shift <> 16:
+			writer.writeUShort(tmp)
+	
+	def xmlWrite(self, xmlWriter, font, value, name, attrs):
+		xmlWriter.simpletag(name, attrs + [("value", value)])
+		xmlWriter.newline()
+	
+	def xmlRead(self, attrs, content, font):
+		return safeEval(attrs["value"])
+
+
+converterMapping = {
+	# type         class
+	"int16":       Short,
+	"uint16":      UShort,
+	"ULONG":       Long,
+	"Tag":         Tag,
+	"GlyphID":     GlyphID,
+	"struct":      Struct,
+	"Offset":      Table,
+	"ValueRecord": ValueRecord,
+}
+
+# equivalents:
+converterMapping["USHORT"] = converterMapping["uint16"]
+converterMapping["Fixed"] = converterMapping["fixed32"] = converterMapping["ULONG"]
+

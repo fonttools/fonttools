@@ -1,5 +1,5 @@
 from otBase import BaseTTXConverter
 
 
-class table_G_P_O_S_(BaseTTXConverter):
+class table_B_A_S_E_(BaseTTXConverter):
 	pass
