@@ -92,6 +92,9 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 	
 	def decompile(self, data, ttFont):
 		dummy, data = sstruct.unpack2(OS2_format_0, data, self)
+		if self.version == 1 and not data:
+			# workaround for buggy Apple fonts
+			self.version = 0
 		if self.version == 1:
 			sstruct.unpack(OS2_format_1_addition, data, self)
 		elif self.version == 2:
