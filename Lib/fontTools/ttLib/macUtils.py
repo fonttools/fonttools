@@ -92,9 +92,9 @@ class SFNTResourceWriter:
 		self.file = cStringIO.StringIO()
 		self.name = path
 		self.closed = 0
-		fullname = ttFont['name'].getname(4, 1, 0) # Full name, mac, default encoding
-		familyname = ttFont['name'].getname(1, 1, 0) # Fam. name, mac, default encoding
-		psname = ttFont['name'].getname(6, 1, 0) # PostScript name, etc.
+		fullname = ttFont['name'].getName(4, 1, 0) # Full name, mac, default encoding
+		familyname = ttFont['name'].getName(1, 1, 0) # Fam. name, mac, default encoding
+		psname = ttFont['name'].getName(6, 1, 0) # PostScript name, etc.
 		if fullname is None or fullname is None or psname is None:
 			from fontTools import ttLib
 			raise ttLib.TTLibError, "can't make 'sfnt' resource, no Macintosh 'name' table found"
