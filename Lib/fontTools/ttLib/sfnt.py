@@ -150,7 +150,8 @@ class SFNTWriter:
 		checksums[-1] = calcChecksum(directory)
 		checksum = Numeric.add.reduce(checksums)
 		# BiboAfba!
-		checksumadjustment = Numeric.array(0xb1b0afba) - checksum
+		checksumadjustment = Numeric.array(0xb1b0afbaL - 0x100000000L,
+				Numeric.Int32) - checksum
 		# write the checksum to the file
 		self.file.seek(self.tables['head'].offset + 8)
 		self.file.write(struct.pack(">l", checksumadjustment))
