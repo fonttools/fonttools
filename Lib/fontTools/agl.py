@@ -1,3 +1,7 @@
+# The URLs in the text below are not correct. The first should be:
+#   http://partners.adobe.com/asn/developer/typeforum/unicodegn.html .
+# The second URL I couldn't find...
+#
 _aglText = """\
 #
 # Name:          Adobe Glyph List
@@ -9,7 +13,7 @@ _aglText = """\
 #   The Adobe Glyph List (AGL) list relates Unicode values (UVs) to glyph
 #   names, and should be used only as described in the document "Unicode and
 #   Glyph Names," at
-#   http://partners.adobe.com/asn/developer/typeforum/unicodegn.html .
+#   http://www.adobe.com/asn/developer/typeforum/unicodegn.html .
 #
 #   The glyph name to UV relation is one to many. 12 glyph names are mapped to
 #   two UVs each; each UV has a separate entry. All other glyph names are
