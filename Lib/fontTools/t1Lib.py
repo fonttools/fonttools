@@ -143,9 +143,9 @@ def readLWFN(path, onlyHeader=0):
 			if ord(res.data[1]) <> 0:
 				raise T1Error, 'corrupt LWFN file'
 			if code in [1, 2]:
-				data.append(res.data[2:])
 				if onlyHeader and code == 2:
 					break
+				data.append(res.data[2:])
 			elif code in [3, 5]:
 				break
 			elif code == 4:
