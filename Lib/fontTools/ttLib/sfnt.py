@@ -129,9 +129,13 @@ class SFNTWriter:
 		directory = sstruct.pack(sfntDirectoryFormat, self)
 		
 		self.file.seek(sfntDirectorySize)
+		seenHead = 0
 		for tag, entry in tables:
+			if tag == "head":
+				seenHead = 1
 			directory = directory + entry.toString()
-		self.calcMasterChecksum(directory)
+		if seenHead:
+			self.calcMasterChecksum(directory)
 		self.file.seek(0)
 		self.file.write(directory)
 		if closeStream:
