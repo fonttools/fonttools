@@ -41,11 +41,10 @@ Dumping 'prep' table...
 """
 
 __author__ = "Just van Rossum, just@letterror.com"
-__version__ = "$Id: __init__.py,v 1.4 1999-12-18 18:06:25 Just Exp $"
+__version__ = "$Id: __init__.py,v 1.5 1999-12-18 21:32:40 Just Exp $"
 __release__ = "1.0a6"
 
 import os
-import stat
 import types
 
 class TTLibError(Exception): pass
@@ -202,7 +201,7 @@ class TTFont:
 		"""
 		if self.tables:
 			raise error, "Can't import XML into existing font."
-		import xmlImport
+		import xmlImport, stat
 		from xml.parsers.xmlproc import xmlproc
 		builder = xmlImport.XMLApplication(self, progress)
 		if progress:
