@@ -341,7 +341,10 @@ class T2CharString(ByteCodeBase):
 					args.append(token)
 	
 	def fromXML(self, (name, attrs, content)):
-		from fontTools.misc.textTools import binary2num
+		from fontTools.misc.textTools import binary2num, readHex
+		if attrs.get("raw"):
+			self.setBytecode(readHex(content))
+			return
 		content = "".join(content)
 		content = content.split()
 		program = []

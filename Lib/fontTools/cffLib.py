@@ -1,7 +1,7 @@
 """cffLib.py -- read/write tools for Adobe CFF fonts."""
 
 #
-# $Id: cffLib.py,v 1.24 2002-05-24 10:38:04 jvr Exp $
+# $Id: cffLib.py,v 1.25 2002-05-24 11:55:37 jvr Exp $
 #
 
 import struct, sstruct
@@ -360,9 +360,13 @@ class GlobalSubrsIndex(Index):
 				"it is ignored when parsed.")
 		xmlWriter.newline()
 		for i in range(len(self)):
-			xmlWriter.begintag("CharString", index=i)
+			subr = self[i]
+			if subr.needsDecompilation():
+				xmlWriter.begintag("CharString", index=i, raw=1)
+			else:
+				xmlWriter.begintag("CharString", index=i)
 			xmlWriter.newline()
-			self[i].toXML(xmlWriter)
+			subr.toXML(xmlWriter)
 			xmlWriter.endtag("CharString")
 			xmlWriter.newline()
 	
@@ -461,13 +465,17 @@ class CharStrings:
 		names.sort()
 		for name in names:
 			charStr, fdSelect = self.getItemAndSelector(name)
+			if charStr.needsDecompilation():
+				raw = [("raw", 1)]
+			else:
+				raw = []
 			if fdSelect is None:
-				xmlWriter.begintag("CharString", name=name)
+				xmlWriter.begintag("CharString", [('name', name)] + raw)
 			else:
 				xmlWriter.begintag("CharString",
-						[('name', name), ('fdSelect', fdSelect)])
+						[('name', name), ('fdSelect', fdSelect)] + raw)
 			xmlWriter.newline()
-			self[name].toXML(xmlWriter)
+			charStr.toXML(xmlWriter)
 			xmlWriter.endtag("CharString")
 			xmlWriter.newline()
 	
@@ -742,8 +750,7 @@ def packCharset(charset, strings):
 		nLeftFunc = packCard16
 	for first, nLeft in ranges:
 		data.append(packCard16(first) + nLeftFunc(nLeft))
-	data = "".join(data)
-	return data
+	return "".join(data)
 
 def parseCharset0(numGlyphs, file, strings):
 	charset = [".notdef"]
