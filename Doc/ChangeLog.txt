@@ -1,4 +1,72 @@
 ----------------------------
+2002/09/12 23:14:59 jvr Tools/ttx 1.9
+macfreeze import hints
+----------------------------
+2002/09/12 22:59:09 jvr Lib/fontTools/ttx.py 1.3
+add simple support for Mac Suitcases, when running on MacOS
+----------------------------
+2002/09/12 22:22:36 jvr Doc/documentation.html 1.5
+2002/09/12 22:22:36 jvr Doc/bugs.txt 1.2
+converging towards 2.0b1
+----------------------------
+2002/09/12 22:03:59 jvr Mac/README.txt 1.2
+note about rustiness
+----------------------------
+2002/09/12 21:48:03 jvr Lib/fontTools/ttLib/tables/otTables.py 1.8
+added manual implementation of LigatureSubst to get nicer XML output
+----------------------------
+2002/09/12 21:21:58 jvr Lib/fontTools/ttLib/tables/otTables.py 1.7
+added manual implementation of AlternateSubst to get nicer XML output
+----------------------------
+2002/09/12 20:51:09 jvr Lib/fontTools/ttLib/tables/otTables.py 1.6
+added manual implementation of ClassDef to get nicer XML output as well as to get rid of GlyphID dependencies
+----------------------------
+2002/09/12 20:05:23 jvr Lib/fontTools/ttx.py 1.2
+doh! fixed wrong indentation, now does batch jobs again...
+----------------------------
+2002/09/12 19:54:02 jvr Lib/fontTools/ttLib/tables/otTables.py 1.5
+added manual implementation of SingleSubst to get nicer XML output as well as to get rid of GlyphID dependencies
+----------------------------
+2002/09/12 19:14:51 jvr MetaTools/roundTrip.py 1.3
+break out of loop when cancelled
+----------------------------
+2002/09/12 19:07:39 jvr Lib/fontTools/ttLib/tables/_n_a_m_e.py 1.7
+don't barf on empty name tables (!)
+----------------------------
+2002/09/12 18:53:49 jvr MetaTools/roundTrip.py 1.2
+adapted doc string to reality; removed -v options
+----------------------------
+2002/09/12 18:34:59 jvr MetaTools/roundTrip.py 1.1
+brand new round trip tool
+----------------------------
+2002/09/12 17:33:12 jvr Tools/ttx 1.8
+2002/09/12 17:33:12 jvr Lib/fontTools/ttx.py 1.1
+moved all ttx code to new fontTools.ttx module
+----------------------------
+2002/09/12 17:22:35 jvr Tools/ttx 1.7
+refactored slightly, preparing for miving most of this code to fontTools.ttx.py
+----------------------------
+2002/09/12 17:09:13 jvr Lib/fontTools/ttLib/tables/otTables.py 1.4
+renamed table to rawTable
+----------------------------
+2002/09/12 17:02:38 jvr Tools/ttroundtrip 1.6
+new version will appear in MetaTools
+----------------------------
+2002/09/12 17:01:25 jvr Tools/ttlist 1.3
+2002/09/12 17:01:25 jvr Tools/ttdump 1.6
+2002/09/12 17:01:25 jvr Tools/ttcompile 1.7
+these tools have been replaced by the multi-purpose ttx tool
+----------------------------
+2002/09/12 16:47:02 jvr Lib/fontTools/ttLib/tables/otTables.py 1.3
+added manual implementation for the Coverage subtable to get rid of GlyphID dependencies
+----------------------------
+2002/09/12 16:45:48 jvr Lib/fontTools/ttLib/tables/otConverters.py 1.5
+2002/09/12 16:45:48 jvr Lib/fontTools/ttLib/tables/otBase.py 1.10
+minor refactoring
+----------------------------
+2002/09/10 20:47:52 jvr Doc/ChangeLog.txt 1.3
+updating
+----------------------------
 2002/09/10 20:43:55 jvr Windows/fonttools-win-setup.txt 1.5
 improved readme
 ----------------------------
