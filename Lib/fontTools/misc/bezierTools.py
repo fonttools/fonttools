@@ -241,6 +241,10 @@ def solveCubic(a, b, c, d,
 		return [x]
 
 
+#
+# Conversion routines for points to parameters and vice versa
+#
+
 def calcQuadraticParameters(pt1, pt2, pt3):
 	pt1, pt2, pt3 = Numeric.array((pt1, pt2, pt3))
 	c = pt1
