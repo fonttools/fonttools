@@ -17,11 +17,25 @@ new outlines. Eg. an outline object can be both a drawable object (it has a
 draw() method) as well as a pen itself: you *build* an outline using pen
 methods.
 
-The AbstractPen class defines the Pen protocol.
+The AbstractPen class defines the Pen protocol. It implements almost
+nothing (only no-op closePath() and endPath() methods), but is useful
+for documentation purposes. Subclassing it basically tells the reader:
+"this class implements the Pen protocol.". An examples of an AbstractPen
+subclass is fontTools.pens.transformPen.TransformPen.
 
-The BasePen class is a base implementation useful for drawing pens. See the
-comments in that class for which methods you need to override.
+The BasePen class is a base implementation useful for pens that actually
+draw (for example a pen renders outlines using a native graphics engine).
+BasePen contains a lot of base functionality, making it very easy to build
+a pen that fully conforms to the pen protocol. Note that if you subclass
+BasePen, you _don't_ override moveTo(), lineTo(), etc., but _moveTo(),
+_lineTo(), etc. See the BasePen doc string for details. Examples of
+BasePen subclasses are fontTools.pens.boundsPen.BoundsPen and
+fontTools.pens.cocoaPen.CocoaPen.
+
+Coordinates are usually expressed as (x, y) tuples, but generally any
+sequence of length 2 will do.
 """
+
 
 __all__ = ["AbstractPen", "BasePen"]
 
@@ -29,11 +43,13 @@ __all__ = ["AbstractPen", "BasePen"]
 class AbstractPen:
 
 	def moveTo(self, pt):
-		"""Begin a new sub path, set the current point to 'pt'."""
+		"""Begin a new sub path, set the current point to 'pt'. You must
+		end each sub path with a call to pen.closePath() or pen.endPath().
+		"""
 		raise NotImplementedError
 
 	def lineTo(self, pt):
-		"""Draw a straight line."""
+		"""Draw a straight line from the current point to 'pt'."""
 		raise NotImplementedError
 
 	def curveTo(self, *points):
@@ -74,7 +90,15 @@ class AbstractPen:
 		raise NotImplementedError
 
 	def closePath(self):
-		"""Close the current sub path."""
+		"""Close the current sub path. You must call either pen.closePath()
+		or pen.endPath() after each sub path.
+		"""
+		pass
+
+	def endPath(self):
+		"""End the current sub path, but don't close it. You must call
+		either pen.closePath() or pen.endPath() after each sub path.
+		"""
 		pass
 
 	def addComponent(self, glyphName, transformation):
@@ -88,7 +112,11 @@ class AbstractPen:
 
 class BasePen(AbstractPen):
 
-	"""Base class for drawing pens."""
+	"""Base class for drawing pens. You must override _moveTo, _lineTo and
+	_curveToOne. You may additionally override _closePath, _endPath,
+	addComponent and/or _qCurveToOne. You should not override any other
+	methods.
+	"""
 
 	def __init__(self, glyphSet):
 		self.glyphSet = glyphSet
@@ -108,6 +136,9 @@ class BasePen(AbstractPen):
 	# may override
 
 	def _closePath(self):
+		pass
+
+	def _endPath(self):
 		pass
 
 	def _qCurveToOne(self, pt1, pt2):
@@ -142,6 +173,10 @@ class BasePen(AbstractPen):
 
 	def closePath(self):
 		self._closePath()
+		self.__currentPoint = None
+
+	def endPath(self):
+		self._endPath()
 		self.__currentPoint = None
 
 	def moveTo(self, pt):
@@ -231,6 +266,7 @@ class BasePen(AbstractPen):
 
 
 class _TestPen(BasePen):
+	"""Test class that prints PostScript to stdout."""
 	def _moveTo(self, pt):
 		print "%s %s moveto" % (pt[0], pt[1])
 	def _lineTo(self, pt):
