@@ -22,7 +22,7 @@ class table__l_o_c_a(DefaultTable.DefaultTable):
 		if not longFormat:
 			locations = locations * 2
 		if len(locations) < (ttFont['maxp'].numGlyphs + 1):
-			raise  ttLib.TTLibError, "corrupt 'loca' table"
+			raise  ttLib.TTLibError, "corrupt 'loca' table, or wrong numGlyphs in 'maxp': %d %d" % (len(locations) - 1, ttFont['maxp'].numGlyphs)
 		self.locations = locations[:ttFont['maxp'].numGlyphs + 1]
 	
 	def compile(self, ttFont):

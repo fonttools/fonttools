@@ -68,7 +68,7 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
 			return
 		if not hasattr(self, "tables"):
 			self.tables = []
-		format = safeEval(name[12])
+		format = safeEval(name[12:])
 		if not cmap_classes.has_key(format):
 			table = cmap_format_unknown(format)
 		else:
@@ -102,12 +102,12 @@ class CmapSubtable:
 		selfTuple = (
 					self.platformID,
 					self.platEncID,
-					self.version,
+					self.language,
 					self.__dict__)
 		otherTuple = (
 					other.platformID,
 					other.platEncID,
-					other.version,
+					other.language,
 					other.__dict__)
 		return cmp(selfTuple, otherTuple)
 
@@ -115,8 +115,8 @@ class CmapSubtable:
 class cmap_format_0(CmapSubtable):
 	
 	def decompile(self, data, ttFont):
-		format, length, version = struct.unpack(">HHH", data[:6])
-		self.version = int(version)
+		format, length, language = struct.unpack(">HHH", data[:6])
+		self.language = int(language)
 		assert len(data) == 262 == length
 		glyphIdArray = array.array("B")
 		glyphIdArray.fromstring(data[6:])
@@ -132,7 +132,7 @@ class cmap_format_0(CmapSubtable):
 			# reusing the charCodes list!
 			charCodes[charCode] = ttFont.getGlyphID(self.cmap[charCode])
 		glyphIdArray = array.array("B", charCodes)
-		data = struct.pack(">HHH", 0, 262, self.version) + glyphIdArray.tostring()
+		data = struct.pack(">HHH", 0, 262, self.language) + glyphIdArray.tostring()
 		assert len(data) == 262
 		return data
 	
@@ -140,7 +140,7 @@ class cmap_format_0(CmapSubtable):
 		writer.begintag(self.__class__.__name__, [
 				("platformID", self.platformID),
 				("platEncID", self.platEncID),
-				("version", self.version),
+				("language", self.language),
 				])
 		writer.newline()
 		items = self.cmap.items()
@@ -152,7 +152,7 @@ class cmap_format_0(CmapSubtable):
 		writer.newline()
 	
 	def fromXML(self, (name, attrs, content), ttFont):
-		self.version = safeEval(attrs["version"])
+		self.language = safeEval(attrs["language"])
 		self.cmap = {}
 		for element in content:
 			if type(element) <> TupleType:
@@ -175,8 +175,8 @@ class SubHeader:
 class cmap_format_2(CmapSubtable):
 	
 	def decompile(self, data, ttFont):
-		format, length, version = struct.unpack(">HHH", data[:6])
-		self.version = int(version)
+		format, length, language = struct.unpack(">HHH", data[:6])
+		self.language = int(language)
 		data = data[6:]
 		subHeaderKeys = []
 		maxSubHeaderindex = 0
@@ -357,7 +357,7 @@ class cmap_format_2(CmapSubtable):
 		length = 6 + 512 + 8*len(subHeaderList) # header, 256 subHeaderKeys, and subheader array.
 		for subhead in 	subHeaderList[:-1]:
 			length = length + subhead.entryCount*2
-		data = struct.pack(">HHH", 2, length, self.version)
+		data = struct.pack(">HHH", 2, length, self.language)
 		for index in subHeaderKeys:
 			data = data + struct.pack(">H", index*8)
 		for subhead in 	subHeaderList:
@@ -373,7 +373,7 @@ class cmap_format_2(CmapSubtable):
 		writer.begintag(self.__class__.__name__, [
 				("platformID", self.platformID),
 				("platEncID", self.platEncID),
-				("version", self.version),
+				("language", self.language),
 				])
 		writer.newline()
 		items = self.cmap.items()
@@ -385,7 +385,7 @@ class cmap_format_2(CmapSubtable):
 		writer.newline()
 	
 	def fromXML(self, (name, attrs, content), ttFont):
-		self.version = safeEval(attrs["version"])
+		self.language = safeEval(attrs["language"])
 		self.cmap = {}
 		for element in content:
 			if type(element) <> TupleType:
@@ -487,7 +487,7 @@ def splitRange(startCode, endCode, cmap):
 class cmap_format_4(CmapSubtable):
 	
 	def decompile(self, data, ttFont):
-		(format, length, self.version, segCountX2, 
+		(format, length, self.language, segCountX2, 
 				searchRange, entrySelector, rangeShift) = \
 					struct.unpack(cmap_format_4_format, data[:14])
 		assert len(data) == length, "corrupt cmap table (%d, %d)" % (len(data), length)
@@ -588,7 +588,7 @@ class cmap_format_4(CmapSubtable):
 			allCodes.byteswap()
 		data = allCodes.tostring()
 		length = struct.calcsize(cmap_format_4_format) + len(data)
-		header = struct.pack(cmap_format_4_format, self.format, length, self.version, 
+		header = struct.pack(cmap_format_4_format, self.format, length, self.language, 
 				segCountX2, searchRange, entrySelector, rangeShift)
 		data = header + data
 		return data
@@ -600,7 +600,7 @@ class cmap_format_4(CmapSubtable):
 		writer.begintag(self.__class__.__name__, [
 				("platformID", self.platformID),
 				("platEncID", self.platEncID),
-				("version", self.version),
+				("language", self.language),
 				])
 		writer.newline()
 		
@@ -613,7 +613,7 @@ class cmap_format_4(CmapSubtable):
 		writer.newline()
 	
 	def fromXML(self, (name, attrs, content), ttFont):
-		self.version = safeEval(attrs["version"])
+		self.language = safeEval(attrs["language"])
 		self.cmap = {}
 		for element in content:
 			if type(element) <> TupleType:
@@ -627,11 +627,11 @@ class cmap_format_4(CmapSubtable):
 class cmap_format_6(CmapSubtable):
 	
 	def decompile(self, data, ttFont):
-		format, length, version, firstCode, entryCount = struct.unpack(
+		format, length, language, firstCode, entryCount = struct.unpack(
 				">HHHHH", data[:10])
-		self.version = int(version)
+		self.language = int(language)
 		firstCode = int(firstCode)
-		self.version = int(version)
+		self.language = int(language)
 		data = data[10:]
 		#assert len(data) == 2 * entryCount  # XXX not true in Apple's Helvetica!!!
 		glyphIndexArray = array.array("H")
@@ -657,7 +657,7 @@ class cmap_format_6(CmapSubtable):
 			glyphIndexArray.byteswap()
 		data = glyphIndexArray.tostring()
 		header = struct.pack(">HHHHH", 
-				6, len(data) + 10, self.version, firstCode, len(self.cmap))
+				6, len(data) + 10, self.language, firstCode, len(self.cmap))
 		return header + data
 	
 	def toXML(self, writer, ttFont):
@@ -666,7 +666,7 @@ class cmap_format_6(CmapSubtable):
 		writer.begintag(self.__class__.__name__, [
 				("platformID", self.platformID),
 				("platEncID", self.platEncID),
-				("version", self.version),
+				("language", self.language),
 				])
 		writer.newline()
 		
@@ -678,7 +678,7 @@ class cmap_format_6(CmapSubtable):
 		writer.newline()
 	
 	def fromXML(self, (name, attrs, content), ttFont):
-		self.version = safeEval(attrs["version"])
+		self.language = safeEval(attrs["language"])
 		self.cmap = {}
 		for element in content:
 			if type(element) <> TupleType:
@@ -694,7 +694,7 @@ class cmap_format_12(CmapSubtable):
 	def decompile(self, data, ttFont):
 		format, reserved, length, language, nGroups = struct.unpack(">HHLLL", data[:16])
 		data = data[16:]
-		assert len(data) == nGroups*12 == (length -16) 
+		assert len(data) == nGroups*12 == (length - 16) 
 		self.cmap = cmap = {}
 		for i in range(nGroups):
 			startCharCode, endCharCode, glyphID = struct.unpack(">LLL",data[:12] )
@@ -702,7 +702,7 @@ class cmap_format_12(CmapSubtable):
 			while startCharCode <= endCharCode:
 				glyphName = ttFont.getGlyphName(glyphID)
 				cmap[startCharCode] = glyphName
-				glyphID = glyphID +1
+				glyphID = glyphID + 1
 				startCharCode = startCharCode + 1
 		self.format = format
 		self.reserved = reserved
@@ -719,23 +719,34 @@ class cmap_format_12(CmapSubtable):
 		charCodes.sort()
 		startCharCode = charCodes[0]
 		startGlyphID = cmap[startCharCode]
-		nextGlyphID = startGlyphID + 1
-		nGroups = 1
+		prevCharCode = startCharCode
+		prevGlyphID = startGlyphID
+		nGroups = 0
 		data = ""
-		for charCode in charCodes:
+
+		for charCode in charCodes[1:]:
 			glyphID = cmap[charCode]
-			if glyphID != nextGlyphID:
-				endCharCode =  charCode -1
+			if charCode != prevCharCode+1 or glyphID != prevGlyphID+1:
+				endCharCode = prevCharCode
 				data = data + struct.pack(">LLL", startCharCode, endCharCode, startGlyphID)
 				startGlyphID = glyphID
 				startCharCode = charCode
 				nGroups = nGroups + 1
-			nextGlyphID = glyphID +1
+			prevCharCode = charCode
+			prevGlyphID = glyphID
+		# Need to write out the last group
+		endCharCode = prevCharCode
+		data = data + struct.pack(">LLL", startCharCode, endCharCode, startGlyphID)
+		nGroups = nGroups + 1
 
-		data = struct.pack(">HHLLL", self.format, 0 , len(data), self.language, nGroups) + data
+		# Prepend header information
+		data = struct.pack(">HHLLL", self.format, 0, len(data)+16, self.language, nGroups) + data
 		return data
 	
 	def toXML(self, writer, ttFont):
+		from fontTools.unicode import Unicode
+		codes = self.cmap.items()
+		codes.sort()
 		writer.begintag(self.__class__.__name__, [
 				("platformID", self.platformID),
 				("platEncID", self.platEncID),
@@ -746,20 +757,16 @@ class cmap_format_12(CmapSubtable):
 				("nGroups", self.nGroups),
 				])
 		writer.newline()
-		items = self.cmap.items()
-		items.sort()
-		for code, name in items:
+
+		for code, name in codes:
 			writer.simpletag("map", code=hex(code), name=name)
+			writer.comment(Unicode[code])
 			writer.newline()
 		writer.endtag(self.__class__.__name__)
 		writer.newline()
 	
 	def fromXML(self, (name, attrs, content), ttFont):
-		self.format = safeEval(attrs["format"])
-		self.reserved = safeEval(attrs["reserved"])
-		self.length = safeEval(attrs["length"])
 		self.language = safeEval(attrs["language"])
-		self.nGroups = safeEval(attrs["nGroups"])
 		self.cmap = {}
 		for element in content:
 			if type(element) <> TupleType:
