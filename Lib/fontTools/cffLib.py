@@ -1,7 +1,7 @@
 """cffLib.py -- read/write tools for Adobe CFF fonts."""
 
 #
-# $Id: cffLib.py,v 1.9 2002-05-14 12:22:03 jvr Exp $
+# $Id: cffLib.py,v 1.10 2002-05-14 12:37:36 jvr Exp $
 #
 
 import struct, sstruct
@@ -73,15 +73,13 @@ class CFFFontSet:
 
 class CFFFont:
 	
-	defaults = topDictDefaults
-	
 	def __init__(self):
 		pass
 	
 	def __getattr__(self, attr):
-		if not self.defaults.has_key(attr):
+		if not topDictDefaults.has_key(attr):
 			raise AttributeError, attr
-		return self.defaults[attr]
+		return topDictDefaults[attr]
 	
 	def fromDict(self, dict):
 		self.__dict__.update(dict)
@@ -253,12 +251,10 @@ class CFFFont:
 
 class PrivateDict:
 	
-	defaults = privateDictDefaults
-	
 	def __init__(self):
 		pass
 	
-	def decompile(self, data, privateData, strings):
+	def decompile(self, file, privateData, strings):
 		p = PrivateDictDecompiler(strings)
 		p.decompile(privateData)
 		self.fromDict(p.getDict())
@@ -266,8 +262,8 @@ class PrivateDict:
 		# get local subrs
 		#print "YYY Private.Subrs:", self.Subrs
 		if hasattr(self, "Subrs"):
-			chunk = data[self.Subrs:]
-			localSubrs, restdata = readINDEX(chunk)
+			file.seek(self.Subrs, 1)
+			localSubrs = readINDEX(file)
 			self.Subrs = map(psCharStrings.T2CharString, localSubrs)
 		else:
 			self.Subrs = []
@@ -303,9 +299,9 @@ class PrivateDict:
 		xmlWriter.newline()
 	
 	def __getattr__(self, attr):
-		if not self.defaults.has_key(attr):
+		if not privateDictDefaults.has_key(attr):
 			raise AttributeError, attr
-		return self.defaults[attr]
+		return privateDictDefaults[attr]
 	
 	def fromDict(self, dict):
 		self.__dict__.update(dict)
@@ -313,6 +309,8 @@ class PrivateDict:
 
 def readINDEX(file):
 	count, = struct.unpack(">H", file.read(2))
+	if count == 0:
+		return []
 	offSize = ord(file.read(1))
 	offsets = []
 	for index in range(count+1):
@@ -321,10 +319,11 @@ def readINDEX(file):
 		offset, = struct.unpack(">L", chunk)
 		offset = int(offset)
 		offsets.append(offset)
+	offsetBase = file.tell() - 1
 	prev = offsets[0]
 	stuff = []
-	next = offsets[0]
 	for next in offsets[1:]:
+		assert offsetBase + prev == file.tell()
 		chunk = file.read(next - prev)
 		assert len(chunk) == next - prev
 		stuff.append(chunk)
