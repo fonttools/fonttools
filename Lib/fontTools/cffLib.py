@@ -1,7 +1,7 @@
 """cffLib.py -- read/write tools for Adobe CFF fonts."""
 
 #
-# $Id: cffLib.py,v 1.26 2002-07-23 16:42:11 jvr Exp $
+# $Id: cffLib.py,v 1.27 2002-09-09 14:18:39 jvr Exp $
 #
 
 import struct, sstruct
@@ -385,6 +385,7 @@ class GlobalSubrsIndex(Index):
 			sel = fdSelect[index]
 		return self[index], sel
 
+
 class SubrsIndex(GlobalSubrsIndex):
 	compilerClass = SubrsCompiler
 
@@ -569,6 +570,12 @@ class SimpleConverter:
 		xmlWriter.newline()
 	def xmlRead(self, (name, attrs, content), parent):
 		return attrs["value"]
+
+class Latin1Converter(SimpleConverter):
+	def xmlRead(self, (name, attrs, content), parent):
+		s = unicode(attrs["value"], "utf-8")
+		return s.encode("latin-1")
+
 
 def parseNum(s):
 	try:
@@ -840,8 +847,8 @@ topDictOperators = [
 	((12, 30), 'ROS',        ('SID','SID','number'), None,      ROSConverter()),
 	((12, 20), 'SyntheticBase',      'number',       None,      None),
 	(0,        'version',            'SID',          None,      None),
-	(1,        'Notice',             'SID',          None,      None),
-	((12, 0),  'Copyright',          'SID',          None,      None),
+	(1,        'Notice',             'SID',          None,      Latin1Converter()),
+	((12, 0),  'Copyright',          'SID',          None,      Latin1Converter()),
 	(2,        'FullName',           'SID',          None,      None),
 	((12, 38), 'FontName',           'SID',          None,      None),
 	(3,        'FamilyName',         'SID',          None,      None),
