@@ -1,6 +1,7 @@
 from fontTools import ttLib
 from fontTools.misc.textTools import safeEval
 from fontTools.ttLib.tables.DefaultTable import DefaultTable
+import os
 
 
 class TTXParseError(Exception): pass
@@ -10,14 +11,15 @@ BUFSIZE = 0x4000
 
 class ExpatParser:
 	
-	def __init__(self, ttFont, progress=None):
+	def __init__(self, ttFont, fileName, progress=None):
 		self.ttFont = ttFont
+		self.fileName = fileName
 		self.progress = progress
 		self.root = None
 		self.contentStack = []
 		self.stackSize = 0
 	
-	def parseFile(self, file):
+	def parse(self):
 		from xml.parsers.expat import ParserCreate
 		parser = ParserCreate()
 		parser.returns_unicode = 0
@@ -25,6 +27,7 @@ class ExpatParser:
 		parser.EndElementHandler = self.endElementHandler
 		parser.CharacterDataHandler = self.characterDataHandler
 		
+		file = open(self.fileName)
 		pos = 0
 		while 1:
 			chunk = file.read(BUFSIZE)
@@ -35,6 +38,7 @@ class ExpatParser:
 			if self.progress:
 				self.progress.set(pos / 100)
 			parser.Parse(chunk, 0)
+		file.close()
 	
 	def startElementHandler(self, name, attrs):
 		stackSize = self.stackSize
@@ -42,12 +46,19 @@ class ExpatParser:
 		if not stackSize:
 			if name <> "ttFont":
 				raise TTXParseError, "illegal root tag: %s" % name
-			sfntVersion = attrs.get("sfntVersion", "\000\001\000\000")
-			if len(sfntVersion) <> 4:
-				sfntVersion = safeEval('"' + sfntVersion + '"')
-			self.ttFont.sfntVersion = sfntVersion
+			sfntVersion = attrs.get("sfntVersion")
+			if sfntVersion is not None:
+				if len(sfntVersion) <> 4:
+					sfntVersion = safeEval('"' + sfntVersion + '"')
+				self.ttFont.sfntVersion = sfntVersion
 			self.contentStack.append([])
 		elif stackSize == 1:
+			subFile = attrs.get("src")
+			if subFile is not None:
+				subFile = os.path.join(os.path.dirname(self.fileName), subFile)
+				importXML(self.ttFont, subFile, self.progress)
+				self.contentStack.append([])
+				return
 			msg = "Parsing '%s' table..." % ttLib.xmltag2tag(name)
 			if self.progress:
 				self.progress.setlabel(msg)
@@ -120,8 +131,6 @@ def importXML(ttFont, fileName, progress=None):
 	if progress:
 		import stat
 		progress.set(0, os.stat(fileName)[stat.ST_SIZE] / 100 or 1)
-	p = ExpatParser(ttFont, progress)
-	file = open(fileName)
-	p.parseFile(file)
-	file.close()
+	p = ExpatParser(ttFont, fileName, progress)
+	p.parse()
 
