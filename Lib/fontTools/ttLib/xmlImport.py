@@ -20,6 +20,11 @@ class ExpatParser:
 		self.stackSize = 0
 	
 	def parse(self):
+		file = open(self.fileName)
+		self.parseFile(file)
+		file.close()
+	
+	def parseFile(self, file):
 		from xml.parsers.expat import ParserCreate
 		parser = ParserCreate()
 		parser.returns_unicode = 0
@@ -27,7 +32,6 @@ class ExpatParser:
 		parser.EndElementHandler = self.endElementHandler
 		parser.CharacterDataHandler = self.characterDataHandler
 		
-		file = open(self.fileName)
 		pos = 0
 		while 1:
 			chunk = file.read(BUFSIZE)
@@ -38,7 +42,6 @@ class ExpatParser:
 			if self.progress:
 				self.progress.set(pos / 100)
 			parser.Parse(chunk, 0)
-		file.close()
 	
 	def startElementHandler(self, name, attrs):
 		stackSize = self.stackSize
