@@ -16,6 +16,8 @@ __all__ = [
 from fontTools.misc.arrayTools import calcBounds
 import Numeric
 
+epsilon = 1e-12
+
 
 def calcQuadraticBounds(pt1, pt2, pt3):
 	"""Return the bounding rectangle for a qudratic bezier segment.
@@ -237,8 +239,8 @@ def solveQuadratic(a, b, c,
 	This function returns a list of roots. Note that the returned list
 	is neither guaranteed to be sorted nor to contain unique values!
 	"""
-	if a == 0.0:
-		if b == 0.0:
+	if abs(a) < epsilon:
+		if abs(b) < epsilon:
 			# We have a non-equation; therefore, we have no valid solution
 			roots = []
 		else:
@@ -269,7 +271,7 @@ def solveCubic(a, b, c, d,
 	#   public domain by Ross Cottrell
 	# found at: http://www.strangecreations.com/library/snippets/Cubic.C
 	#
-	if abs(a) < 1e-6:
+	if abs(a) < epsilon:
 		# don't just test for zero; for very small values of 'a' solveCubic()
 		# returns unreliable results, so we fall back to quad.
 		return solveQuadratic(b, c, d)
