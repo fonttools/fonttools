@@ -1,0 +1,6 @@
+Known bugs
+
+- 'kern' subtable format 2 has not been implemented properly
+- The code has hardly been tested on 64-bit platforms -- there are 
+  still some places where it assumes a long is 32 bits.
+

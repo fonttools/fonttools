@@ -1,0 +1,49 @@
+FontTools Version 1.0 alpha 6 (released March 15 2000)
+
+- Big reorganization: made ttLib a subpackage of the new fontTools package,
+  changed several module names. Called the entire suite "FontTools"
+- Added several submodules to fontTools, some new, some older.
+- Added experimental CFF/GPOS/GSUB support to ttLib, read-only (but XML dumping
+  of GPOS/GSUB is for now disabled)
+- Fixed hdmx endian bug
+- Added -b option to ttCompile.py, it disables recalculation of bounding boxes,
+  as requested by Werner Lemberg.
+- Renamed tt2xml.pt to ttDump.py and xml2tt.py to ttCompile.py
+- Use ".ttx" as file extension instead of ".xml".
+- TTX is now the name of the XML-based *format* for TT fonts, and not just
+  an application.
+
+Version 1.0 alpha 5 (never released)
+
+- More tables supported: hdmx, vhea, vmtx
+
+Version 1.0 alpha 3 & 4 (never released)
+
+- fixed most portability issues
+- retracted the "Euro_or_currency" change from 1.0a2: it was nonsense!
+
+Version 1.0 alpha 2 (released as binary for MacOS, 2 May 1999)
+
+- genenates full FOND resources: including width table, PS
+  font name info and kern table if applicable. 
+- added cmap format 4 support. Extra: dumps Unicode char names as XML comments! 
+- added cmap format 6 support 
+- now accepts true type files starting with "true"
+  (instead of just 0x00010000 and "OTTO") 
+- 'glyf' table support is now complete: I added support for composite scale, 
+  xy-scale and two-by-two for the 'glyf' table. For now, component offset scale 
+  behaviour defaults to Apple-style. This only affects the (re)calculation of 
+  the glyph bounding box. 
+- changed "Euro" to "Euro_or_currency" in the Standard Apple Glyph order list, 
+  since we cannot tell from the 'post' table which is meant. I should probably 
+  doublecheck with a Unicode encoding if available. (This does not affect the 
+  output!)
+
+Fixed bugs: 
+- 'hhea' table is now recalculated correctly 
+- fixed wrong assumption about sfnt resource names
+
+Version 1.0 alpha 1 (27 Apr 1999)
+
+- initial binary release for MacOS
+
