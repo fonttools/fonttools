@@ -44,6 +44,10 @@ Name: {group}\TTX documentation; Filename: {app}\documentation.html; IconIndex: 
 Name: {group}\Changes; Filename: {app}\changes.txt; IconIndex: 0
 Name: {group}\Bugs; Filename: {app}\bugs.txt; IconIndex: 0
 Name: {group}\License; Filename: {app}\LICENSE.txt; IconIndex: 0
+Name: {reg:HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders,SendTo}\TTX; Filename: {app}\ttx.exe; WorkingDir: {reg:HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders,SendTo}; IconFilename: {app}\ttx.ico; IconIndex: 0; MinVersion: 0,5.00.2195
 
 [_ISTool]
 EnableISX=false
+
+[Registry]
+Root: HKCR; Subkey: .ttx; ValueType: string; ValueData: {reg:HKCR\.xml,}; Flags: createvalueifdoesntexist uninsdeletekey
