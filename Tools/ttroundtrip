@@ -1,11 +1,10 @@
 #! /usr/bin/env python
 
 """ttroundtrip font1 ... fontN
-Dump each font as TTX, compile again to TTF or OTF and dump again.
-Then do a diff on the two TTX files. Log problems and diffs to a
-file called "report.txt" in the current directory. This is only
-for testing FontTools/TTX, the resulting files are deleted
-afterwards."""
+Dump each TT/OT font as a TTX file, compile again to TTF or OTF and dump again.
+Then do a diff on the two TTX files. Log problems and diffs to a file called
+"report.txt" in the current directory. This is only for testing FontTools/TTX,
+the resulting files are deleted afterwards."""
 
 
 import sys
