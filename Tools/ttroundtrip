@@ -7,10 +7,13 @@
     and diffs to a file called "report.txt" in the current directory.
     This is only for testing FontTools/TTX, the resulting files are
     deleted afterwards.
-    
+
     This tool supports some of ttdump's command line options (-i, -t
     and -x) and they will in fact be passed to ttdump. Specifying -t
     or -x implies ttcompile -i <originalfile> on the way back.
+
+    Normally all output from ttdump and ttcompile is suppressed,
+    -v (verbose) causes it to be shown.
 """
 
 import sys
@@ -29,9 +32,12 @@ def usage():
 
 def doCommand(cmd, verbose=1, okresult=None):
 	print "--> ", cmd
-	f = os.popen(cmd)
+	output = os.popen(cmd, "r", 1)
 	lines = []
-	for line in f:
+	while 1:
+		line = output.readline()
+		if not line:
+			break
 		if verbose:
 			sys.stdout.write(line)
 		lines.append(line)
@@ -42,7 +48,7 @@ def doCommand(cmd, verbose=1, okresult=None):
 
 
 try:
-	options, args = getopt.getopt(sys.argv[1:], "it:x:")
+	options, args = getopt.getopt(sys.argv[1:], "it:x:v")
 except getopt.GetoptError:
 	usage()
 
@@ -51,11 +57,15 @@ if not args:
 
 dumpOptions = []
 compileWithMinusI = 0
-
+verbose = 0
 for option, value in options:
-	dumpOptions.extend((option, value))
 	if option in ("-t", "-x"):
 		compileWithMinusI = 1
+		dumpOptions.extend((option, value))
+	elif option == "-v":
+		verbose = 1
+	else:
+		dumpOptions.extend((option, value))
 
 dumpOptions = " ".join(dumpOptions)
 if dumpOptions:
@@ -73,23 +83,22 @@ for ttFile in args:
 	
 	try:
 		cmd = 'ttdump -f %s"%s" "%s"' % (dumpOptions, ttFile, xmlFile1)
-		doCommand(cmd, 0)
+		doCommand(cmd, verbose)
 		if compileWithMinusI:
 			cmd = 'ttcompile -f -i "%s" "%s" "%s"' % (ttFile, xmlFile1, ttFile2)
 		else:
 			cmd = 'ttcompile -f "%s" "%s"' % (xmlFile1, ttFile2)
-		doCommand(cmd, 0)
+		doCommand(cmd, verbose)
 		cmd = 'ttdump -f %s"%s" "%s"' % (dumpOptions, ttFile2, xmlFile2)
-		doCommand(cmd, 0)
+		doCommand(cmd, verbose)
 		cmd = 'diff -c2 -I ".*modified value\|checkSumAdjustment.*" "%s" "%s"' % (xmlFile1, xmlFile2)
-		diff = doCommand(cmd, 0, okresult=1)
+		diff = doCommand(cmd, 1, okresult=1)
 		if diff:
 			report.write("=============================================================\n")
 			report.write("%s\n" % xmlFile1)
 			report.write("%s\n" % xmlFile2)
 			report.write("-------------------------------------------------------------\n")
 			report.write(diff)
-			print diff
 		print "--- done ---"
 	except Error, why:
 		report.write("=============================================================\n")
