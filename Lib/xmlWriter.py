@@ -1,17 +1,15 @@
 """xmlWriter.py -- Simple XML authoring class"""
 
-__author__ = "jvr"
-__version__ = "0.9"
-
 import string
 import struct
 import os
 
 INDENT = "  "
 
+
 class XMLWriter:
 	
-	def __init__(self, file, indentwhite=INDENT, idlefunc=None):
+	def __init__(self, file, indentwhite=INDENT, idlefunc=None, encoding="ISO-8859-1"):
 		if type(file) == type(""):
 			self.file = open(file, "w")
 			if os.name == "mac":
@@ -26,7 +24,10 @@ class XMLWriter:
 		self.needindent = 1
 		self.idlefunc = idlefunc
 		self.idlecounter = 0
-		self.writeraw("<?xml version='1.0'?>")
+		if encoding:
+			self.writeraw('<?xml version="1.0" encoding="%s"?>' % encoding)
+		else:
+			self.writeraw('<?xml version="1.0"?>')
 		self.newline()
 	
 	def close(self):
