@@ -42,7 +42,7 @@ Dumping 'prep' table...
 """
 
 #
-# $Id: __init__.py,v 1.23 2002-05-10 19:03:34 jvr Exp $
+# $Id: __init__.py,v 1.24 2002-05-11 21:18:12 jvr Exp $
 #
 
 import os
@@ -193,20 +193,25 @@ class TTFont:
 			writer.newline()
 			writer.newline()
 		else:
-			# 'fileOrPath' must now be a path (pointing to a directory)
-			if not os.path.exists(fileOrPath):
-				os.mkdir(fileOrPath)
-			fileNameTemplate = os.path.join(fileOrPath, 
-					os.path.basename(fileOrPath)) + ".%s.ttx"
+			# 'fileOrPath' must now be a path
+			path, ext = os.path.splitext(fileOrPath)
+			fileNameTemplate = path + ".%s" + ext
+			collection = xmlWriter.XMLWriter(fileOrPath)
+			collection.begintag("ttFont", sfntVersion=`self.sfntVersion`[1:-1], 
+					ttLibVersion=version)
+			collection.newline()
 		
 		for i in range(numTables):
 			tag = tables[i]
+			xmltag = tag2xmltag(tag)
 			if splitTables:
-				writer = xmlWriter.XMLWriter(fileNameTemplate % tag2identifier(tag))
-				writer.begintag("ttFont", sfntVersion=`self.sfntVersion`[1:-1], 
-						ttLibVersion=version)
+				tablePath = fileNameTemplate % tag2identifier(tag)
+				writer = xmlWriter.XMLWriter(tablePath)
+				writer.begintag("ttFont", ttLibVersion=version)
 				writer.newline()
 				writer.newline()
+				collection.simpletag(xmltag, src=os.path.basename(tablePath))
+				collection.newline()
 			table = self[tag]
 			report = "Dumping '%s' table..." % tag
 			if progress:
@@ -215,7 +220,6 @@ class TTFont:
 				debugmsg(report)
 			else:
 				print report
-			xmltag = tag2xmltag(tag)
 			if hasattr(table, "ERROR"):
 				writer.begintag(xmltag, ERROR="decompilation error")
 			else:
@@ -238,6 +242,10 @@ class TTFont:
 			writer.endtag("ttFont")
 			writer.newline()
 			writer.close()
+		else:
+			collection.endtag("ttFont")
+			collection.newline()
+			collection.close()
 		if self.verbose:
 			debugmsg("Done dumping TTX")
 	
