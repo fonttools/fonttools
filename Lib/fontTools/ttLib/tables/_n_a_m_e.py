@@ -24,7 +24,7 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 		self.names = []
 		for i in range(n):
 			name, data = sstruct.unpack2(nameRecordFormat, data, NameRecord())
-			name.fixlongs()
+			name.fixLongs()
 			name.string = stringData[name.offset:name.offset+name.length]
 			assert len(name.string) == name.length
 			#if (name.platEncID, name.platformID) in ((0, 0), (1, 3)):
@@ -65,7 +65,7 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 		self.names.append(name)
 		name.fromXML((name, attrs, content), ttFont)
 	
-	def getname(self, nameID, platformID, platEncID, langID=None):
+	def getName(self, nameID, platformID, platEncID, langID=None):
 		for namerecord in self.names:
 			if (	namerecord.nameID == nameID and 
 					namerecord.platformID == platformID and 
@@ -88,7 +88,7 @@ class NameRecord:
 				("langID", hex(self.langID)),
 						])
 		writer.newline()
-		if self.platformID == 0 or (self.platformID == 3 and self.platEncID == 1):
+		if self.platformID == 0 or (self.platformID == 3 and self.platEncID in (0, 1)):
 			writer.write16bit(self.string)
 		else:
 			writer.write8bit(self.string)
@@ -129,7 +129,7 @@ class NameRecord:
 		return "<NameRecord NameID=%d; PlatformID=%d; LanguageID=%d>" % (
 				self.nameID, self.platformID, self.langID)
 	
-	def fixlongs(self):
+	def fixLongs(self):
 		"""correct effects from bug in Python 1.5.1, where "H" 
 		returns a Python Long int. 
 		This has been fixed in Python 1.5.2.
