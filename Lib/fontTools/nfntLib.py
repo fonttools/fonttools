@@ -123,22 +123,8 @@ def readnfntresource(fss, name, _type = 'NFNT'):
 			# just take the first in the file
 			res = Res.Get1IndResource(_type, 1)
 		theID, theType, name = res.GetResInfo()
-		if theType <> _type:
-			raise TypeError, 'resource of wrong type; expected ' + _type
 		data = res.data
 	finally:
 		Res.CloseResFile(resref)
 	return data
 
-
-if 0:
-	import Win
-	fss, ok = macfs.StandardGetFile('FFIL')
-	if ok:
-		n = NFNT(fss)
-		s = "!!!ABCDEFGHIJKLMN01234 hemeltje lief...x.."
-		x = 10
-		y = 40
-		destbits = Win.FrontWindow().GetWindowPort().portBits
-		n.drawstring(s, destbits, x, y)
-		print n.stringwidth(s)
