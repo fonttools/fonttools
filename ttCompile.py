@@ -69,6 +69,8 @@ for xmlPath in args:
 			print "skipped."
 			continue
 	
+	print 'Compiling "%s" to "%s"...' % (xmlPath, ttPath)
+	
 	tt = ttLib.TTFont(ttInFile, recalcBBoxes=recalcBBoxes, verbose=verbose)
 
 	if os.path.isdir(xmlPath):
