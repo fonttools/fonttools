@@ -1,23 +1,31 @@
 """ttLib.macUtils.py -- Various Mac-specific stuff."""
 
-
+import sys
 import os
-if os.name <> "mac":
+if sys.platform not in ("mac", "darwin"):
 	raise ImportError, "This module is Mac-only!"
 
 import cStringIO
-import macfs
 try:
 	from Carbon import Res
 except ImportError:
 	import Res
 
 
+def MyOpenResFile(path):
+	mode = 1  # read only
+	try:
+		resref = Res.FSpOpenResFile(path, mode)
+	except Res.Error:
+		# try data fork
+		resref = Res.FSOpenResourceFile(path, u'', mode)
+	return resref
+
+
 def getSFNTResIndices(path):
 	"""Determine whether a file has a resource fork or not."""
-	fss = macfs.FSSpec(path)
 	try:
-		resref = Res.FSpOpenResFile(fss, 1)  # read only
+		resref = MyOpenResFile(path)
 	except Res.Error:
 		return []
 	Res.UseResFile(resref)
@@ -50,8 +58,7 @@ class SFNTResourceReader:
 	"""Simple (Mac-only) read-only file wrapper for 'sfnt' resources."""
 	
 	def __init__(self, path, res_name_or_index):
-		fss = macfs.FSSpec(path)
-		resref = Res.FSpOpenResFile(fss, 1)  # read-only
+		resref = MyOpenResFile(path)
 		Res.UseResFile(resref)
 		if type(res_name_or_index) == type(""):
 			res = Res.Get1NamedResource('sfnt', res_name_or_index)
@@ -93,11 +100,11 @@ class SFNTResourceWriter:
 		
 		self.ttFont = ttFont
 		self.res_id = res_id
-		fss = macfs.FSSpec(self.name)
 		if os.path.exists(self.name):
 			os.remove(self.name)
-		Res.FSpCreateResFile(fss, 'DMOV', 'FFIL', 0)
-		self.resref = Res.FSpOpenResFile(fss, 3)  # exclusive read/write permission
+		# XXX datafork support
+		Res.FSpCreateResFile(self.name, 'DMOV', 'FFIL', 0)
+		self.resref = Res.FSpOpenResFile(self.name, 3)  # exclusive read/write permission
 	
 	def close(self):
 		if self.closed:
