@@ -35,10 +35,7 @@ except ImportError:
 	haveMacSupport = 0
 else:
 	haveMacSupport = 1
-	try:
-		from Carbon.File import FSSpec
-	except ImportError:
-		from macfs import FSSpec  # MacPython < 2.2
+	import MacOS
 	
 
 class T1Error(Exception): pass
@@ -95,8 +92,7 @@ def read(path):
 	"""reads any Type 1 font file, returns raw data"""
 	normpath = string.lower(path)
 	if haveMacSupport:
-		fss = FSSpec(path)
-		creator, type = fss.GetCreatorType()
+		creator, type = MacOS.GetCreatorAndType(path)
 		if type == 'LWFN':
 			return readLWFN(path), 'LWFN'
 	if normpath[-4:] == '.pfb':
@@ -246,8 +242,7 @@ def writePFB(path, data):
 	finally:
 		f.close()
 	if haveMacSupport:
-		fss = FSSpec(path)
-		fss.SetCreatorType('mdos', 'BINA')
+		MacOS.SetCreatorAndType(path, 'mdos', 'BINA')
 
 def writeOther(path, data, dohex = 0):
 	chunks = findEncryptedChunks(data)
@@ -269,8 +264,7 @@ def writeOther(path, data, dohex = 0):
 	finally:
 		f.close()
 	if haveMacSupport:
-		fss = FSSpec(path)
-		fss.SetCreatorType('R*ch', 'TEXT') # BBEdit text file
+		MacOS.SetCreatorAndType(path, 'R*ch', 'TEXT') # BBEdit text file
 
 
 # decryption tools
