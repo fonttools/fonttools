@@ -23,7 +23,14 @@ usage: %s [-hvbf] [-d output-dir] [-i TTF-input-file] [TTX-file...]
 import sys, os, getopt
 from fontTools import ttLib
 
-options, args = getopt.getopt(sys.argv[1:], "hvbfd:i:")
+def usage():
+	print __doc__ % sys.argv[0]
+	sys.exit(2)
+
+try:
+	options, args = getopt.getopt(sys.argv[1:], "hvbfd:i:")
+except getopt.GetoptError:
+	usage()
 
 # default values
 verbose = 0
@@ -48,8 +55,7 @@ for option, value in options:
 		forceOverwrite = 1
 
 if not args:
-	print __doc__ % sys.argv[0]
-	sys.exit(2)
+	usage()
 
 if ttInFile and len(args) > 1:
 	print "Must specify exactly one TTX file (or directory) when using -i"

@@ -31,7 +31,14 @@ usage: %s [-hvisf] [-t <table>] [-x <table>] [-d <output-dir>] TrueType-file(s)
 import sys, os, getopt
 from fontTools import ttLib
 
-options, args = getopt.getopt(sys.argv[1:], "hvisft:x:d:")
+def usage():
+	print __doc__ % sys.argv[0]
+	sys.exit(2)
+
+try:
+	options, args = getopt.getopt(sys.argv[1:], "hvisft:x:d:")
+except getopt.GetoptError:
+	usage()
 
 # default values
 verbose = 0
@@ -76,8 +83,7 @@ if tables and skipTables:
 	sys.exit(2)
 
 if not args:
-	print __doc__ % sys.argv[0]
-	sys.exit(2)
+	usage()
 
 for ttPath in args:
 	path, ext = os.path.splitext(ttPath)
