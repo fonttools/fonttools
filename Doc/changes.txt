@@ -1,21 +1,35 @@
-FontTools Version 1.0 beta ? (released ???)
+TTX/FontTools Version 2.0 beta 1 (released September 10 2002)
 
-- Changed the command line interface yet again:
-  - file arguments now work more like the 'cp' and 'mv' unix programs,
-    in that the last file argument specifies the output: a directory
-    for one or more input args or a target file if there's only one input
-    argument.
-  - The -s option of ttdump ("split tables") no longer creates a directory,
+- Fixed embarrassing bug: the master checksum is now calculated correctly
+  even on little-endian platforms (such as Intel).
+- Made the cmap format 4 compiler smarter: the binary data it creates is
+  now more or less as compact as possible. TTX now makes more compact
+  data than in any shipping font I've tested it with.
+- Dump glyph names as a separate "GlyphOrder" pseudo table as opposed to
+  as part of the glyf table (obviously needed for CFF-OTF's).
+- Added proper support for the CFF table.
+- Don't barf on empty tables (questionable, but "there are font out there...")
+- When writing TT glyf data, align glyphs on 4-byte boundaries. This seems
+  to be the current recommendation by MS. Also: don't barf on fonts which
+  are already 4-byte aligned.
+- Windows installer contributed bu Adam Twardoch! Yay!
+- Changed the command line interface again, now by creating one new tool
+  replacing the old ones: ttx
+  It dumps and compiles, depending on input file types. The options have
+  changed somewhat. 
+  - The -d option is back (output dir)
+  - ttcompile's -i options is now called -m (as in "merge"), to avoid clash
+    with dump's -i.
+  - The -s option ("split tables") no longer creates a directory,
     but instead outputs a small .ttx file containing references to the
     individual table files. This is not a true link, it's a simple file
     name, and the referenced file should be in the same directory so
     ttcompile can find them.
-  - ttcompile no longer accepts a directory as input argument. Instead it
-    can parse the new "mini-ttx" format as output by "ttdump -s".
+  - compile no longer accepts a directory as input argument. Instead it
+    can parse the new "mini-ttx" format as output by "ttx -s".
+  - all arguments are input files
 - Renamed the command line programs and moved them to the Tools
   subdirectory. They are now installed by the setup.py install script.
-- Added a new command line tool: "ttlist". It lists some info about each
-  table in the font (length, offset and checksum).
 - Added OpenType support. BASE, GDEF, GPOS, GSUB and JSTF are (almost)
   fully supported. The XML output is not yet final, as I'm still
   considering to output certain subtables in a more human-friendly
@@ -36,7 +50,7 @@ FontTools Version 1.0 beta ? (released ???)
 - Couple of fixes to the 'post' table.
 - Updated OS/2 table to latest spec.
 
-FontTools Version 1.0 beta 1 (released August 10 2001)
+TTX/FontTools Version 1.0 beta 1 (released August 10 2001)
 
 - Reorganized the command line interface for ttDump.py and ttCompile.py,
   they now behave more like "normal" command line tool, in that they accept
@@ -53,7 +67,7 @@ FontTools Version 1.0 beta 1 (released August 10 2001)
   Windows registry.
 - Moved the project to SourceForge.
 
-FontTools Version 1.0 alpha 6 (released March 15 2000)
+TTX/FontTools Version 1.0 alpha 6 (released March 15 2000)
 
 - Big reorganization: made ttLib a subpackage of the new fontTools package,
   changed several module names. Called the entire suite "FontTools"
