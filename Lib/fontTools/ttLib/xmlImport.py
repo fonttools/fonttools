@@ -1,10 +1,6 @@
 from fontTools import ttLib
 from fontTools.misc.textTools import safeEval
 from fontTools.ttLib.tables.DefaultTable import DefaultTable
-import types
-import string
-import Numeric, array
-from xml.parsers.xmlproc import xmlproc
 
 
 class TTXParseError(Exception): pass
@@ -13,23 +9,24 @@ class TTXParseError(Exception): pass
 class ExpatParser:
 	
 	def __init__(self, ttFont, progress=None):
-		from xml.parsers.expat import ParserCreate
 		self.ttFont = ttFont
 		self.progress = progress
 		self.root = None
 		self.contentStack = []
 		self.lastpos = 0
 		self.stackSize = 0
-		self.parser = ParserCreate()
-		self.parser.returns_unicode = 0
-		self.parser.StartElementHandler = self.StartElementHandler
-		self.parser.EndElementHandler = self.EndElementHandler
-		self.parser.CharacterDataHandler = self.CharacterDataHandler
 	
-	def ParseFile(self, file):
-		self.parser.ParseFile(file)
+	def parseFile(self, file):
+		from xml.parsers.expat import ParserCreate
+		parser = ParserCreate()
+		parser.returns_unicode = 0
+		parser.StartElementHandler = self.startElementHandler
+		parser.EndElementHandler = self.endElementHandler
+		parser.CharacterDataHandler = self.characterDataHandler
+		
+		parser.ParseFile(file)
 	
-	def StartElementHandler(self, name, attrs):
+	def startElementHandler(self, name, attrs):
 		if 0 and self.progress:
 			# XXX
 			pos = self.locator.pos + self.locator.block_offset
@@ -75,11 +72,11 @@ class ExpatParser:
 			self.contentStack[-1].append((name, attrs, list))
 			self.contentStack.append(list)
 	
-	def CharacterDataHandler(self, data):
+	def characterDataHandler(self, data):
 		if self.stackSize > 1:
 			self.contentStack[-1].append(data)
 	
-	def EndElementHandler(self, name):
+	def endElementHandler(self, name):
 		self.stackSize = self.stackSize - 1
 		del self.contentStack[-1]
 		if self.stackSize == 1:
@@ -110,6 +107,6 @@ def importXML(ttFont, fileName, progress=None):
 	"""
 	p = ExpatParser(ttFont, progress)
 	file = open(fileName)
-	p.ParseFile(file)
+	p.parseFile(file)
 	file.close()
 
