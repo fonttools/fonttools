@@ -88,6 +88,10 @@ class KernTable_format_0:
 		data = data[8:]
 		
 		for k in range(nPairs):
+			if len(data) < 6:
+				# buggy kern table
+				data = ""
+				break
 			left, right, value = struct.unpack(">HHh", data[:6])
 			data = data[6:]
 			left, right = int(left), int(right)
