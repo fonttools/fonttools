@@ -12,8 +12,7 @@ headFormat = """
 		fontRevision:		16.16F
 		checkSumAdjustment:	i
 		magicNumber:		i
-							x	# pad byte
-		flags:				b
+		flags:				H
 		unitsPerEm:			H
 		created:			8s
 		modified:			8s
@@ -38,6 +37,7 @@ class table__h_e_a_d(DefaultTable.DefaultTable):
 			# this is quite illegal, but there seem to be fonts out there that do this
 			assert rest == "\0\0"
 		self.unitsPerEm = int(self.unitsPerEm)
+		self.flags = int(self.flags)
 		self.strings2dates()
 	
 	def compile(self, ttFont):
