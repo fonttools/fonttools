@@ -1,5 +1,5 @@
 Copyright 1999-2001
-by Just van Rossum, Letterror, Den Haag, The Netherlands.
+by Just van Rossum, Letterror, The Netherlands.
 
                         All Rights Reserved
 
