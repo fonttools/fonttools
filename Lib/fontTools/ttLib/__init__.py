@@ -42,7 +42,7 @@ Dumping 'prep' table...
 """
 
 #
-# $Id: __init__.py,v 1.15 2000-08-23 12:31:52 Just Exp $
+# $Id: __init__.py,v 1.16 2000-10-02 07:51:42 Just Exp $
 #
 
 __version__ = "1.0a6"
@@ -138,8 +138,9 @@ class TTFont:
 		On the Mac, if makeSuitcase is true, a suitcase (resource fork)
 		file will we made instead of a flat .ttf file. 
 		"""
-		import sfnt
+		from fontTools.ttLib import sfnt
 		if type(file) == types.StringType:
+			closeStream = 1
 			if os.name == "mac" and makeSuitcase:
 				import macUtils
 				file = macUtils.SFNTResourceWriter(file, self)
@@ -150,7 +151,8 @@ class TTFont:
 					fss = macfs.FSSpec(file.name)
 					fss.SetCreatorType('mdos', 'BINA')
 		else:
-			pass # assume "file" is a writable file object
+			# assume "file" is a writable file object
+			closeStream = 0
 		
 		tags = self.keys()
 		numTables = len(tags)
@@ -160,7 +162,7 @@ class TTFont:
 		for tag in tags:
 			self._writeTable(tag, writer, done)
 		
-		writer.close()
+		writer.close(closeStream)
 	
 	def saveXML(self, fileOrPath, progress=None, 
 			tables=None, skipTables=None, splitTables=0, disassembleInstructions=1):
