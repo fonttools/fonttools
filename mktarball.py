@@ -11,6 +11,6 @@ tar = src + ".tar"
 gz = tar + ".gz"
 tgz = src + ".tgz"
 
-os.system("tar --exclude="CVS|mktarball.py" -cvf %s %s" % (tar, src))
-os.system("gzip -9v %s" % tar)
+os.system('tar --exclude="CVS|mktarball.py" -cvf %s %s' % (tar, src))
+os.system('gzip -9v %s' % tar)
 os.rename(gz, tgz)
