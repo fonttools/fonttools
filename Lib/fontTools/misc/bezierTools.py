@@ -1,9 +1,12 @@
 """fontTools.misc.bezierTools.py -- tools for working with bezier path segments."""
 
 
-__all__ = ["calcQuadraticBounds", "calcCubicBounds", "splitLine", "splitQuadratic",
-	"splitCubic", "solveQuadratic", "solveCubic"]
-
+__all__ = [
+	"calcQuadraticBounds", "calcCubicBounds",
+	"splitLine", "splitQuadratic", "splitCubic",
+	"splitQuadraticAtT", "splitCubicAtT",
+	"solveQuadratic", "solveCubic",
+]
 
 from fontTools.misc.arrayTools import calcBounds
 import Numeric
@@ -109,21 +112,7 @@ def splitQuadratic(pt1, pt2, pt3, where, isHorizontal):
 	solutions.sort()
 	if not solutions:
 		return [(pt1, pt2, pt3)]
-	
-	segments = []
-	solutions.insert(0, 0.0)
-	solutions.append(1.0)
-	for i in range(len(solutions) - 1):
-		t1 = solutions[i]
-		t2 = solutions[i+1]
-		delta = (t2 - t1)
-		# calc new a, b and c
-		a1 = a * delta**2
-		b1 = (2*a*t1 + b) * delta
-		c1 = a*t1**2 + b*t1 + c
-		pt1, pt2, pt3 = calcQuadraticPoints(a1, b1, c1)
-		segments.append((pt1, pt2, pt3))
-	return segments
+	return _splitQuadraticAtT(a, b, c, *solutions)
 
 
 def splitCubic(pt1, pt2, pt3, pt4, where, isHorizontal):
@@ -145,13 +134,57 @@ def splitCubic(pt1, pt2, pt3, pt4, where, isHorizontal):
 	solutions.sort()
 	if not solutions:
 		return [(pt1, pt2, pt3, pt4)]
-	
+	return _splitCubicAtT(a, b, c, d, *solutions)
+
+
+def splitQuadraticAtT(pt1, pt2, pt3, *ts):
+	"""
+		>>> _testrepr(splitQuadraticAtT((0, 0), (50, 100), (100, 0), 0.5))
+		'(((0.0, 0.0), (25.0, 50.0), (50.0, 50.0)), ((50.0, 50.0), (75.0, 50.0), (100.0, 0.0)))'
+		>>> _testrepr(splitQuadraticAtT((0, 0), (50, 100), (100, 0), 0.5, 0.75))
+		'(((0.0, 0.0), (25.0, 50.0), (50.0, 50.0)), ((50.0, 50.0), (62.5, 50.0), (75.0, 37.5)), ((75.0, 37.5), (87.5, 25.0), (100.0, 0.0)))'
+	"""
+	a, b, c = calcQuadraticParameters(pt1, pt2, pt3)
+	return _splitQuadraticAtT(a, b, c, *ts)
+
+
+def splitCubicAtT(pt1, pt2, pt3, pt4, *ts):
+	"""
+		>>> _testrepr(splitCubicAtT((0, 0), (25, 100), (75, 100), (100, 0), 0.5))
+		'(((0.0, 0.0), (12.5, 50.0), (31.25, 75.0), (50.0, 75.0)), ((50.0, 75.0), (68.75, 75.0), (87.5, 50.0), (100.0, 0.0)))'
+		>>> _testrepr(splitCubicAtT((0, 0), (25, 100), (75, 100), (100, 0), 0.5, 0.75))
+		'(((0.0, 0.0), (12.5, 50.0), (31.25, 75.0), (50.0, 75.0)), ((50.0, 75.0), (59.375, 75.0), (68.75, 68.75), (77.34375, 56.25)), ((77.34375, 56.25), (85.9375, 43.75), (93.75, 25.0), (100.0, 0.0)))'
+	"""
+	a, b, c, d = calcCubicParameters(pt1, pt2, pt3, pt4)
+	return _splitCubicAtT(a, b, c, d, *ts)
+
+
+def _splitQuadraticAtT(a, b, c, *ts):
+	ts = list(ts)
 	segments = []
-	solutions.insert(0, 0.0)
-	solutions.append(1.0)
-	for i in range(len(solutions) - 1):
-		t1 = solutions[i]
-		t2 = solutions[i+1]
+	ts.insert(0, 0.0)
+	ts.append(1.0)
+	for i in range(len(ts) - 1):
+		t1 = ts[i]
+		t2 = ts[i+1]
+		delta = (t2 - t1)
+		# calc new a, b and c
+		a1 = a * delta**2
+		b1 = (2*a*t1 + b) * delta
+		c1 = a*t1**2 + b*t1 + c
+		pt1, pt2, pt3 = calcQuadraticPoints(a1, b1, c1)
+		segments.append((pt1, pt2, pt3))
+	return segments
+
+
+def _splitCubicAtT(a, b, c, d, *ts):
+	ts = list(ts)
+	ts.insert(0, 0.0)
+	ts.append(1.0)
+	segments = []
+	for i in range(len(ts) - 1):
+		t1 = ts[i]
+		t2 = ts[i+1]
 		delta = (t2 - t1)
 		# calc new a, b, c and d
 		a1 = a * delta**3
