@@ -3,6 +3,8 @@
 """\
 usage: ttx [options] inputfile1 [... inputfileN]
 
+    "From OpenType To XML And Back"
+
     If an input file is a TrueType or OpenType font file, it will be
        dumped to an TTX file (an XML-based text format).
     If an input file is a TTX file, it will be compiled to a TrueType
