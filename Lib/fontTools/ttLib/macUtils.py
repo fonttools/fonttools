@@ -59,7 +59,7 @@ class ProgressBar:
 		self.bar.label(text)
 	
 	def close(self):
-		self.bar.d.HideWindow()
+		self.bar.d = None
 		del self.bar
 
 
