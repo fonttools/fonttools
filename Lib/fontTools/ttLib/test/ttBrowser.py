@@ -332,3 +332,20 @@ def qcurveto(pt0, pt1, pt2, done_moveto):
 	ATM.fillCurveToATM((x1a, y1a), (x1b, y1b), (x2, y2))
 	return pt2
 
+
+def browseTTFont():
+	fss, ok = macfs.StandardGetFile()
+	if not ok:
+		return
+	path = fss.as_pathname()
+	indices = macUtils.getSFNTResIndices(path)
+	if indices:
+		for i in indices:
+			TableBrowser(path, res_index=i)
+	else:
+		TableBrowser(path)
+
+
+if __name__ == "__main__":
+	browseTTFont()
+
