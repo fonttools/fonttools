@@ -42,7 +42,7 @@ Dumping 'prep' table...
 """
 
 #
-# $Id: __init__.py,v 1.25 2002-05-12 17:14:50 jvr Exp $
+# $Id: __init__.py,v 1.26 2002-05-13 11:26:38 jvr Exp $
 #
 
 import os
@@ -335,8 +335,12 @@ class TTFont:
 		except AttributeError:
 			pass
 		if self.has_key('CFF '):
-			# CFF OpenType font
-			self.glyphOrder = self['CFF '].getGlyphOrder()
+			cff = self['CFF ']
+			if cff.haveGlyphNames():
+				self.glyphOrder = cff.getGlyphOrder()
+			else:
+				# CID-keyed font, use cmap
+				self._getGlyphNamesFromCmap()
 		elif self.has_key('post'):
 			# TrueType font
 			glyphOrder = self['post'].getGlyphOrder()
@@ -443,7 +447,12 @@ class TTFont:
 		return textTools.caselessSort(self.getGlyphOrder())
 	
 	def getGlyphName(self, glyphID):
-		return self.getGlyphOrder()[glyphID]
+		try:
+			return self.getGlyphOrder()[glyphID]
+		except IndexError:
+			# XXX The ??.W8.otf font that ships with OSX uses higher glyphIDs in
+			# the cmap table than there are glyphs. I don't think it's legal...
+			return "glyph%.5d" % glyphID
 	
 	def getGlyphID(self, glyphName):
 		if not hasattr(self, "_reverseGlyphOrderDict"):
