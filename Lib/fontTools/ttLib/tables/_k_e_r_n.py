@@ -96,7 +96,7 @@ class KernTable_format_0:
 	
 	def compile(self, ttFont):
 		nPairs = len(self.kernTable)
-		entrySelector = sfnt.maxpoweroftwo(nPairs)
+		entrySelector = sfnt.maxPowerOfTwo(nPairs)
 		searchRange = (2 ** entrySelector) * 6
 		rangeShift = (nPairs - (2 ** entrySelector)) * 6
 		data = struct.pack(">HHHH", nPairs, searchRange, entrySelector, rangeShift)

@@ -227,7 +227,7 @@ class cmap_format_4(CmapSubtable):
 		self.cmap = cmap
 	
 	def compile(self, ttFont):
-		from fontTools.ttLib.sfnt import maxpoweroftwo
+		from fontTools.ttLib.sfnt import maxPowerOfTwo
 		
 		codes = self.cmap.items()
 		codes.sort()
@@ -270,7 +270,7 @@ class cmap_format_4(CmapSubtable):
 		# Insane. 
 		segCount = len(endCode)
 		segCountX2 = segCount * 2
-		maxexponent = maxpoweroftwo(segCount)
+		maxexponent = maxPowerOfTwo(segCount)
 		searchRange = 2 * (2 ** maxexponent)
 		entrySelector = maxexponent
 		rangeShift = 2 * segCount - searchRange

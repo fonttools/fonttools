@@ -42,7 +42,7 @@ Dumping 'prep' table...
 """
 
 #
-# $Id: __init__.py,v 1.24 2002-05-11 21:18:12 jvr Exp $
+# $Id: __init__.py,v 1.25 2002-05-12 17:14:50 jvr Exp $
 #
 
 import os
@@ -62,7 +62,7 @@ class TTFont:
 	"""
 	
 	def __init__(self, file=None, res_name_or_index=None, 
-			sfntVersion="\000\001\000\000", checkchecksums=0, 
+			sfntVersion="\000\001\000\000", checkChecksums=0, 
 			verbose=0, recalcBBoxes=1):
 		
 		"""The constructor can be called with a few different arguments.
@@ -75,7 +75,7 @@ class TTFont:
 		or a suitcase. (If it's a suitcase, only the first 'sfnt' resource
 		will be read!)
 		
-		The 'checkchecksums' argument is used to specify how sfnt
+		The 'checkChecksums' argument is used to specify how sfnt
 		checksums are treated upon reading a file from disk:
 			0: don't check (default)
 			1: check, print warnings if a wrong checksum is found (default)
@@ -121,7 +121,7 @@ class TTFont:
 				file = open(file, "rb")
 		else:
 			pass # assume "file" is a readable file object
-		self.reader = sfnt.SFNTReader(file, checkchecksums)
+		self.reader = sfnt.SFNTReader(file, checkChecksums)
 		self.sfntVersion = self.reader.sfntVersion
 	
 	def close(self):

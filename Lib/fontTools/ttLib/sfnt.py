@@ -18,9 +18,9 @@ import os
 
 class SFNTReader:
 	
-	def __init__(self, file, checkchecksums=1):
+	def __init__(self, file, checkChecksums=1):
 		self.file = file
-		self.checkchecksums = checkchecksums
+		self.checkChecksums = checkChecksums
 		data = self.file.read(sfntDirectorySize)
 		if len(data) <> sfntDirectorySize:
 			from fontTools import ttLib
@@ -32,7 +32,7 @@ class SFNTReader:
 		self.tables = {}
 		for i in range(self.numTables):
 			entry = SFNTDirectoryEntry()
-			entry.fromfile(self.file)
+			entry.fromFile(self.file)
 			if entry.length > 0:
 				self.tables[entry.tag] = entry
 			else:
@@ -53,13 +53,13 @@ class SFNTReader:
 		entry = self.tables[tag]
 		self.file.seek(entry.offset)
 		data = self.file.read(entry.length)
-		if self.checkchecksums:
+		if self.checkChecksums:
 			if tag == 'head':
 				# Beh: we have to special-case the 'head' table.
-				checksum = calcchecksum(data[:8] + '\0\0\0\0' + data[12:])
+				checksum = calcChecksum(data[:8] + '\0\0\0\0' + data[12:])
 			else:
-				checksum = calcchecksum(data)
-			if self.checkchecksums > 1:
+				checksum = calcChecksum(data)
+			if self.checkChecksums > 1:
 				# Be obnoxious, and barf when it's wrong
 				assert checksum == entry.checksum, "bad checksum for '%s' table" % tag
 			elif checksum <> entry.checkSum:
@@ -80,7 +80,7 @@ class SFNTWriter:
 		self.file = file
 		self.numTables = numTables
 		self.sfntVersion = sfntVersion
-		self.searchRange, self.entrySelector, self.rangeShift = getsearchrange(numTables)
+		self.searchRange, self.entrySelector, self.rangeShift = getSearchRange(numTables)
 		self.nextTableOffset = sfntDirectorySize + numTables * sfntDirectoryEntrySize
 		# clear out directory area
 		self.file.seek(self.nextTableOffset)
@@ -110,9 +110,9 @@ class SFNTWriter:
 		self.file.write('\0' * (self.nextTableOffset - self.file.tell()))
 		
 		if tag == 'head':
-			entry.checkSum = calcchecksum(data[:8] + '\0\0\0\0' + data[12:])
+			entry.checkSum = calcChecksum(data[:8] + '\0\0\0\0' + data[12:])
 		else:
-			entry.checkSum = calcchecksum(data)
+			entry.checkSum = calcChecksum(data)
 		self.tables[tag] = entry
 	
 	def close(self, closeStream=1):
@@ -129,14 +129,14 @@ class SFNTWriter:
 		
 		self.file.seek(sfntDirectorySize)
 		for tag, entry in tables:
-			directory = directory + entry.tostring()
-		self.calcmasterchecksum(directory)
+			directory = directory + entry.toString()
+		self.calcMasterChecksum(directory)
 		self.file.seek(0)
 		self.file.write(directory)
 		if closeStream:
 			self.file.close()
 	
-	def calcmasterchecksum(self, directory):
+	def calcMasterChecksum(self, directory):
 		# calculate checkSumAdjustment
 		tags = self.tables.keys()
 		checksums = Numeric.zeros(len(tags)+1)
@@ -146,7 +146,7 @@ class SFNTWriter:
 		directory_end = sfntDirectorySize + len(self.tables) * sfntDirectoryEntrySize
 		assert directory_end == len(directory)
 		
-		checksums[-1] = calcchecksum(directory)
+		checksums[-1] = calcChecksum(directory)
 		checksum = Numeric.add.reduce(checksums)
 		# BiboAfba!
 		checksumadjustment = Numeric.array(0xb1b0afba) - checksum
@@ -180,14 +180,14 @@ sfntDirectoryEntrySize = sstruct.calcsize(sfntDirectoryEntryFormat)
 
 class SFNTDirectoryEntry:
 	
-	def fromfile(self, file):
+	def fromFile(self, file):
 		sstruct.unpack(sfntDirectoryEntryFormat, 
 				file.read(sfntDirectoryEntrySize), self)
 	
-	def fromstring(self, str):
+	def fromString(self, str):
 		sstruct.unpack(sfntDirectoryEntryFormat, str, self)
 	
-	def tostring(self):
+	def toString(self):
 		return sstruct.pack(sfntDirectoryEntryFormat, self)
 	
 	def __repr__(self):
@@ -197,7 +197,7 @@ class SFNTDirectoryEntry:
 			return "<SFNTDirectoryEntry at %x>" % id(self)
 
 
-def calcchecksum(data, start=0):
+def calcChecksum(data, start=0):
 	"""Calculate the checksum for an arbitrary block of data.
 	Optionally takes a 'start' argument, which allows you to
 	calculate a checksum in chunks by feeding it a previous
@@ -216,7 +216,7 @@ def calcchecksum(data, start=0):
 	return Numeric.add.reduce(a)
 
 
-def maxpoweroftwo(x):
+def maxPowerOfTwo(x):
 	"""Return the highest exponent of two, so that
 	(2 ** exponent) <= x
 	"""
@@ -227,13 +227,13 @@ def maxpoweroftwo(x):
 	return max(exponent - 1, 0)
 
 
-def getsearchrange(n):
+def getSearchRange(n):
 	"""Calculate searchRange, entrySelector, rangeShift for the
 	sfnt directory. 'n' is the number of tables.
 	"""
 	# This stuff needs to be stored in the file, because?
 	import math
-	exponent = maxpoweroftwo(n)
+	exponent = maxPowerOfTwo(n)
 	searchRange = (2 ** exponent) * 16
 	entrySelector = exponent
 	rangeShift = n * 16 - searchRange
