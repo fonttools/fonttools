@@ -99,23 +99,24 @@ than the command line programs described below.
 makes the two above tools available under the Right Mouse Button. I haven't tested 
 these myself, but I'm very interested in hearing about the results!
 
-<H3>Note about glyph names and TrueType GlyphID's</H3>
+<H3>A note about glyph names and TrueType GlyphID's</H3>
 
 TrueType fonts use glyph indices (GlyphID's) to refer to glyphs in most places.
 While this is fine in binary form, it is really hard to work with for
 humans. Therefore we use names instead.
 
-<P>The names are derived from what is found in the 'post' table. It is
-possible that different glyphs use the same PS name. If this happens, we
-force the names to be unique by appending "#n" to the name (n being an
-integer number). The original PS names will still be maintained by the
-'post' table, so even though we use a different name internally, we are
-still able to write the 'post' table back in original form. If there is
-no proper 'post' table available, names will be derived from a Unicode
-cmap (if available) in conjuction with the Adobe Glyph List (see fontTools/agl.py).
+<P>The glyph names are either extracted from the 'CFF ' table or the 'post' table,
+or are derived from a Unicode 'cmap' table. In the latter case the Adobe Glyph List
+is used to calculate names based on Unicode values. If all of these mthods fail,
+names are invented based on GlyphID (eg. "glyph00142").
+
+<P>It is possible that different glyphs use the same name. If this happens,
+we force the names to be unique by appending "#n" to the name (n being an
+integer number). The original names are being kept, so this has no influence
+on a "round tripped" font.
 
 <P>Because the order in which glyphs are stored inside the TT font is
-important, ttLib maintains an ordered list of glyph names in the font.
+important, we maintain an ordered list of glyph names in the font.
 
 <H3>Feedback</H3>
 
