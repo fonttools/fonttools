@@ -24,8 +24,10 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
 					">HHl", data[4+i*8:4+(i+1)*8])
 			platformID, platEncID = int(platformID), int(platEncID)
 			format, length = struct.unpack(">HH", data[offset:offset+4])
-			if not length:
+			if (format < 8) and not length:
 				continue  # bogus cmap subtable?
+			if format in [8,10,12]:
+				format, reserved, length = struct.unpack(">HHL", data[offset:offset+8])
 			if not cmap_classes.has_key(format):
 				table = cmap_format_unknown(format)
 			else:
@@ -465,6 +467,87 @@ class cmap_format_6(CmapSubtable):
 			self.cmap[safeEval(attrs["code"])] = attrs["name"]
 
 
+class cmap_format_12(CmapSubtable):
+	
+	def decompile(self, data, ttFont):
+		format, reserved, length, language, nGroups = struct.unpack(">HHLLL", data[:16])
+		data = data[16:]
+		assert len(data) == nGroups*12 == (length -16) 
+		self.cmap = cmap = {}
+		for i in range(nGroups):
+			startCharCode, endCharCode, glyphID = struct.unpack(">LLL",data[:12] )
+			data = data[12:]
+			while startCharCode <= endCharCode:
+				glyphName = ttFont.getGlyphName(glyphID)
+				cmap[startCharCode] = glyphName
+				glyphID = glyphID +1
+				startCharCode = startCharCode + 1
+		self.format = format
+		self.reserved = reserved
+		self.length = length
+		self.language = language
+		self.nGroups = nGroups
+	
+	def compile(self, ttFont):
+		cmap = {}  # code:glyphID mapping
+		for code, glyphName in self.cmap.items():
+			cmap[code] = ttFont.getGlyphID(glyphName)
+
+		charCodes = self.cmap.keys()
+		charCodes.sort()
+		startCharCode = charCodes[0]
+		startGlyphID = cmap[startCharCode]
+		nextGlyphID = startGlyphID + 1
+		nGroups = 1
+		data = ""
+		for charCode in charCodes:
+			glyphID = cmap[charCode]
+			if glyphID != nextGlyphID:
+				endCharCode =  charCode -1
+				data = data + struct.pack(">LLL", startCharCode, endCharCode, startGlyphID)
+				startGlyphID = glyphID
+				startCharCode = charCode
+				nGroups = nGroups + 1
+			nextGlyphID = glyphID +1
+
+		data = struct.pack(">HHLLL", self.format, 0 , len(data), self.language, nGroups) + data
+		return data
+	
+	def toXML(self, writer, ttFont):
+		writer.begintag(self.__class__.__name__, [
+				("platformID", self.platformID),
+				("platEncID", self.platEncID),
+				("format", self.format),
+				("reserved", self.reserved),
+				("length", self.length),
+				("language", self.language),
+				("nGroups", self.nGroups),
+				])
+		writer.newline()
+		items = self.cmap.items()
+		items.sort()
+		for code, name in items:
+			writer.simpletag("map", code=hex(code), name=name)
+			writer.newline()
+		writer.endtag(self.__class__.__name__)
+		writer.newline()
+	
+	def fromXML(self, (name, attrs, content), ttFont):
+		self.format = safeEval(attrs["format"])
+		self.reserved = safeEval(attrs["reserved"])
+		self.length = safeEval(attrs["length"])
+		self.language = safeEval(attrs["language"])
+		self.nGroups = safeEval(attrs["nGroups"])
+		self.cmap = {}
+		for element in content:
+			if type(element) <> TupleType:
+				continue
+			name, attrs, content = element
+			if name <> "map":
+				continue
+			self.cmap[safeEval(attrs["code"])] = attrs["name"]
+
+
 class cmap_format_unknown(CmapSubtable):
 	
 	def decompile(self, data, ttFont):
@@ -479,6 +562,7 @@ cmap_classes = {
 		2: cmap_format_2,
 		4: cmap_format_4,
 		6: cmap_format_6,
+		12: cmap_format_12,
 		}
 
 
