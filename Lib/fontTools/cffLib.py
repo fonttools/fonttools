@@ -1,7 +1,7 @@
 """cffLib.py -- read/write tools for Adobe CFF fonts."""
 
 #
-# $Id: cffLib.py,v 1.4 2000-01-16 22:14:02 Just Exp $"
+# $Id: cffLib.py,v 1.5 2000-01-19 20:44:33 Just Exp $
 #
 
 import struct, sstruct
