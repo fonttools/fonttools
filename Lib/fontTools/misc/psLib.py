@@ -1,40 +1,38 @@
-import StringIO
-import regex
-import string
-from fontTools.misc import eexec
+import re
 import types
+from string import whitespace
+import StringIO
+
+from fontTools.misc import eexec
 from psOperators import *
 
 
 ps_special = '()<>[]{}%'	# / is one too, but we take care of that one differently
 
-whitespace = string.whitespace
-skipwhiteRE = regex.compile("[%s]*" % whitespace)
+skipwhiteRE = re.compile("[%s]*" % whitespace)
+endofthingPat = "[^][(){}<>/%%%s]*" % whitespace
+endofthingRE = re.compile(endofthingPat)
+commentRE = re.compile("%[^\n\r]*")
 
-endofthingPat = "[^][(){}<>/%s%s]*" % ('%', whitespace)
-endofthingRE = regex.compile(endofthingPat)
-
-commentRE = regex.compile("%[^\n\r]*")
-
-# XXX This not entirely correct:
-stringPat = """
-	(
-		\(
-			\(
-				[^()]*   \\\\   [()]
-			\)
-			\|
-			\(
-				[^()]*  (   [^()]*  )
-			\)
-		\)*
+# XXX This not entirely correct as it doesn't allow *nested* embedded parens:
+stringPat = r"""
+	\(
+		(
+			(
+				[^()]*   \   [()]
+			)
+			|
+			(
+				[^()]*  \(   [^()]*  \)
+			)
+		)*
 		[^()]*
-	)
+	\)
 """
-stringPat = string.join(string.split(stringPat), '')
-stringRE = regex.compile(stringPat)
+stringPat = "".join(stringPat.split())
+stringRE = re.compile(stringPat)
 
-hexstringRE = regex.compile("<[%s0-9A-Fa-f]*>" % whitespace)
+hexstringRE = re.compile("<[%s0-9A-Fa-f]*>" % whitespace)
 
 ps_tokenerror = 'ps_tokenerror'
 ps_error = 'ps_error'
@@ -43,15 +41,16 @@ class PSTokenizer(StringIO.StringIO):
 	
 	def getnexttoken(self, 
 			# localize some stuff, for performance
-			len = len,
-			ps_special = ps_special,
-			stringmatch = stringRE.match,
-			hexstringmatch = hexstringRE.match,
-			commentmatch = commentRE.match,
-			endmatch = endofthingRE.match, 
-			whitematch = skipwhiteRE.match):
+			len=len,
+			ps_special=ps_special,
+			stringmatch=stringRE.match,
+			hexstringmatch=hexstringRE.match,
+			commentmatch=commentRE.match,
+			endmatch=endofthingRE.match, 
+			whitematch=skipwhiteRE.match):
 		
-		self.pos = self.pos + whitematch(self.buf, self.pos)
+		_, nextpos = whitematch(self.buf, self.pos).span()
+		self.pos = nextpos
 		if self.pos >= self.len:
 			return None, None
 		pos = self.pos
@@ -63,37 +62,41 @@ class PSTokenizer(StringIO.StringIO):
 				token = char
 			elif char == '%':
 				tokentype = 'do_comment'
-				commentlen = commentmatch(buf, pos)
-				token = buf[pos:pos+commentlen]
+				_, nextpos = commentmatch(buf, pos).span()
+				token = buf[pos:nextpos]
 			elif char == '(':
 				tokentype = 'do_string'
-				strlen = stringmatch(buf, pos)
-				if strlen < 0:
+				m = stringmatch(buf, pos)
+				if m is None:
 					raise ps_tokenerror, 'bad string at character %d' % pos
-				token = buf[pos:pos+strlen]
+				_, nextpos = m.span()
+				token = buf[pos:nextpos]
 			elif char == '<':
 				tokentype = 'do_hexstring'
-				strlen = hexstringmatch(buf, pos)
-				if strlen < 0:
+				m = hexstringmatch(buf, pos)
+				if m is None:
 					raise ps_tokenerror, 'bad hexstring at character %d' % pos
-				token = buf[pos:pos+strlen]
+				_, nextpos = m.span()
+				token = buf[pos:nextpos]
 			else:
 				raise ps_tokenerror, 'bad token at character %d' % pos
 		else:
 			if char == '/':
 				tokentype = 'do_literal'
-				endofthing = endmatch(buf, pos + 1) + 1
+				m = endmatch(buf, pos+1)
 			else:
 				tokentype = ''
-				endofthing = endmatch(buf, pos)
-			if endofthing <= 0:
+				m = endmatch(buf, pos)
+			if m is None:
 				raise ps_tokenerror, 'bad token at character %d' % pos
-			token = buf[pos:pos + endofthing]
+			_, nextpos = m.span()
+			token = buf[pos:nextpos]
 		self.pos = pos + len(token)
 		return tokentype, token
 	
-	def skipwhite(self, whitematch = skipwhiteRE.match):
-		self.pos = self.pos + whitematch(self.buf, self.pos)
+	def skipwhite(self, whitematch=skipwhiteRE.match):
+		_, nextpos = whitematch(self.buf, self.pos).span()
+		self.pos = nextpos
 	
 	def starteexec(self):
 		self.pos = self.pos + 1
@@ -111,7 +114,7 @@ class PSTokenizer(StringIO.StringIO):
 	
 	def flush(self):
 		if self.buflist:
-			self.buf = self.buf + string.join(self.buflist, '')
+			self.buf = self.buf + "".join(self.buflist)
 			self.buflist = []
 
 
@@ -201,22 +204,22 @@ class PSInterpreter(PSOperators):
 		raise ps_error, 'name error: ' + str(name)
 	
 	def do_token(self, token,
-				atoi = string.atoi, 
-				atof = string.atof,
-				ps_name = ps_name,
-				ps_integer = ps_integer,
-				ps_real = ps_real):
+				int=int, 
+				float=float,
+				ps_name=ps_name,
+				ps_integer=ps_integer,
+				ps_real=ps_real):
 		try:
-			num = atoi(token)
+			num = int(token)
 		except (ValueError, OverflowError):
 			try:
-				num = atof(token)
+				num = float(token)
 			except (ValueError, OverflowError):
 				if '#' in token:
-					hashpos = string.find(token, '#')
+					hashpos = token.find('#')
 					try:
-						base = string.atoi(token[:hashpos])
-						num = string.atoi(token[hashpos+1:], base)
+						base = int(token[:hashpos])
+						num = int(token[hashpos+1:], base)
 					except (ValueError, OverflowError):
 						return ps_name(token)
 					else:
@@ -238,13 +241,13 @@ class PSInterpreter(PSOperators):
 		return ps_string(token[1:-1])
 	
 	def do_hexstring(self, token):
-		hexStr = string.join(string.split(token[1:-1]), '')
+		hexStr = "".join(token[1:-1].split())
 		if len(hexStr) % 2:
 			hexStr = hexStr + '0'
 		cleanstr = []
 		for i in range(0, len(hexStr), 2):
-			cleanstr.append(chr(string.atoi(hexStr[i:i+2], 16)))
-		cleanstr = string.join(cleanstr, '')
+			cleanstr.append(chr(int(hexStr[i:i+2], 16)))
+		cleanstr = "".join(cleanstr)
 		return ps_string(cleanstr)
 	
 	def do_special(self, token):
