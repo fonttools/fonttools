@@ -55,7 +55,7 @@ class table__m_a_x_p(DefaultTable.DefaultTable):
 	def recalc(self, ttFont):
 		"""Recalculate the font bounding box, and most other maxp values except
 		for the TT instructions values. Also recalculate the value of bit 1
-		of the flags field of the 'head' table.
+		of the flags field and the font bounding box of the 'head' table.
 		"""
 		glyfTable = ttFont['glyf']
 		hmtxTable = ttFont['hmtx']
@@ -91,10 +91,10 @@ class table__m_a_x_p(DefaultTable.DefaultTable):
 					maxCompositeContours = max(maxCompositeContours, nContours)
 					maxComponentElements = max(maxComponentElements, len(g.components))
 					maxComponentDepth = max(maxComponentDepth, componentDepth)
-		self.xMin = xMin
-		self.yMin = yMin
-		self.xMax = xMax
-		self.yMax = yMax
+		headTable.xMin = xMin
+		headTable.yMin = yMin
+		headTable.xMax = xMax
+		headTable.yMax = yMax
 		self.maxPoints = maxPoints
 		self.maxContours = maxContours
 		self.maxCompositePoints = maxCompositePoints
