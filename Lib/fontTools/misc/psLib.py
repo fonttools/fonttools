@@ -341,6 +341,6 @@ if __name__ == "__main__":
 	import macfs
 	fss, ok = macfs.StandardGetFile("LWFN")
 	if ok:
-		import t1Lib
+		from fontTools import t1Lib
 		data, kind = t1Lib.read(fss.as_pathname())
 		font = suckfont(data)
