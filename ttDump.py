@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 
 """\
-usage: %s [-h] [-v] [-s] [-t <table>] TrueType-file [XML-output-file]
+usage: %s [-hvs] [-t <table>] TrueType-file [XML-output-file]
     Dump a TrueType font as an XML file. If the XML-output-file argument
     is omitted, the out put file name will be constructed from the input
     file name, like so: *.ttf becomes *.xml. Either way, existing files
@@ -13,9 +13,11 @@ usage: %s [-h] [-v] [-s] [-t <table>] TrueType-file [XML-output-file]
        will be dumped
     -v verbose: messages will be written to stdout about what is 
        being done.
-    -s split tables: save the XML in a separate XML file per table. 
-       The names of these files will be constructed from the 
-       XML-output-file name as follows: *.xml becomes *.<tag>.xml
+    -s split tables: save the XML in a separate XML file per table.
+       The files will be saved in a directory. The name of this
+       directory will be constructed from the input filename (by
+       dropping the extension) or can be specified by the optional
+       XML-output-file argument.
     -h help: print this message
 """
 
@@ -46,8 +48,11 @@ for option, value in options:
 
 if len(args) == 1:
 	ttPath = args[0]
-	name, ext = os.path.splitext(ttPath)
-	xmlPath = name + '.xml'
+	path, ext = os.path.splitext(ttPath)
+	if splitTables:
+		xmlPath = path
+	else:
+		xmlPath = path + '.xml'
 elif len(args) == 2:
 	ttPath, xmlPath = args
 else:
