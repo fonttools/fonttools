@@ -172,7 +172,8 @@ def solveQuadratic(a, b, c,
 		# We have a true quadratic equation.  Apply the quadratic formula to find two roots.
 		DD = b*b - 4.0*a*c
 		if DD >= 0.0:
-			roots = [(-b+sqrt(DD))/2.0/a, (-b-sqrt(DD))/2.0/a]
+			rDD = sqrt(DD)
+			roots = [(-b+rDD)/2.0/a, (-b-rDD)/2.0/a]
 		else:
 			# complex roots, ignore
 			roots = []
@@ -195,6 +196,7 @@ def solveCubic(a, b, c, d,
 		# don't just test for zero; for very small values of 'a' solveCubic()
 		# returns unreliable results, so we fall back to quad.
 		return solveQuadratic(b, c, d)
+	a = float(a)
 	a1 = b/a
 	a2 = c/a
 	a3 = d/a
@@ -205,9 +207,10 @@ def solveCubic(a, b, c, d,
 
 	if R2_Q3 <= 0:
 		theta = acos(R/sqrt(Q*Q*Q))
-		x0 = -2.0*sqrt(Q)*cos(theta/3.0) - a1/3.0
-		x1 = -2.0*sqrt(Q)*cos((theta+2.0*pi)/3.0) - a1/3.0
-		x2 = -2.0*sqrt(Q)*cos((theta+4.0*pi)/3.0) - a1/3.0
+		rQ2 = -2.0*sqrt(Q)
+		x0 = rQ2*cos(theta/3.0) - a1/3.0
+		x1 = rQ2*cos((theta+2.0*pi)/3.0) - a1/3.0
+		x2 = rQ2*cos((theta+4.0*pi)/3.0) - a1/3.0
 		return [x0, x1, x2]
 	else:
 		x = pow(sqrt(R2_Q3)+abs(R), 1/3.0)
