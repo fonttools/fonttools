@@ -275,7 +275,6 @@ class cmap_format_2(CmapSubtable):
 					gName = ttFont.getGlyphName(0)
 					self.cmap[charCode] = gName
 		
-		
 	def compile(self, ttFont):
 		kEmptyTwoCharCodeRange = -1
 		items = self.cmap.items()
@@ -283,7 +282,7 @@ class cmap_format_2(CmapSubtable):
 
 		# All one-byte code values map through the subHeaderKeys table to subheader 0.
 		# Assume that all entries in the subHeaderKeys table are one-byte codes unless proven otherwise.
-		subHeaderKeys = [ 0 for x in  range(256)] 
+		subHeaderKeys = [0 for x in  range(256)] 
 		subHeaderList = []
 		
 		lastFirstByte = -1
@@ -369,8 +368,6 @@ class cmap_format_2(CmapSubtable):
 			
 		assert (len(data) == length), "Error: cmap format 2 is not same length as calculated! actual: " + str(len(data))+ " calc : " + str(length)
 		return data
-		
-
 
 	def toXML(self, writer, ttFont):
 		writer.begintag(self.__class__.__name__, [
