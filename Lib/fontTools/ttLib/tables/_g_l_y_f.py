@@ -235,9 +235,11 @@ class Glyph:
 			data = data + self.compileComponents(glyfTable)
 		else:
 			data = data + self.compileCoordinates()
-		# from the spec: "Note that the local offsets should be word-aligned"
+		# From the spec: "Note that the local offsets should be word-aligned"
+		# From a later MS spec: "Note that the local offsets should be long-aligned"
+		# For now, I'll stick to word-alignment.
 		if len(data) % 2:
-			# ...so if the length of the data is odd, append a null byte
+			# if the length of the data is odd, append a null byte
 			data = data + "\0"
 		return data
 	
@@ -442,7 +444,7 @@ class Glyph:
 		# unpack raw coordinates, krrrrrr-tching!
 		xDataLen = struct.calcsize(xFormat)
 		yDataLen = struct.calcsize(yFormat)
-		if (len(data) - (xDataLen + yDataLen)) not in (0, 1):
+		if not (0 <= (len(data) - (xDataLen + yDataLen)) < 4):
 			raise ttLib.TTLibError, "bad glyph record"
 		xCoordinates = struct.unpack(xFormat, data[:xDataLen])
 		yCoordinates = struct.unpack(yFormat, data[xDataLen:xDataLen+yDataLen])
