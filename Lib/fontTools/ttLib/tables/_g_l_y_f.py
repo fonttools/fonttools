@@ -225,10 +225,11 @@ class Glyph:
 			data = data + self.compileCoordinates()
 		# From the spec: "Note that the local offsets should be word-aligned"
 		# From a later MS spec: "Note that the local offsets should be long-aligned"
-		# For now, I'll stick to word-alignment.
-		if len(data) % 2:
-			# if the length of the data is odd, append a null byte
-			data = data + "\0"
+		# Let's be modern and align on 4-byte boundaries.
+		if len(data) % 4:
+			# add pad bytes
+			nPadBytes = 4 - (len(data) % 4)
+			data = data + "\0" * nPadBytes
 		return data
 	
 	def toXML(self, writer, ttFont):
