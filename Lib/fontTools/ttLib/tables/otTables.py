@@ -21,12 +21,12 @@ class Coverage(FormatSwitchingBaseTable):
 	
 	# manual implementation to get rid of glyphID dependencies
 	
-	def postRead(self, table, font):
+	def postRead(self, rawTable, font):
 		if self.Format == 1:
-			self.glyphs = table["GlyphArray"]
+			self.glyphs = rawTable["GlyphArray"]
 		elif self.Format == 2:
 			glyphs = self.glyphs = []
-			ranges = table["RangeRecord"]
+			ranges = rawTable["RangeRecord"]
 			for r in ranges:
 				assert r.StartCoverageIndex == len(glyphs), \
 					(r.StartCoverageIndex, len(glyphs))
@@ -40,12 +40,13 @@ class Coverage(FormatSwitchingBaseTable):
 				if start != end:
 					glyphs.append(end)
 		else:
-			assert 0
+			assert 0, "unknown format: %s" % self.Format
 	
 	def preWrite(self, font):
 		format = 1
-		table = {"GlyphArray": self.glyphs}
+		rawTable = {"GlyphArray": self.glyphs}
 		if self.glyphs:
+			# find out whether Format 2 is more compact or not
 			glyphIDs = []
 			for glyphName in self.glyphs:
 				glyphIDs.append(font.getGlyphID(glyphName))
@@ -73,11 +74,11 @@ class Coverage(FormatSwitchingBaseTable):
 					ranges[i] = r
 					index = index + end - start + 1
 				format = 2
-				table = {"RangeRecord": ranges}
+				rawTable = {"RangeRecord": ranges}
 			#else:
 			#	fallthrough; Format 1 is more compact
 		self.Format = format
-		return table
+		return rawTable
 	
 	def toXML2(self, xmlWriter, font):
 		for glyphName in self.glyphs:
