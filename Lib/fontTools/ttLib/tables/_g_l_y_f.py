@@ -445,7 +445,7 @@ class Glyph:
 		xDataLen = struct.calcsize(xFormat)
 		yDataLen = struct.calcsize(yFormat)
 		if not (0 <= (len(data) - (xDataLen + yDataLen)) < 4):
-			raise ttLib.TTLibError, "bad glyph record"
+			raise ttLib.TTLibError, "bad glyph record (leftover bytes: %s)" % (len(data) - (xDataLen + yDataLen))
 		xCoordinates = struct.unpack(xFormat, data[:xDataLen])
 		yCoordinates = struct.unpack(yFormat, data[xDataLen:xDataLen+yDataLen])
 		return flags, xCoordinates, yCoordinates
@@ -637,11 +637,11 @@ class GlyphComponent:
 		# convert it to an absolute offset, since it is valuable information).
 		# This method will now raise "AttributeError: x" on glyphs that use
 		# this TT feature.
-		from fontTools.objects.transform import Transformation
 		if hasattr(self, "transform"):
-			trans = Transformation(self.transform, (self.x, self.y))
+			[[xx, xy], [yx, yy]] = self.transform
+			trans = (xx, xy, yx, yy, self.x, self.y)
 		else:
-			trans = Transformation((1, 1), (self.x, self.y))
+			trans = (1, 0, 0, 1, self.x, self.y)
 		return self.glyphName, trans
 	
 	def decompile(self, data, glyfTable):
