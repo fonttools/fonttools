@@ -42,7 +42,7 @@ Dumping 'prep' table...
 """
 
 #
-# $Id: __init__.py,v 1.27 2002-05-13 16:21:50 jvr Exp $
+# $Id: __init__.py,v 1.28 2002-05-15 07:50:06 jvr Exp $
 #
 
 import os
@@ -212,14 +212,19 @@ class TTFont:
 				writer.newline()
 				collection.simpletag(xmlTag, src=os.path.basename(tablePath))
 				collection.newline()
-			table = self[tag]
-			report = "Dumping '%s' table..." % tag
+			if self.has_key(tag):
+				table = self[tag]
+				report = "Dumping '%s' table..." % tag
+			else:
+				report = "No '%s' table found." % tag
 			if progress:
 				progress.setlabel(report)
 			elif self.verbose:
 				debugmsg(report)
 			else:
 				print report
+			if not self.has_key(tag):
+				continue
 			if hasattr(table, "ERROR"):
 				writer.begintag(xmlTag, ERROR="decompilation error")
 			else:
