@@ -42,7 +42,7 @@ Dumping 'prep' table...
 """
 
 #
-# $Id: __init__.py,v 1.31 2002-05-24 09:58:04 jvr Exp $
+# $Id: __init__.py,v 1.32 2002-05-25 08:22:22 jvr Exp $
 #
 
 import os
@@ -630,6 +630,8 @@ def tagToIdentifier(tag):
 		'OS/2' -> 'O_S_2f_2'
 	"""
 	import re
+	if tag == "GlyphOrder":
+		return tag
 	assert len(tag) == 4, "tag should be 4 characters long"
 	while len(tag) > 1 and tag[-1] == ' ':
 		tag = tag[:-1]
@@ -643,6 +645,8 @@ def tagToIdentifier(tag):
 
 def identifierToTag(ident):
 	"""the opposite of tagToIdentifier()"""
+	if ident == "GlyphOrder":
+		return ident
 	if len(ident) % 2 and ident[0] == "_":
 		ident = ident[1:]
 	assert not (len(ident) % 2)
