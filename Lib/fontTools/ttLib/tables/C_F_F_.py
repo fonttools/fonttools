@@ -19,13 +19,13 @@ class table_C_F_F_(DefaultTable.DefaultTable):
 		from cStringIO import StringIO
 		self.data = data  # XXX while work is in progress...
 		self.cff.decompile(StringIO(data))
-		assert len(self.cff.fonts) == 1, "can't deal with multi-font CFF tables."
+		assert len(self.cff) == 1, "can't deal with multi-font CFF tables."
 	
 	#def compile(self, otFont):
 	#	xxx
 	
 	def haveGlyphNames(self):
-		if hasattr(self.cff.fonts[self.cff.fontNames[0]], "ROS"):
+		if hasattr(self.cff[self.cff.fontNames[0]], "ROS"):
 			return 0  # CID-keyed font
 		else:
 			return 1
@@ -35,10 +35,12 @@ class table_C_F_F_(DefaultTable.DefaultTable):
 			from fontTools import ttLib
 			raise ttLib.TTLibError, "illegal use of getGlyphOrder()"
 		self._gaveGlyphOrder = 1
-		return self.cff.fonts[self.cff.fontNames[0]].getGlyphOrder()
+		return self.cff[self.cff.fontNames[0]].getGlyphOrder()
 	
 	def setGlyphOrder(self, glyphOrder):
-		self.cff.fonts[self.cff.fontNames[0]].setGlyphOrder(glyphOrder)
+		pass
+		# XXX
+		#self.cff[self.cff.fontNames[0]].setGlyphOrder(glyphOrder)
 	
 	def toXML(self, writer, otFont, progress=None):
 		if TESTING_CFF:
