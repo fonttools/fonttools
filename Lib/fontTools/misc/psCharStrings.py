@@ -232,9 +232,9 @@ class T2CharString(ByteCodeBase):
 	def compile(self):
 		if self.bytecode is not None:
 			return
-		if self.program[-1] not in ("endchar", "return", "callsubr", "callgsubr", "seac"):
-			print "XXX", self.program
-			assert 0, "illegal CharString"
+		assert self.program, "illegal CharString: decompiled to empty program"
+		assert self.program[-1] in ("endchar", "return", "callsubr", "callgsubr",
+				"seac"), "illegal CharString"
 		bytecode = []
 		opcodes = self.opcodes
 		program = self.program
@@ -459,10 +459,10 @@ class SimpleT2Decompiler:
 			else:
 				pushToStack(token)
 		if needsDecompilation:
+			assert program, "illegal CharString: decompiled to empty program"
+			assert program[-1] in ("endchar", "return", "callsubr", "callgsubr",
+					"seac"), "illegal CharString"
 			charString.setProgram(program)
-			if program[-1] not in ("endchar", "return", "callsubr", "callgsubr", "seac"):
-				print "XXX", program
-			assert program[-1] in ("endchar", "return", "callsubr", "callgsubr", "seac")
 		del self.callingStack[-1]
 	
 	def pop(self):
@@ -1020,4 +1020,3 @@ def calcSubrBias(subrs):
 	else:
 		bias = 32768
 	return bias
-
