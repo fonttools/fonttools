@@ -81,6 +81,7 @@ def main(args):
 			roundTrip(ttFile, options, report)
 		except KeyboardInterrupt:
 			print "(Cancelled)"
+			break
 		except:
 			print "*** round tripping aborted ***"
 			traceback.print_exc()
