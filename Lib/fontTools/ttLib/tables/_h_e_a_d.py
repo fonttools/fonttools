@@ -129,10 +129,11 @@ def bin2long(data):
 	return v
 
 def long2bin(v, bytes=8):
+	mask = long("FF" * bytes, 16)
 	data = ""
 	while v:
 		data = chr(v & 0xff) + data
-		v = (v >> 8) & 0xffffffffL
+		v = (v >> 8) & mask
 	data = (bytes - len(data)) * "\0" + data
 	assert len(data) == 8, "long too long"
 	return data
