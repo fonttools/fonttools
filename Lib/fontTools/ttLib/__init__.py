@@ -42,13 +42,19 @@ Dumping 'prep' table...
 """
 
 #
-# $Id: __init__.py,v 1.42 2003-08-26 19:00:38 jvr Exp $
+# $Id: __init__.py,v 1.43 2003-08-28 18:23:43 jvr Exp $
 #
 
 import sys
 import os
 import string
-haveMacSupport = sys.platform in ("mac", "darwin")
+
+haveMacSupport = 0
+if sys.platform == "mac":
+	haveMacSupport = 1
+elif sys.platform == "darwin" and sys.version_info[:3] != (2, 2, 0):
+	# Python 2.2's Mac support is broken, so don't enable it there.
+	haveMacSupport = 1
 
 
 class TTLibError(Exception): pass
