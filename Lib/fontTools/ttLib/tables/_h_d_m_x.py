@@ -67,6 +67,8 @@ class table__h_d_m_x(DefaultTable.DefaultTable):
 			for ppem in ppems:
 				widths = self.hdmx[ppem]
 				row.append(widths[glyphName])
+			if ";" in glyphName:
+				glyphName = "\\x3b".join(glyphName.split(";"))
 			writer.write(format % ((glyphName,) + tuple(row)))
 			writer.newline()
 		writer.endtag("hdmxData")
@@ -89,6 +91,9 @@ class table__h_d_m_x(DefaultTable.DefaultTable):
 				continue
 			assert line[0][-1] == ":", "illegal hdmx format"
 			glyphName = line[0][:-1]
+			if "\\" in glyphName:
+				from fontTools.misc.textTools import safeEval
+				glyphName = safeEval('"""' + glyphName + '"""')
 			line = map(int, line[1:])
 			assert len(line) == len(ppems), "illegal hdmx format"
 			for i in range(len(ppems)):
