@@ -324,7 +324,7 @@ class cmap_format_6(CmapSubtable):
 		data = data[10:]
 		#assert len(data) == 2 * entryCount  # XXX not true in Apple's Helvetica!!!
 		glyphIndexArray = array.array("H")
-		glyphIndexArray.fromstring(data[:2 * entryCount])
+		glyphIndexArray.fromstring(data[:2 * int(entryCount)])
 		if ttLib.endian <> "big":
 			glyphIndexArray.byteswap()
 		self.cmap = cmap = {}
