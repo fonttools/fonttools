@@ -42,7 +42,7 @@ Dumping 'prep' table...
 """
 
 #
-# $Id: __init__.py,v 1.16 2000-10-02 07:51:42 Just Exp $
+# $Id: __init__.py,v 1.17 2001-02-23 21:58:57 Just Exp $
 #
 
 __version__ = "1.0a6"
@@ -386,16 +386,25 @@ class TTFont:
 			reversecmap = {}
 			for unicode, name in cmap.items():
 				reversecmap[name] = unicode
+			allNames = {}
 			for i in range(numGlyphs):
 				tempName = glyphOrder[i]
 				if reversecmap.has_key(tempName):
 					unicode = reversecmap[tempName]
 					if agl.UV2AGL.has_key(unicode):
 						# get name from the Adobe Glyph List
-						glyphOrder[i] = agl.UV2AGL[unicode]
+						glyphName = agl.UV2AGL[unicode]
 					else:
 						# create uni<CODE> name
-						glyphOrder[i] = "uni" + string.upper(string.zfill(hex(unicode)[2:], 4))
+						glyphName = "uni" + string.upper(string.zfill(
+								hex(unicode)[2:], 4))
+					tempName = glyphName
+					n = 1
+					while allNames.has_key(tempName):
+						tempName = glyphName + "#" + `n`
+						n = n + 1
+					glyphOrder[i] = tempName
+					allNames[tempName] = 1
 			# Delete the cmap table from the cache, so it can be 
 			# parsed again with the right names.
 			del self.tables['cmap']
