@@ -1,7 +1,7 @@
 """cffLib.py -- read/write tools for Adobe CFF fonts."""
 
 #
-# $Id: cffLib.py,v 1.5 2000-01-19 20:44:33 Just Exp $
+# $Id: cffLib.py,v 1.6 2000-03-28 10:37:25 Just Exp $
 #
 
 import struct, sstruct
@@ -289,9 +289,12 @@ class PrivateDict:
 		
 		# get local subrs
 		#print "YYY Private.Subrs:", self.Subrs
-		chunk = data[self.Subrs:]
-		localSubrs, restdata = readINDEX(chunk)
-		self.Subrs = map(psCharStrings.T2CharString, localSubrs)
+		if hasattr(self, "Subrs"):
+			chunk = data[self.Subrs:]
+			localSubrs, restdata = readINDEX(chunk)
+			self.Subrs = map(psCharStrings.T2CharString, localSubrs)
+		else:
+			self.Subrs = []
 	
 	def toXML(self, xmlWriter):
 		xmlWriter.newline()
@@ -347,6 +350,7 @@ def readINDEX(data):
 	data = data[(count+1) * offSize:]
 	prev = offsets[0]
 	stuff = []
+	next = offsets[0]
 	for next in offsets[1:]:
 		chunk = data[prev-1:next-1]
 		assert len(chunk) == next - prev
