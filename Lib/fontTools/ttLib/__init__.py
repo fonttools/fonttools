@@ -42,7 +42,7 @@ Dumping 'prep' table...
 """
 
 #
-# $Id: __init__.py,v 1.39 2003-08-25 13:15:50 jvr Exp $
+# $Id: __init__.py,v 1.40 2003-08-25 13:20:38 jvr Exp $
 #
 
 import sys
@@ -622,8 +622,9 @@ class _TTGlyph:
 					contour.append(None)
 					pen.qCurveTo(*contour)
 				else:
-					# Shuffle the points so that contour is guaranteed to *end*
-					# in an on-curve point, which we'll use for the moveTo.
+					# Shuffle the points so that contour the is guaranteed
+					# to *end* in an on-curve point, which we'll use for
+					# the moveTo.
 					firstOnCurve = cFlags.index(1) + 1
 					contour = contour[firstOnCurve:] + contour[:firstOnCurve]
 					cFlags = cFlags[firstOnCurve:] + cFlags[:firstOnCurve]
