@@ -20,6 +20,7 @@ assert len(t1OperandEncoding) == 256
 
 t2OperandEncoding = t1OperandEncoding[:]
 t2OperandEncoding[28] = "read_shortInt"
+t2OperandEncoding[255] = "read_fixed1616"
 
 cffDictOperandEncoding = t2OperandEncoding[:]
 cffDictOperandEncoding[29] = "read_longInt"
@@ -56,6 +57,11 @@ class ByteCodeBase:
 		bin = data[index] + data[index+1] + data[index+2] + data[index+3]
 		value, = struct.unpack(">l", bin)
 		return value, index+4
+	
+	def read_fixed1616(self, b0, data, index):
+		bin = data[index] + data[index+1] + data[index+2] + data[index+3]
+		value, = struct.unpack(">l", bin)
+		return value / 65536.0, index+4
 	
 	def read_realNumber(self, b0, data, index):
 		number = ''
@@ -145,17 +151,16 @@ t2Operators = [
 
 
 def getIntEncoder(format):
-	fourByteOp = chr(255)
-	isT1 = 0
 	if format == "cff":
 		fourByteOp = chr(29)
 	elif format == "t1":
-		isT1 = 1
+		fourByteOp = chr(255)
 	else:
 		assert format == "t2"
+		fourByteOp = None
 	
-	def encodeInt(value, fourByteOp=fourByteOp, isT1=isT1,
-			chr=chr, pack=struct.pack, unpack=struct.unpack):
+	def encodeInt(value, fourByteOp=fourByteOp, chr=chr,
+			pack=struct.pack, unpack=struct.unpack):
 		if -107 <= value <= 107:
 			code = chr(value + 139)
 		elif 108 <= value <= 1131:
@@ -164,8 +169,24 @@ def getIntEncoder(format):
 		elif -1131 <= value <= -108:
 			value = -value - 108
 			code = chr((value >> 8) + 251) + chr(value & 0xFF)
-		elif not isT1 and -32768 <= value <= 32767:
-			code = chr(28) + pack(">h", value)
+		elif fourByteOp is None:
+			# T2 only supports 2 byte ints
+			if -32768 <= value <= 32767:
+				code = chr(28) + pack(">h", value)
+			else:
+				# Backwards compatible hack: due to a previous bug in FontTools,
+				# 16.16 fixed numbers were written out as 4-byte ints. When
+				# these numbers were small, they were wrongly written back as
+				# small ints instead of 4-byte ints, breaking round-tripping.
+				# This here workaround doesn't do it any better, since we can't
+				# distinguish anymore between small ints that were supposed to
+				# be small fixed numbers and small ints that were just small
+				# ints. Hence the warning.
+				import sys
+				sys.stderr.write("Warning: 4-byte T2 number got passed to the "
+					"IntType handler. This should happen only when reading in "
+					"old XML files.\n")
+				code = chr(255) + pack(">l", value)
 		else:
 			code = fourByteOp + pack(">l", value)
 		return code
@@ -177,7 +198,12 @@ encodeIntCFF = getIntEncoder("cff")
 encodeIntT1 = getIntEncoder("t1")
 encodeIntT2 = getIntEncoder("t2")
 
+def encodeFixed(f, pack=struct.pack):
+	# For T2 only
+	return "\xff" + pack(">l", int(round(f * 65536)))
+
 def encodeFloat(f):
+	# For CFF only, used in cffLib
 	s = str(f).upper()
 	if s[:2] == "0.":
 		s = s[1:]
@@ -222,6 +248,12 @@ class T2CharString(ByteCodeBase):
 		else:
 			return "<%s (bytecode) at %x>" % (self.__class__.__name__, id(self))
 	
+	def getIntEncoder(self):
+		return encodeIntT2
+	
+	def getFixedEncoder(self):
+		return encodeFixed
+
 	def decompile(self):
 		if not self.needsDecompilation():
 			return
@@ -245,6 +277,8 @@ class T2CharString(ByteCodeBase):
 		bytecode = []
 		opcodes = self.opcodes
 		program = self.program
+		encodeInt = self.getIntEncoder()
+		encodeFixed = self.getFixedEncoder()
 		i = 0
 		end = len(program)
 		while i < end:
@@ -260,7 +294,9 @@ class T2CharString(ByteCodeBase):
 					bytecode.append(program[i])  # hint mask
 					i = i + 1
 			elif tp == types.IntType:
-				bytecode.append(encodeIntT2(token))
+				bytecode.append(encodeInt(token))
+			elif tp == types.FloatType:
+				bytecode.append(encodeFixed(token))
 			else:
 				assert 0, "unsupported type: %s" % tp
 		try:
@@ -363,14 +399,19 @@ class T2CharString(ByteCodeBase):
 			try:
 				token = int(token)
 			except ValueError:
-				program.append(token)
-				if token in ('hintmask', 'cntrmask'):
-					mask = content[i]
-					maskBytes = ""
-					for j in range(0, len(mask), 8):
-						maskBytes = maskBytes + chr(binary2num(mask[j:j+8]))
-					program.append(maskBytes)
-					i = i + 1
+				try:
+					token = float(token)
+				except ValueError:
+					program.append(token)
+					if token in ('hintmask', 'cntrmask'):
+						mask = content[i]
+						maskBytes = ""
+						for j in range(0, len(mask), 8):
+							maskBytes = maskBytes + chr(binary2num(mask[j:j+8]))
+						program.append(maskBytes)
+						i = i + 1
+				else:
+					program.append(token)
 			else:
 				program.append(token)
 		self.setProgram(program)
@@ -416,6 +457,13 @@ class T1CharString(T2CharString):
 		self.bytecode = bytecode
 		self.program = program
 		self.subrs = subrs
+
+	def getIntEncoder(self):
+		return encodeIntT1
+
+	def getFixedEncoder(self):
+		def encodeFixed(value):
+			raise TypeError("Type 1 charstrings don't support floating point operands")
 
 	def decompile(self):
 		if self.program is not None:
