@@ -174,9 +174,9 @@ static char eexec_module_documentation[] =
 ""
 ;
 
-void initeexecOp(); /* prototype to shut up the compiler */
+void initeexecOp(void); /* prototype to shut up the compiler */
 
-void initeexecOp()
+void initeexecOp(void)
 {
 	PyObject *m, *d;
 
