@@ -1,16 +1,16 @@
 #! /usr/bin/env python
 
 """\
-usage: %s [-hvb] [-i TrueType-input-file] XML-file [TrueType-output-file]
-    Translate an XML file (as output by tt2xml.py) to a TrueType font file. 
-    If the XML-file argument is a directory instead of a file, all files 
-    ending in '.xml' will be merged into one TrueType file. This is mostly 
-    useful in conjunction with the -s option of tt2xml.py.
+usage: %s [-hvb] [-i TrueType-input-file] TTX-file [TrueType-output-file]
+    Translate an TTX file (as output by ttDump.py) to a TrueType font file. 
+    If the TTX-file argument is a directory instead of a file, all files in
+    that directory ending in '.ttx' will be merged into one TrueType file. 
+    This is mostly useful in conjunction with the -s option of ttDump.py.
 
     Options:
-    -i TrueType-input-file: specify a TT file to be merged with the XML file(s)
+    -i TrueType-input-file: specify a TT file to be merged with the TTX file(s)
     -v verbose: messages will be written to stdout about what is being done
-    -b Don't recalc glyph boundig boxes: use the values in the XML file as-is.
+    -b Don't recalc glyph boundig boxes: use the values in the TTX file as-is.
     -h help: print this message
 """
 import sys, os, getopt
@@ -48,7 +48,7 @@ if os.path.isdir(xmlPath):
 	import glob
 	oldDir = os.getcwd()
 	os.chdir(xmlPath)
-	files = glob.glob("*.xml")
+	files = glob.glob("*.ttx")
 	os.chdir(oldDir)
 	for xmlFile in files:
 		xmlFile = os.path.join(xmlPath, xmlFile)

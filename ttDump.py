@@ -1,11 +1,11 @@
 #! /usr/bin/env python
 
 """\
-usage: %s [-hvs] [-t <table>] [-x <table>] TrueType-file [XML-output-file]
-    Dump a TrueType font as an XML file. If the XML-output-file argument
-    is omitted, the out put file name will be constructed from the input
-    file name, like so: *.ttf becomes *.xml. Either way, existing files
-    will be overwritten without warning!
+usage: %s [-hvs] [-t <table>] [-x <table>] TrueType-file [TTX-output-file]
+    Dump a TrueType font as a TTX file (an XML-based text format). If the 
+    TTX-output-file argument is omitted, the out put file name will be 
+    constructed from the input file name, like so: *.ttf becomes *.ttx. 
+    Either way, existing files will be overwritten without warning!
 
     Options:
     -t <table> specify a table to dump. Multiple -t options
@@ -15,11 +15,11 @@ usage: %s [-hvs] [-t <table>] [-x <table>] TrueType-file [XML-output-file]
        -x options are allowed. -t and -x are mutually exclusive.
     -v verbose: messages will be written to stdout about what is 
        being done.
-    -s split tables: save the XML in a separate XML file per table.
+    -s split tables: save the TTX data into separate TTX files per table.
        The files will be saved in a directory. The name of this
        directory will be constructed from the input filename (by
        dropping the extension) or can be specified by the optional
-       XML-output-file argument.
+       TTX-output-file argument.
     -h help: print this message
 """
 
@@ -65,7 +65,7 @@ if len(args) == 1:
 	if splitTables:
 		xmlPath = path
 	else:
-		xmlPath = path + '.xml'
+		xmlPath = path + '.ttx'
 elif len(args) == 2:
 	ttPath, xmlPath = args
 else:
