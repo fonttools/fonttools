@@ -82,6 +82,12 @@ class Long(IntValue):
 	def write(self, writer, font, tableStack, value):
 		writer.writeLong(value)
 
+class Fixed(IntValue):
+	def read(self, reader, font, tableStack):
+		return float(reader.readLong()) / 0x10000
+	def write(self, writer, font, tableStack, value):
+		writer.writeLong(int(round(value * 0x10000)))
+
 class Short(IntValue):
 	def read(self, reader, font, tableStack):
 		return reader.readShort()
@@ -110,6 +116,7 @@ class GlyphID(SimpleValue):
 		return font.getGlyphName(reader.readUShort())
 	def write(self, writer, font, tableStack, value):
 		writer.writeUShort(font.getGlyphID(value))
+
 
 class Struct(BaseConverter):
 	
@@ -183,6 +190,7 @@ class ValueFormat(IntValue):
 	def write(self, writer, font, tableStack, format):
 		writer.writeUShort(format)
 		writer.setValueFormat(format, self.which)
+
 
 class ValueRecord(ValueFormat):
 	def read(self, reader, font, tableStack):
@@ -263,6 +271,7 @@ converterMapping = {
 	"int16":       Short,
 	"uint16":      UShort,
 	"ULONG":       Long,
+	"Fixed":       Fixed,
 	"Tag":         Tag,
 	"GlyphID":     GlyphID,
 	"struct":      Struct,
@@ -272,5 +281,5 @@ converterMapping = {
 
 # equivalents:
 converterMapping["USHORT"] = converterMapping["uint16"]
-converterMapping["Fixed"] = converterMapping["fixed32"] = converterMapping["ULONG"]
+converterMapping["fixed32"] = converterMapping["Fixed"]
 
