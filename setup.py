@@ -17,12 +17,14 @@ except ImportError:
 	print "        http://sourceforge.net/projects/pyxml/"
 
 
-
-setup(	name = "FontTools",
+setup(
+		name = "FontTools",
 		version = "1.0",
-		description = "FontTools",
+		description = "Python FontTools",
 		author = "Just van Rossum",
 		author_email = "just@letterror.com",
+		maintainer = "Just van Rossum",
+		maintainer_email = "just@letterror.com",
 		url = "http://fonttools.sourceforge.net/",
 		
 		packages = [
@@ -45,7 +47,7 @@ setup(	name = "FontTools",
 				library_dirs=[],
 				libraries=[],
 			)
-		]
-
+		],
+		scripts = ["Tools/ttcompile", "Tools/ttdump", "Tools/ttlist"],
 	)
 
