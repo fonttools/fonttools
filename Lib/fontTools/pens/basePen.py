@@ -192,7 +192,7 @@ class BasePen(AbstractPen):
 			# there's an implied on-curve point exactly in the middle.
 			# This is where the segment splits.
 			_qCurveToOne = self._qCurveToOne
-			for i in range(len(points) - 2):
+			for i in range(n - 1):
 				x, y = points[i]
 				nx, ny = points[i+1]
 				impliedPt = (0.5 * (x + nx), 0.5 * (y + ny))
