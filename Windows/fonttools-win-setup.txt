@@ -1,3 +1,8 @@
-TTX is an application to convert OpenType and TrueType files to and from an XML-based text format, also called TTX.
+TTX is an application to convert OpenType and TrueType files to and from an
+XML-based text format, also called TTX.
 
-The TTX setup application can create an icon for TTX on your desktop. You will then be able to drop .TTF or .OTF files onto the ttx.exe icon to dump the font to a .TTX file. Dropping a .TTX file onto it builds a TTF or OTF font.
+The TTX setup application can create an icon for TTX on your desktop. You will
+then be able to drop .TTF or .OTF files onto the ttx.exe icon to dump the font
+to a .TTX file. Dropping a .TTX file onto it builds a TTF or OTF font.
+
+For more information, see documentation.html
