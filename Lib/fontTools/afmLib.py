@@ -8,7 +8,7 @@ import re
 import string
 import types
 
-__version__ = "$Id: afmLib.py,v 1.1 1999-12-16 21:34:51 Just Exp $"
+__version__ = "$Id: afmLib.py,v 1.2 2001-04-30 14:40:17 Just Exp $"
 
 
 # every single line starts with a "word"
@@ -18,7 +18,7 @@ identifierRE = re.compile("^([A-Za-z]+).*")
 charRE = re.compile(
 		"(-?\d+)"			# charnum
 		"\s*;\s*WX\s+"		# ; WX 
-		"(\d+)"			# width
+		"(\d+)"				# width
 		"\s*;\s*N\s+"		# ; N 
 		"(\.?[A-Za-z0-9_]+)"	# charname
 		"\s*;\s*B\s+"		# ; B 
@@ -42,7 +42,46 @@ kernRE = re.compile(
 		"\s*"				# 
 		)
 
-error = "AFM.error"
+# regular expressions to parse composite info lines of the form:
+# Aacute 2 ; PCC A 0 0 ; PCC acute 182 211 ;
+compositeRE = re.compile(
+		"([.A-Za-z0-9_]+)"	# char name
+		"\s+"				# 
+		"(\d+)"				# number of parts
+		"\s*;\s*"			# 
+		)
+componentRE = re.compile(
+		"PCC\s+"			# PPC
+		"([.A-Za-z0-9_]+)"	# base char name
+		"\s+"				# 
+		"(-?\d+)"			# x offset
+		"\s+"				# 
+		"(-?\d+)"			# y offset
+		"\s*;\s*"			# 
+		)
+
+preferredAttributeOrder = [
+		"FontName",
+		"FullName",
+		"FamilyName",
+		"Weight",
+		"ItalicAngle",
+		"IsFixedPitch",
+		"FontBBox",
+		"UnderlinePosition",
+		"UnderlineThickness",
+		"Version",
+		"Notice",
+		"EncodingScheme",
+		"CapHeight",
+		"XHeight",
+		"Ascender",
+		"Descender",
+]
+
+
+class error(Exception): pass
+
 
 class AFM:
 	
@@ -53,14 +92,18 @@ class AFM:
 			'StartKernData',
 			'StartKernPairs',
 			'EndKernPairs',
-			'EndKernData', ]
+			'EndKernData',
+			'StartComposites',
+			'EndComposites',
+			]
 	
-	def __init__(self, path = None):
+	def __init__(self, path=None):
 		self._attrs = {}
 		self._chars = {}
 		self._kerning = {}
 		self._index = {}
 		self._comments = []
+		self._composites = {}
 		if path is not None:
 			self.read(path)
 	
@@ -78,10 +121,12 @@ class AFM:
 			rest = string.strip(line[pos:])
 			if word in self._keywords:
 				continue
-			if word == 'C':
+			if word == "C":
 				self.parsechar(rest)
 			elif word == "KPX":
 				self.parsekernpair(rest)
+			elif word == "CC":
+				self.parsecomposite(rest)
 			else:
 				self.parseattr(word, rest)
 	
@@ -122,6 +167,28 @@ class AFM:
 			else:
 				self._attrs[word] = value
 	
+	def parsecomposite(self, rest):
+		m = compositeRE.match(rest)
+		if m is None:
+			raise error, "syntax error in AFM file: " + `rest`
+		charname = m.group(1)
+		ncomponents = int(m.group(2))
+		rest = rest[m.regs[0][1]:]
+		components = []
+		while 1:
+			m = componentRE.match(rest)
+			if m is None:
+				raise error, "syntax error in AFM file: " + `rest`
+			basechar = m.group(1)
+			xoffset = int(m.group(2))
+			yoffset = int(m.group(3))
+			components.append((basechar, xoffset, yoffset))
+			rest = rest[m.regs[0][1]:]
+			if not rest:
+				break
+		assert len(components) == ncomponents
+		self._composites[charname] = components
+	
 	def write(self, path, sep = '\r'):
 		import time
 		lines = [	"StartFontMetrics 2.0",
@@ -130,12 +197,27 @@ class AFM:
 						time.strftime("%m/%d/%Y %H:%M:%S", 
 						time.localtime(time.time())))]
 		
-		# write attributes
-		items = self._attrs.items()
-		items.sort()		# XXX proper ordering???
+		# write comments, assuming (possibly wrongly!) they should
+		# all appear at the top
+		for comment in self._comments:
+			lines.append("Comment " + comment)
+		
+		# write attributes, first the ones we know about, in
+		# a preferred order
+		attrs = self._attrs
+		for attr in preferredAttributeOrder:
+			if attrs.has_key(attr):
+				value = attrs[attr]
+				if attr == "FontBBox":
+					value = "%s %s %s %s" % value
+				lines.append(attr + " " + str(value))
+		# then write the attributes we don't know about,
+		# in alphabetical order
+		items = attrs.items()
+		items.sort()
 		for attr, value in items:
-			if attr == "FontBBox":
-				value = string.join(map(str, value), " ")
+			if attr in preferredAttributeOrder:
+				continue
 			lines.append(attr + " " + str(value))
 		
 		# write char metrics
@@ -166,9 +248,20 @@ class AFM:
 		items.sort()		# XXX is order important?
 		for (leftchar, rightchar), value in items:
 			lines.append("KPX %s %s %d" % (leftchar, rightchar, value))
-		
 		lines.append("EndKernPairs")
 		lines.append("EndKernData")
+		
+		if self._composites:
+			composites = self._composites.items()
+			composites.sort()
+			lines.append("StartComposites %s" % len(self._composites))
+			for charname, components in composites:
+				line = "CC %s %s ;" % (charname, len(components))
+				for basechar, xoffset, yoffset in components:
+					line = line + " PCC %s %s %s ;" % (basechar, xoffset, yoffset)
+				lines.append(line)
+			lines.append("EndComposites")
+		
 		lines.append("EndFontMetrics")
 		
 		writelines(path, lines, sep)
@@ -234,7 +327,7 @@ def readlines(path):
 		sep = sep + '\n'	# unix or dos
 	return string.split(data, sep)
 
-def writelines(path, lines, sep = '\r'):
+def writelines(path, lines, sep='\r'):
 	f = open(path, 'wb')
 	for line in lines:
 		f.write(line + sep)
@@ -261,5 +354,5 @@ if __name__ == "__main__":
 		#print afm.chars()
 		#print afm.kernpairs()
 		print afm
-		afm.write(path + ".xxx")
+		afm.write(path + ".muck")
 
