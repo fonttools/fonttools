@@ -171,7 +171,7 @@ class ClassDef(FormatSwitchingBaseTable):
 			start = rawTable["StartGlyph"]
 			glyphID = font.getGlyphID(start)
 			for cls in rawTable["ClassValueArray"]:
-				classDefs[cls] = font.getGlyphName(glyphID)
+				classDefs[font.getGlyphName(glyphID)] = cls
 				glyphID = glyphID + 1
 		elif self.Format == 2:
 			records = rawTable["ClassRangeRecord"]
