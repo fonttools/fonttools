@@ -212,7 +212,9 @@ class LookupList:
 		for i in range(len(self.lookup)):
 			xmlWriter.newline()
 			lookupTable = self.lookup[i]
-			xmlWriter.begintag("LookupTable", index=i)
+			xmlWriter.begintag("LookupTable",
+				[("index", i), ("LookupType", lookupTable.lookupType),
+				("LookupFlag", hex(lookupTable.lookupFlag))])
 			xmlWriter.newline()
 			lookupTable.toXML(xmlWriter, otFont)
 			xmlWriter.endtag("LookupTable")
@@ -249,8 +251,6 @@ class LookupTable:
 		return "<%s LookupTable at %x>" % (self.lookupTypeName, id(self))
 	
 	def toXML(self, xmlWriter, otFont):
-		xmlWriter.simpletag("LookupFlag", value=hex(self.lookupFlag))
-		xmlWriter.newline()
 		for subTable in self.subTables:
 			name = subTable.__class__.__name__
 			xmlWriter.begintag(name)

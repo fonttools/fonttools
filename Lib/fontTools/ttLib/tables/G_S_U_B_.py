@@ -357,7 +357,13 @@ class ChainContextSubst:
 		self.lookahead = otCommon.unpackCoverageArray(lookaheadCoverage)
 		
 		substCount = reader.readUShort()
-		self.substitutions = reader.readTableArray(substCount, SubstLookupRecord, otFont)
+		self.substitutions = []
+		for i in range(substCount):
+			lookupRecord = SubstLookupRecord()
+			lookupRecord.decompile(reader, otFont)
+			self.substitutions.append(lookupRecord)
+		
+	#	print "XXX", [len(x) for x in self.backtrack], self.substitutions
 	
 	def compile(self, writer, otFont):
 		writer.writeUShort(self.format)
@@ -391,10 +397,41 @@ class ChainContextSubst:
 		writer.writeTableArray(lookahead, otFont)
 		
 		writer.writeUShort(len(self.substitutions))
-		writer.writeTableArray(self.substitutions, otFont)
+		for lookupRecord in self.substitutions:
+			lookupRecord.compile(writer, otFont)
 	
 	def toXML(self, xmlWriter, otFont):
-		xmlWriter.comment("NotImplemented")
+		# XXXX this is for format 3?!
+		xmlWriter.begintag("Backtrack")
+		xmlWriter.newline()
+		for g in self.backtrack:
+			xmlWriter.simpletag("glyph", values=",".join(g))
+			xmlWriter.newline()
+		xmlWriter.endtag("Backtrack")
+		xmlWriter.newline()
+		
+		xmlWriter.begintag("Input")
+		xmlWriter.newline()
+		for g in self.input:
+			xmlWriter.simpletag("glyph", values=",".join(g))
+			xmlWriter.newline()
+		xmlWriter.endtag("Input")
+		xmlWriter.newline()
+		
+		xmlWriter.begintag("Lookahead")
+		xmlWriter.newline()
+		for g in self.lookahead:
+			xmlWriter.simpletag("glyph", values=",".join(g))
+			xmlWriter.newline()
+		xmlWriter.endtag("Lookahead")
+		xmlWriter.newline()
+		
+		xmlWriter.begintag("Subst")
+		xmlWriter.newline()
+		for subst in self.substitutions:
+			subst.toXML(xmlWriter, otFont)
+			xmlWriter.newline()
+		xmlWriter.endtag("Subst")
 		xmlWriter.newline()
 
 
@@ -405,6 +442,7 @@ lookupTypeClasses = {
 	4: LigatureSubst,
 	5: ContextSubst,
 	6: ChainContextSubst,
+#	7: ExtensionSubst,  # ugh...
 }
 
 
@@ -421,4 +459,9 @@ class SubstLookupRecord:
 	def compile(self, writer, otFont):
 		writer.writeUShort(self.sequenceIndex)
 		writer.writeUShort(self.lookupListIndex)
+	
+	def toXML(self, xmlWriter, otFont):
+		xmlWriter.simpletag("SubstLookupRecord",
+				[('sequenceIndex', self.sequenceIndex),
+				('lookupListIndex', self.lookupListIndex)])
 
