@@ -41,7 +41,7 @@ Dumping 'prep' table...
 """
 
 #
-# $Id: __init__.py,v 1.9 1999-12-29 13:06:08 Just Exp $
+# $Id: __init__.py,v 1.10 2000-01-03 22:58:42 Just Exp $
 #
 
 __version__ = "1.0a6"
@@ -205,7 +205,10 @@ class TTFont:
 			else:
 				print report
 			xmltag = tag2xmltag(tag)
-			writer.begintag(xmltag)
+			if hasattr(table, "ERROR"):
+				writer.begintag(xmltag, ERROR="decompilation error")
+			else:
+				writer.begintag(xmltag)
 			writer.newline()
 			if tag == "glyf":
 				table.toXML(writer, self, progress)
@@ -289,6 +292,7 @@ class TTFont:
 			return self.tables[tag]
 		except KeyError:
 			if self.reader is not None:
+				import traceback
 				if self.verbose:
 					debugmsg("reading '%s' table from disk" % tag)
 				data = self.reader[tag]
@@ -297,7 +301,18 @@ class TTFont:
 				self.tables[tag] = table
 				if self.verbose:
 					debugmsg("decompiling '%s' table" % tag)
-				table.decompile(data, self)
+				try:
+					table.decompile(data, self)
+				except:
+					print "An exception accurred during the decompilation of the '%s' table" % tag
+					from tables.DefaultTable import DefaultTable
+					import StringIO
+					file = StringIO.StringIO()
+					traceback.print_exc(file=file)
+					table = DefaultTable(tag)
+					table.ERROR = file.getvalue()
+					self.tables[tag] = table
+					table.decompile(data, self)
 				return table
 			else:
 				raise KeyError, "'%s' table not found" % tag

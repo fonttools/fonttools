@@ -1,5 +1,6 @@
 from fontTools import ttLib
 from fontTools.misc.textTools import safeEval
+from fontTools.ttLib.tables.DefaultTable import DefaultTable
 import types
 import string
 import Numeric, array
@@ -131,8 +132,8 @@ class XMLApplication(xmlproc.Application):
 				self.progress.set(pos / 100)
 				self.lastpos = pos
 		stack = self.locator.stack
-		stacksize = len(stack)
-		if not stacksize:
+		stackSize = len(stack)
+		if not stackSize:
 			if name <> "ttFont":
 				raise xml_parse_error, "illegal root tag: %s" % name
 			sfntVersion = attrs.get("sfntVersion", "\000\001\000\000")
@@ -140,7 +141,7 @@ class XMLApplication(xmlproc.Application):
 				sfntVersion = safeEval('"' + sfntVersion + '"')
 			self.ttFont.sfntVersion = sfntVersion
 			self.content_stack.append([])
-		elif stacksize == 1:
+		elif stackSize == 1:
 			msg = "Parsing '%s' table..." % ttLib.xmltag2tag(name)
 			if self.progress:
 				self.progress.setlabel(msg)
@@ -149,17 +150,19 @@ class XMLApplication(xmlproc.Application):
 			else:
 				print msg
 			tag = ttLib.xmltag2tag(name)
-			tableclass = ttLib.getTableClass(tag)
-			if tableclass is None:
-				from fontTools.ttLib.tables.DefaultTable import DefaultTable
-				tableclass = DefaultTable
+			if attrs.has_key("ERROR"):
+				tableClass = DefaultTable
+			else:
+				tableClass = ttLib.getTableClass(tag)
+				if tableClass is None:
+					tableClass = DefaultTable
 			if self.ttFont.has_key(tag):
 				self.current_table = self.ttFont[tag]
 			else:
-				self.current_table = tableclass(tag)
+				self.current_table = tableClass(tag)
 				self.ttFont[tag] = self.current_table
 			self.content_stack.append([])
-		elif stacksize == 2:
+		elif stackSize == 2:
 			self.content_stack.append([])
 			self.root = (name, attrs, self.content_stack[-1])
 		else:
@@ -174,10 +177,10 @@ class XMLApplication(xmlproc.Application):
 	def handle_end_tag(self, name):
 		del self.content_stack[-1]
 		stack = self.locator.stack
-		stacksize = len(stack)
-		if stacksize == 1:
+		stackSize = len(stack)
+		if stackSize == 1:
 			self.root = None
-		elif stacksize == 2:
+		elif stackSize == 2:
 			self.current_table.fromXML(self.root, self.ttFont)
 			self.root = None
 
