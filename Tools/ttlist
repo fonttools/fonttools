@@ -28,7 +28,7 @@ for fileName in args:
 	for tag in tags:
 		entry = reader.tables[tag]
 		print
-		print "       Tag:", `tag`
+		print "       Tag:", repr(tag)
 		print "  Checksum:", hex(entry.checkSum)
 		print "    Length:", entry.length
 		print "    Offset:", entry.offset
