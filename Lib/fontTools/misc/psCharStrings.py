@@ -145,17 +145,26 @@ class T2CharString(ByteCodeDecompilerBase):
 	operandEncoding = t2OperandEncoding
 	operators, opcodes = buildOperatorDict(t2Operators)
 	
-	def __init__(self, bytecode=None, program=None):
+	def __init__(self, bytecode=None, program=None, subrs=None, globalSubrs=None):
 		if program is None:
 			program = []
 		self.bytecode = bytecode
 		self.program = program
+		self.subrs = subrs
+		self.globalSubrs = globalSubrs
 	
 	def __repr__(self):
 		if self.bytecode is None:
 			return "<%s (source) at %x>" % (self.__class__.__name__, id(self))
 		else:
 			return "<%s (bytecode) at %x>" % (self.__class__.__name__, id(self))
+	
+	def decompile(self):
+		if not self.needsDecompilation():
+			return
+		decompiler = SimpleT2Decompiler(self.subrs, self.globalSubrs)
+		decompiler.reset()
+		decompiler.execute(self)
 	
 	def compile(self):
 		if self.bytecode is not None:
@@ -260,7 +269,7 @@ class T2CharString(ByteCodeDecompilerBase):
 						bits = []
 						for byte in hintMask:
 							bits.append(num2binary(ord(byte), 8))
-						hintMask = repr(string.join(bits, ""))
+						hintMask = string.join(bits, "")
 						line = string.join(args + [token, hintMask], " ")
 					else:
 						line = string.join(args + [token], " ")
@@ -395,10 +404,14 @@ class SimpleT2Decompiler:
 		subr = self.globalSubrs[subrIndex+self.globalBias]
 		self.execute(subr)
 	
+	def op_hstem(self, index):
+		self.countHints()
+	def op_vstem(self, index):
+		self.countHints()
 	def op_hstemhm(self, index):
 		self.countHints()
-	
-	op_vstemhm = op_hstemhm
+	def op_vstemhm(self, index):
+		self.countHints()
 	
 	def op_hintmask(self, index):
 		if not self.hintMaskBytes:
@@ -410,7 +423,6 @@ class SimpleT2Decompiler:
 	op_cntrmask = op_hintmask
 	
 	def countHints(self):
-		assert self.hintMaskBytes == 0
 		args = self.popall()
 		self.hintCount = self.hintCount + len(args) / 2
 
@@ -466,23 +478,20 @@ class T2OutlineExtractor(SimpleT2Decompiler):
 		return args
 	
 	def countHints(self):
-		assert self.hintMaskBytes == 0
 		args = self.popallWidth()
 		self.hintCount = self.hintCount + len(args) / 2
 	
 	#
 	# hint operators
 	#
-	def op_hstem(self, index):
-		self.popallWidth()  # XXX
-	def op_vstem(self, index):
-		self.popallWidth()  # XXX
-	def op_hstemhm(self, index):
-		self.countHints()
-		#XXX
-	def op_vstemhm(self, index):
-		self.countHints()
-		#XXX
+	#def op_hstem(self, index):
+	#	self.countHints()
+	#def op_vstem(self, index):
+	#	self.countHints()
+	#def op_hstemhm(self, index):
+	#	self.countHints()
+	#def op_vstemhm(self, index):
+	#	self.countHints()
 	#def op_hintmask(self, index):
 	#	self.countHints()
 	#def op_cntrmask(self, index):
