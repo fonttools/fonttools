@@ -8,12 +8,9 @@
     This is only for testing FontTools/TTX, the resulting files are
     deleted afterwards.
 
-    This tool supports some of ttdump's command line options (-i, -t
-    and -x) and they will in fact be passed to ttdump. Specifying -t
-    or -x implies ttcompile -i <originalfile> on the way back.
-
-    Normally all output from ttdump and ttcompile is suppressed,
-    -v (verbose) causes it to be shown.
+    This tool supports some of ttx's command line options (-i, -t
+    and -x). Specifying -t or -x implies ttx -m <originalfile> on
+    the way back.
 """
 
 
@@ -70,7 +67,7 @@ def roundTrip(ttFile1, options, report):
 
 def main(args):
 	try:
-		rawOptions, files = getopt.getopt(args, "it:x:v")
+		rawOptions, files = getopt.getopt(args, "it:x:")
 	except getopt.GetoptError:
 		usage()
 	
