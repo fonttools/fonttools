@@ -87,6 +87,8 @@ class Fixed(IntValue):
 		return float(reader.readLong()) / 0x10000
 	def write(self, writer, font, tableStack, value):
 		writer.writeLong(int(round(value * 0x10000)))
+	def xmlRead(self, attrs, content, font):
+		return float(attrs["value"])
 
 class Short(IntValue):
 	def read(self, reader, font, tableStack):
