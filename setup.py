@@ -67,7 +67,7 @@ setup(
 				libraries=[],
 			)
 		],
-		scripts = ["Tools/ttcompile", "Tools/ttdump", "Tools/ttlist"],
+		scripts = ["Tools/ttx"],
 		cmdclass = {"build_ext": build_ext_optional}
 	)
 
