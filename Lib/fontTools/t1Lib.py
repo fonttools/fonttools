@@ -27,20 +27,17 @@ import os
 
 
 try:
-	import macfs
-except ImportError:
-	haveMacSupport = 0
-else:
-	haveMacSupport = 1
-
-if haveMacSupport:
 	try:
 		from Carbon import Res
 	except ImportError:
 		import Res  # MacPython < 2.2
+except ImportError:
+	haveMacSupport = 0
+else:
+	haveMacSupport = 1
 	import macfs
 
-error = 't1Lib.error'
+class T1Error(Exception): pass
 
 
 class T1Font:
@@ -144,7 +141,7 @@ def readLWFN(path):
 			res = Res.Get1Resource('POST', i)
 			code = ord(res.data[0])
 			if ord(res.data[1]) <> 0:
-				raise error, 'corrupt LWFN file'
+				raise T1Error, 'corrupt LWFN file'
 			if code in [1, 2]:
 				data.append(res.data[2:])
 			elif code in [3, 5]:
@@ -156,7 +153,7 @@ def readLWFN(path):
 			elif code == 0:
 				pass # comment, ignore
 			else:
-				raise error, 'bad chunk code: ' + `code`
+				raise T1Error, 'bad chunk code: ' + `code`
 	finally:
 		Res.CloseResFile(resRef)
 	data = string.join(data, '')
@@ -169,7 +166,7 @@ def readPFB(path, onlyHeader=0):
 	data = []
 	while 1:
 		if f.read(1) <> chr(128):
-			raise error, 'corrupt PFB file'
+			raise T1Error, 'corrupt PFB file'
 		code = ord(f.read(1))
 		if code in [1, 2]:
 			chunklen = stringToLong(f.read(4))
@@ -179,7 +176,7 @@ def readPFB(path, onlyHeader=0):
 		elif code == 3:
 			break
 		else:
-			raise error, 'bad chunk code: ' + `code`
+			raise T1Error, 'bad chunk code: ' + `code`
 		if onlyHeader:
 			break
 	f.close()
@@ -295,7 +292,7 @@ def decryptType1(data):
 			decrypted = decrypted[4:]
 			if decrypted[-len(EEXECINTERNALEND)-1:-1] <> EEXECINTERNALEND \
 					and decrypted[-len(EEXECINTERNALEND)-2:-2] <> EEXECINTERNALEND:
-				raise error, "invalid end of eexec part"
+				raise T1Error, "invalid end of eexec part"
 			decrypted = decrypted[:-len(EEXECINTERNALEND)-2] + '\r'
 			data.append(EEXECBEGINMARKER + decrypted + EEXECENDMARKER)
 		else:
@@ -314,13 +311,14 @@ def findEncryptedChunks(data):
 		eBegin = eBegin + len(EEXECBEGIN) + 1
 		eEnd = string.find(data, EEXECEND, eBegin)
 		if eEnd < 0:
-			raise error, "can't find end of eexec part"
-		cypherText = data[eBegin:eEnd + 2]
-		plainText, R = eexec.decrypt(cypherText, 55665)
-		eEndLocal = string.find(plainText, EEXECINTERNALEND)
-		if eEndLocal < 0:
-			raise error, "can't find end of eexec part"
-		eEnd = eBegin + eEndLocal + len(EEXECINTERNALEND) + 1
+			raise T1Error, "can't find end of eexec part"
+		if 0:
+			cypherText = data[eBegin:eEnd + 2]
+			plainText, R = eexec.decrypt(cypherText, 55665)
+			eEndLocal = string.find(plainText, EEXECINTERNALEND)
+			if eEndLocal < 0:
+				raise T1Error, "can't find end of eexec part"
+			eEnd = eBegin + eEndLocal + len(EEXECINTERNALEND) + 1
 		chunks.append((0, data[:eBegin]))
 		chunks.append((1, data[eBegin:eEnd]))
 		data = data[eEnd:]
@@ -340,11 +338,11 @@ def assertType1(data):
 		if data[:len(head)] == head:
 			break
 	else:
-		raise error, "not a PostScript font"
+		raise T1Error, "not a PostScript font"
 	if not _fontType1RE.search(data):
-		raise error, "not a Type 1 font"
+		raise T1Error, "not a Type 1 font"
 	if string.find(data, "currentfile eexec") < 0:
-		raise error, "not an encrypted Type 1 font"
+		raise T1Error, "not an encrypted Type 1 font"
 	# XXX what else?
 	return data
 
