@@ -121,7 +121,10 @@ def parse_date(datestring):
 	day = int(day)
 	hour, minute, second = map(int, string.split(tim, ":"))
 	t = (year, month, day, hour, minute, second, weekday, 0, 0)
-	return long(time.mktime(t) - time.timezone)
+	try:
+		return long(time.mktime(t) - time.timezone)
+	except OverflowError:
+		return 0L
 
 
 def bin2long(data):
