@@ -299,6 +299,7 @@ class BaseTable:
 	def decompile(self, reader, font, tableStack=None):
 		if tableStack is None:
 			tableStack = TableStack()
+		self.readFormat(reader)
 		table = {}
 		self.__rawTable = table  # for debugging
 		tableStack.push(table)
@@ -321,6 +322,7 @@ class BaseTable:
 		if tableStack is None:
 			tableStack = TableStack()
 		table = self.preWrite(font)
+		self.writeFormat(writer)
 		tableStack.push(table)
 		for conv in self.getConverters():
 			value = table.get(conv.name)
@@ -343,6 +345,12 @@ class BaseTable:
 			else:
 				conv.write(writer, font, tableStack, value)
 		tableStack.pop()
+	
+	def readFormat(self, reader):
+		pass
+	
+	def writeFormat(self, writer):
+		pass
 	
 	def postRead(self, table, font):
 		self.__dict__.update(table)
@@ -415,14 +423,12 @@ class FormatSwitchingBaseTable(BaseTable):
 	def getConverterByName(self, name):
 		return self.convertersByName[self.Format][name]
 	
-	def decompile(self, reader, font, tableStack=None):
+	def readFormat(self, reader):
 		self.Format = reader.readUShort()
 		assert self.Format <> 0, (self, reader.pos, len(reader.data))
-		BaseTable.decompile(self, reader, font, tableStack)
 	
-	def compile(self, writer, font, tableStack=None):
+	def writeFormat(self, writer):
 		writer.writeUShort(self.Format)
-		BaseTable.compile(self, writer, font, tableStack)
 
 
 #
