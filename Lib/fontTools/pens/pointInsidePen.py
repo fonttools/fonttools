@@ -1,3 +1,7 @@
+"""fontTools.pens.pointInsidePen -- Pen implementing "point inside" testing
+for shapes.
+"""
+
 from fontTools.pens.basePen import BasePen
 from fontTools.misc.bezierTools import solveQuadratic, solveCubic
 
@@ -6,40 +10,73 @@ __all__ = ["PointInsidePen"]
 
 
 class PointInsidePen(BasePen):
-	
+
+	"""This pen implements "point inside" testing: to test whether
+	a given point lies inside the shape (black) or outside (white).
+	Instances of this class can be recycled, as long as the
+	setTestPoint() method is used to set the new point to test.
+
+	Typical usage:
+
+		pen = PointInsidePen(glyphSet, (100, 200))
+		outline.draw(pen)
+		isInside = pen.getResult()
+
+	Both the even-odd algorithm and the non-zero-winding-rule
+	algorithm are implemented. The latter is the default, specify
+	True for the evenOdd argument of __init__ or setTestPoint
+	to use the even-odd algorithm.
+	"""
+
+	# This class implements the classical "shoot a ray from the test point
+	# to infinity and count how many times it intersects the outline" (as well
+	# as the non-zero variant, where the counter is incremented if the outline
+	# intersects the ray in one direction and decremented if it intersects in
+	# the other direction).
+	# I found an amazingly clear explanation of the subtleties involved in
+	# implementing this correctly for polygons here:
+	#   http://graphics.cs.ucdavis.edu/~okreylos/TAship/Spring2000/PointInPolygon.html
+	# I extended the principles outlined on that page to curves.
+
 	def __init__(self, glyphSet, testPoint, evenOdd=0):
 		BasePen.__init__(self, glyphSet)
 		self.setTestPoint(testPoint, evenOdd)
-	
+
 	def setTestPoint(self, testPoint, evenOdd=0):
+		"""Set the point to test. Call this _before_ the outline gets drawn."""
 		self.testPoint = testPoint
 		self.evenOdd = evenOdd
 		self.firstPoint = None
 		self.intersectionCount = 0
 
 	def getResult(self):
+		"""After the shape has been drawn, getResult() returns True if the test
+		point lies within the (black) shape, and False if it doesn't.
+		"""
 		if self.firstPoint is not None:
+			# always make sure the sub paths are closed; the algorithm only works
+			# for closed paths.
 			self.closePath()
 		if self.evenOdd:
 			result = self.intersectionCount % 2
 		else:
 			result = self.intersectionCount
 		return not not result
-	
+
 	def _addIntersection(self, goingUp):
 		if self.evenOdd or goingUp:
 			self.intersectionCount += 1
 		else:
 			self.intersectionCount -= 1
-	
+
 	def _moveTo(self, point):
 		if self.firstPoint is not None:
+			# always make sure the sub paths are closed; the algorithm only works
+			# for closed paths.
 			self.closePath()
 		self.firstPoint = point
-	
+
 	def _lineTo(self, point):
-		# An amazingly clear explanation of the problem:
-		# http://graphics.cs.ucdavis.edu/~okreylos/TAship/Spring2000/PointInPolygon.html
 		x, y = self.testPoint
 		x1, y1 = self._getCurrentPoint()
 		x2, y2 = point
@@ -50,7 +87,7 @@ class PointInsidePen(BasePen):
 			return
 		if y1 >= y and y2 >= y:
 			return
-		
+
 		dx = x2 - x1
 		dy = y2 - y1
 		t = float(y - y1) / dy
@@ -72,7 +109,7 @@ class PointInsidePen(BasePen):
 			return
 		if y1 >= y and y2 >= y and y3 >= y and y4 >= y:
 			return
-		
+
 		dy = y1
 		cy = (y2 - dy) * 3.0
 		by = (y3 - y2) * 3.0 - cy
@@ -87,7 +124,7 @@ class PointInsidePen(BasePen):
 		cx = (x2 - dx) * 3.0
 		bx = (x3 - x2) * 3.0 - cx
 		ax = x4 - dx - cx - bx
-		
+
 		above = y1 >= y
 		lastT = None
 		for t in solutions:
@@ -139,7 +176,7 @@ class PointInsidePen(BasePen):
 		if not solutions:
 			return
 		XXX
-	
+
 	def _closePath(self):
 		if self._getCurrentPoint() != self.firstPoint:
 			self.lineTo(self.firstPoint)
