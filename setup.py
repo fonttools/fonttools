@@ -4,6 +4,11 @@ import os, sys
 from distutils.core import setup, Extension
 from distutils.command.build_ext import build_ext
 
+try:
+	# load py2exe distutils extension, if available
+	import py2exe
+except ImportError
+	pass
 
 try:
 	import Numeric
