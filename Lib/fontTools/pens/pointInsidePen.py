@@ -187,3 +187,5 @@ class PointInsidePen(BasePen):
 		if self._getCurrentPoint() != self.firstPoint:
 			self.lineTo(self.firstPoint)
 		self.firstPoint = None
+
+	_endPath = _closePath
