@@ -44,10 +44,13 @@ def encrypt(plainstring, R):
 
 
 def hexString(s):
-	xxx
+	import binascii
+	return binascii.hexlify(s)
 
 def deHexString(h):
-	xxx
+	import binascii
+	h = "".join(h.split())
+	return binascii.unhexlify(h)
 
 
 def _test():
