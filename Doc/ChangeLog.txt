@@ -1,4 +1,183 @@
 ----------------------------
+2005/02/23 21:22:27 jvr Lib/fontTools/misc/psCharStrings.py 1.21
+This patch fixes two things
+- in T2 charstrings, a byte code of 255 is followed by a 16.16 fixed
+  point number, not a 4-byte int as in T1. Noted by rroberts.
+- some integers were not correctly encoded in the T1 compiler.
+----------------------------
+2005/02/11 19:36:38 jvr Lib/fontTools/ttLib/tables/otTables.py 1.15
+fixed problem with empty ClassDef, as well as added some more defenses for possible empty tables
+----------------------------
+2005/01/25 19:06:51 jvr Lib/fontTools/t1Lib.py 1.19
+expose onlyHeader keyword arg to generic read() func
+----------------------------
+2005/01/24 10:18:58 jvr Lib/fontTools/ttLib/tables/T_S_I__0.py 1.4
+uh, and the other one
+----------------------------
+2005/01/24 10:06:45 jvr Lib/fontTools/ttLib/__init__.py 1.46
+fixed buglet in GlyphSet support code
+----------------------------
+2005/01/24 10:05:52 jvr Lib/fontTools/ttLib/tables/T_S_I__0.py 1.3
+fixed 2.4 compat issue
+----------------------------
+2005/01/17 21:34:06 jvr Lib/xmlWriter.py 1.5
+- rename file to fileOrPath
+- check for capability, not type, so XMLWriter can hanlde unicode
+  filenames (on OS-es that support them).
+----------------------------
+2004/12/24 16:07:01 jvr Lib/fontTools/ttLib/tables/_h_e_a_d.py 1.16
+2004/12/24 15:59:35 jvr Lib/fontTools/ttx.py 1.8
+fix for new 2.4 hex() behavior
+----------------------------
+2004/12/14 07:55:55 jvr Windows/mcmillan.bat 1.1
+2004/12/14 07:55:55 jvr Windows/fonttools-win-setup.iss 1.7
+2004/12/14 07:55:55 jvr Windows/README.TXT 1.8
+Updates from Adam Twardoch. Thanks!
+----------------------------
+2004/11/16 10:37:59 jvr Lib/fontTools/ttLib/sfnt.py 1.12
+2004/11/16 10:37:59 jvr Lib/fontTools/ttLib/__init__.py 1.45
+Refactored and enhanced table order support:
+- Rewrote sorting function, it was really quite buggy.
+- Added reorderFontTables() functions, which reorders the
+  tables in a font at the sfnt level.
+- TTFont.save() will now by default rewrite the font in the
+  optimized order. This is done through a temp file since
+  our dependency checking logic gets in the way of writing
+  the tables in a predefined order directly (if table A depends
+  on B, table B will always be compiled and written first, so
+  this prevents A from showing up in the file before B).
+
+sfnt.py:
+- removed closeStream option from SFNTWriter.close(); it's better
+  done by the caller (TTFont).
+----------------------------
+2004/11/16 09:12:30 jvr Lib/fontTools/ttLib/__init__.py 1.44
+tweak & bugfix
+----------------------------
+2004/09/26 18:32:50 jvr Lib/fontTools/ttLib/tables/_c_m_a_p.py 1.15
+make sure that a cmap subtable instance always has a language attr, so __cmp__ can't fail
+----------------------------
+2004/09/25 10:56:15 jvr Lib/fontTools/ttLib/tables/_k_e_r_n.py 1.7
+Fix for [ 808370 ] Dumping Legendum.otf fails on 'kern' table
+Work around buggy kern table.
+----------------------------
+2004/09/25 10:31:29 jvr Lib/fontTools/ttLib/tables/otTables.py 1.14
+[ 637398 ] Failure while parsing OpenType file
+Deal with empty Coverage table: it will be None so won't have a .glyphs
+attribute.
+----------------------------
+2004/09/25 10:01:12 jvr Lib/fontTools/ttLib/tables/_h_e_a_d.py 1.15
+workaround for bug [ 766694 ] Error from invalid date
+----------------------------
+2004/09/25 09:12:00 jvr Lib/fontTools/ttLib/tables/_n_a_m_e.py 1.11
+bug #784690: simple workaround for buggy name table
+----------------------------
+2004/09/25 09:06:58 jvr Lib/fontTools/ttLib/tables/_c_m_a_p.py 1.14
+- Refactored XML writing, removed lots of code duplicaiton
+- Only output unicode names as comments if we're in fact dealing with
+  a unicode cmap subtable (and this is -- in theory -- independent of
+  cmap format)
+----------------------------
+2004/09/25 08:24:37 jvr Tools/ttx 1.11
+2004/09/25 08:24:37 jvr MetaTools/roundTrip.py 1.5
+whoops, rolling back accidental #! commits
+----------------------------
+2004/09/25 08:12:50 jvr Lib/fontTools/agl.py 1.5
+"Downgraded" AGL list to the "Adobe Glyph List For New Fonts", which is
+most appropriate here. There may be a use for the "big" AGL, but that will
+have to become a new module.
+----------------------------
+2004/09/25 07:47:41 jvr Tools/ttx 1.10
+2004/09/25 07:47:41 jvr MetaTools/roundTrip.py 1.4
+2004/09/25 07:47:40 jvr Lib/fontTools/unicode.py 1.3
+[ 845172 ] Updating to Unicode 4.0.0
+Instead of using a list internally, I now use a dict, since the unicode
+mapping is quite sparse (lots of unused slots).
+----------------------------
+2004/09/25 07:35:05 jvr Lib/fontTools/ttx.py 1.7
+2004/09/25 07:35:05 jvr LICENSE.txt 1.4
+Patch #845551 from Anthony Fok:
+- two minor typos
+- changed copyright year in LICENSE (and it's 2004 now...)
+----------------------------
+2004/09/25 07:30:47 jvr Lib/fontTools/ttLib/tables/_l_o_c_a.py 1.4
+2004/09/25 07:30:47 jvr Lib/fontTools/ttLib/tables/_c_m_a_p.py 1.13
+Patch #845571 from Anthony Fok:
+- better exception msg in loca table
+- renamed "version" to "language" in cmap
+- made cmap 12 work (untested by me)
+----------------------------
+2004/09/25 07:19:27 jvr Lib/fontTools/ttLib/tables/O_S_2f_2.py 1.8
+whoops, forgot one part os OS/2 version 3 support
+----------------------------
+2004/09/24 18:33:19 jvr Lib/fontTools/ttLib/tables/O_S_2f_2.py 1.7
+added support for OS/2 table #3
+----------------------------
+2003/10/14 20:30:07 jvr Lib/fontTools/pens/pointInsidePen.py 1.3
+Fixed subtle bug in curve intersection logic: due to floating point errors,
+sometimes a legitimate solution is ever so slightly over 1.0. Those used to
+be filtered out; now checking for 1.0 + 1e-10.
+----------------------------
+2003/09/22 13:12:55 jvr Lib/fontTools/ttLib/tables/otTables.py 1.13
+2003/09/22 13:12:55 jvr Lib/fontTools/ttLib/tables/otData.py 1.5
+ReverseChainSingleSubst support from Yannis H. (must get that generate-otdata-from-the-docs working again)
+----------------------------
+2003/09/22 07:09:33 jvr Lib/fontTools/ttLib/tables/otData.py 1.4
+bug from the spec leaked into here; pointed out by Yannis H.
+----------------------------
+2003/09/18 07:33:01 jvr Doc/install.txt 1.2
+checked in with unix line endings -- this probably needs proper review
+----------------------------
+2003/09/17 17:32:11 jvr Lib/fontTools/misc/psCharStrings.py 1.20
+- Implemented the flex operators for T2
+- Changed a whole bunch of XXX traps into NotImplementedErrors
+----------------------------
+2003/09/16 11:30:29 jvr Lib/fontTools/misc/transform.py 1.4
+more doctests
+----------------------------
+2003/09/16 11:01:40 jvr Lib/fontTools/misc/transform.py 1.3
+Added lots of doco and doctests.
+----------------------------
+2003/09/16 10:14:48 jvr Lib/fontTools/pens/transformPen.py 1.4
+debogofied doc string, added another one
+----------------------------
+2003/09/16 09:48:28 jvr Lib/fontTools/misc/psCharStrings.py 1.19
+- Properly support the pen protocol for open sub paths in Type 1
+----------------------------
+2003/09/15 12:26:10 jvr Lib/fontTools/pens/reportLabPen.py 1.1
+Added Pen for reportlab.graphics.
+----------------------------
+2003/09/11 07:11:35 jvr Lib/fontTools/ttLib/tables/otTables.py 1.12
+this should have been part of the previous path by some fixes from klchxbec
+----------------------------
+2003/09/09 23:29:45 jvr Lib/fontTools/pens/transformPen.py 1.3
+Correctly deal with the TT-no-on-curve special case.
+----------------------------
+2003/09/07 09:41:28 jvr Lib/fontTools/pens/basePen.py 1.7
+Factored out the SuperBezier and TT-implied-point algorithms, as the
+may be useful separately from pens.
+----------------------------
+2003/09/06 16:00:03 jvr Lib/fontTools/pens/basePen.py 1.6
+- added endPath() method to the Pen protocol, as a counterpart for
+  closePath() for *open* sub paths. This allows pen implementations
+  to reliably detect the end of a sub path.
+- improved various doc strings.
+----------------------------
+2003/09/05 14:18:26 jvr Lib/fontTools/pens/basePen.py 1.5
+ensure that the current point is always set correctly
+----------------------------
+2003/09/02 19:23:13 jvr Lib/fontTools/ttLib/tables/otBase.py 1.11
+tweaked doc string
+----------------------------
+2003/09/01 16:10:22 jvr Doc/documentation.html 1.9
+more acks
+----------------------------
+2003/09/01 15:09:29 jvr Lib/fontTools/ttLib/tables/_h_h_e_a.py 1.5
+Ha, a reserved field got eaten. Noticed by Yannis Haralambous.
+----------------------------
+2003/08/30 06:46:56 jvr Doc/ChangeLog.txt 1.7
+*** empty log message ***
+----------------------------
 2003/08/29 19:29:46 jvr Lib/fontTools/misc/arrayTools.py 1.7
 - renamed all l,t,r,b tuff to xMin, yMin, xMax, yMax
 - added ome more doc strings
