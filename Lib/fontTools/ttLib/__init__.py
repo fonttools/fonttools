@@ -41,7 +41,7 @@ Dumping 'prep' table...
 """
 
 __author__ = "Just van Rossum, just@letterror.com"
-__version__ = "$Id: __init__.py,v 1.3 1999-12-17 12:54:19 Just Exp $"
+__version__ = "$Id: __init__.py,v 1.4 1999-12-18 18:06:25 Just Exp $"
 __release__ = "1.0a6"
 
 import os
@@ -60,7 +60,8 @@ class TTFont:
 	"""
 	
 	def __init__(self, file=None, res_name_or_index=None, 
-			sfntVersion="\000\001\000\000", checkchecksums=0, verbose=0):
+			sfntVersion="\000\001\000\000", checkchecksums=0, 
+			verbose=0, recalcBBoxes=1):
 		
 		"""The constructor can be called with a few different arguments.
 		When reading a font from disk, 'file' should be either a pathname
@@ -81,10 +82,15 @@ class TTFont:
 		The TTFont constructor can also be called without a 'file' 
 		argument: this is the way to create a new empty font. 
 		In this case you can optionally supply the 'sfntVersion' argument.
+		
+		If the recalcBBoxes argument is false, glyph bounding boxes will 
+		not be recalculated, but taken as they were. This is needed with
+		certain kinds of CJK fonts (ask Werner Lemberg ;-).
 		"""
 		
 		import sfnt
 		self.verbose = verbose
+		self.recalcBBoxes = recalcBBoxes
 		self.tables = {}
 		self.reader = None
 		if not file:
@@ -114,17 +120,17 @@ class TTFont:
 		if self.reader is not None:
 			self.reader.close()
 	
-	def save(self, file, make_suitcase=0):
+	def save(self, file, makeSuitcase=0):
 		"""Save the font to disk. Similarly to the constructor, 
 		the 'file' argument can be either a pathname or a writable
 		file object.
 		
-		On the Mac, if make_suitcase is non-zero, a suitcase file will
-		we made instead of a flat .ttf file. 
+		On the Mac, if makeSuitcase is true, a suitcase (resource fork)
+		file will we made instead of a flat .ttf file. 
 		"""
 		import sfnt
 		if type(file) == types.StringType:
-			if os.name == "mac" and make_suitcase:
+			if os.name == "mac" and makeSuitcase:
 				import macUtils
 				file = macUtils.SFNTResourceWriter(file, self)
 			else:
