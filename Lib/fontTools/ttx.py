@@ -60,6 +60,13 @@ def usage():
 	sys.exit(2)
 
 
+if sys.platform == "darwin" and sys.version_info[:3] == (2, 2, 0):
+	# the macfs module shipping with Jaguar's Python 2.2 is too
+	# broken to be of any use
+	have_broken_macfs = 1
+else:
+	have_broken_macfs = 0
+	
 numberAddedRE = re.compile("(.*)#\d+$")
 
 def makeOutputFileName(input, outputDir, extension):
@@ -170,18 +177,22 @@ def ttCompile(input, output, options):
 
 
 def guessFileType(fileName):
+	base, ext = os.path.splitext(fileName)
 	try:
 		f = open(fileName, "rb")
 	except IOError:
 		return None
-	try:
-		import macfs
-	except ImportError:
-		pass
-	else:
-		cr, tp = macfs.FSSpec(fileName).GetCreatorType()
-		if tp == "FFIL":
-			return "TTF"
+	if not have_broken_macfs:
+		try:
+			import macfs
+		except ImportError:
+			pass
+		else:
+			cr, tp = macfs.FSSpec(fileName).GetCreatorType()
+			if tp in ("sfnt", "FFIL"):
+				return "TTF"
+			if ext == ".dfont":
+				return "TTF"
 	header = f.read(256)
 	head = header[:4]
 	if head == "OTTO":
