@@ -1,7 +1,7 @@
 """cffLib.py -- read/write tools for Adobe CFF fonts."""
 
 #
-# $Id: cffLib.py,v 1.11 2002-05-14 13:51:51 jvr Exp $
+# $Id: cffLib.py,v 1.12 2002-05-15 07:41:30 jvr Exp $
 #
 
 import struct, sstruct
@@ -31,13 +31,25 @@ class CFFFontSet:
 		topDicts = readINDEX(file)
 		strings = IndexedStrings(readINDEX(file))
 		globalSubrs = readINDEX(file)
+		
+		file.seek(4)
+		xfnames = Index(file)
+		xtopds = Index(file)
+		xstrings = Index(file)
+		xgsubrs = Index(file)
+		
+		assert xfnames.toList() == self.fontNames
+		assert xtopds.toList() == topDicts
+		assert xstrings.toList() == strings.strings
+		assert xgsubrs.toList() == globalSubrs
+		
 		self.GlobalSubrs = map(psCharStrings.T2CharString, globalSubrs)
 		
 		for i in range(len(topDicts)):
 			font = self.fonts[self.fontNames[i]] = CFFFont()
 			font.GlobalSubrs = self.GlobalSubrs
 			file.seek(0)
-			font.decompile(file, topDicts[i], strings, self)  # maybe only 'on demand'?
+			font.decompile(file, topDicts[i], strings, self)
 	
 	def compile(self):
 		strings = IndexedStrings()
@@ -57,7 +69,7 @@ class CFFFontSet:
 		xmlWriter.newline()
 		for i in range(len(self.GlobalSubrs)):
 			xmlWriter.newline()
-			xmlWriter.begintag("CharString", id=i)
+			xmlWriter.begintag("CharString", index=i)
 			xmlWriter.newline()
 			self.GlobalSubrs[i].toXML(xmlWriter)
 			xmlWriter.endtag("CharString")
@@ -81,19 +93,8 @@ class CFFFont:
 			raise AttributeError, attr
 		return topDictDefaults[attr]
 	
-	def fromDict(self, dict):
-		self.__dict__.update(dict)
-	
-	def decompileCID(self, data, strings):
-		offset = self.FDArray
-		fontDicts, restdata = readINDEX(data[offset:])
-		subFonts = []
-		for topDictData in fontDicts:
-			subFont = CFFFont()
-			subFonts.append(subFont)
-			subFont.decompile(data, topDictData, strings, None)
-
-		raise NotImplementedError
+	def fromDict(self, d):
+		self.__dict__.update(d)
 	
 	def decompile(self, file, topDictData, strings, fontSet):
 		top = TopDictDecompiler(strings)
@@ -124,29 +125,33 @@ class CFFFont:
 		
 		if hasattr(self, "CharStrings"):
 			file.seek(self.CharStrings)
-			rawCharStrings = readINDEX(file)
+			rawCharStrings = Index(file)
 			nGlyphs = len(rawCharStrings)
 		
 		# get charset (or rather: get glyphNames)
-		if self.charset == 0:
-			pass  # XXX standard charset
-		else:
+		if self.charset > 2:
 			file.seek(self.charset)
 			format = ord(file.read(1))
 			if format == 0:
-				xxx
+				raise NotImplementedError
 			elif format == 1:
 				charset = parseCharsetFormat1(nGlyphs, file, strings, isCID)
 			elif format == 2:
 				charset = parseCharsetFormat2(nGlyphs, file, strings, isCID)
 			elif format == 3:
-				xxx
+				raise NotImplementedError
 			else:
-				xxx
+				raise NotImplementedError
 			self.charset = charset
 			assert len(charset) == nGlyphs
+		else:
+			# self.charset:
+			#   0: ISOAdobe (or CID font!)
+			#   1: Expert
+			#   2: ExpertSubset
+			pass
 		
-		if self.charset <> 0:
+		if hasattr(self, "CharStrings"):
 			self.CharStrings = charStrings = {}
 			if self.CharstringType == 2:
 				# Type 2 CharStrings
@@ -154,19 +159,20 @@ class CFFFont:
 			else:
 				# Type 1 CharStrings
 				charStringClass = psCharStrings.T1CharString
-			
 			for i in range(nGlyphs):
 				charStrings[charset[i]] = charStringClass(rawCharStrings[i])
 			assert len(charStrings) == nGlyphs
-		else:
-			assert not hasattr(self, "CharStrings")
 		
-		# XXX Encoding!
 		encoding = self.Encoding
-		if encoding not in (0, 1):
-			# encoding is an _offset_ from the beginning of 'data' to an encoding subtable
-			XXX
+		if encoding > 1:
+			# encoding is an offset from the beginning of 'data' to an encoding subtable
+			raise NotImplementedError
 			self.Encoding = encoding
+		else:
+			# self.Encoding:
+			#   0 Standard Encoding
+			#   1 Expert Encoding
+			pass
 	
 	def getGlyphOrder(self):
 		return self.charset
@@ -189,78 +195,7 @@ class CFFFont:
 	
 	def toXML(self, xmlWriter, progress=None):
 		xmlWriter.newline()
-		# first dump the simple values
-		self.toXMLSimpleValues(xmlWriter)
-		
-		# dump charset
-		# XXX
-		
-		# decompile all charstrings
-		if progress:
-			progress.setlabel("Decompiling CharStrings...")
-		self.decompileAllCharStrings()
-		
-		# dump private dict
-		xmlWriter.begintag("Private")
-		xmlWriter.newline()
-		self.Private.toXML(xmlWriter)
-		xmlWriter.endtag("Private")
-		xmlWriter.newline()
-		
-		self.toXMLCharStrings(xmlWriter, progress)
-	
-	def toXMLSimpleValues(self, xmlWriter):
-		keys = self.__dict__.keys()
-		keys.remove("CharStrings")
-		keys.remove("Private")
-		keys.remove("charset")
-		keys.remove("GlobalSubrs")
-		keys.sort()
-		for key in keys:
-			value = getattr(self, key)
-			if key == "Encoding":
-				if value == 0:
-					# encoding is (Adobe) Standard Encoding
-					value = "StandardEncoding"
-				elif value == 1:
-					# encoding is Expert Encoding
-					value = "ExpertEncoding"
-			if type(value) == types.ListType:
-				value = string.join(map(str, value), " ")
-			else:
-				value = str(value)
-			xmlWriter.begintag(key)
-			if hasattr(value, "toXML"):
-				xmlWriter.newline()
-				value.toXML(xmlWriter)
-				xmlWriter.newline()
-			else:
-				xmlWriter.write(value)
-			xmlWriter.endtag(key)
-			xmlWriter.newline()
-		xmlWriter.newline()
-	
-	def toXMLCharStrings(self, xmlWriter, progress=None):
-		charStrings = self.CharStrings
-		xmlWriter.newline()
-		xmlWriter.begintag("CharStrings")
-		xmlWriter.newline()
-		glyphNames = charStrings.keys()
-		glyphNames.sort()
-		for glyphName in glyphNames:
-			if progress:
-				progress.setlabel("Dumping 'CFF ' table... (%s)" % glyphName)
-				progress.increment()
-			xmlWriter.newline()
-			charString = charStrings[glyphName]
-			xmlWriter.begintag("CharString", name=glyphName)
-			xmlWriter.newline()
-			charString.toXML(xmlWriter)
-			xmlWriter.endtag("CharString")
-			xmlWriter.newline()
-		xmlWriter.newline()
-		xmlWriter.endtag("CharStrings")
-		xmlWriter.newline()
+		genericToXML(self, topDictOrder, {'CharStrings': 'CharString'}, xmlWriter)
 
 
 class PrivateDict:
@@ -276,48 +211,22 @@ class PrivateDict:
 		# get local subrs
 		if hasattr(self, "Subrs"):
 			file.seek(self.Subrs, 1)
-			localSubrs = readINDEX(file)
+			localSubrs = Index(file)
 			self.Subrs = map(psCharStrings.T2CharString, localSubrs)
 		else:
 			self.Subrs = []
 	
 	def toXML(self, xmlWriter):
 		xmlWriter.newline()
-		keys = self.__dict__.keys()
-		keys.remove("Subrs")
-		for key in keys:
-			value = getattr(self, key)
-			if type(value) == types.ListType:
-				value = string.join(map(str, value), " ")
-			else:
-				value = str(value)
-			xmlWriter.begintag(key)
-			xmlWriter.write(value)
-			xmlWriter.endtag(key)
-			xmlWriter.newline()
-		# write subroutines
-		xmlWriter.newline()
-		xmlWriter.begintag("Subrs")
-		xmlWriter.newline()
-		for i in range(len(self.Subrs)):
-			xmlWriter.newline()
-			xmlWriter.begintag("CharString", id=i)
-			xmlWriter.newline()
-			self.Subrs[i].toXML(xmlWriter)
-			xmlWriter.endtag("CharString")
-			xmlWriter.newline()
-		xmlWriter.newline()
-		xmlWriter.endtag("Subrs")
-		xmlWriter.newline()
-		xmlWriter.newline()
+		genericToXML(self, privateDictOrder, {'Subrs': 'CharString'}, xmlWriter)
 	
 	def __getattr__(self, attr):
 		if not privateDictDefaults.has_key(attr):
 			raise AttributeError, attr
 		return privateDictDefaults[attr]
 	
-	def fromDict(self, dict):
-		self.__dict__.update(dict)
+	def fromDict(self, d):
+		self.__dict__.update(d)
 
 
 def readINDEX(file):
@@ -342,6 +251,111 @@ def readINDEX(file):
 		stuff.append(chunk)
 		prev = next
 	return stuff
+
+
+class Index:
+
+	def __init__(self, file):
+		self.file = file
+		count, = struct.unpack(">H", file.read(2))
+		self.count = count
+		if count == 0:
+			self.offsets = []
+			return
+		offSize = ord(file.read(1))
+		self.offsets = offsets = []
+		pad = '\0' * (4 - offSize)
+		for index in range(count+1):
+			chunk = file.read(offSize)
+			chunk = pad + chunk
+			offset, = struct.unpack(">L", chunk)
+			offsets.append(int(offset))
+		self.offsetBase = file.tell() - 1
+		file.seek(self.offsetBase + offsets[-1])
+	
+	def __len__(self):
+		return self.count
+	
+	def __getitem__(self, index):
+		offset = self.offsets[index] + self.offsetBase
+		size = self.offsets[index+1] - self.offsets[index]
+		return FileString(self.file, offset, size)
+	
+	def toList(self):
+		l = []
+		for item in self:
+			l.append(item[:])
+		return l
+
+
+class FileString:
+
+	def __init__(self, file, offset, size):
+		self.file = file
+		self.offset = offset
+		self.size = size
+		self.string = None
+	
+	def __len__(self):
+		return self.size
+	
+	def __getitem__(self, index):
+		return self.get()[index]
+	
+	def __getslice__(self, i, j):
+		return self.get()[i:j]
+	
+	def get(self):
+		if self.string is None:
+			self.file.seek(self.offset)
+			self.string = self.file.read(self.size)
+		return self.string
+
+
+def getItems(o):
+	if hasattr(o, "items"):
+		items = o.items()
+		items.sort()
+		return "name", items
+	else:
+		return "index", map(None, range(len(o)), o)
+
+
+def genericToXML(obj, order, arrayTypes, xmlWriter):
+	for name in order:
+		value = getattr(obj, name, None)
+		if value is None:
+			continue
+		if hasattr(value, "toXML"):
+			xmlWriter.newline()
+			xmlWriter.begintag(name)
+			xmlWriter.newline()
+			value.toXML(xmlWriter)
+			xmlWriter.endtag(name)
+			xmlWriter.newline()
+			xmlWriter.newline()
+		elif arrayTypes.has_key(name):
+			typeName = arrayTypes[name]
+			xmlWriter.newline()
+			xmlWriter.begintag(name)
+			xmlWriter.newline()
+			xmlWriter.newline()
+			label, items = getItems(value)
+			for k, v in items:
+				xmlWriter.begintag(typeName, [(label, k)])
+				xmlWriter.newline()
+				v.toXML(xmlWriter)
+				xmlWriter.endtag(typeName)
+				xmlWriter.newline()
+				xmlWriter.newline()
+			xmlWriter.endtag(name)
+			xmlWriter.newline()
+			xmlWriter.newline()
+		else:
+			if isinstance(value, types.ListType):
+				value = " ".join(map(str, value))
+			xmlWriter.simpletag(name, value=value)
+			xmlWriter.newline()
 
 
 def parseCharsetFormat1(nGlyphs, file, strings, isCID):
@@ -376,105 +390,101 @@ def parseCharsetFormat2(nGlyphs, file, strings, isCID):
 	return charset
 
 
+def buildOperatorDict(table):
+	d = {}
+	for row in table:
+		d[row[0]] = row[1:3]
+	return d
+
+def buildOrder(table):
+	l = []
+	for row in table:
+		l.append(row[1])
+	return l
+
+def buildDefaults(table):
+	d = {}
+	for row in table:
+		if row[3] is not None:
+			d[row[1]] = row[3]
+	return d
+
+
 topDictOperators = [
-#   opcode     name                  argument type
-	(0,        'version',            'SID'),
-	(1,        'Notice',             'SID'),
-	(2,        'FullName',           'SID'),
-	(3,        'FamilyName',         'SID'),
-	(4,        'Weight',             'SID'),
-	(5,        'FontBBox',           'array'),
-	(13,       'UniqueID',           'number'),
-	(14,       'XUID',               'array'),
-	(15,       'charset',            'number'),
-	(16,       'Encoding',           'number'),
-	(17,       'CharStrings',        'number'),
-	(18,       'Private',            ('number', 'number')),
-	((12, 0),  'Copyright',          'SID'),
-	((12, 1),  'isFixedPitch',       'number'),
-	((12, 2),  'ItalicAngle',        'number'),
-	((12, 3),  'UnderlinePosition',  'number'),
-	((12, 4),  'UnderlineThickness', 'number'),
-	((12, 5),  'PaintType',          'number'),
-	((12, 6),  'CharstringType',     'number'),
-	((12, 7),  'FontMatrix',         'array'),
-	((12, 8),  'StrokeWidth',        'number'),
-	((12, 20), 'SyntheticBase',      'number'),
-	((12, 21), 'PostScript',         'SID'),
-	((12, 22), 'BaseFontName',       'SID'),
-	# CID additions
-	((12, 30), 'ROS',                ('SID', 'SID', 'number')),
-	((12, 31), 'CIDFontVersion',     'number'),
-	((12, 32), 'CIDFontRevision',    'number'),
-	((12, 33), 'CIDFontType',        'number'),
-	((12, 34), 'CIDCount',           'number'),
-	((12, 35), 'UIDBase',            'number'),
-	((12, 36), 'FDArray',            'number'),
-	((12, 37), 'FDSelect',           'number'),
-	((12, 38), 'FontName',           'SID'),
+#	opcode     name                  argument type   default
+	(0,        'version',            'SID',          None),
+	(1,        'Notice',             'SID',          None),
+	((12, 0),  'Copyright',          'SID',          None),
+	(2,        'FullName',           'SID',          None),
+	(3,        'FamilyName',         'SID',          None),
+	(4,        'Weight',             'SID',          None),
+	((12, 1),  'isFixedPitch',       'number',       0),
+	((12, 2),  'ItalicAngle',        'number',       0),
+	((12, 3),  'UnderlinePosition',  'number',       None),
+	((12, 4),  'UnderlineThickness', 'number',       50),
+	((12, 5),  'PaintType',          'number',       0),
+	((12, 6),  'CharstringType',     'number',       2),
+	((12, 7),  'FontMatrix',         'array',  [0.001,0,0,0.001,0,0]),
+	(13,       'UniqueID',           'number',       None),
+	(5,        'FontBBox',           'array',  [0,0,0,0]),
+	((12, 8),  'StrokeWidth',        'number',       0),
+	(14,       'XUID',               'array',        None),
+	(15,       'charset',            'number',       0),
+	(16,       'Encoding',           'number',       0),
+	(18,       'Private',       ('number','number'), None),
+	(17,       'CharStrings',        'number',       None),
+	((12, 20), 'SyntheticBase',      'number',       None),
+	((12, 21), 'PostScript',         'SID',          None),
+	((12, 22), 'BaseFontName',       'SID',          None),
+	((12, 23), 'BaseFontBlend',      'delta',        None),
+	((12, 30), 'ROS',        ('SID','SID','number'), None),
+	((12, 31), 'CIDFontVersion',     'number',       0),
+	((12, 32), 'CIDFontRevision',    'number',       0),
+	((12, 33), 'CIDFontType',        'number',       0),
+	((12, 34), 'CIDCount',           'number',       8720),
+	((12, 35), 'UIDBase',            'number',       None),
+	((12, 36), 'FDArray',            'number',       None),
+	((12, 37), 'FDSelect',           'number',       None),
+	((12, 38), 'FontName',           'SID',          None),
 ]
 
-topDictDefaults = {
-	'isFixedPitch':        0,
-	'ItalicAngle':         0,
-	'UnderlineThickness':  50,
-	'PaintType':           0,
-	'CharstringType':      2,
-	'FontMatrix':          [0.001, 0, 0, 0.001, 0, 0],
-	'FontBBox':            [0, 0, 0, 0],
-	'StrokeWidth':         0,
-	'charset':             0,
-	'Encoding':            0,
-	# CID defaults
-	'CIDFontVersion':      0,
-	'CIDFontRevision':     0,
-	'CIDFontType':         0,
-	'CIDCount':            8720,
-}
+topDictDefaults = buildDefaults(topDictOperators)
+topDictOrder = buildOrder(topDictOperators)
 
 class TopDictDecompiler(psCharStrings.DictDecompiler):
 	
-	operators = psCharStrings.buildOperatorDict(topDictOperators)
+	operators = buildOperatorDict(topDictOperators)
 	dictDefaults = topDictDefaults
 	
 
 privateDictOperators = [
-#   opcode     name                  argument type
-	(6,        'BlueValues',         'array'),
-	(7,        'OtherBlues',         'array'),
-	(8,        'FamilyBlues',        'array'),
-	(9,        'FamilyOtherBlues',   'array'),
-	(10,       'StdHW',              'number'),
-	(11,       'StdVW',              'number'),
-	(19,       'Subrs',              'number'),
-	(20,       'defaultWidthX',      'number'),
-	(21,       'nominalWidthX',      'number'),
-	((12, 9),  'BlueScale',          'number'),
-	((12, 10), 'BlueShift',          'number'),
-	((12, 11), 'BlueFuzz',           'number'),
-	((12, 12), 'StemSnapH',          'array'),
-	((12, 13), 'StemSnapV',          'array'),
-	((12, 14), 'ForceBold',          'number'),
-	((12, 17), 'LanguageGroup',      'number'),
-	((12, 18), 'ExpansionFactor',    'number'),
-	((12, 19), 'initialRandomSeed',  'number'),
+#	opcode     name                  argument type   default
+	(6,        'BlueValues',         'delta',        None),
+	(7,        'OtherBlues',         'delta',        None),
+	(8,        'FamilyBlues',        'delta',        None),
+	(9,        'FamilyOtherBlues',   'delta',        None),
+	((12, 9),  'BlueScale',          'number',       0.039625),
+	((12, 10), 'BlueShift',          'number',       7),
+	((12, 11), 'BlueFuzz',           'number',       1),
+	(10,       'StdHW',              'number',       None),
+	(11,       'StdVW',              'number',       None),
+	((12, 12), 'StemSnapH',          'delta',        None),
+	((12, 13), 'StemSnapV',          'delta',        None),
+	((12, 14), 'ForceBold',          'number',       0),
+	((12, 17), 'LanguageGroup',      'number',       0),
+	((12, 18), 'ExpansionFactor',    'number',       0.06),
+	((12, 19), 'initialRandomSeed',  'number',       0),
+	(20,       'defaultWidthX',      'number',       0),
+	(21,       'nominalWidthX',      'number',       0),
+	(19,       'Subrs',              'number',       None),
 ]
 
-privateDictDefaults = {
-	'defaultWidthX':       0,
-	'nominalWidthX':       0,
-	'BlueScale':           0.039625,
-	'BlueShift':           7,
-	'BlueFuzz':            1,
-	'ForceBold':           0,
-	'LanguageGroup':       0,
-	'ExpansionFactor':     0.06,
-	'initialRandomSeed':   0,
-}
+privateDictDefaults = buildDefaults(privateDictOperators)
+privateDictOrder = buildOrder(privateDictOperators)
 
 class PrivateDictDecompiler(psCharStrings.DictDecompiler):
 	
-	operators = psCharStrings.buildOperatorDict(privateDictOperators)
+	operators = buildOperatorDict(privateDictOperators)
 	dictDefaults = privateDictDefaults
 
 
