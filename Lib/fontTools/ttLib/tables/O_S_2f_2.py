@@ -98,9 +98,9 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 			# workaround for buggy Apple fonts
 			self.version = 0
 		if self.version == 1:
-			sstruct.unpack(OS2_format_1_addition, data, self)
+			sstruct.unpack2(OS2_format_1_addition, data, self)
 		elif self.version == 2:
-			sstruct.unpack(OS2_format_2_addition, data, self)
+			sstruct.unpack2(OS2_format_2_addition, data, self)
 		elif self.version <> 0:
 			from fontTools import ttLib
 			raise ttLib.TTLibError, "unknown format for OS/2 table: version %s" % self.version
