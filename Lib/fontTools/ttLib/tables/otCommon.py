@@ -16,7 +16,7 @@ class base_GPOS_GSUB(DefaultTable.DefaultTable):
 		reader = OTTableReader(data)
 		self.version = reader.readLong()
 		if self.version <> 0x00010000:
-			raise ttLib.TTLibError, "unknown table version: 0x%8x" % self.version
+			raise ttLib.TTLibError, "unknown table version: 0x%.8x" % self.version
 		
 		self.scriptList = reader.readTable(ScriptList, otFont, self.tableTag)
 		self.featureList = reader.readTable(FeatureList, otFont, self.tableTag)
