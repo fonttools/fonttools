@@ -62,21 +62,21 @@ class OTTableReader:
 	def readUShort(self):
 		pos = self.pos
 		newpos = pos + 2
-		value = struct.unpack(">H", self.data[pos:newpos])[0]
+		value, = struct.unpack(">H", self.data[pos:newpos])
 		self.pos = newpos
 		return value
 	
 	def readShort(self):
 		pos = self.pos
 		newpos = pos + 2
-		value = struct.unpack(">h", self.data[pos:newpos])[0]
+		value, = struct.unpack(">h", self.data[pos:newpos])
 		self.pos = newpos
 		return value
 	
 	def readLong(self):
 		pos = self.pos
 		newpos = pos + 4
-		value = struct.unpack(">l", self.data[pos:newpos])[0]
+		value, = struct.unpack(">l", self.data[pos:newpos])
 		self.pos = newpos
 		return value
 	

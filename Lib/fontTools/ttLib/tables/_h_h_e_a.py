@@ -2,33 +2,35 @@ import DefaultTable
 import sstruct
 from fontTools.misc.textTools import safeEval
 
+
 hheaFormat = """
-		>	# big endian
-		tableVersion:			16.16F
-		ascent:					h
-		descent:				h
-		lineGap:				h
-		advanceWidthMax:		H
-		minLeftSideBearing:		h
-		minRightSideBearing:	h
-		xMaxExtent:				h
-		caretSlopeRise:			h
-		caretSlopeRun:			h
-		reserved0:				h
-		reserved1:				h
-		reserved2:				h
-		reserved3:				h
-		reserved4:				h
-		metricDataFormat:		h
-		numberOfHMetrics:		H
+		>  # big endian
+		tableVersion:           16.16F
+		ascent:                 h
+		descent:                h
+		lineGap:                h
+		advanceWidthMax:        H
+		minLeftSideBearing:     h
+		minRightSideBearing:    h
+		xMaxExtent:             h
+		caretSlopeRise:         h
+		caretSlopeRun:          h
+		reserved0:              h
+		reserved1:              h
+		reserved2:              h
+		reserved3:              h
+		reserved4:              h
+		metricDataFormat:       h
+		numberOfHMetrics:       H
 """
+
 
 class table__h_h_e_a(DefaultTable.DefaultTable):
 	
 	dependencies = ['hmtx', 'glyf']
 	
 	def decompile(self, data, ttFont):
-		sstruct.unpack(hheaFormat, data, self)
+		sstruct.unpack(hheaFormat, data.read(), self)
 	
 	def compile(self, ttFont):
 		if ttFont.isLoaded('glyf') and ttFont.recalcBBoxes:
