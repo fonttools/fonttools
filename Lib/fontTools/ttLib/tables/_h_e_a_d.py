@@ -66,6 +66,8 @@ class table__h_e_a_d(DefaultTable.DefaultTable):
 				value=int(value)
 			if name in ("magicNumber", "checkSumAdjustment"):
 				value = hex(value)
+			elif name == "macStyle":
+				value = num2binary(value, 16)
 			elif name == "flags":
 				value = num2binary(value, 16)
 			writer.simpletag(name, value=value)
@@ -75,6 +77,8 @@ class table__h_e_a_d(DefaultTable.DefaultTable):
 		value = attrs["value"]
 		if name in ("created", "modified"):
 			value = parse_date(value) - mac_epoch_diff
+		elif name == "macStyle":
+			value = binary2num(value)
 		elif name == "flags":
 			value = binary2num(value)
 		else:
