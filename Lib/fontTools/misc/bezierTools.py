@@ -62,14 +62,14 @@ def splitLine(pt1, pt2, where, isHorizontal):
 	line was successfully split, or a list containing the original
 	line.
 
-		>>> _tuplify(splitLine((0, 0), (100, 100), 50, True))
-		(((0, 0), (50.0, 50.0)), ((50.0, 50.0), (100, 100)))
-		>>> _tuplify(splitLine((0, 0), (100, 100), 100, True))
-		(((0, 0), (100, 100)),)
-		>>> _tuplify(splitLine((0, 0), (100, 100), 0, True))
-		(((0, 0), (0.0, 0.0)), ((0.0, 0.0), (100, 100)))
-		>>> _tuplify(splitLine((0, 0), (100, 100), 0, False))
-		(((0, 0), (0.0, 0.0)), ((0.0, 0.0), (100, 100)))
+		>>> _testrepr(splitLine((0, 0), (100, 100), 50, True))
+		'(((0, 0), (50.0, 50.0)), ((50.0, 50.0), (100, 100)))'
+		>>> _testrepr(splitLine((0, 0), (100, 100), 100, True))
+		'(((0, 0), (100, 100)))'
+		>>> _testrepr(splitLine((0, 0), (100, 100), 0, True))
+		'(((0, 0), (0.0, 0.0)), ((0.0, 0.0), (100, 100)))'
+		>>> _testrepr(splitLine((0, 0), (100, 100), 0, False))
+		'(((0, 0), (0.0, 0.0)), ((0.0, 0.0), (100, 100)))'
 	"""
 	pt1, pt2 = Numeric.array((pt1, pt2))
 	a = (pt2 - pt1)
@@ -92,15 +92,15 @@ def splitQuadratic(pt1, pt2, pt3, where, isHorizontal):
 
 		>>> splitQuadratic((0, 0), (50, 100), (100, 0), 150, False)
 		[((0, 0), (50, 100), (100, 0))]
-		>>> _tuplify(splitQuadratic((0, 0), (50, 100), (100, 0), 50, False))
-		(((0.0, 0.0), (25.0, 50.0), (50.0, 50.0)), ((50.0, 50.0), (75.0, 50.0), (100.0, 0.0)))
-		>>> _tuplify(splitQuadratic((0, 0), (50, 100), (100, 0), 25, False))
-		(((0.0, 0.0), (12.5, 25.0), (25.0, 37.5)), ((25.0, 37.5), (62.5, 75.0), (100.0, 0.0)))
-		>>> _tuplify(splitQuadratic((0, 0), (50, 100), (100, 0), 25, True))
-		(((0.0, 0.0), (7.3223304703363103, 14.644660940672621), (14.644660940672621, 24.999999999999996)), ((14.644660940672621, 24.999999999999996), (49.999999999999993, 75.0), (85.355339059327363, 25.000000000000025)), ((85.355339059327378, 25.0), (92.677669529663689, 14.644660940672621), (100.0, -7.1054273576010019e-15)))
+		>>> _testrepr(splitQuadratic((0, 0), (50, 100), (100, 0), 50, False))
+		'(((0.0, 0.0), (25.0, 50.0), (50.0, 50.0)), ((50.0, 50.0), (75.0, 50.0), (100.0, 0.0)))'
+		>>> _testrepr(splitQuadratic((0, 0), (50, 100), (100, 0), 25, False))
+		'(((0.0, 0.0), (12.5, 25.0), (25.0, 37.5)), ((25.0, 37.5), (62.5, 75.0), (100.0, 0.0)))'
+		>>> _testrepr(splitQuadratic((0, 0), (50, 100), (100, 0), 25, True))
+		'(((0.0, 0.0), (7.32233047034, 14.6446609407), (14.6446609407, 25.0)), ((14.6446609407, 25.0), (50.0, 75.0), (85.3553390593, 25.0)), ((85.3553390593, 25.0), (92.6776695297, 14.6446609407), (100.0, -7.1054273576e-15)))'
 		>>> # XXX I'm not at all sure it the following behavior is desirable:
-		>>> _tuplify(splitQuadratic((0, 0), (50, 100), (100, 0), 50, True))
-		(((0.0, 0.0), (25.0, 50.0), (50.0, 50.0)), ((50.0, 50.0), (50.0, 50.0), (50.0, 50.0)), ((50.0, 50.0), (75.0, 50.0), (100.0, 0.0)))
+		>>> _testrepr(splitQuadratic((0, 0), (50, 100), (100, 0), 50, True))
+		'(((0.0, 0.0), (25.0, 50.0), (50.0, 50.0)), ((50.0, 50.0), (50.0, 50.0), (50.0, 50.0)), ((50.0, 50.0), (75.0, 50.0), (100.0, 0.0)))'
 	"""
 	a, b, c = calcQuadraticParameters(pt1, pt2, pt3)
 	solutions = solveQuadratic(a[isHorizontal], b[isHorizontal],
@@ -132,7 +132,15 @@ def splitQuadratic(pt1, pt2, pt3, where, isHorizontal):
 def splitCubic(pt1, pt2, pt3, pt4, where, isHorizontal):
 	"""Split the cubic curve between pt1, pt2, pt3 and pt4 at position 'where',
 	which is an x coordinate if isHorizontal is False, a y coordinate if
-	isHorizontal is True. Return a list of curve segments."""
+	isHorizontal is True. Return a list of curve segments.
+
+		>>> splitCubic((0, 0), (25, 100), (75, 100), (100, 0), 150, False)
+		[((0, 0), (25, 100), (75, 100), (100, 0))]
+		>>> _testrepr(splitCubic((0, 0), (25, 100), (75, 100), (100, 0), 50, False))
+		'(((0.0, 0.0), (12.5, 50.0), (31.25, 75.0), (50.0, 75.0)), ((50.0, 75.0), (68.75, 75.0), (87.5, 50.0), (100.0, 0.0)))'
+		>>> _testrepr(splitCubic((0, 0), (25, 100), (75, 100), (100, 0), 25, True))
+		'(((0.0, 0.0), (2.2937927384, 9.17517095361), (4.79804488188, 17.5085042869), (7.47413641001, 25.0)), ((7.47413641001, 25.0), (31.2886200204, 91.6666666667), (68.7113799796, 91.6666666667), (92.52586359, 25.0)), ((92.52586359, 25.0), (95.2019551181, 17.5085042869), (97.7062072616, 9.17517095361), (100.0, 1.7763568394e-15)))'
+	"""
 	a, b, c, d = calcCubicParameters(pt1, pt2, pt3, pt4)
 	solutions = solveCubic(a[isHorizontal], b[isHorizontal], c[isHorizontal],
 		d[isHorizontal] - where)
@@ -257,17 +265,17 @@ def calcCubicParameters(pt1, pt2, pt3, pt4):
 	return a, b, c, d
 
 
-def _tuplify(obj):
+def _testrepr(obj):
 	"""
-		>>> _tuplify([1, [2, 3], [], [[2, [3, 4]]]])
-		(1, (2, 3), (), ((2, (3, 4)),))
+		>>> _testrepr([1, [2, 3], [], [[2, [3, 4]]]])
+		'(1, (2, 3), (), ((2, (3, 4))))'
 	"""
 	try:
 		it = iter(obj)
 	except TypeError:
-		return obj
+		return str(obj)
 	else:
-		return tuple([_tuplify(x) for x in it])
+		return "(%s)" % ", ".join([_testrepr(x) for x in it])
 
 
 if __name__ == "__main__":
