@@ -1,4 +1,81 @@
 ----------------------------
+2003/08/29 19:29:46 jvr Lib/fontTools/misc/arrayTools.py 1.7
+- renamed all l,t,r,b tuff to xMin, yMin, xMax, yMax
+- added ome more doc strings
+- added some minimal test code
+----------------------------
+2003/08/29 08:05:39 jvr Lib/fontTools/misc/psCharStrings.py 1.18
+T2: I'm not sure if the seac-variant of the endchar operator may be
+combined with actual outlines, but if it is, we need to do the closePath
+before the components are added.
+----------------------------
+2003/08/28 20:43:06 jvr Lib/fontTools/misc/psCharStrings.py 1.17
+added deprecated endchar/seac support for T2 charstrings
+----------------------------
+2003/08/28 19:30:46 jvr Lib/fontTools/pens/basePen.py 1.4
+- added support for quadratic contours that have NO on-curve points.
+- more doco and comments.
+----------------------------
+2003/08/28 19:03:29 jvr Lib/fontTools/pens/pointInsidePen.py 1.2
+more doco and comments
+----------------------------
+2003/08/28 18:23:43 jvr Lib/fontTools/ttLib/__init__.py 1.43
+workaround for buggy 2.2 mac support
+----------------------------
+2003/08/28 18:14:33 jvr Lib/fontTools/ttLib/tables/_c_m_a_p.py 1.12
+whitespace nits
+----------------------------
+2003/08/28 18:04:23 jvr Lib/fontTools/ttLib/tables/_c_m_a_p.py 1.11
+Another patch from rroberts. He writes:
+"""It adds full support for cmap format 2, which is what
+the Adobe CJK fonts use for the Mac cmap subtable."""
+----------------------------
+2003/08/28 17:59:52 jvr setup.py 1.11
+whoops, forgot to add the .pens subpacke to the distutils script :-( noticed by rroberts.
+----------------------------
+2003/08/28 08:51:45 jvr Lib/fontTools/pens/pointInsidePen.py 1.1
+Is the point inside or outside the outline?
+----------------------------
+2003/08/26 19:20:33 jvr Lib/fontTools/misc/bezierTools.py 1.4
+- Fixed ZeroDivisionError in solveCubic(). The solution is mathematically
+dubious (I don't think 0.0/0.0 == 0.0...) but the result seems to be
+correct.
+- Documented that soleCubic() and solveQuadratic() are not guaranteed to
+return the roots in order, and nor that they are guaranteed to not return
+duplicate roots.
+----------------------------
+2003/08/26 19:00:38 jvr Lib/fontTools/ttLib/__init__.py 1.42
+Set .width in _TTGlyph.__init__ after all: these are just this wrapper
+objects, _TTGlyphSet doesn't cache them, so setting .width in .draw()
+is confusing to say the least.
+----------------------------
+2003/08/26 18:20:27 jvr Lib/fontTools/pens/cocoaPen.py 1.1
+new Cocoa=specific drawing pen
+----------------------------
+2003/08/26 18:19:11 jvr Lib/fontTools/ttLib/__init__.py 1.41
+fixed AttributeError in _TTGlyphSet.keys()
+----------------------------
+2003/08/26 12:02:48 jvr Doc/documentation.html 1.8
+typo pointed out by Adam T.
+----------------------------
+2003/08/25 21:19:47 jvr MetaTools/buildTableList.py 1.3
+output don't-edit note
+----------------------------
+2003/08/25 21:19:09 jvr Lib/fontTools/ttLib/tables/__init__.py 1.5
+document that this file is generated
+----------------------------
+2003/08/25 21:16:12 jvr Doc/documentation.html 1.7
+add rroberts to the Acknowledgements section; updated some years
+----------------------------
+2003/08/25 17:53:29 jvr Lib/fontTools/t1Lib.py 1.18
+add the generic getGlyphSet() API to T1Font as well.
+----------------------------
+2003/08/25 13:20:38 jvr Lib/fontTools/ttLib/__init__.py 1.40
+comment typo fix, reflow
+----------------------------
+2003/08/25 13:18:23 jvr Doc/ChangeLog.txt 1.6
+lots of stuff
+----------------------------
 2003/08/25 13:15:50 jvr Lib/fontTools/ttLib/__init__.py 1.39
 TTFont now has a getGlyphSet() method, which will return a generic
 GlyphSet. A GlyphSet is simply a dict-like object mapping glyph names
