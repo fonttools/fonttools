@@ -129,8 +129,46 @@ class OTTableWriter:
 		self.valueFormat = valueFormat
 		self.pos = None
 	
-	def getSubWriter(self):
-		return self.__class__(self.tableType, self.valueFormat)
+	# assembler interface
+	
+	def getAllData(self):
+		"""Assemble all data, including all subtables."""
+		self._doneWriting()
+		tables = self._gatherTables()
+		tables.reverse()
+		
+		# Gather all data in two passes: the absolute positions of all
+		# subtable are needed before the actual data can be assembled.
+		pos = 0
+		for table in tables:
+			table.pos = pos
+			pos = pos + table.getDataLength()
+		
+		data = []
+		for table in tables:
+			tableData = table.getData()
+			data.append(tableData)
+		
+		return "".join(data)
+	
+	def getDataLength(self):
+		"""Return the length of this table in bytes, without subtables."""
+		l = 0
+		for item in self.items:
+			if hasattr(item, "getData") or hasattr(item, "getCountData"):
+				l = l + 2  # sizeof(UShort)
+			else:
+				l = l + len(item)
+		return l
+	
+	def getData(self):
+		"""Assemble the data for this writer/table, without subtables."""
+		items = list(self.items)  # make a shallow copy
+		for i in range(len(items)):
+			item = items[i]
+			if hasattr(item, "getData"):
+				items[i] = packUShort(item.pos - self.pos)
+		return "".join(items)
 	
 	def __hash__(self):
 		# only works after self._doneWriting() has been called
@@ -171,42 +209,10 @@ class OTTableWriter:
 		tables.append(self)
 		return tables
 	
-	def getAllData(self):
-		"""Return all data, including all subtables."""
-		self._doneWriting()
-		tables = self._gatherTables()
-		tables.reverse()
-		
-		pos = 0
-		for table in tables:
-			table.pos = pos
-			pos = pos + table.getDataLength()
-		
-		data = []
-		for table in tables:
-			tableData = table.getData()
-			data.append(tableData)
-		
-		return "".join(data)
+	# interface for gathering data, as used by table.compile()
 	
-	def getDataLength(self):
-		"""Return the length of this table in bytes, without subtables."""
-		l = 0
-		for item in self.items:
-			if hasattr(item, "getData") or hasattr(item, "getCountData"):
-				l = l + 2  # sizeof(UShort)
-			else:
-				l = l + len(item)
-		return l
-	
-	def getData(self):
-		"""Return the data for this writer/table, without any subtables."""
-		items = list(self.items)  # make a shallow copy
-		for i in range(len(items)):
-			item = items[i]
-			if hasattr(item, "getData"):
-				items[i] = packUShort(item.pos - self.pos)
-		return "".join(items)
+	def getSubWriter(self):
+		return self.__class__(self.tableType, self.valueFormat)
 	
 	def writeUShort(self, value):
 		assert 0 <= value < 0x10000
