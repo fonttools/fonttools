@@ -33,7 +33,14 @@ class SFNTReader:
 		for i in range(self.numTables):
 			entry = SFNTDirectoryEntry()
 			entry.fromfile(self.file)
-			self.tables[entry.tag] = entry
+			if entry.length > 0:
+				self.tables[entry.tag] = entry
+			else:
+				# Ignore zero-length tables. This doesn't seem to be documented,
+				# yet it's apparently how the Windows TT rasterizer behaves.
+				# Besides, at least one font has been sighted which actually
+				# *has* a zero-length table.
+				pass
 	
 	def has_key(self, tag):
 		return self.tables.has_key(tag)
