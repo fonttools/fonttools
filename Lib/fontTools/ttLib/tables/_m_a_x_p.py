@@ -4,25 +4,25 @@ from fontTools.misc.textTools import safeEval
 
 maxpFormat_0_5 = """
 		>	# big endian
-		tableVersion:			i
-		numGlyphs:				H
+		tableVersion:           i
+		numGlyphs:              H
 """
 
 maxpFormat_1_0_add = """
 		>	# big endian
-		maxPoints:				H
-		maxContours:			H
-		maxCompositePoints:		H
-		maxCompositeContours:	H
-		maxZones:				H
-		maxTwilightPoints:		H
-		maxStorage:				H
-		maxFunctionDefs:		H
-		maxInstructionDefs:		H
-		maxStackElements:		H
-		maxSizeOfInstructions:	H
-		maxComponentElements:	H
-		maxComponentDepth:		H
+		maxPoints:              H
+		maxContours:            H
+		maxCompositePoints:     H
+		maxCompositeContours:   H
+		maxZones:               H
+		maxTwilightPoints:      H
+		maxStorage:             H
+		maxFunctionDefs:        H
+		maxInstructionDefs:     H
+		maxStackElements:       H
+		maxSizeOfInstructions:  H
+		maxComponentElements:   H
+		maxComponentDepth:      H
 """
 
 
@@ -35,8 +35,6 @@ class table__m_a_x_p(DefaultTable.DefaultTable):
 		self.numGlyphs = int(self.numGlyphs)
 		if self.tableVersion != 0x00005000:
 			dummy, data = sstruct.unpack2(maxpFormat_1_0_add, data, self)
-#		else:
-#			assert self.tableVersion == 0x00005000, "unknown 'maxp' format: %x" % self.tableVersion
 		assert len(data) == 0
 	
 	def compile(self, ttFont):
