@@ -128,6 +128,7 @@ class Options:
 
 
 def ttList(input, output, options):
+	import string
 	ttf = TTFont(input)
 	reader = ttf.reader
 	tags = reader.keys()
@@ -138,7 +139,7 @@ def ttList(input, output, options):
 	print format % ("----", "----------", "-------", "-------")
 	for tag in tags:
 		entry = reader.tables[tag]
-		checksum = "0x" + hex(entry.checkSum)[2:].zfill(8)
+		checksum = "0x" + string.zfill(hex(entry.checkSum)[2:], 8)
 		print format % (tag, checksum, entry.length, entry.offset)
 	print
 	ttf.close()

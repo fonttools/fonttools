@@ -1,5 +1,8 @@
 TTX/FontTools Version 2.0 beta 2 (released ??? 2002)
 
+- Fixed ttx -l: it turned out this part of the code didn't work with
+  Python 2.2.1 and earlier. My bad to do most of my testing with a
+  different version than I shipped TTX with :-(
 - Fixed bug in ClassDef format 1 subtable (Andreas Seidel bumped into
   this one).
 
