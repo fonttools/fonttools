@@ -11,7 +11,7 @@ INDENT = "  "
 
 class XMLWriter:
 	
-	def __init__(self, file, dtd=None, indentwhite=INDENT):
+	def __init__(self, file, indentwhite=INDENT, idlefunc=None):
 		if type(file) == type(""):
 			self.file = open(file, "w")
 			if os.name == "mac":
@@ -20,16 +20,14 @@ class XMLWriter:
 		else:
 			# assume writable file object
 			self.file = file
-		self.dtd = dtd
 		self.indentwhite = indentwhite
 		self.indentlevel = 0
 		self.stack = []
 		self.needindent = 1
+		self.idlefunc = idlefunc
+		self.idlecounter = 0
 		self.writeraw("<?xml version='1.0'?>")
 		self.newline()
-		if self.dtd:
-			# DOCTYPE???
-			self.newline()
 	
 	def close(self):
 		self.file.close()
@@ -55,6 +53,10 @@ class XMLWriter:
 	def newline(self):
 		self.file.write("\n")
 		self.needindent = 1
+		idlecounter = self.idlecounter
+		if not idlecounter % 100 and self.idlefunc is not None:
+			self.idlefunc()
+		self.idlecounter = idlecounter + 1
 	
 	def comment(self, data):
 		data = escape(data)
