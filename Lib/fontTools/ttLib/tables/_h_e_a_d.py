@@ -2,7 +2,6 @@ import DefaultTable
 import sstruct
 import time
 import string
-import calendar
 from fontTools.misc.textTools import safeEval, num2binary, binary2num
 
 
@@ -106,8 +105,9 @@ def calc_mac_epoch_diff():
 mac_epoch_diff = calc_mac_epoch_diff()
 
 
-_months = map(string.lower, calendar.month_abbr)
-_weekdays = map(string.lower, calendar.day_abbr)
+_months = ['   ', 'jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug',
+		'sep', 'oct', 'nov', 'dec']
+_weekdays = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
 
 def parse_date(datestring):
 	datestring = string.lower(datestring)
