@@ -36,7 +36,8 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 			metrics = Numeric.concatenate((metrics, 
 					Numeric.transpose(additionalMetrics)))
 		if data:
-			raise  ttLib.TTLibError, "too much data for hmtx/vmtx table"
+			import sys
+			sys.stderr.write("too much data for hmtx/vmtx table\n")
 		metrics = metrics.tolist()
 		self.metrics = {}
 		for i in range(len(metrics)):

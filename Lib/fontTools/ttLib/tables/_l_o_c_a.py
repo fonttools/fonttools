@@ -21,9 +21,9 @@ class table__l_o_c_a(DefaultTable.DefaultTable):
 		locations = Numeric.array(locations, Numeric.Int32)
 		if not longFormat:
 			locations = locations * 2
-		if len(locations) <> (ttFont['maxp'].numGlyphs + 1):
+		if len(locations) < (ttFont['maxp'].numGlyphs + 1):
 			raise  ttLib.TTLibError, "corrupt 'loca' table"
-		self.locations = locations
+		self.locations = locations[:ttFont['maxp'].numGlyphs + 1]
 	
 	def compile(self, ttFont):
 		locations = self.locations
