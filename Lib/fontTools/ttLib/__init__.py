@@ -42,7 +42,7 @@ Dumping 'prep' table...
 """
 
 #
-# $Id: __init__.py,v 1.41 2003-08-26 18:19:11 jvr Exp $
+# $Id: __init__.py,v 1.42 2003-08-26 19:00:38 jvr Exp $
 #
 
 import sys
@@ -584,21 +584,24 @@ class _TTGlyphSet:
 
 class _TTGlyph:
 	
-	"""Wrapper for a TrueType glyph that supports the Pen protocol.
-	Instances have an attribute named 'width', but only *after* the .draw()
-	method has been called.
+	"""Wrapper for a TrueType glyph that supports the Pen protocol, meaning
+	that it has a .draw() method that takes a pen object as its only
+	argument. Additionally there is a 'width' attribute.
 	"""
 	
 	def __init__(self, glyphName, ttFont):
 		self._glyphName = glyphName
 		self._ttFont = ttFont
+		self.width, self.lsb = self._ttFont['hmtx'][self._glyphName]
 	
 	def draw(self, pen):
+		"""Draw the glyph onto Pen. See fontTools.pens.basePen for details
+		how that works.
+		"""
 		glyfTable = self._ttFont['glyf']
 		glyph = glyfTable[self._glyphName]
-		self.width, lsb = self._ttFont['hmtx'][self._glyphName]
 		if hasattr(glyph, "xMin"):
-			offset = lsb - glyph.xMin
+			offset = self.lsb - glyph.xMin
 		else:
 			offset = 0
 		if glyph.isComposite():
