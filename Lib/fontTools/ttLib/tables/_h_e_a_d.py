@@ -33,7 +33,10 @@ class table__h_e_a_d(DefaultTable.DefaultTable):
 	dependencies = ['maxp', 'loca']
 	
 	def decompile(self, data, ttFont):
-		sstruct.unpack(headFormat, data, self)
+		dummy, rest = sstruct.unpack2(headFormat, data, self)
+		if rest:
+			# this is quite illegal, but there seem to be fonts out there that do this
+			assert rest == "\0\0"
 		self.unitsPerEm = int(self.unitsPerEm)
 		self.strings2dates()
 	
