@@ -1,122 +1,13 @@
 """cffLib.py -- read/write tools for Adobe CFF fonts."""
 
 #
-# $Id: cffLib.py,v 1.8 2002-05-13 16:19:37 jvr Exp $
+# $Id: cffLib.py,v 1.9 2002-05-14 12:22:03 jvr Exp $
 #
 
 import struct, sstruct
 import string
 import types
 from fontTools.misc import psCharStrings
-
-
-topDictOperators = [
-#   opcode     name                  argument type
-	(0,        'version',            'SID'),
-	(1,        'Notice',             'SID'),
-	(2,        'FullName',           'SID'),
-	(3,        'FamilyName',         'SID'),
-	(4,        'Weight',             'SID'),
-	(5,        'FontBBox',           'array'),
-	(13,       'UniqueID',           'number'),
-	(14,       'XUID',               'array'),
-	(15,       'charset',            'number'),
-	(16,       'Encoding',           'number'),
-	(17,       'CharStrings',        'number'),
-	(18,       'Private',            ('number', 'number')),
-	((12, 0),  'Copyright',          'SID'),
-	((12, 1),  'isFixedPitch',       'number'),
-	((12, 2),  'ItalicAngle',        'number'),
-	((12, 3),  'UnderlinePosition',  'number'),
-	((12, 4),  'UnderlineThickness', 'number'),
-	((12, 5),  'PaintType',          'number'),
-	((12, 6),  'CharstringType',     'number'),
-	((12, 7),  'FontMatrix',         'array'),
-	((12, 8),  'StrokeWidth',        'number'),
-	((12, 20), 'SyntheticBase',      'number'),
-	((12, 21), 'PostScript',         'SID'),
-	((12, 22), 'BaseFontName',       'SID'),
-	# CID additions
-	((12, 30), 'ROS',                ('SID', 'SID', 'number')),
-	((12, 31), 'CIDFontVersion',     'number'),
-	((12, 32), 'CIDFontRevision',    'number'),
-	((12, 33), 'CIDFontType',        'number'),
-	((12, 34), 'CIDCount',           'number'),
-	((12, 35), 'UIDBase',            'number'),
-	((12, 36), 'FDArray',            'number'),
-	((12, 37), 'FDSelect',           'number'),
-	((12, 38), 'FontName',           'SID'),
-	# MM, Chameleon. Pft.
-]
-
-topDictDefaults = {
-		'isFixedPitch': 		0,
-		'ItalicAngle': 			0,
-		'UnderlineThickness': 	50,
-		'PaintType': 			0,
-		'CharstringType': 		2,
-		'FontMatrix': 			[0.001, 0, 0, 0.001, 0, 0],
-		'FontBBox': 			[0, 0, 0, 0],
-		'StrokeWidth': 			0,
-		'charset': 				0,
-		'Encoding': 			0,
-		# CID defaults
-		'CIDFontVersion':		0,
-		'CIDFontRevision':		0,
-		'CIDFontType':			0,
-		'CIDCount':				8720,
-}
-
-class TopDictDecompiler(psCharStrings.DictDecompiler):
-	
-	operators = psCharStrings.buildOperatorDict(topDictOperators)
-	dictDefaults = topDictDefaults
-	
-
-privateDictOperators = [
-#   opcode     name                  argument type
-	(6,        'BlueValues',         'array'),
-	(7,        'OtherBlues',         'array'),
-	(8,        'FamilyBlues',        'array'),
-	(9,        'FamilyOtherBlues',   'array'),
-	(10,       'StdHW',              'number'),
-	(11,       'StdVW',              'number'),
-	(19,       'Subrs',              'number'),
-	(20,       'defaultWidthX',      'number'),
-	(21,       'nominalWidthX',      'number'),
-	((12, 9),  'BlueScale',          'number'),
-	((12, 10), 'BlueShift',          'number'),
-	((12, 11), 'BlueFuzz',           'number'),
-	((12, 12), 'StemSnapH',          'array'),
-	((12, 13), 'StemSnapV',          'array'),
-	((12, 14), 'ForceBold',          'number'),
-	((12, 15), 'ForceBoldThreshold', 'number'),
-	((12, 16), 'lenIV',              'number'),
-	((12, 17), 'LanguageGroup',      'number'),
-	((12, 18), 'ExpansionFactor',    'number'),
-	((12, 19), 'initialRandomSeed',  'number'),
-]
-
-privateDictDefaults = {
-		'defaultWidthX': 		0,
-		'nominalWidthX': 		0,
-		'BlueScale': 			0.039625,
-		'BlueShift': 			7,
-		'BlueFuzz': 			1,
-		'ForceBold': 			0,
-		'ForceBoldThreshold': 	0,
-		'lenIV': 				-1,
-		'LanguageGroup': 		0,
-		'ExpansionFactor': 		0.06,
-		'initialRandomSeed': 	0,
-}
-
-class PrivateDictDecompiler(psCharStrings.DictDecompiler):
-	
-	operators = psCharStrings.buildOperatorDict(privateDictOperators)
-	dictDefaults = privateDictDefaults
-
-
 
 
 cffHeaderFormat = """
@@ -178,41 +69,6 @@ class CFFFontSet:
 	
 	def fromXML(self, (name, attrs, content)):
 		xxx
-
-
-class IndexedStrings:
-	
-	def __init__(self, strings=None):
-		if strings is None:
-			strings = []
-		self.strings = strings
-	
-	def __getitem__(self, SID):
-		if SID < cffStandardStringCount:
-			return cffStandardStrings[SID]
-		else:
-			return self.strings[SID - cffStandardStringCount]
-	
-	def getSID(self, s):
-		if not hasattr(self, "stringMapping"):
-			self.buildStringMapping()
-		if cffStandardStringMapping.has_key(s):
-			SID = cffStandardStringMapping[s]
-		if self.stringMapping.has_key(s):
-			SID = self.stringMapping[s]
-		else:
-			SID = len(self.strings) + cffStandardStringCount
-			self.strings.append(s)
-			self.stringMapping[s] = SID
-		return SID
-	
-	def getStrings(self):
-		return self.strings
-	
-	def buildStringMapping(self):
-		self.stringMapping = {}
-		for index in range(len(self.strings)):
-			self.stringMapping[self.strings[index]] = index + cffStandardStringCount
 
 
 class CFFFont:
@@ -506,6 +362,143 @@ def parseCharsetFormat2(nGlyphs, file, strings, isCID):
 				charset.append(strings[SID])
 		count = count + nLeft + 1
 	return charset
+
+
+topDictOperators = [
+#   opcode     name                  argument type
+	(0,        'version',            'SID'),
+	(1,        'Notice',             'SID'),
+	(2,        'FullName',           'SID'),
+	(3,        'FamilyName',         'SID'),
+	(4,        'Weight',             'SID'),
+	(5,        'FontBBox',           'array'),
+	(13,       'UniqueID',           'number'),
+	(14,       'XUID',               'array'),
+	(15,       'charset',            'number'),
+	(16,       'Encoding',           'number'),
+	(17,       'CharStrings',        'number'),
+	(18,       'Private',            ('number', 'number')),
+	((12, 0),  'Copyright',          'SID'),
+	((12, 1),  'isFixedPitch',       'number'),
+	((12, 2),  'ItalicAngle',        'number'),
+	((12, 3),  'UnderlinePosition',  'number'),
+	((12, 4),  'UnderlineThickness', 'number'),
+	((12, 5),  'PaintType',          'number'),
+	((12, 6),  'CharstringType',     'number'),
+	((12, 7),  'FontMatrix',         'array'),
+	((12, 8),  'StrokeWidth',        'number'),
+	((12, 20), 'SyntheticBase',      'number'),
+	((12, 21), 'PostScript',         'SID'),
+	((12, 22), 'BaseFontName',       'SID'),
+	# CID additions
+	((12, 30), 'ROS',                ('SID', 'SID', 'number')),
+	((12, 31), 'CIDFontVersion',     'number'),
+	((12, 32), 'CIDFontRevision',    'number'),
+	((12, 33), 'CIDFontType',        'number'),
+	((12, 34), 'CIDCount',           'number'),
+	((12, 35), 'UIDBase',            'number'),
+	((12, 36), 'FDArray',            'number'),
+	((12, 37), 'FDSelect',           'number'),
+	((12, 38), 'FontName',           'SID'),
+]
+
+topDictDefaults = {
+	'isFixedPitch':        0,
+	'ItalicAngle':         0,
+	'UnderlineThickness':  50,
+	'PaintType':           0,
+	'CharstringType':      2,
+	'FontMatrix':          [0.001, 0, 0, 0.001, 0, 0],
+	'FontBBox':            [0, 0, 0, 0],
+	'StrokeWidth':         0,
+	'charset':             0,
+	'Encoding':            0,
+	# CID defaults
+	'CIDFontVersion':      0,
+	'CIDFontRevision':     0,
+	'CIDFontType':         0,
+	'CIDCount':            8720,
+}
+
+class TopDictDecompiler(psCharStrings.DictDecompiler):
+	
+	operators = psCharStrings.buildOperatorDict(topDictOperators)
+	dictDefaults = topDictDefaults
+	
+
+privateDictOperators = [
+#   opcode     name                  argument type
+	(6,        'BlueValues',         'array'),
+	(7,        'OtherBlues',         'array'),
+	(8,        'FamilyBlues',        'array'),
+	(9,        'FamilyOtherBlues',   'array'),
+	(10,       'StdHW',              'number'),
+	(11,       'StdVW',              'number'),
+	(19,       'Subrs',              'number'),
+	(20,       'defaultWidthX',      'number'),
+	(21,       'nominalWidthX',      'number'),
+	((12, 9),  'BlueScale',          'number'),
+	((12, 10), 'BlueShift',          'number'),
+	((12, 11), 'BlueFuzz',           'number'),
+	((12, 12), 'StemSnapH',          'array'),
+	((12, 13), 'StemSnapV',          'array'),
+	((12, 14), 'ForceBold',          'number'),
+	((12, 17), 'LanguageGroup',      'number'),
+	((12, 18), 'ExpansionFactor',    'number'),
+	((12, 19), 'initialRandomSeed',  'number'),
+]
+
+privateDictDefaults = {
+	'defaultWidthX':       0,
+	'nominalWidthX':       0,
+	'BlueScale':           0.039625,
+	'BlueShift':           7,
+	'BlueFuzz':            1,
+	'ForceBold':           0,
+	'LanguageGroup':       0,
+	'ExpansionFactor':     0.06,
+	'initialRandomSeed':   0,
+}
+
+class PrivateDictDecompiler(psCharStrings.DictDecompiler):
+	
+	operators = psCharStrings.buildOperatorDict(privateDictOperators)
+	dictDefaults = privateDictDefaults
+
+
+class IndexedStrings:
+	
+	def __init__(self, strings=None):
+		if strings is None:
+			strings = []
+		self.strings = strings
+	
+	def __getitem__(self, SID):
+		if SID < cffStandardStringCount:
+			return cffStandardStrings[SID]
+		else:
+			return self.strings[SID - cffStandardStringCount]
+	
+	def getSID(self, s):
+		if not hasattr(self, "stringMapping"):
+			self.buildStringMapping()
+		if cffStandardStringMapping.has_key(s):
+			SID = cffStandardStringMapping[s]
+		if self.stringMapping.has_key(s):
+			SID = self.stringMapping[s]
+		else:
+			SID = len(self.strings) + cffStandardStringCount
+			self.strings.append(s)
+			self.stringMapping[s] = SID
+		return SID
+	
+	def getStrings(self):
+		return self.strings
+	
+	def buildStringMapping(self):
+		self.stringMapping = {}
+		for index in range(len(self.strings)):
+			self.stringMapping[self.strings[index]] = index + cffStandardStringCount
 
 
 # The 391 Standard Strings as used in the CFF format.
