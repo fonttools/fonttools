@@ -153,7 +153,7 @@ class SFNTWriter:
 		checksumadjustment = Numeric.array(0xb1b0afba) - checksum
 		# write the checksum to the file
 		self.file.seek(self.tables['head'].offset + 8)
-		self.file.write(struct.pack("l", checksumadjustment))
+		self.file.write(struct.pack(">l", checksumadjustment))
 		
 
 # -- sfnt directory helpers and cruft
