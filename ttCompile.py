@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 
 """\
-usage: %s [-h] [-v] [-i TrueType-input-file] XML-file [TrueType-output-file]
+usage: %s [-hvb] [-i TrueType-input-file] XML-file [TrueType-output-file]
     Translate an XML file (as output by tt2xml.py) to a TrueType font file. 
     If the XML-file argument is a directory instead of a file, all files 
     ending in '.xml' will be merged into one TrueType file. This is mostly 
@@ -46,8 +46,12 @@ tt = ttLib.TTFont(ttInFile, recalcBBoxes=recalcBBoxes, verbose=verbose)
 
 if os.path.isdir(xmlPath):
 	import glob
+	oldDir = os.getcwd()
 	os.chdir(xmlPath)
-	for xmlFile in glob.glob("*.xml"):
+	files = glob.glob("*.xml")
+	os.chdir(oldDir)
+	for xmlFile in files:
+		xmlFile = os.path.join(xmlPath, xmlFile)
 		tt.importXML(xmlFile)
 else:
 	tt.importXML(xmlPath)
