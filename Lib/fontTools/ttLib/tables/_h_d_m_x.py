@@ -3,6 +3,7 @@ import sstruct
 import string
 
 hdmxHeaderFormat = """
+	>   # big endian!
 	version:	H
 	numRecords:	H
 	recordSize:	l
