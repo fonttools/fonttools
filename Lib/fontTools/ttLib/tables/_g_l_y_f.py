@@ -337,7 +337,7 @@ class Glyph:
 			self.program = ttProgram.Program()
 			self.program.fromBytecode(data[:numInstructions])
 			data = data[numInstructions:]
-			assert len(data) in (0, 1), "bad composite data"
+			assert len(data) < 4, "bad composite data"
 	
 	def decompileCoordinates(self, data):
 		endPtsOfContours = array.array("h")
