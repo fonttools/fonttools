@@ -16,6 +16,7 @@ import struct, sstruct
 import Numeric
 import os
 
+
 class SFNTReader:
 	
 	def __init__(self, file, checkChecksums=1):
@@ -92,7 +93,7 @@ class SFNTWriter:
 		"""Write raw table data to disk."""
 		if self.tables.has_key(tag):
 			# We've written this table to file before. If the length
-			# of the data is still the same, we allow overwritng it.
+			# of the data is still the same, we allow overwriting it.
 			entry = self.tables[tag]
 			if len(data) <> entry.length:
 				from fontTools import ttLib
