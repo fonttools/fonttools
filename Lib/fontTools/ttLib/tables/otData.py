@@ -590,6 +590,16 @@ otData = [
 		('ULONG', 'ExtensionOffset', None, None, 'Offset to the extension subtable, of lookup type ExtensionLookupType, relative to the start of the ExtensionSubstFormat1 subtable.'),
 	]),
 
+	('ReverseChainSingleSubstFormat1', [
+		('uint16', 'SubstFormat', None, None, 'Format identifier-format = 1'),
+		('Offset', 'Coverage', None, 0, 'Offset to Coverage table - from beginning of Substitution table'),
+		('uint16', 'BacktrackGlyphCount', None, None, 'Number of glyphs in the backtracking sequence'),
+		('Offset', 'BacktrackCoverage', 'BacktrackGlyphCount', 0, 'Array of offsets to coverage tables in backtracking sequence, in glyph sequence order'),
+		('uint16', 'LookAheadGlyphCount', None, None, 'Number of glyphs in lookahead sequence'),
+		('Offset', 'LookAheadCoverage', 'LookAheadGlyphCount', 0, 'Array of offsets to coverage tables in lookahead sequence, in glyph sequence order'),
+		('uint16', 'GlyphCount', None, None, 'Number of GlyphIDs in the Substitute array'),
+		('GlyphID', 'Substitute', 'GlyphCount', 0, 'Array of substitute GlyphIDs-ordered by Coverage index'),
+	]),
 
 	#
 	# gdef (generated from gdef.htm)

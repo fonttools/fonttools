@@ -421,6 +421,7 @@ def _buildClasses():
 			5: ContextSubst,
 			6: ChainContextSubst,
 			7: ExtensionSubst,
+			8: ReverseChainSingleSubst,
 		},
 		'GPOS': {
 			1: SinglePos,
