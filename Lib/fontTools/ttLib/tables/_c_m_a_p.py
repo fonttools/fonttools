@@ -160,7 +160,6 @@ class cmap_format_0(CmapSubtable):
 			if name <> "map":
 				continue
 			self.cmap[safeEval(attrs["code"])] = attrs["name"]
-			
 
 
 class cmap_format_2(CmapSubtable):
@@ -183,6 +182,75 @@ cmap_format_4_format = ">7H"
 #uint16	idRangeOffset[segCount]		# Offset in bytes to glyph indexArray, or 0
 #uint16	glyphIndexArray[variable]	# Glyph index array
 
+def splitRange(startCode, endCode, cmap):
+	if startCode == endCode:
+		return [], [endCode]
+	
+	allGlyphs = [(startCode, cmap[startCode])]  # XXX
+	lastID = cmap[startCode]
+	lastCode = startCode
+	inOrder = None
+	orderedBegin = None
+	parts = []
+	
+	for code in range(startCode + 1, endCode + 1):
+		glyphID = cmap[code]
+		allGlyphs.append((code, glyphID))  # XXX
+		
+		if glyphID - 1 == lastID:
+			if inOrder is None or not inOrder:
+				inOrder = 1
+				orderedBegin = lastCode
+		else:
+			if inOrder:
+				inOrder = 0
+				parts.append((orderedBegin, lastCode))
+				orderedBegin = None
+				
+		lastID = glyphID
+		lastCode = code
+	
+	if inOrder:
+		parts.append((orderedBegin, lastCode))
+	assert lastCode == endCode
+	
+	newParts = []
+	for b, e in parts:
+		if b == startCode and e == endCode:
+			break  # the whole range, we're fine
+		if b == startCode or e == endCode:
+			threshold = 4  # split costs one more segment
+		else:
+			threshold = 8  # split costs two more segments
+		if (e - b + 1) > threshold:
+			newParts.append((b, e))
+	parts = newParts
+	
+	if not parts:
+		return [], [endCode]
+	
+	if parts[0][0] != startCode:
+		parts.insert(0, (startCode, parts[0][0] - 1))
+	if parts[-1][1] != endCode:
+		parts.append((parts[-1][1] + 1, endCode))
+	i = 1
+	while i < len(parts):
+		if parts[i-1][1] + 1 != parts[i][0]:
+			parts.insert(i, (parts[i-1][1] + 1, parts[i][0] - 1))
+			i = i + 1
+		i = i + 1
+	
+	start = []
+	end = []
+	for b, e in parts:
+		start.append(b)
+		end.append(e)
+	start.pop(0)
+	
+	assert len(start) + 1 == len(end)
+	return start, end
+
+
 class cmap_format_4(CmapSubtable):
 	
 	def decompile(self, data, ttFont):
@@ -190,24 +258,24 @@ class cmap_format_4(CmapSubtable):
 				searchRange, entrySelector, rangeShift) = \
 					struct.unpack(cmap_format_4_format, data[:14])
 		assert len(data) == length, "corrupt cmap table (%d, %d)" % (len(data), length)
-		data = data[14:]
-		segCountX2 = int(segCountX2)
 		segCount = segCountX2 / 2
 		
-		allcodes = array.array("H")
-		allcodes.fromstring(data)
+		allCodes = array.array("H")
+		allCodes.fromstring(data[14:])
 		if ttLib.endian <> "big":
-			allcodes.byteswap()
+			allCodes.byteswap()
 		
 		# divide the data
-		endCode = allcodes[:segCount]
-		allcodes = allcodes[segCount+1:]
-		startCode = allcodes[:segCount]
-		allcodes = allcodes[segCount:]
-		idDelta = allcodes[:segCount]
-		allcodes = allcodes[segCount:]
-		idRangeOffset = allcodes[:segCount]
-		glyphIndexArray = allcodes[segCount:]
+		endCode = allCodes[:segCount]
+		allCodes = allCodes[segCount+1:]  # the +1 is skipping the reservedPad field
+		startCode = allCodes[:segCount]
+		allCodes = allCodes[segCount:]
+		idDelta = allCodes[:segCount]
+		allCodes = allCodes[segCount:]
+		idRangeOffset = allCodes[:segCount]
+		glyphIndexArray = allCodes[segCount:]
+		
+		#print ">>>> segCount", segCount, "len(glyphIndexArray):", len(glyphIndexArray), "len(data)", len(data)
 		
 		# build 2-byte character mapping
 		cmap = {}
@@ -229,33 +297,38 @@ class cmap_format_4(CmapSubtable):
 	def compile(self, ttFont):
 		from fontTools.ttLib.sfnt import maxPowerOfTwo
 		
-		codes = self.cmap.items()
+		cmap = {}  # code:glyphID mapping
+		for code, glyphName in self.cmap.items():
+			cmap[code] = ttFont.getGlyphID(glyphName)
+		codes = cmap.keys()
 		codes.sort()
 		
 		# build startCode and endCode lists
-		last = codes[0][0]
+		lastCode = codes[0]
 		endCode = []
-		startCode = [last]
-		for charCode, glyphName in codes[1:]:  # skip the first code, it's the first start code
-			if charCode == last + 1:
-				last = charCode
+		startCode = [lastCode]
+		for charCode in codes[1:]:  # skip the first code, it's the first start code
+			if charCode == lastCode + 1:
+				lastCode = charCode
 				continue
-			endCode.append(last)
+			start, end = splitRange(startCode[-1], lastCode, cmap)
+			startCode.extend(start)
+			endCode.extend(end)
 			startCode.append(charCode)
-			last = charCode
-		endCode.append(last)
+			lastCode = charCode
+		endCode.append(lastCode)
 		startCode.append(0xffff)
 		endCode.append(0xffff)
 		
-		# build up rest of cruft.
+		# build up rest of cruft
 		idDelta = []
 		idRangeOffset = []
 		glyphIndexArray = []
 		
 		for i in range(len(endCode)-1):  # skip the closing codes (0xffff)
 			indices = []
-			for charCode in range(startCode[i], endCode[i]+1):
-				indices.append(ttFont.getGlyphID(self.cmap[charCode]))
+			for charCode in range(startCode[i], endCode[i] + 1):
+				indices.append(cmap[charCode])
 			if indices == range(indices[0], indices[0] + len(indices)):
 				idDelta.append((indices[0] - startCode[i]) % 0x10000)
 				idRangeOffset.append(0)
@@ -263,27 +336,31 @@ class cmap_format_4(CmapSubtable):
 				# someone *definitely* needs to get killed.
 				idDelta.append(0)
 				idRangeOffset.append(2 * (len(endCode) + len(glyphIndexArray) - i))
-				glyphIndexArray = glyphIndexArray + indices
+				glyphIndexArray.extend(indices)
 		idDelta.append(1)  # 0xffff + 1 == (tadaa!) 0. So this end code maps to .notdef
 		idRangeOffset.append(0)
 		
 		# Insane. 
 		segCount = len(endCode)
 		segCountX2 = segCount * 2
-		maxexponent = maxPowerOfTwo(segCount)
-		searchRange = 2 * (2 ** maxexponent)
-		entrySelector = maxexponent
+		maxExponent = maxPowerOfTwo(segCount)
+		searchRange = 2 * (2 ** maxExponent)
+		entrySelector = maxExponent
 		rangeShift = 2 * segCount - searchRange
 		
-		allcodes = array.array("H", 
+		allCodes = array.array("H", 
 				endCode + [0] + startCode + idDelta + idRangeOffset + glyphIndexArray)
 		if ttLib.endian <> "big":
-			allcodes.byteswap()
-		data = allcodes.tostring()
+			allCodes.byteswap()
+		data = allCodes.tostring()
 		length = struct.calcsize(cmap_format_4_format) + len(data)
 		header = struct.pack(cmap_format_4_format, self.format, length, self.version, 
 				segCountX2, searchRange, entrySelector, rangeShift)
-		return header + data
+		data = header + data
+		
+		#print "<<<< segCount", segCount, "len(glyphIndexArray):", len(glyphIndexArray), "len(data)", len(data)
+		
+		return data
 	
 	def toXML(self, writer, ttFont):
 		from fontTools.unicode import Unicode
