@@ -61,11 +61,10 @@ def usage():
 
 
 if sys.platform == "darwin" and sys.version_info[:3] == (2, 2, 0):
-	# the macfs module shipping with Jaguar's Python 2.2 is too
-	# broken to be of any use
-	have_broken_macfs = 1
+	# the Mac support of Jaguar's Python 2.2 is broken
+	have_broken_macsupport = 1
 else:
-	have_broken_macfs = 0
+	have_broken_macsupport = 0
 	
 numberAddedRE = re.compile("(.*)#\d+$")
 
@@ -182,13 +181,13 @@ def guessFileType(fileName):
 		f = open(fileName, "rb")
 	except IOError:
 		return None
-	if not have_broken_macfs:
+	if not have_broken_macsupport:
 		try:
-			import macfs
+			import MacOS
 		except ImportError:
 			pass
 		else:
-			cr, tp = macfs.FSSpec(fileName).GetCreatorType()
+			cr, tp = MacOS.GetCreatorAndType(fileName)
 			if tp in ("sfnt", "FFIL"):
 				return "TTF"
 			if ext == ".dfont":
