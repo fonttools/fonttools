@@ -1,5 +1,5 @@
 #
-# This module should move to a more appropriate location
+# Various array and rectangle tools
 #
 
 import Numeric
@@ -16,7 +16,6 @@ def calcBounds(array):
 	xmax, ymax = Numeric.maximum.reduce(array)
 	return xmin, ymin, xmax, ymax
 
-
 def pointsInRect(array, rect):
 	"""Find out which points or array are inside rect. 
 	Returns an array with a boolean for each point.
@@ -30,6 +29,13 @@ def pointsInRect(array, rect):
 			Numeric.less(array, rightbottom))
 	return Numeric.logical_and.reduce(condition, -1)
 
+def vectorLength(vector):
+	return Numeric.sqrt(vector[0]**2 + vector[1]**2)
+
+def asInt16(array):
+	"Round and cast to 16 bit integer."
+	return Numeric.floor(array + 0.5).astype(Numeric.Int16)
+	
 
 def normRect((l, t, r, b)):
 	"""XXX doc"""
