@@ -1,4 +1,4 @@
-#! /usr/local/bin/python
+#! /usr/bin/env python
 
 """usage: ttroundtrip [options] font1 ... fontN
 
