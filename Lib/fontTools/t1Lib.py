@@ -25,7 +25,15 @@ import string
 import re
 import os
 
-if os.name == 'mac':
+
+try:
+	import macfs
+except ImportError:
+	haveMacSupport = 0
+else:
+	haveMacSupport = 1
+
+if haveMacSupport:
 	try:
 		from Carbon import Res
 	except ImportError:
@@ -85,7 +93,7 @@ class T1Font:
 def read(path):
 	"""reads any Type 1 font file, returns raw data"""
 	normpath = string.lower(path)
-	if os.name == 'mac':
+	if haveMacSupport:
 		fss = macfs.FSSpec(path)
 		creator, type = fss.GetCreatorType()
 		if type == 'LWFN':
@@ -234,7 +242,7 @@ def writePFB(path, data):
 		f.write(chr(128) + chr(3))
 	finally:
 		f.close()
-	if os.name == 'mac':
+	if haveMacSupport:
 		fss = macfs.FSSpec(path)
 		fss.SetCreatorType('mdos', 'BINA')
 
@@ -257,7 +265,7 @@ def writeOther(path, data, dohex = 0):
 				f.write(chunk)
 	finally:
 		f.close()
-	if os.name == 'mac':
+	if haveMacSupport:
 		fss = macfs.FSSpec(path)
 		fss.SetCreatorType('R*ch', 'TEXT') # BBEdit text file
 
