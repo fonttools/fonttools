@@ -1,10 +1,11 @@
 import os
-import Res
 import struct, sstruct
 import string
+try:
+	from Carbon import Res
+except ImportError:
+	import Res
 
-__version__ = "1.0b2"
-__author__ = "jvr"
 
 error = "fondLib.error"
 
