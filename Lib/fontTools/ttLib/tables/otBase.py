@@ -181,11 +181,12 @@ class OTTableWriter:
 				continue
 			if not done.has_key(item):
 				item._gatherTables(tables, done)
-		done[self] = len(tables)
+		done[self] = 1
 		tables.append(self)
 		return tables
 	
 	def getAllData(self):
+		"""Return all data, including all subtables."""
 		self._doneWriting()
 		tables = self._gatherTables()
 		tables.reverse()
@@ -204,16 +205,12 @@ class OTTableWriter:
 		return "".join(data)
 	
 	def getData(self):
-		for item in self.items:
-			if hasattr(item, "getData"):
-				assert item.pos is not None
-		
+		"""Return the data for this writer/table, without any subtables."""
 		items = list(self.items)  # make a shallow copy
 		for i in range(len(items)):
 			item = items[i]
 			if hasattr(item, "getData"):
 				items[i] = packUShort(item.pos - self.pos)
-		
 		return "".join(items)
 	
 	def writeUShort(self, value):
