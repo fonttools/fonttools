@@ -1,21 +1,28 @@
 #! /usr/bin/env python
 
-"""ttroundtrip font1 ... fontN
+"""ttroundtrip [options] font1 ... fontN
 Dump each TT/OT font as a TTX file, compile again to TTF or OTF and dump again.
-Then do a diff on the two TTX files. Log problems and diffs to a file called
+Then do a diff on the two TTX files. Append problems and diffs to a file called
 "report.txt" in the current directory. This is only for testing FontTools/TTX,
-the resulting files are deleted afterwards."""
+the resulting files are deleted afterwards.
 
+This tool supports some of ttdump's command line options (-i, -t and -x)
+and they will in fact be passed to ttdump. -t or -x will imply ttcompile -i
+on the way back.
+"""
 
 import sys
 import os
 import tempfile
-
-
-report = open("report.txt", "w")
+import getopt
 
 
 class Error(Exception): pass
+
+
+def usage():
+	print __doc__
+	sys.exit(2)
 
 
 def doCommand(cmd, verbose=1, okresult=None):
@@ -32,39 +39,62 @@ def doCommand(cmd, verbose=1, okresult=None):
 	return "".join(lines)
 
 
-if not sys.argv[1:]:
-	print __doc__
-else:
-	for ttFile in sys.argv[1:]:
-		print "--- roundtripping %s ---" % ttFile
-		fn = os.path.basename(ttFile)
-		xmlFile1 = tempfile.mktemp(".%s.ttx1" % fn)
-		ttFile2 = tempfile.mktemp(".%s" % fn)
-		xmlFile2 = tempfile.mktemp(".%s.ttx2" % fn)
-		
-		try:
-			cmd = 'ttdump -i -f "%s" "%s"' % (ttFile, xmlFile1)
-			doCommand(cmd, 0)
+try:
+	options, args = getopt.getopt(sys.argv[1:], "it:x:")
+except getopt.GetoptError:
+	usage()
+
+if not args:
+	usage()
+
+dumpOptions = []
+compileWithMinusI = 0
+
+for option, value in options:
+	dumpOptions.extend((option, value))
+	if option in ("-t", "-x"):
+		compileWithMinusI = 1
+
+dumpOptions = " ".join(dumpOptions)
+if dumpOptions:
+	dumpOptions = dumpOptions + " "
+
+report = open("report.txt", "a+")
+
+
+for ttFile in args:
+	print "--- roundtripping %s ---" % ttFile
+	fn = os.path.basename(ttFile)
+	xmlFile1 = tempfile.mktemp(".%s.ttx1" % fn)
+	ttFile2 = tempfile.mktemp(".%s" % fn)
+	xmlFile2 = tempfile.mktemp(".%s.ttx2" % fn)
+	
+	try:
+		cmd = 'ttdump -f %s"%s" "%s"' % (dumpOptions, ttFile, xmlFile1)
+		doCommand(cmd, 0)
+		if compileWithMinusI:
+			cmd = 'ttcompile -f -i "%s" "%s" "%s"' % (ttFile, xmlFile1, ttFile2)
+		else:
 			cmd = 'ttcompile -f "%s" "%s"' % (xmlFile1, ttFile2)
-			doCommand(cmd, 0)
-			cmd = 'ttdump -i -f "%s" "%s"' % (ttFile2, xmlFile2)
-			doCommand(cmd, 0)
-			cmd = 'diff -c2 -I ".*modified value\|checkSumAdjustment.*" "%s" "%s"' % (xmlFile1, xmlFile2)
-			diff = doCommand(cmd, 0, okresult=1)
-			if diff:
-				report.write("=============================================================\n")
-				report.write("%s\n" % xmlFile1)
-				report.write("%s\n" % xmlFile2)
-				report.write("-------------------------------------------------------------\n")
-				report.write(diff)
-				print diff
-			print "--- done ---"
-		except Error, why:
+		doCommand(cmd, 0)
+		cmd = 'ttdump -f %s"%s" "%s"' % (dumpOptions, ttFile2, xmlFile2)
+		doCommand(cmd, 0)
+		cmd = 'diff -c2 -I ".*modified value\|checkSumAdjustment.*" "%s" "%s"' % (xmlFile1, xmlFile2)
+		diff = doCommand(cmd, 0, okresult=1)
+		if diff:
 			report.write("=============================================================\n")
-			report.write("%s\n" % ttFile)
-			report.write("*** round tripping aborted (code %s) ***\n" % why)
+			report.write("%s\n" % xmlFile1)
+			report.write("%s\n" % xmlFile2)
 			report.write("-------------------------------------------------------------\n")
-			print "*** round tripping aborted (code %s) ***" % why
-		for tmpFile in (xmlFile1, ttFile2, xmlFile2):
-			if os.path.exists(tmpFile):
-				os.remove(tmpFile)
+			report.write(diff)
+			print diff
+		print "--- done ---"
+	except Error, why:
+		report.write("=============================================================\n")
+		report.write("%s\n" % ttFile)
+		report.write("*** round tripping aborted (code %s) ***\n" % why)
+		report.write("-------------------------------------------------------------\n")
+		print "*** round tripping aborted (code %s) ***" % why
+	for tmpFile in (xmlFile1, ttFile2, xmlFile2):
+		if os.path.exists(tmpFile):
+			os.remove(tmpFile)
