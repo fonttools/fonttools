@@ -47,7 +47,7 @@ class T1Font:
 			pass # XXX
 	
 	def saveAs(self, path, type):
-		self.write(path, self.getData(), type)
+		write(path, self.getData(), type)
 	
 	def getData(self):
 		# XXX Todo: if the data has been converted to Python object,
