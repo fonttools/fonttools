@@ -62,14 +62,14 @@ class ExpatParser:
 				importXML(self.ttFont, subFile, self.progress)
 				self.contentStack.append([])
 				return
-			msg = "Parsing '%s' table..." % ttLib.xmltag2tag(name)
+			msg = "Parsing '%s' table..." % ttLib.xmlToTag(name)
 			if self.progress:
 				self.progress.setlabel(msg)
 			elif self.ttFont.verbose:
 				ttLib.debugmsg(msg)
 			else:
 				print msg
-			tag = ttLib.xmltag2tag(name)
+			tag = ttLib.xmlToTag(name)
 			if attrs.has_key("ERROR"):
 				tableClass = DefaultTable
 			else:

@@ -42,7 +42,7 @@ Dumping 'prep' table...
 """
 
 #
-# $Id: __init__.py,v 1.26 2002-05-13 11:26:38 jvr Exp $
+# $Id: __init__.py,v 1.27 2002-05-13 16:21:50 jvr Exp $
 #
 
 import os
@@ -203,14 +203,14 @@ class TTFont:
 		
 		for i in range(numTables):
 			tag = tables[i]
-			xmltag = tag2xmltag(tag)
+			xmlTag = tagToXML(tag)
 			if splitTables:
-				tablePath = fileNameTemplate % tag2identifier(tag)
+				tablePath = fileNameTemplate % tagToIdentifier(tag)
 				writer = xmlWriter.XMLWriter(tablePath)
 				writer.begintag("ttFont", ttLibVersion=version)
 				writer.newline()
 				writer.newline()
-				collection.simpletag(xmltag, src=os.path.basename(tablePath))
+				collection.simpletag(xmlTag, src=os.path.basename(tablePath))
 				collection.newline()
 			table = self[tag]
 			report = "Dumping '%s' table..." % tag
@@ -221,15 +221,15 @@ class TTFont:
 			else:
 				print report
 			if hasattr(table, "ERROR"):
-				writer.begintag(xmltag, ERROR="decompilation error")
+				writer.begintag(xmlTag, ERROR="decompilation error")
 			else:
-				writer.begintag(xmltag)
+				writer.begintag(xmlTag)
 			writer.newline()
 			if tag in ("glyf", "CFF "):
 				table.toXML(writer, self, progress)
 			else:
 				table.toXML(writer, self)
-			writer.endtag(xmltag)
+			writer.endtag(xmlTag)
 			writer.newline()
 			writer.newline()
 			if splitTables:
@@ -290,8 +290,8 @@ class TTFont:
 				if self.verbose:
 					debugmsg("reading '%s' table from disk" % tag)
 				data = self.reader[tag]
-				tableclass = getTableClass(tag)
-				table = tableclass(tag)
+				tableClass = getTableClass(tag)
+				table = tableClass(tag)
 				self.tables[tag] = table
 				if self.verbose:
 					debugmsg("decompiling '%s' table" % tag)
@@ -483,8 +483,8 @@ class TTFont:
 		"""
 		if tag in done:
 			return
-		tableclass = getTableClass(tag)
-		for masterTable in tableclass.dependencies:
+		tableClass = getTableClass(tag)
+		for masterTable in tableClass.dependencies:
 			if masterTable not in done:
 				if self.has_key(masterTable):
 					self._writeTable(masterTable, writer, done)
@@ -535,16 +535,16 @@ def getTableModule(tag):
 	"""
 	import imp
 	import tables
-	py_tag = tag2identifier(tag)
+	pyTag = tagToIdentifier(tag)
 	try:
-		f, path, kind = imp.find_module(py_tag, tables.__path__)
+		f, path, kind = imp.find_module(pyTag, tables.__path__)
 		if f:
 			f.close()
 	except ImportError:
 		return None
 	else:
-		module = __import__("fontTools.ttLib.tables." + py_tag)
-		return getattr(tables, py_tag)
+		module = __import__("fontTools.ttLib.tables." + pyTag)
+		return getattr(tables, pyTag)
 
 
 def getTableClass(tag):
@@ -555,19 +555,19 @@ def getTableClass(tag):
 	if module is None:
 		from tables.DefaultTable import DefaultTable
 		return DefaultTable
-	py_tag = tag2identifier(tag)
-	tableclass = getattr(module, "table_" + py_tag)
-	return tableclass
+	pyTag = tagToIdentifier(tag)
+	tableClass = getattr(module, "table_" + pyTag)
+	return tableClass
 
 
-def getNewTable(tag):
+def newTable(tag):
 	"""Return a new instance of a table."""
-	tableclass = getTableClass(tag)
-	return tableclass(tag)
+	tableClass = getTableClass(tag)
+	return tableClass(tag)
 
 
 def _escapechar(c):
-	"""Helper function for tag2identifier()"""
+	"""Helper function for tagToIdentifier()"""
 	import re
 	if re.match("[a-z0-9]", c):
 		return "_" + c
@@ -577,7 +577,7 @@ def _escapechar(c):
 		return hex(ord(c))[2:]
 
 
-def tag2identifier(tag):
+def tagToIdentifier(tag):
 	"""Convert a table tag to a valid (but UGLY) python identifier, 
 	as well as a filename that's guaranteed to be unique even on a 
 	caseless file system. Each character is mapped to two characters.
@@ -602,8 +602,8 @@ def tag2identifier(tag):
 	return ident
 
 
-def identifier2tag(ident):
-	"""the opposite of tag2identifier()"""
+def identifierToTag(ident):
+	"""the opposite of tagToIdentifier()"""
 	if len(ident) % 2 and ident[0] == "_":
 		ident = ident[1:]
 	assert not (len(ident) % 2)
@@ -621,8 +621,8 @@ def identifier2tag(ident):
 	return tag
 
 
-def tag2xmltag(tag):
-	"""Similarly to tag2identifier(), this converts a TT tag
+def tagToXML(tag):
+	"""Similarly to tagToIdentifier(), this converts a TT tag
 	to a valid XML element name. Since XML element names are
 	case sensitive, this is a fairly simple/readable translation.
 	"""
@@ -632,15 +632,15 @@ def tag2xmltag(tag):
 	if re.match("[A-Za-z_][A-Za-z_0-9]* *$", tag):
 		return string.strip(tag)
 	else:
-		return tag2identifier(tag)
+		return tagToIdentifier(tag)
 
 
-def xmltag2tag(tag):
-	"""The opposite of tag2xmltag()"""
+def xmlToTag(tag):
+	"""The opposite of tagToXML()"""
 	if tag == "OS_2":
 		return "OS/2"
 	if len(tag) == 8:
-		return identifier2tag(tag)
+		return identifierToTag(tag)
 	else:
 		return tag + " " * (4 - len(tag))
 	return tag
@@ -649,5 +649,4 @@ def xmltag2tag(tag):
 def debugmsg(msg):
 	import time
 	print msg + time.strftime("  (%H:%M:%S)", time.localtime(time.time()))
-
 

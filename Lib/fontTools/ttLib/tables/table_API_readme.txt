@@ -16,25 +16,25 @@ as to Python identifiers. The latter means it can only contain
 ttLib provides functions to expand a tag into the format used here:
 
 >>> from fontTools import ttLib
->>> ttLib.tag2identifier("FOO ")
+>>> ttLib.tagToIdentifier("FOO ")
 'F_O_O_'
->>> ttLib.tag2identifier("cvt ")
+>>> ttLib.tagToIdentifier("cvt ")
 '_c_v_t'
->>> ttLib.tag2identifier("OS/2")
+>>> ttLib.tagToIdentifier("OS/2")
 'O_S_2f_2'
->>> ttLib.tag2identifier("glyf")
+>>> ttLib.tagToIdentifier("glyf")
 '_g_l_y_f'
 >>> 
 
 And vice versa:
 
->>> ttLib.identifier2tag("F_O_O_")
+>>> ttLib.identifierToTag("F_O_O_")
 'FOO '
->>> ttLib.identifier2tag("_c_v_t")
+>>> ttLib.identifierToTag("_c_v_t")
 'cvt '
->>> ttLib.identifier2tag("O_S_2f_2")
+>>> ttLib.identifierToTag("O_S_2f_2")
 'OS/2'
->>> ttLib.identifier2tag("_g_l_y_f")
+>>> ttLib.identifierToTag("_g_l_y_f")
 'glyf'
 >>> 
 
