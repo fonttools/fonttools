@@ -1,3 +1,15 @@
+FontTools Version 1.0 beta ? (released ???)
+
+- Switched XML parsers: use expat instead of xmlproc. Should be faster.
+- Removed my UnicodeString object: I now require Python 2.0 or up, which
+  has unicode support built in.
+- Removed assert in glypf table: redundant data at the end of the table
+  is now ignored instead of raising an error. Should become a warning.
+- Fixed bug in hmtx/vmtx code that only occured if all advances were equal.
+- Fixed subtle bug in TT instruction disassembler.
+- Couple of fixes in 'post' table.
+- Updated OS/2 table to latest spec.
+
 FontTools Version 1.0 beta 1 (released August 10 2001)
 
 - Reorganized the command line interface for ttDump.py and ttCompile.py,
