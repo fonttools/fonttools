@@ -504,7 +504,7 @@ otData = [
 	]),
 
 	('SubClassSet', [
-		('uint16', 'SubClassRuleCnt', None, None, 'Number of SubClassRule tables'),
+		('uint16', 'SubClassRuleCount', None, None, 'Number of SubClassRule tables'),
 		('Offset', 'SubClassRule', 'SubClassRuleCount', 0, 'Array of offsets to SubClassRule tables-from beginning of SubClassSet-ordered by preference'),
 	]),
 
