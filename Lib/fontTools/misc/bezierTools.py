@@ -279,8 +279,8 @@ def calcCubicPoints(a, b, c, d):
 
 def _testrepr(obj):
 	"""
-		>>> _testrepr([1, [2, 3], [], [[2, [3, 4]]]])
-		'(1, (2, 3), (), ((2, (3, 4))))'
+		>>> _testrepr([1, [2, 3], [], [[2, [3, 4], Numeric.array([0.1, 2.2])]]])
+		'(1, (2, 3), (), ((2, (3, 4), (0.1, 2.2))))'
 	"""
 	try:
 		it = iter(obj)
