@@ -93,6 +93,77 @@ class Coverage(FormatSwitchingBaseTable):
 		glyphs.append(attrs["value"])
 
 
+class SingleSubst(FormatSwitchingBaseTable):
+
+	def postRead(self, rawTable, font):
+		mapping = {}
+		input = rawTable["Coverage"].glyphs
+		if self.Format == 1:
+			delta = rawTable["DeltaGlyphID"]
+			for inGlyph in input:
+				glyphID = font.getGlyphID(inGlyph)
+				mapping[inGlyph] = font.getGlyphName(glyphID + delta)
+		elif self.Format == 2:
+			assert len(input) == rawTable["GlyphCount"], \
+					"invalid SingleSubstFormat2 table"
+			subst = rawTable["Substitute"]
+			for i in range(len(input)):
+				mapping[input[i]] = subst[i]
+		else:
+			assert 0, "unknown format: %s" % self.Format
+		self.mapping = mapping
+	
+	def preWrite(self, font):
+		items = self.mapping.items()
+		for i in range(len(items)):
+			inGlyph, outGlyph = items[i]
+			items[i] = font.getGlyphID(inGlyph), font.getGlyphID(outGlyph), \
+					inGlyph, outGlyph
+		items.sort()
+		
+		format = 2
+		delta = None
+		for inID, outID, inGlyph, outGlyph in items:
+			if delta is None:
+				delta = outID - inID
+			else:
+				if delta != outID - inID:
+					break
+		else:
+			format = 1
+		
+		rawTable = {}
+		self.Format = format
+		cov = Coverage()
+		cov.glyphs = input = []
+		subst = []
+		for inID, outID, inGlyph, outGlyph in items:
+			input.append(inGlyph)
+			subst.append(outGlyph)
+		rawTable["Coverage"] = cov
+		if format == 1:
+			assert delta is not None
+			rawTable["DeltaGlyphID"] = delta
+		else:
+			rawTable["Substitute"] = subst
+		return rawTable
+	
+	def toXML2(self, xmlWriter, font):
+		items = self.mapping.items()
+		items.sort()
+		for inGlyph, outGlyph in items:
+			xmlWriter.simpletag("Substitution",
+					[("in", inGlyph), ("out", outGlyph)])
+			xmlWriter.newline()
+	
+	def fromXML(self, (name, attrs, content), font):
+		mapping = getattr(self, "mapping", None)
+		if mapping is None:
+			mapping = {}
+			self.mapping = mapping
+		mapping[attrs["in"]] = attrs["out"]
+
+
 #
 # For each subtable format there is a class. However, we don't really distinguish
 # between "field name" and "format name": often these are the same. Yet there's
