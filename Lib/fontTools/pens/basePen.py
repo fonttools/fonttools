@@ -53,7 +53,7 @@ class AbstractPen:
 
 		The conversion algorithm used for n>2 is inspired by NURB
 		splines, and is conceptually equivalent to the TrueType "implied
-		points" principle. See also qCurve().
+		points" principle. See also qCurveTo().
 		"""
 		raise NotImplementedError
 
@@ -185,11 +185,12 @@ class BasePen(AbstractPen):
 						pt3 = (0.5 * (pt2[0] + temp[0]),
 						       0.5 * (pt2[1] + temp[1]))
 						self._curveToOne(pt1, pt2, pt3)
+						self.__currentPoint = pt3
 						pt1, pt2, pt3 = temp, None, None
 			self._curveToOne(pt1, points[-2], points[-1])
 			self.__currentPoint = points[-1]
 		elif n == 1:
-			self._qCurveOne(*points)
+			self.qCurveTo(*points)
 		elif n == 0:
 			self.lineTo(points[0])
 		else:
