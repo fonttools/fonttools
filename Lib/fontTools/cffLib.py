@@ -1,7 +1,7 @@
 """cffLib.py -- read/write tools for Adobe CFF fonts."""
 
 #
-# $Id: cffLib.py,v 1.19 2002-05-17 20:04:05 jvr Exp $
+# $Id: cffLib.py,v 1.20 2002-05-18 20:07:01 jvr Exp $
 #
 
 import struct, sstruct
@@ -316,8 +316,6 @@ class CharsetConverter:
 				raise NotImplementedError
 			elif format == 1 or format == 2:
 				charset = parseCharset(numGlyphs, file, parent.strings, isCID, format)
-			elif format == 3:
-				raise NotImplementedError
 			else:
 				raise NotImplementedError
 			assert len(charset) == numGlyphs
@@ -409,6 +407,7 @@ class ROSConverter(BaseConverter):
 		registry, order, supplement = value
 		xmlWriter.simpletag(name, [('registry', registry), ('order', order),
 			('supplement', supplement)])
+		xmlWriter.newline()
 
 
 topDictOperators = [
