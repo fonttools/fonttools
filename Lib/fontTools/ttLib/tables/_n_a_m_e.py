@@ -26,6 +26,11 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 			name, data = sstruct.unpack2(nameRecordFormat, data, NameRecord())
 			name.fixlongs()
 			name.string = stringData[name.offset:name.offset+name.length]
+			assert len(name.string) == name.length
+			#if (name.platEncID, name.platformID) in ((0, 0), (1, 3)):
+			#	if len(name.string) % 2:
+			#		print "2-byte string doesn't have even length!"
+			#		print name.__dict__
 			del name.offset, name.length
 			self.names.append(name)
 	
