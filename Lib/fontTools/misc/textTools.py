@@ -50,6 +50,8 @@ def num2binary(l, bits=32):
 		if not ((i+1) % 8):
 			all.append(bin)
 			bin = ""
+	if bin:
+		all.append(bin)
 	all.reverse()
 	assert l in (0, -1), "number doesn't fit in number of bits"
 	return string.join(all, " ")
