@@ -859,6 +859,13 @@ class DictDecompiler(ByteCodeDecompilerBase):
 		return self.strings[self.pop()]
 	def arg_array(self, name):
 		return self.popall()
+	def arg_delta(self, name):
+		out = []
+		current = 0
+		for v in self.popall():
+			current = v + current
+			out.append(current)
+		return out
 
 
 def calcSubrBias(subrs):
