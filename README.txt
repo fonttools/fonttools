@@ -5,7 +5,7 @@ Quick start: run
    python setup.py install
 from the command line.
 
-See the file "LEGAL.txt" for licensing info.
+See the file "LICENSE.txt" for licensing info.
 
 Good luck!
 
