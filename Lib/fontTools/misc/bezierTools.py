@@ -159,7 +159,8 @@ def solveQuadratic(a, b, c,
 		sqrt=sqrt):
 	"""Solve a quadratic equation where a, b and c are real.
 	    a*x*x + b*x + c = 0
-	This function returns a list of roots.
+	This function returns a list of roots. Note that the returned list
+	is neither guaranteed to be sorted nor to contain unique values!
 	"""
 	if a == 0.0:
 		if b == 0.0:
@@ -184,7 +185,8 @@ def solveCubic(a, b, c, d,
 		abs=abs, pow=pow, sqrt=sqrt, cos=cos, acos=acos, pi=pi):
 	"""Solve a cubic equation where a, b, c and d are real.
 	    a*x*x*x + b*x*x + c*x + d = 0
-	This function returns a list of roots.
+	This function returns a list of roots. Note that the returned list
+	is neither guaranteed to be sorted nor to contain unique values!
 	"""
 	#
 	# adapted from:
@@ -205,7 +207,7 @@ def solveCubic(a, b, c, d,
 	R = (2.0*a1*a1*a1 - 9.0*a1*a2 + 27.0*a3)/54.0
 	R2_Q3 = R*R - Q*Q*Q
 
-	if R2_Q3 <= 0:
+	if R2_Q3 < 0:
 		theta = acos(R/sqrt(Q*Q*Q))
 		rQ2 = -2.0*sqrt(Q)
 		x0 = rQ2*cos(theta/3.0) - a1/3.0
@@ -213,8 +215,11 @@ def solveCubic(a, b, c, d,
 		x2 = rQ2*cos((theta+4.0*pi)/3.0) - a1/3.0
 		return [x0, x1, x2]
 	else:
-		x = pow(sqrt(R2_Q3)+abs(R), 1/3.0)
-		x = x + Q/x
+		if Q == 0 and R == 0:
+			x = 0
+		else:
+			x = pow(sqrt(R2_Q3)+abs(R), 1/3.0)
+			x = x + Q/x
 		if R >= 0.0:
 			x = -x
 		x = x - a1/3.0
