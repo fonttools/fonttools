@@ -2,21 +2,21 @@
 ;See README.TXT in this folder for instructions on building the setup
 
 [Setup]
-AppName=FontTools
-AppVerName=FontTools 1.0
+AppName=TTX
+AppVerName=TTX 2.0b1
 AppPublisher=Just van Rossum
 AppPublisherURL=http://fonttools.sourceforge.net/
 AppSupportURL=http://fonttools.sourceforge.net/
 AppUpdatesURL=http://fonttools.sourceforge.net/
-DefaultDirName={pf}\FontTools
-DefaultGroupName=FontTools
+DefaultDirName={pf}\TTX
+DefaultGroupName=TTX
 AllowNoIcons=false
 LicenseFile=..\LICENSE.txt
 InfoBeforeFile=fonttools-win-setup.txt
 InfoAfterFile=..\Doc\changes.txt
-OutputBaseFilename=fontttols-setup
+OutputBaseFilename=ttx-setup
 AppCopyright=Copyright 1999-2002 by Just van Rossum, Letterror, The Netherlands.
-UninstallDisplayIcon={app}\fonttools.ico
+UninstallDisplayIcon={app}\ttx.ico
 
 [Tasks]
 Name: desktopicon; Description: Create a &desktop icon; GroupDescription: Additional icons:
@@ -37,14 +37,14 @@ Source: ..\Doc\index.html; DestDir: {app}; CopyMode: alwaysoverwrite
 Source: ..\Doc\changes.txt; DestDir: {app}; CopyMode: alwaysoverwrite
 Source: ..\Doc\bugs.txt; DestDir: {app}; CopyMode: alwaysoverwrite
 Source: fonttools-win-setup.txt; DestDir: {app}; CopyMode: alwaysoverwrite
-Source: fonttools.ico; DestDir: {app}; CopyMode: alwaysoverwrite
+Source: ttx.ico; DestDir: {app}; CopyMode: alwaysoverwrite
 
 [Icons]
-Name: {group}\Uninstall FontTools; Filename: {uninstallexe}; IconIndex: 0
-Name: {userdesktop}\ttdump.exe; Filename: {app}\ttdump.exe; Tasks: desktopicon; IconFilename: {app}\fonttools.ico; IconIndex: 0
-Name: {userdesktop}\ttcompile.exe; Filename: {app}\ttcompile.exe; Tasks: desktopicon; IconIndex: 0; IconFilename: {app}\fonttools.ico
-Name: {userdesktop}\ttlist.exe; Filename: {app}\ttlist.exe; Tasks: desktopicon; IconFilename: {app}\fonttools.ico; IconIndex: 0
-Name: {group}\FontTools documentation; Filename: {app}\index.html; IconIndex: 0
+Name: {group}\Uninstall TTX; Filename: {uninstallexe}; IconIndex: 0
+Name: {userdesktop}\ttdump.exe; Filename: {app}\ttdump.exe; Tasks: desktopicon; IconFilename: {app}\ttx.ico; IconIndex: 0
+Name: {userdesktop}\ttcompile.exe; Filename: {app}\ttcompile.exe; Tasks: desktopicon; IconIndex: 0; IconFilename: {app}\ttx.ico
+Name: {userdesktop}\ttlist.exe; Filename: {app}\ttlist.exe; Tasks: desktopicon; IconFilename: {app}\ttx.ico; IconIndex: 0
+Name: {group}\TTX documentation; Filename: {app}\index.html; IconIndex: 0
 Name: {group}\Changes; Filename: {app}\changes.txt; IconIndex: 0
 Name: {group}\Bugs; Filename: {app}\bugs.txt; IconIndex: 0
 Name: {group}\License; Filename: {app}\LICENSE.txt; IconIndex: 0
