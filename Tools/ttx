@@ -223,4 +223,15 @@ def main(args):
 
 
 if __name__ == "__main__":
-	main(sys.argv[1:])
+	try:
+		main(sys.argv[1:])
+	except KeyboardInterrupt:
+		print "(Cancelled.)"
+	except:
+		import traceback
+		traceback.print_exc()
+		if sys.platform == "win32":
+			import msvcrt
+			print '(Hit any key to exit)'
+			while not msvcrt.kbhit():
+				pass
