@@ -8,7 +8,7 @@ import re
 import string
 import types
 
-__version__ = "$Id: afmLib.py,v 1.3 2001-06-24 15:11:31 Just Exp $"
+__version__ = "$Id: afmLib.py,v 1.4 2002-03-12 14:34:43 jvr Exp $"
 
 
 # every single line starts with a "word"
@@ -20,7 +20,7 @@ charRE = re.compile(
 		"\s*;\s*WX\s+"		# ; WX 
 		"(\d+)"				# width
 		"\s*;\s*N\s+"		# ; N 
-		"(\.?[A-Za-z0-9_]+)"	# charname
+		"([.A-Za-z0-9_]+)"	# charname
 		"\s*;\s*B\s+"		# ; B 
 		"(-?\d+)"			# left
 		"\s+"				# 
