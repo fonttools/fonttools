@@ -6,11 +6,15 @@ __all__ = ["TransformPen"]
 
 class TransformPen(AbstractPen):
 
-	"""Pen that passes transforms all coordinates, and passes them
-	to another pen.
+	"""Pen that transforms all coordinates using a Affine transformation,
+	and passes them to another pen.
 	"""
 
 	def __init__(self, outPen, transformation):
+		"""The 'outPen' argument is another pen object. It will receive the
+		transformed coordinates. The 'transformation' argument can either
+		be a six-tuple, or a fontTools.misc.transform.Transform object.
+		"""
 		if not hasattr(transformation, "transformPoint"):
 			from fontTools.misc.transform import Transform
 			transformation = Transform(*transformation)
