@@ -20,7 +20,7 @@ __author__ = "jvr"
 __version__ = "1.0b2"
 DEBUG = 0
 
-import eexec
+from fontTools.misc import eexec
 import string
 import re
 import os
@@ -68,11 +68,11 @@ class T1Font:
 		lenIV = self.font["Private"].get("lenIV", 4)
 		assert lenIV >= 0
 		for glyphName, charString in charStrings.items():
-			charString, R = eexec.Decrypt(charString, 4330)
+			charString, R = eexec.decrypt(charString, 4330)
 			charStrings[glyphName] = psCharStrings.T1CharString(charString[lenIV:])
 		subrs = self.font["Private"]["Subrs"]
 		for i in range(len(subrs)):
-			charString, R = eexec.Decrypt(subrs[i], 4330)
+			charString, R = eexec.decrypt(subrs[i], 4330)
 			subrs[i] = psCharStrings.T1CharString(charString[lenIV:])
 		del self.data
 	
@@ -246,7 +246,7 @@ def writeother(path, data, dohex = 0):
 				code = 1
 			if code == 2 and dohex:
 				while chunk:
-					f.write(eexec.hexstring(chunk[:hexlinelen]))
+					f.write(eexec.hexString(chunk[:hexlinelen]))
 					f.write('\r')
 					chunk = chunk[hexlinelen:]
 			else:
@@ -279,7 +279,7 @@ def decrypttype1(data):
 		if isencrypted:
 			if ishex(chunk[:4]):
 				chunk = dehexstring(chunk)
-			decrypted, R = eexec.Decrypt(chunk, 55665)
+			decrypted, R = eexec.decrypt(chunk, 55665)
 			decrypted = decrypted[4:]
 			if decrypted[-len(EEXECINTERNALEND)-1:-1] <> EEXECINTERNALEND \
 					and decrypted[-len(EEXECINTERNALEND)-2:-2] <> EEXECINTERNALEND:
@@ -309,7 +309,7 @@ def findencryptedchunks(data):
 	return chunks
 
 def dehexstring(hexstring):
-	return eexec.dehexstring(string.join(string.split(hexstring), ""))
+	return eexec.deHexString(string.join(string.split(hexstring), ""))
 
 
 # Type 1 assertion

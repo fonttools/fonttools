@@ -1,7 +1,7 @@
 import StringIO
 import regex
 import string
-import eexec
+from fontTools.misc import eexec
 import types
 from psOperators import *
 
@@ -99,7 +99,7 @@ class PSTokenizer(StringIO.StringIO):
 		self.pos = self.pos + 1
 		#self.skipwhite()
 		self.dirtybuf = self.buf[self.pos:]
-		self.buf, R = eexec.Decrypt(self.dirtybuf, 55665)
+		self.buf, R = eexec.decrypt(self.dirtybuf, 55665)
 		self.len = len(self.buf)
 		self.pos = 4
 	
