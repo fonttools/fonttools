@@ -380,7 +380,7 @@ class FontFamily:
 		for style, split in items:
 			if len(split) > 1:
 				numindices = numindices + 1
-		styleStrings = [self.ffFamilyName] + numindices * [None] + nameparts
+		styleStrings = [self.ffFamilyName] + numindices * [""] + nameparts
 		# XXX the next bit goes wrong for MM fonts.
 		for style, split in items:
 			if len(split) == 1:
