@@ -220,7 +220,7 @@ def parseOptions(args):
 		
 		output = makeOutputFileName(input, options.outputDir, extension)
 		jobs.append((action, input, output))
-		return jobs, options
+	return jobs, options
 
 
 def process(jobs, options):
