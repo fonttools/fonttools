@@ -36,6 +36,6 @@ else:
 	print __doc__ % sys.argv[0]
 	sys.exit(2)
 
-tt = ttLib.TTFont(ttInFile, verbose=verbose)
+tt = ttLib.TTFont(ttInFile, recalcBBoxes=recalcBBoxes, verbose=verbose)
 tt.importXML(xmlPath)
-tt.save(ttPath, recalcBBoxes=recalcBBoxes)
+tt.save(ttPath)
