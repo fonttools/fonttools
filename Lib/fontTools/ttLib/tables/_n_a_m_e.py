@@ -89,7 +89,12 @@ class NameRecord:
 						])
 		writer.newline()
 		if self.platformID == 0 or (self.platformID == 3 and self.platEncID in (0, 1)):
-			writer.write16bit(self.string)
+			if len(self.string) % 2:
+				# no, shouldn't happen, but some of the Apple
+				# tools cause this anyway :-(
+				writer.write16bit(self.string + "\0")
+			else:
+				writer.write16bit(self.string)
 		else:
 			writer.write8bit(self.string)
 		writer.newline()
