@@ -13,6 +13,7 @@
 # v1.01 revised 26.01.2000 by Adam Twardoch <twardoch@font.org>
 # v1.03 revised 16.02.2000 to match ttLib 1.0a6
 # v1.04 revised 29.04.2000 to match FontTools.pth
+# v1.05 revised 10.08.2001 cleaned up regtext for clarity (jvr)
 
 import sys, os, string, tempfile
 
@@ -33,20 +34,49 @@ pythondir = string.replace(pythondir, '\\', '\\\\')
 ttxdir = string.replace(ttxdir, '\\', '\\\\')
 
 # Prepare the text to write to the temporary reg file
-regtext = 'REGEDIT4\n\n'
-regtext = regtext + '[HKEY_CLASSES_ROOT\\.ttf]\n@="ttffile"\n\n'
-regtext = regtext + '[HKEY_CLASSES_ROOT\\ttffile\\shell]\n@=""\n\n'
-regtext = regtext + '[HKEY_CLASSES_ROOT\\ttffile\\shell\\[TTX] Convert current TrueType to XML]\n@="[TTX] Convert current TrueType to XML"\n\n'
-regtext = regtext + '[HKEY_CLASSES_ROOT\\ttffile\\shell\\[TTX] Convert current TrueType to XML\\command]\n@="\\"' + pythondir + '\\\\python.exe\\" \\"' + ttxdir + '\\\\ttDump.py\\" \\"%1\\""\n\n'
-regtext = regtext + '[HKEY_CLASSES_ROOT\\ttffile\\shell\\[TTX] Convert all TrueType to XML]\n@="[TTX] Convert all TrueType to XML"\n\n'
-regtext = regtext + '[HKEY_CLASSES_ROOT\\ttffile\\shell\\[TTX] Convert all TrueType to XML\\command]\n@="command.com /c for %%I in (*.ttf) do \\"' + pythondir + '\\\\python.exe\\" \\"' + ttxdir + '\\\\ttDump.py\\" \\"%%I\\""\n\n'
-regtext = regtext + '[HKEY_CLASSES_ROOT\\.ttx]\n@="ttxfile"\n\n'
-regtext = regtext + '[HKEY_CLASSES_ROOT\\ttxfile]\n@="TTX Document"\n\n'
-regtext = regtext + '[HKEY_CLASSES_ROOT\\ttxfile\\shell]\n@=""\n\n'
-regtext = regtext + '[HKEY_CLASSES_ROOT\\ttxfile\\shell\\[TTX] Convert current XML to TrueType]\n@="[TTX] Convert current XML to TrueType"\n\n'
-regtext = regtext + '[HKEY_CLASSES_ROOT\\ttxfile\\shell\\[TTX] Convert current XML to TrueType\\command]\n@="\\"' + pythondir + '\\\\python.exe\\" \\"' + ttxdir + '\\\\ttCompile.py\\" \\"%1\\""\n\n'
-regtext = regtext + '[HKEY_CLASSES_ROOT\\ttxfile\\shell\\[TTX] Convert all XML to TrueType]\n@="[TTX] Convert all XML to TrueType"\n\n'
-regtext = regtext + '[HKEY_CLASSES_ROOT\\ttxfile\\shell\\[TTX] Convert all XML to TrueType\\command]\n@="command.com /c for %%I in (*.ttx) do \\"' + pythondir + '\\\\python.exe\\" \\"' + ttxdir + '\\\\ttCompile.py\\" \\"%%I\\""\n\n'
+regtext = r"""REGEDIT4
+
+[HKEY_CLASSES_ROOT\.ttf]
+@="ttffile"
+
+[HKEY_CLASSES_ROOT\ttffile\shell]
+@=""
+
+[HKEY_CLASSES_ROOT\ttffile\shell\[TTX] Convert current TrueType to XML]
+@="[TTX] Convert current TrueType to XML"
+
+[HKEY_CLASSES_ROOT\ttffile\shell\[TTX] Convert current TrueType to XML\command]
+@="\"%(pythondir)s\\python.exe\" \"%(ttxdir)s\\ttDump.py\" \"%%1\""
+
+[HKEY_CLASSES_ROOT\ttffile\shell\[TTX] Convert all TrueType to XML]
+@="[TTX] Convert all TrueType to XML"
+
+[HKEY_CLASSES_ROOT\ttffile\shell\[TTX] Convert all TrueType to XML\command]
+@="command.com /c for %%%%I in (*.ttf) do \"%(pythondir)s\\python.exe\" \"%(ttxdir)s\\ttDump.py\" \"%%%%I\""
+
+[HKEY_CLASSES_ROOT\.ttx]
+@="ttxfile"
+
+[HKEY_CLASSES_ROOT\ttxfile]
+@="TTX Document"
+
+[HKEY_CLASSES_ROOT\ttxfile\shell]
+@=""
+
+[HKEY_CLASSES_ROOT\ttxfile\shell\[TTX] Convert current XML to TrueType]
+@="[TTX] Convert current XML to TrueType"
+
+[HKEY_CLASSES_ROOT\ttxfile\shell\[TTX] Convert current XML to TrueType\command]
+@="\"%(pythondir)s\\python.exe\" \"%(ttxdir)s\\ttCompile.py\" \"%%1\""
+
+[HKEY_CLASSES_ROOT\ttxfile\shell\[TTX] Convert all XML to TrueType]
+@="[TTX] Convert all XML to TrueType"
+
+[HKEY_CLASSES_ROOT\ttxfile\shell\[TTX] Convert all XML to TrueType\command]
+@="command.com /c for %%%%I in (*.ttx) do \"%(pythondir)s\\python.exe\" \"%(ttxdir)s\\ttCompile.py\" \"%%%%I\""
+
+""" % globals()
+
 
 # Create the temporary reg file which will be joined into the Windows registry
 reg_file_name = os.path.join(os.path.dirname(tempfile.mktemp()), "~ttxtemp.reg")
