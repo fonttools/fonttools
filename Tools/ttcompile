@@ -1,12 +1,13 @@
 #! /usr/bin/env python
 
 """\
-usage: ttcompile [-hvbf] [-d output-dir] [-i TTF-input-file] [TTX-file...]
+usage: ttcompile [-hvbf] [-d output-dir] [-i TTF-input-file] TTX-1 ... TTX-N
 
-    Translate a TTX file (as output by ttDump) to a TrueType font file. 
-    If a TTX-file argument is a directory instead of a file, all files in
-    that directory ending in '.ttx' will be merged into one TrueType file. 
-    This is mostly useful in conjunction with the -s option of ttDump.py.
+    Translate one or more TTX files (as output by ttDump) to a TrueType
+    font file. If a TTX-file argument is a directory instead of a file, all
+    files in that directory ending in '.ttx' will be merged into one
+    TrueType file. This is mostly useful in conjunction with the -s option
+    of ttDump.py.
 
     Options:
     -h Help: print this message
