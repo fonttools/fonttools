@@ -1,7 +1,7 @@
 """cffLib.py -- read/write tools for Adobe CFF fonts."""
 
 #
-# $Id: cffLib.py,v 1.23 2002-05-24 10:35:13 jvr Exp $
+# $Id: cffLib.py,v 1.24 2002-05-24 10:38:04 jvr Exp $
 #
 
 import struct, sstruct
@@ -716,7 +716,6 @@ def packCharset0(charset, strings):
 
 def packCharset(charset, strings):
 	format = 1
-	data = [packCard8(format)]
 	ranges = []
 	first = None
 	end = 0
@@ -736,6 +735,7 @@ def packCharset(charset, strings):
 		format = 2
 	ranges.append((first, nLeft))
 	
+	data = [packCard8(format)]
 	if format == 1:
 		nLeftFunc = packCard8
 	else:
