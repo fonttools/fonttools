@@ -9,39 +9,224 @@
 
 <H1>FontTools</H1>
 
-Introduction
+FontTools is a suite of tools and libraries for manipulating fonts. It is written
+in Python and has a Python-style, open-source licence -- see LICENSE.txt.
 
 <P>
+It currently reads and writes TrueType font files, reads PostScript Type 1 fonts
+and more. It contains two command line programs to convert TrueType fonts to an
+XML based format (called TTX) and back. 
+
+<H3>Scope</H3>
+
+FontTools' functionality is aimed towards font developers and font tool developers. 
+It can of course be used to just access fonts (outlines, metrics, etc.) but it is
+not optimized for that. It will be further developed so it can be the core of any
+font editor. And that's exactly what it will be for our upcoming major rewrite of
+<A HREF="http://www.robofog.com/">RoboFog</A>, our (commercial) PythonPowered font
+editor for MacOS.
+
+<H3>Installation</H3>
+
+You need the following software to use FontTools:
+
+<UL>
+<LI>
+  Python 1.5.1 or newer. The latest version 1.5.x is here:
+  <A HREF="http://www.python.org/1.5/">http://www.python.org/1.5/</A>
+  
+  <P>Windows: grab the Windows installer, run the full install
+  <BR>Un*x: follow the build instructions
+  <BR>Linux: maybe you already *have* Python: check whether you have
+  version 1.5.1 or newer.
+  <BR>MacOS: grab the installer, run "Easy Install"
+
+<P>
+<LI>
+  The Numeric Python extension (you don't need this under MacOS, since 	it's
+  included in the MacPython installer).
+  
+  <BR>The compiled Win32 version:
+    <A HREF="ftp://ftp-icf.llnl.gov/pub/python/LLNLDistribution11.zip">ftp://ftp-icf.llnl.gov/pub/python/LLNLDistribution11.zip</A>
+
+  <BR>The source distribution is here:
+    <A HREF="ftp://ftp-icf.llnl.gov/pub/python/LLNLDistribution11.tgz">ftp://ftp-icf.llnl.gov/pub/python/LLNLDistribution11.tgz</A>
+
+  <BR>Included in this archive is a directory called "Numeric" (but do unzip 
+  the whole archive, it's needed for the install script!). 
+  <BR>On Linux or other Unices: follow the build instructions.
+  
+  <BR>On Windows & Unix:
+  In the "Numeric" directory there is a script called "installthis.py". 
+  If you've installed Python successfully, you can just run it, it will 
+  install (copy!) the neccesary stuff to the Python directory all by itself.
+  
+  <P><B>Note</B> that the above links are not pointing to the latest version! Newer
+  versions use a different install procedure, which recently still had some problems.
+  If you know what you're doing, you can get the latest Numeric Python at
+    <A HREF="http://numpy.sourceforge.net/">http://numpy.sourceforge.net/</A>.
+
+<P>
+<LI>
+  xmlproc (a Python based XML parser) from:
+    <A HREF="http://www.stud.ifi.uio.no/%7Elarsga/download/python/xml/xmlproc.html">http://www.stud.ifi.uio.no/~larsga/download/python/xml/xmlproc.html</A>
+
+  <BR>I don't know the official install procedure, but the archive should contain 
+  a directory called "xml", move that directory to the Python directory and 
+  you should be all set. To make sure: start python (python.exe on Win32) 
+  and type at the ">>>" prompt:
+  <PRE>>>> import xml.parsers.xmlproc.xmlproc</PRE>
+  followed by a return. If that doesn't cause an error, you're all set.
+  
+  <P><B>Note</B> that the default xmlproc distribution depends on Python 1.5.2 (by oversight, 
+  not intend) but there is an alternative distribution that does work under Python 1.5.1.
+
+  <P>xmlproc is also part of the xml-sig distribution.
+  
+</UL>
+
+
+Now run the "install.py" script from the FontTools archive. 
+This will make sure Python knows where to find FontTools. It doesn't copy anything.
+(Note that the "install.py" script has only been lightly tested.)
+
+<P>Additional Mac instructions:
+De-binhex "TTX.rsrc.hqx" by dropping it onto StuffIt expander. (Or use your
+own preferred method)
+The "TTX.py" script included in this archive is the Mac-only main program: 
+Drop it onto the "BuildApplet" app inside the Python folder; this will 
+produce the TTX applet.
+
+
+<H3>User documentation</H3>
+
+<P>For MacOS there's a small application called TTX. If you drop a TrueType file
+onto it, it will convert it to XML. If you drop an XML file onto it, it will 
+convert it back to TrueType. Please read the additional README file in the Mac 
+subdirectory, since it behaves quite differently than the command line programs 
+described below.
+
+<P>For Unix and DOS I've provided two command line programs:
+<UL>
+	<LI>ttDump.py
+	<LI>ttCompile.py
+</UL>
+They do pretty much what you'd expect. They take several arguments: 
+an input file name and optionally an output file name. There are some extra
+options which are explained by the 'usage' text; use the -h option to display 
+it.
+
+<P>If you don't provide an output file name, an output file name will be contructed 
+from the input file name: foo.ttf becomes foo.ttx in ttDump.py and vice versa 
+for ttCompile.py. <B>WARNING</B>: these tools will silently overwrite existing files!
+
+<P>Adam Twardoch contributed a Windows registry script (ttx_shellext_win32.py) which
+makes the two above tools available under the Right Mouse Button. I haven't tested 
+these myself, but I'm very interested in hearing about the results!
+
+
+<H3>Note about glyph names and TrueType GlyphID's</H3>
+
+TrueType fonts use glyph indices (GlyphID's) to refer to glyphs in most places.
+While this is fine in binary form, it is really hard to work with for
+humans. Therefore we use names instead.
+
+<P>The names are derived from what is found in the 'post' table. It is
+possible that different glyphs use the same PS name. If this happens, we
+force the names to be unique by appending "#n" to the name (n being an
+integer number). The original PS names will still be maintained by the
+'post' table, so even though we use a different name internally, we are
+still able to write the 'post' table back in original form. If there is
+no proper 'post' table available, names will be derived from a Unicode
+cmap (if available) in conjuction with the Adobe Glyph List (see fontTools/agl.py).
+
+<P>Because the order in which glyphs are stored inside the TT font is
+important, ttLib maintains an ordered list of glyph names in the font.
+
+<H3>Feedback</H3>
+
+Please direct all feedback to <A HREF="mailto:just@letterror.com">just@letterror.com</A>.
+I hope to create a discussion mailing list at some point.
+
+<H3>Anonymous CVS-access</H3>
+
+The FontTools sources are also accessible through CVS:
+<PRE>
+    :pserver:fonttools@rietveld.petr.nl:/usr/local/cvsanon
+    password: fontypython
+    module name: FontTools
+</PRE>
+
+
+<H3>Developer documentation</H3>
+
+Sorry, documentation beyond doc strings in the source code is still on my to-do list... 
+Below follows a brief overview of what's there.
+
+
 <H3>GUI Tools</H3>
-TTX
+TTX -- A simple Mac app that converts TrueType (or OpenType) fonts to TTX format and back.
 <P>
 <H3>Command line tools</H3>
 
-<UL TYPE=DISC>
-	<LI>tt2xml
-	<LI>xml2tt
+<UL>
+	<LI>ttDump -- dumps a TrueType (or OpenType) font file to TTX format.
+	<LI>ttCompile -- compiles a TTX file back into a TTF (or OTF) file.
 </UL>
 
 <P>
 <H3>The library</H3>
 
 Cross-platform
-<UL TYPE=DISC>
-	<LI>fontTools.t1Lib
-	<LI>fontTools.ttLib
-	<LI>fontTools.afmLib
-	<LI>fontTools.cffLib
-	<LI>fontTools.unicode
-	<LI>fontTools.agl
+<UL>
+	<LI>fontTools.t1Lib -- Provides a Type 1 font reader. Writing is a planned feature.
+	<LI>fontTools.ttLib -- Extensive TrueType tools. Reads and writes. This is the flagship 
+	    of FontTools, it's by far the most mature component. Contains a completely modular
+	    TTF table converter architecture. See ttLib/tables/table_API_readme.txt.
+	<LI>fontTools.afmLib -- And AFM file reader/writer.
+	<LI>fontTools.cffLib -- Reads CFF fonts. Writing is a planned feature.
+	<LI>fontTools.unicode -- A simple (but large) module that translates 
+	    Unicode values to their descriptive names. Still Unicode 2.0.
+	<LI>fontTools.agl -- Interface to the Adobe Glyph List: maps unicode values
+	    to glyph names and back.
 </UL>
 
 Mac-specific
-<UL TYPE=DISC>
-	<LI>fontTools.fondLib
-	<LI>fontTools.nfntLib
+<UL>
+	<LI>fontTools.fondLib -- A reader/writer class for Mac FOND resources.
+	<LI>fontTools.nfntLib -- Reads Mac NFNT bitmap font resources.
 </UL>
 
-<P>
+<H3>The Future</H3>
+
+In /Lib/fontTools/objects you'll find several objects-under-construction which will be
+(and partially are) a generic outline font implementation, offering transparent access
+to various font formats (currently only Type 1 and TTF/OTF). Plans:
+<UL>
+	<LI>Develop this into a complete font compiler for at least Type 1, TrueType and
+	OpenType.
+	<LI>To make the above possible, develop a high level XML-based format to be used
+	as source code for font development. This "language" will be called FDL -- Font 
+	Definition Language. For some (rather old) blurb about these ideas, see
+	<A HREF="http://www.letterror.com/fdl/">http://www.letterror.com/fdl/</A>.
+</UL>
+
+<H3>Thank-you's</H3>
+
+(in alphabetical order) 
+Erik van Blokland, Petr van Blokland, Jelle Bosma, Vincent Connare, 
+Simon Daniels, Hannes Famira, Greg Hitchcock, Jack Jansen, Antoine Leca, 
+Werner Lemberg, Peter Lofting, Dave Opstad, Laurence Penney, 
+Guido van Rossum, Adam Twardoch. 
+
+<H3>Copyrights</H3>
+
+FontTools/TTX -- 1999-2000 Just van Rossum; Letterror (just@letterror.com) 
+<BR>Python -- Copyright 1991-1995 by Stichting Mathematisch Centrum, Amsterdam, 
+  The Netherlands. 
+<BR>Numeric Python -- Copyright (c) 1996. The Regents of the
+  University of California. All rights reserved. 
+<BR>xmlproc -- Lars Marius Garshol
 
 </BODY>
 </HTML>
