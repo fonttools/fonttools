@@ -69,8 +69,11 @@ def splitLine(pt1, pt2, where, isHorizontal):
 	if ax == 0:
 		return [(pt1, pt2)]
 	t = float(where - b[isHorizontal]) / ax
-	midPt = a * t + b
-	return [(pt1, midPt), (midPt, pt2)]
+	if 0 <= t < 1:
+		midPt = a * t + b
+		return [(pt1, midPt), (midPt, pt2)]
+	else:
+		return [(pt1, pt2)]
 
 
 def splitQuadratic(pt1, pt2, pt3, where, isHorizontal):
