@@ -4,6 +4,20 @@ import os, sys
 from distutils.core import setup, Extension
 
 
+try:
+	import Numeric
+except ImportError:
+	print "*** Warning: FontTools needs Numerical Python (NumPy), see:"
+	print "        http://sourceforge.net/projects/numpy/"
+
+try:
+	import xml.parsers.xmlproc
+except ImportError:
+	print "*** Warning: FontTools needs PyXML, see:"
+	print "        http://sourceforge.net/projects/pyxml/"
+
+
+
 setup(	name = "FontTools",
 		version = "1.0",
 		description = "FontTools",
