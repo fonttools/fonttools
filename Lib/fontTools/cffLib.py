@@ -1,7 +1,7 @@
 """cffLib.py -- read/write tools for Adobe CFF fonts."""
 
 #
-# $Id: cffLib.py,v 1.17 2002-05-17 18:36:07 jvr Exp $
+# $Id: cffLib.py,v 1.18 2002-05-17 19:58:49 jvr Exp $
 #
 
 import struct, sstruct
@@ -402,12 +402,23 @@ class FDSelectConverter:
 		pass
 
 
+class ROSConverter:
+	def read(self, parent, value):
+		return value
+	def xmlWrite(self, xmlWriter, name, value):
+		registry, order, supplement = value
+		xmlWriter.simpletag(name, [('registry', registry), ('order', order),
+			('supplement', supplement)])
+
+
 topDictOperators = [
 #	opcode     name                  argument type   default    converter
+	((12, 30), 'ROS',        ('SID','SID','number'), None,      ROSConverter()),
 	(0,        'version',            'SID',          None,      None),
 	(1,        'Notice',             'SID',          None,      None),
 	((12, 0),  'Copyright',          'SID',          None,      None),
 	(2,        'FullName',           'SID',          None,      None),
+	((12, 38), 'FontName',           'SID',          None,      None),
 	(3,        'FamilyName',         'SID',          None,      None),
 	(4,        'Weight',             'SID',          None,      None),
 	((12, 1),  'isFixedPitch',       'number',       0,         None),
@@ -422,22 +433,20 @@ topDictOperators = [
 	((12, 8),  'StrokeWidth',        'number',       0,         None),
 	(14,       'XUID',               'array',        None,      None),
 	(15,       'charset',            'number',       0,         CharsetConverter()),
-	(16,       'Encoding',           'number',       0,         None),
-	(18,       'Private',       ('number','number'), None,      PrivateDictConverter()),
-	(17,       'CharStrings',        'number',       None,      CharStringsConverter()),
 	((12, 20), 'SyntheticBase',      'number',       None,      None),
 	((12, 21), 'PostScript',         'SID',          None,      None),
 	((12, 22), 'BaseFontName',       'SID',          None,      None),
 	((12, 23), 'BaseFontBlend',      'delta',        None,      None),
-	((12, 30), 'ROS',        ('SID','SID','number'), None,      None),
 	((12, 31), 'CIDFontVersion',     'number',       0,         None),
 	((12, 32), 'CIDFontRevision',    'number',       0,         None),
 	((12, 33), 'CIDFontType',        'number',       0,         None),
 	((12, 34), 'CIDCount',           'number',       8720,      None),
 	((12, 35), 'UIDBase',            'number',       None,      None),
+	(16,       'Encoding',           'number',       0,         None), # XXX
 	((12, 36), 'FDArray',            'number',       None,      FDArrayConverter()),
 	((12, 37), 'FDSelect',           'number',       None,      FDSelectConverter()),
-	((12, 38), 'FontName',           'SID',          None,      None),
+	(18,       'Private',       ('number','number'), None,      PrivateDictConverter()),
+	(17,       'CharStrings',        'number',       None,      CharStringsConverter()),
 ]
 
 privateDictOperators = [
@@ -481,6 +490,7 @@ class BaseDict:
 		self.file = file
 		self.offset = offset
 		self.strings = strings
+		self.skipNames = []
 	
 	def decompile(self, data):
 		dec = self.decompiler(self.strings)
@@ -505,6 +515,8 @@ class BaseDict:
 	
 	def toXML(self, xmlWriter, progress):
 		for name in self.order:
+			if name in self.skipNames:
+				continue
 			value = getattr(self, name, None)
 			if value is None:
 				continue
@@ -541,12 +553,16 @@ class TopDict(BaseDict):
 		self.numGlyphs = readCard16(self.file)
 	
 	def toXML(self, xmlWriter, progress):
-		self.decompileAllCharStrings()
+		if hasattr(self, "CharStrings"):
+			self.decompileAllCharStrings()
+		if not hasattr(self, "ROS") or not hasattr(self, "CharStrings"):
+			# these values have default values, but I only want them to show up
+			# in CID fonts.
+			self.skipNames = ['CIDFontVersion', 'CIDFontRevision', 'CIDFontType',
+					'CIDCount']
 		BaseDict.toXML(self, xmlWriter, progress)
 	
 	def decompileAllCharStrings(self):
-		if not hasattr(self, "CharStrings"):
-			return
 		for charString in self.CharStrings.values():
 			charString.decompile()
 
