@@ -42,7 +42,7 @@ Dumping 'prep' table...
 """
 
 #
-# $Id: __init__.py,v 1.30 2002-05-23 09:42:45 jvr Exp $
+# $Id: __init__.py,v 1.31 2002-05-24 09:58:04 jvr Exp $
 #
 
 import os
@@ -534,8 +534,8 @@ class GlyphOrder:
 	
 	def toXML(self, writer, ttFont):
 		glyphOrder = ttFont.getGlyphOrder()
-		writer.comment("The 'id' attribute is merely a reading aid; "
-				"it is ignored when read.")
+		writer.comment("The 'id' attribute is only for humans; "
+				"it is ignored when parsed.")
 		writer.newline()
 		for i in range(len(glyphOrder)):
 			glyphName = glyphOrder[i]

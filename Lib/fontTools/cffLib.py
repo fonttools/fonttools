@@ -1,13 +1,14 @@
 """cffLib.py -- read/write tools for Adobe CFF fonts."""
 
 #
-# $Id: cffLib.py,v 1.21 2002-05-23 21:50:36 jvr Exp $
+# $Id: cffLib.py,v 1.22 2002-05-24 09:58:03 jvr Exp $
 #
 
 import struct, sstruct
 import string
-from types import FloatType, ListType, TupleType
+from types import FloatType, ListType, StringType, TupleType
 from fontTools.misc import psCharStrings
+from fontTools.misc.textTools import safeEval
 
 
 DEBUG = 0
@@ -25,16 +26,16 @@ class CFFFontSet:
 	def __init__(self):
 		pass
 	
-	def decompile(self, file):
+	def decompile(self, file, otFont):
 		sstruct.unpack(cffHeaderFormat, file.read(4), self)
 		assert self.major == 1 and self.minor == 0, \
 				"unknown CFF format: %d.%d" % (self.major, self.minor)
 		
 		file.seek(self.hdrSize)
-		self.fontNames = list(Index(file, "fontNames"))
+		self.fontNames = list(Index(file))
 		self.topDictIndex = TopDictIndex(file)
 		self.strings = IndexedStrings(file)
-		self.GlobalSubrs = GlobalSubrsIndex(file, name="GlobalSubrsIndex")
+		self.GlobalSubrs = GlobalSubrsIndex(file)
 		self.topDictIndex.strings = self.strings
 		self.topDictIndex.GlobalSubrs = self.GlobalSubrs
 	
@@ -54,7 +55,7 @@ class CFFFontSet:
 			raise KeyError, name
 		return self.topDictIndex[index]
 	
-	def compile(self, file):
+	def compile(self, file, otFont):
 		strings = IndexedStrings()
 		writer = CFFWriter()
 		writer.add(sstruct.pack(cffHeaderFormat, self))
@@ -67,10 +68,13 @@ class CFFFontSet:
 		writer.add(strings.getCompiler())
 		writer.add(self.GlobalSubrs.getCompiler(strings, None))
 		
+		for topDict in self.topDictIndex:
+			if not hasattr(topDict, "charset") or topDict.charset is None:
+				charset = otFont.getGlyphOrder()
+				topDict.charset = charset
+		
 		for child in topCompiler.getChildren(strings):
 			writer.add(child)
-		
-		print writer.data
 		
 		writer.toFile(file)
 	
@@ -92,7 +96,33 @@ class CFFFontSet:
 		xmlWriter.newline()
 	
 	def fromXML(self, (name, attrs, content)):
-		xxx
+		if not hasattr(self, "GlobalSubrs"):
+			self.GlobalSubrs = GlobalSubrsIndex()
+			self.major = 1
+			self.minor = 0
+			self.hdrSize = 4
+			self.offSize = 4  # XXX ??
+		if name == "CFFFont":
+			if not hasattr(self, "fontNames"):
+				self.fontNames = []
+				self.topDictIndex = TopDictIndex()
+			fontName = attrs["name"]
+			topDict = TopDict(GlobalSubrs=self.GlobalSubrs)
+			topDict.charset = None  # gets filled in later
+			self.fontNames.append(fontName)
+			self.topDictIndex.append(topDict)
+			for element in content:
+				if isinstance(element, StringType):
+					continue
+				topDict.fromXML(element)
+		elif name == "GlobalSubrs":
+			for element in content:
+				if isinstance(element, StringType):
+					continue
+				name, attrs, content = element
+				subr = psCharStrings.T2CharString(None, subrs=None, globalSubrs=None)
+				subr.fromXML((name, attrs, content))
+				self.GlobalSubrs.append(subr)
 
 
 class CFFWriter:
@@ -107,21 +137,25 @@ class CFFWriter:
 		lastPosList = None
 		count = 1
 		while 1:
-			print "XXX iteration", count
-			count += 1
+			if DEBUG:
+				print "CFFWriter.toFile() iteration:", count
+			count = count + 1
 			pos = 0
 			posList = [pos]
 			for item in self.data:
-				if hasattr(item, "setPos"):
-					item.setPos(pos)
 				if hasattr(item, "getDataLength"):
-					pos = pos + item.getDataLength()
+					endPos = pos + item.getDataLength()
 				else:
-					pos = pos + len(item)
+					endPos = pos + len(item)
+				if hasattr(item, "setPos"):
+					item.setPos(pos, endPos)
+				pos = endPos
 				posList.append(pos)
 			if posList == lastPosList:
 				break
 			lastPosList = posList
+		if DEBUG:
+			print "CFFWriter.toFile() writing to file."
 		begin = file.tell()
 		posList = [0]
 		for item in self.data:
@@ -130,10 +164,6 @@ class CFFWriter:
 			else:
 				file.write(item)
 			posList.append(file.tell() - begin)
-		if posList != lastPosList:
-			print "++++"
-			print posList
-			print lastPosList
 		assert posList == lastPosList
 
 
@@ -181,8 +211,6 @@ class IndexCompiler:
 		return dataLength
 	
 	def toFile(self, file):
-		size = self.getDataLength()
-		start = file.tell()
 		offsets = self.getOffsets()
 		writeCard16(file, len(self.items))
 		offSize = calcOffSize(offsets[-1])
@@ -198,7 +226,6 @@ class IndexCompiler:
 				item.toFile(file)
 			else:
 				file.write(item)
-		assert start + size == file.tell()
 
 
 class IndexedStringsCompiler(IndexCompiler):
@@ -231,12 +258,12 @@ class GlobalSubrsCompiler(IndexCompiler):
 		return out
 
 class SubrsCompiler(GlobalSubrsCompiler):
-	def setPos(self, pos):
+	def setPos(self, pos, endPos):
 		offset = pos - self.parent.pos
 		self.parent.rawDict["Subrs"] = offset
 
 class CharStringsCompiler(GlobalSubrsCompiler):
-	def setPos(self, pos):
+	def setPos(self, pos, endPos):
 		self.parent.rawDict["CharStrings"] = pos
 
 
@@ -246,9 +273,8 @@ class Index:
 	
 	compilerClass = IndexCompiler
 	
-	def __init__(self, file=None, name=None):
-		if name is None:
-			name = self.__class__.__name__
+	def __init__(self, file=None):
+		name = self.__class__.__name__
 		if file is None:
 			self.items = []
 			return
@@ -308,9 +334,8 @@ class GlobalSubrsIndex(Index):
 	
 	compilerClass = GlobalSubrsCompiler
 	
-	def __init__(self, file=None, globalSubrs=None, private=None, fdSelect=None, fdArray=None,
-			name=None):
-		Index.__init__(self, file, name)
+	def __init__(self, file=None, globalSubrs=None, private=None, fdSelect=None, fdArray=None):
+		Index.__init__(self, file)
 		self.globalSubrs = globalSubrs
 		self.private = private
 		self.fdSelect = fdSelect
@@ -331,12 +356,22 @@ class GlobalSubrsIndex(Index):
 	
 	def toXML(self, xmlWriter, progress):
 		fdSelect = self.fdSelect
+		xmlWriter.comment("The 'index' attribute is only for humans; "
+				"it is ignored when parsed.")
+		xmlWriter.newline()
 		for i in range(len(self)):
 			xmlWriter.begintag("CharString", index=i)
 			xmlWriter.newline()
 			self[i].toXML(xmlWriter)
 			xmlWriter.endtag("CharString")
 			xmlWriter.newline()
+	
+	def fromXML(self, (name, attrs, content)):
+		if name <> "CharString":
+			return
+		subr = psCharStrings.T2CharString(None, subrs=None, globalSubrs=None)
+		subr.fromXML((name, attrs, content))
+		self.append(subr)
 	
 	def getItemAndSelector(self, index):
 		fdSelect = self.fdSelect
@@ -371,30 +406,55 @@ class TopDictIndex(Index):
 class CharStrings:
 	
 	def __init__(self, file, charset, globalSubrs, private, fdSelect, fdArray):
-		self.charStringsIndex = SubrsIndex(file, globalSubrs, private, fdSelect, fdArray)
-		self.nameToIndex = nameToIndex = {}
-		for i in range(len(charset)):
-			nameToIndex[charset[i]] = i
+		if file is not None:
+			self.charStringsIndex = SubrsIndex(file, globalSubrs, private, fdSelect, fdArray)
+			self.charStrings = charStrings = {}
+			for i in range(len(charset)):
+				charStrings[charset[i]] = i
+			self.charStringsAreIndexed = 1
+		else:
+			self.charStrings = {}
+			self.charStringsAreIndexed = 0
+			self.globalSubrs = globalSubrs
+			self.private = private
+			self.fdSelect = fdSelect
+			self.fdArray = fdArray
 	
 	def keys(self):
-		return self.nameToIndex.keys()
+		return self.charStrings.keys()
 	
 	def values(self):
-		return self.charStringsIndex
+		if self.charStringsAreIndexed:
+			return self.charStringsIndex
+		else:
+			return self.charStrings.values()
 	
 	def has_key(self, name):
-		return self.nameToIndex.has_key(name)
+		return self.charStrings.has_key(name)
 	
 	def __len__(self):
-		return len(self.charStringsIndex)
+		return len(self.charStrings)
 	
 	def __getitem__(self, name):
-		index = self.nameToIndex[name]
-		return self.charStringsIndex[index]
+		charString = self.charStrings[name]
+		if self.charStringsAreIndexed:
+			charString = self.charStringsIndex[charString]
+		return charString
+	
+	def __setitem__(self, name, charString):
+		if self.charStringsAreIndexed:
+			index = self.charStrings[name]
+			self.charStringsIndex[index] = charString
+		else:
+			self.charStrings[name] = charString
 	
 	def getItemAndSelector(self, name):
-		index = self.nameToIndex[name]
-		return self.charStringsIndex.getItemAndSelector(index)
+		if self.charStringsAreIndexed:
+			index = self.charStrings[name]
+			return self.charStringsIndex.getItemAndSelector(index)
+		else:
+			# XXX needs work for CID fonts
+			return self.charStrings[name], None
 	
 	def toXML(self, xmlWriter, progress):
 		names = self.keys()
@@ -410,6 +470,23 @@ class CharStrings:
 			self[name].toXML(xmlWriter)
 			xmlWriter.endtag("CharString")
 			xmlWriter.newline()
+	
+	def fromXML(self, (name, attrs, content)):
+		for element in content:
+			if isinstance(element, StringType):
+				continue
+			name, attrs, content = element
+			if name <> "CharString":
+				continue
+			glyphName = attrs["name"]
+			if hasattr(self.private, "Subrs"):
+				subrs = self.private.Subrs
+			else:
+				subrs = []
+			globalSubrs = self.globalSubrs
+			charString = psCharStrings.T2CharString(None, subrs=subrs, globalSubrs=globalSubrs)
+			charString.fromXML((name, attrs, content))
+			self[glyphName] = charString
 
 
 def readCard8(file):
@@ -467,40 +544,78 @@ def buildConverters(table):
 	return d
 
 
-class BaseConverter:
+class SimpleConverter:
 	def read(self, parent, value):
 		return value
 	def write(self, parent, value):
 		return value
+	def xmlWrite(self, xmlWriter, name, value):
+		xmlWriter.simpletag(name, value=value)
+		xmlWriter.newline()
+	def xmlRead(self, (name, attrs, content), parent):
+		return attrs["value"]
+
+def parseNum(s):
+	try:
+		value = int(s)
+	except:
+		value = float(s)
+	return value
+
+class NumberConverter(SimpleConverter):
+	def xmlRead(self, (name, attrs, content), parent):
+		return parseNum(attrs["value"])
+
+class ArrayConverter(SimpleConverter):
+	def xmlWrite(self, xmlWriter, name, value):
+		value = map(str, value)
+		xmlWriter.simpletag(name, value=" ".join(value))
+		xmlWriter.newline()
+	def xmlRead(self, (name, attrs, content), parent):
+		values = attrs["value"].split()
+		return map(parseNum, values)
+
+class TableConverter(SimpleConverter):
 	def xmlWrite(self, xmlWriter, name, value):
 		xmlWriter.begintag(name)
 		xmlWriter.newline()
 		value.toXML(xmlWriter, None)
 		xmlWriter.endtag(name)
 		xmlWriter.newline()
+	def xmlRead(self, (name, attrs, content), parent):
+		ob = self.getClass()()
+		for element in content:
+			if isinstance(element, StringType):
+				continue
+			ob.fromXML(element)
+		return ob
 
-class PrivateDictConverter(BaseConverter):
+class PrivateDictConverter(TableConverter):
+	def getClass(self):
+		return PrivateDict
 	def read(self, parent, value):
 		size, offset = value
 		file = parent.file
-		pr = PrivateDict(parent.strings, file, offset)
+		priv = PrivateDict(parent.strings, file, offset)
 		file.seek(offset)
 		data = file.read(size)
 		len(data) == size
-		pr.decompile(data)
-		return pr
+		priv.decompile(data)
+		return priv
 	def write(self, parent, value):
 		return (0, 0)  # dummy value
 
-class SubrsConverter(BaseConverter):
+class SubrsConverter(TableConverter):
+	def getClass(self):
+		return SubrsIndex
 	def read(self, parent, value):
 		file = parent.file
 		file.seek(parent.offset + value)  # Offset(self)
-		return SubrsIndex(file, name="SubrsIndex")
+		return SubrsIndex(file)
 	def write(self, parent, value):
 		return 0  # dummy value
 
-class CharStringsConverter(BaseConverter):
+class CharStringsConverter(TableConverter):
 	def read(self, parent, value):
 		file = parent.file
 		charset = parent.charset
@@ -515,6 +630,12 @@ class CharStringsConverter(BaseConverter):
 		return CharStrings(file, charset, globalSubrs, private, fdSelect, fdArray)
 	def write(self, parent, value):
 		return 0  # dummy value
+	def xmlRead(self, (name, attrs, content), parent):
+		# XXX needs work for CID fonts
+		fdSelect, fdArray = None, None
+		charStrings = CharStrings(None, None, parent.GlobalSubrs, parent.Private, fdSelect, fdArray)
+		charStrings.fromXML((name, attrs, content))
+		return charStrings
 
 class CharsetConverter:
 	def read(self, parent, value):
@@ -554,9 +675,14 @@ class CharsetConverter:
 	def write(self, parent, value):
 		return 0  # dummy value
 	def xmlWrite(self, xmlWriter, name, value):
-		# XXX GlyphOrder needs to be stored *somewhere*, but not here...
-		xmlWriter.simpletag("charset", value=value)
+		# XXX only write charset when not in OT/TTX context, where we
+		# dump charset as a separate "GlyphOrder" table.
+		##xmlWriter.simpletag("charset")
+		xmlWriter.comment("charset is dumped separately as the 'GlyphOrder' element")
 		xmlWriter.newline()
+	def xmlRead(self, (name, attrs, content), parent):
+		if 0:
+			return safeEval(attrs["value"])
 
 
 class CharsetCompiler:
@@ -570,7 +696,7 @@ class CharsetCompiler:
 		self.data = "".join(data)
 		self.parent = parent
 	
-	def setPos(self, pos):
+	def setPos(self, pos, endPos):
 		self.parent.rawDict["charset"] = pos
 	
 	def getDataLength(self):
@@ -607,7 +733,7 @@ def parseCharset(numGlyphs, file, strings, isCID, format):
 	return charset
 
 
-class FDArrayConverter(BaseConverter):
+class FDArrayConverter(TableConverter):
 	def read(self, parent, value):
 		file = parent.file
 		file.seek(value)
@@ -648,7 +774,7 @@ class FDSelectConverter:
 		pass
 
 
-class ROSConverter(BaseConverter):
+class ROSConverter(SimpleConverter):
 	def xmlWrite(self, xmlWriter, name, value):
 		registry, order, supplement = value
 		xmlWriter.simpletag(name, [('Registry', registry), ('Order', order),
@@ -718,6 +844,24 @@ privateDictOperators = [
 	(19,       'Subrs',              'number',       None,      SubrsConverter()),
 ]
 
+def addConverters(table):
+	for i in range(len(table)):
+		op, name, arg, default, conv = table[i]
+		if conv is not None:
+			continue
+		if arg in ("delta", "array"):
+			conv = ArrayConverter()
+		elif arg == "number":
+			conv = NumberConverter()
+		elif arg == "SID":
+			conv = SimpleConverter()
+		else:
+			assert 0
+		table[i] = op, name, arg, default, conv
+
+addConverters(privateDictOperators)
+addConverters(topDictOperators)
+
 
 class TopDictDecompiler(psCharStrings.DictDecompiler):
 	operators = buildOperatorDict(topDictOperators)
@@ -740,20 +884,21 @@ class DictCompiler:
 			if value is None:
 				continue
 			conv = dictObj.converters[name]
-			if conv:
-				value = conv.write(dictObj, value)
+			value = conv.write(dictObj, value)
 			if value == dictObj.defaults.get(name):
 				continue
 			rawDict[name] = value
 		self.rawDict = rawDict
 	
-	def setPos(self, pos):
+	def setPos(self, pos, endPos):
 		pass
 	
 	def getDataLength(self):
-		return len(self.compile())
+		return len(self.compile("getDataLength"))
 	
-	def compile(self):
+	def compile(self, reason):
+		if DEBUG:
+			print "-- compiling %s for %s" % (self.__class__.__name__, reason)
 		rawDict = self.rawDict
 		data = []
 		for name in self.dictObj.order:
@@ -776,7 +921,7 @@ class DictCompiler:
 		return "".join(data)
 	
 	def toFile(self, file):
-		file.write(self.compile())
+		file.write(self.compile("toFile"))
 	
 	def arg_number(self, num):
 		return encodeNumber(num)
@@ -832,8 +977,8 @@ class PrivateDictCompiler(DictCompiler):
 	
 	opcodes = buildOpcodeDict(privateDictOperators)
 	
-	def setPos(self, pos):
-		size = len(self.compile())
+	def setPos(self, pos, endPos):
+		size = endPos - pos
 		self.parent.rawDict["Private"] = size, pos
 		self.pos = pos
 	
@@ -846,7 +991,7 @@ class PrivateDictCompiler(DictCompiler):
 
 class BaseDict:
 	
-	def __init__(self, strings, file, offset):
+	def __init__(self, strings=None, file=None, offset=None):
 		self.rawDict = {}
 		if DEBUG:
 			print "loading %s at %s" % (self.__class__.__name__, offset)
@@ -876,8 +1021,7 @@ class BaseDict:
 		if value is None:
 			raise AttributeError, name
 		conv = self.converters[name]
-		if conv is not None:
-			value = conv.read(self, value)
+		value = conv.read(self, value)
 		setattr(self, name, value)
 		return value
 	
@@ -888,14 +1032,13 @@ class BaseDict:
 			value = getattr(self, name, None)
 			if value is None:
 				continue
-			conv = self.converters.get(name)
-			if conv is not None:
-				conv.xmlWrite(xmlWriter, name, value)
-			else:
-				if isinstance(value, ListType):
-					value = " ".join(map(str, value))
-				xmlWriter.simpletag(name, value=value)
-				xmlWriter.newline()
+			conv = self.converters[name]
+			conv.xmlWrite(xmlWriter, name, value)
+	
+	def fromXML(self, (name, attrs, content)):
+		conv = self.converters[name]
+		value = conv.xmlRead((name, attrs, content), self)
+		setattr(self, name, value)
 
 
 class TopDict(BaseDict):
@@ -906,7 +1049,7 @@ class TopDict(BaseDict):
 	decompilerClass = TopDictDecompiler
 	compilerClass = TopDictCompiler
 	
-	def __init__(self, strings, file, offset, GlobalSubrs):
+	def __init__(self, strings=None, file=None, offset=None, GlobalSubrs=None):
 		BaseDict.__init__(self, strings, file, offset)
 		self.GlobalSubrs = GlobalSubrs
 	
@@ -932,6 +1075,7 @@ class TopDict(BaseDict):
 		BaseDict.toXML(self, xmlWriter, progress)
 	
 	def decompileAllCharStrings(self):
+		# XXX only when doing ttdump -i?
 		for charString in self.CharStrings.values():
 			charString.decompile()
 
@@ -952,7 +1096,7 @@ class IndexedStrings:
 		if file is None:
 			strings = []
 		else:
-			strings = list(Index(file, "IndexedStrings"))
+			strings = list(Index(file))
 		self.strings = strings
 	
 	def getCompiler(self):

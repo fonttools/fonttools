@@ -200,6 +200,9 @@ def encodeFloat(f):
 	return d
 
 
+class CharStringCompileError(Exception): pass
+
+
 class T2CharString(ByteCodeBase):
 	
 	operandEncoding = t2OperandEncoding
@@ -229,20 +232,35 @@ class T2CharString(ByteCodeBase):
 	def compile(self):
 		if self.bytecode is not None:
 			return
+		if self.program[-1] not in ("endchar", "return", "callsubr", "callgsubr", "seac"):
+			print "XXX", self.program
+			assert 0, "illegal CharString"
 		bytecode = []
 		opcodes = self.opcodes
-		for token in self.program:
+		program = self.program
+		i = 0
+		end = len(program)
+		while i < end:
+			token = program[i]
+			i = i + 1
 			tp = type(token)
 			if tp == types.StringType:
-				if opcodes.has_key(token):
+				try:
 					bytecode.extend(map(chr, opcodes[token]))
-				else:
-					bytecode.append(token)  # hint mask
+				except KeyError:
+					raise CharStringCompileError, "illegal operator: %s" % token
+				if token in ('hintmask', 'cntrmask'):
+					bytecode.append(program[i])  # hint mask
+					i = i + 1
 			elif tp == types.IntType:
 				bytecode.append(encodeIntT2(token))
 			else:
 				assert 0, "unsupported type: %s" % tp
-		bytecode = "".join(bytecode)
+		try:
+			bytecode = "".join(bytecode)
+		except TypeError:
+			print bytecode
+			raise
 		self.setBytecode(bytecode)
 	
 	def needsDecompilation(self):
@@ -321,6 +339,31 @@ class T2CharString(ByteCodeBase):
 					args = []
 				else:
 					args.append(token)
+	
+	def fromXML(self, (name, attrs, content)):
+		from fontTools.misc.textTools import binary2num
+		content = "".join(content)
+		content = content.split()
+		program = []
+		end = len(content)
+		i = 0
+		while i < end:
+			token = content[i]
+			i = i + 1
+			try:
+				token = int(token)
+			except ValueError:
+				program.append(token)
+				if token in ('hintmask', 'cntrmask'):
+					mask = content[i]
+					maskBytes = ""
+					for j in range(0, len(mask), 8):
+						maskBytes = maskBytes + chr(binary2num(mask[j:j+8]))
+					program.append(maskBytes)
+					i = i + 1
+			else:
+				program.append(token)
+		self.setProgram(program)
 
 
 t1Operators = [
@@ -414,6 +457,8 @@ class SimpleT2Decompiler:
 				pushToStack(token)
 		if needsDecompilation:
 			charString.setProgram(program)
+			if program[-1] not in ("endchar", "return", "callsubr", "callgsubr", "seac"):
+				print "XXX", program
 			assert program[-1] in ("endchar", "return", "callsubr", "callgsubr", "seac")
 		del self.callingStack[-1]
 	
