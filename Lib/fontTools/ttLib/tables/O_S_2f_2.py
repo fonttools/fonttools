@@ -58,9 +58,9 @@ OS2_format_0 = """
 	fsSelection:            H       # font selection flags
 	fsFirstCharIndex:       H       # first unicode character index
 	fsLastCharIndex:        H       # last unicode character index
-	usTypoAscender:         H       # typographic ascender
-	usTypoDescender:        H       # typographic descender
-	usTypoLineGap:          H       # typographic line gap
+	sTypoAscender:          h       # typographic ascender
+	sTypoDescender:         h       # typographic descender
+	sTypoLineGap:           h       # typographic line gap
 	usWinAscent:            H       # Windows ascender
 	usWinDescent:           H       # Windows descender
 """
