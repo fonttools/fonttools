@@ -734,6 +734,7 @@ class cmap_format_unknown(CmapSubtable):
 		writer.newline()
 	
 	def decompile(self, data, ttFont):
+		self.language = 0  # dummy value
 		self.data = data
 	
 	def compile(self, ttFont):
