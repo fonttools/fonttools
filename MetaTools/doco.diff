@@ -1,0 +1,108 @@
+--- htmlorig/gpos.htm   Fri Apr  5 23:55:58 2002
++++ htmlbak/gpos.htm    Tue May  7 09:53:30 2002
+@@ -270,7 +270,7 @@
+ 
+ <P>Example 2 at the end of this chapter shows a SinglePosFormat1 subtable used to adjust the placement of subscript glyphs.
+ 
+-<P>SinglePosFormat1 subtable: Single positioning value
++<P><I>SinglePosFormat1 subtable: Single positioning value</I>
+ <P>
+ 
+ <TABLE BGCOLOR="#F0F0F0" WIDTH=460 BORDER=0 CELLPADDING=3>
+@@ -312,7 +312,7 @@
+ 
+ <P>Example 3 at the end of this chapter shows how to adjust the spacing of three dash glyphs with a SinglePosFormat2 subtable.
+ 
+-<P>SinglePosFormat2 subtable: Array of positioning values
++<P><I>SinglePosFormat2 subtable: Array of positioning values</I>
+ <P>
+ 
+ <TABLE BGCOLOR="#F0F0F0" WIDTH=460 BORDER=0 CELLPADDING=3>
+@@ -392,8 +392,8 @@
+ <TR><TD CLASS=tab VALIGN=TOP>uint16</TD>
+ <TD CLASS=tab VALIGN=TOP>PairSetCount</TD>
+ <TD CLASS=tab>Number of PairSet tables</TD></TR>
+-<TR><TD CLASS=tab VALIGN=TOP>ValueRecord</TD>
+-<TD CLASS=tab VALIGN=TOP>PairSet<BR>[Offset]</TD>
++<TR><TD CLASS=tab VALIGN=TOP>Offset</TD>
++<TD CLASS=tab VALIGN=TOP>PairSet<BR>[PairSetCount]</TD>
+ <TD CLASS=tab>Array of offsets to PairSet tables-from beginning of PairPos subtable-ordered by Coverage Index</TD></TR>
+ </TABLE>
+ 
+@@ -855,7 +855,8 @@
+ <TD CLASS=tab>Offset to Base Mark Coverage table-from beginning of MarkMarkPos subtable</TD></TR>
+ <TR><TD CLASS=tab VALIGN=TOP>uint16</TD>
+ <TD CLASS=tab VALIGN=TOP>ClassCount</TD>
+-<TD CLASS=tab>Number of Combining Mark classes defined<TR>
++<TD CLASS=tab>Number of Combining Mark classes defined</TD>
++<TR>
+ <TD CLASS=tab VALIGN=TOP>Offset</TD>
+ <TD CLASS=tab VALIGN=TOP>Mark1Array</TD>
+ <TD CLASS=tab VALIGN=TOP>Offset to MarkArray table for Mark1-from beginning of MarkMarkPos subtable</TD></TR>
+@@ -1386,19 +1387,19 @@
+ <TD CLASS=tab VALIGN=TOP>BacktrackGlyphCount</TD>
+ <TD CLASS=tab>Number of glyphs in the backtracking sequence</TD></TR>
+ <TR><TD CLASS=tab VALIGN=TOP>Offset</TD>
+-<TD CLASS=tab VALIGN=TOP>Coverage[BacktrackGlyphCount]</TD>
++<TD CLASS=tab VALIGN=TOP>BacktrackCoverage[BacktrackGlyphCount]</TD>
+ <TD CLASS=tab>Array of offsets to coverage tables in backtracking sequence, in glyph sequence order</TD></TR>
+ <TR><TD CLASS=tab VALIGN=TOP>uint16</TD>
+ <TD CLASS=tab VALIGN=TOP>InputGlyphCount</TD>
+ <TD CLASS=tab>Number of glyphs in input sequence</TD></TR>
+ <TR><TD CLASS=tab VALIGN=TOP>Offset</TD>
+-<TD CLASS=tab VALIGN=TOP>Coverage[InputGlyphCount]</TD>
++<TD CLASS=tab VALIGN=TOP>InputCoverage[InputGlyphCount]</TD>
+ <TD CLASS=tab>Array of offsets to coverage tables in input sequence, in glyph sequence order</TD></TR>
+ <TR><TD CLASS=tab VALIGN=TOP>uint16</TD>
+ <TD CLASS=tab VALIGN=TOP>LookaheadGlyphCount</TD>
+ <TD CLASS=tab>Number of glyphs in lookahead sequence</TD></TR>
+ <TR><TD CLASS=tab VALIGN=TOP>Offset</TD>
+-<TD CLASS=tab VALIGN=TOP>Coverage[LookaheadGlyphCount]</TD>
++<TD CLASS=tab VALIGN=TOP>LookaheadCoverage[LookaheadGlyphCount]</TD>
+ <TD CLASS=tab>Array of offsets to coverage tables in lookahead sequence, in glyph sequence order</TD></TR>
+ <TR><TD CLASS=tab VALIGN=TOP>uint16</TD>
+ <TD CLASS=tab VALIGN=TOP>PosCount</TD>
+diff -u htmlorig/gsub.htm htmlbak/gsub.htm
+--- htmlorig/gsub.htm   Fri Apr  5 23:55:58 2002
++++ htmlbak/gsub.htm    Tue May  7 09:53:17 2002
+@@ -758,7 +758,7 @@
+ 
+ <A HREF="#EX9"><P>Example 9</A> at the end of this chapter substitutes swash glyphs for two out of three glyphs in a sequence. 
+ 
+-<P><BR><I>ChainContextSubstFormat3 subtable: Coverage-based context glyph substitution</I><P>
++<P><BR><I>ContextSubstFormat3 subtable: Coverage-based context glyph substitution</I><P>
+ 
+ <TABLE BGCOLOR="#F0F0F0" WIDTH=460 BORDER=0 CELLPADDING=3>
+ <TR>
+@@ -880,7 +880,7 @@
+ <TD CLASS=tab VALIGN=TOP>LookaheadGlyphCount</TD>
+ <TD CLASS=tab>Total number of glyphs in the look ahead sequence (number of glyphs to be matched after the input sequence)</TD></TR>
+ <TR><TD CLASS=tab VALIGN=TOP>GlyphID</TD>
+-<TD CLASS=tab VALIGN=TOP>LookAhead<BR>[LookAheadGlyphCount]</TD>
++<TD CLASS=tab VALIGN=TOP>Lookahead<BR>[LookAheadGlyphCount]</TD>
+ <TD CLASS=tab VALIGN=TOP>Array of lookahead GlyphID's (to be matched after the input sequence)</TD></TR>
+ <TR><TD CLASS=tab VALIGN=TOP>uint16</TD>
+ <TD CLASS=tab VALIGN=TOP>SubstCount</TD>
+@@ -1023,19 +1023,19 @@
+ <TD CLASS=tab VALIGN=TOP>BacktrackGlyphCount</TD>
+ <TD CLASS=tab>Number of glyphs in the backtracking sequence</TD></TR>
+ <TR><TD CLASS=tab VALIGN=TOP>Offset</TD>
+-<TD CLASS=tab VALIGN=TOP>Coverage[BacktrackGlyphCount]</TD>
++<TD CLASS=tab VALIGN=TOP>BacktrackCoverage[BacktrackGlyphCount]</TD>
+ <TD CLASS=tab>Array of offsets to coverage tables in backtracking sequence, in glyph sequence order</TD></TR>
+ <TR><TD CLASS=tab VALIGN=TOP>uint16</TD>
+ <TD CLASS=tab VALIGN=TOP>InputGlyphCount</TD>
+ <TD CLASS=tab>Number of glyphs in input sequence</TD></TR>
+ <TR><TD CLASS=tab VALIGN=TOP>Offset</TD>
+-<TD CLASS=tab VALIGN=TOP>Coverage[InputGlyphCount]</TD>
++<TD CLASS=tab VALIGN=TOP>InputCoverage[InputGlyphCount]</TD>
+ <TD CLASS=tab>Array of offsets to coverage tables in input sequence, in glyph sequence order</TD></TR>
+ <TR><TD CLASS=tab VALIGN=TOP>uint16</TD>
+ <TD CLASS=tab VALIGN=TOP>LookaheadGlyphCount</TD>
+ <TD CLASS=tab>Number of glyphs in lookahead sequence</TD></TR>
+ <TR><TD CLASS=tab VALIGN=TOP>Offset</TD>
+-<TD CLASS=tab VALIGN=TOP>Coverage[LookaheadGlyphCount]</TD>
++<TD CLASS=tab VALIGN=TOP>LookaheadCoverage[LookaheadGlyphCount]</TD>
+ <TD CLASS=tab>Array of offsets to coverage tables in lookahead sequence, in glyph sequence order</TD></TR>
+ <TR><TD CLASS=tab VALIGN=TOP>uint16</TD>
+ <TD CLASS=tab VALIGN=TOP>SubstCount</TD>
