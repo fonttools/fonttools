@@ -9,8 +9,8 @@ headFormat = """
 		>	# big endian
 		tableVersion:		16.16F
 		fontRevision:		16.16F
-		checkSumAdjustment:	i
-		magicNumber:		i
+		checkSumAdjustment:	I
+		magicNumber:		I
 		flags:				H
 		unitsPerEm:			H
 		created:			8s
