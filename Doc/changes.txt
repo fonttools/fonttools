@@ -1,3 +1,20 @@
+FontTools Version 1.0 beta 1 (released August 10 2001)
+
+- Reorganized the command line interface for ttDump.py and ttCompile.py,
+  they now behave more like "normal" command line tool, in that they accept
+  multiple input files for batch processing. 
+- ttDump.py and ttCompile.py don't silently override files anymore, but ask
+  before doing so. Can be overridden by -f.
+- Added -d <destination-directory> option to both ttDump.py and ttCompile.py.
+- Installation is now done with distutils. (Needs work for environments without
+  compilers.)
+- Updated installation instructions.
+- Added some workarounds so as to handle certain buggy fonts more gracefully.
+- Updated Unicode table to Unicode 3.0 (Thanks Antoine!)
+- Included a Python script by Adam Twardoch that adds some useful stuff to the
+  Windows registry.
+- Moved the project to SourceForge.
+
 FontTools Version 1.0 alpha 6 (released March 15 2000)
 
 - Big reorganization: made ttLib a subpackage of the new fontTools package,
