@@ -1,5 +1,5 @@
 /*
-**  Copyright 1996-2001 by Letterror: Just van Rossum, Den Haag, The Netherlands.
+**  Copyright 1996-2001 by Letterror: Just van Rossum, The Netherlands.
 **	
 **  Open source.
 **
@@ -30,7 +30,7 @@ eexec_decrypt(PyObject *self, PyObject *args)
 	unsigned char * outbuf;
 	unsigned long counter, insize;
 	
-	if (!PyArg_ParseTuple(args, "s#h", &inbuf, &insize, &R))
+	if (!PyArg_ParseTuple(args, "s#H", &inbuf, &insize, &R))
 		return NULL;
 	
 	if ((outbuf = malloc(insize)) == NULL)
@@ -63,7 +63,7 @@ eexec_encrypt(PyObject *self, PyObject *args)
 	unsigned char * outbuf;
 	unsigned long counter, insize;
 	
-	if (!PyArg_ParseTuple(args, "s#h", &inbuf, &insize, &R))
+	if (!PyArg_ParseTuple(args, "s#H", &inbuf, &insize, &R))
 		return NULL;
 	
 	if ((outbuf = malloc(insize)) == NULL)
