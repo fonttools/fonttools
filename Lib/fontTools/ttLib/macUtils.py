@@ -5,8 +5,12 @@ import os
 if os.name <> "mac":
 	raise ImportError, "This module is Mac-only!"
 
-import Res, macfs
 import cStringIO
+import macfs
+try:
+	from Carbon import Res
+except ImportError:
+	import Res
 
 
 def getSFNTResIndices(path):
