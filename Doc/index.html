@@ -9,8 +9,10 @@
 
 <H1>FontTools</H1>
 
-FontTools is a suite of tools and libraries for manipulating fonts. It is written
-in Python and has a Python-style, open-source licence -- see LICENSE.txt.
+<A HREF="http://fonttools.sourceforge.net/">FontTools</A> is a suite of tools and
+libraries for manipulating fonts. It is written
+in Python and has a BSD-style, open-source licence -- see LICENSE.txt. It's hosted at
+<A HREF="http://sourceforge.net/">sourceforge.net</A>.
 
 <P>
 It currently reads and writes TrueType font files, reads PostScript Type 1 fonts
@@ -32,63 +34,41 @@ You need the following software to use FontTools:
 
 <UL>
 <LI>
-  Python 1.5.1 or newer. The latest version 1.5.x is here:
-  <A HREF="http://www.python.org/1.5/">http://www.python.org/1.5/</A>
+  <B>Python</B>. The fresh versions as well as older versions (You need 1.5.1 or higher) can be obtained here:
+  <A HREF="http://www.python.org/download/">http://www.python.org/download/</A>
+  or here:
+  <A HREF="http://sourceforge.net/projects/python/">http://sourceforge.net/projects/python/</A>
   
-  <P>Windows: grab the Windows installer, run the full install
-  <BR>Un*x: follow the build instructions
+  <P>Windows: grab the Windows installer, run the full install.
+  <BR>Un*x: follow the build instructions.
   <BR>Linux: maybe you already *have* Python: check whether you have
   version 1.5.1 or newer.
   <BR>MacOS: grab the installer, run "Easy Install"
 
 <P>
 <LI>
-  The Numeric Python extension (you don't need this under MacOS, since 	it's
-  included in the MacPython installer).
-  
-  <BR>The compiled Win32 version:
-    <A HREF="ftp://ftp-icf.llnl.gov/pub/python/LLNLDistribution11.zip">ftp://ftp-icf.llnl.gov/pub/python/LLNLDistribution11.zip</A>
-
-  <BR>The source distribution is here:
-    <A HREF="ftp://ftp-icf.llnl.gov/pub/python/LLNLDistribution11.tgz">ftp://ftp-icf.llnl.gov/pub/python/LLNLDistribution11.tgz</A>
-
-  <BR>Included in this archive is a directory called "Numeric" (but do unzip 
-  the whole archive, it's needed for the install script!). 
-  <BR>On Linux or other Unices: follow the build instructions.
-  
-  <BR>On Windows & Unix:
-  In the "Numeric" directory there is a script called "installthis.py". 
-  If you've installed Python successfully, you can just run it, it will 
-  install (copy!) the neccesary stuff to the Python directory all by itself.
-  
-  <P><B>Note</B> that the above links are not pointing to the latest version! Newer
-  versions use a different install procedure, which recently still had some problems.
-  If you know what you're doing, you can get the latest Numeric Python at
-    <A HREF="http://numpy.sourceforge.net/">http://numpy.sourceforge.net/</A>.
-
+  The <B>Numeric Python</B> extension (you don't need this under MacOS, since 	it's
+  included in the MacPython installer). Get a fresh version from the download page,
+  linked from here:
+    <A HREF="http://sourceforge.net/projects/numpy/">http://sourceforge.net/projects/numpy/</A>
+  <P>Windows: grab the "Numeric-*.exe" archive, it's an installer. Make sure the
+  Python version in the archive name (eg. "2.1") matches the Python version you have.
+  <BR>Linux/Un*x: get a source archive and run this command from the unpacked directory:
+  <BR><TT>python ./setup.py install</TT>
 <P>
 <LI>
-  xmlproc (a Python based XML parser) from:
-    <A HREF="http://www.stud.ifi.uio.no/%7Elarsga/download/python/xml/xmlproc.html">http://www.stud.ifi.uio.no/~larsga/download/python/xml/xmlproc.html</A>
+  <B>PyXML</B>, a set of XML tools:
+    <A HREF="http://sourceforge.net/projects/pyxml/">http://sourceforge.net/projects/pyxml/</A>
 
-  <BR>I don't know the official install procedure, but the archive should contain 
-  a directory called "xml", move that directory to the Python directory and 
-  you should be all set. To make sure: start python (python.exe on Win32) 
-  and type at the ">>>" prompt:
-  <PRE>>>> import xml.parsers.xmlproc.xmlproc</PRE>
-  followed by a return. If that doesn't cause an error, you're all set.
-  
-  <P><B>Note</B> that the default xmlproc distribution depends on Python 1.5.2 (by oversight, 
-  not intend) but there is an alternative distribution that does work under Python 1.5.1.
-
-  <P>xmlproc is also part of the xml-sig distribution.
+  <BR>Installation should be very similar to installing Numeric Python, see above.
   
 </UL>
 
 
-Now run the "install.py" script from the FontTools archive. 
-This will make sure Python knows where to find FontTools. It doesn't copy anything.
-(Note that the "install.py" script has only been lightly tested.)
+Now run the "setup.py" script from the FontTools archive. This will install
+all the modules in the right places, as well as tries to compile the one (optional)
+C extension contained in FontTools. (XXX: need precompiled Mac and Windows binaries,
+*or* a way to skip compilation when there's no compiler available.)
 
 <P>Additional Mac instructions:
 De-binhex "TTX.rsrc.hqx" by dropping it onto StuffIt expander. (Or use your
@@ -116,14 +96,9 @@ an input file name and optionally an output file name. There are some extra
 options which are explained by the 'usage' text; use the -h option to display 
 it.
 
-<P>If you don't provide an output file name, an output file name will be contructed 
-from the input file name: foo.ttf becomes foo.ttx in ttDump.py and vice versa 
-for ttCompile.py. <B>WARNING</B>: these tools will silently overwrite existing files!
-
 <P>Adam Twardoch contributed a Windows registry script (ttx_shellext_win32.py) which
 makes the two above tools available under the Right Mouse Button. I haven't tested 
 these myself, but I'm very interested in hearing about the results!
-
 
 <H3>Note about glyph names and TrueType GlyphID's</H3>
 
@@ -145,18 +120,20 @@ important, ttLib maintains an ordered list of glyph names in the font.
 
 <H3>Feedback</H3>
 
-Please direct all feedback to <A HREF="mailto:just@letterror.com">just@letterror.com</A>.
-I hope to create a discussion mailing list at some point.
+Please join the fonttools-discussion mailing list at SourceForge. Subscription
+info can be found if you follow the "Mailing Lists" link at the
+<A HREF="http://sourceforge.net/projects/fonttools/">SourceForge project page</A>.
+You can also email me directly at <A HREF="mailto:just@letterror.com">just@letterror.com</A>.
+
+<P>
+If you want to follow the development of FontTools closely, or would like to
+contribute, you can also subscribe to the fonttools-checkins mailing list.
 
 <H3>Anonymous CVS-access</H3>
 
-The FontTools sources are also accessible through CVS:
-<PRE>
-    :pserver:fonttools@rietveld.petr.nl:/usr/local/cvsanon
-    password: fontypython
-    module name: FontTools
-</PRE>
-
+The FontTools sources are also accessible through CVS, see the
+the <A HREF="http://sourceforge.net/projects/fonttools/">SourceForge project
+page</A>. Let me know if you'd like to become a co-developer.
 
 <H3>Developer documentation</H3>
 
@@ -170,8 +147,8 @@ TTX -- A simple Mac app that converts TrueType (or OpenType) fonts to TTX format
 <H3>Command line tools</H3>
 
 <UL>
-	<LI>ttDump -- dumps a TrueType (or OpenType) font file to TTX format.
-	<LI>ttCompile -- compiles a TTX file back into a TTF (or OTF) file.
+	<LI>ttDump.py -- dumps a TrueType (or OpenType) font file to TTX format.
+	<LI>ttCompile.py -- compiles a TTX file back into a TTF (or OTF) file.
 </UL>
 
 <P>
@@ -197,20 +174,6 @@ Mac-specific
 	<LI>fontTools.nfntLib -- Reads Mac NFNT bitmap font resources.
 </UL>
 
-<H3>The Future</H3>
-
-In /Lib/fontTools/objects you'll find several objects-under-construction which will be
-(and partially are) a generic outline font implementation, offering transparent access
-to various font formats (currently only Type 1 and TTF/OTF). Plans:
-<UL>
-	<LI>Develop this into a complete font compiler for at least Type 1, TrueType and
-	OpenType.
-	<LI>To make the above possible, develop a high level XML-based format to be used
-	as source code for font development. This "language" will be called FDL -- Font 
-	Definition Language. For some (rather old) blurb about these ideas, see
-	<A HREF="http://www.letterror.com/fdl/">http://www.letterror.com/fdl/</A>.
-</UL>
-
 <H3>Thank-you's</H3>
 
 (in alphabetical order) 
@@ -221,12 +184,7 @@ Guido van Rossum, Adam Twardoch.
 
 <H3>Copyrights</H3>
 
-FontTools/TTX -- 1999-2000 Just van Rossum; Letterror (just@letterror.com) 
-<BR>Python -- Copyright 1991-1995 by Stichting Mathematisch Centrum, Amsterdam, 
-  The Netherlands. 
-<BR>Numeric Python -- Copyright (c) 1996. The Regents of the
-  University of California. All rights reserved. 
-<BR>xmlproc -- Lars Marius Garshol
+FontTools/TTX -- 1999-2001 Just van Rossum; Letterror (just@letterror.com) 
 
 </BODY>
 </HTML>
