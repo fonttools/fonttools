@@ -159,21 +159,21 @@ class SFNTWriter:
 
 sfntDirectoryFormat = """
 		> # big endian
-		sfntVersion: 	4s
-		numTables:		H		# number of tables
-		searchRange:	H		# (max2 <= numTables)*16
-		entrySelector:	H		# log2(max2 <= numTables)
-		rangeShift:		H		# numTables*16-searchRange
+		sfntVersion:    4s
+		numTables:      H    # number of tables
+		searchRange:    H    # (max2 <= numTables)*16
+		entrySelector:  H    # log2(max2 <= numTables)
+		rangeShift:     H    # numTables*16-searchRange
 """
 
 sfntDirectorySize = sstruct.calcsize(sfntDirectoryFormat)
 
 sfntDirectoryEntryFormat = """
 		> # big endian
-		tag:		4s
-		checkSum:	l
-		offset:		l
-		length:		l
+		tag:            4s
+		checkSum:       l
+		offset:         l
+		length:         l
 """
 
 sfntDirectoryEntrySize = sstruct.calcsize(sfntDirectoryEntryFormat)
