@@ -1,7 +1,7 @@
 """cffLib.py -- read/write tools for Adobe CFF fonts."""
 
 #
-# $Id: cffLib.py,v 1.22 2002-05-24 09:58:03 jvr Exp $
+# $Id: cffLib.py,v 1.23 2002-05-24 10:35:13 jvr Exp $
 #
 
 import struct, sstruct
@@ -689,11 +689,12 @@ class CharsetCompiler:
 	
 	def __init__(self, strings, charset, parent):
 		assert charset[0] == '.notdef'
-		format = 0  # XXX!
-		data = [packCard8(format)]
-		for name in charset[1:]:
-			data.append(packCard16(strings.getSID(name)))
-		self.data = "".join(data)
+		data0 = packCharset0(charset, strings)
+		data = packCharset(charset, strings)
+		if len(data) < len(data0):
+			self.data = data
+		else:
+			self.data = data0
 		self.parent = parent
 	
 	def setPos(self, pos, endPos):
@@ -705,6 +706,44 @@ class CharsetCompiler:
 	def toFile(self, file):
 		file.write(self.data)
 
+
+def packCharset0(charset, strings):
+	format = 0
+	data = [packCard8(format)]
+	for name in charset[1:]:
+		data.append(packCard16(strings.getSID(name)))
+	return "".join(data)
+
+def packCharset(charset, strings):
+	format = 1
+	data = [packCard8(format)]
+	ranges = []
+	first = None
+	end = 0
+	for name in charset[1:]:
+		SID = strings.getSID(name)
+		if first is None:
+			first = SID
+		elif end + 1 <> SID:
+			nLeft = end - first
+			if nLeft > 255:
+				format = 2
+			ranges.append((first, nLeft))
+			first = SID
+		end = SID
+	nLeft = end - first
+	if nLeft > 255:
+		format = 2
+	ranges.append((first, nLeft))
+	
+	if format == 1:
+		nLeftFunc = packCard8
+	else:
+		nLeftFunc = packCard16
+	for first, nLeft in ranges:
+		data.append(packCard16(first) + nLeftFunc(nLeft))
+	data = "".join(data)
+	return data
 
 def parseCharset0(numGlyphs, file, strings):
 	charset = [".notdef"]
