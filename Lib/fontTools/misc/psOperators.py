@@ -1,7 +1,5 @@
-import string
-
-
 _accessstrings = {0: "", 1: "readonly", 2: "executeonly", 3: "noaccess"}
+
 
 class ps_object:
 	
@@ -328,15 +326,15 @@ class PSOperators:
 	def ps_readstring(self,
 				ps_boolean = ps_boolean,
 				len = len):
-		string = self.pop('stringtype')
-		oldstr = string.value
+		s = self.pop('stringtype')
+		oldstr = s.value
 		file = self.pop('filetype')
 		#pad = file.value.read(1)
 		# for StringIO, this is faster
 		file.value.pos = file.value.pos + 1
 		newstr = file.value.read(len(oldstr))
-		string.value = newstr
-		self.push(string)
+		s.value = newstr
+		self.push(s)
 		self.push(ps_boolean(len(oldstr) == len(newstr)))
 	
 	def ps_known(self):
@@ -390,14 +388,14 @@ class PSOperators:
 	
 	def ps_anchorsearch(self):
 		seek = self.pop('stringtype')
-		string = self.pop('stringtype')
+		s = self.pop('stringtype')
 		seeklen = len(seek.value)
-		if string.value[:seeklen] == seek.value:
-			self.push(ps_string(string.value[seeklen:]))
+		if s.value[:seeklen] == seek.value:
+			self.push(ps_string(s.value[seeklen:]))
 			self.push(seek)
 			self.push(ps_boolean(1))
 		else:
-			self.push(string)
+			self.push(s)
 			self.push(ps_boolean(0))
 	
 	def ps_array(self):
