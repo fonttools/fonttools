@@ -42,12 +42,13 @@ Dumping 'prep' table...
 """
 
 #
-# $Id: __init__.py,v 1.36 2002-07-23 16:43:55 jvr Exp $
+# $Id: __init__.py,v 1.37 2003-08-22 18:52:22 jvr Exp $
 #
 
+import sys
 import os
 import string
-import types
+haveMacSupport = sys.platform in ("mac", "darwin")
 
 
 class TTLibError(Exception): pass
@@ -105,8 +106,9 @@ class TTFont:
 		if not file:
 			self.sfntVersion = sfntVersion
 			return
-		if type(file) == types.StringType:
-			if os.name == "mac" and res_name_or_index is not None:
+		if not hasattr(file, "read"):
+			# assume file is a string
+			if haveMacSupport and res_name_or_index is not None:
 				# on the mac, we deal with sfnt resources as well as flat files
 				import macUtils
 				if res_name_or_index == 0:
@@ -138,7 +140,7 @@ class TTFont:
 		file will we made instead of a flat .ttf file. 
 		"""
 		from fontTools.ttLib import sfnt
-		if type(file) == types.StringType:
+		if not hasattr(file, "write"):
 			closeStream = 1
 			if os.name == "mac" and makeSuitcase:
 				import macUtils
@@ -184,7 +186,6 @@ class TTFont:
 					if tag in tables:
 						tables.remove(tag)
 		numTables = len(tables)
-		numGlyphs = self['maxp'].numGlyphs
 		if progress:
 			progress.set(0, numTables)
 			idlefunc = getattr(progress, "idle", None)
@@ -582,7 +583,7 @@ def getTableModule(tag):
 	import tables
 	pyTag = tagToIdentifier(tag)
 	try:
-		module = __import__("fontTools.ttLib.tables." + pyTag)
+		__import__("fontTools.ttLib.tables." + pyTag)
 	except ImportError:
 		return None
 	else:
@@ -661,7 +662,7 @@ def identifierToTag(ident):
 			tag = tag + ident[i]
 		else:
 			# assume hex
-			tag = tag + chr(string.atoi(ident[i:i+2], 16))
+			tag = tag + chr(int(ident[i:i+2], 16))
 	# append trailing spaces
 	tag = tag + (4 - len(tag)) * ' '
 	return tag
