@@ -26,10 +26,15 @@ class table__k_e_r_n(DefaultTable.DefaultTable):
 		tablesIndex = []
 		self.kernTables = []
 		for i in range(nTables):
-			version, length = struct.unpack(">HH", data[:4])
+			if self.version == 1.0:
+				# Apple
+				length, coverage, tupleIndex = struct.unpack(">lHH", data[:8])
+				version = coverage & 0xff
+			else:
+				version, length = struct.unpack(">HH", data[:4])
 			length = int(length)
 			if not kern_classes.has_key(version):
-				subtable = KernTable_format_unkown()
+				subtable = KernTable_format_unkown(version)
 			else:
 				subtable = kern_classes[version]()
 			subtable.decompile(data[:length], ttFont)
@@ -40,7 +45,7 @@ class table__k_e_r_n(DefaultTable.DefaultTable):
 		nTables = len(self.kernTables)
 		if self.version == 1.0:
 			# Apple's new format.
-			data = struct.pack(">ll", self.version * 0x1000, nTables)
+			data = struct.pack(">ll", self.version * 0x10000, nTables)
 		else:
 			data = struct.pack(">HH", self.version, nTables)
 		for subtable in self.kernTables:
@@ -63,7 +68,7 @@ class table__k_e_r_n(DefaultTable.DefaultTable):
 			self.kernTables = []
 		format = safeEval(attrs["format"])
 		if not kern_classes.has_key(format):
-			subtable = KernTable_format_unkown()
+			subtable = KernTable_format_unkown(format)
 		else:
 			subtable = kern_classes[format]()
 		self.kernTables.append(subtable)
@@ -87,7 +92,7 @@ class KernTable_format_0:
 			data = data[6:]
 			left, right = int(left), int(right)
 			kernTable[(ttFont.getGlyphName(left), ttFont.getGlyphName(right))] = value
-		assert len(data) == 0
+		assert len(data) == 0, len(data)
 	
 	def compile(self, ttFont):
 		nPairs = len(self.kernTable)
@@ -150,7 +155,7 @@ class KernTable_format_2:
 		self.data = data
 	
 	def compile(self, ttFont):
-		return data
+		return self.data
 	
 	def toXML(self, writer):
 		writer.begintag("kernsubtable", format=2)
@@ -160,27 +165,31 @@ class KernTable_format_2:
 		writer.newline()
 	
 	def fromXML(self, (name, attrs, content), ttFont):
-		self.decompile(readHex(content))
+		self.decompile(readHex(content), ttFont)
 
 
 class KernTable_format_unkown:
+	
+	def __init__(self, format):
+		self.format = format
 	
 	def decompile(self, data, ttFont):
 		self.data = data
 	
 	def compile(self, ttFont):
-		return data
+		return self.data
 	
 	def toXML(self, writer, ttFont):
-		writer.begintag("kernsubtable", format="-1")
+		writer.begintag("kernsubtable", format=self.format)
 		writer.newline()
 		writer.comment("unknown 'kern' subtable format")
+		writer.newline()
 		writer.dumphex(self.data)
 		writer.endtag("kernsubtable")
 		writer.newline()
 	
 	def fromXML(self, (name, attrs, content), ttFont):
-		self.decompile(readHex(content))
+		self.decompile(readHex(content), ttFont)
 
 
 
