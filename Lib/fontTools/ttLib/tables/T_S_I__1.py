@@ -36,6 +36,9 @@ class table_T_S_I__1(DefaultTable.DefaultTable):
 				self.extraPrograms[self.extras[extraCode]] = text
 	
 	def compile(self, ttFont):
+		if not hasattr(self, "glyphPrograms"):
+			self.glyphPrograms = {}
+			self.extraPrograms = {}
 		data = ''
 		indextable = ttFont[self.indextable]
 		glyphNames = ttFont.getGlyphOrder()
