@@ -31,14 +31,13 @@ if os.name == 'mac':
 
 error = 't1Lib.error'
 
-# work in progress
-
 
 class T1Font:
 	
-	"""Type 1 font class. 
-	XXX This is work in progress! For now just use the read()
-	and write() functions as described above, they are stable.
+	"""Type 1 font class.
+	
+	Uses a minimal interpeter that supports just about enough PS to parse
+	Type 1 fonts.
 	"""
 	
 	def __init__(self, path=None):
@@ -51,14 +50,14 @@ class T1Font:
 		self.write(path, self.getData(), type)
 	
 	def getData(self):
+		# XXX Todo: if the data has been converted to Python object,
+		# recreate the PS stream
 		return self.data
 	
 	def __getitem__(self, key):
 		if not hasattr(self, "font"):
 			self.parse()
-			return self.font[key]
-		else:
-			return self.font[key]
+		return self.font[key]
 	
 	def parse(self):
 		from fontTools.misc import psLib
@@ -78,7 +77,7 @@ class T1Font:
 	
 
 
-# public functions
+# low level T1 data read and write functions
 
 def read(path):
 	"""reads any Type 1 font file, returns raw data"""
@@ -163,7 +162,9 @@ def readpfb(path):
 		code = ord(f.read(1))
 		if code in [1, 2]:
 			chunklen = string2long(f.read(4))
-			data.append(f.read(chunklen))
+			chunk = f.read(chunklen)
+			assert len(chunk) == chunklen
+			data.append(chunk)
 		elif code == 3:
 			break
 		else:
@@ -217,7 +218,7 @@ def writelwfn(path, data):
 
 def writepfb(path, data):
 	chunks = findencryptedchunks(data)
-	f = open(dstpath, "wb")
+	f = open(path, "wb")
 	try:
 		for isencrypted, chunk in chunks:
 			if isencrypted:
@@ -231,7 +232,7 @@ def writepfb(path, data):
 	finally:
 		f.close()
 	if os.name == 'mac':
-		fss = macfs.FSSpec(dstpath)
+		fss = macfs.FSSpec(path)
 		fss.SetCreatorType('mdos', 'BINA')
 
 def writeother(path, data, dohex = 0):
