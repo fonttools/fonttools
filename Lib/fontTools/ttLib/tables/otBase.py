@@ -142,16 +142,6 @@ class OTTableWriter:
 		else:
 			return cmp(id(self), id(other))
 	
-	def __len__(self):
-		"""Return the length of this table in bytes, without subtables."""
-		l = 0
-		for item in self.items:
-			if hasattr(item, "getData") or hasattr(item, "getCountData"):
-				l = l + 2  # sizeof(UShort)
-			else:
-				l = l + len(item)
-		return l
-	
 	def _doneWriting(self, internedTables=None):
 		if internedTables is None:
 			internedTables = {}
@@ -190,7 +180,7 @@ class OTTableWriter:
 		pos = 0
 		for table in tables:
 			table.pos = pos
-			pos = pos + len(table)
+			pos = pos + table.getDataLength()
 		
 		data = []
 		for table in tables:
@@ -198,6 +188,16 @@ class OTTableWriter:
 			data.append(tableData)
 		
 		return "".join(data)
+	
+	def getDataLength(self):
+		"""Return the length of this table in bytes, without subtables."""
+		l = 0
+		for item in self.items:
+			if hasattr(item, "getData") or hasattr(item, "getCountData"):
+				l = l + 2  # sizeof(UShort)
+			else:
+				l = l + len(item)
+		return l
 	
 	def getData(self):
 		"""Return the data for this writer/table, without any subtables."""
