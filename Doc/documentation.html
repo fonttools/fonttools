@@ -1,108 +1,53 @@
 <HTML>
 <HEAD>
 
-<TITLE>TTX/FontTools</TITLE>
+<TITLE>TTX Documentation</TITLE>
 
 
 </HEAD>
 <BODY bgcolor="#FFFFFF">
 
-<H1>TTX/FontTools</H1>
+<H3>TTX -- From OpenType and TrueType to XML and Back</H3>
 
-<A HREF="http://fonttools.sourceforge.net/">TTX/FontTools</A> is a
-suite of tools and libraries for manipulating fonts. It is written in
-Python and has a BSD-style, open-source licence -- see LICENSE.txt.
-It's hosted at <A HREF="http://sourceforge.net/">sourceforge.net</A>.
+<A HREF="http://fonttools.sourceforge.net/">TTX</A> is a tool for manipulating TrueType and OpenType fonts. It is written in Python and has a BSD-style, open-source licence -- see LICENSE.txt. Among other things this means you can use it free of charge. It's hosted at <A HREF="http://sourceforge.net/">sourceforge.net</A>.
 
 <P>
-It currently reads and writes TrueType font files, reads PostScript Type 1 fonts
-and more. It contains two command line programs to convert TrueType fonts to an
-XML based format (called TTX) and back. 
+TTX can dump TrueType and OpenType fonts to an XML-based text format, which is also called TTX. TTX files have a .ttx file extension.
 
-<H3>Scope</H3>
+<H3>How to use TTX</H3>
 
-TTX/FontTools' functionality is aimed towards font developers and font tool
-developers. It can of course be used to just access fonts (outlines,
-metrics, etc.) but it is not optimized for that. It will be further
-developed so it can be the core of any font editor. And that's exactly
-what it will be for our upcoming major rewrite of <A
-HREF="http://www.robofog.com/">RoboFog</A>, our (commercial)
-PythonPowered font editor for MacOS.
+The TTX application works can be used in two ways, depending on what platform you run it on:
 
-<H3>Installation</H3>
+<!-- begin table list -->
+<!-- end table list -->
 
-You need the following software to use FontTools:
+<ul>
+  <li>As a command line tool (Windows/DOS, Unix, MacOSX)</li>
+  <li>By dropping files onto the application (Windows, MacOS)</li>
+</ul>
 
-<UL>
-<LI>
-  <B>Python</B>. The fresh versions as well as older versions (You need 2.0 or higher) can be obtained here:
-  <A HREF="http://www.python.org/download/">http://www.python.org/download/</A>
-  or here:
-  <A HREF="http://sourceforge.net/projects/python/">http://sourceforge.net/projects/python/</A>
-  
-  <P>Windows: grab the Windows installer, run the full install.
-  <BR>Un*x: follow the build instructions.
-  <BR>MacOS: grab the installer, run "Easy Install"
 <P>
-<LI>
-  The <B>Numeric Python</B> extension (you don't need this under MacOS, since 	it's
-  included in the MacPython installer). Get a fresh version from the download page,
-  linked from here:
-    <A HREF="http://sourceforge.net/projects/numpy/">http://sourceforge.net/projects/numpy/</A>
-  <P>Windows: grab the "Numeric-*.exe" archive, it's an installer. Make sure the
-  Python version in the archive name (eg. "2.1") matches the Python version you have.
-  <BR>Linux/Un*x: get a source archive and run this command from the unpacked directory:
-  <BR><TT>python setup.py install</TT>
+TTX detects what kind of files it is fed: it will output a .ttx file when it sees a .ttf or .otf, and it will compile a .ttf or .otf when the input file is a .ttx file. By default, the output file is created in the same folder as the input file, and will have the same name as the input file but with a different extension. TTX will <I>never</I> overwrite existing files, but if neccesary will append a unique number to the output filename (before the extension), eg.: "Arial#1.ttf".
+
 <P>
-<LI>
-  <B>PyXML</B>, a set of XML tools:
-    <A HREF="http://sourceforge.net/projects/pyxml/">http://sourceforge.net/projects/pyxml/</A>
-  <BR>Installation should be very similar to installing Numeric Python, see above.
-  <BR><I>Note:</I> some Python distributions already contain the neccesary XML support.
-  If "import xml.parsers.expat" works at the Python interactive prompt, you don't need to
-  install PyXML.
-  
-</UL>
+When using TTX from the command line there are a bunch of extra options, these are explained in the help text, as displayed when typing "ttx -h" at the command prompt. These additional options include:
+<ul>
+  <li>specifying the folder where the output files are created</li>
+  <li>specifying which tables to dump or which tables to exclude</li>
+  <li>merging partial .ttx files with existing .ttf or .otf files</li>
+  <li>listing brief table info isntead of dumping to .ttx</li>
+  <li>splitting tables to separate .ttx files</li>
+  <li>disabling TT instruction disassembly</li>
+</ul>
 
+<H3>The TTX file format</H3>
 
-Now run the "setup.py" script from the FontTools archive. This will install
-all the modules in the right places, as well as tries to compile the one (optional)
-C extension contained in FontTools. (XXX: need precompiled Mac and Windows binaries,
-*or* a way to skip compilation when there's no compiler available.)
+The following tables are currently supported:
 
-<P>Additional Mac instructions:
-De-binhex "TTX.rsrc.hqx" by dropping it onto StuffIt expander. (Or use your
-own preferred method)
-The "TTX.py" script included in this archive is the Mac-only main program: 
-Drop it onto the "BuildApplet" app inside the Python folder; this will 
-produce the TTX applet.
+<P>
+Other tables are dumped as hexadecimal data.
 
-
-<H3>User documentation</H3>
-
-<P>For Unix and DOS there are three command line programs:
-<UL>
-	<LI>ttdump -- dumps a TrueType (or OpenType) font file to TTX format.
-	<LI>ttcompile -- compiles a TTX file back into a TTF (or OTF) file.
-	<LI>ttlist -- lists minimal info about each table in a font.
-</UL>
-They can all work with multiple input files. There are some extra
-options which are explained by the 'usage' text; use the -h option to
-display  it. The setup.py script installs them as global tools, the
-source is in the Tools directory.
-
-<P>For MacOS there's a application called TTX. If you drop a TrueType
-file onto it, it will convert it to XML. If you drop an XML file onto
-it, it will convert it back to TrueType. Please read the additional
-README file in the Mac subdirectory, since it behaves quite differently
-than the command line programs described below.
-
-<P>Adam Twardoch contributed a Windows registry script (ttx_shellext_win32.py) which
-makes the two above tools available under the Right Mouse Button. I haven't tested 
-these myself, but I'm very interested in hearing about the results!
-
-<H3>A note about glyph names and TrueType GlyphID's</H3>
-
+<P>
 TrueType fonts use glyph indices (GlyphID's) to refer to glyphs in most places.
 While this is fine in binary form, it is really hard to work with for
 humans. Therefore we use names instead.
@@ -120,50 +65,13 @@ on a "round tripped" font.
 <P>Because the order in which glyphs are stored inside the TT font is
 important, we maintain an ordered list of glyph names in the font.
 
-<H3>Feedback</H3>
 
-Please join the fonttools-discussion mailing list at SourceForge. Subscription
-info can be found if you follow the "Mailing Lists" link at the
-<A HREF="http://sourceforge.net/projects/fonttools/">SourceForge project page</A>.
-You can also email me directly at <A HREF="mailto:just@letterror.com">just@letterror.com</A>.
+<H3>Development and feedback</H3>
+
+TTX/FontTools development is ongoing, but often goes in spurts. Feature requests and bug reports are always welcome. The best place for these is currently the fonttools-discussion mailing list at SourceForge. This list is both for discussion TTX from an end-user perspective as well as TTX/FontTools development. Subscription info can be found if you follow the "Mailing Lists" link at the <A HREF="http://sourceforge.net/projects/fonttools/">SourceForge project page</A>. You can also email me directly at <A HREF="mailto:just@letterror.com">just@letterror.com</A>.
 
 <P>
-If you want to follow the development of FontTools closely, or would like to
-contribute, you can also subscribe to the fonttools-checkins mailing list.
-
-<H3>Anonymous CVS-access</H3>
-
-The FontTools sources are also accessible through CVS, see the
-the <A HREF="http://sourceforge.net/projects/fonttools/">SourceForge project
-page</A>. Let me know if you'd like to become a co-developer.
-
-<H3>Developer documentation</H3>
-
-Sorry, documentation beyond doc strings in the source code is still on my to-do list... 
-Below follows a brief overview of what's there.
-
-<P>
-<H3>The library</H3>
-
-Cross-platform
-<UL>
-	<LI>fontTools.t1Lib -- Provides a Type 1 font reader. Writing is a planned feature.
-	<LI>fontTools.ttLib -- Extensive TrueType tools. Reads and writes. This is the flagship 
-	    of FontTools, it's by far the most mature component. Contains a completely modular
-	    TTF table converter architecture. See ttLib/tables/table_API_readme.txt.
-	<LI>fontTools.afmLib -- And AFM file reader/writer.
-	<LI>fontTools.cffLib -- Reads CFF fonts. Writing is a planned feature.
-	<LI>fontTools.unicode -- A simple (but large) module that translates 
-	    Unicode values to their descriptive names. Still Unicode 2.0.
-	<LI>fontTools.agl -- Interface to the Adobe Glyph List: maps unicode values
-	    to glyph names and back.
-</UL>
-
-Mac-specific
-<UL>
-	<LI>fontTools.fondLib -- A reader/writer class for Mac FOND resources.
-	<LI>fontTools.nfntLib -- Reads Mac NFNT bitmap font resources.
-</UL>
+Let me take this opportunity to mention that if you have special needs (eg. custom font monipulators, dufferent table formats, etc.): I am available for contracting.
 
 <H3>Thank-you's</H3>
 
