@@ -1,35 +1,40 @@
 #! /usr/bin/env python
 
 """\
-usage: %s [-hvs] [-t <table>] [-x <table>] TrueType-file [TTX-output-file]
+usage: %s [-hvis] [-t <table>] [-x <table>] TrueType-file [TTX-output-file]
     Dump a TrueType font as a TTX file (an XML-based text format). If the 
     TTX-output-file argument is omitted, the out put file name will be 
     constructed from the input file name, like so: *.ttf becomes *.ttx. 
     Either way, existing files will be overwritten without warning!
 
     Options:
-    -t <table> specify a table to dump. Multiple -t options
-       are allowed. When no -t option is specified, all tables
-       will be dumped
-    -x <table> specify a table to exclude from the dump. Multiple
-       -x options are allowed. -t and -x are mutually exclusive.
+    -h help: print this message
     -v verbose: messages will be written to stdout about what is 
        being done.
+    -i disassemble TT instructions: when this option is given, all
+       TrueType programs (glyph programs, the font program and the
+       pre-program) will be written to the TTX file as assembly instead
+       of hex data.
     -s split tables: save the TTX data into separate TTX files per table.
        The files will be saved in a directory. The name of this
        directory will be constructed from the input filename (by
        dropping the extension) or can be specified by the optional
        TTX-output-file argument.
-    -h help: print this message
+    -t <table> specify a table to dump. Multiple -t options
+       are allowed. When no -t option is specified, all tables
+       will be dumped
+    -x <table> specify a table to exclude from the dump. Multiple
+       -x options are allowed. -t and -x are mutually exclusive.
 """
 
 import sys, os, getopt
 from fontTools import ttLib
 
-options, args = getopt.getopt(sys.argv[1:], "shvt:x:")
+options, args = getopt.getopt(sys.argv[1:], "hvist:x:")
 
 verbose = 0
 splitTables = 0
+disassembleInstructions = 0
 tables = []
 skipTables = []
 for option, value in options:
@@ -54,6 +59,8 @@ for option, value in options:
 		sys.exit(0)
 	elif option == "-s":
 		splitTables = 1
+	elif option == "-i":
+		disassembleInstructions = 1
 
 if tables and skipTables:
 	print "-t and -x options are mutually exlusive"
@@ -72,5 +79,7 @@ else:
 	print __doc__ % sys.argv[0]
 	sys.exit(2)
 
-tt = ttLib.TTFont(ttPath, verbose=verbose)
-tt.saveXML(xmlPath, tables=tables, skipTables=skipTables, splitTables=splitTables)
+tt = ttLib.TTFont(ttPath, 0, verbose=verbose)
+tt.saveXML(xmlPath, tables=tables, skipTables=skipTables, 
+		splitTables=splitTables, disassembleInstructions=disassembleInstructions)
+
