@@ -20,9 +20,7 @@ static char eexec_decrypt__doc__[] =
 ;
 
 static PyObject *
-eexec_decrypt(self, args)
-	PyObject *self;	/* Not used */
-	PyObject *args;
+eexec_decrypt(PyObject *self, PyObject *args)
 {
 	PyObject *_res = NULL;
 	unsigned short int R;
@@ -55,9 +53,7 @@ static char eexec_encrypt__doc__[] =
 ;
 
 static PyObject *
-eexec_encrypt(self, args)
-	PyObject *self;	/* Not used */
-	PyObject *args;
+eexec_encrypt(PyObject *self, PyObject *args)
 {
 	PyObject *_res = NULL;
 	unsigned short int R;
@@ -90,9 +86,7 @@ static char eexec_hexString__doc__[] =
 ;
 
 static PyObject *
-eexec_hexString(self, args)
-	PyObject *self;	/* Not used */
-	PyObject *args;
+eexec_hexString(PyObject *self, PyObject *args)
 {
 	PyObject *_res = NULL;
 	unsigned char * inbuf;
@@ -126,9 +120,7 @@ static char eexec_deHexString__doc__[] =
 ;
 
 static PyObject *
-eexec_deHexString(self, args)
-	PyObject *self;	/* Not used */
-	PyObject *args;
+eexec_deHexString(PyObject *self, PyObject *args)
 {
 	PyObject *_res = NULL;
 	unsigned char * inbuf;
