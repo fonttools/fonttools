@@ -121,10 +121,7 @@ def splitQuadratic(pt1, pt2, pt3, where, isHorizontal):
 		a1 = a * delta**2
 		b1 = (2*a*t1 + b) * delta
 		c1 = a*t1**2 + b*t1 + c
-		# calc new points
-		pt1 = c1
-		pt2 = (b1 * 0.5) + c1
-		pt3 = a1 + b1 + c1
+		pt1, pt2, pt3 = calcQuadraticPoints(a1, b1, c1)
 		segments.append((pt1, pt2, pt3))
 	return segments
 
@@ -161,11 +158,7 @@ def splitCubic(pt1, pt2, pt3, pt4, where, isHorizontal):
 		b1 = (3*a*t1 + b) * delta**2
 		c1 = (2*b*t1 + c + 3*a*t1**2) * delta
 		d1 = a*t1**3 + b*t1**2 + c*t1 + d
-		# calc new points
-		pt1 = d1
-		pt2 = (c1 / 3.0) + d1
-		pt3 = (b1 + c1) / 3.0 + pt2
-		pt4 = a1 + d1 + c1 + b1
+		pt1, pt2, pt3, pt4 = calcCubicPoints(a1, b1, c1, d1)
 		segments.append((pt1, pt2, pt3, pt4))
 	return segments
 
@@ -263,6 +256,21 @@ def calcCubicParameters(pt1, pt2, pt3, pt4):
 	b = (pt3 - pt2) * 3.0 - c
 	a = pt4 - d - c - b
 	return a, b, c, d
+
+
+def calcQuadraticPoints(a, b, c):
+	pt1 = c
+	pt2 = (b * 0.5) + c
+	pt3 = a + b + c
+	return pt1, pt2, pt3
+
+
+def calcCubicPoints(a, b, c, d):
+	pt1 = d
+	pt2 = (c / 3.0) + d
+	pt3 = (b + c) / 3.0 + pt2
+	pt4 = a + d + c + b
+	return pt1, pt2, pt3, pt4
 
 
 def _testrepr(obj):
