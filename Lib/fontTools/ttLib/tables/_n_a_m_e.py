@@ -96,7 +96,7 @@ class NameRecord:
 		self.platformID = safeEval(attrs["platformID"])
 		self.platEncID = safeEval(attrs["platEncID"])
 		self.langID =  safeEval(attrs["langID"])
-		if self.platformID == 0 or (self.platformID == 3 and self.platEncID == 1):
+		if self.platformID == 0 or (self.platformID == 3 and self.platEncID in (0, 1)):
 			from fontTools.ttLib.xmlImport import UnicodeString
 			str = UnicodeString("")
 			for element in content:
