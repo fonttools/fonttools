@@ -1,13 +1,39 @@
 FontTools Version 1.0 beta ? (released ???)
 
+- Changed the command line interface yet again:
+  - file arguments now work more like the 'cp' and 'mv' unix programs,
+    in that the last file argument specifies the output: a directory
+    for one or more input args or a target file if there's only one input
+    argument.
+  - The -s option of ttdump ("split tables") no longer creates a directory,
+    but instead outputs a small .ttx file containing references to the
+    individual table files. This is not a true link, it's a simple file
+    name, and the referenced file should be in the same directory so
+    ttcompile can find them.
+  - ttcompile no longer accepts a directory as input argument. Instead it
+    can parse the new "mini-ttx" format as output by "ttdump -s".
+- Renamed the command line programs and moved them to the Tools
+  subdirectory. They are now installed by the setup.py install script.
+- Added a new command line tool: "ttlist". It lists some info about each
+  table in the font (length, offset and checksum).
+- Added OpenType support. BASE, GDEF, GPOS, GSUB and JSTF are (almost)
+  fully supported. The XML output is not yet final, as I'm still
+  considering to output certain subtables in a more human-friendly
+  manner.
+- Fixed 'kern' table to correctly accept subtables it doesn't know about,
+  as well as interpreting Apple's definition of the 'kern' table headers
+  correctly.
+- Fixed bug where glyphnames were not calculated from 'cmap' if it was
+  (one of the) first tables to be decompiled. More specifically: it cmap
+  was the first to ask for a glyphID -> glyphName mapping.
 - Switched XML parsers: use expat instead of xmlproc. Should be faster.
 - Removed my UnicodeString object: I now require Python 2.0 or up, which
   has unicode support built in.
-- Removed assert in glypf table: redundant data at the end of the table
+- Removed assert in glyf table: redundant data at the end of the table
   is now ignored instead of raising an error. Should become a warning.
 - Fixed bug in hmtx/vmtx code that only occured if all advances were equal.
 - Fixed subtle bug in TT instruction disassembler.
-- Couple of fixes in 'post' table.
+- Couple of fixes to the 'post' table.
 - Updated OS/2 table to latest spec.
 
 FontTools Version 1.0 beta 1 (released August 10 2001)
