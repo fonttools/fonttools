@@ -17,7 +17,7 @@ September 9, 2002
    http://fonttools.sourceforge.net/cvs-snapshots/zip/fonttools-current-snapshot.zip
 5. Unzip the source code of TTX/FontTools into a folder.
 6. In the folder where you unzipped TTX/FontTools, type:
-   python.exe setup.py py2exe -f --icon Windows\ttx.ico --packages encodings
+   python setup.py py2exe -f --icon Windows\ttx.ico --packages encodings
 7. Run Inno Setup and open Windows\fonttools-win-setup.iss (this file)
 8. In Inno Setup, select File/Compile, then Run/Run.
 
