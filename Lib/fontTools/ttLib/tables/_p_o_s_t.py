@@ -67,6 +67,12 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 	def decode_format_2_0(self, data, ttFont):
 		numGlyphs, = struct.unpack(">H", data[:2])
 		numGlyphs = int(numGlyphs)
+		if numGlyphs > ttFont['maxp'].numGlyphs:
+			# Assume the numGlyphs field is bogus, so sync with maxp.
+			# I've seen this in one font, and if the assumption is
+			# wrong elsewhere, well, so be it: it's hard enough to
+			# work around _one_ non-conforming post format...
+			numGlyphs = ttFont['maxp'].numGlyphs
 		data = data[2:]
 		indices = array.array("H")
 		indices.fromstring(data[:2*numGlyphs])
@@ -200,11 +206,14 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 
 def unpackPStrings(data):
 	strings = []
-	while data:
-		length = ord(data[0])
-		strings.append(data[1:1+length])
-		data = data[1+length:]
+	index = 0
+	dataLen = len(data)
+	while index < dataLen:
+		length = ord(data[index])
+		strings.append(data[index+1:index+1+length])
+		index = index + 1 + length
 	return strings
+
 
 def packPStrings(strings):
 	data = ""
