@@ -124,7 +124,7 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 	def toXML(self, writer, ttFont):
 		if self.version == 1:
 			format = OS2_format_1
-		elif self.version == 2:
+		elif self.version in (2, 3):
 			format = OS2_format_2
 		else:
 			format = OS2_format_0
