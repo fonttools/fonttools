@@ -1,0 +1,1195 @@
+----------------------------
+2002/09/10 13:25:55 jvr MetaTools/logmerge.py 1.1
+2002/09/10 13:25:55 jvr MetaTools/buildChangeLog.py 1.1
+2 scripts to generate ChangeLog file, logmerge.py is stolen from the python distro
+----------------------------
+2002/09/10 13:14:16 jvr Tools/ttx 1.3
+mjmja
+----------------------------
+2002/09/10 13:13:25 jvr README.txt 1.5
+2002/09/10 13:12:42 jvr Doc/install.txt 1.1
+2002/09/10 13:12:42 jvr Doc/documentation.html 1.2
+updated documentation, split user and developer doco
+----------------------------
+2002/09/10 13:09:27 jvr MetaTools/buildTableList.py 1.1
+tool to generate fontTools/ttLib/tables/__init__.py
+----------------------------
+2002/09/10 13:08:31 jvr Lib/fontTools/ttLib/tables/__init__.py 1.4
+__init__.py is now generated my MetaTools/builtTableList.py
+----------------------------
+2002/09/10 11:55:09 jvr Doc/index.html 1.10
+2002/09/10 11:55:08 jvr Doc/documentation.html 1.1
+renamed index.html to documentation.html
+----------------------------
+2002/09/10 11:38:03 jvr Lib/fontTools/__init__.py 1.5
+prepare for 2.0b1
+----------------------------
+2002/09/10 11:36:43 jvr MetaTools/doco.diff 1.1
+2002/09/10 11:36:43 jvr MetaTools/build_otData.py 1.1
+tool to generate the otData.py module
+----------------------------
+2002/09/10 11:27:34 jvr Windows/README.TXT 1.7
+minor nit, cleaner, and works for me
+----------------------------
+2002/09/10 11:23:34 jvr Windows/fonttools-win-setup.txt 1.4
+2002/09/10 11:23:34 jvr Windows/fonttools-win-setup.iss 1.3
+2002/09/10 11:23:34 jvr Windows/README.TXT 1.6
+adapted to new ttx app (not yet tested)
+----------------------------
+2002/09/10 09:22:28 jvr setup.py 1.9
+ttx it is, the other tools are now obsolete
+----------------------------
+2002/09/10 09:16:59 jvr Tools/ttx 1.2
+added doc string, fiddled with options, made file name creation a little more sensible
+----------------------------
+2002/09/10 08:47:39 jvr Tools/ttx 1.1
+new command line tool 'ttx', replaces ttdump, ttcompile and ttlist
+----------------------------
+2002/09/09 21:28:10 jvr Windows/README.TXT 1.5
+changed py2exe recommended options: removed -O2, added encodings package (needed for compilation)
+----------------------------
+2002/09/09 21:23:34 jvr Windows/README.TXT 1.4
+more fonttools->TTX renaming
+----------------------------
+2002/09/09 21:22:17 jvr Windows/ttx.ico 1.1
+2002/09/09 21:22:17 jvr Windows/fonttools.ico 1.2
+2002/09/09 21:22:17 jvr Windows/fonttools-win-setup.iss 1.2
+some fonttools->TTX renaming
+----------------------------
+2002/09/09 21:12:49 jvr Windows/README.TXT 1.3
+fixed item numbering
+----------------------------
+2002/09/09 21:12:02 jvr Windows/README.TXT 1.2
+fixed naming of the Win folder
+----------------------------
+2002/09/09 20:38:32 uid55619 ttx_shellext_win32.py 1.4
+obsolete, see Windows subdirectory
+----------------------------
+2002/09/09 20:09:27 uid55619 Windows/fonttools-win-setup.txt 1.3
+another dummy checkin
+----------------------------
+2002/09/09 20:05:22 uid55619 Windows/fonttools-win-setup.txt 1.2
+dummy checkin
+----------------------------
+2002/09/09 19:58:42 uid55619 Windows/fonttools.ico 1.1
+2002/09/09 19:58:42 uid55619 Windows/fonttools-win-setup.txt 1.1
+2002/09/09 19:58:42 uid55619 Windows/fonttools-win-setup.iss 1.1
+2002/09/09 19:58:42 uid55619 Windows/README.TXT 1.1
+Adam's new windows installer stuff.
+----------------------------
+2002/09/09 18:17:12 jvr Lib/xmlWriter.py 1.4
+by default, specify an encoding when creating XML files
+----------------------------
+2002/09/09 14:19:49 jvr Lib/fontTools/ttLib/xmlImport.py 1.15
+use latin-1 as the default encoding when parsing XML files
+----------------------------
+2002/09/09 14:18:39 jvr Lib/fontTools/cffLib.py 1.27
+make 8-bit chars work in CFF Notice and Copyright fields
+----------------------------
+2002/09/05 19:46:41 jvr Lib/fontTools/ttLib/tables/_g_l_y_f.py 1.18
+align glyphs on 4-byte boundaries, seems the current recommendation by MS
+----------------------------
+2002/09/05 19:35:56 jvr Lib/fontTools/ttLib/tables/_g_l_y_f.py 1.17
+allow 4-byte alignment of glyph data
+----------------------------
+2002/08/30 17:52:28 jvr Lib/fontTools/ttLib/tables/otData.py 1.2
+fixed spelling consistency bug. Note to self: report as bug in OT doco.
+----------------------------
+2002/07/29 21:39:06 jvr Lib/fontTools/t1Lib.py 1.14
+break before adding the data..
+----------------------------
+2002/07/29 21:33:46 jvr Lib/fontTools/t1Lib.py 1.13
+added only-read-the-header feature to readLWFN(), similar to readPFB()
+----------------------------
+2002/07/23 17:56:20 jvr Tools/ttroundtrip 1.5
+added -v (verbose) option to ttroundtrip, causing stdout of ttdump and ttcompile not to be tossed. not all that useful due to buffering.
+----------------------------
+2002/07/23 16:44:25 jvr Lib/fontTools/ttLib/tables/_g_l_y_f.py 1.16
+2002/07/23 16:43:55 jvr Lib/fontTools/ttLib/xmlImport.py 1.14
+2002/07/23 16:43:55 jvr Lib/fontTools/ttLib/macUtils.py 1.5
+2002/07/23 16:43:55 jvr Lib/fontTools/ttLib/__init__.py 1.36
+some (modified) progress bar support
+----------------------------
+2002/07/23 16:42:11 jvr Lib/fontTools/cffLib.py 1.26
+some progress bar support
+----------------------------
+2002/07/23 16:41:08 jvr Lib/xmlWriter.py 1.3
+some preliminary progress bar support
+----------------------------
+2002/07/23 14:54:47 jvr Lib/fontTools/t1Lib.py 1.12
+back out pfa 'fix'; it reverses a bug fix from last year...
+----------------------------
+2002/07/23 09:26:19 jvr Lib/fontTools/misc/eexec.py 1.5
+'python' implementation of hex functions
+----------------------------
+2002/07/23 09:25:42 jvr Lib/fontTools/t1Lib.py 1.11
+fixed handling of PFA files by being less smart about figuring out the end of the eexec part
+----------------------------
+2002/07/23 08:43:03 jvr Lib/fontTools/ttLib/tables/otBase.py 1.8
+reordered/regrouped some methods for clarity
+----------------------------
+2002/07/23 08:19:38 jvr Lib/fontTools/ttLib/tables/otBase.py 1.7
+don't use __len__ for arbitrary length method
+----------------------------
+2002/07/23 07:51:23 jvr Lib/fontTools/ttLib/tables/_c_m_a_p.py 1.9
+clarified cmap4 optimization strategy
+----------------------------
+2002/07/22 22:39:10 jvr Lib/fontTools/ttLib/tables/otBase.py 1.6
+duh, I don't even _need_ to track referers with the current scheme
+----------------------------
+2002/07/22 22:22:47 jvr Lib/fontTools/ttLib/tables/otBase.py 1.5
+minor changes
+----------------------------
+2002/07/22 22:13:57 jvr Lib/fontTools/ttLib/tables/otBase.py 1.4
+completely revamped optimization strategy: now even _shrinks_ certain Adobe and MS OTL tables.
+----------------------------
+2002/07/21 20:05:52 jvr Lib/fontTools/ttLib/sfnt.py 1.9
+Wow, the master checksum in the 'head' table was never written to file correctly on little-endian platforms :-(. Fixed.
+----------------------------
+2002/07/20 21:57:26 jvr Lib/fontTools/ttLib/tables/_c_m_a_p.py 1.8
+Optimized cmap format 4 compile function: now creates more compact binary. The code is horrible, but then again cmap format 4 is beyond horrible...
+----------------------------
+2002/07/13 08:15:21 jvr setup.py 1.8
+oops.
+----------------------------
+2002/07/12 19:20:19 jvr Lib/fontTools/t1Lib.py 1.10
+don't test for os.name, as the mac stuff now all works under darwin/posix as well
+----------------------------
+2002/07/11 18:19:46 jvr setup.py 1.7
+added py2exe support (yes, that was basically all there was to it...)
+----------------------------
+2002/07/11 18:17:32 jvr Lib/fontTools/ttLib/__init__.py 1.35
+make dynamic table import work when importing from a zip file (for py2exe)
+----------------------------
+2002/07/04 17:17:36 jvr Lib/fontTools/ttLib/tables/_g_l_y_f.py 1.15
+repair ttcompile -b
+----------------------------
+2002/07/04 17:17:05 jvr Lib/fontTools/ttLib/tables/.cvsignore 1.1
+ignore .pyc files
+----------------------------
+2002/07/01 09:11:01 jvr setup.py 1.6
+gracefully skip C extension if it can't be built
+----------------------------
+2002/06/06 19:59:31 jvr Lib/fontTools/ttLib/tables/_g_l_y_f.py 1.14
+increment progress less frequently, it was too costly...
+----------------------------
+2002/06/06 19:58:18 jvr Lib/fontTools/ttLib/macUtils.py 1.4
+MacPython 2.2 compat
+----------------------------
+2002/06/04 19:11:03 jvr Lib/fontTools/misc/psLib.py 1.4
+finally upgraded psLib to use re instead of the long obsolete regex module.
+----------------------------
+2002/06/04 19:10:14 jvr Lib/fontTools/misc/psOperators.py 1.2
+nits
+----------------------------
+2002/06/04 19:08:31 jvr Lib/fontTools/ttLib/tables/__init__.py 1.3
+add dummy import function, so modulefinder can find our tables.
+----------------------------
+2002/05/25 16:08:55 jvr Tools/ttdump 1.5
+2002/05/25 16:08:55 jvr Tools/ttcompile 1.6
+hm, forgot to remove the -d option from the getopt format string
+----------------------------
+2002/05/25 16:08:16 jvr Tools/ttroundtrip 1.4
+mucking with the usage string
+----------------------------
+2002/05/25 16:04:03 jvr Tools/ttroundtrip 1.3
+allow some ttdump options; not -s as that makes diffing that much harder
+----------------------------
+2002/05/25 15:28:48 jvr Lib/fontTools/ttLib/xmlImport.py 1.13
+2002/05/25 15:28:48 jvr Lib/fontTools/ttLib/tables/_g_l_y_f.py 1.13
+2002/05/25 15:28:48 jvr Lib/fontTools/ttLib/__init__.py 1.34
+It still wasn't right; I think the glyph order mess is now sufficiently cleaned up; at least compiling the result of ttdump -x glyf works again.
+----------------------------
+2002/05/25 14:56:29 jvr Lib/fontTools/ttLib/__init__.py 1.33
+make sure the glyph order is loaded when importing XML as the TTX file may not contain it (ttdump -t/ttcompile -i).
+----------------------------
+2002/05/25 08:22:22 jvr Lib/fontTools/ttLib/__init__.py 1.32
+whoops, the new GlyphOrder table stuff broke ttdump -s
+----------------------------
+2002/05/24 18:44:39 jvr Tools/ttroundtrip 1.2
+slight doc rewording
+----------------------------
+2002/05/24 18:36:57 jvr Tools/ttroundtrip 1.1
+test script: batch roundtripper
+----------------------------
+2002/05/24 17:42:04 jvr Lib/fontTools/ttLib/tables/_h_d_m_x.py 1.4
+gross hack to allow ; in glyph names (I don't think it _is_ allowed, but hey, I've got this font here...)
+----------------------------
+2002/05/24 16:52:07 jvr Lib/fontTools/ttLib/tables/T_S_I__0.py 1.2
+don't blow up on orphaned VTT index tables
+----------------------------
+2002/05/24 14:42:15 jvr Lib/fontTools/ttLib/tables/ttProgram.py 1.5
+fixed ttdump -i mode
+----------------------------
+2002/05/24 11:55:37 jvr Lib/fontTools/misc/psCharStrings.py 1.14
+2002/05/24 11:55:37 jvr Lib/fontTools/cffLib.py 1.25
+added support for raw bytecode: this happens unintentionally for subrs that aren't referenced, but it's good to have anyway, in case we want to switch T2 decompilation off.
+----------------------------
+2002/05/24 10:38:04 jvr Lib/fontTools/cffLib.py 1.24
+whoops, make charset format 2 work also..
+----------------------------
+2002/05/24 10:35:13 jvr Lib/fontTools/cffLib.py 1.23
+implemented compiling charset format 1 and 2
+----------------------------
+2002/05/24 09:58:04 jvr Lib/fontTools/ttLib/tables/C_F_F_.py 1.6
+2002/05/24 09:58:04 jvr Lib/fontTools/ttLib/__init__.py 1.31
+2002/05/24 09:58:03 jvr Lib/fontTools/misc/psCharStrings.py 1.13
+2002/05/24 09:58:03 jvr Lib/fontTools/cffLib.py 1.22
+CFF/T2 <-> XML roundtripping has begun!
+----------------------------
+2002/05/23 21:50:36 jvr Lib/fontTools/misc/psCharStrings.py 1.12
+2002/05/23 21:50:36 jvr Lib/fontTools/cffLib.py 1.21
+first working version of CFF/T2 compiler; needs cleanup/refactoring, and doesn't import from XML yet; hardly tested.
+----------------------------
+2002/05/23 09:42:45 jvr Lib/fontTools/ttLib/xmlImport.py 1.12
+2002/05/23 09:42:45 jvr Lib/fontTools/ttLib/tables/_g_l_y_f.py 1.12
+2002/05/23 09:42:45 jvr Lib/fontTools/ttLib/__init__.py 1.30
+big change: the glyph order is now dumped as a separate table and not as part of glyf (which didn't make much sense to begin with, but can't work at all in the case of CFF...)
+----------------------------
+2002/05/22 20:15:10 jvr Lib/fontTools/ttLib/__init__.py 1.29
+refactored saveXML() method
+----------------------------
+2002/05/18 20:07:01 jvr Lib/fontTools/cffLib.py 1.20
+remove format 3 charset switch; add newline after ROS
+----------------------------
+2002/05/17 20:04:05 jvr Lib/fontTools/cffLib.py 1.19
+renaming, refactoring.
+----------------------------
+2002/05/17 19:58:49 jvr Lib/fontTools/cffLib.py 1.18
+tweaked the XML output somewhat, reorder the topdict fields, etc.
+----------------------------
+2002/05/17 18:37:07 jvr Lib/fontTools/misc/psCharStrings.py 1.11
+fixed ctnrmask problem: hints weren't counted correctly
+----------------------------
+2002/05/17 18:36:07 jvr Lib/fontTools/cffLib.py 1.17
+more CID support, some refactoring, stuff.
+----------------------------
+2002/05/17 07:08:52 jvr Lib/fontTools/cffLib.py 1.16
+only debug if DEBUG...
+----------------------------
+2002/05/17 07:07:26 jvr Lib/fontTools/misc/psCharStrings.py 1.10
+first stab at compiling T2 CharStrings
+----------------------------
+2002/05/17 07:06:32 jvr Lib/fontTools/cffLib.py 1.15
+tweaking, added some debug info
+----------------------------
+2002/05/16 18:38:03 jvr Lib/fontTools/cffLib.py 1.14
+make decompiling charstrings work again
+----------------------------
+2002/05/16 18:17:32 jvr Lib/fontTools/cffLib.py 1.13
+major refactoring, now evaluates everything lazily, so it should be really fast if you only need (say) the glyph order.
+----------------------------
+2002/05/16 18:15:57 jvr Lib/fontTools/ttLib/tables/C_F_F_.py 1.5
+some changes to adapt to new cffLib.py
+----------------------------
+2002/05/16 18:13:01 jvr Lib/fontTools/misc/psCharStrings.py 1.9
+(nit)
+----------------------------
+2002/05/16 18:12:11 jvr Lib/fontTools/ttLib/tables/otConverters.py 1.4
+whoops, compile was broken due to Fixed 'fix'
+----------------------------
+2002/05/15 07:50:06 jvr Lib/fontTools/ttLib/__init__.py 1.28
+ignore tables we don't have upon saving as XML: this is indispensible for batch processing
+----------------------------
+2002/05/15 07:41:30 jvr Lib/fontTools/cffLib.py 1.12
+more work in progress
+----------------------------
+2002/05/15 07:40:33 jvr Lib/fontTools/misc/psCharStrings.py 1.8
+added delta array support to DictDecompiler
+----------------------------
+2002/05/14 13:51:51 jvr Lib/fontTools/cffLib.py 1.11
+more CID hackery
+----------------------------
+2002/05/14 13:49:50 jvr Lib/fontTools/misc/psCharStrings.py 1.7
+fix argument type order
+----------------------------
+2002/05/14 12:37:36 jvr Lib/fontTools/cffLib.py 1.10
+more rearranging, some fixes of the previous version
+----------------------------
+2002/05/14 12:22:03 jvr Lib/fontTools/cffLib.py 1.9
+resturcturing, reformatting
+----------------------------
+2002/05/14 12:09:10 jvr Lib/fontTools/ttLib/sfnt.py 1.8
+fixed typo in comment
+----------------------------
+2002/05/13 18:13:03 jvr Lib/fontTools/ttLib/tables/_h_h_e_a.py 1.4
+this wasn't meant te be checked in yet.
+----------------------------
+2002/05/13 18:10:05 jvr Lib/fontTools/ttLib/tables/otConverters.py 1.3
+added Fixed type
+----------------------------
+2002/05/13 18:08:19 jvr Lib/fontTools/ttLib/tables/otBase.py 1.3
+2002/05/13 18:08:19 jvr Lib/fontTools/ttLib/tables/_h_h_e_a.py 1.3
+more cosmetics
+----------------------------
+2002/05/13 16:21:51 jvr Lib/fontTools/ttLib/tables/table_API_readme.txt 1.3
+2002/05/13 16:21:50 jvr Lib/fontTools/ttLib/xmlImport.py 1.11
+2002/05/13 16:21:50 jvr Lib/fontTools/ttLib/__init__.py 1.27
+a whole bunch of renames, purely stylistic
+----------------------------
+2002/05/13 16:19:51 jvr Lib/fontTools/misc/psCharStrings.py 1.6
+2002/05/13 16:19:37 jvr Lib/fontTools/cffLib.py 1.8
+moved some stuff to cffLib
+----------------------------
+2002/05/13 11:26:38 jvr Lib/fontTools/ttLib/__init__.py 1.26
+don't get glyph names from CFF it it's a CID-keyed font; invent glyph name on the spot if glyphID is too high (dubious change..).
+----------------------------
+2002/05/13 11:25:17 jvr Lib/fontTools/ttLib/tables/C_F_F_.py 1.4
+2002/05/13 11:24:43 jvr Lib/fontTools/cffLib.py 1.7
+use a StringIO stream instead slicing strings all the time; don't barf on CID-keyed fonts (but CID support is by no means there yet!)
+----------------------------
+2002/05/13 11:21:48 jvr Lib/fontTools/ttLib/sfnt.py 1.7
+use spaces for alignment
+----------------------------
+2002/05/12 18:46:27 jvr Tools/ttdump 1.4
+2002/05/12 18:46:27 jvr Tools/ttcompile 1.5
+test whether final argument is a directory
+----------------------------
+2002/05/12 17:14:50 jvr Lib/fontTools/ttLib/tables/_k_e_r_n.py 1.6
+2002/05/12 17:14:50 jvr Lib/fontTools/ttLib/tables/_c_m_a_p.py 1.7
+2002/05/12 17:14:50 jvr Lib/fontTools/ttLib/sfnt.py 1.6
+2002/05/12 17:14:50 jvr Lib/fontTools/ttLib/__init__.py 1.25
+renamed several items to use camelCase
+----------------------------
+2002/05/12 17:02:50 jvr Lib/fontTools/ttLib/sfnt.py 1.5
+Applied patch from Owen Taylor that allows zero-length tables to be ignored. Added comment why.
+----------------------------
+2002/05/12 12:58:22 jvr Doc/index.html 1.9
+note about PyXML
+----------------------------
+2002/05/12 12:48:14 jvr Doc/index.html 1.8
+reworded glyph name section
+----------------------------
+2002/05/12 12:24:11 jvr Doc/changes.txt 1.4
+notes about recent changes
+----------------------------
+2002/05/11 21:52:27 jvr Tools/ttcompile 1.4
+case typo
+----------------------------
+2002/05/11 21:44:06 jvr Lib/fontTools/ttLib/xmlImport.py 1.10
+minor restructuring
+----------------------------
+2002/05/11 21:38:26 jvr Lib/fontTools/ttLib/xmlImport.py 1.9
+added support for the new ttdump -s output: read file references from mini-ttx file
+----------------------------
+2002/05/11 21:18:12 jvr Lib/fontTools/ttLib/__init__.py 1.24
+change how saveXML with splitTable=True works: it no longer creates a directory, and outputs a small file that references the individual table files
+----------------------------
+2002/05/11 21:16:05 jvr Tools/ttdump 1.3
+2002/05/11 21:16:05 jvr Tools/ttcompile 1.3
+changed the command line interface of ttdump and ttcompile ***incompatibly***; changed ttdump -s considerably: now outputs a small file containing references to the individual table file; -d is gone; etc.
+----------------------------
+2002/05/11 10:21:36 jvr Lib/fontTools/ttLib/tables/otTables.py 1.2
+2002/05/11 10:21:36 jvr Lib/fontTools/ttLib/tables/otConverters.py 1.2
+2002/05/11 10:21:36 jvr Lib/fontTools/ttLib/tables/otBase.py 1.2
+results of morning-after code review, added some doc strings, etc.
+----------------------------
+2002/05/11 01:03:06 jvr Lib/fontTools/ttLib/tables/otCommon.py 1.6
+removed non-functioning lame-ass previous attempt
+----------------------------
+2002/05/11 00:59:27 jvr Lib/fontTools/ttLib/tables/otTables.py 1.1
+2002/05/11 00:59:27 jvr Lib/fontTools/ttLib/tables/otData.py 1.1
+2002/05/11 00:59:27 jvr Lib/fontTools/ttLib/tables/otConverters.py 1.1
+2002/05/11 00:59:27 jvr Lib/fontTools/ttLib/tables/otBase.py 1.1
+2002/05/11 00:59:27 jvr Lib/fontTools/ttLib/tables/J_S_T_F_.py 1.1
+2002/05/11 00:59:27 jvr Lib/fontTools/ttLib/tables/G_S_U_B_.py 1.4
+2002/05/11 00:59:27 jvr Lib/fontTools/ttLib/tables/G_P_O_S_.py 1.3
+2002/05/11 00:59:27 jvr Lib/fontTools/ttLib/tables/G_D_E_F_.py 1.1
+2002/05/11 00:59:27 jvr Lib/fontTools/ttLib/tables/B_A_S_E_.py 1.1
+Completely revamped OT support; this time it works and is complete. XML output is not yet as pretty as can be.
+----------------------------
+2002/05/10 19:52:14 jvr Lib/fontTools/ttLib/tables/_k_e_r_n.py 1.5
+fix unknown subtable format and handling of Apple fonts
+----------------------------
+2002/05/10 19:03:34 jvr Lib/fontTools/ttLib/__init__.py 1.23
+2002/05/10 19:02:52 jvr Lib/fontTools/ttLib/tables/_p_o_s_t.py 1.6
+2002/05/10 19:02:52 jvr Lib/fontTools/ttLib/tables/_k_e_r_n.py 1.4
+2002/05/10 19:02:52 jvr Lib/fontTools/ttLib/tables/_g_l_y_f.py 1.11
+2002/05/10 19:02:52 jvr Lib/fontTools/ttLib/tables/_c_m_a_p.py 1.6
+2002/05/10 19:02:52 jvr Lib/fontTools/ttLib/tables/O_S_2f_2.py 1.5
+a few cosmetic/style changes
+----------------------------
+2002/05/10 19:02:04 jvr Lib/fontTools/ttLib/tables/otCommon.py 1.5
+2002/05/10 19:02:04 jvr Lib/fontTools/ttLib/tables/G_S_U_B_.py 1.3
+checking in last edits to the old OT support; this stuff will be replaced by brand new code soon.
+----------------------------
+2002/05/05 11:29:33 jvr Lib/fontTools/ttLib/__init__.py 1.22
+Work around bootstrapping problem in TTFont._getGlyphNamesFromCmap():
+  If the cmap parser was the one to cause _getGlyphNamesFromCmap() to be
+  called, no unicode cmap was found as it was just starting to get
+  loaded. This resulted in different glyph names, depending on when
+  the cmap parser was invoked.
+Also added a bunch of comment describing what this method does.
+----------------------------
+2002/05/05 09:55:41 jvr Tools/ttlist 1.2
+cosmetic change: I forgot I dislike backticks...
+----------------------------
+2002/05/05 09:48:31 jvr Lib/fontTools/ttLib/__init__.py 1.21
+renamed _getTableData() to getTableData(); optimized getGlyphOrder() somewhat.
+----------------------------
+2002/05/04 22:04:02 jvr Lib/fontTools/ttLib/sfnt.py 1.4
+2002/05/04 22:04:02 jvr Lib/fontTools/ttLib/__init__.py 1.20
+added support for deleting tables: del f[tag]
+----------------------------
+2002/05/04 22:03:05 jvr Lib/fontTools/ttLib/tables/_p_o_s_t.py 1.5
+use dict for extraNames lookups, getting rid of quadratic behavior
+----------------------------
+2002/05/03 19:38:07 jvr Lib/fontTools/t1Lib.py 1.9
+MacPython 2.2 compatibility fix.
+----------------------------
+2002/05/03 19:35:33 jvr Tools/ttdump 1.2
+2002/05/03 19:35:33 jvr Tools/ttcompile 1.2
+some reformatting of the usage msg.
+----------------------------
+2002/05/03 19:10:39 jvr Doc/index.html 1.7
+more TTX...
+----------------------------
+2002/05/03 19:03:49 jvr Lib/fontTools/__init__.py 1.4
+2002/05/03 19:03:48 jvr README.txt 1.4
+2002/05/03 19:03:48 jvr LICENSE.txt 1.3
+typos, version update, date update
+----------------------------
+2002/05/03 19:02:26 jvr Doc/index.html 1.6
+cleaned up command line tool section, updated to current state.
+----------------------------
+2002/05/03 18:58:47 jvr ttList.py 1.2
+2002/05/03 18:58:47 jvr ttCompile.py 1.11
+2002/05/03 18:58:46 jvr ttDump.py 1.12
+these moved to Tools/
+----------------------------
+2002/05/03 18:57:02 jvr setup.py 1.5
+install the scripts from Tools/
+----------------------------
+2002/05/03 18:55:27 jvr Tools/ttlist 1.1
+2002/05/03 18:55:27 jvr Tools/ttdump 1.1
+2002/05/03 18:55:27 jvr Tools/ttcompile 1.1
+new place and names for scripts/tools
+----------------------------
+2002/05/03 17:05:39 jvr ttDump.py 1.11
+2002/05/03 17:05:39 jvr ttCompile.py 1.10
+minor fiddling with usage.
+----------------------------
+2002/05/03 17:05:06 jvr ttList.py 1.1
+minimal table lister tool
+----------------------------
+2002/05/03 17:01:25 jvr Lib/fontTools/ttLib/tables/otCommon.py 1.4
+2002/05/03 17:01:25 jvr Lib/fontTools/ttLib/tables/G_S_U_B_.py 1.2
+2002/05/03 17:01:25 jvr Lib/fontTools/ttLib/tables/G_P_O_S_.py 1.2
+2002/05/03 17:01:25 jvr Lib/fontTools/ttLib/tables/C_F_F_.py 1.3
+Work in progress on CFF, GPOS and GSUB. Since it's only partly working, it's diasabled by default.
+----------------------------
+2002/05/03 14:33:41 jvr Lib/fontTools/ttLib/tables/C_F_F_.py 1.2
+use composition rather than inheritance; \
+----------------------------
+2002/05/03 08:59:22 jvr setup.py 1.4
+import expat instead of xmlproc, as that's what we're using now
+----------------------------
+2002/05/02 20:54:08 jvr Lib/fontTools/ttLib/xmlImport.py 1.8
+only keep the orginal table around in two special cases.\n this fixes a problem with importing individual tables.
+----------------------------
+2002/05/02 15:26:50 jvr Lib/fontTools/misc/eexec.py 1.4
+eexecOp may be a global module or a submodule.
+----------------------------
+2002/05/02 15:23:25 jvr Lib/fontTools/ttLib/__init__.py 1.19
+use version from fontTools.__init__.py
+----------------------------
+2002/05/02 15:16:45 jvr Lib/fontTools/ttLib/xmlImport.py 1.7
+re-added progress support, to be tested
+----------------------------
+2002/05/02 10:53:10 jvr Lib/fontTools/ttLib/tables/_h_m_t_x.py 1.4
+whoops, lastIndex can't be smaller than 1
+----------------------------
+2002/05/02 08:11:37 jvr Doc/index.html 1.5
+2002/05/02 08:11:36 jvr Doc/changes.txt 1.3
+updated installation instructions and changes.txt
+----------------------------
+2002/05/01 21:32:37 jvr Lib/fontTools/ttLib/xmlImport.py 1.6
+rearranged a bit, removed redundant imports
+----------------------------
+2002/05/01 21:06:11 jvr Lib/fontTools/ttLib/xmlImport.py 1.5
+2002/05/01 21:06:11 jvr Lib/fontTools/ttLib/tables/_n_a_m_e.py 1.6
+2002/05/01 21:06:11 jvr Lib/fontTools/ttLib/tables/_h_m_t_x.py 1.3
+2002/05/01 21:06:11 jvr Lib/fontTools/ttLib/tables/_h_d_m_x.py 1.3
+2002/05/01 21:06:11 jvr Lib/fontTools/ttLib/tables/_g_l_y_f.py 1.10
+2002/05/01 21:06:11 jvr Lib/fontTools/ttLib/__init__.py 1.18
+Complety revised the XML import code:
+- use expat instead of xmlproc
+- minor fixes here and there
+
+Fixed bug in hmtx/vmtx code that only occured if all advances were equal.
+
+FontTools now officially requires Python 2.0 or up, due to exapt and unicode.
+----------------------------
+2002/03/12 14:34:43 jvr Lib/fontTools/afmLib.py 1.4
+Charnames can contain a period anywhere, not just at the start.
+----------------------------
+2002/01/17 09:36:30 jvr Lib/fontTools/ttLib/tables/_p_o_s_t.py 1.4
+another buggy font workaround; sped up unpackPStrings somewhat
+----------------------------
+2002/01/07 08:44:09 jvr Lib/fontTools/ttLib/tables/ttProgram.py 1.4
+Hm, these instructions had their stack pop-count reversed.
+Thanks to L. Peter Deutsch for finding this.
+----------------------------
+2001/11/28 12:22:15 jvr Lib/fontTools/t1Lib.py 1.8
+At the expense of some speed, find the end of an excrypted portion
+more acurately. This fixes an obscure problem with Fog 4 fonts.
+----------------------------
+2001/11/05 19:32:30 jvr Lib/fontTools/ttLib/tables/_p_o_s_t.py 1.3
+fixed post table format 1 error: even though the glyph order is fixed,
+that doesn't mean all glyphs in the standard order are there.
+----------------------------
+2001/08/16 18:14:48 jvr Src/eexecOp/eexecOpmodule.c 1.6
+Ugh. The previous change broke under 1.5.2. Work around it, and clean
+up some more hwile we're at it.
+----------------------------
+2001/08/16 16:34:37 jvr Src/eexecOp/eexecOpmodule.c 1.5
+Hm, using "h" format strings for unsigned shorts broke in Python 2.1
+----------------------------
+2001/08/16 11:02:05 jvr Lib/fontTools/misc/psCharStrings.py 1.5
+behave nicely when *any* subpath doesn't start with a moveto.
+----------------------------
+2001/08/16 10:35:28 jvr Lib/fontTools/misc/psCharStrings.py 1.4
+behave nicely when the font doesn't do an initial moveto.
+----------------------------
+2001/08/16 10:34:22 jvr Lib/fontTools/t1Lib.py 1.7
+fixed saveAs()
+----------------------------
+2001/08/15 09:26:15 jvr Lib/fontTools/ttLib/tables/_h_e_a_d.py 1.7
+style constency
+----------------------------
+2001/08/15 07:01:44 jvr Lib/fontTools/ttLib/tables/O_S_2f_2.py 1.4
+spec changed: three fields are now unsigned instead of signed,
+and due to the the wonderful <snort> hungarian notation the field
+names changed as well... (So this change is not b/w compatible)
+----------------------------
+2001/08/15 07:00:01 jvr Lib/fontTools/ttLib/tables/_h_e_a_d.py 1.6
+dump macStyle as binary
+----------------------------
+2001/08/14 06:43:44 jvr Src/eexecOp/eexecOpmodule.c 1.4
+copyright notice updated (but mostly to test the CVS log msg mail)
+----------------------------
+2001/08/10 22:17:34 jvr Lib/fontTools/ttLib/macUtils.py 1.3
+work around MacPython 2.1 incompatibility
+----------------------------
+2001/08/10 22:16:28 jvr Mac/TTX.py 1.3
+grab version from fontTools.__init__
+----------------------------
+2001/08/10 20:28:13 jvr Doc/changes.txt 1.2
+1.0b1 release notes
+----------------------------
+2001/08/10 20:27:23 jvr Doc/index.html 1.4
+added note about distutils needed for Python < 2.0
+----------------------------
+2001/08/10 16:49:56 jvr Lib/fontTools/__init__.py 1.3
+added version variable
+----------------------------
+2001/08/10 16:49:17 jvr mktarball.py 1.8
+add version to tarball filename
+----------------------------
+2001/08/10 08:58:01 jvr LICENSE.txt 1.2
+Let's be vague about where I live(d)...
+----------------------------
+2001/08/10 08:55:44 jvr LICENSE.txt 1.1
+2001/08/10 08:55:44 jvr LEGAL.txt 1.4
+renamed LEGAL.txt to LICENSE.txt, to match the doco...
+----------------------------
+2001/08/10 08:54:14 jvr Doc/index.html 1.3
+updated to the current state of affairs.
+----------------------------
+2001/08/10 00:04:17 jvr ttx_shellext_win32.py 1.3
+cleaned up regtext for clarity. Should be a 100% cosmetic change,
+but I was unable to test it (Hi Adam ;-)
+----------------------------
+2001/08/09 23:45:32 jvr ttCompile.py 1.9
+print a banner for each output file
+----------------------------
+2001/08/09 23:39:05 jvr ttCompile.py 1.8
+reworked command line options
+----------------------------
+2001/08/09 23:03:47 jvr setup.py 1.3
+added warning about dependency on NumPy and PyXML
+----------------------------
+2001/08/09 21:39:29 jvr ttDump.py 1.10
+- fixed -d (forgot to add it to the getopt arg)
+- added comment that -s implies -f
+----------------------------
+2001/08/09 21:31:55 jvr ttDump.py 1.9
+implemented -d (specify output dir) option
+----------------------------
+2001/08/09 21:06:11 jvr ttDump.py 1.8
+first step of changing the command line usage to something more
+sensible: it is now possible to do batches, as in
+  ./ttDump.py *.ttf
+This is not b/w compatible. (The new -d option is not yet implemented)
+----------------------------
+2001/08/09 19:39:05 jvr Src/eexecOp/eexecOpmodule.c 1.3
+And one more...
+----------------------------
+2001/08/09 19:36:36 jvr Src/eexecOp/eexecOpmodule.c 1.2
+Hm, made func defs ANSI compliant.
+----------------------------
+2001/08/09 19:18:30 jvr setup.py 1.2
+eexecOp.{so|pyd|slb} goes into fontTools/misc/
+----------------------------
+2001/08/09 19:13:02 jvr Lib/interfaceChecker.py 1.3
+old cruft
+----------------------------
+2001/08/09 19:09:27 jvr README.txt 1.3
+2001/08/09 19:09:27 jvr LEGAL.txt 1.3
+minor things: the real doco needs real work...
+----------------------------
+2001/08/09 19:06:39 jvr Src/eexecOp/eexecOp.ppc.prj.exp 1.2
+2001/08/09 19:06:39 jvr Src/eexecOp/eexecOp.ppc.prj 1.2
+2001/08/09 19:06:39 jvr Src/eexecOp/Setup.in 1.2
+2001/08/09 19:06:39 jvr Src/eexecOp/README.txt 1.2
+2001/08/09 19:06:39 jvr Src/eexecOp/Makefile.pre.in 1.2
+2001/08/09 19:06:39 jvr Src/eexecOp/Makefile 1.2
+removed obsolete unix makefile support: distutils takes care
+of that now (see setup.py in fonttools/).
+----------------------------
+2001/08/09 19:00:02 jvr Lib/fontTools/misc/eexec.py 1.3
+eexecOp may also be a global module.
+----------------------------
+2001/08/09 18:47:22 jvr setup.py 1.1
+2001/08/09 18:47:22 jvr install.py 1.3
+Removed obsolete install.py script, and replaced it with a
+proper setup.py, offering full distutils support. So far only
+tested under MacOS.
+----------------------------
+2001/07/30 19:05:49 Just Lib/fontTools/ttLib/tables/_g_l_y_f.py 1.9
+removed dependency on old transformation class
+----------------------------
+2001/07/30 19:04:40 Just Lib/fontTools/t1Lib.py 1.6
+updated OpenResFile() to FSpOpenResFile() and CreateResFile() to
+FSpCreateResFile() for carbon compatiblilty.
+----------------------------
+2001/06/27 23:09:57 Just Lib/fontTools/ttLib/tables/_h_e_a_d.py 1.5
+Don't take month and day names from calendar.py: a buggy Metrowerks strftime() made this crash hard in Python 2.2.
+----------------------------
+2001/06/24 15:14:06 Just Lib/fontTools/misc/psLib.py 1.3
+2001/06/24 15:14:06 Just Lib/fontTools/misc/psCharStrings.py 1.3
+don't print extra error info to stdout
+----------------------------
+2001/06/24 15:12:48 Just Lib/fontTools/t1Lib.py 1.5
+renamed a bunch of things to use CamelCase
+----------------------------
+2001/06/24 15:11:31 Just Lib/fontTools/afmLib.py 1.3
+improved API for creating AFM files from scratch
+----------------------------
+2001/06/24 15:10:02 Just Lib/fontTools/fondLib.py 1.3
+fixed style strings bug, as triggered by the Thorndale font.
+----------------------------
+2001/04/30 14:40:17 Just Lib/fontTools/afmLib.py 1.2
+- added support for composite info
+- write attributes in a decent order
+----------------------------
+2001/04/20 18:39:21 Just Lib/fontTools/misc/psLib.py 1.2
+2001/04/20 18:39:05 Just Lib/fontTools/misc/eexec.py 1.2
+minor cleanups
+----------------------------
+2001/03/09 12:42:25 Just Lib/fontTools/nfntLib.py 1.3
+New & improved, but dead slow. Reads and writes.
+----------------------------
+2001/02/23 21:58:57 Just Lib/fontTools/ttLib/__init__.py 1.17
+don't allow duplicate glyph names when building names from cmap/agl
+----------------------------
+2001/01/13 13:48:30 Just Lib/fontTools/ttLib/tables/_c_m_a_p.py 1.5
+workaround for currupt (?) cmap subtable
+----------------------------
+2000/11/03 10:29:08 Just Lib/fontTools/ttLib/tables/_l_o_c_a.py 1.3
+2000/11/03 10:29:08 Just Lib/fontTools/ttLib/tables/_h_m_t_x.py 1.2
+don't complain as loudly with fonts that don't completely adhere to the spec
+----------------------------
+2000/10/23 14:36:20 Just Lib/fontTools/ttLib/tables/_n_a_m_e.py 1.5
+workaround for odd-length unicode strings (!)
+----------------------------
+2000/10/18 22:27:47 Petr Lib/fontTools/ttLib/tables/_m_a_x_p.py 1.3
+doh! font bounding box goes to the head table, not maxp itself.
+----------------------------
+2000/10/13 14:19:31 Just Mac/TTX.rsrc.hqx 1.2
+updated version & copyright
+----------------------------
+2000/10/13 14:18:17 Just Mac/TTXMain.py 1.3
+2000/10/13 14:18:17 Just Mac/TTX.py 1.2
+what was I thinking
+----------------------------
+2000/10/13 13:51:33 Just Lib/fontTools/ttLib/tables/O_S_2f_2.py 1.3
+added workaround for buggy Apple fonts
+----------------------------
+2000/10/11 18:04:03 Just Lib/fontTools/ttLib/tables/_c_m_a_p.py 1.4
+added workaround for Py 1.5.1 compatibility
+----------------------------
+2000/10/03 10:34:34 Just Lib/fontTools/fondLib.py 1.2
+initialize styleStrings with empty string instead of None's: this allows certain Apple fonts to be handled correctly.
+----------------------------
+2000/10/02 07:51:42 Just Lib/fontTools/ttLib/sfnt.py 1.3
+2000/10/02 07:51:42 Just Lib/fontTools/ttLib/__init__.py 1.16
+improved support for writing to (in memory) streams
+----------------------------
+2000/08/23 12:34:44 Just Lib/fontTools/ttLib/tables/_p_o_s_t.py 1.2
+minor fix
+----------------------------
+2000/08/23 12:34:19 Just Lib/fontTools/ttLib/tables/_g_l_y_f.py 1.8
+made calculating bounding box handle empty coordinate arrays gracefully
+----------------------------
+2000/08/23 12:33:14 Just Lib/fontTools/ttLib/tables/_c_m_a_p.py 1.3
+removed an assert that was too strict
+----------------------------
+2000/08/23 12:32:27 Just Lib/fontTools/ttLib/sfnt.py 1.2
+minor fix
+----------------------------
+2000/08/23 12:31:52 Just Lib/fontTools/ttLib/__init__.py 1.15
+minor changes
+----------------------------
+2000/07/03 18:45:58 Just Lib/fontTools/misc/homeResFile.py 1.1
+module to find the home file of a resource (handy for finding suitcase files when all you have is a resource)
+----------------------------
+2000/06/29 18:35:47 Just Lib/fontTools/ttLib/tables/T_S_I_J_.py 1.1
+another OT source table
+----------------------------
+2000/06/08 18:38:43 Just Lib/fontTools/ttLib/tables/O_S_2f_2.py 1.2
+formatting
+----------------------------
+2000/06/07 19:13:11 Just Lib/fontTools/ttLib/tables/_g_l_y_f.py 1.7
+Allow long-aligned glyph records (as is in fact recommended by the latest MS spec, but almost nobody seems to do it...)
+----------------------------
+2000/06/07 18:25:44 Just Lib/fontTools/ttLib/tables/_c_m_a_p.py 1.2
+Fixed cmap optimizer bug: needs more testing!
+----------------------------
+2000/06/07 18:08:02 Just Lib/fontTools/ttLib/tables/_g_l_y_f.py 1.6
+Fixed getCoordinates() so it works correctly with "empty" components.
+----------------------------
+2000/06/07 18:07:14 Just Lib/fontTools/ttLib/tables/_h_e_a_d.py 1.4
+The "flags" field is an unsigned short, not a byte
+----------------------------
+2000/05/26 13:08:10 Just Lib/fontTools/agl.py 1.4
+Roozbeh Pournader found a working version to one of the broken URLs in the Adobe document.
+----------------------------
+2000/04/29 08:13:09 Just ttx_shellext_win32.py 1.2
+updated to conform to the latest configuration (Adam Twardoch)
+----------------------------
+2000/04/01 21:44:08 just Src/eexecOp/Setup.in 1.1
+2000/04/01 21:44:08 just Src/eexecOp/Makefile.pre.in 1.1
+2000/04/01 21:44:08 just Src/eexecOp/Makefile 1.1
+unix Makefile and Setup
+----------------------------
+2000/03/28 10:38:43 Just Lib/fontTools/t1Lib.py 1.4
+some minor improvements
+----------------------------
+2000/03/28 10:37:25 Just Lib/fontTools/cffLib.py 1.6
+don't barf if there are no subroutines
+----------------------------
+2000/03/28 10:33:58 Just Lib/fontTools/unicode.py 1.2
+updated to Unicode 3.0 by Antoine Leca.
+----------------------------
+2000/03/15 20:57:59 Just Mac/README.txt 1.1
+mac readme file
+----------------------------
+2000/03/15 20:56:56 Just Doc/changes.txt 1.1
+2000/03/15 20:56:56 Just Doc/bugs.txt 1.1
+known bugs and last changes
+----------------------------
+2000/03/15 20:56:20 Just Doc/index.html 1.2
+finally written some more doco
+----------------------------
+2000/03/15 20:55:58 Just LEGAL.txt 1.2
+updated license
+----------------------------
+2000/03/15 20:55:29 Just README.txt 1.2
+new minimal readme file
+----------------------------
+2000/03/14 23:21:41 Just Lib/fontTools/ttLib/test/__init__.py 1.2
+added doc strings to empty __init__.py files: WinZip apparently skips empty files. Doh!
+----------------------------
+2000/03/14 23:21:26 Just Lib/fontTools/ttLib/test/ttBrowser.py 1.5
+fixed multi-arg .append() call, for Python 1.6 compatibility.
+----------------------------
+2000/03/14 23:03:53 Just Lib/fontTools/ttLib/tables/_n_a_m_e.py 1.4
+- some method name changes
+- check for 3,0 platform/encoding wide strings
+----------------------------
+2000/03/14 23:02:33 Just Lib/fontTools/ttLib/tables/_k_e_r_n.py 1.3
+minor fixes. Note: format2 is not implemented correctly!
+----------------------------
+2000/03/14 23:01:03 Just Lib/fontTools/ttLib/tables/__init__.py 1.2
+added doc strings to empty __init__.py files: WinZip apparently skips empty files. Doh!
+----------------------------
+2000/03/14 23:00:21 Just Lib/fontTools/ttLib/xmlImport.py 1.4
+fixed multi-arg .append() call, for Python 1.6 compatibility.
+----------------------------
+2000/03/14 22:59:39 Just Lib/fontTools/ttLib/macUtils.py 1.2
+changes reflecting a method name change in the kern table.
+----------------------------
+2000/03/14 22:56:40 Just Lib/fontTools/misc/__init__.py 1.2
+2000/03/14 22:56:33 Just Lib/fontTools/encodings/__init__.py 1.2
+2000/03/14 22:56:27 Just Lib/fontTools/__init__.py 1.2
+added doc strings to empty __init__.py files: WinZip apparently skips empty files. Doh!
+----------------------------
+2000/02/21 21:30:32 Just Lib/fontTools/ttLib/tables/_h_e_a_d.py 1.3
+be relaxed about zero padding the input data to 4-byte boundaries
+----------------------------
+2000/02/21 21:14:05 Just Lib/fontTools/ttLib/tables/_h_e_a_d.py 1.2
+another 64-bit fix
+----------------------------
+2000/02/16 14:59:20 Just ttx_shellext_win32.py 1.1
+2000/02/16 14:59:20 Just ttffile.reg 1.3
+New Windows shell extension by Adam Twardoch.
+----------------------------
+2000/02/13 17:36:44 just mktarball.py 1.7
+some improvements; can optionally specify dest dir
+----------------------------
+2000/02/13 17:00:45 Just Lib/fontTools/ttLib/tables/_l_o_c_a.py 1.2
+first patch to make ttLib 64-bit clean
+----------------------------
+2000/02/13 16:23:28 Just Lib/fontTools/ttLib/__init__.py 1.14
+disable decompilation exception catching: it causes too many debugging nightmares.
+----------------------------
+2000/02/04 19:19:18 Just Lib/fontTools/agl.py 1.3
+Added note about the incorrect old URL in the Adobe text, and reverted the text to what it was: it still is the latest officially released document, and I'd rather include it as-is.
+----------------------------
+2000/02/04 18:58:59 Erik Lib/fontTools/agl.py 1.2
+new URL for adobe's glyphlist doco
+----------------------------
+2000/02/01 15:54:37 Just Lib/fontTools/ttLib/tables/ttProgram.py 1.3
+reinstated accidentally deleted regex.
+----------------------------
+2000/02/01 15:53:37 Just ttDump.py 1.7
+added -i option. This will enable TT instruction disassembly.
+----------------------------
+2000/02/01 15:32:17 Just Lib/fontTools/ttLib/tables/_n_a_m_e.py 1.3
+added an assert, plus some (commented out) test code for bad unicode strings
+----------------------------
+2000/02/01 15:31:18 Just Lib/fontTools/ttLib/tables/_g_l_y_f.py 1.5
+2000/02/01 15:31:02 Just Lib/fontTools/ttLib/tables/_p_r_e_p.py 1.2
+2000/02/01 15:30:48 Just Lib/fontTools/ttLib/tables/_f_p_g_m.py 1.2
+added support for instruction disassembly
+----------------------------
+2000/02/01 15:30:15 Just Lib/fontTools/ttLib/tables/ttProgram.py 1.2
+- added assembler: we've got a full round trip now!
+- added toXML() and fromXML() methods
+----------------------------
+2000/02/01 15:29:03 Just Lib/fontTools/ttLib/__init__.py 1.13
+added support for instruction disassembly in saveXML()
+----------------------------
+2000/02/01 15:28:18 Just Lib/fontTools/misc/textTools.py 1.2
+fixed buglet in num2binary()
+----------------------------
+2000/01/31 14:33:17 Just Lib/fontTools/misc/psCharStrings.py 1.2
+fixed broken import
+----------------------------
+2000/01/31 14:31:16 Just Lib/interfaceChecker.py 1.2
+minor doc string change
+----------------------------
+2000/01/26 19:32:45 Just Lib/fontTools/misc/arrayTools.py 1.5
+Two new functions:
+- vectorLength(vector): calculate the length of a vector
+- asInt16(): round and cast any array (or number) to 16 bit ints
+----------------------------
+2000/01/26 19:20:06 Just Lib/interfaceChecker.py 1.1
+Support for interface checking. Experimental.
+----------------------------
+2000/01/23 19:10:27 Just Lib/fontTools/misc/arrayTools.py 1.4
+new functions: unionRect() and rectCenter()
+----------------------------
+2000/01/22 00:26:07 Just Lib/fontTools/misc/arrayTools.py 1.3
+added intRect() function. Turn any rect into a rect using ints only.
+----------------------------
+2000/01/20 11:08:15 Just Lib/fontTools/ttLib/tables/_g_l_y_f.py 1.4
+- added methods to get composite component info conveniently
+----------------------------
+2000/01/19 20:44:33 Just Lib/fontTools/cffLib.py 1.5
+various changes:
+- the Transformation class is now a little cleaner & smarter
+- pens now have a reference to a font
+- pens have a new method called drawGlyph(), which is needed for composites.
+----------------------------
+2000/01/19 12:37:17 Just Mac/TTXMain.py 1.2
+use ".ttx" extension instead of ".xml". TTX is now the name of the format, not just the app. Still needs work, though.
+----------------------------
+2000/01/18 22:29:39 Just Lib/fontTools/misc/arrayTools.py 1.2
+added a bunch of rectangle tools that mimic some Qd.*Rect functions, like Qd.InsetRect.
+----------------------------
+2000/01/17 18:58:46 Just Lib/fontTools/ttLib/test/ttBrowser.py 1.4
+2000/01/17 18:58:17 Just Lib/fontTools/ttLib/tables/table_API_readme.txt 1.2
+2000/01/17 18:57:15 Just Lib/fontTools/ttLib/__init__.py 1.12
+use ".ttx" extension instead of ".xml". TTX is not the name of the format, not the app...
+----------------------------
+2000/01/17 18:49:34 Just xml2tt.py 1.7
+2000/01/17 18:49:34 Just ttffile.reg 1.2
+2000/01/17 18:49:34 Just ttDump.py 1.6
+2000/01/17 18:49:34 Just ttCompile.py 1.7
+2000/01/17 18:49:34 Just tt2xml.py 1.6
+renamed tt2xml.pt to ttDump.py and xml2tt.py to ttCompile.py
+----------------------------
+2000/01/16 22:14:02 Just Lib/fontTools/t1Lib.py 1.3
+2000/01/16 22:14:02 Just Lib/fontTools/psOperators.py 1.3
+2000/01/16 22:14:02 Just Lib/fontTools/psLib.py 1.3
+2000/01/16 22:14:02 Just Lib/fontTools/psCharStrings.py 1.2
+2000/01/16 22:14:02 Just Lib/fontTools/misc/psOperators.py 1.1
+2000/01/16 22:14:02 Just Lib/fontTools/misc/psLib.py 1.1
+2000/01/16 22:14:02 Just Lib/fontTools/misc/psCharStrings.py 1.1
+2000/01/16 22:14:02 Just Lib/fontTools/cffLib.py 1.4
+Moved psCharStrings.py, psLib.py and psOperators.py to fontTools.misc, since they're not "toplevel" font tools.
+----------------------------
+2000/01/16 20:37:11 Just Lib/fontTools/misc/arrayTools.py 1.1
+yet another reorganization round...
+----------------------------
+2000/01/12 19:15:57 Just Lib/fontTools/t1Lib.py 1.2
+2000/01/12 19:15:57 Just Lib/fontTools/psLib.py 1.2
+Changes to use the new fontTools.misc.eexec module instead of the old eexec module.
+----------------------------
+2000/01/12 19:15:12 Just Lib/fontTools/misc/eexec.py 1.1
+added fontTools.misc.eexec and a MacOS/PPC shared lib (eexecOp) that provides the C implementation.
+----------------------------
+2000/01/12 19:13:29 Just Src/eexecOp/eexecOpmodule.c 1.1
+2000/01/12 19:13:29 Just Src/eexecOp/eexecOp.ppc.prj.exp 1.1
+2000/01/12 19:13:29 Just Src/eexecOp/eexecOp.ppc.prj 1.1
+2000/01/12 19:13:29 Just Src/eexecOp/README.txt 1.1
+added eexecOp, C implementation of the new fontTools.misc.eexec module.
+----------------------------
+2000/01/05 20:45:38 Just Lib/fontTools/ttLib/tables/asciiTable.py 1.2
+Remove null bytes before dumping to XML. This seems neccesary, but I'm not sure if this breaks compilation.
+----------------------------
+2000/01/05 20:44:19 Just Lib/fontTools/ttLib/tables/T_S_I_V_.py 1.1
+added TSIV table
+----------------------------
+2000/01/05 20:43:36 Just Lib/fontTools/ttLib/__init__.py 1.11
+- Added skiptTables argument to TTFont.saveXML(), to support -x option of tt2xml.py
+- Fixed typo
+----------------------------
+2000/01/05 20:41:34 Just ttDump.py 1.5
+2000/01/05 20:41:34 Just tt2xml.py 1.5
+added -x <table> option, to exclude a specific table.
+----------------------------
+2000/01/04 14:03:13 Just Lib/fontTools/ttLib/tables/asciiTable.py 1.1
+2000/01/04 14:03:13 Just Lib/fontTools/ttLib/tables/T_S_I_S_.py 1.1
+2000/01/04 14:03:13 Just Lib/fontTools/ttLib/tables/T_S_I_P_.py 1.1
+2000/01/04 14:03:13 Just Lib/fontTools/ttLib/tables/T_S_I_D_.py 1.1
+2000/01/04 14:03:13 Just Lib/fontTools/ttLib/tables/T_S_I_B_.py 1.1
+Added private VOLT (?) tables: TSIB, TSID, TSIP, TSIS. Easy, since they're plain ascii tables.
+----------------------------
+2000/01/04 14:02:05 Just Lib/fontTools/ttLib/tables/T_S_I__1.py 1.2
+added some initializer in case the table is empty.
+----------------------------
+2000/01/04 14:01:29 Just Lib/fontTools/ttLib/tables/otCommon.py 1.3
+while the OT modules are in progress, disable decompilation and fall back to hex dumps.
+----------------------------
+2000/01/04 13:51:59 Just Lib/xmlWriter.py 1.2
+set XML file type to BBEdit when on MacOS
+----------------------------
+2000/01/03 23:01:46 Just Lib/fontTools/ttLib/tables/otCommon.py 1.2
+cleaned up error message for failing version test
+----------------------------
+2000/01/03 23:00:55 Just Lib/fontTools/ttLib/tables/L_T_S_H_.py 1.2
+added error messages to the assert statements
+----------------------------
+2000/01/03 23:00:10 Just Lib/fontTools/ttLib/tables/DefaultTable.py 1.2
+2000/01/03 22:58:42 Just Lib/fontTools/ttLib/xmlImport.py 1.3
+2000/01/03 22:58:42 Just Lib/fontTools/ttLib/__init__.py 1.10
+Added code to fall back to the DefaultTable (and therefore to hex XML dumps) when an exception occurs during decompilation.
+----------------------------
+1999/12/29 13:10:59 Just ttDump.py 1.4
+1999/12/29 13:10:59 Just tt2xml.py 1.4
+When using -s (splitting files), save the xml files in a separate directory instead of in the same dir as the font file.
+----------------------------
+1999/12/29 13:09:37 Just xml2tt.py 1.6
+1999/12/29 13:09:37 Just ttCompile.py 1.6
+Revert current directory after glob'ing for *.xml files
+----------------------------
+1999/12/29 13:07:22 Just Lib/fontTools/ttLib/tables/_n_a_m_e.py 1.2
+Treat platformID=3, platEncID=0 also as Unicode strings.
+----------------------------
+1999/12/29 13:06:08 Just Lib/fontTools/ttLib/__init__.py 1.9
+- fixed broken agl import
+- changed TTFOnt.saveXML + splitTables<>0 behavior: now expects a path to a directory
+----------------------------
+1999/12/27 20:02:32 Just Lib/fontTools/ttLib/xmlImport.py 1.2
+XMLApplication: don't create a new table when a table with that tag already exist in the TTFont object.
+----------------------------
+1999/12/27 19:52:01 Just xml2tt.py 1.5
+1999/12/27 19:52:01 Just ttCompile.py 1.5
+Added support to merge multiple XML files into one font (the opposite of tt2xml.py's -s option). Improved doc string.
+----------------------------
+1999/12/27 19:49:36 Just ttDump.py 1.3
+1999/12/27 19:49:36 Just tt2xml.py 1.3
+Added -s option to split each table into a separate XML file.
+----------------------------
+1999/12/27 19:48:21 Just Lib/fontTools/ttLib/__init__.py 1.8
+Added optional splitTables argument to TTFont.saveXML(). Set to non-zero, this will cause each table to be dumped to an idividual XML file.
+----------------------------
+1999/12/27 15:40:43 Just xml2tt.py 1.4
+1999/12/27 15:40:43 Just ttCompile.py 1.4
+print final (timing) message when in verbose mode
+----------------------------
+1999/12/27 15:39:18 Just Lib/fontTools/nfntLib.py 1.2
+slight cleanup.
+----------------------------
+1999/12/23 15:16:22 Just Lib/fontTools/ttLib/__init__.py 1.7
+edited TTFont.__init__ doc string, the recalcBBoxes explanation should now be clearer and more complete.
+----------------------------
+1999/12/23 14:44:59 Just Lib/fontTools/ttLib/test/ttBrowser.py 1.3
+added browseTTFont() function.
+----------------------------
+1999/12/23 14:44:16 Just Lib/fontTools/ttLib/tables/_m_a_x_p.py 1.2
+1999/12/23 14:44:16 Just Lib/fontTools/ttLib/tables/_h_h_e_a.py 1.2
+1999/12/23 14:44:16 Just Lib/fontTools/ttLib/tables/_g_l_y_f.py 1.3
+1999/12/23 14:44:02 Just Lib/fontTools/ttLib/__init__.py 1.6
+don't recalc a number of things then TTFont().recalcBBoxes is off. This allows us to compact glyphs right after they've been parsed from XML, which should greatly reduce memory usage, and therefore should speedup compiling large fonts.
+----------------------------
+1999/12/23 12:32:30 Just Lib/fontTools/ttLib/tables/_h_d_m_x.py 1.2
+oops: header struct is big endian of course! noted by Werner Lemberg.
+----------------------------
+1999/12/23 12:31:19 Just xml2tt.py 1.3
+1999/12/23 12:31:19 Just ttCompile.py 1.3
+fixed dumb error: recalcBBoxes goes into the TTFont constructor, not int TTFont.save.
+----------------------------
+1999/12/20 23:37:23 Just Mac/TTXMain.py 1.1
+1999/12/20 23:37:23 Just Mac/TTX.rsrc.hqx 1.1
+1999/12/20 23:37:23 Just Mac/TTX.py 1.1
+populating Mac subdirectory
+----------------------------
+1999/12/20 23:36:46 Just TTX.rsrc 1.2
+1999/12/20 23:36:46 Just TTX.py 1.2
+moved Mac subdirectory
+----------------------------
+1999/12/20 22:02:10 Just Lib/fontTools/cffLib.py 1.3
+dummy checkin -- testing
+----------------------------
+1999/12/20 21:59:49 Just Lib/fontTools/cffLib.py 1.2
+added $Id$ tag.
+----------------------------
+1999/12/18 23:56:14 just mktarball.py 1.6
+fixed dir dependency
+----------------------------
+1999/12/18 23:28:54 Just mktarball.py 1.5
+doco and cleanup
+----------------------------
+1999/12/18 23:25:16 just mktarball.py 1.4
+working version
+----------------------------
+1999/12/18 23:10:58 Just mktarball.py 1.3
+oops, syntax error
+----------------------------
+1999/12/18 23:09:30 Just mktarball.py 1.2
+debugging...
+----------------------------
+1999/12/18 23:05:58 Just mktarball.py 1.1
+added distribution script
+----------------------------
+1999/12/18 22:56:47 Just Lib/fontTools/encodings/MacRoman.py 1.2
+dummy commit, testing
+----------------------------
+1999/12/18 21:32:40 Just Lib/fontTools/ttLib/__init__.py 1.5
+moved an import statement
+----------------------------
+1999/12/18 21:30:39 Just Lib/fontTools/psOperators.py 1.2
+now uses fontTools.encodings.StandardEncoding instead of defining its own
+----------------------------
+1999/12/18 21:29:28 Just Lib/fontTools/encodings/__init__.py 1.1
+1999/12/18 21:29:28 Just Lib/fontTools/encodings/StandardEncoding.py 1.1
+1999/12/18 21:29:28 Just Lib/fontTools/encodings/MacRoman.py 1.1
+added some encoding files in a new subpackage: fontTools.encodings
+----------------------------
+1999/12/18 18:18:09 Just Doc/index.html 1.1
+added Doc directory and initial hmtl doc file. Still pretty much empty...
+----------------------------
+1999/12/18 18:12:15 Just xml2tt.py 1.2
+1999/12/18 18:12:15 Just ttCompile.py 1.2
+- changed some variable names
+- added -b command line argument: sets recalcBBoxes to false
+----------------------------
+1999/12/18 18:11:44 Just ttDump.py 1.2
+1999/12/18 18:11:44 Just tt2xml.py 1.2
+changed some variable names.
+----------------------------
+1999/12/18 18:08:07 Just Lib/fontTools/ttLib/tables/_g_l_y_f.py 1.2
+added recalcBBoxes argument to Glyph.compile()
+----------------------------
+1999/12/18 18:06:25 Just Lib/fontTools/ttLib/__init__.py 1.4
+added recalcBBoxes argument to TTFont.__init__()
+----------------------------
+1999/12/17 12:54:19 Just Lib/fontTools/ttLib/__init__.py 1.3
+minor cleanup of some doc strings
+----------------------------
+1999/12/17 12:51:21 Just Lib/fontTools/ttLib/__init__.py 1.2
+added __release__ symbol, changed __version__ to $Id$.
+----------------------------
+1999/12/17 12:42:24 Just install.py 1.2
+changed the name of the .pth file to FontTools.pth
+----------------------------
+1999/12/17 12:37:55 Just Lib/fontTools/ttLib/test/ttBrowser.py 1.2
+added doc string saying that this module is Mac-only.
+----------------------------
+1999/12/17 12:36:07 Just Lib/fontTools/ttLib/test/__init__.py 1.1
+forgot to check in the __init__.py file for fontTools.ttLib.test
+----------------------------
+1999/12/17 11:57:06 Just Lib/fontTools/ttLib/tables/_k_e_r_n.py 1.2
+fixed broken ttLib.sfnt import statement
+----------------------------
+1999/12/16 22:04:30 Just xml2tt.py 1.1
+1999/12/16 22:04:30 Just ttffile.reg 1.1
+1999/12/16 22:04:30 Just ttDump.py 1.1
+1999/12/16 22:04:30 Just ttCompile.py 1.1
+1999/12/16 22:04:30 Just tt2xml.py 1.1
+1999/12/16 22:04:30 Just install.py 1.1
+1999/12/16 22:04:30 Just TTX.rsrc 1.1
+1999/12/16 22:04:30 Just TTX.py 1.1
+1999/12/16 22:04:30 Just README.txt 1.1
+1999/12/16 22:04:30 Just LEGAL.txt 1.1
+Added the TTX main program, the command line programs and additional files.
+----------------------------
+1999/12/16 21:34:53 Just Lib/fontTools/ttLib/test/ttBrowser.py 1.1
+1999/12/16 21:34:53 Just Lib/fontTools/ttLib/tables/ttProgram.py 1.1
+1999/12/16 21:34:53 Just Lib/fontTools/ttLib/tables/table_API_readme.txt 1.1
+1999/12/16 21:34:53 Just Lib/fontTools/ttLib/tables/otCommon.py 1.1
+1999/12/16 21:34:53 Just Lib/fontTools/ttLib/tables/_v_m_t_x.py 1.1
+1999/12/16 21:34:53 Just Lib/fontTools/ttLib/tables/_v_h_e_a.py 1.1
+1999/12/16 21:34:53 Just Lib/fontTools/ttLib/tables/_p_r_e_p.py 1.1
+1999/12/16 21:34:53 Just Lib/fontTools/ttLib/tables/_p_o_s_t.py 1.1
+1999/12/16 21:34:53 Just Lib/fontTools/ttLib/tables/_n_a_m_e.py 1.1
+1999/12/16 21:34:53 Just Lib/fontTools/ttLib/tables/_m_a_x_p.py 1.1
+1999/12/16 21:34:53 Just Lib/fontTools/ttLib/tables/_l_o_c_a.py 1.1
+1999/12/16 21:34:53 Just Lib/fontTools/ttLib/tables/_k_e_r_n.py 1.1
+1999/12/16 21:34:53 Just Lib/fontTools/ttLib/tables/_h_m_t_x.py 1.1
+1999/12/16 21:34:53 Just Lib/fontTools/ttLib/tables/_h_h_e_a.py 1.1
+1999/12/16 21:34:53 Just Lib/fontTools/ttLib/tables/_h_e_a_d.py 1.1
+1999/12/16 21:34:53 Just Lib/fontTools/ttLib/tables/_h_d_m_x.py 1.1
+1999/12/16 21:34:53 Just Lib/fontTools/ttLib/tables/_g_l_y_f.py 1.1
+1999/12/16 21:34:53 Just Lib/fontTools/ttLib/tables/_g_a_s_p.py 1.1
+1999/12/16 21:34:53 Just Lib/fontTools/ttLib/tables/_f_p_g_m.py 1.1
+1999/12/16 21:34:53 Just Lib/fontTools/ttLib/tables/_c_v_t.py 1.1
+1999/12/16 21:34:53 Just Lib/fontTools/ttLib/tables/_c_m_a_p.py 1.1
+1999/12/16 21:34:53 Just Lib/fontTools/ttLib/tables/__init__.py 1.1
+1999/12/16 21:34:53 Just Lib/fontTools/ttLib/tables/T_S_I__5.py 1.1
+1999/12/16 21:34:53 Just Lib/fontTools/ttLib/tables/T_S_I__3.py 1.1
+1999/12/16 21:34:53 Just Lib/fontTools/ttLib/tables/T_S_I__2.py 1.1
+1999/12/16 21:34:53 Just Lib/fontTools/ttLib/tables/T_S_I__1.py 1.1
+1999/12/16 21:34:53 Just Lib/fontTools/ttLib/tables/T_S_I__0.py 1.1
+1999/12/16 21:34:53 Just Lib/fontTools/ttLib/tables/O_S_2f_2.py 1.1
+1999/12/16 21:34:53 Just Lib/fontTools/ttLib/tables/L_T_S_H_.py 1.1
+1999/12/16 21:34:53 Just Lib/fontTools/ttLib/tables/G_S_U_B_.py 1.1
+1999/12/16 21:34:53 Just Lib/fontTools/ttLib/tables/G_P_O_S_.py 1.1
+1999/12/16 21:34:53 Just Lib/fontTools/ttLib/tables/DefaultTable.py 1.1
+1999/12/16 21:34:53 Just Lib/fontTools/ttLib/tables/D_S_I_G_.py 1.1
+1999/12/16 21:34:53 Just Lib/fontTools/ttLib/tables/C_F_F_.py 1.1
+1999/12/16 21:34:52 Just Lib/fontTools/ttLib/xmlImport.py 1.1
+1999/12/16 21:34:52 Just Lib/fontTools/ttLib/standardGlyphOrder.py 1.1
+1999/12/16 21:34:52 Just Lib/fontTools/ttLib/sfnt.py 1.1
+1999/12/16 21:34:52 Just Lib/fontTools/ttLib/macUtils.py 1.1
+1999/12/16 21:34:52 Just Lib/fontTools/ttLib/__init__.py 1.1
+1999/12/16 21:34:52 Just Lib/fontTools/misc/textTools.py 1.1
+1999/12/16 21:34:52 Just Lib/fontTools/misc/__init__.py 1.1
+1999/12/16 21:34:51 Just Lib/xmlWriter.py 1.1
+1999/12/16 21:34:51 Just Lib/sstruct.py 1.1
+1999/12/16 21:34:51 Just Lib/fontTools/unicode.py 1.1
+1999/12/16 21:34:51 Just Lib/fontTools/t1Lib.py 1.1
+1999/12/16 21:34:51 Just Lib/fontTools/psOperators.py 1.1
+1999/12/16 21:34:51 Just Lib/fontTools/psLib.py 1.1
+1999/12/16 21:34:51 Just Lib/fontTools/psCharStrings.py 1.1
+1999/12/16 21:34:51 Just Lib/fontTools/nfntLib.py 1.1
+1999/12/16 21:34:51 Just Lib/fontTools/fondLib.py 1.1
+1999/12/16 21:34:51 Just Lib/fontTools/cffLib.py 1.1
+1999/12/16 21:34:51 Just Lib/fontTools/agl.py 1.1
+1999/12/16 21:34:51 Just Lib/fontTools/afmLib.py 1.1
+1999/12/16 21:34:51 Just Lib/fontTools/__init__.py 1.1
+Created a new library directory called "FreeLib". All OpenSource RFMKII components will reside there, fontTools being the flagship.
