@@ -1,7 +1,7 @@
 """cffLib.py -- read/write tools for Adobe CFF fonts."""
 
 #
-# $Id: cffLib.py,v 1.18 2002-05-17 19:58:49 jvr Exp $
+# $Id: cffLib.py,v 1.19 2002-05-17 20:04:05 jvr Exp $
 #
 
 import struct, sstruct
@@ -263,7 +263,9 @@ def buildConverters(table):
 	return d
 
 
-class XMLConverter:
+class BaseConverter:
+	def read(self, parent, value):
+		return value
 	def xmlWrite(self, xmlWriter, name, value):
 		xmlWriter.begintag(name)
 		xmlWriter.newline()
@@ -271,7 +273,7 @@ class XMLConverter:
 		xmlWriter.endtag(name)
 		xmlWriter.newline()
 
-class PrivateDictConverter(XMLConverter):
+class PrivateDictConverter(BaseConverter):
 	def read(self, parent, value):
 		size, offset = value
 		file = parent.file
@@ -282,13 +284,13 @@ class PrivateDictConverter(XMLConverter):
 		pr.decompile(data)
 		return pr
 
-class SubrsConverter(XMLConverter):
+class SubrsConverter(BaseConverter):
 	def read(self, parent, value):
 		file = parent.file
 		file.seek(parent.offset + value)  # Offset(self)
 		return CharStringIndex(file, name="SubrsIndex")
 
-class CharStringsConverter(XMLConverter):
+class CharStringsConverter(BaseConverter):
 	def read(self, parent, value):
 		file = parent.file
 		charset = parent.charset
@@ -361,7 +363,7 @@ def parseCharset(numGlyphs, file, strings, isCID, format):
 	return charset
 
 
-class FDArrayConverter(XMLConverter):
+class FDArrayConverter(BaseConverter):
 	def read(self, parent, value):
 		file = parent.file
 		file.seek(value)
@@ -402,9 +404,7 @@ class FDSelectConverter:
 		pass
 
 
-class ROSConverter:
-	def read(self, parent, value):
-		return value
+class ROSConverter(BaseConverter):
 	def xmlWrite(self, xmlWriter, name, value):
 		registry, order, supplement = value
 		xmlWriter.simpletag(name, [('registry', registry), ('order', order),
