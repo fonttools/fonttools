@@ -287,6 +287,71 @@ class AlternateSubst(FormatSwitchingBaseTable):
 			set.append(attrs["glyph"])
 
 
+class LigatureSubst(FormatSwitchingBaseTable):
+	
+	def postRead(self, rawTable, font):
+		ligatures = {}
+		if self.Format == 1:
+			input = rawTable["Coverage"].glyphs
+			ligSets = rawTable["LigatureSet"]
+			assert len(input) == len(ligSets)
+			for i in range(len(input)):
+				ligatures[input[i]] = ligSets[i].Ligature
+		else:
+			assert 0, "unknown format: %s" % self.Format
+		self.ligatures = ligatures
+	
+	def preWrite(self, font):
+		self.Format = 1
+		items = self.ligatures.items()
+		for i in range(len(items)):
+			glyphName, set = items[i]
+			items[i] = font.getGlyphID(glyphName), glyphName, set
+		items.sort()
+		glyphs = []
+		cov = Coverage()
+		cov.glyphs = glyphs
+		ligSets = []
+		for glyphID, glyphName, set in items:
+			glyphs.append(glyphName)
+			ligSet = LigatureSet()
+			ligs = ligSet.Ligature = []
+			for lig in set:
+				ligs.append(lig)
+			ligSets.append(ligSet)
+		return {"Coverage": cov, "LigatureSet": ligSets}
+	
+	def toXML2(self, xmlWriter, font):
+		items = self.ligatures.items()
+		items.sort()
+		for glyphName, ligSets in items:
+			xmlWriter.begintag("LigatureSet", glyph=glyphName)
+			xmlWriter.newline()
+			for lig in ligSets:
+				xmlWriter.simpletag("Ligature", glyph=lig.LigGlyph,
+					components=",".join(lig.Component))
+				xmlWriter.newline()
+			xmlWriter.endtag("LigatureSet")
+			xmlWriter.newline()
+	
+	def fromXML(self, (name, attrs, content), font):
+		ligatures = getattr(self, "ligatures", None)
+		if ligatures is None:
+			ligatures = {}
+			self.ligatures = ligatures
+		glyphName = attrs["glyph"]
+		ligs = []
+		ligatures[glyphName] = ligs
+		for element in content:
+			if type(element) != TupleType:
+				continue
+			name, attrs, content = element
+			lig = Ligature()
+			lig.LigGlyph = attrs["glyph"]
+			lig.Component = attrs["components"].split(",")
+			ligs.append(lig)
+
+
 #
 # For each subtable format there is a class. However, we don't really distinguish
 # between "field name" and "format name": often these are the same. Yet there's
