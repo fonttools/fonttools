@@ -1,22 +1,17 @@
 #! /usr/bin/env python
 
 """\
-usage: ttcompile [-hvbf] [-d output-dir] [-i TTF-input-file] TTX-1 ... TTX-N
+usage: ttcompile [-hvbf] [-i input-TTF] scr [target]
+       ttcompile [-hvbf] [-i input-TTF] src1 ... srcN directory
 
     Translate one or more TTX files (as output by ttDump) to a TrueType
-    font file. If a TTX-file argument is a directory instead of a file, all
-    files in that directory ending in '.ttx' will be merged into one
-    TrueType file. This is mostly useful in conjunction with the -s option
-    of ttDump.py.
+    font file.
 
     Options:
     -h Help: print this message
     -i TrueType-input-file: specify a TT file to be merged with the TTX file.
-       This option is only valid when at most one TTX file (or directory
-       containing separated TTX files) is specified.
+       This option is only valid when at most one TTX file is specified.
     -b Don't recalc glyph boundig boxes: use the values in the TTX file as-is.
-    -d <output-dir> Specify a directory in which the output file(s)
-       should end up. The directory must exist.
     -f Force overwriting existing files.
     -v Verbose: messages will be written to stdout about what is being done
 """
@@ -28,6 +23,13 @@ def usage():
 	print __doc__
 	sys.exit(2)
 
+def makeOutputFileName(xmlPath, outputDir):
+	dir, file = os.path.split(xmlPath)
+	file, ext = os.path.splitext(file)
+	if outputDir:
+		dir = outputDir
+	return os.path.join(dir, file + ".ttf")
+
 try:
 	options, args = getopt.getopt(sys.argv[1:], "hvbfd:i:")
 except getopt.GetoptError:
@@ -38,7 +40,6 @@ verbose = 0
 ttInFile = None
 recalcBBoxes = 1
 forceOverwrite = 0
-outputDir = None
 
 for option, value in options:
 	if option == "-i":
@@ -50,26 +51,35 @@ for option, value in options:
 		sys.exit(0)
 	elif option == "-b":
 		recalcBBoxes = 0
-	elif option == "-d":
-		outputDir = value
 	elif option == "-f":
 		forceOverwrite = 1
 
 if not args:
 	usage()
 
-if ttInFile and len(args) > 1:
-	print "Must specify exactly one TTX file (or directory) when using -i"
+if ttInFile and len(args) > 2:
+	print "Must specify exactly one TTX source file when using -i"
 	sys.exit(2)
 
 
-for xmlPath in args:
-	path, ext = os.path.splitext(xmlPath)
-	if outputDir is not None:
-		fileName = os.path.basename(path)
-		path = os.path.join(outputDir, fileName)
-	ttPath = path + '.ttf'
-	
+nargs = len(args)
+if nargs == 1:
+	files = [(args[0], makeOutputFileName(args[0], None))]
+elif nargs == 2:
+	xmlPath = args[0]
+	outPath = args[1]
+	print "000", outPath
+	if os.path.isdir(outPath):
+		outPath = makeOutputFileName(xmlPath, outPath)
+	files = [(xmlPath, outPath)]
+else:
+	outputDir = args[-1]
+	files = []
+	for xmlPath in args[:-1]:
+		files.append((xmlPath, makeOutputFileName(xmlPath, outputDir)))
+
+
+for xmlPath, ttPath in files:
 	if not forceOverwrite and os.path.exists(ttPath):
 		answer = raw_input('Overwrite "%s"? ' % ttPath)
 		if not answer[:1] in ("Y", "y"):
@@ -79,16 +89,7 @@ for xmlPath in args:
 	print 'Compiling "%s" to "%s"...' % (xmlPath, ttPath)
 	
 	tt = ttLib.TTFont(ttInFile, recalcBBoxes=recalcBBoxes, verbose=verbose)
-
-	if os.path.isdir(xmlPath):
-		import glob
-		files = glob.glob1(xmlPath, "*.ttx")
-		for xmlFile in files:
-			xmlFile = os.path.join(xmlPath, xmlFile)
-			tt.importXML(xmlFile)
-	else:
-		tt.importXML(xmlPath)
-
+	tt.importXML(xmlPath)
 	tt.save(ttPath)
 
 	if verbose:

@@ -1,7 +1,8 @@
 #! /usr/bin/env python
 
 """\
-usage: ttdump [-hvisf] [-t <table>] [-x <table>] [-d <output-dir>] TTF-1 ... TTF-N 
+usage: ttdump [-hvisf] [-t <table>] [-x <table>] src [target]
+       ttdump [-hvisf] [-t <table>] [-x <table>] src1 ... srcN directory
 
     Dump one or more TrueType/OpenType fonts as TTX files (an XML-based
     text format).
@@ -15,13 +16,11 @@ usage: ttdump [-hvisf] [-t <table>] [-x <table>] [-d <output-dir>] TTF-1 ... TTF
        pre-program) will be written to the TTX file as assembly
        instead of hex data.
     -s Split tables: save the TTX data into separate TTX files per
-       table. The files will be saved in a directory. The name of this
-       directory will be constructed from the input filename (by
-       dropping the extension) or can be specified by the optional
-       TTX-output-file argument. This option implies -f.
+       table and write one small TTX file that contains references
+       to the individual table dumps. This file can be used as
+       input to ttcompile, as long as the table files are in the
+       same directory.
     -f Force overwriting existing files.
-    -d <output-dir> Specify a directory in which the output file(s)
-       should end up. The directory must exist.
     -t <table> Specify a table to dump. Multiple -t options
        are allowed. When no -t option is specified, all tables
        will be dumped.
@@ -36,6 +35,13 @@ def usage():
 	print __doc__
 	sys.exit(2)
 
+def makeOutputFileName(ttPath, outputDir):
+	dir, file = os.path.split(ttPath)
+	file, ext = os.path.splitext(file)
+	if outputDir:
+		dir = outputDir
+	return os.path.join(dir, file + ".ttx")
+
 try:
 	options, args = getopt.getopt(sys.argv[1:], "hvisft:x:d:")
 except getopt.GetoptError:
@@ -48,7 +54,7 @@ disassembleInstructions = 0
 forceOverwrite = 0
 tables = []
 skipTables = []
-outputDir = None
+
 
 for option, value in options:
 	if option == "-t":
@@ -65,8 +71,6 @@ for option, value in options:
 		# normalize tag
 		value = value + (4 - len(value)) * " "
 		skipTables.append(value)
-	elif option == "-d":
-		outputDir = value
 	elif option == "-v":
 		verbose = 1
 	elif option == "-f":
@@ -86,23 +90,33 @@ if tables and skipTables:
 if not args:
 	usage()
 
-for ttPath in args:
-	path, ext = os.path.splitext(ttPath)
-	if outputDir is not None:
-		fileName = os.path.basename(path)
-		path = os.path.join(outputDir, fileName)
-	
-	if splitTables:
-		xmlPath = path
-	else:
-		xmlPath = path + ".ttx"
-		if not forceOverwrite and os.path.exists(xmlPath):
-			answer = raw_input('Overwrite "%s"? ' % xmlPath)
-			if not answer[:1] in ("Y", "y"):
-				print "skipped."
-				continue
-	print 'Dumping "%s" to "%s"...' % (ttPath, xmlPath)
+
+nargs = len(args)
+if nargs == 1:
+	files = [(args[0], makeOutputFileName(args[0], None))]
+elif nargs == 2:
+	ttPath = args[0]
+	outPath = args[1]
+	if os.path.isdir(outPath):
+		outPath = makeOutputFileName(ttPath, outPath)
+	files = [(ttPath, outPath)]
+else:
+	outputDir = args[-1]
+	files = []
+	for ttPath in args[:-1]:
+		files.append((ttPath, makeOutputFileName(ttPath, outputDir)))
+
+
+for ttPath, outFile in files:
+	if not forceOverwrite and os.path.exists(outFile):
+		answer = raw_input('Overwrite "%s"? ' % outFile)
+		if not answer[:1] in ("Y", "y"):
+			print "skipped."
+			continue
+		if not os.path.isdir(outFile):
+			os.remove(outFile)
+	print 'Dumping "%s" to "%s"...' % (ttPath, outFile)
 	tt = ttLib.TTFont(ttPath, 0, verbose=verbose)
-	tt.saveXML(xmlPath, tables=tables, skipTables=skipTables, 
+	tt.saveXML(outFile, tables=tables, skipTables=skipTables, 
 		splitTables=splitTables, disassembleInstructions=disassembleInstructions)
 
