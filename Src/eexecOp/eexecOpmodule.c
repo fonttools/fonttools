@@ -1,5 +1,5 @@
 /*
-**  Copyright 1996-2000 by Letterror: Just van Rossum, Den Haag, The Netherlands.
+**  Copyright 1996-2001 by Letterror: Just van Rossum, Den Haag, The Netherlands.
 **	
 **  Open source.
 **
