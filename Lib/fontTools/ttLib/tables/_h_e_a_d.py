@@ -99,11 +99,11 @@ def calc_mac_epoch_diff():
 	"""calculate the difference between the original Mac epoch (1904)
 	to the epoch on this machine.
 	"""
-	safe_epoch_t = (1971, 1, 1, 0, 0, 0, 0, 0, 0)
+	safe_epoch_t = (1972, 1, 1, 0, 0, 0, 0, 0, 0)
 	safe_epoch = time.mktime(safe_epoch_t) - time.timezone
 	assert time.gmtime(safe_epoch)[:6] == safe_epoch_t[:6]
-	seconds1904to1971 = 60 * 60 * 24 * (365 * (1971-1904) + 17) # thanks, Laurence!
-	return long(safe_epoch - seconds1904to1971)
+	seconds1904to1972 = 60 * 60 * 24 * (365 * (1972-1904) + 17) # thanks, Laurence!
+	return long(safe_epoch - seconds1904to1972)
 
 mac_epoch_diff = calc_mac_epoch_diff()
 
