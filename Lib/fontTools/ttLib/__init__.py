@@ -42,7 +42,7 @@ Dumping 'prep' table...
 """
 
 #
-# $Id: __init__.py,v 1.21 2002-05-05 09:48:31 jvr Exp $
+# $Id: __init__.py,v 1.22 2002-05-05 11:29:33 jvr Exp $
 #
 
 import os
@@ -348,17 +348,42 @@ class TTFont:
 		return self.glyphOrder
 	
 	def _getGlyphNamesFromCmap(self):
-		# Make up glyph names based on glyphID, which will be used 
-		# in case we don't find a unicode cmap.
+		#
+		# This is rather convoluted, but then again, it's an interesting problem:
+		# - we need to use the unicode values found in the cmap table to
+		#   build glyph names (eg. because there is only a minimal post table,
+		#   or none at all).
+		# - but the cmap parser also needs glyph names to work with...
+		# So here's what we do:
+		# - make up glyph names based on glyphID
+		# - load a temporary cmap table based on those names
+		# - extract the unicode values, build the "real" glyph names
+		# - unload the temporary cmap table
+		#
+		if self.isLoaded("cmap"):
+			# Bootstrapping: we're getting called by the cmap parser
+			# itself. This means self.tables['cmap'] contains a partially
+			# loaded cmap, making it impossible to get at a unicode
+			# subtable here. We remove the partially loaded cmap and
+			# restore it later.
+			# This only happens if the cmap table is loaded before any
+			# other table that does f.getGlyphOrder()  or f.getGlyphName().
+			cmapLoading = self.tables['cmap']
+			del self.tables['cmap']
+		else:
+			cmapLoading = None
+		# Make up glyph names based on glyphID, which will be used by the
+		# temporary cmap and by the real cmap in case we don't find a unicode
+		# cmap.
 		numGlyphs = int(self['maxp'].numGlyphs)
 		glyphOrder = [None] * numGlyphs
 		glyphOrder[0] = ".notdef"
 		for i in range(1, numGlyphs):
 			glyphOrder[i] = "glyph%.5d" % i
 		# Set the glyph order, so the cmap parser has something
-		# to work with
+		# to work with (so we don't get called recursively).
 		self.glyphOrder = glyphOrder
-		# Get the temporary cmap (based on the just invented names)
+		# Get a (new) temporary cmap (based on the just invented names)
 		tempcmap = self['cmap'].getcmap(3, 1)
 		if tempcmap is not None:
 			# we have a unicode cmap
@@ -387,12 +412,16 @@ class TTFont:
 						n = n + 1
 					glyphOrder[i] = tempName
 					allNames[tempName] = 1
-			# Delete the cmap table from the cache, so it can be 
-			# parsed again with the right names.
+			# Delete the temporary cmap table from the cache, so it can
+			# be parsed again with the right names.
 			del self.tables['cmap']
 		else:
 			pass # no unicode cmap available, stick with the invented names
 		self.glyphOrder = glyphOrder
+		if cmapLoading:
+			# restore partially loaded cmap, so it can continue loading
+			# using the proper names.
+			self.tables['cmap'] = cmapLoading
 	
 	def getGlyphNames(self):
 		"""Get a list of glyph names, sorted alphabetically."""
