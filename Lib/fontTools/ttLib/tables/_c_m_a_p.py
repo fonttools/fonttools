@@ -88,11 +88,26 @@ class CmapSubtable:
 		writer.begintag(self.__class__.__name__, [
 				("platformID", self.platformID),
 				("platEncID", self.platEncID),
+				("language", self.language),
 				])
 		writer.newline()
-		writer.dumphex(self.compile(ttFont))
+		codes = self.cmap.items()
+		codes.sort()
+		self._writeCodes(codes, writer)
 		writer.endtag(self.__class__.__name__)
 		writer.newline()
+
+	def _writeCodes(self, codes, writer):
+		if (self.platformID, self.platEncID) == (3, 1) or self.platformID == 0:
+			from fontTools.unicode import Unicode
+			isUnicode = 1
+		else:
+			isUnicode = 0
+		for code, name in codes:
+			writer.simpletag("map", code=hex(code), name=name)
+			if isUnicode:
+				writer.comment(Unicode[code])
+			writer.newline()
 	
 	def fromXML(self, (name, attrs, content), ttFont):
 		self.decompile(readHex(content), ttFont)
@@ -135,21 +150,6 @@ class cmap_format_0(CmapSubtable):
 		data = struct.pack(">HHH", 0, 262, self.language) + glyphIdArray.tostring()
 		assert len(data) == 262
 		return data
-	
-	def toXML(self, writer, ttFont):
-		writer.begintag(self.__class__.__name__, [
-				("platformID", self.platformID),
-				("platEncID", self.platEncID),
-				("language", self.language),
-				])
-		writer.newline()
-		items = self.cmap.items()
-		items.sort()
-		for code, name in items:
-			writer.simpletag("map", code=hex(code), name=name)
-			writer.newline()
-		writer.endtag(self.__class__.__name__)
-		writer.newline()
 	
 	def fromXML(self, (name, attrs, content), ttFont):
 		self.language = safeEval(attrs["language"])
@@ -368,21 +368,6 @@ class cmap_format_2(CmapSubtable):
 			
 		assert (len(data) == length), "Error: cmap format 2 is not same length as calculated! actual: " + str(len(data))+ " calc : " + str(length)
 		return data
-
-	def toXML(self, writer, ttFont):
-		writer.begintag(self.__class__.__name__, [
-				("platformID", self.platformID),
-				("platEncID", self.platEncID),
-				("language", self.language),
-				])
-		writer.newline()
-		items = self.cmap.items()
-		items.sort()
-		for code, name in items:
-			writer.simpletag("map", code=hex(code), name=name)
-			writer.newline()
-		writer.endtag(self.__class__.__name__)
-		writer.newline()
 	
 	def fromXML(self, (name, attrs, content), ttFont):
 		self.language = safeEval(attrs["language"])
@@ -593,25 +578,6 @@ class cmap_format_4(CmapSubtable):
 		data = header + data
 		return data
 	
-	def toXML(self, writer, ttFont):
-		from fontTools.unicode import Unicode
-		codes = self.cmap.items()
-		codes.sort()
-		writer.begintag(self.__class__.__name__, [
-				("platformID", self.platformID),
-				("platEncID", self.platEncID),
-				("language", self.language),
-				])
-		writer.newline()
-		
-		for code, name in codes:
-			writer.simpletag("map", code=hex(code), name=name)
-			writer.comment(Unicode[code])
-			writer.newline()
-		
-		writer.endtag(self.__class__.__name__)
-		writer.newline()
-	
 	def fromXML(self, (name, attrs, content), ttFont):
 		self.language = safeEval(attrs["language"])
 		self.cmap = {}
@@ -659,23 +625,6 @@ class cmap_format_6(CmapSubtable):
 		header = struct.pack(">HHHHH", 
 				6, len(data) + 10, self.language, firstCode, len(self.cmap))
 		return header + data
-	
-	def toXML(self, writer, ttFont):
-		codes = self.cmap.items()
-		codes.sort()
-		writer.begintag(self.__class__.__name__, [
-				("platformID", self.platformID),
-				("platEncID", self.platEncID),
-				("language", self.language),
-				])
-		writer.newline()
-		
-		for code, name in codes:
-			writer.simpletag("map", code=hex(code), name=name)
-			writer.newline()
-		
-		writer.endtag(self.__class__.__name__)
-		writer.newline()
 	
 	def fromXML(self, (name, attrs, content), ttFont):
 		self.language = safeEval(attrs["language"])
@@ -744,9 +693,6 @@ class cmap_format_12(CmapSubtable):
 		return data
 	
 	def toXML(self, writer, ttFont):
-		from fontTools.unicode import Unicode
-		codes = self.cmap.items()
-		codes.sort()
 		writer.begintag(self.__class__.__name__, [
 				("platformID", self.platformID),
 				("platEncID", self.platEncID),
@@ -757,11 +703,9 @@ class cmap_format_12(CmapSubtable):
 				("nGroups", self.nGroups),
 				])
 		writer.newline()
-
-		for code, name in codes:
-			writer.simpletag("map", code=hex(code), name=name)
-			writer.comment(Unicode[code])
-			writer.newline()
+		codes = self.cmap.items()
+		codes.sort()
+		self._writeCodes(codes, writer)
 		writer.endtag(self.__class__.__name__)
 		writer.newline()
 	
@@ -779,6 +723,16 @@ class cmap_format_12(CmapSubtable):
 
 class cmap_format_unknown(CmapSubtable):
 	
+	def toXML(self, writer, ttFont):
+		writer.begintag(self.__class__.__name__, [
+				("platformID", self.platformID),
+				("platEncID", self.platEncID),
+				])
+		writer.newline()
+		writer.dumphex(self.compile(ttFont))
+		writer.endtag(self.__class__.__name__)
+		writer.newline()
+	
 	def decompile(self, data, ttFont):
 		self.data = data
 	
@@ -793,5 +747,3 @@ cmap_classes = {
 		6: cmap_format_6,
 		12: cmap_format_12,
 		}
-
-
