@@ -5,6 +5,7 @@ __version__ = "0.9"
 
 import string
 import struct
+import os
 
 INDENT = "  "
 
@@ -13,6 +14,9 @@ class XMLWriter:
 	def __init__(self, file, dtd=None, indentwhite=INDENT):
 		if type(file) == type(""):
 			self.file = open(file, "w")
+			if os.name == "mac":
+				import macfs
+				macfs.FSSpec(file).SetCreatorType('R*ch', 'TEXT')
 		else:
 			# assume writable file object
 			self.file = file
