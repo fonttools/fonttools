@@ -11,15 +11,14 @@ import Numeric
 
 def calcQuadraticBounds(pt1, pt2, pt3):
 	"""Return the bounding rectangle for a qudratic bezier segment.
-	pt1 and pt3 are the "anchor" points, pt2 is the "handle"."""
-	# convert points to Numeric arrays
-	pt1, pt2, pt3 = Numeric.array((pt1, pt2, pt3))
+	pt1 and pt3 are the "anchor" points, pt2 is the "handle".
 
-	# calc quadratic parameters
-	c = pt1
-	b = (pt2 - c) * 2.0
-	a = pt3 - c - b
-
+		>>> calcQuadraticBounds((0, 0), (50, 100), (100, 0))
+		(0.0, 0.0, 100.0, 50.0)
+		>>> calcQuadraticBounds((0, 0), (100, 0), (100, 100))
+		(0.0, 0.0, 100.0, 100.0)
+	"""
+	a, b, c = calcQuadraticParameters(pt1, pt2, pt3)
 	# calc first derivative
 	ax, ay = a * 2
 	bx, by = b
@@ -34,16 +33,16 @@ def calcQuadraticBounds(pt1, pt2, pt3):
 
 def calcCubicBounds(pt1, pt2, pt3, pt4):
 	"""Return the bounding rectangle for a cubic bezier segment.
-	pt1 and pt4 are the "anchor" points, pt2 and pt3 are the "handles"."""
-	# convert points to Numeric arrays
-	pt1, pt2, pt3, pt4 = Numeric.array((pt1, pt2, pt3, pt4))
-	
-	# calc cubic parameters
-	d = pt1
-	c = (pt2 - d) * 3.0
-	b = (pt3 - pt2) * 3.0 - c
-	a = pt4 - d - c - b
-	
+	pt1 and pt4 are the "anchor" points, pt2 and pt3 are the "handles".
+
+		>>> calcCubicBounds((0, 0), (25, 100), (75, 100), (100, 0))
+		(0.0, 0.0, 100.0, 75.0)
+		>>> calcCubicBounds((0, 0), (50, 0), (100, 50), (100, 100))
+		(0.0, 0.0, 100.0, 100.0)
+		>>> calcCubicBounds((50, 0), (0, 100), (100, 100), (50, 0))
+		(35.566243270259356, 0.0, 64.433756729740679, 75.0)
+	"""
+	a, b, c, d = calcCubicParameters(pt1, pt2, pt3, pt4)
 	# calc first derivative
 	ax, ay = a * 3.0
 	bx, by = b * 2.0
@@ -61,7 +60,17 @@ def splitLine(pt1, pt2, where, isHorizontal):
 	is an x coordinate if isHorizontal is False, a y coordinate if
 	isHorizontal is True. Return a list of two line segments if the
 	line was successfully split, or a list containing the original
-	line."""
+	line.
+
+		>>> _tuplify(splitLine((0, 0), (100, 100), 50, True))
+		(((0, 0), (50.0, 50.0)), ((50.0, 50.0), (100, 100)))
+		>>> _tuplify(splitLine((0, 0), (100, 100), 100, True))
+		(((0, 0), (100, 100)),)
+		>>> _tuplify(splitLine((0, 0), (100, 100), 0, True))
+		(((0, 0), (0.0, 0.0)), ((0.0, 0.0), (100, 100)))
+		>>> _tuplify(splitLine((0, 0), (100, 100), 0, False))
+		(((0, 0), (0.0, 0.0)), ((0.0, 0.0), (100, 100)))
+	"""
 	pt1, pt2 = Numeric.array((pt1, pt2))
 	a = (pt2 - pt1)
 	b = pt1
@@ -79,11 +88,21 @@ def splitLine(pt1, pt2, where, isHorizontal):
 def splitQuadratic(pt1, pt2, pt3, where, isHorizontal):
 	"""Split the quadratic curve between pt1, pt2 and pt3 at position 'where',
 	which is an x coordinate if isHorizontal is False, a y coordinate if
-	isHorizontal is True. Return a list of curve segments."""
-	pt1, pt2, pt3 = Numeric.array((pt1, pt2, pt3))
-	c = pt1
-	b = (pt2 - c) * 2.0
-	a = pt3 - c - b
+	isHorizontal is True. Return a list of curve segments.
+
+		>>> splitQuadratic((0, 0), (50, 100), (100, 0), 150, False)
+		[((0, 0), (50, 100), (100, 0))]
+		>>> _tuplify(splitQuadratic((0, 0), (50, 100), (100, 0), 50, False))
+		(((0.0, 0.0), (25.0, 50.0), (50.0, 50.0)), ((50.0, 50.0), (75.0, 50.0), (100.0, 0.0)))
+		>>> _tuplify(splitQuadratic((0, 0), (50, 100), (100, 0), 25, False))
+		(((0.0, 0.0), (12.5, 25.0), (25.0, 37.5)), ((25.0, 37.5), (62.5, 75.0), (100.0, 0.0)))
+		>>> _tuplify(splitQuadratic((0, 0), (50, 100), (100, 0), 25, True))
+		(((0.0, 0.0), (7.3223304703363103, 14.644660940672621), (14.644660940672621, 24.999999999999996)), ((14.644660940672621, 24.999999999999996), (49.999999999999993, 75.0), (85.355339059327363, 25.000000000000025)), ((85.355339059327378, 25.0), (92.677669529663689, 14.644660940672621), (100.0, -7.1054273576010019e-15)))
+		>>> # XXX I'm not at all sure it the following behavior is desirable:
+		>>> _tuplify(splitQuadratic((0, 0), (50, 100), (100, 0), 50, True))
+		(((0.0, 0.0), (25.0, 50.0), (50.0, 50.0)), ((50.0, 50.0), (50.0, 50.0), (50.0, 50.0)), ((50.0, 50.0), (75.0, 50.0), (100.0, 0.0)))
+	"""
+	a, b, c = calcQuadraticParameters(pt1, pt2, pt3)
 	solutions = solveQuadratic(a[isHorizontal], b[isHorizontal],
 		c[isHorizontal] - where)
 	solutions = [t for t in solutions if 0 <= t < 1]
@@ -114,12 +133,7 @@ def splitCubic(pt1, pt2, pt3, pt4, where, isHorizontal):
 	"""Split the cubic curve between pt1, pt2, pt3 and pt4 at position 'where',
 	which is an x coordinate if isHorizontal is False, a y coordinate if
 	isHorizontal is True. Return a list of curve segments."""
-	pt1, pt2, pt3, pt4 = Numeric.array((pt1, pt2, pt3, pt4))
-	d = pt1
-	c = (pt2 - d) * 3.0
-	b = (pt3 - pt2) * 3.0 - c
-	a = pt4 - d - c - b
-	
+	a, b, c, d = calcCubicParameters(pt1, pt2, pt3, pt4)
 	solutions = solveCubic(a[isHorizontal], b[isHorizontal], c[isHorizontal],
 		d[isHorizontal] - where)
 	solutions = [t for t in solutions if 0 <= t < 1]
@@ -224,3 +238,38 @@ def solveCubic(a, b, c, d,
 			x = -x
 		x = x - a1/3.0
 		return [x]
+
+
+def calcQuadraticParameters(pt1, pt2, pt3):
+	pt1, pt2, pt3 = Numeric.array((pt1, pt2, pt3))
+	c = pt1
+	b = (pt2 - c) * 2.0
+	a = pt3 - c - b
+	return a, b, c
+
+
+def calcCubicParameters(pt1, pt2, pt3, pt4):
+	pt1, pt2, pt3, pt4 = Numeric.array((pt1, pt2, pt3, pt4))
+	d = pt1
+	c = (pt2 - d) * 3.0
+	b = (pt3 - pt2) * 3.0 - c
+	a = pt4 - d - c - b
+	return a, b, c, d
+
+
+def _tuplify(obj):
+	"""
+		>>> _tuplify([1, [2, 3], [], [[2, [3, 4]]]])
+		(1, (2, 3), (), ((2, (3, 4)),))
+	"""
+	try:
+		it = iter(obj)
+	except TypeError:
+		return obj
+	else:
+		return tuple([_tuplify(x) for x in it])
+
+
+if __name__ == "__main__":
+	import doctest
+	doctest.testmod()
