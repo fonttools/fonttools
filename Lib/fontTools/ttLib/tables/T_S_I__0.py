@@ -32,7 +32,7 @@ class table_T_S_I__0(DefaultTable.DefaultTable):
 		data = ""
 		for index, textLength, textOffset in self.indices:
 			data = data + struct.pack(tsi0Format, index, textLength, textOffset)
-		data = data + struct.pack(tsi0Format, 0XFFFE, 0, 0xABFC1F34)
+		data = data + struct.pack(tsi0Format, 0XFFFE, 0, -1409540300)  # 0xABFC1F34
 		for index, textLength, textOffset in self.extra_indices:
 			data = data + struct.pack(tsi0Format, index, textLength, textOffset)
 		return data
