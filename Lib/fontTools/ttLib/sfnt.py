@@ -1,0 +1,230 @@
+"""ttLib/sfnt.py -- low-level module to deal with the sfnt file format.
+
+Defines two public classes:
+	SFNTReader
+	SFNTWriter
+
+(Normally you don't have to use these classes explicitly; they are 
+used automatically by ttLib.TTFont.)
+
+The reading and writing of sfnt files is separated in two distinct 
+classes, since whenever to number of tables changes or whenever
+a table's length chages you need to rewrite the whole file anyway.
+"""
+
+import struct, sstruct
+import Numeric
+import os
+
+class SFNTReader:
+	
+	def __init__(self, file, checkchecksums=1):
+		self.file = file
+		self.checkchecksums = checkchecksums
+		data = self.file.read(sfntDirectorySize)
+		if len(data) <> sfntDirectorySize:
+			from fontTools import ttLib
+			raise ttLib.TTLibError, "Not a TrueType or OpenType font (not enough data)"
+		sstruct.unpack(sfntDirectoryFormat, data, self)
+		if self.sfntVersion not in ("\000\001\000\000", "OTTO", "true"):
+			from fontTools import ttLib
+			raise ttLib.TTLibError, "Not a TrueType or OpenType font (bad sfntVersion)"
+		self.tables = {}
+		for i in range(self.numTables):
+			entry = SFNTDirectoryEntry()
+			entry.fromfile(self.file)
+			self.tables[entry.tag] = entry
+	
+	def has_key(self, tag):
+		return self.tables.has_key(tag)
+	
+	def keys(self):
+		return self.tables.keys()
+	
+	def __getitem__(self, tag):
+		"""Fetch the raw table data."""
+		entry = self.tables[tag]
+		self.file.seek(entry.offset)
+		data = self.file.read(entry.length)
+		if self.checkchecksums:
+			if tag == 'head':
+				# Beh: we have to special-case the 'head' table.
+				checksum = calcchecksum(data[:8] + '\0\0\0\0' + data[12:])
+			else:
+				checksum = calcchecksum(data)
+			if self.checkchecksums > 1:
+				# Be obnoxious, and barf when it's wrong
+				assert checksum == entry.checksum, "bad checksum for '%s' table" % tag
+			elif checksum <> entry.checkSum:
+				# Be friendly, and just print a warning.
+				print "bad checksum for '%s' table" % tag
+		return data
+	
+	def close(self):
+		self.file.close()
+
+
+class SFNTWriter:
+	
+	def __init__(self, file, numTables, sfntVersion="\000\001\000\000"):
+		self.file = file
+		self.numTables = numTables
+		self.sfntVersion = sfntVersion
+		self.searchRange, self.entrySelector, self.rangeShift = getsearchrange(numTables)
+		self.nextTableOffset = sfntDirectorySize + numTables * sfntDirectoryEntrySize
+		# clear out directory area
+		self.file.seek(self.nextTableOffset)
+		# make sure we're actually where we want to be. (XXX old cStringIO bug)
+		self.file.write('\0' * (self.nextTableOffset - self.file.tell()))
+		self.tables = {}
+	
+	def __setitem__(self, tag, data):
+		"""Write raw table data to disk."""
+		if self.tables.has_key(tag):
+			# We've written this table to file before. If the length
+			# of the data is still the same, we allow overwritng it.
+			entry = self.tables[tag]
+			if len(data) <> entry.length:
+				from fontTools import ttLib
+				raise ttLib.TTLibError, "cannot rewrite '%s' table: length does not match directory entry" % tag
+		else:
+			entry = SFNTDirectoryEntry()
+			entry.tag = tag
+			entry.offset = self.nextTableOffset
+			entry.length = len(data)
+			self.nextTableOffset = self.nextTableOffset + ((len(data) + 3) & ~3)
+		self.file.seek(entry.offset)
+		self.file.write(data)
+		self.file.seek(self.nextTableOffset)
+		# make sure we're actually where we want to be. (XXX old cStringIO bug)
+		self.file.write('\0' * (self.nextTableOffset - self.file.tell()))
+		
+		if tag == 'head':
+			entry.checkSum = calcchecksum(data[:8] + '\0\0\0\0' + data[12:])
+		else:
+			entry.checkSum = calcchecksum(data)
+		self.tables[tag] = entry
+	
+	def close(self):
+		"""All tables must have been written to disk. Now write the
+		directory.
+		"""
+		tables = self.tables.items()
+		tables.sort()
+		if len(tables) <> self.numTables:
+			from fontTools import ttLib
+			raise ttLib.TTLibError, "wrong number of tables; expected %d, found %d" % (self.numTables, len(tables))
+		
+		directory = sstruct.pack(sfntDirectoryFormat, self)
+		
+		self.file.seek(sfntDirectorySize)
+		for tag, entry in tables:
+			directory = directory + entry.tostring()
+		self.calcmasterchecksum(directory)
+		self.file.seek(0)
+		self.file.write(directory)
+		self.file.close()
+	
+	def calcmasterchecksum(self, directory):
+		# calculate checkSumAdjustment
+		tags = self.tables.keys()
+		checksums = Numeric.zeros(len(tags)+1)
+		for i in range(len(tags)):
+			checksums[i] = self.tables[tags[i]].checkSum
+		
+		directory_end = sfntDirectorySize + len(self.tables) * sfntDirectoryEntrySize
+		assert directory_end == len(directory)
+		
+		checksums[-1] = calcchecksum(directory)
+		checksum = Numeric.add.reduce(checksums)
+		# BiboAfba!
+		checksumadjustment = Numeric.array(0xb1b0afba) - checksum
+		# write the checksum to the file
+		self.file.seek(self.tables['head'].offset + 8)
+		self.file.write(struct.pack("l", checksumadjustment))
+		
+
+# -- sfnt directory helpers and cruft
+
+sfntDirectoryFormat = """
+		> # big endian
+		sfntVersion: 	4s
+		numTables:		H		# number of tables
+		searchRange:	H		# (max2 <= numTables)*16
+		entrySelector:	H		# log2(max2 <= numTables)
+		rangeShift:		H		# numTables*16-searchRange
+"""
+
+sfntDirectorySize = sstruct.calcsize(sfntDirectoryFormat)
+
+sfntDirectoryEntryFormat = """
+		> # big endian
+		tag:		4s
+		checkSum:	l
+		offset:		l
+		length:		l
+"""
+
+sfntDirectoryEntrySize = sstruct.calcsize(sfntDirectoryEntryFormat)
+
+class SFNTDirectoryEntry:
+	
+	def fromfile(self, file):
+		sstruct.unpack(sfntDirectoryEntryFormat, 
+				file.read(sfntDirectoryEntrySize), self)
+	
+	def fromstring(self, str):
+		sstruct.unpack(sfntDirectoryEntryFormat, str, self)
+	
+	def tostring(self):
+		return sstruct.pack(sfntDirectoryEntryFormat, self)
+	
+	def __repr__(self):
+		if hasattr(self, "tag"):
+			return "<SFNTDirectoryEntry '%s' at %x>" % (self.tag, id(self))
+		else:
+			return "<SFNTDirectoryEntry at %x>" % id(self)
+
+
+def calcchecksum(data, start=0):
+	"""Calculate the checksum for an arbitrary block of data.
+	Optionally takes a 'start' argument, which allows you to
+	calculate a checksum in chunks by feeding it a previous
+	result.
+	
+	If the data length is not a multiple of four, it assumes
+	it is to be padded with null byte. 
+	"""
+	from fontTools import ttLib
+	remainder = len(data) % 4
+	if remainder:
+		data = data + '\0' * (4-remainder)
+	a = Numeric.fromstring(struct.pack(">l", start) + data, Numeric.Int32)
+	if ttLib.endian <> "big":
+		a = a.byteswapped()
+	return Numeric.add.reduce(a)
+
+
+def maxpoweroftwo(x):
+	"""Return the highest exponent of two, so that
+	(2 ** exponent) <= x
+	"""
+	exponent = 0
+	while x:
+		x = x >> 1
+		exponent = exponent + 1
+	return exponent - 1
+
+
+def getsearchrange(n):
+	"""Calculate searchRange, entrySelector, rangeShift for the
+	sfnt directory. 'n' is the number of tables.
+	"""
+	# This stuff needs to be stored in the file, because?
+	import math
+	exponent = maxpoweroftwo(n)
+	searchRange = (2 ** exponent) * 16
+	entrySelector = exponent
+	rangeShift = n * 16 - searchRange
+	return searchRange, entrySelector, rangeShift
+
