@@ -4,24 +4,34 @@
 # the script is living in, excluding CVS directories and the 
 # script itself.
 #
-# $Id: mktarball.py,v 1.6 1999-12-18 23:56:14 just Exp $
+# $Id: mktarball.py,v 1.7 2000-02-13 17:36:44 just Exp $
 #
 
 
 import os, sys
 
-script = os.path.join(os.getcwd(), sys.argv[0])
+program = os.path.normpath(sys.argv[0])
+script = os.path.join(os.getcwd(), program)
 srcdir, scriptname = os.path.split(script)
 wdir, src = os.path.split(srcdir)
+
+destdir = None
+if sys.argv[1:]:
+	destdir = os.path.normpath(os.path.join(os.getcwd(), sys.argv[1]))
+	assert os.path.isdir(destdir), "destination is not an existing directory"
+
 os.chdir(wdir)
 
 tar = src + ".tar"
 gz = tar + ".gz"
-tgz = src + ".tgz"
 
 print "source:", src
-print "dest:", tgz
+print "dest:", gz
 
 os.system('tar --exclude=CVS --exclude=%s -cf %s %s' % (scriptname, tar, src))
 os.system('gzip -9v %s' % tar)
-os.rename(gz, tgz)
+
+if destdir:
+	print "destination directory:", destdir
+	os.system('mv %s %s' % (gz, destdir))
+
