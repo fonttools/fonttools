@@ -6,6 +6,7 @@ converter objects from otConverters.py.
 """
 
 from otBase import BaseTable, FormatSwitchingBaseTable
+from types import TupleType
 
 
 class LookupOrder(BaseTable):
@@ -225,6 +226,65 @@ class ClassDef(FormatSwitchingBaseTable):
 			classDefs = {}
 			self.classDefs = classDefs
 		classDefs[attrs["glyph"]] = int(attrs["class"])
+
+
+class AlternateSubst(FormatSwitchingBaseTable):
+	
+	def postRead(self, rawTable, font):
+		alternates = {}
+		if self.Format == 1:
+			input = rawTable["Coverage"].glyphs
+			alts = rawTable["AlternateSet"]
+			assert len(input) == len(alts)
+			for i in range(len(input)):
+				alternates[input[i]] = alts[i].Alternate
+		else:
+			assert 0, "unknown format: %s" % self.Format
+		self.alternates = alternates
+	
+	def preWrite(self, font):
+		self.Format = 1
+		items = self.alternates.items()
+		for i in range(len(items)):
+			glyphName, set = items[i]
+			items[i] = font.getGlyphID(glyphName), glyphName, set
+		items.sort()
+		cov = Coverage()
+		glyphs = []
+		alternates = []
+		cov.glyphs = glyphs
+		for glyphID, glyphName, set in items:
+			glyphs.append(glyphName)
+			alts = AlternateSet()
+			alts.Alternate = set
+			alternates.append(alts)
+		return {"Coverage": cov, "AlternateSet": alternates}
+	
+	def toXML2(self, xmlWriter, font):
+		items = self.alternates.items()
+		items.sort()
+		for glyphName, alternates in items:
+			xmlWriter.begintag("AlternateSet", glyph=glyphName)
+			xmlWriter.newline()
+			for alt in alternates:
+				xmlWriter.simpletag("Alternate", glyph=alt)
+				xmlWriter.newline()
+			xmlWriter.endtag("AlternateSet")
+			xmlWriter.newline()
+	
+	def fromXML(self, (name, attrs, content), font):
+		alternates = getattr(self, "alternates", None)
+		if alternates is None:
+			alternates = {}
+			self.alternates = alternates
+		glyphName = attrs["glyph"]
+		set = []
+		alternates[glyphName] = set
+		for element in content:
+			if type(element) != TupleType:
+				continue
+			name, attrs, content = element
+			set.append(attrs["glyph"])
 
 
 #
