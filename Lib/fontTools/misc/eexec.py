@@ -64,7 +64,7 @@ if __name__ == "__main__":
 
 
 try:
-	from fontTools.misc.eexecOp import *
+	from eexecOp import *
 except ImportError:
 	pass # Use the slow Python versions
 
