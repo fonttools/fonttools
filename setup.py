@@ -24,7 +24,7 @@ setup(	name = "FontTools",
 		extra_path = 'FontTools',
 		ext_modules = [
 			Extension(
-				"eexecOp",
+				"fontTools.misc.eexecOp",
 				["Src/eexecOp/eexecOpmodule.c"],
 				include_dirs=[],
 				define_macros=[],
