@@ -42,14 +42,13 @@ Dumping 'prep' table...
 """
 
 #
-# $Id: __init__.py,v 1.18 2002-05-01 21:06:11 jvr Exp $
+# $Id: __init__.py,v 1.19 2002-05-02 15:23:25 jvr Exp $
 #
-
-__version__ = "1.0a6"
 
 import os
 import string
 import types
+
 
 class TTLibError(Exception): pass
 
@@ -173,6 +172,7 @@ class TTFont:
 		list of tables to dump. The 'skipTables' argument may be a list of tables
 		to skip, but only when the 'tables' argument is false.
 		"""
+		from fontTools import version
 		import xmlWriter
 		
 		self.disassembleInstructions = disassembleInstructions
@@ -189,7 +189,7 @@ class TTFont:
 		if not splitTables:
 			writer = xmlWriter.XMLWriter(fileOrPath)
 			writer.begintag("ttFont", sfntVersion=`self.sfntVersion`[1:-1], 
-					ttLibVersion=__version__)
+					ttLibVersion=version)
 			writer.newline()
 			writer.newline()
 		else:
@@ -204,7 +204,7 @@ class TTFont:
 			if splitTables:
 				writer = xmlWriter.XMLWriter(fileNameTemplate % tag2identifier(tag))
 				writer.begintag("ttFont", sfntVersion=`self.sfntVersion`[1:-1], 
-						ttLibVersion=__version__)
+						ttLibVersion=version)
 				writer.newline()
 				writer.newline()
 			table = self[tag]
