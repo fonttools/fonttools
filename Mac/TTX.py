@@ -1,9 +1,6 @@
 """Main TTX application, Mac-only"""
 
 
-__version__ = "1.0a7"
-
-
 #make sure we don't lose events to SIOUX
 import MacOS
 MacOS.EnableAppswitch(-1)
@@ -34,15 +31,15 @@ import os
 import sys, time
 import re, string
 import traceback
-from fontTools import ttLib
+from fontTools import ttLib, version
 from fontTools.ttLib import xmlImport
 from fontTools.ttLib.macUtils import ProgressBar
 
 abouttext = """\
 TTX - The free TrueType to XML to TrueType converter
 (version %s)
-Copyright 1999-2000, Just van Rossum (Letterror)
-just@letterror.com""" % __version__
+Copyright 1999-2001, Just van Rossum (Letterror)
+just@letterror.com""" % version
 
 
 class TTX(FrameWork.Application, MiniAEFrame.AEServer):
@@ -224,7 +221,7 @@ def guessfiletype(path):
 	f = open(path, "rb")
 	data = f.read(21)
 	f.close()
-	if data == "<?xml version='1.0'?>":
+	if data[:5] == "<?xml":
 		return "xml"
 	elif data[:4] in ("\000\001\000\000", "OTTO", "true"):
 		return "datafork"
