@@ -42,7 +42,7 @@ Dumping 'prep' table...
 """
 
 #
-# $Id: __init__.py,v 1.34 2002-05-25 15:28:48 jvr Exp $
+# $Id: __init__.py,v 1.35 2002-07-11 18:17:32 jvr Exp $
 #
 
 import os
@@ -574,17 +574,13 @@ def getTableModule(tag):
 	"""Fetch the packer/unpacker module for a table. 
 	Return None when no module is found.
 	"""
-	import imp
 	import tables
 	pyTag = tagToIdentifier(tag)
 	try:
-		f, path, kind = imp.find_module(pyTag, tables.__path__)
-		if f:
-			f.close()
+		module = __import__("fontTools.ttLib.tables." + pyTag)
 	except ImportError:
 		return None
 	else:
-		module = __import__("fontTools.ttLib.tables." + pyTag)
 		return getattr(tables, pyTag)
 
 
