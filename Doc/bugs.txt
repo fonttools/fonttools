@@ -1,5 +1,8 @@
 Known bugs
 
+- Font containing name table entries containing control characters
+  (eg. NUL bytes) can't currently be compiled. The error message is
+  "reference to invalid character number".
 - The OT ExtensionSubst and ExtensionPos subtables are not yet
   supported
 - The OT FeatureParams subtable is not yet supported
