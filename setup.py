@@ -11,7 +11,7 @@ except ImportError:
 	print "        http://sourceforge.net/projects/numpy/"
 
 try:
-	import xml.parsers.xmlproc
+	import xml.parsers.expat
 except ImportError:
 	print "*** Warning: FontTools needs PyXML, see:"
 	print "        http://sourceforge.net/projects/pyxml/"
