@@ -1,7 +1,7 @@
 """cffLib.py -- read/write tools for Adobe CFF fonts."""
 
 #
-# $Id: cffLib.py,v 1.30 2003-08-24 19:56:16 jvr Exp $
+# $Id: cffLib.py,v 1.31 2003-08-25 07:37:25 jvr Exp $
 #
 
 import struct, sstruct
@@ -42,7 +42,7 @@ class CFFFontSet:
 		return len(self.fontNames)
 	
 	def keys(self):
-		return self.fontNames[:]
+		return list(self.fontNames)
 	
 	def values(self):
 		return self.topDictIndex
@@ -262,7 +262,6 @@ class FDArrayIndexCompiler(IndexCompiler):
 			children.extend(fontDict.getChildren(strings))
 		return children
 
-
 	def toFile(self, file):
 		offsets = self.getOffsets()
 		writeCard16(file, len(self.items))
@@ -282,8 +281,6 @@ class FDArrayIndexCompiler(IndexCompiler):
 
 	def setPos(self, pos, endPos):
 		self.parent.rawDict["FDArray"] = pos
-
-
 
 
 class GlobalSubrsCompiler(IndexCompiler):
@@ -1336,9 +1333,6 @@ class DictCompiler:
 				l = len(argType)
 				assert len(value) == l, "value doesn't match arg type"
 				for i in range(l):
-					# why was this here? arg = argType[l - i - 1]
-					# In the case of the ROS, it assigns exactly the
-					# wrong handler types
 					arg = argType[i]
 					v = value[i]
 					arghandler = getattr(self, "arg_" + arg)
@@ -1392,7 +1386,7 @@ class TopDictCompiler(DictCompiler):
 			encoding = self.dictObj.Encoding
 			if not isinstance(encoding, StringType):
 				children.append(EncodingCompiler(strings, encoding, self))
-		if  hasattr(self.dictObj, "FDSelect"):
+		if hasattr(self.dictObj, "FDSelect"):
 			# I have not yet supported merging a ttx CFF-CID font, as there are interesting
 			# issues about merging the FDArrays. Here I assume that
 			# either the font was read from XML, and teh FDSelect indices are all
@@ -1412,7 +1406,7 @@ class TopDictCompiler(DictCompiler):
 				items.append(charStrings[name])
 			charStringsComp = CharStringsCompiler(items, strings, self)
 			children.append(charStringsComp)
-		if  hasattr(self.dictObj, "FDArray"):
+		if hasattr(self.dictObj, "FDArray"):
 			# I have not yet supported merging a ttx CFF-CID font, as there are interesting
 			# issues about merging the FDArrays. Here I assume that the FDArray info is correct
 			# and complete.
