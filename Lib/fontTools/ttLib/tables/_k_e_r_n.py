@@ -148,7 +148,7 @@ class KernTable_format_2:
 	def decompile(self, data, ttFont):
 		self.data = data
 	
-	def compile(self, ttFont, ttFont):
+	def compile(self, ttFont):
 		return data
 	
 	def toXML(self, writer):
@@ -183,4 +183,4 @@ class KernTable_format_unkown:
 
 
 
-kern_classes = {0: KernTable_format_0, 1: KernTable_format_2}
+kern_classes = {0: KernTable_format_0, 2: KernTable_format_2}
