@@ -127,7 +127,7 @@ class Options:
 			sys.exit(2)
 
 
-def ttList(input, extension, options):
+def ttList(input, output, options):
 	ttf = TTFont(input)
 	reader = ttf.reader
 	tags = reader.keys()
@@ -144,8 +144,7 @@ def ttList(input, extension, options):
 	ttf.close()
 
 
-def ttDump(input, extension, options):
-	output = makeOutputFileName(input, options.outputDir, extension)
+def ttDump(input, output, options):
 	print 'Dumping "%s" to "%s"...' % (input, output)
 	ttf = TTFont(input, 0, verbose=options.verbose)
 	ttf.saveXML(output,
@@ -156,8 +155,7 @@ def ttDump(input, extension, options):
 	ttf.close()
 
 
-def ttCompile(input, extension, options):
-	output = makeOutputFileName(input, options.outputDir, extension)
+def ttCompile(input, output, options):
 	print 'Compiling "%s" to "%s"...' % (input, output)
 	ttf = TTFont(options.mergeFile,
 			recalcBBoxes=options.recalcBBoxes,
@@ -219,7 +217,8 @@ def main(args):
 			print 'Unknown file type: "%s"' % input
 			continue
 		
-		action(input, extension, options)
+		output = makeOutputFileName(input, options.outputDir, extension)
+		action(input, output, options)
 
 
 def waitForKeyPress():
