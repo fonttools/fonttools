@@ -84,6 +84,16 @@ class Transform:
 	"""
 
 	def __init__(self, xx=1, xy=0, yx=0, yy=1, dx=0, dy=0):
+		"""Transform's constructor takes six arguments, all of which are
+		optional, and can be used as keyword arguments:
+			>>> Transform(12)
+			<Transform [12 0 0 1 0 0]>
+			>>> Transform(dx=12)
+			<Transform [1 0 0 1 12 0]>
+			>>> Transform(yx=12)
+			<Transform [1 0 12 1 0 0]>
+			>>>
+		"""
 		self.__affine = xx, xy, yx, yy, dx, dy
 
 	def transformPoint(self, (x, y)):
@@ -212,9 +222,12 @@ class Transform:
 		"""Return the inverse transformation.
 
 		Example:
-			>>> t = Transform(2, 0, 0, 3, 1, 6)
-			>>> t.inverse()
-			<Transform [0.5 0.0 0.0 0.333333333333 -0.5 -2.0]>
+			>>> t = Identity.translate(2, 3).scale(4, 5)
+			>>> t.transformPoint((10, 20))
+			(42, 103)
+			>>> it = t.inverse()
+			>>> it.transformPoint((42, 103))
+			(10.0, 20.0)
 			>>>
 		"""
 		if self.__affine == (1, 0, 0, 1, 0, 0):
@@ -226,24 +239,92 @@ class Transform:
 		return self.__class__(xx, xy, yx, yy, dx, dy)
 
 	def toPS(self):
+		"""Return a PostScript representation:
+			>>> t = Identity.scale(2, 3).translate(4, 5)
+			>>> t.toPS()
+			'[2 0 0 3 8 15]'
+			>>>
+		"""
 		return "[%s %s %s %s %s %s]" % self.__affine
 
 	def __len__(self):
+		"""Transform instances also behave like sequences of length 6:
+			>>> len(Identity)
+			6
+			>>>
+		"""
 		return 6
 
 	def __getitem__(self, index):
+		"""Transform instances also behave like sequences of length 6:
+			>>> list(Identity)
+			[1, 0, 0, 1, 0, 0]
+			>>> tuple(Identity)
+			(1, 0, 0, 1, 0, 0)
+			>>>
+		"""
 		return self.__affine[index]
 
 	def __getslice__(self, i, j):
+		"""Transform instances also behave like sequences and even support
+		slicing:
+			>>> t = Offset(100, 200)
+			>>> t
+			<Transform [1 0 0 1 100 200]>
+			>>> t[4:]
+			(100, 200)
+			>>>
+		"""
 		return self.__affine[i:j]
 
 	def __cmp__(self, other):
+		"""Transform instances are comparable:
+			>>> t1 = Identity.scale(2, 3).translate(4, 6)
+			>>> t2 = Identity.translate(8, 18).scale(2, 3)
+			>>> t1 == t2
+			1
+			>>>
+
+		But beware of floating point rounding errors:
+			>>> t1 = Identity.scale(0.2, 0.3).translate(0.4, 0.6)
+			>>> t2 = Identity.translate(0.08, 0.18).scale(0.2, 0.3)
+			>>> t1
+			<Transform [0.2 0.0 0.0 0.3 0.08 0.18]>
+			>>> t2
+			<Transform [0.2 0.0 0.0 0.3 0.08 0.18]>
+			>>> t1 == t2
+			0
+			>>>
+		"""
 		xx1, xy1, yx1, yy1, dx1, dy1 = self.__affine
 		xx2, xy2, yx2, yy2, dx2, dy2 = other
 		return cmp((xx1, xy1, yx1, yy1, dx1, dy1),
 				(xx2, xy2, yx2, yy2, dx2, dy2))
 
 	def __hash__(self):
+		"""Transform instances are hashable, meaning you can use them as
+		keys in dictionaries:
+			>>> d = {Scale(12, 13): None}
+			>>> d
+			{<Transform [12 0 0 13 0 0]>: None}
+			>>>
+
+		But again, beware of floating point rounding errors:
+			>>> t1 = Identity.scale(0.2, 0.3).translate(0.4, 0.6)
+			>>> t2 = Identity.translate(0.08, 0.18).scale(0.2, 0.3)
+			>>> t1
+			<Transform [0.2 0.0 0.0 0.3 0.08 0.18]>
+			>>> t2
+			<Transform [0.2 0.0 0.0 0.3 0.08 0.18]>
+			>>> d = {t1: None}
+			>>> d
+			{<Transform [0.2 0.0 0.0 0.3 0.08 0.18]>: None}
+			>>> d[t2]
+			Traceback (most recent call last):
+			  File "<stdin>", line 1, in ?
+			KeyError: <Transform [0.2 0.0 0.0 0.3 0.08 0.18]>
+			>>>
+		"""
 		return hash(self.__affine)
 
 	def __repr__(self):
@@ -278,8 +359,8 @@ def Scale(x, y=None):
 
 
 def _test():
-	import doctest, fontTools.misc.transform
-	return doctest.testmod(fontTools.misc.transform)
+	import doctest, transform
+	return doctest.testmod(transform)
 
 if __name__ == "__main__":
 	_test()
