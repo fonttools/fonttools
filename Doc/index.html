@@ -51,7 +51,7 @@ You need the following software to use FontTools:
   <P>Windows: grab the "Numeric-*.exe" archive, it's an installer. Make sure the
   Python version in the archive name (eg. "2.1") matches the Python version you have.
   <BR>Linux/Un*x: get a source archive and run this command from the unpacked directory:
-  <BR><TT>python ./setup.py install</TT>
+  <BR><TT>python setup.py install</TT>
 <P>
 <LI>
   <B>PyXML</B>, a set of XML tools:
@@ -77,21 +77,22 @@ produce the TTX applet.
 
 <H3>User documentation</H3>
 
-<P>For MacOS there's a small application called TTX. If you drop a TrueType file
-onto it, it will convert it to XML. If you drop an XML file onto it, it will 
-convert it back to TrueType. Please read the additional README file in the Mac 
-subdirectory, since it behaves quite differently than the command line programs 
-described below.
-
-<P>For Unix and DOS I've provided two command line programs:
+<P>For Unix and DOS there are three command line programs:
 <UL>
-	<LI>ttDump.py
-	<LI>ttCompile.py
+	<LI>ttdump -- dumps a TrueType (or OpenType) font file to TTX format.
+	<LI>ttcompile -- compiles a TTX file back into a TTF (or OTF) file.
+	<LI>ttlist -- lists minimal info about each table in a font.
 </UL>
-They do pretty much what you'd expect. They take several arguments: 
-an input file name and optionally an output file name. There are some extra
-options which are explained by the 'usage' text; use the -h option to display 
-it.
+They can all work with multiple input files. There are some extra
+options which are explained by the 'usage' text; use the -h option to
+display  it. The setup.py script installs them as global tools, the
+source is in the Tools directory.
+
+<P>For MacOS there's a application called TTX. If you drop a TrueType
+file onto it, it will convert it to XML. If you drop an XML file onto
+it, it will convert it back to TrueType. Please read the additional
+README file in the Mac subdirectory, since it behaves quite differently
+than the command line programs described below.
 
 <P>Adam Twardoch contributed a Windows registry script (ttx_shellext_win32.py) which
 makes the two above tools available under the Right Mouse Button. I haven't tested 
@@ -137,17 +138,6 @@ page</A>. Let me know if you'd like to become a co-developer.
 Sorry, documentation beyond doc strings in the source code is still on my to-do list... 
 Below follows a brief overview of what's there.
 
-
-<H3>GUI Tools</H3>
-TTX -- A simple Mac app that converts TrueType (or OpenType) fonts to TTX format and back.
-<P>
-<H3>Command line tools</H3>
-
-<UL>
-	<LI>ttDump.py -- dumps a TrueType (or OpenType) font file to TTX format.
-	<LI>ttCompile.py -- compiles a TTX file back into a TTF (or OTF) file.
-</UL>
-
 <P>
 <H3>The library</H3>
 
@@ -181,7 +171,7 @@ Guido van Rossum, Adam Twardoch.
 
 <H3>Copyrights</H3>
 
-FontTools/TTX -- 1999-2001 Just van Rossum; Letterror (just@letterror.com) 
+FontTools/TTX -- 1999-2002 Just van Rossum; Letterror (just@letterror.com) 
 
 </BODY>
 </HTML>
