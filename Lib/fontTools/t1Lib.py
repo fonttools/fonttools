@@ -35,7 +35,11 @@ except ImportError:
 	haveMacSupport = 0
 else:
 	haveMacSupport = 1
-	import macfs
+	try:
+		from Carbon.File import FSSpec
+	except ImportError:
+		from macfs import FSSpec  # MacPython < 2.2
+	
 
 class T1Error(Exception): pass
 
@@ -91,7 +95,7 @@ def read(path):
 	"""reads any Type 1 font file, returns raw data"""
 	normpath = string.lower(path)
 	if haveMacSupport:
-		fss = macfs.FSSpec(path)
+		fss = FSSpec(path)
 		creator, type = fss.GetCreatorType()
 		if type == 'LWFN':
 			return readLWFN(path), 'LWFN'
@@ -242,7 +246,7 @@ def writePFB(path, data):
 	finally:
 		f.close()
 	if haveMacSupport:
-		fss = macfs.FSSpec(path)
+		fss = FSSpec(path)
 		fss.SetCreatorType('mdos', 'BINA')
 
 def writeOther(path, data, dohex = 0):
@@ -265,7 +269,7 @@ def writeOther(path, data, dohex = 0):
 	finally:
 		f.close()
 	if haveMacSupport:
-		fss = macfs.FSSpec(path)
+		fss = FSSpec(path)
 		fss.SetCreatorType('R*ch', 'TEXT') # BBEdit text file
 
 
