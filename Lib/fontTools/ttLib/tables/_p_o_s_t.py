@@ -129,7 +129,7 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 				index = standardGlyphOrder.index(psName)
 			else:
 				index = 258 + len(self.extraNames)
-				extraNames.append(psName)
+				self.extraNames.append(psName)
 			indices.append(index)
 		if ttLib.endian <> "big":
 			indices.byteswap()

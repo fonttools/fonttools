@@ -213,7 +213,7 @@ def maxpoweroftwo(x):
 	while x:
 		x = x >> 1
 		exponent = exponent + 1
-	return exponent - 1
+	return max(exponent - 1, 0)
 
 
 def getsearchrange(n):
