@@ -60,6 +60,9 @@ class SFNTReader:
 				print "bad checksum for '%s' table" % tag
 		return data
 	
+	def __delitem__(self, tag):
+		del self.tables[tag]
+	
 	def close(self):
 		self.file.close()
 

@@ -42,7 +42,7 @@ Dumping 'prep' table...
 """
 
 #
-# $Id: __init__.py,v 1.19 2002-05-02 15:23:25 jvr Exp $
+# $Id: __init__.py,v 1.20 2002-05-04 22:04:02 jvr Exp $
 #
 
 import os
@@ -256,7 +256,6 @@ class TTFont:
 		return self.tables.has_key(tag)
 	
 	def has_key(self, tag):
-		"""Pretend we're a dictionary."""
 		if self.isLoaded(tag):
 			return 1
 		elif self.reader and self.reader.has_key(tag):
@@ -265,7 +264,6 @@ class TTFont:
 			return 0
 	
 	def keys(self):
-		"""Pretend we're a dictionary."""
 		keys = self.tables.keys()
 		if self.reader:
 			for key in self.reader.keys():
@@ -275,11 +273,9 @@ class TTFont:
 		return keys
 	
 	def __len__(self):
-		"""Pretend we're a dictionary."""
 		return len(self.keys())
 	
 	def __getitem__(self, tag):
-		"""Pretend we're a dictionary."""
 		try:
 			return self.tables[tag]
 		except KeyError:
@@ -310,12 +306,15 @@ class TTFont:
 				raise KeyError, "'%s' table not found" % tag
 	
 	def __setitem__(self, tag, table):
-		"""Pretend we're a dictionary."""
 		self.tables[tag] = table
 	
 	def __delitem__(self, tag):
-		"""Pretend we're a dictionary."""
-		del self.tables[tag]
+		if not self.has_key(tag):
+			raise KeyError, "'%s' table not found" % tag
+		if self.tables.has_key(tag):
+			del self.tables[tag]
+		if self.reader and self.reader.has_key(tag):
+			del self.reader[tag]
 	
 	def setGlyphOrder(self, glyphOrder):
 		self.glyphOrder = glyphOrder
