@@ -1,7 +1,7 @@
 """cffLib.py -- read/write tools for Adobe CFF fonts."""
 
 #
-# $Id: cffLib.py,v 1.15 2002-05-17 07:06:32 jvr Exp $
+# $Id: cffLib.py,v 1.16 2002-05-17 07:08:52 jvr Exp $
 #
 
 import struct, sstruct
@@ -456,7 +456,8 @@ class TopDict(BaseDict):
 				if charString.needsDecompilation():
 					decompiler.reset()
 					decompiler.execute(charString)
-				charString.compile()
+				if DEBUG:
+					charString.compile()
 		else:
 			# Type 1 CharStrings
 			for charString in self.CharStrings.values():
