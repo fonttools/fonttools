@@ -42,7 +42,7 @@ Dumping 'prep' table...
 """
 
 #
-# $Id: __init__.py,v 1.29 2002-05-22 20:15:10 jvr Exp $
+# $Id: __init__.py,v 1.30 2002-05-23 09:42:45 jvr Exp $
 #
 
 import os
@@ -61,8 +61,8 @@ class TTFont:
 	accessed. This means that simple operations can be extremely fast.
 	"""
 	
-	def __init__(self, file=None, res_name_or_index=None, 
-			sfntVersion="\000\001\000\000", checkChecksums=0, 
+	def __init__(self, file=None, res_name_or_index=None,
+			sfntVersion="\000\001\000\000", checkChecksums=0,
 			verbose=0, recalcBBoxes=1):
 		
 		"""The constructor can be called with a few different arguments.
@@ -78,7 +78,7 @@ class TTFont:
 		The 'checkChecksums' argument is used to specify how sfnt
 		checksums are treated upon reading a file from disk:
 			0: don't check (default)
-			1: check, print warnings if a wrong checksum is found (default)
+			1: check, print warnings if a wrong checksum is found
 			2: check, raise an exception if a wrong checksum is found.
 		
 		The TTFont constructor can also be called without a 'file' 
@@ -154,6 +154,7 @@ class TTFont:
 			closeStream = 0
 		
 		tags = self.keys()
+		tags.remove("GlyphOrder")
 		numTables = len(tags)
 		writer = sfnt.SFNTWriter(file, numTables, self.sfntVersion)
 		
@@ -201,18 +202,17 @@ class TTFont:
 		
 		for i in range(numTables):
 			tag = tables[i]
-			xmlTag = tagToXML(tag)
 			if splitTables:
 				tablePath = fileNameTemplate % tagToIdentifier(tag)
 				tableWriter = xmlWriter.XMLWriter(tablePath)
 				tableWriter.begintag("ttFont", ttLibVersion=version)
 				tableWriter.newline()
 				tableWriter.newline()
-				writer.simpletag(xmlTag, src=os.path.basename(tablePath))
+				writer.simpletag(tagToXML(tag), src=os.path.basename(tablePath))
 				writer.newline()
 			else:
 				tableWriter = writer
-			self._tableToXML(tableWriter, tag, xmlTag, progress)
+			self._tableToXML(tableWriter, tag, progress)
 			if splitTables:
 				tableWriter.endtag("ttFont")
 				tableWriter.newline()
@@ -225,7 +225,7 @@ class TTFont:
 		if self.verbose:
 			debugmsg("Done dumping TTX")
 	
-	def _tableToXML(self, writer, tag, xmlTag, progress):
+	def _tableToXML(self, writer, tag, progress):
 		if self.has_key(tag):
 			table = self[tag]
 			report = "Dumping '%s' table..." % tag
@@ -239,6 +239,7 @@ class TTFont:
 			print report
 		if not self.has_key(tag):
 			return
+		xmlTag = tagToXML(tag)
 		if hasattr(table, "ERROR"):
 			writer.begintag(xmlTag, ERROR="decompilation error")
 		else:
@@ -269,6 +270,8 @@ class TTFont:
 			return 1
 		elif self.reader and self.reader.has_key(tag):
 			return 1
+		elif tag == "GlyphOrder":
+			return 1
 		else:
 			return 0
 	
@@ -279,7 +282,9 @@ class TTFont:
 				if key not in keys:
 					keys.append(key)
 		keys.sort()
-		return keys
+		if "GlyphOrder" in keys:
+			keys.remove("GlyphOrder")
+		return ["GlyphOrder"] + keys
 	
 	def __len__(self):
 		return len(self.keys())
@@ -288,6 +293,10 @@ class TTFont:
 		try:
 			return self.tables[tag]
 		except KeyError:
+			if tag == "GlyphOrder":
+				table = GlyphOrder(tag)
+				self.tables[tag] = table
+				return table
 			if self.reader is not None:
 				import traceback
 				if self.verbose:
@@ -514,6 +523,33 @@ class TTFont:
 			raise KeyError, tag
 
 
+class GlyphOrder:
+	
+	"""A fake table. The glyph order isn't in the font as a separate table,
+	but it's nice to present it as such in the TTX format.
+	"""
+	
+	def __init__(self, tag):
+		pass
+	
+	def toXML(self, writer, ttFont):
+		glyphOrder = ttFont.getGlyphOrder()
+		writer.comment("The 'id' attribute is merely a reading aid; "
+				"it is ignored when read.")
+		writer.newline()
+		for i in range(len(glyphOrder)):
+			glyphName = glyphOrder[i]
+			writer.simpletag("GlyphID", id=i, name=glyphName)
+			writer.newline()
+	
+	def fromXML(self, (name, attrs, content), ttFont):
+		if not hasattr(self, "glyphOrder"):
+			self.glyphOrder = []
+			ttFont.setGlyphOrder(self.glyphOrder)
+		if name == "GlyphID":
+			self.glyphOrder.append(attrs["name"])
+
+
 def _test_endianness():
 	"""Test the endianness of the machine. This is crucial to know
 	since TrueType data is always big endian, even on little endian
@@ -632,6 +668,8 @@ def tagToXML(tag):
 	import re
 	if tag == "OS/2":
 		return "OS_2"
+	elif tag == "GlyphOrder":
+		return "GlyphOrder"
 	if re.match("[A-Za-z_][A-Za-z_0-9]* *$", tag):
 		return string.strip(tag)
 	else:

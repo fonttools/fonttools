@@ -30,7 +30,6 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 		loca = ttFont['loca']
 		last = loca[0]
 		self.glyphs = {}
-		self.glyphOrder = []
 		self.glyphOrder = glyphOrder = ttFont.getGlyphOrder()
 		for i in range(0, len(loca)-1):
 			glyphName = glyphOrder[i]
@@ -46,6 +45,8 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 		#	raise ttLib.TTLibError, "too much 'glyf' table data"
 	
 	def compile(self, ttFont):
+		if not hasattr(self, "glyphOrder"):
+			self.glyphOrder = ttFont.getGlyphOrder()
 		import string
 		locations = []
 		currentLocation = 0
@@ -64,16 +65,6 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 		return data
 	
 	def toXML(self, writer, ttFont, progress=None):
-		writer.newline()
-		glyphOrder = ttFont.getGlyphOrder()
-		writer.begintag("GlyphOrder")
-		writer.newline()
-		for i in range(len(glyphOrder)):
-			glyphName = glyphOrder[i]
-			writer.simpletag("GlyphID", id=i, name=glyphName)
-			writer.newline()
-		writer.endtag("GlyphOrder")
-		writer.newline()
 		writer.newline()
 		glyphNames = ttFont.getGlyphNames()
 		writer.comment("The xMin, yMin, xMax and yMax values\nwill be recalculated by the compiler.")
@@ -103,34 +94,23 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 			writer.newline()
 	
 	def fromXML(self, (name, attrs, content), ttFont):
-		if name == "GlyphOrder":
-			glyphOrder = []
-			for element in content:
-				if type(element) <> TupleType:
-					continue
-				name, attrs, content = element
-				if name == "GlyphID":
-					index = safeEval(attrs["id"])
-					glyphName = attrs["name"]
-					glyphOrder = glyphOrder + (1 + index - len(glyphOrder)) * [".notdef"]
-					glyphOrder[index] = glyphName
-			ttFont.setGlyphOrder(glyphOrder)
-		elif name == "TTGlyph":
-			if not hasattr(self, "glyphs"):
-				self.glyphs = {}
-			glyphName = attrs["name"]
-			if ttFont.verbose:
-				ttLib.debugmsg("unpacking glyph '%s'" % glyphName)
-			glyph = Glyph()
-			for attr in ['xMin', 'yMin', 'xMax', 'yMax']:
-				setattr(glyph, attr, safeEval(attrs.get(attr, '0')))
-			self.glyphs[glyphName] = glyph
-			for element in content:
-				if type(element) <> TupleType:
-					continue
-				glyph.fromXML(element, ttFont)
-			if not ttFont.recalcBBoxes:
-				glyph.compact(self, 0)
+		if name <> "TTGlyph":
+			return
+		if not hasattr(self, "glyphs"):
+			self.glyphs = {}
+		glyphName = attrs["name"]
+		if ttFont.verbose:
+			ttLib.debugmsg("unpacking glyph '%s'" % glyphName)
+		glyph = Glyph()
+		for attr in ['xMin', 'yMin', 'xMax', 'yMax']:
+			setattr(glyph, attr, safeEval(attrs.get(attr, '0')))
+		self.glyphs[glyphName] = glyph
+		for element in content:
+			if type(element) <> TupleType:
+				continue
+			glyph.fromXML(element, ttFont)
+		if not ttFont.recalcBBoxes:
+			glyph.compact(self, 0)
 	
 	def setGlyphOrder(self, glyphOrder):
 		self.glyphOrder = glyphOrder
