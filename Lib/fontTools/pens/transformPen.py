@@ -29,7 +29,11 @@ class TransformPen(AbstractPen):
 		self._outPen.curveTo(*self._transformPoints(points))
 
 	def qCurveTo(self, *points):
-		self._outPen.qCurveTo(*self._transformPoints(points))
+		if points[-1] is None:
+			points = self._transformPoints(points[:-1]) + [None]
+		else:
+			points = self._transformPoints(points)
+		self._outPen.qCurveTo(*points)
 
 	def _transformPoints(self, points):
 		new = []
