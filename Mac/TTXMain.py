@@ -100,7 +100,7 @@ class TTX(FrameWork.Application, MiniAEFrame.AEServer):
 		if not os.path.exists(dstfolder):
 			os.mkdir(dstfolder)
 		srcfilename = dstfilename = os.path.basename(path)
-		if dstfilename[-4:] == ".xml":
+		if dstfilename[-4:] in (".ttx", ".xml"):
 			dstfilename = dstfilename[:-4]
 		if dstfilename[-4:] not in (".TTF", ".ttf"):
 			dstfilename = dstfilename + ".TTF"
@@ -126,7 +126,7 @@ class TTX(FrameWork.Application, MiniAEFrame.AEServer):
 				return
 			else:
 				f.close()
-		pb = ProgressBar("Reading XML file '%s'..." % srcfilename)
+		pb = ProgressBar("Reading TTX file '%s'..." % srcfilename)
 		try:
 			tt = ttLib.TTFont()
 			tt.importXML(path, pb)
@@ -144,7 +144,7 @@ class TTX(FrameWork.Application, MiniAEFrame.AEServer):
 		pb = ProgressBar("Dumping '%s' to XML..." % filename)
 		if filename[-4:] in (".TTF", ".ttf"):
 			filename = filename[:-4]
-		filename = filename + ".xml"
+		filename = filename + ".ttx"
 		dst = os.path.join(dstfolder, filename)
 		try:
 			tt = ttLib.TTFont(path)
@@ -173,7 +173,7 @@ class TTX(FrameWork.Application, MiniAEFrame.AEServer):
 				if not resname:
 					resname = filename + `i`
 				pb = ProgressBar("Dumping '%s' to XML..." % resname)
-				dst = os.path.join(dstfolder, resname + ".xml")
+				dst = os.path.join(dstfolder, resname + ".ttx")
 				try:
 					tt = ttLib.TTFont(path, i)
 					tt.saveXML(dst, pb)
