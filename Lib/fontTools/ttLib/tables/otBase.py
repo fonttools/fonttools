@@ -127,7 +127,6 @@ class OTTableWriter:
 		if valueFormat is None:
 			valueFormat = ValueRecordFactory(), ValueRecordFactory()
 		self.valueFormat = valueFormat
-		self.referers = []
 		self.pos = None
 	
 	def getSubWriter(self):
@@ -162,14 +161,11 @@ class OTTableWriter:
 			if hasattr(item, "getCountData"):
 				items[i] = item.getCountData()
 			elif hasattr(item, "getData"):
-				assert not item.referers
 				item._doneWriting(internedTables)
 				if internedTables.has_key(item):
 					items[i] = item = internedTables[item]
 				else:
 					internedTables[item] = item
-				if self not in item.referers:
-					item.referers.append(self)  # temp. cycle, gets broken by getAllData()
 		self.items = tuple(items)
 	
 	def _gatherTables(self, tables=None, done=None):
@@ -195,7 +191,6 @@ class OTTableWriter:
 		for table in tables:
 			table.pos = pos
 			pos = pos + len(table)
-			table.referers = []  # break cycles
 		
 		data = []
 		for table in tables:
