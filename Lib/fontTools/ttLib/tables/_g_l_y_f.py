@@ -21,7 +21,8 @@ from fontTools.misc.textTools import safeEval, readHex
 import ttProgram
 import array
 import Numeric
-import types
+from types import StringType, TupleType
+
 
 class table__g_l_y_f(DefaultTable.DefaultTable):
 	
@@ -105,7 +106,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 		if name == "GlyphOrder":
 			glyphOrder = []
 			for element in content:
-				if type(element) == types.StringType:
+				if type(element) <> TupleType:
 					continue
 				name, attrs, content = element
 				if name == "GlyphID":
@@ -125,7 +126,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 				setattr(glyph, attr, safeEval(attrs.get(attr, '0')))
 			self.glyphs[glyphName] = glyph
 			for element in content:
-				if type(element) == types.StringType:
+				if type(element) <> TupleType:
 					continue
 				glyph.fromXML(element, ttFont)
 			if not ttFont.recalcBBoxes:
@@ -281,7 +282,7 @@ class Glyph:
 			coordinates = []
 			flags = []
 			for element in content:
-				if type(element) == types.StringType:
+				if type(element) <> TupleType:
 					continue
 				name, attrs, content = element
 				if name <> "pt":
@@ -310,7 +311,7 @@ class Glyph:
 		elif name == "instructions":
 			self.program = ttProgram.Program()
 			for element in content:
-				if type(element) == types.StringType:
+				if type(element) <> TupleType:
 					continue
 				self.program.fromXML(element, ttFont)
 	
@@ -801,7 +802,7 @@ class GlyphComponent:
 
 def reprflag(flag):
 	bin = ""
-	if type(flag) == types.StringType:
+	if type(flag) == StringType:
 		flag = ord(flag)
 	while flag:
 		if flag & 0x01:

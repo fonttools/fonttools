@@ -2,6 +2,7 @@ import DefaultTable
 import struct
 from fontTools.ttLib import sfnt
 from fontTools.misc.textTools import safeEval, readHex
+from types import TupleType
 
 
 class table__k_e_r_n(DefaultTable.DefaultTable):
@@ -125,7 +126,7 @@ class KernTable_format_0:
 		if not hasattr(self, "kernTable"):
 			self.kernTable = {}
 		for element in content:
-			if type(element) <> type(()):
+			if type(element) <> TupleType:
 				continue
 			name, attrs, content = element
 			self.kernTable[(attrs["l"], attrs["r"])] = safeEval(attrs["v"])

@@ -4,6 +4,7 @@ import string
 import array
 from fontTools import ttLib
 from fontTools.misc.textTools import safeEval, readHex
+from types import TupleType
 
 
 class table__c_m_a_p(DefaultTable.DefaultTable):
@@ -153,7 +154,7 @@ class cmap_format_0(CmapSubtable):
 		self.version = safeEval(attrs["version"])
 		self.cmap = {}
 		for element in content:
-			if type(element) <> type(()):
+			if type(element) <> TupleType:
 				continue
 			name, attrs, content = element
 			if name <> "map":
@@ -307,7 +308,7 @@ class cmap_format_4(CmapSubtable):
 		self.version = safeEval(attrs["version"])
 		self.cmap = {}
 		for element in content:
-			if type(element) <> type(()):
+			if type(element) <> TupleType:
 				continue
 			name, attrs, content = element
 			if name <> "map":
@@ -372,7 +373,7 @@ class cmap_format_6(CmapSubtable):
 		self.version = safeEval(attrs["version"])
 		self.cmap = {}
 		for element in content:
-			if type(element) <> type(()):
+			if type(element) <> TupleType:
 				continue
 			name, attrs, content = element
 			if name <> "map":

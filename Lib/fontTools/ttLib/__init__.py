@@ -42,7 +42,7 @@ Dumping 'prep' table...
 """
 
 #
-# $Id: __init__.py,v 1.22 2002-05-05 11:29:33 jvr Exp $
+# $Id: __init__.py,v 1.23 2002-05-10 19:03:34 jvr Exp $
 #
 
 import os
@@ -221,9 +221,7 @@ class TTFont:
 			else:
 				writer.begintag(xmltag)
 			writer.newline()
-			if tag == "glyf":
-				table.toXML(writer, self, progress)
-			elif tag == "CFF ":
+			if tag in ("glyf", "CFF "):
 				table.toXML(writer, self, progress)
 			else:
 				table.toXML(writer, self)

@@ -4,6 +4,7 @@ import struct, sstruct
 import array
 from fontTools import ttLib
 from fontTools.misc.textTools import safeEval, readHex
+from types import TupleType
 
 
 postFormat = """
@@ -192,7 +193,7 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 		elif name == "psNames":
 			self.mapping = {}
 			for element in content:
-				if type(element) <> type(()):
+				if type(element) <> TupleType:
 					continue
 				name, attrs, content = element
 				if name == "psName":
@@ -200,7 +201,7 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 		elif name == "extraNames":
 			self.extraNames = []
 			for element in content:
-				if type(element) <> type(()):
+				if type(element) <> TupleType:
 					continue
 				name, attrs, content = element
 				if name == "psName":

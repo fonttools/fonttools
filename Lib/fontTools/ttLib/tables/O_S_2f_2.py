@@ -1,6 +1,8 @@
 import DefaultTable
 import sstruct
 from fontTools.misc.textTools import safeEval, num2binary, binary2num
+from types import TupleType
+
 
 # panose classification
 
@@ -152,7 +154,7 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 		if name == "panose":
 			self.panose = panose = Panose()
 			for element in content:
-				if type(element) == type(()):
+				if type(element) == TupleType:
 					panose.fromXML(element, ttFont)
 		elif name in ("ulUnicodeRange1", "ulUnicodeRange2", 
 				"ulUnicodeRange3", "ulUnicodeRange4",
