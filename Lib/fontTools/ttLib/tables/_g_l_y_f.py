@@ -217,7 +217,7 @@ class Glyph:
 			return
 		dummy, data = sstruct.unpack2(glyphHeaderFormat, self.data, self)
 		del self.data
-		if self.numberOfContours == -1:
+		if self.isComposite():
 			self.decompileComponents(data, glyfTable)
 		else:
 			self.decompileCoordinates(data)
@@ -230,7 +230,7 @@ class Glyph:
 		if recalcBBoxes:
 			self.recalcBounds(glyfTable)
 		data = sstruct.pack(glyphHeaderFormat, self)
-		if self.numberOfContours == -1:
+		if self.isComposite():
 			data = data + self.compileComponents(glyfTable)
 		else:
 			data = data + self.compileCoordinates()
@@ -241,7 +241,7 @@ class Glyph:
 		return data
 	
 	def toXML(self, writer, ttFont):
-		if self.numberOfContours == -1:
+		if self.isComposite():
 			for compo in self.components:
 				compo.toXML(writer, ttFont)
 			if hasattr(self, "instructions"):
@@ -309,7 +309,7 @@ class Glyph:
 			self.instructions = readHex(content)
 	
 	def getCompositeMaxpValues(self, glyfTable, maxComponentDepth=1):
-		assert self.numberOfContours == -1
+		assert self.isComposite()
 		nContours = 0
 		nPoints = 0
 		for compo in self.components:
@@ -538,10 +538,18 @@ class Glyph:
 		self.xMin, self.yMin = Numeric.minimum.reduce(coordinates)
 		self.xMax, self.yMax = Numeric.maximum.reduce(coordinates)
 	
+	def isComposite(self):
+		return self.numberOfContours == -1
+	
+	def __getitem__(self, componentIndex):
+		if not self.isComposite():
+			raise ttLib.TTLibError, "can't use glyph as sequence"
+		return self.components[componentIndex]
+	
 	def getCoordinates(self, glyfTable):
 		if self.numberOfContours > 0:
 			return self.coordinates, self.endPtsOfContours, self.flags
-		elif self.numberOfContours == -1:
+		elif self.isComposite():
 			# it's a composite
 			allCoords = None
 			allFlags = None
@@ -549,9 +557,9 @@ class Glyph:
 			for compo in self.components:
 				g = glyfTable[compo.glyphName]
 				coordinates, endPts, flags = g.getCoordinates(glyfTable)
-				if hasattr(compo, "firstpt"):
+				if hasattr(compo, "firstPt"):
 					# move according to two reference points
-					move = allCoords[compo.firstpt] - coordinates[compo.secondpt]
+					move = allCoords[compo.firstPt] - coordinates[compo.secondPt]
 				else:
 					move = compo.x, compo.y
 				
@@ -609,6 +617,20 @@ class GlyphComponent:
 	def __init__(self):
 		pass
 	
+	def getComponentInfo(self):
+		"""Return the base glyph name and a Transformation object."""
+		# XXX Ignoring self.firstPt & self.lastpt for now: I need to implement
+		# something equivalent in fontTools.objects.glyph (I'd rather not 
+		# convert it to an absolute offset, since it is valuable information).
+		# This method will now raise "AttributeError: x" on glyphs that use
+		# this TT feature.
+		from fontTools.objects.transform import Transformation
+		if hasattr(self, "transform"):
+			trans = Transformation(self.transform, (self.x, self.y))
+		else:
+			trans = Transformation((1, 1), (self.x, self.y))
+		return self.glyphName, trans
+	
 	def decompile(self, data, glyfTable):
 		flags, glyphID = struct.unpack(">HH", data[:4])
 		self.flags = int(flags)
@@ -622,14 +644,14 @@ class GlyphComponent:
 				self.x, self.y = struct.unpack(">hh", data[:4])
 			else:
 				x, y = struct.unpack(">HH", data[:4])
-				self.firstpt, self.secondpt = int(x), int(y)
+				self.firstPt, self.secondPt = int(x), int(y)
 			data = data[4:]
 		else:
 			if self.flags & ARGS_ARE_XY_VALUES:
 				self.x, self.y = struct.unpack(">bb", data[:2])
 			else:
 				x, y = struct.unpack(">BB", data[:4])
-				self.firstpt, self.secondpt = int(x), int(y)
+				self.firstPt, self.secondPt = int(x), int(y)
 			data = data[2:]
 		
 		if self.flags & WE_HAVE_A_SCALE:
@@ -667,11 +689,11 @@ class GlyphComponent:
 		if haveInstructions:
 			flags = flags | WE_HAVE_INSTRUCTIONS
 		
-		if hasattr(self, "firstpt"):
-			if (0 <= self.firstpt <= 255) and (0 <= self.secondpt <= 255):
-				data = data + struct.pack(">BB", self.firstpt, self.secondpt)
+		if hasattr(self, "firstPt"):
+			if (0 <= self.firstPt <= 255) and (0 <= self.secondPt <= 255):
+				data = data + struct.pack(">BB", self.firstPt, self.secondPt)
 			else:
-				data = data + struct.pack(">HH", self.firstpt, self.secondpt)
+				data = data + struct.pack(">HH", self.firstPt, self.secondPt)
 				flags = flags | ARG_1_AND_2_ARE_WORDS
 		else:
 			flags = flags | ARGS_ARE_XY_VALUES
@@ -703,10 +725,10 @@ class GlyphComponent:
 	
 	def toXML(self, writer, ttFont):
 		attrs = [("glyphName", self.glyphName)]
-		if not hasattr(self, "firstpt"):
+		if not hasattr(self, "firstPt"):
 			attrs = attrs + [("x", self.x), ("y", self.y)]
 		else:
-			attrs = attrs + [("firstpt", self.firstpt), ("secondpt", self.secondpt)]
+			attrs = attrs + [("firstPt", self.firstPt), ("secondPt", self.secondPt)]
 		
 		if hasattr(self, "transform"):
 			# XXX needs more testing
@@ -728,9 +750,9 @@ class GlyphComponent:
 	
 	def fromXML(self, (name, attrs, content), ttFont):
 		self.glyphName = attrs["glyphName"]
-		if attrs.has_key("firstpt"):
-			self.firstpt = safeEval(attrs["firstpt"])
-			self.secondpt = safeEval(attrs["secondpt"])
+		if attrs.has_key("firstPt"):
+			self.firstPt = safeEval(attrs["firstPt"])
+			self.secondPt = safeEval(attrs["secondPt"])
 		else:
 			self.x = safeEval(attrs["x"])
 			self.y = safeEval(attrs["y"])
