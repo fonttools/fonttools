@@ -1,81 +1,225 @@
-import Res
-import macfs
-import struct
-import Qd
-from types import *
+import struct, sstruct
+import string
+import types
+
+
+# FontRec header
+nfntHeaderFormat = """
+	>  # big endian
+	fontType:    h     # font type
+	firstChar:   h     # ASCII code of first character
+	lastChar:    h     # ASCII code of last character
+	widMax:      h     # maximum character width
+	kernMax:     h     # negative of maximum character kern
+	nDescent:    h     # negative of descent
+	fRectWidth:  h     # width of font rectangle
+	fRectHeight: h     # height of font rectangle
+	owTLoc:      H     # offset to offset/width table (in words from _this_ point)
+	ascent:      h     # ascent
+	descent:     h     # descent
+	leading:     h     # leading
+	rowWords:    h     # row width of bit image / 2
+"""
+headerSize = sstruct.calcsize(nfntHeaderFormat)
+assert headerSize == 26
 
 
 class NFNT:
 	
-	def __init__(self, nfnt, name = "", _type = 'NFNT'):
-		if type(nfnt) == type(Res.Resource("")):
-			theID, theType, name = nfnt.GetResInfo()
-			if theType <> _type:
-				raise TypeError, 'resource of wrong type; expected ' + _type
-			data = nfnt.data
-		elif type(nfnt) == StringType:
-			fss = macfs.FSSpec(nfnt)
-			data = readnfntresource(nfnt, name, _type)
-		elif type(nfnt) == type(macfs.FSSpec(':')):
-			data = readnfntresource(nfnt, name, _type)
-		else:
-			raise TypeError, 'expected resource, string or fss; found ' + type(nfnt).__name__
-		self.parse_nfnt(data)
+	def __init__(self, data=None):
+		if data is not None:
+			self.decompile(data)
 	
-	def parse_nfnt(self, data):
+	def decompile(self, data):
 		# header; FontRec
-		(	self.fontType,
-			self.firstChar,
-			self.lastChar,
-			self.widMax,
-			self.kernMax,
-			self.nDescent,
-			fRectWidth,
-			self.fRectHeight,
-			owTLoc,
-			self.ascent,
-			self.descent,
-			self.leading,
-			self.rowWords	) = struct.unpack("13h", data[:26])
-		if owTLoc < 0:
-			owTLoc = owTLoc + 0x8000	# unsigned short
+		sstruct.unpack(nfntHeaderFormat, data[:headerSize], self)
+		
+		#assert self.fRectHeight == (self.ascent + self.descent)
 		
 		# rest
-		tablesize = 2 * (self.lastChar - self.firstChar + 3)
-		bitmapsize = 2 * self.rowWords * self.fRectHeight
+		tableSize = 2 * (self.lastChar - self.firstChar + 3)
+		bitmapSize = 2 * self.rowWords * self.fRectHeight
 		
-		self.bits = data[26:26 + bitmapsize]
-		self.bitImage = Qd.BitMap(self.bits, 2 * self.rowWords, (0, 0, self.rowWords * 16, self.fRectHeight))
+		self.bits = data[headerSize:headerSize + bitmapSize]
 		
-		owTable = data[26 + bitmapsize + tablesize:26 + bitmapsize + 2 * tablesize]
-		if len(owTable) <> tablesize:
-			raise ValueError, 'invalid NFNT resource'
+		# XXX deal with self.nDescent being a positive number
+		assert (headerSize + bitmapSize + tableSize - 16) / 2 == self.owTLoc  # ugh...
 		
-		locTable = data[26 + bitmapsize:26 + bitmapsize + tablesize]
-		if len(locTable) <> tablesize:
-			raise ValueError, 'invalid NFNT resource'
+		locTable = data[headerSize + bitmapSize:headerSize + bitmapSize + tableSize]
+		if len(locTable) <> tableSize:
+			raise ValueError, 'invalid NFNT format'
+		
+		owTable = data[headerSize + bitmapSize + tableSize:headerSize + bitmapSize + 2 * tableSize]
+		if len(owTable) <> tableSize:
+			raise ValueError, 'invalid NFNT format'
 		
 		# fill tables
-		self.offsettable = []
-		self.widthtable = []
-		self.locationtable = []
-		for i in range(0, tablesize, 2):
-			self.offsettable.append(ord(owTable[i]))
-			self.widthtable.append(ord(owTable[i+1]))
-			loc, = struct.unpack('h', locTable[i:i+2])
-			self.locationtable.append(loc)
+		self.offsetTable = []
+		self.widthTable = []
+		self.locTable = []
+		for i in range(0, tableSize, 2):
+			self.offsetTable.append(ord(owTable[i]))
+			self.widthTable.append(ord(owTable[i+1]))
+			loc, = struct.unpack("h", locTable[i:i+2])
+			self.locTable.append(loc)
 	
-	def drawstring(self, astring, destbits, xoffset = 0, yoffset = 0):
+	def compile(self):
+		header = sstruct.pack(nfntHeaderFormat, self)
+		nEntries = len(self.widthTable)
+		owTable = [None] * nEntries
+		locTable = [None] * nEntries
+		for i in range(nEntries):
+			owTable[i] = chr(self.offsetTable[i]) + chr(self.widthTable[i])
+			locTable[i] = struct.pack("h", self.locTable[i])
+		owTable = string.join(owTable, "")
+		locTable = string.join(locTable, "")
+		assert len(locTable) == len(owTable) == 2 * (self.lastChar - self.firstChar + 3)
+		return header + self.bits + locTable + owTable
+	
+	def unpackGlyphs(self):
+		import Numeric
+		nGlyphs = len(self.locTable) - 1
+		self.glyphs = [None] * nGlyphs
+		
+		rowBytes = self.rowWords * 2
+		imageWidth = self.rowWords * 16
+		imageHeight = self.fRectHeight
+		bits = self.bits
+		bitImage = Numeric.zeros((imageWidth, imageHeight), Numeric.Int8)
+		
+		for y in range(imageHeight):
+			for xByte in range(rowBytes):
+				byte = bits[y * rowBytes + xByte]
+				for xBit in range(8):
+					x = 8 * xByte + xBit
+					bit = (ord(byte) >> (7 - xBit)) & 0x01
+					bitImage[x, y] = bit
+		
+		for i in range(nGlyphs):
+			width = self.widthTable[i]
+			offset = self.offsetTable[i]
+			if width == 255 and offset == 255:
+				self.glyphs[i] = None
+			else:
+				imageL = self.locTable[i]
+				imageR = self.locTable[i+1]
+				imageWidth = imageR - imageL
+				offset = offset + self.kernMax
+				self.glyphs[i] = glyph = Glyph(width, offset, bitImage[imageL:imageR])
+	
+	def packGlyphs(self):
+		import Numeric
+		imageWidth = 0
+		kernMax = 0
+		imageHeight = None
+		widMax = 0
+		fRectWidth = 0
+		for glyph in self.glyphs:
+			if glyph is None:
+				continue
+			if imageHeight is None:
+				imageHeight = glyph.pixels.shape[1]
+			else:
+				assert imageHeight == glyph.pixels.shape[1]
+			imageWidth = imageWidth + glyph.pixels.shape[0]
+			kernMax = min(kernMax, glyph.offset)
+			widMax = max(widMax, glyph.width)
+			fRectWidth = max(fRectWidth, glyph.pixels.shape[0] + glyph.offset)
+		
+		imageWidth = 16 * ((imageWidth - 1) / 16 + 1)
+		rowBytes = imageWidth / 8
+		rowWords = rowBytes / 2
+		bitImage = Numeric.zeros((imageWidth, imageHeight), Numeric.Int8)
+		locTable = []
+		widthTable = []
+		offsetTable = []
+		loc = 0
+		for glyph in self.glyphs:
+			locTable.append(loc)
+			if glyph is None:
+				widthTable.append(255)
+				offsetTable.append(255)
+				continue
+			widthTable.append(glyph.width)
+			offsetTable.append(glyph.offset - kernMax)
+			imageWidth = glyph.pixels.shape[0]
+			bitImage[loc:loc+imageWidth] = glyph.pixels
+			loc = loc + imageWidth
+		
+		locTable.append(loc)
+		widthTable.append(255)
+		offsetTable.append(255)
+		
+		bits = []
+		for y in range(imageHeight):
+			for xByte in range(rowBytes):
+				byte = 0
+				for x in range(8):
+					byte = byte | ((bitImage[8 * xByte + x, y] & 0x01) << (7 - x))
+				bits.append(chr(byte))
+		bits = string.join(bits, "")
+		
+		# assign values
+		self.fontType = 0x9000
+		self.lastChar = self.firstChar + len(self.glyphs) - 2
+		self.widMax = widMax
+		self.kernMax = kernMax
+		self.descent = imageHeight - self.ascent
+		self.nDescent = -self.descent
+		self.fRectWidth = fRectWidth
+		self.fRectHeight = imageHeight
+		self.rowWords = rowWords
+		
+		tableSize = 2 * (self.lastChar - self.firstChar + 3)
+		self.owTLoc = (headerSize + len(bits) + tableSize - 16) / 2
+		
+		self.bits = bits
+		self.locTable = locTable
+		self.widthTable = widthTable
+		self.offsetTable = offsetTable
+	
+	def getMissing(self):
+		return self.glyphs[-1]
+	
+	def __getitem__(self, charNum):
+		if charNum > self.lastChar or charNum < 0:
+			raise IndexError, "no such character"
+		index = charNum - self.firstChar
+		if index < 0:
+			return None
+		return self.glyphs[index]
+	
+	def __setitem__(self, charNum, glyph):
+		if charNum > self.lastChar or charNum < 0:
+			raise IndexError, "no such character"
+		index = charNum - self.firstChar
+		if index < 0:
+			raise IndexError, "no such character"
+		self.glyphs[index] = glyph
+	
+	def __len__(self):
+		return len(self.locTable) - 2 + self.firstChar
+	
+	#
+	# XXX old cruft
+	#
+	
+	def createQdBitImage(self):
+		import Qd
+		self.bitImage = Qd.BitMap(self.bits, 2 * self.rowWords, (0, 0, self.rowWords * 16, self.fRectHeight))
+	
+	def drawstring(self, astring, destbits, xOffset=0, yOffset=0):
 		drawchar = self.drawchar
 		for ch in astring:
-			xoffset = drawchar(ch, destbits, xoffset, yoffset)
-		return xoffset
+			xOffset = drawchar(ch, destbits, xOffset, yOffset)
+		return xOffset
 	
-	def drawchar(self, ch, destbits, xoffset, yoffset = 0):
+	def drawchar(self, ch, destbits, xOffset, yOffset=0):
+		import Qd
 		width, bounds, destbounds = self.getcharbounds(ch)
-		destbounds = Qd.OffsetRect(destbounds, xoffset, yoffset)
+		destbounds = Qd.OffsetRect(destbounds, xOffset, yOffset)
 		Qd.CopyBits(self.bitImage, destbits, bounds, destbounds, 1, None)
-		return xoffset + width
+		return xOffset + width
 	
 	def stringwidth(self, astring):
 		charwidth = self.charwidth
@@ -87,24 +231,24 @@ class NFNT:
 	def charwidth(self, ch):
 		cindex = ord(ch) - self.firstChar
 		if cindex > self.lastChar or 	\
-				(self.offsettable[cindex] == 255 and self.widthtable[cindex] == 255):
+				(self.offsetTable[cindex] == 255 and self.widthTable[cindex] == 255):
 			cindex = -2		# missing char
-		return self.widthtable[cindex]
+		return self.widthTable[cindex]
 	
 	def getcharbounds(self, ch):
 		cindex = ord(ch) - self.firstChar
 		if cindex > self.lastChar or 	\
-				(self.offsettable[cindex] == 255 and self.widthtable[cindex] == 255):
+				(self.offsetTable[cindex] == 255 and self.widthTable[cindex] == 255):
 			return self.getcharboundsindex(-2)	# missing char
 		return self.getcharboundsindex(cindex)
 	
 	def getcharboundsindex(self, cindex):
-		offset = self.offsettable[cindex]
-		width = self.widthtable[cindex]
+		offset = self.offsetTable[cindex]
+		width = self.widthTable[cindex]
 		if offset == 255 and width == 255:
 			raise ValueError, "character not defined"
-		location0 = self.locationtable[cindex]
-		location1 = self.locationtable[cindex + 1]
+		location0 = self.locTable[cindex]
+		location1 = self.locTable[cindex + 1]
 		srcbounds = (location0, 0, location1, self.fRectHeight)
 		destbounds = (	offset + self.kernMax, 
 					0, 
@@ -113,18 +257,51 @@ class NFNT:
 		return width, srcbounds, destbounds
 
 
-def readnfntresource(fss, name, _type = 'NFNT'):
+class Glyph:
+	
+	def __init__(self, width, offset, pixels=None, pixelDepth=1):
+		import Numeric
+		self.width = width
+		self.offset = offset
+		self.pixelDepth = pixelDepth
+		self.pixels = pixels
+
+
+def dataFromFile(pathOrFSSpec, nameOrID="", resType='NFNT'):
+	import Res, macfs
+	if type(pathOrFSSpec) == types.StringType:
+		fss = macfs.FSSpec(pathOrFSSpec)
+	else:
+		fss = pathOrFSSpec
 	resref = Res.FSpOpenResFile(fss, 1)	# readonly
-	Res.UseResFile(resref)
 	try:
-		if name:
-			res = Res.Get1NamedResource(_type, name)
-		else:
+		Res.UseResFile(resref)
+		if not nameOrID:
 			# just take the first in the file
-			res = Res.Get1IndResource(_type, 1)
+			res = Res.Get1IndResource(resType, 1)
+		elif type(nameOrID) == types.IntType:
+			res = Res.Get1Resource(resType, nameOrID)
+		else:
+			res = Res.Get1NamedResource(resType, nameOrID)
 		theID, theType, name = res.GetResInfo()
 		data = res.data
 	finally:
 		Res.CloseResFile(resref)
 	return data
 
+
+def fromFile(pathOrFSSpec, nameOrID="", resType='NFNT'):
+	data = dataFromFile(pathOrFSSpec, nameOrID, resType)
+	return NFNT(data)
+
+
+if __name__ == "__main__":
+	import macfs
+	fss, ok = macfs.StandardGetFile('FFIL')
+	if ok:
+		data = dataFromFile(fss)
+		font = NFNT(data)
+		font.unpackGlyphs()
+		font.packGlyphs()
+		data2 = font.compile()
+		print "xxxxx", data == data2, len(data) == len(data2)
