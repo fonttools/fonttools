@@ -1,0 +1,14 @@
+REGEDIT4
+
+[HKEY_CLASSES_ROOT\ttffile\shell\Convert to XML]
+@="Convert to XML"
+
+[HKEY_CLASSES_ROOT\ttffile\shell\Convert to XML\command]
+@="start.exe \"C:\\Program Files\\f\\TTX\\tt2xml.py\" \"%1\""
+
+[HKEY_CLASSES_ROOT\xmlfile\shell\Convert to TTF]
+@="Convert to TrueType font"
+
+[HKEY_CLASSES_ROOT\xmlfile\shell\Convert to TTF\command]
+@="start.exe \"C:\\Program Files\\f\\TTX\\xml2tt.py\" \"%1\""
+
