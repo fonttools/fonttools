@@ -32,14 +32,14 @@ for option, value in options:
 
 
 if len(args) == 1:
-	ttpath = args[0]
-	name, ext = os.path.splitext(ttpath)
-	xmlpath = name + '.xml'
+	ttPath = args[0]
+	name, ext = os.path.splitext(ttPath)
+	xmlPath = name + '.xml'
 elif len(args) == 2:
-	ttpath, xmlpath = args
+	ttPath, xmlPath = args
 else:
 	print __doc__ % sys.argv[0]
 	sys.exit(2)
 
-tt = ttLib.TTFont(ttpath, verbose=verbose)
-tt.saveXML(xmlpath, tables=tables)
+tt = ttLib.TTFont(ttPath, verbose=verbose)
+tt.saveXML(xmlPath, tables=tables)
