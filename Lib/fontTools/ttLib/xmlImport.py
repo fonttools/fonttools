@@ -153,8 +153,11 @@ class XMLApplication(xmlproc.Application):
 			if tableclass is None:
 				from fontTools.ttLib.tables.DefaultTable import DefaultTable
 				tableclass = DefaultTable
-			self.current_table = tableclass(tag)
-			self.ttFont[tag] = self.current_table
+			if self.ttFont.has_key(tag):
+				self.current_table = self.ttFont[tag]
+			else:
+				self.current_table = tableclass(tag)
+				self.ttFont[tag] = self.current_table
 			self.content_stack.append([])
 		elif stacksize == 2:
 			self.content_stack.append([])
