@@ -1,7 +1,7 @@
 """cffLib.py -- read/write tools for Adobe CFF fonts."""
 
 #
-# $Id: cffLib.py,v 1.6 2000-03-28 10:37:25 Just Exp $
+# $Id: cffLib.py,v 1.7 2002-05-13 11:24:43 jvr Exp $
 #
 
 import struct, sstruct
@@ -22,24 +22,24 @@ class CFFFontSet:
 	def __init__(self):
 		self.fonts = {}
 	
-	def decompile(self, data):
-		sstruct.unpack(cffHeaderFormat, data[:4], self)
+	def decompile(self, file):
+		sstruct.unpack(cffHeaderFormat, file.read(4), self)
 		assert self.major == 1 and self.minor == 0, \
 				"unknown CFF format: %d.%d" % (self.major, self.minor)
-		restdata = data[self.hdrSize:]
 		
-		self.fontNames, restdata = readINDEX(restdata)
-		topDicts, restdata = readINDEX(restdata)
-		strings, restdata = readINDEX(restdata)
-		strings = IndexedStrings(strings)
-		globalSubrs, restdata = readINDEX(restdata)
+		self.fontNames = readINDEX(file)
+		topDicts = readINDEX(file)
+		strings = IndexedStrings(readINDEX(file))
+		globalSubrs = readINDEX(file)
+		
 		self.GlobalSubrs = map(psCharStrings.T2CharString, globalSubrs)
+		
+		file.seek(0, 0)
 		
 		for i in range(len(topDicts)):
 			font = self.fonts[self.fontNames[i]] = CFFFont()
 			font.GlobalSubrs = self.GlobalSubrs  # Hmm.
-			font.decompile(data, topDicts[i], strings, self)  # maybe only 'on demand'?
-			
+			font.decompile(file, topDicts[i], strings, self)  # maybe only 'on demand'?
 	
 	def compile(self):
 		strings = IndexedStrings()
@@ -123,45 +123,58 @@ class CFFFont:
 	def fromDict(self, dict):
 		self.__dict__.update(dict)
 	
-	def decompile(self, data, topDictData, strings, fontSet):
+	def decompileCID(self, data, strings):
+		offset = self.FDArray
+		fontDicts, restdata = readINDEX(data[offset:])
+		subFonts = []
+		for topDictData in fontDicts:
+			subFont = CFFFont()
+			subFonts.append(subFont)
+			subFont.decompile(data, topDictData, strings, None)
+
+		raise NotImplementedError
+	
+	def decompile(self, file, topDictData, strings, fontSet):
 		top = psCharStrings.TopDictDecompiler(strings)
 		top.decompile(topDictData)
 		self.fromDict(top.getDict())
 		
-		# get private dict
-		size, offset = self.Private
-		#print "YYY Private (size, offset):", size, offset
-		privateData = data[offset:offset+size]
-		self.Private = PrivateDict()
-		self.Private.decompile(data[offset:], privateData, strings)
+		if hasattr(self, "ROS"):
+			isCID = 1
+			# XXX CID subFonts
+		else:
+			isCID = 0
+			size, offset = self.Private
+			file.seek(offset, 0)
+			privateData = file.read(size)
+			file.seek(offset, 0)
+			assert len(privateData) == size
+			self.Private = PrivateDict()
+			self.Private.decompile(file, privateData, strings)
 		
-		# get raw charstrings
-		#print "YYYY CharStrings offset:", self.CharStrings
-		rawCharStrings, restdata = readINDEX(data[self.CharStrings:])
+		file.seek(self.CharStrings)
+		rawCharStrings = readINDEX(file)
 		nGlyphs = len(rawCharStrings)
 		
 		# get charset (or rather: get glyphNames)
-		charsetOffset = self.charset
-		if charsetOffset == 0:
+		if self.charset == 0:
 			xxx  # standard charset
 		else:
-			#print "YYYYY charsetOffset:", charsetOffset
-			format = ord(data[charsetOffset])
+			file.seek(self.charset)
+			format = ord(file.read(1))
 			if format == 0:
 				xxx
 			elif format == 1:
-				charSet = parseCharsetFormat1(nGlyphs, 
-						data[charsetOffset+1:], strings)
+				charset = parseCharsetFormat1(nGlyphs, file, strings, isCID)
 			elif format == 2:
-				charSet = parseCharsetFormat2(nGlyphs, 
-						data[charsetOffset+1:], strings)
+				charset = parseCharsetFormat2(nGlyphs, file, strings, isCID)
 			elif format == 3:
 				xxx
 			else:
 				xxx
-		self.charset = charSet
+		self.charset = charset
 		
-		assert len(charSet) == nGlyphs
+		assert len(charset) == nGlyphs
 		self.CharStrings = charStrings = {}
 		if self.CharstringType == 2:
 			# Type 2 CharStrings
@@ -170,7 +183,7 @@ class CFFFont:
 			# Type 1 CharStrings
 			charStringClass = psCharStrings.T1CharString
 		for i in range(nGlyphs):
-			charStrings[charSet[i]] = charStringClass(rawCharStrings[i])
+			charStrings[charset[i]] = charStringClass(rawCharStrings[i])
 		assert len(charStrings) == nGlyphs
 		
 		# XXX Encoding!
@@ -335,55 +348,57 @@ class PrivateDict:
 		self.__dict__.update(dict)
 
 
-def readINDEX(data):
-	count, = struct.unpack(">H", data[:2])
-	count = int(count)
-	offSize = ord(data[2])
-	data = data[3:]
+def readINDEX(file):
+	count, = struct.unpack(">H", file.read(2))
+	offSize = ord(file.read(1))
 	offsets = []
 	for index in range(count+1):
-		chunk = data[index * offSize: (index+1) * offSize]
+		chunk = file.read(offSize)
 		chunk = '\0' * (4 - offSize) + chunk
 		offset, = struct.unpack(">L", chunk)
 		offset = int(offset)
 		offsets.append(offset)
-	data = data[(count+1) * offSize:]
 	prev = offsets[0]
 	stuff = []
 	next = offsets[0]
 	for next in offsets[1:]:
-		chunk = data[prev-1:next-1]
+		chunk = file.read(next - prev)
 		assert len(chunk) == next - prev
 		stuff.append(chunk)
 		prev = next
-	data = data[next-1:]
-	return stuff, data
+	return stuff
 
 
-def parseCharsetFormat1(nGlyphs, data, strings):
-	charSet = ['.notdef']
+def parseCharsetFormat1(nGlyphs, file, strings, isCID):
+	charset = ['.notdef']
 	count = 1
 	while count < nGlyphs:
-		first = int(struct.unpack(">H", data[:2])[0])
-		nLeft = ord(data[2])
-		data = data[3:]
-		for SID in range(first, first+nLeft+1):
-			charSet.append(strings[SID])
+		first, = struct.unpack(">H", file.read(2))
+		nLeft = ord(file.read(1))
+		if isCID:
+			for CID in range(first, first+nLeft+1):
+				charset.append(CID)
+		else:
+			for SID in range(first, first+nLeft+1):
+				charset.append(strings[SID])
 		count = count + nLeft + 1
-	return charSet
+	return charset
 
 
-def parseCharsetFormat2(nGlyphs, data, strings):
-	charSet = ['.notdef']
+def parseCharsetFormat2(nGlyphs, file, strings, isCID):
+	charset = ['.notdef']
 	count = 1
 	while count < nGlyphs:
-		first = int(struct.unpack(">H", data[:2])[0])
-		nLeft = int(struct.unpack(">H", data[2:4])[0])
-		data = data[4:]
-		for SID in range(first, first+nLeft+1):
-			charSet.append(strings[SID])
+		first, = struct.unpack(">H", file.read(2))
+		nLeft, = struct.unpack(">H", file.read(2))
+		if isCID:
+			for CID in range(first, first+nLeft+1):
+				charset.append(CID)
+		else:
+			for SID in range(first, first+nLeft+1):
+				charset.append(strings[SID])
 		count = count + nLeft + 1
-	return charSet
+	return charset
 
 
 # The 391 Standard Strings as used in the CFF format.

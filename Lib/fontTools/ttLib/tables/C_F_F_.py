@@ -16,12 +16,19 @@ class table_C_F_F_(DefaultTable.DefaultTable):
 		self._gaveGlyphOrder = 0
 	
 	def decompile(self, data, otFont):
+		from cStringIO import StringIO
 		self.data = data  # XXX while work is in progress...
-		self.cff.decompile(data)
+		self.cff.decompile(StringIO(data))
 		assert len(self.cff.fonts) == 1, "can't deal with multi-font CFF tables."
 	
 	#def compile(self, otFont):
 	#	xxx
+	
+	def haveGlyphNames(self):
+		if hasattr(self.cff.fonts[self.cff.fontNames[0]], "ROS"):
+			return 0  # CID-keyed font
+		else:
+			return 1
 	
 	def getGlyphOrder(self):
 		if self._gaveGlyphOrder:
