@@ -130,7 +130,7 @@ LWFNCHUNKSIZE = 2000
 HEXLINELENGTH = 80
 
 
-def readLWFN(path):
+def readLWFN(path, onlyHeader=0):
 	"""reads an LWFN font file, returns raw data"""
 	resRef = Res.FSpOpenResFile(path, 1)  # read-only
 	try:
@@ -144,6 +144,8 @@ def readLWFN(path):
 				raise T1Error, 'corrupt LWFN file'
 			if code in [1, 2]:
 				data.append(res.data[2:])
+				if onlyHeader and code == 2:
+					break
 			elif code in [3, 5]:
 				break
 			elif code == 4:
