@@ -271,13 +271,13 @@ otData = [
 		('uint16', 'PosFormat', None, None, 'Format identifier-format = 2'),
 		('Offset', 'Coverage', None, None, 'Offset to Coverage table-from beginning of ContextPos subtable'),
 		('Offset', 'ClassDef', None, None, 'Offset to ClassDef table-from beginning of ContextPos subtable'),
-		('uint16', 'PosClassSetCnt', None, None, 'Number of PosClassSet tables'),
-		('Offset', 'PosClassSet', 'PosClassSetCnt', 0, 'Array of offsets to PosClassSet tables-from beginning of ContextPos subtable-ordered by class-may be NULL'),
+		('uint16', 'PosClassSetCount', None, None, 'Number of PosClassSet tables'),
+		('Offset', 'PosClassSet', 'PosClassSetCount', 0, 'Array of offsets to PosClassSet tables-from beginning of ContextPos subtable-ordered by class-may be NULL'),
 	]),
 
 	('PosClassSet', [
-		('uint16', 'PosClassRuleCnt', None, None, 'Number of PosClassRule tables'),
-		('Offset', 'PosClassRule', 'PosClassRuleCnt', 0, 'Array of offsets to PosClassRule tables-from beginning of PosClassSet-ordered by preference'),
+		('uint16', 'PosClassRuleCount', None, None, 'Number of PosClassRule tables'),
+		('Offset', 'PosClassRule', 'PosClassRuleCount', 0, 'Array of offsets to PosClassRule tables-from beginning of PosClassSet-ordered by preference'),
 	]),
 
 	('PosClassRule', [
@@ -312,7 +312,7 @@ otData = [
 		('GlyphID', 'Backtrack', 'BacktrackGlyphCount', 0, "Array of backtracking GlyphID's (to be matched before the input sequence)"),
 		('uint16', 'InputGlyphCount', None, None, 'Total number of glyphs in the input sequence (includes the first glyph)'),
 		('GlyphID', 'Input', 'InputGlyphCount', -1, 'Array of input GlyphIDs (start with second glyph)'),
-		('uint16', 'LookaheadGlyphCount', None, None, 'Total number of glyphs in the look ahead sequence (number of glyphs to be matched after the input sequence)'),
+		('uint16', 'LookAheadGlyphCount', None, None, 'Total number of glyphs in the look ahead sequence (number of glyphs to be matched after the input sequence)'),
 		('GlyphID', 'LookAhead', 'LookAheadGlyphCount', 0, "Array of lookahead GlyphID's (to be matched after the input sequence)"),
 		('uint16', 'PosCount', None, None, 'Number of PosLookupRecords'),
 		('struct', 'PosLookupRecord', 'PosCount', 0, 'Array of PosLookupRecords (in design order)'),
@@ -323,14 +323,14 @@ otData = [
 		('Offset', 'Coverage', None, None, 'Offset to Coverage table-from beginning of ChainContextPos subtable'),
 		('Offset', 'BacktrackClassDef', None, None, 'Offset to ClassDef table containing backtrack sequence context-from beginning of ChainContextPos subtable'),
 		('Offset', 'InputClassDef', None, None, 'Offset to ClassDef table containing input sequence context-from beginning of ChainContextPos subtable'),
-		('Offset', 'LookaheadClassDef', None, None, 'Offset to ClassDef table containing lookahead sequence context-from beginning of ChainContextPos subtable'),
-		('uint16', 'ChainPosClassSetCnt', None, None, 'Number of ChainPosClassSet tables'),
-		('Offset', 'ChainPosClassSet', 'ChainPosClassSetCnt', 0, 'Array of offsets to ChainPosClassSet tables-from beginning of ChainContextPos subtable-ordered by input class-may be NULL'),
+		('Offset', 'LookAheadClassDef', None, None, 'Offset to ClassDef table containing lookahead sequence context-from beginning of ChainContextPos subtable'),
+		('uint16', 'ChainPosClassSetCount', None, None, 'Number of ChainPosClassSet tables'),
+		('Offset', 'ChainPosClassSet', 'ChainPosClassSetCount', 0, 'Array of offsets to ChainPosClassSet tables-from beginning of ChainContextPos subtable-ordered by input class-may be NULL'),
 	]),
 
 	('ChainPosClassSet', [
-		('uint16', 'ChainPosClassRuleCnt', None, None, 'Number of ChainPosClassRule tables'),
-		('Offset', 'ChainPosClassRule', 'ChainPosClassRuleCnt', 0, 'Array of offsets to ChainPosClassRule tables-from beginning of ChainPosClassSet-ordered by preference'),
+		('uint16', 'ChainPosClassRuleCount', None, None, 'Number of ChainPosClassRule tables'),
+		('Offset', 'ChainPosClassRule', 'ChainPosClassRuleCount', 0, 'Array of offsets to ChainPosClassRule tables-from beginning of ChainPosClassSet-ordered by preference'),
 	]),
 
 	('ChainPosClassRule', [
@@ -338,7 +338,7 @@ otData = [
 		('uint16', 'Backtrack', 'BacktrackGlyphCount', 0, 'Array of backtracking classes(to be matched before the input sequence)'),
 		('uint16', 'InputGlyphCount', None, None, 'Total number of classes in the input sequence (includes the first class)'),
 		('uint16', 'Input', 'InputGlyphCount', -1, 'Array of input classes(start with second class; to be matched with the input glyph sequence)'),
-		('uint16', 'LookaheadGlyphCount', None, None, 'Total number of classes in the look ahead sequence (number of classes to be matched after the input sequence)'),
+		('uint16', 'LookAheadGlyphCount', None, None, 'Total number of classes in the look ahead sequence (number of classes to be matched after the input sequence)'),
 		('uint16', 'LookAhead', 'LookAheadGlyphCount', 0, 'Array of lookahead classes(to be matched after the input sequence)'),
 		('uint16', 'PosCount', None, None, 'Number of PosLookupRecords'),
 		('struct', 'PosLookupRecord', 'ChainPosCount', 0, 'Array of PosLookupRecords (in design order)'),
@@ -350,8 +350,8 @@ otData = [
 		('Offset', 'BacktrackCoverage', 'BacktrackGlyphCount', 0, 'Array of offsets to coverage tables in backtracking sequence, in glyph sequence order'),
 		('uint16', 'InputGlyphCount', None, None, 'Number of glyphs in input sequence'),
 		('Offset', 'InputCoverage', 'InputGlyphCount', 0, 'Array of offsets to coverage tables in input sequence, in glyph sequence order'),
-		('uint16', 'LookaheadGlyphCount', None, None, 'Number of glyphs in lookahead sequence'),
-		('Offset', 'LookaheadCoverage', 'LookaheadGlyphCount', 0, 'Array of offsets to coverage tables in lookahead sequence, in glyph sequence order'),
+		('uint16', 'LookAheadGlyphCount', None, None, 'Number of glyphs in lookahead sequence'),
+		('Offset', 'LookAheadCoverage', 'LookAheadGlyphCount', 0, 'Array of offsets to coverage tables in lookahead sequence, in glyph sequence order'),
 		('uint16', 'PosCount', None, None, 'Number of PosLookupRecords'),
 		('struct', 'PosLookupRecord', 'PosCount', 0, 'Array of PosLookupRecords,in design order'),
 	]),
@@ -499,8 +499,8 @@ otData = [
 		('uint16', 'SubstFormat', None, None, 'Format identifier-format = 2'),
 		('Offset', 'Coverage', None, None, 'Offset to Coverage table-from beginning of Substitution table'),
 		('Offset', 'ClassDef', None, None, 'Offset to glyph ClassDef table-from beginning of Substitution table'),
-		('uint16', 'SubClassSetCnt', None, None, 'Number of SubClassSet tables'),
-		('Offset', 'SubClassSet', 'SubClassSetCnt', 0, 'Array of offsets to SubClassSet tables-from beginning of Substitution table-ordered by class-may be NULL'),
+		('uint16', 'SubClassSetCount', None, None, 'Number of SubClassSet tables'),
+		('Offset', 'SubClassSet', 'SubClassSetCount', 0, 'Array of offsets to SubClassSet tables-from beginning of Substitution table-ordered by class-may be NULL'),
 	]),
 
 	('SubClassSet', [
@@ -540,8 +540,8 @@ otData = [
 		('GlyphID', 'Backtrack', 'BacktrackGlyphCount', 0, "Array of backtracking GlyphID's (to be matched before the input sequence)"),
 		('uint16', 'InputGlyphCount', None, None, 'Total number of glyphs in the input sequence (includes the first glyph)'),
 		('GlyphID', 'Input', 'InputGlyphCount', -1, 'Array of input GlyphIDs (start with second glyph)'),
-		('uint16', 'LookaheadGlyphCount', None, None, 'Total number of glyphs in the look ahead sequence (number of glyphs to be matched after the input sequence)'),
-		('GlyphID', 'Lookahead', 'LookAheadGlyphCount', 0, "Array of lookahead GlyphID's (to be matched after the input sequence)"),
+		('uint16', 'LookAheadGlyphCount', None, None, 'Total number of glyphs in the look ahead sequence (number of glyphs to be matched after the input sequence)'),
+		('GlyphID', 'LookAhead', 'LookAheadGlyphCount', 0, "Array of lookahead GlyphID's (to be matched after the input sequence)"),
 		('uint16', 'SubstCount', None, None, 'Number of SubstLookupRecords'),
 		('struct', 'SubstLookupRecord', 'SubstCount', 0, 'Array of SubstLookupRecords (in design order)'),
 	]),
@@ -551,13 +551,13 @@ otData = [
 		('Offset', 'Coverage', None, None, 'Offset to Coverage table-from beginning of Substitution table'),
 		('Offset', 'BacktrackClassDef', None, None, 'Offset to glyph ClassDef table containing backtrack sequence data-from beginning of Substitution table'),
 		('Offset', 'InputClassDef', None, None, 'Offset to glyph ClassDef table containing input sequence data-from beginning of Substitution table'),
-		('Offset', 'LookaheadClassDef', None, None, 'Offset to glyph ClassDef table containing lookahead sequence data-from beginning of Substitution table'),
-		('uint16', 'ChainSubClassSetCnt', None, None, 'Number of ChainSubClassSet tables'),
-		('Offset', 'ChainSubClassSet', 'ChainSubClassSetCnt', 0, 'Array of offsets to ChainSubClassSet tables-from beginning of Substitution table-ordered by input class-may be NULL'),
+		('Offset', 'LookAheadClassDef', None, None, 'Offset to glyph ClassDef table containing lookahead sequence data-from beginning of Substitution table'),
+		('uint16', 'ChainSubClassSetCount', None, None, 'Number of ChainSubClassSet tables'),
+		('Offset', 'ChainSubClassSet', 'ChainSubClassSetCount', 0, 'Array of offsets to ChainSubClassSet tables-from beginning of Substitution table-ordered by input class-may be NULL'),
 	]),
 
 	('ChainSubClassSet', [
-		('uint16', 'ChainSubClassRuleCnt', None, None, 'Number of ChainSubClassRule tables'),
+		('uint16', 'ChainSubClassRuleCount', None, None, 'Number of ChainSubClassRule tables'),
 		('Offset', 'ChainSubClassRule', 'ChainSubClassRuleCount', 0, 'Array of offsets to ChainSubClassRule tables-from beginning of ChainSubClassSet-ordered by preference'),
 	]),
 
@@ -566,7 +566,7 @@ otData = [
 		('uint16', 'Backtrack', 'BacktrackGlyphCount', 0, 'Array of backtracking classes(to be matched before the input sequence)'),
 		('uint16', 'InputGlyphCount', None, None, 'Total number of classes in the input sequence (includes the first class)'),
 		('uint16', 'Input', 'InputGlyphCount', -1, 'Array of input classes(start with second class; to be matched with the input glyph sequence)'),
-		('uint16', 'LookaheadGlyphCount', None, None, 'Total number of classes in the look ahead sequence (number of classes to be matched after the input sequence)'),
+		('uint16', 'LookAheadGlyphCount', None, None, 'Total number of classes in the look ahead sequence (number of classes to be matched after the input sequence)'),
 		('uint16', 'LookAhead', 'LookAheadGlyphCount', 0, 'Array of lookahead classes(to be matched after the input sequence)'),
 		('uint16', 'SubstCount', None, None, 'Number of SubstLookupRecords'),
 		('struct', 'SubstLookupRecord', 'SubstCount', 0, 'Array of SubstLookupRecords (in design order)'),
@@ -578,8 +578,8 @@ otData = [
 		('Offset', 'BacktrackCoverage', 'BacktrackGlyphCount', 0, 'Array of offsets to coverage tables in backtracking sequence, in glyph sequence order'),
 		('uint16', 'InputGlyphCount', None, None, 'Number of glyphs in input sequence'),
 		('Offset', 'InputCoverage', 'InputGlyphCount', 0, 'Array of offsets to coverage tables in input sequence, in glyph sequence order'),
-		('uint16', 'LookaheadGlyphCount', None, None, 'Number of glyphs in lookahead sequence'),
-		('Offset', 'LookaheadCoverage', 'LookaheadGlyphCount', 0, 'Array of offsets to coverage tables in lookahead sequence, in glyph sequence order'),
+		('uint16', 'LookAheadGlyphCount', None, None, 'Number of glyphs in lookahead sequence'),
+		('Offset', 'LookAheadCoverage', 'LookAheadGlyphCount', 0, 'Array of offsets to coverage tables in lookahead sequence, in glyph sequence order'),
 		('uint16', 'SubstCount', None, None, 'Number of SubstLookupRecords'),
 		('struct', 'SubstLookupRecord', 'SubstCount', 0, 'Array of SubstLookupRecords, in design order'),
 	]),
@@ -755,8 +755,8 @@ otData = [
 	]),
 
 	('JstfLangSys', [
-		('uint16', 'JstfPriorityCnt', None, None, 'Number of JstfPriority tables'),
-		('Offset', 'JstfPriority', 'JstfPriorityCnt', 0, 'Array of offsets to JstfPriority tables-from beginning of JstfLangSys table-in priority order'),
+		('uint16', 'JstfPriorityCount', None, None, 'Number of JstfPriority tables'),
+		('Offset', 'JstfPriority', 'JstfPriorityCount', 0, 'Array of offsets to JstfPriority tables-from beginning of JstfLangSys table-in priority order'),
 	]),
 
 	('JstfPriority', [
