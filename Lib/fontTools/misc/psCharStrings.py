@@ -844,7 +844,8 @@ class DictDecompiler(ByteCodeDecompilerBase):
 	def handle_operator(self, operator, argType):
 		if type(argType) == type(()):
 			value = ()
-			for arg in argType:
+			for i in range(len(argType)-1, -1, -1):
+				arg = argType[i]
 				arghandler = getattr(self, "arg_" + arg)
 				value = (arghandler(operator),) + value
 		else:
