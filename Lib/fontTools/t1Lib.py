@@ -124,9 +124,9 @@ HEXLINELENGTH = 80
 
 def readLWFN(path):
 	"""reads an LWFN font file, returns raw data"""
-	resref = Res.OpenResFile(path)
+	resRef = Res.FSpOpenResFile(path, 1)  # read-only
 	try:
-		Res.UseResFile(resref)
+		Res.UseResFile(resRef)
 		n = Res.Count1Resources('POST')
 		data = []
 		for i in range(501, 501 + n):
@@ -147,7 +147,7 @@ def readLWFN(path):
 			else:
 				raise error, 'bad chunk code: ' + `code`
 	finally:
-		Res.CloseResFile(resref)
+		Res.CloseResFile(resRef)
 	data = string.join(data, '')
 	assertType1(data)
 	return data
@@ -195,12 +195,10 @@ def readOther(path):
 # file writing tools
 
 def writeLWFN(path, data):
-	Res.CreateResFile(path)
-	fss = macfs.FSSpec(path)
-	fss.SetCreatorType('just', 'LWFN')
-	resref = Res.OpenResFile(path)
+	Res.FSpCreateResFile(path, "just", "LWFN", 0)
+	resRef = Res.FSpOpenResFile(path, 2)  # write-only
 	try:
-		Res.UseResFile(resref)
+		Res.UseResFile(resRef)
 		resID = 501
 		chunks = findEncryptedChunks(data)
 		for isEncrypted, chunk in chunks:
@@ -216,7 +214,7 @@ def writeLWFN(path, data):
 		res = Res.Resource(chr(5) + '\0')
 		res.AddResource('POST', resID, '')
 	finally:
-		Res.CloseResFile(resref)
+		Res.CloseResFile(resRef)
 
 def writePFB(path, data):
 	chunks = findEncryptedChunks(data)
