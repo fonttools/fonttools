@@ -731,35 +731,53 @@ class T2OutlineExtractor(SimpleT2Decompiler):
 	# path constructors, flex
 	#
 	def op_hflex(self, index):
-		XXX
+		dx1, dx2, dy2, dx3, dx4, dx5, dx6 = self.popall()
+		dy1 = dy3 = dy4 = dy5 = dy6 = 0
+		self.rCurveTo((dx1, dy1), (dx2, dy2), (dx3, dy3))
+		self.rCurveTo((dx4, dy4), (dx5, dy5), (dx6, dy6))
 	def op_flex(self, index):
-		XXX
+		dx1, dy1, dx2, dy2, dx3, dy3, dx4, dy4, dx5, dy5, dx6, dy6, fd = self.popall()
+		self.rCurveTo((dx1, dy1), (dx2, dy2), (dx3, dy3))
+		self.rCurveTo((dx4, dy4), (dx5, dy5), (dx6, dy6))
 	def op_hflex1(self, index):
-		XXX
+		dx1, dy1, dx2, dy2, dx3, dx4, dx5, dy5, dx6 = self.popall()
+		dy3 = dy4 = dy6 = 0
+		self.rCurveTo((dx1, dy1), (dx2, dy2), (dx3, dy3))
+		self.rCurveTo((dx4, dy4), (dx5, dy5), (dx6, dy6))
 	def op_flex1(self, index):
-		XXX
+		dx1, dy1, dx2, dy2, dx3, dy3, dx4, dy4, dx5, dy5, d6 = self.popall()
+		dx = dx1 + dx2 + dx3 + dx4 + dx5
+		dy = dy1 + dy2 + dy3 + dy4 + dy5
+		if abs(dx) > abs(dy):
+			dx6 = d6
+			dy6 = 0
+		else:
+			dx6 = 0
+			dy6 = d6
+		self.rCurveTo((dx1, dy1), (dx2, dy2), (dx3, dy3))
+		self.rCurveTo((dx4, dy4), (dx5, dy5), (dx6, dy6))
 	
 	#
 	# MultipleMaster. Well...
 	#
 	def op_blend(self, index):
-		XXX
+		args = self.popall()
 	
 	# misc
 	def op_and(self, index):
-		XXX
+		raise NotImplementedError
 	def op_or(self, index):
-		XXX
+		raise NotImplementedError
 	def op_not(self, index):
-		XXX
+		raise NotImplementedError
 	def op_store(self, index):
-		XXX
+		raise NotImplementedError
 	def op_abs(self, index):
-		XXX
+		raise NotImplementedError
 	def op_add(self, index):
-		XXX
+		raise NotImplementedError
 	def op_sub(self, index):
-		XXX
+		raise NotImplementedError
 	def op_div(self, index):
 		num2 = self.pop()
 		num1 = self.pop()
@@ -770,33 +788,33 @@ class T2OutlineExtractor(SimpleT2Decompiler):
 		else:
 			self.push(d2)
 	def op_load(self, index):
-		XXX
+		raise NotImplementedError
 	def op_neg(self, index):
-		XXX
+		raise NotImplementedError
 	def op_eq(self, index):
-		XXX
+		raise NotImplementedError
 	def op_drop(self, index):
-		XXX
+		raise NotImplementedError
 	def op_put(self, index):
-		XXX
+		raise NotImplementedError
 	def op_get(self, index):
-		XXX
+		raise NotImplementedError
 	def op_ifelse(self, index):
-		XXX
+		raise NotImplementedError
 	def op_random(self, index):
-		XXX
+		raise NotImplementedError
 	def op_mul(self, index):
-		XXX
+		raise NotImplementedError
 	def op_sqrt(self, index):
-		XXX
+		raise NotImplementedError
 	def op_dup(self, index):
-		XXX
+		raise NotImplementedError
 	def op_exch(self, index):
-		XXX
+		raise NotImplementedError
 	def op_index(self, index):
-		XXX
+		raise NotImplementedError
 	def op_roll(self, index):
-		XXX
+		raise NotImplementedError
 	
 	#
 	# miscelaneous helpers
