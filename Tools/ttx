@@ -3,7 +3,7 @@
 """\
 usage: ttx [options] inputfile1 [... inputfileN]
 
-    "From OpenType To XML And Back"
+    TTX %s -- From OpenType To XML And Back
 
     If an input file is a TrueType or OpenType font file, it will be
        dumped to an TTX file (an XML-based text format).
@@ -53,10 +53,10 @@ import os
 import getopt
 import re
 from fontTools.ttLib import TTFont
-
+from fontTools import version
 
 def usage():
-	print __doc__
+	print __doc__ % version
 	sys.exit(2)
 
 
@@ -94,7 +94,7 @@ class Options:
 		for option, value in rawOptions:
 			# general options
 			if option == "-h":
-				print __doc__
+				print __doc__ % version
 				sys.exit(0)
 			elif option == "-d":
 				if not os.path.isdir(value):
