@@ -38,7 +38,7 @@ class ExpatParser:
 	
 	def startElementHandler(self, name, attrs):
 		stackSize = self.stackSize
-		self.stackSize = self.stackSize + 1
+		self.stackSize = stackSize + 1
 		if not stackSize:
 			if name <> "ttFont":
 				raise TTXParseError, "illegal root tag: %s" % name
@@ -62,7 +62,15 @@ class ExpatParser:
 				tableClass = ttLib.getTableClass(tag)
 				if tableClass is None:
 					tableClass = DefaultTable
-			if self.ttFont.has_key(tag):
+			if tag in ('post', 'loca') and self.ttFont.has_key(tag):
+				# Special-case 'post' to prevent a bootstrap problem with
+				#    ttCompile.py -i:
+				#    - import post table from XML
+				#    - don't import glyf table from XML
+				#    - the glyphOrder is in the *original* binary post table
+				#    So: we can't throw away the original post table.
+				# Also special-case the 'laca' table as we need the
+				#    original if the 'glyf' table isn't recompiled.
 				self.currentTable = self.ttFont[tag]
 			else:
 				self.currentTable = tableClass(tag)
