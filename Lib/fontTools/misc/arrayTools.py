@@ -50,4 +50,9 @@ def sectRect((l1, t1, r1, b1), (l2, t2, r2, b2)):
 		return 0, (0, 0, 0, 0)
 	return 1, (l, t, r, b)
 
+def intRect(rect):
+	rect = Numeric.array(rect)
+	l, t = Numeric.floor(rect[:2])
+	r, b = Numeric.ceil(rect[2:])
+	return tuple(Numeric.array((l, t, r, b)).astype(Numeric.Int))
 
