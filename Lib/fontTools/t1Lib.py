@@ -8,7 +8,7 @@ read(path)
 	to by 'path'. 
 	Raises an error when the file does not contain valid Type 1 data.
 
-write(path, data, kind = 'OTHER', dohex = 0)
+write(path, data, kind='OTHER', dohex=0)
 	writes raw Type 1 data to the file pointed to by 'path'. 
 	'kind' can be one of 'LWFN', 'PFB' or 'OTHER'; it defaults to 'OTHER'.
 	'dohex' is a flag which determines whether the eexec encrypted
@@ -86,14 +86,14 @@ def read(path):
 		fss = macfs.FSSpec(path)
 		creator, type = fss.GetCreatorType()
 		if type == 'LWFN':
-			return readlwfn(path), 'LWFN'
+			return readLWFN(path), 'LWFN'
 	if normpath[-4:] == '.pfb':
-		return readpfb(path), 'PFB'
+		return readPFB(path), 'PFB'
 	else:
-		return readother(path), 'OTHER'
+		return readOther(path), 'OTHER'
 
 def write(path, data, kind='OTHER', dohex=0):
-	asserttype1(data)
+	assertType1(data)
 	kind = string.upper(kind)
 	try:
 		os.remove(path)
@@ -102,11 +102,11 @@ def write(path, data, kind='OTHER', dohex=0):
 	err = 1
 	try:
 		if kind == 'LWFN':
-			writelwfn(path, data)
+			writeLWFN(path, data)
 		elif kind == 'PFB':
-			writepfb(path, data)
+			writePFB(path, data)
 		else:
-			writeother(path, data, dohex)
+			writeOther(path, data, dohex)
 		err = 0
 	finally:
 		if err and not DEBUG:
@@ -122,7 +122,7 @@ LWFNCHUNKSIZE = 2000
 HEXLINELENGTH = 80
 
 
-def readlwfn(path):
+def readLWFN(path):
 	"""reads an LWFN font file, returns raw data"""
 	resref = Res.OpenResFile(path)
 	try:
@@ -149,10 +149,10 @@ def readlwfn(path):
 	finally:
 		Res.CloseResFile(resref)
 	data = string.join(data, '')
-	asserttype1(data)
+	assertType1(data)
 	return data
 
-def readpfb(path):
+def readPFB(path, onlyHeader=0):
 	"""reads a PFB font file, returns raw data"""
 	f = open(path, "rb")
 	data = []
@@ -161,7 +161,7 @@ def readpfb(path):
 			raise error, 'corrupt PFB file'
 		code = ord(f.read(1))
 		if code in [1, 2]:
-			chunklen = string2long(f.read(4))
+			chunklen = stringToLong(f.read(4))
 			chunk = f.read(chunklen)
 			assert len(chunk) == chunklen
 			data.append(chunk)
@@ -169,30 +169,32 @@ def readpfb(path):
 			break
 		else:
 			raise error, 'bad chunk code: ' + `code`
+		if onlyHeader:
+			break
 	f.close()
 	data = string.join(data, '')
-	asserttype1(data)
+	assertType1(data)
 	return data
 
-def readother(path):
+def readOther(path):
 	"""reads any (font) file, returns raw data"""
 	f = open(path, "rb")
 	data = f.read()
 	f.close()
-	asserttype1(data)
+	assertType1(data)
 	
-	chunks = findencryptedchunks(data)
+	chunks = findEncryptedChunks(data)
 	data = []
-	for isencrypted, chunk in chunks:
-		if isencrypted and ishex(chunk[:4]):
-			data.append(dehexstring(chunk))
+	for isEncrypted, chunk in chunks:
+		if isEncrypted and isHex(chunk[:4]):
+			data.append(deHexString(chunk))
 		else:
 			data.append(chunk)
 	return string.join(data, '')
 
 # file writing tools
 
-def writelwfn(path, data):
+def writeLWFN(path, data):
 	Res.CreateResFile(path)
 	fss = macfs.FSSpec(path)
 	fss.SetCreatorType('just', 'LWFN')
@@ -200,9 +202,9 @@ def writelwfn(path, data):
 	try:
 		Res.UseResFile(resref)
 		resID = 501
-		chunks = findencryptedchunks(data)
-		for isencrypted, chunk in chunks:
-			if isencrypted:
+		chunks = findEncryptedChunks(data)
+		for isEncrypted, chunk in chunks:
+			if isEncrypted:
 				code = 2
 			else:
 				code = 1
@@ -216,17 +218,17 @@ def writelwfn(path, data):
 	finally:
 		Res.CloseResFile(resref)
 
-def writepfb(path, data):
-	chunks = findencryptedchunks(data)
+def writePFB(path, data):
+	chunks = findEncryptedChunks(data)
 	f = open(path, "wb")
 	try:
-		for isencrypted, chunk in chunks:
-			if isencrypted:
+		for isEncrypted, chunk in chunks:
+			if isEncrypted:
 				code = 2
 			else:
 				code = 1
 			f.write(chr(128) + chr(code))
-			f.write(long2string(len(chunk)))
+			f.write(longToString(len(chunk)))
 			f.write(chunk)
 		f.write(chr(128) + chr(3))
 	finally:
@@ -235,13 +237,13 @@ def writepfb(path, data):
 		fss = macfs.FSSpec(path)
 		fss.SetCreatorType('mdos', 'BINA')
 
-def writeother(path, data, dohex = 0):
-	chunks = findencryptedchunks(data)
+def writeOther(path, data, dohex = 0):
+	chunks = findEncryptedChunks(data)
 	f = open(path, "wb")
 	try:
 		hexlinelen = HEXLINELENGTH / 2
-		for isencrypted, chunk in chunks:
-			if isencrypted:
+		for isEncrypted, chunk in chunks:
+			if isEncrypted:
 				code = 2
 			else:
 				code = 1
@@ -269,17 +271,17 @@ EEXECENDMARKER = "%-- eexec end\r"
 
 _ishexRE = re.compile('[0-9A-Fa-f]*$')
 
-def ishex(text):
+def isHex(text):
 	return _ishexRE.match(text) is not None
 
 
-def decrypttype1(data):
-	chunks = findencryptedchunks(data)
+def decryptType1(data):
+	chunks = findEncryptedChunks(data)
 	data = []
-	for isencrypted, chunk in chunks:
-		if isencrypted:
-			if ishex(chunk[:4]):
-				chunk = dehexstring(chunk)
+	for isEncrypted, chunk in chunks:
+		if isEncrypted:
+			if isHex(chunk[:4]):
+				chunk = deHexString(chunk)
 			decrypted, R = eexec.decrypt(chunk, 55665)
 			decrypted = decrypted[4:]
 			if decrypted[-len(EEXECINTERNALEND)-1:-1] <> EEXECINTERNALEND \
@@ -294,22 +296,22 @@ def decrypttype1(data):
 				data.append(chunk)
 	return string.join(data, '')
 
-def findencryptedchunks(data):
+def findEncryptedChunks(data):
 	chunks = []
 	while 1:
-		ebegin = string.find(data, EEXECBEGIN)
-		if ebegin < 0:
+		eBegin = string.find(data, EEXECBEGIN)
+		if eBegin < 0:
 			break
-		eend = string.find(data, EEXECEND, ebegin)
-		if eend < 0:
+		eEnd = string.find(data, EEXECEND, eBegin)
+		if eEnd < 0:
 			raise error, "can't find end of eexec part"
-		chunks.append((0, data[:ebegin + len(EEXECBEGIN) + 1]))
-		chunks.append((1, data[ebegin + len(EEXECBEGIN) + 1:eend]))
-		data = data[eend:]
+		chunks.append((0, data[:eBegin + len(EEXECBEGIN) + 1]))
+		chunks.append((1, data[eBegin + len(EEXECBEGIN) + 1:eEnd]))
+		data = data[eEnd:]
 	chunks.append((0, data))
 	return chunks
 
-def dehexstring(hexstring):
+def deHexString(hexstring):
 	return eexec.deHexString(string.join(string.split(hexstring), ""))
 
 
@@ -317,7 +319,7 @@ def dehexstring(hexstring):
 
 _fontType1RE = re.compile(r"/FontType\s+1\s+def")
 
-def asserttype1(data):
+def assertType1(data):
 	for head in ['%!PS-AdobeFont', '%!FontType1-1.0']:
 		if data[:len(head)] == head:
 			break
@@ -333,16 +335,17 @@ def asserttype1(data):
 
 # pfb helpers
 
-def long2string(long):
+def longToString(long):
 	str = ""
 	for i in range(4):
 		str = str + chr((long & (0xff << (i * 8))) >> i * 8)
 	return str
 
-def string2long(str):
+def stringToLong(str):
 	if len(str) <> 4:
 		raise ValueError, 'string must be 4 bytes long'
 	long = 0
 	for i in range(4):
 		long = long + (ord(str[i]) << (i * 8))
 	return long
+
