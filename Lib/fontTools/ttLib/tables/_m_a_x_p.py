@@ -33,10 +33,10 @@ class table__m_a_x_p(DefaultTable.DefaultTable):
 	def decompile(self, data, ttFont):
 		dummy, data = sstruct.unpack2(maxpFormat_0_5, data, self)
 		self.numGlyphs = int(self.numGlyphs)
-		if self.tableVersion == 0x00010000:
+		if self.tableVersion != 0x00005000:
 			dummy, data = sstruct.unpack2(maxpFormat_1_0_add, data, self)
-		else:
-			assert self.tableVersion == 0x00005000, "unknown 'maxp' format: %x" % self.tableVersion
+#		else:
+#			assert self.tableVersion == 0x00005000, "unknown 'maxp' format: %x" % self.tableVersion
 		assert len(data) == 0
 	
 	def compile(self, ttFont):
@@ -44,12 +44,12 @@ class table__m_a_x_p(DefaultTable.DefaultTable):
 			if ttFont.isLoaded('glyf') and ttFont.recalcBBoxes:
 				self.recalc(ttFont)
 		else:
-			pass # XXX CFF!!!
+			pass  # CFF
+		if self.tableVersion != 0x00005000:
+			self.tableVersion = 0x00010000
 		data = sstruct.pack(maxpFormat_0_5, self)
 		if self.tableVersion == 0x00010000:
 			data = data + sstruct.pack(maxpFormat_1_0_add, self)
-		else:
-			assert self.tableVersion == 0x00005000, "unknown 'maxp' format: %f" % self.tableVersion
 		return data
 	
 	def recalc(self, ttFont):
@@ -114,15 +114,13 @@ class table__m_a_x_p(DefaultTable.DefaultTable):
 		print ". . . . . . . . ."
 	
 	def toXML(self, writer, ttFont):
-		if self.tableVersion <> 0x00005000:
+		if self.tableVersion != 0x00005000:
 			writer.comment("Most of this table will be recalculated by the compiler")
 			writer.newline()
 		formatstring, names, fixes = sstruct.getformat(maxpFormat_0_5)
-		if self.tableVersion == 0x00010000:
+		if self.tableVersion != 0x00005000:
 			formatstring, names_1_0, fixes = sstruct.getformat(maxpFormat_1_0_add)
 			names = names + names_1_0
-		else:
-			assert self.tableVersion == 0x00005000, "unknown 'maxp' format: %f" % self.tableVersion
 		for name in names:
 			value = getattr(self, name)
 			if type(value) == type(0L):
