@@ -47,9 +47,10 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 		locations = []
 		currentLocation = 0
 		dataList = []
+		recalcBBoxes = ttFont.recalcBBoxes
 		for glyphName in ttFont.getGlyphOrder():
 			glyph = self[glyphName]
-			glyphData = glyph.compile(self)
+			glyphData = glyph.compile(self, recalcBBoxes)
 			locations.append(currentLocation)
 			currentLocation = currentLocation + len(glyphData)
 			dataList.append(glyphData)
@@ -59,7 +60,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 		ttFont['maxp'].numGlyphs = len(self.glyphs)
 		return data
 	
-	def toXML(self, writer, ttFont, progress=None, compactGlyphs=0):
+	def toXML(self, writer, ttFont, progress=None):
 		writer.newline()
 		glyphOrder = ttFont.getGlyphOrder()
 		writer.begintag("GlyphOrder")
@@ -90,8 +91,6 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 						])
 				writer.newline()
 				glyph.toXML(writer, ttFont)
-				if compactGlyphs:
-					glyph.compact(self)
 				writer.endtag('TTGlyph')
 				writer.newline()
 			else:
@@ -207,8 +206,8 @@ class Glyph:
 			return
 		self.data = data
 	
-	def compact(self, glyfTable):
-		data = self.compile(glyfTable)
+	def compact(self, glyfTable, recalcBBoxes=1):
+		data = self.compile(glyfTable, recalcBBoxes)
 		self.__dict__.clear()
 		self.data = data
 	
@@ -223,12 +222,13 @@ class Glyph:
 		else:
 			self.decompileCoordinates(data)
 	
-	def compile(self, glyfTable):
+	def compile(self, glyfTable, recalcBBoxes=1):
 		if hasattr(self, "data"):
 			return self.data
 		if self.numberOfContours == 0:
 			return ""
-		self.recalcBounds(glyfTable)
+		if recalcBBoxes:
+			self.recalcBounds(glyfTable)
 		data = sstruct.pack(glyphHeaderFormat, self)
 		if self.numberOfContours == -1:
 			data = data + self.compileComponents(glyfTable)
