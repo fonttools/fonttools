@@ -42,7 +42,7 @@ Dumping 'prep' table...
 """
 
 #
-# $Id: __init__.py,v 1.17 2001-02-23 21:58:57 Just Exp $
+# $Id: __init__.py,v 1.18 2002-05-01 21:06:11 jvr Exp $
 #
 
 __version__ = "1.0a6"
@@ -244,30 +244,11 @@ class TTFont:
 			debugmsg("Done dumping TTX")
 	
 	def importXML(self, file, progress=None):
-		"""Import an TTX file (an XML-based text format), so as to recreate
+		"""Import a TTX file (an XML-based text format), so as to recreate
 		a font object.
 		"""
-		import xmlImport, stat
-		from xml.parsers.xmlproc import xmlproc
-		builder = xmlImport.XMLApplication(self, progress)
-		if progress:
-			progress.set(0, os.stat(file)[stat.ST_SIZE] / 100 or 1)
-		proc = xmlImport.UnicodeProcessor()
-		proc.set_application(builder)
-		proc.set_error_handler(xmlImport.XMLErrorHandler(proc))
-		dir, filename = os.path.split(file)
-		if dir:
-			olddir = os.getcwd()
-			os.chdir(dir)
-		try:
-			proc.parse_resource(filename)
-			root = builder.root
-		finally:
-			if dir:
-				os.chdir(olddir)
-			# remove circular references
-			proc.deref()
-			del builder.progress
+		import xmlImport
+		xmlImport.importXML(self, file, progress)
 	
 	def isLoaded(self, tag):
 		"""Return true if the table identified by 'tag' has been 

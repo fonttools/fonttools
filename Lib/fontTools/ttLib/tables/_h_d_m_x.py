@@ -75,7 +75,7 @@ class table__h_d_m_x(DefaultTable.DefaultTable):
 	def fromXML(self, (name, attrs, content), ttFont):
 		if name <> "hdmxData":
 			return
-		content = string.join(content, " ")
+		content = string.join(content, "")
 		lines = string.split(content, ";")
 		topRow = string.split(lines[0])
 		assert topRow[0] == "ppem:", "illegal hdmx format"

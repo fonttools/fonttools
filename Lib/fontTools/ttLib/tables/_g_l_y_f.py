@@ -40,8 +40,9 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 			glyph = Glyph(glyphdata)
 			self.glyphs[glyphName] = glyph
 			last = next
-		if len(data) > next:
-			raise ttLib.TTLibError, "too much 'glyf' table data"
+		# this should become a warning:
+		#if len(data) > next:
+		#	raise ttLib.TTLibError, "too much 'glyf' table data"
 	
 	def compile(self, ttFont):
 		import string

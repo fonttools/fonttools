@@ -107,13 +107,15 @@ class NameRecord:
 		self.platEncID = safeEval(attrs["platEncID"])
 		self.langID =  safeEval(attrs["langID"])
 		if self.platformID == 0 or (self.platformID == 3 and self.platEncID in (0, 1)):
-			from fontTools.ttLib.xmlImport import UnicodeString
-			str = UnicodeString("")
+			s = ""
 			for element in content:
-				str = str + element
-			self.string = str.stripped().tostring()
+				s = s + element
+			s = unicode(s, "utf8")
+			s = s.strip()
+			self.string = s.encode("utf_16_be")
 		else:
-			self.string = string.strip(string.join(content, ""))
+			s = string.strip(string.join(content, ""))
+			self.string = unicode(s, "utf8").encode("latin1")
 	
 	def __cmp__(self, other):
 		"""Compare method, so a list of NameRecords can be sorted
