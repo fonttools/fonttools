@@ -26,7 +26,10 @@ import re
 import os
 
 if os.name == 'mac':
-	import Res
+	try:
+		from Carbon import Res
+	except ImportError:
+		import Res  # MacPython < 2.2
 	import macfs
 
 error = 't1Lib.error'
