@@ -10,8 +10,8 @@ headFormat = """
 		>	# big endian
 		tableVersion:		16.16F
 		fontRevision:		16.16F
-		checkSumAdjustment:	l
-		magicNumber:		l
+		checkSumAdjustment:	i
+		magicNumber:		i
 							x	# pad byte
 		flags:				b
 		unitsPerEm:			H
