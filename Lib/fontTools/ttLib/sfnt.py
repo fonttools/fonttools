@@ -116,7 +116,7 @@ class SFNTWriter:
 			entry.checkSum = calcChecksum(data)
 		self.tables[tag] = entry
 	
-	def close(self, closeStream=1):
+	def close(self):
 		"""All tables must have been written to disk. Now write the
 		directory.
 		"""
@@ -138,8 +138,6 @@ class SFNTWriter:
 			self.calcMasterChecksum(directory)
 		self.file.seek(0)
 		self.file.write(directory)
-		if closeStream:
-			self.file.close()
 	
 	def calcMasterChecksum(self, directory):
 		# calculate checkSumAdjustment
