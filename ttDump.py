@@ -2,6 +2,7 @@
 
 """\
 usage: %s [-hvisf] [-t <table>] [-x <table>] [-d <output-dir>] TrueType-file(s) 
+
     Dump TrueType fonts as TTX files (an XML-based text format).
 
     Options:
@@ -16,7 +17,7 @@ usage: %s [-hvisf] [-t <table>] [-x <table>] [-d <output-dir>] TrueType-file(s)
        The files will be saved in a directory. The name of this
        directory will be constructed from the input filename (by
        dropping the extension) or can be specified by the optional
-       TTX-output-file argument.
+       TTX-output-file argument. This option implies -f.
     -f Force overwriting existing files.
     -d <output-dir> Specify a directory in which the output file(s)
        should end up. The directory must exist.
@@ -30,7 +31,7 @@ usage: %s [-hvisf] [-t <table>] [-x <table>] [-d <output-dir>] TrueType-file(s)
 import sys, os, getopt
 from fontTools import ttLib
 
-options, args = getopt.getopt(sys.argv[1:], "hvisft:x:")
+options, args = getopt.getopt(sys.argv[1:], "hvisft:x:d:")
 
 # default values
 verbose = 0
