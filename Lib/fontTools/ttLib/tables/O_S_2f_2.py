@@ -5,16 +5,16 @@ from fontTools.misc.textTools import safeEval, num2binary, binary2num
 # panose classification
 
 panoseFormat = """
-	bFamilyType:		B
-	bSerifStyle:		B
-	bWeight:			B
-	bProportion:		B
-	bContrast:			B
-	bStrokeVariation:	B
-	bArmStyle:			B
-	bLetterForm:		B
-	bMidline:			B
-	bXHeight:			B
+	bFamilyType:        B
+	bSerifStyle:        B
+	bWeight:            B
+	bProportion:        B
+	bContrast:          B
+	bStrokeVariation:   B
+	bArmStyle:          B
+	bLetterForm:        B
+	bMidline:           B
+	bXHeight:           B
 """
 
 class Panose:
@@ -32,50 +32,50 @@ class Panose:
 # 'sfnt' OS/2 and Windows Metrics table - 'OS/2'
 
 OS2_format_0 = """
-	>	# big endian
-	version:				H		# version
-	xAvgCharWidth:			h		# average character width
-	usWeightClass:			H		# degree of thickness of strokes
-	usWidthClass:			H		# aspect ratio
-	fsType:					h		# type flags
-	ySubscriptXSize:		h		# subscript horizontal font size
-	ySubscriptYSize:		h		# subscript vertical font size
-	ySubscriptXOffset:		h		# subscript x offset
-	ySubscriptYOffset:		h		# subscript y offset
-	ySuperscriptXSize:		h		# superscript horizontal font size
-	ySuperscriptYSize:		h		# superscript vertical font size
-	ySuperscriptXOffset:	h		# superscript x offset
-	ySuperscriptYOffset:	h		# superscript y offset
-	yStrikeoutSize:			h		# strikeout size
-	yStrikeoutPosition:		h		# strikeout position
-	sFamilyClass:			h		# font family class and subclass
-	panose: 				10s		# panose classification number
-	ulUnicodeRange1:		l		# character range
-	ulUnicodeRange2:		l		# character range
-	ulUnicodeRange3:		l		# character range
-	ulUnicodeRange4:		l		# character range
-	achVendID:				4s		# font vendor identification
-	fsSelection:			H		# font selection flags
-	fsFirstCharIndex:		H		# first unicode character index
-	fsLastCharIndex:		H		# last unicode character index
-	usTypoAscender:			H		# typographic ascender
-	usTypoDescender:		H		# typographic descender
-	usTypoLineGap:			H		# typographic line gap
-	usWinAscent:			H		# Windows ascender
-	usWinDescent:			H		# Windows descender
+	>   # big endian
+	version:                H       # version
+	xAvgCharWidth:          h       # average character width
+	usWeightClass:          H       # degree of thickness of strokes
+	usWidthClass:           H       # aspect ratio
+	fsType:                 h       # type flags
+	ySubscriptXSize:        h       # subscript horizontal font size
+	ySubscriptYSize:        h       # subscript vertical font size
+	ySubscriptXOffset:      h       # subscript x offset
+	ySubscriptYOffset:      h       # subscript y offset
+	ySuperscriptXSize:      h       # superscript horizontal font size
+	ySuperscriptYSize:      h       # superscript vertical font size
+	ySuperscriptXOffset:    h       # superscript x offset
+	ySuperscriptYOffset:    h       # superscript y offset
+	yStrikeoutSize:         h       # strikeout size
+	yStrikeoutPosition:     h       # strikeout position
+	sFamilyClass:           h       # font family class and subclass
+	panose:                 10s     # panose classification number
+	ulUnicodeRange1:        l       # character range
+	ulUnicodeRange2:        l       # character range
+	ulUnicodeRange3:        l       # character range
+	ulUnicodeRange4:        l       # character range
+	achVendID:              4s      # font vendor identification
+	fsSelection:            H       # font selection flags
+	fsFirstCharIndex:       H       # first unicode character index
+	fsLastCharIndex:        H       # last unicode character index
+	usTypoAscender:         H       # typographic ascender
+	usTypoDescender:        H       # typographic descender
+	usTypoLineGap:          H       # typographic line gap
+	usWinAscent:            H       # Windows ascender
+	usWinDescent:           H       # Windows descender
 """
 
 OS2_format_1_addition =  """
-	ulCodePageRange1:	l
-	ulCodePageRange2:	l	
+	ulCodePageRange1:   l
+	ulCodePageRange2:   l
 """
 
 OS2_format_2_addition =  OS2_format_1_addition + """
-	sxHeight:			h
-	sCapHeight:			h
-	usDefaultChar:		H
-	usBreakChar:		H
-	usMaxContex:		H
+	sxHeight:           h
+	sCapHeight:         h
+	usDefaultChar:      H
+	usBreakChar:        H
+	usMaxContex:        H
 """
 
 bigendian = "	>	# big endian\n"
