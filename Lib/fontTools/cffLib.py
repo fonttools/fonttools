@@ -1,7 +1,7 @@
 """cffLib.py -- read/write tools for Adobe CFF fonts."""
 
 #
-# $Id: cffLib.py,v 1.13 2002-05-16 18:17:32 jvr Exp $
+# $Id: cffLib.py,v 1.14 2002-05-16 18:38:03 jvr Exp $
 #
 
 import struct, sstruct
@@ -32,6 +32,7 @@ class CFFFontSet:
 		self.strings = IndexedStrings(list(Index(file)))
 		self.GlobalSubrs = SubrsIndex(file)
 		self.topDictIndex.strings = self.strings
+		self.topDictIndex.GlobalSubrs = self.GlobalSubrs
 	
 	def __len__(self):
 		return len(self.fontNames)
@@ -44,10 +45,7 @@ class CFFFontSet:
 			index = self.fontNames.index(name)
 		except ValueError:
 			raise KeyError, name
-		font = self.topDictIndex[index]
-		if not hasattr(font, "GlobalSubrs"):
-			font.GlobalSubrs = self.GlobalSubrs
-		return font
+		return self.topDictIndex[index]
 	
 	def compile(self):
 		strings = IndexedStrings()
@@ -143,6 +141,9 @@ class CharStrings:
 	def keys(self):
 		return self.nameToIndex.keys()
 	
+	def values(self):
+		return list(self.charStringsIndex)
+	
 	def has_key(self, name):
 		return self.nameToIndex.has_key(name)
 	
@@ -163,7 +164,7 @@ class CharStrings:
 
 class TopDictIndex(Index):
 	def produceItem(self, data, file, offset, size):
-		top = TopDict(self.strings, file, offset)
+		top = TopDict(self.strings, file, offset, self.GlobalSubrs)
 		top.decompile(data)
 		return top
 
@@ -405,6 +406,10 @@ class TopDict(BaseDict):
 	order = buildOrder(topDictOperators)
 	decompiler = TopDictDecompiler
 	
+	def __init__(self, strings, file, offset, GlobalSubrs):
+		BaseDict.__init__(self, strings, file, offset)
+		self.GlobalSubrs = GlobalSubrs
+	
 	def getGlyphOrder(self):
 		return self.charset
 	
@@ -416,6 +421,9 @@ class TopDict(BaseDict):
 		self.file.seek(offset)
 		self.numGlyphs, = struct.unpack(">H", self.file.read(2))
 	
+	def toXML(self, xmlWriter, progress):
+		self.decompileAllCharStrings()
+		BaseDict.toXML(self, xmlWriter, progress)
 	def decompileAllCharStrings(self):
 		if self.CharstringType == 2:
 			# Type 2 CharStrings
