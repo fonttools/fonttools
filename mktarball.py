@@ -1,12 +1,16 @@
 #! /usr/bin/env python
 
-import os
+import os, sys
 
-src = os.getcwd()
+src = os.path.basename(sys.argv[0])
+print src
+
+xxxxxx
+
 tar = src + ".tar"
 gz = tar + ".gz"
 tgz = src + ".tgz"
 
-os.system("tar --exclude=CVS -cvf %s %s" % (tar, src))
+os.system("tar --exclude="CVS|mktarball.py" -cvf %s %s" % (tar, src))
 os.system("gzip -9v %s" % tar)
 os.rename(gz, tgz)
