@@ -570,7 +570,8 @@ class Glyph:
 					move = compo.x, compo.y
 				
 				if not hasattr(compo, "transform"):
-					coordinates = coordinates + move  # I love NumPy!
+					if len(coordinates) > 0:
+						coordinates = coordinates + move  # I love NumPy!
 				else:
 					apple_way = compo.flags & SCALED_COMPONENT_OFFSET
 					ms_way = compo.flags & UNSCALED_COMPONENT_OFFSET
@@ -590,14 +591,15 @@ class Glyph:
 					# due to the transformation the coords. are now floats;
 					# round them off nicely, and cast to short
 					coordinates = Numeric.floor(coordinates + 0.5).astype(Numeric.Int16)
-				if allCoords is None:
+				if allCoords is None or len(allCoords) == 0:
 					allCoords = coordinates
 					allEndPts = endPts
 					allFlags = flags
 				else:
 					allEndPts = allEndPts + (Numeric.array(endPts) + len(allCoords)).tolist()
-					allCoords = Numeric.concatenate((allCoords, coordinates))
-					allFlags = Numeric.concatenate((allFlags, flags))
+					if len(coordinates) > 0:
+						allCoords = Numeric.concatenate((allCoords, coordinates))
+						allFlags = Numeric.concatenate((allFlags, flags))
 			return allCoords, allEndPts, allFlags
 		else:
 			return Numeric.array([], Numeric.Int16), [], Numeric.array([], Numeric.Int8)
