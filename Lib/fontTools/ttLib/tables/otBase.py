@@ -6,9 +6,10 @@ from types import TupleType
 
 class BaseTTXConverter(DefaultTable):
 	
-	"""Generic base class for TTX table converters. Functions as an adapter
-	between the TTX (ttLib actually) table model and the model we use for
-	OpenType tables, which is neccesarily subtly different."""
+	"""Generic base class for TTX table converters. It functions as an
+	adapter between the TTX (ttLib actually) table model and the model
+	we use for OpenType tables, which is necessarily subtly different.
+	"""
 	
 	def decompile(self, data, font):
 		import otTables
