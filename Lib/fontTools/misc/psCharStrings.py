@@ -623,6 +623,7 @@ class T2OutlineExtractor(SimpleT2Decompiler):
 		self.closePath()
 		self.rMoveTo((0, self.popallWidth(1)[0]))
 	def op_endchar(self, index):
+		self.closePath()
 		args = self.popallWidth()
 		if args:
 			from fontTools.encodings.StandardEncoding import StandardEncoding
@@ -633,7 +634,6 @@ class T2OutlineExtractor(SimpleT2Decompiler):
 			self.pen.addComponent(baseGlyph, (1, 0, 0, 1, 0, 0))
 			accentGlyph = StandardEncoding[achar]
 			self.pen.addComponent(accentGlyph, (1, 0, 0, 1, adx, ady))
-		self.closePath()
 	
 	#
 	# path constructors, lines
