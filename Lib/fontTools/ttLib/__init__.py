@@ -42,7 +42,7 @@ Dumping 'prep' table...
 """
 
 #
-# $Id: __init__.py,v 1.45 2004-11-16 10:37:59 jvr Exp $
+# $Id: __init__.py,v 1.46 2005-01-24 10:06:45 jvr Exp $
 #
 
 import sys
@@ -590,7 +590,7 @@ class _TTGlyphSet:
 		return self._ttFont["glyf"].keys()
 	
 	def has_key(self, glyphName):
-		return self._glyfTable.has_key(glyphName)
+		return self._ttFont["glyf"].has_key(glyphName)
 	
 	__contains__ = has_key
 
