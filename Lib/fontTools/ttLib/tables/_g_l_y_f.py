@@ -70,10 +70,13 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 		writer.comment("The xMin, yMin, xMax and yMax values\nwill be recalculated by the compiler.")
 		writer.newline()
 		writer.newline()
+		counter = 0
+		progressStep = 10
 		for glyphName in glyphNames:
-			if progress:
+			if not counter % progressStep and progress is not None:
 				progress.setlabel("Dumping 'glyf' table... (%s)" % glyphName)
-				progress.increment()
+				progress.increment(progressStep)
+			counter = counter + 1
 			glyph = self[glyphName]
 			if glyph.numberOfContours:
 				writer.begintag('TTGlyph', [
