@@ -52,7 +52,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 		currentLocation = 0
 		dataList = []
 		recalcBBoxes = ttFont.recalcBBoxes
-		for glyphName in ttFont.getGlyphOrder():
+		for glyphName in self.glyphOrder:
 			glyph = self.glyphs[glyphName]
 			glyphData = glyph.compile(self, recalcBBoxes)
 			locations.append(currentLocation)

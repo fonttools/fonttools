@@ -42,7 +42,7 @@ Dumping 'prep' table...
 """
 
 #
-# $Id: __init__.py,v 1.33 2002-05-25 14:56:29 jvr Exp $
+# $Id: __init__.py,v 1.34 2002-05-25 15:28:48 jvr Exp $
 #
 
 import os
@@ -258,10 +258,10 @@ class TTFont:
 		a font object.
 		"""
 		if self.has_key("maxp") and self.has_key("post"):
-			# Make sure the glyph order is loaded, as it otherwise may
-			# get lost if the XML doesn't contain the glyph order, yet
-			# does contain the CFF table, which then can't be used to
-			# retrieve the glyph order.
+			# Make sure the glyph order is loaded, as it otherwise gets
+			# lost if the XML doesn't contain the glyph order, yet does
+			# contain the table which was originally used to extract the
+			# glyph names from (ie. 'post', 'cmap' or 'CFF ').
 			self.getGlyphOrder()
 		import xmlImport
 		xmlImport.importXML(self, file, progress)
@@ -342,10 +342,6 @@ class TTFont:
 	
 	def setGlyphOrder(self, glyphOrder):
 		self.glyphOrder = glyphOrder
-		if self.has_key('CFF '):
-			self['CFF '].setGlyphOrder(glyphOrder)
-		if self.has_key('glyf'):
-			self['glyf'].setGlyphOrder(glyphOrder)
 	
 	def getGlyphOrder(self):
 		try:
