@@ -300,11 +300,18 @@ def findEncryptedChunks(data):
 		eBegin = string.find(data, EEXECBEGIN)
 		if eBegin < 0:
 			break
+		eBegin = eBegin + len(EEXECBEGIN) + 1
 		eEnd = string.find(data, EEXECEND, eBegin)
 		if eEnd < 0:
 			raise error, "can't find end of eexec part"
-		chunks.append((0, data[:eBegin + len(EEXECBEGIN) + 1]))
-		chunks.append((1, data[eBegin + len(EEXECBEGIN) + 1:eEnd]))
+		cypherText = data[eBegin:eEnd + 2]
+		plainText, R = eexec.decrypt(cypherText, 55665)
+		eEndLocal = string.find(plainText, EEXECINTERNALEND)
+		if eEndLocal < 0:
+			raise error, "can't find end of eexec part"
+		eEnd = eBegin + eEndLocal + len(EEXECINTERNALEND) + 1
+		chunks.append((0, data[:eBegin]))
+		chunks.append((1, data[eBegin:eEnd]))
 		data = data[eEnd:]
 	chunks.append((0, data))
 	return chunks
