@@ -46,7 +46,7 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
 				offset = done[chunk]
 			else:
 				offset = done[chunk] = totalOffset + len(tableData)
-			tableData = tableData + chunk
+				tableData = tableData + chunk
 			data = data + struct.pack(">HHl", table.platformID, table.platEncID, offset)
 		return data + tableData
 	
