@@ -41,7 +41,7 @@ Dumping 'prep' table...
 """
 
 __author__ = "Just van Rossum, just@letterror.com"
-__version__ = "$Id: __init__.py,v 1.7 1999-12-23 15:16:22 Just Exp $"
+__version__ = "$Id: __init__.py,v 1.8 1999-12-27 19:48:21 Just Exp $"
 __release__ = "1.0a6"
 
 import os
@@ -158,22 +158,34 @@ class TTFont:
 		
 		writer.close()
 	
-	def saveXML(self, file, progress=None, tables=None):
+	def saveXML(self, file, progress=None, tables=None, splitTables=0):
 		"""Export the font as an XML-based text file."""
 		import xmlWriter
-		writer = xmlWriter.XMLWriter(file)
-		writer.begintag("ttFont", sfntVersion=`self.sfntVersion`[1:-1], 
-				ttLibVersion=__release__)
-		writer.newline()
-		writer.newline()
 		if not tables:
 			tables = self.keys()
 		numTables = len(tables)
 		numGlyphs = self['maxp'].numGlyphs
 		if progress:
 			progress.set(0, numTables * numGlyphs)
+		if not splitTables:
+			writer = xmlWriter.XMLWriter(file)
+			writer.begintag("ttFont", sfntVersion=`self.sfntVersion`[1:-1], 
+					ttLibVersion=__release__)
+			writer.newline()
+			writer.newline()
+		else:
+			# 'file' must now be a string
+			base, ext = os.path.splitext(file)
+			fileNameTemplate = base + ".%s" + ext
+		
 		for i in range(numTables):
 			tag = tables[i]
+			if splitTables:
+				writer = xmlWriter.XMLWriter(fileNameTemplate % tag2identifier(tag))
+				writer.begintag("ttFont", sfntVersion=`self.sfntVersion`[1:-1], 
+						ttLibVersion=__release__)
+				writer.newline()
+				writer.newline()
 			table = self[tag]
 			report = "Dumping '%s' table..." % tag
 			if progress:
@@ -194,11 +206,16 @@ class TTFont:
 			writer.endtag(xmltag)
 			writer.newline()
 			writer.newline()
+			if splitTables:
+				writer.endtag("ttFont")
+				writer.newline()
+				writer.close()
 			if progress:
 				progress.set(i * numGlyphs, numTables * numGlyphs)
-		writer.endtag("ttFont")
-		writer.newline()
-		writer.close()
+		if not splitTables:
+			writer.endtag("ttFont")
+			writer.newline()
+			writer.close()
 		if self.verbose:
 			debugmsg("Done dumping XML")
 	
@@ -206,8 +223,6 @@ class TTFont:
 		"""Import an XML-based text file, so as to recreate
 		a font object.
 		"""
-		if self.tables:
-			raise error, "Can't import XML into existing font."
 		import xmlImport, stat
 		from xml.parsers.xmlproc import xmlproc
 		builder = xmlImport.XMLApplication(self, progress)
