@@ -44,7 +44,9 @@ class Coverage(FormatSwitchingBaseTable):
 			assert 0, "unknown format: %s" % self.Format
 	
 	def preWrite(self, font):
-		glyphs = getattr(self, "glyphs", [])
+		glyphs = getattr(self, "glyphs")
+		if glyphs is None:
+			glyphs = self.glyphs = []
 		format = 1
 		rawTable = {"GlyphArray": glyphs}
 		if glyphs:
