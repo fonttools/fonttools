@@ -400,11 +400,11 @@ class T2OutlineExtractor(SimpleT2Decompiler):
 	def appendPoint(self, point, isPrimary):
 		import Numeric
 		point = self.currentPoint + Numeric.array(point, Numeric.Int16)
-		if not self.contours:
-			# The glyph doesn't start with a moveto. Not sure whether
+		if not self.contours or self.contours[-1][2]:
+			# The subpath doesn't start with a moveto. Not sure whether
 			# this is legal, but apparently it usually works.
 			self.newPath()
-			self.appendPoint(self.currentPoint, 1)
+			self.appendPoint((0, 0), 1)
 		self.currentPoint = point
 		points, flags, isClosed = self.contours[-1]
 		points.append(point)
