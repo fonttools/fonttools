@@ -2,6 +2,6 @@ TTX/FontTools is a suite of tools and libraries for manipulating fonts.
 
 It currently reads and writes TrueType font files, reads PostScript Type 1 fonts and more. It contains two command line programs to convert TrueType fonts to an XML based format (called TTX) and back. 
 
-If you let setup to create desktop icons during installation, icons for ttdump.exe, ttcompile.exe and ttlist.exe will be created. You will be able to drop a TTF or OTF file onto the ttlist.exe or ttdump.exe icon to dump the font into an TTX file that is in XML format. You will be also able to drop a TTX file onto the ttcompile.exe icon to build a TTF or OTF font. 
+If you let setup to create desktop icons during installation, icons for ttdump.exe, ttcompile.exe and ttlist.exe will be created. You will be able to drop a TTF or OTF file onto the ttlist.exe or ttdump.exe icon to dump the font into an TTX file that is in XML format. You will be also able to drop a TTX file onto the ttcompile.exe icon to build a TTF or OTF font.
 
 Please note that you can only drag-n-drop one file onto the FontTools icons. Dropping multiple files won't work in this version!
