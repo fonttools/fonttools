@@ -9,13 +9,15 @@ September 9, 2002
    or install ActivePython 2.2.1:
    http://www.activestate.com/Products/Download/Download.plex?id=ActivePython
 2. Install py2exe: http://starship.python.net/crew/theller/py2exe/
-3. Download the current CVS snapshot of TTX/FontTools:
-   http://fonttools.sourceforge.net/cvs-snapshots/zip/fonttools-current-snapshot.zip
-4. Unzip the CVS snapshot of TTX/FontTools into a folder.
-5. In the folder where you unzipped TTX/FontTools, type:
-   python.exe setup.py py2exe -f --icon Windows\ttx.ico --packages encodings
-6. Install InnoSetup 3:
+3. Install InnoSetup 3:
    http://www.jrsoftware.org/is3.php
+4. Download the latest released source code of TTX/FontTools at
+   http://sourceforge.net/projects/fonttools/
+   Or alternatively grab the sources from CVS or download a CVS snapshot:
+   http://fonttools.sourceforge.net/cvs-snapshots/zip/fonttools-current-snapshot.zip
+5. Unzip the source code of TTX/FontTools into a folder.
+6. In the folder where you unzipped TTX/FontTools, type:
+   python.exe setup.py py2exe -f --icon Windows\ttx.ico --packages encodings
 7. Run Inno Setup and open Windows\fonttools-win-setup.iss (this file)
 8. In Inno Setup, select File/Compile, then Run/Run.
 
