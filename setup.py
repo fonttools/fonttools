@@ -80,6 +80,7 @@ setup(
 			"fontTools",
 			"fontTools.encodings",
 			"fontTools.misc",
+			"fontTools.pens",
 			"fontTools.ttLib",
 			"fontTools.ttLib.tables",
 			"fontTools.ttLib.test",
