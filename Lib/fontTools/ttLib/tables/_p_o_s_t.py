@@ -62,7 +62,7 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 		return glyphOrder
 	
 	def decode_format_1_0(self, data, ttFont):
-		self.glyphOrder = standardGlyphOrder[:]
+		self.glyphOrder = standardGlyphOrder[:ttFont["maxp"].numGlyphs]
 	
 	def decode_format_2_0(self, data, ttFont):
 		numGlyphs, = struct.unpack(">H", data[:2])
