@@ -63,6 +63,17 @@ class T1Font:
 		# recreate the PS stream
 		return self.data
 	
+	def getGlyphSet(self):
+		"""Return a generic GlyphSet, which is a dict-like object
+		mapping glyph names to glyph objects. The returned glyph objects
+		have a .draw() method that supports the Pen protocol, and will
+		have an attribute named 'width', but only *after* the .draw() method
+		has been called.
+		
+		In the case of Type 1, the GlyphSet is simply the CharStrings dict.
+		"""
+		return self["CharStrings"]
+	
 	def __getitem__(self, key):
 		if not hasattr(self, "font"):
 			self.parse()
