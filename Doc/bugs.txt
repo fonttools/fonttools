@@ -1,6 +1,9 @@
 Known bugs
 
+- The OT ExtensionSubst and ExtensionPos subtables are not yet
+  supported
+- The OT FeatureParams subtable is not yet supported
+- CFF/CID support fonts is currently limited
 - 'kern' subtable format 2 has not been implemented properly
-- The code has hardly been tested on 64-bit platforms -- there are 
-  still some places where it assumes a long is 32 bits.
-
+- The code has hardly been tested on 64-bit platforms -- there
+  are still some places where it assumes a long is 32 bits.
