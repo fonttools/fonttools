@@ -132,7 +132,7 @@ def long2bin(v, bytes=8):
 	data = ""
 	while v:
 		data = chr(v & 0xff) + data
-		v = v >> 8
+		v = (v >> 8) & 0xffffffffL
 	data = (bytes - len(data)) * "\0" + data
 	assert len(data) == 8, "long too long"
 	return data
