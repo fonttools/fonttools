@@ -24,6 +24,8 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
 					">HHl", data[4+i*8:4+(i+1)*8])
 			platformID, platEncID = int(platformID), int(platEncID)
 			format, length = struct.unpack(">HH", data[offset:offset+4])
+			if not length:
+				continue  # bogus cmap subtable?
 			if not cmap_classes.has_key(format):
 				table = cmap_format_unknown(format)
 			else:
