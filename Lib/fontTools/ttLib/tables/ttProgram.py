@@ -266,7 +266,7 @@ class Program:
 			binary2num=binary2num):
 		assembly = self.assembly
 		if type(assembly) == type([]):
-			assembly = string.join(assembly, " ")
+			assembly = string.join(assembly, "")
 		bytecode = []
 		push = bytecode.append
 		lenAssembly = len(assembly)
