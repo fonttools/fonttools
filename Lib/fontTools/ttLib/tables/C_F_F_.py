@@ -2,6 +2,12 @@ import DefaultTable
 from fontTools import cffLib
 
 
+# temporary switch:
+# - if true use possibly incomplete compile/decompile/toXML/fromXML implementation
+# - if false use DefaultTable, ie. dump as hex.
+TESTING_CFF = 0
+
+
 class table_C_F_F_(DefaultTable.DefaultTable):
 	
 	def __init__(self, tag):
@@ -28,11 +34,11 @@ class table_C_F_F_(DefaultTable.DefaultTable):
 		self.cff.fonts[self.cff.fontNames[0]].setGlyphOrder(glyphOrder)
 	
 	def toXML(self, writer, otFont, progress=None):
-		if "disableCFFdump":
+		if TESTING_CFF:
+			self.cff.toXML(writer, progress)
+		else:
 			# dump as hex as long as we can't compile
 			DefaultTable.DefaultTable.toXML(self, writer, otFont)
-		else:
-			self.cff.toXML(writer, progress)
 	
 	#def fromXML(self, (name, attrs, content), otFont):
 	#	xxx

@@ -1,9 +1,15 @@
-"""ttLib.tables.otCommon.py -- Various data structures used by various OpenType tables.
-"""
+"""fontTools.ttLib.tables.otCommon.py -- Various data structures used
+by various OpenType tables."""
 
 import struct, sstruct
+import string
 import DefaultTable
 from fontTools import ttLib
+
+# temporary switch:
+# - if true use possibly incomplete compile/decompile/toXML/fromXML implementation
+# - if false use DefaultTable, ie. dump as hex.
+TESTING_OT = 0
 
 
 class base_GPOS_GSUB(DefaultTable.DefaultTable):
@@ -13,8 +19,7 @@ class base_GPOS_GSUB(DefaultTable.DefaultTable):
 	version = 0x00010000
 	
 	def decompile(self, data, otFont):
-		self.data = data   # while work is in progress, dump as hex
-		return
+		#self.data = data  # handy for debugging
 		reader = OTTableReader(data)
 		self.version = reader.readLong()
 		if self.version <> 0x00010000:
@@ -25,11 +30,13 @@ class base_GPOS_GSUB(DefaultTable.DefaultTable):
 		self.lookupList = reader.readTable(LookupList, otFont, self.tableTag)
 	
 	def compile(self, otFont):
-		return self.data
+		writer = OTTableWriter()
+		writer.writeLong(self.version)
+		writer.writeTable(self.scriptList, otFont)
+		writer.writeTable(self.featureList, otFont)
+		writer.writeTable(self.lookupList, otFont)
+		return writer.getData()
 
-
-class Dummy:
-	
 	def toXML(self, xmlWriter, otFont):
 		names = [("ScriptList", "scriptList"), 
 				("FeatureList", "featureList"), 
@@ -45,8 +52,12 @@ class Dummy:
 		xmlWriter.newline()
 	
 	def fromXML(self, (name, attrs, content), otFont):
-		xxx
+		raise NotImplementedError
 
+
+if not TESTING_OT:
+	# disable the GPOS/GSUB code, dump as hex.
+	base_GPOS_GSUB = DefaultTable.DefaultTable
 
 #
 # Script List and subtables
@@ -61,8 +72,9 @@ class ScriptList:
 		scriptCount = reader.readUShort()
 		self.scripts = reader.readTagList(scriptCount, Script, otFont)
 	
-	def compile(self, otFont):
-		XXXXXX
+	def compile(self, writer, otFont):
+		writer.writeUShort(len(self.scripts))
+		writer.writeTagList(self.scripts, otFont)
 	
 	def toXML(self, xmlWriter, otFont):
 		for tag, script in self.scripts:
@@ -73,19 +85,20 @@ class ScriptList:
 			xmlWriter.newline()
 	
 	def fromXML(self, (name, attrs, content), otFont):
-		xxx
+		raise NotImplementedError
 
 
 class Script:
 	
 	def decompile(self, reader, otFont):
-		self.defaultLangSystem = None
 		self.defaultLangSystem = reader.readTable(LanguageSystem, otFont)
 		langSysCount = reader.readUShort()
 		self.languageSystems = reader.readTagList(langSysCount, LanguageSystem, otFont)
 	
-	def compile(self, otFont):
-		XXXXX
+	def compile(self, writer, otFont):
+		writer.writeTable(self.defaultLangSystem, otFont)
+		writer.writeUShort(len(self.languageSystems))
+		writer.writeTagList(self.languageSystems, otFont)
 	
 	def toXML(self, xmlWriter, otFont):
 		xmlWriter.begintag("DefaultLanguageSystem")
@@ -109,8 +122,11 @@ class LanguageSystem:
 		featureCount = reader.readUShort()
 		self.featureIndex = reader.readUShortArray(featureCount)
 	
-	def compile(self, otFont):
-		xxx
+	def compile(self, writer, otFont):
+		writer.writeUShort(self.lookupOrder)
+		writer.writeUShort(self.reqFeatureIndex)
+		writer.writeUShort(len(self.featureIndex))
+		writer.writeUShortArray(self.featureIndex)
 	
 	def toXML(self, xmlWriter, otFont):
 		xmlWriter.simpletag("LookupOrder", value=self.lookupOrder)
@@ -135,8 +151,9 @@ class FeatureList:
 		featureCount = reader.readUShort()
 		self.features = reader.readTagList(featureCount, Feature, otFont)
 	
-	def compile(self, otFont):
-		XXXXX
+	def compile(self, writer, otFont):
+		writer.writeUShort(len(self.features))
+		writer.writeTagList(self.features, otFont)
 	
 	def toXML(self, xmlWriter, otFont):
 		for index in range(len(self.features)):
@@ -148,7 +165,7 @@ class FeatureList:
 			xmlWriter.newline()
 			
 	def fromXML(self, (name, attrs, content), otFont):
-		xxx
+		raise NotImplementedError
 
 
 class Feature:
@@ -158,8 +175,10 @@ class Feature:
 		lookupCount = reader.readUShort()
 		self.lookupListIndex = reader.readUShortArray(lookupCount)
 	
-	def compile(self, otFont):
-		XXXXX
+	def compile(self, writer, otFont):
+		writer.writeUShort(self.featureParams)
+		writer.writeUShort(len(self.lookupListIndex))
+		writer.writeUShortArray(self.lookupListIndex)
 	
 	def toXML(self, xmlWriter, otFont):
 		xmlWriter.simpletag("FeatureParams", value=hex(self.featureParams))
@@ -169,7 +188,7 @@ class Feature:
 			xmlWriter.newline()
 	
 	def fromXML(self, (name, attrs, content), otFont):
-		xxx
+		raise NotImplementedError
 
 
 #
@@ -183,12 +202,11 @@ class LookupList:
 	
 	def decompile(self, reader, otFont):
 		lookupCount = reader.readUShort()
-		self.lookup = lookup = []
-		for i in range(lookupCount):
-			lookup.append(reader.readTable(LookupTable, otFont, self.parentTag))
+		self.lookup = reader.readTableArray(lookupCount, LookupTable, otFont, self.parentTag)
 	
-	def compile(self, otFont):
-		XXXXX
+	def compile(self, writer, otFont):
+		writer.writeUShort(len(self.lookup))
+		writer.writeTableArray(self.lookup, otFont)
 	
 	def toXML(self, xmlWriter, otFont):
 		for i in range(len(self.lookup)):
@@ -202,7 +220,7 @@ class LookupList:
 		xmlWriter.newline()
 		
 	def fromXML(self, (name, attrs, content), otFont):
-		xxx
+		raise NotImplementedError
 
 
 class LookupTable:
@@ -215,13 +233,14 @@ class LookupTable:
 		self.lookupType = reader.readUShort()
 		self.lookupFlag = reader.readUShort()
 		subTableCount = reader.readUShort()
-		self.subTables = subTables = []
 		lookupTypeClass = parentTable.getLookupTypeClass(self.lookupType)
-		for i in range(subTableCount):
-			subTables.append(reader.readTable(lookupTypeClass, otFont))
+		self.subTables = reader.readTableArray(subTableCount, lookupTypeClass, otFont)
 	
-	def compile(self, otFont):
-		XXXXXX
+	def compile(self, writer, otFont):
+		writer.writeUShort(self.lookupType)
+		writer.writeUShort(self.lookupFlag)
+		writer.writeUShort(len(self.subTables))
+		writer.writeTableArray(self.subTables, otFont)
 	
 	def __repr__(self):
 		if not hasattr(self, "lookupTypeName"):
@@ -241,7 +260,7 @@ class LookupTable:
 			xmlWriter.newline()
 	
 	def fromXML(self, (name, attrs, content), otFont):
-		xxx
+		raise NotImplementedError
 
 
 #
@@ -254,6 +273,14 @@ class CoverageTable:
 		return self.glyphIDs
 	
 	def getGlyphNames(self):
+		return self.glyphNames
+	
+	def setGlyphNames(self, glyphNames, otFont):
+		glyphIDs = map(otFont.getGlyphID, glyphNames)
+		glyphIDs = map(None, glyphIDs, glyphNames)
+		glyphIDs.sort()
+		self.glyphNames = map(lambda (x, y): y, glyphIDs)
+		self.glyphIDs = map(lambda (x, y): x, glyphIDs)
 		return self.glyphNames
 	
 	def makeGlyphNames(self, otFont):
@@ -286,49 +313,66 @@ class CoverageTable:
 			for glyphID in range(startID, endID + 1):
 				glyphIDs.append(glyphID)
 	
-	def compile(self, otFont):
-		# brute force ;-)
-		data1 = self.compileFormat1(otFont)
-		data2 = self.compileFormat2(otFont)
-		if len(data1) <= len(data2):
-			format = 1
-			reader = data1
+	def compile(self, writer, otFont):
+		# figure out which format is more compact, doing so by brute force...
+		
+		# compile format 1
+		writer1 = OTTableWriter()
+		writer1.writeUShort(1)
+		self.compileFormat1(writer1, otFont)
+		data1 = writer1.getData()
+		
+		# compile format 2
+		writer2 = OTTableWriter()
+		writer2.writeUShort(2)
+		self.compileFormat2(writer2, otFont)
+		data2 = writer2.getData()
+		
+		if len(data1) < len(data2):
+			writer.writeRaw(data1)
 		else:
-			format = 2
-			reader = data2
-		return struct.pack(">H", format) + reader
+			writer.writeRaw(data2)
 	
-	def compileFormat1(self, otFont):
-		xxxxx
-		glyphIDs = map(otFont.getGlyphID, self.glyphNames)
-		data = pack(">H", len(glyphIDs))
-		pack = struct.pack
-		for glyphID in glyphIDs:
-			data = data + pack(">H", glyphID)
-		return data
+	def compileFormat1(self, writer, otFont):
+		writer.writeUShort(len(self.glyphIDs))
+		writer.writeUShortArray(self.glyphIDs)
 	
-	def compileFormat2(self, otFont):
-		xxxxx
-		glyphIDs = map(otFont.getGlyphID, self.glyphNames)
+	def compileFormat2(self, writer, otFont):
 		ranges = []
-		lastID = startID = glyphIDs[0]
+		lastID = startID = self.glyphIDs[0]
 		startCoverageIndex = 0
-		glyphCount = len(glyphIDs)
+		glyphCount = len(self.glyphIDs)
 		for i in range(1, glyphCount+1):
 			if i == glyphCount:
 				glyphID = 0x1ffff  # arbitrary, but larger than 0x10000
 			else:
-				glyphID = glyphIDs[i]
+				glyphID = self.glyphIDs[i]
 			if glyphID <> (lastID + 1):
 				ranges.append((startID, lastID, startCoverageIndex))
 				startCoverageIndex = i
 				startID = glyphID
 			lastID = glyphID
 		ranges.sort()  # sort by startID
-		rangeData = ""
+		writer.writeUShort(len(ranges))
 		for startID, endID, startCoverageIndex in ranges:
-			rangeData = rangeData + struct.pack(">HHH", startID, endID, startCoverageIndex)
-		return pack(">H", len(ranges)) + rangeData
+			writer.writeUShort(startID)
+			writer.writeUShort(endID)
+			writer.writeUShort(startCoverageIndex)
+
+
+def unpackCoverageArray(coverageArray):
+	coverageArray = coverageArray[:]
+	for i in range(len(coverageArray)):
+		coverageArray[i] = coverageArray[i].getGlyphNames()
+	return coverageArray
+
+def buildCoverageArray(coverageArray, otFont):
+	coverageArray = coverageArray[:]
+	for i in range(len(coverageArray)):
+		coverage = CoverageTable()
+		coverage.setGlyphNames(coverageArray[i], otFont)
+		coverageArray[i] = coverage
+	return coverageArray
 
 
 class ClassDefinitionTable:
@@ -374,7 +418,8 @@ class ClassDefinitionTable:
 					glyphName = otFont.getGlyphName(glyphID)
 					classDefs.append((glyphName, classValue))
 	
-	def compile(self, otFont):
+	def compile(self, writer, otFont):
+		XXX
 		# brute force again
 		data1 = self.compileFormat1(otFont)
 		data2 = self.compileFormat2(otFont)
@@ -387,6 +432,7 @@ class ClassDefinitionTable:
 		return struct.pack(">H", format) + data
 	
 	def compileFormat1(self, otFont):
+		XXX
 		items = map(lambda (glyphName, classValue), getGlyphID=otFont.getGlyphID:
 				(getGlyphID(glyphName), classValue), self.glyphs.items())
 		items.sort()
@@ -402,6 +448,7 @@ class ClassDefinitionTable:
 		return struct.pack(">H", endGlyphID - startGlyphID + 1) + data
 	
 	def compileFormat2(self, otFont):
+		XXX
 		items = map(lambda (glyphName, classValue), getGlyphID=otFont.getGlyphID:
 				(getGlyphID(glyphName), classValue), self.glyphs.items())
 		items.sort()
@@ -436,11 +483,9 @@ class ClassDefinitionTable:
 class DeviceTable:
 	
 	def decompile(self, reader, otFont):
-		xxxxxx
-		self.startSize = unpack_uint16(reader[:2])
-		endSize = unpack_uint16(reader[2:4])
-		deltaFormat = unpack_uint16(reader[4:6])
-		reader = reader[6:]
+		self.startSize = reader.readUShort()
+		endSize = reader.readUShort()
+		deltaFormat = reader.readUShort()
 		if deltaFormat == 1:
 			bits = 2
 		elif deltaFormat == 2:
@@ -457,7 +502,7 @@ class DeviceTable:
 		shift = 1 << bits
 		for i in range(0, deltaCount, numCount):
 			offset = 2*i/numCount
-			chunk = unpack_uint16(reader[offset:offset+2])
+			chunk = reader.readUShort()
 			deltas = []
 			for j in range(numCount):
 				delta = chunk & mask
@@ -469,7 +514,9 @@ class DeviceTable:
 			deltaValues = deltaValues + deltas
 		self.deltaValues = deltaValues[:deltaCount]
 	
-	def compile(self, otFont):
+	def compile(self, writer, otFont):
+		raise NotImplementedError
+		# XXX
 		deltaValues = self.deltaValues
 		startSize = self.startSize
 		endSize = startSize + len(deltaValues) - 1
@@ -515,6 +562,15 @@ class OTTableReader:
 		self.offset = offset
 		self.pos = offset
 	
+	def readTable(self, tableClass, otFont, *args):
+		offset = self.readOffset()
+		if offset == 0:
+			return None
+		newReader = self.getSubString(offset)
+		table = apply(tableClass, args)
+		table.decompile(newReader, otFont)
+		return table
+	
 	def readUShort(self):
 		pos = self.pos
 		newpos = pos + 2
@@ -549,14 +605,12 @@ class OTTableReader:
 	def readUShortArray(self, count):
 		return self.readArray(count, "H")
 	
-	readOffsetArray = readUShortArray
-	
 	def readShortArray(self, count):
 		return self.readArray(count, "h")
 	
 	def readArray(self, count, format):
-		assert format in "Hh"
 		from array import array
+		assert format in "Hh"
 		pos = self.pos
 		newpos = pos + 2 * count
 		a = array(format)
@@ -565,15 +619,6 @@ class OTTableReader:
 			a.byteswap()
 		self.pos = newpos
 		return a.tolist()
-	
-	def readTable(self, tableClass, otFont, *args):
-		offset = self.readOffset()
-		if offset == 0:
-			return None
-		newReader = self.getSubString(offset)
-		table = apply(tableClass, args)
-		table.decompile(newReader, otFont)
-		return table
 	
 	def readTableArray(self, count, tableClass, otFont, *args):
 		list = []
@@ -607,4 +652,87 @@ class OTTableReader:
 		"""Relative seek."""
 		self.pos = self.pos + n
 
+
+class OTTableWriter:
+	
+	def __init__(self):
+		self.items = []
+	
+	def getData(self):
+		items = self.items[:]
+		offset = 0
+		for item in items:
+			if hasattr(item, "getData"):
+				offset = offset + 2  # sizeof(Offset)
+			else:
+				offset = offset + len(item)
+		subTables = []
+		cache = {}
+		for i in range(len(items)):
+			item = items[i]
+			if hasattr(item, "getData"):
+				subTableData = item.getData()
+				if cache.has_key(subTableData):
+					items[i] = packOffset(cache[subTableData])
+				else:
+					items[i] = packOffset(offset)
+					subTables.append(subTableData)
+					cache[subTableData] = offset
+					offset = offset + len(subTableData)
+		return string.join(items, "") + string.join(subTables, "")
+	
+	def writeTable(self, subTable, otFont):
+		if subTable is None:
+			self.writeUShort(0)
+		else:
+			subWriter = self.__class__()
+			self.items.append(subWriter)
+			subTable.compile(subWriter, otFont)
+	
+	def writeUShort(self, value):
+		self.items.append(struct.pack(">H", value))
+	
+	def writeShort(self, value):
+		self.items.append(struct.pack(">h", value))
+	
+	def writeLong(self, value):
+		self.items.append(struct.pack(">l", value))
+	
+	def writeTag(self, tag):
+		assert len(tag) == 4
+		self.items.append(tag)
+	
+	def writeUShortArray(self, array):
+		return self.writeArray(array, "H")
+	
+	def writeShortArray(self, array):
+		return self.writeArray(array, "h")
+	
+	def writeArray(self, list, format):
+		from array import array
+		assert format in "Hh"
+		a = array(format, list)
+		if ttLib.endian <> 'big':
+			a.byteswap()
+		self.items.append(a.tostring())
+	
+	def writeTableArray(self, list, otFont):
+		for subTable in list:
+			self.writeTable(subTable, otFont)
+	
+	def writeTagList(self, list, otFont):
+		for tag, subTable in list:
+			self.writeTag(tag)
+			self.writeTable(subTable, otFont)
+	
+	def writeStruct(self, format, values):
+		data = apply(struct.pack, (format,) + values)
+		self.items.append(data)
+	
+	def writeRaw(self, data):
+		self.items.append(data)
+
+
+def packOffset(offset):
+	return struct.pack(">H", offset)
 
