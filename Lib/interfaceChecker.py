@@ -52,7 +52,7 @@ def checkClass(moduleName, theClass):
 				if not gotOne:
 					print "\nWarnings for module %s\n" % moduleName
 					gotOne = 1
-				print "Method has not enough arguments:"
+				print "Method doesn't have enough arguments:"
 				print "  interface:      %s.%s" % (className, describeFunction.describe(method))
 				print "  implementation: %s.%s" % (className, describeFunction.describe(method2))
 				continue
