@@ -9,15 +9,15 @@ INDENT = "  "
 
 class XMLWriter:
 	
-	def __init__(self, file, indentwhite=INDENT, idlefunc=None, encoding="ISO-8859-1"):
-		if type(file) == type(""):
-			self.file = open(file, "w")
+	def __init__(self, fileOrPath, indentwhite=INDENT, idlefunc=None, encoding="ISO-8859-1"):
+		if not hasattr(fileOrPath, "write"):
+			self.file = open(fileOrPath, "w")
 			if os.name == "mac":
 				import macfs
-				macfs.FSSpec(file).SetCreatorType('R*ch', 'TEXT')
+				macfs.FSSpec(fileOrPath).SetCreatorType('R*ch', 'TEXT')
 		else:
 			# assume writable file object
-			self.file = file
+			self.file = fileOrPath
 		self.indentwhite = indentwhite
 		self.indentlevel = 0
 		self.stack = []
