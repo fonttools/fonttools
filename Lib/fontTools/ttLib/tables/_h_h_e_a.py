@@ -15,11 +15,11 @@ hheaFormat = """
 		xMaxExtent:             h
 		caretSlopeRise:         h
 		caretSlopeRun:          h
+		caretOffset:            h
 		reserved0:              h
 		reserved1:              h
 		reserved2:              h
 		reserved3:              h
-		reserved4:              h
 		metricDataFormat:       h
 		numberOfHMetrics:       H
 """
