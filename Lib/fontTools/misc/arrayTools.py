@@ -16,6 +16,16 @@ def calcBounds(array):
 	xmax, ymax = Numeric.maximum.reduce(array)
 	return xmin, ymin, xmax, ymax
 
+def updateBounds(bounds, (x, y), min=min, max=max):
+	"""Return the bounding recangle of rectangle bounds and point (x, y)."""
+	xMin, yMin, xMax, yMax = bounds
+	return min(xMin, x), min(yMin, y), max(xMax, x), max(yMax, y)
+
+def pointInRect((x, y), rect):
+	"""Return True when point (x, y) is inside rect."""
+	xMin, yMin, xMax, yMax = rect
+	return (xMin <= x <= xMax) and (yMin <= y <= yMax)
+
 def pointsInRect(array, rect):
 	"""Find out which points or array are inside rect. 
 	Returns an array with a boolean for each point.
