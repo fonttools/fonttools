@@ -1,4 +1,4 @@
-TTX 1.0 for Windows
+TTX 2.0 for Windows
 -------------------------
 
 Creating a Windows (9x/ME/NT/2000/XP) setup executable for TTX
@@ -13,7 +13,7 @@ September 9, 2002
    http://fonttools.sourceforge.net/cvs-snapshots/zip/fonttools-current-snapshot.zip
 4. Unzip the CVS snapshot of TTX/FontTools into a folder.
 5. In the folder where you unzipped TTX/FontTools, type:
-   python.exe setup.py py2exe -O2 -f --icon Windows\ttx.ico
+   python.exe setup.py py2exe -f --icon Windows\ttx.ico --packages encodings
 6. Install InnoSetup 3:
    http://www.jrsoftware.org/is3.php
 7. Run Inno Setup and open Windows\fonttools-win-setup.iss (this file)
