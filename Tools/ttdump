@@ -102,6 +102,9 @@ elif nargs == 2:
 	files = [(ttPath, outPath)]
 else:
 	outputDir = args[-1]
+	if not os.path.isdir(outputDir):
+		print "last argument must be an existing directory"
+		sys.exit(2)
 	files = []
 	for ttPath in args[:-1]:
 		files.append((ttPath, makeOutputFileName(ttPath, outputDir)))

@@ -68,12 +68,14 @@ if nargs == 1:
 elif nargs == 2:
 	xmlPath = args[0]
 	outPath = args[1]
-	print "000", outPath
 	if os.path.isdir(outPath):
 		outPath = makeOutputFileName(xmlPath, outPath)
 	files = [(xmlPath, outPath)]
 else:
 	outputDir = args[-1]
+	if not os.path.isdir(outputDir):
+		print "last argument must be an existing directory"
+		sys.exit(2)
 	files = []
 	for xmlPath in args[:-1]:
 		files.append((xmlPath, makeOutputFileName(xmlPath, outputDir)))
