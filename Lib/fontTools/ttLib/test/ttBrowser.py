@@ -176,7 +176,7 @@ class Glyph:
 	def getcontours(self, scale, move):
 		contours = []
 		for i in range(len(self.contours)):
-			contours.append((self.contours[i] * Numeric.array(scale) + move), self.flags[i])
+			contours.append(((self.contours[i] * Numeric.array(scale) + move), self.flags[i]))
 		return contours
 
 
