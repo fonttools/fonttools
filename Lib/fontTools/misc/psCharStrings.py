@@ -2,13 +2,12 @@
 CFF dictionary data and Type1/Type2 CharStrings.
 """
 
-__version__ = "1.0b1"
-__author__ = "jvr"
-
-
 import types
 import struct
 import string
+
+
+DEBUG = 0
 
 
 t1OperandEncoding = [None] * 256
@@ -68,17 +67,22 @@ class ByteCodeDecompilerBase:
 			if nibble1 == 0xf:
 				break
 			number = number + realNibbles[nibble1]
-		return string.atof(number), index
+		return float(number), index
 
 
 def buildOperatorDict(operatorList):
-	dict = {}
+	oper = {}
+	opc = {}
 	for item in operatorList:
 		if len(item) == 2:
-			dict[item[0]] = item[1]
+			oper[item[0]] = item[1]
 		else:
-			dict[item[0]] = item[1:]
-	return dict
+			oper[item[0]] = item[1:]
+		if type(item[0]) == types.TupleType:
+			opc[item[1]] = item[0]
+		else:
+			opc[item[1]] = (item[0],)
+	return oper, opc
 
 
 t2Operators = [
@@ -139,7 +143,7 @@ t2Operators = [
 class T2CharString(ByteCodeDecompilerBase):
 	
 	operandEncoding = t2OperandEncoding
-	operators = buildOperatorDict(t2Operators)
+	operators, opcodes = buildOperatorDict(t2Operators)
 	
 	def __init__(self, bytecode=None, program=None):
 		if program is None:
@@ -153,11 +157,51 @@ class T2CharString(ByteCodeDecompilerBase):
 		else:
 			return "<%s (bytecode) at %x>" % (self.__class__.__name__, id(self))
 	
+	def compile(self):
+		if self.bytecode is not None:
+			return
+		bytecode = []
+		opcodes = self.opcodes
+		for token in self.program:
+			tp = type(token)
+			if tp == types.StringType:
+				if opcodes.has_key(token):
+					bytecode.extend(map(chr, opcodes[token]))
+				else:
+					bytecode.append(token)  # hint mask
+			elif tp == types.FloatType:
+				# only in CFF
+				raise NotImplementedError
+			elif tp == types.IntType:
+				# XXX factor out, is largely OK for CFF dicts, too.
+				if -107 <= token <= 107:
+					code = chr(token + 139)
+				elif 108 <= token <= 1131:
+					token = token - 108
+					code = chr((token >> 8) + 247) + chr(token & 0xFF)
+				elif -1131 <= token <= -108:
+					token = -token - 108
+					code = chr((token >> 8) + 251) + chr(token & 0xFF)
+				elif -32768 <= token <= 32767:
+					# XXX T2/CFF-specific: doesn't exist in T1
+					code = chr(28) + struct.pack(">h", token)
+				else:
+					# XXX T1/T2-specific: different opcode in CFF
+					code = chr(255) + struct.pack(">l", token)
+				bytecode.append(code)
+			else:
+				assert 0
+		bytecode = "".join(bytecode)
+		if DEBUG:
+			assert bytecode == self.__bytecode
+		
 	def needsDecompilation(self):
 		return self.bytecode is not None
 	
 	def setProgram(self, program):
 		self.program = program
+		if DEBUG:
+			self.__bytecode = self.bytecode
 		self.bytecode = None
 	
 	def getToken(self, index, 
@@ -259,7 +303,7 @@ t1Operators = [
 class T1CharString(T2CharString):
 	
 	operandEncoding = t1OperandEncoding
-	operators = buildOperatorDict(t1Operators)
+	operators, opcodes = buildOperatorDict(t1Operators)
 	
 	def decompile(self):
 		if self.program is not None:
