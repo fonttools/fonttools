@@ -62,12 +62,12 @@ class table__h_e_a_d(DefaultTable.DefaultTable):
 			value = getattr(self, name)
 			if name in ("created", "modified"):
 				value = time.asctime(time.gmtime(max(0, value + mac_epoch_diff)))
-			if type(value) == type(0L):
-				value=int(value)
 			if name in ("magicNumber", "checkSumAdjustment"):
 				value = hex(value)
 			elif name in ("macStyle", "flags"):
 				value = num2binary(value, 16)
+			elif type(value) == type(0L):
+				value=int(value)
 			writer.simpletag(name, value=value)
 			writer.newline()
 	
