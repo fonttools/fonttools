@@ -126,10 +126,10 @@ class Options:
 			elif option == "-b":
 				self.recalcBBoxes = 0
 		if self.onlyTables and self.skipTables:
-			print "-t and -x options are mutually exlusive"
+			print "-t and -x options are mutually exclusive"
 			sys.exit(2)
 		if self.mergeFile and numFiles > 1:
-			print "Must specify exactly one TTX source file when using -i"
+			print "Must specify exactly one TTX source file when using -m"
 			sys.exit(2)
 
 
