@@ -13,6 +13,8 @@ class base_GPOS_GSUB(DefaultTable.DefaultTable):
 	version = 0x00010000
 	
 	def decompile(self, data, otFont):
+		self.data = data   # while work is in progress, dump as hex
+		return
 		reader = OTTableReader(data)
 		self.version = reader.readLong()
 		if self.version <> 0x00010000:
@@ -23,7 +25,10 @@ class base_GPOS_GSUB(DefaultTable.DefaultTable):
 		self.lookupList = reader.readTable(LookupList, otFont, self.tableTag)
 	
 	def compile(self, otFont):
-		XXXXXX
+		return self.data
+
+
+class Dummy:
 	
 	def toXML(self, xmlWriter, otFont):
 		names = [("ScriptList", "scriptList"), 
