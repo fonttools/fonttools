@@ -40,11 +40,14 @@ Dumping 'prep' table...
 
 """
 
-__author__ = "Just van Rossum, just@letterror.com"
-__version__ = "$Id: __init__.py,v 1.8 1999-12-27 19:48:21 Just Exp $"
-__release__ = "1.0a6"
+#
+# $Id: __init__.py,v 1.9 1999-12-29 13:06:08 Just Exp $
+#
+
+__version__ = "1.0a6"
 
 import os
+import string
 import types
 
 class TTLibError(Exception): pass
@@ -158,8 +161,13 @@ class TTFont:
 		
 		writer.close()
 	
-	def saveXML(self, file, progress=None, tables=None, splitTables=0):
-		"""Export the font as an XML-based text file."""
+	def saveXML(self, fileOrPath, progress=None, tables=None, splitTables=0):
+		"""Export the font as an XML-based text file, or as a series of text
+		files when splitTables is true. In the latter case, the 'fileOrPath'
+		argument should be a path to a directory.
+		The 'tables' argument must either be None (dump all tables) or a
+		list of tables to dump.
+		"""
 		import xmlWriter
 		if not tables:
 			tables = self.keys()
@@ -168,22 +176,24 @@ class TTFont:
 		if progress:
 			progress.set(0, numTables * numGlyphs)
 		if not splitTables:
-			writer = xmlWriter.XMLWriter(file)
+			writer = xmlWriter.XMLWriter(fileOrPath)
 			writer.begintag("ttFont", sfntVersion=`self.sfntVersion`[1:-1], 
-					ttLibVersion=__release__)
+					ttLibVersion=__version__)
 			writer.newline()
 			writer.newline()
 		else:
-			# 'file' must now be a string
-			base, ext = os.path.splitext(file)
-			fileNameTemplate = base + ".%s" + ext
+			# 'fileOrPath' must now be a path (pointing to a directory)
+			if not os.path.exists(fileOrPath):
+				os.mkdir(fileOrPath)
+			fileNameTemplate = os.path.join(fileOrPath, 
+					os.path.basename(fileOrPath)) + ".%s.xml"
 		
 		for i in range(numTables):
 			tag = tables[i]
 			if splitTables:
 				writer = xmlWriter.XMLWriter(fileNameTemplate % tag2identifier(tag))
 				writer.begintag("ttFont", sfntVersion=`self.sfntVersion`[1:-1], 
-						ttLibVersion=__release__)
+						ttLibVersion=__version__)
 				writer.newline()
 				writer.newline()
 			table = self[tag]
@@ -342,13 +352,12 @@ class TTFont:
 		tempcmap = self['cmap'].getcmap(3, 1)
 		if tempcmap is not None:
 			# we have a unicode cmap
-			import agl, string
+			from fontTools import agl
 			cmap = tempcmap.cmap
 			# create a reverse cmap dict
 			reversecmap = {}
 			for unicode, name in cmap.items():
 				reversecmap[name] = unicode
-			assert len(reversecmap) == len(cmap)
 			for i in range(numGlyphs):
 				tempName = glyphOrder[i]
 				if reversecmap.has_key(tempName):
@@ -533,7 +542,6 @@ def tag2identifier(tag):
 
 def identifier2tag(ident):
 	"""the opposite of tag2identifier()"""
-	import string
 	if len(ident) % 2 and ident[0] == "_":
 		ident = ident[1:]
 	assert not (len(ident) % 2)
@@ -556,7 +564,7 @@ def tag2xmltag(tag):
 	to a valid XML element name. Since XML element names are
 	case sensitive, this is a fairly simple/readable translation.
 	"""
-	import string, re
+	import re
 	if tag == "OS/2":
 		return "OS_2"
 	if re.match("[A-Za-z_][A-Za-z_0-9]* *$", tag):
