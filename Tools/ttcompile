@@ -4,7 +4,7 @@
 usage: ttcompile [-hvbf] [-i input-TTF] scr [target]
        ttcompile [-hvbf] [-i input-TTF] src1 ... srcN directory
 
-    Translate one or more TTX files (as output by ttDump) to a TrueType
+    Translate one or more TTX files (as output by ttdump) to a TrueType
     font file.
 
     Options:
