@@ -26,13 +26,11 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 			# XXX we need a warn function
 			print "Warning: 'name' table stringOffset incorrect.",
 			print "Expected: %s; Actual: %s" % (expectedStringOffset, stringOffset)
-			stringOffset = expectedStringOffset
 		stringData = data[stringOffset:]
-		data = data[6:stringOffset]
+		data = data[6:]
 		self.names = []
 		for i in range(n):
 			name, data = sstruct.unpack2(nameRecordFormat, data, NameRecord())
-			name.fixLongs()
 			name.string = stringData[name.offset:name.offset+name.length]
 			assert len(name.string) == name.length
 			#if (name.platEncID, name.platformID) in ((0, 0), (1, 3)):
@@ -147,14 +145,3 @@ class NameRecord:
 	def __repr__(self):
 		return "<NameRecord NameID=%d; PlatformID=%d; LanguageID=%d>" % (
 				self.nameID, self.platformID, self.langID)
-	
-	def fixLongs(self):
-		"""correct effects from bug in Python 1.5.1, where "H" 
-		returns a Python Long int. 
-		This has been fixed in Python 1.5.2.
-		"""
-		for attr in dir(self):
-			val = getattr(self, attr)
-			if type(val) == types.LongType:
-				setattr(self, attr, int(val))
-
