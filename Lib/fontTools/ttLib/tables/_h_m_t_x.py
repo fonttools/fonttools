@@ -52,8 +52,9 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 		lastIndex = len(metrics)
 		while metrics[lastIndex-2][0] == lastAdvance:
 			lastIndex = lastIndex - 1
-			if lastIndex == 0:
+			if lastIndex <= 1:
 				# all advances are equal
+				lastIndex = 1
 				break
 		additionalMetrics = metrics[lastIndex:]
 		additionalMetrics = map(lambda (advance, sb): sb, additionalMetrics)
