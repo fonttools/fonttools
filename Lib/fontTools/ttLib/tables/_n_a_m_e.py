@@ -35,6 +35,10 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 			self.names.append(name)
 	
 	def compile(self, ttFont):
+		if not hasattr(self, "names"):
+			# only happens when there are NO name table entries read
+			# from the TTX file
+			self.names = []
 		self.names.sort()  # sort according to the spec; see NameRecord.__cmp__()
 		stringData = ""
 		format = 0
