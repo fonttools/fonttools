@@ -80,7 +80,7 @@ class table_F_O_O_(DefaultTable.DefaultTable): # converter for table 'FOO '
 		# Again, 'ttFont' is there so you can access other tables.
 		# Same warning applies.
 
-If you want to support XML import/export as well, you need to provide two
+If you want to support TTX import/export as well, you need to provide two
 additional methods:
 
 	def toXML(self, writer, ttFont):

@@ -112,7 +112,7 @@ class TableBrowser:
 			self.ttFont.save(path, 1)
 	
 	def saveXML(self):
-		path = putfile("Save font as XML text file:", self.filename, ".xml")
+		path = putfile("Save font as XML text file:", self.filename, ".ttx")
 		if path:
 			W.SetCursor('watch')
 			pb = macUtils.ProgressBar("Saving %s as XMLŠ" % self.filename)
@@ -300,7 +300,7 @@ class GlyphViewer(W.Widget):
 			Qd.DisposeRgn(savergn)
 
 
-extensions = [".suit", ".xml", ".TTF", ".ttf"]
+extensions = [".suit", ".xml", ".ttx", ".TTF", ".ttf"]
 
 def putfile(prompt, filename, newextension):
 	for ext in extensions:

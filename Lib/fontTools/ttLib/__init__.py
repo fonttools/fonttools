@@ -1,7 +1,8 @@
-"""ttLib -- a package for dealing with TrueType fonts.
+"""fontTools.ttLib -- a package for dealing with TrueType fonts.
 
 This package offers translators to convert TrueType fonts to Python 
-objects and vice versa, and additionally from Python to XML and vice versa.
+objects and vice versa, and additionally from Python to TTX (an XML-based
+text format) and vice versa.
 
 Example interactive session:
 
@@ -15,7 +16,7 @@ Copyright 1991-1995 Stichting Mathematisch Centrum, Amsterdam
 'B&H\000'
 >>> tt['head'].unitsPerEm
 2048
->>> tt.saveXML("afont.xml")
+>>> tt.saveXML("afont.ttx")
 Dumping 'LTSH' table...
 Dumping 'OS/2' table...
 Dumping 'VDMX' table...
@@ -33,7 +34,7 @@ Dumping 'name' table...
 Dumping 'post' table...
 Dumping 'prep' table...
 >>> tt2 = ttLib.TTFont()
->>> tt2.importXML("afont.xml")
+>>> tt2.importXML("afont.ttx")
 >>> tt2['maxp'].numGlyphs
 242
 >>> 
@@ -41,7 +42,7 @@ Dumping 'prep' table...
 """
 
 #
-# $Id: __init__.py,v 1.11 2000-01-05 20:43:36 Just Exp $
+# $Id: __init__.py,v 1.12 2000-01-17 18:57:15 Just Exp $
 #
 
 __version__ = "1.0a6"
@@ -91,7 +92,7 @@ class TTFont:
 			2) maxp font bounding box
 			3) hhea min/max values
 		(1) is needed for certain kinds of CJK fonts (ask Werner Lemberg ;-).
-		Additionally, upon importing an XML file, this option cause glyphs
+		Additionally, upon importing an TTX file, this option cause glyphs
 		to be compiled right away. This should reduce memory consumption 
 		greatly, and therefore should have some impact on the time needed 
 		to parse/compile large fonts.
@@ -163,7 +164,7 @@ class TTFont:
 	
 	def saveXML(self, fileOrPath, progress=None, 
 			tables=None, skipTables=None, splitTables=0):
-		"""Export the font as an XML-based text file, or as a series of text
+		"""Export the font as TTX (an XML-based text file), or as a series of text
 		files when splitTables is true. In the latter case, the 'fileOrPath'
 		argument should be a path to a directory.
 		The 'tables' argument must either be false (dump all tables) or a
@@ -192,7 +193,7 @@ class TTFont:
 			if not os.path.exists(fileOrPath):
 				os.mkdir(fileOrPath)
 			fileNameTemplate = os.path.join(fileOrPath, 
-					os.path.basename(fileOrPath)) + ".%s.xml"
+					os.path.basename(fileOrPath)) + ".%s.ttx"
 		
 		for i in range(numTables):
 			tag = tables[i]
@@ -236,10 +237,10 @@ class TTFont:
 			writer.newline()
 			writer.close()
 		if self.verbose:
-			debugmsg("Done dumping XML")
+			debugmsg("Done dumping TTX")
 	
 	def importXML(self, file, progress=None):
-		"""Import an XML-based text file, so as to recreate
+		"""Import an TTX file (an XML-based text format), so as to recreate
 		a font object.
 		"""
 		import xmlImport, stat
