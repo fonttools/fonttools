@@ -37,7 +37,8 @@ sequence of length 2 will do.
 """
 
 
-__all__ = ["AbstractPen", "BasePen"]
+__all__ = ["AbstractPen", "BasePen",
+           "decomposeSuperBezierSegment", "decomposeQuadraticSegment"]
 
 
 class AbstractPen:
@@ -65,11 +66,11 @@ class AbstractPen:
 		bezier is drawn. If n==1, we fall back to a quadratic segment and
 		if n==0 we draw a straight line. It gets interesting when n>2:
 		n-1 PostScript-style cubic segments will be drawn as if it were
-		one curve.
+		one curve. See decomposeSuperBezierSegment().
 
 		The conversion algorithm used for n>2 is inspired by NURB
 		splines, and is conceptually equivalent to the TrueType "implied
-		points" principle. See also qCurveTo().
+		points" principle. See also decomposeQuadraticSegment().
 		"""
 		raise NotImplementedError
 
@@ -81,7 +82,8 @@ class AbstractPen:
 
 		This method implements TrueType-style curves, breaking up curves
 		using 'implied points': between each two consequtive off-curve points,
-		there is one implied point exactly in the middle between them.
+		there is one implied point exactly in the middle between them. See
+		also decomposeQuadraticSegment().
 
 		The last argument (normally the on-curve point) may be None.
 		This is to support contours that have NO on-curve points (a rarely
@@ -192,7 +194,9 @@ class BasePen(AbstractPen):
 		assert n >= 0
 		if n == 2:
 			# The common case, we have exactly two BCP's, so this is a standard
-			# cubic bezier.
+			# cubic bezier. Even though decomposeSuperBezierSegment() handles
+			# this case just fine, we special-case it anyway since it's so
+			# common.
 			self._curveToOne(*points)
 			self.__currentPoint = points[-1]
 		elif n > 2:
@@ -203,27 +207,10 @@ class BasePen(AbstractPen):
 			# with no disruption in the curvature. It is practical since it
 			# allows one to construct multiple bezier segments with a much
 			# smaller amount of points.
-			pt1, pt2, pt3 = points[0], None, None
-			for i in range(2, n+1):
-				# calculate points in between control points.
-				nDivisions = min(i, 3, n-i+2)
-				d = float(nDivisions)
-				for j in range(1, nDivisions):
-					factor = j / d
-					temp1 = points[i-1]
-					temp2 = points[i-2]
-					temp = (temp2[0] + factor * (temp1[0] - temp2[0]),
-					        temp2[1] + factor * (temp1[1] - temp2[1]))
-					if pt2 is None:
-						pt2 = temp
-					else:
-						pt3 = (0.5 * (pt2[0] + temp[0]),
-						       0.5 * (pt2[1] + temp[1]))
-						self._curveToOne(pt1, pt2, pt3)
-						self.__currentPoint = pt3
-						pt1, pt2, pt3 = temp, None, None
-			self._curveToOne(pt1, points[-2], points[-1])
-			self.__currentPoint = points[-1]
+			_curveToOne = self._curveToOne
+			for pt1, pt2, pt3 in decomposeSuperBezierSegment(points):
+				_curveToOne(pt1, pt2, pt3)
+				self.__currentPoint = pt3
 		elif n == 1:
 			self.qCurveTo(*points)
 		elif n == 0:
@@ -253,16 +240,68 @@ class BasePen(AbstractPen):
 			# there's an implied on-curve point exactly in the middle.
 			# This is where the segment splits.
 			_qCurveToOne = self._qCurveToOne
-			for i in range(n - 1):
-				x, y = points[i]
-				nx, ny = points[i+1]
-				impliedPt = (0.5 * (x + nx), 0.5 * (y + ny))
-				_qCurveToOne(points[i], impliedPt)
-				self.__currentPoint = impliedPt
-			_qCurveToOne(points[-2], points[-1])
-			self.__currentPoint = points[-1]
+			for pt1, pt2 in decomposeQuadraticSegment(points):
+				_qCurveToOne(pt1, pt2)
+				self.__currentPoint = pt2
 		else:
 			self.lineTo(points[0])
+
+
+def decomposeSuperBezierSegment(points):
+	"""Split the SuperBezier described by 'points' into a list of regular
+	bezier segments. The 'points' argument must be a sequence with length
+	3 or greater, containing (x, y) coordinates. The last point is the
+	destination on-curve point, the rest of the points are off-curve points.
+	The start point should not be supplied.
+
+	This function returns a list of (pt1, pt2, pt3) tuples, which each
+	specify a regular curveto-style bezier segment.
+	"""
+	n = len(points) - 1
+	assert n > 1
+	bezierSegments = []
+	pt1, pt2, pt3 = points[0], None, None
+	for i in range(2, n+1):
+		# calculate points in between control points.
+		nDivisions = min(i, 3, n-i+2)
+		d = float(nDivisions)
+		for j in range(1, nDivisions):
+			factor = j / d
+			temp1 = points[i-1]
+			temp2 = points[i-2]
+			temp = (temp2[0] + factor * (temp1[0] - temp2[0]),
+					temp2[1] + factor * (temp1[1] - temp2[1]))
+			if pt2 is None:
+				pt2 = temp
+			else:
+				pt3 = (0.5 * (pt2[0] + temp[0]),
+					   0.5 * (pt2[1] + temp[1]))
+				bezierSegments.append((pt1, pt2, pt3))
+				pt1, pt2, pt3 = temp, None, None
+	bezierSegments.append((pt1, points[-2], points[-1]))
+	return bezierSegments
+
+
+def decomposeQuadraticSegment(points):
+	"""Split the quadratic curve segment described by 'points' into a list
+	of "atomic" quadratic segments. The 'points' argument must be a sequence
+	with length 2 or greater, containing (x, y) coordinates. The last point
+	is the destination on-curve point, the rest of the points are off-curve
+	points. The start point should not be supplied.
+
+	This function returns a list of (pt1, pt2) tuples, which each specify a
+	plain quadratic bezier segment.
+	"""
+	n = len(points) - 1
+	assert n > 0
+	quadSegments = []
+	for i in range(n - 1):
+		x, y = points[i]
+		nx, ny = points[i+1]
+		impliedPt = (0.5 * (x + nx), 0.5 * (y + ny))
+		quadSegments.append((points[i], impliedPt))
+	quadSegments.append((points[-2], points[-1]))
+	return quadSegments
 
 
 class _TestPen(BasePen):
@@ -282,7 +321,7 @@ if __name__ == "__main__":
 	pen = _TestPen(None)
 	pen.moveTo((0, 0))
 	pen.lineTo((0, 100))
-	pen.qCurveTo((50, 75), (60, 50), (50, 25), (0, 0))
+	pen.curveTo((50, 75), (60, 50), (50, 25), (0, 0))
 	pen.closePath()
 
 	pen = _TestPen(None)
