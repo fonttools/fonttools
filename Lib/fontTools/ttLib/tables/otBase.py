@@ -12,15 +12,26 @@ class BaseTTXConverter(DefaultTable):
 	
 	def decompile(self, data, font):
 		import otTables
-		reader = OTTableReader(data, self.tableTag)
+		cachingStats = None
+		reader = OTTableReader(data, self.tableTag, cachingStats=cachingStats)
 		tableClass = getattr(otTables, self.tableTag)
 		self.table = tableClass()
 		self.table.decompile(reader, font)
+		if 0:
+			stats = [(v, k) for k, v in cachingStats.items()]
+			stats.sort()
+			stats.reverse()
+			print "cachingsstats for ", self.tableTag
+			for v, k in stats:
+				if v < 2:
+					break
+				print v, k
+			print "---", len(stats)
 	
 	def compile(self, font):
 		writer = OTTableWriter(self.tableTag)
 		self.table.compile(writer, font)
-		return writer.getData()
+		return writer.getAllData()
 	
 	def toXML(self, writer, font):
 		self.table.toXML2(writer, font)
@@ -116,34 +127,94 @@ class OTTableWriter:
 		if valueFormat is None:
 			valueFormat = ValueRecordFactory(), ValueRecordFactory()
 		self.valueFormat = valueFormat
+		self.referers = []
+		self.pos = None
 	
 	def getSubWriter(self):
 		return self.__class__(self.tableType, self.valueFormat)
 	
-	def getData(self):
-		items = list(self.items)
-		offset = 0
-		for item in items:
-			if hasattr(item, "getData") or hasattr(item, "getCount"):
-				offset = offset + 2  # sizeof(UShort)
+	def __hash__(self):
+		# only works after self._doneWriting() has been called
+		return hash(self.items)
+	
+	def __cmp__(self, other):
+		if hasattr(other, "items"):
+			return cmp(self.items, other.items)
+		else:
+			return cmp(id(self), id(other))
+	
+	def __len__(self):
+		"""Return the length of this table in bytes, without subtables."""
+		l = 0
+		for item in self.items:
+			if hasattr(item, "getData") or hasattr(item, "getCountData"):
+				l = l + 2  # sizeof(UShort)
 			else:
-				offset = offset + len(item)
-		subTables = []
-		cache = {}
+				l = l + len(item)
+		return l
+	
+	def _doneWriting(self, internedTables=None):
+		if internedTables is None:
+			internedTables = {}
+		items = self.items
+		for i in range(len(items)):
+			item = items[i]
+			if hasattr(item, "getCountData"):
+				items[i] = item.getCountData()
+			elif hasattr(item, "getData"):
+				assert not item.referers
+				item._doneWriting(internedTables)
+				if internedTables.has_key(item):
+					items[i] = item = internedTables[item]
+				else:
+					internedTables[item] = item
+				if self not in item.referers:
+					item.referers.append(self)  # temp. cycle, gets broken by getAllData()
+		self.items = tuple(items)
+	
+	def _gatherTables(self, tables=None, done=None):
+		if tables is None:
+			tables = []
+			done = {}
+		for item in self.items:
+			if not hasattr(item, "getData"):
+				continue
+			if not done.has_key(item):
+				item._gatherTables(tables, done)
+		done[self] = len(tables)
+		tables.append(self)
+		return tables
+	
+	def getAllData(self):
+		self._doneWriting()
+		tables = self._gatherTables()
+		tables.reverse()
+		
+		pos = 0
+		for table in tables:
+			table.pos = pos
+			pos = pos + len(table)
+			table.referers = []  # break cycles
+		
+		data = []
+		for table in tables:
+			tableData = table.getData()
+			data.append(tableData)
+		
+		return "".join(data)
+	
+	def getData(self):
+		for item in self.items:
+			if hasattr(item, "getData"):
+				assert item.pos is not None
+		
+		items = list(self.items)  # make a shallow copy
 		for i in range(len(items)):
 			item = items[i]
 			if hasattr(item, "getData"):
-				subTableData = item.getData()
-				if cache.has_key(subTableData):
-					items[i] = packUShort(cache[subTableData])
-				else:
-					items[i] = packUShort(offset)
-					subTables.append(subTableData)
-					cache[subTableData] = offset
-					offset = offset + len(subTableData)
-			elif hasattr(item, "getCount"):
-				items[i] = item.getCount()
-		return "".join(items + subTables)
+				items[i] = packUShort(item.pos - self.pos)
+		
+		return "".join(items)
 	
 	def writeUShort(self, value):
 		assert 0 <= value < 0x10000
@@ -177,16 +248,16 @@ class OTTableWriter:
 
 
 class CountReference:
-	"""A reference to a Count value, not a count of a reference."""
+	"""A reference to a Count value, not a count of references."""
 	def __init__(self, table, name):
 		self.table = table
 		self.name = name
-	def getCount(self):
+	def getCountData(self):
 		return packUShort(self.table[self.name])
 
 
 def packUShort(value):
-	assert 0 <= value < 0x10000
+	assert 0 <= value < 0x10000, value
 	return struct.pack(">H", value)
 
 
@@ -337,7 +408,7 @@ class BaseTable:
 
 class FormatSwitchingBaseTable(BaseTable):
 	
-	"""Small specialization of BaseTable, for tables that have multiple
+	"""Minor specialization of BaseTable, for tables that have multiple
 	formats, eg. CoverageFormat1 vs. CoverageFormat2."""
 	
 	def getConverters(self):
