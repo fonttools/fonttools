@@ -54,9 +54,7 @@ class Coverage(FormatSwitchingBaseTable):
 			last = glyphIDs[0]
 			ranges = [[last]]
 			for glyphID in glyphIDs[1:]:
-				if glyphID == last + 1:
-					pass
-				else:
+				if glyphID != last + 1:
 					ranges[-1].append(last)
 					ranges.append([glyphID])
 				last = glyphID
@@ -162,6 +160,71 @@ class SingleSubst(FormatSwitchingBaseTable):
 			mapping = {}
 			self.mapping = mapping
 		mapping[attrs["in"]] = attrs["out"]
+
+
+class ClassDef(FormatSwitchingBaseTable):
+	
+	def postRead(self, rawTable, font):
+		classDefs = {}
+		if self.Format == 1:
+			start = rawTable["StartGlyph"]
+			glyphID = font.getGlyphID(start)
+			for cls in rawTable["ClassValueArray"]:
+				classDefs[cls] = font.getGlyphName(glyphID)
+				glyphID = glyphID + 1
+		elif self.Format == 2:
+			records = rawTable["ClassRangeRecord"]
+			for rec in records:
+				start = rec.Start
+				end = rec.End
+				cls = rec.Class
+				classDefs[start] = cls
+				for glyphID in range(font.getGlyphID(start) + 1,
+						font.getGlyphID(end)):
+					classDefs[font.getGlyphName(glyphID)] = cls
+				classDefs[end] = cls
+		else:
+			assert 0, "unknown format: %s" % self.Format
+		self.classDefs = classDefs
+	
+	def preWrite(self, font):
+		items = self.classDefs.items()
+		for i in range(len(items)):
+			glyphName, cls = items[i]
+			items[i] = font.getGlyphID(glyphName), glyphName, cls
+		items.sort()
+		last, lastName, lastCls = items[0]
+		rec = ClassRangeRecord()
+		rec.Start = lastName
+		rec.Class = lastCls
+		ranges = [rec]
+		for glyphID, glyphName, cls in items[1:]:
+			if glyphID != last + 1 or cls != lastCls:
+				rec.End = lastName
+				rec = ClassRangeRecord()
+				rec.Start = glyphName
+				rec.Class = cls
+				ranges.append(rec)
+			last = glyphID
+			lastName = glyphName
+			lastCls = cls
+		rec.End = lastName
+		self.Format = 2  # currently no support for Format 1
+		return {"ClassRangeRecord": ranges}
+	
+	def toXML2(self, xmlWriter, font):
+		items = self.classDefs.items()
+		items.sort()
+		for glyphName, cls in items:
+			xmlWriter.simpletag("ClassDef", [("glyph", glyphName), ("class", cls)])
+			xmlWriter.newline()
+	
+	def fromXML(self, (name, attrs, content), font):
+		classDefs = getattr(self, "classDefs", None)
+		if classDefs is None:
+			classDefs = {}
+			self.classDefs = classDefs
+		classDefs[attrs["glyph"]] = int(attrs["class"])
 
 
 #
