@@ -170,7 +170,8 @@ class BasePen(AbstractPen):
 					if pt2 is None:
 						pt2 = temp
 					else:
-						pt3 = (0.5 * (pt2[0] + temp[0]), 0.5 * (pt2[1] + temp[1]))
+						pt3 = (0.5 * (pt2[0] + temp[0]),
+						       0.5 * (pt2[1] + temp[1]))
 						self._curveToOne(pt1, pt2, pt3)
 						pt1, pt2, pt3 = temp, None, None
 			self._curveToOne(pt1, points[-2], points[-1])
@@ -186,9 +187,10 @@ class BasePen(AbstractPen):
 		n = len(points) - 1  # 'n' is the number of control points
 		assert n >= 0
 		if n > 0:
-			# Split the string of points into discrete quadratic curve segments.
-			# Between any two consecutive off-curve points there's an implied
-			# on-curve point exactly in the middle. This is where the segment splits.
+			# Split the string of points into discrete quadratic curve
+			# segments. Between any two consecutive off-curve points
+			# there's an implied on-curve point exactly in the middle.
+			# This is where the segment splits.
 			_qCurveToOne = self._qCurveToOne
 			for i in range(len(points) - 2):
 				x, y = points[i]
@@ -208,7 +210,8 @@ class _TestPen(BasePen):
 	def _lineTo(self, pt):
 		print "%s %s lineto" % (pt[0], pt[1])
 	def _curveToOne(self, bcp1, bcp2, pt):
-		print "%s %s %s %s %s %s curveto" % (bcp1[0], bcp1[1], bcp2[0], bcp2[1], pt[0], pt[1])
+		print "%s %s %s %s %s %s curveto" % (bcp1[0], bcp1[1], 
+				bcp2[0], bcp2[1], pt[0], pt[1])
 	def _closePath(self):
 		print "closepath"
 
