@@ -72,10 +72,11 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 		writer.newline()
 		counter = 0
 		progressStep = 10
+		numGlyphs = len(glyphNames)
 		for glyphName in glyphNames:
 			if not counter % progressStep and progress is not None:
-				progress.setlabel("Dumping 'glyf' table... (%s)" % glyphName)
-				progress.increment(progressStep)
+				progress.setLabel("Dumping 'glyf' table... (%s)" % glyphName)
+				progress.increment(progressStep / float(numGlyphs))
 			counter = counter + 1
 			glyph = self[glyphName]
 			if glyph.numberOfContours:

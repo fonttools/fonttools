@@ -45,28 +45,6 @@ def openTTFonts(path):
 	return fonts
 
 
-class ProgressBar:
-	
-	def __init__(self, title, maxval=100):
-		import EasyDialogs
-		self.bar = EasyDialogs.ProgressBar(title, maxval=maxval)
-	
-	def set(self, val, maxval=None):
-		if maxval <> None:
-			self.bar.maxval = maxval
-		self.bar.set(val)
-	
-	def increment(self, val=1):
-		self.bar.inc(val)
-	
-	def setlabel(self, text):
-		self.bar.label(text)
-	
-	def close(self):
-		self.bar.d = None
-		del self.bar
-
-
 class SFNTResourceReader:
 	
 	"""Simple (Mac-only) read-only file wrapper for 'sfnt' resources."""

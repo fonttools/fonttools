@@ -42,7 +42,7 @@ Dumping 'prep' table...
 """
 
 #
-# $Id: __init__.py,v 1.35 2002-07-11 18:17:32 jvr Exp $
+# $Id: __init__.py,v 1.36 2002-07-23 16:43:55 jvr Exp $
 #
 
 import os
@@ -186,9 +186,12 @@ class TTFont:
 		numTables = len(tables)
 		numGlyphs = self['maxp'].numGlyphs
 		if progress:
-			progress.set(0, numTables * numGlyphs)
+			progress.set(0, numTables)
+			idlefunc = getattr(progress, "idle", None)
+		else:
+			idlefunc = None
 		
-		writer = xmlWriter.XMLWriter(fileOrPath)
+		writer = xmlWriter.XMLWriter(fileOrPath, idlefunc=idlefunc)
 		writer.begintag("ttFont", sfntVersion=`self.sfntVersion`[1:-1], 
 				ttLibVersion=version)
 		writer.newline()
@@ -201,10 +204,12 @@ class TTFont:
 			fileNameTemplate = path + ".%s" + ext
 		
 		for i in range(numTables):
+			if progress:
+				progress.set(i)
 			tag = tables[i]
 			if splitTables:
 				tablePath = fileNameTemplate % tagToIdentifier(tag)
-				tableWriter = xmlWriter.XMLWriter(tablePath)
+				tableWriter = xmlWriter.XMLWriter(tablePath, idlefunc=idlefunc)
 				tableWriter.begintag("ttFont", ttLibVersion=version)
 				tableWriter.newline()
 				tableWriter.newline()
@@ -217,8 +222,8 @@ class TTFont:
 				tableWriter.endtag("ttFont")
 				tableWriter.newline()
 				tableWriter.close()
-			if progress:
-				progress.set(i * numGlyphs, numTables * numGlyphs)
+		if progress:
+			progress.set((i + 1))
 		writer.endtag("ttFont")
 		writer.newline()
 		writer.close()
@@ -232,7 +237,7 @@ class TTFont:
 		else:
 			report = "No '%s' table found." % tag
 		if progress:
-			progress.setlabel(report)
+			progress.setLabel(report)
 		elif self.verbose:
 			debugmsg(report)
 		else:
@@ -306,13 +311,13 @@ class TTFont:
 			if self.reader is not None:
 				import traceback
 				if self.verbose:
-					debugmsg("reading '%s' table from disk" % tag)
+					debugmsg("Reading '%s' table from disk" % tag)
 				data = self.reader[tag]
 				tableClass = getTableClass(tag)
 				table = tableClass(tag)
 				self.tables[tag] = table
 				if self.verbose:
-					debugmsg("decompiling '%s' table" % tag)
+					debugmsg("Decompiling '%s' table" % tag)
 				try:
 					table.decompile(data, self)
 				except "_ _ F O O _ _": # dummy exception to disable exception catching
@@ -519,7 +524,7 @@ class TTFont:
 			return self.tables[tag].compile(self)
 		elif self.reader and self.reader.has_key(tag):
 			if self.verbose:
-				debugmsg("reading '%s' table from disk" % tag)
+				debugmsg("Reading '%s' table from disk" % tag)
 			return self.reader[tag]
 		else:
 			raise KeyError, tag

@@ -119,7 +119,7 @@ class ProgressPrinter:
 	def increment(self, val=1):
 		pass
 	
-	def setlabel(self, text):
+	def setLabel(self, text):
 		print text
 
 
