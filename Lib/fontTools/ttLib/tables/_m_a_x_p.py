@@ -41,7 +41,7 @@ class table__m_a_x_p(DefaultTable.DefaultTable):
 	
 	def compile(self, ttFont):
 		if ttFont.has_key('glyf'):
-			if ttFont.isLoaded('glyf'):
+			if ttFont.isLoaded('glyf') and ttFont.recalcBBoxes:
 				self.recalc(ttFont)
 		else:
 			pass # XXX CFF!!!

@@ -49,7 +49,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 		dataList = []
 		recalcBBoxes = ttFont.recalcBBoxes
 		for glyphName in ttFont.getGlyphOrder():
-			glyph = self[glyphName]
+			glyph = self.glyphs[glyphName]
 			glyphData = glyph.compile(self, recalcBBoxes)
 			locations.append(currentLocation)
 			currentLocation = currentLocation + len(glyphData)
@@ -126,6 +126,8 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 				if type(element) == types.StringType:
 					continue
 				glyph.fromXML(element, ttFont)
+			if not ttFont.recalcBBoxes:
+				glyph.compact(self, 0)
 	
 	def setGlyphOrder(self, glyphOrder):
 		self.glyphOrder = glyphOrder
@@ -137,12 +139,6 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 		# XXX optimize with reverse dict!!!
 		return self.glyphOrder.index(glyphName)
 	
-	#def keys(self):
-	#	return self.glyphOrder[:]
-	#
-	#def has_key(self, glyphName):
-	#	return self.glyphs.has_key(glyphName)
-	#
 	def __getitem__(self, glyphName):
 		glyph = self.glyphs[glyphName]
 		glyph.expand(self)
@@ -214,6 +210,10 @@ class Glyph:
 	def expand(self, glyfTable):
 		if not hasattr(self, "data"):
 			# already unpacked
+			return
+		if not self.data:
+			# empty char
+			self.numberOfContours = 0
 			return
 		dummy, data = sstruct.unpack2(glyphHeaderFormat, self.data, self)
 		del self.data

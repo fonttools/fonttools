@@ -31,14 +31,13 @@ class table__h_h_e_a(DefaultTable.DefaultTable):
 		sstruct.unpack(hheaFormat, data, self)
 	
 	def compile(self, ttFont):
-		self.recalc(ttFont)
+		if ttFont.isLoaded('glyf') and ttFont.recalcBBoxes:
+			self.recalc(ttFont)
 		return sstruct.pack(hheaFormat, self)
 	
 	def recalc(self, ttFont):
 		hmtxTable = ttFont['hmtx']
 		if ttFont.has_key('glyf'):
-			if not ttFont.isLoaded('glyf'):
-				return
 			glyfTable = ttFont['glyf']
 			advanceWidthMax = -100000    # arbitrary big negative number
 			minLeftSideBearing = 100000  # arbitrary big number

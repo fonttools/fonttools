@@ -41,7 +41,7 @@ Dumping 'prep' table...
 """
 
 __author__ = "Just van Rossum, just@letterror.com"
-__version__ = "$Id: __init__.py,v 1.5 1999-12-18 21:32:40 Just Exp $"
+__version__ = "$Id: __init__.py,v 1.6 1999-12-23 14:44:02 Just Exp $"
 __release__ = "1.0a6"
 
 import os
@@ -82,9 +82,14 @@ class TTFont:
 		argument: this is the way to create a new empty font. 
 		In this case you can optionally supply the 'sfntVersion' argument.
 		
-		If the recalcBBoxes argument is false, glyph bounding boxes will 
-		not be recalculated, but taken as they were. This is needed with
-		certain kinds of CJK fonts (ask Werner Lemberg ;-).
+		If the recalcBBoxes argument is false, a number of things will not
+		be recalculated upon save/compile:
+			- glyph bounding boxes 
+			- maxp font bounding box
+			- hhea min/max values
+		This is needed with certain kinds of CJK fonts (ask Werner Lemberg ;-)
+		but also limits memory use greatly, which should have some impact on
+		the time needed to compile large fonts.
 		"""
 		
 		import sfnt
