@@ -75,15 +75,15 @@ class T1Font:
 		charStrings = self.font["CharStrings"]
 		lenIV = self.font["Private"].get("lenIV", 4)
 		assert lenIV >= 0
+		subrs = self.font["Private"]["Subrs"]
 		for glyphName, charString in charStrings.items():
 			charString, R = eexec.decrypt(charString, 4330)
-			charStrings[glyphName] = psCharStrings.T1CharString(charString[lenIV:])
-		subrs = self.font["Private"]["Subrs"]
+			charStrings[glyphName] = psCharStrings.T1CharString(charString[lenIV:],
+					subrs=subrs)
 		for i in range(len(subrs)):
 			charString, R = eexec.decrypt(subrs[i], 4330)
-			subrs[i] = psCharStrings.T1CharString(charString[lenIV:])
+			subrs[i] = psCharStrings.T1CharString(charString[lenIV:], subrs=subrs)
 		del self.data
-	
 
 
 # low level T1 data read and write functions

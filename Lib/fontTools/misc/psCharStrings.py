@@ -208,12 +208,12 @@ class T2CharString(ByteCodeBase):
 	operandEncoding = t2OperandEncoding
 	operators, opcodes = buildOperatorDict(t2Operators)
 	
-	def __init__(self, bytecode=None, program=None, subrs=None, globalSubrs=None):
+	def __init__(self, bytecode=None, program=None, private=None, globalSubrs=None):
 		if program is None:
 			program = []
 		self.bytecode = bytecode
 		self.program = program
-		self.subrs = subrs
+		self.private = private
 		self.globalSubrs = globalSubrs
 	
 	def __repr__(self):
@@ -225,9 +225,16 @@ class T2CharString(ByteCodeBase):
 	def decompile(self):
 		if not self.needsDecompilation():
 			return
-		decompiler = SimpleT2Decompiler(self.subrs, self.globalSubrs)
-		decompiler.reset()
+		subrs = getattr(self.private, "Subrs", [])
+		decompiler = SimpleT2Decompiler(subrs, self.globalSubrs)
 		decompiler.execute(self)
+	
+	def draw(self, pen):
+		subrs = getattr(self.private, "Subrs", [])
+		extractor = T2OutlineExtractor(pen, subrs, self.globalSubrs,
+				self.private.nominalWidthX, self.private.defaultWidthX)
+		extractor.execute(self)
+		self.width = extractor.width
 	
 	def compile(self):
 		if self.bytecode is not None:
@@ -403,6 +410,13 @@ class T1CharString(T2CharString):
 	operandEncoding = t1OperandEncoding
 	operators, opcodes = buildOperatorDict(t1Operators)
 	
+	def __init__(self, bytecode=None, program=None, subrs=None):
+		if program is None:
+			program = []
+		self.bytecode = bytecode
+		self.program = program
+		self.subrs = subrs
+
 	def decompile(self):
 		if self.program is not None:
 			return
@@ -414,6 +428,11 @@ class T1CharString(T2CharString):
 				break
 			program.append(token)
 		self.setProgram(program)
+
+	def draw(self, pen):
+		extractor = T1OutlineExtractor(pen, self.subrs)
+		extractor.execute(self)
+		self.width = extractor.width
 
 
 class SimpleT2Decompiler:
@@ -520,42 +539,45 @@ class SimpleT2Decompiler:
 
 class T2OutlineExtractor(SimpleT2Decompiler):
 	
-	def __init__(self, localSubrs, globalSubrs, nominalWidthX, defaultWidthX):
+	def __init__(self, pen, localSubrs, globalSubrs, nominalWidthX, defaultWidthX):
 		SimpleT2Decompiler.__init__(self, localSubrs, globalSubrs)
+		self.pen = pen
 		self.nominalWidthX = nominalWidthX
 		self.defaultWidthX = defaultWidthX
 	
 	def reset(self):
-		import Numeric
 		SimpleT2Decompiler.reset(self)
 		self.hints = []
 		self.gotWidth = 0
 		self.width = 0
-		self.currentPoint = Numeric.array((0, 0), Numeric.Int16)
-		self.contours = []
+		self.currentPoint = (0, 0)
+		self.sawMoveTo = 0
 	
-	def getContours(self):
-		return self.contours
+	def _nextPoint(self, point):
+		x, y = self.currentPoint
+		point = x + point[0], y + point[1]
+		self.currentPoint = point
+		return point
 	
-	def newPath(self):
-		self.contours.append([[], [], 0])
+	def rMoveTo(self, point):
+		self.pen.moveTo(self._nextPoint(point))
+		self.sawMoveTo = 1
+
+	def rLineTo(self, point):
+		if not self.sawMoveTo:
+			self.rMoveTo((0, 0))
+		self.pen.lineTo(self._nextPoint(point))
+
+	def rCurveTo(self, pt1, pt2, pt3):
+		if not self.sawMoveTo:
+			self.rMoveTo((0, 0))
+		nextPoint = self._nextPoint
+		self.pen.curveTo(nextPoint(pt1), nextPoint(pt2), nextPoint(pt3))
 	
 	def closePath(self):
-		if self.contours and self.contours[-1][2] == 0:
-			self.contours[-1][2] = 1
-	
-	def appendPoint(self, point, isPrimary):
-		import Numeric
-		point = self.currentPoint + Numeric.array(point, Numeric.Int16)
-		if not self.contours or self.contours[-1][2]:
-			# The subpath doesn't start with a moveto. Not sure whether
-			# this is legal, but apparently it usually works.
-			self.newPath()
-			self.appendPoint((0, 0), 1)
-		self.currentPoint = point
-		points, flags, isClosed = self.contours[-1]
-		points.append(point)
-		flags.append(isPrimary)
+		if self.sawMoveTo:
+			self.pen.closePath()
+		self.sawMoveTo = 0
 	
 	def popallWidth(self, evenOdd=0):
 		args = self.popall()
@@ -593,16 +615,13 @@ class T2OutlineExtractor(SimpleT2Decompiler):
 	#
 	def op_rmoveto(self, index):
 		self.closePath()
-		self.newPath()
-		self.appendPoint(self.popallWidth(), 1)
+		self.rMoveTo(self.popallWidth())
 	def op_hmoveto(self, index):
 		self.closePath()
-		self.newPath()
-		self.appendPoint((self.popallWidth(1)[0], 0), 1)
+		self.rMoveTo((self.popallWidth(1)[0], 0))
 	def op_vmoveto(self, index):
 		self.closePath()
-		self.newPath()
-		self.appendPoint((0, self.popallWidth(1)[0]), 1)
+		self.rMoveTo((0, self.popallWidth(1)[0]))
 	def op_endchar(self, index):
 		self.closePath()
 	
@@ -613,7 +632,7 @@ class T2OutlineExtractor(SimpleT2Decompiler):
 		args = self.popall()
 		for i in range(0, len(args), 2):
 			point = args[i:i+2]
-			self.appendPoint(point, 1)
+			self.rLineTo(point)
 	
 	def op_hlineto(self, index):
 		self.alternatingLineto(1)
@@ -628,24 +647,24 @@ class T2OutlineExtractor(SimpleT2Decompiler):
 		args = self.popall()
 		for i in range(0, len(args), 6):
 			dxa, dya, dxb, dyb, dxc, dyc, = args[i:i+6]
-			self.rrcurveto((dxa, dya), (dxb, dyb), (dxc, dyc))
+			self.rCurveTo((dxa, dya), (dxb, dyb), (dxc, dyc))
 	
 	def op_rcurveline(self, index):
 		"""{dxa dya dxb dyb dxc dyc}+ dxd dyd rcurveline"""
 		args = self.popall()
 		for i in range(0, len(args)-2, 6):
 			dxb, dyb, dxc, dyc, dxd, dyd = args[i:i+6]
-			self.rrcurveto((dxb, dyb), (dxc, dyc), (dxd, dyd))
-		self.appendPoint(args[-2:], 1)
+			self.rCurveTo((dxb, dyb), (dxc, dyc), (dxd, dyd))
+		self.rLineTo(args[-2:])
 	
 	def op_rlinecurve(self, index):
 		"""{dxa dya}+ dxb dyb dxc dyc dxd dyd rlinecurve"""
 		args = self.popall()
 		lineArgs = args[:-6]
 		for i in range(0, len(lineArgs), 2):
-			self.appendPoint(lineArgs[i:i+2], 1)
+			self.rLineTo(lineArgs[i:i+2])
 		dxb, dyb, dxc, dyc, dxd, dyd = args[-6:]
-		self.rrcurveto((dxb, dyb), (dxc, dyc), (dxd, dyd))
+		self.rCurveTo((dxb, dyb), (dxc, dyc), (dxd, dyd))
 	
 	def op_vvcurveto(self, index):
 		"dx1? {dya dxb dyb dyc}+ vvcurveto"
@@ -657,7 +676,7 @@ class T2OutlineExtractor(SimpleT2Decompiler):
 			dx1 = 0
 		for i in range(0, len(args), 4):
 			dya, dxb, dyb, dyc = args[i:i+4]
-			self.rrcurveto((dx1, dya), (dxb, dyb), (0, dyc))
+			self.rCurveTo((dx1, dya), (dxb, dyb), (0, dyc))
 			dx1 = 0
 	
 	def op_hhcurveto(self, index):
@@ -670,7 +689,7 @@ class T2OutlineExtractor(SimpleT2Decompiler):
 			dy1 = 0
 		for i in range(0, len(args), 4):
 			dxa, dxb, dyb, dxc = args[i:i+4]
-			self.rrcurveto((dxa, dy1), (dxb, dyb), (dxc, 0))
+			self.rCurveTo((dxa, dy1), (dxb, dyb), (dxc, 0))
 			dy1 = 0
 	
 	def op_vhcurveto(self, index):
@@ -774,13 +793,8 @@ class T2OutlineExtractor(SimpleT2Decompiler):
 				point = (arg, 0)
 			else:
 				point = (0, arg)
-			self.appendPoint(point, 1)
+			self.rLineTo(point)
 			isHorizontal = not isHorizontal
-	
-	def rrcurveto(self, p1, p2, p3):
-		self.appendPoint(p1, 0)
-		self.appendPoint(p2, 0)
-		self.appendPoint(p3, 1)
 	
 	def vcurveto(self, args):
 		dya, dxb, dyb, dxc = args[:4]
@@ -790,7 +804,7 @@ class T2OutlineExtractor(SimpleT2Decompiler):
 			args = []
 		else:
 			dyc = 0
-		self.rrcurveto((0, dya), (dxb, dyb), (dxc, dyc))
+		self.rCurveTo((0, dya), (dxb, dyb), (dxc, dyc))
 		return args
 	
 	def hcurveto(self, args):
@@ -801,13 +815,14 @@ class T2OutlineExtractor(SimpleT2Decompiler):
 			args = []
 		else:
 			dxc = 0
-		self.rrcurveto((dxa, 0), (dxb, dyb), (dxc, dyc))
+		self.rCurveTo((dxa, 0), (dxb, dyb), (dxc, dyc))
 		return args
 
 
 class T1OutlineExtractor(T2OutlineExtractor):
 	
-	def __init__(self, subrs):
+	def __init__(self, pen, subrs):
+		self.pen = pen
 		self.subrs = subrs
 		self.reset()
 	
@@ -830,30 +845,26 @@ class T1OutlineExtractor(T2OutlineExtractor):
 	def op_rmoveto(self, index):
 		if self.flexing:
 			return
-		self.newPath()
-		self.appendPoint(self.popall(), 1)
+		self.rMoveTo(self.popall())
 	def op_hmoveto(self, index):
 		if self.flexing:
 			# We must add a parameter to the stack if we are flexing
 			self.push(0)
 			return
-		self.newPath()
-		self.appendPoint((self.popall()[0], 0), 1)
+		self.rMoveTo((self.popall()[0], 0))
 	def op_vmoveto(self, index):
 		if self.flexing:
 			# We must add a parameter to the stack if we are flexing
 			self.push(0)
 			self.exch()
 			return
-		self.newPath()
-		self.appendPoint((0, self.popall()[0]), 1)
+		self.rMoveTo((0, self.popall()[0]))
 	def op_closepath(self, index):
 		self.closePath()
 	def op_setcurrentpoint(self, index):
 		args = self.popall()
 		x, y = args
-		self.currentPoint[0] = x
-		self.currentPoint[1] = y
+		self.currentPoint = x, y
 	
 	def op_endchar(self, index):
 		self.closePath()
@@ -862,7 +873,7 @@ class T1OutlineExtractor(T2OutlineExtractor):
 		sbx, wx = self.popall()
 		self.width = wx
 		self.sbx = sbx
-		self.currentPoint[0] = sbx
+		self.currentPoint = sbx, self.currentPoint[1]
 	def op_sbw(self, index):
 		self.popall()  # XXX
 	
@@ -932,8 +943,13 @@ class T1OutlineExtractor(T2OutlineExtractor):
 		self.popall()  # XXX
 	def op_seac(self, index):
 		"asb adx ady bchar achar seac"
-		asb, adx, ady, bchar, achar = self.popall()  # XXX
-		self.contours.append([(asb, adx, ady, bchar, achar), None, -1])
+		from fontTools.encodings.StandardEncoding import StandardEncoding
+		asb, adx, ady, bchar, achar = self.popall()
+		baseGlyph = StandardEncoding[bchar]
+		self.pen.addComponent(baseGlyph, (1, 0, 0, 1, 0, 0))
+		accentGlyph = StandardEncoding[achar]
+		adx = adx + self.sbx - asb  # seac weirdness
+		self.pen.addComponent(accentGlyph, (1, 0, 0, 1, adx, ady))
 	def op_vstem3(self, index):
 		self.popall()  # XXX
 

@@ -1,7 +1,7 @@
 """cffLib.py -- read/write tools for Adobe CFF fonts."""
 
 #
-# $Id: cffLib.py,v 1.29 2003-08-22 19:53:32 jvr Exp $
+# $Id: cffLib.py,v 1.30 2003-08-24 19:56:16 jvr Exp $
 #
 
 import struct, sstruct
@@ -119,7 +119,7 @@ class CFFFontSet:
 				if isinstance(element, StringType):
 					continue
 				name, attrs, content = element
-				subr = psCharStrings.T2CharString(None, subrs=None, globalSubrs=None)
+				subr = psCharStrings.T2CharString()
 				subr.fromXML((name, attrs, content))
 				self.GlobalSubrs.append(subr)
 
@@ -387,11 +387,7 @@ class GlobalSubrsIndex(Index):
 			private = self.fdArray[self.fdSelect[index]].Private
 		else:
 			private = None
-		if hasattr(private, "Subrs"):
-			subrs = private.Subrs
-		else:
-			subrs = []
-		return psCharStrings.T2CharString(data, subrs=subrs, globalSubrs=self.globalSubrs)
+		return psCharStrings.T2CharString(data, private=private, globalSubrs=self.globalSubrs)
 	
 	def toXML(self, xmlWriter, progress):
 		xmlWriter.comment("The 'index' attribute is only for humans; it is ignored when parsed.")
@@ -410,7 +406,7 @@ class GlobalSubrsIndex(Index):
 	def fromXML(self, (name, attrs, content)):
 		if name <> "CharString":
 			return
-		subr = psCharStrings.T2CharString(None, subrs=None, globalSubrs=None)
+		subr = psCharStrings.T2CharString()
 		subr.fromXML((name, attrs, content))
 		self.append(subr)
 	
@@ -603,12 +599,9 @@ class CharStrings:
 				private = self.private
 				
 			glyphName = attrs["name"]
-			if hasattr(private, "Subrs"):
-				subrs = private.Subrs
-			else:
-				subrs = []
-			globalSubrs = self.globalSubrs
-			charString = psCharStrings.T2CharString(None, subrs=subrs, globalSubrs=globalSubrs)
+			charString = psCharStrings.T2CharString(
+					private=private,
+					globalSubrs=self.globalSubrs)
 			charString.fromXML((name, attrs, content))
 			if fdID >= 0:
 				charString.fdSelectIndex = fdID
