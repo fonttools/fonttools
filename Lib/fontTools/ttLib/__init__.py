@@ -42,7 +42,7 @@ Dumping 'prep' table...
 """
 
 #
-# $Id: __init__.py,v 1.43 2003-08-28 18:23:43 jvr Exp $
+# $Id: __init__.py,v 1.44 2004-11-16 09:12:30 jvr Exp $
 #
 
 import sys
@@ -558,8 +558,8 @@ class TTFont:
 			return self["CFF "].cff.values()[0].CharStrings
 		if self.has_key("glyf"):
 			return _TTGlyphSet(self)
-		if not preferCFF and self.has_key("CFF "):
-			return self["CFF "].cff.values(0).CharStrings
+		if self.has_key("CFF "):
+			return self["CFF "].cff.values()[0].CharStrings
 		raise TTLibError, "Font contains no outlines"
 
 
