@@ -20,15 +20,15 @@ nameRecordSize = sstruct.calcsize(nameRecordFormat)
 class table__n_a_m_e(DefaultTable.DefaultTable):
 	
 	def decompile(self, data, ttFont):
-		format, n, stringoffset = struct.unpack(">HHH", data[:6])
+		format, n, stringOffset = struct.unpack(">HHH", data[:6])
 		expectedStringOffset = 6 + n * nameRecordSize
-		if stringoffset != expectedStringOffset:
+		if stringOffset != expectedStringOffset:
 			# XXX we need a warn function
-			print "Warning: 'name' table stringoffset incorrect.",
-			print "Expected: %s; Actual: %s" % (expectedStringOffset, stringoffset)
-			stringoffset = expectedStringOffset
-		stringData = data[stringoffset:]
-		data = data[6:stringoffset]
+			print "Warning: 'name' table stringOffset incorrect.",
+			print "Expected: %s; Actual: %s" % (expectedStringOffset, stringOffset)
+			stringOffset = expectedStringOffset
+		stringData = data[stringOffset:]
+		data = data[6:stringOffset]
 		self.names = []
 		for i in range(n):
 			name, data = sstruct.unpack2(nameRecordFormat, data, NameRecord())
@@ -51,8 +51,8 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 		stringData = ""
 		format = 0
 		n = len(self.names)
-		stringoffset = 6 + n * sstruct.calcsize(nameRecordFormat)
-		data = struct.pack(">HHH", format, n, stringoffset)
+		stringOffset = 6 + n * sstruct.calcsize(nameRecordFormat)
+		data = struct.pack(">HHH", format, n, stringOffset)
 		lastoffset = 0
 		done = {}  # remember the data so we can reuse the "pointers"
 		for name in self.names:
