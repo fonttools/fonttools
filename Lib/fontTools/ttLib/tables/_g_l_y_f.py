@@ -128,6 +128,14 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 		# XXX optimize with reverse dict!!!
 		return self.glyphOrder.index(glyphName)
 	
+	def keys(self):
+		return self.glyphs.keys()
+	
+	def has_key(self, glyphName):
+		return self.glyphs.has_key(glyphName)
+	
+	__contains__ = has_key
+	
 	def __getitem__(self, glyphName):
 		glyph = self.glyphs[glyphName]
 		glyph.expand(self)
@@ -620,7 +628,7 @@ class GlyphComponent:
 		pass
 	
 	def getComponentInfo(self):
-		"""Return the base glyph name and a Transformation object."""
+		"""Return the base glyph name and a transform."""
 		# XXX Ignoring self.firstPt & self.lastpt for now: I need to implement
 		# something equivalent in fontTools.objects.glyph (I'd rather not 
 		# convert it to an absolute offset, since it is valuable information).
