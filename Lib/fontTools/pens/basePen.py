@@ -37,7 +37,12 @@ class AbstractPen:
 		raise NotImplementedError
 
 	def curveTo(self, *points):
-		"""Draw a curve with an *arbitrary* number of control points.
+		"""Draw a cubic bezier with an arbitrary number of control points.
+
+		The last point specified is on-curve, all others are off-curve
+		(control) points. If the number of control points is > 2, the
+		segment is split into multiple bezier segments. This works
+		like this:
 
 		Let n be the number of control points (which is the number of
 		arguments to this call minus 1). If n==2, a plain vanilla cubic
@@ -55,13 +60,16 @@ class AbstractPen:
 	def qCurveTo(self, *points):
 		"""Draw a whole string of quadratic curve segments.
 
-		This implements TrueType-style curves, breaking up curves using
-		implied points: between each two consequtive off-curve points,
-		there is one 'implied' point exactly in the middle between them.
+		The last point specified is on-curve, all others are off-curve
+		points.
 
-		'points' is a sequence of at least two points. Just like with
-		any segment drawing function, the first and the last point are
-		treated as onCurve, the rest as offCurve.
+		This method implements TrueType-style curves, breaking up curves
+		using 'implied points': between each two consequtive off-curve points,
+		there is one implied point exactly in the middle between them.
+
+		The last argument (normally the on-curve point) may be None.
+		This is to support contours that have NO on-curve points (a rarely
+		seen feature of TrueType outlines).
 		"""
 		raise NotImplementedError
 
@@ -70,7 +78,11 @@ class AbstractPen:
 		pass
 
 	def addComponent(self, glyphName, transformation):
-		"""Add a sub glyph."""
+		"""Add a sub glyph. The 'transformation' argument must be a 6-tuple
+		containing an affine transformation, or a Transform object from the
+		fontTools.misc.transform module. More precisely: it should be a
+		sequence containing 6 numbers.
+		"""
 		raise NotImplementedError
 
 
@@ -186,6 +198,19 @@ class BasePen(AbstractPen):
 	def qCurveTo(self, *points):
 		n = len(points) - 1  # 'n' is the number of control points
 		assert n >= 0
+		if points[-1] is None:
+			# Special case for TrueType quadratics: it is possible to
+			# define a contour with NO on-curve points. BasePen supports
+			# this by allowing the final argument (the expected on-curve
+			# point) to be None. We simulate the feature by making the implied
+			# on-curve point between the last and the first off-curve points
+			# explicit.
+			x, y = points[-2]  # last off-curve point
+			nx, ny = points[0] # first off-curve point
+			impliedStartPoint = (0.5 * (x + nx), 0.5 * (y + ny))
+			self.__currentPoint = impliedStartPoint
+			self._moveTo(impliedStartPoint)
+			points = points[:-1] + (impliedStartPoint,)
 		if n > 0:
 			# Split the string of points into discrete quadratic curve
 			# segments. Between any two consecutive off-curve points
@@ -210,7 +235,7 @@ class _TestPen(BasePen):
 	def _lineTo(self, pt):
 		print "%s %s lineto" % (pt[0], pt[1])
 	def _curveToOne(self, bcp1, bcp2, pt):
-		print "%s %s %s %s %s %s curveto" % (bcp1[0], bcp1[1], 
+		print "%s %s %s %s %s %s curveto" % (bcp1[0], bcp1[1],
 				bcp2[0], bcp2[1], pt[0], pt[1])
 	def _closePath(self):
 		print "closepath"
@@ -224,7 +249,6 @@ if __name__ == "__main__":
 	pen.closePath()
 
 	pen = _TestPen(None)
-	pen.moveTo((0, 0))
-	pen.lineTo((0, 100))
-	pen.curveTo((50, 75), (60, 50), (50, 25), (0, 0))
+	# testing the "no on-curve point" scenario
+	pen.qCurveTo((0, 0), (0, 100), (100, 100), (100, 0), None)
 	pen.closePath()
