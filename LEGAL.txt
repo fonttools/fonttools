@@ -1,4 +1,4 @@
-Copyright 1999-2000
+Copyright 1999-2001
 by Just van Rossum, Letterror, Den Haag, The Netherlands.
 
                         All Rights Reserved
