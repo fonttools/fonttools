@@ -42,7 +42,7 @@ Dumping 'prep' table...
 """
 
 #
-# $Id: __init__.py,v 1.37 2003-08-22 18:52:22 jvr Exp $
+# $Id: __init__.py,v 1.38 2003-08-22 19:44:08 jvr Exp $
 #
 
 import sys
@@ -156,7 +156,8 @@ class TTFont:
 			closeStream = 0
 		
 		tags = self.keys()
-		tags.remove("GlyphOrder")
+		if "GlyphOrder" in tags:
+			tags.remove("GlyphOrder")
 		numTables = len(tags)
 		writer = sfnt.SFNTWriter(file, numTables, self.sfntVersion)
 		
@@ -181,6 +182,8 @@ class TTFont:
 		self.disassembleInstructions = disassembleInstructions
 		if not tables:
 			tables = self.keys()
+			if "GlyphOrder" not in tables:
+				tables = ["GlyphOrder"] + tables
 			if skipTables:
 				for tag in skipTables:
 					if tag in tables:
@@ -293,10 +296,15 @@ class TTFont:
 			for key in self.reader.keys():
 				if key not in keys:
 					keys.append(key)
-		keys.sort()
-		if "GlyphOrder" in keys:
-			keys.remove("GlyphOrder")
-		return ["GlyphOrder"] + keys
+
+		if "glyf" in keys:
+			tableSort = sortTTFFont
+		elif "CFF " in keys:
+			tableSort = sortOTFFont
+		else:
+			assert 0, "Font has neither glyf nor CFF table. Table list:" + str(keys)
+		keys.sort(tableSort)
+		return keys
 	
 	def __len__(self):
 		return len(self.keys())
@@ -356,11 +364,7 @@ class TTFont:
 			pass
 		if self.has_key('CFF '):
 			cff = self['CFF ']
-			if cff.haveGlyphNames():
-				self.glyphOrder = cff.getGlyphOrder()
-			else:
-				# CID-keyed font, use cmap
-				self._getGlyphNamesFromCmap()
+			self.glyphOrder = cff.getGlyphOrder()
 		elif self.has_key('post'):
 			# TrueType font
 			glyphOrder = self['post'].getGlyphOrder()
@@ -699,3 +703,45 @@ def debugmsg(msg):
 	import time
 	print msg + time.strftime("  (%H:%M:%S)", time.localtime(time.time()))
 
+
+
+# Table sorting algorithm pre recommendations in OpenType Spec v1.4
+kTTFTableOrder = ["GlyphOrder", "head", "hhea", "maxp", "OS/2", "hmtx", "LTSH", "VDMX", "hdmx", "cmap", "fpgm", "prep", "cvt", "loca", "glyf", "kern", "name", "post", "gasp", "PCLT"]
+kOTFTableOrder = ["GlyphOrder", "head", "hhea", "maxp", "OS/2", "name", "cmap", "post", "CFF "]
+kNotInTableIndex = 10000 # an arbitrary value larger than will ever be a font.
+def sortFontTables(tag1, tag2, tableOrder):
+	#No need to allow for two tags with the same name.
+	if tag1 == "DSIG":
+		ret = -1
+	elif tag2 == "DSIG":
+		ret = 1
+	else:
+		try:
+			i1 = tableOrder.index(tag1)
+		except ValueError:
+			i1 = kNotInTableIndex
+		try:
+			i2 = tableOrder.index(tag2)
+		except ValueError:
+			i2 = kNotInTableIndex
+		
+		if i1 > i2:
+			ret = 1
+		elif i1 < i2:
+			ret  = -1
+		else:
+			if tag1 < tag2:
+				ret = 1
+			elif tag1 < tag2:
+				ret = -1
+			else:
+				ret = 0
+	return ret
+
+
+def sortTTFFont(tag1, tag2):
+	return sortFontTables(tag1, tag2, kTTFTableOrder)
+
+
+def sortOTFFont(tag1, tag2):
+	return sortFontTables(tag1, tag2, kOTFTableOrder)
