@@ -29,9 +29,12 @@ cffDictOperandEncoding[255] = "reserved"
 
 realNibbles = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 
 		'.', 'E', 'E-', None, '-']
+realNibblesDict = {}
+for _i in range(len(realNibbles)):
+	realNibblesDict[realNibbles[_i]] = _i
 
 
-class ByteCodeDecompilerBase:
+class ByteCodeBase:
 	
 	def read_byte(self, b0, data, index):
 		return b0 - 139, index
@@ -140,7 +143,64 @@ t2Operators = [
 	((12, 37), 'flex1'),
 ]
 
-class T2CharString(ByteCodeDecompilerBase):
+
+def getIntEncoder(format):
+	fourByteOp = chr(255)
+	isT1 = 0
+	if format == "cff":
+		fourByteOp = chr(29)
+	elif format == "t1":
+		isT1 = 1
+	else:
+		assert format == "t2"
+	
+	def encodeInt(value, fourByteOp=fourByteOp, isT1=isT1,
+			chr=chr, pack=struct.pack, unpack=struct.unpack):
+		if -107 <= value <= 107:
+			code = chr(value + 139)
+		elif 108 <= value <= 1131:
+			value = value - 108
+			code = chr((value >> 8) + 247) + chr(value & 0xFF)
+		elif -1131 <= value <= -108:
+			value = -value - 108
+			code = chr((value >> 8) + 251) + chr(value & 0xFF)
+		elif not isT1 and -32768 <= value <= 32767:
+			code = chr(28) + pack(">h", value)
+		else:
+			code = fourByteOp + pack(">l", value)
+		return code
+	
+	return encodeInt
+
+
+encodeIntCFF = getIntEncoder("cff")
+encodeIntT1 = getIntEncoder("t1")
+encodeIntT2 = getIntEncoder("t2")
+
+def encodeFloat(f):
+	s = str(f).upper()
+	if s[:2] == "0.":
+		s = s[1:]
+	elif s[:3] == "-0.":
+		s = "-" + s[2:]
+	nibbles = []
+	while s:
+		c = s[0]
+		s = s[1:]
+		if c == "E" and s[:1] == "-":
+			s = s[1:]
+			c = "E-"
+		nibbles.append(realNibblesDict[c])
+	nibbles.append(0xf)
+	if len(nibbles) % 2:
+		nibbles.append(0xf)
+	d = chr(30)
+	for i in range(0, len(nibbles), 2):
+		d = d + chr(nibbles[i] << 4 | nibbles[i+1])
+	return d
+
+
+class T2CharString(ByteCodeBase):
 	
 	operandEncoding = t2OperandEncoding
 	operators, opcodes = buildOperatorDict(t2Operators)
@@ -178,40 +238,23 @@ class T2CharString(ByteCodeDecompilerBase):
 					bytecode.extend(map(chr, opcodes[token]))
 				else:
 					bytecode.append(token)  # hint mask
-			elif tp == types.FloatType:
-				# only in CFF
-				raise NotImplementedError
 			elif tp == types.IntType:
-				# XXX factor out, is largely OK for CFF dicts, too.
-				if -107 <= token <= 107:
-					code = chr(token + 139)
-				elif 108 <= token <= 1131:
-					token = token - 108
-					code = chr((token >> 8) + 247) + chr(token & 0xFF)
-				elif -1131 <= token <= -108:
-					token = -token - 108
-					code = chr((token >> 8) + 251) + chr(token & 0xFF)
-				elif -32768 <= token <= 32767:
-					# XXX T2/CFF-specific: doesn't exist in T1
-					code = chr(28) + struct.pack(">h", token)
-				else:
-					# XXX T1/T2-specific: different opcode in CFF
-					code = chr(255) + struct.pack(">l", token)
-				bytecode.append(code)
+				bytecode.append(encodeIntT2(token))
 			else:
-				assert 0
+				assert 0, "unsupported type: %s" % tp
 		bytecode = "".join(bytecode)
-		if DEBUG:
-			assert bytecode == self.__bytecode
-		
+		self.setBytecode(bytecode)
+	
 	def needsDecompilation(self):
 		return self.bytecode is not None
 	
 	def setProgram(self, program):
 		self.program = program
-		if DEBUG:
-			self.__bytecode = self.bytecode
 		self.bytecode = None
+	
+	def setBytecode(self, bytecode):
+		self.bytecode = bytecode
+		self.program = None
 	
 	def getToken(self, index, 
 			len=len, ord=ord, getattr=getattr, type=type, StringType=types.StringType):
@@ -847,7 +890,7 @@ class T1OutlineExtractor(T2OutlineExtractor):
 		self.popall()  # XXX
 
 
-class DictDecompiler(ByteCodeDecompilerBase):
+class DictDecompiler(ByteCodeBase):
 	
 	operandEncoding = cffDictOperandEncoding
 	

@@ -1,12 +1,12 @@
 """cffLib.py -- read/write tools for Adobe CFF fonts."""
 
 #
-# $Id: cffLib.py,v 1.20 2002-05-18 20:07:01 jvr Exp $
+# $Id: cffLib.py,v 1.21 2002-05-23 21:50:36 jvr Exp $
 #
 
 import struct, sstruct
 import string
-import types
+from types import FloatType, ListType, TupleType
 from fontTools.misc import psCharStrings
 
 
@@ -30,10 +30,11 @@ class CFFFontSet:
 		assert self.major == 1 and self.minor == 0, \
 				"unknown CFF format: %d.%d" % (self.major, self.minor)
 		
+		file.seek(self.hdrSize)
 		self.fontNames = list(Index(file, "fontNames"))
 		self.topDictIndex = TopDictIndex(file)
 		self.strings = IndexedStrings(file)
-		self.GlobalSubrs = CharStringIndex(file, name="GlobalSubrsIndex")
+		self.GlobalSubrs = GlobalSubrsIndex(file, name="GlobalSubrsIndex")
 		self.topDictIndex.strings = self.strings
 		self.topDictIndex.GlobalSubrs = self.GlobalSubrs
 	
@@ -53,9 +54,25 @@ class CFFFontSet:
 			raise KeyError, name
 		return self.topDictIndex[index]
 	
-	def compile(self):
+	def compile(self, file):
 		strings = IndexedStrings()
-		XXXX
+		writer = CFFWriter()
+		writer.add(sstruct.pack(cffHeaderFormat, self))
+		fontNames = Index()
+		for name in self.fontNames:
+			fontNames.append(name)
+		writer.add(fontNames.getCompiler(strings, None))
+		topCompiler = self.topDictIndex.getCompiler(strings, None)
+		writer.add(topCompiler)
+		writer.add(strings.getCompiler())
+		writer.add(self.GlobalSubrs.getCompiler(strings, None))
+		
+		for child in topCompiler.getChildren(strings):
+			writer.add(child)
+		
+		print writer.data
+		
+		writer.toFile(file)
 	
 	def toXML(self, xmlWriter, progress=None):
 		xmlWriter.newline()
@@ -78,13 +95,163 @@ class CFFFontSet:
 		xxx
 
 
+class CFFWriter:
+	
+	def __init__(self):
+		self.data = []
+	
+	def add(self, table):
+		self.data.append(table)
+	
+	def toFile(self, file):
+		lastPosList = None
+		count = 1
+		while 1:
+			print "XXX iteration", count
+			count += 1
+			pos = 0
+			posList = [pos]
+			for item in self.data:
+				if hasattr(item, "setPos"):
+					item.setPos(pos)
+				if hasattr(item, "getDataLength"):
+					pos = pos + item.getDataLength()
+				else:
+					pos = pos + len(item)
+				posList.append(pos)
+			if posList == lastPosList:
+				break
+			lastPosList = posList
+		begin = file.tell()
+		posList = [0]
+		for item in self.data:
+			if hasattr(item, "toFile"):
+				item.toFile(file)
+			else:
+				file.write(item)
+			posList.append(file.tell() - begin)
+		if posList != lastPosList:
+			print "++++"
+			print posList
+			print lastPosList
+		assert posList == lastPosList
+
+
+def calcOffSize(largestOffset):
+	if largestOffset < 0x100:
+		offSize = 1
+	elif largestOffset < 0x10000:
+		offSize = 2
+	elif largestOffset < 0x1000000:
+		offSize = 3
+	else:
+		offSize = 4
+	return offSize
+
+
+class IndexCompiler:
+	
+	def __init__(self, items, strings, parent):
+		self.items = self.getItems(items, strings)
+		self.parent = parent
+	
+	def getItems(self, items, strings):
+		return items
+	
+	def getOffsets(self):
+		pos = 1
+		offsets = [pos]
+		for item in self.items:
+			if hasattr(item, "getDataLength"):
+				pos = pos + item.getDataLength()
+			else:
+				pos = pos + len(item)
+			offsets.append(pos)
+		return offsets
+	
+	def getDataLength(self):
+		lastOffset = self.getOffsets()[-1]
+		offSize = calcOffSize(lastOffset)
+		dataLength = (
+			2 +                                # count
+			1 +                                # offSize
+			(len(self.items) + 1) * offSize +  # the offsets
+			lastOffset - 1                     # size of object data
+		)
+		return dataLength
+	
+	def toFile(self, file):
+		size = self.getDataLength()
+		start = file.tell()
+		offsets = self.getOffsets()
+		writeCard16(file, len(self.items))
+		offSize = calcOffSize(offsets[-1])
+		writeCard8(file, offSize)
+		offSize = -offSize
+		pack = struct.pack
+		for offset in offsets:
+			binOffset = pack(">l", offset)[offSize:]
+			assert len(binOffset) == -offSize
+			file.write(binOffset)
+		for item in self.items:
+			if hasattr(item, "toFile"):
+				item.toFile(file)
+			else:
+				file.write(item)
+		assert start + size == file.tell()
+
+
+class IndexedStringsCompiler(IndexCompiler):
+	
+	def getItems(self, items, strings):
+		return items.strings
+
+
+class TopDictIndexCompiler(IndexCompiler):
+	
+	def getItems(self, items, strings):
+		out = []
+		for item in items:
+			out.append(item.getCompiler(strings, self))
+		return out
+	
+	def getChildren(self, strings):
+		children = []
+		for topDict in self.items:
+			children.extend(topDict.getChildren(strings))
+		return children
+
+
+class GlobalSubrsCompiler(IndexCompiler):
+	def getItems(self, items, strings):
+		out = []
+		for cs in items:
+			cs.compile()
+			out.append(cs.bytecode)
+		return out
+
+class SubrsCompiler(GlobalSubrsCompiler):
+	def setPos(self, pos):
+		offset = pos - self.parent.pos
+		self.parent.rawDict["Subrs"] = offset
+
+class CharStringsCompiler(GlobalSubrsCompiler):
+	def setPos(self, pos):
+		self.parent.rawDict["CharStrings"] = pos
+
+
 class Index:
 	
 	"""This class represents what the CFF spec calls an INDEX."""
 	
-	def __init__(self, file, name=None):
+	compilerClass = IndexCompiler
+	
+	def __init__(self, file=None, name=None):
 		if name is None:
 			name = self.__class__.__name__
+		if file is None:
+			self.items = []
+			return
 		if DEBUG:
 			print "loading %s at %s" % (name, file.tell())
 		self.file = file
@@ -92,11 +259,11 @@ class Index:
 		self.count = count
 		self.items = [None] * count
 		if count == 0:
-			self.offsets = []
+			self.items = []
 			return
 		offSize = readCard8(file)
 		if DEBUG:
-			print "index count: %s offSize: %s" % (count, offSize)
+			print "    index count: %s offSize: %s" % (count, offSize)
 		assert offSize <= 4, "offSize too large: %s" % offSize
 		self.offsets = offsets = []
 		pad = '\0' * (4 - offSize)
@@ -107,9 +274,11 @@ class Index:
 			offsets.append(int(offset))
 		self.offsetBase = file.tell() - 1
 		file.seek(self.offsetBase + offsets[-1])  # pretend we've read the whole lot
+		if DEBUG:
+			print "    end of %s at %s" % (name, file.tell())
 	
 	def __len__(self):
-		return self.count
+		return len(self.items)
 	
 	def __getitem__(self, index):
 		item = self.items[index]
@@ -127,11 +296,19 @@ class Index:
 	
 	def produceItem(self, index, data, file, offset, size):
 		return data
-
-
-class CharStringIndex(Index):
 	
-	def __init__(self, file, globalSubrs=None, private=None, fdSelect=None, fdArray=None,
+	def append(self, item):
+		self.items.append(item)
+	
+	def getCompiler(self, strings, parent):
+		return self.compilerClass(self, strings, parent)
+
+
+class GlobalSubrsIndex(Index):
+	
+	compilerClass = GlobalSubrsCompiler
+	
+	def __init__(self, file=None, globalSubrs=None, private=None, fdSelect=None, fdArray=None,
 			name=None):
 		Index.__init__(self, file, name)
 		self.globalSubrs = globalSubrs
@@ -168,9 +345,14 @@ class CharStringIndex(Index):
 		else:
 			sel = fdSelect[index]
 		return self[index], sel
-			
+
+class SubrsIndex(GlobalSubrsIndex):
+	compilerClass = SubrsCompiler
+
 
 class TopDictIndex(Index):
+	
+	compilerClass = TopDictIndexCompiler
 	
 	def produceItem(self, index, data, file, offset, size):
 		top = TopDict(self.strings, file, offset, self.GlobalSubrs)
@@ -189,7 +371,7 @@ class TopDictIndex(Index):
 class CharStrings:
 	
 	def __init__(self, file, charset, globalSubrs, private, fdSelect, fdArray):
-		self.charStringsIndex = CharStringIndex(file, globalSubrs, private, fdSelect, fdArray)
+		self.charStringsIndex = SubrsIndex(file, globalSubrs, private, fdSelect, fdArray)
 		self.nameToIndex = nameToIndex = {}
 		for i in range(len(charset)):
 			nameToIndex[charset[i]] = i
@@ -237,10 +419,32 @@ def readCard16(file):
 	value, = struct.unpack(">H", file.read(2))
 	return value
 
+def writeCard8(file, value):
+	file.write(chr(value))
+
+def writeCard16(file, value):
+	file.write(struct.pack(">H", value))
+
+def packCard8(value):
+	return chr(value)
+
+def packCard16(value):
+	return struct.pack(">H", value)
+
 def buildOperatorDict(table):
 	d = {}
 	for op, name, arg, default, conv in table:
 		d[op] = (name, arg)
+	return d
+
+def buildOpcodeDict(table):
+	d = {}
+	for op, name, arg, default, conv in table:
+		if type(op) == TupleType:
+			op = chr(op[0]) + chr(op[1])
+		else:
+			op = chr(op)
+		d[name] = (op, arg)
 	return d
 
 def buildOrder(table):
@@ -266,6 +470,8 @@ def buildConverters(table):
 class BaseConverter:
 	def read(self, parent, value):
 		return value
+	def write(self, parent, value):
+		return value
 	def xmlWrite(self, xmlWriter, name, value):
 		xmlWriter.begintag(name)
 		xmlWriter.newline()
@@ -283,12 +489,16 @@ class PrivateDictConverter(BaseConverter):
 		len(data) == size
 		pr.decompile(data)
 		return pr
+	def write(self, parent, value):
+		return (0, 0)  # dummy value
 
 class SubrsConverter(BaseConverter):
 	def read(self, parent, value):
 		file = parent.file
 		file.seek(parent.offset + value)  # Offset(self)
-		return CharStringIndex(file, name="SubrsIndex")
+		return SubrsIndex(file, name="SubrsIndex")
+	def write(self, parent, value):
+		return 0  # dummy value
 
 class CharStringsConverter(BaseConverter):
 	def read(self, parent, value):
@@ -303,6 +513,8 @@ class CharStringsConverter(BaseConverter):
 			private = parent.Private
 		file.seek(value)  # Offset(0)
 		return CharStrings(file, charset, globalSubrs, private, fdSelect, fdArray)
+	def write(self, parent, value):
+		return 0  # dummy value
 
 class CharsetConverter:
 	def read(self, parent, value):
@@ -311,14 +523,18 @@ class CharsetConverter:
 			numGlyphs = parent.numGlyphs
 			file = parent.file
 			file.seek(value)
+			if DEBUG:
+				print "loading charset at %s" % value
 			format = readCard8(file)
 			if format == 0:
-				raise NotImplementedError
+				charset =parseCharset0(numGlyphs, file, parent.strings)
 			elif format == 1 or format == 2:
 				charset = parseCharset(numGlyphs, file, parent.strings, isCID, format)
 			else:
 				raise NotImplementedError
 			assert len(charset) == numGlyphs
+			if DEBUG:
+				print "    charset end at %s" % file.tell()
 		else:
 			if isCID or not hasattr(parent, "CharStrings"):
 				assert value == 0
@@ -335,11 +551,41 @@ class CharsetConverter:
 			#   2: ExpertSubset
 			charset = None  # 
 		return charset
+	def write(self, parent, value):
+		return 0  # dummy value
 	def xmlWrite(self, xmlWriter, name, value):
 		# XXX GlyphOrder needs to be stored *somewhere*, but not here...
 		xmlWriter.simpletag("charset", value=value)
 		xmlWriter.newline()
 
+
+class CharsetCompiler:
+	
+	def __init__(self, strings, charset, parent):
+		assert charset[0] == '.notdef'
+		format = 0  # XXX!
+		data = [packCard8(format)]
+		for name in charset[1:]:
+			data.append(packCard16(strings.getSID(name)))
+		self.data = "".join(data)
+		self.parent = parent
+	
+	def setPos(self, pos):
+		self.parent.rawDict["charset"] = pos
+	
+	def getDataLength(self):
+		return len(self.data)
+	
+	def toFile(self, file):
+		file.write(self.data)
+
+
+def parseCharset0(numGlyphs, file, strings):
+	charset = [".notdef"]
+	for i in range(numGlyphs - 1):
+		SID = readCard16(file)
+		charset.append(strings[SID])
+	return charset
 
 def parseCharset(numGlyphs, file, strings, isCID, format):
 	charset = ['.notdef']
@@ -405,14 +651,15 @@ class FDSelectConverter:
 class ROSConverter(BaseConverter):
 	def xmlWrite(self, xmlWriter, name, value):
 		registry, order, supplement = value
-		xmlWriter.simpletag(name, [('registry', registry), ('order', order),
-			('supplement', supplement)])
+		xmlWriter.simpletag(name, [('Registry', registry), ('Order', order),
+			('Supplement', supplement)])
 		xmlWriter.newline()
 
 
 topDictOperators = [
 #	opcode     name                  argument type   default    converter
 	((12, 30), 'ROS',        ('SID','SID','number'), None,      ROSConverter()),
+	((12, 20), 'SyntheticBase',      'number',       None,      None),
 	(0,        'version',            'SID',          None,      None),
 	(1,        'Notice',             'SID',          None,      None),
 	((12, 0),  'Copyright',          'SID',          None,      None),
@@ -432,7 +679,6 @@ topDictOperators = [
 	((12, 8),  'StrokeWidth',        'number',       0,         None),
 	(14,       'XUID',               'array',        None,      None),
 	(15,       'charset',            'number',       0,         CharsetConverter()),
-	((12, 20), 'SyntheticBase',      'number',       None,      None),
 	((12, 21), 'PostScript',         'SID',          None,      None),
 	((12, 22), 'BaseFontName',       'SID',          None,      None),
 	((12, 23), 'BaseFontBlend',      'delta',        None,      None),
@@ -462,6 +708,8 @@ privateDictOperators = [
 	((12, 12), 'StemSnapH',          'delta',        None,      None),
 	((12, 13), 'StemSnapV',          'delta',        None,      None),
 	((12, 14), 'ForceBold',          'number',       0,         None),
+	((12, 15), 'ForceBoldThreshold', 'number',       None,      None),  # deprecated
+	((12, 16), 'lenIV',              'number',       None,      None),  # deprecated
 	((12, 17), 'LanguageGroup',      'number',       0,         None),
 	((12, 18), 'ExpansionFactor',    'number',       0.06,      None),
 	((12, 19), 'initialRandomSeed',  'number',       0,         None),
@@ -479,26 +727,147 @@ class PrivateDictDecompiler(psCharStrings.DictDecompiler):
 	operators = buildOperatorDict(privateDictOperators)
 
 
+class DictCompiler:
+	
+	def __init__(self, dictObj, strings, parent):
+		assert isinstance(strings, IndexedStrings)
+		self.dictObj = dictObj
+		self.strings = strings
+		self.parent = parent
+		rawDict = {}
+		for name in dictObj.order:
+			value = getattr(dictObj, name, None)
+			if value is None:
+				continue
+			conv = dictObj.converters[name]
+			if conv:
+				value = conv.write(dictObj, value)
+			if value == dictObj.defaults.get(name):
+				continue
+			rawDict[name] = value
+		self.rawDict = rawDict
+	
+	def setPos(self, pos):
+		pass
+	
+	def getDataLength(self):
+		return len(self.compile())
+	
+	def compile(self):
+		rawDict = self.rawDict
+		data = []
+		for name in self.dictObj.order:
+			value = rawDict.get(name)
+			if value is None:
+				continue
+			op, argType = self.opcodes[name]
+			if type(argType) == TupleType:
+				l = len(argType)
+				assert len(value) == l, "value doesn't match arg type"
+				for i in range(l):
+					arg = argType[l - i - 1]
+					v = value[i]
+					arghandler = getattr(self, "arg_" + arg)
+					data.append(arghandler(v))
+			else:
+				arghandler = getattr(self, "arg_" + argType)
+				data.append(arghandler(value))
+			data.append(op)
+		return "".join(data)
+	
+	def toFile(self, file):
+		file.write(self.compile())
+	
+	def arg_number(self, num):
+		return encodeNumber(num)
+	def arg_SID(self, s):
+		return psCharStrings.encodeIntCFF(self.strings.getSID(s))
+	def arg_array(self, value):
+		data = []
+		for num in value:
+			data.append(encodeNumber(num))
+		return "".join(data)
+	def arg_delta(self, value):
+		out = []
+		last = 0
+		for v in value:
+			out.append(v - last)
+			last = v
+		data = []
+		for num in out:
+			data.append(encodeNumber(num))
+		return "".join(data)
+
+
+def encodeNumber(num):
+	if type(num) == FloatType:
+		return psCharStrings.encodeFloat(num)
+	else:
+		return psCharStrings.encodeIntCFF(num)
+
+
+class TopDictCompiler(DictCompiler):
+	
+	opcodes = buildOpcodeDict(topDictOperators)
+	
+	def getChildren(self, strings):
+		children = []
+		if hasattr(self.dictObj, "charset"):
+			children.append(CharsetCompiler(strings, self.dictObj.charset, self))
+		if hasattr(self.dictObj, "CharStrings"):
+			items = []
+			charStrings = self.dictObj.CharStrings
+			for name in self.dictObj.charset:
+				items.append(charStrings[name])
+			charStringsComp = CharStringsCompiler(items, strings, self)
+			children.append(charStringsComp)
+		if hasattr(self.dictObj, "Private"):
+			privComp = self.dictObj.Private.getCompiler(strings, self)
+			children.append(privComp)
+			children.extend(privComp.getChildren(strings))
+		return children
+
+
+class PrivateDictCompiler(DictCompiler):
+	
+	opcodes = buildOpcodeDict(privateDictOperators)
+	
+	def setPos(self, pos):
+		size = len(self.compile())
+		self.parent.rawDict["Private"] = size, pos
+		self.pos = pos
+	
+	def getChildren(self, strings):
+		children = []
+		if hasattr(self.dictObj, "Subrs"):
+			children.append(self.dictObj.Subrs.getCompiler(strings, self))
+		return children
+
 
 class BaseDict:
 	
 	def __init__(self, strings, file, offset):
 		self.rawDict = {}
 		if DEBUG:
-			print "loading %s at %s" % (self, offset)
+			print "loading %s at %s" % (self.__class__.__name__, offset)
 		self.file = file
 		self.offset = offset
 		self.strings = strings
 		self.skipNames = []
 	
 	def decompile(self, data):
-		dec = self.decompiler(self.strings)
+		if DEBUG:
+			print "    length %s is %s" % (self.__class__.__name__, len(data))
+		dec = self.decompilerClass(self.strings)
 		dec.decompile(data)
 		self.rawDict = dec.getDict()
 		self.postDecompile()
 	
 	def postDecompile(self):
 		pass
+	
+	def getCompiler(self, strings, parent):
+		return self.compilerClass(self, strings, parent)
 	
 	def __getattr__(self, name):
 		value = self.rawDict.get(name)
@@ -523,7 +892,7 @@ class BaseDict:
 			if conv is not None:
 				conv.xmlWrite(xmlWriter, name, value)
 			else:
-				if isinstance(value, types.ListType):
+				if isinstance(value, ListType):
 					value = " ".join(map(str, value))
 				xmlWriter.simpletag(name, value=value)
 				xmlWriter.newline()
@@ -534,7 +903,8 @@ class TopDict(BaseDict):
 	defaults = buildDefaults(topDictOperators)
 	converters = buildConverters(topDictOperators)
 	order = buildOrder(topDictOperators)
-	decompiler = TopDictDecompiler
+	decompilerClass = TopDictDecompiler
+	compilerClass = TopDictCompiler
 	
 	def __init__(self, strings, file, offset, GlobalSubrs):
 		BaseDict.__init__(self, strings, file, offset)
@@ -570,7 +940,8 @@ class PrivateDict(BaseDict):
 	defaults = buildDefaults(privateDictOperators)
 	converters = buildConverters(privateDictOperators)
 	order = buildOrder(privateDictOperators)
-	decompiler = PrivateDictDecompiler
+	decompilerClass = PrivateDictDecompiler
+	compilerClass = PrivateDictCompiler
 
 
 class IndexedStrings:
@@ -584,6 +955,12 @@ class IndexedStrings:
 			strings = list(Index(file, "IndexedStrings"))
 		self.strings = strings
 	
+	def getCompiler(self):
+		return IndexedStringsCompiler(self, None, None)
+	
+	def __len__(self):
+		return len(self.strings)
+	
 	def __getitem__(self, SID):
 		if SID < cffStandardStringCount:
 			return cffStandardStrings[SID]
@@ -595,7 +972,7 @@ class IndexedStrings:
 			self.buildStringMapping()
 		if cffStandardStringMapping.has_key(s):
 			SID = cffStandardStringMapping[s]
-		if self.stringMapping.has_key(s):
+		elif self.stringMapping.has_key(s):
 			SID = self.stringMapping[s]
 		else:
 			SID = len(self.strings) + cffStandardStringCount
@@ -686,5 +1063,4 @@ assert len(cffStandardStrings) == cffStandardStringCount
 cffStandardStringMapping = {}
 for _i in range(cffStandardStringCount):
 	cffStandardStringMapping[cffStandardStrings[_i]] = _i
-
 
