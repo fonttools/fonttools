@@ -1,3 +1,5 @@
+"""Mac-only TrueType browser window."""
+
 from fontTools import ttLib
 from fontTools.ttLib import macUtils
 import macfs
