@@ -5,23 +5,25 @@ usage: %s [-hvisf] [-t <table>] [-x <table>] [-d <output-dir>] TrueType-file(s)
     Dump TrueType fonts as TTX files (an XML-based text format).
 
     Options:
-    -h help: print this message
-    -v verbose: messages will be written to stdout about what is 
+    -h Help: print this message
+    -v Verbose: messages will be written to stdout about what is 
        being done.
-    -i disassemble TT instructions: when this option is given, all
+    -i Disassemble TT instructions: when this option is given, all
        TrueType programs (glyph programs, the font program and the
        pre-program) will be written to the TTX file as assembly instead
        of hex data.
-    -s split tables: save the TTX data into separate TTX files per table.
+    -s Split tables: save the TTX data into separate TTX files per table.
        The files will be saved in a directory. The name of this
        directory will be constructed from the input filename (by
        dropping the extension) or can be specified by the optional
        TTX-output-file argument.
-    -f force overwriting existing files.
-    -t <table> specify a table to dump. Multiple -t options
+    -f Force overwriting existing files.
+    -d <output-dir> Specify a directory in which the output file(s)
+       should end up. The directory must exist.
+    -t <table> Specify a table to dump. Multiple -t options
        are allowed. When no -t option is specified, all tables
        will be dumped.
-    -x <table> specify a table to exclude from the dump. Multiple
+    -x <table> Specify a table to exclude from the dump. Multiple
        -x options are allowed. -t and -x are mutually exclusive.
 """
 
@@ -30,12 +32,15 @@ from fontTools import ttLib
 
 options, args = getopt.getopt(sys.argv[1:], "hvisft:x:")
 
+# default values
 verbose = 0
 splitTables = 0
 disassembleInstructions = 0
 forceOverwrite = 0
 tables = []
 skipTables = []
+outputDir = None
+
 for option, value in options:
 	if option == "-t":
 		if len(value) > 4:
@@ -51,6 +56,8 @@ for option, value in options:
 		# normalize tag
 		value = value + (4 - len(value)) * " "
 		skipTables.append(value)
+	elif option == "-d":
+		outputDir = value
 	elif option == "-v":
 		verbose = 1
 	elif option == "-f":
@@ -73,6 +80,10 @@ if not args:
 
 for ttPath in args:
 	path, ext = os.path.splitext(ttPath)
+	if outputDir is not None:
+		fileName = os.path.basename(path)
+		path = os.path.join(outputDir, fileName)
+	
 	if splitTables:
 		xmlPath = path
 	else:
