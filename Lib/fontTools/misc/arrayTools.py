@@ -50,6 +50,13 @@ def sectRect((l1, t1, r1, b1), (l2, t2, r2, b2)):
 		return 0, (0, 0, 0, 0)
 	return 1, (l, t, r, b)
 
+def unionRect((l1, t1, r1, b1), (l2, t2, r2, b2)):
+	l, t, r, b = min(l1, l2), min(t1, t2), max(r1, r2), max(b1, b2)
+	return (l, t, r, b)
+
+def rectCenter((l, t, r, b)):
+	return (l+r)/2, (t+b)/2
+
 def intRect(rect):
 	rect = Numeric.array(rect)
 	l, t = Numeric.floor(rect[:2])
