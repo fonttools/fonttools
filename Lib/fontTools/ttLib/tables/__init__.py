@@ -1,1 +1,3 @@
-# dummy file, so Python knows ttLib.tables is a subpackage
+"""Empty __init__.py file to signal Python this directory is a package.
+(It can't be completely empty since WinZip seems to skip empty files.)
+"""
