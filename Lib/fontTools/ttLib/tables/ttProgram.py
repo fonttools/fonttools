@@ -80,8 +80,8 @@ instructions = [
 	(0xc0,      'MDRP',     5,        'MoveDirectRelPt',  1,  0), #                                    p               -
 	(0x3e,      'MIAP',     1,      'MoveIndirectAbsPt',  2,  0), #                                 n, p               -
 	(0x8c,       'MIN',     0,                'Minimum',  2,  1), #                               e2, e1     min(e1, e2)
-	(0x26,    'MINDEX',     0,        'MoveXToTopStack',  2,  1), #                                    k              ek
-	(0xe0,      'MIRP',     5,      'MoveIndirectRelPt',  1,  0), #                                 n, p               -
+	(0x26,    'MINDEX',     0,        'MoveXToTopStack',  1,  1), #                                    k              ek
+	(0xe0,      'MIRP',     5,      'MoveIndirectRelPt',  2,  0), #                                 n, p               -
 	(0x4b,     'MPPEM',     0,      'MeasurePixelPerEm',  0,  1), #                                    -            ppem
 	(0x4c,       'MPS',     0,       'MeasurePointSize',  0,  1), #                                    -       pointSize
 	(0x3a,     'MSIRP',     1,    'MoveStackIndirRelPt',  2,  0), #                                 d, p               -
