@@ -34,3 +34,4 @@ MacRoman = [
 		'circumflex', 'tilde', 'macron', 'breve', 'dotaccent', 'ring', 'cedilla', 
 		'hungarumlaut', 'ogonek', 'caron'
 		]
+
