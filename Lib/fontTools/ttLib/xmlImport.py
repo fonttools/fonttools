@@ -167,7 +167,7 @@ class XMLApplication(xmlproc.Application):
 			self.root = (name, attrs, self.content_stack[-1])
 		else:
 			list = []
-			self.content_stack[-1].append(name, attrs, list)
+			self.content_stack[-1].append((name, attrs, list))
 			self.content_stack.append(list)
 	
 	def handle_data(self, data, start, end):
