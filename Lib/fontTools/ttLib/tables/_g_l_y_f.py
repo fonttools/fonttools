@@ -101,6 +101,8 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 			return
 		if not hasattr(self, "glyphs"):
 			self.glyphs = {}
+		if not hasattr(self, "glyphOrder"):
+			self.glyphOrder = ttFont.getGlyphOrder()
 		glyphName = attrs["name"]
 		if ttFont.verbose:
 			ttLib.debugmsg("unpacking glyph '%s'" % glyphName)
