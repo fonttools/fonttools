@@ -2,6 +2,7 @@
 
 import os, sys
 from distutils.core import setup, Extension
+from distutils.command.build_ext import build_ext
 
 
 try:
@@ -15,6 +16,19 @@ try:
 except ImportError:
 	print "*** Warning: FontTools needs PyXML, see:"
 	print "        http://sourceforge.net/projects/pyxml/"
+
+
+class build_ext_optional(build_ext):
+	"""build_ext command which doesn't abort when it fails."""
+	def build_extension(self, ext):
+		# Skip extensions which cannot be built
+		try:
+			build_ext.build_extension(self, ext)
+		except:
+			self.announce(
+				'*** WARNING: Building of extension "%s" '
+				'failed: %s' %
+				(ext.name, sys.exc_info()[1]))
 
 
 setup(
@@ -49,5 +63,6 @@ setup(
 			)
 		],
 		scripts = ["Tools/ttcompile", "Tools/ttdump", "Tools/ttlist"],
+		cmdclass = {"build_ext": build_ext_optional}
 	)
 
