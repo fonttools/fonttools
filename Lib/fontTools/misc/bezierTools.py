@@ -2,10 +2,15 @@
 
 
 __all__ = [
-	"calcQuadraticBounds", "calcCubicBounds",
-	"splitLine", "splitQuadratic", "splitCubic",
-	"splitQuadraticAtT", "splitCubicAtT",
-	"solveQuadratic", "solveCubic",
+	"calcQuadraticBounds",
+	"calcCubicBounds",
+	"splitLine",
+	"splitQuadratic",
+	"splitCubic",
+	"splitQuadraticAtT",
+	"splitCubicAtT",
+	"solveQuadratic",
+	"solveCubic",
 ]
 
 from fontTools.misc.arrayTools import calcBounds
@@ -108,7 +113,7 @@ def splitQuadratic(pt1, pt2, pt3, where, isHorizontal):
 		((0.0, 0.0), (7.32233047034, 14.6446609407), (14.6446609407, 25.0))
 		((14.6446609407, 25.0), (50.0, 75.0), (85.3553390593, 25.0))
 		((85.3553390593, 25.0), (92.6776695297, 14.6446609407), (100.0, -7.1054273576e-15))
-		>>> # XXX I'm not at all sure it the following behavior is desirable:
+		>>> # XXX I'm not at all sure if the following behavior is desirable:
 		>>> printSegments(splitQuadratic((0, 0), (50, 100), (100, 0), 50, True))
 		((0.0, 0.0), (25.0, 50.0), (50.0, 50.0))
 		((50.0, 50.0), (50.0, 50.0), (50.0, 50.0))
@@ -150,7 +155,9 @@ def splitCubic(pt1, pt2, pt3, pt4, where, isHorizontal):
 
 
 def splitQuadraticAtT(pt1, pt2, pt3, *ts):
-	"""
+	"""Split the quadratic curve between pt1, pt2 and pt3 at one or more
+	values of t. Return a list of curve segments.
+
 		>>> printSegments(splitQuadraticAtT((0, 0), (50, 100), (100, 0), 0.5))
 		((0.0, 0.0), (25.0, 50.0), (50.0, 50.0))
 		((50.0, 50.0), (75.0, 50.0), (100.0, 0.0))
@@ -164,7 +171,9 @@ def splitQuadraticAtT(pt1, pt2, pt3, *ts):
 
 
 def splitCubicAtT(pt1, pt2, pt3, pt4, *ts):
-	"""
+	"""Split the cubic curve between pt1, pt2, pt3 and pt4 at one or more
+	values of t. Return a list of curve segments.
+
 		>>> printSegments(splitCubicAtT((0, 0), (25, 100), (75, 100), (100, 0), 0.5))
 		((0.0, 0.0), (12.5, 50.0), (31.25, 75.0), (50.0, 75.0))
 		((50.0, 75.0), (68.75, 75.0), (87.5, 50.0), (100.0, 0.0))
@@ -342,6 +351,9 @@ def _segmentrepr(obj):
 
 
 def printSegments(segments):
+	"""Helper for the doctests, displaying each segment in a list of
+	segments on a single line as a tuple.
+	"""
 	for segment in segments:
 		print _segmentrepr(segment)
 
