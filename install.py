@@ -11,7 +11,7 @@ if sys.platform not in ('win32', 'mac'):
                           'site-packages')
 else:
     libdir = sys.exec_prefix
-pth_path = os.path.join(libdir, "ttlib.pth")
+pth_path = os.path.join(libdir, "FontTools.pth")
 pth_file = open(pth_path, "w")
 pth_file.write(ttlibdir + '\n')
 pth_file.close()
