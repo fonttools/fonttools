@@ -1,4 +1,58 @@
 ----------------------------
+2002/10/29 15:49:25 jvr Lib/fontTools/fondLib.py 1.4
+try Carbon.Res first.
+----------------------------
+2002/10/27 19:47:51 jvr Lib/fontTools/ttLib/standardGlyphOrder.py 1.2
+revised comment, added note about MS disagreement, removed alignment tabs
+----------------------------
+2002/10/27 09:11:42 jvr Windows/fonttools-win-setup.txt 1.6
+2002/10/27 09:11:42 jvr Windows/fonttools-win-setup.iss 1.6
+Patches from Adam:
+So, meanwhile, attached is a slightly improved isntaller. Now, .ttx files
+are registered as XML files so you can use Internet Explorer etc. to view
+them. Also, I'm creating a shortcut in the "SendTo" structure, so the user
+can click with RMB on the TTF, OTF or TTX file, then select Send To / TTX.
+Works with multiple files, very nice.
+----------------------------
+2002/10/08 14:22:16 jvr Lib/fontTools/ttLib/tables/_h_e_a_d.py 1.9
+fixed previous fix: it assumed 4 bytes of data, which is wrong
+----------------------------
+2002/10/07 21:34:47 jvr Lib/fontTools/ttLib/tables/_h_e_a_d.py 1.8
+Handle negative long time values gracefully instead of looping infinitely. Reported by Jessica P. Hekman
+----------------------------
+2002/09/24 20:50:57 jvr Lib/fontTools/ttLib/tables/otTables.py 1.10
+deal gracefully with empty coverage tables; fixes bug 611509
+----------------------------
+2002/09/16 08:21:30 jvr Doc/changes.txt 1.9
+note about maxp change
+----------------------------
+2002/09/16 08:10:05 jvr Lib/fontTools/ttLib/tables/_m_a_x_p.py 1.5
+minor cleanups
+----------------------------
+2002/09/16 08:06:48 jvr Lib/fontTools/ttLib/tables/_m_a_x_p.py 1.4
+interpret any version value as 0x0001000 if it's not 0x00005000 (workaround for buggy font)
+----------------------------
+2002/09/14 15:31:26 jvr Doc/changes.txt 1.8
+2002/09/14 15:29:47 jvr Lib/fontTools/ttx.py 1.4
+ugh, the zfill string method doesn't exist in 2.2.1 and earlier :-(
+----------------------------
+2002/09/13 13:17:39 jvr Doc/documentation.html 1.6
+2002/09/13 13:17:39 jvr Doc/changes.txt 1.7
+small changes, first bux fix note since 2.0b1
+----------------------------
+2002/09/13 12:07:48 jvr Windows/fonttools-win-setup.iss 1.5
+2002/09/13 12:07:47 jvr Lib/fontTools/__init__.py 1.6
+bumped version to 2.0b2
+----------------------------
+2002/09/13 12:04:13 jvr Lib/fontTools/ttLib/tables/otTables.py 1.9
+whoops, reversed key and value
+----------------------------
+2002/09/13 00:17:23 jvr Doc/bugs.txt 1.3
+mention control chars in name table
+----------------------------
+2002/09/12 23:15:41 jvr Doc/ChangeLog.txt 1.4
+last commit for 2.0b1, I hope...
+----------------------------
 2002/09/12 23:14:59 jvr Tools/ttx 1.9
 macfreeze import hints
 ----------------------------
