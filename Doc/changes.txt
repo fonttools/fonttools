@@ -1,7 +1,7 @@
 TTX/FontTools Version 2.0 beta 1 (released September 10 2002)
 
-- Fixed embarrassing bug: the master checksum is now calculated correctly
-  even on little-endian platforms (such as Intel).
+- Fixed embarrassing bug: the master checksum in the head table is now
+  calculated correctly even on little-endian platforms (such as Intel).
 - Made the cmap format 4 compiler smarter: the binary data it creates is
   now more or less as compact as possible. TTX now makes more compact
   data than in any shipping font I've tested it with.

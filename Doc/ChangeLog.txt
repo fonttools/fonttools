@@ -1,4 +1,13 @@
 ----------------------------
+2002/09/10 15:37:34 jvr Windows/fonttools-win-setup.iss 1.4
+adapt to renamed doco
+----------------------------
+2002/09/10 14:10:58 jvr Doc/changes.txt 1.5
+more notes about 2.0b1
+----------------------------
+2002/09/10 13:39:19 jvr Doc/ChangeLog.txt 1.1
+mit freundlichen Gruessen an Werner Lemberg ;-)
+----------------------------
 2002/09/10 13:25:55 jvr MetaTools/logmerge.py 1.1
 2002/09/10 13:25:55 jvr MetaTools/buildChangeLog.py 1.1
 2 scripts to generate ChangeLog file, logmerge.py is stolen from the python distro
