@@ -30,7 +30,7 @@ class table__h_h_e_a(DefaultTable.DefaultTable):
 	dependencies = ['hmtx', 'glyf']
 	
 	def decompile(self, data, ttFont):
-		sstruct.unpack(hheaFormat, data.read(), self)
+		sstruct.unpack(hheaFormat, data, self)
 	
 	def compile(self, ttFont):
 		if ttFont.isLoaded('glyf') and ttFont.recalcBBoxes:
