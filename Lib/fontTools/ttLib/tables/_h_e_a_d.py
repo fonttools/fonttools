@@ -64,10 +64,10 @@ class table__h_e_a_d(DefaultTable.DefaultTable):
 				value = time.asctime(time.gmtime(max(0, value + mac_epoch_diff)))
 			if name in ("magicNumber", "checkSumAdjustment"):
 				value = hex(value)
+				if value[-1:] == "L":
+					value = value[:-1]
 			elif name in ("macStyle", "flags"):
 				value = num2binary(value, 16)
-			elif type(value) == type(0L):
-				value=int(value)
 			writer.simpletag(name, value=value)
 			writer.newline()
 	
@@ -78,7 +78,10 @@ class table__h_e_a_d(DefaultTable.DefaultTable):
 		elif name in ("macStyle", "flags"):
 			value = binary2num(value)
 		else:
-			value = safeEval(value)
+			try:
+				value = safeEval(value)
+			except OverflowError:
+				value = long(value)
 		setattr(self, name, value)
 	
 	def __cmp__(self, other):
