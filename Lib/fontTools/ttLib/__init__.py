@@ -41,7 +41,7 @@ Dumping 'prep' table...
 """
 
 #
-# $Id: __init__.py,v 1.10 2000-01-03 22:58:42 Just Exp $
+# $Id: __init__.py,v 1.11 2000-01-05 20:43:36 Just Exp $
 #
 
 __version__ = "1.0a6"
@@ -161,16 +161,22 @@ class TTFont:
 		
 		writer.close()
 	
-	def saveXML(self, fileOrPath, progress=None, tables=None, splitTables=0):
+	def saveXML(self, fileOrPath, progress=None, 
+			tables=None, skipTables=None, splitTables=0):
 		"""Export the font as an XML-based text file, or as a series of text
 		files when splitTables is true. In the latter case, the 'fileOrPath'
 		argument should be a path to a directory.
-		The 'tables' argument must either be None (dump all tables) or a
-		list of tables to dump.
+		The 'tables' argument must either be false (dump all tables) or a
+		list of tables to dump. The 'skipTables' argument may be a list of tables
+		to skip, but only when the 'tables' argument is false.
 		"""
 		import xmlWriter
 		if not tables:
 			tables = self.keys()
+			if skipTables:
+				for tag in skipTables:
+					if tag in tables:
+						tables.remove(tag)
 		numTables = len(tables)
 		numGlyphs = self['maxp'].numGlyphs
 		if progress:
@@ -304,7 +310,7 @@ class TTFont:
 				try:
 					table.decompile(data, self)
 				except:
-					print "An exception accurred during the decompilation of the '%s' table" % tag
+					print "An exception occurred during the decompilation of the '%s' table" % tag
 					from tables.DefaultTable import DefaultTable
 					import StringIO
 					file = StringIO.StringIO()
