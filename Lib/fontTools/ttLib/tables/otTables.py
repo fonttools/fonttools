@@ -44,12 +44,13 @@ class Coverage(FormatSwitchingBaseTable):
 			assert 0, "unknown format: %s" % self.Format
 	
 	def preWrite(self, font):
+		glyphs = getattr(self, "glyphs", [])
 		format = 1
-		rawTable = {"GlyphArray": self.glyphs}
-		if self.glyphs:
+		rawTable = {"GlyphArray": glyphs}
+		if glyphs:
 			# find out whether Format 2 is more compact or not
 			glyphIDs = []
-			for glyphName in self.glyphs:
+			for glyphName in glyphs:
 				glyphIDs.append(font.getGlyphID(glyphName))
 			
 			last = glyphIDs[0]
@@ -61,7 +62,7 @@ class Coverage(FormatSwitchingBaseTable):
 				last = glyphID
 			ranges[-1].append(last)
 			
-			if len(ranges) * 3 < len(self.glyphs):  # 3 words vs. 1 word
+			if len(ranges) * 3 < len(glyphs):  # 3 words vs. 1 word
 				# Format 2 is more compact
 				index = 0
 				for i in range(len(ranges)):
@@ -80,7 +81,7 @@ class Coverage(FormatSwitchingBaseTable):
 		return rawTable
 	
 	def toXML2(self, xmlWriter, font):
-		for glyphName in self.glyphs:
+		for glyphName in getattr(self, "glyphs", []):
 			xmlWriter.simpletag("Glyph", value=glyphName)
 			xmlWriter.newline()
 	
