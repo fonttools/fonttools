@@ -5,6 +5,8 @@ from fontTools.ttLib.tables.DefaultTable import DefaultTable
 
 class TTXParseError(Exception): pass
 
+BUFSIZE = 0x4000
+
 
 class ExpatParser:
 	
@@ -13,7 +15,6 @@ class ExpatParser:
 		self.progress = progress
 		self.root = None
 		self.contentStack = []
-		self.lastpos = 0
 		self.stackSize = 0
 	
 	def parseFile(self, file):
@@ -24,15 +25,18 @@ class ExpatParser:
 		parser.EndElementHandler = self.endElementHandler
 		parser.CharacterDataHandler = self.characterDataHandler
 		
-		parser.ParseFile(file)
+		pos = 0
+		while 1:
+			chunk = file.read(BUFSIZE)
+			if not chunk:
+				parser.Parse(chunk, 1)
+				break
+			pos = pos + len(chunk)
+			if self.progress:
+				self.progress.set(pos / 100)
+			parser.Parse(chunk, 0)
 	
 	def startElementHandler(self, name, attrs):
-		if 0 and self.progress:
-			# XXX
-			pos = self.locator.pos + self.locator.block_offset
-			if (pos - self.lastpos) > 4000:
-				self.progress.set(pos / 100)
-				self.lastpos = pos
 		stackSize = self.stackSize
 		self.stackSize = self.stackSize + 1
 		if not stackSize:
@@ -105,6 +109,9 @@ def importXML(ttFont, fileName, progress=None):
 	"""Import a TTX file (an XML-based text format), so as to recreate
 	a font object.
 	"""
+	if progress:
+		import stat
+		progress.set(0, os.stat(fileName)[stat.ST_SIZE] / 100 or 1)
 	p = ExpatParser(ttFont, progress)
 	file = open(fileName)
 	p.parseFile(file)
