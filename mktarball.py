@@ -2,15 +2,14 @@
 
 import os, sys
 
-src = os.path.basename(sys.argv[0])
-print src
-
-xxxxxx
-
+src, self = os.path.split(sys.argv[0])
 tar = src + ".tar"
 gz = tar + ".gz"
 tgz = src + ".tgz"
 
-os.system('tar --exclude="CVS|mktarball.py" -cvf %s %s' % (tar, src))
+print "source:", src
+print "dest:", tgz
+
+os.system('tar --exclude=CVS --exclude=%s -cf %s %s' % (self, tar, src))
 os.system('gzip -9v %s' % tar)
 os.rename(gz, tgz)
