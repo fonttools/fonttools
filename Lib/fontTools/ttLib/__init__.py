@@ -42,7 +42,7 @@ Dumping 'prep' table...
 """
 
 #
-# $Id: __init__.py,v 1.38 2003-08-22 19:44:08 jvr Exp $
+# $Id: __init__.py,v 1.39 2003-08-25 13:15:50 jvr Exp $
 #
 
 import sys
@@ -290,6 +290,8 @@ class TTFont:
 		else:
 			return 0
 	
+	__contains__ = has_key
+	
 	def keys(self):
 		keys = self.tables.keys()
 		if self.reader:
@@ -533,6 +535,108 @@ class TTFont:
 			return self.reader[tag]
 		else:
 			raise KeyError, tag
+	
+	def getGlyphSet(self, preferCFF=1):
+		"""Return a generic GlyphSet, which is a dict-like object
+		mapping glyph names to glyph objects. The returned glyph objects
+		have a .draw() method that supports the Pen protocol, and will
+		have an attribute named 'width', but only *after* the .draw() method
+		has been called.
+		
+		If the font is CFF-based, the outlines will be taken from the 'CFF '
+		table. Otherwise the outlines will be taken from the 'glyf' table.
+		If the font contains both a 'CFF ' and a 'glyf' table, you can use
+		the 'preferCFF' argument to specify which one should be taken.
+		"""
+		if preferCFF and self.has_key("CFF "):
+			return self["CFF "].cff.values()[0].CharStrings
+		if self.has_key("glyf"):
+			return _TTGlyphSet(self)
+		if not preferCFF and self.has_key("CFF "):
+			return self["CFF "].cff.values(0).CharStrings
+		raise TTLibError, "Font contains no outlines"
+
+
+class _TTGlyphSet:
+	
+	"""Generic dict-like GlyphSet class, meant as a TrueType counterpart
+	to CFF's CharString dict. See TTFont.getGlyphSet().
+	"""
+	
+	# This class is distinct from the 'glyf' table itself because we need
+	# access to the 'hmtx' table, which could cause a dependency problem
+	# there when reading from XML.
+	
+	def __init__(self, ttFont):
+		self._ttFont = ttFont
+	
+	def keys(self):
+		return self._glyfTable.keys()
+	
+	def has_key(self, glyphName):
+		return self._glyfTable.has_key(glyphName)
+	
+	__contains__ = has_key
+
+	def __getitem__(self, glyphName):
+		return _TTGlyph(glyphName, self._ttFont)
+
+
+class _TTGlyph:
+	
+	"""Wrapper for a TrueType glyph that supports the Pen protocol.
+	Instances have an attribute named 'width', but only *after* the .draw()
+	method has been called.
+	"""
+	
+	def __init__(self, glyphName, ttFont):
+		self._glyphName = glyphName
+		self._ttFont = ttFont
+	
+	def draw(self, pen):
+		glyfTable = self._ttFont['glyf']
+		glyph = glyfTable[self._glyphName]
+		self.width, lsb = self._ttFont['hmtx'][self._glyphName]
+		if hasattr(glyph, "xMin"):
+			offset = lsb - glyph.xMin
+		else:
+			offset = 0
+		if glyph.isComposite():
+			for component in glyph:
+				glyphName, transform = component.getComponentInfo()
+				pen.addComponent(glyphName, transform)
+		else:
+			coordinates, endPts, flags = glyph.getCoordinates(glyfTable)
+			if offset:
+				coordinates = coordinates + (offset, 0)
+			start = 0
+			for end in endPts:
+				end = end + 1
+				contour = coordinates[start:end].tolist()
+				cFlags = flags[start:end].tolist()
+				start = end
+				if 1 not in cFlags:
+					# There is not a single on-curve point on the curve,
+					# use pen.qCurveTo's special case by specifying None
+					# as the on-curve point.
+					contour.append(None)
+					pen.qCurveTo(*contour)
+				else:
+					# Shuffle the points so that contour is guaranteed to *end*
+					# in an on-curve point, which we'll use for the moveTo.
+					firstOnCurve = cFlags.index(1) + 1
+					contour = contour[firstOnCurve:] + contour[:firstOnCurve]
+					cFlags = cFlags[firstOnCurve:] + cFlags[:firstOnCurve]
+					pen.moveTo(contour[-1])
+					while contour:
+						nextOnCurve = cFlags.index(1) + 1
+						if nextOnCurve == 1:
+							pen.lineTo(contour[0])
+						else:
+							pen.qCurveTo(*contour[:nextOnCurve])
+						contour = contour[nextOnCurve:]
+						cFlags = cFlags[nextOnCurve:]
+				pen.closePath()
 
 
 class GlyphOrder:
