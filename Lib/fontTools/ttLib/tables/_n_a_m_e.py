@@ -14,11 +14,19 @@ nameRecordFormat = """
 		offset:		H
 """
 
+nameRecordSize = sstruct.calcsize(nameRecordFormat)
+
+
 class table__n_a_m_e(DefaultTable.DefaultTable):
 	
 	def decompile(self, data, ttFont):
 		format, n, stringoffset = struct.unpack(">HHH", data[:6])
-		stringoffset = int(stringoffset)
+		expectedStringOffset = 6 + n * nameRecordSize
+		if stringoffset != expectedStringOffset:
+			# XXX we need a warn function
+			print "Warning: 'name' table stringoffset incorrect.",
+			print "Expected: %s; Actual: %s" % (expectedStringOffset, stringoffset)
+			stringoffset = expectedStringOffset
 		stringData = data[stringoffset:]
 		data = data[6:stringoffset]
 		self.names = []
