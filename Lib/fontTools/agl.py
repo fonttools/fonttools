@@ -1,6 +1,6 @@
-# The URLs in the text below are not correct. The first should be:
-#   http://partners.adobe.com/asn/developer/typeforum/unicodegn.html .
-# The second URL I couldn't find...
+# The URLs in the text below are not correct. They should be:
+#   http://partners.adobe.com/asn/developer/typeforum/unicodegn.html
+#   http://partners.adobe.com/asn/developer/typeforum/corporateuse.txt
 #
 _aglText = """\
 #
