@@ -126,6 +126,7 @@ class NFNT:
 			widMax = max(widMax, glyph.width)
 			fRectWidth = max(fRectWidth, glyph.pixels.shape[0] + glyph.offset)
 		
+		fRectWidth = fRectWidth - kernMax
 		imageWidth = 16 * ((imageWidth - 1) / 16 + 1)
 		rowBytes = imageWidth / 8
 		rowWords = rowBytes / 2
