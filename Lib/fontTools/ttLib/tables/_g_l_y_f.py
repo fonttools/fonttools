@@ -18,6 +18,7 @@ import struct, sstruct
 import DefaultTable
 from fontTools import ttLib
 from fontTools.misc.textTools import safeEval, readHex
+import ttProgram
 import array
 import Numeric
 import types
@@ -244,10 +245,9 @@ class Glyph:
 		if self.isComposite():
 			for compo in self.components:
 				compo.toXML(writer, ttFont)
-			if hasattr(self, "instructions"):
+			if hasattr(self, "program"):
 				writer.begintag("instructions")
-				writer.newline()
-				writer.dumphex(self.instructions)
+				self.program.toXML(writer, ttFont)
 				writer.endtag("instructions")
 				writer.newline()
 		else:
@@ -266,8 +266,7 @@ class Glyph:
 				writer.newline()
 			if self.numberOfContours:
 				writer.begintag("instructions")
-				writer.newline()
-				writer.dumphex(self.instructions)
+				self.program.toXML(writer, ttFont)
 				writer.endtag("instructions")
 				writer.newline()
 	
@@ -306,7 +305,11 @@ class Glyph:
 			self.components.append(component)
 			component.fromXML((name, attrs, content), ttFont)
 		elif name == "instructions":
-			self.instructions = readHex(content)
+			self.program = ttProgram.Program()
+			for element in content:
+				if type(element) == types.StringType:
+					continue
+				self.program.fromXML(element, ttFont)
 	
 	def getCompositeMaxpValues(self, glyfTable, maxComponentDepth=1):
 		assert self.isComposite()
@@ -341,7 +344,8 @@ class Glyph:
 		if haveInstructions:
 			numInstructions, = struct.unpack(">h", data[:2])
 			data = data[2:]
-			self.instructions = data[:numInstructions]
+			self.program = ttProgram.Program()
+			self.program.fromBytecode(data[:numInstructions])
 			data = data[numInstructions:]
 			assert len(data) in (0, 1), "bad composite data"
 	
@@ -356,7 +360,8 @@ class Glyph:
 		
 		instructionLength, = struct.unpack(">h", data[:2])
 		data = data[2:]
-		self.instructions = data[:instructionLength]
+		self.program = ttProgram.Program()
+		self.program.fromBytecode(data[:instructionLength])
 		data = data[instructionLength:]
 		nCoordinates = self.endPtsOfContours[-1] + 1
 		flags, xCoordinates, yCoordinates = \
@@ -450,12 +455,13 @@ class Glyph:
 		haveInstructions = 0
 		for i in range(len(self.components)):
 			if i == lastcomponent:
-				haveInstructions = hasattr(self, "instructions")
+				haveInstructions = hasattr(self, "program")
 				more = 0
 			compo = self.components[i]
 			data = data + compo.compile(more, haveInstructions, glyfTable)
 		if haveInstructions:
-			data = data + struct.pack(">h", len(self.instructions)) + self.instructions
+			instructions = self.program.getBytecode()
+			data = data + struct.pack(">h", len(instructions)) + instructions
 		return data
 			
 	
@@ -466,8 +472,8 @@ class Glyph:
 		if ttLib.endian <> "big":
 			endPtsOfContours.byteswap()
 		data = data + endPtsOfContours.tostring()
-		data = data + struct.pack(">h", len(self.instructions))
-		data = data + self.instructions
+		instructions = self.program.getBytecode()
+		data = data + struct.pack(">h", len(instructions)) + instructions
 		nCoordinates = len(self.coordinates)
 		
 		# make a copy
@@ -608,7 +614,7 @@ class Glyph:
 				return 1
 			return (
 					cmp(self.endPtsOfContours, other.endPtsOfContours) or
-					cmp(self.instructions, other.instructions)
+					cmp(self.program, other.instructions)
 				)
 
 
