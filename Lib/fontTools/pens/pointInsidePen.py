@@ -9,6 +9,12 @@ from fontTools.misc.bezierTools import solveQuadratic, solveCubic
 __all__ = ["PointInsidePen"]
 
 
+# working around floating point errors
+EPSILON = 1e-10
+ONE_PLUS_EPSILON = 1 + EPSILON
+ZERO_MINUS_EPSILON = 0 - EPSILON
+
+
 class PointInsidePen(BasePen):
 
 	"""This pen implements "point inside" testing: to test whether
@@ -116,7 +122,7 @@ class PointInsidePen(BasePen):
 		ay = y4 - dy - cy - by
 		solutions = solveCubic(ay, by, cy, dy - y)
 		solutions.sort()
-		solutions = [t for t in solutions if 0 <= t <= 1]
+		solutions = [t for t in solutions if ZERO_MINUS_EPSILON <= t <= ONE_PLUS_EPSILON]
 		if not solutions:
 			return
 
@@ -172,7 +178,7 @@ class PointInsidePen(BasePen):
 		a = y3 - c - b
 		solutions = solveQuadratic(a, b, c - y)
 		solutions.sort()
-		solutions = [t for t in solutions if 0 <= t <= 1]
+		solutions = [t for t in solutions if ZERO_MINUS_EPSILON <= t <= ONE_PLUS_EPSILON]
 		if not solutions:
 			return
 		XXX
