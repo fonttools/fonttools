@@ -31,7 +31,7 @@ def makeOutputFileName(xmlPath, outputDir):
 	return os.path.join(dir, file + ".ttf")
 
 try:
-	options, args = getopt.getopt(sys.argv[1:], "hvbfd:i:")
+	options, args = getopt.getopt(sys.argv[1:], "hvbfi:")
 except getopt.GetoptError:
 	usage()
 

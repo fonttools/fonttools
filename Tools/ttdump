@@ -43,7 +43,7 @@ def makeOutputFileName(ttPath, outputDir):
 	return os.path.join(dir, file + ".ttx")
 
 try:
-	options, args = getopt.getopt(sys.argv[1:], "hvisft:x:d:")
+	options, args = getopt.getopt(sys.argv[1:], "hvisft:x:")
 except getopt.GetoptError:
 	usage()
 
