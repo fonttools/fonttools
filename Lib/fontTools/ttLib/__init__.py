@@ -42,7 +42,7 @@ Dumping 'prep' table...
 """
 
 #
-# $Id: __init__.py,v 1.13 2000-02-01 15:29:03 Just Exp $
+# $Id: __init__.py,v 1.14 2000-02-13 16:23:28 Just Exp $
 #
 
 __version__ = "1.0a6"
@@ -312,7 +312,7 @@ class TTFont:
 					debugmsg("decompiling '%s' table" % tag)
 				try:
 					table.decompile(data, self)
-				except:
+				except "_ _ F O O _ _": # dummy exception to disable exception catching
 					print "An exception occurred during the decompilation of the '%s' table" % tag
 					from tables.DefaultTable import DefaultTable
 					import StringIO
