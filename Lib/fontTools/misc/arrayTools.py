@@ -40,3 +40,14 @@ def scaleRect((l, t, r, b), x, y):
 
 def offsetRect((l, t, r, b), dx, dy):
 	return l+dx, t+dy, r+dx, b+dy
+
+def insetRect((l, t, r, b), dx, dy):
+	return l+dx, t+dy, r-dx, b-dy
+
+def sectRect((l1, t1, r1, b1), (l2, t2, r2, b2)):
+	l, t, r, b = max(l1, l2), max(t1, t2), min(r1, r2), min(b1, b2)
+	if l >= r or t >= b:
+		return 0, (0, 0, 0, 0)
+	return 1, (l, t, r, b)
+
+
