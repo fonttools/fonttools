@@ -42,7 +42,7 @@ Dumping 'prep' table...
 """
 
 #
-# $Id: __init__.py,v 1.28 2002-05-15 07:50:06 jvr Exp $
+# $Id: __init__.py,v 1.29 2002-05-22 20:15:10 jvr Exp $
 #
 
 import os
@@ -186,73 +186,71 @@ class TTFont:
 		numGlyphs = self['maxp'].numGlyphs
 		if progress:
 			progress.set(0, numTables * numGlyphs)
+		
+		writer = xmlWriter.XMLWriter(fileOrPath)
+		writer.begintag("ttFont", sfntVersion=`self.sfntVersion`[1:-1], 
+				ttLibVersion=version)
+		writer.newline()
+		
 		if not splitTables:
-			writer = xmlWriter.XMLWriter(fileOrPath)
-			writer.begintag("ttFont", sfntVersion=`self.sfntVersion`[1:-1], 
-					ttLibVersion=version)
-			writer.newline()
 			writer.newline()
 		else:
 			# 'fileOrPath' must now be a path
 			path, ext = os.path.splitext(fileOrPath)
 			fileNameTemplate = path + ".%s" + ext
-			collection = xmlWriter.XMLWriter(fileOrPath)
-			collection.begintag("ttFont", sfntVersion=`self.sfntVersion`[1:-1], 
-					ttLibVersion=version)
-			collection.newline()
 		
 		for i in range(numTables):
 			tag = tables[i]
 			xmlTag = tagToXML(tag)
 			if splitTables:
 				tablePath = fileNameTemplate % tagToIdentifier(tag)
-				writer = xmlWriter.XMLWriter(tablePath)
-				writer.begintag("ttFont", ttLibVersion=version)
+				tableWriter = xmlWriter.XMLWriter(tablePath)
+				tableWriter.begintag("ttFont", ttLibVersion=version)
+				tableWriter.newline()
+				tableWriter.newline()
+				writer.simpletag(xmlTag, src=os.path.basename(tablePath))
 				writer.newline()
-				writer.newline()
-				collection.simpletag(xmlTag, src=os.path.basename(tablePath))
-				collection.newline()
-			if self.has_key(tag):
-				table = self[tag]
-				report = "Dumping '%s' table..." % tag
 			else:
-				report = "No '%s' table found." % tag
-			if progress:
-				progress.setlabel(report)
-			elif self.verbose:
-				debugmsg(report)
-			else:
-				print report
-			if not self.has_key(tag):
-				continue
-			if hasattr(table, "ERROR"):
-				writer.begintag(xmlTag, ERROR="decompilation error")
-			else:
-				writer.begintag(xmlTag)
-			writer.newline()
-			if tag in ("glyf", "CFF "):
-				table.toXML(writer, self, progress)
-			else:
-				table.toXML(writer, self)
-			writer.endtag(xmlTag)
-			writer.newline()
-			writer.newline()
+				tableWriter = writer
+			self._tableToXML(tableWriter, tag, xmlTag, progress)
 			if splitTables:
-				writer.endtag("ttFont")
-				writer.newline()
-				writer.close()
+				tableWriter.endtag("ttFont")
+				tableWriter.newline()
+				tableWriter.close()
 			if progress:
 				progress.set(i * numGlyphs, numTables * numGlyphs)
-		if not splitTables:
-			writer.endtag("ttFont")
-			writer.newline()
-			writer.close()
-		else:
-			collection.endtag("ttFont")
-			collection.newline()
-			collection.close()
+		writer.endtag("ttFont")
+		writer.newline()
+		writer.close()
 		if self.verbose:
 			debugmsg("Done dumping TTX")
+	
+	def _tableToXML(self, writer, tag, xmlTag, progress):
+		if self.has_key(tag):
+			table = self[tag]
+			report = "Dumping '%s' table..." % tag
+		else:
+			report = "No '%s' table found." % tag
+		if progress:
+			progress.setlabel(report)
+		elif self.verbose:
+			debugmsg(report)
+		else:
+			print report
+		if not self.has_key(tag):
+			return
+		if hasattr(table, "ERROR"):
+			writer.begintag(xmlTag, ERROR="decompilation error")
+		else:
+			writer.begintag(xmlTag)
+		writer.newline()
+		if tag in ("glyf", "CFF "):
+			table.toXML(writer, self, progress)
+		else:
+			table.toXML(writer, self)
+		writer.endtag(xmlTag)
+		writer.newline()
+		writer.newline()
 	
 	def importXML(self, file, progress=None):
 		"""Import a TTX file (an XML-based text format), so as to recreate
