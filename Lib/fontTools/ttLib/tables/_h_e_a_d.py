@@ -63,6 +63,8 @@ class table__h_e_a_d(DefaultTable.DefaultTable):
 			if name in ("created", "modified"):
 				value = time.asctime(time.gmtime(max(0, value + mac_epoch_diff)))
 			if name in ("magicNumber", "checkSumAdjustment"):
+				if value < 0:
+					value = value + 0x100000000L
 				value = hex(value)
 				if value[-1:] == "L":
 					value = value[:-1]
