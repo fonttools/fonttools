@@ -2,7 +2,13 @@
 
 """\
 usage: %s [-h] [-v] [-i TrueType-input-file] XML-file [TrueType-output-file]
-    -i TrueType-input-file: specify a TT file to be merged with the XML file
+    Translate an XML file (as output by tt2xml.py) to a TrueType font file. 
+    If the XML-file argument is a directory instead of a file, all files 
+    ending in '.xml' will be merged into one TrueType file. This is mostly 
+    useful in conjunction with the -s option of tt2xml.py.
+
+    Options:
+    -i TrueType-input-file: specify a TT file to be merged with the XML file(s)
     -v verbose: messages will be written to stdout about what is being done
     -b Don't recalc glyph boundig boxes: use the values in the XML file as-is.
     -h help: print this message
@@ -37,7 +43,14 @@ else:
 	sys.exit(2)
 
 tt = ttLib.TTFont(ttInFile, recalcBBoxes=recalcBBoxes, verbose=verbose)
-tt.importXML(xmlPath)
+
+if os.path.isdir(xmlPath):
+	import glob
+	os.chdir(xmlPath)
+	for xmlFile in glob.glob("*.xml"):
+		tt.importXML(xmlFile)
+else:
+	tt.importXML(xmlPath)
 tt.save(ttPath)
 del tt
 if verbose:
