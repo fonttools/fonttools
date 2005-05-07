@@ -780,7 +780,8 @@ class T2OutlineExtractor(SimpleT2Decompiler):
 	#
 	def op_hflex(self, index):
 		dx1, dx2, dy2, dx3, dx4, dx5, dx6 = self.popall()
-		dy1 = dy3 = dy4 = dy5 = dy6 = 0
+		dy1 = dy3 = dy4 = dy6 = 0
+		dy5 = -dy2
 		self.rCurveTo((dx1, dy1), (dx2, dy2), (dx3, dy3))
 		self.rCurveTo((dx4, dy4), (dx5, dy5), (dx6, dy6))
 	def op_flex(self, index):
@@ -789,7 +790,9 @@ class T2OutlineExtractor(SimpleT2Decompiler):
 		self.rCurveTo((dx4, dy4), (dx5, dy5), (dx6, dy6))
 	def op_hflex1(self, index):
 		dx1, dy1, dx2, dy2, dx3, dx4, dx5, dy5, dx6 = self.popall()
-		dy3 = dy4 = dy6 = 0
+		dy3 = dy4 = 0
+		dy6 = -(dy1 + dy2 + dy3 + dy4 + dy5)
+
 		self.rCurveTo((dx1, dy1), (dx2, dy2), (dx3, dy3))
 		self.rCurveTo((dx4, dy4), (dx5, dy5), (dx6, dy6))
 	def op_flex1(self, index):
@@ -798,9 +801,9 @@ class T2OutlineExtractor(SimpleT2Decompiler):
 		dy = dy1 + dy2 + dy3 + dy4 + dy5
 		if abs(dx) > abs(dy):
 			dx6 = d6
-			dy6 = 0
+			dy6 = -dy
 		else:
-			dx6 = 0
+			dx6 = -dx
 			dy6 = d6
 		self.rCurveTo((dx1, dy1), (dx2, dy2), (dx3, dy3))
 		self.rCurveTo((dx4, dy4), (dx5, dy5), (dx6, dy6))
