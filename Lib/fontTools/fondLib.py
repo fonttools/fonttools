@@ -12,6 +12,7 @@ error = "fondLib.error"
 DEBUG = 0
 
 headerformat = """
+	>
 	ffFlags:	h
 	ffFamID:	h
 	ffFirstChar:	h
@@ -127,9 +128,9 @@ class FontFamily:
 	def _getheader(self):
 		data = self.FOND.data
 		sstruct.unpack(headerformat, data[:28], self)
-		self.ffProperty = struct.unpack("9h", data[28:46])
-		self.ffIntl = struct.unpack("hh", data[46:50])
-		self.ffVersion, = struct.unpack("h", data[50:FONDheadersize])
+		self.ffProperty = struct.unpack(">9h", data[28:46])
+		self.ffIntl = struct.unpack(">hh", data[46:50])
+		self.ffVersion, = struct.unpack(">h", data[50:FONDheadersize])
 		
 		if DEBUG:
 			self._rawheader = data[:FONDheadersize]
@@ -137,9 +138,9 @@ class FontFamily:
 	
 	def _buildheader(self):
 		header = sstruct.pack(headerformat, self)
-		header = header + apply(struct.pack, ("9h",) + self.ffProperty)
-		header = header + apply(struct.pack, ("hh",) + self.ffIntl)
-		header = header + struct.pack("h", self.ffVersion)
+		header = header + apply(struct.pack, (">9h",) + self.ffProperty)
+		header = header + apply(struct.pack, (">hh",) + self.ffIntl)
+		header = header + struct.pack(">h", self.ffVersion)
 		if DEBUG:
 			print "header is the same?", self._rawheader == header and 'yes.' or 'no.'
 			if self._rawheader <> header:
@@ -149,12 +150,12 @@ class FontFamily:
 	def _getfontassociationtable(self):
 		data = self.FOND.data
 		offset = FONDheadersize
-		numberofentries, = struct.unpack("h", data[offset:offset+2])
+		numberofentries, = struct.unpack(">h", data[offset:offset+2])
 		numberofentries = numberofentries + 1
 		size = numberofentries * 6
 		self.fontAssoc = []
 		for i in range(offset + 2, offset + size, 6):
-			self.fontAssoc.append(struct.unpack("3h", data[i:i+6]))
+			self.fontAssoc.append(struct.unpack(">3h", data[i:i+6]))
 		
 		self._endoffontassociationtable = offset + size + 2
 		if DEBUG:
@@ -162,9 +163,9 @@ class FontFamily:
 			self.parsedthings.append((offset, self._endoffontassociationtable, 'fontassociationtable'))
 	
 	def _buildfontassociationtable(self):
-		data = struct.pack("h", len(self.fontAssoc) - 1)
+		data = struct.pack(">h", len(self.fontAssoc) - 1)
 		for size, stype, ID in self.fontAssoc:
-			data = data + struct.pack("3h", size, stype, ID)
+			data = data + struct.pack(">3h", size, stype, ID)
 		
 		if DEBUG:
 			print "font association table is the same?", self._rawfontassociationtable == data and 'yes.' or 'no.'
@@ -194,10 +195,10 @@ class FontFamily:
 			return
 		boxes = {}
 		data = self._rawoffsettable[6:]
-		numstyles = struct.unpack("h", data[:2])[0] + 1
+		numstyles = struct.unpack(">h", data[:2])[0] + 1
 		data = data[2:]
 		for i in range(numstyles):
-			style, l, b, r, t = struct.unpack("hhhhh", data[:10])
+			style, l, b, r, t = struct.unpack(">hhhhh", data[:10])
 			boxes[style] = (l, b, r, t)
 			data = data[10:]
 		self.boundingBoxes = boxes
@@ -206,9 +207,9 @@ class FontFamily:
 		if self.boundingBoxes and self._rawoffsettable[:6] == '\0\0\0\0\0\6':
 			boxes = self.boundingBoxes.items()
 			boxes.sort()
-			data = '\0\0\0\0\0\6' + struct.pack("h", len(boxes) - 1)
+			data = '\0\0\0\0\0\6' + struct.pack(">h", len(boxes) - 1)
 			for style, (l, b, r, t) in boxes:
-				data = data + struct.pack("hhhhh", style, l, b, r, t)
+				data = data + struct.pack(">hhhhh", style, l, b, r, t)
 			self._rawoffsettable = data
 	
 	def _getglyphwidthtable(self):
@@ -217,15 +218,15 @@ class FontFamily:
 			return
 		data = self.FOND.data
 		offset = self.ffWTabOff
-		numberofentries, = struct.unpack("h", data[offset:offset+2])
+		numberofentries, = struct.unpack(">h", data[offset:offset+2])
 		numberofentries = numberofentries + 1
 		count = offset + 2
 		for i in range(numberofentries):
-			stylecode, = struct.unpack("h", data[count:count+2])
+			stylecode, = struct.unpack(">h", data[count:count+2])
 			widthtable = self.widthTables[stylecode] = []
 			count = count + 2
 			for j in range(3 + self.ffLastChar - self.ffFirstChar):
-				width, = struct.unpack("h", data[count:count+2])
+				width, = struct.unpack(">h", data[count:count+2])
 				widthtable.append(width)
 				count = count + 2
 		
@@ -238,15 +239,15 @@ class FontFamily:
 			self._rawglyphwidthtable = ""
 			return
 		numberofentries = len(self.widthTables)
-		data = struct.pack('h', numberofentries - 1)
+		data = struct.pack('>h', numberofentries - 1)
 		tables = self.widthTables.items()
 		tables.sort()
 		for stylecode, table in tables:
-			data = data + struct.pack('h', stylecode)
+			data = data + struct.pack('>h', stylecode)
 			if len(table) <> (3 + self.ffLastChar - self.ffFirstChar):
 				raise error, "width table has wrong length"
 			for width in table:
-				data = data + struct.pack('h', width)
+				data = data + struct.pack('>h', width)
 		if DEBUG:
 			print "glyph width table is the same?", self._rawglyphwidthtable == data and 'yes.' or 'no.'
 		self._rawglyphwidthtable = data
@@ -257,17 +258,17 @@ class FontFamily:
 			return
 		data = self.FOND.data
 		offset = self.ffKernOff
-		numberofentries, = struct.unpack("h", data[offset:offset+2])
+		numberofentries, = struct.unpack(">h", data[offset:offset+2])
 		numberofentries = numberofentries + 1
 		count = offset + 2
 		for i in range(numberofentries):
-			stylecode, = struct.unpack("h", data[count:count+2])
+			stylecode, = struct.unpack(">h", data[count:count+2])
 			count = count + 2
-			numberofpairs, = struct.unpack("h", data[count:count+2])
+			numberofpairs, = struct.unpack(">h", data[count:count+2])
 			count = count + 2
 			kerntable = self.kernTables[stylecode] = []
 			for j in range(numberofpairs):
-				firstchar, secondchar, kerndistance = struct.unpack("cch", data[count:count+4])
+				firstchar, secondchar, kerndistance = struct.unpack(">cch", data[count:count+4])
 				kerntable.append((ord(firstchar), ord(secondchar), kerndistance))
 				count = count + 4
 		
@@ -281,14 +282,14 @@ class FontFamily:
 			self.ffKernOff = 0
 			return
 		numberofentries = len(self.kernTables)
-		data = [struct.pack('h', numberofentries - 1)]
+		data = [struct.pack('>h', numberofentries - 1)]
 		tables = self.kernTables.items()
 		tables.sort()
 		for stylecode, table in tables:
-			data.append(struct.pack('h', stylecode))
-			data.append(struct.pack('h', len(table)))  # numberofpairs
+			data.append(struct.pack('>h', stylecode))
+			data.append(struct.pack('>h', len(table)))  # numberofpairs
 			for firstchar, secondchar, kerndistance in table:
-				data.append(struct.pack("cch", chr(firstchar), chr(secondchar), kerndistance))
+				data.append(struct.pack(">cch", chr(firstchar), chr(secondchar), kerndistance))
 		
 		data = string.join(data, '')
 		
@@ -308,9 +309,9 @@ class FontFamily:
 			return
 		data = self.FOND.data
 		self.fondClass, self.glyphTableOffset, self.styleMappingReserved, = \
-				struct.unpack("hll", data[offset:offset+10])
-		self.styleIndices = struct.unpack('48b', data[offset + 10:offset + 58])
-		stringcount, = struct.unpack('h', data[offset+58:offset+60])
+				struct.unpack(">hll", data[offset:offset+10])
+		self.styleIndices = struct.unpack('>48b', data[offset + 10:offset + 58])
+		stringcount, = struct.unpack('>h', data[offset+58:offset+60])
 		
 		count = offset + 60
 		for i in range(stringcount):
@@ -331,14 +332,14 @@ class FontFamily:
 		if not self.styleIndices:
 			self._rawstylemappingtable = ""
 			return
-		data = struct.pack("hll", self.fondClass, self.glyphTableOffset, 
+		data = struct.pack(">hll", self.fondClass, self.glyphTableOffset, 
 					self.styleMappingReserved)
 		
 		self._packstylestrings()
-		data = data + apply(struct.pack, ("48b",) + self.styleIndices)
+		data = data + apply(struct.pack, (">48b",) + self.styleIndices)
 		
 		stringcount = len(self.styleStrings)
-		data = data + struct.pack("h", stringcount)
+		data = data + struct.pack(">h", stringcount)
 		for string in self.styleStrings:
 			data = data + chr(len(string)) + string
 		
@@ -401,7 +402,7 @@ class FontFamily:
 		data = self._rawstylemappingtable
 		if not data:
 			return
-		data = data[:2] + struct.pack("l", self.glyphTableOffset) + data[6:]
+		data = data[:2] + struct.pack(">l", self.glyphTableOffset) + data[6:]
 		self._rawstylemappingtable = data
 	
 	def _getglyphencodingsubtable(self):
@@ -410,7 +411,7 @@ class FontFamily:
 			return
 		offset = self.ffStylOff + self.glyphTableOffset
 		data = self.FOND.data
-		numberofentries, = struct.unpack("h", data[offset:offset+2])
+		numberofentries, = struct.unpack(">h", data[offset:offset+2])
 		count = offset + 2
 		for i in range(numberofentries):
 			glyphcode = ord(data[count])
@@ -430,7 +431,7 @@ class FontFamily:
 			self._rawglyphencodingsubtable = ""
 			return
 		numberofentries = len(self.glyphEncoding)
-		data = struct.pack("h", numberofentries)
+		data = struct.pack(">h", numberofentries)
 		items = self.glyphEncoding.items()
 		items.sort()
 		for glyphcode, glyphname in items:
