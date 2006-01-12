@@ -13,11 +13,11 @@ postFormat = """
 	italicAngle:		16.16F		# italic angle in degrees			
 	underlinePosition:	h
 	underlineThickness:	h
-	isFixedPitch:		l
-	minMemType42:		l			# minimum memory if TrueType font is downloaded
-	maxMemType42:		l			# maximum memory if TrueType font is downloaded
-	minMemType1:		l			# minimum memory if Type1 font is downloaded
-	maxMemType1:		l			# maximum memory if Type1 font is downloaded
+	isFixedPitch:		L
+	minMemType42:		L			# minimum memory if TrueType font is downloaded
+	maxMemType42:		L			# maximum memory if TrueType font is downloaded
+	minMemType1:		L			# minimum memory if Type1 font is downloaded
+	maxMemType1:		L			# maximum memory if Type1 font is downloaded
 """
 
 postFormatSize = sstruct.calcsize(postFormat)

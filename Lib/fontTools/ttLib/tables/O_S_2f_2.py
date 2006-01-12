@@ -52,10 +52,10 @@ OS2_format_0 = """
 	yStrikeoutPosition:     h       # strikeout position
 	sFamilyClass:           h       # font family class and subclass
 	panose:                 10s     # panose classification number
-	ulUnicodeRange1:        l       # character range
-	ulUnicodeRange2:        l       # character range
-	ulUnicodeRange3:        l       # character range
-	ulUnicodeRange4:        l       # character range
+	ulUnicodeRange1:        L       # character range
+	ulUnicodeRange2:        L       # character range
+	ulUnicodeRange3:        L       # character range
+	ulUnicodeRange4:        L       # character range
 	achVendID:              4s      # font vendor identification
 	fsSelection:            H       # font selection flags
 	fsFirstCharIndex:       H       # first unicode character index
@@ -68,8 +68,8 @@ OS2_format_0 = """
 """
 
 OS2_format_1_addition =  """
-	ulCodePageRange1:   l
-	ulCodePageRange2:   l
+	ulCodePageRange1:   L
+	ulCodePageRange2:   L
 """
 
 OS2_format_2_addition =  OS2_format_1_addition + """
