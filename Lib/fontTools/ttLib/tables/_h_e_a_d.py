@@ -61,7 +61,10 @@ class table__h_e_a_d(DefaultTable.DefaultTable):
 		for name in names:
 			value = getattr(self, name)
 			if name in ("created", "modified"):
-				value = time.asctime(time.gmtime(max(0, value + mac_epoch_diff)))
+				try:
+					value = time.asctime(time.gmtime(max(0, value + mac_epoch_diff)))
+				except ValueError:
+					value = time.asctime(time.gmtime(0))
 			if name in ("magicNumber", "checkSumAdjustment"):
 				if value < 0:
 					value = value + 0x100000000L
