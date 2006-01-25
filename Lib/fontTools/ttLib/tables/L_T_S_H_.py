@@ -13,7 +13,7 @@ class table_L_T_S_H_(DefaultTable.DefaultTable):
 		version, numGlyphs = struct.unpack(">HH", data[:4])
 		data = data[4:]
 		assert version == 0, "unknown version: %s" % version
-		assert len(data) == numGlyphs, "numGlyphs doesn't match data length"
+		assert (len(data) % numGlyphs) < 4, "numGlyphs doesn't match data length"
 		# ouch: the assertion is not true in Chicago!
 		#assert numGlyphs == ttFont['maxp'].numGlyphs
 		yPels = array.array("B")
