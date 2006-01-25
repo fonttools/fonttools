@@ -15,9 +15,9 @@ class table__k_e_r_n(DefaultTable.DefaultTable):
 	
 	def decompile(self, data, ttFont):
 		version, nTables = struct.unpack(">HH", data[:4])
-		if version == 1:
-			# Apple's new format. Hm.
-			version, nTables = struct.unpack(">ll", data[:8])
+		if (len(data) >= 8) and (version == 1):
+			# AAT Apple's new format. Hm.
+			version, nTables = struct.unpack(">LL", data[:8])
 			self.version = version / float(0x10000)
 			data = data[8:]
 		else:
@@ -42,14 +42,18 @@ class table__k_e_r_n(DefaultTable.DefaultTable):
 			data = data[length:]
 	
 	def compile(self, ttFont):
-		nTables = len(self.kernTables)
+		if hasattr(self, "kernTables"):
+			nTables = len(self.kernTables)
+		else:
+			nTables = 0
 		if self.version == 1.0:
-			# Apple's new format.
+			# AAT Apple's new format.
 			data = struct.pack(">ll", self.version * 0x10000, nTables)
 		else:
 			data = struct.pack(">HH", self.version, nTables)
-		for subtable in self.kernTables:
-			data = data + subtable.compile(ttFont)
+		if hasattr(self, "kernTables"):
+			for subtable in self.kernTables:
+				data = data + subtable.compile(ttFont)
 		return data
 	
 	def toXML(self, writer, ttFont):
