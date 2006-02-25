@@ -121,6 +121,8 @@ t2Operators = [
 	(29,       'callgsubr'),
 	(30,       'vhcurveto'),
 	(31,       'hvcurveto'),
+	((12, 0),  'ignore'),  # dotsection. Yes, there a few very early OTF/CFF
+	                   # fonts with this deprecated operator. Just ignore it.
 	((12, 3),  'and'),
 	((12, 4),  'or'),
 	((12, 5),  'not'),
@@ -551,7 +553,10 @@ class SimpleT2Decompiler:
 	
 	def op_endchar(self, index):
 		pass
-	
+
+	def op_ignore(self, index):
+		pass
+
 	def op_callsubr(self, index):
 		subrIndex = self.pop()
 		subr = self.localSubrs[subrIndex+self.localBias]
