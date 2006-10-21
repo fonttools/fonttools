@@ -7,11 +7,15 @@ def _moduleFinderHint():
 	import C_F_F_
 	import D_S_I_G_
 	import G_D_E_F_
+	import G_M_A_P_
+	import G_P_K_G_
 	import G_P_O_S_
 	import G_S_U_B_
 	import J_S_T_F_
 	import L_T_S_H_
+	import M_E_T_A_
 	import O_S_2f_2
+	import S_I_N_G_
 	import T_S_I_B_
 	import T_S_I_D_
 	import T_S_I_J_
