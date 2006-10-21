@@ -357,9 +357,9 @@ otData = [
 	]),
 
 	('ExtensionPosFormat1', [
-		('USHORT', 'PosFormat', None, None, 'Format identifier. Set to 1.'),
+		('USHORT', 'ExtFormat', None, None, 'Format identifier. Set to 1.'),
 		('USHORT', 'ExtensionLookupType', None, None, 'Lookup type of subtable referenced by ExtensionOffset (i.e. the extension subtable).'),
-		('ULONG', 'ExtensionOffset', None, None, 'Offset to the extension subtable, of lookup type ExtensionLookupType, relative to the start of the ExtensionPosFormat1 subtable.'),
+		('LOffset', 'ExtSubTable', None, None, 'Array of offsets to Lookup tables-from beginning of LookupList -zero based (first lookup is Lookup index = 0)'),
 	]),
 
 	('ValueRecord', [
@@ -585,9 +585,9 @@ otData = [
 	]),
 
 	('ExtensionSubstFormat1', [
-		('USHORT', 'SubstFormat', None, None, 'Format identifier. Set to 1.'),
+		('USHORT', 'ExtFormat', None, None, 'Format identifier. Set to 1.'),
 		('USHORT', 'ExtensionLookupType', None, None, 'Lookup type of subtable referenced by ExtensionOffset (i.e. the extension subtable).'),
-		('ULONG', 'ExtensionOffset', None, None, 'Offset to the extension subtable, of lookup type ExtensionLookupType, relative to the start of the ExtensionSubstFormat1 subtable.'),
+		('LOffset', 'ExtSubTable', None, None, 'Array of offsets to Lookup tables-from beginning of LookupList -zero based (first lookup is Lookup index = 0)'),
 	]),
 
 	('ReverseChainSingleSubstFormat1', [

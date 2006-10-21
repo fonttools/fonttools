@@ -19,6 +19,7 @@ usage: ttx [options] inputfile1 [... inputfileN]
        to be created.
     -v Verbose: more messages will be written to stdout about what
        is being done.
+    -a allow virtual glyphs ID's on compile or decompile.
 
     Dump options:
     -l List table info: instead of dumping to a TTX file, list some
@@ -53,6 +54,8 @@ import os
 import getopt
 import re
 from fontTools.ttLib import TTFont
+from fontTools.ttLib.tables.otBase import OTLOffsetOverflowError
+from fontTools.ttLib.tables.otTables import fixLookupOverFlows, fixSubTableOverFlows
 from fontTools import version
 
 def usage():
@@ -93,6 +96,7 @@ class Options:
 	disassembleInstructions = 1
 	mergeFile = None
 	recalcBBoxes = 1
+	allowVID = 0
 	
 	def __init__(self, rawOptions, numFiles):
 		self.onlyTables = []
@@ -125,6 +129,8 @@ class Options:
 				self.mergeFile = value
 			elif option == "-b":
 				self.recalcBBoxes = 0
+			elif option == "-a":
+				self.allowVID = 1
 		if self.onlyTables and self.skipTables:
 			print "-t and -x options are mutually exclusive"
 			sys.exit(2)
@@ -156,7 +162,7 @@ def ttList(input, output, options):
 
 def ttDump(input, output, options):
 	print 'Dumping "%s" to "%s"...' % (input, output)
-	ttf = TTFont(input, 0, verbose=options.verbose)
+	ttf = TTFont(input, 0, verbose=options.verbose, allowVID=options.allowVID)
 	ttf.saveXML(output,
 			tables=options.onlyTables,
 			skipTables=options.skipTables, 
@@ -169,9 +175,31 @@ def ttCompile(input, output, options):
 	print 'Compiling "%s" to "%s"...' % (input, output)
 	ttf = TTFont(options.mergeFile,
 			recalcBBoxes=options.recalcBBoxes,
-			verbose=options.verbose)
+			verbose=options.verbose, allowVID=options.allowVID)
 	ttf.importXML(input)
-	ttf.save(output)
+	try:
+		ttf.save(output)
+	except OTLOffsetOverflowError, e:
+		overflowRecord = e.value
+		print "Attempting to fix OTLOffsetOverflowError", e
+		lastItem = overflowRecord 
+		while 1:
+			ok = 0
+			if overflowRecord.itemName == None:
+				ok = fixLookupOverFlows(ttf, overflowRecord)
+			else:
+				ok = fixSubTableOverFlows(ttf, overflowRecord)
+			if not ok:
+				raise
+
+			try:
+				ttf.save(output)
+				break
+			except OTLOffsetOverflowError, e:
+				print "Attempting to fix OTLOffsetOverflowError", e
+				overflowRecord = e.value
+				if overflowRecord == lastItem:
+					raise
 
 	if options.verbose:
 		import time
@@ -211,7 +239,7 @@ def guessFileType(fileName):
 
 def parseOptions(args):
 	try:
-		rawOptions, files = getopt.getopt(args, "ld:vht:x:sim:b")
+		rawOptions, files = getopt.getopt(args, "ld:vht:x:sim:ba")
 	except getopt.GetoptError:
 		usage()
 	

@@ -3,6 +3,24 @@ import otData
 import struct
 from types import TupleType
 
+class OverflowErrorRecord:
+	def __init__(self, overflowTuple):
+		self.tableType = overflowTuple[0]
+		self.LookupListIndex = overflowTuple[1]
+		self.SubTableIndex = overflowTuple[2]
+		self.itemName = overflowTuple[3]
+		self.itemIndex = overflowTuple[4]
+
+	def __repr__(self):
+		return str((self.tableType, "LookupIndex:", self.LookupListIndex, "SubTableIndex:", self.SubTableIndex, "ItemName:", self.itemName, "ItemIndex:", self.itemIndex))
+
+class OTLOffsetOverflowError(Exception):
+	def __init__(self, overflowErrorRecord):
+		self.value = overflowErrorRecord
+
+	def __str__(self):
+		return repr(self.value)
+
 
 class BaseTTXConverter(DefaultTable):
 	
@@ -30,10 +48,31 @@ class BaseTTXConverter(DefaultTable):
 			print "---", len(stats)
 	
 	def compile(self, font):
+		""" Create a top-level OTFWriter for the GPOS/GSUB table.
+			Call the compile method for the the table
+				for each 'convertor' record in the table convertor list
+					call convertor's write method for each item in the value. 
+						- For simple items, the write method adds a string to the
+						writer's self.items list. 
+						- For Struct/Table/Subtabl items, it add first adds new writer to the 
+						to the writer's self.items, then calls the item's compile method.
+						This creates a tree of writers, rooted at the GUSB/GPOS writer, with
+						each writer representing a table, and the writer.items list containing
+						the child data strings and writers.
+			call the GetAllData method
+				call _doneWriting, which removes duplicates
+				call _GetTables. This traverses the tables, adding unique occurences to a flat list of tables
+				Traverse the flat list of tables, calling GetDataLength on each to update their position
+				Traverse the flat list of tables again, calling GetData each get the data in the table, now that
+				pas's and offset are known.
+
+				If a lookup subtable overflows an offset, we have to start all over. 
+		"""
 		writer = OTTableWriter(self.tableTag)
+		writer.parent = None
 		self.table.compile(writer, font)
 		return writer.getAllData()
-	
+
 	def toXML(self, writer, font):
 		self.table.toXML2(writer, font)
 	
@@ -92,6 +131,13 @@ class OTTableReader:
 		self.pos = newpos
 		return value
 	
+	def readULong(self):
+		pos = self.pos
+		newpos = pos + 4
+		value, = struct.unpack(">L", self.data[pos:newpos])
+		self.pos = newpos
+		return value
+	
 	def readTag(self):
 		pos = self.pos
 		newpos = pos + 4
@@ -135,29 +181,45 @@ class OTTableWriter:
 	def getAllData(self):
 		"""Assemble all data, including all subtables."""
 		self._doneWriting()
-		tables = self._gatherTables()
+		tables, extTables = self._gatherTables()
 		tables.reverse()
-		
+		extTables.reverse()
 		# Gather all data in two passes: the absolute positions of all
 		# subtable are needed before the actual data can be assembled.
 		pos = 0
 		for table in tables:
 			table.pos = pos
 			pos = pos + table.getDataLength()
-		
+
+		for table in extTables:
+			table.pos = pos
+			pos = pos + table.getDataLength()
+
+
 		data = []
 		for table in tables:
 			tableData = table.getData()
 			data.append(tableData)
-		
+
+		for table in extTables:
+			tableData = table.getData()
+			data.append(tableData)
+
 		return "".join(data)
 	
 	def getDataLength(self):
 		"""Return the length of this table in bytes, without subtables."""
 		l = 0
+		if hasattr(self, "Extension"):
+			longOffset = 1
+		else:
+			longOffset = 0
 		for item in self.items:
 			if hasattr(item, "getData") or hasattr(item, "getCountData"):
-				l = l + 2  # sizeof(UShort)
+				if longOffset:
+					l = l + 4  # sizeof(ULong)
+				else:
+					l = l + 2  # sizeof(UShort)
 			else:
 				l = l + len(item)
 		return l
@@ -165,10 +227,60 @@ class OTTableWriter:
 	def getData(self):
 		"""Assemble the data for this writer/table, without subtables."""
 		items = list(self.items)  # make a shallow copy
-		for i in range(len(items)):
+		if hasattr(self,"Extension"):
+			longOffset = 1
+		else:
+			longOffset = 0
+		pos = self.pos
+		numItems = len(items)
+		for i in range(numItems):
 			item = items[i]
+			
 			if hasattr(item, "getData"):
-				items[i] = packUShort(item.pos - self.pos)
+				if longOffset:
+					items[i] = packULong(item.pos - pos)
+				else:
+					try:
+						items[i] = packUShort(item.pos - pos)
+					except AssertionError:
+						# provide data to fix overflow problem.
+						# If the overflow is to a lookup, or from a lookup to a subtable, 
+						# just report the current item.
+						if self.name in [ 'LookupList', 'Lookup']:
+							overflowErrorRecord = self.getOverflowErrorRecord(item)
+						else:
+							# overflow is within a subTable. Life is more complicated.
+							# If we split the sub-table just before the current item, we may still suffer overflow.
+							# This is because duplicate table merging is done only within an Extension subTable tree;
+							# when we split the subtable in two, some items may no longer be duplicates. 
+							# Get worst case by adding up all the item lengths, depth first traversal.
+							# and then report the first item that overflows a short.
+							def getDeepItemLength(table):
+								if hasattr(table, "getDataLength"):
+									length = 0
+									for item in table.items:
+										length = length + getDeepItemLength(item)
+								else:
+									length = len(table)
+								return length
+	
+							length = self.getDataLength()
+							if hasattr(self, "sortCoverageLast") and item.name == "Coverage":
+								# Coverage is first in the item list, but last in the table list,
+								# The original overflow is really in the item list. Skip the Coverage 
+								# table in the following test.
+								items = items[i+1:]
+	
+							for j in range(len(items)):
+								item = items[j]
+								length = length + getDeepItemLength(item)
+								if length > 65535:
+									break
+						overflowErrorRecord = self.getOverflowErrorRecord(item)
+						
+						
+						raise OTLOffsetOverflowError, overflowErrorRecord
+
 		return "".join(items)
 	
 	def __hash__(self):
@@ -182,38 +294,109 @@ class OTTableWriter:
 			return cmp(id(self), id(other))
 	
 	def _doneWriting(self, internedTables=None):
+		# Convert CountData references to data string items
+		# collapse duplicate table references to a unique entry
+		# "tables" are OTTableWriter objects.
+
+		# For Extension Lookup types, we can
+		# eliminate duplicates only within the tree under the Extension Lookup,
+		# as offsets may exceed 64K even between Extension LookupTable subtables.
 		if internedTables is None:
 			internedTables = {}
 		items = self.items
-		for i in range(len(items)):
+		iRange = range(len(items))
+		
+		if hasattr(self, "Extension"):
+			newTree = 1
+		else:
+			newTree = 0
+		for i in iRange:
 			item = items[i]
 			if hasattr(item, "getCountData"):
 				items[i] = item.getCountData()
 			elif hasattr(item, "getData"):
-				item._doneWriting(internedTables)
-				if internedTables.has_key(item):
-					items[i] = item = internedTables[item]
+				if newTree:
+					item._doneWriting()
 				else:
-					internedTables[item] = item
+					item._doneWriting(internedTables)
+					if internedTables.has_key(item):
+						items[i] = item = internedTables[item]
+					else:
+						internedTables[item] = item
 		self.items = tuple(items)
 	
-	def _gatherTables(self, tables=None, done=None):
-		if tables is None:
+	def _gatherTables(self, tables=None, extTables=None, done=None):
+		# Convert table references in self.items tree to a flat
+		# list of tables in depth-first traversal order.
+		# "tables" are OTTableWriter objects.
+		# We do the traversal in reverse order at each level, in order to 
+		# resolve duplicate references to be the last reference in the list of tables.
+		# For extension lookups, duplicate references can be merged only within the
+		# writer tree under the  extension lookup.
+		if tables is None: # init call for first time.
 			tables = []
+			extTables = []
 			done = {}
-		for item in self.items:
+
+		done[self] = 1
+
+		numItems = len(self.items)
+		iRange = range(numItems)
+		iRange.reverse()
+
+		if hasattr(self, "Extension"):
+			appendExtensions = 1
+		else:
+			appendExtensions = 0
+
+		# add Coverage table if it is sorted last.
+		sortCoverageLast = 0
+		if hasattr(self, "sortCoverageLast"):
+			# Find coverage table
+			for i in range(numItems):
+				item = self.items[i]
+				if hasattr(item, "name") and (item.name == "Coverage"):
+					sortCoverageLast = 1
+					break
+			if not done.has_key(item):
+				item._gatherTables(tables, extTables, done)
+			else:
+				index = max(item.parent.keys())
+				item.parent[index + 1] = self
+
+		saveItem = None
+		for i in iRange:
+			item = self.items[i]
 			if not hasattr(item, "getData"):
 				continue
-			if not done.has_key(item):
-				item._gatherTables(tables, done)
-		done[self] = 1
+
+			if sortCoverageLast and (i==1) and item.name == 'Coverage':
+				# we've already 'gathered' it above
+				continue
+
+			if appendExtensions:
+				assert extTables != None, "Program or XML editing error. Extension subtables cannot contain extensions subtables"
+				newDone = {}
+				item._gatherTables(extTables, None, newDone)
+
+			elif not done.has_key(item):
+				item._gatherTables(tables, extTables, done)
+			else:
+				index = max(item.parent.keys())
+				item.parent[index + 1] = self
+
+
 		tables.append(self)
-		return tables
+		return tables, extTables
 	
 	# interface for gathering data, as used by table.compile()
 	
 	def getSubWriter(self):
-		return self.__class__(self.tableType, self.valueFormat)
+		subwriter = self.__class__(self.tableType, self.valueFormat)
+		subwriter.parent = {0:self} # because some subtables have idential values, we discard
+									# the duplicates under the getAllData method. Hence some
+									# subtable writers can have more than one parent writer.
+		return subwriter
 	
 	def writeUShort(self, value):
 		assert 0 <= value < 0x10000
@@ -224,6 +407,9 @@ class OTTableWriter:
 	
 	def writeLong(self, value):
 		self.items.append(struct.pack(">l", value))
+	
+	def writeULong(self, value):
+		self.items.append(struct.pack(">L", value))
 	
 	def writeTag(self, tag):
 		assert len(tag) == 4
@@ -239,11 +425,47 @@ class OTTableWriter:
 		data = apply(struct.pack, (format,) + values)
 		self.items.append(data)
 	
+	def writeData(self, data):
+		self.items.append(data)
+	
 	def setValueFormat(self, format, which):
 		self.valueFormat[which].setFormat(format)
 	
 	def writeValueRecord(self, value, font, which):
 		return self.valueFormat[which].writeValueRecord(self, font, value)
+
+	def	getOverflowErrorRecord(self, item):
+		LookupListIndex = SubTableIndex = itemName = itemIndex = None
+		if self.name == 'LookupList':
+			LookupListIndex = item.repeatIndex
+		elif self.name == 'Lookup':
+			LookupListIndex = self.repeatIndex
+			SubTableIndex = item.repeatIndex
+		else:
+			itemName = item.name
+			if hasattr(item, 'repeatIndex'):
+				itemIndex = item.repeatIndex
+			if self.name == 'SubTable':
+				LookupListIndex = self.parent[0].repeatIndex
+				SubTableIndex = self.repeatIndex
+			elif self.name == 'ExtSubTable':
+				LookupListIndex = self.parent[0].parent[0].repeatIndex
+				SubTableIndex = self.parent[0].repeatIndex
+			else: # who knows how far below the SubTable level we are! Climb back up to the nearest subtable.
+				itemName = ".".join(self.name, item.name)
+				p1 = self.parent[0]
+				while p1 and p1.name not in ['ExtSubTable', 'SubTable']:
+					itemName = ".".join(p1.name, item.name)
+					p1 = p1.parent[0]
+				if p1:
+					if p1.name == 'ExtSubTable':
+						LookupListIndex = self.parent[0].parent[0].repeatIndex
+						SubTableIndex = self.parent[0].repeatIndex
+					else:
+						LookupListIndex = self.parent[0].repeatIndex
+						SubTableIndex = self.repeatIndex
+
+		return OverflowErrorRecord( (self.tableType, LookupListIndex, SubTableIndex, itemName, itemIndex) )
 
 
 class CountReference:
@@ -258,6 +480,11 @@ class CountReference:
 def packUShort(value):
 	assert 0 <= value < 0x10000, value
 	return struct.pack(">H", value)
+
+
+def packULong(value):
+	assert 0 <= value < 0x1000000000, value
+	return struct.pack(">L", value)
 
 
 
@@ -288,7 +515,38 @@ class TableStack:
 
 
 class BaseTable:
+	def __init__(self):
+		self.compileStatus = 0 # 0 means table was created
+									# 1 means the table.read() function was called by a table which is subject
+									# to delayed compilation
+									# 2 means that it was subject to delayed compilation, and 
+									# has been decompiled
+									# 3 means that the start and end fields have been filled out, and that we
+									# can use the data string rather than compiling from the table data.
+
+		self.recurse = 0
 	
+	def __getattr__(self, attr):
+		# we get here only when the table does not have the attribute.
+		# This method ovveride exists so that we can try to de-compile
+		# a table which is subject to delayed decompilation, and then try
+		# to get the value again after decompilation.
+		self.recurse +=1
+		if self.recurse > 2:
+			# shouldn't ever get here - we should only get to two levels of recursion.
+			# this guards against self.decompile NOT setting compileStatus to other than 1.
+			raise AttributeError, attr 
+		if self.compileStatus == 1:
+			# table.read() has been called, but table has not yet been decompiled
+			# This happens only for extension tables.
+			self.decompile(self.reader, self.font)
+			val = getattr(self, attr)
+			self.recurse -=1
+			return val
+			
+		raise AttributeError, attr 
+
+
 	"""Generic base class for all OpenType (sub)tables."""
 	
 	def getConverters(self):
@@ -298,6 +556,7 @@ class BaseTable:
 		return self.convertersByName[name]
 	
 	def decompile(self, reader, font, tableStack=None):
+		self.compileStatus = 2 # table has been decompiled.
 		if tableStack is None:
 			tableStack = TableStack()
 		self.readFormat(reader)
@@ -308,6 +567,9 @@ class BaseTable:
 			if conv.name == "SubTable":
 				conv = conv.getConverter(reader.tableType,
 						table["LookupType"])
+			if conv.name == "ExtSubTable":
+				conv = conv.getConverter(reader.tableType,
+						table["ExtensionLookupType"])
 			if conv.repeat:
 				l = []
 				for i in range(tableStack.getValue(conv.repeat) + conv.repeatOffset):
@@ -318,11 +580,18 @@ class BaseTable:
 		tableStack.pop()
 		self.postRead(table, font)
 		del self.__rawTable  # succeeded, get rid of debugging info
-	
+
+	def preCompile(self):
+		pass # used only by the LookupList class
+
 	def compile(self, writer, font, tableStack=None):
 		if tableStack is None:
 			tableStack = TableStack()
 		table = self.preWrite(font)
+
+		if hasattr(self, 'sortCoverageLast'):
+			writer.sortCoverageLast = 1
+
 		self.writeFormat(writer)
 		tableStack.push(table)
 		for conv in self.getConverters():
@@ -331,8 +600,8 @@ class BaseTable:
 				if value is None:
 					value = []
 				tableStack.storeValue(conv.repeat, len(value) - conv.repeatOffset)
-				for item in value:
-					conv.write(writer, font, tableStack, item)
+				for i in range(len(value)):
+					conv.write(writer, font, tableStack, value[i], i)
 			elif conv.isCount:
 				# Special-case Count values.
 				# Assumption: a Count field will *always* precede
@@ -389,7 +658,6 @@ class BaseTable:
 		try:
 			conv = self.getConverterByName(name)
 		except KeyError:
-##			print self, name, attrs, content
 			raise    # XXX on KeyError, raise nice error
 		value = conv.xmlRead(attrs, content, font)
 		if conv.repeat:

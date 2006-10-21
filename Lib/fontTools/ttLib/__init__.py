@@ -42,7 +42,7 @@ Dumping 'prep' table...
 """
 
 #
-# $Id: __init__.py,v 1.47 2005-03-08 09:50:56 jvr Exp $
+# $Id: __init__.py,v 1.48 2006-10-21 14:12:38 jvr Exp $
 #
 
 import sys
@@ -70,7 +70,7 @@ class TTFont:
 	
 	def __init__(self, file=None, res_name_or_index=None,
 			sfntVersion="\000\001\000\000", checkChecksums=0,
-			verbose=0, recalcBBoxes=1):
+			verbose=0, recalcBBoxes=1, allowVID=0):
 		
 		"""The constructor can be called with a few different arguments.
 		When reading a font from disk, 'file' should be either a pathname
@@ -102,6 +102,17 @@ class TTFont:
 		to be compiled right away. This should reduce memory consumption 
 		greatly, and therefore should have some impact on the time needed 
 		to parse/compile large fonts.
+
+		If the allowVID argument is set to true, then virtual GID's are
+		supported. Asking for a glyph ID with a glyph name or GID that is not in
+		the font will return a virtual GID.   This is valid for GSUB and cmap
+		tables. For SING glyphlets, the cmap table is used to specify Unicode
+		values for virtual GI's used in GSUB/GPOS rules. If the gid Nis requested
+		and does not exist in the font, or the glyphname has the form glyphN
+		and does not exist in the font, then N is used as the virtual GID.
+		Else, the first virtual GID is assigned as 0x1000 -1; for subsequent new
+		virtual GIDs, the next is one less than the previous.
+		
 		"""
 		
 		import sfnt
@@ -109,6 +120,13 @@ class TTFont:
 		self.recalcBBoxes = recalcBBoxes
 		self.tables = {}
 		self.reader = None
+
+		# Permit the user to reference glyphs that are not int the font.
+		self.last_vid = 0xFFFE # Can't make it be 0xFFFF, as the world is full unsigned short integer counters that get incremented after the last seen GID value.
+		self.reverseVIDDict = {}
+		self.VIDDict = {}
+		self.allowVID = allowVID
+
 		if not file:
 			self.sfntVersion = sfntVersion
 			return
@@ -488,15 +506,26 @@ class TTFont:
 		from fontTools.misc import textTools
 		return textTools.caselessSort(self.getGlyphOrder())
 	
-	def getGlyphName(self, glyphID):
+	def getGlyphName(self, glyphID, requireReal=0):
 		try:
 			return self.getGlyphOrder()[glyphID]
 		except IndexError:
-			# XXX The ??.W8.otf font that ships with OSX uses higher glyphIDs in
-			# the cmap table than there are glyphs. I don't think it's legal...
-			return "glyph%.5d" % glyphID
-	
-	def getGlyphID(self, glyphName):
+			if requireReal or not self.allowVID:
+				# XXX The ??.W8.otf font that ships with OSX uses higher glyphIDs in
+				# the cmap table than there are glyphs. I don't think it's legal...
+				return "glyph%.5d" % glyphID
+			else:
+				# user intends virtual GID support 	
+				try:
+					glyphName = self.VIDDict[glyphID]
+				except KeyError:
+					glyphName  ="glyph%.5d" % glyphID
+					self.last_vid = min(glyphID, self.last_vid )
+					self.reverseVIDDict[glyphName] = glyphID
+					self.VIDDict[glyphID] = glyphName
+				return glyphName
+
+	def getGlyphID(self, glyphName, requireReal = 0):
 		if not hasattr(self, "_reverseGlyphOrderDict"):
 			self._buildReverseGlyphOrderDict()
 		glyphOrder = self.getGlyphOrder()
@@ -506,13 +535,37 @@ class TTFont:
 				self._buildReverseGlyphOrderDict()
 				return self.getGlyphID(glyphName)
 			else:
-				raise KeyError, glyphName
+				if requireReal or not self.allowVID:
+					raise KeyError, glyphName
+				else:
+					# user intends virtual GID support 	
+					try:
+						glyphID = self.reverseVIDDict[glyphName]
+					except KeyError:
+						# if name is in glyphXXX format, use the specified name.
+						if glyphName[:5] == "glyph":
+							try:
+								glyphID = int(glyphName[5:])
+							except (NameError, ValueError):
+								glyphID = None
+						if glyphID == None:
+							glyphID = self.last_vid -1
+							self.last_vid = glyphID
+						self.reverseVIDDict[glyphName] = glyphID
+						self.VIDDict[glyphID] = glyphName
+					return glyphID
+
 		glyphID = d[glyphName]
 		if glyphName <> glyphOrder[glyphID]:
 			self._buildReverseGlyphOrderDict()
 			return self.getGlyphID(glyphName)
 		return glyphID
-	
+
+	def getReverseGlyphMap(self, rebuild=0):
+		if rebuild or not hasattr(self, "_reverseGlyphOrderDict"):
+			self._buildReverseGlyphOrderDict()
+		return self._reverseGlyphOrderDict
+
 	def _buildReverseGlyphOrderDict(self):
 		self._reverseGlyphOrderDict = d = {}
 		glyphOrder = self.getGlyphOrder()
