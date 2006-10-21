@@ -1,7 +1,7 @@
 """cffLib.py -- read/write tools for Adobe CFF fonts."""
 
 #
-# $Id: cffLib.py,v 1.31 2003-08-25 07:37:25 jvr Exp $
+# $Id: cffLib.py,v 1.32 2006-10-21 13:41:18 jvr Exp $
 #
 
 import struct, sstruct
@@ -774,7 +774,7 @@ class CharsetConverter:
 				print "loading charset at %s" % value
 			format = readCard8(file)
 			if format == 0:
-				charset = parseCharset0(numGlyphs, file, parent.strings)
+				charset = parseCharset0(numGlyphs, file, parent.strings, isCID)
 			elif format == 1 or format == 2:
 				charset = parseCharset(numGlyphs, file, parent.strings, isCID, format)
 			else:
@@ -782,22 +782,18 @@ class CharsetConverter:
 			assert len(charset) == numGlyphs
 			if DEBUG:
 				print "    charset end at %s" % file.tell()
-		else:
-			if isCID or not hasattr(parent, "CharStrings"):
-				assert value == 0
+		else: # offset == 0 -> no charset data.
+			if isCID or not parent.rawDict.has_key("CharStrings"): 
+				assert value == 0 # We get here only when processing fontDicts from the FDArray of CFF-CID fonts. Only the real topDict references the chrset.
 				charset = None
 			elif value == 0:
-				charset = ISOAdobe
+				charset = cffISOAdobeStrings
 			elif value == 1:
-				charset = Expert
+				charset = cffIExpertStrings
 			elif value == 2:
-				charset = ExpertSubset
-			# self.charset:
-			#   0: ISOAdobe (or CID font!)
-			#   1: Expert
-			#   2: ExpertSubset
-			charset = None  # 
+				charset = cffExpertSubsetStrings
 		return charset
+
 	def write(self, parent, value):
 		return 0  # dummy value
 	def xmlWrite(self, xmlWriter, name, value, progress):
@@ -888,11 +884,16 @@ def packCharset(charset, isCID, strings):
 		data.append(packCard16(first) + nLeftFunc(nLeft))
 	return "".join(data)
 
-def parseCharset0(numGlyphs, file, strings):
+def parseCharset0(numGlyphs, file, strings, isCID):
 	charset = [".notdef"]
-	for i in range(numGlyphs - 1):
-		SID = readCard16(file)
-		charset.append(strings[SID])
+	if isCID:
+		for i in range(numGlyphs - 1):
+			CID = readCard16(file)
+			charset.append("cid" + string.zfill(str(CID), 5) )
+	else:
+		for i in range(numGlyphs - 1):
+			SID = readCard16(file)
+			charset.append(strings[SID])
 	return charset
 
 def parseCharset(numGlyphs, file, strings, isCID, format):
@@ -907,7 +908,7 @@ def parseCharset(numGlyphs, file, strings, isCID, format):
 		nLeft = nLeftFunc(file)
 		if isCID:
 			for CID in range(first, first+nLeft+1):
-				charset.append("cid" + str(CID) )
+				charset.append("cid" + string.zfill(str(CID), 5) )
 		else:
 			for SID in range(first, first+nLeft+1):
 				charset.append(strings[SID])
@@ -1700,3 +1701,97 @@ assert len(cffStandardStrings) == cffStandardStringCount
 cffStandardStringMapping = {}
 for _i in range(cffStandardStringCount):
 	cffStandardStringMapping[cffStandardStrings[_i]] = _i
+
+cffISOAdobeStrings = [".notdef", "space", "exclam", "quotedbl", "numbersign",
+"dollar", "percent", "ampersand", "quoteright", "parenleft", "parenright",
+"asterisk", "plus", "comma", "hyphen", "period", "slash", "zero", "one", "two",
+"three", "four", "five", "six", "seven", "eight", "nine", "colon", "semicolon",
+"less", "equal", "greater", "question", "at", "A", "B", "C", "D", "E", "F", "G",
+"H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W",
+"X", "Y", "Z", "bracketleft", "backslash", "bracketright", "asciicircum",
+"underscore", "quoteleft", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j",
+"k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
+"braceleft", "bar", "braceright", "asciitilde", "exclamdown", "cent",
+"sterling", "fraction", "yen", "florin", "section", "currency", "quotesingle",
+"quotedblleft", "guillemotleft", "guilsinglleft", "guilsinglright", "fi", "fl",
+"endash", "dagger", "daggerdbl", "periodcentered", "paragraph", "bullet",
+"quotesinglbase", "quotedblbase", "quotedblright", "guillemotright", "ellipsis",
+"perthousand", "questiondown", "grave", "acute", "circumflex", "tilde",
+"macron", "breve", "dotaccent", "dieresis", "ring", "cedilla", "hungarumlaut",
+"ogonek", "caron", "emdash", "AE", "ordfeminine", "Lslash", "Oslash", "OE",
+"ordmasculine", "ae", "dotlessi", "lslash", "oslash", "oe", "germandbls",
+"onesuperior", "logicalnot", "mu", "trademark", "Eth", "onehalf", "plusminus",
+"Thorn", "onequarter", "divide", "brokenbar", "degree", "thorn",
+"threequarters", "twosuperior", "registered", "minus", "eth", "multiply",
+"threesuperior", "copyright", "Aacute", "Acircumflex", "Adieresis", "Agrave",
+"Aring", "Atilde", "Ccedilla", "Eacute", "Ecircumflex", "Edieresis", "Egrave",
+"Iacute", "Icircumflex", "Idieresis", "Igrave", "Ntilde", "Oacute",
+"Ocircumflex", "Odieresis", "Ograve", "Otilde", "Scaron", "Uacute",
+"Ucircumflex", "Udieresis", "Ugrave", "Yacute", "Ydieresis", "Zcaron", "aacute",
+"acircumflex", "adieresis", "agrave", "aring", "atilde", "ccedilla", "eacute",
+"ecircumflex", "edieresis", "egrave", "iacute", "icircumflex", "idieresis",
+"igrave", "ntilde", "oacute", "ocircumflex", "odieresis", "ograve", "otilde",
+"scaron", "uacute", "ucircumflex", "udieresis", "ugrave", "yacute", "ydieresis",
+"zcaron"]
+
+cffISOAdobeStringCount = 229
+assert len(cffISOAdobeStrings) == cffISOAdobeStringCount
+
+cffIExpertStrings = [".notdef", "space", "exclamsmall", "Hungarumlautsmall",
+"dollaroldstyle", "dollarsuperior", "ampersandsmall", "Acutesmall",
+"parenleftsuperior", "parenrightsuperior", "twodotenleader", "onedotenleader",
+"comma", "hyphen", "period", "fraction", "zerooldstyle", "oneoldstyle",
+"twooldstyle", "threeoldstyle", "fouroldstyle", "fiveoldstyle", "sixoldstyle",
+"sevenoldstyle", "eightoldstyle", "nineoldstyle", "colon", "semicolon",
+"commasuperior", "threequartersemdash", "periodsuperior", "questionsmall",
+"asuperior", "bsuperior", "centsuperior", "dsuperior", "esuperior", "isuperior",
+"lsuperior", "msuperior", "nsuperior", "osuperior", "rsuperior", "ssuperior",
+"tsuperior", "ff", "fi", "fl", "ffi", "ffl", "parenleftinferior",
+"parenrightinferior", "Circumflexsmall", "hyphensuperior", "Gravesmall",
+"Asmall", "Bsmall", "Csmall", "Dsmall", "Esmall", "Fsmall", "Gsmall", "Hsmall",
+"Ismall", "Jsmall", "Ksmall", "Lsmall", "Msmall", "Nsmall", "Osmall", "Psmall",
+"Qsmall", "Rsmall", "Ssmall", "Tsmall", "Usmall", "Vsmall", "Wsmall", "Xsmall",
+"Ysmall", "Zsmall", "colonmonetary", "onefitted", "rupiah", "Tildesmall",
+"exclamdownsmall", "centoldstyle", "Lslashsmall", "Scaronsmall", "Zcaronsmall",
+"Dieresissmall", "Brevesmall", "Caronsmall", "Dotaccentsmall", "Macronsmall",
+"figuredash", "hypheninferior", "Ogoneksmall", "Ringsmall", "Cedillasmall",
+"onequarter", "onehalf", "threequarters", "questiondownsmall", "oneeighth",
+"threeeighths", "fiveeighths", "seveneighths", "onethird", "twothirds",
+"zerosuperior", "onesuperior", "twosuperior", "threesuperior", "foursuperior",
+"fivesuperior", "sixsuperior", "sevensuperior", "eightsuperior", "ninesuperior",
+"zeroinferior", "oneinferior", "twoinferior", "threeinferior", "fourinferior",
+"fiveinferior", "sixinferior", "seveninferior", "eightinferior", "nineinferior",
+"centinferior", "dollarinferior", "periodinferior", "commainferior",
+"Agravesmall", "Aacutesmall", "Acircumflexsmall", "Atildesmall",
+"Adieresissmall", "Aringsmall", "AEsmall", "Ccedillasmall", "Egravesmall",
+"Eacutesmall", "Ecircumflexsmall", "Edieresissmall", "Igravesmall",
+"Iacutesmall", "Icircumflexsmall", "Idieresissmall", "Ethsmall", "Ntildesmall",
+"Ogravesmall", "Oacutesmall", "Ocircumflexsmall", "Otildesmall",
+"Odieresissmall", "OEsmall", "Oslashsmall", "Ugravesmall", "Uacutesmall",
+"Ucircumflexsmall", "Udieresissmall", "Yacutesmall", "Thornsmall",
+"Ydieresissmall"]
+
+cffExpertStringCount = 166
+assert len(cffIExpertStrings) == cffExpertStringCount
+
+cffExpertSubsetStrings = [".notdef", "space", "dollaroldstyle",
+"dollarsuperior", "parenleftsuperior", "parenrightsuperior", "twodotenleader",
+"onedotenleader", "comma", "hyphen", "period", "fraction", "zerooldstyle",
+"oneoldstyle", "twooldstyle", "threeoldstyle", "fouroldstyle", "fiveoldstyle",
+"sixoldstyle", "sevenoldstyle", "eightoldstyle", "nineoldstyle", "colon",
+"semicolon", "commasuperior", "threequartersemdash", "periodsuperior",
+"asuperior", "bsuperior", "centsuperior", "dsuperior", "esuperior", "isuperior",
+"lsuperior", "msuperior", "nsuperior", "osuperior", "rsuperior", "ssuperior",
+"tsuperior", "ff", "fi", "fl", "ffi", "ffl", "parenleftinferior",
+"parenrightinferior", "hyphensuperior", "colonmonetary", "onefitted", "rupiah",
+"centoldstyle", "figuredash", "hypheninferior", "onequarter", "onehalf",
+"threequarters", "oneeighth", "threeeighths", "fiveeighths", "seveneighths",
+"onethird", "twothirds", "zerosuperior", "onesuperior", "twosuperior",
+"threesuperior", "foursuperior", "fivesuperior", "sixsuperior", "sevensuperior",
+"eightsuperior", "ninesuperior", "zeroinferior", "oneinferior", "twoinferior",
+"threeinferior", "fourinferior", "fiveinferior", "sixinferior", "seveninferior",
+"eightinferior", "nineinferior", "centinferior", "dollarinferior",
+"periodinferior", "commainferior"]
+
+cffExpertSubsetStringCount = 87
+assert len(cffExpertSubsetStrings) == cffExpertSubsetStringCount
