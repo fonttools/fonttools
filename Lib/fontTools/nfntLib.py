@@ -269,7 +269,8 @@ class Glyph:
 
 
 def dataFromFile(pathOrFSSpec, nameOrID="", resType='NFNT'):
-	import Res, macfs
+	from Carbon import Res
+	import macfs
 	if type(pathOrFSSpec) == types.StringType:
 		fss = macfs.FSSpec(pathOrFSSpec)
 	else:
