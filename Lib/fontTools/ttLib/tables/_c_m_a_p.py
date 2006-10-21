@@ -1,6 +1,8 @@
 import DefaultTable
 import struct
 import array
+import Numeric
+import operator
 from fontTools import ttLib
 from fontTools.misc.textTools import safeEval, readHex
 from types import TupleType
@@ -19,6 +21,7 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
 		tableVersion, numSubTables = struct.unpack(">HH", data[:4])
 		self.tableVersion = int(tableVersion)
 		self.tables = tables = []
+		seenOffsets = {}
 		for i in range(numSubTables):
 			platformID, platEncID, offset = struct.unpack(
 					">HHl", data[4+i*8:4+(i+1)*8])
@@ -34,7 +37,14 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
 				table = cmap_classes[format](format)
 			table.platformID = platformID
 			table.platEncID = platEncID
-			table.decompile(data[offset:offset+int(length)], ttFont)
+			# Note that by default we decompile only the subtable header info;
+			# any other data gets decompiled only when an attribute of the
+			# subtable is referenced.
+			table.decompileHeader(data[offset:offset+int(length)], ttFont)
+			if seenOffsets.has_key(offset):
+				table.cmap = tables[seenOffsets[offset]].cmap
+			else:
+				seenOffsets[offset] = i
 			tables.append(table)
 	
 	def compile(self, ttFont):
@@ -43,14 +53,18 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
 		totalOffset = 4 + 8 * numSubTables
 		data = struct.pack(">HH", self.tableVersion, numSubTables)
 		tableData = ""
-		done = {}  # remember the data so we can reuse the "pointers"
+		seen = {}  # Some tables are the same object reference. Don't compile them twice.
+		done = {}  # Some tables are different objects, but compile to the same data chunk
 		for table in self.tables:
-			chunk = table.compile(ttFont)
-			if done.has_key(chunk):
-				offset = done[chunk]
-			else:
-				offset = done[chunk] = totalOffset + len(tableData)
-				tableData = tableData + chunk
+			try:
+				offset = seen[id(table.cmap)]
+			except KeyError:
+				chunk = table.compile(ttFont)
+				if done.has_key(chunk):
+					offset = done[chunk]
+				else:
+					offset = seen[id(table.cmap)] = done[chunk] = totalOffset + len(tableData)
+					tableData = tableData + chunk
 			data = data + struct.pack(">HHl", table.platformID, table.platEncID, offset)
 		return data + tableData
 	
@@ -83,7 +97,30 @@ class CmapSubtable:
 	
 	def __init__(self, format):
 		self.format = format
+		self.data = None
+		self.ttFont = None
+
+	def __getattr__(self, attr):
+		# allow lazy decompilation of subtables.
+		if attr[:2] == '__': # don't handle requests for member functions like '__lt__'
+			raise AttributeError, attr
+		if self.data == None:
+			raise AttributeError, attr
+		self.decompile(None, None) # use saved data.
+		self.data = None # Once this table has been decompiled, make sure we don't
+						# just return the original data. Also avoids recursion when
+						# called with an attribute that the cmap subtable doesn't have.
+		return getattr(self, attr)
 	
+	def decompileHeader(self, data, ttFont):
+		format, length, language = struct.unpack(">HHH", data[:6])
+		assert len(data) == length, "corrupt cmap table format %d (data length: %d, header length: %d)" % (format, len(data), length)
+		self.format = int(format)
+		self.length = int(length)
+		self.language = int(language)
+		self.data = data[6:]
+		self.ttFont = ttFont
+
 	def toXML(self, writer, ttFont):
 		writer.begintag(self.__class__.__name__, [
 				("platformID", self.platformID),
@@ -98,7 +135,7 @@ class CmapSubtable:
 		writer.newline()
 
 	def _writeCodes(self, codes, writer):
-		if (self.platformID, self.platEncID) == (3, 1) or self.platformID == 0:
+		if (self.platformID, self.platEncID) == (3, 1) or (self.platformID, self.platEncID) == (3, 10) or self.platformID == 0:
 			from fontTools.unicode import Unicode
 			isUnicode = 1
 		else:
@@ -108,9 +145,6 @@ class CmapSubtable:
 			if isUnicode:
 				writer.comment(Unicode[code])
 			writer.newline()
-	
-	def fromXML(self, (name, attrs, content), ttFont):
-		self.decompile(readHex(content), ttFont)
 	
 	def __cmp__(self, other):
 		# implemented so that list.sort() sorts according to the cmap spec.
@@ -130,37 +164,51 @@ class CmapSubtable:
 class cmap_format_0(CmapSubtable):
 	
 	def decompile(self, data, ttFont):
-		format, length, language = struct.unpack(">HHH", data[:6])
-		self.language = int(language)
-		assert len(data) == 262 == length
+		# we usually get here indirectly from the subtable __getattr__ function, in which case both args must be None.
+		# If not, someone is calling  the subtable decompile() directly, and must provide both args.
+		if data != None and ttFont != None:
+			self.decompileHeader(data[offset:offset+int(length)], ttFont)
+		else:
+			assert(	(data == None and (ttFont == None), "Need both data and ttFont arguments"))
+		data = self.data # decompileHeader assigns the data after the header to self.data
+		assert 262 == self.length, "Format 0 cmap subtable not 262 bytes"
 		glyphIdArray = array.array("B")
-		glyphIdArray.fromstring(data[6:])
+		glyphIdArray.fromstring(self.data)
 		self.cmap = cmap = {}
-		for charCode in range(len(glyphIdArray)):
-			cmap[charCode] = ttFont.getGlyphName(glyphIdArray[charCode])
+		lenArray = len(glyphIdArray)
+		charCodes = range(lenArray)
+		names = map(self.ttFont.getGlyphName, glyphIdArray)
+		map(operator.setitem, [cmap]*lenArray, charCodes, names)
+
 	
 	def compile(self, ttFont):
-		charCodes = self.cmap.keys()
-		charCodes.sort()
-		assert charCodes == range(256)  # charCodes[charCode] == charCode
-		for charCode in charCodes:
-			# reusing the charCodes list!
-			charCodes[charCode] = ttFont.getGlyphID(self.cmap[charCode])
-		glyphIdArray = array.array("B", charCodes)
+		if self.data:
+			return struct.pack(">HHH", 0, 262, self.language) + self.data
+
+		charCodeList = self.cmap.items()
+		charCodeList.sort()
+		charCodes = [entry[0] for entry in charCodeList]
+		valueList = [entry[1] for entry in charCodeList]
+		assert charCodes == range(256)
+		valueList = map(ttFont.getGlyphID, valueList)
+
+		glyphIdArray = Numeric.array(valueList, Numeric.Int8)
 		data = struct.pack(">HHH", 0, 262, self.language) + glyphIdArray.tostring()
 		assert len(data) == 262
 		return data
 	
 	def fromXML(self, (name, attrs, content), ttFont):
 		self.language = safeEval(attrs["language"])
-		self.cmap = {}
+		if not hasattr(self, "cmap"):
+			self.cmap = {}
+		cmap = self.cmap
 		for element in content:
 			if type(element) <> TupleType:
 				continue
 			name, attrs, content = element
 			if name <> "map":
 				continue
-			self.cmap[safeEval(attrs["code"])] = attrs["name"]
+			cmap[safeEval(attrs["code"])] = attrs["name"]
 
 
 subHeaderFormat = ">HHhH"
@@ -174,37 +222,70 @@ class SubHeader:
 		
 class cmap_format_2(CmapSubtable):
 	
+	def setIDDelta(self, subHeader):
+		subHeader.idDelta = 0
+		# find the minGI which is not zero.
+		minGI = subHeader.glyphIndexArray[0]
+		for gid in subHeader.glyphIndexArray:
+			if (gid != 0) and (gid < minGI):
+				minGI = gid
+		# The lowest gid in glyphIndexArray, after subtracting idDelta, must be 1.
+		# idDelta is a short, and must be between -32K and 32K. minGI can be between 1 and 64K.
+		# We would like to pick an idDelta such that the first glyphArray GID is 1, 
+		# so that we are more likely to be able to combine glypharray GID subranges.
+		# This means that we have a problem when minGI is > 32K
+		# Since the final gi is reconstructed from the glyphArray GID by:
+		#    (short)finalGID = (gid +  idDelta) % 0x10000),
+		# we can get from a glypharray GID of 1 to a final GID of 65K by subtracting 2, and casting the
+		# negative number to an unsigned short. 
+
+		if  (minGI > 1):
+			if  minGI > 0x7FFF:
+				subHeader.idDelta = -(0x10000 - minGI) -1
+			else:
+				subHeader.idDelta =  minGI -1
+			idDelta = subHeader.idDelta
+			for i in range(subHeader.entryCount):
+				gid = subHeader.glyphIndexArray[i]
+				if gid > 0: 
+					subHeader.glyphIndexArray[i] = gid - idDelta 
+
+
 	def decompile(self, data, ttFont):
-		format, length, language = struct.unpack(">HHH", data[:6])
-		self.language = int(language)
-		data = data[6:]
+		# we usually get here indirectly from the subtable __getattr__ function, in which case both args must be None.
+		# If not, someone is calling  the subtable decompile() directly, and must provide both args.
+		if data != None and ttFont != None:
+			self.decompileHeader(data[offset:offset+int(length)], ttFont)
+		else:
+			assert(	(data == None and (ttFont == None), "Need both data and ttFont arguments"))
+
+		data = self.data # decompileHeader assigns the data after the header to self.data
 		subHeaderKeys = []
 		maxSubHeaderindex = 0
-		
 		# get the key array, and determine the number of subHeaders.
-		for i in range(256):
-			key = struct.unpack(">H", data[:2])[0]
-			value = int(key)/8
-			if value > maxSubHeaderindex:
-				maxSubHeaderindex  = value
-			data = data[2:]
-			subHeaderKeys.append(value)
+		allKeys = array.array("H")
+		allKeys.fromstring(data[:512])
+		data = data[512:]
+		if ttLib.endian <> "big":
+			allKeys.byteswap()
+		subHeaderKeys = [ key/8 for key in allKeys]
+		maxSubHeaderindex = max(subHeaderKeys)
 	
 		#Load subHeaders
 		subHeaderList = []
+		pos = 0
 		for i in range(maxSubHeaderindex + 1):
 			subHeader = SubHeader()
 			(subHeader.firstCode, subHeader.entryCount, subHeader.idDelta, \
-				subHeader.idRangeOffset) = struct.unpack(subHeaderFormat, data[:8])
-			data = data[8:]
-			giData = data[subHeader.idRangeOffset-2:]
-			for j in range(subHeader.entryCount):
-				gi = struct.unpack(">H", giData[:2])[0]
-				giData = giData[2:]
-				subHeader.glyphIndexArray.append(int(gi))
-			 		
+				subHeader.idRangeOffset) = struct.unpack(subHeaderFormat, data[pos:pos + 8])
+			pos += 8
+			giDataPos = pos + subHeader.idRangeOffset-2
+			giList = array.array("H")
+			giList.fromstring(data[giDataPos:giDataPos + subHeader.entryCount*2])
+			if ttLib.endian <> "big":
+				giList.byteswap()
+			subHeader.glyphIndexArray = giList
 			subHeaderList.append(subHeader)
-		
 		# How this gets processed. 
 		# Charcodes may be one or two bytes.
 		# The first byte of a charcode is mapped through the  subHeaderKeys, to select
@@ -238,99 +319,154 @@ class cmap_format_2(CmapSubtable):
 		# [257], [1]=2  	from charcode [129, 65]
 		# [258], [2]=3  	from charcode [129, 66]
 		# [259], [3]=4  	from charcode [129, 67]
-		# So, the glyphIndex = 3 from the array. Then if idDelta is not zero, add it to the glyphInex to get the final glyphIndex
+		# So, the glyphIndex = 3 from the array. Then if idDelta is not zero and the glyph ID is not zero, 
+		# add it to the glyphID to get the final glyphIndex
 		# value. In this case the final glyph index = 3+ 42 -> 45 for the final glyphIndex. Whew!
-		# Has anyone ever really tried to overlap the subHeader subranges in the glyphIndexArray? I doubt it!
 		
 		self.data = ""
-		self.cmap = {}
+		self.cmap = cmap = {}
+		notdefGI = 0
 		for firstByte in range(256):
 			subHeadindex = subHeaderKeys[firstByte]
 			subHeader = subHeaderList[subHeadindex]
 			if subHeadindex == 0:
 				if (firstByte < subHeader.firstCode) or (firstByte >= subHeader.firstCode + subHeader.entryCount):
-					gi = 0
+					continue # gi is notdef.
 				else:
 					charCode = firstByte
 					offsetIndex = firstByte - subHeader.firstCode
 					gi = subHeader.glyphIndexArray[offsetIndex]
 					if gi != 0:
-						gi = gi + subHeader.idDelta
-				gName = ttFont.getGlyphName(gi)
-				self.cmap[charCode] = gName
+						gi = (gi + subHeader.idDelta) % 0x10000
+					else:
+						continue # gi is notdef.
+				cmap[charCode] = gi
 			else:
 				if subHeader.entryCount:
+					charCodeOffset = firstByte * 256 + subHeader.firstCode
 					for offsetIndex in range(subHeader.entryCount):
-						charCode = firstByte * 256 + offsetIndex + subHeader.firstCode
+						charCode = charCodeOffset + offsetIndex
 						gi = subHeader.glyphIndexArray[offsetIndex]
 						if gi != 0:
-							gi = gi + subHeader.idDelta
-						gName = ttFont.getGlyphName(gi)
-						self.cmap[charCode] = gName
-				else:
-					# Is a subHead that maps to .notdef. We do need to record it, so we can later
-					# know that this firstByte value is the initial byte of a two byte charcode,
-					# as opposed to a sing byte charcode.
-					charCode = firstByte * 256
-					gName = ttFont.getGlyphName(0)
-					self.cmap[charCode] = gName
+							gi = (gi + subHeader.idDelta) % 0x10000
+						else:
+							continue
+						cmap[charCode] = gi
+				# If not subHeader.entryCount, then all char codes with this first byte are
+				# mapped to .notdef. We can skip this subtable, and leave the glyphs un-encoded, which is the 
+				# same as mapping it to .notdef.
+		# cmap values are GID's.
+		glyphOrder = self.ttFont.getGlyphOrder()
+		gids = cmap.values()
+		charCodes = cmap.keys()
+		lenCmap = len(gids)
+		try:
+			names = map(operator.getitem, [glyphOrder]*lenCmap, gids )
+		except IndexError:
+			getGlyphName = self.ttFont.getGlyphName
+			names = map(getGlyphName, gids )
+		map(operator.setitem, [cmap]*lenCmap, charCodes, names)
+	
 		
 	def compile(self, ttFont):
+		if self.data:
+			return struct.pack(">HHH", self.format, self.length, self.language) + self.data
 		kEmptyTwoCharCodeRange = -1
+		notdefGI = 0
+
 		items = self.cmap.items()
 		items.sort()
+		charCodes = [item[0] for item in items]
+		names = [item[1] for item in items]
+		nameMap = ttFont.getReverseGlyphMap()
+		lenCharCodes = len(charCodes) 
+		try:
+			gids = map(operator.getitem, [nameMap]*lenCharCodes, names)
+		except KeyError:
+			nameMap = ttFont.getReverseGlyphMap(rebuild=1)
+			try:
+				gids = map(operator.getitem, [nameMap]*lenCharCodes, names)
+			except KeyError:
+				# allow virtual GIDs in format 2 tables
+				gids = []
+				for name in names:
+					try:
+						gid = nameMap[name]
+					except KeyError:
+						try:
+							if (name[:3] == 'gid'):
+								gid = eval(name[3:])
+							else:
+								gid = ttFont.getGlyphID(name)
+						except:
+							raise KeyError(name)
 
-		# All one-byte code values map through the subHeaderKeys table to subheader 0.
-		# Assume that all entries in the subHeaderKeys table are one-byte codes unless proven otherwise.
-		subHeaderKeys = [0 for x in  range(256)] 
+					gids.append(gid)
+
+		# Process the (char code to gid) item list  in char code order.
+		# By definition, all one byte char codes map to subheader 0. 
+		# For all the two byte char codes, we assume that the first byte maps maps to the empty subhead (with an entry count of 0, 
+		# which defines all char codes in its range to map to notdef) unless proven otherwise.
+		# Note that since the char code items are processed in char code order, all the char codes with the
+		# same first byte are in sequential order.
+
+		subHeaderKeys = [ kEmptyTwoCharCodeRange for x in  range(256)] # list of indices into subHeaderList.
 		subHeaderList = []
+
+		# We force this subheader entry 0  to exist in the subHeaderList in the case where some one comes up
+		# with a cmap where all the one byte char codes map to notdef,
+		# with the result that the subhead 0 would not get created just by processing the item list.
+		charCode = charCodes[0]
+		if charCode > 255:
+			subHeader = SubHeader()
+			subHeader.firstCode = 0
+			subHeader.entryCount = 0
+			subHeader.idDelta = 0
+			subHeader.idRangeOffset = 0
+			subHeaderList.append(subHeader)
+			
 		
 		lastFirstByte = -1
-		for item in items:
-			charCode = item[0]
+		items = zip(charCodes, gids)
+		for charCode, gid in items:
+			if gid == 0:
+				continue
 			firstbyte = charCode >> 8
 			secondByte = charCode & 0x00FF
-			gi = ttFont.getGlyphID(item[1])
-			if firstbyte != lastFirstByte:
+
+			if firstbyte != lastFirstByte: # Need to update the current subhead, and start a new one.
 				if lastFirstByte > -1:
-					# fix GI's and iDelta of last subheader.
-					subHeader.idDelta = 0
-					if subHeader.entryCount > 0:
-						minGI = min(subHeader.glyphIndexArray) -1
-						if minGI > 0:
-							subHeader.idDelta = minGI
-							for i in range(subHeader.entryCount):
-								subHeader.glyphIndexArray[i] = subHeader.glyphIndexArray[i] - minGI
+					# fix GI's and iDelta of current subheader.
+					self.setIDDelta(subHeader)
+
+					# If it was sunheader 0 for one-byte charCodes, then we need to set the subHeaderKeys value to zero
+					# for the indices matching the char codes.
+					if lastFirstByte == 0:
+						for index in range(subHeader.entryCount):
+							charCode = subHeader.firstCode + index
+							subHeaderKeys[charCode] = 0
+
 					assert (subHeader.entryCount == len(subHeader.glyphIndexArray)), "Error - subhead entry count does not match len of glyphID subrange."
 				# init new subheader
 				subHeader = SubHeader()
 				subHeader.firstCode = secondByte
-				if (secondByte == 0) and ( gi==0 ) and (lastFirstByte > -1): # happens only when the font has no glyphs in the this charcpde range.
-					subHeader.entryCount = 0
-					subHeaderKeys[firstbyte] = kEmptyTwoCharCodeRange
-				else:
-					subHeader.entryCount = 1
-					subHeader.glyphIndexArray.append(gi)
-					subHeaderList.append(subHeader)
-					subHeaderKeys[firstbyte] = len(subHeaderList) -1
+				subHeader.entryCount = 1
+				subHeader.glyphIndexArray.append(gid)
+				subHeaderList.append(subHeader)
+				subHeaderKeys[firstbyte] = len(subHeaderList) -1
 				lastFirstByte = firstbyte
 			else:
-				assert (subHeader.entryCount != 0), "Error: we should never see another entry for an empty 2 byte charcode range."
+				# need to fill in with notdefs all the code points between the last charCode and the current charCode.
 				codeDiff = secondByte - (subHeader.firstCode + subHeader.entryCount)
 				for i in range(codeDiff):
-					subHeader.glyphIndexArray.append(0)
-				subHeader.glyphIndexArray.append(gi)
+					subHeader.glyphIndexArray.append(notdefGI)
+				subHeader.glyphIndexArray.append(gid)
 				subHeader.entryCount = subHeader.entryCount + codeDiff + 1
-		# fix GI's and iDelta of last subheader.
-		subHeader.idDelta = 0
-		if subHeader.entryCount > 0:
-			minGI = min(subHeader.glyphIndexArray) -1
-			if minGI > 0:
-				subHeader.idDelta = minGI
-				for i in range(subHeader.entryCount):
-					subHeaderList[i] = subHeaderList[i] - minGI
+					
+		# fix GI's and iDelta of last subheader that we we added to the subheader array.
+		self.setIDDelta(subHeader)
 
-		# Now we add a last subheader for the subHeaderKeys which mapped to empty two byte charcode ranges.
+		# Now we add a final subheader for the subHeaderKeys which maps to empty two byte charcode ranges.
 		subHeader = SubHeader()
 		subHeader.firstCode = 0
 		subHeader.entryCount = 0
@@ -339,46 +475,60 @@ class cmap_format_2(CmapSubtable):
 		subHeaderList.append(subHeader)
 		emptySubheadIndex = len(subHeaderList) - 1
 		for index in range(256):
-			if subHeaderKeys[index] < 0:
+			if subHeaderKeys[index] == kEmptyTwoCharCodeRange:
 				subHeaderKeys[index] = emptySubheadIndex
 		# Since this is the last subheader, the GlyphIndex Array starts two bytes after the start of the
-		# idRangeOffset word of this subHeader. we can safely point to the first entry in the GlyphIndexArray,
+		# idRangeOffset word of this subHeader. We can safely point to the first entry in the GlyphIndexArray,
 		# since the first subrange of the GlyphIndexArray is for subHeader 0, which always starts with 
 		# charcode 0 and GID 0.
 		
-		# I am not going to try and optimise by trying to overlap the glyphIDArray subranges of the subheaders -
-		# I will just write them out sequentially.
 		idRangeOffset = (len(subHeaderList)-1)*8  + 2 # offset to beginning of glyphIDArray from first subheader idRangeOffset.
-		for subHeader in subHeaderList[:-1]: # skip last special empty-set subheader
-			subHeader.idRangeOffset = idRangeOffset
-			idRangeOffset = (idRangeOffset -8) + subHeader.entryCount*2 # one less subheader, one more subRange.
-		
+		subheadRangeLen = len(subHeaderList) -1 # skip last special empty-set subheader; we've already hardocodes its idRangeOffset to 2.
+		for index in range(subheadRangeLen): 
+			subHeader = subHeaderList[index]
+			subHeader.idRangeOffset = 0
+			for j  in range(index):
+				prevSubhead = subHeaderList[j]
+				if prevSubhead.glyphIndexArray == subHeader.glyphIndexArray: # use the glyphIndexArray subarray
+					subHeader.idRangeOffset = prevSubhead.idRangeOffset - (index-j)*8
+					subHeader.glyphIndexArray = []
+					break
+			if subHeader.idRangeOffset == 0: # didn't find one. 
+				subHeader.idRangeOffset = idRangeOffset
+				idRangeOffset = (idRangeOffset - 8) + subHeader.entryCount*2 # one less subheader, one more subArray.
+			else:
+				idRangeOffset = idRangeOffset - 8  # one less subheader
+
 		# Now we can write out the data!
 		length = 6 + 512 + 8*len(subHeaderList) # header, 256 subHeaderKeys, and subheader array.
 		for subhead in 	subHeaderList[:-1]:
-			length = length + subhead.entryCount*2
-		data = struct.pack(">HHH", 2, length, self.language)
+			length = length + len(subhead.glyphIndexArray)*2  # We can't use subhead.entryCount, as some of the subhead may share subArrays.
+		dataList = [struct.pack(">HHH", 2, length, self.language)]
 		for index in subHeaderKeys:
-			data = data + struct.pack(">H", index*8)
+			dataList.append(struct.pack(">H", index*8))
 		for subhead in 	subHeaderList:
-			data = data + struct.pack(subHeaderFormat, subhead.firstCode, subhead.entryCount, subhead.idDelta, subhead.idRangeOffset)
+			dataList.append(struct.pack(subHeaderFormat, subhead.firstCode, subhead.entryCount, subhead.idDelta, subhead.idRangeOffset))
 		for subhead in 	subHeaderList[:-1]:
 			for gi in subhead.glyphIndexArray:
-				data = data + struct.pack(">H", gi)
-			
+				dataList.append(struct.pack(">H", gi))
+		data = "".join(dataList)
 		assert (len(data) == length), "Error: cmap format 2 is not same length as calculated! actual: " + str(len(data))+ " calc : " + str(length)
 		return data
-	
+
+
 	def fromXML(self, (name, attrs, content), ttFont):
 		self.language = safeEval(attrs["language"])
-		self.cmap = {}
+		if not hasattr(self, "cmap"):
+			self.cmap = {}
+		cmap = self.cmap
+
 		for element in content:
 			if type(element) <> TupleType:
 				continue
 			name, attrs, content = element
 			if name <> "map":
 				continue
-			self.cmap[safeEval(attrs["code"])] = attrs["name"]
+			cmap[safeEval(attrs["code"])] = attrs["name"]
 
 
 cmap_format_4_format = ">7H"
@@ -472,14 +622,23 @@ def splitRange(startCode, endCode, cmap):
 class cmap_format_4(CmapSubtable):
 	
 	def decompile(self, data, ttFont):
-		(format, length, self.language, segCountX2, 
-				searchRange, entrySelector, rangeShift) = \
-					struct.unpack(cmap_format_4_format, data[:14])
-		assert len(data) == length, "corrupt cmap table (%d, %d)" % (len(data), length)
+		# we usually get here indirectly from the subtable __getattr__ function, in which case both args must be None.
+		# If not, someone is calling  the subtable decompile() directly, and must provide both args.
+		if data != None and ttFont != None:
+			self.decompileHeader(self.data[offset:offset+int(length)], ttFont)
+		else:
+			assert(	(data == None and (ttFont == None), "Need both data and ttFont arguments"))
+
+		data = self.data # decompileHeader assigns the data after the header to self.data
+		(segCountX2, searchRange, entrySelector, rangeShift) = \
+					struct.unpack(">4H", data[:8])
+		data = data[8:]
 		segCount = segCountX2 / 2
 		
 		allCodes = array.array("H")
-		allCodes.fromstring(data[14:])
+		allCodes.fromstring(data)
+		self.data = data = None
+
 		if ttLib.endian <> "big":
 			allCodes.byteswap()
 		
@@ -492,64 +651,133 @@ class cmap_format_4(CmapSubtable):
 		allCodes = allCodes[segCount:]
 		idRangeOffset = allCodes[:segCount]
 		glyphIndexArray = allCodes[segCount:]
-		
+		lenGIArray = len(glyphIndexArray)
+
 		# build 2-byte character mapping
-		cmap = {}
+		charCodes = []
+		gids = []
 		for i in range(len(startCode) - 1):	# don't do 0xffff!
-			for charCode in range(startCode[i], endCode[i] + 1):
+			rangeCharCodes = range(startCode[i], endCode[i] + 1)
+			charCodes = charCodes + rangeCharCodes
+			for charCode in rangeCharCodes:
 				rangeOffset = idRangeOffset[i]
 				if rangeOffset == 0:
 					glyphID = charCode + idDelta[i]
 				else:
 					# *someone* needs to get killed.
 					index = idRangeOffset[i] / 2 + (charCode - startCode[i]) + i - len(idRangeOffset)
+					assert (index < lenGIArray), "In format 4 cmap, range (%d), the calculated index (%d) into the glyph index array  is not less than the length of the array (%d) !" % (i, index, lenGIArray)
 					if glyphIndexArray[index] <> 0:  # if not missing glyph
 						glyphID = glyphIndexArray[index] + idDelta[i]
 					else:
 						glyphID = 0  # missing glyph
-				cmap[charCode] = ttFont.getGlyphName(glyphID % 0x10000)
-		self.cmap = cmap
-	
+				gids.append(glyphID % 0x10000)
+
+		self.cmap = cmap = {}
+		lenCmap = len(gids)
+		glyphOrder = self.ttFont.getGlyphOrder()
+		try:
+			names = map(operator.getitem, [glyphOrder]*lenCmap, gids )
+		except IndexError:
+			getGlyphName = self.ttFont.getGlyphName
+			names = map(getGlyphName, gids )
+		map(operator.setitem, [cmap]*lenCmap, charCodes, names)
+		
+
+
+	def setIDDelta(self, idDelta):
+		# The lowest gid in glyphIndexArray, after subtracting idDelta, must be 1.
+		# idDelta is a short, and must be between -32K and 32K
+		# startCode can be between 0 and 64K-1, and the first glyph index can be between 1 and 64K-1
+		# This means that we have a problem because we can need to assign to idDelta values
+		# between -(64K-2) and 64K -1.
+		# Since the final gi is reconstructed from the glyphArray GID by:
+		#    (short)finalGID = (gid +  idDelta) % 0x10000),
+		# we can get from a startCode of 0 to a final GID of 64 -1K by subtracting 1, and casting the
+		# negative number to an unsigned short.
+		# Similarly , we can get from a startCode of 64K-1 to a final GID of 1 by adding 2, because of
+		# the modulo arithmetic.
+
+		if idDelta > 0x7FFF:
+			idDelta = idDelta - 0x10000
+		elif idDelta <  -0x7FFF:
+			idDelta = idDelta + 0x10000
+
+		return idDelta
+
+
 	def compile(self, ttFont):
+		if self.data:
+			return struct.pack(">HHH", self.format, self.length, self.language) + self.data
+
 		from fontTools.ttLib.sfnt import maxPowerOfTwo
 		
-		cmap = {}  # code:glyphID mapping
-		for code, glyphName in self.cmap.items():
-			cmap[code] = ttFont.getGlyphID(glyphName)
-		codes = cmap.keys()
-		codes.sort()
+		charCodes = self.cmap.keys()
+			
+		charCodes.sort()
+		lenCharCodes = len(charCodes)
+		if lenCharCodes == 0:
+			startCode = [0xffff]
+			endCode = [0xffff]
+		else:
+			names = self.cmap.values()
+			nameMap = ttFont.getReverseGlyphMap()
+			try:
+				gids = map(operator.getitem, [nameMap]*lenCharCodes, names)
+			except KeyError:
+				nameMap = ttFont.getReverseGlyphMap(rebuild=1)
+				try:
+					gids = map(operator.getitem, [nameMap]*lenCharCodes, names)
+				except KeyError:
+					# allow virtual GIDs in format 4 tables
+					gids = []
+					for name in names:
+						try:
+							gid = nameMap[name]
+						except KeyError:
+							try:
+								if (name[:3] == 'gid'):
+									gid = eval(name[3:])
+								else:
+									gid = ttFont.getGlyphID(name)
+							except:
+								raise KeyError(name)
+	
+						gids.append(gid)
+			cmap = {}  # code:glyphID mapping
+			map(operator.setitem, [cmap]*len(charCodes), charCodes, gids)
 		
-		# Build startCode and endCode lists.
-		# Split the char codes in ranges of consecutive char codes, then split
-		# each range in more ranges of consecutive/not consecutive glyph IDs.
-		# See splitRange().
-		lastCode = codes[0]
-		endCode = []
-		startCode = [lastCode]
-		for charCode in codes[1:]:  # skip the first code, it's the first start code
-			if charCode == lastCode + 1:
+			# Build startCode and endCode lists.
+			# Split the char codes in ranges of consecutive char codes, then split
+			# each range in more ranges of consecutive/not consecutive glyph IDs.
+			# See splitRange().
+			lastCode = charCodes[0]
+			endCode = []
+			startCode = [lastCode]
+			for charCode in charCodes[1:]:  # skip the first code, it's the first start code
+				if charCode == lastCode + 1:
+					lastCode = charCode
+					continue
+				start, end = splitRange(startCode[-1], lastCode, cmap)
+				startCode.extend(start)
+				endCode.extend(end)
+				startCode.append(charCode)
 				lastCode = charCode
-				continue
-			start, end = splitRange(startCode[-1], lastCode, cmap)
-			startCode.extend(start)
-			endCode.extend(end)
-			startCode.append(charCode)
-			lastCode = charCode
-		endCode.append(lastCode)
-		startCode.append(0xffff)
-		endCode.append(0xffff)
+			endCode.append(lastCode)
+			startCode.append(0xffff)
+			endCode.append(0xffff)
 		
 		# build up rest of cruft
 		idDelta = []
 		idRangeOffset = []
 		glyphIndexArray = []
-		
 		for i in range(len(endCode)-1):  # skip the closing codes (0xffff)
 			indices = []
 			for charCode in range(startCode[i], endCode[i] + 1):
 				indices.append(cmap[charCode])
-			if indices == range(indices[0], indices[0] + len(indices)):
-				idDelta.append((indices[0] - startCode[i]) % 0x10000)
+			if  (indices == range(indices[0], indices[0] + len(indices))):
+				idDeltaTemp = self.setIDDelta(indices[0] - startCode[i])
+				idDelta.append( idDeltaTemp)
 				idRangeOffset.append(0)
 			else:
 				# someone *definitely* needs to get killed.
@@ -567,130 +795,212 @@ class cmap_format_4(CmapSubtable):
 		entrySelector = maxExponent
 		rangeShift = 2 * segCount - searchRange
 		
-		allCodes = array.array("H", 
-				endCode + [0] + startCode + idDelta + idRangeOffset + glyphIndexArray)
+		charCodeArray = Numeric.array( endCode + [0] + startCode, Numeric.UInt16)
+		idDeltaeArray = Numeric.array(idDelta, Numeric.Int16)
+		restArray = Numeric.array(idRangeOffset + glyphIndexArray, Numeric.UInt16)
 		if ttLib.endian <> "big":
-			allCodes.byteswap()
-		data = allCodes.tostring()
+			charCodeArray = charCodeArray.byteswapped()
+			idDeltaeArray = idDeltaeArray.byteswapped()
+			restArray = restArray.byteswapped()
+		data = charCodeArray.tostring() + idDeltaeArray.tostring() + restArray.tostring()
+
 		length = struct.calcsize(cmap_format_4_format) + len(data)
 		header = struct.pack(cmap_format_4_format, self.format, length, self.language, 
 				segCountX2, searchRange, entrySelector, rangeShift)
-		data = header + data
-		return data
+		return header + data
 	
 	def fromXML(self, (name, attrs, content), ttFont):
 		self.language = safeEval(attrs["language"])
-		self.cmap = {}
+		if not hasattr(self, "cmap"):
+			self.cmap = {}
+		cmap = self.cmap
+
 		for element in content:
 			if type(element) <> TupleType:
 				continue
-			name, attrs, content = element
-			if name <> "map":
-				continue
-			self.cmap[safeEval(attrs["code"])] = attrs["name"]
+			nameMap, attrsMap, dummyContent = element
+			if nameMap <> "map":
+				assert 0, "Unrecognized keyword in cmap subtable"
+			cmap[safeEval(attrsMap["code"])] = attrsMap["name"]
 
 
 class cmap_format_6(CmapSubtable):
 	
 	def decompile(self, data, ttFont):
-		format, length, language, firstCode, entryCount = struct.unpack(
-				">HHHHH", data[:10])
-		self.language = int(language)
+		# we usually get here indirectly from the subtable __getattr__ function, in which case both args must be None.
+		# If not, someone is calling  the subtable decompile() directly, and must provide both args.
+		if data != None and ttFont != None:
+			self.decompileHeader(data[offset:offset+int(length)], ttFont)
+		else:
+			assert(	(data == None and (ttFont == None), "Need both data and ttFont arguments"))
+
+		data = self.data # decompileHeader assigns the data after the header to self.data
+		firstCode, entryCount = struct.unpack(">HH", data[:4])
 		firstCode = int(firstCode)
-		self.language = int(language)
-		data = data[10:]
+		data = data[4:]
 		#assert len(data) == 2 * entryCount  # XXX not true in Apple's Helvetica!!!
 		glyphIndexArray = array.array("H")
 		glyphIndexArray.fromstring(data[:2 * int(entryCount)])
 		if ttLib.endian <> "big":
 			glyphIndexArray.byteswap()
+		self.data = data = None
+
 		self.cmap = cmap = {}
-		for i in range(len(glyphIndexArray)):
-			glyphID = glyphIndexArray[i]
-			glyphName = ttFont.getGlyphName(glyphID)
-			cmap[i+firstCode] = glyphName
+
+		lenArray = len(glyphIndexArray)
+		charCodes = range(firstCode, firstCode + lenArray )
+		glyphOrder = self.ttFont.getGlyphOrder()
+		try:
+			names = map(operator.getitem, [glyphOrder]*lenArray, glyphIndexArray )
+		except IndexError:
+			getGlyphName = self.ttFont.getGlyphName
+			names = map(getGlyphName, glyphIndexArray )
+		map(operator.setitem, [cmap]*lenArray, charCodes, names)
 	
 	def compile(self, ttFont):
-		codes = self.cmap.keys()
-		codes.sort()
-		assert codes == range(codes[0], codes[0] + len(codes))
-		glyphIndexArray = array.array("H", [0] * len(codes))
-		firstCode = codes[0]
-		for i in range(len(codes)):
-			code = codes[i]
-			glyphIndexArray[code-firstCode] = ttFont.getGlyphID(self.cmap[code])
-		if ttLib.endian <> "big":
-			glyphIndexArray.byteswap()
-		data = glyphIndexArray.tostring()
+		if self.data:
+			return struct.pack(">HHH", self.format, self.length, self.language) + self.data
+		cmap = self.cmap
+		codes = cmap.keys()
+		if codes: # yes, there are empty cmap tables.
+			codes.sort()
+			lenCodes = len(codes)
+			assert codes == range(codes[0], codes[0] + lenCodes)
+			firstCode = codes[0]
+			valueList = map(operator.getitem, [cmap]*lenCodes, codes)
+			valueList = map(ttFont.getGlyphID, valueList)
+			glyphIndexArray = Numeric.array(valueList, Numeric.UInt16)
+			if ttLib.endian <> "big":
+				glyphIndexArray = glyphIndexArray.byteswapped()
+			data = glyphIndexArray.tostring()
+		else:
+			data = ""
+			firstCode = 0
 		header = struct.pack(">HHHHH", 
-				6, len(data) + 10, self.language, firstCode, len(self.cmap))
+				6, len(data) + 10, self.language, firstCode, len(codes))
 		return header + data
 	
 	def fromXML(self, (name, attrs, content), ttFont):
 		self.language = safeEval(attrs["language"])
-		self.cmap = {}
+		if not hasattr(self, "cmap"):
+			self.cmap = {}
+		cmap = self.cmap
+
 		for element in content:
 			if type(element) <> TupleType:
 				continue
 			name, attrs, content = element
 			if name <> "map":
 				continue
-			self.cmap[safeEval(attrs["code"])] = attrs["name"]
+			cmap[safeEval(attrs["code"])] = attrs["name"]
 
 
 class cmap_format_12(CmapSubtable):
 	
-	def decompile(self, data, ttFont):
+	def __init__(self, format):
+		self.format = format
+		self.reserved = 0
+		self.data = None
+		self.ttFont = None
+
+	def decompileHeader(self, data, ttFont):
 		format, reserved, length, language, nGroups = struct.unpack(">HHLLL", data[:16])
-		data = data[16:]
-		assert len(data) == nGroups*12 == (length - 16) 
-		self.cmap = cmap = {}
-		for i in range(nGroups):
-			startCharCode, endCharCode, glyphID = struct.unpack(">LLL",data[:12] )
-			data = data[12:]
-			while startCharCode <= endCharCode:
-				glyphName = ttFont.getGlyphName(glyphID)
-				cmap[startCharCode] = glyphName
-				glyphID = glyphID + 1
-				startCharCode = startCharCode + 1
+		assert len(data) == (16 + nGroups*12) == (length), "corrupt cmap table format 12 (data length: %d, header length: %d)" % (len(data), length)
 		self.format = format
 		self.reserved = reserved
 		self.length = length
 		self.language = language
 		self.nGroups = nGroups
+		self.data = data[16:]
+		self.ttFont = ttFont
+
+	def decompile(self, data, ttFont):
+		# we usually get here indirectly from the subtable __getattr__ function, in which case both args must be None.
+		# If not, someone is calling  the subtable decompile() directly, and must provide both args.
+		if data != None and ttFont != None:
+			self.decompileHeader(data[offset:offset+int(length)], ttFont)
+		else:
+			assert(	(data == None and (ttFont == None), "Need both data and ttFont arguments"))
+
+		data = self.data # decompileHeader assigns the data after the header to self.data
+		charCodes = []
+		gids = []
+		pos = 0
+		for i in range(self.nGroups):
+			startCharCode, endCharCode, glyphID = struct.unpack(">LLL",data[pos:pos+12] )
+			pos += 12
+			lenGroup = 1 + endCharCode - startCharCode
+			charCodes += range(startCharCode, endCharCode +1)
+			gids += range(glyphID, glyphID + lenGroup)
+		self.data = data = None
+		self.cmap = cmap = {}
+		lenCmap = len(gids)
+		glyphOrder = self.ttFont.getGlyphOrder()
+		try:
+			names = map(operator.getitem, [glyphOrder]*lenCmap, gids )
+		except IndexError:
+			getGlyphName = self.ttFont.getGlyphName
+			names = map(getGlyphName, gids )
+		map(operator.setitem, [cmap]*lenCmap, charCodes, names)
 	
 	def compile(self, ttFont):
-		cmap = {}  # code:glyphID mapping
-		for code, glyphName in self.cmap.items():
-			cmap[code] = ttFont.getGlyphID(glyphName)
-
+		if self.data:
+			return struct.pack(">HHLLL", self.format, self.reserved , self.length, self.language, self.nGroups) + self.data
 		charCodes = self.cmap.keys()
+		lenCharCodes = len(charCodes) 
+		names = self.cmap.values()
+		nameMap = ttFont.getReverseGlyphMap()
+		try:
+			gids = map(operator.getitem, [nameMap]*lenCharCodes, names)
+		except KeyError:
+			nameMap = ttFont.getReverseGlyphMap(rebuild=1)
+			try:
+				gids = map(operator.getitem, [nameMap]*lenCharCodes, names)
+			except KeyError:
+				# allow virtual GIDs in format 12 tables
+				gids = []
+				for name in names:
+					try:
+						gid = nameMap[name]
+					except KeyError:
+						try:
+							if (name[:3] == 'gid'):
+								gid = eval(name[3:])
+							else:
+								gid = ttFont.getGlyphID(name)
+						except:
+							raise KeyError(name)
+
+					gids.append(gid)
+		
+		cmap = {}  # code:glyphID mapping
+		map(operator.setitem, [cmap]*len(charCodes), charCodes, gids)
+
 		charCodes.sort()
+		index = 0
 		startCharCode = charCodes[0]
 		startGlyphID = cmap[startCharCode]
-		prevCharCode = startCharCode
-		prevGlyphID = startGlyphID
+		lastGlyphID =  startGlyphID - 1
+		lastCharCode = startCharCode - 1
 		nGroups = 0
-		data = ""
-
-		for charCode in charCodes[1:]:
+		dataList =  []
+		maxIndex = len(charCodes)
+		for index in range(maxIndex):
+			charCode = charCodes[index]
 			glyphID = cmap[charCode]
-			if charCode != prevCharCode+1 or glyphID != prevGlyphID+1:
-				endCharCode = prevCharCode
-				data = data + struct.pack(">LLL", startCharCode, endCharCode, startGlyphID)
-				startGlyphID = glyphID
+			if (glyphID != 1 + lastGlyphID) or (charCode != 1 + lastCharCode):
+				dataList.append(struct.pack(">LLL", startCharCode, lastCharCode, startGlyphID))
 				startCharCode = charCode
+				startGlyphID = glyphID
 				nGroups = nGroups + 1
-			prevCharCode = charCode
-			prevGlyphID = glyphID
-		# Need to write out the last group
-		endCharCode = prevCharCode
-		data = data + struct.pack(">LLL", startCharCode, endCharCode, startGlyphID)
+			lastGlyphID = glyphID
+			lastCharCode = charCode
+		dataList.append(struct.pack(">LLL", startCharCode, lastCharCode, startGlyphID))
 		nGroups = nGroups + 1
-
-		# Prepend header information
-		data = struct.pack(">HHLLL", self.format, 0, len(data)+16, self.language, nGroups) + data
-		return data
+		data = "".join(dataList)
+		lengthSubtable = len(data) +16
+		assert len(data) == (nGroups*12) == (lengthSubtable-16) 
+		return struct.pack(">HHLLL", self.format, self.reserved , lengthSubtable, self.language, nGroups) + data
 	
 	def toXML(self, writer, ttFont):
 		writer.begintag(self.__class__.__name__, [
@@ -710,36 +1020,58 @@ class cmap_format_12(CmapSubtable):
 		writer.newline()
 	
 	def fromXML(self, (name, attrs, content), ttFont):
+		self.format = safeEval(attrs["format"])
+		self.reserved = safeEval(attrs["reserved"])
+		self.length = safeEval(attrs["length"])
 		self.language = safeEval(attrs["language"])
-		self.cmap = {}
+		self.nGroups = safeEval(attrs["nGroups"])
+		if not hasattr(self, "cmap"):
+			self.cmap = {}
+		cmap = self.cmap
+
 		for element in content:
 			if type(element) <> TupleType:
 				continue
 			name, attrs, content = element
 			if name <> "map":
 				continue
-			self.cmap[safeEval(attrs["code"])] = attrs["name"]
+			cmap[safeEval(attrs["code"])] = attrs["name"]
 
 
 class cmap_format_unknown(CmapSubtable):
 	
 	def toXML(self, writer, ttFont):
-		writer.begintag(self.__class__.__name__, [
+		cmapName = self.__class__.__name__[:12] + str(self.format)
+		writer.begintag(cmapName, [
 				("platformID", self.platformID),
 				("platEncID", self.platEncID),
 				])
 		writer.newline()
-		writer.dumphex(self.compile(ttFont))
-		writer.endtag(self.__class__.__name__)
+		writer.dumphex(self.data)
+		writer.endtag(cmapName)
 		writer.newline()
 	
-	def decompile(self, data, ttFont):
+	def fromXML(self, (name, attrs, content), ttFont):
+		self.data = readHex(content)
+		self.cmap = {}
+	
+	def decompileHeader(self, data, ttFont):
 		self.language = 0  # dummy value
 		self.data = data
 	
-	def compile(self, ttFont):
-		return self.data
+	def decompile(self, data, ttFont):
+		# we usually get here indirectly from the subtable __getattr__ function, in which case both args must be None.
+		# If not, someone is calling  the subtable decompile() directly, and must provide both args.
+		if data != None and ttFont != None:
+			self.decompileHeader(data[offset:offset+int(length)], ttFont)
+		else:
+			assert(	(data == None and (ttFont == None), "Need both data and ttFont arguments"))
 
+	def compile(self, ttFont):
+		if self.data:
+			return self.data
+		else:
+			return None
 
 cmap_classes = {
 		0: cmap_format_0,
