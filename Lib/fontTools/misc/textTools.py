@@ -11,11 +11,7 @@ def safeEval(data, eval=eval):
 
 def readHex(content):
 	"""Convert a list of hex strings to binary data."""
-	hexdata = ""
-	for chunk in content:
-		if type(chunk) == type(""):
-			hexdata = hexdata + chunk
-	return deHexStr(hexdata)
+	return deHexStr(''.join([ chunk for chunk in content if isinstance(chunk,str) ]))
 
 def deHexStr(hexdata):
 	"""Convert a hex string to binary data."""
@@ -23,10 +19,11 @@ def deHexStr(hexdata):
 	hexdata = string.join(parts, "")
 	if len(hexdata) % 2:
 		hexdata = hexdata + "0"
-	data = ""
+	data = []
 	for i in range(0, len(hexdata), 2):
-		data = data + chr(string.atoi(hexdata[i:i+2], 16))
-	return data
+		data.append(chr(string.atoi(hexdata[i:i+2], 16)))
+	return "".join(data)
+
 
 def hexStr(data):
 	"""Convert binary data to a hex string."""
