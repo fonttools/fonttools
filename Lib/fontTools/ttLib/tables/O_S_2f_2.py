@@ -99,7 +99,7 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 			self.version = 0
 		if self.version == 1:
 			sstruct.unpack2(OS2_format_1_addition, data, self)
-		elif self.version in (2, 3):
+		elif self.version in (2, 3, 4):
 			sstruct.unpack2(OS2_format_2_addition, data, self)
 		elif self.version <> 0:
 			from fontTools import ttLib
@@ -113,7 +113,7 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 			data = sstruct.pack(OS2_format_0, self)
 		elif self.version == 1:
 			data = sstruct.pack(OS2_format_1, self)
-		elif self.version in (2, 3):
+		elif self.version in (2, 3, 4):
 			data = sstruct.pack(OS2_format_2, self)
 		else:
 			from fontTools import ttLib
@@ -124,7 +124,7 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 	def toXML(self, writer, ttFont):
 		if self.version == 1:
 			format = OS2_format_1
-		elif self.version in (2, 3):
+		elif self.version in (2, 3, 4):
 			format = OS2_format_2
 		else:
 			format = OS2_format_0
