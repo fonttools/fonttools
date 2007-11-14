@@ -28,12 +28,12 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 	
 	def decompile(self, data, ttFont):
 		loca = ttFont['loca']
-		last = loca[0]
+		last = int(loca[0])
 		self.glyphs = {}
 		self.glyphOrder = glyphOrder = ttFont.getGlyphOrder()
 		for i in range(0, len(loca)-1):
 			glyphName = glyphOrder[i]
-			next = loca[i+1]
+			next = int(loca[i+1])
 			glyphdata = data[last:next]
 			if len(glyphdata) <> (next - last):
 				raise ttLib.TTLibError, "not enough 'glyf' table data"
