@@ -1,0 +1,98 @@
+
+import os, sys
+from robofab import RoboFabError, version, numberVersion
+
+from robofab.interface.all.dialogs import SelectFont, SelectGlyph
+
+
+class RFWorld:
+	"""All parameters about platforms, versions and environments included in one object."""
+	def __init__(self):
+		self.mac = None
+		self.pc = None
+		self.platform = sys.platform
+		self.applicationName = None	# name of the application we're running in
+		self.name = os.name
+		self.version = version	# the robofab version
+		self.numberVersion = numberVersion
+		self._hasNagged = False
+		self._willNag = True
+		self._timedOut = False
+		self._license = False
+		self.run = True
+		
+		# check the time
+				
+		# show the sponsors
+		#if self._willNag and not self._hasNagged:
+		#	self.printMessage(['This program uses RoboFab', 'For more information on RoboFab contact the Developers', 'http://www.letterror.com/code/robofab/'])
+
+		# get some platform information
+		if self.name == 'mac' or self.name == 'posix':
+			if self.platform == "darwin":
+				self.mac = "X"
+			else:
+				self.mac = "pre-X"
+		elif self.name == 'nt':
+			# if you know more about PC & win stuff, add it here!
+			self.pc = True
+		else:
+			raise RoboFabError, "We're running on an unknown platform."
+		
+		# collect versions
+		self.pyVersion = sys.version[:3]
+		self.inPython = False 
+		self.flVersion = None
+		self.inFontLab = False
+		
+		# are we in FontLab?
+		try:
+			from FL import fl
+			self.applicationName = fl.filename
+			self.inFontLab = True
+			self.flVersion = fl.version
+		except ImportError: pass
+		if not self.inFontLab:
+			self.inPython = True
+
+		# see if we have W
+		self.supportsW = False
+		if not self.inFontLab:
+			try:
+				import W
+				self.supportsW = True
+			except ImportError:
+				self.supportsW = False
+			
+	def __repr__(self):
+		return "[Robofab is running on %s. Python version: %s, Mac stuff: %s, PC stuff: %s, FontLab stuff: %s, FLversion: %s]"%(self.platform, self.pyVersion, self.mac, self.pc, self.inFontLab, self.flVersion)
+
+	def printMessage(self, msg):
+		print 
+		print '='*30
+		print "RoboFab Public Announcement"
+		print '-'*30
+		for m in msg:
+			print m
+		print '-'*30
+		print 
+		
+
+world = RFWorld()
+
+lineBreak = os.linesep
+
+if world.inFontLab:
+	from robofab.objects.objectsFL import CurrentFont, CurrentGlyph, RFont, RGlyph, OpenFont, NewFont
+	lineBreak = "\n"
+elif world.inPython:
+	from robofab.objects.objectsRF import CurrentFont, CurrentGlyph, RFont, RGlyph, OpenFont, NewFont
+
+def AllFonts():
+	"""Return a list of all active fonts."""
+	return RFont.getAllFonts()
+
+
+if __name__ == "__main__":
+	f = RFWorld()
+	print f

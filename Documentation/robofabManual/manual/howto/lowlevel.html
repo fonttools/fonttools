@@ -1,0 +1,149 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>How to get to FontLab internals</title>
+
+<link href="../default.css" type="text/css" rel="stylesheet" />
+
+</head>
+<body>
+
+	
+	
+	<div id="modellogo">
+		<img src="../img/drawmodel_header.jpg" width="595" height="112" />
+	</div>
+	<div class="leftcontent">
+		<h2 class="crb-seealso">
+			RoboFab
+		</h2>
+		<p class="menu">
+			<a href="../index.html">
+				Home
+			</a>
+			<br />
+			<a href="../download/license.html">
+				Download v1.1.1
+			</a>
+			<br />
+			<a href="../intro.html">
+				Intro
+			</a>
+			<br />
+			<a href="../install.html">
+				Install Notes
+			</a>
+			<br />
+			<a href="../history.html">
+				History
+			</a>
+			<br />
+			<a href="../executive.html">
+				Summary
+			</a>
+		</p>
+		<p class="menu">
+			<a href="index.html">
+				How to's
+			</a>
+			<br />
+			<a href="../objects/index.html">
+				Fab Objects
+			</a>
+			<br />
+			<a href="../objects/model.html">
+				Fab Map
+			</a>
+			<br />
+			<a href="../tools/index.html">
+				Fab Tools
+			</a>
+			<br />
+			<a href="../ufo/index.html">
+				UFO Overview
+			</a>
+			<br />
+			<a href="../limitations.html">
+				Fab Limitations
+			</a>
+		</p>
+		<p class="menu">
+			<a href="../links/index.html">
+				Links
+			</a>
+			<br />
+			<a href="../glossary/index.html">
+				Glossary
+			</a>
+			<br />
+			<a href="../credits.html">
+				Credits
+			</a>
+		</p>
+		<br />
+		<br />
+		<p class="crb-uplink"><a href="index.html">Back to How To</a></p>
+
+		<br />
+		<br />
+		<p class="menu">
+			<a href="buildingaccents.html">Building accents</a><br />
+<a href="fontlabremote.html">FontLab Remote</a><br />
+<a href="generatefonts.html">Generate Fonts</a><br />
+<a href="index.html">How To</a><br />
+<a href="scripting.html">Scripting</a><br />
+<a href="understandcontours.html">Understanding Contours</a><br />
+<a href="usepens.html">Using Pens</a><br />
+<a href="usethelib.html">Using the lib</a><br />
+<a href="world.html">The world module</a><br />
+
+		</p>
+	</div>
+	<div class="footer">
+		<a href="../feedback.html">
+			Feedback
+		</a>
+		<br />
+		<a href="../map.html">
+			Sitemap
+		</a>
+		<br />
+		Please also refer to the 
+		<a href="../download/license.html">
+			Legal
+		</a>
+		<br />
+		Copyright 2003-2005 RoboFab 
+		<br />
+		version 1.1.1 
+	</div>
+
+	
+	 
+	<div class="content">
+		<h1>How to get to FontLab's internals</h1> 
+		<p>
+			If you're using RoboFab in FontLab, it can happen that you need to access a method or attribute of a glyph or font object which does not seem to have an equivalent in RoboFab. What to do?
+		</p>
+		<h3>Get Naked</h3> 
+		<p>
+RoboFab Glyph and Font objects have a special method, <strong>naked()</strong> which returns the actual, low level FontLab object. This object can then be used with the documented FontLab methods and attributes. The methods and attributes of these FontLab objects are very different from RoboFab.
+		</p>
+		<pre>
+from robofab.world import CurrentFont
+f = CurrentFont()
+print f
+# this is the high level RoboFab object
+>>> < RFont font for TemplatefontPro Rg Regular >
+
+print f.naked()
+# this is the low level FontLab object, not a part of RoboFab
+>>> < Font 'TemplatefontPro Rg Regular' >
+
+
+		</pre>
+	</div>
+</body>
+</html>

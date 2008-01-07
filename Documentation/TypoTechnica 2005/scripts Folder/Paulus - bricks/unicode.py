@@ -1,0 +1,1 @@
+from robofab.world import CurrentFontmyFont = CurrentFont()myflFont = fl.fontmyEncoding = myflFont.encodingprint ""for myGlyph in myFont:	myGlyphname = myGlyph.name	myIndex = myEncoding.FindName(myGlyphname)	print "\u" + str(myGlyph.unicode) + "\\'" + (hex(myIndex)[-2:])print "done"

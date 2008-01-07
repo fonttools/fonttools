@@ -1,0 +1,120 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  SYSTEM "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>How to: Manipulate points</title>
+
+<link href="../default.css" type="text/css" rel="stylesheet" />
+
+</head>
+<body>
+
+    
+    
+    
+
+<div id="modellogo">
+	<a href="../objects/model.html"><img src="../img/logo.gif" alt="" border="0" width="102" height="88" /></a>
+</div>
+
+    <!-- leftcontent section -->
+
+    <div id="leftcontent">
+    
+
+<h2 class="crb-seealso">RoboFab</h2>
+
+<p>
+<a href="../index.html">Home</a>
+<br /><a href="../download/license.html">Download</a>
+<br /><a href="../install.html">Install</a>
+<br /><a href="../intro.html">Intro</a>
+<br /><a href="../ufo/index.html">UFO</a>
+<br /><a href="../objects/index.html">Objects</a>
+<br /><a href="../tools/index.html">Tools</a>
+<br /><a href="index.html">How to's</a>
+<br /><a href="../limitations.html">Limitations</a>
+<br /><a href="../links/index.html">Links</a>
+<br /><a href="../history.html">History</a>
+<br /><a href="../glossary/index.html">Glossary</a>
+<br /><a href="../credits.html">Credits</a>
+<br /><a href="../shop/index.html">Shop</a>
+</p>
+    
+
+
+    <h2 class="crb-seealso">See Also</h2>
+<a href="../glossary/glyphmath.html">Glossary: GlyphMath</a><br />
+<a href="../objects/anchor.html">RAnchor</a><br />
+<a href="../objects/bpoint.html">bPoint</a><br />
+<a href="../objects/component.html">RComponent</a><br />
+<a href="../objects/contour.html">RContour</a><br />
+<a href="../objects/font.html">RFont</a><br />
+<a href="../objects/glyph.html">RGlyph</a><br />
+<a href="../objects/lib.html">RLib</a><br />
+<a href="../objects/pen.html">Pen objects</a><br />
+<a href="../objects/point.html">RPoint</a><br />
+<a href="../objects/segment.html">RSegment</a><br />
+<a href="glyphmath.html">Using Glyph Math</a><br />
+<a href="usetransformations.html">Using transformations</a><br />
+
+
+
+<p>
+<p class="crb-uplink"><a href="index.html">Back to How To</a></p>
+
+</p>
+
+    </div>
+    <!-- leftcontent section ends -->
+
+
+    
+    
+
+
+
+<div id="content">
+<div id="columntext">
+
+
+<h1>Manipulating Points</h1>
+<p>
+RGlyph objects have methods that allow the objects to behave a bit like variables in simple math. These methods do not do additions or substractions of the surface area of the glyphs, like layering two glyphs on top of each other and than doing &quot;remove overlap&quot;. Instead, they return new glyph objects in which each coordinate in each contour is the product of the two glyphs. 
+</p>
+
+<h2>Objects</h2>
+<p>
+All glyph math operations in have new, orphaned, objects as result. For instance a substraction of two FontLab RoboFab glyphs will result in a new glyph object, but it won't be part of the font. If you want the result to be part of the font you have to add it explicitly, see the example at the bottom of this page. There are several reasons for this: 
+<ul>
+	<li>the result might not even come from glyphs in the same font, i.e. you can substract a glyph in one font from a glyph in another font. Where should the result live? you decide.</li>	
+	<li>You might not want the result to be part of your font when you're using it for further calculations. So: results from glyphmath operations are orphan glyphs that do not belong to any font.</li>
+	<li>the results need to use floating point (19.234943) numbers for precision, FontLab only stores integer numbers (19)</li>
+</ul>
+
+If you want to add a glyph (of any flavor, FontLab or UFO) to a font use the appendGlyph method:
+<pre>
+someNewGlyph = aFont.newGlyph(&quot;someNewGlyph&quot;)
+someNewGlyph.appendGlyph(restultFromGlyphMath)
+
+# note you have to set the width, appendGlyph does not automatically
+# take the value.
+someNewGlyph.width = restultFromGlyphMath.width
+</pre>
+</p>
+
+</div>
+</div>
+
+<div id="footer">
+
+<h2 class="crb-seealso">Fine print</h2>
+    <p><a href="../feedback.html">Feedback</a></p>
+    <p><a href="../map.html">Sitemap</a></p>
+	<p>Please also refer to the <a href="../download/license.html">Legal</a></p>
+    <p>Copyright 2004 RoboFab</p>
+    <p>version 1.0</p>
+    </div>
+</body>
+</html>

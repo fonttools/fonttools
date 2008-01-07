@@ -1,0 +1,3 @@
+from robofab.world import CurrentFontimport osencfilename= os.path.join(fl.path, r"Encoding", r"WINCE.ENC")f = CurrentFont()f.info.fondID = 30915f.naked().encoding.Load(encfilename)f.naked().ttinfo.os2_ul_code_page_range1 = 2
+# 1= Latin 1# 2= Latin 2  f.naked().ttinfo.os2_ul_code_page_range2 = 67108864f.naked().ms_charset = 238
+# Win ANSI=0# 1252 Latin 2=238f.update()print f.info.fullName

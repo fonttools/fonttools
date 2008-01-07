@@ -1,0 +1,6 @@
+import os.path
+encfilename= os.path.join(fl.path, r"Encoding", r"MACROMAN.ENC")
+
+font = fl.font
+font.encoding.Load(encfilename)
+fl.UpdateFont()

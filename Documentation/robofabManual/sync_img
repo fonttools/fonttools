@@ -1,0 +1,1 @@
+rsync -avze ssh site/ erik@lettersetter.net:/Users/erik/Sites/robofab.com/ --include "*/" --include "*.jpg" --include "*.gif" --include "*.png" --include "*.ico" --include "*.mov" --exclude "*"

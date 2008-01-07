@@ -1,0 +1,1 @@
+from robofab.world import CurrentGlyphmyGlyph = CurrentGlyph()myPen = myGlyph.getPen()myPen.moveTo((-10,0))myPen.lineTo((500,0))myPen.lineTo((500,50))myPen.lineTo((-10,50))myPen.lineTo((-10,0))myPen.closePath()myGlyph.update()

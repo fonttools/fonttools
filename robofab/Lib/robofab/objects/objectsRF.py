@@ -1,0 +1,1434 @@
+"""UFO for GlifLib"""
+
+from robofab import RoboFabError, RoboFabWarning
+from robofab.objects.objectsBase import BaseFont, BaseKerning, BaseGroups, BaseInfo, BaseLib,\
+		BaseGlyph, BaseContour, BaseSegment, BasePoint, BaseBPoint, BaseAnchor, BaseGuide, BaseComponent, \
+		relativeBCPIn, relativeBCPOut, absoluteBCPIn, absoluteBCPOut, _box,\
+		_interpolate, _interpolatePt, roundPt, addPt,\
+		MOVE, LINE, CORNER, CURVE, QCURVE, OFFCURVE
+
+import os
+
+
+__all__ = [	"CurrentFont", 
+		"CurrentGlyph", 'OpenFont',
+		'RFont', 'RGlyph', 'RContour',
+		'RPoint', 'RBPoint', 'RAnchor',
+		'RComponent'
+		]
+
+
+
+def CurrentFont():
+	return None
+
+def CurrentGlyph():
+	return None
+
+def OpenFont(path=None, note=None):
+	"""Open a font from a path. If path is not given, present the user with a dialog."""
+	if not note:
+		note = 'select a .ufo directory'
+	if not path:
+		from robofab.interface.all.dialogs import GetFolder
+		path = GetFolder(note)
+	if path:
+		try:
+			return RFont(path)
+		except OSError:
+			from robofab.interface.all.dialogs import Message
+			Message("%s is not a valid .UFO font. But considering it's all XML, why don't  you have a look inside with a simple text editor."%(path))
+	else:
+		return None
+		
+def NewFont(familyName=None, styleName=None):
+	"""Make a new font"""
+	new = RFont()
+	new.info.familyName = familyName
+	new.info.styleName = styleName
+	return new
+
+
+class RFont(BaseFont):
+	"""UFO font object which reads and writes glif, and keeps the data in memory in between.
+	Bahviour:
+		- comparable to Font
+		- comparable to GlyphSet so that it can be passed to Glif widgets
+	"""
+	
+	_title = "RoboFabFont"
+	
+	def __init__(self, path=None):
+		BaseFont.__init__(self)
+		if path is not None:
+			self._path = os.path.normpath(os.path.abspath(path))
+		else:
+			self._path = None
+		self._object = {}
+		
+		self._glyphSet = None
+		self._scheduledForDeletion = []	# this is a place for storing glyphs that need to be removed when the font is saved
+		
+		self.kerning = RKerning()
+		self.kerning.setParent(self)
+		self.info = RInfo()
+		self.info.setParent(self)
+		self.groups = RGroups()
+		self.groups.setParent(self)
+		self.lib = RLib()
+		self.lib.setParent(self)
+		
+		if path:
+			self._loadData(path)
+		
+	def __setitem__(self, glyphName, glyph):
+		"""Set a glyph at key."""
+		self._object[glyphName] = glyph
+	
+	def __cmp__(self, other):
+		"""Compare this font with another, compare if they refer to the same file."""
+		if not hasattr(other, '_path'):
+			return -1
+		if self._object._path == other._object._path and self._object._path is not None: 
+			return 0
+		else:
+			return -1
+	
+	def __len__(self):
+		if self._glyphSet is None:
+			return 0
+		return len(self._glyphSet)
+	
+	def _loadData(self, path):
+		#Load the data into the font
+		from robofab.ufoLib import UFOReader
+		u = UFOReader(path)
+		u.readInfo(self.info)
+		self.kerning.update(u.readKerning())
+		self.kerning.setChanged(False)
+		self.groups.update(u.readGroups())
+		self.lib.update(u.readLib())
+		self._glyphSet = u.getGlyphSet()
+		self._hasNotChanged(doGlyphs=False)
+		
+	def _loadGlyph(self, glyphName):
+		"""Load a single glyph from the glyphSet, on request."""
+		from robofab.pens.rfUFOPen import RFUFOPointPen
+		g =  RGlyph()
+		g.name = glyphName
+		pen = RFUFOPointPen(g)
+		self._glyphSet.readGlyph(glyphName=glyphName, glyphObject=g, pointPen=pen)
+		g.setParent(self)
+		self._object[glyphName] = g
+		self._object[glyphName]._hasNotChanged()
+		return g
+		
+	#def _prepareSaveDir(self, dir):
+	#	path = os.path.join(dir, 'glyphs')
+	#	if not os.path.exists(path):
+	#		os.makedirs(path)
+
+	def _hasNotChanged(self, doGlyphs=True):
+		#set the changed state of the font
+		if doGlyphs:
+			for glyph in self:
+				glyph._hasNotChanged()
+		self.setChanged(False)
+	
+	#
+	# attributes
+	#
+	
+	def _get_path(self):
+		return self._path
+	
+	path = property(_get_path, doc="path of the font")
+		
+	#
+	# methods for imitating GlyphSet?
+	#
+			
+	def keys(self):
+		# the keys are the superset of self._objects.keys() and
+		# self._glyphSet.keys(), minus self._scheduledForDeletion
+		keys = self._object.keys()
+		if self._glyphSet is not None:
+			keys.extend(self._glyphSet.keys())
+		d = dict()
+		for glyphName in keys:
+			d[glyphName] = None
+		for glyphName in self._scheduledForDeletion:
+			if glyphName in d:
+				del d[glyphName]
+		return d.keys()
+
+	def has_key(self, glyphName):
+		# XXX ditto, see above.
+		if self._glyphSet is not None:
+			hasGlyph = glyphName in self._object or glyphName in self._glyphSet
+		else:
+			hasGlyph = glyphName in self._object
+		return hasGlyph and not glyphName in self._scheduledForDeletion
+	
+	__contains__ = has_key
+	
+	def getWidth(self, glyphName):
+		if self._object.has_key(glyphName):
+			return self._object[glyphName].width
+		raise IndexError		# or return None?
+		
+	def getReverseComponentMapping(self):
+		"""
+		Get a reversed map of component references in the font.
+		{
+		'A' : ['Aacute', 'Aring']
+		'acute' : ['Aacute']
+		'ring' : ['Aring']
+		etc.
+		}
+		"""
+		# a NON-REVERESED map is stored in the lib.
+		# this is done because a reveresed map could
+		# contain faulty data. for example: "Aacute" contains
+		# a component that references "A". Glyph "Aacute" is
+		# then deleted. The reverse map would still say that
+		# "A" is referenced by "Aacute" even though the
+		# glyph has been deleted. So, the stored lib works like this:
+		# {
+		# 'Aacute' : [
+		#		# the last known mod time of the GLIF
+		#		1098706856.75,
+		#		# component references in a glyph
+		#		['A', 'acute']
+		#		]
+		# }
+		import time
+		import os
+		import re
+		componentSearch_RE = re.compile(
+			"<component\s+"		# <component
+			"[^>]*?"			# anything EXCEPT >
+			"base\s*=\s*[\"\']"		# base="
+			"(.*?)"			# foo
+			"[\"\']"			# "
+			)
+		rightNow = time.time()
+		libKey = "org.robofab.componentMapping"
+		previousMap = None
+		if self.lib.has_key(libKey):
+			previousMap = self.lib[libKey]
+		basicMap = {}
+		reverseMap = {}
+		for glyphName in self.keys():
+			componentsToMap = None
+			modTime = None
+			# get the previous bits of data
+			previousModTime = None
+			previousList = None
+			if previousMap is not None and previousMap.has_key(glyphName):
+				previousModTime, previousList = previousMap[glyphName]
+			# the glyph has been loaded.
+			# simply get the components from it.
+			if self._object.has_key(glyphName):
+				componentsToMap = [component.baseGlyph for component in self._object[glyphName].components]
+			# the glyph has not been loaded.
+			else:
+				glyphPath = os.path.join(self._glyphSet.dirName, self._glyphSet.contents[glyphName])
+				scanGlyph = True
+				# test the modified time of the GLIF
+				fileModTime = os.path.getmtime(glyphPath)
+				if previousModTime is not None and fileModTime == previousModTime:
+					# the GLIF almost* certianly has not changed.
+					# *theoretically, a user could replace a GLIF
+					# with another GLIF that has precisely the same
+					# mod time. 
+					scanGlyph = False
+					componentsToMap = previousList
+					modTime = previousModTime
+				else:
+					# the GLIF is different
+					modTime = fileModTime
+				if scanGlyph:
+					# use regex to extract component
+					# base glyphs from the file
+					f = open(glyphPath, 'rb')
+					data = f.read()
+					f.close()
+					componentsToMap = componentSearch_RE.findall(data)
+			if componentsToMap is not None:
+				# store the non-reversed map
+				basicMap[glyphName] = (modTime, componentsToMap)
+				# reverse the map for the user
+				if componentsToMap:
+					for baseGlyphName in componentsToMap:
+						if not reverseMap.has_key(baseGlyphName):
+							reverseMap[baseGlyphName] = []
+						reverseMap[baseGlyphName].append(glyphName)
+				# if a glyph has been loaded, we do not store data about it in the lib.
+				# this is done becuase there is not way to determine the proper mod time
+				# for a loaded glyph.
+				if modTime is None:
+					del basicMap[glyphName]
+		# store the map in the lib for re-use
+		self.lib[libKey] = basicMap
+		return reverseMap
+		
+
+	def save(self, destDir=None, doProgress=False, saveNow=False):
+		"""Save the Font in UFO format."""
+		# XXX note that when doing "save as" by specifying the destDir argument
+		# _all_ glyphs get loaded into memory. This could be optimized by either
+		# copying those .glif files that have not been edited or (not sure how
+		# well that would work) by simply clearing out self._objects after the
+		# save.
+		from robofab.ufoLib import UFOWriter
+		# if no destination is given, or if
+		# the given destination is the current
+		# path, this is not a save as operation
+		if destDir is None or destDir == self._path:
+			saveAs = False
+			destDir = self._path
+		else:
+			saveAs = True
+		u = UFOWriter(destDir)
+		nonGlyphCount = 5
+		bar = None
+		if doProgress:
+			from robofab.interface.all.dialogs import ProgressBar
+			bar = ProgressBar('Exporting UFO', nonGlyphCount+len(self._object.keys()))
+		try:
+			#if self.info.changed:
+			if bar:
+				bar.label('Saving info...')
+			u.writeInfo(self.info)
+			if bar:
+				bar.tick()
+			if self.kerning.changed:
+				if bar:
+					bar.label('Saving kerning...')
+				u.writeKerning(self.kerning.asDict())
+				self.kerning.setChanged(False)
+			if bar:
+				bar.tick()
+			#if self.groups.changed:
+			if bar:
+				bar.label('Saving groups...')
+			u.writeGroups(self.groups)
+			if bar:
+				bar.tick()
+			#if self.lib.changed:
+			if bar:
+				bar.label('Saving lib...')
+			u.writeLib(self.lib)
+			if bar:
+				bar.tick()
+			glyphNameToFileNameFunc = self.getGlyphNameToFileNameFunc()
+			glyphSet = u.getGlyphSet(glyphNameToFileNameFunc)
+			if len(self._scheduledForDeletion) != 0:
+				if bar:
+					bar.label('Removing deleted glyphs......')
+				for glyphName in self._scheduledForDeletion:
+					if glyphSet.has_key(glyphName):
+						glyphSet.deleteGlyph(glyphName)
+				if bar:
+					bar.tick()
+			if bar:
+				bar.label('Saving glyphs...')
+			count = nonGlyphCount
+			if saveAs:
+				glyphNames = self.keys()
+			else:
+				glyphNames = self._object.keys()
+			for glyphName in glyphNames:
+				glyph = self[glyphName]
+				glyph._saveToGlyphSet(glyphSet, glyphName=glyphName, force=saveAs)
+				if bar and not count % 10:
+					bar.tick(count)
+				count = count + 1
+			glyphSet.writeContents()
+			self._glyphSet = glyphSet
+		except KeyboardInterrupt:
+			bar.close()
+			bar = None
+		if bar:
+			bar.close()
+		self._path = destDir
+		self._scheduledForDeletion = []
+		self.setChanged(False)
+		
+	def newGlyph(self, glyphName, clear=True):
+		"""Make a new glyph with glyphName
+		if the glyph exists and clear=True clear the glyph"""
+		if clear and glyphName in self:
+			g = self[glyphName]
+			g.clear()
+			g.width = self.info.defaultWidth
+			return g
+		g = RGlyph()
+		g.setParent(self)
+		g.name = glyphName
+		g.width = self.info.defaultWidth
+		g._hasChanged()
+		self._object[glyphName] = g
+		# is the user adding a glyph that has the same
+		# name as one that was deleted earlier?
+		if glyphName in self._scheduledForDeletion:
+			self._scheduledForDeletion.remove(glyphName)
+		return self.getGlyph(glyphName)
+		
+	def insertGlyph(self, glyph, as=None):
+		"""returns a new glyph that has been inserted into the font"""
+		if as is None:
+			name = glyph.name
+		else:
+			name = as
+		glyph = glyph.copy()
+		glyph.name = name
+		glyph.setParent(self)
+		glyph._hasChanged()
+		self._object[name] = glyph
+		# is the user adding a glyph that has the same
+		# name as one that was deleted earlier?
+		if name in self._scheduledForDeletion:
+			self._scheduledForDeletion.remove(name)
+		return self.getGlyph(name)
+		
+	def removeGlyph(self, glyphName):
+		"""remove a glyph from the font"""
+		# XXX! Potential issue with removing glyphs.
+		# if a glyph is removed from a font, but it is still referenced
+		# by a component, it will give pens some trouble.
+		# where does the resposibility for catching this fall?
+		# the removeGlyph method? the addComponent method
+		# of the various pens? somewhere else? hm... tricky.
+		#
+		#we won't actually remove it, we will just store it for removal
+		# but only if the glyph does exist
+		if self.has_key(glyphName) and glyphName not in self._scheduledForDeletion:
+			self._scheduledForDeletion.append(glyphName)
+		# now delete the object
+		if self._object.has_key(glyphName):
+			del self._object[glyphName]
+		self._hasChanged()
+		
+	def getGlyph(self, glyphName):
+		# XXX getGlyph may have to become private, to avoid duplication
+		# with __getitem__
+		n = None
+		if self._object.has_key(glyphName):
+			# have we served this glyph before? it should be in _object
+			n = self._object[glyphName]
+		else:
+			# haven't served it before, is it in the glyphSet then?
+			if self._glyphSet is not None and glyphName in self._glyphSet:
+				# yes, read the .glif file from disk
+				n = self._loadGlyph(glyphName)
+		if n is None:
+			raise KeyError, glyphName
+		return n
+
+
+class RGlyph(BaseGlyph):
+	
+	_title = "RGlyph"
+	
+	def __init__(self):
+		BaseGlyph.__init__(self)
+		self.contours = []
+		self.components = []
+		self.anchors = []
+		self._unicodes = []
+		self.width = 0
+		self.note = None
+		self._name = "Unnamed Glyph"
+		self.selected = False
+		self._properties = None
+		self._lib = RLib()
+		self._lib.setParent(self)
+		
+
+
+	def __len__(self):
+		return len(self.contours) 
+
+	def __getitem__(self, index):
+		if index < len(self.contours):
+			return self.contours[index]
+		raise IndexError
+	
+	def _hasNotChanged(self):
+		for contour in self.contours:
+			contour.setChanged(False)
+			for segment in contour.segments:
+				segment.setChanged(False)
+				for point in segment.points:
+					point.setChanged(False)
+		for component in self.components:
+			component.setChanged(False)
+		for anchor in self.anchors:
+			anchor.setChanged(False)
+		self.setChanged(False)
+	
+	#
+	# attributes
+	#
+	
+	def _get_lib(self):
+		return self._lib
+	
+	def _set_lib(self, obj):
+		self._lib.clear()
+		self._lib.update(obj)
+	
+	lib = property(_get_lib, _set_lib)
+	
+	def _get_name(self):
+		return self._name
+	
+	def _set_name(self, value):
+		prevName = self._name
+		newName = value
+		if newName == prevName:
+			return
+		self._name = newName
+		self.setChanged(True)
+		font = self.getParent()
+		if font is not None:
+			# but, this glyph could be linked to a
+			# FontLab font, because objectsFL.RGlyph.copy()
+			# creates an objectsRF.RGlyph with the parent
+			# set to an objectsFL.RFont object. so, check to see
+			# if this is a legitimate RFont before trying to 
+			# do the objectsRF.RFont glyph name change
+			if isinstance(font, RFont):
+				font._object[newName] = self
+				# is the user changing a glyph's name to the
+				# name of a glyph that was deleted earlier?
+				if newName in font._scheduledForDeletion:
+					font._scheduledForDeletion.remove(newName)
+				font.removeGlyph(prevName)
+	
+	name = property(_get_name, _set_name)
+	
+	def _get_unicodes(self):
+		return self._unicodes
+	
+	def _set_unicodes(self, value):
+		if not isinstance(value, list):
+			raise RoboFabError, "unicodes must be a list"
+		self._unicodes = value
+		self._hasChanged()
+			
+	unicodes = property(_get_unicodes, _set_unicodes, doc="all unicode values for the glyph")
+	
+	def _get_unicode(self):
+		if len(self._unicodes) == 0:
+			return None
+		return self._unicodes[0]
+	
+	def _set_unicode(self, value):
+		uni = self._unicodes
+		if value is not None:
+			if value not in uni:
+				self.unicodes.insert(0, value)
+			elif uni.index(value) != 0:
+				uni.insert(0, uni.pop(uni.index(value)))
+				self.unicodes = uni
+		
+	unicode = property(_get_unicode, _set_unicode, doc="first unicode value for the glyph")
+	
+	def getPointPen(self):
+		from robofab.pens.rfUFOPen import RFUFOPointPen
+		return RFUFOPointPen(self)
+
+	def appendComponent(self, baseGlyph, offset=(0, 0), scale=(1, 1)):
+		"""append a component to the glyph"""
+		new = RComponent(baseGlyph, offset, scale)
+		new.setParent(self)
+		self.components.append(new)
+		self._hasChanged()
+		
+	def appendAnchor(self, name, position, mark=None):
+		"""append an anchor to the glyph"""
+		new = RAnchor(name, position, mark)
+		new.setParent(self)
+		self.anchors.append(new)
+		self._hasChanged()
+	
+	def removeContour(self, index):
+		"""remove  a specific contour from the glyph"""
+		del self.contours[index]
+		self._hasChanged()
+		
+	def removeAnchor(self, anchor):
+		"""remove  a specific anchor from the glyph"""
+		del self.anchors[anchor.index]
+		self._hasChanged()
+	
+	def removeComponent(self, component):
+		"""remove  a specific component from the glyph"""
+		del self.components[component.index]
+		self._hasChanged()
+			
+	def center(self, padding=None):
+		"""Equalise sidebearings, set to padding if wanted."""
+		left = self.leftMargin
+		right = self.rightMargin
+		if padding:
+			e_left = e_right = padding
+		else:
+			e_left = (left + right)/2
+			e_right = (left + right) - e_left
+		self.leftMargin = e_left
+		self.rightMargin = e_right
+	
+	def decompose(self):
+		"""Decompose all components"""
+		for i in range(len(self.components)):
+			self.components[-1].decompose()
+		self._hasChanged()
+			
+	def clear(self, contours=True, components=True, anchors=True, guides=True):
+		"""Clear all items marked as True from the glyph"""
+		if contours:
+			self.clearContours()
+		if components:
+			self.clearComponents()
+		if anchors:
+			self.clearAnchors()
+		if guides:
+			self.clearHGuides()
+			self.clearVGuides()
+	
+	def clearContours(self):
+		"""clear all contours"""
+		self.contours = []
+		self._hasChanged()
+	
+	def clearComponents(self):
+		"""clear all components"""
+		self.components = []
+		self._hasChanged()
+		
+	def clearAnchors(self):
+		"""clear all anchors"""
+		self.anchors = []
+		self._hasChanged()
+		
+	def clearHGuides(self):
+		"""clear all horizontal guides"""
+		self.hGuides = []
+		self._hasChanged()
+	
+	def clearVGuides(self):
+		"""clear all vertical guides"""
+		self.vGuides = []
+		self._hasChanged()
+		
+	def getAnchors(self):
+		return self.anchors
+	
+	def getComponents(self):
+		return self.components
+	
+	#
+	# stuff related to Glyph Properties
+	#
+	
+
+
+class RContour(BaseContour):
+	
+	_title = "RoboFabContour"
+	
+	def __init__(self, object=None):
+		#BaseContour.__init__(self)
+		self.segments = []
+		self.selected = False
+		
+	def __len__(self):
+		return len(self.segments) 
+
+	def __getitem__(self, index):
+		if index < len(self.segments):
+			return self.segments[index]
+		raise IndexError
+		
+	def _get_index(self):
+		return self.getParent().contours.index(self)
+		
+	def _set_index(self, index):
+		ogIndex = self.index
+		if index != ogIndex:
+			contourList = self.getParent().contours
+			contourList.insert(index, contourList.pop(ogIndex))
+			
+	
+	index = property(_get_index, _set_index, doc="index of the contour")
+	
+	def _get_points(self):
+		points = []
+		for segment in self.segments:
+			for point in segment.points:
+				points.append(point)
+		return points
+	
+	points = property(_get_points, doc="view the contour as a list of points")
+	
+	def _get_bPoints(self):
+		bPoints = []
+		for segment in self.segments:
+			segType = segment.type
+			if segType == MOVE:
+				bType = CORNER
+			elif segType == LINE:
+				bType = CORNER
+			elif segType == CURVE:
+				if segment.smooth:
+					bType = CURVE
+				else:
+					bType = CORNER
+			else:
+				raise RoboFabError, "encountered unknown segment type"
+			b = RBPoint()
+			b.setParent(segment)
+			bPoints.append(b)
+		return bPoints
+
+	bPoints = property(_get_bPoints, doc="view the contour as a list of bPoints")
+	
+	def appendSegment(self, segmentType, points, smooth=False):
+		"""append a segment to the contour"""
+		segment = self.insertSegment(index=len(self.segments), segmentType=segmentType, points=points, smooth=smooth)
+		return segment
+		
+	def insertSegment(self, index, segmentType, points, smooth=False):
+		"""insert a segment into the contour"""
+		segment = RSegment(segmentType, points, smooth)
+		segment.setParent(self)
+		self.segments.insert(index, segment)
+		self._hasChanged()
+		return segment
+		
+	def removeSegment(self, index):
+		"""remove a segment from the contour"""
+		del self.segments[index]
+		self._hasChanged()
+				
+	def reverseContour(self):
+		"""reverse the contour"""
+		from robofab.pens.reverseContourPointPen import ReverseContourPointPen
+		index = self.index
+		glyph = self.getParent()
+		pen = glyph.getPointPen()
+		reversePen = ReverseContourPointPen(pen)
+		self.drawPoints(reversePen)
+		# we've drawn the reversed contour onto our parent glyph,
+		# so it sits at the end of the contours list:
+		newContour = glyph.contours.pop(-1)
+		for segment in newContour.segments:
+			segment.setParent(self)
+		self.segments = newContour.segments
+		self._hasChanged()
+	
+	def setStartSegment(self, segmentIndex):
+		"""set the first segment on the contour"""
+		# this obviously does not support open contours
+		if len(self.segments) < 2:
+			return
+		if segmentIndex == 0:
+			return
+		if segmentIndex > len(self.segments)-1:
+			raise IndexError, 'segment index not in segments list'
+		oldStart = self.segments[0]
+		oldLast = self.segments[-1]
+		 #check to see if the contour ended with a curve on top of the move
+		 #if we find one delete it,
+		if oldLast.type == CURVE or oldLast.type == QCURVE:
+			startOn = oldStart.onCurve
+			lastOn = oldLast.onCurve
+			if startOn.x == lastOn.x and startOn.y == lastOn.y:
+				del self.segments[0]
+				# since we deleted the first contour, the segmentIndex needs to shift
+				segmentIndex = segmentIndex - 1
+		# if we DO have a move left over, we need to convert it to a line
+		if self.segments[0].type == MOVE:
+			self.segments[0].type = LINE
+		# slice up the segments and reassign them to the contour
+		segments = self.segments[segmentIndex:]
+		self.segments = segments + self.segments[:segmentIndex]
+		# now, draw the contour onto the parent glyph
+		glyph = self.getParent()
+		pen = glyph.getPointPen()
+		self.drawPoints(pen)
+		# we've drawn the new contour onto our parent glyph,
+		# so it sits at the end of the contours list:
+		newContour = glyph.contours.pop(-1)
+		for segment in newContour.segments:
+			segment.setParent(self)
+		self.segments = newContour.segments
+		self._hasChanged()
+
+
+class RSegment(BaseSegment):
+	
+	_title = "RoboFabSegment"
+	
+	def __init__(self, segmentType=None, points=[], smooth=False):
+		BaseSegment.__init__(self)
+		self.selected = False
+		self.points = []
+		self.smooth = smooth
+		if points:
+			#the points in the segment should be RPoints, so create those objects
+			for point in points[:-1]:
+				x, y = point
+				p = RPoint(x, y, pointType=OFFCURVE)
+				p.setParent(self)
+				self.points.append(p)
+			aX, aY = points[-1]
+			p = RPoint(aX, aY, segmentType)
+			p.setParent(self)
+			self.points.append(p)
+		
+	def _get_type(self):
+		return self.points[-1].type
+	
+	def _set_type(self, pointType):
+		onCurve = self.points[-1]
+		ocType = onCurve.type
+		if ocType == pointType:
+			return
+		#we are converting a cubic line into a cubic curve
+		if pointType == CURVE and  ocType == LINE:
+			onCurve.type = pointType
+			parent = self.getParent()
+			prev = parent._prevSegment(self.index)
+			p1 = RPoint(prev.onCurve.x, prev.onCurve.y, pointType=OFFCURVE)
+			p1.setParent(self)
+			p2 = RPoint(onCurve.x, onCurve.y, pointType=OFFCURVE)
+			p2.setParent(self)
+			self.points.insert(0, p2)
+			self.points.insert(0, p1)
+		#we are converting a cubic move to a curve
+		elif pointType == CURVE and ocType == MOVE:
+			onCurve.type = pointType
+			parent = self.getParent()
+			prev = parent._prevSegment(self.index)
+			p1 = RPoint(prev.onCurve.x, prev.onCurve.y, pointType=OFFCURVE)
+			p1.setParent(self)
+			p2 = RPoint(onCurve.x, onCurve.y, pointType=OFFCURVE)
+			p2.setParent(self)
+			self.points.insert(0, p2)
+			self.points.insert(0, p1)
+		#we are converting a quad curve to a cubic curve
+		elif pointType == CURVE and ocType == QCURVE:
+			onCurve.type == CURVE
+		#we are converting a cubic curve into a cubic line
+		elif pointType == LINE and ocType == CURVE:
+			p = self.points.pop(-1)
+			self.points = [p]
+			onCurve.type = pointType
+			self.smooth = False
+		#we are converting a cubic move to a line
+		elif pointType == LINE and ocType == MOVE:
+			onCurve.type = pointType
+		#we are converting a quad curve to a line:
+		elif pointType == LINE and ocType == QCURVE:
+			p = self.points.pop(-1)
+			self.points = [p]
+			onCurve.type = pointType
+			self.smooth = False	
+		# we are converting to a quad curve where just about anything is legal
+		elif pointType == QCURVE:
+			onCurve.type = pointType
+		else:
+			raise RoboFabError, 'unknown segment type'
+			
+	type = property(_get_type, _set_type, doc="type of the segment")
+	
+	def _get_index(self):
+		return self.getParent().segments.index(self)
+		
+	index = property(_get_index, doc="index of the segment")
+	
+	def insertPoint(self, index, pointType, point):
+		x, y = point
+		p = RPoint(x, y, pointType=pointType)
+		p.setParent(self)
+		self.points.insert(index, p)
+		self._hasChanged()
+	
+	def removePoint(self, index):
+		del self.points[index]
+		self._hasChanged()
+		
+
+class RBPoint(BaseBPoint):
+	
+	_title = "RoboFabBPoint"
+		
+	def _setAnchorChanged(self, value):
+		self._anchorPoint.setChanged(value)
+	
+	def _setNextChanged(self, value):
+		self._nextOnCurve.setChanged(value)	
+		
+	def _get__parentSegment(self):
+		return self.getParent()
+		
+	_parentSegment = property(_get__parentSegment, doc="")
+	
+	def _get__nextOnCurve(self):
+		pSeg = self._parentSegment
+		contour = pSeg.getParent()
+		#could this potentially return an incorrect index? say, if two segments are exactly the same?
+		return contour.segments[(contour.segments.index(pSeg) + 1) % len(contour.segments)]
+	
+	_nextOnCurve = property(_get__nextOnCurve, doc="")
+	
+	def _get_index(self):
+		return self._parentSegment.index
+	
+	index = property(_get_index, doc="index of the bPoint on the contour")
+
+
+class RPoint(BasePoint):
+	
+	_title = "RoboFabPoint"
+	
+	def __init__(self, x=0, y=0, pointType=None, name=None):
+		self.selected = False
+		self._type = pointType
+		self._x = x
+		self._y = y
+		self._name = None
+		
+	def _get_x(self):
+		return self._x
+		
+	def _set_x(self, value):
+		self._x = value
+		self._hasChanged()
+	
+	x = property(_get_x, _set_x, doc="")
+
+	def _get_y(self):
+		return self._y
+	
+	def _set_y(self, value):
+		self._y = value
+		self._hasChanged()
+
+	y = property(_get_y, _set_y, doc="")
+	
+	def _get_type(self):
+		return self._type
+	
+	def _set_type(self, value):
+		self._type = value
+		self._hasChanged()
+
+	type = property(_get_type, _set_type, doc="")
+	
+	def _get_name(self):
+		return self._name
+	
+	def _set_name(self, value):
+		self._name = value
+		self._hasChanged()
+
+	name = property(_get_name, _set_name, doc="")
+
+		
+class RAnchor(BaseAnchor):
+	
+	_title = "RoboFabAnchor"
+	
+	def __init__(self, name=None, position=None, mark=None):
+		BaseAnchor.__init__(self)
+		self.selected = False
+		self.name = name
+		if position is None:
+			self.x = self.y = None
+		else:
+			self.x, self.y = position
+		self.mark = mark
+		
+	def _get_index(self):
+		if self.getParent() is None: return None
+		return self.getParent().anchors.index(self)
+	
+	index = property(_get_index, doc="index of the anchor")
+	
+	def _get_position(self):
+		return (self.x, self.y)
+	
+	def _set_position(self, value):
+		self.x = value[0]
+		self.y = value[1]
+		self._hasChanged()
+	
+	position = property(_get_position, _set_position, doc="position of the anchor")
+	
+	def move(self, (x, y)):
+		"""Move the anchor"""
+		self.x = self.x + x
+		self.y = self.y + y
+		self._hasChanged()
+
+		
+class RComponent(BaseComponent):
+	
+	_title = "RoboFabComponent"
+	
+	def __init__(self, baseGlyphName=None, offset=(0,0), scale=(1,1)):
+		BaseComponent.__init__(self)
+		self.selected = False
+		self._baseGlyph = baseGlyphName
+		self._offset = offset
+		self._scale = scale
+		
+	def _get_index(self):
+		if self.getParent() is None: return None
+		return self.getParent().components.index(self)
+		
+	index = property(_get_index, doc="index of the component")
+	
+	def _get_baseGlyph(self):
+		return self._baseGlyph
+		
+	def _set_baseGlyph(self, glyphName):
+		# XXXX needs to be implemented in objectsFL for symmetricity's sake. Eventually.
+		self._baseGlyph = glyphName
+		self._hasChanged()
+		
+	baseGlyph = property(_get_baseGlyph, _set_baseGlyph, doc="")
+
+	def _get_offset(self):
+		return self._offset
+	
+	def _set_offset(self, value):
+		self._offset = value
+		self._hasChanged()
+		
+	offset = property(_get_offset, _set_offset, doc="the offset of the component")
+
+	def _get_scale(self):
+		return self._scale
+	
+	def _set_scale(self, (x, y)):
+		self._scale = (x, y)
+		self._hasChanged()
+		
+	scale = property(_get_scale, _set_scale, doc="the scale of the component")
+		
+	def move(self, (x, y)):
+		"""Move the component"""
+		self.offset = (self.offset[0] + x, self.offset[1] + y)
+	
+	def decompose(self):
+		"""Decompose the component"""
+		baseGlyphName = self.baseGlyph
+		parentGlyph = self.getParent()
+		# if there is no parent glyph, there is nothing to decompose to
+		if baseGlyphName is not None and parentGlyph is not None:
+			parentFont = parentGlyph.getParent()
+			# we must have a parent glyph with the baseGlyph
+			# if not, we will simply remove the component from
+			# the parent glyph thereby decomposing the component
+			# to nothing.
+			if parentFont is not None and parentFont.has_key(baseGlyphName):
+				from robofab.pens.adapterPens import TransformPointPen
+				oX, oY = self.offset
+				sX, sY = self.scale
+				baseGlyph = parentFont[baseGlyphName]
+				for contour in baseGlyph.contours:
+					pointPen = parentGlyph.getPointPen()
+					transPen = TransformPointPen(pointPen, (sX, 0, 0, sY, oX, oY))
+					contour.drawPoints(transPen)
+			parentGlyph.components.remove(self)
+	
+		
+class RKerning(BaseKerning):
+	
+	_title = "RoboFabKerning"
+
+		
+class RGroups(BaseGroups):
+	
+	_title = "RoboFabGroups"
+	
+class RLib(BaseLib):
+	
+	_title = "RoboFabLib"
+
+		
+class RInfo(BaseInfo):
+	
+	_title = "RoboFabFonInfo"
+	
+	def __init__(self):
+		BaseInfo.__init__(self)
+		self.selected = False
+		
+		self._familyName = None
+		self._styleName = None
+		self._fullName = None
+		self._fontName = None
+		self._menuName = None
+		self._fondName = None
+		self._otFamilyName = None
+		self._otStyleName = None
+		self._otMacName = None
+		self._weightValue = None
+		self._weightName = None
+		self._widthName = None
+		self._fontStyle = None
+		self._msCharSet = None
+		self._note = None
+		self._fondID = None
+		self._uniqueID = None
+		self._versionMajor = None
+		self._versionMinor = None
+		self._year = None
+		self._copyright = None
+		self._notice = None
+		self._trademark = None
+		self._license = None
+		self._licenseURL = None
+		self._designer = None
+		self._designerURL = None
+		self._vendorURL = None
+		self._ttVendor = None
+		self._ttUniqueID = None
+		self._ttVersion = None
+		self._unitsPerEm = None
+		self._ascender = None
+		self._descender = None
+		self._capHeight = None
+		self._xHeight = None
+		self._defaultWidth = None
+		self._italicAngle = None
+		self._slantAngle = None
+	
+	def _get_familyName(self):
+		return self._familyName
+	
+	def _set_familyName(self, value):
+		self._familyName = value
+	
+	familyName = property(_get_familyName, _set_familyName, doc="family_name")
+	
+	def _get_styleName(self):
+		return self._styleName
+	
+	def _set_styleName(self, value):
+		self._styleName = value
+	
+	styleName = property(_get_styleName, _set_styleName, doc="style_name")
+	
+	def _get_fullName(self):
+		return self._fullName
+	
+	def _set_fullName(self, value):
+		self._fullName = value
+	
+	fullName = property(_get_fullName, _set_fullName, doc="full_name")
+	
+	def _get_fontName(self):
+		return self._fontName
+	
+	def _set_fontName(self, value):
+		self._fontName = value
+	
+	fontName = property(_get_fontName, _set_fontName, doc="font_name")
+	
+	def _get_menuName(self):
+		return self._menuName
+	
+	def _set_menuName(self, value):
+		self._menuName = value
+	
+	menuName = property(_get_menuName, _set_menuName, doc="menu_name")
+	
+	def _get_fondName(self):
+		return self._fondName
+	
+	def _set_fondName(self, value):
+		self._fondName = value
+	
+	fondName = property(_get_fondName, _set_fondName, doc="apple_name")
+	
+	def _get_otFamilyName(self):
+		return self._otFamilyName
+	
+	def _set_otFamilyName(self, value):
+		self._otFamilyName = value
+	
+	otFamilyName = property(_get_otFamilyName, _set_otFamilyName, doc="pref_family_name")
+	
+	def _get_otStyleName(self):
+		return self._otStyleName
+	
+	def _set_otStyleName(self, value):
+		self._otStyleName = value
+	
+	otStyleName = property(_get_otStyleName, _set_otStyleName, doc="pref_style_name")
+	
+	def _get_otMacName(self):
+		return self._otMacName
+	
+	def _set_otMacName(self, value):
+		self._otMacName = value
+	
+	otMacName = property(_get_otMacName, _set_otMacName, doc="mac_compatible")
+	
+	def _get_weightValue(self):
+		return self._weightValue
+	
+	def _set_weightValue(self, value):
+		self._weightValue = value
+	
+	weightValue = property(_get_weightValue, _set_weightValue, doc="weight value")
+	
+	def _get_weightName(self):
+		return self._weightName
+	
+	def _set_weightName(self, value):
+		self._weightName = value
+	
+	weightName = property(_get_weightName, _set_weightName, doc="weight name")
+	
+	def _get_widthName(self):
+		return self._widthName
+	
+	def _set_widthName(self, value):
+		self._widthName = value
+	
+	widthName = property(_get_widthName, _set_widthName, doc="width name")
+
+	def _get_fontStyle(self):
+		return self._fontStyle
+	
+	def _set_fontStyle(self, value):
+		self._fontStyle = value
+	
+	fontStyle = property(_get_fontStyle, _set_fontStyle, doc="font_style")
+	
+	def _get_msCharSet(self):
+		return self._msCharSet
+	
+	def _set_msCharSet(self, value):
+		self._msCharSet = value
+	
+	msCharSet = property(_get_msCharSet, _set_msCharSet, doc="ms_charset")
+	
+	def _get_note(self):
+		return self._note
+	
+	def _set_note(self, value):
+		self._note = value
+	
+	note = property(_get_note, _set_note, doc="note")
+	
+	def _get_fondID(self):
+		return self._fondID
+	
+	def _set_fondID(self, value):
+		self._fondID = value
+	
+	fondID = property(_get_fondID, _set_fondID, doc="fond_id")
+	
+	def _get_uniqueID(self):
+		return self._uniqueID
+	
+	def _set_uniqueID(self, value):
+		self._uniqueID = value
+	
+	uniqueID = property(_get_uniqueID, _set_uniqueID, doc="unique_id")
+	
+	def _get_versionMajor(self):
+		return self._versionMajor
+	
+	def _set_versionMajor(self, value):
+		self._versionMajor = value
+	
+	versionMajor = property(_get_versionMajor, _set_versionMajor, doc="version_major")
+	
+	def _get_versionMinor(self):
+		return self._versionMinor
+	
+	def _set_versionMinor(self, value):
+		self._versionMinor = value
+	
+	versionMinor = property(_get_versionMinor, _set_versionMinor, doc="version_minor")
+	
+	def _get_year(self):
+		return self._year
+	
+	def _set_year(self, value):
+		self._year = value
+	
+	year = property(_get_year, _set_year, doc="year")
+	
+	def _get_copyright(self):
+		return self._copyright
+	
+	def _set_copyright(self, value):
+		self._copyright = value
+	
+	copyright = property(_get_copyright, _set_copyright, doc="copyright")
+	
+	def _get_notice(self):
+		return self._notice
+	
+	def _set_notice(self, value):
+		self._notice = value
+	
+	notice = property(_get_notice, _set_notice, doc="notice")
+	
+	def _get_trademark(self):
+		return self._trademark
+	
+	def _set_trademark(self, value):
+		self._trademark = value
+	
+	trademark = property(_get_trademark, _set_trademark, doc="trademark")
+	
+	def _get_license(self):
+		return self._license
+	
+	def _set_license(self, value):
+		self._license = value
+	
+	license = property(_get_license, _set_license, doc="license")
+	
+	def _get_licenseURL(self):
+		return self._licenseURL
+	
+	def _set_licenseURL(self, value):
+		self._licenseURL = value
+	
+	licenseURL = property(_get_licenseURL, _set_licenseURL, doc="license_url")
+	
+	def _get_designer(self):
+		return self._designer
+	
+	def _set_designer(self, value):
+		self._designer = value
+	
+	designer = property(_get_designer, _set_designer, doc="designer")
+	
+	def _get_createdBy(self):
+		return self._createdBy
+	
+	def _set_createdBy(self, value):
+		self._createdBy = value
+	
+	createdBy = property(_get_createdBy, _set_createdBy, doc="source")
+	
+	def _get_designerURL(self):
+		return self._designerURL
+	
+	def _set_designerURL(self, value):
+		self._designerURL = value
+	
+	designerURL = property(_get_designerURL, _set_designerURL, doc="designer_url")
+	
+	def _get_vendorURL(self):
+		return self._vendorURL
+	
+	def _set_vendorURL(self, value):
+		self._vendorURL = value
+	
+	vendorURL = property(_get_vendorURL, _set_vendorURL, doc="vendor_url")
+	
+	def _get_ttVendor(self):
+		return self._ttVendor
+	
+	def _set_ttVendor(self, value):
+		self._ttVendor = value
+	
+	ttVendor = property(_get_ttVendor, _set_ttVendor, doc="vendor")
+	
+	def _get_ttUniqueID(self):
+		return self._ttUniqueID
+	
+	def _set_ttUniqueID(self, value):
+		self._ttUniqueID = value
+	
+	ttUniqueID = property(_get_ttUniqueID, _set_ttUniqueID, doc="tt_u_id")
+	
+	def _get_ttVersion(self):
+		return self._ttVersion
+	
+	def _set_ttVersion(self, value):
+		self._ttVersion = value
+	
+	ttVersion = property(_get_ttVersion, _set_ttVersion, doc="tt_version")
+	
+	def _get_unitsPerEm(self):
+		return self._unitsPerEm
+		
+	def _set_unitsPerEm(self, value):
+		self._unitsPerEm = value
+	
+	unitsPerEm = property(_get_unitsPerEm, _set_unitsPerEm, doc="")
+	
+	def _get_ascender(self):
+		return self._ascender
+	
+	def _set_ascender(self, value):
+		self._ascender = value
+	
+	ascender = property(_get_ascender, _set_ascender, doc="ascender value")
+	
+	def _get_descender(self):
+		return self._descender
+	
+	def _set_descender(self, value):
+		self._descender = value
+	
+	descender = property(_get_descender, _set_descender, doc="descender value")
+	
+	def _get_capHeight(self):
+		return self._capHeight
+	
+	def _set_capHeight(self, value):
+		self._capHeight = value
+	
+	capHeight = property(_get_capHeight, _set_capHeight, doc="cap height value")
+	
+	def _get_xHeight(self):
+		return self._xHeight
+	
+	def _set_xHeight(self, value):
+		self._xHeight = value
+	
+	xHeight = property(_get_xHeight, _set_xHeight, doc="x height value")
+	
+	def _get_defaultWidth(self):
+		return self._defaultWidth
+	
+	def _set_defaultWidth(self, value):
+		self._defaultWidth = value
+	
+	defaultWidth = property(_get_defaultWidth, _set_defaultWidth, doc="default width value")
+	
+	def _get_italicAngle(self):
+		return self._italicAngle
+	
+	def _set_italicAngle(self, value):
+		self._italicAngle = value
+	
+	italicAngle = property(_get_italicAngle, _set_italicAngle, doc="italic_angle")
+	
+	def _get_slantAngle(self):
+		return self._slantAngle
+	
+	def _set_slantAngle(self, value):
+		self._slantAngle = value
+	
+	slantAngle = property(_get_slantAngle, _set_slantAngle, doc="slant_angle")
+

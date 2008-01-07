@@ -1,0 +1,201 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>RoboFab Objects: RComponent</title>
+
+<link href="../default.css" type="text/css" rel="stylesheet" />
+
+</head>
+<body>
+
+    
+	
+	<div id="modellogo">
+		<img src="../img/drawmodel_header.jpg" width="595" height="112" />
+	</div>
+	<div class="leftcontent">
+		<h2 class="crb-seealso">
+			RoboFab
+		</h2>
+		<p class="menu">
+			<a href="../index.html">
+				Home
+			</a>
+			<br />
+			<a href="../download/license.html">
+				Download v1.1.1
+			</a>
+			<br />
+			<a href="../intro.html">
+				Intro
+			</a>
+			<br />
+			<a href="../install.html">
+				Install Notes
+			</a>
+			<br />
+			<a href="../history.html">
+				History
+			</a>
+			<br />
+			<a href="../executive.html">
+				Summary
+			</a>
+		</p>
+		<p class="menu">
+			<a href="../howto/index.html">
+				How to's
+			</a>
+			<br />
+			<a href="index.html">
+				Fab Objects
+			</a>
+			<br />
+			<a href="model.html">
+				Fab Map
+			</a>
+			<br />
+			<a href="../tools/index.html">
+				Fab Tools
+			</a>
+			<br />
+			<a href="../ufo/index.html">
+				UFO Overview
+			</a>
+			<br />
+			<a href="../limitations.html">
+				Fab Limitations
+			</a>
+		</p>
+		<p class="menu">
+			<a href="../links/index.html">
+				Links
+			</a>
+			<br />
+			<a href="../glossary/index.html">
+				Glossary
+			</a>
+			<br />
+			<a href="../credits.html">
+				Credits
+			</a>
+		</p>
+		<br />
+		<br />
+		<p class="crb-uplink"><a href="index.html">Back to Objects</a></p>
+
+		<br />
+		<br />
+		<p class="menu">
+			<a href="../howto/buildingaccents.html">Building accents</a><br />
+<a href="../howto/glyphmath.html">Using Glyph Math</a><br />
+<a href="../howto/understandcontours.html">Understanding Contours</a><br />
+<a href="../howto/usetransformations.html">Using transformations</a><br />
+<a href="anchor.html">RAnchor</a><br />
+<a href="bpoint.html">bPoint</a><br />
+<a href="contour.html">RContour</a><br />
+<a href="font.html">RFont</a><br />
+<a href="glyph.html">RGlyph</a><br />
+<a href="index.html">Objects</a><br />
+<a href="info.html">RInfo</a><br />
+<a href="kerning.html">RKerning</a><br />
+<a href="lib.html">RLib</a><br />
+<a href="model.html">Object model</a><br />
+<a href="pen.html">Pen objects</a><br />
+<a href="point.html">RPoint</a><br />
+<a href="segment.html">RSegment</a><br />
+
+		</p>
+	</div>
+	<div class="footer">
+		<a href="../feedback.html">
+			Feedback
+		</a>
+		<br />
+		<a href="../map.html">
+			Sitemap
+		</a>
+		<br />
+		Please also refer to the 
+		<a href="../download/license.html">
+			Legal
+		</a>
+		<br />
+		Copyright 2003-2005 RoboFab 
+		<br />
+		version 1.1.1 
+	</div>
+
+    
+    
+    
+
+<div id="titlepic">
+	<img src="../img/offdrawmodel_26.gif" alt="" border="0" />
+</div>
+
+
+    <div class="content">
+    <h1>RoboFab RComponent</h1>
+
+    <h3>Usage</h3>
+ 
+
+    <pre># the easiest way to get to a component
+# is to get one from a glyph
+from robofab.world import CurrentFont
+f = CurrentFont()
+g = f['adieresis']
+for c in g.components:
+	print c
+>>> < RComponent for Excellent-Regular.adieresis.components[0] >
+>>> < RComponent for Excellent-Regular.adieresis.components[1] >
+</pre>
+    <h3>Description</h3>
+    <p>
+A component can be a part of a glyph and it is a reference to another glyph in the same font. With components you can make glyphs depend on other glyphs. Changes to the baseGlyph will reflect in the component as well. Fontographer and RoboFog called them <strong>composites</strong>. The <strong>parent</strong> of a component is usually a glyph. Components can be decomposed: they replace themselves with the actual outlines from the baseGlyph. When that happens the link between the original and the component is broken: changes to the baseGlyph will no longer reflect in the glyph that had the component.
+    </p>
+	<h3>Attributes</h3>
+		<ul>
+		<li><strong>baseGlyph</strong>: the name of the glyph the component points to. The glyph is assumed to be present in the same font.</li>
+<li><strong>index</strong>: the index of the component in the list of components in the parent glyph. i.e. the first component in a glyph has index 0.</li>
+<li><strong>offset</strong>: offset vector (x, y). The distance the component has been moved.
+</li>
+<li><strong>scale</strong>: scale (x, y). The distance the component has been moved.
+</li>
+<li><strong>box</strong>: the bounding box for the component (read only).
+</li>
+		</ul>
+	<h3>Attribute examples</h3>
+    <pre>print f['adieresis'].components[0].baseGlyph
+>>> a
+
+print f['adieresis'].components[1].baseGlyph
+>>> dieresis
+
+# move the component in the base glyph
+f['adieresis'].components[1].offset = (100,100)
+
+# scale the component in the base glyph
+f['adieresis'].components[0].scale = (.5, .25)
+</pre>
+    <h3>Methods</h3>
+    <p>
+    </p>
+		<ul>
+		<li><strong>decompose()</strong>: in the parent glyph replace this component object with the actual contours. This practically ends the existence of the component object.</li>
+		<li><strong>move((x, y))</strong>: move the component to position (x, y)</li>
+		<li><strong>draw(aPen)</strong>: draw this component with aPen</li>
+		<li><strong>drawPoints(aPointPen)</strong>: draw this component with aPointPen. Note: both these drawing methods are usually called by aGlyph.draw() and aGlyph.drawPoints() as part of the drawing process.</li>
+		<li><strong>copy()</strong>: return a deep copy of the object.</li>
+		<li><strong>setChanged()</strong>: call to indicate that something about the component has changed.</li>
+		</ul>
+	<h3>Method examples</h3>
+    <pre>#method examples
+    </pre>
+    
+     </div>
+</body>
+</html>

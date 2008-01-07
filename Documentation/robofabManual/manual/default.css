@@ -1,0 +1,408 @@
+/**** STANDARD HTML TAGS ****/
+body
+{
+	margin: 0;
+	padding: 0;
+	background: #fff;
+	color: #000;
+	font: 11px Lucida Grande, Geneva, Arial, Verdana, sans-serif;
+	/* Special hack for IE/5 */
+	voice-family: "\"}\"";
+	voice-family: inherit;
+	font-size: small;
+}
+
+html>body { font-size: small; }
+
+/* We define links using border-bottom instead of ugly underline */
+a
+{
+	text-decoration: none;
+	color: #339;
+}
+
+
+a img {border:0}
+
+a:hover { background: #eee; }
+
+a.crb-quickbutton
+{
+	background: transparent;
+	border: 0;
+}
+a.crb-quickbutton:hover
+{
+	background: transparent;
+	border: 0;
+}
+
+h1
+{
+	font-size: 16px;
+	color: #333;
+	padding: 0;
+	margin: 2.5em 0 1em 0;
+	border-top: 1px dotted #666;
+}
+
+h2
+{
+	font-size: 15px;
+	color: #666;
+	padding: 0;
+	margin: 2.5em 0 1em 0;
+	border-top: 1px dotted #666;
+}
+
+h3
+{
+	font-size: 13px;
+	color: #666;
+	padding: 0;
+	margin: 2.5em 0 1em 0;
+	border-top: 1px dotted #ddd;
+}
+
+h4
+{
+	font-size: 11px;
+	color: #666;
+	padding: 0;
+	margin: 2.5em 0 1em 0;
+}
+
+p { margin: 0 0 0.2em 0;
+	font-size: 12px;
+	line-height: 1.5em;
+	}
+	
+p.note { margin: 0 0 0.2em 0;
+	font-size: 12px;
+	line-height: 1.5em;
+	background: #CF6;
+	padding: 5px;
+	}
+	
+li { margin: 0 1em 0 0;
+	font-size: 12px;
+	line-height: 1.5em;
+	}
+	
+p.menu { margin: 0 0 2em 0;
+	font-size: 11px;
+	line-height: 1.5em;
+	}
+
+crb-seealso
+
+ul { list-style-type: square; 
+	font-size: 8px;
+	line-height: 1.5em;
+}
+li {	margin: .1em 0 .3em 0; }
+
+/**** PAGE LAYOUT ****/
+/* The general page looks like this:
+
+  +-----------------------------------------------------------+
+  | #header                                                   |
+  +------+--------------+----------+---------------+----------+
+  | #nav | #leftcontent | #content | #rightcontent | #seealso |
+  |      |              |          |               |          |
+  |      |              |          |               |          |
+  |      |              |          |               |          |
+  |      |              |          |               |          |
+  |      |              | #footer  |               |          |
+  +------+--------------+----------+---------------+----------+
+  
+  All <div>'s, except #content and #footer, are absolutely 
+  positioned. We use margins to seperate them from eachother.
+  
+*/  
+
+#header
+{
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%; /*960px;*/
+	background: #fff;
+}
+
+#subheader
+{
+	position: absolute;
+	top: 91px;
+	left: 0;
+	background: #fff;
+	width:100%; 
+	/*width: 960px;*/
+	height:19px;
+}
+
+#subscribe
+{
+	position: absolute;
+	top: 5px;
+	right: 10px;
+	width: 200px;
+	font-size:85%;
+}
+
+#nav
+{
+	position: absolute;
+	top: 120px;
+	left: 0;
+	width: 60px;
+	height: 100%;
+	background: white;
+	font-size: 70%;
+}
+
+div.leftcontent
+{
+	position: absolute;
+	top: 120px;
+	left: 20px;
+	width: 110px;
+	padding: 2px 5px;
+	font-size: 75%;
+}
+
+div.content
+{
+	position: absolute;
+	top: 120px;
+	left: 180px;
+	font-size: 85%;
+	width: 490px;
+}
+
+#rightcontent
+{
+	position: absolute;
+	top: 120px;
+	left: 600px;
+	width: 110px;
+	padding: 2px 5px;
+	font-size: 70%;
+}
+
+#rightimage
+{
+	position: absolute;
+	left: 500px;
+	z-index:100;
+}
+
+#seealso
+{
+	position: absolute;
+	top: 240px;
+	left: 20px;
+	width: 50px;
+	padding: 2px 5px;
+	font-size: 10px;
+	line-height: 12px;
+	color: #888;
+}
+
+#footer
+{
+	position: absolute;
+	top: 900px;
+	left: 20px;
+	font-size: 60%;
+	width: 60px;
+}
+
+/*absolute positions for menu items*/
+#menuitem1
+{
+	position: absolute;
+	top: 200px;
+	left: 0;
+}
+#menuitem2
+{
+	position: absolute;
+	top: 230px;
+	left: 0;
+}
+#menuitem3
+{
+	position: absolute;
+	top: 260px;
+	left: 0;
+}
+#menuitem4
+{
+	position: absolute;
+	top: 290px;
+	left: 0;
+}
+#menuitem5
+{
+	position: absolute;
+	top: 320px;
+	left: 0;
+}
+#menuitem6
+{
+	position: absolute;
+	top: 350px;
+	left: 0;
+}
+#menuitem7
+{
+	position: absolute;
+	top: 380px;
+	left: 0;
+}
+#menuitem8
+{
+	position: absolute;
+	top: 410px;
+	left: 0;
+}
+#menuitem9
+{
+	position: absolute;
+	top: 440px;
+	left: 0;
+}
+#menuitem10
+{
+	position: absolute;
+	top: 470px;
+	left: 0;
+}
+#auxmenu
+{
+	position: absolute;
+	top: 500px;
+	left: 10px;
+	font-size:9px;
+	font-weight:normal
+}
+
+#modellogo
+{
+position: absolute;
+left: 0px;
+top: 0px;
+}
+
+#titlepic
+{
+position: absolute;
+left: 180px;
+top: 10px;
+}
+
+/**** SPECIAL CASES ****/
+ul.crb-seealso {list-style-type:none;padding:0;margin:0}
+#seealso h2
+{
+	font-size:12px;
+	font-weight:normal;
+}
+#header table
+{
+	background: #eee;
+	font-size:10px
+}
+
+/* The navigation uses an unordered list to show its items,
+which is semantically correct. */
+#subnav
+{
+	border: 0px;
+	font-size: 9px;
+	line-height: 12px;
+	font-family: Verdana, Helvetica, Sans-Serif;
+	color: #888;
+	width: 110px;
+}
+
+span.selected
+{
+	font-weight:bold;
+}
+
+a.subnav
+{
+	text-decoration: none;
+	color: #aaa;
+}
+
+
+#nav ul
+{
+	list-style-type: none;
+	margin: 0;
+	padding-left: 0.5em;
+}
+
+#nav li
+{
+	line-height: 1.8em;
+	text-align: left;
+}
+
+#nav a { border: 0; }
+
+/* A special class, link, is used to display the pointing hand.
+   We pad the actual content so it doesn't overlay the hand. */ 
+p.link
+{
+	background: url('g/link.gif') no-repeat left top;
+	padding-left: 42px;
+	line-height: 18px;
+}
+
+/* The item class is used to display seperate news items */
+.item { margin: 1em 0 2em 0;}
+
+/* Class to display a label on feedback page */
+.label
+{
+	font-size: 110%;
+	color: #333;
+}
+
+
+pre {
+	overflow: hidden;
+    background-color: #EEE;
+    white-space:pre;
+    color:#111111;
+    padding: 10px 10px 10px 10px;
+    width:480px;
+	font-size: 11px;
+	line-height: 13px;
+	z-index:0;
+}
+
+div.objectname {
+}
+
+div.objectexamples {
+}
+
+div.objectdescription {
+}
+
+div.objectmethods {
+}
+
+div.objectattributes {
+}
+
+div.objectsyntax {
+}
+
+div.objectparameters {
+}

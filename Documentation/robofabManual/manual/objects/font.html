@@ -1,0 +1,328 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>RoboFab Objects: RFont</title>
+
+<link href="../default.css" type="text/css" rel="stylesheet" />
+
+</head>
+<body>
+
+	
+	
+	<div id="modellogo">
+		<img src="../img/drawmodel_header.jpg" width="595" height="112" />
+	</div>
+	<div class="leftcontent">
+		<h2 class="crb-seealso">
+			RoboFab
+		</h2>
+		<p class="menu">
+			<a href="../index.html">
+				Home
+			</a>
+			<br />
+			<a href="../download/license.html">
+				Download v1.1.1
+			</a>
+			<br />
+			<a href="../intro.html">
+				Intro
+			</a>
+			<br />
+			<a href="../install.html">
+				Install Notes
+			</a>
+			<br />
+			<a href="../history.html">
+				History
+			</a>
+			<br />
+			<a href="../executive.html">
+				Summary
+			</a>
+		</p>
+		<p class="menu">
+			<a href="../howto/index.html">
+				How to's
+			</a>
+			<br />
+			<a href="index.html">
+				Fab Objects
+			</a>
+			<br />
+			<a href="model.html">
+				Fab Map
+			</a>
+			<br />
+			<a href="../tools/index.html">
+				Fab Tools
+			</a>
+			<br />
+			<a href="../ufo/index.html">
+				UFO Overview
+			</a>
+			<br />
+			<a href="../limitations.html">
+				Fab Limitations
+			</a>
+		</p>
+		<p class="menu">
+			<a href="../links/index.html">
+				Links
+			</a>
+			<br />
+			<a href="../glossary/index.html">
+				Glossary
+			</a>
+			<br />
+			<a href="../credits.html">
+				Credits
+			</a>
+		</p>
+		<br />
+		<br />
+		<p class="crb-uplink"><a href="index.html">Back to Objects</a></p>
+
+		<br />
+		<br />
+		<p class="menu">
+			<a href="../howto/generatefonts.html">Generate Fonts</a><br />
+<a href="../howto/glyphmath.html">Using Glyph Math</a><br />
+<a href="../howto/usetransformations.html">Using transformations</a><br />
+<a href="anchor.html">RAnchor</a><br />
+<a href="bpoint.html">bPoint</a><br />
+<a href="component.html">RComponent</a><br />
+<a href="contour.html">RContour</a><br />
+<a href="glyph.html">RGlyph</a><br />
+<a href="index.html">Objects</a><br />
+<a href="info.html">RInfo</a><br />
+<a href="kerning.html">RKerning</a><br />
+<a href="lib.html">RLib</a><br />
+<a href="model.html">Object model</a><br />
+<a href="pen.html">Pen objects</a><br />
+<a href="point.html">RPoint</a><br />
+<a href="segment.html">RSegment</a><br />
+
+		</p>
+	</div>
+	<div class="footer">
+		<a href="../feedback.html">
+			Feedback
+		</a>
+		<br />
+		<a href="../map.html">
+			Sitemap
+		</a>
+		<br />
+		Please also refer to the 
+		<a href="../download/license.html">
+			Legal
+		</a>
+		<br />
+		Copyright 2003-2005 RoboFab 
+		<br />
+		version 1.1.1 
+	</div>
+
+	
+	 
+
+<div id="titlepic">
+	<img src="../img/offdrawmodel_07.gif" alt="" border="0" />
+</div>
+
+	<div class="content">
+		<h1>RFont()</h1>
+		
+		
+		<h3>Usage</h3> <pre>#Usage examples
+# start using the current font
+f = CurrentFont()
+
+# get a clean, empty new font object,
+# appropriate for the current environment
+f = robofab.world.RFont()
+
+# get an open dialog and start a new font
+f = OpenFont()
+
+# open the font at path
+f = OpenFont(path)
+    </pre>
+    <h3>Description</h3> 
+		<p>
+			Perhaps the first object you get to play with. The RFont object is the central part that connects all glyphs with font information (like names, key dimensions etc.). In FontLab the RFont object talks directly to the glyphs and font data in the FontLab font it belongs to. In UFO or NoneLab use, the RFont object contains the data and saves it to UFO. RFont object behave like dictionaries: the glyphname is the key and the returned value is a <a href="glyph.html">RGlyph</a> object for that glyph. If the glyph does not exist RFont will raise an IndexError.
+RFont has a couple of important sub-objects which are worth checking out. The font's kerning is stored in a <a href="kerning.html">RKerning</a> object and can be reached as an attribute at <strong>RFont.kerning</strong>. Fontnames, key dimensions, flags etc are stored in a <a href="info.html">RInfo</a> object which is available through <strong>RFont.info</strong>. The RFont.lib is an <strong>RLib</strong> object which behaves as a dictionary. 
+		</p>
+    <h3>Iterating</h3> 
+		<p>
+One of the most important uses of the RFont object is that it makes it really easy to iterate (&quot;step through&quot;) the glyphs in the font.
+<pre>
+f = CurrentFont()
+for glyph in f:
+	print glyph.name
+>>>a
+>>>b
+>>>c
+etc..
+</pre>
+This makes the code clear and simple.
+		</p>
+		<h3>FontLab / UFO</h3> 
+		<p>
+			All basic attributes, methods and behaviour for RFont objects made in FontLab or in NoneLab are identical. However, the RFont objects in FontLab have some additional attributes and methods that make special FontLab functionality available. These extra methods and attributes are listed seperately below. 
+		</p>
+		<h3>RFont Attributes</h3> 
+		<ul>
+			<li>
+				<strong>path</strong>: the path to the font. (read only)
+			</li>
+			<li>
+				<strong>kerning</strong>: the <a href="kerning.html">RKerning</a> object.
+			</li>
+			<li>
+				<strong>info</strong>: the <a href="info.html">RInfo</a> object with all the font's names and key dimensions.
+			</li>
+			<li>
+				<strong>lib</strong>: the <a href="lib.html">lib</a> object which behaves like a dictionary for arbitrary data that needs to be stored with the font. In FontLab the lib is stored in the .vfb file. In UFO based fonts the lib is a seperate .plist file. Have a look at <a href="../howto/usethelib.html">how to use the lib</a>
+			</li>
+		</ul>
+		<h3>Attribute examples</h3> <pre># Most useful attributes of RFont are
+# actually stored in <a href="info.html">RFont.info</a>
+f = CurrentFont()
+print f.info.unitsPerEm
+>>> 2048
+
+# len() gives you the &quot;length&quot; of the font, i.e. the number of glyphs
+print len(f)
+>>> 1120
+
+# treat a font object as a dictionary to get to the glyphs
+print f[&quot;A&quot;]
+>>> < Glyph for MyFont.A >
+</pre> <h3>RFont Methods available in FontLab and UFO</h3> 
+		<p>
+		</p>
+		<ul>
+			<li>
+				<strong>RFont[glyphName]</strong>: asking the font for a glyph by glyphName like a dictionary.
+			</li>
+			<li>
+				<strong>has_key(glyphName)</strong>: return True if glyphName is present in the font.
+			</li>
+			<li>
+				<strong>keys()</strong>: return a list of all glyphnames in this font.
+			</li>
+			<li>
+				<strong>newGlyph(glyphName, clear=True)</strong>: create a new, <strong>empty</strong> glyph in the font with glyphName. If clear is True (by default) this will clear the glyph if it already exists under this name.
+			</li>
+			<li>
+				<strong>removeGlyph(glyphName)</strong>: remove a glyph from the font. This method will show a slightly different behaviour in FontLab and pure Python. In FontLab, components that reference the glyph that is being removed will be decomposed. In plain Python, the components will continue to point to the glyph.</li>
+			<li><strong>insertGlyph(aGlyph, as=None)</strong> inserts aGlyph in the font, the new glyph obejct is returned. If the font already has a glyph with the same name the exisiting data is deleted. The optional <strong>as</strong> parameter is an alternative glyph name, to be used if you want to insert the glyph with a different name.</li>
+			<li>
+				<strong>compileGlyph(glyphName, baseName, accentNames, adjustWidth=False, preflight=False, printErrors=True)</strong>: Compile components into a new glyph using components and anchorpoints. <strong>glyphName</strong>: the name of the glyph where it all needs to go. <strong>baseName</strong>: the name of the base glyph. <strong>accentNames</strong>: a list of accentName, anchorName tuples, [('acute', 'top'), etc] 
+			</li>
+			<li>
+				<strong>generateGlyph(glyphName, replace=True, preflight=False, printErrors=True)</strong>: Generate a glyph and return it. Assembled from GlyphConstruction.txt. <strong>replace</strong> is True the font will replace the glyph if there is already one with this name. <strong>preflight</strong> is True: the font will attempt to generate the glyph without adding it to the font. Do this to find out if there are any problems to make this glyph. For instance missing glyphs or components could be a problem. See <a href="../howto/buildingaccents.html">building accents</a>.
+			</li>
+			<li>
+<strong>getReverseComponentMapping()</strong>: Get a reversed map of component references in the font.
+		<pre>
+	{
+	'A' : ['Aacute', 'Aring']
+	'acute' : ['Aacute']
+	'ring' : ['Aring']
+	etc.
+	}
+		</pre>
+			</li>
+			<li>
+				<strong>save(destDir=None, doProgress=False, saveNow=False)</strong>: Save the font.
+			</li>
+			<li>
+				<strong>autoUnicodes()</strong>: Using fontTools.agl, assign Unicode lists to all glyphs in the font
+			</li>
+			<li>
+				<strong>interpolate()</strong>: see <a href="../howto/interpolate.html">how to interpolate</a> for a detailed description of the interpolate method in RFont.
+			</li>
+			<li>
+				<strong>round()</strong>: round all of the coordinates in all of the glyphs to whole integer numbers. For instance a point at (12.3, -10.99) becomes (12, -11). UFO based fonts can deal with floating point coordinates, but for use in FontLab everything needs to be rounded otherwise bad things happen.
+			</li>
+			<li>
+				<strong>update()</strong>: call to FontLab to refresh the font. You call update() after doing lots of manipulating and editing. In UFO based RFont objects update() doesn't do anything, but it exists.
+			</li>
+			<li>
+				<strong>copy()</strong>: returns a deep copy of the font, i.e. all glyphs and all associated data is duplicated.
+			</li>
+			<li>
+				<strong>getCharacterMapping()</strong>: returns a dict of unicode values to glyph names.
+			</li>
+		</ul>
+
+
+
+<h3>Method examples</h3> <pre>
+f = CurrentFont()
+
+# the keys() method returns a list of glyphnames:
+print f.keys()
+>>> ['A', 'B', 'space', 'adieresis.alt1']
+
+# find unicodes for each glyph by using the postscript name:
+f.autoUnicodes()
+</pre>
+
+
+		<h3>RFont Methods available in FontLab only</h3> 
+		<ul>
+		<li>
+			<strong>naked()</strong>: return the wrapped fontlab font object itself. This can be useful if you want to set very specific values in the fontlab font that aren't wrapped or handled by RoboFab objects.
+		</li>
+			<li>
+				<strong>writeUFO((path=None, doProgress=False,
+			glyphNameToFileNameFunc=None)</strong>: write the font to UFO at path. doProgress=True gives you a progressbar if you want. glyphNameToFileNameFunc is an optional callback for alternative naming schemes. <a href="../howto/glifnames.html">See How to use glyph naming schemes</a>
+			</li>
+		<li>
+			<strong>close()</strong>: close the font object and the font window in FontLab.
+		</li>
+		<li>
+			<strong>appendHGuide()</strong>: append a horizontal guide.
+		</li>
+		<li>
+			<strong>appendVGuide()</strong>: append a vertical guide.
+		</li>
+		<li>
+			<strong>clearHGuides()</strong>: clear all horizontal guides
+		</li>
+		<li>
+			<strong>clearVGuides()</strong>: clear all vertical guides
+		</li>
+		<li>
+			<strong>generate(outputType, path=None)</strong>: call FontLab to generate fonts with these parameters and location. Have a look at <a href="../howto/generatefonts.html">generate fonts</a> for a more detailed description of this method and how to use it.
+		</li>
+		</ul>
+		<h3>RFont Attributes available in FontLab only</h3> 
+		<ul>
+		<li>
+			<strong>selection</strong>: a list of selected glyph names in the font window.
+		</li>
+	</ul>
+
+<h3>Attribute examples</h3> <pre>
+f = CurrentFont()
+
+# the keys() method returns a list of glyphnames:
+print f.selected
+>>> ['A']
+
+</pre>
+
+
+
+
+</div>
+</body>
+</html>

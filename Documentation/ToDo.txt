@@ -1,0 +1,94 @@
+RoboFab ToDo List
+
+A list of things that need to be done before RoboThon. Add things to the list that need to be done. If something is absolutely necessary, add it to the 1.0 list. Otherwise, add it to the 2.0 list.
+
+############
+RoboFab 1.0: The Dawn of a New Age
+############
+
+BUGS to be fixed before release:
+- I think we need to have a look at that "scheduledForDeletion" stuff. For example,
+  I think the following scenario may not work: delete "A", add new "A".
+
+Documentation:
+---------------
+- nail down & document the UFO/GLIF formats, at least the basic stuff
+  (This is well underway at the wiki)
+- write doc strings for all properties
+- write doc strings for public stuff
+- comment out doc strings on private stuff
+
+General Stuff:
+---------------
+- write setup.py script.
+- invent really really easy install script.
+- include iGlyph (as an app anyway)
+- remove all deprecated stuff
+- remove lib magic, replace with less surprising plain dicts.
+- Write tests.
+
+The UFO, GLIF and Pens:
+---------------
+- Create test glyphs in the demo font that excercise vairous outline
+  features and edge cases.
+- Write tests.
+- Attempt to convert all 'fab pens to FontTools pens? We're very close --
+  I think the biggest thing to do is convert all addComponent() calls
+  and implementations. It will be worthwile: it will cause pretty massive
+  code deletion. (Getting closer!!)
+
+FontLab
+-------
+- Write tests.
+
+Objects:
+---------------
+Objects will need a complete inspection. Perhaps sort of "F* Up Everything
+In The Font For Testing Purposes" script is in order.
+
+- clean up all the unneeded stuff.
+
+objectsBase:
+- work out removeBPoint method (yeah, right)
+
+objectsFL:
+- get rid of all the getFoo methods in RGlyph? this should be a 1.1 change as it touches many modules.
+
+objectsRF:
+- test various contour methods.
+- make sure ALL changes are flagging the font and needed objects as changed.
+
+
+############
+RoboFab 2.0: Bigger and Badder.
+############
+
+- Make RoboFab 1.0 better
+
+objects:
+-glyph.contours, glyph.anchors and glyph.components should return a
+special list. this list would be a new style class subclassed from a dict
+object. the main avantage of this would be that we could make normal list
+methods work with the objects, ie glyph.contours.append(...), del
+glyph.contours[X] instead of the crummy appendFoo and removeFoo
+stuff that is in there now. This could also apply to contour.segments and
+segment.points as well.
+
+objectsFL:
+- write better algo for writing kerning back into FL font.
+
+objectsRF:
+- work out save as. (waiting on new glifLib before proceeding.)
+- rework NewFont. as it is now, it doesn't really work since a GlyphSet is
+needed for some special methods, but when a new font is created it doesn't
+have a path and therefore a GlyphSet. i (tal) have some ideas on how to fix
+this, but i will wait until version 1.1. this will also need the save as method
+mentioned above.
+
+The UFO and GLIF:
+---------------
+- new/revised glifLib and glif format that supports more than one glyph in a file.
+- Factor out format-specific info from font.info/fontinfo.plist into a to be
+  designed "targets" object and file. A "target" is a description for a specific
+  output file, or set of output files. This will need lots of experimentation
+  and careful design. Think of it as a "generate fonts" toolkit.
