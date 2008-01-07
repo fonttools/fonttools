@@ -1,2 +1,0 @@
-
-rsync -avze ssh site/ erik@davis.petr.com:/home/httpd/xml/letterror/code/robofab/ --include "*/" --include "*.html" --include "*.jpg" --include "*.gif" --include "*.css" --exclude "*"
