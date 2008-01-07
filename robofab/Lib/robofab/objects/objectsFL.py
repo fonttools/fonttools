@@ -2,7 +2,7 @@
 
 from FL import *	
 
-from robofab.tools.toolsFL import FontIndex, GlyphIndexTable,\
+from robofab.tools.toolsFL import GlyphIndexTable,\
 		AllFonts, NewGlyph
 from robofab.objects.objectsBase import BaseFont, BaseGlyph, BaseContour, BaseSegment,\
 		BasePoint, BaseBPoint, BaseAnchor, BaseGuide, BaseComponent, BaseKerning, BaseInfo, BaseGroups, BaseLib,\
@@ -223,6 +223,7 @@ def CurrentGlyph():
 			currentFont = font
 			break
 	xx =  currentFont[glyphName]
+	#print "objectsFL.CurrentGlyph parent for %d"% id(xx), xx.getParent()
  	return xx
 	
 def OpenFont(path=None, note=None):
@@ -247,6 +248,14 @@ def NewFont(familyName=None, styleName=None):
 	rf.info.styleName = styleName
 	return rf
 
+def AllFonts():
+	"""Return a list of all open fonts."""
+	fontCount = len(fl)
+	all = []
+	for index in xrange(fontCount):
+		naked = fl[index]
+		all.append(RFont(naked))
+	return all
 
 # the lib getter and setter are shared by RFont and RGlyph	
 def _get_lib(self):
@@ -292,31 +301,6 @@ class RFont(BaseFont):
 		self._object = font
 		self._lib = {}
 		self._supportHints = False
-	
-	def getAllFonts(cls):
-		from robofab.tools.toolsFL import AllFonts as AllFLFonts
-		# first get a list of existing wrapper instances
-		allFonts = BaseFont.getAllFonts()
-		# and collect the FL font object, if any
-		naked = []
-		for font in allFonts:
-			if isinstance(font, RFont):
-				naked.append(font._object)
-		# then get the list of open FL fonts to see if there is one
-		# that hasn't been wrapped yet
-		for font in AllFLFonts():
-			foundOne = False
-			for otherFont in naked:
-				# XXX this will falsely identify two distinct "Untitled"
-				# fonts as equal:
-				if font.file_name == otherFont.file_name:
-					foundOne = True
-					break
-			if not foundOne:
-				# not yet wrapped, wrap now
-				allFonts.append(RFont(font))
-		return allFonts
-	getAllFonts = classmethod(getAllFonts)
 
 	def keys(self):
 		keys = {}
@@ -404,7 +388,19 @@ class RFont(BaseFont):
 	#
 	
 	def _get_fontIndex(self):
-		return FontIndex(self._object)
+		# find the index of the font
+		# by comparing the file_name
+		# to all open fonts. if the
+		# font has no file_name, meaning
+		# it is a new, unsaved font,
+		# return the index of the first
+		# font with no file_name.
+		selfFileName = self._object.file_name
+		fontCount = len(fl)
+		for index in xrange(fontCount):
+			other = fl[index]
+			if other.file_name == selfFileName:
+				return index
 	
 	fontIndex = property(_get_fontIndex, doc="the fontindex for this font")
 	
@@ -450,7 +446,7 @@ class RFont(BaseFont):
 			
 	def update(self):
 		"""Don't forget to update the font when you are done."""
-		fl.UpdateFont(FontIndex(self._object))
+		fl.UpdateFont(self.fontIndex)
 
 	def save(self, path=None):
 		"""Save the font, path is required."""
@@ -459,7 +455,7 @@ class RFont(BaseFont):
 				raise RoboFabError, "No destination path specified."
 			else:
 				path = self._object.file_name
-		fl.Save(FontIndex(self._object), path)
+		fl.Save(self.fontIndex, path)
 	
 	def close(self, save=False):
 		"""Close the font, saving is optional."""
@@ -467,7 +463,7 @@ class RFont(BaseFont):
 			self.save()
 		else:
 			self._object.modified = 0
-		fl.Close(FontIndex(self._object))
+		fl.Close(self.fontIndex)
 	
 	def getGlyph(self, glyphName):
 		# XXX may need to become private
@@ -478,7 +474,7 @@ class RFont(BaseFont):
 			return glyph
 		return self.newGlyph(glyphName)
 
-	def newGlyph(self, glyphName, clear=False):
+	def newGlyph(self, glyphName, clear=True):
 		"""Make a new glyph"""
 		#if generate:
 		#	g = GenerateGlyph(self._object, glyphName, replace=clear)
@@ -757,9 +753,15 @@ class RFont(BaseFont):
 			else:
 				filePath, fileName = os.path.split(path)
 		if '.' in fileName:
-			raise RoboFabError, "filename cannot contain periods."
+			raise RoboFabError, "filename cannot contain periods.", fileName
 		fileName = '.'.join([fileName, suffix])
 		finalPath = os.path.join(filePath, fileName)
+		# generate is (oddly) an application level method
+		# rather than a font level method. because of this,
+		# the font must be the current font. so, make it so.
+		print "robofab: self.fontIndex", self.fontIndex
+		fl.ifont = self.fontIndex
+		print "robofab: fl.font", fl.font
 		fl.GenerateFont(flOutputType, finalPath)
 	
 	def _writeOpenTypeFeaturesToLib(self, fontLib):
@@ -769,9 +771,12 @@ class RFont(BaseFont):
 					flFont.ot_classes)
 		if flFont.features:
 			features = {}
+			order = []
 			for feature in flFont.features:
+				order.append(feature.tag)
 				features[feature.tag] = _normalizeLineEndings(feature.value)
 			fontLib["org.robofab.opentype.features"] = features
+			fontLib["org.robofab.opentype.featureorder"] = order
 	
 	def writeUFO(self, path=None, doProgress=False,
 			glyphNameToFileNameFunc=None):
@@ -871,11 +876,20 @@ class RFont(BaseFont):
 			self.naked().ot_classes = classes
 		features = fontLib.get("org.robofab.opentype.features")
 		if features is not None:
+			order = fontLib.get("org.robofab.opentype.featureorder")
+			if order is None:
+				# for UFOs saved without the feature order, do the same as before.
+				order = features.keys()
+				order.sort()
+			else:
+				del fontLib["org.robofab.opentype.featureorder"]
 			del fontLib["org.robofab.opentype.features"]
-			features = features.items()
-			features.sort()
+			#features = features.items()
+			orderedFeatures = []
+			for tag in order:
+				orderedFeatures.append((tag, features[tag]))
 			self.naked().features.clean()
-			for tag, src in features:
+			for tag, src in orderedFeatures:
 				self.naked().features.append(Feature(tag, src))
 	
 	def readUFO(self, path, doProgress=False):
@@ -1023,7 +1037,9 @@ class RGlyph(BaseGlyph):
 	width = property(_get_width, _set_width, doc="the width")
 	
 	def _get_box(self):
-		r=self._object.GetBoundingRect()
+		if not len(self.contours) and not len(self.components):
+			return (0, 0, 0, 0)
+		r = self._object.GetBoundingRect()
 		return (int(round(r.ll.x)), int(round(r.ll.y)), int(round(r.ur.x)), int(round(r.ur.y)))
 			
 	box = property(_get_box, doc="box of glyph as a tuple (xMin, yMin, xMax, yMax)")
@@ -2405,6 +2421,7 @@ class RInfo(BaseInfo):
 		return self._object.weight_code
 	
 	def _set_weightValue(self, value):
+		value = int(round(value))	# FL can't take float - 28/8/07 / evb
 		self._object.weight_code = value
 	
 	weightValue = property(_get_weightValue, _set_weightValue, doc="weight value")
