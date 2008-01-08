@@ -83,14 +83,11 @@ world = RFWorld()
 lineBreak = os.linesep
 
 if world.inFontLab:
-	from robofab.objects.objectsFL import CurrentFont, CurrentGlyph, RFont, RGlyph, OpenFont, NewFont
+	from robofab.objects.objectsFL import CurrentFont, CurrentGlyph, RFont, RGlyph, OpenFont, NewFont, AllFonts
 	lineBreak = "\n"
 elif world.inPython:
-	from robofab.objects.objectsRF import CurrentFont, CurrentGlyph, RFont, RGlyph, OpenFont, NewFont
+	from robofab.objects.objectsRF import CurrentFont, CurrentGlyph, RFont, RGlyph, OpenFont, NewFont, AllFonts
 
-def AllFonts():
-	"""Return a list of all active fonts."""
-	return RFont.getAllFonts()
 
 
 if __name__ == "__main__":
