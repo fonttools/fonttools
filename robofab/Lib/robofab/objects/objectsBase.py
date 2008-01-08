@@ -213,19 +213,6 @@ class BaseFont(RBaseObject):
 			name = "unnamed_font"
 		return "<RFont font for %s>" %(name)
 	
-	def getAllFonts(cls):
-		"""Return a list of all instances of this class (or its subclasses)
-		that are currently alive.
-		"""
-		# filter out all dead references
-		allFonts = []
-		for ref in cls._allFonts:
-			if ref() is not None:
-				allFonts.append(ref)
-		cls._allFonts = allFonts
-		return [ref() for ref in allFonts]
-	getAllFonts = classmethod(getAllFonts)
-
 	def __eq__(self, other):
 		#Compare this font with another, compare if they refer to the same file.
 		return self._compare(other)
