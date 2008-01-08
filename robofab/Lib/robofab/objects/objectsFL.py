@@ -759,9 +759,7 @@ class RFont(BaseFont):
 		# generate is (oddly) an application level method
 		# rather than a font level method. because of this,
 		# the font must be the current font. so, make it so.
-		print "robofab: self.fontIndex", self.fontIndex
 		fl.ifont = self.fontIndex
-		print "robofab: fl.font", fl.font
 		fl.GenerateFont(flOutputType, finalPath)
 	
 	def _writeOpenTypeFeaturesToLib(self, fontLib):
