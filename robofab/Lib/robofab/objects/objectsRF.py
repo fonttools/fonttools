@@ -4,7 +4,7 @@ from robofab import RoboFabError, RoboFabWarning
 from robofab.objects.objectsBase import BaseFont, BaseKerning, BaseGroups, BaseInfo, BaseLib,\
 		BaseGlyph, BaseContour, BaseSegment, BasePoint, BaseBPoint, BaseAnchor, BaseGuide, BaseComponent, \
 		relativeBCPIn, relativeBCPOut, absoluteBCPIn, absoluteBCPOut, _box,\
-		_interpolÅate, _interpolatePt, roundPt, addPt,\
+		_interpolate, _interpolatePt, roundPt, addPt,\
 		MOVE, LINE, CORNER, CURVE, QCURVE, OFFCURVE
 
 import os
