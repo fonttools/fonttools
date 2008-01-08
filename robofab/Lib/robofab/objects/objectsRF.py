@@ -4,7 +4,7 @@ from robofab import RoboFabError, RoboFabWarning
 from robofab.objects.objectsBase import BaseFont, BaseKerning, BaseGroups, BaseInfo, BaseLib,\
 		BaseGlyph, BaseContour, BaseSegment, BasePoint, BaseBPoint, BaseAnchor, BaseGuide, BaseComponent, \
 		relativeBCPIn, relativeBCPOut, absoluteBCPIn, absoluteBCPOut, _box,\
-		_interpolate, _interpolatePt, roundPt, addPt,\
+		_interpolÅate, _interpolatePt, roundPt, addPt,\
 		MOVE, LINE, CORNER, CURVE, QCURVE, OFFCURVE
 
 import os
@@ -47,7 +47,12 @@ def NewFont(familyName=None, styleName=None):
 	new.info.familyName = familyName
 	new.info.styleName = styleName
 	return new
-
+	
+def AllFonts():
+	"""AllFonts can't work in plain python usage. It's really up to some sort of application
+	to keep track of which fonts are open."""
+	raise NotImplementedError
+	
 
 class RFont(BaseFont):
 	"""UFO font object which reads and writes glif, and keeps the data in memory in between.
