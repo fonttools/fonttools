@@ -13,11 +13,11 @@ RoboFab is developed and maintained by
 
 MORE INFO
 The RoboFab homepage, documentation etc.
-http://www.letterror.com/code/robofab
+http://robofab.com
 
 LICENSE
 Some restrictions apply.
-http://www.letterror.com/code/manual/download/license.html
+http://robofab.com/download/index.html
 
 HISTORY
 RoboFab starts somewhere during the 

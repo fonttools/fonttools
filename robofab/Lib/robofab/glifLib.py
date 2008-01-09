@@ -2,7 +2,7 @@
 
 More info about the .glif format (GLyphInterchangeFormat) can be found here:
 
-  http://just.letterror.com/ltrwiki/GlyphInterchangeFormat
+	http://robofab.com/ufo/glif.html
 
 The main class in this module is GlyphSet. It manages a set of .glif files
 in a folder. It offers two ways to read glyph data, and one way to write

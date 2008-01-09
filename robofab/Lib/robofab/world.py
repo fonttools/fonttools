@@ -20,12 +20,6 @@ class RFWorld:
 		self._timedOut = False
 		self._license = False
 		self.run = True
-		
-		# check the time
-				
-		# show the sponsors
-		#if self._willNag and not self._hasNagged:
-		#	self.printMessage(['This program uses RoboFab', 'For more information on RoboFab contact the Developers', 'http://www.letterror.com/code/robofab/'])
 
 		# get some platform information
 		if self.name == 'mac' or self.name == 'posix':
