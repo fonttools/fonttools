@@ -6,27 +6,27 @@ Tokenize FontLab’s preview/metrics text into single characters
 respecting escaped glyph names (eg. “/A.smcp”) and providing a
 lossless reverse function. Sample usage (and actual test suite):
 
-tokenize('/A/B/C')
+>>> tokenize('/A/B/C')
 ['/A', '/B', '/C']
-tokenize('abcde/B/C')
+>>> tokenize('abcde/B/C')
 ['a', 'b', 'c', 'd', 'e', '/B', '/C']
-tokenize('foo/A.smcp/B.smcp abc')
+>>> tokenize('foo/A.smcp/B.smcp abc')
 ['f', 'o', 'o', '/A.smcp', '/B.smcp', 'a', 'b', 'c']
-p = ['f', 'o', 'o', '/A.smcp', '/B.smcp', 'a', 'b', 'c']
-serialize(p)
+>>> p = ['f', 'o', 'o', '/A.smcp', '/B.smcp', 'a', 'b', 'c']
+>>> serialize(p)
 'foo/A.smcp/B.smcp abc'
-tokenize('/a /b /c')
+>>> tokenize('/a /b /c')
 ['/a', '/b', '/c']
-tokenize('/a/b c')
+>>> tokenize('/a/b c')
 ['/a', '/b', 'c']
-tokenize('@a@b@')
+>>> tokenize('@a@b@')
 ['@', 'a', '@', 'b', '@']
-tokenize('abc def ghi ')
+>>> tokenize('abc def ghi ')
 ['a', 'b', 'c', ' ', 'd', 'e', 'f', ' ', 'g', 'h', 'i', ' ']
-p = ['a', 'b', 'c', ' ', 'd', 'e', 'f', ' ', 'g', 'h', 'i', ' ']
-serialize(p)
+>>> p = ['a', 'b', 'c', ' ', 'd', 'e', 'f', ' ', 'g', 'h', 'i', ' ']
+>>> serialize(p)
 'abc def ghi '
-serialize(['/a', 'b', '/c', 'd'])
+>>> serialize(['/a', 'b', '/c', 'd'])
 '/a b/c d'
 """
 
