@@ -29,7 +29,13 @@ class DigestPointPen(AbstractPointPen):
 			self._data.append((pt, segmentType, smooth, name))
 
 	def addComponent(self, baseGlyphName, transformation):
-		self._data.append((baseGlyphName, tuple(transformation)))
+		t = []
+		for v in transformation:
+			if int(v) == v:
+				t.append(int(v))
+			else:
+				t.append(v)
+		self._data.append((baseGlyphName, tuple(t)))
 
 	def getDigest(self):
 		return tuple(self._data)
