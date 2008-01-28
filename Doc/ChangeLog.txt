@@ -1,4 +1,13 @@
 ----------------------------
+2008/01/28 07:09:27 pabs3 Lib/fontTools/__init__.py 1.7
+Woops, missed a version number
+----------------------------
+2008/01/28 04:59:14 pabs3 MANIFEST 1.1
+Add a MANIFEST file so that we don't forget files in the source distribution
+----------------------------
+2008/01/28 04:22:26 pabs3 Doc/ChangeLog.txt 1.9
+Update the changelog from the CVS history
+----------------------------
 2008/01/28 04:19:40 pabs3 setup.py 1.13
 Get ready to release version 2.1
 ----------------------------
