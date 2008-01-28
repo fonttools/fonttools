@@ -63,7 +63,7 @@ TrueType/OpenType fonts to and from an XML-based format.
 """
 
 setup(
-		name = "FontTools-TTX",
+		name = "fonttools",
 		version = "2.0b1",
 		description = "Tools to manipulate font files",
 		author = "Just van Rossum",
