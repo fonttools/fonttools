@@ -1,4 +1,184 @@
 ----------------------------
+2008/01/28 04:19:40 pabs3 setup.py 1.13
+Get ready to release version 2.1
+----------------------------
+2008/01/28 04:00:14 pabs3 setup.py 1.12
+Just use fonttools as the tarball name.
+----------------------------
+2007/11/14 07:06:39 pabs3 Lib/fontTools/ttLib/tables/_g_l_y_f.py 1.20
+Fix 1762552: traceback on amd64 with DejaVuSans.ttf
+----------------------------
+2007/10/22 09:31:02 jvr Lib/fontTools/ttLib/tables/O_S_2f_2.py 1.10
+added 'support' for OS/2 version 4: can anyone verify this is correct? I can't seem to find an OS/2 v4 spec...
+----------------------------
+2007/08/25 06:19:37 pabs3 Lib/fontTools/misc/textTools.py 1.3
+Patch #1296028 from Tomasz Wegrzanowski: improve performance with CJK fonts
+----------------------------
+2006/10/21 14:12:38 jvr Lib/fontTools/ttx.py 1.9
+2006/10/21 14:12:38 jvr Lib/fontTools/ttLib/tables/otTables.py 1.16
+2006/10/21 14:12:38 jvr Lib/fontTools/ttLib/tables/otData.py 1.6
+2006/10/21 14:12:38 jvr Lib/fontTools/ttLib/tables/otConverters.py 1.6
+2006/10/21 14:12:38 jvr Lib/fontTools/ttLib/tables/otBase.py 1.12
+2006/10/21 14:12:38 jvr Lib/fontTools/ttLib/__init__.py 1.48
+Misc patches from rroberts:
+
+fontTools/ttx.py
+  # support virtual GIDs, support handling some GSUB offset overflows.
+
+fontTools/ttlib/__init__.py
+# 1) make getReverseGlyphMap  a public function; I find a reverse map
+to often be useful
+# 2) support virtual glyphs, e.g. references to GID's that are not in the font.
+# Added the TTFont argument allowVID (default 0) to turn this off and on;
+# added the arg requireReal ( default 0) so as to get the obvious
+default behaviour when
+# allowVID is 0 or 1, but to allow requiring a true GID when allowVID is 1.
+
+fontTools/ttlib/tables/otBase.py
+fontTools/ttlib/tables/otConverters.py
+fontTools/ttlib/tables/otData.py
+fontTools/ttlib/tables/otTables.py
+# 1) speed optimization
+# - collapse for loops
+# - do not decompile extension lookups until a record is requested
+from within the lookup.
+# 2) handling offset overflows
+# 3) support of extension lookups
+# 4) Fixed FetauresParam converter class def so as to survive a font
+that has this offset non-NULL.
+# This fixes a stack dump.
+# The data will now just get ignored
+----------------------------
+2006/10/21 13:54:30 jvr Lib/fontTools/ttLib/tables/_c_m_a_p.py 1.16
+patches from rroberts:
+
+# 1) Switched to using Numeric module arrays rather than array modules arrays,
+#  because of a memory leak in array.array when handling elements > 1 byte.
+# 2) speed optimizations:
+# -  For loops are collapsed when possible
+# - the data for a subtable is parsed only if a mapping value is requested
+# - if two subtables share the same data offset, then on
+decompilation, they will
+# share the same cmap dict, and not get decompiled twice. Same for compiling.
+# - as before, two tables with the same contents will get compiled to a single
+# data block in the font.
+# 3) added  (self.platformID, self.platEncID) == (3, 10) to the list
+of subtables that
+# get Unicode comments.
+# 4) allow item reference by GID as well as by name. I did this when
+experimenting to see if using GID references only would speed the
+compile; it didn't but it seemed useful enough to leave in.
+# 5) Fixed compile to/from XML: for cmap type unknown ( aka cmap
+format 10, in practice.)
+----------------------------
+2006/10/21 13:41:18 jvr Lib/fontTools/cffLib.py 1.32
+Some edits from rroberts:
+# 1) speed optimizations
+# 2) fixed parseCharset0 to support CFF-CID fonts.
+# 3) fixed CharsetConverter.read to work a font that actually has one
+of the pre-canned encodings.
+# This fixes a stack dump.
+# I did not try to support using these encodings when writing a font,
+# as the cases will be so rare as to not justify the processing
+overhead for all other fonts.
+
+(Read: I took out some of your loop optimizations since I believe they
+made the code a lot less clear. I also have my doubts whether they were
+actually performance improvements.)
+----------------------------
+2006/10/21 13:29:47 jvr Lib/fontTools/ttLib/tables/V_O_R_G_.py 1.2
+Speed optimizations from rroberts
+----------------------------
+2006/10/21 13:27:25 jvr Lib/fontTools/ttLib/tables/__init__.py 1.6
+2006/10/21 13:27:25 jvr Lib/fontTools/ttLib/tables/S_I_N_G_.py 1.1
+2006/10/21 13:27:25 jvr Lib/fontTools/ttLib/tables/M_E_T_A_.py 1.1
+2006/10/21 13:27:25 jvr Lib/fontTools/ttLib/tables/G_P_K_G_.py 1.1
+2006/10/21 13:27:25 jvr Lib/fontTools/ttLib/tables/G_M_A_P_.py 1.1
+2006/10/21 13:27:25 jvr Doc/documentation.html 1.10
+Some non-official OT tables from rrboerts. He wrote:
+
+There are also some new files, for SING glyphlet support, that you
+may or may not want to add, because they are not in the OpenType spec.
+
+M_E_T_A_.py # SING glyphlet meta data table. see
+'http://partners.adobe.com/public/developer/opentype/gdk/topic.html"
+S_I_N_G_.py # SING glyphlet basic info. See same web site as for META
+data table.
+
+G_M_A_P_.py # Summary of sing glyphlet info that has been stuck into
+a parent font. Not documented anywhere yet.
+G_P_K_G_.py # Opaque wrapper for SING glyphlet info; travels with
+application document. Is also stuck into augmented parent font. Not
+documented anywhere yet
+----------------------------
+2006/10/21 13:16:51 jvr Lib/fontTools/nfntLib.py 1.5
+make this module work with semi-recent MacPython
+----------------------------
+2006/02/25 21:39:33 jvr Lib/fontTools/misc/psCharStrings.py 1.23
+support the deprecated dotsection T2 operator
+----------------------------
+2006/01/25 15:24:37 fcoiffie Lib/fontTools/ttLib/tables/_k_e_r_n.py 1.8
+In some bad fonts, kern table is incomplete (it only contains a version number). In this case, the code accept a table without kernTables.
+----------------------------
+2006/01/25 15:21:22 fcoiffie Lib/fontTools/ttLib/tables/L_T_S_H_.py 1.3
+LTSH length can be different of numGlyphs as the table length must be 4-bytes aligned (assertion changed to (len(data) % numGlyphs) < 4)
+----------------------------
+2006/01/25 15:12:14 fcoiffie Lib/fontTools/ttLib/tables/_h_e_a_d.py 1.17
+The dates are stored in 8-bytes fields (Microsoft reference document) but Macintosh dates are only coded with 4-bytes. In some fonts, these date fields are badly coded and 8-bytes are used. So, a ValueError occurs.
+----------------------------
+2006/01/12 14:04:40 fcoiffie Lib/fontTools/ttLib/tables/_p_o_s_t.py 1.7
+2006/01/12 14:04:40 fcoiffie Lib/fontTools/ttLib/tables/O_S_2f_2.py 1.9
+Unsigned long data field must be packed with "L" instead of "l" (sometimes an OverflowError can occur)
+----------------------------
+2005/06/24 09:35:16 jvr Lib/fontTools/fondLib.py 1.5
+Hmm, fondLib has been broken on Python.framework for a while: I used
+the native struct alignment, which is different on OSX. Changed all
+struct calls to explicitly use big endian (ready for x86...), which
+also fixes the alignment issue.
+----------------------------
+2005/05/07 08:41:12 jvr Lib/fontTools/misc/psCharStrings.py 1.22
+some flex hint fixes from rroberts
+----------------------------
+2005/04/10 13:18:42 jvr Lib/fontTools/pens/basePen.py 1.9
+avoid glyphSet.get(): not all glyphsets in use implement it.
+----------------------------
+2005/03/08 09:50:56 jvr Lib/fontTools/ttLib/__init__.py 1.47
+2005/03/08 09:50:55 jvr Lib/fontTools/pens/basePen.py 1.8
+BasePen should not fail if a base glyph does not exist in the glyph set; added get() method to _TTGlyphSet class
+----------------------------
+2005/03/08 09:40:25 jvr Lib/fontTools/pens/pointInsidePen.py 1.4
+added _endPath method; without it, we'd fail on open paths (which requires pen.endPath() to be called instead of pen.closePath())
+----------------------------
+2005/02/25 22:31:39 jvr Lib/fontTools/misc/bezierTools.py 1.13
+use highly unscientific epsilon value
+----------------------------
+2005/02/25 12:51:49 jvr Lib/fontTools/misc/bezierTools.py 1.12
+more doco, reformatted __all__
+----------------------------
+2005/02/25 12:40:52 jvr Lib/fontTools/misc/bezierTools.py 1.11
+reworked test code and results, to make the results more readable
+----------------------------
+2005/02/25 12:28:45 jvr Lib/fontTools/misc/bezierTools.py 1.10
+Refactored splitting logic; added splitQuadraticAtT() and splitCubicAtT()
+----------------------------
+2005/02/25 10:47:36 jvr Lib/fontTools/misc/bezierTools.py 1.9
+show/test that _testrepr() reprs Numeric arrays nicely, too
+----------------------------
+2005/02/25 10:42:29 jvr Lib/fontTools/misc/bezierTools.py 1.8
+added a comment
+----------------------------
+2005/02/25 10:40:07 jvr Lib/fontTools/misc/bezierTools.py 1.7
+factored out param -> points conversion
+----------------------------
+2005/02/25 10:33:47 jvr Lib/fontTools/misc/bezierTools.py 1.6
+renamed and rewrote _tuplify() to _testrepr(), added tests for splitCubic()
+----------------------------
+2005/02/25 10:11:30 jvr Lib/fontTools/misc/bezierTools.py 1.5
+some refactoring, some doctests
+----------------------------
+2005/02/23 22:15:14 jvr Doc/ChangeLog.txt 1.8
+hm, it's been more than a year and a half since I regenerated ChangeLog.txt...
+----------------------------
 2005/02/23 21:22:27 jvr Lib/fontTools/misc/psCharStrings.py 1.21
 This patch fixes two things
 - in T2 charstrings, a byte code of 255 is followed by a 16.16 fixed
