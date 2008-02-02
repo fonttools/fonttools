@@ -17,7 +17,7 @@ from robofab.plistlib import Data, Dict, readPlist, writePlist
 from StringIO import StringIO
 
 # local encoding
-if os.name == "mac":
+if os.name in ["mac", "posix"]:
 	LOCAL_ENCODING = "macroman"
 else:
 	LOCAL_ENCODING = "latin-1"
