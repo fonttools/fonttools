@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """glifLib.py -- Generic module for reading and writing the .glif format.
 
 More info about the .glif format (GLyphInterchangeFormat) can be found here:
@@ -355,7 +356,7 @@ def writeGlyphToString(glyphName, glyphObject=None, drawPointsFunc=None, writer=
 	if note is not None:
 		if not isinstance(note, (str, unicode)):
 			raise GlifLibError, "note attribute must be str or unicode"
-		note = unicode(note)
+		note = note.encode('utf-8')
 		writer.begintag("note")
 		writer.newline()
 		for line in note.splitlines():
