@@ -169,7 +169,6 @@ class FlattenPen(BasePen):
 		for i in factors:
 			pt = _getCubicPoint(i*step, self.currentPt, pt1, pt2, pt3)
 			self.otherPen.lineTo(pt)
-		print "xxxx", pt3
 		self.currentPt = pt3
 		
 	def _closePath(self):
