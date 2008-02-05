@@ -81,7 +81,6 @@ def _estimateCubicCurveLength(pt0, pt1, pt2, pt3, precision=10):
 	length = 0
 	step = 1.0/precision
 	factors = range(0, precision+1)
-	print "estimateCubicCurveLength", pt0, pt1, pt2, pt3
 	for i in factors:
 		points.append(_getCubicPoint(i*step, pt0, pt1, pt2, pt3))
 	for i in range(len(points)-1):
