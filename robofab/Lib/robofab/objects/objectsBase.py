@@ -1349,6 +1349,7 @@ class BaseGlyph(RBaseObject):
 			offset = (0,0)
 		rT = Identity.translate(offset[0], offset[1])
 		rT = rT.rotate(radAngle)
+		rT = rT.translate(-offset[0], -offset[1])
 		self.transform(rT)	
 	
 	def skew(self, angle, offset=None):
