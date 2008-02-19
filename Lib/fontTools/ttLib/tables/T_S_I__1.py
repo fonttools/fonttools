@@ -26,7 +26,7 @@ class table_T_S_I__1(DefaultTable.DefaultTable):
 		for i in range(len(indextable.extra_indices)):
 			extraCode, textLength, textOffset = indextable.extra_indices[i]
 			if textLength == 0x8000:
-				if extraName == "fpgm":	# this is the last one
+				if self.extras[extraCode] == "fpgm":	# this is the last one
 					textLength = len(data) - textOffset
 				else:
 					textLength = indextable.extra_indices[i+1][1]
