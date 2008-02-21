@@ -308,7 +308,7 @@ class RFont(BaseFont):
 			u.writeInfo(self.info)
 			if bar:
 				bar.tick()
-			if self.kerning.changed:
+			if self.kerning.changed or saveAs:
 				if bar:
 					bar.label('Saving kerning...')
 				u.writeKerning(self.kerning.asDict())
