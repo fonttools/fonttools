@@ -885,7 +885,9 @@ class RFont(BaseFont):
 			#features = features.items()
 			orderedFeatures = []
 			for tag in order:
-				orderedFeatures.append((tag, features[tag]))
+				oneFeature = features.get(tag)
+				if oneFeature is not None:
+					orderedFeatures.append((tag, oneFeature))
 			self.naked().features.clean()
 			for tag, src in orderedFeatures:
 				self.naked().features.append(Feature(tag, src))
