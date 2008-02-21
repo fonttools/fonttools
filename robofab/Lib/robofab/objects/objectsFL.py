@@ -8,7 +8,8 @@ from robofab.objects.objectsBase import BaseFont, BaseGlyph, BaseContour, BaseSe
 		BasePoint, BaseBPoint, BaseAnchor, BaseGuide, BaseComponent, BaseKerning, BaseInfo, BaseGroups, BaseLib,\
 		roundPt, addPt, _box,\
 		MOVE, LINE, CORNER, CURVE, QCURVE, OFFCURVE,\
-		relativeBCPIn, relativeBCPOut, absoluteBCPIn, absoluteBCPOut
+		relativeBCPIn, relativeBCPOut, absoluteBCPIn, absoluteBCPOut,\
+		BasePostScriptFontHintValues, BasePostScriptGlyphHintValues, postScriptHintDataLibKey
 from fontTools.misc import arrayTools
 from robofab.pens.flPen import FLPointPen
 from robofab import RoboFabError
@@ -61,6 +62,147 @@ _flGenerateTypes ={	PC_TYPE1		:	(ftTYPE1,			'pfb'),		# PC Type 1 font (binary/PF
 ## FL Hint stuff
 # this should not be referenced outside of this module
 # since we may be changing the way this works in the future.
+
+
+"""
+
+	FontLab implementation of psHints object
+	
+	Most of the FL methods relating to ps hints return a list of 16 items.
+	These values are for the 16 corners of a 4 axis multiple master.
+	The odd thing is that even single masters get these 16 values.
+	RoboFab doesn't access the MM masters, so by default, the psHints
+	object only works with the first element. If you want to access the other
+	values in the list, give a value between 0 and 15 for impliedMasterIndex
+	when creating the object.
+
+	From the FontLab docs:
+	http://dev.fontlab.net/flpydoc/
+
+	blue_fuzz
+	blue_scale
+	blue_shift
+
+	blue_values_num(integer)             - number of defined blue values
+	blue_values[integer[integer]]        - two-dimentional array of BlueValues
+                                         master index is top-level index
+
+	other_blues_num(integer)             - number of defined OtherBlues values
+	other_blues[integer[integer]]        - two-dimentional array of OtherBlues
+	                                       master index is top-level index
+
+	family_blues_num(integer)            - number of FamilyBlues records
+	family_blues[integer[integer]]       - two-dimentional array of FamilyBlues
+	                                       master index is top-level index
+
+	family_other_blues_num(integer)      - number of FamilyOtherBlues records
+	family_other_blues[integer[integer]] - two-dimentional array of FamilyOtherBlues
+	                                       master index is top-level index
+
+	force_bold[integer]                  - list of Force Bold values, one for 
+	                                       each master
+	stem_snap_h_num(integer)
+	stem_snap_h
+	stem_snap_v_num(integer)
+	stem_snap_v
+ """
+
+class PostScriptFontHintValues(BasePostScriptFontHintValues):
+	"""	Wrapper for font-level PostScript hinting information for FontLab.
+		Blues values, stem values. 
+	"""
+	def __init__(self, font=None, impliedMasterIndex=0):
+		self._object = font.naked()
+		self._masterIndex = impliedMasterIndex
+			
+	def _getBlueFuzz(self):
+		return self._object.blue_fuzz[self._masterIndex]
+	def _setBlueFuzz(self, value):
+		self._object.blue_fuzz[self._masterIndex] = value
+
+	def _getBlueScale(self):
+		return self._object.blue_scale[self._masterIndex]
+	def _setBlueScale(self, value):
+		self._object.blue_scale[self._masterIndex] = float(value)
+
+	def _getBlueShift(self):
+		return self._object.blue_shift[self._masterIndex]
+	def _setBlueShift(self, value):
+		self._object.blue_shift[self._masterIndex] = value
+
+	def _getForceBold(self):
+		return self._object.force_bold[self._masterIndex]
+	def _setForceBold(self, value):
+		self._object.force_bold[self._masterIndex] = value
+	
+	# Note: these attributes are wrapppers for lists,
+	# but regular list operatons won't have any effect.
+	# you really have to _get_ and _set_ a list.
+	
+	def _getBlueValues(self):
+			return list(self._object.blue_values[self._masterIndex])
+	def _setBlueValues(self, values):
+		# FL says max 13 elements for this attribute
+		self._object.blue_values_num = min(self._attrs['blueValues']['max'], len(values))
+		for i in range(self._object.blue_values_num):
+			self._object.blue_values[self._masterIndex][i] = values[i]
+
+	def _getOtherBlues(self):
+			return list(self._object.other_blues[self._masterIndex])
+	def _setOtherBlues(self, values):
+		# FL says max 9 elements for this attribute
+		self._object.other_blues_num = min(self._attrs['otherBlues']['max'], len(values))
+		for i in range(self._object.other_blues_num):
+			self._object.other_blues[self._masterIndex][i] = values[i]
+
+	def _getFamilyBlues(self):
+			return list(self._object.family_blues[self._masterIndex])
+	def _setFamilyBlues(self, values):
+		# FL says max 13 elements for this attribute
+		self._object.family_blues_num = min(self._attrs['familyBlues']['max'], len(values))
+		for i in range(self._object.family_blues_num):
+			self._object.family_blues[self._masterIndex][i] = values[i]
+
+	def _getFamilyOtherBlues(self):
+			return list(self._object.family_other_blues[self._masterIndex])
+	def _setFamilyOtherBlues(self, values):
+		# FL says max 9 elements for this attribute
+		self._object.family_other_blues_num = min(self._attrs['familyOtherBlues']['max'], len(values))
+		for i in range(self._object.family_other_blues_num):
+			self._object.family_other_blues[self._masterIndex][i] = values[i]
+
+	def _getVStems(self):
+			return list(self._object.stem_snap_v[self._masterIndex])
+	def _setVStems(self, values):
+		# FL says max 11 elements for this attribute
+		self._object.stem_snap_v_num = min(self._attrs['vStems']['max'], len(values))
+		for i in range(self._object.stem_snap_v_num):
+			self._object.stem_snap_v[self._masterIndex][i] = values[i]
+
+	def _getHStems(self):
+			return list(self._object.stem_snap_h[self._masterIndex])
+	def _setHStems(self, values):
+		# FL says max 11 elements for this attribute
+		self._object.stem_snap_h_num = min(self._attrs['hStems']['max'], len(values))
+		for i in range(self._object.stem_snap_h_num):
+			self._object.stem_snap_h[self._masterIndex][i] = values[i]
+
+	blueFuzz = property(_getBlueFuzz, _setBlueFuzz, doc="postscript hints: bluefuzz value")
+	blueScale = property(_getBlueScale, _setBlueScale, doc="postscript hints: bluescale value")
+	blueShift = property(_getBlueShift, _setBlueShift, doc="postscript hints: blueshift value")
+	forceBold = property(_getForceBold, _setForceBold, doc="postscript hints: force bold value")
+	blueValues = property(_getBlueValues, _setBlueValues, doc="postscript hints: blue values")
+	otherBlues = property(_getOtherBlues, _setOtherBlues, doc="postscript hints: other blue values")
+	familyBlues = property(_getFamilyBlues, _setFamilyBlues, doc="postscript hints: family blue values")
+	familyOtherBlues = property(_getFamilyOtherBlues, _setFamilyOtherBlues, doc="postscript hints: family other blue values")
+	vStems = property(_getVStems, _setVStems, doc="postscript hints: vertical stem values")
+	hStems = property(_getHStems, _setHStems, doc="postscript hints: horizontal stem values")
+
+def getPostScriptHintDataFromLib(aFont, fontLib):
+	hintData = fontLib.get(postScriptHintDataLibKey)
+	psh = PostScriptFontHintValues(aFont)
+	psh.fromDict(hintData)
+
 
 def _glyphHintsToDict(glyph):
 	data = {}
@@ -340,7 +482,13 @@ class RFont(BaseFont):
 	#		return 0
 	#	else:
 	#		return -1
-		
+	
+
+	def _get_psHints(self):
+		return PostScriptFontHintValues(self)
+
+	psHints = property(_get_psHints, doc="font level postscript hint data")
+
 	def _get_info(self):
 		return RInfo(self._object)
 	
@@ -555,7 +703,7 @@ class RFont(BaseFont):
 			# if the glyph is a NoneLab glyph, then we need
 			# to extract the ps hints from the lib
 			if isinstance(oldGlyph, _RGlyph):
-				hintDict = oldGlyph.lib.get('com.fontlab.hintData', {})
+				hintDict = oldGlyph.lib.get(postScriptHintDataLibKey, {})
 			# otherwise we need to extract the hint dict from the glyph
 			else:
 				hintDict = _glyphHintsToDict(oldGlyph.naked())
@@ -563,8 +711,8 @@ class RFont(BaseFont):
 			if hintDict:
 				_dictHintsToGlyph(newGlyph.naked(), hintDict)
 			# delete any remaining hint data from the glyph lib
-			if newGlyph.lib.has_key('com.fontlab.hintData'):
-				del newGlyph.lib['com.fontlab.hintData']
+			if newGlyph.lib.has_key(postScriptHintDataLibKey):
+				del newGlyph.lib[postScriptHintDataLibKey]
 		return newGlyph
 	
 	def removeGlyph(self, glyphName):
@@ -819,11 +967,11 @@ class RFont(BaseFont):
 				if doHints:
 					hintStuff = _glyphHintsToDict(glyph.naked())
 					if hintStuff:
-						glyph.lib['com.fontlab.hintData'] = hintStuff
+						glyph.lib[postScriptHintDataLibKey] = hintStuff
 				glyphSet.writeGlyph(glyph.name, glyph, glyph.drawPoints)
 				# remove the hint dict from the lib
-				if doHints and glyph.lib.has_key('com.fontlab.hintData'):
-					del glyph.lib['com.fontlab.hintData']
+				if doHints and glyph.lib.has_key(postScriptHintDataLibKey):
+					del glyph.lib[postScriptHintDataLibKey]
 				if bar and not count % 10:
 					bar.tick(count)
 				count = count + 1
@@ -832,6 +980,10 @@ class RFont(BaseFont):
 			# We make a shallow copy if lib, since we add some stuff for export
 			# that doesn't need to be retained in memory.
 			fontLib = dict(self.lib)
+			if self._supportHints:
+				psh = PostScriptFontHintValues(self)
+				d = psh.asDict()
+				fontLib[postScriptHintDataLibKey] = d
 			fontLib["org.robofab.glyphOrder"] = glyphOrder
 			self._writeOpenTypeFeaturesToLib(fontLib)
 			u.writeLib(fontLib)
@@ -847,7 +999,7 @@ class RFont(BaseFont):
 	def _getGlyphOrderFromLib(self, fontLib, glyphSet):
 		glyphOrder = fontLib.get("org.robofab.glyphOrder")
 		if glyphOrder is not None:
-			# no need to keep track if the glyph order in lib once we're in FL
+			# no need to keep track if the glyph order in lib once the font is loaded.
 			del fontLib["org.robofab.glyphOrder"]
 			glyphNames = []
 			done = {}
@@ -921,17 +1073,20 @@ class RFont(BaseFont):
 				pen = FLPointPen(glyph.naked())
 				glyphSet.readGlyph(glyphName=glyphName, glyphObject=glyph, pointPen=pen)
 				if doHints:
-					hintData = glyph.lib.get('com.fontlab.hintData')
+					hintData = glyph.lib.get(postScriptHintDataLibKey)
 					if hintData:
 						_dictHintsToGlyph(glyph.naked(), hintData)
 					# now that the hints have been extracted from the glyph
 					# there is no reason to keep the location in the lib.
-					if glyph.lib.has_key('com.fontlab.hintData'):
-						del glyph.lib['com.fontlab.hintData']
+					if glyph.lib.has_key(postScriptHintDataLibKey):
+						del glyph.lib[postScriptHintDataLibKey]
 				glyph.update()
 				if bar and not count % 10:
 					bar.tick(count)
 				count = count + 1
+			if doHints:
+				# import postscript font hint data
+				getPostScriptHintDataFromLib(self, fontLib)
 			self.kerning.clear()
 			self.kerning.update(u.readKerning())
 			if bar:
@@ -1077,6 +1232,13 @@ class RGlyph(BaseGlyph):
 		self._object.note = value
 
 	note = property(_get_note, _set_note, doc="note")
+	
+	#def _get_psHints(self):
+	#	# get an object representing the postscript zone information
+	#	# thes
+	#	raise NotImplementedError
+		
+	#psHints = property(_get_psHints, doc="postscript hint data")
 	
 	#
 	#	necessary evil
@@ -1352,7 +1514,7 @@ class RGlyph(BaseGlyph):
 		if parent is not None and parent._supportHints:
 			hintStuff = _glyphHintsToDict(self.naked())
 			if hintStuff:
-				newGlyph.lib['com.fontlab.hintData'] = hintStuff
+				newGlyph.lib[postScriptHintDataLibKey] = hintStuff
 		if aParent is not None:
 			newGlyph.setParent(aParent)
 		elif self.getParent() is not None:
