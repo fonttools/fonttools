@@ -35,6 +35,63 @@ OFFCURVE = 'offcurve'
 DEGREE = 180 / math.pi
 
 
+
+# the key for the postscript hint data stored in the UFO
+postScriptHintDataLibKey = "org.robofab.postScriptHintData"
+
+
+class BasePostScriptFontHintValues(object):
+	""" Base class for font-level postscript hinting information.
+		Blues values, stem values.
+	"""
+	
+	_attrs = {
+		# some of these values can have only a certain number of elements
+		'blueFuzz': 	{'default': None, 'max':1},
+		'blueScale': 	{'default': None, 'max':1},
+		'blueShift': 	{'default': None, 'max':1},
+		'forceBold': 	{'default': None, 'max':1},
+		'blueValues': 	{'default': None, 'max':13},
+		'otherBlues': 	{'default': None, 'max':9},
+		'familyBlues': 	{'default': None, 'max':13},
+		'familyOtherBlues': {'default': None, 'max':9},
+		'vStems': 		{'default': None, 'max':11},
+		'hStems': 		{'default': None, 'max':11},
+		}
+		
+	def __init__(self):
+		for name in self._attrs.keys():
+			setattr(self, name, self._attrs[name])
+		
+	def getParent(self):
+		"""this method will be overwritten with a weakref if there is a parent."""
+		return None
+
+	def setParent(self, parent):
+		import weakref
+		self.getParent = weakref.ref(parent)
+
+	def fromDict(self, data):
+		for name in self._attrs:
+			if name in data:
+				setattr(self, name, data[name])
+	
+	def asDict(self):
+		d = {}
+		for name in self._attrs:
+			try:
+				value = getattr(self, name)
+			except AttributeError:
+				print "%s attribute not supported"%name
+				continue
+			if value is not None or not value:
+				d[name] = getattr(self, name)
+		return d
+	
+	def __repr__(self):
+		return "<PostScript Font Hints Values>"
+
+
 class RoboFabInterpolationError(Exception): pass
 
 
