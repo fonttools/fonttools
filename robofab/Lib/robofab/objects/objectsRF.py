@@ -5,7 +5,8 @@ from robofab.objects.objectsBase import BaseFont, BaseKerning, BaseGroups, BaseI
 		BaseGlyph, BaseContour, BaseSegment, BasePoint, BaseBPoint, BaseAnchor, BaseGuide, BaseComponent, \
 		relativeBCPIn, relativeBCPOut, absoluteBCPIn, absoluteBCPOut, _box,\
 		_interpolate, _interpolatePt, roundPt, addPt,\
-		MOVE, LINE, CORNER, CURVE, QCURVE, OFFCURVE
+		MOVE, LINE, CORNER, CURVE, QCURVE, OFFCURVE,\
+		BasePostScriptFontHintValues, postScriptHintDataLibKey
 
 import os
 
@@ -53,6 +54,27 @@ def AllFonts():
 	to keep track of which fonts are open."""
 	raise NotImplementedError
 	
+
+class PostScriptFontHintValues(BasePostScriptFontHintValues):
+	"""	PostScript hints object for objectsRF usage.
+		If there are values in the lib, use those.
+		If there are no values in the lib, use defaults.
+	"""
+	
+	def __init__(self, aFont=None):
+		# read the data from the font.lib, it won't be anywhere else
+		BasePostScriptFontHintValues.__init__(self)
+		data = aFont.lib.get(postScriptHintDataLibKey)
+		if data is not None:
+			self.fromDict(data)
+		if aFont is not None:
+			self.setParent(aFont)
+
+def getPostScriptHintDataFromLib(aFont, fontLib):
+	hintData = fontLib.get(postScriptHintDataLibKey)
+	psh = PostScriptFontHintValues(aFont)
+	psh.fromDict(hintData)
+	return psh
 
 class RFont(BaseFont):
 	"""UFO font object which reads and writes glif, and keeps the data in memory in between.
@@ -113,6 +135,8 @@ class RFont(BaseFont):
 		self.kerning.setChanged(False)
 		self.groups.update(u.readGroups())
 		self.lib.update(u.readLib())
+		# after reading the lib, read hinting data from the lib
+		self.psHints = PostScriptFontHintValues(self)
 		self._glyphSet = u.getGlyphSet()
 		self._hasNotChanged(doGlyphs=False)
 		
@@ -321,6 +345,10 @@ class RFont(BaseFont):
 			u.writeGroups(self.groups)
 			if bar:
 				bar.tick()
+
+			if self._supportHints:
+				# save postscript hint data
+				self.lib[postScriptHintDataLibKey] = self.psHints.asDict()
 			#if self.lib.changed:
 			if bar:
 				bar.label('Saving lib...')
