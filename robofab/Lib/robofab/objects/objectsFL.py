@@ -9,7 +9,7 @@ from robofab.objects.objectsBase import BaseFont, BaseGlyph, BaseContour, BaseSe
 		roundPt, addPt, _box,\
 		MOVE, LINE, CORNER, CURVE, QCURVE, OFFCURVE,\
 		relativeBCPIn, relativeBCPOut, absoluteBCPIn, absoluteBCPOut,\
-		BasePostScriptFontHintValues, BasePostScriptGlyphHintValues, postScriptHintDataLibKey
+		BasePostScriptFontHintValues, postScriptHintDataLibKey
 from fontTools.misc import arrayTools
 from robofab.pens.flPen import FLPointPen
 from robofab import RoboFabError
