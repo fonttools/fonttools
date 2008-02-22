@@ -131,42 +131,68 @@ class PostScriptFontHintValues(BasePostScriptFontHintValues):
 		self._object.blue_shift[self._masterIndex] = value
 
 	def _getForceBold(self):
-		return self._object.force_bold[self._masterIndex]
+		return self._object.force_bold[self._masterIndex] == 1
+		
 	def _setForceBold(self, value):
+		if value:
+			value = 1
+		else:
+			value = 0
 		self._object.force_bold[self._masterIndex] = value
 	
 	# Note: these attributes are wrapppers for lists,
 	# but regular list operatons won't have any effect.
 	# you really have to _get_ and _set_ a list.
 	
+	def _asTuplePairs(self, l):
+		"""Split a list of numbers into a list of pairs"""
+		assert len(l)%2 == 0, "Even number of values required: %s"%(`l`)
+		n = [(l[i], l[i+1]) for i in range(0, len(l), 2)]
+		n.sort()
+		return n
+	
+	def _flattenTuplePairs(self, l):
+		"""The reverse of _asTuplePairs"""
+		n = []
+		l.sort()
+		for i in l:
+			assert len(i) == 2, "Each entry must consist of two numbers"
+			n.append(i[0])
+			n.append(i[1])
+		return n
+	
 	def _getBlueValues(self):
-			return list(self._object.blue_values[self._masterIndex])
+			return self._asTuplePairs(self._object.blue_values[self._masterIndex])
 	def _setBlueValues(self, values):
 		# FL says max 13 elements for this attribute
+		values = self._flattenTuplePairs(values)
 		self._object.blue_values_num = min(self._attrs['blueValues']['max'], len(values))
 		for i in range(self._object.blue_values_num):
 			self._object.blue_values[self._masterIndex][i] = values[i]
 
 	def _getOtherBlues(self):
-			return list(self._object.other_blues[self._masterIndex])
+			return self._asTuplePairs(self._object.other_blues[self._masterIndex])
 	def _setOtherBlues(self, values):
 		# FL says max 9 elements for this attribute
+		values = self._flattenTuplePairs(values)
 		self._object.other_blues_num = min(self._attrs['otherBlues']['max'], len(values))
 		for i in range(self._object.other_blues_num):
 			self._object.other_blues[self._masterIndex][i] = values[i]
 
 	def _getFamilyBlues(self):
-			return list(self._object.family_blues[self._masterIndex])
+			return self._asTuplePairs(self._object.family_blues[self._masterIndex])
 	def _setFamilyBlues(self, values):
 		# FL says max 13 elements for this attribute
+		values = self._flattenTuplePairs(values)
 		self._object.family_blues_num = min(self._attrs['familyBlues']['max'], len(values))
 		for i in range(self._object.family_blues_num):
 			self._object.family_blues[self._masterIndex][i] = values[i]
 
 	def _getFamilyOtherBlues(self):
-			return list(self._object.family_other_blues[self._masterIndex])
+			return self._asTuplePairs(self._object.family_other_blues[self._masterIndex])
 	def _setFamilyOtherBlues(self, values):
 		# FL says max 9 elements for this attribute
+		values = self._flattenTuplePairs(values)
 		self._object.family_other_blues_num = min(self._attrs['familyOtherBlues']['max'], len(values))
 		for i in range(self._object.family_other_blues_num):
 			self._object.family_other_blues[self._masterIndex][i] = values[i]
@@ -980,10 +1006,11 @@ class RFont(BaseFont):
 			# We make a shallow copy if lib, since we add some stuff for export
 			# that doesn't need to be retained in memory.
 			fontLib = dict(self.lib)
-			if self._supportHints:
-				psh = PostScriptFontHintValues(self)
-				d = psh.asDict()
-				fontLib[postScriptHintDataLibKey] = d
+			# Always export the postscript font hint values
+			psh = PostScriptFontHintValues(self)
+			d = psh.asDict()
+			fontLib[postScriptHintDataLibKey] = d
+			# Export the glyph order
 			fontLib["org.robofab.glyphOrder"] = glyphOrder
 			self._writeOpenTypeFeaturesToLib(fontLib)
 			u.writeLib(fontLib)
@@ -1084,9 +1111,8 @@ class RFont(BaseFont):
 				if bar and not count % 10:
 					bar.tick(count)
 				count = count + 1
-			if doHints:
-				# import postscript font hint data
-				getPostScriptHintDataFromLib(self, fontLib)
+			# import postscript font hint data
+			getPostScriptHintDataFromLib(self, fontLib)
 			self.kerning.clear()
 			self.kerning.update(u.readKerning())
 			if bar:
