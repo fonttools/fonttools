@@ -64,11 +64,12 @@ class PostScriptFontHintValues(BasePostScriptFontHintValues):
 	def __init__(self, aFont=None):
 		# read the data from the font.lib, it won't be anywhere else
 		BasePostScriptFontHintValues.__init__(self)
-		data = aFont.lib.get(postScriptHintDataLibKey)
-		if data is not None:
-			self.fromDict(data)
+		data = None
 		if aFont is not None:
 			self.setParent(aFont)
+			data = aFont.lib.get(postScriptHintDataLibKey)
+		if data is not None:
+			self.fromDict(data)
 
 def getPostScriptHintDataFromLib(aFont, fontLib):
 	hintData = fontLib.get(postScriptHintDataLibKey)
