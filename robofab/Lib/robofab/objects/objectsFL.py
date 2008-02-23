@@ -114,6 +114,10 @@ class PostScriptFontHintValues(BasePostScriptFontHintValues):
 	def __init__(self, font=None, impliedMasterIndex=0):
 		self._object = font.naked()
 		self._masterIndex = impliedMasterIndex
+	
+	def copy(self):
+		from robofab.objects.objectsRF import PostScriptFontHintValues as _PostScriptFontHintValues
+		return _PostScriptFontHintValues(data=self.asDict())
 			
 	def _getBlueFuzz(self):
 		return self._object.blue_fuzz[self._masterIndex]
@@ -164,52 +168,46 @@ class PostScriptFontHintValues(BasePostScriptFontHintValues):
 	def _getBlueValues(self):
 			return self._asPairs(self._object.blue_values[self._masterIndex])
 	def _setBlueValues(self, values):
-		# FL says max 13 elements for this attribute
 		values = self._flattenPairs(values)
-		self._object.blue_values_num = min(self._attrs['blueValues']['max'], len(values))
+		self._object.blue_values_num = min(self._attributeNames['blueValues']['max']*2, len(values))
 		for i in range(self._object.blue_values_num):
 			self._object.blue_values[self._masterIndex][i] = values[i]
 
 	def _getOtherBlues(self):
 			return self._asPairs(self._object.other_blues[self._masterIndex])
 	def _setOtherBlues(self, values):
-		# FL says max 9 elements for this attribute
 		values = self._flattenPairs(values)
-		self._object.other_blues_num = min(self._attrs['otherBlues']['max'], len(values))
+		self._object.other_blues_num = min(self._attributeNames['otherBlues']['max']*2, len(values))
 		for i in range(self._object.other_blues_num):
 			self._object.other_blues[self._masterIndex][i] = values[i]
 
 	def _getFamilyBlues(self):
 			return self._asPairs(self._object.family_blues[self._masterIndex])
 	def _setFamilyBlues(self, values):
-		# FL says max 13 elements for this attribute
 		values = self._flattenPairs(values)
-		self._object.family_blues_num = min(self._attrs['familyBlues']['max'], len(values))
+		self._object.family_blues_num = min(self._attributeNames['familyBlues']['max']*2, len(values))
 		for i in range(self._object.family_blues_num):
 			self._object.family_blues[self._masterIndex][i] = values[i]
 
 	def _getFamilyOtherBlues(self):
 			return self._asPairs(self._object.family_other_blues[self._masterIndex])
 	def _setFamilyOtherBlues(self, values):
-		# FL says max 9 elements for this attribute
 		values = self._flattenPairs(values)
-		self._object.family_other_blues_num = min(self._attrs['familyOtherBlues']['max'], len(values))
+		self._object.family_other_blues_num = min(self._attributeNames['familyOtherBlues']['max']*2, len(values))
 		for i in range(self._object.family_other_blues_num):
 			self._object.family_other_blues[self._masterIndex][i] = values[i]
 
 	def _getVStems(self):
 			return list(self._object.stem_snap_v[self._masterIndex])
 	def _setVStems(self, values):
-		# FL says max 11 elements for this attribute
-		self._object.stem_snap_v_num = min(self._attrs['vStems']['max'], len(values))
+		self._object.stem_snap_v_num = min(self._attributeNames['vStems']['max'], len(values))
 		for i in range(self._object.stem_snap_v_num):
 			self._object.stem_snap_v[self._masterIndex][i] = values[i]
 
 	def _getHStems(self):
 			return list(self._object.stem_snap_h[self._masterIndex])
 	def _setHStems(self, values):
-		# FL says max 11 elements for this attribute
-		self._object.stem_snap_h_num = min(self._attrs['hStems']['max'], len(values))
+		self._object.stem_snap_h_num = min(self._attributeNames['hStems']['max'], len(values))
 		for i in range(self._object.stem_snap_h_num):
 			self._object.stem_snap_h[self._masterIndex][i] = values[i]
 
@@ -223,6 +221,8 @@ class PostScriptFontHintValues(BasePostScriptFontHintValues):
 	familyOtherBlues = property(_getFamilyOtherBlues, _setFamilyOtherBlues, doc="postscript hints: family other blue values")
 	vStems = property(_getVStems, _setVStems, doc="postscript hints: vertical stem values")
 	hStems = property(_getHStems, _setHStems, doc="postscript hints: horizontal stem values")
+	
+		
 
 def getPostScriptHintDataFromLib(aFont, fontLib):
 	hintData = fontLib.get(postScriptHintDataLibKey)
