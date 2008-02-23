@@ -61,10 +61,9 @@ class PostScriptFontHintValues(BasePostScriptFontHintValues):
 		If there are no values in the lib, use defaults.
 	"""
 	
-	def __init__(self, aFont=None):
+	def __init__(self, aFont=None, data=None):
 		# read the data from the font.lib, it won't be anywhere else
 		BasePostScriptFontHintValues.__init__(self)
-		data = None
 		if aFont is not None:
 			self.setParent(aFont)
 			data = aFont.lib.get(postScriptHintDataLibKey)
