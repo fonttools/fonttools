@@ -177,6 +177,7 @@ class BasePostScriptFontHintValues(object):
 				setattr(self, name, new)
 	
 	# math operations for psHint object
+	# Note: math operations can change integers to floats.
 	def __add__(self, other):
 		assert isinstance(other, BasePostScriptFontHintValues)
 		copied = self.copy()
@@ -202,7 +203,7 @@ class BasePostScriptFontHintValues(object):
 		if isinstance(factor, tuple):
 			factor = factor[0]
 		copiedInfo = self.copy()
-		self._processMathTwo(copiedInfo, factor, mul)
+		self._processMathTwo(copiedInfo, factor, div)
 		return copiedInfo
 
 	__rdiv__ = __div__
