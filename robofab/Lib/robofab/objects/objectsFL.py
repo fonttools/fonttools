@@ -144,15 +144,15 @@ class PostScriptFontHintValues(BasePostScriptFontHintValues):
 	# but regular list operatons won't have any effect.
 	# you really have to _get_ and _set_ a list.
 	
-	def _asTuplePairs(self, l):
+	def _asPairs(self, l):
 		"""Split a list of numbers into a list of pairs"""
 		assert len(l)%2 == 0, "Even number of values required: %s"%(`l`)
-		n = [(l[i], l[i+1]) for i in range(0, len(l), 2)]
+		n = [[l[i], l[i+1]] for i in range(0, len(l), 2)]
 		n.sort()
 		return n
 	
-	def _flattenTuplePairs(self, l):
-		"""The reverse of _asTuplePairs"""
+	def _flattenPairs(self, l):
+		"""The reverse of _asPairs"""
 		n = []
 		l.sort()
 		for i in l:
@@ -162,37 +162,37 @@ class PostScriptFontHintValues(BasePostScriptFontHintValues):
 		return n
 	
 	def _getBlueValues(self):
-			return self._asTuplePairs(self._object.blue_values[self._masterIndex])
+			return self._asPairs(self._object.blue_values[self._masterIndex])
 	def _setBlueValues(self, values):
 		# FL says max 13 elements for this attribute
-		values = self._flattenTuplePairs(values)
+		values = self._flattenPairs(values)
 		self._object.blue_values_num = min(self._attrs['blueValues']['max'], len(values))
 		for i in range(self._object.blue_values_num):
 			self._object.blue_values[self._masterIndex][i] = values[i]
 
 	def _getOtherBlues(self):
-			return self._asTuplePairs(self._object.other_blues[self._masterIndex])
+			return self._asPairs(self._object.other_blues[self._masterIndex])
 	def _setOtherBlues(self, values):
 		# FL says max 9 elements for this attribute
-		values = self._flattenTuplePairs(values)
+		values = self._flattenPairs(values)
 		self._object.other_blues_num = min(self._attrs['otherBlues']['max'], len(values))
 		for i in range(self._object.other_blues_num):
 			self._object.other_blues[self._masterIndex][i] = values[i]
 
 	def _getFamilyBlues(self):
-			return self._asTuplePairs(self._object.family_blues[self._masterIndex])
+			return self._asPairs(self._object.family_blues[self._masterIndex])
 	def _setFamilyBlues(self, values):
 		# FL says max 13 elements for this attribute
-		values = self._flattenTuplePairs(values)
+		values = self._flattenPairs(values)
 		self._object.family_blues_num = min(self._attrs['familyBlues']['max'], len(values))
 		for i in range(self._object.family_blues_num):
 			self._object.family_blues[self._masterIndex][i] = values[i]
 
 	def _getFamilyOtherBlues(self):
-			return self._asTuplePairs(self._object.family_other_blues[self._masterIndex])
+			return self._asPairs(self._object.family_other_blues[self._masterIndex])
 	def _setFamilyOtherBlues(self, values):
 		# FL says max 9 elements for this attribute
-		values = self._flattenTuplePairs(values)
+		values = self._flattenPairs(values)
 		self._object.family_other_blues_num = min(self._attrs['familyOtherBlues']['max'], len(values))
 		for i in range(self._object.family_other_blues_num):
 			self._object.family_other_blues[self._masterIndex][i] = values[i]
