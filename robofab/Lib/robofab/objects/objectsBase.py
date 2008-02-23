@@ -1,4 +1,4 @@
-"""	
+""" 
 Base classes for the Unified Font Objects (UFO),
 a series of classes that deal with fonts, glyphs,
 contours and related things.
@@ -16,6 +16,7 @@ do it with the objectsFL and objectsRF.
 
 
 from __future__ import generators
+from __future__ import division
 
 
 from robofab import RoboFabError
@@ -39,29 +40,50 @@ DEGREE = 180 / math.pi
 # the key for the postscript hint data stored in the UFO
 postScriptHintDataLibKey = "org.robofab.postScriptHintData"
 
+# from http://svn.typesupply.com/packages/fontMath/mathFunctions.py
+
+def add(v1, v2):
+	return v1 + v2
+
+def sub(v1, v2):
+	return v1 - v2
+
+def mul(v, f):
+	return v * f
+
+def div(v, f):
+	return v / f
+	
+def issequence(x):
+	"Is x a sequence? We say it is if it has a __getitem__ method."
+	return hasattr(x, '__getitem__')
+
 
 class BasePostScriptFontHintValues(object):
 	""" Base class for font-level postscript hinting information.
 		Blues values, stem values.
 	"""
 	
-	_attrs = {
+	_attributeNames = {
 		# some of these values can have only a certain number of elements
-		'blueFuzz': 	{'default': None, 'max':1},
-		'blueScale': 	{'default': None, 'max':1},
-		'blueShift': 	{'default': None, 'max':1},
-		'forceBold': 	{'default': None, 'max':1},
-		'blueValues': 	{'default': None, 'max':13},
-		'otherBlues': 	{'default': None, 'max':9},
-		'familyBlues': 	{'default': None, 'max':13},
-		'familyOtherBlues': {'default': None, 'max':9},
-		'vStems': 		{'default': None, 'max':11},
-		'hStems': 		{'default': None, 'max':11},
+		'blueFuzz':		{'default': None, 'max':1},
+		'blueScale':	{'default': None, 'max':1},
+		'blueShift':	{'default': None, 'max':1},
+		'forceBold':	{'default': None, 'max':1},
+		'blueValues':	{'default': None, 'max':7},
+		'otherBlues':	{'default': None, 'max':5},
+		'familyBlues':	{'default': None, 'max':7},
+		'familyOtherBlues': {'default': None, 'max':5},
+		'vStems':		{'default': None, 'max':6},
+		'hStems':		{'default': None, 'max':11},
 		}
 		
-	def __init__(self):
-		for name in self._attrs.keys():
-			setattr(self, name, self._attrs[name])
+	def __init__(self, data=None):
+		if data is not None:
+			self.fromDict(data)
+		else:
+			for name in self._attributeNames.keys():
+				setattr(self, name, self._attributeNames[name]['default'])
 		
 	def getParent(self):
 		"""this method will be overwritten with a weakref if there is a parent."""
@@ -72,13 +94,13 @@ class BasePostScriptFontHintValues(object):
 		self.getParent = weakref.ref(parent)
 
 	def fromDict(self, data):
-		for name in self._attrs:
+		for name in self._attributeNames:
 			if name in data:
 				setattr(self, name, data[name])
 	
 	def asDict(self):
 		d = {}
-		for name in self._attrs:
+		for name in self._attributeNames:
 			try:
 				value = getattr(self, name)
 			except AttributeError:
@@ -88,8 +110,170 @@ class BasePostScriptFontHintValues(object):
 				d[name] = getattr(self, name)
 		return d
 	
+	def update(self, other):
+		assert isinstance(other, BasePostScriptFontHintValues)
+		for name in self._attributeNames.keys():
+			v = getattr(other, name)
+			if v is not None:
+				setattr(self, name, v)
+
 	def __repr__(self):
 		return "<PostScript Font Hints Values>"
+
+	def copy(self, aParent=None):
+		"""Duplicate this object. Pass an object for parenting if you want."""
+		n = self.__class__(data=self.asDict())
+		if aParent is not None:
+			n.setParent(aParent)
+		elif self.getParent() is not None:
+			n.setParent(self.getParent())
+		dont = ['getParent']
+		for k in self.__dict__.keys():
+			if k in dont:
+				continue
+			dup = copy.deepcopy(self.__dict__[k])
+			setattr(n, k, dup)
+		return n
+
+	def round(self):
+		"""Round the values to reasonable values.
+			- blueScale is not rounded, it is a float
+			- forceBold is set to False if -0.5 < value < 0.5. Otherwise it will be True.
+			- blueShift, blueFuzz are rounded to int
+			- stems are rounded to int
+			- blues are rounded to int
+		"""
+		for name, values in self._attributeNames.items():
+			if name == "blueScale":
+				continue
+			elif name == "forceBold":
+				v = getattr(self, name)
+				if v is None:
+					continue
+				if -0.5 <= v <= 0.5:
+					setattr(self, name, False)
+				else:
+					setattr(self, name, True)
+			elif name in ['blueFuzz', 'blueShift']:
+				v = getattr(self, name)
+				if v is None:
+					continue
+				setattr(self, name, int(round(v)))
+			elif name in ['hStems', 'vStems']:
+				v = getattr(self, name)
+				if v is None:
+					continue
+				new = []
+				for n in v:
+					new.append(int(round(n)))
+				setattr(self, name, new)
+			else:
+				v = getattr(self, name)
+				if v is None:
+					continue
+				new = []
+				for n in v:
+					new.append([int(round(m)) for m in n])
+				setattr(self, name, new)
+	
+	# math operations for psHint object
+	def __add__(self, other):
+		assert isinstance(other, BasePostScriptFontHintValues)
+		copied = self.copy()
+		self._processMathOne(copied, other, add)
+		return copied
+
+	def __sub__(self, other):
+		assert isinstance(other, BasePostScriptFontHintValues)
+		copied = self.copy()
+		self._processMathOne(copied, other, sub)
+		return copied
+
+	def __mul__(self, factor):
+		if isinstance(factor, tuple):
+			factor = factor[0]
+		copiedInfo = self.copy()
+		self._processMathTwo(copiedInfo, factor, mul)
+		return copiedInfo
+
+	__rmul__ = __mul__
+
+	def __div__(self, factor):
+		if isinstance(factor, tuple):
+			factor = factor[0]
+		copiedInfo = self.copy()
+		self._processMathTwo(copiedInfo, factor, mul)
+		return copiedInfo
+
+	__rdiv__ = __div__
+	
+	def _processMathOne(self, copied, other, funct):
+		for name, values in self._attributeNames.items():
+			a = None
+			b = None
+			v = None
+			if hasattr(copied, name):
+				a = getattr(copied, name)
+			if hasattr(other, name):
+				b = getattr(other, name)
+			if name in ['blueFuzz', 'blueScale', 'blueShift', 'forceBold']:
+				# process single values
+				if a is not None and b is not None:
+					v = funct(a, b)
+				elif a is not None and b is None:
+					v = a
+				elif b is not None and a is None:
+					v = b
+				if v is not None:
+					setattr(copied, name, v)
+			elif name in ['hStems', 'vStems']:
+				if a is not None and b is not None:
+					l = min(len(a), len(b))
+					v = [funct(a[i], b[i]) for i in range(l)]
+				if v is not None:
+					setattr(copied, name, v)
+			else:
+				if a is not None and b is not None:
+					l = min(len(a), len(b))
+					for i in range(l):
+						if v is None:
+							v = []
+						ai = a[i]
+						bi = b[i]
+						l2 = min(len(ai), len(bi))
+						v2 = [funct(ai[j], bi[j]) for j in range(l2)]
+						v.append(v2)
+				if v is not None:
+					setattr(copied, name, v)
+
+	def _processMathTwo(self, copied, factor, funct):
+		for name, values in self._attributeNames.items():
+			a = None
+			b = None
+			v = None
+			if hasattr(copied, name):
+				a = getattr(copied, name)
+			if name in ['blueFuzz', 'blueScale', 'blueShift', 'forceBold']:
+				# process single values
+				if a is not None:
+					v = funct(a, factor)
+				if v is not None:
+					setattr(copied, name, v)
+			elif name in ['hStems', 'vStems']:
+				if a is not None:
+					v = [funct(a[i], factor) for i in range(len(a))]
+				if v is not None:
+					setattr(copied, name, v)
+			else:
+				if a is not None:
+					for i in range(len(a)):
+						if v is None:
+							v = []
+						v2 = [funct(a[i][j], factor) for j in range(len(a[i]))]
+						v.append(v2)
+				if v is not None:
+					setattr(copied, name, v)
+
 
 
 class RoboFabInterpolationError(Exception): pass
@@ -1318,7 +1502,7 @@ class BaseGlyph(RBaseObject):
 		Slice the glyph into a grid based on the cell size.
 		It returns a list of lists containing bool values
 		that indicate the black (True) or white (False)
-		value of that particular cell.  These lists are
+		value of that particular cell.	These lists are
 		arranged from top to bottom of the glyph and
 		proceed from left to right.
 		This is an expensive operation!
