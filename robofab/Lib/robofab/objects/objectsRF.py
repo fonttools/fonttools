@@ -102,6 +102,8 @@ class RFont(BaseFont):
 		self.info.setParent(self)
 		self.groups = RGroups()
 		self.groups.setParent(self)
+		self.psHints = PostScriptFontHintValues()
+		self.psHints.setParent(self)
 		self.lib = RLib()
 		self.lib.setParent(self)
 		
@@ -346,9 +348,9 @@ class RFont(BaseFont):
 			if bar:
 				bar.tick()
 
-			if self._supportHints:
-				# save postscript hint data
-				self.lib[postScriptHintDataLibKey] = self.psHints.asDict()
+			# save postscript hint data
+			self.lib[postScriptHintDataLibKey] = self.psHints.asDict()
+
 			#if self.lib.changed:
 			if bar:
 				bar.label('Saving lib...')
