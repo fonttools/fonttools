@@ -221,14 +221,7 @@ class PostScriptFontHintValues(BasePostScriptFontHintValues):
 	familyOtherBlues = property(_getFamilyOtherBlues, _setFamilyOtherBlues, doc="postscript hints: family other blue values")
 	vStems = property(_getVStems, _setVStems, doc="postscript hints: vertical stem values")
 	hStems = property(_getHStems, _setHStems, doc="postscript hints: horizontal stem values")
-	
-	
-def getPostScriptFontHintDataFromLib(aFont, fontLib):
-	hintData = fontLib.get(postScriptHintDataLibKey)
-	psh = PostScriptFontHintValues(aFont)
-	if psh is not None:
-		psh.fromDict(hintData)
-		
+			
 
 class PostScriptGlyphHintValues(BasePostScriptGlyphHintValues):
 	"""	Wrapper for glyph-level PostScript hinting information for FontLab.
@@ -1173,7 +1166,7 @@ class RFont(BaseFont):
 					bar.tick(count)
 				count = count + 1
 			# import postscript font hint data
-			getPostScriptFontHintDataFromLib(self, fontLib)
+			self.psHints._loadFromLib(fontLib)
 			self.kerning.clear()
 			self.kerning.update(u.readKerning())
 			if bar:
