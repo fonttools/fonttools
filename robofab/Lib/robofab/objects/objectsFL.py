@@ -226,8 +226,9 @@ class PostScriptFontHintValues(BasePostScriptFontHintValues):
 def getPostScriptFontHintDataFromLib(aFont, fontLib):
 	hintData = fontLib.get(postScriptHintDataLibKey)
 	psh = PostScriptFontHintValues(aFont)
-	psh.fromDict(hintData)
-
+	if psh is not None:
+		psh.fromDict(hintData)
+		
 
 class PostScriptGlyphHintValues(BasePostScriptGlyphHintValues):
 	"""	Wrapper for glyph-level PostScript hinting information for FontLab.
