@@ -71,7 +71,8 @@ class PostScriptFontHintValues(BasePostScriptFontHintValues):
 		BasePostScriptFontHintValues.__init__(self)
 		if aFont is not None:
 			self.setParent(aFont)
-			data = aFont.lib.get(postScriptHintDataLibKey)
+			libData = aFont.lib.get(postScriptHintDataLibKey)
+			self.fromDict(libData)
 		if data is not None:
 			self.fromDict(data)
 
@@ -93,6 +94,8 @@ class PostScriptGlyphHintValues(BasePostScriptGlyphHintValues):
 		if aGlyph is not None:
 			self.setParent(aGlyph)
 			self._loadFromLib(aGlyph.lib)
+		if data is not None:
+			self.fromDict(data)
 			
 			
 class RFont(BaseFont):
