@@ -72,7 +72,8 @@ class PostScriptFontHintValues(BasePostScriptFontHintValues):
 		if aFont is not None:
 			self.setParent(aFont)
 			libData = aFont.lib.get(postScriptHintDataLibKey)
-			self.fromDict(libData)
+			if libData is not None:
+				self.fromDict(libData)
 		if data is not None:
 			self.fromDict(data)
 
