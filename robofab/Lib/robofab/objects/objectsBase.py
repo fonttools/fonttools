@@ -88,6 +88,11 @@ class BasePostScriptHintValues(object):
 				break
 		return empty
 
+	def clear(self):
+		"""Set all attributes to default / empty"""
+		for name in self._attributeNames:
+			setattr(self, name, self._attributeNames[name]['default'])
+		
 	def _loadFromLib(self, lib):
 		data = lib.get(postScriptHintDataLibKey)
 		if data is not None:
@@ -122,7 +127,7 @@ class BasePostScriptHintValues(object):
 			v = getattr(other, name)
 			if v is not None:
 				setattr(self, name, v)
-
+	
 	def __repr__(self):
 		return "<Base PS Hint Data>"
 
