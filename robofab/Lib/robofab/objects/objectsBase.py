@@ -59,24 +59,10 @@ def issequence(x):
 	return hasattr(x, '__getitem__')
 
 
-class BasePostScriptFontHintValues(object):
-	""" Base class for font-level postscript hinting information.
-		Blues values, stem values.
+
+class BasePostScriptHintValues(object):
+	""" Base class for postscript hinting information.
 	"""
-	
-	_attributeNames = {
-		# some of these values can have only a certain number of elements
-		'blueFuzz':		{'default': None, 'max':1},
-		'blueScale':	{'default': None, 'max':1},
-		'blueShift':	{'default': None, 'max':1},
-		'forceBold':	{'default': None, 'max':1},
-		'blueValues':	{'default': None, 'max':7},
-		'otherBlues':	{'default': None, 'max':5},
-		'familyBlues':	{'default': None, 'max':7},
-		'familyOtherBlues': {'default': None, 'max':5},
-		'vStems':		{'default': None, 'max':6},
-		'hStems':		{'default': None, 'max':11},
-		}
 		
 	def __init__(self, data=None):
 		if data is not None:
@@ -92,6 +78,26 @@ class BasePostScriptFontHintValues(object):
 	def setParent(self, parent):
 		import weakref
 		self.getParent = weakref.ref(parent)
+		
+	def isEmpty(self):
+		"""Check all attrs and decide if they're all empty."""
+		empty = True
+		for name in self._attributeNames:
+			if getattr(self, name):
+				empty = False
+				break
+		return empty
+
+	def _loadFromLib(self, lib):
+		data = lib.get(postScriptHintDataLibKey)
+		if data is not None:
+			self.fromDict(data)
+
+	def _saveToLib(self, lib):
+		parent = self.getParent()
+		if parent is not None:
+			parent.setChanged(True)
+		lib[postScriptHintDataLibKey] = self.asDict()
 
 	def fromDict(self, data):
 		for name in self._attributeNames:
@@ -106,19 +112,19 @@ class BasePostScriptFontHintValues(object):
 			except AttributeError:
 				print "%s attribute not supported"%name
 				continue
-			if value is not None or not value:
+			if value:
 				d[name] = getattr(self, name)
 		return d
 	
 	def update(self, other):
-		assert isinstance(other, BasePostScriptFontHintValues)
+		assert isinstance(other, BasePostScriptHintValues)
 		for name in self._attributeNames.keys():
 			v = getattr(other, name)
 			if v is not None:
 				setattr(self, name, v)
 
 	def __repr__(self):
-		return "<PostScript Font Hints Values>"
+		return "<Base PS Hint Data>"
 
 	def copy(self, aParent=None):
 		"""Duplicate this object. Pass an object for parenting if you want."""
@@ -134,6 +140,154 @@ class BasePostScriptFontHintValues(object):
 			dup = copy.deepcopy(self.__dict__[k])
 			setattr(n, k, dup)
 		return n
+
+	# math operations for psHint object
+	# Note: math operations can change integers to floats.
+	def __add__(self, other):
+		assert isinstance(other, BasePostScriptHintValues)
+		copied = self.copy()
+		self._processMathOne(copied, other, add)
+		return copied
+
+	def __sub__(self, other):
+		assert isinstance(other, BasePostScriptHintValues)
+		copied = self.copy()
+		self._processMathOne(copied, other, sub)
+		return copied
+
+	def __mul__(self, factor):
+		#if isinstance(factor, tuple):
+		#	factor = factor[0]
+		copiedInfo = self.copy()
+		self._processMathTwo(copiedInfo, factor, mul)
+		return copiedInfo
+
+	__rmul__ = __mul__
+
+	def __div__(self, factor):
+		#if isinstance(factor, tuple):
+		#	factor = factor[0]
+		copiedInfo = self.copy()
+		self._processMathTwo(copiedInfo, factor, div)
+		return copiedInfo
+
+	__rdiv__ = __div__
+	
+	
+class BasePostScriptGlyphHintValues(BasePostScriptHintValues):
+	""" Base class for glyph-level postscript hinting information.
+		vStems, hStems
+	"""
+	_attributeNames = {
+		# some of these values can have only a certain number of elements
+		'vHints':		{'default': None, 'max':100, 'isVertical':True},
+		'hHints':		{'default': None, 'max':100, 'isVertical':False},
+		}
+		
+	def __init__(self, data=None):
+		if data is not None:
+			self.fromDict(data)
+		else:
+			for name in self._attributeNames.keys():
+				setattr(self, name, self._attributeNames[name]['default'])
+
+	def __repr__(self):
+		return "<PostScript Glyph Hints Values>"
+
+	def round(self):
+		"""Round the values to reasonable values.
+			- stems are rounded to int
+		"""
+		for name, values in self._attributeNames.items():
+			v = getattr(self, name)
+			if v is None:
+				continue
+			new = []
+			for n in v:
+				new.append((int(round(n[0])), int(round(n[1]))))
+			setattr(self, name, new)
+
+	def _processMathOne(self, copied, other, funct):
+		for name, values in self._attributeNames.items():
+			a = None
+			b = None
+			v = None
+			if hasattr(copied, name):
+				a = getattr(copied, name)
+			if hasattr(other, name):
+				b = getattr(other, name)
+			if a is not None and b is not None:
+				if len(a) != len(b):
+					# can't do math with non matching zones
+					continue
+				l = len(a)
+				for i in range(l):
+					if v is None:
+						v = []
+					ai = a[i]
+					bi = b[i]
+					l2 = min(len(ai), len(bi))
+					v2 = [funct(ai[j], bi[j]) for j in range(l2)]
+					v.append(v2)
+			if v is not None:
+				setattr(copied, name, v)
+
+	def _processMathTwo(self, copied, factor, funct):
+		for name, values in self._attributeNames.items():
+			a = None
+			b = None
+			v = None
+			isVertical = self._attributeNames[name]['isVertical']
+			splitFactor = factor
+			if isinstance(factor, tuple):
+				#print "mathtwo", name, funct, factor, isVertical
+				if isVertical:
+					splitFactor = factor[1]
+				else:
+					splitFactor = factor[0]
+			if hasattr(copied, name):
+				a = getattr(copied, name)
+			if a is not None:
+				for i in range(len(a)):
+					if v is None:
+						v = []
+					v2 = [funct(a[i][j], splitFactor) for j in range(len(a[i]))]
+					v.append(v2)
+			if v is not None:
+				setattr(copied, name, v)
+	
+
+class BasePostScriptFontHintValues(BasePostScriptHintValues):
+	""" Base class for font-level postscript hinting information.
+		Blues values, stem values.
+	"""
+	
+	_attributeNames = {
+		# some of these values can have only a certain number of elements
+		# 	default: what the value should be when initialised
+		#	max:	the maximum number of items this attribute is allowed to have
+		#	isVertical:		the vertical relevance
+		'blueFuzz':		{'default': None, 'max':1, 'isVertical':True},
+		'blueScale':	{'default': None, 'max':1, 'isVertical':True},
+		'blueShift':	{'default': None, 'max':1, 'isVertical':True},
+		'forceBold':	{'default': None, 'max':1, 'isVertical':False},
+		'blueValues':	{'default': None, 'max':7, 'isVertical':True},
+		'otherBlues':	{'default': None, 'max':5, 'isVertical':True},
+		'familyBlues':	{'default': None, 'max':7, 'isVertical':True},
+		'familyOtherBlues': {'default': None, 'max':5, 'isVertical':True},
+		'vStems':		{'default': None, 'max':6, 'isVertical':True},
+		'hStems':		{'default': None, 'max':11, 'isVertical':False},
+		}
+		
+	def __init__(self, data=None):
+		if data is not None:
+			self.fromDict(data)
+		else:
+			for name in self._attributeNames.keys():
+				setattr(self, name, self._attributeNames[name]['default'])
+
+	def __repr__(self):
+		return "<PostScript Font Hints Values>"
 
 	def round(self):
 		"""Round the values to reasonable values.
@@ -176,37 +330,6 @@ class BasePostScriptFontHintValues(object):
 					new.append([int(round(m)) for m in n])
 				setattr(self, name, new)
 	
-	# math operations for psHint object
-	# Note: math operations can change integers to floats.
-	def __add__(self, other):
-		assert isinstance(other, BasePostScriptFontHintValues)
-		copied = self.copy()
-		self._processMathOne(copied, other, add)
-		return copied
-
-	def __sub__(self, other):
-		assert isinstance(other, BasePostScriptFontHintValues)
-		copied = self.copy()
-		self._processMathOne(copied, other, sub)
-		return copied
-
-	def __mul__(self, factor):
-		if isinstance(factor, tuple):
-			factor = factor[0]
-		copiedInfo = self.copy()
-		self._processMathTwo(copiedInfo, factor, mul)
-		return copiedInfo
-
-	__rmul__ = __mul__
-
-	def __div__(self, factor):
-		if isinstance(factor, tuple):
-			factor = factor[0]
-		copiedInfo = self.copy()
-		self._processMathTwo(copiedInfo, factor, div)
-		return copiedInfo
-
-	__rdiv__ = __div__
 	
 	def _processMathOne(self, copied, other, funct):
 		for name, values in self._attributeNames.items():
@@ -217,6 +340,15 @@ class BasePostScriptFontHintValues(object):
 				a = getattr(copied, name)
 			if hasattr(other, name):
 				b = getattr(other, name)
+			# handle isVertical factors:
+			# Values with vertical relevance should respond to vertical scalars.
+			# Values with horizontal relevance should respond to horizontal scalars.
+			isVertical = self._attributeNames[name]['isVertical']
+			if isinstance(factor, tuple):
+				if isVertical:
+					factor = factor[1]
+				else:
+					factor = factor[0]
 			if name in ['blueFuzz', 'blueScale', 'blueShift', 'forceBold']:
 				# process single values
 				if a is not None and b is not None:
@@ -229,13 +361,19 @@ class BasePostScriptFontHintValues(object):
 					setattr(copied, name, v)
 			elif name in ['hStems', 'vStems']:
 				if a is not None and b is not None:
-					l = min(len(a), len(b))
+					if len(a) != len(b):
+						# can't do math with non matching zones
+						continue
+					l = len(a)
 					v = [funct(a[i], b[i]) for i in range(l)]
 				if v is not None:
 					setattr(copied, name, v)
 			else:
 				if a is not None and b is not None:
-					l = min(len(a), len(b))
+					if len(a) != len(b):
+						# can't do math with non matching zones
+						continue
+					l = len(a)
 					for i in range(l):
 						if v is None:
 							v = []
@@ -254,15 +392,22 @@ class BasePostScriptFontHintValues(object):
 			v = None
 			if hasattr(copied, name):
 				a = getattr(copied, name)
+			splitFactor = factor
+			isVertical = self._attributeNames[name]['isVertical']
+			if isinstance(factor, tuple):
+				if isVertical:
+					splitFactor = factor[1]
+				else:
+					splitFactor = factor[0]
 			if name in ['blueFuzz', 'blueScale', 'blueShift', 'forceBold']:
 				# process single values
 				if a is not None:
-					v = funct(a, factor)
+					v = funct(a, splitFactor)
 				if v is not None:
 					setattr(copied, name, v)
 			elif name in ['hStems', 'vStems']:
 				if a is not None:
-					v = [funct(a[i], factor) for i in range(len(a))]
+					v = [funct(a[i], splitFactor) for i in range(len(a))]
 				if v is not None:
 					setattr(copied, name, v)
 			else:
@@ -270,7 +415,7 @@ class BasePostScriptFontHintValues(object):
 					for i in range(len(a)):
 						if v is None:
 							v = []
-						v2 = [funct(a[i][j], factor) for j in range(len(a[i]))]
+						v2 = [funct(a[i][j], splitFactor) for j in range(len(a[i]))]
 						v.append(v2)
 				if v is not None:
 					setattr(copied, name, v)
@@ -811,6 +956,9 @@ class BaseGlyph(RBaseObject):
 			filterPen.addPoint(pt=pt, segmentType="move", smooth=False, name=name)
 			filterPen.endPath()
 		newGlyph.width = data['width']
+		psHints = data.get('psHints')
+		if psHints is not None:
+			newGlyph.psHints.update(psHints)
 		#
 		return newGlyph
 	
@@ -998,6 +1146,10 @@ class BaseGlyph(RBaseObject):
 			factor = (factor, factor)
 		data = self._processMathTwo(factor, mulPt)
 		data['width'] = self.width * factor[0]
+		# psHints
+		if not self.psHints.isEmpty():
+			newPsHints = self.psHints * factor
+			data['psHints'] = newPsHints
 		return self._setMathData(data)
 
 	__rmul__ = __mul__
@@ -1263,6 +1415,8 @@ class BaseGlyph(RBaseObject):
 				dup = []
 				for i in self.anchors:
 					dup.append(i.copy(n))
+			elif k == "psHints":
+				dup = self.psHints.copy()
 			elif isinstance(self.__dict__[k], (RBaseObject, BaseLib)):
 				dup = self.__dict__[k].copy(n)
 			else:
