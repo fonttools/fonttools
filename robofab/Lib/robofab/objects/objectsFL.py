@@ -9,7 +9,7 @@ from robofab.objects.objectsBase import BaseFont, BaseGlyph, BaseContour, BaseSe
 		roundPt, addPt, _box,\
 		MOVE, LINE, CORNER, CURVE, QCURVE, OFFCURVE,\
 		relativeBCPIn, relativeBCPOut, absoluteBCPIn, absoluteBCPOut,\
-		BasePostScriptFontHintValues, postScriptHintDataLibKey
+		BasePostScriptFontHintValues, postScriptHintDataLibKey, BasePostScriptGlyphHintValues
 from fontTools.misc import arrayTools
 from robofab.pens.flPen import FLPointPen
 from robofab import RoboFabError
@@ -66,7 +66,7 @@ _flGenerateTypes ={	PC_TYPE1		:	(ftTYPE1,			'pfb'),		# PC Type 1 font (binary/PF
 
 """
 
-	FontLab implementation of psHints object
+	FontLab implementation of psHints objects
 	
 	Most of the FL methods relating to ps hints return a list of 16 items.
 	These values are for the 16 corners of a 4 axis multiple master.
@@ -222,12 +222,74 @@ class PostScriptFontHintValues(BasePostScriptFontHintValues):
 	vStems = property(_getVStems, _setVStems, doc="postscript hints: vertical stem values")
 	hStems = property(_getHStems, _setHStems, doc="postscript hints: horizontal stem values")
 	
-		
-
-def getPostScriptHintDataFromLib(aFont, fontLib):
+	
+def getPostScriptFontHintDataFromLib(aFont, fontLib):
 	hintData = fontLib.get(postScriptHintDataLibKey)
 	psh = PostScriptFontHintValues(aFont)
 	psh.fromDict(hintData)
+
+
+class PostScriptGlyphHintValues(BasePostScriptGlyphHintValues):
+	"""	Wrapper for glyph-level PostScript hinting information for FontLab.
+		vStems, hStems
+	"""
+	def __init__(self, glyph=None):
+		self._object = glyph.naked()
+
+	def copy(self):
+		from robofab.objects.objectsRF import PostScriptGlyphHintValues as _PostScriptGlyphHintValues
+		return _PostScriptGlyphHintValues(data=self.asDict())
+
+	def _hintObjectsToList(self, item):
+		data = []
+		done = []
+		for hint in item:
+			p = (hint.position, hint.width)
+			if p in done:
+				continue
+			data.append(p)
+			done.append(p)
+		data.sort()
+		return data
+		
+	def _listToHintObjects(self, item):
+		hints = []
+		done = []
+		for pos, width in item:
+			if (pos, width) in done:
+				# we don't want to set duplicates
+				continue
+			hints.append(Hint(pos, width))
+			done.append((pos,width))
+		return hints
+
+	def _getVHints(self):
+		return self._hintObjectsToList(self._object.vhints)
+
+	def _setVHints(self, values):
+		# 1 = horizontal hints and links,
+		# 2 = vertical hints and links
+		# 3 = all hints and links
+		self._object.RemoveHints(2)
+		values.sort()
+		for hint in self._listToHintObjects(values):
+			self._object.vhints.append(hint)
+
+	def _getHHints(self):
+		return self._hintObjectsToList(self._object.hhints)
+
+	def _setHHints(self, values):
+		# 1 = horizontal hints and links,
+		# 2 = vertical hints and links
+		# 3 = all hints and links
+		self._object.RemoveHints(1)
+		values.sort()
+		for hint in self._listToHintObjects(values):
+			self._object.hhints.append(hint)
+
+	vHints = property(_getVHints, _setVHints, doc="postscript hints: vertical hint zones")
+	hHints = property(_getHHints, _setHHints, doc="postscript hints: horizontal hint zones")
+
 
 
 def _glyphHintsToDict(glyph):
@@ -237,61 +299,55 @@ def _glyphHintsToDict(glyph):
 	##
 	# glyph.hhints and glyph.vhints returns a list of Hint objects.
 	# Hint objects have position and width attributes.
-	data['hhints'] = []
+	data['hHints'] = []
 	for index in xrange(len(glyph.hhints)):
 		hint = glyph.hhints[index]
-		d = {	'position' : hint.position,
-			'width' : hint.width,
-			}
-		data['hhints'].append(d)
-	if not data['hhints']:
-		del data['hhints']
-	data['vhints'] = []
+		data['hHints'].append((hint.position, hint.width))
+	if not data['hHints']:
+		del data['hHints']
+	data['vHints'] = []
 	for index in xrange(len(glyph.vhints)):
 		hint = glyph.vhints[index]
-		d = {	'position' : hint.position,
-			'width' : hint.width,
-			}
-		data['vhints'].append(d)
-	if not data['vhints']:
-		del data['vhints']
+		data['vHints'].append((hint.position, hint.width))
+	if not data['vHints']:
+		del data['vHints']
 	##
 	## horizontal and vertical links
 	##
 	# glyph.hlinks and glyph.vlinks returns a list of Link objects.
 	# Link objects have node1 and node2 attributes.
-	data['hlinks'] = []
+	data['hLinks'] = []
 	for index in xrange(len(glyph.hlinks)):
 		link = glyph.hlinks[index]
 		d = {	'node1' : link.node1,
 			'node2' : link.node2,
 			}
-		data['hlinks'].append(d)
-	if not data['hlinks']:
-		del data['hlinks']
-	data['vlinks'] = []
+		data['hLinks'].append(d)
+	if not data['hLinks']:
+		del data['hLinks']
+	data['vLinks'] = []
 	for index in xrange(len(glyph.vlinks)):
 		link = glyph.vlinks[index]
 		d = {	'node1' : link.node1,
 			'node2' : link.node2,
 			}
-		data['vlinks'].append(d)
-	if not data['vlinks']:
-		del data['vlinks']
+		data['vLinks'].append(d)
+	if not data['vLinks']:
+		del data['vLinks']
 	##
 	## replacement table
 	##
 	# glyph.replace_table returns a list of Replace objects.
 	# Replace objects have type and index attributes.
-	data['replace_table'] = []
+	data['replaceTable'] = []
 	for index in xrange(len(glyph.replace_table)):
 		replace = glyph.replace_table[index]
 		d = {	'type' : replace.type,
 			'index' : replace.index,
 			}
-		data['replace_table'].append(d)
-	if not data['replace_table']:
-		del data['replace_table']
+		data['replaceTable'].append(d)
+	if not data['replaceTable']:
+		del data['replaceTable']
 	# XXX
 	# need to support glyph.instructions and glyph.hdmx?
 	# they are not documented very well.
@@ -309,26 +365,26 @@ def _dictHintsToGlyph(glyph, aDict):
 	##
 	## horizontal and vertical hints
 	##
-	if aDict.has_key('hhints'):
-		for d in aDict['hhints']:
+	if aDict.has_key('hHints'):
+		for d in aDict['hHints']:
 			glyph.hhints.append(Hint(d['position'], d['width']))
-	if aDict.has_key('vhints'):
-		for d in aDict['vhints']:
+	if aDict.has_key('vHints'):
+		for d in aDict['vHints']:
 			glyph.vhints.append(Hint(d['position'], d['width']))
 	##
 	## horizontal and vertical links
 	##
-	if aDict.has_key('hlinks'):
-		for d in aDict['hlinks']:
+	if aDict.has_key('hLinks'):
+		for d in aDict['hLinks']:
 			glyph.hlinks.append(Link(d['node1'], d['node2']))
-	if aDict.has_key('vlinks'):
-		for d in aDict['vlinks']:
+	if aDict.has_key('vLinks'):
+		for d in aDict['vLinks']:
 			glyph.vlinks.append(Link(d['node1'], d['node2']))
 	##
 	## replacement table
 	##
-	if aDict.has_key('replace_table'):
-		for d in aDict['replace_table']:
+	if aDict.has_key('replaceTable'):
+		for d in aDict['replaceTable']:
 			glyph.replace_table.append(Replace(d['type'], d['index']))
 	
 # FL Node Types
@@ -1112,7 +1168,7 @@ class RFont(BaseFont):
 					bar.tick(count)
 				count = count + 1
 			# import postscript font hint data
-			getPostScriptHintDataFromLib(self, fontLib)
+			getPostScriptFontHintDataFromLib(self, fontLib)
 			self.kerning.clear()
 			self.kerning.update(u.readKerning())
 			if bar:
@@ -1259,12 +1315,11 @@ class RGlyph(BaseGlyph):
 
 	note = property(_get_note, _set_note, doc="note")
 	
-	#def _get_psHints(self):
-	#	# get an object representing the postscript zone information
-	#	# thes
-	#	raise NotImplementedError
+	def _get_psHints(self):
+		# get an object representing the postscript zone information
+		return PostScriptGlyphHintValues(self)
 		
-	#psHints = property(_get_psHints, doc="postscript hint data")
+	psHints = property(_get_psHints, doc="postscript hint data")
 	
 	#
 	#	necessary evil
