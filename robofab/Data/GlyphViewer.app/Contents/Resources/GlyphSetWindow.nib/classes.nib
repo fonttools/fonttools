@@ -1,0 +1,19 @@
+{
+    IBClasses = (
+        {CLASS = FirstResponder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
+        {
+            CLASS = GlyphSetDocument; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {glyphSetTableView = id; glyphView = id; }; 
+            SUPERCLASS = NSDocument; 
+        }, 
+        {
+            ACTIONS = {sizeChanged = id; }; 
+            CLASS = GlyphView; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {document = id; sizeSlider = id; }; 
+            SUPERCLASS = NSView; 
+        }
+    ); 
+    IBVersion = 1; 
+}

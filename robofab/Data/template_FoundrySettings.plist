@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>copyright</key>
+	<string>(C) RoboFab Type Foundry</string>
+	<key>designer</key>
+	<string>Rob O. Fab</string>
+	<key>designerurl</key>
+	<string>http://www.afontdesigner.com</string>
+	<key>license</key>
+	<string>RoboFab demo EULA</string>
+	<key>licenseurl</key>
+	<string>(C) RoboFab Type Foundry</string>
+	<key>notice</key>
+	<string>(C) RoboFab Type Foundry</string>
+	<key>trademark</key>
+	<string>RoboFab is a trademark of RoboFab</string>
+	<key>ttvendor</key>
+	<string>PYRS</string>
+	<key>vendorurl</key>
+	<string>http://www.myfoundry.com</string>
+</dict>
+</plist>

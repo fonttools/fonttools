@@ -1,0 +1,11 @@
+{
+    IBClasses = (
+        {
+            ACTIONS = {copyFLString = id; saveGlyphsAsTiffFiles = id; }; 
+            CLASS = FirstResponder; 
+            LANGUAGE = ObjC; 
+            SUPERCLASS = NSObject; 
+        }
+    ); 
+    IBVersion = 1; 
+}

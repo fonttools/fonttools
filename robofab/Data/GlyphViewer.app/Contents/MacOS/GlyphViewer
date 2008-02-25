@@ -1,0 +1,23 @@
+#!/usr/bin/python
+
+import sys, os
+execdir = os.path.dirname(sys.argv[0])
+executable = os.path.join(execdir, "python2.3")
+resdir = os.path.join(os.path.dirname(execdir), "Resources")
+libdir = os.path.join(os.path.dirname(execdir), "Frameworks")
+mainprogram = os.path.join(resdir, "GlyphViewer.py")
+
+sys.argv.insert(1, mainprogram)
+if 1 or 0:
+    os.environ["PYTHONPATH"] = resdir
+    if 1:
+        os.environ["PYTHONHOME"] = resdir
+else:
+    pypath = os.getenv("PYTHONPATH", "")
+    if pypath:
+        pypath = ":" + pypath
+    os.environ["PYTHONPATH"] = resdir + pypath
+os.environ["PYTHONEXECUTABLE"] = executable
+os.environ["DYLD_LIBRARY_PATH"] = libdir
+os.environ["DYLD_FRAMEWORK_PATH"] = libdir
+os.execve(executable, sys.argv, os.environ)
