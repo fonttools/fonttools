@@ -28,7 +28,11 @@ def test():
 
 		>>> not g.psHints.isEmpty()
 		True
-
+		
+		>>> gc = g.copy()
+		>>> gc.psHints.asDict() == g.psHints.asDict()
+		True
+		
 		# multiplication
 		>>> v = g.psHints * 2
 		>>> v.asDict() == {'vHints': [[200, 100], [400, 100]], 'hHints': [[200, 100], [400, 10]]}
@@ -92,6 +96,11 @@ def test():
 		>>> f.psHints.vStems = (500, 10)
 
 		>>> not f.psHints.isEmpty()
+		True
+
+		>>> f.insertGlyph(g, as="new")
+		<RGlyph for None.new>
+		>>> f["new"].psHints.asDict() == g.psHints.asDict()
 		True
 
 		# multiplication
