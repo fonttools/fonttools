@@ -238,6 +238,7 @@ class PostScriptGlyphHintValues(BasePostScriptGlyphHintValues):
 
 	def copy(self):
 		from robofab.objects.objectsRF import PostScriptGlyphHintValues as _PostScriptGlyphHintValues
+		print "FL copy", self.asDict()
 		return _PostScriptGlyphHintValues(data=self.asDict())
 
 	def _hintObjectsToList(self, item):
@@ -271,6 +272,9 @@ class PostScriptGlyphHintValues(BasePostScriptGlyphHintValues):
 		# 2 = vertical hints and links
 		# 3 = all hints and links
 		self._object.RemoveHints(2)
+		if values is None:
+			# just clearing it then
+			return
 		values.sort()
 		for hint in self._listToHintObjects(values):
 			self._object.vhints.append(hint)
@@ -283,6 +287,9 @@ class PostScriptGlyphHintValues(BasePostScriptGlyphHintValues):
 		# 2 = vertical hints and links
 		# 3 = all hints and links
 		self._object.RemoveHints(1)
+		if values is None:
+			# just clearing it then
+			return
 		values.sort()
 		for hint in self._listToHintObjects(values):
 			self._object.hhints.append(hint)
@@ -367,10 +374,10 @@ def _dictHintsToGlyph(glyph, aDict):
 	##
 	if aDict.has_key('hHints'):
 		for d in aDict['hHints']:
-			glyph.hhints.append(Hint(d['position'], d['width']))
+			glyph.hhints.append(Hint(d[0], d[1]))
 	if aDict.has_key('vHints'):
 		for d in aDict['vHints']:
-			glyph.vhints.append(Hint(d['position'], d['width']))
+			glyph.vhints.append(Hint(d[0], d[1]))
 	##
 	## horizontal and vertical links
 	##
@@ -524,7 +531,7 @@ class RFont(BaseFont):
 			#raise RoboFabError, "RFont: there's nothing to wrap!?"
 		self._object = font
 		self._lib = {}
-		self._supportHints = False
+		self._supportHints = True
 
 	def keys(self):
 		keys = {}
@@ -1006,8 +1013,7 @@ class RFont(BaseFont):
 			fontLib["org.robofab.opentype.features"] = features
 			fontLib["org.robofab.opentype.featureorder"] = order
 	
-	def writeUFO(self, path=None, doProgress=False,
-			glyphNameToFileNameFunc=None):
+	def writeUFO(self, path=None, doProgress=False, glyphNameToFileNameFunc=None, doHints=False):
 		"""write a font to .ufo"""
 		from robofab.ufoLib import makeUFOPath, UFOWriter
 		from robofab.interface.all.dialogs import ProgressBar
@@ -1024,7 +1030,6 @@ class RFont(BaseFont):
 				return
 			else:
 				path = makeUFOPath(self.path)
-		doHints = self._supportHints
 		nonGlyphCount = 4
 		bar = None
 		if doProgress:
@@ -1127,12 +1132,11 @@ class RFont(BaseFont):
 			for tag, src in orderedFeatures:
 				self.naked().features.append(Feature(tag, src))
 	
-	def readUFO(self, path, doProgress=False):
+	def readUFO(self, path, doProgress=False, doHints=True):
 		"""read a .ufo into the font"""
 		from robofab.ufoLib import UFOReader
 		from robofab.pens.flPen import FLPointPen
 		from robofab.interface.all.dialogs import ProgressBar
-		doHints = self._supportHints
 		nonGlyphCount = 4
 		bar = None
 		u = UFOReader(path)
