@@ -6,7 +6,7 @@ from robofab.objects.objectsBase import BaseFont, BaseKerning, BaseGroups, BaseI
 		relativeBCPIn, relativeBCPOut, absoluteBCPIn, absoluteBCPOut, _box,\
 		_interpolate, _interpolatePt, roundPt, addPt,\
 		MOVE, LINE, CORNER, CURVE, QCURVE, OFFCURVE,\
-		BasePostScriptFontHintValues, postScriptHintDataLibKey
+		BasePostScriptFontHintValues, postScriptHintDataLibKey, BasePostScriptGlyphHintValues
 
 import os
 
@@ -56,9 +56,14 @@ def AllFonts():
 	
 
 class PostScriptFontHintValues(BasePostScriptFontHintValues):
-	"""	PostScript hints object for objectsRF usage.
+	"""	Font level PostScript hints object for objectsRF usage.
 		If there are values in the lib, use those.
 		If there are no values in the lib, use defaults.
+		
+		The psHints attribute for objectsRF.RFont is basically just the
+		data read from the Lib. When the object saves to UFO, the 
+		hints are written back to the lib, which is then saved.
+		
 	"""
 	
 	def __init__(self, aFont=None, data=None):
@@ -75,7 +80,21 @@ def getPostScriptHintDataFromLib(aFont, fontLib):
 	psh = PostScriptFontHintValues(aFont)
 	psh.fromDict(hintData)
 	return psh
-
+	
+class PostScriptGlyphHintValues(BasePostScriptGlyphHintValues):
+	"""	Glyph level PostScript hints object for objectsRF usage.
+		If there are values in the lib, use those.
+		If there are no values in the lib, be empty.
+		
+	"""
+	def __init__(self, aGlyph=None, data=None):
+		# read the data from the glyph.lib, it won't be anywhere else
+		BasePostScriptGlyphHintValues.__init__(self)
+		if aGlyph is not None:
+			self.setParent(aGlyph)
+			self._loadFromLib(aGlyph.lib)
+			
+			
 class RFont(BaseFont):
 	"""UFO font object which reads and writes glif, and keeps the data in memory in between.
 	Bahviour:
@@ -102,10 +121,10 @@ class RFont(BaseFont):
 		self.info.setParent(self)
 		self.groups = RGroups()
 		self.groups.setParent(self)
-		self.psHints = PostScriptFontHintValues()
-		self.psHints.setParent(self)
 		self.lib = RLib()
 		self.lib.setParent(self)
+		self.psHints = PostScriptFontHintValues(self)
+		self.psHints.setParent(self)
 		
 		if path:
 			self._loadData(path)
@@ -150,6 +169,7 @@ class RFont(BaseFont):
 		pen = RFUFOPointPen(g)
 		self._glyphSet.readGlyph(glyphName=glyphName, glyphObject=g, pointPen=pen)
 		g.setParent(self)
+		g.psHints._loadFromLib(g.lib)
 		self._object[glyphName] = g
 		self._object[glyphName]._hasNotChanged()
 		return g
@@ -376,6 +396,7 @@ class RFont(BaseFont):
 				glyphNames = self._object.keys()
 			for glyphName in glyphNames:
 				glyph = self[glyphName]
+				glyph.psHints._saveToLib(glyph.lib)
 				glyph._saveToGlyphSet(glyphSet, glyphName=glyphName, force=saveAs)
 				if bar and not count % 10:
 					bar.tick(count)
@@ -480,8 +501,8 @@ class RGlyph(BaseGlyph):
 		self._properties = None
 		self._lib = RLib()
 		self._lib.setParent(self)
-		
-
+		self.psHints = PostScriptGlyphHintValues()
+		self.psHints.setParent(self)
 
 	def __len__(self):
 		return len(self.contours) 
