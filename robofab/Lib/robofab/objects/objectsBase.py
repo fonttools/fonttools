@@ -345,15 +345,6 @@ class BasePostScriptFontHintValues(BasePostScriptHintValues):
 				a = getattr(copied, name)
 			if hasattr(other, name):
 				b = getattr(other, name)
-			# handle isVertical factors:
-			# Values with vertical relevance should respond to vertical scalars.
-			# Values with horizontal relevance should respond to horizontal scalars.
-			isVertical = self._attributeNames[name]['isVertical']
-			if isinstance(factor, tuple):
-				if isVertical:
-					factor = factor[1]
-				else:
-					factor = factor[0]
 			if name in ['blueFuzz', 'blueScale', 'blueShift', 'forceBold']:
 				# process single values
 				if a is not None and b is not None:
