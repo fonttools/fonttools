@@ -27,10 +27,11 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
 					">HHl", data[4+i*8:4+(i+1)*8])
 			platformID, platEncID = int(platformID), int(platEncID)
 			format, length = struct.unpack(">HH", data[offset:offset+4])
-			if (format < 8) and not length:
-				continue  # bogus cmap subtable?
 			if format in [8,10,12]:
 				format, reserved, length = struct.unpack(">HHL", data[offset:offset+8])
+			if not length:
+				print "Error: cmap subtable is reported as having zero length: platformID %s, platEncID %s,  format %s offset %s. Skipping table." % (platformID, platEncID,format, offset)
+				continue
 			if not cmap_classes.has_key(format):
 				table = cmap_format_unknown(format)
 			else:
@@ -713,14 +714,13 @@ class cmap_format_4(CmapSubtable):
 		from fontTools.ttLib.sfnt import maxPowerOfTwo
 		
 		charCodes = self.cmap.keys()
-			
-		charCodes.sort()
 		lenCharCodes = len(charCodes)
 		if lenCharCodes == 0:
 			startCode = [0xffff]
 			endCode = [0xffff]
 		else:
-			names = self.cmap.values()
+			charCodes.sort()
+			names = map(operator.getitem, [self.cmap]*lenCharCodes, charCodes)
 			nameMap = ttFont.getReverseGlyphMap()
 			try:
 				gids = map(operator.getitem, [nameMap]*lenCharCodes, names)
