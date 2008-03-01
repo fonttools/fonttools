@@ -3,6 +3,8 @@ import struct
 from fontTools.misc.textTools import safeEval
 
 
+GASP_SYMMETRIC_GRIDFIT = 0x0008
+GASP_SYMMETRIC_SMOOTHING = 0x0004
 GASP_DOGRAY = 0x0002
 GASP_GRIDFIT = 0x0001
 
@@ -10,7 +12,7 @@ class table__g_a_s_p(DefaultTable.DefaultTable):
 	
 	def decompile(self, data, ttFont):
 		self.version, numRanges = struct.unpack(">HH", data[:4])
-		assert self.version == 0, "unknown 'gasp' format: %s" % self.version
+		assert 0 <= self.version <= 1, "unknown 'gasp' format: %s" % self.version
 		data = data[4:]
 		self.gaspRange = {}
 		for i in range(numRanges):
@@ -20,12 +22,16 @@ class table__g_a_s_p(DefaultTable.DefaultTable):
 		assert not data, "too much data"
 	
 	def compile(self, ttFont):
+		version = 0 # ignore self.version
 		numRanges = len(self.gaspRange)
-		data = struct.pack(">HH", 0, numRanges)
+		data = []
 		items = self.gaspRange.items()
 		items.sort()
 		for rangeMaxPPEM, rangeGaspBehavior in items:
 			data = data + struct.pack(">HH", rangeMaxPPEM, rangeGaspBehavior)
+			if rangeGaspBehavior & ~(GASP_GRIDFIT | GASP_DOGRAY):
+				version = 1
+		data = struct.pack(">HH", version, numRanges) + data
 		return data
 	
 	def toXML(self, writer, ttFont):
