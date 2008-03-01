@@ -1,3 +1,4 @@
+import sys
 from fontTools.ttLib.standardGlyphOrder import standardGlyphOrder
 import DefaultTable
 import struct, sstruct
@@ -77,7 +78,7 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 		data = data[2:]
 		indices = array.array("H")
 		indices.fromstring(data[:2*numGlyphs])
-		if ttLib.endian <> "big":
+		if sys.byteorder <> "big":
 			indices.byteswap()
 		data = data[2*numGlyphs:]
 		self.extraNames = extraNames = unpackPStrings(data)
@@ -143,7 +144,7 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 				extraDict[psName] = len(extraNames)
 				extraNames.append(psName)
 			indices.append(index)
-		if ttLib.endian <> "big":
+		if sys.byteorder <> "big":
 			indices.byteswap()
 		return struct.pack(">H", numGlyphs) + indices.tostring() + packPStrings(extraNames)
 	

@@ -42,7 +42,7 @@ Dumping 'prep' table...
 """
 
 #
-# $Id: __init__.py,v 1.49 2008-03-01 09:30:17 jvr Exp $
+# $Id: __init__.py,v 1.50 2008-03-01 11:43:00 jvr Exp $
 #
 
 import sys
@@ -751,24 +751,6 @@ class GlyphOrder:
 			ttFont.setGlyphOrder(self.glyphOrder)
 		if name == "GlyphID":
 			self.glyphOrder.append(attrs["name"])
-
-
-def _test_endianness():
-	"""Test the endianness of the machine. This is crucial to know
-	since TrueType data is always big endian, even on little endian
-	machines. There are quite a few situations where we explicitly
-	need to swap some bytes.
-	"""
-	import struct
-	data = struct.pack("h", 0x01)
-	if data == "\000\001":
-		return "big"
-	elif data == "\001\000":
-		return "little"
-	else:
-		assert 0, "endian confusion!"
-
-endian = _test_endianness()
 
 
 def getTableModule(tag):

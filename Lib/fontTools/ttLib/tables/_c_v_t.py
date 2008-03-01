@@ -1,3 +1,4 @@
+import sys
 import DefaultTable
 import array
 from fontTools import ttLib
@@ -8,13 +9,13 @@ class table__c_v_t(DefaultTable.DefaultTable):
 	def decompile(self, data, ttFont):
 		values = array.array("h")
 		values.fromstring(data)
-		if ttLib.endian <> "big":
+		if sys.byteorder <> "big":
 			values.byteswap()
 		self.values = values
 	
 	def compile(self, ttFont):
 		values = self.values[:]
-		if ttLib.endian <> "big":
+		if sys.byteorder <> "big":
 			values.byteswap()
 		return values.tostring()
 	

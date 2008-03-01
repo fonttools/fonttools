@@ -1,3 +1,4 @@
+import sys
 import DefaultTable
 import Numeric
 from fontTools import ttLib
@@ -15,7 +16,7 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 		numberOfMetrics = int(getattr(ttFont[self.headerTag], self.numberOfMetricsName))
 		metrics = Numeric.fromstring(data[:4 * numberOfMetrics], 
 				Numeric.Int16)
-		if ttLib.endian <> "big":
+		if sys.byteorder <> "big":
 			metrics = metrics.byteswapped()
 		metrics.shape = (numberOfMetrics, 2)
 		data = data[4 * numberOfMetrics:]
@@ -28,7 +29,7 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 					Numeric.Int16)
 			sideBearings = Numeric.fromstring(data[:2 * numberOfSideBearings], 
 					Numeric.Int16)
-			if ttLib.endian <> "big":
+			if sys.byteorder <> "big":
 				sideBearings = sideBearings.byteswapped()
 			data = data[2 * numberOfSideBearings:]
 			additionalMetrics = Numeric.array([advances, sideBearings], 
@@ -62,12 +63,12 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 		setattr(ttFont[self.headerTag], self.numberOfMetricsName, len(metrics))
 		
 		metrics = Numeric.array(metrics, Numeric.Int16)
-		if ttLib.endian <> "big":
+		if sys.byteorder <> "big":
 			metrics = metrics.byteswapped()
 		data = metrics.tostring()
 		
 		additionalMetrics = Numeric.array(additionalMetrics, Numeric.Int16)
-		if ttLib.endian <> "big":
+		if sys.byteorder <> "big":
 			additionalMetrics = additionalMetrics.byteswapped()
 		data = data + additionalMetrics.tostring()
 		return data

@@ -1,3 +1,4 @@
+import sys
 import DefaultTable
 import array
 import Numeric
@@ -16,7 +17,7 @@ class table__l_o_c_a(DefaultTable.DefaultTable):
 			format = "H"
 		locations = array.array(format)
 		locations.fromstring(data)
-		if ttLib.endian <> "big":
+		if sys.byteorder <> "big":
 			locations.byteswap()
 		locations = Numeric.array(locations, Numeric.Int32)
 		if not longFormat:
@@ -33,7 +34,7 @@ class table__l_o_c_a(DefaultTable.DefaultTable):
 			ttFont['head'].indexToLocFormat = 0
 		else:
 			ttFont['head'].indexToLocFormat = 1
-		if ttLib.endian <> "big":
+		if sys.byteorder <> "big":
 			locations = locations.byteswapped()
 		return locations.tostring()
 	

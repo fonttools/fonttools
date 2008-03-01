@@ -1,3 +1,4 @@
+import sys
 import DefaultTable
 import struct
 import array
@@ -267,7 +268,7 @@ class cmap_format_2(CmapSubtable):
 		allKeys = array.array("H")
 		allKeys.fromstring(data[:512])
 		data = data[512:]
-		if ttLib.endian <> "big":
+		if sys.byteorder <> "big":
 			allKeys.byteswap()
 		subHeaderKeys = [ key/8 for key in allKeys]
 		maxSubHeaderindex = max(subHeaderKeys)
@@ -283,7 +284,7 @@ class cmap_format_2(CmapSubtable):
 			giDataPos = pos + subHeader.idRangeOffset-2
 			giList = array.array("H")
 			giList.fromstring(data[giDataPos:giDataPos + subHeader.entryCount*2])
-			if ttLib.endian <> "big":
+			if sys.byteorder <> "big":
 				giList.byteswap()
 			subHeader.glyphIndexArray = giList
 			subHeaderList.append(subHeader)
@@ -640,7 +641,7 @@ class cmap_format_4(CmapSubtable):
 		allCodes.fromstring(data)
 		self.data = data = None
 
-		if ttLib.endian <> "big":
+		if sys.byteorder <> "big":
 			allCodes.byteswap()
 		
 		# divide the data
@@ -798,7 +799,7 @@ class cmap_format_4(CmapSubtable):
 		charCodeArray = Numeric.array( endCode + [0] + startCode, Numeric.UInt16)
 		idDeltaeArray = Numeric.array(idDelta, Numeric.Int16)
 		restArray = Numeric.array(idRangeOffset + glyphIndexArray, Numeric.UInt16)
-		if ttLib.endian <> "big":
+		if sys.byteorder <> "big":
 			charCodeArray = charCodeArray.byteswapped()
 			idDeltaeArray = idDeltaeArray.byteswapped()
 			restArray = restArray.byteswapped()
@@ -841,7 +842,7 @@ class cmap_format_6(CmapSubtable):
 		#assert len(data) == 2 * entryCount  # XXX not true in Apple's Helvetica!!!
 		glyphIndexArray = array.array("H")
 		glyphIndexArray.fromstring(data[:2 * int(entryCount)])
-		if ttLib.endian <> "big":
+		if sys.byteorder <> "big":
 			glyphIndexArray.byteswap()
 		self.data = data = None
 
@@ -870,7 +871,7 @@ class cmap_format_6(CmapSubtable):
 			valueList = map(operator.getitem, [cmap]*lenCodes, codes)
 			valueList = map(ttFont.getGlyphID, valueList)
 			glyphIndexArray = Numeric.array(valueList, Numeric.UInt16)
-			if ttLib.endian <> "big":
+			if sys.byteorder <> "big":
 				glyphIndexArray = glyphIndexArray.byteswapped()
 			data = glyphIndexArray.tostring()
 		else:

@@ -1,3 +1,4 @@
+import sys
 import DefaultTable
 import sstruct
 import array
@@ -25,7 +26,7 @@ class table_G_P_K_G_(DefaultTable.DefaultTable):
 		GMAPoffsets = array.array("L")
 		endPos = (self.numGMAPs+1) * 4
 		GMAPoffsets.fromstring(newData[:endPos])
-		if ttLib.endian <> "big":
+		if sys.byteorder <> "big":
 			GMAPoffsets.byteswap()
 		self.GMAPs = []
 		for i in range(self.numGMAPs):
@@ -36,7 +37,7 @@ class table_G_P_K_G_(DefaultTable.DefaultTable):
 		endPos = pos + (self.numGlyplets + 1)*4
 		glyphletOffsets = array.array("L")
 		glyphletOffsets.fromstring(newData[pos:endPos])
-		if ttLib.endian <> "big":
+		if sys.byteorder <> "big":
 			glyphletOffsets.byteswap()
 		self.glyphlets = []
 		for i in range(self.numGlyplets):
@@ -59,7 +60,7 @@ class table_G_P_K_G_(DefaultTable.DefaultTable):
 			pos += len(self.GMAPs[i-1])
 			GMAPoffsets[i] = pos
 		gmapArray = Numeric.array(GMAPoffsets, Numeric.UInt32)
-		if ttLib.endian <> "big":
+		if sys.byteorder <> "big":
 			gmapArray = gmapArray.byteswapped()
 		dataList.append(gmapArray.tostring())
 
@@ -68,7 +69,7 @@ class table_G_P_K_G_(DefaultTable.DefaultTable):
 			pos += len(self.glyphlets[i-1])
 			glyphletOffsets[i] = pos
 		glyphletArray = Numeric.array(glyphletOffsets, Numeric.UInt32)
-		if ttLib.endian <> "big":
+		if sys.byteorder <> "big":
 			glyphletArray = glyphletArray.byteswapped()
 		dataList.append(glyphletArray.tostring())
 		dataList += self.GMAPs

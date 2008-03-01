@@ -12,6 +12,7 @@ classes, since whenever to number of tables changes or whenever
 a table's length chages you need to rewrite the whole file anyway.
 """
 
+import sys
 import struct, sstruct
 import Numeric
 import os
@@ -215,7 +216,7 @@ def calcChecksum(data, start=0):
 	if remainder:
 		data = data + '\0' * (4-remainder)
 	a = Numeric.fromstring(struct.pack(">l", start) + data, Numeric.Int32)
-	if ttLib.endian <> "big":
+	if sys.byteorder <> "big":
 		a = a.byteswapped()
 	return Numeric.add.reduce(a)
 

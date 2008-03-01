@@ -14,6 +14,7 @@
 SCALE_COMPONENT_OFFSET_DEFAULT = 0   # 0 == MS, 1 == Apple
 
 
+import sys
 import struct, sstruct
 import DefaultTable
 from fontTools import ttLib
@@ -351,7 +352,7 @@ class Glyph:
 	def decompileCoordinates(self, data):
 		endPtsOfContours = array.array("h")
 		endPtsOfContours.fromstring(data[:2*self.numberOfContours])
-		if ttLib.endian <> "big":
+		if sys.byteorder <> "big":
 			endPtsOfContours.byteswap()
 		self.endPtsOfContours = endPtsOfContours.tolist()
 		
@@ -468,7 +469,7 @@ class Glyph:
 		assert len(self.coordinates) == len(self.flags)
 		data = ""
 		endPtsOfContours = array.array("h", self.endPtsOfContours)
-		if ttLib.endian <> "big":
+		if sys.byteorder <> "big":
 			endPtsOfContours.byteswap()
 		data = data + endPtsOfContours.tostring()
 		instructions = self.program.getBytecode()
