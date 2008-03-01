@@ -42,7 +42,7 @@ Dumping 'prep' table...
 """
 
 #
-# $Id: __init__.py,v 1.48 2006-10-21 14:12:38 jvr Exp $
+# $Id: __init__.py,v 1.49 2008-03-01 09:30:17 jvr Exp $
 #
 
 import sys
@@ -70,7 +70,7 @@ class TTFont:
 	
 	def __init__(self, file=None, res_name_or_index=None,
 			sfntVersion="\000\001\000\000", checkChecksums=0,
-			verbose=0, recalcBBoxes=1, allowVID=0):
+			verbose=0, recalcBBoxes=1, allowVID=0, ignoreDecompileErrors=False):
 		
 		"""The constructor can be called with a few different arguments.
 		When reading a font from disk, 'file' should be either a pathname
@@ -112,7 +112,11 @@ class TTFont:
 		and does not exist in the font, then N is used as the virtual GID.
 		Else, the first virtual GID is assigned as 0x1000 -1; for subsequent new
 		virtual GIDs, the next is one less than the previous.
-		
+
+		If ignoreDecompileErrors is set to True, exceptions raised in
+		individual tables during decompilation will be ignored, falling
+		back to the DefaultTable implementation, which simply keeps the
+		binary data.
 		"""
 		
 		import sfnt
@@ -126,6 +130,7 @@ class TTFont:
 		self.reverseVIDDict = {}
 		self.VIDDict = {}
 		self.allowVID = allowVID
+		self.ignoreDecompileErrors = ignoreDecompileErrors
 
 		if not file:
 			self.sfntVersion = sfntVersion
@@ -365,7 +370,10 @@ class TTFont:
 					debugmsg("Decompiling '%s' table" % tag)
 				try:
 					table.decompile(data, self)
-				except "_ _ F O O _ _": # dummy exception to disable exception catching
+				except:
+					if not self.ignoreDecompileErrors:
+						raise
+					# fall back to DefaultTable, retaining the binary table data
 					print "An exception occurred during the decompilation of the '%s' table" % tag
 					from tables.DefaultTable import DefaultTable
 					import StringIO
