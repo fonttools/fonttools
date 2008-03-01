@@ -1,4 +1,3 @@
-Doc/bugs.txt
 Doc/ChangeLog.txt
 Doc/changes.txt
 Doc/documentation.html
@@ -18,6 +17,7 @@ Lib/fontTools/misc/arrayTools.py
 Lib/fontTools/misc/bezierTools.py
 Lib/fontTools/misc/eexec.py
 Lib/fontTools/misc/homeResFile.py
+Lib/fontTools/misc/macCreatorType.py
 Lib/fontTools/misc/__init__.py
 Lib/fontTools/misc/psCharStrings.py
 Lib/fontTools/misc/psLib.py
