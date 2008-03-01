@@ -39,6 +39,8 @@ usage: ttx [options] inputfile1 [... inputfileN]
        pre-program) will be written to the TTX file as hex data
        instead of assembly. This saves some time and makes the TTX
        file smaller.
+    -e Don't ignore decompilation errors, but show a full traceback
+       and abort.
 
     Compile options:
     -m Merge with TrueType-input-file: specify a TrueType or OpenType
@@ -97,7 +99,8 @@ class Options:
 	mergeFile = None
 	recalcBBoxes = 1
 	allowVID = 0
-	
+	ignoreDecompileErrors = True
+
 	def __init__(self, rawOptions, numFiles):
 		self.onlyTables = []
 		self.skipTables = []
@@ -131,6 +134,8 @@ class Options:
 				self.recalcBBoxes = 0
 			elif option == "-a":
 				self.allowVID = 1
+			elif option == "-e":
+				self.ignoreDecompileErrors = False
 		if self.onlyTables and self.skipTables:
 			print "-t and -x options are mutually exclusive"
 			sys.exit(2)
@@ -162,7 +167,8 @@ def ttList(input, output, options):
 
 def ttDump(input, output, options):
 	print 'Dumping "%s" to "%s"...' % (input, output)
-	ttf = TTFont(input, 0, verbose=options.verbose, allowVID=options.allowVID)
+	ttf = TTFont(input, 0, verbose=options.verbose, allowVID=options.allowVID,
+			ignoreDecompileErrors=options.ignoreDecompileErrors)
 	ttf.saveXML(output,
 			tables=options.onlyTables,
 			skipTables=options.skipTables, 
@@ -239,7 +245,7 @@ def guessFileType(fileName):
 
 def parseOptions(args):
 	try:
-		rawOptions, files = getopt.getopt(args, "ld:vht:x:sim:ba")
+		rawOptions, files = getopt.getopt(args, "ld:vht:x:sim:bae")
 	except getopt.GetoptError:
 		usage()
 	
