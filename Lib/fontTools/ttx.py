@@ -58,18 +58,13 @@ import re
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables.otBase import OTLOffsetOverflowError
 from fontTools.ttLib.tables.otTables import fixLookupOverFlows, fixSubTableOverFlows
+from fontTools.misc.macCreatorType import getMacCreatorAndType
 from fontTools import version
 
 def usage():
 	print __doc__ % version
 	sys.exit(2)
 
-
-if sys.platform == "darwin" and sys.version_info[:3] == (2, 2, 0):
-	# the Mac support of Jaguar's Python 2.2 is broken
-	have_broken_macsupport = 1
-else:
-	have_broken_macsupport = 0
 	
 numberAddedRE = re.compile("(.*)#\d+$")
 
@@ -218,17 +213,11 @@ def guessFileType(fileName):
 		f = open(fileName, "rb")
 	except IOError:
 		return None
-	if not have_broken_macsupport:
-		try:
-			import MacOS
-		except ImportError:
-			pass
-		else:
-			cr, tp = MacOS.GetCreatorAndType(fileName)
-			if tp in ("sfnt", "FFIL"):
-				return "TTF"
-			if ext == ".dfont":
-				return "TTF"
+	cr, tp = getMacCreatorAndType(fileName)
+	if tp in ("sfnt", "FFIL"):
+		return "TTF"
+	if ext == ".dfont":
+		return "TTF"
 	header = f.read(256)
 	head = header[:4]
 	if head == "OTTO":

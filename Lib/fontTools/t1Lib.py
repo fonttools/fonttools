@@ -21,6 +21,7 @@ __version__ = "1.0b2"
 DEBUG = 0
 
 from fontTools.misc import eexec
+from fontTools.misc.macCreatorType import getMacCreatorAndType
 import string
 import re
 import os
@@ -102,10 +103,9 @@ class T1Font:
 def read(path, onlyHeader=0):
 	"""reads any Type 1 font file, returns raw data"""
 	normpath = string.lower(path)
-	if haveMacSupport:
-		creator, type = MacOS.GetCreatorAndType(path)
-		if type == 'LWFN':
-			return readLWFN(path, onlyHeader), 'LWFN'
+	creator, type = getMacCreatorAndType(path)
+	if type == 'LWFN':
+		return readLWFN(path, onlyHeader), 'LWFN'
 	if normpath[-4:] == '.pfb':
 		return readPFB(path, onlyHeader), 'PFB'
 	else:
@@ -252,8 +252,6 @@ def writePFB(path, data):
 		f.write(chr(128) + chr(3))
 	finally:
 		f.close()
-	if haveMacSupport:
-		MacOS.SetCreatorAndType(path, 'mdos', 'BINA')
 
 def writeOther(path, data, dohex = 0):
 	chunks = findEncryptedChunks(data)
@@ -274,8 +272,6 @@ def writeOther(path, data, dohex = 0):
 				f.write(chunk)
 	finally:
 		f.close()
-	if haveMacSupport:
-		MacOS.SetCreatorAndType(path, 'R*ch', 'TEXT') # BBEdit text file
 
 
 # decryption tools
