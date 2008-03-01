@@ -1,4 +1,59 @@
 ----------------------------
+2008/03/01 17:22:24 jvr MANIFEST 1.2
+updated file list
+----------------------------
+2008/03/01 17:20:26 jvr setup.py 1.14
+2008/03/01 17:20:26 jvr Lib/fontTools/__init__.py 1.8
+post 2.1 version numbering
+----------------------------
+2008/03/01 17:03:35 jvr Doc/bugs.txt 1.4
+see sf tracker
+----------------------------
+2008/03/01 16:43:24 jvr Lib/fontTools/ttLib/tables/_g_a_s_p.py 1.2
+the gasp portion of patch 1675210: support for ClearType
+----------------------------
+2008/03/01 15:31:01 jvr Lib/fontTools/ttLib/tables/_h_m_t_x.py 1.6
+fixed oversight in sys.byteorder transition
+----------------------------
+2008/03/01 11:43:01 jvr Lib/fontTools/ttLib/tables/_p_o_s_t.py 1.8
+2008/03/01 11:43:01 jvr Lib/fontTools/ttLib/tables/_l_o_c_a.py 1.5
+2008/03/01 11:43:01 jvr Lib/fontTools/ttLib/tables/_h_m_t_x.py 1.5
+2008/03/01 11:43:00 jvr Lib/fontTools/ttLib/tables/_g_l_y_f.py 1.21
+2008/03/01 11:43:00 jvr Lib/fontTools/ttLib/tables/_c_v_t.py 1.2
+2008/03/01 11:43:00 jvr Lib/fontTools/ttLib/tables/_c_m_a_p.py 1.18
+2008/03/01 11:43:00 jvr Lib/fontTools/ttLib/tables/T_S_I__5.py 1.2
+2008/03/01 11:43:00 jvr Lib/fontTools/ttLib/tables/G_P_K_G_.py 1.2
+2008/03/01 11:43:00 jvr Lib/fontTools/ttLib/sfnt.py 1.13
+2008/03/01 11:43:00 jvr Lib/fontTools/ttLib/__init__.py 1.50
+Use sys.byteorder, getting rid of ttLib.endian
+----------------------------
+2008/03/01 11:34:54 jvr Lib/fontTools/misc/macCreatorType.py 1.1
+2008/03/01 11:34:53 jvr Lib/fontTools/ttx.py 1.11
+2008/03/01 11:34:52 jvr Lib/fontTools/t1Lib.py 1.20
+- removed support for Python 2.2 on MacOS 10.2
+- worked around a bug in GetCreatorType() on intel Macs
+----------------------------
+2008/03/01 09:42:58 jvr Lib/fontTools/ttx.py 1.10
+Expose ignoreDecompileErrors as a command line option (-e, to set
+ignoreDecompileErrors to to false)
+----------------------------
+2008/03/01 09:30:17 jvr Lib/fontTools/ttLib/__init__.py 1.49
+Make a hidden feature accessible: optionally ignore decompilation errors,
+falling back to DefaultTable, retaining the binary data. It's a bit
+dangerous to enable this by default, since it can lead to hiding other
+errors or bugs (in the font or fonttools itself).
+----------------------------
+2008/02/29 14:43:49 jvr Lib/fontTools/ttLib/tables/_c_m_a_p.py 1.17
+- skip subtables of length zero
+- minor tweak in cmap 4 logic
+contributed by rroberts
+----------------------------
+2008/02/19 18:49:14 jvr Lib/fontTools/ttLib/tables/T_S_I__1.py 1.3
+fixed problem with private VTT table, found by Peter Bilak
+----------------------------
+2008/01/28 07:11:06 pabs3 Doc/ChangeLog.txt 1.10
+Update changelog
+----------------------------
 2008/01/28 07:09:27 pabs3 Lib/fontTools/__init__.py 1.7
 Woops, missed a version number
 ----------------------------
