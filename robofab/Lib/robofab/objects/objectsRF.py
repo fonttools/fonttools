@@ -1157,6 +1157,7 @@ class RInfo(BaseInfo):
 		self._trademark = None
 		self._license = None
 		self._licenseURL = None
+		self._createdBy = None
 		self._designer = None
 		self._designerURL = None
 		self._vendorURL = None
