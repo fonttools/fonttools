@@ -11,10 +11,10 @@ except ImportError:
 	pass
 
 try:
-	import Numeric
+	import numpy
 except ImportError:
-	print "*** Warning: FontTools needs Numerical Python (NumPy), see:"
-	print "        http://sourceforge.net/projects/numpy/"
+	print "*** Warning: FontTools needs the numpy library, see:"
+	print "        http://numpy.scipy.org/"
 
 try:
 	import xml.parsers.expat

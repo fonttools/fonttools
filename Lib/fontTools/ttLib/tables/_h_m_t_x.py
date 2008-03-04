@@ -1,6 +1,6 @@
 import sys
 import DefaultTable
-import Numeric
+import numpy
 from fontTools import ttLib
 from fontTools.misc.textTools import safeEval
 
@@ -14,10 +14,10 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 	
 	def decompile(self, data, ttFont):
 		numberOfMetrics = int(getattr(ttFont[self.headerTag], self.numberOfMetricsName))
-		metrics = Numeric.fromstring(data[:4 * numberOfMetrics], 
-				Numeric.Int16)
+		metrics = numpy.fromstring(data[:4 * numberOfMetrics], 
+				numpy.int16)
 		if sys.byteorder <> "big":
-			metrics = metrics.byteswapped()
+			metrics = metrics.byteswap()
 		metrics.shape = (numberOfMetrics, 2)
 		data = data[4 * numberOfMetrics:]
 		numberOfSideBearings = ttFont['maxp'].numGlyphs - numberOfMetrics
@@ -25,17 +25,17 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 		if numberOfSideBearings:
 			assert numberOfSideBearings > 0, "bad hmtx/vmtx table"
 			lastAdvance = metrics[-1][0]
-			advances = Numeric.array([lastAdvance] * numberOfSideBearings, 
-					Numeric.Int16)
-			sideBearings = Numeric.fromstring(data[:2 * numberOfSideBearings], 
-					Numeric.Int16)
+			advances = numpy.array([lastAdvance] * numberOfSideBearings, 
+					numpy.int16)
+			sideBearings = numpy.fromstring(data[:2 * numberOfSideBearings], 
+					numpy.int16)
 			if sys.byteorder <> "big":
-				sideBearings = sideBearings.byteswapped()
+				sideBearings = sideBearings.byteswap()
 			data = data[2 * numberOfSideBearings:]
-			additionalMetrics = Numeric.array([advances, sideBearings], 
-					Numeric.Int16)
-			metrics = Numeric.concatenate((metrics, 
-					Numeric.transpose(additionalMetrics)))
+			additionalMetrics = numpy.array([advances, sideBearings], 
+					numpy.int16)
+			metrics = numpy.concatenate((metrics, 
+					numpy.transpose(additionalMetrics)))
 		if data:
 			sys.stderr.write("too much data for hmtx/vmtx table\n")
 		metrics = metrics.tolist()
@@ -61,14 +61,14 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 		metrics = metrics[:lastIndex]
 		setattr(ttFont[self.headerTag], self.numberOfMetricsName, len(metrics))
 		
-		metrics = Numeric.array(metrics, Numeric.Int16)
+		metrics = numpy.array(metrics, numpy.int16)
 		if sys.byteorder <> "big":
-			metrics = metrics.byteswapped()
+			metrics = metrics.byteswap()
 		data = metrics.tostring()
 		
-		additionalMetrics = Numeric.array(additionalMetrics, Numeric.Int16)
+		additionalMetrics = numpy.array(additionalMetrics, numpy.int16)
 		if sys.byteorder <> "big":
-			additionalMetrics = additionalMetrics.byteswapped()
+			additionalMetrics = additionalMetrics.byteswap()
 		data = data + additionalMetrics.tostring()
 		return data
 	

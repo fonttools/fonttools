@@ -2,7 +2,7 @@ import sys
 import DefaultTable
 import struct
 import array
-import Numeric
+import numpy
 import operator
 from fontTools import ttLib
 from fontTools.misc.textTools import safeEval, readHex
@@ -194,7 +194,7 @@ class cmap_format_0(CmapSubtable):
 		assert charCodes == range(256)
 		valueList = map(ttFont.getGlyphID, valueList)
 
-		glyphIdArray = Numeric.array(valueList, Numeric.Int8)
+		glyphIdArray = numpy.array(valueList, numpy.int8)
 		data = struct.pack(">HHH", 0, 262, self.language) + glyphIdArray.tostring()
 		assert len(data) == 262
 		return data
@@ -796,13 +796,13 @@ class cmap_format_4(CmapSubtable):
 		entrySelector = maxExponent
 		rangeShift = 2 * segCount - searchRange
 		
-		charCodeArray = Numeric.array( endCode + [0] + startCode, Numeric.UInt16)
-		idDeltaeArray = Numeric.array(idDelta, Numeric.Int16)
-		restArray = Numeric.array(idRangeOffset + glyphIndexArray, Numeric.UInt16)
+		charCodeArray = numpy.array( endCode + [0] + startCode, numpy.uint16)
+		idDeltaeArray = numpy.array(idDelta, numpy.int16)
+		restArray = numpy.array(idRangeOffset + glyphIndexArray, numpy.uint16)
 		if sys.byteorder <> "big":
-			charCodeArray = charCodeArray.byteswapped()
-			idDeltaeArray = idDeltaeArray.byteswapped()
-			restArray = restArray.byteswapped()
+			charCodeArray = charCodeArray.byteswap()
+			idDeltaeArray = idDeltaeArray.byteswap()
+			restArray = restArray.byteswap()
 		data = charCodeArray.tostring() + idDeltaeArray.tostring() + restArray.tostring()
 
 		length = struct.calcsize(cmap_format_4_format) + len(data)
@@ -870,9 +870,9 @@ class cmap_format_6(CmapSubtable):
 			firstCode = codes[0]
 			valueList = map(operator.getitem, [cmap]*lenCodes, codes)
 			valueList = map(ttFont.getGlyphID, valueList)
-			glyphIndexArray = Numeric.array(valueList, Numeric.UInt16)
+			glyphIndexArray = numpy.array(valueList, numpy.uint16)
 			if sys.byteorder <> "big":
-				glyphIndexArray = glyphIndexArray.byteswapped()
+				glyphIndexArray = glyphIndexArray.byteswap()
 			data = glyphIndexArray.tostring()
 		else:
 			data = ""

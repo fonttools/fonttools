@@ -14,7 +14,7 @@ __all__ = [
 ]
 
 from fontTools.misc.arrayTools import calcBounds
-import Numeric
+import numpy
 
 epsilon = 1e-12
 
@@ -50,7 +50,7 @@ def calcCubicBounds(pt1, pt2, pt3, pt4):
 		>>> calcCubicBounds((0, 0), (50, 0), (100, 50), (100, 100))
 		(0.0, 0.0, 100.0, 100.0)
 		>>> calcCubicBounds((50, 0), (0, 100), (100, 100), (50, 0))
-		(35.566243270259356, 0.0, 64.433756729740679, 75.0)
+		(35.5662432703, 0.0, 64.4337567297, 75.0)
 	"""
 	a, b, c, d = calcCubicParameters(pt1, pt2, pt3, pt4)
 	# calc first derivative
@@ -84,7 +84,7 @@ def splitLine(pt1, pt2, where, isHorizontal):
 		((0, 0), (0.0, 0.0))
 		((0.0, 0.0), (100, 100))
 	"""
-	pt1, pt2 = Numeric.array((pt1, pt2))
+	pt1, pt2 = numpy.array((pt1, pt2))
 	a = (pt2 - pt1)
 	b = pt1
 	ax = a[isHorizontal]
@@ -308,7 +308,7 @@ def solveCubic(a, b, c, d,
 #
 
 def calcQuadraticParameters(pt1, pt2, pt3):
-	pt1, pt2, pt3 = Numeric.array((pt1, pt2, pt3))
+	pt1, pt2, pt3 = numpy.array((pt1, pt2, pt3))
 	c = pt1
 	b = (pt2 - c) * 2.0
 	a = pt3 - c - b
@@ -316,7 +316,7 @@ def calcQuadraticParameters(pt1, pt2, pt3):
 
 
 def calcCubicParameters(pt1, pt2, pt3, pt4):
-	pt1, pt2, pt3, pt4 = Numeric.array((pt1, pt2, pt3, pt4))
+	pt1, pt2, pt3, pt4 = numpy.array((pt1, pt2, pt3, pt4))
 	d = pt1
 	c = (pt2 - d) * 3.0
 	b = (pt3 - pt2) * 3.0 - c
@@ -341,7 +341,7 @@ def calcCubicPoints(a, b, c, d):
 
 def _segmentrepr(obj):
 	"""
-		>>> _segmentrepr([1, [2, 3], [], [[2, [3, 4], Numeric.array([0.1, 2.2])]]])
+		>>> _segmentrepr([1, [2, 3], [], [[2, [3, 4], numpy.array([0.1, 2.2])]]])
 		'(1, (2, 3), (), ((2, (3, 4), (0.1, 2.2))))'
 	"""
 	try:

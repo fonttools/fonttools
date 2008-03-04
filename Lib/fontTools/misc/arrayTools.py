@@ -3,7 +3,7 @@
 # name of this module (not).
 #
 
-import Numeric
+import numpy
 
 def calcBounds(array):
 	"""Return the bounding rectangle of a 2D points array as a tuple:
@@ -11,8 +11,8 @@ def calcBounds(array):
 	"""
 	if len(array) == 0:
 		return 0, 0, 0, 0
-	xMin, yMin = Numeric.minimum.reduce(array)
-	xMax, yMax = Numeric.maximum.reduce(array)
+	xMin, yMin = numpy.minimum.reduce(array)
+	xMax, yMax = numpy.maximum.reduce(array)
 	return xMin, yMin, xMax, yMax
 
 def updateBounds(bounds, (x, y), min=min, max=max):
@@ -33,18 +33,18 @@ def pointsInRect(array, rect):
 		return []
 	lefttop = rect[:2]
 	rightbottom = rect[2:]
-	condition = Numeric.logical_and(
-			Numeric.greater_equal(array, lefttop), 
-			Numeric.less_equal(array, rightbottom))
-	return Numeric.logical_and.reduce(condition, -1)
+	condition = numpy.logical_and(
+			numpy.greater_equal(array, lefttop), 
+			numpy.less_equal(array, rightbottom))
+	return numpy.logical_and.reduce(condition, -1)
 
 def vectorLength(vector):
 	"""Return the length of the given vector."""
-	return Numeric.sqrt(vector[0]**2 + vector[1]**2)
+	return numpy.sqrt(vector[0]**2 + vector[1]**2)
 
 def asInt16(array):
 	"""Round and cast to 16 bit integer."""
-	return Numeric.floor(array + 0.5).astype(Numeric.Int16)
+	return numpy.floor(array + 0.5).astype(numpy.int16)
 	
 
 def normRect((xMin, yMin, xMax, yMax)):
@@ -117,12 +117,12 @@ def _test():
 	>>> not pointInRect((101, 100), (0, 0, 100, 100))
 	True
 	>>> list(pointsInRect([(50, 50), (0, 0), (100, 100), (101, 100)], (0, 0, 100, 100)))
-	[1, 1, 1, 0]
+	[True, True, True, False]
 	>>> vectorLength((3, 4))
 	5.0
 	>>> vectorLength((1, 1)) == math.sqrt(2)
 	True
-	>>> list(asInt16(Numeric.array([0, 0.1, 0.5, 0.9])))
+	>>> list(asInt16(numpy.array([0, 0.1, 0.5, 0.9])))
 	[0, 0, 1, 1]
 	>>> normRect((0, 10, 100, 200))
 	(0, 10, 100, 200)

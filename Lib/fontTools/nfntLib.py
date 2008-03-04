@@ -77,7 +77,7 @@ class NFNT:
 		return header + self.bits + locTable + owTable
 	
 	def unpackGlyphs(self):
-		import Numeric
+		import numpy
 		nGlyphs = len(self.locTable) - 1
 		self.glyphs = [None] * nGlyphs
 		
@@ -85,7 +85,7 @@ class NFNT:
 		imageWidth = self.rowWords * 16
 		imageHeight = self.fRectHeight
 		bits = self.bits
-		bitImage = Numeric.zeros((imageWidth, imageHeight), Numeric.Int8)
+		bitImage = numpy.zeros((imageWidth, imageHeight), numpy.int8)
 		
 		for y in range(imageHeight):
 			for xByte in range(rowBytes):
@@ -108,7 +108,7 @@ class NFNT:
 				self.glyphs[i] = glyph = Glyph(width, offset, bitImage[imageL:imageR])
 	
 	def packGlyphs(self):
-		import Numeric
+		import numpy
 		imageWidth = 0
 		kernMax = 0
 		imageHeight = None
@@ -130,7 +130,7 @@ class NFNT:
 		imageWidth = 16 * ((imageWidth - 1) / 16 + 1)
 		rowBytes = imageWidth / 8
 		rowWords = rowBytes / 2
-		bitImage = Numeric.zeros((imageWidth, imageHeight), Numeric.Int8)
+		bitImage = numpy.zeros((imageWidth, imageHeight), numpy.int8)
 		locTable = []
 		widthTable = []
 		offsetTable = []
@@ -261,7 +261,6 @@ class NFNT:
 class Glyph:
 	
 	def __init__(self, width, offset, pixels=None, pixelDepth=1):
-		import Numeric
 		self.width = width
 		self.offset = offset
 		self.pixelDepth = pixelDepth

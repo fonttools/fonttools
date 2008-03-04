@@ -7,7 +7,7 @@ import PyBrowser
 import W, Lists
 import os
 import ATM
-import Numeric
+import numpy
 import Qd
 from rf.views.wGlyphList import GlyphList
 
@@ -169,14 +169,14 @@ class Glyph:
 		self.flags = []
 		startpt = 0
 		for endpt in endPts:
-			self.contours.append(Numeric.array(coordinates[startpt:endpt+1]))
+			self.contours.append(numpy.array(coordinates[startpt:endpt+1]))
 			self.flags.append(flags[startpt:endpt+1])
 			startpt = endpt + 1
 	
 	def getcontours(self, scale, move):
 		contours = []
 		for i in range(len(self.contours)):
-			contours.append(((self.contours[i] * Numeric.array(scale) + move), self.flags[i]))
+			contours.append(((self.contours[i] * numpy.array(scale) + move), self.flags[i]))
 		return contours
 
 

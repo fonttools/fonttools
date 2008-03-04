@@ -21,7 +21,7 @@ from fontTools import ttLib
 from fontTools.misc.textTools import safeEval, readHex
 import ttProgram
 import array
-import Numeric
+import numpy
 from types import StringType, TupleType
 
 
@@ -285,15 +285,15 @@ class Glyph:
 					continue  # ignore anything but "pt"
 				coordinates.append([safeEval(attrs["x"]), safeEval(attrs["y"])])
 				flags.append(not not safeEval(attrs["on"]))
-			coordinates = Numeric.array(coordinates, Numeric.Int16)
-			flags = Numeric.array(flags, Numeric.Int8)
+			coordinates = numpy.array(coordinates, numpy.int16)
+			flags = numpy.array(flags, numpy.int8)
 			if not hasattr(self, "coordinates"):
 				self.coordinates = coordinates
 				self.flags = flags
 				self.endPtsOfContours = [len(coordinates)-1]
 			else:
-				self.coordinates = Numeric.concatenate((self.coordinates, coordinates))
-				self.flags = Numeric.concatenate((self.flags, flags))
+				self.coordinates = numpy.concatenate((self.coordinates, coordinates))
+				self.flags = numpy.concatenate((self.flags, flags))
 				self.endPtsOfContours.append(len(self.coordinates)-1)
 		elif name == "component":
 			if self.numberOfContours > 0:
@@ -368,7 +368,7 @@ class Glyph:
 				self.decompileCoordinatesRaw(nCoordinates, data)
 		
 		# fill in repetitions and apply signs
-		coordinates = Numeric.zeros((nCoordinates, 2), Numeric.Int16)
+		coordinates = numpy.zeros((nCoordinates, 2), numpy.int16)
 		xIndex = 0
 		yIndex = 0
 		for i in range(nCoordinates):
@@ -401,16 +401,13 @@ class Glyph:
 		assert xIndex == len(xCoordinates)
 		assert yIndex == len(yCoordinates)
 		# convert relative to absolute coordinates
-		self.coordinates = Numeric.add.accumulate(coordinates)
+		self.coordinates = numpy.add.accumulate(coordinates)
 		# discard all flags but for "flagOnCurve"
-		if hasattr(Numeric, "__version__"):
-			self.flags = Numeric.bitwise_and(flags, flagOnCurve).astype(Numeric.Int8)
-		else:
-			self.flags = Numeric.boolean_and(flags, flagOnCurve).astype(Numeric.Int8)
-	
+		self.flags = numpy.bitwise_and(flags, flagOnCurve).astype(numpy.int8)
+
 	def decompileCoordinatesRaw(self, nCoordinates, data):
 		# unpack flags and prepare unpacking of coordinates
-		flags = Numeric.array([0] * nCoordinates, Numeric.Int8)
+		flags = numpy.array([0] * nCoordinates, numpy.int8)
 		# Warning: deep Python trickery going on. We use the struct module to unpack
 		# the coordinates. We build a format string based on the flags, so we can
 		# unpack the coordinates in one struct.unpack() call.
@@ -479,7 +476,7 @@ class Glyph:
 		# make a copy
 		coordinates = self.coordinates.astype(self.coordinates.typecode())
 		# absolute to relative coordinates
-		coordinates[1:] = Numeric.subtract(coordinates[1:], coordinates[:-1])
+		coordinates[1:] = numpy.subtract(coordinates[1:], coordinates[:-1])
 		flags = self.flags
 		compressedflags = []
 		xPoints = []
@@ -542,8 +539,8 @@ class Glyph:
 	def recalcBounds(self, glyfTable):
 		coordinates, endPts, flags = self.getCoordinates(glyfTable)
 		if len(coordinates) > 0:
-			self.xMin, self.yMin = Numeric.minimum.reduce(coordinates)
-			self.xMax, self.yMax = Numeric.maximum.reduce(coordinates)
+			self.xMin, self.yMin = numpy.minimum.reduce(coordinates)
+			self.xMax, self.yMax = numpy.maximum.reduce(coordinates)
 		else:
 			self.xMin, self.yMin, self.xMax, self.yMax = (0, 0, 0, 0)
 	
@@ -586,26 +583,26 @@ class Glyph:
 					if scale_component_offset:
 						# the Apple way: first move, then scale (ie. scale the component offset)
 						coordinates = coordinates + move
-						coordinates = Numeric.dot(coordinates, compo.transform)
+						coordinates = numpy.dot(coordinates, compo.transform)
 					else:
 						# the MS way: first scale, then move
-						coordinates = Numeric.dot(coordinates, compo.transform)
+						coordinates = numpy.dot(coordinates, compo.transform)
 						coordinates = coordinates + move
 					# due to the transformation the coords. are now floats;
 					# round them off nicely, and cast to short
-					coordinates = Numeric.floor(coordinates + 0.5).astype(Numeric.Int16)
+					coordinates = numpy.floor(coordinates + 0.5).astype(numpy.int16)
 				if allCoords is None or len(allCoords) == 0:
 					allCoords = coordinates
 					allEndPts = endPts
 					allFlags = flags
 				else:
-					allEndPts = allEndPts + (Numeric.array(endPts) + len(allCoords)).tolist()
+					allEndPts = allEndPts + (numpy.array(endPts) + len(allCoords)).tolist()
 					if len(coordinates) > 0:
-						allCoords = Numeric.concatenate((allCoords, coordinates))
-						allFlags = Numeric.concatenate((allFlags, flags))
+						allCoords = numpy.concatenate((allCoords, coordinates))
+						allFlags = numpy.concatenate((allFlags, flags))
 			return allCoords, allEndPts, allFlags
 		else:
-			return Numeric.array([], Numeric.Int16), [], Numeric.array([], Numeric.Int8)
+			return numpy.array([], numpy.int16), [], numpy.array([], numpy.int8)
 	
 	def __cmp__(self, other):
 		if self.numberOfContours <= 0:
@@ -613,8 +610,8 @@ class Glyph:
 		else:
 			if cmp(len(self.coordinates), len(other.coordinates)):
 				return 1
-			ctest = Numeric.alltrue(Numeric.alltrue(Numeric.equal(self.coordinates, other.coordinates)))
-			ftest = Numeric.alltrue(Numeric.equal(self.flags, other.flags))
+			ctest = numpy.alltrue(numpy.alltrue(numpy.equal(self.coordinates, other.coordinates)))
+			ftest = numpy.alltrue(numpy.equal(self.flags, other.flags))
 			if not ctest or not ftest:
 				return 1
 			return (
@@ -667,18 +664,18 @@ class GlyphComponent:
 		
 		if self.flags & WE_HAVE_A_SCALE:
 			scale, = struct.unpack(">h", data[:2])
-			self.transform = Numeric.array(
+			self.transform = numpy.array(
 					[[scale, 0], [0, scale]]) / float(0x4000)  # fixed 2.14
 			data = data[2:]
 		elif self.flags & WE_HAVE_AN_X_AND_Y_SCALE:
 			xscale, yscale = struct.unpack(">hh", data[:4])
-			self.transform = Numeric.array(
+			self.transform = numpy.array(
 					[[xscale, 0], [0, yscale]]) / float(0x4000)  # fixed 2.14
 			data = data[4:]
 		elif self.flags & WE_HAVE_A_TWO_BY_TWO:
 			(xscale, scale01, 
 					scale10, yscale) = struct.unpack(">hhhh", data[:8])
-			self.transform = Numeric.array(
+			self.transform = numpy.array(
 					[[xscale, scale01], [scale10, yscale]]) / float(0x4000)  # fixed 2.14
 			data = data[8:]
 		more = self.flags & MORE_COMPONENTS
@@ -716,7 +713,7 @@ class GlyphComponent:
 		
 		if hasattr(self, "transform"):
 			# XXX needs more testing
-			transform = Numeric.floor(self.transform * 0x4000 + 0.5)
+			transform = numpy.floor(self.transform * 0x4000 + 0.5)
 			if transform[0][1] or transform[1][0]:
 				flags = flags | WE_HAVE_A_TWO_BY_TWO
 				data = data + struct.pack(">hhhh", 
@@ -772,19 +769,19 @@ class GlyphComponent:
 			scale01 = safeEval(attrs["scale01"])
 			scale10 = safeEval(attrs["scale10"])
 			scaley = safeEval(attrs["scaley"])
-			self.transform = Numeric.array([[scalex, scale01], [scale10, scaley]])
+			self.transform = numpy.array([[scalex, scale01], [scale10, scaley]])
 		elif attrs.has_key("scalex"):
 			scalex = safeEval(attrs["scalex"])
 			scaley = safeEval(attrs["scaley"])
-			self.transform = Numeric.array([[scalex, 0], [0, scaley]])
+			self.transform = numpy.array([[scalex, 0], [0, scaley]])
 		elif attrs.has_key("scale"):
 			scale = safeEval(attrs["scale"])
-			self.transform = Numeric.array([[scale, 0], [0, scale]])
+			self.transform = numpy.array([[scale, 0], [0, scale]])
 		self.flags = safeEval(attrs["flags"])
 	
 	def __cmp__(self, other):
 		if hasattr(self, "transform"):
-			if Numeric.alltrue(Numeric.equal(self.transform, other.transform)):
+			if numpy.alltrue(numpy.equal(self.transform, other.transform)):
 				selfdict = self.__dict__.copy()
 				otherdict = other.__dict__.copy()
 				del selfdict["transform"]
