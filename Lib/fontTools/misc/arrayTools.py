@@ -3,12 +3,12 @@
 # name of this module (not).
 #
 
+import Numeric
 
 def calcBounds(array):
 	"""Return the bounding rectangle of a 2D points array as a tuple:
 	(xMin, yMin, xMax, yMax)
 	"""
-	import Numeric
 	if len(array) == 0:
 		return 0, 0, 0, 0
 	xMin, yMin = Numeric.minimum.reduce(array)
@@ -29,7 +29,6 @@ def pointsInRect(array, rect):
 	"""Find out which points or array are inside rect. 
 	Returns an array with a boolean for each point.
 	"""
-	import Numeric
 	if len(array) < 1:
 		return []
 	lefttop = rect[:2]
@@ -41,12 +40,10 @@ def pointsInRect(array, rect):
 
 def vectorLength(vector):
 	"""Return the length of the given vector."""
-	import Numeric
 	return Numeric.sqrt(vector[0]**2 + vector[1]**2)
 
 def asInt16(array):
 	"""Round and cast to 16 bit integer."""
-	import Numeric
 	return Numeric.floor(array + 0.5).astype(Numeric.Int16)
 	
 
@@ -104,31 +101,59 @@ def intRect((xMin, yMin, xMax, yMax)):
 	return (xMin, yMin, xMax, yMax)
 
 
+def _test():
+	"""
+	>>> import math
+	>>> calcBounds([(0, 40), (0, 100), (50, 50), (80, 10)])
+	(0, 10, 80, 100)
+	>>> updateBounds((0, 0, 0, 0), (100, 100))
+	(0, 0, 100, 100)
+	>>> pointInRect((50, 50), (0, 0, 100, 100))
+	True
+	>>> pointInRect((0, 0), (0, 0, 100, 100))
+	True
+	>>> pointInRect((100, 100), (0, 0, 100, 100))
+	True
+	>>> not pointInRect((101, 100), (0, 0, 100, 100))
+	True
+	>>> list(pointsInRect([(50, 50), (0, 0), (100, 100), (101, 100)], (0, 0, 100, 100)))
+	[1, 1, 1, 0]
+	>>> vectorLength((3, 4))
+	5.0
+	>>> vectorLength((1, 1)) == math.sqrt(2)
+	True
+	>>> list(asInt16(Numeric.array([0, 0.1, 0.5, 0.9])))
+	[0, 0, 1, 1]
+	>>> normRect((0, 10, 100, 200))
+	(0, 10, 100, 200)
+	>>> normRect((100, 200, 0, 10))
+	(0, 10, 100, 200)
+	>>> scaleRect((10, 20, 50, 150), 1.5, 2)
+	(15.0, 40, 75.0, 300)
+	>>> offsetRect((10, 20, 30, 40), 5, 6)
+	(15, 26, 35, 46)
+	>>> insetRect((10, 20, 50, 60), 5, 10)
+	(15, 30, 45, 50)
+	>>> insetRect((10, 20, 50, 60), -5, -10)
+	(5, 10, 55, 70)
+	>>> intersects, rect = sectRect((0, 10, 20, 30), (0, 40, 20, 50))
+	>>> not intersects
+	True
+	>>> intersects, rect = sectRect((0, 10, 20, 30), (5, 20, 35, 50))
+	>>> intersects
+	1
+	>>> rect
+	(5, 20, 20, 30)
+	>>> unionRect((0, 10, 20, 30), (0, 40, 20, 50))
+	(0, 10, 20, 50)
+	>>> rectCenter((0, 0, 100, 200))
+	(50, 100)
+	>>> rectCenter((0, 0, 100, 199.0))
+	(50, 99.5)
+	>>> intRect((0.9, 2.9, 3.1, 4.1))
+	(0, 2, 4, 5)
+	"""
+
 if __name__ == "__main__":
-	import Numeric, math
-	assert calcBounds([(0, 40), (0, 100), (50, 50), (80, 10)]) == (0, 10, 80, 100)
-	assert updateBounds((0, 0, 0, 0), (100, 100)) == (0, 0, 100, 100)
-	assert pointInRect((50, 50), (0, 0, 100, 100))
-	assert pointInRect((0, 0), (0, 0, 100, 100))
-	assert pointInRect((100, 100), (0, 0, 100, 100))
-	assert not pointInRect((101, 100), (0, 0, 100, 100))
-	assert list(pointsInRect([(50, 50), (0, 0), (100, 100), (101, 100)],
-			(0, 0, 100, 100))) == [1, 1, 1, 0]
-	assert vectorLength((3, 4)) == 5
-	assert vectorLength((1, 1)) == math.sqrt(2)
-	assert list(asInt16(Numeric.array([0, 0.1, 0.5, 0.9]))) == [0, 0, 1, 1]
-	assert normRect((0, 10, 100, 200)) == (0, 10, 100, 200)
-	assert normRect((100, 200, 0, 10)) == (0, 10, 100, 200)
-	assert scaleRect((10, 20, 50, 150), 1.5, 2) == (15, 40, 75, 300)
-	assert offsetRect((10, 20, 30, 40), 5, 6) == ((15, 26, 35, 46))
-	assert insetRect((10, 20, 50, 60), 5, 10) == (15, 30, 45, 50)
-	assert insetRect((10, 20, 50, 60), -5, -10) == (5, 10, 55, 70)
-	intersects, rect = sectRect((0, 10, 20, 30), (0, 40, 20, 50))
-	assert not intersects
-	intersects, rect = sectRect((0, 10, 20, 30), (5, 20, 35, 50))
-	assert intersects
-	assert rect == (5, 20, 20, 30)
-	assert unionRect((0, 10, 20, 30), (0, 40, 20, 50)) == (0, 10, 20, 50)
-	assert rectCenter((0, 0, 100, 200)) == (50, 100)
-	assert rectCenter((0, 0, 100, 199.0)) == (50, 99.5)
-	assert intRect((0.9, 2.9, 3.1, 4.1)) == (0, 2, 4, 5)
+	import doctest
+	doctest.testmod()
