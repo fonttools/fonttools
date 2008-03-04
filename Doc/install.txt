@@ -1,4 +1,4 @@
-TTX/FontTools 2.0b1
+TTX/FontTools 2.1+
 
 TTX/FontTools is a suite of tools for manipulating fonts. It is written in
 Python and has a BSD-style, open-source licence -- see LICENSE.txt.
@@ -40,24 +40,8 @@ Python
   Un*x: follow the build instructions.
   MacOS: grab the installer, run "Easy Install"
 
-The Numeric Python extension
-  Get a fresh version from the download page, linked from here:
-     http://sourceforge.net/projects/numpy/
-  Windows: grab the "Numeric-*.exe" archive, it's an installer. Make sure
-  the Python version in the archive name (eg. "2.2") matches the Python
-  version you have.
-  Linux, other Unices including MacOSX: get a source archive and run this
-  command from the unpacked directory:
-     python setup.py install
-
-PyXML
-  Similar to the Numeric Python instructions, get the appropriate archive
-  or installer from
-     http://sourceforge.net/projects/pyxml/
-  Installation is also similar to installing Numeric Python, see above.
-  Note: some Python distributions already contain the neccesary XML support.
-  If "import xml.parsers.expat" works at the Python interactive prompt, you
-  don't need to install PyXML.
+The numpy extension
+  See http://numpy.scipy.org/
 
 Now run the "setup.py" script from the FontTools archive. This will install
 all the modules in the right places, as well as tries to compile the one
