@@ -474,7 +474,7 @@ class Glyph:
 		nCoordinates = len(self.coordinates)
 		
 		# make a copy
-		coordinates = self.coordinates.astype(self.coordinates.typecode())
+		coordinates = numpy.array(self.coordinates)
 		# absolute to relative coordinates
 		coordinates[1:] = numpy.subtract(coordinates[1:], coordinates[:-1])
 		flags = self.flags
