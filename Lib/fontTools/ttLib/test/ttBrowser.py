@@ -1,4 +1,4 @@
-"""Mac-only TrueType browser window."""
+"""Mac-OS9-only TrueType browser window, deprecated and no longer maintained."""
 
 from fontTools import ttLib
 from fontTools.ttLib import macUtils
