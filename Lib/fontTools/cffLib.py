@@ -1,12 +1,12 @@
 """cffLib.py -- read/write tools for Adobe CFF fonts."""
 
 #
-# $Id: cffLib.py,v 1.32 2006-10-21 13:41:18 jvr Exp $
+# $Id: cffLib.py,v 1.33 2008-03-07 19:49:25 jvr Exp $
 #
 
 import struct, sstruct
 import string
-from types import FloatType, ListType, StringType, TupleType
+from types import ListType, StringType, TupleType
 from fontTools.misc import psCharStrings
 from fontTools.misc.textTools import safeEval
 
@@ -1369,7 +1369,7 @@ class DictCompiler:
 
 
 def encodeNumber(num):
-	if type(num) == FloatType:
+	if isinstance(num, float):
 		return psCharStrings.encodeFloat(num)
 	else:
 		return psCharStrings.encodeIntCFF(num)
