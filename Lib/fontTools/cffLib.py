@@ -1,12 +1,11 @@
 """cffLib.py -- read/write tools for Adobe CFF fonts."""
 
 #
-# $Id: cffLib.py,v 1.33 2008-03-07 19:49:25 jvr Exp $
+# $Id: cffLib.py,v 1.34 2008-03-07 19:56:17 jvr Exp $
 #
 
 import struct, sstruct
 import string
-from types import ListType, StringType, TupleType
 from fontTools.misc import psCharStrings
 from fontTools.misc.textTools import safeEval
 
@@ -111,12 +110,12 @@ class CFFFontSet:
 			self.fontNames.append(fontName)
 			self.topDictIndex.append(topDict)
 			for element in content:
-				if isinstance(element, StringType):
+				if isinstance(element, basestring):
 					continue
 				topDict.fromXML(element)
 		elif name == "GlobalSubrs":
 			for element in content:
-				if isinstance(element, StringType):
+				if isinstance(element, basestring):
 					continue
 				name, attrs, content = element
 				subr = psCharStrings.T2CharString()
@@ -445,7 +444,7 @@ class FDArrayIndex(TopDictIndex):
 			return
 		fontDict = FontDict()
 		for element in content:
-			if isinstance(element, StringType):
+			if isinstance(element, basestring):
 				continue
 			fontDict.fromXML(element)
 		self.append(fontDict)
@@ -583,7 +582,7 @@ class CharStrings:
 	
 	def fromXML(self, (name, attrs, content)):
 		for element in content:
-			if isinstance(element, StringType):
+			if isinstance(element, basestring):
 				continue
 			name, attrs, content = element
 			if name <> "CharString":
@@ -633,7 +632,7 @@ def buildOperatorDict(table):
 def buildOpcodeDict(table):
 	d = {}
 	for op, name, arg, default, conv in table:
-		if type(op) == TupleType:
+		if isinstance(op, tuple):
 			op = chr(op[0]) + chr(op[1])
 		else:
 			op = chr(op)
@@ -707,7 +706,7 @@ class TableConverter(SimpleConverter):
 	def xmlRead(self, (name, attrs, content), parent):
 		ob = self.getClass()()
 		for element in content:
-			if isinstance(element, StringType):
+			if isinstance(element, basestring):
 				continue
 			ob.fromXML(element)
 		return ob
@@ -919,7 +918,7 @@ def parseCharset(numGlyphs, file, strings, isCID, format):
 class EncodingCompiler:
 
 	def __init__(self, strings, encoding, parent):
-		assert not isinstance(encoding, StringType)
+		assert not isinstance(encoding, basestring)
 		data0 = packEncoding0(parent.dictObj.charset, encoding, parent.strings)
 		data1 = packEncoding1(parent.dictObj.charset, encoding, parent.strings)
 		if len(data0) < len(data1):
@@ -991,7 +990,7 @@ class EncodingConverter(SimpleConverter):
 			return attrs["name"]
 		encoding = [".notdef"] * 256
 		for element in content:
-			if isinstance(element, StringType):
+			if isinstance(element, basestring):
 				continue
 			name, attrs, content = element
 			code = safeEval(attrs["code"])
@@ -1094,7 +1093,7 @@ class FDArrayConverter(TableConverter):
 	def xmlRead(self, (name, attrs, content), parent):
 		fdArray = FDArrayIndex()
 		for element in content:
-			if isinstance(element, StringType):
+			if isinstance(element, basestring):
 				continue
 			fdArray.fromXML(element)
 		return fdArray
@@ -1330,7 +1329,7 @@ class DictCompiler:
 			if value is None:
 				continue
 			op, argType = self.opcodes[name]
-			if type(argType) == TupleType:
+			if isinstance(argType, tuple):
 				l = len(argType)
 				assert len(value) == l, "value doesn't match arg type"
 				for i in range(l):
@@ -1385,7 +1384,7 @@ class TopDictCompiler(DictCompiler):
 			children.append(CharsetCompiler(strings, self.dictObj.charset, self))
 		if hasattr(self.dictObj, "Encoding"):
 			encoding = self.dictObj.Encoding
-			if not isinstance(encoding, StringType):
+			if not isinstance(encoding, basestring):
 				children.append(EncodingCompiler(strings, encoding, self))
 		if hasattr(self.dictObj, "FDSelect"):
 			# I have not yet supported merging a ttx CFF-CID font, as there are interesting
