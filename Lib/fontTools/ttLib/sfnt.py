@@ -143,7 +143,7 @@ class SFNTWriter:
 	def calcMasterChecksum(self, directory):
 		# calculate checkSumAdjustment
 		tags = self.tables.keys()
-		checksums = numpy.zeros(len(tags)+1)
+		checksums = numpy.zeros(len(tags)+1, numpy.int32)
 		for i in range(len(tags)):
 			checksums[i] = self.tables[tags[i]].checkSum
 		
@@ -158,7 +158,7 @@ class SFNTWriter:
 		# write the checksum to the file
 		self.file.seek(self.tables['head'].offset + 8)
 		self.file.write(struct.pack(">l", checksumadjustment))
-		
+
 
 # -- sfnt directory helpers and cruft
 

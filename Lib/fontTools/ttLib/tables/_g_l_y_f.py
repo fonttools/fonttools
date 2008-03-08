@@ -532,6 +532,8 @@ class Glyph:
 				compressedflags.append(flag)
 			lastflag = flag
 		data = data + array.array("B", compressedflags).tostring()
+		xPoints = map(int, xPoints)  # work around numpy vs. struct >= 2.5 bug
+		yPoints = map(int, yPoints)
 		data = data + apply(struct.pack, (xFormat,)+tuple(xPoints))
 		data = data + apply(struct.pack, (yFormat,)+tuple(yPoints))
 		return data
