@@ -50,21 +50,21 @@ class BaseTTXConverter(DefaultTable):
 	def compile(self, font):
 		""" Create a top-level OTFWriter for the GPOS/GSUB table.
 			Call the compile method for the the table
-				for each 'convertor' record in the table convertor list
-					call convertor's write method for each item in the value. 
+				for each 'converter' record in the table converter list
+					call converter's write method for each item in the value. 
 						- For simple items, the write method adds a string to the
 						writer's self.items list. 
-						- For Struct/Table/Subtabl items, it add first adds new writer to the 
+						- For Struct/Table/Subtable items, it add first adds new writer to the 
 						to the writer's self.items, then calls the item's compile method.
 						This creates a tree of writers, rooted at the GUSB/GPOS writer, with
 						each writer representing a table, and the writer.items list containing
 						the child data strings and writers.
-			call the GetAllData method
+			call the getAllData method
 				call _doneWriting, which removes duplicates
-				call _GetTables. This traverses the tables, adding unique occurences to a flat list of tables
-				Traverse the flat list of tables, calling GetDataLength on each to update their position
-				Traverse the flat list of tables again, calling GetData each get the data in the table, now that
-				pas's and offset are known.
+				call _gatherTables. This traverses the tables, adding unique occurences to a flat list of tables
+				Traverse the flat list of tables, calling getDataLength on each to update their position
+				Traverse the flat list of tables again, calling getData each get the data in the table, now that
+				pos's and offset are known.
 
 				If a lookup subtable overflows an offset, we have to start all over. 
 		"""
