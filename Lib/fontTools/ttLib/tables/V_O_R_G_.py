@@ -80,13 +80,13 @@ class table_V_O_R_G_(DefaultTable.DefaultTable):
 			vOriginRec.toXML(writer, ttFont)
 
 	def fromXML(self, (name, attrs, content), ttFont):
+		if not hasattr(self, "VOriginRecords"):
+			self.VOriginRecords = {}
 		self.getGlyphName = ttFont.getGlyphName # for use in get/set item functions, for access by GID
 		if name == "VOriginRecord":
 			for element in content:
 				if isinstance(element, StringType):
 					continue
-			if not hasattr(self, "VOriginRecords"):
-				self.VOriginRecords = {}
 			vOriginRec = VOriginRecord()
 			for element in content:
 				if isinstance(element, StringType):
