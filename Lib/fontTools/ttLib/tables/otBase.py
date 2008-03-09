@@ -483,7 +483,7 @@ def packUShort(value):
 
 
 def packULong(value):
-	assert 0 <= value < 0x1000000000, value
+	assert 0 <= value < 0x100000000, value
 	return struct.pack(">L", value)
 
 
