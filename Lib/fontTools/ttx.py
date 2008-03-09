@@ -181,6 +181,8 @@ def ttCompile(input, output, options):
 	try:
 		ttf.save(output)
 	except OTLOffsetOverflowError, e:
+		# XXX This shouldn't be here at all, it should be as close to the
+		# OTL code as possible.
 		overflowRecord = e.value
 		print "Attempting to fix OTLOffsetOverflowError", e
 		lastItem = overflowRecord 
