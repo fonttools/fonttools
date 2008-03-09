@@ -477,6 +477,10 @@ _equivalents = {
 	'JstfMax': ('ShrinkageJstfMax', 'ExtensionJstfMax',),
 }
 
+#
+# OverFlow logic, to automatically create ExtensionLookups
+# XXX This should probably move to otBase.py
+#
 
 def fixLookupOverFlows(ttf, overflowRecord):
 	""" Either the offset from the LookupList to a lookup overflowed, or
@@ -661,6 +665,7 @@ def fixSubTableOverFlows(ttf, overflowRecord):
 	ok = splitFunc(subtable, newSubTable, overflowRecord)
 	return ok
 
+# End of OverFlow logic
 
 
 def _buildClasses():
