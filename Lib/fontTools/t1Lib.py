@@ -320,13 +320,14 @@ def findEncryptedChunks(data):
 		if eEnd < 0:
 			raise T1Error, "can't find end of eexec part"
 		cypherText = data[eBegin:eEnd + 2]
+		if isHex(cypherText[:4]):
+			cypherText = deHexString(cypherText)
 		plainText, R = eexec.decrypt(cypherText, 55665)
 		eEndLocal = string.find(plainText, EEXECINTERNALEND)
 		if eEndLocal < 0:
 			raise T1Error, "can't find end of eexec part"
-		eEnd = eBegin + eEndLocal + len(EEXECINTERNALEND) + 1
 		chunks.append((0, data[:eBegin]))
-		chunks.append((1, data[eBegin:eEnd]))
+		chunks.append((1, cypherText[:eEndLocal + len(EEXECINTERNALEND) + 1]))
 		data = data[eEnd:]
 	chunks.append((0, data))
 	return chunks
@@ -340,7 +341,7 @@ def deHexString(hexstring):
 _fontType1RE = re.compile(r"/FontType\s+1\s+def")
 
 def assertType1(data):
-	for head in ['%!PS-AdobeFont', '%!FontType1-1.0']:
+	for head in ['%!PS-AdobeFont', '%!FontType1']:
 		if data[:len(head)] == head:
 			break
 	else:

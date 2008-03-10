@@ -937,9 +937,9 @@ class T1OutlineExtractor(T2OutlineExtractor):
 	# path constructors
 	#
 	def op_rmoveto(self, index):
-		self.endPath()
 		if self.flexing:
 			return
+		self.endPath()
 		self.rMoveTo(self.popall())
 	def op_hmoveto(self, index):
 		if self.flexing:
