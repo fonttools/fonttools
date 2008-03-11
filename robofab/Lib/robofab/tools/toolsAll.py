@@ -41,13 +41,10 @@ def setFoundrySetting(key, value, dstPath):
 	writeFoundrySettings(d, dstPath)
 	
 def readGlyphConstructions():
-	"""read GlyphConstruction.txt and turn it into a dict"""
-	dataDir=os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(robofab.__file__))), 'Data')
-	glyphConstructions={}
-	filePath = os.path.join(dataDir, 'GlyphConstruction.txt')
-	f = open(filePath, 'rb')
-	data = f.read().replace('\r', '\n').split('\n')
-	f.close()
+	"""read GlyphConstruction and turn it into a dict"""
+	from robofab.tools.glyphConstruction import _glyphConstruction
+	data = _glyphConstruction.split("\n")
+	glyphConstructions = {}
 	for i in data:
 		if len(i) == 0: continue
 		if i[0] != '#':
@@ -166,3 +163,8 @@ def fontToUFO(src, dst, fileType=None):
 	elif fileType == "Type 1":
 		info = extractT1FontInfo(font)
 	ufoWriter.writeInfo(info)
+
+if __name__ == "__main__":
+	print readGlyphConstructions()
+	
+	
