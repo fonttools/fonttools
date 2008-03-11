@@ -34,8 +34,9 @@ stringRE = re.compile(stringPat)
 
 hexstringRE = re.compile("<[%s0-9A-Fa-f]*>" % whitespace)
 
-ps_tokenerror = 'ps_tokenerror'
-ps_error = 'ps_error'
+class PSTokenError(Exception): pass
+class PSError(Exception): pass
+
 
 class PSTokenizer(StringIO.StringIO):
 	
@@ -68,18 +69,18 @@ class PSTokenizer(StringIO.StringIO):
 				tokentype = 'do_string'
 				m = stringmatch(buf, pos)
 				if m is None:
-					raise ps_tokenerror, 'bad string at character %d' % pos
+					raise PSTokenError, 'bad string at character %d' % pos
 				_, nextpos = m.span()
 				token = buf[pos:nextpos]
 			elif char == '<':
 				tokentype = 'do_hexstring'
 				m = hexstringmatch(buf, pos)
 				if m is None:
-					raise ps_tokenerror, 'bad hexstring at character %d' % pos
+					raise PSTokenError, 'bad hexstring at character %d' % pos
 				_, nextpos = m.span()
 				token = buf[pos:nextpos]
 			else:
-				raise ps_tokenerror, 'bad token at character %d' % pos
+				raise PSTokenError, 'bad token at character %d' % pos
 		else:
 			if char == '/':
 				tokentype = 'do_literal'
@@ -88,7 +89,7 @@ class PSTokenizer(StringIO.StringIO):
 				tokentype = ''
 				m = endmatch(buf, pos)
 			if m is None:
-				raise ps_tokenerror, 'bad token at character %d' % pos
+				raise PSTokenError, 'bad token at character %d' % pos
 			_, nextpos = m.span()
 			token = buf[pos:nextpos]
 		self.pos = pos + len(token)
@@ -201,7 +202,7 @@ class PSInterpreter(PSOperators):
 		for i in range(len(dictstack)-1, -1, -1):
 			if dictstack[i].has_key(name):
 				return dictstack[i][name]
-		raise ps_error, 'name error: ' + str(name)
+		raise PSError, 'name error: ' + str(name)
 	
 	def do_token(self, token,
 				int=int, 
@@ -269,7 +270,7 @@ class PSInterpreter(PSOperators):
 		elif token == ']':
 			return ps_name(']')
 		else:
-			raise ps_tokenerror, 'huh?'
+			raise PSTokenError, 'huh?'
 	
 	def push(self, object):
 		self.stack.append(object)
@@ -277,11 +278,11 @@ class PSInterpreter(PSOperators):
 	def pop(self, *types):
 		stack = self.stack
 		if not stack:
-			raise ps_error, 'stack underflow'
+			raise PSError, 'stack underflow'
 		object = stack[-1]
 		if types:
 			if object.type not in types:
-				raise ps_error, 'typecheck, expected %s, found %s' % (`types`, object.type)
+				raise PSError, 'typecheck, expected %s, found %s' % (`types`, object.type)
 		del stack[-1]
 		return object
 	
