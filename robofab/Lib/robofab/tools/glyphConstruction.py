@@ -1,5 +1,5 @@
 
-_glyphConstructions = """\
+_glyphConstruction = """\
 #
 # RoboFab Glyph Construction Database
 #
