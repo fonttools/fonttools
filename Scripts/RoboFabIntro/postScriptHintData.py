@@ -1,4 +1,4 @@
-#FLM: Get and set font level PostScript hint data.
+﻿#FLM: Get and set font level PostScript hint data.
 from robofab.world import CurrentFont
 
 """
