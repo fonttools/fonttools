@@ -1,592 +1,0 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8" /><title>
- 		RoboThon 2006: Interpolation 
- 	</title>
-<link href="../default.css" type="text/css" rel="stylesheet" />
-<link href="../code/robothon06/py2html.css" type="text/css" rel="stylesheet" />
-</head><body>
-	
-	
-
-	
-
-<script type="text/javascript"  src="http://www.google-analytics.com/urchin.js"></script>
-<script type="text/javascript">
-_uacct = "UA-2044310-2";
-urchinTracker();
-</script>
-
-	<div id="modellogo">
-		<img src="../img/drawmodel_header.jpg" width="595" height="112" />
-	</div>
-	<div class="leftcontent">
-		<h1 class="crb-seealso">
-			RoboFab
-		</h1>
-		<p class="menu">
-			<a href="../index.html">
-				Home
-			</a>
-			<br />
-			<a href="../download/index.html">
-				Download v1.1.1
-			</a>
-			<br />
-			<a href="../intro.html">
-				Intro
-			</a>
-			<br />
-			<a href="../install.html">
-				Install Notes
-			</a>
-			<br />
-			<a href="../history.html">
-				History
-			</a>
-			<br />
-			<a href="../executive.html">
-				Summary
-			</a>
-		</p>
-		
-		<p class="menu">
-			<a href="../howto/index.html">
-				How to's
-			</a>
-			<br />
-			<a href="index.html">
-				Step by step
-			</a>
-			<br />
-			<a href="../tools/dialogs.html">
-				Fab Dialogs
-			</a>
-			<br />
-			<a href="../objects/index.html">
-				Object reference
-			</a>
-			<br />
-			<a href="../objects/model.html">
-				Object map
-			</a>
-			<br />
-			<a href="../tools/index.html">
-				Tools
-			</a>
-			<br />
-			<a href="../ufo/index.html">
-				UFO Overview
-			</a>
-			<br />
-			<a href="../ufo/specification.html">
-				UFO Spec
-			</a>
-			<br />
-			<a href="../limitations.html">
-				Fab Limitations
-			</a>
-
-			<a href="../links/index.html">
-				Links
-			</a>
-			<br />
-			<a href="../credits.html">
-				Credits
-			</a>
-		</p>
-
-		<h1 class="crb-seealso">
-			Support RoboFab
-		</h1>
-
-
-<form action="https://www.paypal.com/cgi-bin/webscr" method="post">
-<input type="hidden" name="cmd" value="_s-xclick">
-<input type="image" src="https://www.paypal.com/en_US/i/btn/x-click-but21.gif" border="0" name="submit" alt="Make payments with PayPal - it's fast, free and secure!">
-<img alt="" border="0" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1">
-<input type="hidden" name="encrypted" value="-----BEGIN PKCS7-----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-----END PKCS7-----
-">
-</form>
-
-
-
-		<h2 class="crb-seealso">
-			Up
-		</h2>
-
-		<p class="menu">
-		<p class="bonbon_uplink"><a href="index.html">Back to Step by step</a></p>
-		</p>
-
-		<h2 class="crb-seealso">
-			See also
-		</h2>
-
-	
-	
-	
-	
-
-		<p class="menu">
-			<a href="../howto/generatefonts.html">Generate Fonts</a><br /><a href="../howto/glyphmath.html">Using Glyph Math</a><br /><a href="../howto/interpolate.html">How to interpolate</a><br /><a href="../howto/usetransformations.html">Using transformations</a><br /><a href="../objects/component.html">RComponent</a><br /><a href="../objects/contour.html">RContour</a><br /><a href="../objects/font.html">RFont</a><br /><a href="../objects/glyph.html">RGlyph</a><br /><a href="../objects/lib.html">RLib</a><br /><a href="../objects/pen.html">Pen objects</a><br /><a href="robofab_session1.html">Font object, Info object</a><br /><a href="robofab_session2.html">Glyph object and Pen object</a><br /><a href="robofab_session3.html">Kerning object and glyph building</a><br />
-		</p>
-	</div>
-	
-	<div class="footer">
-		<a href="../feedback.html">
-			Feedback
-		</a>
-		<br />
-		<a href="../map.html">
-			Sitemap
-		</a>
-		<br />
-		Please also refer to the 
-		<a href="../download/license.html">
-			Legal
-		</a>
-		<br />
-		Copyright 2003-2006 RoboFab 
-		<br />
-		version 1.1.1 
-	</div>
-	
-	<div class="google">
-		
-		
-			<h2>RoboFab Mailinglist</h2>
-			<p>
-			Join the RoboFab users community at Google groups.
-			</p>
-
-
-		    <img src="http://groups.google.com/groups/img/3nb/groups_bar.gif" alt="Google Groups" height="26" width="132" />
-
-<p>
-		  <form action="http://groups.google.com/group/robofab/boxsubscribe">
-		    Email: <input type="text" name="../email" />
-		           <input type="submit" name="../sub" value="Subscribe" />
-		</form>
-</p>
-<p>
-		  <a href="http://groups.google.com/group/robofab">Visit this group</a>
-</p>
-
-
-<h2>RoboFab Sponsors</h2>
-		
-	<script type="text/javascript">
-		
-
-google_ad_client = "pub-3703953449723704";
-google_ad_width = 120;
-google_ad_height = 600;
-google_ad_format = "120x600_as";
-google_ad_type = "text_image";
-google_ad_channel ="";
-google_color_border = "336699";
-google_color_bg = "FFFFFF";
-google_color_link = "0000FF";
-google_color_url = "008000";
-google_color_text = "000000";
-
-
-
-
-</script>
-
-
-	<script type="text/javascript"  src="http://pagead2.googlesyndication.com/pagead/show_ads.js"></script>
-
-
-
-</div>
-
-
-
-
-	
-	
-	
-	
-	<div class="content">
-
-
-
-	
-
-	
-
-
-		<h1>
-			Scripting for interpolation
-		</h1>
-		
-		
-				<img src="http://letterror.com/code/robofab/img/ondrawmodel_17.gif" width="140" height="96" />
-
-		<img src="http://letterror.com/code/robofab/img/ondrawmodel_07.gif" />
-
-	
-	<h2>Interpolation</h2>
-	<p>
-
-In this session we're going to look at scripting and interpolation. Building an interpolation system has 2 phases: <strong>preparing</strong> it and <strong>using</strong> it. Though this isn't necessarily a design / production difference. In the first phase you need to make sure all the data is set up properly, the compatible glyphs in each master, matching contours in each glyph, path directions, start point locations etc. This can be a lot of work, but RoboFab can assist by reporting the problems. The second phase, using the interpolation comes when everything works and rather than look for problems (there shouldn't be any) you just want to generate all the weights as fast as possible and get on with it proofing and other things.
-	</p>
-
-<h2>Terminology</h2>
-<p>
-The glyphs (or whole fonts) that are used in an interpolation system are usually called <strong>masters</strong>. The <strong>interpolation factor</strong> is a number between 0 and 1. With factor = 0 the result will be identical to the first master (in this case glyph "A"), and as you can probably guess, with factor = 1 the result will match glyph "B". Factor =0.5 means the resulting shape will be exactly between the two masters. The factor can actually also be outside the 0, 1 range - in that case we speak of <strong>extrapolation</strong>. The particular change in a glyph when interpolating from one master to another is called an <strong>axis</strong>.
-</p>
-	
-	
-	<h2>Why use RoboFab interpolation?</h2>
-	<p>
-All the alternatives come with strings attached. FontLab's <strong>Blend</strong> tool forces points in contours which don't match. This is handy if you're looking for a quick fix, but it can more or less destroy your masters. Alternatively you can use the Multiple Master tools, but this requires all of your masters to be in the same file and drawing this way can be tricky. Since interpolation is a useful process in typedesign, and a good candidate for scripting we decided to include solid interpolation support in Robofab.
-</p>
-
-<h2>Interpolating glyphs</h2>
-<p>
-In the first example we're going to interpolate two glyphs in the same font. This can be useful in the design stage, for sketching or testing. The result is stored in a third glyph. Note: if you want to run this example in FontLab, open a new, empty font. Use the circle tool to draw one circle in "A", and again in "B". Make sure these are different enough to tell what's going on.
-</p>
-
-<div class="pythonsource"><pre># robothon06<br># interpolate two glyphs in the same font<br><span class="py_res">from</span> <span class="py_key">robofab</span>.<span class="py_key">world</span> <span class="py_res">import</span> <span class="py_key">CurrentFont</span><br><span class="py_key">f</span> = <span class="py_key">CurrentFont</span>()<br><span class="py_key">factor</span> = <span class="py_num">0.5</span><br><span class="py_key">f</span>[<span class="py_str">"C"</span>].<span class="py_key">interpolate</span>(<span class="py_key">factor</span>, <span class="py_key">f</span>[<span class="py_str">"A"</span>], <span class="py_key">f</span>[<span class="py_str">"B"</span>])<br><span class="py_key">f</span>[<span class="py_str">"C"</span>].<span class="py_key">update</span>()<br></pre></div><div class="pythonsourcetitle"><a href="examples/interpolateGlyphs.py" target="new">download examples/interpolateGlyphs.py</a></div>
-
-<p>
-You see there are 3 glyphs involved: the two masters (<strong>"A"</strong> and <strong>"B"</strong>) and a new glyph which is used to store the results. In this case the new glyph is stored as <strong>"C"</strong>, but it can be helpful to give it a more descriptive name. This is not very PostScript-like, but chances are these glyphs won't make it to production anyway, so it's not a problem. Notice that <strong>interpolate()</strong> is a method of the <strong>Glyph</strong> object. The <strong>Font</strong> object has an interpolate method as well, more about that later. The <a href="http://letterror.com/code/robofab/howto/interpolate.html" class="reference" target="docs">obligatory link</a> to the relevant RoboFab documentation.
-</p>
-
-<p>
-Here's the same script, but now it generates a range of interpolated glyphs, each with a better name which tells you which interpolation factor was used:
-</p>
-
-<div class="pythonsource"><pre># robothon06<br># interpolate two glyphs in the same font a bunch of times<br><span class="py_res">from</span> <span class="py_key">robofab</span>.<span class="py_key">world</span> <span class="py_res">import</span> <span class="py_key">CurrentFont</span><br><span class="py_key">f</span> = <span class="py_key">CurrentFont</span>()<br><span class="py_res">for</span> <span class="py_key">i</span> <span class="py_res">in</span> <span class="py_key">range</span>(<span class="py_num">0</span>, <span class="py_num">10</span>):<br>&nbsp; &nbsp; <span class="py_key">factor</span> = <span class="py_key">i</span>*<span class="py_num">.1</span><br>&nbsp; &nbsp; <span class="py_key">name</span> = <span class="py_str">"result_%f"</span>%<span class="py_key">factor</span><br>&nbsp; &nbsp; <span class="py_res">print</span> <span class="py_str">"interpolating"</span>, <span class="py_key">name</span><br>&nbsp; &nbsp; <span class="py_key">f</span>[<span class="py_key">name</span>].<span class="py_key">interpolate</span>(<span class="py_key">factor</span>, <span class="py_key">f</span>[<span class="py_str">"A"</span>], <span class="py_key">f</span>[<span class="py_str">"B"</span>])<br><span class="py_key">f</span>.<span class="py_key">update</span>()</pre></div><div class="pythonsourcetitle"><a href="examples/interpolateSeries.py" target="new">download examples/interpolateSeries.py</a></div>
-
-<div class="pythonoutput"><pre><span class="py_key">interpolating</span> <span class="py_key">result_0</span><span class="py_num">.000000</span><br><span class="py_key">interpolating</span> <span class="py_key">result_0</span><span class="py_num">.100000</span><br><span class="py_key">interpolating</span> <span class="py_key">result_0</span><span class="py_num">.200000</span><br><span class="py_key">interpolating</span> <span class="py_key">result_0</span><span class="py_num">.300000</span><br><span class="py_key">interpolating</span> <span class="py_key">result_0</span><span class="py_num">.400000</span><br><span class="py_key">interpolating</span> <span class="py_key">result_0</span><span class="py_num">.500000</span><br><span class="py_key">interpolating</span> <span class="py_key">result_0</span><span class="py_num">.600000</span><br><span class="py_key">interpolating</span> <span class="py_key">result_0</span><span class="py_num">.700000</span><br><span class="py_key">interpolating</span> <span class="py_key">result_0</span><span class="py_num">.800000</span><br><span class="py_key">interpolating</span> <span class="py_key">result_0</span><span class="py_num">.900000</span></pre></div>
-
-<img src="glyphinterpol.gif" alt="" width="493" height="65" />
-
-<p>
-Here you see a range of resulting glyphs as they could be generated by the script above.
-</p>
-
-<h2>Rounding errors</h2>
-<p>
-When you interpolate in FontLab you need to take into account that the results will be rounded off. Coordinates can only consist of whole numbers, i,e, "101" or "102" but not "101.3290" There is a nice solution for working with floating point precision glyphs using RoboFab. Here's a brief introduction:</p>
-
-<div class="pythonsource"><pre># robothon06<br><br><span class="py_res">from</span> <span class="py_key">robofab</span>.<span class="py_key">world</span> <span class="py_res">import</span> <span class="py_key">CurrentFont</span><br># We need to import a class with a different<br># implementation for the glyph object.<br># It looks a bit odd, but this is how it is done<br><span class="py_res">from</span> <span class="py_key">robofab</span>.<span class="py_key">objects</span>.<span class="py_key">objectsRF</span> <span class="py_res">import</span> <span class="py_key">RGlyph</span> <span class="py_key">as</span> <span class="py_key">_RGlyph</span><br><br><span class="py_key">f</span> = <span class="py_key">CurrentFont</span>()<br><br># pick two compatible glyphs as masters<br><span class="py_key">m1</span> = <span class="py_key">f</span>[<span class="py_str">"A"</span>]<br><span class="py_key">m2</span> = <span class="py_key">f</span>[<span class="py_str">"B"</span>]<br><br># make a new glyph object from this other glyph class<br><span class="py_key">g</span> = <span class="py_key">_RGlyph</span>()<br><br># interpolation factor which is&nbsp; bound to make floats<br><span class="py_key">oddFactor</span> = <span class="py_num">0.2382345</span><br><br># go!<br><span class="py_key">g</span>.<span class="py_key">interpolate</span>(<span class="py_key">oddFactor</span>, <span class="py_key">m1</span>, <span class="py_key">m2</span>)<br><br># let's have a look at the raw results<br><span class="py_res">for</span> <span class="py_key">contour</span> <span class="py_res">in</span> <span class="py_key">g</span>:<br>&nbsp; &nbsp; <span class="py_res">for</span> <span class="py_key">pt</span> <span class="py_res">in</span> <span class="py_key">contour</span>.<span class="py_key">points</span>:<br>&nbsp; &nbsp; &nbsp; &nbsp; <span class="py_res">print</span> <span class="py_str">"float"</span>, <span class="py_key">pt</span>.<span class="py_key">x</span>, <span class="py_key">pt</span>.<span class="py_key">y</span><br>&nbsp; &nbsp; <br># a glyph can round itself off:<br><span class="py_key">g</span>.<span class="py_key">round</span>()<br><br># and then it looks like integers again<br><span class="py_res">for</span> <span class="py_key">contour</span> <span class="py_res">in</span> <span class="py_key">g</span>:<br>&nbsp; &nbsp; <span class="py_res">for</span> <span class="py_key">pt</span> <span class="py_res">in</span> <span class="py_key">contour</span>.<span class="py_key">points</span>:<br>&nbsp; &nbsp; &nbsp; &nbsp; <span class="py_res">print</span> <span class="py_str">"integer"</span>, <span class="py_key">pt</span>.<span class="py_key">x</span>, <span class="py_key">pt</span>.<span class="py_key">y</span><br><span class="py_com"> </span></pre></div><div class="pythonsourcetitle"><a href="examples/floatingPointGlyph.py" target="new">download examples/floatingPointGlyph.py</a></div>
-
-<div class="pythonoutput"><pre><span class="py_key">float</span> <span class="py_key">glyph</span> <span class="py_num">285.07676</span> <span class="py_num">114.59806</span><br><span class="py_key">float</span> <span class="py_key">glyph</span> <span class="py_num">641.51202</span> <span class="py_num">285.66048</span><br><span class="py_key">float</span> <span class="py_key">glyph</span> <span class="py_num">452.009385</span> <span class="py_num">679.5407</span><br><span class="py_key">float</span> <span class="py_key">glyph</span> <span class="py_num">95.96647</span> <span class="py_num">508.47828</span><br><span class="py_key">integer</span> <span class="py_key">glyph</span> <span class="py_num">285</span> <span class="py_num">115</span><br><span class="py_key">integer</span> <span class="py_key">glyph</span> <span class="py_num">642</span> <span class="py_num">286</span><br><span class="py_key">integer</span> <span class="py_key">glyph</span> <span class="py_num">452</span> <span class="py_num">680</span><br><span class="py_key">integer</span> <span class="py_key">glyph</span> <span class="py_num">96</span> <span class="py_num">508</span></pre></div>
-
-<p>
-Use <strong>font.insertGlyph(myOrphanFloatGlyph, as="someName")</strong> if you want to insert the glyph back into a real font. Inserting causes the glyph points to be rounded off again. In a similar way you can make a font object which does not refer to an open FontLab font. In such a font you can store intermediate floating point glyphs of interpolations.
-</p>
-
-
-<h2>Making it work</h2>
-
-<p>
-The following table shows the problems glyphs can have when interpolating. <strong>Compatible</strong> means that the data can interpolate. <strong>Functioning</strong> means that the result actually works as a glyph. You'll see there are several combinations where glyphs are compatible, but the interpolation is not functional.
-</p>
-
-<table>
-<thead>
-<tr>
-<td>masters</td>
-<td>result</td>
-<td>fix</td>
-</tr>
-
-</thead>
-
-
-<tr>
-
-<td>
-<img src="compatibility-scheme_2_01.gif" alt="compatibility" width="226" height="89" />
-</td>
-
-<td>
-Compatible and functioning. Same number of points, same direction, same start point location.
-</td>
-
-<td>-
-</td>
-
-</tr>
-
-
-
-
-
-
-<tr>
-
-<td><img src="compatibility-scheme_2_02.gif" alt="unusual but compatible and functioning" width="226" height="90" />
-</td>
-
-<td>
-Unusual, but compatible and functioning. The number of off-curve points differ, but these are assumed to be on top of the on-curve when missing. Note: this only works for segments with 2 off-curve points.
-</td>
-
-<td>-
-</td>
-
-</tr>
-
-
-
-
-
-<tr>
-
-<td><img src="compatibility-scheme_2_03.gif" alt="compatible, functioning" width="226" height="90" />
-</td>
-
-<td>
-Compatible and functioning. Same number of points, same direction, same start point location, same contour order.
-</td>
-
-<td>-
-</td>
-
-</tr>
-
-
-
-
-<tr>
-
-<td><img src="compatibility-scheme_2_04.gif" alt="incompatible" width="226" height="90" />
-</td>
-
-<td>
-Incompatible and not functioning: different number of points
-</td>
-
-<td>Edit the masters.
-</td>
-
-</tr>
-
-
-
-
-<tr>
-
-<td><img src="compatibility-scheme_2_05.gif" alt="compatible, but not functioning" width="226" height="90" />
-</td>
-
-<td>
-Compatible but not functioning: start point is in the wrong place.</td>
-
-<td>apply <strong> c.autoStartSegment()</strong> on each contour, otherwise edit the masters.
-</td>
-
-</tr>
-
-
-
-
-<tr>
-
-<td><img src="compatibility-scheme_2_06.gif" alt="incompatible and not functioning" width="226" height="90" />
-</td>
-
-<td>
-Incompatible and not functioning: different number of contours
-</td>
-
-<td>
-Edit the masters.
-</td>
-
-</tr>
-
-
-
-
-<tr>
-
-<td><img src="compatibility-scheme_2_07.gif" alt="compatible but not functioning" width="226" height="90" />
-</td>
-
-<td>
-Compatible but not functioning: one of the contours is turning in the wrong direction.
-</td>
-
-<td>apply <strong>glyph.correctDirection()</strong>, otherwise edit the masters.
-</td>
-
-</tr>
-
-
-
-
-<tr>
-
-<td><img src="compatibility-scheme_2_08.gif" alt="compatible but not functioning" width="226" height="91" />
-</td>
-
-<td>
-Compatible but not functioning. Contour order: the paths are in the wrong order.
-</td>
-
-<td>
-apply <strong>glyph.autoContourOrder()</strong>, otherwise edit the masters.
-</td>
-
-</tr>
-
-
-
-
-
-
-
-</table>
-
-
-
-<p>
-Here are some snippets which can help prepare your glyphs. Suppose your test font has two incompatible glyphs "A" and "B".
-</p>
-
-<div class="pythonsource"><pre># see if "A" and "B" can interpolate<br><span class="py_res">from</span> <span class="py_key">robofab</span>.<span class="py_key">world</span> <span class="py_res">import</span> <span class="py_key">CurrentFont</span><br><span class="py_key">f</span> = <span class="py_key">CurrentFont</span>()<br><span class="py_key">a</span> = <span class="py_key">f</span>[<span class="py_str">"a"</span>]<br><span class="py_res">print</span> <span class="py_key">a</span>.<span class="py_key">isCompatible</span>(<span class="py_key">f</span>[<span class="py_str">"b"</span>], <span class="py_key">False</span>)</pre></div>
-
-<div class="pythonoutput"><pre><span class="py_key">False</span></pre></div>
-
-<p>
-So, there's the answer in code, they can't interpolate. Suppose the glyphs were in fact compatible, the answer will read <strong>True</strong>. The <strong>isCompatible()</strong> method takes another parameter,
-</p>
-
-<div class="pythonsource"><pre># see if "A" and "B" can interpolate<br># and find out what's wrong if you can<br><span class="py_res">from</span> <span class="py_key">robofab</span>.<span class="py_key">world</span> <span class="py_res">import</span> <span class="py_key">CurrentFont</span><br><span class="py_key">f</span> = <span class="py_key">CurrentFont</span>()<br><span class="py_key">a</span> = <span class="py_key">f</span>[<span class="py_str">"a"</span>]<br><span class="py_res">print</span> <span class="py_key">a</span>.<span class="py_key">isCompatible</span>(<span class="py_key">f</span>[<span class="py_str">"b"</span>], <span class="py_key">True</span>)</pre></div>
-
-<div class="pythonoutput"><pre>(<span class="py_key">False</span>, [<span class="py_com">"</span><span class="py_key">Fatal</span> <span class="py_key">error</span>: <span class="py_key">contour</span> <span class="py_num">1</span> <span class="py_res">in</span> <span class="py_key">glyph</span> <span class="py_key">A</span> <span class="py_res">and</span> <span class="py_key">glyph</span> <span class="py_key">B</span><br><span class="py_key">don</span><span class="py_com">'</span><span class="py_key">t</span> <span class="py_key">have</span> <span class="py_key">the</span> <span class="py_key">same</span> <span class="py_key">number</span> <span class="py_key">of</span> <span class="py_key">segments</span>.<span class="py_com">"</span>])</pre></div>
-
-<p>Apart from the stunted grammar, this will tell you more or less what's wrong with the two glyphs. Now you have something to fix. Another frequently found error is this:
-</p>
-
-<div class="pythonoutput"><pre>(<span class="py_key">False</span>, [<span class="py_com">"</span><span class="py_key">Fatal</span> <span class="py_key">error</span>: <span class="py_key">glyph</span> <span class="py_key">A</span> <span class="py_res">and</span> <span class="py_key">glyph</span> <span class="py_key">B</span><br><span class="py_key">don</span><span class="py_com">'</span><span class="py_key">t</span> <span class="py_key">have</span> <span class="py_key">the</span> <span class="py_key">same</span> <span class="py_key">number</span> <span class="py_key">of</span> <span class="py_key">contours</span>.<span class="py_com">"</span>])</pre></div>
-
-
-
-<p>
-More subtle errors happen when one of the contours in one of the masters turns in the wrong direction, or the start point of the contour is in a different place. These won't trip incompatibility errors like ones above, you have to verify the results.
-</p>
-
-<p>
-The following example shows methods which can help to make glyph more compatible. These methods use rules to arrange the starting point, the order of the contours and the direction of the contours. It is likely, but not garanteed, that other masters of your interpolation will respond the same way to these rules. For instance, <strong>autoStartSegment()</strong> moves the starting point of a contour to the most, bottom left point on the contour. If all your masters share the same structure, this will make sense. But if the masters are radically different on purpose, these rules won't produce the right results and you have to prepare the glyphs manually.
-
-</p>
-
-<div class="pythonsource"><pre># robothon06<br># prepare glyph for interpolation<br># move startpoints<br># fix directions<br># fix contour order<br><span class="py_res">from</span> <span class="py_key">robofab</span>.<span class="py_key">world</span> <span class="py_res">import</span> <span class="py_key">CurrentFont</span><br><span class="py_key">f</span> = <span class="py_key">CurrentFont</span>()<br><span class="py_key">glyph</span> = <span class="py_key">f</span>[<span class="py_str">"A"</span>]<br> <br><span class="py_key">glyph</span>.<span class="py_key">autoContourOrder</span>()<br><span class="py_key">glyph</span>.<span class="py_key">correctDirection</span>()<br><span class="py_res">for</span> <span class="py_key">c</span> <span class="py_res">in</span> <span class="py_key">glyph</span>.<span class="py_key">contours</span>:<br>&nbsp; &nbsp; <span class="py_key">c</span>.<span class="py_key">autoStartSegment</span>()<br><span class="py_key">glyph</span>.<span class="py_key">update</span>()</pre></div><div class="pythonsourcetitle"><a href="examples/prepareInterpolGlyph.py" target="new">download examples/prepareInterpolGlyph.py</a></div>
-
-<br />
-
-
-<h2>Interpolating fonts</h2>
-
-<p>
-The following script interpolates two fonts and stores the results in a third. It also smoothly introduces a couple of simple user interface thingies: <strong>AskString</strong> and <strong>SelectFont.</strong> Have a look at the <a href="http://letterror.com/code/robofab/tools/dialogs.html" target="new" class="reference">how to page on the simple dialogs stuff</a>. <strong>AskString()</strong> presents a small dialogbox with a prompt and a text input box. It will return the value you typed in, or <strong>None</strong> if you didn't. Which kinda implies you need to check whether the input makes sense before continuing, but that's a different project. <strong>SelectFont()</strong> gives you simple dialog with a list of the currently open fonts. When you select a fontname, the object for that font is returned. If you don't select anything, <strong>None</strong> is returned.
-</p>
-
-
-<div class="pythonsource"><pre># robothon06<br># interpolate two fonts<br> <br><span class="py_res">from</span> <span class="py_key">robofab</span>.<span class="py_key">world</span> <span class="py_res">import</span> <span class="py_key">SelectFont</span>, <span class="py_key">NewFont</span><br><span class="py_res">from</span> <span class="py_key">robofab</span>.<span class="py_key">interface</span>.<span class="py_key">all</span>.<span class="py_key">dialogs</span> <span class="py_res">import</span> <span class="py_key">AskString</span><br> <br><span class="py_key">font1</span> = <span class="py_key">SelectFont</span>(<span class="py_str">"Select font 1"</span>)<br><span class="py_key">font2</span> = <span class="py_key">SelectFont</span>(<span class="py_str">"Select font 2"</span>)<br><span class="py_key">value</span> = <span class="py_key">AskString</span>(<span class="py_str">"What percentage?"</span>)<br><span class="py_key">value</span> = <span class="py_key">int</span>(<span class="py_key">value</span>) * <span class="py_num">.01</span><br> <br><span class="py_key">destination</span> = <span class="py_key">NewFont</span>()<br># this interpolates the glyphs<br><span class="py_key">destination</span>.<span class="py_key">interpolate</span>(<span class="py_key">value</span>, <span class="py_key">font1</span>, <span class="py_key">font2</span>, <span class="py_key">doProgress</span>=<span class="py_key">True</span>)<br># this interpolates the kerning<br># comment this line out of you're just testing<br><span class="py_key">destination</span>.<span class="py_key">kerning</span>.<span class="py_key">interpolate</span>(<span class="py_key">font1</span>.<span class="py_key">kerning</span>, <span class="py_key">font2</span>.<span class="py_key">kerning</span>, <span class="py_key">value</span>)<br><span class="py_key">destination</span>.<span class="py_key">update</span>()<br></pre></div><div class="pythonsourcetitle"><a href="examples/interpolateTwoFonts.py" target="new">download examples/interpolateTwoFonts.py</a></div>
-
-<p>
-This script asks you to select 2 fonts, then it asks you for an interpolation factor. Then is creates a new font (in FontLab a new empty font window will pop up). Then the <strong>font.interpolate()</strong> method of this new font is called with the interpolation factor you entered before, and the two fonts you selected.
-</p>
-
-<h2>Interpolate Kerning</h2>
-<p>
-In the example above the kerning is interpolated seperately, the Kerning object has its own <strong>interpolate()</strong> method. When a kernpair exists in both masters, the resulting pair will be the expected interpolated value. If a pair is missing from one, the interpolation will assume it has value 0. This only works for flat, non-class kerning. Interpolating class based kerning with exceptions requires more attention. Some Robofab developers have this working though.
-</p>
-
-
-<h2>GlyphMath (aside 1)</h2>
-<p>
-If they're compatible, Robofab Glyph objects can be used in Python math expression: you can add, subtract, multiply and divide them like normal numbers or variables. The math is applied to the coordinates of each point in the glyph. The result of a glyphMath operation is a new glyph. You can then insert this glyph in a font, or use it for other math operations.
-</p>
-
-
-<table>
-<thead>
-<tr><td>GlyphMath</td><td>operation</td></tr>
-</thead>
-
-<tr><td><img src="glyphmath_examples_01.gif" alt="addition" width="285" height="77" />
-</td><td><strong>addition:</strong> the coordinates of each point are added</td>
-</tr>
-
-<tr><td><img src="glyphmath_examples_02.gif" alt="subtraction" width="285" height="78" />
-</td><td><strong>subtraction:</strong> the  coordinates of each point are subtracted. Note that though the glyph looks unrecognisable, all points are still there. Literally the difference between the two glyphs.</td>
-</tr>
-
-<tr><td><img src="glyphmath_examples_03.gif" alt="multiplication" width="285" height="78" />
-</td><td><strong>multiplication:</strong> scaling the glyph up. When you multiply with a tuple like (1.3, 1.05) the first value is used to multiply the x coordinates, the second value is used for the y coordinates.</td>
-</tr>
-
-<tr><td><img src="glyphmath_examples_04.gif" alt="division" width="285" height="78" />
-</td><td><strong>division:</strong> scaling the glyph down. When you divide with a tuple like (30, 29) the first value is used to divide the x coordinates, the second value is used for the y coordinates.</td>
-</tr>
-
-<tr><td><img src="glyphmath_examples_05.gif" alt="alltogether" width="285" height="193" />
-</td><td>Combination of operations to make a real interpolation.</td>
-</tr>
-
-
-</table>
-
-
-<div class="pythonsource"><pre># glyphmath example, using glyphs in math<br># in the test font: two interpolatable, different glyphs<br># on positions A and B.<br> <br><span class="py_res">from</span> <span class="py_key">robofab</span>.<span class="py_key">world</span> <span class="py_res">import</span> <span class="py_key">CurrentFont</span><br><span class="py_key">f</span> = <span class="py_key">CurrentFont</span>()<br> <br># glyphmath<br><span class="py_key">a</span> = <span class="py_key">f</span>[<span class="py_str">"A"</span>]<br><span class="py_key">b</span> = <span class="py_key">f</span>[<span class="py_str">"B"</span>]<br> <br># multiply works as scaling up<br><span class="py_key">d</span> = <span class="py_key">a</span> * <span class="py_num">2</span><br>#or<br><span class="py_key">d</span> = <span class="py_num">2</span> * <span class="py_key">a</span><br><span class="py_key">f</span>.<span class="py_key">insertGlyph</span>(<span class="py_key">d</span>, <span class="py_key">as</span>=<span class="py_str">"A.A_times_2"</span>)<br> <br># division works as scaling down<br><span class="py_key">d</span> = <span class="py_key">a</span> / <span class="py_num">2</span><br><span class="py_key">f</span>.<span class="py_key">insertGlyph</span>(<span class="py_key">d</span>, <span class="py_key">as</span>=<span class="py_str">"A.A_divide_2"</span>)<br> <br># addition: add coordinates of each point<br><span class="py_key">d</span> = <span class="py_key">a</span> + <span class="py_key">b</span><br><span class="py_key">f</span>.<span class="py_key">insertGlyph</span>(<span class="py_key">d</span>, <span class="py_key">as</span>=<span class="py_str">"A.A_plus_B"</span>)<br> <br># subtraction: subtract coordinates of each point<br><span class="py_key">d</span> = <span class="py_key">a</span> - <span class="py_key">b</span><br><span class="py_key">f</span>.<span class="py_key">insertGlyph</span>(<span class="py_key">d</span>, <span class="py_key">as</span>=<span class="py_str">"A.A_minus_B"</span>)<br> <br># combination: interpolation!<br><span class="py_key">d</span> = <span class="py_key">a</span> + <span class="py_num">.5</span> * (<span class="py_key">b</span>-<span class="py_key">a</span>)<br><span class="py_key">f</span>.<span class="py_key">insertGlyph</span>(<span class="py_key">d</span>, <span class="py_key">as</span>=<span class="py_str">"A.A_interpolate_B"</span>)<br> <br><span class="py_key">f</span>.<span class="py_key">update</span>()</pre></div><div class="pythonsourcetitle"><a href="examples/glyphMathOperations.py" target="new">download examples/glyphMathOperations.py</a></div>
-
-
-
-<p>
-You can use GlyphMath to create interpolation effects, transplant transformations from one glyph to another and superimpose several effects at once.
-</p>
-
-
-<h2>Superpolation (aside 2)</h2>
-<p>
-Shameless commercial: <a href="../http:?//http://letterror.com/code/superpolator/index.html" class="reference" target="docs">Superpolator</a> is a tool for building complex interpolation systems. It's based on Robofab and doesn't really have a place in this presentation. It doesn't make complex interpolations easier, it makes them possible. But ask Erik afterwards.
-
-</p>
-
-
-
-<h2>Advanced Interpolation</h2>
-
-<p>
-Here are two more advanced examples of interpolation. The first script asks for two master fonts. Then it will generate a list of weights with predefined names and factors. After interpolating, it will close the result font and continue with the next weigt.
-</p>
-
-<div class="pythonsource"><pre># robothon06<br># interpolate two fonts with a series of factors.<br># for each factor create a new font file.<br><br><span class="py_res">from</span> <span class="py_key">robofab</span>.<span class="py_key">world</span> <span class="py_res">import</span> <span class="py_key">SelectFont</span>, <span class="py_key">NewFont</span><br><span class="py_res">from</span> <span class="py_key">robofab</span>.<span class="py_key">interface</span>.<span class="py_key">all</span>.<span class="py_key">dialogs</span> <span class="py_res">import</span> <span class="py_key">AskString</span>, <span class="py_key">GetFolder</span><br><span class="py_res">import</span> <span class="py_key">os</span><br><br><span class="py_key">font1</span> = <span class="py_key">SelectFont</span>(<span class="py_str">"Select font 1"</span>)<br><span class="py_key">font2</span> = <span class="py_key">SelectFont</span>(<span class="py_str">"Select font 2"</span>)<br><br><span class="py_key">where</span> = <span class="py_key">GetFolder</span>(<span class="py_str">"Select a folder to save the interpolations"</span>)<br><br><span class="py_key">instances</span> = [ (<span class="py_str">"Light"</span>, <span class="py_num">0</span>),<br>&nbsp; &nbsp; &nbsp; &nbsp; (<span class="py_str">"NotTooLight"</span>, <span class="py_num">.25</span>),<br>&nbsp; &nbsp; &nbsp; &nbsp; (<span class="py_str">"Regular"</span>, <span class="py_num">.5</span>),<br>&nbsp; &nbsp; &nbsp; &nbsp; (<span class="py_str">"Demi"</span>, <span class="py_num">.75</span>),<br>&nbsp; &nbsp; &nbsp; &nbsp; (<span class="py_str">"Medium"</span>, <span class="py_num">1</span>),<br>]<br><br><span class="py_res">for</span> <span class="py_key">thing</span> <span class="py_res">in</span> <span class="py_key">instances</span>:<br>&nbsp; &nbsp; <span class="py_key">name</span>, <span class="py_key">value</span> = <span class="py_key">thing</span><br>&nbsp; &nbsp; <span class="py_res">print</span> <span class="py_str">"generating"</span>, <span class="py_key">name</span>, <span class="py_key">value</span><br>&nbsp; &nbsp; <span class="py_key">dst</span> = <span class="py_key">NewFont</span>()<br>&nbsp; &nbsp; <br>&nbsp; &nbsp; # this interpolates the glyphs<br>&nbsp; &nbsp; <span class="py_key">dst</span>.<span class="py_key">interpolate</span>(<span class="py_key">value</span>, <span class="py_key">font1</span>, <span class="py_key">font2</span>, <span class="py_key">doProgress</span>=<span class="py_key">True</span>)<br><br>&nbsp; &nbsp; # this interpolates the kerning<br>&nbsp; &nbsp; # comment this line out of you're just testing<br>&nbsp; &nbsp; #dst.kerning.interpolate(font1.kerning, font2.kerning, value)<br><br>&nbsp; &nbsp; <span class="py_key">dst</span>.<span class="py_key">info</span>.<span class="py_key">familyName</span> = <span class="py_str">"MyBigFamily"</span><br>&nbsp; &nbsp; <span class="py_key">dst</span>.<span class="py_key">info</span>.<span class="py_key">styleName</span> = <span class="py_key">name</span><br>&nbsp; &nbsp; <span class="py_key">dst</span>.<span class="py_key">info</span>.<span class="py_key">autoNaming</span>()<br>&nbsp; &nbsp; <span class="py_key">dst</span>.<span class="py_key">update</span>()<br>&nbsp; &nbsp; <span class="py_key">fileName</span> = <span class="py_key">dst</span>.<span class="py_key">info</span>.<span class="py_key">familyName</span> + <span class="py_str">"-"</span> + <span class="py_key">dst</span>.<span class="py_key">info</span>.<span class="py_key">styleName</span> + <span class="py_str">".vfb"</span><br>&nbsp; &nbsp; <span class="py_key">path</span> = <span class="py_key">os</span>.<span class="py_key">path</span>.<span class="py_key">join</span>(<span class="py_key">where</span>, <span class="py_key">fileName</span>)<br>&nbsp; &nbsp; <span class="py_res">print</span> <span class="py_str">'saving at'</span>, <span class="py_key">path</span><br>&nbsp; &nbsp; <br>&nbsp; &nbsp; <span class="py_key">dst</span>.<span class="py_key">save</span>(<span class="py_key">path</span>)<br>&nbsp; &nbsp; <span class="py_key">dst</span>.<span class="py_key">close</span>()<br></pre></div><div class="pythonsourcetitle"><a href="examples/interpolateFontSeries.py" target="new">download examples/interpolateFontSeries.py</a></div>
-
-<p>
-The next script is a bit tricky, but it can be useful tool in typedesign. Suppose you have a two interpolating masters of different weights. The script interpolates <strong>in horizontal direction</strong> with the heavy weight to increase the stem thickness of the glyph. Then it proceeds to horizontally scale the glyph in such a way that the increase of weight from the interpolation is reduced again. The effect of both operations is a condensed version of the original glyph, but with a comparable stem thickness as the original. If you measure the stems of both masters and enter the values in the script, it can calculate an exact match. Note that the success of this script depends on the quality of the interpolation, and how far you're pushing the limit. From a design point of view you might not even want the condensed to have the same stem thickness. This script won't produce ready-made condensed versions of your typeface, but it can be used to create a starting point for further editing.
-</p>
-
-<div class="pythonsource"><pre># robothon06<br># Get started with a condensed if you have a regular and a bold:<br>#&nbsp; &nbsp; seperate x, y interpolation to make stems fatter<br>#&nbsp; &nbsp; then scaling to reduce width<br>#&nbsp; &nbsp; stems will get their original thickness<br><br><span class="py_res">from</span> <span class="py_key">robofab</span>.<span class="py_key">world</span> <span class="py_res">import</span> <span class="py_key">CurrentFont</span><br><span class="py_key">f</span> = <span class="py_key">CurrentFont</span>()<br><br># these are measurements you have to take<br># from your font. The width of a stem.<br><span class="py_key">lightStem</span> = <span class="py_num">106</span><br><span class="py_key">fatStem</span> = <span class="py_num">200</span><br><br><span class="py_res">for</span> <span class="py_key">i</span> <span class="py_res">in</span> <span class="py_key">range</span>(<span class="py_num">0</span>, <span class="py_num">10</span>):<br>&nbsp; &nbsp; <span class="py_key">factor</span> = (<span class="py_key">i</span>*<span class="py_num">.1</span>, <span class="py_num">0</span>)<br>&nbsp; &nbsp; <span class="py_res">print</span> <span class="py_key">factor</span><br>&nbsp; &nbsp; <span class="py_key">name</span> = <span class="py_str">"result_%f"</span>%<span class="py_key">factor</span>[<span class="py_num">0</span>]<br>&nbsp; &nbsp; <span class="py_key">scale</span> = <span class="py_key">float</span>(<span class="py_num">41</span>)/(<span class="py_num">41</span> + <span class="py_key">factor</span>[<span class="py_num">0</span>]*(<span class="py_num">116</span>-<span class="py_num">41</span>))<br>&nbsp; &nbsp; <span class="py_res">print</span> <span class="py_key">scale</span><br>&nbsp; &nbsp; <span class="py_key">f</span>[<span class="py_key">name</span>].<span class="py_key">interpolate</span>(<span class="py_key">factor</span>, <span class="py_key">f</span>[<span class="py_str">"A"</span>], <span class="py_key">f</span>[<span class="py_str">"B"</span>])<br>&nbsp; &nbsp; <span class="py_key">f</span>[<span class="py_key">name</span>].<span class="py_key">scale</span>((<span class="py_key">scale</span>, <span class="py_num">1</span>))<br>&nbsp; &nbsp; <span class="py_key">f</span>[<span class="py_key">name</span>].<span class="py_key">leftMargin</span> = <span class="py_key">f</span>[<span class="py_str">"A"</span>].<span class="py_key">leftMargin</span><br>&nbsp; &nbsp; <span class="py_key">f</span>[<span class="py_key">name</span>].<span class="py_key">rightMargin</span> = <span class="py_key">f</span>[<span class="py_str">"A"</span>].<span class="py_key">rightMargin</span><br>&nbsp; &nbsp; &nbsp; &nbsp; <br><span class="py_key">f</span>.<span class="py_key">update</span>()<span class="py_com"> </span></pre></div><div class="pythonsourcetitle"><a href="examples/glyphCondensor.py" target="new">download examples/glyphCondensor.py</a></div>
-
-<img src="condensor.jpg" alt="condensor examples" width="552" height="90" />
-
-<p>
-
-
-</p>
-
-
-
-
-
-	</div>
-	
-
-
-
-
-
-
-</body></html>
