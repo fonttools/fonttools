@@ -32,6 +32,8 @@ for c in todo:
 	g = f[c]
 	result = True
 	file = GetFolder("Select a UFO to save the GLIF in:")
+	if file is None:
+		continue
 	if file.find(".ufo") == -1:
 		Message("You need to select an UFO. Quitting.")
 	else:

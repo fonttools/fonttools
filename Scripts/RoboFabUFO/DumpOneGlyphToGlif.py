@@ -26,11 +26,12 @@ for c in todo:
 	data = writeGlyphToString(g.name, g, g.drawPoints)
 	filename = glyphNameToShortFileName(g.name, None)
 	file = PutFile("Save this glif as:")
-	path = os.path.join(os.path.dirname(file), filename)
-	print "saving to", path
-	f = open(path, "w")
-	f.write(data)
-	f.close()
+	if file is not None:
+		path = os.path.join(os.path.dirname(file), filename)
+		print "saving to", path
+		f = open(path, "w")
+		f.write(data)
+		f.close()
 		
 
 print 'done'
