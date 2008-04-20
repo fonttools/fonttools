@@ -1,5 +1,12 @@
 #FLM: Import all UFOs in a folder
 
+"""
+	
+	Import all UFOs in a folder
+	
+	Note this is a relatively dumb import script.
+	
+"""
 from robofab.world import NewFont
 from robofab.interface.mac.getFileOrFolder import GetFileOrFolder
 

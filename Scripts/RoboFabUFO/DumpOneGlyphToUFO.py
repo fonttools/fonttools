@@ -1,8 +1,10 @@
 #FLM: Export Selected Glyph to UFO
 
 
-"""Dump the selected glyph to a .glif as part of a UFO.
-It saves the .glif through a GlyphSet and updates the contents.plist.
+"""
+	Dump the selected glyph to a .glif as part of a UFO.
+	It saves the .glif through a GlyphSet and updates the contents.plist.
+
 """
 
 

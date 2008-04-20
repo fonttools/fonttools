@@ -1,9 +1,11 @@
 #FLM: Glyph to Glif, not in UFO
 
-"""Dump the selected glyph to a Glif as a seperate, individual file.
+"""
+Dump the selected glyph to a Glif as a seperate, individual file.
 This is not saved through a GlyphSet and any contents.plist in the
 same directory will not be updated. If that's what you need use
 DumpOneGlyphToUFO.py
+
 """
 
 
