@@ -232,7 +232,6 @@ class PostScriptGlyphHintValues(BasePostScriptGlyphHintValues):
 
 	def copy(self):
 		from robofab.objects.objectsRF import PostScriptGlyphHintValues as _PostScriptGlyphHintValues
-		print "FL copy", self.asDict()
 		return _PostScriptGlyphHintValues(data=self.asDict())
 
 	def _hintObjectsToList(self, item):
