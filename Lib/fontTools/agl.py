@@ -1,31 +1,63 @@
 # The table below is taken from
-# http://partners.adobe.com/asn/tech/type/aglfn13.txt
+# http://www.adobe.com/devnet/opentype/archives/aglfn.txt
 
 _aglText = """\
-#
+# ###################################################################################
+# Copyright (c) 2003,2005,2006,2007 Adobe Systems Incorporated
+# 
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this documentation file to use, copy, publish, distribute,
+# sublicense, and/or sell copies of the documentation, and to permit
+# others to do the same, provided that:
+# - No modification, editing or other alteration of this document is
+# allowed; and
+# - The above copyright notice and this permission notice shall be
+# included in all copies of the documentation.
+# 
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this documentation file, to create their own derivative works
+# from the content of this document to use, copy, publish, distribute,
+# sublicense, and/or sell the derivative works, and to permit others to do
+# the same, provided that the derived work is not represented as being a
+# copy or version of this document.
+# 
+# Adobe shall not be liable to any party for any loss of revenue or profit
+# or for indirect, incidental, special, consequential, or other similar
+# damages, whether based on tort (including without limitation negligence
+# or strict liability), contract or other legal or equitable grounds even
+# if Adobe has been advised or had reason to know of the possibility of
+# such damages. The Adobe materials are provided on an "AS IS" basis.
+# Adobe specifically disclaims all express, statutory, or implied
+# warranties relating to the Adobe materials, including but not limited to
+# those concerning merchantability or fitness for a particular purpose or
+# non-infringement of any third party rights regarding the Adobe
+# materials.
+# ###################################################################################
 # Name:          Adobe Glyph List For New Fonts
-# Table version: 1.1
-# Date:          17 April 2003
+# Table version: 1.6
+# Date:          30 Januaury 2006
 #
 # Description:
 #
 #   The Adobe Glyph List For New Fonts (AGLFN) is meant to provide a list of 
-#	base glyph names which are compatible with the AGL specification at
+#   base glyph names which are compatible with the AGL specification at
 #   http://partners.adobe.com/asn/developer/type/unicodegn.html.
-#	and which can be used as described in section 6 of that document.
+#   and which can be used as described in section 6 of that document.
 #
-#   This list comprises the set of glyph names from the AGLv1.2 which
-#	map to via the AGL rules to the semanticly correct Unicode value.
-#	For example, Asmall is omitted as the AGL maps this to the Unicode 
-#	Private Use Area value F761, rather than to the Unicode value for
-#	the character "A". "ffi" is also omitted, as the AGL maps this to the 
-#	Unicode Private Use Area value FB03, rather than decomposing it to the
-#	three-value Unicode sequence 0066,0066,0069. "arrowvertex" is omitted
-#	becuase this now has a real Unicode character value, and the AGL is 
-#	now incorrect in mapping this to the  Private Use Area value  F8E6.
+#   This list comprises the set of glyph names from the AGLv2,0 which map
+#   to via the AGL rules to the semanticly correct Unicode value. For
+#   example, Asmall is omitted as the AGL maps this to the Unicode
+#   Private Use Area value F761, rather than to the Unicode value for the
+#   character "A". "ffi" is also omitted, as the AGL maps this to the
+#   Alphabetic Presentation Forms Area value FB03, rather than
+#   decomposing it to the three-value Unicode sequence 0066,0066,0069.
+#    See section 7.1 of the Unicode Standard 4.0 on this issue.
+#   "arrowvertex" is omitted becuase this now has a real Unicode
+#   character value, and the AGL is now incorrect in mapping this to the 
+#   Private Use Area value  F8E6.
 #
-#	If you do not find an appropriate name for your glyph in this list,
-#	then please refer to section 6 of the document:
+#  If you do not find an appropriate name for your glyph in this list,
+#  then please refer to section 6 of the document:
 #   http://partners.adobe.com/asn/developer/typeforum/unicodegn.html.
 #
 #	The Unicode values and names are given for convenience.
@@ -43,6 +75,22 @@ _aglText = """\
 #   with the same glyph name are sorted in decreasing priority order.
 #
 #   Lines starting with "#" are comments; blank lines should be ignored.
+#
+#   1.6  [30 January 2006]
+#	- Completed work intended in 1.5
+#
+#   1.5  [23 November 2005]
+#      - removed duplicated block at end of file
+#      - changed mappings:
+#            2206;Delta;INCREMENT changed to 0394;Delta;GREEK CAPITAL LETTER DELTA
+#            2126;Omega;OHM SIGN changed to 03A9;Omega;GREEK CAPITAL LETTER OMEGA
+#            03BC;mu;MICRO SIGN changed to 03BC;mu;GREEK SMALL LETTER MU
+#      - corrected statement above about why ffi is omitted.
+
+#   1.4  [24 September 2003]  Changed version to 1.4, to avoid confusion 
+#		with the AGL 1.3
+#			fixed spelling errors in the header
+#			fully removed arrowvertex, as it is mapped only to a PUA Unicode value in some fonts.
 #
 #   1.1  [17 April 2003]  Renamed [Tt]cedilla back to [Tt]commaaccent:
 #
@@ -78,7 +126,7 @@ _aglText = """\
 0044;D;LATIN CAPITAL LETTER D
 010E;Dcaron;LATIN CAPITAL LETTER D WITH CARON
 0110;Dcroat;LATIN CAPITAL LETTER D WITH STROKE
-2206;Delta;INCREMENT
+0394;Delta;GREEK CAPITAL LETTER DELTA
 0045;E;LATIN CAPITAL LETTER E
 00C9;Eacute;LATIN CAPITAL LETTER E WITH ACUTE
 0114;Ebreve;LATIN CAPITAL LETTER E WITH BREVE
@@ -156,7 +204,7 @@ _aglText = """\
 01A0;Ohorn;LATIN CAPITAL LETTER O WITH HORN
 0150;Ohungarumlaut;LATIN CAPITAL LETTER O WITH DOUBLE ACUTE
 014C;Omacron;LATIN CAPITAL LETTER O WITH MACRON
-2126;Omega;OHM SIGN
+03A9;Omega;GREEK CAPITAL LETTER OMEGA
 038F;Omegatonos;GREEK CAPITAL LETTER OMEGA WITH TONOS
 039F;Omicron;GREEK CAPITAL LETTER OMICRON
 038C;Omicrontonos;GREEK CAPITAL LETTER OMICRON WITH TONOS
@@ -532,7 +580,6 @@ _aglText = """\
 2191;arrowup;UPWARDS ARROW
 2195;arrowupdn;UP DOWN ARROW
 21A8;arrowupdnbse;UP DOWN ARROW WITH BASE
-# XXXX ;arrowvertex;VERTICAL ARROW EXTENDER
 005E;asciicircum;CIRCUMFLEX ACCENT
 007E;asciitilde;TILDE
 002A;asterisk;ASTERISK
@@ -707,7 +754,7 @@ _aglText = """\
 2642;male;MALE SIGN
 2212;minus;MINUS SIGN
 2032;minute;PRIME
-00B5;mu;MICRO SIGN
+03BC;mu;GREEK SMALL LETTER MU
 00D7;multiply;MULTIPLICATION SIGN
 266A;musicalnote;EIGHTH NOTE
 266B;musicalnotedbl;BEAMED EIGHTH NOTES
@@ -887,26 +934,6 @@ _aglText = """\
 017C;zdotaccent;LATIN SMALL LETTER Z WITH DOT ABOVE
 0030;zero;DIGIT ZERO
 03B6;zeta;GREEK SMALL LETTER ZETA
-0077;w;LATIN SMALL LETTER W
-1E83;wacute;LATIN SMALL LETTER W WITH ACUTE
-0175;wcircumflex;LATIN SMALL LETTER W WITH CIRCUMFLEX
-1E85;wdieresis;LATIN SMALL LETTER W WITH DIAERESIS
-2118;weierstrass;SCRIPT CAPITAL P
-1E81;wgrave;LATIN SMALL LETTER W WITH GRAVE
-0078;x;LATIN SMALL LETTER X
-03BE;xi;GREEK SMALL LETTER XI
-0079;y;LATIN SMALL LETTER Y
-00FD;yacute;LATIN SMALL LETTER Y WITH ACUTE
-0177;ycircumflex;LATIN SMALL LETTER Y WITH CIRCUMFLEX
-00FF;ydieresis;LATIN SMALL LETTER Y WITH DIAERESIS
-00A5;yen;YEN SIGN
-1EF3;ygrave;LATIN SMALL LETTER Y WITH GRAVE
-007A;z;LATIN SMALL LETTER Z
-017A;zacute;LATIN SMALL LETTER Z WITH ACUTE
-017E;zcaron;LATIN SMALL LETTER Z WITH CARON
-017C;zdotaccent;LATIN SMALL LETTER Z WITH DOT ABOVE
-0030;zero;DIGIT ZERO
-03B6;zeta;GREEK SMALL LETTER ZETA
 """
 
 
@@ -923,9 +950,7 @@ def _builddicts():
 	parseAGL_RE = re.compile("([0-9A-F]{4});([A-Za-z_0-9.]+);.*?$")
 	
 	for line in lines:
-		if not line:
-			break
-		if line[:1] == '#':
+		if not line or line[:1] == '#':
 			continue
 		m = parseAGL_RE.match(line)
 		if not m:
