@@ -99,5 +99,6 @@ setup(
 		],
 		scripts = ["Tools/ttx"],
 		cmdclass = {"build_ext": build_ext_optional},
+		data_files = [('man/man1', ["Doc/ttx.1"])],
 		**classifiers
 	)
