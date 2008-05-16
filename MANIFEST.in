@@ -1,0 +1,17 @@
+include LICENSE.txt
+include MANIFEST.in
+include Doc/ttx.1
+include Doc/*.txt
+include Doc/*.html
+include MetaTools/*.py
+include MetaTools/*.diff
+include Mac/TTX.py
+include Mac/README.txt
+include Mac/TTX.rsrc.hqx
+include Windows/mcmillan.bat
+include Windows/ttx.ico
+include Windows/README.TXT
+include Windows/fonttools-win-setup.iss
+include Windows/fonttools-win-setup.txt
+include Lib/fontTools/ttLib/tables/table_API_readme.txt
+include Src/eexecOp/README.txt
