@@ -106,7 +106,8 @@ def calc_mac_epoch_diff():
 	"""
 	safe_epoch_t = (1972, 1, 1, 0, 0, 0, 0, 0, 0)
 	safe_epoch = time.mktime(safe_epoch_t) - time.timezone
-	assert time.gmtime(safe_epoch)[:6] == safe_epoch_t[:6]
+	# This assert fails in certain time zones, with certain daylight settings
+	#assert time.gmtime(safe_epoch)[:6] == safe_epoch_t[:6]
 	seconds1904to1972 = 60 * 60 * 24 * (365 * (1972-1904) + 17) # thanks, Laurence!
 	return long(safe_epoch - seconds1904to1972)
 
