@@ -104,22 +104,9 @@ def calc_mac_epoch_diff():
 	"""calculate the difference between the original Mac epoch (1904)
 	to the epoch on this machine.
 	"""
-	# Since the below code tracebacks in some timezones,
-	# just return the constant that the code returns
-	return -2082844800
-	# Also, the commented lines consitute a hacky fix
-	# import os
-	# try:
-	# 	tz = os.environ['TZ']
-	# except:
-	# 	tz = time.tzname[0]
-	# os.environ['TZ'] = 'UTC'
-	# time.tzset()
 	safe_epoch_t = (1972, 1, 1, 0, 0, 0, 0, 0, 0)
 	safe_epoch = time.mktime(safe_epoch_t) - time.timezone
 	assert time.gmtime(safe_epoch)[:6] == safe_epoch_t[:6]
-	# os.environ['TZ'] = tz
-	# time.tzset()
 	seconds1904to1972 = 60 * 60 * 24 * (365 * (1972-1904) + 17) # thanks, Laurence!
 	return long(safe_epoch - seconds1904to1972)
 
