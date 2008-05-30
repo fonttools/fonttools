@@ -49,7 +49,7 @@ class MarginPen(BasePen):
 		if pt[1] == self.height:
 			# it could happen
 			if not self.contourIndex in self.hits:
-				self.hits[self.contourIndex] =  []
+				self.hits[self.contourIndex] =	[]
 			self.hits[self.contourIndex].append(pt[0])
 		self.currentPt = pt
 
@@ -101,7 +101,16 @@ class MarginPen(BasePen):
 			unique.sort()
 			allHits[index] = unique
 		return allHits
-	
+		
+	def getAll(self):
+		"""Get all the slices."""
+		allHits = []
+		for index, pts in self.hits.items():
+			allHits.extend(pts)
+		unique = list(Set(allHits))
+		unique = list(unique)
+		unique.sort()
+		return unique
 		
 		
 if __name__ == "__main__":
@@ -112,6 +121,6 @@ if __name__ == "__main__":
 
 	pt = (74, 216)
 	pen = MarginPen(f, pt[1])
-	g.draw(pen)	
+	g.draw(pen) 
 	print 'glyph margins', pen.getMargins()
 	print pen.getContourMargins()
