@@ -36,7 +36,6 @@ class MarginPen(BasePen):
 			if pt == self.currentPt:
 				return
 		hits = splitLine(self.currentPt, pt, self.height, True)
-		#print "hits lineto", hits
 		if len(hits)>1:
 			# result will be 2 tuples of 2 coordinates
 			# first two points: start to intersect
@@ -56,7 +55,6 @@ class MarginPen(BasePen):
 
 	def _curveToOne(self, pt1, pt2, pt3):
 		hits = splitCubic(self.currentPt, pt1, pt2, pt3, self.height, True)
-		#print "hits curveto", hits
 		if len(hits)==2:
 			if not self.contourIndex in self.hits:
 				self.hits[self.contourIndex] = []
@@ -87,7 +85,6 @@ class MarginPen(BasePen):
 		
 	def getContourMargins(self):
 		"""Get the horizontal margins for each contour."""
-		print 'self.hits', self.hits
 		allHits = {}
 		for index, pts in self.hits.items():
 			unique = list(Set(pts))
