@@ -18,14 +18,15 @@ class MarginPen(BasePen):
 
 	def __init__(self, glyphSet, height):
 		BasePen.__init__(self, glyphSet)
-		
 		self.height = height
 		self.hits = {}
 		self.filterDoubles = True
 		self.contourIndex = None
+		self.startPt = None
 		
 	def _moveTo(self, pt):
 		self.currentPt = pt
+		self.startPt = pt
 		if self.contourIndex is None:
 			self.contourIndex = 0
 		else:
@@ -49,17 +50,18 @@ class MarginPen(BasePen):
 			# it could happen
 			if not self.contourIndex in self.hits:
 				self.hits[self.contourIndex] =  []
-				
 			self.hits[self.contourIndex].append(pt[0])
 		self.currentPt = pt
 
 	def _curveToOne(self, pt1, pt2, pt3):
 		hits = splitCubic(self.currentPt, pt1, pt2, pt3, self.height, True)
-		if len(hits)==2:
+		for i in range(len(hits)-1):
+			# a number of intersections is possible. Just take the 
+			# last point of each segment.
 			if not self.contourIndex in self.hits:
 				self.hits[self.contourIndex] = []
-			self.hits[self.contourIndex].append(round(hits[0][-1][0], 4))
-		elif pt3[1] == self.height:
+			self.hits[self.contourIndex].append(round(hits[i][-1][0], 4))
+		if pt3[1] == self.height:
 			# it could happen
 			if not self.contourIndex in self.hits:
 				self.hits[self.contourIndex] = []
@@ -67,20 +69,28 @@ class MarginPen(BasePen):
 		self.currentPt = pt3
 		
 	def _closePath(self):
-		self.currentPt = None
+		if self.currentPt != self.startPt:
+			self._lineTo(self.startPt)
+		self.currentPt = self.startPt = None
 	
 	def _endPath(self):
 		self.currentPt = None
+
+	def addComponent(self, baseGlyph, transformation):
+		if self.glyphSet is None:
+			return
+		if baseGlyph in self.glyphSet:
+			glyph = self.glyphSet[baseGlyph]
+		if glyph is not None:
+			glyph.draw(self)
 		
 	def getMargins(self):
 		"""Get the horizontal margins for all contours combined, i.e. the whole glyph."""
 		allHits = []
 		for index, pts in self.hits.items():
 			allHits.extend(pts)
-		unique = list(Set(allHits))
-		unique.sort()
-		if unique:
-			return min(unique), max(unique)
+		if allHits:
+			return min(allHits), max(allHits)
 		return None
 		
 	def getContourMargins(self):
@@ -92,13 +102,6 @@ class MarginPen(BasePen):
 			allHits[index] = unique
 		return allHits
 	
-	def addComponent(self, baseGlyph, transformation):
-		if self.glyphSet is None:
-			return
-		if baseGlyph in self.glyphSet:
-			glyph = self.glyphSet[baseGlyph]
-		if glyph is not None:
-			glyph.draw(self)
 		
 		
 if __name__ == "__main__":
@@ -107,9 +110,8 @@ if __name__ == "__main__":
 	f = CurrentFont()
 	g = CurrentGlyph()
 
-	pt = (100, 249)
+	pt = (74, 216)
 	pen = MarginPen(f, pt[1])
 	g.draw(pen)	
 	print 'glyph margins', pen.getMargins()
-
 	print pen.getContourMargins()
