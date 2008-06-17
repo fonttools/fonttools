@@ -107,9 +107,12 @@ class SFNTWriter:
 			self.nextTableOffset = self.nextTableOffset + ((len(data) + 3) & ~3)
 		self.file.seek(entry.offset)
 		self.file.write(data)
-		self.file.seek(self.nextTableOffset)
-		# make sure we're actually where we want to be. (XXX old cStringIO bug)
+		# Add NUL bytes to pad the table data to a 4-byte boundary.
+		# Don't depend on f.seek() as we need to add the padding even if no
+		# subsequent write follows (seek is lazy), ie. after the final table
+		# in the font.
 		self.file.write('\0' * (self.nextTableOffset - self.file.tell()))
+		assert self.nextTableOffset == self.file.tell()
 		
 		if tag == 'head':
 			entry.checkSum = calcChecksum(data[:8] + '\0\0\0\0' + data[12:])
