@@ -169,46 +169,46 @@ class PostScriptFontHintValues(BasePostScriptFontHintValues):
 			return self._asPairs(self._object.blue_values[self._masterIndex])
 	def _setBlueValues(self, values):
 		values = self._flattenPairs(values)
-		self._object.blue_values_num = min(self._attributeNames['blueValues']['max']*2, len(values))
-		for i in range(self._object.blue_values_num):
+		self._object.blue_values_num = min(self._attributeNames['blueValues']['max']*2, len(values))-1
+		for i in range(self._object.blue_values_num+1):
 			self._object.blue_values[self._masterIndex][i] = values[i]
 
 	def _getOtherBlues(self):
 			return self._asPairs(self._object.other_blues[self._masterIndex])
 	def _setOtherBlues(self, values):
 		values = self._flattenPairs(values)
-		self._object.other_blues_num = min(self._attributeNames['otherBlues']['max']*2, len(values))
-		for i in range(self._object.other_blues_num):
+		self._object.other_blues_num = min(self._attributeNames['otherBlues']['max']*2, len(values))-1
+		for i in range(self._object.other_blues_num+1):
 			self._object.other_blues[self._masterIndex][i] = values[i]
 
 	def _getFamilyBlues(self):
 			return self._asPairs(self._object.family_blues[self._masterIndex])
 	def _setFamilyBlues(self, values):
 		values = self._flattenPairs(values)
-		self._object.family_blues_num = min(self._attributeNames['familyBlues']['max']*2, len(values))
-		for i in range(self._object.family_blues_num):
+		self._object.family_blues_num = min(self._attributeNames['familyBlues']['max']*2, len(values))-1
+		for i in range(self._object.family_blues_num+1):
 			self._object.family_blues[self._masterIndex][i] = values[i]
 
 	def _getFamilyOtherBlues(self):
 			return self._asPairs(self._object.family_other_blues[self._masterIndex])
 	def _setFamilyOtherBlues(self, values):
 		values = self._flattenPairs(values)
-		self._object.family_other_blues_num = min(self._attributeNames['familyOtherBlues']['max']*2, len(values))
-		for i in range(self._object.family_other_blues_num):
+		self._object.family_other_blues_num = min(self._attributeNames['familyOtherBlues']['max']*2, len(values))-1
+		for i in range(self._object.family_other_blues_num+1):
 			self._object.family_other_blues[self._masterIndex][i] = values[i]
 
 	def _getVStems(self):
 			return list(self._object.stem_snap_v[self._masterIndex])
 	def _setVStems(self, values):
-		self._object.stem_snap_v_num = min(self._attributeNames['vStems']['max'], len(values))
-		for i in range(self._object.stem_snap_v_num):
+		self._object.stem_snap_v_num = min(self._attributeNames['vStems']['max'], len(values))-1
+		for i in range(self._object.stem_snap_v_num+1):
 			self._object.stem_snap_v[self._masterIndex][i] = values[i]
 
 	def _getHStems(self):
 			return list(self._object.stem_snap_h[self._masterIndex])
 	def _setHStems(self, values):
-		self._object.stem_snap_h_num = min(self._attributeNames['hStems']['max'], len(values))
-		for i in range(self._object.stem_snap_h_num):
+		self._object.stem_snap_h_num = min(self._attributeNames['hStems']['max'], len(values))-1
+		for i in range(self._object.stem_snap_h_num+1):
 			self._object.stem_snap_h[self._masterIndex][i] = values[i]
 
 	blueFuzz = property(_getBlueFuzz, _setBlueFuzz, doc="postscript hints: bluefuzz value")
