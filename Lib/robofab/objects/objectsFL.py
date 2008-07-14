@@ -225,7 +225,7 @@ class PostScriptFontHintValues(BasePostScriptFontHintValues):
 
 class PostScriptGlyphHintValues(BasePostScriptGlyphHintValues):
 	"""	Wrapper for glyph-level PostScript hinting information for FontLab.
-		vStems, hStems
+		vStems, hStems.
 	"""
 	def __init__(self, glyph=None):
 		self._object = glyph.naked()
