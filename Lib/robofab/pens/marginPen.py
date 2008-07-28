@@ -122,7 +122,10 @@ if __name__ == "__main__":
 	g = CurrentGlyph()
 
 	pt = (74, 216)
-	pen = MarginPen(f, pt[1])
-	g.draw(pen) 
-	print 'glyph margins', pen.getMargins()
-	print pen.getContourMargins()
+	if f is not None and g is not None:
+		pen = MarginPen(f, pt[1])
+		g.draw(pen)
+		print 'glyph margins', pen.getMargins()
+		print pen.getContourMargins()
+	else:
+		print "no font or glyph"
