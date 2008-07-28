@@ -77,12 +77,14 @@ class MarginPen(BasePen):
 		self.currentPt = None
 
 	def addComponent(self, baseGlyph, transformation):
+		from fontTools.pens.transformPen import TransformPen
 		if self.glyphSet is None:
 			return
 		if baseGlyph in self.glyphSet:
 			glyph = self.glyphSet[baseGlyph]
 		if glyph is not None:
-			glyph.draw(self)
+			tPen = TransformPen(self, transformation)
+			glyph.draw(tPen)
 		
 	def getMargins(self):
 		"""Get the horizontal margins for all contours combined, i.e. the whole glyph."""
