@@ -394,7 +394,7 @@ if __name__ == "__main__":
 	
 	p = Program()
 	p.fromBytecode(bc)
-	as = p.getAssembly()
-	p.fromAssembly(as)
+	asm = p.getAssembly()
+	p.fromAssembly(asm)
 	print bc == p.getBytecode()
 
