@@ -105,6 +105,9 @@ _flGenerateTypes ={	PC_TYPE1		:	(ftTYPE1,			'pfb'),		# PC Type 1 font (binary/PF
 	stem_snap_h
 	stem_snap_v_num(integer)
 	stem_snap_v
+	
+		
+	
  """
 
 class PostScriptFontHintValues(BasePostScriptFontHintValues):
@@ -150,7 +153,8 @@ class PostScriptFontHintValues(BasePostScriptFontHintValues):
 	
 	def _asPairs(self, l):
 		"""Split a list of numbers into a list of pairs"""
-		assert len(l)%2 == 0, "Even number of values required: %s"%(`l`)
+		if not len(l)%2 == 0:
+			l = l[:-1]
 		n = [[l[i], l[i+1]] for i in range(0, len(l), 2)]
 		n.sort()
 		return n
@@ -165,50 +169,80 @@ class PostScriptFontHintValues(BasePostScriptFontHintValues):
 			n.append(i[1])
 		return n
 	
+	def _checkForFontLabSanity(self, attribute, values):
+		"""Function to handle problems with FontLab not allowing the max number of 
+		alignment zones to be set to the max number.
+		Input:	the name of the zones and the values to be set
+		Output: a warning when there are too many values to be set
+				and the max values which FontLab will allow.
+		"""
+		warn = False
+		if attribute in ['vStems', 'hStems']:
+			# the number of items to drop from the list if the list is too long,
+			# stems are single values, but the zones are pairs.
+			skip = 1
+			total = min(self._attributeNames[attribute]['max'], len(values))
+			if total == self._attributeNames[attribute]['max']:
+				total = self._attributeNames[attribute]['max'] - skip
+				warn = True
+		else:
+			skip = 2
+			values = self._flattenPairs(values)
+			total = min(self._attributeNames[attribute]['max']*2, len(values))
+			if total == self._attributeNames[attribute]['max']*2:
+				total = self._attributeNames[attribute]['max']*2 - skip
+				warn = True
+		if warn:
+			print "* * * WARNING: FontLab will only accept %d %s items maximum from Python. Dropping values: %s."%(self._attributeNames[attribute]['max']-1, attribute, `values[total:]`)
+		return total, values[:total]
+		
+		
 	def _getBlueValues(self):
 			return self._asPairs(self._object.blue_values[self._masterIndex])
 	def _setBlueValues(self, values):
-		values = self._flattenPairs(values)
-		self._object.blue_values_num = min(self._attributeNames['blueValues']['max']*2, len(values))-1
-		for i in range(self._object.blue_values_num+1):
+		total, values = self._checkForFontLabSanity('blueValues', values)
+		self._object.blue_values_num = total
+		for i in range(self._object.blue_values_num):
 			self._object.blue_values[self._masterIndex][i] = values[i]
 
 	def _getOtherBlues(self):
 			return self._asPairs(self._object.other_blues[self._masterIndex])
 	def _setOtherBlues(self, values):
-		values = self._flattenPairs(values)
-		self._object.other_blues_num = min(self._attributeNames['otherBlues']['max']*2, len(values))-1
-		for i in range(self._object.other_blues_num+1):
+		total, values = self._checkForFontLabSanity('otherBlues', values)
+		self._object.other_blues_num = total
+		for i in range(self._object.other_blues_num):
 			self._object.other_blues[self._masterIndex][i] = values[i]
 
 	def _getFamilyBlues(self):
 			return self._asPairs(self._object.family_blues[self._masterIndex])
 	def _setFamilyBlues(self, values):
-		values = self._flattenPairs(values)
-		self._object.family_blues_num = min(self._attributeNames['familyBlues']['max']*2, len(values))-1
-		for i in range(self._object.family_blues_num+1):
+		total, values = self._checkForFontLabSanity('familyBlues', values)
+		self._object.family_blues_num = total
+		for i in range(self._object.family_blues_num):
 			self._object.family_blues[self._masterIndex][i] = values[i]
 
 	def _getFamilyOtherBlues(self):
 			return self._asPairs(self._object.family_other_blues[self._masterIndex])
 	def _setFamilyOtherBlues(self, values):
-		values = self._flattenPairs(values)
-		self._object.family_other_blues_num = min(self._attributeNames['familyOtherBlues']['max']*2, len(values))-1
-		for i in range(self._object.family_other_blues_num+1):
+		total, values = self._checkForFontLabSanity('familyOtherBlues', values)
+		self._object.family_other_blues_num = total
+		for i in range(self._object.family_other_blues_num):
 			self._object.family_other_blues[self._masterIndex][i] = values[i]
 
 	def _getVStems(self):
 			return list(self._object.stem_snap_v[self._masterIndex])
 	def _setVStems(self, values):
-		self._object.stem_snap_v_num = min(self._attributeNames['vStems']['max'], len(values))-1
-		for i in range(self._object.stem_snap_v_num+1):
+		total, values = self._checkForFontLabSanity('vStems', values)
+		self._object.stem_snap_v_num = total
+		for i in range(self._object.stem_snap_v_num):
 			self._object.stem_snap_v[self._masterIndex][i] = values[i]
 
 	def _getHStems(self):
 			return list(self._object.stem_snap_h[self._masterIndex])
 	def _setHStems(self, values):
-		self._object.stem_snap_h_num = min(self._attributeNames['hStems']['max'], len(values))-1
-		for i in range(self._object.stem_snap_h_num+1):
+		total, values = self._checkForFontLabSanity('hStems', values)
+		self._object.stem_snap_h_num = total
+		for i in range(self._object.stem_snap_h_num):
 			self._object.stem_snap_h[self._masterIndex][i] = values[i]
 
 	blueFuzz = property(_getBlueFuzz, _setBlueFuzz, doc="postscript hints: bluefuzz value")
