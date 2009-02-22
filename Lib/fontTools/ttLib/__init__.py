@@ -42,7 +42,7 @@ Dumping 'prep' table...
 """
 
 #
-# $Id: __init__.py,v 1.50 2008-03-01 11:43:00 jvr Exp $
+# $Id: __init__.py,v 1.51 2009-02-22 08:55:00 pabs3 Exp $
 #
 
 import sys
@@ -70,7 +70,8 @@ class TTFont:
 	
 	def __init__(self, file=None, res_name_or_index=None,
 			sfntVersion="\000\001\000\000", checkChecksums=0,
-			verbose=0, recalcBBoxes=1, allowVID=0, ignoreDecompileErrors=False):
+			verbose=0, recalcBBoxes=1, allowVID=0, ignoreDecompileErrors=False,
+			fontNumber=-1):
 		
 		"""The constructor can be called with a few different arguments.
 		When reading a font from disk, 'file' should be either a pathname
@@ -152,7 +153,7 @@ class TTFont:
 				file = open(file, "rb")
 		else:
 			pass # assume "file" is a readable file object
-		self.reader = sfnt.SFNTReader(file, checkChecksums)
+		self.reader = sfnt.SFNTReader(file, checkChecksums, fontNumber=fontNumber)
 		self.sfntVersion = self.reader.sfntVersion
 	
 	def close(self):

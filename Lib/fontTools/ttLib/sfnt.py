@@ -20,7 +20,7 @@ import os
 
 class SFNTReader:
 	
-	def __init__(self, file, checkChecksums=1):
+	def __init__(self, file, checkChecksums=1, fontNumber=-1):
 		self.file = file
 		self.checkChecksums = checkChecksums
 		data = self.file.read(sfntDirectorySize)
@@ -28,6 +28,19 @@ class SFNTReader:
 			from fontTools import ttLib
 			raise ttLib.TTLibError, "Not a TrueType or OpenType font (not enough data)"
 		sstruct.unpack(sfntDirectoryFormat, data, self)
+		if self.sfntVersion == "ttcf":
+			assert ttcHeaderSize == sfntDirectorySize
+			sstruct.unpack(ttcHeaderFormat, data, self)
+			assert self.Version == 0x00010000 or self.Version == 0x00020000, "unrecognized TTC version 0x%08x" % self.Version
+			if not 0 <= fontNumber < self.numFonts:
+				from fontTools import ttLib
+				raise ttLib.TTLibError, "specify a font number between 0 and %d (inclusive)" % (self.numFonts - 1)
+			offsetTable = struct.unpack(">%dL" % self.numFonts, self.file.read(self.numFonts * 4))
+			if self.Version == 0x00020000:
+				pass # ignoring version 2.0 signatures
+			self.file.seek(offsetTable[fontNumber])
+			data = self.file.read(sfntDirectorySize)
+			sstruct.unpack(sfntDirectoryFormat, data, self)
 		if self.sfntVersion not in ("\000\001\000\000", "OTTO", "true"):
 			from fontTools import ttLib
 			raise ttLib.TTLibError, "Not a TrueType or OpenType font (bad sfntVersion)"
@@ -164,6 +177,19 @@ class SFNTWriter:
 
 
 # -- sfnt directory helpers and cruft
+
+ttcHeaderFormat = """
+		> # big endian
+		TTCTag:                  4s # "ttcf"
+		Version:                 L  # 0x00010000 or 0x00020000
+		numFonts:                L  # number of fonts
+		# OffsetTable[numFonts]: L  # array with offsets from beginning of file
+		# ulDsigTag:             L  # version 2.0 only
+		# ulDsigLength:          L  # version 2.0 only
+		# ulDsigOffset:          L  # version 2.0 only
+"""
+
+ttcHeaderSize = sstruct.calcsize(ttcHeaderFormat)
 
 sfntDirectoryFormat = """
 		> # big endian

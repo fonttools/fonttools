@@ -41,6 +41,8 @@ usage: ttx [options] inputfile1 [... inputfileN]
        file smaller.
     -e Don't ignore decompilation errors, but show a full traceback
        and abort.
+    -y <number> Select font number for TrueTrue Collection,
+       starting from 0.
 
     Compile options:
     -m Merge with TrueType-input-file: specify a TrueType or OpenType
@@ -99,6 +101,7 @@ class Options:
 	def __init__(self, rawOptions, numFiles):
 		self.onlyTables = []
 		self.skipTables = []
+		self.fontNumber = -1
 		for option, value in rawOptions:
 			# general options
 			if option == "-h":
@@ -122,6 +125,8 @@ class Options:
 				self.splitTables = 1
 			elif option == "-i":
 				self.disassembleInstructions = 0
+			elif option == "-y":
+				self.fontNumber = int(value)
 			# compile options
 			elif option == "-m":
 				self.mergeFile = value
@@ -141,7 +146,7 @@ class Options:
 
 def ttList(input, output, options):
 	import string
-	ttf = TTFont(input)
+	ttf = TTFont(input, fontNumber=options.fontNumber)
 	reader = ttf.reader
 	tags = reader.keys()
 	tags.sort()
@@ -163,7 +168,8 @@ def ttList(input, output, options):
 def ttDump(input, output, options):
 	print 'Dumping "%s" to "%s"...' % (input, output)
 	ttf = TTFont(input, 0, verbose=options.verbose, allowVID=options.allowVID,
-			ignoreDecompileErrors=options.ignoreDecompileErrors)
+			ignoreDecompileErrors=options.ignoreDecompileErrors,
+			fontNumber=options.fontNumber)
 	ttf.saveXML(output,
 			tables=options.onlyTables,
 			skipTables=options.skipTables, 
@@ -224,6 +230,8 @@ def guessFileType(fileName):
 	head = header[:4]
 	if head == "OTTO":
 		return "OTF"
+	elif head == "ttcf":
+		return "TTC"
 	elif head in ("\0\1\0\0", "true"):
 		return "TTF"
 	elif head.lower() == "<?xm":
@@ -236,7 +244,7 @@ def guessFileType(fileName):
 
 def parseOptions(args):
 	try:
-		rawOptions, files = getopt.getopt(args, "ld:vht:x:sim:bae")
+		rawOptions, files = getopt.getopt(args, "ld:vht:x:sim:baey:")
 	except getopt.GetoptError:
 		usage()
 	
@@ -248,7 +256,7 @@ def parseOptions(args):
 	
 	for input in files:
 		tp = guessFileType(input)
-		if tp in ("OTF", "TTF"):
+		if tp in ("OTF", "TTF", "TTC"):
 			extension = ".ttx"
 			if options.listTables:
 				action = ttList
