@@ -18,12 +18,15 @@ do it with the objectsFL and objectsRF.
 from __future__ import generators
 from __future__ import division
 
+from warnings import warn
+import math
+import copy
 
+from robofab import ufoLib
 from robofab import RoboFabError
 from fontTools.misc.arrayTools import updateBounds, pointInRect, unionRect, sectRect
 from fontTools.pens.basePen import AbstractPen
-import math
-import copy
+
 
 #constants for dealing with segments, points and bPoints
 MOVE = 'move'
@@ -146,39 +149,6 @@ class BasePostScriptHintValues(object):
 			setattr(n, k, dup)
 		return n
 
-	# math operations for psHint object
-	# Note: math operations can change integers to floats.
-	def __add__(self, other):
-		assert isinstance(other, BasePostScriptHintValues)
-		copied = self.copy()
-		self._processMathOne(copied, other, add)
-		return copied
-
-	def __sub__(self, other):
-		assert isinstance(other, BasePostScriptHintValues)
-		copied = self.copy()
-		self._processMathOne(copied, other, sub)
-		return copied
-
-	def __mul__(self, factor):
-		#if isinstance(factor, tuple):
-		#	factor = factor[0]
-		copiedInfo = self.copy()
-		self._processMathTwo(copiedInfo, factor, mul)
-		return copiedInfo
-
-	__rmul__ = __mul__
-
-	def __div__(self, factor):
-		#if isinstance(factor, tuple):
-		#	factor = factor[0]
-		copiedInfo = self.copy()
-		self._processMathTwo(copiedInfo, factor, div)
-		return copiedInfo
-
-	__rdiv__ = __div__
-	
-	
 class BasePostScriptGlyphHintValues(BasePostScriptHintValues):
 	""" Base class for glyph-level postscript hinting information.
 		vStems, hStems
@@ -211,6 +181,38 @@ class BasePostScriptGlyphHintValues(BasePostScriptHintValues):
 			for n in v:
 				new.append((int(round(n[0])), int(round(n[1]))))
 			setattr(self, name, new)
+
+	# math operations for psHint object
+	# Note: math operations can change integers to floats.
+	def __add__(self, other):
+		assert isinstance(other, BasePostScriptHintValues)
+		copied = self.copy()
+		self._processMathOne(copied, other, add)
+		return copied
+
+	def __sub__(self, other):
+		assert isinstance(other, BasePostScriptHintValues)
+		copied = self.copy()
+		self._processMathOne(copied, other, sub)
+		return copied
+
+	def __mul__(self, factor):
+		#if isinstance(factor, tuple):
+		#	factor = factor[0]
+		copiedInfo = self.copy()
+		self._processMathTwo(copiedInfo, factor, mul)
+		return copiedInfo
+
+	__rmul__ = __mul__
+
+	def __div__(self, factor):
+		#if isinstance(factor, tuple):
+		#	factor = factor[0]
+		copiedInfo = self.copy()
+		self._processMathTwo(copiedInfo, factor, div)
+		return copiedInfo
+
+	__rdiv__ = __div__
 
 	def _processMathOne(self, copied, other, funct):
 		for name, values in self._attributeNames.items():
@@ -287,12 +289,140 @@ class BasePostScriptFontHintValues(BasePostScriptHintValues):
 	def __init__(self, data=None):
 		if data is not None:
 			self.fromDict(data)
-		else:
-			for name in self._attributeNames.keys():
-				setattr(self, name, self._attributeNames[name]['default'])
 
 	def __repr__(self):
 		return "<PostScript Font Hints Values>"
+
+	# route attribute calls to info object
+
+	def _bluesToPairs(self, values):
+		values.sort()
+		finalValues = []
+		for value in values:
+			if not finalValues or len(finalValues[-1]) == 2:
+				finalValues.append([])
+			finalValues[-1].append(value)
+		return finalValues
+
+	def _bluesFromPairs(self, values):
+		finalValues = []
+		for value1, value2 in values:
+			finalValues.append(value1)
+			finalValues.append(value2)
+		finalValues.sort()
+		return finalValues
+
+	def _get_blueValues(self):
+		values = self.getParent().info.postscriptBlueValues
+		if values is None:
+			values = []
+		values = self._bluesToPairs(values)
+		return values
+
+	def _set_blueValues(self, values):
+		if values is None:
+			values = []
+		values = self._bluesFromPairs(values)
+		self.getParent().info.postscriptBlueValues = values
+
+	blueValues = property(_get_blueValues, _set_blueValues)
+
+	def _get_otherBlues(self):
+		values = self.getParent().info.postscriptOtherBlues
+		if values is None:
+			values = []
+		values = self._bluesToPairs(values)
+		return values
+
+	def _set_otherBlues(self, values):
+		if values is None:
+			values = []
+		values = self._bluesFromPairs(values)
+		self.getParent().info.postscriptOtherBlues = values
+
+	otherBlues = property(_get_otherBlues, _set_otherBlues)
+
+	def _get_familyBlues(self):
+		values = self.getParent().info.postscriptFamilyBlues
+		if values is None:
+			values = []
+		values = self._bluesToPairs(values)
+		return values
+
+	def _set_familyBlues(self, values):
+		if values is None:
+			values = []
+		values = self._bluesFromPairs(values)
+		self.getParent().info.postscriptFamilyBlues = values
+
+	familyBlues = property(_get_familyBlues, _set_familyBlues)
+
+	def _get_familyOtherBlues(self):
+		values = self.getParent().info.postscriptFamilyOtherBlues
+		if values is None:
+			values = []
+		values = self._bluesToPairs(values)
+		return values
+
+	def _set_familyOtherBlues(self, values):
+		if values is None:
+			values = []
+		values = self._bluesFromPairs(values)
+		self.getParent().info.postscriptFamilyOtherBlues = values
+
+	familyOtherBlues = property(_get_familyOtherBlues, _set_familyOtherBlues)
+
+	def _get_vStems(self):
+		return self.getParent().info.postscriptStemSnapV
+
+	def _set_vStems(self, value):
+		if value is None:
+			value = []
+		self.getParent().info.postscriptStemSnapV = list(value)
+
+	vStems = property(_get_vStems, _set_vStems)
+
+	def _get_hStems(self):
+		return self.getParent().info.postscriptStemSnapH
+
+	def _set_hStems(self, value):
+		if value is None:
+			value = []
+		self.getParent().info.postscriptStemSnapH = list(value)
+
+	hStems = property(_get_hStems, _set_hStems)
+
+	def _get_blueScale(self):
+		return self.getParent().info.postscriptBlueScale
+
+	def _set_blueScale(self, value):
+		self.getParent().info.postscriptBlueScale = value
+
+	blueScale = property(_get_blueScale, _set_blueScale)
+
+	def _get_blueShift(self):
+		return self.getParent().info.postscriptBlueShift
+
+	def _set_blueShift(self, value):
+		self.getParent().info.postscriptBlueShift = value
+
+	blueShift = property(_get_blueShift, _set_blueShift)
+
+	def _get_blueFuzz(self):
+		return self.getParent().info.postscriptBlueFuzz
+
+	def _set_blueFuzz(self, value):
+		self.getParent().info.postscriptBlueFuzz = value
+
+	blueFuzz = property(_get_blueFuzz, _set_blueFuzz)
+
+	def _get_forceBold(self):
+		return self.getParent().info.postscriptForceBold
+
+	def _set_forceBold(self, value):
+		self.getParent().info.postscriptForceBold = value
+
+	forceBold = property(_get_forceBold, _set_forceBold)
 
 	def round(self):
 		"""Round the values to reasonable values.
@@ -334,87 +464,6 @@ class BasePostScriptFontHintValues(BasePostScriptHintValues):
 				for n in v:
 					new.append([int(round(m)) for m in n])
 				setattr(self, name, new)
-	
-	
-	def _processMathOne(self, copied, other, funct):
-		for name, values in self._attributeNames.items():
-			a = None
-			b = None
-			v = None
-			if hasattr(copied, name):
-				a = getattr(copied, name)
-			if hasattr(other, name):
-				b = getattr(other, name)
-			if name in ['blueFuzz', 'blueScale', 'blueShift', 'forceBold']:
-				# process single values
-				if a is not None and b is not None:
-					v = funct(a, b)
-				elif a is not None and b is None:
-					v = a
-				elif b is not None and a is None:
-					v = b
-				if v is not None:
-					setattr(copied, name, v)
-			elif name in ['hStems', 'vStems']:
-				if a is not None and b is not None:
-					if len(a) != len(b):
-						# can't do math with non matching zones
-						continue
-					l = len(a)
-					v = [funct(a[i], b[i]) for i in range(l)]
-				if v is not None:
-					setattr(copied, name, v)
-			else:
-				if a is not None and b is not None:
-					if len(a) != len(b):
-						# can't do math with non matching zones
-						continue
-					l = len(a)
-					for i in range(l):
-						if v is None:
-							v = []
-						ai = a[i]
-						bi = b[i]
-						l2 = min(len(ai), len(bi))
-						v2 = [funct(ai[j], bi[j]) for j in range(l2)]
-						v.append(v2)
-				if v is not None:
-					setattr(copied, name, v)
-
-	def _processMathTwo(self, copied, factor, funct):
-		for name, values in self._attributeNames.items():
-			a = None
-			b = None
-			v = None
-			if hasattr(copied, name):
-				a = getattr(copied, name)
-			splitFactor = factor
-			isVertical = self._attributeNames[name]['isVertical']
-			if isinstance(factor, tuple):
-				if isVertical:
-					splitFactor = factor[1]
-				else:
-					splitFactor = factor[0]
-			if name in ['blueFuzz', 'blueScale', 'blueShift', 'forceBold']:
-				# process single values
-				if a is not None:
-					v = funct(a, splitFactor)
-				if v is not None:
-					setattr(copied, name, v)
-			elif name in ['hStems', 'vStems']:
-				if a is not None:
-					v = [funct(a[i], splitFactor) for i in range(len(a))]
-				if v is not None:
-					setattr(copied, name, v)
-			else:
-				if a is not None:
-					for i in range(len(a)):
-						if v is None:
-							v = []
-						v2 = [funct(a[i][j], splitFactor) for j in range(len(a[i]))]
-						v.append(v2)
-				if v is not None:
-					setattr(copied, name, v)
 
 
 
@@ -591,7 +640,7 @@ class BaseFont(RBaseObject):
 		
 	def __repr__(self):
 		try:
-			name = self.info.fullName
+			name = self.info.postscriptFullName
 		except AttributeError:
 			name = "unnamed_font"
 		return "<RFont font for %s>" %(name)
@@ -642,6 +691,9 @@ class BaseFont(RBaseObject):
 
 	def __getitem__(self, glyphName):
 		return self.getGlyph(glyphName)
+
+	def __contains__(self, glyphName):
+		return self.has_key(glyphName)
 
 	def _hasChanged(self):
 		#mark the object as changed
@@ -729,7 +781,7 @@ class BaseFont(RBaseObject):
 			try:
 				accent = self[accentName]
 			except IndexError:
-				errors["glyph '%s' is missing in font %s"%(accentName, self.fullName)] =  1
+				errors["glyph '%s' is missing in font %s"%(accentName, self.postscriptFullName)] =  1
 				continue
 			localAnchors = {}
 			foundAnchor = None
@@ -752,7 +804,7 @@ class BaseFont(RBaseObject):
 				try:
 					baseX, baseY = anchors[foundAnchor[1:]]
 				except KeyError:
-					errors["anchor '%s' not found in glyph '%s' of font %s"%(foundAnchor[1:], baseName, self.info.fullName)]=1
+					errors["anchor '%s' not found in glyph '%s' of font %s"%(foundAnchor[1:], baseName, self.info.postscriptFullName)]=1
 					continue
 				#calculate the accent componet offset values
 				xShift = baseX - accentAnchorX
@@ -831,12 +883,12 @@ class BaseFont(RBaseObject):
 				fatalError = True
 				if not errors.has_key('Missing Glyphs'):
 					errors['Missing Glyphs'] = []
-				errors['Missing Glyphs'].append('Interpolation Error: %s not in %s'%(glyphName, minFont.info.fullName))
+				errors['Missing Glyphs'].append('Interpolation Error: %s not in %s'%(glyphName, minFont.info.postscriptFullName))
 			if glyphName not in maxGlyphNames:
 				fatalError = True
 				if not errors.has_key('Missing Glyphs'):
 					errors['Missing Glyphs'] = []
-				errors['Missing Glyphs'].append('Interpolation Error: %s not in %s'%(glyphName, maxFont.info.fullName))
+				errors['Missing Glyphs'].append('Interpolation Error: %s not in %s'%(glyphName, maxFont.info.postscriptFullName))
 			# if no major problems, proceed.
 			if not fatalError:
 				# remove the glyph since FontLab has a problem with
@@ -880,7 +932,6 @@ class BaseFont(RBaseObject):
 			for sub in parts[1:]:
 				item = getattr(item, sub)
 		except (ImportError, AttributeError):
-			from warnings import warn
 			warn("Can't find glyph name to file name converter function, "
 				"falling back to default scheme (%s)" % funcName, RoboFabWarning)
 			return None
@@ -909,7 +960,7 @@ class BaseGlyph(RBaseObject):
 		fontParent = self.getParent()
 		if fontParent is not None:
 			try:
-				font = fontParent.info.fullName
+				font = fontParent.info.postscriptFullName
 			except AttributeError:
 				pass
 		try:
@@ -1775,7 +1826,7 @@ class BaseContour(RBaseObject):
 			fontParent = glyphParent.getParent()
 			if fontParent is not None:
 				try:
-					font = fontParent.info.fullName
+					font = fontParent.info.postscriptFullName
 				except AttributeError: pass
 		try:
 			idx = `self.index`
@@ -1788,7 +1839,6 @@ class BaseContour(RBaseObject):
 		return len(self.segments)
 	
 	def __mul__(self, factor):
-		from warnings import warn
 		warn("Contour math has been deprecated and is slated for removal.", DeprecationWarning)
 		n = self.copy()
 		n.segments = []
@@ -1800,7 +1850,6 @@ class BaseContour(RBaseObject):
 	__rmul__ = __mul__
 
 	def __add__(self, other):
-		from warnings import warn
 		warn("Contour math has been deprecated and is slated for removal.", DeprecationWarning)
 		n = self.copy()
 		n.segments = []
@@ -1810,7 +1859,6 @@ class BaseContour(RBaseObject):
 		return n
 
 	def __sub__(self, other):
-		from warnings import warn
 		warn("Contour math has been deprecated and is slated for removal.", DeprecationWarning)
 		n = self.copy()
 		n.segments = []
@@ -2185,7 +2233,7 @@ class BaseSegment(RBaseObject):
 				fontParent = glyphParent.getParent()
 				if fontParent is not None:
 					try:
-						font = fontParent.info.fullName
+						font = fontParent.info.postscriptFullName
 					except AttributeError: pass
 		try:
 			idx = `self.index`
@@ -2194,7 +2242,6 @@ class BaseSegment(RBaseObject):
 		return "<RSegment for %s.%s[%s][%s]>"%(font, glyph, contourIndex, idx)
 		
 	def __mul__(self, factor):
-		from warnings import warn
 		warn("Segment math has been deprecated and is slated for removal.", DeprecationWarning)
 		n = self.copy()
 		n.points = []
@@ -2206,7 +2253,6 @@ class BaseSegment(RBaseObject):
 	__rmul__ = __mul__
 
 	def __add__(self, other):
-		from warnings import warn
 		warn("Segment math has been deprecated and is slated for removal.", DeprecationWarning)
 		n = self.copy()
 		n.points = []
@@ -2215,7 +2261,6 @@ class BaseSegment(RBaseObject):
 		return n
 
 	def __sub__(self, other):
-		from warnings import warn
 		warn("Segment math has been deprecated and is slated for removal.", DeprecationWarning)
 		n = self.copy()
 		n.points = []
@@ -2324,12 +2369,11 @@ class BasePoint(RBaseObject):
 					fontParent = glyphParent.getParent()
 					if fontParent is not None:
 						try:
-							font = fontParent.info.fullName
+							font = fontParent.info.postscriptFullName
 						except AttributeError: pass
 		return "<RPoint for %s.%s[%s][%s]>"%(font, glyph, contourIndex, segmentIndex)
 	
 	def __add__(self, other):
-		from warnings import warn
 		warn("Point math has been deprecated and is slated for removal.", DeprecationWarning)
 		#Add one point to another
 		n = self.copy()
@@ -2337,7 +2381,6 @@ class BasePoint(RBaseObject):
 		return n
 
 	def __sub__(self, other):
-		from warnings import warn
 		warn("Point math has been deprecated and is slated for removal.", DeprecationWarning)
 		#Subtract one point from another
 		n = self.copy()
@@ -2345,7 +2388,6 @@ class BasePoint(RBaseObject):
 		return n
 
 	def __mul__(self, factor):
-		from warnings import warn
 		warn("Point math has been deprecated and is slated for removal.", DeprecationWarning)
 		#Multiply the point with factor. Factor can be a tuple of 2 *(f1, f2)
 		n = self.copy()
@@ -2440,13 +2482,12 @@ class BaseBPoint(RBaseObject):
 					fontParent = glyphParent.getParent()
 					if fontParent is not None:
 						try:
-							font = fontParent.info.fullName
+							font = fontParent.info.postscriptFullName
 						except AttributeError: pass
 		return "<RBPoint for %s.%s[%s][%s][%s]>"%(font, glyph, contourIndex, segmentIndex, `self.index`)
 
 	
 	def __add__(self, other):
-		from warnings import warn
 		warn("BPoint math has been deprecated and is slated for removal.", DeprecationWarning)
 		#Add one bPoint to another
 		n = self.copy()
@@ -2456,7 +2497,6 @@ class BaseBPoint(RBaseObject):
 		return n
 
 	def __sub__(self, other):
-		from warnings import warn
 		warn("BPoint math has been deprecated and is slated for removal.", DeprecationWarning)
 		#Subtract one bPoint from another
 		n = self.copy()
@@ -2466,7 +2506,6 @@ class BaseBPoint(RBaseObject):
 		return n
 
 	def __mul__(self, factor):
-		from warnings import warn
 		warn("BPoint math has been deprecated and is slated for removal.", DeprecationWarning)
 		#Multiply the bPoint with factor. Factor can be a tuple of 2 *(f1, f2)
 		n = self.copy()
@@ -2679,7 +2718,7 @@ class BaseComponent(RBaseObject):
 			fontParent = glyphParent.getParent()
 			if fontParent is not None:
 				try:
-					font = fontParent.info.fullName
+					font = fontParent.info.postscriptFullName
 				except AttributeError: pass
 		return "<RComponent for %s.%s.components[%s]>"%(font, glyph, `self.index`)
 		
@@ -2708,7 +2747,6 @@ class BaseComponent(RBaseObject):
 		return n
 
 	def __add__(self, other):
-		from warnings import warn
 		warn("Component math has been deprecated and is slated for removal.", DeprecationWarning)
 		#Add one Component to another
 		n = self.copy()
@@ -2717,7 +2755,6 @@ class BaseComponent(RBaseObject):
 		return n
 
 	def __sub__(self, other):
-		from warnings import warn
 		warn("Component math has been deprecated and is slated for removal.", DeprecationWarning)
 		#Subtract one Component from another
 		n = self.copy()
@@ -2726,7 +2763,6 @@ class BaseComponent(RBaseObject):
 		return n
 
 	def __mul__(self, factor):
-		from warnings import warn
 		warn("Component math has been deprecated and is slated for removal.", DeprecationWarning)
 		#Multiply the Component with factor. Factor can be a tuple of 2 *(f1, f2)
 		n = self.copy()
@@ -2798,12 +2834,11 @@ class BaseAnchor(RBaseObject):
 			fontParent = glyphParent.getParent()
 			if fontParent is not None:
 				try:
-					font = fontParent.info.fullName
+					font = fontParent.info.postscriptFullName
 				except AttributeError: pass
 		return "<RAnchor for %s.%s.anchors[%s]>"%(font, glyph, `self.index`)
 
 	def __add__(self, other):
-		from warnings import warn
 		warn("Anchor math has been deprecated and is slated for removal.", DeprecationWarning)
 		#Add one anchor to another
 		n = self.copy()
@@ -2811,7 +2846,6 @@ class BaseAnchor(RBaseObject):
 		return n
 
 	def __sub__(self, other):
-		from warnings import warn
 		warn("Anchor math has been deprecated and is slated for removal.", DeprecationWarning)
 		#Substract one anchor from another
 		n = self.copy()
@@ -2819,7 +2853,6 @@ class BaseAnchor(RBaseObject):
 		return n
 
 	def __mul__(self, factor):
-		from warnings import warn
 		warn("Anchor math has been deprecated and is slated for removal.", DeprecationWarning)
 		#Multiply the anchor with factor. Factor can be a tuple of 2 *(f1, f2)
 		n = self.copy()
@@ -2898,364 +2931,116 @@ class BaseGuide(RBaseObject):
 		self.changed = False		# if the object needs to be saved
 		self.selected = False
 
-		
 
-			
 class BaseInfo(RBaseObject):
-	
-	"""Base class for all font.info objects."""
-	
+
+	_baseAttributes = ["_object", "changed", "selected", "getParent"]
+	_deprecatedAttributes = ufoLib.deprecatedFontInfoAttributesVersion2
+	_infoAttributes = ufoLib.fontInfoAttributesVersion2
+	# subclasses may define a list of environment
+	# specific attributes that can be retrieved or set.
+	_environmentAttributes = []
+	# subclasses may define a list of attributes
+	# that should not follow the standard get/set
+	# order provided by __setattr__ and __getattr__.
+	# for these attributes, the environment specific
+	# set and get methods must handle this value
+	# without any pre-call validation.
+	# (yeah. this is because of some FontLab dumbness.)
+	_environmentOverrides = []
+
+	def __setattr__(self, attr, value):
+		# check to see if the attribute has been
+		# deprecated. if so, warn the caller and
+		# update the attribute and value.
+		if attr in self._deprecatedAttributes:
+			newAttr, newValue = ufoLib.convertFontInfoValueForAttributeFromVersion1ToVersion2(attr, value)
+			note = "The %s attribute has been deprecated. Use the new %s attribute." % (attr, newAttr)
+			warn(note, DeprecationWarning)
+			attr = newAttr
+			value = newValue
+		# setting a known attribute
+		if attr in self._infoAttributes or attr in self._environmentAttributes:
+			# lightly test the validity of the value
+			if value is not None:
+				isValidValue = ufoLib.validateFontInfoVersion2ValueForAttribute(attr, value)
+				if not isValidValue:
+					raise RoboFabError("Invalid value (%s) for attribute (%s)." % (repr(value), attr))
+			# use the environment specific info attr set
+			# method if it is defined.
+			if hasattr(self, "_environmentSetAttr"):
+				self._environmentSetAttr(attr, value)
+			# fallback to super
+			else:
+				super(BaseInfo, self).__setattr__(attr, value)
+		# unknown attribute, test to see if it is a python attr
+		elif attr in self.__dict__ or attr in self._baseAttributes:
+			super(BaseInfo, self).__setattr__(attr, value)
+		# raise an attribute error
+		else:
+			raise AttributeError("Unknown attribute %s." % attr)
+
+	# subclasses with environment specific attr setting can
+	# implement this method. __setattr__ will call it if present.
+	# def _environmentSetAttr(self, attr, value):
+	# 	pass
+
+	def __getattr__(self, attr):
+		if attr in self._environmentOverrides:
+			return self._environmentGetAttr(attr)
+		# check to see if the attribute has been
+		# deprecated. if so, warn the caller and
+		# flag the value as needing conversion.
+		needValueConversionTo1 = False
+		if attr in self._deprecatedAttributes:
+			oldAttr = attr
+			oldValue = attr
+			newAttr, x = ufoLib.convertFontInfoValueForAttributeFromVersion1ToVersion2(attr, None)
+			note = "The %s attribute has been deprecated. Use the new %s attribute." % (attr, newAttr)
+			warn(note, DeprecationWarning)
+			attr = newAttr
+			needValueConversionTo1 = True
+		# getting a known attribute
+		if attr in self._infoAttributes or attr in self._environmentAttributes:
+			# use the environment specific info attr get
+			# method if it is defined.
+			if hasattr(self, "_environmentGetAttr"):
+				value = self._environmentGetAttr(attr)
+			# fallback to super
+			else:
+				try:
+					value = super(BaseInfo, self).__getattribute__(attr)
+				except AttributeError:
+					return None
+			if needValueConversionTo1:
+				oldAttr, value = ufoLib.convertFontInfoValueForAttributeFromVersion2ToVersion1(attr, value)
+			return value
+		# raise an attribute error
+		else:
+			raise AttributeError("Unknown attribute %s." % attr)
+
+		# subclasses with environment specific attr retrieval can
+		# implement this method. __getattr__ will call it if present.
+		# it should return the requested value.
+		# def _environmentGetAttr(self, attr):
+		# 	pass
+
+class BaseFeatures(RBaseObject):
+
 	def __init__(self):
 		RBaseObject.__init__(self)
-	
-	def __repr__(self):
-		font = self.fullName
-		return "<RInfo for %s>"%font
+		self._text = ""
 
-	def _get_familyName(self):
-		raise NotImplementedError
-	
-	def _set_familyName(self, value):
-		raise NotImplementedError
-	
-	familyName = property(_get_familyName, _set_familyName, doc="family name")
-	
-	def _get_styleName(self):
-		raise NotImplementedError
-	
-	def _set_styleName(self, value):
-		raise NotImplementedError
-	
-	styleName = property(_get_styleName, _set_styleName, doc="style name")
-	
-	def _get_fullName(self):
-		raise NotImplementedError
-	
-	def _set_fullName(self, value):
-		raise NotImplementedError
-	
-	fullName = property(_get_fullName, _set_fullName, doc="full name")
-	
-	def _get_fontName(self):
-		raise NotImplementedError
-	
-	def _set_fontName(self, value):
-		raise NotImplementedError
-	
-	fontName = property(_get_fontName, _set_fontName, doc="font name")
-	
-	def _get_menuName(self):
-		raise NotImplementedError
-	
-	def _set_menuName(self, value):
-		raise NotImplementedError
-	
-	menuName = property(_get_menuName, _set_menuName, doc="menu name")
-	
-	def _get_fondName(self):
-		raise NotImplementedError
-	
-	def _set_fondName(self, value):
-		raise NotImplementedError
-	
-	fondName = property(_get_fondName, _set_fondName, doc="fond name")
-	
-	def _get_otFamilyName(self):
-		raise NotImplementedError
-	
-	def _set_otFamilyName(self, value):
-		raise NotImplementedError
-	
-	otFamilyName = property(_get_otFamilyName, _set_otFamilyName, doc="OpenType family name")
-	
-	def _get_otStyleName(self):
-		raise NotImplementedError
-	
-	def _set_otStyleName(self, value):
-		raise NotImplementedError
-	
-	otStyleName = property(_get_otStyleName, _set_otStyleName, doc="OpenType style name")
-	
-	def _get_otMacName(self):
-		raise NotImplementedError
-	
-	def _set_otMacName(self, value):
-		raise NotImplementedError
-	
-	otMacName = property(_get_otMacName, _set_otMacName, doc="Mac specific OpenType name")
-	
-	def _get_weightValue(self):
-		raise NotImplementedError
-	
-	def _set_weightValue(self, value):
-		raise NotImplementedError
-	
-	weightValue = property(_get_weightValue, _set_weightValue, doc="weight value")
-	
-	def _get_weightName(self):
-		raise NotImplementedError
-	
-	def _set_weightName(self, value):
-		raise NotImplementedError
-	
-	weightName = property(_get_weightName, _set_weightName, doc="weight name")
-	
-	def _get_widthName(self):
-		raise NotImplementedError
-	
-	def _set_widthName(self, value):
-		raise NotImplementedError
-	
-	widthName = property(_get_widthName, _set_widthName, doc="width name")
-	
-	def _get_fontStyle(self):
-		raise NotImplementedError
-	
-	def _set_fontStyle(self, value):
-		raise NotImplementedError
-	
-	fontStyle = property(_get_fontStyle, _set_fontStyle, doc="font style")
-	
-	def _get_msCharSet(self):
-		raise NotImplementedError
-	
-	def _set_msCharSet(self, value):
-		raise NotImplementedError
-	
-	msCharSet = property(_get_msCharSet, _set_msCharSet, doc="ms charset")
-	
-	def _get_note(self):
-		raise NotImplementedError
-	
-	def _set_note(self, value):
-		raise NotImplementedError
-	
-	note = property(_get_note, _set_note, doc="note")
-	
-	def _get_fondID(self):
-		raise NotImplementedError
-	
-	def _set_fondID(self, value):
-		raise NotImplementedError
-	
-	fondID = property(_get_fondID, _set_fondID, doc="fond id number")
-	
-	def _get_uniqueID(self):
-		raise NotImplementedError
-	
-	def _set_uniqueID(self, value):
-		raise NotImplementedError
-	
-	uniqueID = property(_get_uniqueID, _set_uniqueID, doc="unique id number")
-	
-	def _get_versionMajor(self):
-		raise NotImplementedError
-	
-	def _set_versionMajor(self, value):
-		raise NotImplementedError
-	
-	versionMajor = property(_get_versionMajor, _set_versionMajor, doc="version major")
-	
-	def _get_versionMinor(self):
-		raise NotImplementedError
-	
-	def _set_versionMinor(self, value):
-		raise NotImplementedError
-	
-	versionMinor = property(_get_versionMinor, _set_versionMinor, doc="version minor")
-	
-	def _get_year(self):
-		raise NotImplementedError
-	
-	def _set_year(self, value):
-		raise NotImplementedError
-	
-	year = property(_get_year, _set_year, doc="year")
-	
-	def _get_copyright(self):
-		raise NotImplementedError
-	
-	def _set_copyright(self, value):
-		raise NotImplementedError
-	
-	copyright = property(_get_copyright, _set_copyright, doc="copyright")
-	
-	def _get_notice(self):
-		raise NotImplementedError
-	
-	def _set_notice(self, value):
-		raise NotImplementedError
-	
-	notice = property(_get_notice, _set_notice, doc="notice")
-	
-	def _get_trademark(self):
-		raise NotImplementedError
-	
-	def _set_trademark(self, value):
-		raise NotImplementedError
-	
-	trademark = property(_get_trademark, _set_trademark, doc="trademark")
-	
-	def _get_license(self):
-		raise NotImplementedError
-	
-	def _set_license(self, value):
-		raise NotImplementedError
-	
-	license = property(_get_license, _set_license, doc="license")
-	
-	def _get_licenseURL(self):
-		raise NotImplementedError
-	
-	def _set_licenseURL(self, value):
-		raise NotImplementedError
-	
-	licenseURL = property(_get_licenseURL, _set_licenseURL, doc="license url")
-	
-	def _get_createdBy(self):
-		raise NotImplementedError
-	
-	def _set_createdBy(self, value):
-		raise NotImplementedError
-	
-	createdBy = property(_get_createdBy, _set_createdBy, doc="source")
-	
-	def _get_designer(self):
-		raise NotImplementedError
-	
-	def _set_designer(self, value):
-		raise NotImplementedError
-	
-	designer = property(_get_designer, _set_designer, doc="designer")
-	
-	def _get_designerURL(self):
-		raise NotImplementedError
-	
-	def _set_designerURL(self, value):
-		raise NotImplementedError
-	
-	designerURL = property(_get_designerURL, _set_designerURL, doc="designer url")
-	
-	def _get_vendorURL(self):
-		raise NotImplementedError
-	
-	def _set_vendorURL(self, value):
-		raise NotImplementedError
-	
-	vendorURL = property(_get_vendorURL, _set_vendorURL, doc="vendor url")
-	
-	def _get_ttVendor(self):
-		raise NotImplementedError
-	
-	def _set_ttVendor(self, value):
-		raise NotImplementedError
-	
-	ttVendor = property(_get_ttVendor, _set_ttVendor, doc="vendor")
-	
-	def _get_ttUniqueID(self):
-		raise NotImplementedError
-	
-	def _set_ttUniqueID(self, value):
-		raise NotImplementedError
-	
-	ttUniqueID = property(_get_ttUniqueID, _set_ttUniqueID, doc="TrueType unique id number")
-	
-	def _get_ttVersion(self):
-		raise NotImplementedError
-	
-	def _set_ttVersion(self, value):
-		raise NotImplementedError
-	
-	ttVersion = property(_get_ttVersion, _set_ttVersion, doc="TrueType version")
-	
-	def _get_unitsPerEm(self):
-		raise NotImplementedError
-	
-	def _set_unitsPerEm(self):
-		raise NotImplementedError
-	
-	unitsPerEm = property(_get_unitsPerEm, _set_unitsPerEm, doc="unitsPerEm value")
-	
-	def _get_ascender(self):
-		raise NotImplementedError
-	
-	def _set_ascender(self, value):
-		raise NotImplementedError
-	
-	ascender = property(_get_ascender, _set_ascender, doc="ascender value")
-	
-	def _get_descender(self):
-		raise NotImplementedError
-	
-	def _set_descender(self, value):
-		raise NotImplementedError
-	
-	descender = property(_get_descender, _set_descender, doc="descender value")
-	
-	def _get_capHeight(self):
-		raise NotImplementedError
-	
-	def _set_capHeight(self, value):
-		raise NotImplementedError
-	
-	capHeight = property(_get_capHeight, _set_capHeight, doc="cap height value")
-	
-	def _get_xHeight(self):
-		raise NotImplementedError
-	
-	def _set_xHeight(self, value):
-		raise NotImplementedError
-	
-	xHeight = property(_get_xHeight, _set_xHeight, doc="x height value")
-	
-	def _get_defaultWidth(self):
-		raise NotImplementedError
-	
-	def _set_defaultWidth(self, value):
-		raise NotImplementedError
-	
-	defaultWidth = property(_get_defaultWidth, _set_defaultWidth, doc="default width value")
-	
-	def _get_italicAngle(self):
-		raise NotImplementedError
-	
-	def _set_italicAngle(self, value):
-		raise NotImplementedError
-	
-	italicAngle = property(_get_italicAngle, _set_italicAngle, doc="italic_angle")
-	
-	def _get_slantAngle(self):
-		raise NotImplementedError
-	
-	def _set_slantAngle(self, value):
-		raise NotImplementedError
-	
-	slantAngle = property(_get_slantAngle, _set_slantAngle, doc="slant_angle")
-	
-	def autoNaming(self, familyName=None, styleName=None):
-		"""Automatically set the font naming info based on family and style names."""
+	def _get_text(self):
+		return self._text
 
-		if familyName is None:
-			if not self.familyName:
-				raise RoboFabError, "Family name and style name must be complete"
-		else:
-			self.familyName = familyName
-		if styleName is None:
-			if not self.styleName:
-				raise RoboFabError, "Family name and style name must be complete"
-		else:
-			self.styleName = styleName
-		family = self.familyName
-		style = self.styleName		
-		self.fullName = ' '.join((family, style))
-		self.fontName = '-'.join((family, style)).replace(' ', '')
-		self.fondName = family
-		self.menuName = ' '.join((family, style))
-		self.otFamilyName = family
-		self.otStyleName = style
-		self.otMacName = ' '.join((family, style))
-		#self._hasChanged()
-		
+	def _set_text(self, value):
+		assert isinstance(value, basestring)
+		self._text = value
+
+	text = property(_get_text, _set_text, doc="raw feature text.")
+
+
 class BaseGroups(dict):
 	
 	"""Base class for all RFont.groups objects"""
@@ -3268,7 +3053,7 @@ class BaseGroups(dict):
 		fontParent = self.getParent()
 		if fontParent is not None:
 			try:
-				font = fontParent.info.fullName
+				font = fontParent.info.postscriptFullName
 			except AttributeError: pass
 		return "<RGroups for %s>"%font
 
@@ -3312,7 +3097,7 @@ class BaseLib(dict):
 		if parentObject is not None:
 			#do we have a font?
 			try:
-				parent = parentObject.info.fullName
+				parent = parentObject.info.postscriptFullName
 			except AttributeError:
 				#or do we have a glyph?
 				try:
@@ -3357,7 +3142,7 @@ class BaseKerning(RBaseObject):
 		fontParent = self.getParent()
 		if fontParent is not None:
 			try:
-				font = fontParent.info.fullName
+				font = fontParent.info.postscriptFullName
 			except AttributeError: pass
 		return "<RKerning for %s>"%font
 			
@@ -3704,5 +3489,4 @@ class BaseKerning(RBaseObject):
 		if factor == 0:
 			raise ZeroDivisionError
 		return self.__mul__(1.0/factor)
-	
 	

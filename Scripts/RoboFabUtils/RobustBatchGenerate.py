@@ -25,7 +25,7 @@ def makeDestination(root):
 	return macPath
 
 def generateOne(f, dstDir):
-	print "generating %s"%f.info.fullName
+	print "generating %s"%f.info.postscriptFullName
 	f.generate('mactype1',  dstDir)
 	
 

@@ -8,13 +8,13 @@ af = AllFonts()
 results = []
 line = []
 for n in af:
-	line.append(`n.info.fullName`)
+	line.append(`n.info.postscriptFullName`)
 results.append(line)
 
 for i in range(len(af)):
 	one = af[i]
 	line = []
-	line.append(af[i].info.fullName)
+	line.append(af[i].info.postscriptFullName)
 	for j in range(len(af)):
 		other = af[j]
 		line.append(`one==other`)

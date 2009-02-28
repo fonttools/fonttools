@@ -29,7 +29,7 @@ kerning = f.kerning
 # you call and attribute or make a change.
 
 # kerning gives you access to some bits of global data
-print "%s has %s kerning pairs"%(f.info.fullName, len(kerning))
+print "%s has %s kerning pairs"%(f.info.postscriptFullName, len(kerning))
 print "the average kerning value is %s"%kerning.getAverage()
 min, max = kerning.getExtremes()
 print "the largest kerning value is %s"%max

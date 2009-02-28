@@ -12,7 +12,7 @@ from robofab.world import NewFont
 from robofab.test.testSupport import getDemoFontPath, getDemoFontGlyphSetPath
 from robofab.tools.glifImport import importAllGlifFiles
 from robofab.pens.digestPen import DigestPointPen
-from robofab.pens.adapterPens import SegmentToPointPen, FabToFontToolsPenAdapter
+from robofab.pens.adapterPens import SegmentToPointPen
 
 
 def getDigests(font):

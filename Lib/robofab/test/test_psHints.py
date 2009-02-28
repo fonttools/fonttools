@@ -102,34 +102,6 @@ def test():
 		<RGlyph for None.new>
 		>>> f["new"].psHints.asDict() == g.psHints.asDict()
 		True
-
-		# multiplication
-		>>> v = f.psHints * 2
-		>>> v.asDict() == {'vStems': [1000, 20], 'blueFuzz': 2, 'blueShift': 2, 'forceBold': 2, 'blueScale': 1.0, 'hStems': [200, 180]}
-		True
-
-		# division
-		>>> v = f.psHints / 2
-		>>> v.asDict() == {'vStems': [250.0, 5.0], 'blueFuzz': 0.5, 'blueShift': 0.5, 'forceBold': 0.5, 'blueScale': 0.25, 'hStems': [50.0, 45.0]}
-		True
-
-		# multiplication with x, y, factor
-		# note the h stems are multiplied by .5, the v stems (and blue values) are multiplied by 10
-		>>> v = f.psHints * (.5, 10)
-		>>> v.asDict() == {'vStems': [5000, 100], 'blueFuzz': 10, 'blueShift': 10, 'forceBold': 0.5, 'blueScale': 5.0, 'hStems': [50.0, 45.0]}
-		True
-
-		# multiplication with x, y, factor
-		# note the h stems are divided by .5, the v stems (and blue values) are divided by 10
-		>>> v = f.psHints / (.5, 10)
-		>>> v.asDict() == {'vStems': [50.0, 1.0], 'blueFuzz': 0.10000000000000001, 'blueShift': 0.10000000000000001, 'forceBold': 2.0, 'blueScale': 0.050000000000000003, 'hStems': [200.0, 180.0]}
-		True
-
-		>>> v = f.psHints * .333
-		>>> v.round()
-		>>> v.asDict() == {'vStems': [167, 3], 'blueScale': 0.16650000000000001, 'hStems': [33, 30]}
-		True
-
 	"""
 
 if __name__ == "__main__":

@@ -17,6 +17,7 @@ if __name__ == "__main__":
 			mod = __import__(modName, {}, {}, ["*"])
 		except ImportError:
 			print "*** skipped", fileName
+			continue
 	
 		suites.append(loader.loadTestsFromModule(mod))
 	

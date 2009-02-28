@@ -1,7 +1,7 @@
 """UFO for GlifLib"""
 
 from robofab import RoboFabError, RoboFabWarning
-from robofab.objects.objectsBase import BaseFont, BaseKerning, BaseGroups, BaseInfo, BaseLib,\
+from robofab.objects.objectsBase import BaseFont, BaseKerning, BaseGroups, BaseInfo, BaseFeatures, BaseLib,\
 		BaseGlyph, BaseContour, BaseSegment, BasePoint, BaseBPoint, BaseAnchor, BaseGuide, BaseComponent, \
 		relativeBCPIn, relativeBCPOut, absoluteBCPIn, absoluteBCPOut, _box,\
 		_interpolate, _interpolatePt, roundPt, addPt,\
@@ -45,8 +45,10 @@ def OpenFont(path=None, note=None):
 def NewFont(familyName=None, styleName=None):
 	"""Make a new font"""
 	new = RFont()
-	new.info.familyName = familyName
-	new.info.styleName = styleName
+	if familyName is not None:
+		new.info.familyName = familyName
+	if styleName is not None:
+		new.info.styleName = styleName
 	return new
 	
 def AllFonts():
@@ -67,13 +69,16 @@ class PostScriptFontHintValues(BasePostScriptFontHintValues):
 	"""
 	
 	def __init__(self, aFont=None, data=None):
-		# read the data from the font.lib, it won't be anywhere else
+		self.setParent(aFont)
 		BasePostScriptFontHintValues.__init__(self)
 		if aFont is not None:
-			self.setParent(aFont)
+			# in version 1, this data was stored in the lib
+			# if it is still there, guess that it is correct
+			# move it to font info and remove it from the lib.
 			libData = aFont.lib.get(postScriptHintDataLibKey)
 			if libData is not None:
 				self.fromDict(libData)
+				del libData[postScriptHintDataLibKey]
 		if data is not None:
 			self.fromDict(data)
 
@@ -123,15 +128,17 @@ class RFont(BaseFont):
 		self.kerning.setParent(self)
 		self.info = RInfo()
 		self.info.setParent(self)
+		self.features = RFeatures()
+		self.features.setParent(self)
 		self.groups = RGroups()
 		self.groups.setParent(self)
 		self.lib = RLib()
 		self.lib.setParent(self)
-		self.psHints = PostScriptFontHintValues(self)
-		self.psHints.setParent(self)
-		
 		if path:
 			self._loadData(path)
+		else:
+			self.psHints = PostScriptFontHintValues(self)
+			self.psHints.setParent(self)
 		
 	def __setitem__(self, glyphName, glyph):
 		"""Set a glyph at key."""
@@ -152,19 +159,51 @@ class RFont(BaseFont):
 		return len(self._glyphSet)
 	
 	def _loadData(self, path):
-		#Load the data into the font
 		from robofab.ufoLib import UFOReader
-		u = UFOReader(path)
-		u.readInfo(self.info)
-		self.kerning.update(u.readKerning())
+		reader = UFOReader(path)
+		fontLib = reader.readLib()
+		# info
+		reader.readInfo(self.info)
+		# kerning
+		self.kerning.update(reader.readKerning())
 		self.kerning.setChanged(False)
-		self.groups.update(u.readGroups())
-		self.lib.update(u.readLib())
-		# after reading the lib, read hinting data from the lib
+		# groups
+		self.groups.update(reader.readGroups())
+		# features
+		if reader.formatVersion == 1:
+			# migrate features from the lib
+			features = []
+			classes = fontLib.get("org.robofab.opentype.classes")
+			if classes is not None:
+				del fontLib["org.robofab.opentype.classes"]
+				features.append(classes)
+			splitFeatures = fontLib.get("org.robofab.opentype.features")
+			if splitFeatures is not None:
+				order = fontLib.get("org.robofab.opentype.featureorder")
+				if order is None:
+					order = splitFeatures.keys()
+					order.sort()
+				else:
+					del fontLib["org.robofab.opentype.featureorder"]
+				del fontLib["org.robofab.opentype.features"]
+				for tag in order:
+					oneFeature = splitFeatures.get(tag)
+					if oneFeature is not None:
+						features.append(oneFeature)
+			features = "\n".join(features)
+		else:
+			features = reader.readFeatures()
+		self.features.text = features
+		# hint data
 		self.psHints = PostScriptFontHintValues(self)
-		self._glyphSet = u.getGlyphSet()
+		if postScriptHintDataLibKey in fontLib:
+			del fontLib[postScriptHintDataLibKey]
+		# lib
+		self.lib.update(fontLib)
+		# glyphs
+		self._glyphSet = reader.getGlyphSet()
 		self._hasNotChanged(doGlyphs=False)
-		
+
 	def _loadGlyph(self, glyphName):
 		"""Load a single glyph from the glyphSet, on request."""
 		from robofab.pens.rfUFOPen import RFUFOPointPen
@@ -329,7 +368,7 @@ class RFont(BaseFont):
 		return reverseMap
 		
 
-	def save(self, destDir=None, doProgress=False, saveNow=False):
+	def save(self, destDir=None, doProgress=False, formatVersion=2):
 		"""Save the Font in UFO format."""
 		# XXX note that when doing "save as" by specifying the destDir argument
 		# _all_ glyphs get loaded into memory. This could be optimized by either
@@ -337,6 +376,7 @@ class RFont(BaseFont):
 		# well that would work) by simply clearing out self._objects after the
 		# save.
 		from robofab.ufoLib import UFOWriter
+		from robofab.tools.fontlabFeatureSplitter import splitFeaturesForFontLab
 		# if no destination is given, or if
 		# the given destination is the current
 		# path, this is not a save as operation
@@ -345,54 +385,78 @@ class RFont(BaseFont):
 			destDir = self._path
 		else:
 			saveAs = True
-		u = UFOWriter(destDir)
+		# start a progress bar
 		nonGlyphCount = 5
 		bar = None
 		if doProgress:
 			from robofab.interface.all.dialogs import ProgressBar
-			bar = ProgressBar('Exporting UFO', nonGlyphCount+len(self._object.keys()))
+			bar = ProgressBar("Exporting UFO", nonGlyphCount + len(self._object.keys()))
+		# write
+		writer = UFOWriter(destDir, formatVersion=formatVersion)
 		try:
-			#if self.info.changed:
+			# make a shallow copy of the lib. stuff may be added to it.
+			fontLib = dict(self.lib)
+			# info
 			if bar:
-				bar.label('Saving info...')
-			u.writeInfo(self.info)
+				bar.label("Saving info...")
+			writer.writeInfo(self.info)
 			if bar:
 				bar.tick()
+			# kerning
 			if self.kerning.changed or saveAs:
 				if bar:
-					bar.label('Saving kerning...')
-				u.writeKerning(self.kerning.asDict())
-				self.kerning.setChanged(False)
+					bar.label("Saving kerning...")
+				writer.writeKerning(self.kerning.asDict())
+				if bar:
+					bar.tick()
+			# groups
+			if bar:
+				bar.label("Saving groups...")
+			writer.writeGroups(self.groups)
 			if bar:
 				bar.tick()
-			#if self.groups.changed:
+			# features
 			if bar:
-				bar.label('Saving groups...')
-			u.writeGroups(self.groups)
+				bar.label("Saving features...")
+			features = self.features.text
+			if features is None:
+				features = ""
+			if formatVersion == 2:
+				writer.writeFeatures(features)
+			elif formatVersion == 1:
+				classes, features = splitFeaturesForFontLab(features)
+				if classes:
+					fontLib["org.robofab.opentype.classes"] = classes.strip() + "\n"
+				if features:
+					featureDict = {}
+					for featureName, featureText in features:
+						featureDict[featureName] = featureText.strip() + "\n"
+					fontLib["org.robofab.opentype.features"] = featureDict
+					fontLib["org.robofab.opentype.featureorder"] = [featureName for featureName, featureText in features]
 			if bar:
 				bar.tick()
-
-			# save postscript hint data
-			self.lib[postScriptHintDataLibKey] = self.psHints.asDict()
-
-			#if self.lib.changed:
+			# lib
+			if formatVersion == 1:
+				fontLib[postScriptHintDataLibKey] = self.psHints.asDict()
 			if bar:
-				bar.label('Saving lib...')
-			u.writeLib(self.lib)
+				bar.label("Saving lib...")
+			writer.writeLib(fontLib)
 			if bar:
 				bar.tick()
+			# glyphs
 			glyphNameToFileNameFunc = self.getGlyphNameToFileNameFunc()
-			glyphSet = u.getGlyphSet(glyphNameToFileNameFunc)
+
+			glyphSet = writer.getGlyphSet(glyphNameToFileNameFunc)
 			if len(self._scheduledForDeletion) != 0:
 				if bar:
-					bar.label('Removing deleted glyphs......')
+					bar.label("Removing deleted glyphs...")
 				for glyphName in self._scheduledForDeletion:
 					if glyphSet.has_key(glyphName):
 						glyphSet.deleteGlyph(glyphName)
 				if bar:
 					bar.tick()
 			if bar:
-				bar.label('Saving glyphs...')
+				bar.label("Saving glyphs...")
 			count = nonGlyphCount
 			if saveAs:
 				glyphNames = self.keys()
@@ -407,15 +471,18 @@ class RFont(BaseFont):
 				count = count + 1
 			glyphSet.writeContents()
 			self._glyphSet = glyphSet
+		# only blindly stop if the user says to
 		except KeyboardInterrupt:
 			bar.close()
 			bar = None
+		# kill the progress bar
 		if bar:
 			bar.close()
+		# reset internal stuff
 		self._path = destDir
 		self._scheduledForDeletion = []
 		self.setChanged(False)
-		
+
 	def newGlyph(self, glyphName, clear=True):
 		"""Make a new glyph with glyphName
 		if the glyph exists and clear=True clear the glyph"""
@@ -1126,370 +1193,9 @@ class RLib(BaseLib):
 		
 class RInfo(BaseInfo):
 	
-	_title = "RoboFabFonInfo"
-	
-	def __init__(self):
-		BaseInfo.__init__(self)
-		self.selected = False
-		
-		self._familyName = None
-		self._styleName = None
-		self._fullName = None
-		self._fontName = None
-		self._menuName = None
-		self._fondName = None
-		self._otFamilyName = None
-		self._otStyleName = None
-		self._otMacName = None
-		self._weightValue = None
-		self._weightName = None
-		self._widthName = None
-		self._fontStyle = None
-		self._msCharSet = None
-		self._note = None
-		self._fondID = None
-		self._uniqueID = None
-		self._versionMajor = None
-		self._versionMinor = None
-		self._year = None
-		self._copyright = None
-		self._notice = None
-		self._trademark = None
-		self._license = None
-		self._licenseURL = None
-		self._createdBy = None
-		self._designer = None
-		self._designerURL = None
-		self._vendorURL = None
-		self._ttVendor = None
-		self._ttUniqueID = None
-		self._ttVersion = None
-		self._unitsPerEm = None
-		self._ascender = None
-		self._descender = None
-		self._capHeight = None
-		self._xHeight = None
-		self._defaultWidth = None
-		self._italicAngle = None
-		self._slantAngle = None
-	
-	def _get_familyName(self):
-		return self._familyName
-	
-	def _set_familyName(self, value):
-		self._familyName = value
-	
-	familyName = property(_get_familyName, _set_familyName, doc="family_name")
-	
-	def _get_styleName(self):
-		return self._styleName
-	
-	def _set_styleName(self, value):
-		self._styleName = value
-	
-	styleName = property(_get_styleName, _set_styleName, doc="style_name")
-	
-	def _get_fullName(self):
-		return self._fullName
-	
-	def _set_fullName(self, value):
-		self._fullName = value
-	
-	fullName = property(_get_fullName, _set_fullName, doc="full_name")
-	
-	def _get_fontName(self):
-		return self._fontName
-	
-	def _set_fontName(self, value):
-		self._fontName = value
-	
-	fontName = property(_get_fontName, _set_fontName, doc="font_name")
-	
-	def _get_menuName(self):
-		return self._menuName
-	
-	def _set_menuName(self, value):
-		self._menuName = value
-	
-	menuName = property(_get_menuName, _set_menuName, doc="menu_name")
-	
-	def _get_fondName(self):
-		return self._fondName
-	
-	def _set_fondName(self, value):
-		self._fondName = value
-	
-	fondName = property(_get_fondName, _set_fondName, doc="apple_name")
-	
-	def _get_otFamilyName(self):
-		return self._otFamilyName
-	
-	def _set_otFamilyName(self, value):
-		self._otFamilyName = value
-	
-	otFamilyName = property(_get_otFamilyName, _set_otFamilyName, doc="pref_family_name")
-	
-	def _get_otStyleName(self):
-		return self._otStyleName
-	
-	def _set_otStyleName(self, value):
-		self._otStyleName = value
-	
-	otStyleName = property(_get_otStyleName, _set_otStyleName, doc="pref_style_name")
-	
-	def _get_otMacName(self):
-		return self._otMacName
-	
-	def _set_otMacName(self, value):
-		self._otMacName = value
-	
-	otMacName = property(_get_otMacName, _set_otMacName, doc="mac_compatible")
-	
-	def _get_weightValue(self):
-		return self._weightValue
-	
-	def _set_weightValue(self, value):
-		self._weightValue = value
-	
-	weightValue = property(_get_weightValue, _set_weightValue, doc="weight value")
-	
-	def _get_weightName(self):
-		return self._weightName
-	
-	def _set_weightName(self, value):
-		self._weightName = value
-	
-	weightName = property(_get_weightName, _set_weightName, doc="weight name")
-	
-	def _get_widthName(self):
-		return self._widthName
-	
-	def _set_widthName(self, value):
-		self._widthName = value
-	
-	widthName = property(_get_widthName, _set_widthName, doc="width name")
+	_title = "RoboFabFontInfo"
 
-	def _get_fontStyle(self):
-		return self._fontStyle
-	
-	def _set_fontStyle(self, value):
-		self._fontStyle = value
-	
-	fontStyle = property(_get_fontStyle, _set_fontStyle, doc="font_style")
-	
-	def _get_msCharSet(self):
-		return self._msCharSet
-	
-	def _set_msCharSet(self, value):
-		self._msCharSet = value
-	
-	msCharSet = property(_get_msCharSet, _set_msCharSet, doc="ms_charset")
-	
-	def _get_note(self):
-		return self._note
-	
-	def _set_note(self, value):
-		self._note = value
-	
-	note = property(_get_note, _set_note, doc="note")
-	
-	def _get_fondID(self):
-		return self._fondID
-	
-	def _set_fondID(self, value):
-		self._fondID = value
-	
-	fondID = property(_get_fondID, _set_fondID, doc="fond_id")
-	
-	def _get_uniqueID(self):
-		return self._uniqueID
-	
-	def _set_uniqueID(self, value):
-		self._uniqueID = value
-	
-	uniqueID = property(_get_uniqueID, _set_uniqueID, doc="unique_id")
-	
-	def _get_versionMajor(self):
-		return self._versionMajor
-	
-	def _set_versionMajor(self, value):
-		self._versionMajor = value
-	
-	versionMajor = property(_get_versionMajor, _set_versionMajor, doc="version_major")
-	
-	def _get_versionMinor(self):
-		return self._versionMinor
-	
-	def _set_versionMinor(self, value):
-		self._versionMinor = value
-	
-	versionMinor = property(_get_versionMinor, _set_versionMinor, doc="version_minor")
-	
-	def _get_year(self):
-		return self._year
-	
-	def _set_year(self, value):
-		self._year = value
-	
-	year = property(_get_year, _set_year, doc="year")
-	
-	def _get_copyright(self):
-		return self._copyright
-	
-	def _set_copyright(self, value):
-		self._copyright = value
-	
-	copyright = property(_get_copyright, _set_copyright, doc="copyright")
-	
-	def _get_notice(self):
-		return self._notice
-	
-	def _set_notice(self, value):
-		self._notice = value
-	
-	notice = property(_get_notice, _set_notice, doc="notice")
-	
-	def _get_trademark(self):
-		return self._trademark
-	
-	def _set_trademark(self, value):
-		self._trademark = value
-	
-	trademark = property(_get_trademark, _set_trademark, doc="trademark")
-	
-	def _get_license(self):
-		return self._license
-	
-	def _set_license(self, value):
-		self._license = value
-	
-	license = property(_get_license, _set_license, doc="license")
-	
-	def _get_licenseURL(self):
-		return self._licenseURL
-	
-	def _set_licenseURL(self, value):
-		self._licenseURL = value
-	
-	licenseURL = property(_get_licenseURL, _set_licenseURL, doc="license_url")
-	
-	def _get_designer(self):
-		return self._designer
-	
-	def _set_designer(self, value):
-		self._designer = value
-	
-	designer = property(_get_designer, _set_designer, doc="designer")
-	
-	def _get_createdBy(self):
-		return self._createdBy
-	
-	def _set_createdBy(self, value):
-		self._createdBy = value
-	
-	createdBy = property(_get_createdBy, _set_createdBy, doc="source")
-	
-	def _get_designerURL(self):
-		return self._designerURL
-	
-	def _set_designerURL(self, value):
-		self._designerURL = value
-	
-	designerURL = property(_get_designerURL, _set_designerURL, doc="designer_url")
-	
-	def _get_vendorURL(self):
-		return self._vendorURL
-	
-	def _set_vendorURL(self, value):
-		self._vendorURL = value
-	
-	vendorURL = property(_get_vendorURL, _set_vendorURL, doc="vendor_url")
-	
-	def _get_ttVendor(self):
-		return self._ttVendor
-	
-	def _set_ttVendor(self, value):
-		self._ttVendor = value
-	
-	ttVendor = property(_get_ttVendor, _set_ttVendor, doc="vendor")
-	
-	def _get_ttUniqueID(self):
-		return self._ttUniqueID
-	
-	def _set_ttUniqueID(self, value):
-		self._ttUniqueID = value
-	
-	ttUniqueID = property(_get_ttUniqueID, _set_ttUniqueID, doc="tt_u_id")
-	
-	def _get_ttVersion(self):
-		return self._ttVersion
-	
-	def _set_ttVersion(self, value):
-		self._ttVersion = value
-	
-	ttVersion = property(_get_ttVersion, _set_ttVersion, doc="tt_version")
-	
-	def _get_unitsPerEm(self):
-		return self._unitsPerEm
-		
-	def _set_unitsPerEm(self, value):
-		self._unitsPerEm = value
-	
-	unitsPerEm = property(_get_unitsPerEm, _set_unitsPerEm, doc="")
-	
-	def _get_ascender(self):
-		return self._ascender
-	
-	def _set_ascender(self, value):
-		self._ascender = value
-	
-	ascender = property(_get_ascender, _set_ascender, doc="ascender value")
-	
-	def _get_descender(self):
-		return self._descender
-	
-	def _set_descender(self, value):
-		self._descender = value
-	
-	descender = property(_get_descender, _set_descender, doc="descender value")
-	
-	def _get_capHeight(self):
-		return self._capHeight
-	
-	def _set_capHeight(self, value):
-		self._capHeight = value
-	
-	capHeight = property(_get_capHeight, _set_capHeight, doc="cap height value")
-	
-	def _get_xHeight(self):
-		return self._xHeight
-	
-	def _set_xHeight(self, value):
-		self._xHeight = value
-	
-	xHeight = property(_get_xHeight, _set_xHeight, doc="x height value")
-	
-	def _get_defaultWidth(self):
-		return self._defaultWidth
-	
-	def _set_defaultWidth(self, value):
-		self._defaultWidth = value
-	
-	defaultWidth = property(_get_defaultWidth, _set_defaultWidth, doc="default width value")
-	
-	def _get_italicAngle(self):
-		return self._italicAngle
-	
-	def _set_italicAngle(self, value):
-		self._italicAngle = value
-	
-	italicAngle = property(_get_italicAngle, _set_italicAngle, doc="italic_angle")
-	
-	def _get_slantAngle(self):
-		return self._slantAngle
-	
-	def _set_slantAngle(self, value):
-		self._slantAngle = value
-	
-	slantAngle = property(_get_slantAngle, _set_slantAngle, doc="slant_angle")
+class RFeatures(BaseFeatures):
+
+	_title = "RoboFabFeatures"
 

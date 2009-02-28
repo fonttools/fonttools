@@ -12,34 +12,6 @@ else:
 	have_broken_macsupport = 0
 
 
-import robofab
-from robofab.plistlib import readPlist, writePlist
-
-def readFoundrySettings(dstPath):
-	"""read the foundry settings xml file and return a keyed dict."""
-	fileName = os.path.basename(dstPath)
-	if not os.path.exists(dstPath):
-		import shutil
-		# hm -- a fresh install, make a new default settings file
-		print "RoboFab: creating a new foundry settings file at", dstPath
-		srcDir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(robofab.__file__))), 'Data')
-		srcPath = os.path.join(srcDir, 'template_' + fileName)
-		shutil.copy(srcPath, dstPath)
-	return readPlist(dstPath)
-
-def getFoundrySetting(key, path):
-	"""get a specific setting from the foundry settings xml file."""
-	d = readFoundrySettings(path)
-	return d.get(key)
-
-writeFoundrySettings = writePlist
-
-def setFoundrySetting(key, value, dstPath):
-	"""write a specific entry in the foundry settings xml file."""
-	d = readFoundrySettings(dstPath)
-	d[key] = value
-	writeFoundrySettings(d, dstPath)
-	
 def readGlyphConstructions():
 	"""read GlyphConstruction and turn it into a dict"""
 	from robofab.tools.glyphConstruction import _glyphConstruction
@@ -57,9 +29,6 @@ def readGlyphConstructions():
 				build.append((accent, position))
 			glyphConstructions[name] = build
 	return glyphConstructions
-
-
-
 
 #
 #

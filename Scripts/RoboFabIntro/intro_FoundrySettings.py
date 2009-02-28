@@ -50,13 +50,13 @@ font.info.year = time.gmtime(time.time())[0]
 # Apply those settings that we just loaded
 font.info.copyright = mySettings['copyright']
 font.info.trademark = mySettings['trademark']
-font.info.license = mySettings['license']
-font.info.licenseURL = mySettings['licenseurl']
-font.info.notice = mySettings['notice']
-font.info.ttVendor = mySettings['ttvendor']
-font.info.vendorURL = mySettings['vendorurl']
-font.info.designer = mySettings['designer']
-font.info.designerURL = mySettings['designerurl']
+font.info.openTypeNameLicense = mySettings['license']
+font.info.openTypeNameLicenseURL = mySettings['licenseurl']
+font.info.openTypeNameDescription = mySettings['notice']
+font.info.openTypeOS2VendorID = mySettings['ttvendor']
+font.info.openTypeNameManufacturerURL = mySettings['vendorurl']
+font.info.openTypeNameDesigner = mySettings['designer']
+font.info.openTypeNameDesignerURL = mySettings['designerurl']
 
 # and call the update method
 font.update()

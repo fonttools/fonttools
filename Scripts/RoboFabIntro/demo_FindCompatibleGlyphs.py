@@ -21,7 +21,7 @@ for c in f:
 	compatibles[d].append(c.name)
 
 print
-print 'In %s, these glyphs could interpolate:'%(f.info.fullName)
+print 'In %s, these glyphs could interpolate:'%(f.info.postscriptFullName)
 for d, names in compatibles.items():
 	if len(names) > 1:
 		print ", ".join(names)
