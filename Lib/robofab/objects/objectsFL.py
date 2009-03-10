@@ -1034,8 +1034,10 @@ class RFont(BaseFont):
 	def _writeOpenTypeFeaturesToLib(self, fontLib):
 		# this should only be used for UFO format version 1
 		flFont = self.naked()
-		fontLib["org.robofab.opentype.classes"] = _normalizeLineEndings(flFont.ot_classes).rstrip() + "\n"
-		if flFont.features:
+		cls = flFont.ot_classes
+		if cls is not None:
+			fontLib["org.robofab.opentype.classes"] = _normalizeLineEndings(cls).rstrip() + "\n"
+		if flFontA.features:
 			features = {}
 			order = []
 			for feature in flFont.features:
