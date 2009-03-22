@@ -2,8 +2,7 @@
 
 from FL import *	
 
-from robofab.tools.toolsFL import GlyphIndexTable,\
-		AllFonts, NewGlyph
+from robofab.tools.toolsFL import GlyphIndexTable, NewGlyph
 from robofab.objects.objectsBase import BaseFont, BaseGlyph, BaseContour, BaseSegment,\
 		BasePoint, BaseBPoint, BaseAnchor, BaseGuide, BaseComponent, BaseKerning, BaseInfo, BaseFeatures, BaseGroups, BaseLib,\
 		roundPt, addPt, _box,\
@@ -343,7 +342,6 @@ def CurrentFont():
 	
 def CurrentGlyph():
 	"""Return a RoboFab glyph object for the currently selected glyph."""
-	from robofab.world import AllFonts
 	currentPath = fl.font.file_name
 	if fl.glyph is None:
 		return None
@@ -391,6 +389,41 @@ def AllFonts():
 		naked = fl[index]
 		all.append(RFont(naked))
 	return all
+	
+	from robofab.world import CurrentGlyph
+
+def getGlyphFromMask(g):
+	"""Get a Fab glyph object for the data in the mask layer."""
+	from robofab.objects.objectsFL import RGlyph as FL_RGlyph
+	from robofab.objects.objectsRF import RGlyph as RF_RGlyph
+	n = g.naked()
+	mask = n.mask
+	fg = FL_RGlyph(mask)
+	rf = RF_RGlyph()
+	pen = rf.getPointPen()
+	fg.drawPoints(pen)
+	rf.width = g.width	# can we get to the mask glyph width without flipping the UI?
+	return rf
+
+def setMaskToGlyph(maskGlyph, targetGlyph, clear=True):
+	"""Set the maskGlyph as a mask layer in targetGlyph.
+	maskGlyph is a FontLab or RoboFab RGlyph, orphaned or not.
+	targetGlyph is a FontLab RGLyph.
+	clear is a bool. False: keep the existing mask data, True: clear the existing mask data.
+	"""
+	from robofab.objects.objectsFL import RGlyph as FL_RGlyph
+	from FL import Glyph as FL_NakedGlyph
+	flGlyph = FL_NakedGlyph()		# new, orphaned FL glyph
+	wrapped = FL_RGlyph(flGlyph)	# rf wrapper for FL glyph
+	if not clear:
+			# copy the existing mask data first
+			existingMask = getGlyphFromMask(targetGlyph)
+			pen = wrapped.getPointPen()		# get a pen for the wrapper
+			existingMask.drawPoints(pen)
+	pen = wrapped.getPointPen()		# get a pen for the wrapper
+	maskGlyph.drawPoints(pen)		# draw the data
+	targetGlyph.naked().mask = wrapped .naked()	
+	targetGlyph.update()
 
 # the lib getter and setter are shared by RFont and RGlyph	
 def _get_lib(self):
