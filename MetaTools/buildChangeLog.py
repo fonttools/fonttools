@@ -6,5 +6,5 @@ fontToolsDir = os.path.dirname(os.path.dirname(os.path.normpath(
 		os.path.join(os.getcwd(), sys.argv[0]))))
 
 os.chdir(fontToolsDir)
-os.system("cvs log | ./MetaTools/logmerge.py > Doc/ChangeLog.txt")
+os.system("svn2cl -o Doc/ChangeLog https://fonttools.svn.sourceforge.net/svnroot/fonttools/trunk")
 print "done."
