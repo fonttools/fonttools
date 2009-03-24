@@ -43,7 +43,7 @@ def roundTrip(ttFile1, options, report):
 		options.mergeFile = None
 		ttx.ttDump(ttFile2, xmlFile2, options)
 		
-		diffcmd = 'diff -c2 -I ".*modified value\|checkSumAdjustment.*" "%s" "%s"' % (xmlFile1, xmlFile2)
+		diffcmd = 'diff -U2 -I ".*modified value\|checkSumAdjustment.*" "%s" "%s"' % (xmlFile1, xmlFile2)
 		output = os.popen(diffcmd, "r", 1)
 		lines = []
 		while 1:
