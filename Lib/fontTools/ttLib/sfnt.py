@@ -159,7 +159,7 @@ class SFNTWriter:
 	def calcMasterChecksum(self, directory):
 		# calculate checkSumAdjustment
 		tags = self.tables.keys()
-		checksums = numpy.zeros(len(tags)+1, numpy.int32)
+		checksums = numpy.zeros(len(tags)+1, numpy.uint32)
 		for i in range(len(tags)):
 			checksums[i] = self.tables[tags[i]].checkSum
 		
@@ -167,13 +167,12 @@ class SFNTWriter:
 		assert directory_end == len(directory)
 		
 		checksums[-1] = calcChecksum(directory)
-		checksum = numpy.add.reduce(checksums)
+		checksum = numpy.add.reduce(checksums,dtype=numpy.uint32)
 		# BiboAfba!
-		checksumadjustment = numpy.array(0xb1b0afbaL - 0x100000000L,
-				numpy.int32) - checksum
+		checksumadjustment = int(numpy.subtract.reduce(numpy.array([0xB1B0AFBA, checksum], numpy.uint32)))
 		# write the checksum to the file
 		self.file.seek(self.tables['head'].offset + 8)
-		self.file.write(struct.pack(">l", checksumadjustment))
+		self.file.write(struct.pack(">L", checksumadjustment))
 
 
 # -- sfnt directory helpers and cruft
@@ -205,9 +204,9 @@ sfntDirectorySize = sstruct.calcsize(sfntDirectoryFormat)
 sfntDirectoryEntryFormat = """
 		> # big endian
 		tag:            4s
-		checkSum:       l
-		offset:         l
-		length:         l
+		checkSum:       L
+		offset:         L
+		length:         L
 """
 
 sfntDirectoryEntrySize = sstruct.calcsize(sfntDirectoryEntryFormat)
@@ -244,10 +243,9 @@ def calcChecksum(data, start=0):
 	remainder = len(data) % 4
 	if remainder:
 		data = data + '\0' * (4-remainder)
-	a = numpy.fromstring(struct.pack(">l", start) + data, numpy.int32)
-	if sys.byteorder <> "big":
-		a = a.byteswap()
-	return numpy.add.reduce(a)
+	data = struct.unpack(">%dL"%(len(data)/4), data)
+	a = numpy.array((start,)+data, numpy.uint32)
+	return int(numpy.sum(a,dtype=numpy.uint32))
 
 
 def maxPowerOfTwo(x):
