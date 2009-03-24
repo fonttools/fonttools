@@ -1070,7 +1070,7 @@ class RFont(BaseFont):
 		cls = flFont.ot_classes
 		if cls is not None:
 			fontLib["org.robofab.opentype.classes"] = _normalizeLineEndings(cls).rstrip() + "\n"
-		if flFontA.features:
+		if flFont.features:
 			features = {}
 			order = []
 			for feature in flFont.features:
