@@ -489,12 +489,18 @@ class RFont(BaseFont):
 		if clear and glyphName in self:
 			g = self[glyphName]
 			g.clear()
-			g.width = self.info.defaultWidth
+			w = self.info.postscriptDefaultWidthX
+			if w is None:
+				w = 0
+			g.width = w
 			return g
 		g = RGlyph()
 		g.setParent(self)
 		g.name = glyphName
-		g.width = self.info.defaultWidth
+		w = self.info.postscriptDefaultWidthX
+		if w is None:
+			w = 0
+		g.width = w
 		g._hasChanged()
 		self._object[glyphName] = g
 		# is the user adding a glyph that has the same
