@@ -60,15 +60,37 @@ def glyphNameToFileName(glyphName, glyphSet):
 		'a'     -> 'a.glif'
 		'A'     -> 'A_.glif'
 		'A.alt' -> 'A_.alt.glif'
-		'A.Alt' -> 'A_.Alt.glif'  # this one would cause problems
+		'A.Alt' -> 'A_.Alt.glif'
+		'T_H'   -> 'T__H_.glif'
+		'T_h'   -> 'T__h.glif'
+		't_h'   -> 't_h.glif'
+		'F_F_I' -> 'F__F__I_.glif'
+		'f_f_i' -> 'f_f_i.glif'
+
 	"""
 	if glyphName.startswith("."):
 		# some OSes consider filenames such as .notdef "hidden"
 		glyphName = "_" + glyphName[1:]
 	parts = glyphName.split(".")
-	if parts[0] != parts[0].lower():
-		parts[0] += "_"
+	if parts[0].find("_")!=-1:
+		# it is a compound name, check the separate parts
+		bits = []
+		for p in parts[0].split("_"):
+			if p != p.lower():
+				bits.append(p+"_")
+				continue
+			bits.append(p)
+		parts[0] = "_".join(bits)
+	else:
+		# it is a single name
+		if parts[0] != parts[0].lower():
+			parts[0] += "_"
+	for i in range(1, len(parts)):
+		# resolve additional, period separated parts, like alt / Alt
+		if parts[i] != parts[i].lower():
+			parts[i] += "_"
 	return ".".join(parts) + ".glif"
+
 
 
 class GlyphSet:
@@ -684,3 +706,4 @@ if __name__ == "__main__":
 		g2 = TestGlyph()
 		readGlyphFromString(s, g2, PrintingPointPen())
 		pprint(g2.__dict__)
+
