@@ -79,6 +79,7 @@ class GlyphSetTests(unittest.TestCase):
 			dst.writeGlyph(glyphName, g, g.drawPoints)
 		d = {}
 		for k, v in src.contents.items():
+			print k, v
 			d[k] = "prefix" + v
 		self.assertEqual(d, dst.contents)
 
@@ -100,9 +101,16 @@ class FileNameTests(unittest.TestCase):
 		self.assertEqual(glyphNameToFileName("a", None), "a.glif")
 		self.assertEqual(glyphNameToFileName("A", None), "A_.glif")
 		self.assertEqual(glyphNameToFileName("Aring", None), "Aring_.glif")
-		self.assertEqual(glyphNameToFileName("F_A_B", None), "F_A_B_.glif")
+		self.assertEqual(glyphNameToFileName("F_A_B", None), "F__A__B_.glif")
 		self.assertEqual(glyphNameToFileName("A.alt", None), "A_.alt.glif")
+		self.assertEqual(glyphNameToFileName("A.Alt", None), "A_.Alt_.glif")
 		self.assertEqual(glyphNameToFileName(".notdef", None), "_notdef.glif")
+		self.assertEqual(glyphNameToFileName("T_H", None), "T__H_.glif")
+		self.assertEqual(glyphNameToFileName("T_h", None), "T__h.glif")
+		self.assertEqual(glyphNameToFileName("t_h", None), "t_h.glif")
+		self.assertEqual(glyphNameToFileName('F_F_I', None), "F__F__I_.glif")
+		self.assertEqual(glyphNameToFileName('f_f_i', None), "f_f_i.glif")
+		
 
 	def testShortFileNameScheme(self):
 		self.assertEqual(glyphNameToShortFileName("a", None), "a.glif")
