@@ -10,7 +10,7 @@ from robofab.objects.objectsBase import BaseFont, BaseGlyph, BaseContour, BaseSe
 		relativeBCPIn, relativeBCPOut, absoluteBCPIn, absoluteBCPOut,\
 		BasePostScriptFontHintValues, postScriptHintDataLibKey, BasePostScriptGlyphHintValues
 from fontTools.misc import arrayTools
-from robofab.pens.flPen import FLPointPen
+from robofab.pens.flPen import FLPointPen, FLPointContourPen
 from robofab import RoboFabError
 import os
 from robofab.plistlib import Data, Dict, readPlist, writePlist
@@ -416,11 +416,11 @@ def setMaskToGlyph(maskGlyph, targetGlyph, clear=True):
 	flGlyph = FL_NakedGlyph()		# new, orphaned FL glyph
 	wrapped = FL_RGlyph(flGlyph)	# rf wrapper for FL glyph
 	if not clear:
-			# copy the existing mask data first
-			existingMask = getGlyphFromMask(targetGlyph)
-			pen = wrapped.getPointPen()		# get a pen for the wrapper
-			existingMask.drawPoints(pen)
-	pen = wrapped.getPointPen()		# get a pen for the wrapper
+		# copy the existing mask data first
+		existingMask = getGlyphFromMask(targetGlyph)
+		pen = FLPointContourPen(existingMask)
+		existingMask.drawPoints(pen)
+	pen = FLPointContourPen(wrapped)
 	maskGlyph.drawPoints(pen)		# draw the data
 	targetGlyph.naked().mask = wrapped .naked()	
 	targetGlyph.update()
