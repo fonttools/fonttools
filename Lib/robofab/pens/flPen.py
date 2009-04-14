@@ -173,6 +173,13 @@ def drawFLGlyphOntoPointPen(flGlyph, pen):
 		pen.endPath()
 	for baseGlyph, tranform in _getComponents(flGlyph):
 		pen.addComponent(baseGlyph, tranform)
+		
+
+
+class FLPointContourPen(FLPointPen):
+	"""Same as FLPointPen, except that it ignores components."""
+	def addComponent(self, baseName, transformation):
+		pass
 
 
 NODE_TYPES = {nMOVE: "move", nLINE: "line", nCURVE: "curve",
