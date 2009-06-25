@@ -939,6 +939,8 @@ class RFont(BaseFont):
 			raise RoboFabError, "filename cannot contain periods.", fileName
 		fileName = '.'.join([fileName, suffix])
 		finalPath = os.path.join(filePath, fileName)
+		if isinstance(finalPath, unicode):
+			finalPath = finalPath.encode("utf-8")
 		# generate is (oddly) an application level method
 		# rather than a font level method. because of this,
 		# the font must be the current font. so, make it so.
