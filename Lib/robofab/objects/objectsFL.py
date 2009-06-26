@@ -418,8 +418,9 @@ def setMaskToGlyph(maskGlyph, targetGlyph, clear=True):
 	if not clear:
 		# copy the existing mask data first
 		existingMask = getGlyphFromMask(targetGlyph)
-		pen = FLPointContourPen(existingMask)
-		existingMask.drawPoints(pen)
+		if existingMask is not None:
+			pen = FLPointContourPen(existingMask)
+			existingMask.drawPoints(pen)
 	pen = FLPointContourPen(wrapped)
 	maskGlyph.drawPoints(pen)		# draw the data
 	targetGlyph.naked().mask = wrapped .naked()	
