@@ -666,16 +666,14 @@ class RFont(BaseFont):
 		g = NewGlyph(self._object, glyphName, clear)
 		return RGlyph(g)
 	
-	def insertGlyph(self, glyph, as=None):
+	def insertGlyph(self, glyph, name=None):
 		"""Returns a new glyph that has been inserted into the font.
-		as = another glyphname if you want to insert as with that."""
+		name = another glyphname if you want to insert as with that."""
 		from robofab.objects.objectsRF import RFont as _RFont
 		from robofab.objects.objectsRF import RGlyph as _RGlyph
 		oldGlyph = glyph
-		if as is None:
+		if name is None:
 			name = oldGlyph.name
-		else:
-			name = as
 		# clear the destination glyph if it exists.
 		if self.has_key(name):
 			self[name].clear()

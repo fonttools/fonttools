@@ -107,7 +107,7 @@ class UpdateFromUFODialogDialog(object):
 	def updateGlyph(self, name):
 		print "importing", name
 		self.vfb[name].clear()
-		self.vfb.insertGlyph(self.ufo[name], as=name)
+		self.vfb.insertGlyph(self.ufo[name], name=name)
 		self.vfb[name].width = self.ufo[name].width
 		self.vfb[name].note = self.ufo[name].note
 		self.vfb[name].psHints.update(self.ufo[name].psHints)

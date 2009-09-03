@@ -509,12 +509,10 @@ class RFont(BaseFont):
 			self._scheduledForDeletion.remove(glyphName)
 		return self.getGlyph(glyphName)
 		
-	def insertGlyph(self, glyph, as=None):
+	def insertGlyph(self, glyph, name=None):
 		"""returns a new glyph that has been inserted into the font"""
-		if as is None:
+		if name is None:
 			name = glyph.name
-		else:
-			name = as
 		glyph = glyph.copy()
 		glyph.name = name
 		glyph.setParent(self)

@@ -518,22 +518,22 @@ def AskString(prompt, value='', title='RoboFab'):
 	Availability: FontLab, Macintosh
 	"""
 	if inFontLab:
-		as = _FontLabDialogAskString(prompt, value, title)
-		as.Run()
-		v = as.value
+		askString = _FontLabDialogAskString(prompt, value, title)
+		askString.Run()
+		v = askString.value
 		if v is None:
 			return None
 		else:
 			return v
 	elif MAC:
 		import EasyDialogs
-		as = EasyDialogs.AskString(prompt)
-		if as is None:
+		askString = EasyDialogs.AskString(prompt)
+		if askString is None:
 			return None
-		if len(as) == 0:
+		if len(askString) == 0:
 			return None
 		else:
-			return as
+			return askString
 	elif PC:
 		_raisePlatformError('GetString')
 		

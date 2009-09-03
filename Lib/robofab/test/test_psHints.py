@@ -98,7 +98,7 @@ def test():
 		>>> not f.psHints.isEmpty()
 		True
 
-		>>> f.insertGlyph(g, as="new")
+		>>> f.insertGlyph(g, name="new")
 		<RGlyph for None.new>
 		>>> f["new"].psHints.asDict() == g.psHints.asDict()
 		True
