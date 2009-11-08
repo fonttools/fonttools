@@ -173,7 +173,11 @@ def _makeDict(instructionList):
 streamOpcodeDict, streamMnemonicDict = _makeDict(streamInstructions)
 opcodeDict, mnemonicDict = _makeDict(instructions)
 
-tt_instructions_error = "TT instructions error"
+class tt_instructions_error(Exception):
+	def __init__(self, error):
+		self.error = error
+	def __str__(self):
+		return "TT instructions error: %s" % repr(self.error)
 
 
 _comment = r"/\*.*?\*/"
