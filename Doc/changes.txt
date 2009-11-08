@@ -1,3 +1,10 @@
+TTX/FontTools Version 2.3
+
+- TrueType Collection (TTC) support
+- Python 2.6 support
+- Update Unicode data to 5.2.0
+- Couple of bug fixes
+
 TTX/FontTools Version 2.2
 
 - ClearType support
