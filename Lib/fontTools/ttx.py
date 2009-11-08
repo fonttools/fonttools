@@ -41,7 +41,7 @@ usage: ttx [options] inputfile1 [... inputfileN]
        file smaller.
     -e Don't ignore decompilation errors, but show a full traceback
        and abort.
-    -y <number> Select font number for TrueTrue Collection,
+    -y <number> Select font number for TrueType Collection,
        starting from 0.
 
     Compile options:
