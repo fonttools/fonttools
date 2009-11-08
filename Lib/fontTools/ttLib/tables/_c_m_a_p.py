@@ -174,7 +174,7 @@ class cmap_format_0(CmapSubtable):
 		if data != None and ttFont != None:
 			self.decompileHeader(data[offset:offset+int(length)], ttFont)
 		else:
-			assert(	(data == None and (ttFont == None), "Need both data and ttFont arguments"))
+			assert (data == None and ttFont == None), "Need both data and ttFont arguments"
 		data = self.data # decompileHeader assigns the data after the header to self.data
 		assert 262 == self.length, "Format 0 cmap subtable not 262 bytes"
 		glyphIdArray = array.array("B")
@@ -262,7 +262,7 @@ class cmap_format_2(CmapSubtable):
 		if data != None and ttFont != None:
 			self.decompileHeader(data[offset:offset+int(length)], ttFont)
 		else:
-			assert(	(data == None and (ttFont == None), "Need both data and ttFont arguments"))
+			assert (data == None and ttFont == None), "Need both data and ttFont arguments"
 
 		data = self.data # decompileHeader assigns the data after the header to self.data
 		subHeaderKeys = []
@@ -632,7 +632,7 @@ class cmap_format_4(CmapSubtable):
 		if data != None and ttFont != None:
 			self.decompileHeader(self.data[offset:offset+int(length)], ttFont)
 		else:
-			assert(	(data == None and (ttFont == None), "Need both data and ttFont arguments"))
+			assert (data == None and ttFont == None), "Need both data and ttFont arguments"
 
 		data = self.data # decompileHeader assigns the data after the header to self.data
 		(segCountX2, searchRange, entrySelector, rangeShift) = \
@@ -836,7 +836,7 @@ class cmap_format_6(CmapSubtable):
 		if data != None and ttFont != None:
 			self.decompileHeader(data[offset:offset+int(length)], ttFont)
 		else:
-			assert(	(data == None and (ttFont == None), "Need both data and ttFont arguments"))
+			assert (data == None and ttFont == None), "Need both data and ttFont arguments"
 
 		data = self.data # decompileHeader assigns the data after the header to self.data
 		firstCode, entryCount = struct.unpack(">HH", data[:4])
@@ -924,7 +924,7 @@ class cmap_format_12(CmapSubtable):
 		if data != None and ttFont != None:
 			self.decompileHeader(data[offset:offset+int(length)], ttFont)
 		else:
-			assert(	(data == None and (ttFont == None), "Need both data and ttFont arguments"))
+			assert (data == None and ttFont == None), "Need both data and ttFont arguments"
 
 		data = self.data # decompileHeader assigns the data after the header to self.data
 		charCodes = []
@@ -1086,7 +1086,7 @@ class cmap_format_14(CmapSubtable):
 		if data != None and ttFont != None:
 			self.decompileHeader(data, ttFont)
 		else:
-			assert(	(data == None and (ttFont == None), "Need both data and ttFont arguments"))
+			assert (data == None and ttFont == None), "Need both data and ttFont arguments"
 		data = self.data
 		
 		self.cmap = {} # so that clients that expect this to exist in a cmap table won't fail.
@@ -1277,7 +1277,7 @@ class cmap_format_unknown(CmapSubtable):
 		if data != None and ttFont != None:
 			self.decompileHeader(data[offset:offset+int(length)], ttFont)
 		else:
-			assert(	(data == None and (ttFont == None), "Need both data and ttFont arguments"))
+			assert (data == None and ttFont == None), "Need both data and ttFont arguments"
 
 	def compile(self, ttFont):
 		if self.data:
