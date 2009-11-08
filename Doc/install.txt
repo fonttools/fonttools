@@ -1,4 +1,4 @@
-TTX/FontTools 2.1+
+TTX/FontTools
 
 TTX/FontTools is a suite of tools for manipulating fonts. It is written in
 Python and has a BSD-style, open-source licence -- see LICENSE.txt.
