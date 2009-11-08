@@ -1,6 +1,7 @@
 include LICENSE.txt
 include MANIFEST.in
 include Doc/ttx.1
+include Doc/ChangeLog
 include Doc/*.txt
 include Doc/*.html
 include MetaTools/*.py
