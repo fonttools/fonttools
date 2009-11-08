@@ -54,7 +54,7 @@ def deHexString(h):
 
 
 def _test():
-	import eexecOp
+	import fontTools.misc.eexecOp as eexecOp
 	testStr = "\0\0asdadads asds\265"
 	print decrypt, decrypt(testStr, 12321)
 	print eexecOp.decrypt, eexecOp.decrypt(testStr, 12321)
@@ -67,7 +67,7 @@ if __name__ == "__main__":
 
 
 try:
-	from eexecOp import *
+	from fontTools.misc.eexecOp import *
 except ImportError:
 	pass # Use the slow Python versions
 
