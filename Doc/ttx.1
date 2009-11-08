@@ -119,8 +119,11 @@ file as hexadecimal data instead of
 assembly.  This saves some time and results in smaller
 .Tn TTX
 files.
-.It Fl e
-Don't ignore decompilation errors, but show a full traceback and abort.
+.It Fl y Ar n
+When decompiling a TrueType Collection (TTC) file,
+decompile font number
+.Ar n ,
+starting from 0.
 .El
 .Ss "Compilation options"
 The following options control the process of compiling
