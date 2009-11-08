@@ -1,3 +1,17 @@
+TTX/FontTools Version 2.2
+
+- ClearType support
+- cmap format 1 support
+- PFA font support
+- Switched from Numeric to numpy
+- Update Unicode data to 5.1.0
+- Update AGLFN data to 1.6
+- Many bug fixes
+
+TTX/FontTools Version 2.1
+
+- Many years worth of fixes and features
+
 TTX/FontTools Version 2.0 beta 2 (released ??? 2002)
 
 - Be "forgiving" when interpreting the maxp table version field:
