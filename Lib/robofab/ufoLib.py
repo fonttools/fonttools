@@ -973,6 +973,8 @@ _widthName1To2["Normal"] = 5
 _widthName1To2["All"] = 5
 # "medium" appears in a lot of UFO 1 files.
 _widthName1To2["medium"] = 5
+# "Medium" appears in a lot of UFO 1 files.
+_widthName1To2["Medium"] = 5
 
 _msCharSet1To2 = {
 	0	: 1,
