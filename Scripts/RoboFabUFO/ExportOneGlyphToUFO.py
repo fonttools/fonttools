@@ -1,48 +1,40 @@
-#FLM: Export Selected Glyph to UFO
+#FLM: Export Selected or Current Glyph to UFO
 
 
 """
 	Dump the selected glyph to a .glif as part of a UFO.
 	It saves the .glif through a GlyphSet and updates the contents.plist.
-
+	
+	Updated for UFO2
 """
 
 
 from robofab.glifLib import GlyphSet
 from robofab.world import CurrentFont, CurrentGlyph
 from robofab.interface.all.dialogs import Message, GetFolder
-from robofab.tools.glyphNameSchemes import glyphNameToShortFileName
 import os
-
-
-if os.name == "mac":
-	LOCAL_ENCODING = "macroman"
-else:
-	LOCAL_ENCODING = "latin-1"
 
 
 f = CurrentFont()
 g = CurrentGlyph()
 
+ufoPath = f.path.replace(".vfb", ".ufo")
+if not os.path.exists(ufoPath):
+	from robofab.interface.all.dialogs import Message
+	Message("No UFO found for this font. I'm looking for \"%s\"."%(os.path.basename(ufoPath) ))
+
 if g is not None:
 	todo = [g.name]
 else:
 	todo = f.selection
-for c in todo:
-	if f is None:
-		continue
-	g = f[c]
-	result = True
-	file = GetFolder("Select a UFO to save the GLIF in:")
-	if file is None:
-		continue
-	if file.find(".ufo") == -1:
-		Message("You need to select an UFO. Quitting.")
-	else:
-		path = os.path.join(os.path.dirname(file), os.path.basename(file), "glyphs")
-		print "saving glyph %s in %s"%(g.name.encode(LOCAL_ENCODING), path)
-		gs = GlyphSet(path, glyphNameToFileNameFunc=glyphNameToShortFileName)
-		gs.writeGlyph(g.name, g, g.drawPoints)
-		gs.writeContents()
-
+	
+if todo:
+	Message("Exporting %s to \"%s\"."%(", ".join(todo), os.path.basename(ufoPath) ))
+	f.writeUFO(doHints=False, doInfo=False, doKerning=False,
+		doGroups=False, doLib=False, doFeatures=False, glyphs=todo)
+		
+else:
+	from robofab.interface.all.dialogs import Message
+	Message("No glyphs selected for export.")
+	
 print 'done'

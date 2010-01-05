@@ -22,6 +22,7 @@ if g is not None:
 	todo = [g.name]
 else:
 	todo = f.selection
+
 for c in todo:
 	g = f[c]
 	result = True
