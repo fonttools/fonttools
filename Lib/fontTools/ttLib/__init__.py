@@ -64,7 +64,7 @@ class TTFont:
 	
 	"""The main font object. It manages file input and output, and offers
 	a convenient way of accessing tables. 
-	Tables will be only decompiled when neccesary, ie. when they're actually
+	Tables will be only decompiled when necessary, ie. when they're actually
 	accessed. This means that simple operations can be extremely fast.
 	"""
 	
