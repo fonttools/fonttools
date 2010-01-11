@@ -754,94 +754,37 @@ class BaseFont(RBaseObject):
 	def compileGlyph(self, glyphName, baseName, accentNames, \
 		adjustWidth=False, preflight=False, printErrors=True):
 		"""Compile components into a new glyph using components and anchorpoints.
-		font: the font
 		glyphName: the name of the glyph where it all needs to go
 		baseName: the name of the base glyph
 		accentNames: a list of accentName, anchorName tuples, [('acute', 'top'), etc]
 		"""
-		baseAnchors = ['left', 'right', 'top', 'bottom']
-		accentAnchors = ['_left', '_right', '_top', '_bottom']
 		anchors = {}
 		errors = {}
-		#grab the baseGlyph
 		baseGlyph = self[baseName]
-		#store the anchors in the baseGlyph
 		for anchor in baseGlyph.getAnchors():
-			if anchor.name in baseAnchors:
-				anchors[anchor.name] = anchor.position
-		#make a destination glyph if it doesn't exist already
+			anchors[anchor.name] = anchor.position
 		destGlyph = self.newGlyph(glyphName, clear=True)
-		if not preflight:
-			#add the baseGlyph as a component to the destGlyph and set the width
-			destGlyph.appendComponent(baseName)
-			destGlyph.width = baseGlyph.width
-		#go through the list of provided accentNames
-		for accentName, accentPosition in accentNames:
-			#grab the accent if it exists
+		destGlyph.appendComponent(baseName)
+		destGlyph.width = baseGlyph.width
+		for accentName, anchorName in accentNames:
 			try:
 				accent = self[accentName]
 			except IndexError:
-				errors["glyph '%s' is missing in font %s"%(accentName, self.postscriptFullName)] =  1
+				errors["glyph '%s' is missing in font %s"%(accentName, self.info.fullName)] =  1
 				continue
-			localAnchors = {}
-			foundAnchor = None
-			accX = accent.getAnchors()
-			#temporarily store the anchors found in the accent
-			for anchor in accX:
-				localAnchors[anchor.name] = anchor.position
-			#look through the list of possible accent positions
-			for anchorName in accentAnchors:
-				#if we have an anchor in the accent that matches something in the list
-				if anchorName in localAnchors:
-					#if this anchor name matches an anchor position that the user has requested, we have a winner
-					if ''.join(['_', accentPosition]) == anchorName:
-						foundAnchor = anchorName
-						break
-			if foundAnchor:
-				#grab the coordinates of the found anchor
-				accentAnchorX, accentAnchorY = localAnchors[foundAnchor]
-				#get the coordinates for the cooresponding anchor in the baseGlyph
-				try:
-					baseX, baseY = anchors[foundAnchor[1:]]
-				except KeyError:
-					errors["anchor '%s' not found in glyph '%s' of font %s"%(foundAnchor[1:], baseName, self.info.postscriptFullName)]=1
-					continue
-				#calculate the accent componet offset values
-				xShift = baseX - accentAnchorX
-				yShift = baseY - accentAnchorY
-				#add the accent to the destination glyph
-				if not preflight:
-					destGlyph.appendComponent(accentName, offset=(xShift, yShift))
-				#if the found anchor the anchor that it was just aligned to, make the values for that anchor the new standard
-				if foundAnchor[1:] in localAnchors:
-					newX, newY = localAnchors[foundAnchor[1:]]
-					newX = newX+xShift
-					newY = newY+yShift
-					anchors[foundAnchor[1:]] = (newX, newY)
-		#adjust the width if the user has requested it
-		if adjustWidth and not preflight:
-			for accentName, accentPosition in accentNames:
-				#accent might not be present in the font -- the user has been warned already
-				try:
-					accent = self[accentName]
-				except IndexError:
-					continue
-				if accent is None: continue
-				#not sure what this does...
-				#if accentPosition == 'right' or accentPosition == '_left':
-				#	for component in destGlyph.getComponents():
-				#		if component.baseName == accentName:
-				
-				#set the right and left margins only if the accent has been added to the right or left
-				if accentPosition == 'right':
-					destGlyph.rightMargin = self[accentName].rightMargin
-				elif accentPosition == 'left':
-					destGlyph.leftMargin = self[accentName].leftMargin
-			if preflight:
-				return errors.keys()
-			if printErrors:
-				for px in errors.keys():
-					print px
+			shift = None
+			for accentAnchor in accent.getAnchors():
+				if '_'+anchorName == accentAnchor.name:
+					shift = anchors[anchorName][0] - accentAnchor.position[0], anchors[anchorName][1] - accentAnchor.position[1]
+					destGlyph.appendComponent(accentName, offset=shift)
+					break
+			if shift is not None:
+				for accentAnchor in accent.getAnchors():
+					if accentAnchor.name in anchors:
+						anchors[accentAnchor.name] = shift[0]+accentAnchor.position[0], shift[1]+accentAnchor.position[1]
+		if printErrors:
+			for px in errors.keys():
+				print px
 		return destGlyph
 	
 	def generateGlyph(self, glyphName, replace=1, preflight=False, printErrors=True):
