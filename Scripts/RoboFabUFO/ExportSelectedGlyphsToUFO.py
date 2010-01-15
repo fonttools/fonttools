@@ -17,6 +17,7 @@ import os
 
 f = CurrentFont()
 g = CurrentGlyph()
+todo = None
 
 ufoPath = f.path.replace(".vfb", ".ufo")
 if not os.path.exists(ufoPath):
