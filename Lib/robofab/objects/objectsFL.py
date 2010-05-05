@@ -2783,7 +2783,7 @@ class RInfo(BaseInfo):
 		"postscriptUniqueID"					: _infoMapDict(valueType=int, nakedAttribute="unique_id"),
 		"postscriptUnderlineThickness"			: _infoMapDict(valueType=int, nakedAttribute="underline_thickness"),
 		"postscriptUnderlinePosition"			: _infoMapDict(valueType=int, nakedAttribute="underline_position"),
-		"postscriptIsFixedPitch"				: _infoMapDict(valueType=bool, nakedAttribute="is_fixed_pitch"),
+		"postscriptIsFixedPitch"				: _infoMapDict(valueType="boolint", nakedAttribute="is_fixed_pitch"),
 		"postscriptBlueValues"					: _infoMapDict(valueType="intList", nakedAttribute="blue_values", masterSpecific=True, requiresSetNum=True),
 		"postscriptOtherBlues"					: _infoMapDict(valueType="intList", nakedAttribute="other_blues", masterSpecific=True, requiresSetNum=True),
 		"postscriptFamilyBlues"					: _infoMapDict(valueType="intList", nakedAttribute="family_blues", masterSpecific=True, requiresSetNum=True),
@@ -2793,7 +2793,7 @@ class RInfo(BaseInfo):
 		"postscriptBlueFuzz"					: _infoMapDict(valueType=int, nakedAttribute="blue_fuzz", masterSpecific=True),
 		"postscriptBlueShift"					: _infoMapDict(valueType=int, nakedAttribute="blue_shift", masterSpecific=True),
 		"postscriptBlueScale"					: _infoMapDict(valueType=float, nakedAttribute="blue_scale", masterSpecific=True),
-		"postscriptForceBold"					: _infoMapDict(valueType=bool, nakedAttribute="force_bold", masterSpecific=True),
+		"postscriptForceBold"					: _infoMapDict(valueType="boolint", nakedAttribute="force_bold", masterSpecific=True),
 		"postscriptDefaultWidthX"				: _infoMapDict(valueType=int, nakedAttribute="default_width", masterSpecific=True),
 		"postscriptNominalWidthX"				: _infoMapDict(valueType=int, nakedAttribute=None),
 		"postscriptWeightName"					: _infoMapDict(valueType=str, nakedAttribute="weight"),
@@ -2834,6 +2834,8 @@ class RInfo(BaseInfo):
 		# make sure that the value is the proper type for FL
 		if valueType == "intList":
 			value = [int(i) for i in value]
+		elif valueType == "boolint":
+			value = int(bool(value))
 		elif valueType == str:
 			if value is None:
 				value = ""
@@ -2916,6 +2918,8 @@ class RInfo(BaseInfo):
 		# convert if necessary
 		if valueType == "intList":
 			value = [int(i) for i in value]
+		elif valueType == "boolint":
+			value = bool(value)
 		elif valueType == str:
 			if value is None:
 				pass
