@@ -67,11 +67,11 @@ def extractTTFFontInfo(font):
 			('copyright', 0),
 			('familyName', 1),
 			('fontStyle', 1),
-			('fullName', 4),
+			('postscriptFullName', 4),
 			('trademark', 7),
-			('designer', 9),
-			('licenseURL', 14),
-			('designerURL', 12),
+			('openTypeNameDesigner', 9),
+			('openTypeNameLicenseURL', 14),
+			('openTypeNameDesignerURL', 12),
 			]
 	info = RInfo()
 	names = font['name']
