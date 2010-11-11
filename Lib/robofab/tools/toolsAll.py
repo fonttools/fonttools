@@ -81,7 +81,10 @@ def extractTTFFontInfo(font):
 	for name, index in attrs:
 		entry = font["name"].getName(index, 3, 1)
 		if entry is not None:
-			setattr(info, name, unicode(entry.string, "utf16"))
+			try:
+				setattr(info, name, unicode(entry.string, "utf16"))
+			except:
+				print "Error importing value %s: %s"%(str(name), str(info))
 	return info
 
 def extractT1FontInfo(font):
