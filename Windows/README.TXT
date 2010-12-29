@@ -19,7 +19,7 @@ APPROACH I: Using py2exe and InnoSetup
    http://fonttools.sourceforge.net/
 5. Unzip the source code of TTX/FontTools into a folder.
 6. In the folder where you unzipped TTX/FontTools, type:
-   python setup.py py2exe -f --icon Windows\ttx.ico --packages encodings
+   python setup.py py2exe --icon Windows\ttx.ico --packages encodings
 7. Run Inno Setup and open Windows\fonttools-win-setup.iss
 8. In Inno Setup, select File/Compile, then Run/Run.
 
