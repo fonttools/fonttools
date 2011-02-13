@@ -33,7 +33,7 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 			if sys.byteorder <> "big":
 				sideBearings = sideBearings.byteswap()
 			data = data[2 * numberOfSideBearings:]
-			if advances and sideBearings:
+			if len(advances) and len(sideBearings):
 				additionalMetrics = numpy.array([advances, sideBearings], numpy.int16)
 				metrics = numpy.concatenate((metrics, numpy.transpose(additionalMetrics)))
 			else:
