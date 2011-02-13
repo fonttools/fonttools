@@ -659,11 +659,12 @@ class RFont(BaseFont):
 		return self.newGlyph(glyphName)
 
 	def newGlyph(self, glyphName, clear=True):
-		"""Make a new glyph"""
-		#if generate:
-		#	g = GenerateGlyph(self._object, glyphName, replace=clear)
-		#else:
-		g = NewGlyph(self._object, glyphName, clear)
+		"""Make a new glyph."""
+		# the old implementation always updated the font.
+		# that proved to be very slow. so, the updating is
+		# now left up to the caller where it can be more
+		# efficiently managed.
+		g = NewGlyph(self._object, glyphName, clear, updateFont=False)
 		return RGlyph(g)
 	
 	def insertGlyph(self, glyph, name=None):
@@ -1121,7 +1122,6 @@ class RFont(BaseFont):
 					# there is no reason to keep the location in the lib.
 					if glyph.lib.has_key(postScriptHintDataLibKey):
 						del glyph.lib[postScriptHintDataLibKey]
-				glyph.update()
 				if bar and not count % 10:
 					bar.tick(count)
 				count = count + 1
@@ -1162,6 +1162,8 @@ class RFont(BaseFont):
 				self.lib.update(fontLib)
 				if bar:
 					bar.tick()
+			# update the font
+			self.update()
 		# only blindly stop if the user says to
 		except KeyboardInterrupt:
 			bar.close()

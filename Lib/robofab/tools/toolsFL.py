@@ -201,9 +201,10 @@ def makePSFontName(name):
 #
 #
 
-def NewGlyph(font, glyphName, clear=False):
+def NewGlyph(font, glyphName, clear=False, updateFont=True):
 	"""Make a new glyph if it doesn't already exist, return the glyph.
-	font  is either a FL Font or RF RFont object.
+	font is either a FL Font or RF RFont object. If updateFont is True
+	the (very slow) fl.UpdateFont function will be called.
 	"""
 	font = unwrapFont(font)
 	if isinstance(glyphName, unicode):
@@ -213,7 +214,8 @@ def NewGlyph(font, glyphName, clear=False):
 		new = Glyph()
 		new.name = glyphName
 		font.glyphs.append(new)
-		fl.UpdateFont(FontIndex(font))
+		if updateFont:
+			fl.UpdateFont(FontIndex(font))
 		glyph = font[glyphName]
 	elif clear:
 		glyph.Clear()
