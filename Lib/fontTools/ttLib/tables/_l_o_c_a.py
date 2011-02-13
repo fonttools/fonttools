@@ -12,7 +12,7 @@ class table__l_o_c_a(DefaultTable.DefaultTable):
 	def decompile(self, data, ttFont):
 		longFormat = ttFont['head'].indexToLocFormat
 		if longFormat:
-			format = "i"
+			format = "I"
 		else:
 			format = "H"
 		locations = array.array(format)
