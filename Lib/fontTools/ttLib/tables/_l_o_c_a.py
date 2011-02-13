@@ -4,6 +4,7 @@ import array
 import numpy
 from fontTools import ttLib
 import struct
+import warnings
 
 class table__l_o_c_a(DefaultTable.DefaultTable):
 	
@@ -23,8 +24,8 @@ class table__l_o_c_a(DefaultTable.DefaultTable):
 		if not longFormat:
 			locations = locations * 2
 		if len(locations) < (ttFont['maxp'].numGlyphs + 1):
-			raise  ttLib.TTLibError, "corrupt 'loca' table, or wrong numGlyphs in 'maxp': %d %d" % (len(locations) - 1, ttFont['maxp'].numGlyphs)
-		self.locations = locations[:ttFont['maxp'].numGlyphs + 1]
+			warnings.warn("corrupt 'loca' table, or wrong numGlyphs in 'maxp': %d %d" % (len(locations) - 1, ttFont['maxp'].numGlyphs))
+		self.locations = locations
 	
 	def compile(self, ttFont):
 		locations = self.locations

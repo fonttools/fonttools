@@ -23,6 +23,7 @@ import ttProgram
 import array
 import numpy
 from types import StringType, TupleType
+import warnings
 
 
 class table__g_l_y_f(DefaultTable.DefaultTable):
@@ -30,10 +31,15 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 	def decompile(self, data, ttFont):
 		loca = ttFont['loca']
 		last = int(loca[0])
+		noname = 0
 		self.glyphs = {}
 		self.glyphOrder = glyphOrder = ttFont.getGlyphOrder()
 		for i in range(0, len(loca)-1):
-			glyphName = glyphOrder[i]
+			try:
+				glyphName = glyphOrder[i]
+			except IndexError:
+				noname = noname + 1
+				glyphName = 'ttxautoglyph%s' % i
 			next = int(loca[i+1])
 			glyphdata = data[last:next]
 			if len(glyphdata) <> (next - last):
@@ -44,6 +50,8 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 		# this should become a warning:
 		#if len(data) > next:
 		#	raise ttLib.TTLibError, "too much 'glyf' table data"
+		if noname:
+			warnings.warn('%s glyphs have no name' % i)
 	
 	def compile(self, ttFont):
 		if not hasattr(self, "glyphOrder"):
