@@ -3,6 +3,7 @@ import DefaultTable
 import numpy
 from fontTools import ttLib
 from fontTools.misc.textTools import safeEval
+import warnings
 
 
 class table__h_m_t_x(DefaultTable.DefaultTable):
@@ -32,10 +33,11 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 			if sys.byteorder <> "big":
 				sideBearings = sideBearings.byteswap()
 			data = data[2 * numberOfSideBearings:]
-			additionalMetrics = numpy.array([advances, sideBearings], 
-					numpy.int16)
-			metrics = numpy.concatenate((metrics, 
-					numpy.transpose(additionalMetrics)))
+			if advances and sideBearings:
+				additionalMetrics = numpy.array([advances, sideBearings], numpy.int16)
+				metrics = numpy.concatenate((metrics, numpy.transpose(additionalMetrics)))
+			else:
+				warnings.warn('Unable to include additional metrics')
 		if data:
 			sys.stderr.write("too much data for hmtx/vmtx table\n")
 		metrics = metrics.tolist()
