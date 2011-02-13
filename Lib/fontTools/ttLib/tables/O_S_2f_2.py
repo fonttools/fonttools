@@ -94,9 +94,17 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 	
 	def decompile(self, data, ttFont):
 		dummy, data = sstruct.unpack2(OS2_format_0, data, self)
-		if self.version == 1 and not data:
-			# workaround for buggy Apple fonts
+		# workarounds for buggy fonts (Apple, mona)
+		if not data:
 			self.version = 0
+		elif len(data) == sstruct.calcsize(OS2_format_1_addition):
+			self.version = 1
+		elif len(data) == sstruct.calcsize(OS2_format_2_addition):
+			if self.version not in (2, 3, 4):
+				self.version = 1
+		else:
+			from fontTools import ttLib
+			raise ttLib.TTLibError, "unknown format for OS/2 table (incorrect length): version %s" % (self.version, len(data))
 		if self.version == 1:
 			sstruct.unpack2(OS2_format_1_addition, data, self)
 		elif self.version in (2, 3, 4):
