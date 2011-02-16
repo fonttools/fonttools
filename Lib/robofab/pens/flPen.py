@@ -150,7 +150,7 @@ class FLPointPen(AbstractPointPen):
 	def addComponent(self, baseName, transformation):
 		assert self.currentPath is None
 		# make base glyph if needed, Component() needs the index
-		NewGlyph(self.glyph.parent, baseName)
+		NewGlyph(self.glyph.parent, baseName, updateFont=False)
 		baseIndex = self.glyph.parent.FindGlyph(baseName)
 		if baseIndex == -1:
 			raise KeyError, "couldn't find or make base glyph"
