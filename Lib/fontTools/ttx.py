@@ -1,5 +1,3 @@
-#! /usr/bin/env python
-
 """\
 usage: ttx [options] inputfile1 [... inputfileN]
 
