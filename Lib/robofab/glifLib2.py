@@ -92,7 +92,6 @@ def glyphNameToFileName(glyphName, glyphSet):
 	return ".".join(parts) + ".glif"
 
 
-
 class GlyphSet:
 
 	"""GlyphSet manages a set of .glif files inside one directory.
@@ -125,6 +124,7 @@ class GlyphSet:
 		self.glyphNameToFileName = glyphNameToFileNameFunc
 		self.contents = self._findContents()
 		self._reverseContents = None
+		self._glifCache = {}
 
 	def rebuildContents(self):
 		"""Rebuild the contents dict by checking what glyphs are available
@@ -163,6 +163,24 @@ class GlyphSet:
 
 	# reading/writing API
 
+	def loadGLIF(self, glyphName):
+		needRead = False
+		path = self.contents.get(glyphName)
+		if glyphName not in self._glifCache:
+			needRead = True
+		elif path is not None and os.path.getmtime(path) != self._glifCache[glyphName][1]:
+			needRead = True
+		if needRead:
+			fileName = self.contents[glyphName]
+			path = os.path.join(self.dirName, fileName)
+			if not os.path.exists(path):
+				raise KeyError, glyphName
+			f = open(path, "rb")
+			text = f.read()
+			f.close()
+			self._glifCache[glyphName] = (text, os.path.getmtime(path))
+		return self._glifCache[glyphName][0]
+
 	def readGlyph(self, glyphName, glyphObject=None, pointPen=None):
 		"""Read a .glif file for 'glyphName' from the glyph set. The
 		'glyphObject' argument can be any kind of object (even None);
@@ -189,8 +207,10 @@ class GlyphSet:
 		readGlyph() will raise KeyError if the glyph is not present in
 		the glyph set.
 		"""
-		tree = self._getXMLTree(glyphName)
+		text = self.loadGLIF(glyphName)
+		tree = _glifTreeFromFile(StringIO(text))
 		_readGlyphFromTree(tree, glyphObject, pointPen)
+		del self._glifCache[glyphName]
 
 	def writeGlyph(self, glyphName, glyphObject=None, drawPointsFunc=None):
 		"""Write a .glif file for 'glyphName' to the glyph set. The
@@ -289,14 +309,6 @@ class GlyphSet:
 			from plistlib import readPlist
 			contents = readPlist(contentsPath)
 		return contents
-
-	def _getXMLTree(self, glyphName):
-		fileName = self.contents[glyphName]
-		path = os.path.join(self.dirName, fileName)
-		if not os.path.exists(path):
-			raise KeyError, glyphName
-		return _glifTreeFromFile(path)
-
 
 def readGlyphFromString(aString, glyphObject=None, pointPen=None):
 	"""Read .glif data from a string into a glyph object.
