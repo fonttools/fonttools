@@ -165,14 +165,16 @@ class GlyphSet:
 
 	def loadGLIF(self, glyphName):
 		needRead = False
-		path = self.contents.get(glyphName)
+		fileName = self.contents.get(glyphName)
+		path = None
+		if fileName is not None:
+			path = os.path.join(self.dirName, fileName)
 		if glyphName not in self._glifCache:
 			needRead = True
-		elif path is not None and os.path.getmtime(path) != self._glifCache[glyphName][1]:
+		elif fileName is not None and os.path.getmtime(path) != self._glifCache[glyphName][1]:
 			needRead = True
 		if needRead:
 			fileName = self.contents[glyphName]
-			path = os.path.join(self.dirName, fileName)
 			if not os.path.exists(path):
 				raise KeyError, glyphName
 			f = open(path, "rb")
@@ -285,13 +287,10 @@ class GlyphSet:
 		the unicode value[s] for that glyph, if any. This parses the .glif
 		files partially, so is a lot faster than parsing all files completely.
 		"""
-		# XXX: This method is quite wasteful if we've already parsed many .glif
-		#      files completely. We could collect unicodes values in readGlyph,
-		#      and only do _fetchUnicodes() for those we haven't seen yet.
 		unicodes = {}
-		for glyphName, fileName in self.contents.iteritems():
-			path = os.path.join(self.dirName, fileName)
-			unicodes[glyphName] = _fetchUnicodes(path)
+		for glyphName in self.contents.keys():
+			text = self.loadGLIF(glyphName)
+			unicodes[glyphName] = _fetchUnicodes(text)
 		return unicodes
 
 	# internal methods
@@ -535,9 +534,8 @@ def _fetchGlyphName(glyphPath):
 	return glyphName
 
 
-def _fetchUnicodes(glyphPath):
-	# Given a path to an existing .glif file, get a list of all
-	# unicode values from the XML data.
+def _fetchUnicodes(text):
+	# Given GLIF text, get a list of all unicode values from the XML data.
 	# NOTE: this assumes .glif files written by glifLib, since
 	# we simply stop parsing as soon as we see anything else than
 	# <glyph>, <advance> or <unicode>. glifLib always writes those
@@ -554,7 +552,7 @@ def _fetchUnicodes(glyphPath):
 	p = ParserCreate()
 	p.StartElementHandler = _startElementHandler
 	p.returns_unicode = True
-	f = open(glyphPath)
+	f = StringIO(text)
 	try:
 		p.ParseFile(f)
 	except _DoneParsing:
