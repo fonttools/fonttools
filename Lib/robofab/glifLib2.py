@@ -161,7 +161,7 @@ class GlyphSet:
 		f.write(plist)
 		f.close()
 
-	# reading/writing API
+	# read caching
 
 	def loadGLIF(self, glyphName):
 		needRead = False
@@ -182,6 +182,12 @@ class GlyphSet:
 			f.close()
 			self._glifCache[glyphName] = (text, os.path.getmtime(path))
 		return self._glifCache[glyphName][0]
+
+	def _purgeCachedGLIF(self, glyphName):
+		if glyphName in self._glifCache:
+			del self._glifCache[glyphName]
+
+	# reading/writing API
 
 	def readGlyph(self, glyphName, glyphObject=None, pointPen=None):
 		"""Read a .glif file for 'glyphName' from the glyph set. The
@@ -210,9 +216,9 @@ class GlyphSet:
 		the glyph set.
 		"""
 		text = self.loadGLIF(glyphName)
+		self._purgeCachedGLIF(glyphName)
 		tree = _glifTreeFromFile(StringIO(text))
 		_readGlyphFromTree(tree, glyphObject, pointPen)
-		del self._glifCache[glyphName]
 
 	def writeGlyph(self, glyphName, glyphObject=None, drawPointsFunc=None):
 		"""Write a .glif file for 'glyphName' to the glyph set. The
@@ -233,8 +239,8 @@ class GlyphSet:
 		The function will be called by writeGlyph(); it has to call the
 		proper PointPen methods to transfer the outline to the .glif file.
 		"""
+		self._purgeCachedGLIF(glyphName)
 		data = writeGlyphToString(glyphName, glyphObject, drawPointsFunc)
-
 		fileName = self.contents.get(glyphName)
 		if fileName is None:
 			fileName = self.glyphNameToFileName(glyphName, self)
@@ -256,6 +262,7 @@ class GlyphSet:
 		"""Permanently delete the glyph from the glyph set on disk. Will
 		raise KeyError if the glyph is not present in the glyph set.
 		"""
+		self._purgeCachedGLIF(glyphName)
 		fileName = self.contents[glyphName]
 		os.remove(os.path.join(self.dirName, fileName))
 		if self._reverseContents is not None:
@@ -308,6 +315,7 @@ class GlyphSet:
 			from plistlib import readPlist
 			contents = readPlist(contentsPath)
 		return contents
+
 
 def readGlyphFromString(aString, glyphObject=None, pointPen=None):
 	"""Read .glif data from a string into a glyph object.
