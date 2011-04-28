@@ -536,28 +536,36 @@ def _fetchGlyphName(glyphPath):
 
 def _fetchUnicodes(text):
 	# Given GLIF text, get a list of all unicode values from the XML data.
-	# NOTE: this assumes .glif files written by glifLib, since
-	# we simply stop parsing as soon as we see anything else than
-	# <glyph>, <advance> or <unicode>. glifLib always writes those
-	# elements in that order, before anything else.
-	from xml.parsers.expat import ParserCreate
+	parser = _FetchUnicodesParser(text)
+	return parser.unicodes
 
-	unicodes = []
-	def _startElementHandler(tagName, attrs, _unicodes=unicodes):
-		if tagName == "unicode":
-			_unicodes.append(int(attrs["hex"], 16))
-		elif tagName not in ("glyph", "advance"):
-			raise _DoneParsing()
+class _FetchUnicodesParser(object):
 
-	p = ParserCreate()
-	p.StartElementHandler = _startElementHandler
-	p.returns_unicode = True
-	f = StringIO(text)
-	try:
-		p.ParseFile(f)
-	except _DoneParsing:
-		pass
-	return unicodes
+	def __init__(self, text):
+		from xml.parsers.expat import ParserCreate
+		self.unicodes = []
+		self._elementStack = []
+		parser = ParserCreate()
+		parser.returns_unicode = 0  # XXX, Don't remember why. It sucks, though.
+		parser.StartElementHandler = self.startElementHandler
+		parser.EndElementHandler = self.endElementHandler
+		parser.Parse(text)
+
+	def startElementHandler(self, name, attrs):
+		if name == "unicode" and len(self._elementStack) == 1 and self._elementStack[0] == "glyph":
+			value = attrs.get("hex")
+			if value is None:
+				raise GlifLibError("The required hex attribute not defined in a unicode element.")
+			try:
+				value = int(value, 16)
+			except ValueError:
+				raise GlifLibError("The value for the hex attribute defined in a unicode element is not a valid value.")
+			self.unicodes.append(value)
+		self._elementStack.append(name)
+
+	def endElementHandler(self, name):
+		other = self._elementStack.pop(-1)
+		assert other == name
 
 
 def buildOutline_Format0(pen, xmlNodes):
