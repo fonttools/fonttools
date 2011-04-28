@@ -162,7 +162,21 @@ class GlyphSet:
 
 	# read caching
 
-	def loadGLIF(self, glyphName):
+	def getGLIF(self, glyphName):
+		"""Get the raw GLIF text for a given glyph name. This only works
+		for GLIF files that are already on disk.
+
+		This method is useful in situations when the raw XML needs to be
+		read from a glyph set for a particular glyph before fully parsing
+		it into an object structure via the readGlyph method.
+
+		Internally, this method will load a GLIF the first time it is
+		called and then cache it. The next time this method is called
+		the GLIF will be pulled from the cache if the file's modification
+		time has not changed since the GLIF was cached. For memory
+		efficiency, the cached GLIF will be purged by various other methods
+		such as readGlyph.
+		"""
 		needRead = False
 		fileName = self.contents.get(glyphName)
 		path = None
@@ -214,7 +228,7 @@ class GlyphSet:
 		readGlyph() will raise KeyError if the glyph is not present in
 		the glyph set.
 		"""
-		text = self.loadGLIF(glyphName)
+		text = self.getGLIF(glyphName)
 		self._purgeCachedGLIF(glyphName)
 		tree = _glifTreeFromFile(StringIO(text))
 		_readGlyphFromTree(tree, glyphObject, pointPen)
@@ -295,7 +309,7 @@ class GlyphSet:
 		"""
 		unicodes = {}
 		for glyphName in self.contents.keys():
-			text = self.loadGLIF(glyphName)
+			text = self.getGLIF(glyphName)
 			unicodes[glyphName] = _fetchUnicodes(text)
 		return unicodes
 
