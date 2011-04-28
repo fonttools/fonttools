@@ -3,7 +3,7 @@
 
 More info about the .glif format (GLyphInterchangeFormat) can be found here:
 
-	http://robofab.com/ufo/glif.html
+	http://unifiedfontobject.org
 
 The main class in this module is GlyphSet. It manages a set of .glif files
 in a folder. It offers two ways to read glyph data, and one way to write
@@ -103,8 +103,7 @@ class GlyphSet:
 
 	To write a glyph to the glyph set, you use the writeGlyph() method.
 	The simple glyph objects returned through the dict interface do not
-	support writing, they are just means as a convenient way to get at
-	the glyph data.
+	support writing, they are just a convenient way to get at the glyph data.
 	"""
 
 	glyphClass = Glyph
