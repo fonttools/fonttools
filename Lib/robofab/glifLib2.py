@@ -575,12 +575,7 @@ class _FetchUnicodesParser(object):
 	def startElementHandler(self, name, attrs):
 		if name == "unicode" and len(self._elementStack) == 1 and self._elementStack[0] == "glyph":
 			value = attrs.get("hex")
-			if value is None:
-				raise GlifLibError("The required hex attribute not defined in a unicode element.")
-			try:
-				value = int(value, 16)
-			except ValueError:
-				raise GlifLibError("The value for the hex attribute defined in a unicode element is not a valid value.")
+			value = int(value, 16)
 			self.unicodes.append(value)
 		self._elementStack.append(name)
 
