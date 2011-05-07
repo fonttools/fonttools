@@ -10,7 +10,7 @@ class RFWorld:
 		self.mac = None
 		self.pc = None
 		self.platform = sys.platform
-		self.applicationName = None	# name of the application we're running in
+		self.applicationName = None # name of the application we're running in
 		self.name = os.name
 		self.version = version	# the robofab version
 		self.numberVersion = numberVersion
@@ -56,6 +56,9 @@ class RFWorld:
 				self.supportsW = True
 			except ImportError:
 				self.supportsW = False
+
+		# see if we have DialogKit
+		self.supportsDialogKit = False
 			
 	def __repr__(self):
 		return "[Robofab is running on %s. Python version: %s, Mac stuff: %s, PC stuff: %s, FontLab stuff: %s, FLversion: %s]"%(self.platform, self.pyVersion, self.mac, self.pc, self.inFontLab, self.flVersion)
@@ -79,7 +82,7 @@ if world.inFontLab:
 	from robofab.interface.all.dialogs import SelectFont, SelectGlyph
 	from robofab.objects.objectsFL import CurrentFont, CurrentGlyph, RFont, RGlyph, OpenFont, NewFont, AllFonts
 	lineBreak = "\n"
-    
+	
 elif world.inPython:
 	from robofab.objects.objectsRF import CurrentFont, CurrentGlyph, RFont, RGlyph, OpenFont, NewFont, AllFonts
 
