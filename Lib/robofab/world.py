@@ -2,7 +2,6 @@
 import os, sys
 from robofab import RoboFabError, version, numberVersion
 
-from robofab.interface.all.dialogs import SelectFont, SelectGlyph
 
 
 class RFWorld:
@@ -77,8 +76,10 @@ world = RFWorld()
 lineBreak = os.linesep
 
 if world.inFontLab:
+	from robofab.interface.all.dialogs import SelectFont, SelectGlyph
 	from robofab.objects.objectsFL import CurrentFont, CurrentGlyph, RFont, RGlyph, OpenFont, NewFont, AllFonts
 	lineBreak = "\n"
+    
 elif world.inPython:
 	from robofab.objects.objectsRF import CurrentFont, CurrentGlyph, RFont, RGlyph, OpenFont, NewFont, AllFonts
 
