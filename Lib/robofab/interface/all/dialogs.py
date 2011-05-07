@@ -13,6 +13,7 @@ PC implementation by Eigi Eigendorf and is (C)2002 Eigi Eigendorf.
 import os
 import sys
 from robofab import RoboFabError
+from warnings import warn
 
 MAC = False
 PC = False
@@ -23,7 +24,7 @@ if sys.platform in ('mac', 'darwin'):
 elif os.name == 'nt':
 	PC = True
 else:
-	raise RoboFabError("dialogs.py only supports Mac and PC platforms.")
+	warn("dialogs.py only supports Mac and PC platforms.")
 pyVersion = sys.version_info[:3]
 
 inFontLab = False
