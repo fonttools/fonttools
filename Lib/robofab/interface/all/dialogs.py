@@ -1,20 +1,18 @@
+
 """
+
 Dialogs. Not just for FontLab any more.
-Cross-platform and cross-application compatible. Mostly anyway.
+Cross-platform and cross-application compatible. Some of them anyway.
 (Not all dialogs work on PCs outside of FontLab. Some dialogs are for FontLab only. Sorry.)
 
 Mac and FontLab implementation written by the RoboFab development team.
 PC implementation by Eigi Eigendorf and is (C)2002 Eigi Eigendorf.
+
 """
-
-#to add:
-#W version of TwoFields
-
 
 import os
 import sys
-#from robofab import RoboFabError
-RoboFabError = "RoboFabError"
+from robofab import RoboFabError
 
 MAC = False
 PC = False
@@ -25,7 +23,7 @@ if sys.platform in ('mac', 'darwin'):
 elif os.name == 'nt':
 	PC = True
 else:
-	raise RoboFabError, "dialogs.py only supports Mac and PC platforms."
+	raise RoboFabError("dialogs.py only supports Mac and PC platforms.")
 pyVersion = sys.version_info[:3]
 
 inFontLab = False
@@ -34,6 +32,25 @@ try:
 	inFontLab = True
 except ImportError: pass
 
+
+try:
+	import W
+	hasW = True
+except ImportError:
+	hasW = False
+
+try:
+	import dialogKit
+	hasDialogKit = True
+except ImportError:
+	hasDialogKit = False
+	
+try:
+	import EasyDialogs
+	hasEasyDialogs = True
+except:
+	hasEasyDialogs = False
+	
 if MAC:
 	if pyVersion < (2, 3, 0):
 		import macfs
@@ -50,7 +67,9 @@ def _raisePlatformError(dialog):
 		p = 'Macintosh'
 	elif PC:
 		p = 'PC'
-	raise RoboFabError, "%s is not currently available on the %s platform"%(dialog, p)
+	else:
+		p = sys.platform
+	raise RoboFabError("%s is not currently available on the %s platform"%(dialog, p))
 
 
 class _FontLabDialogOneList:
@@ -241,7 +260,7 @@ class _FontLabDialogGetYesNoCancel:
 		self.d.End()
 
 		
-class _MacOneList:
+class _MacOneListW:
 	"""A one list dialog for Macintosh. This class should not be called directly. Use the OneList function."""
 	
 	def __init__(self, list, message='Make a selection'):
@@ -267,7 +286,8 @@ class _MacOneList:
 		self.selected = None
 		self.w.close()
 		
-class _MacTwoChecks:
+class _MacTwoChecksW:
+	""" Version using W """
 	
 	def __init__(self, title_1, title_2, value1=1, value2=1, title='RoboFab'):
 		import W
@@ -304,7 +324,7 @@ class ProgressBar:
 		
 		if inFontLab:
 			fl.BeginProgress(title, ticks)
-		elif MAC:
+		elif MAC and hasEasyDialogs:
 			import EasyDialogs
 			self._bar = EasyDialogs.ProgressBar(title, maxval=ticks, label=label)
 		else:
@@ -425,12 +445,15 @@ def OneList(list, message="Select an item:", title='RoboFab'):
 			except:
 				return None
 	elif MAC:
-		d = _MacOneList(list, message)
-		sel = d.selected
-		if sel is None:
-			return None
+		if hasW:
+			d = _MacOneListW(list, message)
+			sel = d.selected
+			if sel is None:
+				return None
+			else:
+				return list[sel]
 		else:
-			return list[sel]
+			_raisePlatformError('OneList')
 	elif PC:
 		_raisePlatformError('OneList')
 
@@ -483,8 +506,11 @@ def TwoChecks(title_1="One",  title_2="Two", value1=1, value2=1, title='RoboFab'
 		tc = _FontLabDialogTwoChecks(title_1, title_2, value1, value2, title)
 		tc.Run()
 	elif MAC:
-		tc = _MacTwoChecks(title_1, title_2, value1, value2, title)
-	elif PC:
+		if hasW:
+			tc = _MacTwoChecksW(title_1, title_2, value1, value2, title)
+		else:
+			_raisePlatformError('TwoChecks')
+	else:
 		_raisePlatformError('TwoChecks')
 	c1 = tc.check1
 	c2 = tc.check2	
@@ -509,7 +535,7 @@ def Message(message, title='RoboFab'):
 	elif MAC:
 		import EasyDialogs
 		EasyDialogs.Message(message)
-	elif PC:
+	else:
 		_raisePlatformError('Message')
 		
 def AskString(prompt, value='', title='RoboFab'):
@@ -534,7 +560,7 @@ def AskString(prompt, value='', title='RoboFab'):
 			return None
 		else:
 			return askString
-	elif PC:
+	else:
 		_raisePlatformError('GetString')
 		
 def AskYesNoCancel(prompt, title='RoboFab', default=0):
@@ -552,8 +578,7 @@ def AskYesNoCancel(prompt, title='RoboFab', default=0):
 		import EasyDialogs
 		gync = EasyDialogs.AskYesNoCancel(prompt, default=default)
 		return gync
-		
-	elif PC:
+	else:
 		_raisePlatformError('GetYesNoCancel')
 		
 def GetFile(message=None):
@@ -653,16 +678,43 @@ def PutFile(message=None, defaultName=None):
 		_raisePlatformError('GetFile')
 	return path
 
+
 if __name__=='__main__':
-	#print TwoFields()
-	print TwoChecks('hello', 'world', 1, 0, 'ugh')
-	print OneList(['a', 'b', 'c'], 'hello world')
-	Message('hello world')
-	print AskString('hello world')
-	print AskYesNoCancel('hello world')
-	b = ProgressBar('hello', 50, 'world')
-	for i in range(50):
-		if i == 25:
-			b.label('ugh.')
-		b.tick(i)
-	b.close()
+	import traceback
+	
+	print "dialogs hasW", hasW
+	print "dialogs hasDialogKit", hasDialogKit
+	print "dialogs MAC", MAC
+	print "dialogs PC", PC
+	print "dialogs inFontLab", inFontLab
+	print "dialogs hasEasyDialogs", hasEasyDialogs
+	
+	def tryDialog(dialogClass, args=None):
+		print
+		print "tryDialog:", dialogClass, "with args:", args
+		try:
+			if args is not None:
+				apply(dialogClass, args)
+			else:
+				apply(dialogClass)
+		except:
+			traceback.print_exc(limit=0)
+
+	tryDialog(TwoChecks, ('hello', 'world', 1, 0, 'ugh'))
+	tryDialog(TwoFields)
+	tryDialog(TwoChecks, ('hello', 'world', 1, 0, 'ugh'))
+	tryDialog(OneList, (['a', 'b', 'c'], 'hello world'))
+	tryDialog(Message, ('hello world',))
+	tryDialog(AskString, ('hello world',))
+	tryDialog(AskYesNoCancel, ('hello world',))
+
+	try:
+		b = ProgressBar('hello', 50, 'world')
+		for i in range(50):
+			if i == 25:
+				b.label('ugh.')
+			b.tick(i)
+		b.close()
+	except:
+		traceback.print_exc(limit=0)
+#
