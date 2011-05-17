@@ -2980,12 +2980,12 @@ class RInfo(BaseInfo):
 	# openTypeOS2WinDescent
 
 	def _get_openTypeOS2WinDescent(self):
-		return -self._object.ttinfo.os2_us_win_descent
+		return self._object.ttinfo.os2_us_win_descent
 
 	def _set_openTypeOS2WinDescent(self, value):
-		if value > 0:
-			raise ValueError("FontLab can only handle negative values for openTypeOS2WinDescent.")
-		self._object.ttinfo.os2_us_win_descent = abs(value)
+		if value < 0:
+			raise ValueError("FontLab can only handle positive values for openTypeOS2WinDescent.")
+		self._object.ttinfo.os2_us_win_descent = value
 
 	# openTypeOS2Type
 
