@@ -153,7 +153,7 @@ class FlattenPen(BasePen):
 				return
 			step = 1.0/maxSteps
 			factors = range(0, maxSteps+1)
-			for i in factors:
+			for i in factors[1:]:
 				self.otherPen.lineTo(_interpolatePt(self.currentPt, pt, i*step))
 			self.currentPt = pt
 
@@ -162,10 +162,11 @@ class FlattenPen(BasePen):
 		maxSteps = int(round(est))
 		if maxSteps < 1:
 			self.otherPen.lineTo(pt3)
+			self.currentPt = pt3
 			return
 		step = 1.0/maxSteps
 		factors = range(0, maxSteps+1)
-		for i in factors:
+		for i in factors[1:]:
 			pt = _getCubicPoint(i*step, self.currentPt, pt1, pt2, pt3)
 			self.otherPen.lineTo(pt)
 		self.currentPt = pt3
