@@ -144,23 +144,25 @@ class FlattenPen(BasePen):
 				return
 		if not self.segmentLines:
 			self.otherPen.lineTo(pt)
-		else:
-			d = distance(self.currentPt, pt)
-			maxSteps = int(round(d / self.approximateSegmentLength))
-			if maxSteps < 1:
-				self.otherPen.lineTo(pt)
-				self.currentPt = pt
-				return
-			step = 1.0/maxSteps
-			factors = range(0, maxSteps+1)
-			for i in factors[1:]:
-				self.otherPen.lineTo(_interpolatePt(self.currentPt, pt, i*step))
 			self.currentPt = pt
+			return
+		d = distance(self.currentPt, pt)
+		maxSteps = int(round(d / self.approximateSegmentLength))
+		if maxSteps < 1:
+			self.otherPen.lineTo(pt)
+			self.currentPt = pt
+			return
+		step = 1.0/maxSteps
+		factors = range(0, maxSteps+1)
+		for i in factors[1:]:
+			self.otherPen.lineTo(_interpolatePt(self.currentPt, pt, i*step))
+		self.currentPt = pt
 
 	def _curveToOne(self, pt1, pt2, pt3):
 		est = _estimateCubicCurveLength(self.currentPt, pt1, pt2, pt3)/self.approximateSegmentLength
 		maxSteps = int(round(est))
-		if maxSteps < 1:
+		falseCurve = (pt1==self.currentPt) and (pt2==pt3)
+		if maxSteps < 1 or falseCurve:
 			self.otherPen.lineTo(pt3)
 			self.currentPt = pt3
 			return
@@ -177,7 +179,6 @@ class FlattenPen(BasePen):
 		self.currentPt = None
 	
 	def _endPath(self):
-		self.lineTo(self.firstPt)
 		self.otherPen.endPath()
 		self.currentPt = None
 		
