@@ -35,9 +35,11 @@ class RFWorld:
 		# collect versions
 		self.pyVersion = sys.version[:3]
 		self.inPython = False 
-		self.flVersion = None
 		self.inFontLab = False
-		
+		self.flVersion = None
+		self.inGlyphsApp = False
+		self.glyphsAppVersion = None
+
 		# are we in FontLab?
 		try:
 			from FL import fl
@@ -45,6 +47,16 @@ class RFWorld:
 			self.inFontLab = True
 			self.flVersion = fl.version
 		except ImportError: pass
+		# are we in Glyphs?
+		try:
+			import objectsGS
+			from AppKit import NSBundle
+			bundle = NSBundle.mainBundle()
+			self.applicationName = bundle.infoDictionary()["CFBundleName"]
+			self.inGlyphsApp = True
+			self.glyphsAppVersion = bundle.infoDictionary()["CFBundleVersion"]
+		except ImportError: pass
+		# we are in NoneLab
 		if not self.inFontLab:
 			self.inPython = True
 
@@ -59,7 +71,7 @@ class RFWorld:
 
 		# see if we have DialogKit
 		self.supportsDialogKit = False
-			
+
 	def __repr__(self):
 		return "[Robofab is running on %s. Python version: %s, Mac stuff: %s, PC stuff: %s, FontLab stuff: %s, FLversion: %s]"%(self.platform, self.pyVersion, self.mac, self.pc, self.inFontLab, self.flVersion)
 
@@ -72,7 +84,6 @@ class RFWorld:
 			print m
 		print '-'*30
 		print 
-		
 
 world = RFWorld()
 
@@ -82,7 +93,8 @@ if world.inFontLab:
 	from robofab.interface.all.dialogs import SelectFont, SelectGlyph
 	from robofab.objects.objectsFL import CurrentFont, CurrentGlyph, RFont, RGlyph, OpenFont, NewFont, AllFonts
 	lineBreak = "\n"
-	
+elif world.inGlyphsApp:
+	from robofab.objects.objectsFL import CurrentFont, CurrentGlyph, RFont, RGlyph, OpenFont, NewFont, AllFonts
 elif world.inPython:
 	from robofab.objects.objectsRF import CurrentFont, CurrentGlyph, RFont, RGlyph, OpenFont, NewFont, AllFonts
 
