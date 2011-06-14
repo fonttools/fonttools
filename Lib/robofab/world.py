@@ -60,30 +60,12 @@ class RFWorld:
 		if not self.inFontLab:
 			self.inPython = True
 
-		# see if we have W
-		self.supportsW = False
-		if not self.inFontLab:
-			try:
-				import W
-				self.supportsW = True
-			except ImportError:
-				self.supportsW = False
-
 		# see if we have DialogKit
 		self.supportsDialogKit = False
 
 	def __repr__(self):
 		return "[Robofab is running on %s. Python version: %s, Mac stuff: %s, PC stuff: %s, FontLab stuff: %s, FLversion: %s]"%(self.platform, self.pyVersion, self.mac, self.pc, self.inFontLab, self.flVersion)
 
-	def printMessage(self, msg):
-		print 
-		print '='*30
-		print "RoboFab Public Announcement"
-		print '-'*30
-		for m in msg:
-			print m
-		print '-'*30
-		print 
 
 world = RFWorld()
 
