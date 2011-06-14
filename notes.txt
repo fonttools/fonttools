@@ -85,6 +85,7 @@ glifLib
 
 - add the user name to file name conversion from the UFO spec
 
+- don't write "180.0"
 
 
 point pen protocol
@@ -99,5 +100,8 @@ RoboFab
 -------
 - remove
   - anything with a DeprecationWarning (except the font.info attribute mapping)
-
+- pens
+  - TransoformationPointPen needs to retain point data
+  - make point pens new style classes?
+  - reverse contour pen needs to retain kwargs
 
