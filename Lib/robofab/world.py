@@ -14,10 +14,6 @@ class RFWorld:
 		self.name = os.name
 		self.version = version	# the robofab version
 		self.numberVersion = numberVersion
-		self._hasNagged = False
-		self._willNag = True
-		self._timedOut = False
-		self._license = False
 		self.run = True
 
 		# get some platform information
