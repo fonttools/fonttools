@@ -33,8 +33,8 @@ class RFWorld:
 		self.inPython = False 
 		self.inFontLab = False
 		self.flVersion = None
-		self.inGlyphsApp = False
-		self.glyphsAppVersion = None
+		self.inGlyphs = False
+		self.glyphsVersion = None
 
 		# are we in FontLab?
 		try:
@@ -49,8 +49,8 @@ class RFWorld:
 			from AppKit import NSBundle
 			bundle = NSBundle.mainBundle()
 			self.applicationName = bundle.infoDictionary()["CFBundleName"]
-			self.inGlyphsApp = True
-			self.glyphsAppVersion = bundle.infoDictionary()["CFBundleVersion"]
+			self.inGlyphs = True
+			self.glyphsVersion = bundle.infoDictionary()["CFBundleVersion"]
 		except ImportError: pass
 		# we are in NoneLab
 		if not self.inFontLab:
@@ -68,8 +68,8 @@ class RFWorld:
 			"PC stuff: %s, " % self.pc,
 			"FontLab stuff: %s, " % self.inFontLab,
 			"FLversion: %s, " % self.flVersion,
-			"Glyphs stuff: %s, " % self.inGlyphsApp,
-			"Glyphs version: %s" % self.glyphsAppVersion
+			"Glyphs stuff: %s, " % self.inGlyphs,
+			"Glyphs version: %s" % self.glyphsVersion
 		]
 		return "".join(s)
 
@@ -82,7 +82,7 @@ if world.inFontLab:
 	from robofab.interface.all.dialogs import SelectFont, SelectGlyph
 	from robofab.objects.objectsFL import CurrentFont, CurrentGlyph, RFont, RGlyph, OpenFont, NewFont, AllFonts
 	lineBreak = "\n"
-elif world.inGlyphsApp:
+elif world.inGlyphs:
 	from robofab.objects.objectsFL import CurrentFont, CurrentGlyph, RFont, RGlyph, OpenFont, NewFont, AllFonts
 elif world.inPython:
 	from robofab.objects.objectsRF import CurrentFont, CurrentGlyph, RFont, RGlyph, OpenFont, NewFont, AllFonts
