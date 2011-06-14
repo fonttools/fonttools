@@ -1,0 +1,103 @@
+ufoLib
+------
+- UFOReader
+  - need to add up-conversion for kerning and kerning groups
+    - this needs to be done in three different methods:
+      - readInfo
+        - default suffixes can be set in __init__
+      - readGroups
+        - maybe skim the kerning for referenced groups and rename on the fly.
+          this creates a race condition of sorts in that he kerning could be modified
+          after the groups have been read. there isn't any way around this. maybe the 
+          doc should say that for < version 3 kerning and groups should always be read
+          at the same time.
+      - readKerning
+        - need to temporarily read the groups for conversion. see above.
+  - readInfo
+    - double check to make sure that no conversion is needed
+    - add support for new attributes
+  - add a method for getting the images path
+  - add a method for getting the directory path
+  - add a getLayerNames method
+    - how will this handle indicating that a layer is the default?
+  - getGlyphSet
+    - add a layerName=None argument
+
+- UFOWriter
+  - change default version
+  - writeInfo
+    - need down-convert function to filter out >= 3 attributes
+    - add support for new attributes
+  - writeKerning and writeGroups
+    - down conversion of modified group names is going to be a problem
+      when writing into an existing < 3 file.
+  - getGlyphSet
+    - add layerName=None argument
+      - add the user name to file name conversion abstraction to glifLib
+    - add an isDefaultLayer=True (or something) argument for when the default layer has a name
+    - update layercontents.plist each time a glyph set is created or make the caller do it?
+  - add a method for getting the images path
+  - add a method for getting the directory path
+
+- build version 3 attribute definitions
+  - maybe do a dynamic copy of the version 2 data
+- update validation functions
+
+- are the in place version converters necessary?
+
+
+glifLib
+-------
+- make GlyphSet a new style class
+- roll in server optimizations
+- GlyphSet
+  - add a readLayerInfo(info) method
+  - add a writeLayerInfo(info) method
+  - writeGlyph
+    - need to support guides
+      - objects could be required to have a guides attribute
+        containing objects with a specific API. this could be 
+        messy in read glyphs. two ideas for that: guides is a
+        list like object with an addGuide method; the glyph has
+        an add guide method. the former is more symmetrical with
+        the output API.
+      - need to support images
+        - glyph could have an image attribute that accepts a tuple of (name, transformation), color)
+          this is similar to existing glifLib behavior but it is very different for robofab and defcon.
+          it's also going to be a problem for getting the image out of the object. maybe there could
+          be several attributes imageName, imageTransformation, imageColor. or there could be a specific
+          API:
+            image = glyphObject.image
+            image.name = name
+            image.transformation = transformation
+            image.color = color
+          this could be similar to guides.
+  - readGlyph
+    - need to support guides
+    - need to support images
+
+- GLIFPointPen
+  - update to new API
+
+- writeGlyphToString needs to be adapted
+  - add a formatVersion=3 argument
+- add a buildOutline_Format2 function
+
+- add the user name to file name conversion from the UFO spec
+
+
+
+point pen protocol
+------------------
+- add an identifier=None to the beginPath method
+- add an identifier=None to the addComponent method
+- add an identifier=None to the addPoint method?
+- add **kwargs to beginPath and addComponent?
+
+
+RoboFab
+-------
+- remove
+  - anything with a DeprecationWarning (except the font.info attribute mapping)
+
+
