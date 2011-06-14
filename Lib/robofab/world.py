@@ -64,7 +64,18 @@ class RFWorld:
 		self.supportsDialogKit = False
 
 	def __repr__(self):
-		return "[Robofab is running on %s. Python version: %s, Mac stuff: %s, PC stuff: %s, FontLab stuff: %s, FLversion: %s]"%(self.platform, self.pyVersion, self.mac, self.pc, self.inFontLab, self.flVersion)
+		s = [
+			"["
+			"Robofab is running on %s. " % self.platform,
+			"Python version: %s, " % self.pyVersion,
+			"Mac stuff: %s, " % self.mac,
+			"PC stuff: %s, " % self.pc,
+			"FontLab stuff: %s, " % self.inFontLab,
+			"FLversion: %s, " % self.flVersion,
+			"Glyphs stuff: %s, " % self.inGlyphsApp,
+			"Glyphs version: %s" % self.glyphsAppVersion
+		]
+		return "".join(s)
 
 
 world = RFWorld()
