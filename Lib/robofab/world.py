@@ -1,11 +1,11 @@
-
 import os, sys
 from robofab import RoboFabError, version, numberVersion
 
 
-
 class RFWorld:
+
 	"""All parameters about platforms, versions and environments included in one object."""
+
 	def __init__(self):
 		self.mac = None
 		self.pc = None
@@ -31,7 +31,7 @@ class RFWorld:
 			self.pc = True
 		else:
 			raise RoboFabError, "We're running on an unknown platform."
-		
+
 		# collect versions
 		self.pyVersion = sys.version[:3]
 		self.inPython = False 
@@ -79,8 +79,6 @@ elif world.inGlyphsApp:
 	from robofab.objects.objectsFL import CurrentFont, CurrentGlyph, RFont, RGlyph, OpenFont, NewFont, AllFonts
 elif world.inPython:
 	from robofab.objects.objectsRF import CurrentFont, CurrentGlyph, RFont, RGlyph, OpenFont, NewFont, AllFonts
-
-
 
 if __name__ == "__main__":
 	f = RFWorld()
