@@ -3,7 +3,7 @@
 
 More info about the .glif format (GLyphInterchangeFormat) can be found here:
 
-	http://robofab.com/ufo/glif.html
+	http://unifiedfontobject.org
 
 The main class in this module is GlyphSet. It manages a set of .glif files
 in a folder. It offers two ways to read glyph data, and one way to write
@@ -92,7 +92,6 @@ def glyphNameToFileName(glyphName, glyphSet):
 	return ".".join(parts) + ".glif"
 
 
-
 class GlyphSet:
 
 	"""GlyphSet manages a set of .glif files inside one directory.
@@ -104,8 +103,7 @@ class GlyphSet:
 
 	To write a glyph to the glyph set, you use the writeGlyph() method.
 	The simple glyph objects returned through the dict interface do not
-	support writing, they are just means as a convenient way to get at
-	the glyph data.
+	support writing, they are just a convenient way to get at the glyph data.
 	"""
 
 	glyphClass = Glyph
@@ -125,6 +123,7 @@ class GlyphSet:
 		self.glyphNameToFileName = glyphNameToFileNameFunc
 		self.contents = self._findContents()
 		self._reverseContents = None
+		self._glifCache = {}
 
 	def rebuildContents(self):
 		"""Rebuild the contents dict by checking what glyphs are available
@@ -161,6 +160,46 @@ class GlyphSet:
 		f.write(plist)
 		f.close()
 
+	# read caching
+
+	def getGLIF(self, glyphName):
+		"""Get the raw GLIF text for a given glyph name. This only works
+		for GLIF files that are already on disk.
+
+		This method is useful in situations when the raw XML needs to be
+		read from a glyph set for a particular glyph before fully parsing
+		it into an object structure via the readGlyph method.
+
+		Internally, this method will load a GLIF the first time it is
+		called and then cache it. The next time this method is called
+		the GLIF will be pulled from the cache if the file's modification
+		time has not changed since the GLIF was cached. For memory
+		efficiency, the cached GLIF will be purged by various other methods
+		such as readGlyph.
+		"""
+		needRead = False
+		fileName = self.contents.get(glyphName)
+		path = None
+		if fileName is not None:
+			path = os.path.join(self.dirName, fileName)
+		if glyphName not in self._glifCache:
+			needRead = True
+		elif fileName is not None and os.path.getmtime(path) != self._glifCache[glyphName][1]:
+			needRead = True
+		if needRead:
+			fileName = self.contents[glyphName]
+			if not os.path.exists(path):
+				raise KeyError, glyphName
+			f = open(path, "rb")
+			text = f.read()
+			f.close()
+			self._glifCache[glyphName] = (text, os.path.getmtime(path))
+		return self._glifCache[glyphName][0]
+
+	def _purgeCachedGLIF(self, glyphName):
+		if glyphName in self._glifCache:
+			del self._glifCache[glyphName]
+
 	# reading/writing API
 
 	def readGlyph(self, glyphName, glyphObject=None, pointPen=None):
@@ -189,7 +228,9 @@ class GlyphSet:
 		readGlyph() will raise KeyError if the glyph is not present in
 		the glyph set.
 		"""
-		tree = self._getXMLTree(glyphName)
+		text = self.getGLIF(glyphName)
+		self._purgeCachedGLIF(glyphName)
+		tree = _glifTreeFromFile(StringIO(text))
 		_readGlyphFromTree(tree, glyphObject, pointPen)
 
 	def writeGlyph(self, glyphName, glyphObject=None, drawPointsFunc=None):
@@ -211,8 +252,8 @@ class GlyphSet:
 		The function will be called by writeGlyph(); it has to call the
 		proper PointPen methods to transfer the outline to the .glif file.
 		"""
+		self._purgeCachedGLIF(glyphName)
 		data = writeGlyphToString(glyphName, glyphObject, drawPointsFunc)
-
 		fileName = self.contents.get(glyphName)
 		if fileName is None:
 			fileName = self.glyphNameToFileName(glyphName, self)
@@ -234,6 +275,7 @@ class GlyphSet:
 		"""Permanently delete the glyph from the glyph set on disk. Will
 		raise KeyError if the glyph is not present in the glyph set.
 		"""
+		self._purgeCachedGLIF(glyphName)
 		fileName = self.contents[glyphName]
 		os.remove(os.path.join(self.dirName, fileName))
 		if self._reverseContents is not None:
@@ -265,13 +307,10 @@ class GlyphSet:
 		the unicode value[s] for that glyph, if any. This parses the .glif
 		files partially, so is a lot faster than parsing all files completely.
 		"""
-		# XXX: This method is quite wasteful if we've already parsed many .glif
-		#      files completely. We could collect unicodes values in readGlyph,
-		#      and only do _fetchUnicodes() for those we haven't seen yet.
 		unicodes = {}
-		for glyphName, fileName in self.contents.iteritems():
-			path = os.path.join(self.dirName, fileName)
-			unicodes[glyphName] = _fetchUnicodes(path)
+		for glyphName in self.contents.keys():
+			text = self.getGLIF(glyphName)
+			unicodes[glyphName] = _fetchUnicodes(text)
 		return unicodes
 
 	# internal methods
@@ -289,13 +328,6 @@ class GlyphSet:
 			from plistlib import readPlist
 			contents = readPlist(contentsPath)
 		return contents
-
-	def _getXMLTree(self, glyphName):
-		fileName = self.contents[glyphName]
-		path = os.path.join(self.dirName, fileName)
-		if not os.path.exists(path):
-			raise KeyError, glyphName
-		return _glifTreeFromFile(path)
 
 
 def readGlyphFromString(aString, glyphObject=None, pointPen=None):
@@ -523,31 +555,33 @@ def _fetchGlyphName(glyphPath):
 	return glyphName
 
 
-def _fetchUnicodes(glyphPath):
-	# Given a path to an existing .glif file, get a list of all
-	# unicode values from the XML data.
-	# NOTE: this assumes .glif files written by glifLib, since
-	# we simply stop parsing as soon as we see anything else than
-	# <glyph>, <advance> or <unicode>. glifLib always writes those
-	# elements in that order, before anything else.
-	from xml.parsers.expat import ParserCreate
+def _fetchUnicodes(text):
+	# Given GLIF text, get a list of all unicode values from the XML data.
+	parser = _FetchUnicodesParser(text)
+	return parser.unicodes
 
-	unicodes = []
-	def _startElementHandler(tagName, attrs, _unicodes=unicodes):
-		if tagName == "unicode":
-			_unicodes.append(int(attrs["hex"], 16))
-		elif tagName not in ("glyph", "advance"):
-			raise _DoneParsing()
+class _FetchUnicodesParser(object):
 
-	p = ParserCreate()
-	p.StartElementHandler = _startElementHandler
-	p.returns_unicode = True
-	f = open(glyphPath)
-	try:
-		p.ParseFile(f)
-	except _DoneParsing:
-		pass
-	return unicodes
+	def __init__(self, text):
+		from xml.parsers.expat import ParserCreate
+		self.unicodes = []
+		self._elementStack = []
+		parser = ParserCreate()
+		parser.returns_unicode = 0  # XXX, Don't remember why. It sucks, though.
+		parser.StartElementHandler = self.startElementHandler
+		parser.EndElementHandler = self.endElementHandler
+		parser.Parse(text)
+
+	def startElementHandler(self, name, attrs):
+		if name == "unicode" and len(self._elementStack) == 1 and self._elementStack[0] == "glyph":
+			value = attrs.get("hex")
+			value = int(value, 16)
+			self.unicodes.append(value)
+		self._elementStack.append(name)
+
+	def endElementHandler(self, name):
+		other = self._elementStack.pop(-1)
+		assert other == name
 
 
 def buildOutline_Format0(pen, xmlNodes):
