@@ -48,33 +48,37 @@ ufoLib
 
 glifLib
 -------
+X roll in server optimizations
 - make GlyphSet a new style class
-- roll in server optimizations
 - GlyphSet
   - add a readLayerInfo(info) method
   - add a writeLayerInfo(info) method
   - writeGlyph
     - need to support guides
-      - objects could be required to have a guides attribute
-        containing objects with a specific API. this could be 
-        messy in read glyphs. two ideas for that: guides is a
-        list like object with an addGuide method; the glyph has
-        an add guide method. the former is more symmetrical with
-        the output API.
+      - glyph object must have a list like object located at the guidelines attribute.
+        the objects returned from that object must have a dict like behavior.
+        API sketch:
+          for guideline in glyph.guidelines:
+            x = guideline["x"]
+            y = guideline["y"]
+            ...
       - need to support images
-        - glyph could have an image attribute that accepts a tuple of (name, transformation), color)
-          this is similar to existing glifLib behavior but it is very different for robofab and defcon.
-          it's also going to be a problem for getting the image out of the object. maybe there could
-          be several attributes imageName, imageTransformation, imageColor. or there could be a specific
-          API:
-            image = glyphObject.image
-            image.name = name
-            image.transformation = transformation
-            image.color = color
-          this could be similar to guides.
+        - glyph object must have a dict like object located at the image attribute.
+          API sketch:
+            fileName = glyph.image["fileName"]
+            xScale = glyph.image["xScale"]
   - readGlyph
     - need to support guides
+      - glyph object must accept a list of dicts at the guidelines attribute.
+        API sketch:
+          glyph.guidelines = [
+            dict(x=100, y=100, angle=12.3, name="name", color="0,0,0,1", identified="identifier1"),
+            dict(x=100, y=100, angle=12.3, name="name", color="0,0,0,1", identified="identifier2")
+          ]
     - need to support images
+      - glyph object must accept a dict at the image attribute.
+        API sketch:
+          glyph.image = dict(fileName="foo.png", xScale=1, yScale=1, ..., color="1,0,0,0.5")
 
 - GLIFPointPen
   - update to new API
