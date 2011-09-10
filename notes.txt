@@ -38,6 +38,7 @@ ufoLib
     - update layercontents.plist each time a glyph set is created or make the caller do it?
   - add a method for getting the images path
   - add a method for getting the directory path
+  - change the directory mod time for each write
 
 - build version 3 attribute definitions
   - maybe do a dynamic copy of the version 2 data
