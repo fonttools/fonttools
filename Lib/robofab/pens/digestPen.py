@@ -40,16 +40,19 @@ class DigestPointPen(AbstractPointPen):
 	def getDigest(self):
 		return tuple(self._data)
 	
-	def getDigestPointsOnly(self):
-		"""Return a tuple with all coordinates of all points, 
+	def getDigestPointsOnly(self, needSort=True):
+		""" Return a tuple with all coordinates of all points, 
 			but without smooth info or drawing instructions.
 			For instance if you want to compare 2 glyphs in shape,
 			but not interpolatability.
 			"""
 		points = []
+		from types import TupleType
 		for item in self._data:
-			points.append(item[0])
-		points.sort()
+			if type(item) == TupleType:
+				points.append(item[0])
+		if needSort:
+			points.sort()
 		return tuple(points)
 
 

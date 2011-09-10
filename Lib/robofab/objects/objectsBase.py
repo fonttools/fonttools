@@ -105,7 +105,9 @@ class BasePostScriptHintValues(object):
 		parent = self.getParent()
 		if parent is not None:
 			parent.setChanged(True)
-		lib[postScriptHintDataLibKey] = self.asDict()
+		hintsDict = self.asDict()
+		if hintsDict:
+			lib[postScriptHintDataLibKey] = hintsDict
 
 	def fromDict(self, data):
 		for name in self._attributeNames:
