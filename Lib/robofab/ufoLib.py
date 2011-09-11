@@ -65,13 +65,14 @@ class UFOLibError(Exception): pass
 # File Names
 # ----------
 
-GLYPHS_DIRNAME = "glyphs"
+DEFAULT_GLYPHS_DIRNAME = "glyphs"
 METAINFO_FILENAME = "metainfo.plist"
 FONTINFO_FILENAME = "fontinfo.plist"
 LIB_FILENAME = "lib.plist"	
 GROUPS_FILENAME = "groups.plist"
 KERNING_FILENAME = "kerning.plist"
 FEATURES_FILENAME = "features.fea"
+LAYERCONTENTS_FILENAME = "layercontents.plist"
 
 supportedUFOFormatVersions = [1, 2]
 
@@ -315,12 +316,58 @@ class UFOReader(object):
 		f.close()
 		return text
 
-	def getGlyphSet(self):
+	def _readLayerContents(self):
+		"""
+		Private utility for reading layercontents.plist.
+		"""
+		path = os.path.join(self._path, LAYERCONTENTS_FILENAME)
+		# XXX the spec does not address if layercontents.plist is required if
+		# the only layer is the default layer.
+		if not self._checkForFile(path):
+			return []
+		return readPlist(path)
+
+	def getLayerNames(self):
+		"""
+		Get the ordered layer names from layercontents.plist.
+		"""
+		layerContents = self._readLayerContents()
+		layerNames = [layerName for layerName, directoryName in layerContents]
+		return layerNames
+
+	def getDefaultLayerName(self):
+		"""
+		Get the default layer name from layercontents.plist.
+		"""
+		# XXX the default glyphs layer name is not defined in the spec yet.
+		# public.foreground seems like the logical name but it needs to be discussed.
+		layerContents = self._readLayerContents()
+		for layerName, layerDirectory in layerContents:
+			if layerDirectory == DEFAULT_GLYPHS_DIRNAME:
+				return layerName
+		# The default layer is not defined in the UFO.
+		# XXX Should this error be raised when layercontents.plist is first read?
+		raise UFOLibError("The default layer is not defined in layercontents.plist.")
+
+	def getGlyphSet(self, layerName=None):
 		"""
 		Return the GlyphSet associated with the
-		glyphs directory in the .ufo.
+		glyphs directory mapped to layerName
+		in the UFO. If layerName is not provided,
+		the name retrieved with getDefaultLayerName
+		will be used.
 		"""
-		glyphsPath = os.path.join(self._path, GLYPHS_DIRNAME)
+		if layerName is None:
+			layerName = self.getDefaultLayerName()
+		directory = None
+		layerContents = self._readLayerContents()
+		for storedLayerName, storedLayerDirectory in layerContents:
+			if layerName == storedLayerName:
+				directory = storedLayerDirectory
+				break
+		if directory is None:
+			raise UFOLibError("No glyphs directory is mapped to \"%s\"." % layerName)
+		glyphsPath = os.path.join(self._path, directory)
 		return GlyphSet(glyphsPath)
 
 	def getCharacterMapping(self):
