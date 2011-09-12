@@ -847,9 +847,15 @@ def _validateInfoVersion2Data(infoData):
 # Data Validators
 
 def _fontInfoTypeValidator(value, typ):
+	"""
+	Generic. (Added at version 2.)
+	"""
 	return isinstance(value, typ)
 
 def _fontInfoIntListValidator(values, validValues):
+	"""
+	Generic. (Added at version 2.)
+	"""
 	if not isinstance(values, (list, tuple)):
 		return False
 	valuesSet = set(values)
@@ -861,11 +867,37 @@ def _fontInfoIntListValidator(values, validValues):
 			return False
 	return True
 
+def _fontInfoNonNegativeIntValidator(value):
+	"""
+	Generic. (Added at version 3.)
+	"""
+	if not isinstance(value, int):
+		return False
+	if value < 0:
+		return False
+	return True
+
+def _fontInfoNonNegativeNumberValidator(value):
+	"""
+	Generic. (Added at version 3.)
+	"""
+	if not isinstance(value, (int, float)):
+		return False
+	if value < 0:
+		return False
+	return True
+
 def _fontInfoStyleMapStyleNameValidator(value):
+	"""
+	Version 2+.
+	"""
 	options = ["regular", "italic", "bold", "bold italic"]
 	return value in options
 
 def _fontInfoOpenTypeHeadCreatedValidator(value):
+	"""
+	Version 2+.
+	"""
 	# format: 0000/00/00 00:00:00
 	if not isinstance(value, (str, unicode)):
 		return False
@@ -922,6 +954,9 @@ def _fontInfoOpenTypeHeadCreatedValidator(value):
 	return True
 
 def _fontInfoOpenTypeOS2WeightClassValidator(value):
+	"""
+	Version 2+.
+	"""
 	if not isinstance(value, int):
 		return False
 	if value < 0:
@@ -929,6 +964,9 @@ def _fontInfoOpenTypeOS2WeightClassValidator(value):
 	return True
 
 def _fontInfoOpenTypeOS2WidthClassValidator(value):
+	"""
+	Version 2+.
+	"""
 	if not isinstance(value, int):
 		return False
 	if value < 1:
@@ -937,7 +975,10 @@ def _fontInfoOpenTypeOS2WidthClassValidator(value):
 		return False
 	return True
 
-def _fontInfoOpenTypeOS2PanoseValidator(values):
+def _fontInfoVersion2OpenTypeOS2PanoseValidator(values):
+	"""
+	Version 2.
+	"""
 	if not isinstance(values, (list, tuple)):
 		return False
 	if len(values) != 10:
@@ -948,7 +989,26 @@ def _fontInfoOpenTypeOS2PanoseValidator(values):
 	# XXX further validation?
 	return True
 
+def _fontInfoVersion3OpenTypeOS2PanoseValidator(values):
+	"""
+	Version 3+.
+	"""
+	if not isinstance(values, (list, tuple)):
+		return False
+	if len(values) != 10:
+		return False
+	for value in values:
+		if not isinstance(value, int):
+			return False
+		if value < 0:
+			return False
+	# XXX further validation?
+	return True
+
 def _fontInfoOpenTypeOS2FamilyClassValidator(values):
+	"""
+	Version 2+.
+	"""
 	if not isinstance(values, (list, tuple)):
 		return False
 	if len(values) != 2:
@@ -964,6 +1024,9 @@ def _fontInfoOpenTypeOS2FamilyClassValidator(values):
 	return True
 
 def _fontInfoPostscriptBluesValidator(values):
+	"""
+	Version 2+.
+	"""
 	if not isinstance(values, (list, tuple)):
 		return False
 	if len(values) > 14:
@@ -976,6 +1039,9 @@ def _fontInfoPostscriptBluesValidator(values):
 	return True
 
 def _fontInfoPostscriptOtherBluesValidator(values):
+	"""
+	Version 2+.
+	"""
 	if not isinstance(values, (list, tuple)):
 		return False
 	if len(values) > 10:
@@ -988,6 +1054,9 @@ def _fontInfoPostscriptOtherBluesValidator(values):
 	return True
 
 def _fontInfoPostscriptStemsValidator(values):
+	"""
+	Version 2+.
+	"""
 	if not isinstance(values, (list, tuple)):
 		return False
 	if len(values) > 12:
@@ -998,6 +1067,9 @@ def _fontInfoPostscriptStemsValidator(values):
 	return True
 
 def _fontInfoPostscriptWindowsCharacterSetValidator(value):
+	"""
+	Version 2+.
+	"""
 	validValues = range(1, 21)
 	if value not in validValues:
 		return False
@@ -1104,7 +1176,7 @@ _fontInfoAttributesVersion2ValueData = {
 	"openTypeOS2WeightClass"				: dict(type=int, valueValidator=_fontInfoOpenTypeOS2WeightClassValidator),
 	"openTypeOS2Selection"					: dict(type="integerList", valueValidator=_fontInfoIntListValidator, valueOptions=_fontInfoOpenTypeOS2SelectionOptions),
 	"openTypeOS2VendorID"					: dict(type=(str, unicode)),
-	"openTypeOS2Panose"						: dict(type="integerList", valueValidator=_fontInfoOpenTypeOS2PanoseValidator),
+	"openTypeOS2Panose"						: dict(type="integerList", valueValidator=_fontInfoVersion2OpenTypeOS2PanoseValidator),
 	"openTypeOS2FamilyClass"				: dict(type="integerList", valueValidator=_fontInfoOpenTypeOS2FamilyClassValidator),
 	"openTypeOS2UnicodeRanges"				: dict(type="integerList", valueValidator=_fontInfoIntListValidator, valueOptions=_fontInfoOpenTypeOS2UnicodeRangesOptions),
 	"openTypeOS2CodePageRanges"				: dict(type="integerList", valueValidator=_fontInfoIntListValidator, valueOptions=_fontInfoOpenTypeOS2CodePageRangesOptions),
@@ -1156,6 +1228,16 @@ _fontInfoAttributesVersion2ValueData = {
 	"macintoshFONDName"						: dict(type=(str, unicode)),
 }
 fontInfoAttributesVersion2 = set(_fontInfoAttributesVersion2ValueData.keys())
+
+_fontInfoAttributesVersion3ValueData = deepcopy(_fontInfoAttributesVersion2ValueData)
+_fontInfoAttributesVersion3ValueData.update({
+	"versionMinor"							: dict(type=int, valueValidator=_fontInfoNonNegativeIntValidator),
+	"unitsPerEm"							: dict(type=(int, float), valueValidator=_fontInfoNonNegativeNumberValidator),
+	"openTypeHeadLowestRecPPEM"				: dict(type=(int, float), valueValidator=_fontInfoNonNegativeNumberValidator),
+	"openTypeOS2Panose"						: dict(type="integerList", valueValidator=_fontInfoVersion3OpenTypeOS2PanoseValidator),
+	"openTypeOS2WinAscent"					: dict(type=(int, float), valueValidator=_fontInfoNonNegativeNumberValidator),
+	"openTypeOS2WinDescent"					: dict(type=(int, float), valueValidator=_fontInfoNonNegativeNumberValidator),
+})
 
 # insert the type validator for all attrs that
 # have no defined validator.
@@ -1339,14 +1421,6 @@ def _convertFontInfoDataVersion2ToVersion1(data):
 		# store
 		converted[newAttr] = newValue
 	return converted
-
-# Version 3
-# ---------
-
-_fontInfoAttributesVersion3ValueData = deepcopy(_fontInfoAttributesVersion2ValueData)
-_fontInfoAttributesVersion2ValueData.update(
-	
-)
 
 
 if __name__ == "__main__":
