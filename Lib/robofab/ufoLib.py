@@ -35,6 +35,7 @@ import shutil
 from cStringIO import StringIO
 import calendar
 import codecs
+from copy import deepcopy
 from robofab.plistlib import readPlist, writePlist
 from robofab.glifLib import GlyphSet, READ_MODE, WRITE_MODE
 
@@ -802,54 +803,11 @@ def writeFileAtomically(text, path, encoding=None):
 # fontinfo.plist Support
 # ----------------------
 
-# Version 1
+# Version Validators
 
-fontInfoAttributesVersion1 = set([
-	"familyName",
-	"styleName",
-	"fullName",
-	"fontName",
-	"menuName",
-	"fontStyle",
-	"note",
-	"versionMajor",
-	"versionMinor",
-	"year",
-	"copyright",
-	"notice",
-	"trademark",
-	"license",
-	"licenseURL",
-	"createdBy",
-	"designer",
-	"designerURL",
-	"vendorURL",
-	"unitsPerEm",
-	"ascender",
-	"descender",
-	"capHeight",
-	"xHeight",
-	"defaultWidth",
-	"slantAngle",
-	"italicAngle",
-	"widthName",
-	"weightName",
-	"weightValue",
-	"fondName",
-	"otFamilyName",
-	"otStyleName",
-	"otMacName",
-	"msCharSet",
-	"fondID",
-	"uniqueID",
-	"ttVendor",
-	"ttUniqueID",
-	"ttVersion",
-])
-
-# Version 2
-
-# Validators
+# There is no version 1 validator and there shouldn't be.
+# The version 1 spec was very loose and there were numerous
+# cases of invalid values.
 
 def validateFontInfoVersion2ValueForAttribute(attr, value):
 	"""
@@ -886,10 +844,12 @@ def _validateInfoVersion2Data(infoData):
 			validInfoData[attr] = value
 	return infoData
 
+# Data Validators
+
 def _fontInfoTypeValidator(value, typ):
 	return isinstance(value, typ)
 
-def _fontInfoVersion2IntListValidator(values, validValues):
+def _fontInfoIntListValidator(values, validValues):
 	if not isinstance(values, (list, tuple)):
 		return False
 	valuesSet = set(values)
@@ -901,11 +861,11 @@ def _fontInfoVersion2IntListValidator(values, validValues):
 			return False
 	return True
 
-def _fontInfoVersion2StyleMapStyleNameValidator(value):
+def _fontInfoStyleMapStyleNameValidator(value):
 	options = ["regular", "italic", "bold", "bold italic"]
 	return value in options
 
-def _fontInfoVersion2OpenTypeHeadCreatedValidator(value):
+def _fontInfoOpenTypeHeadCreatedValidator(value):
 	# format: 0000/00/00 00:00:00
 	if not isinstance(value, (str, unicode)):
 		return False
@@ -961,14 +921,14 @@ def _fontInfoVersion2OpenTypeHeadCreatedValidator(value):
 	# fallback
 	return True
 
-def _fontInfoVersion2OpenTypeOS2WeightClassValidator(value):
+def _fontInfoOpenTypeOS2WeightClassValidator(value):
 	if not isinstance(value, int):
 		return False
 	if value < 0:
 		return False
 	return True
 
-def _fontInfoVersion2OpenTypeOS2WidthClassValidator(value):
+def _fontInfoOpenTypeOS2WidthClassValidator(value):
 	if not isinstance(value, int):
 		return False
 	if value < 1:
@@ -977,7 +937,7 @@ def _fontInfoVersion2OpenTypeOS2WidthClassValidator(value):
 		return False
 	return True
 
-def _fontInfoVersion2OpenTypeOS2PanoseValidator(values):
+def _fontInfoOpenTypeOS2PanoseValidator(values):
 	if not isinstance(values, (list, tuple)):
 		return False
 	if len(values) != 10:
@@ -988,7 +948,7 @@ def _fontInfoVersion2OpenTypeOS2PanoseValidator(values):
 	# XXX further validation?
 	return True
 
-def _fontInfoVersion2OpenTypeOS2FamilyClassValidator(values):
+def _fontInfoOpenTypeOS2FamilyClassValidator(values):
 	if not isinstance(values, (list, tuple)):
 		return False
 	if len(values) != 2:
@@ -1003,7 +963,7 @@ def _fontInfoVersion2OpenTypeOS2FamilyClassValidator(values):
 		return False
 	return True
 
-def _fontInfoVersion2PostscriptBluesValidator(values):
+def _fontInfoPostscriptBluesValidator(values):
 	if not isinstance(values, (list, tuple)):
 		return False
 	if len(values) > 14:
@@ -1015,7 +975,7 @@ def _fontInfoVersion2PostscriptBluesValidator(values):
 			return False
 	return True
 
-def _fontInfoVersion2PostscriptOtherBluesValidator(values):
+def _fontInfoPostscriptOtherBluesValidator(values):
 	if not isinstance(values, (list, tuple)):
 		return False
 	if len(values) > 10:
@@ -1027,7 +987,7 @@ def _fontInfoVersion2PostscriptOtherBluesValidator(values):
 			return False
 	return True
 
-def _fontInfoVersion2PostscriptStemsValidator(values):
+def _fontInfoPostscriptStemsValidator(values):
 	if not isinstance(values, (list, tuple)):
 		return False
 	if len(values) > 12:
@@ -1037,28 +997,73 @@ def _fontInfoVersion2PostscriptStemsValidator(values):
 			return False
 	return True
 
-def _fontInfoVersion2PostscriptWindowsCharacterSetValidator(value):
+def _fontInfoPostscriptWindowsCharacterSetValidator(value):
 	validValues = range(1, 21)
 	if value not in validValues:
 		return False
 	return True
 
-# Attribute Definitions
+# Value Options
+
+_fontInfoOpenTypeHeadFlagsOptions = range(0, 14)
+_fontInfoOpenTypeOS2SelectionOptions = [1, 2, 3, 4]
+_fontInfoOpenTypeOS2UnicodeRangesOptions = range(0, 128)
+_fontInfoOpenTypeOS2CodePageRangesOptions = range(0, 64)
+_fontInfoOpenTypeOS2TypeOptions = [0, 1, 2, 3, 8, 9]
+
+# Version Attribute Definitions
 # This defines the attributes, types and, in some
 # cases the possible values, that can exist is
 # fontinfo.plist.
 
-_fontInfoVersion2OpenTypeHeadFlagsOptions = range(0, 14)
-_fontInfoVersion2OpenTypeOS2SelectionOptions = [1, 2, 3, 4]
-_fontInfoVersion2OpenTypeOS2UnicodeRangesOptions = range(0, 128)
-_fontInfoVersion2OpenTypeOS2CodePageRangesOptions = range(0, 64)
-_fontInfoVersion2OpenTypeOS2TypeOptions = [0, 1, 2, 3, 8, 9]
+fontInfoAttributesVersion1 = set([
+	"familyName",
+	"styleName",
+	"fullName",
+	"fontName",
+	"menuName",
+	"fontStyle",
+	"note",
+	"versionMajor",
+	"versionMinor",
+	"year",
+	"copyright",
+	"notice",
+	"trademark",
+	"license",
+	"licenseURL",
+	"createdBy",
+	"designer",
+	"designerURL",
+	"vendorURL",
+	"unitsPerEm",
+	"ascender",
+	"descender",
+	"capHeight",
+	"xHeight",
+	"defaultWidth",
+	"slantAngle",
+	"italicAngle",
+	"widthName",
+	"weightName",
+	"weightValue",
+	"fondName",
+	"otFamilyName",
+	"otStyleName",
+	"otMacName",
+	"msCharSet",
+	"fondID",
+	"uniqueID",
+	"ttVendor",
+	"ttUniqueID",
+	"ttVersion",
+])
 
 _fontInfoAttributesVersion2ValueData = {
 	"familyName"							: dict(type=(str, unicode)),
 	"styleName"								: dict(type=(str, unicode)),
 	"styleMapFamilyName"					: dict(type=(str, unicode)),
-	"styleMapStyleName"						: dict(type=(str, unicode), valueValidator=_fontInfoVersion2StyleMapStyleNameValidator),
+	"styleMapStyleName"						: dict(type=(str, unicode), valueValidator=_fontInfoStyleMapStyleNameValidator),
 	"versionMajor"							: dict(type=int),
 	"versionMinor"							: dict(type=int),
 	"year"									: dict(type=int),
@@ -1071,9 +1076,9 @@ _fontInfoAttributesVersion2ValueData = {
 	"ascender"								: dict(type=(int, float)),
 	"italicAngle"							: dict(type=(float, int)),
 	"note"									: dict(type=(str, unicode)),
-	"openTypeHeadCreated"					: dict(type=(str, unicode), valueValidator=_fontInfoVersion2OpenTypeHeadCreatedValidator),
+	"openTypeHeadCreated"					: dict(type=(str, unicode), valueValidator=_fontInfoOpenTypeHeadCreatedValidator),
 	"openTypeHeadLowestRecPPEM"				: dict(type=(int, float)),
-	"openTypeHeadFlags"						: dict(type="integerList", valueValidator=_fontInfoVersion2IntListValidator, valueOptions=_fontInfoVersion2OpenTypeHeadFlagsOptions),
+	"openTypeHeadFlags"						: dict(type="integerList", valueValidator=_fontInfoIntListValidator, valueOptions=_fontInfoOpenTypeHeadFlagsOptions),
 	"openTypeHheaAscender"					: dict(type=(int, float)),
 	"openTypeHheaDescender"					: dict(type=(int, float)),
 	"openTypeHheaLineGap"					: dict(type=(int, float)),
@@ -1095,20 +1100,20 @@ _fontInfoAttributesVersion2ValueData = {
 	"openTypeNameSampleText"				: dict(type=(str, unicode)),
 	"openTypeNameWWSFamilyName"				: dict(type=(str, unicode)),
 	"openTypeNameWWSSubfamilyName"			: dict(type=(str, unicode)),
-	"openTypeOS2WidthClass"					: dict(type=int, valueValidator=_fontInfoVersion2OpenTypeOS2WidthClassValidator),
-	"openTypeOS2WeightClass"				: dict(type=int, valueValidator=_fontInfoVersion2OpenTypeOS2WeightClassValidator),
-	"openTypeOS2Selection"					: dict(type="integerList", valueValidator=_fontInfoVersion2IntListValidator, valueOptions=_fontInfoVersion2OpenTypeOS2SelectionOptions),
+	"openTypeOS2WidthClass"					: dict(type=int, valueValidator=_fontInfoOpenTypeOS2WidthClassValidator),
+	"openTypeOS2WeightClass"				: dict(type=int, valueValidator=_fontInfoOpenTypeOS2WeightClassValidator),
+	"openTypeOS2Selection"					: dict(type="integerList", valueValidator=_fontInfoIntListValidator, valueOptions=_fontInfoOpenTypeOS2SelectionOptions),
 	"openTypeOS2VendorID"					: dict(type=(str, unicode)),
-	"openTypeOS2Panose"						: dict(type="integerList", valueValidator=_fontInfoVersion2OpenTypeOS2PanoseValidator),
-	"openTypeOS2FamilyClass"				: dict(type="integerList", valueValidator=_fontInfoVersion2OpenTypeOS2FamilyClassValidator),
-	"openTypeOS2UnicodeRanges"				: dict(type="integerList", valueValidator=_fontInfoVersion2IntListValidator, valueOptions=_fontInfoVersion2OpenTypeOS2UnicodeRangesOptions),
-	"openTypeOS2CodePageRanges"				: dict(type="integerList", valueValidator=_fontInfoVersion2IntListValidator, valueOptions=_fontInfoVersion2OpenTypeOS2CodePageRangesOptions),
+	"openTypeOS2Panose"						: dict(type="integerList", valueValidator=_fontInfoOpenTypeOS2PanoseValidator),
+	"openTypeOS2FamilyClass"				: dict(type="integerList", valueValidator=_fontInfoOpenTypeOS2FamilyClassValidator),
+	"openTypeOS2UnicodeRanges"				: dict(type="integerList", valueValidator=_fontInfoIntListValidator, valueOptions=_fontInfoOpenTypeOS2UnicodeRangesOptions),
+	"openTypeOS2CodePageRanges"				: dict(type="integerList", valueValidator=_fontInfoIntListValidator, valueOptions=_fontInfoOpenTypeOS2CodePageRangesOptions),
 	"openTypeOS2TypoAscender"				: dict(type=(int, float)),
 	"openTypeOS2TypoDescender"				: dict(type=(int, float)),
 	"openTypeOS2TypoLineGap"				: dict(type=(int, float)),
 	"openTypeOS2WinAscent"					: dict(type=(int, float)),
 	"openTypeOS2WinDescent"					: dict(type=(int, float)),
-	"openTypeOS2Type"						: dict(type="integerList", valueValidator=_fontInfoVersion2IntListValidator, valueOptions=_fontInfoVersion2OpenTypeOS2TypeOptions),
+	"openTypeOS2Type"						: dict(type="integerList", valueValidator=_fontInfoIntListValidator, valueOptions=_fontInfoOpenTypeOS2TypeOptions),
 	"openTypeOS2SubscriptXSize"				: dict(type=(int, float)),
 	"openTypeOS2SubscriptYSize"				: dict(type=(int, float)),
 	"openTypeOS2SubscriptXOffset"			: dict(type=(int, float)),
@@ -1132,12 +1137,12 @@ _fontInfoAttributesVersion2ValueData = {
 	"postscriptUnderlineThickness"			: dict(type=(int, float)),
 	"postscriptUnderlinePosition"			: dict(type=(int, float)),
 	"postscriptIsFixedPitch"				: dict(type=bool),
-	"postscriptBlueValues"					: dict(type="integerList", valueValidator=_fontInfoVersion2PostscriptBluesValidator),
-	"postscriptOtherBlues"					: dict(type="integerList", valueValidator=_fontInfoVersion2PostscriptOtherBluesValidator),
-	"postscriptFamilyBlues"					: dict(type="integerList", valueValidator=_fontInfoVersion2PostscriptBluesValidator),
-	"postscriptFamilyOtherBlues"			: dict(type="integerList", valueValidator=_fontInfoVersion2PostscriptOtherBluesValidator),
-	"postscriptStemSnapH"					: dict(type="integerList", valueValidator=_fontInfoVersion2PostscriptStemsValidator),
-	"postscriptStemSnapV"					: dict(type="integerList", valueValidator=_fontInfoVersion2PostscriptStemsValidator),
+	"postscriptBlueValues"					: dict(type="integerList", valueValidator=_fontInfoPostscriptBluesValidator),
+	"postscriptOtherBlues"					: dict(type="integerList", valueValidator=_fontInfoPostscriptOtherBluesValidator),
+	"postscriptFamilyBlues"					: dict(type="integerList", valueValidator=_fontInfoPostscriptBluesValidator),
+	"postscriptFamilyOtherBlues"			: dict(type="integerList", valueValidator=_fontInfoPostscriptOtherBluesValidator),
+	"postscriptStemSnapH"					: dict(type="integerList", valueValidator=_fontInfoPostscriptStemsValidator),
+	"postscriptStemSnapV"					: dict(type="integerList", valueValidator=_fontInfoPostscriptStemsValidator),
 	"postscriptBlueFuzz"					: dict(type=(int, float)),
 	"postscriptBlueShift"					: dict(type=(int, float)),
 	"postscriptBlueScale"					: dict(type=(float, int)),
@@ -1146,7 +1151,7 @@ _fontInfoAttributesVersion2ValueData = {
 	"postscriptNominalWidthX"				: dict(type=(int, float)),
 	"postscriptWeightName"					: dict(type=(str, unicode)),
 	"postscriptDefaultCharacter"			: dict(type=(str, unicode)),
-	"postscriptWindowsCharacterSet"			: dict(type=int, valueValidator=_fontInfoVersion2PostscriptWindowsCharacterSetValidator),
+	"postscriptWindowsCharacterSet"			: dict(type=int, valueValidator=_fontInfoPostscriptWindowsCharacterSetValidator),
 	"macintoshFONDFamilyID"					: dict(type=int),
 	"macintoshFONDName"						: dict(type=(str, unicode)),
 }
@@ -1334,6 +1339,14 @@ def _convertFontInfoDataVersion2ToVersion1(data):
 		# store
 		converted[newAttr] = newValue
 	return converted
+
+# Version 3
+# ---------
+
+_fontInfoAttributesVersion3ValueData = deepcopy(_fontInfoAttributesVersion2ValueData)
+_fontInfoAttributesVersion2ValueData.update(
+	
+)
 
 
 if __name__ == "__main__":
