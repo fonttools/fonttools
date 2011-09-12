@@ -1,7 +1,11 @@
+#! /usr/local/bin/apppython
+# -*- coding: utf-8 -*-
+
 import os
 import shutil
 import unittest
 import tempfile
+import codecs
 from plistlib import writePlist, readPlist
 from robofab.ufoLib import UFOReader, UFOWriter, UFOLibError, \
 	convertUFOFormatVersion1ToFormatVersion2, convertUFOFormatVersion2ToFormatVersion1
@@ -1551,7 +1555,128 @@ class WriteFontInfoVersion2TestCase(unittest.TestCase):
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 
 
+class UFO3ReadDataTestCase(unittest.TestCase):
 
+	def getFontPath(self):
+		import robofab
+		path = os.path.dirname(robofab.__file__)
+		path = os.path.dirname(path)
+		path = os.path.dirname(path)
+		path = os.path.join(path, "TestData", "UFO3-Read Data.ufo")
+		return path
+
+	def testUFOReaderDataDirectoryListing(self):
+		reader = UFOReader(self.getFontPath())
+		found = reader.getDataDirectoryListing()
+		expected = [
+			'data/org.unifiedfontobject.directory/bar/lol.txt',
+			'data/org.unifiedfontobject.directory/foo.txt',
+			'data/org.unifiedfontobject.file.txt'
+		]
+		self.assertEqual(found, expected)
+
+	def testUFOReaderBytesFromPath(self):
+		reader = UFOReader(self.getFontPath())
+		found = reader.readBytesFromPath("data/org.unifiedfontobject.file.txt")
+		expected = "file.txt"
+		self.assertEqual(found, expected)
+		found = reader.readBytesFromPath("data/org.unifiedfontobject.directory/bar/lol.txt")
+		expected = "lol.txt"
+		self.assertEqual(found, expected)
+		found = reader.readBytesFromPath("data/org.unifiedfontobject.doesNotExist")
+		expected = None
+		self.assertEqual(found, expected)
+
+	def testUFOReaderReadFileFromPath(self):
+		reader = UFOReader(self.getFontPath())
+		fileObject = reader.getReadFileForPath("data/org.unifiedfontobject.file.txt")
+		self.assertNotEqual(fileObject, None)
+		hasRead = hasattr(fileObject, "read")
+		self.assertEqual(hasRead, True)
+		fileObject.close()
+		fileObject = reader.getReadFileForPath("data/org.unifiedfontobject.doesNotExist")
+		self.assertEqual(fileObject, None)
+
+class UFO3WriteDataTestCase(unittest.TestCase):
+
+	def setUp(self):
+		self.dstDir = tempfile.mktemp()
+		os.mkdir(self.dstDir)
+
+	def tearDown(self):
+		shutil.rmtree(self.dstDir)
+
+	def testUFOWriterWriteBytesToPath(self):
+		# basic file
+		path = "data/org.unifiedfontobject.writebytesbasicfile.txt"
+		bytes = "test"
+		writer = UFOWriter(self.dstDir)
+		writer.writeBytesToPath(path, bytes)
+		path = os.path.join(self.dstDir, path)
+		self.assertEqual(os.path.exists(path), True)
+		f = open(path, "rb")
+		written = f.read()
+		f.close()
+		self.assertEqual(bytes, written)
+		# basic file with unicode text
+		path = "data/org.unifiedfontobject.writebytesbasicunicodefile.txt"
+		bytes = u"tëßt"
+		writer = UFOWriter(self.dstDir)
+		writer.writeBytesToPath(path, bytes, encoding="utf8")
+		path = os.path.join(self.dstDir, path)
+		self.assertEqual(os.path.exists(path), True)
+		f = codecs.open(path, "rb")
+		written = f.read().decode("utf8")
+		f.close()
+		self.assertEqual(bytes, written)
+		# basic directory
+		path = "data/org.unifiedfontobject.writebytesdirectory/level1/level2/file.txt"
+		bytes = "test"
+		writer = UFOWriter(self.dstDir)
+		writer.writeBytesToPath(path, bytes)
+		path = os.path.join(self.dstDir, path)
+		self.assertEqual(os.path.exists(path), True)
+		f = open(path, "rb")
+		written = f.read()
+		f.close()
+		self.assertEqual(bytes, written)
+
+	def testUFOWriterWriteFileToPath(self):
+		# basic file
+		path = "data/org.unifiedfontobject.getwritefile.txt"
+		writer = UFOWriter(self.dstDir)
+		fileObject = writer.getFileObjectForPath(path)
+		self.assertNotEqual(fileObject, None)
+		hasRead = hasattr(fileObject, "read")
+		self.assertEqual(hasRead, True)
+		fileObject.close()
+
+	def testUFOWriterRemoveFile(self):
+		path1 = "data/org.unifiedfontobject.removefile/level1/level2/file1.txt"
+		path2 = "data/org.unifiedfontobject.removefile/level1/level2/file2.txt"
+		path3 = "data/org.unifiedfontobject.removefile/level1/file3.txt"
+		writer = UFOWriter(self.dstDir)
+		writer.writeBytesToPath(path1, "test")
+		writer.writeBytesToPath(path2, "test")
+		writer.writeBytesToPath(path3, "test")
+		self.assertEqual(os.path.exists(os.path.join(self.dstDir, path1)), True)
+		self.assertEqual(os.path.exists(os.path.join(self.dstDir, path2)), True)
+		self.assertEqual(os.path.exists(os.path.join(self.dstDir, path3)), True)
+		writer.removeFileForPath(path1)
+		self.assertEqual(os.path.exists(os.path.join(self.dstDir, path1)), False)
+		self.assertEqual(os.path.exists(os.path.dirname(os.path.join(self.dstDir, path1))), True)
+		self.assertEqual(os.path.exists(os.path.join(self.dstDir, path2)), True)
+		self.assertEqual(os.path.exists(os.path.join(self.dstDir, path3)), True)
+		writer.removeFileForPath(path2)
+		self.assertEqual(os.path.exists(os.path.dirname(os.path.join(self.dstDir, path1))), False)
+		self.assertEqual(os.path.exists(os.path.join(self.dstDir, path2)), False)
+		self.assertEqual(os.path.exists(os.path.join(self.dstDir, path3)), True)
+		writer.removeFileForPath(path3)
+		self.assertEqual(os.path.exists(os.path.join(self.dstDir, path3)), False)
+		self.assertEqual(os.path.exists(os.path.dirname(os.path.join(self.dstDir, path2))), False)
+		self.assertEqual(os.path.exists(os.path.join(self.dstDir, "data/org.unifiedfontobject.removefile")), False)
+		self.assertRaises(UFOLibError, writer.removeFileForPath, path="metainfo.plist")
+		self.assertRaises(UFOLibError, writer.removeFileForPath, path="data/org.unifiedfontobject.doesNotExist.txt")
 
 class ConversionFunctionsTestCase(unittest.TestCase):
 
