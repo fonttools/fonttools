@@ -1568,11 +1568,15 @@ class UFO3ReadDataTestCase(unittest.TestCase):
 	def testUFOReaderDataDirectoryListing(self):
 		reader = UFOReader(self.getFontPath())
 		found = reader.getDataDirectoryListing()
+		# filter out the .svn
+		found = [path for path in found if ".svn" not in path]
+		found = list(sorted(found))
 		expected = [
 			'data/org.unifiedfontobject.directory/bar/lol.txt',
 			'data/org.unifiedfontobject.directory/foo.txt',
 			'data/org.unifiedfontobject.file.txt'
 		]
+		expected = list(sorted(expected))
 		self.assertEqual(found, expected)
 
 	def testUFOReaderBytesFromPath(self):
@@ -1596,6 +1600,7 @@ class UFO3ReadDataTestCase(unittest.TestCase):
 		fileObject.close()
 		fileObject = reader.getReadFileForPath("data/org.unifiedfontobject.doesNotExist")
 		self.assertEqual(fileObject, None)
+
 
 class UFO3WriteDataTestCase(unittest.TestCase):
 
@@ -1677,6 +1682,7 @@ class UFO3WriteDataTestCase(unittest.TestCase):
 		self.assertEqual(os.path.exists(os.path.join(self.dstDir, "data/org.unifiedfontobject.removefile")), False)
 		self.assertRaises(UFOLibError, writer.removeFileForPath, path="metainfo.plist")
 		self.assertRaises(UFOLibError, writer.removeFileForPath, path="data/org.unifiedfontobject.doesNotExist.txt")
+
 
 class ConversionFunctionsTestCase(unittest.TestCase):
 
