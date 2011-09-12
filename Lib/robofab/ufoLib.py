@@ -411,7 +411,12 @@ class UFOReader(object):
 		"""
 		Returns a list of all files and directories
 		in the data directory. The returned paths will
-		be relative to the UFO.
+		be relative to the UFO. This will not list
+		directory names, only file names. Thus, empty
+		directories will be skipped.
+
+		The maxDepth argument sets the maximum number
+		of sub-directories that are allowed.
 		"""
 		path = os.path.join(self._path, DATA_DIRNAME)
 		if not self._checkForFile(path):
