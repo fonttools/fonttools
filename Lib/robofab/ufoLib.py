@@ -66,6 +66,8 @@ class UFOLibError(Exception): pass
 # ----------
 
 DEFAULT_GLYPHS_DIRNAME = "glyphs"
+DATA_DIRNAME = "data"
+IMAGES_DIRNAME = "images"
 METAINFO_FILENAME = "metainfo.plist"
 FONTINFO_FILENAME = "fontinfo.plist"
 LIB_FILENAME = "lib.plist"	
@@ -215,6 +217,24 @@ class UFOReader(object):
 			return False
 		else:
 			return True
+
+	def readDataForPath(self, path):
+		"""
+		Reads the data from the file at the given path.
+		The path must be relative to the UFO path.
+		Returns None if the file does not exist.
+		"""
+		# XXX this is likely less efficient than allowing
+		# the caller to read files directly. However a future
+		# version of the UFO may not be a package with readable
+		# files. (ie, it could be a zip.)
+		path = os.path.join(self._path, path)
+		if not self._checkForFile(path):
+			return None
+		f = open(path, "rb")
+		data = f.read()
+		f.close()
+		return data
 
 	def readMetaInfo(self):
 		"""
@@ -387,6 +407,30 @@ class UFOReader(object):
 					cmap[code] = [glyphName]
 		return cmap
 
+	def getDataDirectoryListing(self, maxDepth=100):
+		"""
+		Returns a list of all files and directories
+		in the data directory. The returned paths will
+		be relative to the UFO.
+		"""
+		path = os.path.join(self._path, DATA_DIRNAME)
+		if not self._checkForFile(path):
+			return []
+		listing = self._getDirectoryListing(path, maxDepth=maxDepth)
+		return listing
+
+	def _getDirectoryListing(self, path, depth=0, maxDepth=100):
+		if depth > maxDepth:
+			raise UFOLibError("Maximum recusion depth reached.")
+		result = []
+		for fileName in os.listdir(path):
+			p = os.path.join(path, fileName)
+			if os.path.isdir(p):
+				result += self._getDirectoryListing(p, depth=depth+1, maxDepth=maxDepth)
+			else:
+				p = os.path.relpath(p, self._path)
+				result.append(p)
+		return result
 
 # ----------
 # UFO Writer
