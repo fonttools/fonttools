@@ -75,6 +75,7 @@ GROUPS_FILENAME = "groups.plist"
 KERNING_FILENAME = "kerning.plist"
 FEATURES_FILENAME = "features.fea"
 LAYERCONTENTS_FILENAME = "layercontents.plist"
+LAYERINFO_FILENAME = "layerinfo.plist"
 
 supportedUFOFormatVersions = [1, 2, 3]
 
@@ -218,7 +219,7 @@ class UFOReader(object):
 		else:
 			return True
 
-	def readDataForPath(self, path):
+	def readDataFromPath(self, path):
 		"""
 		Reads the data from the file at the given path.
 		The path must be relative to the UFO path.
@@ -437,6 +438,7 @@ class UFOReader(object):
 				result.append(p)
 		return result
 
+
 # ----------
 # UFO Writer
 # ----------
@@ -454,11 +456,29 @@ class UFOWriter(object):
 		self._fileCreator = fileCreator
 		self._writeMetaInfo()
 		# handle down conversion
-		if formatVersion == 1:
-			## remove existing features.fea
-			featuresPath = os.path.join(path, FEATURES_FILENAME)
-			if os.path.exists(featuresPath):
-				os.remove(featuresPath)
+		if formatVersion < 3:
+			# remove all glyph sets except the default
+			for fileName in os.listdir(path):
+				if fileName.startswith("glyphs."):
+					p = os.path.join(path, fileName)
+					self._removePath(p)
+			# remove layercontents.plist
+			p = os.path.join(path, LAYERCONTENTS_FILENAME)
+			self._removePath(p)
+			# remove glyphs/layerinfo.plist
+			# XXX should glifLib handle this one?
+			p = os.path.join(path, GLYPHS_DIRNAME, LAYERINFO_FILENAME)
+			self._removePath(p)
+			# remove /images
+			p = os.path.join(path, IMAGES_DIRNAME)
+			self._removePath(p)
+			# remove /data
+			p = os.path.join(path, DATA_DIRNAME)
+			self._removePath(p)
+		if formatVersion < 2:
+			# remove features.fea
+			p = os.path.join(path, FEATURES_FILENAME)
+			self._removePath(p)
 
 	def _get_formatVersion(self):
 		return self._formatVersion
@@ -469,6 +489,13 @@ class UFOWriter(object):
 		return self._fileCreator
 
 	fileCreator = property(_get_fileCreator, doc="The file creator of the UFO. This is set into metainfo.plist during __init__.")
+
+	def _removePath(self, path):
+		if os.path.exists(p):
+			if os.path.isdir(p):
+				shutil.rmtree(p)
+			else:
+				os.remove(p)
 
 	def _makeDirectory(self, subDirectory=None):
 		path = self._path
