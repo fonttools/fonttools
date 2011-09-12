@@ -76,7 +76,7 @@ KERNING_FILENAME = "kerning.plist"
 FEATURES_FILENAME = "features.fea"
 LAYERCONTENTS_FILENAME = "layercontents.plist"
 
-supportedUFOFormatVersions = [1, 2]
+supportedUFOFormatVersions = [1, 2, 3]
 
 
 # ---------------------------
