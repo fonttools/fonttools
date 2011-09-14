@@ -9,7 +9,7 @@ import codecs
 from plistlib import writePlist, readPlist
 from robofab.ufoLib import UFOReader, UFOWriter, UFOLibError, \
 	convertUFOFormatVersion1ToFormatVersion2, convertUFOFormatVersion2ToFormatVersion1
-from robofab.test.testSupport import fontInfoVersion1, fontInfoVersion2, expectedFontInfo1To2Conversion, expectedFontInfo2To1Conversion
+from robofab.test.testSupport import fontInfoVersion1, fontInfoVersion2, fontInfoVersion3, expectedFontInfo1To2Conversion, expectedFontInfo2To1Conversion
 
 
 # the format version 1 lib.plist contains some data
@@ -852,6 +852,860 @@ class ReadFontInfoVersion2TestCase(unittest.TestCase):
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 
 
+class ReadFontInfoVersion3TestCase(unittest.TestCase):
+
+	def setUp(self):
+		self.dstDir = tempfile.mktemp()
+		os.mkdir(self.dstDir)
+		metaInfo = {
+			"creator": "test",
+			"formatVersion": 3
+		}
+		path = os.path.join(self.dstDir, "metainfo.plist")
+		writePlist(metaInfo, path)
+
+	def tearDown(self):
+		shutil.rmtree(self.dstDir)
+
+	def _writeInfoToPlist(self, info):
+		path = os.path.join(self.dstDir, "fontinfo.plist")
+		writePlist(info, path)
+
+	def testRead(self):
+		originalData = dict(fontInfoVersion3)
+		self._writeInfoToPlist(originalData)
+		infoObject = TestInfoObject()
+		reader = UFOReader(self.dstDir)
+		reader.readInfo(infoObject)
+		readData = {}
+		for attr in fontInfoVersion3.keys():
+			readData[attr] = getattr(infoObject, attr)
+		self.assertEqual(originalData, readData)
+
+	def testGenericRead(self):
+		# familyName
+		info = dict(fontInfoVersion3)
+		info["familyName"] = 123
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# styleName
+		info = dict(fontInfoVersion3)
+		info["styleName"] = 123
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# styleMapFamilyName
+		info = dict(fontInfoVersion3)
+		info["styleMapFamilyName"] = 123
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# styleMapStyleName
+		## not a string
+		info = dict(fontInfoVersion3)
+		info["styleMapStyleName"] = 123
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		## out of range
+		info = dict(fontInfoVersion3)
+		info["styleMapStyleName"] = "REGULAR"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# versionMajor
+		info = dict(fontInfoVersion3)
+		info["versionMajor"] = "1"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# versionMinor
+		info = dict(fontInfoVersion3)
+		info["versionMinor"] = "0"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		info = dict(fontInfoVersion3)
+		info["versionMinor"] = -1
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# copyright
+		info = dict(fontInfoVersion3)
+		info["copyright"] = 123
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# trademark
+		info = dict(fontInfoVersion3)
+		info["trademark"] = 123
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# unitsPerEm
+		info = dict(fontInfoVersion3)
+		info["unitsPerEm"] = "abc"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		info = dict(fontInfoVersion3)
+		info["unitsPerEm"] = -1
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		info = dict(fontInfoVersion3)
+		info["unitsPerEm"] = -1.0
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# descender
+		info = dict(fontInfoVersion3)
+		info["descender"] = "abc"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# xHeight
+		info = dict(fontInfoVersion3)
+		info["xHeight"] = "abc"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# capHeight
+		info = dict(fontInfoVersion3)
+		info["capHeight"] = "abc"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# ascender
+		info = dict(fontInfoVersion3)
+		info["ascender"] = "abc"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# italicAngle
+		info = dict(fontInfoVersion3)
+		info["italicAngle"] = "abc"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+
+	def testGaspRead(self):
+		# not a list
+		info = dict(fontInfoVersion3)
+		info["openTypeGaspRangeRecords"] = "abc"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# empty list
+		info = dict(fontInfoVersion3)
+		info["openTypeGaspRangeRecords"] = []
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# not a dict
+		info = dict(fontInfoVersion3)
+		info["openTypeGaspRangeRecords"] = ["abc"]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# dict not properly formatted
+		info = dict(fontInfoVersion3)
+		info["openTypeGaspRangeRecords"] = [dict(rangeMaxPPEM=0xFFFF, notTheRightKey=1)]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		info = dict(fontInfoVersion3)
+		info["openTypeGaspRangeRecords"] = [dict(notTheRightKey=1, rangeGaspBehavior=[0])]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# not an int for ppem
+		info = dict(fontInfoVersion3)
+		info["openTypeGaspRangeRecords"] = [dict(rangeMaxPPEM="abc", rangeGaspBehavior=[0]), dict(rangeMaxPPEM=0xFFFF, rangeGaspBehavior=[0])]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# not a list for behavior
+		info = dict(fontInfoVersion3)
+		info["openTypeGaspRangeRecords"] = [dict(rangeMaxPPEM=10, rangeGaspBehavior="abc"), dict(rangeMaxPPEM=0xFFFF, rangeGaspBehavior=[0])]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# invalid behavior value
+		info = dict(fontInfoVersion3)
+		info["openTypeGaspRangeRecords"] = [dict(rangeMaxPPEM=10, rangeGaspBehavior=[-1]), dict(rangeMaxPPEM=0xFFFF, rangeGaspBehavior=[0])]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# not sorted
+		info = dict(fontInfoVersion3)
+		info["openTypeGaspRangeRecords"] = [dict(rangeMaxPPEM=0xFFFF, rangeGaspBehavior=[0]), dict(rangeMaxPPEM=10, rangeGaspBehavior=[-1])]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# no 0xFFFF
+		info = dict(fontInfoVersion3)
+		info["openTypeGaspRangeRecords"] = [dict(rangeMaxPPEM=10, rangeGaspBehavior=[0]), dict(rangeMaxPPEM=20, rangeGaspBehavior=[-1])]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+
+	def testHeadRead(self):
+		# openTypeHeadCreated
+		## not a string
+		info = dict(fontInfoVersion3)
+		info["openTypeHeadCreated"] = 123
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		## invalid format
+		info = dict(fontInfoVersion3)
+		info["openTypeHeadCreated"] = "2000-Jan-01 00:00:00"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# openTypeHeadLowestRecPPEM
+		info = dict(fontInfoVersion3)
+		info["openTypeHeadLowestRecPPEM"] = "abc"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		info = dict(fontInfoVersion3)
+		info["openTypeHeadLowestRecPPEM"] = -1
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# openTypeHeadFlags
+		info = dict(fontInfoVersion3)
+		info["openTypeHeadFlags"] = [-1]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+
+	def testHheaRead(self):
+		# openTypeHheaAscender
+		info = dict(fontInfoVersion3)
+		info["openTypeHheaAscender"] = "abc"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# openTypeHheaDescender
+		info = dict(fontInfoVersion3)
+		info["openTypeHheaDescender"] = "abc"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# openTypeHheaLineGap
+		info = dict(fontInfoVersion3)
+		info["openTypeHheaLineGap"] = "abc"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# openTypeHheaCaretSlopeRise
+		info = dict(fontInfoVersion3)
+		info["openTypeHheaCaretSlopeRise"] = "abc"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# openTypeHheaCaretSlopeRun
+		info = dict(fontInfoVersion3)
+		info["openTypeHheaCaretSlopeRun"] = "abc"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# openTypeHheaCaretOffset
+		info = dict(fontInfoVersion3)
+		info["openTypeHheaCaretOffset"] = "abc"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+
+	def testNameRead(self):
+		# openTypeNameDesigner
+		info = dict(fontInfoVersion3)
+		info["openTypeNameDesigner"] = 123
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# openTypeNameDesignerURL
+		info = dict(fontInfoVersion3)
+		info["openTypeNameDesignerURL"] = 123
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# openTypeNameManufacturer
+		info = dict(fontInfoVersion3)
+		info["openTypeNameManufacturer"] = 123
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# openTypeNameManufacturerURL
+		info = dict(fontInfoVersion3)
+		info["openTypeNameManufacturerURL"] = 123
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# openTypeNameLicense
+		info = dict(fontInfoVersion3)
+		info["openTypeNameLicense"] = 123
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# openTypeNameLicenseURL
+		info = dict(fontInfoVersion3)
+		info["openTypeNameLicenseURL"] = 123
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# openTypeNameVersion
+		info = dict(fontInfoVersion3)
+		info["openTypeNameVersion"] = 123
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# openTypeNameUniqueID
+		info = dict(fontInfoVersion3)
+		info["openTypeNameUniqueID"] = 123
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# openTypeNameDescription
+		info = dict(fontInfoVersion3)
+		info["openTypeNameDescription"] = 123
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# openTypeNamePreferredFamilyName
+		info = dict(fontInfoVersion3)
+		info["openTypeNamePreferredFamilyName"] = 123
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# openTypeNamePreferredSubfamilyName
+		info = dict(fontInfoVersion3)
+		info["openTypeNamePreferredSubfamilyName"] = 123
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# openTypeNameCompatibleFullName
+		info = dict(fontInfoVersion3)
+		info["openTypeNameCompatibleFullName"] = 123
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# openTypeNameSampleText
+		info = dict(fontInfoVersion3)
+		info["openTypeNameSampleText"] = 123
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# openTypeNameWWSFamilyName
+		info = dict(fontInfoVersion3)
+		info["openTypeNameWWSFamilyName"] = 123
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# openTypeNameWWSSubfamilyName
+		info = dict(fontInfoVersion3)
+		info["openTypeNameWWSSubfamilyName"] = 123
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+
+	def testOS2Read(self):
+		# openTypeOS2WidthClass
+		## not an int
+		info = dict(fontInfoVersion3)
+		info["openTypeOS2WidthClass"] = "abc"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		## out or range
+		info = dict(fontInfoVersion3)
+		info["openTypeOS2WidthClass"] = 15
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# openTypeOS2WeightClass
+		info = dict(fontInfoVersion3)
+		## not an int
+		info["openTypeOS2WeightClass"] = "abc"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		## out of range
+		info["openTypeOS2WeightClass"] = -50
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# openTypeOS2Selection
+		info = dict(fontInfoVersion3)
+		info["openTypeOS2Selection"] = [-1]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# openTypeOS2VendorID
+		info = dict(fontInfoVersion3)
+		info["openTypeOS2VendorID"] = 1234
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# openTypeOS2Panose
+		## not an int
+		info = dict(fontInfoVersion3)
+		info["openTypeOS2Panose"] = [0, 1, 2, 3, 4, 5, 6, 7, 8, str(9)]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		## negative
+		info = dict(fontInfoVersion3)
+		info["openTypeOS2Panose"] = [0, 1, 2, 3, 4, 5, 6, 7, 8, -9]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		## too few values
+		info = dict(fontInfoVersion3)
+		info["openTypeOS2Panose"] = [0, 1, 2, 3]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		## too many values
+		info = dict(fontInfoVersion3)
+		info["openTypeOS2Panose"] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# openTypeOS2FamilyClass
+		## not an int
+		info = dict(fontInfoVersion3)
+		info["openTypeOS2FamilyClass"] = [1, str(1)]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		## too few values
+		info = dict(fontInfoVersion3)
+		info["openTypeOS2FamilyClass"] = [1]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		## too many values
+		info = dict(fontInfoVersion3)
+		info["openTypeOS2FamilyClass"] = [1, 1, 1]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		## out of range
+		info = dict(fontInfoVersion3)
+		info["openTypeOS2FamilyClass"] = [1, 201]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# openTypeOS2UnicodeRanges
+		## not an int
+		info = dict(fontInfoVersion3)
+		info["openTypeOS2UnicodeRanges"] = ["0"]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		## out of range
+		info = dict(fontInfoVersion3)
+		info["openTypeOS2UnicodeRanges"] = [-1]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# openTypeOS2CodePageRanges
+		## not an int
+		info = dict(fontInfoVersion3)
+		info["openTypeOS2CodePageRanges"] = ["0"]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		## out of range
+		info = dict(fontInfoVersion3)
+		info["openTypeOS2CodePageRanges"] = [-1]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# openTypeOS2TypoAscender
+		info = dict(fontInfoVersion3)
+		info["openTypeOS2TypoAscender"] = "abc"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# openTypeOS2TypoDescender
+		info = dict(fontInfoVersion3)
+		info["openTypeOS2TypoDescender"] = "abc"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# openTypeOS2TypoLineGap
+		info = dict(fontInfoVersion3)
+		info["openTypeOS2TypoLineGap"] = "abc"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# openTypeOS2WinAscent
+		info = dict(fontInfoVersion3)
+		info["openTypeOS2WinAscent"] = "abc"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		info = dict(fontInfoVersion3)
+		info["openTypeOS2WinAscent"] = -1
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# openTypeOS2WinDescent
+		info = dict(fontInfoVersion3)
+		info["openTypeOS2WinDescent"] = "abc"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		info = dict(fontInfoVersion3)
+		info["openTypeOS2WinDescent"] = -1
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# openTypeOS2Type
+		## not an int
+		info = dict(fontInfoVersion3)
+		info["openTypeOS2Type"] = ["1"]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		## out of range
+		info = dict(fontInfoVersion3)
+		info["openTypeOS2Type"] = [-1]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# openTypeOS2SubscriptXSize
+		info = dict(fontInfoVersion3)
+		info["openTypeOS2SubscriptXSize"] = "abc"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# openTypeOS2SubscriptYSize
+		info = dict(fontInfoVersion3)
+		info["openTypeOS2SubscriptYSize"] = "abc"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# openTypeOS2SubscriptXOffset
+		info = dict(fontInfoVersion3)
+		info["openTypeOS2SubscriptXOffset"] = "abc"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# openTypeOS2SubscriptYOffset
+		info = dict(fontInfoVersion3)
+		info["openTypeOS2SubscriptYOffset"] = "abc"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# openTypeOS2SuperscriptXSize
+		info = dict(fontInfoVersion3)
+		info["openTypeOS2SuperscriptXSize"] = "abc"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# openTypeOS2SuperscriptYSize
+		info = dict(fontInfoVersion3)
+		info["openTypeOS2SuperscriptYSize"] = "abc"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# openTypeOS2SuperscriptXOffset
+		info = dict(fontInfoVersion3)
+		info["openTypeOS2SuperscriptXOffset"] = "abc"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# openTypeOS2SuperscriptYOffset
+		info = dict(fontInfoVersion3)
+		info["openTypeOS2SuperscriptYOffset"] = "abc"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# openTypeOS2StrikeoutSize
+		info = dict(fontInfoVersion3)
+		info["openTypeOS2StrikeoutSize"] = "abc"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# openTypeOS2StrikeoutPosition
+		info = dict(fontInfoVersion3)
+		info["openTypeOS2StrikeoutPosition"] = "abc"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+
+	def testVheaRead(self):
+		# openTypeVheaVertTypoAscender
+		info = dict(fontInfoVersion3)
+		info["openTypeVheaVertTypoAscender"] = "abc"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# openTypeVheaVertTypoDescender
+		info = dict(fontInfoVersion3)
+		info["openTypeVheaVertTypoDescender"] = "abc"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# openTypeVheaVertTypoLineGap
+		info = dict(fontInfoVersion3)
+		info["openTypeVheaVertTypoLineGap"] = "abc"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# openTypeVheaCaretSlopeRise
+		info = dict(fontInfoVersion3)
+		info["openTypeVheaCaretSlopeRise"] = "abc"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# openTypeVheaCaretSlopeRun
+		info = dict(fontInfoVersion3)
+		info["openTypeVheaCaretSlopeRun"] = "abc"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# openTypeVheaCaretOffset
+		info = dict(fontInfoVersion3)
+		info["openTypeVheaCaretOffset"] = "abc"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+
+	def testFONDRead(self):
+		# macintoshFONDFamilyID
+		info = dict(fontInfoVersion3)
+		info["macintoshFONDFamilyID"] = "abc"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# macintoshFONDName
+		info = dict(fontInfoVersion3)
+		info["macintoshFONDName"] = 123
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+
+	def testPostscriptRead(self):
+		# postscriptFontName
+		info = dict(fontInfoVersion3)
+		info["postscriptFontName"] = 123
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# postscriptFullName
+		info = dict(fontInfoVersion3)
+		info["postscriptFullName"] = 123
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# postscriptSlantAngle
+		info = dict(fontInfoVersion3)
+		info["postscriptSlantAngle"] = "abc"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# postscriptUniqueID
+		info = dict(fontInfoVersion3)
+		info["postscriptUniqueID"] = "abc"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		# postscriptUnderlineThickness
+		info = dict(fontInfoVersion3)
+		info["postscriptUnderlineThickness"] = "abc"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		# postscriptUnderlinePosition
+		info = dict(fontInfoVersion3)
+		info["postscriptUnderlinePosition"] = "abc"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		# postscriptIsFixedPitch
+		info = dict(fontInfoVersion3)
+		info["postscriptIsFixedPitch"] = 2
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		# postscriptBlueValues
+		## not a list
+		info = dict(fontInfoVersion3)
+		info["postscriptBlueValues"] = "abc"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		## uneven value count
+		info = dict(fontInfoVersion3)
+		info["postscriptBlueValues"] = [500]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		## too many values
+		info = dict(fontInfoVersion3)
+		info["postscriptBlueValues"] = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		# postscriptOtherBlues
+		## not a list
+		info = dict(fontInfoVersion3)
+		info["postscriptOtherBlues"] = "abc"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		## uneven value count
+		info = dict(fontInfoVersion3)
+		info["postscriptOtherBlues"] = [500]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		## too many values
+		info = dict(fontInfoVersion3)
+		info["postscriptOtherBlues"] = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		# postscriptFamilyBlues
+		## not a list
+		info = dict(fontInfoVersion3)
+		info["postscriptFamilyBlues"] = "abc"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		## uneven value count
+		info = dict(fontInfoVersion3)
+		info["postscriptFamilyBlues"] = [500]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		## too many values
+		info = dict(fontInfoVersion3)
+		info["postscriptFamilyBlues"] = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		# postscriptFamilyOtherBlues
+		## not a list
+		info = dict(fontInfoVersion3)
+		info["postscriptFamilyOtherBlues"] = "abc"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		## uneven value count
+		info = dict(fontInfoVersion3)
+		info["postscriptFamilyOtherBlues"] = [500]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		## too many values
+		info = dict(fontInfoVersion3)
+		info["postscriptFamilyOtherBlues"] = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		# postscriptStemSnapH
+		## not list
+		info = dict(fontInfoVersion3)
+		info["postscriptStemSnapH"] = "abc"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		## too many values
+		info = dict(fontInfoVersion3)
+		info["postscriptStemSnapH"] = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		# postscriptStemSnapV
+		## not list
+		info = dict(fontInfoVersion3)
+		info["postscriptStemSnapV"] = "abc"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		## too many values
+		info = dict(fontInfoVersion3)
+		info["postscriptStemSnapV"] = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		# postscriptBlueFuzz
+		info = dict(fontInfoVersion3)
+		info["postscriptBlueFuzz"] = "abc"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		# postscriptBlueShift
+		info = dict(fontInfoVersion3)
+		info["postscriptBlueShift"] = "abc"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		# postscriptBlueScale
+		info = dict(fontInfoVersion3)
+		info["postscriptBlueScale"] = "abc"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		# postscriptForceBold
+		info = dict(fontInfoVersion3)
+		info["postscriptForceBold"] = "abc"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		# postscriptDefaultWidthX
+		info = dict(fontInfoVersion3)
+		info["postscriptDefaultWidthX"] = "abc"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		# postscriptNominalWidthX
+		info = dict(fontInfoVersion3)
+		info["postscriptNominalWidthX"] = "abc"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		# postscriptWeightName
+		info = dict(fontInfoVersion3)
+		info["postscriptWeightName"] = 123
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		# postscriptDefaultCharacter
+		info = dict(fontInfoVersion3)
+		info["postscriptDefaultCharacter"] = 123
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		# postscriptWindowsCharacterSet
+		info = dict(fontInfoVersion3)
+		info["postscriptWindowsCharacterSet"] = -1
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		# macintoshFONDFamilyID
+		info = dict(fontInfoVersion3)
+		info["macintoshFONDFamilyID"] = "abc"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		# macintoshFONDName
+		info = dict(fontInfoVersion3)
+		info["macintoshFONDName"] = 123
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+
+
 class WriteFontInfoVersion1TestCase(unittest.TestCase):
 
 	def setUp(self):
@@ -937,7 +1791,7 @@ class WriteFontInfoVersion2TestCase(unittest.TestCase):
 
 	def testWrite(self):
 		infoObject = self.makeInfoObject()
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		writer.writeInfo(infoObject)
 		writtenData = self.readPlist()
 		for attr, originalValue in fontInfoVersion2.items():
@@ -948,78 +1802,78 @@ class WriteFontInfoVersion2TestCase(unittest.TestCase):
 		# familyName
 		infoObject = self.makeInfoObject()
 		infoObject.familyName = 123
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# styleName
 		infoObject = self.makeInfoObject()
 		infoObject.styleName = 123
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# styleMapFamilyName
 		infoObject = self.makeInfoObject()
 		infoObject.styleMapFamilyName = 123
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# styleMapStyleName
 		## not a string
 		infoObject = self.makeInfoObject()
 		infoObject.styleMapStyleName = 123
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		## out of range
 		infoObject = self.makeInfoObject()
 		infoObject.styleMapStyleName = "REGULAR"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# versionMajor
 		infoObject = self.makeInfoObject()
 		infoObject.versionMajor = "1"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# versionMinor
 		infoObject = self.makeInfoObject()
 		infoObject.versionMinor = "0"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# copyright
 		infoObject = self.makeInfoObject()
 		infoObject.copyright = 123
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# trademark
 		infoObject = self.makeInfoObject()
 		infoObject.trademark = 123
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# unitsPerEm
 		infoObject = self.makeInfoObject()
 		infoObject.unitsPerEm = "abc"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# descender
 		infoObject = self.makeInfoObject()
 		infoObject.descender = "abc"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# xHeight
 		infoObject = self.makeInfoObject()
 		infoObject.xHeight = "abc"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# capHeight
 		infoObject = self.makeInfoObject()
 		infoObject.capHeight = "abc"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# ascender
 		infoObject = self.makeInfoObject()
 		infoObject.ascender = "abc"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# italicAngle
 		infoObject = self.makeInfoObject()
 		infoObject.italicAngle = "abc"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 
 	def testHeadWrite(self):
@@ -1027,131 +1881,131 @@ class WriteFontInfoVersion2TestCase(unittest.TestCase):
 		## not a string
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeHeadCreated = 123
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		## invalid format
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeHeadCreated = "2000-Jan-01 00:00:00"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# openTypeHeadLowestRecPPEM
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeHeadLowestRecPPEM = "abc"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# openTypeHeadFlags
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeHeadFlags = [-1]
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 
 	def testHheaWrite(self):
 		# openTypeHheaAscender
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeHheaAscender = "abc"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# openTypeHheaDescender
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeHheaDescender = "abc"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# openTypeHheaLineGap
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeHheaLineGap = "abc"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# openTypeHheaCaretSlopeRise
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeHheaCaretSlopeRise = "abc"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# openTypeHheaCaretSlopeRun
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeHheaCaretSlopeRun = "abc"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# openTypeHheaCaretOffset
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeHheaCaretOffset = "abc"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 
 	def testNameWrite(self):
 		# openTypeNameDesigner
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeNameDesigner = 123
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# openTypeNameDesignerURL
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeNameDesignerURL = 123
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# openTypeNameManufacturer
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeNameManufacturer = 123
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# openTypeNameManufacturerURL
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeNameManufacturerURL = 123
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# openTypeNameLicense
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeNameLicense = 123
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# openTypeNameLicenseURL
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeNameLicenseURL = 123
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# openTypeNameVersion
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeNameVersion = 123
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# openTypeNameUniqueID
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeNameUniqueID = 123
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# openTypeNameDescription
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeNameDescription = 123
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# openTypeNamePreferredFamilyName
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeNamePreferredFamilyName = 123
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# openTypeNamePreferredSubfamilyName
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeNamePreferredSubfamilyName = 123
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# openTypeNameCompatibleFullName
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeNameCompatibleFullName = 123
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# openTypeNameSampleText
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeNameSampleText = 123
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# openTypeNameWWSFamilyName
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeNameWWSFamilyName = 123
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# openTypeNameWWSSubfamilyName
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeNameWWSSubfamilyName = 123
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 
 	def testOS2Write(self):
@@ -1159,399 +2013,1091 @@ class WriteFontInfoVersion2TestCase(unittest.TestCase):
 		## not an int
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2WidthClass = "abc"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		## out or range
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2WidthClass = 15
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# openTypeOS2WeightClass
 		infoObject = self.makeInfoObject()
 		## not an int
 		infoObject.openTypeOS2WeightClass = "abc"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		## out of range
 		infoObject.openTypeOS2WeightClass = -50
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# openTypeOS2Selection
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2Selection = [-1]
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# openTypeOS2VendorID
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2VendorID = 1234
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# openTypeOS2Panose
 		## not an int
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2Panose = [0, 1, 2, 3, 4, 5, 6, 7, 8, str(9)]
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		## too few values
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2Panose = [0, 1, 2, 3]
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		## too many values
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2Panose = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# openTypeOS2FamilyClass
 		## not an int
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2FamilyClass = [0, str(1)]
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		## too few values
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2FamilyClass = [1]
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		## too many values
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2FamilyClass = [1, 1, 1]
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		## out of range
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2FamilyClass = [1, 20]
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# openTypeOS2UnicodeRanges
 		## not an int
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2UnicodeRanges = ["0"]
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		## out of range
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2UnicodeRanges = [-1]
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# openTypeOS2CodePageRanges
 		## not an int
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2CodePageRanges = ["0"]
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		## out of range
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2CodePageRanges = [-1]
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# openTypeOS2TypoAscender
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2TypoAscender = "abc"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# openTypeOS2TypoDescender
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2TypoDescender = "abc"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# openTypeOS2TypoLineGap
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2TypoLineGap = "abc"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# openTypeOS2WinAscent
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2WinAscent = "abc"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# openTypeOS2WinDescent
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2WinDescent = "abc"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# openTypeOS2Type
 		## not an int
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2Type = ["1"]
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		## out of range
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2Type = [-1]
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# openTypeOS2SubscriptXSize
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2SubscriptXSize = "abc"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# openTypeOS2SubscriptYSize
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2SubscriptYSize = "abc"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# openTypeOS2SubscriptXOffset
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2SubscriptXOffset = "abc"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# openTypeOS2SubscriptYOffset
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2SubscriptYOffset = "abc"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# openTypeOS2SuperscriptXSize
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2SuperscriptXSize = "abc"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# openTypeOS2SuperscriptYSize
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2SuperscriptYSize = "abc"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# openTypeOS2SuperscriptXOffset
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2SuperscriptXOffset = "abc"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# openTypeOS2SuperscriptYOffset
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2SuperscriptYOffset = "abc"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# openTypeOS2StrikeoutSize
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2StrikeoutSize = "abc"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# openTypeOS2StrikeoutPosition
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2StrikeoutPosition = "abc"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 
 	def testVheaWrite(self):
 		# openTypeVheaVertTypoAscender
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeVheaVertTypoAscender = "abc"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# openTypeVheaVertTypoDescender
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeVheaVertTypoDescender = "abc"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# openTypeVheaVertTypoLineGap
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeVheaVertTypoLineGap = "abc"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# openTypeVheaCaretSlopeRise
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeVheaCaretSlopeRise = "abc"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# openTypeVheaCaretSlopeRun
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeVheaCaretSlopeRun = "abc"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# openTypeVheaCaretOffset
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeVheaCaretOffset = "abc"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 
 	def testFONDWrite(self):
 		# macintoshFONDFamilyID
 		infoObject = self.makeInfoObject()
 		infoObject.macintoshFONDFamilyID = "abc"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# macintoshFONDName
 		infoObject = self.makeInfoObject()
 		infoObject.macintoshFONDName = 123
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 
 	def testPostscriptWrite(self):
 		# postscriptFontName
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptFontName = 123
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# postscriptFullName
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptFullName = 123
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# postscriptSlantAngle
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptSlantAngle = "abc"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# postscriptUniqueID
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptUniqueID = "abc"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# postscriptUnderlineThickness
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptUnderlineThickness = "abc"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# postscriptUnderlinePosition
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptUnderlinePosition = "abc"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# postscriptIsFixedPitch
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptIsFixedPitch = 2
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# postscriptBlueValues
 		## not a list
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptBlueValues = "abc"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		## uneven value count
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptBlueValues = [500]
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		## too many values
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptBlueValues = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160]
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# postscriptOtherBlues
 		## not a list
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptOtherBlues = "abc"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		## uneven value count
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptOtherBlues = [500]
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		## too many values
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptOtherBlues = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160]
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# postscriptFamilyBlues
 		## not a list
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptFamilyBlues = "abc"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		## uneven value count
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptFamilyBlues = [500]
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		## too many values
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptFamilyBlues = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160]
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# postscriptFamilyOtherBlues
 		## not a list
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptFamilyOtherBlues = "abc"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		## uneven value count
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptFamilyOtherBlues = [500]
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		## too many values
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptFamilyOtherBlues = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160]
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# postscriptStemSnapH
 		## not list
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptStemSnapH = "abc"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		## too many values
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptStemSnapH = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160]
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# postscriptStemSnapV
 		## not list
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptStemSnapV = "abc"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		## too many values
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptStemSnapV = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160]
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# postscriptBlueFuzz
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptBlueFuzz = "abc"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# postscriptBlueShift
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptBlueShift = "abc"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# postscriptBlueScale
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptBlueScale = "abc"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# postscriptForceBold
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptForceBold = "abc"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# postscriptDefaultWidthX
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptDefaultWidthX = "abc"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# postscriptNominalWidthX
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptNominalWidthX = "abc"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# postscriptWeightName
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptWeightName = 123
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# postscriptDefaultCharacter
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptDefaultCharacter = 123
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# postscriptWindowsCharacterSet
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptWindowsCharacterSet = -1
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# macintoshFONDFamilyID
 		infoObject = self.makeInfoObject()
 		infoObject.macintoshFONDFamilyID = "abc"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# macintoshFONDName
 		infoObject = self.makeInfoObject()
 		infoObject.macintoshFONDName = 123
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=2)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+
+
+class WriteFontInfoVersion3TestCase(unittest.TestCase):
+
+	def setUp(self):
+		#self.dstDir = tempfile.mktemp()
+		#os.mkdir(self.dstDir)
+		self.dstDir = "/Users/tal/Desktop/untitled folder"
+
+	def tearDown(self):
+		pass
+		#shutil.rmtree(self.dstDir)
+
+	def makeInfoObject(self):
+		infoObject = TestInfoObject()
+		for attr, value in fontInfoVersion3.items():
+			setattr(infoObject, attr, value)
+		return infoObject
+
+	def readPlist(self):
+		path = os.path.join(self.dstDir, "fontinfo.plist")
+		return readPlist(path)
+
+	def testWrite(self):
+		infoObject = self.makeInfoObject()
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		writer.writeInfo(infoObject)
+		writtenData = self.readPlist()
+		for attr, originalValue in fontInfoVersion3.items():
+			newValue = writtenData[attr]
+			self.assertEqual(newValue, originalValue)
+
+	def testGenericWrite(self):
+		# familyName
+		infoObject = self.makeInfoObject()
+		infoObject.familyName = 123
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# styleName
+		infoObject = self.makeInfoObject()
+		infoObject.styleName = 123
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# styleMapFamilyName
+		infoObject = self.makeInfoObject()
+		infoObject.styleMapFamilyName = 123
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# styleMapStyleName
+		## not a string
+		infoObject = self.makeInfoObject()
+		infoObject.styleMapStyleName = 123
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## out of range
+		infoObject = self.makeInfoObject()
+		infoObject.styleMapStyleName = "REGULAR"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# versionMajor
+		infoObject = self.makeInfoObject()
+		infoObject.versionMajor = "1"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# versionMinor
+		infoObject = self.makeInfoObject()
+		infoObject.versionMinor = "0"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# copyright
+		infoObject = self.makeInfoObject()
+		infoObject.copyright = 123
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# trademark
+		infoObject = self.makeInfoObject()
+		infoObject.trademark = 123
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# unitsPerEm
+		infoObject = self.makeInfoObject()
+		infoObject.unitsPerEm = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# descender
+		infoObject = self.makeInfoObject()
+		infoObject.descender = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# xHeight
+		infoObject = self.makeInfoObject()
+		infoObject.xHeight = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# capHeight
+		infoObject = self.makeInfoObject()
+		infoObject.capHeight = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# ascender
+		infoObject = self.makeInfoObject()
+		infoObject.ascender = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# italicAngle
+		infoObject = self.makeInfoObject()
+		infoObject.italicAngle = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+
+	def testGaspWrite(self):
+		# not a list
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeGaspRangeRecords = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# empty list
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeGaspRangeRecords = []
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# not a dict
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeGaspRangeRecords = ["abc"]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# dict not properly formatted
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeGaspRangeRecords = [dict(rangeMaxPPEM=0xFFFF, notTheRightKey=1)]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeGaspRangeRecords = [dict(notTheRightKey=1, rangeGaspBehavior=[0])]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# not an int for ppem
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeGaspRangeRecords = [dict(rangeMaxPPEM="abc", rangeGaspBehavior=[0]), dict(rangeMaxPPEM=0xFFFF, rangeGaspBehavior=[0])]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# not a list for behavior
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeGaspRangeRecords = [dict(rangeMaxPPEM=10, rangeGaspBehavior="abc"), dict(rangeMaxPPEM=0xFFFF, rangeGaspBehavior=[0])]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# invalid behavior value
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeGaspRangeRecords = [dict(rangeMaxPPEM=10, rangeGaspBehavior=[-1]), dict(rangeMaxPPEM=0xFFFF, rangeGaspBehavior=[0])]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# not sorted
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeGaspRangeRecords = [dict(rangeMaxPPEM=0xFFFF, rangeGaspBehavior=[0]), dict(rangeMaxPPEM=10, rangeGaspBehavior=[-1])]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# no 0xFFFF
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeGaspRangeRecords = [dict(rangeMaxPPEM=10, rangeGaspBehavior=[0]), dict(rangeMaxPPEM=20, rangeGaspBehavior=[-1])]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+
+	def testHeadWrite(self):
+		# openTypeHeadCreated
+		## not a string
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeHeadCreated = 123
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## invalid format
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeHeadCreated = "2000-Jan-01 00:00:00"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# openTypeHeadLowestRecPPEM
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeHeadLowestRecPPEM = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# openTypeHeadFlags
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeHeadFlags = [-1]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+
+	def testHheaWrite(self):
+		# openTypeHheaAscender
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeHheaAscender = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# openTypeHheaDescender
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeHheaDescender = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# openTypeHheaLineGap
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeHheaLineGap = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# openTypeHheaCaretSlopeRise
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeHheaCaretSlopeRise = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# openTypeHheaCaretSlopeRun
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeHheaCaretSlopeRun = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# openTypeHheaCaretOffset
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeHheaCaretOffset = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+
+	def testNameWrite(self):
+		# openTypeNameDesigner
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeNameDesigner = 123
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# openTypeNameDesignerURL
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeNameDesignerURL = 123
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# openTypeNameManufacturer
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeNameManufacturer = 123
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# openTypeNameManufacturerURL
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeNameManufacturerURL = 123
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# openTypeNameLicense
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeNameLicense = 123
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# openTypeNameLicenseURL
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeNameLicenseURL = 123
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# openTypeNameVersion
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeNameVersion = 123
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# openTypeNameUniqueID
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeNameUniqueID = 123
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# openTypeNameDescription
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeNameDescription = 123
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# openTypeNamePreferredFamilyName
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeNamePreferredFamilyName = 123
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# openTypeNamePreferredSubfamilyName
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeNamePreferredSubfamilyName = 123
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# openTypeNameCompatibleFullName
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeNameCompatibleFullName = 123
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# openTypeNameSampleText
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeNameSampleText = 123
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# openTypeNameWWSFamilyName
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeNameWWSFamilyName = 123
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# openTypeNameWWSSubfamilyName
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeNameWWSSubfamilyName = 123
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+
+	def testOS2Write(self):
+		# openTypeOS2WidthClass
+		## not an int
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeOS2WidthClass = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## out or range
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeOS2WidthClass = 15
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# openTypeOS2WeightClass
+		infoObject = self.makeInfoObject()
+		## not an int
+		infoObject.openTypeOS2WeightClass = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## out of range
+		infoObject.openTypeOS2WeightClass = -50
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# openTypeOS2Selection
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeOS2Selection = [-1]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# openTypeOS2VendorID
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeOS2VendorID = 1234
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# openTypeOS2Panose
+		## not an int
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeOS2Panose = [0, 1, 2, 3, 4, 5, 6, 7, 8, str(9)]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## too few values
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeOS2Panose = [0, 1, 2, 3]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## too many values
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeOS2Panose = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# openTypeOS2FamilyClass
+		## not an int
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeOS2FamilyClass = [0, str(1)]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## too few values
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeOS2FamilyClass = [1]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## too many values
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeOS2FamilyClass = [1, 1, 1]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## out of range
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeOS2FamilyClass = [1, 20]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# openTypeOS2UnicodeRanges
+		## not an int
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeOS2UnicodeRanges = ["0"]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## out of range
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeOS2UnicodeRanges = [-1]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# openTypeOS2CodePageRanges
+		## not an int
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeOS2CodePageRanges = ["0"]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## out of range
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeOS2CodePageRanges = [-1]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# openTypeOS2TypoAscender
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeOS2TypoAscender = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# openTypeOS2TypoDescender
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeOS2TypoDescender = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# openTypeOS2TypoLineGap
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeOS2TypoLineGap = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# openTypeOS2WinAscent
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeOS2WinAscent = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# openTypeOS2WinDescent
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeOS2WinDescent = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# openTypeOS2Type
+		## not an int
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeOS2Type = ["1"]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## out of range
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeOS2Type = [-1]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# openTypeOS2SubscriptXSize
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeOS2SubscriptXSize = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# openTypeOS2SubscriptYSize
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeOS2SubscriptYSize = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# openTypeOS2SubscriptXOffset
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeOS2SubscriptXOffset = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# openTypeOS2SubscriptYOffset
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeOS2SubscriptYOffset = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# openTypeOS2SuperscriptXSize
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeOS2SuperscriptXSize = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# openTypeOS2SuperscriptYSize
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeOS2SuperscriptYSize = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# openTypeOS2SuperscriptXOffset
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeOS2SuperscriptXOffset = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# openTypeOS2SuperscriptYOffset
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeOS2SuperscriptYOffset = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# openTypeOS2StrikeoutSize
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeOS2StrikeoutSize = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# openTypeOS2StrikeoutPosition
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeOS2StrikeoutPosition = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+
+	def testVheaWrite(self):
+		# openTypeVheaVertTypoAscender
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeVheaVertTypoAscender = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# openTypeVheaVertTypoDescender
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeVheaVertTypoDescender = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# openTypeVheaVertTypoLineGap
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeVheaVertTypoLineGap = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# openTypeVheaCaretSlopeRise
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeVheaCaretSlopeRise = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# openTypeVheaCaretSlopeRun
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeVheaCaretSlopeRun = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# openTypeVheaCaretOffset
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeVheaCaretOffset = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+
+	def testFONDWrite(self):
+		# macintoshFONDFamilyID
+		infoObject = self.makeInfoObject()
+		infoObject.macintoshFONDFamilyID = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# macintoshFONDName
+		infoObject = self.makeInfoObject()
+		infoObject.macintoshFONDName = 123
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+
+	def testPostscriptWrite(self):
+		# postscriptFontName
+		infoObject = self.makeInfoObject()
+		infoObject.postscriptFontName = 123
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# postscriptFullName
+		infoObject = self.makeInfoObject()
+		infoObject.postscriptFullName = 123
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# postscriptSlantAngle
+		infoObject = self.makeInfoObject()
+		infoObject.postscriptSlantAngle = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# postscriptUniqueID
+		infoObject = self.makeInfoObject()
+		infoObject.postscriptUniqueID = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# postscriptUnderlineThickness
+		infoObject = self.makeInfoObject()
+		infoObject.postscriptUnderlineThickness = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# postscriptUnderlinePosition
+		infoObject = self.makeInfoObject()
+		infoObject.postscriptUnderlinePosition = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# postscriptIsFixedPitch
+		infoObject = self.makeInfoObject()
+		infoObject.postscriptIsFixedPitch = 2
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# postscriptBlueValues
+		## not a list
+		infoObject = self.makeInfoObject()
+		infoObject.postscriptBlueValues = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## uneven value count
+		infoObject = self.makeInfoObject()
+		infoObject.postscriptBlueValues = [500]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## too many values
+		infoObject = self.makeInfoObject()
+		infoObject.postscriptBlueValues = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# postscriptOtherBlues
+		## not a list
+		infoObject = self.makeInfoObject()
+		infoObject.postscriptOtherBlues = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## uneven value count
+		infoObject = self.makeInfoObject()
+		infoObject.postscriptOtherBlues = [500]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## too many values
+		infoObject = self.makeInfoObject()
+		infoObject.postscriptOtherBlues = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# postscriptFamilyBlues
+		## not a list
+		infoObject = self.makeInfoObject()
+		infoObject.postscriptFamilyBlues = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## uneven value count
+		infoObject = self.makeInfoObject()
+		infoObject.postscriptFamilyBlues = [500]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## too many values
+		infoObject = self.makeInfoObject()
+		infoObject.postscriptFamilyBlues = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# postscriptFamilyOtherBlues
+		## not a list
+		infoObject = self.makeInfoObject()
+		infoObject.postscriptFamilyOtherBlues = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## uneven value count
+		infoObject = self.makeInfoObject()
+		infoObject.postscriptFamilyOtherBlues = [500]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## too many values
+		infoObject = self.makeInfoObject()
+		infoObject.postscriptFamilyOtherBlues = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# postscriptStemSnapH
+		## not list
+		infoObject = self.makeInfoObject()
+		infoObject.postscriptStemSnapH = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## too many values
+		infoObject = self.makeInfoObject()
+		infoObject.postscriptStemSnapH = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# postscriptStemSnapV
+		## not list
+		infoObject = self.makeInfoObject()
+		infoObject.postscriptStemSnapV = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## too many values
+		infoObject = self.makeInfoObject()
+		infoObject.postscriptStemSnapV = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# postscriptBlueFuzz
+		infoObject = self.makeInfoObject()
+		infoObject.postscriptBlueFuzz = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# postscriptBlueShift
+		infoObject = self.makeInfoObject()
+		infoObject.postscriptBlueShift = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# postscriptBlueScale
+		infoObject = self.makeInfoObject()
+		infoObject.postscriptBlueScale = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# postscriptForceBold
+		infoObject = self.makeInfoObject()
+		infoObject.postscriptForceBold = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# postscriptDefaultWidthX
+		infoObject = self.makeInfoObject()
+		infoObject.postscriptDefaultWidthX = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# postscriptNominalWidthX
+		infoObject = self.makeInfoObject()
+		infoObject.postscriptNominalWidthX = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# postscriptWeightName
+		infoObject = self.makeInfoObject()
+		infoObject.postscriptWeightName = 123
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# postscriptDefaultCharacter
+		infoObject = self.makeInfoObject()
+		infoObject.postscriptDefaultCharacter = 123
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# postscriptWindowsCharacterSet
+		infoObject = self.makeInfoObject()
+		infoObject.postscriptWindowsCharacterSet = -1
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# macintoshFONDFamilyID
+		infoObject = self.makeInfoObject()
+		infoObject.macintoshFONDFamilyID = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# macintoshFONDName
+		infoObject = self.makeInfoObject()
+		infoObject.macintoshFONDName = 123
+		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 
 
@@ -1615,7 +3161,7 @@ class UFO3WriteDataTestCase(unittest.TestCase):
 		# basic file
 		path = "data/org.unifiedfontobject.writebytesbasicfile.txt"
 		bytes = "test"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=3)
 		writer.writeBytesToPath(path, bytes)
 		path = os.path.join(self.dstDir, path)
 		self.assertEqual(os.path.exists(path), True)
@@ -1626,7 +3172,7 @@ class UFO3WriteDataTestCase(unittest.TestCase):
 		# basic file with unicode text
 		path = "data/org.unifiedfontobject.writebytesbasicunicodefile.txt"
 		bytes = u"tëßt"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=3)
 		writer.writeBytesToPath(path, bytes, encoding="utf8")
 		path = os.path.join(self.dstDir, path)
 		self.assertEqual(os.path.exists(path), True)
@@ -1637,7 +3183,7 @@ class UFO3WriteDataTestCase(unittest.TestCase):
 		# basic directory
 		path = "data/org.unifiedfontobject.writebytesdirectory/level1/level2/file.txt"
 		bytes = "test"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=3)
 		writer.writeBytesToPath(path, bytes)
 		path = os.path.join(self.dstDir, path)
 		self.assertEqual(os.path.exists(path), True)
@@ -1649,7 +3195,7 @@ class UFO3WriteDataTestCase(unittest.TestCase):
 	def testUFOWriterWriteFileToPath(self):
 		# basic file
 		path = "data/org.unifiedfontobject.getwritefile.txt"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=3)
 		fileObject = writer.getFileObjectForPath(path)
 		self.assertNotEqual(fileObject, None)
 		hasRead = hasattr(fileObject, "read")
@@ -1660,7 +3206,7 @@ class UFO3WriteDataTestCase(unittest.TestCase):
 		path1 = "data/org.unifiedfontobject.removefile/level1/level2/file1.txt"
 		path2 = "data/org.unifiedfontobject.removefile/level1/level2/file2.txt"
 		path3 = "data/org.unifiedfontobject.removefile/level1/file3.txt"
-		writer = UFOWriter(self.dstDir)
+		writer = UFOWriter(self.dstDir, formatVersion=3)
 		writer.writeBytesToPath(path1, "test")
 		writer.writeBytesToPath(path2, "test")
 		writer.writeBytesToPath(path3, "test")

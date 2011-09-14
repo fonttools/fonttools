@@ -128,7 +128,7 @@ def convertUFOFormatVersion1ToFormatVersion2(inPath, outPath=None):
 		writePlistAtomically(infoData, infoPath)
 	# otherwise write everything.
 	else:
-		writer = UFOWriter(outPath)
+		writer = UFOWriter(outPath, formatVersion=2)
 		writer.writeGroups(groups)
 		writer.writeKerning(kerning)
 		writer.writeLib(libData)
@@ -313,11 +313,21 @@ class UFOReader(object):
 				if value is None:
 					continue
 				infoDataToSet[attr] = value
+		# version 3
+		elif self._formatVersion == 3:
+			for attr, dataValidationDict in _fontInfoAttributesVersion3ValueData.items():
+				value = infoDict.get(attr)
+				if value is None:
+					continue
+				infoDataToSet[attr] = value
 		# unsupported version
 		else:
 			raise NotImplementedError
 		# validate data
-		infoDataToSet = _validateInfoVersion2Data(infoDataToSet)
+		if self._formatVersion < 3:
+			infoDataToSet = _validateInfoVersion2Data(infoDataToSet)
+		elif self._formatVersion == 3:
+			infoDataToSet = _validateInfoVersion3Data(infoDataToSet)
 		# populate the object
 		for attr, value in infoDataToSet.items():
 			try:
@@ -482,7 +492,7 @@ class UFOWriter(object):
 
 	"""Write the various components of the .ufo."""
 
-	def __init__(self, path, formatVersion=2, fileCreator="org.robofab.ufoLib"):
+	def __init__(self, path, formatVersion=3, fileCreator="org.robofab.ufoLib"):
 		if formatVersion not in supportedUFOFormatVersions:
 			raise UFOLibError("Unsupported UFO format (%d)." % formatVersion)
 		self._path = path
@@ -513,9 +523,9 @@ class UFOWriter(object):
 			# remove features.fea
 			p = os.path.join(path, FEATURES_FILENAME)
 			self._removePath(p)
-		# read the existing layer contents
-		if formatVersion >= 3:
-			p = os.path.join(layercontents)
+		## read the existing layer contents
+		#if formatVersion >= 3:
+		#	p = os.path.join(layercontents)
 
 	# properties
 
@@ -658,26 +668,32 @@ class UFOWriter(object):
 		"""
 		Write info.plist. This method requires an object
 		that supports getting attributes that follow the
-		fontinfo.plist version 2 secification. Attributes
+		fontinfo.plist version 2 specification. Attributes
 		will be taken from the given object and written
 		into the file.
 		"""
 		self._makeDirectory()
 		path = os.path.join(self._path, FONTINFO_FILENAME)
-		# gather version 2 data
+		# gather version 3 data
 		infoData = {}
-		for attr in _fontInfoAttributesVersion2ValueData.keys():
-			try:
-				value = getattr(info, attr)
-			except AttributeError:
-				raise UFOLibError("The supplied info object does not support getting a necessary attribute (%s)." % attr)
-			if value is None:
-				continue
-			infoData[attr] = value
-		# validate data
-		infoData = _validateInfoVersion2Data(infoData)
-		# down convert data to version 1 if necessary
-		if self._formatVersion == 1:
+		for attr in _fontInfoAttributesVersion3ValueData.keys():
+			if hasattr(info, attr):
+				try:
+					value = getattr(info, attr)
+				except AttributeError:
+					raise UFOLibError("The supplied info object does not support getting a necessary attribute (%s)." % attr)
+				if value is None:
+					continue
+				infoData[attr] = value
+		# down convert data if necessary and validate
+		if self._formatVersion == 3:
+			infoData = _validateInfoVersion3Data(infoData)
+		elif self._formatVersion == 2:
+			infoData = _convertFontInfoDataVersion3ToVersion2(infoData)
+			infoData = _validateInfoVersion2Data(infoData)
+		elif self._formatVersion == 1:
+			infoData = _convertFontInfoDataVersion3ToVersion2(infoData)
+			infoData = _validateInfoVersion2Data(infoData)
 			infoData = _convertFontInfoDataVersion2ToVersion1(infoData)
 		# write file
 		writePlistAtomically(infoData, path)
@@ -812,7 +828,7 @@ def writeFileAtomically(text, path, encoding=None):
 def validateFontInfoVersion2ValueForAttribute(attr, value):
 	"""
 	This performs very basic validation of the value for attribute
-	following the UFO fontinfo.plist specification. The results
+	following the UFO 2 fontinfo.plist specification. The results
 	of this should not be interpretted as *correct* for the font
 	that they are part of. This merely indicates that the value
 	is of the proper type and, where the specification defines
@@ -838,6 +854,41 @@ def _validateInfoVersion2Data(infoData):
 	validInfoData = {}
 	for attr, value in infoData.items():
 		isValidValue = validateFontInfoVersion2ValueForAttribute(attr, value)
+		if not isValidValue:
+			raise UFOLibError("Invalid value for attribute %s (%s)." % (attr, repr(value)))
+		else:
+			validInfoData[attr] = value
+	return infoData
+
+def validateFontInfoVersion3ValueForAttribute(attr, value):
+	"""
+	This performs very basic validation of the value for attribute
+	following the UFO 2 fontinfo.plist specification. The results
+	of this should not be interpretted as *correct* for the font
+	that they are part of. This merely indicates that the value
+	is of the proper type and, where the specification defines
+	a set range of possible values for an attribute, that the
+	value is in the accepted range.
+	"""
+	dataValidationDict = _fontInfoAttributesVersion3ValueData[attr]
+	valueType = dataValidationDict.get("type")
+	validator = dataValidationDict.get("valueValidator")
+	valueOptions = dataValidationDict.get("valueOptions")
+	# have specific options for the validator
+	if valueOptions is not None:
+		isValidValue = validator(value, valueOptions)
+	# no specific options
+	else:
+		if validator == _fontInfoTypeValidator:
+			isValidValue = validator(value, valueType)
+		else:
+			isValidValue = validator(value)
+	return isValidValue
+
+def _validateInfoVersion3Data(infoData):
+	validInfoData = {}
+	for attr, value in infoData.items():
+		isValidValue = validateFontInfoVersion3ValueForAttribute(attr, value)
 		if not isValidValue:
 			raise UFOLibError("Invalid value for attribute %s (%s)." % (attr, repr(value)))
 		else:
@@ -893,6 +944,37 @@ def _fontInfoStyleMapStyleNameValidator(value):
 	"""
 	options = ["regular", "italic", "bold", "bold italic"]
 	return value in options
+
+def _fontInfoOpenTypeGaspRangeRecordsValidator(value):
+	"""
+	Version 3+.
+	"""
+	if not isinstance(value, list):
+		return False
+	if len(value) == 0:
+		return False
+	validBehaviors = [0, 1, 2, 3]
+	ppemOrder = []
+	for rangeRecord in value:
+		if not isinstance(rangeRecord, dict):
+			return False
+		keys = set(rangeRecord.keys())
+		if keys != set(("rangeMaxPPEM", "rangeGaspBehavior")):
+			return False
+		ppem = rangeRecord["rangeMaxPPEM"]
+		behavior = rangeRecord["rangeGaspBehavior"]
+		ppemValidity = _fontInfoNonNegativeIntValidator(ppem)
+		if not ppemValidity:
+			return False
+		behaviorValidity = _fontInfoIntListValidator(behavior, validBehaviors)
+		if not behaviorValidity:
+			return False
+		ppemOrder.append(ppem)
+	if ppemOrder != sorted(ppemOrder):
+		return False
+	if ppemOrder[-1] != 0xFFFF:
+		return False
+	return True
 
 def _fontInfoOpenTypeHeadCreatedValidator(value):
 	"""
@@ -1237,11 +1319,16 @@ _fontInfoAttributesVersion3ValueData.update({
 	"openTypeOS2Panose"						: dict(type="integerList", valueValidator=_fontInfoVersion3OpenTypeOS2PanoseValidator),
 	"openTypeOS2WinAscent"					: dict(type=(int, float), valueValidator=_fontInfoNonNegativeNumberValidator),
 	"openTypeOS2WinDescent"					: dict(type=(int, float), valueValidator=_fontInfoNonNegativeNumberValidator),
+	"openTypeGaspRangeRecords"				: dict(type=("dictList"), valueValidator=_fontInfoOpenTypeGaspRangeRecordsValidator)
 })
 
 # insert the type validator for all attrs that
 # have no defined validator.
 for attr, dataDict in _fontInfoAttributesVersion2ValueData.items():
+	if "valueValidator" not in dataDict:
+		dataDict["valueValidator"] = _fontInfoTypeValidator
+
+for attr, dataDict in _fontInfoAttributesVersion3ValueData.items():
 	if "valueValidator" not in dataDict:
 		dataDict["valueValidator"] = _fontInfoTypeValidator
 
@@ -1422,6 +1509,15 @@ def _convertFontInfoDataVersion2ToVersion1(data):
 		converted[newAttr] = newValue
 	return converted
 
+def _convertFontInfoDataVersion3ToVersion2(data):
+	converted = {}
+	for attr, value in data.items():
+		# only take attributes that are registered for version 2
+		if attr not in fontInfoAttributesVersion2:
+			continue
+		# store
+		converted[attr] = value
+	return converted
 
 if __name__ == "__main__":
 	import doctest
