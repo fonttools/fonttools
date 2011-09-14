@@ -2811,9 +2811,17 @@ class WriteFontInfoVersion3TestCase(unittest.TestCase):
 		infoObject.openTypeOS2WinAscent = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeOS2WinAscent = -1
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# openTypeOS2WinDescent
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2WinDescent = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeOS2WinDescent = -1
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# openTypeOS2Type
