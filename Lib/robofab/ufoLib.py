@@ -1036,6 +1036,32 @@ def _fontInfoOpenTypeHeadCreatedValidator(value):
 	# fallback
 	return True
 
+def _fontInfoOpenTypeNameRecordsValidator(value):
+	"""
+	Version 3+.
+	"""
+	if not isinstance(value, list):
+		return False
+	validKeys = set(["nameID", "platformID", "encodingID", "languageID", "string"])
+	seenRecords = []
+	for nameRecord in value:
+		if not isinstance(nameRecord, dict):
+			return False
+		if set(nameRecord.keys()) != validKeys:
+			return False
+		for key in validKeys:
+			if key == "string":
+				continue
+			if not isinstance(nameRecord[key], int):
+				return False
+		if not isinstance(nameRecord["string"], basestring):
+			return False
+		recordKey = (nameRecord["nameID"], nameRecord["platformID"], nameRecord["encodingID"], nameRecord["languageID"])
+		if recordKey in seenRecords:
+			return False
+		seenRecords.append(recordKey)
+	return True
+
 def _fontInfoOpenTypeOS2WeightClassValidator(value):
 	"""
 	Version 2+.
@@ -1320,7 +1346,8 @@ _fontInfoAttributesVersion3ValueData.update({
 	"openTypeOS2Panose"						: dict(type="integerList", valueValidator=_fontInfoVersion3OpenTypeOS2PanoseValidator),
 	"openTypeOS2WinAscent"					: dict(type=(int, float), valueValidator=_fontInfoNonNegativeNumberValidator),
 	"openTypeOS2WinDescent"					: dict(type=(int, float), valueValidator=_fontInfoNonNegativeNumberValidator),
-	"openTypeGaspRangeRecords"				: dict(type=("dictList"), valueValidator=_fontInfoOpenTypeGaspRangeRecordsValidator)
+	"openTypeGaspRangeRecords"				: dict(type="dictList", valueValidator=_fontInfoOpenTypeGaspRangeRecordsValidator),
+	"openTypeNameRecords"					: dict(type="dictList", valueValidator=_fontInfoOpenTypeNameRecordsValidator)
 })
 
 # insert the type validator for all attrs that

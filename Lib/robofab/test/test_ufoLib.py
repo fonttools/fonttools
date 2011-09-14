@@ -1212,6 +1212,113 @@ class ReadFontInfoVersion3TestCase(unittest.TestCase):
 		self._writeInfoToPlist(info)
 		reader = UFOReader(self.dstDir)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		# openTypeNameRecords
+		## not a list
+		info = dict(fontInfoVersion3)
+		info["openTypeNameRecords"] = "abc"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		## not a dict
+		info = dict(fontInfoVersion3)
+		info["openTypeNameRecords"] = ["abc"]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		## invalid dict structure
+		info = dict(fontInfoVersion3)
+		info["openTypeNameRecords"] = [dict(foo="bar")]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		## incorrect keys
+		info = dict(fontInfoVersion3)
+		info["openTypeNameRecords"] = [
+			dict(nameID=1, platformID=1, encodingID=1, languageID=1, string="Name Record.", foo="bar")
+		]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		info = dict(fontInfoVersion3)
+		info["openTypeNameRecords"] = [
+			dict(platformID=1, encodingID=1, languageID=1, string="Name Record.")
+		]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		info = dict(fontInfoVersion3)
+		info["openTypeNameRecords"] = [
+			dict(nameID=1, encodingID=1, languageID=1, string="Name Record.")
+		]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		info = dict(fontInfoVersion3)
+		info["openTypeNameRecords"] = [
+			dict(nameID=1, platformID=1, languageID=1, string="Name Record.")
+		]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		info = dict(fontInfoVersion3)
+		info["openTypeNameRecords"] = [
+			dict(nameID=1, platformID=1, encodingID=1, string="Name Record.")
+		]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		info = dict(fontInfoVersion3)
+		info["openTypeNameRecords"] = [
+			dict(nameID=1, platformID=1, encodingID=1, languageID=1)
+		]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		## invalid values
+		info = dict(fontInfoVersion3)
+		info["openTypeNameRecords"] = [
+			dict(nameID="1", platformID=1, encodingID=1, languageID=1, string="Name Record.")
+		]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		info = dict(fontInfoVersion3)
+		info["openTypeNameRecords"] = [
+			dict(nameID=1, platformID="1", encodingID=1, languageID=1, string="Name Record.")
+		]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		info = dict(fontInfoVersion3)
+		info["openTypeNameRecords"] = [
+			dict(nameID=1, platformID=1, encodingID="1", languageID=1, string="Name Record.")
+		]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		info = dict(fontInfoVersion3)
+		info["openTypeNameRecords"] = [
+			dict(nameID=1, platformID=1, encodingID=1, languageID="1", string="Name Record.")
+		]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		info = dict(fontInfoVersion3)
+		info["openTypeNameRecords"] = [
+			dict(nameID=1, platformID=1, encodingID=1, languageID=1, string=1)
+		]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		## duplicate
+		info = dict(fontInfoVersion3)
+		info["openTypeNameRecords"] = [
+			dict(nameID=1, platformID=1, encodingID=1, languageID=1, string="Name Record."),
+			dict(nameID=1, platformID=1, encodingID=1, languageID=1, string="Name Record.")
+		]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 
 	def testOS2Read(self):
 		# openTypeOS2WidthClass
@@ -2696,6 +2803,98 @@ class WriteFontInfoVersion3TestCase(unittest.TestCase):
 		# openTypeNameWWSSubfamilyName
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeNameWWSSubfamilyName = 123
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# openTypeNameRecords
+		## not a list
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeNameRecords = "abc"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## not a dict
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeNameRecords = ["abc"]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## invalid dict structure
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeNameRecords = [dict(foo="bar")]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## incorrect keys
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeNameRecords = [
+			dict(nameID=1, platformID=1, encodingID=1, languageID=1, string="Name Record.", foo="bar")
+		]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeNameRecords = [
+			dict(platformID=1, encodingID=1, languageID=1, string="Name Record.")
+		]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeNameRecords = [
+			dict(nameID=1, encodingID=1, languageID=1, string="Name Record.")
+		]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeNameRecords = [
+			dict(nameID=1, platformID=1, languageID=1, string="Name Record.")
+		]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeNameRecords = [
+			dict(nameID=1, platformID=1, encodingID=1, string="Name Record.")
+		]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeNameRecords = [
+			dict(nameID=1, platformID=1, encodingID=1, languageID=1)
+		]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## invalid values
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeNameRecords = [
+			dict(nameID="1", platformID=1, encodingID=1, languageID=1, string="Name Record.")
+		]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeNameRecords = [
+			dict(nameID=1, platformID="1", encodingID=1, languageID=1, string="Name Record.")
+		]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeNameRecords = [
+			dict(nameID=1, platformID=1, encodingID="1", languageID=1, string="Name Record.")
+		]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeNameRecords = [
+			dict(nameID=1, platformID=1, encodingID=1, languageID="1", string="Name Record.")
+		]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeNameRecords = [
+			dict(nameID=1, platformID=1, encodingID=1, languageID=1, string=1)
+		]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## duplicate
+		infoObject = self.makeInfoObject()
+		infoObject.openTypeNameRecords = [
+			dict(nameID=1, platformID=1, encodingID=1, languageID=1, string="Name Record."),
+			dict(nameID=1, platformID=1, encodingID=1, languageID=1, string="Name Record.")
+		]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 

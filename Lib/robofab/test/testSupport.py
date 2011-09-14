@@ -238,6 +238,10 @@ fontInfoVersion3 = {
 	"openTypeNameSampleText"			 : "Sample Text for Some Font.",
 	"openTypeNameWWSFamilyName"			 : "Some Font (WWS Family Name)",
 	"openTypeNameWWSSubfamilyName"		 : "Regular (WWS Subfamily Name)",
+	"openTypeNameRecords"				 : [
+		dict(nameID=1, platformID=1, encodingID=1, languageID=1, string="Name Record."),
+		dict(nameID=2, platformID=1, encodingID=1, languageID=1, string="Name Record.")
+	],
 	"openTypeOS2WidthClass"				 : 5,
 	"openTypeOS2WeightClass"			 : 500,
 	"openTypeOS2Selection"				 : [3],
