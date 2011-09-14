@@ -2412,13 +2412,12 @@ class WriteFontInfoVersion2TestCase(unittest.TestCase):
 class WriteFontInfoVersion3TestCase(unittest.TestCase):
 
 	def setUp(self):
-		#self.dstDir = tempfile.mktemp()
-		#os.mkdir(self.dstDir)
-		self.dstDir = "/Users/tal/Desktop/untitled folder"
+		self.dstDir = tempfile.mktemp()
+		os.mkdir(self.dstDir)
+
 
 	def tearDown(self):
-		pass
-		#shutil.rmtree(self.dstDir)
+		shutil.rmtree(self.dstDir)
 
 	def makeInfoObject(self):
 		infoObject = TestInfoObject()

@@ -605,6 +605,7 @@ class UFOWriter(object):
 		if self._formatVersion < 2:
 			raise UFOLibError("The data directory is not allowed in UFO Format Version %d." % self.formatVersion)
 		self._buildDirectoryTree(path)
+		path = os.path.join(self._path, path)
 		return codecs.open(path, WRITE_MODE, encoding=encoding)
 
 	def removeFileForPath(self, path):
