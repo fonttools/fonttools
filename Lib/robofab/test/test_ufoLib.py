@@ -1950,6 +1950,109 @@ class ReadFontInfoVersion3TestCase(unittest.TestCase):
 		self._writeInfoToPlist(info)
 		reader = UFOReader(self.dstDir)
 		reader.readInfo(TestInfoObject())
+		# woffMetadataCredits
+		## no credits attribute
+		info = dict(fontInfoVersion3)
+		info["woffMetadataCredits"] = {}
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		## unknown attribute
+		info = dict(fontInfoVersion3)
+		info["woffMetadataCredits"] = dict(credits=[dict(name="foo")], notTheRightKey=1)
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		## not a list
+		info = dict(fontInfoVersion3)
+		info["woffMetadataCredits"] = dict(credits="abc")
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		## no elements in credits
+		info = dict(fontInfoVersion3)
+		info["woffMetadataCredits"] = dict(credits=[])
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		## credit not a dict
+		info = dict(fontInfoVersion3)
+		info["woffMetadataCredits"] = dict(credits=["abc"])
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		## unknown key
+		info = dict(fontInfoVersion3)
+		info["woffMetadataCredits"] = dict(credits=[dict(name="foo", notTheRightKey=1)])
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		## no name
+		info = dict(fontInfoVersion3)
+		info["woffMetadataCredits"] = dict(credits=[dict(url="foo")])
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		## name not a string
+		info = dict(fontInfoVersion3)
+		info["woffMetadataCredits"] = dict(credits=[dict(name=1)])
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		## name an empty string
+		info = dict(fontInfoVersion3)
+		info["woffMetadataCredits"] = dict(credits=[dict(name="")])
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		reader.readInfo(TestInfoObject())
+		## url not a string
+		info = dict(fontInfoVersion3)
+		info["woffMetadataCredits"] = dict(credits=[dict(name="foo", url=1)])
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		## url an empty string
+		info = dict(fontInfoVersion3)
+		info["woffMetadataCredits"] = dict(credits=[dict(name="foo", url="")])
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		reader.readInfo(TestInfoObject())
+		## role not a string
+		info = dict(fontInfoVersion3)
+		info["woffMetadataCredits"] = dict(credits=[dict(name="foo", role=1)])
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		## role an empty string
+		info = dict(fontInfoVersion3)
+		info["woffMetadataCredits"] = dict(credits=[dict(name="", role="")])
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		reader.readInfo(TestInfoObject())
+		## dir not a string
+		info = dict(fontInfoVersion3)
+		info["woffMetadataCredits"] = dict(credits=[dict(name="foo", dir=1)])
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		## dir not ltr or rtl
+		info = dict(fontInfoVersion3)
+		info["woffMetadataCredits"] = dict(name="foo", dir="utd")
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		## class not a string
+		info = dict(fontInfoVersion3)
+		info["woffMetadataCredits"] = dict(credits=[{"name"  : "foo", "class" : 1}])
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		## class an empty string
+		info = dict(fontInfoVersion3)
+		info["woffMetadataCredits"] = dict(credits=[{"name"  : "foo", "class" : ""}])
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		reader.readInfo(TestInfoObject())
 
 
 class WriteFontInfoVersion1TestCase(unittest.TestCase):
@@ -3558,6 +3661,92 @@ class WriteFontInfoVersion3TestCase(unittest.TestCase):
 		## class empty string
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataVendor = {"name"  : "foo", "url" : "bar", "class" : ""}
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		writer.writeInfo(TestInfoObject())
+		# woffMetadataCredits
+		## no credits attribute
+		infoObject = self.makeInfoObject()
+		infoObject.woffMetadataCredits = {}
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## unknown attribute
+		infoObject = self.makeInfoObject()
+		infoObject.woffMetadataCredits = dict(credits=[dict(name="foo")], notTheRightKey=1)
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## not a list
+		infoObject = self.makeInfoObject()
+		infoObject.woffMetadataCredits = dict(credits="abc")
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## no elements in credits
+		infoObject = self.makeInfoObject()
+		infoObject.woffMetadataCredits = dict(credits=[])
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## credit not a dict
+		infoObject = self.makeInfoObject()
+		infoObject.woffMetadataCredits = dict(credits=["abc"])
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## unknown key
+		infoObject = self.makeInfoObject()
+		infoObject.woffMetadataCredits = dict(credits=[dict(name="foo", notTheRightKey=1)])
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## no name
+		infoObject = self.makeInfoObject()
+		infoObject.woffMetadataCredits = dict(credits=[dict(url="foo")])
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## name not a string
+		infoObject = self.makeInfoObject()
+		infoObject.woffMetadataCredits = dict(credits=[dict(name=1)])
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## name an empty string
+		infoObject = self.makeInfoObject()
+		infoObject.woffMetadataCredits = dict(credits=[dict(name="")])
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		writer.writeInfo(TestInfoObject())
+		## url not a string
+		infoObject = self.makeInfoObject()
+		infoObject.woffMetadataCredits = dict(credits=[dict(name="foo", url=1)])
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## url an empty string
+		infoObject = self.makeInfoObject()
+		infoObject.woffMetadataCredits = dict(credits=[dict(name="foo", url="")])
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		writer.writeInfo(TestInfoObject())
+		## role not a string
+		infoObject = self.makeInfoObject()
+		infoObject.woffMetadataCredits = dict(credits=[dict(name="foo", role=1)])
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## role an empty string
+		infoObject = self.makeInfoObject()
+		infoObject.woffMetadataCredits = dict(credits=[dict(name="", role="")])
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		writer.writeInfo(TestInfoObject())
+		## dir not a string
+		infoObject = self.makeInfoObject()
+		infoObject.woffMetadataCredits = dict(credits=[dict(name="foo", dir=1)])
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## dir not ltr or rtl
+		infoObject = self.makeInfoObject()
+		infoObject.woffMetadataCredits = dict(name="foo", dir="utd")
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## class not a string
+		infoObject = self.makeInfoObject()
+		infoObject.woffMetadataCredits = dict(credits=[{"name"  : "foo", "class" : 1}])
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## class an empty string
+		infoObject = self.makeInfoObject()
+		infoObject.woffMetadataCredits = dict(credits=[{"name"  : "foo", "class" : ""}])
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		writer.writeInfo(TestInfoObject())
 

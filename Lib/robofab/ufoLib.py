@@ -1222,12 +1222,13 @@ def _fontInfoWOFFMetadataCreditsValidator(value):
 	"""
 	Version 3+.
 	"""
-	if not isinstance(value, list):
+	dictPrototype = dict(credits=(list, True))
+	if not _fontInfoDictValidator(value, dictPrototype):
 		return False
-	if not len(value):
+	if not len(value["credits"]):
 		return False
-	dictPrototype = {"name" : (basestring, True), "url" : (basestring, False), "dir" : (basestring, False), "class" : (basestring, False)}
-	for credit in value:
+	dictPrototype = {"name" : (basestring, True), "url" : (basestring, False), "role" : (basestring, False), "dir" : (basestring, False), "class" : (basestring, False)}
+	for credit in value["credits"]:
 		if not _fontInfoDictValidator(credit, dictPrototype):
 			return False
 		if "dir" in credit and credit.get("dir") not in ("ltr", "rtl"):
@@ -1534,6 +1535,7 @@ _fontInfoAttributesVersion3ValueData.update({
 	"woffMinorVersion"						: dict(type=int, valueValidator=_fontInfoNonNegativeIntValidator),
 	"woffMetadataUniqueID"					: dict(type=dict, valueValidator=_fontInfoWOFFMetadataUniqueIDValidator),
 	"woffMetadataVendor"					: dict(type=dict, valueValidator=_fontInfoWOFFMetadataVendorValidator),
+	"woffMetadataCredits"					: dict(type=dict, valueValidator=_fontInfoWOFFMetadataCreditsValidator),
 })
 
 # insert the type validator for all attrs that

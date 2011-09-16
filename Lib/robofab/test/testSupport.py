@@ -300,6 +300,16 @@ fontInfoVersion3 = {
 	"woffMinorVersion"					 : 0,
 	"woffMetadataUniqueID"				 : dict(id="string"),
 	"woffMetadataVendor"				 : dict(name="Some Foundry", url="http://somefoundry.com"),
+	"woffMetadataCredits"				 : dict(
+												credits=[
+													dict(name="Some Designer"),
+													dict(name="Some Designer", url="http://somedesigner.com"),
+													dict(name="Some Designer", role="Designer"),
+													dict(name="Some Designer", dir="ltr"),
+													dict(name="rengiseD emoS", dir="rtl"),
+													{"name" : "Some Designer", "class" : "hello"}
+												]
+											),
 }
 
 expectedFontInfo1To2Conversion = {
