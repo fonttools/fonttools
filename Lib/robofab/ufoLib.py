@@ -1264,10 +1264,10 @@ def _fontInfoWOFFMetadataTrademarkValidator(value):
 	"""
 	Version 3+.
 	"""
-	dictPrototype = dict(text=(list, False))
+	dictPrototype = dict(text=(list, True))
 	if not _fontInfoDictValidator(value, dictPrototype):
 		return False
-	for text in value:
+	for text in value["text"]:
 		if not _fontInfoWOFFMetadataTextValue(text):
 			return False
 	return True
@@ -1276,10 +1276,10 @@ def _fontInfoWOFFMetadataCopyrightValidator(value):
 	"""
 	Version 3+.
 	"""
-	dictPrototype = dict(text=(list, False))
+	dictPrototype = dict(text=(list, True))
 	if not _fontInfoDictValidator(value, dictPrototype):
 		return False
-	for text in value:
+	for text in value["text"]:
 		if not _fontInfoWOFFMetadataTextValue(text):
 			return False
 	return True
@@ -1539,6 +1539,7 @@ _fontInfoAttributesVersion3ValueData.update({
 	"woffMetadataCredits"					: dict(type=dict, valueValidator=_fontInfoWOFFMetadataCreditsValidator),
 	"woffMetadataDescription"				: dict(type=dict, valueValidator=_fontInfoWOFFMetadataDescriptionValidator),
 	"woffMetadataLicense"					: dict(type=dict, valueValidator=_fontInfoWOFFMetadataLicenseValidator),
+	"woffMetadataCopyright"					: dict(type=dict, valueValidator=_fontInfoWOFFMetadataCopyrightValidator),
 })
 
 # insert the type validator for all attrs that
