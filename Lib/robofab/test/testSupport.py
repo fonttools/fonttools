@@ -365,6 +365,9 @@ fontInfoVersion3 = {
 													{"text" : "foo", "class" : ""},
 												]
 											),
+	"woffMetadataLicensee"				 : dict(
+											name="Some Licensee"
+											)
 }
 
 expectedFontInfo1To2Conversion = {

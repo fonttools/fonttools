@@ -1541,6 +1541,7 @@ _fontInfoAttributesVersion3ValueData.update({
 	"woffMetadataLicense"					: dict(type=dict, valueValidator=_fontInfoWOFFMetadataLicenseValidator),
 	"woffMetadataCopyright"					: dict(type=dict, valueValidator=_fontInfoWOFFMetadataCopyrightValidator),
 	"woffMetadataTrademark"					: dict(type=dict, valueValidator=_fontInfoWOFFMetadataTrademarkValidator),
+	"woffMetadataLicensee"					: dict(type=dict, valueValidator=_fontInfoWOFFMetadataLicenseeValidator),
 })
 
 # insert the type validator for all attrs that
