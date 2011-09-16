@@ -366,8 +366,72 @@ fontInfoVersion3 = {
 												]
 											),
 	"woffMetadataLicensee"				 : dict(
-											name="Some Licensee"
-											)
+												name="Some Licensee"
+											),
+	"woffMetadataExtensions"				 : [
+												dict(
+													# everything
+													names=[
+														dict(text="foo"),
+														dict(text=""),
+														dict(text="foo", language="bar"),
+														dict(text="foo", language=""),
+														dict(text="foo", dir="ltr"),
+														dict(text="foo", dir="rtl"),
+														{"text" : "foo", "class" : "hello"},
+														{"text" : "foo", "class" : ""},
+													],
+													items=[
+														# everything
+														dict(
+															id="foo",
+															names=[
+																dict(text="foo"),
+																dict(text=""),
+																dict(text="foo", language="bar"),
+																dict(text="foo", language=""),
+																dict(text="foo", dir="ltr"),
+																dict(text="foo", dir="rtl"),
+																{"text" : "foo", "class" : "hello"},
+																{"text" : "foo", "class" : ""},
+															],
+															values=[
+																dict(text="foo"),
+																dict(text=""),
+																dict(text="foo", language="bar"),
+																dict(text="foo", language=""),
+																dict(text="foo", dir="ltr"),
+																dict(text="foo", dir="rtl"),
+																{"text" : "foo", "class" : "hello"},
+																{"text" : "foo", "class" : ""},
+															]
+														),
+														# no id
+														dict(
+															names=[
+																dict(text="foo")
+															],
+															values=[
+																dict(text="foo")
+															]
+														)
+													]
+												),
+												# no names
+												dict(
+													items=[
+														dict(
+															id="foo",
+															names=[
+																dict(text="foo")
+															],
+															values=[
+																dict(text="foo")
+															]
+														)
+													]
+												),
+											]
 }
 
 expectedFontInfo1To2Conversion = {

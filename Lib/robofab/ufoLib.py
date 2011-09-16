@@ -1335,7 +1335,7 @@ def _fontInfoWOFFMetadataExtensionValidator(value):
 			return False
 	return True
 
-def _fontInfoWOFFMetadataExtensionItemValidator(name):
+def _fontInfoWOFFMetadataExtensionItemValidator(value):
 	"""
 	Version 3+.
 	"""
@@ -1542,6 +1542,7 @@ _fontInfoAttributesVersion3ValueData.update({
 	"woffMetadataCopyright"					: dict(type=dict, valueValidator=_fontInfoWOFFMetadataCopyrightValidator),
 	"woffMetadataTrademark"					: dict(type=dict, valueValidator=_fontInfoWOFFMetadataTrademarkValidator),
 	"woffMetadataLicensee"					: dict(type=dict, valueValidator=_fontInfoWOFFMetadataLicenseeValidator),
+	"woffMetadataExtensions"				: dict(type=list, valueValidator=_fontInfoWOFFMetadataExtensionsValidator),
 })
 
 # insert the type validator for all attrs that
