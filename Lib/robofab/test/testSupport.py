@@ -303,13 +303,30 @@ fontInfoVersion3 = {
 	"woffMetadataCredits"				 : dict(
 												credits=[
 													dict(name="Some Designer"),
+													dict(name=""),
 													dict(name="Some Designer", url="http://somedesigner.com"),
+													dict(name="Some Designer", url=""),
 													dict(name="Some Designer", role="Designer"),
+													dict(name="Some Designer", role=""),
 													dict(name="Some Designer", dir="ltr"),
 													dict(name="rengiseD emoS", dir="rtl"),
-													{"name" : "Some Designer", "class" : "hello"}
+													{"name" : "Some Designer", "class" : "hello"},
+													{"name" : "Some Designer", "class" : ""},
 												]
 											),
+	"woffMetadataDescription"			 : dict(
+												url="http://somefoundry.com/foo/description",
+												text=[
+													dict(text="foo"),
+													dict(text=""),
+													dict(text="foo", language="bar"),
+													dict(text="foo", language=""),
+													dict(text="foo", dir="ltr"),
+													dict(text="foo", dir="rtl"),
+													{"text" : "foo", "class" : "foo"},
+													{"text" : "foo", "class" : ""},
+												]
+											)
 }
 
 expectedFontInfo1To2Conversion = {
