@@ -296,6 +296,10 @@ fontInfoVersion3 = {
 	"postscriptWindowsCharacterSet"		 : 1,
 	"macintoshFONDFamilyID"				 : 15000,
 	"macintoshFONDName"					 : "SomeFont Regular (FOND Name)",
+	"woffMajorVersion"					 : 1,
+	"woffMinorVersion"					 : 0,
+	"woffMetadataUniqueID"				 : dict(id="string"),
+	"woffMetadataVendor"				 : dict(name="Some Foundry", url="http://somefoundry.com"),
 }
 
 expectedFontInfo1To2Conversion = {
