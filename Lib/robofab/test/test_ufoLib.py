@@ -2102,6 +2102,85 @@ class ReadFontInfoVersion3TestCase(unittest.TestCase):
 		self._writeInfoToPlist(info)
 		reader = UFOReader(self.dstDir)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		# woffMetadataLicense
+		## no url
+		info = dict(fontInfoVersion3)
+		info["woffMetadataLicense"] = dict(text=[dict(text="foo")])
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		reader.readInfo(TestInfoObject())
+		## url not a string
+		info = dict(fontInfoVersion3)
+		info["woffMetadataLicense"] = dict(text=[dict(text="foo")], url=1)
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		## id not a string
+		info = dict(fontInfoVersion3)
+		info["woffMetadataLicense"] = dict(text=[dict(text="foo")], id=1)
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		## no text
+		info = dict(fontInfoVersion3)
+		info["woffMetadataLicense"] = dict(url="foo")
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		reader.readInfo(TestInfoObject())
+		## text not a list
+		info = dict(fontInfoVersion3)
+		info["woffMetadataLicense"] = dict(text="abc")
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		## text item not a dict
+		info = dict(fontInfoVersion3)
+		info["woffMetadataLicense"] = dict(text=["abc"])
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		## text item unknown key
+		info = dict(fontInfoVersion3)
+		info["woffMetadataLicense"] = dict(text=[dict(text="foo", notTheRightKey=1)])
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		## text item missing text
+		info = dict(fontInfoVersion3)
+		info["woffMetadataLicense"] = dict(text=[dict(language="foo")])
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		## text not a string
+		info = dict(fontInfoVersion3)
+		info["woffMetadataLicense"] = dict(text=[dict(text=1)])
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		## url not a string
+		info = dict(fontInfoVersion3)
+		info["woffMetadataLicense"] = dict(text=[dict(text="foo", url=1)])
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		## language not a string
+		info = dict(fontInfoVersion3)
+		info["woffMetadataLicense"] = dict(text=[dict(text="foo", language=1)])
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		## dir not ltr or rtl
+		info = dict(fontInfoVersion3)
+		info["woffMetadataLicense"] = dict(text=[dict(text="foo", dir="utd")])
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		## class not a string
+		info = dict(fontInfoVersion3)
+		info["woffMetadataLicense"] = dict(text=[{"text"  : "foo", "class" : 1}])
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 
 
 class WriteFontInfoVersion1TestCase(unittest.TestCase):
@@ -3837,6 +3916,59 @@ class WriteFontInfoVersion3TestCase(unittest.TestCase):
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataDescription = dict(text=[{"text"  : "foo", "class" : 1}])
 		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# woffMetadataLicense
+		## no url
+		infoObject = self.makeInfoObject()
+		infoObject.woffMetadataLicense = dict(text=[dict(text="foo")])
+		writer.writeInfo(TestInfoObject())
+		## url not a string
+		infoObject = self.makeInfoObject()
+		infoObject.woffMetadataLicense = dict(text=[dict(text="foo")], url=1)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## id not a string
+		infoObject = self.makeInfoObject()
+		infoObject.woffMetadataLicense = dict(text=[dict(text="foo")], id=1)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## no text
+		infoObject = self.makeInfoObject()
+		infoObject.woffMetadataLicense = dict(url="foo")
+		writer.writeInfo(TestInfoObject())
+		## text not a list
+		infoObject = self.makeInfoObject()
+		infoObject.woffMetadataLicense = dict(text="abc")
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## text item not a dict
+		infoObject = self.makeInfoObject()
+		infoObject.woffMetadataLicense = dict(text=["abc"])
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## text item unknown key
+		infoObject = self.makeInfoObject()
+		infoObject.woffMetadataLicense = dict(text=[dict(text="foo", notTheRightKey=1)])
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## text item missing text
+		infoObject = self.makeInfoObject()
+		infoObject.woffMetadataLicense = dict(text=[dict(language="foo")])
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## text not a string
+		infoObject = self.makeInfoObject()
+		infoObject.woffMetadataLicense = dict(text=[dict(text=1)])
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## url not a string
+		infoObject = self.makeInfoObject()
+		infoObject.woffMetadataLicense = dict(text=[dict(text="foo", url=1)])
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## language not a string
+		infoObject = self.makeInfoObject()
+		infoObject.woffMetadataLicense = dict(text=[dict(text="foo", language=1)])
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## dir not ltr or rtl
+		infoObject = self.makeInfoObject()
+		infoObject.woffMetadataLicense = dict(text=[dict(text="foo", dir="utd")])
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## class not a string
+		infoObject = self.makeInfoObject()
+		infoObject.woffMetadataLicense = dict(text=[{"text"  : "foo", "class" : 1}])
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 
 

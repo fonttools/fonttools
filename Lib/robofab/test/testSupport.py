@@ -326,7 +326,21 @@ fontInfoVersion3 = {
 													{"text" : "foo", "class" : "foo"},
 													{"text" : "foo", "class" : ""},
 												]
-											)
+											),
+	"woffMetadataLicense"				 : dict(
+												url="http://somefoundry.com/foo/license",
+												id="foo",
+												text=[
+													dict(text="foo"),
+													dict(text=""),
+													dict(text="foo", language="bar"),
+													dict(text="foo", language=""),
+													dict(text="foo", dir="ltr"),
+													dict(text="foo", dir="rtl"),
+													{"text" : "foo", "class" : "foo"},
+													{"text" : "foo", "class" : ""},
+												]
+											),
 }
 
 expectedFontInfo1To2Conversion = {
