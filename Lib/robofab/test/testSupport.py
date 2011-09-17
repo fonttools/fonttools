@@ -368,7 +368,7 @@ fontInfoVersion3 = {
 	"woffMetadataLicensee"				 : dict(
 												name="Some Licensee"
 											),
-	"woffMetadataExtensions"				 : [
+	"woffMetadataExtensions"			 : [
 												dict(
 													# everything
 													names=[
@@ -431,7 +431,9 @@ fontInfoVersion3 = {
 														)
 													]
 												),
-											]
+											],
+	"firstKerningGroupPrefix"			 : "@kern1",
+	"secondKerningGroupPrefix"			 : "@kern2",
 }
 
 expectedFontInfo1To2Conversion = {

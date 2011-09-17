@@ -2364,6 +2364,68 @@ class ReadFontInfoVersion3TestCase(unittest.TestCase):
 		reader = UFOReader(self.dstDir)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 
+	def testKerningPrefixRead(self):
+		# None
+		info = dict(fontInfoVersion3)
+		del info["firstKerningGroupPrefix"]
+		del info["secondKerningGroupPrefix"]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		reader.readInfo(TestInfoObject())
+		# not a string
+		info = dict(fontInfoVersion3)
+		info["firstKerningGroupPrefix"] = 1
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		info = dict(fontInfoVersion3)
+		info["secondKerningGroupPrefix"] = 2
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		# one is None
+		info = dict(fontInfoVersion3)
+		del info["firstKerningGroupPrefix"]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		info = dict(fontInfoVersion3)
+		del info["secondKerningGroupPrefix"]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		# one is empty
+		info = dict(fontInfoVersion3)
+		info["firstKerningGroupPrefix"] = ""
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		info = dict(fontInfoVersion3)
+		info["secondKerningGroupPrefix"] = ""
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		# same
+		info = dict(fontInfoVersion3)
+		info["firstKerningGroupPrefix"] = "@kern"
+		info["secondKerningGroupPrefix"] = "@kern"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		# overlap
+		info = dict(fontInfoVersion3)
+		info["firstKerningGroupPrefix"] = "@kern"
+		info["secondKerningGroupPrefix"] = "@kern2"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		info = dict(fontInfoVersion3)
+		info["firstKerningGroupPrefix"] = "@kern1"
+		info["secondKerningGroupPrefix"] = "@kern"
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+
 
 class WriteFontInfoVersion1TestCase(unittest.TestCase):
 
@@ -4314,6 +4376,58 @@ class WriteFontInfoVersion3TestCase(unittest.TestCase):
 		## class not a string
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataLicensee = {"name" : "foo", "class" : 1}
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+
+	def testKerningPrefixWrite(self):
+		# None
+		infoObject = self.makeInfoObject()
+		infoObject.firstKerningGroupPrefix = None
+		infoObject.secondKerningGroupPrefix = None
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		writer.writeInfo(infoObject)
+		# not a string
+		infoObject = self.makeInfoObject()
+		infoObject.firstKerningGroupPrefix = 1
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		infoObject = self.makeInfoObject()
+		infoObject.secondKerningGroupPrefix = 2
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# one is None
+		infoObject = self.makeInfoObject()
+		infoObject.firstKerningGroupPrefix = None
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		infoObject = self.makeInfoObject()
+		infoObject.secondKerningGroupPrefix = None
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# one is empty
+		infoObject = self.makeInfoObject()
+		infoObject.firstKerningGroupPrefix = ""
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		infoObject = self.makeInfoObject()
+		infoObject.secondKerningGroupPrefix = ""
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# same
+		infoObject = self.makeInfoObject()
+		infoObject.firstKerningGroupPrefix = "@kern"
+		infoObject.secondKerningGroupPrefix = "@kern"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# overlap
+		info = dict(fontInfoVersion3)
+		infoObject.firstKerningGroupPrefix = "@kern"
+		infoObject.secondKerningGroupPrefix = "@kern2"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		info = dict(fontInfoVersion3)
+		infoObject.firstKerningGroupPrefix = "@kern1"
+		infoObject.secondKerningGroupPrefix = "@kern"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 

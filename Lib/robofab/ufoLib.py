@@ -894,6 +894,9 @@ def _validateInfoVersion3Data(infoData):
 			raise UFOLibError("Invalid value for attribute %s (%s)." % (attr, repr(value)))
 		else:
 			validInfoData[attr] = value
+	# handle the kerning prefixes specially
+	if not _fontInfoKerningPrefixesValidator(infoData):
+		raise UFOLibError("Invalid kerning prefixes.")
 	return infoData
 
 # Data Validators
@@ -1368,6 +1371,40 @@ def _fontInfoWOFFMetadataExtensionValueValidator(value):
 		return False
 	return True
 
+def _fontInfoKerningPrefixesValidator(info):
+	"""
+	Version 3+.
+	"""
+	prefix1 = info.get("firstKerningGroupPrefix")
+	prefix2 = info.get("secondKerningGroupPrefix")
+	# both are None
+	if prefix1 is None and prefix2 is None:
+		return True
+	# one is None
+	if prefix1 is None and prefix2 is not None:
+		return False
+	if prefix2 is None and prefix1 is not None:
+		return False
+	# they are the same
+	if prefix1 == prefix2:
+		return False
+	# one starts with the other
+	if prefix1.startswith(prefix2):
+		return False
+	if prefix2.startswith(prefix1):
+		return False
+	return True
+
+def _fontInfoKerningPrefixValidator(value):
+	"""
+	Version 3+.
+	"""
+	if not isinstance(value, basestring):
+		return False
+	if not len(value):
+		return False
+	return True
+
 # Value Options
 
 _fontInfoOpenTypeHeadFlagsOptions = range(0, 14)
@@ -1543,6 +1580,8 @@ _fontInfoAttributesVersion3ValueData.update({
 	"woffMetadataTrademark"					: dict(type=dict, valueValidator=_fontInfoWOFFMetadataTrademarkValidator),
 	"woffMetadataLicensee"					: dict(type=dict, valueValidator=_fontInfoWOFFMetadataLicenseeValidator),
 	"woffMetadataExtensions"				: dict(type=list, valueValidator=_fontInfoWOFFMetadataExtensionsValidator),
+	"firstKerningGroupPrefix" 				: dict(type=basestring, valueValidator=_fontInfoKerningPrefixValidator),
+	"secondKerningGroupPrefix" 				: dict(type=basestring, valueValidator=_fontInfoKerningPrefixValidator),
 })
 
 # insert the type validator for all attrs that
