@@ -2426,6 +2426,167 @@ class ReadFontInfoVersion3TestCase(unittest.TestCase):
 		reader = UFOReader(self.dstDir)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 
+	def testGuidelinesRead(self):
+		# x
+		## not an int or float
+		info = dict(fontInfoVersion3)
+		info["guidelines"] = [dict(x="1")]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		# y
+		## not an int or float
+		info = dict(fontInfoVersion3)
+		info["guidelines"] = [dict(y="1")]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		# angle
+		## < 0
+		info = dict(fontInfoVersion3)
+		info["guidelines"] = [dict(x=0, y=0, angle=-1)]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		## > 360
+		info = dict(fontInfoVersion3)
+		info["guidelines"] = [dict(x=0, y=0, angle=361)]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		# name
+		## not a string
+		info = dict(fontInfoVersion3)
+		info["guidelines"] = [dict(x=0, name=1)]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		# color
+		## not a string
+		info = dict(fontInfoVersion3)
+		info["guidelines"] = [dict(x=0, color=1)]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		## not enough commas
+		info = dict(fontInfoVersion3)
+		info["guidelines"] = [dict(x=0, color="1 0, 0, 0")]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		info = dict(fontInfoVersion3)
+		info["guidelines"] = [dict(x=0, color="1 0 0, 0")]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		info = dict(fontInfoVersion3)
+		info["guidelines"] = [dict(x=0, color="1 0 0 0")]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		## not enough parts
+		info = dict(fontInfoVersion3)
+		info["guidelines"] = [dict(x=0, color=", 0, 0, 0")]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		info = dict(fontInfoVersion3)
+		info["guidelines"] = [dict(x=0, color="1, , 0, 0")]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		info = dict(fontInfoVersion3)
+		info["guidelines"] = [dict(x=0, color="1, 0, , 0")]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		info = dict(fontInfoVersion3)
+		info["guidelines"] = [dict(x=0, color="1, 0, 0, ")]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		info = dict(fontInfoVersion3)
+		info["guidelines"] = [dict(x=0, color=", , , ")]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		## not a number in all positions
+		info = dict(fontInfoVersion3)
+		info["guidelines"] = [dict(x=0, color="r, 1, 1, 1")]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		info = dict(fontInfoVersion3)
+		info["guidelines"] = [dict(x=0, color="1, g, 1, 1")]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		info = dict(fontInfoVersion3)
+		info["guidelines"] = [dict(x=0, color="1, 1, b, 1")]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		info = dict(fontInfoVersion3)
+		info["guidelines"] = [dict(x=0, color="1, 1, 1, a")]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		## too many parts
+		info = dict(fontInfoVersion3)
+		info["guidelines"] = [dict(x=0, color="1, 0, 0, 0, 0")]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		## < 0 in each position
+		info = dict(fontInfoVersion3)
+		info["guidelines"] = [dict(x=0, color="-1, 0, 0, 0")]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		info = dict(fontInfoVersion3)
+		info["guidelines"] = [dict(x=0, color="0, -1, 0, 0")]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		info = dict(fontInfoVersion3)
+		info["guidelines"] = [dict(x=0, color="0, 0, -1, 0")]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		info = dict(fontInfoVersion3)
+		info["guidelines"] = [dict(x=0, color="0, 0, 0, -1")]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		## > 1 in each position
+		info = dict(fontInfoVersion3)
+		info["guidelines"] = [dict(x=0, color="2, 0, 0, 0")]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		info = dict(fontInfoVersion3)
+		info["guidelines"] = [dict(x=0, color="0, 2, 0, 0")]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		info = dict(fontInfoVersion3)
+		info["guidelines"] = [dict(x=0, color="0, 0, 2, 0")]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		info = dict(fontInfoVersion3)
+		info["guidelines"] = [dict(x=0, color="0, 0, 0, 2")]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+		# identifier
+		## duplicate
+		info = dict(fontInfoVersion3)
+		info["guidelines"] = [dict(x=0, identifier="guide1"), dict(y=0, identifier="guide1")]
+		self._writeInfoToPlist(info)
+		reader = UFOReader(self.dstDir)
+		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
+
 
 class WriteFontInfoVersion1TestCase(unittest.TestCase):
 
@@ -4420,14 +4581,157 @@ class WriteFontInfoVersion3TestCase(unittest.TestCase):
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		# overlap
-		info = dict(fontInfoVersion3)
+		infoObject = self.makeInfoObject()
 		infoObject.firstKerningGroupPrefix = "@kern"
 		infoObject.secondKerningGroupPrefix = "@kern2"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
-		info = dict(fontInfoVersion3)
+		infoObject = self.makeInfoObject()
 		infoObject.firstKerningGroupPrefix = "@kern1"
 		infoObject.secondKerningGroupPrefix = "@kern"
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+
+	def testGuidelinesWrite(self):
+		# x
+		## not an int or float
+		infoObject = self.makeInfoObject()
+		infoObject.guidelines = [dict(x="1")]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# y
+		## not an int or float
+		infoObject = self.makeInfoObject()
+		infoObject.guidelines = [dict(y="1")]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# angle
+		## < 0
+		infoObject = self.makeInfoObject()
+		infoObject.guidelines = [dict(x=0, y=0, angle=-1)]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## > 360
+		infoObject = self.makeInfoObject()
+		infoObject.guidelines = [dict(x=0, y=0, angle=361)]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# name
+		## not a string
+		infoObject = self.makeInfoObject()
+		infoObject.guidelines = [dict(x=0, name=1)]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# color
+		## not a string
+		infoObject = self.makeInfoObject()
+		infoObject.guidelines = [dict(x=0, color=1)]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## not enough commas
+		infoObject = self.makeInfoObject()
+		infoObject.guidelines = [dict(x=0, color="1 0, 0, 0")]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		infoObject = self.makeInfoObject()
+		infoObject.guidelines = [dict(x=0, color="1 0 0, 0")]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		infoObject = self.makeInfoObject()
+		infoObject.guidelines = [dict(x=0, color="1 0 0 0")]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## not enough parts
+		infoObject = self.makeInfoObject()
+		infoObject.guidelines = [dict(x=0, color=", 0, 0, 0")]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		infoObject = self.makeInfoObject()
+		infoObject.guidelines = [dict(x=0, color="1, , 0, 0")]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		infoObject = self.makeInfoObject()
+		infoObject.guidelines = [dict(x=0, color="1, 0, , 0")]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		infoObject = self.makeInfoObject()
+		infoObject.guidelines = [dict(x=0, color="1, 0, 0, ")]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		infoObject = self.makeInfoObject()
+		infoObject.guidelines = [dict(x=0, color=", , , ")]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## not a number in all positions
+		infoObject = self.makeInfoObject()
+		infoObject.guidelines = [dict(x=0, color="r, 1, 1, 1")]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		infoObject = self.makeInfoObject()
+		infoObject.guidelines = [dict(x=0, color="1, g, 1, 1")]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		infoObject = self.makeInfoObject()
+		infoObject.guidelines = [dict(x=0, color="1, 1, b, 1")]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		infoObject = self.makeInfoObject()
+		infoObject.guidelines = [dict(x=0, color="1, 1, 1, a")]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## too many parts
+		infoObject = self.makeInfoObject()
+		infoObject.guidelines = [dict(x=0, color="1, 0, 0, 0, 0")]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## < 0 in each position
+		infoObject = self.makeInfoObject()
+		infoObject.guidelines = [dict(x=0, color="-1, 0, 0, 0")]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		infoObject = self.makeInfoObject()
+		infoObject.guidelines = [dict(x=0, color="0, -1, 0, 0")]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		infoObject = self.makeInfoObject()
+		infoObject.guidelines = [dict(x=0, color="0, 0, -1, 0")]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		infoObject = self.makeInfoObject()
+		infoObject.guidelines = [dict(x=0, color="0, 0, 0, -1")]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## > 1 in each position
+		infoObject = self.makeInfoObject()
+		infoObject.guidelines = [dict(x=0, color="2, 0, 0, 0")]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		infoObject = self.makeInfoObject()
+		infoObject.guidelines = [dict(x=0, color="0, 2, 0, 0")]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		infoObject = self.makeInfoObject()
+		infoObject.guidelines = [dict(x=0, color="0, 0, 2, 0")]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		infoObject = self.makeInfoObject()
+		infoObject.guidelines = [dict(x=0, color="0, 0, 0, 2")]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		# identifier
+		## duplicate
+		infoObject = self.makeInfoObject()
+		infoObject.guidelines = [dict(x=0, identifier="guide1"), dict(y=0, identifier="guide1")]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## below min
+		infoObject = self.makeInfoObject()
+		infoObject.guidelines = [dict(x=0, identifier=u"\0x1F")]
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		## above max
+		infoObject = self.makeInfoObject()
+		infoObject.guidelines = [dict(x=0, identifier=u"\0x7F")]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 

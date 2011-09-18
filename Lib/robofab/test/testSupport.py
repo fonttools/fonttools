@@ -434,6 +434,47 @@ fontInfoVersion3 = {
 											],
 	"firstKerningGroupPrefix"			 : "@kern1",
 	"secondKerningGroupPrefix"			 : "@kern2",
+	"guidelines"						 : [
+											# ints
+											dict(x=100, y=200, angle=45),
+											# floats
+											dict(x=100.5, y=200.5, angle=45.5),
+											# edges
+											dict(x=0, y=0, angle=0),
+											dict(x=0, y=0, angle=360),
+											dict(x=0, y=0, angle=360.0),
+											# no y
+											dict(x=100),
+											# no x
+											dict(y=200),
+											# name
+											dict(x=100, y=200, angle=45, name="foo"),
+											dict(x=100, y=200, angle=45, name=""),
+											# identifier
+											dict(x=100, y=200, angle=45, identifier="guide1"),
+											dict(x=100, y=200, angle=45, identifier="guide2"),
+											dict(x=100, y=200, angle=45, identifier=u"\x20"),
+											dict(x=100, y=200, angle=45, identifier=u"\x7E"),
+											# colors
+											dict(x=100, y=200, angle=45, color="0,0,0,0"),
+											dict(x=100, y=200, angle=45, color="1,0,0,0"),
+											dict(x=100, y=200, angle=45, color="1,1,1,1"),
+											dict(x=100, y=200, angle=45, color="0,1,0,0"),
+											dict(x=100, y=200, angle=45, color="0,0,1,0"),
+											dict(x=100, y=200, angle=45, color="0,0,0,1"),
+											dict(x=100, y=200, angle=45, color="1, 0, 0, 0"),
+											dict(x=100, y=200, angle=45, color="0, 1, 0, 0"),
+											dict(x=100, y=200, angle=45, color="0, 0, 1, 0"),
+											dict(x=100, y=200, angle=45, color="0, 0, 0, 1"),
+											dict(x=100, y=200, angle=45, color=".5,0,0,0"),
+											dict(x=100, y=200, angle=45, color="0,.5,0,0"),
+											dict(x=100, y=200, angle=45, color="0,0,.5,0"),
+											dict(x=100, y=200, angle=45, color="0,0,0,.5"),
+											dict(x=100, y=200, angle=45, color=".5,1,1,1"),
+											dict(x=100, y=200, angle=45, color="1,.5,1,1"),
+											dict(x=100, y=200, angle=45, color="1,1,.5,1"),
+											dict(x=100, y=200, angle=45, color="1,1,1,.5"),
+										],
 }
 
 expectedFontInfo1To2Conversion = {

@@ -1405,6 +1405,106 @@ def _fontInfoKerningPrefixValidator(value):
 		return False
 	return True
 
+def _fontInfoGuidelinesValidator(value):
+	"""
+	Version 3+.
+	"""
+	if not isinstance(value, list):
+		return True
+	identifiers = set()
+	for guide in value:
+		if not _fontInfoGuidelineValidator(guide):
+			return False
+		identifier = guide.get("identifier")
+		if identifier is not None:
+			if identifier in identifiers:
+				return False
+			identifiers.add(identifier)
+	return True
+
+def _fontInfoGuidelineValidator(value):
+	"""
+	Version 3+.
+	"""
+	dictPrototype = dict(
+		x=((int, float), False), y=((int, float), False), angle=((int, float), False),
+		name=(basestring, False), color=(basestring, False), identifier=(basestring, False)
+	)
+	if not _fontInfoDictValidator(value, dictPrototype):
+		return False
+	x = value.get("x")
+	y = value.get("y")
+	angle = value.get("angle")
+	# x or y must be present
+	if x is None and y is None:
+		return False
+	# if x or y are None, angle must not be present
+	if x is None or y is None:
+		if angle is not None:
+			return False
+	# angle must be between 0 and 360
+	if angle is not None:
+		if angle < 0:
+			return False
+		if angle > 360:
+			return False
+	# identifier must be 1 or more characters
+	identifier = value.get("identifier")
+	if identifier is not None and not _fontInfoIdentifierValidator(identifier):
+		return False
+	# color must follow the proper format
+	color = value.get("color")
+	if color is not None and not _fontInfoColorValidator(color):
+		return False
+	return True
+
+def _fontInfoIdentifierValidator(value):
+	"""
+	Version 3+.
+	"""
+	validCharactersMin = 0x20
+	validCharactersMax = 0x7E
+	if not isinstance(value, basestring):
+		return False
+	if not value:
+		return False
+	for c in value:
+		c = ord(c)
+		if c < validCharactersMin or c > validCharactersMax:
+			return False
+	return True
+
+def _fontInfoColorValidator(value):
+	"""
+	Version 3+.
+	"""
+	if not isinstance(value, basestring):
+		return False
+	parts = value.split(",")
+	if len(parts) != 4:
+		return False
+	for part in parts:
+		part = part.strip()
+		converted = False
+		try:
+			part = int(part)
+			converted = True
+		except ValueError:
+			pass
+		if not converted:
+			try:
+				part = float(part)
+				converted = True
+			except ValueError:
+				pass
+		if not converted:
+			return False
+		if part < 0:
+			return False
+		if part > 1:
+			return False
+	return True
+
 # Value Options
 
 _fontInfoOpenTypeHeadFlagsOptions = range(0, 14)
@@ -1582,6 +1682,7 @@ _fontInfoAttributesVersion3ValueData.update({
 	"woffMetadataExtensions"				: dict(type=list, valueValidator=_fontInfoWOFFMetadataExtensionsValidator),
 	"firstKerningGroupPrefix" 				: dict(type=basestring, valueValidator=_fontInfoKerningPrefixValidator),
 	"secondKerningGroupPrefix" 				: dict(type=basestring, valueValidator=_fontInfoKerningPrefixValidator),
+	"guidelines"							: dict(type=list, valueValidator=_fontInfoGuidelinesValidator)
 })
 
 # insert the type validator for all attrs that
