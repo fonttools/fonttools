@@ -33,11 +33,11 @@ fontinfo.plist values between the possible format versions.
 import os
 import shutil
 from cStringIO import StringIO
-import calendar
 import codecs
 from copy import deepcopy
 from plistlib import readPlist, writePlist
 from glifLib import GlyphSet, READ_MODE, WRITE_MODE
+from validators import *
 
 try:
 	set
@@ -308,14 +308,14 @@ class UFOReader(object):
 			infoDataToSet = _convertFontInfoDataVersion1ToVersion2(infoDataToSet)
 		# version 2
 		elif self._formatVersion == 2:
-			for attr, dataValidationDict in _fontInfoAttributesVersion2ValueData.items():
+			for attr, dataValidationDict in fontInfoAttributesVersion2ValueData.items():
 				value = infoDict.get(attr)
 				if value is None:
 					continue
 				infoDataToSet[attr] = value
 		# version 3
 		elif self._formatVersion == 3:
-			for attr, dataValidationDict in _fontInfoAttributesVersion3ValueData.items():
+			for attr, dataValidationDict in fontInfoAttributesVersion3ValueData.items():
 				value = infoDict.get(attr)
 				if value is None:
 					continue
@@ -325,9 +325,9 @@ class UFOReader(object):
 			raise NotImplementedError
 		# validate data
 		if self._formatVersion < 3:
-			infoDataToSet = _validateInfoVersion2Data(infoDataToSet)
+			infoDataToSet = validateInfoVersion2Data(infoDataToSet)
 		elif self._formatVersion == 3:
-			infoDataToSet = _validateInfoVersion3Data(infoDataToSet)
+			infoDataToSet = validateInfoVersion3Data(infoDataToSet)
 		# populate the object
 		for attr, value in infoDataToSet.items():
 			try:
@@ -677,7 +677,7 @@ class UFOWriter(object):
 		path = os.path.join(self._path, FONTINFO_FILENAME)
 		# gather version 3 data
 		infoData = {}
-		for attr in _fontInfoAttributesVersion3ValueData.keys():
+		for attr in fontInfoAttributesVersion3ValueData.keys():
 			if hasattr(info, attr):
 				try:
 					value = getattr(info, attr)
@@ -688,13 +688,13 @@ class UFOWriter(object):
 				infoData[attr] = value
 		# down convert data if necessary and validate
 		if self._formatVersion == 3:
-			infoData = _validateInfoVersion3Data(infoData)
+			infoData = validateInfoVersion3Data(infoData)
 		elif self._formatVersion == 2:
 			infoData = _convertFontInfoDataVersion3ToVersion2(infoData)
-			infoData = _validateInfoVersion2Data(infoData)
+			infoData = validateInfoVersion2Data(infoData)
 		elif self._formatVersion == 1:
 			infoData = _convertFontInfoDataVersion3ToVersion2(infoData)
-			infoData = _validateInfoVersion2Data(infoData)
+			infoData = validateInfoVersion2Data(infoData)
 			infoData = _convertFontInfoDataVersion2ToVersion1(infoData)
 		# write file
 		writePlistAtomically(infoData, path)
@@ -836,7 +836,7 @@ def validateFontInfoVersion2ValueForAttribute(attr, value):
 	a set range of possible values for an attribute, that the
 	value is in the accepted range.
 	"""
-	dataValidationDict = _fontInfoAttributesVersion2ValueData[attr]
+	dataValidationDict = fontInfoAttributesVersion2ValueData[attr]
 	valueType = dataValidationDict.get("type")
 	validator = dataValidationDict.get("valueValidator")
 	valueOptions = dataValidationDict.get("valueOptions")
@@ -845,13 +845,22 @@ def validateFontInfoVersion2ValueForAttribute(attr, value):
 		isValidValue = validator(value, valueOptions)
 	# no specific options
 	else:
-		if validator == _fontInfoTypeValidator:
+		if validator == fontInfoTypeValidator:
 			isValidValue = validator(value, valueType)
 		else:
 			isValidValue = validator(value)
 	return isValidValue
 
-def _validateInfoVersion2Data(infoData):
+def validateInfoVersion2Data(infoData):
+	"""
+	This performs very basic validation of the value for infoData
+	following the UFO 2 fontinfo.plist specification. The results
+	of this should not be interpretted as *correct* for the font
+	that they are part of. This merely indicates that the values
+	are of the proper type and, where the specification defines
+	a set range of possible values for an attribute, that the
+	value is in the accepted range.
+	"""
 	validInfoData = {}
 	for attr, value in infoData.items():
 		isValidValue = validateFontInfoVersion2ValueForAttribute(attr, value)
@@ -864,14 +873,14 @@ def _validateInfoVersion2Data(infoData):
 def validateFontInfoVersion3ValueForAttribute(attr, value):
 	"""
 	This performs very basic validation of the value for attribute
-	following the UFO 2 fontinfo.plist specification. The results
+	following the UFO 3 fontinfo.plist specification. The results
 	of this should not be interpretted as *correct* for the font
 	that they are part of. This merely indicates that the value
 	is of the proper type and, where the specification defines
 	a set range of possible values for an attribute, that the
 	value is in the accepted range.
 	"""
-	dataValidationDict = _fontInfoAttributesVersion3ValueData[attr]
+	dataValidationDict = fontInfoAttributesVersion3ValueData[attr]
 	valueType = dataValidationDict.get("type")
 	validator = dataValidationDict.get("valueValidator")
 	valueOptions = dataValidationDict.get("valueOptions")
@@ -880,13 +889,22 @@ def validateFontInfoVersion3ValueForAttribute(attr, value):
 		isValidValue = validator(value, valueOptions)
 	# no specific options
 	else:
-		if validator == _fontInfoTypeValidator:
+		if validator == fontInfoTypeValidator:
 			isValidValue = validator(value, valueType)
 		else:
 			isValidValue = validator(value)
 	return isValidValue
 
-def _validateInfoVersion3Data(infoData):
+def validateInfoVersion3Data(infoData):
+	"""
+	This performs very basic validation of the value for infoData
+	following the UFO 3 fontinfo.plist specification. The results
+	of this should not be interpretted as *correct* for the font
+	that they are part of. This merely indicates that the values
+	are of the proper type and, where the specification defines
+	a set range of possible values for an attribute, that the
+	value is in the accepted range.
+	"""
 	validInfoData = {}
 	for attr, value in infoData.items():
 		isValidValue = validateFontInfoVersion3ValueForAttribute(attr, value)
@@ -895,623 +913,17 @@ def _validateInfoVersion3Data(infoData):
 		else:
 			validInfoData[attr] = value
 	# handle the kerning prefixes specially
-	if not _fontInfoKerningPrefixesValidator(infoData):
+	if not fontInfoKerningPrefixesValidator(infoData):
 		raise UFOLibError("Invalid kerning prefixes.")
 	return infoData
 
-# Data Validators
-
-def _fontInfoTypeValidator(value, typ):
-	"""
-	Generic. (Added at version 2.)
-	"""
-	return isinstance(value, typ)
-
-def _fontInfoIntListValidator(values, validValues):
-	"""
-	Generic. (Added at version 2.)
-	"""
-	if not isinstance(values, (list, tuple)):
-		return False
-	valuesSet = set(values)
-	validValuesSet = set(validValues)
-	if len(valuesSet - validValuesSet) > 0:
-		return False
-	for value in values:
-		if not isinstance(value, int):
-			return False
-	return True
-
-def _fontInfoNonNegativeIntValidator(value):
-	"""
-	Generic. (Added at version 3.)
-	"""
-	if not isinstance(value, int):
-		return False
-	if value < 0:
-		return False
-	return True
-
-def _fontInfoNonNegativeNumberValidator(value):
-	"""
-	Generic. (Added at version 3.)
-	"""
-	if not isinstance(value, (int, float)):
-		return False
-	if value < 0:
-		return False
-	return True
-
-def _fontInfoDictValidator(value, prototype):
-	"""
-	Generic. (Added at version 3.)
-	"""
-	# not a dict
-	if not isinstance(value, dict):
-		return False
-	# missing required keys
-	for key, (typ, required) in prototype.items():
-		if not required:
-			continue
-		if key not in value:
-			return False
-	# unknown keys
-	for key in value.keys():
-		if key not in prototype:
-			return False
-	# incorrect types
-	for key, v in value.items():
-		prototypeType = prototype[key][0]
-		if not isinstance(v, prototypeType):
-			return False
-	return True
-
-def _fontInfoStyleMapStyleNameValidator(value):
-	"""
-	Version 2+.
-	"""
-	options = ["regular", "italic", "bold", "bold italic"]
-	return value in options
-
-def _fontInfoOpenTypeGaspRangeRecordsValidator(value):
-	"""
-	Version 3+.
-	"""
-	if not isinstance(value, list):
-		return False
-	if len(value) == 0:
-		return False
-	validBehaviors = [0, 1, 2, 3]
-	dictPrototype = dict(rangeMaxPPEM=(int, True), rangeGaspBehavior=(list, True))
-	ppemOrder = []
-	for rangeRecord in value:
-		if not _fontInfoDictValidator(rangeRecord, dictPrototype):
-			return False
-		ppem = rangeRecord["rangeMaxPPEM"]
-		behavior = rangeRecord["rangeGaspBehavior"]
-		ppemValidity = _fontInfoNonNegativeIntValidator(ppem)
-		if not ppemValidity:
-			return False
-		behaviorValidity = _fontInfoIntListValidator(behavior, validBehaviors)
-		if not behaviorValidity:
-			return False
-		ppemOrder.append(ppem)
-	if ppemOrder != sorted(ppemOrder):
-		return False
-	if ppemOrder[-1] != 0xFFFF:
-		return False
-	return True
-
-def _fontInfoOpenTypeHeadCreatedValidator(value):
-	"""
-	Version 2+.
-	"""
-	# format: 0000/00/00 00:00:00
-	if not isinstance(value, basestring):
-		return False
-	# basic formatting
-	if not len(value) == 19:
-		return False
-	if value.count(" ") != 1:
-		return False
-	date, time = value.split(" ")
-	if date.count("/") != 2:
-		return False
-	if time.count(":") != 2:
-		return False
-	# date
-	year, month, day = date.split("/")
-	if len(year) != 4:
-		return False
-	if len(month) != 2:
-		return False
-	if len(day) != 2:
-		return False
-	try:
-		year = int(year)
-		month = int(month)
-		day = int(day)
-	except ValueError:
-		return False
-	if month < 1 or month > 12:
-		return False
-	monthMaxDay = calendar.monthrange(year, month)
-	if month > monthMaxDay:
-		return False
-	# time
-	hour, minute, second = time.split(":")
-	if len(hour) != 2:
-		return False
-	if len(minute) != 2:
-		return False
-	if len(second) != 2:
-		return False
-	try:
-		hour = int(hour)
-		minute = int(minute)
-		second = int(second)
-	except ValueError:
-		return False
-	if hour < 0 or hour > 23:
-		return False
-	if minute < 0 or minute > 59:
-		return False
-	if second < 0 or second > 59:
-		return True
-	# fallback
-	return True
-
-def _fontInfoOpenTypeNameRecordsValidator(value):
-	"""
-	Version 3+.
-	"""
-	if not isinstance(value, list):
-		return False
-	validKeys = set(["nameID", "platformID", "encodingID", "languageID", "string"])
-	dictPrototype = dict(nameID=(int, True), platformID=(int, True), encodingID=(int, True), languageID=(int, True), string=(basestring, True))
-	seenRecords = []
-	for nameRecord in value:
-		if not _fontInfoDictValidator(nameRecord, dictPrototype):
-			return False
-		recordKey = (nameRecord["nameID"], nameRecord["platformID"], nameRecord["encodingID"], nameRecord["languageID"])
-		if recordKey in seenRecords:
-			return False
-		seenRecords.append(recordKey)
-	return True
-
-def _fontInfoOpenTypeOS2WeightClassValidator(value):
-	"""
-	Version 2+.
-	"""
-	if not isinstance(value, int):
-		return False
-	if value < 0:
-		return False
-	return True
-
-def _fontInfoOpenTypeOS2WidthClassValidator(value):
-	"""
-	Version 2+.
-	"""
-	if not isinstance(value, int):
-		return False
-	if value < 1:
-		return False
-	if value > 9:
-		return False
-	return True
-
-def _fontInfoVersion2OpenTypeOS2PanoseValidator(values):
-	"""
-	Version 2.
-	"""
-	if not isinstance(values, (list, tuple)):
-		return False
-	if len(values) != 10:
-		return False
-	for value in values:
-		if not isinstance(value, int):
-			return False
-	# XXX further validation?
-	return True
-
-def _fontInfoVersion3OpenTypeOS2PanoseValidator(values):
-	"""
-	Version 3+.
-	"""
-	if not isinstance(values, (list, tuple)):
-		return False
-	if len(values) != 10:
-		return False
-	for value in values:
-		if not isinstance(value, int):
-			return False
-		if value < 0:
-			return False
-	# XXX further validation?
-	return True
-
-def _fontInfoOpenTypeOS2FamilyClassValidator(values):
-	"""
-	Version 2+.
-	"""
-	if not isinstance(values, (list, tuple)):
-		return False
-	if len(values) != 2:
-		return False
-	for value in values:
-		if not isinstance(value, int):
-			return False
-	classID, subclassID = values
-	if classID < 0 or classID > 14:
-		return False
-	if subclassID < 0 or subclassID > 15:
-		return False
-	return True
-
-def _fontInfoPostscriptBluesValidator(values):
-	"""
-	Version 2+.
-	"""
-	if not isinstance(values, (list, tuple)):
-		return False
-	if len(values) > 14:
-		return False
-	if len(values) % 2:
-		return False
-	for value in values:
-		if not isinstance(value, (int, float)):
-			return False
-	return True
-
-def _fontInfoPostscriptOtherBluesValidator(values):
-	"""
-	Version 2+.
-	"""
-	if not isinstance(values, (list, tuple)):
-		return False
-	if len(values) > 10:
-		return False
-	if len(values) % 2:
-		return False
-	for value in values:
-		if not isinstance(value, (int, float)):
-			return False
-	return True
-
-def _fontInfoPostscriptStemsValidator(values):
-	"""
-	Version 2+.
-	"""
-	if not isinstance(values, (list, tuple)):
-		return False
-	if len(values) > 12:
-		return False
-	for value in values:
-		if not isinstance(value, (int, float)):
-			return False
-	return True
-
-def _fontInfoPostscriptWindowsCharacterSetValidator(value):
-	"""
-	Version 2+.
-	"""
-	validValues = range(1, 21)
-	if value not in validValues:
-		return False
-	return True
-
-def _fontInfoWOFFMetadataUniqueIDValidator(value):
-	"""
-	Version 3+.
-	"""
-	dictPrototype = dict(id=(basestring, True))
-	if not _fontInfoDictValidator(value, dictPrototype):
-		return False
-	return True
-
-def _fontInfoWOFFMetadataVendorValidator(value):
-	"""
-	Version 3+.
-	"""
-	dictPrototype = {"name" : (basestring, True), "url" : (basestring, False), "dir" : (basestring, False), "class" : (basestring, False)}
-	if not _fontInfoDictValidator(value, dictPrototype):
-		return False
-	if "dir" in value and value.get("dir") not in ("ltr", "rtl"):
-		return False
-	return True
-
-def _fontInfoWOFFMetadataCreditsValidator(value):
-	"""
-	Version 3+.
-	"""
-	dictPrototype = dict(credits=(list, True))
-	if not _fontInfoDictValidator(value, dictPrototype):
-		return False
-	if not len(value["credits"]):
-		return False
-	dictPrototype = {"name" : (basestring, True), "url" : (basestring, False), "role" : (basestring, False), "dir" : (basestring, False), "class" : (basestring, False)}
-	for credit in value["credits"]:
-		if not _fontInfoDictValidator(credit, dictPrototype):
-			return False
-		if "dir" in credit and credit.get("dir") not in ("ltr", "rtl"):
-			return False
-	return True
-
-def _fontInfoWOFFMetadataDescriptionValidator(value):
-	"""
-	Version 3+.
-	"""
-	dictPrototype = dict(url=(basestring, False), text=(list, True))
-	if not _fontInfoDictValidator(value, dictPrototype):
-		return False
-	for text in value["text"]:
-		if not _fontInfoWOFFMetadataTextValue(text):
-			return False
-	return True
-
-def _fontInfoWOFFMetadataLicenseValidator(value):
-	"""
-	Version 3+.
-	"""
-	dictPrototype = dict(url=(basestring, False), text=(list, False), id=(basestring, False))
-	if not _fontInfoDictValidator(value, dictPrototype):
-		return False
-	if "text" in value:
-		for text in value["text"]:
-			if not _fontInfoWOFFMetadataTextValue(text):
-				return False
-	return True
-
-def _fontInfoWOFFMetadataTrademarkValidator(value):
-	"""
-	Version 3+.
-	"""
-	dictPrototype = dict(text=(list, True))
-	if not _fontInfoDictValidator(value, dictPrototype):
-		return False
-	for text in value["text"]:
-		if not _fontInfoWOFFMetadataTextValue(text):
-			return False
-	return True
-
-def _fontInfoWOFFMetadataCopyrightValidator(value):
-	"""
-	Version 3+.
-	"""
-	dictPrototype = dict(text=(list, True))
-	if not _fontInfoDictValidator(value, dictPrototype):
-		return False
-	for text in value["text"]:
-		if not _fontInfoWOFFMetadataTextValue(text):
-			return False
-	return True
-
-def _fontInfoWOFFMetadataLicenseeValidator(value):
-	"""
-	Version 3+.
-	"""
-	dictPrototype = {"name" : (basestring, True), "dir" : (basestring, False), "class" : (basestring, False)}
-	if not _fontInfoDictValidator(value, dictPrototype):
-		return False
-	if "dir" in value and value.get("dir") not in ("ltr", "rtl"):
-		return False
-	return True
-
-def _fontInfoWOFFMetadataTextValue(value):
-	"""
-	Version 3+.
-	"""
-	dictPrototype = {"text" : (basestring, True), "language" : (basestring, False), "dir" : (basestring, False), "class" : (basestring, False)}
-	if not _fontInfoDictValidator(value, dictPrototype):
-		return False
-	if "dir" in value and value.get("dir") not in ("ltr", "rtl"):
-		return False
-	return True
-
-def _fontInfoWOFFMetadataExtensionsValidator(value):
-	"""
-	Version 3+.
-	"""
-	if not isinstance(value, list):
-		return False
-	if not value:
-		return False
-	for extension in value:
-		if not _fontInfoWOFFMetadataExtensionValidator(extension):
-			return False
-	return True
-
-def _fontInfoWOFFMetadataExtensionValidator(value):
-	"""
-	Version 3+.
-	"""
-	dictPrototype = dict(names=(list, False), items=(list, True))
-	if not _fontInfoDictValidator(value, dictPrototype):
-		return False
-	if "names" in value:
-		for name in value["names"]:
-			if not _fontInfoWOFFMetadataExtensionNameValidator(name):
-				return False
-	for item in value["items"]:
-		if not _fontInfoWOFFMetadataExtensionItemValidator(item):
-			return False
-	return True
-
-def _fontInfoWOFFMetadataExtensionItemValidator(value):
-	"""
-	Version 3+.
-	"""
-	dictPrototype = dict(id=(basestring, False), names=(list, True), values=(list, True))
-	if not _fontInfoDictValidator(value, dictPrototype):
-		return False
-	for name in value["names"]:
-		if not _fontInfoWOFFMetadataExtensionNameValidator(name):
-			return False
-	for value in value["values"]:
-		if not _fontInfoWOFFMetadataExtensionValueValidator(name):
-			return False
-	return True
-
-def _fontInfoWOFFMetadataExtensionNameValidator(value):
-	"""
-	Version 3+.
-	"""
-	dictPrototype = {"text" : (basestring, True), "language" : (basestring, False), "dir" : (basestring, False), "class" : (basestring, False)}
-	if not _fontInfoDictValidator(value, dictPrototype):
-		return False
-	return True
-
-def _fontInfoWOFFMetadataExtensionValueValidator(value):
-	"""
-	Version 3+.
-	"""
-	dictPrototype = {"text" : (basestring, True), "language" : (basestring, False), "dir" : (basestring, False), "class" : (basestring, False)}
-	if not _fontInfoDictValidator(value, dictPrototype):
-		return False
-	return True
-
-def _fontInfoKerningPrefixesValidator(info):
-	"""
-	Version 3+.
-	"""
-	prefix1 = info.get("firstKerningGroupPrefix")
-	prefix2 = info.get("secondKerningGroupPrefix")
-	# both are None
-	if prefix1 is None and prefix2 is None:
-		return True
-	# one is None
-	if prefix1 is None and prefix2 is not None:
-		return False
-	if prefix2 is None and prefix1 is not None:
-		return False
-	# they are the same
-	if prefix1 == prefix2:
-		return False
-	# one starts with the other
-	if prefix1.startswith(prefix2):
-		return False
-	if prefix2.startswith(prefix1):
-		return False
-	return True
-
-def _fontInfoKerningPrefixValidator(value):
-	"""
-	Version 3+.
-	"""
-	if not isinstance(value, basestring):
-		return False
-	if not len(value):
-		return False
-	return True
-
-def _fontInfoGuidelinesValidator(value):
-	"""
-	Version 3+.
-	"""
-	if not isinstance(value, list):
-		return True
-	identifiers = set()
-	for guide in value:
-		if not _fontInfoGuidelineValidator(guide):
-			return False
-		identifier = guide.get("identifier")
-		if identifier is not None:
-			if identifier in identifiers:
-				return False
-			identifiers.add(identifier)
-	return True
-
-def _fontInfoGuidelineValidator(value):
-	"""
-	Version 3+.
-	"""
-	dictPrototype = dict(
-		x=((int, float), False), y=((int, float), False), angle=((int, float), False),
-		name=(basestring, False), color=(basestring, False), identifier=(basestring, False)
-	)
-	if not _fontInfoDictValidator(value, dictPrototype):
-		return False
-	x = value.get("x")
-	y = value.get("y")
-	angle = value.get("angle")
-	# x or y must be present
-	if x is None and y is None:
-		return False
-	# if x or y are None, angle must not be present
-	if x is None or y is None:
-		if angle is not None:
-			return False
-	# angle must be between 0 and 360
-	if angle is not None:
-		if angle < 0:
-			return False
-		if angle > 360:
-			return False
-	# identifier must be 1 or more characters
-	identifier = value.get("identifier")
-	if identifier is not None and not _fontInfoIdentifierValidator(identifier):
-		return False
-	# color must follow the proper format
-	color = value.get("color")
-	if color is not None and not _fontInfoColorValidator(color):
-		return False
-	return True
-
-def _fontInfoIdentifierValidator(value):
-	"""
-	Version 3+.
-	"""
-	validCharactersMin = 0x20
-	validCharactersMax = 0x7E
-	if not isinstance(value, basestring):
-		return False
-	if not value:
-		return False
-	for c in value:
-		c = ord(c)
-		if c < validCharactersMin or c > validCharactersMax:
-			return False
-	return True
-
-def _fontInfoColorValidator(value):
-	"""
-	Version 3+.
-	"""
-	if not isinstance(value, basestring):
-		return False
-	parts = value.split(",")
-	if len(parts) != 4:
-		return False
-	for part in parts:
-		part = part.strip()
-		converted = False
-		try:
-			part = int(part)
-			converted = True
-		except ValueError:
-			pass
-		if not converted:
-			try:
-				part = float(part)
-				converted = True
-			except ValueError:
-				pass
-		if not converted:
-			return False
-		if part < 0:
-			return False
-		if part > 1:
-			return False
-	return True
-
 # Value Options
 
-_fontInfoOpenTypeHeadFlagsOptions = range(0, 14)
-_fontInfoOpenTypeOS2SelectionOptions = [1, 2, 3, 4]
-_fontInfoOpenTypeOS2UnicodeRangesOptions = range(0, 128)
-_fontInfoOpenTypeOS2CodePageRangesOptions = range(0, 64)
-_fontInfoOpenTypeOS2TypeOptions = [0, 1, 2, 3, 8, 9]
+fontInfoOpenTypeHeadFlagsOptions = range(0, 14)
+fontInfoOpenTypeOS2SelectionOptions = [1, 2, 3, 4]
+fontInfoOpenTypeOS2UnicodeRangesOptions = range(0, 128)
+fontInfoOpenTypeOS2CodePageRangesOptions = range(0, 64)
+fontInfoOpenTypeOS2TypeOptions = [0, 1, 2, 3, 8, 9]
 
 # Version Attribute Definitions
 # This defines the attributes, types and, in some
@@ -1561,11 +973,11 @@ fontInfoAttributesVersion1 = set([
 	"ttVersion",
 ])
 
-_fontInfoAttributesVersion2ValueData = {
+fontInfoAttributesVersion2ValueData = {
 	"familyName"							: dict(type=basestring),
 	"styleName"								: dict(type=basestring),
 	"styleMapFamilyName"					: dict(type=basestring),
-	"styleMapStyleName"						: dict(type=basestring, valueValidator=_fontInfoStyleMapStyleNameValidator),
+	"styleMapStyleName"						: dict(type=basestring, valueValidator=fontInfoStyleMapStyleNameValidator),
 	"versionMajor"							: dict(type=int),
 	"versionMinor"							: dict(type=int),
 	"year"									: dict(type=int),
@@ -1578,9 +990,9 @@ _fontInfoAttributesVersion2ValueData = {
 	"ascender"								: dict(type=(int, float)),
 	"italicAngle"							: dict(type=(float, int)),
 	"note"									: dict(type=basestring),
-	"openTypeHeadCreated"					: dict(type=basestring, valueValidator=_fontInfoOpenTypeHeadCreatedValidator),
+	"openTypeHeadCreated"					: dict(type=basestring, valueValidator=fontInfoOpenTypeHeadCreatedValidator),
 	"openTypeHeadLowestRecPPEM"				: dict(type=(int, float)),
-	"openTypeHeadFlags"						: dict(type="integerList", valueValidator=_fontInfoIntListValidator, valueOptions=_fontInfoOpenTypeHeadFlagsOptions),
+	"openTypeHeadFlags"						: dict(type="integerList", valueValidator=fontInfoIntListValidator, valueOptions=fontInfoOpenTypeHeadFlagsOptions),
 	"openTypeHheaAscender"					: dict(type=(int, float)),
 	"openTypeHheaDescender"					: dict(type=(int, float)),
 	"openTypeHheaLineGap"					: dict(type=(int, float)),
@@ -1602,20 +1014,20 @@ _fontInfoAttributesVersion2ValueData = {
 	"openTypeNameSampleText"				: dict(type=basestring),
 	"openTypeNameWWSFamilyName"				: dict(type=basestring),
 	"openTypeNameWWSSubfamilyName"			: dict(type=basestring),
-	"openTypeOS2WidthClass"					: dict(type=int, valueValidator=_fontInfoOpenTypeOS2WidthClassValidator),
-	"openTypeOS2WeightClass"				: dict(type=int, valueValidator=_fontInfoOpenTypeOS2WeightClassValidator),
-	"openTypeOS2Selection"					: dict(type="integerList", valueValidator=_fontInfoIntListValidator, valueOptions=_fontInfoOpenTypeOS2SelectionOptions),
+	"openTypeOS2WidthClass"					: dict(type=int, valueValidator=fontInfoOpenTypeOS2WidthClassValidator),
+	"openTypeOS2WeightClass"				: dict(type=int, valueValidator=fontInfoOpenTypeOS2WeightClassValidator),
+	"openTypeOS2Selection"					: dict(type="integerList", valueValidator=fontInfoIntListValidator, valueOptions=fontInfoOpenTypeOS2SelectionOptions),
 	"openTypeOS2VendorID"					: dict(type=basestring),
-	"openTypeOS2Panose"						: dict(type="integerList", valueValidator=_fontInfoVersion2OpenTypeOS2PanoseValidator),
-	"openTypeOS2FamilyClass"				: dict(type="integerList", valueValidator=_fontInfoOpenTypeOS2FamilyClassValidator),
-	"openTypeOS2UnicodeRanges"				: dict(type="integerList", valueValidator=_fontInfoIntListValidator, valueOptions=_fontInfoOpenTypeOS2UnicodeRangesOptions),
-	"openTypeOS2CodePageRanges"				: dict(type="integerList", valueValidator=_fontInfoIntListValidator, valueOptions=_fontInfoOpenTypeOS2CodePageRangesOptions),
+	"openTypeOS2Panose"						: dict(type="integerList", valueValidator=fontInfoVersion2OpenTypeOS2PanoseValidator),
+	"openTypeOS2FamilyClass"				: dict(type="integerList", valueValidator=fontInfoOpenTypeOS2FamilyClassValidator),
+	"openTypeOS2UnicodeRanges"				: dict(type="integerList", valueValidator=fontInfoIntListValidator, valueOptions=fontInfoOpenTypeOS2UnicodeRangesOptions),
+	"openTypeOS2CodePageRanges"				: dict(type="integerList", valueValidator=fontInfoIntListValidator, valueOptions=fontInfoOpenTypeOS2CodePageRangesOptions),
 	"openTypeOS2TypoAscender"				: dict(type=(int, float)),
 	"openTypeOS2TypoDescender"				: dict(type=(int, float)),
 	"openTypeOS2TypoLineGap"				: dict(type=(int, float)),
 	"openTypeOS2WinAscent"					: dict(type=(int, float)),
 	"openTypeOS2WinDescent"					: dict(type=(int, float)),
-	"openTypeOS2Type"						: dict(type="integerList", valueValidator=_fontInfoIntListValidator, valueOptions=_fontInfoOpenTypeOS2TypeOptions),
+	"openTypeOS2Type"						: dict(type="integerList", valueValidator=fontInfoIntListValidator, valueOptions=fontInfoOpenTypeOS2TypeOptions),
 	"openTypeOS2SubscriptXSize"				: dict(type=(int, float)),
 	"openTypeOS2SubscriptYSize"				: dict(type=(int, float)),
 	"openTypeOS2SubscriptXOffset"			: dict(type=(int, float)),
@@ -1639,12 +1051,12 @@ _fontInfoAttributesVersion2ValueData = {
 	"postscriptUnderlineThickness"			: dict(type=(int, float)),
 	"postscriptUnderlinePosition"			: dict(type=(int, float)),
 	"postscriptIsFixedPitch"				: dict(type=bool),
-	"postscriptBlueValues"					: dict(type="integerList", valueValidator=_fontInfoPostscriptBluesValidator),
-	"postscriptOtherBlues"					: dict(type="integerList", valueValidator=_fontInfoPostscriptOtherBluesValidator),
-	"postscriptFamilyBlues"					: dict(type="integerList", valueValidator=_fontInfoPostscriptBluesValidator),
-	"postscriptFamilyOtherBlues"			: dict(type="integerList", valueValidator=_fontInfoPostscriptOtherBluesValidator),
-	"postscriptStemSnapH"					: dict(type="integerList", valueValidator=_fontInfoPostscriptStemsValidator),
-	"postscriptStemSnapV"					: dict(type="integerList", valueValidator=_fontInfoPostscriptStemsValidator),
+	"postscriptBlueValues"					: dict(type="integerList", valueValidator=fontInfoPostscriptBluesValidator),
+	"postscriptOtherBlues"					: dict(type="integerList", valueValidator=fontInfoPostscriptOtherBluesValidator),
+	"postscriptFamilyBlues"					: dict(type="integerList", valueValidator=fontInfoPostscriptBluesValidator),
+	"postscriptFamilyOtherBlues"			: dict(type="integerList", valueValidator=fontInfoPostscriptOtherBluesValidator),
+	"postscriptStemSnapH"					: dict(type="integerList", valueValidator=fontInfoPostscriptStemsValidator),
+	"postscriptStemSnapV"					: dict(type="integerList", valueValidator=fontInfoPostscriptStemsValidator),
 	"postscriptBlueFuzz"					: dict(type=(int, float)),
 	"postscriptBlueShift"					: dict(type=(int, float)),
 	"postscriptBlueScale"					: dict(type=(float, int)),
@@ -1653,47 +1065,47 @@ _fontInfoAttributesVersion2ValueData = {
 	"postscriptNominalWidthX"				: dict(type=(int, float)),
 	"postscriptWeightName"					: dict(type=basestring),
 	"postscriptDefaultCharacter"			: dict(type=basestring),
-	"postscriptWindowsCharacterSet"			: dict(type=int, valueValidator=_fontInfoPostscriptWindowsCharacterSetValidator),
+	"postscriptWindowsCharacterSet"			: dict(type=int, valueValidator=fontInfoPostscriptWindowsCharacterSetValidator),
 	"macintoshFONDFamilyID"					: dict(type=int),
 	"macintoshFONDName"						: dict(type=basestring),
 }
-fontInfoAttributesVersion2 = set(_fontInfoAttributesVersion2ValueData.keys())
+fontInfoAttributesVersion2 = set(fontInfoAttributesVersion2ValueData.keys())
 
-_fontInfoAttributesVersion3ValueData = deepcopy(_fontInfoAttributesVersion2ValueData)
-_fontInfoAttributesVersion3ValueData.update({
-	"versionMinor"							: dict(type=int, valueValidator=_fontInfoNonNegativeIntValidator),
-	"unitsPerEm"							: dict(type=(int, float), valueValidator=_fontInfoNonNegativeNumberValidator),
-	"openTypeHeadLowestRecPPEM"				: dict(type=(int, float), valueValidator=_fontInfoNonNegativeNumberValidator),
-	"openTypeOS2Panose"						: dict(type="integerList", valueValidator=_fontInfoVersion3OpenTypeOS2PanoseValidator),
-	"openTypeOS2WinAscent"					: dict(type=(int, float), valueValidator=_fontInfoNonNegativeNumberValidator),
-	"openTypeOS2WinDescent"					: dict(type=(int, float), valueValidator=_fontInfoNonNegativeNumberValidator),
-	"openTypeGaspRangeRecords"				: dict(type="dictList", valueValidator=_fontInfoOpenTypeGaspRangeRecordsValidator),
-	"openTypeNameRecords"					: dict(type="dictList", valueValidator=_fontInfoOpenTypeNameRecordsValidator),
-	"woffMajorVersion"						: dict(type=int, valueValidator=_fontInfoNonNegativeIntValidator),
-	"woffMinorVersion"						: dict(type=int, valueValidator=_fontInfoNonNegativeIntValidator),
-	"woffMetadataUniqueID"					: dict(type=dict, valueValidator=_fontInfoWOFFMetadataUniqueIDValidator),
-	"woffMetadataVendor"					: dict(type=dict, valueValidator=_fontInfoWOFFMetadataVendorValidator),
-	"woffMetadataCredits"					: dict(type=dict, valueValidator=_fontInfoWOFFMetadataCreditsValidator),
-	"woffMetadataDescription"				: dict(type=dict, valueValidator=_fontInfoWOFFMetadataDescriptionValidator),
-	"woffMetadataLicense"					: dict(type=dict, valueValidator=_fontInfoWOFFMetadataLicenseValidator),
-	"woffMetadataCopyright"					: dict(type=dict, valueValidator=_fontInfoWOFFMetadataCopyrightValidator),
-	"woffMetadataTrademark"					: dict(type=dict, valueValidator=_fontInfoWOFFMetadataTrademarkValidator),
-	"woffMetadataLicensee"					: dict(type=dict, valueValidator=_fontInfoWOFFMetadataLicenseeValidator),
-	"woffMetadataExtensions"				: dict(type=list, valueValidator=_fontInfoWOFFMetadataExtensionsValidator),
-	"firstKerningGroupPrefix" 				: dict(type=basestring, valueValidator=_fontInfoKerningPrefixValidator),
-	"secondKerningGroupPrefix" 				: dict(type=basestring, valueValidator=_fontInfoKerningPrefixValidator),
-	"guidelines"							: dict(type=list, valueValidator=_fontInfoGuidelinesValidator)
+fontInfoAttributesVersion3ValueData = deepcopy(fontInfoAttributesVersion2ValueData)
+fontInfoAttributesVersion3ValueData.update({
+	"versionMinor"							: dict(type=int, valueValidator=fontInfoNonNegativeIntValidator),
+	"unitsPerEm"							: dict(type=(int, float), valueValidator=fontInfoNonNegativeNumberValidator),
+	"openTypeHeadLowestRecPPEM"				: dict(type=(int, float), valueValidator=fontInfoNonNegativeNumberValidator),
+	"openTypeOS2Panose"						: dict(type="integerList", valueValidator=fontInfoVersion3OpenTypeOS2PanoseValidator),
+	"openTypeOS2WinAscent"					: dict(type=(int, float), valueValidator=fontInfoNonNegativeNumberValidator),
+	"openTypeOS2WinDescent"					: dict(type=(int, float), valueValidator=fontInfoNonNegativeNumberValidator),
+	"openTypeGaspRangeRecords"				: dict(type="dictList", valueValidator=fontInfoOpenTypeGaspRangeRecordsValidator),
+	"openTypeNameRecords"					: dict(type="dictList", valueValidator=fontInfoOpenTypeNameRecordsValidator),
+	"woffMajorVersion"						: dict(type=int, valueValidator=fontInfoNonNegativeIntValidator),
+	"woffMinorVersion"						: dict(type=int, valueValidator=fontInfoNonNegativeIntValidator),
+	"woffMetadataUniqueID"					: dict(type=dict, valueValidator=fontInfoWOFFMetadataUniqueIDValidator),
+	"woffMetadataVendor"					: dict(type=dict, valueValidator=fontInfoWOFFMetadataVendorValidator),
+	"woffMetadataCredits"					: dict(type=dict, valueValidator=fontInfoWOFFMetadataCreditsValidator),
+	"woffMetadataDescription"				: dict(type=dict, valueValidator=fontInfoWOFFMetadataDescriptionValidator),
+	"woffMetadataLicense"					: dict(type=dict, valueValidator=fontInfoWOFFMetadataLicenseValidator),
+	"woffMetadataCopyright"					: dict(type=dict, valueValidator=fontInfoWOFFMetadataCopyrightValidator),
+	"woffMetadataTrademark"					: dict(type=dict, valueValidator=fontInfoWOFFMetadataTrademarkValidator),
+	"woffMetadataLicensee"					: dict(type=dict, valueValidator=fontInfoWOFFMetadataLicenseeValidator),
+	"woffMetadataExtensions"				: dict(type=list, valueValidator=fontInfoWOFFMetadataExtensionsValidator),
+	"firstKerningGroupPrefix" 				: dict(type=basestring, valueValidator=fontInfoKerningPrefixValidator),
+	"secondKerningGroupPrefix" 				: dict(type=basestring, valueValidator=fontInfoKerningPrefixValidator),
+	"guidelines"							: dict(type=list, valueValidator=fontInfoGuidelinesValidator)
 })
 
 # insert the type validator for all attrs that
 # have no defined validator.
-for attr, dataDict in _fontInfoAttributesVersion2ValueData.items():
+for attr, dataDict in fontInfoAttributesVersion2ValueData.items():
 	if "valueValidator" not in dataDict:
-		dataDict["valueValidator"] = _fontInfoTypeValidator
+		dataDict["valueValidator"] = fontInfoTypeValidator
 
-for attr, dataDict in _fontInfoAttributesVersion3ValueData.items():
+for attr, dataDict in fontInfoAttributesVersion3ValueData.items():
 	if "valueValidator" not in dataDict:
-		dataDict["valueValidator"] = _fontInfoTypeValidator
+		dataDict["valueValidator"] = fontInfoTypeValidator
 
 # Version Conversion Support
 # These are used from converting from version 1
@@ -1705,7 +1117,7 @@ def _flipDict(d):
 		flipped[value] = key
 	return flipped
 
-_fontInfoAttributesVersion1To2 = {
+fontInfoAttributesVersion1To2 = {
 	"menuName"		: "styleMapFamilyName",
 	"designer"		: "openTypeNameDesigner",
 	"designerURL"	: "openTypeNameDesignerURL",
@@ -1734,8 +1146,8 @@ _fontInfoAttributesVersion1To2 = {
 	"widthName"		: "openTypeOS2WidthClass",
 	"msCharSet"		: "postscriptWindowsCharacterSet"
 }
-_fontInfoAttributesVersion2To1 = _flipDict(_fontInfoAttributesVersion1To2)
-deprecatedFontInfoAttributesVersion2 = set(_fontInfoAttributesVersion1To2.keys())
+fontInfoAttributesVersion2To1 = _flipDict(fontInfoAttributesVersion1To2)
+deprecatedFontInfoAttributesVersion2 = set(fontInfoAttributesVersion1To2.keys())
 
 _fontStyle1To2 = {
 	64 : "regular",
@@ -1820,7 +1232,7 @@ def convertFontInfoValueForAttributeFromVersion1ToVersion2(attr, value):
 			if v is None:
 				raise UFOLibError("Cannot convert value (%s) for attribute %s." % (repr(value), attr))
 			value = v
-	attr = _fontInfoAttributesVersion1To2.get(attr, attr)
+	attr = fontInfoAttributesVersion1To2.get(attr, attr)
 	return attr, value
 
 def convertFontInfoValueForAttributeFromVersion2ToVersion1(attr, value):
@@ -1836,7 +1248,7 @@ def convertFontInfoValueForAttributeFromVersion2ToVersion1(attr, value):
 			value = _widthName2To1.get(value)
 		elif attr == "postscriptWindowsCharacterSet":
 			value = _msCharSet2To1.get(value)
-	attr = _fontInfoAttributesVersion2To1.get(attr, attr)
+	attr = fontInfoAttributesVersion2To1.get(attr, attr)
 	return attr, value
 
 def _convertFontInfoDataVersion1ToVersion2(data):
