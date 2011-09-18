@@ -36,8 +36,8 @@ from cStringIO import StringIO
 import calendar
 import codecs
 from copy import deepcopy
-from robofab.plistlib import readPlist, writePlist
-from robofab.glifLib import GlyphSet, READ_MODE, WRITE_MODE
+from plistlib import readPlist, writePlist
+from glifLib import GlyphSet, READ_MODE, WRITE_MODE
 
 try:
 	set

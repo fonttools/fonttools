@@ -15,7 +15,7 @@ __all__ = ["GlyphSet", "GlifLibError",
 		"glyphNameToFileName"]
 
 import os
-from robofab.xmlTreeBuilder import buildTree, stripCharacterData
+from xmlTreeBuilder import buildTree, stripCharacterData
 from robofab.pens.pointPen import AbstractPointPen
 from cStringIO import StringIO
 
