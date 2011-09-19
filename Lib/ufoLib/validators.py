@@ -1,5 +1,6 @@
 """Various low level data validators."""
 
+import os
 import calendar
 
 # ----------------------
@@ -611,3 +612,58 @@ def fontInfoColorValidator(value):
 		if part > 1:
 			return False
 	return True
+
+# ---------------------------
+# layercontents.plist Support
+# ---------------------------
+
+def layerContentsValidator(value, ufoPath):
+	"""
+	Check the validity of layercontents.plist.
+	Version 3+.
+	"""
+	from ufoLib import DEFAULT_GLYPHS_DIRNAME
+	bogusFileMessage = "layercontents.plist in not in the correct format."
+	# file isn't in the right format
+	if not isinstance(value, list):
+		return False, bogusFileMessage
+	# work through each entry
+	usedLayerNames = set()
+	usedDirectories = set()
+	contents = {}
+	for entry in value:
+		# layer entry in the incorrect format
+		if not isinstance(entry, list):
+			return False, bogusFileMessage
+		if not len(entry) == 2:
+			return False, bogusFileMessage
+		for i in entry:
+			if not isinstance(i, basestring):
+				return False, bogusFileMessage
+		layerName, directoryName = entry
+		if not directoryName.startswith("glyphs"):
+			return False, bogusFileMessage
+		# directory doesn't exist
+		p = os.path.join(ufoPath, directoryName)
+		if not os.path.exists(p):
+			return False, "A glyphset does not exist at %s." % directoryName
+		# check usage
+		if layerName in usedLayerNames:
+			return False, "The layer name %s is used by more than one layer." % layerName
+		usedLayerNames.add(layerName)
+		if directoryName in usedDirectories:
+			return False, "The directory %s is used by more than one layer." % directoryName
+		usedDirectories.add(directoryName)
+		# store
+		contents[layerName] = directoryName
+	# missing default layer
+	foundDefault = True
+	for layerName, directory in contents.items():
+		if directory == DEFAULT_GLYPHS_DIRNAME:
+			foundDefault = True
+			break
+	if not foundDefault:
+		return False, "The required default glyph set is not in the UFO."
+	return True, None
+
+

@@ -13,6 +13,10 @@ from testSupport import fontInfoVersion3
 class TestInfoObject(object): pass
 
 
+# --------------
+# fontinfo.plist
+# --------------
+
 class ReadFontInfoVersion3TestCase(unittest.TestCase):
 
 	def setUp(self):
@@ -1752,11 +1756,14 @@ class ReadFontInfoVersion3TestCase(unittest.TestCase):
 class WriteFontInfoVersion3TestCase(unittest.TestCase):
 
 	def setUp(self):
-		self.dstDir = tempfile.mktemp()
-		os.mkdir(self.dstDir)
-
+		self.tempDir = tempfile.mktemp()
+		os.mkdir(self.tempDir)
+		self.dstDir = os.path.join(self.tempDir, "test.ufo")
 
 	def tearDown(self):
+		shutil.rmtree(self.tempDir)
+
+	def tearDownUFO(self):
 		shutil.rmtree(self.dstDir)
 
 	def makeInfoObject(self):
@@ -1777,6 +1784,7 @@ class WriteFontInfoVersion3TestCase(unittest.TestCase):
 		for attr, originalValue in fontInfoVersion3.items():
 			newValue = writtenData[attr]
 			self.assertEqual(newValue, originalValue)
+		self.tearDownUFO()
 
 	def testGenericWrite(self):
 		# familyName
@@ -1784,77 +1792,92 @@ class WriteFontInfoVersion3TestCase(unittest.TestCase):
 		infoObject.familyName = 123
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# styleName
 		infoObject = self.makeInfoObject()
 		infoObject.styleName = 123
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# styleMapFamilyName
 		infoObject = self.makeInfoObject()
 		infoObject.styleMapFamilyName = 123
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# styleMapStyleName
 		## not a string
 		infoObject = self.makeInfoObject()
 		infoObject.styleMapStyleName = 123
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## out of range
 		infoObject = self.makeInfoObject()
 		infoObject.styleMapStyleName = "REGULAR"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# versionMajor
 		infoObject = self.makeInfoObject()
 		infoObject.versionMajor = "1"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# versionMinor
 		infoObject = self.makeInfoObject()
 		infoObject.versionMinor = "0"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# copyright
 		infoObject = self.makeInfoObject()
 		infoObject.copyright = 123
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# trademark
 		infoObject = self.makeInfoObject()
 		infoObject.trademark = 123
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# unitsPerEm
 		infoObject = self.makeInfoObject()
 		infoObject.unitsPerEm = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# descender
 		infoObject = self.makeInfoObject()
 		infoObject.descender = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# xHeight
 		infoObject = self.makeInfoObject()
 		infoObject.xHeight = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# capHeight
 		infoObject = self.makeInfoObject()
 		infoObject.capHeight = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# ascender
 		infoObject = self.makeInfoObject()
 		infoObject.ascender = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# italicAngle
 		infoObject = self.makeInfoObject()
 		infoObject.italicAngle = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 
 	def testGaspWrite(self):
 		# not a list
@@ -1862,50 +1885,60 @@ class WriteFontInfoVersion3TestCase(unittest.TestCase):
 		infoObject.openTypeGaspRangeRecords = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# empty list
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeGaspRangeRecords = []
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# not a dict
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeGaspRangeRecords = ["abc"]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# dict not properly formatted
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeGaspRangeRecords = [dict(rangeMaxPPEM=0xFFFF, notTheRightKey=1)]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeGaspRangeRecords = [dict(notTheRightKey=1, rangeGaspBehavior=[0])]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# not an int for ppem
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeGaspRangeRecords = [dict(rangeMaxPPEM="abc", rangeGaspBehavior=[0]), dict(rangeMaxPPEM=0xFFFF, rangeGaspBehavior=[0])]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# not a list for behavior
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeGaspRangeRecords = [dict(rangeMaxPPEM=10, rangeGaspBehavior="abc"), dict(rangeMaxPPEM=0xFFFF, rangeGaspBehavior=[0])]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# invalid behavior value
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeGaspRangeRecords = [dict(rangeMaxPPEM=10, rangeGaspBehavior=[-1]), dict(rangeMaxPPEM=0xFFFF, rangeGaspBehavior=[0])]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# not sorted
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeGaspRangeRecords = [dict(rangeMaxPPEM=0xFFFF, rangeGaspBehavior=[0]), dict(rangeMaxPPEM=10, rangeGaspBehavior=[-1])]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# no 0xFFFF
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeGaspRangeRecords = [dict(rangeMaxPPEM=10, rangeGaspBehavior=[0]), dict(rangeMaxPPEM=20, rangeGaspBehavior=[-1])]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 
 	def testHeadWrite(self):
 		# openTypeHeadCreated
@@ -1914,21 +1947,25 @@ class WriteFontInfoVersion3TestCase(unittest.TestCase):
 		infoObject.openTypeHeadCreated = 123
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## invalid format
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeHeadCreated = "2000-Jan-01 00:00:00"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# openTypeHeadLowestRecPPEM
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeHeadLowestRecPPEM = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# openTypeHeadFlags
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeHeadFlags = [-1]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 
 	def testHheaWrite(self):
 		# openTypeHheaAscender
@@ -1936,31 +1973,37 @@ class WriteFontInfoVersion3TestCase(unittest.TestCase):
 		infoObject.openTypeHheaAscender = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# openTypeHheaDescender
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeHheaDescender = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# openTypeHheaLineGap
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeHheaLineGap = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# openTypeHheaCaretSlopeRise
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeHheaCaretSlopeRise = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# openTypeHheaCaretSlopeRun
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeHheaCaretSlopeRun = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# openTypeHheaCaretOffset
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeHheaCaretOffset = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 
 	def testNameWrite(self):
 		# openTypeNameDesigner
@@ -1968,92 +2011,110 @@ class WriteFontInfoVersion3TestCase(unittest.TestCase):
 		infoObject.openTypeNameDesigner = 123
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# openTypeNameDesignerURL
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeNameDesignerURL = 123
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# openTypeNameManufacturer
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeNameManufacturer = 123
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# openTypeNameManufacturerURL
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeNameManufacturerURL = 123
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# openTypeNameLicense
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeNameLicense = 123
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# openTypeNameLicenseURL
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeNameLicenseURL = 123
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# openTypeNameVersion
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeNameVersion = 123
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# openTypeNameUniqueID
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeNameUniqueID = 123
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# openTypeNameDescription
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeNameDescription = 123
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# openTypeNamePreferredFamilyName
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeNamePreferredFamilyName = 123
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# openTypeNamePreferredSubfamilyName
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeNamePreferredSubfamilyName = 123
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# openTypeNameCompatibleFullName
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeNameCompatibleFullName = 123
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# openTypeNameSampleText
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeNameSampleText = 123
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# openTypeNameWWSFamilyName
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeNameWWSFamilyName = 123
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# openTypeNameWWSSubfamilyName
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeNameWWSSubfamilyName = 123
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# openTypeNameRecords
 		## not a list
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeNameRecords = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## not a dict
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeNameRecords = ["abc"]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## invalid dict structure
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeNameRecords = [dict(foo="bar")]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## incorrect keys
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeNameRecords = [
@@ -2061,36 +2122,42 @@ class WriteFontInfoVersion3TestCase(unittest.TestCase):
 		]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeNameRecords = [
 			dict(platformID=1, encodingID=1, languageID=1, string="Name Record.")
 		]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeNameRecords = [
 			dict(nameID=1, encodingID=1, languageID=1, string="Name Record.")
 		]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeNameRecords = [
 			dict(nameID=1, platformID=1, languageID=1, string="Name Record.")
 		]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeNameRecords = [
 			dict(nameID=1, platformID=1, encodingID=1, string="Name Record.")
 		]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeNameRecords = [
 			dict(nameID=1, platformID=1, encodingID=1, languageID=1)
 		]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## invalid values
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeNameRecords = [
@@ -2098,30 +2165,35 @@ class WriteFontInfoVersion3TestCase(unittest.TestCase):
 		]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeNameRecords = [
 			dict(nameID=1, platformID="1", encodingID=1, languageID=1, string="Name Record.")
 		]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeNameRecords = [
 			dict(nameID=1, platformID=1, encodingID="1", languageID=1, string="Name Record.")
 		]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeNameRecords = [
 			dict(nameID=1, platformID=1, encodingID=1, languageID="1", string="Name Record.")
 		]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeNameRecords = [
 			dict(nameID=1, platformID=1, encodingID=1, languageID=1, string=1)
 		]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## duplicate
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeNameRecords = [
@@ -2138,184 +2210,221 @@ class WriteFontInfoVersion3TestCase(unittest.TestCase):
 		infoObject.openTypeOS2WidthClass = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## out or range
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2WidthClass = 15
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# openTypeOS2WeightClass
-		infoObject = self.makeInfoObject()
 		## not an int
+		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2WeightClass = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## out of range
+		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2WeightClass = -50
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# openTypeOS2Selection
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2Selection = [-1]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# openTypeOS2VendorID
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2VendorID = 1234
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# openTypeOS2Panose
 		## not an int
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2Panose = [0, 1, 2, 3, 4, 5, 6, 7, 8, str(9)]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## too few values
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2Panose = [0, 1, 2, 3]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## too many values
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2Panose = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# openTypeOS2FamilyClass
 		## not an int
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2FamilyClass = [0, str(1)]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## too few values
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2FamilyClass = [1]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## too many values
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2FamilyClass = [1, 1, 1]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## out of range
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2FamilyClass = [1, 20]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# openTypeOS2UnicodeRanges
 		## not an int
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2UnicodeRanges = ["0"]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## out of range
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2UnicodeRanges = [-1]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# openTypeOS2CodePageRanges
 		## not an int
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2CodePageRanges = ["0"]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## out of range
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2CodePageRanges = [-1]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# openTypeOS2TypoAscender
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2TypoAscender = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# openTypeOS2TypoDescender
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2TypoDescender = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# openTypeOS2TypoLineGap
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2TypoLineGap = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# openTypeOS2WinAscent
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2WinAscent = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2WinAscent = -1
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# openTypeOS2WinDescent
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2WinDescent = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2WinDescent = -1
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# openTypeOS2Type
 		## not an int
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2Type = ["1"]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## out of range
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2Type = [-1]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# openTypeOS2SubscriptXSize
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2SubscriptXSize = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# openTypeOS2SubscriptYSize
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2SubscriptYSize = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# openTypeOS2SubscriptXOffset
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2SubscriptXOffset = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# openTypeOS2SubscriptYOffset
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2SubscriptYOffset = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# openTypeOS2SuperscriptXSize
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2SuperscriptXSize = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# openTypeOS2SuperscriptYSize
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2SuperscriptYSize = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# openTypeOS2SuperscriptXOffset
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2SuperscriptXOffset = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# openTypeOS2SuperscriptYOffset
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2SuperscriptYOffset = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# openTypeOS2StrikeoutSize
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2StrikeoutSize = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# openTypeOS2StrikeoutPosition
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeOS2StrikeoutPosition = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 
 	def testVheaWrite(self):
 		# openTypeVheaVertTypoAscender
@@ -2323,31 +2432,37 @@ class WriteFontInfoVersion3TestCase(unittest.TestCase):
 		infoObject.openTypeVheaVertTypoAscender = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# openTypeVheaVertTypoDescender
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeVheaVertTypoDescender = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# openTypeVheaVertTypoLineGap
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeVheaVertTypoLineGap = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# openTypeVheaCaretSlopeRise
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeVheaCaretSlopeRise = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# openTypeVheaCaretSlopeRun
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeVheaCaretSlopeRun = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# openTypeVheaCaretOffset
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeVheaCaretOffset = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 
 	def testFONDWrite(self):
 		# macintoshFONDFamilyID
@@ -2355,11 +2470,13 @@ class WriteFontInfoVersion3TestCase(unittest.TestCase):
 		infoObject.macintoshFONDFamilyID = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# macintoshFONDName
 		infoObject = self.makeInfoObject()
 		infoObject.macintoshFONDName = 123
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 
 	def testPostscriptWrite(self):
 		# postscriptFontName
@@ -2367,177 +2484,211 @@ class WriteFontInfoVersion3TestCase(unittest.TestCase):
 		infoObject.postscriptFontName = 123
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# postscriptFullName
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptFullName = 123
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# postscriptSlantAngle
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptSlantAngle = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# postscriptUniqueID
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptUniqueID = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# postscriptUnderlineThickness
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptUnderlineThickness = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# postscriptUnderlinePosition
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptUnderlinePosition = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# postscriptIsFixedPitch
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptIsFixedPitch = 2
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# postscriptBlueValues
 		## not a list
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptBlueValues = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## uneven value count
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptBlueValues = [500]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## too many values
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptBlueValues = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# postscriptOtherBlues
 		## not a list
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptOtherBlues = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## uneven value count
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptOtherBlues = [500]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## too many values
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptOtherBlues = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# postscriptFamilyBlues
 		## not a list
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptFamilyBlues = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## uneven value count
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptFamilyBlues = [500]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## too many values
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptFamilyBlues = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# postscriptFamilyOtherBlues
 		## not a list
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptFamilyOtherBlues = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## uneven value count
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptFamilyOtherBlues = [500]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## too many values
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptFamilyOtherBlues = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# postscriptStemSnapH
 		## not list
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptStemSnapH = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## too many values
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptStemSnapH = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# postscriptStemSnapV
 		## not list
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptStemSnapV = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## too many values
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptStemSnapV = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# postscriptBlueFuzz
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptBlueFuzz = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# postscriptBlueShift
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptBlueShift = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# postscriptBlueScale
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptBlueScale = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# postscriptForceBold
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptForceBold = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# postscriptDefaultWidthX
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptDefaultWidthX = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# postscriptNominalWidthX
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptNominalWidthX = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# postscriptWeightName
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptWeightName = 123
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# postscriptDefaultCharacter
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptDefaultCharacter = 123
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# postscriptWindowsCharacterSet
 		infoObject = self.makeInfoObject()
 		infoObject.postscriptWindowsCharacterSet = -1
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# macintoshFONDFamilyID
 		infoObject = self.makeInfoObject()
 		infoObject.macintoshFONDFamilyID = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# macintoshFONDName
 		infoObject = self.makeInfoObject()
 		infoObject.macintoshFONDName = 123
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 
 	def testWOFFWrite(self):
 		# woffMajorVersion
@@ -2545,458 +2696,549 @@ class WriteFontInfoVersion3TestCase(unittest.TestCase):
 		infoObject.woffMajorVersion = 1.0
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		infoObject = self.makeInfoObject()
 		infoObject.woffMajorVersion = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# woffMinorVersion
 		infoObject = self.makeInfoObject()
 		infoObject.woffMinorVersion = 1.0
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		infoObject = self.makeInfoObject()
 		infoObject.woffMinorVersion = "abc"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# woffMetadataUniqueID
 		## none
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataUniqueID = None
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		writer.writeInfo(TestInfoObject())
+		self.tearDownUFO()
 		## not a dict
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataUniqueID = 1
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## unknown key
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataUniqueID = dict(id="foo", notTheRightKey=1)
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## no id
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataUniqueID = dict()
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## not a string for id
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataUniqueID = dict(id=1)
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## empty string
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataUniqueID = dict(id="")
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		writer.writeInfo(TestInfoObject())
+		self.tearDownUFO()
 		# woffMetadataVendor
 		## no name
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataVendor = dict(url="foo")
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## name not a string
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataVendor = dict(name=1, url="foo")
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## name an empty string
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataVendor = dict(name="", url="foo")
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		writer.writeInfo(TestInfoObject())
+		self.tearDownUFO()
 		## no URL
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataVendor = dict(name="foo")
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		writer.writeInfo(TestInfoObject())
+		self.tearDownUFO()
 		## url not a string
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataVendor = dict(name="foo", url=1)
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## url empty string
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataVendor = dict(name="foo", url="")
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		writer.writeInfo(TestInfoObject())
+		self.tearDownUFO()
 		## have dir
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataVendor = dict(name="foo", url="bar", dir="ltr")
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		writer.writeInfo(TestInfoObject())
+		self.tearDownUFO()
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataVendor = dict(name="foo", url="bar", dir="rtl")
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		writer.writeInfo(TestInfoObject())
+		self.tearDownUFO()
 		## dir not a string
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataVendor = dict(name="foo", url="bar", dir=1)
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## dir not ltr or rtl
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataVendor = dict(name="foo", url="bar", dir="utd")
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## have class
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataVendor = {"name"  : "foo", "url" : "bar", "class" : "hello"}
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		writer.writeInfo(TestInfoObject())
+		self.tearDownUFO()
 		## class not a string
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataVendor = {"name"  : "foo", "url" : "bar", "class" : 1}
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## class empty string
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataVendor = {"name"  : "foo", "url" : "bar", "class" : ""}
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		writer.writeInfo(TestInfoObject())
+		self.tearDownUFO()
 		# woffMetadataCredits
 		## no credits attribute
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataCredits = {}
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## unknown attribute
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataCredits = dict(credits=[dict(name="foo")], notTheRightKey=1)
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## not a list
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataCredits = dict(credits="abc")
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## no elements in credits
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataCredits = dict(credits=[])
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## credit not a dict
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataCredits = dict(credits=["abc"])
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## unknown key
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataCredits = dict(credits=[dict(name="foo", notTheRightKey=1)])
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## no name
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataCredits = dict(credits=[dict(url="foo")])
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## name not a string
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataCredits = dict(credits=[dict(name=1)])
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## url not a string
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataCredits = dict(credits=[dict(name="foo", url=1)])
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## role not a string
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataCredits = dict(credits=[dict(name="foo", role=1)])
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## dir not a string
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataCredits = dict(credits=[dict(name="foo", dir=1)])
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## dir not ltr or rtl
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataCredits = dict(credits=[dict(name="foo", dir="utd")])
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## class not a string
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataCredits = dict(credits=[{"name"  : "foo", "class" : 1}])
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# woffMetadataDescription
 		## no url
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataDescription = dict(text=[dict(text="foo")])
 		writer.writeInfo(TestInfoObject())
+		self.tearDownUFO()
 		## url not a string
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataDescription = dict(text=[dict(text="foo")], url=1)
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## no text
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataDescription = dict(url="foo")
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## text not a list
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataDescription = dict(text="abc")
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## text item not a dict
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataDescription = dict(text=["abc"])
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## text item unknown key
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataDescription = dict(text=[dict(text="foo", notTheRightKey=1)])
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## text item missing text
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataDescription = dict(text=[dict(language="foo")])
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## text not a string
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataDescription = dict(text=[dict(text=1)])
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## url not a string
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataDescription = dict(text=[dict(text="foo", url=1)])
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## language not a string
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataDescription = dict(text=[dict(text="foo", language=1)])
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## dir not ltr or rtl
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataDescription = dict(text=[dict(text="foo", dir="utd")])
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## class not a string
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataDescription = dict(text=[{"text"  : "foo", "class" : 1}])
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# woffMetadataLicense
 		## no url
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataLicense = dict(text=[dict(text="foo")])
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		writer.writeInfo(TestInfoObject())
+		self.tearDownUFO()
 		## url not a string
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataLicense = dict(text=[dict(text="foo")], url=1)
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## id not a string
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataLicense = dict(text=[dict(text="foo")], id=1)
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## no text
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataLicense = dict(url="foo")
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		writer.writeInfo(TestInfoObject())
+		self.tearDownUFO()
 		## text not a list
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataLicense = dict(text="abc")
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## text item not a dict
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataLicense = dict(text=["abc"])
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## text item unknown key
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataLicense = dict(text=[dict(text="foo", notTheRightKey=1)])
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## text item missing text
 		infoObject = self.makeInfoObject()
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		infoObject.woffMetadataLicense = dict(text=[dict(language="foo")])
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## text not a string
 		infoObject = self.makeInfoObject()
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		infoObject.woffMetadataLicense = dict(text=[dict(text=1)])
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## url not a string
 		infoObject = self.makeInfoObject()
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		infoObject.woffMetadataLicense = dict(text=[dict(text="foo", url=1)])
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## language not a string
 		infoObject = self.makeInfoObject()
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		infoObject.woffMetadataLicense = dict(text=[dict(text="foo", language=1)])
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## dir not ltr or rtl
 		infoObject = self.makeInfoObject()
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		infoObject.woffMetadataLicense = dict(text=[dict(text="foo", dir="utd")])
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## class not a string
 		infoObject = self.makeInfoObject()
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		infoObject.woffMetadataLicense = dict(text=[{"text"  : "foo", "class" : 1}])
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# woffMetadataCopyright
 		## unknown attribute
 		infoObject = self.makeInfoObject()
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		infoObject.woffMetadataCopyright = dict(text=[dict(text="foo")], notTheRightKey=1)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## no text
 		infoObject = self.makeInfoObject()
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		infoObject.woffMetadataCopyright = dict()
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## text not a list
 		infoObject = self.makeInfoObject()
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		infoObject.woffMetadataCopyright = dict(text="abc")
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## text item not a dict
 		infoObject = self.makeInfoObject()
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		infoObject.woffMetadataCopyright = dict(text=["abc"])
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## text item unknown key
 		infoObject = self.makeInfoObject()
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		infoObject.woffMetadataCopyright = dict(text=[dict(text="foo", notTheRightKey=1)])
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## text item missing text
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataCopyright = dict(text=[dict(language="foo")])
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## text not a string
 		infoObject = self.makeInfoObject()
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		infoObject.woffMetadataCopyright = dict(text=[dict(text=1)])
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## url not a string
 		infoObject = self.makeInfoObject()
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		infoObject.woffMetadataCopyright = dict(text=[dict(text="foo", url=1)])
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## language not a string
 		infoObject = self.makeInfoObject()
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		infoObject.woffMetadataCopyright = dict(text=[dict(text="foo", language=1)])
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## dir not ltr or rtl
 		infoObject = self.makeInfoObject()
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		infoObject.woffMetadataCopyright = dict(text=[dict(text="foo", dir="utd")])
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## class not a string
 		infoObject = self.makeInfoObject()
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		infoObject.woffMetadataCopyright = dict(text=[{"text"  : "foo", "class" : 1}])
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# woffMetadataTrademark
 		## unknown attribute
 		infoObject = self.makeInfoObject()
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		infoObject.woffMetadataTrademark = dict(text=[dict(text="foo")], notTheRightKey=1)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## no text
 		infoObject = self.makeInfoObject()
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		infoObject.woffMetadataTrademark = dict()
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## text not a list
 		infoObject = self.makeInfoObject()
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		infoObject.woffMetadataTrademark = dict(text="abc")
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## text item not a dict
 		infoObject = self.makeInfoObject()
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		infoObject.woffMetadataTrademark = dict(text=["abc"])
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## text item unknown key
 		infoObject = self.makeInfoObject()
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		infoObject.woffMetadataTrademark = dict(text=[dict(text="foo", notTheRightKey=1)])
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## text item missing text
 		infoObject = self.makeInfoObject()
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		infoObject.woffMetadataTrademark = dict(text=[dict(language="foo")])
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## text not a string
 		infoObject = self.makeInfoObject()
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		infoObject.woffMetadataTrademark = dict(text=[dict(text=1)])
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## url not a string
 		infoObject = self.makeInfoObject()
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		infoObject.woffMetadataTrademark = dict(text=[dict(text="foo", url=1)])
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## language not a string
 		infoObject = self.makeInfoObject()
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		infoObject.woffMetadataTrademark = dict(text=[dict(text="foo", language=1)])
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## dir not ltr or rtl
 		infoObject = self.makeInfoObject()
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		infoObject.woffMetadataTrademark = dict(text=[dict(text="foo", dir="utd")])
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## class not a string
 		infoObject = self.makeInfoObject()
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		infoObject.woffMetadataTrademark = dict(text=[{"text"  : "foo", "class" : 1}])
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# woffMetadataLicensee
 		## no name
 		infoObject = self.makeInfoObject()
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		infoObject.woffMetadataLicensee = dict()
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## unknown attribute
 		infoObject = self.makeInfoObject()
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		infoObject.woffMetadataLicensee = dict(name="foo", notTheRightKey=1)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## name not a string
 		infoObject = self.makeInfoObject()
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		infoObject.woffMetadataLicensee = dict(name=1)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## dir options
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataLicensee = dict(name="foo", dir="ltr")
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		writer.writeInfo(infoObject)
+		self.tearDownUFO()
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataLicensee = dict(name="foo", dir="rtl")
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		writer.writeInfo(infoObject)
+		self.tearDownUFO()
 		## dir not ltr or rtl
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataLicensee = dict(name="foo", dir="utd")
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## have class
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataLicensee = {"name" : "foo", "class" : "hello"}
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		writer.writeInfo(infoObject)
+		self.tearDownUFO()
 		## class not a string
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataLicensee = {"name" : "foo", "class" : 1}
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 
 	def testKerningPrefixWrite(self):
 		# None
@@ -3005,50 +3247,60 @@ class WriteFontInfoVersion3TestCase(unittest.TestCase):
 		infoObject.secondKerningGroupPrefix = None
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		writer.writeInfo(infoObject)
+		self.tearDownUFO()
 		# not a string
 		infoObject = self.makeInfoObject()
 		infoObject.firstKerningGroupPrefix = 1
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		infoObject = self.makeInfoObject()
 		infoObject.secondKerningGroupPrefix = 2
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# one is None
 		infoObject = self.makeInfoObject()
 		infoObject.firstKerningGroupPrefix = None
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		infoObject = self.makeInfoObject()
 		infoObject.secondKerningGroupPrefix = None
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# one is empty
 		infoObject = self.makeInfoObject()
 		infoObject.firstKerningGroupPrefix = ""
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		infoObject = self.makeInfoObject()
 		infoObject.secondKerningGroupPrefix = ""
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# same
 		infoObject = self.makeInfoObject()
 		infoObject.firstKerningGroupPrefix = "@kern"
 		infoObject.secondKerningGroupPrefix = "@kern"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# overlap
 		infoObject = self.makeInfoObject()
 		infoObject.firstKerningGroupPrefix = "@kern"
 		infoObject.secondKerningGroupPrefix = "@kern2"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		infoObject = self.makeInfoObject()
 		infoObject.firstKerningGroupPrefix = "@kern1"
 		infoObject.secondKerningGroupPrefix = "@kern"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 
 	def testGuidelinesWrite(self):
 		# x
@@ -3057,141 +3309,193 @@ class WriteFontInfoVersion3TestCase(unittest.TestCase):
 		infoObject.guidelines = [dict(x="1")]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# y
 		## not an int or float
 		infoObject = self.makeInfoObject()
 		infoObject.guidelines = [dict(y="1")]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# angle
 		## < 0
 		infoObject = self.makeInfoObject()
 		infoObject.guidelines = [dict(x=0, y=0, angle=-1)]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## > 360
 		infoObject = self.makeInfoObject()
 		infoObject.guidelines = [dict(x=0, y=0, angle=361)]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# name
 		## not a string
 		infoObject = self.makeInfoObject()
 		infoObject.guidelines = [dict(x=0, name=1)]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# color
 		## not a string
 		infoObject = self.makeInfoObject()
 		infoObject.guidelines = [dict(x=0, color=1)]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## not enough commas
 		infoObject = self.makeInfoObject()
 		infoObject.guidelines = [dict(x=0, color="1 0, 0, 0")]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		infoObject = self.makeInfoObject()
 		infoObject.guidelines = [dict(x=0, color="1 0 0, 0")]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		infoObject = self.makeInfoObject()
 		infoObject.guidelines = [dict(x=0, color="1 0 0 0")]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## not enough parts
 		infoObject = self.makeInfoObject()
 		infoObject.guidelines = [dict(x=0, color=", 0, 0, 0")]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		infoObject = self.makeInfoObject()
 		infoObject.guidelines = [dict(x=0, color="1, , 0, 0")]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		infoObject = self.makeInfoObject()
 		infoObject.guidelines = [dict(x=0, color="1, 0, , 0")]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		infoObject = self.makeInfoObject()
 		infoObject.guidelines = [dict(x=0, color="1, 0, 0, ")]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		infoObject = self.makeInfoObject()
 		infoObject.guidelines = [dict(x=0, color=", , , ")]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## not a number in all positions
 		infoObject = self.makeInfoObject()
 		infoObject.guidelines = [dict(x=0, color="r, 1, 1, 1")]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		infoObject = self.makeInfoObject()
 		infoObject.guidelines = [dict(x=0, color="1, g, 1, 1")]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		infoObject = self.makeInfoObject()
 		infoObject.guidelines = [dict(x=0, color="1, 1, b, 1")]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		infoObject = self.makeInfoObject()
 		infoObject.guidelines = [dict(x=0, color="1, 1, 1, a")]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## too many parts
 		infoObject = self.makeInfoObject()
 		infoObject.guidelines = [dict(x=0, color="1, 0, 0, 0, 0")]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## < 0 in each position
 		infoObject = self.makeInfoObject()
 		infoObject.guidelines = [dict(x=0, color="-1, 0, 0, 0")]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		infoObject = self.makeInfoObject()
 		infoObject.guidelines = [dict(x=0, color="0, -1, 0, 0")]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		infoObject = self.makeInfoObject()
 		infoObject.guidelines = [dict(x=0, color="0, 0, -1, 0")]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		infoObject = self.makeInfoObject()
 		infoObject.guidelines = [dict(x=0, color="0, 0, 0, -1")]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## > 1 in each position
 		infoObject = self.makeInfoObject()
 		infoObject.guidelines = [dict(x=0, color="2, 0, 0, 0")]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		infoObject = self.makeInfoObject()
 		infoObject.guidelines = [dict(x=0, color="0, 2, 0, 0")]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		infoObject = self.makeInfoObject()
 		infoObject.guidelines = [dict(x=0, color="0, 0, 2, 0")]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		infoObject = self.makeInfoObject()
 		infoObject.guidelines = [dict(x=0, color="0, 0, 0, 2")]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		# identifier
 		## duplicate
 		infoObject = self.makeInfoObject()
 		infoObject.guidelines = [dict(x=0, identifier="guide1"), dict(y=0, identifier="guide1")]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## below min
 		infoObject = self.makeInfoObject()
 		infoObject.guidelines = [dict(x=0, identifier=u"\0x1F")]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
 		## above max
 		infoObject = self.makeInfoObject()
 		infoObject.guidelines = [dict(x=0, identifier=u"\0x7F")]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		self.tearDownUFO()
+
+
+# -------------------
+# layercontents.plist
+# -------------------
+
+# bogus layercontents file structure and data
+# no layercontents file
+# layercontents that doesn't match the data on disk?
+# no glyph sets
+# no default glyph set, but others
+# glyph sets with duplicate names
+# default with no name
+## going into a file with a name
+# default with a name
+## going into a file without a name
+# layer name used twice
+# directory used twice
+
+# -----
+# /data
+# -----
 
 
 class UFO3ReadDataTestCase(unittest.TestCase):
@@ -3244,10 +3548,14 @@ class UFO3ReadDataTestCase(unittest.TestCase):
 class UFO3WriteDataTestCase(unittest.TestCase):
 
 	def setUp(self):
-		self.dstDir = tempfile.mktemp()
-		os.mkdir(self.dstDir)
+		self.tempDir = tempfile.mktemp()
+		os.mkdir(self.tempDir)
+		self.dstDir = os.path.join(self.tempDir, "test.ufo")
 
 	def tearDown(self):
+		shutil.rmtree(self.tempDir)
+
+	def tearDownUFO(self):
 		shutil.rmtree(self.dstDir)
 
 	def testUFOWriterWriteBytesToPath(self):
@@ -3262,6 +3570,7 @@ class UFO3WriteDataTestCase(unittest.TestCase):
 		written = f.read()
 		f.close()
 		self.assertEqual(bytes, written)
+		self.tearDownUFO()
 		# basic file with unicode text
 		path = "data/org.unifiedfontobject.writebytesbasicunicodefile.txt"
 		bytes = u"tëßt"
@@ -3273,6 +3582,7 @@ class UFO3WriteDataTestCase(unittest.TestCase):
 		written = f.read().decode("utf8")
 		f.close()
 		self.assertEqual(bytes, written)
+		self.tearDownUFO()
 		# basic directory
 		path = "data/org.unifiedfontobject.writebytesdirectory/level1/level2/file.txt"
 		bytes = "test"
@@ -3284,6 +3594,7 @@ class UFO3WriteDataTestCase(unittest.TestCase):
 		written = f.read()
 		f.close()
 		self.assertEqual(bytes, written)
+		self.tearDownUFO()
 
 	def testUFOWriterWriteFileToPath(self):
 		# basic file
@@ -3294,6 +3605,7 @@ class UFO3WriteDataTestCase(unittest.TestCase):
 		hasRead = hasattr(fileObject, "read")
 		self.assertEqual(hasRead, True)
 		fileObject.close()
+		self.tearDownUFO()
 
 	def testUFOWriterRemoveFile(self):
 		path1 = "data/org.unifiedfontobject.removefile/level1/level2/file1.txt"
@@ -3321,6 +3633,7 @@ class UFO3WriteDataTestCase(unittest.TestCase):
 		self.assertEqual(os.path.exists(os.path.join(self.dstDir, "data/org.unifiedfontobject.removefile")), False)
 		self.assertRaises(UFOLibError, writer.removeFileForPath, path="metainfo.plist")
 		self.assertRaises(UFOLibError, writer.removeFileForPath, path="data/org.unifiedfontobject.doesNotExist.txt")
+		self.tearDownUFO()
 
 
 
