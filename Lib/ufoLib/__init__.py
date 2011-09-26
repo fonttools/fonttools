@@ -114,6 +114,23 @@ class UFOReader(object):
 		else:
 			return True
 
+	def _readPlist(self, path):
+		"""
+		Read a property list. The errors that
+		could be raised during the reading of
+		a plist are unpredictable and/or too
+		large to list, so, a blind try: except:
+		is done. If an exception occurs, a
+		UFOLibError will be raised.
+		"""
+		originalPath = path
+		path = os.path.join(self._path, path)
+		try:
+			data = readPlist(path)
+			return data
+		except:
+			raise UFOLibError("The file %s could not be read." % originalPath)
+
 	def readBytesFromPath(self, path, encoding=None):
 		"""
 		Returns the bytes in the file at the given path.
@@ -274,25 +291,18 @@ class UFOReader(object):
 		are available on disk.
 		"""
 		if self._formatVersion < 3:
-			return
+			return [(DEFAULT_LAYER_NAME, DEFAULT_GLYPHS_DIRNAME)]
 		# read the file on disk
 		path = os.path.join(self._path, LAYERCONTENTS_FILENAME)
 		if not os.path.exists(path):
 			raise UFOLibError("layercontents.plist is missing.")
-		contents = {}
-		order = []
 		bogusFileMessage = "layercontents.plist in not in the correct format."
 		if os.path.exists(path):
-			raw = self._readPlist(path)
-			valid, error = layerContentsValidator(raw, self._path)
+			contents = self._readPlist(path)
+			valid, error = layerContentsValidator(contents, self._path)
 			if not valid:
 				raise UFOLibError(error)
-			for entry in raw:
-				layerName, directoryName = entry
-				contents[layerName] = directoryName
-				order.insert(0, layerName)
-		self.layerContents = contents
-		self.layerOrder = order
+		return contents
 
 	def getLayerNames(self):
 		"""
@@ -308,7 +318,7 @@ class UFOReader(object):
 		"""
 		layerContents = self._readLayerContents()
 		for layerName, layerDirectory in layerContents:
-			if layerDirectory == DEFAULT_DEFAULT_GLYPHS_DIRNAME:
+			if layerDirectory == DEFAULT_GLYPHS_DIRNAME:
 				return layerName
 		# this will already have been raised during __init__
 		raise UFOLibError("The default layer is not defined in layercontents.plist.")

@@ -3476,22 +3476,231 @@ class WriteFontInfoVersion3TestCase(unittest.TestCase):
 		self.tearDownUFO()
 
 
-# -------------------
-# layercontents.plist
-# -------------------
+# ------
+# layers
+# ------
 
-# bogus layercontents file structure and data
-# no layercontents file
-# layercontents that doesn't match the data on disk?
-# no glyph sets
-# no default glyph set, but others
-# glyph sets with duplicate names
-# default with no name
-## going into a file with a name
-# default with a name
-## going into a file without a name
-# layer name used twice
-# directory used twice
+class UFO3ReadLayersTestCase(unittest.TestCase):
+
+	def setUp(self):
+		self.tempDir = tempfile.mktemp()
+		self.tempDir = "/users/tal/desktop/layer read test"
+		os.mkdir(self.tempDir)
+		self.ufoPath = os.path.join(self.tempDir, "test.ufo")
+
+	def tearDown(self):
+		shutil.rmtree(self.tempDir)
+
+	def makeUFO(self, metaInfo=None, layerContents=None):
+		self.clearUFO()
+		if not os.path.exists(self.ufoPath):
+			os.mkdir(self.ufoPath)
+		# metainfo.plist
+		if metaInfo is None:
+			metaInfo = dict(creator="test", formatVersion=3)
+		path = os.path.join(self.ufoPath, "metainfo.plist")
+		writePlist(metaInfo, path)
+		# layers
+		if layerContents is None:
+			layerContents = [
+				("public.foreground", "glyphs"),
+				("layer 1", "glyphs.layer1"),
+				("layer 2", "glyphs.layer2"),
+			]
+		if layerContents:
+			path = os.path.join(self.ufoPath, "layercontents.plist")
+			writePlist(layerContents, path)
+		else:
+			layerContents = [("", "glyphs")]
+		for name, directory in layerContents:
+			glyphsPath = os.path.join(self.ufoPath, directory)
+			os.mkdir(glyphsPath)
+			contents = dict(a="a.glif")
+			path = os.path.join(glyphsPath, "contents.plist")
+			writePlist(contents, path)
+			path = os.path.join(glyphsPath, "a.glif")
+			f = open(path, "w")
+			f.write(" ")
+			f.close()
+
+	def clearUFO(self):
+		if os.path.exists(self.ufoPath):
+			shutil.rmtree(self.ufoPath)
+
+	# valid
+
+	def testValidRead(self):
+		# UFO 1
+		self.makeUFO(
+			metaInfo=dict(creator="test", formatVersion=1),
+			layerContents=dict()
+		)
+		reader = UFOReader(self.ufoPath)
+		reader.getGlyphSet()
+		# UFO 2
+		self.makeUFO(
+			metaInfo=dict(creator="test", formatVersion=2),
+			layerContents=dict()
+		)
+		reader = UFOReader(self.ufoPath)
+		reader.getGlyphSet()
+		# UFO 3
+		self.makeUFO()
+		reader = UFOReader(self.ufoPath)
+		reader.getGlyphSet()
+
+	# missing layer contents
+
+	def testMissingLayerContents(self):
+		self.makeUFO()
+		path = os.path.join(self.ufoPath, "layercontents.plist")
+		os.remove(path)
+		reader = UFOReader(self.ufoPath)
+		self.assertRaises(UFOLibError, reader.getGlyphSet)
+
+	# layer contents invalid format
+
+	def testInvalidLayerContentsFormat(self):
+		# bogus
+		self.makeUFO()
+		path = os.path.join(self.ufoPath, "layercontents.plist")
+		os.remove(path)
+		f = open(path, "w")
+		f.write("test")
+		f.close()
+		reader = UFOReader(self.ufoPath)
+		self.assertRaises(UFOLibError, reader.getGlyphSet)
+		# dict
+		self.makeUFO()
+		path = os.path.join(self.ufoPath, "layercontents.plist")
+		os.remove(path)
+		layerContents = {
+			"public.foreground" : "glyphs",
+			"layer 1" : "glyphs.layer1",
+			"layer 2" : "glyphs.layer2",
+		}
+		writePlist(layerContents, path)
+		reader = UFOReader(self.ufoPath)
+		self.assertRaises(UFOLibError, reader.getGlyphSet)
+
+	# layer contents invalid name format
+
+	def testInvalidLayerContentsNameFormat(self):
+		self.makeUFO()
+		path = os.path.join(self.ufoPath, "layercontents.plist")
+		os.remove(path)
+		layerContents = [
+			(1, "glyphs"),
+			("layer 1", "glyphs.layer1"),
+			("layer 2", "glyphs.layer2")
+		]
+		writePlist(layerContents, path)
+		reader = UFOReader(self.ufoPath)
+		self.assertRaises(UFOLibError, reader.getGlyphSet)
+
+	# layer contents invalid directory format
+
+	def testInvalidLayerContentsDirectoryFormat(self):
+		self.makeUFO()
+		path = os.path.join(self.ufoPath, "layercontents.plist")
+		os.remove(path)
+		layerContents = [
+			("public.foregound", "glyphs"),
+			("layer 1", 1),
+			("layer 2", "glyphs.layer2")
+		]
+		writePlist(layerContents, path)
+		reader = UFOReader(self.ufoPath)
+		self.assertRaises(UFOLibError, reader.getGlyphSet)
+
+	# directory listed in contents not on disk
+
+	def testLayerContentsHasMissingDirectory(self):
+		self.makeUFO()
+		path = os.path.join(self.ufoPath, "layercontents.plist")
+		os.remove(path)
+		layerContents = [
+			("public.foregound", "glyphs"),
+			("layer 1", "glyphs.doesnotexist"),
+			("layer 2", "glyphs.layer2")
+		]
+		writePlist(layerContents, path)
+		reader = UFOReader(self.ufoPath)
+		self.assertRaises(UFOLibError, reader.getGlyphSet)
+
+	# # directory on disk not listed in contents
+	# XXX should this raise an error?
+	#
+	# def testLayerContentsHasMissingDirectory(self):
+	# 	self.makeUFO()
+	# 	path = os.path.join(self.ufoPath, "layercontents.plist")
+	# 	os.remove(path)
+	# 	layerContents = [
+	# 		("public.foregound", "glyphs"),
+	# 		("layer 1", "glyphs.layer2")
+	# 	]
+	# 	writePlist(layerContents, path)
+	# 	reader = UFOReader(self.ufoPath)
+	# 	self.assertRaises(UFOLibError, reader.getGlyphSet)
+
+	# no default layer on disk
+
+	def testMissingDefaultLayer(self):
+		self.makeUFO()
+		path = os.path.join(self.ufoPath, "layercontents.plist")
+		os.remove(path)
+		layerContents = [
+			("layer 1", "glyphs.layer1"),
+			("layer 2", "glyphs.layer2")
+		]
+		writePlist(layerContents, path)
+		reader = UFOReader(self.ufoPath)
+		self.assertRaises(UFOLibError, reader.getGlyphSet)
+
+	# duplicate layer name
+
+	def testDuplicateLayerName(self):
+		self.makeUFO()
+		path = os.path.join(self.ufoPath, "layercontents.plist")
+		os.remove(path)
+		layerContents = [
+			("public.foregound", "glyphs"),
+			("layer 1", "glyphs.layer1"),
+			("layer 1", "glyphs.layer2")
+		]
+		writePlist(layerContents, path)
+		reader = UFOReader(self.ufoPath)
+		self.assertRaises(UFOLibError, reader.getGlyphSet)
+
+	# directory referenced by two layer names
+
+	def testDuplicateLayerDirectory(self):
+		self.makeUFO()
+		path = os.path.join(self.ufoPath, "layercontents.plist")
+		os.remove(path)
+		layerContents = [
+			("public.foregound", "glyphs"),
+			("layer 1", "glyphs.layer1"),
+			("layer 2", "glyphs.layer1")
+		]
+		writePlist(layerContents, path)
+		reader = UFOReader(self.ufoPath)
+		self.assertRaises(UFOLibError, reader.getGlyphSet)
+
+	# default with a name
+
+	def testDuplicateLayerDirectory(self):
+		self.makeUFO()
+		path = os.path.join(self.ufoPath, "layercontents.plist")
+		os.remove(path)
+		layerContents = [
+			("custom name", "glyphs"),
+			("layer 1", "glyphs.layer1"),
+			("layer 2", "glyphs.layer2")
+		]
+		writePlist(layerContents, path)
+		reader = UFOReader(self.ufoPath)
+		reader.getGlyphSet()
 
 # -----
 # /data
