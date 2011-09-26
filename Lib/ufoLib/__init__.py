@@ -98,7 +98,6 @@ class UFOReader(object):
 			raise UFOLibError("The specified UFO doesn't exist.")
 		self._path = path
 		self.readMetaInfo()
-		self.readLayerContents()
 
 	# properties
 
@@ -269,7 +268,7 @@ class UFOReader(object):
 
 	# glyph sets & layers
 
-	def readLayerContents(self):
+	def _readLayerContents(self):
 		"""
 		Rebuild the layer contents list by checking what glyphsets
 		are available on disk.
@@ -771,8 +770,10 @@ class UFOWriter(object):
 		If not, any layers that are not called with this
 		method will be ordered below the called layers.
 		"""
-		foundDirectory = None
+		if layerName is not None and self._formatVersion < 3:
+			raise UFOLibError("Layer names are not supported in UFO %d." % self._formatVersion)
 		# try to find an existing directory
+		foundDirectory = None
 		if layerName is None:
 			for existingLayerName, directory in self.layerContents.items():
 				if directory == DEFAULT_GLYPHS_DIRNAME:
@@ -822,6 +823,8 @@ class UFOWriter(object):
 		layerName, it is up to the caller to inform that object that
 		the directory it represents has changed.
 		"""
+		if layerName is not None and self._formatVersion < 3:
+			raise UFOLibError("Renaming a glyph set is not allowed in UFO %d." % self._formatVersion)
 		# make sure the new layer name doesn't already exist
 		if newLayerName is None:
 			newLayerName = DEFAULT_LAYER_NAME
@@ -843,15 +846,21 @@ class UFOWriter(object):
 		oldDirectory = os.path.join(self._path, oldDirectory)
 		newDirectory = os.path.join(self._path, newDirectory)
 		shutil.copy(oldDirectory, newDirectory)
+		# write the layer contents file
+		self._writeLayerContents()
 
 	def deleteGlyphSet(self, layerName):
 		"""
 		Remove the glyph set matching layerName.
 		"""
+		if layerName is not None and self._formatVersion < 3:
+			raise UFOLibError("Deleting a glyph set is not allowed in UFO %d." % self._formatVersion)
 		foundDirectory = _findDirectoryForLayerName(layerName)
 		self._removeFileForPath(foundDirectory)
 		del self.layerContents[layerName]
 		self.layerOrder.pop(layerName)
+		# write the layer contents file
+		self._writeLayerContents()
 
 # ----------------
 # Helper Functions
