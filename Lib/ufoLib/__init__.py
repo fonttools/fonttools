@@ -98,6 +98,7 @@ class UFOReader(object):
 			raise UFOLibError("The specified UFO doesn't exist.")
 		self._path = path
 		self.readMetaInfo()
+		self.readLayerContents()
 
 	# properties
 
@@ -268,16 +269,31 @@ class UFOReader(object):
 
 	# glyph sets & layers
 
-	def _readLayerContents(self):
+	def readLayerContents(self):
 		"""
-		Private utility for reading layercontents.plist.
+		Rebuild the layer contents list by checking what glyphsets
+		are available on disk.
 		"""
+		if self._formatVersion < 3:
+			return
+		# read the file on disk
 		path = os.path.join(self._path, LAYERCONTENTS_FILENAME)
-		# XXX the spec does not address if layercontents.plist is required if
-		# the only layer is the default layer.
-		if not self._checkForFile(path):
-			return []
-		return readPlist(path)
+		if not os.path.exists(path):
+			raise UFOLibError("layercontents.plist is missing.")
+		contents = {}
+		order = []
+		bogusFileMessage = "layercontents.plist in not in the correct format."
+		if os.path.exists(path):
+			raw = self._readPlist(path)
+			valid, error = layerContentsValidator(raw, self._path)
+			if not valid:
+				raise UFOLibError(error)
+			for entry in raw:
+				layerName, directoryName = entry
+				contents[layerName] = directoryName
+				order.insert(0, layerName)
+		self.layerContents = contents
+		self.layerOrder = order
 
 	def getLayerNames(self):
 		"""
@@ -291,14 +307,11 @@ class UFOReader(object):
 		"""
 		Get the default layer name from layercontents.plist.
 		"""
-		# XXX the default glyphs layer name is not defined in the spec yet.
-		# public.foreground seems like the logical name but it needs to be discussed.
 		layerContents = self._readLayerContents()
 		for layerName, layerDirectory in layerContents:
 			if layerDirectory == DEFAULT_DEFAULT_GLYPHS_DIRNAME:
 				return layerName
-		# The default layer is not defined in the UFO.
-		# XXX Should this error be raised when layercontents.plist is first read?
+		# this will already have been raised during __init__
 		raise UFOLibError("The default layer is not defined in layercontents.plist.")
 
 	def getGlyphSet(self, layerName=None):
@@ -384,51 +397,59 @@ class UFOWriter(object):
 	def __init__(self, path, formatVersion=3, fileCreator="org.robofab.ufoLib"):
 		if formatVersion not in supportedUFOFormatVersions:
 			raise UFOLibError("Unsupported UFO format (%d)." % formatVersion)
+		# if the file already exists, get the format version.
+		# this will be needed for up and down conversion.
+		previousFormatVersion = None
+		if os.path.exists(path):
+			p = os.path.join(path, METAINFO_FILENAME)
+			if not os.path.exists(p):
+				raise UFOLibError("The metainfo.plist file is not in the existing UFO.")
+			    metaInfo = self._readPlist(METAINFO_FILENAME)
+				previousFormatVersion = metaInfo.get("formatVersion")
+				try:
+					previousFormatVersion = int(previousFormatVersion)
+				except:
+					raise UFOLibError("The existing metainfo.plist is not properly formatted.")
 		# establish some basic stuff
 		self._path = path
 		self._formatVersion = formatVersion
 		self._fileCreator = fileCreator
-		# load the layer contents
+		# handle the layer contents
 		self.layerContents = {}
 		self.layerOrder = []
-		if os.path.exists(path) and formatVersion >= 3:
-			# check the previous format version
-			p = os.path.join(path, METAINFO_FILENAME)
-			if not os.path.exists(p):
-				raise UFOLibError("The metainfo.plist file is not in the existing UFO.")
-			metaInfo = self._readPlist(METAINFO_FILENAME)
-			previousFormatVersion = metaInfo.get("formatVersion")
-			try:
-				previousFormatVersion = int(previousFormatVersion)
-			except:
-				raise UFOLibError("The existing metainfo.plist is not properly formatted.")
-			# previous >= 3
-			if previousFormatVersion >= 3:
-				self._readLayerContents()
+		if previousFormatVersion >= 3:
+			# already exists
+			self._readLayerContents()
+		else:
 			# previous < 3
 			# imply the layer contents
-			else:
-				p = os.path.join(path, DEFAULT_GLYPHS_DIRNAME)
-				if os.path.exists(p):
-					self._layerContents = {DEFAULT_LAYER_NAME : DEFAULT_GLYPHS_DIRNAME}
-					self._layerOrder = [DEFAULT_LAYER_NAME]
-		# write the new metainto
+			p = os.path.join(path, DEFAULT_GLYPHS_DIRNAME)
+			if os.path.exists(p):
+				self._layerContents = {DEFAULT_LAYER_NAME : DEFAULT_GLYPHS_DIRNAME}
+				self._layerOrder = [DEFAULT_LAYER_NAME]
+		# write the new metainfo
 		self._writeMetaInfo()
+		# handle up conversion
+		# < 3 to >= 3
+		if previousFormatVersion < 3 and formatVersion >= 3:
+			self._writeLayerContents()
 		# handle down conversion
+		# >= 3 to 2
 		if formatVersion < 3:
 			# remove all glyph sets except the default
 			for layerName, directoryName in self._layerContents:
-				self._removeFileForPath(directoryName)
+				if directoryName != DEFAULT_GLYPHS_DIRNAME:
+					self._removeFileForPath(directoryName)
 			# remove layercontents.plist
 			self._removeFileForPath(LAYERCONTENTS_FILENAME)
 			# remove glyphs/layerinfo.plist
-			# XXX should glifLib handle this one?
 			p = os.path.join(DEFAULT_GLYPHS_DIRNAME, LAYERINFO_FILENAME)
 			self._removeFileForPath(p)
 			# remove /images
 			self._removeFileForPath(IMAGES_DIRNAME)
 			# remove /data
 			self._removeFileForPath(DATA_DIRNAME)
+		# 2 to 1
 		if formatVersion < 2:
 			# remove features.fea
 			self._removeFileForPath(FEATURES_FILENAME)
@@ -528,6 +549,8 @@ class UFOWriter(object):
 		directory = os.path.dirname(directory)
 		if directory:
 			self._removeEmptyDirectoriesForPath(directory)
+
+	# file system interaction
 
 	def writeBytesToPath(self, path, bytes, encoding=None):
 		"""
@@ -689,7 +712,7 @@ class UFOWriter(object):
 
 	def _readLayerContents(self):
 		"""
-		Rebuild the layer contents list by chancking what glyphsets
+		Rebuild the layer contents list by checking what glyphsets
 		are available on disk.
 		"""
 		if self._formatVersion < 3:
@@ -719,9 +742,22 @@ class UFOWriter(object):
 		layerContents = [(layerName, self.layerContents[layerName]) for layerName in self.layerOrder]
 		self._writePlist(layerContents, path)
 
+	def _findDirectoryForLayerName(self, layerName):
+		foundDirectory = None
+		for existingLayerName, directoryName in self.layerContents.items():
+			if layerName is None and directoryName == DEFAULT_GLYPHS_DIRNAME:
+				foundDirectory = directoryName
+				break
+			elif existingLayerName == layerName:
+				foundDirectory = directoryName
+				break
+		if not foundDirectory:
+			raise UFOLibError("Could not locate a glyph set directory for the layer named %s." % layerName)
+		return foundDirectory
+
 	def getGlyphSet(self, layerName=None, glyphNameToFileNameFunc=None):
 		"""
-		Return the GlyphSet associated with the
+		Return the GlyphSet object associated with the
 		appropriate glyph directory in the .ufo.
 		If layerName is None, the default glyph set
 		will be used.
@@ -747,10 +783,10 @@ class UFOWriter(object):
 		directory = foundDirectory
 		# make a new directory name
 		if not directory:
-			# use the default if no name is given
+			# use the default if no name is given.
 			# this won't cause an overwrite since the
 			# default would have been found in the
-			# previous search
+			# previous search.
 			if layerName is None:
 				layerName = DEFAULT_LAYER_NAME
 				directory = DEFAULT_GLYPHS_DIRNAME
@@ -778,17 +814,41 @@ class UFOWriter(object):
 		# load the glyph set
 		return GlyphSet(path, glyphNameToFileNameFunc=glyphNameToFileNameFunc)
 
+	def renameGlyphSet(self, layerName, newLayerName):
+		"""
+		Rename a glyph set.
+
+		Note: if a GlyphSet object has already been retrieved for
+		layerName, it is up to the caller to inform that object that
+		the directory it represents has changed.
+		"""
+		# make sure the new layer name doesn't already exist
+		if newLayerName is None:
+			newLayerName = DEFAULT_LAYER_NAME
+		if newLayerName in self.layerContents:
+			raise UFOLibError("A layer named %s already exists." % newLayerName)
+		# get the paths
+		oldDirectory = _findDirectoryForLayerName(layerName)
+		newDirectory = userNameToFileName(newLayerName, existing=self.layerContents.values(), prefix="glyphs.", )
+		# update the internal mapping
+		del self.layerContents[layerName]
+		layerContents[newLayerName] = newDirectory
+		layerOrder = []
+		for otherLayerName in self.layerOrder:
+			if otherLayerName == layerName:
+				otherLayerName = newLayerName
+			layerOrder.append(otherLayerName)
+		self.layerOrder = layerOrder
+		# do the file system copy
+		oldDirectory = os.path.join(self._path, oldDirectory)
+		newDirectory = os.path.join(self._path, newDirectory)
+		shutil.copy(oldDirectory, newDirectory)
+
 	def deleteGlyphSet(self, layerName):
 		"""
 		Remove the glyph set matching layerName.
 		"""
-		foundDirectory = None
-		for existingLayerName, directoryName in self.layerContents:
-			if existingLayerName == layerName:
-				foundDirectory = directoryName
-				break
-		if not foundDirectory:
-			raise UFOLibError("Could not locate a glyph set directory for the layer named %s." % layerName)
+		foundDirectory = _findDirectoryForLayerName(layerName)
 		self._removeFileForPath(foundDirectory)
 		del self.layerContents[layerName]
 		self.layerOrder.pop(layerName)
