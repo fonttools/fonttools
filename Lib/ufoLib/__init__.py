@@ -403,7 +403,7 @@ class UFOWriter(object):
 			p = os.path.join(path, METAINFO_FILENAME)
 			if not os.path.exists(p):
 				raise UFOLibError("The metainfo.plist file is not in the existing UFO.")
-			    metaInfo = self._readPlist(METAINFO_FILENAME)
+				metaInfo = self._readPlist(METAINFO_FILENAME)
 				previousFormatVersion = metaInfo.get("formatVersion")
 				try:
 					previousFormatVersion = int(previousFormatVersion)
