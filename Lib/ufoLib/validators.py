@@ -657,7 +657,7 @@ def layerContentsValidator(value, ufoPath):
 		# store
 		contents[layerName] = directoryName
 	# missing default layer
-	foundDefault = True
+	foundDefault = False
 	for layerName, directory in contents.items():
 		if directory == DEFAULT_GLYPHS_DIRNAME:
 			foundDefault = True
