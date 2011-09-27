@@ -773,11 +773,12 @@ class ReadFontInfoVersion2TestCase(unittest.TestCase):
 class WriteFontInfoVersion2TestCase(unittest.TestCase):
 
 	def setUp(self):
-		self.dstDir = tempfile.mktemp()
-		os.mkdir(self.dstDir)
+		self.tempDir = tempfile.mktemp()
+		os.mkdir(self.tempDir)
+		self.dstDir = os.path.join(self.tempDir, "test.ufo")
 
 	def tearDown(self):
-		shutil.rmtree(self.dstDir)
+		shutil.rmtree(self.tempDir)
 
 	def makeInfoObject(self):
 		infoObject = TestInfoObject()
