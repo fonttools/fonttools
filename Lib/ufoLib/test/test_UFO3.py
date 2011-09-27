@@ -3484,7 +3484,6 @@ class UFO3ReadLayersTestCase(unittest.TestCase):
 
 	def setUp(self):
 		self.tempDir = tempfile.mktemp()
-		self.tempDir = "/users/tal/desktop/layer read test"
 		os.mkdir(self.tempDir)
 		self.ufoPath = os.path.join(self.tempDir, "test.ufo")
 
