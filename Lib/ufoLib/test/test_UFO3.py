@@ -3687,9 +3687,40 @@ class UFO3ReadLayersTestCase(unittest.TestCase):
 		reader = UFOReader(self.ufoPath)
 		self.assertRaises(UFOLibError, reader.getGlyphSet)
 
+	# default without a name
+
+	def testDefaultLayerNoName(self):
+		# get the glyph set
+		self.makeUFO()
+		path = os.path.join(self.ufoPath, "layercontents.plist")
+		os.remove(path)
+		layerContents = [
+			("public.foregound", "glyphs"),
+			("layer 1", "glyphs.layer1"),
+			("layer 2", "glyphs.layer2")
+		]
+		writePlist(layerContents, path)
+		reader = UFOReader(self.ufoPath)
+		reader.getGlyphSet()
+
 	# default with a name
 
-	def testDuplicateLayerDirectory(self):
+	def testDefaultLayerName(self):
+		# get the name
+		self.makeUFO()
+		path = os.path.join(self.ufoPath, "layercontents.plist")
+		os.remove(path)
+		layerContents = [
+			("custom name", "glyphs"),
+			("layer 1", "glyphs.layer1"),
+			("layer 2", "glyphs.layer2")
+		]
+		expected = layerContents[0][0]
+		writePlist(layerContents, path)
+		reader = UFOReader(self.ufoPath)
+		result = reader.getDefaultLayerName()
+		self.assertEqual(expected, result)
+		# get the glyph set
 		self.makeUFO()
 		path = os.path.join(self.ufoPath, "layercontents.plist")
 		os.remove(path)
@@ -3700,7 +3731,51 @@ class UFO3ReadLayersTestCase(unittest.TestCase):
 		]
 		writePlist(layerContents, path)
 		reader = UFOReader(self.ufoPath)
-		reader.getGlyphSet()
+		reader.getGlyphSet(expected)
+
+	# layer order
+
+	def testLayerOrder(self):
+		self.makeUFO()
+		path = os.path.join(self.ufoPath, "layercontents.plist")
+		os.remove(path)
+		layerContents = [
+			("public.foregound", "glyphs"),
+			("layer 1", "glyphs.layer1"),
+			("layer 2", "glyphs.layer2")
+		]
+		expected = [name for (name, directory) in layerContents]
+		writePlist(layerContents, path)
+		reader = UFOReader(self.ufoPath)
+		result = reader.getLayerNames()
+		self.assertEqual(expected, result)
+		self.makeUFO()
+		path = os.path.join(self.ufoPath, "layercontents.plist")
+		os.remove(path)
+		layerContents = [
+			("layer 1", "glyphs.layer1"),
+			("public.foregound", "glyphs"),
+			("layer 2", "glyphs.layer2")
+		]
+		expected = [name for (name, directory) in layerContents]
+		writePlist(layerContents, path)
+		reader = UFOReader(self.ufoPath)
+		result = reader.getLayerNames()
+		self.assertEqual(expected, result)
+		self.makeUFO()
+		path = os.path.join(self.ufoPath, "layercontents.plist")
+		os.remove(path)
+		layerContents = [
+			("layer 2", "glyphs.layer2"),
+			("layer 1", "glyphs.layer1"),
+			("public.foregound", "glyphs")
+		]
+		expected = [name for (name, directory) in layerContents]
+		writePlist(layerContents, path)
+		reader = UFOReader(self.ufoPath)
+		result = reader.getLayerNames()
+		self.assertEqual(expected, result)
+
 
 # -----
 # /data
