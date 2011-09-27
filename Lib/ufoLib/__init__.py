@@ -129,7 +129,7 @@ class UFOReader(object):
 			testGroups = self._readGroups()
 			if testGroups != self._upConvertedKerningData["originalGroups"]:
 				raise UFOLibError("The data in groups.plist has been modified since it was converted to UFO 3 format.")
-			testFontInfo = self._readFontInfo()
+			testFontInfo = self._readInfo()
 			if testFontInfo != self._upConvertedKerningData["originalFontInfo"]:
 				raise UFOLibError("The data in fontinfo.plist has been modified since it was converted to UFO 3 format.")
 		else:
@@ -144,7 +144,7 @@ class UFOReader(object):
 			# convert kerning and groups
 			kerning, groups = convertUFO1OrUFO2KerningToUFO3Kerning(
 				self._upConvertedKerningData["originalKerning"],
-				self._upConvertedKerningData["originalGroups"],
+				deepcopy(self._upConvertedKerningData["originalGroups"]),
 				firstKerningGroupPrefix=DEFAULT_FIRST_KERNING_PREFIX,
 				secondKerningGroupPrefix=DEFAULT_SECOND_KERNING_PREFIX
 			)
@@ -310,6 +310,10 @@ class UFOReader(object):
 				setattr(info, attr, value)
 			except AttributeError:
 				raise UFOLibError("The supplied info object does not support setting a necessary attribute (%s)." % attr)
+		# set the kenring prefixes for older formats
+		if self._formatVersion < 3 and self._upConvertedKerningData:
+			info.firstKerningGroupPrefix = self._upConvertedKerningData["fontInfo"]["firstKerningGroupPrefix"]
+			info.secondKerningGroupPrefix = self._upConvertedKerningData["fontInfo"]["secondKerningGroupPrefix"]
 
 	# kerning.plist
 

@@ -6,7 +6,8 @@ import unittest
 import tempfile
 import codecs
 from plistlib import writePlist, readPlist
-from ufoLib import convertUFOFormatVersion1ToFormatVersion2, convertUFOFormatVersion2ToFormatVersion1
+from ufoLib import convertUFOFormatVersion1ToFormatVersion2, convertUFOFormatVersion2ToFormatVersion1,\
+	UFOReader
 from testSupport import expectedFontInfo1To2Conversion, expectedFontInfo2To1Conversion
 
 
@@ -119,6 +120,125 @@ class ConversionFunctionsTestCase(unittest.TestCase):
 		path3 = self.getFontPath("TestFont1 (UFO1).ufo")
 		convertUFOFormatVersion2ToFormatVersion1(path1, path2)
 		self.compareFileStructures(path2, path3, expectedFontInfo2To1Conversion, False)
+
+
+# ---------------------
+# kerning up conversion
+# ---------------------
+
+class TestInfoObject(object): pass
+
+
+class KerningUpConversionTestCase(unittest.TestCase):
+
+	expectedKerning = {
+		("@KERN_1_BGroup", "@KERN_2_CGroup"): 7,
+		("@KERN_1_BGroup", "@KERN_2_DGroup"): 8,
+		("@KERN_1_BGroup", "A"): 5,
+		("@KERN_1_BGroup", "B"): 6,
+		("@KERN_1_CGroup", "@KERN_2_CGroup"): 11,
+		("@KERN_1_CGroup", "@KERN_2_DGroup"): 12,
+		("@KERN_1_CGroup", "A"): 9,
+		("@KERN_1_CGroup", "B"): 10,
+		("A", "@KERN_2_CGroup"): 3,
+		("A", "@KERN_2_DGroup"): 4,
+		("A", "A"): 1,
+		("A", "B"): 2
+	}
+
+	expectedGroups = {
+		"BGroup": ["B"],
+		"CGroup": ["C", "Ccedilla"],
+		"DGroup": ["D"],
+		"@KERN_1_BGroup": ["B"],
+		"@KERN_1_CGroup": ["C", "Ccedilla"],
+		"@KERN_2_CGroup": ["C", "Ccedilla"],
+		"@KERN_2_DGroup": ["D"],
+		"Not A Kerning Group" : ["A"]
+	}
+
+	def setUp(self):
+		self.tempDir = tempfile.mktemp()
+		os.mkdir(self.tempDir)
+		self.ufoPath = os.path.join(self.tempDir, "test.ufo")
+
+	def tearDown(self):
+		shutil.rmtree(self.tempDir)
+
+	def makeUFO(self, formatVersion):
+		self.clearUFO()
+		if not os.path.exists(self.ufoPath):
+			os.mkdir(self.ufoPath)
+		# metainfo.plist
+		metaInfo = dict(creator="test", formatVersion=formatVersion)
+		path = os.path.join(self.ufoPath, "metainfo.plist")
+		writePlist(metaInfo, path)
+		# kerning
+		kerning = {
+			"A" : {
+				"A" : 1,
+				"B" : 2,
+				"CGroup" : 3,
+				"DGroup" : 4
+			},
+			"BGroup" : {
+				"A" : 5,
+				"B" : 6,
+				"CGroup" : 7,
+				"DGroup" : 8
+			},
+			"CGroup" : {
+				"A" : 9,
+				"B" : 10,
+				"CGroup" : 11,
+				"DGroup" : 12
+			}
+		}
+		path = os.path.join(self.ufoPath, "kerning.plist")
+		writePlist(kerning, path)
+		# groups
+		groups = {
+			"BGroup" : ["B"],
+			"CGroup" : ["C", "Ccedilla"],
+			"DGroup" : ["D"],
+			"Not A Kerning Group" : ["A"]
+		}
+		path = os.path.join(self.ufoPath, "groups.plist")
+		writePlist(groups, path)
+		# font info
+		fontInfo = {
+			"familyName" : "Test"
+		}
+		path = os.path.join(self.ufoPath, "fontinfo.plist")
+		writePlist(fontInfo, path)
+
+	def clearUFO(self):
+		if os.path.exists(self.ufoPath):
+			shutil.rmtree(self.ufoPath)
+
+	def testUFO1(self):
+		self.makeUFO(formatVersion=2)
+		reader = UFOReader(self.ufoPath)
+		kerning = reader.readKerning()
+		self.assertEqual(self.expectedKerning, kerning)
+		groups = reader.readGroups()
+		self.assertEqual(self.expectedGroups, groups)
+		info = TestInfoObject()
+		reader.readInfo(info)
+		self.assertEqual("@KERN_1_", info.firstKerningGroupPrefix)
+		self.assertEqual("@KERN_2_", info.secondKerningGroupPrefix)
+
+	def testUFO2(self):
+		self.makeUFO(formatVersion=2)
+		reader = UFOReader(self.ufoPath)
+		kerning = reader.readKerning()
+		self.assertEqual(self.expectedKerning, kerning)
+		groups = reader.readGroups()
+		self.assertEqual(self.expectedGroups, groups)
+		info = TestInfoObject()
+		reader.readInfo(info)
+		self.assertEqual("@KERN_1_", info.firstKerningGroupPrefix)
+		self.assertEqual("@KERN_2_", info.secondKerningGroupPrefix)
 
 
 if __name__ == "__main__":

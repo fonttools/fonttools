@@ -7,6 +7,68 @@ Conversion functions.
 def convertUFO1OrUFO2KerningToUFO3Kerning(kerning, groups,
 	firstKerningGroupPrefix="@KERN_1_",
 	secondKerningGroupPrefix="@KERN_2_"):
+	"""
+	>>> testKerning = {
+	...   "A" : {
+	...     "A" : 1,
+	...     "B" : 2,
+	...     "CGroup" : 3,
+	...     "DGroup" : 4
+	...   },
+	...   "BGroup" : {
+	...     "A" : 5,
+	...     "B" : 6,
+	...     "CGroup" : 7,
+	...     "DGroup" : 8
+	...   },
+	...   "CGroup" : {
+	...     "A" : 9,
+	...     "B" : 10,
+	...     "CGroup" : 11,
+	...     "DGroup" : 12
+	...   },
+	... }
+	>>> testGroups = {
+	...   "BGroup" : ["B"],
+	...   "CGroup" : ["C"],
+	...   "DGroup" : ["D"],
+	... }
+	>>> kerning, groups = convertUFO1OrUFO2KerningToUFO3Kerning(
+	...   testKerning, testGroups)
+	>>> expected = {
+	...   "A" : {
+	...     "A": 1,
+	...     "B": 2,
+	...     "@KERN_2_CGroup": 3,
+	...     "@KERN_2_DGroup": 4
+	...   },
+	...   "@KERN_1_BGroup": {
+	...     "A": 5,
+	...     "B": 6,
+	...     "@KERN_2_CGroup": 7,
+	...     "@KERN_2_DGroup": 8
+	...   },
+	...   "@KERN_1_CGroup": {
+	...     "A": 9,
+	...     "B": 10,
+	...     "@KERN_2_CGroup": 11,
+	...     "@KERN_2_DGroup": 12
+	...   }
+	... }
+	>>> kerning == expected
+	True
+	>>> expected = {
+	...   "BGroup": ["B"],
+	...   "CGroup": ["C"],
+	...   "DGroup": ["D"],
+	...   "@KERN_1_BGroup": ["B"],
+	...   "@KERN_1_CGroup": ["C"],
+	...   "@KERN_2_CGroup": ["C"],
+	...   "@KERN_2_DGroup": ["D"],
+	... }
+	>>> groups == expected
+	True
+	"""
 	# The prefixes must be unique.
 	assert firstKerningGroupPrefix != secondKerningGroupPrefix
 	# Make lists of groups referenced in kerning pairs.
@@ -70,70 +132,6 @@ def makeUniqueGroupName(name, groupNames, counter=0):
 		return makeUniqueGroupName(name, groupNames, counter + 1)
 	# Otherwise send back the new name.
 	return newName
-
-def test():
-	"""
-	>>> testKerning = {
-	...   "A" : {
-	...     "A" : 1,
-	...     "B" : 2,
-	...     "CGroup" : 3,
-	...     "DGroup" : 4
-	...   },
-	...   "BGroup" : {
-	...     "A" : 5,
-	...     "B" : 6,
-	...     "CGroup" : 7,
-	...     "DGroup" : 8
-	...   },
-	...   "CGroup" : {
-	...     "A" : 9,
-	...     "B" : 10,
-	...     "CGroup" : 11,
-	...     "DGroup" : 12
-	...   },
-	... }
-	>>> testGroups = {
-	...   "BGroup" : ["B"],
-	...   "CGroup" : ["C"],
-	...   "DGroup" : ["D"],
-	... }
-	>>> kerning, groups = convertUFO1OrUFO2KerningToUFO3Kerning(
-	...   testKerning, testGroups)
-	>>> expected = {
-	...   "A" : {
-	...     "A": 1,
-	...     "B": 2,
-	...     "@KERN_2_CGroup": 3,
-	...     "@KERN_2_DGroup": 4
-	...   },
-	...   "@KERN_1_BGroup": {
-	...     "A": 5,
-	...     "B": 6,
-	...     "@KERN_2_CGroup": 7,
-	...     "@KERN_2_DGroup": 8
-	...   },
-	...   "@KERN_1_CGroup": {
-	...     "A": 9,
-	...     "B": 10,
-	...     "@KERN_2_CGroup": 11,
-	...     "@KERN_2_DGroup": 12
-	...   }
-	... }
-	>>> kerning == expected
-	True
-	>>> expected = {
-	...   "BGroup": ["B"],
-	...   "CGroup": ["C"],
-	...   "DGroup": ["D"],
-	...   "@KERN_1_BGroup": ["B"],
-	...   "@KERN_1_CGroup": ["C"],
-	...   "@KERN_2_CGroup": ["C"],
-	...   "@KERN_2_DGroup": ["D"],
-	... }
-	>>> groups == expected
-	True
-	"""
 
 if __name__ == "__main__":
 	import doctest
