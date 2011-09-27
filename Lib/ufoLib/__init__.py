@@ -39,6 +39,7 @@ from plistlib import readPlist, writePlist
 from glifLib import GlyphSet, READ_MODE, WRITE_MODE
 from validators import *
 from filenames import userNameToFileName
+from converters import convertUFO1OrUFO2KerningToUFO3Kerning
 
 try:
 	set
@@ -82,6 +83,9 @@ LAYERINFO_FILENAME = "layerinfo.plist"
 
 DEFAULT_LAYER_NAME = "public.default"
 
+DEFAULT_FIRST_KERNING_PREFIX = "@KERN_1_"
+DEFAULT_SECOND_KERNING_PREFIX = "@KERN_2_"
+
 supportedUFOFormatVersions = [1, 2, 3]
 
 
@@ -98,6 +102,7 @@ class UFOReader(object):
 			raise UFOLibError("The specified UFO doesn't exist.")
 		self._path = path
 		self.readMetaInfo()
+		self._upConvertedKerningData = None
 
 	# properties
 
@@ -105,6 +110,52 @@ class UFOReader(object):
 		return self._formatVersion
 
 	formatVersion = property(_get_formatVersion, doc="The format version of the UFO. This is determined by reading metainfo.plist during __init__.")
+
+	# up conversion
+
+	def _upConvertKerning(self):
+		"""
+		Up convert kerning, groups and font info in UFO 1 and 2.
+		The data will be held internally until each bit of data
+		has been retrieved. The conversion of all three must
+		be done at once, so the raw data is cached and an error
+		is raised if one bit of data becomes obsolete before
+		it is called.
+		"""
+		if self._upConvertedKerningData:
+			testKerning = self._readKerning()
+			if testKerning != self._upConvertedKerningData["originalKerning"]:
+				raise UFOLibError("The data in kerning.plist has been modified since it was converted to UFO 3 format.")
+			testGroups = self._readGroups()
+			if testGroups != self._upConvertedKerningData["originalGroups"]:
+				raise UFOLibError("The data in groups.plist has been modified since it was converted to UFO 3 format.")
+			testFontInfo = self._readFontInfo()
+			if testFontInfo != self._upConvertedKerningData["originalFontInfo"]:
+				raise UFOLibError("The data in fontinfo.plist has been modified since it was converted to UFO 3 format.")
+		else:
+			self._upConvertedKerningData = dict(
+				kerning={},
+				originalKerning=self._readKerning(),
+				groups={},
+				originalGroups=self._readGroups(),
+				fontInfo={},
+				originalFontInfo=self._readInfo()
+			)
+			# convert kerning and groups
+			kerning, groups = convertUFO1OrUFO2KerningToUFO3Kerning(
+				self._upConvertedKerningData["originalKerning"],
+				self._upConvertedKerningData["originalGroups"],
+				firstKerningGroupPrefix=DEFAULT_FIRST_KERNING_PREFIX,
+				secondKerningGroupPrefix=DEFAULT_SECOND_KERNING_PREFIX
+			)
+			# update the font info
+			fontInfo = deepcopy(self._upConvertedKerningData["originalFontInfo"])
+			fontInfo["firstKerningGroupPrefix"] = DEFAULT_FIRST_KERNING_PREFIX
+			fontInfo["secondKerningGroupPrefix"] = DEFAULT_SECOND_KERNING_PREFIX
+			# store
+			self._upConvertedKerningData["kerning"] = kerning
+			self._upConvertedKerningData["groups"] = groups
+			self._upConvertedKerningData["fontInfo"] = fontInfo
 
 	# support methods
 
@@ -183,29 +234,46 @@ class UFOReader(object):
 
 	# groups.plist
 
-	def readGroups(self):
-		"""
-		Read groups.plist. Returns a dict.
-		"""
+	def _readGroups(self):
 		path = os.path.join(self._path, GROUPS_FILENAME)
 		if not self._checkForFile(path):
 			return {}
 		return readPlist(path)
 
+	def readGroups(self):
+		"""
+		Read groups.plist. Returns a dict.
+		"""
+		# handle up conversion
+		if self._formatVersion < 3:
+			self._upConvertKerning()
+			return self._upConvertedKerningData["groups"]
+		# normal
+		else:
+			return self._readGroups()
+
 	# fontinfo.plist
+
+	def _readInfo(self):
+		path = os.path.join(self._path, FONTINFO_FILENAME)
+		if not self._checkForFile(path):
+			return {}
+		return readPlist(path)
 
 	def readInfo(self, info):
 		"""
 		Read fontinfo.plist. It requires an object that allows
 		setting attributes with names that follow the fontinfo.plist
-		version 2 specification. This will write the attributes
+		version 3 specification. This will write the attributes
 		defined in the file into the object.
 		"""
-		# load the file and return if there is no file
-		path = os.path.join(self._path, FONTINFO_FILENAME)
-		if not self._checkForFile(path):
-			return
-		infoDict = readPlist(path)
+		# handle up conversion
+		if self._formatVersion < 3:
+			self._upConvertKerning()
+			infoDict = self._upConvertedKerningData["fontInfo"]
+		# normal
+		else:
+			infoDict = self._readInfo()
 		infoDataToSet = {}
 		# version 1
 		if self._formatVersion == 1:
@@ -245,14 +313,24 @@ class UFOReader(object):
 
 	# kerning.plist
 
+	def _readKerning(self):
+		path = os.path.join(self._path, KERNING_FILENAME)
+		if not self._checkForFile(path):
+			return {}
+		return readPlist(path)
+
 	def readKerning(self):
 		"""
 		Read kerning.plist. Returns a dict.
 		"""
-		path = os.path.join(self._path, KERNING_FILENAME)
-		if not self._checkForFile(path):
-			return {}
-		kerningNested = readPlist(path)
+		# handle up conversion
+		if self._formatVersion < 3:
+			self._upConvertKerning()
+			kerningNested = self._upConvertedKerningData["kerning"]
+		# normal
+		else:
+			kerningNested = self._readKerning()
+		# flatten
 		kerning = {}
 		for left in kerningNested:
 			for right in kerningNested[left]:
