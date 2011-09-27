@@ -80,7 +80,7 @@ FEATURES_FILENAME = "features.fea"
 LAYERCONTENTS_FILENAME = "layercontents.plist"
 LAYERINFO_FILENAME = "layerinfo.plist"
 
-DEFAULT_LAYER_NAME = "public.foreground"
+DEFAULT_LAYER_NAME = "public.default"
 
 supportedUFOFormatVersions = [1, 2, 3]
 

@@ -3503,7 +3503,7 @@ class UFO3ReadLayersTestCase(unittest.TestCase):
 		# layers
 		if layerContents is None:
 			layerContents = [
-				("public.foreground", "glyphs"),
+				("public.default", "glyphs"),
 				("layer 1", "glyphs.layer 1"),
 				("layer 2", "glyphs.layer 2"),
 			]
@@ -3575,7 +3575,7 @@ class UFO3ReadLayersTestCase(unittest.TestCase):
 		path = os.path.join(self.ufoPath, "layercontents.plist")
 		os.remove(path)
 		layerContents = {
-			"public.foreground" : "glyphs",
+			"public.default" : "glyphs",
 			"layer 1" : "glyphs.layer 1",
 			"layer 2" : "glyphs.layer 2",
 		}
@@ -3799,7 +3799,7 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 		# layers
 		if layerContents is None:
 			layerContents = [
-				("public.foreground", "glyphs"),
+				("public.default", "glyphs"),
 				("layer 1", "glyphs.layer 1"),
 				("layer 2", "glyphs.layer 2"),
 			]
@@ -3847,7 +3847,7 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 		path = os.path.join(self.ufoPath, "layercontents.plist")
 		os.remove(path)
 		layerContents = {
-			"public.foreground" : "glyphs",
+			"public.default" : "glyphs",
 			"layer 1" : "glyphs.layer 1",
 			"layer 2" : "glyphs.layer 2",
 		}
@@ -3975,7 +3975,7 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 		)
 		writer = UFOWriter(self.ufoPath)
 		path = os.path.join(self.ufoPath, "layercontents.plist")
-		expected = [["public.foreground", "glyphs"]]
+		expected = [["public.default", "glyphs"]]
 		result = readPlist(path)
 		self.assertEqual(expected, result)
 
@@ -3988,7 +3988,7 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 		)
 		writer = UFOWriter(self.ufoPath)
 		path = os.path.join(self.ufoPath, "layercontents.plist")
-		expected = [["public.foreground", "glyphs"]]
+		expected = [["public.default", "glyphs"]]
 		result = readPlist(path)
 		self.assertEqual(expected, result)
 
@@ -4072,7 +4072,7 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 		self.assertEqual(True, exists)
 		# layer contents
 		path = os.path.join(self.ufoPath, "layercontents.plist")
-		expected = [["public.foreground", "glyphs"]]
+		expected = [["public.default", "glyphs"]]
 		result = readPlist(path)
 		self.assertEqual(expected, result)
 
@@ -4094,7 +4094,7 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 		self.assertEqual(True, exists)
 		# layer contents
 		path = os.path.join(self.ufoPath, "layercontents.plist")
-		expected = [["layer 2", "glyphs.layer 2"], ["public.foreground", "glyphs"], ["layer 1", "glyphs.layer 1"]]
+		expected = [["layer 2", "glyphs.layer 2"], ["public.default", "glyphs"], ["layer 1", "glyphs.layer 1"]]
 		result = readPlist(path)
 		self.assertEqual(expected, result)
 
@@ -4119,7 +4119,7 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 		self.assertEqual(True, exists)
 		# layer contents
 		path = os.path.join(self.ufoPath, "layercontents.plist")
-		expected = [["layer 3", "glyphs.layer 3"], ['public.foreground', 'glyphs'], ['layer 1', 'glyphs.layer 1'], ['layer 2', 'glyphs.layer 2']]
+		expected = [["layer 3", "glyphs.layer 3"], ['public.default', 'glyphs'], ['layer 1', 'glyphs.layer 1'], ['layer 2', 'glyphs.layer 2']]
 		result = readPlist(path)
 		self.assertEqual(expected, result)
 
@@ -4144,7 +4144,7 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 		self.assertEqual(True, exists)
 		# layer contents
 		path = os.path.join(self.ufoPath, "layercontents.plist")
-		expected = [['public.foreground', 'glyphs'], ['layer 3', 'glyphs.layer 3'], ['layer 2', 'glyphs.layer 2']]
+		expected = [['public.default', 'glyphs'], ['layer 3', 'glyphs.layer 3'], ['layer 2', 'glyphs.layer 2']]
 		result = readPlist(path)
 		self.assertEqual(expected, result)
 
@@ -4180,7 +4180,7 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 		self.assertEqual(True, exists)
 		# layer contents
 		path = os.path.join(self.ufoPath, "layercontents.plist")
-		expected = [["public.foreground", "glyphs"], ["layer 2", "glyphs.layer 2"]]
+		expected = [["public.default", "glyphs"], ["layer 2", "glyphs.layer 2"]]
 		result = readPlist(path)
 		self.assertEqual(expected, result)
 
@@ -4189,7 +4189,7 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 	def testRemoveDefaultLayer(self):
 		self.makeUFO()
 		writer = UFOWriter(self.ufoPath)
-		writer.deleteGlyphSet("public.foreground")
+		writer.deleteGlyphSet("public.default")
 		# directories
 		path = os.path.join(self.ufoPath, "glyphs")
 		exists = os.path.exists(path)
