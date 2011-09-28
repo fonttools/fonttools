@@ -625,8 +625,10 @@ def _readGlyphFromTree(tree, glyphObject=None, pointPen=None):
 		elif glyphObject is None:
 			continue
 		elif element == "advance":
-			width = _number(attrs["width"])
+			width = _number(attrs.get("width", 0))
 			_relaxedSetattr(glyphObject, "width", width)
+			height = _number(attrs.get("height", 0))
+			_relaxedSetattr(glyphObject, "height", height)
 		elif element == "unicode":
 			unicodes.append(int(attrs["hex"], 16))
 		elif element == "note":
