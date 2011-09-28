@@ -542,6 +542,8 @@ def guidelinesValidator(value):
 def guidelineValidator(value):
 	"""
 	Version 3+.
+
+	
 	"""
 	dictPrototype = dict(
 		x=((int, float), False), y=((int, float), False), angle=((int, float), False),
@@ -582,12 +584,21 @@ def guidelineValidator(value):
 def identifierValidator(value):
 	"""
 	Version 3+.
+
+	>>> identifierValidator("a")
+	True
+	>>> identifierValidator("")
+	False
+	>>> identifierValidator("a" * 101)
+	False
 	"""
 	validCharactersMin = 0x20
 	validCharactersMax = 0x7E
 	if not isinstance(value, basestring):
 		return False
 	if not value:
+		return False
+	if len(value) > 100:
 		return False
 	for c in value:
 		c = ord(c)
@@ -602,6 +613,45 @@ def identifierValidator(value):
 def colorValidator(value):
 	"""
 	Version 3+.
+
+	>>> colorValidator("0,0,0,0")
+	True
+	>>> colorValidator(".5,.5,.5,.5")
+	True
+	>>> colorValidator("0.5,0.5,0.5,0.5")
+	True
+	>>> colorValidator("1,1,1,1")
+	True
+
+	>>> colorValidator("2,0,0,0")
+	False
+	>>> colorValidator("0,2,0,0")
+	False
+	>>> colorValidator("0,0,2,0")
+	False
+	>>> colorValidator("0,0,0,2")
+	False
+
+	>>> colorValidator("1r,1,1,1")
+	False
+	>>> colorValidator("1,1g,1,1")
+	False
+	>>> colorValidator("1,1,1b,1")
+	False
+	>>> colorValidator("1,1,1,1a")
+	False
+
+	>>> colorValidator("1 1 1 1")
+	False
+	>>> colorValidator("1 1,1,1")
+	False
+	>>> colorValidator("1,1 1,1")
+	False
+	>>> colorValidator("1,1,1 1")
+	False
+
+	>>> colorValidator("1, 1, 1, 1")
+	True
 	"""
 	if not isinstance(value, basestring):
 		return False
@@ -683,4 +733,6 @@ def layerContentsValidator(value, ufoPath):
 		return False, "The required default glyph set is not in the UFO."
 	return True, None
 
-
+if __name__ == "__main__":
+	import doctest
+	doctest.testmod()

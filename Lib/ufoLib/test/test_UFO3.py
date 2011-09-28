@@ -7,6 +7,7 @@ import tempfile
 import codecs
 from plistlib import writePlist, readPlist
 from ufoLib import UFOReader, UFOWriter, UFOLibError
+from ufoLib.glifLib import GlifLibError
 from testSupport import fontInfoVersion3
 
 
@@ -4356,6 +4357,440 @@ class UFO3WriteDataTestCase(unittest.TestCase):
 		self.tearDownUFO()
 
 
+# ---------------
+# layerinfo.plist
+# ---------------
+
+class TestLayerInfoObject(object):
+
+	color = guidelines = lib = None
+
+
+class UFO3ReadLayerInfoTestCase(unittest.TestCase):
+
+	def setUp(self):
+		self.tempDir = tempfile.mktemp()
+		os.mkdir(self.tempDir)
+		self.ufoPath = os.path.join(self.tempDir, "test.ufo")
+
+	def tearDown(self):
+		shutil.rmtree(self.tempDir)
+
+	def makeUFO(self, formatVersion=3, layerInfo=None):
+		self.clearUFO()
+		if not os.path.exists(self.ufoPath):
+			os.mkdir(self.ufoPath)
+		# metainfo.plist
+		metaInfo = dict(creator="test", formatVersion=formatVersion)
+		path = os.path.join(self.ufoPath, "metainfo.plist")
+		writePlist(metaInfo, path)
+		# layercontents.plist
+		layerContents = [("public.default", "glyphs")]
+		path = os.path.join(self.ufoPath, "layercontents.plist")
+		writePlist(layerContents, path)
+		# glyphs
+		glyphsPath = os.path.join(self.ufoPath, "glyphs")
+		os.mkdir(glyphsPath)
+		contents = dict(a="a.glif")
+		path = os.path.join(glyphsPath, "contents.plist")
+		writePlist(contents, path)
+		path = os.path.join(glyphsPath, "a.glif")
+		f = open(path, "w")
+		f.write(" ")
+		f.close()
+		# layerinfo.plist
+		if layerInfo is None:
+			layerInfo = dict(
+				color="0,0,0,1",
+				guidelines=[dict(x=0, color="1,0,0,1"), dict(y=0, color="0,1,0,1")],
+				lib={"foo" : "bar"}
+			)
+		path = os.path.join(glyphsPath, "layerinfo.plist")
+		writePlist(layerInfo, path)
+
+	def clearUFO(self):
+		if os.path.exists(self.ufoPath):
+			shutil.rmtree(self.ufoPath)
+
+	def testValidLayerInfo(self):
+		self.makeUFO()
+		reader = UFOReader(self.ufoPath)
+		glyphSet = reader.getGlyphSet()
+		info = TestLayerInfoObject()
+		glyphSet.readLayerInfo(info)
+		expectedColor = "0,0,0,1"
+		self.assertEqual(expectedColor, info.color)
+		expectedGuidelines = [{"color": "1,0,0,1", "x": 0}, {"color": "0,1,0,1", "y": 0}]
+		self.assertEqual(expectedGuidelines, info.guidelines)
+		expectedLib = {"foo": "bar"}
+		self.assertEqual(expectedLib, info.lib)
+
+	def testMissingLayerInfo(self):
+		self.makeUFO()
+		path = os.path.join(self.ufoPath, "glyphs", "layerinfo.plist")
+		os.remove(path)
+		# read
+		reader = UFOReader(self.ufoPath)
+		glyphSet = reader.getGlyphSet()
+		info = TestLayerInfoObject()
+		glyphSet.readLayerInfo(info)
+		self.assertEqual(None, info.color)
+		self.assertEqual(None, info.guidelines)
+		self.assertEqual(None, info.lib)
+
+	def testBogusLayerInfo(self):
+		self.makeUFO()
+		path = os.path.join(self.ufoPath, "glyphs", "layerinfo.plist")
+		os.remove(path)
+		f = open(path, "wb")
+		f.write("test")
+		f.close()
+		# read
+		reader = UFOReader(self.ufoPath)
+		glyphSet = reader.getGlyphSet()
+		info = TestLayerInfoObject()
+		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, info)
+
+	def testInvalidFormatLayerInfo(self):
+		self.makeUFO()
+		path = os.path.join(self.ufoPath, "glyphs", "layerinfo.plist")
+		info = [("color", "0,0,0,0")]
+		writePlist(info, path)
+		# read
+		reader = UFOReader(self.ufoPath)
+		glyphSet = reader.getGlyphSet()
+		info = TestLayerInfoObject()
+		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, info)
+
+	def testColor(self):
+		## not a string
+		info = dict(fontInfoVersion3)
+		info["color"] = 1
+		self.makeUFO(layerInfo=info)
+		reader = UFOReader(self.ufoPath)
+		glyphSet = reader.getGlyphSet()
+		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
+		## not enough commas
+		info = dict(fontInfoVersion3)
+		info["color"] = "1 0, 0, 0"
+		self.makeUFO(layerInfo=info)
+		reader = UFOReader(self.ufoPath)
+		glyphSet = reader.getGlyphSet()
+		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
+		info = dict(fontInfoVersion3)
+		info["color"] = "1 0 0, 0"
+		self.makeUFO(layerInfo=info)
+		reader = UFOReader(self.ufoPath)
+		glyphSet = reader.getGlyphSet()
+		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
+		info = dict(fontInfoVersion3)
+		info["color"] = "1 0 0 0"
+		self.makeUFO(layerInfo=info)
+		reader = UFOReader(self.ufoPath)
+		glyphSet = reader.getGlyphSet()
+		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
+		## not enough parts
+		info = dict(fontInfoVersion3)
+		info["color"] = ", 0, 0, 0"
+		self.makeUFO(layerInfo=info)
+		reader = UFOReader(self.ufoPath)
+		glyphSet = reader.getGlyphSet()
+		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
+		info = dict(fontInfoVersion3)
+		info["color"] = "1, , 0, 0"
+		self.makeUFO(layerInfo=info)
+		reader = UFOReader(self.ufoPath)
+		glyphSet = reader.getGlyphSet()
+		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
+		info = dict(fontInfoVersion3)
+		info["color"] = "1, 0, , 0"
+		self.makeUFO(layerInfo=info)
+		reader = UFOReader(self.ufoPath)
+		glyphSet = reader.getGlyphSet()
+		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
+		info = dict(fontInfoVersion3)
+		info["color"] = "1, 0, 0, "
+		self.makeUFO(layerInfo=info)
+		reader = UFOReader(self.ufoPath)
+		glyphSet = reader.getGlyphSet()
+		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
+		info = dict(fontInfoVersion3)
+		info["color"] = ", , , "
+		self.makeUFO(layerInfo=info)
+		reader = UFOReader(self.ufoPath)
+		glyphSet = reader.getGlyphSet()
+		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
+		## not a number in all positions
+		info = dict(fontInfoVersion3)
+		info["color"] = "r, 1, 1, 1"
+		self.makeUFO(layerInfo=info)
+		reader = UFOReader(self.ufoPath)
+		glyphSet = reader.getGlyphSet()
+		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
+		info = dict(fontInfoVersion3)
+		info["color"] = "1, g, 1, 1"
+		self.makeUFO(layerInfo=info)
+		reader = UFOReader(self.ufoPath)
+		glyphSet = reader.getGlyphSet()
+		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
+		info = dict(fontInfoVersion3)
+		info["color"] = "1, 1, b, 1"
+		self.makeUFO(layerInfo=info)
+		reader = UFOReader(self.ufoPath)
+		glyphSet = reader.getGlyphSet()
+		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
+		info = dict(fontInfoVersion3)
+		info["color"] = "1, 1, 1, a"
+		self.makeUFO(layerInfo=info)
+		reader = UFOReader(self.ufoPath)
+		glyphSet = reader.getGlyphSet()
+		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
+		## too many parts
+		info = dict(fontInfoVersion3)
+		info["color"] = "1, 0, 0, 0, 0"
+		self.makeUFO(layerInfo=info)
+		reader = UFOReader(self.ufoPath)
+		glyphSet = reader.getGlyphSet()
+		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
+		## < 0 in each position
+		info = dict(fontInfoVersion3)
+		info["color"] = "-1, 0, 0, 0"
+		self.makeUFO(layerInfo=info)
+		reader = UFOReader(self.ufoPath)
+		glyphSet = reader.getGlyphSet()
+		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
+		info = dict(fontInfoVersion3)
+		info["color"] = "0, -1, 0, 0"
+		self.makeUFO(layerInfo=info)
+		reader = UFOReader(self.ufoPath)
+		glyphSet = reader.getGlyphSet()
+		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
+		info = dict(fontInfoVersion3)
+		info["color"] = "0, 0, -1, 0"
+		self.makeUFO(layerInfo=info)
+		reader = UFOReader(self.ufoPath)
+		glyphSet = reader.getGlyphSet()
+		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
+		info = dict(fontInfoVersion3)
+		info["color"] = "0, 0, 0, -1"
+		self.makeUFO(layerInfo=info)
+		reader = UFOReader(self.ufoPath)
+		glyphSet = reader.getGlyphSet()
+		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
+		## > 1 in each position
+		info = dict(fontInfoVersion3)
+		info["color"] = "2, 0, 0, 0"
+		self.makeUFO(layerInfo=info)
+		reader = UFOReader(self.ufoPath)
+		glyphSet = reader.getGlyphSet()
+		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
+		info = dict(fontInfoVersion3)
+		info["color"] = "0, 2, 0, 0"
+		self.makeUFO(layerInfo=info)
+		reader = UFOReader(self.ufoPath)
+		glyphSet = reader.getGlyphSet()
+		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
+		info = dict(fontInfoVersion3)
+		info["color"] = "0, 0, 2, 0"
+		self.makeUFO(layerInfo=info)
+		reader = UFOReader(self.ufoPath)
+		glyphSet = reader.getGlyphSet()
+		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
+		info = dict(fontInfoVersion3)
+		info["color"] = "0, 0, 0, 2"
+		self.makeUFO(layerInfo=info)
+		reader = UFOReader(self.ufoPath)
+		glyphSet = reader.getGlyphSet()
+		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
+
+	def testGuidelines(self):
+		# x
+		## not an int or float
+		info = dict(fontInfoVersion3)
+		info["guidelines"] = [dict(x="1")]
+		self.makeUFO(layerInfo=info)
+		reader = UFOReader(self.ufoPath)
+		glyphSet = reader.getGlyphSet()
+		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
+		# y
+		## not an int or float
+		info = dict(fontInfoVersion3)
+		info["guidelines"] = [dict(y="1")]
+		self.makeUFO(layerInfo=info)
+		reader = UFOReader(self.ufoPath)
+		glyphSet = reader.getGlyphSet()
+		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
+		# angle
+		## < 0
+		info = dict(fontInfoVersion3)
+		info["guidelines"] = [dict(x=0, y=0, angle=-1)]
+		self.makeUFO(layerInfo=info)
+		reader = UFOReader(self.ufoPath)
+		glyphSet = reader.getGlyphSet()
+		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
+		## > 360
+		info = dict(fontInfoVersion3)
+		info["guidelines"] = [dict(x=0, y=0, angle=361)]
+		self.makeUFO(layerInfo=info)
+		reader = UFOReader(self.ufoPath)
+		glyphSet = reader.getGlyphSet()
+		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
+		# name
+		## not a string
+		info = dict(fontInfoVersion3)
+		info["guidelines"] = [dict(x=0, name=1)]
+		self.makeUFO(layerInfo=info)
+		reader = UFOReader(self.ufoPath)
+		glyphSet = reader.getGlyphSet()
+		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
+		# color
+		## not a string
+		info = dict(fontInfoVersion3)
+		info["guidelines"] = [dict(x=0, color=1)]
+		self.makeUFO(layerInfo=info)
+		reader = UFOReader(self.ufoPath)
+		glyphSet = reader.getGlyphSet()
+		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
+		## not enough commas
+		info = dict(fontInfoVersion3)
+		info["guidelines"] = [dict(x=0, color="1 0, 0, 0")]
+		self.makeUFO(layerInfo=info)
+		reader = UFOReader(self.ufoPath)
+		glyphSet = reader.getGlyphSet()
+		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
+		info = dict(fontInfoVersion3)
+		info["guidelines"] = [dict(x=0, color="1 0 0, 0")]
+		self.makeUFO(layerInfo=info)
+		reader = UFOReader(self.ufoPath)
+		glyphSet = reader.getGlyphSet()
+		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
+		info = dict(fontInfoVersion3)
+		info["guidelines"] = [dict(x=0, color="1 0 0 0")]
+		self.makeUFO(layerInfo=info)
+		reader = UFOReader(self.ufoPath)
+		glyphSet = reader.getGlyphSet()
+		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
+		## not enough parts
+		info = dict(fontInfoVersion3)
+		info["guidelines"] = [dict(x=0, color=", 0, 0, 0")]
+		self.makeUFO(layerInfo=info)
+		reader = UFOReader(self.ufoPath)
+		glyphSet = reader.getGlyphSet()
+		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
+		info = dict(fontInfoVersion3)
+		info["guidelines"] = [dict(x=0, color="1, , 0, 0")]
+		self.makeUFO(layerInfo=info)
+		reader = UFOReader(self.ufoPath)
+		glyphSet = reader.getGlyphSet()
+		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
+		info = dict(fontInfoVersion3)
+		info["guidelines"] = [dict(x=0, color="1, 0, , 0")]
+		self.makeUFO(layerInfo=info)
+		reader = UFOReader(self.ufoPath)
+		glyphSet = reader.getGlyphSet()
+		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
+		info = dict(fontInfoVersion3)
+		info["guidelines"] = [dict(x=0, color="1, 0, 0, ")]
+		self.makeUFO(layerInfo=info)
+		reader = UFOReader(self.ufoPath)
+		glyphSet = reader.getGlyphSet()
+		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
+		info = dict(fontInfoVersion3)
+		info["guidelines"] = [dict(x=0, color=", , , ")]
+		self.makeUFO(layerInfo=info)
+		reader = UFOReader(self.ufoPath)
+		glyphSet = reader.getGlyphSet()
+		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
+		## not a number in all positions
+		info = dict(fontInfoVersion3)
+		info["guidelines"] = [dict(x=0, color="r, 1, 1, 1")]
+		self.makeUFO(layerInfo=info)
+		reader = UFOReader(self.ufoPath)
+		glyphSet = reader.getGlyphSet()
+		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
+		info = dict(fontInfoVersion3)
+		info["guidelines"] = [dict(x=0, color="1, g, 1, 1")]
+		self.makeUFO(layerInfo=info)
+		reader = UFOReader(self.ufoPath)
+		glyphSet = reader.getGlyphSet()
+		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
+		info = dict(fontInfoVersion3)
+		info["guidelines"] = [dict(x=0, color="1, 1, b, 1")]
+		self.makeUFO(layerInfo=info)
+		reader = UFOReader(self.ufoPath)
+		glyphSet = reader.getGlyphSet()
+		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
+		info = dict(fontInfoVersion3)
+		info["guidelines"] = [dict(x=0, color="1, 1, 1, a")]
+		self.makeUFO(layerInfo=info)
+		reader = UFOReader(self.ufoPath)
+		glyphSet = reader.getGlyphSet()
+		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
+		## too many parts
+		info = dict(fontInfoVersion3)
+		info["guidelines"] = [dict(x=0, color="1, 0, 0, 0, 0")]
+		self.makeUFO(layerInfo=info)
+		reader = UFOReader(self.ufoPath)
+		glyphSet = reader.getGlyphSet()
+		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
+		## < 0 in each position
+		info = dict(fontInfoVersion3)
+		info["guidelines"] = [dict(x=0, color="-1, 0, 0, 0")]
+		self.makeUFO(layerInfo=info)
+		reader = UFOReader(self.ufoPath)
+		glyphSet = reader.getGlyphSet()
+		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
+		info = dict(fontInfoVersion3)
+		info["guidelines"] = [dict(x=0, color="0, -1, 0, 0")]
+		self.makeUFO(layerInfo=info)
+		reader = UFOReader(self.ufoPath)
+		glyphSet = reader.getGlyphSet()
+		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
+		info = dict(fontInfoVersion3)
+		info["guidelines"] = [dict(x=0, color="0, 0, -1, 0")]
+		self.makeUFO(layerInfo=info)
+		reader = UFOReader(self.ufoPath)
+		glyphSet = reader.getGlyphSet()
+		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
+		info = dict(fontInfoVersion3)
+		info["guidelines"] = [dict(x=0, color="0, 0, 0, -1")]
+		self.makeUFO(layerInfo=info)
+		reader = UFOReader(self.ufoPath)
+		glyphSet = reader.getGlyphSet()
+		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
+		## > 1 in each position
+		info = dict(fontInfoVersion3)
+		info["guidelines"] = [dict(x=0, color="2, 0, 0, 0")]
+		self.makeUFO(layerInfo=info)
+		reader = UFOReader(self.ufoPath)
+		glyphSet = reader.getGlyphSet()
+		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
+		info = dict(fontInfoVersion3)
+		info["guidelines"] = [dict(x=0, color="0, 2, 0, 0")]
+		self.makeUFO(layerInfo=info)
+		reader = UFOReader(self.ufoPath)
+		glyphSet = reader.getGlyphSet()
+		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
+		info = dict(fontInfoVersion3)
+		info["guidelines"] = [dict(x=0, color="0, 0, 2, 0")]
+		self.makeUFO(layerInfo=info)
+		reader = UFOReader(self.ufoPath)
+		glyphSet = reader.getGlyphSet()
+		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
+		info = dict(fontInfoVersion3)
+		info["guidelines"] = [dict(x=0, color="0, 0, 0, 2")]
+		self.makeUFO(layerInfo=info)
+		reader = UFOReader(self.ufoPath)
+		glyphSet = reader.getGlyphSet()
+		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
+		# identifier
+		## duplicate
+		info = dict(fontInfoVersion3)
+		info["guidelines"] = [dict(x=0, identifier="guide1"), dict(y=0, identifier="guide1")]
+		self.makeUFO(layerInfo=info)
+		reader = UFOReader(self.ufoPath)
+		glyphSet = reader.getGlyphSet()
+		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
 
 if __name__ == "__main__":
 	from robofab.test.testSupport import runTests

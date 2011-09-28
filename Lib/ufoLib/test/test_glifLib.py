@@ -4,7 +4,7 @@ import shutil
 import unittest
 
 from robofab.test.testSupport import getDemoFontGlyphSetPath
-from robofab.glifLib import GlyphSet, glyphNameToFileName, READ_MODE
+from ufoLib.glifLib import GlyphSet, glyphNameToFileName, READ_MODE
 from robofab.tools.glyphNameSchemes import glyphNameToShortFileName
 
 

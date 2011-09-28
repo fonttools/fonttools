@@ -15,7 +15,9 @@ import os
 from cStringIO import StringIO
 from xmlTreeBuilder import buildTree, stripCharacterData
 from robofab.pens.pointPen import AbstractPointPen
+from plistlib import readPlist
 from filenames import userNameToFileName
+from validators import genericTypeValidator, colorValidator, guidelinesValidator
 
 __all__ = [
 	"GlyphSet",
@@ -43,7 +45,7 @@ else:
 # Filenames
 # ---------
 
-LAYERINFO_FILENAME = "layercontents.plist"
+LAYERINFO_FILENAME = "layerinfo.plist"
 
 # ------------
 # Simple Glyph
@@ -159,10 +161,12 @@ class GlyphSet(object):
 		path = os.path.join(self.dirName, LAYERINFO_FILENAME)
 		if not os.path.exists(path):
 			return
-		infoDict = readPlist(path)
-		infoDict = validateLayerInfoData(infoDict)
+		infoDict = self._readPlist(path)
+		if not isinstance(infoDict, dict):
+			raise GlifLibError("layerinfo.plist is not properly formatted.")
+		infoDict = validateLayerInfoVersion3Data(infoDict)
 		# populate the object
-		for attr, value in infoDataToSet.items():
+		for attr, value in infoDict.items():
 			try:
 				setattr(info, attr, value)
 			except AttributeError:
@@ -350,6 +354,13 @@ class GlyphSet(object):
 
 	# internal methods
 
+	def _readPlist(self, path):
+		try:
+			data = readPlist(path)
+			return data
+		except:
+			raise GlifLibError("The file %s could not be read." % path)
+
 	def _findContents(self, forceRebuild=False):
 		contentsPath = os.path.join(self.dirName, "contents.plist")
 		if forceRebuild or not os.path.exists(contentsPath):
@@ -360,7 +371,6 @@ class GlyphSet(object):
 				glyphPath = os.path.join(self.dirName, n)
 				contents[_fetchGlyphName(glyphPath)] = n
 		else:
-			from plistlib import readPlist
 			contents = readPlist(contentsPath)
 		return contents
 
@@ -508,6 +518,60 @@ def writeGlyphToString(glyphName, glyphObject=None, drawPointsFunc=None, writer=
 # -----------------------
 # layerinfo.plist Support
 # -----------------------
+
+layerInfoVersion3ValueData = {
+	"color"			: dict(type=basestring, valueValidator=colorValidator),
+	"guidelines"	: dict(type=list, valueValidator=guidelinesValidator),
+	"lib"			: dict(type=dict, valueValidator=genericTypeValidator)
+}
+
+def validateLayerInfoVersion3ValueForAttribute(attr, value):
+	"""
+	This performs very basic validation of the value for attribute
+	following the UFO 3 fontinfo.plist specification. The results
+	of this should not be interpretted as *correct* for the font
+	that they are part of. This merely indicates that the value
+	is of the proper type and, where the specification defines
+	a set range of possible values for an attribute, that the
+	value is in the accepted range.
+	"""
+	if attr not in layerInfoVersion3ValueData:
+		return False
+	dataValidationDict = layerInfoVersion3ValueData[attr]
+	valueType = dataValidationDict.get("type")
+	validator = dataValidationDict.get("valueValidator")
+	valueOptions = dataValidationDict.get("valueOptions")
+	# have specific options for the validator
+	if valueOptions is not None:
+		isValidValue = validator(value, valueOptions)
+	# no specific options
+	else:
+		if validator == genericTypeValidator:
+			isValidValue = validator(value, valueType)
+		else:
+			isValidValue = validator(value)
+	return isValidValue
+
+def validateLayerInfoVersion3Data(infoData):
+	"""
+	This performs very basic validation of the value for infoData
+	following the UFO 3 layerinfo.plist specification. The results
+	of this should not be interpretted as *correct* for the font
+	that they are part of. This merely indicates that the values
+	are of the proper type and, where the specification defines
+	a set range of possible values for an attribute, that the
+	value is in the accepted range.
+	"""
+	validInfoData = {}
+	for attr, value in infoData.items():
+		if attr not in layerInfoVersion3ValueData:
+			raise GlifLibError("Unknown attribute %s." % attr)
+		isValidValue = validateLayerInfoVersion3ValueForAttribute(attr, value)
+		if not isValidValue:
+			raise GlifLibError("Invalid value for attribute %s (%s)." % (attr, repr(value)))
+		else:
+			validInfoData[attr] = value
+	return validInfoData
 
 # -----------------
 # GLIF Tree Support
