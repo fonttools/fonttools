@@ -3,19 +3,18 @@
 import os
 import calendar
 
-# ----------------------
-# fontinfo.plist Support
-# ----------------------
 
-# Data Validators
+# ------------------
+# Generic Validators
+# ------------------
 
-def fontInfoTypeValidator(value, typ):
+def genericTypeValidator(value, typ):
 	"""
 	Generic. (Added at version 2.)
 	"""
 	return isinstance(value, typ)
 
-def fontInfoIntListValidator(values, validValues):
+def genericIntListValidator(values, validValues):
 	"""
 	Generic. (Added at version 2.)
 	"""
@@ -30,7 +29,7 @@ def fontInfoIntListValidator(values, validValues):
 			return False
 	return True
 
-def fontInfoNonNegativeIntValidator(value):
+def genericNonNegativeIntValidator(value):
 	"""
 	Generic. (Added at version 3.)
 	"""
@@ -40,7 +39,7 @@ def fontInfoNonNegativeIntValidator(value):
 		return False
 	return True
 
-def fontInfoNonNegativeNumberValidator(value):
+def genericNonNegativeNumberValidator(value):
 	"""
 	Generic. (Added at version 3.)
 	"""
@@ -50,7 +49,7 @@ def fontInfoNonNegativeNumberValidator(value):
 		return False
 	return True
 
-def fontInfoDictValidator(value, prototype):
+def genericDictValidator(value, prototype):
 	"""
 	Generic. (Added at version 3.)
 	"""
@@ -74,6 +73,12 @@ def fontInfoDictValidator(value, prototype):
 			return False
 	return True
 
+# ----------------------
+# fontinfo.plist Support
+# ----------------------
+
+# Data Validators
+
 def fontInfoStyleMapStyleNameValidator(value):
 	"""
 	Version 2+.
@@ -93,14 +98,14 @@ def fontInfoOpenTypeGaspRangeRecordsValidator(value):
 	dictPrototype = dict(rangeMaxPPEM=(int, True), rangeGaspBehavior=(list, True))
 	ppemOrder = []
 	for rangeRecord in value:
-		if not fontInfoDictValidator(rangeRecord, dictPrototype):
+		if not genericDictValidator(rangeRecord, dictPrototype):
 			return False
 		ppem = rangeRecord["rangeMaxPPEM"]
 		behavior = rangeRecord["rangeGaspBehavior"]
-		ppemValidity = fontInfoNonNegativeIntValidator(ppem)
+		ppemValidity = genericNonNegativeIntValidator(ppem)
 		if not ppemValidity:
 			return False
-		behaviorValidity = fontInfoIntListValidator(behavior, validBehaviors)
+		behaviorValidity = genericIntListValidator(behavior, validBehaviors)
 		if not behaviorValidity:
 			return False
 		ppemOrder.append(ppem)
@@ -179,7 +184,7 @@ def fontInfoOpenTypeNameRecordsValidator(value):
 	dictPrototype = dict(nameID=(int, True), platformID=(int, True), encodingID=(int, True), languageID=(int, True), string=(basestring, True))
 	seenRecords = []
 	for nameRecord in value:
-		if not fontInfoDictValidator(nameRecord, dictPrototype):
+		if not genericDictValidator(nameRecord, dictPrototype):
 			return False
 		recordKey = (nameRecord["nameID"], nameRecord["platformID"], nameRecord["encodingID"], nameRecord["languageID"])
 		if recordKey in seenRecords:
@@ -314,7 +319,7 @@ def fontInfoWOFFMetadataUniqueIDValidator(value):
 	Version 3+.
 	"""
 	dictPrototype = dict(id=(basestring, True))
-	if not fontInfoDictValidator(value, dictPrototype):
+	if not genericDictValidator(value, dictPrototype):
 		return False
 	return True
 
@@ -323,7 +328,7 @@ def fontInfoWOFFMetadataVendorValidator(value):
 	Version 3+.
 	"""
 	dictPrototype = {"name" : (basestring, True), "url" : (basestring, False), "dir" : (basestring, False), "class" : (basestring, False)}
-	if not fontInfoDictValidator(value, dictPrototype):
+	if not genericDictValidator(value, dictPrototype):
 		return False
 	if "dir" in value and value.get("dir") not in ("ltr", "rtl"):
 		return False
@@ -334,13 +339,13 @@ def fontInfoWOFFMetadataCreditsValidator(value):
 	Version 3+.
 	"""
 	dictPrototype = dict(credits=(list, True))
-	if not fontInfoDictValidator(value, dictPrototype):
+	if not genericDictValidator(value, dictPrototype):
 		return False
 	if not len(value["credits"]):
 		return False
 	dictPrototype = {"name" : (basestring, True), "url" : (basestring, False), "role" : (basestring, False), "dir" : (basestring, False), "class" : (basestring, False)}
 	for credit in value["credits"]:
-		if not fontInfoDictValidator(credit, dictPrototype):
+		if not genericDictValidator(credit, dictPrototype):
 			return False
 		if "dir" in credit and credit.get("dir") not in ("ltr", "rtl"):
 			return False
@@ -351,7 +356,7 @@ def fontInfoWOFFMetadataDescriptionValidator(value):
 	Version 3+.
 	"""
 	dictPrototype = dict(url=(basestring, False), text=(list, True))
-	if not fontInfoDictValidator(value, dictPrototype):
+	if not genericDictValidator(value, dictPrototype):
 		return False
 	for text in value["text"]:
 		if not fontInfoWOFFMetadataTextValue(text):
@@ -363,7 +368,7 @@ def fontInfoWOFFMetadataLicenseValidator(value):
 	Version 3+.
 	"""
 	dictPrototype = dict(url=(basestring, False), text=(list, False), id=(basestring, False))
-	if not fontInfoDictValidator(value, dictPrototype):
+	if not genericDictValidator(value, dictPrototype):
 		return False
 	if "text" in value:
 		for text in value["text"]:
@@ -376,7 +381,7 @@ def fontInfoWOFFMetadataTrademarkValidator(value):
 	Version 3+.
 	"""
 	dictPrototype = dict(text=(list, True))
-	if not fontInfoDictValidator(value, dictPrototype):
+	if not genericDictValidator(value, dictPrototype):
 		return False
 	for text in value["text"]:
 		if not fontInfoWOFFMetadataTextValue(text):
@@ -388,7 +393,7 @@ def fontInfoWOFFMetadataCopyrightValidator(value):
 	Version 3+.
 	"""
 	dictPrototype = dict(text=(list, True))
-	if not fontInfoDictValidator(value, dictPrototype):
+	if not genericDictValidator(value, dictPrototype):
 		return False
 	for text in value["text"]:
 		if not fontInfoWOFFMetadataTextValue(text):
@@ -400,7 +405,7 @@ def fontInfoWOFFMetadataLicenseeValidator(value):
 	Version 3+.
 	"""
 	dictPrototype = {"name" : (basestring, True), "dir" : (basestring, False), "class" : (basestring, False)}
-	if not fontInfoDictValidator(value, dictPrototype):
+	if not genericDictValidator(value, dictPrototype):
 		return False
 	if "dir" in value and value.get("dir") not in ("ltr", "rtl"):
 		return False
@@ -411,7 +416,7 @@ def fontInfoWOFFMetadataTextValue(value):
 	Version 3+.
 	"""
 	dictPrototype = {"text" : (basestring, True), "language" : (basestring, False), "dir" : (basestring, False), "class" : (basestring, False)}
-	if not fontInfoDictValidator(value, dictPrototype):
+	if not genericDictValidator(value, dictPrototype):
 		return False
 	if "dir" in value and value.get("dir") not in ("ltr", "rtl"):
 		return False
@@ -435,7 +440,7 @@ def fontInfoWOFFMetadataExtensionValidator(value):
 	Version 3+.
 	"""
 	dictPrototype = dict(names=(list, False), items=(list, True))
-	if not fontInfoDictValidator(value, dictPrototype):
+	if not genericDictValidator(value, dictPrototype):
 		return False
 	if "names" in value:
 		for name in value["names"]:
@@ -451,7 +456,7 @@ def fontInfoWOFFMetadataExtensionItemValidator(value):
 	Version 3+.
 	"""
 	dictPrototype = dict(id=(basestring, False), names=(list, True), values=(list, True))
-	if not fontInfoDictValidator(value, dictPrototype):
+	if not genericDictValidator(value, dictPrototype):
 		return False
 	for name in value["names"]:
 		if not fontInfoWOFFMetadataExtensionNameValidator(name):
@@ -466,7 +471,7 @@ def fontInfoWOFFMetadataExtensionNameValidator(value):
 	Version 3+.
 	"""
 	dictPrototype = {"text" : (basestring, True), "language" : (basestring, False), "dir" : (basestring, False), "class" : (basestring, False)}
-	if not fontInfoDictValidator(value, dictPrototype):
+	if not genericDictValidator(value, dictPrototype):
 		return False
 	return True
 
@@ -475,7 +480,7 @@ def fontInfoWOFFMetadataExtensionValueValidator(value):
 	Version 3+.
 	"""
 	dictPrototype = {"text" : (basestring, True), "language" : (basestring, False), "dir" : (basestring, False), "class" : (basestring, False)}
-	if not fontInfoDictValidator(value, dictPrototype):
+	if not genericDictValidator(value, dictPrototype):
 		return False
 	return True
 
@@ -538,7 +543,7 @@ def fontInfoGuidelineValidator(value):
 		x=((int, float), False), y=((int, float), False), angle=((int, float), False),
 		name=(basestring, False), color=(basestring, False), identifier=(basestring, False)
 	)
-	if not fontInfoDictValidator(value, dictPrototype):
+	if not genericDictValidator(value, dictPrototype):
 		return False
 	x = value.get("x")
 	y = value.get("y")

@@ -1152,7 +1152,7 @@ def validateFontInfoVersion2ValueForAttribute(attr, value):
 		isValidValue = validator(value, valueOptions)
 	# no specific options
 	else:
-		if validator == fontInfoTypeValidator:
+		if validator == genericTypeValidator:
 			isValidValue = validator(value, valueType)
 		else:
 			isValidValue = validator(value)
@@ -1196,7 +1196,7 @@ def validateFontInfoVersion3ValueForAttribute(attr, value):
 		isValidValue = validator(value, valueOptions)
 	# no specific options
 	else:
-		if validator == fontInfoTypeValidator:
+		if validator == genericTypeValidator:
 			isValidValue = validator(value, valueType)
 		else:
 			isValidValue = validator(value)
@@ -1299,7 +1299,7 @@ fontInfoAttributesVersion2ValueData = {
 	"note"									: dict(type=basestring),
 	"openTypeHeadCreated"					: dict(type=basestring, valueValidator=fontInfoOpenTypeHeadCreatedValidator),
 	"openTypeHeadLowestRecPPEM"				: dict(type=(int, float)),
-	"openTypeHeadFlags"						: dict(type="integerList", valueValidator=fontInfoIntListValidator, valueOptions=fontInfoOpenTypeHeadFlagsOptions),
+	"openTypeHeadFlags"						: dict(type="integerList", valueValidator=genericIntListValidator, valueOptions=fontInfoOpenTypeHeadFlagsOptions),
 	"openTypeHheaAscender"					: dict(type=(int, float)),
 	"openTypeHheaDescender"					: dict(type=(int, float)),
 	"openTypeHheaLineGap"					: dict(type=(int, float)),
@@ -1323,18 +1323,18 @@ fontInfoAttributesVersion2ValueData = {
 	"openTypeNameWWSSubfamilyName"			: dict(type=basestring),
 	"openTypeOS2WidthClass"					: dict(type=int, valueValidator=fontInfoOpenTypeOS2WidthClassValidator),
 	"openTypeOS2WeightClass"				: dict(type=int, valueValidator=fontInfoOpenTypeOS2WeightClassValidator),
-	"openTypeOS2Selection"					: dict(type="integerList", valueValidator=fontInfoIntListValidator, valueOptions=fontInfoOpenTypeOS2SelectionOptions),
+	"openTypeOS2Selection"					: dict(type="integerList", valueValidator=genericIntListValidator, valueOptions=fontInfoOpenTypeOS2SelectionOptions),
 	"openTypeOS2VendorID"					: dict(type=basestring),
 	"openTypeOS2Panose"						: dict(type="integerList", valueValidator=fontInfoVersion2OpenTypeOS2PanoseValidator),
 	"openTypeOS2FamilyClass"				: dict(type="integerList", valueValidator=fontInfoOpenTypeOS2FamilyClassValidator),
-	"openTypeOS2UnicodeRanges"				: dict(type="integerList", valueValidator=fontInfoIntListValidator, valueOptions=fontInfoOpenTypeOS2UnicodeRangesOptions),
-	"openTypeOS2CodePageRanges"				: dict(type="integerList", valueValidator=fontInfoIntListValidator, valueOptions=fontInfoOpenTypeOS2CodePageRangesOptions),
+	"openTypeOS2UnicodeRanges"				: dict(type="integerList", valueValidator=genericIntListValidator, valueOptions=fontInfoOpenTypeOS2UnicodeRangesOptions),
+	"openTypeOS2CodePageRanges"				: dict(type="integerList", valueValidator=genericIntListValidator, valueOptions=fontInfoOpenTypeOS2CodePageRangesOptions),
 	"openTypeOS2TypoAscender"				: dict(type=(int, float)),
 	"openTypeOS2TypoDescender"				: dict(type=(int, float)),
 	"openTypeOS2TypoLineGap"				: dict(type=(int, float)),
 	"openTypeOS2WinAscent"					: dict(type=(int, float)),
 	"openTypeOS2WinDescent"					: dict(type=(int, float)),
-	"openTypeOS2Type"						: dict(type="integerList", valueValidator=fontInfoIntListValidator, valueOptions=fontInfoOpenTypeOS2TypeOptions),
+	"openTypeOS2Type"						: dict(type="integerList", valueValidator=genericIntListValidator, valueOptions=fontInfoOpenTypeOS2TypeOptions),
 	"openTypeOS2SubscriptXSize"				: dict(type=(int, float)),
 	"openTypeOS2SubscriptYSize"				: dict(type=(int, float)),
 	"openTypeOS2SubscriptXOffset"			: dict(type=(int, float)),
@@ -1380,16 +1380,16 @@ fontInfoAttributesVersion2 = set(fontInfoAttributesVersion2ValueData.keys())
 
 fontInfoAttributesVersion3ValueData = deepcopy(fontInfoAttributesVersion2ValueData)
 fontInfoAttributesVersion3ValueData.update({
-	"versionMinor"							: dict(type=int, valueValidator=fontInfoNonNegativeIntValidator),
-	"unitsPerEm"							: dict(type=(int, float), valueValidator=fontInfoNonNegativeNumberValidator),
-	"openTypeHeadLowestRecPPEM"				: dict(type=(int, float), valueValidator=fontInfoNonNegativeNumberValidator),
+	"versionMinor"							: dict(type=int, valueValidator=genericNonNegativeIntValidator),
+	"unitsPerEm"							: dict(type=(int, float), valueValidator=genericNonNegativeNumberValidator),
+	"openTypeHeadLowestRecPPEM"				: dict(type=(int, float), valueValidator=genericNonNegativeNumberValidator),
 	"openTypeOS2Panose"						: dict(type="integerList", valueValidator=fontInfoVersion3OpenTypeOS2PanoseValidator),
-	"openTypeOS2WinAscent"					: dict(type=(int, float), valueValidator=fontInfoNonNegativeNumberValidator),
-	"openTypeOS2WinDescent"					: dict(type=(int, float), valueValidator=fontInfoNonNegativeNumberValidator),
+	"openTypeOS2WinAscent"					: dict(type=(int, float), valueValidator=genericNonNegativeNumberValidator),
+	"openTypeOS2WinDescent"					: dict(type=(int, float), valueValidator=genericNonNegativeNumberValidator),
 	"openTypeGaspRangeRecords"				: dict(type="dictList", valueValidator=fontInfoOpenTypeGaspRangeRecordsValidator),
 	"openTypeNameRecords"					: dict(type="dictList", valueValidator=fontInfoOpenTypeNameRecordsValidator),
-	"woffMajorVersion"						: dict(type=int, valueValidator=fontInfoNonNegativeIntValidator),
-	"woffMinorVersion"						: dict(type=int, valueValidator=fontInfoNonNegativeIntValidator),
+	"woffMajorVersion"						: dict(type=int, valueValidator=genericNonNegativeIntValidator),
+	"woffMinorVersion"						: dict(type=int, valueValidator=genericNonNegativeIntValidator),
 	"woffMetadataUniqueID"					: dict(type=dict, valueValidator=fontInfoWOFFMetadataUniqueIDValidator),
 	"woffMetadataVendor"					: dict(type=dict, valueValidator=fontInfoWOFFMetadataVendorValidator),
 	"woffMetadataCredits"					: dict(type=dict, valueValidator=fontInfoWOFFMetadataCreditsValidator),
@@ -1408,11 +1408,11 @@ fontInfoAttributesVersion3ValueData.update({
 # have no defined validator.
 for attr, dataDict in fontInfoAttributesVersion2ValueData.items():
 	if "valueValidator" not in dataDict:
-		dataDict["valueValidator"] = fontInfoTypeValidator
+		dataDict["valueValidator"] = genericTypeValidator
 
 for attr, dataDict in fontInfoAttributesVersion3ValueData.items():
 	if "valueValidator" not in dataDict:
-		dataDict["valueValidator"] = fontInfoTypeValidator
+		dataDict["valueValidator"] = genericTypeValidator
 
 # Version Conversion Support
 # These are used from converting from version 1
