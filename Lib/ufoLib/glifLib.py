@@ -15,7 +15,7 @@ import os
 from cStringIO import StringIO
 from xmlTreeBuilder import buildTree, stripCharacterData
 from robofab.pens.pointPen import AbstractPointPen
-from plistlib import readPlist
+from plistlib import readPlist, writePlistToString
 from filenames import userNameToFileName
 from validators import genericTypeValidator, colorValidator, guidelinesValidator
 
@@ -146,7 +146,6 @@ class GlyphSet(object):
 		Write the contents.plist file out to disk. Call this method when
 		you're done writing glyphs.
 		"""
-		from plistlib import writePlistToString
 		contentsPath = os.path.join(self.dirName, "contents.plist")
 		# We need to force Unix line endings, even in OS9 MacPython in FL,
 		# so we do the writing to file ourselves.
