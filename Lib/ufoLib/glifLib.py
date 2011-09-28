@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-"""glifLib.py -- Generic module for reading and writing the .glif format.
+"""
+glifLib.py -- Generic module for reading and writing the .glif format.
 
 More info about the .glif format (GLyphInterchangeFormat) can be found here:
 
@@ -10,19 +11,26 @@ in a folder. It offers two ways to read glyph data, and one way to write
 glyph data. See the class doc string for details.
 """
 
-__all__ = ["GlyphSet", "GlifLibError",
-		"readGlyphFromString", "writeGlyphToString",
-		"glyphNameToFileName"]
-
 import os
 from cStringIO import StringIO
 from xmlTreeBuilder import buildTree, stripCharacterData
 from robofab.pens.pointPen import AbstractPointPen
 from filenames import userNameToFileName
 
+__all__ = [
+	"GlyphSet",
+	"GlifLibError",
+	"readGlyphFromString", "writeGlyphToString",
+	"glyphNameToFileName"
+]
+
 
 class GlifLibError(Exception): pass
 
+
+# -------------------------
+# Reading and Writing Modes
+# -------------------------
 
 if os.name == "mac":
 	WRITE_MODE = "wb"  # use unix line endings, even with Classic MacPython
@@ -31,45 +39,20 @@ else:
 	WRITE_MODE = "w"
 	READ_MODE = "r"
 
+# ---------
+# Filenames
+# ---------
+
 LAYERINFO_FILENAME = "layercontents.plist"
 
-
-class Glyph(object):
-
-	"""Minimal glyph object. It has no glyph attributes until either
-	the draw() or the drawPoint() method has been called.
-	"""
-
-	def __init__(self, glyphName, glyphSet):
-		self.glyphName = glyphName
-		self.glyphSet = glyphSet
-
-	def draw(self, pen):
-		"""Draw this glyph onto a *FontTools* Pen."""
-		from robofab.pens.adapterPens import PointToSegmentPen
-		pointPen = PointToSegmentPen(pen)
-		self.drawPoints(pointPen)
-
-	def drawPoints(self, pointPen):
-		"""Draw this glyph onto a PointPen."""
-		self.glyphSet.readGlyph(self.glyphName, self, pointPen)
-
-
-def glyphNameToFileName(glyphName, glyphSet):
-	"""Wrapper around the userNameToFileName function in filenames.py"""
-	existing = [name.lower() for name in glyphSet.contents.values()]
-	if not isinstance(glyphName, unicode):
-		try:
-			new = unicode(glyphName)
-			glyphName = new
-		except UnicodeDecodeError:
-			pass
-	return userNameToFileName(glyphName, existing=existing, suffix=".glif")
-
+# ---------
+# Glyph Set
+# ---------
 
 class GlyphSet(object):
 
-	"""GlyphSet manages a set of .glif files inside one directory.
+	"""
+	GlyphSet manages a set of .glif files inside one directory.
 
 	GlyphSet's constructor takes a path to an existing directory as it's
 	first argument. Reading glyph data can either be done through the
@@ -84,7 +67,8 @@ class GlyphSet(object):
 	glyphClass = Glyph
 
 	def __init__(self, dirName, glyphNameToFileNameFunc=None, ufoFormatVersion=3):
-		"""'dirName' should be a path to an existing directory.
+		"""
+		'dirName' should be a path to an existing directory.
 
 		The optional 'glyphNameToFileNameFunc' argument must be a callback
 		function that takes two arguments: a glyph name and the GlyphSet
@@ -102,14 +86,16 @@ class GlyphSet(object):
 		self._glifCache = {}
 
 	def rebuildContents(self):
-		"""Rebuild the contents dict by checking what glyphs are available
+		"""
+		Rebuild the contents dict by checking what glyphs are available
 		on disk.
 		"""
 		self.contents = self._findContents(forceRebuild=True)
 		self._reverseContents = None
 
 	def getReverseContents(self):
-		"""Return a reversed dict of self.contents, mapping file names to
+		"""
+		Return a reversed dict of self.contents, mapping file names to
 		glyph names. This is primarily an aid for custom glyph name to file
 		name schemes that want to make sure they don't generate duplicate
 		file names. The file names are converted to lowercase so we can
@@ -124,7 +110,8 @@ class GlyphSet(object):
 		return self._reverseContents
 
 	def writeContents(self):
-		"""Write the contents.plist file out to disk. Call this method when
+		"""
+		Write the contents.plist file out to disk. Call this method when
 		you're done writing glyphs.
 		"""
 		from plistlib import writePlistToString
@@ -174,11 +161,11 @@ class GlyphSet(object):
 		f.write(plist)
 		f.close()
 
-
 	# read caching
 
 	def getGLIF(self, glyphName):
-		"""Get the raw GLIF text for a given glyph name. This only works
+		"""
+		Get the raw GLIF text for a given glyph name. This only works
 		for GLIF files that are already on disk.
 
 		This method is useful in situations when the raw XML needs to be
@@ -218,7 +205,8 @@ class GlyphSet(object):
 	# reading/writing API
 
 	def readGlyph(self, glyphName, glyphObject=None, pointPen=None):
-		"""Read a .glif file for 'glyphName' from the glyph set. The
+		"""
+		Read a .glif file for 'glyphName' from the glyph set. The
 		'glyphObject' argument can be any kind of object (even None);
 		the readGlyph() method will attempt to set the following
 		attributes on it:
@@ -249,7 +237,8 @@ class GlyphSet(object):
 		_readGlyphFromTree(tree, glyphObject, pointPen)
 
 	def writeGlyph(self, glyphName, glyphObject=None, drawPointsFunc=None):
-		"""Write a .glif file for 'glyphName' to the glyph set. The
+		"""
+		Write a .glif file for 'glyphName' to the glyph set. The
 		'glyphObject' argument can be any kind of object (even None);
 		the writeGlyph() method will attempt to get the following
 		attributes from it:
@@ -315,10 +304,11 @@ class GlyphSet(object):
 			raise KeyError, glyphName
 		return self.glyphClass(glyphName, self)
 
-	# quickly fetching unicode values
+	# quickly fetch unicode values
 
 	def getUnicodes(self):
-		"""Return a dictionary that maps all glyph names to lists containing
+		"""
+		Return a dictionary that maps all glyph names to lists containing
 		the unicode value[s] for that glyph, if any. This parses the .glif
 		files partially, so is a lot faster than parsing all files completely.
 		"""
@@ -345,8 +335,60 @@ class GlyphSet(object):
 		return contents
 
 
+# ------------
+# Simple Glyph
+# ------------
+
+class Glyph(object):
+
+	"""
+	Minimal glyph object. It has no glyph attributes until either
+	the draw() or the drawPoint() method has been called.
+	"""
+
+	def __init__(self, glyphName, glyphSet):
+		self.glyphName = glyphName
+		self.glyphSet = glyphSet
+
+	def draw(self, pen):
+		"""
+		Draw this glyph onto a *FontTools* Pen.
+		"""
+		from robofab.pens.adapterPens import PointToSegmentPen
+		pointPen = PointToSegmentPen(pen)
+		self.drawPoints(pointPen)
+
+	def drawPoints(self, pointPen):
+		"""
+		Draw this glyph onto a PointPen.
+		"""
+		self.glyphSet.readGlyph(self.glyphName, self, pointPen)
+
+
+# -----------------------
+# Glyph Name to File Name
+# -----------------------
+
+def glyphNameToFileName(glyphName, glyphSet):
+	"""
+	Wrapper around the userNameToFileName function in filenames.py
+	"""
+	existing = [name.lower() for name in glyphSet.contents.values()]
+	if not isinstance(glyphName, unicode):
+		try:
+			new = unicode(glyphName)
+			glyphName = new
+		except UnicodeDecodeError:
+			pass
+	return userNameToFileName(glyphName, existing=existing, suffix=".glif")
+
+# -----------------------
+# GLIF To and From String
+# -----------------------
+
 def readGlyphFromString(aString, glyphObject=None, pointPen=None):
-	"""Read .glif data from a string into a glyph object.
+	"""
+	Read .glif data from a string into a glyph object.
 
 	The 'glyphObject' argument can be any kind of object (even None);
 	the readGlyphFromString() method will attempt to set the following
@@ -374,7 +416,8 @@ def readGlyphFromString(aString, glyphObject=None, pointPen=None):
 
 
 def writeGlyphToString(glyphName, glyphObject=None, drawPointsFunc=None, writer=None):
-	"""Return .glif data for a glyph as a UTF-8 encoded string.
+	"""
+	Return .glif data for a glyph as a UTF-8 encoded string.
 	The 'glyphObject' argument can be any kind of object (even None);
 	the writeGlyphToString() method will attempt to get the following
 	attributes from it:
@@ -462,8 +505,9 @@ def writeGlyphToString(glyphName, glyphObject=None, drawPointsFunc=None, writer=
 	else:
 		return None
 
-
-# misc helper functions
+# -----------------
+# GLIF Tree Support
+# -----------------
 
 def _stripGlyphXMLTree(nodes):
 	for element, attrs, children in nodes:
@@ -473,34 +517,12 @@ def _stripGlyphXMLTree(nodes):
 		recursive = (element != "lib")
 		stripCharacterData(children, recursive=recursive)
 
-
 def _glifTreeFromFile(aFile):
 	tree = buildTree(aFile, stripData=False)
 	stripCharacterData(tree[2], recursive=False)
 	assert tree[0] == "glyph"
 	_stripGlyphXMLTree(tree[2])
 	return tree
-
-
-def _relaxedSetattr(object, attr, value):
-	try:
-		setattr(object, attr, value)
-	except AttributeError:
-		pass
-
-
-def _number(s):
-	"""Given a numeric string, return an integer or a float, whichever
-	the string indicates. _number("1") will return the integer 1,
-	_number("1.0") will return the float 1.0.
-	"""
-	try:
-		n = int(s)
-	except ValueError:
-		n = float(s)
-	return n
-
-
 
 def _readGlyphFromTree(tree, glyphObject=None, pointPen=None):
 	unicodes = []
@@ -539,65 +561,9 @@ def _readGlyphFromTree(tree, glyphObject=None, pointPen=None):
 	if unicodes:
 		_relaxedSetattr(glyphObject, "unicodes", unicodes)
 
-
-class _DoneParsing(Exception): pass
-
-def _startElementHandler(tagName, attrs):
-	if tagName != "glyph":
-		# the top level element of any .glif file must be <glyph>
-		raise _DoneParsing(None)
-	glyphName = attrs["name"]
-	raise _DoneParsing(glyphName)
-
-def _fetchGlyphName(glyphPath):
-	# Given a path to an existing .glif file, get the glyph name
-	# from the XML data.
-	from xml.parsers.expat import ParserCreate
-
-	p = ParserCreate()
-	p.StartElementHandler = _startElementHandler
-	p.returns_unicode = True
-	f = open(glyphPath)
-	try:
-		p.ParseFile(f)
-	except _DoneParsing, why:
-		glyphName = why.args[0]
-		if glyphName is None:
-			raise ValueError, (".glif file doen't have a <glyph> top-level "
-					"element: %r" % glyphPath)
-	else:
-		assert 0, "it's not expected that parsing the file ends normally"
-	return glyphName
-
-
-def _fetchUnicodes(text):
-	# Given GLIF text, get a list of all unicode values from the XML data.
-	parser = _FetchUnicodesParser(text)
-	return parser.unicodes
-
-class _FetchUnicodesParser(object):
-
-	def __init__(self, text):
-		from xml.parsers.expat import ParserCreate
-		self.unicodes = []
-		self._elementStack = []
-		parser = ParserCreate()
-		parser.returns_unicode = 0  # XXX, Don't remember why. It sucks, though.
-		parser.StartElementHandler = self.startElementHandler
-		parser.EndElementHandler = self.endElementHandler
-		parser.Parse(text)
-
-	def startElementHandler(self, name, attrs):
-		if name == "unicode" and len(self._elementStack) == 1 and self._elementStack[0] == "glyph":
-			value = attrs.get("hex")
-			value = int(value, 16)
-			self.unicodes.append(value)
-		self._elementStack.append(name)
-
-	def endElementHandler(self, name):
-		other = self._elementStack.pop(-1)
-		assert other == name
-
+# ----------------
+# GLIF to PointPen
+# ----------------
 
 def buildOutline_Format0(pen, xmlNodes):
 	# This reads the "old" .glif format, retroactively named "format 0",
@@ -643,7 +609,6 @@ def buildOutline_Format0(pen, xmlNodes):
 			pen.addPoint((x, y), segmentType="move", name=name)
 			pen.endPath()
 
-
 def buildOutline_Format1(pen, xmlNodes):
 	for element, attrs, children in xmlNodes:
 		if element == "contour":
@@ -672,6 +637,97 @@ def buildOutline_Format1(pen, xmlNodes):
 				transformation.append(value)
 			pen.addComponent(baseGlyphName, tuple(transformation))
 
+# ---------------------
+# Misc Helper Functions
+# ---------------------
+
+def _relaxedSetattr(object, attr, value):
+	try:
+		setattr(object, attr, value)
+	except AttributeError:
+		pass
+
+def _number(s):
+	"""
+	Given a numeric string, return an integer or a float, whichever
+	the string indicates. _number("1") will return the integer 1,
+	_number("1.0") will return the float 1.0.
+	"""
+	try:
+		n = int(s)
+	except ValueError:
+		n = float(s)
+	return n
+
+# -------------------
+# Glyph Name Fetching
+# -------------------
+
+class _DoneParsing(Exception): pass
+
+def _startElementHandler(tagName, attrs):
+	if tagName != "glyph":
+		# the top level element of any .glif file must be <glyph>
+		raise _DoneParsing(None)
+	glyphName = attrs["name"]
+	raise _DoneParsing(glyphName)
+
+def _fetchGlyphName(glyphPath):
+	# Given a path to an existing .glif file, get the glyph name
+	# from the XML data.
+	from xml.parsers.expat import ParserCreate
+
+	p = ParserCreate()
+	p.StartElementHandler = _startElementHandler
+	p.returns_unicode = True
+	f = open(glyphPath)
+	try:
+		p.ParseFile(f)
+	except _DoneParsing, why:
+		glyphName = why.args[0]
+		if glyphName is None:
+			raise ValueError, (".glif file doen't have a <glyph> top-level "
+					"element: %r" % glyphPath)
+	else:
+		assert 0, "it's not expected that parsing the file ends normally"
+	return glyphName
+
+# ----------------
+# Unicode Fetching
+# ----------------
+
+def _fetchUnicodes(text):
+	# Given GLIF text, get a list of all unicode values from the XML data.
+	parser = _FetchUnicodesParser(text)
+	return parser.unicodes
+
+class _FetchUnicodesParser(object):
+
+	def __init__(self, text):
+		from xml.parsers.expat import ParserCreate
+		self.unicodes = []
+		self._elementStack = []
+		parser = ParserCreate()
+		parser.returns_unicode = 0  # XXX, Don't remember why. It sucks, though.
+		parser.StartElementHandler = self.startElementHandler
+		parser.EndElementHandler = self.endElementHandler
+		parser.Parse(text)
+
+	def startElementHandler(self, name, attrs):
+		if name == "unicode" and len(self._elementStack) == 1 and self._elementStack[0] == "glyph":
+			value = attrs.get("hex")
+			value = int(value, 16)
+			self.unicodes.append(value)
+		self._elementStack.append(name)
+
+	def endElementHandler(self, name):
+		other = self._elementStack.pop(-1)
+		assert other == name
+
+
+# --------------
+# GLIF Point Pen
+# --------------
 
 _transformationInfo = [
 	# field name, default value
@@ -685,7 +741,8 @@ _transformationInfo = [
 
 class GLIFPointPen(AbstractPointPen):
 
-	"""Helper class using the PointPen protocol to write the <outline>
+	"""
+	Helper class using the PointPen protocol to write the <outline>
 	part of .glif files.
 	"""
 
