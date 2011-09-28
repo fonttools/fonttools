@@ -31,6 +31,8 @@ else:
 	WRITE_MODE = "w"
 	READ_MODE = "r"
 
+LAYERINFO_FILENAME = "layercontents.plist"
+
 
 class Glyph(object):
 
@@ -81,7 +83,7 @@ class GlyphSet(object):
 
 	glyphClass = Glyph
 
-	def __init__(self, dirName, glyphNameToFileNameFunc=None):
+	def __init__(self, dirName, glyphNameToFileNameFunc=None, ufoFormatVersion=3):
 		"""'dirName' should be a path to an existing directory.
 
 		The optional 'glyphNameToFileNameFunc' argument must be a callback
@@ -91,6 +93,7 @@ class GlyphSet(object):
 		a file name is created for a given glyph name.
 		"""
 		self.dirName = dirName
+		self.ufoFormatVersion = ufoFormatVersion
 		if glyphNameToFileNameFunc is None:
 			glyphNameToFileNameFunc = glyphNameToFileName
 		self.glyphNameToFileName = glyphNameToFileNameFunc
@@ -132,6 +135,45 @@ class GlyphSet(object):
 		f = open(contentsPath, WRITE_MODE)
 		f.write(plist)
 		f.close()
+
+	# layer info
+
+	def readLayerInfo(self, info):
+		path = os.path.join(self.dirName, LAYERINFO_FILENAME)
+		if not os.path.exists(path):
+			return
+		infoDict = readPlist(path)
+		infoDict = validateLayerInfoData(infoDict)
+		# populate the object
+		for attr, value in infoDataToSet.items():
+			try:
+				setattr(info, attr, value)
+			except AttributeError:
+				raise GlifLibError("The supplied layer info object does not support setting a necessary attribute (%s)." % attr)
+
+	def writeLayerInfo(self, info):
+		if self.ufoFormatVersion < 3:
+			raise GlifLibError("layerinfo.plist is not allowed in UFO %d." % self.ufoFormatVersion)
+		# gather data
+		infoData = {}
+		for attr in layerInfoVersion3ValueData.keys():
+			if hasattr(info, attr):
+				try:
+					value = getattr(info, attr)
+				except AttributeError:
+					raise GlifLibError("The supplied info object does not support getting a necessary attribute (%s)." % attr)
+				if value is None:
+					continue
+				infoData[attr] = value
+		# validate
+		infoData = validateLayerInfoVersion3Data(infoData)
+		# write file
+		path = os.path.join(self.dirName, LAYERINFO_FILENAME)
+		plist = writePlistToString(infoData)
+		f = open(path, WRITE_MODE)
+		f.write(plist)
+		f.close()
+
 
 	# read caching
 
