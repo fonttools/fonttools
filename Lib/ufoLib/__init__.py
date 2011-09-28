@@ -1401,7 +1401,7 @@ fontInfoAttributesVersion3ValueData.update({
 	"woffMetadataExtensions"				: dict(type=list, valueValidator=fontInfoWOFFMetadataExtensionsValidator),
 	"firstKerningGroupPrefix" 				: dict(type=basestring, valueValidator=fontInfoKerningPrefixValidator),
 	"secondKerningGroupPrefix" 				: dict(type=basestring, valueValidator=fontInfoKerningPrefixValidator),
-	"guidelines"							: dict(type=list, valueValidator=fontInfoGuidelinesValidator)
+	"guidelines"							: dict(type=list, valueValidator=guidelinesValidator)
 })
 
 # insert the type validator for all attrs that

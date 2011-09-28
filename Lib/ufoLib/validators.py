@@ -4,9 +4,9 @@ import os
 import calendar
 
 
-# ------------------
-# Generic Validators
-# ------------------
+# -------
+# Generic
+# -------
 
 def genericTypeValidator(value, typ):
 	"""
@@ -73,9 +73,9 @@ def genericDictValidator(value, prototype):
 			return False
 	return True
 
-# ----------------------
-# fontinfo.plist Support
-# ----------------------
+# --------------
+# fontinfo.plist
+# --------------
 
 # Data Validators
 
@@ -518,7 +518,11 @@ def fontInfoKerningPrefixValidator(value):
 		return False
 	return True
 
-def fontInfoGuidelinesValidator(value):
+# ----------
+# Guidelines
+# ----------
+
+def guidelinesValidator(value):
 	"""
 	Version 3+.
 	"""
@@ -526,7 +530,7 @@ def fontInfoGuidelinesValidator(value):
 		return True
 	identifiers = set()
 	for guide in value:
-		if not fontInfoGuidelineValidator(guide):
+		if not guidelineValidator(guide):
 			return False
 		identifier = guide.get("identifier")
 		if identifier is not None:
@@ -535,7 +539,7 @@ def fontInfoGuidelinesValidator(value):
 			identifiers.add(identifier)
 	return True
 
-def fontInfoGuidelineValidator(value):
+def guidelineValidator(value):
 	"""
 	Version 3+.
 	"""
@@ -563,15 +567,19 @@ def fontInfoGuidelineValidator(value):
 			return False
 	# identifier must be 1 or more characters
 	identifier = value.get("identifier")
-	if identifier is not None and not fontInfoIdentifierValidator(identifier):
+	if identifier is not None and not identifierValidator(identifier):
 		return False
 	# color must follow the proper format
 	color = value.get("color")
-	if color is not None and not fontInfoColorValidator(color):
+	if color is not None and not colorValidator(color):
 		return False
 	return True
 
-def fontInfoIdentifierValidator(value):
+# ----------
+# Identifier
+# ----------
+
+def identifierValidator(value):
 	"""
 	Version 3+.
 	"""
@@ -587,7 +595,11 @@ def fontInfoIdentifierValidator(value):
 			return False
 	return True
 
-def fontInfoColorValidator(value):
+# -----
+# Color
+# -----
+
+def colorValidator(value):
 	"""
 	Version 3+.
 	"""
@@ -618,9 +630,9 @@ def fontInfoColorValidator(value):
 			return False
 	return True
 
-# ---------------------------
-# layercontents.plist Support
-# ---------------------------
+# -------------------
+# layercontents.plist
+# -------------------
 
 def layerContentsValidator(value, ufoPath):
 	"""
