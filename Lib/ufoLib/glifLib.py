@@ -17,7 +17,12 @@ from xmlTreeBuilder import buildTree, stripCharacterData
 from robofab.pens.pointPen import AbstractPointPen
 from plistlib import readPlist, writePlistToString
 from filenames import userNameToFileName
-from validators import genericTypeValidator, colorValidator, guidelinesValidator
+from validators import genericTypeValidator, colorValidator, guidelinesValidator, identifierValidator
+
+try:
+	set
+except NameError:
+	from sets import Set as set
 
 __all__ = [
 	"GlyphSet",
@@ -618,10 +623,11 @@ def _readGlyphFromTree(tree, glyphObject=None, pointPen=None):
 		_relaxedSetattr(glyphObject, "name", glyphName)
 	# populate the sub elements
 	unicodes = []
+	identifiers = set()
 	for element, attrs, children in tree[2]:
 		if element == "outline":
 			if pointPen is not None:
-				buildOutline(pointPen, children, formatVersion)
+				buildOutline(pointPen, children, formatVersion, identifiers)
 		elif glyphObject is None:
 			continue
 		elif element == "advance":
@@ -652,7 +658,10 @@ def _readGlyphFromTree(tree, glyphObject=None, pointPen=None):
 # GLIF to PointPen
 # ----------------
 
-def buildOutline(pen, xmlNodes, formatVersion):
+pointSmoothOptions = ("no", "yes")
+pointTypeOptions = ("move", "line", "offcurve", "curve", "qcurve")
+
+def buildOutline(pen, xmlNodes, formatVersion, identifiers):
 	for element, attrs, children in xmlNodes:
 		if element == "contour":
 			pen.beginPath()
@@ -670,16 +679,29 @@ def buildOutline(pen, xmlNodes, formatVersion):
 				y = _number(y)
 				# type is not required
 				segmentType = attrs.get("type", "offcurve")
+				if segmentType not in pointTypeOptions:
+					raise GlifLibError("Unknown point type: %s" % segmentType)
 				if segmentType == "offcurve":
 					segmentType = None
 				# smooth is not required
-				smooth = attrs.get("smooth") == "yes"
+				smooth = attrs.get("smooth", "no")
+				if smooth is not None:
+					if smooth not in pointSmoothOptions:
+						raise GlifLibError("Unknown point smooth value: %s" % smooth)
+				smooth = smooth == "yes"
 				# name is not required
 				name = attrs.get("name")
 				# identifier is not required but it is not part of format 1
 				identifier = attrs.get("identifier")
 				if identifier is not None and formatVersion == 1:
 					raise GlifLibError("The identifier attribute is not allowed in GLIF format 1.")
+				if identifier is not None:
+					if identifier in identifiers:
+						raise GlifLibError("The identifier %s is used more than once." % identifier)
+					isValid = identifierValidator(identifier)
+					if not isValid:
+						raise GlifLibError("The identifier %s is not valid." % identifier)
+					identifiers.add(identifier)
 				# write to a point pen
 				pen.addPoint((x, y), segmentType=segmentType, smooth=smooth, name=name, identifier=identifier)
 			pen.endPath()
