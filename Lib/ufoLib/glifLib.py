@@ -623,6 +623,7 @@ def _readGlyphFromTree(tree, glyphObject=None, pointPen=None):
 		_relaxedSetattr(glyphObject, "name", glyphName)
 	# populate the sub elements
 	unicodes = []
+	guidelines = []
 	identifiers = set()
 	for element, attrs, children in tree[2]:
 		if element == "outline":
@@ -642,6 +643,12 @@ def _readGlyphFromTree(tree, glyphObject=None, pointPen=None):
 				unicodes.append(v)
 			except ValueError:
 				raise GlifLibError("Illegal value for hex attribute of unicode element.")
+		elif element == "guideline":
+			if formatVersion == 1:
+				raise GlifLibError("The guideline element is not allowed in GLIF format 1.")
+			if len(children):
+				raise GlifLibError("Unknown children in guideline element.")
+			guidelines.append(attrs)
 		elif element == "note":
 			rawNote = "\n".join(children)
 			lines = rawNote.split("\n")
@@ -658,6 +665,11 @@ def _readGlyphFromTree(tree, glyphObject=None, pointPen=None):
 	# set the collected unicodes
 	if unicodes:
 		_relaxedSetattr(glyphObject, "unicodes", unicodes)
+	# set the collected guidelines
+	if formatVersion > 1 and guidelines:
+		if not guidelinesValidator(guidelines, identifiers):
+			raise GlifLibError("Guidelines are improperly formatted.")
+		_relaxedSetattr(glyphObject, "guidelines", guidelines)
 
 # ----------------
 # GLIF to PointPen
@@ -1001,19 +1013,24 @@ if __name__ == "__main__":
 
 	from pprint import pprint
 	from robofab.pens.pointPen import PrintingPointPen
+
 	class TestGlyph: pass
+
 	gs = GlyphSet(".")
+
 	def drawPoints(pen):
 		pen.beginPath(identifier="my contour")
 		pen.addPoint((100, 200), name="foo", identifier="my point")
 		pen.addPoint((200, 250), segmentType="curve", smooth=True)
 		pen.endPath()
 		pen.addComponent("a", (1, 0, 0, 1, 20, 30), identifier="my component")
+
 	glyph = TestGlyph()
 	glyph.width = 120
 	glyph.unicodes = [1, 2, 3, 43215, 66666]
 	glyph.lib = {"a": "b", "c": [1, 2, 3, True]}
 	glyph.note = "  hallo!   "
+
 	if 0:
 		gs.writeGlyph("a", glyph, drawPoints)
 		g2 = TestGlyph()
