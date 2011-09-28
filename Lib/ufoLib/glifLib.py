@@ -693,12 +693,26 @@ def _number(s):
 	Given a numeric string, return an integer or a float, whichever
 	the string indicates. _number("1") will return the integer 1,
 	_number("1.0") will return the float 1.0.
+
+	>>> _number("1")
+	1
+	>>> _number("1.0")
+	1.0
+	>>> _number("a")
+	Traceback (most recent call last):
+	    ...
+	GlifLibError: Could not convert a to an int or float.
 	"""
 	try:
 		n = int(s)
+		return n
 	except ValueError:
+		pass
+	try:
 		n = float(s)
-	return n
+		return n
+	except ValueError:
+		raise GlifLibError("Could not convert %s to an int or float." % s)
 
 # -------------------
 # Glyph Name Fetching
@@ -827,6 +841,9 @@ class GLIFPointPen(AbstractPointPen):
 
 
 if __name__ == "__main__":
+	import doctest
+	doctest.testmod()
+
 	from pprint import pprint
 	from robofab.pens.pointPen import PrintingPointPen
 	class TestGlyph: pass
