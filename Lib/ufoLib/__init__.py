@@ -167,8 +167,6 @@ class UFOReader(object):
 
 	def _readPlist(self, path):
 		"""
-		XXX make all readers in this object use this method.
-
 		Read a property list. The errors that
 		could be raised during the reading of
 		a plist are unpredictable and/or too
@@ -226,7 +224,9 @@ class UFOReader(object):
 		# should there be a blind try/except with a UFOLibError
 		# raised in except here (and elsewhere)? It would be nice to
 		# provide external callers with a single exception to catch.
-		data = readPlist(path)
+		data = self._readPlist(path)
+		if not isinstance(data, dict):
+			raise UFOLibError("maetainfo.plist is not properly formatted.")
 		formatVersion = data["formatVersion"]
 		if formatVersion not in supportedUFOFormatVersions:
 			raise UFOLibError("Unsupported UFO format (%d) in %s." % (formatVersion, self._path))
@@ -238,7 +238,10 @@ class UFOReader(object):
 		path = os.path.join(self._path, GROUPS_FILENAME)
 		if not self._checkForFile(path):
 			return {}
-		return readPlist(path)
+		data = self._readPlist(path)
+		if not isinstance(data, dict):
+			raise UFOLibError("groups.plist is not properly formatted.")
+		return data
 
 	def readGroups(self):
 		"""
@@ -258,7 +261,10 @@ class UFOReader(object):
 		path = os.path.join(self._path, FONTINFO_FILENAME)
 		if not self._checkForFile(path):
 			return {}
-		return readPlist(path)
+		data = self._readPlist(path)
+		if not isinstance(data, dict):
+			raise UFOLibError("fontinfo.plist is not properly formatted.")
+		return data
 
 	def readInfo(self, info):
 		"""
@@ -321,7 +327,10 @@ class UFOReader(object):
 		path = os.path.join(self._path, KERNING_FILENAME)
 		if not self._checkForFile(path):
 			return {}
-		return readPlist(path)
+		data = self._readPlist(path)
+		if not isinstance(data, dict):
+			raise UFOLibError("kerning.plist is not properly formatted.")
+		return data
 
 	def readKerning(self):
 		"""
@@ -351,6 +360,9 @@ class UFOReader(object):
 		path = os.path.join(self._path, LIB_FILENAME)
 		if not self._checkForFile(path):
 			return {}
+		data = self._readPlist(path)
+		if not isinstance(data, dict):
+			raise UFOLibError("lib.plist is not properly formatted.")
 		return readPlist(path)
 
 	# features.fea
@@ -710,6 +722,8 @@ class UFOWriter(object):
 		Write groups.plist. This method requires a
 		dict of glyph groups as an argument.
 		"""
+		if not isinstance(groups, dict):
+			raise UFOLibError("The groups must be a dict or dict like object.")
 		self._makeDirectory()
 		path = os.path.join(self._path, GROUPS_FILENAME)
 		groupsNew = {}
@@ -763,6 +777,8 @@ class UFOWriter(object):
 		Write kerning.plist. This method requires a
 		dict of kerning pairs as an argument.
 		"""
+		if not isinstance(kerning, dict):
+			raise UFOLibError("The kerning must be a dict or dict like object.")
 		self._makeDirectory()
 		path = os.path.join(self._path, KERNING_FILENAME)
 		kerningDict = {}
@@ -783,6 +799,8 @@ class UFOWriter(object):
 		Write lib.plist. This method requires a
 		lib dict as an argument.
 		"""
+		if not isinstance(libDict, dict):
+			raise UFOLibError("The libDict must be a dict or dict like object.")
 		self._makeDirectory()
 		path = os.path.join(self._path, LIB_FILENAME)
 		if libDict:
