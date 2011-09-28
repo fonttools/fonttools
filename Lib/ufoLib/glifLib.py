@@ -15,9 +15,10 @@ __all__ = ["GlyphSet", "GlifLibError",
 		"glyphNameToFileName"]
 
 import os
+from cStringIO import StringIO
 from xmlTreeBuilder import buildTree, stripCharacterData
 from robofab.pens.pointPen import AbstractPointPen
-from cStringIO import StringIO
+from filenames import userNameToFileName
 
 
 class GlifLibError(Exception): pass
@@ -53,43 +54,15 @@ class Glyph(object):
 
 
 def glyphNameToFileName(glyphName, glyphSet):
-	"""Default algorithm for making a file name out of a glyph name.
-	This one has limited support for case insensitive file systems:
-	it assumes glyph names are not case sensitive apart from the first
-	character:
-		'a'     -> 'a.glif'
-		'A'     -> 'A_.glif'
-		'A.alt' -> 'A_.alt.glif'
-		'A.Alt' -> 'A_.Alt.glif'
-		'T_H'   -> 'T__H_.glif'
-		'T_h'   -> 'T__h.glif'
-		't_h'   -> 't_h.glif'
-		'F_F_I' -> 'F__F__I_.glif'
-		'f_f_i' -> 'f_f_i.glif'
-
-	"""
-	if glyphName.startswith("."):
-		# some OSes consider filenames such as .notdef "hidden"
-		glyphName = "_" + glyphName[1:]
-	parts = glyphName.split(".")
-	if parts[0].find("_")!=-1:
-		# it is a compound name, check the separate parts
-		bits = []
-		for p in parts[0].split("_"):
-			if p != p.lower():
-				bits.append(p+"_")
-				continue
-			bits.append(p)
-		parts[0] = "_".join(bits)
-	else:
-		# it is a single name
-		if parts[0] != parts[0].lower():
-			parts[0] += "_"
-	for i in range(1, len(parts)):
-		# resolve additional, period separated parts, like alt / Alt
-		if parts[i] != parts[i].lower():
-			parts[i] += "_"
-	return ".".join(parts) + ".glif"
+	"""Wrapper around the userNameToFileName function in filenames.py"""
+	existing = [name.lower() for name in glyphSet.contents.values()]
+	if not isinstance(glyphName, unicode):
+		try:
+			new = unicode(glyphName)
+			glyphName = new
+		except UnicodeDecodeError:
+			pass
+	return userNameToFileName(glyphName, existing=existing, suffix=".glif")
 
 
 class GlyphSet(object):
