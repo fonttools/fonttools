@@ -687,8 +687,12 @@ def buildOutline(pen, xmlNodes, formatVersion, identifiers):
 				pen.beginPath()
 				raise DeprecationWarning("The beginPath method needs an identifier kwarg. The contour's identifier value has been discarded.")
 			# points
+			## loop through the points very quickly to make sure that the number of off-curves is correct
+			if children:
+				_validateSegmentStructures(children)
+			## interpret the points
 			for index, (subElement, attrs, dummy) in enumerate(children):
-				# unknwon child element of contour
+				# unknown child element of contour
 				if subElement != "point":
 					raise GlifLibError("Unknown child element (%s) of contour element." % subElement)
 				# search for unknown attributes
@@ -741,7 +745,7 @@ def buildOutline(pen, xmlNodes, formatVersion, identifiers):
 					raise DeprecationWarning("The addPoint method needs an identifier kwarg. The point's identifier value has been discarded.")
 			pen.endPath()
 		elif element == "component":
-			# unknwon child element of contour
+			# unknown child element of contour
 			if len(children):
 				raise GlifLibError("Unknown child elements of component element." % subElement)
 			# search for unknown attributes
@@ -777,6 +781,35 @@ def buildOutline(pen, xmlNodes, formatVersion, identifiers):
 				pen.addComponent(baseGlyphName, tuple(transformation))
 				raise DeprecationWarning("The addComponent method needs an identifier kwarg. The component's identifier value has been discarded.")
 
+def _validateSegmentStructures(tree):
+	pointTypes = [a.get("type", "offcurve") for s, a, d in tree]
+	if set(pointTypes) != set(("offcurve")):
+		while pointTypes[-1] == "offcurve":
+			pointTypes.insert(0, pointTypes.pop(-1))
+		segments = []
+		for pointType in reversed(pointTypes):
+			if pointType != "offcurve":
+				segments.append([pointType])
+			else:
+				segments[-1].append(pointType)
+		for segment in segments:
+			if len(segment) == 1:
+				continue
+			segmentType = segment[0]
+			offCurves = segment[1:]
+			# move and line can't be preceded by off-curves
+			if segmentType == "move":
+				raise GlifLibError("move can not have an offcurve.")
+			elif segmentType == "line":
+				raise GlifLibError("move can not have an offcurve.")
+			elif segmentType == "curve":
+				if len(offCurves) > 2:
+					raise GlifLibError("Too many offcurves defined for curve.")
+			elif segmentType == "qcurve":
+				pass
+			else:
+				# unknown segement type. it'll be caught later.
+				pass
 
 # ---------------------
 # Misc Helper Functions
