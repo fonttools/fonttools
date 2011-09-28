@@ -276,7 +276,7 @@ class GlyphSet(object):
 		tree = _glifTreeFromFile(StringIO(text))
 		_readGlyphFromTree(tree, glyphObject, pointPen)
 
-	def writeGlyph(self, glyphName, glyphObject=None, drawPointsFunc=None):
+	def writeGlyph(self, glyphName, glyphObject=None, drawPointsFunc=None, glifFormatVersion=2):
 		"""
 		Write a .glif file for 'glyphName' to the glyph set. The
 		'glyphObject' argument can be any kind of object (even None);
@@ -297,7 +297,7 @@ class GlyphSet(object):
 		proper PointPen methods to transfer the outline to the .glif file.
 		"""
 		self._purgeCachedGLIF(glyphName)
-		data = writeGlyphToString(glyphName, glyphObject, drawPointsFunc)
+		data = writeGlyphToString(glyphName, glyphObject, drawPointsFunc, glifFormatVersion=glifFormatVersion)
 		fileName = self.contents.get(glyphName)
 		if fileName is None:
 			fileName = self.glyphNameToFileName(glyphName, self)
@@ -431,7 +431,7 @@ def readGlyphFromString(aString, glyphObject=None, pointPen=None):
 	_readGlyphFromTree(tree, glyphObject, pointPen)
 
 
-def writeGlyphToString(glyphName, glyphObject=None, drawPointsFunc=None, writer=None):
+def writeGlyphToString(glyphName, glyphObject=None, drawPointsFunc=None, writer=None, glifFormatVersion=2):
 	"""
 	Return .glif data for a glyph as a UTF-8 encoded string.
 	The 'glyphObject' argument can be any kind of object (even None);
@@ -457,7 +457,7 @@ def writeGlyphToString(glyphName, glyphObject=None, drawPointsFunc=None, writer=
 		writer = XMLWriter(aFile, encoding="UTF-8")
 	else:
 		aFile = None
-	writer.begintag("glyph", [("name", glyphName), ("format", "1")])
+	writer.begintag("glyph", [("name", glyphName), ("format", glifFormatVersion)])
 	writer.newline()
 
 	width = getattr(glyphObject, "width", None)
@@ -658,12 +658,18 @@ def _readGlyphFromTree(tree, glyphObject=None, pointPen=None):
 # GLIF to PointPen
 # ----------------
 
-pointSmoothOptions = ("no", "yes")
-pointTypeOptions = ("move", "line", "offcurve", "curve", "qcurve")
+componentAttributes = set(["base", "xScale", "xyScale", "yxScale", "yScale", "xOffset", "yOffset", "identifier"])
+contourAttributes = set(["identifier"])
+pointAttributes = set(["x", "y", "type", "smooth", "name", "identifier"])
+pointSmoothOptions = set(("no", "yes"))
+pointTypeOptions = set(["move", "line", "offcurve", "curve", "qcurve"])
 
 def buildOutline(pen, xmlNodes, formatVersion, identifiers):
 	for element, attrs, children in xmlNodes:
 		if element == "contour":
+			# search for unknown attributes
+			if set(attrs.keys()) - contourAttributes:
+				raise GlifLibError("Unknown attributes in contour element.")
 			# identifier is not required but it is not part of format 1
 			identifier = attrs.get("identifier")
 			if identifier is not None and formatVersion == 1:
@@ -678,12 +684,19 @@ def buildOutline(pen, xmlNodes, formatVersion, identifiers):
 			try:
 				pen.beginPath(identifier)
 			except TypeError:
-				raise DeprecationWarning("The beginPath method needs an identifier kwarg. The contour's identifier value has been discarded.")
 				pen.beginPath()
+				raise DeprecationWarning("The beginPath method needs an identifier kwarg. The contour's identifier value has been discarded.")
 			# points
 			for subElement, attrs, dummy in children:
+				# unknwon child element of contour
 				if subElement != "point":
 					raise GlifLibError("Unknown child element (%s) of contour element." % subElement)
+				# search for unknown attributes
+				if set(attrs.keys()) - pointAttributes:
+					raise GlifLibError("Unknown attributes in point element.")
+				# search for unknown children
+				if len(dummy):
+					raise GlifLibError("Unknown child elements in point element.")
 				# x and y are required
 				x = attrs.get("x")
 				y = attrs.get("y")
@@ -721,11 +734,21 @@ def buildOutline(pen, xmlNodes, formatVersion, identifiers):
 				try:
 					pen.addPoint((x, y), segmentType=segmentType, smooth=smooth, name=name, identifier=identifier)
 				except TypeError:
-					raise DeprecationWarning("The addPoint method needs an identifier kwarg. The point's identifier value has been discarded.")
 					pen.addPoint((x, y), segmentType=segmentType, smooth=smooth, name=name)
+					raise DeprecationWarning("The addPoint method needs an identifier kwarg. The point's identifier value has been discarded.")
 			pen.endPath()
 		elif element == "component":
-			baseGlyphName = attrs["base"]
+			# unknwon child element of contour
+			if len(children):
+				raise GlifLibError("Unknown child elements of component element." % subElement)
+			# search for unknown attributes
+			if set(attrs.keys()) - componentAttributes:
+				raise GlifLibError("Unknown attributes in component element.")
+			# base is required
+			baseGlyphName = attrs.get("base")
+			if baseGlyphName is None:
+				raise GlifLibError("The base attribute is not defined in the component.")
+			# transformation is not required
 			transformation = []
 			for attr, default in _transformationInfo:
 				value = attrs.get(attr)
@@ -734,7 +757,23 @@ def buildOutline(pen, xmlNodes, formatVersion, identifiers):
 				else:
 					value = _number(value)
 				transformation.append(value)
-			pen.addComponent(baseGlyphName, tuple(transformation))
+			# identifier is not required but it is not part of format 1
+			identifier = attrs.get("identifier")
+			if identifier is not None and formatVersion == 1:
+				raise GlifLibError("The component identifier attribute is not allowed in GLIF format 1.")
+			if identifier is not None:
+				if identifier in identifiers:
+					raise GlifLibError("The identifier %s is used more than once." % identifier)
+				if not identifierValidator(identifier):
+					raise GlifLibError("The identifier %s is not valid." % identifier)
+				identifiers.add(identifier)
+			# try to pass the identifier attribute
+			try:
+				pen.addComponent(baseGlyphName, tuple(transformation), identifier=identifier)
+			except TypeError:
+				pen.addComponent(baseGlyphName, tuple(transformation))
+				raise DeprecationWarning("The addComponent method needs an identifier kwarg. The component's identifier value has been discarded.")
+
 
 # ---------------------
 # Misc Helper Functions
@@ -862,15 +901,18 @@ class GLIFPointPen(AbstractPointPen):
 	def __init__(self, xmlWriter):
 		self.writer = xmlWriter
 
-	def beginPath(self):
-		self.writer.begintag("contour")
+	def beginPath(self, identifier=None, **kwargs):
+		attrs = []
+		if identifier is not None:
+			attrs.append(("identifier", identifier))
+		self.writer.begintag("contour", attrs)
 		self.writer.newline()
 
 	def endPath(self):
 		self.writer.endtag("contour")
 		self.writer.newline()
 
-	def addPoint(self, pt, segmentType=None, smooth=None, name=None, **kwargs):
+	def addPoint(self, pt, segmentType=None, smooth=None, name=None, identifier=None, **kwargs):
 		attrs = []
 		if pt is not None:
 			for coord in pt:
@@ -884,16 +926,20 @@ class GLIFPointPen(AbstractPointPen):
 			attrs.append(("smooth", "yes"))
 		if name is not None:
 			attrs.append(("name", name))
+		if identifier is not None:
+			attrs.append(("identifier", identifier))
 		self.writer.simpletag("point", attrs)
 		self.writer.newline()
 
-	def addComponent(self, glyphName, transformation):
+	def addComponent(self, glyphName, transformation, identifier=None, **kwargs):
 		attrs = [("base", glyphName)]
 		for (attr, default), value in zip(_transformationInfo, transformation):
 			if not isinstance(value, (int, float)):
 				raise GlifLibError, "transformation values must be int or float"
 			if value != default:
 				attrs.append((attr, str(value)))
+		if identifier is not None:
+			attrs.append(("identifier", identifier))
 		self.writer.simpletag("component", attrs)
 		self.writer.newline()
 
@@ -907,11 +953,11 @@ if __name__ == "__main__":
 	class TestGlyph: pass
 	gs = GlyphSet(".")
 	def drawPoints(pen):
-		pen.beginPath()
-		pen.addPoint((100, 200), name="foo", identifier="hello")
+		pen.beginPath(identifier="my contour")
+		pen.addPoint((100, 200), name="foo", identifier="my point")
 		pen.addPoint((200, 250), segmentType="curve", smooth=True)
 		pen.endPath()
-		pen.addComponent("a", (1, 0, 0, 1, 20, 30))
+		pen.addComponent("a", (1, 0, 0, 1, 20, 30), identifier="my component")
 	glyph = TestGlyph()
 	glyph.width = 120
 	glyph.unicodes = [1, 2, 3, 43215, 66666]
