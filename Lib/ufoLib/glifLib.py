@@ -678,7 +678,8 @@ def buildOutline(pen, xmlNodes, formatVersion, identifiers):
 			try:
 				pen.beginPath(identifier)
 			except TypeError:
-				raise DeprecationWarning("The beginPath method now needs an identifier kwarg. The contours identifier value has been discarded.")
+				raise DeprecationWarning("The beginPath method needs an identifier kwarg. The contour's identifier value has been discarded.")
+				pen.beginPath()
 			# points
 			for subElement, attrs, dummy in children:
 				if subElement != "point":
@@ -716,8 +717,12 @@ def buildOutline(pen, xmlNodes, formatVersion, identifiers):
 					if not identifierValidator(identifier):
 						raise GlifLibError("The identifier %s is not valid." % identifier)
 					identifiers.add(identifier)
-				# write to a point pen
-				pen.addPoint((x, y), segmentType=segmentType, smooth=smooth, name=name, identifier=identifier)
+				# try to pass the identifier attribute
+				try:
+					pen.addPoint((x, y), segmentType=segmentType, smooth=smooth, name=name, identifier=identifier)
+				except TypeError:
+					raise DeprecationWarning("The addPoint method needs an identifier kwarg. The point's identifier value has been discarded.")
+					pen.addPoint((x, y), segmentType=segmentType, smooth=smooth, name=name)
 			pen.endPath()
 		elif element == "component":
 			baseGlyphName = attrs["base"]
