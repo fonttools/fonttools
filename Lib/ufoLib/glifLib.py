@@ -41,11 +41,13 @@ else:
 	WRITE_MODE = "w"
 	READ_MODE = "r"
 
-# ---------
-# Filenames
-# ---------
+# ----------
+# Connstants
+# ----------
 
 LAYERINFO_FILENAME = "layerinfo.plist"
+supportedGLIFFormatVersions = [1, 2]
+
 
 # ------------
 # Simple Glyph
@@ -592,21 +594,34 @@ def _glifTreeFromFile(aFile):
 	return tree
 
 def _readGlyphFromTree(tree, glyphObject=None, pointPen=None):
-	unicodes = []
-	assert tree[0] == "glyph"
-	formatVersion = int(tree[1].get("format", "0"))
-	if formatVersion not in (0, 1):
-		raise GlifLibError, "unsupported glif format version: %s" % formatVersion
+	# quick format validation
+	formatError = False
+	if len(tree) != 3:
+		formatError = True
+	else:
+		if tree[0] != "glyph":
+			formatError = True
+	if formatError:
+		raise GlifLibError("GLIF data is not properly formatted.")
+	# check the format version
+	formatVersion = tree[1].get("format", None)
+	try:
+		v = int(formatVersion)
+		formatVersion = v
+	except ValueError:
+		pass
+	if formatVersion not in supportedGLIFFormatVersions:
+		raise GlifLibError, "Unsupported GLIF format version: %s" % formatVersion
+	# get the name
 	glyphName = tree[1].get("name")
 	if glyphName and glyphObject is not None:
 		_relaxedSetattr(glyphObject, "name", glyphName)
+	# populate the sub elements
+	unicodes = []
 	for element, attrs, children in tree[2]:
 		if element == "outline":
 			if pointPen is not None:
-				if formatVersion == 0:
-					buildOutline_Format0(pointPen, children)
-				else:
-					buildOutline_Format1(pointPen, children)
+				buildOutline(pointPen, children, formatVersion)
 		elif glyphObject is None:
 			continue
 		elif element == "advance":
@@ -625,6 +640,9 @@ def _readGlyphFromTree(tree, glyphObject=None, pointPen=None):
 			assert len(children) == 1
 			lib = readPlistFromTree(children[0])
 			_relaxedSetattr(glyphObject, "lib", lib)
+		else:
+			raise GlifLibError("Unknown element in GLIF: %s" % element)
+	# set the collected unicodes
 	if unicodes:
 		_relaxedSetattr(glyphObject, "unicodes", unicodes)
 
@@ -632,51 +650,7 @@ def _readGlyphFromTree(tree, glyphObject=None, pointPen=None):
 # GLIF to PointPen
 # ----------------
 
-def buildOutline_Format0(pen, xmlNodes):
-	# This reads the "old" .glif format, retroactively named "format 0",
-	# later formats have a "format" attribute in the <glyph> element.
-	for element, attrs, children in xmlNodes:
-		if element == "contour":
-			pen.beginPath()
-			currentSegmentType = None
-			for subElement, attrs, dummy in children:
-				if subElement != "point":
-					continue
-				x = _number(attrs["x"])
-				y = _number(attrs["y"])
-				pointType = attrs.get("type", "onCurve")
-				if pointType == "bcp":
-					currentSegmentType = "curve"
-				elif pointType == "offCurve":
-					currentSegmentType = "qcurve"
-				elif currentSegmentType is None and pointType == "onCurve":
-					currentSegmentType = "line"
-				if pointType == "onCurve":
-					segmentType = currentSegmentType
-					currentSegmentType = None
-				else:
-					segmentType = None
-				smooth = attrs.get("smooth") == "yes"
-				pen.addPoint((x, y), segmentType=segmentType, smooth=smooth)
-			pen.endPath()
-		elif element == "component":
-			baseGlyphName = attrs["base"]
-			transformation = []
-			for attr, default in _transformationInfo:
-				value = attrs.get(attr)
-				if value is None:
-					value = default
-				else:
-					value = _number(value)
-				transformation.append(value)
-			pen.addComponent(baseGlyphName, tuple(transformation))
-		elif element == "anchor":
-			name, x, y = attrs["name"], _number(attrs["x"]), _number(attrs["y"])
-			pen.beginPath()
-			pen.addPoint((x, y), segmentType="move", name=name)
-			pen.endPath()
-
-def buildOutline_Format1(pen, xmlNodes):
+def buildOutline(pen, xmlNodes, formatVersion):
 	for element, attrs, children in xmlNodes:
 		if element == "contour":
 			pen.beginPath()
