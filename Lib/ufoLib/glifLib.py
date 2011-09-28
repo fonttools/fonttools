@@ -667,122 +667,78 @@ pointTypeOptions = set(["move", "line", "offcurve", "curve", "qcurve"])
 def buildOutline(pen, xmlNodes, formatVersion, identifiers):
 	for element, attrs, children in xmlNodes:
 		if element == "contour":
-			# search for unknown attributes
-			if set(attrs.keys()) - contourAttributes:
-				raise GlifLibError("Unknown attributes in contour element.")
-			# identifier is not required but it is not part of format 1
-			identifier = attrs.get("identifier")
-			if identifier is not None and formatVersion == 1:
-				raise GlifLibError("The contour identifier attribute is not allowed in GLIF format 1.")
-			if identifier is not None:
-				if identifier in identifiers:
-					raise GlifLibError("The identifier %s is used more than once." % identifier)
-				if not identifierValidator(identifier):
-					raise GlifLibError("The contour identifier %s is not valid." % identifier)
-				identifiers.add(identifier)
-			# try to pass the identifier attribute
-			try:
-				pen.beginPath(identifier)
-			except TypeError:
-				pen.beginPath()
-				raise DeprecationWarning("The beginPath method needs an identifier kwarg. The contour's identifier value has been discarded.")
-			# points
-			## loop through the points very quickly to make sure that the number of off-curves is correct
-			if children:
-				_validateSegmentStructures(children)
-			## interpret the points
-			for index, (subElement, attrs, dummy) in enumerate(children):
-				# unknown child element of contour
-				if subElement != "point":
-					raise GlifLibError("Unknown child element (%s) of contour element." % subElement)
-				# search for unknown attributes
-				if set(attrs.keys()) - pointAttributes:
-					raise GlifLibError("Unknown attributes in point element.")
-				# search for unknown children
-				if len(dummy):
-					raise GlifLibError("Unknown child elements in point element.")
-				# x and y are required
-				x = attrs.get("x")
-				y = attrs.get("y")
-				if x is None:
-					raise GlifLibError("Required x attribute is missing in point element.")
-				if y is None:
-					raise GlifLibError("Required y attribute is missing in point element.")
-				x = _number(x)
-				y = _number(y)
-				# type is not required
-				segmentType = attrs.get("type", "offcurve")
-				if segmentType not in pointTypeOptions:
-					raise GlifLibError("Unknown point type: %s" % segmentType)
-				if segmentType == "offcurve":
-					segmentType = None
-				# move can only occur as the first point
-				if segmentType == "move" and index != 0:
-					raise GlifLibError("A move point occurs after the first point in the contour.")
-				# smooth is not required
-				smooth = attrs.get("smooth", "no")
-				if smooth is not None:
-					if smooth not in pointSmoothOptions:
-						raise GlifLibError("Unknown point smooth value: %s" % smooth)
-				smooth = smooth == "yes"
-				# name is not required
-				name = attrs.get("name")
-				# identifier is not required but it is not part of format 1
-				identifier = attrs.get("identifier")
-				if identifier is not None and formatVersion == 1:
-					raise GlifLibError("The point identifier attribute is not allowed in GLIF format 1.")
-				if identifier is not None:
-					if identifier in identifiers:
-						raise GlifLibError("The identifier %s is used more than once." % identifier)
-					if not identifierValidator(identifier):
-						raise GlifLibError("The identifier %s is not valid." % identifier)
-					identifiers.add(identifier)
-				# try to pass the identifier attribute
-				try:
-					pen.addPoint((x, y), segmentType=segmentType, smooth=smooth, name=name, identifier=identifier)
-				except TypeError:
-					pen.addPoint((x, y), segmentType=segmentType, smooth=smooth, name=name)
-					raise DeprecationWarning("The addPoint method needs an identifier kwarg. The point's identifier value has been discarded.")
-			pen.endPath()
+			_buildOutlineContour(pen, (attrs, children), formatVersion, identifiers)
 		elif element == "component":
-			# unknown child element of contour
-			if len(children):
-				raise GlifLibError("Unknown child elements of component element." % subElement)
-			# search for unknown attributes
-			if set(attrs.keys()) - componentAttributes:
-				raise GlifLibError("Unknown attributes in component element.")
-			# base is required
-			baseGlyphName = attrs.get("base")
-			if baseGlyphName is None:
-				raise GlifLibError("The base attribute is not defined in the component.")
-			# transformation is not required
-			transformation = []
-			for attr, default in _transformationInfo:
-				value = attrs.get(attr)
-				if value is None:
-					value = default
-				else:
-					value = _number(value)
-				transformation.append(value)
-			# identifier is not required but it is not part of format 1
-			identifier = attrs.get("identifier")
-			if identifier is not None and formatVersion == 1:
-				raise GlifLibError("The component identifier attribute is not allowed in GLIF format 1.")
-			if identifier is not None:
-				if identifier in identifiers:
-					raise GlifLibError("The identifier %s is used more than once." % identifier)
-				if not identifierValidator(identifier):
-					raise GlifLibError("The identifier %s is not valid." % identifier)
-				identifiers.add(identifier)
-			# try to pass the identifier attribute
-			try:
-				pen.addComponent(baseGlyphName, tuple(transformation), identifier=identifier)
-			except TypeError:
-				pen.addComponent(baseGlyphName, tuple(transformation))
-				raise DeprecationWarning("The addComponent method needs an identifier kwarg. The component's identifier value has been discarded.")
+			_buildOutlineComponent(pen, (attrs, children), formatVersion, identifiers)
 
-def _validateSegmentStructures(tree):
-	pointTypes = [a.get("type", "offcurve") for s, a, d in tree]
+def _buildOutlineContour(pen, (attrs, children), formatVersion, identifiers):
+	# search for unknown attributes
+	if set(attrs.keys()) - contourAttributes:
+		raise GlifLibError("Unknown attributes in contour element.")
+	# identifier is not required but it is not part of format 1
+	identifier = attrs.get("identifier")
+	if identifier is not None and formatVersion == 1:
+		raise GlifLibError("The contour identifier attribute is not allowed in GLIF format 1.")
+	if identifier is not None:
+		if identifier in identifiers:
+			raise GlifLibError("The identifier %s is used more than once." % identifier)
+		if not identifierValidator(identifier):
+			raise GlifLibError("The contour identifier %s is not valid." % identifier)
+		identifiers.add(identifier)
+	# try to pass the identifier attribute
+	try:
+		pen.beginPath(identifier)
+	except TypeError:
+		pen.beginPath()
+		raise DeprecationWarning("The beginPath method needs an identifier kwarg. The contour's identifier value has been discarded.")
+	# points
+	if children:
+		# loop through the points very quickly to make sure that the number of off-curves is correct
+		_validateSegmentStructures(children)
+		# interpret the points
+		_buildOutlinePoints(pen, children, formatVersion, identifiers)
+	# done
+	pen.endPath()
+
+def _buildOutlineComponent(pen, (attrs, children), formatVersion, identifiers):
+	# unknown child element of contour
+	if len(children):
+		raise GlifLibError("Unknown child elements of component element." % subElement)
+	# search for unknown attributes
+	if set(attrs.keys()) - componentAttributes:
+		raise GlifLibError("Unknown attributes in component element.")
+	# base is required
+	baseGlyphName = attrs.get("base")
+	if baseGlyphName is None:
+		raise GlifLibError("The base attribute is not defined in the component.")
+	# transformation is not required
+	transformation = []
+	for attr, default in _transformationInfo:
+		value = attrs.get(attr)
+		if value is None:
+			value = default
+		else:
+			value = _number(value)
+		transformation.append(value)
+	# identifier is not required but it is not part of format 1
+	identifier = attrs.get("identifier")
+	if identifier is not None and formatVersion == 1:
+		raise GlifLibError("The component identifier attribute is not allowed in GLIF format 1.")
+	if identifier is not None:
+		if identifier in identifiers:
+			raise GlifLibError("The identifier %s is used more than once." % identifier)
+		if not identifierValidator(identifier):
+			raise GlifLibError("The identifier %s is not valid." % identifier)
+		identifiers.add(identifier)
+	# try to pass the identifier attribute
+	try:
+		pen.addComponent(baseGlyphName, tuple(transformation), identifier=identifier)
+	except TypeError:
+		pen.addComponent(baseGlyphName, tuple(transformation))
+		raise DeprecationWarning("The addComponent method needs an identifier kwarg. The component's identifier value has been discarded.")
+
+def _validateSegmentStructures(children):
+	pointTypes = [a.get("type", "offcurve") for s, a, d in children]
 	if set(pointTypes) != set(("offcurve")):
 		while pointTypes[-1] == "offcurve":
 			pointTypes.insert(0, pointTypes.pop(-1))
@@ -810,6 +766,60 @@ def _validateSegmentStructures(tree):
 			else:
 				# unknown segement type. it'll be caught later.
 				pass
+
+def _buildOutlinePoints(pen, children, formatVersion, identifiers):
+	for index, (subElement, attrs, dummy) in enumerate(children):
+		# unknown child element of contour
+		if subElement != "point":
+			raise GlifLibError("Unknown child element (%s) of contour element." % subElement)
+		# search for unknown attributes
+		if set(attrs.keys()) - pointAttributes:
+			raise GlifLibError("Unknown attributes in point element.")
+		# search for unknown children
+		if len(dummy):
+			raise GlifLibError("Unknown child elements in point element.")
+		# x and y are required
+		x = attrs.get("x")
+		y = attrs.get("y")
+		if x is None:
+			raise GlifLibError("Required x attribute is missing in point element.")
+		if y is None:
+			raise GlifLibError("Required y attribute is missing in point element.")
+		x = _number(x)
+		y = _number(y)
+		# type is not required
+		segmentType = attrs.get("type", "offcurve")
+		if segmentType not in pointTypeOptions:
+			raise GlifLibError("Unknown point type: %s" % segmentType)
+		if segmentType == "offcurve":
+			segmentType = None
+		# move can only occur as the first point
+		if segmentType == "move" and index != 0:
+			raise GlifLibError("A move point occurs after the first point in the contour.")
+		# smooth is not required
+		smooth = attrs.get("smooth", "no")
+		if smooth is not None:
+			if smooth not in pointSmoothOptions:
+				raise GlifLibError("Unknown point smooth value: %s" % smooth)
+		smooth = smooth == "yes"
+		# name is not required
+		name = attrs.get("name")
+		# identifier is not required but it is not part of format 1
+		identifier = attrs.get("identifier")
+		if identifier is not None and formatVersion == 1:
+			raise GlifLibError("The point identifier attribute is not allowed in GLIF format 1.")
+		if identifier is not None:
+			if identifier in identifiers:
+				raise GlifLibError("The identifier %s is used more than once." % identifier)
+			if not identifierValidator(identifier):
+				raise GlifLibError("The identifier %s is not valid." % identifier)
+			identifiers.add(identifier)
+		# try to pass the identifier attribute
+		try:
+			pen.addPoint((x, y), segmentType=segmentType, smooth=smooth, name=name, identifier=identifier)
+		except TypeError:
+			pen.addPoint((x, y), segmentType=segmentType, smooth=smooth, name=name)
+			raise DeprecationWarning("The addPoint method needs an identifier kwarg. The point's identifier value has been discarded.")
 
 # ---------------------
 # Misc Helper Functions
