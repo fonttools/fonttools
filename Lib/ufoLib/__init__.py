@@ -926,7 +926,8 @@ class UFOWriter(object):
 			raise UFOLibError("A layer named %s already exists." % newLayerName)
 		# get the paths
 		oldDirectory = self._findDirectoryForLayerName(layerName)
-		newDirectory = userNameToFileName(newLayerName, existing=self.layerContents.values(), prefix="glyphs.", )
+		existing = [name.lower() for name in self.layerContents.values()]
+		newDirectory = userNameToFileName(newLayerName, existing=existing, prefix="glyphs.")
 		# update the internal mapping
 		del self.layerContents[layerName]
 		self.layerContents[newLayerName] = newDirectory
