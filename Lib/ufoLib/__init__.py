@@ -1175,7 +1175,7 @@ def validateInfoVersion2Data(infoData):
 			raise UFOLibError("Invalid value for attribute %s (%s)." % (attr, repr(value)))
 		else:
 			validInfoData[attr] = value
-	return infoData
+	return validInfoData
 
 def validateFontInfoVersion3ValueForAttribute(attr, value):
 	"""
@@ -1222,7 +1222,7 @@ def validateInfoVersion3Data(infoData):
 	# handle the kerning prefixes specially
 	if not fontInfoKerningPrefixesValidator(infoData):
 		raise UFOLibError("Invalid kerning prefixes.")
-	return infoData
+	return validInfoData
 
 # Value Options
 
