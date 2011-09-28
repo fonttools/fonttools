@@ -664,7 +664,22 @@ pointTypeOptions = ("move", "line", "offcurve", "curve", "qcurve")
 def buildOutline(pen, xmlNodes, formatVersion, identifiers):
 	for element, attrs, children in xmlNodes:
 		if element == "contour":
-			pen.beginPath()
+			# identifier is not required but it is not part of format 1
+			identifier = attrs.get("identifier")
+			if identifier is not None and formatVersion == 1:
+				raise GlifLibError("The contour identifier attribute is not allowed in GLIF format 1.")
+			if identifier is not None:
+				if identifier in identifiers:
+					raise GlifLibError("The identifier %s is used more than once." % identifier)
+				if not identifierValidator(identifier):
+					raise GlifLibError("The contour identifier %s is not valid." % identifier)
+				identifiers.add(identifier)
+			# try to pass the identifier attribute
+			try:
+				pen.beginPath(identifier)
+			except TypeError:
+				raise DeprecationWarning("The beginPath method now needs an identifier kwarg. The contours identifier value has been discarded.")
+			# points
 			for subElement, attrs, dummy in children:
 				if subElement != "point":
 					raise GlifLibError("Unknown child element (%s) of contour element." % subElement)
@@ -694,12 +709,11 @@ def buildOutline(pen, xmlNodes, formatVersion, identifiers):
 				# identifier is not required but it is not part of format 1
 				identifier = attrs.get("identifier")
 				if identifier is not None and formatVersion == 1:
-					raise GlifLibError("The identifier attribute is not allowed in GLIF format 1.")
+					raise GlifLibError("The point identifier attribute is not allowed in GLIF format 1.")
 				if identifier is not None:
 					if identifier in identifiers:
 						raise GlifLibError("The identifier %s is used more than once." % identifier)
-					isValid = identifierValidator(identifier)
-					if not isValid:
+					if not identifierValidator(identifier):
 						raise GlifLibError("The identifier %s is not valid." % identifier)
 					identifiers.add(identifier)
 				# write to a point pen
