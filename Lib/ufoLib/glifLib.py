@@ -687,7 +687,7 @@ def buildOutline(pen, xmlNodes, formatVersion, identifiers):
 				pen.beginPath()
 				raise DeprecationWarning("The beginPath method needs an identifier kwarg. The contour's identifier value has been discarded.")
 			# points
-			for subElement, attrs, dummy in children:
+			for index, (subElement, attrs, dummy) in enumerate(children):
 				# unknwon child element of contour
 				if subElement != "point":
 					raise GlifLibError("Unknown child element (%s) of contour element." % subElement)
@@ -712,6 +712,9 @@ def buildOutline(pen, xmlNodes, formatVersion, identifiers):
 					raise GlifLibError("Unknown point type: %s" % segmentType)
 				if segmentType == "offcurve":
 					segmentType = None
+				# move can only occur as the first point
+				if segmentType == "move" and index != 0:
+					raise GlifLibError("A move point occurs after the first point in the contour.")
 				# smooth is not required
 				smooth = attrs.get("smooth", "no")
 				if smooth is not None:
