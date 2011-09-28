@@ -31,7 +31,7 @@ else:
 	READ_MODE = "r"
 
 
-class Glyph:
+class Glyph(object):
 
 	"""Minimal glyph object. It has no glyph attributes until either
 	the draw() or the drawPoint() method has been called.
@@ -92,7 +92,7 @@ def glyphNameToFileName(glyphName, glyphSet):
 	return ".".join(parts) + ".glif"
 
 
-class GlyphSet:
+class GlyphSet(object):
 
 	"""GlyphSet manages a set of .glif files inside one directory.
 
@@ -429,7 +429,7 @@ def writeGlyphToString(glyphName, glyphObject=None, drawPointsFunc=None, writer=
 
 	lib = getattr(glyphObject, "lib", None)
 	if lib:
-		from robofab.plistlib import PlistWriter
+		from ufoLib.plistlib import PlistWriter
 		if not isinstance(lib, dict):
 			lib = dict(lib)
 		writer.begintag("lib")
