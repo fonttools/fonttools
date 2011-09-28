@@ -658,15 +658,30 @@ def buildOutline(pen, xmlNodes, formatVersion):
 			pen.beginPath()
 			for subElement, attrs, dummy in children:
 				if subElement != "point":
-					continue
-				x = _number(attrs["x"])
-				y = _number(attrs["y"])
+					raise GlifLibError("Unknown child element (%s) of contour element." % subElement)
+				# x and y are required
+				x = attrs.get("x")
+				y = attrs.get("y")
+				if x is None:
+					raise GlifLibError("Required x attribute is missing in point element.")
+				if y is None:
+					raise GlifLibError("Required y attribute is missing in point element.")
+				x = _number(x)
+				y = _number(y)
+				# type is not required
 				segmentType = attrs.get("type", "offcurve")
 				if segmentType == "offcurve":
 					segmentType = None
+				# smooth is not required
 				smooth = attrs.get("smooth") == "yes"
+				# name is not required
 				name = attrs.get("name")
-				pen.addPoint((x, y), segmentType=segmentType, smooth=smooth, name=name)
+				# identifier is not required but it is not part of format 1
+				identifier = attrs.get("identifier")
+				if identifier is not None and formatVersion == 1:
+					raise GlifLibError("The identifier attribute is not allowed in GLIF format 1.")
+				# write to a point pen
+				pen.addPoint((x, y), segmentType=segmentType, smooth=smooth, name=name, identifier=identifier)
 			pen.endPath()
 		elif element == "component":
 			baseGlyphName = attrs["base"]
@@ -852,7 +867,7 @@ if __name__ == "__main__":
 	gs = GlyphSet(".")
 	def drawPoints(pen):
 		pen.beginPath()
-		pen.addPoint((100, 200), name="foo")
+		pen.addPoint((100, 200), name="foo", identifier="hello")
 		pen.addPoint((200, 250), segmentType="curve", smooth=True)
 		pen.endPath()
 		pen.addComponent("a", (1, 0, 0, 1, 20, 30))
