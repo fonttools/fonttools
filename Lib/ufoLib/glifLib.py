@@ -45,6 +45,36 @@ else:
 
 LAYERINFO_FILENAME = "layercontents.plist"
 
+# ------------
+# Simple Glyph
+# ------------
+
+class Glyph(object):
+
+	"""
+	Minimal glyph object. It has no glyph attributes until either
+	the draw() or the drawPoint() method has been called.
+	"""
+
+	def __init__(self, glyphName, glyphSet):
+		self.glyphName = glyphName
+		self.glyphSet = glyphSet
+
+	def draw(self, pen):
+		"""
+		Draw this glyph onto a *FontTools* Pen.
+		"""
+		from robofab.pens.adapterPens import PointToSegmentPen
+		pointPen = PointToSegmentPen(pen)
+		self.drawPoints(pointPen)
+
+	def drawPoints(self, pointPen):
+		"""
+		Draw this glyph onto a PointPen.
+		"""
+		self.glyphSet.readGlyph(self.glyphName, self, pointPen)
+
+
 # ---------
 # Glyph Set
 # ---------
@@ -335,36 +365,6 @@ class GlyphSet(object):
 		return contents
 
 
-# ------------
-# Simple Glyph
-# ------------
-
-class Glyph(object):
-
-	"""
-	Minimal glyph object. It has no glyph attributes until either
-	the draw() or the drawPoint() method has been called.
-	"""
-
-	def __init__(self, glyphName, glyphSet):
-		self.glyphName = glyphName
-		self.glyphSet = glyphSet
-
-	def draw(self, pen):
-		"""
-		Draw this glyph onto a *FontTools* Pen.
-		"""
-		from robofab.pens.adapterPens import PointToSegmentPen
-		pointPen = PointToSegmentPen(pen)
-		self.drawPoints(pointPen)
-
-	def drawPoints(self, pointPen):
-		"""
-		Draw this glyph onto a PointPen.
-		"""
-		self.glyphSet.readGlyph(self.glyphName, self, pointPen)
-
-
 # -----------------------
 # Glyph Name to File Name
 # -----------------------
@@ -504,6 +504,10 @@ def writeGlyphToString(glyphName, glyphObject=None, drawPointsFunc=None, writer=
 		return aFile.getvalue()
 	else:
 		return None
+
+# -----------------------
+# layerinfo.plist Support
+# -----------------------
 
 # -----------------
 # GLIF Tree Support
