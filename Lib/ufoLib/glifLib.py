@@ -609,7 +609,7 @@ def _readGlyphFromTree(tree, glyphObject=None, pointPen=None):
 	if formatError:
 		raise GlifLibError("GLIF data is not properly formatted.")
 	# check the format version
-	formatVersion = tree[1].get("format", None)
+	formatVersion = tree[1].get("format", "undefined")
 	try:
 		v = int(formatVersion)
 		formatVersion = v
@@ -636,7 +636,12 @@ def _readGlyphFromTree(tree, glyphObject=None, pointPen=None):
 			height = _number(attrs.get("height", 0))
 			_relaxedSetattr(glyphObject, "height", height)
 		elif element == "unicode":
-			unicodes.append(int(attrs["hex"], 16))
+			try:
+				v = attrs.get("hex", "undefined")
+				v = int(v, 16)
+				unicodes.append(v)
+			except ValueError:
+				raise GlifLibError("Illegal value for hex attribute of unicode element.")
 		elif element == "note":
 			rawNote = "\n".join(children)
 			lines = rawNote.split("\n")
@@ -779,8 +784,8 @@ def _buildOutlinePoints(pen, children, formatVersion, identifiers):
 		if len(dummy):
 			raise GlifLibError("Unknown child elements in point element.")
 		# x and y are required
-		x = attrs.get("x")
-		y = attrs.get("y")
+		x = attrs.get("x", "undefined")
+		y = attrs.get("y", "undefined")
 		if x is None:
 			raise GlifLibError("Required x attribute is missing in point element.")
 		if y is None:
