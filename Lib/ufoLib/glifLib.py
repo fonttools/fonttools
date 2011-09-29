@@ -663,12 +663,14 @@ def _readGlyphFromTree(tree, glyphObject=None, pointPen=None):
 				raise GlifLibError("The image element is not properly formatted.")
 			_relaxedSetattr(glyphObject, "image", image)
 		elif element == "note":
+			# XXX validate?
 			rawNote = "\n".join(children)
 			lines = rawNote.split("\n")
 			lines = [line.strip() for line in lines]
 			note = "\n".join(lines)
 			_relaxedSetattr(glyphObject, "note", note)
 		elif element == "lib":
+			# XXX validate?
 			from plistFromTree import readPlistFromTree
 			assert len(children) == 1
 			lib = readPlistFromTree(children[0])
