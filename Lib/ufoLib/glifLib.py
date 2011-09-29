@@ -17,7 +17,7 @@ from xmlTreeBuilder import buildTree, stripCharacterData
 from robofab.pens.pointPen import AbstractPointPen
 from plistlib import readPlist, writePlistToString
 from filenames import userNameToFileName
-from validators import genericTypeValidator, colorValidator, guidelinesValidator, identifierValidator
+from validators import genericTypeValidator, colorValidator, guidelinesValidator, identifierValidator, imageValidator
 
 try:
 	set
@@ -624,6 +624,7 @@ def _readGlyphFromTree(tree, glyphObject=None, pointPen=None):
 	# populate the sub elements
 	unicodes = []
 	guidelines = []
+	haveSeenImage = False
 	identifiers = set()
 	for element, attrs, children in tree[2]:
 		if element == "outline":
@@ -649,6 +650,18 @@ def _readGlyphFromTree(tree, glyphObject=None, pointPen=None):
 			if len(children):
 				raise GlifLibError("Unknown children in guideline element.")
 			guidelines.append(attrs)
+		elif element == "image":
+			if formatVersion == 1:
+				raise GlifLibError("The image element is not allowed in GLIF format 1.")
+			if haveSeenImage:
+				raise GlifLibError("The image element occurs more than once.")
+			if len(children):
+				raise GlifLibError("Unknown children in image element.")
+			haveSeenImage = True
+			imageData = attrs
+			if not imageValidator(imageData):
+				raise GlifLibError("The image element is not properly formatted.")
+			_relaxedSetattr(glyphObject, "image", image)
 		elif element == "note":
 			rawNote = "\n".join(children)
 			lines = rawNote.split("\n")
@@ -668,7 +681,7 @@ def _readGlyphFromTree(tree, glyphObject=None, pointPen=None):
 	# set the collected guidelines
 	if formatVersion > 1 and guidelines:
 		if not guidelinesValidator(guidelines, identifiers):
-			raise GlifLibError("Guidelines are improperly formatted.")
+			raise GlifLibError("The guidelines are improperly formatted.")
 		_relaxedSetattr(glyphObject, "guidelines", guidelines)
 
 # ----------------
