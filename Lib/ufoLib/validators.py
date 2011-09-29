@@ -522,13 +522,14 @@ def fontInfoKerningPrefixValidator(value):
 # Guidelines
 # ----------
 
-def guidelinesValidator(value):
+def guidelinesValidator(value, identifiers=None):
 	"""
 	Version 3+.
 	"""
 	if not isinstance(value, list):
-		return True
-	identifiers = set()
+		return False
+	if identifiers is None:
+		identifiers = set()
 	for guide in value:
 		if not guidelineValidator(guide):
 			return False
@@ -542,8 +543,6 @@ def guidelinesValidator(value):
 def guidelineValidator(value):
 	"""
 	Version 3+.
-
-	
 	"""
 	dictPrototype = dict(
 		x=((int, float), False), y=((int, float), False), angle=((int, float), False),
@@ -679,6 +678,32 @@ def colorValidator(value):
 		if part > 1:
 			return False
 	return True
+
+# -----
+# image
+# -----
+
+def imageValidator(value):
+	"""
+	Version 3+.
+	"""
+	dictPrototype = dict(
+		fileName=(basestring, True),
+		xScale=((int, float), False), xyScale=((int, float), False), yxScale=((int, float), False), yScale=((int, float), False),
+		xOffset=((int, float), False), yOffset=((int, float), False),
+		color=(basestring, False)
+	)
+	if not genericDictValidator(value, dictPrototype):
+		return False
+	# fileName must be one or more characters
+	if not fileName:
+		return False
+	# color must follow the proper format
+	color = value.get("color")
+	if color is not None and not colorValidator(color):
+		return False
+	return True
+
 
 # -------------------
 # layercontents.plist
