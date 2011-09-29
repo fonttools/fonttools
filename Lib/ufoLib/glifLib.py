@@ -46,11 +46,12 @@ else:
 	WRITE_MODE = "w"
 	READ_MODE = "r"
 
-# ----------
-# Connstants
-# ----------
+# ---------
+# Constants
+# ---------
 
 LAYERINFO_FILENAME = "layerinfo.plist"
+supportedUFOFormatVersions = [1, 2, 3]
 supportedGLIFFormatVersions = [1, 2]
 
 
@@ -116,6 +117,8 @@ class GlyphSet(object):
 		a file name is created for a given glyph name.
 		"""
 		self.dirName = dirName
+		if ufoFormatVersion not in supportedUFOFormatVersions:
+			raise GlifLibError("Unsupported UFO format version: %s" % ufoFormatVersion)
 		self.ufoFormatVersion = ufoFormatVersion
 		if glyphNameToFileNameFunc is None:
 			glyphNameToFileNameFunc = glyphNameToFileName
@@ -295,7 +298,7 @@ class GlyphSet(object):
 		tree = _glifTreeFromFile(StringIO(text))
 		_readGlyphFromTree(tree, glyphObject, pointPen)
 
-	def writeGlyph(self, glyphName, glyphObject=None, drawPointsFunc=None, glifFormatVersion=2):
+	def writeGlyph(self, glyphName, glyphObject=None, drawPointsFunc=None, formatVersion=None):
 		"""
 		Write a .glif file for 'glyphName' to the glyph set. The
 		'glyphObject' argument can be any kind of object (even None);
@@ -314,9 +317,23 @@ class GlyphSet(object):
 		argument: an object that conforms to the PointPen protocol.
 		The function will be called by writeGlyph(); it has to call the
 		proper PointPen methods to transfer the outline to the .glif file.
+
+		The GLIF format version will be chosen based on the ufoFormatVersion
+		passed during the creation of this object. If a particular format
+		version is desired, it can be passed with the formatVersion argument.
 		"""
+		if formatVersion is None:
+			if self.ufoFormatVersion >= 3:
+				formatVersion = 2
+			else:
+				formatVersion = 1
+		else:
+			if formatVersion not in supportedGLIFFormatVersions:
+				raise GlifLibError("Unsupported GLIF format version: %s" % formatVersion)
+			if formatVersion == 2 and self.ufoFormatVersion < 3:
+				raise GlifLibError("Unsupported GLIF format version (%d) for UFO format version %d." % (formatVersion, self.ufoFormatVersion))
 		self._purgeCachedGLIF(glyphName)
-		data = writeGlyphToString(glyphName, glyphObject, drawPointsFunc, glifFormatVersion=glifFormatVersion)
+		data = writeGlyphToString(glyphName, glyphObject, drawPointsFunc, formatVersion=glifFormatVersion)
 		fileName = self.contents.get(glyphName)
 		if fileName is None:
 			fileName = self.glyphNameToFileName(glyphName, self)
@@ -437,7 +454,7 @@ def readGlyphFromString(aString, glyphObject=None, pointPen=None):
 	_readGlyphFromTree(tree, glyphObject, pointPen)
 
 
-def writeGlyphToString(glyphName, glyphObject=None, drawPointsFunc=None, writer=None, glifFormatVersion=2):
+def writeGlyphToString(glyphName, glyphObject=None, drawPointsFunc=None, writer=None, formatVersion=2):
 	"""
 	Return .glif data for a glyph as a UTF-8 encoded string.
 	The 'glyphObject' argument can be any kind of object (even None);
@@ -456,6 +473,8 @@ def writeGlyphToString(glyphName, glyphObject=None, drawPointsFunc=None, writer=
 	argument: an object that conforms to the PointPen protocol.
 	The function will be called by writeGlyphToString(); it has to call the
 	proper PointPen methods to transfer the outline to the .glif file.
+
+	The GLIF format version can be specified with the formatVersion argument.
 	"""
 	if writer is None:
 		from xmlWriter import XMLWriter
@@ -463,7 +482,7 @@ def writeGlyphToString(glyphName, glyphObject=None, drawPointsFunc=None, writer=
 		writer = XMLWriter(aFile, encoding="UTF-8")
 	else:
 		aFile = None
-	writer.begintag("glyph", [("name", glyphName), ("format", glifFormatVersion)])
+	writer.begintag("glyph", [("name", glyphName), ("format", formatVersion)])
 	writer.newline()
 
 	width = getattr(glyphObject, "width", None)
