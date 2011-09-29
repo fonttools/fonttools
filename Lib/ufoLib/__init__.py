@@ -742,8 +742,17 @@ class UFOWriter(object):
 		Write groups.plist. This method requires a
 		dict of glyph groups as an argument.
 		"""
+		invalidFormatMessage = "The groups are not properly formatted."
 		if not isinstance(groups, dict):
-			raise UFOLibError("The groups must be a dict or dict like object.")
+			raise UFOLibError(invalidFormatMessage)
+		for groupName, glyphList in groups.items():
+			if not isinstance(groupName, basestring):
+				raise UFOLibError(invalidFormatMessage)
+			if not isinstance(glyphList, list):
+				raise UFOLibError(invalidFormatMessage)
+			for glyphName in glyphList:
+				if not isinstance(glyphName, basestring):
+					raise UFOLibError(invalidFormatMessage)
 		self._makeDirectory()
 		path = os.path.join(self._path, GROUPS_FILENAME)
 		groupsNew = {}
@@ -797,8 +806,20 @@ class UFOWriter(object):
 		Write kerning.plist. This method requires a
 		dict of kerning pairs as an argument.
 		"""
+		invalidFormatMessage = "The kerning is not properly formatted."
 		if not isinstance(kerning, dict):
-			raise UFOLibError("The kerning must be a dict or dict like object.")
+			raise UFOLibError(invalidFormatMessage)
+		for pair, value in kerning.items():
+			if not isinstance(pair, (list, tuple)):
+				raise UFOLibError(invalidFormatMessage)
+			if not len(pair) == 2:
+				raise UFOLibError(invalidFormatMessage)
+			if not isinstance(pair[0], basestring):
+				raise UFOLibError(invalidFormatMessage)
+			if not isinstance(pair[1], basestring):
+				raise UFOLibError(invalidFormatMessage)
+			if not isinstance(value, (int, float)):
+				raise UFOLibError(invalidFormatMessage)
 		self._makeDirectory()
 		path = os.path.join(self._path, KERNING_FILENAME)
 		kerningDict = {}
@@ -837,6 +858,8 @@ class UFOWriter(object):
 		"""
 		if self._formatVersion == 1:
 			raise UFOLibError("features.fea is not allowed in UFO Format Version 1.")
+		if not isinstance(features, basestring):
+			raise UFOLibError("The features are not text.")
 		self._makeDirectory()
 		path = os.path.join(self._path, FEATURES_FILENAME)
 		writeFileAtomically(features, path)
