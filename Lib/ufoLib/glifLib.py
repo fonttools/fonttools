@@ -489,11 +489,11 @@ def writeGlyphToString(glyphName, glyphObject=None, drawPointsFunc=None, writer=
 	width = getattr(glyphObject, "width", None)
 	if width is not None:
 		if not isinstance(width, (int, float)):
-			raise GlifLibError, "width attribute must be int or float"
+			raise GlifLibError("width attribute must be int or float")
 	height = getattr(glyphObject, "height", None)
 	if height is not None:
 		if not isinstance(height, (int, float)):
-			raise GlifLibError, "height attribute must be int or float"
+			raise GlifLibError("height attribute must be int or float")
 	if width is not None and height is not None:
 		writer.simpletag("advance", width=str(width), height=str(height))
 		writer.newline()
@@ -510,7 +510,7 @@ def writeGlyphToString(glyphName, glyphObject=None, drawPointsFunc=None, writer=
 			unicodes = [unicodes]
 		for code in unicodes:
 			if not isinstance(code, int):
-				raise GlifLibError, "unicode values must be int"
+				raise GlifLibError("unicode values must be int")
 			hexCode = hex(code)[2:].upper()
 			if len(hexCode) < 4:
 				hexCode = "0" * (4 - len(hexCode)) + hexCode
@@ -520,8 +520,8 @@ def writeGlyphToString(glyphName, glyphObject=None, drawPointsFunc=None, writer=
 	note = getattr(glyphObject, "note", None)
 	if note is not None:
 		if not isinstance(note, (str, unicode)):
-			raise GlifLibError, "note attribute must be str or unicode"
-		note = note.encode('utf-8')
+			raise GlifLibError("note attribute must be str or unicode")
+		note = note.encode("utf-8")
 		writer.begintag("note")
 		writer.newline()
 		for line in note.splitlines():
@@ -529,6 +529,22 @@ def writeGlyphToString(glyphName, glyphObject=None, drawPointsFunc=None, writer=
 			writer.newline()
 		writer.endtag("note")
 		writer.newline()
+
+	image = getattr(glyphObject, "image", None)
+	if image is not None:
+		if not imageValidator(image):
+			raise GlifLibError("image attribute must be a dict or dict-like object with the proper structure.")
+		attrs = [
+			("filename", image["filename"])
+		]
+		for attr, default in _transformationInfo.items():
+			value = image.get(attr)
+			attrs.append((attr, str(value)))
+		color = image.get("color")
+		if color is not None:
+			attrs.append(("color", color))
+		self.writer.simpletag("image", attrs)
+		self.writer.newline()
 
 	if drawPointsFunc is not None:
 		writer.begintag("outline")
