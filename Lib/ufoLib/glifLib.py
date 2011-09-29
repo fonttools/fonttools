@@ -489,7 +489,18 @@ def writeGlyphToString(glyphName, glyphObject=None, drawPointsFunc=None, writer=
 	if width is not None:
 		if not isinstance(width, (int, float)):
 			raise GlifLibError, "width attribute must be int or float"
+	height = getattr(glyphObject, "height", None)
+	if height is not None:
+		if not isinstance(height, (int, float)):
+			raise GlifLibError, "height attribute must be int or float"
+	if width is not None and height is not None:
+		writer.simpletag("advance", width=str(width), height=str(height))
+		writer.newline()
+	elif width is not None:
 		writer.simpletag("advance", width=str(width))
+		writer.newline()
+	elif height is not None:
+		writer.simpletag("advance", height=str(height))
 		writer.newline()
 
 	unicodes = getattr(glyphObject, "unicodes", None)
