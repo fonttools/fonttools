@@ -530,26 +530,57 @@ def writeGlyphToString(glyphName, glyphObject=None, drawPointsFunc=None, writer=
 		writer.endtag("note")
 		writer.newline()
 
-	image = getattr(glyphObject, "image", None)
-	if image is not None:
-		if not imageValidator(image):
-			raise GlifLibError("image attribute must be a dict or dict-like object with the proper structure.")
-		attrs = [
-			("filename", image["filename"])
-		]
-		for attr, default in _transformationInfo.items():
-			value = image.get(attr)
-			attrs.append((attr, str(value)))
-		color = image.get("color")
-		if color is not None:
-			attrs.append(("color", color))
-		self.writer.simpletag("image", attrs)
-		self.writer.newline()
+	if formatVersion > 2:
+		image = getattr(glyphObject, "image", None)
+		if image is not None:
+			if not imageValidator(image):
+				raise GlifLibError("image attribute must be a dict or dict-like object with the proper structure.")
+			attrs = [
+				("fileName", image["fileName"])
+			]
+			for attr, default in _transformationInfo.items():
+				value = image.get(attr)
+				attrs.append((attr, str(value)))
+			color = image.get("color")
+			if color is not None:
+				attrs.append(("color", color))
+			self.writer.simpletag("image", attrs)
+			self.writer.newline()
+
+	identifiers = set()
+
+	if formatVersion > 2:
+		guidelines = getattr(glyphObject, "guidelines")
+		if guidelines:
+			if not guidelinesValidator(guidelinesValidator):
+				aise GlifLibError("guidelines attribute does not have the proper structure.")
+			for guideline in guidelines:
+				attrs = []
+				x = guideline.get("x")
+				if x is not None:
+					attrs.append(("x", str(x)))
+				y = guideline.get("y")
+				if y is not None:
+					attrs.append(("y", str(y)))
+				angle = guideline.get("angle")
+				if angle is not None:
+					attrs.append(("angle", str(angle)))
+				name = guideline.get("name")
+				if name is not None:
+					attrs.append(("name", name))
+				color = image.get("color")
+				if color is not None:
+					attrs.append(("color", color))
+				identifier = image.get("identifier")
+				if identifier is not None:
+					if identifier in identifiers:
+						raise GlifLibError("identifier used more than once: %s" % identifier)
+					attrs.append(("identifier", identifier))
 
 	if drawPointsFunc is not None:
 		writer.begintag("outline")
 		writer.newline()
-		pen = GLIFPointPen(writer)
+		pen = GLIFPointPen(writer, identifiers=identifiers)
 		drawPointsFunc(pen)
 		writer.endtag("outline")
 		writer.newline()
@@ -1042,12 +1073,18 @@ class GLIFPointPen(AbstractPointPen):
 	part of .glif files.
 	"""
 
-	def __init__(self, xmlWriter):
+	def __init__(self, xmlWriter, formatVersion=2, identifiers=None):
+		if identifiers is None:
+			identifiers = set()
+		self.formatVersion = formatVersion
+		self.identifiers = identifiers
 		self.writer = xmlWriter
 
 	def beginPath(self, identifier=None, **kwargs):
 		attrs = []
-		if identifier is not None:
+		if identifier is not None self.formatVersion > 2:
+			if identifier in identifiers:
+				raise GlifLibError("identifier used more than once: %s" % identifier)
 			attrs.append(("identifier", identifier))
 		self.writer.begintag("contour", attrs)
 		self.writer.newline()
@@ -1061,7 +1098,7 @@ class GLIFPointPen(AbstractPointPen):
 		if pt is not None:
 			for coord in pt:
 				if not isinstance(coord, (int, float)):
-					raise GlifLibError, "coordinates must be int or float"
+					raise GlifLibError("coordinates must be int or float")
 			attrs.append(("x", str(pt[0])))
 			attrs.append(("y", str(pt[1])))
 		if segmentType is not None:
@@ -1070,7 +1107,9 @@ class GLIFPointPen(AbstractPointPen):
 			attrs.append(("smooth", "yes"))
 		if name is not None:
 			attrs.append(("name", name))
-		if identifier is not None:
+		if identifier is not None self.formatVersion > 2:
+			if identifier in identifiers:
+				raise GlifLibError("identifier used more than once: %s" % identifier)
 			attrs.append(("identifier", identifier))
 		self.writer.simpletag("point", attrs)
 		self.writer.newline()
@@ -1079,10 +1118,12 @@ class GLIFPointPen(AbstractPointPen):
 		attrs = [("base", glyphName)]
 		for (attr, default), value in zip(_transformationInfo, transformation):
 			if not isinstance(value, (int, float)):
-				raise GlifLibError, "transformation values must be int or float"
+				raise GlifLibError("transformation values must be int or float")
 			if value != default:
 				attrs.append((attr, str(value)))
-		if identifier is not None:
+		if identifier is not None self.formatVersion > 2:
+			if identifier in identifiers:
+				raise GlifLibError("identifier used more than once: %s" % identifier)
 			attrs.append(("identifier", identifier))
 		self.writer.simpletag("component", attrs)
 		self.writer.newline()
