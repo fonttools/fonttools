@@ -120,7 +120,7 @@ class GlyphSet(object):
 		if glyphNameToFileNameFunc is None:
 			glyphNameToFileNameFunc = glyphNameToFileName
 		self.glyphNameToFileName = glyphNameToFileNameFunc
-		self.contents = self.rebuildContents()
+		self.rebuildContents()
 		self._reverseContents = None
 		self._glifCache = {}
 
@@ -130,8 +130,10 @@ class GlyphSet(object):
 		"""
 		contentsPath = os.path.join(self.dirName, "contents.plist")
 		if not os.path.exists(contentsPath):
-			raise GlifLibError("contents.plist is missing.")
-		contents = self._readPlist(contentsPath)
+			# missing, consider the glyphset empty.
+			contents = {}
+		else:
+			contents = self._readPlist(contentsPath)
 		# validate the contents
 		invalidFormat = False
 		if not isinstance(contents, dict):
