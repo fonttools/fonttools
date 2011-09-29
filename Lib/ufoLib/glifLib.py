@@ -1085,6 +1085,8 @@ class GLIFPointPen(AbstractPointPen):
 		if identifier is not None self.formatVersion > 2:
 			if identifier in identifiers:
 				raise GlifLibError("identifier used more than once: %s" % identifier)
+			if not identifierValidator(identifier):
+				raise GlifLibError("identifier not formatted properly: %s" % identifier)
 			attrs.append(("identifier", identifier))
 		self.writer.begintag("contour", attrs)
 		self.writer.newline()
@@ -1110,6 +1112,8 @@ class GLIFPointPen(AbstractPointPen):
 		if identifier is not None self.formatVersion > 2:
 			if identifier in identifiers:
 				raise GlifLibError("identifier used more than once: %s" % identifier)
+			if not identifierValidator(identifier):
+				raise GlifLibError("identifier not formatted properly: %s" % identifier)
 			attrs.append(("identifier", identifier))
 		self.writer.simpletag("point", attrs)
 		self.writer.newline()
@@ -1124,6 +1128,8 @@ class GLIFPointPen(AbstractPointPen):
 		if identifier is not None self.formatVersion > 2:
 			if identifier in identifiers:
 				raise GlifLibError("identifier used more than once: %s" % identifier)
+			if not identifierValidator(identifier):
+				raise GlifLibError("identifier not formatted properly: %s" % identifier)
 			attrs.append(("identifier", identifier))
 		self.writer.simpletag("component", attrs)
 		self.writer.newline()
