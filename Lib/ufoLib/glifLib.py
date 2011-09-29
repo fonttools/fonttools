@@ -598,7 +598,8 @@ def _stripGlyphXMLTree(nodes):
 def _glifTreeFromFile(aFile):
 	tree = buildTree(aFile, stripData=False)
 	stripCharacterData(tree[2], recursive=False)
-	assert tree[0] == "glyph"
+	if tree[0] != "glyph":
+		raise GlifLibError("The GLIF is not properly formatted.")
 	_stripGlyphXMLTree(tree[2])
 	return tree
 
