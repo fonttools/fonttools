@@ -120,16 +120,33 @@ class GlyphSet(object):
 		if glyphNameToFileNameFunc is None:
 			glyphNameToFileNameFunc = glyphNameToFileName
 		self.glyphNameToFileName = glyphNameToFileNameFunc
-		self.contents = self._findContents()
+		self.contents = self.rebuildContents()
 		self._reverseContents = None
 		self._glifCache = {}
 
 	def rebuildContents(self):
 		"""
-		Rebuild the contents dict by checking what glyphs are available
-		on disk.
+		Rebuild the contents dict by loading contents.plist.
 		"""
-		self.contents = self._findContents(forceRebuild=True)
+		contentsPath = os.path.join(self.dirName, "contents.plist")
+		if not os.path.exists(contentsPath):
+			raise GlifLibError("contents.plist is missing.")
+		contents = self._readPlist(contentsPath)
+		# validate the contents
+		invalidFormat = False
+		if not isinstance(contents, dict):
+			invalidFormat = True
+		else:
+			for name, fileName in contents.items():
+				if not isinstance(name, basestring):
+					invalidFormat = True
+				if not isinstance(fileName, basestring):
+					invalidFormat = True
+				elif not os.path.exists(os.path.join(self.dirName, fileName)):
+					raise GlifLibError("contents.plist references a file that does not exist: %s" % fileName)
+		if invalidFormat:
+			raise GlifLibError("contents.plist is not properly formatted")
+		self.contents = contents
 		self._reverseContents = None
 
 	def getReverseContents(self):
@@ -366,19 +383,6 @@ class GlyphSet(object):
 			return data
 		except:
 			raise GlifLibError("The file %s could not be read." % path)
-
-	def _findContents(self, forceRebuild=False):
-		contentsPath = os.path.join(self.dirName, "contents.plist")
-		if forceRebuild or not os.path.exists(contentsPath):
-			fileNames = os.listdir(self.dirName)
-			fileNames = [n for n in fileNames if n.endswith(".glif")]
-			contents = {}
-			for n in fileNames:
-				glyphPath = os.path.join(self.dirName, n)
-				contents[_fetchGlyphName(glyphPath)] = n
-		else:
-			contents = readPlist(contentsPath)
-		return contents
 
 
 # -----------------------
