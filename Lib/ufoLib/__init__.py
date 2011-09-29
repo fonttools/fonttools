@@ -239,8 +239,17 @@ class UFOReader(object):
 		if not self._checkForFile(path):
 			return {}
 		data = self._readPlist(path)
+		invalidFormatMessage = "groups.plist is not properly formatted."
 		if not isinstance(data, dict):
-			raise UFOLibError("groups.plist is not properly formatted.")
+			raise UFOLibError(invalidFormatMessage)
+		for groupName, glyphList in data.items():
+			if not isinstance(groupName, basestring):
+				raise UFOLibError(invalidFormatMessage)
+			elif not isinstance(glyphList, list):
+				raise UFOLibError(invalidFormatMessage)
+			for glyphName in glyphList:
+				if not isinstance(glyphName, basestring):
+					raise UFOLibError(invalidFormatMessage)
 		return data
 
 	def readGroups(self):
@@ -328,8 +337,19 @@ class UFOReader(object):
 		if not self._checkForFile(path):
 			return {}
 		data = self._readPlist(path)
+		invalidFormatMessage = "kerning.plist is not properly formatted."
 		if not isinstance(data, dict):
-			raise UFOLibError("kerning.plist is not properly formatted.")
+			raise UFOLibError(invalidFormatMessage)
+		for first, secondDict in data.items():
+			if not isinstance(first, basestring):
+				raise UFOLibError(invalidFormatMessage)
+			elif not isinstance(secondDict, dict):
+				raise UFOLibError(invalidFormatMessage)
+			for second, value in secondDict.items():
+				if not isinstance(second, basestring):
+					raise UFOLibError(invalidFormatMessage)
+				elif not isinstance(value, (int, float)):
+					raise UFOLibError(invalidFormatMessage)
 		return data
 
 	def readKerning(self):
