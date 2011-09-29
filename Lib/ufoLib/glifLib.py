@@ -333,7 +333,7 @@ class GlyphSet(object):
 			if formatVersion == 2 and self.ufoFormatVersion < 3:
 				raise GlifLibError("Unsupported GLIF format version (%d) for UFO format version %d." % (formatVersion, self.ufoFormatVersion))
 		self._purgeCachedGLIF(glyphName)
-		data = writeGlyphToString(glyphName, glyphObject, drawPointsFunc, formatVersion=glifFormatVersion)
+		data = writeGlyphToString(glyphName, glyphObject, drawPointsFunc, formatVersion=formatVersion)
 		fileName = self.contents.get(glyphName)
 		if fileName is None:
 			fileName = self.glyphNameToFileName(glyphName, self)
@@ -460,7 +460,8 @@ def writeGlyphToString(glyphName, glyphObject=None, drawPointsFunc=None, writer=
 	The 'glyphObject' argument can be any kind of object (even None);
 	the writeGlyphToString() method will attempt to get the following
 	attributes from it:
-		"width"     the advance with of the glyph
+		"width"     the advance width of the glyph
+		"height"    the advance height of the glyph
 		"unicodes"  a list of unicode values for this glyph
 		"note"      a string
 		"lib"       a dictionary containing custom data
@@ -661,15 +662,21 @@ def _readGlyphFromTree(tree, glyphObject=None, pointPen=None):
 	# populate the sub elements
 	unicodes = []
 	guidelines = []
-	haveSeenImage = False
+	haveSeenAdvance = haveSeenImage = haveSeenOutline = haveSeenLib = haveSeenNote = False
 	identifiers = set()
 	for element, attrs, children in tree[2]:
 		if element == "outline":
+			if haveSeenOutline:
+				raise GlifLibError("The outline element occurs more than once.")
+			haveSeenOutline = True
 			if pointPen is not None:
 				buildOutline(pointPen, children, formatVersion, identifiers)
 		elif glyphObject is None:
 			continue
 		elif element == "advance":
+			if haveSeenAdvance:
+				raise GlifLibError("The advance element occurs more than once.")
+			haveSeenAdvance = True
 			width = _number(attrs.get("width", 0))
 			_relaxedSetattr(glyphObject, "width", width)
 			height = _number(attrs.get("height", 0))
@@ -700,6 +707,9 @@ def _readGlyphFromTree(tree, glyphObject=None, pointPen=None):
 				raise GlifLibError("The image element is not properly formatted.")
 			_relaxedSetattr(glyphObject, "image", image)
 		elif element == "note":
+			if haveSeenNote:
+				raise GlifLibError("The note element occurs more than once.")
+			haveSeenNote = True
 			# XXX validate?
 			rawNote = "\n".join(children)
 			lines = rawNote.split("\n")
@@ -707,6 +717,9 @@ def _readGlyphFromTree(tree, glyphObject=None, pointPen=None):
 			note = "\n".join(lines)
 			_relaxedSetattr(glyphObject, "note", note)
 		elif element == "lib":
+			if haveSeenLib:
+				raise GlifLibError("The lib element occurs more than once.")
+			haveSeenLib = True
 			# XXX validate?
 			from plistFromTree import readPlistFromTree
 			assert len(children) == 1
