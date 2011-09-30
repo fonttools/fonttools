@@ -460,13 +460,12 @@ class UFOReader(object):
 		glyphsPath = os.path.join(self._path, directory)
 		return GlyphSet(glyphsPath)
 
-	def getCharacterMapping(self):
+	def getCharacterMapping(self, layerName=None):
 		"""
 		Return a dictionary that maps unicode values (ints) to
 		lists of glyph names.
 		"""
-		glyphsPath = os.path.join(self._path, DEFAULT_GLYPHS_DIRNAME)
-		glyphSet = GlyphSet(glyphsPath)
+		glyphsPath = self.getGlyphSet(layerName)
 		allUnicodes = glyphSet.getUnicodes()
 		cmap = {}
 		for glyphName, unicodes in allUnicodes.iteritems():
