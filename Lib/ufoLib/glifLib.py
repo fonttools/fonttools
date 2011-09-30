@@ -583,7 +583,8 @@ def _writeImage(glyphObject, writer):
 	]
 	for attr, default in _transformationInfo:
 		value = image.get(attr, default)
-		attrs.append((attr, str(value)))
+		if value != default:
+			attrs.append((attr, str(value)))
 	color = image.get("color")
 	if color is not None:
 		attrs.append(("color", color))
