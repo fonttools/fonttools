@@ -616,6 +616,7 @@ def _writeGuidelines(glyphObject, writer, identifiers):
 			if identifier in identifiers:
 				raise GlifLibError("identifier used more than once: %s" % identifier)
 			attrs.append(("identifier", identifier))
+			identifiers.add(identifier)
 		writer.simpletag("guideline", attrs)
 		writer.newline()
 
@@ -1142,6 +1143,7 @@ class GLIFPointPen(AbstractPointPen):
 			if not identifierValidator(identifier):
 				raise GlifLibError("identifier not formatted properly: %s" % identifier)
 			attrs.append(("identifier", identifier))
+			self.identifiers.add(identifier)
 		self.writer.begintag("contour", attrs)
 		self.writer.newline()
 		self.prevSegmentType = None
@@ -1193,6 +1195,7 @@ class GLIFPointPen(AbstractPointPen):
 			if not identifierValidator(identifier):
 				raise GlifLibError("identifier not formatted properly: %s" % identifier)
 			attrs.append(("identifier", identifier))
+			self.identifiers.add(identifier)
 		self.writer.simpletag("point", attrs)
 		self.writer.newline()
 
@@ -1209,6 +1212,7 @@ class GLIFPointPen(AbstractPointPen):
 			if not identifierValidator(identifier):
 				raise GlifLibError("identifier not formatted properly: %s" % identifier)
 			attrs.append(("identifier", identifier))
+			self.identifiers.add(identifier)
 		self.writer.simpletag("component", attrs)
 		self.writer.newline()
 
