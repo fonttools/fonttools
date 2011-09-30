@@ -560,6 +560,9 @@ def guidelineValidator(value):
 	if x is None or y is None:
 		if angle is not None:
 			return False
+	# if x and y are defined, angle must be defined
+	if x is not None and y is not None and angle is None:
+		return False
 	# angle must be between 0 and 360
 	if angle is not None:
 		if angle < 0:
