@@ -862,12 +862,16 @@ def _buildOutlineContour(pen, (attrs, children), formatVersion, identifiers):
 		identifiers.add(identifier)
 	# try to pass the identifier attribute
 	try:
-		pen.beginPath(identifier)
+		pen.beginPath(identifier=identifier)
 	except TypeError:
 		pen.beginPath()
 		raise DeprecationWarning("The beginPath method needs an identifier kwarg. The contour's identifier value has been discarded.")
 	# points
 	if children:
+		# make sure that only points are here
+		for e, d, c in children:
+			if e != "point":
+				raise GlifLibError("The contour element contains an unknown element: %s" % e)
 		# loop through the points very quickly to make sure that the number of off-curves is correct
 		_validateSegmentStructures(children)
 		# interpret the points
@@ -977,6 +981,8 @@ def _buildOutlinePoints(pen, children, formatVersion, identifiers):
 			if smooth not in pointSmoothOptions:
 				raise GlifLibError("Unknown point smooth value: %s" % smooth)
 		smooth = smooth == "yes"
+		if smooth and segmentType not in ["curve"]:
+			raise GlifLibError("smooth attribute set in a %s point." % segmentType)
 		# name is not required
 		name = attrs.get("name")
 		# identifier is not required but it is not part of format 1
@@ -1152,6 +1158,8 @@ class GLIFPointPen(AbstractPointPen):
 		if segmentType is not None:
 			attrs.append(("type", segmentType))
 		if smooth:
+			if segmentType not in ["curve"]:
+				raise GlifLibError("can't set smooth in a %s point." % segmentType)
 			attrs.append(("smooth", "yes"))
 		if name is not None:
 			attrs.append(("name", name))
