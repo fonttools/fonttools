@@ -881,6 +881,10 @@ class UFOWriter(object):
 		self.layerContents = contents
 
 	def writeLayerContents(self, layerOrder=None):
+		"""
+		Write the layercontents.plist file. This method  *must* be called
+		after all glyph sets have been written.
+		"""
 		newOrder = []
 		for layerName in layerOrder:
 			if layerName is None:
