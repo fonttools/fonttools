@@ -1131,6 +1131,7 @@ class GLIFPointPen(AbstractPointPen):
 		self.formatVersion = formatVersion
 		self.identifiers = identifiers
 		self.writer = xmlWriter
+		self.prevSegmentType = None
 
 	def beginPath(self, identifier=None, **kwargs):
 		attrs = []
@@ -1142,27 +1143,37 @@ class GLIFPointPen(AbstractPointPen):
 			attrs.append(("identifier", identifier))
 		self.writer.begintag("contour", attrs)
 		self.writer.newline()
+		self.prevSegmentType = None
 
 	def endPath(self):
 		self.writer.endtag("contour")
 		self.writer.newline()
+		self.prevSegmentType = None
 
 	def addPoint(self, pt, segmentType=None, smooth=None, name=None, identifier=None, **kwargs):
 		attrs = []
+		# coordinates
 		if pt is not None:
 			for coord in pt:
 				if not isinstance(coord, (int, float)):
 					raise GlifLibError("coordinates must be int or float")
 			attrs.append(("x", str(pt[0])))
 			attrs.append(("y", str(pt[1])))
+		# segment type
+		if segmentType == "move" and self.prevSegmentType is not None:
+			raise GlifLibError("move occurs after a point has already been added to the contour.")
 		if segmentType is not None:
 			attrs.append(("type", segmentType))
+		self.prevSegmentType = segmentType
+		# smooth
 		if smooth:
 			if segmentType not in ["curve"]:
 				raise GlifLibError("can't set smooth in a %s point." % segmentType)
 			attrs.append(("smooth", "yes"))
+		# name
 		if name is not None:
 			attrs.append(("name", name))
+		# identifier
 		if identifier is not None and self.formatVersion >= 2:
 			if identifier in self.identifiers:
 				raise GlifLibError("identifier used more than once: %s" % identifier)
