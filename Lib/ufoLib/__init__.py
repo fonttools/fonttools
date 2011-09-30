@@ -543,7 +543,6 @@ class UFOWriter(object):
 				raise UFOLibError("Unsupported UFO format (%d)." % formatVersion)
 		# handle the layer contents
 		self.layerContents = {}
-		self.layerOrder = []
 		if previousFormatVersion >= 3:
 			# already exists
 			self._readLayerContents()
@@ -553,13 +552,8 @@ class UFOWriter(object):
 			p = os.path.join(path, DEFAULT_GLYPHS_DIRNAME)
 			if os.path.exists(p):
 				self.layerContents = {DEFAULT_LAYER_NAME : DEFAULT_GLYPHS_DIRNAME}
-				self.layerOrder = [DEFAULT_LAYER_NAME]
 		# write the new metainfo
 		self._writeMetaInfo()
-		# handle up conversion
-		# < 3 to >= 3
-		if previousFormatVersion < 3 and formatVersion >= 3:
-			self._writeLayerContents()
 		# handle down conversion
 		# >= 3 to 2
 		if formatVersion < 3 and previousFormatVersion >= 3:
@@ -876,7 +870,6 @@ class UFOWriter(object):
 		if not os.path.exists(path):
 			raise UFOLibError("layercontents.plist is missing.")
 		contents = {}
-		order = []
 		bogusFileMessage = "layercontents.plist in not in the correct format."
 		if os.path.exists(path):
 			raw = self._readPlist(path)
@@ -886,14 +879,20 @@ class UFOWriter(object):
 			for entry in raw:
 				layerName, directoryName = entry
 				contents[layerName] = directoryName
-				order.append(layerName)
 		self.layerContents = contents
-		self.layerOrder = order
 
-	def _writeLayerContents(self):
+	def writeLayerContents(self, layerOrder=None):
+		newOrder = []
+		for layerName in layerOrder:
+			if layerName is None:
+				layerName = DEFAULT_LAYER_NAME
+			newOrder.append(layerName)
+		layerOrder = newOrder
+		if set(layerOrder) != set(self.layerContents.keys()):
+			raise UFOLibError("The layer order contents does not match the glyph sets that have been created.")
 		self._makeDirectory()
 		path = os.path.join(self._path, LAYERCONTENTS_FILENAME)
-		layerContents = [(layerName, self.layerContents[layerName]) for layerName in self.layerOrder]
+		layerContents = [(layerName, self.layerContents[layerName]) for layerName in layerOrder]
 		self._writePlist(layerContents, path)
 
 	def _findDirectoryForLayerName(self, layerName):
@@ -960,13 +959,8 @@ class UFOWriter(object):
 		path = os.path.join(self._path, directory)
 		if not os.path.exists(path):
 			self._makeDirectory(subDirectory=directory)
-		# store the mapping and position
+		# store the mapping
 		self.layerContents[layerName] = directory
-		if layerName in self.layerOrder:
-			self.layerOrder.remove(layerName)
-		self.layerOrder.insert(0, layerName)
-		# write the layer contents file
-		self._writeLayerContents()
 		# load the glyph set
 		return GlyphSet(path, glyphNameToFileNameFunc=glyphNameToFileNameFunc)
 
@@ -992,18 +986,10 @@ class UFOWriter(object):
 		# update the internal mapping
 		del self.layerContents[layerName]
 		self.layerContents[newLayerName] = newDirectory
-		layerOrder = []
-		for otherLayerName in self.layerOrder:
-			if otherLayerName == layerName:
-				otherLayerName = newLayerName
-			layerOrder.append(otherLayerName)
-		self.layerOrder = layerOrder
 		# do the file system copy
 		oldDirectory = os.path.join(self._path, oldDirectory)
 		newDirectory = os.path.join(self._path, newDirectory)
 		shutil.move(oldDirectory, newDirectory)
-		# write the layer contents file
-		self._writeLayerContents()
 
 	def deleteGlyphSet(self, layerName):
 		"""
@@ -1014,9 +1000,6 @@ class UFOWriter(object):
 		foundDirectory = self._findDirectoryForLayerName(layerName)
 		self._removeFileForPath(foundDirectory)
 		del self.layerContents[layerName]
-		self.layerOrder.remove(layerName)
-		# write the layer contents file
-		self._writeLayerContents()
 
 # ----------------
 # Helper Functions

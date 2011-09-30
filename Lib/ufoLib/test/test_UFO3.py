@@ -3974,6 +3974,7 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 			layerContents=dict()
 		)
 		writer = UFOWriter(self.ufoPath)
+		writer.writeLayerContents(["public.default"])
 		path = os.path.join(self.ufoPath, "layercontents.plist")
 		expected = [["public.default", "glyphs"]]
 		result = readPlist(path)
@@ -3981,12 +3982,13 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 
 	# __init__: up convert 2 > 3
 
-	def testUpConvert1To3(self):
+	def testUpConvert2To3(self):
 		self.makeUFO(
 			metaInfo=dict(creator="test", formatVersion=2),
 			layerContents=dict()
 		)
 		writer = UFOWriter(self.ufoPath)
+		writer.writeLayerContents(["public.default"])
 		path = os.path.join(self.ufoPath, "layercontents.plist")
 		expected = [["public.default", "glyphs"]]
 		result = readPlist(path)
@@ -4066,6 +4068,7 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 		self.clearUFO()
 		writer = UFOWriter(self.ufoPath)
 		writer.getGlyphSet()
+		writer.writeLayerContents(["public.default"])
 		# directory
 		path = os.path.join(self.ufoPath, "glyphs")
 		exists = os.path.exists(path)
@@ -4082,6 +4085,7 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 		writer.getGlyphSet("layer 1")
 		writer.getGlyphSet()
 		writer.getGlyphSet("layer 2")
+		writer.writeLayerContents(["layer 1", "public.default", "layer 2"])
 		# directories
 		path = os.path.join(self.ufoPath, "glyphs")
 		exists = os.path.exists(path)
@@ -4094,16 +4098,17 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 		self.assertEqual(True, exists)
 		# layer contents
 		path = os.path.join(self.ufoPath, "layercontents.plist")
-		expected = [["layer 2", "glyphs.layer 2"], ["public.default", "glyphs"], ["layer 1", "glyphs.layer 1"]]
+		expected = [["layer 1", "glyphs.layer 1"], ["public.default", "glyphs"], ["layer 2", "glyphs.layer 2"]]
 		result = readPlist(path)
 		self.assertEqual(expected, result)
 
 	# add a layer to an existing font
 
-	def testAddLayeroExistingFont(self):
+	def testAddLayerToExistingFont(self):
 		self.makeUFO()
 		writer = UFOWriter(self.ufoPath)
 		writer.getGlyphSet("layer 3")
+		writer.writeLayerContents(["public.default", "layer 1", "layer 2", "layer 3"])
 		# directories
 		path = os.path.join(self.ufoPath, "glyphs")
 		exists = os.path.exists(path)
@@ -4119,7 +4124,7 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 		self.assertEqual(True, exists)
 		# layer contents
 		path = os.path.join(self.ufoPath, "layercontents.plist")
-		expected = [["layer 3", "glyphs.layer 3"], ['public.default', 'glyphs'], ['layer 1', 'glyphs.layer 1'], ['layer 2', 'glyphs.layer 2']]
+		expected = [['public.default', 'glyphs'], ['layer 1', 'glyphs.layer 1'], ['layer 2', 'glyphs.layer 2'], ["layer 3", "glyphs.layer 3"]]
 		result = readPlist(path)
 		self.assertEqual(expected, result)
 
@@ -4129,6 +4134,7 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 		self.makeUFO()
 		writer = UFOWriter(self.ufoPath)
 		writer.renameGlyphSet("layer 1", u"layer 3")
+		writer.writeLayerContents(["public.default", "layer 3", "layer 2"])
 		# directories
 		path = os.path.join(self.ufoPath, "glyphs")
 		exists = os.path.exists(path)
@@ -4168,6 +4174,7 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 		self.makeUFO()
 		writer = UFOWriter(self.ufoPath)
 		writer.deleteGlyphSet("layer 1")
+		writer.writeLayerContents(["public.default", "layer 2"])
 		# directories
 		path = os.path.join(self.ufoPath, "glyphs")
 		exists = os.path.exists(path)
