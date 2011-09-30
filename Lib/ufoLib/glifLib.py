@@ -483,9 +483,45 @@ def writeGlyphToString(glyphName, glyphObject=None, drawPointsFunc=None, writer=
 		writer = XMLWriter(aFile, encoding="UTF-8")
 	else:
 		aFile = None
+	identifiers = set()
+	# start
 	writer.begintag("glyph", [("name", glyphName), ("format", formatVersion)])
 	writer.newline()
+	# advance
+	_writeAdvance(glyphObject, writer)
+	# unicodes
+	if getattr(glyphObject, "unicodes", None):
+		_writeUnicodes(glyphObject, writer)
+	# note
+	if getattr(glyphObject, "note", None):
+		_writeNote(glyphObject, writer)
+	# image
+	if formatVersion > 2 and getattr(glyphObject, "image", None):
+		_writeImage(glyphObject, writer)
+	# guidelines
+	if formatVersion > 2 and getattr(glyphObject, "guidelines", None):
+		_writeGuidelines(glyphObject, writer, identifiers)
+	# outline
+	if drawPointsFunc is not None:
+		writer.begintag("outline")
+		writer.newline()
+		pen = GLIFPointPen(writer, identifiers=identifiers)
+		drawPointsFunc(pen)
+		writer.endtag("outline")
+		writer.newline()
+	# lib
+	if getattr(glyphObject, "lib", None):
+		_writeLib(glyphObject, writer)
+	# end
+	writer.endtag("glyph")
+	writer.newline()
+	# return the appropriate value
+	if aFile is not None:
+		return aFile.getvalue()
+	else:
+		return None
 
+def _writeAdvance(glyphObject, writer):
 	width = getattr(glyphObject, "width", None)
 	if width is not None:
 		if not isinstance(width, (int, float)):
@@ -504,106 +540,89 @@ def writeGlyphToString(glyphName, glyphObject=None, drawPointsFunc=None, writer=
 		writer.simpletag("advance", height=str(height))
 		writer.newline()
 
+def _writeUnicodes(glyphObject, writer):
 	unicodes = getattr(glyphObject, "unicodes", None)
-	if unicodes:
-		if isinstance(unicodes, int):
-			unicodes = [unicodes]
-		for code in unicodes:
-			if not isinstance(code, int):
-				raise GlifLibError("unicode values must be int")
-			hexCode = hex(code)[2:].upper()
-			if len(hexCode) < 4:
-				hexCode = "0" * (4 - len(hexCode)) + hexCode
-			writer.simpletag("unicode", hex=hexCode)
-			writer.newline()
+	if isinstance(unicodes, int):
+		unicodes = [unicodes]
+	for code in unicodes:
+		if not isinstance(code, int):
+			raise GlifLibError("unicode values must be int")
+		hexCode = hex(code)[2:].upper()
+		if len(hexCode) < 4:
+			hexCode = "0" * (4 - len(hexCode)) + hexCode
+		writer.simpletag("unicode", hex=hexCode)
+		writer.newline()
 
+def _writeNote(glyphObject, writer):
 	note = getattr(glyphObject, "note", None)
-	if note is not None:
-		if not isinstance(note, (str, unicode)):
-			raise GlifLibError("note attribute must be str or unicode")
-		note = note.encode("utf-8")
-		writer.begintag("note")
-		writer.newline()
-		for line in note.splitlines():
-			writer.write(line.strip())
-			writer.newline()
-		writer.endtag("note")
-		writer.newline()
-
-	if formatVersion > 2:
-		image = getattr(glyphObject, "image", None)
-		if image is not None:
-			if not imageValidator(image):
-				raise GlifLibError("image attribute must be a dict or dict-like object with the proper structure.")
-			attrs = [
-				("fileName", image["fileName"])
-			]
-			for attr, default in _transformationInfo.items():
-				value = image.get(attr)
-				attrs.append((attr, str(value)))
-			color = image.get("color")
-			if color is not None:
-				attrs.append(("color", color))
-			self.writer.simpletag("image", attrs)
-			self.writer.newline()
-
-	identifiers = set()
-
-	if formatVersion > 2:
-		guidelines = getattr(glyphObject, "guidelines")
-		if guidelines:
-			if not guidelinesValidator(guidelinesValidator):
-				aise GlifLibError("guidelines attribute does not have the proper structure.")
-			for guideline in guidelines:
-				attrs = []
-				x = guideline.get("x")
-				if x is not None:
-					attrs.append(("x", str(x)))
-				y = guideline.get("y")
-				if y is not None:
-					attrs.append(("y", str(y)))
-				angle = guideline.get("angle")
-				if angle is not None:
-					attrs.append(("angle", str(angle)))
-				name = guideline.get("name")
-				if name is not None:
-					attrs.append(("name", name))
-				color = image.get("color")
-				if color is not None:
-					attrs.append(("color", color))
-				identifier = image.get("identifier")
-				if identifier is not None:
-					if identifier in identifiers:
-						raise GlifLibError("identifier used more than once: %s" % identifier)
-					attrs.append(("identifier", identifier))
-
-	if drawPointsFunc is not None:
-		writer.begintag("outline")
-		writer.newline()
-		pen = GLIFPointPen(writer, identifiers=identifiers)
-		drawPointsFunc(pen)
-		writer.endtag("outline")
-		writer.newline()
-
-	lib = getattr(glyphObject, "lib", None)
-	if lib:
-		from ufoLib.plistlib import PlistWriter
-		if not isinstance(lib, dict):
-			lib = dict(lib)
-		writer.begintag("lib")
-		writer.newline()
-		plistWriter = PlistWriter(writer.file, indentLevel=writer.indentlevel,
-				indent=writer.indentwhite, writeHeader=False)
-		plistWriter.writeValue(lib)
-		writer.endtag("lib")
-		writer.newline()
-
-	writer.endtag("glyph")
+	if not isinstance(note, (str, unicode)):
+		raise GlifLibError("note attribute must be str or unicode")
+	note = note.encode("utf-8")
+	writer.begintag("note")
 	writer.newline()
-	if aFile is not None:
-		return aFile.getvalue()
-	else:
-		return None
+	for line in note.splitlines():
+		writer.write(line.strip())
+		writer.newline()
+	writer.endtag("note")
+	writer.newline()
+
+def _writeImage(glyphObject, writer):
+	image = getattr(glyphObject, "image", None)
+	if not imageValidator(image):
+		raise GlifLibError("image attribute must be a dict or dict-like object with the proper structure.")
+	attrs = [
+		("fileName", image["fileName"])
+	]
+	for attr, default in _transformationInfo.items():
+		value = image.get(attr)
+		attrs.append((attr, str(value)))
+	color = image.get("color")
+	if color is not None:
+		attrs.append(("color", color))
+	self.writer.simpletag("image", attrs)
+	self.writer.newline()
+
+def _writeGuidelines(glyphObject, writer, identifiers):
+	guidelines = getattr(glyphObject, "guidelines", [])
+	if not guidelinesValidator(guidelinesValidator):
+		raise GlifLibError("guidelines attribute does not have the proper structure.")
+	for guideline in guidelines:
+		attrs = []
+		x = guideline.get("x")
+		if x is not None:
+			attrs.append(("x", str(x)))
+		y = guideline.get("y")
+		if y is not None:
+			attrs.append(("y", str(y)))
+		angle = guideline.get("angle")
+		if angle is not None:
+			attrs.append(("angle", str(angle)))
+		name = guideline.get("name")
+		if name is not None:
+			attrs.append(("name", name))
+		color = image.get("color")
+		if color is not None:
+			attrs.append(("color", color))
+		identifier = image.get("identifier")
+		if identifier is not None:
+			if identifier in identifiers:
+				raise GlifLibError("identifier used more than once: %s" % identifier)
+			attrs.append(("identifier", identifier))
+		self.writer.simpletag("guideline", attrs)
+		self.writer.newline()
+
+def _writeLib(glyphObject, writer):
+	from ufoLib.plistlib import PlistWriter
+	lib = getattr(glyphObject, "lib", None)
+	if not isinstance(lib, dict):
+		raise GlifLibError("lib attribute must be a dict.")
+	writer.begintag("lib")
+	writer.newline()
+	plistWriter = PlistWriter(writer.file, indentLevel=writer.indentlevel,
+			indent=writer.indentwhite, writeHeader=False)
+	plistWriter.writeValue(lib)
+	writer.endtag("lib")
+	writer.newline()
 
 # -----------------------
 # layerinfo.plist Support
@@ -1082,8 +1101,8 @@ class GLIFPointPen(AbstractPointPen):
 
 	def beginPath(self, identifier=None, **kwargs):
 		attrs = []
-		if identifier is not None self.formatVersion > 2:
-			if identifier in identifiers:
+		if identifier is not None and self.formatVersion >= 2:
+			if identifier in self.identifiers:
 				raise GlifLibError("identifier used more than once: %s" % identifier)
 			if not identifierValidator(identifier):
 				raise GlifLibError("identifier not formatted properly: %s" % identifier)
@@ -1109,8 +1128,8 @@ class GLIFPointPen(AbstractPointPen):
 			attrs.append(("smooth", "yes"))
 		if name is not None:
 			attrs.append(("name", name))
-		if identifier is not None self.formatVersion > 2:
-			if identifier in identifiers:
+		if identifier is not None and self.formatVersion >= 2:
+			if identifier in self.identifiers:
 				raise GlifLibError("identifier used more than once: %s" % identifier)
 			if not identifierValidator(identifier):
 				raise GlifLibError("identifier not formatted properly: %s" % identifier)
@@ -1125,8 +1144,8 @@ class GLIFPointPen(AbstractPointPen):
 				raise GlifLibError("transformation values must be int or float")
 			if value != default:
 				attrs.append((attr, str(value)))
-		if identifier is not None self.formatVersion > 2:
-			if identifier in identifiers:
+		if identifier is not None and self.formatVersion >= 2:
+			if identifier in self.identifiers:
 				raise GlifLibError("identifier used more than once: %s" % identifier)
 			if not identifierValidator(identifier):
 				raise GlifLibError("identifier not formatted properly: %s" % identifier)
