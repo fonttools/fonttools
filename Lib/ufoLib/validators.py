@@ -696,7 +696,7 @@ def imageValidator(value):
 	if not genericDictValidator(value, dictPrototype):
 		return False
 	# fileName must be one or more characters
-	if not fileName:
+	if not value["fileName"]:
 		return False
 	# color must follow the proper format
 	color = value.get("color")

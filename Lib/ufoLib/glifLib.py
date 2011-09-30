@@ -485,6 +485,10 @@ def writeGlyphToString(glyphName, glyphObject=None, drawPointsFunc=None, writer=
 		aFile = None
 	identifiers = set()
 	# start
+	if glyphName == "":
+		raise GlifLibError("The glyph name is empty.")
+	if not isinstance(glyphName, basestring):
+		raise GlifLibError("The glyph name is not properly formatted.")
 	writer.begintag("glyph", [("name", glyphName), ("format", formatVersion)])
 	writer.newline()
 	# advance
@@ -544,9 +548,13 @@ def _writeUnicodes(glyphObject, writer):
 	unicodes = getattr(glyphObject, "unicodes", None)
 	if isinstance(unicodes, int):
 		unicodes = [unicodes]
+	seen = set()
 	for code in unicodes:
 		if not isinstance(code, int):
 			raise GlifLibError("unicode values must be int")
+		if code in seen:
+			continue
+		seen.add(code)
 		hexCode = hex(code)[2:].upper()
 		if len(hexCode) < 4:
 			hexCode = "0" * (4 - len(hexCode)) + hexCode
@@ -687,7 +695,10 @@ def validateLayerInfoVersion3Data(infoData):
 # -----------------
 
 def _stripGlyphXMLTree(nodes):
-	for element, attrs, children in nodes:
+	for node in nodes:
+		if len(node) != 3:
+			raise GlifLibError("Invalid GLIF structure.")
+		element, attrs, children = node
 		# "lib" is formatted as a plist, so we need unstripped
 		# character data so we can support strings with leading or
 		# trailing whitespace. Do strip everything else.
@@ -723,6 +734,8 @@ def _readGlyphFromTree(tree, glyphObject=None, pointPen=None):
 		raise GlifLibError, "Unsupported GLIF format version: %s" % formatVersion
 	# get the name
 	glyphName = tree[1].get("name")
+	if glyphName == "":
+		raise GlifLibError("Empty glyph name in GLIF.")
 	if glyphName and glyphObject is not None:
 		_relaxedSetattr(glyphObject, "name", glyphName)
 	# populate the sub elements
@@ -751,7 +764,8 @@ def _readGlyphFromTree(tree, glyphObject=None, pointPen=None):
 			try:
 				v = attrs.get("hex", "undefined")
 				v = int(v, 16)
-				unicodes.append(v)
+				if v not in unicodes:
+					unicodes.append(v)
 			except ValueError:
 				raise GlifLibError("Illegal value for hex attribute of unicode element.")
 		elif element == "guideline":
@@ -840,11 +854,14 @@ def _buildOutlineContour(pen, (attrs, children), formatVersion, identifiers):
 			raise GlifLibError("The contour identifier %s is not valid." % identifier)
 		identifiers.add(identifier)
 	# try to pass the identifier attribute
-	try:
-		pen.beginPath(identifier)
-	except TypeError:
+	if formatVersion == 1:
 		pen.beginPath()
-		raise DeprecationWarning("The beginPath method needs an identifier kwarg. The contour's identifier value has been discarded.")
+	else:
+		try:
+			pen.beginPath(identifier)
+		except TypeError:
+			pen.beginPath()
+			raise DeprecationWarning("The beginPath method needs an identifier kwarg. The contour's identifier value has been discarded.")
 	# points
 	if children:
 		# loop through the points very quickly to make sure that the number of off-curves is correct
