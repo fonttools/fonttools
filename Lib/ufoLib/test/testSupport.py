@@ -47,6 +47,138 @@ def runTests(testCases=None, verbosity=1):
 	testSuite = unittest.TestSuite(suites)
 	testRunner.run(testSuite)
 
+# GLIF test tools
+
+class Glyph(object):
+
+	def __init__(self):
+		self.name = None
+		self.width = None
+		self.height = None
+		self.unicodes = None
+		self.note = None
+		self.lib = None
+		self.image = None
+		self.guidelines = None
+		self.outline = []
+
+	def _writePointPenCommand(self, command, args, kwargs):
+		args = _listToString(args)
+		kwargs = _dictToString(kwargs)
+		if args and kwargs:
+			return "pointPen.%s(*%s, **%s)" % (command, args, kwargs)
+		elif len(args):
+			return "pointPen.%s(*%s)" % (command, args)
+		elif len(kwargs):
+			return "pointPen.%s(**%s)" % (command, kwargs)
+		else:
+			return "pointPen.%s()" % command
+
+	def beginPath(self, **kwargs):
+		self.outline.append(self._writePointPenCommand("beginPath", [], kwargs))
+
+	def endPath(self):
+		self.outline.append(self._writePointPenCommand("endPath", [], {}))
+
+	def addPoint(self, *args, **kwargs):
+		self.outline.append(self._writePointPenCommand("addPoint", args, kwargs))
+
+	def addComponent(self, *args, **kwargs):
+		self.outline.append(self._writePointPenCommand("addComponent", args, kwargs))
+
+	def drawPoints(self, pointPen):
+		if self.outline:
+			py = "\n".join(self.outline)
+			exec py in {"pointPen" : pointPen}
+
+	def py(self):
+		text = []
+		if self.name is not None:
+			text.append("glyph.name = \"%s\"" % self.name)
+		if self.width:
+			text.append("glyph.width = %s" % str(self.width))
+		if self.height:
+			text.append("glyph.height = %s" % str(self.height))
+		if self.unicodes is not None:
+			text.append("glyph.unicodes = [%s]" % ", ".join([str(i) for i in self.unicodes]))
+		if self.note is not None:
+			text.append("glyph.note = \"%s\"" % self.note)
+		if self.lib is not None:
+			text.append("glyph.lib = %s" % _dictToString(self.lib))
+		if self.image is not None:
+			text.append("glyph.image = %s" % _dictToString(self.image))
+		if self.guidelines is not None:
+			text.append("glyph.guidelines = %s" % _listToString(self.guidelines))
+		if self.outline:
+			text += self.outline
+		return "\n".join(text)
+
+def _dictToString(d):
+	text = []
+	for key, value in sorted(d.items()):
+		if value is None:
+			continue
+		key = "\"%s\"" % key
+		if isinstance(value, dict):
+			value = _dictToString(value)
+		elif isinstance(value, list):
+			value = _listToString(value)
+		elif isinstance(value, tuple):
+			value = _tupleToString(value)
+		elif isinstance(value, (int, float)):
+			value = str(value)
+		elif isinstance(value, basestring):
+			value = "\"%s\"" % value
+		text.append("%s : %s" % (key, value))
+	if not text:
+		return ""
+	return "{%s}" % ", ".join(text)
+
+def _listToString(l):
+	text = []
+	for value in l:
+		if isinstance(value, dict):
+			value = _dictToString(value)
+		elif isinstance(value, list):
+			value = _listToString(value)
+		elif isinstance(value, tuple):
+			value = _tupleToString(value)
+		elif isinstance(value, (int, float)):
+			value = str(value)
+		elif isinstance(value, basestring):
+			value = "\"%s\"" % value
+		text.append(value)
+	if not text:
+		return ""
+	return "[%s]" % ", ".join(text)
+
+def _tupleToString(t):
+	text = []
+	for value in t:
+		if isinstance(value, dict):
+			value = _dictToString(value)
+		elif isinstance(value, list):
+			value = _listToString(value)
+		elif isinstance(value, tuple):
+			value = _tupleToString(value)
+		elif isinstance(value, (int, float)):
+			value = str(value)
+		elif isinstance(value, basestring):
+			value = "\"%s\"" % value
+		text.append(value)
+	if not text:
+		return ""
+	return "(%s)" % ", ".join(text)
+
+def stripText(text):
+	new = []
+	for line in text.strip().splitlines():
+		line = line.strip()
+		if not line:
+			continue
+		new.append(line)
+	return "\n".join(new)
+
 # font info values used by several tests
 
 fontInfoVersion1 = {
