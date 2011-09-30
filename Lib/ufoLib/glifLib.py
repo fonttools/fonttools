@@ -747,6 +747,8 @@ def _readGlyphFromTree(tree, glyphObject=None, pointPen=None):
 		if element == "outline":
 			if haveSeenOutline:
 				raise GlifLibError("The outline element occurs more than once.")
+			if attrs:
+				raise GlifLibError("The outline element contains unknwon attributes.")
 			haveSeenOutline = True
 			if pointPen is not None:
 				buildOutline(pointPen, children, formatVersion, identifiers)
@@ -833,11 +835,16 @@ pointSmoothOptions = set(("no", "yes"))
 pointTypeOptions = set(["move", "line", "offcurve", "curve", "qcurve"])
 
 def buildOutline(pen, xmlNodes, formatVersion, identifiers):
-	for element, attrs, children in xmlNodes:
+	for node in xmlNodes:
+		if len(node) != 3:
+			raise GlifLibError("The outline element is not properly structured.")
+		element, attrs, children = node
 		if element == "contour":
 			_buildOutlineContour(pen, (attrs, children), formatVersion, identifiers)
 		elif element == "component":
 			_buildOutlineComponent(pen, (attrs, children), formatVersion, identifiers)
+		else:
+			raise GlifLibError("Unknown element in outline element: %s" % element)
 
 def _buildOutlineContour(pen, (attrs, children), formatVersion, identifiers):
 	# search for unknown attributes
@@ -854,14 +861,11 @@ def _buildOutlineContour(pen, (attrs, children), formatVersion, identifiers):
 			raise GlifLibError("The contour identifier %s is not valid." % identifier)
 		identifiers.add(identifier)
 	# try to pass the identifier attribute
-	if formatVersion == 1:
+	try:
+		pen.beginPath(identifier)
+	except TypeError:
 		pen.beginPath()
-	else:
-		try:
-			pen.beginPath(identifier)
-		except TypeError:
-			pen.beginPath()
-			raise DeprecationWarning("The beginPath method needs an identifier kwarg. The contour's identifier value has been discarded.")
+		raise DeprecationWarning("The beginPath method needs an identifier kwarg. The contour's identifier value has been discarded.")
 	# points
 	if children:
 		# loop through the points very quickly to make sure that the number of off-curves is correct
