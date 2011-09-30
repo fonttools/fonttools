@@ -936,7 +936,7 @@ def _validateSegmentStructures(children):
 			if segmentType == "move":
 				raise GlifLibError("move can not have an offcurve.")
 			elif segmentType == "line":
-				raise GlifLibError("move can not have an offcurve.")
+				raise GlifLibError("line can not have an offcurve.")
 			elif segmentType == "curve":
 				if len(offCurves) > 2:
 					raise GlifLibError("Too many offcurves defined for curve.")
@@ -981,7 +981,7 @@ def _buildOutlinePoints(pen, children, formatVersion, identifiers):
 			if smooth not in pointSmoothOptions:
 				raise GlifLibError("Unknown point smooth value: %s" % smooth)
 		smooth = smooth == "yes"
-		if smooth and segmentType not in ["curve"]:
+		if smooth and segmentType not in ("curve", "qcurve"):
 			raise GlifLibError("smooth attribute set in a %s point." % segmentType)
 		# name is not required
 		name = attrs.get("name")
@@ -1132,6 +1132,7 @@ class GLIFPointPen(AbstractPointPen):
 		self.identifiers = identifiers
 		self.writer = xmlWriter
 		self.prevSegmentType = None
+		self.prevOffCurveCount = 0
 
 	def beginPath(self, identifier=None, **kwargs):
 		attrs = []
@@ -1144,11 +1145,13 @@ class GLIFPointPen(AbstractPointPen):
 		self.writer.begintag("contour", attrs)
 		self.writer.newline()
 		self.prevSegmentType = None
+		self.prevOffCurveCount = 0
 
 	def endPath(self):
 		self.writer.endtag("contour")
 		self.writer.newline()
 		self.prevSegmentType = None
+		self.prevOffCurveCount = 0
 
 	def addPoint(self, pt, segmentType=None, smooth=None, name=None, identifier=None, **kwargs):
 		attrs = []
@@ -1162,12 +1165,22 @@ class GLIFPointPen(AbstractPointPen):
 		# segment type
 		if segmentType == "move" and self.prevSegmentType is not None:
 			raise GlifLibError("move occurs after a point has already been added to the contour.")
+		if segmentType in ("move", "line") and self.prevSegmentType == "offcurve":
+			raise GlifLibError("offcurve occurs before %s point." % segmentType)
+		if segmentType == "curve" and self.prevOffCurveCount > 2:
+			raise GlifLibError("too many offcurve points before curve point.")
 		if segmentType is not None:
 			attrs.append(("type", segmentType))
+		else:
+			segmentType = "offcurve"
+		if segmentType == "offcurve":
+			self.prevOffCurveCount += 1
+		else:
+			self.prevOffCurveCount = 0
 		self.prevSegmentType = segmentType
 		# smooth
 		if smooth:
-			if segmentType not in ["curve"]:
+			if segmentType not in ("curve", "qcurve"):
 				raise GlifLibError("can't set smooth in a %s point." % segmentType)
 			attrs.append(("smooth", "yes"))
 		# name

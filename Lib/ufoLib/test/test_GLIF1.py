@@ -13,25 +13,28 @@ class Glyph(object):
 		self.height = None
 		self.unicodes = None
 		self.note = None
+		self.lib = None
 		self.image = None
 		self.guidelines = None
 		self.outline = []
 
 	def _writePointPenCommand(self, command, args, kwargs):
+		args = listToString(args)
+		kwargs = dictToString(kwargs)
 		if args and kwargs:
-			return "pointPen.%s(*%s, **%s)" % (command, listToString(args), dictToString(kwargs))
-		elif args:
-			return "pointPen.%s(*%s)" % (command, listToString(args))
-		elif kwargs:
-			return "pointPen.%s(**%s)" % (command, dictToString(kwargs))
+			return "pointPen.%s(*%s, **%s)" % (command, args, kwargs)
+		elif len(args):
+			return "pointPen.%s(*%s)" % (command, args)
+		elif len(kwargs):
+			return "pointPen.%s(**%s)" % (command, kwargs)
 		else:
 			return "pointPen.%s()" % command
 
 	def beginPath(self, **kwargs):
-		self.outline.append(self._writePointPenCommand("beginPath", args))
+		self.outline.append(self._writePointPenCommand("beginPath", [], kwargs))
 
 	def endPath(self):
-		self.outline.append(self._writePointPenCommand("endPath"))
+		self.outline.append(self._writePointPenCommand("endPath", [], {}))
 
 	def addPoint(self, *args, **kwargs):
 		self.outline.append(self._writePointPenCommand("addPoint", args, kwargs))
@@ -56,12 +59,13 @@ class Glyph(object):
 			text.append("glyph.unicodes = [%s]" % ", ".join([str(i) for i in self.unicodes]))
 		if self.note is not None:
 			text.append("glyph.note = \"%s\"" % self.note)
+		if self.lib is not None:
+			text.append("glyph.lib = %s" % dictToString(self.lib))
 		if self.image is not None:
 			text.append("glyph.image = %s" % dictToString(self.image))
 		if self.guidelines is not None:
 			text.append("glyph.guidelines = %s" % listToString(self.guidelines))
 		if self.outline:
-			text.append("pointPen = glyph.getPointPen()")
 			text += self.outline
 		return "\n".join(text)
 
@@ -82,6 +86,8 @@ def dictToString(d):
 		elif isinstance(value, basestring):
 			value = "\"%s\"" % value
 		text.append("%s : %s" % (key, value))
+	if not text:
+		return ""
 	return "{%s}" % ", ".join(text)
 
 def listToString(l):
@@ -98,6 +104,8 @@ def listToString(l):
 		elif isinstance(value, basestring):
 			value = "\"%s\"" % value
 		text.append(value)
+	if not text:
+		return ""
 	return "[%s]" % ", ".join(text)
 
 def tupleToString(t):
@@ -114,8 +122,9 @@ def tupleToString(t):
 		elif isinstance(value, basestring):
 			value = "\"%s\"" % value
 		text.append(value)
+	if not text:
+		return ""
 	return "(%s)" % ", ".join(text)
-
 
 def stripText(text):
 	new = []
@@ -142,7 +151,7 @@ class TestGLIF1(unittest.TestCase):
 	def glyphToGLIF(self, py):
 		py = stripText(py)
 		glyph = Glyph()
-		exec py in {"glyph" : glyph}
+		exec py in {"glyph" : glyph, "pointPen" : glyph}
 		glif = writeGlyphToString(glyph.name, glyphObject=glyph, drawPointsFunc=glyph.drawPoints, formatVersion=1)
 		glif = "\n".join(glif.splitlines()[1:])
 		return glif
@@ -407,6 +416,851 @@ class TestGLIF1(unittest.TestCase):
 		resultPy = self.glifToPy(glif)
 		self.assertEqual(glif, resultGlif)
 		self.assertEqual(py, resultPy)
+
+	def testLib(self):
+		glif = """
+		<glyph name="a" format="1">
+			<outline>
+			</outline>
+			<lib>
+				<dict>
+					<key>dict</key>
+					<dict>
+						<key>hello</key>
+						<string>world</string>
+					</dict>
+					<key>float</key>
+					<real>2.5</real>
+					<key>int</key>
+					<integer>1</integer>
+					<key>list</key>
+					<array>
+						<string>a</string>
+						<string>b</string>
+						<integer>1</integer>
+						<real>2.5</real>
+					</array>
+					<key>string</key>
+					<string>a</string>
+				</dict>
+			</lib>
+		</glyph>
+		"""
+		py = """
+		glyph.name = "a"
+		glyph.lib = {"dict" : {"hello" : "world"}, "float" : 2.5, "int" : 1, "list" : ["a", "b", 1, 2.5], "string" : "a"}
+		"""
+		resultGlif = self.glyphToGLIF(py)
+		resultPy = self.glifToPy(glif)
+		self.assertEqual(glif, resultGlif)
+		self.assertEqual(py, resultPy)
+
+	def testOutline(self):
+		# unknown element
+		glif = """
+		<glyph name="a" format="1">
+			<outline>
+				<unknown/>
+			</outline>
+		</glyph>
+		"""
+		self.assertRaises(GlifLibError, self.glifToPy, glif)
+		# content
+		glif = """
+		<glyph name="a" format="1">
+			<outline>
+				hello
+			</outline>
+		</glyph>
+		"""
+		self.assertRaises(GlifLibError, self.glifToPy, glif)
+
+	def testComponent(self):
+		# legal
+		glif = """
+		<glyph name="a" format="1">
+			<outline>
+				<component base="x" xScale="2" xyScale="3" yxScale="6" yScale="5" xOffset="1" yOffset="4"/>
+			</outline>
+		</glyph>
+		"""
+		py = """
+		glyph.name = "a"
+		pointPen.addComponent(*["x", (2, 3, 6, 5, 1, 4)])
+		"""
+		resultGlif = self.glyphToGLIF(py)
+		resultPy = self.glifToPy(glif)
+		self.assertEqual(glif, resultGlif)
+		self.assertEqual(py, resultPy)
+		# no base
+		glif = """
+		<glyph name="a" format="1">
+			<outline>
+				<component xScale="2" xyScale="3" yxScale="6" yScale="5" xOffset="1" yOffset="4"/>
+			</outline>
+		</glyph>
+		"""
+		self.assertRaises(GlifLibError, self.glifToPy, glif)
+		# bogus values in transformation
+		glif = """
+		<glyph name="a" format="1">
+			<outline>
+				<component base="x" xScale="a" xyScale="3" yxScale="6" yScale="5" xOffset="1" yOffset="4"/>
+			</outline>
+		</glyph>
+		"""
+		py = """
+		glyph.name = "a"
+		pointPen.addComponent(*["x", ("a", 3, 6, 5, 1, 4)])
+		"""
+		self.assertRaises(GlifLibError, self.glyphToGLIF, py)
+		self.assertRaises(GlifLibError, self.glifToPy, glif)
+		glif = """
+		<glyph name="a" format="1">
+			<outline>
+				<component base="x" xScale="a" xyScale="3" yxScale="6" yScale="5" xOffset="1" yOffset="4"/>
+			</outline>
+		</glyph>
+		"""
+		py = """
+		glyph.name = "a"
+		pointPen.addComponent(*["x", (2, "a", 6, 5, 1, 4)])
+		"""
+		self.assertRaises(GlifLibError, self.glyphToGLIF, py)
+		self.assertRaises(GlifLibError, self.glifToPy, glif)
+		glif = """
+		<glyph name="a" format="1">
+			<outline>
+				<component base="x" xScale="2" xyScale="3" yxScale="a" yScale="5" xOffset="1" yOffset="4"/>
+			</outline>
+		</glyph>
+		"""
+		py = """
+		glyph.name = "a"
+		pointPen.addComponent(*["x", (2, 3, "a", 5, 1, 4)])
+		"""
+		self.assertRaises(GlifLibError, self.glyphToGLIF, py)
+		self.assertRaises(GlifLibError, self.glifToPy, glif)
+		glif = """
+		<glyph name="a" format="1">
+			<outline>
+				<component base="x" xScale="2" xyScale="3" yxScale="6" yScale="a" xOffset="1" yOffset="4"/>
+			</outline>
+		</glyph>
+		"""
+		py = """
+		glyph.name = "a"
+		pointPen.addComponent(*["x", (2, 3, 6, "a", 1, 4)])
+		"""
+		self.assertRaises(GlifLibError, self.glyphToGLIF, py)
+		self.assertRaises(GlifLibError, self.glifToPy, glif)
+		glif = """
+		<glyph name="a" format="1">
+			<outline>
+				<component base="x" xScale="2" xyScale="3" yxScale="6" yScale="5" xOffset="a" yOffset="4"/>
+			</outline>
+		</glyph>
+		"""
+		py = """
+		glyph.name = "a"
+		pointPen.addComponent(*["x", (2, 3, 6, 5, "a", 4)])
+		"""
+		self.assertRaises(GlifLibError, self.glyphToGLIF, py)
+		self.assertRaises(GlifLibError, self.glifToPy, glif)
+		glif = """
+		<glyph name="a" format="1">
+			<outline>
+				<component base="x" xScale="2" xyScale="3" yxScale="6" yScale="5" xOffset="1" yOffset="a"/>
+			</outline>
+		</glyph>
+		"""
+		py = """
+		glyph.name = "a"
+		pointPen.addComponent(*["x", (2, 3, 6, 5, 1, "a")])
+		"""
+		self.assertRaises(GlifLibError, self.glyphToGLIF, py)
+		self.assertRaises(GlifLibError, self.glifToPy, glif)
+
+	def testContour(self):
+		# legal: one contour
+		glif = """
+		<glyph name="a" format="1">
+			<outline>
+				<contour>
+				</contour>
+			</outline>
+		</glyph>
+		"""
+		py = """
+		glyph.name = "a"
+		pointPen.beginPath()
+		pointPen.endPath()
+		"""
+		resultGlif = self.glyphToGLIF(py)
+		resultPy = self.glifToPy(glif)
+		self.assertEqual(glif, resultGlif)
+		self.assertEqual(py, resultPy)
+		# legal: two contours
+		glif = """
+		<glyph name="a" format="1">
+			<outline>
+				<contour>
+					<point x="1" y="2" type="move"/>
+				</contour>
+				<contour>
+					<point x="1" y="2" type="move"/>
+					<point x="10" y="20" type="line"/>
+				</contour>
+			</outline>
+		</glyph>
+		"""
+		py = """
+		glyph.name = "a"
+		pointPen.beginPath()
+		pointPen.addPoint(*[(1, 2)], **{"segmentType" : "move", "smooth" : False})
+		pointPen.endPath()
+		pointPen.beginPath()
+		pointPen.addPoint(*[(1, 2)], **{"segmentType" : "move", "smooth" : False})
+		pointPen.addPoint(*[(10, 20)], **{"segmentType" : "line", "smooth" : False})
+		pointPen.endPath()
+		"""
+		resultGlif = self.glyphToGLIF(py)
+		resultPy = self.glifToPy(glif)
+		self.assertEqual(glif, resultGlif)
+		self.assertEqual(py, resultPy)
+		# unknown element
+		glif = """
+		<glyph name="a" format="1">
+			<outline>
+				<contour>
+					<unknown/>
+				</contour>
+			</outline>
+		</glyph>
+		"""
+		self.assertRaises(GlifLibError, self.glifToPy, glif)
+
+	def testPointCoordinates(self):
+		# legal: int
+		glif = """
+		<glyph name="a" format="1">
+			<outline>
+				<contour>
+					<point x="1" y="-2" type="move"/>
+				</contour>
+			</outline>
+		</glyph>
+		"""
+		py = """
+		glyph.name = "a"
+		pointPen.beginPath()
+		pointPen.addPoint(*[(1, -2)], **{"segmentType" : "move", "smooth" : False})
+		pointPen.endPath()
+		"""
+		resultGlif = self.glyphToGLIF(py)
+		resultPy = self.glifToPy(glif)
+		self.assertEqual(glif, resultGlif)
+		self.assertEqual(py, resultPy)
+		# legal: float
+		glif = """
+		<glyph name="a" format="1">
+			<outline>
+				<contour>
+					<point x="1.1" y="-2.2" type="move"/>
+				</contour>
+			</outline>
+		</glyph>
+		"""
+		py = """
+		glyph.name = "a"
+		pointPen.beginPath()
+		pointPen.addPoint(*[(1.1, -2.2)], **{"segmentType" : "move", "smooth" : False})
+		pointPen.endPath()
+		"""
+		resultGlif = self.glyphToGLIF(py)
+		resultPy = self.glifToPy(glif)
+		self.assertEqual(glif, resultGlif)
+		self.assertEqual(py, resultPy)
+		# legal: int
+		glif = """
+		<glyph name="a" format="1">
+			<outline>
+				<contour>
+					<point x="a" y="2" type="move"/>
+				</contour>
+			</outline>
+		</glyph>
+		"""
+		py = """
+		glyph.name = "a"
+		pointPen.beginPath()
+		pointPen.addPoint(*[("a", 2)], **{"segmentType" : "move", "smooth" : False})
+		pointPen.endPath()
+		"""
+		self.assertRaises(GlifLibError, self.glyphToGLIF, py)
+		self.assertRaises(GlifLibError, self.glifToPy, glif)
+		# legal: int
+		glif = """
+		<glyph name="a" format="1">
+			<outline>
+				<contour>
+					<point x="1" y="a" type="move"/>
+				</contour>
+			</outline>
+		</glyph>
+		"""
+		py = """
+		glyph.name = "a"
+		pointPen.beginPath()
+		pointPen.addPoint(*[(1, "a")], **{"segmentType" : "move", "smooth" : False})
+		pointPen.endPath()
+		"""
+		self.assertRaises(GlifLibError, self.glyphToGLIF, py)
+		self.assertRaises(GlifLibError, self.glifToPy, glif)
+
+	def testPointTypeMove(self):
+		# legal
+		glif = """
+		<glyph name="a" format="1">
+			<outline>
+				<contour>
+					<point x="1" y="-2" type="move"/>
+					<point x="3" y="-4" type="line"/>
+				</contour>
+			</outline>
+		</glyph>
+		"""
+		py = """
+		glyph.name = "a"
+		pointPen.beginPath()
+		pointPen.addPoint(*[(1, -2)], **{"segmentType" : "move", "smooth" : False})
+		pointPen.addPoint(*[(3, -4)], **{"segmentType" : "line", "smooth" : False})
+		pointPen.endPath()
+		"""
+		resultGlif = self.glyphToGLIF(py)
+		resultPy = self.glifToPy(glif)
+		self.assertEqual(glif, resultGlif)
+		self.assertEqual(py, resultPy)
+		# illegal: smooth=True
+		glif = """
+		<glyph name="a" format="1">
+			<outline>
+				<contour>
+					<point x="1" y="-2" type="move" smooth="yes"/>
+					<point x="3" y="-4" type="line"/>
+				</contour>
+			</outline>
+		</glyph>
+		"""
+		py = """
+		glyph.name = "a"
+		pointPen.beginPath()
+		pointPen.addPoint(*[(1, -2)], **{"segmentType" : "move", "smooth" : True})
+		pointPen.addPoint(*[(3, -4)], **{"segmentType" : "line", "smooth" : False})
+		pointPen.endPath()
+		"""
+		self.assertRaises(GlifLibError, self.glyphToGLIF, py)
+		self.assertRaises(GlifLibError, self.glifToPy, glif)
+		# illegal: not at start
+		glif = """
+		<glyph name="a" format="1">
+			<outline>
+				<contour>
+					<point x="3" y="-4" type="line"/>
+					<point x="1" y="-2" type="move"/>
+				</contour>
+			</outline>
+		</glyph>
+		"""
+		py = """
+		glyph.name = "a"
+		pointPen.beginPath()
+		pointPen.addPoint(*[(3, -4)], **{"segmentType" : "line", "smooth" : False})
+		pointPen.addPoint(*[(1, -2)], **{"segmentType" : "move", "smooth" : False})
+		pointPen.endPath()
+		"""
+		self.assertRaises(GlifLibError, self.glyphToGLIF, py)
+		self.assertRaises(GlifLibError, self.glifToPy, glif)
+
+	def testPointTypeLine(self):
+		# legal
+		glif = """
+		<glyph name="a" format="1">
+			<outline>
+				<contour>
+					<point x="1" y="-2" type="move"/>
+					<point x="3" y="-4" type="line"/>
+				</contour>
+			</outline>
+		</glyph>
+		"""
+		py = """
+		glyph.name = "a"
+		pointPen.beginPath()
+		pointPen.addPoint(*[(1, -2)], **{"segmentType" : "move", "smooth" : False})
+		pointPen.addPoint(*[(3, -4)], **{"segmentType" : "line", "smooth" : False})
+		pointPen.endPath()
+		"""
+		resultGlif = self.glyphToGLIF(py)
+		resultPy = self.glifToPy(glif)
+		self.assertEqual(glif, resultGlif)
+		self.assertEqual(py, resultPy)
+		# legal: start of contour
+		glif = """
+		<glyph name="a" format="1">
+			<outline>
+				<contour>
+					<point x="1" y="-2" type="line"/>
+					<point x="3" y="-4" type="line"/>
+				</contour>
+			</outline>
+		</glyph>
+		"""
+		py = """
+		glyph.name = "a"
+		pointPen.beginPath()
+		pointPen.addPoint(*[(1, -2)], **{"segmentType" : "line", "smooth" : False})
+		pointPen.addPoint(*[(3, -4)], **{"segmentType" : "line", "smooth" : False})
+		pointPen.endPath()
+		"""
+		resultGlif = self.glyphToGLIF(py)
+		resultPy = self.glifToPy(glif)
+		self.assertEqual(glif, resultGlif)
+		self.assertEqual(py, resultPy)
+		# illegal: smooth=True
+		glif = """
+		<glyph name="a" format="1">
+			<outline>
+				<contour>
+					<point x="1" y="-2" type="move"/>
+					<point x="3" y="-4" type="line" smooth="yes"/>
+				</contour>
+			</outline>
+		</glyph>
+		"""
+		py = """
+		glyph.name = "a"
+		pointPen.beginPath()
+		pointPen.addPoint(*[(1, -2)], **{"segmentType" : "move", "smooth" : False})
+		pointPen.addPoint(*[(3, -4)], **{"segmentType" : "line", "smooth" : True})
+		pointPen.endPath()
+		"""
+		self.assertRaises(GlifLibError, self.glyphToGLIF, py)
+		self.assertRaises(GlifLibError, self.glifToPy, glif)
+
+	def testPointTypeCurve(self):
+		# legal
+		glif = """
+		<glyph name="a" format="1">
+			<outline>
+				<contour>
+					<point x="0" y="0" type="move"/>
+					<point x="0" y="65"/>
+					<point x="65" y="200"/>
+					<point x="100" y="200" type="curve"/>
+				</contour>
+			</outline>
+		</glyph>
+		"""
+		py = """
+		glyph.name = "a"
+		pointPen.beginPath()
+		pointPen.addPoint(*[(0, 0)], **{"segmentType" : "move", "smooth" : False})
+		pointPen.addPoint(*[(0, 65)], **{"smooth" : False})
+		pointPen.addPoint(*[(65, 200)], **{"smooth" : False})
+		pointPen.addPoint(*[(100, 200)], **{"segmentType" : "curve", "smooth" : False})
+		pointPen.endPath()
+		"""
+		resultGlif = self.glyphToGLIF(py)
+		resultPy = self.glifToPy(glif)
+		self.assertEqual(glif, resultGlif)
+		self.assertEqual(py, resultPy)
+		# legal: start of contour
+		glif = """
+		<glyph name="a" format="1">
+			<outline>
+				<contour>
+					<point x="100" y="200" type="curve"/>
+					<point x="0" y="65"/>
+					<point x="65" y="200"/>
+				</contour>
+			</outline>
+		</glyph>
+		"""
+		py = """
+		glyph.name = "a"
+		pointPen.beginPath()
+		pointPen.addPoint(*[(100, 200)], **{"segmentType" : "curve", "smooth" : False})
+		pointPen.addPoint(*[(0, 65)], **{"smooth" : False})
+		pointPen.addPoint(*[(65, 200)], **{"smooth" : False})
+		pointPen.endPath()
+		"""
+		resultGlif = self.glyphToGLIF(py)
+		resultPy = self.glifToPy(glif)
+		self.assertEqual(glif, resultGlif)
+		self.assertEqual(py, resultPy)
+		# legal: smooth=True
+		glif = """
+		<glyph name="a" format="1">
+			<outline>
+				<contour>
+					<point x="0" y="0" type="move"/>
+					<point x="0" y="65"/>
+					<point x="65" y="200"/>
+					<point x="100" y="200" type="curve" smooth="yes"/>
+				</contour>
+			</outline>
+		</glyph>
+		"""
+		py = """
+		glyph.name = "a"
+		pointPen.beginPath()
+		pointPen.addPoint(*[(0, 0)], **{"segmentType" : "move", "smooth" : False})
+		pointPen.addPoint(*[(0, 65)], **{"smooth" : False})
+		pointPen.addPoint(*[(65, 200)], **{"smooth" : False})
+		pointPen.addPoint(*[(100, 200)], **{"segmentType" : "curve", "smooth" : True})
+		pointPen.endPath()
+		"""
+		resultGlif = self.glyphToGLIF(py)
+		resultPy = self.glifToPy(glif)
+		self.assertEqual(glif, resultGlif)
+		self.assertEqual(py, resultPy)
+		# legal: no off-curves
+		glif = """
+		<glyph name="a" format="1">
+			<outline>
+				<contour>
+					<point x="0" y="0" type="move"/>
+					<point x="100" y="200" type="curve"/>
+				</contour>
+			</outline>
+		</glyph>
+		"""
+		py = """
+		glyph.name = "a"
+		pointPen.beginPath()
+		pointPen.addPoint(*[(0, 0)], **{"segmentType" : "move", "smooth" : False})
+		pointPen.addPoint(*[(100, 200)], **{"segmentType" : "curve", "smooth" : False})
+		pointPen.endPath()
+		"""
+		resultGlif = self.glyphToGLIF(py)
+		resultPy = self.glifToPy(glif)
+		self.assertEqual(glif, resultGlif)
+		self.assertEqual(py, resultPy)
+		# legal: 1 off-curve
+		glif = """
+		<glyph name="a" format="1">
+			<outline>
+				<contour>
+					<point x="0" y="0" type="move"/>
+					<point x="50" y="100"/>
+					<point x="100" y="200" type="curve"/>
+				</contour>
+			</outline>
+		</glyph>
+		"""
+		py = """
+		glyph.name = "a"
+		pointPen.beginPath()
+		pointPen.addPoint(*[(0, 0)], **{"segmentType" : "move", "smooth" : False})
+		pointPen.addPoint(*[(50, 100)], **{"smooth" : False})
+		pointPen.addPoint(*[(100, 200)], **{"segmentType" : "curve", "smooth" : False})
+		pointPen.endPath()
+		"""
+		resultGlif = self.glyphToGLIF(py)
+		resultPy = self.glifToPy(glif)
+		self.assertEqual(glif, resultGlif)
+		self.assertEqual(py, resultPy)
+		# illegal: 3 off-curves
+		glif = """
+		<glyph name="a" format="1">
+			<outline>
+				<contour>
+					<point x="0" y="0" type="move"/>
+					<point x="0" y="100"/>
+					<point x="35" y="125"/>
+					<point x="65" y="200"/>
+					<point x="100" y="200" type="curve"/>
+				</contour>
+			</outline>
+		</glyph>
+		"""
+		py = """
+		glyph.name = "a"
+		pointPen.beginPath()
+		pointPen.addPoint(*[(0, 0)], **{"segmentType" : "move", "smooth" : False})
+		pointPen.addPoint(*[(0, 100)], **{"smooth" : False})
+		pointPen.addPoint(*[(35, 125)], **{"smooth" : False})
+		pointPen.addPoint(*[(65, 200)], **{"smooth" : False})
+		pointPen.addPoint(*[(100, 200)], **{"segmentType" : "curve", "smooth" : False})
+		pointPen.endPath()
+		"""
+		self.assertRaises(GlifLibError, self.glyphToGLIF, py)
+		self.assertRaises(GlifLibError, self.glifToPy, glif)
+
+	def testPointQCurve(self):
+		# legal
+		glif = """
+		<glyph name="a" format="1">
+			<outline>
+				<contour>
+					<point x="0" y="0" type="move"/>
+					<point x="0" y="65"/>
+					<point x="65" y="200"/>
+					<point x="100" y="200" type="qcurve"/>
+				</contour>
+			</outline>
+		</glyph>
+		"""
+		py = """
+		glyph.name = "a"
+		pointPen.beginPath()
+		pointPen.addPoint(*[(0, 0)], **{"segmentType" : "move", "smooth" : False})
+		pointPen.addPoint(*[(0, 65)], **{"smooth" : False})
+		pointPen.addPoint(*[(65, 200)], **{"smooth" : False})
+		pointPen.addPoint(*[(100, 200)], **{"segmentType" : "qcurve", "smooth" : False})
+		pointPen.endPath()
+		"""
+		resultGlif = self.glyphToGLIF(py)
+		resultPy = self.glifToPy(glif)
+		self.assertEqual(glif, resultGlif)
+		self.assertEqual(py, resultPy)
+		# legal: start of contour
+		glif = """
+		<glyph name="a" format="1">
+			<outline>
+				<contour>
+					<point x="100" y="200" type="qcurve"/>
+					<point x="0" y="65"/>
+					<point x="65" y="200"/>
+				</contour>
+			</outline>
+		</glyph>
+		"""
+		py = """
+		glyph.name = "a"
+		pointPen.beginPath()
+		pointPen.addPoint(*[(100, 200)], **{"segmentType" : "qcurve", "smooth" : False})
+		pointPen.addPoint(*[(0, 65)], **{"smooth" : False})
+		pointPen.addPoint(*[(65, 200)], **{"smooth" : False})
+		pointPen.endPath()
+		"""
+		resultGlif = self.glyphToGLIF(py)
+		resultPy = self.glifToPy(glif)
+		self.assertEqual(glif, resultGlif)
+		self.assertEqual(py, resultPy)
+		# legal: smooth=True
+		glif = """
+		<glyph name="a" format="1">
+			<outline>
+				<contour>
+					<point x="0" y="0" type="move"/>
+					<point x="0" y="65"/>
+					<point x="65" y="200"/>
+					<point x="100" y="200" type="qcurve" smooth="yes"/>
+				</contour>
+			</outline>
+		</glyph>
+		"""
+		py = """
+		glyph.name = "a"
+		pointPen.beginPath()
+		pointPen.addPoint(*[(0, 0)], **{"segmentType" : "move", "smooth" : False})
+		pointPen.addPoint(*[(0, 65)], **{"smooth" : False})
+		pointPen.addPoint(*[(65, 200)], **{"smooth" : False})
+		pointPen.addPoint(*[(100, 200)], **{"segmentType" : "qcurve", "smooth" : True})
+		pointPen.endPath()
+		"""
+		resultGlif = self.glyphToGLIF(py)
+		resultPy = self.glifToPy(glif)
+		self.assertEqual(glif, resultGlif)
+		self.assertEqual(py, resultPy)
+		# legal: no off-curves
+		glif = """
+		<glyph name="a" format="1">
+			<outline>
+				<contour>
+					<point x="0" y="0" type="move"/>
+					<point x="100" y="200" type="qcurve"/>
+				</contour>
+			</outline>
+		</glyph>
+		"""
+		py = """
+		glyph.name = "a"
+		pointPen.beginPath()
+		pointPen.addPoint(*[(0, 0)], **{"segmentType" : "move", "smooth" : False})
+		pointPen.addPoint(*[(100, 200)], **{"segmentType" : "qcurve", "smooth" : False})
+		pointPen.endPath()
+		"""
+		resultGlif = self.glyphToGLIF(py)
+		resultPy = self.glifToPy(glif)
+		self.assertEqual(glif, resultGlif)
+		self.assertEqual(py, resultPy)
+		# legal: 1 off-curve
+		glif = """
+		<glyph name="a" format="1">
+			<outline>
+				<contour>
+					<point x="0" y="0" type="move"/>
+					<point x="50" y="100"/>
+					<point x="100" y="200" type="qcurve"/>
+				</contour>
+			</outline>
+		</glyph>
+		"""
+		py = """
+		glyph.name = "a"
+		pointPen.beginPath()
+		pointPen.addPoint(*[(0, 0)], **{"segmentType" : "move", "smooth" : False})
+		pointPen.addPoint(*[(50, 100)], **{"smooth" : False})
+		pointPen.addPoint(*[(100, 200)], **{"segmentType" : "qcurve", "smooth" : False})
+		pointPen.endPath()
+		"""
+		resultGlif = self.glyphToGLIF(py)
+		resultPy = self.glifToPy(glif)
+		self.assertEqual(glif, resultGlif)
+		self.assertEqual(py, resultPy)
+		# legal: 3 off-curves
+		glif = """
+		<glyph name="a" format="1">
+			<outline>
+				<contour>
+					<point x="0" y="0" type="move"/>
+					<point x="0" y="100"/>
+					<point x="35" y="125"/>
+					<point x="65" y="200"/>
+					<point x="100" y="200" type="qcurve"/>
+				</contour>
+			</outline>
+		</glyph>
+		"""
+		py = """
+		glyph.name = "a"
+		pointPen.beginPath()
+		pointPen.addPoint(*[(0, 0)], **{"segmentType" : "move", "smooth" : False})
+		pointPen.addPoint(*[(0, 100)], **{"smooth" : False})
+		pointPen.addPoint(*[(35, 125)], **{"smooth" : False})
+		pointPen.addPoint(*[(65, 200)], **{"smooth" : False})
+		pointPen.addPoint(*[(100, 200)], **{"segmentType" : "qcurve", "smooth" : False})
+		pointPen.endPath()
+		"""
+		resultGlif = self.glyphToGLIF(py)
+		resultPy = self.glifToPy(glif)
+		self.assertEqual(glif, resultGlif)
+		self.assertEqual(py, resultPy)
+
+	def testPointTypeOffCurve(self):
+		# legal
+		glif = """
+		<glyph name="a" format="1">
+			<outline>
+				<contour>
+					<point x="0" y="0" type="move"/>
+					<point x="0" y="65"/>
+					<point x="65" y="200"/>
+					<point x="100" y="200" type="curve"/>
+				</contour>
+			</outline>
+		</glyph>
+		"""
+		py = """
+		glyph.name = "a"
+		pointPen.beginPath()
+		pointPen.addPoint(*[(0, 0)], **{"segmentType" : "move", "smooth" : False})
+		pointPen.addPoint(*[(0, 65)], **{"smooth" : False})
+		pointPen.addPoint(*[(65, 200)], **{"smooth" : False})
+		pointPen.addPoint(*[(100, 200)], **{"segmentType" : "curve", "smooth" : False})
+		pointPen.endPath()
+		"""
+		resultGlif = self.glyphToGLIF(py)
+		resultPy = self.glifToPy(glif)
+		self.assertEqual(glif, resultGlif)
+		self.assertEqual(py, resultPy)
+		# legal: start of contour
+		glif = """
+		<glyph name="a" format="1">
+			<outline>
+				<contour>
+					<point x="0" y="65"/>
+					<point x="65" y="200"/>
+					<point x="100" y="200" type="curve"/>
+				</contour>
+			</outline>
+		</glyph>
+		"""
+		py = """
+		glyph.name = "a"
+		pointPen.beginPath()
+		pointPen.addPoint(*[(0, 65)], **{"smooth" : False})
+		pointPen.addPoint(*[(65, 200)], **{"smooth" : False})
+		pointPen.addPoint(*[(100, 200)], **{"segmentType" : "curve", "smooth" : False})
+		pointPen.endPath()
+		"""
+		resultGlif = self.glyphToGLIF(py)
+		resultPy = self.glifToPy(glif)
+		self.assertEqual(glif, resultGlif)
+		self.assertEqual(py, resultPy)
+		# before move
+		glif = """
+		<glyph name="a" format="1">
+			<outline>
+				<contour>
+					<point x="0" y="65"/>
+					<point x="0" y="0" type="move"/>
+				</contour>
+			</outline>
+		</glyph>
+		"""
+		py = """
+		glyph.name = "a"
+		pointPen.beginPath()
+		pointPen.addPoint(*[(0, 65)], **{"smooth" : False})
+		pointPen.addPoint(*[(0, 0)], **{"segmentType" : "move", "smooth" : False})
+		pointPen.endPath()
+		"""
+		self.assertRaises(GlifLibError, self.glyphToGLIF, py)
+		self.assertRaises(GlifLibError, self.glifToPy, glif)
+		# before line
+		glif = """
+		<glyph name="a" format="1">
+			<outline>
+				<contour>
+					<point x="0" y="65"/>
+					<point x="0" y="0" type="line"/>
+				</contour>
+			</outline>
+		</glyph>
+		"""
+		py = """
+		glyph.name = "a"
+		pointPen.beginPath()
+		pointPen.addPoint(*[(0, 65)], **{"smooth" : False})
+		pointPen.addPoint(*[(0, 0)], **{"segmentType" : "line", "smooth" : False})
+		pointPen.endPath()
+		"""
+		self.assertRaises(GlifLibError, self.glyphToGLIF, py)
+		self.assertRaises(GlifLibError, self.glifToPy, glif)
+		# smooth=True
+		glif = """
+		<glyph name="a" format="1">
+			<outline>
+				<contour>
+					<point x="0" y="65" smooth="yess"/>
+					<point x="0" y="0" type="curve"/>
+				</contour>
+			</outline>
+		</glyph>
+		"""
+		py = """
+		glyph.name = "a"
+		pointPen.beginPath()
+		pointPen.addPoint(*[(0, 65)], **{"smooth" : True})
+		pointPen.addPoint(*[(0, 0)], **{"segmentType" : "curve", "smooth" : False})
+		pointPen.endPath()
+		"""
+		self.assertRaises(GlifLibError, self.glyphToGLIF, py)
+		self.assertRaises(GlifLibError, self.glifToPy, glif)
 
 
 if __name__ == "__main__":
