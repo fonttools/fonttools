@@ -496,10 +496,10 @@ def writeGlyphToString(glyphName, glyphObject=None, drawPointsFunc=None, writer=
 	if getattr(glyphObject, "note", None):
 		_writeNote(glyphObject, writer)
 	# image
-	if formatVersion > 2 and getattr(glyphObject, "image", None):
+	if formatVersion >= 2 and getattr(glyphObject, "image", None):
 		_writeImage(glyphObject, writer)
 	# guidelines
-	if formatVersion > 2 and getattr(glyphObject, "guidelines", None):
+	if formatVersion >= 2 and getattr(glyphObject, "guidelines", None):
 		_writeGuidelines(glyphObject, writer, identifiers)
 	# outline
 	if drawPointsFunc is not None:
@@ -573,18 +573,18 @@ def _writeImage(glyphObject, writer):
 	attrs = [
 		("fileName", image["fileName"])
 	]
-	for attr, default in _transformationInfo.items():
-		value = image.get(attr)
+	for attr, default in _transformationInfo:
+		value = image.get(attr, default)
 		attrs.append((attr, str(value)))
 	color = image.get("color")
 	if color is not None:
 		attrs.append(("color", color))
-	self.writer.simpletag("image", attrs)
-	self.writer.newline()
+	writer.simpletag("image", attrs)
+	writer.newline()
 
 def _writeGuidelines(glyphObject, writer, identifiers):
 	guidelines = getattr(glyphObject, "guidelines", [])
-	if not guidelinesValidator(guidelinesValidator):
+	if not guidelinesValidator(guidelines):
 		raise GlifLibError("guidelines attribute does not have the proper structure.")
 	for guideline in guidelines:
 		attrs = []
@@ -600,16 +600,16 @@ def _writeGuidelines(glyphObject, writer, identifiers):
 		name = guideline.get("name")
 		if name is not None:
 			attrs.append(("name", name))
-		color = image.get("color")
+		color = guideline.get("color")
 		if color is not None:
 			attrs.append(("color", color))
-		identifier = image.get("identifier")
+		identifier = guideline.get("identifier")
 		if identifier is not None:
 			if identifier in identifiers:
 				raise GlifLibError("identifier used more than once: %s" % identifier)
 			attrs.append(("identifier", identifier))
-		self.writer.simpletag("guideline", attrs)
-		self.writer.newline()
+		writer.simpletag("guideline", attrs)
+		writer.newline()
 
 def _writeLib(glyphObject, writer):
 	from ufoLib.plistlib import PlistWriter
@@ -759,6 +759,9 @@ def _readGlyphFromTree(tree, glyphObject=None, pointPen=None):
 				raise GlifLibError("The guideline element is not allowed in GLIF format 1.")
 			if len(children):
 				raise GlifLibError("Unknown children in guideline element.")
+			for attr in ("x", "y", "angle"):
+				if attr in attrs:
+					attrs[attr] = _number(attrs[attr])
 			guidelines.append(attrs)
 		elif element == "image":
 			if formatVersion == 1:
@@ -769,9 +772,12 @@ def _readGlyphFromTree(tree, glyphObject=None, pointPen=None):
 				raise GlifLibError("Unknown children in image element.")
 			haveSeenImage = True
 			imageData = attrs
+			for attr, d in _transformationInfo:
+				if attr in imageData:
+					imageData[attr] = _number(imageData[attr])
 			if not imageValidator(imageData):
 				raise GlifLibError("The image element is not properly formatted.")
-			_relaxedSetattr(glyphObject, "image", image)
+			_relaxedSetattr(glyphObject, "image", imageData)
 		elif element == "note":
 			if haveSeenNote:
 				raise GlifLibError("The note element occurs more than once.")
@@ -1177,6 +1183,8 @@ if __name__ == "__main__":
 	glyph.unicodes = [1, 2, 3, 43215, 66666]
 	glyph.lib = {"a": "b", "c": [1, 2, 3, True]}
 	glyph.note = "  hallo!   "
+	glyph.image = dict(fileName="foo.png", color="1,1,0,.1")
+	glyph.guidelines = [dict(x=100, y=200, angle=144.44)]
 
 	if 0:
 		gs.writeGlyph("a", glyph, drawPoints)
