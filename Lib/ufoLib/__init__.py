@@ -1,4 +1,4 @@
-""""
+"""
 A library for importing .ufo files and their descendants.
 Refer to http://unifiedfontobject.com for the UFO specification.
 
