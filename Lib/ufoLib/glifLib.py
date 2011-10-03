@@ -17,7 +17,7 @@ from xmlTreeBuilder import buildTree, stripCharacterData
 from robofab.pens.pointPen import AbstractPointPen
 from plistlib import readPlist, writePlistToString
 from filenames import userNameToFileName
-from validators import genericTypeValidator, colorValidator, guidelinesValidator, identifierValidator, imageValidator
+from validators import genericTypeValidator, colorValidator, guidelinesValidator, identifierValidator, imageValidator, libValidator
 
 try:
 	set
@@ -799,7 +799,6 @@ def _readGlyphFromTree(tree, glyphObject=None, pointPen=None):
 			if haveSeenNote:
 				raise GlifLibError("The note element occurs more than once.")
 			haveSeenNote = True
-			# XXX validate?
 			rawNote = "\n".join(children)
 			lines = rawNote.split("\n")
 			lines = [line.strip() for line in lines]
@@ -809,10 +808,12 @@ def _readGlyphFromTree(tree, glyphObject=None, pointPen=None):
 			if haveSeenLib:
 				raise GlifLibError("The lib element occurs more than once.")
 			haveSeenLib = True
-			# XXX validate?
 			from plistFromTree import readPlistFromTree
 			assert len(children) == 1
 			lib = readPlistFromTree(children[0])
+			valid, message = libValidator(lib)
+			if not valid:
+				raise GlifLibError(message)
 			_relaxedSetattr(glyphObject, "lib", lib)
 		else:
 			raise GlifLibError("Unknown element in GLIF: %s" % element)

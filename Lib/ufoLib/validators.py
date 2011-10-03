@@ -735,33 +735,33 @@ def layerContentsValidator(value, ufoPath):
 # groups.plist
 # ------------
 
-def validateGroups(value):
+def groupsValidator(value):
 	"""
 	>>> groups = {"A" : ["A", "A"], "A2" : ["A"]}
-	>>> validateGroups(groups)
+	>>> groupsValidator(groups)
 	(True, None)
 
 	>>> groups = {"" : ["A"]}
-	>>> validateGroups(groups)
+	>>> groupsValidator(groups)
 	(False, 'A group has an empty name.')
 
 	>>> groups = {"public.awesome" : ["A"]}
-	>>> validateGroups(groups)
+	>>> groupsValidator(groups)
 	(True, None)
 
 	>>> groups = {"public.kern1." : ["A"]}
-	>>> validateGroups(groups)
+	>>> groupsValidator(groups)
 	(False, 'The group data contains a kerning group with an incomplete name.')
 	>>> groups = {"public.kern2." : ["A"]}
-	>>> validateGroups(groups)
+	>>> groupsValidator(groups)
 	(False, 'The group data contains a kerning group with an incomplete name.')
 
 	>>> groups = {"public.kern1.A" : ["A"], "public.kern2.A" : ["A"]}
-	>>> validateGroups(groups)
+	>>> groupsValidator(groups)
 	(True, None)
 
 	>>> groups = {"public.kern1.A1" : ["A"], "public.kern1.A2" : ["A"]}
-	>>> validateGroups(groups)
+	>>> groupsValidator(groups)
 	(False, 'The glyph "A" occurs in too many kerning groups.')
 	"""
 	bogusFormatMessage = "The group data is not in the correct format."
@@ -778,7 +778,7 @@ def validateGroups(value):
 			return False, "A group has an empty name."
 		if groupName.startswith("public."):
 			if not groupName.startswith("public.kern1.") and not groupName.startswith("public.kern2."):
-				# uknown pubic.* name, silently skip.
+				# unknown pubic.* name. silently skip.
 				continue
 			else:
 				if len("public.kernN.") == len(groupName):
@@ -799,6 +799,43 @@ def validateGroups(value):
 # lib.plist/lib
 # -------------
 
+def libValidator(lib):
+	"""
+	>>> lib = {"foo" : "bar"}
+	>>> libValidator(lib)
+	(True, None)
+
+	>>> lib = {"public.awesome" : "hello"}
+	>>> libValidator(lib)
+	(True, None)
+
+	>>> lib = {"public.glyphOrder" : ["A", "C", "B"]}
+	>>> libValidator(lib)
+	(True, None)
+
+	>>> lib = {"public.glyphOrder" : "hello"}
+	>>> libValidator(lib)
+	(False, 'public.glyphOrder is not properly formatted.')
+
+	>>> lib = {"public.glyphOrder" : ["A", 1, "B"]}
+	>>> libValidator(lib)
+	(False, 'public.glyphOrder is not properly formatted.')
+	"""
+	bogusFormatMessage = "The lib data is not in the correct format."
+	if not isinstance(lib, dict):
+		return False, bogusFormatMessage
+	for key, value in lib.items():
+		if not isinstance(key, basestring):
+			return False, bogusFormatMessage
+		# public.glyphOrder
+		if key == "public.glyphOrder":
+			bogusGlyphOrderMessage = "public.glyphOrder is not properly formatted."
+			if not isinstance(value, (list, tuple)):
+				return False, bogusGlyphOrderMessage
+			for glyphName in value:
+				if not isinstance(glyphName, basestring):
+					return False, bogusGlyphOrderMessage
+	return True, None
 
 if __name__ == "__main__":
 	import doctest

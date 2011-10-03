@@ -248,7 +248,7 @@ class UFOReader(object):
 		# normal
 		else:
 			groups = self._readGroups()
-		valid, message = validateGroups(groups)
+		valid, message = groupsValidator(groups)
 		if not valid:
 			raise UFOLibError(message)
 		return groups
@@ -365,9 +365,10 @@ class UFOReader(object):
 		if not self._checkForFile(path):
 			return {}
 		data = self._readPlist(path)
-		if not isinstance(data, dict):
-			raise UFOLibError("lib.plist is not properly formatted.")
-		return readPlist(path)
+		valid, message = validateLib(data)
+		if not valid:
+			raise UFOLibError(message)
+		return data
 
 	# features.fea
 
@@ -719,7 +720,7 @@ class UFOWriter(object):
 		Write groups.plist. This method requires a
 		dict of glyph groups as an argument.
 		"""
-		valid, message = validateGroups(groups)
+		valid, message = groupsValidator(groups)
 		if not valid:
 			raise UFOLibError(message)
 		self._makeDirectory()
@@ -809,8 +810,9 @@ class UFOWriter(object):
 		Write lib.plist. This method requires a
 		lib dict as an argument.
 		"""
-		if not isinstance(libDict, dict):
-			raise UFOLibError("The libDict must be a dict or dict like object.")
+		valid, message = validateLib(libDict)
+		if not valid:
+			raise UFOLibError(message)
 		self._makeDirectory()
 		path = os.path.join(self._path, LIB_FILENAME)
 		if libDict:
