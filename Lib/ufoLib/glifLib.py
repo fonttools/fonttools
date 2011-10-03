@@ -496,10 +496,10 @@ def writeGlyphToString(glyphName, glyphObject=None, drawPointsFunc=None, writer=
 		aFile = None
 	identifiers = set()
 	# start
-	if glyphName == "":
-		raise GlifLibError("The glyph name is empty.")
 	if not isinstance(glyphName, basestring):
 		raise GlifLibError("The glyph name is not properly formatted.")
+	if len(glyphName) == 0:
+		raise GlifLibError("The glyph name is empty.")
 	writer.begintag("glyph", [("name", glyphName), ("format", formatVersion)])
 	writer.newline()
 	# advance
@@ -746,7 +746,7 @@ def _readGlyphFromTree(tree, glyphObject=None, pointPen=None):
 		raise GlifLibError, "Unsupported GLIF format version: %s" % formatVersion
 	# get the name
 	glyphName = tree[1].get("name")
-	if glyphName == "":
+	if len(glyphName) == 0:
 		raise GlifLibError("Empty glyph name in GLIF.")
 	if glyphName and glyphObject is not None:
 		_relaxedSetattr(glyphObject, "name", glyphName)
@@ -931,7 +931,7 @@ def _buildOutlineComponent(pen, (attrs, children), formatVersion, identifiers):
 
 def _validateSegmentStructures(children):
 	pointTypes = [a.get("type", "offcurve") for s, a, d in children]
-	if set(pointTypes) != set(("offcurve")):
+	if set(pointTypes) != set(["offcurve"]):
 		while pointTypes[-1] == "offcurve":
 			pointTypes.insert(0, pointTypes.pop(-1))
 		segments = []

@@ -1312,6 +1312,34 @@ class TestGLIF1(unittest.TestCase):
 		self.assertEqual(glif, resultGlif)
 		self.assertEqual(py, resultPy)
 
+	def testSpecialCaseQCurve(self):
+		# contour with no on curve
+		glif = """
+		<glyph name="a" format="2">
+			<outline>
+				<contour>
+					<point x="0" y="0"/>
+					<point x="0" y="100"/>
+					<point x="100" y="100"/>
+					<point x="100" y="0"/>
+				</contour>
+			</outline>
+		</glyph>
+		"""
+		py = """
+		glyph.name = "a"
+		pointPen.beginPath()
+		pointPen.addPoint(*[(0, 0)], **{"smooth" : False})
+		pointPen.addPoint(*[(0, 100)], **{"smooth" : False})
+		pointPen.addPoint(*[(100, 100)], **{"smooth" : False})
+		pointPen.addPoint(*[(100, 0)], **{"smooth" : False})
+		pointPen.endPath()
+		"""
+		resultGlif = self.pyToGLIF(py)
+		resultPy = self.glifToPy(glif)
+		self.assertEqual(glif, resultGlif)
+		self.assertEqual(py, resultPy)
+
 	def testPointTypeOffCurve(self):
 		# legal
 		glif = """
