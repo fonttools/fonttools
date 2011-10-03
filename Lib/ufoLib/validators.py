@@ -737,7 +737,12 @@ def layerContentsValidator(value, ufoPath):
 				return False, bogusFileMessage
 		layerName, directoryName = entry
 		if not directoryName.startswith("glyphs"):
-			return False, bogusFileMessage
+			return False, "Invalid directory name (%s) in layercontents.plist." % directoryName
+		if directoryName != "glyphs":
+			if not directoryName.startswith("glyphs."):
+				return False, "Invalid directory name (%s) in layercontents.plist." % directoryName
+		if len(layerName) == 0:
+			return False, "Empty layer name in layercontents.plist."
 		# directory doesn't exist
 		p = os.path.join(ufoPath, directoryName)
 		if not os.path.exists(p):
