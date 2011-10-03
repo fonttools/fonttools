@@ -126,11 +126,23 @@ class UFOReader(object):
 			if testGroups != self._upConvertedKerningData["originalGroups"]:
 				raise UFOLibError("The data in groups.plist has been modified since it was converted to UFO 3 format.")
 		else:
+			groups = self._readGroups()
+			invalidFormatMessage = "groups.plist is not properly formatted."
+			if not isinstance(data, dict):
+				raise UFOLibError(invalidFormatMessage)
+			for groupName, glyphList in data.items():
+				if not isinstance(groupName, basestring):
+					raise UFOLibError(invalidFormatMessage)
+				elif not isinstance(glyphList, list):
+					raise UFOLibError(invalidFormatMessage)
+				for glyphName in glyphList:
+					if not isinstance(glyphName, basestring):
+						raise UFOLibError(invalidFormatMessage)
 			self._upConvertedKerningData = dict(
 				kerning={},
 				originalKerning=self._readKerning(),
 				groups={},
-				originalGroups=self._readGroups()
+				originalGroups=groups
 			)
 			# convert kerning and groups
 			kerning, groups = convertUFO1OrUFO2KerningToUFO3Kerning(
@@ -223,17 +235,6 @@ class UFOReader(object):
 		if not self._checkForFile(path):
 			return {}
 		data = self._readPlist(path)
-		invalidFormatMessage = "groups.plist is not properly formatted."
-		if not isinstance(data, dict):
-			raise UFOLibError(invalidFormatMessage)
-		for groupName, glyphList in data.items():
-			if not isinstance(groupName, basestring):
-				raise UFOLibError(invalidFormatMessage)
-			elif not isinstance(glyphList, list):
-				raise UFOLibError(invalidFormatMessage)
-			for glyphName in glyphList:
-				if not isinstance(glyphName, basestring):
-					raise UFOLibError(invalidFormatMessage)
 		return data
 
 	def readGroups(self):
@@ -243,10 +244,14 @@ class UFOReader(object):
 		# handle up conversion
 		if self._formatVersion < 3:
 			self._upConvertKerning()
-			return self._upConvertedKerningData["groups"]
+			groups = self._upConvertedKerningData["groups"]
 		# normal
 		else:
-			return self._readGroups()
+			groups = self._readGroups()
+		valid, message = validateGroups(groups)
+		if not valid:
+			raise UFOLibError(message)
+		return groups
 
 	# fontinfo.plist
 
@@ -714,17 +719,9 @@ class UFOWriter(object):
 		Write groups.plist. This method requires a
 		dict of glyph groups as an argument.
 		"""
-		invalidFormatMessage = "The groups are not properly formatted."
-		if not isinstance(groups, dict):
-			raise UFOLibError(invalidFormatMessage)
-		for groupName, glyphList in groups.items():
-			if not isinstance(groupName, basestring):
-				raise UFOLibError(invalidFormatMessage)
-			if not isinstance(glyphList, list):
-				raise UFOLibError(invalidFormatMessage)
-			for glyphName in glyphList:
-				if not isinstance(glyphName, basestring):
-					raise UFOLibError(invalidFormatMessage)
+		valid, message = validateGroups(groups)
+		if not valid:
+			raise UFOLibError(message)
 		self._makeDirectory()
 		path = os.path.join(self._path, GROUPS_FILENAME)
 		groupsNew = {}

@@ -673,7 +673,6 @@ def imageValidator(value):
 		return False
 	return True
 
-
 # -------------------
 # layercontents.plist
 # -------------------
@@ -731,6 +730,76 @@ def layerContentsValidator(value, ufoPath):
 	if not foundDefault:
 		return False, "The required default glyph set is not in the UFO."
 	return True, None
+
+# ------------
+# groups.plist
+# ------------
+
+def validateGroups(value):
+	"""
+	>>> groups = {"A" : ["A", "A"], "A2" : ["A"]}
+	>>> validateGroups(groups)
+	(True, None)
+
+	>>> groups = {"" : ["A"]}
+	>>> validateGroups(groups)
+	(False, 'A group has an empty name.')
+
+	>>> groups = {"public.awesome" : ["A"]}
+	>>> validateGroups(groups)
+	(False, 'The group data contains a group with an illegal public.* group name.')
+
+	>>> groups = {"public.kern1." : ["A"]}
+	>>> validateGroups(groups)
+	(False, 'The group data contains a kerning group with an incomplete name.')
+	>>> groups = {"public.kern2." : ["A"]}
+	>>> validateGroups(groups)
+	(False, 'The group data contains a kerning group with an incomplete name.')
+
+	>>> groups = {"public.kern1.A" : ["A"], "public.kern2.A" : ["A"]}
+	>>> validateGroups(groups)
+	(True, None)
+
+	>>> groups = {"public.kern1.A1" : ["A"], "public.kern1.A2" : ["A"]}
+	>>> validateGroups(groups)
+	(False, 'The glyph "A" occurs in too many kerning groups.')
+	"""
+	bogusFormatMessage = "The group data is not in the correct format."
+	if not isinstance(value, dict):
+		return False, bogusFormatMessage
+	firstSideMapping = {}
+	secondSideMapping = {}
+	for groupName, glyphList in value.items():
+		if not isinstance(groupName, basestring):
+			return False, bogusFormatMessage
+		if not isinstance(glyphList, (list, tuple)):
+			return False, bogusFormatMessage
+		if not groupName:
+			return False, "A group has an empty name."
+		if groupName.startswith("public."):
+			if not groupName.startswith("public.kern1.") and not groupName.startswith("public.kern2."):
+				return False, "The group data contains a group with an illegal public.* group name."
+			else:
+				if len("public.kernN.") == len(groupName):
+					return False, "The group data contains a kerning group with an incomplete name."
+			if groupName.startswith("public.kern1."):
+				d = firstSideMapping
+			else:
+				d = secondSideMapping
+			for glyphName in glyphList:
+				if not isinstance(glyphName, basestring):
+					return False, "The group data %s contains an invalid member." % groupName
+				if glyphName in d:
+					return False, "The glyph \"%s\" occurs in too many kerning groups." % glyphName
+				d[glyphName] = groupName
+	return True, None
+				
+
+# -------------
+# lib.plist/lib
+# -------------
+
+
 
 if __name__ == "__main__":
 	import doctest
