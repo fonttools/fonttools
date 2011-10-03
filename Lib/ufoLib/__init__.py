@@ -397,7 +397,6 @@ class UFOReader(object):
 		path = os.path.join(self._path, LAYERCONTENTS_FILENAME)
 		if not os.path.exists(path):
 			raise UFOLibError("layercontents.plist is missing.")
-		bogusFileMessage = "layercontents.plist in not in the correct format."
 		if os.path.exists(path):
 			contents = self._readPlist(path)
 			valid, error = layerContentsValidator(contents, self._path)
@@ -847,7 +846,6 @@ class UFOWriter(object):
 		if not os.path.exists(path):
 			raise UFOLibError("layercontents.plist is missing.")
 		contents = {}
-		bogusFileMessage = "layercontents.plist in not in the correct format."
 		if os.path.exists(path):
 			raw = self._readPlist(path)
 			valid, error = layerContentsValidator(raw, self._path)
