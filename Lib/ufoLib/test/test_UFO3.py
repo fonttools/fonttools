@@ -4409,7 +4409,6 @@ class UFO3ReadLayerInfoTestCase(unittest.TestCase):
 		if layerInfo is None:
 			layerInfo = dict(
 				color="0,0,0,1",
-				guidelines=[dict(x=0, color="1,0,0,1", identifier="guide1"), dict(y=0, color="0,1,0,1", identifier="guide2")],
 				lib={"foo" : "bar"}
 			)
 		path = os.path.join(glyphsPath, "layerinfo.plist")
@@ -4427,8 +4426,6 @@ class UFO3ReadLayerInfoTestCase(unittest.TestCase):
 		glyphSet.readLayerInfo(info)
 		expectedColor = "0,0,0,1"
 		self.assertEqual(expectedColor, info.color)
-		expectedGuidelines = [{"color": "1,0,0,1", "x": 0, "identifier":"guide1"}, {"color": "0,1,0,1", "y": 0, "identifier":"guide2"}]
-		self.assertEqual(expectedGuidelines, info.guidelines)
 		expectedLib = {"foo": "bar"}
 		self.assertEqual(expectedLib, info.lib)
 
@@ -4610,195 +4607,6 @@ class UFO3ReadLayerInfoTestCase(unittest.TestCase):
 		glyphSet = reader.getGlyphSet()
 		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
 
-	def testGuidelines(self):
-		# x
-		## not an int or float
-		info = {}
-		info["guidelines"] = [dict(x="1")]
-		self.makeUFO(layerInfo=info)
-		reader = UFOReader(self.ufoPath)
-		glyphSet = reader.getGlyphSet()
-		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
-		# y
-		## not an int or float
-		info = {}
-		info["guidelines"] = [dict(y="1")]
-		self.makeUFO(layerInfo=info)
-		reader = UFOReader(self.ufoPath)
-		glyphSet = reader.getGlyphSet()
-		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
-		# angle
-		## < 0
-		info = {}
-		info["guidelines"] = [dict(x=0, y=0, angle=-1)]
-		self.makeUFO(layerInfo=info)
-		reader = UFOReader(self.ufoPath)
-		glyphSet = reader.getGlyphSet()
-		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
-		## > 360
-		info = {}
-		info["guidelines"] = [dict(x=0, y=0, angle=361)]
-		self.makeUFO(layerInfo=info)
-		reader = UFOReader(self.ufoPath)
-		glyphSet = reader.getGlyphSet()
-		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
-		# name
-		## not a string
-		info = {}
-		info["guidelines"] = [dict(x=0, name=1)]
-		self.makeUFO(layerInfo=info)
-		reader = UFOReader(self.ufoPath)
-		glyphSet = reader.getGlyphSet()
-		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
-		# color
-		## not a string
-		info = {}
-		info["guidelines"] = [dict(x=0, color=1)]
-		self.makeUFO(layerInfo=info)
-		reader = UFOReader(self.ufoPath)
-		glyphSet = reader.getGlyphSet()
-		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
-		## not enough commas
-		info = {}
-		info["guidelines"] = [dict(x=0, color="1 0, 0, 0")]
-		self.makeUFO(layerInfo=info)
-		reader = UFOReader(self.ufoPath)
-		glyphSet = reader.getGlyphSet()
-		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
-		info = {}
-		info["guidelines"] = [dict(x=0, color="1 0 0, 0")]
-		self.makeUFO(layerInfo=info)
-		reader = UFOReader(self.ufoPath)
-		glyphSet = reader.getGlyphSet()
-		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
-		info = {}
-		info["guidelines"] = [dict(x=0, color="1 0 0 0")]
-		self.makeUFO(layerInfo=info)
-		reader = UFOReader(self.ufoPath)
-		glyphSet = reader.getGlyphSet()
-		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
-		## not enough parts
-		info = {}
-		info["guidelines"] = [dict(x=0, color=", 0, 0, 0")]
-		self.makeUFO(layerInfo=info)
-		reader = UFOReader(self.ufoPath)
-		glyphSet = reader.getGlyphSet()
-		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
-		info = {}
-		info["guidelines"] = [dict(x=0, color="1, , 0, 0")]
-		self.makeUFO(layerInfo=info)
-		reader = UFOReader(self.ufoPath)
-		glyphSet = reader.getGlyphSet()
-		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
-		info = {}
-		info["guidelines"] = [dict(x=0, color="1, 0, , 0")]
-		self.makeUFO(layerInfo=info)
-		reader = UFOReader(self.ufoPath)
-		glyphSet = reader.getGlyphSet()
-		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
-		info = {}
-		info["guidelines"] = [dict(x=0, color="1, 0, 0, ")]
-		self.makeUFO(layerInfo=info)
-		reader = UFOReader(self.ufoPath)
-		glyphSet = reader.getGlyphSet()
-		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
-		info = {}
-		info["guidelines"] = [dict(x=0, color=", , , ")]
-		self.makeUFO(layerInfo=info)
-		reader = UFOReader(self.ufoPath)
-		glyphSet = reader.getGlyphSet()
-		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
-		## not a number in all positions
-		info = {}
-		info["guidelines"] = [dict(x=0, color="r, 1, 1, 1")]
-		self.makeUFO(layerInfo=info)
-		reader = UFOReader(self.ufoPath)
-		glyphSet = reader.getGlyphSet()
-		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
-		info = {}
-		info["guidelines"] = [dict(x=0, color="1, g, 1, 1")]
-		self.makeUFO(layerInfo=info)
-		reader = UFOReader(self.ufoPath)
-		glyphSet = reader.getGlyphSet()
-		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
-		info = {}
-		info["guidelines"] = [dict(x=0, color="1, 1, b, 1")]
-		self.makeUFO(layerInfo=info)
-		reader = UFOReader(self.ufoPath)
-		glyphSet = reader.getGlyphSet()
-		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
-		info = {}
-		info["guidelines"] = [dict(x=0, color="1, 1, 1, a")]
-		self.makeUFO(layerInfo=info)
-		reader = UFOReader(self.ufoPath)
-		glyphSet = reader.getGlyphSet()
-		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
-		## too many parts
-		info = {}
-		info["guidelines"] = [dict(x=0, color="1, 0, 0, 0, 0")]
-		self.makeUFO(layerInfo=info)
-		reader = UFOReader(self.ufoPath)
-		glyphSet = reader.getGlyphSet()
-		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
-		## < 0 in each position
-		info = {}
-		info["guidelines"] = [dict(x=0, color="-1, 0, 0, 0")]
-		self.makeUFO(layerInfo=info)
-		reader = UFOReader(self.ufoPath)
-		glyphSet = reader.getGlyphSet()
-		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
-		info = {}
-		info["guidelines"] = [dict(x=0, color="0, -1, 0, 0")]
-		self.makeUFO(layerInfo=info)
-		reader = UFOReader(self.ufoPath)
-		glyphSet = reader.getGlyphSet()
-		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
-		info = {}
-		info["guidelines"] = [dict(x=0, color="0, 0, -1, 0")]
-		self.makeUFO(layerInfo=info)
-		reader = UFOReader(self.ufoPath)
-		glyphSet = reader.getGlyphSet()
-		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
-		info = {}
-		info["guidelines"] = [dict(x=0, color="0, 0, 0, -1")]
-		self.makeUFO(layerInfo=info)
-		reader = UFOReader(self.ufoPath)
-		glyphSet = reader.getGlyphSet()
-		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
-		## > 1 in each position
-		info = {}
-		info["guidelines"] = [dict(x=0, color="2, 0, 0, 0")]
-		self.makeUFO(layerInfo=info)
-		reader = UFOReader(self.ufoPath)
-		glyphSet = reader.getGlyphSet()
-		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
-		info = {}
-		info["guidelines"] = [dict(x=0, color="0, 2, 0, 0")]
-		self.makeUFO(layerInfo=info)
-		reader = UFOReader(self.ufoPath)
-		glyphSet = reader.getGlyphSet()
-		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
-		info = {}
-		info["guidelines"] = [dict(x=0, color="0, 0, 2, 0")]
-		self.makeUFO(layerInfo=info)
-		reader = UFOReader(self.ufoPath)
-		glyphSet = reader.getGlyphSet()
-		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
-		info = {}
-		info["guidelines"] = [dict(x=0, color="0, 0, 0, 2")]
-		self.makeUFO(layerInfo=info)
-		reader = UFOReader(self.ufoPath)
-		glyphSet = reader.getGlyphSet()
-		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
-		# identifier
-		## duplicate
-		info = {}
-		info["guidelines"] = [dict(x=0, identifier="guide1"), dict(y=0, identifier="guide1")]
-		self.makeUFO(layerInfo=info)
-		reader = UFOReader(self.ufoPath)
-		glyphSet = reader.getGlyphSet()
-		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
-
 
 class UFO3WriteLayerInfoTestCase(unittest.TestCase):
 
@@ -4822,12 +4630,10 @@ class UFO3WriteLayerInfoTestCase(unittest.TestCase):
 	def testValidWrite(self):
 		expected = dict(
 			color="0,0,0,1",
-			guidelines=[dict(x=0, color="1,0,0,1", identifier="guide1"), dict(y=0, color="0,1,0,1", identifier="guide2")],
 			lib={"foo" : "bar"}
 		)
 		info = TestLayerInfoObject()
 		info.color = expected["color"]
-		info.guidelines = expected["guidelines"]
 		info.lib = expected["lib"]
 		glyphSet = self.makeGlyphSet()
 		glyphSet.writeLayerInfo(info)
@@ -4929,139 +4735,6 @@ class UFO3WriteLayerInfoTestCase(unittest.TestCase):
 		self.assertRaises(GlifLibError, glyphSet.writeLayerInfo, info)
 		info = TestLayerInfoObject()
 		info.color = "0, 0, 0, 2"
-		glyphSet = self.makeGlyphSet()
-		self.assertRaises(GlifLibError, glyphSet.writeLayerInfo, info)
-
-	def testGuidelines(self):
-		# x
-		## not an int or float
-		info = TestLayerInfoObject()
-		info.guidelines = [dict(x="1")]
-		glyphSet = self.makeGlyphSet()
-		self.assertRaises(GlifLibError, glyphSet.writeLayerInfo, info)
-		# y
-		## not an int or float
-		info = TestLayerInfoObject()
-		info.guidelines = [dict(y="1")]
-		glyphSet = self.makeGlyphSet()
-		self.assertRaises(GlifLibError, glyphSet.writeLayerInfo, info)
-		# angle
-		## < 0
-		info = TestLayerInfoObject()
-		info.guidelines = [dict(x=0, y=0, angle=-1)]
-		glyphSet = self.makeGlyphSet()
-		self.assertRaises(GlifLibError, glyphSet.writeLayerInfo, info)
-		## > 360
-		info = TestLayerInfoObject()
-		info.guidelines = [dict(x=0, y=0, angle=361)]
-		glyphSet = self.makeGlyphSet()
-		self.assertRaises(GlifLibError, glyphSet.writeLayerInfo, info)
-		# name
-		## not a string
-		info = TestLayerInfoObject()
-		info.guidelines = [dict(x=0, name=1)]
-		glyphSet = self.makeGlyphSet()
-		self.assertRaises(GlifLibError, glyphSet.writeLayerInfo, info)
-		# color
-		## not a string
-		info = TestLayerInfoObject()
-		info.guidelines = [dict(x=0, color=1)]
-		glyphSet = self.makeGlyphSet()
-		self.assertRaises(GlifLibError, glyphSet.writeLayerInfo, info)
-		## not enough commas
-		info = TestLayerInfoObject()
-		info.guidelines = [dict(x=0, color="1 0, 0, 0")]
-		glyphSet = self.makeGlyphSet()
-		self.assertRaises(GlifLibError, glyphSet.writeLayerInfo, info)
-		info = TestLayerInfoObject()
-		info.guidelines = [dict(x=0, color="1 0 0, 0")]
-		glyphSet = self.makeGlyphSet()
-		self.assertRaises(GlifLibError, glyphSet.writeLayerInfo, info)
-		info = TestLayerInfoObject()
-		info.guidelines = [dict(x=0, color="1 0 0 0")]
-		glyphSet = self.makeGlyphSet()
-		self.assertRaises(GlifLibError, glyphSet.writeLayerInfo, info)
-		## not enough parts
-		info = TestLayerInfoObject()
-		info.guidelines = [dict(x=0, color=", 0, 0, 0")]
-		glyphSet = self.makeGlyphSet()
-		self.assertRaises(GlifLibError, glyphSet.writeLayerInfo, info)
-		info = TestLayerInfoObject()
-		info.guidelines = [dict(x=0, color="1, , 0, 0")]
-		glyphSet = self.makeGlyphSet()
-		self.assertRaises(GlifLibError, glyphSet.writeLayerInfo, info)
-		info = TestLayerInfoObject()
-		info.guidelines = [dict(x=0, color="1, 0, , 0")]
-		glyphSet = self.makeGlyphSet()
-		self.assertRaises(GlifLibError, glyphSet.writeLayerInfo, info)
-		info = TestLayerInfoObject()
-		info.guidelines = [dict(x=0, color="1, 0, 0, ")]
-		glyphSet = self.makeGlyphSet()
-		self.assertRaises(GlifLibError, glyphSet.writeLayerInfo, info)
-		info = TestLayerInfoObject()
-		info.guidelines = [dict(x=0, color=", , , ")]
-		glyphSet = self.makeGlyphSet()
-		self.assertRaises(GlifLibError, glyphSet.writeLayerInfo, info)
-		## not a number in all positions
-		info = TestLayerInfoObject()
-		info.guidelines = [dict(x=0, color="r, 1, 1, 1")]
-		glyphSet = self.makeGlyphSet()
-		self.assertRaises(GlifLibError, glyphSet.writeLayerInfo, info)
-		info = TestLayerInfoObject()
-		info.guidelines = [dict(x=0, color="1, g, 1, 1")]
-		glyphSet = self.makeGlyphSet()
-		self.assertRaises(GlifLibError, glyphSet.writeLayerInfo, info)
-		info = TestLayerInfoObject()
-		info.guidelines = [dict(x=0, color="1, 1, b, 1")]
-		glyphSet = self.makeGlyphSet()
-		self.assertRaises(GlifLibError, glyphSet.writeLayerInfo, info)
-		info = TestLayerInfoObject()
-		info.guidelines = [dict(x=0, color="1, 1, 1, a")]
-		glyphSet = self.makeGlyphSet()
-		self.assertRaises(GlifLibError, glyphSet.writeLayerInfo, info)
-		## too many parts
-		info = TestLayerInfoObject()
-		info.guidelines = [dict(x=0, color="1, 0, 0, 0, 0")]
-		glyphSet = self.makeGlyphSet()
-		self.assertRaises(GlifLibError, glyphSet.writeLayerInfo, info)
-		## < 0 in each position
-		info = TestLayerInfoObject()
-		info.guidelines = [dict(x=0, color="-1, 0, 0, 0")]
-		glyphSet = self.makeGlyphSet()
-		self.assertRaises(GlifLibError, glyphSet.writeLayerInfo, info)
-		info = TestLayerInfoObject()
-		info.guidelines = [dict(x=0, color="0, -1, 0, 0")]
-		glyphSet = self.makeGlyphSet()
-		self.assertRaises(GlifLibError, glyphSet.writeLayerInfo, info)
-		info = TestLayerInfoObject()
-		info.guidelines = [dict(x=0, color="0, 0, -1, 0")]
-		glyphSet = self.makeGlyphSet()
-		self.assertRaises(GlifLibError, glyphSet.writeLayerInfo, info)
-		info = TestLayerInfoObject()
-		info.guidelines = [dict(x=0, color="0, 0, 0, -1")]
-		glyphSet = self.makeGlyphSet()
-		self.assertRaises(GlifLibError, glyphSet.writeLayerInfo, info)
-		## > 1 in each position
-		info = TestLayerInfoObject()
-		info.guidelines = [dict(x=0, color="2, 0, 0, 0")]
-		glyphSet = self.makeGlyphSet()
-		self.assertRaises(GlifLibError, glyphSet.writeLayerInfo, info)
-		info = TestLayerInfoObject()
-		info.guidelines = [dict(x=0, color="0, 2, 0, 0")]
-		glyphSet = self.makeGlyphSet()
-		self.assertRaises(GlifLibError, glyphSet.writeLayerInfo, info)
-		info = TestLayerInfoObject()
-		info.guidelines = [dict(x=0, color="0, 0, 2, 0")]
-		glyphSet = self.makeGlyphSet()
-		self.assertRaises(GlifLibError, glyphSet.writeLayerInfo, info)
-		info = TestLayerInfoObject()
-		info.guidelines = [dict(x=0, color="0, 0, 0, 2")]
-		glyphSet = self.makeGlyphSet()
-		self.assertRaises(GlifLibError, glyphSet.writeLayerInfo, info)
-		# identifier
-		## duplicate
-		info = TestLayerInfoObject()
-		info.guidelines = [dict(x=0, identifier="guide1"), dict(y=0, identifier="guide1")]
 		glyphSet = self.makeGlyphSet()
 		self.assertRaises(GlifLibError, glyphSet.writeLayerInfo, info)
 

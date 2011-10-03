@@ -640,7 +640,6 @@ def _writeLib(glyphObject, writer):
 
 layerInfoVersion3ValueData = {
 	"color"			: dict(type=basestring, valueValidator=colorValidator),
-	"guidelines"	: dict(type=list, valueValidator=guidelinesValidator),
 	"lib"			: dict(type=dict, valueValidator=genericTypeValidator)
 }
 
