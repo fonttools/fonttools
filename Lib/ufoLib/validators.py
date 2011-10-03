@@ -682,7 +682,6 @@ def layerContentsValidator(value, ufoPath):
 	Check the validity of layercontents.plist.
 	Version 3+.
 	"""
-	from ufoLib import DEFAULT_GLYPHS_DIRNAME
 	bogusFileMessage = "layercontents.plist in not in the correct format."
 	# file isn't in the right format
 	if not isinstance(value, list):
@@ -701,6 +700,7 @@ def layerContentsValidator(value, ufoPath):
 			if not isinstance(i, basestring):
 				return False, bogusFileMessage
 		layerName, directoryName = entry
+		# check directory naming
 		if not directoryName.startswith("glyphs"):
 			return False, "Invalid directory name (%s) in layercontents.plist." % directoryName
 		if directoryName != "glyphs":
@@ -712,6 +712,9 @@ def layerContentsValidator(value, ufoPath):
 		p = os.path.join(ufoPath, directoryName)
 		if not os.path.exists(p):
 			return False, "A glyphset does not exist at %s." % directoryName
+		# empty name
+		if not len(layerName):
+			return False, "A layer has an empty name."
 		# check usage
 		if layerName in usedLayerNames:
 			return False, "The layer name %s is used by more than one layer." % layerName
@@ -724,7 +727,7 @@ def layerContentsValidator(value, ufoPath):
 	# missing default layer
 	foundDefault = False
 	for layerName, directory in contents.items():
-		if directory == DEFAULT_GLYPHS_DIRNAME:
+		if directory == "glyphs":
 			foundDefault = True
 			break
 	if not foundDefault:
@@ -737,6 +740,9 @@ def layerContentsValidator(value, ufoPath):
 
 def groupsValidator(value):
 	"""
+	Check the validity of the groups.
+	Version 3+ (though it's backwards compatible with UFO 1 and UFO 2).
+
 	>>> groups = {"A" : ["A", "A"], "A2" : ["A"]}
 	>>> groupsValidator(groups)
 	(True, None)
@@ -799,8 +805,11 @@ def groupsValidator(value):
 # lib.plist/lib
 # -------------
 
-def libValidator(lib):
+def libValidator(value):
 	"""
+	Check the validity of the lib.
+	Version 3+ (though it's backwards compatible with UFO 1 and UFO 2).
+
 	>>> lib = {"foo" : "bar"}
 	>>> libValidator(lib)
 	(True, None)
@@ -822,9 +831,9 @@ def libValidator(lib):
 	(False, 'public.glyphOrder is not properly formatted.')
 	"""
 	bogusFormatMessage = "The lib data is not in the correct format."
-	if not isinstance(lib, dict):
+	if not isinstance(value, dict):
 		return False, bogusFormatMessage
-	for key, value in lib.items():
+	for key, value in value.items():
 		if not isinstance(key, basestring):
 			return False, bogusFormatMessage
 		# public.glyphOrder
