@@ -747,7 +747,7 @@ def validateGroups(value):
 
 	>>> groups = {"public.awesome" : ["A"]}
 	>>> validateGroups(groups)
-	(False, 'The group data contains a group with an illegal public.* group name.')
+	(True, None)
 
 	>>> groups = {"public.kern1." : ["A"]}
 	>>> validateGroups(groups)
@@ -778,7 +778,8 @@ def validateGroups(value):
 			return False, "A group has an empty name."
 		if groupName.startswith("public."):
 			if not groupName.startswith("public.kern1.") and not groupName.startswith("public.kern2."):
-				return False, "The group data contains a group with an illegal public.* group name."
+				# uknown pubic.* name, silently skip.
+				continue
 			else:
 				if len("public.kernN.") == len(groupName):
 					return False, "The group data contains a kerning group with an incomplete name."
@@ -793,12 +794,10 @@ def validateGroups(value):
 					return False, "The glyph \"%s\" occurs in too many kerning groups." % glyphName
 				d[glyphName] = groupName
 	return True, None
-				
 
 # -------------
 # lib.plist/lib
 # -------------
-
 
 
 if __name__ == "__main__":
