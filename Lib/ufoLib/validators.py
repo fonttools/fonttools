@@ -484,40 +484,6 @@ def fontInfoWOFFMetadataExtensionValueValidator(value):
 		return False
 	return True
 
-def fontInfoKerningPrefixesValidator(info):
-	"""
-	Version 3+.
-	"""
-	prefix1 = info.get("firstKerningGroupPrefix")
-	prefix2 = info.get("secondKerningGroupPrefix")
-	# both are None
-	if prefix1 is None and prefix2 is None:
-		return True
-	# one is None
-	if prefix1 is None and prefix2 is not None:
-		return False
-	if prefix2 is None and prefix1 is not None:
-		return False
-	# they are the same
-	if prefix1 == prefix2:
-		return False
-	# one starts with the other
-	if prefix1.startswith(prefix2):
-		return False
-	if prefix2.startswith(prefix1):
-		return False
-	return True
-
-def fontInfoKerningPrefixValidator(value):
-	"""
-	Version 3+.
-	"""
-	if not isinstance(value, basestring):
-		return False
-	if not len(value):
-		return False
-	return True
-
 # ----------
 # Guidelines
 # ----------

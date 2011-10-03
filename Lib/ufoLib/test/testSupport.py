@@ -564,8 +564,6 @@ fontInfoVersion3 = {
 													]
 												),
 											],
-	"firstKerningGroupPrefix"			 : "@kern1",
-	"secondKerningGroupPrefix"			 : "@kern2",
 	"guidelines"						 : [
 											# ints
 											dict(x=100, y=200, angle=45),

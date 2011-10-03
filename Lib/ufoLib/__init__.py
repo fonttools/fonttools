@@ -83,9 +83,6 @@ LAYERINFO_FILENAME = "layerinfo.plist"
 
 DEFAULT_LAYER_NAME = "public.default"
 
-DEFAULT_FIRST_KERNING_PREFIX = "@KERN_1_"
-DEFAULT_SECOND_KERNING_PREFIX = "@KERN_2_"
-
 supportedUFOFormatVersions = [1, 2, 3]
 
 
@@ -115,12 +112,11 @@ class UFOReader(object):
 
 	def _upConvertKerning(self):
 		"""
-		Up convert kerning, groups and font info in UFO 1 and 2.
+		Up convert kerning and groups in UFO 1 and 2.
 		The data will be held internally until each bit of data
-		has been retrieved. The conversion of all three must
-		be done at once, so the raw data is cached and an error
-		is raised if one bit of data becomes obsolete before
-		it is called.
+		has been retrieved. The conversion of both must be done
+		at once, so the raw data is cached and an error is raised
+		if one bit of data becomes obsolete before it is called.
 		"""
 		if self._upConvertedKerningData:
 			testKerning = self._readKerning()
@@ -129,33 +125,21 @@ class UFOReader(object):
 			testGroups = self._readGroups()
 			if testGroups != self._upConvertedKerningData["originalGroups"]:
 				raise UFOLibError("The data in groups.plist has been modified since it was converted to UFO 3 format.")
-			testFontInfo = self._readInfo()
-			if testFontInfo != self._upConvertedKerningData["originalFontInfo"]:
-				raise UFOLibError("The data in fontinfo.plist has been modified since it was converted to UFO 3 format.")
 		else:
 			self._upConvertedKerningData = dict(
 				kerning={},
 				originalKerning=self._readKerning(),
 				groups={},
-				originalGroups=self._readGroups(),
-				fontInfo={},
-				originalFontInfo=self._readInfo()
+				originalGroups=self._readGroups()
 			)
 			# convert kerning and groups
 			kerning, groups = convertUFO1OrUFO2KerningToUFO3Kerning(
 				self._upConvertedKerningData["originalKerning"],
-				deepcopy(self._upConvertedKerningData["originalGroups"]),
-				firstKerningGroupPrefix=DEFAULT_FIRST_KERNING_PREFIX,
-				secondKerningGroupPrefix=DEFAULT_SECOND_KERNING_PREFIX
+				deepcopy(self._upConvertedKerningData["originalGroups"])
 			)
-			# update the font info
-			fontInfo = deepcopy(self._upConvertedKerningData["originalFontInfo"])
-			fontInfo["firstKerningGroupPrefix"] = DEFAULT_FIRST_KERNING_PREFIX
-			fontInfo["secondKerningGroupPrefix"] = DEFAULT_SECOND_KERNING_PREFIX
 			# store
 			self._upConvertedKerningData["kerning"] = kerning
 			self._upConvertedKerningData["groups"] = groups
-			self._upConvertedKerningData["fontInfo"] = fontInfo
 
 	# support methods
 
@@ -282,13 +266,12 @@ class UFOReader(object):
 		version 3 specification. This will write the attributes
 		defined in the file into the object.
 		"""
-		# handle up conversion
-		if self._formatVersion < 3:
-			self._upConvertKerning()
-			infoDict = self._upConvertedKerningData["fontInfo"]
-		# normal
-		else:
-			infoDict = self._readInfo()
+		path = os.path.join(self._path, FONTINFO_FILENAME)
+		if not self._checkForFile(path):
+			return {}
+		infoDict = self._readPlist(path)
+		if not isinstance(infoDict, dict):
+			raise UFOLibError("fontinfo.plist is not properly formatted.")
 		infoDataToSet = {}
 		# version 1
 		if self._formatVersion == 1:
@@ -325,10 +308,6 @@ class UFOReader(object):
 				setattr(info, attr, value)
 			except AttributeError:
 				raise UFOLibError("The supplied info object does not support setting a necessary attribute (%s)." % attr)
-		# set the kenring prefixes for older formats
-		if self._formatVersion < 3 and self._upConvertedKerningData:
-			info.firstKerningGroupPrefix = self._upConvertedKerningData["fontInfo"]["firstKerningGroupPrefix"]
-			info.secondKerningGroupPrefix = self._upConvertedKerningData["fontInfo"]["secondKerningGroupPrefix"]
 
 	# kerning.plist
 
@@ -1266,9 +1245,6 @@ def validateInfoVersion3Data(infoData):
 			raise UFOLibError("Invalid value for attribute %s (%s)." % (attr, repr(value)))
 		else:
 			validInfoData[attr] = value
-	# handle the kerning prefixes specially
-	if not fontInfoKerningPrefixesValidator(infoData):
-		raise UFOLibError("Invalid kerning prefixes.")
 	return validInfoData
 
 # Value Options
@@ -1446,8 +1422,6 @@ fontInfoAttributesVersion3ValueData.update({
 	"woffMetadataTrademark"					: dict(type=dict, valueValidator=fontInfoWOFFMetadataTrademarkValidator),
 	"woffMetadataLicensee"					: dict(type=dict, valueValidator=fontInfoWOFFMetadataLicenseeValidator),
 	"woffMetadataExtensions"				: dict(type=list, valueValidator=fontInfoWOFFMetadataExtensionsValidator),
-	"firstKerningGroupPrefix" 				: dict(type=basestring, valueValidator=fontInfoKerningPrefixValidator),
-	"secondKerningGroupPrefix" 				: dict(type=basestring, valueValidator=fontInfoKerningPrefixValidator),
 	"guidelines"							: dict(type=list, valueValidator=guidelinesValidator)
 })
 
