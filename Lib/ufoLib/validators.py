@@ -673,6 +673,28 @@ def imageValidator(value):
 		return False
 	return True
 
+def pngValidator(path=None, data=None, fileObj=None):
+	"""
+	Version 3+.
+
+	This checks the signature of the image data.
+	"""
+	print path
+	assert path is not None or data is not None or fileObj is not None
+	if path is not None:
+		f = open(path, "rb")
+		signature = f.read(8)
+		f.close()
+	elif data is not None:
+		signature = data[:8]
+	elif fileObj is not None:
+		pos = fileObj.tell()
+		signature = fileObj.read(8)
+		fileObj.seek(pos)
+	if signature != "\x89PNG\r\n\x1a\n":
+		return False, "Image does not begin with the PNG signature."
+	return True, None
+
 # -------------------
 # layercontents.plist
 # -------------------
