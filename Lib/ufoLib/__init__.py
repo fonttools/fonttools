@@ -365,7 +365,7 @@ class UFOReader(object):
 		if not self._checkForFile(path):
 			return {}
 		data = self._readPlist(path)
-		valid, message = validateLib(data)
+		valid, message = libValidator(data)
 		if not valid:
 			raise UFOLibError(message)
 		return data
@@ -809,7 +809,7 @@ class UFOWriter(object):
 		Write lib.plist. This method requires a
 		lib dict as an argument.
 		"""
-		valid, message = validateLib(libDict)
+		valid, message = libValidator(libDict)
 		if not valid:
 			raise UFOLibError(message)
 		self._makeDirectory()
