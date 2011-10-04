@@ -737,6 +737,9 @@ def layerContentsValidator(value, ufoPath):
 		# empty name
 		if not len(layerName):
 			return False, "A layer has an empty name."
+		# default layer name
+		if layerName == "public.default" and directoryName != "glyphs":
+		    return False, "The name public.default is being used by a layer that is not the default."
 		# check usage
 		if layerName in usedLayerNames:
 			return False, "The layer name %s is used by more than one layer." % layerName
