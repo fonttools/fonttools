@@ -541,10 +541,14 @@ def _writeAdvance(glyphObject, writer):
 	if width is not None:
 		if not isinstance(width, (int, float)):
 			raise GlifLibError("width attribute must be int or float")
+		if width == 0:
+		    width = None
 	height = getattr(glyphObject, "height", None)
 	if height is not None:
 		if not isinstance(height, (int, float)):
 			raise GlifLibError("height attribute must be int or float")
+		if height == 0:
+		    height = None
 	if width is not None and height is not None:
 		writer.simpletag("advance", width=str(width), height=str(height))
 		writer.newline()
