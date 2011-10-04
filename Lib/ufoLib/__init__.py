@@ -128,9 +128,9 @@ class UFOReader(object):
 		else:
 			groups = self._readGroups()
 			invalidFormatMessage = "groups.plist is not properly formatted."
-			if not isinstance(data, dict):
+			if not isinstance(groups, dict):
 				raise UFOLibError(invalidFormatMessage)
-			for groupName, glyphList in data.items():
+			for groupName, glyphList in groups.items():
 				if not isinstance(groupName, basestring):
 					raise UFOLibError(invalidFormatMessage)
 				elif not isinstance(glyphList, list):
