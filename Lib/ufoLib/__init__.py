@@ -1421,6 +1421,7 @@ fontInfoAttributesVersion3ValueData.update({
 	"woffMetadataExtensions"				: dict(type=list, valueValidator=fontInfoWOFFMetadataExtensionsValidator),
 	"guidelines"							: dict(type=list, valueValidator=guidelinesValidator)
 })
+fontInfoAttributesVersion3 = set(fontInfoAttributesVersion3ValueData.keys())
 
 # insert the type validator for all attrs that
 # have no defined validator.
