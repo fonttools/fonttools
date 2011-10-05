@@ -887,33 +887,39 @@ class UFOWriter(object):
 			raise UFOLibError("Could not locate a glyph set directory for the layer named %s." % layerName)
 		return foundDirectory
 
-	def getGlyphSet(self, layerName=None, glyphNameToFileNameFunc=None):
+	def getGlyphSet(self, layerName=None, defaultLayer=True, glyphNameToFileNameFunc=None):
 		"""
 		Return the GlyphSet object associated with the
 		appropriate glyph directory in the .ufo.
 		If layerName is None, the default glyph set
 		will be used.
 		"""
-		if layerName is not None and self._formatVersion < 3:
-			raise UFOLibError("Layer names are not supported in UFO %d." % self._formatVersion)
-		# try to find an existing directory
-		foundDirectory = None
-		if layerName is None:
+		# only the default can be written in < 3
+		if self.formatVersion < 3 and not defaultLayer:
+			raise UFOLibError("Only the default layer can be writen in UFO %d." % self.formatVersion)
+		# None can only be used as a layer name with the default layer
+		if layerName is None and not defaultLayer:
+			raise UFOLibError("The default layer flag must be used with an unnamed layer.")
+		# if the default layer flag is on and no name has been given,
+		# use the default layer name.
+		if layerName is None and defaultLayer:
+			layerName = DEFAULT_LAYER_NAME
+		# if the default flag is on, make sure that the default in the file
+		# matches the default being written. also make sure that this layer
+		# name is not already linked to a non-default layer.
+		if defaultLayer:
 			for existingLayerName, directory in self.layerContents.items():
 				if directory == DEFAULT_GLYPHS_DIRNAME:
-					foundDirectory = directory
-					layerName = existingLayerName
+					if existingLayerName != layerName:
+						raise UFOLibError("Another layer is already mapped to the default directory.")
+				elif existingLayerName == layerName:
+					raise UFOLibError("The layer name is already mapped to a non-default layer.")
+		# get an existing directory name
+		if layerName in self.layerContents:
+			directory = self.layerContents[layerName]
+		# geta  new directory name
 		else:
-			foundDirectory = self.layerContents.get(layerName)
-		directory = foundDirectory
-		# make a new directory name
-		if not directory:
-			# use the default if no name is given.
-			# this won't cause an overwrite since the
-			# default would have been found in the
-			# previous search.
-			if layerName is None:
-				layerName = DEFAULT_LAYER_NAME
+			if defaultLayer:
 				directory = DEFAULT_GLYPHS_DIRNAME
 			else:
 				# not caching this could be slightly expensive,

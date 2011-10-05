@@ -3931,11 +3931,11 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 		self.assertEqual(expected, result)
 		# layer 1
 		expected = ["b"]
-		result = list(writer.getGlyphSet("layer 1").keys())
+		result = list(writer.getGlyphSet("layer 1", defaultLayer=False).keys())
 		self.assertEqual(expected, result)
 		# layer 2
 		expected = ["c"]
-		result = list(writer.getGlyphSet("layer 2").keys())
+		result = list(writer.getGlyphSet("layer 2", defaultLayer=False).keys())
 		self.assertEqual(expected, result)
 
 	# make a new font with two layers
@@ -3958,9 +3958,9 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 	def testNewFontThreeLayers(self):
 		self.clearUFO()
 		writer = UFOWriter(self.ufoPath)
-		writer.getGlyphSet("layer 1")
+		writer.getGlyphSet("layer 1", defaultLayer=False)
 		writer.getGlyphSet()
-		writer.getGlyphSet("layer 2")
+		writer.getGlyphSet("layer 2", defaultLayer=False)
 		writer.writeLayerContents(["layer 1", "public.default", "layer 2"])
 		# directories
 		path = os.path.join(self.ufoPath, "glyphs")
@@ -3983,7 +3983,7 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 	def testAddLayerToExistingFont(self):
 		self.makeUFO()
 		writer = UFOWriter(self.ufoPath)
-		writer.getGlyphSet("layer 3")
+		writer.getGlyphSet("layer 3", defaultLayer=False)
 		writer.writeLayerContents(["public.default", "layer 1", "layer 2", "layer 3"])
 		# directories
 		path = os.path.join(self.ufoPath, "glyphs")
