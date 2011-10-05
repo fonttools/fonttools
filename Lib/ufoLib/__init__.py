@@ -893,15 +893,6 @@ class UFOWriter(object):
 		appropriate glyph directory in the .ufo.
 		If layerName is None, the default glyph set
 		will be used.
-
-		This method also establishes the layer order.
-		Each time this method is called, the layer for
-		which it is called is placed at the top of the
-		stored layer order. To ensure that the order in
-		the UFO is properly stored, this method should be
-		called for each layer each time the UFO is written.
-		If not, any layers that are not called with this
-		method will be ordered below the called layers.
 		"""
 		if layerName is not None and self._formatVersion < 3:
 			raise UFOLibError("Layer names are not supported in UFO %d." % self._formatVersion)
