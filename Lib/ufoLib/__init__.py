@@ -8,7 +8,6 @@ supplied in this library. These conversion functions are only
 necessary if conversion without loading the UFO data into
 a set of objects is desired. These functions are:
 	convertUFOFormatVersion1ToFormatVersion2
-	convertUFOFormatVersion2ToFormatVersion1
 
 Two sets that list the font info attribute names for the two
 fontinfo.plist formats are available for external use. These are:
@@ -52,7 +51,6 @@ __all__ = [
 	"UFOReader",
 	"UFOWriter",
 	"convertUFOFormatVersion1ToFormatVersion2",
-	"convertUFOFormatVersion2ToFormatVersion1",
 	"fontInfoAttributesVersion1",
 	"fontInfoAttributesVersion2",
 	"deprecatedFontInfoAttributesVersion2",
@@ -524,6 +522,9 @@ class UFOWriter(object):
 				raise UFOLibError("The existing metainfo.plist is not properly formatted.")
 			if previousFormatVersion not in supportedUFOFormatVersions:
 				raise UFOLibError("Unsupported UFO format (%d)." % formatVersion)
+		# catch down conversion
+		if previousFormatVersion is not None and previousFormatVersion > formatVersion:
+			raise UFOLibError("The UFO located at this path is a higher version (%d) than the version (%d) that is trying to be written. This is not supported." % (previousFormatVersion, formatVersion))
 		# handle the layer contents
 		self.layerContents = {}
 		if previousFormatVersion >= 3:
@@ -537,26 +538,6 @@ class UFOWriter(object):
 				self.layerContents = {DEFAULT_LAYER_NAME : DEFAULT_GLYPHS_DIRNAME}
 		# write the new metainfo
 		self._writeMetaInfo()
-		# handle down conversion
-		# >= 3 to 2
-		if formatVersion < 3 and previousFormatVersion >= 3:
-			# remove all glyph sets except the default
-			for layerName, directoryName in self.layerContents.items():
-				if directoryName != DEFAULT_GLYPHS_DIRNAME:
-					self._removeFileForPath(directoryName)
-			# remove layercontents.plist
-			self._removeFileForPath(LAYERCONTENTS_FILENAME)
-			# remove glyphs/layerinfo.plist
-			p = os.path.join(DEFAULT_GLYPHS_DIRNAME, LAYERINFO_FILENAME)
-			self._removeFileForPath(p)
-			# remove /images
-			self._removeFileForPath(IMAGES_DIRNAME)
-			# remove /data
-			self._removeFileForPath(DATA_DIRNAME)
-		# 2 to 1
-		if formatVersion < 2:
-			# remove features.fea
-			self._removeFileForPath(FEATURES_FILENAME)
 
 	# properties
 
@@ -861,6 +842,8 @@ class UFOWriter(object):
 		Write the layercontents.plist file. This method  *must* be called
 		after all glyph sets have been written.
 		"""
+		if self.formatVersion < 3:
+			return
 		newOrder = []
 		for layerName in layerOrder:
 			if layerName is None:
@@ -896,16 +879,33 @@ class UFOWriter(object):
 		that the layer should be saved into the default
 		glyphs directory.
 		"""
-		# only the default can be written in < 3
-		if self.formatVersion < 3 and not defaultLayer:
+		# only default can be written in < 3
+		if self._formatVersion < 3:
 			raise UFOLibError("Only the default layer can be writen in UFO %d." % self.formatVersion)
-		# None can only be used as a layer name with the default layer
-		if layerName is None and not defaultLayer:
-			raise UFOLibError("The default layer flag must be used with an unnamed layer.")
-		# if the default layer flag is on and no name has been given,
-		# use the default layer name.
+		# locate a layer name when None has been given
 		if layerName is None and defaultLayer:
-			layerName = DEFAULT_LAYER_NAME
+			for existingLayerName, directory in self.layerContents.items():
+				if directory == DEFAULT_GLYPHS_DIRNAME:
+					layerName = existingLayerName
+			if layerName is None:
+				layerName = DEFAULT_LAYER_NAME
+		elif layerName is None and not defaultLayer:
+			raise UFOLibError("A layer name must be provided for non-default layers.")
+		# move along to format specific writing
+		if self.formatVersion == 1:
+			return self._getGlyphSetFormatVersion1(glyphNameToFileNameFunc=glyphNameToFileNameFunc)
+		elif self.formatVersion == 2:
+			return self._getGlyphSetFormatVersion2(glyphNameToFileNameFunc=glyphNameToFileNameFunc)
+		elif self.formatVersion == 3:
+			return self._getGlyphSetFormatVersion3(layerName=layerName, defaultLayer=defaultLayer, glyphNameToFileNameFunc=glyphNameToFileNameFunc)
+
+	def _getGlyphSetFormatVersion1(self, glyphNameToFileNameFunc=None):
+		glyphDir = self._makeDirectory(GLYPHS_DIRNAME)
+		return GlyphSet(glyphDir, glyphNameToFileNameFunc)
+
+	_getGlyphSetFormatVersion = _getGlyphSetFormatVersion1
+
+	def _getGlyphSetFormatVersion3(self, layerName=None, defaultLayer=True, glyphNameToFileNameFunc=None):
 		# if the default flag is on, make sure that the default in the file
 		# matches the default being written. also make sure that this layer
 		# name is not already linked to a non-default layer.
@@ -919,7 +919,7 @@ class UFOWriter(object):
 		# get an existing directory name
 		if layerName in self.layerContents:
 			directory = self.layerContents[layerName]
-		# geta  new directory name
+		# get a  new directory name
 		else:
 			if defaultLayer:
 				directory = DEFAULT_GLYPHS_DIRNAME
@@ -950,7 +950,7 @@ class UFOWriter(object):
 		layerName, it is up to the caller to inform that object that
 		the directory it represents has changed.
 		"""
-		if layerName is not None and self._formatVersion < 3:
+		if self._formatVersion < 3:
 			raise UFOLibError("Renaming a glyph set is not allowed in UFO %d." % self._formatVersion)
 		# make sure the new layer name doesn't already exist
 		if newLayerName is None:
@@ -973,7 +973,7 @@ class UFOWriter(object):
 		"""
 		Remove the glyph set matching layerName.
 		"""
-		if layerName is not None and self._formatVersion < 3:
+		if self._formatVersion < 3:
 			raise UFOLibError("Deleting a glyph set is not allowed in UFO %d." % self._formatVersion)
 		foundDirectory = self._findDirectoryForLayerName(layerName)
 		self._removeFileForPath(foundDirectory)
@@ -1078,62 +1078,6 @@ def convertUFOFormatVersion1ToFormatVersion2(inPath, outPath=None):
 	# otherwise write everything.
 	else:
 		writer = UFOWriter(outPath, formatVersion=2)
-		writer.writeGroups(groups)
-		writer.writeKerning(kerning)
-		writer.writeLib(libData)
-		# write the info manually
-		writePlistAtomically(infoData, infoPath)
-		# copy the glyph tree
-		inGlyphs = os.path.join(inPath, DEFAULT_GLYPHS_DIRNAME)
-		outGlyphs = os.path.join(outPath, DEFAULT_GLYPHS_DIRNAME)
-		if os.path.exists(inGlyphs):
-			shutil.copytree(inGlyphs, outGlyphs)
-
-def convertUFOFormatVersion2ToFormatVersion1(inPath, outPath=None):
-	"""
-	Function for converting a version format 2 UFO
-	to version format 1. inPath should be a path
-	to a UFO. outPath is the path where the new UFO
-	should be written. If outPath is not given, the
-	inPath will be used and, therefore, the UFO will
-	be converted in place. Otherwise, if outPath is
-	specified, nothing must exist at that path.
-	"""
-	if outPath is None:
-		outPath = inPath
-	if inPath != outPath and os.path.exists(outPath):
-		raise UFOLibError("A file already exists at %s." % outPath)
-	# use a reader for loading most of the data
-	reader = UFOReader(inPath)
-	if reader.formatVersion == 1:
-		raise UFOLibError("The UFO at %s is already format version 1." % inPath)
-	groups = reader.readGroups()
-	kerning = reader.readKerning()
-	libData = reader.readLib()
-	# read the info data manually and convert
-	infoPath = os.path.join(inPath, FONTINFO_FILENAME)
-	if not os.path.exists(infoPath):
-		infoData = {}
-	else:
-		infoData = readPlist(infoPath)
-	infoData = _convertFontInfoDataVersion2ToVersion1(infoData)
-	# if the paths are the same, only need to change the
-	# fontinfo, metainfo and feature files.
-	infoPath = os.path.join(outPath, FONTINFO_FILENAME)
-	if inPath == outPath:
-		metaInfoPath = os.path.join(inPath, METAINFO_FILENAME)
-		metaInfo = dict(
-			creator="org.robofab.ufoLib",
-			formatVersion=1
-		)
-		writePlistAtomically(metaInfo, metaInfoPath)
-		writePlistAtomically(infoData, infoPath)
-		featuresPath = os.path.join(inPath, FEATURES_FILENAME)
-		if os.path.exists(featuresPath):
-			os.remove(featuresPath)
-	# otherwise write everything.
-	else:
-		writer = UFOWriter(outPath, formatVersion=1)
 		writer.writeGroups(groups)
 		writer.writeKerning(kerning)
 		writer.writeLib(libData)

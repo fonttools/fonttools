@@ -3874,45 +3874,13 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 
 	def testDownConvert3To1(self):
 		self.makeUFO()
-		writer = UFOWriter(self.ufoPath, formatVersion=1)
-		# layercontents.plist
-		path = os.path.join(self.ufoPath, "layercontents.plist")
-		exists = os.path.exists(path)
-		self.assertEqual(False, exists)
-		# /glyphs
-		path = os.path.join(self.ufoPath, "glyphs")
-		exists = os.path.exists(path)
-		self.assertEqual(True, exists)
-		# /glyphs.layer 1
-		path = os.path.join(self.ufoPath, "glyphs.layer 1")
-		exists = os.path.exists(path)
-		self.assertEqual(False, exists)
-		# /glyphs.layer 2
-		path = os.path.join(self.ufoPath, "glyphs.layer 2")
-		exists = os.path.exists(path)
-		self.assertEqual(False, exists)
+		self.assertRaises(UFOLibError, UFOWriter, self.ufoPath, formatVersion=1)
 
 	# __init__: down convert 3 > 2
 
-	def testDownConvert3To1(self):
+	def testDownConvert3To2(self):
 		self.makeUFO()
-		writer = UFOWriter(self.ufoPath, formatVersion=2)
-		# layercontents.plist
-		path = os.path.join(self.ufoPath, "layercontents.plist")
-		exists = os.path.exists(path)
-		self.assertEqual(False, exists)
-		# /glyphs
-		path = os.path.join(self.ufoPath, "glyphs")
-		exists = os.path.exists(path)
-		self.assertEqual(True, exists)
-		# /glyphs.layer 1
-		path = os.path.join(self.ufoPath, "glyphs.layer 1")
-		exists = os.path.exists(path)
-		self.assertEqual(False, exists)
-		# /glyphs.layer 2
-		path = os.path.join(self.ufoPath, "glyphs.layer 2")
-		exists = os.path.exists(path)
-		self.assertEqual(False, exists)
+		self.assertRaises(UFOLibError, UFOWriter, self.ufoPath, formatVersion=2)
 
 	# get glyph sets
 
@@ -3937,45 +3905,6 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 		expected = ["c"]
 		result = list(writer.getGlyphSet("layer 2", defaultLayer=False).keys())
 		self.assertEqual(expected, result)
-
-	def testGetGlyphSet3To2(self):
-		# existing UFO 3, saving down to UFO 2
-		## None, True
-		## layer 1, False
-		self.makeUFO()
-		writer = UFOWriter(self.ufoPath, formatVersion=2)
-		writer.getGlyphSet(None)
-		self.assertRaises(UFOLibError, writer.getGlyphSet, "layer 1", defaultLayer=False)
-		## public.default, True
-		## layer 1, False
-		self.makeUFO()
-		writer = UFOWriter(self.ufoPath, formatVersion=2)
-		writer.getGlyphSet("public.default")
-		self.assertRaises(UFOLibError, writer.getGlyphSet, "layer 1", defaultLayer=False)
-		## None, False
-		self.makeUFO()
-		writer = UFOWriter(self.ufoPath, formatVersion=2)
-		self.assertRaises(UFOLibError, writer.getGlyphSet, None, defaultLayer=False)
-		## public.default, False
-		self.makeUFO()
-		writer = UFOWriter(self.ufoPath, formatVersion=2)
-		self.assertRaises(UFOLibError, writer.getGlyphSet, "public.default", defaultLayer=False)
-		## layer 1, True
-		self.makeUFO()
-		writer = UFOWriter(self.ufoPath, formatVersion=2)
-		self.assertRaises(UFOLibError, writer.getGlyphSet, "layer 1", defaultLayer=True)
-		## Foo, True
-		self.makeUFO()
-		writer = UFOWriter(self.ufoPath, formatVersion=2)
-		self.assertRaises(UFOLibError, writer.getGlyphSet, "Foo", defaultLayer=True)
-		## make layer 1 the default and save it as the default
-		layerContents = [
-			("layer 1", "glyphs"),
-			("layer 2", "glyphs.layer 2"),
-		]
-		self.makeUFO(layerContents=layerContents)
-		writer = UFOWriter(self.ufoPath, formatVersion=2)
-		writer.getGlyphSet("layer 1")
 
 	# make a new font with two layers
 
