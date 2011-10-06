@@ -952,14 +952,24 @@ class UFOWriter(object):
 		"""
 		if self._formatVersion < 3:
 			raise UFOLibError("Renaming a glyph set is not allowed in UFO %d." % self._formatVersion)
-		# make sure the new layer name doesn't already exist
-		if newLayerName is None:
-			newLayerName = DEFAULT_LAYER_NAME
-		if newLayerName in self.layerContents:
-			raise UFOLibError("A layer named %s already exists." % newLayerName)
-		# make sure the default layer doesn't already exist
-		if defaultLayer and DEFAULT_GLYPHS_DIRNAME in self.layerContents.values():
-			raise UFOLibError("A default layer already exists.")
+		# the new and old names can be the same
+		# as long as the default is being switched
+		if layerName == newLayerName:
+			# if the default is off and the layer is already not the default, skip
+			if self.layerContents[layerName] != DEFAULT_GLYPHS_DIRNAME and not defaultLayer:
+				return
+			# if the default is on and the layer is already the default, skip
+			if self.layerContents[layerName] == DEFAULT_GLYPHS_DIRNAME and defaultLayer:
+				return
+		else:
+			# make sure the new layer name doesn't already exist
+			if newLayerName is None:
+				newLayerName = DEFAULT_LAYER_NAME
+			if newLayerName in self.layerContents:
+				raise UFOLibError("A layer named %s already exists." % newLayerName)
+			# make sure the default layer doesn't already exist
+			if defaultLayer and DEFAULT_GLYPHS_DIRNAME in self.layerContents.values():
+				raise UFOLibError("A default layer already exists.")
 		# get the paths
 		oldDirectory = self._findDirectoryForLayerName(layerName)
 		if defaultLayer:

@@ -3998,6 +3998,30 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 		result = readPlist(path)
 		self.assertEqual(expected, result)
 
+	def testRenameLayerDefault(self):
+		self.makeUFO()
+		writer = UFOWriter(self.ufoPath)
+		writer.renameGlyphSet("public.default", u"layer xxx")
+		writer.renameGlyphSet("layer 1", u"layer 1", defaultLayer=True)
+		writer.writeLayerContents(["layer xxx", "layer 1", "layer 2"])
+		path = os.path.join(self.ufoPath, "glyphs")
+		exists = os.path.exists(path)
+		self.assertEqual(True, exists)
+		path = os.path.join(self.ufoPath, "glyphs.layer 1")
+		exists = os.path.exists(path)
+		self.assertEqual(False, exists)
+		path = os.path.join(self.ufoPath, "glyphs.layer 2")
+		exists = os.path.exists(path)
+		self.assertEqual(True, exists)
+		path = os.path.join(self.ufoPath, "glyphs.layer xxx")
+		exists = os.path.exists(path)
+		self.assertEqual(True, exists)
+		# layer contents
+		path = os.path.join(self.ufoPath, "layercontents.plist")
+		expected = [['layer xxx', 'glyphs.layer xxx'], ['layer 1', 'glyphs'], ['layer 2', 'glyphs.layer 2']]
+		result = readPlist(path)
+		self.assertEqual(expected, result)
+
 	# rename duplicate name
 
 	def testRenameLayerDuplicateName(self):
