@@ -17,7 +17,7 @@ from xmlTreeBuilder import buildTree, stripCharacterData
 from robofab.pens.pointPen import AbstractPointPen
 from plistlib import readPlist, writePlistToString
 from filenames import userNameToFileName
-from validators import genericTypeValidator, colorValidator, guidelinesValidator, identifierValidator, imageValidator, libValidator
+from validators import isDictEnough, genericTypeValidator, colorValidator, guidelinesValidator, identifierValidator, imageValidator, libValidator
 
 try:
 	set
@@ -639,8 +639,10 @@ def _writeGuidelines(glyphObject, writer, identifiers):
 def _writeLib(glyphObject, writer):
 	from ufoLib.plistlib import PlistWriter
 	lib = getattr(glyphObject, "lib", None)
-	if not isinstance(lib, dict):
+	if not isDictEnough(lib):
 		raise GlifLibError("lib attribute must be a dict.")
+	if not isinstance(lib, dict):
+	    lib = dict(lib)
 	writer.begintag("lib")
 	writer.newline()
 	plistWriter = PlistWriter(writer.file, indentLevel=writer.indentlevel,

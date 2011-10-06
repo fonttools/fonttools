@@ -8,6 +8,19 @@ import calendar
 # Generic
 # -------
 
+def isDictEnough(value):
+    """
+    Some objects will likely come in that aren't
+    dicts but are dict-ish enough.
+    """
+    if isinstance(value, dict):
+        return True
+    attrs = ("keys", "values", "items")
+    for attr in attrs:
+        if not hasattr(value, attr):
+            return False
+    return True
+
 def genericTypeValidator(value, typ):
 	"""
 	Generic. (Added at version 2.)
@@ -796,7 +809,7 @@ def groupsValidator(value):
 	(False, 'The glyph "A" occurs in too many kerning groups.')
 	"""
 	bogusFormatMessage = "The group data is not in the correct format."
-	if not isinstance(value, dict):
+	if not isDictEnough(value):
 		return False, bogusFormatMessage
 	firstSideMapping = {}
 	secondSideMapping = {}
@@ -856,7 +869,7 @@ def libValidator(value):
 	(False, 'public.glyphOrder is not properly formatted.')
 	"""
 	bogusFormatMessage = "The lib data is not in the correct format."
-	if not isinstance(value, dict):
+	if not isDictEnough(value):
 		return False, bogusFormatMessage
 	for key, value in value.items():
 		if not isinstance(key, basestring):

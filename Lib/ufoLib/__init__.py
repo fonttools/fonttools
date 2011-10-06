@@ -757,7 +757,7 @@ class UFOWriter(object):
 		dict of kerning pairs as an argument.
 		"""
 		invalidFormatMessage = "The kerning is not properly formatted."
-		if not isinstance(kerning, dict):
+		if not isDictEnough(kerning):
 			raise UFOLibError(invalidFormatMessage)
 		for pair, value in kerning.items():
 			if not isinstance(pair, (list, tuple)):
