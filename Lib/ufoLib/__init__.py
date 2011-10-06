@@ -880,7 +880,7 @@ class UFOWriter(object):
 		glyphs directory.
 		"""
 		# only default can be written in < 3
-		if self._formatVersion < 3:
+		if self._formatVersion < 3 and (not defaultLayer or layerName is not None):
 			raise UFOLibError("Only the default layer can be writen in UFO %d." % self.formatVersion)
 		# locate a layer name when None has been given
 		if layerName is None and defaultLayer:
@@ -900,10 +900,12 @@ class UFOWriter(object):
 			return self._getGlyphSetFormatVersion3(layerName=layerName, defaultLayer=defaultLayer, glyphNameToFileNameFunc=glyphNameToFileNameFunc)
 
 	def _getGlyphSetFormatVersion1(self, glyphNameToFileNameFunc=None):
-		glyphDir = self._makeDirectory(GLYPHS_DIRNAME)
+		glyphDir = self._makeDirectory(DEFAULT_GLYPHS_DIRNAME)
 		return GlyphSet(glyphDir, glyphNameToFileNameFunc)
 
-	_getGlyphSetFormatVersion = _getGlyphSetFormatVersion1
+	def _getGlyphSetFormatVersion2(self, glyphNameToFileNameFunc=None):
+		glyphDir = self._makeDirectory(DEFAULT_GLYPHS_DIRNAME)
+		return GlyphSet(glyphDir, glyphNameToFileNameFunc)
 
 	def _getGlyphSetFormatVersion3(self, layerName=None, defaultLayer=True, glyphNameToFileNameFunc=None):
 		# if the default flag is on, make sure that the default in the file
