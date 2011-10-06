@@ -942,7 +942,7 @@ class UFOWriter(object):
 		# load the glyph set
 		return GlyphSet(path, glyphNameToFileNameFunc=glyphNameToFileNameFunc)
 
-	def renameGlyphSet(self, layerName, newLayerName):
+	def renameGlyphSet(self, layerName, newLayerName, defaultLayer=False):
 		"""
 		Rename a glyph set.
 
@@ -957,10 +957,16 @@ class UFOWriter(object):
 			newLayerName = DEFAULT_LAYER_NAME
 		if newLayerName in self.layerContents:
 			raise UFOLibError("A layer named %s already exists." % newLayerName)
+		# make sure the default layer doesn't already exist
+		if defaultLayer and DEFAULT_GLYPHS_DIRNAME in self.layerContents.values():
+			raise UFOLibError("A default layer already exists.")
 		# get the paths
 		oldDirectory = self._findDirectoryForLayerName(layerName)
-		existing = [name.lower() for name in self.layerContents.values()]
-		newDirectory = userNameToFileName(newLayerName, existing=existing, prefix="glyphs.")
+		if defaultLayer:
+			newDirectory = DEFAULT_GLYPHS_DIRNAME
+		else:
+			existing = [name.lower() for name in self.layerContents.values()]
+			newDirectory = userNameToFileName(newLayerName, existing=existing, prefix="glyphs.")
 		# update the internal mapping
 		del self.layerContents[layerName]
 		self.layerContents[newLayerName] = newDirectory
