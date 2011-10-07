@@ -299,7 +299,11 @@ class GlyphSet(object):
 		text = self.getGLIF(glyphName)
 		self._purgeCachedGLIF(glyphName)
 		tree = _glifTreeFromFile(StringIO(text))
-		_readGlyphFromTree(tree, glyphObject, pointPen)
+		if self.ufoFormatVersion < 3:
+			formatVersions = (1,)
+		else:
+			formatVersions = (1, 2)
+		_readGlyphFromTree(tree, glyphObject, pointPen, formatVersions=formatVersions)
 
 	def writeGlyph(self, glyphName, glyphObject=None, drawPointsFunc=None, formatVersion=None):
 		"""
@@ -431,7 +435,7 @@ def glyphNameToFileName(glyphName, glyphSet):
 # GLIF To and From String
 # -----------------------
 
-def readGlyphFromString(aString, glyphObject=None, pointPen=None):
+def readGlyphFromString(aString, glyphObject=None, pointPen=None, formatVersions=(1, 2)):
 	"""
 	Read .glif data from a string into a glyph object.
 
@@ -458,6 +462,9 @@ def readGlyphFromString(aString, glyphObject=None, pointPen=None):
 	To retrieve outline information, you need to pass an object
 	conforming to the PointPen protocol as the 'pointPen' argument.
 	This argument may be None if you don't need the outline data.
+
+	The formatVersions argument defined the GLIF format versions
+	that are allowed to be read.
 	"""
 	tree = _glifTreeFromFile(StringIO(aString))
 	_readGlyphFromTree(tree, glyphObject, pointPen)
@@ -731,7 +738,7 @@ def _glifTreeFromFile(aFile):
 	_stripGlyphXMLTree(tree[2])
 	return tree
 
-def _readGlyphFromTree(tree, glyphObject=None, pointPen=None):
+def _readGlyphFromTree(tree, glyphObject=None, pointPen=None, formatVersions=(1, 2)):
 	# quick format validation
 	formatError = False
 	if len(tree) != 3:
@@ -748,7 +755,7 @@ def _readGlyphFromTree(tree, glyphObject=None, pointPen=None):
 		formatVersion = v
 	except ValueError:
 		pass
-	if formatVersion not in supportedGLIFFormatVersions:
+	if formatVersion not in formatVersions:
 		raise GlifLibError, "Unsupported GLIF format version: %s" % formatVersion
 	# get the name
 	glyphName = tree[1].get("name")

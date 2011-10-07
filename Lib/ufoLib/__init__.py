@@ -440,7 +440,7 @@ class UFOReader(object):
 		if directory is None:
 			raise UFOLibError("No glyphs directory is mapped to \"%s\"." % layerName)
 		glyphsPath = os.path.join(self._path, directory)
-		return GlyphSet(glyphsPath)
+		return GlyphSet(glyphsPath, ufoFormatVersion=self._formatVersion)
 
 	def getCharacterMapping(self, layerName=None):
 		"""
