@@ -901,11 +901,11 @@ class UFOWriter(object):
 
 	def _getGlyphSetFormatVersion1(self, glyphNameToFileNameFunc=None):
 		glyphDir = self._makeDirectory(DEFAULT_GLYPHS_DIRNAME)
-		return GlyphSet(glyphDir, glyphNameToFileNameFunc)
+		return GlyphSet(glyphDir, glyphNameToFileNameFunc, ufoFormatVersion=1)
 
 	def _getGlyphSetFormatVersion2(self, glyphNameToFileNameFunc=None):
 		glyphDir = self._makeDirectory(DEFAULT_GLYPHS_DIRNAME)
-		return GlyphSet(glyphDir, glyphNameToFileNameFunc)
+		return GlyphSet(glyphDir, glyphNameToFileNameFunc, ufoFormatVersion=2)
 
 	def _getGlyphSetFormatVersion3(self, layerName=None, defaultLayer=True, glyphNameToFileNameFunc=None):
 		# if the default flag is on, make sure that the default in the file
@@ -942,7 +942,7 @@ class UFOWriter(object):
 		# store the mapping
 		self.layerContents[layerName] = directory
 		# load the glyph set
-		return GlyphSet(path, glyphNameToFileNameFunc=glyphNameToFileNameFunc)
+		return GlyphSet(path, glyphNameToFileNameFunc=glyphNameToFileNameFunc, ufoFormatVersion=3)
 
 	def renameGlyphSet(self, layerName, newLayerName, defaultLayer=False):
 		"""
