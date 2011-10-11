@@ -490,6 +490,40 @@ class UFOReader(object):
 				result.append(p)
 		return result
 
+	def getImageDirectoryListing(self):
+		"""
+		Returns a list of all image file names in
+		the images directory. Each of the images will
+		have been verified to have the PNG signature.
+		"""
+		path = os.path.join(self._path, IMAGES_DIRNAME)
+		if not os.path.exists(path):
+			return []
+		if not os.path.isdir(path):
+			raise UFOLibError("The UFO contains an \"images\" file instead of a directory.")
+		result = []
+		for fileName in os.listdir(path):
+			p = os.path.join(path, fileName)
+			if os.path.isdir(p):
+				# silently skip this as version control
+				# systems often have hidden directories
+				continue
+			valid, error = pngValidator(path=p)
+			if valid:
+				result.append(fileName)
+		return result
+
+	def readImage(self, fileName):
+		"""
+		Return image data for the file named fileName.
+		"""
+		data = self.readBytesFromPath(os.path.join(IMAGES_DIRNAME, fileName))
+		if data is None:
+			raise UFOLibError("No image file named %s." % fileName)
+		valid, error = pngValidator(data=data)
+		if not valid:
+			raise UFOLibError(error)
+		return data
 
 # ----------
 # UFO Writer
@@ -996,6 +1030,27 @@ class UFOWriter(object):
 		foundDirectory = self._findDirectoryForLayerName(layerName)
 		self._removeFileForPath(foundDirectory)
 		del self.layerContents[layerName]
+
+	# /images
+
+	def writeImage(self, fileName, data):
+		"""
+		Write data to fileName in the images directory.
+		The data must be a valid PNG.
+		"""
+		valid, error = pngValidator(data)
+		if not valid:
+			raise UFOLibError(error)
+		path = os.path.join(IMAGES_DIRNAME, fileName)
+		self.writeBytesToPath(path, data)
+
+	def removeImage(self, fileName):
+		"""
+		Remove the file named fileName from the
+		images directory.
+		"""
+		path = os.path.join(IMAGES_DIRNAME, fileName)
+		self.removeFileForPath(path)
 
 # ----------------
 # Helper Functions
