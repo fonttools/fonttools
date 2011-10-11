@@ -1064,39 +1064,6 @@ def _number(s):
 	except ValueError:
 		raise GlifLibError("Could not convert %s to an int or float." % s)
 
-# -------------------
-# Glyph Name Fetching
-# -------------------
-
-class _DoneParsing(Exception): pass
-
-def _startElementHandler(tagName, attrs):
-	if tagName != "glyph":
-		# the top level element of any .glif file must be <glyph>
-		raise _DoneParsing(None)
-	glyphName = attrs["name"]
-	raise _DoneParsing(glyphName)
-
-def _fetchGlyphName(glyphPath):
-	# Given a path to an existing .glif file, get the glyph name
-	# from the XML data.
-	from xml.parsers.expat import ParserCreate
-
-	p = ParserCreate()
-	p.StartElementHandler = _startElementHandler
-	p.returns_unicode = True
-	f = open(glyphPath)
-	try:
-		p.ParseFile(f)
-	except _DoneParsing, why:
-		glyphName = why.args[0]
-		if glyphName is None:
-			raise ValueError, (".glif file doen't have a <glyph> top-level "
-					"element: %r" % glyphPath)
-	else:
-		assert 0, "it's not expected that parsing the file ends normally"
-	return glyphName
-
 # ----------------
 # Unicode Fetching
 # ----------------
