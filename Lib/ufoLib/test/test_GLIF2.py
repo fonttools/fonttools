@@ -484,7 +484,7 @@ class TestGLIF1(unittest.TestCase):
 		"""
 		py = """
 		glyph.name = "a"
-		glyph.image = {"fileName" : "test.png"}
+		glyph.image = {"fileName" : "test.png", "xOffset" : 0, "xScale" : 1, "xyScale" : 0, "yOffset" : 0, "yScale" : 1, "yxScale" : 0}
 		"""
 		resultGlif = self.pyToGLIF(py)
 		resultPy = self.glifToPy(glif)
