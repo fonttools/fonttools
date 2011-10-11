@@ -1044,7 +1044,7 @@ class UFOWriter(object):
 		"""
 		if self._formatVersion < 3:
 			raise UFOLibError("Images are not allowed in UFO %d." % self._formatVersion)
-		valid, error = pngValidator(data)
+		valid, error = pngValidator(data=data)
 		if not valid:
 			raise UFOLibError(error)
 		path = os.path.join(IMAGES_DIRNAME, fileName)
