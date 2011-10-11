@@ -81,7 +81,9 @@ def genericDictValidator(value, prototype):
 			return False
 	# incorrect types
 	for key, v in value.items():
-		prototypeType = prototype[key][0]
+		prototypeType, required = prototype[key]
+		if v is None and not required:
+			continue
 		if not isinstance(v, prototypeType):
 			return False
 	return True
