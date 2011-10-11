@@ -692,7 +692,6 @@ def pngValidator(path=None, data=None, fileObj=None):
 
 	This checks the signature of the image data.
 	"""
-	print path
 	assert path is not None or data is not None or fileObj is not None
 	if path is not None:
 		f = open(path, "rb")
