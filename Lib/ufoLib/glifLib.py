@@ -396,13 +396,37 @@ class GlyphSet(object):
 		"""
 		Return a dictionary that maps all glyph names to lists containing
 		the unicode value[s] for that glyph, if any. This parses the .glif
-		files partially, so is a lot faster than parsing all files completely.
+		files partially, so it is a lot faster than parsing all files completely.
 		"""
 		unicodes = {}
 		for glyphName in self.contents.keys():
 			text = self.getGLIF(glyphName)
 			unicodes[glyphName] = _fetchUnicodes(text)
 		return unicodes
+
+	def getComponentReferences(self):
+		"""
+		Return a dictionary that maps all glyph names to lists containing the
+		base glyph name of components in the glyph. This parses the .glif
+		files partially, so it is a lot faster than parsing all files completely.
+		"""
+		components = {}
+		for glyphName in self.contents.keys():
+			text = self.getGLIF(glyphName)
+			components[glyphName] = _fetchComponentBases(text)
+		return components
+
+	def getImageReferences(self):
+		"""
+		Return a dictionary that maps all glyph names to the file name of the image
+		referenced by the glyph. This parses the .glif files partially, so it is a
+		lot faster than parsing all files completely.
+		"""
+		images = {}
+		for glyphName in self.contents.keys():
+			text = self.getGLIF(glyphName)
+			images[glyphName] = _fetchImageFileName(text)
+		return images
 
 	# internal methods
 
@@ -1064,21 +1088,21 @@ def _number(s):
 	except ValueError:
 		raise GlifLibError("Could not convert %s to an int or float." % s)
 
-# ----------------
-# Unicode Fetching
-# ----------------
+# --------------------
+# Rapid Value Fetching
+# --------------------
 
-def _fetchUnicodes(text):
-	# Given GLIF text, get a list of all unicode values from the XML data.
-	parser = _FetchUnicodesParser(text)
-	return parser.unicodes
+# base
 
-class _FetchUnicodesParser(object):
+class _DoneParsing(Exception): pass
 
-	def __init__(self, text):
-		from xml.parsers.expat import ParserCreate
-		self.unicodes = []
+class _BaseParser(object):
+
+	def __init__(self):
 		self._elementStack = []
+
+	def parse(self, text):
+		from xml.parsers.expat import ParserCreate
 		parser = ParserCreate()
 		parser.returns_unicode = 0  # XXX, Don't remember why. It sucks, though.
 		parser.StartElementHandler = self.startElementHandler
@@ -1086,16 +1110,96 @@ class _FetchUnicodesParser(object):
 		parser.Parse(text)
 
 	def startElementHandler(self, name, attrs):
-		if name == "unicode" and len(self._elementStack) == 1 and self._elementStack[0] == "glyph":
-			value = attrs.get("hex")
-			value = int(value, 16)
-			self.unicodes.append(value)
 		self._elementStack.append(name)
 
 	def endElementHandler(self, name):
 		other = self._elementStack.pop(-1)
 		assert other == name
 
+
+# unicodes
+
+def _fetchUnicodes(glif):
+	"""
+	Get a list of unicodes listed in glif.
+	"""
+	parser = _FetchUnicodesParser()
+	parser.parse(glif)
+	return parser.unicodes
+
+class _FetchUnicodesParser(_BaseParser):
+
+	def __init__(self):
+		self.unicodes = []
+		super(_FetchUnicodesParser, self).__init__()
+
+	def startElementHandler(self, name, attrs):
+		if name == "unicode" and self._elementStack and self._elementStack[-1] == "glyph":
+			value = attrs.get("hex")
+			if value is not None:
+				try:
+					value = int(value, 16)
+					if value not in self.unicodes:
+						self.unicodes.append(value)
+				except ValueError:
+					pass
+		super(_FetchUnicodesParser, self).startElementHandler(name, attrs)
+
+# image
+
+def _fetchImageFileName(glif):
+	"""
+	The image file name (if any) from glif.
+	"""
+	parser = _FetchImageFileNameParser()
+	try:
+		parser.parse(glif)
+	except _DoneParsing:
+		pass
+	return parser.fileName
+
+class _FetchImageFileNameParser(_BaseParser):
+
+	def __init__(self):
+		self.fileName = None
+		super(_FetchImageFileNameParser, self).__init__()
+
+	def startElementHandler(self, name, attrs):
+		if name == "image" and self._elementStack and self._elementStack[-1] == "glyph":
+			self.fileName = attrs.get("fileName")
+			raise _DoneParsing
+		super(_FetchImageFileNameParser, self).startElementHandler(name, attrs)
+
+# component references
+
+def _fetchComponentBases(glif):
+	"""
+	Get a list of component base glyphs listed in glif.
+	"""
+	parser = _FetchComponentBasesParser()
+	try:
+		parser.parse(glif)
+	except _DoneParsing:
+		pass
+	return list(parser.bases)
+
+class _FetchComponentBasesParser(_BaseParser):
+
+	def __init__(self):
+		self.bases = []
+		super(_FetchComponentBasesParser, self).__init__()
+
+	def startElementHandler(self, name, attrs):
+		if name == "component" and self._elementStack and self._elementStack[-1] == "outline":
+			base = attrs.get("base")
+			if base is not None:
+				self.bases.append(base)
+		super(_FetchComponentBasesParser, self).startElementHandler(name, attrs)
+
+	def endElementHandler(self, name):
+		if name == "outline":
+			raise _DoneParsing
+		super(_FetchComponentBasesParser, self).endElementHandler(name)
 
 # --------------
 # GLIF Point Pen
