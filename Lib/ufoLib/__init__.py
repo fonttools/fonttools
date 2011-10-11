@@ -496,6 +496,8 @@ class UFOReader(object):
 		the images directory. Each of the images will
 		have been verified to have the PNG signature.
 		"""
+		if self._formatVersion < 3:
+			return []
 		path = os.path.join(self._path, IMAGES_DIRNAME)
 		if not os.path.exists(path):
 			return []
@@ -517,6 +519,8 @@ class UFOReader(object):
 		"""
 		Return image data for the file named fileName.
 		"""
+		if self._formatVersion < 3:
+			raise UFOLibError("Reading images is not allowed in UFO %d." % self._formatVersion)
 		data = self.readBytesFromPath(os.path.join(IMAGES_DIRNAME, fileName))
 		if data is None:
 			raise UFOLibError("No image file named %s." % fileName)
@@ -1038,6 +1042,8 @@ class UFOWriter(object):
 		Write data to fileName in the images directory.
 		The data must be a valid PNG.
 		"""
+		if self._formatVersion < 3:
+			raise UFOLibError("Images are not allowed in UFO %d." % self._formatVersion)
 		valid, error = pngValidator(data)
 		if not valid:
 			raise UFOLibError(error)
@@ -1049,6 +1055,8 @@ class UFOWriter(object):
 		Remove the file named fileName from the
 		images directory.
 		"""
+		if self._formatVersion < 3:
+			raise UFOLibError("Images are not allowed in UFO %d." % self._formatVersion)
 		path = os.path.join(IMAGES_DIRNAME, fileName)
 		self.removeFileForPath(path)
 
