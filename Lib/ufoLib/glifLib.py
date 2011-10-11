@@ -837,9 +837,11 @@ def _readGlyphFromTree(tree, glyphObject=None, pointPen=None, formatVersions=(1,
 				raise GlifLibError("Unknown children in image element.")
 			haveSeenImage = True
 			imageData = attrs
-			for attr, d in _transformationInfo:
+			for attr, default in _transformationInfo:
+				value = default
 				if attr in imageData:
-					imageData[attr] = _number(imageData[attr])
+					value = imageData[attr]
+				imageData[attr] = _number(value)
 			if not imageValidator(imageData):
 				raise GlifLibError("The image element is not properly formatted.")
 			_relaxedSetattr(glyphObject, "image", imageData)
