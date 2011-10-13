@@ -108,7 +108,7 @@ def fontInfoOpenTypeGaspRangeRecordsValidator(value):
 	if not isinstance(value, list):
 		return False
 	if len(value) == 0:
-		return False
+		return True
 	validBehaviors = [0, 1, 2, 3]
 	dictPrototype = dict(rangeMaxPPEM=(int, True), rangeGaspBehavior=(list, True))
 	ppemOrder = []
