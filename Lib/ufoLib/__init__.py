@@ -1270,7 +1270,7 @@ def validateInfoVersion3Data(infoData):
 
 # Value Options
 
-fontInfoOpenTypeHeadFlagsOptions = range(0, 14)
+fontInfoOpenTypeHeadFlagsOptions = range(0, 15)
 fontInfoOpenTypeOS2SelectionOptions = [1, 2, 3, 4, 7, 8, 9]
 fontInfoOpenTypeOS2UnicodeRangesOptions = range(0, 128)
 fontInfoOpenTypeOS2CodePageRangesOptions = range(0, 64)
