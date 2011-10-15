@@ -60,6 +60,7 @@ class Glyph(object):
 		self.lib = None
 		self.image = None
 		self.guidelines = None
+		self.anchors = None
 		self.outline = []
 
 	def _writePointPenCommand(self, command, args, kwargs):
@@ -109,6 +110,8 @@ class Glyph(object):
 			text.append("glyph.image = %s" % _dictToString(self.image))
 		if self.guidelines is not None:
 			text.append("glyph.guidelines = %s" % _listToString(self.guidelines))
+		if self.anchors is not None:
+			text.append("glyph.anchors = %s" % _listToString(self.anchors))
 		if self.outline:
 			text += self.outline
 		return "\n".join(text)

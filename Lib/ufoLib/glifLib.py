@@ -17,7 +17,8 @@ from xmlTreeBuilder import buildTree, stripCharacterData
 from robofab.pens.pointPen import AbstractPointPen
 from plistlib import readPlist, writePlistToString
 from filenames import userNameToFileName
-from validators import isDictEnough, genericTypeValidator, colorValidator, guidelinesValidator, identifierValidator, imageValidator, libValidator
+from validators import isDictEnough, genericTypeValidator, colorValidator,\
+	guidelinesValidator, anchorsValidator, identifierValidator, imageValidator, libValidator
 
 try:
 	set
@@ -466,13 +467,14 @@ def readGlyphFromString(aString, glyphObject=None, pointPen=None, formatVersions
 	The 'glyphObject' argument can be any kind of object (even None);
 	the readGlyphFromString() method will attempt to set the following
 	attributes on it:
-		"width"     the advance with of the glyph
+		"width"      the advance with of the glyph
 		"height"     the advance height of the glyph
-		"unicodes"  a list of unicode values for this glyph
-		"note"      a string
-		"lib"       a dictionary containing custom data
+		"unicodes"   a list of unicode values for this glyph
+		"note"       a string
+		"lib"        a dictionary containing custom data
 		"image"      a dictionary containing image data
 		"guidelines" a list of guideline data dictionaries
+		"anchors"    a list of anchor data dictionaries
 
 	All attributes are optional, in two ways:
 		1) An attribute *won't* be set if the .glif file doesn't
@@ -507,6 +509,7 @@ def writeGlyphToString(glyphName, glyphObject=None, drawPointsFunc=None, writer=
 		"lib"        a dictionary containing custom data
 		"image"      a dictionary containing image data
 		"guidelines" a list of guideline data dictionaries
+		"anchors"    a list of anchor data dictionaries
 
 	All attributes are optional: if 'glyphObject' doesn't
 	have the attribute, it will simply be skipped.
@@ -547,6 +550,10 @@ def writeGlyphToString(glyphName, glyphObject=None, drawPointsFunc=None, writer=
 	# guidelines
 	if formatVersion >= 2 and getattr(glyphObject, "guidelines", None):
 		_writeGuidelines(glyphObject, writer, identifiers)
+	# anchors
+	anchors = getattr(glyphObject, "anchors", None)
+	if formatVersion >= 2 and anchors:
+		_writeAnchors(glyphObject, writer, identifiers)
 	# outline
 	if drawPointsFunc is not None:
 		writer.begintag("outline")
@@ -665,6 +672,31 @@ def _writeGuidelines(glyphObject, writer, identifiers):
 			attrs.append(("identifier", identifier))
 			identifiers.add(identifier)
 		writer.simpletag("guideline", attrs)
+		writer.newline()
+
+def _writeAnchors(glyphObject, writer, identifiers):
+	anchors = getattr(glyphObject, "anchors", [])
+	if not anchorsValidator(anchors):
+		raise GlifLibError("anchors attribute does not have the proper structure.")
+	for anchor in anchors:
+		attrs = []
+		x = anchor["x"]
+		attrs.append(("x", str(x)))
+		y = anchor["y"]
+		attrs.append(("y", str(y)))
+		name = anchor.get("name")
+		if name is not None:
+			attrs.append(("name", name))
+		color = anchor.get("color")
+		if color is not None:
+			attrs.append(("color", color))
+		identifier = anchor.get("identifier")
+		if identifier is not None:
+			if identifier in identifiers:
+				raise GlifLibError("identifier used more than once: %s" % identifier)
+			attrs.append(("identifier", identifier))
+			identifiers.add(identifier)
+		writer.simpletag("anchor", attrs)
 		writer.newline()
 
 def _writeLib(glyphObject, writer):
@@ -790,6 +822,7 @@ def _readGlyphFromTree(tree, glyphObject=None, pointPen=None, formatVersions=(1,
 	# populate the sub elements
 	unicodes = []
 	guidelines = []
+	anchors = []
 	haveSeenAdvance = haveSeenImage = haveSeenOutline = haveSeenLib = haveSeenNote = False
 	identifiers = set()
 	for element, attrs, children in tree[2]:
@@ -828,6 +861,15 @@ def _readGlyphFromTree(tree, glyphObject=None, pointPen=None, formatVersions=(1,
 				if attr in attrs:
 					attrs[attr] = _number(attrs[attr])
 			guidelines.append(attrs)
+		elif element == "anchor":
+			if formatVersion == 1:
+				raise GlifLibError("The anchor element is not allowed in GLIF format 1.")
+			if len(children):
+				raise GlifLibError("Unknown children in anchor element.")
+			for attr in ("x", "y"):
+				if attr in attrs:
+					attrs[attr] = _number(attrs[attr])
+			anchors.append(attrs)
 		elif element == "image":
 			if formatVersion == 1:
 				raise GlifLibError("The image element is not allowed in GLIF format 1.")
@@ -875,6 +917,11 @@ def _readGlyphFromTree(tree, glyphObject=None, pointPen=None, formatVersions=(1,
 		if not guidelinesValidator(guidelines, identifiers):
 			raise GlifLibError("The guidelines are improperly formatted.")
 		_relaxedSetattr(glyphObject, "guidelines", guidelines)
+	# set the collected anchors
+	if formatVersion > 1 and anchors:
+		if not anchorsValidator(anchors, identifiers):
+			raise GlifLibError("The anchors are improperly formatted.")
+		_relaxedSetattr(glyphObject, "anchors", anchors)
 
 # ----------------
 # GLIF to PointPen

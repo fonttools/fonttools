@@ -6,14 +6,14 @@ from ufoLib.test.testSupport import Glyph, stripText
 # Test Cases
 # ----------
 
-class TestGLIF1(unittest.TestCase):
+class TestGLIF2(unittest.TestCase):
 
 	def assertEqual(self, first, second, msg=None):
 		if isinstance(first, basestring):
 			first = stripText(first)
 		if isinstance(second, basestring):
 			second = stripText(second)
-		return super(TestGLIF1, self).assertEqual(first, second, msg=msg)
+		return super(TestGLIF2, self).assertEqual(first, second, msg=msg)
 
 	def pyToGLIF(self, py):
 		py = stripText(py)
@@ -453,6 +453,81 @@ class TestGLIF1(unittest.TestCase):
 		py = """
 		glyph.name = "a"
 		glyph.guidelines = [{"angle" : 361, "x" : "1", "y" : 1}]
+		"""
+		self.assertRaises(GlifLibError, self.pyToGLIF, py)
+		self.assertRaises(GlifLibError, self.glifToPy, glif)
+
+	def testAnchors(self):
+		# legal
+		glif = """
+		<glyph name="a" format="2">
+			<anchor x="1" y="2" name="test" color="1,0,0,1"/>
+			<anchor x="1" y="2"/>
+			<outline>
+			</outline>
+		</glyph>
+		"""
+		py = """
+		glyph.name = "a"
+		glyph.anchors = [{"color" : "1,0,0,1", "name" : "test", "x" : 1, "y" : 2}, {"x" : 1, "y" : 2}]
+		"""
+		resultGlif = self.pyToGLIF(py)
+		resultPy = self.glifToPy(glif)
+		self.assertEqual(glif, resultGlif)
+		self.assertEqual(py, resultPy)
+		# x not an int or float
+		glif = """
+		<glyph name="a" format="2">
+			<anchor x="a" y="1"/>
+			<outline>
+			</outline>
+		</glyph>
+		"""
+		py = """
+		glyph.name = "a"
+		glyph.anchors = [{"x" : "a", "y" : 1}]
+		"""
+		self.assertRaises(GlifLibError, self.pyToGLIF, py)
+		self.assertRaises(GlifLibError, self.glifToPy, glif)
+		# y not an int or float
+		glif = """
+		<glyph name="a" format="2">
+			<anchor x="1" y="a"/>
+			<outline>
+			</outline>
+		</glyph>
+		"""
+		py = """
+		glyph.name = "a"
+		glyph.anchors = [{"x" : 1, "y" : "a"}]
+		"""
+		self.assertRaises(GlifLibError, self.pyToGLIF, py)
+		self.assertRaises(GlifLibError, self.glifToPy, glif)
+		# x missing
+		glif = """
+		<glyph name="a" format="2">
+			<anchor y="1"/>
+			<outline>
+			</outline>
+		</glyph>
+		"""
+		py = """
+		glyph.name = "a"
+		glyph.anchors = [{"y" : 1}]
+		"""
+		self.assertRaises(GlifLibError, self.pyToGLIF, py)
+		self.assertRaises(GlifLibError, self.glifToPy, glif)
+		# y missing
+		glif = """
+		<glyph name="a" format="2">
+			<anchor x="1"/>
+			<outline>
+			</outline>
+		</glyph>
+		"""
+		py = """
+		glyph.name = "a"
+		glyph.anchors = [{"x" : 1}]
 		"""
 		self.assertRaises(GlifLibError, self.pyToGLIF, py)
 		self.assertRaises(GlifLibError, self.glifToPy, glif)
@@ -1484,6 +1559,8 @@ class TestGLIF1(unittest.TestCase):
 		<glyph name="a" format="2">
 			<guideline x="0" identifier="guideline1"/>
 			<guideline x="0" identifier="guideline2"/>
+			<anchor x="0" y="0" identifier="anchor1"/>
+			<anchor x="0" y="0" identifier="anchor2"/>
 			<outline>
 				<contour identifier="contour1">
 					<point x="1" y="-2" type="move" identifier="point1"/>
@@ -1502,6 +1579,7 @@ class TestGLIF1(unittest.TestCase):
 		py = """
 		glyph.name = "a"
 		glyph.guidelines = [{"identifier" : "guideline1", "x" : 0}, {"identifier" : "guideline2", "x" : 0}]
+		glyph.anchors = [{"identifier" : "anchor1", "x" : 0, "y" : 0}, {"identifier" : "anchor2", "x" : 0, "y" : 0}]
 		pointPen.beginPath(**{"identifier" : "contour1"})
 		pointPen.addPoint(*[(1, -2)], **{"identifier" : "point1", "segmentType" : "move", "smooth" : False})
 		pointPen.addPoint(*[(1, -2)], **{"identifier" : "point2", "segmentType" : "line", "smooth" : False})
@@ -1523,6 +1601,8 @@ class TestGLIF1(unittest.TestCase):
 		<glyph name="a" format="2">
 			<guideline x="0" identifier="guideline1"/>
 			<guideline x="0" identifier="guideline2"/>
+			<anchor x="0" y="0" identifier="anchor1"/>
+			<anchor x="0" y="0" identifier="anchor2"/>
 			<outline>
 				<contour identifier="contour1">
 					<point x="1" y="-2" type="move" identifier="point1"/>
@@ -1541,6 +1621,7 @@ class TestGLIF1(unittest.TestCase):
 		py = """
 		glyph.name = "a"
 		glyph.guidelines = [{"identifier" : "guideline1", "x" : 0}, {"identifier" : "guideline2", "x" : 0}]
+		glyph.anchors = [{"identifier" : "anchor1", "x" : 0, "y" : 0}, {"identifier" : "anchor2", "x" : 0, "y" : 0}]
 		pointPen.beginPath(**{"identifier" : "contour1"})
 		pointPen.addPoint(*[(1, -2)], **{"identifier" : "point1", "segmentType" : "move", "smooth" : False})
 		pointPen.addPoint(*[(1, -2)], **{"identifier" : "point1", "segmentType" : "line", "smooth" : False})
@@ -1560,6 +1641,8 @@ class TestGLIF1(unittest.TestCase):
 		<glyph name="a" format="2">
 			<guideline x="0" identifier="guideline1"/>
 			<guideline x="0" identifier="guideline2"/>
+			<anchor x="0" y="0" identifier="anchor1"/>
+			<anchor x="0" y="0" identifier="anchor2"/>
 			<outline>
 				<contour identifier="contour1">
 					<point x="1" y="-2" type="move" identifier="point1"/>
@@ -1578,6 +1661,7 @@ class TestGLIF1(unittest.TestCase):
 		py = """
 		glyph.name = "a"
 		glyph.guidelines = [{"identifier" : "guideline1", "x" : 0}, {"identifier" : "guideline2", "x" : 0}]
+		glyph.anchors = [{"identifier" : "anchor1", "x" : 0, "y" : 0}, {"identifier" : "anchor2", "x" : 0, "y" : 0}]
 		pointPen.beginPath(**{"identifier" : "contour1"})
 		pointPen.addPoint(*[(1, -2)], **{"identifier" : "point1", "segmentType" : "move", "smooth" : False})
 		pointPen.addPoint(*[(1, -2)], **{"identifier" : "point1", "segmentType" : "line", "smooth" : False})
@@ -1597,6 +1681,8 @@ class TestGLIF1(unittest.TestCase):
 		<glyph name="a" format="2">
 			<guideline x="0" identifier="guideline1"/>
 			<guideline x="0" identifier="guideline2"/>
+			<anchor x="0" y="0" identifier="anchor1"/>
+			<anchor x="0" y="0" identifier="anchor2"/>
 			<outline>
 				<contour identifier="contour1">
 					<point x="1" y="-2" type="move" identifier="contour1"/>
@@ -1615,6 +1701,7 @@ class TestGLIF1(unittest.TestCase):
 		py = """
 		glyph.name = "a"
 		glyph.guidelines = [{"identifier" : "guideline1", "x" : 0}, {"identifier" : "guideline2", "x" : 0}]
+		glyph.anchors = [{"identifier" : "anchor1", "x" : 0, "y" : 0}, {"identifier" : "anchor2", "x" : 0, "y" : 0}]
 		pointPen.beginPath(**{"identifier" : "contour1"})
 		pointPen.addPoint(*[(1, -2)], **{"identifier" : "contour1", "segmentType" : "move", "smooth" : False})
 		pointPen.addPoint(*[(1, -2)], **{"identifier" : "point2", "segmentType" : "line", "smooth" : False})
@@ -1634,6 +1721,8 @@ class TestGLIF1(unittest.TestCase):
 		<glyph name="a" format="2">
 			<guideline x="0" identifier="guideline1"/>
 			<guideline x="0" identifier="guideline2"/>
+			<anchor x="0" y="0" identifier="anchor1"/>
+			<anchor x="0" y="0" identifier="anchor2"/>
 			<outline>
 				<contour identifier="contour1">
 					<point x="1" y="-2" type="move" identifier="component1"/>
@@ -1652,6 +1741,7 @@ class TestGLIF1(unittest.TestCase):
 		py = """
 		glyph.name = "a"
 		glyph.guidelines = [{"identifier" : "guideline1", "x" : 0}, {"identifier" : "guideline2", "x" : 0}]
+		glyph.anchors = [{"identifier" : "anchor1", "x" : 0, "y" : 0}, {"identifier" : "anchor2", "x" : 0, "y" : 0}]
 		pointPen.beginPath(**{"identifier" : "contour1"})
 		pointPen.addPoint(*[(1, -2)], **{"identifier" : "component1", "segmentType" : "move", "smooth" : False})
 		pointPen.addPoint(*[(1, -2)], **{"identifier" : "point2", "segmentType" : "line", "smooth" : False})
@@ -1671,6 +1761,8 @@ class TestGLIF1(unittest.TestCase):
 		<glyph name="a" format="2">
 			<guideline x="0" identifier="guideline1"/>
 			<guideline x="0" identifier="guideline2"/>
+			<anchor x="0" y="0" identifier="anchor1"/>
+			<anchor x="0" y="0" identifier="anchor2"/>
 			<outline>
 				<contour identifier="contour1">
 					<point x="1" y="-2" type="move" identifier="guideline1"/>
@@ -1689,8 +1781,49 @@ class TestGLIF1(unittest.TestCase):
 		py = """
 		glyph.name = "a"
 		glyph.guidelines = [{"identifier" : "guideline1", "x" : 0}, {"identifier" : "guideline2", "x" : 0}]
+		glyph.anchors = [{"identifier" : "anchor1", "x" : 0, "y" : 0}, {"identifier" : "anchor2", "x" : 0, "y" : 0}]
 		pointPen.beginPath(**{"identifier" : "contour1"})
 		pointPen.addPoint(*[(1, -2)], **{"identifier" : "guideline1", "segmentType" : "move", "smooth" : False})
+		pointPen.addPoint(*[(1, -2)], **{"identifier" : "point2", "segmentType" : "line", "smooth" : False})
+		pointPen.addPoint(*[(1, -2)], **{"identifier" : "point3", "segmentType" : "curve", "smooth" : False})
+		pointPen.addPoint(*[(1, -2)], **{"identifier" : "point4", "segmentType" : "qcurve", "smooth" : False})
+		pointPen.endPath()
+		pointPen.beginPath(**{"identifier" : "contour2"})
+		pointPen.addPoint(*[(1, -2)], **{"identifier" : "point5", "segmentType" : "move", "smooth" : False})
+		pointPen.endPath()
+		pointPen.addComponent(*["x", (1, 1, 1, 1, 1, 1)], **{"identifier" : "component1"})
+		pointPen.addComponent(*["x", (1, 1, 1, 1, 1, 1)], **{"identifier" : "component2"})
+		"""
+		self.assertRaises(GlifLibError, self.pyToGLIF, py)
+		self.assertRaises(GlifLibError, self.glifToPy, glif)
+		# point - anchor
+		glif = """
+		<glyph name="a" format="2">
+			<guideline x="0" identifier="guideline1"/>
+			<guideline x="0" identifier="guideline2"/>
+			<anchor x="0" y="0" identifier="anchor1"/>
+			<anchor x="0" y="0" identifier="anchor2"/>
+			<outline>
+				<contour identifier="contour1">
+					<point x="1" y="-2" type="move" identifier="anchor1"/>
+					<point x="1" y="-2" type="line" identifier="point2"/>
+					<point x="1" y="-2" type="curve" identifier="point3"/>
+					<point x="1" y="-2" type="qcurve" identifier="point4"/>
+				</contour>
+				<contour identifier="contour2">
+					<point x="1" y="-2" type="move" identifier="point5"/>
+				</contour>
+				<component base="x" xyScale="1" yxScale="1" xOffset="1" yOffset="1" identifier="component1"/>
+				<component base="x" xyScale="1" yxScale="1" xOffset="1" yOffset="1" identifier="component2"/>
+			</outline>
+		</glyph>
+		"""
+		py = """
+		glyph.name = "a"
+		glyph.guidelines = [{"identifier" : "guideline1", "x" : 0}, {"identifier" : "guideline2", "x" : 0}]
+		glyph.anchors = [{"identifier" : "anchor1", "x" : 0, "y" : 0}, {"identifier" : "anchor2", "x" : 0, "y" : 0}]
+		pointPen.beginPath(**{"identifier" : "contour1"})
+		pointPen.addPoint(*[(1, -2)], **{"identifier" : "anchor1", "segmentType" : "move", "smooth" : False})
 		pointPen.addPoint(*[(1, -2)], **{"identifier" : "point2", "segmentType" : "line", "smooth" : False})
 		pointPen.addPoint(*[(1, -2)], **{"identifier" : "point3", "segmentType" : "curve", "smooth" : False})
 		pointPen.addPoint(*[(1, -2)], **{"identifier" : "point4", "segmentType" : "qcurve", "smooth" : False})
@@ -1708,6 +1841,8 @@ class TestGLIF1(unittest.TestCase):
 		<glyph name="a" format="2">
 			<guideline x="0" identifier="guideline1"/>
 			<guideline x="0" identifier="guideline2"/>
+			<anchor x="0" y="0" identifier="anchor1"/>
+			<anchor x="0" y="0" identifier="anchor2"/>
 			<outline>
 				<contour identifier="contour1">
 					<point x="1" y="-2" type="move" identifier="point1"/>
@@ -1726,6 +1861,7 @@ class TestGLIF1(unittest.TestCase):
 		py = """
 		glyph.name = "a"
 		glyph.guidelines = [{"identifier" : "guideline1", "x" : 0}, {"identifier" : "guideline2", "x" : 0}]
+		glyph.anchors = [{"identifier" : "anchor1", "x" : 0, "y" : 0}, {"identifier" : "anchor2", "x" : 0, "y" : 0}]
 		pointPen.beginPath(**{"identifier" : "contour1"})
 		pointPen.addPoint(*[(1, -2)], **{"identifier" : "point1", "segmentType" : "move", "smooth" : False})
 		pointPen.addPoint(*[(1, -2)], **{"identifier" : "point2", "segmentType" : "line", "smooth" : False})
@@ -1745,6 +1881,8 @@ class TestGLIF1(unittest.TestCase):
 		<glyph name="a" format="2">
 			<guideline x="0" identifier="guideline1"/>
 			<guideline x="0" identifier="guideline2"/>
+			<anchor x="0" y="0" identifier="anchor1"/>
+			<anchor x="0" y="0" identifier="anchor2"/>
 			<outline>
 				<contour identifier="contour1">
 					<point x="1" y="-2" type="move" identifier="point1"/>
@@ -1763,6 +1901,7 @@ class TestGLIF1(unittest.TestCase):
 		py = """
 		glyph.name = "a"
 		glyph.guidelines = [{"identifier" : "guideline1", "x" : 0}, {"identifier" : "guideline2", "x" : 0}]
+		glyph.anchors = [{"identifier" : "anchor1", "x" : 0, "y" : 0}, {"identifier" : "anchor2", "x" : 0, "y" : 0}]
 		pointPen.beginPath(**{"identifier" : "contour1"})
 		pointPen.addPoint(*[(1, -2)], **{"identifier" : "point1", "segmentType" : "move", "smooth" : False})
 		pointPen.addPoint(*[(1, -2)], **{"identifier" : "point2", "segmentType" : "line", "smooth" : False})
@@ -1782,6 +1921,8 @@ class TestGLIF1(unittest.TestCase):
 		<glyph name="a" format="2">
 			<guideline x="0" identifier="contour1"/>
 			<guideline x="0" identifier="guideline2"/>
+			<anchor x="0" y="0" identifier="anchor1"/>
+			<anchor x="0" y="0" identifier="anchor2"/>
 			<outline>
 				<contour identifier="contour1">
 					<point x="1" y="-2" type="move" identifier="point1"/>
@@ -1800,7 +1941,48 @@ class TestGLIF1(unittest.TestCase):
 		py = """
 		glyph.name = "a"
 		glyph.guidelines = [{"identifier" : "contour1", "x" : 0}, {"identifier" : "guideline2", "x" : 0}]
+		glyph.anchors = [{"identifier" : "anchor1", "x" : 0, "y" : 0}, {"identifier" : "anchor2", "x" : 0, "y" : 0}]
 		pointPen.beginPath(**{"identifier" : "contour1"})
+		pointPen.addPoint(*[(1, -2)], **{"identifier" : "point1", "segmentType" : "move", "smooth" : False})
+		pointPen.addPoint(*[(1, -2)], **{"identifier" : "point2", "segmentType" : "line", "smooth" : False})
+		pointPen.addPoint(*[(1, -2)], **{"identifier" : "point3", "segmentType" : "curve", "smooth" : False})
+		pointPen.addPoint(*[(1, -2)], **{"identifier" : "point4", "segmentType" : "qcurve", "smooth" : False})
+		pointPen.endPath()
+		pointPen.beginPath(**{"identifier" : "contour2"})
+		pointPen.addPoint(*[(1, -2)], **{"identifier" : "point5", "segmentType" : "move", "smooth" : False})
+		pointPen.endPath()
+		pointPen.addComponent(*["x", (1, 1, 1, 1, 1, 1)], **{"identifier" : "component1"})
+		pointPen.addComponent(*["x", (1, 1, 1, 1, 1, 1)], **{"identifier" : "component2"})
+		"""
+		self.assertRaises(GlifLibError, self.pyToGLIF, py)
+		self.assertRaises(GlifLibError, self.glifToPy, glif)
+		# contour - anchor
+		glif = """
+		<glyph name="a" format="2">
+			<guideline x="0" identifier="guideline1"/>
+			<guideline x="0" identifier="guideline2"/>
+			<anchor x="0" y="0" identifier="anchor1"/>
+			<anchor x="0" y="0" identifier="anchor2"/>
+			<outline>
+				<contour identifier="anchor1">
+					<point x="1" y="-2" type="move" identifier="point1"/>
+					<point x="1" y="-2" type="line" identifier="point2"/>
+					<point x="1" y="-2" type="curve" identifier="point3"/>
+					<point x="1" y="-2" type="qcurve" identifier="point4"/>
+				</contour>
+				<contour identifier="contour2">
+					<point x="1" y="-2" type="move" identifier="point5"/>
+				</contour>
+				<component base="x" xyScale="1" yxScale="1" xOffset="1" yOffset="1" identifier="component1"/>
+				<component base="x" xyScale="1" yxScale="1" xOffset="1" yOffset="1" identifier="component2"/>
+			</outline>
+		</glyph>
+		"""
+		py = """
+		glyph.name = "a"
+		glyph.guidelines = [{"identifier" : "guideline1", "x" : 0}, {"identifier" : "guideline2", "x" : 0}]
+		glyph.anchors = [{"identifier" : "anchor1", "x" : 0, "y" : 0}, {"identifier" : "anchor2", "x" : 0, "y" : 0}]
+		pointPen.beginPath(**{"identifier" : "anchor1"})
 		pointPen.addPoint(*[(1, -2)], **{"identifier" : "point1", "segmentType" : "move", "smooth" : False})
 		pointPen.addPoint(*[(1, -2)], **{"identifier" : "point2", "segmentType" : "line", "smooth" : False})
 		pointPen.addPoint(*[(1, -2)], **{"identifier" : "point3", "segmentType" : "curve", "smooth" : False})
@@ -1819,6 +2001,8 @@ class TestGLIF1(unittest.TestCase):
 		<glyph name="a" format="2">
 			<guideline x="0" identifier="guideline1"/>
 			<guideline x="0" identifier="guideline2"/>
+			<anchor x="0" y="0" identifier="anchor1"/>
+			<anchor x="0" y="0" identifier="anchor2"/>
 			<outline>
 				<contour identifier="contour1">
 					<point x="1" y="-2" type="move" identifier="point1"/>
@@ -1837,6 +2021,7 @@ class TestGLIF1(unittest.TestCase):
 		py = """
 		glyph.name = "a"
 		glyph.guidelines = [{"identifier" : "guideline1", "x" : 0}, {"identifier" : "guideline2", "x" : 0}]
+		glyph.anchors = [{"identifier" : "anchor1", "x" : 0, "y" : 0}, {"identifier" : "anchor2", "x" : 0, "y" : 0}]
 		pointPen.beginPath(**{"identifier" : "contour1"})
 		pointPen.addPoint(*[(1, -2)], **{"identifier" : "point1", "segmentType" : "move", "smooth" : False})
 		pointPen.addPoint(*[(1, -2)], **{"identifier" : "point2", "segmentType" : "line", "smooth" : False})
@@ -1856,6 +2041,8 @@ class TestGLIF1(unittest.TestCase):
 		<glyph name="a" format="2">
 			<guideline x="0" identifier="component1"/>
 			<guideline x="0" identifier="guideline2"/>
+			<anchor x="0" y="0" identifier="anchor1"/>
+			<anchor x="0" y="0" identifier="anchor2"/>
 			<outline>
 				<contour identifier="contour1">
 					<point x="1" y="-2" type="move" identifier="point1"/>
@@ -1874,6 +2061,7 @@ class TestGLIF1(unittest.TestCase):
 		py = """
 		glyph.name = "a"
 		glyph.guidelines = [{"identifier" : "component1", "x" : 0}, {"identifier" : "guideline2", "x" : 0}]
+		glyph.anchors = [{"identifier" : "anchor1", "x" : 0, "y" : 0}, {"identifier" : "anchor2", "x" : 0, "y" : 0}]
 		pointPen.beginPath(**{"identifier" : "contour1"})
 		pointPen.addPoint(*[(1, -2)], **{"identifier" : "point1", "segmentType" : "move", "smooth" : False})
 		pointPen.addPoint(*[(1, -2)], **{"identifier" : "point2", "segmentType" : "line", "smooth" : False})
@@ -1888,11 +2076,53 @@ class TestGLIF1(unittest.TestCase):
 		"""
 		self.assertRaises(GlifLibError, self.pyToGLIF, py)
 		self.assertRaises(GlifLibError, self.glifToPy, glif)
+		# component - anchor
+		glif = """
+		<glyph name="a" format="2">
+			<guideline x="0" identifier="guideline1"/>
+			<guideline x="0" identifier="guideline2"/>
+			<anchor x="0" y="0" identifier="anchor1"/>
+			<anchor x="0" y="0" identifier="anchor2"/>
+			<outline>
+				<contour identifier="contour1">
+					<point x="1" y="-2" type="move" identifier="point1"/>
+					<point x="1" y="-2" type="line" identifier="point2"/>
+					<point x="1" y="-2" type="curve" identifier="point3"/>
+					<point x="1" y="-2" type="qcurve" identifier="point4"/>
+				</contour>
+				<contour identifier="contour2">
+					<point x="1" y="-2" type="move" identifier="point5"/>
+				</contour>
+				<component base="x" xyScale="1" yxScale="1" xOffset="1" yOffset="1" identifier="anchor1"/>
+				<component base="x" xyScale="1" yxScale="1" xOffset="1" yOffset="1" identifier="component2"/>
+			</outline>
+		</glyph>
+		"""
+		py = """
+		glyph.name = "a"
+		glyph.guidelines = [{"identifier" : "guideline1", "x" : 0}, {"identifier" : "guideline2", "x" : 0}]
+		glyph.anchors = [{"identifier" : "anchor1", "x" : 0, "y" : 0}, {"identifier" : "anchor2", "x" : 0, "y" : 0}]
+		pointPen.beginPath(**{"identifier" : "contour1"})
+		pointPen.addPoint(*[(1, -2)], **{"identifier" : "point1", "segmentType" : "move", "smooth" : False})
+		pointPen.addPoint(*[(1, -2)], **{"identifier" : "point2", "segmentType" : "line", "smooth" : False})
+		pointPen.addPoint(*[(1, -2)], **{"identifier" : "point3", "segmentType" : "curve", "smooth" : False})
+		pointPen.addPoint(*[(1, -2)], **{"identifier" : "point4", "segmentType" : "qcurve", "smooth" : False})
+		pointPen.endPath()
+		pointPen.beginPath(**{"identifier" : "contour2"})
+		pointPen.addPoint(*[(1, -2)], **{"identifier" : "point5", "segmentType" : "move", "smooth" : False})
+		pointPen.endPath()
+		pointPen.addComponent(*["x", (1, 1, 1, 1, 1, 1)], **{"identifier" : "anchor1"})
+		pointPen.addComponent(*["x", (1, 1, 1, 1, 1, 1)], **{"identifier" : "component2"})
+		"""
+		self.assertRaises(GlifLibError, self.pyToGLIF, py)
+		self.assertRaises(GlifLibError, self.glifToPy, glif)
 		# guideline - guideline
 		glif = """
 		<glyph name="a" format="2">
 			<guideline x="0" identifier="guideline1"/>
 			<guideline x="0" identifier="guideline1"/>
+			<anchor x="0" y="0" identifier="anchor1"/>
+			<anchor x="0" y="0" identifier="anchor2"/>
 			<outline>
 				<contour identifier="contour1">
 					<point x="1" y="-2" type="move" identifier="point1"/>
@@ -1911,6 +2141,87 @@ class TestGLIF1(unittest.TestCase):
 		py = """
 		glyph.name = "a"
 		glyph.guidelines = [{"identifier" : "guideline1", "x" : 0}, {"identifier" : "guideline1", "x" : 0}]
+		glyph.anchors = [{"identifier" : "anchor1", "x" : 0, "y" : 0}, {"identifier" : "anchor2", "x" : 0, "y" : 0}]
+		pointPen.beginPath(**{"identifier" : "contour1"})
+		pointPen.addPoint(*[(1, -2)], **{"identifier" : "point1", "segmentType" : "move", "smooth" : False})
+		pointPen.addPoint(*[(1, -2)], **{"identifier" : "point2", "segmentType" : "line", "smooth" : False})
+		pointPen.addPoint(*[(1, -2)], **{"identifier" : "point3", "segmentType" : "curve", "smooth" : False})
+		pointPen.addPoint(*[(1, -2)], **{"identifier" : "point4", "segmentType" : "qcurve", "smooth" : False})
+		pointPen.endPath()
+		pointPen.beginPath(**{"identifier" : "contour2"})
+		pointPen.addPoint(*[(1, -2)], **{"identifier" : "point5", "segmentType" : "move", "smooth" : False})
+		pointPen.endPath()
+		pointPen.addComponent(*["x", (1, 1, 1, 1, 1, 1)], **{"identifier" : "component1"})
+		pointPen.addComponent(*["x", (1, 1, 1, 1, 1, 1)], **{"identifier" : "component2"})
+		"""
+		self.assertRaises(GlifLibError, self.pyToGLIF, py)
+		self.assertRaises(GlifLibError, self.glifToPy, glif)
+		# guideline - anchor
+		glif = """
+		<glyph name="a" format="2">
+			<guideline x="0" identifier="anchor1"/>
+			<guideline x="0" identifier="guideline2"/>
+			<anchor x="0" y="0" identifier="anchor1"/>
+			<anchor x="0" y="0" identifier="anchor2"/>
+			<outline>
+				<contour identifier="contour1">
+					<point x="1" y="-2" type="move" identifier="point1"/>
+					<point x="1" y="-2" type="line" identifier="point2"/>
+					<point x="1" y="-2" type="curve" identifier="point3"/>
+					<point x="1" y="-2" type="qcurve" identifier="point4"/>
+				</contour>
+				<contour identifier="contour2">
+					<point x="1" y="-2" type="move" identifier="point5"/>
+				</contour>
+				<component base="x" xyScale="1" yxScale="1" xOffset="1" yOffset="1" identifier="component1"/>
+				<component base="x" xyScale="1" yxScale="1" xOffset="1" yOffset="1" identifier="component2"/>
+			</outline>
+		</glyph>
+		"""
+		py = """
+		glyph.name = "a"
+		glyph.guidelines = [{"identifier" : "anchor1", "x" : 0}, {"identifier" : "guideline2", "x" : 0}]
+		glyph.anchors = [{"identifier" : "anchor1", "x" : 0, "y" : 0}, {"identifier" : "anchor2", "x" : 0, "y" : 0}]
+		pointPen.beginPath(**{"identifier" : "contour1"})
+		pointPen.addPoint(*[(1, -2)], **{"identifier" : "point1", "segmentType" : "move", "smooth" : False})
+		pointPen.addPoint(*[(1, -2)], **{"identifier" : "point2", "segmentType" : "line", "smooth" : False})
+		pointPen.addPoint(*[(1, -2)], **{"identifier" : "point3", "segmentType" : "curve", "smooth" : False})
+		pointPen.addPoint(*[(1, -2)], **{"identifier" : "point4", "segmentType" : "qcurve", "smooth" : False})
+		pointPen.endPath()
+		pointPen.beginPath(**{"identifier" : "contour2"})
+		pointPen.addPoint(*[(1, -2)], **{"identifier" : "point5", "segmentType" : "move", "smooth" : False})
+		pointPen.endPath()
+		pointPen.addComponent(*["x", (1, 1, 1, 1, 1, 1)], **{"identifier" : "component1"})
+		pointPen.addComponent(*["x", (1, 1, 1, 1, 1, 1)], **{"identifier" : "component2"})
+		"""
+		self.assertRaises(GlifLibError, self.pyToGLIF, py)
+		self.assertRaises(GlifLibError, self.glifToPy, glif)
+		# anchor - anchor
+		glif = """
+		<glyph name="a" format="2">
+			<guideline x="0" identifier="guideline1"/>
+			<guideline x="0" identifier="guideline2"/>
+			<anchor x="0" y="0" identifier="anchor1"/>
+			<anchor x="0" y="0" identifier="anchor1"/>
+			<outline>
+				<contour identifier="contour1">
+					<point x="1" y="-2" type="move" identifier="point1"/>
+					<point x="1" y="-2" type="line" identifier="point2"/>
+					<point x="1" y="-2" type="curve" identifier="point3"/>
+					<point x="1" y="-2" type="qcurve" identifier="point4"/>
+				</contour>
+				<contour identifier="contour2">
+					<point x="1" y="-2" type="move" identifier="point5"/>
+				</contour>
+				<component base="x" xyScale="1" yxScale="1" xOffset="1" yOffset="1" identifier="component1"/>
+				<component base="x" xyScale="1" yxScale="1" xOffset="1" yOffset="1" identifier="component2"/>
+			</outline>
+		</glyph>
+		"""
+		py = """
+		glyph.name = "a"
+		glyph.guidelines = [{"identifier" : "guideline1", "x" : 0}, {"identifier" : "guideline2", "x" : 0}]
+		glyph.anchors = [{"identifier" : "anchor1", "x" : 0, "y" : 0}, {"identifier" : "anchor1", "x" : 0, "y" : 0}]
 		pointPen.beginPath(**{"identifier" : "contour1"})
 		pointPen.addPoint(*[(1, -2)], **{"identifier" : "point1", "segmentType" : "move", "smooth" : False})
 		pointPen.addPoint(*[(1, -2)], **{"identifier" : "point2", "segmentType" : "line", "smooth" : False})

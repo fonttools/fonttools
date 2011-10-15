@@ -560,6 +560,53 @@ def guidelineValidator(value):
 		return False
 	return True
 
+# -------
+# Anchors
+# -------
+
+def anchorsValidator(value, identifiers=None):
+	"""
+	Version 3+.
+	"""
+	if not isinstance(value, list):
+		return False
+	if identifiers is None:
+		identifiers = set()
+	for anchor in value:
+		if not anchorValidator(anchor):
+			return False
+		identifier = anchor.get("identifier")
+		if identifier is not None:
+			if identifier in identifiers:
+				return False
+			identifiers.add(identifier)
+	return True
+
+def anchorValidator(value):
+	"""
+	Version 3+.
+	"""
+	dictPrototype = dict(
+		x=((int, float), False), y=((int, float), False),
+		name=(basestring, False), color=(basestring, False), identifier=(basestring, False)
+	)
+	if not genericDictValidator(value, dictPrototype):
+		return False
+	x = value.get("x")
+	y = value.get("y")
+	# x and y must be present
+	if x is None or y is None:
+		return False
+	# identifier must be 1 or more characters
+	identifier = value.get("identifier")
+	if identifier is not None and not identifierValidator(identifier):
+		return False
+	# color must follow the proper format
+	color = value.get("color")
+	if color is not None and not colorValidator(color):
+		return False
+	return True
+
 # ----------
 # Identifier
 # ----------
