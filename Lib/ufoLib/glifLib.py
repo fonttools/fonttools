@@ -1361,42 +1361,6 @@ class GLIFPointPen(AbstractPointPen):
 		self.writer.simpletag("component", attrs)
 		self.writer.newline()
 
-
 if __name__ == "__main__":
 	import doctest
 	doctest.testmod()
-
-	from pprint import pprint
-	from robofab.pens.pointPen import PrintingPointPen
-
-	class TestGlyph: pass
-
-	gs = GlyphSet(".")
-
-	def drawPoints(pen):
-		pen.beginPath(identifier="my contour")
-		pen.addPoint((100, 200), name="foo", identifier="my point")
-		pen.addPoint((200, 250), segmentType="curve", smooth=True)
-		pen.endPath()
-		pen.addComponent("a", (1, 0, 0, 1, 20, 30), identifier="my component")
-
-	glyph = TestGlyph()
-	glyph.width = 120
-	glyph.unicodes = [1, 2, 3, 43215, 66666]
-	glyph.lib = {"a": "b", "c": [1, 2, 3, True]}
-	glyph.note = "  hallo!   "
-	glyph.image = dict(fileName="foo.png", color="1,1,0,.1")
-	glyph.guidelines = [dict(x=100, y=200, angle=144.44)]
-
-	if 0:
-		gs.writeGlyph("a", glyph, drawPoints)
-		g2 = TestGlyph()
-		gs.readGlyph("a", g2, PrintingPointPen())
-		pprint(g2.__dict__)
-	else:
-		s = writeGlyphToString("a", glyph, drawPoints)
-		print s
-		g2 = TestGlyph()
-		readGlyphFromString(s, g2, PrintingPointPen())
-		pprint(g2.__dict__)
-
