@@ -840,10 +840,7 @@ def _readGlyphFromTree(tree, glyphObject=None, pointPen=None, formatVersions=(1,
 			if haveSeenAdvance:
 				raise GlifLibError("The advance element occurs more than once.")
 			haveSeenAdvance = True
-			width = _number(attrs.get("width", 0))
-			_relaxedSetattr(glyphObject, "width", width)
-			height = _number(attrs.get("height", 0))
-			_relaxedSetattr(glyphObject, "height", height)
+			_readAdvance(glyphObject, attrs)
 		elif element == "unicode":
 			try:
 				v = attrs.get("hex", "undefined")
@@ -878,35 +875,17 @@ def _readGlyphFromTree(tree, glyphObject=None, pointPen=None, formatVersions=(1,
 			if len(children):
 				raise GlifLibError("Unknown children in image element.")
 			haveSeenImage = True
-			imageData = attrs
-			for attr, default in _transformationInfo:
-				value = default
-				if attr in imageData:
-					value = imageData[attr]
-				imageData[attr] = _number(value)
-			if not imageValidator(imageData):
-				raise GlifLibError("The image element is not properly formatted.")
-			_relaxedSetattr(glyphObject, "image", imageData)
+			_readImage(glyphObject, attrs)
 		elif element == "note":
 			if haveSeenNote:
 				raise GlifLibError("The note element occurs more than once.")
 			haveSeenNote = True
-			rawNote = "\n".join(children)
-			lines = rawNote.split("\n")
-			lines = [line.strip() for line in lines]
-			note = "\n".join(lines)
-			_relaxedSetattr(glyphObject, "note", note)
+			_readNote(glyphObject, children)
 		elif element == "lib":
 			if haveSeenLib:
 				raise GlifLibError("The lib element occurs more than once.")
 			haveSeenLib = True
-			from plistFromTree import readPlistFromTree
-			assert len(children) == 1
-			lib = readPlistFromTree(children[0])
-			valid, message = libValidator(lib)
-			if not valid:
-				raise GlifLibError(message)
-			_relaxedSetattr(glyphObject, "lib", lib)
+			_readLib(glyphObject, children)
 		else:
 			raise GlifLibError("Unknown element in GLIF: %s" % element)
 	# set the collected unicodes
@@ -922,6 +901,39 @@ def _readGlyphFromTree(tree, glyphObject=None, pointPen=None, formatVersions=(1,
 		if not anchorsValidator(anchors, identifiers):
 			raise GlifLibError("The anchors are improperly formatted.")
 		_relaxedSetattr(glyphObject, "anchors", anchors)
+
+def _readAdvance(glyphObject, attrs):
+	width = _number(attrs.get("width", 0))
+	_relaxedSetattr(glyphObject, "width", width)
+	height = _number(attrs.get("height", 0))
+	_relaxedSetattr(glyphObject, "height", height)
+
+def _readImage(glyphObject, attrs):
+	imageData = attrs
+	for attr, default in _transformationInfo:
+		value = default
+		if attr in imageData:
+			value = imageData[attr]
+		imageData[attr] = _number(value)
+	if not imageValidator(imageData):
+		raise GlifLibError("The image element is not properly formatted.")
+	_relaxedSetattr(glyphObject, "image", imageData)
+
+def _readNote(glyphObject, children):
+	rawNote = "\n".join(children)
+	lines = rawNote.split("\n")
+	lines = [line.strip() for line in lines]
+	note = "\n".join(lines)
+	_relaxedSetattr(glyphObject, "note", note)
+
+def _readLib(glyphObject, children):
+	from plistFromTree import readPlistFromTree
+	assert len(children) == 1
+	lib = readPlistFromTree(children[0])
+	valid, message = libValidator(lib)
+	if not valid:
+		raise GlifLibError(message)
+	_relaxedSetattr(glyphObject, "lib", lib)
 
 # ----------------
 # GLIF to PointPen
