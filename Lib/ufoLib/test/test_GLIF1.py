@@ -1173,21 +1173,36 @@ class TestGLIF1(unittest.TestCase):
 		<glyph name="a" format="1">
 			<outline>
 				<contour>
-					<point x="1" y="-2" type="move"/>
+					<point x="1" y="2" type="move"/>
 				</contour>
 			</outline>
 		</glyph>
 		"""
-		#py = """
-		#glyph.name = "a"
-		#pointPen.beginPath()
-		#pointPen.anchors = [{"x" : 1, "y" : 2}]
-		#pointPen.endPath()
-		#"""
-		#resultGlif = self.pyToGLIF(py)
+		py = """
+		glyph.name = "a"
+		glyph.anchors = [{"x" : 1, "y" : 2}]
+		"""
+		resultGlif = self.pyToGLIF(py)
 		resultPy = self.glifToPy(glif)
-		#self.assertEqual(glif, resultGlif)
-		#self.assertEqual(py, resultPy)
+		self.assertEqual(glif, resultGlif)
+		self.assertEqual(py, resultPy)
+		glif = """
+		<glyph name="a" format="1">
+			<outline>
+				<contour>
+					<point x="1" y="2" type="move" name="test"/>
+				</contour>
+			</outline>
+		</glyph>
+		"""
+		py = """
+		glyph.name = "a"
+		glyph.anchors = [{"name" : "test", "x" : 1, "y" : 2}]
+		"""
+		resultGlif = self.pyToGLIF(py)
+		resultPy = self.glifToPy(glif)
+		self.assertEqual(glif, resultGlif)
+		self.assertEqual(py, resultPy)
 
 
 if __name__ == "__main__":

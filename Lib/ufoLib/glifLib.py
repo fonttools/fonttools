@@ -560,6 +560,8 @@ def writeGlyphToString(glyphName, glyphObject=None, drawPointsFunc=None, writer=
 		writer.newline()
 		pen = GLIFPointPen(writer, identifiers=identifiers)
 		drawPointsFunc(pen)
+		if formatVersion == 1 and anchors:
+			_writeAnchorsFormat1(pen, anchors)
 		writer.endtag("outline")
 		writer.newline()
 	# lib
@@ -673,6 +675,22 @@ def _writeGuidelines(glyphObject, writer, identifiers):
 			identifiers.add(identifier)
 		writer.simpletag("guideline", attrs)
 		writer.newline()
+
+def _writeAnchorsFormat1(pen, anchors):
+	if not anchorsValidator(anchors):
+		raise GlifLibError("anchors attribute does not have the proper structure.")
+	for anchor in anchors:
+		attrs = []
+		x = anchor["x"]
+		attrs.append(("x", str(x)))
+		y = anchor["y"]
+		attrs.append(("y", str(y)))
+		name = anchor.get("name")
+		if name is not None:
+			attrs.append(("name", name))
+		pen.beginPath()
+		pen.addPoint((x, y), segmentType="move", name=name)
+		pen.endPath()
 
 def _writeAnchors(glyphObject, writer, identifiers):
 	anchors = getattr(glyphObject, "anchors", [])
@@ -984,7 +1002,7 @@ def _buildAnchorFormat1(point):
 	x = _number(x)
 	y = _number(y)
 	name = point.get("name")
-	anchor = dict(x=y, y=y, name=name)
+	anchor = dict(x=x, y=y, name=name)
 	return anchor
 
 def _buildOutlineContour(pen, (attrs, children), formatVersion, identifiers):
