@@ -946,16 +946,33 @@ pointSmoothOptions = set(("no", "yes"))
 pointTypeOptions = set(["move", "line", "offcurve", "curve", "qcurve"])
 
 def buildOutline(pen, xmlNodes, formatVersion, identifiers):
+	anchors = []
 	for node in xmlNodes:
 		if len(node) != 3:
 			raise GlifLibError("The outline element is not properly structured.")
 		element, attrs, children = node
 		if element == "contour":
+			# special handling of implied anchors in GLIF 1
+			if formatVersion == 1 and len(children) == 1:
+				child = children[0]
+				if len(child) != 3:
+					raise GlifLibError("The outline element is not properly structured.")
+				if child[0] == "point":
+					anchor = _buildAnchorFormat1(child[1])
+					if anchor is not None:
+						anchors.append(anchor)
+						continue
 			_buildOutlineContour(pen, (attrs, children), formatVersion, identifiers)
 		elif element == "component":
 			_buildOutlineComponent(pen, (attrs, children), formatVersion, identifiers)
 		else:
 			raise GlifLibError("Unknown element in outline element: %s" % element)
+
+def _buildAnchorFormat1(point):
+	if point.get("type") != "move":
+		return None
+	anchor = dict(x=point.get("x"), y=point.get("y"), name=point.get("name"))
+	return anchor
 
 def _buildOutlineContour(pen, (attrs, children), formatVersion, identifiers):
 	# search for unknown attributes

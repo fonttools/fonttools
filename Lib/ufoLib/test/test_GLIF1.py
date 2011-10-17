@@ -473,6 +473,7 @@ class TestGLIF1(unittest.TestCase):
 			<outline>
 				<contour>
 					<point x="1" y="2" type="move"/>
+					<point x="10" y="20" type="line"/>
 				</contour>
 				<contour>
 					<point x="1" y="2" type="move"/>
@@ -485,6 +486,7 @@ class TestGLIF1(unittest.TestCase):
 		glyph.name = "a"
 		pointPen.beginPath()
 		pointPen.addPoint(*[(1, 2)], **{"segmentType" : "move", "smooth" : False})
+		pointPen.addPoint(*[(10, 20)], **{"segmentType" : "line", "smooth" : False})
 		pointPen.endPath()
 		pointPen.beginPath()
 		pointPen.addPoint(*[(1, 2)], **{"segmentType" : "move", "smooth" : False})
@@ -514,6 +516,7 @@ class TestGLIF1(unittest.TestCase):
 			<outline>
 				<contour>
 					<point x="1" y="-2" type="move"/>
+					<point x="0" y="0" type="line" name="this is here so that the contour isn't seen as an anchor"/>
 				</contour>
 			</outline>
 		</glyph>
@@ -522,6 +525,7 @@ class TestGLIF1(unittest.TestCase):
 		glyph.name = "a"
 		pointPen.beginPath()
 		pointPen.addPoint(*[(1, -2)], **{"segmentType" : "move", "smooth" : False})
+		pointPen.addPoint(*[(0, 0)], **{"name" : "this is here so that the contour isn't seen as an anchor", "segmentType" : "line", "smooth" : False})
 		pointPen.endPath()
 		"""
 		resultGlif = self.pyToGLIF(py)
@@ -534,6 +538,7 @@ class TestGLIF1(unittest.TestCase):
 			<outline>
 				<contour>
 					<point x="1.1" y="-2.2" type="move"/>
+					<point x="0" y="0" type="line" name="this is here so that the contour isn't seen as an anchor"/>
 				</contour>
 			</outline>
 		</glyph>
@@ -542,6 +547,7 @@ class TestGLIF1(unittest.TestCase):
 		glyph.name = "a"
 		pointPen.beginPath()
 		pointPen.addPoint(*[(1.1, -2.2)], **{"segmentType" : "move", "smooth" : False})
+		pointPen.addPoint(*[(0, 0)], **{"name" : "this is here so that the contour isn't seen as an anchor", "segmentType" : "line", "smooth" : False})
 		pointPen.endPath()
 		"""
 		resultGlif = self.pyToGLIF(py)
@@ -554,6 +560,7 @@ class TestGLIF1(unittest.TestCase):
 			<outline>
 				<contour>
 					<point x="a" y="2" type="move"/>
+					<point x="0" y="0" type="line" name="this is here so that the contour isn't seen as an anchor"/>
 				</contour>
 			</outline>
 		</glyph>
@@ -562,6 +569,7 @@ class TestGLIF1(unittest.TestCase):
 		glyph.name = "a"
 		pointPen.beginPath()
 		pointPen.addPoint(*[("a", 2)], **{"segmentType" : "move", "smooth" : False})
+		pointPen.addPoint(*[(0, 0)], **{"name" : "this is here so that the contour isn't seen as an anchor", "segmentType" : "line", "smooth" : False})
 		pointPen.endPath()
 		"""
 		self.assertRaises(GlifLibError, self.pyToGLIF, py)
@@ -572,6 +580,7 @@ class TestGLIF1(unittest.TestCase):
 			<outline>
 				<contour>
 					<point x="1" y="a" type="move"/>
+					<point x="0" y="0" type="line" name="this is here so that the contour isn't seen as an anchor"/>
 				</contour>
 			</outline>
 		</glyph>
@@ -580,6 +589,7 @@ class TestGLIF1(unittest.TestCase):
 		glyph.name = "a"
 		pointPen.beginPath()
 		pointPen.addPoint(*[(1, "a")], **{"segmentType" : "move", "smooth" : False})
+		pointPen.addPoint(*[(0, 0)], **{"name" : "this is here so that the contour isn't seen as an anchor", "segmentType" : "line", "smooth" : False})
 		pointPen.endPath()
 		"""
 		self.assertRaises(GlifLibError, self.pyToGLIF, py)
@@ -1156,6 +1166,28 @@ class TestGLIF1(unittest.TestCase):
 		"""
 		self.assertRaises(GlifLibError, self.pyToGLIF, py)
 		self.assertRaises(GlifLibError, self.glifToPy, glif)
+
+	def testAnchor(self):
+		# legal
+		glif = """
+		<glyph name="a" format="1">
+			<outline>
+				<contour>
+					<point x="1" y="-2" type="move"/>
+				</contour>
+			</outline>
+		</glyph>
+		"""
+		#py = """
+		#glyph.name = "a"
+		#pointPen.beginPath()
+		#pointPen.anchors = [{"x" : 1, "y" : 2}]
+		#pointPen.endPath()
+		#"""
+		#resultGlif = self.pyToGLIF(py)
+		resultPy = self.glifToPy(glif)
+		#self.assertEqual(glif, resultGlif)
+		#self.assertEqual(py, resultPy)
 
 
 if __name__ == "__main__":
