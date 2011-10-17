@@ -363,7 +363,7 @@ class UFOReader(object):
 		if not self._checkForFile(path):
 			return {}
 		data = self._readPlist(path)
-		valid, message = libValidator(data)
+		valid, message = fontLibValidator(data)
 		if not valid:
 			raise UFOLibError(message)
 		return data
@@ -828,7 +828,7 @@ class UFOWriter(object):
 		Write lib.plist. This method requires a
 		lib dict as an argument.
 		"""
-		valid, message = libValidator(libDict)
+		valid, message = fontLibValidator(libDict)
 		if not valid:
 			raise UFOLibError(message)
 		self._makeDirectory()

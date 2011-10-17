@@ -891,29 +891,29 @@ def groupsValidator(value):
 # lib.plist/lib
 # -------------
 
-def libValidator(value):
+def fontLibValidator(value):
 	"""
 	Check the validity of the lib.
 	Version 3+ (though it's backwards compatible with UFO 1 and UFO 2).
 
 	>>> lib = {"foo" : "bar"}
-	>>> libValidator(lib)
+	>>> fontLibValidator(lib)
 	(True, None)
 
 	>>> lib = {"public.awesome" : "hello"}
-	>>> libValidator(lib)
+	>>> fontLibValidator(lib)
 	(True, None)
 
 	>>> lib = {"public.glyphOrder" : ["A", "C", "B"]}
-	>>> libValidator(lib)
+	>>> fontLibValidator(lib)
 	(True, None)
 
 	>>> lib = {"public.glyphOrder" : "hello"}
-	>>> libValidator(lib)
+	>>> fontLibValidator(lib)
 	(False, 'public.glyphOrder is not properly formatted.')
 
 	>>> lib = {"public.glyphOrder" : ["A", 1, "B"]}
-	>>> libValidator(lib)
+	>>> fontLibValidator(lib)
 	(False, 'public.glyphOrder is not properly formatted.')
 	"""
 	bogusFormatMessage = "The lib data is not in the correct format."
@@ -931,6 +931,44 @@ def libValidator(value):
 				if not isinstance(glyphName, basestring):
 					return False, bogusGlyphOrderMessage
 	return True, None
+
+# --------
+# GLIF lib
+# --------
+
+def glyphLibValidator(value):
+	"""
+	Check the validity of the lib.
+	Version 3+ (though it's backwards compatible with UFO 1 and UFO 2).
+
+	>>> lib = {"foo" : "bar"}
+	>>> glyphLibValidator(lib)
+	(True, None)
+
+	>>> lib = {"public.awesome" : "hello"}
+	>>> glyphLibValidator(lib)
+	(True, None)
+
+	>>> lib = {"public.markColor" : "1,0,0,0.5"}
+	>>> glyphLibValidator(lib)
+	(True, None)
+
+	>>> lib = {"public.markColor" : 1}
+	>>> glyphLibValidator(lib)
+	(False, 'public.markColor is not properly formatted.')
+	"""
+	bogusFormatMessage = "The lib data is not in the correct format."
+	if not isDictEnough(value):
+		return False, bogusFormatMessage
+	for key, value in value.items():
+		if not isinstance(key, basestring):
+			return False, bogusFormatMessage
+		# public.markColor
+		if key == "public.markColor":
+			if not colorValidator(value):
+				return False, "public.markColor is not properly formatted."
+	return True, None
+
 
 if __name__ == "__main__":
 	import doctest

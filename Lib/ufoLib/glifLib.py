@@ -19,7 +19,7 @@ from robofab.pens.pointPen import AbstractPointPen
 from plistlib import readPlist, writePlistToString
 from filenames import userNameToFileName
 from validators import isDictEnough, genericTypeValidator, colorValidator,\
-	guidelinesValidator, anchorsValidator, identifierValidator, imageValidator, libValidator
+	guidelinesValidator, anchorsValidator, identifierValidator, imageValidator, glyphLibValidator
 
 try:
 	set
@@ -988,7 +988,7 @@ def _readLib(glyphObject, children):
 	from plistFromTree import readPlistFromTree
 	assert len(children) == 1
 	lib = readPlistFromTree(children[0])
-	valid, message = libValidator(lib)
+	valid, message = glyphLibValidator(lib)
 	if not valid:
 		raise GlifLibError(message)
 	_relaxedSetattr(glyphObject, "lib", lib)
