@@ -1153,7 +1153,7 @@ def _buildOutlinePointsFormat2(pen, children, identifiers):
 			pen.addPoint((x, y), segmentType=segmentType, smooth=smooth, name=name, identifier=identifier)
 		except TypeError:
 			pen.addPoint((x, y), segmentType=segmentType, smooth=smooth, name=name)
-			raise DeprecationWarning("The addPoint method needs an identifier kwarg. The point's identifier value has been discarded.")
+			raise warn("The addPoint method needs an identifier kwarg. The point's identifier value has been discarded.", DeprecationWarning)
 
 def _buildOutlineComponentFormat2(pen, (attrs, children), identifiers):
 	if len(children):
@@ -1182,7 +1182,7 @@ def _buildOutlineComponentFormat2(pen, (attrs, children), identifiers):
 		pen.addComponent(baseGlyphName, tuple(transformation), identifier=identifier)
 	except TypeError:
 		pen.addComponent(baseGlyphName, tuple(transformation))
-		raise DeprecationWarning("The addComponent method needs an identifier kwarg. The component's identifier value has been discarded.")
+		raise warn("The addComponent method needs an identifier kwarg. The component's identifier value has been discarded.", DeprecationWarning)
 
 # all formats
 
