@@ -833,7 +833,7 @@ def _readGlyphFromTree(tree, glyphObject=None, pointPen=None, formatVersions=(1,
 				raise GlifLibError("The outline element contains unknwon attributes.")
 			haveSeenOutline = True
 			if pointPen is not None:
-				buildOutline(pointPen, children, formatVersion, identifiers)
+				buildOutline(glyphObject, pointPen, children, formatVersion, identifiers)
 		elif glyphObject is None:
 			continue
 		elif element == "advance":
@@ -945,7 +945,7 @@ pointAttributes = set(["x", "y", "type", "smooth", "name", "identifier"])
 pointSmoothOptions = set(("no", "yes"))
 pointTypeOptions = set(["move", "line", "offcurve", "curve", "qcurve"])
 
-def buildOutline(pen, xmlNodes, formatVersion, identifiers):
+def buildOutline(glyphObject, pen, xmlNodes, formatVersion, identifiers):
 	anchors = []
 	for node in xmlNodes:
 		if len(node) != 3:
@@ -967,11 +967,24 @@ def buildOutline(pen, xmlNodes, formatVersion, identifiers):
 			_buildOutlineComponent(pen, (attrs, children), formatVersion, identifiers)
 		else:
 			raise GlifLibError("Unknown element in outline element: %s" % element)
+	if glyphObject is not None and formatVersion == 1 and anchors:
+		if not anchorsValidator(anchors):
+			raise GlifLibError("GLIF 1 anchors are not properly formatted.")
+		_relaxedSetattr(glyphObject, "anchors", anchors)
 
 def _buildAnchorFormat1(point):
 	if point.get("type") != "move":
 		return None
-	anchor = dict(x=point.get("x"), y=point.get("y"), name=point.get("name"))
+	x = point.get("x")
+	y = point.get("y")
+	if x is None:
+		raise GlifLibError("Required x attribute is missing in point element.")
+	if y is None:
+		raise GlifLibError("Required y attribute is missing in point element.")
+	x = _number(x)
+	y = _number(y)
+	name = point.get("name")
+	anchor = dict(x=y, y=y, name=name)
 	return anchor
 
 def _buildOutlineContour(pen, (attrs, children), formatVersion, identifiers):
