@@ -1456,6 +1456,7 @@ class GLIFPointPen(AbstractPointPen):
 		self.writer = xmlWriter
 		self.prevSegmentType = None
 		self.prevOffCurveCount = 0
+		self.points = None
 
 	def beginPath(self, identifier=None, **kwargs):
 		attrs = []
@@ -1470,22 +1471,51 @@ class GLIFPointPen(AbstractPointPen):
 		self.writer.newline()
 		self.prevSegmentType = None
 		self.prevOffCurveCount = 0
+		self.points = []
 
 	def endPath(self):
+		if self.points:
+			# quietly ignore offcurves after the
+			# last on curve on an open contour
+			if self.points[0].get("type") != "move":
+				points = self.points
+			else:
+				self.points.reverse()
+				while 1:
+					for index, attrs in enumerate(self.points):
+						if attrs.get("type") not in (None, "offcurve"):
+							points = self.points[index:]
+							points.reverse()
+							break
+						else:
+							pass
+					break
+			# write the points
+			for attrs in points:
+				orderedAttributes = []
+				attributeOrder = ("x", "y", "type", "name", "smooth", "identifier")
+				for attr in attributeOrder:
+					value = attrs.get(attr)
+					if value is not None:
+						orderedAttributes.append((attr, value))
+				self.writer.simpletag("point", orderedAttributes)
+				self.writer.newline()
+			self.points = None
+		# close the contour
 		self.writer.endtag("contour")
 		self.writer.newline()
 		self.prevSegmentType = None
 		self.prevOffCurveCount = 0
 
 	def addPoint(self, pt, segmentType=None, smooth=None, name=None, identifier=None, **kwargs):
-		attrs = []
+		attrs = {}
 		# coordinates
 		if pt is not None:
 			for coord in pt:
 				if not isinstance(coord, (int, float)):
 					raise GlifLibError("coordinates must be int or float")
-			attrs.append(("x", str(pt[0])))
-			attrs.append(("y", str(pt[1])))
+			attrs["x"] = str(pt[0])
+			attrs["y"] = str(pt[1])
 		# segment type
 		if segmentType == "move" and self.prevSegmentType is not None:
 			raise GlifLibError("move occurs after a point has already been added to the contour.")
@@ -1494,7 +1524,7 @@ class GLIFPointPen(AbstractPointPen):
 		if segmentType == "curve" and self.prevOffCurveCount > 2:
 			raise GlifLibError("too many offcurve points before curve point.")
 		if segmentType is not None:
-			attrs.append(("type", segmentType))
+			attrs["type"] = segmentType
 		else:
 			segmentType = "offcurve"
 		if segmentType == "offcurve":
@@ -1506,20 +1536,20 @@ class GLIFPointPen(AbstractPointPen):
 		if smooth:
 			if segmentType not in ("curve", "qcurve"):
 				raise GlifLibError("can't set smooth in a %s point." % segmentType)
-			attrs.append(("smooth", "yes"))
+			attrs["smooth"] = "yes"
 		# name
 		if name is not None:
-			attrs.append(("name", name))
+			attrs["name"] = name
 		# identifier
 		if identifier is not None and self.formatVersion >= 2:
 			if identifier in self.identifiers:
 				raise GlifLibError("identifier used more than once: %s" % identifier)
 			if not identifierValidator(identifier):
 				raise GlifLibError("identifier not formatted properly: %s" % identifier)
-			attrs.append(("identifier", identifier))
+			attrs["identifier"] = identifier
 			self.identifiers.add(identifier)
-		self.writer.simpletag("point", attrs)
-		self.writer.newline()
+		# hold the point until endPath
+		self.points.append(attrs)
 
 	def addComponent(self, glyphName, transformation, identifier=None, **kwargs):
 		attrs = [("base", glyphName)]

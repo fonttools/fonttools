@@ -1204,6 +1204,57 @@ class TestGLIF1(unittest.TestCase):
 		self.assertEqual(glif, resultGlif)
 		self.assertEqual(py, resultPy)
 
+	def testLooseOffCurves(self):
+		# a piece of software was writing this kind of structure
+		glif = """
+		<glyph name="a" format="1">
+			<outline>
+				<contour>
+					<point x="1" y="2" type="move"/>
+					<point x="1" y="2"/>
+					<point x="1" y="2"/>
+					<point x="1" y="2" type="curve"/>
+					<point x="1" y="2"/>
+				</contour>
+			</outline>
+		</glyph>
+		"""
+		expectedPy = """
+		glyph.name = "a"
+		pointPen.beginPath()
+		pointPen.addPoint(*[(1, 2)], **{"segmentType" : "move", "smooth" : False})
+		pointPen.addPoint(*[(1, 2)], **{"smooth" : False})
+		pointPen.addPoint(*[(1, 2)], **{"smooth" : False})
+		pointPen.addPoint(*[(1, 2)], **{"segmentType" : "curve", "smooth" : False})
+		pointPen.endPath()
+		"""
+		resultPy = self.glifToPy(glif)
+		self.assertEqual(resultPy, expectedPy)
+		py = """
+		glyph.name = "a"
+		pointPen.beginPath()
+		pointPen.addPoint(*[(1, 2)], **{"segmentType" : "move", "smooth" : False})
+		pointPen.addPoint(*[(1, 2)], **{"smooth" : False})
+		pointPen.addPoint(*[(1, 2)], **{"smooth" : False})
+		pointPen.addPoint(*[(1, 2)], **{"segmentType" : "curve", "smooth" : False})
+		pointPen.addPoint(*[(1, 2)], **{"smooth" : False})
+		pointPen.endPath()
+		"""
+		expectedGLIF = """
+		<glyph name="a" format="1">
+			<outline>
+				<contour>
+					<point x="1" y="2" type="move"/>
+					<point x="1" y="2"/>
+					<point x="1" y="2"/>
+					<point x="1" y="2" type="curve"/>
+				</contour>
+			</outline>
+		</glyph>
+		"""
+		resultGlif = self.pyToGLIF(py)
+		self.assertEqual(resultGlif, expectedGLIF)
+
 
 if __name__ == "__main__":
 	from robofab.test.testSupport import runTests
