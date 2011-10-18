@@ -1644,59 +1644,6 @@ class BaseGlyph(RBaseObject):
 			points, segments, xO, yO, surface, contour = contourList[i]
 			contour.index = i
 	
-	def rasterize(self, cellSize=50, xMin=None, yMin=None, xMax=None, yMax=None):
-		"""
-		Slice the glyph into a grid based on the cell size.
-		It returns a list of lists containing bool values
-		that indicate the black (True) or white (False)
-		value of that particular cell.	These lists are
-		arranged from top to bottom of the glyph and
-		proceed from left to right.
-		This is an expensive operation!
-		"""
-		from fontTools.pens.pointInsidePen import PointInsidePen
-		piPen = PointInsidePen(glyphSet=self.getParent(), testPoint=(0, 0), evenOdd=0)
-		if xMin is None or yMin is None or xMax is None or yMax is None:
-			_xMin, _yMin, _xMax, _yMax = self.box
-			if xMin is None:
-				xMin = _xMin
-			if yMin is None:
-				yMin = _yMin
-			if xMax is None:
-				xMax = _xMax
-			if yMax is None:
-				yMax = _yMax
-		#
-		hitXMax = False
-		hitYMin = False
-		xSlice = 0
-		ySlice = 0
-		halfCellSize = cellSize / 2.0
-		#
-		map = []
-		#
-		while not hitYMin:
-			map.append([])
-			yScan = -(ySlice * cellSize) + yMax - halfCellSize
-			if yScan < yMin:
-				hitYMin = True
-			while not hitXMax:
-				xScan = (xSlice * cellSize) + xMin - halfCellSize
-				if xScan > xMax:
-					hitXMax = True
-				piPen.setTestPoint((xScan, yScan))
-				self.draw(piPen)
-				test = piPen.getResult()
-				if test:
-					map[-1].append(True)
-				else:
-					map[-1].append(False)
-				xSlice = xSlice + 1
-			hitXMax = False
-			xSlice = 0
-			ySlice = ySlice + 1
-		return map
-
 	def move(self, (x, y), contours=True, components=True, anchors=True):
 		"""Move a glyph's items that are flagged as True"""
 		x, y = roundPt((x, y))
