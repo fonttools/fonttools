@@ -1069,7 +1069,7 @@ def _buildOutlineContourFormat1(pen, (attrs, children)):
 		raise GlifLibError("Unknown attributes in contour element.")
 	pen.beginPath()
 	if children:
-		children = _validateAndMassagePointStructures(children, pointAttributesFormat1)
+		children = _validateAndMassagePointStructures(children, pointAttributesFormat1, openContourOffCurveLeniency=True)
 		_buildOutlinePointsFormat1(pen, children)
 	pen.endPath()
 
@@ -1186,7 +1186,7 @@ def _buildOutlineComponentFormat2(pen, (attrs, children), identifiers):
 
 # all formats
 
-def _validateAndMassagePointStructures(children, pointAttributes):
+def _validateAndMassagePointStructures(children, pointAttributes, openContourOffCurveLeniency=False):
 	if not children:
 		return children
 	# validate and massage the individual point elements
@@ -1232,20 +1232,21 @@ def _validateAndMassagePointStructures(children, pointAttributes):
 		# name is optional
 		if "name" not in attrs:
 			attrs["name"] = None
-	# remove offcurves that precede a move. this is technically illegal,
-	# but we let it slide because there are fonts out there in the wild like this.
-	if children[0][1]["segmentType"] == "move":
-		children.reverse()
-		while 1:
-			for index, (subElement, attrs, dummy) in enumerate(children):
-				if attrs["segmentType"] is not None:
-					children = children[index:]
-					break
-				elif attrs["segmentType"] is None:
-					# remove the point
-					pass
-			break
-		children.reverse()
+	if openContourOffCurveLeniency:
+		# remove offcurves that precede a move. this is technically illegal,
+		# but we let it slide because there are fonts out there in the wild like this.
+		if children[0][1]["segmentType"] == "move":
+			children.reverse()
+			while 1:
+				for index, (subElement, attrs, dummy) in enumerate(children):
+					if attrs["segmentType"] is not None:
+						children = children[index:]
+						break
+					elif attrs["segmentType"] is None:
+						# remove the point
+						pass
+				break
+			children.reverse()
 	# validate the segments
 	pointTypes = [a.get("type", "offcurve") for s, a, d in children]
 	if set(pointTypes) != set(["offcurve"]):
