@@ -1444,17 +1444,6 @@ class BaseGlyph(RBaseObject):
 		"""Return a PointPen object for creating an outline in this glyph."""
 		raise NotImplementedError, "getPointPen() must be implemented by subclass"
 	
-	def deSelect(self):
-		"""Set all selected attrs in glyph to False: for the glyph, components, anchors, points."""
-		for a in self.anchors:
-			a.selected = False
-		for a in self.components:
-			a.selected = False
-		for c in self.contours:
-			for p in c.points:
-				p.selected = False
-		self.selected = False
-
 	def isEmpty(self):
 		"""return true if the glyph has no contours or components"""
 		if len(self.contours) + len(self.components) == 0:
