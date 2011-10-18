@@ -620,12 +620,6 @@ class RBaseObject(object):
 	def _writeXML(self, writer):
 		pass
 
-	def dump(self, private=False):
-		"""Print a dump of this object to the std out."""
-		from robofab.tools.objectDumper import dumpObject
-		dumpObject(self, private)
-	
-
 
 class BaseFont(RBaseObject):
 	
