@@ -1527,6 +1527,33 @@ class TestGLIF2(unittest.TestCase):
 		self.assertRaises(GlifLibError, self.pyToGLIF, py)
 		self.assertRaises(GlifLibError, self.glifToPy, glif)
 
+	def testOpenContourLooseOffCurves(self):
+		glif = """
+		<glyph name="a" format="2">
+			<outline>
+				<contour>
+					<point x="1" y="2" type="move"/>
+					<point x="1" y="2"/>
+					<point x="1" y="2"/>
+					<point x="1" y="2" type="curve"/>
+					<point x="1" y="2"/>
+				</contour>
+			</outline>
+		</glyph>
+		"""
+		self.assertRaises(GlifLibError, self.glifToPy, glif)
+		py = """
+		glyph.name = "a"
+		pointPen.beginPath()
+		pointPen.addPoint(*[(1, 2)], **{"segmentType" : "move", "smooth" : False})
+		pointPen.addPoint(*[(1, 2)], **{"smooth" : False})
+		pointPen.addPoint(*[(1, 2)], **{"smooth" : False})
+		pointPen.addPoint(*[(1, 2)], **{"segmentType" : "curve", "smooth" : False})
+		pointPen.addPoint(*[(1, 2)], **{"smooth" : False})
+		pointPen.endPath()
+		"""
+		self.assertRaises(GlifLibError, self.pyToGLIF, py)
+
 	def testPointIdentifier(self):
 		glif = """
 		<glyph name="a" format="2">

@@ -1204,7 +1204,7 @@ class TestGLIF1(unittest.TestCase):
 		self.assertEqual(glif, resultGlif)
 		self.assertEqual(py, resultPy)
 
-	def testLooseOffCurves(self):
+	def testOpenContourLooseOffCurves(self):
 		# a piece of software was writing this kind of structure
 		glif = """
 		<glyph name="a" format="1">
@@ -1240,20 +1240,7 @@ class TestGLIF1(unittest.TestCase):
 		pointPen.addPoint(*[(1, 2)], **{"smooth" : False})
 		pointPen.endPath()
 		"""
-		expectedGLIF = """
-		<glyph name="a" format="1">
-			<outline>
-				<contour>
-					<point x="1" y="2" type="move"/>
-					<point x="1" y="2"/>
-					<point x="1" y="2"/>
-					<point x="1" y="2" type="curve"/>
-				</contour>
-			</outline>
-		</glyph>
-		"""
-		resultGlif = self.pyToGLIF(py)
-		self.assertEqual(resultGlif, expectedGLIF)
+		self.assertRaises(GlifLibError, self.pyToGLIF, py)
 
 
 if __name__ == "__main__":

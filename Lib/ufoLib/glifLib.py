@@ -1455,9 +1455,8 @@ class GLIFPointPen(AbstractPointPen):
 		self.formatVersion = formatVersion
 		self.identifiers = identifiers
 		self.writer = xmlWriter
-		self.prevSegmentType = None
 		self.prevOffCurveCount = 0
-		self.points = None
+		self.prevPointTypes = []
 
 	def beginPath(self, identifier=None, **kwargs):
 		attrs = []
@@ -1470,87 +1469,63 @@ class GLIFPointPen(AbstractPointPen):
 			self.identifiers.add(identifier)
 		self.writer.begintag("contour", attrs)
 		self.writer.newline()
-		self.prevSegmentType = None
 		self.prevOffCurveCount = 0
-		self.points = []
 
 	def endPath(self):
-		if self.points:
-			# quietly ignore offcurves after the
-			# last on curve on an open contour
-			if self.points[0].get("type") != "move":
-				points = self.points
-			else:
-				self.points.reverse()
-				while 1:
-					for index, attrs in enumerate(self.points):
-						if attrs.get("type") not in (None, "offcurve"):
-							points = self.points[index:]
-							points.reverse()
-							break
-						else:
-							pass
-					break
-			# write the points
-			for attrs in points:
-				orderedAttributes = []
-				attributeOrder = ("x", "y", "type", "name", "smooth", "identifier")
-				for attr in attributeOrder:
-					value = attrs.get(attr)
-					if value is not None:
-						orderedAttributes.append((attr, value))
-				self.writer.simpletag("point", orderedAttributes)
-				self.writer.newline()
-			self.points = None
-		# close the contour
+		if self.prevPointTypes and self.prevPointTypes[0] == "move":
+			if self.prevPointTypes[-1] == "offcurve":
+				raise GlifLibError("open contour has loose offcurve point")
 		self.writer.endtag("contour")
 		self.writer.newline()
-		self.prevSegmentType = None
+		self.prevPointType = None
 		self.prevOffCurveCount = 0
+		self.prevPointTypes = []
 
 	def addPoint(self, pt, segmentType=None, smooth=None, name=None, identifier=None, **kwargs):
-		attrs = {}
+		attrs = []
 		# coordinates
 		if pt is not None:
 			for coord in pt:
 				if not isinstance(coord, (int, float)):
 					raise GlifLibError("coordinates must be int or float")
-			attrs["x"] = str(pt[0])
-			attrs["y"] = str(pt[1])
+			attrs.append(("x", str(pt[0])))
+			attrs.append(("y", str(pt[1])))
 		# segment type
-		if segmentType == "move" and self.prevSegmentType is not None:
+		if segmentType == "offcurve":
+			segmentType = None
+		if segmentType == "move" and self.prevPointTypes:
 			raise GlifLibError("move occurs after a point has already been added to the contour.")
-		if segmentType in ("move", "line") and self.prevSegmentType == "offcurve":
+		if segmentType in ("move", "line") and self.prevPointTypes and self.prevPointTypes[-1] == "offcurve":
 			raise GlifLibError("offcurve occurs before %s point." % segmentType)
 		if segmentType == "curve" and self.prevOffCurveCount > 2:
 			raise GlifLibError("too many offcurve points before curve point.")
 		if segmentType is not None:
-			attrs["type"] = segmentType
+			attrs.append(("type", segmentType))
 		else:
 			segmentType = "offcurve"
 		if segmentType == "offcurve":
 			self.prevOffCurveCount += 1
 		else:
 			self.prevOffCurveCount = 0
-		self.prevSegmentType = segmentType
+		self.prevPointTypes.append(segmentType)
 		# smooth
 		if smooth:
 			if segmentType not in ("curve", "qcurve"):
 				raise GlifLibError("can't set smooth in a %s point." % segmentType)
-			attrs["smooth"] = "yes"
+			attrs.append(("smooth", "yes"))
 		# name
 		if name is not None:
-			attrs["name"] = name
+			attrs.append(("name", name))
 		# identifier
 		if identifier is not None and self.formatVersion >= 2:
 			if identifier in self.identifiers:
 				raise GlifLibError("identifier used more than once: %s" % identifier)
 			if not identifierValidator(identifier):
 				raise GlifLibError("identifier not formatted properly: %s" % identifier)
-			attrs["identifier"] = identifier
+			attrs.append(("identifier", identifier))
 			self.identifiers.add(identifier)
-		# hold the point until endPath
-		self.points.append(attrs)
+		self.writer.simpletag("point", attrs)
+		self.writer.newline()
 
 	def addComponent(self, glyphName, transformation, identifier=None, **kwargs):
 		attrs = [("base", glyphName)]
