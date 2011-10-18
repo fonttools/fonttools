@@ -394,38 +394,47 @@ class GlyphSet(object):
 
 	# quickly fetch unicode values
 
-	def getUnicodes(self):
+	def getUnicodes(self, glyphNames=None):
 		"""
-		Return a dictionary that maps all glyph names to lists containing
+		Return a dictionary that maps glyph names to lists containing
 		the unicode value[s] for that glyph, if any. This parses the .glif
 		files partially, so it is a lot faster than parsing all files completely.
+		By default this checks all glyphs, but a subset can be passed with glyphNames.
 		"""
 		unicodes = {}
-		for glyphName in self.contents.keys():
+		if glyphNames is None:
+			glyphNames = self.contents.keys()
+		for glyphName in glyphNames:
 			text = self.getGLIF(glyphName)
 			unicodes[glyphName] = _fetchUnicodes(text)
 		return unicodes
 
-	def getComponentReferences(self):
+	def getComponentReferences(self, glyphNames=None):
 		"""
-		Return a dictionary that maps all glyph names to lists containing the
+		Return a dictionary that maps glyph names to lists containing the
 		base glyph name of components in the glyph. This parses the .glif
 		files partially, so it is a lot faster than parsing all files completely.
+		By default this checks all glyphs, but a subset can be passed with glyphNames.
 		"""
 		components = {}
-		for glyphName in self.contents.keys():
+		if glyphNames is None:
+			glyphNames = self.contents.keys()
+		for glyphName in glyphNames:
 			text = self.getGLIF(glyphName)
 			components[glyphName] = _fetchComponentBases(text)
 		return components
 
-	def getImageReferences(self):
+	def getImageReferences(self, glyphNames=None):
 		"""
-		Return a dictionary that maps all glyph names to the file name of the image
+		Return a dictionary that maps glyph names to the file name of the image
 		referenced by the glyph. This parses the .glif files partially, so it is a
 		lot faster than parsing all files completely.
+		By default this checks all glyphs, but a subset can be passed with glyphNames.
 		"""
 		images = {}
-		for glyphName in self.contents.keys():
+		if glyphNames is None:
+			glyphNames = self.contents.keys()
+		for glyphName in glyphNames:
 			text = self.getGLIF(glyphName)
 			images[glyphName] = _fetchImageFileName(text)
 		return images
