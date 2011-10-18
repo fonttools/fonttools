@@ -1716,41 +1716,6 @@ class BaseContour(RBaseObject):
 			idx = "XXX"
 		return "<RContour for %s.%s[%s]>"%(font, glyph, idx)
 		
-	def __len__(self):
-		return len(self.segments)
-	
-	def __mul__(self, factor):
-		warn("Contour math has been deprecated and is slated for removal.", DeprecationWarning)
-		n = self.copy()
-		n.segments = []
-		for i in range(len(self.segments)):
-			n.segments.append(self.segments[i] * factor)
-		n._setParentTree()
-		return n
-	
-	__rmul__ = __mul__
-
-	def __add__(self, other):
-		warn("Contour math has been deprecated and is slated for removal.", DeprecationWarning)
-		n = self.copy()
-		n.segments = []
-		for i in range(len(self.segments)):
-			n.segments.append(self.segments[i] + other.segments[i])
-		n._setParentTree()
-		return n
-
-	def __sub__(self, other):
-		warn("Contour math has been deprecated and is slated for removal.", DeprecationWarning)
-		n = self.copy()
-		n.segments = []
-		for i in range(len(self.segments)):
-			n.segments.append(self.segments[i] - other.segments[i])
-		n._setParentTree()
-		return n
-		
-	def __getitem__(self, index):
-		return self.segments[index]
-		
 	def _hasChanged(self):
 		"""mark the object and it's parent as changed"""
 		self.setChanged(True)
@@ -2122,33 +2087,6 @@ class BaseSegment(RBaseObject):
 			idx = "XXX"
 		return "<RSegment for %s.%s[%s][%s]>"%(font, glyph, contourIndex, idx)
 		
-	def __mul__(self, factor):
-		warn("Segment math has been deprecated and is slated for removal.", DeprecationWarning)
-		n = self.copy()
-		n.points = []
-		for i in range(len(self.points)):
-			n.points.append(self.points[i] * factor)
-		n._setParentTree()
-		return n
-
-	__rmul__ = __mul__
-
-	def __add__(self, other):
-		warn("Segment math has been deprecated and is slated for removal.", DeprecationWarning)
-		n = self.copy()
-		n.points = []
-		for i in range(len(self.points)):
-			n.points.append(self.points[i] + other.points[i])
-		return n
-
-	def __sub__(self, other):
-		warn("Segment math has been deprecated and is slated for removal.", DeprecationWarning)
-		n = self.copy()
-		n.points = []
-		for i in range(len(self.points)):
-			n.points.append(self.points[i] - other.points[i])
-		return n
-		
 	def _hasChanged(self):
 		"""mark the object and it's parent as changed"""
 		self.setChanged(True)
@@ -2254,29 +2192,6 @@ class BasePoint(RBaseObject):
 						except AttributeError: pass
 		return "<RPoint for %s.%s[%s][%s]>"%(font, glyph, contourIndex, segmentIndex)
 	
-	def __add__(self, other):
-		warn("Point math has been deprecated and is slated for removal.", DeprecationWarning)
-		#Add one point to another
-		n = self.copy()
-		n.x, n.y = addPt((self.x, self.y), (other.x, other.y))
-		return n
-
-	def __sub__(self, other):
-		warn("Point math has been deprecated and is slated for removal.", DeprecationWarning)
-		#Subtract one point from another
-		n = self.copy()
-		n.x, n.y = subPt((self.x, self.y), (other.x, other.y))
-		return n
-
-	def __mul__(self, factor):
-		warn("Point math has been deprecated and is slated for removal.", DeprecationWarning)
-		#Multiply the point with factor. Factor can be a tuple of 2 *(f1, f2)
-		n = self.copy()
-		n.x, n.y = mulPt((self.x, self.y), factor)
-		return n
-		
-	__rmul__ = __mul__
-
 	def _hasChanged(self):
 		#mark the object and it's parent as changed
 		self.setChanged(True)
@@ -2366,36 +2281,6 @@ class BaseBPoint(RBaseObject):
 							font = fontParent.info.postscriptFullName
 						except AttributeError: pass
 		return "<RBPoint for %s.%s[%s][%s][%s]>"%(font, glyph, contourIndex, segmentIndex, `self.index`)
-
-	
-	def __add__(self, other):
-		warn("BPoint math has been deprecated and is slated for removal.", DeprecationWarning)
-		#Add one bPoint to another
-		n = self.copy()
-		n.anchor = addPt(self.anchor, other.anchor)
-		n.bcpIn = addPt(self.bcpIn, other.bcpIn)
-		n.bcpOut = addPt(self.bcpOut, other.bcpOut)
-		return n
-
-	def __sub__(self, other):
-		warn("BPoint math has been deprecated and is slated for removal.", DeprecationWarning)
-		#Subtract one bPoint from another
-		n = self.copy()
-		n.anchor = subPt(self.anchor, other.anchor)
-		n.bcpIn = subPt(self.bcpIn, other.bcpIn)
-		n.bcpOut = subPt(self.bcpOut, other.bcpOut)
-		return n
-
-	def __mul__(self, factor):
-		warn("BPoint math has been deprecated and is slated for removal.", DeprecationWarning)
-		#Multiply the bPoint with factor. Factor can be a tuple of 2 *(f1, f2)
-		n = self.copy()
-		n.anchor = mulPt(self.anchor, factor)
-		n.bcpIn = mulPt(self.bcpIn, factor)
-		n.bcpOut = mulPt(self.bcpOut, factor)
-		return n
-		
-	__rmul__ = __mul__
 
 	def _hasChanged(self):
 		#mark the object and it's parent as changed
