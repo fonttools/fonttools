@@ -168,7 +168,7 @@ class ReadFontInfoVersion3TestCase(unittest.TestCase):
 		info["openTypeGaspRangeRecords"] = []
 		self._writeInfoToPlist(info)
 		reader = UFOReader(self.dstDir)
-		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		reader.readInfo(TestInfoObject())
 		# not a dict
 		info = dict(fontInfoVersion3)
 		info["openTypeGaspRangeRecords"] = ["abc"]
@@ -1829,7 +1829,7 @@ class WriteFontInfoVersion3TestCase(unittest.TestCase):
 		infoObject = self.makeInfoObject()
 		infoObject.openTypeGaspRangeRecords = []
 		writer = UFOWriter(self.dstDir, formatVersion=3)
-		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		writer.writeInfo(infoObject)
 		self.tearDownUFO()
 		# not a dict
 		infoObject = self.makeInfoObject()
