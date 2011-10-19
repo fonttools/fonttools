@@ -720,6 +720,25 @@ class UFOWriter(object):
 		# remove the file
 		self._removeFileForPath(path, raiseErrorIfMissing=True)
 
+	def copyFromReader(self, reader, sourcePath, destPath):
+		"""
+		Copy the sourcePath in the provided UFOReader to destPath
+		in this writer. The paths must be relative. They may represent
+		directories or paths. This uses the most memory effecient
+		method possible for copying the data possible.
+		"""
+		if not isinstance(reader, UFOReader):
+			raise UFOLibError("The reader must be an instance of UFOReader.")
+		fullSourcePath = os.path.join(reader._path, sourcePath)
+		if not reader._checkForFile(fullSourcePath):
+			raise UFOLibError("No file named \"%s\" to copy from." % sourcePath)
+		self._buildDirectoryTree(destPath)
+		fullDestPath = os.path.join(self._path, destPath)
+		if os.path.isdir(fullSourcePath):
+			shutil.copytree(fullSourcePath, fullDestPath)
+		else:
+			shutil.copy(fullSourcePath, fullDestPath)
+
 	# metainfo.plist
 
 	def _writeMetaInfo(self):

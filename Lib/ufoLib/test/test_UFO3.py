@@ -4231,6 +4231,26 @@ class UFO3WriteDataTestCase(unittest.TestCase):
 		self.assertRaises(UFOLibError, writer.removeFileForPath, path="data/org.unifiedfontobject.doesNotExist.txt")
 		self.tearDownUFO()
 
+	def testUFOWriterCopy(self):
+		sourceDir = self.dstDir.replace(".ufo", "") + "-copy source" + ".ufo"
+		dataPath = "data/org.unifiedfontobject.copy/level1/level2/file1.txt"
+		writer = UFOWriter(sourceDir, formatVersion=3)
+		writer.writeBytesToPath(dataPath, "test")
+		# copy a file
+		reader = UFOReader(sourceDir)
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		writer.copyFromReader(reader, dataPath, dataPath)
+		path = os.path.join(self.dstDir, dataPath)
+		self.assertEqual(os.path.exists(path), True)
+		self.tearDownUFO()
+		# copy a directory
+		reader = UFOReader(sourceDir)
+		writer = UFOWriter(self.dstDir, formatVersion=3)
+		p = "data/org.unifiedfontobject.copy"
+		writer.copyFromReader(reader, p, p)
+		path = os.path.join(self.dstDir, dataPath)
+		self.assertEqual(os.path.exists(path), True)
+		self.tearDownUFO()
 
 # ---------------
 # layerinfo.plist
