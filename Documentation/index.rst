@@ -12,7 +12,7 @@ Contents:
 =========
 
 
-ObjectsRF
+Objects
 ^^^^^^^^^
 
 .. toctree::
