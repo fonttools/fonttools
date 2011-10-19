@@ -1,10 +1,10 @@
 .. highlight:: python
 
-======
-RGlyph
-======
+===============
+objectsRF.RFont
+===============
 
 .. module:: robofab.objects.objectsRF
-.. autoclass:: RGlyph
+.. autoclass:: RFont
    :inherited-members:
    :members:
