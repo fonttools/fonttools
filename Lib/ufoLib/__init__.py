@@ -724,7 +724,7 @@ class UFOWriter(object):
 		"""
 		Copy the sourcePath in the provided UFOReader to destPath
 		in this writer. The paths must be relative. They may represent
-		directories or paths. This uses the most memory effecient
+		directories or paths. This uses the most memory efficient
 		method possible for copying the data possible.
 		"""
 		if not isinstance(reader, UFOReader):
@@ -732,8 +732,10 @@ class UFOWriter(object):
 		fullSourcePath = os.path.join(reader._path, sourcePath)
 		if not reader._checkForFile(fullSourcePath):
 			raise UFOLibError("No file named \"%s\" to copy from." % sourcePath)
-		self._buildDirectoryTree(destPath)
 		fullDestPath = os.path.join(self._path, destPath)
+		if os.path.exists(fullDestPath):
+			raise UFOLibError("A file named \"%s\" already exists." % sourcePath)
+		self._buildDirectoryTree(destPath)
 		if os.path.isdir(fullSourcePath):
 			shutil.copytree(fullSourcePath, fullDestPath)
 		else:
@@ -1078,6 +1080,19 @@ class UFOWriter(object):
 			raise UFOLibError("Images are not allowed in UFO %d." % self._formatVersion)
 		path = os.path.join(IMAGES_DIRNAME, fileName)
 		self.removeFileForPath(path)
+
+	def copyImageFromReader(self, reader, sourceFileName, destFileName):
+		"""
+		Copy the sourceFileName in the provided UFOReader to destFileName
+		in this writer. This uses the most memory efficient method possible
+		for copying the data possible.
+		"""
+		if self._formatVersion < 3:
+			raise UFOLibError("Images are not allowed in UFO %d." % self._formatVersion)
+		sourcePath = os.path.join("images", sourceFileName)
+		destPath = os.path.join("images", destFileName)
+		self.copyFromReader(reader, sourcePath, destPath)
+
 
 # ----------------
 # Helper Functions
