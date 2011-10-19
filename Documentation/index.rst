@@ -18,8 +18,8 @@ ObjectsRF
 .. toctree::
    :maxdepth: 1
 
-   objectsRF/RFont
-   objectsRF/RGlyph
+   objects/objectsBase
+   objects/objectsRF
 
 Indices and tables
 ==================

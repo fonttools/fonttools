@@ -1,20 +1,9 @@
 .. highlight:: python
 
-===============
-objectsRF.RFont
-===============
+=========
+objectsRF
+=========
 
-.. module:: robofab.objects.objectsRF
-.. autoclass:: RFont
+.. automodule:: robofab.objects.objectsRF
    :inherited-members:
    :members:
-
-================
-objectsRF.RGlyph
-================
-
-.. module:: robofab.objects.objectsRF
-.. autoclass:: RGlyph
-   :inherited-members:
-   :members:
-
