@@ -186,7 +186,7 @@ class UFOReader(object):
 		fullPath = os.path.join(self._path, path)
 		if not self._checkForFile(fullPath):
 			return None
-		if os.path.exists(fullPath):
+		if os.path.isdir(fullPath):
 			raise UFOLibError("%s is a directory." % path)
 		f = codecs.open(fullPath, READ_MODE, encoding=encoding)
 		data = f.read()
@@ -205,7 +205,7 @@ class UFOReader(object):
 		fullPath = os.path.join(self._path, path)
 		if not self._checkForFile(fullPath):
 			return None
-		if os.path.exists(fullPath):
+		if os.path.isdir(fullPath):
 			raise UFOLibError("%s is a directory." % path)
 		f = codecs.open(path, READ_MODE, encoding=encoding)
 		return f
@@ -685,11 +685,11 @@ class UFOWriter(object):
 		for the given path will be built. The path must be
 		relative to the UFO. An encoding may be passed if needed.
 		"""
-		if self._formatVersion < 2:
-			raise UFOLibError("The data directory is not allowed in UFO Format Version %d." % self.formatVersion)
+		fullPath = os.path.join(self._path, path)
+		if os.path.exists(fullPath) and os.path.isdir(fullPath):
+			raise UFOLibError("A directory exists at %s." % path)
 		self._buildDirectoryTree(path)
-		path = os.path.join(self._path, path)
-		writeFileAtomically(bytes, path, encoding=encoding)
+		writeFileAtomically(bytes, fullPath, encoding=encoding)
 
 	def getFileObjectForPath(self, path, encoding=None):
 		"""
@@ -700,10 +700,10 @@ class UFOWriter(object):
 
 		Note: The caller is responsible for closing the open file.
 		"""
-		if self._formatVersion < 2:
-			raise UFOLibError("The data directory is not allowed in UFO Format Version %d." % self.formatVersion)
+		fullPath = os.path.join(self._path, path)
+		if os.path.exists(fullPath) and os.path.isdir(fullPath):
+			raise UFOLibError("A directory exists at %s." % path)
 		self._buildDirectoryTree(path)
-		path = os.path.join(self._path, path)
 		return codecs.open(path, WRITE_MODE, encoding=encoding)
 
 	def removeFileForPath(self, path):
