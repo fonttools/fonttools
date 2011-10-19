@@ -23,13 +23,15 @@ __all__ = [	"CurrentFont",
 
 
 def CurrentFont():
+	"""CurrentFont is not available in objectsRF."""
 	return None
 
 def CurrentGlyph():
+	"""CurrentGlyph is not available in objectsRF."""
 	return None
 
 def OpenFont(path=None, note=None):
-	"""Open a font from a path. If path is not given, present the user with a dialog."""
+	"""Open a font from a path. If path is not given, present the user with a dialog (availability of dialogs will vary)"""
 	if not note:
 		note = 'select a .ufo directory'
 	if not path:
@@ -45,7 +47,7 @@ def OpenFont(path=None, note=None):
 		return None
 		
 def NewFont(familyName=None, styleName=None):
-	"""Make a new font"""
+	"""Make a new font object. Initialise with familyName and styleName."""
 	new = RFont()
 	if familyName is not None:
 		new.info.familyName = familyName
@@ -54,13 +56,13 @@ def NewFont(familyName=None, styleName=None):
 	return new
 	
 def AllFonts():
-	"""AllFonts can't work in plain python usage. It's really up to some sort of application
-	to keep track of which fonts are open."""
+	"""AllFonts is not available in objectsRF."""
 	raise NotImplementedError
 	
 
 class PostScriptFontHintValues(BasePostScriptFontHintValues):
 	"""	Font level PostScript hints object for objectsRF usage.
+
 		If there are values in the lib, use those.
 		If there are no values in the lib, use defaults.
 		
