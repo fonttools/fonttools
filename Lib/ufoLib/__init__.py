@@ -478,6 +478,7 @@ class UFOReader(object):
 		if not self._checkForFile(path):
 			return []
 		listing = self._getDirectoryListing(path, maxDepth=maxDepth)
+		listing = [os.path.relpath(path, "data") for path in listing]
 		return listing
 
 	def _getDirectoryListing(self, path, depth=0, maxDepth=100):
