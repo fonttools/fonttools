@@ -22,7 +22,7 @@ from warnings import warn
 import math
 import copy
 
-from robofab import ufoLib
+import ufoLib
 from robofab import RoboFabError
 from fontTools.misc.arrayTools import updateBounds, pointInRect, unionRect, sectRect
 from fontTools.pens.basePen import AbstractPen

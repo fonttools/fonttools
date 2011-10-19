@@ -15,7 +15,7 @@ from robofab import RoboFabError
 import os
 from robofab.plistlib import Data, Dict, readPlist, writePlist
 from StringIO import StringIO
-from robofab import ufoLib
+import ufoLib
 from warnings import warn
 import datetime
 from robofab.tools.fontlabFeatureSplitter import splitFeaturesForFontLab
