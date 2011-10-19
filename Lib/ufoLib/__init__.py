@@ -183,10 +183,12 @@ class UFOReader(object):
 		Returns None if the file does not exist.
 		An encoding may be passed if needed.
 		"""
-		path = os.path.join(self._path, path)
-		if not self._checkForFile(path):
+		fullPath = os.path.join(self._path, path)
+		if not self._checkForFile(fullPath):
 			return None
-		f = codecs.open(path, READ_MODE, encoding=encoding)
+		if os.path.exists(fullPath):
+			raise UFOLibError("%s is a directory." % path)
+		f = codecs.open(fullPath, READ_MODE, encoding=encoding)
 		data = f.read()
 		f.close()
 		return data
@@ -200,9 +202,11 @@ class UFOReader(object):
 
 		Note: The caller is responsible for closing the open file.
 		"""
-		path = os.path.join(self._path, path)
-		if not self._checkForFile(path):
+		fullPath = os.path.join(self._path, path)
+		if not self._checkForFile(fullPath):
 			return None
+		if os.path.exists(fullPath):
+			raise UFOLibError("%s is a directory." % path)
 		f = codecs.open(path, READ_MODE, encoding=encoding)
 		return f
 
@@ -462,11 +466,10 @@ class UFOReader(object):
 
 	def getDataDirectoryListing(self, maxDepth=100):
 		"""
-		Returns a list of all files and directories
-		in the data directory. The returned paths will
-		be relative to the UFO. This will not list
-		directory names, only file names. Thus, empty
-		directories will be skipped.
+		Returns a list of all files in the data directory.
+		The returned paths will be relative to the UFO.
+		This will not list directory names, only file names.
+		Thus, empty directories will be skipped.
 
 		The maxDepth argument sets the maximum number
 		of sub-directories that are allowed.
