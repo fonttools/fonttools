@@ -69,5 +69,5 @@ class RoboFabError(Exception): pass
 class RoboFabWarning(Warning): pass
 
 
-numberVersion = (1, 2, "release", 0)
-version = "1.2.0"
+numberVersion = (1, 3, "developer", 0)
+version = "1.3.0"
