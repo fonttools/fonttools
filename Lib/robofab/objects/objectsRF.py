@@ -1,4 +1,6 @@
-"""UFO for GlifLib"""
+"""
+This is the new doc for the objectsRF module.
+"""
 
 from robofab import RoboFabError, RoboFabWarning
 from robofab.objects.objectsBase import BaseFont, BaseKerning, BaseGroups, BaseInfo, BaseFeatures, BaseLib,\
@@ -105,11 +107,12 @@ class PostScriptGlyphHintValues(BasePostScriptGlyphHintValues):
 			
 			
 class RFont(BaseFont):
-	"""UFO font object which reads and writes glif, and keeps the data in memory in between.
-	Bahviour:
-		- comparable to Font
-		- comparable to GlyphSet so that it can be passed to Glif widgets
 	"""
+    Font object representing the data in an UFO.
+    
+        - myFontInstace['A']    access the font as a dictionary with glyphnames as key
+
+    """
 	
 	_title = "RoboFabFont"
 	
@@ -159,7 +162,7 @@ class RFont(BaseFont):
 		return len(self._glyphSet)
 	
 	def _loadData(self, path):
-		from robofab.ufoLib import UFOReader
+		from ufoLib import UFOReader
 		reader = UFOReader(path)
 		fontLib = reader.readLib()
 		# info
@@ -375,7 +378,7 @@ class RFont(BaseFont):
 		# copying those .glif files that have not been edited or (not sure how
 		# well that would work) by simply clearing out self._objects after the
 		# save.
-		from robofab.ufoLib import UFOWriter
+		from ufoLib import UFOWriter
 		from robofab.tools.fontlabFeatureSplitter import splitFeaturesForFontLab
 		# if no destination is given, or if
 		# the given destination is the current
