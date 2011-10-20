@@ -45,8 +45,11 @@ Tools for accessing, validating and making UFO and glif.
 .. toctree::
    :maxdepth: 1
 
+   ufoLib/ufoLib
    ufoLib/glifLib
    ufoLib/pointPen
+   ufoLib/filenames
+   ufoLib/converters
 
 
 

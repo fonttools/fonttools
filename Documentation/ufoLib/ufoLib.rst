@@ -1,9 +1,9 @@
 .. highlight:: python
 
-========
-pointPen
-========
+======
+ufoLib
+======
 
-.. automodule:: ufoLib.pointPen
+.. automodule:: ufoLib
    :inherited-members:
    :members:
