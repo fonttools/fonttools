@@ -1,6 +1,14 @@
-"""A couple of pens to filter contours in various ways.
+"""
+=============================
+Filters: chaining pen objects
+=============================
 
-Filterpens need to be initialised with another pen object that will do the actual drawing. 
+By chaining two (or more) pen objects together, the first pen can function as a filter to the second. The first pen receives data from (for instance) glyph.draw() or glyph.drawPoints(). The filter pen then processes the data and passes new, fresh data to the second pen. In turn the second pen can draw in a glyph. 
+
+Filterpens need to be initialised with a second pen object that will receive the processed data. The examples in this module, ThresholdPen and FlattenPen, have proven useful in a number of projects. For convenienve, each pen has a wrapper function that takes care of making a new glyph to dump the processed data in, and making the appropriate pen instances. But these are non-normative examples.
+
+All pens in this module subclass from fontTools.pens.basePen.
+
 """
 
 
@@ -25,7 +33,11 @@ def distance(pt1, pt2):
 
 class ThresholdPen(AbstractPen):
 
-	"""This pen only segments longer in length than the threshold value."""
+	"""This pen only draws segments longer in length than the threshold value.	
+
+		- otherPen: a different segment pen object this filter should draw the results with.
+		- threshold: the minimum length of a segment
+	"""
 
 	def __init__(self, otherPen, threshold=10):
 		self.threshold = threshold
@@ -62,7 +74,9 @@ class ThresholdPen(AbstractPen):
 
 
 def thresholdGlyph(aGlyph, threshold=10):
-	"""Convenience function that applies the Threshold pen to a glyph. Returns a new glyph object."""
+	
+	"""Convenience function that applies the **ThresholdPen** to a glyph. Returns a new glyph object (from objectsRF.RGlyph)."""
+	
 	from robofab.pens.adapterPens import PointToSegmentPen
 	new = _RGlyph()
 	filterpen = ThresholdPen(new.getPen(), threshold)
@@ -125,7 +139,12 @@ def _getCubicPoint(t, pt0, pt1, pt2, pt3):
 
 class FlattenPen(BasePen):
 
-	"""This filter pen processes the contours into a series of straight lines by flattening the curves. It takes arguments for approximateSegmentLength: the length you want the flattened segments to be (roughly), segmentLines: whether to cut straight lines into segments as well
+	"""This filter pen processes the contours into a series of straight lines by flattening the curves.
+	
+		- otherPen: a different segment pen object this filter should draw the results with.
+		- approximateSegmentLength: the length you want the flattened segments to be (roughly).
+		- segmentLines: whether to cut straight lines into segments as well.
+		- filterDoubles: don't draw if a segment goes to the same coordinate.
 	"""
 
 	def __init__(self, otherPen, approximateSegmentLength=5, segmentLines=False, filterDoubles=True):
@@ -192,7 +211,7 @@ class FlattenPen(BasePen):
 
 def flattenGlyph(aGlyph, threshold=10, segmentLines=True):
 
-	"""Convenience function that applies the FlattenPen pen to a glyph. Returns a new glyph object."""
+	"""Convenience function that applies the **FlattenPen** pen to a glyph. Returns a new glyph object."""
 
 	from robofab.pens.adapterPens import PointToSegmentPen
 	if len(aGlyph.contours) == 0:
@@ -207,91 +226,3 @@ def flattenGlyph(aGlyph, threshold=10, segmentLines=True):
 	aGlyph.update()
 	return aGlyph
 
-
-def spikeGlyph(aGlyph, segmentLength=20, spikeLength=40, patternFunc=None):
-	
-	"""Add narly spikes or dents to the glyph.
-	patternFunc is an optional function which recalculates the offset.
-	
-	**Needs to find a new home.**
-	"""
-
-	from math import atan2, sin, cos, pi
-	
-	new = _RGlyph()
-	new.appendGlyph(aGlyph)
-	new.width = aGlyph.width
-	
-	if len(new.contours) == 0:
-		return
-	flattenGlyph(new, segmentLength, segmentLines=True)
-	for contour in new:
-		l = len(contour.points)
-		lastAngle = None
-		for i in range(0, len(contour.points), 2):
-			prev = contour.points[i-1]
-			cur = contour.points[i]
-			next = contour.points[(i+1)%l]
-			angle = atan2(prev.x - next.x, prev.y - next.y)
-			lastAngle = angle
-			if patternFunc is not None:
-				thisSpikeLength = patternFunc(spikeLength)
-			else:
-				thisSpikeLength = spikeLength
-			cur.x -= sin(angle+.5*pi)*thisSpikeLength
-			cur.y -= cos(angle+.5*pi)*thisSpikeLength
-			new.update()
-	aGlyph.clear()
-	aGlyph.appendGlyph(new)
-	aGlyph.update()
-	return aGlyph
-
-
-def halftoneGlyph(aGlyph, invert=False):
-	
-	"""Convert the glyph into some sort of halftoning pattern.
-	Measure a bunch of inside/outside points to simulate grayscale levels.
-	Slow.
-	**Needs to find a new home.**
-	"""
-	print 'halftoneGlyph is running...'
-	grid = {}
-	drawing = {}
-	dataDistance = 10
-	scan = 2
-	preload = 0
-	cellDistance = dataDistance * 5
-	overshoot = dataDistance * 2
-	(xMin, yMin, xMax, yMax) = aGlyph.box
-	for x in range(xMin-overshoot, xMax+overshoot, dataDistance):
-		print 'scanning..', x
-		for y in range(yMin-overshoot, yMax+overshoot, dataDistance):
-			if aGlyph.pointInside((x, y)):
-				grid[(x, y)] = True
-			else:
-				grid[(x, y)] = False
-			#print 'gathering data', x, y, grid[(x, y)]
-	print 'analyzing..'
-	for x in range(xMin-overshoot, xMax+overshoot, cellDistance):
-		for y in range(yMin-overshoot, yMax+overshoot, cellDistance):
-			total = preload
-			for scanx in range(-scan, scan):
-				for scany in range(-scan, scan):
-					if grid.get((x+scanx*dataDistance, y+scany*dataDistance)):
-						total += 1
-			if invert:
-				drawing[(x, y)] = 2*scan**2 - float(total)
-			else:
-				drawing[(x, y)] = float(total)
-	aGlyph.clear()
-	print drawing
-	for (x,y) in drawing.keys():
-		size = drawing[(x,y)] / float(2*scan**2) * 5
-		pen = aGlyph.getPen()
-		pen.moveTo((x-size, y-size))
-		pen.lineTo((x+size, y-size))
-		pen.lineTo((x+size, y+size))
-		pen.lineTo((x-size, y+size))
-		pen.lineTo((x-size, y-size))
-		pen.closePath()
-		aGlyph.update()
