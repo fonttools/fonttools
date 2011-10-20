@@ -1,7 +1,7 @@
 import unittest
 from cStringIO import StringIO
 import sys
-from robofab import ufoLib
+import ufoLib
 from robofab.objects.objectsRF import RInfo
 from robofab.test.testSupport import fontInfoVersion1, fontInfoVersion2
 
