@@ -1,15 +1,20 @@
-"""A couple of point pens which return the glyph as a list of basic values."""
-
-
 from ufoLib.pointPen import AbstractPointPen
-
 
 class DigestPointPen(AbstractPointPen):
 
-	"""Calculate a digest of all points
-		AND coordinates
-		AND components
-	in a glyph.
+	"""This calculates a tuple representing the structure and values in a glyph:
+
+		- including coordinates
+		- including components
+
+	>>> from robofab.pens.digestPen import DigestPointPen
+	>>> pen = DigestPointPen()
+	>>> g = CurrentGlyph()
+	>>> g.drawPoints(pen)
+	>>> pen.getDigest()
+	('beginPath', ((25, 425), 'line', False, None),((25, 0), 'line', False, None),((95, 0), 'line', False, None),((95, 425), 'line', False, None), 'endPath',
+	 'beginPath', ((25, 595), 'line', False, None),((25, 491), 'line', False, None),((95, 491), 'line', False, None),((95, 595), 'line', False, None), 'endPath')
+	
 	"""
 
 	def __init__(self, ignoreSmoothAndName=False):
@@ -38,13 +43,14 @@ class DigestPointPen(AbstractPointPen):
 		self._data.append((baseGlyphName, tuple(t)))
 
 	def getDigest(self):
+		"""Return the digest as a tuple with all coordinates of all points."""
 		return tuple(self._data)
 	
 	def getDigestPointsOnly(self, needSort=True):
-		""" Return a tuple with all coordinates of all points, 
-			but without smooth info or drawing instructions.
-			For instance if you want to compare 2 glyphs in shape,
-			but not interpolatability.
+		""" Return the digest as a tuple with all coordinates of all points, 
+				- but without smooth info or drawing instructions.
+				- For instance if you want to compare 2 glyphs in shape,
+				  but not interpolatability.
 			"""
 		points = []
 		from types import TupleType
@@ -58,9 +64,18 @@ class DigestPointPen(AbstractPointPen):
 
 class DigestPointStructurePen(DigestPointPen):
 
-	"""Calculate a digest of the structure of the glyph
-		NOT coordinates
-		NOT values.
+	"""This calculates a tuple representing the structure and values in a glyph:
+
+		- excluding coordinates
+		- excluding components
+
+	>>> from robofab.pens.digestPen import DigestPointStructurePen
+	>>> pen = DigestPointStructurePen()
+	>>> g = CurrentGlyph()
+	>>> g.drawPoints(pen)
+	>>> pen.getDigest()
+	 ('beginPath', 'line', 'line', 'line', 'line', 'endPath', 'beginPath', 'line', 'line', 'line', 'line', 'endPath')
+	
 	"""
 
 	def addPoint(self, pt, segmentType=None, smooth=False, name=None, **kwargs):
