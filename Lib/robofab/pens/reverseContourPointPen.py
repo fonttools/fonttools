@@ -88,7 +88,7 @@ class ReverseContourPointPen(AbstractPointPen):
 
 
 if __name__ == "__main__":
-	from robofab.pens.pointPen import PrintingPointPen
+	from robofab.pens.printingPens import PrintingPointPen
 	pP = PrintingPointPen()
 	rP = ReverseContourPointPen(pP)
 

@@ -271,7 +271,7 @@ class GuessSmoothPointPen(AbstractPointPen):
 
 if __name__ == "__main__":
 	from fontTools.pens.basePen import _TestPen as PSPen
-	from robofab.pens.pointPen import PrintingPointPen
+	from robofab.pens.printingPens import PrintingPointPen
 	segmentPen = PSPen(None)
 #	pen = PointToSegmentPen(SegmentToPointPen(PointToSegmentPen(PSPen(None))))
 	pen = PointToSegmentPen(SegmentToPointPen(PrintingPointPen()))
