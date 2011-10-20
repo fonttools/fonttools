@@ -540,7 +540,7 @@ def absoluteBCPOut(anchor, BCPOut):
 	return (BCPOut[0] + anchor[0], BCPOut[1] + anchor[1])
 
 class FuzzyNumber(object):
-    """Number-like object that will match another fuzzy number if the values are within a specific range."""
+	"""Number-like object that will match another fuzzy number if the values are within a specific range."""
 	def __init__(self, value, threshold):
 		self.value = value
 		self.threshold = threshold
