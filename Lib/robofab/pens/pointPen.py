@@ -1,13 +1,20 @@
+"""
+=========
+PointPens
+=========
+
+Where **SegmentPens** have an intuitive approach to drawing (if you're familiar with postscript anyway), the **PointPen** is geared towards accessing all the data in the contours of the glyph. A PointsPen has a very simple interface, it just steps through all the points in a call from glyph.drawPoints(). This allows the caller to provide more data for each point. For instance, whether or not a point is smooth, and its name.
+
+"""
 
 __all__ = ["AbstractPointPen", "BasePointToSegmentPen" ]
 
-class AbstractPointPen:
+class AbstractPointPen(object):
 	
 	"""
-	Prototype for all PointPens.
+	Baseclass for all PointPens.
 	
-		- Should migrate to new style class.
-		- Should move to fontTools?
+		- Should move to ufoLib?
 	"""
 
 	def beginPath(self):
