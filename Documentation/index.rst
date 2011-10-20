@@ -13,13 +13,30 @@ Contents:
 
 
 Objects
-^^^^^^^^^
+^^^^^^^
+
+The Robofab object model.
 
 .. toctree::
    :maxdepth: 1
 
    objects/objectsBase
    objects/objectsRF
+
+Pens
+^^^^
+
+Pen objects for all sorts of use.
+
+.. toctree::
+   :maxdepth: 1
+
+   pens/pointPen
+   pens/rfUFOPen
+   pens/digestPen
+   pens/mathPens
+   pens/filterPen
+   pens/adapterPens
 
 Indices and tables
 ==================
