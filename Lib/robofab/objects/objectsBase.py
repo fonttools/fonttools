@@ -1,17 +1,10 @@
 """ 
-Base classes for the Unified Font Objects (UFO),
-a series of classes that deal with fonts, glyphs,
-contours and related things.
 
-Unified Font Objects are:
-- platform independent
-- application independent
+====================
+Robofab Base Classes
+====================
 
-About Object Inheritance:
-objectsFL and objectsRF objects inherit
-methods and attributes from these objects.
-In other words, if it is in here, you can
-do it with the objectsFL and objectsRF.
+These are base classes for Font, Glyph, Contour, Segment and Point objects. This defines the basic API that needs to be supported in RoboFab objects.
 """
 
 
@@ -527,23 +520,27 @@ def mulPt(ptA, scalar):
 	return ptA[0]*f1, ptA[1]*f2
 	
 def relativeBCPIn(anchor, BCPIn):
-	"""convert absolute incoming bcp value to a relative value"""
+	"""Convert absolute incoming bcp value to a relative value.
+	** NOTE How is this different from relativeBCPOut? **
+	"""
 	return (BCPIn[0] - anchor[0], BCPIn[1] - anchor[1])
 
 def absoluteBCPIn(anchor, BCPIn):
-	"""convert relative incoming bcp value to an absolute value"""
+	"""Convert relative incoming bcp value to an absolute value
+	** NOTE How is this different from absoluteBCPOut? **
+	"""
 	return (BCPIn[0] + anchor[0], BCPIn[1] + anchor[1])
 
 def relativeBCPOut(anchor, BCPOut):
-	"""convert absolute outgoing bcp value to a relative value"""
+	"""Convert absolute outgoing bcp value to a relative value"""
 	return (BCPOut[0] - anchor[0], BCPOut[1] - anchor[1])
 
 def absoluteBCPOut(anchor, BCPOut):
-	"""convert relative outgoing bcp value to an absolute value"""
+	"""Convert relative outgoing bcp value to an absolute value"""
 	return (BCPOut[0] + anchor[0], BCPOut[1] + anchor[1])
 
 class FuzzyNumber(object):
-
+    """Number-like object that will match another fuzzy number if the values are within a specific range."""
 	def __init__(self, value, threshold):
 		self.value = value
 		self.threshold = threshold
@@ -596,10 +593,12 @@ class RBaseObject(object):
 		return n
 			
 	def round(self):
+		"""Placeholder. Round all numerical values."""
 		pass
 	
 	def isRobofab(self):
 		"""Presence of this method indicates a Robofab object"""
+		raise
 		return 1
 		
 	def naked(self):
