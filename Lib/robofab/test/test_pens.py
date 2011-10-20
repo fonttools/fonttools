@@ -9,7 +9,7 @@ from robofab.pens.adapterPens import SegmentToPointPen, PointToSegmentPen
 from robofab.pens.adapterPens import GuessSmoothPointPen
 from robofab.pens.reverseContourPointPen import ReverseContourPointPen
 from robofab.test.testSupport import getDemoFontGlyphSetPath
-from robofab.glifLib import GlyphSet
+from ufoLib.glifLib import GlyphSet
 
 
 class TestShapes:
