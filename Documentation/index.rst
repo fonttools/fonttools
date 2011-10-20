@@ -8,9 +8,8 @@ Welcome to the RoboFab documentation!
 
 Welcome to the RoboFab documentation. At the time of this writing, the UFO3 implementation is in full swing. We're using this opportunity to remove some cruft and clean up.
 
-Contents:
-=========
-
+RoboFab
+=======
 
 Objects
 ^^^^^^^
@@ -31,12 +30,25 @@ Pen objects for all sorts of use.
 .. toctree::
    :maxdepth: 1
 
-   pens/pointPen
    pens/rfUFOPen
    pens/digestPen
    pens/mathPens
    pens/filterPen
    pens/adapterPens
+   
+   
+UFOLib
+======
+
+Tools for accessing, validating and making UFO and glif.
+
+.. toctree::
+   :maxdepth: 1
+
+   ufoLib/glifLib
+   ufoLib/pointPen
+
+
 
 Indices and tables
 ==================
