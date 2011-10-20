@@ -4,7 +4,10 @@ __all__ = ["AbstractPointPen", "BasePointToSegmentPen" ]
 class AbstractPointPen:
 	
 	"""
-	Prototype for all PointPens. Should migrate to new style class.
+	Prototype for all PointPens.
+	
+		- Should migrate to new style class.
+		- Should move to fontTools?
 	"""
 
 	def beginPath(self):

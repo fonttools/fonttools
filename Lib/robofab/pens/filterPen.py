@@ -1,4 +1,7 @@
-"""A couple of point pens to filter contours in various ways."""
+"""A couple of pens to filter contours in various ways.
+
+Filterpens need to be initialised with another pen object that will do the actual drawing. 
+"""
 
 
 from fontTools.pens.basePen import AbstractPen, BasePen
@@ -22,7 +25,7 @@ def distance(pt1, pt2):
 
 class ThresholdPen(AbstractPen):
 
-	"""Removes segments shorter in length than the threshold value."""
+	"""This pen only segments longer in length than the threshold value."""
 
 	def __init__(self, otherPen, threshold=10):
 		self.threshold = threshold
@@ -59,6 +62,7 @@ class ThresholdPen(AbstractPen):
 
 
 def thresholdGlyph(aGlyph, threshold=10):
+	"""Convenience function that applies the Threshold pen to a glyph. Returns a new glyph object."""
 	from robofab.pens.adapterPens import PointToSegmentPen
 	new = _RGlyph()
 	filterpen = ThresholdPen(new.getPen(), threshold)
@@ -121,7 +125,7 @@ def _getCubicPoint(t, pt0, pt1, pt2, pt3):
 
 class FlattenPen(BasePen):
 
-	"""Process the contours into a series of straight lines by flattening the curves.
+	"""This filter pen processes the contours into a series of straight lines by flattening the curves. It takes arguments for approximateSegmentLength: the length you want the flattened segments to be (roughly), segmentLines: whether to cut straight lines into segments as well
 	"""
 
 	def __init__(self, otherPen, approximateSegmentLength=5, segmentLines=False, filterDoubles=True):
@@ -188,7 +192,7 @@ class FlattenPen(BasePen):
 
 def flattenGlyph(aGlyph, threshold=10, segmentLines=True):
 
-	"""Replace curves with series of straight l ines."""
+	"""Convenience function that applies the FlattenPen pen to a glyph. Returns a new glyph object."""
 
 	from robofab.pens.adapterPens import PointToSegmentPen
 	if len(aGlyph.contours) == 0:
@@ -207,7 +211,10 @@ def flattenGlyph(aGlyph, threshold=10, segmentLines=True):
 def spikeGlyph(aGlyph, segmentLength=20, spikeLength=40, patternFunc=None):
 	
 	"""Add narly spikes or dents to the glyph.
-	patternFunc is an optional function which recalculates the offset."""
+	patternFunc is an optional function which recalculates the offset.
+	
+	**Needs to find a new home.**
+	"""
 
 	from math import atan2, sin, cos, pi
 	
@@ -245,6 +252,7 @@ def halftoneGlyph(aGlyph, invert=False):
 	"""Convert the glyph into some sort of halftoning pattern.
 	Measure a bunch of inside/outside points to simulate grayscale levels.
 	Slow.
+	**Needs to find a new home.**
 	"""
 	print 'halftoneGlyph is running...'
 	grid = {}
