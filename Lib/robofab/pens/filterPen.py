@@ -16,7 +16,7 @@ from fontTools.pens.basePen import AbstractPen, BasePen
 
 
 
-from robofab.pens.pointPen import AbstractPointPen
+from ufoLib.pointPen import AbstractPointPen
 from robofab.objects.objectsRF import RGlyph as _RGlyph
 from robofab.objects.objectsBase import _interpolatePt
 

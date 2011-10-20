@@ -15,7 +15,7 @@ import os
 from cStringIO import StringIO
 from warnings import warn
 from xmlTreeBuilder import buildTree, stripCharacterData
-from robofab.pens.pointPen import AbstractPointPen
+from ufoLib.pointPen import AbstractPointPen
 from plistlib import readPlist, writePlistToString
 from filenames import userNameToFileName
 from validators import isDictEnough, genericTypeValidator, colorValidator,\

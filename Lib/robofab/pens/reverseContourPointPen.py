@@ -4,7 +4,7 @@
 __all__ = ["ReverseContourPointPen"]
 
 
-from robofab.pens.pointPen import AbstractPointPen
+from ufoLib.pointPen import AbstractPointPen
 
 
 class ReverseContourPointPen(AbstractPointPen):

@@ -1,7 +1,7 @@
 """Some pens that are needed during glyph math"""
 
 
-from robofab.pens.pointPen import BasePointToSegmentPen, AbstractPointPen
+from ufoLib.pointPen import BasePointToSegmentPen, AbstractPointPen
 
 
 class GetMathDataPointPen(AbstractPointPen):

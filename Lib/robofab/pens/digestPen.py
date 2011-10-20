@@ -1,7 +1,7 @@
 """A couple of point pens which return the glyph as a list of basic values."""
 
 
-from robofab.pens.pointPen import AbstractPointPen
+from ufoLib.pointPen import AbstractPointPen
 
 
 class DigestPointPen(AbstractPointPen):
