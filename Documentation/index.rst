@@ -35,7 +35,17 @@ Pen objects for all sorts of use.
    pens/mathPens
    pens/filterPen
    pens/adapterPens
+   pens/boundsPen
+   pens/marginPen
+   pens/angledMarginPen
    
+Interface
+^^^^^^^^^   
+
+.. toctree::
+   :maxdepth: 1
+
+   interface/dialogs
    
 UFOLib
 ======
