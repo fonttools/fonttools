@@ -27,31 +27,31 @@ __all__ = [
 # start with all the defaults. 
 
 def AskString(prompt, value='', title='RoboFab'):
-	"""Prototype for AskString dialog. Should show a prompt, a text input box and OK button."""
+    """Prototype for AskString dialog. Should show a prompt, a text input box and OK button."""
     raise NotImplementedError
 
 def AskYesNoCancel(prompt, title='RoboFab', default=0):
-	"""Prototype for AskYesNoCancel dialog. Should show a prompt, Yes, No, Cancel buttons."""
+    """Prototype for AskYesNoCancel dialog. Should show a prompt, Yes, No, Cancel buttons."""
     raise NotImplementedError
 
 def FindGlyph(font, message="Search for a glyph:", title='RoboFab'):
-	"""Prototype for FindGlyph dialog. Should show a list of glyph names of the current font, OK and Cancel buttons"""
+    """Prototype for FindGlyph dialog. Should show a list of glyph names of the current font, OK and Cancel buttons"""
     raise NotImplementedError
 
 def GetFile(message=None):
-	"""Prototype for GetFile dialog. Should offer a standard OS get file dialog."""
+    """Prototype for GetFile dialog. Should offer a standard OS get file dialog."""
     raise NotImplementedError
 
 def GetFolder(message=None):
-	"""Prototype for GetFolder dialog. Should offer a standard OS get folder dialog."""
+    """Prototype for GetFolder dialog. Should offer a standard OS get folder dialog."""
     raise NotImplementedError
 
 def Message(message, title='RoboFab'):
-	"""Prototype for Message dialog. Should offer a window with the message, OK button."""
+    """Prototype for Message dialog. Should offer a window with the message, OK button."""
     raise NotImplementedError
 
 def OneList(list, message="Select an item:", title='RoboFab'):
-	"""Prototype for OneList dialog."""
+    """Prototype for OneList dialog."""
     raise NotImplementedError
     
 def PutFile(message=None, defaultName=None):
