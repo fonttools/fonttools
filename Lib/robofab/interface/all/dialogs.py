@@ -204,6 +204,7 @@ __all__ = [
 
     
 def test():
+    """This prints the basic parameters of the environment we're in, and the code we've loaded."""
     print
     print "testing RoboFab Dialogs:"
     print "\tpython version:", pyVersion
