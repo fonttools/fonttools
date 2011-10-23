@@ -45,17 +45,17 @@ if sys.platform in (
         'mac',
         'darwin',
         ):
-	platform = "mac"
-	v = _platform.mac_ver()[0]
-	platformVersion = float('.'.join(v.split('.')[:2]))
+    platform = "mac"
+    v = _platform.mac_ver()[0]
+    platformVersion = float('.'.join(v.split('.')[:2]))
 elif sys.platform in (
         'linux1',
         'linux2',       # Ubuntu = others?
         ):
     platform = "linux"
 elif os.name == 'nt':
-	platform = "win"
-	
+    platform = "win"
+    
 # determine application
 
 try:
