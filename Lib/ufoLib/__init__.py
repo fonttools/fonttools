@@ -594,6 +594,11 @@ class UFOWriter(object):
 
 	# properties
 
+	def _get_path(self):
+		return self._path
+
+	path = property(_get_path, doc="The path the UFO is being written to.")
+
 	def _get_formatVersion(self):
 		return self._formatVersion
 
