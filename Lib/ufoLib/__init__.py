@@ -210,16 +210,16 @@ class UFOReader(object):
 		f = codecs.open(path, READ_MODE, encoding=encoding)
 		return f
 
-	def getFileModTime(self, path):
+	def getFileModificationTime(self, path):
 		"""
-		Returns the modification time (as reported by os.stat st_mtime)
+		Returns the modification time (as reported by os.path.getmtime)
 		for the file at the given path. The path must be relative to
 		the UFO path. Returns None if the file does not exist.
 		"""
 		fullPath = os.path.join(self._path, path)
 		if not self._checkForFile(fullPath):
 			return None
-		return os.stat(fullPath).st_mtime
+		return os.path.getmtime(fullPath)
 
 	# metainfo.plist
 
