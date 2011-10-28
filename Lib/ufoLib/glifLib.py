@@ -262,6 +262,14 @@ class GlyphSet(object):
 			self._glifCache[glyphName] = (text, os.path.getmtime(path))
 		return self._glifCache[glyphName][0]
 
+	def getGLIFModificationTime(self, glyphName):
+		"""
+		Get the modification time (as reported by os.path.getmtime)
+		of the GLIF with glyphName.
+		"""
+		self.getGLIF(glyphName)
+		return self._glifCache[glyphName][1]
+
 	def _purgeCachedGLIF(self, glyphName):
 		if glyphName in self._glifCache:
 			del self._glifCache[glyphName]
