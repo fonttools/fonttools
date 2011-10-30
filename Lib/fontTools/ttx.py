@@ -9,7 +9,7 @@ usage: ttx [options] inputfile1 [... inputfileN]
        or OpenType font file.
 
     Output files are created so they are unique: an existing file is
-       never overwrritten.
+       never overwritten.
 
     General options:
     -h Help: print this message
@@ -46,7 +46,7 @@ usage: ttx [options] inputfile1 [... inputfileN]
     -m Merge with TrueType-input-file: specify a TrueType or OpenType
        font file to be merged with the TTX file. This option is only
        valid when at most one TTX file is specified.
-    -b Don't recalc glyph boundig boxes: use the values in the TTX
+    -b Don't recalc glyph bounding boxes: use the values in the TTX
        file as-is.
 """
 
