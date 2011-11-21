@@ -738,8 +738,9 @@ def _writeAnchors(glyphObject, writer, identifiers):
 def _writeLib(glyphObject, writer):
 	from ufoLib.plistlib import PlistWriter
 	lib = getattr(glyphObject, "lib", None)
-	if not isDictEnough(lib):
-		raise GlifLibError("lib attribute must be a dict.")
+	valid, message = glyphLibValidator(lib)
+	if not valid:
+	    raise GlifLibError(message)
 	if not isinstance(lib, dict):
 	    lib = dict(lib)
 	writer.begintag("lib")
