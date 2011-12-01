@@ -462,7 +462,7 @@ class UFOReader(object):
 		Return a dictionary that maps unicode values (ints) to
 		lists of glyph names.
 		"""
-		glyphsPath = self.getGlyphSet(layerName)
+		glyphSet = self.getGlyphSet(layerName)
 		allUnicodes = glyphSet.getUnicodes()
 		cmap = {}
 		for glyphName, unicodes in allUnicodes.iteritems():
