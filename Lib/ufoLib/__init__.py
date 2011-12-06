@@ -1192,6 +1192,8 @@ def convertUFOFormatVersion1ToFormatVersion2(inPath, outPath=None):
 	be converted in place. Otherwise, if outPath is
 	specified, nothing must exist at that path.
 	"""
+	from warnings import warn
+	warn("convertUFOFormatVersion1ToFormatVersion2 is deprecated.", DeprecationWarning)
 	if outPath is None:
 		outPath = inPath
 	if inPath != outPath and os.path.exists(outPath):
