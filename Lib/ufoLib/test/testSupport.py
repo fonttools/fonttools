@@ -280,7 +280,7 @@ fontInfoVersion2 = {
 	"openTypeOS2TypoDescender"			 : -250,
 	"openTypeOS2TypoLineGap"			 : 200,
 	"openTypeOS2WinAscent"				 : 750,
-	"openTypeOS2WinDescent"				 : -250,
+	"openTypeOS2WinDescent"				 : 250,
 	"openTypeOS2Type"					 : [],
 	"openTypeOS2SubscriptXSize"			 : 200,
 	"openTypeOS2SubscriptYSize"			 : 400,
