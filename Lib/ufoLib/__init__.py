@@ -352,6 +352,13 @@ class UFOReader(object):
 	def readKerning(self):
 		"""
 		Read kerning.plist. Returns a dict.
+
+		This performs structural validation of the kerning data,
+		but it does not check the validity of the kerning as
+		dictated in the UFO spec. To do that, pass the kerning
+		obtained from this method and the groups obtained from
+		readGroups to the kerningvalidator function in the
+		validators module.
 		"""
 		# handle up conversion
 		if self._formatVersion < 3:
@@ -834,6 +841,11 @@ class UFOWriter(object):
 		"""
 		Write kerning.plist. This method requires a
 		dict of kerning pairs as an argument.
+
+		This performs basic structural validation of the kerning,
+		but it does not check for compliance with the spec in
+		regards to conflicting pairs. The assumption is that the
+		kerning data being passed is standards compliant.
 		"""
 		invalidFormatMessage = "The kerning is not properly formatted."
 		if not isDictEnough(kerning):

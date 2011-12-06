@@ -3,7 +3,6 @@
 import os
 import calendar
 
-
 # -------
 # Generic
 # -------
@@ -886,6 +885,92 @@ def groupsValidator(value):
 					return False, "The glyph \"%s\" occurs in too many kerning groups." % glyphName
 				d[glyphName] = groupName
 	return True, None
+
+# -------------
+# kerning.plist
+# -------------
+
+def kerningValidator(kerning, groups):
+	"""
+	This validates a passed kerning dictionary
+	using the provided groups. The validation
+	checks to make sure that there are no conflicting
+	glyph + group and group + glyph exceptions.
+
+	>>> groups = {
+	...     "public.kern1.O" : ["O", "D", "Q"],
+	...     "public.kern2.E" : ["E", "F"]
+	... }
+	>>> kerning = {
+	...     ("public.kern1.O", "public.kern2.E") : -100,
+	...     ("public.kern1.O", "F") : -200,
+	...     ("D", "F") : -300,
+	... }
+	>>> kerningValidator(kerning, groups)
+	True
+	>>> kerning = {
+	...     ("public.kern1.O", "public.kern2.E") : -100,
+	...     ("public.kern1.O", "F") : -200,
+	...     ("Q", "public.kern2.E") : -250,
+	...     ("D", "F") : -300,
+	... }
+	>>> kerningValidator(kerning, groups)
+	False
+	"""
+	# flatten the groups
+	flatFirstGroups = {}
+	flatSecondGroups = {}
+	for groupName, glyphList in groups.items():
+		if not groupName.startswith("public.kern1.") and not groupName.startswith("public.kern2."):
+			continue
+		if groupName.startswith("public.kern1."):
+			d = flatFirstGroups
+		elif groupName.startswith("public.kern2."):
+			d = flatSecondGroups
+		for glyphName in glyphList:
+			d[glyphName] = groupName
+	# search for conflicts
+	for first, second in kerning.keys():
+		firstIsGroup = first.startswith("public.kern1.")
+		secondIsGroup = second.startswith("public.kern2.")
+		# skip anything other than glyph + group and group + glyph
+		if firstIsGroup and secondIsGroup:
+			continue
+		if not firstIsGroup and not secondIsGroup:
+			continue
+		# if the first is a glyph and it isn't in a group, skip
+		if not firstIsGroup:
+			if first not in flatFirstGroups:
+				continue
+		# if the second is a glyph and it isn't in a group, skip
+		if not secondIsGroup:
+			if second not in flatSecondGroups:
+				continue
+		# skip unknown things
+		if firstIsGroup and first not in groups:
+			continue
+		if firstIsGroup and second not in flatSecondGroups:
+			continue
+		if secondIsGroup and second not in groups:
+			continue
+		if secondIsGroup and first not in flatFirstGroups:
+			continue
+		# validate group + glyph
+		if firstIsGroup:
+			firstOptions = groups[first]
+			secondGroup = flatSecondGroups[second]
+			for glyph in firstOptions:
+				if (glyph, secondGroup) in kerning:
+					return False
+		# validate glyph + group
+		if secondIsGroup:
+			secondOptions = groups[second]
+			firstGroup = flatFirstGroups[first]
+			for glyph in secondOptions:
+				if (firstGroup, glyph) in kerning:
+					return False
+	# fallback
+	return True
 
 # -------------
 # lib.plist/lib
