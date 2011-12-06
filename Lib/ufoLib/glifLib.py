@@ -1207,20 +1207,25 @@ def _buildOutlineComponentFormat2(pen, (attrs, children), identifiers):
 def _validateAndMassagePointStructures(children, pointAttributes, openContourOffCurveLeniency=False):
 	if not children:
 		return children
+	# store some data for later validation
+	pointTypes = []
+	haveOnCurvePoint = False
+	haveOffCurvePoint = False
 	# validate and massage the individual point elements
 	for index, (subElement, attrs, dummy) in enumerate(children):
 		# not <point>
 		if subElement != "point":
 			raise GlifLibError("Unknown child element (%s) of contour element." % subElement)
 		# unknown attributes
-		if set(attrs.keys()) - pointAttributes:
+		unknownAttributes = [attr for attr in attrs.keys() if attr not in pointAttributes]
+		if unknownAttributes:
 			raise GlifLibError("Unknown attributes in point element.")
 		# search for unknown children
 		if len(dummy):
 			raise GlifLibError("Unknown child elements in point element.")
 		# x and y are required
-		x = attrs.get("x", "undefined")
-		y = attrs.get("y", "undefined")
+		x = attrs.get("x")
+		y = attrs.get("y")
 		if x is None:
 			raise GlifLibError("Required x attribute is missing in point element.")
 		if y is None:
@@ -1228,14 +1233,19 @@ def _validateAndMassagePointStructures(children, pointAttributes, openContourOff
 		x = attrs["x"] = _number(x)
 		y = attrs["y"] = _number(y)
 		# segment type
-		segmentType = attrs.get("type", "offcurve")
-		if segmentType not in pointTypeOptions:
-			raise GlifLibError("Unknown point type: %s" % segmentType)
-		if segmentType == "offcurve":
-			segmentType = None
-		attrs["segmentType"] = segmentType
+		pointType = attrs.pop("type", "offcurve")
+		if pointType not in pointTypeOptions:
+			raise GlifLibError("Unknown point type: %s" % pointType)
+		if pointType == "offcurve":
+			pointType = None
+		attrs["segmentType"] = pointType
+		if pointType is None:
+			haveOffCurvePoint = True
+		else:
+			haveOnCurvePoint = True
+		pointTypes.append(pointType)
 		# move can only occur as the first point
-		if segmentType == "move" and index != 0:
+		if pointType == "move" and index != 0:
 			raise GlifLibError("A move point occurs after the first point in the contour.")
 		# smooth is optional
 		smooth = attrs.get("smooth", "no")
@@ -1245,8 +1255,8 @@ def _validateAndMassagePointStructures(children, pointAttributes, openContourOff
 		smooth = smooth == "yes"
 		attrs["smooth"] = smooth
 		# smooth can only be applied to curve and qcurve
-		if smooth and segmentType not in ("curve", "qcurve"):
-			raise GlifLibError("smooth attribute set in a %s point." % segmentType)
+		if smooth and pointType not in ("curve", "qcurve"):
+			raise GlifLibError("smooth attribute set in a %s point." % pointType)
 		# name is optional
 		if "name" not in attrs:
 			attrs["name"] = None
@@ -1262,39 +1272,39 @@ def _validateAndMassagePointStructures(children, pointAttributes, openContourOff
 						break
 					elif attrs["segmentType"] is None:
 						# remove the point
+						pointTypes.pop(-1)
 						pass
 				break
 			children.reverse()
-	# validate the segments
-	pointTypes = [a.get("type", "offcurve") for s, a, d in children]
-	if set(pointTypes) != set(["offcurve"]):
-		while pointTypes[-1] == "offcurve":
+	# validate the off-curves in the segments
+	if haveOffCurvePoint and haveOnCurvePoint:
+		while pointTypes[-1] is None:
 			pointTypes.insert(0, pointTypes.pop(-1))
-		segments = []
-		for pointType in reversed(pointTypes):
-			if pointType != "offcurve":
-				segments.append([pointType])
-			else:
-				segments[-1].append(pointType)
-		for segment in segments:
-			if len(segment) == 1:
+		segment = []
+		for pointType in pointTypes:
+			if pointType is None:
+				segment.append(pointType)
 				continue
-			segmentType = segment[0]
-			offCurves = segment[1:]
-			# move and line can't be preceded by off-curves
-			if segmentType == "move":
-				# this will have been filtered out already
-				raise GlifLibError("move can not have an offcurve.")
-			elif segmentType == "line":
-				raise GlifLibError("line can not have an offcurve.")
-			elif segmentType == "curve":
-				if len(offCurves) > 2:
-					raise GlifLibError("Too many offcurves defined for curve.")
-			elif segmentType == "qcurve":
-				pass
-			else:
-				# unknown segement type. it'll be caught later.
-				pass
+			segment.append(pointType)
+			if len(segment) > 1:
+				segmentType = segment[-1]
+				offCurves = segment[:-1]
+				# move and line can't be preceded by off-curves
+				if segmentType == "move":
+					# this will have been filtered out already
+					raise GlifLibError("move can not have an offcurve.")
+				elif segmentType == "line":
+					raise GlifLibError("line can not have an offcurve.")
+				elif segmentType == "curve":
+					if len(offCurves) > 2:
+						raise GlifLibError("Too many offcurves defined for curve.")
+				elif segmentType == "qcurve":
+					pass
+				else:
+					# unknown segement type. it'll be caught later.
+					pass
+			# reset
+			segment = []
 	return children
 
 # ---------------------
