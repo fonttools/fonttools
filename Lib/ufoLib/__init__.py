@@ -24,6 +24,8 @@ Value conversion functions are availble for converting
 fontinfo.plist values between the possible format versions.
 	convertFontInfoValueForAttributeFromVersion1ToVersion2
 	convertFontInfoValueForAttributeFromVersion2ToVersion1
+	convertFontInfoValueForAttributeFromVersion2ToVersion3
+	convertFontInfoValueForAttributeFromVersion3ToVersion2
 """
 
 
@@ -56,6 +58,8 @@ __all__ = [
 	"validateFontInfoVersion3ValueForAttribute",
 	"convertFontInfoValueForAttributeFromVersion1ToVersion2",
 	"convertFontInfoValueForAttributeFromVersion2ToVersion1"
+	# deprecated
+	"convertUFOFormatVersion1ToFormatVersion2"
 ]
 
 
@@ -297,6 +301,7 @@ class UFOReader(object):
 				if value is not None:
 					infoDataToSet[attr] = value
 			infoDataToSet = _convertFontInfoDataVersion1ToVersion2(infoDataToSet)
+			infoDataToSet = _convertFontInfoDataVersion2ToVersion3(infoDataToSet)
 		# version 2
 		elif self._formatVersion == 2:
 			for attr, dataValidationDict in fontInfoAttributesVersion2ValueData.items():
@@ -304,6 +309,7 @@ class UFOReader(object):
 				if value is None:
 					continue
 				infoDataToSet[attr] = value
+			infoDataToSet = _convertFontInfoDataVersion2ToVersion3(infoDataToSet)
 		# version 3
 		elif self._formatVersion == 3:
 			for attr, dataValidationDict in fontInfoAttributesVersion3ValueData.items():
@@ -315,10 +321,7 @@ class UFOReader(object):
 		else:
 			raise NotImplementedError
 		# validate data
-		if self._formatVersion < 3:
-			infoDataToSet = validateInfoVersion2Data(infoDataToSet)
-		elif self._formatVersion == 3:
-			infoDataToSet = validateInfoVersion3Data(infoDataToSet)
+		infoDataToSet = validateInfoVersion3Data(infoDataToSet)
 		# populate the object
 		for attr, value in infoDataToSet.items():
 			try:
@@ -1623,6 +1626,8 @@ _msCharSet1To2 = {
 }
 _msCharSet2To1 = _flipDict(_msCharSet1To2)
 
+# 1 <-> 2
+
 def convertFontInfoValueForAttributeFromVersion1ToVersion2(attr, value):
 	"""
 	Convert value from version 1 to version 2 format.
@@ -1701,13 +1706,63 @@ def _convertFontInfoDataVersion2ToVersion1(data):
 		converted[newAttr] = newValue
 	return converted
 
+# 2 <-> 3
+
+_ufo2To3NonNegativeInt = set((
+	"versionMinor"
+))
+_ufo2To3NonNegativeIntOrFloat = set((
+	"unitsPerEm",
+	"openTypeHeadLowestRecPPEM",
+	"openTypeOS2WinAscent",
+	"openTypeOS2WinDescent"
+))
+
+def convertFontInfoValueForAttributeFromVersion2ToVersion3(attr, value):
+	"""
+	Convert value from version 2 to version 3 format.
+	Returns the new attribute name and the converted value.
+	If the value is None, None will be returned for the new value.
+	"""
+	if attr in _ufo2To3NonNegativeInt:
+		try:
+			v = int(abs(value))
+		except (ValueError, TypeError):
+			raise UFOLibError("Could not convert value for %s." % attr)
+		if v != value:
+			value = v
+	elif attr in _ufo2To3NonNegativeIntOrFloat:
+		try:
+			v = float(abs(value))
+		except (ValueError, TypeError):
+			raise UFOLibError("Could not convert value for %s." % attr)
+		if v == int(v):
+			v = int(v)
+		if v != value:
+			value = v
+	return attr, value
+
+def convertFontInfoValueForAttributeFromVersion3ToVersion2(attr, value):
+	"""
+	Convert value from version 3 to version 2 format.
+	Returns the new attribute name and the converted value.
+	If the value is None, None will be returned for the new value.
+	"""
+	return attr, value
+
 def _convertFontInfoDataVersion3ToVersion2(data):
 	converted = {}
 	for attr, value in data.items():
-		# only take attributes that are registered for version 2
-		if attr not in fontInfoAttributesVersion2:
+		newAttr, newValue = convertFontInfoValueForAttributeFromVersion3ToVersion2(attr, value)
+		if newAttr not in fontInfoAttributesVersion2:
 			continue
-		# store
+		converted[newAttr] = newValue
+	return converted
+
+def _convertFontInfoDataVersion2ToVersion3(data):
+	converted = {}
+	for attr, value in data.items():
+		attr, value = convertFontInfoValueForAttributeFromVersion2ToVersion3(attr, value)
 		converted[attr] = value
 	return converted
 
