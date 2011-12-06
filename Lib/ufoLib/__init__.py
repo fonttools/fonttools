@@ -2,27 +2,25 @@
 A library for importing .ufo files and their descendants.
 Refer to http://unifiedfontobject.com for the UFO specification.
 
-The UFOReader and UFOWriter classes support versions 1 and 2
-of the specification. Up and down conversion functions are also
-supplied in this library. These conversion functions are only
-necessary if conversion without loading the UFO data into
-a set of objects is desired. These functions are:
-	convertUFOFormatVersion1ToFormatVersion2
+The UFOReader and UFOWriter classes support versions 1, 2 and 3
+of the specification.
 
-Two sets that list the font info attribute names for the two
-fontinfo.plist formats are available for external use. These are:
+Sets that list the font info attribute names for the fontinfo.plist
+formats are available for external use. These are:
 	fontInfoAttributesVersion1
 	fontInfoAttributesVersion2
+	fontInfoAttributesVersion3
 
 A set listing the fontinfo.plist attributes that were deprecated
 in version 2 is available for external use:
 	deprecatedFontInfoAttributesVersion2
 
-A function, validateFontInfoVersion2ValueForAttribute, that does
-some basic validation on values for a fontinfo.plist value is
-available for external use.
+Functions that do basic validation on values for fontinfo.plist
+are available for external use. These are
+	validateFontInfoVersion2ValueForAttribute
+	validateFontInfoVersion3ValueForAttribute
 
-Two value conversion functions are availble for converting
+Value conversion functions are availble for converting
 fontinfo.plist values between the possible format versions.
 	convertFontInfoValueForAttributeFromVersion1ToVersion2
 	convertFontInfoValueForAttributeFromVersion2ToVersion1
@@ -50,11 +48,12 @@ __all__ = [
 	"UFOLibError",
 	"UFOReader",
 	"UFOWriter",
-	"convertUFOFormatVersion1ToFormatVersion2",
 	"fontInfoAttributesVersion1",
 	"fontInfoAttributesVersion2",
+	"fontInfoAttributesVersion3",
 	"deprecatedFontInfoAttributesVersion2",
 	"validateFontInfoVersion2ValueForAttribute",
+	"validateFontInfoVersion3ValueForAttribute",
 	"convertFontInfoValueForAttributeFromVersion1ToVersion2",
 	"convertFontInfoValueForAttributeFromVersion2ToVersion1"
 ]
