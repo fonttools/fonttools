@@ -207,7 +207,7 @@ class UFOReader(object):
 			return None
 		if os.path.isdir(fullPath):
 			raise UFOLibError("%s is a directory." % path)
-		f = codecs.open(path, READ_MODE, encoding=encoding)
+		f = codecs.open(fullPath, READ_MODE, encoding=encoding)
 		return f
 
 	def getFileModificationTime(self, path):
@@ -727,7 +727,7 @@ class UFOWriter(object):
 		if os.path.exists(fullPath) and os.path.isdir(fullPath):
 			raise UFOLibError("A directory exists at %s." % path)
 		self._buildDirectoryTree(path)
-		return codecs.open(path, WRITE_MODE, encoding=encoding)
+		return codecs.open(fullPath, WRITE_MODE, encoding=encoding)
 
 	def removeFileForPath(self, path):
 		"""

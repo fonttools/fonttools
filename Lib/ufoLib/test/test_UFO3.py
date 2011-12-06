@@ -4111,9 +4111,9 @@ class UFO3ReadDataTestCase(unittest.TestCase):
 		found = [path for path in found if ".svn" not in path]
 		found = list(sorted(found))
 		expected = [
-			'data/org.unifiedfontobject.directory/bar/lol.txt',
-			'data/org.unifiedfontobject.directory/foo.txt',
-			'data/org.unifiedfontobject.file.txt'
+			'org.unifiedfontobject.directory/bar/lol.txt',
+			'org.unifiedfontobject.directory/foo.txt',
+			'org.unifiedfontobject.file.txt'
 		]
 		expected = list(sorted(expected))
 		self.assertEqual(found, expected)
