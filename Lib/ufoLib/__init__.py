@@ -770,6 +770,16 @@ class UFOWriter(object):
 		else:
 			shutil.copy(fullSourcePath, fullDestPath)
 
+	# UFO mod time
+
+	def setModificationTime(self):
+		"""
+		Set the UFO modification time to the current time.
+		This is never called automatically. It is up to the
+		caller to call this when finished working on the UFO.
+		"""
+		os.utime(self._path, None)
+
 	# metainfo.plist
 
 	def _writeMetaInfo(self):
