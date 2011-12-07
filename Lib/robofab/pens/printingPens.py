@@ -1,4 +1,5 @@
-from ufoLib.pointPen import AbstractPointPen, BasePointToSegmentPen
+from robofab.pens.pointPen import BasePointToSegmentPen
+from ufoLib.pointPen import AbstractPointPen
 
 """
 	

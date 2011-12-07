@@ -1,6 +1,7 @@
 import math
 from fontTools.pens.basePen import AbstractPen
-from ufoLib.pointPen import AbstractPointPen, BasePointToSegmentPen
+from ufoLib.pointPen import AbstractPointPen
+from robofab.pens.pointPen import BasePointToSegmentPen
 
 
 class FabToFontToolsPenAdapter:

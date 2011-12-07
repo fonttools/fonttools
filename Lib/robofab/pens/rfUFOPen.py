@@ -2,7 +2,7 @@
 
 from robofab.objects.objectsBase import MOVE, LINE, CORNER, CURVE, QCURVE, OFFCURVE
 from robofab.objects.objectsRF import RContour, RSegment, RPoint
-from ufoLib.pointPen import BasePointToSegmentPen
+from robofab.pens.pointPen import BasePointToSegmentPen
 from robofab.pens.adapterPens import SegmentToPointPen
 
 
