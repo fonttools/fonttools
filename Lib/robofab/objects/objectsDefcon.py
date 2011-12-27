@@ -12,6 +12,7 @@ To Do:
 - BaseObject.naked expects the wrapped object to be stored at ._object.
   this is not always true.
 - what should be done about the PSHint objects?
+- the repr methods in ObjectsBase use odd font.info name values
 
 
 I'm trying to find a way to make it possible for defcon based
@@ -26,7 +27,7 @@ a basic defcon font or a defcon.Font (or subclass) object to be wrapped.
 import os
 from defcon import Font as DefconFont
 from robofab import RoboFabError, RoboFabWarning
-from robofab.objects.objectsBase import BaseFont, BaseKerning, BaseGroups, BaseInfo, BaseFeatures, BaseLib,\
+from robofab.objects.objectsBase import RBaseObject, BaseFont, BaseKerning, BaseGroups, BaseInfo, BaseFeatures, BaseLib,\
 		BaseGlyph, BaseContour, BaseSegment, BasePoint, BaseBPoint, BaseAnchor, BaseGuide, BaseComponent, \
 		relativeBCPIn, relativeBCPOut, absoluteBCPIn, absoluteBCPOut, _box,\
 		_interpolate, _interpolatePt, roundPt, addPt,\
@@ -125,31 +126,36 @@ class RFont(BaseFont):
 
 	def _get_info(self):
 		if self._info is None:
-			self._info = self.infoClass(self._object.info)
+			self._info = self.infoClass()(self._object.info)
+		return self._info
 
 	info = property(_get_info)
 
 	def _get_groups(self):
 		if self._groups is None:
-			self._groups = self.groupsClass(self._object.groups)
+			self._groups = self.groupsClass()(self._object.groups)
+		return self._groups
 
 	groups = property(_get_groups)
 
 	def _get_kerning(self):
 		if self._kerning is None:
-			self._kerning = self.kerningClass(self._object.kerning)
+			self._kerning = self.kerningClass()(self._object.kerning)
+		return self._kerning
 
 	kerning = property(_get_kerning)
 
 	def _get_features(self):
 		if self._features is None:
-			self._features = self.featuresClass(self._object.features)
+			self._features = self.featuresClass()(self._object.features)
+		return self._features
 
 	features = property(_get_features)
 
 	def _get_lib(self):
 		if self._lib is None:
-			self._lib = self.libClass(self._object.lib)
+			self._lib = self.libClass()(self._object.lib)
+		return self._lib
 
 	lib = property(_get_lib)
 
@@ -1217,7 +1223,7 @@ class RInfo(BaseInfo):
 # Groups
 # ------
 
-class _RDict(BaseObject):
+class _RDict(RBaseObject):
 
 	def __init__(self, obj):
 		super(_RDict, self).__init__()
@@ -1382,3 +1388,14 @@ class RLib(_RDict):
 #			self._loadFromLib(aGlyph.lib)
 #		if data is not None:
 #			self.fromDict(data)
+
+if __name__ == "__main__":
+	from defcon.test.testTools import getTestFontPath
+	font = RFont(getTestFontPath())
+	print font
+	print font.info
+	print font.groups
+	print font.kerning
+	#print font.features
+	print font.lib
+
