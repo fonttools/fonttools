@@ -623,27 +623,33 @@ class RBaseObject(object):
 class BaseFont(RBaseObject):
 	
 	"""Base class for all font objects."""
-	
+
 	_allFonts = []
-	
+
 	def __init__(self):
 		import weakref
 		RBaseObject.__init__(self)
 		self.changed = False		# if the object needs to be saved
 		self._allFonts.append(weakref.ref(self))
 		self._supportHints = False
-		
+
 	def __repr__(self):
 		try:
 			name = self.info.postscriptFullName
 		except AttributeError:
 			name = "unnamed_font"
 		return "<RFont font for %s>" %(name)
-	
+
+	def _defaultLayer(self):
+		layers = self.layers
+		return layers[layers.defaultLayerName]
+
+	# comparison
+
 	def __eq__(self, other):
 		#Compare this font with another, compare if they refer to the same file.
 		return self._compare(other)
-		
+
 	def _compare(self, other):
 		"""Compare this font to other. RF and FL UFO implementations need
 		slightly different ways of comparing fonts. This method does the
@@ -675,20 +681,67 @@ class BaseFont(RBaseObject):
 			if not c == other[c.name]:
 				return False
 		return True
-		
+
+	# dict behavior
+
 	def keys(self):
 		# must be implemented by subclass
 		raise NotImplementedError
 
 	def __iter__(self):
 		for glyphName in self.keys():
-			yield self.getGlyph(glyphName)
+			yield self[glyphName]
 
 	def __getitem__(self, glyphName):
-		return self.getGlyph(glyphName)
+		return self._defaultLayer()[glyphName]
+
+	def has_key(self, glyphName):
+		return self._defaultLayer().has_key(glyphName)
 
 	def __contains__(self, glyphName):
 		return self.has_key(glyphName)
+
+	# dynamic data extraction
+
+	def getCharacterMapping(self):
+		"""Convenience that returns the result of defaultLayer.getCharacterMapping()."""
+		return self._defaultLayer().getCharacterMapping()
+
+	def getReverseComponentMapping(self):
+		"""Convenience that returns the result of defaultLayer.getReverseComponentMapping()."""
+		return self._defaultLayer().getReverseComponentMapping()
+
+	# scripting API
+
+	def round(self):
+		"""Convenience that calls defaultLayer.round()."""
+		self._defaultLayer().round()
+	
+	def autoUnicodes(self):
+		"""Convenience that calls defaultLayer.autoUnicodes()."""
+		self._defaultLayer().autoUnicodes()
+
+	def compileGlyph(self, glyphName, baseName, accentNames, \
+			adjustWidth=False, preflight=False, printErrors=True):
+		"""Convenience that calls defaultLayer.compileGlyph."""
+		return self._defaultLayer().compileGlyph(
+			glyphName, baseName, accentNames,
+			adjustWidth=adjustWidth, preflight=preflight, printErrors=printErrors)
+	
+	def generateGlyph(self, glyphName, replace=1, preflight=False, printErrors=True):
+		"""Convenience that calls defaultLayer.generateGlyph."""
+		return self._defaultLayer().generateGlyph(
+			glyphName, replace=replace, preflight=preflight, printErrors=printErrors
+		)
+
+	def interpolate(self, factor, minFont, maxFont, suppressError=True, analyzeOnly=False, doProgress=False):
+		"""Convenience that calls defaultLayer.interpolate."""
+		return self._defaultLayer().interpolate(
+			factor, minFont, maxFont,
+			suppressError=suppressError, analyzeOnly=analyzeOnly, doProgress=doProgress
+		)
+
+	# enviornment placeholders
 
 	def _hasChanged(self):
 		#mark the object as changed
@@ -702,16 +755,61 @@ class BaseFont(RBaseObject):
 		"""Close the font, saving is optional."""
 		pass
 
-	def round(self):
-		"""round all of the points in all of the glyphs"""
-		for glyph in self.glyphs:
-			glyph.round()
-	
-	def autoUnicodes(self):
-		"""Using fontTools.agl, assign Unicode lists to all glyphs in the font"""
-		for glyph in self:
-			glyph.autoUnicodes()
-			
+	# glifLib support
+
+	def getGlyphNameToFileNameFunc(self):
+		funcName = self.lib.get("org.robofab.glyphNameToFileNameFuncName")
+		if funcName is None:
+			return None
+		parts = funcName.split(".")
+		module = ".".join(parts[:-1])
+		try:
+			item = __import__(module)
+			for sub in parts[1:]:
+				item = getattr(item, sub)
+		except (ImportError, AttributeError):
+			warn("Can't find glyph name to file name converter function, "
+				"falling back to default scheme (%s)" % funcName, RoboFabWarning)
+			return None
+		else:
+			return item
+
+
+class BaseLayerSet(RBaseObject):
+
+	pass
+
+
+class BaseLayer(RBaseObject):
+
+	"""Base class for all Layer objects."""
+
+	def __init__(self):
+		RBaseObject.__init__(self)
+		self.changed = False		# if the object needs to be saved
+
+	# XXX def __repr__(self):
+
+	# dict behavior
+
+	def keys(self):
+		raise NotImplementedError
+
+	def __iter__(self):
+		for glyphName in self.keys():
+			yield self.getGlyph(glyphName)
+
+	def __getitem__(self, glyphName):
+		return self.getGlyph(glyphName)
+
+	def has_key(self):
+		raise NotImplementedError
+
+	def __contains__(self, glyphName):
+		return self.has_key(glyphName)
+
+	# dynamic data extraction
+
 	def getCharacterMapping(self):
 		"""Create a dictionary of unicode -> [glyphname, ...] mappings.
 		Note that this dict is created each time this method is called, 
@@ -725,7 +823,7 @@ class BaseFont(RBaseObject):
 					map[u] = []
 				map[u].append(glyph.name)
 		return map
-	
+
 	def getReverseComponentMapping(self):
 		"""
 		Get a reversed map of component references in the font.
@@ -745,6 +843,18 @@ class BaseFont(RBaseObject):
 					map[baseGlyphName] = []
 				map[baseGlyphName].append(glyphName)
 		return map
+
+	# scripting API
+
+	def round(self):
+		"""round all of the points in all of the glyphs"""
+		for glyph in self.glyphs:
+			glyph.round()
+
+	def autoUnicodes(self):
+		"""Using fontTools.agl, assign Unicode lists to all glyphs in the font"""
+		for glyph in self:
+			glyph.autoUnicodes()
 
 	def compileGlyph(self, glyphName, baseName, accentNames, \
 		adjustWidth=False, preflight=False, printErrors=True):
@@ -781,7 +891,7 @@ class BaseFont(RBaseObject):
 			for px in errors.keys():
 				print px
 		return destGlyph
-	
+
 	def generateGlyph(self, glyphName, replace=1, preflight=False, printErrors=True):
 		"""Generate a glyph and return it. Assembled from GlyphConstruction.txt"""
 		from robofab.tools.toolsAll import readGlyphConstructions
@@ -793,7 +903,7 @@ class BaseFont(RBaseObject):
 		baseName = con[glyphName][0]
 		parts = con[glyphName][1:]
 		return self.compileGlyph(glyphName, baseName, parts, adjustWidth=1, preflight=preflight, printErrors=printErrors)
-	
+
 	def interpolate(self, factor, minFont, maxFont, suppressError=True, analyzeOnly=False, doProgress=False):
 		"""Traditional interpolation method. Interpolates by factor between minFont and maxFont.
 		suppressError will supress all tracebacks and analyze only will not perform the interpolation
@@ -858,23 +968,6 @@ class BaseFont(RBaseObject):
 		if doProgress:
 			progress.close()
 		return errors
-
-	def getGlyphNameToFileNameFunc(self):
-		funcName = self.lib.get("org.robofab.glyphNameToFileNameFuncName")
-		if funcName is None:
-			return None
-		parts = funcName.split(".")
-		module = ".".join(parts[:-1])
-		try:
-			item = __import__(module)
-			for sub in parts[1:]:
-				item = getattr(item, sub)
-		except (ImportError, AttributeError):
-			warn("Can't find glyph name to file name converter function, "
-				"falling back to default scheme (%s)" % funcName, RoboFabWarning)
-			return None
-		else:
-			return item
 
 
 class BaseGlyph(RBaseObject):
