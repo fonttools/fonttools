@@ -20,540 +20,12 @@ from robofab import RoboFabError
 from robofab.misc.arrayTools import updateBounds, pointInRect, unionRect, sectRect
 from fontTools.pens.basePen import AbstractPen
 
-
-#constants for dealing with segments, points and bPoints
-MOVE = 'move'
-LINE = 'line'
-CORNER = 'corner'
-CURVE = 'curve'
-QCURVE = 'qcurve'
-OFFCURVE = 'offcurve'
-
-DEGREE = 180 / math.pi
-
-
-
-# the key for the postscript hint data stored in the UFO
-postScriptHintDataLibKey = "org.robofab.postScriptHintData"
-
-# from http://svn.typesupply.com/packages/fontMath/mathFunctions.py
-
-def add(v1, v2):
-	return v1 + v2
-
-def sub(v1, v2):
-	return v1 - v2
-
-def mul(v, f):
-	return v * f
-
-def div(v, f):
-	return v / f
-	
-def issequence(x):
-	"Is x a sequence? We say it is if it has a __getitem__ method."
-	return hasattr(x, '__getitem__')
-
-
-
-class BasePostScriptHintValues(object):
-	""" Base class for postscript hinting information.
-	"""
-		
-	def __init__(self, data=None):
-		if data is not None:
-			self.fromDict(data)
-		else:
-			for name in self._attributeNames.keys():
-				setattr(self, name, self._attributeNames[name]['default'])
-		
-	def getParent(self):
-		"""this method will be overwritten with a weakref if there is a parent."""
-		return None
-
-	def setParent(self, parent):
-		import weakref
-		self.getParent = weakref.ref(parent)
-		
-	def isEmpty(self):
-		"""Check all attrs and decide if they're all empty."""
-		empty = True
-		for name in self._attributeNames:
-			if getattr(self, name):
-				empty = False
-				break
-		return empty
-
-	def clear(self):
-		"""Set all attributes to default / empty"""
-		for name in self._attributeNames:
-			setattr(self, name, self._attributeNames[name]['default'])
-		
-	def _loadFromLib(self, lib):
-		data = lib.get(postScriptHintDataLibKey)
-		if data is not None:
-			self.fromDict(data)
-
-	def _saveToLib(self, lib):
-		parent = self.getParent()
-		if parent is not None:
-			parent.setChanged(True)
-		hintsDict = self.asDict()
-		if hintsDict:
-			lib[postScriptHintDataLibKey] = hintsDict
-
-	def fromDict(self, data):
-		for name in self._attributeNames:
-			if name in data:
-				setattr(self, name, data[name])
-	
-	def asDict(self):
-		d = {}
-		for name in self._attributeNames:
-			try:
-				value = getattr(self, name)
-			except AttributeError:
-				print "%s attribute not supported"%name
-				continue
-			if value:
-				d[name] = getattr(self, name)
-		return d
-	
-	def update(self, other):
-		assert isinstance(other, BasePostScriptHintValues)
-		for name in self._attributeNames.keys():
-			v = getattr(other, name)
-			if v is not None:
-				setattr(self, name, v)
-	
-	def __repr__(self):
-		return "<Base PS Hint Data>"
-
-	def copy(self, aParent=None):
-		"""Duplicate this object. Pass an object for parenting if you want."""
-		n = self.__class__(data=self.asDict())
-		if aParent is not None:
-			n.setParent(aParent)
-		elif self.getParent() is not None:
-			n.setParent(self.getParent())
-		dont = ['getParent']
-		for k in self.__dict__.keys():
-			if k in dont:
-				continue
-			dup = copy.deepcopy(self.__dict__[k])
-			setattr(n, k, dup)
-		return n
-
-class BasePostScriptGlyphHintValues(BasePostScriptHintValues):
-	""" Base class for glyph-level postscript hinting information.
-		vStems, hStems
-	"""
-	_attributeNames = {
-		# some of these values can have only a certain number of elements
-		'vHints':		{'default': None, 'max':100, 'isVertical':True},
-		'hHints':		{'default': None, 'max':100, 'isVertical':False},
-		}
-		
-	def __init__(self, data=None):
-		if data is not None:
-			self.fromDict(data)
-		else:
-			for name in self._attributeNames.keys():
-				setattr(self, name, self._attributeNames[name]['default'])
-
-	def __repr__(self):
-		return "<PostScript Glyph Hints Values>"
-
-	def round(self):
-		"""Round the values to reasonable values.
-			- stems are rounded to int
-		"""
-		for name, values in self._attributeNames.items():
-			v = getattr(self, name)
-			if v is None:
-				continue
-			new = []
-			for n in v:
-				new.append((int(round(n[0])), int(round(n[1]))))
-			setattr(self, name, new)
-
-	# math operations for psHint object
-	# Note: math operations can change integers to floats.
-	def __add__(self, other):
-		assert isinstance(other, BasePostScriptHintValues)
-		copied = self.copy()
-		self._processMathOne(copied, other, add)
-		return copied
-
-	def __sub__(self, other):
-		assert isinstance(other, BasePostScriptHintValues)
-		copied = self.copy()
-		self._processMathOne(copied, other, sub)
-		return copied
-
-	def __mul__(self, factor):
-		#if isinstance(factor, tuple):
-		#	factor = factor[0]
-		copiedInfo = self.copy()
-		self._processMathTwo(copiedInfo, factor, mul)
-		return copiedInfo
-
-	__rmul__ = __mul__
-
-	def __div__(self, factor):
-		#if isinstance(factor, tuple):
-		#	factor = factor[0]
-		copiedInfo = self.copy()
-		self._processMathTwo(copiedInfo, factor, div)
-		return copiedInfo
-
-	__rdiv__ = __div__
-
-	def _processMathOne(self, copied, other, funct):
-		for name, values in self._attributeNames.items():
-			a = None
-			b = None
-			v = None
-			if hasattr(copied, name):
-				a = getattr(copied, name)
-			if hasattr(other, name):
-				b = getattr(other, name)
-			if a is not None and b is not None:
-				if len(a) != len(b):
-					# can't do math with non matching zones
-					continue
-				l = len(a)
-				for i in range(l):
-					if v is None:
-						v = []
-					ai = a[i]
-					bi = b[i]
-					l2 = min(len(ai), len(bi))
-					v2 = [funct(ai[j], bi[j]) for j in range(l2)]
-					v.append(v2)
-			if v is not None:
-				setattr(copied, name, v)
-
-	def _processMathTwo(self, copied, factor, funct):
-		for name, values in self._attributeNames.items():
-			a = None
-			b = None
-			v = None
-			isVertical = self._attributeNames[name]['isVertical']
-			splitFactor = factor
-			if isinstance(factor, tuple):
-				#print "mathtwo", name, funct, factor, isVertical
-				if isVertical:
-					splitFactor = factor[1]
-				else:
-					splitFactor = factor[0]
-			if hasattr(copied, name):
-				a = getattr(copied, name)
-			if a is not None:
-				for i in range(len(a)):
-					if v is None:
-						v = []
-					v2 = [funct(a[i][j], splitFactor) for j in range(len(a[i]))]
-					v.append(v2)
-			if v is not None:
-				setattr(copied, name, v)
-	
-
-class BasePostScriptFontHintValues(BasePostScriptHintValues):
-	""" Base class for font-level postscript hinting information.
-		Blues values, stem values.
-	"""
-	
-	_attributeNames = {
-		# some of these values can have only a certain number of elements
-		# 	default: what the value should be when initialised
-		#	max:	the maximum number of items this attribute is allowed to have
-		#	isVertical:		the vertical relevance
-		'blueFuzz':		{'default': None, 'max':1, 'isVertical':True},
-		'blueScale':	{'default': None, 'max':1, 'isVertical':True},
-		'blueShift':	{'default': None, 'max':1, 'isVertical':True},
-		'forceBold':	{'default': None, 'max':1, 'isVertical':False},
-		'blueValues':	{'default': None, 'max':7, 'isVertical':True},
-		'otherBlues':	{'default': None, 'max':5, 'isVertical':True},
-		'familyBlues':	{'default': None, 'max':7, 'isVertical':True},
-		'familyOtherBlues': {'default': None, 'max':5, 'isVertical':True},
-		'vStems':		{'default': None, 'max':6, 'isVertical':True},
-		'hStems':		{'default': None, 'max':11, 'isVertical':False},
-		}
-		
-	def __init__(self, data=None):
-		if data is not None:
-			self.fromDict(data)
-
-	def __repr__(self):
-		return "<PostScript Font Hints Values>"
-
-	# route attribute calls to info object
-
-	def _bluesToPairs(self, values):
-		values.sort()
-		finalValues = []
-		for value in values:
-			if not finalValues or len(finalValues[-1]) == 2:
-				finalValues.append([])
-			finalValues[-1].append(value)
-		return finalValues
-
-	def _bluesFromPairs(self, values):
-		finalValues = []
-		for value1, value2 in values:
-			finalValues.append(value1)
-			finalValues.append(value2)
-		finalValues.sort()
-		return finalValues
-
-	def _get_blueValues(self):
-		values = self.getParent().info.postscriptBlueValues
-		if values is None:
-			values = []
-		values = self._bluesToPairs(values)
-		return values
-
-	def _set_blueValues(self, values):
-		if values is None:
-			values = []
-		values = self._bluesFromPairs(values)
-		self.getParent().info.postscriptBlueValues = values
-
-	blueValues = property(_get_blueValues, _set_blueValues)
-
-	def _get_otherBlues(self):
-		values = self.getParent().info.postscriptOtherBlues
-		if values is None:
-			values = []
-		values = self._bluesToPairs(values)
-		return values
-
-	def _set_otherBlues(self, values):
-		if values is None:
-			values = []
-		values = self._bluesFromPairs(values)
-		self.getParent().info.postscriptOtherBlues = values
-
-	otherBlues = property(_get_otherBlues, _set_otherBlues)
-
-	def _get_familyBlues(self):
-		values = self.getParent().info.postscriptFamilyBlues
-		if values is None:
-			values = []
-		values = self._bluesToPairs(values)
-		return values
-
-	def _set_familyBlues(self, values):
-		if values is None:
-			values = []
-		values = self._bluesFromPairs(values)
-		self.getParent().info.postscriptFamilyBlues = values
-
-	familyBlues = property(_get_familyBlues, _set_familyBlues)
-
-	def _get_familyOtherBlues(self):
-		values = self.getParent().info.postscriptFamilyOtherBlues
-		if values is None:
-			values = []
-		values = self._bluesToPairs(values)
-		return values
-
-	def _set_familyOtherBlues(self, values):
-		if values is None:
-			values = []
-		values = self._bluesFromPairs(values)
-		self.getParent().info.postscriptFamilyOtherBlues = values
-
-	familyOtherBlues = property(_get_familyOtherBlues, _set_familyOtherBlues)
-
-	def _get_vStems(self):
-		return self.getParent().info.postscriptStemSnapV
-
-	def _set_vStems(self, value):
-		if value is None:
-			value = []
-		self.getParent().info.postscriptStemSnapV = list(value)
-
-	vStems = property(_get_vStems, _set_vStems)
-
-	def _get_hStems(self):
-		return self.getParent().info.postscriptStemSnapH
-
-	def _set_hStems(self, value):
-		if value is None:
-			value = []
-		self.getParent().info.postscriptStemSnapH = list(value)
-
-	hStems = property(_get_hStems, _set_hStems)
-
-	def _get_blueScale(self):
-		return self.getParent().info.postscriptBlueScale
-
-	def _set_blueScale(self, value):
-		self.getParent().info.postscriptBlueScale = value
-
-	blueScale = property(_get_blueScale, _set_blueScale)
-
-	def _get_blueShift(self):
-		return self.getParent().info.postscriptBlueShift
-
-	def _set_blueShift(self, value):
-		self.getParent().info.postscriptBlueShift = value
-
-	blueShift = property(_get_blueShift, _set_blueShift)
-
-	def _get_blueFuzz(self):
-		return self.getParent().info.postscriptBlueFuzz
-
-	def _set_blueFuzz(self, value):
-		self.getParent().info.postscriptBlueFuzz = value
-
-	blueFuzz = property(_get_blueFuzz, _set_blueFuzz)
-
-	def _get_forceBold(self):
-		return self.getParent().info.postscriptForceBold
-
-	def _set_forceBold(self, value):
-		self.getParent().info.postscriptForceBold = value
-
-	forceBold = property(_get_forceBold, _set_forceBold)
-
-	def round(self):
-		"""Round the values to reasonable values.
-			- blueScale is not rounded, it is a float
-			- forceBold is set to False if -0.5 < value < 0.5. Otherwise it will be True.
-			- blueShift, blueFuzz are rounded to int
-			- stems are rounded to int
-			- blues are rounded to int
-		"""
-		for name, values in self._attributeNames.items():
-			if name == "blueScale":
-				continue
-			elif name == "forceBold":
-				v = getattr(self, name)
-				if v is None:
-					continue
-				if -0.5 <= v <= 0.5:
-					setattr(self, name, False)
-				else:
-					setattr(self, name, True)
-			elif name in ['blueFuzz', 'blueShift']:
-				v = getattr(self, name)
-				if v is None:
-					continue
-				setattr(self, name, int(round(v)))
-			elif name in ['hStems', 'vStems']:
-				v = getattr(self, name)
-				if v is None:
-					continue
-				new = []
-				for n in v:
-					new.append(int(round(n)))
-				setattr(self, name, new)
-			else:
-				v = getattr(self, name)
-				if v is None:
-					continue
-				new = []
-				for n in v:
-					new.append([int(round(m)) for m in n])
-				setattr(self, name, new)
-
-
-
-class RoboFabInterpolationError(Exception): pass
-
-
-def _interpolate(a,b,v):
-	"""interpolate values by factor v"""
-	return a + (b-a) * v
-
-def _interpolatePt((xa, ya),(xb, yb),v):
-	"""interpolate point by factor v"""
-	if not isinstance(v, tuple):
-		xv = v
-		yv = v
-	else:
-		xv, yv = v
-	return xa + (xb-xa) * xv, ya + (yb-ya) * yv
-
-def _scalePointFromCenter((pointX, pointY), (scaleX, scaleY), (centerX, centerY)):
-	"""scale a point from a center point"""
-	ogCenter = (centerX, centerY)
-	scaledCenter = (centerX * scaleX, centerY * scaleY)
-	shiftVal = (scaledCenter[0] - ogCenter[0], scaledCenter[1] - ogCenter[1])
-	scaledPointX = (pointX * scaleX) - shiftVal[0]
-	scaledPointY = (pointY * scaleY) - shiftVal[1]
-	return (scaledPointX, scaledPointY)
-
-def _box(objectToMeasure, fontObject=None):
-	"""calculate the bounds of the object and return it as a (xMin, yMin, xMax, yMax)"""
-	#from fontTools.pens.boundsPen import BoundsPen
-	from robofab.pens.boundsPen import BoundsPen
-	boundsPen = BoundsPen(glyphSet=fontObject)
-	objectToMeasure.draw(boundsPen)
-	bounds = boundsPen.bounds
-	if bounds is None:
-		bounds = (0, 0, 0, 0)
-	return bounds
-
-def roundPt((x, y)):
-	"""Round a vector"""
-	return int(round(x)), int(round(y))
-
-def addPt(ptA, ptB):
-	"""Add two vectors"""
-	return ptA[0] + ptB[0], ptA[1] + ptB[1]
-
-def subPt(ptA, ptB):
-	"""Substract two vectors"""
-	return ptA[0] - ptB[0], ptA[1] - ptB[1]
-
-def mulPt(ptA, scalar):
-	"""Multiply a vector with scalar"""
-	if not isinstance(scalar, tuple):
-		f1 = scalar
-		f2 = scalar
-	else:
-		f1, f2 = scalar
-	return ptA[0]*f1, ptA[1]*f2
-	
-def relativeBCPIn(anchor, BCPIn):
-	"""Convert absolute incoming bcp value to a relative value.
-	** NOTE How is this different from relativeBCPOut? **
-	"""
-	return (BCPIn[0] - anchor[0], BCPIn[1] - anchor[1])
-
-def absoluteBCPIn(anchor, BCPIn):
-	"""Convert relative incoming bcp value to an absolute value
-	** NOTE How is this different from absoluteBCPOut? **
-	"""
-	return (BCPIn[0] + anchor[0], BCPIn[1] + anchor[1])
-
-def relativeBCPOut(anchor, BCPOut):
-	"""Convert absolute outgoing bcp value to a relative value"""
-	return (BCPOut[0] - anchor[0], BCPOut[1] - anchor[1])
-
-def absoluteBCPOut(anchor, BCPOut):
-	"""Convert relative outgoing bcp value to an absolute value"""
-	return (BCPOut[0] + anchor[0], BCPOut[1] + anchor[1])
-
-class FuzzyNumber(object):
-	"""Number-like object that will match another fuzzy number if the values are within a specific range."""
-	def __init__(self, value, threshold):
-		self.value = value
-		self.threshold = threshold
-	
-	def __cmp__(self, other):
-		if abs(self.value - other.value) < self.threshold:
-			return 0
-		else:
-			return cmp(self.value, other.value)
-
+# ----
+# Base
+# ----
 
 class RBaseObject(object):
-	
+
 	"""Base class for wrapper objects"""
 	
 	attrMap= {}
@@ -619,6 +91,10 @@ class RBaseObject(object):
 	def _writeXML(self, writer):
 		pass
 
+
+# ----
+# Font
+# ----
 
 class BaseFont(RBaseObject):
 	
@@ -775,10 +251,18 @@ class BaseFont(RBaseObject):
 			return item
 
 
+# --------
+# LayerSet
+# --------
+
 class BaseLayerSet(RBaseObject):
 
 	pass
 
+
+# -----
+# Layer
+# -----
 
 class BaseLayer(RBaseObject):
 
@@ -969,6 +453,10 @@ class BaseLayer(RBaseObject):
 			progress.close()
 		return errors
 
+
+# -----
+# Glyph
+# -----
 
 class BaseGlyph(RBaseObject):
 	
@@ -1771,8 +1259,11 @@ class BaseGlyph(RBaseObject):
 		rT = Identity.translate(offset[0], offset[1])
 		rT = rT.skew(radAngle)
 		self.transform(rT)
-	
-	
+
+# -------
+# Contour
+# -------
+
 class BaseContour(RBaseObject):
 	
 	"""Base class for all contour objects."""
@@ -2141,6 +1632,10 @@ class BaseContour(RBaseObject):
 				newSegment.smooth = True
 
 
+# -------
+# Segment
+# -------
+
 class BaseSegment(RBaseObject):
 	
 	"""Base class for all segment objects"""
@@ -2241,7 +1736,10 @@ class BaseSegment(RBaseObject):
 	onCurve = property(_get_onCurve, doc="list of off curve points for the segment")
 
 
-		
+# -----
+# Point
+# -----
+
 class BasePoint(RBaseObject):
 	
 	"""Base class for point objects."""
@@ -2331,6 +1829,10 @@ class BasePoint(RBaseObject):
 		object from fontTools.misc.transform"""
 		self.x, self.y = matrix.transformPoint((self.x, self.y))
 
+
+# ------
+# BPoint
+# ------
 
 class BaseBPoint(RBaseObject):
 
@@ -2549,7 +2051,11 @@ class BaseBPoint(RBaseObject):
 
 	type = property(_get_type, _set_type, doc="the type of bPoint, either 'corner' or 'curve'")
 
-	
+
+# ---------
+# Component
+# ---------
+
 class BaseComponent(RBaseObject):
 	
 	"""Base class for all component objects."""
@@ -2666,6 +2172,10 @@ class BaseComponent(RBaseObject):
 		pen.addComponent(self.baseGlyph, (sX, 0, 0, sY, oX, oY))
 
 
+# ------
+# Anchor
+# ------
+
 class BaseAnchor(RBaseObject):
 	
 	"""Base class for all anchor point objects."""
@@ -2774,6 +2284,10 @@ class BaseAnchor(RBaseObject):
 		self.x, self.y = matrix.transformPoint((self.x, self.y))
 
 
+# -----
+# Guide
+# -----
+
 class BaseGuide(RBaseObject):
 	
 	"""Base class for all guide objects."""
@@ -2783,6 +2297,10 @@ class BaseGuide(RBaseObject):
 		self.changed = False		# if the object needs to be saved
 		self.selected = False
 
+
+# ----
+# Info
+# ----
 
 class BaseInfo(RBaseObject):
 
@@ -2877,6 +2395,10 @@ class BaseInfo(RBaseObject):
 		# def _environmentGetAttr(self, attr):
 		# 	pass
 
+# --------
+# Features
+# --------
+
 class BaseFeatures(RBaseObject):
 
 	def __init__(self):
@@ -2892,6 +2414,10 @@ class BaseFeatures(RBaseObject):
 
 	text = property(_get_text, _set_text, doc="raw feature text.")
 
+
+# ------
+# Groups
+# ------
 
 class BaseGroups(dict):
 	
@@ -2933,7 +2459,11 @@ class BaseGroups(dict):
 			if glyphName in l:
 				found.append(i)
 		return found
-		
+
+
+# ---
+# Lib
+# ---
 
 class BaseLib(dict):
 	
@@ -2976,7 +2506,11 @@ class BaseLib(dict):
 		for k in self.keys():
 			n[k] = copy.deepcopy(self[k])
 		return n
-	
+
+
+# -------
+# Kerning
+# -------
 		
 class BaseKerning(RBaseObject):
 	
@@ -3341,4 +2875,545 @@ class BaseKerning(RBaseObject):
 		if factor == 0:
 			raise ZeroDivisionError
 		return self.__mul__(1.0/factor)
+
+
+# -----------
+# PSHintStuff
+# -----------
+
+# the key for the postscript hint data stored in the UFO
+postScriptHintDataLibKey = "org.robofab.postScriptHintData"
+
+
+class BasePostScriptHintValues(object):
+	""" Base class for postscript hinting information.
+	"""
+		
+	def __init__(self, data=None):
+		if data is not None:
+			self.fromDict(data)
+		else:
+			for name in self._attributeNames.keys():
+				setattr(self, name, self._attributeNames[name]['default'])
+		
+	def getParent(self):
+		"""this method will be overwritten with a weakref if there is a parent."""
+		return None
+
+	def setParent(self, parent):
+		import weakref
+		self.getParent = weakref.ref(parent)
+		
+	def isEmpty(self):
+		"""Check all attrs and decide if they're all empty."""
+		empty = True
+		for name in self._attributeNames:
+			if getattr(self, name):
+				empty = False
+				break
+		return empty
+
+	def clear(self):
+		"""Set all attributes to default / empty"""
+		for name in self._attributeNames:
+			setattr(self, name, self._attributeNames[name]['default'])
+		
+	def _loadFromLib(self, lib):
+		data = lib.get(postScriptHintDataLibKey)
+		if data is not None:
+			self.fromDict(data)
+
+	def _saveToLib(self, lib):
+		parent = self.getParent()
+		if parent is not None:
+			parent.setChanged(True)
+		hintsDict = self.asDict()
+		if hintsDict:
+			lib[postScriptHintDataLibKey] = hintsDict
+
+	def fromDict(self, data):
+		for name in self._attributeNames:
+			if name in data:
+				setattr(self, name, data[name])
 	
+	def asDict(self):
+		d = {}
+		for name in self._attributeNames:
+			try:
+				value = getattr(self, name)
+			except AttributeError:
+				print "%s attribute not supported"%name
+				continue
+			if value:
+				d[name] = getattr(self, name)
+		return d
+	
+	def update(self, other):
+		assert isinstance(other, BasePostScriptHintValues)
+		for name in self._attributeNames.keys():
+			v = getattr(other, name)
+			if v is not None:
+				setattr(self, name, v)
+	
+	def __repr__(self):
+		return "<Base PS Hint Data>"
+
+	def copy(self, aParent=None):
+		"""Duplicate this object. Pass an object for parenting if you want."""
+		n = self.__class__(data=self.asDict())
+		if aParent is not None:
+			n.setParent(aParent)
+		elif self.getParent() is not None:
+			n.setParent(self.getParent())
+		dont = ['getParent']
+		for k in self.__dict__.keys():
+			if k in dont:
+				continue
+			dup = copy.deepcopy(self.__dict__[k])
+			setattr(n, k, dup)
+		return n
+
+class BasePostScriptGlyphHintValues(BasePostScriptHintValues):
+	""" Base class for glyph-level postscript hinting information.
+		vStems, hStems
+	"""
+	_attributeNames = {
+		# some of these values can have only a certain number of elements
+		'vHints':		{'default': None, 'max':100, 'isVertical':True},
+		'hHints':		{'default': None, 'max':100, 'isVertical':False},
+		}
+		
+	def __init__(self, data=None):
+		if data is not None:
+			self.fromDict(data)
+		else:
+			for name in self._attributeNames.keys():
+				setattr(self, name, self._attributeNames[name]['default'])
+
+	def __repr__(self):
+		return "<PostScript Glyph Hints Values>"
+
+	def round(self):
+		"""Round the values to reasonable values.
+			- stems are rounded to int
+		"""
+		for name, values in self._attributeNames.items():
+			v = getattr(self, name)
+			if v is None:
+				continue
+			new = []
+			for n in v:
+				new.append((int(round(n[0])), int(round(n[1]))))
+			setattr(self, name, new)
+
+	# math operations for psHint object
+	# Note: math operations can change integers to floats.
+	def __add__(self, other):
+		assert isinstance(other, BasePostScriptHintValues)
+		copied = self.copy()
+		self._processMathOne(copied, other, add)
+		return copied
+
+	def __sub__(self, other):
+		assert isinstance(other, BasePostScriptHintValues)
+		copied = self.copy()
+		self._processMathOne(copied, other, sub)
+		return copied
+
+	def __mul__(self, factor):
+		#if isinstance(factor, tuple):
+		#	factor = factor[0]
+		copiedInfo = self.copy()
+		self._processMathTwo(copiedInfo, factor, mul)
+		return copiedInfo
+
+	__rmul__ = __mul__
+
+	def __div__(self, factor):
+		#if isinstance(factor, tuple):
+		#	factor = factor[0]
+		copiedInfo = self.copy()
+		self._processMathTwo(copiedInfo, factor, div)
+		return copiedInfo
+
+	__rdiv__ = __div__
+
+	def _processMathOne(self, copied, other, funct):
+		for name, values in self._attributeNames.items():
+			a = None
+			b = None
+			v = None
+			if hasattr(copied, name):
+				a = getattr(copied, name)
+			if hasattr(other, name):
+				b = getattr(other, name)
+			if a is not None and b is not None:
+				if len(a) != len(b):
+					# can't do math with non matching zones
+					continue
+				l = len(a)
+				for i in range(l):
+					if v is None:
+						v = []
+					ai = a[i]
+					bi = b[i]
+					l2 = min(len(ai), len(bi))
+					v2 = [funct(ai[j], bi[j]) for j in range(l2)]
+					v.append(v2)
+			if v is not None:
+				setattr(copied, name, v)
+
+	def _processMathTwo(self, copied, factor, funct):
+		for name, values in self._attributeNames.items():
+			a = None
+			b = None
+			v = None
+			isVertical = self._attributeNames[name]['isVertical']
+			splitFactor = factor
+			if isinstance(factor, tuple):
+				#print "mathtwo", name, funct, factor, isVertical
+				if isVertical:
+					splitFactor = factor[1]
+				else:
+					splitFactor = factor[0]
+			if hasattr(copied, name):
+				a = getattr(copied, name)
+			if a is not None:
+				for i in range(len(a)):
+					if v is None:
+						v = []
+					v2 = [funct(a[i][j], splitFactor) for j in range(len(a[i]))]
+					v.append(v2)
+			if v is not None:
+				setattr(copied, name, v)
+	
+
+class BasePostScriptFontHintValues(BasePostScriptHintValues):
+	""" Base class for font-level postscript hinting information.
+		Blues values, stem values.
+	"""
+	
+	_attributeNames = {
+		# some of these values can have only a certain number of elements
+		# 	default: what the value should be when initialised
+		#	max:	the maximum number of items this attribute is allowed to have
+		#	isVertical:		the vertical relevance
+		'blueFuzz':		{'default': None, 'max':1, 'isVertical':True},
+		'blueScale':	{'default': None, 'max':1, 'isVertical':True},
+		'blueShift':	{'default': None, 'max':1, 'isVertical':True},
+		'forceBold':	{'default': None, 'max':1, 'isVertical':False},
+		'blueValues':	{'default': None, 'max':7, 'isVertical':True},
+		'otherBlues':	{'default': None, 'max':5, 'isVertical':True},
+		'familyBlues':	{'default': None, 'max':7, 'isVertical':True},
+		'familyOtherBlues': {'default': None, 'max':5, 'isVertical':True},
+		'vStems':		{'default': None, 'max':6, 'isVertical':True},
+		'hStems':		{'default': None, 'max':11, 'isVertical':False},
+		}
+		
+	def __init__(self, data=None):
+		if data is not None:
+			self.fromDict(data)
+
+	def __repr__(self):
+		return "<PostScript Font Hints Values>"
+
+	# route attribute calls to info object
+
+	def _bluesToPairs(self, values):
+		values.sort()
+		finalValues = []
+		for value in values:
+			if not finalValues or len(finalValues[-1]) == 2:
+				finalValues.append([])
+			finalValues[-1].append(value)
+		return finalValues
+
+	def _bluesFromPairs(self, values):
+		finalValues = []
+		for value1, value2 in values:
+			finalValues.append(value1)
+			finalValues.append(value2)
+		finalValues.sort()
+		return finalValues
+
+	def _get_blueValues(self):
+		values = self.getParent().info.postscriptBlueValues
+		if values is None:
+			values = []
+		values = self._bluesToPairs(values)
+		return values
+
+	def _set_blueValues(self, values):
+		if values is None:
+			values = []
+		values = self._bluesFromPairs(values)
+		self.getParent().info.postscriptBlueValues = values
+
+	blueValues = property(_get_blueValues, _set_blueValues)
+
+	def _get_otherBlues(self):
+		values = self.getParent().info.postscriptOtherBlues
+		if values is None:
+			values = []
+		values = self._bluesToPairs(values)
+		return values
+
+	def _set_otherBlues(self, values):
+		if values is None:
+			values = []
+		values = self._bluesFromPairs(values)
+		self.getParent().info.postscriptOtherBlues = values
+
+	otherBlues = property(_get_otherBlues, _set_otherBlues)
+
+	def _get_familyBlues(self):
+		values = self.getParent().info.postscriptFamilyBlues
+		if values is None:
+			values = []
+		values = self._bluesToPairs(values)
+		return values
+
+	def _set_familyBlues(self, values):
+		if values is None:
+			values = []
+		values = self._bluesFromPairs(values)
+		self.getParent().info.postscriptFamilyBlues = values
+
+	familyBlues = property(_get_familyBlues, _set_familyBlues)
+
+	def _get_familyOtherBlues(self):
+		values = self.getParent().info.postscriptFamilyOtherBlues
+		if values is None:
+			values = []
+		values = self._bluesToPairs(values)
+		return values
+
+	def _set_familyOtherBlues(self, values):
+		if values is None:
+			values = []
+		values = self._bluesFromPairs(values)
+		self.getParent().info.postscriptFamilyOtherBlues = values
+
+	familyOtherBlues = property(_get_familyOtherBlues, _set_familyOtherBlues)
+
+	def _get_vStems(self):
+		return self.getParent().info.postscriptStemSnapV
+
+	def _set_vStems(self, value):
+		if value is None:
+			value = []
+		self.getParent().info.postscriptStemSnapV = list(value)
+
+	vStems = property(_get_vStems, _set_vStems)
+
+	def _get_hStems(self):
+		return self.getParent().info.postscriptStemSnapH
+
+	def _set_hStems(self, value):
+		if value is None:
+			value = []
+		self.getParent().info.postscriptStemSnapH = list(value)
+
+	hStems = property(_get_hStems, _set_hStems)
+
+	def _get_blueScale(self):
+		return self.getParent().info.postscriptBlueScale
+
+	def _set_blueScale(self, value):
+		self.getParent().info.postscriptBlueScale = value
+
+	blueScale = property(_get_blueScale, _set_blueScale)
+
+	def _get_blueShift(self):
+		return self.getParent().info.postscriptBlueShift
+
+	def _set_blueShift(self, value):
+		self.getParent().info.postscriptBlueShift = value
+
+	blueShift = property(_get_blueShift, _set_blueShift)
+
+	def _get_blueFuzz(self):
+		return self.getParent().info.postscriptBlueFuzz
+
+	def _set_blueFuzz(self, value):
+		self.getParent().info.postscriptBlueFuzz = value
+
+	blueFuzz = property(_get_blueFuzz, _set_blueFuzz)
+
+	def _get_forceBold(self):
+		return self.getParent().info.postscriptForceBold
+
+	def _set_forceBold(self, value):
+		self.getParent().info.postscriptForceBold = value
+
+	forceBold = property(_get_forceBold, _set_forceBold)
+
+	def round(self):
+		"""Round the values to reasonable values.
+			- blueScale is not rounded, it is a float
+			- forceBold is set to False if -0.5 < value < 0.5. Otherwise it will be True.
+			- blueShift, blueFuzz are rounded to int
+			- stems are rounded to int
+			- blues are rounded to int
+		"""
+		for name, values in self._attributeNames.items():
+			if name == "blueScale":
+				continue
+			elif name == "forceBold":
+				v = getattr(self, name)
+				if v is None:
+					continue
+				if -0.5 <= v <= 0.5:
+					setattr(self, name, False)
+				else:
+					setattr(self, name, True)
+			elif name in ['blueFuzz', 'blueShift']:
+				v = getattr(self, name)
+				if v is None:
+					continue
+				setattr(self, name, int(round(v)))
+			elif name in ['hStems', 'vStems']:
+				v = getattr(self, name)
+				if v is None:
+					continue
+				new = []
+				for n in v:
+					new.append(int(round(n)))
+				setattr(self, name, new)
+			else:
+				v = getattr(self, name)
+				if v is None:
+					continue
+				new = []
+				for n in v:
+					new.append([int(round(m)) for m in n])
+				setattr(self, name, new)
+
+# ---------
+# Constants
+# ---------
+
+MOVE = 'move'
+LINE = 'line'
+CORNER = 'corner'
+CURVE = 'curve'
+QCURVE = 'qcurve'
+OFFCURVE = 'offcurve'
+DEGREE = 180 / math.pi
+
+# ------------
+# Math Support
+# ------------
+
+# math functions
+
+def add(v1, v2):
+	return v1 + v2
+
+def sub(v1, v2):
+	return v1 - v2
+
+def mul(v, f):
+	return v * f
+
+def div(v, f):
+	return v / f
+
+def roundPt((x, y)):
+	"""Round a vector"""
+	return int(round(x)), int(round(y))
+
+def addPt(ptA, ptB):
+	"""Add two vectors"""
+	return ptA[0] + ptB[0], ptA[1] + ptB[1]
+
+def subPt(ptA, ptB):
+	"""Substract two vectors"""
+	return ptA[0] - ptB[0], ptA[1] - ptB[1]
+
+def mulPt(ptA, scalar):
+	"""Multiply a vector with scalar"""
+	if not isinstance(scalar, tuple):
+		f1 = scalar
+		f2 = scalar
+	else:
+		f1, f2 = scalar
+	return ptA[0]*f1, ptA[1]*f2
+
+# interpolation
+
+def _interpolate(a,b,v):
+	"""interpolate values by factor v"""
+	return a + (b-a) * v
+
+def _interpolatePt((xa, ya),(xb, yb),v):
+	"""interpolate point by factor v"""
+	if not isinstance(v, tuple):
+		xv = v
+		yv = v
+	else:
+		xv, yv = v
+	return xa + (xb-xa) * xv, ya + (yb-ya) * yv
+
+# transformations
+
+def _scalePointFromCenter((pointX, pointY), (scaleX, scaleY), (centerX, centerY)):
+	"""scale a point from a center point"""
+	ogCenter = (centerX, centerY)
+	scaledCenter = (centerX * scaleX, centerY * scaleY)
+	shiftVal = (scaledCenter[0] - ogCenter[0], scaledCenter[1] - ogCenter[1])
+	scaledPointX = (pointX * scaleX) - shiftVal[0]
+	scaledPointY = (pointY * scaleY) - shiftVal[1]
+	return (scaledPointX, scaledPointY)
+
+# bounds
+
+def _box(objectToMeasure, fontObject=None):
+	"""calculate the bounds of the object and return it as a (xMin, yMin, xMax, yMax)"""
+	#from fontTools.pens.boundsPen import BoundsPen
+	from robofab.pens.boundsPen import BoundsPen
+	boundsPen = BoundsPen(glyphSet=fontObject)
+	objectToMeasure.draw(boundsPen)
+	bounds = boundsPen.bounds
+	if bounds is None:
+		bounds = (0, 0, 0, 0)
+	return bounds
+
+# fuzzy number
+
+class FuzzyNumber(object):
+	"""Number-like object that will match another fuzzy number if the values are within a specific range."""
+	def __init__(self, value, threshold):
+		self.value = value
+		self.threshold = threshold
+	
+	def __cmp__(self, other):
+		if abs(self.value - other.value) < self.threshold:
+			return 0
+		else:
+			return cmp(self.value, other.value)
+
+
+# -----------
+# BCP Support
+# -----------
+
+def relativeBCPIn(anchor, BCPIn):
+	"""Convert absolute incoming bcp value to a relative value.
+	** NOTE How is this different from relativeBCPOut? **
+	"""
+	return (BCPIn[0] - anchor[0], BCPIn[1] - anchor[1])
+
+def absoluteBCPIn(anchor, BCPIn):
+	"""Convert relative incoming bcp value to an absolute value
+	** NOTE How is this different from absoluteBCPOut? **
+	"""
+	return (BCPIn[0] + anchor[0], BCPIn[1] + anchor[1])
+
+def relativeBCPOut(anchor, BCPOut):
+	"""Convert absolute outgoing bcp value to a relative value"""
+	return (BCPOut[0] - anchor[0], BCPOut[1] - anchor[1])
+
+def absoluteBCPOut(anchor, BCPOut):
+	"""Convert relative outgoing bcp value to an absolute value"""
+	return (BCPOut[0] + anchor[0], BCPOut[1] + anchor[1])
