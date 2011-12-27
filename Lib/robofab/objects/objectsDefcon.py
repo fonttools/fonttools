@@ -4,11 +4,10 @@ This is the new doc for the objectsRF module.
 To Do:
 - make it so that BaseKerning.clear() uses self._kerning.clear() instead of self._kerning = {}
 - check all of BaseKerning to make sure that it doesn't replace self._kerning
-- in BaseKerning.__init__ use if kerningDixt is None
+- in BaseKerning.__init__ use if kerningDict is None
 - make BaseGroups subclass BaseObject like BaseKerning does?
 - add __contains__ to all dict-like base objects
 - get right of BaseGroups.findGlyph
-- look at notification disabling in RFeatures.__init__
 - BaseObject.naked expects the wrapped object to be stored at ._object.
   this is not always true.
 - what should be done about the PSHint objects?
@@ -1301,19 +1300,15 @@ class RFeatures(BaseFeatures):
 	_title = "RoboFabFeatures"
 
 	def __init__(self, featuresObject):
-		# XXX may need to temporarily disable notifications
-		# so that defcon doesn't set dirty as a result of the
-		# _text attribute hacking here.
-		text = featuresObject.text
 		super(RFeatures, self).__init__()
-		self._text = text
+		self._object = featuresObject
 
 	def _get_text(self):
-		return self._features.text
+		return self._object.text
 
 	def _set_text(self, value):
 		assert isinstance(value, (basestring, None))
-		self._features.text = value
+		self._object.text = value
 
 	text = property(_get_text, _set_text, doc="raw feature text.")
 
@@ -1325,9 +1320,16 @@ class RFeatures(BaseFeatures):
 		return self.text
 
 	def _set__text(self, value):
+		# __init__ hack:
+		# during __init__ BaseFetaures tries self._text = "".
+		# In these objects, the text must not be maintained independently
+		# of the defcon object, so hack around this when self._object
+		# is a dict (as is the case when starting up)
+		if self._object == {}:
+			return
 		self.text = value
 
-	_text = property(_get__text)
+	_text = property(_get__text, _set__text)
 
 
 # ---
@@ -1396,6 +1398,6 @@ if __name__ == "__main__":
 	print font.info
 	print font.groups
 	print font.kerning
-	#print font.features
+	print font.features
 	print font.lib
 
