@@ -12,6 +12,15 @@ To Do:
 - BaseObject.naked expects the wrapped object to be stored at ._object.
   this is not always true.
 - what should be done about the PSHint objects?
+
+
+I'm trying to find a way to make it possible for defcon based
+environments to use these objects in a simple way. For now, I
+have overridable methods that return uninstantiated classes
+for each of the sub-object types that are needed by a particular
+object. Subclasses can override these to implement their own
+R* subclasses. In __init__, "path" can be a path or None to open
+a basic defcon font or a defcon.Font (or subclass) object to be wrapped.
 """
 
 import os
@@ -82,15 +91,12 @@ class RFont(BaseFont):
 	
 	_title = "RoboFabFont"
 
-	# available for overriding by subclasses that
-	# want to implement their own defcon subclasses.
-	_defconFontClass = DefconFont
-	_defconObjectSubclasses = {}
-	
 	def __init__(self, path=None):
 		super(RFont, self).__init__()
-        # load the defcon object
-		self._object = DefconFont(path, **self._defconObjectSubclasses)
+		if isinstance(path, DefconFont):
+			self._object = path
+		else:
+			self._object = DefconFont(path)
 		self._info = None
 		self._kerning = None
 		self._groups = None
@@ -98,35 +104,52 @@ class RFont(BaseFont):
 		self._lib = None
 		# XXX PS Hints?
 
-	# sub-objects
+    # Object Classes
+
+	def infoClass(self):
+		return RInfo
+
+	def groupsClass(self):
+		return RGroups
+
+	def kerningClass(self):
+		return RKerning
+
+	def featuresClass(self):
+		return RFeatures
+
+	def libClass(self):
+		return RLib
+
+	# Sub-Objects
 
 	def _get_info(self):
 		if self._info is None:
-			self._info = RInfo(self._object.info)
+			self._info = self.infoClass(self._object.info)
 
 	info = property(_get_info)
 
 	def _get_groups(self):
 		if self._groups is None:
-			self._groups = RGroups(self._object.groups)
+			self._groups = self.groupsClass(self._object.groups)
 
 	groups = property(_get_groups)
 
 	def _get_kerning(self):
 		if self._kerning is None:
-			self._kerning = RKerning(self._object.kerning)
+			self._kerning = self.kerningClass(self._object.kerning)
 
 	kerning = property(_get_kerning)
 
 	def _get_features(self):
 		if self._features is None:
-			self._features = RFeatures(self._object.features)
+			self._features = self.featuresClass(self._object.features)
 
 	features = property(_get_features)
 
 	def _get_lib(self):
 		if self._lib is None:
-			self._lib = RLib(self._object.lib)
+			self._lib = self.libClass(self._object.lib)
 
 	lib = property(_get_lib)
 
@@ -1304,7 +1327,6 @@ class RFeatures(BaseFeatures):
 # ---
 # Lib
 # ---
-
 
 class RLib(_RDict):
 
