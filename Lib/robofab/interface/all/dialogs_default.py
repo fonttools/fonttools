@@ -13,6 +13,7 @@ __all__ = [
     "FindGlyph",
     "GetFile",
     "GetFolder",
+    "GetFileOrFolder", 
     "Message",
     "OneList",
     "PutFile",
@@ -26,11 +27,11 @@ __all__ = [
 
 # start with all the defaults. 
 
-def AskString(prompt, value='', title='RoboFab'):
+def AskString(message, value='', title='RoboFab'):
     """Prototype for AskString dialog. Should show a prompt, a text input box and OK button."""
     raise NotImplementedError
 
-def AskYesNoCancel(prompt, title='RoboFab', default=0):
+def AskYesNoCancel(message, title='RoboFab', default=0):
     """Prototype for AskYesNoCancel dialog. Should show a prompt, Yes, No, Cancel buttons."""
     raise NotImplementedError
 
@@ -46,6 +47,9 @@ def GetFolder(message=None):
     """Prototype for GetFolder dialog. Should offer a standard OS get folder dialog."""
     raise NotImplementedError
 
+def GetFileOrFolder(message=None):
+    raise NotImplementedError
+
 def Message(message, title='RoboFab'):
     """Prototype for Message dialog. Should offer a window with the message, OK button."""
     raise NotImplementedError
@@ -54,7 +58,7 @@ def OneList(list, message="Select an item:", title='RoboFab'):
     """Prototype for OneList dialog."""
     raise NotImplementedError
     
-def PutFile(message=None, defaultName=None):
+def PutFile(message=None, fileName=None):
     raise NotImplementedError
 
 def SearchList(list, message="Select an item:", title='RoboFab'):
@@ -67,10 +71,10 @@ def SelectGlyph(font, message="Select a glyph:", title='RoboFab'):
     raise NotImplementedError
 
 def TwoChecks(title_1="One",  title_2="Two", value1=1, value2=1, title='RoboFab'):
-    raise NotImplementedError
+    raise PendingDeprecationWarning
 
 def TwoFields(title_1="One:", value_1="0", title_2="Two:", value_2="0", title='RoboFab'):
-    raise NotImplementedError
+    raise PendingDeprecationWarning
 
 class ProgressBar(object):
     pass

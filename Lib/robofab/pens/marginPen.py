@@ -1,5 +1,5 @@
 from fontTools.pens.basePen import AbstractPen, BasePen
-from fontTools.misc.bezierTools import splitLine, splitCubic
+from robofab.misc.bezierTools import splitLine, splitCubic
 
 
 from sets import Set

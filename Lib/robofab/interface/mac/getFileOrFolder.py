@@ -22,8 +22,12 @@ import Carbon.File
 kNavSupportPackages = 0x00001000
 
 
-def GetFile(message=None):
-	"""Ask the user to select a file."""
+def GetFile(message=None, title=None, directory=None, fileName=None, allowsMultipleSelection=False, fileTypes=None):
+	"""Ask the user to select a file.
+	
+	Some of these arguments are not supported:
+	    title, directory, fileName, allowsMultipleSelection and fileTypes are here for compatibility reasons.
+	"""
 	default_flags = 0x56 | kNavSupportPackages
 	args, tpwanted = _process_Nav_args(default_flags, message=message)
 	_interact()
@@ -47,8 +51,12 @@ def GetFile(message=None):
 	raise TypeError, "Unknown value for argument 'wanted': %s" % repr(tpwanted)
 
 
-def GetFileOrFolder(message=None):
-	"""Ask the user to select a file or a folder."""
+def GetFileOrFolder(message=None, title=None, directory=None, fileName=None, allowsMultipleSelection=False, fileTypes=None):
+	"""Ask the user to select a file or a folder.
+
+	Some of these arguments are not supported:
+	    title, directory, fileName, allowsMultipleSelection and fileTypes are here for compatibility reasons.
+	"""
 	default_flags = 0x17 | kNavSupportPackages
 	args, tpwanted = _process_Nav_args(default_flags, message=message)
 	_interact()

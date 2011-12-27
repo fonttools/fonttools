@@ -1,6 +1,6 @@
 from fontTools.pens.basePen import BasePen
-from fontTools.misc.arrayTools import updateBounds, pointInRect, unionRect
-from fontTools.misc.bezierTools import calcCubicBounds, calcQuadraticBounds
+from robofab.misc.arrayTools import updateBounds, pointInRect, unionRect
+from robofab.misc.bezierTools import calcCubicBounds, calcQuadraticBounds
 
 
 __all__ = ["BoundsPen", "ControlBoundsPen"]

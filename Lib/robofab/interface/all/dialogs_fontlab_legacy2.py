@@ -29,6 +29,7 @@ __all__ = [
 #    "FindGlyph",
     "GetFile",
     "GetFolder",
+	"GetFileOrFolder",
     "Message",
 #    "OneList",
     "PutFile",
@@ -37,7 +38,7 @@ __all__ = [
 #    "SelectGlyph",
 #    "TwoChecks",
 #    "TwoFields",
-#    "ProgressBar",
+    "ProgressBar",
 ]
 
 
@@ -189,12 +190,12 @@ class GetFileOrFolderPanel(BasePutGetPanel):
     openPanelDidEnd_returnCode_contextInfo_ = objc.selector(openPanelDidEnd_returnCode_contextInfo_, signature="v@:@ii")
 
 
-def Message(messageText="", title='RoboFab', informativeText=""):
+def Message(message="", title='noLongerUsed', informativeText=""):
     """Legacy robofab dialog compatible wrapper."""
     #def _message(messageText="", informativeText="", alertStyle=NSInformationalAlertStyle, parentWindow=None, resultCallback=None):
     resultCallback = None
     alert = BaseMessageDialog.alloc().initWithMessageText_informativeText_alertStyle_buttonTitlesValues_window_resultCallback_(
-                messageText=messageText,
+                messageText=message,
                 informativeText=informativeText,
                 alertStyle=NSInformationalAlertStyle,
                 buttonTitlesValues=[("OK", 1)],
@@ -203,11 +204,23 @@ def Message(messageText="", title='RoboFab', informativeText=""):
     if resultCallback is None:
         return 1
 
-def AskYesNoCancel(messageText, informativeText=""):
-    """Legacy robofab dialog compatible wrapper."""
+
+def AskYesNoCancel(message, title='noLongerUsed', default=None, informativeText=""):
+    """
+        AskYesNoCancel Dialog
+        
+        message             the string
+        title*              a title of the window
+                            (may not be supported everywhere)
+        default*            index number of which button should be default
+                            (i.e. respond to return)
+        informativeText*    A string with secundary information
+
+        * may not be supported everywhere
+    """
     parentWindow = None
     alert = BaseMessageDialog.alloc().initWithMessageText_informativeText_alertStyle_buttonTitlesValues_window_resultCallback_(
-        messageText=messageText,
+        messageText=message,
         informativeText=informativeText,
         alertStyle=NSInformationalAlertStyle,
         buttonTitlesValues=[("Cancel", -1), ("Yes", 1), ("No", 0)],
@@ -222,14 +235,14 @@ def _askYesNo(messageText="", informativeText="", alertStyle=NSInformationalAler
     if resultCallback is None:
         return alert._value
 
-def GetFile(messageText=None, title=None, directory=None, fileName=None, allowsMultipleSelection=False, fileTypes=None):
+def GetFile(message=None, title=None, directory=None, fileName=None, allowsMultipleSelection=False, fileTypes=None):
     """ Legacy robofab dialog compatible wrapper.
         This will select UFO on OSX 10.7, FL5.1
     """
     parentWindow = None
     resultCallback=None
     basePanel = GetFileOrFolderPanel.alloc().initWithWindow_resultCallback_(parentWindow, resultCallback)
-    basePanel.messageText = messageText
+    basePanel.messageText = message
     basePanel.title = title
     basePanel.directory = directory
     basePanel.fileName = fileName
@@ -238,6 +251,8 @@ def GetFile(messageText=None, title=None, directory=None, fileName=None, allowsM
     basePanel.canChooseDirectories = False
     basePanel.canChooseFiles = True
     basePanel.run()
+    if basePanel._result is None:
+        return None
     if not allowsMultipleSelection:
         # compatibly return only one as we expect
         return str(list(basePanel._result)[0])
@@ -245,17 +260,19 @@ def GetFile(messageText=None, title=None, directory=None, fileName=None, allowsM
         # return more if we explicitly expect
         return [str(n) for n in list(basePanel._result)]
 
-def GetFolder(messageText=None, title=None, directory=None, allowsMultipleSelection=False):
+def GetFolder(message=None, title=None, directory=None, allowsMultipleSelection=False):
     parentWindow = None
     resultCallback = None
     basePanel = GetFileOrFolderPanel.alloc().initWithWindow_resultCallback_(parentWindow, resultCallback)
-    basePanel.messageText = messageText
+    basePanel.messageText = message
     basePanel.title = title
     basePanel.directory = directory
     basePanel.allowsMultipleSelection = allowsMultipleSelection
     basePanel.canChooseDirectories = True
     basePanel.canChooseFiles = False
     basePanel.run()
+    if basePanel._result is None:
+        return None
     if not allowsMultipleSelection:
         # compatibly return only one as we expect
         return str(list(basePanel._result)[0])
@@ -263,10 +280,10 @@ def GetFolder(messageText=None, title=None, directory=None, allowsMultipleSelect
         # return more if we explicitly expect
         return [str(n) for n in list(basePanel._result)]
 
-def GetFileOrFolder(messageText=None, title=None, directory=None, fileName=None, allowsMultipleSelection=False, fileTypes=None, parentWindow=None, resultCallback=None):
+def GetFileOrFolder(message=None, title=None, directory=None, fileName=None, allowsMultipleSelection=False, fileTypes=None, parentWindow=None, resultCallback=None):
     parentWindow = None
     basePanel = GetFileOrFolderPanel.alloc().initWithWindow_resultCallback_(parentWindow, resultCallback)
-    basePanel.messageText = messageText
+    basePanel.messageText = message
     basePanel.title = title
     basePanel.directory = directory
     basePanel.fileName = fileName
@@ -275,15 +292,21 @@ def GetFileOrFolder(messageText=None, title=None, directory=None, fileName=None,
     basePanel.canChooseDirectories = True
     basePanel.canChooseFiles = True
     basePanel.run()
-    if resultCallback is None:
-        return basePanel._result
+    if basePanel._result is None:
+        return None
+    if not allowsMultipleSelection:
+        # compatibly return only one as we expect
+        return str(list(basePanel._result)[0])
+    else:
+        # return more if we explicitly expect
+        return [str(n) for n in list(basePanel._result)]
 
-def PutFile(messageText=None, title=None, directory=None, fileName=None, canCreateDirectories=True, fileTypes=None):
+def PutFile(message=None, title=None, directory=None, fileName=None, canCreateDirectories=True, fileTypes=None):
     parentWindow = None
     resultCallback=None
     accessoryView=None
     basePanel = PutFilePanel.alloc().initWithWindow_resultCallback_(parentWindow, resultCallback)
-    basePanel.messageText = messageText
+    basePanel.messageText = message
     basePanel.title = title
     basePanel.directory = directory
     basePanel.fileName = fileName
@@ -306,7 +329,7 @@ def PutFile(messageText=None, title=None, directory=None, fileName=None, canCrea
 
 # start with all the defaults. 
 
-def AskString(prompt, value='', title='RoboFab'):
+def AskString(message, value='', title='RoboFab'):
     raise NotImplementedError
 
 def FindGlyph(aFont, message="Search for a glyph:", title='RoboFab'):
@@ -315,7 +338,7 @@ def FindGlyph(aFont, message="Search for a glyph:", title='RoboFab'):
 def OneList(list, message="Select an item:", title='RoboFab'):
     raise NotImplementedError
     
-#def PutFile(message=None, defaultName=None):
+#def PutFile(message=None, fileName=None):
 #    raise NotImplementedError
 
 def SearchList(list, message="Select an item:", title='RoboFab'):
@@ -334,5 +357,24 @@ def TwoFields(title_1="One:", value_1="0", title_2="Two:", value_2="0", title='R
     raise NotImplementedError
 
 class ProgressBar(object):
-    pass
+
+    def __init__(self, title="RoboFab...", ticks=0, label=""):
+        self._tickValue = 1
+        fl.BeginProgress(title, ticks)
+
+    def getCurrentTick(self):
+        return self._tickValue
+
+    def tick(self, tickValue=None):
+        if not tickValue:
+            tickValue = self._tickValue
+        fl.TickProgress(tickValue)
+        self._tickValue = tickValue + 1
+
+    def label(self, label):
+        pass
+
+    def close(self):
+        fl.EndProgress()
+
 

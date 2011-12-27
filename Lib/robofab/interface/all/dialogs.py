@@ -183,6 +183,15 @@ elif platformApplicationModuleName == "dialogs_mac_vanilla":
             print "loaded robofab.interface.all.dialogs_mac_vanilla"
     except ImportError:
         print "can't import", platformApplicationModuleName
+
+elif platformApplicationModuleName == "dialogs_legacy":
+   try:
+       from robofab.interface.all.dialogs_legacy import *
+       foundPlatformModule = True
+       if __verbose__:
+           print "loaded robofab.interface.all.dialogs_legacy"
+   except ImportError:
+       print "can't import", platformApplicationModuleName
     
 
 __all__ = [
@@ -191,6 +200,7 @@ __all__ = [
     "FindGlyph",
     "GetFile",
     "GetFolder",
+    "GetFileOrFolder",
     "Message",
     "OneList",
     "PutFile",

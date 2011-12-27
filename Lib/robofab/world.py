@@ -35,6 +35,8 @@ class RFWorld:
 		self.flVersion = None
 		self.inGlyphs = False
 		self.glyphsVersion = None
+		self.inRoboFont = False
+		self.roboFontVersion = None
 
 		# are we in FontLab?
 		try:
@@ -52,6 +54,15 @@ class RFWorld:
 			self.inGlyphs = True
 			self.glyphsVersion = bundle.infoDictionary()["CFBundleVersion"]
 		except ImportError: pass
+		# are we in RoboFont
+		try:
+			import mojo
+			from AppKit import NSBundle
+			bundle = NSBundle.mainBundle()
+			self.applicationName = bundle.infoDictionary()["CFBundleName"]
+			self.inRoboFont = True
+			self.roboFontVersion = bundle.infoDictionary()["CFBundleVersion"]
+		except ImportError: pass
 		# we are in NoneLab
 		if not self.inFontLab:
 			self.inPython = True
@@ -61,17 +72,18 @@ class RFWorld:
 
 	def __repr__(self):
 		s = [
-			"["
-			"Robofab is running on %s. " % self.platform,
-			"Python version: %s, " % self.pyVersion,
-			"Mac stuff: %s, " % self.mac,
-			"PC stuff: %s, " % self.pc,
-			"FontLab stuff: %s, " % self.inFontLab,
-			"FLversion: %s, " % self.flVersion,
-			"Glyphs stuff: %s, " % self.inGlyphs,
-			"Glyphs version: %s" % self.glyphsVersion
+			"Robofab is running on %s" % self.platform,
+			"Python version: %s" % self.pyVersion,
+			"Mac stuff: %s" % self.mac,
+			"PC stuff: %s" % self.pc,
+			"FontLab stuff: %s" % self.inFontLab,
+			"FLversion: %s" % self.flVersion,
+			"Glyphs stuff: %s" % self.inGlyphs,
+			"Glyphs version: %s" % self.glyphsVersion,
+			"RoboFont stuff: %s" %self.inRoboFont,
+			"RoboFont version: %s" %self.roboFontVersion,
 		]
-		return "".join(s)
+		return ", ".join(s)
 
 
 world = RFWorld()
@@ -82,10 +94,14 @@ if world.inFontLab:
 	from robofab.interface.all.dialogs import SelectFont, SelectGlyph
 	from robofab.objects.objectsFL import CurrentFont, CurrentGlyph, RFont, RGlyph, OpenFont, NewFont, AllFonts
 	lineBreak = "\n"
+elif world.inRoboFont:
+	from mojo.roboFont import CurrentFont, CurrentGlyph, RFont, RGlyph, OpenFont, NewFont, AllFonts
 elif world.inGlyphs:
 	from objectsGS import CurrentFont, CurrentGlyph, RFont, RGlyph, OpenFont, NewFont, AllFonts
 elif world.inPython:
 	from robofab.objects.objectsRF import CurrentFont, CurrentGlyph, RFont, RGlyph, OpenFont, NewFont, AllFonts
+
+    
 
 if __name__ == "__main__":
 	f = RFWorld()

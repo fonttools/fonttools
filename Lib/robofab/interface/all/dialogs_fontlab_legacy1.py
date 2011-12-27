@@ -7,9 +7,6 @@
     
 """
 
-
-print "dialogs_fontlab_legacy loading!"
-
 from FL import *
 from dialogKit import ModalDialog, Button, TextBox, EditText
 
@@ -27,19 +24,19 @@ __all__ = [
     #"SelectGlyph",
     #"TwoChecks",
     #"TwoFields",
-    #"ProgressBar",
+    "ProgressBar",
 ]
 
 
-def AskString(prompt, value='', title='RoboFab'):
-    dialogInstance = _AskStringDialog(prompt, value, title)
+def AskString(message, value='', title='RoboFab'):
+    dialogInstance = _AskStringDialog(message, value, title)
     return dialogInstance.getValue()
 
 class _AskStringDialog(object):
-    def __init__(self, prompt, value, title):
+    def __init__(self, message, value, title):
         self.w = ModalDialog((360, 140), title)
         self.w.button1 = Button((-100, -300, 80, 24), 'OK', callback=self.buttonCallback)
-        self.w.t = TextBox((5, 10, -5, 27), prompt)
+        self.w.t = TextBox((5, 10, -5, 27), message)
         self.w.inputValue = EditText((5, 35, -5, 50), value)
         self.w.open()
     
@@ -49,20 +46,20 @@ class _AskStringDialog(object):
     def buttonCallback(self, sender):
         self.w.close()
 
-def AskYesNoCancel(prompt, title='RoboFab', default=1):
-    dialogInstance = _AskYesNoCancelDialog(prompt, title=title, default=default)
+def AskYesNoCancel(message, title='RoboFab', default=1, informativeText=None):
+    dialogInstance = _AskYesNoCancelDialog(message, title=title, default=default)
     result = dialogInstance.getValue()
     if result is None and default is not None:
         return default
     return result
 
 class _AskYesNoCancelDialog(object):
-    def __init__(self, prompt, default=None, title="RoboFab"):
+    def __init__(self, message, default=None, title="RoboFab"):
         # default is ignord?
         self.answer = -1
         self.w = ModalDialog((360, 140), title, okCallback=self.buttonOKCallback)
         self.w.noButton = Button((10, -35, 80, 24), 'No', callback=self.buttonNoCallback)
-        self.w.t = TextBox((5, 10, -5, 27), prompt)
+        self.w.t = TextBox((5, 10, -5, 27), message)
         self.w.open()
     
     def getValue(self):
@@ -79,13 +76,13 @@ class _AskYesNoCancelDialog(object):
 def FindGlyph(aFont, message="Search for a glyph:", title='RoboFab'):
     raise NotImplementedError
 
-def GetFile(message=None):
-    strFilter = "All Files	(*.*)|*.*|"
+def GetFile(message=None, title=None, directory=None, fileName=None, allowsMultipleSelection=False, fileTypes=None):
+    strFilter = "All Files  (*.*)|*.*|"
     defaultExt = ""
     # using fontlab's internal file dialogs
     return fl.GetFileName(1, defaultExt, message, strFilter)
 
-def GetFolder(message=None):
+def GetFolder(message=None, title=None, directory=None, allowsMultipleSelection=False):
     # using fontlab's internal file dialogs
     if message is None:
         message = ""
@@ -106,15 +103,15 @@ class _MessageDialog(object):
         self.w.open()
 
     
-def PutFile(message=None, defaultName=None):
+def PutFile(message=None, fileName=None):
     # using fontlab's internal file dialogs
     # message is not used
     if message is None:
         message = ""
-    if defaultName is None:
-        defaultName = ""
+    if fileName is None:
+        fileName = ""
     defaultExt = ""
-    return fl.GetFileName(0, defaultExt, defaultName, '')
+    return fl.GetFileName(0, defaultExt, fileName, '')
 
 def OneList(list, message="Select an item:", title='RoboFab'):
     raise NotImplementedError
@@ -134,6 +131,25 @@ def TwoChecks(title_1="One",  title_2="Two", value1=1, value2=1, title='RoboFab'
 def TwoFields(title_1="One:", value_1="0", title_2="Two:", value_2="0", title='RoboFab'):
     raise NotImplementedError
 
+
 class ProgressBar(object):
-    pass
+
+    def __init__(self, title="RoboFab...", ticks=0, label=""):
+        self._tickValue = 1
+        fl.BeginProgress(title, ticks)
+
+    def getCurrentTick(self):
+        return self._tickValue
+
+    def tick(self, tickValue=None):
+        if not tickValue:
+            tickValue = self._tickValue
+        fl.TickProgress(tickValue)
+        self._tickValue = tickValue + 1
+
+    def label(self, label):
+        pass
+
+    def close(self):
+        fl.EndProgress()
 

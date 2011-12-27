@@ -203,12 +203,12 @@ class _FontLabDialogTwoChecks:
 class _FontLabDialogAskString:
 	"""A one simple string prompt dialog for FontLab. This class should not be called directly. Use the GetString function."""
 
-	def __init__(self, prompt, value, title='RoboFab'):
+	def __init__(self, message, value, title='RoboFab'):
 		self.d = Dialog(self)
 		self.d.size = Point(350, 130)
 		self.d.title = title
 		self.d.Center()
-		self.d.AddControl(STATICCONTROL, Rect(aIDENT, aIDENT, aIDENT, aAUTO), "label", STYLE_LABEL, prompt) 
+		self.d.AddControl(STATICCONTROL, Rect(aIDENT, aIDENT, aIDENT, aAUTO), "label", STYLE_LABEL, message) 
 		self.d.AddControl(EDITCONTROL, Rect(aIDENT, 40, aIDENT, aAUTO), "value", STYLE_EDIT, '')	
 		self.value=value
 		
@@ -235,7 +235,7 @@ class _FontLabDialogMessage:
 		return self.d.Run()
 		
 class _FontLabDialogGetYesNoCancel:
-	"""A yes no cancel prompt dialog for FontLab. This class should not be called directly. Use the YesNoCancel function."""
+	"""A yes no cancel message dialog for FontLab. This class should not be called directly. Use the YesNoCancel function."""
 	
 	def __init__(self, message, title='RoboFab'):
 		self.d = Dialog(self)
@@ -539,13 +539,13 @@ def Message(message, title='RoboFab'):
 	else:
 		_raisePlatformError('Message')
 		
-def AskString(prompt, value='', title='RoboFab'):
+def AskString(message, value='', title='RoboFab'):
 	"""
 	Returns entered string.
 	Availability: FontLab, Macintosh
 	"""
 	if inFontLab:
-		askString = _FontLabDialogAskString(prompt, value, title)
+		askString = _FontLabDialogAskString(message, value, title)
 		askString.Run()
 		v = askString.value
 		if v is None:
@@ -554,7 +554,7 @@ def AskString(prompt, value='', title='RoboFab'):
 			return v
 	elif MAC:
 		import EasyDialogs
-		askString = EasyDialogs.AskString(prompt)
+		askString = EasyDialogs.AskString(message)
 		if askString is None:
 			return None
 		if len(askString) == 0:
@@ -564,20 +564,20 @@ def AskString(prompt, value='', title='RoboFab'):
 	else:
 		_raisePlatformError('GetString')
 		
-def AskYesNoCancel(prompt, title='RoboFab', default=0):
+def AskYesNoCancel(message, title='RoboFab', default=0):
 	"""
 	Returns 1 for 'Yes', 0 for 'No' and -1 for 'Cancel'.
 	Availability: FontLab, Macintosh
 	("default" argument only available on Macintosh)
 	"""
 	if inFontLab:
-		gync = _FontLabDialogGetYesNoCancel(prompt, title)
+		gync = _FontLabDialogGetYesNoCancel(message, title)
 		gync.Run()
 		v = gync.value
 		return v
 	elif MAC:
 		import EasyDialogs
-		gync = EasyDialogs.AskYesNoCancel(prompt, default=default)
+		gync = EasyDialogs.AskYesNoCancel(message, default=default)
 		return gync
 	else:
 		_raisePlatformError('GetYesNoCancel')
@@ -646,7 +646,7 @@ def GetFolder(message=None):
 	
 GetDirectory = GetFolder
 
-def PutFile(message=None, defaultName=None):
+def PutFile(message=None, fileName=None):
 	"""
 	Save file dialog. Returns path if one is entered. Otherwise it returns None.
 	Availability: FontLab, Macintosh, PC
@@ -654,23 +654,23 @@ def PutFile(message=None, defaultName=None):
 	path = None
 	if MAC:
 		if haveMacfs:
-			fss, ok = macfs.StandardPutFile(message, defaultName)
+			fss, ok = macfs.StandardPutFile(message, fileName)
 			if ok:
 				path = fss.as_pathname()
 		else:
 			import EasyDialogs
-			path = EasyDialogs.AskFileForSave(message, savedFileName=defaultName)
+			path = EasyDialogs.AskFileForSave(message, savedFileName=fileName)
 	elif PC:
 		if inFontLab:
 			if not message:
 				message = ''
-			if not defaultName:
-				defaultName = ''
-			path = fl.GetFileName(0, message, defaultName, '')
+			if not fileName:
+				fileName = ''
+			path = fl.GetFileName(0, message, fileName, '')
 		else:
 			openFlags = win32con.OFN_OVERWRITEPROMPT|win32con.OFN_EXPLORER
 			mode_save = 0
-			myDialog = win32ui.CreateFileDialog(mode_save, None, defaultName, openFlags)
+			myDialog = win32ui.CreateFileDialog(mode_save, None, fileName, openFlags)
 			myDialog.SetOFNTitle(message)
 			is_OK = myDialog.DoModal()
 			if is_OK == 1:
