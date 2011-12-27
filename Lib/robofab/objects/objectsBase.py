@@ -116,9 +116,17 @@ class BaseFont(RBaseObject):
 			name = "unnamed_font"
 		return "<RFont font for %s>" %(name)
 
-	def _defaultLayer(self):
-		layers = self.layers
-		return layers[layers.defaultLayerName]
+	def getGlyph(self, glyphName):
+		raise NotImplementedError
+
+	def newGlyph(self, glyphName, clear=True):
+		return self.layers.getDefaultLayer().newGlyph(glyphName, clear=clear)
+
+	def insertGlyph(self, glyph, name=None):
+		return self.layers.getDefaultLayer().insertGlyph(glyph, name=name)
+
+	def removeGlyph(self, glyphName):
+		self.layers.getDefaultLayer().removeGlyph(glyphName)
 
 	# comparison
 
@@ -161,18 +169,17 @@ class BaseFont(RBaseObject):
 	# dict behavior
 
 	def keys(self):
-		# must be implemented by subclass
-		raise NotImplementedError
+		return self.layers.getDefaultLayer().keys()
 
 	def __iter__(self):
 		for glyphName in self.keys():
 			yield self[glyphName]
 
 	def __getitem__(self, glyphName):
-		return self._defaultLayer()[glyphName]
+		return self.layers.getDefaultLayer()[glyphName]
 
 	def has_key(self, glyphName):
-		return self._defaultLayer().has_key(glyphName)
+		return self.layers.getDefaultLayer().has_key(glyphName)
 
 	def __contains__(self, glyphName):
 		return self.has_key(glyphName)
@@ -181,38 +188,38 @@ class BaseFont(RBaseObject):
 
 	def getCharacterMapping(self):
 		"""Convenience that returns the result of defaultLayer.getCharacterMapping()."""
-		return self._defaultLayer().getCharacterMapping()
+		return self.layers.getDefaultLayer().getCharacterMapping()
 
 	def getReverseComponentMapping(self):
 		"""Convenience that returns the result of defaultLayer.getReverseComponentMapping()."""
-		return self._defaultLayer().getReverseComponentMapping()
+		return self.layers.getDefaultLayer().getReverseComponentMapping()
 
 	# scripting API
 
 	def round(self):
 		"""Convenience that calls defaultLayer.round()."""
-		self._defaultLayer().round()
+		self.layers.getDefaultLayer().round()
 	
 	def autoUnicodes(self):
 		"""Convenience that calls defaultLayer.autoUnicodes()."""
-		self._defaultLayer().autoUnicodes()
+		self.layers.getDefaultLayer().autoUnicodes()
 
 	def compileGlyph(self, glyphName, baseName, accentNames, \
 			adjustWidth=False, preflight=False, printErrors=True):
 		"""Convenience that calls defaultLayer.compileGlyph."""
-		return self._defaultLayer().compileGlyph(
+		return self.layers.getDefaultLayer().compileGlyph(
 			glyphName, baseName, accentNames,
 			adjustWidth=adjustWidth, preflight=preflight, printErrors=printErrors)
 	
 	def generateGlyph(self, glyphName, replace=1, preflight=False, printErrors=True):
 		"""Convenience that calls defaultLayer.generateGlyph."""
-		return self._defaultLayer().generateGlyph(
+		return self.layers.getDefaultLayer().generateGlyph(
 			glyphName, replace=replace, preflight=preflight, printErrors=printErrors
 		)
 
 	def interpolate(self, factor, minFont, maxFont, suppressError=True, analyzeOnly=False, doProgress=False):
 		"""Convenience that calls defaultLayer.interpolate."""
-		return self._defaultLayer().interpolate(
+		return self.layers.getDefaultLayer().interpolate(
 			factor, minFont, maxFont,
 			suppressError=suppressError, analyzeOnly=analyzeOnly, doProgress=doProgress
 		)
@@ -257,7 +264,33 @@ class BaseFont(RBaseObject):
 
 class BaseLayerSet(RBaseObject):
 
-	pass
+	def __getitem__(self, layerName):
+		pass
+
+	def newLayer(self, layerName):
+		raise NotImplementedError
+
+	def removeLayer(self, layerName):
+		raise NotImplementedError
+
+	# layer names
+
+	def keys(self):
+		raise NotImplementedError
+
+	def getLayerOrder(self):
+		raise NotImplementedError
+
+	def setLayerOrder(self, order):
+		raise NotImplementedError
+
+	# default layer
+
+	def getDefaultLayer(self):
+		raise NotImplementedError
+
+	def setDefaultLayer(self, layer):
+		raise NotImplementedError
 
 
 # -----
@@ -273,6 +306,18 @@ class BaseLayer(RBaseObject):
 		self.changed = False		# if the object needs to be saved
 
 	# XXX def __repr__(self):
+
+	def getGlyph(self, glyphName):
+		raise NotImplementedError
+
+	def newGlyph(self, glyphName, clear=True):
+		raise NotImplementedError
+
+	def insertGlyph(self, glyph, name=None):
+		raise NotImplementedError
+
+	def removeGlyph(self, glyphName):
+		raise NotImplementedError
 
 	# dict behavior
 
