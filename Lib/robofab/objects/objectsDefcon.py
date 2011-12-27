@@ -2,7 +2,6 @@
 This is the new doc for the objectsRF module.
 
 To Do:
-- is the path normalization magic in RFont.__init__ necessary?
 - make it so that BaseKerning.clear() uses self._kerning.clear() instead of self._kerning = {}
 - check all of BaseKerning to make sure that it doesn't replace self._kerning
 - in BaseKerning.__init__ use if kerningDixt is None
@@ -90,11 +89,6 @@ class RFont(BaseFont):
 	
 	def __init__(self, path=None):
 		super(RFont, self).__init__()
-        # XXX is it really necessary to normalize paths?
-		if path is not None:
-			self._path = os.path.normpath(os.path.abspath(path))
-		else:
-			self._path = None
         # load the defcon object
 		self._object = DefconFont(path, **self._defconObjectSubclasses)
 		self._info = None
