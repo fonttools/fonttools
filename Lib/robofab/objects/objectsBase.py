@@ -20,6 +20,8 @@ from robofab import RoboFabError
 from robofab.misc.arrayTools import updateBounds, pointInRect, unionRect, sectRect
 from fontTools.pens.basePen import AbstractPen
 
+from defcon.objects.color as DefconColor
+
 # ----
 # Base
 # ----
@@ -3355,6 +3357,13 @@ class BasePostScriptFontHintValues(BasePostScriptHintValues):
 				for n in v:
 					new.append([int(round(m)) for m in n])
 				setattr(self, name, new)
+
+# -----
+# Color
+# -----
+
+class BaseColor(DefconColor): pass
+
 
 # ---------
 # Constants
