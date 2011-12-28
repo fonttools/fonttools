@@ -321,6 +321,8 @@ class BaseLayer(RBaseObject):
 
 	# XXX def __repr__(self):
 
+	# glyph creation, destruction and retrieval
+
 	def getGlyph(self, glyphName):
 		raise NotImplementedError
 

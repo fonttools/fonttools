@@ -30,6 +30,7 @@ from robofab import RoboFabError, RoboFabWarning
 from robofab.objects.objectsBase import RBaseObject, BaseFont, BaseLayerSet, \
 		BaseKerning, BaseGroups, BaseInfo, BaseFeatures, BaseLib,\
 		BaseGlyph, BaseContour, BaseSegment, BasePoint, BaseBPoint, BaseAnchor, BaseGuide, BaseComponent, \
+		BaseColor, \
 		relativeBCPIn, relativeBCPOut, absoluteBCPIn, absoluteBCPOut, _box,\
 		_interpolate, _interpolatePt, roundPt, addPt,\
 		MOVE, LINE, CORNER, CURVE, QCURVE, OFFCURVE,\
@@ -668,6 +669,25 @@ class RLayer(RBaseObject):
 		return RGlyph
 
 	# XXX def __repr__(self):
+
+	# layer info
+
+	def _get_lib(self):
+		if self._lib is None:
+			self._lib = self.libClass()(self._object.lib)
+		return self._lib
+
+	lib = property(_get_lib)
+
+	def _get_color(self):
+		return BaseColor(self._object.color)
+
+	def _set_color(self, value):
+		self._object.color = value
+
+	color = property(_get_color, _set_color)
+
+	# glyph creation, destruction and retrieval
 
 	def getGlyph(self, glyphName):
 		if glyphName not in self._object:
