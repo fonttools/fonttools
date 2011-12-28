@@ -272,13 +272,18 @@ class BaseLayerSet(RBaseObject):
 	def __contains__(self, layerName):
 		raise NotImplementedError
 
-	has_key = __contains__
+	def has_key(self, layerName):
+		return self.__contains__(layerName)
 
 	def __getitem__(self, layerName):
 		raise NotImplementedError
 
 	def __iter__(self):
-		raise NotImplementedError
+		names = self.keys()
+		while names:
+			name = names[0]
+			yield self[name]
+			names = names[1:]
 
 	def newLayer(self, layerName):
 		raise NotImplementedError
@@ -333,18 +338,24 @@ class BaseLayer(RBaseObject):
 	def keys(self):
 		raise NotImplementedError
 
+	def __len__(self):
+		raise NotImplementedError
+
 	def __iter__(self):
-		for glyphName in self.keys():
-			yield self.getGlyph(glyphName)
+		names = self.keys()
+		while names:
+			name = names[0]
+			yield self[name]
+			names = names[1:]
 
 	def __getitem__(self, glyphName):
 		return self.getGlyph(glyphName)
 
-	def has_key(self):
+	def __contains__(self, glyphName):
 		raise NotImplementedError
 
-	def __contains__(self, glyphName):
-		return self.has_key(glyphName)
+	def has_key(self, glyphName):
+		return self.__contains__(glyphName)
 
 	# dynamic data extraction
 

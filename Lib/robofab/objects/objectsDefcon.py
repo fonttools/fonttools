@@ -616,12 +616,8 @@ class RLayerSet(BaseLayerSet):
 	def __getitem__(self, layerName):
 		return self.getLayer(layerName)
 
-	def __iter__(self):
-		for layerName in self.getLayerOrder():
-			yield self.getLayer(layerName)
-
 	def newLayer(self, layerName):
-		assert layerName not in self._object
+		assert layerName not in self._object, "A layer named %s already exists." % layerName
 		self._object.newLayer(layerName)
 		return self.getLayer(layerName)
 
@@ -632,7 +628,7 @@ class RLayerSet(BaseLayerSet):
 	# layer names
 
 	def keys(self):
-		return self._object.layerOrder()
+		return self._object.layerOrder
 
 	def getLayerOrder(self):
 		return self._object.layerOrder()
@@ -660,35 +656,46 @@ class RLayerSet(BaseLayerSet):
 # Layer
 # -----
 
-class BaseLayer(RBaseObject):
+class RLayer(RBaseObject):
 
 	"""Base class for all Layer objects."""
 
-	def __init__(self):
-		RBaseObject.__init__(self)
-		self.changed = False		# if the object needs to be saved
+	def __init__(self, layer):
+		super(RLayer, self).__init__()
+		self._object = layer
+
+	def glyphClass(self):
+		return RGlyph
 
 	# XXX def __repr__(self):
 
 	def getGlyph(self, glyphName):
-		raise NotImplementedError
+		if glyphName not in self._object:
+			raise KeyError("The layer does not contain a glyph named %s." % glyphName)
+		return self.glyphClass()(self._object[glyphName])
 
 	def newGlyph(self, glyphName, clear=True):
-		raise NotImplementedError
+		assert glyphName not in self._object, "A glyph named %s already exists." % glyphName
+		self._object.newGlyph(glyphName)
+		return self.getGlyph(glyphName)
 
 	def insertGlyph(self, glyph, name=None):
-		raise NotImplementedError
+		self._object.insertGlyph(glyph, name=name)
+		if name is None:
+			name = glyph.name
+		return self.getGlyph(name)
 
 	def removeGlyph(self, glyphName):
-		raise NotImplementedError
+		glyph = self.getGlyph(glyphName)
+		del self._object[glyphName]
 
 	# dict behavior
 
 	def keys(self):
-		raise NotImplementedError
+		return self._object.keys()
 
-	def has_key(self):
-		raise NotImplementedError
+	def __contains__(self, glyphName):
+		return glyphName in self._object
 
 	# dynamic data extraction
 
@@ -1532,10 +1539,19 @@ if __name__ == "__main__":
 	from defcon.test.testTools import getTestFontPath
 	font = RFont(getTestFontPath())
 	print font
-	print font.layers
-	print font.info
-	print font.groups
-	print font.kerning
-	print font.features
-	print font.lib
+	print
+	print "layers:", font.layers
+	print
+	print "info:", font.info
+	print
+	print "groups:", font.groups
+	print
+	print "kerning:", font.kerning
+	print
+	print "features:", font.features
+	print
+	print "lib:", font.lib
+	print
+	print "layer:", font.layers[None], [layer for layer in font.layers]
+	print
 
