@@ -264,8 +264,21 @@ class BaseFont(RBaseObject):
 
 class BaseLayerSet(RBaseObject):
 
+	# layer creation, destruction and retrieval
+
+	def getLayer(self, layerName):
+		raise NotImplementedError
+
+	def __contains__(self, layerName):
+		raise NotImplementedError
+
+	has_key = __contains__
+
 	def __getitem__(self, layerName):
-		pass
+		raise NotImplementedError
+
+	def __iter__(self):
+		raise NotImplementedError
 
 	def newLayer(self, layerName):
 		raise NotImplementedError
@@ -300,10 +313,6 @@ class BaseLayerSet(RBaseObject):
 class BaseLayer(RBaseObject):
 
 	"""Base class for all Layer objects."""
-
-	def __init__(self):
-		RBaseObject.__init__(self)
-		self.changed = False		# if the object needs to be saved
 
 	# XXX def __repr__(self):
 

@@ -7,11 +7,12 @@ To Do:
 - in BaseKerning.__init__ use if kerningDict is None
 - make BaseGroups subclass BaseObject like BaseKerning does?
 - add __contains__ to all dict-like base objects
-- get right of BaseGroups.findGlyph
+- get rid of BaseGroups.findGlyph
 - BaseObject.naked expects the wrapped object to be stored at ._object.
   this is not always true.
 - what should be done about the PSHint objects?
 - the repr methods in ObjectsBase use odd font.info name values
+- how will obj.copy() work here?
 
 
 I'm trying to find a way to make it possible for defcon based
@@ -26,7 +27,8 @@ a basic defcon font or a defcon.Font (or subclass) object to be wrapped.
 import os
 from defcon import Font as DefconFont
 from robofab import RoboFabError, RoboFabWarning
-from robofab.objects.objectsBase import RBaseObject, BaseFont, BaseKerning, BaseGroups, BaseInfo, BaseFeatures, BaseLib,\
+from robofab.objects.objectsBase import RBaseObject, BaseFont, BaseLayerSet, \
+		BaseKerning, BaseGroups, BaseInfo, BaseFeatures, BaseLib,\
 		BaseGlyph, BaseContour, BaseSegment, BasePoint, BaseBPoint, BaseAnchor, BaseGuide, BaseComponent, \
 		relativeBCPIn, relativeBCPOut, absoluteBCPIn, absoluteBCPOut, _box,\
 		_interpolate, _interpolatePt, roundPt, addPt,\
@@ -97,6 +99,7 @@ class RFont(BaseFont):
 			self._object = path
 		else:
 			self._object = DefconFont(path)
+		self._layers = None
 		self._info = None
 		self._kerning = None
 		self._groups = None
@@ -105,6 +108,9 @@ class RFont(BaseFont):
 		# XXX PS Hints?
 
     # Object Classes
+
+	def layersClass(self):
+		return RLayerSet
 
 	def infoClass(self):
 		return RInfo
@@ -122,6 +128,13 @@ class RFont(BaseFont):
 		return RLib
 
 	# Sub-Objects
+
+	def _get_layers(self):
+		if self._layers is None:
+			self._layers = self.layersClass()(self._object.layers)
+		return self._layers
+
+	layers = property(_get_layers)
 
 	def _get_info(self):
 		if self._info is None:
@@ -170,12 +183,10 @@ class RFont(BaseFont):
 #			return 0
 #		else:
 #			return -1
-#	
-#	def __len__(self):
-#		if self._glyphSet is None:
-#			return 0
-#		return len(self._glyphSet)
-#	
+
+	def __len__(self):
+		return len(self._object)
+
 #	def _loadData(self, path):
 #		from ufoLib import UFOReader
 #		reader = UFOReader(path)
@@ -576,7 +587,133 @@ class RFont(BaseFont):
 #			raise KeyError, glyphName
 #		return n
 #
-#
+
+# --------
+# LayerSet
+# --------
+
+class RLayerSet(BaseLayerSet):
+
+	def __init__(self, layerSet):
+		super(RLayerSet, self).__init__()
+		self._object = layerSet
+
+	def layerClass(self):
+		return RLayer
+
+	# layer creation, destruction and retrieval
+
+	def __contains__(self, layerName):
+		return layerName in self._object
+
+	has_key = __contains__
+
+	def getLayer(self, layerName):
+		if layerName not in self._object:
+			raise KeyError("Font does not have a layer named %s." % layerName)
+		return self.layerClass()(self._object[layerName])
+
+	def __getitem__(self, layerName):
+		return self.getLayer(layerName)
+
+	def __iter__(self):
+		for layerName in self.getLayerOrder():
+			yield self.getLayer(layerName)
+
+	def newLayer(self, layerName):
+		assert layerName not in self._object
+		self._object.newLayer(layerName)
+		return self.getLayer(layerName)
+
+	def removeLayer(self, layerName):
+		layer = self.getLayer(layerName)
+		del self._object[layerName]
+
+	# layer names
+
+	def keys(self):
+		return self._object.layerOrder()
+
+	def getLayerOrder(self):
+		return self._object.layerOrder()
+
+	def setLayerOrder(self, order):
+		self._object.layerOrder = order
+
+	# default layer
+
+	def getDefaultLayer(self):
+		layerName = self._object.defaultLayer.name
+		return self[layerName]
+
+	def setDefaultLayer(self, layer):
+		naked = layer.naked()
+		found = False
+		for l in self._object:
+			if l == naked:
+				found = True
+				break
+		assert found, "The layer being set as the default must already belong to the font."
+		self._object.setDefaultLayer(naked)
+
+# -----
+# Layer
+# -----
+
+class BaseLayer(RBaseObject):
+
+	"""Base class for all Layer objects."""
+
+	def __init__(self):
+		RBaseObject.__init__(self)
+		self.changed = False		# if the object needs to be saved
+
+	# XXX def __repr__(self):
+
+	def getGlyph(self, glyphName):
+		raise NotImplementedError
+
+	def newGlyph(self, glyphName, clear=True):
+		raise NotImplementedError
+
+	def insertGlyph(self, glyph, name=None):
+		raise NotImplementedError
+
+	def removeGlyph(self, glyphName):
+		raise NotImplementedError
+
+	# dict behavior
+
+	def keys(self):
+		raise NotImplementedError
+
+	def has_key(self):
+		raise NotImplementedError
+
+	# dynamic data extraction
+
+	def getCharacterMapping(self):
+		"""Create a dictionary of unicode -> [glyphname, ...] mappings.
+		Note that this dict is created each time this method is called, 
+		which can make it expensive for larger fonts. All glyphs are loaded.
+		Note that one glyph can have multiple unicode values,
+		and a unicode value can have multiple glyphs pointing to it."""
+		return dict(self._object.unicodeData)
+
+	def getReverseComponentMapping(self):
+		"""
+		Get a reversed map of component references in the font.
+		{
+		'A' : ['Aacute', 'Aring']
+		'acute' : ['Aacute']
+		'ring' : ['Aring']
+		etc.
+		}
+		"""
+		return self._object.componentReferences
+
+
+
 #class RGlyph(BaseGlyph):
 #	
 #	_title = "RGlyph"
@@ -1395,6 +1532,7 @@ if __name__ == "__main__":
 	from defcon.test.testTools import getTestFontPath
 	font = RFont(getTestFontPath())
 	print font
+	print font.layers
 	print font.info
 	print font.groups
 	print font.kerning
