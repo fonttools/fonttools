@@ -664,9 +664,13 @@ class RLayer(RBaseObject):
 	def __init__(self, layer):
 		super(RLayer, self).__init__()
 		self._object = layer
+		self._lib = None
 
 	def glyphClass(self):
 		return RGlyph
+
+	def libClass(self):
+		return RLib
 
 	# XXX def __repr__(self):
 
@@ -680,7 +684,10 @@ class RLayer(RBaseObject):
 	lib = property(_get_lib)
 
 	def _get_color(self):
-		return BaseColor(self._object.color)
+		color = self._object.color
+		if color is not None:
+			color = BaseColor(color)
+		return color
 
 	def _set_color(self, value):
 		self._object.color = value
@@ -1572,6 +1579,9 @@ if __name__ == "__main__":
 	print
 	print "lib:", font.lib
 	print
-	print "layer:", font.layers[None], [layer for layer in font.layers]
+	print "layer:", font.layers[None]
+	font.layers[None].color = ".5, 1, 0, .2"
+	print "layer.color:", font.layers[None].color
+	print "layer.lib:", font.layers[None].lib
 	print
 

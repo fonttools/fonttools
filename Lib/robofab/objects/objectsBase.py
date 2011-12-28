@@ -20,7 +20,7 @@ from robofab import RoboFabError
 from robofab.misc.arrayTools import updateBounds, pointInRect, unionRect, sectRect
 from fontTools.pens.basePen import AbstractPen
 
-from defcon.objects.color as DefconColor
+from defcon.objects.color import Color as DefconColor
 
 # ----
 # Base
