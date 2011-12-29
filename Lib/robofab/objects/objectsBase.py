@@ -554,14 +554,6 @@ class BaseGlyph(RBaseObject):
 			pass
 		return "<RGlyph for %s.%s>" %(font, glyph)
 
-	def getGlyph(self, glyphName):
-		"""Provided there is a font parent for this glyph, return a sibling glyph."""
-		if glyphName == self.name:
-			return self
-		if self.getParent() is not None:
-			return self.getParent()[glyphName]
-		return None
-
 	def _saveToGlyphSet(self, glyphSet, glyphName=None, force=False):
 		"""Save the glyph to GlyphSet, a private method that's part of the saving process."""
 		# save stuff in the lib first
