@@ -13,7 +13,20 @@ To Do:
 - what should be done about the PSHint objects?
 - the repr methods in ObjectsBase use odd font.info name values
 - how will obj.copy() work here?
-
+    probably need to make the object arguments in __init__ optional and create one if needed.
+    this could cause problems when their are defcon subclasses (consider a contour being created
+    with the defcon Contour object independently and then inserted into a glyph that uses a
+    Contour subclass). a way around this would be to test isinstance(incoming, self.objClass())
+    during all insertion methods.
+- need to work out how selected will work in these objects
+- note somewhere that the various get* methods should not be used externally
+  (they are only public because getGLyph was left public in RFont back in the day)
+- need to add an index method to RGlyph for getting the index of a contour
+  glyph.contours.index(contour) won't work unless we rework comparisons to compare
+  the naked object. this is a problem because glyph.removeContour requires an index.
+  whereas glyph.removeComponent requires the component.
+- what should happen to anchors in BaseGlyph.appendGlyph?
+- what should be done with the anchor mark (used in appendAnchor and probably elsewhere)?
 
 I'm trying to find a way to make it possible for defcon based
 environments to use these objects in a simple way. For now, I
@@ -22,12 +35,18 @@ for each of the sub-object types that are needed by a particular
 object. Subclasses can override these to implement their own
 R* subclasses. In __init__, "path" can be a path or None to open
 a basic defcon font or a defcon.Font (or subclass) object to be wrapped.
+
+Overall Design:
+- The defcon objects are wrapped whenever they are requested and there
+  is no caching of the wrapped objects. This is not done because it would
+  likely cause synchronicity problems.
+
 """
 
 import os
 from defcon import Font as DefconFont
 from robofab import RoboFabError, RoboFabWarning
-from robofab.objects.objectsBase import RBaseObject, BaseFont, BaseLayerSet, \
+from robofab.objects.objectsBase import RBaseObject, BaseFont, BaseLayerSet, BaseLayer, \
 		BaseKerning, BaseGroups, BaseInfo, BaseFeatures, BaseLib,\
 		BaseGlyph, BaseContour, BaseSegment, BasePoint, BaseBPoint, BaseAnchor, BaseGuide, BaseComponent, \
 		BaseColor, \
@@ -657,7 +676,7 @@ class RLayerSet(BaseLayerSet):
 # Layer
 # -----
 
-class RLayer(RBaseObject):
+class RLayer(BaseLayer):
 
 	"""Base class for all Layer objects."""
 
@@ -724,6 +743,9 @@ class RLayer(RBaseObject):
 	def __contains__(self, glyphName):
 		return glyphName in self._object
 
+	def __getitem__(self, glyphName):
+		return self.getGlyph(glyphName)
+
 	# dynamic data extraction
 
 	def getCharacterMapping(self):
@@ -746,217 +768,210 @@ class RLayer(RBaseObject):
 		"""
 		return self._object.componentReferences
 
+# -----
+# Glyph
+# -----
+
+class RGlyph(BaseGlyph):
+
+	_title = "RGlyph"
+
+	def __init__(self, glyph):
+		super(RGlyph, self).__init__()
+		self._object = glyph
+
+	def _hasNotChanged(self):
+		raise NotImplementedError
+
+	# Identification
+
+	def _get_name(self):
+		return self._object.name
+
+	def _set_name(self, value):
+		self._object.name = value
+
+	name = property(_get_name, _set_name)
+
+	def _get_unicodes(self):
+		return self._object.unicodes
+
+	def _set_unicodes(self, value):
+		if not isinstance(value, list):
+			raise RoboFabError, "unicodes must be a list"
+		self._objects.unicodes = value
+
+	unicodes = property(_get_unicodes, _set_unicodes, doc="all unicode values for the glyph")
+
+	def _get_unicode(self):
+		return self._object.unicode
+
+	def _set_unicode(self, value):
+		self._object.unicode = value
+
+	unicode = property(_get_unicode, _set_unicode, doc="first unicode value for the glyph")
+
+	# Metrics
+
+	def _get_box(self):
+		bounds = self._obejct.bounds
+		if bounds is None:
+			bounds = (0, 0, 0, 0)
+		return bounds
+
+	def _get_leftMargin(self):
+		if self.isEmpty():
+			return 0
+		return self._object.leftMargin
+
+	def _set_leftMargin(self, value):
+		if self.isEmpty():
+			self.width = self.width + value
+		else:
+			self._object.leftMargin = value
+
+	leftMargin = property(_get_leftMargin, _set_leftMargin, doc="the left margin")
+
+	def _get_rightMargin(self):
+		if self.isEmpty():
+			return self.width
+		return self._object.rightMargin
+
+	def _set_rightMargin(self, value):
+		if self.isEmpty():
+			self.width = value
+		else:
+			self._object.rightMargin = value
+
+	# Lib
+
+	def libClass(self):
+		return RLib
+
+	def _get_lib(self):
+		return self.libClass()(self._object.lib)
+
+	def _set_lib(self, obj):
+		self._object.lib.clear()
+		self._object.lib.update(obj)
+
+	lib = property(_get_lib, _set_lib)
+
+	# Contours
+
+	def contourClass(self):
+		return RContour
+
+	def getContour(self, index):
+		return self.contourClass()(self._object[index])
+
+	def _get_contours(self):
+		return [self.getContour(index) for index in range(len(self))]
+
+	contours = property(_get_contours)
+
+	def __len__(self):
+		return len(self._object) 
+
+	def __getitem__(self, index):
+		if index < len(self._object):
+			return self._getContour(index)
+		raise IndexError
+
+	def removeContour(self, index):
+		"""remove  a specific contour from the glyph"""
+		del self._object[index]
+
+	def clearContours(self):
+		"""clear all contours"""
+		self._object.clearContours()
+
+	# Components
+
+	def componentClass(self):
+		return RComponent
+
+	def getComponent(self, component):
+		return self.componentClass()(component)
+
+	def _get_components(self):
+		return [self.getComponent(component) for component in self._object.components]
+
+	components = property(_get_components)
+
+	def getComponents(self):
+		return self.components
+
+	def removeComponent(self, component):
+		"""remove  a specific component from the glyph"""
+		self._object.removeComponent(component.naked())
+
+	def decompose(self):
+		"""Decompose all components"""
+		self._object.decomposeAllComponents()
+
+	def clearComponents(self):
+		"""clear all components"""
+		self._object.clearComponents()
+
+	# Anchors
+
+	def anchorClass(self):
+		return RAnchor
+
+	def getAnchor(self, anchor):
+		return self.anchorClass()(anchor)
+
+	def _get_anchors(self):
+		return [self.getAnchor(anchor) for anchor in self._object.anchors]
+
+	anchors = property(_get_anchors)
+
+	def getAnchors(self):
+		return self.anchors
+
+	def appendAnchor(self, name, position, mark=None):
+		"""append an anchor to the glyph"""
+		anchor = self._object.instantiateAnchor()
+		anchor.name = name
+		anchor.x = position[0]
+		anchor.y = position[1]
+		self._object.appendAnchor(anchor)
+
+	def removeAnchor(self, anchor):
+		"""remove  a specific anchor from the glyph"""
+		self._object.removeAnchor(anchor.naked())
+
+	def clearAnchors(self):
+		"""clear all anchors"""
+		self._object.clearAnchors()
+
+	# Clear
+
+	def clear(self, contours=True, components=True, anchors=True):
+		"""Clear all items marked as True from the glyph"""
+		if contours:
+			self.clearContours()
+		if components:
+			self.clearComponents()
+		if anchors:
+			self.clearAnchors()
+
+	# Pens and Drawing
+
+	def getPen(self):
+		return self._object.getPen()
+
+	def getPointPen(self):
+		return self._object.getPointPen()
+
+	def draw(self, pen):
+		self._object.draw(pen)
+
+	def drawPoints(self, pointPen):
+		self._object.drawPoints(pointPen)
 
 
-#class RGlyph(BaseGlyph):
-#	
-#	_title = "RGlyph"
-#	
-#	def __init__(self):
-#		BaseGlyph.__init__(self)
-#		self.contours = []
-#		self.components = []
-#		self.anchors = []
-#		self._unicodes = []
-#		self.width = 0
-#		self.note = None
-#		self._name = "Unnamed Glyph"
-#		self.selected = False
-#		self._properties = None
-#		self._lib = RLib()
-#		self._lib.setParent(self)
-#		self.psHints = PostScriptGlyphHintValues()
-#		self.psHints.setParent(self)
-#
-#	def __len__(self):
-#		return len(self.contours) 
-#
-#	def __getitem__(self, index):
-#		if index < len(self.contours):
-#			return self.contours[index]
-#		raise IndexError
-#	
-#	def _hasNotChanged(self):
-#		for contour in self.contours:
-#			contour.setChanged(False)
-#			for segment in contour.segments:
-#				segment.setChanged(False)
-#				for point in segment.points:
-#					point.setChanged(False)
-#		for component in self.components:
-#			component.setChanged(False)
-#		for anchor in self.anchors:
-#			anchor.setChanged(False)
-#		self.setChanged(False)
-#	
-#	#
-#	# attributes
-#	#
-#	
-#	def _get_lib(self):
-#		return self._lib
-#	
-#	def _set_lib(self, obj):
-#		self._lib.clear()
-#		self._lib.update(obj)
-#	
-#	lib = property(_get_lib, _set_lib)
-#	
-#	def _get_name(self):
-#		return self._name
-#	
-#	def _set_name(self, value):
-#		prevName = self._name
-#		newName = value
-#		if newName == prevName:
-#			return
-#		self._name = newName
-#		self.setChanged(True)
-#		font = self.getParent()
-#		if font is not None:
-#			# but, this glyph could be linked to a
-#			# FontLab font, because objectsFL.RGlyph.copy()
-#			# creates an objectsRF.RGlyph with the parent
-#			# set to an objectsFL.RFont object. so, check to see
-#			# if this is a legitimate RFont before trying to 
-#			# do the objectsRF.RFont glyph name change
-#			if isinstance(font, RFont):
-#				font._object[newName] = self
-#				# is the user changing a glyph's name to the
-#				# name of a glyph that was deleted earlier?
-#				if newName in font._scheduledForDeletion:
-#					font._scheduledForDeletion.remove(newName)
-#				font.removeGlyph(prevName)
-#	
-#	name = property(_get_name, _set_name)
-#	
-#	def _get_unicodes(self):
-#		return self._unicodes
-#	
-#	def _set_unicodes(self, value):
-#		if not isinstance(value, list):
-#			raise RoboFabError, "unicodes must be a list"
-#		self._unicodes = value
-#		self._hasChanged()
-#			
-#	unicodes = property(_get_unicodes, _set_unicodes, doc="all unicode values for the glyph")
-#	
-#	def _get_unicode(self):
-#		if len(self._unicodes) == 0:
-#			return None
-#		return self._unicodes[0]
-#	
-#	def _set_unicode(self, value):
-#		uni = self._unicodes
-#		if value is not None:
-#			if value not in uni:
-#				self.unicodes.insert(0, value)
-#			elif uni.index(value) != 0:
-#				uni.insert(0, uni.pop(uni.index(value)))
-#				self.unicodes = uni
-#		
-#	unicode = property(_get_unicode, _set_unicode, doc="first unicode value for the glyph")
-#	
-#	def getPointPen(self):
-#		from robofab.pens.rfUFOPen import RFUFOPointPen
-#		return RFUFOPointPen(self)
-#
-#	def appendComponent(self, baseGlyph, offset=(0, 0), scale=(1, 1)):
-#		"""append a component to the glyph"""
-#		new = RComponent(baseGlyph, offset, scale)
-#		new.setParent(self)
-#		self.components.append(new)
-#		self._hasChanged()
-#		
-#	def appendAnchor(self, name, position, mark=None):
-#		"""append an anchor to the glyph"""
-#		new = RAnchor(name, position, mark)
-#		new.setParent(self)
-#		self.anchors.append(new)
-#		self._hasChanged()
-#	
-#	def removeContour(self, index):
-#		"""remove  a specific contour from the glyph"""
-#		del self.contours[index]
-#		self._hasChanged()
-#		
-#	def removeAnchor(self, anchor):
-#		"""remove  a specific anchor from the glyph"""
-#		del self.anchors[anchor.index]
-#		self._hasChanged()
-#	
-#	def removeComponent(self, component):
-#		"""remove  a specific component from the glyph"""
-#		del self.components[component.index]
-#		self._hasChanged()
-#			
-#	def center(self, padding=None):
-#		"""Equalise sidebearings, set to padding if wanted."""
-#		left = self.leftMargin
-#		right = self.rightMargin
-#		if padding:
-#			e_left = e_right = padding
-#		else:
-#			e_left = (left + right)/2
-#			e_right = (left + right) - e_left
-#		self.leftMargin = e_left
-#		self.rightMargin = e_right
-#	
-#	def decompose(self):
-#		"""Decompose all components"""
-#		for i in range(len(self.components)):
-#			self.components[-1].decompose()
-#		self._hasChanged()
-#			
-#	def clear(self, contours=True, components=True, anchors=True, guides=True):
-#		"""Clear all items marked as True from the glyph"""
-#		if contours:
-#			self.clearContours()
-#		if components:
-#			self.clearComponents()
-#		if anchors:
-#			self.clearAnchors()
-#		if guides:
-#			self.clearHGuides()
-#			self.clearVGuides()
-#	
-#	def clearContours(self):
-#		"""clear all contours"""
-#		self.contours = []
-#		self._hasChanged()
-#	
-#	def clearComponents(self):
-#		"""clear all components"""
-#		self.components = []
-#		self._hasChanged()
-#		
-#	def clearAnchors(self):
-#		"""clear all anchors"""
-#		self.anchors = []
-#		self._hasChanged()
-#		
-#	def clearHGuides(self):
-#		"""clear all horizontal guides"""
-#		self.hGuides = []
-#		self._hasChanged()
-#	
-#	def clearVGuides(self):
-#		"""clear all vertical guides"""
-#		self.vGuides = []
-#		self._hasChanged()
-#		
-#	def getAnchors(self):
-#		return self.anchors
-#	
-#	def getComponents(self):
-#		return self.components
-#	
-#	#
-#	# stuff related to Glyph Properties
-#	#
-#	
-#
-#
 #class RContour(BaseContour):
 #	
 #	_title = "RoboFabContour"
@@ -1584,4 +1599,5 @@ if __name__ == "__main__":
 	print "layer.color:", font.layers[None].color
 	print "layer.lib:", font.layers[None].lib
 	print
-
+	print "glyph:", font.layers[None]["A"]
+	print font.layers[None]["A"].leftMargin

@@ -174,8 +174,11 @@ class BaseFont(RBaseObject):
 		return self.layers.getDefaultLayer().keys()
 
 	def __iter__(self):
-		for glyphName in self.keys():
-			yield self[glyphName]
+		names = self.keys()
+		while names:
+			name = names[0]
+			yield self[name]
+			names = names[1:]
 
 	def __getitem__(self, glyphName):
 		return self.layers.getDefaultLayer()[glyphName]
@@ -346,6 +349,7 @@ class BaseLayer(RBaseObject):
 		raise NotImplementedError
 
 	def __iter__(self):
+		print "-" * 100
 		names = self.keys()
 		while names:
 			name = names[0]
@@ -528,20 +532,13 @@ class BaseLayer(RBaseObject):
 # -----
 
 class BaseGlyph(RBaseObject):
-	
+
 	"""Base class for all glyph objects."""
-	
+
 	def __init__(self):
 		RBaseObject.__init__(self)
-		#self.contours = []
-		#self.components = []
-		#self.anchors = []
-		#self.width = 0
-		#self.note = None
-		##self.unicodes = []
-		#self.selected = None
 		self.changed = False		# if the object needs to be saved
-	
+
 	def __repr__(self):
 		font = "unnamed_font"
 		glyph = "unnamed_glyph"
@@ -556,519 +553,6 @@ class BaseGlyph(RBaseObject):
 		except AttributeError:
 			pass
 		return "<RGlyph for %s.%s>" %(font, glyph)
-		
-	#
-	# Glyph Math
-	#
-	
-	def _getMathData(self):
-		from robofab.pens.mathPens import GetMathDataPointPen
-		pen = GetMathDataPointPen()
-		self.drawPoints(pen)
-		data = pen.getData()
-		return data
-	
-	def _setMathData(self, data, destination=None):
-		from robofab.pens.mathPens import CurveSegmentFilterPointPen
-		if destination is None:
-			newGlyph = self._mathCopy()
-		else:
-			newGlyph = destination
-		newGlyph.clear()
-		#
-		# draw the data onto the glyph
-		pointPen = newGlyph.getPointPen()
-		filterPen = CurveSegmentFilterPointPen(pointPen)
-		for contour in data['contours']:
-			filterPen.beginPath()
-			for segmentType, pt, smooth, name in contour:
-				filterPen.addPoint(pt=pt, segmentType=segmentType, smooth=smooth, name=name)
-			filterPen.endPath()
-		for baseName, transformation in data['components']:
-			filterPen.addComponent(baseName, transformation)
-		for pt, name in data['anchors']:
-			filterPen.beginPath()
-			filterPen.addPoint(pt=pt, segmentType="move", smooth=False, name=name)
-			filterPen.endPath()
-		newGlyph.width = data['width']
-		psHints = data.get('psHints')
-		if psHints is not None:
-			newGlyph.psHints.update(psHints)
-		#
-		return newGlyph
-	
-	def _getMathDestination(self):
-		# make a new, empty glyph
-		return self.__class__()
-	
-	def _mathCopy(self):
-		# copy self without contour, component and anchor data
-		glyph = self._getMathDestination()
-		glyph.name = self.name
-		glyph.unicodes = list(self.unicodes)
-		glyph.width = self.width
-		glyph.note = self.note
-		glyph.lib = dict(self.lib)
-		return glyph
-	
-	def _processMathOne(self, otherGlyph, funct):
-		# used by: __add__, __sub__
-		#
-		newData =	{
-				'contours':[],
-				'components':[],
-				'anchors':[],
-				'width':None
-				}
-		selfData = self._getMathData()
-		otherData = otherGlyph._getMathData()
-		#
-		# contours
-		selfContours = selfData['contours']
-		otherContours = otherData['contours']
-		newContours = newData['contours']
-		if len(selfContours) > 0:
-			for contourIndex in xrange(len(selfContours)):
-				newContours.append([])
-				selfContour = selfContours[contourIndex]
-				otherContour = otherContours[contourIndex]
-				for pointIndex in xrange(len(selfContour)):
-					segType, pt, smooth, name = selfContour[pointIndex]
-					newX, newY = funct(selfContour[pointIndex][1], otherContour[pointIndex][1])
-					newContours[-1].append((segType, (newX, newY), smooth, name))
-		# anchors
-		selfAnchors = selfData['anchors']
-		otherAnchors = otherData['anchors']
-		newAnchors = newData['anchors']
-		if len(selfAnchors) > 0:
-			selfAnchors, otherAnchors = self._mathAnchorCompare(selfAnchors, otherAnchors)
-			anchorNames = selfAnchors.keys()
-			for anchorName in anchorNames:
-				selfAnchorList = selfAnchors[anchorName]
-				otherAnchorList = otherAnchors[anchorName]
-				for i in range(len(selfAnchorList)):
-					selfAnchor = selfAnchorList[i]
-					otherAnchor = otherAnchorList[i]
-					newAnchor = funct(selfAnchor, otherAnchor)
-					newAnchors.append((newAnchor, anchorName))
-		# components
-		selfComponents = selfData['components']
-		otherComponents = otherData['components']
-		newComponents = newData['components']
-		if len(selfComponents) > 0:
-			selfComponents, otherComponents = self._mathComponentCompare(selfComponents, otherComponents)
-			componentNames = selfComponents.keys()
-			for componentName in componentNames:
-				selfComponentList = selfComponents[componentName]
-				otherComponentList = otherComponents[componentName]
-				for i in range(len(selfComponentList)):
-					# transformation breakdown: xScale, xyScale, yxScale, yScale, xOffset, yOffset
-					selfXScale, selfXYScale, selfYXScale, selfYScale, selfXOffset, selfYOffset = selfComponentList[i]
-					otherXScale, otherXYScale, otherYXScale, otherYScale, otherXOffset, otherYOffset = otherComponentList[i]
-					newXScale, newXYScale = funct((selfXScale, selfXYScale), (otherXScale, otherXYScale))
-					newYXScale, newYScale = funct((selfYXScale, selfYScale), (otherYXScale, otherYScale))
-					newXOffset, newYOffset = funct((selfXOffset, selfYOffset), (otherXOffset, otherYOffset))
-					newComponents.append((componentName, (newXScale, newXYScale, newYXScale, newYScale, newXOffset, newYOffset)))
-		return newData
-	
-	def _processMathTwo(self, factor, funct):
-		# used by: __mul__, __div__
-		#
-		newData =	{
-				'contours':[],
-				'components':[],
-				'anchors':[],
-				'width':None
-				}
-		selfData = self._getMathData()
-		# contours
-		selfContours = selfData['contours']
-		newContours = newData['contours']
-		for selfContour in selfContours:
-			newContours.append([])
-			for segType, pt, smooth, name in selfContour:
-				newX, newY = funct(pt, factor)
-				newContours[-1].append((segType, (newX, newY), smooth, name))
-		# anchors
-		selfAnchors = selfData['anchors']
-		newAnchors = newData['anchors']
-		for pt, anchorName in selfAnchors:
-			newPt = funct(pt, factor)
-			newAnchors.append((newPt, anchorName))
-		# components
-		selfComponents = selfData['components']
-		newComponents = newData['components']
-		for baseName, transformation in selfComponents:
-			xScale, xyScale, yxScale, yScale, xOffset, yOffset = transformation
-			newXOffset, newYOffset = funct((xOffset, yOffset), factor)
-			newXScale, newYScale = funct((xScale, yScale), factor)
-			newXYScale, newYXScale = funct((xyScale, yxScale), factor)
-			newComponents.append((baseName, (newXScale, newXYScale, newYXScale, newYScale, newXOffset, newYOffset)))
-		# return the data
-		return newData
-	
-	def _mathAnchorCompare(self, selfMathAnchors, otherMathAnchors):
-		# collect compatible anchors
-		from sets import Set
-		selfAnchors = {}
-		for pt, name in selfMathAnchors:
-			if not selfAnchors.has_key(name):
-				selfAnchors[name] = []
-			selfAnchors[name].append(pt)
-		otherAnchors = {}
-		for pt, name in otherMathAnchors:
-			if not otherAnchors.has_key(name):
-				otherAnchors[name] = []
-			otherAnchors[name].append(pt)
-		compatAnchors = Set(selfAnchors.keys()) & Set(otherAnchors.keys())
-		finalSelfAnchors = {}
-		finalOtherAnchors = {}
-		for name in compatAnchors:
-			if not finalSelfAnchors.has_key(name):
-				finalSelfAnchors[name] = []
-			if not finalOtherAnchors.has_key(name):
-				finalOtherAnchors[name] = []
-			selfList = selfAnchors[name]
-			otherList = otherAnchors[name]
-			selfCount = len(selfList)
-			otherCount = len(otherList)
-			if selfCount != otherCount:
-				r = range(min(selfCount, otherCount))
-			else:
-				r = range(selfCount)
-			for i in r:
-				finalSelfAnchors[name].append(selfList[i])
-				finalOtherAnchors[name].append(otherList[i])
-		return finalSelfAnchors, finalOtherAnchors
-	
-	def _mathComponentCompare(self, selfMathComponents, otherMathComponents):
-		# collect compatible components
-		from sets import Set
-		selfComponents = {}
-		for baseName, transformation in selfMathComponents:
-			if not selfComponents.has_key(baseName):
-				selfComponents[baseName] = []
-			selfComponents[baseName].append(transformation)
-		otherComponents = {}
-		for baseName, transformation in otherMathComponents:
-			if not otherComponents.has_key(baseName):
-				otherComponents[baseName] = []
-			otherComponents[baseName].append(transformation)
-		compatComponents = Set(selfComponents.keys()) & Set(otherComponents.keys())
-		finalSelfComponents = {}
-		finalOtherComponents = {}
-		for baseName in compatComponents:
-			if not finalSelfComponents.has_key(baseName):
-				finalSelfComponents[baseName] = []
-			if not finalOtherComponents.has_key(baseName):
-				finalOtherComponents[baseName] = []
-			selfList = selfComponents[baseName]
-			otherList = otherComponents[baseName]
-			selfCount = len(selfList)
-			otherCount = len(otherList)
-			if selfCount != otherCount:
-				r = range(min(selfCount, otherCount))
-			else:
-				r = range(selfCount)
-			for i in r:
-				finalSelfComponents[baseName].append(selfList[i])
-				finalOtherComponents[baseName].append(otherList[i])
-		return finalSelfComponents, finalOtherComponents
-		
-	def __mul__(self, factor):
-		assert isinstance(factor, (int, float, tuple)), "Glyphs can only be multiplied by int, float or a 2-tuple."
-		if not isinstance(factor, tuple):
-			factor = (factor, factor)
-		data = self._processMathTwo(factor, mulPt)
-		data['width'] = self.width * factor[0]
-		# psHints
-		if not self.psHints.isEmpty():
-			newPsHints = self.psHints * factor
-			data['psHints'] = newPsHints
-		return self._setMathData(data)
-
-	__rmul__ = __mul__
-
-	def __div__(self, factor):
-		assert isinstance(factor, (int, float, tuple)), "Glyphs can only be divided by int, float or a 2-tuple."
-		# calculate reverse factor, and cause nice ZeroDivisionError if it can't
-		if isinstance(factor, tuple):
-			reverse = 1.0/factor[0], 1.0/factor[1]
-		else:
-			reverse = 1.0/factor
-		return self.__mul__(reverse)
-
-	def __add__(self, other):
-		assert isinstance(other, BaseGlyph), "Glyphs can only be added to other glyphs."
-		data = self._processMathOne(other, addPt)
-		data['width'] = self.width + other.width
-		return self._setMathData(data)
-
-	def __sub__(self, other):
-		assert isinstance(other, BaseGlyph), "Glyphs can only be substracted from other glyphs."
-		data = self._processMathOne(other, subPt)
-		data['width'] = self.width + other.width
-		return self._setMathData(data)
-	
-	#
-	# Interpolation
-	#
-	
-	def interpolate(self, factor, minGlyph, maxGlyph, suppressError=True, analyzeOnly=False):
-		"""Traditional interpolation method. Interpolates by factor between minGlyph and maxGlyph.
-		suppressError will supress all tracebacks and analyze only will not perform the interpolation
-		but it will analyze all glyphs and return a dict of problems."""
-		if not isinstance(factor, tuple):
-			factor = factor, factor
-		fatalError = False
-		if analyzeOnly:
-			ok, errors = minGlyph.isCompatible(maxGlyph)
-			return ok, errors
-		minData = None
-		maxData = None
-		minName = minGlyph.name
-		maxName = maxGlyph.name
-		try:
-			minData = minGlyph._getMathData()
-			maxData = maxGlyph._getMathData()
-			newContours = self._interpolateContours(factor, minData['contours'], maxData['contours'])
-			newComponents = self._interpolateComponents(factor, minData['components'], maxData['components'])
-			newAnchors = self._interpolateAnchors(factor, minData['anchors'], maxData['anchors'])
-			newWidth = _interpolate(minGlyph.width, maxGlyph.width, factor[0])
-			newData = {
-					'contours':newContours,
-					'components':newComponents,
-					'anchors':newAnchors,
-					'width':newWidth
-					}
-			self._setMathData(newData, self)
-		except IndexError:
-			if not suppressError:
-				ok, errors = minGlyph.isCompatible(maxGlyph)
-				ok = not ok
-				return ok, errors
-		self.update()
-		return False, []
-	
-	def isCompatible(self, otherGlyph, report=True):
-		"""Return a bool value if the glyph is compatible with otherGlyph.
-		With report = True, isCompatible will return a report of what's wrong.
-		The interpolate method requires absolute equality between contour data.
-		Absolute equality is preferred among component and anchor data, but
-		it is NOT required. Interpolation between components and anchors
-		will only deal with compatible data and incompatible data will be
-		ignored. This method reflects this system."""
-		selfName = self.name
-		selfData = self._getMathData()
-		otherName = otherGlyph.name
-		otherData = otherGlyph._getMathData()
-		compatible, errors = self._isCompatibleInternal(selfName, otherName, selfData, otherData)
-		if report:
-			return compatible, errors
-		return compatible
-				
-	def _isCompatibleInternal(self, selfName, otherName, selfData, otherData):
-		fatalError = False
-		errors = []
-		## contours
-		# any contour incompatibilities
-		# result in fatal errors
-		selfContours = selfData['contours']
-		otherContours = otherData['contours']
-		if len(selfContours) != len(otherContours):
-			fatalError = True
-			errors.append("Fatal error: glyph %s and glyph %s don't have the same number of contours." %(selfName, otherName))
-		else:
-			for contourIndex in xrange(len(selfContours)):
-				selfContour = selfContours[contourIndex]
-				otherContour = otherContours[contourIndex]
-				if len(selfContour) != len(otherContour):
-					fatalError = True
-					errors.append("Fatal error: contour %d in glyph %s and glyph %s don't have the same number of segments." %(contourIndex, selfName, otherName))
-		## components
-		# component incompatibilities
-		# do not result in fatal errors
-		selfComponents = selfData['components']
-		otherComponents = otherData['components']
-		if len(selfComponents) != len(otherComponents):
-			errors.append("Error: glyph %s and glyph %s don't have the same number of components." %(selfName, otherName))
-		for componentIndex in xrange(min(len(selfComponents), len(otherComponents))):
-			selfBaseName, selfTransformation = selfComponents[componentIndex]
-			otherBaseName, otherTransformation = otherComponents[componentIndex]
-			if selfBaseName != otherBaseName:
-				errors.append("Error: component %d in glyph %s and glyph %s don't have the same base glyph." %(componentIndex, selfName, otherName))
-		## anchors
-		# anchor incompatibilities
-		# do not result in fatal errors
-		selfAnchors = selfData['anchors']
-		otherAnchors = otherData['anchors']
-		if len(selfAnchors) != len(otherAnchors):
-			errors.append("Error: glyph %s and glyph %s don't have the same number of anchors." %(selfName, otherName))
-		for anchorIndex in xrange(min(len(selfAnchors), len(otherAnchors))):
-			selfPt, selfAnchorName = selfAnchors[anchorIndex]
-			otherPt, otherAnchorName = otherAnchors[anchorIndex]
-			if selfAnchorName != otherAnchorName:
-				errors.append("Error: anchor %d in glyph %s and glyph %s don't have the same name." %(anchorIndex, selfName, otherName))
-		return not fatalError, errors
-	
-	def _interpolateContours(self, factor, minContours, maxContours):
-		newContours = []
-		for contourIndex in xrange(len(minContours)):
-			minContour = minContours[contourIndex]
-			maxContour = maxContours[contourIndex]
-			newContours.append([])
-			for pointIndex in xrange(len(minContour)):
-				segType, pt, smooth, name = minContour[pointIndex]
-				minPoint = minContour[pointIndex][1]
-				maxPoint = maxContour[pointIndex][1]
-				newX, newY = _interpolatePt(minPoint, maxPoint, factor)
-				newContours[-1].append((segType, (newX, newY), smooth, name))
-		return newContours
-
-	def _interpolateComponents(self, factor, minComponents, maxComponents):
-		newComponents = []
-		minComponents, maxComponents = self._mathComponentCompare(minComponents, maxComponents)
-		componentNames = minComponents.keys()
-		for componentName in componentNames:
-			minComponentList = minComponents[componentName]
-			maxComponentList = maxComponents[componentName]
-			for i in xrange(len(minComponentList)):
-				# transformation breakdown: xScale, xyScale, yxScale, yScale, xOffset, yOffset
-				minXScale, minXYScale, minYXScale, minYScale, minXOffset, minYOffset = minComponentList[i]
-				maxXScale, maxXYScale, maxYXScale, maxYScale, maxXOffset, maxYOffset = maxComponentList[i]
-				newXScale, newXYScale = _interpolatePt((minXScale, minXYScale), (maxXScale, maxXYScale), factor)
-				newYXScale, newYScale = _interpolatePt((minYXScale, minYScale), (maxYXScale, maxYScale), factor)
-				newXOffset, newYOffset = _interpolatePt((minXOffset, minYOffset), (maxXOffset, maxYOffset), factor)
-				newComponents.append((componentName, (newXScale, newXYScale, newYXScale, newYScale, newXOffset, newYOffset)))
-		return newComponents
-
-	def _interpolateAnchors(self, factor, minAnchors, maxAnchors):
-		newAnchors = []
-		minAnchors, maxAnchors = self._mathAnchorCompare(minAnchors, maxAnchors)
-		anchorNames = minAnchors.keys()
-		for anchorName in anchorNames:
-			minAnchorList = minAnchors[anchorName]
-			maxAnchorList = maxAnchors[anchorName]
-			for i in range(len(minAnchorList)):
-				minAnchor = minAnchorList[i]
-				maxAnchor = maxAnchorList[i]
-				newAnchor = _interpolatePt(minAnchor, maxAnchor, factor)
-				newAnchors.append((newAnchor, anchorName))
-		return newAnchors
-	
-	#
-	# comparisons
-	#
-
-	def __eq__(self, other):
-		if isinstance(other, BaseGlyph):
-			return self._getDigest() == other._getDigest()
-		return False
-
-	def _getDigest(self, pointsOnly=False):
-		"""Calculate a digest of coordinates, points, things in this glyph.
-		With pointsOnly == True the digest consists of a flat tuple of all
-		coordinate pairs in the glyph, without the order of contours.
-		"""
-		from robofab.pens.digestPen import DigestPointPen
-		mp = DigestPointPen()
-		self.drawPoints(mp)
-		if pointsOnly:
-			return "%s|%d|%s"%(mp.getDigestPointsOnly(), self.width, self.unicode)
-		else:
-			return "%s|%d|%s"%(mp.getDigest(), self.width, self.unicode)
-	
-	def _getStructure(self):
-		"""Calculate a digest of points, things in this glyph, but NOT coordinates."""
-		from robofab.pens.digestPen import DigestPointStructurePen
-		mp = DigestPointStructurePen()
-		self.drawPoints(mp)
-		return mp.getDigest()
-	
-	def _hasChanged(self):
-		"""mark the object and it's parent as changed"""
-		self.setChanged(True)
-		if self.getParent() is not None:
-			self.getParent()._hasChanged()
-	
-	def _get_box(self):
-		bounds = _box(self, fontObject=self.getParent())
-		return bounds
-	
-	box = property(_get_box, doc="the bounding box of the glyph: (xMin, yMin, xMax, yMax)")
-			
-	def _get_leftMargin(self):
-		if self.isEmpty():
-			return 0
-		xMin, yMin, xMax, yMax = self.box
-		return xMin
-		
-	def _set_leftMargin(self, value):
-		if self.isEmpty():
-			self.width = self.width + value
-		else:
-			diff = value - self.leftMargin
-			self.move((diff, 0))
-			self.width = self.width + diff
-	
-	leftMargin = property(_get_leftMargin, _set_leftMargin, doc="the left margin")
-
-	def _get_rightMargin(self):
-		if self.isEmpty():
-			return self.width
-		xMin, yMin, xMax, yMax = self.box
-		return self.width - xMax
-		
-	def _set_rightMargin(self, value):
-		if self.isEmpty():
-			self.width = value
-		else:
-			xMin, yMin, xMax, yMax = self.box
-			self.width = xMax + value
-
-	rightMargin = property(_get_rightMargin, _set_rightMargin, doc="the right margin")
-	
-	def copy(self, aParent=None):
-		"""Duplicate this glyph"""
-		n = self.__class__()
-		if aParent is not None:
-			n.setParent(aParent)
-		dont = ['_object', 'getParent']
-		for k in self.__dict__.keys():
-			ok = True
-			if k in dont:
-				continue
-			elif k == "contours":
-				dup = []
-				for i in self.contours:
-					dup.append(i.copy(n))
-			elif k == "components":
-				dup = []
-				for i in self.components:
-					dup.append(i.copy(n))
-			elif k == "anchors":
-				dup = []
-				for i in self.anchors:
-					dup.append(i.copy(n))
-			elif k == "psHints":
-				dup = self.psHints.copy()
-			elif isinstance(self.__dict__[k], (RBaseObject, BaseLib)):
-				dup = self.__dict__[k].copy(n)
-			else:
-				dup = copy.deepcopy(self.__dict__[k])
-			if ok:
-				setattr(n, k, dup)
-		return n
-	
-	def _setParentTree(self):
-		"""Set the parents of all contained and dependent objects (and their dependents) right."""
-		for item in self.contours:
-			item.setParent(self)
-			item._setParentTree()
-		for item in self.components:
-			item.setParent(self)
-		for items in self.anchors:
-			item.setParent(self)
 
 	def getGlyph(self, glyphName):
 		"""Provided there is a font parent for this glyph, return a sibling glyph."""
@@ -1077,23 +561,7 @@ class BaseGlyph(RBaseObject):
 		if self.getParent() is not None:
 			return self.getParent()[glyphName]
 		return None
-		
-	def getPen(self):
-		"""Return a Pen object for creating an outline in this glyph."""
-		from robofab.pens.adapterPens import SegmentToPointPen
-		return SegmentToPointPen(self.getPointPen())
 
-	def getPointPen(self):
-		"""Return a PointPen object for creating an outline in this glyph."""
-		raise NotImplementedError, "getPointPen() must be implemented by subclass"
-	
-	def isEmpty(self):
-		"""return true if the glyph has no contours or components"""
-		if len(self.contours) + len(self.components) == 0:
-			return True
-		else:
-			return False
-	
 	def _saveToGlyphSet(self, glyphSet, glyphName=None, force=False):
 		"""Save the glyph to GlyphSet, a private method that's part of the saving process."""
 		# save stuff in the lib first
@@ -1101,82 +569,89 @@ class BaseGlyph(RBaseObject):
 			if glyphName is None:
 				glyphName = self.name
 			glyphSet.writeGlyph(glyphName, self, self.drawPoints)
-			
-	def update(self):
-		"""update the glyph"""
-		pass
-	
-	def draw(self, pen):
-		"""draw the object with a RoboFab segment pen"""
-		try:
-			pen.setWidth(self.width)
-			if self.note is not None:
-				pen.setNote(self.note)
-		except AttributeError:
-			# FontTools pens don't have these methods
-			pass
-		for a in self.anchors:
-			a.draw(pen)
-		for c in self.contours:
-			c.draw(pen)
-		for c in self.components:
-			c.draw(pen)
-		try:
-			pen.doneDrawing()
-		except AttributeError:
-			# FontTools pens don't have a doneDrawing() method
-			pass
-		
-	def drawPoints(self, pen):
-		"""draw the object with a point pen"""
-		for a in self.anchors:
-			a.drawPoints(pen)
-		for c in self.contours:
-			c.drawPoints(pen)
-		for c in self.components:
-			c.drawPoints(pen)
-	
-	def appendContour(self, aContour, offset=(0, 0)):
-		"""append a contour to the glyph"""
-		x, y = offset
-		pen = self.getPointPen()
-		aContour.drawPoints(pen)
-		self.contours[-1].move((x, y))
-	
-	def appendGlyph(self, aGlyph, offset=(0, 0)):
-		"""append another glyph to the glyph"""
-		x, y = offset
-		pen = self.getPointPen()
-		#to handle the offsets, move the source glyph and then move it back!
-		aGlyph.move((x, y))
-		aGlyph.drawPoints(pen)
-		aGlyph.move((-x, -y))
-		
-	def round(self):
-		"""round all coordinates in all contours, components and anchors"""
-		for n in self.contours:
-			n.round()
-		for n in self.components:
-			n.round()
-		for n in self.anchors:
-			n.round()
-		self.width = int(round(self.width))
-		
+
+	def isEmpty(self):
+		"""return true if the glyph has no contours or components"""
+		if len(self.contours) + len(self.components) == 0:
+			return True
+		else:
+			return False
+
+	# Identification
+
 	def autoUnicodes(self):
 		"""Using fontTools.agl, assign Unicode list to the glyph"""
 		from fontTools.agl import AGL2UV
 		if AGL2UV.has_key(self.name):
 			self.unicode = AGL2UV[self.name]
 			self._hasChanged()
-			
-	def pointInside(self, (x, y), evenOdd=0):
-		"""determine if the point is in the black or white of the glyph"""
-		from fontTools.pens.pointInsidePen import PointInsidePen
-		font = self.getParent()
-		piPen = PointInsidePen(glyphSet=font, testPoint=(x, y), evenOdd=evenOdd)
-		self.draw(piPen)
-		return piPen.getResult()
-	
+
+	# Metrics
+
+	def _get_box(self):
+		bounds = _box(self, fontObject=self.getParent())
+		return bounds
+
+	box = property(_get_box, doc="the bounding box of the glyph: (xMin, yMin, xMax, yMax)")
+
+	def _get_leftMargin(self):
+		if self.isEmpty():
+			return 0
+		xMin, yMin, xMax, yMax = self.box
+		return xMin
+
+	def _set_leftMargin(self, value):
+		if self.isEmpty():
+			self.width = self.width + value
+		else:
+			diff = value - self.leftMargin
+			self.move((diff, 0))
+			self.width = self.width + diff
+
+	leftMargin = property(_get_leftMargin, _set_leftMargin, doc="the left margin")
+
+	def _get_rightMargin(self):
+		if self.isEmpty():
+			return self.width
+		xMin, yMin, xMax, yMax = self.box
+		return self.width - xMax
+
+	def _set_rightMargin(self, value):
+		if self.isEmpty():
+			self.width = value
+		else:
+			xMin, yMin, xMax, yMax = self.box
+			self.width = xMax + value
+
+	rightMargin = property(_get_rightMargin, _set_rightMargin, doc="the right margin")
+
+	def center(self, padding=None):
+		"""Equalise sidebearings, set to padding if wanted."""
+		left = self.leftMargin
+		right = self.rightMargin
+		if padding:
+			e_left = e_right = padding
+		else:
+			e_left = (left + right)/2
+			e_right = (left + right) - e_left
+		self.leftMargin = e_left
+		self.rightMargin = e_right
+
+	# Contours
+
+	def appendContour(self, aContour, offset=(0, 0)):
+		"""append a contour to the glyph"""
+		pen = self.getPointPen()
+		aContour.drawPoints(pen)
+		x, y = offset
+		self.contours[-1].move((x, y))
+
+	def removeContour(self, component):
+		raise NotImplementedError
+
+	def clearContours(self):
+		raise NotImplementedError
+
 	def correctDirection(self, trueType=False):
 		"""corect the direction of the contours in the glyph."""
 		#this is a bit slow, but i'm not sure how much more it can be optimized.
@@ -1239,7 +714,7 @@ class BaseGlyph(RBaseObject):
 			#now set the direction if we need to
 			if newDirection != contourDict[contourIndex]['dir']:
 				contour.reverseContour()
-	
+
 	def autoContourOrder(self):
 		"""attempt to sort the contours based on their centers"""
 		# sort is based on (in this order):
@@ -1275,7 +750,563 @@ class BaseGlyph(RBaseObject):
 		for i in range(len(contourList)):
 			points, segments, xO, yO, surface, contour = contourList[i]
 			contour.index = i
-	
+
+	# Components
+
+	def appendComponent(self, baseGlyph, offset=(0, 0), scale=(1, 1)):
+		"""append a component to the glyph"""
+		oX, oY = offset
+		sX, sY = scale
+		transformation = (sX, 0, 0, sY, oX, oY)
+		pointPen = self.getPointPen()
+		pointPen.addComponent(baseGlyph, transformation=transformation)
+
+	def removeComponent(self, component):
+		raise NotImplementedError
+
+	def clearComponents(self):
+		raise NotImplementedError
+
+	def decompose(self):
+		raise NotImplementedError
+
+	# Anchors
+
+	def appendAnchor(self, name, position, mark=None):
+		raise NotImplementedError
+
+	def removeAnchor(self, anchor):
+		raise NotImplementedError
+
+	def clearAnchors(self):
+		raise NotImplementedError
+
+	# Misc
+
+	def appendGlyph(self, aGlyph, offset=(0, 0)):
+		"""append another glyph to the glyph"""
+		x, y = offset
+		pen = self.getPointPen()
+		#to handle the offsets, move the source glyph and then move it back!
+		aGlyph.move((x, y))
+		aGlyph.drawPoints(pen)
+		aGlyph.move((-x, -y))
+
+	# Glyph Math
+
+	def _getMathData(self):
+		from robofab.pens.mathPens import GetMathDataPointPen
+		pen = GetMathDataPointPen()
+		self.drawPoints(pen)
+		data = pen.getData()
+		return data
+
+	def _setMathData(self, data, destination=None):
+		from robofab.pens.mathPens import CurveSegmentFilterPointPen
+		if destination is None:
+			newGlyph = self._mathCopy()
+		else:
+			newGlyph = destination
+		newGlyph.clear()
+		# draw the data onto the glyph
+		pointPen = newGlyph.getPointPen()
+		filterPen = CurveSegmentFilterPointPen(pointPen)
+		for contour in data['contours']:
+			filterPen.beginPath()
+			for segmentType, pt, smooth, name in contour:
+				filterPen.addPoint(pt=pt, segmentType=segmentType, smooth=smooth, name=name)
+			filterPen.endPath()
+		for baseName, transformation in data['components']:
+			filterPen.addComponent(baseName, transformation)
+		for pt, name in data['anchors']:
+			filterPen.beginPath()
+			filterPen.addPoint(pt=pt, segmentType="move", smooth=False, name=name)
+			filterPen.endPath()
+		newGlyph.width = data['width']
+		psHints = data.get('psHints')
+		if psHints is not None:
+			newGlyph.psHints.update(psHints)
+		return newGlyph
+
+	def _getMathDestination(self):
+		# make a new, empty glyph
+		return self.__class__()
+
+	def _mathCopy(self):
+		# copy self without contour, component and anchor data
+		glyph = self._getMathDestination()
+		glyph.name = self.name
+		glyph.unicodes = list(self.unicodes)
+		glyph.width = self.width
+		glyph.note = self.note
+		glyph.lib = dict(self.lib)
+		return glyph
+
+	def _processMathOne(self, otherGlyph, funct):
+		# used by: __add__, __sub__
+		newData =	{
+				'contours':[],
+				'components':[],
+				'anchors':[],
+				'width':None
+				}
+		selfData = self._getMathData()
+		otherData = otherGlyph._getMathData()
+		#
+		# contours
+		selfContours = selfData['contours']
+		otherContours = otherData['contours']
+		newContours = newData['contours']
+		if len(selfContours) > 0:
+			for contourIndex in xrange(len(selfContours)):
+				newContours.append([])
+				selfContour = selfContours[contourIndex]
+				otherContour = otherContours[contourIndex]
+				for pointIndex in xrange(len(selfContour)):
+					segType, pt, smooth, name = selfContour[pointIndex]
+					newX, newY = funct(selfContour[pointIndex][1], otherContour[pointIndex][1])
+					newContours[-1].append((segType, (newX, newY), smooth, name))
+		# anchors
+		selfAnchors = selfData['anchors']
+		otherAnchors = otherData['anchors']
+		newAnchors = newData['anchors']
+		if len(selfAnchors) > 0:
+			selfAnchors, otherAnchors = self._mathAnchorCompare(selfAnchors, otherAnchors)
+			anchorNames = selfAnchors.keys()
+			for anchorName in anchorNames:
+				selfAnchorList = selfAnchors[anchorName]
+				otherAnchorList = otherAnchors[anchorName]
+				for i in range(len(selfAnchorList)):
+					selfAnchor = selfAnchorList[i]
+					otherAnchor = otherAnchorList[i]
+					newAnchor = funct(selfAnchor, otherAnchor)
+					newAnchors.append((newAnchor, anchorName))
+		# components
+		selfComponents = selfData['components']
+		otherComponents = otherData['components']
+		newComponents = newData['components']
+		if len(selfComponents) > 0:
+			selfComponents, otherComponents = self._mathComponentCompare(selfComponents, otherComponents)
+			componentNames = selfComponents.keys()
+			for componentName in componentNames:
+				selfComponentList = selfComponents[componentName]
+				otherComponentList = otherComponents[componentName]
+				for i in range(len(selfComponentList)):
+					# transformation breakdown: xScale, xyScale, yxScale, yScale, xOffset, yOffset
+					selfXScale, selfXYScale, selfYXScale, selfYScale, selfXOffset, selfYOffset = selfComponentList[i]
+					otherXScale, otherXYScale, otherYXScale, otherYScale, otherXOffset, otherYOffset = otherComponentList[i]
+					newXScale, newXYScale = funct((selfXScale, selfXYScale), (otherXScale, otherXYScale))
+					newYXScale, newYScale = funct((selfYXScale, selfYScale), (otherYXScale, otherYScale))
+					newXOffset, newYOffset = funct((selfXOffset, selfYOffset), (otherXOffset, otherYOffset))
+					newComponents.append((componentName, (newXScale, newXYScale, newYXScale, newYScale, newXOffset, newYOffset)))
+		return newData
+
+	def _processMathTwo(self, factor, funct):
+		# used by: __mul__, __div__
+		newData =	{
+				'contours':[],
+				'components':[],
+				'anchors':[],
+				'width':None
+				}
+		selfData = self._getMathData()
+		# contours
+		selfContours = selfData['contours']
+		newContours = newData['contours']
+		for selfContour in selfContours:
+			newContours.append([])
+			for segType, pt, smooth, name in selfContour:
+				newX, newY = funct(pt, factor)
+				newContours[-1].append((segType, (newX, newY), smooth, name))
+		# anchors
+		selfAnchors = selfData['anchors']
+		newAnchors = newData['anchors']
+		for pt, anchorName in selfAnchors:
+			newPt = funct(pt, factor)
+			newAnchors.append((newPt, anchorName))
+		# components
+		selfComponents = selfData['components']
+		newComponents = newData['components']
+		for baseName, transformation in selfComponents:
+			xScale, xyScale, yxScale, yScale, xOffset, yOffset = transformation
+			newXOffset, newYOffset = funct((xOffset, yOffset), factor)
+			newXScale, newYScale = funct((xScale, yScale), factor)
+			newXYScale, newYXScale = funct((xyScale, yxScale), factor)
+			newComponents.append((baseName, (newXScale, newXYScale, newYXScale, newYScale, newXOffset, newYOffset)))
+		# return the data
+		return newData
+
+	def _mathAnchorCompare(self, selfMathAnchors, otherMathAnchors):
+		# collect compatible anchors
+		from sets import Set
+		selfAnchors = {}
+		for pt, name in selfMathAnchors:
+			if not selfAnchors.has_key(name):
+				selfAnchors[name] = []
+			selfAnchors[name].append(pt)
+		otherAnchors = {}
+		for pt, name in otherMathAnchors:
+			if not otherAnchors.has_key(name):
+				otherAnchors[name] = []
+			otherAnchors[name].append(pt)
+		compatAnchors = Set(selfAnchors.keys()) & Set(otherAnchors.keys())
+		finalSelfAnchors = {}
+		finalOtherAnchors = {}
+		for name in compatAnchors:
+			if not finalSelfAnchors.has_key(name):
+				finalSelfAnchors[name] = []
+			if not finalOtherAnchors.has_key(name):
+				finalOtherAnchors[name] = []
+			selfList = selfAnchors[name]
+			otherList = otherAnchors[name]
+			selfCount = len(selfList)
+			otherCount = len(otherList)
+			if selfCount != otherCount:
+				r = range(min(selfCount, otherCount))
+			else:
+				r = range(selfCount)
+			for i in r:
+				finalSelfAnchors[name].append(selfList[i])
+				finalOtherAnchors[name].append(otherList[i])
+		return finalSelfAnchors, finalOtherAnchors
+
+	def _mathComponentCompare(self, selfMathComponents, otherMathComponents):
+		# collect compatible components
+		from sets import Set
+		selfComponents = {}
+		for baseName, transformation in selfMathComponents:
+			if not selfComponents.has_key(baseName):
+				selfComponents[baseName] = []
+			selfComponents[baseName].append(transformation)
+		otherComponents = {}
+		for baseName, transformation in otherMathComponents:
+			if not otherComponents.has_key(baseName):
+				otherComponents[baseName] = []
+			otherComponents[baseName].append(transformation)
+		compatComponents = Set(selfComponents.keys()) & Set(otherComponents.keys())
+		finalSelfComponents = {}
+		finalOtherComponents = {}
+		for baseName in compatComponents:
+			if not finalSelfComponents.has_key(baseName):
+				finalSelfComponents[baseName] = []
+			if not finalOtherComponents.has_key(baseName):
+				finalOtherComponents[baseName] = []
+			selfList = selfComponents[baseName]
+			otherList = otherComponents[baseName]
+			selfCount = len(selfList)
+			otherCount = len(otherList)
+			if selfCount != otherCount:
+				r = range(min(selfCount, otherCount))
+			else:
+				r = range(selfCount)
+			for i in r:
+				finalSelfComponents[baseName].append(selfList[i])
+				finalOtherComponents[baseName].append(otherList[i])
+		return finalSelfComponents, finalOtherComponents
+
+	def __mul__(self, factor):
+		assert isinstance(factor, (int, float, tuple)), "Glyphs can only be multiplied by int, float or a 2-tuple."
+		if not isinstance(factor, tuple):
+			factor = (factor, factor)
+		data = self._processMathTwo(factor, mulPt)
+		data['width'] = self.width * factor[0]
+		# psHints
+		if not self.psHints.isEmpty():
+			newPsHints = self.psHints * factor
+			data['psHints'] = newPsHints
+		return self._setMathData(data)
+
+	__rmul__ = __mul__
+
+	def __div__(self, factor):
+		assert isinstance(factor, (int, float, tuple)), "Glyphs can only be divided by int, float or a 2-tuple."
+		# calculate reverse factor, and cause nice ZeroDivisionError if it can't
+		if isinstance(factor, tuple):
+			reverse = 1.0/factor[0], 1.0/factor[1]
+		else:
+			reverse = 1.0/factor
+		return self.__mul__(reverse)
+
+	def __add__(self, other):
+		assert isinstance(other, BaseGlyph), "Glyphs can only be added to other glyphs."
+		data = self._processMathOne(other, addPt)
+		data['width'] = self.width + other.width
+		return self._setMathData(data)
+
+	def __sub__(self, other):
+		assert isinstance(other, BaseGlyph), "Glyphs can only be substracted from other glyphs."
+		data = self._processMathOne(other, subPt)
+		data['width'] = self.width + other.width
+		return self._setMathData(data)
+
+	# Interpolation
+
+	def interpolate(self, factor, minGlyph, maxGlyph, suppressError=True, analyzeOnly=False):
+		"""Traditional interpolation method. Interpolates by factor between minGlyph and maxGlyph.
+		suppressError will supress all tracebacks and analyze only will not perform the interpolation
+		but it will analyze all glyphs and return a dict of problems."""
+		if not isinstance(factor, tuple):
+			factor = factor, factor
+		fatalError = False
+		if analyzeOnly:
+			ok, errors = minGlyph.isCompatible(maxGlyph)
+			return ok, errors
+		minData = None
+		maxData = None
+		minName = minGlyph.name
+		maxName = maxGlyph.name
+		try:
+			minData = minGlyph._getMathData()
+			maxData = maxGlyph._getMathData()
+			newContours = self._interpolateContours(factor, minData['contours'], maxData['contours'])
+			newComponents = self._interpolateComponents(factor, minData['components'], maxData['components'])
+			newAnchors = self._interpolateAnchors(factor, minData['anchors'], maxData['anchors'])
+			newWidth = _interpolate(minGlyph.width, maxGlyph.width, factor[0])
+			newData = {
+					'contours':newContours,
+					'components':newComponents,
+					'anchors':newAnchors,
+					'width':newWidth
+					}
+			self._setMathData(newData, self)
+		except IndexError:
+			if not suppressError:
+				ok, errors = minGlyph.isCompatible(maxGlyph)
+				ok = not ok
+				return ok, errors
+		self.update()
+		return False, []
+
+	def isCompatible(self, otherGlyph, report=True):
+		"""Return a bool value if the glyph is compatible with otherGlyph.
+		With report = True, isCompatible will return a report of what's wrong.
+		The interpolate method requires absolute equality between contour data.
+		Absolute equality is preferred among component and anchor data, but
+		it is NOT required. Interpolation between components and anchors
+		will only deal with compatible data and incompatible data will be
+		ignored. This method reflects this system."""
+		selfName = self.name
+		selfData = self._getMathData()
+		otherName = otherGlyph.name
+		otherData = otherGlyph._getMathData()
+		compatible, errors = self._isCompatibleInternal(selfName, otherName, selfData, otherData)
+		if report:
+			return compatible, errors
+		return compatible
+
+	def _isCompatibleInternal(self, selfName, otherName, selfData, otherData):
+		fatalError = False
+		errors = []
+		## contours
+		# any contour incompatibilities
+		# result in fatal errors
+		selfContours = selfData['contours']
+		otherContours = otherData['contours']
+		if len(selfContours) != len(otherContours):
+			fatalError = True
+			errors.append("Fatal error: glyph %s and glyph %s don't have the same number of contours." %(selfName, otherName))
+		else:
+			for contourIndex in xrange(len(selfContours)):
+				selfContour = selfContours[contourIndex]
+				otherContour = otherContours[contourIndex]
+				if len(selfContour) != len(otherContour):
+					fatalError = True
+					errors.append("Fatal error: contour %d in glyph %s and glyph %s don't have the same number of segments." %(contourIndex, selfName, otherName))
+		## components
+		# component incompatibilities
+		# do not result in fatal errors
+		selfComponents = selfData['components']
+		otherComponents = otherData['components']
+		if len(selfComponents) != len(otherComponents):
+			errors.append("Error: glyph %s and glyph %s don't have the same number of components." %(selfName, otherName))
+		for componentIndex in xrange(min(len(selfComponents), len(otherComponents))):
+			selfBaseName, selfTransformation = selfComponents[componentIndex]
+			otherBaseName, otherTransformation = otherComponents[componentIndex]
+			if selfBaseName != otherBaseName:
+				errors.append("Error: component %d in glyph %s and glyph %s don't have the same base glyph." %(componentIndex, selfName, otherName))
+		## anchors
+		# anchor incompatibilities
+		# do not result in fatal errors
+		selfAnchors = selfData['anchors']
+		otherAnchors = otherData['anchors']
+		if len(selfAnchors) != len(otherAnchors):
+			errors.append("Error: glyph %s and glyph %s don't have the same number of anchors." %(selfName, otherName))
+		for anchorIndex in xrange(min(len(selfAnchors), len(otherAnchors))):
+			selfPt, selfAnchorName = selfAnchors[anchorIndex]
+			otherPt, otherAnchorName = otherAnchors[anchorIndex]
+			if selfAnchorName != otherAnchorName:
+				errors.append("Error: anchor %d in glyph %s and glyph %s don't have the same name." %(anchorIndex, selfName, otherName))
+		return not fatalError, errors
+
+	def _interpolateContours(self, factor, minContours, maxContours):
+		newContours = []
+		for contourIndex in xrange(len(minContours)):
+			minContour = minContours[contourIndex]
+			maxContour = maxContours[contourIndex]
+			newContours.append([])
+			for pointIndex in xrange(len(minContour)):
+				segType, pt, smooth, name = minContour[pointIndex]
+				minPoint = minContour[pointIndex][1]
+				maxPoint = maxContour[pointIndex][1]
+				newX, newY = _interpolatePt(minPoint, maxPoint, factor)
+				newContours[-1].append((segType, (newX, newY), smooth, name))
+		return newContours
+
+	def _interpolateComponents(self, factor, minComponents, maxComponents):
+		newComponents = []
+		minComponents, maxComponents = self._mathComponentCompare(minComponents, maxComponents)
+		componentNames = minComponents.keys()
+		for componentName in componentNames:
+			minComponentList = minComponents[componentName]
+			maxComponentList = maxComponents[componentName]
+			for i in xrange(len(minComponentList)):
+				# transformation breakdown: xScale, xyScale, yxScale, yScale, xOffset, yOffset
+				minXScale, minXYScale, minYXScale, minYScale, minXOffset, minYOffset = minComponentList[i]
+				maxXScale, maxXYScale, maxYXScale, maxYScale, maxXOffset, maxYOffset = maxComponentList[i]
+				newXScale, newXYScale = _interpolatePt((minXScale, minXYScale), (maxXScale, maxXYScale), factor)
+				newYXScale, newYScale = _interpolatePt((minYXScale, minYScale), (maxYXScale, maxYScale), factor)
+				newXOffset, newYOffset = _interpolatePt((minXOffset, minYOffset), (maxXOffset, maxYOffset), factor)
+				newComponents.append((componentName, (newXScale, newXYScale, newYXScale, newYScale, newXOffset, newYOffset)))
+		return newComponents
+
+	def _interpolateAnchors(self, factor, minAnchors, maxAnchors):
+		newAnchors = []
+		minAnchors, maxAnchors = self._mathAnchorCompare(minAnchors, maxAnchors)
+		anchorNames = minAnchors.keys()
+		for anchorName in anchorNames:
+			minAnchorList = minAnchors[anchorName]
+			maxAnchorList = maxAnchors[anchorName]
+			for i in range(len(minAnchorList)):
+				minAnchor = minAnchorList[i]
+				maxAnchor = maxAnchorList[i]
+				newAnchor = _interpolatePt(minAnchor, maxAnchor, factor)
+				newAnchors.append((newAnchor, anchorName))
+		return newAnchors
+
+	# Comparisons
+
+	def __eq__(self, other):
+		if isinstance(other, BaseGlyph):
+			return self._getDigest() == other._getDigest()
+		return False
+
+	def _getDigest(self, pointsOnly=False):
+		"""Calculate a digest of coordinates, points, things in this glyph.
+		With pointsOnly == True the digest consists of a flat tuple of all
+		coordinate pairs in the glyph, without the order of contours.
+		"""
+		from robofab.pens.digestPen import DigestPointPen
+		mp = DigestPointPen()
+		self.drawPoints(mp)
+		if pointsOnly:
+			return "%s|%d|%s"%(mp.getDigestPointsOnly(), self.width, self.unicode)
+		else:
+			return "%s|%d|%s"%(mp.getDigest(), self.width, self.unicode)
+
+	def _getStructure(self):
+		"""Calculate a digest of points, things in this glyph, but NOT coordinates."""
+		from robofab.pens.digestPen import DigestPointStructurePen
+		mp = DigestPointStructurePen()
+		self.drawPoints(mp)
+		return mp.getDigest()
+
+	# Copy
+
+	def copy(self, aParent=None):
+		"""Duplicate this glyph"""
+		n = self.__class__()
+		if aParent is not None:
+			n.setParent(aParent)
+		dont = ['_object', 'getParent']
+		for k in self.__dict__.keys():
+			ok = True
+			if k in dont:
+				continue
+			elif k == "contours":
+				dup = []
+				for i in self.contours:
+					dup.append(i.copy(n))
+			elif k == "components":
+				dup = []
+				for i in self.components:
+					dup.append(i.copy(n))
+			elif k == "anchors":
+				dup = []
+				for i in self.anchors:
+					dup.append(i.copy(n))
+			elif k == "psHints":
+				dup = self.psHints.copy()
+			elif isinstance(self.__dict__[k], (RBaseObject, BaseLib)):
+				dup = self.__dict__[k].copy(n)
+			else:
+				dup = copy.deepcopy(self.__dict__[k])
+			if ok:
+				setattr(n, k, dup)
+		return n
+
+	def _setParentTree(self):
+		"""Set the parents of all contained and dependent objects (and their dependents) right."""
+		for item in self.contours:
+			item.setParent(self)
+			item._setParentTree()
+		for item in self.components:
+			item.setParent(self)
+		for items in self.anchors:
+			item.setParent(self)
+
+	# Pens and Drawing
+
+	def getPen(self):
+		"""Return a Pen object for creating an outline in this glyph."""
+		from robofab.pens.adapterPens import SegmentToPointPen
+		return SegmentToPointPen(self.getPointPen())
+
+	def getPointPen(self):
+		"""Return a PointPen object for creating an outline in this glyph."""
+		raise NotImplementedError, "getPointPen() must be implemented by subclass"
+
+	def draw(self, pen):
+		"""draw the object with a RoboFab segment pen"""
+		for a in self.anchors:
+			a.draw(pen)
+		for c in self.contours:
+			c.draw(pen)
+		for c in self.components:
+			c.draw(pen)
+
+	def drawPoints(self, pen):
+		"""draw the object with a point pen"""
+		for a in self.anchors:
+			a.drawPoints(pen)
+		for c in self.contours:
+			c.drawPoints(pen)
+		for c in self.components:
+			c.drawPoints(pen)
+
+	# Round
+
+	def round(self):
+		"""round all coordinates in all contours, components and anchors"""
+		for n in self.contours:
+			n.round()
+		for n in self.components:
+			n.round()
+		for n in self.anchors:
+			n.round()
+		self.width = int(round(self.width))
+
+	# Transformations
+
+	def transform(self, matrix):
+		"""Transform this glyph.
+		Use a Transform matrix object from
+		robofab.transform"""
+		n = []
+		for c in self.contours:
+			c.transform(matrix)
+		for a in self.anchors:
+			a.transform(matrix)
+
 	def move(self, (x, y), contours=True, components=True, anchors=True):
 		"""Move a glyph's items that are flagged as True"""
 		x, y = roundPt((x, y))
@@ -1285,7 +1316,7 @@ class BaseGlyph(RBaseObject):
 			component.move((x, y))
 		for anchor in self.anchors:
 			anchor.move((x, y))
-			
+
 	def scale(self, (x, y), center=(0, 0)):
 		"""scale the glyph"""
 		for contour in self.contours:
@@ -1298,16 +1329,6 @@ class BaseGlyph(RBaseObject):
 		for anchor in self.anchors:
 			anchor.scale((x, y), center=center)
 
-	def transform(self, matrix):
-		"""Transform this glyph.
-		Use a Transform matrix object from
-		robofab.transform"""
-		n = []
-		for c in self.contours:
-			c.transform(matrix)
-		for a in self.anchors:
-			a.transform(matrix)
-			
 	def rotate(self, angle, offset=None):
 		"""rotate the glyph"""
 		from fontTools.misc.transform import Identity
@@ -1317,8 +1338,8 @@ class BaseGlyph(RBaseObject):
 		rT = Identity.translate(offset[0], offset[1])
 		rT = rT.rotate(radAngle)
 		rT = rT.translate(-offset[0], -offset[1])
-		self.transform(rT)	
-	
+		self.transform(rT)
+
 	def skew(self, angle, offset=None):
 		"""skew the glyph"""
 		from fontTools.misc.transform import Identity
@@ -1328,6 +1349,30 @@ class BaseGlyph(RBaseObject):
 		rT = Identity.translate(offset[0], offset[1])
 		rT = rT.skew(radAngle)
 		self.transform(rT)
+
+	# Point Inside
+
+	def pointInside(self, (x, y), evenOdd=0):
+		"""determine if the point is in the black or white of the glyph"""
+		from fontTools.pens.pointInsidePen import PointInsidePen
+		font = self.getParent()
+		piPen = PointInsidePen(glyphSet=font, testPoint=(x, y), evenOdd=evenOdd)
+		self.draw(piPen)
+		return piPen.getResult()
+
+	# Environment Placeholders
+
+	def _hasChanged(self):
+		"""mark the object and it's parent as changed"""
+		self.setChanged(True)
+		if self.getParent() is not None:
+			self.getParent()._hasChanged()
+
+	def update(self):
+		"""update the glyph"""
+		pass
+
+
 
 # -------
 # Contour
