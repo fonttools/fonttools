@@ -972,44 +972,133 @@ class RGlyph(BaseGlyph):
 		self._object.drawPoints(pointPen)
 
 
-#class RContour(BaseContour):
-#	
-#	_title = "RoboFabContour"
-#	
-#	def __init__(self, object=None):
-#		#BaseContour.__init__(self)
-#		self.segments = []
-#		self.selected = False
-#		
-#	def __len__(self):
-#		return len(self.segments) 
-#
-#	def __getitem__(self, index):
-#		if index < len(self.segments):
-#			return self.segments[index]
-#		raise IndexError
-#		
-#	def _get_index(self):
-#		return self.getParent().contours.index(self)
-#		
-#	def _set_index(self, index):
-#		ogIndex = self.index
-#		if index != ogIndex:
-#			contourList = self.getParent().contours
-#			contourList.insert(index, contourList.pop(ogIndex))
-#			
-#	
-#	index = property(_get_index, _set_index, doc="index of the contour")
-#	
-#	def _get_points(self):
-#		points = []
-#		for segment in self.segments:
-#			for point in segment.points:
-#				points.append(point)
-#		return points
-#	
-#	points = property(_get_points, doc="view the contour as a list of points")
-#	
+class RContour(BaseContour):
+
+	_title = "RoboFabContour"
+
+	def __init__(self, contour):
+		super(RContour, self).__init__()
+		self._object = contour
+
+	# Bounds
+
+	def _get_box(self):
+		bounds = self._obejct.bounds
+		if bounds is None:
+			bounds = (0, 0, 0, 0)
+		return bounds
+
+	box = property(_get_box, doc="the bounding box for the contour")
+
+	# Direction
+
+	def _set_clockwise(self, value):
+		self._object.clockwise = value
+
+	def _get_clockwise(self):
+		return self._object.clockwise
+
+	clockwise = property(_get_clockwise, _set_clockwise, doc="direction of contour: 1=clockwise 0=counterclockwise")
+
+	def reverseContour(self):
+		"""reverse the contour"""
+		self._object.reverse()
+
+	# Index
+
+	def _get_index(self):
+		glyph = self.getParent()
+		if glyph is None:
+			return None
+		return glyph.naked().contourIndex(self.naked())
+
+	def _set_index(self, index):
+		glyph = self.getParent()
+		if glyph is None:
+			return
+		originalIndex = self.index
+		if originalIndex < index:
+			index -= 1
+		if index != originalIndex:
+			glyph.insertContour(index, glyph.naked()[originalIndex])
+
+	index = property(_get_index, _set_index, doc="index of the contour")
+
+	# Points
+
+	def pointClass(self):
+		return RPoint
+
+	def getPoint(self, point):
+		return point
+
+	def _get_points(self):
+		return [self.getPoint(point) for point in self._object]
+
+	points = property(_get_points, doc="view the contour as a list of points")
+
+	# Segments
+
+	def segmentClass(self):
+		return RSegment
+
+	def getSegment(self, points):
+		return self.segmentClass()(points)
+
+	def _get_segments(self):
+		return [self.getSegment(points) for points in self._object.segments]
+
+	segments = property(_get_segments)
+
+	def __len__(self):
+		return len(self._object.segments)
+
+	def __getitem__(self, index):
+		segments = self._object.segments
+		if index < len(segments):
+			segment = segments[index]
+			return self.getSegment(segment)
+		raise IndexError
+
+	def appendSegment(self, segmentType, points, smooth=False):
+		"""append a segment to the contour"""
+		return self.insertSegment(index=len(self.segments), segmentType=segmentType, points=points, smooth=smooth)
+
+	def insertSegment(self, index, segmentType, points, smooth=False):
+		"""insert a segment into the contour"""
+		originalIndex = index
+		for point in points:
+			x = point.x
+			y = point.y
+			segmentType = point.segmentType
+			smooth = point.smooth
+			name = point.name
+			identifier = point.identifier
+			point = self._object.pointClass((x, y), segmentType=segmentType, smooth=smooth, name=name, identifier=identifier)
+			self._object.insertPoint(index, point)
+			index += 1
+		onCurve = self._object[index]
+		for segment in self._object.segments:
+			if segment[-1] == onCurve:
+				return self.getSegment(segment)
+
+	def removeSegment(self, index):
+		"""remove a segment from the contour"""
+		segment = self.segments[index]
+		for point in segment:
+			point = point.naked()
+			self._object.removePoint(point)
+
+	def setStartSegment(self, segmentIndex):
+		"""set the first segment on the contour"""
+		segment = self._object.segments[segmentIndex]
+		point = segment[-1].naked()
+		index = self._object.index(point)
+		self._object.setStartPoint(index)
+
+
+	# bPoints
+
 #	def _get_bPoints(self):
 #		bPoints = []
 #		for segment in self.segments:
@@ -1031,80 +1120,17 @@ class RGlyph(BaseGlyph):
 #		return bPoints
 #
 #	bPoints = property(_get_bPoints, doc="view the contour as a list of bPoints")
-#	
-#	def appendSegment(self, segmentType, points, smooth=False):
-#		"""append a segment to the contour"""
-#		segment = self.insertSegment(index=len(self.segments), segmentType=segmentType, points=points, smooth=smooth)
-#		return segment
-#		
-#	def insertSegment(self, index, segmentType, points, smooth=False):
-#		"""insert a segment into the contour"""
-#		segment = RSegment(segmentType, points, smooth)
-#		segment.setParent(self)
-#		self.segments.insert(index, segment)
-#		self._hasChanged()
-#		return segment
-#		
-#	def removeSegment(self, index):
-#		"""remove a segment from the contour"""
-#		del self.segments[index]
-#		self._hasChanged()
-#				
-#	def reverseContour(self):
-#		"""reverse the contour"""
-#		from robofab.pens.reverseContourPointPen import ReverseContourPointPen
-#		index = self.index
-#		glyph = self.getParent()
-#		pen = glyph.getPointPen()
-#		reversePen = ReverseContourPointPen(pen)
-#		self.drawPoints(reversePen)
-#		# we've drawn the reversed contour onto our parent glyph,
-#		# so it sits at the end of the contours list:
-#		newContour = glyph.contours.pop(-1)
-#		for segment in newContour.segments:
-#			segment.setParent(self)
-#		self.segments = newContour.segments
-#		self._hasChanged()
-#	
-#	def setStartSegment(self, segmentIndex):
-#		"""set the first segment on the contour"""
-#		# this obviously does not support open contours
-#		if len(self.segments) < 2:
-#			return
-#		if segmentIndex == 0:
-#			return
-#		if segmentIndex > len(self.segments)-1:
-#			raise IndexError, 'segment index not in segments list'
-#		oldStart = self.segments[0]
-#		oldLast = self.segments[-1]
-#		 #check to see if the contour ended with a curve on top of the move
-#		 #if we find one delete it,
-#		if oldLast.type == CURVE or oldLast.type == QCURVE:
-#			startOn = oldStart.onCurve
-#			lastOn = oldLast.onCurve
-#			if startOn.x == lastOn.x and startOn.y == lastOn.y:
-#				del self.segments[0]
-#				# since we deleted the first contour, the segmentIndex needs to shift
-#				segmentIndex = segmentIndex - 1
-#		# if we DO have a move left over, we need to convert it to a line
-#		if self.segments[0].type == MOVE:
-#			self.segments[0].type = LINE
-#		# slice up the segments and reassign them to the contour
-#		segments = self.segments[segmentIndex:]
-#		self.segments = segments + self.segments[:segmentIndex]
-#		# now, draw the contour onto the parent glyph
-#		glyph = self.getParent()
-#		pen = glyph.getPointPen()
-#		self.drawPoints(pen)
-#		# we've drawn the new contour onto our parent glyph,
-#		# so it sits at the end of the contours list:
-#		newContour = glyph.contours.pop(-1)
-#		for segment in newContour.segments:
-#			segment.setParent(self)
-#		self.segments = newContour.segments
-#		self._hasChanged()
-#
-#
+
+	# Drawing
+
+	def draw(self, pen):
+		self._object.draw(pen)
+
+	def drawPoints(self, pointPen):
+		self._object.drawPoints(pointPen)
+
+
+
 #class RSegment(BaseSegment):
 #	
 #	_title = "RoboFabSegment"
