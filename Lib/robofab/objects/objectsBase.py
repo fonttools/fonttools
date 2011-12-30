@@ -1365,20 +1365,18 @@ class BaseGlyph(RBaseObject):
 		pass
 
 
-
 # -------
 # Contour
 # -------
 
 class BaseContour(RBaseObject):
-	
+
 	"""Base class for all contour objects."""
-	
+
 	def __init__(self):
 		RBaseObject.__init__(self)
-		#self.index = None
-		self.changed = False		# if the object needs to be saved
-		
+		self.changed = False
+
 	def __repr__(self):
 		font = "unnamed_font"
 		glyph = "unnamed_glyph"
@@ -1398,30 +1396,30 @@ class BaseContour(RBaseObject):
 			# XXXX
 			idx = "XXX"
 		return "<RContour for %s.%s[%s]>"%(font, glyph, idx)
-		
+
 	def _hasChanged(self):
 		"""mark the object and it's parent as changed"""
 		self.setChanged(True)
 		if self.getParent() is not None:
 			self.getParent()._hasChanged()
-	
+
 	def _nextSegment(self, segmentIndex):
 		return self.segments[(segmentIndex + 1) % len(self.segments)]
-	
+
 	def _prevSegment(self, segmentIndex):
 		segments = self.segments
 		return self.segments[(segmentIndex - 1) % len(self.segments)]
-		
+
 	def _get_box(self):
 		bounds = _box(self)
 		return bounds
-	
+
 	box = property(_get_box, doc="the bounding box for the contour")
 
 	def _set_clockwise(self, value):
 		if self.clockwise != value:
 			self.reverseContour()
-			
+
 	def _get_clockwise(self):
 		anchors = []
 		lastOn = None
@@ -1479,7 +1477,7 @@ class BaseContour(RBaseObject):
 			if ok:
 				setattr(n, k, dup)
 		return n
-		
+
 	def _setParentTree(self):
 		"""Set the parents of all contained and dependent objects (and their dependents) right."""
 		for item in self.segments:
@@ -1489,7 +1487,7 @@ class BaseContour(RBaseObject):
 		"""round the value of all points in the contour"""
 		for n in self.points:
 			n.round()
-	
+
 	def draw(self, pen):
 		"""draw the object with a fontTools pen"""
 		firstOn = self.segments[0].onCurve
@@ -1544,7 +1542,7 @@ class BaseContour(RBaseObject):
 				pen.closePath()
 			else:
 				pen.endPath()
-	
+
 	def drawPoints(self, pen):
 		"""draw the object with a point pen"""
 		pen.beginPath()
@@ -1597,19 +1595,19 @@ class BaseContour(RBaseObject):
 				name = getattr(point, 'name', None)
 				pen.addPoint((point.x, point.y), segmentType=None, smooth=None, name=name, selected=point.selected)
 		pen.endPath()
-		
+
 	def move(self, (x, y)):
 		"""move the contour"""
 		#this will be faster if we go straight to the points
 		for point in self.points:
 			point.move((x, y))
-	
+
 	def scale(self,(x, y), center=(0, 0)):
 		"""scale the contour"""
 		#this will be faster if we go straight to the points
 		for point in self.points:
 			point.scale((x, y), center=center)
-	
+
 	def transform(self, matrix):
 		"""Transform this contour.
 		Use a Transform matrix object from
@@ -1617,7 +1615,7 @@ class BaseContour(RBaseObject):
 		n = []
 		for s in self.segments:
 			s.transform(matrix)
-			
+
 	def rotate(self, angle, offset=None):
 		"""rotate the contour"""
 		from fontTools.misc.transform import Identity
@@ -1627,7 +1625,7 @@ class BaseContour(RBaseObject):
 		rT = Identity.translate(offset[0], offset[1])
 		rT = rT.rotate(radAngle)
 		self.transform(rT)	
-	
+
 	def skew(self, angle, offset=None):
 		"""skew the contour"""
 		from fontTools.misc.transform import Identity
@@ -1637,7 +1635,7 @@ class BaseContour(RBaseObject):
 		rT = Identity.translate(offset[0], offset[1])
 		rT = rT.skew(radAngle)
 		self.transform(rT)
-	
+
 	def pointInside(self, (x, y), evenOdd=0):
 		"""determine if the point is inside or ouside of the contour"""
 		from fontTools.pens.pointInsidePen import PointInsidePen
@@ -1646,7 +1644,7 @@ class BaseContour(RBaseObject):
 		piPen = PointInsidePen(glyphSet=font, testPoint=(x, y), evenOdd=evenOdd)
 		self.draw(piPen)
 		return piPen.getResult()
-			
+
 	def autoStartSegment(self):
 		"""automatically set the lower left point of the contour as the first point."""
 		#adapted from robofog
@@ -1666,11 +1664,11 @@ class BaseContour(RBaseObject):
 					startIndex = i
 		if startIndex != 0:
 			self.setStartSegment(startIndex)
-		
+
 	def appendBPoint(self, pointType, anchor, bcpIn=(0, 0), bcpOut=(0, 0)):
 		"""append a bPoint to the contour"""
 		self.insertBPoint(len(self.segments), pointType=pointType, anchor=anchor, bcpIn=bcpIn, bcpOut=bcpOut)
-		
+
 	def insertBPoint(self, index, pointType, anchor, bcpIn=(0, 0), bcpOut=(0, 0)):
 		"""insert a bPoint at index on the contour"""
 		#insert a CURVE point that we can work with
@@ -1733,7 +1731,7 @@ class BaseContour(RBaseObject):
 			prevAnchor = prevSegment.onCurve
 			if (prevAnchor.x, prevAnchor.y) == (newA.x, newA.y) and (newAnchor.x, newAnchor.y) == (newB.x, newB.y):
 				newSegment.type = LINE
-			#the user wants a smooth segment		
+			#the user wants a smooth segment
 			if pointType == CURVE:
 				newSegment.smooth = True
 
