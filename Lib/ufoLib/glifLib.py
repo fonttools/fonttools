@@ -1255,8 +1255,8 @@ def _validateAndMassagePointStructures(children, pointAttributes, openContourOff
 		smooth = smooth == "yes"
 		attrs["smooth"] = smooth
 		# smooth can only be applied to curve and qcurve
-		if smooth and pointType not in ("curve", "qcurve"):
-			raise GlifLibError("smooth attribute set in a %s point." % pointType)
+		if smooth and pointType is None:
+			raise GlifLibError("smooth attribute set in an offcurve point.")
 		# name is optional
 		if "name" not in attrs:
 			attrs["name"] = None
@@ -1538,8 +1538,8 @@ class GLIFPointPen(AbstractPointPen):
 		self.prevPointTypes.append(segmentType)
 		# smooth
 		if smooth:
-			if segmentType not in ("curve", "qcurve"):
-				raise GlifLibError("can't set smooth in a %s point." % segmentType)
+			if segmentType == "offcurve":
+				raise GlifLibError("can't set smooth in an offcurve point.")
 			attrs.append(("smooth", "yes"))
 		# name
 		if name is not None:

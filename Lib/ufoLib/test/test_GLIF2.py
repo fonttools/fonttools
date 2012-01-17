@@ -978,7 +978,7 @@ class TestGLIF2(unittest.TestCase):
 		resultPy = self.glifToPy(glif)
 		self.assertEqual(glif, resultGlif)
 		self.assertEqual(py, resultPy)
-		# illegal: smooth=True
+		# legal: smooth=True
 		glif = """
 		<glyph name="a" format="2">
 			<outline>
@@ -996,8 +996,10 @@ class TestGLIF2(unittest.TestCase):
 		pointPen.addPoint(*[(3, -4)], **{"segmentType" : "line", "smooth" : False})
 		pointPen.endPath()
 		"""
-		self.assertRaises(GlifLibError, self.pyToGLIF, py)
-		self.assertRaises(GlifLibError, self.glifToPy, glif)
+		resultGlif = self.pyToGLIF(py)
+		resultPy = self.glifToPy(glif)
+		self.assertEqual(glif, resultGlif)
+		self.assertEqual(py, resultPy)
 		# illegal: not at start
 		glif = """
 		<glyph name="a" format="2">
@@ -1064,7 +1066,7 @@ class TestGLIF2(unittest.TestCase):
 		resultPy = self.glifToPy(glif)
 		self.assertEqual(glif, resultGlif)
 		self.assertEqual(py, resultPy)
-		# illegal: smooth=True
+		# legal: smooth=True
 		glif = """
 		<glyph name="a" format="2">
 			<outline>
@@ -1082,8 +1084,10 @@ class TestGLIF2(unittest.TestCase):
 		pointPen.addPoint(*[(3, -4)], **{"segmentType" : "line", "smooth" : True})
 		pointPen.endPath()
 		"""
-		self.assertRaises(GlifLibError, self.pyToGLIF, py)
-		self.assertRaises(GlifLibError, self.glifToPy, glif)
+		resultGlif = self.pyToGLIF(py)
+		resultPy = self.glifToPy(glif)
+		self.assertEqual(glif, resultGlif)
+		self.assertEqual(py, resultPy)
 
 	def testPointTypeCurve(self):
 		# legal
