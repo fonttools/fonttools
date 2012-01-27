@@ -1,3 +1,5 @@
+#! /usr/local/bin/apppython
+
 """
 This is the new doc for the objectsRF module.
 
@@ -18,7 +20,11 @@ To Do:
     with the defcon Contour object independently and then inserted into a glyph that uses a
     Contour subclass). a way around this would be to test isinstance(incoming, self.objClass())
     during all insertion methods.
+f -------> or defcon should have a copy() and setting all the subclasses correctly 
+
 - need to work out how selected will work in these objects
+f -------> why its a bool, subclasses should overwrite it with a property thing if they wants to use 
+
 - note somewhere that the various get* methods should not be used externally
   (they are only public because getGLyph was left public in RFont back in the day)
 - need to add an index method to RGlyph for getting the index of a contour
@@ -27,6 +33,8 @@ To Do:
   whereas glyph.removeComponent requires the component.
 - what should happen to anchors in BaseGlyph.appendGlyph?
 - what should be done with the anchor mark (used in appendAnchor and probably elsewhere)?
+f -------> ignore it or can be converted to a color object
+
 
 I'm trying to find a way to make it possible for defcon based
 environments to use these objects in a simple way. For now, I
@@ -43,7 +51,9 @@ Overall Design:
 
 """
 
+
 import os
+import weakref
 from defcon import Font as DefconFont
 from robofab import RoboFabError, RoboFabWarning
 from robofab.objects.objectsBase import RBaseObject, BaseFont, BaseLayerSet, BaseLayer, \
@@ -875,7 +885,7 @@ class RGlyph(BaseGlyph):
 
 	def __getitem__(self, index):
 		if index < len(self._object):
-			return self._getContour(index)
+			return self.getContour(index)
 		raise IndexError
 
 	def removeContour(self, index):
@@ -971,6 +981,9 @@ class RGlyph(BaseGlyph):
 	def drawPoints(self, pointPen):
 		self._object.drawPoints(pointPen)
 
+# -------
+# Contour
+# -------
 
 class RContour(BaseContour):
 
@@ -1030,7 +1043,10 @@ class RContour(BaseContour):
 		return RPoint
 
 	def getPoint(self, point):
-		return point
+		rPoint = self.pointClass()(point)
+		rPoint.getSegment = self.getSegment
+		rPoint._setDefconContour(self._object)
+		return rPoint
 
 	def _get_points(self):
 		return [self.getPoint(point) for point in self._object]
@@ -1043,7 +1059,11 @@ class RContour(BaseContour):
 		return RSegment
 
 	def getSegment(self, points):
-		return self.segmentClass()(points)
+		segment = self.segmentClass()(points=points)
+		segment.getPoint = self.getPoint
+		segment._RContourClass = self.__class__
+		segment._setDefconContour(self._object)
+		return segment
 
 	def _get_segments(self):
 		return [self.getSegment(points) for points in self._object.segments]
@@ -1096,30 +1116,23 @@ class RContour(BaseContour):
 		index = self._object.index(point)
 		self._object.setStartPoint(index)
 
-
 	# bPoints
 
-#	def _get_bPoints(self):
-#		bPoints = []
-#		for segment in self.segments:
-#			segType = segment.type
-#			if segType == MOVE:
-#				bType = CORNER
-#			elif segType == LINE:
-#				bType = CORNER
-#			elif segType == CURVE:
-#				if segment.smooth:
-#					bType = CURVE
-#				else:
-#					bType = CORNER
-#			else:
-#				raise RoboFabError, "encountered unknown segment type"
-#			b = RBPoint()
-#			b.setParent(segment)
-#			bPoints.append(b)
-#		return bPoints
-#
-#	bPoints = property(_get_bPoints, doc="view the contour as a list of bPoints")
+	def bPointClass(self):
+		return RBPoint
+
+	def getBPoint(self, point):
+		bPoint = self.bPointClass()(point)
+		bPoint.getSegment = self.getSegment
+		bPoint.getPoint = self.getPoint
+		bPoint._RContourClass = self.__class__
+		bPoint._setDefconContour(self._object)
+		return bPoint
+
+	def _get_bPoints(self):
+		return [self.getBPoint(point) for point in self._object.onCurvePoints]
+	
+	bPoints = property(_get_bPoints, doc="view the contour as a list of bPoints")
 
 	# Drawing
 
@@ -1129,287 +1142,414 @@ class RContour(BaseContour):
 	def drawPoints(self, pointPen):
 		self._object.drawPoints(pointPen)
 
+# -------
+# Segment
+# -------
+
+class RSegment(BaseSegment):
+
+	_title = "RoboFabSegment"
+
+	def __init__(self, segmentType=None, points=[], smooth=False):
+		super(RSegment, self).__init__()
+		self._points = points
+		self._RContourClass = None
+
+	def getParent(self):
+		defconContour = self._defconContour()
+		if defconContour is None:
+			return None
+		if self._RContourClass is None:
+			return None
+		return self._RContourClass(defconContour)
+
+	def _setDefconContour(self, defconContour):
+		self._defconContour = weakref.ref(defconContour)
+
+	def _defconContour(self):
+		return None
+
+	def _setDefconContourDirty(self):
+		contour = self._defconContour()
+		if contour is not None:
+			contour.dirty = True
+
+	def _get_index(self):
+		contour = self._defconContour()
+		if contour is None:
+			return None
+		segments = contour.segments
+		if self._points in segments:
+			return segments.index(self._points)
+		return None
+
+	index = property(_get_index, doc="index of the segment")
+
+	# Points
+
+	def _get_points(self):
+		return [self.getPoint(point) for point in self._points]
+
+	points = property(_get_points, doc="view the segment as a list of points")
+
+	# smooth 
+
+	def _get_smooth(self):
+		return self._points[-1].smooth
+
+	def _set_smooth(self, value):
+		old = self._points[-1].smooth
+		if old == value:
+			return
+		self._points[-1].smooth = value
+		self._setDefconContourDirty()
+
+	smooth = property(_get_smooth, _set_smooth, doc="smoothness of the segment")
+
+	# type
+
+	def _get_type(self):
+		value = self._points[-1].segmentType
+		if value is None:
+			value = "offcurve"
+		return value
+
+	def _set_type(self, pointType):
+		if pointType == "offcurve":
+			pointType = None
+		onCurve = self._points[-1]
+		ocType = onCurve.segmentType
+		defconContour = self._defconContour()
+		if defconContour is None:
+			return
+		if ocType == pointType:
+			return
+		onCurve.segmentType = pointType
+		# we are converting a cubic line, move into a cubic curve
+		if pointType == "curve" and ocType in  ["line", "move"]:
+			# add offcurves
+			index = defconContour.index(onCurve)
+			prevOnCurve = defconContour[index - 1]
+			p1 = defconContour.pointClass((prevOnCurve.x, prevOnCurve.y), segmentType=None)
+			p2 = defconContour.pointClass((onCurve.x, onCurve.y), segmentType=None)
+			defconContour.insertPoint(index, p2)
+			defconContour.insertPoint(index, p1)
+			found = False
+			for points in defconContour.segments:
+				if points[-1] == onCurve:
+					found = True
+					break
+			if found:
+				self._points = points
+		# we are converting a quad curve to a cubic curve
+		elif pointType == "curve" and ocType == "qcurve":
+			# do nothing
+			pass
+		# we are converting a cubic curve or quad curve into a  line
+		elif pointType == "line" and ocType in ["curve", "qcurve"]:
+			# remove offcurves
+			offCurves = self._points[:-1]
+			for point in offCurves:
+				defconContour.removePoint(point)
+			self._points = [onCurve]
+		# we are converting a cubic move to a line
+		elif pointType == "line" and ocType == "move":
+			# do nothing
+			pass
+		# we are converting to a quad curve where just about anything is legal
+		elif pointType == "qcurve":
+			# do nothing
+			pass
+		else:
+			raise RoboFabError, 'unknown segment type'
+		self._setDefconContourDirty()
+
+	type = property(_get_type, _set_type, doc="type of the segment")
+
+	def insertPoint(self, index, pointType, point):
+		raise NotImplementedError
+
+	def removePoint(self, index):
+		raise NotImplementedError
 
 
-#class RSegment(BaseSegment):
-#	
-#	_title = "RoboFabSegment"
-#	
-#	def __init__(self, segmentType=None, points=[], smooth=False):
-#		BaseSegment.__init__(self)
-#		self.selected = False
-#		self.points = []
-#		self.smooth = smooth
-#		if points:
-#			#the points in the segment should be RPoints, so create those objects
-#			for point in points[:-1]:
-#				x, y = point
-#				p = RPoint(x, y, pointType=OFFCURVE)
-#				p.setParent(self)
-#				self.points.append(p)
-#			aX, aY = points[-1]
-#			p = RPoint(aX, aY, segmentType)
-#			p.setParent(self)
-#			self.points.append(p)
-#		
-#	def _get_type(self):
-#		return self.points[-1].type
-#	
-#	def _set_type(self, pointType):
-#		onCurve = self.points[-1]
-#		ocType = onCurve.type
-#		if ocType == pointType:
-#			return
-#		#we are converting a cubic line into a cubic curve
-#		if pointType == CURVE and  ocType == LINE:
-#			onCurve.type = pointType
-#			parent = self.getParent()
-#			prev = parent._prevSegment(self.index)
-#			p1 = RPoint(prev.onCurve.x, prev.onCurve.y, pointType=OFFCURVE)
-#			p1.setParent(self)
-#			p2 = RPoint(onCurve.x, onCurve.y, pointType=OFFCURVE)
-#			p2.setParent(self)
-#			self.points.insert(0, p2)
-#			self.points.insert(0, p1)
-#		#we are converting a cubic move to a curve
-#		elif pointType == CURVE and ocType == MOVE:
-#			onCurve.type = pointType
-#			parent = self.getParent()
-#			prev = parent._prevSegment(self.index)
-#			p1 = RPoint(prev.onCurve.x, prev.onCurve.y, pointType=OFFCURVE)
-#			p1.setParent(self)
-#			p2 = RPoint(onCurve.x, onCurve.y, pointType=OFFCURVE)
-#			p2.setParent(self)
-#			self.points.insert(0, p2)
-#			self.points.insert(0, p1)
-#		#we are converting a quad curve to a cubic curve
-#		elif pointType == CURVE and ocType == QCURVE:
-#			onCurve.type == CURVE
-#		#we are converting a cubic curve into a cubic line
-#		elif pointType == LINE and ocType == CURVE:
-#			p = self.points.pop(-1)
-#			self.points = [p]
-#			onCurve.type = pointType
-#			self.smooth = False
-#		#we are converting a cubic move to a line
-#		elif pointType == LINE and ocType == MOVE:
-#			onCurve.type = pointType
-#		#we are converting a quad curve to a line:
-#		elif pointType == LINE and ocType == QCURVE:
-#			p = self.points.pop(-1)
-#			self.points = [p]
-#			onCurve.type = pointType
-#			self.smooth = False	
-#		# we are converting to a quad curve where just about anything is legal
-#		elif pointType == QCURVE:
-#			onCurve.type = pointType
-#		else:
-#			raise RoboFabError, 'unknown segment type'
-#			
-#	type = property(_get_type, _set_type, doc="type of the segment")
-#	
-#	def _get_index(self):
-#		return self.getParent().segments.index(self)
-#		
-#	index = property(_get_index, doc="index of the segment")
-#	
-#	def insertPoint(self, index, pointType, point):
-#		x, y = point
-#		p = RPoint(x, y, pointType=pointType)
-#		p.setParent(self)
-#		self.points.insert(index, p)
-#		self._hasChanged()
-#	
-#	def removePoint(self, index):
-#		del self.points[index]
-#		self._hasChanged()
-#		
-#
-#class RBPoint(BaseBPoint):
-#	
-#	_title = "RoboFabBPoint"
-#		
-#	def _setAnchorChanged(self, value):
-#		self._anchorPoint.setChanged(value)
-#	
-#	def _setNextChanged(self, value):
-#		self._nextOnCurve.setChanged(value)	
-#		
-#	def _get__parentSegment(self):
-#		return self.getParent()
-#		
-#	_parentSegment = property(_get__parentSegment, doc="")
-#	
-#	def _get__nextOnCurve(self):
-#		pSeg = self._parentSegment
-#		contour = pSeg.getParent()
-#		#could this potentially return an incorrect index? say, if two segments are exactly the same?
-#		return contour.segments[(contour.segments.index(pSeg) + 1) % len(contour.segments)]
-#	
-#	_nextOnCurve = property(_get__nextOnCurve, doc="")
-#	
-#	def _get_index(self):
-#		return self._parentSegment.index
-#	
-#	index = property(_get_index, doc="index of the bPoint on the contour")
-#
-#
-#class RPoint(BasePoint):
-#	
-#	_title = "RoboFabPoint"
-#	
-#	def __init__(self, x=0, y=0, pointType=None, name=None):
-#		self.selected = False
-#		self._type = pointType
-#		self._x = x
-#		self._y = y
-#		self._name = None
-#		
-#	def _get_x(self):
-#		return self._x
-#		
-#	def _set_x(self, value):
-#		self._x = value
-#		self._hasChanged()
-#	
-#	x = property(_get_x, _set_x, doc="")
-#
-#	def _get_y(self):
-#		return self._y
-#	
-#	def _set_y(self, value):
-#		self._y = value
-#		self._hasChanged()
-#
-#	y = property(_get_y, _set_y, doc="")
-#	
-#	def _get_type(self):
-#		return self._type
-#	
-#	def _set_type(self, value):
-#		self._type = value
-#		self._hasChanged()
-#
-#	type = property(_get_type, _set_type, doc="")
-#	
-#	def _get_name(self):
-#		return self._name
-#	
-#	def _set_name(self, value):
-#		self._name = value
-#		self._hasChanged()
-#
-#	name = property(_get_name, _set_name, doc="")
-#
-#		
-#class RAnchor(BaseAnchor):
-#	
-#	_title = "RoboFabAnchor"
-#	
-#	def __init__(self, name=None, position=None, mark=None):
-#		BaseAnchor.__init__(self)
-#		self.selected = False
-#		self.name = name
-#		if position is None:
-#			self.x = self.y = None
-#		else:
-#			self.x, self.y = position
-#		self.mark = mark
-#		
-#	def _get_index(self):
-#		if self.getParent() is None: return None
-#		return self.getParent().anchors.index(self)
-#	
-#	index = property(_get_index, doc="index of the anchor")
-#	
-#	def _get_position(self):
-#		return (self.x, self.y)
-#	
-#	def _set_position(self, value):
-#		self.x = value[0]
-#		self.y = value[1]
-#		self._hasChanged()
-#	
-#	position = property(_get_position, _set_position, doc="position of the anchor")
-#	
-#	def move(self, (x, y)):
-#		"""Move the anchor"""
-#		self.x = self.x + x
-#		self.y = self.y + y
-#		self._hasChanged()
-#
-#		
-#class RComponent(BaseComponent):
-#	
-#	_title = "RoboFabComponent"
-#	
-#	def __init__(self, baseGlyphName=None, offset=(0,0), scale=(1,1)):
-#		BaseComponent.__init__(self)
-#		self.selected = False
-#		self._baseGlyph = baseGlyphName
-#		self._offset = offset
-#		self._scale = scale
-#		
-#	def _get_index(self):
-#		if self.getParent() is None: return None
-#		return self.getParent().components.index(self)
-#		
-#	index = property(_get_index, doc="index of the component")
-#	
-#	def _get_baseGlyph(self):
-#		return self._baseGlyph
-#		
-#	def _set_baseGlyph(self, glyphName):
-#		# XXXX needs to be implemented in objectsFL for symmetricity's sake. Eventually.
-#		self._baseGlyph = glyphName
-#		self._hasChanged()
-#		
-#	baseGlyph = property(_get_baseGlyph, _set_baseGlyph, doc="")
-#
-#	def _get_offset(self):
-#		return self._offset
-#	
-#	def _set_offset(self, value):
-#		self._offset = value
-#		self._hasChanged()
-#		
-#	offset = property(_get_offset, _set_offset, doc="the offset of the component")
-#
-#	def _get_scale(self):
-#		return self._scale
-#	
-#	def _set_scale(self, (x, y)):
-#		self._scale = (x, y)
-#		self._hasChanged()
-#		
-#	scale = property(_get_scale, _set_scale, doc="the scale of the component")
-#		
-#	def move(self, (x, y)):
-#		"""Move the component"""
-#		self.offset = (self.offset[0] + x, self.offset[1] + y)
-#	
-#	def decompose(self):
-#		"""Decompose the component"""
-#		baseGlyphName = self.baseGlyph
-#		parentGlyph = self.getParent()
-#		# if there is no parent glyph, there is nothing to decompose to
-#		if baseGlyphName is not None and parentGlyph is not None:
-#			parentFont = parentGlyph.getParent()
-#			# we must have a parent glyph with the baseGlyph
-#			# if not, we will simply remove the component from
-#			# the parent glyph thereby decomposing the component
-#			# to nothing.
-#			if parentFont is not None and parentFont.has_key(baseGlyphName):
-#				from robofab.pens.adapterPens import TransformPointPen
-#				oX, oY = self.offset
-#				sX, sY = self.scale
-#				baseGlyph = parentFont[baseGlyphName]
-#				for contour in baseGlyph.contours:
-#					pointPen = parentGlyph.getPointPen()
-#					transPen = TransformPointPen(pointPen, (sX, 0, 0, sY, oX, oY))
-#					contour.drawPoints(transPen)
-#			parentGlyph.components.remove(self)
-#	
+# ------
+# bPoint
+# ------
+
+class RBPoint(BaseBPoint):
+
+	_title = "RoboFabBPoint"
+
+	def __init__(self, anchor=None):
+		super(RBPoint, self).__init__()
+		self._anchor = anchor
+		self._RContourClass = None
+
+	def _setDefconContour(self, contour):
+		self._defconContour = weakref.ref(contour)
+
+	def _defconContour(self):
+		return None
+
+	def _setDefconContourDirty(self):
+		defconContour = self._defconContour()
+		if defconContour is not None:
+			defconContour.dirty = True
+
+	def getParent(self):
+		defconContour = self._defconContour()
+		if defconContour is None:
+			return None
+		if self._RContourClass is None:
+			return None
+		return self._RContourClass(defconContour)
+
+	def _get_index(self):
+		defconContour = self._defconContour()
+		if defconContour is None:
+			return None
+		onCurvePoints = defconContour.onCurvePoints
+		if self._anchor in onCurvePoints:
+			return onCurvePoints.index(self._anchor)
+		return None
+
+	index = property(_get_index, doc="index of the segment")
+
+	def _setAnchorChanged(self, value):
+		pass
+
+	def _setNextChanged(self, value):
+		pass
+
+	def _get__parentSegment(self):
+		defconContour = self._defconContour()
+		if defconContour is None:
+			return None
+		found = False
+		for points in defconContour.segments:
+			if self._anchor == points[-1]:
+				found = True
+				break
+		if found:
+			return self.getSegment(points)
+		return None
+
+	_parentSegment = property(_get__parentSegment)
+
+	def _get__nextOnCurve(self):
+		defconContour = self._defconContour()
+		if defconContour is None:
+			return None
+		onCurvePoints = defconContour.onCurvePoints
+		index = onCurvePoints.index(self._anchor)
+		return self.getPoint(onCurvePoints[(index + 1) % len(onCurvePoints)])
+
+	_nextOnCurve = property(_get__nextOnCurve)
+
+# -----
+# Point
+# -----
+
+class RPoint(BasePoint):
+
+	_title = "RoboFabPoint"
+
+	def __init__(self, obj=None):
+		super(RPoint, self).__init__()
+		self._object = obj
+
+	def __repr__(self):
+		return "<RPoint for position: (%s, %s) type: %s >" % (self.x, self.y, self.type)
+
+	def _setDefconContour(self, contour):
+		self._defconContour = weakref.ref(contour)
+
+	def _defconContour(self):
+		return None
+
+	def _setDefconContourDirty(self):
+		defconContour = self._defconContour()
+		if defconContour is not None:
+			defconContour.dirty = True
+
+	def getParent(self):
+		defconContour = self._defconContour()
+		if defconContour is None:
+			return None
+		segments = defconContour.segments
+		found = False
+		for points in segments:
+			if self._object in points:
+				found = True
+				break
+		if found:
+			return self.getSegment(points)
+		return None
+
+	def _get_x(self):
+		return self._object.x
+
+	def _set_x(self, value):
+		old = self._object.x
+		if old == value:
+			return
+		self._object.x = value
+		self._setDefconContourDirty()
+
+	x = property(_get_x, _set_x, doc="x attribute for point")
+
+	def _get_y(self):
+		return self._object.y
+
+	def _set_y(self, value):
+		old = self._object.y
+		if old == value:
+			return
+		self._object.y = value
+		self._setDefconContourDirty()
+
+	y = property(_get_y, _set_y, doc="y attribute for point")
+
+	def _get_smooth(self):
+		return self._points[-1].smooth
+
+	def _set_smooth(self, value):
+		old = self._object.smooth
+		if old == value:
+			return
+		self._object.smooth = value
+		self._setDefconContourDirty()
+
+	smooth = property(_get_smooth, _set_smooth, doc="smoothness of the segment")
+
+	def _get_type(self):
+		value = self._object.segmentType
+		if value is None:
+			value = "offcurve"
+		return value
+
+	def _set_type(self, value):
+		if value == "offcurve":
+			value = None
+		old = self._object.segmentType
+		if old == value:
+			return
+		self._object.segmentType = value
+		self._setDefconContourDirty()
+
+	type = property(_get_type, _set_type, doc="type of the segment")
+
+	def _get_name(self):
+		return self._object.name
+
+	def _set_name(self, value):
+		old = self._object.name
+		if old == value:
+			return
+		self._object.name = value
+		self._setDefconContourDirty()
+
+	name = property(_get_name, _set_name, doc="name attribute for point")
+
+
+# ------
+# Anchor
+# ------
+
+class RAnchor(BaseAnchor):
+
+	_title = "RoboFabAnchor"
+
+	def __init__(self, obj):
+		super(RAnchor, self).__init__()
+		self._object = obj
+
+	def _get_index(self):
+		glyph = self._object.glyph
+		if glyph is None:
+			return None
+		return glyph.anchorIndex(self._object)
+
+	index = property(_get_index, doc="index of the anchor")
+
+	def _get_position(self):
+		return (self._object.x, self._object.y)
+
+	def _set_position(self, value):
+		self._object.x = value[0]
+		self._object.y = value[1]
+
+	position = property(_get_position, _set_position, doc="position of the anchor")
+
+	def _get_name(self):
+		return self._object.name
+
+	def _set_name(self, value):
+		self._object.name = value
+
+	name = property(_get_name, _set_name, doc="name of the anchor")
+
+
+# ---------
+# Component
+# ---------
+
+class RComponent(BaseComponent):
+
+	_title = "RoboFabComponent"
+
+	def __init__(self, obj=None):
+		super(RComponent, self).__init__()
+		self._object = obj
+
+	def _get_index(self):
+		glyph = self._object.glyph
+		if glyph is None:
+			return None
+		return glyph.componentIndex(self._object)
+
+	index = property(_get_index, doc="index of the component")
+
+	def _get_baseGlyph(self):
+		return self._object.baseGlyph
+
+	def _set_baseGlyph(self, glyphName):
+		self._object.baseGlyph = glyphName
+
+	baseGlyph = property(_get_baseGlyph, _set_baseGlyph, doc="")
+
+	def _get_offset(self):
+		xScale, xyScale, yxScale, yScale, xOffset, yOffset = self._object.transformation
+		return xOffset, yOffset
+
+	def _set_offset(self, (x, y)):
+		xScale, xyScale, yxScale, yScale, xOffset, yOffset = self._object.transformation
+		self._object.transformation = (xScale, xyScale, yxScale, yScale, x, y)
+
+	offset = property(_get_offset, _set_offset, doc="the offset of the component")
+
+	def _get_scale(self):
+		xScale, xyScale, yxScale, yScale, xOffset, yOffset = self._object.transformation
+		return xScale, yScale
+
+	def _set_scale(self, (x, y)):
+		xScale, xyScale, yxScale, yScale, xOffset, yOffset = self._object.transformation
+		self._object.transformation = (x, xyScale, yxScale, y, xOffset, yOffset)
+
+	scale = property(_get_scale, _set_scale, doc="the scale of the component")
+
+	def move(self, (x, y)):
+		"""Move the component"""
+		self._object.move((x, y))
+
+	def decompose(self):
+		"""Decompose the component"""
+		glyph = self._object.glyph
+		if glyph is None:
+			return
+		glyph.decomposeComponent(self._object)
+
 
 # ----
 # Info
@@ -1603,6 +1743,7 @@ class RLib(_RDict):
 #		if data is not None:
 #			self.fromDict(data)
 
+
 if __name__ == "__main__":
 	from defcon.test.testTools import getTestFontPath
 	font = RFont(getTestFontPath())
@@ -1626,4 +1767,39 @@ if __name__ == "__main__":
 	print "layer.lib:", font.layers[None].lib
 	print
 	print "glyph:", font.layers[None]["A"]
-	print font.layers[None]["A"].leftMargin
+	print "glyph.leftMargin:", font.layers[None]["A"].leftMargin
+	print "contours:", list(font.layers[None]["A"])
+	print "contour:", font.layers[None]["A"][0]
+	print "points:", font.layers[None]["A"][0].points
+	print "segments:", font.layers[None]["A"][0].segments
+	
+	for seg in font.layers[None]["A"][0].segments:
+		seg.round()
+	
+	print "bPoints:", font.layers[None]["A"][0].bPoints
+	print
+	bPoints = font.layers[None]["A"][0].bPoints
+	for bPoint in bPoints:
+		print "bPoint:", bPoint
+		print "bPoint.anchor:", bPoint.anchor
+		print "bPoint.bcpIn:", bPoint.bcpIn
+		bPoint.bcpIn = (10, 10)
+		print bPoint.bcpIn
+		print "bPoint.bcpOut:", bPoint.bcpOut
+		print 
+	for point in font.layers[None]["A"][0].points:
+		print "point", point
+		print "point.getParent():", point.getParent()
+	
+	
+	print 
+	print "anchors:", font.layers[None]["A"].anchors
+	print "components for 'C':", font.layers[None]["C"].components
+	print "decompose..."
+	for component in font.layers[None]["C"].components:
+		component.decompose()
+	print "components for 'C':",  font.layers[None]["C"].components
+	### endless loop
+	#print font.layers[None]["A"].appendComponent("C")
+
+	print "done"
