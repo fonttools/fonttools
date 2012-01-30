@@ -146,13 +146,14 @@ class UFOReader(object):
 				originalGroups=groups
 			)
 			# convert kerning and groups
-			kerning, groups = convertUFO1OrUFO2KerningToUFO3Kerning(
+			kerning, groups, conversionMaps = convertUFO1OrUFO2KerningToUFO3Kerning(
 				self._upConvertedKerningData["originalKerning"],
 				deepcopy(self._upConvertedKerningData["originalGroups"])
 			)
 			# store
 			self._upConvertedKerningData["kerning"] = kerning
 			self._upConvertedKerningData["groups"] = groups
+			self._upConvertedKerningData["groupRenameMaps"] = conversionMaps
 
 	# support methods
 
@@ -268,6 +269,27 @@ class UFOReader(object):
 		if not valid:
 			raise UFOLibError(message)
 		return groups
+
+	def getKerningGroupConversionRenameMaps(self):
+		"""
+		Get maps defining the renaming that was done during any
+		needed kerning group conversion. This method returns a
+		dictionary of this form:
+
+			{
+				"side1" : {"old group name" : "new group name"},
+				"side2" : {"old group name" : "new group name"}
+			}
+
+		When no conversion has been performed, the side1 and side2
+		dictionaries will be empty.
+		"""
+		if self._formatVersion >= 3:
+			return dict(side1={}, side2={})
+		# use the public group reader to force the load and
+		# conversion of the data if it hasn't happened yet.
+		self.readGroups()
+		return self._upConvertedKerningData["groupRenameMaps"]
 
 	# fontinfo.plist
 

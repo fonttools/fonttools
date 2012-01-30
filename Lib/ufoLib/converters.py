@@ -54,7 +54,7 @@ def convertUFO1OrUFO2KerningToUFO3Kerning(kerning, groups):
         group = list(groups[oldName])
         groups[newName] = group
     # Return the kerning and the groups.
-    return newKerning, groups
+    return newKerning, groups, dict(side1=firstRenamedGroups, side2=secondRenamedGroups)
 
 def makeUniqueGroupName(name, groupNames, counter=0):
     # Add a number to the name if the counter is higher than zero.
@@ -94,7 +94,7 @@ def test():
     ...     "CGroup" : ["C"],
     ...     "DGroup" : ["D"],
     ... }
-    >>> kerning, groups = convertUFO1OrUFO2KerningToUFO3Kerning(
+    >>> kerning, groups, maps = convertUFO1OrUFO2KerningToUFO3Kerning(
     ...     testKerning, testGroups)
     >>> expected = {
     ...     "A" : {
