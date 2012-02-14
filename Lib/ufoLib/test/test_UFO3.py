@@ -206,16 +206,16 @@ class ReadFontInfoVersion3TestCase(unittest.TestCase):
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# not sorted
 		info = dict(fontInfoVersion3)
-		info["openTypeGaspRangeRecords"] = [dict(rangeMaxPPEM=0xFFFF, rangeGaspBehavior=[0]), dict(rangeMaxPPEM=10, rangeGaspBehavior=[-1])]
+		info["openTypeGaspRangeRecords"] = [dict(rangeMaxPPEM=0xFFFF, rangeGaspBehavior=[0]), dict(rangeMaxPPEM=10, rangeGaspBehavior=[0])]
 		self._writeInfoToPlist(info)
 		reader = UFOReader(self.dstDir)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# no 0xFFFF
 		info = dict(fontInfoVersion3)
-		info["openTypeGaspRangeRecords"] = [dict(rangeMaxPPEM=10, rangeGaspBehavior=[0]), dict(rangeMaxPPEM=20, rangeGaspBehavior=[-1])]
+		info["openTypeGaspRangeRecords"] = [dict(rangeMaxPPEM=10, rangeGaspBehavior=[0]), dict(rangeMaxPPEM=20, rangeGaspBehavior=[0])]
 		self._writeInfoToPlist(info)
 		reader = UFOReader(self.dstDir)
-		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		reader.readInfo(TestInfoObject())
 
 	def testHeadRead(self):
 		# openTypeHeadCreated
@@ -1868,15 +1868,15 @@ class WriteFontInfoVersion3TestCase(unittest.TestCase):
 		self.tearDownUFO()
 		# not sorted
 		infoObject = self.makeInfoObject()
-		infoObject.openTypeGaspRangeRecords = [dict(rangeMaxPPEM=0xFFFF, rangeGaspBehavior=[0]), dict(rangeMaxPPEM=10, rangeGaspBehavior=[-1])]
+		infoObject.openTypeGaspRangeRecords = [dict(rangeMaxPPEM=0xFFFF, rangeGaspBehavior=[0]), dict(rangeMaxPPEM=10, rangeGaspBehavior=[0])]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		self.tearDownUFO()
 		# no 0xFFFF
 		infoObject = self.makeInfoObject()
-		infoObject.openTypeGaspRangeRecords = [dict(rangeMaxPPEM=10, rangeGaspBehavior=[0]), dict(rangeMaxPPEM=20, rangeGaspBehavior=[-1])]
+		infoObject.openTypeGaspRangeRecords = [dict(rangeMaxPPEM=10, rangeGaspBehavior=[0]), dict(rangeMaxPPEM=20, rangeGaspBehavior=[0])]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
-		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		writer.writeInfo(infoObject)
 		self.tearDownUFO()
 
 	def testHeadWrite(self):

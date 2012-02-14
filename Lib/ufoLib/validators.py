@@ -125,8 +125,6 @@ def fontInfoOpenTypeGaspRangeRecordsValidator(value):
 		ppemOrder.append(ppem)
 	if ppemOrder != sorted(ppemOrder):
 		return False
-	if ppemOrder[-1] != 0xFFFF:
-		return False
 	return True
 
 def fontInfoOpenTypeHeadCreatedValidator(value):
