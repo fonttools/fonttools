@@ -15,19 +15,16 @@ __all__ = ["AngledMarginPen", "getAngledMargins",
 
 class AngledMarginPen(BasePen):
 	"""
-		Angled Margin Pen
+		Pen to calculate the margins according to a slanted coordinate system. Slant angle comes from font.info.italicAngle.
 
-		Pen to calculate the margins as if the margin lines were slanted
-		according to the font.info.italicAngle.
+			- this pen works on the on-curve points, and approximates the distance to curves.
+			- results will be float.
+			- when used in FontLab, the resulting margins may be slightly different from the values originally set, due to rounding errors.
 
-		Notes:
-		- this pen works on the on-curve points, and approximates the distance to curves.
-		- results will be float.
-		- when used in FontLab, the resulting margins may be slightly
-			different from the values originally set, due to rounding errors.
-		- similar to what RoboFog used to do.
-		- RoboFog had a special attribute for "italicoffset", horizontal
-		shift of all glyphs. This is missing in Robofab.
+			Notes:
+
+			- similar to what RoboFog used to do.
+			- RoboFog had a special attribute for "italicoffset", horizontal shift of all glyphs. This is missing in Robofab.
 	"""
 	def __init__(self, glyphSet, width, italicAngle):
 		BasePen.__init__(self, glyphSet)
@@ -81,27 +78,27 @@ class AngledMarginPen(BasePen):
 		self.currentPt = pt3
 
 def getAngledMargins(glyph, font):
-	"""Get the angled margins for this glyph."""
+	"""Convenience function, returns the angled margins for this glyph. Adjusted for font.info.italicAngle."""
 	pen = AngledMarginPen(font, glyph.width, font.info.italicAngle)
 	glyph.draw(pen)
 	return pen.margin
 	
 def setAngledLeftMargin(glyph, font, value):
-	"""Set the left angled margin to value, adjusted for font.info.italicAngle."""
+	"""Convenience function, sets the left angled margin to value. Adjusted for font.info.italicAngle."""
 	pen = AngledMarginPen(font, glyph.width, font.info.italicAngle)
 	g.draw(pen)
 	isLeft, isRight = pen.margin
 	glyph.leftMargin += value-isLeft
 	
 def setAngledRightMargin(glyph, font, value):
-	"""Set the right angled margin to value, adjusted for font.info.italicAngle."""
+	"""Convenience function, sets the right angled margin to value. Adjusted for font.info.italicAngle."""
 	pen = AngledMarginPen(font, glyph.width, font.info.italicAngle)
 	g.draw(pen)
 	isLeft, isRight = pen.margin
 	glyph.rightMargin += value-isRight
 
 def centerAngledMargins(glyph, font):
-	"""Center the glyph on angled margins."""
+	"""Convenience function, centers the glyph on angled margins."""
 	pen = AngledMarginPen(font, glyph.width, font.info.italicAngle)
 	g.draw(pen)
 	isLeft, isRight = pen.margin

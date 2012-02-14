@@ -92,7 +92,7 @@ class GetMathDataPointPen(AbstractPointPen):
 class CurveSegmentFilterPointPen(AbstractPointPen):
 	
 	"""
-	Point pen that turns curve segments that contain
+	Filtering Point pen that turns curve segments that contain
 	unnecessary anchor points into line segments.
 	"""
 	# XXX it would be great if this also checked to see if the

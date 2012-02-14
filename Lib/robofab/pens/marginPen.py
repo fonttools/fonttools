@@ -7,16 +7,32 @@ from sets import Set
 class MarginPen(BasePen):
 
 	"""
-		Pen to calculate the margins at a given value.
-			When isHorizontal is True, the margins at <value> are horizontal.
-			When isHorizontal is False, the margins at <value> are vertical.
-		
-		When a glyphset or font is given, MarginPen will also calculate for glyphs with components.
+		Pen to calculate the margins at a given height or width.
 
-		pen.getMargins() returns the minimum and maximum intersections of the glyph.
-		pen.getContourMargins() returns the minimum and maximum intersections for each contour.
+			- isHorizontal = True: slice the glyph at y=value.
+			- isHorizontal = False: slice the glyph at x=value.
 		
-		
+		>>> f = CurrentFont()
+		>>> g = CurrentGlyph()
+		>>> pen = MarginPen(f, 200, isHorizontal=True)
+		>>> g.draw(pen)
+		>>> print pen.getMargins()
+		(75.7881, 181.9713)
+
+		>>> pen = MarginPen(f, 200, isHorizontal=False)
+		>>> g.draw(pen)
+		>>> print pen.getMargins()
+		(26.385, 397.4469)
+		>>> print pen.getAll()
+		[75.7881, 181.9713]
+
+		>>> pen = MarginPen(f, 200, isHorizontal=False)
+		>>> g.draw(pen)
+		>>> print pen.getMargins()
+		(26.385, 397.4469)
+		>>> print pen.getAll()
+		[26.385, 171.6137, 268.0, 397.4469]
+				
 		Possible optimisation:
 		Initialise the pen object with a list of points we want to measure,
 		then draw the glyph once, but do the splitLine() math for all measure points.
@@ -109,7 +125,7 @@ class MarginPen(BasePen):
 			glyph.draw(self)
 		
 	def getMargins(self):
-		"""Get the horizontal margins for all contours combined, i.e. the whole glyph."""
+		"""Return the extremes of the slice for all contours combined, i.e. the whole glyph."""
 		allHits = []
 		for index, pts in self.hits.items():
 			allHits.extend(pts)
@@ -118,7 +134,7 @@ class MarginPen(BasePen):
 		return None
 		
 	def getContourMargins(self):
-		"""Get the horizontal margins for each contour."""
+		"""Return the extremes of the slice for each contour."""
 		allHits = {}
 		for index, pts in self.hits.items():
 			unique = list(Set(pts))
@@ -127,7 +143,7 @@ class MarginPen(BasePen):
 		return allHits
 		
 	def getAll(self):
-		"""Get all the slices."""
+		"""Return all the slices."""
 		allHits = []
 		for index, pts in self.hits.items():
 			allHits.extend(pts)
