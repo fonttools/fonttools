@@ -1528,12 +1528,33 @@ fontInfoAttributesVersion3ValueData = deepcopy(fontInfoAttributesVersion2ValueDa
 fontInfoAttributesVersion3ValueData.update({
 	"versionMinor"							: dict(type=int, valueValidator=genericNonNegativeIntValidator),
 	"unitsPerEm"							: dict(type=(int, float), valueValidator=genericNonNegativeNumberValidator),
-	"openTypeHeadLowestRecPPEM"				: dict(type=(int, float), valueValidator=genericNonNegativeNumberValidator),
+	"openTypeHeadLowestRecPPEM"				: dict(type=int, valueValidator=genericNonNegativeNumberValidator),
+	"openTypeHheaAscender"					: dict(type=int),
+	"openTypeHheaDescender"					: dict(type=int),
+	"openTypeHheaLineGap"					: dict(type=int),
+	"openTypeHheaCaretOffset"				: dict(type=int),
 	"openTypeOS2Panose"						: dict(type="integerList", valueValidator=fontInfoVersion3OpenTypeOS2PanoseValidator),
-	"openTypeOS2WinAscent"					: dict(type=(int, float), valueValidator=genericNonNegativeNumberValidator),
-	"openTypeOS2WinDescent"					: dict(type=(int, float), valueValidator=genericNonNegativeNumberValidator),
+	"openTypeOS2TypoAscender"				: dict(type=int),
+	"openTypeOS2TypoDescender"				: dict(type=int),
+	"openTypeOS2TypoLineGap"				: dict(type=int),
+	"openTypeOS2WinAscent"					: dict(type=int, valueValidator=genericNonNegativeNumberValidator),
+	"openTypeOS2WinDescent"					: dict(type=int, valueValidator=genericNonNegativeNumberValidator),
+	"openTypeOS2SubscriptXSize"				: dict(type=int),
+	"openTypeOS2SubscriptYSize"				: dict(type=int),
+	"openTypeOS2SubscriptXOffset"			: dict(type=int),
+	"openTypeOS2SubscriptYOffset"			: dict(type=int),
+	"openTypeOS2SuperscriptXSize"			: dict(type=int),
+	"openTypeOS2SuperscriptYSize"			: dict(type=int),
+	"openTypeOS2SuperscriptXOffset"			: dict(type=int),
+	"openTypeOS2SuperscriptYOffset"			: dict(type=int),
+	"openTypeOS2StrikeoutSize"				: dict(type=int),
+	"openTypeOS2StrikeoutPosition"			: dict(type=int),
 	"openTypeGaspRangeRecords"				: dict(type="dictList", valueValidator=fontInfoOpenTypeGaspRangeRecordsValidator),
 	"openTypeNameRecords"					: dict(type="dictList", valueValidator=fontInfoOpenTypeNameRecordsValidator),
+	"openTypeVheaVertTypoAscender"			: dict(type=int),
+	"openTypeVheaVertTypoDescender"			: dict(type=int),
+	"openTypeVheaVertTypoLineGap"			: dict(type=int),
+	"openTypeVheaCaretOffset"				: dict(type=int),
 	"woffMajorVersion"						: dict(type=int, valueValidator=genericNonNegativeIntValidator),
 	"woffMinorVersion"						: dict(type=int, valueValidator=genericNonNegativeIntValidator),
 	"woffMetadataUniqueID"					: dict(type=dict, valueValidator=fontInfoWOFFMetadataUniqueIDValidator),
@@ -1741,14 +1762,40 @@ def _convertFontInfoDataVersion2ToVersion1(data):
 # 2 <-> 3
 
 _ufo2To3NonNegativeInt = set((
-	"versionMinor"
-))
-_ufo2To3NonNegativeIntOrFloat = set((
-	"unitsPerEm",
+	"versionMinor",
 	"openTypeHeadLowestRecPPEM",
 	"openTypeOS2WinAscent",
 	"openTypeOS2WinDescent"
 ))
+_ufo2To3NonNegativeIntOrFloat = set((
+	"unitsPerEm"
+))
+_ufo2To3FloatToInt = set(((
+	"openTypeHeadLowestRecPPEM",
+	"openTypeHheaAscender",
+	"openTypeHheaDescender",
+	"openTypeHheaLineGap",
+	"openTypeHheaCaretOffset",
+	"openTypeOS2TypoAscender",
+	"openTypeOS2TypoDescender",
+	"openTypeOS2TypoLineGap",
+	"openTypeOS2WinAscent",
+	"openTypeOS2WinDescent",
+	"openTypeOS2SubscriptXSize",
+	"openTypeOS2SubscriptYSize",
+	"openTypeOS2SubscriptXOffset",
+	"openTypeOS2SubscriptYOffset",
+	"openTypeOS2SuperscriptXSize",
+	"openTypeOS2SuperscriptYSize",
+	"openTypeOS2SuperscriptXOffset",
+	"openTypeOS2SuperscriptYOffset",
+	"openTypeOS2StrikeoutSize",
+	"openTypeOS2StrikeoutPosition",
+	"openTypeVheaVertTypoAscender",
+	"openTypeVheaVertTypoDescender",
+	"openTypeVheaVertTypoLineGap",
+	"openTypeVheaCaretOffset"
+)))
 
 def convertFontInfoValueForAttributeFromVersion2ToVersion3(attr, value):
 	"""
@@ -1756,6 +1803,13 @@ def convertFontInfoValueForAttributeFromVersion2ToVersion3(attr, value):
 	Returns the new attribute name and the converted value.
 	If the value is None, None will be returned for the new value.
 	"""
+	if attr in _ufo2To3FloatToInt:
+		try:
+			v = int(round(value))
+		except (ValueError, TypeError):
+			raise UFOLibError("Could not convert value for %s." % attr)
+		if v != value:
+			value = v
 	if attr in _ufo2To3NonNegativeInt:
 		try:
 			v = int(abs(value))
