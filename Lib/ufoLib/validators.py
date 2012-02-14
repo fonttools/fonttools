@@ -194,14 +194,9 @@ def fontInfoOpenTypeNameRecordsValidator(value):
 		return False
 	validKeys = set(["nameID", "platformID", "encodingID", "languageID", "string"])
 	dictPrototype = dict(nameID=(int, True), platformID=(int, True), encodingID=(int, True), languageID=(int, True), string=(basestring, True))
-	seenRecords = []
 	for nameRecord in value:
 		if not genericDictValidator(nameRecord, dictPrototype):
 			return False
-		recordKey = (nameRecord["nameID"], nameRecord["platformID"], nameRecord["encodingID"], nameRecord["languageID"])
-		if recordKey in seenRecords:
-			return False
-		seenRecords.append(recordKey)
 	return True
 
 def fontInfoOpenTypeOS2WeightClassValidator(value):

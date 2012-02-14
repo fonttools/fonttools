@@ -484,7 +484,7 @@ class ReadFontInfoVersion3TestCase(unittest.TestCase):
 		]
 		self._writeInfoToPlist(info)
 		reader = UFOReader(self.dstDir)
-		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
+		reader.readInfo(TestInfoObject())
 
 	def testOS2Read(self):
 		# openTypeOS2WidthClass
@@ -2140,7 +2140,7 @@ class WriteFontInfoVersion3TestCase(unittest.TestCase):
 			dict(nameID=1, platformID=1, encodingID=1, languageID=1, string="Name Record.")
 		]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
-		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
+		writer.writeInfo(infoObject)
 
 	def testOS2Write(self):
 		# openTypeOS2WidthClass
