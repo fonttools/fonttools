@@ -329,8 +329,8 @@ def PutFile(message=None, title=None, directory=None, fileName=None, canCreateDi
 
 # start with all the defaults. 
 
-def AskString(message, value='', title='RoboFab'):
-    raise NotImplementedError
+#def AskString(message, value='', title='RoboFab'):
+#    raise NotImplementedError
 
 def FindGlyph(aFont, message="Search for a glyph:", title='RoboFab'):
     raise NotImplementedError
