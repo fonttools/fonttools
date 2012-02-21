@@ -446,7 +446,7 @@ def fontInfoWOFFMetadataExtensionValidator(value):
 	"""
 	Version 3+.
 	"""
-	dictPrototype = dict(names=(list, False), items=(list, True))
+	dictPrototype = dict(names=(list, False), items=(list, True), id=(basestring, False))
 	if not genericDictValidator(value, dictPrototype):
 		return False
 	if "names" in value:
