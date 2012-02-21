@@ -552,7 +552,18 @@ def writeGlyphToString(glyphName, glyphObject=None, drawPointsFunc=None, writer=
 		raise GlifLibError("The glyph name is not properly formatted.")
 	if len(glyphName) == 0:
 		raise GlifLibError("The glyph name is empty.")
-	writer.begintag("glyph", [("name", glyphName), ("format", formatVersion)])
+	utf8GlyphName = None
+	try:
+		n = str(glyphName)
+		utf8GlyphName = glyphName
+	except UnicodeEncodeError:
+		pass
+	try:
+		n = glyphName.encode("utf8")
+		utf8GlyphName = n
+	except UnicodeEncodeError:
+		raise GlifLibError(u"encountered a glyph name (%s) that can't be converted to UTF-8." % glyphName)
+	writer.begintag("glyph", [("name", utf8GlyphName), ("format", formatVersion)])
 	writer.newline()
 	# advance
 	_writeAdvance(glyphObject, writer)
