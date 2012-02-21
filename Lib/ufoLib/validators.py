@@ -160,8 +160,8 @@ def fontInfoOpenTypeHeadCreatedValidator(value):
 		return False
 	if month < 1 or month > 12:
 		return False
-	monthMaxDay = calendar.monthrange(year, month)
-	if month > monthMaxDay:
+	monthMaxDay = calendar.monthrange(year, month)[1]
+	if day < 1 or day > monthMaxDay:
 		return False
 	# time
 	hour, minute, second = time.split(":")
@@ -182,7 +182,7 @@ def fontInfoOpenTypeHeadCreatedValidator(value):
 	if minute < 0 or minute > 59:
 		return False
 	if second < 0 or second > 59:
-		return True
+		return False
 	# fallback
 	return True
 
