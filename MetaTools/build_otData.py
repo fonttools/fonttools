@@ -156,4 +156,3 @@ if __name__ == "__main__":
 		print "# XXX duplicate field name '%s' in table '%s'" % (fieldName, name)
 	for n in not3:
 		print "#XXX", not3
-
