@@ -93,3 +93,30 @@ class BoundsPen(ControlBoundsPen):
 					self._getCurrentPoint(), bcp, pt))
 		self.bounds = bounds
 
+if __name__ == "__main__":
+	
+	def makeTestGlyph():
+		# make a simple glyph that we can test the pens with.
+		from robofab.objects.objectsRF import RGlyph
+		testGlyph = RGlyph()
+		testGlyph.name = "testGlyph"
+		testGlyph.width = 1000
+		pen = testGlyph.getPen()
+		pen.moveTo((100, 100))
+		pen.lineTo((900, 100))
+		pen.lineTo((900, 800))
+		pen.lineTo((100, 800))
+		# a curve
+		pen.curveTo((120, 700), (120, 300), (100, 100))
+		pen.closePath()
+		return testGlyph
+		
+	def controlBoundsPenTest():
+		testGlyph = makeTestGlyph()
+		glyphSet = {}
+		testPen = ControlBoundsPen(glyphSet)
+		testGlyph.draw(testPen)
+		assert testPen.bounds == (100, 100, 900, 800)
+	
+		
+	controlBoundsPenTest()
