@@ -155,14 +155,29 @@ class MarginPen(BasePen):
 		
 if __name__ == "__main__":
 
-	from robofab.world import CurrentGlyph, CurrentFont
-	f = CurrentFont()
-	g = CurrentGlyph()
-
-	pt = (74, 216)
-
-	pen = MarginPen(f, pt[1], isHorizontal=False)
-	g.draw(pen) 
-	print 'glyph Y margins', pen.getMargins()
-	print pen.getContourMargins()
-
+	def makeTestGlyph():
+		# make a simple glyph that we can test the pens with.
+		from robofab.objects.objectsRF import RGlyph
+		testGlyph = RGlyph()
+		testGlyph.name = "testGlyph"
+		testGlyph.width = 1000
+		pen = testGlyph.getPen()
+		pen.moveTo((100, 100))
+		pen.lineTo((900, 100))
+		pen.lineTo((900, 800))
+		pen.lineTo((100, 800))
+		# a curve
+		pen.curveTo((120, 700), (120, 300), (100, 100))
+		pen.closePath()
+		return testGlyph
+		
+	def controlBoundsPenTest():
+		testGlyph = makeTestGlyph()
+		glyphSet = {}
+		value = 200
+		isHorizontal = True
+		testPen = MarginPen(glyphSet, value, isHorizontal)
+		testGlyph.draw(testPen)
+		assert testPen.getAll() == [107.5475, 200.0, 300.0]
+		
+	controlBoundsPenTest()
