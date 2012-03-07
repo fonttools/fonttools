@@ -4,55 +4,6 @@ from ufoLib.pointPen import AbstractPointPen
 from robofab.pens.pointPen import BasePointToSegmentPen
 
 
-class FabToFontToolsPenAdapter:
-
-	"""Class that covers up the subtle differences between RoboFab
-	Pens and FontTools Pens. 'Fab should eventually move to FontTools
-	Pens, this class may help to make the transition smoother.
-	"""
-
-	# XXX The change to FontTools pens has almost been completed. Any
-	# usage of this class should be highly suspect.
-
-	def __init__(self, fontToolsPen):
-		self.fontToolsPen = fontToolsPen
-
-	def moveTo(self, pt, **kargs):
-		self.fontToolsPen.moveTo(pt)
-
-	def lineTo(self, pt, **kargs):
-		self.fontToolsPen.lineTo(pt)
-
-	def curveTo(self, *pts, **kargs):
-		self.fontToolsPen.curveTo(*pts)
-
-	def qCurveTo(self, *pts, **kargs):
-		self.fontToolsPen.qCurveTo(*pts)
-
-	def closePath(self):
-		self.fontToolsPen.closePath()
-
-	def endPath(self):
-		self.fontToolsPen.endPath()
-
-	def addComponent(self, glyphName, offset=(0, 0), scale=(1, 1)):
-		self.fontToolsPen.addComponent(glyphName,
-				(scale[0], 0, 0, scale[1], offset[0], offset[1]))
-
-	def setWidth(self, width):
-		self.width = width
-
-	def setNote(self, note):
-		pass
-
-	def addAnchor(self, name, pt):
-		self.fontToolsPen.moveTo(pt)
-		self.fontToolsPen.endPath()
-
-	def doneDrawing(self):
-		pass
-
-
 class PointToSegmentPen(BasePointToSegmentPen):
 
 	"""Adapter class that converts the PointPen protocol to the

@@ -108,17 +108,6 @@ class GlyphsMethodsTestCase(ContourMethodsTestCase):
 			digest2 = digestPen.getDigest()
 			self.assertEqual(digest1, digest2, "%r not the same for gl.draw() and gl.drawPoints()" % glyph.name)
 
-	def testFabPenCompatibility(self):
-		for glyph in self.font:
-			digestPen = DigestPointPen(ignoreSmoothAndName=True)
-			pen = FabToFontToolsPenAdapter(SegmentToPointPen(digestPen))
-			glyph.draw(pen)
-			digest1 = digestPen.getDigest()
-			digestPen = DigestPointPen(ignoreSmoothAndName=True)
-			glyph.drawPoints(digestPen)
-			digest2 = digestPen.getDigest()
-			self.assertEqual(digest1, digest2, "%r not the same for gl.draw() and gl.drawPoints()" % glyph.name)
-
 
 class SaveTestCase(ContourMethodsTestCase):
 
