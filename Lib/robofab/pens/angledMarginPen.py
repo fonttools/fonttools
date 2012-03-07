@@ -38,7 +38,8 @@ class AngledMarginPen(BasePen):
 		self.currentPt = None
 	
 	def _getAngled(self, pt):
-		r = (g.width + (pt[1] / math.tan(self._angle)))-pt[0]
+		print "_getAngled", pt
+		r = (self.width + (pt[1] / math.tan(self._angle)))-pt[0]
 		l = pt[0]-((pt[1] / math.tan(self._angle)))
 		if self._right is None:
 			self._right = r
@@ -48,7 +49,6 @@ class AngledMarginPen(BasePen):
 			self._left = l
 		else:
 			self._left = min(self._left, l)
-		#print pt, l, r
 		self.margin = self._left, self._right
 		
 	def _moveTo(self, pt):
@@ -61,12 +61,14 @@ class AngledMarginPen(BasePen):
 
 	def _lineTo(self, pt):
 		self._addMoveTo()
+		print "_lineTo"
 		self._getAngled(pt)
 
 	def _curveToOne(self, pt1, pt2, pt3):
 		step = 1.0/self.maxSteps
 		factors = range(0, self.maxSteps+1)
 		for i in factors:
+			print "_curveToOne", i
 			pt = _getCubicPoint(i*step, self.currentPt, pt1, pt2, pt3)
 			self._getAngled(pt)
 		self.currentPt = pt3
@@ -74,6 +76,7 @@ class AngledMarginPen(BasePen):
 	def _qCurveToOne(self, bcp, pt):
 		self._addMoveTo()
 		# add curve tracing magic here.
+		print "_qCurveToOne"
 		self._getAngled(pt)
 		self.currentPt = pt3
 
@@ -114,16 +117,28 @@ def guessItalicOffset(glyph, font):
 
 
 if __name__ == "__main__":
-	
-	# example for FontLab, with a glyph open.
-	from robofab.world import CurrentFont, CurrentGlyph
-	g = CurrentGlyph()
-	f = CurrentFont()
 
-	print "margins!", getAngledMargins(g, f)
-	# set the angled margin to a value
-	m = 50
-	setAngledLeftMargin(g, f, m)
-	setAngledRightMargin(g, f, m)
-	g.update()
+	def makeTestGlyph():
+		# make a simple glyph that we can test the pens with.
+		from robofab.objects.objectsRF import RGlyph
+		testGlyph = RGlyph()
+		testGlyph.name = "testGlyph"
+		testGlyph.width = 1000
+		pen = testGlyph.getPen()
+		pen.moveTo((100, 100))
+		pen.lineTo((900, 100))
+		pen.lineTo((900, 800))
+		pen.lineTo((100, 800))
+		# a curve
+		pen.curveTo((120, 700), (120, 300), (100, 100))
+		pen.closePath()
+		return testGlyph
 
+	def angledMarginPenTest():
+		testGlyph = makeTestGlyph()
+		glyphSet = {}
+		testPen = AngledMarginPen(glyphSet, width=0, italicAngle=10)
+		testGlyph.draw(testPen)
+		print testPen.margin
+
+	angledMarginPenTest()
