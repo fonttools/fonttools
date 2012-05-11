@@ -467,8 +467,8 @@ def fontInfoWOFFMetadataExtensionItemValidator(value):
 	for name in value["names"]:
 		if not fontInfoWOFFMetadataExtensionNameValidator(name):
 			return False
-	for value in value["values"]:
-		if not fontInfoWOFFMetadataExtensionValueValidator(name):
+	for val in value["values"]:
+		if not fontInfoWOFFMetadataExtensionValueValidator(val):
 			return False
 	return True
 
