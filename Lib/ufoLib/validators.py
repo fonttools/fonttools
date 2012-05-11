@@ -790,9 +790,6 @@ def layerContentsValidator(value, ufoPath):
 		p = os.path.join(ufoPath, directoryName)
 		if not os.path.exists(p):
 			return False, "A glyphset does not exist at %s." % directoryName
-		# empty name
-		if not len(layerName):
-			return False, "A layer has an empty name."
 		# default layer name
 		if layerName == "public.default" and directoryName != "glyphs":
 			return False, "The name public.default is being used by a layer that is not the default."
