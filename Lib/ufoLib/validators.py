@@ -479,8 +479,8 @@ def fontInfoWOFFMetadataExtensionNameValidator(value):
 	dictPrototype = {"text" : (basestring, True), "language" : (basestring, False), "dir" : (basestring, False), "class" : (basestring, False)}
 	if not genericDictValidator(value, dictPrototype):
 		return False
-    if "dir" in value and value.get("dir") not in ("ltr", "rtl"):
-    	return False
+	if "dir" in value and value.get("dir") not in ("ltr", "rtl"):
+		return False
 	return True
 
 def fontInfoWOFFMetadataExtensionValueValidator(value):
@@ -490,8 +490,8 @@ def fontInfoWOFFMetadataExtensionValueValidator(value):
 	dictPrototype = {"text" : (basestring, True), "language" : (basestring, False), "dir" : (basestring, False), "class" : (basestring, False)}
 	if not genericDictValidator(value, dictPrototype):
 		return False
-    if "dir" in value and value.get("dir") not in ("ltr", "rtl"):
-    	return False
+	if "dir" in value and value.get("dir") not in ("ltr", "rtl"):
+		return False
 	return True
 
 # ----------
@@ -795,7 +795,7 @@ def layerContentsValidator(value, ufoPath):
 			return False, "A layer has an empty name."
 		# default layer name
 		if layerName == "public.default" and directoryName != "glyphs":
-		    return False, "The name public.default is being used by a layer that is not the default."
+			return False, "The name public.default is being used by a layer that is not the default."
 		# check usage
 		if layerName in usedLayerNames:
 			return False, "The layer name %s is used by more than one layer." % layerName
@@ -806,11 +806,7 @@ def layerContentsValidator(value, ufoPath):
 		# store
 		contents[layerName] = directoryName
 	# missing default layer
-	foundDefault = False
-	for layerName, directory in contents.items():
-		if directory == "glyphs":
-			foundDefault = True
-			break
+	foundDefault = "glyphs" in contents.values()
 	if not foundDefault:
 		return False, "The required default glyph set is not in the UFO."
 	return True, None
