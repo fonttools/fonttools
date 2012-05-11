@@ -479,6 +479,8 @@ def fontInfoWOFFMetadataExtensionNameValidator(value):
 	dictPrototype = {"text" : (basestring, True), "language" : (basestring, False), "dir" : (basestring, False), "class" : (basestring, False)}
 	if not genericDictValidator(value, dictPrototype):
 		return False
+    if "dir" in value and value.get("dir") not in ("ltr", "rtl"):
+    	return False
 	return True
 
 def fontInfoWOFFMetadataExtensionValueValidator(value):
@@ -488,6 +490,8 @@ def fontInfoWOFFMetadataExtensionValueValidator(value):
 	dictPrototype = {"text" : (basestring, True), "language" : (basestring, False), "dir" : (basestring, False), "class" : (basestring, False)}
 	if not genericDictValidator(value, dictPrototype):
 		return False
+    if "dir" in value and value.get("dir") not in ("ltr", "rtl"):
+    	return False
 	return True
 
 # ----------
