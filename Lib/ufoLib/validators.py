@@ -779,8 +779,6 @@ def layerContentsValidator(value, ufoPath):
 				return False, bogusFileMessage
 		layerName, directoryName = entry
 		# check directory naming
-		if not directoryName.startswith("glyphs"):
-			return False, "Invalid directory name (%s) in layercontents.plist." % directoryName
 		if directoryName != "glyphs":
 			if not directoryName.startswith("glyphs."):
 				return False, "Invalid directory name (%s) in layercontents.plist." % directoryName
