@@ -192,7 +192,6 @@ def fontInfoOpenTypeNameRecordsValidator(value):
 	"""
 	if not isinstance(value, list):
 		return False
-	validKeys = set(["nameID", "platformID", "encodingID", "languageID", "string"])
 	dictPrototype = dict(nameID=(int, True), platformID=(int, True), encodingID=(int, True), languageID=(int, True), string=(basestring, True))
 	for nameRecord in value:
 		if not genericDictValidator(nameRecord, dictPrototype):
