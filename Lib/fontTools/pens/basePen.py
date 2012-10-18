@@ -41,7 +41,7 @@ __all__ = ["AbstractPen", "BasePen",
            "decomposeSuperBezierSegment", "decomposeQuadraticSegment"]
 
 
-class AbstractPen:
+class AbstractPen(object):
 
 	def moveTo(self, pt):
 		"""Begin a new sub path, set the current point to 'pt'. You must

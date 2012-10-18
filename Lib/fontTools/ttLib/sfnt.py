@@ -14,7 +14,6 @@ a table's length chages you need to rewrite the whole file anyway.
 
 import sys
 import struct, sstruct
-import numpy
 import os
 
 
@@ -152,24 +151,28 @@ class SFNTWriter:
 				seenHead = 1
 			directory = directory + entry.toString()
 		if seenHead:
-			self.calcMasterChecksum(directory)
+			self.writeMasterChecksum(directory)
 		self.file.seek(0)
 		self.file.write(directory)
-	
-	def calcMasterChecksum(self, directory):
+
+	def _calcMasterChecksum(self, directory):
 		# calculate checkSumAdjustment
 		tags = self.tables.keys()
-		checksums = numpy.zeros(len(tags)+1, numpy.uint32)
+		checksums = []
 		for i in range(len(tags)):
-			checksums[i] = self.tables[tags[i]].checkSum
-		
+			checksums.append(self.tables[tags[i]].checkSum)
+
 		directory_end = sfntDirectorySize + len(self.tables) * sfntDirectoryEntrySize
 		assert directory_end == len(directory)
-		
-		checksums[-1] = calcChecksum(directory)
-		checksum = numpy.add.reduce(checksums,dtype=numpy.uint32)
+
+		checksums.append(calcChecksum(directory))
+		checksum = sum(checksums) & 0xffffffff
 		# BiboAfba!
-		checksumadjustment = int(numpy.subtract.reduce(numpy.array([0xB1B0AFBA, checksum], numpy.uint32)))
+		checksumadjustment = (0xB1B0AFBA - checksum) & 0xffffffff
+		return checksumadjustment
+
+	def writeMasterChecksum(self, directory):
+		checksumadjustment = self._calcMasterChecksum(directory)
 		# write the checksum to the file
 		self.file.seek(self.tables['head'].offset + 8)
 		self.file.write(struct.pack(">L", checksumadjustment))
@@ -230,7 +233,7 @@ class SFNTDirectoryEntry:
 			return "<SFNTDirectoryEntry at %x>" % id(self)
 
 
-def calcChecksum(data, start=0):
+def calcChecksum(data):
 	"""Calculate the checksum for an arbitrary block of data.
 	Optionally takes a 'start' argument, which allows you to
 	calculate a checksum in chunks by feeding it a previous
@@ -238,14 +241,23 @@ def calcChecksum(data, start=0):
 	
 	If the data length is not a multiple of four, it assumes
 	it is to be padded with null byte. 
+
+		>>> print calcChecksum("abcd")
+		1633837924
+		>>> print calcChecksum("abcdxyz")
+		3655064932
 	"""
-	from fontTools import ttLib
 	remainder = len(data) % 4
 	if remainder:
-		data = data + '\0' * (4-remainder)
-	data = struct.unpack(">%dL"%(len(data)/4), data)
-	a = numpy.array((start,)+data, numpy.uint32)
-	return int(numpy.sum(a,dtype=numpy.uint32))
+		data += "\0" * (4 - remainder)
+	value = 0
+	blockSize = 4096
+	assert blockSize % 4 == 0
+	for i in xrange(0, len(data), blockSize):
+		block = data[i:i+blockSize]
+		longs = struct.unpack(">%dL" % (len(block) // 4), block)
+		value = (value + sum(longs)) & 0xffffffff
+	return value
 
 
 def maxPowerOfTwo(x):
@@ -271,3 +283,7 @@ def getSearchRange(n):
 	rangeShift = n * 16 - searchRange
 	return searchRange, entrySelector, rangeShift
 
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()

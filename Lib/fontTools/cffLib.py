@@ -549,7 +549,7 @@ class CharStrings:
 			return self.charStringsIndex.getItemAndSelector(index)
 		else:
 			if hasattr(self, 'fdSelect'):
-				sel = self.fdSelect[index]
+				sel = self.fdSelect[index]  # index is not defined at this point. Read R. ?
 			else:
 				raise KeyError("fdSelect array not yet defined.")
 			return self.charStrings[name], sel

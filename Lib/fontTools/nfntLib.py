@@ -269,12 +269,7 @@ class Glyph:
 
 def dataFromFile(pathOrFSSpec, nameOrID="", resType='NFNT'):
 	from Carbon import Res
-	import macfs
-	if type(pathOrFSSpec) == types.StringType:
-		fss = macfs.FSSpec(pathOrFSSpec)
-	else:
-		fss = pathOrFSSpec
-	resref = Res.FSpOpenResFile(fss, 1)	# readonly
+	resref = Res.FSOpenResFile(pathOrFSSpec, 1)	# readonly
 	try:
 		Res.UseResFile(resref)
 		if not nameOrID:
@@ -297,10 +292,10 @@ def fromFile(pathOrFSSpec, nameOrID="", resType='NFNT'):
 
 
 if __name__ == "__main__":
-	import macfs
-	fss, ok = macfs.StandardGetFile('FFIL')
-	if ok:
-		data = dataFromFile(fss)
+	import EasyDialogs
+	path = EasyDialogs.AskFileForOpen()
+	if path:
+		data = dataFromFile(path)
 		font = NFNT(data)
 		font.unpackGlyphs()
 		font.packGlyphs()

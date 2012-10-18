@@ -178,9 +178,8 @@ class TTFont:
 			else:
 				file = open(file, "wb")
 				if os.name == "mac":
-					import macfs
-					fss = macfs.FSSpec(file.name)
-					fss.SetCreatorType('mdos', 'BINA')
+					from fontTools.misc.macCreator import setMacCreatorAndType
+					setMacCreatorAndType(file.name, 'mdos', 'BINA')
 		else:
 			# assume "file" is a writable file object
 			closeStream = 0

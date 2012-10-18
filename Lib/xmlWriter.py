@@ -12,9 +12,6 @@ class XMLWriter:
 	def __init__(self, fileOrPath, indentwhite=INDENT, idlefunc=None, encoding="ISO-8859-1"):
 		if not hasattr(fileOrPath, "write"):
 			self.file = open(fileOrPath, "w")
-			if os.name == "mac":
-				import macfs
-				macfs.FSSpec(fileOrPath).SetCreatorType('R*ch', 'TEXT')
 		else:
 			# assume writable file object
 			self.file = fileOrPath

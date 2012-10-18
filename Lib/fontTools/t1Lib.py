@@ -143,7 +143,7 @@ HEXLINELENGTH = 80
 
 def readLWFN(path, onlyHeader=0):
 	"""reads an LWFN font file, returns raw data"""
-	resRef = Res.FSpOpenResFile(path, 1)  # read-only
+	resRef = Res.FSOpenResFile(path, 1)  # read-only
 	try:
 		Res.UseResFile(resRef)
 		n = Res.Count1Resources('POST')
@@ -217,7 +217,7 @@ def readOther(path):
 
 def writeLWFN(path, data):
 	Res.FSpCreateResFile(path, "just", "LWFN", 0)
-	resRef = Res.FSpOpenResFile(path, 2)  # write-only
+	resRef = Res.FSOpenResFile(path, 2)  # write-only
 	try:
 		Res.UseResFile(resRef)
 		resID = 501

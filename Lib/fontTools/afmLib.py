@@ -367,10 +367,9 @@ def writelines(path, lines, sep='\r'):
 	
 
 if __name__ == "__main__":
-	import macfs
-	fss, ok = macfs.StandardGetFile('TEXT')
-	if ok:
-		path = fss.as_pathname()
+	import EasyDialogs
+	path = EasyDialogs.AskFileForOpen()
+	if path:
 		afm = AFM(path)
 		char = 'A'
 		if afm.has_char(char):

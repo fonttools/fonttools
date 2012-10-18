@@ -258,7 +258,7 @@ class Program:
 	
 	def fromXML(self, (name, attrs, content), ttFont):
 		if name == "assembly":
-			self.fromAssembly(content)
+			self.fromAssembly(string.join(content, ""))
 			self._assemble()
 			del self.assembly
 		else:
@@ -270,7 +270,7 @@ class Program:
 			binary2num=binary2num):
 		assembly = self.assembly
 		if type(assembly) == type([]):
-			assembly = string.join(assembly, "")
+			assembly = string.join(assembly, " ")
 		bytecode = []
 		push = bytecode.append
 		lenAssembly = len(assembly)

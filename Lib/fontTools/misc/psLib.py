@@ -343,9 +343,9 @@ def suckfont(data):
 
 
 if __name__ == "__main__":
-	import macfs
-	fss, ok = macfs.StandardGetFile("LWFN")
-	if ok:
+	import EasyDialogs
+	path = EasyDialogs.AskFileForOpen()
+	if path:
 		from fontTools import t1Lib
-		data, kind = t1Lib.read(fss.as_pathname())
+		data, kind = t1Lib.read(path)
 		font = suckfont(data)

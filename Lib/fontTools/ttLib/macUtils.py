@@ -15,7 +15,7 @@ except ImportError:
 def MyOpenResFile(path):
 	mode = 1  # read only
 	try:
-		resref = Res.FSpOpenResFile(path, mode)
+		resref = Res.FSOpenResFile(path, mode)
 	except Res.Error:
 		# try data fork
 		resref = Res.FSOpenResourceFile(path, u'', mode)
@@ -104,7 +104,7 @@ class SFNTResourceWriter:
 			os.remove(self.name)
 		# XXX datafork support
 		Res.FSpCreateResFile(self.name, 'DMOV', 'FFIL', 0)
-		self.resref = Res.FSpOpenResFile(self.name, 3)  # exclusive read/write permission
+		self.resref = Res.FSOpenResFile(self.name, 3)  # exclusive read/write permission
 	
 	def close(self):
 		if self.closed:

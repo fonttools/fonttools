@@ -280,9 +280,9 @@ class Glyph:
 	
 	def fromXML(self, (name, attrs, content), ttFont):
 		if name == "contour":
-			self.numberOfContours = self.numberOfContours + 1
 			if self.numberOfContours < 0:
 				raise ttLib.TTLibError, "can't mix composites and contours in glyph"
+			self.numberOfContours = self.numberOfContours + 1
 			coordinates = []
 			flags = []
 			for element in content:
