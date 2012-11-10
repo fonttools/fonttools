@@ -15,11 +15,13 @@ class table__k_e_r_n(DefaultTable.DefaultTable):
 	
 	def decompile(self, data, ttFont):
 		version, nTables = struct.unpack(">HH", data[:4])
+		apple = False
 		if (len(data) >= 8) and (version == 1):
-			# AAT Apple's new format. Hm.
+			# AAT Apple's "new" format. Hm.
 			version, nTables = struct.unpack(">LL", data[:8])
 			self.version = version / float(0x10000)
 			data = data[8:]
+			apple = True
 		else:
 			self.version = version
 			data = data[4:]
@@ -37,6 +39,7 @@ class table__k_e_r_n(DefaultTable.DefaultTable):
 				subtable = KernTable_format_unkown(version)
 			else:
 				subtable = kern_classes[version]()
+			subtable.apple = apple
 			subtable.decompile(data[:length], ttFont)
 			self.kernTables.append(subtable)
 			data = data[length:]
@@ -47,7 +50,7 @@ class table__k_e_r_n(DefaultTable.DefaultTable):
 		else:
 			nTables = 0
 		if self.version == 1.0:
-			# AAT Apple's new format.
+			# AAT Apple's "new" format.
 			data = struct.pack(">ll", self.version * 0x10000, nTables)
 		else:
 			data = struct.pack(">HH", self.version, nTables)
@@ -82,9 +85,14 @@ class table__k_e_r_n(DefaultTable.DefaultTable):
 class KernTable_format_0:
 	
 	def decompile(self, data, ttFont):
-		version, length, coverage = struct.unpack(">HHH", data[:6])
+		version, length, coverage = (0,0,0)
+		if not self.apple:
+			version, length, coverage = struct.unpack(">HHH", data[:6])
+			data = data[6:]
+		else:
+			version, length, coverage = struct.unpack(">LHH", data[:8])
+			data = data[8:]
 		self.version, self.coverage = int(version), int(coverage)
-		data = data[6:]
 		
 		self.kernTable = kernTable = {}
 		
