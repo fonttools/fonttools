@@ -217,7 +217,7 @@ class ExtSubTable(Table):
 			# If the subtable has not yet been decompiled, we need to do so.
 			if  value.compileStatus == 1:
 				value.decompile(value.reader, value.font, tableStack)
- 			subWriter = writer.getSubWriter()
+			subWriter = writer.getSubWriter()
 			subWriter.name = self.name
 			writer.writeSubTable(subWriter)
 			# If the subtable has been sorted and we can just write the original
