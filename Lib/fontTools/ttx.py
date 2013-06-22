@@ -15,8 +15,7 @@ usage: ttx [options] inputfile1 [... inputfileN]
     -h Help: print this message
     -d <outputfolder> Specify a directory where the output files are
        to be created.
-    -o <outputfile> Specify a file to write the output to, use - for
-       standard output.
+    -o <outputfile> Specify a file to write the output to.
     -v Verbose: more messages will be written to stdout about what
        is being done.
     -a allow virtual glyphs ID's on compile or decompile.
