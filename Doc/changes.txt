@@ -1,3 +1,14 @@
+TTX/FontTools Version 2.4
+- Option to write to arbitrary files
+- Better dump format for DSIG
+- Better detection of OTF XML
+- Fix issue with Apple's kern table format
+- Fix mangling of TT glyph programs
+- Fix issues related to mona.ttf
+- Fix Windows Installer instructions
+- Fix some modern MacOS issues
+- Fix minor issues and typos
+
 TTX/FontTools Version 2.3
 
 - TrueType Collection (TTC) support
