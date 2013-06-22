@@ -68,7 +68,7 @@ def usage():
 
 	
 numberAddedRE = re.compile("(.*)#\d+$")
-opentypeheaderRE = re.compile('''sfntVersion=['"]OTTO["']'''):
+opentypeheaderRE = re.compile('''sfntVersion=['"]OTTO["']''')
 
 def makeOutputFileName(input, outputDir, extension):
 	dir, file = os.path.split(input)
