@@ -97,6 +97,9 @@ setup(
 				libraries=[],
 			)
 		],
+		install_requires=[
+			'numpy',
+		],
 		scripts = ["Tools/ttx"],
 		console = ["Tools/ttx"],
 		cmdclass = {"build_ext": build_ext_optional},
