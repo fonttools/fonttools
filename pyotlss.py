@@ -4,30 +4,15 @@
 # Writte by: Behdad Esfahbod
 
 import fontTools.ttx
-import sys
-import types
 
-if len (sys.argv) < 3:
-	print >>sys.stderr, "usage: pyotlss.py font-file glyph..."
-	sys.exit (1)
 
-fontfile = sys.argv[1]
-glyphs   = sys.argv[2:]
-
-font = fontTools.ttx.TTFont (fontfile)
-
-names = font.getGlyphNames()
-# Convert to glyph names
-glyphs = [g if g in names else font.getGlyphName(int(g)) for g in glyphs]
-
-def add_method (clazz):
+def add_method (*clazzes):
 	def wrapper(method):
-		setattr (clazz, method.func_name, method)
+		for clazz in clazzes:
+			setattr (clazz, method.func_name, method)
 	return wrapper
 
-#
 # Subset
-#
 
 @add_method(fontTools.ttLib.tables.otTables.Coverage)
 def subset (self, glyphs):
@@ -67,21 +52,6 @@ def subset (self, glyphs):
 	self.ligatures = {g:[seq for seq in seqs if all(c in glyphs for c in seq.Component)]
 			  for g,seqs in self.ligatures.items()}
 	self.ligatures = {g:v for g,v in self.ligatures.items() if v}
-
-@add_method(fontTools.ttLib.tables.otTables.ContextSubst)
-def subset (self, glyphs):
-	pass # XXX
-
-@add_method(fontTools.ttLib.tables.otTables.ChainContextSubst)
-def subset (self, glyphs):
-	pass # XXX
-
-@add_method(fontTools.ttLib.tables.otTables.ExtensionSubst)
-def subset (self, glyphs):
-	if self.Format == 1:
-		self.ExtSubTable.subset (glyphs)
-	else:
-		assert 0, "unknown format: %s" % self.Format
 
 @add_method(fontTools.ttLib.tables.otTables.ReverseChainSingleSubst)
 def subset (self, glyphs):
@@ -172,28 +142,70 @@ def subset (self, glyphs):
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
-@add_method(fontTools.ttLib.tables.otTables.ContextPos)
+@add_method(fontTools.ttLib.tables.otTables.ContextSubst, fontTools.ttLib.tables.otTables.ContextPos)
 def subset (self, glyphs):
-	pass # XXX
+	if self.Format == 1:
+		assert 0 # XXX
+	elif self.Format == 2:
+		assert 0 # XXX
+	elif self.Format == 3:
+		assert 0 # XXX
+	else:
+		assert 0, "unknown format: %s" % self.Format
 
-@add_method(fontTools.ttLib.tables.otTables.ChainContextPos)
+@add_method(fontTools.ttLib.tables.otTables.ChainContextSubst, fontTools.ttLib.tables.otTables.ChainContextPos)
 def subset (self, glyphs):
-	pass # XXX
+	if self.Format == 1:
+		assert 0 # XXX
+	elif self.Format == 2:
+		assert 0 # XXX
+	elif self.Format == 3:
+		for c in self.InputCoverage:
+			c.subset (glyphs)
+		for c in self.LookAheadCoverage:
+			c.subset (glyphs)
+		for c in self.BacktrackCoverage:
+			c.subset (glyphs)
+	else:
+		assert 0, "unknown format: %s" % self.Format
 
-@add_method(fontTools.ttLib.tables.otTables.ExtensionPos)
+@add_method(fontTools.ttLib.tables.otTables.ExtensionSubst, fontTools.ttLib.tables.otTables.ExtensionPos)
 def subset (self, glyphs):
 	if self.Format == 1:
 		self.ExtSubTable.subset (glyphs)
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
-for Gtag in ['GSUB', 'GPOS']:
-	if Gtag not in font:
-		continue
-	G = font[Gtag]
-	for lookup in G.table.LookupList.Lookup:
-		for subtable in lookup.SubTable:
-			print subtable
-			subtable.subset (glyphs)
+@add_method(fontTools.ttLib.tables.otTables.Lookup)
+def subset (self, glyphs):
+	for subtable in self.SubTable:
+		subtable.subset (glyphs)
 
-#font['GSUB'].toXML(sys.stdout, font)
+@add_method(fontTools.ttLib.tables.otTables.GSUB, fontTools.ttLib.tables.otTables.GPOS)
+def subset (self, glyphs):
+	for lookup in self.LookupList.Lookup:
+		lookup.subset (glyphs)
+
+if __name__ == '__main__':
+
+	import sys
+
+	if len (sys.argv) < 3:
+		print >>sys.stderr, "usage: pyotlss.py font-file glyph..."
+		sys.exit (1)
+
+	fontfile = sys.argv[1]
+	glyphs   = sys.argv[2:]
+
+	font = fontTools.ttx.TTFont (fontfile)
+
+	names = font.getGlyphNames()
+	# Convert to glyph names
+	glyphs = [g if g in names else font.getGlyphName(int(g)) for g in glyphs]
+
+	for Gtag in ['GSUB', 'GPOS']:
+		if Gtag not in font:
+			continue
+		font[Gtag].table.subset (glyphs)
+
+	# XXX GDEF
