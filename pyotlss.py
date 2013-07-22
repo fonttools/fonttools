@@ -373,6 +373,8 @@ def subset (self, glyphs):
 
 @add_method(fontTools.ttLib.getTableClass('cmap'))
 def subset (self, glyphs):
+	# Drop non-Unicode / non-Symbol cmaps
+	self.tables = [t for t in self.tables if t.platformID == 3 and t.platEncID in [0, 1, 10]]
 	for t in self.tables:
 		# For reasons I don't understand I need this here
 		# to force decompilation of the cmap format 14.
@@ -393,7 +395,6 @@ def subset (self, glyphs):
 
 
 # TODO OS/2 ulUnicodeRange / ulCodePageRange?
-# TODO Drop unnecessary cmap subtables
 # TODO Drop unnecessary name entries
 # TODO Drop glyph names
 # TODO Drop unneeded GSUB/GPOS entries
