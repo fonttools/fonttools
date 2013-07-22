@@ -364,7 +364,14 @@ def subset (self, glyphs):
 @add_method(fontTools.ttLib.getTableClass('cmap'))
 def subset (self, glyphs):
 	for t in self.tables:
+		# For reasons I don't understand I need this here
+		# to force decompilation of the cmap format 14.
+		try:
+			getattr (t, "asdf")
+		except AttributeError:
+			pass
 		if t.format == 14:
+			# XXX We drop all the default-UVS mappings (g==None)
 			t.uvsDict = {v:[(u,g) for (u,g) in l if g in glyphs] for (v,l) in t.uvsDict.items()}
 			t.uvsDict = {v:l for (v,l) in t.uvsDict.items() if l}
 		else:
