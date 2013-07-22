@@ -351,6 +351,10 @@ def subset (self, glyphs):
 def subset (self, glyphs):
 	self.hdmx = {s:{g:v for (g,v) in l.items() if g in glyphs} for (s,l) in self.hdmx.items()}
 
+@add_method(fontTools.ttLib.getTableClass('post'))
+def subset (self, glyphs):
+	return True
+
 # TODO OS/2 ulUnicodeRange / ulCodePageRange?
 
 if __name__ == '__main__':
