@@ -143,8 +143,14 @@ def subset (self, glyphs):
 		base_indices = self.BaseCoverage.subset (glyphs)
 		self.BaseArray.BaseRecord = [self.BaseArray.BaseRecord[i] for i in base_indices]
 		self.BaseArray.BaseCount = len (self.BaseArray.BaseRecord)
-		# TODO Prune empty classes
-		return self.MarkArray.MarkCount and self.BaseArray.BaseCount
+		# Prune empty classes
+		class_indices = {v.Class:1 for v in self.MarkArray.MarkRecord}.keys ()
+		self.ClassCount = len (class_indices)
+		for m in self.MarkArray.MarkRecord:
+			m.Class = class_indices.index (m.Class)
+		for b in self.BaseArray.BaseRecord:
+			b.BaseAnchor = [b.BaseAnchor[i] for i in class_indices]
+		return self.ClassCount and self.MarkArray.MarkCount and self.BaseArray.BaseCount
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
@@ -157,8 +163,15 @@ def subset (self, glyphs):
 		ligature_indices = self.LigatureCoverage.subset (glyphs)
 		self.LigatureArray.LigatureAttach = [self.LigatureArray.LigatureAttach[i] for i in ligature_indices]
 		self.LigatureArray.LigatureCount = len (self.LigatureArray.LigatureAttach)
-		# TODO Prune empty classes
-		return self.MarkArray.MarkCount and self.LigatureArray.LigatureCount
+		# Prune empty classes
+		class_indices = {v.Class:1 for v in self.MarkArray.MarkRecord}.keys ()
+		self.ClassCount = len (class_indices)
+		for m in self.MarkArray.MarkRecord:
+			m.Class = class_indices.index (m.Class)
+		for l in self.LigatureArray.LigatureAttach:
+			for c in l.ComponentRecord:
+				c.LigatureAnchor = [c.LigatureAnchor[i] for i in class_indices]
+		return self.ClassCount and self.MarkArray.MarkCount and self.LigatureArray.LigatureCount
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
@@ -171,8 +184,14 @@ def subset (self, glyphs):
 		mark2_indices = self.Mark2Coverage.subset (glyphs)
 		self.Mark2Array.Mark2Record = [self.Mark2Array.Mark2Record[i] for i in mark2_indices]
 		self.Mark2Array.MarkCount = len (self.Mark2Array.Mark2Record)
-		# TODO Prune empty classes
-		return self.Mark1Array.MarkCount and self.Mark2Array.MarkCount
+		# Prune empty classes
+		class_indices = {v.Class:1 for v in self.Mark1Array.MarkRecord}.keys ()
+		self.ClassCount = len (class_indices)
+		for m in self.Mark1Array.MarkRecord:
+			m.Class = class_indices.index (m.Class)
+		for b in self.Mark2Array.Mark2Record:
+			b.Mark2Anchor = [b.Mark2Anchor[i] for i in class_indices]
+		return self.ClassCount and self.Mark1Array.MarkCount and self.Mark2Array.MarkCount
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
