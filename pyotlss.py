@@ -342,6 +342,11 @@ def subset (self, glyphs):
 	self.kernTables = [t for t in self.kernTables if t.kernTable]
 	return self.kernTables
 
+@add_method(fontTools.ttLib.getTableClass('hmtx'))
+def subset (self, glyphs):
+	self.metrics = {g:v for (g,v) in self.metrics.items() if g in glyphs}
+	return len (self.metrics)
+
 @add_method(fontTools.ttLib.getTableClass('gasp'),
 	    fontTools.ttLib.getTableClass('head'),
 	    fontTools.ttLib.getTableClass('hhea'),
@@ -372,6 +377,10 @@ if __name__ == '__main__':
 	fontfile = sys.argv[1]
 	glyphs   = sys.argv[2:]
 
+	# Always include .notdef; anything else?
+	if '.notdef' not in glyphs:
+		glyphs.append ('.notdef')
+
 	font = fontTools.ttx.TTFont (fontfile)
 
 	names = font.getGlyphNames()
@@ -385,21 +394,26 @@ if __name__ == '__main__':
 	drop_tables = ['BASE', 'JSTF', 'DSIG', 'EBDT', 'EBLC', 'EBSC', 'PCLT', 'LTSH']
 	for tag in font.keys():
 
+		if tag == 'GlyphOrder':
+			continue
+
 		if tag in drop_tables:
-			print tag, "dropped."
+			if verbose:
+				print tag, "dropped."
 			del font[tag]
 			continue
 
 		clazz = fontTools.ttLib.getTableClass(tag)
 		if 'subset' not in vars (clazz):
-			print tag, "skipped."
+			if verbose:
+				print tag, "skipped."
 			continue
 
 		table = font[tag]
 		if not table.subset (glyphs):
 			del font[tag]
 			if verbose:
-				print tag, "is empty and hence dropped now."
+				print tag, "subset empty; dropped."
 		else:
 			if xml:
 				writer.begintag (tag)
@@ -408,6 +422,11 @@ if __name__ == '__main__':
 				writer.endtag (tag)
 				writer.newline ()
 			if verbose:
-				print tag, "is %d bytes now." % len (table.compile (font))
+				print tag, "subsetted."
+
+	glyphOrder = font.getGlyphOrder()
+	glyphOrder = [g for g in glyphOrder if g in glyphs]
+	font.setGlyphOrder (glyphOrder)
+	font._buildReverseGlyphOrderDict ()
 
 	font.save (fontfile + '.subset')
