@@ -371,10 +371,13 @@ if __name__ == '__main__':
 	if xml:
 		import xmlWriter
 		writer = xmlWriter.XMLWriter (sys.stdout)
-	for tag in ['GDEF', 'GSUB', 'GPOS', 'kern']:
-		if tag not in font:
+	for tag in font.keys():
+		clazz = fontTools.ttLib.getTableClass(tag)
+		if 'subset' not in vars (clazz):
+			print tag, "skipped."
 			continue
-		if not font[tag].subset (glyphs):
+		table = font[tag]
+		if not table.subset (glyphs):
 			del font[tag]
 			if verbose:
 				print tag, "is empty and hence dropped now."
@@ -386,6 +389,6 @@ if __name__ == '__main__':
 				writer.endtag (tag)
 				writer.newline ()
 			if verbose:
-				print tag, "is %d bytes now." % len (font[tag].compile (font))
+				print tag, "is %d bytes now." % len (table.compile (font))
 
 	font.save (fontfile + '.subset')
