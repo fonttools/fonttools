@@ -361,6 +361,12 @@ def subset (self, glyphs):
 def subset (self, glyphs):
 	return True # Just pass-through
 
+@add_method(fontTools.ttLib.getTableClass('glyf'))
+def subset (self, glyphs):
+	self.glyphs = {g:v for (g,v) in self.glyphs.items() if g in glyphs}
+	self.glyphOrder = [g for g in self.glyphOrder if g in glyphs]
+	return len (self.glyphs)
+
 @add_method(fontTools.ttLib.getTableClass('cmap'))
 def subset (self, glyphs):
 	for t in self.tables:
@@ -419,7 +425,7 @@ if __name__ == '__main__':
 		writer = xmlWriter.XMLWriter (sys.stdout)
 
 	drop_tables = ['BASE', 'JSTF', 'DSIG', 'EBDT', 'EBLC', 'EBSC', 'PCLT', 'LTSH']
-	noneed_tables = ['gasp', 'head', 'hhea', 'maxp', 'name', 'vhea', 'OS/2', 'VDMX']
+	noneed_tables = ['gasp', 'head', 'hhea', 'maxp', 'name', 'vhea', 'OS/2', 'VDMX', 'loca']
 
 	# For now drop these
 	drop_tables += ['cvt ', 'fpgm', 'prep']
