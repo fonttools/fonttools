@@ -297,43 +297,48 @@ def subset_features (self, feature_indices):
 	self.ScriptCount = len (self.ScriptRecord)
 	return self.ScriptCount
 
-@add_method(fontTools.ttLib.tables.otTables.GSUB, fontTools.ttLib.tables.otTables.GPOS)
+@add_method(fontTools.ttLib.getTableClass('GSUB'), fontTools.ttLib.getTableClass('GPOS'))
 def subset (self, glyphs):
-	lookup_indices = self.LookupList.subset (glyphs)
+	lookup_indices = self.table.LookupList.subset (glyphs)
 	self.subset_lookups (lookup_indices)
 	return True # Retain the possibly empty table
 
-@add_method(fontTools.ttLib.tables.otTables.GSUB, fontTools.ttLib.tables.otTables.GPOS)
+@add_method(fontTools.ttLib.getTableClass('GSUB'), fontTools.ttLib.getTableClass('GPOS'))
 def subset_lookups (self, lookup_indices):
 	"Retrains specified lookups, then removes empty features, language systems, and scripts."
-	self.LookupList.subset_lookups (lookup_indices)
-	feature_indices = self.FeatureList.subset_lookups (lookup_indices)
-	self.ScriptList.subset_features (feature_indices)
+	self.table.LookupList.subset_lookups (lookup_indices)
+	feature_indices = self.table.FeatureList.subset_lookups (lookup_indices)
+	self.table.ScriptList.subset_features (feature_indices)
 
-@add_method(fontTools.ttLib.tables.otTables.GDEF)
+@add_method(fontTools.ttLib.getTableClass('GDEF'))
 def subset (self, glyphs):
-	if self.LigCaretList:
-		indices = self.LigCaretList.Coverage.subset (glyphs)
-		self.LigCaretList.LigGlyph = [self.LigCaretList.LigGlyph[i] for i in indices]
-		self.LigCaretList.LigGlyphCount = len (self.LigCaretList.LigGlyph)
-		if not self.LigCaretList.LigGlyphCount:
-			self.LigCaretList = None
-	if self.MarkAttachClassDef:
-		self.MarkAttachClassDef.classDefs = {g:v for g,v in self.MarkAttachClassDef.classDefs.items() if g in glyphs}
-		if not self.MarkAttachClassDef.classDefs:
-			self.MarkAttachClassDef = None
-	if self.GlyphClassDef:
-		self.GlyphClassDef.classDefs = {g:v for g,v in self.GlyphClassDef.classDefs.items() if g in glyphs}
-		if not self.GlyphClassDef.classDefs:
-			self.GlyphClassDef = None
-	if self.AttachList:
-		indices = self.AttachList.Coverage.subset (glyphs)
-		self.AttachList.AttachPoint = [self.AttachList.AttachPoint[i] for i in indices]
-		self.AttachList.GlyphCount = len (self.AttachList.AttachPoint)
-		if not self.AttachList.GlyphCount:
-			self.AttachList = None
-	return True # Retain the possibly empty table
+	table = self.table
+	if table.LigCaretList:
+		indices = table.LigCaretList.Coverage.subset (glyphs)
+		table.LigCaretList.LigGlyph = [table.LigCaretList.LigGlyph[i] for i in indices]
+		table.LigCaretList.LigGlyphCount = len (table.LigCaretList.LigGlyph)
+		if not table.LigCaretList.LigGlyphCount:
+			table.LigCaretList = None
+	if table.MarkAttachClassDef:
+		table.MarkAttachClassDef.classDefs = {g:v for g,v in table.MarkAttachClassDef.classDefs.items() if g in glyphs}
+		if not table.MarkAttachClassDef.classDefs:
+			table.MarkAttachClassDef = None
+	if table.GlyphClassDef:
+		table.GlyphClassDef.classDefs = {g:v for g,v in table.GlyphClassDef.classDefs.items() if g in glyphs}
+		if not table.GlyphClassDef.classDefs:
+			table.GlyphClassDef = None
+	if table.AttachList:
+		indices = table.AttachList.Coverage.subset (glyphs)
+		table.AttachList.AttachPoint = [table.AttachList.AttachPoint[i] for i in indices]
+		table.AttachList.GlyphCount = len (table.AttachList.AttachPoint)
+		if not table.AttachList.GlyphCount:
+			table.AttachList = None
+	return table.LigCaretList or table.MarkAttachClassDef or table.GlyphClassDef or table.AttachList
 
+@add_method(fontTools.ttLib.getTableClass('kern'))
+def subset (self, glyphs):
+	pass # XXX
+	return True
 
 if __name__ == '__main__':
 
@@ -364,10 +369,11 @@ if __name__ == '__main__':
 	if xml:
 		import xmlWriter
 		writer = xmlWriter.XMLWriter (sys.stdout)
-	for tag in ['GDEF', 'GSUB', 'GPOS']:
+	for tag in ['GDEF', 'GSUB', 'GPOS', 'kern']:
 		if tag not in font:
 			continue
-		if not font[tag].table.subset (glyphs):
+		print font[tag]
+		if not font[tag].subset (glyphs):
 			del font[tag]
 		else:
 			if xml:
