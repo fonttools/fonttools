@@ -342,6 +342,16 @@ def subset (self, glyphs):
 	self.kernTables = [t for t in self.kernTables if t.kernTable]
 	return self.kernTables
 
+@add_method(fontTools.ttLib.getTableClass('gasp'),
+	    fontTools.ttLib.getTableClass('head'),
+	    fontTools.ttLib.getTableClass('hhea'),
+	    fontTools.ttLib.getTableClass('name'),
+	    fontTools.ttLib.getTableClass('vhea'),
+	    fontTools.ttLib.getTableClass('OS/2'))
+def subset (self, glyphs):
+	# Nothing to do.
+	return True
+
 if __name__ == '__main__':
 
 	import sys
