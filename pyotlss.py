@@ -342,11 +342,16 @@ def subset (self, glyphs):
 	self.kernTables = [t for t in self.kernTables if t.kernTable]
 	return self.kernTables
 
-@add_method(fontTools.ttLib.getTableClass('hmtx'))
+@add_method(fontTools.ttLib.getTableClass('hmtx'), fontTools.ttLib.getTableClass('vmtx'))
 def subset (self, glyphs):
 	self.metrics = {g:v for (g,v) in self.metrics.items() if g in glyphs}
 	return len (self.metrics)
 
+@add_method(fontTools.ttLib.getTableClass('hdmx'))
+def subset (self, glyphs):
+	self.hdmx = {s:{g:v for (g,v) in l.items() if g in glyphs} for (s,l) in self.hdmx.items()}
+
+# TODO OS/2 ulUnicodeRange / ulCodePageRange?
 
 if __name__ == '__main__':
 
@@ -383,7 +388,7 @@ if __name__ == '__main__':
 		writer = xmlWriter.XMLWriter (sys.stdout)
 
 	drop_tables = ['BASE', 'JSTF', 'DSIG', 'EBDT', 'EBLC', 'EBSC', 'PCLT', 'LTSH']
-	noneed_tables = ['gasp', 'head', 'hhea', 'name', 'vhea', 'OS/2']
+	noneed_tables = ['gasp', 'head', 'hhea', 'maxp', 'name', 'vhea', 'OS/2', 'VDMX']
 
 	for tag in font.keys():
 
@@ -404,7 +409,7 @@ if __name__ == '__main__':
 		clazz = fontTools.ttLib.getTableClass(tag)
 		if 'subset' not in vars (clazz):
 			if verbose:
-				print tag, "skipped."
+				print tag, "skipped................"
 			continue
 
 		table = font[tag]
