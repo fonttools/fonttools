@@ -312,6 +312,10 @@ if __name__ == '__main__':
 	if "--verbose" in sys.argv:
 		verbose = True
 		sys.argv.remove ("--verbose")
+	xml = False
+	if "--xml" in sys.argv:
+		xml = True
+		sys.argv.remove ("--xml")
 
 	if len (sys.argv) < 3:
 		print >>sys.stderr, "usage: pyotlss.py font-file glyph..."
@@ -326,7 +330,7 @@ if __name__ == '__main__':
 	# Convert to glyph names
 	glyphs = [g if g in names else font.getGlyphName(int(g)) for g in glyphs]
 
-	if verbose:
+	if xml:
 		import xmlWriter
 		writer = xmlWriter.XMLWriter (sys.stdout)
 	for tag in ['GDEF', 'GSUB', 'GPOS']:
@@ -335,11 +339,13 @@ if __name__ == '__main__':
 		if not font[tag].table.subset (glyphs):
 			del font[tag]
 		else:
-			if verbose:
+			if xml:
 				writer.begintag (tag)
 				writer.newline ()
 				font[tag].toXML(writer, font)
 				writer.endtag (tag)
 				writer.newline ()
+			if verbose:
+				print tag, "is %d bytes now." % len (font[tag].compile (font))
 
 	font.save (fontfile + '.subset')
