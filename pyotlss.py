@@ -186,6 +186,22 @@ def subset (self, glyphs):
 	for lookup in self.LookupList.Lookup:
 		lookup.subset (glyphs)
 
+@add_method(fontTools.ttLib.tables.otTables.GDEF)
+def subset (self, glyphs):
+	if self.LigCaretList:
+		indices = self.LigCaretList.Coverage.subset (glyphs)
+		self.LigCaretList.LigGlyph = [self.LigCaretList.LigGlyph[i] for i in indices]
+		self.LigCaretList.LigGlyphCount = len (self.LigCaretList.LigGlyph)
+	if self.MarkAttachClassDef:
+		self.MarkAttachClassDef.classDefs = {g:v for g,v in self.MarkAttachClassDef.classDefs.items() if g in glyphs}
+	if self.GlyphClassDef:
+		self.GlyphClassDef.classDefs = {g:v for g,v in self.GlyphClassDef.classDefs.items() if g in glyphs}
+	if self.AttachList:
+		indices = self.AttachList.Coverage.subset (glyphs)
+		self.AttachList.AttachPoint = [self.AttachList.AttachPoint[i] for i in indices]
+		self.AttachList.GlyphCount = len (self.AttachList.AttachPoint)
+
+
 if __name__ == '__main__':
 
 	import sys
@@ -203,9 +219,7 @@ if __name__ == '__main__':
 	# Convert to glyph names
 	glyphs = [g if g in names else font.getGlyphName(int(g)) for g in glyphs]
 
-	for Gtag in ['GSUB', 'GPOS']:
+	for Gtag in ['GDEF', 'GSUB', 'GPOS']:
 		if Gtag not in font:
 			continue
 		font[Gtag].table.subset (glyphs)
-
-	# XXX GDEF
