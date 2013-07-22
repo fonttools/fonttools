@@ -19,10 +19,12 @@ def subset (self, glyphs):
 	indices = [i for (i,g) in enumerate (self.glyphs) if g in glyphs]
 	self.glyphs = [g for g in self.glyphs if g in glyphs]
 	return indices
+	return True
 
 @add_method(fontTools.ttLib.tables.otTables.ClassDef)
 def subset (self, glyphs):
 	self.classDefs = {g:v for g,v in self.classDefs.items() if g in glyphs}
+	return True
 
 @add_method(fontTools.ttLib.tables.otTables.SingleSubst)
 def subset (self, glyphs):
@@ -30,6 +32,7 @@ def subset (self, glyphs):
 		self.mapping = {g:v for g,v in self.mapping.items() if g in glyphs}
 	else:
 		assert 0, "unknown format: %s" % self.Format
+	return True
 
 @add_method(fontTools.ttLib.tables.otTables.MultipleSubst)
 def subset (self, glyphs):
@@ -38,6 +41,7 @@ def subset (self, glyphs):
 		self.Sequence = [self.Sequence[i] for i in indices]
 	else:
 		assert 0, "unknown format: %s" % self.Format
+	return True
 
 @add_method(fontTools.ttLib.tables.otTables.AlternateSubst)
 def subset (self, glyphs):
@@ -45,6 +49,7 @@ def subset (self, glyphs):
 		self.alternates = {g:v for g,v in self.alternates.items() if g in glyphs}
 	else:
 		assert 0, "unknown format: %s" % self.Format
+	return True
 
 @add_method(fontTools.ttLib.tables.otTables.LigatureSubst)
 def subset (self, glyphs):
@@ -52,6 +57,7 @@ def subset (self, glyphs):
 	self.ligatures = {g:[seq for seq in seqs if all(c in glyphs for c in seq.Component)]
 			  for g,seqs in self.ligatures.items()}
 	self.ligatures = {g:v for g,v in self.ligatures.items() if v}
+	return True
 
 @add_method(fontTools.ttLib.tables.otTables.ReverseChainSingleSubst)
 def subset (self, glyphs):
@@ -65,6 +71,7 @@ def subset (self, glyphs):
 			c.subset (glyphs)
 	else:
 		assert 0, "unknown format: %s" % self.Format
+	return True
 
 @add_method(fontTools.ttLib.tables.otTables.SinglePos)
 def subset (self, glyphs):
@@ -76,6 +83,7 @@ def subset (self, glyphs):
 		self.ValueCount = len (self.Value)
 	else:
 		assert 0, "unknown format: %s" % self.Format
+	return True
 
 @add_method(fontTools.ttLib.tables.otTables.PairPos)
 def subset (self, glyphs):
@@ -94,6 +102,7 @@ def subset (self, glyphs):
 		# TODO Prune empty classes
 	else:
 		assert 0, "unknown format: %s" % self.Format
+	return True
 
 @add_method(fontTools.ttLib.tables.otTables.CursivePos)
 def subset (self, glyphs):
@@ -102,6 +111,7 @@ def subset (self, glyphs):
 		self.EntryExitRecord = [self.EntryExitRecord[i] for i in indices]
 	else:
 		assert 0, "unknown format: %s" % self.Format
+	return True
 
 @add_method(fontTools.ttLib.tables.otTables.MarkBasePos)
 def subset (self, glyphs):
@@ -115,6 +125,7 @@ def subset (self, glyphs):
 		# TODO Prune empty classes
 	else:
 		assert 0, "unknown format: %s" % self.Format
+	return True
 
 @add_method(fontTools.ttLib.tables.otTables.MarkLigPos)
 def subset (self, glyphs):
@@ -128,6 +139,7 @@ def subset (self, glyphs):
 		# TODO Prune empty classes
 	else:
 		assert 0, "unknown format: %s" % self.Format
+	return True
 
 @add_method(fontTools.ttLib.tables.otTables.MarkMarkPos)
 def subset (self, glyphs):
@@ -141,6 +153,7 @@ def subset (self, glyphs):
 		# TODO Prune empty classes
 	else:
 		assert 0, "unknown format: %s" % self.Format
+	return True
 
 @add_method(fontTools.ttLib.tables.otTables.ContextSubst, fontTools.ttLib.tables.otTables.ContextPos)
 def subset (self, glyphs):
@@ -161,6 +174,7 @@ def subset (self, glyphs):
 			c.subset (glyphs)
 	else:
 		assert 0, "unknown format: %s" % self.Format
+	return True
 
 @add_method(fontTools.ttLib.tables.otTables.ChainContextSubst, fontTools.ttLib.tables.otTables.ChainContextPos)
 def subset (self, glyphs):
@@ -186,6 +200,7 @@ def subset (self, glyphs):
 			c.subset (glyphs)
 	else:
 		assert 0, "unknown format: %s" % self.Format
+	return True
 
 @add_method(fontTools.ttLib.tables.otTables.ExtensionSubst, fontTools.ttLib.tables.otTables.ExtensionPos)
 def subset (self, glyphs):
@@ -193,16 +208,16 @@ def subset (self, glyphs):
 		self.ExtSubTable.subset (glyphs)
 	else:
 		assert 0, "unknown format: %s" % self.Format
+	return True
 
 @add_method(fontTools.ttLib.tables.otTables.Lookup)
 def subset (self, glyphs):
-	for subtable in self.SubTable:
-		subtable.subset (glyphs)
+	self.SubTable = [s for s in self.SubTable if s.subset (glyphs)]
+	return any (self.SubTable)
 
 @add_method(fontTools.ttLib.tables.otTables.GSUB, fontTools.ttLib.tables.otTables.GPOS)
 def subset (self, glyphs):
-	for lookup in self.LookupList.Lookup:
-		lookup.subset (glyphs)
+	self.LookupList.Lookup = [l for l in self.LookupList.Lookup if l.subset (glyphs)]
 
 @add_method(fontTools.ttLib.tables.otTables.GDEF)
 def subset (self, glyphs):
