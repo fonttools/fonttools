@@ -337,8 +337,10 @@ def subset (self, glyphs):
 
 @add_method(fontTools.ttLib.getTableClass('kern'))
 def subset (self, glyphs):
-	pass # XXX
-	return True
+	for t in self.kernTables:
+		t.kernTable = {(a,b):v for ((a,b),v) in t.kernTable.items() if a in glyphs and b in glyphs}
+	self.kernTables = [t for t in self.kernTables if t.kernTable]
+	return self.kernTables
 
 if __name__ == '__main__':
 
@@ -372,9 +374,10 @@ if __name__ == '__main__':
 	for tag in ['GDEF', 'GSUB', 'GPOS', 'kern']:
 		if tag not in font:
 			continue
-		print font[tag]
 		if not font[tag].subset (glyphs):
 			del font[tag]
+			if verbose:
+				print tag, "is empty and hence dropped now."
 		else:
 			if xml:
 				writer.begintag (tag)
