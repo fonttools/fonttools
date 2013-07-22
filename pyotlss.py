@@ -145,20 +145,38 @@ def subset (self, glyphs):
 @add_method(fontTools.ttLib.tables.otTables.ContextSubst, fontTools.ttLib.tables.otTables.ContextPos)
 def subset (self, glyphs):
 	if self.Format == 1:
-		assert 0 # XXX
+		indices = self.Coverage.subset (glyphs)
+		self.SubRuleSet = [self.SubRuleSet[i] for i in indices]
+		self.SubRuleSetCount = len (self.SubRuleSet)
+		for rs in self.SubRuleSet:
+			rs.SubRule = [r for r in rs.SubRule
+				      if all (g in glyphs for g in r.Input)]
+			rs.SubRuleCount = len (rs.SubRule)
 	elif self.Format == 2:
-		assert 0 # XXX
+		self.Coverage.subset (glyphs)
+		self.ClassDef.subset (glyphs)
+		pass
 	elif self.Format == 3:
-		assert 0 # XXX
+		for c in self.Coverage:
+			c.subset (glyphs)
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
 @add_method(fontTools.ttLib.tables.otTables.ChainContextSubst, fontTools.ttLib.tables.otTables.ChainContextPos)
 def subset (self, glyphs):
 	if self.Format == 1:
-		assert 0 # XXX
+		indices = self.Coverage.subset (glyphs)
+		self.ChainSubRuleSet = [self.ChainSubRuleSet[i] for i in indices]
+		self.ChainSubRuleSetCount = len (self.ChainSubRuleSet)
+		for rs in self.ChainSubRuleSet:
+			rs.ChainSubRule = [r for r in rs.ChainSubRule
+					   if all (g in glyphs for g in r.Backtrack + r.Input + r.LookAhead)]
+			rs.ChainSubRuleCount = len (rs.ChainSubRule)
 	elif self.Format == 2:
-		assert 0 # XXX
+		self.Coverage.subset (glyphs)
+		self.LookAheadClassDef.subset (glyphs)
+		self.BacktrackClassDef.subset (glyphs)
+		self.InputClassDef.subset (glyphs)
 	elif self.Format == 3:
 		for c in self.InputCoverage:
 			c.subset (glyphs)
