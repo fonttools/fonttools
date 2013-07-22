@@ -371,9 +371,18 @@ def subset (self, glyphs):
 	self.glyphOrder = [g for g in self.glyphOrder if g in glyphs]
 	return len (self.glyphs)
 
+@add_method(fontTools.ttLib.getTableClass('name'))
+def subset (self, glyphs):
+	# TODO Make sure something remains?
+	# TODO Add option for this.
+	# TODO Drop even more (license, etc)? / Drop completely?
+	self.names = [n for n in self.names if n.platformID == 3 and n.platEncID == 1 and n.langID == 0x0409]
+	return len (self.names)
+
 @add_method(fontTools.ttLib.getTableClass('cmap'))
 def subset (self, glyphs):
 	# Drop non-Unicode / non-Symbol cmaps
+	# TODO Add option for this
 	self.tables = [t for t in self.tables if t.platformID == 3 and t.platEncID in [0, 1, 10]]
 	for t in self.tables:
 		# For reasons I don't understand I need this here
@@ -446,7 +455,7 @@ if __name__ == '__main__':
 		writer = xmlWriter.XMLWriter (sys.stdout)
 
 	drop_tables = ['BASE', 'JSTF', 'DSIG', 'EBDT', 'EBLC', 'EBSC', 'PCLT', 'LTSH']
-	noneed_tables = ['gasp', 'head', 'hhea', 'maxp', 'name', 'vhea', 'OS/2', 'VDMX', 'loca']
+	noneed_tables = ['gasp', 'head', 'hhea', 'maxp', 'vhea', 'OS/2', 'VDMX', 'loca']
 
 	# For now drop these
 	drop_tables += ['cvt ', 'fpgm', 'prep']
