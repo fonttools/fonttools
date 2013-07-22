@@ -353,9 +353,21 @@ def subset (self, glyphs):
 
 @add_method(fontTools.ttLib.getTableClass('post'))
 def subset (self, glyphs):
-	return True
+	return True # Just pass-through
+
+@add_method(fontTools.ttLib.getTableClass('cmap'))
+def subset (self, glyphs):
+	# XXX Implement cmap_format_14
+	# TODO Switch format?
+	for t in self.tables:
+		t.cmap = {u:g for (u,g) in t.cmap.items() if g in glyphs}
+	self.tables = [t for t in self.tables if t.cmap]
+	return len (self.tables)
+
 
 # TODO OS/2 ulUnicodeRange / ulCodePageRange?
+# TODO Drop unnecessary cmap subtables
+# TODO Drop unnecessary name entries
 
 if __name__ == '__main__':
 
