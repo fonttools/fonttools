@@ -275,9 +275,10 @@ if __name__ == '__main__':
 	# Convert to glyph names
 	glyphs = [g if g in names else font.getGlyphName(int(g)) for g in glyphs]
 
-	for Gtag in ['GDEF', 'GSUB', 'GPOS']:
-		if Gtag not in font:
+	for tag in ['GDEF', 'GSUB', 'GPOS']:
+		if tag not in font:
 			continue
-		font[Gtag].table.subset (glyphs)
+		if not font[tag].table.subset (glyphs):
+			del font[tag]
 
 	font.save (fontfile + '.subset.ttf')
