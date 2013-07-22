@@ -277,9 +277,13 @@ def subset_lookups (self, lookup_indices):
 
 @add_method(fontTools.ttLib.tables.otTables.DefaultLangSys, fontTools.ttLib.tables.otTables.LangSys)
 def subset_features (self, feature_indices):
-	if self.ReqFeatureIndex not in feature_indices:
+	if self.ReqFeatureIndex in feature_indices:
+		self.ReqFeatureIndex = feature_indices.index (self.ReqFeatureIndex)
+	else:
 		self.ReqFeatureIndex = 65535
 	self.FeatureIndex = [f for f in self.FeatureIndex if f in feature_indices]
+	# Now map them.
+	self.FeatureIndex = [feature_indices.index (f) for f in self.FeatureIndex if f in feature_indices]
 	self.FeatureCount = len (self.FeatureIndex)
 	return self.FeatureCount
 
