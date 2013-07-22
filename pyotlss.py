@@ -420,6 +420,16 @@ if __name__ == '__main__':
 	# Convert to glyph names
 	glyphs = [g if g in names else font.getGlyphName(int(g)) for g in glyphs]
 
+	# Close over composite glyphs
+	if 'glyf' in font:
+		glyf = font['glyf']
+		for g in glyphs:
+			gl = glyf[g]
+			if gl.isComposite ():
+				for c in gl.components:
+					if c.glyphName not in glyphs:
+						glyphs.append (c.glyphName)
+
 	if xml:
 		import xmlWriter
 		writer = xmlWriter.XMLWriter (sys.stdout)
