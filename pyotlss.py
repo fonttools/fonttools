@@ -220,18 +220,64 @@ def subset (self, glyphs):
 
 @add_method(fontTools.ttLib.tables.otTables.LookupList)
 def subset (self, glyphs):
-	for l in self.Lookup:
-		l.subset (glyphs)
+	"Returns the indices of nonempty lookups."
+	return [i for (i,l) in enumerate (self.Lookup) if l.subset (glyphs)]
+
+@add_method(fontTools.ttLib.tables.otTables.LookupList)
+def subset_lookups (self, lookup_indices):
+	self.Lookup = [self.Lookup[i] for i in lookup_indices]
+	self.LookupCount = len (self.Lookup)
+
+@add_method(fontTools.ttLib.tables.otTables.Feature)
+def subset_lookups (self, lookup_indices):
+	self.LookupListIndex = [l for l in self.LookupListIndex if l in lookup_indices]
+	# Now map them.
+	self.LookupListIndex = [lookup_indices.index (l) for l in self.LookupListIndex]
+	self.LookupCount = len (self.LookupListIndex)
 	return self.LookupCount
+
+@add_method(fontTools.ttLib.tables.otTables.FeatureList)
+def subset_lookups (self, lookup_indices):
+	"Returns the indices of nonempty features."
+	feature_indices = [i for (i,f) in enumerate (self.FeatureRecord) if f.Feature.subset_lookups (lookup_indices)]
+	self.FeatureRecord = [self.FeatureRecord[i] for i in feature_indices]
+	self.FeatureCount = len (self.FeatureRecord)
+	return feature_indices
+
+@add_method(fontTools.ttLib.tables.otTables.DefaultLangSys, fontTools.ttLib.tables.otTables.LangSys)
+def subset_features (self, feature_indices):
+	if self.ReqFeatureIndex not in feature_indices:
+		self.ReqFeatureIndex = 65535
+	self.FeatureIndex = [f for f in self.FeatureIndex if f in feature_indices]
+	self.FeatureCount = len (self.FeatureIndex)
+	return self.FeatureCount
+
+@add_method(fontTools.ttLib.tables.otTables.Script)
+def subset_features (self, feature_indices):
+	if self.DefaultLangSys and not self.DefaultLangSys.subset_features (feature_indices):
+		self.DefaultLangSys = None
+	self.LangSysRecord = [l for l in self.LangSysRecord if l.LangSys.subset_features (feature_indices)]
+	self.LangSysCount = len (self.LangSysRecord)
+	return self.LangSysCount
+
+@add_method(fontTools.ttLib.tables.otTables.ScriptList)
+def subset_features (self, feature_indices):
+	self.ScriptRecord = [s for s in self.ScriptRecord if s.Script.subset_features (feature_indices)]
+	self.ScriptCount = len (self.ScriptRecord)
+	return self.ScriptCount
 
 @add_method(fontTools.ttLib.tables.otTables.GSUB, fontTools.ttLib.tables.otTables.GPOS)
 def subset (self, glyphs):
-	self.LookupList.subset (glyphs)
-	# TODO Prune featurelists
-	#print vars (self.ScriptList.ScriptRecord[0].Script.LangSysRecord[0].LangSys)
-	#self.ScriptList.ScriptCount = len (self.ScriptList.ScriptRecord)
-	#self.FeatureList.FeatureCount = len (self.FeatureList.FeatureRecord)
+	lookup_indices = self.LookupList.subset (glyphs)
+	self.subset_lookups (lookup_indices)
 	return True # Retain the possibly empty table
+
+@add_method(fontTools.ttLib.tables.otTables.GSUB, fontTools.ttLib.tables.otTables.GPOS)
+def subset_lookups (self, lookup_indices):
+	"Retrains specified lookups, then removes empty features, language systems, and scripts."
+	self.LookupList.subset_lookups (lookup_indices)
+	feature_indices = self.FeatureList.subset_lookups (lookup_indices)
+	self.ScriptList.subset_features (feature_indices)
 
 @add_method(fontTools.ttLib.tables.otTables.GDEF)
 def subset (self, glyphs):
@@ -281,4 +327,4 @@ if __name__ == '__main__':
 		if not font[tag].table.subset (glyphs):
 			del font[tag]
 
-	font.save (fontfile + '.subset.ttf')
+	font.save (fontfile + '.subset')
