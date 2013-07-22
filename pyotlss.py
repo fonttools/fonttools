@@ -383,6 +383,8 @@ def subset (self, glyphs):
 		else:
 			t.cmap = {u:g for (u,g) in t.cmap.items() if g in glyphs}
 	self.tables = [t for t in self.tables if (t.cmap if t.format != 14 else t.uvsDict)]
+	# Drop format=0 which can't be subset easily?
+	self.tables = [t for t in self.tables if t.format != 0]
 	return len (self.tables)
 
 
