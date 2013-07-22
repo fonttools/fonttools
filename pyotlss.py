@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 # Python OpenType Layout Subsetter
-# Writte by: Behdad Esfahbod
+# Written by: Behdad Esfahbod
 
 import fontTools.ttx
 
@@ -26,8 +26,14 @@ def __nonzero__ (self):
 
 @add_method(fontTools.ttLib.tables.otTables.ClassDef)
 def subset (self, glyphs):
+	"Returns ascending list of remaining classes."
 	self.classDefs = {g:v for g,v in self.classDefs.items() if g in glyphs}
-	return len (self.classDefs)
+	return {v:1 for v in self.classDefs.values ()}.keys ()
+
+@add_method(fontTools.ttLib.tables.otTables.ClassDef)
+def remap (self, class_map):
+	"Remaps classes."
+	self.classDefs = {g:class_map.index (v) for g,v in self.classDefs.items()}
 
 @add_method(fontTools.ttLib.tables.otTables.ClassDef)
 def __nonzero__ (self):
@@ -105,10 +111,16 @@ def subset (self, glyphs):
 		return self.PairSetCount
 	elif self.Format == 2:
 		self.Coverage.subset (glyphs)
-		self.ClassDef1.subset (glyphs)
-		self.ClassDef2.subset (glyphs)
-		# TODO Prune empty classes
-		return self.Coverage and self.ClassDef1 and self.ClassDef2
+		class1_map = self.ClassDef1.subset (glyphs)
+		class2_map = self.ClassDef2.subset (glyphs)
+		self.ClassDef1.remap (class1_map)
+		self.ClassDef2.remap (class2_map)
+		self.Class1Record = [self.Class1Record[i] for i in class1_map]
+		for c in self.Class1Record:
+			c.Class2Record = [c.Class2Record[i] for i in class2_map]
+		self.Class1Count = len (class1_map)
+		self.Class2Count = len (class2_map)
+		return self.Coverage and self.Class1Count and self.Class2Count
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
