@@ -381,11 +381,20 @@ if __name__ == '__main__':
 	if xml:
 		import xmlWriter
 		writer = xmlWriter.XMLWriter (sys.stdout)
+
+	drop_tables = ['BASE', 'JSTF', 'DSIG', 'EBDT', 'EBLC', 'EBSC', 'PCLT', 'LTSH']
 	for tag in font.keys():
+
+		if tag in drop_tables:
+			print tag, "dropped."
+			del font[tag]
+			continue
+
 		clazz = fontTools.ttLib.getTableClass(tag)
 		if 'subset' not in vars (clazz):
 			print tag, "skipped."
 			continue
+
 		table = font[tag]
 		if not table.subset (glyphs):
 			del font[tag]
