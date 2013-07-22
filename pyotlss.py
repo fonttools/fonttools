@@ -406,6 +406,9 @@ if __name__ == '__main__':
 	drop_tables = ['BASE', 'JSTF', 'DSIG', 'EBDT', 'EBLC', 'EBSC', 'PCLT', 'LTSH']
 	noneed_tables = ['gasp', 'head', 'hhea', 'maxp', 'name', 'vhea', 'OS/2', 'VDMX']
 
+	# For now drop these
+	drop_tables += ['cvt ', 'fpgm', 'prep']
+
 	for tag in font.keys():
 
 		if tag == 'GlyphOrder':
