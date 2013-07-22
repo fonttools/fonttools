@@ -396,6 +396,8 @@ def subset (self, glyphs):
 # TODO Drop unnecessary cmap subtables
 # TODO Drop unnecessary name entries
 # TODO Drop glyph names
+# TODO Drop unneeded GSUB/GPOS entries
+# TODO Move glyf component closure after GSUB/GPOS/etc
 
 if __name__ == '__main__':
 
