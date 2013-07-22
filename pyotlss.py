@@ -363,11 +363,13 @@ def subset (self, glyphs):
 
 @add_method(fontTools.ttLib.getTableClass('cmap'))
 def subset (self, glyphs):
-	# XXX Implement cmap_format_14
-	# TODO Switch format?
 	for t in self.tables:
-		t.cmap = {u:g for (u,g) in t.cmap.items() if g in glyphs}
-	self.tables = [t for t in self.tables if t.cmap]
+		if t.format == 14:
+			t.uvsDict = {v:[(u,g) for (u,g) in l if g in glyphs] for (v,l) in t.uvsDict.items()}
+			t.uvsDict = {v:l for (v,l) in t.uvsDict.items() if l}
+		else:
+			t.cmap = {u:g for (u,g) in t.cmap.items() if g in glyphs}
+	self.tables = [t for t in self.tables if (t.cmap if t.format != 14 else t.uvsDict)]
 	return len (self.tables)
 
 
