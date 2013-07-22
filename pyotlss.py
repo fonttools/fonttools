@@ -391,6 +391,7 @@ def subset (self, glyphs):
 # TODO OS/2 ulUnicodeRange / ulCodePageRange?
 # TODO Drop unnecessary cmap subtables
 # TODO Drop unnecessary name entries
+# TODO Drop glyph names
 
 if __name__ == '__main__':
 
@@ -413,10 +414,10 @@ if __name__ == '__main__':
 	glyphs   = sys.argv[2:]
 
 	# Always include .notdef; anything else?
-	if '.notdef' not in glyphs:
-		glyphs.append ('.notdef')
+	glyphs.append ('.notdef')
 
 	font = fontTools.ttx.TTFont (fontfile)
+	font.disassembleInstructions = False
 
 	names = font.getGlyphNames()
 	# Convert to glyph names
@@ -470,12 +471,6 @@ if __name__ == '__main__':
 			if verbose:
 				print tag, "subset empty; dropped."
 		else:
-			if xml:
-				writer.begintag (tag)
-				writer.newline ()
-				font[tag].toXML(writer, font)
-				writer.endtag (tag)
-				writer.newline ()
 			if verbose:
 				print tag, "subsetted."
 
@@ -483,5 +478,13 @@ if __name__ == '__main__':
 	glyphOrder = [g for g in glyphOrder if g in glyphs]
 	font.setGlyphOrder (glyphOrder)
 	font._buildReverseGlyphOrderDict ()
+
+	if xml:
+		for tag in font.keys():
+			writer.begintag (tag)
+			writer.newline ()
+			font[tag].toXML(writer, font)
+			writer.endtag (tag)
+			writer.newline ()
 
 	font.save (fontfile + '.subset')
