@@ -351,6 +351,12 @@ def subset (self, glyphs):
 def subset (self, glyphs):
 	self.hdmx = {s:{g:v for (g,v) in l.items() if g in glyphs} for (s,l) in self.hdmx.items()}
 
+@add_method(fontTools.ttLib.getTableClass('VORG'))
+def subset (self, glyphs):
+	self.VOriginRecords = {g:v for (g,v) in self.VOriginRecords.items() if g in glyphs}
+	self.numVertOriginYMetrics = len (self.VOriginRecords)
+	return True # Never drop; has default metrics
+
 @add_method(fontTools.ttLib.getTableClass('post'))
 def subset (self, glyphs):
 	return True # Just pass-through
