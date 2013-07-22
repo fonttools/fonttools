@@ -408,8 +408,6 @@ def subset (self, glyphs):
 
 
 # TODO OS/2 ulUnicodeRange / ulCodePageRange?
-# TODO Drop unnecessary name entries
-# TODO Drop glyph names
 # TODO Drop unneeded GSUB/GPOS entries
 # TODO Move glyf component closure after GSUB/GPOS/etc
 
