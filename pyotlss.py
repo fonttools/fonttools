@@ -347,15 +347,6 @@ def subset (self, glyphs):
 	self.metrics = {g:v for (g,v) in self.metrics.items() if g in glyphs}
 	return len (self.metrics)
 
-@add_method(fontTools.ttLib.getTableClass('gasp'),
-	    fontTools.ttLib.getTableClass('head'),
-	    fontTools.ttLib.getTableClass('hhea'),
-	    fontTools.ttLib.getTableClass('name'),
-	    fontTools.ttLib.getTableClass('vhea'),
-	    fontTools.ttLib.getTableClass('OS/2'))
-def subset (self, glyphs):
-	# Nothing to do.
-	return True
 
 if __name__ == '__main__':
 
@@ -392,6 +383,8 @@ if __name__ == '__main__':
 		writer = xmlWriter.XMLWriter (sys.stdout)
 
 	drop_tables = ['BASE', 'JSTF', 'DSIG', 'EBDT', 'EBLC', 'EBSC', 'PCLT', 'LTSH']
+	noneed_tables = ['gasp', 'head', 'hhea', 'name', 'vhea', 'OS/2']
+
 	for tag in font.keys():
 
 		if tag == 'GlyphOrder':
@@ -401,6 +394,11 @@ if __name__ == '__main__':
 			if verbose:
 				print tag, "dropped."
 			del font[tag]
+			continue
+
+		if tag in noneed_tables:
+			if verbose:
+				print tag, "intact."
 			continue
 
 		clazz = fontTools.ttLib.getTableClass(tag)
