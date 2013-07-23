@@ -520,6 +520,26 @@ def subset_glyphs (self, glyphs):
 	return True
 
 @add_method(fontTools.ttLib.getTableClass('glyf'))
+def closure_glyphs (self, glyphs):
+	glyphs = unique_sorted (glyphs)
+	decompose = glyphs
+	# I don't know if component glyphs can be composite themselves.
+	# We handle them anyway.
+	while True:
+		components = []
+		for g in decompose:
+			gl = self[g]
+			if gl.isComposite ():
+				for c in gl.components:
+					if c.glyphName not in glyphs:
+						components.append (c.glyphName)
+		components = [c for c in components if c not in glyphs]
+		if not components:
+			return glyphs
+		decompose = unique_sorted (components)
+		glyphs.extend (components)
+
+@add_method(fontTools.ttLib.getTableClass('glyf'))
 def subset_glyphs (self, glyphs):
 	self.glyphs = {g:v for (g,v) in self.glyphs.items() if g in glyphs}
 	self.glyphOrder = [g for g in self.glyphOrder if g in glyphs]
@@ -533,6 +553,16 @@ def prune_post_subset (self, options):
 			g.program = fontTools.ttLib.tables.ttProgram.Program()
 			g.program.fromBytecode([])
 	return True
+
+@add_method(fontTools.ttLib.getTableClass('cmap'))
+def prune_pre_subset (self, options):
+	# Drop non-Unicode / non-Symbol cmaps
+	# TODO Add option for this
+	# TODO Only keep one subtable?
+	self.tables = [t for t in self.tables if t.platformID == 3 and t.platEncID in [0, 1, 10]]
+	# For now, drop format=0 which can't be subset_glyphs easily?
+	self.tables = [t for t in self.tables if t.format != 0]
+	return bool (self.tables)
 
 @add_method(fontTools.ttLib.getTableClass('cmap'))
 def subset_glyphs (self, glyphs):
@@ -553,17 +583,6 @@ def subset_glyphs (self, glyphs):
 	# XXX Convert formats when needed
 	return bool (self.tables)
 
-
-@add_method(fontTools.ttLib.getTableClass('cmap'))
-def prune_pre_subset (self, options):
-	# Drop non-Unicode / non-Symbol cmaps
-	# TODO Add option for this
-	# TODO Only keep one subtable?
-	self.tables = [t for t in self.tables if t.platformID == 3 and t.platEncID in [0, 1, 10]]
-	# For now, drop format=0 which can't be subset_glyphs easily?
-	self.tables = [t for t in self.tables if t.format != 0]
-	return bool (self.tables)
-
 @add_method(fontTools.ttLib.getTableClass('name'))
 def prune_pre_subset (self, options):
 	# TODO Make sure something remains?
@@ -571,27 +590,6 @@ def prune_pre_subset (self, options):
 	# TODO Drop even more (license, etc)? / Drop completely?
 	self.names = [n for n in self.names if n.platformID == 3 and n.platEncID == 1 and n.langID == 0x0409]
 	return bool (self.names)
-
-
-@add_method(fontTools.ttLib.getTableClass('glyf'))
-def closure_glyphs (self, glyphs):
-	glyphs = unique_sorted (glyphs)
-	decompose = glyphs
-	# I don't know if component glyphs can be composite themselves.
-	# We handle them anyway.
-	while True:
-		components = []
-		for g in decompose:
-			gl = self[g]
-			if gl.isComposite ():
-				for c in gl.components:
-					if c.glyphName not in glyphs:
-						components.append (c.glyphName)
-		components = [c for c in components if c not in glyphs]
-		if not components:
-			return glyphs
-		decompose = unique_sorted (components)
-		glyphs.extend (components)
 
 
 drop_tables_default = ['BASE', 'JSTF', 'DSIG', 'EBDT', 'EBLC', 'EBSC', 'PCLT', 'LTSH']
