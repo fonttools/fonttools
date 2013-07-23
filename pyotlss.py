@@ -632,6 +632,9 @@ options_default = {
 
 # TODO OS/2 ulUnicodeRange / ulCodePageRange?
 # TODO Drop unneeded GSUB/GPOS Script/LangSys entries
+# TODO GSUB glyph closure
+# TODO Text direction considerations
+# TODO Text script / language considerations
 
 if __name__ == '__main__':
 
