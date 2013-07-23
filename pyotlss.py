@@ -24,10 +24,6 @@ def subset_glyphs (self, glyphs):
 	self.glyphs = [g for g in self.glyphs if g in glyphs]
 	return indices
 
-@add_method(fontTools.ttLib.tables.otTables.Coverage)
-def __nonzero__ (self):
-	return bool (self.glyphs)
-
 @add_method(fontTools.ttLib.tables.otTables.ClassDef)
 def subset_glyphs (self, glyphs):
 	"Returns ascending list of remaining classes."
@@ -38,10 +34,6 @@ def subset_glyphs (self, glyphs):
 def remap (self, class_map):
 	"Remaps classes."
 	self.classDefs = {g:class_map.index (v) for g,v in self.classDefs.items()}
-
-@add_method(fontTools.ttLib.tables.otTables.ClassDef)
-def __nonzero__ (self):
-	return bool (self.classDefs)
 
 @add_method(fontTools.ttLib.tables.otTables.SingleSubst)
 def subset_glyphs (self, glyphs):
