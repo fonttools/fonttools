@@ -12,6 +12,10 @@ def add_method (*clazzes):
 			setattr (clazz, method.func_name, method)
 	return wrapper
 
+def unique_sorted (l):
+	return sorted ({v:1 for v in l}.keys ())
+
+
 # Subset
 
 @add_method(fontTools.ttLib.tables.otTables.Coverage)
@@ -28,7 +32,7 @@ def __nonzero__ (self):
 def subset (self, glyphs):
 	"Returns ascending list of remaining classes."
 	self.classDefs = {g:v for g,v in self.classDefs.items() if g in glyphs}
-	return {v:1 for v in self.classDefs.values ()}.keys ()
+	return unique_sorted (self.classDefs.values ())
 
 @add_method(fontTools.ttLib.tables.otTables.ClassDef)
 def remap (self, class_map):
@@ -144,7 +148,7 @@ def subset (self, glyphs):
 		self.BaseArray.BaseRecord = [self.BaseArray.BaseRecord[i] for i in base_indices]
 		self.BaseArray.BaseCount = len (self.BaseArray.BaseRecord)
 		# Prune empty classes
-		class_indices = {v.Class:1 for v in self.MarkArray.MarkRecord}.keys ()
+		class_indices = unique_sorted (v.Class for v in self.MarkArray.MarkRecord)
 		self.ClassCount = len (class_indices)
 		for m in self.MarkArray.MarkRecord:
 			m.Class = class_indices.index (m.Class)
@@ -164,7 +168,7 @@ def subset (self, glyphs):
 		self.LigatureArray.LigatureAttach = [self.LigatureArray.LigatureAttach[i] for i in ligature_indices]
 		self.LigatureArray.LigatureCount = len (self.LigatureArray.LigatureAttach)
 		# Prune empty classes
-		class_indices = {v.Class:1 for v in self.MarkArray.MarkRecord}.keys ()
+		class_indices = unique_sorted (v.Class for v in self.MarkArray.MarkRecord)
 		self.ClassCount = len (class_indices)
 		for m in self.MarkArray.MarkRecord:
 			m.Class = class_indices.index (m.Class)
@@ -185,7 +189,7 @@ def subset (self, glyphs):
 		self.Mark2Array.Mark2Record = [self.Mark2Array.Mark2Record[i] for i in mark2_indices]
 		self.Mark2Array.MarkCount = len (self.Mark2Array.Mark2Record)
 		# Prune empty classes
-		class_indices = {v.Class:1 for v in self.Mark1Array.MarkRecord}.keys ()
+		class_indices = unique_sorted (v.Class for v in self.Mark1Array.MarkRecord)
 		self.ClassCount = len (class_indices)
 		for m in self.Mark1Array.MarkRecord:
 			m.Class = class_indices.index (m.Class)
@@ -194,6 +198,34 @@ def subset (self, glyphs):
 		return self.ClassCount and self.Mark1Array.MarkCount and self.Mark2Array.MarkCount
 	else:
 		assert 0, "unknown format: %s" % self.Format
+
+@add_method(fontTools.ttLib.tables.otTables.SingleSubst,
+            fontTools.ttLib.tables.otTables.MultipleSubst,
+            fontTools.ttLib.tables.otTables.AlternateSubst,
+            fontTools.ttLib.tables.otTables.LigatureSubst,
+            fontTools.ttLib.tables.otTables.ReverseChainSingleSubst,
+            fontTools.ttLib.tables.otTables.SinglePos,
+            fontTools.ttLib.tables.otTables.PairPos,
+            fontTools.ttLib.tables.otTables.CursivePos,
+            fontTools.ttLib.tables.otTables.MarkBasePos,
+            fontTools.ttLib.tables.otTables.MarkLigPos,
+            fontTools.ttLib.tables.otTables.MarkMarkPos)
+def subset_lookups (self, lookup_indices):
+	pass
+
+@add_method(fontTools.ttLib.tables.otTables.SingleSubst,
+            fontTools.ttLib.tables.otTables.MultipleSubst,
+            fontTools.ttLib.tables.otTables.AlternateSubst,
+            fontTools.ttLib.tables.otTables.LigatureSubst,
+            fontTools.ttLib.tables.otTables.ReverseChainSingleSubst,
+            fontTools.ttLib.tables.otTables.SinglePos,
+            fontTools.ttLib.tables.otTables.PairPos,
+            fontTools.ttLib.tables.otTables.CursivePos,
+            fontTools.ttLib.tables.otTables.MarkBasePos,
+            fontTools.ttLib.tables.otTables.MarkLigPos,
+            fontTools.ttLib.tables.otTables.MarkMarkPos)
+def collect_lookups (self):
+	return []
 
 @add_method(fontTools.ttLib.tables.otTables.ContextSubst, fontTools.ttLib.tables.otTables.ContextPos)
 def subset (self, glyphs):
@@ -236,10 +268,36 @@ def subset (self, glyphs):
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
+@add_method(fontTools.ttLib.tables.otTables.ContextSubst, fontTools.ttLib.tables.otTables.ContextPos,
+	    fontTools.ttLib.tables.otTables.ChainContextSubst, fontTools.ttLib.tables.otTables.ChainContextPos)
+def subset_lookups (self, lookup_indices):
+	self.SubstLookupRecord = [ll for ll in self.SubstLookupRecord if ll.LookupListIndex in lookup_indices]
+	for ll in self.SubstLookupRecord:
+		ll.LookupListIndex = lookup_indices.index (ll.LookupListIndex)
+
+@add_method(fontTools.ttLib.tables.otTables.ContextSubst, fontTools.ttLib.tables.otTables.ContextPos,
+	    fontTools.ttLib.tables.otTables.ChainContextSubst, fontTools.ttLib.tables.otTables.ChainContextPos)
+def collect_lookups (self):
+	return [ll.LookupListIndex for ll in self.SubstLookupRecord]
+
 @add_method(fontTools.ttLib.tables.otTables.ExtensionSubst, fontTools.ttLib.tables.otTables.ExtensionPos)
 def subset (self, glyphs):
 	if self.Format == 1:
 		return self.ExtSubTable.subset (glyphs)
+	else:
+		assert 0, "unknown format: %s" % self.Format
+
+@add_method(fontTools.ttLib.tables.otTables.ExtensionSubst, fontTools.ttLib.tables.otTables.ExtensionPos)
+def subset_lookups (self, lookup_indices):
+	if self.Format == 1:
+		return self.ExtSubTable.subset_lookups (lookup_indices)
+	else:
+		assert 0, "unknown format: %s" % self.Format
+
+@add_method(fontTools.ttLib.tables.otTables.ExtensionSubst, fontTools.ttLib.tables.otTables.ExtensionPos)
+def collect_lookups (self):
+	if self.Format == 1:
+		return self.ExtSubTable.collect_lookups ()
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
@@ -248,6 +306,15 @@ def subset (self, glyphs):
 	self.SubTable = [s for s in self.SubTable if s.subset (glyphs)]
 	self.SubTableCount = len (self.SubTable)
 	return self.SubTableCount
+
+@add_method(fontTools.ttLib.tables.otTables.Lookup)
+def subset_lookups (self, lookup_indices):
+	for s in self.SubTable:
+		s.subset_lookups (lookup_indices)
+
+@add_method(fontTools.ttLib.tables.otTables.Lookup)
+def collect_lookups (self):
+	return unique_sorted (sum ((s.collect_lookups () for s in self.SubTable), []))
 
 @add_method(fontTools.ttLib.tables.otTables.LookupList)
 def subset (self, glyphs):
@@ -258,6 +325,17 @@ def subset (self, glyphs):
 def subset_lookups (self, lookup_indices):
 	self.Lookup = [self.Lookup[i] for i in lookup_indices]
 	self.LookupCount = len (self.Lookup)
+	for l in self.Lookup:
+		l.subset_lookups (lookup_indices)
+
+@add_method(fontTools.ttLib.tables.otTables.LookupList)
+def closure_lookups (self, lookup_indices):
+	while True:
+		recurse_lookups = sum ((self.Lookup[i].collect_lookups () for i in lookup_indices), [])
+		recurse_lookups = [l for l in recurse_lookups if l not in lookup_indices]
+		if not recurse_lookups:
+			return lookup_indices
+		lookup_indices = unique_sorted (lookup_indices + recurse_lookups)
 
 @add_method(fontTools.ttLib.tables.otTables.Feature)
 def subset_lookups (self, lookup_indices):
@@ -267,6 +345,10 @@ def subset_lookups (self, lookup_indices):
 	self.LookupCount = len (self.LookupListIndex)
 	return self.LookupCount
 
+@add_method(fontTools.ttLib.tables.otTables.Feature)
+def collect_lookups (self):
+	return self.LookupListIndex[:]
+
 @add_method(fontTools.ttLib.tables.otTables.FeatureList)
 def subset_lookups (self, lookup_indices):
 	"Returns the indices of nonempty features."
@@ -274,6 +356,11 @@ def subset_lookups (self, lookup_indices):
 	self.FeatureRecord = [self.FeatureRecord[i] for i in feature_indices]
 	self.FeatureCount = len (self.FeatureRecord)
 	return feature_indices
+
+@add_method(fontTools.ttLib.tables.otTables.FeatureList)
+def collect_lookups (self, feature_indices):
+	return unique_sorted (sum ((self.FeatureRecord[i].Feature.collect_lookups () for i in feature_indices
+				    if i < self.FeatureCount), []))
 
 @add_method(fontTools.ttLib.tables.otTables.DefaultLangSys, fontTools.ttLib.tables.otTables.LangSys)
 def subset_features (self, feature_indices):
@@ -285,7 +372,14 @@ def subset_features (self, feature_indices):
 	# Now map them.
 	self.FeatureIndex = [feature_indices.index (f) for f in self.FeatureIndex if f in feature_indices]
 	self.FeatureCount = len (self.FeatureIndex)
-	return self.FeatureCount
+	return self.FeatureCount or self.ReqFeatureIndex != 65535
+
+@add_method(fontTools.ttLib.tables.otTables.DefaultLangSys, fontTools.ttLib.tables.otTables.LangSys)
+def collect_features (self):
+	feature_indices = self.FeatureIndex[:]
+	if self.ReqFeatureIndex != 65535:
+		feature_indices.append (self.ReqFeatureIndex)
+	return unique_sorted (feature_indices)
 
 @add_method(fontTools.ttLib.tables.otTables.Script)
 def subset_features (self, feature_indices):
@@ -293,7 +387,14 @@ def subset_features (self, feature_indices):
 		self.DefaultLangSys = None
 	self.LangSysRecord = [l for l in self.LangSysRecord if l.LangSys.subset_features (feature_indices)]
 	self.LangSysCount = len (self.LangSysRecord)
-	return self.LangSysCount
+	return self.LangSysCount or self.DefaultLangSys
+
+@add_method(fontTools.ttLib.tables.otTables.Script)
+def collect_features (self):
+	feature_indices = [l.LangSys.collectFeatures () for l in self.LangSysRecord]
+	if self.DefaultLangSys:
+		feature_indices.append (self.DefaultLangSys.collect_features ())
+	return unique_sorted (sum (feature_indices, []))
 
 @add_method(fontTools.ttLib.tables.otTables.ScriptList)
 def subset_features (self, feature_indices):
@@ -301,11 +402,16 @@ def subset_features (self, feature_indices):
 	self.ScriptCount = len (self.ScriptRecord)
 	return self.ScriptCount
 
+@add_method(fontTools.ttLib.tables.otTables.ScriptList)
+def collect_features (self):
+	return unique_sorted (sum ((s.Script.collect_features () for s in self.ScriptRecord), []))
+
 @add_method(fontTools.ttLib.getTableClass('GSUB'), fontTools.ttLib.getTableClass('GPOS'))
 def subset (self, glyphs):
 	lookup_indices = self.table.LookupList.subset (glyphs)
 	self.subset_lookups (lookup_indices)
-	return True # Retain the possibly empty table
+	self.prune_lookups ()
+	return True
 
 @add_method(fontTools.ttLib.getTableClass('GSUB'), fontTools.ttLib.getTableClass('GPOS'))
 def subset_lookups (self, lookup_indices):
@@ -313,6 +419,14 @@ def subset_lookups (self, lookup_indices):
 	self.table.LookupList.subset_lookups (lookup_indices)
 	feature_indices = self.table.FeatureList.subset_lookups (lookup_indices)
 	self.table.ScriptList.subset_features (feature_indices)
+
+@add_method(fontTools.ttLib.getTableClass('GSUB'), fontTools.ttLib.getTableClass('GPOS'))
+def prune_lookups (self):
+	"Remove unreferenced lookups"
+	feature_indices = self.table.ScriptList.collect_features ()
+	lookup_indices = self.table.FeatureList.collect_lookups (feature_indices)
+	lookup_indices = self.table.LookupList.closure_lookups (lookup_indices)
+	self.subset_lookups (lookup_indices)
 
 @add_method(fontTools.ttLib.getTableClass('GDEF'))
 def subset (self, glyphs):
