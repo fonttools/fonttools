@@ -594,9 +594,9 @@ def closure_glyphs (self, glyphs):
 		glyphs.extend (components)
 
 
-drop_tables_default = ['BASE', 'JSTF', 'DSIG', 'EBDT', 'EBLC', 'EBSC', 'PCLT', 'LTSH', 'VDMX']
+drop_tables_default = ['BASE', 'JSTF', 'DSIG', 'EBDT', 'EBLC', 'EBSC', 'PCLT', 'LTSH']
 no_subset_tables = ['gasp', 'head', 'hhea', 'maxp', 'vhea', 'OS/2', 'loca', 'name', 'cvt ', 'fpgm', 'prep']
-hinting_tables = ['cvt ', 'fpgm', 'prep', 'hdmx']
+hinting_tables = ['cvt ', 'fpgm', 'prep', 'hdmx', 'VDMX']
 
 # Based on HarfBuzz shapers
 layout_features_dict = {
