@@ -509,9 +509,14 @@ def subset_glyphs (self, glyphs):
 	return True # Never drop; has default metrics
 
 @add_method(fontTools.ttLib.getTableClass('post'))
+def prune_pre_subset (self, glyphs):
+	if 'glyph-names' in options and not options['glyph-names']:
+		self.formatType = 3.0
+	return True
+
+@add_method(fontTools.ttLib.getTableClass('post'))
 def subset_glyphs (self, glyphs):
-	# TODO Drop names?  How?
-	self.extraNames = []
+	self.extraNames = [] # This seems to do it
 	return True
 
 @add_method(fontTools.ttLib.getTableClass('glyf'))
@@ -684,6 +689,7 @@ if __name__ == '__main__':
 	options = {
 		'layout-features': layout_features_all,
 		'hinting': False,
+		'glyph-names': False,
 		'drop-tables': drop_tables_default
 	}
 
