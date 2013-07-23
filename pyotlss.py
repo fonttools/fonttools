@@ -353,7 +353,7 @@ def closure_glyphs (self, glyphs, table):
 @add_method(fontTools.ttLib.tables.otTables.ContextSubst, fontTools.ttLib.tables.otTables.ContextPos)
 def subset_glyphs (self, glyphs):
 	if self.Format == 1:
-		# XXX Needs more work
+		# XXX De-"Sub" it
 		indices = self.Coverage.subset_glyphs (glyphs)
 		self.SubRuleSet = [self.SubRuleSet[i] for i in indices]
 		self.SubRuleSetCount = len (self.SubRuleSet)
@@ -361,6 +361,7 @@ def subset_glyphs (self, glyphs):
 			rs.SubRule = [r for r in rs.SubRule
 				      if all (g in glyphs for g in r.Input)]
 			rs.SubRuleCount = len (rs.SubRule)
+		# XXX Needs more work
 		# TODO Prune empty subrulesets
 		return bool (self.SubRuleSetCount)
 	elif self.Format == 2:
@@ -374,7 +375,7 @@ def subset_glyphs (self, glyphs):
 @add_method(fontTools.ttLib.tables.otTables.ChainContextSubst, fontTools.ttLib.tables.otTables.ChainContextPos)
 def subset_glyphs (self, glyphs):
 	if self.Format == 1:
-		# XXX Needs more work
+		# XXX De-"Sub" it
 		indices = self.Coverage.subset_glyphs (glyphs)
 		self.ChainSubRuleSet = [self.ChainSubRuleSet[i] for i in indices]
 		self.ChainSubRuleSetCount = len (self.ChainSubRuleSet)
@@ -382,6 +383,7 @@ def subset_glyphs (self, glyphs):
 			rs.ChainSubRule = [r for r in rs.ChainSubRule
 					   if all (g in glyphs for g in r.Backtrack + r.Input + r.LookAhead)]
 			rs.ChainSubRuleCount = len (rs.ChainSubRule)
+		# XXX Needs more work
 		# TODO Prune empty subrulesets
 		return self.ChainSubRuleSetCount
 	elif self.Format == 2:
@@ -779,6 +781,7 @@ def prune_pre_subset (self, options):
 
 drop_tables_default = ['BASE', 'JSTF', 'DSIG', 'EBDT', 'EBLC', 'EBSC', 'PCLT', 'LTSH']
 drop_tables_default += ['Feat', 'Glat', 'Gloc', 'Silf', 'Sill'] # Graphite
+drop_tables_default += ['CBLC', 'CBDT', 'sbix', 'COLR', 'CPAL'] # Color
 no_subset_tables = ['gasp', 'head', 'hhea', 'maxp', 'vhea', 'OS/2', 'loca', 'name', 'cvt ', 'fpgm', 'prep']
 hinting_tables = ['cvt ', 'fpgm', 'prep', 'hdmx', 'VDMX']
 
@@ -819,6 +822,7 @@ options_default = {
 # TODO Avoid recursing too much
 # TODO Text direction considerations
 # TODO Text script / language considerations
+# TODO Drop unknown tables
 
 if __name__ == '__main__':
 
