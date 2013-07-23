@@ -480,20 +480,8 @@ def subset_glyphs (self, glyphs):
 	self.glyphOrder = [g for g in self.glyphOrder if g in glyphs]
 	return bool (self.glyphs)
 
-@add_method(fontTools.ttLib.getTableClass('name'))
-def subset_glyphs (self, glyphs):
-	# TODO Make sure something remains?
-	# TODO Add option for this.
-	# TODO Drop even more (license, etc)? / Drop completely?
-	self.names = [n for n in self.names if n.platformID == 3 and n.platEncID == 1 and n.langID == 0x0409]
-	return bool (self.names)
-
 @add_method(fontTools.ttLib.getTableClass('cmap'))
 def subset_glyphs (self, glyphs):
-	# Drop non-Unicode / non-Symbol cmaps
-	# TODO Add option for this
-	# TODO Only keep one subtable?
-	self.tables = [t for t in self.tables if t.platformID == 3 and t.platEncID in [0, 1, 10]]
 	for t in self.tables:
 		# For reasons I don't understand I need this here
 		# to force decompilation of the cmap format 14.
@@ -509,9 +497,25 @@ def subset_glyphs (self, glyphs):
 			t.cmap = {u:g for (u,g) in t.cmap.items() if g in glyphs}
 	self.tables = [t for t in self.tables if (t.cmap if t.format != 14 else t.uvsDict)]
 	# XXX Convert formats when needed
+	return bool (self.tables)
+
+
+@add_method(fontTools.ttLib.getTableClass('cmap'))
+def prune (self, options):
+	# Drop non-Unicode / non-Symbol cmaps
+	# TODO Add option for this
+	# TODO Only keep one subtable?
+	self.tables = [t for t in self.tables if t.platformID == 3 and t.platEncID in [0, 1, 10]]
 	# For now, drop format=0 which can't be subset_glyphs easily?
 	self.tables = [t for t in self.tables if t.format != 0]
-	return bool (self.tables)
+
+@add_method(fontTools.ttLib.getTableClass('name'))
+def prune (self, options):
+	# TODO Make sure something remains?
+	# TODO Add option for this.
+	# TODO Drop even more (license, etc)? / Drop completely?
+	self.names = [n for n in self.names if n.platformID == 3 and n.platEncID == 1 and n.langID == 0x0409]
+	return bool (self.names)
 
 
 # TODO OS/2 ulUnicodeRange / ulCodePageRange?
@@ -566,10 +570,12 @@ if __name__ == '__main__':
 		writer = xmlWriter.XMLWriter (sys.stdout)
 
 	drop_tables = ['BASE', 'JSTF', 'DSIG', 'EBDT', 'EBLC', 'EBSC', 'PCLT', 'LTSH', 'VDMX']
-	noneed_tables = ['gasp', 'head', 'hhea', 'maxp', 'vhea', 'OS/2', 'loca']
+	no_subset_tables = ['gasp', 'head', 'hhea', 'maxp', 'vhea', 'OS/2', 'loca', 'name']
 
 	# For now drop these
 	drop_tables += ['cvt ', 'fpgm', 'prep']
+
+	prune_options = []
 
 	for tag in font.keys():
 
@@ -582,25 +588,31 @@ if __name__ == '__main__':
 			del font[tag]
 			continue
 
-		if tag in noneed_tables:
-			if verbose:
-				print tag, "intact."
-			continue
-
 		clazz = fontTools.ttLib.getTableClass(tag)
-		if 'subset_glyphs' not in vars (clazz):
-			if verbose:
-				print tag, "skipped................"
-			continue
 
-		table = font[tag]
-		if not table.subset_glyphs (glyphs):
-			del font[tag]
+		if 'prune' in vars (clazz):
+			table = font[tag]
+			table.prune (prune_options)
 			if verbose:
-				print tag, "subset_glyphs empty; dropped."
+				print tag, "pruned."
+
+		if tag in no_subset_tables:
+			if verbose:
+				print tag, "subsetting not needed."
+		elif 'subset_glyphs' in vars (clazz):
+			table = font[tag]
+			if not table.subset_glyphs (glyphs):
+				del font[tag]
+				if verbose:
+					print tag, "subsetted to empty; dropped."
+			else:
+				if verbose:
+					print tag, "subsetted."
 		else:
 			if verbose:
-				print tag, "subsetted."
+				print tag, "NOT subset; don't know how to subset."
+			continue
+
 
 	glyphOrder = font.getGlyphOrder()
 	glyphOrder = [g for g in glyphOrder if g in glyphs]
