@@ -596,7 +596,7 @@ def closure_glyphs (self, glyphs):
 
 drop_tables_default = ['BASE', 'JSTF', 'DSIG', 'EBDT', 'EBLC', 'EBSC', 'PCLT', 'LTSH', 'VDMX']
 no_subset_tables = ['gasp', 'head', 'hhea', 'maxp', 'vhea', 'OS/2', 'loca', 'name', 'cvt ', 'fpgm', 'prep']
-hinting_tables = ['cvt ', 'fpgm', 'prep']
+hinting_tables = ['cvt ', 'fpgm', 'prep', 'hdmx']
 
 # Based on HarfBuzz shapers
 layout_features_dict = {
