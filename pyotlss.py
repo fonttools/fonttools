@@ -536,9 +536,12 @@ def prune (self, options):
 @add_method(fontTools.ttLib.getTableClass('glyf'))
 def closure_glyphs (self, glyphs):
 	glyphs = unique_sorted (glyphs)
+	decompose = glyphs
+	# I don't know if component glyphs can be composite themselves.
+	# We handle them anyway.
 	while True:
 		components = []
-		for g in glyphs:
+		for g in decompose:
 			gl = self[g]
 			if gl.isComposite ():
 				for c in gl.components:
@@ -547,7 +550,8 @@ def closure_glyphs (self, glyphs):
 		components = [c for c in components if c not in glyphs]
 		if not components:
 			return glyphs
-		glyphs = unique_sorted (glyphs + components)
+		decompose = unique_sorted (components)
+		glyphs.extend (components)
 
 
 drop_tables = ['BASE', 'JSTF', 'DSIG', 'EBDT', 'EBLC', 'EBSC', 'PCLT', 'LTSH', 'VDMX']
