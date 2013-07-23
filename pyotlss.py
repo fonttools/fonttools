@@ -573,8 +573,8 @@ if __name__ == '__main__':
 		import xmlWriter
 		writer = xmlWriter.XMLWriter (sys.stdout)
 
-	drop_tables = ['BASE', 'JSTF', 'DSIG', 'EBDT', 'EBLC', 'EBSC', 'PCLT', 'LTSH']
-	noneed_tables = ['gasp', 'head', 'hhea', 'maxp', 'vhea', 'OS/2', 'VDMX', 'loca']
+	drop_tables = ['BASE', 'JSTF', 'DSIG', 'EBDT', 'EBLC', 'EBSC', 'PCLT', 'LTSH', 'VDMX']
+	noneed_tables = ['gasp', 'head', 'hhea', 'maxp', 'vhea', 'OS/2', 'loca']
 
 	# For now drop these
 	drop_tables += ['cvt ', 'fpgm', 'prep']
