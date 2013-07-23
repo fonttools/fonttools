@@ -286,7 +286,10 @@ def closure_glyphs (self, glyphs, table):
 	elif self.Format == 2:
 		assert 0 # XXX
 	elif self.Format == 3:
-		assert 0 # XXX
+		if not all (c.intersect_glyphs (glyphs) for c in self.Coverage):
+			return []
+		return sum ((table.table.LookupList.Lookup[ll.LookupListIndex].closure_glyphs (glyphs, table) \
+			     for ll in self.SubstLookupRecord), [])
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
