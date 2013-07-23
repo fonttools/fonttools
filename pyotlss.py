@@ -703,6 +703,7 @@ def prune_pre_subset (self, options):
 
 
 drop_tables_default = ['BASE', 'JSTF', 'DSIG', 'EBDT', 'EBLC', 'EBSC', 'PCLT', 'LTSH']
+drop_tables_default += ['Feat', 'Glat', 'Gloc', 'Silf', 'Sill'] # Graphite
 no_subset_tables = ['gasp', 'head', 'hhea', 'maxp', 'vhea', 'OS/2', 'loca', 'name', 'cvt ', 'fpgm', 'prep']
 hinting_tables = ['cvt ', 'fpgm', 'prep', 'hdmx', 'VDMX']
 
