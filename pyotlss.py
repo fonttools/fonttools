@@ -682,7 +682,7 @@ if __name__ == '__main__':
 
 		clazz = fontTools.ttLib.getTableClass(tag)
 
-		if 'prune' in vars (clazz):
+		if hasattr (clazz, 'prune'):
 			table = font[tag]
 			retain = table.prune (prune_options)
 			lapse ("prune  '%s'" % tag)
@@ -698,7 +698,7 @@ if __name__ == '__main__':
 		if tag in no_subset_tables:
 			if verbose:
 				print tag, "subsetting not needed."
-		elif 'subset_glyphs' in vars (clazz):
+		elif hasattr (clazz, 'subset_glyphs'):
 			table = font[tag]
 			if tag in ['GSUB', 'GPOS', 'GDEF', 'cmap', 'kern', 'post', 'cmap']: # What else?
 				glyphs = glyphs_requested
