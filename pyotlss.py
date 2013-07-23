@@ -33,9 +33,14 @@ def unique_sorted (l):
 
 
 @add_method(fontTools.ttLib.tables.otTables.Coverage)
+def intersect_glyphs (self, glyphs):
+	"Returns ascending list of matching coverage values."
+	return [i for (i,g) in enumerate (self.glyphs) if g in glyphs]
+
+@add_method(fontTools.ttLib.tables.otTables.Coverage)
 def subset_glyphs (self, glyphs):
 	"Returns ascending list of remaining coverage values."
-	indices = [i for (i,g) in enumerate (self.glyphs) if g in glyphs]
+	indices = self.intersect_glyphs (glyphs)
 	self.glyphs = [g for g in self.glyphs if g in glyphs]
 	return indices
 
@@ -51,10 +56,25 @@ def remap (self, class_map):
 	self.classDefs = {g:class_map.index (v) for g,v in self.classDefs.items()}
 
 @add_method(fontTools.ttLib.tables.otTables.SingleSubst)
+def closure_glyphs (self, glyphs, table):
+	if self.Format in [1, 2]:
+		return [v for g,v in self.mapping.items() if g in glyphs]
+	else:
+		assert 0, "unknown format: %s" % self.Format
+
+@add_method(fontTools.ttLib.tables.otTables.SingleSubst)
 def subset_glyphs (self, glyphs):
 	if self.Format in [1, 2]:
 		self.mapping = {g:v for g,v in self.mapping.items() if g in glyphs}
 		return bool (self.mapping)
+	else:
+		assert 0, "unknown format: %s" % self.Format
+
+@add_method(fontTools.ttLib.tables.otTables.MultipleSubst)
+def closure_glyphs (self, glyphs, table):
+	if self.Format == 1:
+		indices = self.Coverage.intersect_glyphs (glyphs)
+		return sum ((self.Sequence[i].Substitute for i in indices), [])
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
@@ -69,10 +89,25 @@ def subset_glyphs (self, glyphs):
 		assert 0, "unknown format: %s" % self.Format
 
 @add_method(fontTools.ttLib.tables.otTables.AlternateSubst)
+def closure_glyphs (self, glyphs, table):
+	if self.Format == 1:
+		return sum ((v for g,v in self.alternates.items() if g in glyphs), [])
+	else:
+		assert 0, "unknown format: %s" % self.Format
+
+@add_method(fontTools.ttLib.tables.otTables.AlternateSubst)
 def subset_glyphs (self, glyphs):
 	if self.Format == 1:
 		self.alternates = {g:v for g,v in self.alternates.items() if g in glyphs}
 		return bool (self.alternates)
+	else:
+		assert 0, "unknown format: %s" % self.Format
+
+@add_method(fontTools.ttLib.tables.otTables.LigatureSubst)
+def closure_glyphs (self, glyphs, table):
+	if self.Format == 1:
+		return sum (([seq.LigGlyph for seq in seqs if all(c in glyphs for c in seq.Component)]
+			     for g,seqs in self.ligatures.items()), [])
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
@@ -84,6 +119,17 @@ def subset_glyphs (self, glyphs):
 				  for g,seqs in self.ligatures.items()}
 		self.ligatures = {g:v for g,v in self.ligatures.items() if v}
 		return bool (self.ligatures)
+	else:
+		assert 0, "unknown format: %s" % self.Format
+
+@add_method(fontTools.ttLib.tables.otTables.ReverseChainSingleSubst)
+def closure_glyphs (self, glyphs, table):
+	if self.Format == 1:
+		indices = self.Coverage.intersect_glyphs (glyphs)
+		if not indices or \
+		   not all (c.intersect_glyphs (glyphs) for c in self.LookAheadCoverage + self.BacktrackCoverage):
+			return []
+		return [self.Substitute[i] for i in indices]
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
@@ -233,6 +279,17 @@ def subset_lookups (self, lookup_indices):
 def collect_lookups (self):
 	return []
 
+@add_method(fontTools.ttLib.tables.otTables.ContextSubst)
+def closure_glyphs (self, glyphs, table):
+	if self.Format == 1:
+		assert 0 # XXX
+	elif self.Format == 2:
+		assert 0 # XXX
+	elif self.Format == 3:
+		assert 0 # XXX
+	else:
+		assert 0, "unknown format: %s" % self.Format
+
 @add_method(fontTools.ttLib.tables.otTables.ContextSubst, fontTools.ttLib.tables.otTables.ContextPos)
 def subset_glyphs (self, glyphs):
 	if self.Format == 1:
@@ -249,6 +306,21 @@ def subset_glyphs (self, glyphs):
 		return bool (self.Coverage.subset_glyphs (glyphs) and self.ClassDef.subset_glyphs (glyphs))
 	elif self.Format == 3:
 		return all (c.subset_glyphs (glyphs) for c in self.Coverage)
+	else:
+		assert 0, "unknown format: %s" % self.Format
+
+@add_method(fontTools.ttLib.tables.otTables.ChainContextSubst)
+def closure_glyphs (self, glyphs, table):
+	if self.Format == 1:
+		assert 0 # XXX
+	elif self.Format == 2:
+		assert 0 # XXX
+	elif self.Format == 3:
+		if not all (c.intersect_glyphs (glyphs) \
+			    for c in self.InputCoverage + self.LookAheadCoverage + self.BacktrackCoverage):
+			return []
+		return sum ((table.table.LookupList.Lookup[ll.LookupListIndex].closure_glyphs (glyphs, table) \
+			     for ll in self.SubstLookupRecord), [])
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
@@ -294,6 +366,13 @@ def collect_lookups (self):
 def collect_lookups (self):
 	return [ll.LookupListIndex for ll in self.PosLookupRecord]
 
+@add_method(fontTools.ttLib.tables.otTables.ExtensionSubst)
+def closure_glyphs (self, glyphs, table):
+	if self.Format == 1:
+		return self.ExtSubTable.closure_glyphs (glyphs, table)
+	else:
+		assert 0, "unknown format: %s" % self.Format
+
 @add_method(fontTools.ttLib.tables.otTables.ExtensionSubst, fontTools.ttLib.tables.otTables.ExtensionPos)
 def subset_glyphs (self, glyphs):
 	if self.Format == 1:
@@ -304,7 +383,7 @@ def subset_glyphs (self, glyphs):
 @add_method(fontTools.ttLib.tables.otTables.ExtensionSubst, fontTools.ttLib.tables.otTables.ExtensionPos)
 def subset_lookups (self, lookup_indices):
 	if self.Format == 1:
-		self.ExtSubTable.subset_lookups (lookup_indices)
+		return self.ExtSubTable.subset_lookups (lookup_indices)
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
@@ -314,6 +393,10 @@ def collect_lookups (self):
 		return self.ExtSubTable.collect_lookups ()
 	else:
 		assert 0, "unknown format: %s" % self.Format
+
+@add_method(fontTools.ttLib.tables.otTables.Lookup)
+def closure_glyphs (self, glyphs, table):
+	return sum ((s.closure_glyphs (glyphs, table) for s in self.SubTable), [])
 
 @add_method(fontTools.ttLib.tables.otTables.Lookup)
 def subset_glyphs (self, glyphs):
@@ -429,6 +512,18 @@ def subset_features (self, feature_indices):
 def collect_features (self):
 	return unique_sorted (sum ((s.Script.collect_features () for s in self.ScriptRecord), []))
 
+@add_method(fontTools.ttLib.getTableClass('GSUB'))
+def closure_glyphs (self, glyphs):
+	feature_indices = self.table.ScriptList.collect_features ()
+	lookup_indices = self.table.FeatureList.collect_lookups (feature_indices)
+	glyphs = unique_sorted (glyphs)
+	while True:
+		additions = (sum ((self.table.LookupList.Lookup[i].closure_glyphs (glyphs, self) for i in lookup_indices), []))
+		additions = unique_sorted (g for g in additions if g not in glyphs)
+		if not additions:
+			return glyphs
+		glyphs.extend (additions)
+
 @add_method(fontTools.ttLib.getTableClass('GSUB'), fontTools.ttLib.getTableClass('GPOS'))
 def subset_glyphs (self, glyphs):
 	lookup_indices = self.table.LookupList.subset_glyphs (glyphs)
@@ -498,17 +593,17 @@ def subset_glyphs (self, glyphs):
 
 @add_method(fontTools.ttLib.getTableClass('hmtx'), fontTools.ttLib.getTableClass('vmtx'))
 def subset_glyphs (self, glyphs):
-	self.metrics = {g:v for (g,v) in self.metrics.items() if g in glyphs}
+	self.metrics = {g:v for g,v in self.metrics.items() if g in glyphs}
 	return bool (self.metrics)
 
 @add_method(fontTools.ttLib.getTableClass('hdmx'))
 def subset_glyphs (self, glyphs):
-	self.hdmx = {s:{g:v for (g,v) in l.items() if g in glyphs} for (s,l) in self.hdmx.items()}
+	self.hdmx = {s:{g:v for g,v in l.items() if g in glyphs} for (s,l) in self.hdmx.items()}
 	return bool (self.hdmx)
 
 @add_method(fontTools.ttLib.getTableClass('VORG'))
 def subset_glyphs (self, glyphs):
-	self.VOriginRecords = {g:v for (g,v) in self.VOriginRecords.items() if g in glyphs}
+	self.VOriginRecords = {g:v for g,v in self.VOriginRecords.items() if g in glyphs}
 	self.numVertOriginYMetrics = len (self.VOriginRecords)
 	return True # Never drop; has default metrics
 
@@ -545,7 +640,7 @@ def closure_glyphs (self, glyphs):
 
 @add_method(fontTools.ttLib.getTableClass('glyf'))
 def subset_glyphs (self, glyphs):
-	self.glyphs = {g:v for (g,v) in self.glyphs.items() if g in glyphs}
+	self.glyphs = {g:v for g,v in self.glyphs.items() if g in glyphs}
 	self.glyphOrder = [g for g in self.glyphOrder if g in glyphs]
 	return bool (self.glyphs)
 
@@ -635,12 +730,13 @@ options_default = {
 	'name-IDs': [1, 2], # Family and Style
 	'name-legacy': False,
 	'name-languages': [0x0409], # English
+	'notdef': True,
 }
 
 
 # TODO OS/2 ulUnicodeRange / ulCodePageRange?
 # TODO Drop unneeded GSUB/GPOS Script/LangSys entries
-# TODO GSUB glyph closure
+# TODO Finish GSUB glyph closure
 # TODO Text direction considerations
 # TODO Text script / language considerations
 
@@ -664,6 +760,8 @@ if __name__ == '__main__':
 		timing = True
 		sys.argv.remove ("--timing")
 
+	options = options_default.copy ()
+
 	def lapse (what):
 		if not timing:
 			return
@@ -679,9 +777,6 @@ if __name__ == '__main__':
 	fontfile = sys.argv[1]
 	glyphs   = sys.argv[2:]
 
-	# Always include .notdef; anything else?
-	glyphs.append ('.notdef')
-
 	font = fontTools.ttx.TTFont (fontfile)
 	font.disassembleInstructions = False
 	lapse ("load font")
@@ -691,17 +786,35 @@ if __name__ == '__main__':
 	glyphs = [g if g in names else font.getGlyphName(int(g)) for g in glyphs]
 	lapse ("compile glyph list")
 
-	glyphs_requested = glyphs[:]
+	if options["notdef"]:
+		# Always include .notdef; anything else?
+		glyphs.append ('.notdef')
+		if verbose:
+			print "Added .notdef glyph"
+
+	glyphs_requested = glyphs
+	if 'GSUB' in font:
+		# XXX Do this after pruning!
+		if verbose:
+			print "Closing glyph list over 'GSUB'. %d glyphs before" % len (glyphs)
+		glyphs = font['GSUB'].closure_glyphs (glyphs)
+		if verbose:
+			print "Closed  glyph list over 'GSUB'. %d glyphs after" % len (glyphs)
+		lapse ("close glyph list over 'GSUB'")
+	glyphs_gsubed = glyphs
+
 	# Close over composite glyphs
 	if 'glyf' in font:
 		if verbose:
-			print "Closing glyph list over 'glyf' components."
-		glyphs_closed = font['glyf'].closure_glyphs (glyphs)
+			print "Closing glyph list over 'glyf'. %d glyphs before" % len (glyphs)
+		glyphs = font['glyf'].closure_glyphs (glyphs)
 		if verbose:
-			print "Before: %d glyphs; after: %d glyphs" % (len (glyphs_requested), len (glyphs_closed))
-		lapse ("close glyph list over 'glyf' components")
+			print "Closed  glyph list over 'glyf'. %d glyphs after" % len (glyphs)
+		lapse ("close glyph list over 'glyf'")
 	else:
-		glyphs_closed = glyphs
+		glyphs = glyphs
+	glyphs_glyfed = glyphs
+	glyphs_closed = glyphs
 	del glyphs
 
 	if verbose:
@@ -710,8 +823,6 @@ if __name__ == '__main__':
 	if xml:
 		import xmlWriter
 		writer = xmlWriter.XMLWriter (sys.stdout)
-
-	options = options_default.copy ()
 
 	for tag in font.keys():
 
@@ -745,8 +856,10 @@ if __name__ == '__main__':
 				print tag, "subsetting not needed."
 		elif hasattr (clazz, 'subset_glyphs'):
 			table = font[tag]
-			if tag in ['GSUB', 'GPOS', 'GDEF', 'cmap', 'kern', 'post', 'cmap']: # What else?
+			if tag == 'cmap': # What else?
 				glyphs = glyphs_requested
+			elif tag in ['GSUB', 'GPOS', 'GDEF', 'cmap', 'kern', 'post']: # What else?
+				glyphs = glyphs_gsubed
 			else:
 				glyphs = glyphs_closed
 			retain = table.subset_glyphs (glyphs)
