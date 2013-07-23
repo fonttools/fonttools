@@ -344,12 +344,16 @@ def subset_lookups (self, lookup_indices):
 
 @add_method(fontTools.ttLib.tables.otTables.LookupList)
 def closure_lookups (self, lookup_indices):
+	lookup_indices = unique_sorted (lookup_indices)
+	recurse = lookup_indices
 	while True:
-		recurse_lookups = sum ((self.Lookup[i].collect_lookups () for i in lookup_indices), [])
+		recurse_lookups = sum ((self.Lookup[i].collect_lookups () for i in recurse), [])
 		recurse_lookups = [l for l in recurse_lookups if l not in lookup_indices]
 		if not recurse_lookups:
-			return lookup_indices
-		lookup_indices = unique_sorted (lookup_indices + recurse_lookups)
+			return unique_sorted (lookup_indices)
+		recurse_lookups = unique_sorted (recurse_lookups)
+		lookup_indices.extend (recurse_lookups)
+		recurse = recurse_lookups
 
 @add_method(fontTools.ttLib.tables.otTables.Feature)
 def subset_lookups (self, lookup_indices):
