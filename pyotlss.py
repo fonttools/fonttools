@@ -518,6 +518,12 @@ def prune (self, options):
 	return bool (self.names)
 
 
+drop_tables = ['BASE', 'JSTF', 'DSIG', 'EBDT', 'EBLC', 'EBSC', 'PCLT', 'LTSH', 'VDMX']
+no_subset_tables = ['gasp', 'head', 'hhea', 'maxp', 'vhea', 'OS/2', 'loca', 'name']
+# For now drop these
+drop_tables += ['cvt ', 'fpgm', 'prep']
+
+
 # TODO OS/2 ulUnicodeRange / ulCodePageRange?
 # TODO Drop unneeded GSUB/GPOS entries
 # TODO Move glyf component closure after GSUB/GPOS/etc
@@ -568,12 +574,6 @@ if __name__ == '__main__':
 	if xml:
 		import xmlWriter
 		writer = xmlWriter.XMLWriter (sys.stdout)
-
-	drop_tables = ['BASE', 'JSTF', 'DSIG', 'EBDT', 'EBLC', 'EBSC', 'PCLT', 'LTSH', 'VDMX']
-	no_subset_tables = ['gasp', 'head', 'hhea', 'maxp', 'vhea', 'OS/2', 'loca', 'name']
-
-	# For now drop these
-	drop_tables += ['cvt ', 'fpgm', 'prep']
 
 	prune_options = []
 
