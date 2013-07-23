@@ -470,8 +470,7 @@ def subset_glyphs (self, glyphs):
 
 @add_method(fontTools.ttLib.getTableClass('post'))
 def subset_glyphs (self, glyphs):
-	# Drop names
-	# TODO Add option for this.
+	# TODO Drop names?  How?
 	self.extraNames = []
 	return True
 
