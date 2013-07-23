@@ -1,7 +1,23 @@
 #!/usr/bin/python
 
 # Python OpenType Layout Subsetter
-# Written by: Behdad Esfahbod
+#
+# Copyright 2013 Google, Inc. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# Google Author(s): Behdad Esfahbod
+#
 
 import fontTools.ttx
 
@@ -15,8 +31,6 @@ def add_method (*clazzes):
 def unique_sorted (l):
 	return sorted ({v:1 for v in l}.keys ())
 
-
-# Subset
 
 @add_method(fontTools.ttLib.tables.otTables.Coverage)
 def subset_glyphs (self, glyphs):
@@ -518,6 +532,19 @@ def prune (self, options):
 	return bool (self.names)
 
 
+@add_method(fontTools.ttLib.getTableClass('glyf'))
+def closure_glyphs (self, glyphs):
+	# XXX Rinse & repeat
+	components = []
+	for g in glyphs:
+		gl = self[g]
+		if gl.isComposite ():
+			for c in gl.components:
+				if c.glyphName not in glyphs:
+					components.append (c.glyphName)
+	return unique_sorted (glyphs + components)
+
+
 drop_tables = ['BASE', 'JSTF', 'DSIG', 'EBDT', 'EBLC', 'EBSC', 'PCLT', 'LTSH', 'VDMX']
 no_subset_tables = ['gasp', 'head', 'hhea', 'maxp', 'vhea', 'OS/2', 'loca', 'name']
 # For now drop these
@@ -558,18 +585,20 @@ if __name__ == '__main__':
 	# Convert to glyph names
 	glyphs = [g if g in names else font.getGlyphName(int(g)) for g in glyphs]
 
+	glyphs_requested = glyphs[:]
 	# Close over composite glyphs
 	if 'glyf' in font:
-		glyf = font['glyf']
-		# XXX Rinse & repeat
-		for g in glyphs:
-			gl = glyf[g]
-			if gl.isComposite ():
-				for c in gl.components:
-					if c.glyphName not in glyphs:
-						glyphs.append (c.glyphName)
+		if verbose:
+			print "Closing glyph list over 'glyf' components."
+		glyphs_closed = font['glyf'].closure_glyphs (glyphs)
+		if verbose:
+			print "Before: %d glyphs; after: %d glyphs" % (len (glyphs_requested), len (glyphs_closed))
+	else:
+		glyphs_closed = glyphs
+	del glyphs
+
 	if verbose:
-		print "Retaining %d glyphs: " % len (glyphs), glyphs
+		print "Retaining %d glyphs: " % len (glyphs_closed)
 
 	if xml:
 		import xmlWriter
@@ -601,6 +630,10 @@ if __name__ == '__main__':
 				print tag, "subsetting not needed."
 		elif 'subset_glyphs' in vars (clazz):
 			table = font[tag]
+			if tag in ['GSUB', 'GPOS', 'GDEF', 'cmap', 'kern', 'post', 'cmap']: # What else?
+				glyphs = glyphs_requested
+			else:
+				glyphs = glyphs_closed
 			if not table.subset_glyphs (glyphs):
 				del font[tag]
 				if verbose:
@@ -608,6 +641,7 @@ if __name__ == '__main__':
 			else:
 				if verbose:
 					print tag, "subsetted."
+			del glyphs
 		else:
 			if verbose:
 				print tag, "NOT subset; don't know how to subset."
@@ -615,7 +649,7 @@ if __name__ == '__main__':
 
 
 	glyphOrder = font.getGlyphOrder()
-	glyphOrder = [g for g in glyphOrder if g in glyphs]
+	glyphOrder = [g for g in glyphOrder if g in glyphs_closed]
 	font.setGlyphOrder (glyphOrder)
 	font._buildReverseGlyphOrderDict ()
 
