@@ -380,8 +380,7 @@ def subset_glyphs (self, glyphs):
 		setattr (self, c.RuleSetCount, len (rss))
 		return bool (rss)
 	elif self.Format == 2:
-		# XXX Needs more work
-		# TODO Renumber classes?
+		# TODO Renumber classes then prune rules
 		return self.Coverage.subset_glyphs (glyphs) and \
 		       all (x.subset_glyphs (glyphs) for x in c.ContextSequence (self, self.Format))
 	elif self.Format == 3:
