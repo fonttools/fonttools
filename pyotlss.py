@@ -359,14 +359,19 @@ def collect_lookups (self):
 def subset_lookups (self, lookup_indices):
 	"Returns the indices of nonempty features."
 	feature_indices = [i for (i,f) in enumerate (self.FeatureRecord) if f.Feature.subset_lookups (lookup_indices)]
-	self.FeatureRecord = [self.FeatureRecord[i] for i in feature_indices]
-	self.FeatureCount = len (self.FeatureRecord)
+	self.subset_features (feature_indices)
 	return feature_indices
 
 @add_method(fontTools.ttLib.tables.otTables.FeatureList)
 def collect_lookups (self, feature_indices):
 	return unique_sorted (sum ((self.FeatureRecord[i].Feature.collect_lookups () for i in feature_indices
 				    if i < self.FeatureCount), []))
+
+@add_method(fontTools.ttLib.tables.otTables.FeatureList)
+def subset_features (self, feature_indices):
+	self.FeatureRecord = [self.FeatureRecord[i] for i in feature_indices]
+	self.FeatureCount = len (self.FeatureRecord)
+	return bool (self.FeatureCount)
 
 @add_method(fontTools.ttLib.tables.otTables.DefaultLangSys, fontTools.ttLib.tables.otTables.LangSys)
 def subset_features (self, feature_indices):
@@ -378,7 +383,7 @@ def subset_features (self, feature_indices):
 	# Now map them.
 	self.FeatureIndex = [feature_indices.index (f) for f in self.FeatureIndex if f in feature_indices]
 	self.FeatureCount = len (self.FeatureIndex)
-	return self.FeatureCount or self.ReqFeatureIndex != 65535
+	return bool (self.FeatureCount or self.ReqFeatureIndex != 65535)
 
 @add_method(fontTools.ttLib.tables.otTables.DefaultLangSys, fontTools.ttLib.tables.otTables.LangSys)
 def collect_features (self):
@@ -393,7 +398,7 @@ def subset_features (self, feature_indices):
 		self.DefaultLangSys = None
 	self.LangSysRecord = [l for l in self.LangSysRecord if l.LangSys.subset_features (feature_indices)]
 	self.LangSysCount = len (self.LangSysRecord)
-	return self.LangSysCount or self.DefaultLangSys
+	return bool (self.LangSysCount or self.DefaultLangSys)
 
 @add_method(fontTools.ttLib.tables.otTables.Script)
 def collect_features (self):
@@ -406,7 +411,7 @@ def collect_features (self):
 def subset_features (self, feature_indices):
 	self.ScriptRecord = [s for s in self.ScriptRecord if s.Script.subset_features (feature_indices)]
 	self.ScriptCount = len (self.ScriptRecord)
-	return self.ScriptCount
+	return bool (self.ScriptCount)
 
 @add_method(fontTools.ttLib.tables.otTables.ScriptList)
 def collect_features (self):
@@ -433,6 +438,19 @@ def prune_lookups (self):
 	lookup_indices = self.table.FeatureList.collect_lookups (feature_indices)
 	lookup_indices = self.table.LookupList.closure_lookups (lookup_indices)
 	self.subset_lookups (lookup_indices)
+
+@add_method(fontTools.ttLib.getTableClass('GSUB'), fontTools.ttLib.getTableClass('GPOS'))
+def subset_feature_tags (self, feature_tags):
+	feature_indices = [i for (i,f) in enumerate (self.table.FeatureList.FeatureRecord) if f.FeatureTag in feature_tags]
+	self.table.FeatureList.subset_features (feature_indices)
+	self.table.ScriptList.subset_features (feature_indices)
+
+@add_method(fontTools.ttLib.getTableClass('GSUB'), fontTools.ttLib.getTableClass('GPOS'))
+def prune (self, options):
+	if 'layout_features' in options:
+		self.subset_feature_tags (options['layout_features'])
+	self.prune_lookups ()
+	return True
 
 @add_method(fontTools.ttLib.getTableClass('GDEF'))
 def subset_glyphs (self, glyphs):
@@ -559,6 +577,23 @@ no_subset_tables = ['gasp', 'head', 'hhea', 'maxp', 'vhea', 'OS/2', 'loca', 'nam
 # For now drop these
 drop_tables += ['cvt ', 'fpgm', 'prep']
 
+# Based on HarfBuzz shapers
+layout_features_dict = {
+	# Default shaper
+	'common':	['ccmp', 'liga', 'locl', 'mark', 'mkmk', 'rlig'],
+	'horizontal':	['calt', 'clig', 'curs', 'kern', 'rclt'],
+	'vertical':	['valt', 'vert', 'vkrn', 'vpal', 'vrt2'],
+	'ltr':		['ltra', 'ltrm'],
+	'rtl':		['rtla', 'rtlm'],
+	# Complex shapers
+	'arabic':	['init', 'medi', 'fina', 'isol', 'med2', 'fin2', 'fin3'],
+	'hangul':	['ljmo', 'vjmo', 'tjmo'],
+	'tibetal':	['abvs', 'blws', 'abvm', 'blwm'],
+	'indic':	['nukt', 'akhn', 'rphf', 'rkrf', 'pref', 'blwf', 'half', 'abvf', 'pstf', 'cfar', 'vatu', 'cjct',
+		         'init', 'pres', 'abvs', 'blws', 'psts', 'haln', 'dist', 'abvm', 'blwm'],
+}
+layout_features_all = unique_sorted (sum (layout_features_dict.values (), []))
+
 
 # TODO OS/2 ulUnicodeRange / ulCodePageRange?
 # TODO Drop unneeded GSUB/GPOS entries
@@ -630,7 +665,9 @@ if __name__ == '__main__':
 		import xmlWriter
 		writer = xmlWriter.XMLWriter (sys.stdout)
 
-	prune_options = []
+	prune_options = {
+		'layout_features': layout_features_all
+	}
 
 	for tag in font.keys():
 
