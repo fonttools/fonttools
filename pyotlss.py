@@ -522,6 +522,7 @@ def prune (self, options):
 	self.tables = [t for t in self.tables if t.platformID == 3 and t.platEncID in [0, 1, 10]]
 	# For now, drop format=0 which can't be subset_glyphs easily?
 	self.tables = [t for t in self.tables if t.format != 0]
+	return bool (self.tables)
 
 @add_method(fontTools.ttLib.getTableClass('name'))
 def prune (self, options):
@@ -624,9 +625,14 @@ if __name__ == '__main__':
 
 		if 'prune' in vars (clazz):
 			table = font[tag]
-			table.prune (prune_options)
-			if verbose:
-				print tag, "pruned."
+			if not table.prune (prune_options):
+				if verbose:
+					print tag, "pruned to empty; dropped."
+				del font[tag]
+				continue
+			else:
+				if verbose:
+					print tag, "pruned."
 
 		if tag in no_subset_tables:
 			if verbose:
@@ -638,9 +644,10 @@ if __name__ == '__main__':
 			else:
 				glyphs = glyphs_closed
 			if not table.subset_glyphs (glyphs):
-				del font[tag]
 				if verbose:
 					print tag, "subsetted to empty; dropped."
+				del font[tag]
+				continue
 			else:
 				if verbose:
 					print tag, "subsetted."
