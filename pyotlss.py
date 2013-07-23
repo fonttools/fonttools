@@ -561,7 +561,10 @@ drop_tables += ['cvt ', 'fpgm', 'prep']
 
 if __name__ == '__main__':
 
-	import sys
+	import sys, time
+
+	start_time = time.time ()
+	last_time = start_time
 
 	verbose = False
 	if "--verbose" in sys.argv:
@@ -571,6 +574,18 @@ if __name__ == '__main__':
 	if "--xml" in sys.argv:
 		xml = True
 		sys.argv.remove ("--xml")
+	timing = False
+	if "--timing" in sys.argv:
+		timing = True
+		sys.argv.remove ("--timing")
+
+	def lapse (what):
+		if not timing:
+			return
+		global last_time
+		new_time = time.time ()
+		print "Took %0.3fs to %s" % (new_time - last_time, what)
+		last_time = new_time
 
 	if len (sys.argv) < 3:
 		print >>sys.stderr, "usage: pyotlss.py font-file glyph..."
@@ -584,10 +599,12 @@ if __name__ == '__main__':
 
 	font = fontTools.ttx.TTFont (fontfile)
 	font.disassembleInstructions = False
+	lapse ("load font")
 
 	names = font.getGlyphNames()
 	# Convert to glyph names
 	glyphs = [g if g in names else font.getGlyphName(int(g)) for g in glyphs]
+	lapse ("compile glyph list")
 
 	glyphs_requested = glyphs[:]
 	# Close over composite glyphs
@@ -597,6 +614,7 @@ if __name__ == '__main__':
 		glyphs_closed = font['glyf'].closure_glyphs (glyphs)
 		if verbose:
 			print "Before: %d glyphs; after: %d glyphs" % (len (glyphs_requested), len (glyphs_closed))
+		lapse ("close glyph list over 'glyf' components")
 	else:
 		glyphs_closed = glyphs
 	del glyphs
@@ -625,7 +643,9 @@ if __name__ == '__main__':
 
 		if 'prune' in vars (clazz):
 			table = font[tag]
-			if not table.prune (prune_options):
+			retain = table.prune (prune_options)
+			lapse ("prune  '%s'" % tag)
+			if not retain:
 				if verbose:
 					print tag, "pruned to empty; dropped."
 				del font[tag]
@@ -643,7 +663,9 @@ if __name__ == '__main__':
 				glyphs = glyphs_requested
 			else:
 				glyphs = glyphs_closed
-			if not table.subset_glyphs (glyphs):
+			retain = table.subset_glyphs (glyphs)
+			lapse ("subset '%s'" % tag)
+			if not retain:
 				if verbose:
 					print tag, "subsetted to empty; dropped."
 				del font[tag]
@@ -662,6 +684,7 @@ if __name__ == '__main__':
 	glyphOrder = [g for g in glyphOrder if g in glyphs_closed]
 	font.setGlyphOrder (glyphOrder)
 	font._buildReverseGlyphOrderDict ()
+	lapse ("subset GlyphOrder")
 
 	if xml:
 		for tag in font.keys():
@@ -672,3 +695,7 @@ if __name__ == '__main__':
 			writer.newline ()
 
 	font.save (fontfile + '.subset')
+	lapse ("compile and save font")
+
+	last_time = start_time
+	lapse ("make one with everything (TOTAL TIME)")
