@@ -40,7 +40,7 @@ def remap (self, class_map):
 def subset_glyphs (self, glyphs):
 	if self.Format in [1, 2]:
 		self.mapping = {g:v for g,v in self.mapping.items() if g in glyphs}
-		return len (self.mapping)
+		return bool (self.mapping)
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
@@ -50,7 +50,7 @@ def subset_glyphs (self, glyphs):
 		indices = self.Coverage.subset_glyphs (glyphs)
 		self.Sequence = [self.Sequence[i] for i in indices]
 		self.SequenceCount = len (self.Sequence)
-		return self.SequenceCount
+		return bool (self.SequenceCount)
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
@@ -58,7 +58,7 @@ def subset_glyphs (self, glyphs):
 def subset_glyphs (self, glyphs):
 	if self.Format == 1:
 		self.alternates = {g:v for g,v in self.alternates.items() if g in glyphs}
-		return len (self.alternates)
+		return bool (self.alternates)
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
@@ -69,7 +69,7 @@ def subset_glyphs (self, glyphs):
 		self.ligatures = {g:[seq for seq in seqs if all(c in glyphs for c in seq.Component)]
 				  for g,seqs in self.ligatures.items()}
 		self.ligatures = {g:v for g,v in self.ligatures.items() if v}
-		return len (self.ligatures)
+		return bool (self.ligatures)
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
@@ -79,7 +79,7 @@ def subset_glyphs (self, glyphs):
 		indices = self.Coverage.subset_glyphs (glyphs)
 		self.Substitute = [self.Substitute[i] for i in indices]
 		self.GlyphCount = len (self.Substitute)
-		return self.GlyphCount and all (c.subset_glyphs (glyphs) for c in self.LookAheadCoverage + self.BacktrackCoverage)
+		return bool (self.GlyphCount and all (c.subset_glyphs (glyphs) for c in self.LookAheadCoverage + self.BacktrackCoverage))
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
@@ -91,7 +91,7 @@ def subset_glyphs (self, glyphs):
 		indices = self.Coverage.subset_glyphs (glyphs)
 		self.Value = [self.Value[i] for i in indices]
 		self.ValueCount = len (self.Value)
-		return self.ValueCount
+		return bool (self.ValueCount)
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
@@ -105,9 +105,8 @@ def subset_glyphs (self, glyphs):
 			p.PairValueCount = len (p.PairValueRecord)
 		self.PairSet = [p for p in self.PairSet if p.PairValueCount]
 		self.PairSetCount = len (self.PairSet)
-		return self.PairSetCount
+		return bool (self.PairSetCount)
 	elif self.Format == 2:
-		self.Coverage.subset_glyphs (glyphs)
 		class1_map = self.ClassDef1.subset_glyphs (glyphs)
 		class2_map = self.ClassDef2.subset_glyphs (glyphs)
 		self.ClassDef1.remap (class1_map)
@@ -117,7 +116,7 @@ def subset_glyphs (self, glyphs):
 			c.Class2Record = [c.Class2Record[i] for i in class2_map]
 		self.Class1Count = len (class1_map)
 		self.Class2Count = len (class2_map)
-		return self.Coverage and self.Class1Count and self.Class2Count
+		return bool (self.Class1Count and self.Class2Count and self.Coverage.subset_glyphs (glyphs))
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
@@ -127,7 +126,7 @@ def subset_glyphs (self, glyphs):
 		indices = self.Coverage.subset_glyphs (glyphs)
 		self.EntryExitRecord = [self.EntryExitRecord[i] for i in indices]
 		self.EntryExitCount = len (self.EntryExitRecord)
-		return self.EntryExitCount
+		return bool (self.EntryExitCount)
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
@@ -147,7 +146,7 @@ def subset_glyphs (self, glyphs):
 			m.Class = class_indices.index (m.Class)
 		for b in self.BaseArray.BaseRecord:
 			b.BaseAnchor = [b.BaseAnchor[i] for i in class_indices]
-		return self.ClassCount and self.MarkArray.MarkCount and self.BaseArray.BaseCount
+		return bool (self.ClassCount and self.MarkArray.MarkCount and self.BaseArray.BaseCount)
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
@@ -168,7 +167,7 @@ def subset_glyphs (self, glyphs):
 		for l in self.LigatureArray.LigatureAttach:
 			for c in l.ComponentRecord:
 				c.LigatureAnchor = [c.LigatureAnchor[i] for i in class_indices]
-		return self.ClassCount and self.MarkArray.MarkCount and self.LigatureArray.LigatureCount
+		return bool (self.ClassCount and self.MarkArray.MarkCount and self.LigatureArray.LigatureCount)
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
@@ -188,7 +187,7 @@ def subset_glyphs (self, glyphs):
 			m.Class = class_indices.index (m.Class)
 		for b in self.Mark2Array.Mark2Record:
 			b.Mark2Anchor = [b.Mark2Anchor[i] for i in class_indices]
-		return self.ClassCount and self.Mark1Array.MarkCount and self.Mark2Array.MarkCount
+		return bool (self.ClassCount and self.Mark1Array.MarkCount and self.Mark2Array.MarkCount)
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
@@ -231,9 +230,9 @@ def subset_glyphs (self, glyphs):
 				      if all (g in glyphs for g in r.Input)]
 			rs.SubRuleCount = len (rs.SubRule)
 		# Prune empty subrulesets
-		return self.SubRuleSetCount
+		return bool (self.SubRuleSetCount)
 	elif self.Format == 2:
-		return self.Coverage.subset_glyphs (glyphs) and self.ClassDef.subset_glyphs (glyphs)
+		return bool (self.Coverage.subset_glyphs (glyphs) and self.ClassDef.subset_glyphs (glyphs))
 	elif self.Format == 3:
 		return all (c.subset_glyphs (glyphs) for c in self.Coverage)
 	else:
@@ -283,7 +282,7 @@ def subset_glyphs (self, glyphs):
 @add_method(fontTools.ttLib.tables.otTables.ExtensionSubst, fontTools.ttLib.tables.otTables.ExtensionPos)
 def subset_lookups (self, lookup_indices):
 	if self.Format == 1:
-		return self.ExtSubTable.subset_lookups (lookup_indices)
+		self.ExtSubTable.subset_lookups (lookup_indices)
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
@@ -298,7 +297,7 @@ def collect_lookups (self):
 def subset_glyphs (self, glyphs):
 	self.SubTable = [s for s in self.SubTable if s.subset_glyphs (glyphs)]
 	self.SubTableCount = len (self.SubTable)
-	return self.SubTableCount
+	return bool (self.SubTableCount)
 
 @add_method(fontTools.ttLib.tables.otTables.Lookup)
 def subset_lookups (self, lookup_indices):
@@ -444,23 +443,24 @@ def subset_glyphs (self, glyphs):
 		table.AttachList.GlyphCount = len (table.AttachList.AttachPoint)
 		if not table.AttachList.GlyphCount:
 			table.AttachList = None
-	return table.LigCaretList or table.MarkAttachClassDef or table.GlyphClassDef or table.AttachList
+	return bool (table.LigCaretList or table.MarkAttachClassDef or table.GlyphClassDef or table.AttachList)
 
 @add_method(fontTools.ttLib.getTableClass('kern'))
 def subset_glyphs (self, glyphs):
 	for t in self.kernTables:
 		t.kernTable = {(a,b):v for ((a,b),v) in t.kernTable.items() if a in glyphs and b in glyphs}
 	self.kernTables = [t for t in self.kernTables if t.kernTable]
-	return self.kernTables
+	return bool (self.kernTables)
 
 @add_method(fontTools.ttLib.getTableClass('hmtx'), fontTools.ttLib.getTableClass('vmtx'))
 def subset_glyphs (self, glyphs):
 	self.metrics = {g:v for (g,v) in self.metrics.items() if g in glyphs}
-	return len (self.metrics)
+	return bool (self.metrics)
 
 @add_method(fontTools.ttLib.getTableClass('hdmx'))
 def subset_glyphs (self, glyphs):
 	self.hdmx = {s:{g:v for (g,v) in l.items() if g in glyphs} for (s,l) in self.hdmx.items()}
+	return bool (self.hdmx)
 
 @add_method(fontTools.ttLib.getTableClass('VORG'))
 def subset_glyphs (self, glyphs):
@@ -479,7 +479,7 @@ def subset_glyphs (self, glyphs):
 def subset_glyphs (self, glyphs):
 	self.glyphs = {g:v for (g,v) in self.glyphs.items() if g in glyphs}
 	self.glyphOrder = [g for g in self.glyphOrder if g in glyphs]
-	return len (self.glyphs)
+	return bool (self.glyphs)
 
 @add_method(fontTools.ttLib.getTableClass('name'))
 def subset_glyphs (self, glyphs):
@@ -487,7 +487,7 @@ def subset_glyphs (self, glyphs):
 	# TODO Add option for this.
 	# TODO Drop even more (license, etc)? / Drop completely?
 	self.names = [n for n in self.names if n.platformID == 3 and n.platEncID == 1 and n.langID == 0x0409]
-	return len (self.names)
+	return bool (self.names)
 
 @add_method(fontTools.ttLib.getTableClass('cmap'))
 def subset_glyphs (self, glyphs):
@@ -512,7 +512,7 @@ def subset_glyphs (self, glyphs):
 	# XXX Convert formats when needed
 	# For now, drop format=0 which can't be subset_glyphs easily?
 	self.tables = [t for t in self.tables if t.format != 0]
-	return len (self.tables)
+	return bool (self.tables)
 
 
 # TODO OS/2 ulUnicodeRange / ulCodePageRange?
