@@ -834,6 +834,7 @@ options_default = {
 # TODO Text direction considerations
 # TODO Text script / language considerations
 # TODO Drop unknown tables
+# TODO Add other three required TrueType glyphs (1,2,3)
 
 if __name__ == '__main__':
 
