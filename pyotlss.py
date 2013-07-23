@@ -279,6 +279,22 @@ def subset_lookups (self, lookup_indices):
 def collect_lookups (self):
 	return []
 
+
+@add_method(fontTools.ttLib.tables.otTables.ContextSubst, fontTools.ttLib.tables.otTables.ChainContextSubst,
+	    fontTools.ttLib.tables.otTables.ContextPos,   fontTools.ttLib.tables.otTables.ChainContextPos)
+def __classify_context (self):
+	if self.__class__.__name__.startswith ('Chain'):
+		SubRule = 'ChainSubRule'
+		SubRuleSet = 'ChainSubRuleSet'
+	else:
+		SubRule = 'SubRule'
+		SubRuleSet = 'SubRuleSet'
+	if self.__class__.__name__.endswith ('Subst'):
+		LookupRecord = 'SubstLookupRecord'
+	else:
+		LookupRecord = 'PosLookupRecord'
+	return (SubRule, SubRuleSet, LookupRecord)
+
 @add_method(fontTools.ttLib.tables.otTables.ContextSubst)
 def closure_glyphs (self, glyphs, table):
 	if self.Format == 1:
@@ -354,117 +370,40 @@ def subset_glyphs (self, glyphs):
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
-@add_method(fontTools.ttLib.tables.otTables.ContextSubst)
+@add_method(fontTools.ttLib.tables.otTables.ContextSubst, fontTools.ttLib.tables.otTables.ChainContextSubst,
+	    fontTools.ttLib.tables.otTables.ContextPos,   fontTools.ttLib.tables.otTables.ChainContextPos)
 def subset_lookups (self, lookup_indices):
+	SubRule, SubRuleSet, LookupRecord = self.__classify_context ()
+
 	if self.Format == 1:
-		for rs in self.SubRuleSet:
-			for r in rs.SubRule:
-				r.SubstLookupRecord = [ll for ll in r.SubstLookupRecord if ll.LookupListIndex in lookup_indices]
-				for ll in r.SubstLookupRecord:
+		for rs in getattr (self, SubRuleSet):
+			for r in getattr (rs, SubRule):
+				setattr (r, LookupRecord, [ll for ll in getattr (r, LookupRecord) if ll.LookupListIndex in lookup_indices])
+				for ll in getattr (r, LookupRecord):
 					ll.LookupListIndex = lookup_indices.index (ll.LookupListIndex)
 	elif self.Format == 2:
 		assert 0 # XXX
 	elif self.Format == 3:
-		self.SubstLookupRecord = [ll for ll in self.SubstLookupRecord if ll.LookupListIndex in lookup_indices]
-		for ll in self.SubstLookupRecord:
+		setattr (self, LookupRecord, [ll for ll in getattr (self, LookupRecord) if ll.LookupListIndex in lookup_indices])
+		for ll in getattr (self, LookupRecord):
 			ll.LookupListIndex = lookup_indices.index (ll.LookupListIndex)
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
-@add_method(fontTools.ttLib.tables.otTables.ChainContextSubst)
-def subset_lookups (self, lookup_indices):
-	if self.Format == 1:
-		for rs in self.ChainSubRuleSet:
-			for r in rs.ChainSubRule:
-				r.SubstLookupRecord = [ll for ll in r.SubstLookupRecord if ll.LookupListIndex in lookup_indices]
-				for ll in r.SubstLookupRecord:
-					ll.LookupListIndex = lookup_indices.index (ll.LookupListIndex)
-	elif self.Format == 2:
-		assert 0 # XXX
-	elif self.Format == 3:
-		self.SubstLookupRecord = [ll for ll in self.SubstLookupRecord if ll.LookupListIndex in lookup_indices]
-		for ll in self.SubstLookupRecord:
-			ll.LookupListIndex = lookup_indices.index (ll.LookupListIndex)
-	else:
-		assert 0, "unknown format: %s" % self.Format
-
-@add_method(fontTools.ttLib.tables.otTables.ContextPos)
-def subset_lookups (self, lookup_indices):
-	if self.Format == 1:
-		for rs in self.SubRuleSet:
-			for r in rs.SubRule:
-				r.PosLookupRecord = [ll for ll in r.PosLookupRecord if ll.LookupListIndex in lookup_indices]
-				for ll in r.PosLookupRecord:
-					ll.LookupListIndex = lookup_indices.index (ll.LookupListIndex)
-	elif self.Format == 2:
-		assert 0 # XXX
-	elif self.Format == 3:
-		self.PosLookupRecord = [ll for ll in self.PosLookupRecord if ll.LookupListIndex in lookup_indices]
-		for ll in self.PosLookupRecord:
-			ll.LookupListIndex = lookup_indices.index (ll.LookupListIndex)
-	else:
-		assert 0, "unknown format: %s" % self.Format
-
-@add_method(fontTools.ttLib.tables.otTables.ChainContextPos)
-def subset_lookups (self, lookup_indices):
-	if self.Format == 1:
-		for rs in self.ChainSubRuleSet:
-			for r in rs.ChainSubRule:
-				r.PosLookupRecord = [ll for ll in r.PosLookupRecord if ll.LookupListIndex in lookup_indices]
-				for ll in r.PosLookupRecord:
-					ll.LookupListIndex = lookup_indices.index (ll.LookupListIndex)
-	elif self.Format == 2:
-		assert 0 # XXX
-	elif self.Format == 3:
-		self.PosLookupRecord = [ll for ll in self.PosLookupRecord if ll.LookupListIndex in lookup_indices]
-		for ll in self.PosLookupRecord:
-			ll.LookupListIndex = lookup_indices.index (ll.LookupListIndex)
-	else:
-		assert 0, "unknown format: %s" % self.Format
-
-@add_method(fontTools.ttLib.tables.otTables.ContextSubst)
+@add_method(fontTools.ttLib.tables.otTables.ContextSubst, fontTools.ttLib.tables.otTables.ChainContextSubst,
+	    fontTools.ttLib.tables.otTables.ContextPos,   fontTools.ttLib.tables.otTables.ChainContextPos)
 def collect_lookups (self):
+	SubRule, SubRuleSet, LookupRecord = self.__classify_context ()
+
 	if self.Format == 1:
-		return [ll.LookupListIndex for rs in self.SubRuleSet for r in rs.SubRule for ll in r.SubstLookupRecord]
+		return [ll.LookupListIndex for rs in getattr (self, SubRuleSet) for r in getattr (rs, SubRule) for ll in getattr (r, LookupRecord)]
 	elif self.Format == 2:
 		assert 0 # XXX
 	elif self.Format == 3:
-		return [ll.LookupListIndex for ll in self.SubstLookupRecord]
+		return [ll.LookupListIndex for ll in getattr (self, LookupRecord)]
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
-@add_method(fontTools.ttLib.tables.otTables.ChainContextSubst)
-def collect_lookups (self):
-	if self.Format == 1:
-		return [ll.LookupListIndex for rs in self.ChainSubRuleSet for r in rs.ChainSubRule for ll in r.SubstLookupRecord]
-	elif self.Format == 2:
-		assert 0 # XXX
-	elif self.Format == 3:
-		return [ll.LookupListIndex for ll in self.SubstLookupRecord]
-	else:
-		assert 0, "unknown format: %s" % self.Format
-
-@add_method(fontTools.ttLib.tables.otTables.ContextPos)
-def collect_lookups (self):
-	if self.Format == 1:
-		return [ll.LookupListIndex for rs in self.SubRuleSet for r in rs.SubRule for ll in r.PosLookupRecord]
-	elif self.Format == 2:
-		assert 0 # XXX
-	elif self.Format == 3:
-		return [ll.LookupListIndex for ll in self.PosLookupRecord]
-	else:
-		assert 0, "unknown format: %s" % self.Format
-
-@add_method(fontTools.ttLib.tables.otTables.ChainContextPos)
-def collect_lookups (self):
-	if self.Format == 1:
-		return [ll.LookupListIndex for rs in self.ChainSubRuleSet for r in rs.ChainSubRule for ll in r.PosLookupRecord]
-	elif self.Format == 2:
-		assert 0 # XXX
-	elif self.Format == 3:
-		return [ll.LookupListIndex for ll in self.PosLookupRecord]
-	else:
-		assert 0, "unknown format: %s" % self.Format
 
 @add_method(fontTools.ttLib.tables.otTables.ExtensionSubst)
 def closure_glyphs (self, glyphs, table):
