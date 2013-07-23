@@ -296,6 +296,7 @@ def closure_glyphs (self, glyphs, table):
 @add_method(fontTools.ttLib.tables.otTables.ContextSubst, fontTools.ttLib.tables.otTables.ContextPos)
 def subset_glyphs (self, glyphs):
 	if self.Format == 1:
+		# XXX Needs more work
 		indices = self.Coverage.subset_glyphs (glyphs)
 		self.SubRuleSet = [self.SubRuleSet[i] for i in indices]
 		self.SubRuleSetCount = len (self.SubRuleSet)
@@ -303,9 +304,10 @@ def subset_glyphs (self, glyphs):
 			rs.SubRule = [r for r in rs.SubRule
 				      if all (g in glyphs for g in r.Input)]
 			rs.SubRuleCount = len (rs.SubRule)
-		# Prune empty subrulesets
+		# TODO Prune empty subrulesets
 		return bool (self.SubRuleSetCount)
 	elif self.Format == 2:
+		# XXX Needs more work
 		return bool (self.Coverage.subset_glyphs (glyphs) and self.ClassDef.subset_glyphs (glyphs))
 	elif self.Format == 3:
 		return all (c.subset_glyphs (glyphs) for c in self.Coverage)
@@ -315,6 +317,7 @@ def subset_glyphs (self, glyphs):
 @add_method(fontTools.ttLib.tables.otTables.ChainContextSubst)
 def closure_glyphs (self, glyphs, table):
 	if self.Format == 1:
+		return []
 		assert 0 # XXX
 	elif self.Format == 2:
 		assert 0 # XXX
@@ -330,6 +333,7 @@ def closure_glyphs (self, glyphs, table):
 @add_method(fontTools.ttLib.tables.otTables.ChainContextSubst, fontTools.ttLib.tables.otTables.ChainContextPos)
 def subset_glyphs (self, glyphs):
 	if self.Format == 1:
+		# XXX Needs more work
 		indices = self.Coverage.subset_glyphs (glyphs)
 		self.ChainSubRuleSet = [self.ChainSubRuleSet[i] for i in indices]
 		self.ChainSubRuleSetCount = len (self.ChainSubRuleSet)
@@ -337,9 +341,10 @@ def subset_glyphs (self, glyphs):
 			rs.ChainSubRule = [r for r in rs.ChainSubRule
 					   if all (g in glyphs for g in r.Backtrack + r.Input + r.LookAhead)]
 			rs.ChainSubRuleCount = len (rs.ChainSubRule)
-		# Prune empty subrulesets
+		# TODO Prune empty subrulesets
 		return self.ChainSubRuleSetCount
 	elif self.Format == 2:
+		# XXX Needs more work
 		return self.Coverage.subset_glyphs (glyphs) and \
 		       self.LookAheadClassDef.subset_glyphs (glyphs) and \
 		       self.BacktrackClassDef.subset_glyphs (glyphs) and \
@@ -351,23 +356,59 @@ def subset_glyphs (self, glyphs):
 
 @add_method(fontTools.ttLib.tables.otTables.ContextSubst, fontTools.ttLib.tables.otTables.ChainContextSubst)
 def subset_lookups (self, lookup_indices):
-	self.SubstLookupRecord = [ll for ll in self.SubstLookupRecord if ll.LookupListIndex in lookup_indices]
-	for ll in self.SubstLookupRecord:
-		ll.LookupListIndex = lookup_indices.index (ll.LookupListIndex)
+	if self.Format == 1:
+		for rs in self.ChainSubRuleSet:
+			for r in rs.ChainSubRule:
+				r.SubstLookupRecord = [ll for ll in r.SubstLookupRecord if ll.LookupListIndex in lookup_indices]
+				for ll in r.SubstLookupRecord:
+					ll.LookupListIndex = lookup_indices.index (ll.LookupListIndex)
+	elif self.Format == 2:
+		assert 0 # XXX
+	elif self.Format == 3:
+		self.SubstLookupRecord = [ll for ll in self.SubstLookupRecord if ll.LookupListIndex in lookup_indices]
+		for ll in self.SubstLookupRecord:
+			ll.LookupListIndex = lookup_indices.index (ll.LookupListIndex)
+	else:
+		assert 0, "unknown format: %s" % self.Format
 
 @add_method(fontTools.ttLib.tables.otTables.ContextPos, fontTools.ttLib.tables.otTables.ChainContextPos)
 def subset_lookups (self, lookup_indices):
-	self.PosLookupRecord = [ll for ll in self.PosLookupRecord if ll.LookupListIndex in lookup_indices]
-	for ll in self.PosLookupRecord:
-		ll.LookupListIndex = lookup_indices.index (ll.LookupListIndex)
+	if self.Format == 1:
+		for rs in self.ChainSubRuleSet:
+			for r in rs.ChainSubRule:
+				r.PosLookupRecord = [ll for ll in r.PosLookupRecord if ll.LookupListIndex in lookup_indices]
+				for ll in r.PosLookupRecord:
+					ll.LookupListIndex = lookup_indices.index (ll.LookupListIndex)
+	elif self.Format == 2:
+		assert 0 # XXX
+	elif self.Format == 3:
+		self.PosLookupRecord = [ll for ll in self.PosLookupRecord if ll.LookupListIndex in lookup_indices]
+		for ll in self.PosLookupRecord:
+			ll.LookupListIndex = lookup_indices.index (ll.LookupListIndex)
+	else:
+		assert 0, "unknown format: %s" % self.Format
 
 @add_method(fontTools.ttLib.tables.otTables.ContextSubst, fontTools.ttLib.tables.otTables.ChainContextSubst)
 def collect_lookups (self):
-	return [ll.LookupListIndex for ll in self.SubstLookupRecord]
+	if self.Format == 1:
+		return [ll.LookupListIndex for rs in self.ChainSubRuleSet for r in rs.ChainSubRule for ll in r.SubstLookupRecord]
+	elif self.Format == 2:
+		assert 0 # XXX
+	elif self.Format == 3:
+		return [ll.LookupListIndex for ll in self.SubstLookupRecord]
+	else:
+		assert 0, "unknown format: %s" % self.Format
 
 @add_method(fontTools.ttLib.tables.otTables.ContextPos, fontTools.ttLib.tables.otTables.ChainContextPos)
 def collect_lookups (self):
-	return [ll.LookupListIndex for ll in self.PosLookupRecord]
+	if self.Format == 1:
+		return [ll.LookupListIndex for rs in self.ChainSubRuleSet for r in rs.ChainSubRule for ll in r.PosLookupRecord]
+	elif self.Format == 2:
+		assert 0 # XXX
+	elif self.Format == 3:
+		return [ll.LookupListIndex for ll in self.PosLookupRecord]
+	else:
+		assert 0, "unknown format: %s" % self.Format
 
 @add_method(fontTools.ttLib.tables.otTables.ExtensionSubst)
 def closure_glyphs (self, glyphs, table):
@@ -741,6 +782,7 @@ options_default = {
 # TODO OS/2 ulUnicodeRange / ulCodePageRange?
 # TODO Drop unneeded GSUB/GPOS Script/LangSys entries
 # TODO Finish GSUB glyph closure
+# TODO Avoid recursing too much
 # TODO Text direction considerations
 # TODO Text script / language considerations
 
