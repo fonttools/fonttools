@@ -587,11 +587,13 @@ def subset_glyphs (self, glyphs):
 
 @add_method(fontTools.ttLib.getTableClass('name'))
 def prune_pre_subset (self, options):
-	# TODO Make sure something remains?
-	# TODO Add option for this.
-	# TODO Drop even more (license, etc)? / Drop completely?
-	self.names = [n for n in self.names if n.platformID == 3 and n.platEncID == 1 and n.langID == 0x0409]
-	return bool (self.names)
+	if '*' not in options['name-IDs']:
+		self.names = [n for n in self.names if n.nameID in options['name-IDs']]
+	if not options['name-legacy']:
+		self.names = [n for n in self.names if n.platformID == 3 and n.platEncID == 1]
+	if '*' not in options['name-languages']:
+		self.names = [n for n in self.names if n.langID in options['name-languages']]
+	return True # Retain even if empty
 
 
 drop_tables_default = ['BASE', 'JSTF', 'DSIG', 'EBDT', 'EBLC', 'EBSC', 'PCLT', 'LTSH']
@@ -622,6 +624,9 @@ options_default = {
 	'glyph-names': False,
 	'legacy-cmap': False,
 	'symbol-cmap': False,
+	'name-IDs': [1, 2], # Family and Style
+	'name-legacy': False,
+	'name-languages': [0x0409], # English
 }
 
 
