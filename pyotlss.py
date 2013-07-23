@@ -20,6 +20,7 @@ def unique_sorted (l):
 
 @add_method(fontTools.ttLib.tables.otTables.Coverage)
 def subset_glyphs (self, glyphs):
+	"Returns ascending list of remaining coverage values."
 	indices = [i for (i,g) in enumerate (self.glyphs) if g in glyphs]
 	self.glyphs = [g for g in self.glyphs if g in glyphs]
 	return indices
