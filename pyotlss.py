@@ -454,7 +454,7 @@ def subset_feature_tags (self, feature_tags):
 	self.table.ScriptList.subset_features (feature_indices)
 
 @add_method(fontTools.ttLib.getTableClass('GSUB'), fontTools.ttLib.getTableClass('GPOS'))
-def prune (self, options):
+def prune_pre_subset (self, options):
 	if 'layout-features' in options:
 		self.subset_feature_tags (options['layout-features'])
 	self.prune_lookups ()
@@ -521,13 +521,12 @@ def subset_glyphs (self, glyphs):
 	return bool (self.glyphs)
 
 @add_method(fontTools.ttLib.getTableClass('glyf'))
-def prune (self, options):
-	# TODO move 'glyf' pruning to after subsetting to avoid loading all glyphs
+def prune_post_subset (self, options):
 	if 'hinting' in options and not options['hinting']:
 		for g in self.glyphs.values ():
-			if hasattr (g, 'program'):
-				g.program = fontTools.ttLib.tables.ttProgram.Program()
-				g.program.fromBytecode([])
+			g.expand (self)
+			g.program = fontTools.ttLib.tables.ttProgram.Program()
+			g.program.fromBytecode([])
 	return True
 
 @add_method(fontTools.ttLib.getTableClass('cmap'))
@@ -551,7 +550,7 @@ def subset_glyphs (self, glyphs):
 
 
 @add_method(fontTools.ttLib.getTableClass('cmap'))
-def prune (self, options):
+def prune_pre_subset (self, options):
 	# Drop non-Unicode / non-Symbol cmaps
 	# TODO Add option for this
 	# TODO Only keep one subtable?
@@ -561,7 +560,7 @@ def prune (self, options):
 	return bool (self.tables)
 
 @add_method(fontTools.ttLib.getTableClass('name'))
-def prune (self, options):
+def prune_pre_subset (self, options):
 	# TODO Make sure something remains?
 	# TODO Add option for this.
 	# TODO Drop even more (license, etc)? / Drop completely?
@@ -702,9 +701,9 @@ if __name__ == '__main__':
 
 		clazz = fontTools.ttLib.getTableClass(tag)
 
-		if hasattr (clazz, 'prune'):
+		if hasattr (clazz, 'prune_pre_subset'):
 			table = font[tag]
-			retain = table.prune (options)
+			retain = table.prune_pre_subset (options)
 			lapse ("prune  '%s'" % tag)
 			if not retain:
 				if verbose:
@@ -739,6 +738,20 @@ if __name__ == '__main__':
 			if verbose:
 				print tag, "NOT subset; don't know how to subset."
 			continue
+
+		if hasattr (clazz, 'prune_post_subset'):
+			table = font[tag]
+			retain = table.prune_post_subset (options)
+			lapse ("prune  '%s'" % tag)
+			if not retain:
+				if verbose:
+					print tag, "pruned to empty; dropped."
+				del font[tag]
+				continue
+			else:
+				if verbose:
+					print tag, "pruned."
+
 
 
 	glyphOrder = font.getGlyphOrder()
