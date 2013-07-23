@@ -293,6 +293,22 @@ def closure_glyphs (self, glyphs, table):
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
+@add_method(fontTools.ttLib.tables.otTables.ChainContextSubst)
+def closure_glyphs (self, glyphs, table):
+	if self.Format == 1:
+		return []
+		assert 0 # XXX
+	elif self.Format == 2:
+		assert 0 # XXX
+	elif self.Format == 3:
+		if not all (c.intersect_glyphs (glyphs) \
+			    for c in self.InputCoverage + self.LookAheadCoverage + self.BacktrackCoverage):
+			return []
+		return sum ((table.table.LookupList.Lookup[ll.LookupListIndex].closure_glyphs (glyphs, table) \
+			     for ll in self.SubstLookupRecord), [])
+	else:
+		assert 0, "unknown format: %s" % self.Format
+
 @add_method(fontTools.ttLib.tables.otTables.ContextSubst, fontTools.ttLib.tables.otTables.ContextPos)
 def subset_glyphs (self, glyphs):
 	if self.Format == 1:
@@ -311,22 +327,6 @@ def subset_glyphs (self, glyphs):
 		return bool (self.Coverage.subset_glyphs (glyphs) and self.ClassDef.subset_glyphs (glyphs))
 	elif self.Format == 3:
 		return all (c.subset_glyphs (glyphs) for c in self.Coverage)
-	else:
-		assert 0, "unknown format: %s" % self.Format
-
-@add_method(fontTools.ttLib.tables.otTables.ChainContextSubst)
-def closure_glyphs (self, glyphs, table):
-	if self.Format == 1:
-		return []
-		assert 0 # XXX
-	elif self.Format == 2:
-		assert 0 # XXX
-	elif self.Format == 3:
-		if not all (c.intersect_glyphs (glyphs) \
-			    for c in self.InputCoverage + self.LookAheadCoverage + self.BacktrackCoverage):
-			return []
-		return sum ((table.table.LookupList.Lookup[ll.LookupListIndex].closure_glyphs (glyphs, table) \
-			     for ll in self.SubstLookupRecord), [])
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
