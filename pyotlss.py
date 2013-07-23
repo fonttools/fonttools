@@ -455,7 +455,7 @@ def subset_feature_tags (self, feature_tags):
 
 @add_method(fontTools.ttLib.getTableClass('GSUB'), fontTools.ttLib.getTableClass('GPOS'))
 def prune_pre_subset (self, options):
-	if 'layout-features' in options:
+	if options['layout-features'] and '*' not in options['layout-features']:
 		self.subset_feature_tags (options['layout-features'])
 	self.prune_lookups ()
 	return True
@@ -510,7 +510,7 @@ def subset_glyphs (self, glyphs):
 
 @add_method(fontTools.ttLib.getTableClass('post'))
 def prune_pre_subset (self, glyphs):
-	if 'glyph-names' in options and not options['glyph-names']:
+	if not options['glyph-names']:
 		self.formatType = 3.0
 	return True
 
@@ -547,7 +547,7 @@ def subset_glyphs (self, glyphs):
 
 @add_method(fontTools.ttLib.getTableClass('glyf'))
 def prune_post_subset (self, options):
-	if 'hinting' in options and not options['hinting']:
+	if not options['hinting']:
 		for g in self.glyphs.values ():
 			g.expand (self)
 			g.program = fontTools.ttLib.tables.ttProgram.Program()
@@ -612,6 +612,13 @@ layout_features_dict = {
 		         'init', 'pres', 'abvs', 'blws', 'psts', 'haln', 'dist', 'abvm', 'blwm'],
 }
 layout_features_all = unique_sorted (sum (layout_features_dict.values (), []))
+
+options_default = {
+	'layout-features': layout_features_all,
+	'hinting': False,
+	'glyph-names': False,
+	'drop-tables': drop_tables_default
+}
 
 
 # TODO OS/2 ulUnicodeRange / ulCodePageRange?
@@ -684,12 +691,7 @@ if __name__ == '__main__':
 		import xmlWriter
 		writer = xmlWriter.XMLWriter (sys.stdout)
 
-	options = {
-		'layout-features': layout_features_all,
-		'hinting': False,
-		'glyph-names': False,
-		'drop-tables': drop_tables_default
-	}
+	options = options_default.copy ()
 
 	for tag in font.keys():
 
