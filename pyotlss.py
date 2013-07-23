@@ -342,24 +342,7 @@ def __classify_context (self):
 		self.__class__.__ContextContext = ContextContext (self)
 	return self.__class__.__ContextContext
 
-
-
-
-@add_method(fontTools.ttLib.tables.otTables.ContextSubst)
-def closure_glyphs (self, glyphs, table):
-	if self.Format == 1:
-		assert 0 # XXX
-	elif self.Format == 2:
-		assert 0 # XXX
-	elif self.Format == 3:
-		if not all (x.intersect_glyphs (glyphs) for x in c.ContextSequence (self, self.Format)):
-			return []
-		return sum ((table.table.LookupList.Lookup[ll.LookupListIndex].closure_glyphs (glyphs, table) \
-			     for ll in self.SubstLookupRecord), [])
-	else:
-		assert 0, "unknown format: %s" % self.Format
-
-@add_method(fontTools.ttLib.tables.otTables.ChainContextSubst)
+@add_method(fontTools.ttLib.tables.otTables.ContextSubst, fontTools.ttLib.tables.otTables.ChainContextSubst)
 def closure_glyphs (self, glyphs, table):
 	c = self.__classify_context ()
 
@@ -372,10 +355,9 @@ def closure_glyphs (self, glyphs, table):
 		if not all (x.intersect_glyphs (glyphs) for x in c.ContextSequence (self, self.Format)):
 			return []
 		return sum ((table.table.LookupList.Lookup[ll.LookupListIndex].closure_glyphs (glyphs, table) \
-			     for ll in self.SubstLookupRecord), [])
+			     for ll in getattr (self, c.LookupRecord)), [])
 	else:
 		assert 0, "unknown format: %s" % self.Format
-
 
 @add_method(fontTools.ttLib.tables.otTables.ContextSubst,      fontTools.ttLib.tables.otTables.ContextPos,
 	    fontTools.ttLib.tables.otTables.ChainContextSubst, fontTools.ttLib.tables.otTables.ChainContextPos)
@@ -406,7 +388,6 @@ def subset_glyphs (self, glyphs):
 		return all (x.subset_glyphs (glyphs) for x in c.ContextSequence (self, self.Format))
 	else:
 		assert 0, "unknown format: %s" % self.Format
-
 
 @add_method(fontTools.ttLib.tables.otTables.ContextSubst, fontTools.ttLib.tables.otTables.ChainContextSubst,
 	    fontTools.ttLib.tables.otTables.ContextPos,   fontTools.ttLib.tables.otTables.ChainContextPos)
