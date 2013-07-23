@@ -274,17 +274,25 @@ def subset_glyphs (self, glyphs):
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
-@add_method(fontTools.ttLib.tables.otTables.ContextSubst, fontTools.ttLib.tables.otTables.ContextPos,
-	    fontTools.ttLib.tables.otTables.ChainContextSubst, fontTools.ttLib.tables.otTables.ChainContextPos)
+@add_method(fontTools.ttLib.tables.otTables.ContextSubst, fontTools.ttLib.tables.otTables.ChainContextSubst)
 def subset_lookups (self, lookup_indices):
 	self.SubstLookupRecord = [ll for ll in self.SubstLookupRecord if ll.LookupListIndex in lookup_indices]
 	for ll in self.SubstLookupRecord:
 		ll.LookupListIndex = lookup_indices.index (ll.LookupListIndex)
 
-@add_method(fontTools.ttLib.tables.otTables.ContextSubst, fontTools.ttLib.tables.otTables.ContextPos,
-	    fontTools.ttLib.tables.otTables.ChainContextSubst, fontTools.ttLib.tables.otTables.ChainContextPos)
+@add_method(fontTools.ttLib.tables.otTables.ContextPos, fontTools.ttLib.tables.otTables.ChainContextPos)
+def subset_lookups (self, lookup_indices):
+	self.PosLookupRecord = [ll for ll in self.PosLookupRecord if ll.LookupListIndex in lookup_indices]
+	for ll in self.PosLookupRecord:
+		ll.LookupListIndex = lookup_indices.index (ll.LookupListIndex)
+
+@add_method(fontTools.ttLib.tables.otTables.ContextSubst, fontTools.ttLib.tables.otTables.ChainContextSubst)
 def collect_lookups (self):
 	return [ll.LookupListIndex for ll in self.SubstLookupRecord]
+
+@add_method(fontTools.ttLib.tables.otTables.ContextPos, fontTools.ttLib.tables.otTables.ChainContextPos)
+def collect_lookups (self):
+	return [ll.LookupListIndex for ll in self.PosLookupRecord]
 
 @add_method(fontTools.ttLib.tables.otTables.ExtensionSubst, fontTools.ttLib.tables.otTables.ExtensionPos)
 def subset_glyphs (self, glyphs):
