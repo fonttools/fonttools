@@ -615,7 +615,7 @@ layout_features_all = unique_sorted (sum (layout_features_dict.values (), []))
 
 
 # TODO OS/2 ulUnicodeRange / ulCodePageRange?
-# TODO Drop unneeded GSUB/GPOS entries
+# TODO Drop unneeded GSUB/GPOS Script/LangSys entries
 
 if __name__ == '__main__':
 
