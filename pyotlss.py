@@ -304,10 +304,17 @@ def __classify_context (self):
 
 			self.LookupRecord = Type+'LookupRecord'
 
+			# Format 1
 			self.Rule = ChainTyp+'Rule'
 			self.RuleCount = ChainTyp+'RuleCount'
 			self.RuleSet = ChainTyp+'RuleSet'
 			self.RuleSetCount = ChainTyp+'RuleSetCount'
+
+			# Format 2
+			self.ClassRule = ChainTyp+'ClassRule'
+			self.ClassRuleCount = ChainTyp+'ClassRuleCount'
+			self.ClassRuleSet = ChainTyp+'ClassSet'
+			self.ClassRuleSetCount = ChainTyp+'ClassSetCount'
 
 	if not hasattr (self.__class__, "__ContextContext"):
 		self.__class__.__ContextContext = ContextContext (self)
@@ -401,7 +408,12 @@ def subset_lookups (self, lookup_indices):
 				for ll in getattr (r, c.LookupRecord):
 					ll.LookupListIndex = lookup_indices.index (ll.LookupListIndex)
 	elif self.Format == 2:
-		assert 0 # XXX
+		for rs in getattr (self, c.ClassRuleSet):
+			for r in getattr (rs, c.ClassRule):
+				setattr (r, c.LookupRecord, [ll for ll in getattr (r, c.LookupRecord) \
+								if ll.LookupListIndex in lookup_indices])
+				for ll in getattr (r, c.LookupRecord):
+					ll.LookupListIndex = lookup_indices.index (ll.LookupListIndex)
 	elif self.Format == 3:
 		setattr (self, c.LookupRecord, [ll for ll in getattr (self, c.LookupRecord) \
 						   if ll.LookupListIndex in lookup_indices])
@@ -421,7 +433,10 @@ def collect_lookups (self):
 			for r in getattr (rs, c.Rule) \
 			for ll in getattr (r, c.LookupRecord)]
 	elif self.Format == 2:
-		assert 0 # XXX
+		return [ll.LookupListIndex \
+			for rs in getattr (self, c.ClassRuleSet) \
+			for r in getattr (rs, c.ClassRule) \
+			for ll in getattr (r, c.LookupRecord)]
 	elif self.Format == 3:
 		return [ll.LookupListIndex \
 			for ll in getattr (self, c.LookupRecord)]
