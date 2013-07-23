@@ -447,8 +447,8 @@ def subset_feature_tags (self, feature_tags):
 
 @add_method(fontTools.ttLib.getTableClass('GSUB'), fontTools.ttLib.getTableClass('GPOS'))
 def prune (self, options):
-	if 'layout_features' in options:
-		self.subset_feature_tags (options['layout_features'])
+	if 'layout-features' in options:
+		self.subset_feature_tags (options['layout-features'])
 	self.prune_lookups ()
 	return True
 
@@ -512,6 +512,16 @@ def subset_glyphs (self, glyphs):
 	self.glyphOrder = [g for g in self.glyphOrder if g in glyphs]
 	return bool (self.glyphs)
 
+@add_method(fontTools.ttLib.getTableClass('glyf'))
+def prune (self, options):
+	# TODO move 'glyf' pruning to after subsetting to avoid loading all glyphs
+	if 'hinting' in options and not options['hinting']:
+		for g in self.glyphs.values ():
+			if hasattr (g, 'program'):
+				g.program = fontTools.ttLib.tables.ttProgram.Program()
+				g.program.fromBytecode([])
+	return True
+
 @add_method(fontTools.ttLib.getTableClass('cmap'))
 def subset_glyphs (self, glyphs):
 	for t in self.tables:
@@ -572,10 +582,9 @@ def closure_glyphs (self, glyphs):
 		glyphs.extend (components)
 
 
-drop_tables = ['BASE', 'JSTF', 'DSIG', 'EBDT', 'EBLC', 'EBSC', 'PCLT', 'LTSH', 'VDMX']
-no_subset_tables = ['gasp', 'head', 'hhea', 'maxp', 'vhea', 'OS/2', 'loca', 'name']
-# For now drop these
-drop_tables += ['cvt ', 'fpgm', 'prep']
+drop_tables_default = ['BASE', 'JSTF', 'DSIG', 'EBDT', 'EBLC', 'EBSC', 'PCLT', 'LTSH', 'VDMX']
+no_subset_tables = ['gasp', 'head', 'hhea', 'maxp', 'vhea', 'OS/2', 'loca', 'name', 'cvt ', 'fpgm', 'prep']
+hinting_tables = ['cvt ', 'fpgm', 'prep']
 
 # Based on HarfBuzz shapers
 layout_features_dict = {
@@ -665,8 +674,10 @@ if __name__ == '__main__':
 		import xmlWriter
 		writer = xmlWriter.XMLWriter (sys.stdout)
 
-	prune_options = {
-		'layout_features': layout_features_all
+	options = {
+		'layout-features': layout_features_all,
+		'hinting': False,
+		'drop-tables': drop_tables_default
 	}
 
 	for tag in font.keys():
@@ -674,7 +685,8 @@ if __name__ == '__main__':
 		if tag == 'GlyphOrder':
 			continue
 
-		if tag in drop_tables:
+		if tag in options['drop-tables'] or \
+		   (not options['hinting'] and tag in hinting_tables):
 			if verbose:
 				print tag, "dropped."
 			del font[tag]
@@ -684,7 +696,7 @@ if __name__ == '__main__':
 
 		if hasattr (clazz, 'prune'):
 			table = font[tag]
-			retain = table.prune (prune_options)
+			retain = table.prune (options)
 			lapse ("prune  '%s'" % tag)
 			if not retain:
 				if verbose:
