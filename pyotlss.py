@@ -309,6 +309,28 @@ def __classify_context (self):
 			self.RuleCount = ChainTyp+'RuleCount'
 			self.RuleSet = ChainTyp+'RuleSet'
 			self.RuleSetCount = ChainTyp+'RuleSetCount'
+			def ContextSequence (r, Format):
+				if Format == 1:
+					return r.Input
+				elif Format == 2:
+					assert 0
+				elif Format == 3:
+					return r.Coverage
+				else:
+					assert 0, "unknown format: %s" % Format
+			def ChainContextSequence (r, Format):
+				if Format == 1:
+					return r.Backtrack + r.Input + r.LookAhead
+				elif Format == 2:
+					assert 0
+				elif Format == 3:
+					return r.InputCoverage + r.LookAheadCoverage + r.BacktrackCoverage
+				else:
+					assert 0, "unknown format: %s" % Format
+			if Chain:
+				self.ContextSequence = ChainContextSequence
+			else:
+				self.ContextSequence = ContextSequence
 
 			# Format 2
 			self.ClassRule = ChainTyp+'ClassRule'
@@ -327,7 +349,7 @@ def closure_glyphs (self, glyphs, table):
 	elif self.Format == 2:
 		assert 0 # XXX
 	elif self.Format == 3:
-		if not all (c.intersect_glyphs (glyphs) for c in self.Coverage):
+		if not all (x.intersect_glyphs (glyphs) for x in c.ContextSequence (self, self.Format)):
 			return []
 		return sum ((table.table.LookupList.Lookup[ll.LookupListIndex].closure_glyphs (glyphs, table) \
 			     for ll in self.SubstLookupRecord), [])
@@ -336,14 +358,15 @@ def closure_glyphs (self, glyphs, table):
 
 @add_method(fontTools.ttLib.tables.otTables.ChainContextSubst)
 def closure_glyphs (self, glyphs, table):
+	c = self.__classify_context ()
+
 	if self.Format == 1:
 		return []
 		assert 0 # XXX
 	elif self.Format == 2:
 		assert 0 # XXX
 	elif self.Format == 3:
-		if not all (c.intersect_glyphs (glyphs) \
-			    for c in self.InputCoverage + self.LookAheadCoverage + self.BacktrackCoverage):
+		if not all (x.intersect_glyphs (glyphs) for x in c.ContextSequence (self, self.Format)):
 			return []
 		return sum ((table.table.LookupList.Lookup[ll.LookupListIndex].closure_glyphs (glyphs, table) \
 			     for ll in self.SubstLookupRecord), [])
@@ -352,6 +375,8 @@ def closure_glyphs (self, glyphs, table):
 
 @add_method(fontTools.ttLib.tables.otTables.ContextSubst, fontTools.ttLib.tables.otTables.ContextPos)
 def subset_glyphs (self, glyphs):
+	c = self.__classify_context ()
+
 	if self.Format == 1:
 		# XXX De-"Sub" it
 		indices = self.Coverage.subset_glyphs (glyphs)
