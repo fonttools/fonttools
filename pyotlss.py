@@ -554,6 +554,10 @@ def prune_post_subset (self, options):
 			g.program.fromBytecode([])
 	return True
 
+@add_method(fontTools.ttLib.getTableClass('CFF '))
+def subset_glyphs (self, glyphs):
+	assert 0, "unimplemented"
+
 @add_method(fontTools.ttLib.getTableClass('cmap'))
 def prune_pre_subset (self, options):
 	if not options['legacy-cmap']:
@@ -769,8 +773,6 @@ if __name__ == '__main__':
 			else:
 				if verbose:
 					print tag, "pruned."
-
-
 
 	glyphOrder = font.getGlyphOrder()
 	glyphOrder = [g for g in glyphOrder if g in glyphs_closed]
