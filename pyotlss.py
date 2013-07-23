@@ -556,10 +556,12 @@ def prune_post_subset (self, options):
 
 @add_method(fontTools.ttLib.getTableClass('cmap'))
 def prune_pre_subset (self, options):
-	# Drop non-Unicode / non-Symbol cmaps
-	# TODO Add option for this
+	if not options['legacy-cmap']:
+		# Drop non-Unicode / non-Symbol cmaps
+		self.tables = [t for t in self.tables if t.platformID == 3 and t.platEncID in [0, 1, 10]]
+	if not options['symbol-cmap']:
+		self.tables = [t for t in self.tables if t.platformID == 3 and t.platEncID in [1, 10]]
 	# TODO Only keep one subtable?
-	self.tables = [t for t in self.tables if t.platformID == 3 and t.platEncID in [0, 1, 10]]
 	# For now, drop format=0 which can't be subset_glyphs easily?
 	self.tables = [t for t in self.tables if t.format != 0]
 	return bool (self.tables)
@@ -614,10 +616,12 @@ layout_features_dict = {
 layout_features_all = unique_sorted (sum (layout_features_dict.values (), []))
 
 options_default = {
+	'drop-tables': drop_tables_default,
 	'layout-features': layout_features_all,
 	'hinting': False,
 	'glyph-names': False,
-	'drop-tables': drop_tables_default
+	'legacy-cmap': False,
+	'symbol-cmap': False,
 }
 
 
