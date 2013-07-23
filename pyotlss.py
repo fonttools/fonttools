@@ -783,7 +783,33 @@ if __name__ == '__main__':
 
 	names = font.getGlyphNames()
 	# Convert to glyph names
-	glyphs = [g if g in names else font.getGlyphName(int(g)) for g in glyphs]
+	glyph_names = []
+	for g in glyphs:
+		if g in names:
+			glyph_names.append (g)
+			continue
+		if g[:3] == 'uni':
+			u = int (g[3:], 16)
+			cmap = font['cmap']
+			found = False
+			for table in  [t for t in cmap.tables if t.platformID == 3 and t.platEncID in [1, 10]]:
+				if u in table.cmap:
+					glyph_names.append (table.cmap[u])
+					found = True
+					break
+			if not found:
+				raise Exception ("No glyph for Unicode value %s" % g)
+			continue
+		if g[:3] == 'gid':
+			g = g[3:]
+		elif g[:5] == 'glyph':
+			g = g[5:]
+		try:
+			glyph_names.append (font.getGlyphName (int (g)))
+		except ValueError:
+			raise Exception ("Invalid glyph identifier %s" % g)
+	glyphs = glyph_names
+	del glyph_names
 	lapse ("compile glyph list")
 
 	if options["notdef"]:
