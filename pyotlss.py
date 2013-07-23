@@ -313,7 +313,7 @@ def __classify_context (self):
 				if Format == 1:
 					return r.Input
 				elif Format == 2:
-					assert 0
+					return [r.ClassDef]
 				elif Format == 3:
 					return r.Coverage
 				else:
@@ -322,7 +322,7 @@ def __classify_context (self):
 				if Format == 1:
 					return r.Backtrack + r.Input + r.LookAhead
 				elif Format == 2:
-					assert 0
+					return [r.LookAheadClassDef, r.BacktrackClassDef, r.InputClassDef]
 				elif Format == 3:
 					return r.InputCoverage + r.LookAheadCoverage + r.BacktrackCoverage
 				else:
@@ -341,6 +341,9 @@ def __classify_context (self):
 	if not hasattr (self.__class__, "__ContextContext"):
 		self.__class__.__ContextContext = ContextContext (self)
 	return self.__class__.__ContextContext
+
+
+
 
 @add_method(fontTools.ttLib.tables.otTables.ContextSubst)
 def closure_glyphs (self, glyphs, table):
@@ -373,31 +376,9 @@ def closure_glyphs (self, glyphs, table):
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
-@add_method(fontTools.ttLib.tables.otTables.ContextSubst, fontTools.ttLib.tables.otTables.ContextPos)
-def subset_glyphs (self, glyphs):
-	c = self.__classify_context ()
 
-	if self.Format == 1:
-		# XXX De-"Sub" it
-		indices = self.Coverage.subset_glyphs (glyphs)
-		self.SubRuleSet = [self.SubRuleSet[i] for i in indices]
-		self.SubRuleSetCount = len (self.SubRuleSet)
-		for rs in self.SubRuleSet:
-			rs.SubRule = [r for r in rs.SubRule
-				      if all (g in glyphs for g in r.Input)]
-			rs.SubRuleCount = len (rs.SubRule)
-		# XXX Needs more work
-		# TODO Prune empty subrulesets
-		return bool (self.SubRuleSetCount)
-	elif self.Format == 2:
-		# XXX Needs more work
-		return bool (self.Coverage.subset_glyphs (glyphs) and self.ClassDef.subset_glyphs (glyphs))
-	elif self.Format == 3:
-		return all (c.subset_glyphs (glyphs) for c in self.Coverage)
-	else:
-		assert 0, "unknown format: %s" % self.Format
-
-@add_method(fontTools.ttLib.tables.otTables.ChainContextSubst, fontTools.ttLib.tables.otTables.ChainContextPos)
+@add_method(fontTools.ttLib.tables.otTables.ContextSubst,      fontTools.ttLib.tables.otTables.ContextPos,
+	    fontTools.ttLib.tables.otTables.ChainContextSubst, fontTools.ttLib.tables.otTables.ChainContextPos)
 def subset_glyphs (self, glyphs):
 	c = self.__classify_context ()
 
@@ -408,24 +389,24 @@ def subset_glyphs (self, glyphs):
 		for rs in rss:
 			ss = getattr (rs, c.Rule)
 			ss = [r for r in ss \
-			      if all (g in glyphs for g in r.Backtrack + r.Input + r.LookAhead)]
+			      if all (g in glyphs for g in c.ContextSequence (r, self.Format))]
 			setattr (rs, c.Rule, ss)
 			setattr (rs, c.RuleCount, len (ss))
-			# XXX Needs more work
-		# TODO Prune empty subrulesets
+		# Prune empty subrulesets
+		rss = [rs for rs in rss if getattr (rs, c.Rule)]
 		setattr (self, c.RuleSet, rss)
 		setattr (self, c.RuleSetCount, len (rss))
 		return bool (rss)
 	elif self.Format == 2:
 		# XXX Needs more work
+		# TODO Renumber classes?
 		return self.Coverage.subset_glyphs (glyphs) and \
-		       self.LookAheadClassDef.subset_glyphs (glyphs) and \
-		       self.BacktrackClassDef.subset_glyphs (glyphs) and \
-		       self.InputClassDef.subset_glyphs (glyphs)
+		       all (x.subset_glyphs (glyphs) for x in c.ContextSequence (self, self.Format))
 	elif self.Format == 3:
-		return all (c.subset_glyphs (glyphs) for c in self.InputCoverage + self.LookAheadCoverage + self.BacktrackCoverage)
+		return all (x.subset_glyphs (glyphs) for x in c.ContextSequence (self, self.Format))
 	else:
 		assert 0, "unknown format: %s" % self.Format
+
 
 @add_method(fontTools.ttLib.tables.otTables.ContextSubst, fontTools.ttLib.tables.otTables.ChainContextSubst,
 	    fontTools.ttLib.tables.otTables.ContextPos,   fontTools.ttLib.tables.otTables.ChainContextPos)
