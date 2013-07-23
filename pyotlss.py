@@ -347,8 +347,14 @@ def closure_glyphs (self, glyphs, table):
 	c = self.__classify_context ()
 
 	if self.Format == 1:
-		return []
-		assert 0 # XXX
+		indices = self.Coverage.intersect_glyphs (glyphs)
+		rss = getattr (self, c.RuleSet)
+		return sum ((table.table.LookupList.Lookup[ll.LookupListIndex].closure_glyphs (glyphs, table) \
+			     for i in indices \
+			     for r in getattr (rss[i], c.Rule) \
+			     if all (g in glyphs for g in c.ContextSequence (r, self.Format)) \
+			     for ll in getattr (r, c.LookupRecord) \
+			    ), [])
 	elif self.Format == 2:
 		assert 0 # XXX
 	elif self.Format == 3:
