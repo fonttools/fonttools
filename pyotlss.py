@@ -397,7 +397,7 @@ def subset_features (self, feature_indices):
 
 @add_method(fontTools.ttLib.tables.otTables.Script)
 def collect_features (self):
-	feature_indices = [l.LangSys.collectFeatures () for l in self.LangSysRecord]
+	feature_indices = [l.LangSys.collect_features () for l in self.LangSysRecord]
 	if self.DefaultLangSys:
 		feature_indices.append (self.DefaultLangSys.collect_features ())
 	return unique_sorted (sum (feature_indices, []))
@@ -553,7 +553,6 @@ drop_tables += ['cvt ', 'fpgm', 'prep']
 
 # TODO OS/2 ulUnicodeRange / ulCodePageRange?
 # TODO Drop unneeded GSUB/GPOS entries
-# TODO Move glyf component closure after GSUB/GPOS/etc
 
 if __name__ == '__main__':
 
