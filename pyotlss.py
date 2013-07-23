@@ -354,7 +354,24 @@ def subset_glyphs (self, glyphs):
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
-@add_method(fontTools.ttLib.tables.otTables.ContextSubst, fontTools.ttLib.tables.otTables.ChainContextSubst)
+@add_method(fontTools.ttLib.tables.otTables.ContextSubst)
+def subset_lookups (self, lookup_indices):
+	if self.Format == 1:
+		for rs in self.SubRuleSet:
+			for r in rs.SubRule:
+				r.SubstLookupRecord = [ll for ll in r.SubstLookupRecord if ll.LookupListIndex in lookup_indices]
+				for ll in r.SubstLookupRecord:
+					ll.LookupListIndex = lookup_indices.index (ll.LookupListIndex)
+	elif self.Format == 2:
+		assert 0 # XXX
+	elif self.Format == 3:
+		self.SubstLookupRecord = [ll for ll in self.SubstLookupRecord if ll.LookupListIndex in lookup_indices]
+		for ll in self.SubstLookupRecord:
+			ll.LookupListIndex = lookup_indices.index (ll.LookupListIndex)
+	else:
+		assert 0, "unknown format: %s" % self.Format
+
+@add_method(fontTools.ttLib.tables.otTables.ChainContextSubst)
 def subset_lookups (self, lookup_indices):
 	if self.Format == 1:
 		for rs in self.ChainSubRuleSet:
@@ -371,7 +388,24 @@ def subset_lookups (self, lookup_indices):
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
-@add_method(fontTools.ttLib.tables.otTables.ContextPos, fontTools.ttLib.tables.otTables.ChainContextPos)
+@add_method(fontTools.ttLib.tables.otTables.ContextPos)
+def subset_lookups (self, lookup_indices):
+	if self.Format == 1:
+		for rs in self.SubRuleSet:
+			for r in rs.SubRule:
+				r.PosLookupRecord = [ll for ll in r.PosLookupRecord if ll.LookupListIndex in lookup_indices]
+				for ll in r.PosLookupRecord:
+					ll.LookupListIndex = lookup_indices.index (ll.LookupListIndex)
+	elif self.Format == 2:
+		assert 0 # XXX
+	elif self.Format == 3:
+		self.PosLookupRecord = [ll for ll in self.PosLookupRecord if ll.LookupListIndex in lookup_indices]
+		for ll in self.PosLookupRecord:
+			ll.LookupListIndex = lookup_indices.index (ll.LookupListIndex)
+	else:
+		assert 0, "unknown format: %s" % self.Format
+
+@add_method(fontTools.ttLib.tables.otTables.ChainContextPos)
 def subset_lookups (self, lookup_indices):
 	if self.Format == 1:
 		for rs in self.ChainSubRuleSet:
@@ -388,7 +422,18 @@ def subset_lookups (self, lookup_indices):
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
-@add_method(fontTools.ttLib.tables.otTables.ContextSubst, fontTools.ttLib.tables.otTables.ChainContextSubst)
+@add_method(fontTools.ttLib.tables.otTables.ContextSubst)
+def collect_lookups (self):
+	if self.Format == 1:
+		return [ll.LookupListIndex for rs in self.SubRuleSet for r in rs.SubRule for ll in r.SubstLookupRecord]
+	elif self.Format == 2:
+		assert 0 # XXX
+	elif self.Format == 3:
+		return [ll.LookupListIndex for ll in self.SubstLookupRecord]
+	else:
+		assert 0, "unknown format: %s" % self.Format
+
+@add_method(fontTools.ttLib.tables.otTables.ChainContextSubst)
 def collect_lookups (self):
 	if self.Format == 1:
 		return [ll.LookupListIndex for rs in self.ChainSubRuleSet for r in rs.ChainSubRule for ll in r.SubstLookupRecord]
@@ -399,7 +444,18 @@ def collect_lookups (self):
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
-@add_method(fontTools.ttLib.tables.otTables.ContextPos, fontTools.ttLib.tables.otTables.ChainContextPos)
+@add_method(fontTools.ttLib.tables.otTables.ContextPos)
+def collect_lookups (self):
+	if self.Format == 1:
+		return [ll.LookupListIndex for rs in self.SubRuleSet for r in rs.SubRule for ll in r.PosLookupRecord]
+	elif self.Format == 2:
+		assert 0 # XXX
+	elif self.Format == 3:
+		return [ll.LookupListIndex for ll in self.PosLookupRecord]
+	else:
+		assert 0, "unknown format: %s" % self.Format
+
+@add_method(fontTools.ttLib.tables.otTables.ChainContextPos)
 def collect_lookups (self):
 	if self.Format == 1:
 		return [ll.LookupListIndex for rs in self.ChainSubRuleSet for r in rs.ChainSubRule for ll in r.PosLookupRecord]
