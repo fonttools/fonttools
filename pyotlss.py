@@ -374,18 +374,23 @@ def subset_glyphs (self, glyphs):
 
 @add_method(fontTools.ttLib.tables.otTables.ChainContextSubst, fontTools.ttLib.tables.otTables.ChainContextPos)
 def subset_glyphs (self, glyphs):
+	c = self.__classify_context ()
+
 	if self.Format == 1:
-		# XXX De-"Sub" it
 		indices = self.Coverage.subset_glyphs (glyphs)
-		self.ChainSubRuleSet = [self.ChainSubRuleSet[i] for i in indices]
-		self.ChainSubRuleSetCount = len (self.ChainSubRuleSet)
-		for rs in self.ChainSubRuleSet:
-			rs.ChainSubRule = [r for r in rs.ChainSubRule
-					   if all (g in glyphs for g in r.Backtrack + r.Input + r.LookAhead)]
-			rs.ChainSubRuleCount = len (rs.ChainSubRule)
-		# XXX Needs more work
+		rss = getattr (self, c.RuleSet)
+		rss = [rss[i] for i in indices]
+		for rs in rss:
+			ss = getattr (rs, c.Rule)
+			ss = [r for r in ss \
+			      if all (g in glyphs for g in r.Backtrack + r.Input + r.LookAhead)]
+			setattr (rs, c.Rule, ss)
+			setattr (rs, c.RuleCount, len (ss))
+			# XXX Needs more work
 		# TODO Prune empty subrulesets
-		return self.ChainSubRuleSetCount
+		setattr (self, c.RuleSet, rss)
+		setattr (self, c.RuleSetCount, len (rss))
+		return bool (rss)
 	elif self.Format == 2:
 		# XXX Needs more work
 		return self.Coverage.subset_glyphs (glyphs) and \
