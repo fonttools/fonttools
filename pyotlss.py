@@ -283,17 +283,24 @@ def collect_lookups (self):
 @add_method(fontTools.ttLib.tables.otTables.ContextSubst, fontTools.ttLib.tables.otTables.ChainContextSubst,
 	    fontTools.ttLib.tables.otTables.ContextPos,   fontTools.ttLib.tables.otTables.ChainContextPos)
 def __classify_context (self):
-	if self.__class__.__name__.startswith ('Chain'):
-		SubRule = 'ChainSubRule'
-		SubRuleSet = 'ChainSubRuleSet'
-	else:
-		SubRule = 'SubRule'
-		SubRuleSet = 'SubRuleSet'
-	if self.__class__.__name__.endswith ('Subst'):
-		LookupRecord = 'SubstLookupRecord'
-	else:
-		LookupRecord = 'PosLookupRecord'
-	return (SubRule, SubRuleSet, LookupRecord)
+	class ContextContext:
+		def __init__ (self, lookup):
+			if lookup.__class__.__name__.startswith ('Chain'):
+				self.SubRule = 'ChainSubRule'
+				self.SubRuleCount = 'ChainSubRuleCount'
+				self.SubRuleSetCount = 'ChainSubRuleSetCount'
+			else:
+				self.SubRule = 'SubRule'
+				self.SubRuleCount = 'SubRuleCount'
+				self.SubRuleSet = 'SubRuleSet'
+				self.SubRuleSetCount = 'SubRuleSetCount'
+			if lookup.__class__.__name__.endswith ('Subst'):
+				self.LookupRecord = 'SubstLookupRecord'
+			else:
+				self.LookupRecord = 'PosLookupRecord'
+	if not hasattr (self.__class__, "__ContextContext"):
+		self.__class__.__ContextContext = ContextContext (self)
+	return self.__class__.__ContextContext
 
 @add_method(fontTools.ttLib.tables.otTables.ContextSubst)
 def closure_glyphs (self, glyphs, table):
@@ -373,19 +380,21 @@ def subset_glyphs (self, glyphs):
 @add_method(fontTools.ttLib.tables.otTables.ContextSubst, fontTools.ttLib.tables.otTables.ChainContextSubst,
 	    fontTools.ttLib.tables.otTables.ContextPos,   fontTools.ttLib.tables.otTables.ChainContextPos)
 def subset_lookups (self, lookup_indices):
-	SubRule, SubRuleSet, LookupRecord = self.__classify_context ()
+	c = self.__classify_context ()
 
 	if self.Format == 1:
-		for rs in getattr (self, SubRuleSet):
-			for r in getattr (rs, SubRule):
-				setattr (r, LookupRecord, [ll for ll in getattr (r, LookupRecord) if ll.LookupListIndex in lookup_indices])
-				for ll in getattr (r, LookupRecord):
+		for rs in getattr (self, c.SubRuleSet):
+			for r in getattr (rs, c.SubRule):
+				setattr (r, c.LookupRecord, [ll for ll in getattr (r, c.LookupRecord) \
+								if ll.LookupListIndex in lookup_indices])
+				for ll in getattr (r, c.LookupRecord):
 					ll.LookupListIndex = lookup_indices.index (ll.LookupListIndex)
 	elif self.Format == 2:
 		assert 0 # XXX
 	elif self.Format == 3:
-		setattr (self, LookupRecord, [ll for ll in getattr (self, LookupRecord) if ll.LookupListIndex in lookup_indices])
-		for ll in getattr (self, LookupRecord):
+		setattr (self, c.LookupRecord, [ll for ll in getattr (self, c.LookupRecord) \
+						   if ll.LookupListIndex in lookup_indices])
+		for ll in getattr (self, c.LookupRecord):
 			ll.LookupListIndex = lookup_indices.index (ll.LookupListIndex)
 	else:
 		assert 0, "unknown format: %s" % self.Format
@@ -393,14 +402,18 @@ def subset_lookups (self, lookup_indices):
 @add_method(fontTools.ttLib.tables.otTables.ContextSubst, fontTools.ttLib.tables.otTables.ChainContextSubst,
 	    fontTools.ttLib.tables.otTables.ContextPos,   fontTools.ttLib.tables.otTables.ChainContextPos)
 def collect_lookups (self):
-	SubRule, SubRuleSet, LookupRecord = self.__classify_context ()
+	c = self.__classify_context ()
 
 	if self.Format == 1:
-		return [ll.LookupListIndex for rs in getattr (self, SubRuleSet) for r in getattr (rs, SubRule) for ll in getattr (r, LookupRecord)]
+		return [ll.LookupListIndex \
+			for rs in getattr (self, c.SubRuleSet) \
+			for r in getattr (rs, c.SubRule) \
+			for ll in getattr (r, c.LookupRecord)]
 	elif self.Format == 2:
 		assert 0 # XXX
 	elif self.Format == 3:
-		return [ll.LookupListIndex for ll in getattr (self, LookupRecord)]
+		return [ll.LookupListIndex \
+			for ll in getattr (self, c.LookupRecord)]
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
