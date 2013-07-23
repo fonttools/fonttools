@@ -285,19 +285,30 @@ def collect_lookups (self):
 def __classify_context (self):
 	class ContextContext:
 		def __init__ (self, lookup):
-			if lookup.__class__.__name__.startswith ('Chain'):
-				self.SubRule = 'ChainSubRule'
-				self.SubRuleCount = 'ChainSubRuleCount'
-				self.SubRuleSetCount = 'ChainSubRuleSetCount'
-			else:
-				self.SubRule = 'SubRule'
-				self.SubRuleCount = 'SubRuleCount'
-				self.SubRuleSet = 'SubRuleSet'
-				self.SubRuleSetCount = 'SubRuleSetCount'
 			if lookup.__class__.__name__.endswith ('Subst'):
-				self.LookupRecord = 'SubstLookupRecord'
+				Typ = 'Sub'
+				Type = 'Subst'
 			else:
-				self.LookupRecord = 'PosLookupRecord'
+				Typ = 'Pos'
+				Type = 'Pos'
+			if lookup.__class__.__name__.startswith ('Chain'):
+				Chain = 'Chain'
+			else:
+				Chain = ''
+			ChainTyp = Chain+Typ
+
+			self.Typ = Typ
+			self.Type = Type
+			self.Chain = Chain
+			self.ChainTyp = ChainTyp
+
+			self.LookupRecord = Type+'LookupRecord'
+
+			self.Rule = ChainTyp+'Rule'
+			self.RuleCount = ChainTyp+'RuleCount'
+			self.RuleSet = ChainTyp+'RuleSet'
+			self.RuleSetCount = ChainTyp+'RuleSetCount'
+
 	if not hasattr (self.__class__, "__ContextContext"):
 		self.__class__.__ContextContext = ContextContext (self)
 	return self.__class__.__ContextContext
@@ -383,8 +394,8 @@ def subset_lookups (self, lookup_indices):
 	c = self.__classify_context ()
 
 	if self.Format == 1:
-		for rs in getattr (self, c.SubRuleSet):
-			for r in getattr (rs, c.SubRule):
+		for rs in getattr (self, c.RuleSet):
+			for r in getattr (rs, c.Rule):
 				setattr (r, c.LookupRecord, [ll for ll in getattr (r, c.LookupRecord) \
 								if ll.LookupListIndex in lookup_indices])
 				for ll in getattr (r, c.LookupRecord):
@@ -406,8 +417,8 @@ def collect_lookups (self):
 
 	if self.Format == 1:
 		return [ll.LookupListIndex \
-			for rs in getattr (self, c.SubRuleSet) \
-			for r in getattr (rs, c.SubRule) \
+			for rs in getattr (self, c.RuleSet) \
+			for r in getattr (rs, c.Rule) \
 			for ll in getattr (r, c.LookupRecord)]
 	elif self.Format == 2:
 		assert 0 # XXX
