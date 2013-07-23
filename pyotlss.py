@@ -480,7 +480,7 @@ def subset (self, glyphs):
 	# Drop names
 	# TODO Add option for this.
 	self.extraNames = []
-	return True # Just pass-through
+	return True
 
 @add_method(fontTools.ttLib.getTableClass('glyf'))
 def subset (self, glyphs):
@@ -500,6 +500,7 @@ def subset (self, glyphs):
 def subset (self, glyphs):
 	# Drop non-Unicode / non-Symbol cmaps
 	# TODO Add option for this
+	# TODO Only keep one subtable?
 	self.tables = [t for t in self.tables if t.platformID == 3 and t.platEncID in [0, 1, 10]]
 	for t in self.tables:
 		# For reasons I don't understand I need this here
@@ -558,12 +559,15 @@ if __name__ == '__main__':
 	# Close over composite glyphs
 	if 'glyf' in font:
 		glyf = font['glyf']
+		# XXX Rinse & repeat
 		for g in glyphs:
 			gl = glyf[g]
 			if gl.isComposite ():
 				for c in gl.components:
 					if c.glyphName not in glyphs:
 						glyphs.append (c.glyphName)
+	if verbose:
+		print "Retaining %d glyphs: " % len (glyphs), glyphs
 
 	if xml:
 		import xmlWriter
