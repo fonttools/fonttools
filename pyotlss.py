@@ -558,7 +558,7 @@ def subset_glyphs (self, glyphs):
 
 @add_method(fontTools.ttLib.tables.otTables.LookupList)
 def subset_lookups (self, lookup_indices):
-	self.Lookup = [self.Lookup[i] for i in lookup_indices]
+	self.Lookup = [self.Lookup[i] for i in lookup_indices if i < self.LookupCount]
 	self.LookupCount = len (self.Lookup)
 	for l in self.Lookup:
 		l.subset_lookups (lookup_indices)
@@ -568,8 +568,8 @@ def closure_lookups (self, lookup_indices):
 	lookup_indices = unique_sorted (lookup_indices)
 	recurse = lookup_indices
 	while True:
-		recurse_lookups = sum ((self.Lookup[i].collect_lookups () for i in recurse), [])
-		recurse_lookups = [l for l in recurse_lookups if l not in lookup_indices]
+		recurse_lookups = sum ((self.Lookup[i].collect_lookups () for i in recurse if i < self.LookupCount), [])
+		recurse_lookups = [l for l in recurse_lookups if l not in lookup_indices and l < self.LookupCount]
 		if not recurse_lookups:
 			return unique_sorted (lookup_indices)
 		recurse_lookups = unique_sorted (recurse_lookups)
@@ -656,7 +656,8 @@ def closure_glyphs (self, glyphs):
 	lookup_indices = self.table.FeatureList.collect_lookups (feature_indices)
 	glyphs = unique_sorted (glyphs)
 	while True:
-		additions = (sum ((self.table.LookupList.Lookup[i].closure_glyphs (glyphs, self) for i in lookup_indices), []))
+		additions = (sum ((self.table.LookupList.Lookup[i].closure_glyphs (glyphs, self) \
+				   for i in lookup_indices if i < self.table.LookupList.LookupCount), []))
 		additions = unique_sorted (g for g in additions if g not in glyphs)
 		if not additions:
 			return glyphs
