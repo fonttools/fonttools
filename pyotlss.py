@@ -738,7 +738,7 @@ def subset_glyphs (self, glyphs):
 	return True # Never drop; has default metrics
 
 @add_method(fontTools.ttLib.getTableClass('post'))
-def prune_pre_subset (self, glyphs):
+def prune_pre_subset (self, options):
 	if not options['glyph-names']:
 		self.formatType = 3.0
 	return True
@@ -875,9 +875,11 @@ options_default = {
 # TODO Text script / language considerations
 # TODO Drop unknown tables
 
-if __name__ == '__main__':
+
+def main ():
 
 	import sys, time
+	global last_time
 
 	start_time = time.time ()
 	last_time = start_time
@@ -1093,3 +1095,6 @@ if __name__ == '__main__':
 			font[tag].toXML(writer, font)
 			writer.endtag (tag)
 			writer.newline ()
+
+if __name__ == '__main__':
+	main ()
