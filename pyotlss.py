@@ -26,6 +26,7 @@ except ImportError:
 	pass
 
 import fontTools.ttx
+import struct
 
 
 def add_method (*clazzes):
@@ -755,6 +756,68 @@ def subset_glyphs (self, glyphs):
 	self.extraNames = [] # This seems to do it
 	return True
 
+# Copied from _g_l_y_f.py
+ARG_1_AND_2_ARE_WORDS      = 0x0001  # if set args are words otherwise they are bytes
+ARGS_ARE_XY_VALUES         = 0x0002  # if set args are xy values, otherwise they are points
+ROUND_XY_TO_GRID           = 0x0004  # for the xy values if above is true
+WE_HAVE_A_SCALE            = 0x0008  # Sx = Sy, otherwise scale == 1.0
+NON_OVERLAPPING            = 0x0010  # set to same value for all components (obsolete!)
+MORE_COMPONENTS            = 0x0020  # indicates at least one more glyph after this one
+WE_HAVE_AN_X_AND_Y_SCALE   = 0x0040  # Sx, Sy
+WE_HAVE_A_TWO_BY_TWO       = 0x0080  # t00, t01, t10, t11
+WE_HAVE_INSTRUCTIONS       = 0x0100  # instructions follow
+USE_MY_METRICS             = 0x0200  # apply these metrics to parent glyph
+OVERLAP_COMPOUND           = 0x0400  # used by Apple in GX fonts
+SCALED_COMPONENT_OFFSET    = 0x0800  # composite designed to have the component offset scaled (designed for Apple)
+UNSCALED_COMPONENT_OFFSET  = 0x1000  # composite designed not to have the component offset scaled (designed for MS)
+
+@add_method(fontTools.ttLib.getTableModule('glyf').Glyph)
+def getComponentNamesFast (self, glyfTable):
+	if struct.unpack(">h", self.data[:2])[0] >= 0:
+		return [] # Not composite
+	data = self.data
+	i = 10
+	components = []
+	more = 1
+	while more:
+		flags, glyphID = struct.unpack(">HH", data[i:i+4])
+		i += 4
+		flags = int(flags)
+		components.append (glyfTable.getGlyphName (int (glyphID)))
+
+		if flags & ARG_1_AND_2_ARE_WORDS:	i += 4
+		else:					i += 2
+		if flags & WE_HAVE_A_SCALE:		i += 2
+		elif flags & WE_HAVE_AN_X_AND_Y_SCALE:	i += 4
+		elif flags & WE_HAVE_A_TWO_BY_TWO:	i += 8
+		more = flags & MORE_COMPONENTS
+	return components
+
+@add_method(fontTools.ttLib.getTableModule('glyf').Glyph)
+def remapComponentsFast (self, indices):
+	if struct.unpack(">h", self.data[:2])[0] >= 0:
+		return # Not composite
+	data = bytearray (self.data)
+	i = 10
+	more = 1
+	while more:
+		flags = (data[i] << 8) | data[i+1]
+		glyphID = (data[i+2] << 8) | data[i+3]
+		# Remap
+		glyphID = indices.index (glyphID)
+		data[i+2] = glyphID >> 8
+		data[i+3] = glyphID & 0xFF
+		i += 4
+		flags = int(flags)
+
+		if flags & ARG_1_AND_2_ARE_WORDS:	i += 4
+		else:					i += 2
+		if flags & WE_HAVE_A_SCALE:		i += 2
+		elif flags & WE_HAVE_AN_X_AND_Y_SCALE:	i += 4
+		elif flags & WE_HAVE_A_TWO_BY_TWO:	i += 8
+		more = flags & MORE_COMPONENTS
+	self.data = str (data)
+
 @add_method(fontTools.ttLib.getTableClass('glyf'))
 def closure_glyphs (self, glyphs):
 	glyphs = unique_sorted (glyphs)
@@ -764,13 +827,19 @@ def closure_glyphs (self, glyphs):
 	while True:
 		components = []
 		for g in decompose:
-			if g not in self:
+			if g not in self.glyphs:
 				continue
-			gl = self[g]
-			if gl.isComposite ():
-				for c in gl.components:
-					if c.glyphName not in glyphs:
-						components.append (c.glyphName)
+			gl = self.glyphs[g]
+			if hasattr (gl, "data"):
+				for c in gl.getComponentNamesFast (self):
+					if c not in glyphs:
+						components.append (c)
+			else:
+				# TTX seems to expand gid0..3 always
+				if gl.isComposite ():
+					for c in gl.components:
+						if c.glyphName not in glyphs:
+							components.append (c.glyphName)
 		components = [c for c in components if c not in glyphs]
 		if not components:
 			return glyphs
@@ -780,6 +849,12 @@ def closure_glyphs (self, glyphs):
 @add_method(fontTools.ttLib.getTableClass('glyf'))
 def subset_glyphs (self, glyphs):
 	self.glyphs = {g:v for g,v in self.glyphs.items() if g in glyphs}
+	indices = [i for i,g in enumerate (self.glyphOrder) if g in glyphs]
+	for v in self.glyphs.values ():
+		if hasattr (v, "data"):
+			v.remapComponentsFast (indices)
+		else:
+			pass # No need
 	self.glyphOrder = [g for g in self.glyphOrder if g in glyphs]
 	return bool (self.glyphs)
 
