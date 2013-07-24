@@ -319,25 +319,33 @@ def __classify_context (self):
 				ChainContextData = None
 				RuleData = lambda r: r.Input
 				ChainRuleData = lambda r: r.Backtrack + r.Input + r.LookAhead
+				SetRuleData = None
+				ChainSetRuleData = None
 			elif Format == 2:
 				ContextData = lambda r: [r.ClassDef]
 				ChainContextData = lambda r: [r.LookAheadClassDef, r.InputClassDef, r.BacktrackClassDef]
 				RuleData = lambda r: [r.Class]
 				ChainRuleData = lambda r: [r.LookAhead, r.Input, r.Backtrack]
+				def SetRuleData (r, d): r.Class = d[0]
+				def ChainSetRuleData (r, d): r.LookAhead, r.Input, r.Backtrack = d
 			elif Format == 3:
 				ContextData = None
 				ChainContextData = None
 				RuleData = lambda r: r.Coverage
 				ChainRuleData = lambda r: r.LookAheadCoverage + r.InputCoverage + r.BacktrackCoverage
+				SetRuleData = None
+				ChainSetRuleData = None
 			else:
 				assert 0, "unknown format: %s" % Format
 
 			if Chain:
 				self.ContextData = ChainContextData
 				self.RuleData = ChainRuleData
+				self.SetRuleData = ChainSetRuleData
 			else:
 				self.ContextData = ContextData
 				self.RuleData = RuleData
+				self.SetRuleData = SetRuleData
 
 			if Format == 1:
 				self.Rule = ChainTyp+'Rule'
@@ -435,14 +443,8 @@ def subset_glyphs (self, glyphs):
 
 				# Remap rule classes
 				for r in ss:
-					# Kludge; RuleData can't be used for assignment
-					if c.Chain:
-						r.LookAhead = klass_maps[0].index (r.LookAhead)
-						r.Input     = klass_maps[1].index (r.Input)
-						r.Backtrack = klass_maps[2].index (r.Backtrack)
-					else:
-						pass
-						r.Class = klass_maps[0].index (r.Class)
+					c.SetRuleData (r, (klass_map.index (k) \
+							   for klassmap,k in zip (klass_maps, c.RuleData (r))))
 		# Prune empty subrulesets
 		rss = [rs for rs in rss if rs and getattr (rs, c.Rule)]
 		setattr (self, c.RuleSet, rss)
