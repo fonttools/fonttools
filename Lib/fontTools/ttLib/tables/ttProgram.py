@@ -224,7 +224,7 @@ class Program:
 		return self.assembly
 	
 	def toXML(self, writer, ttFont):
-		if ttFont.disassembleInstructions:
+		if hasattr (ttFont, "disassembleInstructions") and ttFont.disassembleInstructions:
 			assembly = self.getAssembly()
 			writer.begintag("assembly")
 			writer.newline()
