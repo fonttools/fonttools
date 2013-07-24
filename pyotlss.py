@@ -723,6 +723,12 @@ def subset_glyphs (self, glyphs):
 	return bool (table.LigCaretList or table.MarkAttachClassDef or table.GlyphClassDef or table.AttachList)
 
 @add_method(fontTools.ttLib.getTableClass('kern'))
+def prune_pre_subset (self, options):
+	# Prune unknown kern table types
+	self.kernTables = [t for t in self.kernTables if hasattr (t, 'kernTable')]
+	return bool (self.kernTables)
+
+@add_method(fontTools.ttLib.getTableClass('kern'))
 def subset_glyphs (self, glyphs):
 	for t in self.kernTables:
 		t.kernTable = {(a,b):v for ((a,b),v) in t.kernTable.items() if a in glyphs and b in glyphs}
