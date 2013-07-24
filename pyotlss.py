@@ -756,6 +756,8 @@ def closure_glyphs (self, glyphs):
 	while True:
 		components = []
 		for g in decompose:
+			if g not in self:
+				continue
 			gl = self[g]
 			if gl.isComposite ():
 				for c in gl.components:
