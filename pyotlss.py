@@ -999,6 +999,7 @@ options_default = {
 # TODO Text direction considerations
 # TODO Text script / language considerations
 # TODO Drop unknown tables
+# TODO Drop GPOS Device records if not hinting?
 
 
 def main ():
