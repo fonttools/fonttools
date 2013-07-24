@@ -106,13 +106,13 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 			glyphName = psName = self.glyphOrder[i]
 			if allNames.has_key(glyphName):
 				# make up a new glyphName that's unique
-				n = 1
-				while allNames.has_key(glyphName + "#" + `n`):
-					n = n + 1
+				n = allNames[glyphName]
+				allNames[glyphName] = n + 1
 				glyphName = glyphName + "#" + `n`
 				self.glyphOrder[i] = glyphName
 				mapping[glyphName] = psName
-			allNames[glyphName] = psName
+			else:
+				allNames[glyphName] = 1
 		self.mapping = mapping
 	
 	def decode_format_3_0(self, data, ttFont):
