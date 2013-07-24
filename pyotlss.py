@@ -31,6 +31,7 @@ import fontTools.ttx
 def add_method (*clazzes):
 	def wrapper(method):
 		for clazz in clazzes:
+			assert clazz.__name__ != 'DefaultTable', 'Oops, table class not found.'
 			setattr (clazz, method.func_name, method)
 	return wrapper
 
@@ -983,7 +984,7 @@ def main ():
 		if tag == 'GlyphOrder': continue
 
 		if tag in options['drop-tables'] or \
-		   (not options['hinting'] and tag in hinting_tables):
+		   (tag in hinting_tables and not options['hinting']):
 			if verbose:
 				print tag, "dropped."
 			del font[tag]
