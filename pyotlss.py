@@ -340,18 +340,17 @@ def __classify_context (self):
 				self.ContextData = ContextData
 				self.RuleData = RuleData
 
-			# Format 1
-			self.Rule = ChainTyp+'Rule'
-			self.RuleCount = ChainTyp+'RuleCount'
-			self.RuleSet = ChainTyp+'RuleSet'
-			self.RuleSetCount = ChainTyp+'RuleSetCount'
-
-			# Format 2
-			self.ClassRule = ChainTyp+'ClassRule'
-			self.ClassRuleCount = ChainTyp+'ClassRuleCount'
-			self.ClassRuleSet = ChainTyp+'ClassSet'
-			self.ClassRuleSetCount = ChainTyp+'ClassSetCount'
-			self.ClassDef = 'InputClassDef' if Chain else 'ClassDef'
+			if Format == 1:
+				self.Rule = ChainTyp+'Rule'
+				self.RuleCount = ChainTyp+'RuleCount'
+				self.RuleSet = ChainTyp+'RuleSet'
+				self.RuleSetCount = ChainTyp+'RuleSetCount'
+			elif Format == 2:
+				self.Rule = ChainTyp+'ClassRule'
+				self.RuleCount = ChainTyp+'ClassRuleCount'
+				self.RuleSet = ChainTyp+'ClassSet'
+				self.RuleSetCount = ChainTyp+'ClassSetCount'
+				self.ClassDef = 'InputClassDef' if Chain else 'ClassDef'
 
 	if self.Format not in [1, 2, 3]:
 		return None # Don't shoot the messenger; let it go
@@ -378,10 +377,10 @@ def closure_glyphs (self, glyphs, table):
 		if not self.Coverage.intersect_glyphs (glyphs):
 			return []
 		indices = getattr (self, c.ClassDef).intersect_glyphs (glyphs)
-		rss = getattr (self, c.ClassRuleSet)
+		rss = getattr (self, c.RuleSet)
 		return sum ((table.table.LookupList.Lookup[ll.LookupListIndex].closure_glyphs (glyphs, table) \
 			     for i in indices \
-			     for r in getattr (rss[i], c.ClassRule) \
+			     for r in getattr (rss[i], c.Rule) \
 			     if r and all (cd.intersects_glyphs_class (glyphs, k) \
 					   for cd,k in zip (c.ContextData (self), c.RuleData (r))) \
 			     for ll in getattr (r, c.LookupRecord) if ll \
@@ -419,7 +418,7 @@ def subset_glyphs (self, glyphs):
 		if not self.Coverage.subset_glyphs (glyphs):
 			return False
 		indices = getattr (self, c.ClassDef).intersect_glyphs (glyphs)
-		rss = getattr (self, c.ClassRuleSet)
+		rss = getattr (self, c.RuleSet)
 		rss = [rss[i] for i in indices]
 		ContextData = c.ContextData (self)
 		klass_maps = [x.subset_glyphs (glyphs) for x in ContextData]
@@ -427,12 +426,12 @@ def subset_glyphs (self, glyphs):
 			cd.remap (m)
 		for rs in rss:
 			if rs:
-				ss = getattr (rs, c.ClassRule)
+				ss = getattr (rs, c.Rule)
 				ss = [r for r in ss \
 				      if r and all (k in klass_map \
 						    for klass_map,k in zip (klass_maps, c.RuleData (r)))]
-				setattr (rs, c.ClassRule, ss)
-				setattr (rs, c.ClassRuleCount, len (ss))
+				setattr (rs, c.Rule, ss)
+				setattr (rs, c.RuleCount, len (ss))
 
 				# Remap rule classes
 				for r in ss:
@@ -445,9 +444,9 @@ def subset_glyphs (self, glyphs):
 						pass
 						r.Class = klass_maps[0].index (r.Class)
 		# Prune empty subrulesets
-		rss = [rs for rs in rss if rs and getattr (rs, c.ClassRule)]
-		setattr (self, c.ClassRuleSet, rss)
-		setattr (self, c.ClassRuleSetCount, len (rss))
+		rss = [rs for rs in rss if rs and getattr (rs, c.Rule)]
+		setattr (self, c.RuleSet, rss)
+		setattr (self, c.RuleSetCount, len (rss))
 		return bool (rss)
 
 		return all (x.subset_glyphs (glyphs) for x in c.ContextData (self))
@@ -472,9 +471,9 @@ def subset_lookups (self, lookup_indices):
 							if ll:
 								ll.LookupListIndex = lookup_indices.index (ll.LookupListIndex)
 	elif self.Format == 2:
-		for rs in getattr (self, c.ClassRuleSet):
+		for rs in getattr (self, c.RuleSet):
 			if rs:
-				for r in getattr (rs, c.ClassRule):
+				for r in getattr (rs, c.Rule):
 					if r:
 						setattr (r, c.LookupRecord, [ll for ll in getattr (r, c.LookupRecord) if ll\
 										if ll.LookupListIndex in lookup_indices])
@@ -502,8 +501,8 @@ def collect_lookups (self):
 			for ll in getattr (r, c.LookupRecord) if ll]
 	elif self.Format == 2:
 		return [ll.LookupListIndex \
-			for rs in getattr (self, c.ClassRuleSet) if rs \
-			for r in getattr (rs, c.ClassRule) if r \
+			for rs in getattr (self, c.RuleSet) if rs \
+			for r in getattr (rs, c.Rule) if r \
 			for ll in getattr (r, c.LookupRecord) if ll]
 	elif self.Format == 3:
 		return [ll.LookupListIndex \
