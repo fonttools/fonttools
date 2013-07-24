@@ -947,6 +947,7 @@ options_default = {
 	'name-legacy': False,
 	'name-languages': [0x0409], # English
 	'mandatory-glyphs': True, # First four for TrueType, .notdef for CFF
+	'recalc-bboxes': False, # Slows us down
 }
 
 
@@ -998,6 +999,7 @@ def main ():
 
 	font = fontTools.ttx.TTFont (fontfile)
 	font.disassembleInstructions = False
+	font.recalcBBoxes = options['recalc-bboxes']
 	lapse ("load font")
 
 	if options["mandatory-glyphs"]:
