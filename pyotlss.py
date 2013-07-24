@@ -1047,9 +1047,7 @@ def main ():
 	fontfile = sys.argv[1]
 	glyphs   = sys.argv[2:]
 
-	font = fontTools.ttx.TTFont (fontfile)
-	font.disassembleInstructions = False
-	font.recalcBBoxes = options['recalc-bboxes']
+	font = fontTools.ttx.TTFont (fontfile, recalcBBoxes=options['recalc-bboxes'])
 	lapse ("load font")
 
 	if options["mandatory-glyphs"]:
@@ -1222,6 +1220,8 @@ def main ():
 	if xml:
 		import xmlWriter
 		writer = xmlWriter.XMLWriter (sys.stdout)
+
+		font.disassembleInstructions = False # Work around ttx bug
 
 		for tag in font.keys():
 			writer.begintag (tag)
