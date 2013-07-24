@@ -432,10 +432,41 @@ def subset_glyphs (self, glyphs):
 		setattr (self, c.RuleSetCount, len (rss))
 		return bool (rss)
 	elif self.Format == 2:
-		# TODO Renumber classes then prune rules that can't apply
-		# But then I first need to find fonts that use this type.  D'oh!
-		return self.Coverage.subset_glyphs (glyphs) and \
-		       all (x.subset_glyphs (glyphs) for x in c.ContextData (self))
+		if not self.Coverage.subset_glyphs (glyphs):
+			return False
+		indices = getattr (self, c.ClassDef).intersect_glyphs (glyphs)
+		rss = getattr (self, c.ClassRuleSet)
+		rss = [rss[i] for i in indices]
+		ContextData = c.ContextData (self)
+		klass_maps = [x.subset_glyphs (glyphs) for x in ContextData]
+		for cd,m in zip (ContextData, klass_maps):
+			cd.remap (m)
+		for rs in rss:
+			if rs:
+				ss = getattr (rs, c.ClassRule)
+				ss = [r for r in ss \
+				      if r and all (k in klass_map \
+						    for klass_map,k in zip (klass_maps, c.RuleData (r, self.Format)))]
+				setattr (rs, c.ClassRule, ss)
+				setattr (rs, c.ClassRuleCount, len (ss))
+
+				# Remap rule classes
+				for r in ss:
+					# Kludge; RuleData can't be used for assignment
+					if c.Chain:
+						r.LookAhead = klass_maps[0].index (r.LookAhead)
+						r.Input     = klass_maps[1].index (r.Input)
+						r.Backtrack = klass_maps[2].index (r.Backtrack)
+					else:
+						pass
+						r.Class = klass_maps[0].index (r.Class)
+		# Prune empty subrulesets
+		rss = [rs for rs in rss if rs and getattr (rs, c.ClassRule)]
+		setattr (self, c.ClassRuleSet, rss)
+		setattr (self, c.ClassRuleSetCount, len (rss))
+		return bool (rss)
+
+		return all (x.subset_glyphs (glyphs) for x in c.ContextData (self))
 	elif self.Format == 3:
 		return all (x.subset_glyphs (glyphs) for x in c.RuleData (self, self.Format))
 	else:
