@@ -314,11 +314,6 @@ def __classify_context (self):
 
 			self.LookupRecord = Type+'LookupRecord'
 
-			# Format 1
-			self.Rule = ChainTyp+'Rule'
-			self.RuleCount = ChainTyp+'RuleCount'
-			self.RuleSet = ChainTyp+'RuleSet'
-			self.RuleSetCount = ChainTyp+'RuleSetCount'
 			def ContextData (r):
 				if r.Format == 1:
 					assert 0
@@ -365,6 +360,12 @@ def __classify_context (self):
 			else:
 				self.ContextData = ContextData
 				self.RuleData = RuleData
+
+			# Format 1
+			self.Rule = ChainTyp+'Rule'
+			self.RuleCount = ChainTyp+'RuleCount'
+			self.RuleSet = ChainTyp+'RuleSet'
+			self.RuleSetCount = ChainTyp+'RuleSetCount'
 
 			# Format 2
 			self.ClassRule = ChainTyp+'ClassRule'
