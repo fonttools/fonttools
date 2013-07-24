@@ -322,12 +322,12 @@ def __classify_context (self):
 				SetRuleData = None
 				ChainSetRuleData = None
 			elif Format == 2:
-				ContextData = lambda r: [r.ClassDef]
-				ChainContextData = lambda r: [r.LookAheadClassDef, r.InputClassDef, r.BacktrackClassDef]
-				RuleData = lambda r: [r.Class]
-				ChainRuleData = lambda r: [r.LookAhead, r.Input, r.Backtrack]
-				def SetRuleData (r, d): r.Class = d[0]
-				def ChainSetRuleData (r, d): r.LookAhead, r.Input, r.Backtrack = d
+				ContextData = lambda r: (r.ClassDef,)
+				ChainContextData = lambda r: (r.LookAheadClassDef, r.InputClassDef, r.BacktrackClassDef)
+				RuleData = lambda r: (r.Class,)
+				ChainRuleData = lambda r: (r.LookAhead, r.Input, r.Backtrack)
+				def SetRuleData (r, d): (r.Class,) = d
+				def ChainSetRuleData (r, d): (r.LookAhead, r.Input, r.Backtrack) = d
 			elif Format == 3:
 				ContextData = None
 				ChainContextData = None
