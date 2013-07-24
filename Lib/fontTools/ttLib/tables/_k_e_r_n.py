@@ -3,6 +3,7 @@ import struct
 from fontTools.ttLib import sfnt
 from fontTools.misc.textTools import safeEval, readHex
 from types import TupleType
+import warnings
 
 
 class table__k_e_r_n(DefaultTable.DefaultTable):
@@ -108,7 +109,8 @@ class KernTable_format_0:
 			data = data[6:]
 			left, right = int(left), int(right)
 			kernTable[(ttFont.getGlyphName(left), ttFont.getGlyphName(right))] = value
-		assert len(data) == 0, len(data)
+		if len(data):
+			warnings.warn("excess data in 'kern' subtable: %d bytes" % len(data))
 	
 	def compile(self, ttFont):
 		nPairs = len(self.kernTable)
