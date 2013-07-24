@@ -875,6 +875,7 @@ if __name__ == '__main__':
 				print "Added .notdef glyph to subset"
 
 	names = font.getGlyphNames()
+	lapse ("loading glyph names")
 	# Convert to glyph names
 	glyph_names = []
 	cmap_tables = None
