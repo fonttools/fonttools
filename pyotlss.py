@@ -1005,7 +1005,7 @@ options_default = {
 # TODO Avoid recursing too much
 # TODO Text direction considerations
 # TODO Text script / language considerations
-# TODO Drop unknown tables
+# TODO Drop unknown tables?  Using DefaultTable.prune?
 # TODO Drop GPOS Device records if not hinting?
 
 
@@ -1047,6 +1047,7 @@ def main ():
 	fontfile = sys.argv[1]
 	glyphs   = sys.argv[2:]
 
+	# TODO Option for ignoreDecompileErrors?
 	font = fontTools.ttx.TTFont (fontfile, recalcBBoxes=options['recalc-bboxes'])
 	lapse ("load font")
 
