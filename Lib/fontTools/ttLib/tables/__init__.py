@@ -7,6 +7,8 @@ def _moduleFinderHint():
 	import C_B_D_T_
 	import C_B_L_C_
 	import C_F_F_
+	import C_O_L_R_
+	import C_P_A_L_
 	import D_S_I_G_
 	import E_B_D_T_
 	import E_B_L_C_
