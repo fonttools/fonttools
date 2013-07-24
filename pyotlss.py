@@ -964,6 +964,8 @@ if __name__ == '__main__':
 	glyphs = unique_sorted (glyph_names)
 	del glyph_names
 	lapse ("compile glyph list")
+	if verbose:
+		print "Glyphs:", glyphs
 
 	glyphs_requested = glyphs
 	if 'GSUB' in font:
@@ -973,6 +975,7 @@ if __name__ == '__main__':
 		glyphs = font['GSUB'].closure_glyphs (glyphs)
 		if verbose:
 			print "Closed  glyph list over 'GSUB': %d glyphs after" % len (glyphs)
+			print "Glyphs:", glyphs
 		lapse ("close glyph list over 'GSUB'")
 	glyphs_gsubed = glyphs
 
@@ -980,9 +983,11 @@ if __name__ == '__main__':
 	if 'glyf' in font:
 		if verbose:
 			print "Closing glyph list over 'glyf': %d glyphs before" % len (glyphs)
+			print "Glyphs:", glyphs
 		glyphs = font['glyf'].closure_glyphs (glyphs)
 		if verbose:
 			print "Closed  glyph list over 'glyf': %d glyphs after" % len (glyphs)
+			print "Glyphs:", glyphs
 		lapse ("close glyph list over 'glyf'")
 	else:
 		glyphs = glyphs
