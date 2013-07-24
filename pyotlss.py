@@ -818,6 +818,46 @@ def remapComponentsFast (self, indices):
 		more = flags & MORE_COMPONENTS
 	self.data = str (data)
 
+@add_method(fontTools.ttLib.getTableModule('glyf').Glyph)
+def dropInstructionsFast (self):
+	# TODO Perhaps first just check whethere ther *are* any hints at all?
+	numContours = struct.unpack(">h", self.data[:2])[0]
+	data = bytearray (self.data)
+	i = 10
+	if numContours >= 0:
+		i += 2 * numContours # endPtsOfContours
+		instructionLen = (data[i] << 8) | data[i+1]
+		# Zero it
+		data[i] = data [i+1] = 0
+		i += 2
+		# Splice it out
+		data = data[:i] + data[i+instructionLen:]
+	else:
+		more = 1
+		while more:
+			flags = (data[i] << 8) | data[i+1]
+			# Turn instruction flag off
+			flags &= ~WE_HAVE_INSTRUCTIONS
+			data[i+0] = flags >> 8
+			data[i+1] = flags & 0xFF
+			i += 4
+			flags = int(flags)
+
+			if flags & ARG_1_AND_2_ARE_WORDS:	i += 4
+			else:					i += 2
+			if flags & WE_HAVE_A_SCALE:		i += 2
+			elif flags & WE_HAVE_AN_X_AND_Y_SCALE:	i += 4
+			elif flags & WE_HAVE_A_TWO_BY_TWO:	i += 8
+			more = flags & MORE_COMPONENTS
+		# Cut off
+		data = data[:i]
+	if len(data) % 4:
+		# add pad bytes
+		nPadBytes = 4 - (len(data) % 4)
+		for i in range (nPadBytes):
+			data.append (0)
+	self.data = str (data)
+
 @add_method(fontTools.ttLib.getTableClass('glyf'))
 def closure_glyphs (self, glyphs):
 	glyphs = unique_sorted (glyphs)
@@ -861,10 +901,12 @@ def subset_glyphs (self, glyphs):
 @add_method(fontTools.ttLib.getTableClass('glyf'))
 def prune_post_subset (self, options):
 	if not options['hinting']:
-		for g in self.glyphs.values ():
-			g.expand (self)
-			g.program = fontTools.ttLib.tables.ttProgram.Program()
-			g.program.fromBytecode([])
+		for v in self.glyphs.values ():
+			if hasattr (v, "data"):
+				v.dropInstructionsFast ()
+			else:
+				v.program = fontTools.ttLib.tables.ttProgram.Program()
+				v.program.fromBytecode([])
 	return True
 
 @add_method(fontTools.ttLib.getTableClass('CFF '))
