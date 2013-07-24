@@ -349,6 +349,7 @@ def __classify_context (self):
 				self.RuleCount = ChainTyp+'ClassRuleCount'
 				self.RuleSet = ChainTyp+'ClassSet'
 				self.RuleSetCount = ChainTyp+'ClassSetCount'
+
 				self.ClassDef = 'InputClassDef' if Chain else 'ClassDef'
 
 	if self.Format not in [1, 2, 3]:
