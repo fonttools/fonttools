@@ -352,8 +352,8 @@ def closure_glyphs (self, glyphs, table):
 		return sum ((table.table.LookupList.Lookup[ll.LookupListIndex].closure_glyphs (glyphs, table) \
 			     for i in indices \
 			     for r in getattr (rss[i], c.Rule) \
-			     if all (g in glyphs for g in c.ContextData (r, self.Format)) \
-			     for ll in getattr (r, c.LookupRecord) \
+			     if r and all (g in glyphs for g in c.ContextData (r, self.Format)) \
+			     for ll in getattr (r, c.LookupRecord) if ll \
 			    ), [])
 	elif self.Format == 2:
 		assert 0 # XXX
@@ -361,7 +361,7 @@ def closure_glyphs (self, glyphs, table):
 		if not all (x.intersect_glyphs (glyphs) for x in c.ContextData (self, self.Format)):
 			return []
 		return sum ((table.table.LookupList.Lookup[ll.LookupListIndex].closure_glyphs (glyphs, table) \
-			     for ll in getattr (self, c.LookupRecord)), [])
+			     for ll in getattr (self, c.LookupRecord) if ll), [])
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
@@ -375,13 +375,14 @@ def subset_glyphs (self, glyphs):
 		rss = getattr (self, c.RuleSet)
 		rss = [rss[i] for i in indices]
 		for rs in rss:
-			ss = getattr (rs, c.Rule)
-			ss = [r for r in ss \
-			      if all (g in glyphs for g in c.ContextData (r, self.Format))]
-			setattr (rs, c.Rule, ss)
-			setattr (rs, c.RuleCount, len (ss))
+			if rs:
+				ss = getattr (rs, c.Rule)
+				ss = [r for r in ss \
+				      if r and all (g in glyphs for g in c.ContextData (r, self.Format))]
+				setattr (rs, c.Rule, ss)
+				setattr (rs, c.RuleCount, len (ss))
 		# Prune empty subrulesets
-		rss = [rs for rs in rss if getattr (rs, c.Rule)]
+		rss = [rs for rs in rss if rs and getattr (rs, c.Rule)]
 		setattr (self, c.RuleSet, rss)
 		setattr (self, c.RuleSetCount, len (rss))
 		return bool (rss)
@@ -402,23 +403,30 @@ def subset_lookups (self, lookup_indices):
 
 	if self.Format == 1:
 		for rs in getattr (self, c.RuleSet):
-			for r in getattr (rs, c.Rule):
-				setattr (r, c.LookupRecord, [ll for ll in getattr (r, c.LookupRecord) \
-								if ll.LookupListIndex in lookup_indices])
-				for ll in getattr (r, c.LookupRecord):
-					ll.LookupListIndex = lookup_indices.index (ll.LookupListIndex)
+			if rs:
+				for r in getattr (rs, c.Rule):
+					if r:
+						setattr (r, c.LookupRecord, [ll for ll in getattr (r, c.LookupRecord) if ll\
+										if ll.LookupListIndex in lookup_indices])
+						for ll in getattr (r, c.LookupRecord):
+							if ll:
+								ll.LookupListIndex = lookup_indices.index (ll.LookupListIndex)
 	elif self.Format == 2:
 		for rs in getattr (self, c.ClassRuleSet):
-			for r in getattr (rs, c.ClassRule):
-				setattr (r, c.LookupRecord, [ll for ll in getattr (r, c.LookupRecord) \
-								if ll.LookupListIndex in lookup_indices])
-				for ll in getattr (r, c.LookupRecord):
-					ll.LookupListIndex = lookup_indices.index (ll.LookupListIndex)
+			if rs:
+				for r in getattr (rs, c.ClassRule):
+					if r:
+						setattr (r, c.LookupRecord, [ll for ll in getattr (r, c.LookupRecord) if ll\
+										if ll.LookupListIndex in lookup_indices])
+						for ll in getattr (r, c.LookupRecord):
+							if ll:
+								ll.LookupListIndex = lookup_indices.index (ll.LookupListIndex)
 	elif self.Format == 3:
-		setattr (self, c.LookupRecord, [ll for ll in getattr (self, c.LookupRecord) \
+		setattr (self, c.LookupRecord, [ll for ll in getattr (self, c.LookupRecord) if ll \
 						   if ll.LookupListIndex in lookup_indices])
 		for ll in getattr (self, c.LookupRecord):
-			ll.LookupListIndex = lookup_indices.index (ll.LookupListIndex)
+			if ll:
+				ll.LookupListIndex = lookup_indices.index (ll.LookupListIndex)
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
@@ -429,17 +437,17 @@ def collect_lookups (self):
 
 	if self.Format == 1:
 		return [ll.LookupListIndex \
-			for rs in getattr (self, c.RuleSet) \
-			for r in getattr (rs, c.Rule) \
-			for ll in getattr (r, c.LookupRecord)]
+			for rs in getattr (self, c.RuleSet) if rs \
+			for r in getattr (rs, c.Rule) if r \
+			for ll in getattr (r, c.LookupRecord) if ll]
 	elif self.Format == 2:
 		return [ll.LookupListIndex \
-			for rs in getattr (self, c.ClassRuleSet) \
-			for r in getattr (rs, c.ClassRule) \
-			for ll in getattr (r, c.LookupRecord)]
+			for rs in getattr (self, c.ClassRuleSet) if rs \
+			for r in getattr (rs, c.ClassRule) if r \
+			for ll in getattr (r, c.LookupRecord) if ll]
 	elif self.Format == 3:
 		return [ll.LookupListIndex \
-			for ll in getattr (self, c.LookupRecord)]
+			for ll in getattr (self, c.LookupRecord) if ll]
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
@@ -474,11 +482,11 @@ def collect_lookups (self):
 
 @add_method(fontTools.ttLib.tables.otTables.Lookup)
 def closure_glyphs (self, glyphs, table):
-	return sum ((s.closure_glyphs (glyphs, table) for s in self.SubTable), [])
+	return sum ((s.closure_glyphs (glyphs, table) for s in self.SubTable if s), [])
 
 @add_method(fontTools.ttLib.tables.otTables.Lookup)
 def subset_glyphs (self, glyphs):
-	self.SubTable = [s for s in self.SubTable if s.subset_glyphs (glyphs)]
+	self.SubTable = [s for s in self.SubTable if s and s.subset_glyphs (glyphs)]
 	self.SubTableCount = len (self.SubTable)
 	return bool (self.SubTableCount)
 
@@ -489,12 +497,12 @@ def subset_lookups (self, lookup_indices):
 
 @add_method(fontTools.ttLib.tables.otTables.Lookup)
 def collect_lookups (self):
-	return unique_sorted (sum ((s.collect_lookups () for s in self.SubTable), []))
+	return unique_sorted (sum ((s.collect_lookups () for s in self.SubTable if s), []))
 
 @add_method(fontTools.ttLib.tables.otTables.LookupList)
 def subset_glyphs (self, glyphs):
 	"Returns the indices of nonempty lookups."
-	return [i for (i,l) in enumerate (self.Lookup) if l.subset_glyphs (glyphs)]
+	return [i for (i,l) in enumerate (self.Lookup) if l and l.subset_glyphs (glyphs)]
 
 @add_method(fontTools.ttLib.tables.otTables.LookupList)
 def subset_lookups (self, lookup_indices):
@@ -883,7 +891,7 @@ if __name__ == '__main__':
 		if g in names:
 			glyph_names.append (g)
 			continue
-		if g.startswith ('uni'):
+		if g.startswith ('uni') and len (g) > 3:
 			if not cmap_tables:
 				cmap = font['cmap']
 				cmap_tables = [t for t in cmap.tables if t.platformID == 3 and t.platEncID in [1, 10]]
@@ -900,9 +908,9 @@ if __name__ == '__main__':
 					print ("No glyph for Unicode value %s; skipping." % g)
 			continue
 		if g.startswith ('gid') or g.startswith ('glyph'):
-			if g.startswith ('gid'):
+			if g.startswith ('gid') and len (g) > 3:
 				g = g[3:]
-			elif g.startswith ('glyph'):
+			elif g.startswith ('glyph') and len (g) > 5:
 				g = g[5:]
 			try:
 				glyph_names.append (font.getGlyphName (int (g), requireReal=1))
