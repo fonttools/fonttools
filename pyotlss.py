@@ -820,7 +820,6 @@ def remapComponentsFast (self, indices):
 
 @add_method(fontTools.ttLib.getTableModule('glyf').Glyph)
 def dropInstructionsFast (self):
-	# TODO Perhaps first just check whethere ther *are* any hints at all?
 	numContours = struct.unpack(">h", self.data[:2])[0]
 	data = bytearray (self.data)
 	i = 10
@@ -830,8 +829,9 @@ def dropInstructionsFast (self):
 		# Zero it
 		data[i] = data [i+1] = 0
 		i += 2
-		# Splice it out
-		data = data[:i] + data[i+instructionLen:]
+		if instructionLen:
+			# Splice it out
+			data = data[:i] + data[i+instructionLen:]
 	else:
 		more = 1
 		while more:
