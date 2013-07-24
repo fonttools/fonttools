@@ -391,6 +391,8 @@ def closure_glyphs (self, glyphs, table):
 			     for ll in getattr (r, c.LookupRecord) if ll \
 			    ), [])
 	elif self.Format == 2:
+		if not self.Coverage.intersect_glyphs (glyphs):
+			return []
 		indices = getattr (self, c.ClassDef).intersect_glyphs (glyphs)
 		rss = getattr (self, c.ClassRuleSet)
 		return sum ((table.table.LookupList.Lookup[ll.LookupListIndex].closure_glyphs (glyphs, table) \
