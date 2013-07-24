@@ -289,7 +289,6 @@ def subset_lookups (self, lookup_indices):
 def collect_lookups (self):
 	return []
 
-
 @add_method(fontTools.ttLib.tables.otTables.ContextSubst, fontTools.ttLib.tables.otTables.ChainContextSubst,
 	    fontTools.ttLib.tables.otTables.ContextPos,   fontTools.ttLib.tables.otTables.ChainContextPos)
 def __classify_context (self):
@@ -460,22 +459,12 @@ def subset_glyphs (self, glyphs):
 def subset_lookups (self, lookup_indices):
 	c = self.__classify_context ()
 
-	if self.Format == 1:
+	if self.Format in [1, 2]:
 		for rs in getattr (self, c.RuleSet):
 			if rs:
 				for r in getattr (rs, c.Rule):
 					if r:
-						setattr (r, c.LookupRecord, [ll for ll in getattr (r, c.LookupRecord) if ll\
-										if ll.LookupListIndex in lookup_indices])
-						for ll in getattr (r, c.LookupRecord):
-							if ll:
-								ll.LookupListIndex = lookup_indices.index (ll.LookupListIndex)
-	elif self.Format == 2:
-		for rs in getattr (self, c.RuleSet):
-			if rs:
-				for r in getattr (rs, c.Rule):
-					if r:
-						setattr (r, c.LookupRecord, [ll for ll in getattr (r, c.LookupRecord) if ll\
+						setattr (r, c.LookupRecord, [ll for ll in getattr (r, c.LookupRecord) if ll \
 										if ll.LookupListIndex in lookup_indices])
 						for ll in getattr (r, c.LookupRecord):
 							if ll:
@@ -494,12 +483,7 @@ def subset_lookups (self, lookup_indices):
 def collect_lookups (self):
 	c = self.__classify_context ()
 
-	if self.Format == 1:
-		return [ll.LookupListIndex \
-			for rs in getattr (self, c.RuleSet) if rs \
-			for r in getattr (rs, c.Rule) if r \
-			for ll in getattr (r, c.LookupRecord) if ll]
-	elif self.Format == 2:
+	if self.Format in [1, 2]:
 		return [ll.LookupListIndex \
 			for rs in getattr (self, c.RuleSet) if rs \
 			for r in getattr (rs, c.Rule) if r \
@@ -509,7 +493,6 @@ def collect_lookups (self):
 			for ll in getattr (self, c.LookupRecord) if ll]
 	else:
 		assert 0, "unknown format: %s" % self.Format
-
 
 @add_method(fontTools.ttLib.tables.otTables.ExtensionSubst)
 def closure_glyphs (self, glyphs, table):
