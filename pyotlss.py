@@ -309,7 +309,7 @@ def __classify_context (self):
 			self.RuleCount = ChainTyp+'RuleCount'
 			self.RuleSet = ChainTyp+'RuleSet'
 			self.RuleSetCount = ChainTyp+'RuleSetCount'
-			def ContextSequence (r, Format):
+			def ContextData (r, Format):
 				if Format == 1:
 					return r.Input
 				elif Format == 2:
@@ -318,7 +318,7 @@ def __classify_context (self):
 					return r.Coverage
 				else:
 					assert 0, "unknown format: %s" % Format
-			def ChainContextSequence (r, Format):
+			def ChainContextData (r, Format):
 				if Format == 1:
 					return r.Backtrack + r.Input + r.LookAhead
 				elif Format == 2:
@@ -328,9 +328,9 @@ def __classify_context (self):
 				else:
 					assert 0, "unknown format: %s" % Format
 			if Chain:
-				self.ContextSequence = ChainContextSequence
+				self.ContextData = ChainContextData
 			else:
-				self.ContextSequence = ContextSequence
+				self.ContextData = ContextData
 
 			# Format 2
 			self.ClassRule = ChainTyp+'ClassRule'
@@ -352,13 +352,13 @@ def closure_glyphs (self, glyphs, table):
 		return sum ((table.table.LookupList.Lookup[ll.LookupListIndex].closure_glyphs (glyphs, table) \
 			     for i in indices \
 			     for r in getattr (rss[i], c.Rule) \
-			     if all (g in glyphs for g in c.ContextSequence (r, self.Format)) \
+			     if all (g in glyphs for g in c.ContextData (r, self.Format)) \
 			     for ll in getattr (r, c.LookupRecord) \
 			    ), [])
 	elif self.Format == 2:
 		assert 0 # XXX
 	elif self.Format == 3:
-		if not all (x.intersect_glyphs (glyphs) for x in c.ContextSequence (self, self.Format)):
+		if not all (x.intersect_glyphs (glyphs) for x in c.ContextData (self, self.Format)):
 			return []
 		return sum ((table.table.LookupList.Lookup[ll.LookupListIndex].closure_glyphs (glyphs, table) \
 			     for ll in getattr (self, c.LookupRecord)), [])
@@ -377,7 +377,7 @@ def subset_glyphs (self, glyphs):
 		for rs in rss:
 			ss = getattr (rs, c.Rule)
 			ss = [r for r in ss \
-			      if all (g in glyphs for g in c.ContextSequence (r, self.Format))]
+			      if all (g in glyphs for g in c.ContextData (r, self.Format))]
 			setattr (rs, c.Rule, ss)
 			setattr (rs, c.RuleCount, len (ss))
 		# Prune empty subrulesets
@@ -389,9 +389,9 @@ def subset_glyphs (self, glyphs):
 		# TODO Renumber classes then prune rules that can't apply
 		# But then I first need to find fonts that use this type.  D'oh!
 		return self.Coverage.subset_glyphs (glyphs) and \
-		       all (x.subset_glyphs (glyphs) for x in c.ContextSequence (self, self.Format))
+		       all (x.subset_glyphs (glyphs) for x in c.ContextData (self, self.Format))
 	elif self.Format == 3:
-		return all (x.subset_glyphs (glyphs) for x in c.ContextSequence (self, self.Format))
+		return all (x.subset_glyphs (glyphs) for x in c.ContextData (self, self.Format))
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
