@@ -120,7 +120,7 @@ def subset_glyphs (self, glyphs):
 def closure_glyphs (self, glyphs, table):
 	if self.Format == 1:
 		return sum (([seq.LigGlyph for seq in seqs if all(c in glyphs for c in seq.Component)]
-			     for g,seqs in self.ligatures.items()), [])
+			     for g,seqs in self.ligatures.items() if g in glyphs), [])
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
