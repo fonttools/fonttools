@@ -55,10 +55,13 @@ def intersects_glyphs_class (self, glyphs, klass):
 	return any (g in glyphs for g,v in self.classDefs.items() if v == klass)
 
 @add_method(fontTools.ttLib.tables.otTables.ClassDef)
-def subset_glyphs (self, glyphs):
+def subset_glyphs (self, glyphs, remap=False):
 	"Returns ascending list of remaining classes."
 	self.classDefs = {g:v for g,v in self.classDefs.items() if g in glyphs}
-	return unique_sorted (self.classDefs.values ())
+	indices = unique_sorted (self.classDefs.values ())
+	if remap:
+		self.remap (indices)
+	return indices
 
 @add_method(fontTools.ttLib.tables.otTables.ClassDef)
 def remap (self, class_map):
@@ -177,10 +180,8 @@ def subset_glyphs (self, glyphs):
 		self.PairSetCount = len (self.PairSet)
 		return bool (self.PairSetCount)
 	elif self.Format == 2:
-		class1_map = self.ClassDef1.subset_glyphs (glyphs)
-		class2_map = self.ClassDef2.subset_glyphs (glyphs)
-		self.ClassDef1.remap (class1_map)
-		self.ClassDef2.remap (class2_map)
+		class1_map = self.ClassDef1.subset_glyphs (glyphs, remap=True)
+		class2_map = self.ClassDef2.subset_glyphs (glyphs, remap=True)
 		self.Class1Record = [self.Class1Record[i] for i in class1_map]
 		for c in self.Class1Record:
 			c.Class2Record = [c.Class2Record[i] for i in class2_map]
@@ -429,9 +430,7 @@ def subset_glyphs (self, glyphs):
 		rss = getattr (self, c.RuleSet)
 		rss = [rss[i] for i in indices]
 		ContextData = c.ContextData (self)
-		klass_maps = [x.subset_glyphs (glyphs) for x in ContextData]
-		for cd,m in zip (ContextData, klass_maps):
-			cd.remap (m)
+		klass_maps = [x.subset_glyphs (glyphs, remap=True) for x in ContextData]
 		for rs in rss:
 			if rs:
 				ss = getattr (rs, c.Rule)
@@ -971,9 +970,34 @@ if __name__ == '__main__':
 	if verbose:
 		print "Glyphs:", glyphs
 
+
+	for tag in font.keys():
+		if tag == 'GlyphOrder': continue
+
+		if tag in options['drop-tables'] or \
+		   (not options['hinting'] and tag in hinting_tables):
+			if verbose:
+				print tag, "dropped."
+			del font[tag]
+			continue
+
+		clazz = fontTools.ttLib.getTableClass(tag)
+
+		if hasattr (clazz, 'prune_pre_subset'):
+			table = font[tag]
+			retain = table.prune_pre_subset (options)
+			lapse ("prune  '%s'" % tag)
+			if not retain:
+				if verbose:
+					print tag, "pruned to empty; dropped."
+				del font[tag]
+				continue
+			else:
+				if verbose:
+					print tag, "pruned."
+
 	glyphs_requested = glyphs
 	if 'GSUB' in font:
-		# XXX Do this after pruning!
 		if verbose:
 			print "Closing glyph list over 'GSUB': %d glyphs before" % len (glyphs)
 		glyphs = font['GSUB'].closure_glyphs (glyphs)
@@ -1002,36 +1026,10 @@ if __name__ == '__main__':
 	if verbose:
 		print "Retaining %d glyphs: " % len (glyphs_closed)
 
-	if xml:
-		import xmlWriter
-		writer = xmlWriter.XMLWriter (sys.stdout)
-
 	for tag in font.keys():
-
-		if tag == 'GlyphOrder':
-			continue
-
-		if tag in options['drop-tables'] or \
-		   (not options['hinting'] and tag in hinting_tables):
-			if verbose:
-				print tag, "dropped."
-			del font[tag]
-			continue
+		if tag == 'GlyphOrder': continue
 
 		clazz = fontTools.ttLib.getTableClass(tag)
-
-		if hasattr (clazz, 'prune_pre_subset'):
-			table = font[tag]
-			retain = table.prune_pre_subset (options)
-			lapse ("prune  '%s'" % tag)
-			if not retain:
-				if verbose:
-					print tag, "pruned to empty; dropped."
-				del font[tag]
-				continue
-			else:
-				if verbose:
-					print tag, "pruned."
 
 		if tag in no_subset_tables:
 			if verbose:
@@ -1079,16 +1077,19 @@ if __name__ == '__main__':
 	font._buildReverseGlyphOrderDict ()
 	lapse ("subset GlyphOrder")
 
+	font.save (fontfile + '.subset')
+	lapse ("compile and save font")
+
+	last_time = start_time
+	lapse ("make one with everything (TOTAL TIME)")
+
 	if xml:
+		import xmlWriter
+		writer = xmlWriter.XMLWriter (sys.stdout)
+
 		for tag in font.keys():
 			writer.begintag (tag)
 			writer.newline ()
 			font[tag].toXML(writer, font)
 			writer.endtag (tag)
 			writer.newline ()
-
-	font.save (fontfile + '.subset')
-	lapse ("compile and save font")
-
-	last_time = start_time
-	lapse ("make one with everything (TOTAL TIME)")
