@@ -315,46 +315,24 @@ def __classify_context (self):
 
 			self.LookupRecord = Type+'LookupRecord'
 
-			def ContextData (r):
-				if Format == 1:
-					assert 0
-					return r.Input
-				elif Format == 2:
-					return [r.ClassDef]
-				elif Format == 3:
-					assert 0
-					return r.Coverage
-				else:
-					assert 0, "unknown format: %s" % Format
-			def ChainContextData (r):
-				if Format == 1:
-					assert 0
-					return r.Backtrack + r.Input + r.LookAhead
-				elif Format == 2:
-					return [r.LookAheadClassDef, r.InputClassDef, r.BacktrackClassDef]
-				elif Format == 3:
-					assert 0
-					return r.LookAheadCoverage + r.InputCoverage + r.BacktrackCoverage
-				else:
-					assert 0, "unknown format: %s" % Format
-			def RuleData (r):
-				if Format == 1:
-					return r.Input
-				elif Format == 2:
-					return [r.Class]
-				elif Format == 3:
-					return r.Coverage
-				else:
-					assert 0, "unknown format: %s" % Format
-			def ChainRuleData (r):
-				if Format == 1:
-					return r.Backtrack + r.Input + r.LookAhead
-				elif Format == 2:
-					return [r.LookAhead, r.Input, r.Backtrack]
-				elif Format == 3:
-					return r.LookAheadCoverage + r.InputCoverage + r.BacktrackCoverage
-				else:
-					assert 0, "unknown format: %s" % Format
+			if Format == 1:
+				ContextData = None
+				ChainContextData = None
+				RuleData = lambda r: r.Input
+				ChainRuleData = lambda r: r.Backtrack + r.Input + r.LookAhead
+			elif Format == 2:
+				ContextData = lambda r: [r.ClassDef]
+				ChainContextData = lambda r: [r.LookAheadClassDef, r.InputClassDef, r.BacktrackClassDef]
+				RuleData = lambda r: [r.Class]
+				ChainRuleData = lambda r: [r.LookAhead, r.Input, r.Backtrack]
+			elif Format == 3:
+				ContextData = None
+				ChainContextData = None
+				RuleData = lambda r: r.Coverage
+				ChainRuleData = lambda r: r.LookAheadCoverage + r.InputCoverage + r.BacktrackCoverage
+			else:
+				assert 0, "unknown format: %s" % Format
+
 			if Chain:
 				self.ContextData = ChainContextData
 				self.RuleData = ChainRuleData
