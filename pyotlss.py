@@ -293,15 +293,16 @@ def collect_lookups (self):
 @add_method(fontTools.ttLib.tables.otTables.ContextSubst, fontTools.ttLib.tables.otTables.ChainContextSubst,
 	    fontTools.ttLib.tables.otTables.ContextPos,   fontTools.ttLib.tables.otTables.ChainContextPos)
 def __classify_context (self):
-	class ContextContext:
-		def __init__ (self, lookup):
-			if lookup.__class__.__name__.endswith ('Subst'):
+
+	class ContextHelper:
+		def __init__ (self, klass, Format):
+			if klass.__name__.endswith ('Subst'):
 				Typ = 'Sub'
 				Type = 'Subst'
 			else:
 				Typ = 'Pos'
 				Type = 'Pos'
-			if lookup.__class__.__name__.startswith ('Chain'):
+			if klass.__name__.startswith ('Chain'):
 				Chain = 'Chain'
 			else:
 				Chain = ''
@@ -315,28 +316,28 @@ def __classify_context (self):
 			self.LookupRecord = Type+'LookupRecord'
 
 			def ContextData (r):
-				if r.Format == 1:
+				if Format == 1:
 					assert 0
 					return r.Input
-				elif r.Format == 2:
+				elif Format == 2:
 					return [r.ClassDef]
-				elif r.Format == 3:
+				elif Format == 3:
 					assert 0
 					return r.Coverage
 				else:
-					assert 0, "unknown format: %s" % r.Format
+					assert 0, "unknown format: %s" % Format
 			def ChainContextData (r):
-				if r.Format == 1:
+				if Format == 1:
 					assert 0
 					return r.Backtrack + r.Input + r.LookAhead
-				elif r.Format == 2:
+				elif Format == 2:
 					return [r.LookAheadClassDef, r.InputClassDef, r.BacktrackClassDef]
-				elif r.Format == 3:
+				elif Format == 3:
 					assert 0
 					return r.LookAheadCoverage + r.InputCoverage + r.BacktrackCoverage
 				else:
 					assert 0, "unknown format: %s" % Format
-			def RuleData (r, Format):
+			def RuleData (r):
 				if Format == 1:
 					return r.Input
 				elif Format == 2:
@@ -345,7 +346,7 @@ def __classify_context (self):
 					return r.Coverage
 				else:
 					assert 0, "unknown format: %s" % Format
-			def ChainRuleData (r, Format):
+			def ChainRuleData (r):
 				if Format == 1:
 					return r.Backtrack + r.Input + r.LookAhead
 				elif Format == 2:
@@ -374,9 +375,13 @@ def __classify_context (self):
 			self.ClassRuleSetCount = ChainTyp+'ClassSetCount'
 			self.ClassDef = 'InputClassDef' if Chain else 'ClassDef'
 
-	if not hasattr (self.__class__, "__ContextContext"):
-		self.__class__.__ContextContext = ContextContext (self)
-	return self.__class__.__ContextContext
+	if self.Format not in [1, 2, 3]:
+		return None # Don't shoot the messenger; let it go
+	if not hasattr (self.__class__, "__ContextHelpers"):
+		self.__class__.__ContextHelpers = {}
+	if self.Format not in self.__class__.__ContextHelpers:
+		self.__class__.__ContextHelpers[self.Format] = ContextHelper (self.__class__, self.Format)
+	return self.__class__.__ContextHelpers[self.Format]
 
 @add_method(fontTools.ttLib.tables.otTables.ContextSubst, fontTools.ttLib.tables.otTables.ChainContextSubst)
 def closure_glyphs (self, glyphs, table):
@@ -388,7 +393,7 @@ def closure_glyphs (self, glyphs, table):
 		return sum ((table.table.LookupList.Lookup[ll.LookupListIndex].closure_glyphs (glyphs, table) \
 			     for i in indices \
 			     for r in getattr (rss[i], c.Rule) \
-			     if r and all (g in glyphs for g in c.RuleData (r, self.Format)) \
+			     if r and all (g in glyphs for g in c.RuleData (r)) \
 			     for ll in getattr (r, c.LookupRecord) if ll \
 			    ), [])
 	elif self.Format == 2:
@@ -400,11 +405,11 @@ def closure_glyphs (self, glyphs, table):
 			     for i in indices \
 			     for r in getattr (rss[i], c.ClassRule) \
 			     if r and all (cd.intersects_glyphs_class (glyphs, k) \
-					   for cd,k in zip (c.ContextData (self), c.RuleData (r, self.Format))) \
+					   for cd,k in zip (c.ContextData (self), c.RuleData (r))) \
 			     for ll in getattr (r, c.LookupRecord) if ll \
 			    ), [])
 	elif self.Format == 3:
-		if not all (x.intersect_glyphs (glyphs) for x in c.RuleData (self, self.Format)):
+		if not all (x.intersect_glyphs (glyphs) for x in c.RuleData (self)):
 			return []
 		return sum ((table.table.LookupList.Lookup[ll.LookupListIndex].closure_glyphs (glyphs, table) \
 			     for ll in getattr (self, c.LookupRecord) if ll), [])
@@ -424,7 +429,7 @@ def subset_glyphs (self, glyphs):
 			if rs:
 				ss = getattr (rs, c.Rule)
 				ss = [r for r in ss \
-				      if r and all (g in glyphs for g in c.RuleData (r, self.Format))]
+				      if r and all (g in glyphs for g in c.RuleData (r))]
 				setattr (rs, c.Rule, ss)
 				setattr (rs, c.RuleCount, len (ss))
 		# Prune empty subrulesets
@@ -447,7 +452,7 @@ def subset_glyphs (self, glyphs):
 				ss = getattr (rs, c.ClassRule)
 				ss = [r for r in ss \
 				      if r and all (k in klass_map \
-						    for klass_map,k in zip (klass_maps, c.RuleData (r, self.Format)))]
+						    for klass_map,k in zip (klass_maps, c.RuleData (r)))]
 				setattr (rs, c.ClassRule, ss)
 				setattr (rs, c.ClassRuleCount, len (ss))
 
@@ -469,7 +474,7 @@ def subset_glyphs (self, glyphs):
 
 		return all (x.subset_glyphs (glyphs) for x in c.ContextData (self))
 	elif self.Format == 3:
-		return all (x.subset_glyphs (glyphs) for x in c.RuleData (self, self.Format))
+		return all (x.subset_glyphs (glyphs) for x in c.RuleData (self))
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
