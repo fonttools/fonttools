@@ -810,7 +810,7 @@ options_default = {
 	'name-IDs': [1, 2], # Family and Style
 	'name-legacy': False,
 	'name-languages': [0x0409], # English
-	'notdef': True,
+	'mandatory-glyphs': True, # First four for TrueType, .notdef for CFF
 }
 
 
@@ -821,7 +821,6 @@ options_default = {
 # TODO Text direction considerations
 # TODO Text script / language considerations
 # TODO Drop unknown tables
-# TODO Add other three required TrueType glyphs (1,2,3)
 
 if __name__ == '__main__':
 
@@ -864,6 +863,17 @@ if __name__ == '__main__':
 	font.disassembleInstructions = False
 	lapse ("load font")
 
+	if options["mandatory-glyphs"]:
+		# Always include .notdef; anything else?
+		if 'glyf' in font:
+			glyphs.extend (['gid0', 'gid1', 'gid2', 'gid3'])
+			if verbose:
+				print "Added first four glyphs to subset"
+		else:
+			glyphs.append ('.notdef')
+			if verbose:
+				print "Added .notdef glyph to subset"
+
 	names = font.getGlyphNames()
 	# Convert to glyph names
 	glyph_names = []
@@ -872,7 +882,7 @@ if __name__ == '__main__':
 		if g in names:
 			glyph_names.append (g)
 			continue
-		if g[:3] == 'uni':
+		if g.startswith ('uni'):
 			if not cmap_tables:
 				cmap = font['cmap']
 				cmap_tables = [t for t in cmap.tables if t.platformID == 3 and t.platEncID in [1, 10]]
@@ -888,43 +898,40 @@ if __name__ == '__main__':
 				if verbose:
 					print ("No glyph for Unicode value %s; skipping." % g)
 			continue
-		if g[:3] == 'gid':
-			g = g[3:]
-		elif g[:5] == 'glyph':
-			g = g[5:]
-		try:
-			glyph_names.append (font.getGlyphName (int (g)))
-		except ValueError:
-			raise Exception ("Invalid glyph identifier %s" % g)
+		if g.startswith ('gid') or g.startswith ('glyph'):
+			if g.startswith ('gid'):
+				g = g[3:]
+			elif g.startswith ('glyph'):
+				g = g[5:]
+			try:
+				glyph_names.append (font.getGlyphName (int (g), requireReal=1))
+			except ValueError:
+				raise Exception ("Invalid glyph identifier %s" % g)
+			continue
+		raise Exception ("Invalid glyph identifier %s" % g)
 	del cmap_tables
-	glyphs = glyph_names
+	glyphs = unique_sorted (glyph_names)
 	del glyph_names
 	lapse ("compile glyph list")
-
-	if options["notdef"]:
-		# Always include .notdef; anything else?
-		glyphs.append ('.notdef')
-		if verbose:
-			print "Added .notdef glyph"
 
 	glyphs_requested = glyphs
 	if 'GSUB' in font:
 		# XXX Do this after pruning!
 		if verbose:
-			print "Closing glyph list over 'GSUB'. %d glyphs before" % len (glyphs)
+			print "Closing glyph list over 'GSUB': %d glyphs before" % len (glyphs)
 		glyphs = font['GSUB'].closure_glyphs (glyphs)
 		if verbose:
-			print "Closed  glyph list over 'GSUB'. %d glyphs after" % len (glyphs)
+			print "Closed  glyph list over 'GSUB': %d glyphs after" % len (glyphs)
 		lapse ("close glyph list over 'GSUB'")
 	glyphs_gsubed = glyphs
 
 	# Close over composite glyphs
 	if 'glyf' in font:
 		if verbose:
-			print "Closing glyph list over 'glyf'. %d glyphs before" % len (glyphs)
+			print "Closing glyph list over 'glyf': %d glyphs before" % len (glyphs)
 		glyphs = font['glyf'].closure_glyphs (glyphs)
 		if verbose:
-			print "Closed  glyph list over 'glyf'. %d glyphs after" % len (glyphs)
+			print "Closed  glyph list over 'glyf': %d glyphs after" % len (glyphs)
 		lapse ("close glyph list over 'glyf'")
 	else:
 		glyphs = glyphs
