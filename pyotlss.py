@@ -45,6 +45,16 @@ def subset_glyphs (self, glyphs):
 	return indices
 
 @add_method(fontTools.ttLib.tables.otTables.ClassDef)
+def intersect_glyphs (self, glyphs):
+	"Returns ascending list of matching class values."
+	return unique_sorted (v for g,v in self.classDefs.items() if g in glyphs)
+
+@add_method(fontTools.ttLib.tables.otTables.ClassDef)
+def intersects_glyphs_class (self, glyphs, klass):
+	"Returns true if any of glyphs has requested class."
+	return any (g in glyphs for g,v in self.classDefs.items() if v == klass)
+
+@add_method(fontTools.ttLib.tables.otTables.ClassDef)
 def subset_glyphs (self, glyphs):
 	"Returns ascending list of remaining classes."
 	self.classDefs = {g:v for g,v in self.classDefs.items() if g in glyphs}
@@ -309,34 +319,59 @@ def __classify_context (self):
 			self.RuleCount = ChainTyp+'RuleCount'
 			self.RuleSet = ChainTyp+'RuleSet'
 			self.RuleSetCount = ChainTyp+'RuleSetCount'
-			def ContextData (r, Format):
+			def ContextData (r):
+				if r.Format == 1:
+					assert 0
+					return r.Input
+				elif r.Format == 2:
+					return [r.ClassDef]
+				elif r.Format == 3:
+					assert 0
+					return r.Coverage
+				else:
+					assert 0, "unknown format: %s" % r.Format
+			def ChainContextData (r):
+				if r.Format == 1:
+					assert 0
+					return r.Backtrack + r.Input + r.LookAhead
+				elif r.Format == 2:
+					return [r.LookAheadClassDef, r.InputClassDef, r.BacktrackClassDef]
+				elif r.Format == 3:
+					assert 0
+					return r.LookAheadCoverage + r.InputCoverage + r.BacktrackCoverage
+				else:
+					assert 0, "unknown format: %s" % Format
+			def RuleData (r, Format):
 				if Format == 1:
 					return r.Input
 				elif Format == 2:
-					return [r.ClassDef]
+					return [r.Class]
 				elif Format == 3:
 					return r.Coverage
 				else:
 					assert 0, "unknown format: %s" % Format
-			def ChainContextData (r, Format):
+			def ChainRuleData (r, Format):
 				if Format == 1:
 					return r.Backtrack + r.Input + r.LookAhead
 				elif Format == 2:
-					return [r.LookAheadClassDef, r.BacktrackClassDef, r.InputClassDef]
+					return [r.LookAhead, r.Input, r.Backtrack]
 				elif Format == 3:
-					return r.InputCoverage + r.LookAheadCoverage + r.BacktrackCoverage
+					return r.LookAheadCoverage + r.InputCoverage + r.BacktrackCoverage
 				else:
 					assert 0, "unknown format: %s" % Format
 			if Chain:
 				self.ContextData = ChainContextData
+				self.RuleData = ChainRuleData
 			else:
 				self.ContextData = ContextData
+				self.RuleData = RuleData
 
 			# Format 2
 			self.ClassRule = ChainTyp+'ClassRule'
 			self.ClassRuleCount = ChainTyp+'ClassRuleCount'
 			self.ClassRuleSet = ChainTyp+'ClassSet'
 			self.ClassRuleSetCount = ChainTyp+'ClassSetCount'
+			self.ClassDef = 'InputClassDef' if Chain else 'ClassDef'
 
 	if not hasattr (self.__class__, "__ContextContext"):
 		self.__class__.__ContextContext = ContextContext (self)
@@ -352,13 +387,21 @@ def closure_glyphs (self, glyphs, table):
 		return sum ((table.table.LookupList.Lookup[ll.LookupListIndex].closure_glyphs (glyphs, table) \
 			     for i in indices \
 			     for r in getattr (rss[i], c.Rule) \
-			     if r and all (g in glyphs for g in c.ContextData (r, self.Format)) \
+			     if r and all (g in glyphs for g in c.RuleData (r, self.Format)) \
 			     for ll in getattr (r, c.LookupRecord) if ll \
 			    ), [])
 	elif self.Format == 2:
-		assert 0 # XXX
+		indices = getattr (self, c.ClassDef).intersect_glyphs (glyphs)
+		rss = getattr (self, c.ClassRuleSet)
+		return sum ((table.table.LookupList.Lookup[ll.LookupListIndex].closure_glyphs (glyphs, table) \
+			     for i in indices \
+			     for r in getattr (rss[i], c.ClassRule) \
+			     if r and all (cd.intersects_glyphs_class (glyphs, k) \
+					   for cd,k in zip (c.ContextData (self), c.RuleData (r, self.Format))) \
+			     for ll in getattr (r, c.LookupRecord) if ll \
+			    ), [])
 	elif self.Format == 3:
-		if not all (x.intersect_glyphs (glyphs) for x in c.ContextData (self, self.Format)):
+		if not all (x.intersect_glyphs (glyphs) for x in c.RuleData (self, self.Format)):
 			return []
 		return sum ((table.table.LookupList.Lookup[ll.LookupListIndex].closure_glyphs (glyphs, table) \
 			     for ll in getattr (self, c.LookupRecord) if ll), [])
@@ -378,7 +421,7 @@ def subset_glyphs (self, glyphs):
 			if rs:
 				ss = getattr (rs, c.Rule)
 				ss = [r for r in ss \
-				      if r and all (g in glyphs for g in c.ContextData (r, self.Format))]
+				      if r and all (g in glyphs for g in c.RuleData (r, self.Format))]
 				setattr (rs, c.Rule, ss)
 				setattr (rs, c.RuleCount, len (ss))
 		# Prune empty subrulesets
@@ -390,9 +433,9 @@ def subset_glyphs (self, glyphs):
 		# TODO Renumber classes then prune rules that can't apply
 		# But then I first need to find fonts that use this type.  D'oh!
 		return self.Coverage.subset_glyphs (glyphs) and \
-		       all (x.subset_glyphs (glyphs) for x in c.ContextData (self, self.Format))
+		       all (x.subset_glyphs (glyphs) for x in c.ContextData (self))
 	elif self.Format == 3:
-		return all (x.subset_glyphs (glyphs) for x in c.ContextData (self, self.Format))
+		return all (x.subset_glyphs (glyphs) for x in c.RuleData (self, self.Format))
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
@@ -824,7 +867,6 @@ options_default = {
 
 # TODO OS/2 ulUnicodeRange / ulCodePageRange?
 # TODO Drop unneeded GSUB/GPOS Script/LangSys entries
-# TODO Finish GSUB glyph closure
 # TODO Avoid recursing too much
 # TODO Text direction considerations
 # TODO Text script / language considerations
