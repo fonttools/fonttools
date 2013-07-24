@@ -19,6 +19,12 @@
 # Google Author(s): Behdad Esfahbod
 #
 
+# Try running on PyPy
+try:
+	import numpypy
+except ImportError:
+	pass
+
 import fontTools.ttx
 
 
