@@ -1051,14 +1051,17 @@ def main ():
 	font = fontTools.ttx.TTFont (fontfile, recalcBBoxes=options['recalc-bboxes'])
 	lapse ("load font")
 
-	if not options['glyph-names']:
-		# If we don't need glyph names, change 'post' class to not try to
-		# load them.  It avoid lots of headache with broken fonts as well
-		# as loading time.  We already change the table format during
-		# pruning so we are safe for the encode side.
-		#
-		# Ideally ttLib should provide a way to ask it to skip loading
-		# glyph names.  But it currently doesn't provide such a thing.
+	# If we don't need glyph names, change 'post' class to not try to
+	# load them.  It avoid lots of headache with broken fonts as well
+	# as loading time.  We already change the table format during
+	# pruning so we are safe for the encode side.
+	#
+	# Ideally ttLib should provide a way to ask it to skip loading
+	# glyph names.  But it currently doesn't provide such a thing.
+	if not options['glyph-names'] \
+			and all (any (g.startswith (p) \
+				      for p in ['gid', 'glyph', 'uni']) \
+				 for g in glyphs):
 		post = fontTools.ttLib.getTableClass('post')
 		post.decode_format_2_0 = post.decode_format_3_0
 		del post
