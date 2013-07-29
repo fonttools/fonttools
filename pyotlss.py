@@ -1007,6 +1007,7 @@ options_default = {
 # TODO Text script / language considerations
 # TODO Drop unknown tables?  Using DefaultTable.prune?
 # TODO Drop GPOS Device records if not hinting?
+# TODO subset_unicode values in cmap
 
 
 def main ():
