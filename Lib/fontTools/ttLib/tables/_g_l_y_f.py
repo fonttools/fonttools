@@ -47,9 +47,8 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 			glyph = Glyph(glyphdata)
 			self.glyphs[glyphName] = glyph
 			last = next
-		# this should become a warning:
-		#if len(data) > next:
-		#	raise ttLib.TTLibError, "too much 'glyf' table data"
+		if len(data) > next:
+			warnings.warn("too much 'glyf' table data")
 		if noname:
 			warnings.warn('%s glyphs have no name' % i)
 	
@@ -447,8 +446,8 @@ class Glyph:
 		# unpack raw coordinates, krrrrrr-tching!
 		xDataLen = struct.calcsize(xFormat)
 		yDataLen = struct.calcsize(yFormat)
-		if not (0 <= (len(data) - (xDataLen + yDataLen)) < 4):
-			raise ttLib.TTLibError, "bad glyph record (leftover bytes: %s)" % (len(data) - (xDataLen + yDataLen))
+		if len(data) - (xDataLen + yDataLen) >= 4:
+			warnings.warn("too much glyph data: %d excess bytes" % (len(data) - (xDataLen + yDataLen)))
 		xCoordinates = struct.unpack(xFormat, data[:xDataLen])
 		yCoordinates = struct.unpack(yFormat, data[xDataLen:xDataLen+yDataLen])
 		return flags, xCoordinates, yCoordinates
