@@ -1272,7 +1272,7 @@ def main (args):
 		sys.exit (1)
 
 	fontfile = args[0]
-	glyphs   = args[1:]
+	args = args[1:]
 
 	# TODO Option for ignoreDecompileErrors?
 	font = fontTools.ttx.TTFont (fontfile)
@@ -1290,7 +1290,7 @@ def main (args):
 	#
 	if not options.glyph_names \
 			and all (any (g.startswith (p) for p in ['gid', 'glyph', 'uni']) \
-				 for g in glyphs):
+				 for g in args):
 		post = fontTools.ttLib.getTableClass('post')
 		saved = post.decode_format_2_0
 		post.decode_format_2_0 = post.decode_format_3_0
@@ -1302,12 +1302,12 @@ def main (args):
 
 	names = font.getGlyphNames()
 	log.lapse ("loading glyph names")
-	# Convert to glyph names
-	glyph_names = []
+
+	glyphs = []
 	unicodes = []
-	for g in glyphs:
+	for g in args:
 		if g in names:
-			glyph_names.append (g)
+			glyphs.append (g)
 			continue
 		if g.startswith ('uni') and len (g) > 3:
 			u = int (g[3:], 16)
@@ -1319,14 +1319,13 @@ def main (args):
 			elif g.startswith ('glyph') and len (g) > 5:
 				g = g[5:]
 			try:
-				glyph_names.append (font.getGlyphName (int (g), requireReal=1))
+				glyphs.append (font.getGlyphName (int (g), requireReal=1))
 			except ValueError:
 				raise Exception ("Invalid glyph identifier %s" % g)
 			continue
 		raise Exception ("Invalid glyph identifier %s" % g)
-	unicodes = set (unicodes)
-	glyphs = set (glyph_names)
 	log.lapse ("compile glyph list")
+	log ("Unicodes:", unicodes)
 	log ("Glyphs:", glyphs)
 
 	s.populate (glyphs=glyphs, unicodes=unicodes)
