@@ -84,9 +84,9 @@ def closure_glyphs (self, glyphs, table):
 		assert 0, "unknown format: %s" % self.Format
 
 @add_method(fontTools.ttLib.tables.otTables.SingleSubst)
-def subset_glyphs (self, glyphs):
+def subset_glyphs (self, s):
 	if self.Format in [1, 2]:
-		self.mapping = {g:v for g,v in self.mapping.items() if g in glyphs}
+		self.mapping = {g:v for g,v in self.mapping.items() if g in s.glyphs}
 		return bool (self.mapping)
 	else:
 		assert 0, "unknown format: %s" % self.Format
@@ -100,9 +100,9 @@ def closure_glyphs (self, glyphs, table):
 		assert 0, "unknown format: %s" % self.Format
 
 @add_method(fontTools.ttLib.tables.otTables.MultipleSubst)
-def subset_glyphs (self, glyphs):
+def subset_glyphs (self, s):
 	if self.Format == 1:
-		indices = self.Coverage.subset (glyphs)
+		indices = self.Coverage.subset (s.glyphs)
 		self.Sequence = [self.Sequence[i] for i in indices]
 		self.SequenceCount = len (self.Sequence)
 		return bool (self.SequenceCount)
@@ -117,9 +117,9 @@ def closure_glyphs (self, glyphs, table):
 		assert 0, "unknown format: %s" % self.Format
 
 @add_method(fontTools.ttLib.tables.otTables.AlternateSubst)
-def subset_glyphs (self, glyphs):
+def subset_glyphs (self, s):
 	if self.Format == 1:
-		self.alternates = {g:v for g,v in self.alternates.items() if g in glyphs}
+		self.alternates = {g:v for g,v in self.alternates.items() if g in s.glyphs}
 		return bool (self.alternates)
 	else:
 		assert 0, "unknown format: %s" % self.Format
@@ -133,10 +133,10 @@ def closure_glyphs (self, glyphs, table):
 		assert 0, "unknown format: %s" % self.Format
 
 @add_method(fontTools.ttLib.tables.otTables.LigatureSubst)
-def subset_glyphs (self, glyphs):
+def subset_glyphs (self, s):
 	if self.Format == 1:
-		self.ligatures = {g:v for g,v in self.ligatures.items() if g in glyphs}
-		self.ligatures = {g:[seq for seq in seqs if all(c in glyphs for c in seq.Component)]
+		self.ligatures = {g:v for g,v in self.ligatures.items() if g in s.glyphs}
+		self.ligatures = {g:[seq for seq in seqs if all(c in s.glyphs for c in seq.Component)]
 				  for g,seqs in self.ligatures.items()}
 		self.ligatures = {g:v for g,v in self.ligatures.items() if v}
 		return bool (self.ligatures)
@@ -155,21 +155,21 @@ def closure_glyphs (self, glyphs, table):
 		assert 0, "unknown format: %s" % self.Format
 
 @add_method(fontTools.ttLib.tables.otTables.ReverseChainSingleSubst)
-def subset_glyphs (self, glyphs):
+def subset_glyphs (self, s):
 	if self.Format == 1:
-		indices = self.Coverage.subset (glyphs)
+		indices = self.Coverage.subset (s.glyphs)
 		self.Substitute = [self.Substitute[i] for i in indices]
 		self.GlyphCount = len (self.Substitute)
-		return bool (self.GlyphCount and all (c.subset (glyphs) for c in self.LookAheadCoverage + self.BacktrackCoverage))
+		return bool (self.GlyphCount and all (c.subset (s.glyphs) for c in self.LookAheadCoverage + self.BacktrackCoverage))
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
 @add_method(fontTools.ttLib.tables.otTables.SinglePos)
-def subset_glyphs (self, glyphs):
+def subset_glyphs (self, s):
 	if self.Format == 1:
-		return len (self.Coverage.subset (glyphs))
+		return len (self.Coverage.subset (s.glyphs))
 	elif self.Format == 2:
-		indices = self.Coverage.subset (glyphs)
+		indices = self.Coverage.subset (s.glyphs)
 		self.Value = [self.Value[i] for i in indices]
 		self.ValueCount = len (self.Value)
 		return bool (self.ValueCount)
@@ -177,32 +177,32 @@ def subset_glyphs (self, glyphs):
 		assert 0, "unknown format: %s" % self.Format
 
 @add_method(fontTools.ttLib.tables.otTables.PairPos)
-def subset_glyphs (self, glyphs):
+def subset_glyphs (self, s):
 	if self.Format == 1:
-		indices = self.Coverage.subset (glyphs)
+		indices = self.Coverage.subset (s.glyphs)
 		self.PairSet = [self.PairSet[i] for i in indices]
 		for p in self.PairSet:
-			p.PairValueRecord = [r for r in p.PairValueRecord if r.SecondGlyph in glyphs]
+			p.PairValueRecord = [r for r in p.PairValueRecord if r.SecondGlyph in s.glyphs]
 			p.PairValueCount = len (p.PairValueRecord)
 		self.PairSet = [p for p in self.PairSet if p.PairValueCount]
 		self.PairSetCount = len (self.PairSet)
 		return bool (self.PairSetCount)
 	elif self.Format == 2:
-		class1_map = self.ClassDef1.subset (glyphs, remap=True)
-		class2_map = self.ClassDef2.subset (glyphs, remap=True)
+		class1_map = self.ClassDef1.subset (s.glyphs, remap=True)
+		class2_map = self.ClassDef2.subset (s.glyphs, remap=True)
 		self.Class1Record = [self.Class1Record[i] for i in class1_map]
 		for c in self.Class1Record:
 			c.Class2Record = [c.Class2Record[i] for i in class2_map]
 		self.Class1Count = len (class1_map)
 		self.Class2Count = len (class2_map)
-		return bool (self.Class1Count and self.Class2Count and self.Coverage.subset (glyphs))
+		return bool (self.Class1Count and self.Class2Count and self.Coverage.subset (s.glyphs))
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
 @add_method(fontTools.ttLib.tables.otTables.CursivePos)
-def subset_glyphs (self, glyphs):
+def subset_glyphs (self, s):
 	if self.Format == 1:
-		indices = self.Coverage.subset (glyphs)
+		indices = self.Coverage.subset (s.glyphs)
 		self.EntryExitRecord = [self.EntryExitRecord[i] for i in indices]
 		self.EntryExitCount = len (self.EntryExitRecord)
 		return bool (self.EntryExitCount)
@@ -210,12 +210,12 @@ def subset_glyphs (self, glyphs):
 		assert 0, "unknown format: %s" % self.Format
 
 @add_method(fontTools.ttLib.tables.otTables.MarkBasePos)
-def subset_glyphs (self, glyphs):
+def subset_glyphs (self, s):
 	if self.Format == 1:
-		mark_indices = self.MarkCoverage.subset (glyphs)
+		mark_indices = self.MarkCoverage.subset (s.glyphs)
 		self.MarkArray.MarkRecord = [self.MarkArray.MarkRecord[i] for i in mark_indices]
 		self.MarkArray.MarkCount = len (self.MarkArray.MarkRecord)
-		base_indices = self.BaseCoverage.subset (glyphs)
+		base_indices = self.BaseCoverage.subset (s.glyphs)
 		self.BaseArray.BaseRecord = [self.BaseArray.BaseRecord[i] for i in base_indices]
 		self.BaseArray.BaseCount = len (self.BaseArray.BaseRecord)
 		# Prune empty classes
@@ -230,12 +230,12 @@ def subset_glyphs (self, glyphs):
 		assert 0, "unknown format: %s" % self.Format
 
 @add_method(fontTools.ttLib.tables.otTables.MarkLigPos)
-def subset_glyphs (self, glyphs):
+def subset_glyphs (self, s):
 	if self.Format == 1:
-		mark_indices = self.MarkCoverage.subset (glyphs)
+		mark_indices = self.MarkCoverage.subset (s.glyphs)
 		self.MarkArray.MarkRecord = [self.MarkArray.MarkRecord[i] for i in mark_indices]
 		self.MarkArray.MarkCount = len (self.MarkArray.MarkRecord)
-		ligature_indices = self.LigatureCoverage.subset (glyphs)
+		ligature_indices = self.LigatureCoverage.subset (s.glyphs)
 		self.LigatureArray.LigatureAttach = [self.LigatureArray.LigatureAttach[i] for i in ligature_indices]
 		self.LigatureArray.LigatureCount = len (self.LigatureArray.LigatureAttach)
 		# Prune empty classes
@@ -251,12 +251,12 @@ def subset_glyphs (self, glyphs):
 		assert 0, "unknown format: %s" % self.Format
 
 @add_method(fontTools.ttLib.tables.otTables.MarkMarkPos)
-def subset_glyphs (self, glyphs):
+def subset_glyphs (self, s):
 	if self.Format == 1:
-		mark1_indices = self.Mark1Coverage.subset (glyphs)
+		mark1_indices = self.Mark1Coverage.subset (s.glyphs)
 		self.Mark1Array.MarkRecord = [self.Mark1Array.MarkRecord[i] for i in mark1_indices]
 		self.Mark1Array.MarkCount = len (self.Mark1Array.MarkRecord)
-		mark2_indices = self.Mark2Coverage.subset (glyphs)
+		mark2_indices = self.Mark2Coverage.subset (s.glyphs)
 		self.Mark2Array.Mark2Record = [self.Mark2Array.Mark2Record[i] for i in mark2_indices]
 		self.Mark2Array.MarkCount = len (self.Mark2Array.Mark2Record)
 		# Prune empty classes
@@ -412,18 +412,18 @@ def closure_glyphs (self, glyphs, table):
 
 @add_method(fontTools.ttLib.tables.otTables.ContextSubst,      fontTools.ttLib.tables.otTables.ContextPos,
 	    fontTools.ttLib.tables.otTables.ChainContextSubst, fontTools.ttLib.tables.otTables.ChainContextPos)
-def subset_glyphs (self, glyphs):
+def subset_glyphs (self, s):
 	c = self.__classify_context ()
 
 	if self.Format == 1:
-		indices = self.Coverage.subset (glyphs)
+		indices = self.Coverage.subset (s.glyphs)
 		rss = getattr (self, c.RuleSet)
 		rss = [rss[i] for i in indices]
 		for rs in rss:
 			if rs:
 				ss = getattr (rs, c.Rule)
 				ss = [r for r in ss \
-				      if r and all (g in glyphs for g in c.RuleData (r))]
+				      if r and all (g in s.glyphs for g in c.RuleData (r))]
 				setattr (rs, c.Rule, ss)
 				setattr (rs, c.RuleCount, len (ss))
 		# Prune empty subrulesets
@@ -432,13 +432,13 @@ def subset_glyphs (self, glyphs):
 		setattr (self, c.RuleSetCount, len (rss))
 		return bool (rss)
 	elif self.Format == 2:
-		if not self.Coverage.subset (glyphs):
+		if not self.Coverage.subset (s.glyphs):
 			return False
-		indices = getattr (self, c.ClassDef).intersect (glyphs)
+		indices = getattr (self, c.ClassDef).intersect (s.glyphs)
 		rss = getattr (self, c.RuleSet)
 		rss = [rss[i] for i in indices]
 		ContextData = c.ContextData (self)
-		klass_maps = [x.subset (glyphs, remap=True) for x in ContextData]
+		klass_maps = [x.subset (s.glyphs, remap=True) for x in ContextData]
 		for rs in rss:
 			if rs:
 				ss = getattr (rs, c.Rule)
@@ -458,7 +458,7 @@ def subset_glyphs (self, glyphs):
 		setattr (self, c.RuleSetCount, len (rss))
 		return bool (rss)
 	elif self.Format == 3:
-		return all (x.subset (glyphs) for x in c.RuleData (self))
+		return all (x.subset (s.glyphs) for x in c.RuleData (self))
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
@@ -510,9 +510,9 @@ def closure_glyphs (self, glyphs, table):
 		assert 0, "unknown format: %s" % self.Format
 
 @add_method(fontTools.ttLib.tables.otTables.ExtensionSubst, fontTools.ttLib.tables.otTables.ExtensionPos)
-def subset_glyphs (self, glyphs):
+def subset_glyphs (self, s):
 	if self.Format == 1:
-		return self.ExtSubTable.subset_glyphs (glyphs)
+		return self.ExtSubTable.subset_glyphs (s)
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
@@ -532,11 +532,11 @@ def collect_lookups (self):
 
 @add_method(fontTools.ttLib.tables.otTables.Lookup)
 def closure_glyphs (self, glyphs, table):
-	return sum ((s.closure_glyphs (glyphs, table) for s in self.SubTable if s), [])
+	return sum ((st.closure_glyphs (glyphs, table) for st in self.SubTable if st), [])
 
 @add_method(fontTools.ttLib.tables.otTables.Lookup)
-def subset_glyphs (self, glyphs):
-	self.SubTable = [s for s in self.SubTable if s and s.subset_glyphs (glyphs)]
+def subset_glyphs (self, s):
+	self.SubTable = [st for st in self.SubTable if st and st.subset_glyphs (s)]
 	self.SubTableCount = len (self.SubTable)
 	return bool (self.SubTableCount)
 
@@ -547,12 +547,12 @@ def subset_lookups (self, lookup_indices):
 
 @add_method(fontTools.ttLib.tables.otTables.Lookup)
 def collect_lookups (self):
-	return unique_sorted (sum ((s.collect_lookups () for s in self.SubTable if s), []))
+	return unique_sorted (sum ((st.collect_lookups () for st in self.SubTable if st), []))
 
 @add_method(fontTools.ttLib.tables.otTables.LookupList)
-def subset_glyphs (self, glyphs):
+def subset_glyphs (self, s):
 	"Returns the indices of nonempty lookups."
-	return [i for (i,l) in enumerate (self.Lookup) if l and l.subset_glyphs (glyphs)]
+	return [i for (i,l) in enumerate (self.Lookup) if l and l.subset_glyphs (s)]
 
 @add_method(fontTools.ttLib.tables.otTables.LookupList)
 def subset_lookups (self, lookup_indices):
@@ -662,8 +662,8 @@ def closure_glyphs (self, glyphs):
 		glyphs.extend (additions)
 
 @add_method(fontTools.ttLib.getTableClass('GSUB'), fontTools.ttLib.getTableClass('GPOS'))
-def subset_glyphs (self, glyphs):
-	lookup_indices = self.table.LookupList.subset_glyphs (glyphs)
+def subset_glyphs (self, s):
+	lookup_indices = self.table.LookupList.subset_glyphs (s)
 	self.subset_lookups (lookup_indices)
 	self.prune_lookups ()
 	return True
@@ -697,24 +697,24 @@ def prune_pre_subset (self, options):
 	return True
 
 @add_method(fontTools.ttLib.getTableClass('GDEF'))
-def subset_glyphs (self, glyphs):
+def subset_glyphs (self, s):
 	table = self.table
 	if table.LigCaretList:
-		indices = table.LigCaretList.Coverage.subset (glyphs)
+		indices = table.LigCaretList.Coverage.subset (s.glyphs)
 		table.LigCaretList.LigGlyph = [table.LigCaretList.LigGlyph[i] for i in indices]
 		table.LigCaretList.LigGlyphCount = len (table.LigCaretList.LigGlyph)
 		if not table.LigCaretList.LigGlyphCount:
 			table.LigCaretList = None
 	if table.MarkAttachClassDef:
-		table.MarkAttachClassDef.classDefs = {g:v for g,v in table.MarkAttachClassDef.classDefs.items() if g in glyphs}
+		table.MarkAttachClassDef.classDefs = {g:v for g,v in table.MarkAttachClassDef.classDefs.items() if g in s.glyphs}
 		if not table.MarkAttachClassDef.classDefs:
 			table.MarkAttachClassDef = None
 	if table.GlyphClassDef:
-		table.GlyphClassDef.classDefs = {g:v for g,v in table.GlyphClassDef.classDefs.items() if g in glyphs}
+		table.GlyphClassDef.classDefs = {g:v for g,v in table.GlyphClassDef.classDefs.items() if g in s.glyphs}
 		if not table.GlyphClassDef.classDefs:
 			table.GlyphClassDef = None
 	if table.AttachList:
-		indices = table.AttachList.Coverage.subset (glyphs)
+		indices = table.AttachList.Coverage.subset (s.glyphs)
 		table.AttachList.AttachPoint = [table.AttachList.AttachPoint[i] for i in indices]
 		table.AttachList.GlyphCount = len (table.AttachList.AttachPoint)
 		if not table.AttachList.GlyphCount:
@@ -728,25 +728,25 @@ def prune_pre_subset (self, options):
 	return bool (self.kernTables)
 
 @add_method(fontTools.ttLib.getTableClass('kern'))
-def subset_glyphs (self, glyphs):
+def subset_glyphs (self, s):
 	for t in self.kernTables:
-		t.kernTable = {(a,b):v for ((a,b),v) in t.kernTable.items() if a in glyphs and b in glyphs}
+		t.kernTable = {(a,b):v for ((a,b),v) in t.kernTable.items() if a in s.glyphs and b in s.glyphs}
 	self.kernTables = [t for t in self.kernTables if t.kernTable]
 	return bool (self.kernTables)
 
 @add_method(fontTools.ttLib.getTableClass('hmtx'), fontTools.ttLib.getTableClass('vmtx'))
-def subset_glyphs (self, glyphs):
-	self.metrics = {g:v for g,v in self.metrics.items() if g in glyphs}
+def subset_glyphs (self, s):
+	self.metrics = {g:v for g,v in self.metrics.items() if g in s.glyphs}
 	return bool (self.metrics)
 
 @add_method(fontTools.ttLib.getTableClass('hdmx'))
-def subset_glyphs (self, glyphs):
-	self.hdmx = {s:{g:v for g,v in l.items() if g in glyphs} for (s,l) in self.hdmx.items()}
+def subset_glyphs (self, s):
+	self.hdmx = {s:{g:v for g,v in l.items() if g in s.glyphs} for (s,l) in self.hdmx.items()}
 	return bool (self.hdmx)
 
 @add_method(fontTools.ttLib.getTableClass('VORG'))
-def subset_glyphs (self, glyphs):
-	self.VOriginRecords = {g:v for g,v in self.VOriginRecords.items() if g in glyphs}
+def subset_glyphs (self, s):
+	self.VOriginRecords = {g:v for g,v in self.VOriginRecords.items() if g in s.glyphs}
 	self.numVertOriginYMetrics = len (self.VOriginRecords)
 	return True # Never drop; has default metrics
 
@@ -757,7 +757,7 @@ def prune_pre_subset (self, options):
 	return True
 
 @add_method(fontTools.ttLib.getTableClass('post'))
-def subset_glyphs (self, glyphs):
+def subset_glyphs (self, s):
 	self.extraNames = [] # This seems to do it
 	return True
 
@@ -892,15 +892,15 @@ def closure_glyphs (self, glyphs):
 		glyphs.extend (components)
 
 @add_method(fontTools.ttLib.getTableClass('glyf'))
-def subset_glyphs (self, glyphs):
-	self.glyphs = {g:v for g,v in self.glyphs.items() if g in glyphs}
-	indices = [i for i,g in enumerate (self.glyphOrder) if g in glyphs]
+def subset_glyphs (self, s):
+	self.glyphs = {g:v for g,v in self.glyphs.items() if g in s.glyphs}
+	indices = [i for i,g in enumerate (self.glyphOrder) if g in s.glyphs]
 	for v in self.glyphs.values ():
 		if hasattr (v, "data"):
 			v.remapComponentsFast (indices)
 		else:
 			pass # No need
-	self.glyphOrder = [g for g in self.glyphOrder if g in glyphs]
+	self.glyphOrder = [g for g in self.glyphOrder if g in s.glyphs]
 	return bool (self.glyphs)
 
 @add_method(fontTools.ttLib.getTableClass('glyf'))
@@ -915,7 +915,7 @@ def prune_post_subset (self, options):
 	return True
 
 @add_method(fontTools.ttLib.getTableClass('CFF '))
-def subset_glyphs (self, glyphs):
+def subset_glyphs (self, s):
 	assert 0, "unimplemented"
 
 @add_method(fontTools.ttLib.getTableClass('cmap'))
@@ -931,7 +931,7 @@ def prune_pre_subset (self, options):
 	return bool (self.tables)
 
 @add_method(fontTools.ttLib.getTableClass('cmap'))
-def subset_glyphs (self, glyphs):
+def subset_glyphs (self, s):
 	for t in self.tables:
 		# For reasons I don't understand I need this here
 		# to force decompilation of the cmap format 14.
@@ -941,10 +941,10 @@ def subset_glyphs (self, glyphs):
 			pass
 		if t.format == 14:
 			# XXX We drop all the default-UVS mappings (g==None)
-			t.uvsDict = {v:[(u,g) for (u,g) in l if g in glyphs] for (v,l) in t.uvsDict.items()}
+			t.uvsDict = {v:[(u,g) for (u,g) in l if g in s.glyphs] for (v,l) in t.uvsDict.items()}
 			t.uvsDict = {v:l for (v,l) in t.uvsDict.items() if l}
 		else:
-			t.cmap = {u:g for (u,g) in t.cmap.items() if g in glyphs}
+			t.cmap = {u:g for (u,g) in t.cmap.items() if g in s.glyphs}
 	self.tables = [t for t in self.tables if (t.cmap if t.format != 14 else t.uvsDict)]
 	# XXX Convert formats when needed
 	return bool (self.tables)
@@ -1006,6 +1006,10 @@ options_default = {
 # TODO Drop unknown tables?  Using DefaultTable.prune?
 # TODO Drop GPOS Device records if not hinting?
 # TODO subset_unicode values in cmap
+
+
+class Subsetter:
+	pass
 
 
 def main ():
@@ -1175,6 +1179,7 @@ def main ():
 	if verbose:
 		print "Retaining %d glyphs: " % len (glyphs_closed)
 
+	subsetter = Subsetter ()
 	for tag in font.keys():
 		if tag == 'GlyphOrder': continue
 
@@ -1191,7 +1196,8 @@ def main ():
 				glyphs = glyphs_gsubed
 			else:
 				glyphs = glyphs_closed
-			retain = table.subset_glyphs (glyphs)
+			subsetter.glyphs = glyphs
+			retain = table.subset_glyphs (subsetter)
 			lapse ("subset '%s'" % tag)
 			if not retain:
 				if verbose:
