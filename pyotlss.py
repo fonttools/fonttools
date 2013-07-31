@@ -1014,53 +1014,79 @@ options_default = {
 
 
 class Subsetter:
-	def __init__ (self, font=None, options=None, logger=None):
+	def __init__ (self, font=None, options=None, log=None):
 		self.font = font
 		self.options = options
-		self.logger = logger
+		self.log = log
 
 	def prepare (self):
 		if isinstance (self.font, basestring):
 			self.font = fontTools.ttx.TTFont (self.font)
 
+import sys, time
+class Logger:
+
+	def __init__ (self, verbose=False, xml=False, timing=False):
+		self.verbose = verbose
+		self.xml = xml
+		self.timing = timing
+		self.last_time = self.start_time = time.time ()
+
+	def parse_opts (self, argv):
+		argv = argv[:]
+		for v in ['verbose', 'xml', 'timing']:
+			if "--"+v in argv:
+				setattr (self, v, True)
+				argv.remove ("--"+v)
+		return argv
+
+	def __call__ (self, *things):
+		if not self.verbose:
+			return
+		print ' '.join (str (x) for x in things)
+
+	def lapse (self, *things):
+		if not self.timing:
+			return
+		new_time = time.time ()
+		print "Took %0.3fs to %s" % (new_time - self.last_time, ' '.join (str (x) for x in things))
+		self.last_time = new_time
+
+	def font (self, font, file=sys.stdout):
+		if not self.xml:
+			return
+		import xmlWriter, sys
+		writer = xmlWriter.XMLWriter (file)
+		font.disassembleInstructions = False # Work around ttx bug
+		for tag in font.keys():
+			writer.begintag (tag)
+			writer.newline ()
+			font[tag].toXML(writer, font)
+			writer.endtag (tag)
+			writer.newline ()
+
+
 def main ():
 
-	import sys, time
-	global last_time
-
-	start_time = time.time ()
-	last_time = start_time
-
-	class Opts:
-		pass
-	opts = Opts ()
-	for v in ['verbose', 'xml', 'timing']:
-		setattr (opts, v, False)
-		if "--"+v in sys.argv:
-			setattr (opts, v, True)
-			sys.argv.remove ("--"+v)
+	import sys
+	args = sys.argv[1:]
 
 	options = options_default.copy ()
 
-	def lapse (what):
-		if not opts.timing:
-			return
-		global last_time
-		new_time = time.time ()
-		print "Took %0.3fs to %s" % (new_time - last_time, what)
-		last_time = new_time
+	log = Logger ()
+	args = log.parse_opts (args)
 
-	if len (sys.argv) < 3:
+	if len (args) < 2:
 		print >>sys.stderr, "usage: pyotlss.py font-file glyph..."
 		sys.exit (1)
 
-	fontfile = sys.argv[1]
-	glyphs   = sys.argv[2:]
+	fontfile = args[0]
+	glyphs   = args[1:]
 
 	# TODO Option for ignoreDecompileErrors?
 	font = fontTools.ttx.TTFont (fontfile)
-	subsetter = Subsetter (font)
-	lapse ("load font")
+	s = Subsetter (font=font, log=log)
+	s.log.lapse ("load font")
 
 	font.recalcBBoxes=options['recalc-bboxes']
 
@@ -1083,15 +1109,13 @@ def main ():
 		# Always include .notdef; anything else?
 		if 'glyf' in font:
 			glyphs.extend (['gid0', 'gid1', 'gid2', 'gid3'])
-			if opts.verbose:
-				print "Added first four glyphs to subset"
+			s.log ("Added first four glyphs to subset")
 		else:
 			glyphs.append ('.notdef')
-			if opts.verbose:
-				print "Added .notdef glyph to subset"
+			s.log ("Added .notdef glyph to subset")
 
 	names = font.getGlyphNames()
-	lapse ("loading glyph names")
+	s.log.lapse ("loading glyph names")
 	# Convert to glyph names
 	glyph_names = []
 	cmap_tables = None
@@ -1112,8 +1136,7 @@ def main ():
 					found = True
 					break
 			if not found:
-				if opts.verbose:
-					print ("No glyph for Unicode value %s; skipping." % g)
+				s.log ("No glyph for Unicode value %s; skipping." % g)
 			continue
 		if g.startswith ('gid') or g.startswith ('glyph'):
 			if g.startswith ('gid') and len (g) > 3:
@@ -1129,9 +1152,8 @@ def main ():
 	del cmap_tables
 	glyphs = unique_sorted (glyph_names)
 	del glyph_names
-	lapse ("compile glyph list")
-	if opts.verbose:
-		print "Glyphs:", glyphs
+	s.log.lapse ("compile glyph list")
+	s.log ("Glyphs:", glyphs)
 
 
 	for tag in font.keys():
@@ -1139,8 +1161,7 @@ def main ():
 
 		if tag in options['drop-tables'] or \
 		   (tag in hinting_tables and not options['hinting']):
-			if opts.verbose:
-				print tag, "dropped."
+			s.log (tag, "dropped")
 			del font[tag]
 			continue
 
@@ -1149,47 +1170,40 @@ def main ():
 		if hasattr (clazz, 'prune_pre_subset'):
 			table = font[tag]
 			retain = table.prune_pre_subset (options)
-			lapse ("prune  '%s'" % tag)
+			s.log.lapse ("prune  '%s'" % tag)
 			if not retain:
-				if opts.verbose:
-					print tag, "pruned to empty; dropped."
+				s.log (tag, "pruned to empty; dropped")
 				del font[tag]
 				continue
 			else:
-				if opts.verbose:
-					print tag, "pruned."
+				s.log (tag, "pruned")
 
 	glyphs_requested = glyphs
 	if 'GSUB' in font:
-		if opts.verbose:
-			print "Closing glyph list over 'GSUB': %d glyphs before" % len (glyphs)
-		subsetter.glyphs = glyphs
-		glyphs = font['GSUB'].closure_glyphs (subsetter)
-		if opts.verbose:
-			print "Closed  glyph list over 'GSUB': %d glyphs after" % len (glyphs)
-			print "Glyphs:", glyphs
-		lapse ("close glyph list over 'GSUB'")
+		s.log ("Closing glyph list over 'GSUB': %d glyphs before" % len (glyphs))
+		s.glyphs = glyphs
+		glyphs = font['GSUB'].closure_glyphs (s)
+		s.log ("Closed  glyph list over 'GSUB': %d glyphs after" % len (glyphs))
+		s.log ("Glyphs:", glyphs)
+		s.log.lapse ("close glyph list over 'GSUB'")
 	glyphs_gsubed = glyphs
 
 	# Close over composite glyphs
 	if 'glyf' in font:
-		if opts.verbose:
-			print "Closing glyph list over 'glyf': %d glyphs before" % len (glyphs)
-			print "Glyphs:", glyphs
-		subsetter.glyphs = glyphs
-		glyphs = font['glyf'].closure_glyphs (subsetter)
-		if opts.verbose:
-			print "Closed  glyph list over 'glyf': %d glyphs after" % len (glyphs)
-			print "Glyphs:", glyphs
-		lapse ("close glyph list over 'glyf'")
+		s.log ("Closing glyph list over 'glyf': %d glyphs before" % len (glyphs))
+		s.log ("Glyphs:", glyphs)
+		s.glyphs = glyphs
+		glyphs = font['glyf'].closure_glyphs (s)
+		s.log ("Closed  glyph list over 'glyf': %d glyphs after" % len (glyphs))
+		s.log ("Glyphs:", glyphs)
+		s.log.lapse ("close glyph list over 'glyf'")
 	else:
 		glyphs = glyphs
 	glyphs_glyfed = glyphs
 	glyphs_closed = glyphs
 	del glyphs
 
-	if opts.verbose:
-		print "Retaining %d glyphs: " % len (glyphs_closed)
+	s.log ("Retaining %d glyphs: " % len (glyphs_closed))
 
 	for tag in font.keys():
 		if tag == 'GlyphOrder': continue
@@ -1197,8 +1211,7 @@ def main ():
 		clazz = fontTools.ttLib.getTableClass(tag)
 
 		if tag in no_subset_tables:
-			if opts.verbose:
-				print tag, "subsetting not needed."
+			s.log (tag, "subsetting not needed")
 		elif hasattr (clazz, 'subset_glyphs'):
 			table = font[tag]
 			if tag == 'cmap': # What else?
@@ -1207,60 +1220,44 @@ def main ():
 				glyphs = glyphs_gsubed
 			else:
 				glyphs = glyphs_closed
-			subsetter.glyphs = glyphs
-			retain = table.subset_glyphs (subsetter)
-			lapse ("subset '%s'" % tag)
+			s.glyphs = glyphs
+			retain = table.subset_glyphs (s)
+			s.log.lapse ("subset '%s'" % tag)
 			if not retain:
-				if opts.verbose:
-					print tag, "subsetted to empty; dropped."
+				s.log (tag, "subsetted to empty; dropped")
 				del font[tag]
 				continue
 			else:
-				if opts.verbose:
-					print tag, "subsetted."
+				s.log (tag, "subsetted")
 			del glyphs
 		else:
-			if opts.verbose:
-				print tag, "NOT subset; don't know how to subset."
+			s.log (tag, "NOT subset; don't know how to subset")
 			continue
 
 		if hasattr (clazz, 'prune_post_subset'):
 			table = font[tag]
 			retain = table.prune_post_subset (options)
-			lapse ("prune  '%s'" % tag)
+			s.log.lapse ("prune  '%s'" % tag)
 			if not retain:
-				if opts.verbose:
-					print tag, "pruned to empty; dropped."
+				s.log (tag, "pruned to empty; dropped")
 				del font[tag]
 				continue
 			else:
-				if opts.verbose:
-					print tag, "pruned."
+				s.log (tag, "pruned")
 
 	glyphOrder = font.getGlyphOrder()
 	glyphOrder = [g for g in glyphOrder if g in glyphs_closed]
 	font.setGlyphOrder (glyphOrder)
 	font._buildReverseGlyphOrderDict ()
-	lapse ("subset GlyphOrder")
+	s.log.lapse ("subset GlyphOrder")
 
 	font.save (fontfile + '.subset')
-	lapse ("compile and save font")
+	s.log.lapse ("compile and save font")
 
-	last_time = start_time
-	lapse ("make one with everything (TOTAL TIME)")
+	s.log.last_time = s.log.start_time
+	s.log.lapse ("make one with everything (TOTAL TIME)")
 
-	if opts.xml:
-		import xmlWriter
-		writer = xmlWriter.XMLWriter (sys.stdout)
-
-		font.disassembleInstructions = False # Work around ttx bug
-
-		for tag in font.keys():
-			writer.begintag (tag)
-			writer.newline ()
-			font[tag].toXML(writer, font)
-			writer.endtag (tag)
-			writer.newline ()
+	s.log.font (font)
 
 if __name__ == '__main__':
 	main ()
