@@ -672,6 +672,7 @@ def closure_glyphs (self, s):
 
 @add_method(fontTools.ttLib.getTableClass('GSUB'), fontTools.ttLib.getTableClass('GPOS'))
 def subset_glyphs (self, s):
+	s.glyphs = s.glyphs_gsubed
 	lookup_indices = self.table.LookupList.subset_glyphs (s)
 	self.subset_lookups (lookup_indices)
 	self.prune_lookups ()
@@ -707,23 +708,24 @@ def prune_pre_subset (self, options):
 
 @add_method(fontTools.ttLib.getTableClass('GDEF'))
 def subset_glyphs (self, s):
+	glyphs = s.glyphs_gsubed
 	table = self.table
 	if table.LigCaretList:
-		indices = table.LigCaretList.Coverage.subset (s.glyphs)
+		indices = table.LigCaretList.Coverage.subset (glyphs)
 		table.LigCaretList.LigGlyph = [table.LigCaretList.LigGlyph[i] for i in indices]
 		table.LigCaretList.LigGlyphCount = len (table.LigCaretList.LigGlyph)
 		if not table.LigCaretList.LigGlyphCount:
 			table.LigCaretList = None
 	if table.MarkAttachClassDef:
-		table.MarkAttachClassDef.classDefs = {g:v for g,v in table.MarkAttachClassDef.classDefs.items() if g in s.glyphs}
+		table.MarkAttachClassDef.classDefs = {g:v for g,v in table.MarkAttachClassDef.classDefs.items() if g in glyphs}
 		if not table.MarkAttachClassDef.classDefs:
 			table.MarkAttachClassDef = None
 	if table.GlyphClassDef:
-		table.GlyphClassDef.classDefs = {g:v for g,v in table.GlyphClassDef.classDefs.items() if g in s.glyphs}
+		table.GlyphClassDef.classDefs = {g:v for g,v in table.GlyphClassDef.classDefs.items() if g in glyphs}
 		if not table.GlyphClassDef.classDefs:
 			table.GlyphClassDef = None
 	if table.AttachList:
-		indices = table.AttachList.Coverage.subset (s.glyphs)
+		indices = table.AttachList.Coverage.subset (glyphs)
 		table.AttachList.AttachPoint = [table.AttachList.AttachPoint[i] for i in indices]
 		table.AttachList.GlyphCount = len (table.AttachList.AttachPoint)
 		if not table.AttachList.GlyphCount:
@@ -738,8 +740,9 @@ def prune_pre_subset (self, options):
 
 @add_method(fontTools.ttLib.getTableClass('kern'))
 def subset_glyphs (self, s):
+	glyphs = s.glyphs_gsubed
 	for t in self.kernTables:
-		t.kernTable = {(a,b):v for ((a,b),v) in t.kernTable.items() if a in s.glyphs and b in s.glyphs}
+		t.kernTable = {(a,b):v for ((a,b),v) in t.kernTable.items() if a in glyphs and b in glyphs}
 	self.kernTables = [t for t in self.kernTables if t.kernTable]
 	return bool (self.kernTables)
 
@@ -956,6 +959,7 @@ def prune_pre_subset (self, options):
 
 @add_method(fontTools.ttLib.getTableClass('cmap'))
 def subset_glyphs (self, s):
+	s.glyphs = s.glyphs_cmaped
 	for t in self.tables:
 		# For reasons I don't understand I need this here
 		# to force decompilation of the cmap format 14.
@@ -1182,12 +1186,7 @@ class Subsetter:
 				self.log (tag, "subsetting not needed")
 			elif hasattr (clazz, 'subset_glyphs'):
 				table = font[tag]
-				if tag == 'cmap': # What else?
-					self.glyphs = self.glyphs_cmaped
-				elif tag in ['GSUB', 'GPOS', 'GDEF', 'cmap', 'kern', 'post']: # What else?
-					self.glyphs = self.glyphs_gsubed
-				else:
-					self.glyphs = self.glyphs_glyfed
+				self.glyphs = self.glyphs_all
 				retain = table.subset_glyphs (self)
 				self.log.lapse ("subset '%s'" % tag)
 				if not retain:
