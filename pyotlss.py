@@ -1014,12 +1014,16 @@ options_default = {
 
 
 class Subsetter:
-	pass
+	def __init__ (self, font=None, options=None, logger=None):
+		self.font = font
+		self.options = options
+		self.logger = logger
 
+	def prepare (self):
+		if isinstance (self.font, basestring):
+			self.font = fontTools.ttx.TTFont (self.font)
 
 def main ():
-
-	subsetter = Subsetter ()
 
 	import sys, time
 	global last_time
@@ -1027,23 +1031,19 @@ def main ():
 	start_time = time.time ()
 	last_time = start_time
 
-	verbose = False
-	if "--verbose" in sys.argv:
-		verbose = True
-		sys.argv.remove ("--verbose")
-	xml = False
-	if "--xml" in sys.argv:
-		xml = True
-		sys.argv.remove ("--xml")
-	timing = False
-	if "--timing" in sys.argv:
-		timing = True
-		sys.argv.remove ("--timing")
+	class Opts:
+		pass
+	opts = Opts ()
+	for v in ['verbose', 'xml', 'timing']:
+		setattr (opts, v, False)
+		if "--"+v in sys.argv:
+			setattr (opts, v, True)
+			sys.argv.remove ("--"+v)
 
 	options = options_default.copy ()
 
 	def lapse (what):
-		if not timing:
+		if not opts.timing:
 			return
 		global last_time
 		new_time = time.time ()
@@ -1058,8 +1058,11 @@ def main ():
 	glyphs   = sys.argv[2:]
 
 	# TODO Option for ignoreDecompileErrors?
-	font = fontTools.ttx.TTFont (fontfile, recalcBBoxes=options['recalc-bboxes'])
+	font = fontTools.ttx.TTFont (fontfile)
+	subsetter = Subsetter (font)
 	lapse ("load font")
+
+	font.recalcBBoxes=options['recalc-bboxes']
 
 	# If we don't need glyph names, change 'post' class to not try to
 	# load them.  It avoid lots of headache with broken fonts as well
@@ -1080,11 +1083,11 @@ def main ():
 		# Always include .notdef; anything else?
 		if 'glyf' in font:
 			glyphs.extend (['gid0', 'gid1', 'gid2', 'gid3'])
-			if verbose:
+			if opts.verbose:
 				print "Added first four glyphs to subset"
 		else:
 			glyphs.append ('.notdef')
-			if verbose:
+			if opts.verbose:
 				print "Added .notdef glyph to subset"
 
 	names = font.getGlyphNames()
@@ -1109,7 +1112,7 @@ def main ():
 					found = True
 					break
 			if not found:
-				if verbose:
+				if opts.verbose:
 					print ("No glyph for Unicode value %s; skipping." % g)
 			continue
 		if g.startswith ('gid') or g.startswith ('glyph'):
@@ -1127,7 +1130,7 @@ def main ():
 	glyphs = unique_sorted (glyph_names)
 	del glyph_names
 	lapse ("compile glyph list")
-	if verbose:
+	if opts.verbose:
 		print "Glyphs:", glyphs
 
 
@@ -1136,7 +1139,7 @@ def main ():
 
 		if tag in options['drop-tables'] or \
 		   (tag in hinting_tables and not options['hinting']):
-			if verbose:
+			if opts.verbose:
 				print tag, "dropped."
 			del font[tag]
 			continue
@@ -1148,21 +1151,21 @@ def main ():
 			retain = table.prune_pre_subset (options)
 			lapse ("prune  '%s'" % tag)
 			if not retain:
-				if verbose:
+				if opts.verbose:
 					print tag, "pruned to empty; dropped."
 				del font[tag]
 				continue
 			else:
-				if verbose:
+				if opts.verbose:
 					print tag, "pruned."
 
 	glyphs_requested = glyphs
 	if 'GSUB' in font:
-		if verbose:
+		if opts.verbose:
 			print "Closing glyph list over 'GSUB': %d glyphs before" % len (glyphs)
 		subsetter.glyphs = glyphs
 		glyphs = font['GSUB'].closure_glyphs (subsetter)
-		if verbose:
+		if opts.verbose:
 			print "Closed  glyph list over 'GSUB': %d glyphs after" % len (glyphs)
 			print "Glyphs:", glyphs
 		lapse ("close glyph list over 'GSUB'")
@@ -1170,12 +1173,12 @@ def main ():
 
 	# Close over composite glyphs
 	if 'glyf' in font:
-		if verbose:
+		if opts.verbose:
 			print "Closing glyph list over 'glyf': %d glyphs before" % len (glyphs)
 			print "Glyphs:", glyphs
 		subsetter.glyphs = glyphs
 		glyphs = font['glyf'].closure_glyphs (subsetter)
-		if verbose:
+		if opts.verbose:
 			print "Closed  glyph list over 'glyf': %d glyphs after" % len (glyphs)
 			print "Glyphs:", glyphs
 		lapse ("close glyph list over 'glyf'")
@@ -1185,7 +1188,7 @@ def main ():
 	glyphs_closed = glyphs
 	del glyphs
 
-	if verbose:
+	if opts.verbose:
 		print "Retaining %d glyphs: " % len (glyphs_closed)
 
 	for tag in font.keys():
@@ -1194,7 +1197,7 @@ def main ():
 		clazz = fontTools.ttLib.getTableClass(tag)
 
 		if tag in no_subset_tables:
-			if verbose:
+			if opts.verbose:
 				print tag, "subsetting not needed."
 		elif hasattr (clazz, 'subset_glyphs'):
 			table = font[tag]
@@ -1208,16 +1211,16 @@ def main ():
 			retain = table.subset_glyphs (subsetter)
 			lapse ("subset '%s'" % tag)
 			if not retain:
-				if verbose:
+				if opts.verbose:
 					print tag, "subsetted to empty; dropped."
 				del font[tag]
 				continue
 			else:
-				if verbose:
+				if opts.verbose:
 					print tag, "subsetted."
 			del glyphs
 		else:
-			if verbose:
+			if opts.verbose:
 				print tag, "NOT subset; don't know how to subset."
 			continue
 
@@ -1226,12 +1229,12 @@ def main ():
 			retain = table.prune_post_subset (options)
 			lapse ("prune  '%s'" % tag)
 			if not retain:
-				if verbose:
+				if opts.verbose:
 					print tag, "pruned to empty; dropped."
 				del font[tag]
 				continue
 			else:
-				if verbose:
+				if opts.verbose:
 					print tag, "pruned."
 
 	glyphOrder = font.getGlyphOrder()
@@ -1246,7 +1249,7 @@ def main ():
 	last_time = start_time
 	lapse ("make one with everything (TOTAL TIME)")
 
-	if xml:
+	if opts.xml:
 		import xmlWriter
 		writer = xmlWriter.XMLWriter (sys.stdout)
 
