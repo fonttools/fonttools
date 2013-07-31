@@ -39,6 +39,10 @@ def add_method (*clazzes):
 def unique_sorted (l):
 	return sorted (set (l))
 
+def safeEval(data, eval=eval):
+	"""A (kindof) safe replacement for eval."""
+	return eval(data, {"__builtins__":{}}, {})
+
 
 @add_method(fontTools.ttLib.tables.otTables.Coverage)
 def intersect (self, glyphs):
@@ -696,8 +700,8 @@ def subset_feature_tags (self, feature_tags):
 
 @add_method(fontTools.ttLib.getTableClass('GSUB'), fontTools.ttLib.getTableClass('GPOS'))
 def prune_pre_subset (self, options):
-	if options['layout-features'] and '*' not in options['layout-features']:
-		self.subset_feature_tags (options['layout-features'])
+	if options.layout_features and '*' not in options.layout_features:
+		self.subset_feature_tags (options.layout_features)
 	self.prune_lookups ()
 	return True
 
@@ -746,7 +750,7 @@ def subset_glyphs (self, s):
 
 @add_method(fontTools.ttLib.getTableClass('hdmx'))
 def subset_glyphs (self, s):
-	self.hdmx = {s:{g:v for g,v in l.items() if g in s.glyphs} for (s,l) in self.hdmx.items()}
+	self.hdmx = {sz:{g:v for g,v in l.items() if g in s.glyphs} for (sz,l) in self.hdmx.items()}
 	return bool (self.hdmx)
 
 @add_method(fontTools.ttLib.getTableClass('VORG'))
@@ -757,7 +761,7 @@ def subset_glyphs (self, s):
 
 @add_method(fontTools.ttLib.getTableClass('post'))
 def prune_pre_subset (self, options):
-	if not options['glyph-names']:
+	if not options.glyph_names:
 		self.formatType = 3.0
 	return True
 
@@ -910,7 +914,7 @@ def subset_glyphs (self, s):
 
 @add_method(fontTools.ttLib.getTableClass('glyf'))
 def prune_post_subset (self, options):
-	if not options['hinting']:
+	if not options.hinting:
 		for v in self.glyphs.values ():
 			if hasattr (v, "data"):
 				v.dropInstructionsFast ()
@@ -925,10 +929,10 @@ def subset_glyphs (self, s):
 
 @add_method(fontTools.ttLib.getTableClass('cmap'))
 def prune_pre_subset (self, options):
-	if not options['legacy-cmap']:
+	if not options.legacy_cmap:
 		# Drop non-Unicode / non-Symbol cmaps
 		self.tables = [t for t in self.tables if t.platformID == 3 and t.platEncID in [0, 1, 10]]
-	if not options['symbol-cmap']:
+	if not options.symbol_cmap:
 		self.tables = [t for t in self.tables if t.platformID == 3 and t.platEncID in [1, 10]]
 	# TODO Only keep one subtable?
 	# For now, drop format=0 which can't be subset_glyphs easily?
@@ -956,12 +960,12 @@ def subset_glyphs (self, s):
 
 @add_method(fontTools.ttLib.getTableClass('name'))
 def prune_pre_subset (self, options):
-	if '*' not in options['name-IDs']:
-		self.names = [n for n in self.names if n.nameID in options['name-IDs']]
-	if not options['name-legacy']:
+	if '*' not in options.name_IDs:
+		self.names = [n for n in self.names if n.nameID in options.name_IDs]
+	if not options.name_legacy:
 		self.names = [n for n in self.names if n.platformID == 3 and n.platEncID == 1]
-	if '*' not in options['name-languages']:
-		self.names = [n for n in self.names if n.langID in options['name-languages']]
+	if '*' not in options.name_languages:
+		self.names = [n for n in self.names if n.langID in options.name_languages]
 	return True # Retain even if empty
 
 
@@ -988,21 +992,6 @@ layout_features_dict = {
 }
 layout_features_all = unique_sorted (sum (layout_features_dict.values (), []))
 
-options_default = {
-	'drop-tables': drop_tables_default,
-	'layout-features': layout_features_all,
-	'hinting': False,
-	'glyph-names': False,
-	'legacy-cmap': False,
-	'symbol-cmap': False,
-	'name-IDs': [1, 2], # Family and Style
-	'name-legacy': False,
-	'name-languages': [0x0409], # English
-	'mandatory-glyphs': True, # First four for TrueType, .notdef for CFF
-	'recalc-bboxes': False, # Slows us down
-}
-
-
 # TODO OS/2 ulUnicodeRange / ulCodePageRange?
 # TODO Drop unneeded GSUB/GPOS Script/LangSys entries
 # TODO Avoid recursing too much
@@ -1014,16 +1003,88 @@ options_default = {
 
 
 class Subsetter:
+
+	class Options:
+		drop_tables = drop_tables_default
+		layout_features = layout_features_all
+		hinting = False
+		glyph_names = False
+		legacy_cmap = False
+		symbol_cmap = False
+		name_IDs = [1, 2] # Family and Style
+		name_legacy = False
+		name_languages = [0x0409] # English
+		mandatory_glyphs = True # First four for TrueType, .notdef for CFF
+		recalc_bboxes = False # Slows us down
+
+		def __init__ (self, **kwargs):
+
+			self.set (**kwargs)
+
+		def set (self, **kwargs):
+			for k,v in kwargs.items ():
+				if not hasattr (self, k):
+					raise Exception ("Unknown option '%s'" % k)
+				setattr (self, k, v)
+
+		def parse_opts (self, argv, ignore_unknown=False):
+			ret = []
+			opts = {}
+			for a in argv:
+				if not a.startswith ('--'):
+					ret.append (a)
+					continue
+				a = a[2:]
+				i = a.find ('=')
+				if i == -1:
+					if a.startswith ("no-"):
+						k = a[3:]
+						v = False
+					else:
+						k = a
+						v = True
+				else:
+					k = a[:i]
+					v = a[i+1:]
+				k = k.replace ('-', '_')
+				if not hasattr (self, k):
+					if ignore_unknown:
+						ret.append (a)
+						continue
+					else:
+						raise Exception ("Unknown option '%s'" % a)
+
+				ov = getattr (self, k)
+				if isinstance (ov, bool):
+					v = bool (v)
+				elif isinstance (ov, int):
+					v = int (v)
+				elif isinstance (ov, list):
+					v = v.split (',')
+					v = [int (x, 0) if x[0] in range (10) else x for x in v]
+
+				opts[k] = v
+			self.set (**opts)
+
+			return ret
+
+
 	def __init__ (self, font=None, options=None, log=None):
+
+		if isinstance (font, basestring):
+			font = fontTools.ttx.TTFont (font)
+		if not log:
+			log = Logger()
+		if not options:
+			options = Options()
+
 		self.font = font
 		self.options = options
 		self.log = log
 
 	def subset (self, font, glyphs):
-		if isinstance (self.font, basestring):
-			self.font = fontTools.ttx.TTFont (self.font)
 
-		font.recalcBBoxes = self.options['recalc-bboxes']
+		font.recalcBBoxes = self.options.recalc_bboxes
 
 		# If we don't need glyph names, change 'post' class to not try to
 		# load them.  It avoid lots of headache with broken fonts as well
@@ -1032,7 +1093,7 @@ class Subsetter:
 		#
 		# Ideally ttLib should provide a way to ask it to skip loading
 		# glyph names.  But it currently doesn't provide such a thing.
-		if not self.options['glyph-names'] \
+		if not self.options.glyph_names \
 				and all (any (g.startswith (p) \
 					      for p in ['gid', 'glyph', 'uni']) \
 					 for g in glyphs):
@@ -1040,7 +1101,7 @@ class Subsetter:
 			post.decode_format_2_0 = post.decode_format_3_0
 			del post
 
-		if self.options["mandatory-glyphs"]:
+		if self.options.mandatory_glyphs:
 			# Always include .notdef; anything else?
 			if 'glyf' in font:
 				glyphs.extend (['gid0', 'gid1', 'gid2', 'gid3'])
@@ -1094,8 +1155,8 @@ class Subsetter:
 		for tag in font.keys():
 			if tag == 'GlyphOrder': continue
 
-			if tag in self.options['drop-tables'] or \
-			   (tag in hinting_tables and not self.options['hinting']):
+			if tag in self.options.drop_tables or \
+			   (tag in hinting_tables and not self.options.hinting):
 				self.log (tag, "dropped")
 				del font[tag]
 				continue
@@ -1229,18 +1290,16 @@ class Logger:
 			writer.endtag (tag)
 			writer.newline ()
 
-
-def main ():
-
-	import sys
-	args = sys.argv[1:]
-
-	options = options_default.copy ()
+def main (args):
 
 	log = Logger ()
 	args = log.parse_opts (args)
 
+	options = Subsetter.Options ()
+	args = options.parse_opts (args)
+
 	if len (args) < 2:
+		import sys
 		print >>sys.stderr, "usage: pyotlss.py font-file glyph..."
 		sys.exit (1)
 
@@ -1250,17 +1309,18 @@ def main ():
 	# TODO Option for ignoreDecompileErrors?
 	font = fontTools.ttx.TTFont (fontfile)
 	s = Subsetter (font=font, options=options, log=log)
-	s.log.lapse ("load font")
+	log.lapse ("load font")
 
 	s.subset (font, glyphs)
 
 	font.save (fontfile + '.subset')
-	s.log.lapse ("compile and save font")
+	log.lapse ("compile and save font")
 
-	s.log.last_time = s.log.start_time
-	s.log.lapse ("make one with everything (TOTAL TIME)")
+	log.last_time = s.log.start_time
+	log.lapse ("make one with everything (TOTAL TIME)")
 
-	s.log.font (font)
+	log.font (font)
 
 if __name__ == '__main__':
-	main ()
+	import sys
+	main (sys.argv[1:])
