@@ -972,7 +972,7 @@ def subset_glyphs (self, s):
 			t.uvsDict = {v:[(u,g) for (u,g) in l if g in s.glyphs] for (v,l) in t.uvsDict.items()}
 			t.uvsDict = {v:l for (v,l) in t.uvsDict.items() if l}
 		else:
-			t.cmap = {u:g for (u,g) in t.cmap.items() if g in s.glyphs}
+			t.cmap = {u:g for (u,g) in t.cmap.items() if g in s.glyphs_requested or u in s.unicodes_requested}
 	self.tables = [t for t in self.tables if (t.cmap if t.format != 14 else t.uvsDict)]
 	# XXX Convert formats when needed
 	return bool (self.tables)
@@ -1018,7 +1018,6 @@ layout_features_all = unique_sorted (sum (layout_features_dict.values (), []))
 # TODO Text script / language considerations
 # TODO Drop unknown tables?  Using DefaultTable.prune?
 # TODO Drop GPOS Device records if not hinting?
-# TODO subset_unicode values in cmap
 
 
 class Subsetter:
@@ -1100,21 +1099,21 @@ class Subsetter:
 		self.font = font
 		self.options = options
 		self.log = log
-		self.requested_unicodes = set ()
-		self.requested_glyphs = set ()
+		self.unicodes_requested = set ()
+		self.glyphs_requested = set ()
 
 	def populate (self, glyphs=[], unicodes=[], text=[]):
-		self.requested_unicodes.update (unicodes)
+		self.unicodes_requested.update (unicodes)
 		for u in text:
-			self.requested_unicodes.add (u)
-		self.requested_glyphs.update (glyphs)
+			self.unicodes_requested.add (u)
+		self.glyphs_requested.update (glyphs)
 
 	def subset (self, font):
 
 		font.recalcBBoxes = self.options.recalc_bboxes
 
-		self.unicodes = self.requested_unicodes
-		self.glyphs = self.requested_glyphs
+		self.unicodes = self.unicodes_requested
+		self.glyphs = self.glyphs_requested
 
 		if 'cmap' in font:
 			extra_glyphs = font['cmap'].closure_glyphs (self)
