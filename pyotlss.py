@@ -37,7 +37,7 @@ def add_method (*clazzes):
 	return wrapper
 
 def unique_sorted (l):
-	return sorted ({v:1 for v in l}.keys ())
+	return sorted (set (l))
 
 
 @add_method(fontTools.ttLib.tables.otTables.Coverage)
