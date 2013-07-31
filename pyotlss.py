@@ -1086,23 +1086,29 @@ class Subsetter:
 
 		font.recalcBBoxes = self.options.recalc_bboxes
 
+		# Hack:
+		#
 		# If we don't need glyph names, change 'post' class to not try to
 		# load them.  It avoid lots of headache with broken fonts as well
-		# as loading time.  We already change the table format during
-		# pruning so we are safe for the encode side.
+		# as loading time.
 		#
 		# Ideally ttLib should provide a way to ask it to skip loading
 		# glyph names.  But it currently doesn't provide such a thing.
+		#
 		if not self.options.glyph_names \
 				and all (any (g.startswith (p) \
 					      for p in ['gid', 'glyph', 'uni']) \
 					 for g in glyphs):
 			post = fontTools.ttLib.getTableClass('post')
+			saved = post.decode_format_2_0
 			post.decode_format_2_0 = post.decode_format_3_0
-			del post
+			f = font['post']
+			if f.formatType == 2.0:
+				f.formatType = 3.0
+			post.decode_format_2_0 = saved
+			del post, saved, f
 
 		if self.options.mandatory_glyphs:
-			# Always include .notdef; anything else?
 			if 'glyf' in font:
 				glyphs.extend (['gid0', 'gid1', 'gid2', 'gid3'])
 				self.log ("Added first four glyphs to subset")
