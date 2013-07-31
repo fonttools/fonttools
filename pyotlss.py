@@ -1019,11 +1019,175 @@ class Subsetter:
 		self.options = options
 		self.log = log
 
-	def prepare (self):
+	def subset (self, font, glyphs):
 		if isinstance (self.font, basestring):
 			self.font = fontTools.ttx.TTFont (self.font)
 
+		font.recalcBBoxes = self.options['recalc-bboxes']
+
+		# If we don't need glyph names, change 'post' class to not try to
+		# load them.  It avoid lots of headache with broken fonts as well
+		# as loading time.  We already change the table format during
+		# pruning so we are safe for the encode side.
+		#
+		# Ideally ttLib should provide a way to ask it to skip loading
+		# glyph names.  But it currently doesn't provide such a thing.
+		if not self.options['glyph-names'] \
+				and all (any (g.startswith (p) \
+					      for p in ['gid', 'glyph', 'uni']) \
+					 for g in glyphs):
+			post = fontTools.ttLib.getTableClass('post')
+			post.decode_format_2_0 = post.decode_format_3_0
+			del post
+
+		if self.options["mandatory-glyphs"]:
+			# Always include .notdef; anything else?
+			if 'glyf' in font:
+				glyphs.extend (['gid0', 'gid1', 'gid2', 'gid3'])
+				self.log ("Added first four glyphs to subset")
+			else:
+				glyphs.append ('.notdef')
+				self.log ("Added .notdef glyph to subset")
+
+		names = font.getGlyphNames()
+		self.log.lapse ("loading glyph names")
+		# Convert to glyph names
+		glyph_names = []
+		cmap_tables = None
+		for g in glyphs:
+			if g in names:
+				glyph_names.append (g)
+				continue
+			if g.startswith ('uni') and len (g) > 3:
+				if not cmap_tables:
+					cmap = font['cmap']
+					cmap_tables = [t for t in cmap.tables if t.platformID == 3 and t.platEncID in [1, 10]]
+					del cmap
+				found = False
+				u = int (g[3:], 16)
+				for table in cmap_tables:
+					if u in table.cmap:
+						glyph_names.append (table.cmap[u])
+						found = True
+						break
+				if not found:
+					self.log ("No glyph for Unicode value %s; skipping." % g)
+				continue
+			if g.startswith ('gid') or g.startswith ('glyph'):
+				if g.startswith ('gid') and len (g) > 3:
+					g = g[3:]
+				elif g.startswith ('glyph') and len (g) > 5:
+					g = g[5:]
+				try:
+					glyph_names.append (font.getGlyphName (int (g), requireReal=1))
+				except ValueError:
+					raise Exception ("Invalid glyph identifier %s" % g)
+				continue
+			raise Exception ("Invalid glyph identifier %s" % g)
+		del cmap_tables
+		glyphs = unique_sorted (glyph_names)
+		del glyph_names
+		self.log.lapse ("compile glyph list")
+		self.log ("Glyphs:", glyphs)
+
+
+		for tag in font.keys():
+			if tag == 'GlyphOrder': continue
+
+			if tag in self.options['drop-tables'] or \
+			   (tag in hinting_tables and not self.options['hinting']):
+				self.log (tag, "dropped")
+				del font[tag]
+				continue
+
+			clazz = fontTools.ttLib.getTableClass(tag)
+
+			if hasattr (clazz, 'prune_pre_subset'):
+				table = font[tag]
+				retain = table.prune_pre_subset (self.options)
+				self.log.lapse ("prune  '%s'" % tag)
+				if not retain:
+					self.log (tag, "pruned to empty; dropped")
+					del font[tag]
+					continue
+				else:
+					self.log (tag, "pruned")
+
+		glyphs_requested = glyphs
+		if 'GSUB' in font:
+			self.log ("Closing glyph list over 'GSUB': %d glyphs before" % len (glyphs))
+			self.glyphs = glyphs
+			glyphs = font['GSUB'].closure_glyphs (self)
+			self.log ("Closed  glyph list over 'GSUB': %d glyphs after" % len (glyphs))
+			self.log ("Glyphs:", glyphs)
+			self.log.lapse ("close glyph list over 'GSUB'")
+		glyphs_gsubed = glyphs
+
+		# Close over composite glyphs
+		if 'glyf' in font:
+			self.log ("Closing glyph list over 'glyf': %d glyphs before" % len (glyphs))
+			self.log ("Glyphs:", glyphs)
+			self.glyphs = glyphs
+			glyphs = font['glyf'].closure_glyphs (self)
+			self.log ("Closed  glyph list over 'glyf': %d glyphs after" % len (glyphs))
+			self.log ("Glyphs:", glyphs)
+			self.log.lapse ("close glyph list over 'glyf'")
+		else:
+			glyphs = glyphs
+		glyphs_glyfed = glyphs
+		glyphs_closed = glyphs
+		del glyphs
+
+		self.log ("Retaining %d glyphs: " % len (glyphs_closed))
+
+		for tag in font.keys():
+			if tag == 'GlyphOrder': continue
+
+			clazz = fontTools.ttLib.getTableClass(tag)
+
+			if tag in no_subset_tables:
+				self.log (tag, "subsetting not needed")
+			elif hasattr (clazz, 'subset_glyphs'):
+				table = font[tag]
+				if tag == 'cmap': # What else?
+					glyphs = glyphs_requested
+				elif tag in ['GSUB', 'GPOS', 'GDEF', 'cmap', 'kern', 'post']: # What else?
+					glyphs = glyphs_gsubed
+				else:
+					glyphs = glyphs_closed
+				self.glyphs = glyphs
+				retain = table.subset_glyphs (self)
+				self.log.lapse ("subset '%s'" % tag)
+				if not retain:
+					self.log (tag, "subsetted to empty; dropped")
+					del font[tag]
+					continue
+				else:
+					self.log (tag, "subsetted")
+				del glyphs
+			else:
+				self.log (tag, "NOT subset; don't know how to subset")
+				continue
+
+			if hasattr (clazz, 'prune_post_subset'):
+				table = font[tag]
+				retain = table.prune_post_subset (self.options)
+				self.log.lapse ("prune  '%s'" % tag)
+				if not retain:
+					self.log (tag, "pruned to empty; dropped")
+					del font[tag]
+					continue
+				else:
+					self.log (tag, "pruned")
+
+		glyphOrder = font.getGlyphOrder()
+		glyphOrder = [g for g in glyphOrder if g in glyphs_closed]
+		font.setGlyphOrder (glyphOrder)
+		font._buildReverseGlyphOrderDict ()
+		self.log.lapse ("subset GlyphOrder")
+
 import sys, time
+
 class Logger:
 
 	def __init__ (self, verbose=False, xml=False, timing=False):
@@ -1085,171 +1249,10 @@ def main ():
 
 	# TODO Option for ignoreDecompileErrors?
 	font = fontTools.ttx.TTFont (fontfile)
-	s = Subsetter (font=font, log=log)
+	s = Subsetter (font=font, options=options, log=log)
 	s.log.lapse ("load font")
 
-	font.recalcBBoxes=options['recalc-bboxes']
-
-	# If we don't need glyph names, change 'post' class to not try to
-	# load them.  It avoid lots of headache with broken fonts as well
-	# as loading time.  We already change the table format during
-	# pruning so we are safe for the encode side.
-	#
-	# Ideally ttLib should provide a way to ask it to skip loading
-	# glyph names.  But it currently doesn't provide such a thing.
-	if not options['glyph-names'] \
-			and all (any (g.startswith (p) \
-				      for p in ['gid', 'glyph', 'uni']) \
-				 for g in glyphs):
-		post = fontTools.ttLib.getTableClass('post')
-		post.decode_format_2_0 = post.decode_format_3_0
-		del post
-
-	if options["mandatory-glyphs"]:
-		# Always include .notdef; anything else?
-		if 'glyf' in font:
-			glyphs.extend (['gid0', 'gid1', 'gid2', 'gid3'])
-			s.log ("Added first four glyphs to subset")
-		else:
-			glyphs.append ('.notdef')
-			s.log ("Added .notdef glyph to subset")
-
-	names = font.getGlyphNames()
-	s.log.lapse ("loading glyph names")
-	# Convert to glyph names
-	glyph_names = []
-	cmap_tables = None
-	for g in glyphs:
-		if g in names:
-			glyph_names.append (g)
-			continue
-		if g.startswith ('uni') and len (g) > 3:
-			if not cmap_tables:
-				cmap = font['cmap']
-				cmap_tables = [t for t in cmap.tables if t.platformID == 3 and t.platEncID in [1, 10]]
-				del cmap
-			found = False
-			u = int (g[3:], 16)
-			for table in cmap_tables:
-				if u in table.cmap:
-					glyph_names.append (table.cmap[u])
-					found = True
-					break
-			if not found:
-				s.log ("No glyph for Unicode value %s; skipping." % g)
-			continue
-		if g.startswith ('gid') or g.startswith ('glyph'):
-			if g.startswith ('gid') and len (g) > 3:
-				g = g[3:]
-			elif g.startswith ('glyph') and len (g) > 5:
-				g = g[5:]
-			try:
-				glyph_names.append (font.getGlyphName (int (g), requireReal=1))
-			except ValueError:
-				raise Exception ("Invalid glyph identifier %s" % g)
-			continue
-		raise Exception ("Invalid glyph identifier %s" % g)
-	del cmap_tables
-	glyphs = unique_sorted (glyph_names)
-	del glyph_names
-	s.log.lapse ("compile glyph list")
-	s.log ("Glyphs:", glyphs)
-
-
-	for tag in font.keys():
-		if tag == 'GlyphOrder': continue
-
-		if tag in options['drop-tables'] or \
-		   (tag in hinting_tables and not options['hinting']):
-			s.log (tag, "dropped")
-			del font[tag]
-			continue
-
-		clazz = fontTools.ttLib.getTableClass(tag)
-
-		if hasattr (clazz, 'prune_pre_subset'):
-			table = font[tag]
-			retain = table.prune_pre_subset (options)
-			s.log.lapse ("prune  '%s'" % tag)
-			if not retain:
-				s.log (tag, "pruned to empty; dropped")
-				del font[tag]
-				continue
-			else:
-				s.log (tag, "pruned")
-
-	glyphs_requested = glyphs
-	if 'GSUB' in font:
-		s.log ("Closing glyph list over 'GSUB': %d glyphs before" % len (glyphs))
-		s.glyphs = glyphs
-		glyphs = font['GSUB'].closure_glyphs (s)
-		s.log ("Closed  glyph list over 'GSUB': %d glyphs after" % len (glyphs))
-		s.log ("Glyphs:", glyphs)
-		s.log.lapse ("close glyph list over 'GSUB'")
-	glyphs_gsubed = glyphs
-
-	# Close over composite glyphs
-	if 'glyf' in font:
-		s.log ("Closing glyph list over 'glyf': %d glyphs before" % len (glyphs))
-		s.log ("Glyphs:", glyphs)
-		s.glyphs = glyphs
-		glyphs = font['glyf'].closure_glyphs (s)
-		s.log ("Closed  glyph list over 'glyf': %d glyphs after" % len (glyphs))
-		s.log ("Glyphs:", glyphs)
-		s.log.lapse ("close glyph list over 'glyf'")
-	else:
-		glyphs = glyphs
-	glyphs_glyfed = glyphs
-	glyphs_closed = glyphs
-	del glyphs
-
-	s.log ("Retaining %d glyphs: " % len (glyphs_closed))
-
-	for tag in font.keys():
-		if tag == 'GlyphOrder': continue
-
-		clazz = fontTools.ttLib.getTableClass(tag)
-
-		if tag in no_subset_tables:
-			s.log (tag, "subsetting not needed")
-		elif hasattr (clazz, 'subset_glyphs'):
-			table = font[tag]
-			if tag == 'cmap': # What else?
-				glyphs = glyphs_requested
-			elif tag in ['GSUB', 'GPOS', 'GDEF', 'cmap', 'kern', 'post']: # What else?
-				glyphs = glyphs_gsubed
-			else:
-				glyphs = glyphs_closed
-			s.glyphs = glyphs
-			retain = table.subset_glyphs (s)
-			s.log.lapse ("subset '%s'" % tag)
-			if not retain:
-				s.log (tag, "subsetted to empty; dropped")
-				del font[tag]
-				continue
-			else:
-				s.log (tag, "subsetted")
-			del glyphs
-		else:
-			s.log (tag, "NOT subset; don't know how to subset")
-			continue
-
-		if hasattr (clazz, 'prune_post_subset'):
-			table = font[tag]
-			retain = table.prune_post_subset (options)
-			s.log.lapse ("prune  '%s'" % tag)
-			if not retain:
-				s.log (tag, "pruned to empty; dropped")
-				del font[tag]
-				continue
-			else:
-				s.log (tag, "pruned")
-
-	glyphOrder = font.getGlyphOrder()
-	glyphOrder = [g for g in glyphOrder if g in glyphs_closed]
-	font.setGlyphOrder (glyphOrder)
-	font._buildReverseGlyphOrderDict ()
-	s.log.lapse ("subset GlyphOrder")
+	s.subset (font, glyphs)
 
 	font.save (fontfile + '.subset')
 	s.log.lapse ("compile and save font")
