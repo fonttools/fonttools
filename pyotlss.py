@@ -1084,79 +1084,18 @@ class Subsetter:
 
 	def subset (self, font, glyphs):
 
-		font.recalcBBoxes = self.options.recalc_bboxes
+		glyphs = set (glyphs)
 
-		# Hack:
-		#
-		# If we don't need glyph names, change 'post' class to not try to
-		# load them.  It avoid lots of headache with broken fonts as well
-		# as loading time.
-		#
-		# Ideally ttLib should provide a way to ask it to skip loading
-		# glyph names.  But it currently doesn't provide such a thing.
-		#
-		if not self.options.glyph_names \
-				and all (any (g.startswith (p) \
-					      for p in ['gid', 'glyph', 'uni']) \
-					 for g in glyphs):
-			post = fontTools.ttLib.getTableClass('post')
-			saved = post.decode_format_2_0
-			post.decode_format_2_0 = post.decode_format_3_0
-			f = font['post']
-			if f.formatType == 2.0:
-				f.formatType = 3.0
-			post.decode_format_2_0 = saved
-			del post, saved, f
+		font.recalcBBoxes = self.options.recalc_bboxes
 
 		if self.options.mandatory_glyphs:
 			if 'glyf' in font:
-				glyphs.extend (['gid0', 'gid1', 'gid2', 'gid3'])
+				for i in range (4):
+					glyphs.add (font.getGlyphName (i))
 				self.log ("Added first four glyphs to subset")
 			else:
 				glyphs.append ('.notdef')
 				self.log ("Added .notdef glyph to subset")
-
-		names = font.getGlyphNames()
-		self.log.lapse ("loading glyph names")
-		# Convert to glyph names
-		glyph_names = []
-		cmap_tables = None
-		for g in glyphs:
-			if g in names:
-				glyph_names.append (g)
-				continue
-			if g.startswith ('uni') and len (g) > 3:
-				if not cmap_tables:
-					cmap = font['cmap']
-					cmap_tables = [t for t in cmap.tables if t.platformID == 3 and t.platEncID in [1, 10]]
-					del cmap
-				found = False
-				u = int (g[3:], 16)
-				for table in cmap_tables:
-					if u in table.cmap:
-						glyph_names.append (table.cmap[u])
-						found = True
-						break
-				if not found:
-					self.log ("No glyph for Unicode value %s; skipping." % g)
-				continue
-			if g.startswith ('gid') or g.startswith ('glyph'):
-				if g.startswith ('gid') and len (g) > 3:
-					g = g[3:]
-				elif g.startswith ('glyph') and len (g) > 5:
-					g = g[5:]
-				try:
-					glyph_names.append (font.getGlyphName (int (g), requireReal=1))
-				except ValueError:
-					raise Exception ("Invalid glyph identifier %s" % g)
-				continue
-			raise Exception ("Invalid glyph identifier %s" % g)
-		del cmap_tables
-		glyphs = unique_sorted (glyph_names)
-		del glyph_names
-		self.log.lapse ("compile glyph list")
-		self.log ("Glyphs:", glyphs)
-
 
 		for tag in font.keys():
 			if tag == 'GlyphOrder': continue
@@ -1316,6 +1255,68 @@ def main (args):
 	font = fontTools.ttx.TTFont (fontfile)
 	s = Subsetter (font=font, options=options, log=log)
 	log.lapse ("load font")
+
+	# Hack:
+	#
+	# If we don't need glyph names, change 'post' class to not try to
+	# load them.  It avoid lots of headache with broken fonts as well
+	# as loading time.
+	#
+	# Ideally ttLib should provide a way to ask it to skip loading
+	# glyph names.  But it currently doesn't provide such a thing.
+	#
+	if not options.glyph_names \
+			and all (any (g.startswith (p) for p in ['gid', 'glyph', 'uni']) \
+				 for g in glyphs):
+		post = fontTools.ttLib.getTableClass('post')
+		saved = post.decode_format_2_0
+		post.decode_format_2_0 = post.decode_format_3_0
+		f = font['post']
+		if f.formatType == 2.0:
+			f.formatType = 3.0
+		post.decode_format_2_0 = saved
+		del post, saved, f
+
+	names = font.getGlyphNames()
+	log.lapse ("loading glyph names")
+	# Convert to glyph names
+	glyph_names = []
+	cmap_tables = None
+	for g in glyphs:
+		if g in names:
+			glyph_names.append (g)
+			continue
+		if g.startswith ('uni') and len (g) > 3:
+			if not cmap_tables:
+				cmap = font['cmap']
+				cmap_tables = [t for t in cmap.tables if t.platformID == 3 and t.platEncID in [1, 10]]
+				del cmap
+			found = False
+			u = int (g[3:], 16)
+			for table in cmap_tables:
+				if u in table.cmap:
+					glyph_names.append (table.cmap[u])
+					found = True
+					break
+			if not found:
+				log ("No glyph for Unicode value %s; skipping." % g)
+			continue
+		if g.startswith ('gid') or g.startswith ('glyph'):
+			if g.startswith ('gid') and len (g) > 3:
+				g = g[3:]
+			elif g.startswith ('glyph') and len (g) > 5:
+				g = g[5:]
+			try:
+				glyph_names.append (font.getGlyphName (int (g), requireReal=1))
+			except ValueError:
+				raise Exception ("Invalid glyph identifier %s" % g)
+			continue
+		raise Exception ("Invalid glyph identifier %s" % g)
+	del cmap_tables
+	glyphs = set (glyph_names)
+	del glyph_names
+	log.lapse ("compile glyph list")
+	log ("Glyphs:", glyphs)
 
 	s.subset (font, glyphs)
 
