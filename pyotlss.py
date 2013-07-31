@@ -928,6 +928,21 @@ def subset_glyphs (self, s):
 	assert 0, "unimplemented"
 
 @add_method(fontTools.ttLib.getTableClass('cmap'))
+def closure_glyphs (self, s):
+	tables = [t for t in self.tables if t.platformID == 3 and t.platEncID in [1, 10]]
+	extra = []
+	for u in s.unicodes:
+		found = False
+		for table in tables:
+			if u in table.cmap:
+				extra.append (table.cmap[u])
+				found = True
+				break
+		if not found:
+			s.log ("No glyph for Unicode value %s; skipping." % u)
+	return extra
+
+@add_method(fontTools.ttLib.getTableClass('cmap'))
 def prune_pre_subset (self, options):
 	if not options.legacy_cmap:
 		# Drop non-Unicode / non-Symbol cmaps
@@ -1081,22 +1096,39 @@ class Subsetter:
 		self.font = font
 		self.options = options
 		self.log = log
+		self.requested_unicodes = set ()
+		self.requested_glyphs = set ()
 
-	def subset (self, font, glyphs):
+	def populate (self, glyphs=[], unicodes=[], text=[]):
+		self.requested_unicodes.update (unicodes)
+		for u in text:
+			self.requested_unicodes.add (u)
+		self.requested_glyphs.update (glyphs)
 
-		glyphs = set (glyphs)
+	def subset (self, font):
 
 		font.recalcBBoxes = self.options.recalc_bboxes
 
+		self.unicodes = self.requested_unicodes
+		self.glyphs = self.requested_glyphs
+
+		if 'cmap' in font:
+			extra_glyphs = font['cmap'].closure_glyphs (self)
+			self.glyph = self.glyphs.copy ()
+			self.glyphs.update (extra_glyphs)
+		self.glyphs_cmaped = self.glyphs
+
 		if self.options.mandatory_glyphs:
+			self.glyphs = self.glyphs.copy ()
 			if 'glyf' in font:
 				for i in range (4):
-					glyphs.add (font.getGlyphName (i))
+					self.glyphs.add (font.getGlyphName (i))
 				self.log ("Added first four glyphs to subset")
 			else:
-				glyphs.append ('.notdef')
+				self.glyphs.add ('.notdef')
 				self.log ("Added .notdef glyph to subset")
 
+		# Prune!
 		for tag in font.keys():
 			if tag == 'GlyphOrder': continue
 
@@ -1119,32 +1151,27 @@ class Subsetter:
 				else:
 					self.log (tag, "pruned")
 
-		glyphs_requested = glyphs
 		if 'GSUB' in font:
-			self.log ("Closing glyph list over 'GSUB': %d glyphs before" % len (glyphs))
-			self.glyphs = glyphs
-			glyphs = font['GSUB'].closure_glyphs (self)
-			self.log ("Closed  glyph list over 'GSUB': %d glyphs after" % len (glyphs))
-			self.log ("Glyphs:", glyphs)
+			self.log ("Closing glyph list over 'GSUB': %d glyphs before" % len (self.glyphs))
+			self.glyphs = set (font['GSUB'].closure_glyphs (self))
+			self.log ("Closed  glyph list over 'GSUB': %d glyphs after" % len (self.glyphs))
+			self.log ("Glyphs:", self.glyphs)
 			self.log.lapse ("close glyph list over 'GSUB'")
-		glyphs_gsubed = glyphs
+		self.glyphs_gsubed = self.glyphs
 
 		# Close over composite glyphs
 		if 'glyf' in font:
-			self.log ("Closing glyph list over 'glyf': %d glyphs before" % len (glyphs))
-			self.log ("Glyphs:", glyphs)
-			self.glyphs = glyphs
-			glyphs = font['glyf'].closure_glyphs (self)
-			self.log ("Closed  glyph list over 'glyf': %d glyphs after" % len (glyphs))
-			self.log ("Glyphs:", glyphs)
+			self.log ("Closing glyph list over 'glyf': %d glyphs before" % len (self.glyphs))
+			self.log ("Glyphs:", self.glyphs)
+			self.glyphs = set (font['glyf'].closure_glyphs (self))
+			self.log ("Closed  glyph list over 'glyf': %d glyphs after" % len (self.glyphs))
+			self.log ("Glyphs:", self.glyphs)
 			self.log.lapse ("close glyph list over 'glyf'")
-		else:
-			glyphs = glyphs
-		glyphs_glyfed = glyphs
-		glyphs_closed = glyphs
-		del glyphs
+		self.glyphs_glyfed = self.glyphs
 
-		self.log ("Retaining %d glyphs: " % len (glyphs_closed))
+		self.glyphs_all = self.glyphs
+
+		self.log ("Retaining %d glyphs: " % len (self.glyphs_all))
 
 		for tag in font.keys():
 			if tag == 'GlyphOrder': continue
@@ -1156,12 +1183,11 @@ class Subsetter:
 			elif hasattr (clazz, 'subset_glyphs'):
 				table = font[tag]
 				if tag == 'cmap': # What else?
-					glyphs = glyphs_requested
+					self.glyphs = self.glyphs_cmaped
 				elif tag in ['GSUB', 'GPOS', 'GDEF', 'cmap', 'kern', 'post']: # What else?
-					glyphs = glyphs_gsubed
+					self.glyphs = self.glyphs_gsubed
 				else:
-					glyphs = glyphs_closed
-				self.glyphs = glyphs
+					self.glyphs = self.glyphs_glyfed
 				retain = table.subset_glyphs (self)
 				self.log.lapse ("subset '%s'" % tag)
 				if not retain:
@@ -1170,7 +1196,6 @@ class Subsetter:
 					continue
 				else:
 					self.log (tag, "subsetted")
-				del glyphs
 			else:
 				self.log (tag, "NOT subset; don't know how to subset")
 				continue
@@ -1187,7 +1212,7 @@ class Subsetter:
 					self.log (tag, "pruned")
 
 		glyphOrder = font.getGlyphOrder()
-		glyphOrder = [g for g in glyphOrder if g in glyphs_closed]
+		glyphOrder = [g for g in glyphOrder if g in self.glyphs_all]
 		font.setGlyphOrder (glyphOrder)
 		font._buildReverseGlyphOrderDict ()
 		self.log.lapse ("subset GlyphOrder")
@@ -1281,25 +1306,14 @@ def main (args):
 	log.lapse ("loading glyph names")
 	# Convert to glyph names
 	glyph_names = []
-	cmap_tables = None
+	unicodes = []
 	for g in glyphs:
 		if g in names:
 			glyph_names.append (g)
 			continue
 		if g.startswith ('uni') and len (g) > 3:
-			if not cmap_tables:
-				cmap = font['cmap']
-				cmap_tables = [t for t in cmap.tables if t.platformID == 3 and t.platEncID in [1, 10]]
-				del cmap
-			found = False
 			u = int (g[3:], 16)
-			for table in cmap_tables:
-				if u in table.cmap:
-					glyph_names.append (table.cmap[u])
-					found = True
-					break
-			if not found:
-				log ("No glyph for Unicode value %s; skipping." % g)
+			unicodes.append (u)
 			continue
 		if g.startswith ('gid') or g.startswith ('glyph'):
 			if g.startswith ('gid') and len (g) > 3:
@@ -1312,13 +1326,13 @@ def main (args):
 				raise Exception ("Invalid glyph identifier %s" % g)
 			continue
 		raise Exception ("Invalid glyph identifier %s" % g)
-	del cmap_tables
+	unicodes = set (unicodes)
 	glyphs = set (glyph_names)
-	del glyph_names
 	log.lapse ("compile glyph list")
 	log ("Glyphs:", glyphs)
 
-	s.subset (font, glyphs)
+	s.populate (glyphs=glyphs, unicodes=unicodes)
+	s.subset (font)
 
 	font.save (fontfile + '.subset')
 	log.lapse ("compile and save font")
