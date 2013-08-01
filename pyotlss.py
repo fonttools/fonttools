@@ -1102,10 +1102,12 @@ class Subsetter:
 		self.unicodes_requested = set ()
 		self.glyphs_requested = set ()
 
-	def populate (self, glyphs=[], unicodes=[], text=[]):
+	def populate (self, glyphs=[], unicodes=[], text=""):
 		self.unicodes_requested.update (unicodes)
+		if isinstance (text, str)
+			text = text.decode ("utf8")
 		for u in text:
-			self.unicodes_requested.add (u)
+			self.unicodes_requested.add (ord (u))
 		self.glyphs_requested.update (glyphs)
 
 	def subset (self, font):
