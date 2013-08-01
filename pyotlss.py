@@ -1115,23 +1115,7 @@ class Subsetter:
 		self.unicodes = self.unicodes_requested
 		self.glyphs = self.glyphs_requested
 
-		if 'cmap' in font:
-			extra_glyphs = font['cmap'].closure_glyphs (self)
-			self.glyph = self.glyphs.copy ()
-			self.glyphs.update (extra_glyphs)
-		self.glyphs_cmaped = self.glyphs
-
-		if self.options.mandatory_glyphs:
-			self.glyphs = self.glyphs.copy ()
-			if 'glyf' in font:
-				for i in range (4):
-					self.glyphs.add (font.getGlyphName (i))
-				self.log ("Added first four glyphs to subset")
-			else:
-				self.glyphs.add ('.notdef')
-				self.log ("Added .notdef glyph to subset")
-
-		# Prune!
+		# Pre-prune
 		for tag in font.keys():
 			if tag == 'GlyphOrder': continue
 
@@ -1154,6 +1138,24 @@ class Subsetter:
 				else:
 					self.log (tag, "pruned")
 
+		# Close glyph list
+
+		if 'cmap' in font:
+			extra_glyphs = font['cmap'].closure_glyphs (self)
+			self.glyph = self.glyphs.copy ()
+			self.glyphs.update (extra_glyphs)
+		self.glyphs_cmaped = self.glyphs
+
+		if self.options.mandatory_glyphs:
+			self.glyphs = self.glyphs.copy ()
+			if 'glyf' in font:
+				for i in range (4):
+					self.glyphs.add (font.getGlyphName (i))
+				self.log ("Added first four glyphs to subset")
+			else:
+				self.glyphs.add ('.notdef')
+				self.log ("Added .notdef glyph to subset")
+
 		if 'GSUB' in font:
 			self.log ("Closing glyph list over 'GSUB': %d glyphs before" % len (self.glyphs))
 			self.glyphs = set (font['GSUB'].closure_glyphs (self))
@@ -1162,7 +1164,6 @@ class Subsetter:
 			self.log.lapse ("close glyph list over 'GSUB'")
 		self.glyphs_gsubed = self.glyphs
 
-		# Close over composite glyphs
 		if 'glyf' in font:
 			self.log ("Closing glyph list over 'glyf': %d glyphs before" % len (self.glyphs))
 			self.log ("Glyphs:", self.glyphs)
@@ -1176,9 +1177,10 @@ class Subsetter:
 
 		self.log ("Retaining %d glyphs: " % len (self.glyphs_all))
 
+		# Subset
+
 		for tag in font.keys():
 			if tag == 'GlyphOrder': continue
-
 			clazz = fontTools.ttLib.getTableClass(tag)
 
 			if tag in no_subset_tables:
@@ -1191,13 +1193,21 @@ class Subsetter:
 				if not retain:
 					self.log (tag, "subsetted to empty; dropped")
 					del font[tag]
-					continue
 				else:
 					self.log (tag, "subsetted")
 			else:
 				self.log (tag, "NOT subset; don't know how to subset")
-				continue
 
+		glyphOrder = font.getGlyphOrder()
+		glyphOrder = [g for g in glyphOrder if g in self.glyphs_all]
+		font.setGlyphOrder (glyphOrder)
+		font._buildReverseGlyphOrderDict ()
+		self.log.lapse ("subset GlyphOrder")
+
+		# Post-prune
+		for tag in font.keys():
+			if tag == 'GlyphOrder': continue
+			clazz = fontTools.ttLib.getTableClass(tag)
 			if hasattr (clazz, 'prune_post_subset'):
 				table = font[tag]
 				retain = table.prune_post_subset (self.options)
@@ -1205,15 +1215,8 @@ class Subsetter:
 				if not retain:
 					self.log (tag, "pruned to empty; dropped")
 					del font[tag]
-					continue
 				else:
 					self.log (tag, "pruned")
-
-		glyphOrder = font.getGlyphOrder()
-		glyphOrder = [g for g in glyphOrder if g in self.glyphs_all]
-		font.setGlyphOrder (glyphOrder)
-		font._buildReverseGlyphOrderDict ()
-		self.log.lapse ("subset GlyphOrder")
 
 import sys, time
 
