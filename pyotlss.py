@@ -1218,12 +1218,15 @@ class Subsetter:
 	def subset (self, font):
 
 		self.font = font
+
 		self.font.recalcBBoxes = self.options.recalc_bboxes
 
 		self.pre_prune ()
 		self.closure_glyphs ()
 		self.subset_glyphs ()
 		self.post_prune ()
+
+		del self.font
 
 import sys, time
 
