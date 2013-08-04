@@ -1003,7 +1003,7 @@ layout_features_dict = {
 	'ltr':		['ltra', 'ltrm'],
 	'rtl':		['rtla', 'rtlm'],
 	# Complex shapers
-	'arabic':	['init', 'medi', 'fina', 'isol', 'med2', 'fin2', 'fin3'],
+	'arabic':	['init', 'medi', 'fina', 'isol', 'med2', 'fin2', 'fin3', 'cswh', 'mset'],
 	'hangul':	['ljmo', 'vjmo', 'tjmo'],
 	'tibetal':	['abvs', 'blws', 'abvm', 'blwm'],
 	'indic':	['nukt', 'akhn', 'rphf', 'rkrf', 'pref', 'blwf', 'half', 'abvf', 'pstf', 'cfar', 'vatu', 'cjct',
