@@ -494,11 +494,11 @@ class TableStack:
 	def __init__(self):
 		self.stack = []
 	def push(self, table):
-		self.stack.insert(0, table)
+		self.stack.append(table)
 	def pop(self):
-		self.stack.pop(0)
+		self.stack.pop()
 	def getTop(self):
-		return self.stack[0]
+		return self.stack[-1]
 	def getValue(self, name):
 		return self.__findTable(name)[name]
 	def storeValue(self, name, value):
@@ -508,7 +508,7 @@ class TableStack:
 		else:
 			assert table[name] == value, (table[name], value)
 	def __findTable(self, name):
-		for table in self.stack:
+		for table in reversed(self.stack):
 			if table.has_key(name):
 				return table
 		raise KeyError, name
