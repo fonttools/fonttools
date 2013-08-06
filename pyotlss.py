@@ -64,6 +64,10 @@ def intersect (self, glyphs):
 @add_method(fontTools.ttLib.tables.otTables.ClassDef)
 def intersects_class (self, glyphs, klass):
 	"Returns true if any of glyphs has requested class."
+	if klass == 0:
+		if any (g not in self.classDefs.items() for g in glyphs):
+			return True
+		# Fall through
 	return any (g in glyphs for g,v in self.classDefs.items() if v == klass)
 
 @add_method(fontTools.ttLib.tables.otTables.ClassDef)
