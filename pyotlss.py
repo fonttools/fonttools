@@ -58,8 +58,8 @@ def subset (self, glyphs):
 
 @add_method(fontTools.ttLib.tables.otTables.ClassDef)
 def intersect (self, glyphs):
-	"Returns ascending list of matching class values."
-	return unique_sorted (v for g,v in self.classDefs.items() if g in glyphs)
+	"Returns ascending list of matching class values.  Always includes class 0."
+	return unique_sorted ([0] + [v for g,v in self.classDefs.items() if g in glyphs])
 
 @add_method(fontTools.ttLib.tables.otTables.ClassDef)
 def intersects_class (self, glyphs, klass):
@@ -72,9 +72,9 @@ def intersects_class (self, glyphs, klass):
 
 @add_method(fontTools.ttLib.tables.otTables.ClassDef)
 def subset (self, glyphs, remap=False):
-	"Returns ascending list of remaining classes."
+	"Returns ascending list of remaining classes.  Doesn't reuse class 0."
 	self.classDefs = {g:v for g,v in self.classDefs.items() if g in glyphs}
-	indices = unique_sorted (self.classDefs.values ())
+	indices = unique_sorted ([0] + self.classDefs.values ())
 	if remap:
 		self.remap (indices)
 	return indices
@@ -393,7 +393,7 @@ def closure_glyphs (self, s):
 		indices = self.Coverage.intersect (s.glyphs)
 		rss = getattr (self, c.RuleSet)
 		return sum ((s.table.LookupList.Lookup[ll.LookupListIndex].closure_glyphs (s) \
-			     for i in indices \
+			     for i in indices if rss[i] \
 			     for r in getattr (rss[i], c.Rule) \
 			     if r and all (g in s.glyphs for g in c.RuleData (r)) \
 			     for ll in getattr (r, c.LookupRecord) if ll \
@@ -404,7 +404,7 @@ def closure_glyphs (self, s):
 		indices = getattr (self, c.ClassDef).intersect (s.glyphs)
 		rss = getattr (self, c.RuleSet)
 		return sum ((s.table.LookupList.Lookup[ll.LookupListIndex].closure_glyphs (s) \
-			     for i in indices \
+			     for i in indices if rss[i] \
 			     for r in getattr (rss[i], c.Rule) \
 			     if r and all (cd.intersects_class (s.glyphs, k) \
 					   for cd,k in zip (c.ContextData (self), c.RuleData (r))) \
