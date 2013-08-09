@@ -56,6 +56,11 @@ def subset (self, glyphs):
 	self.glyphs = [g for g in self.glyphs if g in glyphs]
 	return indices
 
+@add_method(fontTools.ttLib.tables.otTables.Coverage)
+def remap (self, coverage_map):
+	"Remaps coverage."
+	self.glyphs = [self.glyphs[i] for i in coverage_map]
+
 @add_method(fontTools.ttLib.tables.otTables.ClassDef)
 def intersect (self, glyphs):
 	"Returns ascending list of matching class values."
@@ -99,7 +104,7 @@ def closure_glyphs (self, s):
 @add_method(fontTools.ttLib.tables.otTables.SingleSubst)
 def subset_glyphs (self, s):
 	if self.Format in [1, 2]:
-		self.mapping = {g:v for g,v in self.mapping.items() if g in s.glyphs}
+		self.mapping = {g:v for g,v in self.mapping.items() if g in s.glyphs and v in s.glyphs}
 		return bool (self.mapping)
 	else:
 		assert 0, "unknown format: %s" % self.Format
@@ -117,6 +122,11 @@ def subset_glyphs (self, s):
 	if self.Format == 1:
 		indices = self.Coverage.subset (s.glyphs)
 		self.Sequence = [self.Sequence[i] for i in indices]
+		# Now drop rules generating glyphs we don't want
+		indices = [i for i,seq in enumerate (self.Sequence) \
+			   if all (sub in s.glyphs for sub in seq.Substitute)]
+		self.Sequence = [self.Sequence[i] for i in indices]
+		self.Coverage.remap (indices)
 		self.SequenceCount = len (self.Sequence)
 		return bool (self.SequenceCount)
 	else:
@@ -125,14 +135,15 @@ def subset_glyphs (self, s):
 @add_method(fontTools.ttLib.tables.otTables.AlternateSubst)
 def closure_glyphs (self, s):
 	if self.Format == 1:
-		return sum ((v for g,v in self.alternates.items() if g in s.glyphs), [])
+		return sum ((vlist for g,vlist in self.alternates.items() if g in s.glyphs), [])
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
 @add_method(fontTools.ttLib.tables.otTables.AlternateSubst)
 def subset_glyphs (self, s):
 	if self.Format == 1:
-		self.alternates = {g:v for g,v in self.alternates.items() if g in s.glyphs}
+		self.alternates = {g:vlist for g,vlist in self.alternates.items() \
+				   if g in s.glyphs and all (v in s.glyphs for v in vlist)}
 		return bool (self.alternates)
 	else:
 		assert 0, "unknown format: %s" % self.Format
@@ -149,7 +160,9 @@ def closure_glyphs (self, s):
 def subset_glyphs (self, s):
 	if self.Format == 1:
 		self.ligatures = {g:v for g,v in self.ligatures.items() if g in s.glyphs}
-		self.ligatures = {g:[seq for seq in seqs if all(c in s.glyphs for c in seq.Component)]
+		self.ligatures = {g:[seq for seq in seqs \
+				     if seq.LigGlyph in s.glyphs and \
+				        all(c in s.glyphs for c in seq.Component)]
 				  for g,seqs in self.ligatures.items()}
 		self.ligatures = {g:v for g,v in self.ligatures.items() if v}
 		return bool (self.ligatures)
@@ -172,6 +185,11 @@ def subset_glyphs (self, s):
 	if self.Format == 1:
 		indices = self.Coverage.subset (s.glyphs)
 		self.Substitute = [self.Substitute[i] for i in indices]
+		# Now drop rules generating glyphs we don't want
+		indices = [i for i,sub in enumerate (self.Substitute) \
+			   if sub in s.glyphs]
+		self.Substitute = [self.Substitute[i] for i in indices]
+		self.Coverage.remap (indices)
 		self.GlyphCount = len (self.Substitute)
 		return bool (self.GlyphCount and all (c.subset (s.glyphs) for c in self.LookAheadCoverage + self.BacktrackCoverage))
 	else:
