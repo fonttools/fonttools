@@ -1021,6 +1021,9 @@ def subset_glyphs (self, s):
 			t.cmap = {u:g for (u,g) in t.cmap.items() if g in s.glyphs_requested or u in s.unicodes_requested}
 	self.tables = [t for t in self.tables if (t.cmap if t.format != 14 else t.uvsDict)]
 	# XXX Convert formats when needed
+	# In particular, if we have a format=12 without non-BMP
+	# characters, either drop format=12 one or convert it
+	# to format=4 if there's not one.
 	return bool (self.tables)
 
 @add_method(fontTools.ttLib.getTableClass('name'))
