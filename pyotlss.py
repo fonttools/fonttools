@@ -58,12 +58,14 @@ def subset (self, glyphs):
 
 @add_method(fontTools.ttLib.tables.otTables.ClassDef)
 def intersect (self, glyphs):
-	"Returns ascending list of matching class values.  Always includes class 0."
-	return unique_sorted ([0] + [v for g,v in self.classDefs.items() if g in glyphs])
+	"Returns ascending list of matching class values."
+	return unique_sorted (([0] if any (g not in self.classDefs.items() for g in glyphs) else []) + \
+			      [v for g,v in self.classDefs.items() if g in glyphs])
 
 @add_method(fontTools.ttLib.tables.otTables.ClassDef)
 def intersects_class (self, glyphs, klass):
 	"Returns true if any of glyphs has requested class."
+	assert isinstance (klass, int)
 	if klass == 0:
 		if any (g not in self.classDefs.items() for g in glyphs):
 			return True
@@ -401,13 +403,14 @@ def closure_glyphs (self, s):
 	elif self.Format == 2:
 		if not self.Coverage.intersect (s.glyphs):
 			return []
+		# XXX Intersect glyphs with coverage before going further
 		indices = getattr (self, c.ClassDef).intersect (s.glyphs)
 		rss = getattr (self, c.RuleSet)
 		return sum ((s.table.LookupList.Lookup[ll.LookupListIndex].closure_glyphs (s) \
 			     for i in indices if rss[i] \
 			     for r in getattr (rss[i], c.Rule) \
-			     if r and all (cd.intersects_class (s.glyphs, k) \
-					   for cd,k in zip (c.ContextData (self), c.RuleData (r))) \
+			     if r and all (all (cd.intersects_class (s.glyphs, k) for k in klist) \
+					   for cd,klist in zip (c.ContextData (self), c.RuleData (r))) \
 			     for ll in getattr (r, c.LookupRecord) if ll \
 			    ), [])
 	elif self.Format == 3:
@@ -442,7 +445,8 @@ def subset_glyphs (self, s):
 	elif self.Format == 2:
 		if not self.Coverage.subset (s.glyphs):
 			return False
-		indices = getattr (self, c.ClassDef).intersect (s.glyphs)
+		# XXX Intersect glyphs with coverage before going further
+		indices = getattr (self, c.ClassDef).subset (s.glyphs, remap=False)
 		rss = getattr (self, c.RuleSet)
 		rss = [rss[i] for i in indices]
 		ContextData = c.ContextData (self)
@@ -451,15 +455,15 @@ def subset_glyphs (self, s):
 			if rs:
 				ss = getattr (rs, c.Rule)
 				ss = [r for r in ss \
-				      if r and all (k in klass_map \
-						    for klass_map,k in zip (klass_maps, c.RuleData (r)))]
+				      if r and all (all (k in klass_map for k in klist) \
+						    for klass_map,klist in zip (klass_maps, c.RuleData (r)))]
 				setattr (rs, c.Rule, ss)
 				setattr (rs, c.RuleCount, len (ss))
 
 				# Remap rule classes
 				for r in ss:
-					c.SetRuleData (r, (klass_map.index (k) \
-							   for klassmap,k in zip (klass_maps, c.RuleData (r))))
+					c.SetRuleData (r, [[klass_map.index (k) for k in klist] \
+							   for klass_map,klist in zip (klass_maps, c.RuleData (r))])
 		# Prune empty subrulesets
 		rss = [rs for rs in rss if rs and getattr (rs, c.Rule)]
 		setattr (self, c.RuleSet, rss)
@@ -1200,6 +1204,7 @@ class Subsetter:
 				self.log (tag, "NOT subset; don't know how to subset")
 
 		glyphOrder = self.font.getGlyphOrder()
+		#print [glyphOrder.index (g) for g in self.glyphs_all]
 		glyphOrder = [g for g in glyphOrder if g in self.glyphs_all]
 		self.font.setGlyphOrder (glyphOrder)
 		self.font._buildReverseGlyphOrderDict ()
