@@ -1167,18 +1167,19 @@ class Subsetter:
 
 		if 'GSUB' in self.font:
 			self.log ("Closing glyph list over 'GSUB': %d glyphs before" % len (self.glyphs))
+			self.log.glyphs (self.glyphs, font=self.font)
 			self.glyphs = set (self.font['GSUB'].closure_glyphs (self))
 			self.log ("Closed  glyph list over 'GSUB': %d glyphs after" % len (self.glyphs))
-			self.log ("Glyphs:", self.glyphs)
+			self.log.glyphs (self.glyphs, font=self.font)
 			self.log.lapse ("close glyph list over 'GSUB'")
 		self.glyphs_gsubed = self.glyphs
 
 		if 'glyf' in self.font:
 			self.log ("Closing glyph list over 'glyf': %d glyphs before" % len (self.glyphs))
-			self.log ("Glyphs:", self.glyphs)
+			self.log.glyphs (self.glyphs, font=self.font)
 			self.glyphs = set (self.font['glyf'].closure_glyphs (self))
 			self.log ("Closed  glyph list over 'glyf': %d glyphs after" % len (self.glyphs))
-			self.log ("Glyphs:", self.glyphs)
+			self.log.glyphs (self.glyphs, font=self.font)
 			self.log.lapse ("close glyph list over 'glyf'")
 		self.glyphs_glyfed = self.glyphs
 
@@ -1207,7 +1208,6 @@ class Subsetter:
 				self.log (tag, "NOT subset; don't know how to subset")
 
 		glyphOrder = self.font.getGlyphOrder()
-		#print sorted(glyphOrder.index (g) for g in self.glyphs_all)
 		glyphOrder = [g for g in glyphOrder if g in self.glyphs_all]
 		self.font.setGlyphOrder (glyphOrder)
 		self.font._buildReverseGlyphOrderDict ()
@@ -1269,6 +1269,12 @@ class Logger:
 		new_time = time.time ()
 		print "Took %0.3fs to %s" % (new_time - self.last_time, ' '.join (str (x) for x in things))
 		self.last_time = new_time
+
+	def glyphs (self, glyphs, glyph_names=True, font=None):
+		self ("Names: ", sorted (glyphs))
+		if font:
+			glyphOrder = font.getGlyphOrder()
+			self ("Gids : ", sorted (glyphOrder.index (g) for g in glyphs))
 
 	def font (self, font, file=sys.stdout):
 		if not self.xml:
