@@ -95,9 +95,10 @@ def remap (self, class_map):
 	self.classDefs = {g:class_map.index (v) for g,v in self.classDefs.items()}
 
 @add_method(fontTools.ttLib.tables.otTables.SingleSubst)
-def closure_glyphs (self, s):
+def closure_glyphs (self, s, cur_glyphs=None):
+	if cur_glyphs == None: cur_glyphs = s.glyphs
 	if self.Format in [1, 2]:
-		return [v for g,v in self.mapping.items() if g in s.glyphs]
+		return [v for g,v in self.mapping.items() if g in cur_glyphs]
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
@@ -110,9 +111,10 @@ def subset_glyphs (self, s):
 		assert 0, "unknown format: %s" % self.Format
 
 @add_method(fontTools.ttLib.tables.otTables.MultipleSubst)
-def closure_glyphs (self, s):
+def closure_glyphs (self, s, cur_glyphs=None):
+	if cur_glyphs == None: cur_glyphs = s.glyphs
 	if self.Format == 1:
-		indices = self.Coverage.intersect (s.glyphs)
+		indices = self.Coverage.intersect (cur_glyphs)
 		return sum ((self.Sequence[i].Substitute for i in indices), [])
 	else:
 		assert 0, "unknown format: %s" % self.Format
@@ -133,9 +135,10 @@ def subset_glyphs (self, s):
 		assert 0, "unknown format: %s" % self.Format
 
 @add_method(fontTools.ttLib.tables.otTables.AlternateSubst)
-def closure_glyphs (self, s):
+def closure_glyphs (self, s, cur_glyphs=None):
+	if cur_glyphs == None: cur_glyphs = s.glyphs
 	if self.Format == 1:
-		return sum ((vlist for g,vlist in self.alternates.items() if g in s.glyphs), [])
+		return sum ((vlist for g,vlist in self.alternates.items() if g in cur_glyphs), [])
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
@@ -149,10 +152,11 @@ def subset_glyphs (self, s):
 		assert 0, "unknown format: %s" % self.Format
 
 @add_method(fontTools.ttLib.tables.otTables.LigatureSubst)
-def closure_glyphs (self, s):
+def closure_glyphs (self, s, cur_glyphs=None):
+	if cur_glyphs == None: cur_glyphs = s.glyphs
 	if self.Format == 1:
 		return sum (([seq.LigGlyph for seq in seqs if all(c in s.glyphs for c in seq.Component)]
-			     for g,seqs in self.ligatures.items() if g in s.glyphs), [])
+			     for g,seqs in self.ligatures.items() if g in cur_glyphs), [])
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
@@ -170,9 +174,10 @@ def subset_glyphs (self, s):
 		assert 0, "unknown format: %s" % self.Format
 
 @add_method(fontTools.ttLib.tables.otTables.ReverseChainSingleSubst)
-def closure_glyphs (self, s):
+def closure_glyphs (self, s, cur_glyphs=None):
+	if cur_glyphs == None: cur_glyphs = s.glyphs
 	if self.Format == 1:
-		indices = self.Coverage.intersect (s.glyphs)
+		indices = self.Coverage.intersect (cur_glyphs)
 		if not indices or \
 		   not all (c.intersect (s.glyphs) for c in self.LookAheadCoverage + self.BacktrackCoverage):
 			return []
@@ -355,6 +360,8 @@ def __classify_context (self):
 			self.LookupRecord = Type+'LookupRecord'
 
 			if Format == 1:
+				Coverage = lambda r: r.Coverage
+				ChainCoverage = lambda r: r.Coverage
 				ContextData = None
 				ChainContextData = None
 				RuleData = lambda r: r.Input
@@ -362,6 +369,8 @@ def __classify_context (self):
 				SetRuleData = None
 				ChainSetRuleData = None
 			elif Format == 2:
+				Coverage = lambda r: r.Coverage
+				ChainCoverage = lambda r: r.Coverage
 				ContextData = lambda r: (r.ClassDef,)
 				ChainContextData = lambda r: (r.LookAheadClassDef, r.InputClassDef, r.BacktrackClassDef)
 				RuleData = lambda r: (r.Class,)
@@ -369,6 +378,8 @@ def __classify_context (self):
 				def SetRuleData (r, d): (r.Class,) = d
 				def ChainSetRuleData (r, d): (r.LookAhead, r.Input, r.Backtrack) = d
 			elif Format == 3:
+				Coverage = lambda r: r.Coverage[0]
+				ChainCoverage = lambda r: r.InputCoverage[0]
 				ContextData = None
 				ChainContextData = None
 				RuleData = lambda r: r.Coverage
@@ -379,10 +390,12 @@ def __classify_context (self):
 				assert 0, "unknown format: %s" % Format
 
 			if Chain:
+				self.Coverage = ChainCoverage
 				self.ContextData = ChainContextData
 				self.RuleData = ChainRuleData
 				self.SetRuleData = ChainSetRuleData
 			else:
+				self.Coverage = Coverage
 				self.ContextData = ContextData
 				self.RuleData = RuleData
 				self.SetRuleData = SetRuleData
@@ -409,25 +422,29 @@ def __classify_context (self):
 	return self.__class__.__ContextHelpers[self.Format]
 
 @add_method(fontTools.ttLib.tables.otTables.ContextSubst, fontTools.ttLib.tables.otTables.ChainContextSubst)
-def closure_glyphs (self, s):
+def closure_glyphs (self, s, cur_glyphs=None):
+	if cur_glyphs == None: cur_glyphs = s.glyphs
 	c = self.__classify_context ()
 
+	indices = c.Coverage (self).intersect (s.glyphs)
+	if not indices:
+		return []
+	cur_glyphs = set (g for g in c.Coverage (self).glyphs if g in s.glyphs)
+
 	if self.Format == 1:
-		indices = self.Coverage.intersect (s.glyphs)
 		rss = getattr (self, c.RuleSet)
-		return sum ((s.table.LookupList.Lookup[ll.LookupListIndex].closure_glyphs (s) \
+		return sum ((s.table.LookupList.Lookup[ll.LookupListIndex].closure_glyphs \
+				(s, cur_glyphs=(cur_glyphs if ll.SequenceIndex == 0 else s.glyphs)) \
 			     for i in indices if rss[i] \
 			     for r in getattr (rss[i], c.Rule) \
 			     if r and all (g in s.glyphs for g in c.RuleData (r)) \
 			     for ll in getattr (r, c.LookupRecord) if ll \
 			    ), [])
 	elif self.Format == 2:
-		if not self.Coverage.intersect (s.glyphs):
-			return []
-		# XXX Intersect glyphs with coverage before going further
-		indices = getattr (self, c.ClassDef).intersect (s.glyphs)
+		indices = getattr (self, c.ClassDef).intersect (cur_glyphs)
 		rss = getattr (self, c.RuleSet)
-		return sum ((s.table.LookupList.Lookup[ll.LookupListIndex].closure_glyphs (s) \
+		return sum ((s.table.LookupList.Lookup[ll.LookupListIndex].closure_glyphs \
+				(s, cur_glyphs=(cur_glyphs if ll.SequenceIndex == 0 else s.glyphs)) \
 			     for i in indices if rss[i] \
 			     for r in getattr (rss[i], c.Rule) \
 			     if r and all (all (cd.intersects_class (s.glyphs, k) for k in klist) \
@@ -437,7 +454,8 @@ def closure_glyphs (self, s):
 	elif self.Format == 3:
 		if not all (x.intersect (s.glyphs) for x in c.RuleData (self)):
 			return []
-		return sum ((s.table.LookupList.Lookup[ll.LookupListIndex].closure_glyphs (s) \
+		return sum ((s.table.LookupList.Lookup[ll.LookupListIndex].closure_glyphs \
+				(s, cur_glyphs=(cur_glyphs if ll.SequenceIndex == 0 else s.glyphs)) \
 			     for ll in getattr (self, c.LookupRecord) if ll), [])
 	else:
 		assert 0, "unknown format: %s" % self.Format
@@ -466,8 +484,7 @@ def subset_glyphs (self, s):
 	elif self.Format == 2:
 		if not self.Coverage.subset (s.glyphs):
 			return False
-		# XXX Intersect glyphs with coverage before going further
-		indices = getattr (self, c.ClassDef).subset (s.glyphs, remap=False)
+		indices = getattr (self, c.ClassDef).subset (self.Coverage.glyphs, remap=False)
 		rss = getattr (self, c.RuleSet)
 		rss = [rss[i] for i in indices]
 		ContextData = c.ContextData (self)
@@ -536,9 +553,9 @@ def collect_lookups (self):
 		assert 0, "unknown format: %s" % self.Format
 
 @add_method(fontTools.ttLib.tables.otTables.ExtensionSubst)
-def closure_glyphs (self, s):
+def closure_glyphs (self, s, cur_glyphs=None):
 	if self.Format == 1:
-		return self.ExtSubTable.closure_glyphs (s)
+		return self.ExtSubTable.closure_glyphs (s, cur_glyphs)
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
@@ -564,8 +581,8 @@ def collect_lookups (self):
 		assert 0, "unknown format: %s" % self.Format
 
 @add_method(fontTools.ttLib.tables.otTables.Lookup)
-def closure_glyphs (self, s):
-	return sum ((st.closure_glyphs (s) for st in self.SubTable if st), [])
+def closure_glyphs (self, s, cur_glyphs=None):
+	return sum ((st.closure_glyphs (s, cur_glyphs) for st in self.SubTable if st), [])
 
 @add_method(fontTools.ttLib.tables.otTables.Lookup)
 def subset_glyphs (self, s):
