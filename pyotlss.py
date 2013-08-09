@@ -1207,7 +1207,7 @@ class Subsetter:
 				self.log (tag, "NOT subset; don't know how to subset")
 
 		glyphOrder = self.font.getGlyphOrder()
-		#print [glyphOrder.index (g) for g in self.glyphs_all]
+		#print sorted(glyphOrder.index (g) for g in self.glyphs_all)
 		glyphOrder = [g for g in glyphOrder if g in self.glyphs_all]
 		self.font.setGlyphOrder (glyphOrder)
 		self.font._buildReverseGlyphOrderDict ()
@@ -1314,7 +1314,7 @@ def main (args):
 	# glyph names.  But it currently doesn't provide such a thing.
 	#
 	if not options.glyph_names \
-			and all (any (g.startswith (p) for p in ['gid', 'glyph', 'uni']) \
+			and all (any (g.startswith (p) for p in ['gid', 'glyph', 'uni', 'U+']) \
 				 for g in args):
 		post = fontTools.ttLib.getTableClass('post')
 		saved = post.decode_format_2_0
@@ -1334,8 +1334,12 @@ def main (args):
 		if g in names:
 			glyphs.append (g)
 			continue
-		if g.startswith ('uni') and len (g) > 3:
-			u = int (g[3:], 16)
+		if g.startswith ('uni') or g.startswith ('U+'):
+			if g.startswith ('uni') and len (g) > 3:
+				g = g[3:]
+			elif g.startswith ('U+') and len (g) > 2:
+				g = g[2:]
+			u = int (g, 16)
 			unicodes.append (u)
 			continue
 		if g.startswith ('gid') or g.startswith ('glyph'):
