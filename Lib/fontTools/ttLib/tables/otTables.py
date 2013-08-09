@@ -33,7 +33,7 @@ class Coverage(FormatSwitchingBaseTable):
 		elif self.Format == 2:
 			glyphs = self.glyphs = []
 			ranges = rawTable["RangeRecord"]
-			getGlyphName = font.getGlyphName
+			glyphOrder = font.getGlyphOrder()
 			for r in ranges:
 				assert r.StartCoverageIndex == len(glyphs), \
 					(r.StartCoverageIndex, len(glyphs))
@@ -42,7 +42,7 @@ class Coverage(FormatSwitchingBaseTable):
 				startID = font.getGlyphID(start)
 				endID = font.getGlyphID(end)
 				glyphs.append(start)
-				rangeList = [getGlyphName(glyphID) for glyphID in range(startID + 1, endID) ]
+				rangeList = [glyphOrder[glyphID] for glyphID in range(startID + 1, endID) ]
 				glyphs += rangeList
 				if start != end:
 					glyphs.append(end)
