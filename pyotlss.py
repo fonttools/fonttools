@@ -59,7 +59,7 @@ def subset (self, glyphs):
 @add_method(fontTools.ttLib.tables.otTables.ClassDef)
 def intersect (self, glyphs):
 	"Returns ascending list of matching class values."
-	return unique_sorted (([0] if any (g not in self.classDefs.items() for g in glyphs) else []) + \
+	return unique_sorted (([0] if any (g not in self.classDefs for g in glyphs) else []) + \
 			      [v for g,v in self.classDefs.items() if g in glyphs])
 
 @add_method(fontTools.ttLib.tables.otTables.ClassDef)
@@ -67,16 +67,19 @@ def intersects_class (self, glyphs, klass):
 	"Returns true if any of glyphs has requested class."
 	assert isinstance (klass, int)
 	if klass == 0:
-		if any (g not in self.classDefs.items() for g in glyphs):
+		if any (g not in self.classDefs for g in glyphs):
 			return True
 		# Fall through
 	return any (g in glyphs for g,v in self.classDefs.items() if v == klass)
 
 @add_method(fontTools.ttLib.tables.otTables.ClassDef)
 def subset (self, glyphs, remap=False):
-	"Returns ascending list of remaining classes.  Doesn't reuse class 0."
+	"Returns ascending list of remaining classes."
 	self.classDefs = {g:v for g,v in self.classDefs.items() if g in glyphs}
-	indices = unique_sorted ([0] + self.classDefs.values ())
+	# Note: while class 0 has the special meaning of "not matched", if no glyph will
+	# ever /not match/, we can optimize class 0 out too.
+	indices = unique_sorted (([0]  if any (g not in self.classDefs for g in glyphs) else []) + \
+				 self.classDefs.values ())
 	if remap:
 		self.remap (indices)
 	return indices
