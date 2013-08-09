@@ -38,6 +38,18 @@ usage: ttx [options] inputfile1 [... inputfileN]
        pre-program) will be written to the TTX file as hex data
        instead of assembly. This saves some time and makes the TTX
        file smaller.
+    -z <format> Specify a bitmap data export option for EBDT:
+       {'raw', 'row', 'bitwise', 'extfile'} or for the CBDT:
+       {'raw', 'extfile'} Each option does one of the following:
+         -z raw
+            * export the bitmap data as a hex dump
+         -z row
+            * export each row as hex data
+         -z bitwise
+            * export each row as binary in an ASCII art style
+         -z extfile
+            * export the data as external files with XML refences
+       If no export format is specified 'raw' format is used.
     -e Don't ignore decompilation errors, but show a full traceback
        and abort.
     -y <number> Select font number for TrueType Collection,
@@ -98,6 +110,7 @@ class Options:
 	recalcBBoxes = 1
 	allowVID = 0
 	ignoreDecompileErrors = True
+	bitmapGlyphDataFormat = 'raw'
 
 	def __init__(self, rawOptions, numFiles):
 		self.onlyTables = []
@@ -128,6 +141,12 @@ class Options:
 				self.splitTables = 1
 			elif option == "-i":
 				self.disassembleInstructions = 0
+			elif option == "-z":
+				validOptions = ('raw', 'row', 'bitwise', 'extfile')
+				if value not in validOptions:
+					print "-z does not allow %s as a format. Use %s" % (option, validOptions)
+					sys.exit(2)
+				self.bitmapGlyphDataFormat = value
 			elif option == "-y":
 				self.fontNumber = int(value)
 			# compile options
@@ -177,7 +196,8 @@ def ttDump(input, output, options):
 			tables=options.onlyTables,
 			skipTables=options.skipTables, 
 			splitTables=options.splitTables,
-			disassembleInstructions=options.disassembleInstructions)
+			disassembleInstructions=options.disassembleInstructions,
+			bitmapGlyphDataFormat=options.bitmapGlyphDataFormat)
 	ttf.close()
 
 
@@ -247,7 +267,7 @@ def guessFileType(fileName):
 
 def parseOptions(args):
 	try:
-		rawOptions, files = getopt.getopt(args, "ld:o:vht:x:sim:baey:")
+		rawOptions, files = getopt.getopt(args, "ld:o:vht:x:sim:z:baey:")
 	except getopt.GetoptError:
 		usage()
 	
