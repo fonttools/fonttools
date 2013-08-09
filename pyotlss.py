@@ -1067,6 +1067,8 @@ layout_features_all = unique_sorted (sum (layout_features_dict.values (), []))
 # TODO Text script / language considerations
 # TODO Drop unknown tables?  Using DefaultTable.prune?
 # TODO Drop GPOS Device records if not hinting?
+# TODO Hookup options.verbose to font.verbose?
+# TODO Move font name loading hack to Subsetter?
 
 
 class Subsetter:
