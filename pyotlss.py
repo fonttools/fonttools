@@ -470,12 +470,12 @@ def subset_glyphs (self, s):
 		rss = getattr (self, c.RuleSet)
 		rss = [rss[i] for i in indices]
 		for rs in rss:
-			if rs:
-				ss = getattr (rs, c.Rule)
-				ss = [r for r in ss \
-				      if r and all (g in s.glyphs for g in c.RuleData (r))]
-				setattr (rs, c.Rule, ss)
-				setattr (rs, c.RuleCount, len (ss))
+			if not rs: continue
+			ss = getattr (rs, c.Rule)
+			ss = [r for r in ss \
+			      if r and all (g in s.glyphs for g in c.RuleData (r))]
+			setattr (rs, c.Rule, ss)
+			setattr (rs, c.RuleCount, len (ss))
 		# Prune empty subrulesets
 		rss = [rs for rs in rss if rs and getattr (rs, c.Rule)]
 		setattr (self, c.RuleSet, rss)
@@ -490,18 +490,18 @@ def subset_glyphs (self, s):
 		ContextData = c.ContextData (self)
 		klass_maps = [x.subset (s.glyphs, remap=True) for x in ContextData]
 		for rs in rss:
-			if rs:
-				ss = getattr (rs, c.Rule)
-				ss = [r for r in ss \
-				      if r and all (all (k in klass_map for k in klist) \
-						    for klass_map,klist in zip (klass_maps, c.RuleData (r)))]
-				setattr (rs, c.Rule, ss)
-				setattr (rs, c.RuleCount, len (ss))
+			if not rs: continue
+			ss = getattr (rs, c.Rule)
+			ss = [r for r in ss \
+			      if r and all (all (k in klass_map for k in klist) \
+					    for klass_map,klist in zip (klass_maps, c.RuleData (r)))]
+			setattr (rs, c.Rule, ss)
+			setattr (rs, c.RuleCount, len (ss))
 
-				# Remap rule classes
-				for r in ss:
-					c.SetRuleData (r, [[klass_map.index (k) for k in klist] \
-							   for klass_map,klist in zip (klass_maps, c.RuleData (r))])
+			# Remap rule classes
+			for r in ss:
+				c.SetRuleData (r, [[klass_map.index (k) for k in klist] \
+						   for klass_map,klist in zip (klass_maps, c.RuleData (r))])
 		# Prune empty subrulesets
 		rss = [rs for rs in rss if rs and getattr (rs, c.Rule)]
 		setattr (self, c.RuleSet, rss)
@@ -519,20 +519,20 @@ def subset_lookups (self, lookup_indices):
 
 	if self.Format in [1, 2]:
 		for rs in getattr (self, c.RuleSet):
-			if rs:
-				for r in getattr (rs, c.Rule):
-					if r:
-						setattr (r, c.LookupRecord, [ll for ll in getattr (r, c.LookupRecord) if ll \
-										if ll.LookupListIndex in lookup_indices])
-						for ll in getattr (r, c.LookupRecord):
-							if ll:
-								ll.LookupListIndex = lookup_indices.index (ll.LookupListIndex)
+			if not rs: continue
+			for r in getattr (rs, c.Rule):
+				if not r: continue
+				setattr (r, c.LookupRecord, [ll for ll in getattr (r, c.LookupRecord) if ll \
+								if ll.LookupListIndex in lookup_indices])
+				for ll in getattr (r, c.LookupRecord):
+					if not ll: continue
+					ll.LookupListIndex = lookup_indices.index (ll.LookupListIndex)
 	elif self.Format == 3:
 		setattr (self, c.LookupRecord, [ll for ll in getattr (self, c.LookupRecord) if ll \
 						   if ll.LookupListIndex in lookup_indices])
 		for ll in getattr (self, c.LookupRecord):
-			if ll:
-				ll.LookupListIndex = lookup_indices.index (ll.LookupListIndex)
+			if not ll: continue
+			ll.LookupListIndex = lookup_indices.index (ll.LookupListIndex)
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
