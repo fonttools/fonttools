@@ -50,6 +50,11 @@ def intersect (self, glyphs):
 	return [i for (i,g) in enumerate (self.glyphs) if g in glyphs]
 
 @add_method(fontTools.ttLib.tables.otTables.Coverage)
+def intersect_glyphs (self, glyphs):
+	"Returns set of intersecting glyphs."
+	return set (g for g in self.glyphs if g in glyphs)
+
+@add_method(fontTools.ttLib.tables.otTables.Coverage)
 def subset (self, glyphs):
 	"Returns ascending list of remaining coverage values."
 	indices = self.intersect (glyphs)
@@ -68,14 +73,11 @@ def intersect (self, glyphs):
 			      [v for g,v in self.classDefs.items() if g in glyphs])
 
 @add_method(fontTools.ttLib.tables.otTables.ClassDef)
-def intersects_class (self, glyphs, klass):
-	"Returns true if any of glyphs has requested class."
-	assert isinstance (klass, int)
+def intersect_class (self, glyphs, klass):
+	"Returns set of glyphs matching class."
 	if klass == 0:
-		if any (g not in self.classDefs for g in glyphs):
-			return True
-		# Fall through
-	return any (g in glyphs for g,v in self.classDefs.items() if v == klass)
+		return set (g for g in glyphs if g not in self.classDefs)
+	return set (g for g,v in self.classDefs.items() if v == klass and g in glyphs)
 
 @add_method(fontTools.ttLib.tables.otTables.ClassDef)
 def subset (self, glyphs, remap=False):
@@ -362,10 +364,10 @@ def __classify_context (self):
 			if Format == 1:
 				Coverage = lambda r: r.Coverage
 				ChainCoverage = lambda r: r.Coverage
-				ContextData = None
-				ChainContextData = None
-				RuleData = lambda r: r.Input
-				ChainRuleData = lambda r: r.Backtrack + r.Input + r.LookAhead
+				ContextData = lambda r: (None,)
+				ChainContextData = lambda r: (None, None, None)
+				RuleData = lambda r: (r.Input,)
+				ChainRuleData = lambda r: (r.Backtrack, r.Input, r.LookAhead)
 				SetRuleData = None
 				ChainSetRuleData = None
 			elif Format == 2:
@@ -405,11 +407,13 @@ def __classify_context (self):
 				self.RuleCount = ChainTyp+'RuleCount'
 				self.RuleSet = ChainTyp+'RuleSet'
 				self.RuleSetCount = ChainTyp+'RuleSetCount'
+				self.Intersect = lambda glyphs, ContextData, RuleData: [RuleData] if RuleData in glyphs else []
 			elif Format == 2:
 				self.Rule = ChainTyp+'ClassRule'
 				self.RuleCount = ChainTyp+'ClassRuleCount'
 				self.RuleSet = ChainTyp+'ClassSet'
 				self.RuleSetCount = ChainTyp+'ClassSetCount'
+				self.Intersect = lambda glyphs, ContextData, RuleData: ContextData.intersect_class (glyphs, RuleData)
 
 				self.ClassDef = 'InputClassDef' if Chain else 'ClassDef'
 
@@ -429,34 +433,65 @@ def closure_glyphs (self, s, cur_glyphs=None):
 	indices = c.Coverage (self).intersect (s.glyphs)
 	if not indices:
 		return []
-	cur_glyphs = set (g for g in c.Coverage (self).glyphs if g in s.glyphs)
+	cur_glyphs = c.Coverage (self).intersect_glyphs (s.glyphs);
 
 	if self.Format == 1:
+		ContextData = c.ContextData (self)
 		rss = getattr (self, c.RuleSet)
-		return sum ((s.table.LookupList.Lookup[ll.LookupListIndex].closure_glyphs \
-				(s, cur_glyphs=(cur_glyphs if ll.SequenceIndex == 0 else s.glyphs)) \
-			     for i in indices if rss[i] \
-			     for r in getattr (rss[i], c.Rule) \
-			     if r and all (g in s.glyphs for g in c.RuleData (r)) \
-			     for ll in getattr (r, c.LookupRecord) if ll \
-			    ), [])
+		add = []
+		for i in indices:
+			if not rss[i]: continue
+			for r in getattr (rss[i], c.Rule):
+				if not r: continue
+				if all (all (c.Intersect (s.glyphs, cd, k) for k in klist)
+					for cd,klist in zip (ContextData, c.RuleData (r))):
+					for ll in getattr (r, c.LookupRecord):
+						if not ll: continue
+						seqi = ll.SequenceIndex
+						if seqi == 0:
+							pos_glyphs = set (c.Coverage (self).glyphs[i])
+						else:
+							pos_glyphs = set (r.Input[seqi - 1])
+						lookup = s.table.LookupList.Lookup[ll.LookupListIndex]
+						add.extend (lookup.closure_glyphs (s, cur_glyphs=pos_glyphs))
+		return add
 	elif self.Format == 2:
-		indices = getattr (self, c.ClassDef).intersect (cur_glyphs)
+		ClassDef = getattr (self, c.ClassDef)
+		indices = ClassDef.intersect (cur_glyphs)
+		ContextData = c.ContextData (self)
 		rss = getattr (self, c.RuleSet)
-		return sum ((s.table.LookupList.Lookup[ll.LookupListIndex].closure_glyphs \
-				(s, cur_glyphs=(cur_glyphs if ll.SequenceIndex == 0 else s.glyphs)) \
-			     for i in indices if rss[i] \
-			     for r in getattr (rss[i], c.Rule) \
-			     if r and all (all (cd.intersects_class (s.glyphs, k) for k in klist) \
-					   for cd,klist in zip (c.ContextData (self), c.RuleData (r))) \
-			     for ll in getattr (r, c.LookupRecord) if ll \
-			    ), [])
+		add = []
+		for i in indices:
+			if not rss[i]: continue
+			for r in getattr (rss[i], c.Rule):
+				if not r: continue
+				if all (all (c.Intersect (s.glyphs, cd, k) for k in klist)
+					for cd,klist in zip (ContextData, c.RuleData (r))):
+					for ll in getattr (r, c.LookupRecord):
+						if not ll: continue
+						seqi = ll.SequenceIndex
+						if seqi == 0:
+							pos_glyphs = ClassDef.intersect_class (cur_glyphs, i)
+						else:
+							pos_glyphs = ClassDef.intersect_class (s.glyphs, r.Input[seqi - 1])
+						lookup = s.table.LookupList.Lookup[ll.LookupListIndex]
+						add.extend (lookup.closure_glyphs (s, cur_glyphs=pos_glyphs))
+		return add
 	elif self.Format == 3:
 		if not all (x.intersect (s.glyphs) for x in c.RuleData (self)):
 			return []
-		return sum ((s.table.LookupList.Lookup[ll.LookupListIndex].closure_glyphs \
-				(s, cur_glyphs=(cur_glyphs if ll.SequenceIndex == 0 else s.glyphs)) \
-			     for ll in getattr (self, c.LookupRecord) if ll), [])
+		r = self
+		add = []
+		for ll in getattr (r, c.LookupRecord):
+			if not ll: continue
+			seqi = ll.SequenceIndex
+			if seqi == 0:
+				pos_glyphs = cur_glyphs
+			else:
+				pos_glyphs = r.InputCoverage[seqi].intersect_glyphs (s.glyphs)
+			lookup = s.table.LookupList.Lookup[ll.LookupListIndex]
+			add.extend (lookup.closure_glyphs (s, cur_glyphs=pos_glyphs))
+		return add
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
@@ -473,7 +508,8 @@ def subset_glyphs (self, s):
 			if not rs: continue
 			ss = getattr (rs, c.Rule)
 			ss = [r for r in ss \
-			      if r and all (g in s.glyphs for g in c.RuleData (r))]
+			      if r and all (all (g in s.glyphs for g in glist) \
+					    for glist in c.RuleData (r))]
 			setattr (rs, c.Rule, ss)
 			setattr (rs, c.RuleCount, len (ss))
 		# Prune empty subrulesets
