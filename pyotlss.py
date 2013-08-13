@@ -1216,6 +1216,7 @@ class Subsetter:
 		self.log = log
 		self.unicodes_requested = set ()
 		self.glyphs_requested = set ()
+		self.glyphs = set ()
 
 	def populate (self, glyphs=[], unicodes=[], text=""):
 		self.unicodes_requested.update (unicodes)
@@ -1224,6 +1225,7 @@ class Subsetter:
 		for u in text:
 			self.unicodes_requested.add (ord (u))
 		self.glyphs_requested.update (glyphs)
+		self.glyphs.update (glyphs)
 
 	def pre_prune (self, font):
 
