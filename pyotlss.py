@@ -1132,7 +1132,6 @@ layout_features_all = unique_sorted (sum (layout_features_dict.values (), []))
 # TODO Text script / language considerations
 # TODO Drop unknown tables?  Using DefaultTable.prune?
 # TODO Drop GPOS Device records if not hinting?
-# TODO Hookup options.verbose to font.verbose?
 # TODO Move font name loading hack to Subsetter?
 
 
@@ -1205,12 +1204,12 @@ class Subsetter:
 
 	def __init__ (self, font=None, options=None, log=None):
 
-		if isinstance (font, basestring):
-			font = fontTools.ttx.TTFont (font)
 		if not log:
 			log = Logger()
 		if not options:
 			options = Options()
+		if isinstance (font, basestring):
+			font = load_font (font, dont_load_glyph_names=not options.glyph_names)
 
 		self.font = font
 		self.options = options
@@ -1330,9 +1329,7 @@ class Subsetter:
 				else:
 					self.log (tag, "pruned")
 
-	def subset (self, font):
-
-		self.font = font
+	def subset (self):
 
 		self.font.recalcBBoxes = self.options.recalc_bboxes
 
@@ -1392,6 +1389,34 @@ class Logger:
 			writer.endtag (tag)
 			writer.newline ()
 
+
+def load_font (fontfile, dont_load_glyph_names=False):
+
+	# TODO Option for ignoreDecompileErrors?
+
+	font = fontTools.ttx.TTFont (fontfile)
+
+	# Hack:
+	#
+	# If we don't need glyph names, change 'post' class to not try to
+	# load them.  It avoid lots of headache with broken fonts as well
+	# as loading time.
+	#
+	# Ideally ttLib should provide a way to ask it to skip loading
+	# glyph names.  But it currently doesn't provide such a thing.
+	#
+	if dont_load_glyph_names:
+		post = fontTools.ttLib.getTableClass('post')
+		saved = post.decode_format_2_0
+		post.decode_format_2_0 = post.decode_format_3_0
+		f = font['post']
+		if f.formatType == 2.0:
+			f.formatType = 3.0
+		post.decode_format_2_0 = saved
+
+	return font
+
+
 def main (args):
 
 	log = Logger ()
@@ -1408,31 +1433,14 @@ def main (args):
 	fontfile = args[0]
 	args = args[1:]
 
-	# TODO Option for ignoreDecompileErrors?
-	font = fontTools.ttx.TTFont (fontfile)
+	dont_load_glyph_names = not options.glyph_names and \
+				all (any (g.startswith (p) \
+					  for p in ['gid', 'glyph', 'uni', 'U+']) \
+				     for g in args)
+
+	font = load_font (fontfile, dont_load_glyph_names=dont_load_glyph_names)
 	s = Subsetter (font=font, options=options, log=log)
 	log.lapse ("load font")
-
-	# Hack:
-	#
-	# If we don't need glyph names, change 'post' class to not try to
-	# load them.  It avoid lots of headache with broken fonts as well
-	# as loading time.
-	#
-	# Ideally ttLib should provide a way to ask it to skip loading
-	# glyph names.  But it currently doesn't provide such a thing.
-	#
-	if not options.glyph_names \
-			and all (any (g.startswith (p) for p in ['gid', 'glyph', 'uni', 'U+']) \
-				 for g in args):
-		post = fontTools.ttLib.getTableClass('post')
-		saved = post.decode_format_2_0
-		post.decode_format_2_0 = post.decode_format_3_0
-		f = font['post']
-		if f.formatType == 2.0:
-			f.formatType = 3.0
-		post.decode_format_2_0 = saved
-		del post, saved, f
 
 	names = font.getGlyphNames()
 	log.lapse ("loading glyph names")
@@ -1467,7 +1475,7 @@ def main (args):
 	log ("Glyphs:", glyphs)
 
 	s.populate (glyphs=glyphs, unicodes=unicodes)
-	s.subset (font)
+	s.subset ()
 
 	font.save (fontfile + '.subset')
 	log.lapse ("compile and save font")
