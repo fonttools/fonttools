@@ -40,10 +40,6 @@ def add_method (*clazzes):
 def unique_sorted (l):
 	return sorted (set (l))
 
-def safeEval(data, eval=eval):
-	"""A (kindof) safe replacement for eval."""
-	return eval(data, {"__builtins__":{}}, {})
-
 
 @add_method(fontTools.ttLib.tables.otTables.Coverage)
 def intersect (self, glyphs):
