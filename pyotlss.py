@@ -128,7 +128,7 @@ def subset_glyphs (self, s):
 		indices = self.Coverage.subset (s.glyphs)
 		self.Sequence = [self.Sequence[i] for i in indices]
 		# Now drop rules generating glyphs we don't want
-		indices = [i for i,seq in enumerate (self.Sequence) \
+		indices = [i for i,seq in enumerate (self.Sequence)
 			   if all (sub in s.glyphs for sub in seq.Substitute)]
 		self.Sequence = [self.Sequence[i] for i in indices]
 		self.Coverage.remap (indices)
@@ -148,7 +148,7 @@ def closure_glyphs (self, s, cur_glyphs=None):
 @add_method(fontTools.ttLib.tables.otTables.AlternateSubst)
 def subset_glyphs (self, s):
 	if self.Format == 1:
-		self.alternates = {g:vlist for g,vlist in self.alternates.items() \
+		self.alternates = {g:vlist for g,vlist in self.alternates.items()
 				   if g in s.glyphs and all (v in s.glyphs for v in vlist)}
 		return bool (self.alternates)
 	else:
@@ -167,9 +167,9 @@ def closure_glyphs (self, s, cur_glyphs=None):
 def subset_glyphs (self, s):
 	if self.Format == 1:
 		self.ligatures = {g:v for g,v in self.ligatures.items() if g in s.glyphs}
-		self.ligatures = {g:[seq for seq in seqs \
-				     if seq.LigGlyph in s.glyphs and \
-				        all(c in s.glyphs for c in seq.Component)]
+		self.ligatures = {g:[seq for seq in seqs
+				     if seq.LigGlyph in s.glyphs and
+				        all (c in s.glyphs for c in seq.Component)]
 				  for g,seqs in self.ligatures.items()}
 		self.ligatures = {g:v for g,v in self.ligatures.items() if v}
 		return bool (self.ligatures)
@@ -194,7 +194,7 @@ def subset_glyphs (self, s):
 		indices = self.Coverage.subset (s.glyphs)
 		self.Substitute = [self.Substitute[i] for i in indices]
 		# Now drop rules generating glyphs we don't want
-		indices = [i for i,sub in enumerate (self.Substitute) \
+		indices = [i for i,sub in enumerate (self.Substitute)
 			   if sub in s.glyphs]
 		self.Substitute = [self.Substitute[i] for i in indices]
 		self.Coverage.remap (indices)
@@ -530,8 +530,8 @@ def subset_glyphs (self, s):
 		for rs in rss:
 			if not rs: continue
 			ss = getattr (rs, c.Rule)
-			ss = [r for r in ss \
-			      if r and all (all (g in s.glyphs for g in glist) \
+			ss = [r for r in ss
+			      if r and all (all (g in s.glyphs for g in glist)
 					    for glist in c.RuleData (r))]
 			setattr (rs, c.Rule, ss)
 			setattr (rs, c.RuleCount, len (ss))
@@ -551,15 +551,15 @@ def subset_glyphs (self, s):
 		for rs in rss:
 			if not rs: continue
 			ss = getattr (rs, c.Rule)
-			ss = [r for r in ss \
-			      if r and all (all (k in klass_map for k in klist) \
+			ss = [r for r in ss
+			      if r and all (all (k in klass_map for k in klist)
 					    for klass_map,klist in zip (klass_maps, c.RuleData (r)))]
 			setattr (rs, c.Rule, ss)
 			setattr (rs, c.RuleCount, len (ss))
 
 			# Remap rule classes
 			for r in ss:
-				c.SetRuleData (r, [[klass_map.index (k) for k in klist] \
+				c.SetRuleData (r, [[klass_map.index (k) for k in klist]
 						   for klass_map,klist in zip (klass_maps, c.RuleData (r))])
 		# Prune empty subrulesets
 		rss = [rs for rs in rss if rs and getattr (rs, c.Rule)]
@@ -581,13 +581,13 @@ def subset_lookups (self, lookup_indices):
 			if not rs: continue
 			for r in getattr (rs, c.Rule):
 				if not r: continue
-				setattr (r, c.LookupRecord, [ll for ll in getattr (r, c.LookupRecord) if ll \
+				setattr (r, c.LookupRecord, [ll for ll in getattr (r, c.LookupRecord) if ll
 								if ll.LookupListIndex in lookup_indices])
 				for ll in getattr (r, c.LookupRecord):
 					if not ll: continue
 					ll.LookupListIndex = lookup_indices.index (ll.LookupListIndex)
 	elif self.Format == 3:
-		setattr (self, c.LookupRecord, [ll for ll in getattr (self, c.LookupRecord) if ll \
+		setattr (self, c.LookupRecord, [ll for ll in getattr (self, c.LookupRecord) if ll
 						   if ll.LookupListIndex in lookup_indices])
 		for ll in getattr (self, c.LookupRecord):
 			if not ll: continue
