@@ -71,23 +71,23 @@ def remap (self, coverage_map):
 def intersect (self, glyphs):
 	"Returns ascending list of matching class values."
 	return unique_sorted (([0] if any (g not in self.classDefs for g in glyphs) else []) + \
-			      [v for g,v in self.classDefs.items() if g in glyphs])
+			      [v for g,v in self.classDefs.iteritems() if g in glyphs])
 
 @add_method(fontTools.ttLib.tables.otTables.ClassDef)
 def intersect_class (self, glyphs, klass):
 	"Returns set of glyphs matching class."
 	if klass == 0:
 		return set (g for g in glyphs if g not in self.classDefs)
-	return set (g for g,v in self.classDefs.items() if v == klass and g in glyphs)
+	return set (g for g,v in self.classDefs.iteritems() if v == klass and g in glyphs)
 
 @add_method(fontTools.ttLib.tables.otTables.ClassDef)
 def subset (self, glyphs, remap=False):
 	"Returns ascending list of remaining classes."
-	self.classDefs = {g:v for g,v in self.classDefs.items() if g in glyphs}
+	self.classDefs = {g:v for g,v in self.classDefs.iteritems() if g in glyphs}
 	# Note: while class 0 has the special meaning of "not matched", if no glyph will
 	# ever /not match/, we can optimize class 0 out too.
 	indices = unique_sorted (([0]  if any (g not in self.classDefs for g in glyphs) else []) + \
-				 self.classDefs.values ())
+				 self.classDefs.itervalues())
 	if remap:
 		self.remap (indices)
 	return indices
@@ -95,20 +95,20 @@ def subset (self, glyphs, remap=False):
 @add_method(fontTools.ttLib.tables.otTables.ClassDef)
 def remap (self, class_map):
 	"Remaps classes."
-	self.classDefs = {g:class_map.index (v) for g,v in self.classDefs.items()}
+	self.classDefs = {g:class_map.index (v) for g,v in self.classDefs.iteritems()}
 
 @add_method(fontTools.ttLib.tables.otTables.SingleSubst)
 def closure_glyphs (self, s, cur_glyphs=None):
 	if cur_glyphs == None: cur_glyphs = s.glyphs
 	if self.Format in [1, 2]:
-		s.glyphs.update (v for g,v in self.mapping.items() if g in cur_glyphs)
+		s.glyphs.update (v for g,v in self.mapping.iteritems() if g in cur_glyphs)
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
 @add_method(fontTools.ttLib.tables.otTables.SingleSubst)
 def subset_glyphs (self, s):
 	if self.Format in [1, 2]:
-		self.mapping = {g:v for g,v in self.mapping.items() if g in s.glyphs and v in s.glyphs}
+		self.mapping = {g:v for g,v in self.mapping.iteritems() if g in s.glyphs and v in s.glyphs}
 		return bool (self.mapping)
 	else:
 		assert 0, "unknown format: %s" % self.Format
@@ -141,14 +141,14 @@ def subset_glyphs (self, s):
 def closure_glyphs (self, s, cur_glyphs=None):
 	if cur_glyphs == None: cur_glyphs = s.glyphs
 	if self.Format == 1:
-		s.glyphs.update (*(vlist for g,vlist in self.alternates.items() if g in cur_glyphs))
+		s.glyphs.update (*(vlist for g,vlist in self.alternates.iteritems() if g in cur_glyphs))
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
 @add_method(fontTools.ttLib.tables.otTables.AlternateSubst)
 def subset_glyphs (self, s):
 	if self.Format == 1:
-		self.alternates = {g:vlist for g,vlist in self.alternates.items()
+		self.alternates = {g:vlist for g,vlist in self.alternates.iteritems()
 				   if g in s.glyphs and all (v in s.glyphs for v in vlist)}
 		return bool (self.alternates)
 	else:
@@ -159,19 +159,19 @@ def closure_glyphs (self, s, cur_glyphs=None):
 	if cur_glyphs == None: cur_glyphs = s.glyphs
 	if self.Format == 1:
 		s.glyphs.update (*([seq.LigGlyph for seq in seqs if all(c in s.glyphs for c in seq.Component)]
-				    for g,seqs in self.ligatures.items() if g in cur_glyphs))
+				    for g,seqs in self.ligatures.iteritems() if g in cur_glyphs))
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
 @add_method(fontTools.ttLib.tables.otTables.LigatureSubst)
 def subset_glyphs (self, s):
 	if self.Format == 1:
-		self.ligatures = {g:v for g,v in self.ligatures.items() if g in s.glyphs}
+		self.ligatures = {g:v for g,v in self.ligatures.iteritems() if g in s.glyphs}
 		self.ligatures = {g:[seq for seq in seqs
 				     if seq.LigGlyph in s.glyphs and
 				        all (c in s.glyphs for c in seq.Component)]
-				  for g,seqs in self.ligatures.items()}
-		self.ligatures = {g:v for g,v in self.ligatures.items() if v}
+				  for g,seqs in self.ligatures.iteritems()}
+		self.ligatures = {g:v for g,v in self.ligatures.iteritems() if v}
 		return bool (self.ligatures)
 	else:
 		assert 0, "unknown format: %s" % self.Format
@@ -832,11 +832,11 @@ def subset_glyphs (self, s):
 		if not table.LigCaretList.LigGlyphCount:
 			table.LigCaretList = None
 	if table.MarkAttachClassDef:
-		table.MarkAttachClassDef.classDefs = {g:v for g,v in table.MarkAttachClassDef.classDefs.items() if g in glyphs}
+		table.MarkAttachClassDef.classDefs = {g:v for g,v in table.MarkAttachClassDef.classDefs.iteritems() if g in glyphs}
 		if not table.MarkAttachClassDef.classDefs:
 			table.MarkAttachClassDef = None
 	if table.GlyphClassDef:
-		table.GlyphClassDef.classDefs = {g:v for g,v in table.GlyphClassDef.classDefs.items() if g in glyphs}
+		table.GlyphClassDef.classDefs = {g:v for g,v in table.GlyphClassDef.classDefs.iteritems() if g in glyphs}
 		if not table.GlyphClassDef.classDefs:
 			table.GlyphClassDef = None
 	if table.AttachList:
@@ -857,23 +857,23 @@ def prune_pre_subset (self, options):
 def subset_glyphs (self, s):
 	glyphs = s.glyphs_gsubed
 	for t in self.kernTables:
-		t.kernTable = {(a,b):v for ((a,b),v) in t.kernTable.items() if a in glyphs and b in glyphs}
+		t.kernTable = {(a,b):v for ((a,b),v) in t.kernTable.iteritems() if a in glyphs and b in glyphs}
 	self.kernTables = [t for t in self.kernTables if t.kernTable]
 	return bool (self.kernTables)
 
 @add_method(fontTools.ttLib.getTableClass('hmtx'), fontTools.ttLib.getTableClass('vmtx'))
 def subset_glyphs (self, s):
-	self.metrics = {g:v for g,v in self.metrics.items() if g in s.glyphs}
+	self.metrics = {g:v for g,v in self.metrics.iteritems() if g in s.glyphs}
 	return bool (self.metrics)
 
 @add_method(fontTools.ttLib.getTableClass('hdmx'))
 def subset_glyphs (self, s):
-	self.hdmx = {sz:{g:v for g,v in l.items() if g in s.glyphs} for (sz,l) in self.hdmx.items()}
+	self.hdmx = {sz:{g:v for g,v in l.iteritems() if g in s.glyphs} for (sz,l) in self.hdmx.iteritems()}
 	return bool (self.hdmx)
 
 @add_method(fontTools.ttLib.getTableClass('VORG'))
 def subset_glyphs (self, s):
-	self.VOriginRecords = {g:v for g,v in self.VOriginRecords.items() if g in s.glyphs}
+	self.VOriginRecords = {g:v for g,v in self.VOriginRecords.iteritems() if g in s.glyphs}
 	self.numVertOriginYMetrics = len (self.VOriginRecords)
 	return True # Never drop; has default metrics
 
@@ -1019,9 +1019,9 @@ def closure_glyphs (self, s):
 
 @add_method(fontTools.ttLib.getTableClass('glyf'))
 def subset_glyphs (self, s):
-	self.glyphs = {g:v for g,v in self.glyphs.items() if g in s.glyphs}
+	self.glyphs = {g:v for g,v in self.glyphs.iteritems() if g in s.glyphs}
 	indices = [i for i,g in enumerate (self.glyphOrder) if g in s.glyphs]
-	for v in self.glyphs.values ():
+	for v in self.glyphs.itervalues():
 		if hasattr (v, "data"):
 			v.remapComponentsFast (indices)
 		else:
@@ -1032,7 +1032,7 @@ def subset_glyphs (self, s):
 @add_method(fontTools.ttLib.getTableClass('glyf'))
 def prune_post_subset (self, options):
 	if not options.hinting:
-		for v in self.glyphs.values ():
+		for v in self.glyphs.itervalues():
 			if hasattr (v, "data"):
 				v.dropInstructionsFast ()
 			else:
@@ -1066,9 +1066,9 @@ def subset_glyphs (self, s):
 				sel = font.FDSelect
 				sel.format = None
 				sel.gidArray = [font.FDSelect.gidArray[i] for i in indices]
-			cs.charStrings = {g:indices.index (v) for g,v in cs.charStrings.items() if g in s.glyphs}
+			cs.charStrings = {g:indices.index (v) for g,v in cs.charStrings.iteritems() if g in s.glyphs}
 		else:
-			cs.charStrings = {g:v for g,v in cs.charStrings.items() if g in s.glyphs}
+			cs.charStrings = {g:v for g,v in cs.charStrings.iteritems() if g in s.glyphs}
 		font.charset = [g for g in font.charset if g in s.glyphs]
 		font.numGlyphs = len (font.charset)
 	return any (cff[fontname].numGlyphs for fontname in cff.keys())
@@ -1116,10 +1116,10 @@ def subset_glyphs (self, s):
 			pass
 		if t.format == 14:
 			# XXX We drop all the default-UVS mappings (g==None)
-			t.uvsDict = {v:[(u,g) for (u,g) in l if g in s.glyphs] for (v,l) in t.uvsDict.items()}
-			t.uvsDict = {v:l for (v,l) in t.uvsDict.items() if l}
+			t.uvsDict = {v:[(u,g) for (u,g) in l if g in s.glyphs] for (v,l) in t.uvsDict.iteritems()}
+			t.uvsDict = {v:l for (v,l) in t.uvsDict.iteritems() if l}
 		else:
-			t.cmap = {u:g for (u,g) in t.cmap.items() if g in s.glyphs_requested or u in s.unicodes_requested}
+			t.cmap = {u:g for (u,g) in t.cmap.iteritems() if g in s.glyphs_requested or u in s.unicodes_requested}
 	self.tables = [t for t in self.tables if (t.cmap if t.format != 14 else t.uvsDict)]
 	# XXX Convert formats when needed
 	# In particular, if we have a format=12 without non-BMP
@@ -1176,7 +1176,7 @@ class Subsetter:
 			'indic':	['nukt', 'akhn', 'rphf', 'rkrf', 'pref', 'blwf', 'half', 'abvf', 'pstf', 'cfar', 'vatu', 'cjct',
 					 'init', 'pres', 'abvs', 'blws', 'psts', 'haln', 'dist', 'abvm', 'blwm'],
 		}
-		layout_features_default = unique_sorted (sum (layout_features_groups.values (), []))
+		layout_features_default = unique_sorted (sum (layout_features_groups.itervalues(), []))
 
 		drop_tables = drop_tables_default
 		no_subset_tables = no_subset_tables_default
@@ -1197,7 +1197,7 @@ class Subsetter:
 			self.set (**kwargs)
 
 		def set (self, **kwargs):
-			for k,v in kwargs.items ():
+			for k,v in kwargs.iteritems():
 				if not hasattr (self, k):
 					raise self.UnknownOptionError ("Unknown option '%s'" % k)
 				setattr (self, k, v)
