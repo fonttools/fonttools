@@ -309,32 +309,45 @@ def subset_glyphs (self, s):
 		assert 0, "unknown format: %s" % self.Format
 
 @add_method(fontTools.ttLib.tables.otTables.SingleSubst,
-            fontTools.ttLib.tables.otTables.MultipleSubst,
-            fontTools.ttLib.tables.otTables.AlternateSubst,
-            fontTools.ttLib.tables.otTables.LigatureSubst,
-            fontTools.ttLib.tables.otTables.ReverseChainSingleSubst,
-            fontTools.ttLib.tables.otTables.SinglePos,
-            fontTools.ttLib.tables.otTables.PairPos,
-            fontTools.ttLib.tables.otTables.CursivePos,
-            fontTools.ttLib.tables.otTables.MarkBasePos,
-            fontTools.ttLib.tables.otTables.MarkLigPos,
-            fontTools.ttLib.tables.otTables.MarkMarkPos)
+	    fontTools.ttLib.tables.otTables.MultipleSubst,
+	    fontTools.ttLib.tables.otTables.AlternateSubst,
+	    fontTools.ttLib.tables.otTables.LigatureSubst,
+	    fontTools.ttLib.tables.otTables.ReverseChainSingleSubst,
+	    fontTools.ttLib.tables.otTables.SinglePos,
+	    fontTools.ttLib.tables.otTables.PairPos,
+	    fontTools.ttLib.tables.otTables.CursivePos,
+	    fontTools.ttLib.tables.otTables.MarkBasePos,
+	    fontTools.ttLib.tables.otTables.MarkLigPos,
+	    fontTools.ttLib.tables.otTables.MarkMarkPos)
 def subset_lookups (self, lookup_indices):
 	pass
 
 @add_method(fontTools.ttLib.tables.otTables.SingleSubst,
-            fontTools.ttLib.tables.otTables.MultipleSubst,
-            fontTools.ttLib.tables.otTables.AlternateSubst,
-            fontTools.ttLib.tables.otTables.LigatureSubst,
-            fontTools.ttLib.tables.otTables.ReverseChainSingleSubst,
-            fontTools.ttLib.tables.otTables.SinglePos,
-            fontTools.ttLib.tables.otTables.PairPos,
-            fontTools.ttLib.tables.otTables.CursivePos,
-            fontTools.ttLib.tables.otTables.MarkBasePos,
-            fontTools.ttLib.tables.otTables.MarkLigPos,
-            fontTools.ttLib.tables.otTables.MarkMarkPos)
+	    fontTools.ttLib.tables.otTables.MultipleSubst,
+	    fontTools.ttLib.tables.otTables.AlternateSubst,
+	    fontTools.ttLib.tables.otTables.LigatureSubst,
+	    fontTools.ttLib.tables.otTables.ReverseChainSingleSubst,
+	    fontTools.ttLib.tables.otTables.SinglePos,
+	    fontTools.ttLib.tables.otTables.PairPos,
+	    fontTools.ttLib.tables.otTables.CursivePos,
+	    fontTools.ttLib.tables.otTables.MarkBasePos,
+	    fontTools.ttLib.tables.otTables.MarkLigPos,
+	    fontTools.ttLib.tables.otTables.MarkMarkPos)
 def collect_lookups (self):
 	return []
+
+@add_method(fontTools.ttLib.tables.otTables.SingleSubst,
+	    fontTools.ttLib.tables.otTables.AlternateSubst,
+	    fontTools.ttLib.tables.otTables.ReverseChainSingleSubst)
+def may_have_non_1to1 (self):
+	return False
+
+@add_method(fontTools.ttLib.tables.otTables.MultipleSubst,
+	    fontTools.ttLib.tables.otTables.LigatureSubst,
+	    fontTools.ttLib.tables.otTables.ContextSubst,
+	    fontTools.ttLib.tables.otTables.ChainContextSubst)
+def may_have_non_1to1 (self):
+	return True
 
 @add_method(fontTools.ttLib.tables.otTables.ContextSubst, fontTools.ttLib.tables.otTables.ChainContextSubst,
 	    fontTools.ttLib.tables.otTables.ContextPos,   fontTools.ttLib.tables.otTables.ChainContextPos)
@@ -445,14 +458,19 @@ def closure_glyphs (self, s, cur_glyphs=None):
 				if not r: continue
 				if all (all (c.Intersect (s.glyphs, cd, k) for k in klist)
 					for cd,klist in zip (ContextData, c.RuleData (r))):
+					chaos = False
 					for ll in getattr (r, c.LookupRecord):
 						if not ll: continue
 						seqi = ll.SequenceIndex
 						if seqi == 0:
 							pos_glyphs = set (c.Coverage (self).glyphs[i])
 						else:
-							pos_glyphs = set (r.Input[seqi - 1])
+							if chaos:
+								pos_glyphs = s.glyphs
+							else:
+								pos_glyphs = set (r.Input[seqi - 1])
 						lookup = s.table.LookupList.Lookup[ll.LookupListIndex]
+						chaos = chaos or lookup.may_have_non_1to1 ()
 						add.extend (lookup.closure_glyphs (s, cur_glyphs=pos_glyphs))
 		return add
 	elif self.Format == 2:
@@ -467,14 +485,19 @@ def closure_glyphs (self, s, cur_glyphs=None):
 				if not r: continue
 				if all (all (c.Intersect (s.glyphs, cd, k) for k in klist)
 					for cd,klist in zip (ContextData, c.RuleData (r))):
+					chaos = False
 					for ll in getattr (r, c.LookupRecord):
 						if not ll: continue
 						seqi = ll.SequenceIndex
 						if seqi == 0:
 							pos_glyphs = ClassDef.intersect_class (cur_glyphs, i)
 						else:
-							pos_glyphs = ClassDef.intersect_class (s.glyphs, r.Input[seqi - 1])
+							if chaos:
+								pos_glyphs = s.glyphs
+							else:
+								pos_glyphs = ClassDef.intersect_class (s.glyphs, r.Input[seqi - 1])
 						lookup = s.table.LookupList.Lookup[ll.LookupListIndex]
+						chaos = chaos or lookup.may_have_non_1to1 ()
 						add.extend (lookup.closure_glyphs (s, cur_glyphs=pos_glyphs))
 		return add
 	elif self.Format == 3:
@@ -482,14 +505,19 @@ def closure_glyphs (self, s, cur_glyphs=None):
 			return []
 		r = self
 		add = []
+		chaos = False
 		for ll in getattr (r, c.LookupRecord):
 			if not ll: continue
 			seqi = ll.SequenceIndex
 			if seqi == 0:
 				pos_glyphs = cur_glyphs
 			else:
-				pos_glyphs = r.InputCoverage[seqi].intersect_glyphs (s.glyphs)
+				if chaos:
+					pos_glyphs = s.glyphs
+				else:
+					pos_glyphs = r.InputCoverage[seqi].intersect_glyphs (s.glyphs)
 			lookup = s.table.LookupList.Lookup[ll.LookupListIndex]
+			chaos = chaos or lookup.may_have_non_1to1 ()
 			add.extend (lookup.closure_glyphs (s, cur_glyphs=pos_glyphs))
 		return add
 	else:
@@ -595,6 +623,13 @@ def closure_glyphs (self, s, cur_glyphs=None):
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
+@add_method(fontTools.ttLib.tables.otTables.ExtensionSubst)
+def may_have_non_1to1 (self):
+	if self.Format == 1:
+		return self.ExtSubTable.may_have_non_1to1 ()
+	else:
+		assert 0, "unknown format: %s" % self.Format
+
 @add_method(fontTools.ttLib.tables.otTables.ExtensionSubst, fontTools.ttLib.tables.otTables.ExtensionPos)
 def subset_glyphs (self, s):
 	if self.Format == 1:
@@ -634,6 +669,10 @@ def subset_lookups (self, lookup_indices):
 @add_method(fontTools.ttLib.tables.otTables.Lookup)
 def collect_lookups (self):
 	return unique_sorted (sum ((st.collect_lookups () for st in self.SubTable if st), []))
+
+@add_method(fontTools.ttLib.tables.otTables.Lookup)
+def may_have_non_1to1 (self):
+	return any (st.may_have_non_1to1 () for st in self.SubTable if st)
 
 @add_method(fontTools.ttLib.tables.otTables.LookupList)
 def subset_glyphs (self, s):
