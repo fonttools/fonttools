@@ -1072,7 +1072,7 @@ def subset_glyphs (self, s):
 			cs.charStrings = {g:v for g,v in cs.charStrings.items() if g in s.glyphs}
 		font.charset = [g for g in font.charset if g in s.glyphs]
 		font.numGlyphs = len (font.charset)
-	return bool (any (cff[fontname].numGlyphs for fontname in cff.keys()))
+	return any (cff[fontname].numGlyphs for fontname in cff.keys())
 
 @add_method(fontTools.ttLib.getTableClass('glyf'))
 def prune_post_subset (self, options):
