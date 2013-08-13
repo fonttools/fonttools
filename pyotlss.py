@@ -1062,7 +1062,7 @@ def subset_glyphs (self, s):
 			csi = cs.charStringsIndex
 			csi.items = [csi.items[i] for i in indices]
 			csi.offsets = [] # Don't need it; loaded all glyphs
-			if hasattr (font, "FDSelect")
+			if hasattr (font, "FDSelect"):
 				sel = font.FDSelect
 				sel.format = None
 				sel.gidArray = [font.FDSelect.gidArray[i] for i in indices]
