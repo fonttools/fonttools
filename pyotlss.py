@@ -31,6 +31,8 @@ import struct
 
 
 def add_method (*clazzes):
+	"""A decorator-returning function to add a new method to one or
+	   more classes."""
 	def wrapper (method):
 		for clazz in clazzes:
 			assert clazz.__name__ != 'DefaultTable', 'Oops, table class not found.'
@@ -67,7 +69,7 @@ def remap (self, coverage_map):
 @add_method(fontTools.ttLib.tables.otTables.ClassDef)
 def intersect (self, glyphs):
 	"Returns ascending list of matching class values."
-	return unique_sorted (([0] if any (g not in self.classDefs for g in glyphs) else []) + \
+	return unique_sorted (([0] if any (g not in self.classDefs for g in glyphs) else []) +
 			      [v for g,v in self.classDefs.iteritems() if g in glyphs])
 
 @add_method(fontTools.ttLib.tables.otTables.ClassDef)
@@ -83,7 +85,7 @@ def subset (self, glyphs, remap=False):
 	self.classDefs = {g:v for g,v in self.classDefs.iteritems() if g in glyphs}
 	# Note: while class 0 has the special meaning of "not matched", if no glyph will
 	# ever /not match/, we can optimize class 0 out too.
-	indices = unique_sorted (([0]  if any (g not in self.classDefs for g in glyphs) else []) + \
+	indices = unique_sorted (([0]  if any (g not in self.classDefs for g in glyphs) else []) +
 				 self.classDefs.itervalues())
 	if remap:
 		self.remap (indices)
@@ -178,8 +180,8 @@ def closure_glyphs (self, s, cur_glyphs=None):
 	if cur_glyphs == None: cur_glyphs = s.glyphs
 	if self.Format == 1:
 		indices = self.Coverage.intersect (cur_glyphs)
-		if not indices or \
-		   not all (c.intersect (s.glyphs) for c in self.LookAheadCoverage + self.BacktrackCoverage):
+		if (not indices or
+		    not all (c.intersect (s.glyphs) for c in self.LookAheadCoverage + self.BacktrackCoverage)):
 			return
 		s.glyphs.update (self.Substitute[i] for i in indices)
 	else:
@@ -598,12 +600,12 @@ def collect_lookups (self):
 	c = self.__classify_context ()
 
 	if self.Format in [1, 2]:
-		return [ll.LookupListIndex \
-			for rs in getattr (self, c.RuleSet) if rs \
-			for r in getattr (rs, c.Rule) if r \
+		return [ll.LookupListIndex
+			for rs in getattr (self, c.RuleSet) if rs
+			for r in getattr (rs, c.Rule) if r
 			for ll in getattr (r, c.LookupRecord) if ll]
 	elif self.Format == 3:
-		return [ll.LookupListIndex \
+		return [ll.LookupListIndex
 			for ll in getattr (self, c.LookupRecord) if ll]
 	else:
 		assert 0, "unknown format: %s" % self.Format
@@ -1269,8 +1271,8 @@ class Subsetter:
 		for tag in font.keys():
 			if tag == 'GlyphOrder': continue
 
-			if tag in self.options.drop_tables or \
-			   (tag in self.options.hinting_tables and not self.options.hinting):
+			if (tag in self.options.drop_tables or
+			    (tag in self.options.hinting_tables and not self.options.hinting)):
 				self.log (tag, "dropped")
 				del font[tag]
 				continue
@@ -1471,10 +1473,10 @@ def main (args):
 	fontfile = args[0]
 	args = args[1:]
 
-	dont_load_glyph_names = not options.glyph_names and \
-				all (any (g.startswith (p) \
-					  for p in ['gid', 'glyph', 'uni', 'U+']) \
-				     for g in args)
+	dont_load_glyph_names = (not options.glyph_names and
+				 all (any (g.startswith (p)
+					   for p in ['gid', 'glyph', 'uni', 'U+'])
+				      for g in args))
 
 	font = load_font (fontfile, dont_load_glyph_names=dont_load_glyph_names)
 	subsetter = Subsetter (options=options, log=log)
