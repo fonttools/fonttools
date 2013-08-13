@@ -1065,9 +1065,7 @@ def subset_glyphs (self, s):
 			sel = font.FDSelect
 			sel.format = None
 			sel.gidArray = [font.FDSelect.gidArray[i] for i in indices]
-			cs.charStrings = {g:v for g,v in cs.charStrings.items() if g in s.glyphs}
-			# Remap indices
-			cs.charStrings = {g:indices.index (v) for g,v in cs.charStrings.items()}
+			cs.charStrings = {g:indices.index (v) for g,v in cs.charStrings.items() if g in s.glyphs}
 		else:
 			cs.charStrings = {g:v for g,v in cs.charStrings.items() if g in s.glyphs}
 		font.charset = [g for g in font.charset if g in s.glyphs]
