@@ -1,6 +1,7 @@
 #!/usr/bin/python
-
+#
 # Python OpenType Layout Subsetter
+# Later grown into a full OpenType subsetter...
 #
 # Copyright 2013 Google, Inc. All Rights Reserved.
 #
@@ -1372,8 +1373,8 @@ class Logger:
 	def glyphs (self, glyphs, glyph_names=True, font=None):
 		self ("Names: ", sorted (glyphs))
 		if font:
-			glyphOrder = font.getGlyphOrder()
-			self ("Gids : ", sorted (glyphOrder.index (g) for g in glyphs))
+			reverseGlyphMap = font.getReverseGlyphMap ()
+			self ("Gids : ", sorted (reverseGlyphMap[g] for g in glyphs))
 
 	def font (self, font, file=sys.stdout):
 		if not self.xml:
