@@ -1417,7 +1417,7 @@ class Logger:
 	def font (self, font, file=sys.stdout):
 		if not self.xml:
 			return
-		import xmlWriter, sys
+		import xmlWriter
 		writer = xmlWriter.XMLWriter (file)
 		font.disassembleInstructions = False # Work around ttx bug
 		for tag in font.keys():
@@ -1464,7 +1464,6 @@ def main (args):
 	args = options.parse_opts (args, ignore_unknown=['text'])
 
 	if len (args) < 2:
-		import sys
 		print >>sys.stderr, "usage: pyotlss.py font-file glyph..."
 		sys.exit (1)
 
@@ -1528,5 +1527,4 @@ def main (args):
 	log.font (font)
 
 if __name__ == '__main__':
-	import sys
 	main (sys.argv[1:])
