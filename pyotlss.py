@@ -100,7 +100,7 @@ def remap (self, class_map):
 def closure_glyphs (self, s, cur_glyphs=None):
 	if cur_glyphs == None: cur_glyphs = s.glyphs
 	if self.Format in [1, 2]:
-		return [v for g,v in self.mapping.items() if g in cur_glyphs]
+		s.glyphs.update (v for g,v in self.mapping.items() if g in cur_glyphs)
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
@@ -117,7 +117,7 @@ def closure_glyphs (self, s, cur_glyphs=None):
 	if cur_glyphs == None: cur_glyphs = s.glyphs
 	if self.Format == 1:
 		indices = self.Coverage.intersect (cur_glyphs)
-		return sum ((self.Sequence[i].Substitute for i in indices), [])
+		s.glyphs.update (*(self.Sequence[i].Substitute for i in indices))
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
@@ -140,7 +140,7 @@ def subset_glyphs (self, s):
 def closure_glyphs (self, s, cur_glyphs=None):
 	if cur_glyphs == None: cur_glyphs = s.glyphs
 	if self.Format == 1:
-		return sum ((vlist for g,vlist in self.alternates.items() if g in cur_glyphs), [])
+		s.glyphs.update (*(vlist for g,vlist in self.alternates.items() if g in cur_glyphs))
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
@@ -157,8 +157,8 @@ def subset_glyphs (self, s):
 def closure_glyphs (self, s, cur_glyphs=None):
 	if cur_glyphs == None: cur_glyphs = s.glyphs
 	if self.Format == 1:
-		return sum (([seq.LigGlyph for seq in seqs if all(c in s.glyphs for c in seq.Component)]
-			     for g,seqs in self.ligatures.items() if g in cur_glyphs), [])
+		s.glyphs.update (*([seq.LigGlyph for seq in seqs if all(c in s.glyphs for c in seq.Component)]
+				    for g,seqs in self.ligatures.items() if g in cur_glyphs))
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
@@ -182,8 +182,8 @@ def closure_glyphs (self, s, cur_glyphs=None):
 		indices = self.Coverage.intersect (cur_glyphs)
 		if not indices or \
 		   not all (c.intersect (s.glyphs) for c in self.LookAheadCoverage + self.BacktrackCoverage):
-			return []
-		return [self.Substitute[i] for i in indices]
+			return
+		s.glyphs.update (self.Substitute[i] for i in indices)
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
@@ -451,7 +451,6 @@ def closure_glyphs (self, s, cur_glyphs=None):
 	if self.Format == 1:
 		ContextData = c.ContextData (self)
 		rss = getattr (self, c.RuleSet)
-		add = []
 		for i in indices:
 			if not rss[i]: continue
 			for r in getattr (rss[i], c.Rule):
@@ -471,14 +470,12 @@ def closure_glyphs (self, s, cur_glyphs=None):
 								pos_glyphs = set (r.Input[seqi - 1])
 						lookup = s.table.LookupList.Lookup[ll.LookupListIndex]
 						chaos = chaos or lookup.may_have_non_1to1 ()
-						add.extend (lookup.closure_glyphs (s, cur_glyphs=pos_glyphs))
-		return add
+						lookup.closure_glyphs (s, cur_glyphs=pos_glyphs)
 	elif self.Format == 2:
 		ClassDef = getattr (self, c.ClassDef)
 		indices = ClassDef.intersect (cur_glyphs)
 		ContextData = c.ContextData (self)
 		rss = getattr (self, c.RuleSet)
-		add = []
 		for i in indices:
 			if not rss[i]: continue
 			for r in getattr (rss[i], c.Rule):
@@ -498,13 +495,11 @@ def closure_glyphs (self, s, cur_glyphs=None):
 								pos_glyphs = ClassDef.intersect_class (s.glyphs, r.Input[seqi - 1])
 						lookup = s.table.LookupList.Lookup[ll.LookupListIndex]
 						chaos = chaos or lookup.may_have_non_1to1 ()
-						add.extend (lookup.closure_glyphs (s, cur_glyphs=pos_glyphs))
-		return add
+						lookup.closure_glyphs (s, cur_glyphs=pos_glyphs)
 	elif self.Format == 3:
 		if not all (x.intersect (s.glyphs) for x in c.RuleData (self)):
 			return []
 		r = self
-		add = []
 		chaos = False
 		for ll in getattr (r, c.LookupRecord):
 			if not ll: continue
@@ -518,8 +513,7 @@ def closure_glyphs (self, s, cur_glyphs=None):
 					pos_glyphs = r.InputCoverage[seqi].intersect_glyphs (s.glyphs)
 			lookup = s.table.LookupList.Lookup[ll.LookupListIndex]
 			chaos = chaos or lookup.may_have_non_1to1 ()
-			add.extend (lookup.closure_glyphs (s, cur_glyphs=pos_glyphs))
-		return add
+			lookup.closure_glyphs (s, cur_glyphs=pos_glyphs)
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
@@ -619,7 +613,7 @@ def collect_lookups (self):
 @add_method(fontTools.ttLib.tables.otTables.ExtensionSubst)
 def closure_glyphs (self, s, cur_glyphs=None):
 	if self.Format == 1:
-		return self.ExtSubTable.closure_glyphs (s, cur_glyphs)
+		self.ExtSubTable.closure_glyphs (s, cur_glyphs)
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
@@ -653,7 +647,9 @@ def collect_lookups (self):
 
 @add_method(fontTools.ttLib.tables.otTables.Lookup)
 def closure_glyphs (self, s, cur_glyphs=None):
-	return sum ((st.closure_glyphs (s, cur_glyphs) for st in self.SubTable if st), [])
+	for st in self.SubTable:
+		if not st: continue
+		st.closure_glyphs (s, cur_glyphs)
 
 @add_method(fontTools.ttLib.tables.otTables.Lookup)
 def subset_glyphs (self, s):
@@ -778,17 +774,14 @@ def closure_glyphs (self, s):
 	s.table = self.table
 	feature_indices = self.table.ScriptList.collect_features ()
 	lookup_indices = self.table.FeatureList.collect_lookups (feature_indices)
-	orig_glyphs = s.glyphs
-	glyphs = unique_sorted (s.glyphs)
 	while True:
-		s.glyphs = glyphs
-		additions = (sum ((self.table.LookupList.Lookup[i].closure_glyphs (s) \
-				   for i in lookup_indices if i < self.table.LookupList.LookupCount), []))
-		additions = unique_sorted (g for g in additions if g not in glyphs)
-		if not additions:
-			s.glyphs = orig_glyphs
-			return glyphs
-		glyphs.extend (additions)
+		orig_glyphs = s.glyphs.copy ()
+		for i in lookup_indices:
+			if i >= self.table.LookupList.LookupCount: continue
+			if not self.table.LookupList.Lookup[i]: continue
+			self.table.LookupList.Lookup[i].closure_glyphs (s)
+		if orig_glyphs == s.glyphs:
+			break
 	del s.table
 
 @add_method(fontTools.ttLib.getTableClass('GSUB'), fontTools.ttLib.getTableClass('GPOS'))
@@ -998,31 +991,30 @@ def dropInstructionsFast (self):
 
 @add_method(fontTools.ttLib.getTableClass('glyf'))
 def closure_glyphs (self, s):
-	glyphs = unique_sorted (s.glyphs)
-	decompose = glyphs
+	decompose = s.glyphs
 	# I don't know if component glyphs can be composite themselves.
 	# We handle them anyway.
 	while True:
-		components = []
+		components = set ()
 		for g in decompose:
 			if g not in self.glyphs:
 				continue
 			gl = self.glyphs[g]
 			if hasattr (gl, "data"):
 				for c in gl.getComponentNamesFast (self):
-					if c not in glyphs:
-						components.append (c)
+					if c not in s.glyphs:
+						components.add (c)
 			else:
 				# TTX seems to expand gid0..3 always
 				if gl.isComposite ():
 					for c in gl.components:
-						if c.glyphName not in glyphs:
-							components.append (c.glyphName)
-		components = [c for c in components if c not in glyphs]
+						if c.glyphName not in s.glyphs:
+							components.add (c.glyphName)
+		components = set (c for c in components if c not in s.glyphs)
 		if not components:
-			return glyphs
-		decompose = unique_sorted (components)
-		glyphs.extend (components)
+			break
+		decompose = components
+		s.glyphs.update (components)
 
 @add_method(fontTools.ttLib.getTableClass('glyf'))
 def subset_glyphs (self, s):
@@ -1054,17 +1046,15 @@ def subset_glyphs (self, s):
 @add_method(fontTools.ttLib.getTableClass('cmap'))
 def closure_glyphs (self, s):
 	tables = [t for t in self.tables if t.platformID == 3 and t.platEncID in [1, 10]]
-	extra = []
 	for u in s.unicodes_requested:
 		found = False
 		for table in tables:
 			if u in table.cmap:
-				extra.append (table.cmap[u])
+				s.glyphs.add (table.cmap[u])
 				found = True
 				break
 		if not found:
 			s.log ("No glyph for Unicode value %s; skipping." % u)
-	return extra
 
 @add_method(fontTools.ttLib.getTableClass('cmap'))
 def prune_pre_subset (self, options):
@@ -1262,16 +1252,13 @@ class Subsetter:
 
 	def closure_glyphs (self):
 
-		self.glyphs = self.glyphs_requested
+		self.glyphs = self.glyphs_requested.copy ()
 
 		if 'cmap' in self.font:
-			extra_glyphs = self.font['cmap'].closure_glyphs (self)
-			self.glyph = self.glyphs.copy ()
-			self.glyphs.update (extra_glyphs)
+			self.font['cmap'].closure_glyphs (self)
 		self.glyphs_cmaped = self.glyphs
 
 		if self.options.mandatory_glyphs:
-			self.glyphs = self.glyphs.copy ()
 			if 'glyf' in self.font:
 				for i in range (4):
 					self.glyphs.add (self.font.getGlyphName (i))
@@ -1283,22 +1270,22 @@ class Subsetter:
 		if 'GSUB' in self.font:
 			self.log ("Closing glyph list over 'GSUB': %d glyphs before" % len (self.glyphs))
 			self.log.glyphs (self.glyphs, font=self.font)
-			self.glyphs = set (self.font['GSUB'].closure_glyphs (self))
+			self.font['GSUB'].closure_glyphs (self)
 			self.log ("Closed  glyph list over 'GSUB': %d glyphs after" % len (self.glyphs))
 			self.log.glyphs (self.glyphs, font=self.font)
 			self.log.lapse ("close glyph list over 'GSUB'")
-		self.glyphs_gsubed = self.glyphs
+		self.glyphs_gsubed = self.glyphs.copy ()
 
 		if 'glyf' in self.font:
 			self.log ("Closing glyph list over 'glyf': %d glyphs before" % len (self.glyphs))
 			self.log.glyphs (self.glyphs, font=self.font)
-			self.glyphs = set (self.font['glyf'].closure_glyphs (self))
+			self.font['glyf'].closure_glyphs (self)
 			self.log ("Closed  glyph list over 'glyf': %d glyphs after" % len (self.glyphs))
 			self.log.glyphs (self.glyphs, font=self.font)
 			self.log.lapse ("close glyph list over 'glyf'")
-		self.glyphs_glyfed = self.glyphs
+		self.glyphs_glyfed = self.glyphs.copy ()
 
-		self.glyphs_all = self.glyphs
+		self.glyphs_all = self.glyphs.copy ()
 
 		self.log ("Retaining %d glyphs: " % len (self.glyphs_all))
 
@@ -1313,6 +1300,7 @@ class Subsetter:
 				table = self.font[tag]
 				self.glyphs = self.glyphs_all
 				retain = table.subset_glyphs (self)
+				self.glyphs = self.glyphs_all
 				self.log.lapse ("subset '%s'" % tag)
 				if not retain:
 					self.log (tag, "subsetted to empty; dropped")
