@@ -1042,9 +1042,10 @@ def prune_post_subset (self, options):
 
 @add_method(fontTools.ttLib.getTableClass('CFF '))
 def prune_pre_subset (self, s):
-	# TODO Check that there's only one font?  Prune others?
-	# TODO Prune names etc?
-	return True
+	cff = self.cff
+	# CFF table should have one font only
+	cff.fontNames = cff.fontNames[:1]
+	return bool (cff.fontNames)
 
 @add_method(fontTools.ttLib.getTableClass('CFF '))
 def subset_glyphs (self, s):
