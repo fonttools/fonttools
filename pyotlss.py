@@ -1204,16 +1204,13 @@ class Subsetter:
 			return ret
 
 
-	def __init__ (self, font=None, options=None, log=None):
+	def __init__ (self, options=None, log=None):
 
 		if not log:
 			log = Logger()
 		if not options:
 			options = Options()
-		if isinstance (font, basestring):
-			font = load_font (font, dont_load_glyph_names=not options.glyph_names)
 
-		self.font = font
 		self.options = options
 		self.log = log
 		self.unicodes_requested = set ()
@@ -1227,62 +1224,62 @@ class Subsetter:
 			self.unicodes_requested.add (ord (u))
 		self.glyphs_requested.update (glyphs)
 
-	def pre_prune (self):
+	def pre_prune (self, font):
 
-		for tag in self.font.keys():
+		for tag in font.keys():
 			if tag == 'GlyphOrder': continue
 
 			if tag in self.options.drop_tables or \
 			   (tag in self.options.hinting_tables and not self.options.hinting):
 				self.log (tag, "dropped")
-				del self.font[tag]
+				del font[tag]
 				continue
 
 			clazz = fontTools.ttLib.getTableClass(tag)
 
 			if hasattr (clazz, 'prune_pre_subset'):
-				table = self.font[tag]
+				table = font[tag]
 				retain = table.prune_pre_subset (self.options)
 				self.log.lapse ("prune  '%s'" % tag)
 				if not retain:
 					self.log (tag, "pruned to empty; dropped")
-					del self.font[tag]
+					del font[tag]
 					continue
 				else:
 					self.log (tag, "pruned")
 
-	def closure_glyphs (self):
+	def closure_glyphs (self, font):
 
 		self.glyphs = self.glyphs_requested.copy ()
 
-		if 'cmap' in self.font:
-			self.font['cmap'].closure_glyphs (self)
+		if 'cmap' in font:
+			font['cmap'].closure_glyphs (self)
 		self.glyphs_cmaped = self.glyphs
 
 		if self.options.mandatory_glyphs:
-			if 'glyf' in self.font:
+			if 'glyf' in font:
 				for i in range (4):
-					self.glyphs.add (self.font.getGlyphName (i))
+					self.glyphs.add (font.getGlyphName (i))
 				self.log ("Added first four glyphs to subset")
 			else:
 				self.glyphs.add ('.notdef')
 				self.log ("Added .notdef glyph to subset")
 
-		if 'GSUB' in self.font:
+		if 'GSUB' in font:
 			self.log ("Closing glyph list over 'GSUB': %d glyphs before" % len (self.glyphs))
-			self.log.glyphs (self.glyphs, font=self.font)
-			self.font['GSUB'].closure_glyphs (self)
+			self.log.glyphs (self.glyphs, font=font)
+			font['GSUB'].closure_glyphs (self)
 			self.log ("Closed  glyph list over 'GSUB': %d glyphs after" % len (self.glyphs))
-			self.log.glyphs (self.glyphs, font=self.font)
+			self.log.glyphs (self.glyphs, font=font)
 			self.log.lapse ("close glyph list over 'GSUB'")
 		self.glyphs_gsubed = self.glyphs.copy ()
 
-		if 'glyf' in self.font:
+		if 'glyf' in font:
 			self.log ("Closing glyph list over 'glyf': %d glyphs before" % len (self.glyphs))
-			self.log.glyphs (self.glyphs, font=self.font)
-			self.font['glyf'].closure_glyphs (self)
+			self.log.glyphs (self.glyphs, font=font)
+			font['glyf'].closure_glyphs (self)
 			self.log ("Closed  glyph list over 'glyf': %d glyphs after" % len (self.glyphs))
-			self.log.glyphs (self.glyphs, font=self.font)
+			self.log.glyphs (self.glyphs, font=font)
 			self.log.lapse ("close glyph list over 'glyf'")
 		self.glyphs_glyfed = self.glyphs.copy ()
 
@@ -1290,56 +1287,56 @@ class Subsetter:
 
 		self.log ("Retaining %d glyphs: " % len (self.glyphs_all))
 
-	def subset_glyphs (self):
-		for tag in self.font.keys():
+	def subset_glyphs (self, font):
+		for tag in font.keys():
 			if tag == 'GlyphOrder': continue
 			clazz = fontTools.ttLib.getTableClass(tag)
 
 			if tag in self.options.no_subset_tables:
 				self.log (tag, "subsetting not needed")
 			elif hasattr (clazz, 'subset_glyphs'):
-				table = self.font[tag]
+				table = font[tag]
 				self.glyphs = self.glyphs_all
 				retain = table.subset_glyphs (self)
 				self.glyphs = self.glyphs_all
 				self.log.lapse ("subset '%s'" % tag)
 				if not retain:
 					self.log (tag, "subsetted to empty; dropped")
-					del self.font[tag]
+					del font[tag]
 				else:
 					self.log (tag, "subsetted")
 			else:
 				self.log (tag, "NOT subset; don't know how to subset; dropped")
-				del self.font[tag]
+				del font[tag]
 
-		glyphOrder = self.font.getGlyphOrder()
+		glyphOrder = font.getGlyphOrder()
 		glyphOrder = [g for g in glyphOrder if g in self.glyphs_all]
-		self.font.setGlyphOrder (glyphOrder)
-		self.font._buildReverseGlyphOrderDict ()
+		font.setGlyphOrder (glyphOrder)
+		font._buildReverseGlyphOrderDict ()
 		self.log.lapse ("subset GlyphOrder")
 
-	def post_prune (self):
-		for tag in self.font.keys():
+	def post_prune (self, font):
+		for tag in font.keys():
 			if tag == 'GlyphOrder': continue
 			clazz = fontTools.ttLib.getTableClass(tag)
 			if hasattr (clazz, 'prune_post_subset'):
-				table = self.font[tag]
+				table = font[tag]
 				retain = table.prune_post_subset (self.options)
 				self.log.lapse ("prune  '%s'" % tag)
 				if not retain:
 					self.log (tag, "pruned to empty; dropped")
-					del self.font[tag]
+					del font[tag]
 				else:
 					self.log (tag, "pruned")
 
-	def subset (self):
+	def subset (self, font):
 
-		self.font.recalcBBoxes = self.options.recalc_bboxes
+		font.recalcBBoxes = self.options.recalc_bboxes
 
-		self.pre_prune ()
-		self.closure_glyphs ()
-		self.subset_glyphs ()
-		self.post_prune ()
+		self.pre_prune (font)
+		self.closure_glyphs (font)
+		self.subset_glyphs (font)
+		self.post_prune (font)
 
 
 import sys, time
@@ -1441,7 +1438,7 @@ def main (args):
 				     for g in args)
 
 	font = load_font (fontfile, dont_load_glyph_names=dont_load_glyph_names)
-	s = Subsetter (font=font, options=options, log=log)
+	subsetter = Subsetter (options=options, log=log)
 	log.lapse ("load font")
 
 	names = font.getGlyphNames()
@@ -1476,13 +1473,13 @@ def main (args):
 	log ("Unicodes:", unicodes)
 	log ("Glyphs:", glyphs)
 
-	s.populate (glyphs=glyphs, unicodes=unicodes)
-	s.subset ()
+	subsetter.populate (glyphs=glyphs, unicodes=unicodes)
+	subsetter.subset (font)
 
 	font.save (fontfile + '.subset')
 	log.lapse ("compile and save font")
 
-	log.last_time = s.log.start_time
+	log.last_time = log.start_time
 	log.lapse ("make one with everything (TOTAL TIME)")
 
 	log.font (font)
