@@ -1138,29 +1138,6 @@ def prune_pre_subset (self, options):
 	return True # Retain even if empty
 
 
-drop_tables_default = ['BASE', 'JSTF', 'DSIG', 'EBDT', 'EBLC', 'EBSC', 'PCLT', 'LTSH']
-drop_tables_default += ['Feat', 'Glat', 'Gloc', 'Silf', 'Sill'] # Graphite
-drop_tables_default += ['CBLC', 'CBDT', 'sbix', 'COLR', 'CPAL'] # Color
-no_subset_tables_default = ['gasp', 'head', 'hhea', 'maxp', 'vhea', 'OS/2', 'loca', 'name', 'cvt ', 'fpgm', 'prep']
-hinting_tables_default = ['cvt ', 'fpgm', 'prep', 'hdmx', 'VDMX']
-
-# Based on HarfBuzz shapers
-layout_features_dict = {
-	# Default shaper
-	'common':	['ccmp', 'liga', 'locl', 'mark', 'mkmk', 'rlig'],
-	'horizontal':	['calt', 'clig', 'curs', 'kern', 'rclt'],
-	'vertical':	['valt', 'vert', 'vkrn', 'vpal', 'vrt2'],
-	'ltr':		['ltra', 'ltrm'],
-	'rtl':		['rtla', 'rtlm'],
-	# Complex shapers
-	'arabic':	['init', 'medi', 'fina', 'isol', 'med2', 'fin2', 'fin3', 'cswh', 'mset'],
-	'hangul':	['ljmo', 'vjmo', 'tjmo'],
-	'tibetal':	['abvs', 'blws', 'abvm', 'blwm'],
-	'indic':	['nukt', 'akhn', 'rphf', 'rkrf', 'pref', 'blwf', 'half', 'abvf', 'pstf', 'cfar', 'vatu', 'cjct',
-		         'init', 'pres', 'abvs', 'blws', 'psts', 'haln', 'dist', 'abvm', 'blwm'],
-}
-layout_features_all = unique_sorted (sum (layout_features_dict.values (), []))
-
 # TODO OS/2 ulUnicodeRange / ulCodePageRange?
 # TODO Drop unneeded GSUB/GPOS Script/LangSys entries
 # TODO Avoid recursing too much
@@ -1178,10 +1155,33 @@ class Subsetter:
 		class UnknownOptionError (Exception):
 			pass
 
+		drop_tables_default = ['BASE', 'JSTF', 'DSIG', 'EBDT', 'EBLC', 'EBSC', 'PCLT', 'LTSH']
+		drop_tables_default += ['Feat', 'Glat', 'Gloc', 'Silf', 'Sill'] # Graphite
+		drop_tables_default += ['CBLC', 'CBDT', 'sbix', 'COLR', 'CPAL'] # Color
+		no_subset_tables_default = ['gasp', 'head', 'hhea', 'maxp', 'vhea', 'OS/2', 'loca', 'name', 'cvt ', 'fpgm', 'prep']
+		hinting_tables_default = ['cvt ', 'fpgm', 'prep', 'hdmx', 'VDMX']
+
+		# Based on HarfBuzz shapers
+		layout_features_groups = {
+			# Default shaper
+			'common':	['ccmp', 'liga', 'locl', 'mark', 'mkmk', 'rlig'],
+			'horizontal':	['calt', 'clig', 'curs', 'kern', 'rclt'],
+			'vertical':	['valt', 'vert', 'vkrn', 'vpal', 'vrt2'],
+			'ltr':		['ltra', 'ltrm'],
+			'rtl':		['rtla', 'rtlm'],
+			# Complex shapers
+			'arabic':	['init', 'medi', 'fina', 'isol', 'med2', 'fin2', 'fin3', 'cswh', 'mset'],
+			'hangul':	['ljmo', 'vjmo', 'tjmo'],
+			'tibetal':	['abvs', 'blws', 'abvm', 'blwm'],
+			'indic':	['nukt', 'akhn', 'rphf', 'rkrf', 'pref', 'blwf', 'half', 'abvf', 'pstf', 'cfar', 'vatu', 'cjct',
+					 'init', 'pres', 'abvs', 'blws', 'psts', 'haln', 'dist', 'abvm', 'blwm'],
+		}
+		layout_features_default = unique_sorted (sum (layout_features_groups.values (), []))
+
 		drop_tables = drop_tables_default
 		no_subset_tables = no_subset_tables_default
 		hinting_tables = hinting_tables_default
-		layout_features = layout_features_all
+		layout_features = layout_features_default
 		hinting = False
 		glyph_names = False
 		legacy_cmap = False
