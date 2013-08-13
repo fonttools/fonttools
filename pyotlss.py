@@ -1105,8 +1105,8 @@ def prune_pre_subset (self, options):
 drop_tables_default = ['BASE', 'JSTF', 'DSIG', 'EBDT', 'EBLC', 'EBSC', 'PCLT', 'LTSH']
 drop_tables_default += ['Feat', 'Glat', 'Gloc', 'Silf', 'Sill'] # Graphite
 drop_tables_default += ['CBLC', 'CBDT', 'sbix', 'COLR', 'CPAL'] # Color
-no_subset_tables = ['gasp', 'head', 'hhea', 'maxp', 'vhea', 'OS/2', 'loca', 'name', 'cvt ', 'fpgm', 'prep']
-hinting_tables = ['cvt ', 'fpgm', 'prep', 'hdmx', 'VDMX']
+no_subset_tables_default = ['gasp', 'head', 'hhea', 'maxp', 'vhea', 'OS/2', 'loca', 'name', 'cvt ', 'fpgm', 'prep']
+hinting_tables_default = ['cvt ', 'fpgm', 'prep', 'hdmx', 'VDMX']
 
 # Based on HarfBuzz shapers
 layout_features_dict = {
@@ -1139,6 +1139,8 @@ class Subsetter:
 
 	class Options:
 		drop_tables = drop_tables_default
+		no_subset_tables = no_subset_tables_default
+		hinting_tables = hinting_tables_default
 		layout_features = layout_features_all
 		hinting = False
 		glyph_names = False
@@ -1231,7 +1233,7 @@ class Subsetter:
 			if tag == 'GlyphOrder': continue
 
 			if tag in self.options.drop_tables or \
-			   (tag in hinting_tables and not self.options.hinting):
+			   (tag in self.options.hinting_tables and not self.options.hinting):
 				self.log (tag, "dropped")
 				del self.font[tag]
 				continue
@@ -1293,7 +1295,7 @@ class Subsetter:
 			if tag == 'GlyphOrder': continue
 			clazz = fontTools.ttLib.getTableClass(tag)
 
-			if tag in no_subset_tables:
+			if tag in self.options.no_subset_tables:
 				self.log (tag, "subsetting not needed")
 			elif hasattr (clazz, 'subset_glyphs'):
 				table = self.font[tag]
@@ -1307,7 +1309,8 @@ class Subsetter:
 				else:
 					self.log (tag, "subsetted")
 			else:
-				self.log (tag, "NOT subset; don't know how to subset")
+				self.log (tag, "NOT subset; don't know how to subset; dropped")
+				del self.font[tag]
 
 		glyphOrder = self.font.getGlyphOrder()
 		glyphOrder = [g for g in glyphOrder if g in self.glyphs_all]
@@ -1338,7 +1341,6 @@ class Subsetter:
 		self.subset_glyphs ()
 		self.post_prune ()
 
-		del self.font
 
 import sys, time
 
