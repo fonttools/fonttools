@@ -1260,19 +1260,19 @@ class Subsetter:
     # Based on HarfBuzz shapers
     layout_features_groups = {
       # Default shaper
-      'common':  ['ccmp', 'liga', 'locl', 'mark', 'mkmk', 'rlig'],
-      'horizontal':  ['calt', 'clig', 'curs', 'kern', 'rclt'],
+      'common': ['ccmp', 'liga', 'locl', 'mark', 'mkmk', 'rlig'],
+      'horizontal': ['calt', 'clig', 'curs', 'kern', 'rclt'],
       'vertical':  ['valt', 'vert', 'vkrn', 'vpal', 'vrt2'],
-      'ltr':    ['ltra', 'ltrm'],
-      'rtl':    ['rtla', 'rtlm'],
+      'ltr': ['ltra', 'ltrm'],
+      'rtl': ['rtla', 'rtlm'],
       # Complex shapers
-      'arabic':  ['init', 'medi', 'fina', 'isol', 'med2', 'fin2', 'fin3',
-                  'cswh', 'mset'],
-      'hangul':  ['ljmo', 'vjmo', 'tjmo'],
-      'tibetal':  ['abvs', 'blws', 'abvm', 'blwm'],
-      'indic':  ['nukt', 'akhn', 'rphf', 'rkrf', 'pref', 'blwf', 'half',
-                 'abvf', 'pstf', 'cfar', 'vatu', 'cjct', 'init', 'pres',
-                 'abvs', 'blws', 'psts', 'haln', 'dist', 'abvm', 'blwm'],
+      'arabic': ['init', 'medi', 'fina', 'isol', 'med2', 'fin2', 'fin3',
+                 'cswh', 'mset'],
+      'hangul': ['ljmo', 'vjmo', 'tjmo'],
+      'tibetal': ['abvs', 'blws', 'abvm', 'blwm'],
+      'indic': ['nukt', 'akhn', 'rphf', 'rkrf', 'pref', 'blwf', 'half',
+                'abvf', 'pstf', 'cfar', 'vatu', 'cjct', 'init', 'pres',
+                'abvs', 'blws', 'psts', 'haln', 'dist', 'abvm', 'blwm'],
     }
     layout_features_default = unique_sorted(sum(
         layout_features_groups.itervalues(), []))
