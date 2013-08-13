@@ -1059,7 +1059,6 @@ def subset_glyphs (self, s):
 			for g in font.charset:
 				if g not in s.glyphs: continue
 				cs.getItemAndSelector (g)
-
 			csi = cs.charStringsIndex
 			csi.items = [csi.items[i] for i in indices]
 			csi.offsets = [] # Don't need it; loaded all glyphs
