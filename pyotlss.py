@@ -31,10 +31,11 @@ import struct
 
 
 def add_method (*clazzes):
-	def wrapper(method):
+	def wrapper (method):
 		for clazz in clazzes:
 			assert clazz.__name__ != 'DefaultTable', 'Oops, table class not found.'
 			setattr (clazz, method.func_name, method)
+		return None
 	return wrapper
 
 def unique_sorted (l):
