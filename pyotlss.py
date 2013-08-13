@@ -1041,8 +1041,44 @@ def prune_post_subset (self, options):
 	return True
 
 @add_method(fontTools.ttLib.getTableClass('CFF '))
+def prune_pre_subset (self, s):
+	# TODO Check that there's only one font?  Prune others?
+	# TODO Prune names etc?
+	return True
+
+@add_method(fontTools.ttLib.getTableClass('CFF '))
 def subset_glyphs (self, s):
-	assert 0, "unimplemented"
+	cff = self.cff
+	for fontname in cff.keys():
+		font = cff[fontname]
+		cs = font.CharStrings
+		if cs.charStringsAreIndexed:
+			indices = [i for i,g in enumerate (font.charset) if g in s.glyphs]
+			# Load all glyphs
+			for g in font.charset:
+				if g not in s.glyphs: continue
+				cs.getItemAndSelector (g)
+
+			csi = cs.charStringsIndex
+			csi.items = [csi.items[i] for i in indices]
+			csi.offsets = [] # Don't need it; loaded all glyphs
+			sel = font.FDSelect
+			sel.format = None
+			sel.gidArray = [font.FDSelect.gidArray[i] for i in indices]
+			cs.charStrings = {g:v for g,v in cs.charStrings.items() if g in s.glyphs}
+			# Remap indices
+			cs.charStrings = {g:indices.index (v) for g,v in cs.charStrings.items()}
+		else:
+			cs.charStrings = {g:v for g,v in cs.charStrings.items() if g in s.glyphs}
+		font.charset = [g for g in font.charset if g in s.glyphs]
+		font.numGlyphs = len (font.charset)
+	return bool (any (cff[fontname].numGlyphs for fontname in cff.keys()))
+
+@add_method(fontTools.ttLib.getTableClass('glyf'))
+def prune_post_subset (self, options):
+	if not options.hinting:
+		pass # Drop hints
+	return True
 
 @add_method(fontTools.ttLib.getTableClass('cmap'))
 def closure_glyphs (self, s):
