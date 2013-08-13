@@ -1167,6 +1167,7 @@ class Subsetter:
 			ret = []
 			opts = {}
 			for a in argv:
+				orig_a = a
 				if not a.startswith ('--'):
 					ret.append (a)
 					continue
@@ -1184,8 +1185,8 @@ class Subsetter:
 					v = a[i+1:]
 				k = k.replace ('-', '_')
 				if not hasattr (self, k):
-					if ignore_unknown:
-						ret.append (a)
+					if ignore_unknown == True or k in ignore_unknown:
+						ret.append (orig_a)
 						continue
 					else:
 						raise Exception ("Unknown option '%s'" % a)
@@ -1425,7 +1426,7 @@ def main (args):
 	args = log.parse_opts (args)
 
 	options = Subsetter.Options ()
-	args = options.parse_opts (args)
+	args = options.parse_opts (args, ignore_unknown=['text'])
 
 	if len (args) < 2:
 		import sys
@@ -1449,9 +1450,13 @@ def main (args):
 
 	glyphs = []
 	unicodes = []
+	text = ""
 	for g in args:
 		if g in names:
 			glyphs.append (g)
+			continue
+		if g.startswith ('--text='):
+			text += g[7:]
 			continue
 		if g.startswith ('uni') or g.startswith ('U+'):
 			if g.startswith ('uni') and len (g) > 3:
@@ -1469,14 +1474,14 @@ def main (args):
 			try:
 				glyphs.append (font.getGlyphName (int (g), requireReal=1))
 			except ValueError:
-				raise Exception ("Invalid glyph identifier %s" % g)
+				raise Exception ("Invalid glyph identifier: %s" % g)
 			continue
-		raise Exception ("Invalid glyph identifier %s" % g)
+		raise Exception ("Invalid glyph identifier: %s" % g)
 	log.lapse ("compile glyph list")
 	log ("Unicodes:", unicodes)
 	log ("Glyphs:", glyphs)
 
-	subsetter.populate (glyphs=glyphs, unicodes=unicodes)
+	subsetter.populate (glyphs=glyphs, unicodes=unicodes, text=text)
 	subsetter.subset (font)
 
 	font.save (fontfile + '.subset')
