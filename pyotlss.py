@@ -1191,7 +1191,7 @@ def prune_pre_subset(self, options):
   if not options.symbol_cmap:
     self.tables = [t for t in self.tables
                    if t.platformID == 3 and t.platEncID in [1, 10]]
-  # TODO Only keep one subtable?
+  # TODO(behdad) Only keep one subtable?
   # For now, drop format=0 which can't be subset_glyphs easily?
   self.tables = [t for t in self.tables if t.format != 0]
   return bool(self.tables)
@@ -1207,7 +1207,7 @@ def subset_glyphs(self, s):
     except AttributeError:
       pass
     if t.format == 14:
-      # XXX We drop all the default-UVS mappings(g==None)
+      # TODO(behdad) XXX We drop all the default-UVS mappings(g==None).
       t.uvsDict = {v:[(u,g) for(u,g) in l if g in s.glyphs]
                    for(v,l) in t.uvsDict.iteritems()}
       t.uvsDict = {v:l for(v,l) in t.uvsDict.iteritems() if l}
@@ -1216,7 +1216,7 @@ def subset_glyphs(self, s):
                 if g in s.glyphs_requested or u in s.unicodes_requested}
   self.tables = [t for t in self.tables
                  if(t.cmap if t.format != 14 else t.uvsDict)]
-  # XXX Convert formats when needed
+  # TODO(behdad) Convert formats when needed.
   # In particular, if we have a format=12 without non-BMP
   # characters, either drop format=12 one or convert it
   # to format=4 if there's not one.
@@ -1234,14 +1234,14 @@ def prune_pre_subset(self, options):
   return True  # Retain even if empty
 
 
-# TODO OS/2 ulUnicodeRange / ulCodePageRange?
-# TODO Drop unneeded GSUB/GPOS Script/LangSys entries
-# TODO Avoid recursing too much
-# TODO Text direction considerations
-# TODO Text script / language considerations
-# TODO Drop unknown tables?  Using DefaultTable.prune?
-# TODO Drop GPOS Device records if not hinting?
-# TODO Move font name loading hack to Subsetter?
+# TODO(behdad) OS/2 ulUnicodeRange / ulCodePageRange?
+# TODO(behdad) Drop unneeded GSUB/GPOS Script/LangSys entries.
+# TODO(behdad) Avoid recursing too much.
+# TODO(behdad) Text direction considerations.
+# TODO(behdad) Text script / language considerations.
+# TODO(behdad) Drop unknown tables?  Using DefaultTable.prune?
+# TODO(behdad) Drop GPOS Device records if not hinting?
+# TODO(behdad) Move font name loading hack to Subsetter?
 
 
 class Subsetter(object):
@@ -1540,7 +1540,7 @@ class Logger(object):
 
 def load_font(fontfile, dont_load_glyph_names=False):
 
-  # TODO Option for ignoreDecompileErrors?
+  # TODO(behdad) Option for ignoreDecompileErrors?
 
   font = fontTools.ttx.TTFont(fontfile)
 
