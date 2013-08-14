@@ -1209,7 +1209,7 @@ def prune_post_subset(self, options):
       #subrs.offsets = []
 
     if hasattr(font, "FDSelect"):
-      # TODO(behdad) Drop unused FDArray items; remap FDSelect'ors
+      # Drop unused FDArray items; remap FDSelect'ors
       sel = font.FDSelect
       indices = _uniq_sort(sel.gidArray)
       sel.gidArray = [indices.index (ss) for ss in sel.gidArray]
