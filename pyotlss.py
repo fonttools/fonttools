@@ -976,14 +976,6 @@ def subset_glyphs(self, s):
   self.extraNames = []  # This seems to do it
   return True
 
-# Copied from _g_l_y_f.py
-_ARG_1_AND_2_ARE_WORDS      = 0x0001  # args are words or bytes
-_WE_HAVE_A_SCALE            = 0x0008  # Sx = Sy, otherwise scale == 1.0
-_MORE_COMPONENTS            = 0x0020  # at least one more glyph after this one
-_WE_HAVE_AN_X_AND_Y_SCALE   = 0x0040  # Sx, Sy
-_WE_HAVE_A_TWO_BY_TWO       = 0x0080  # t00, t01, t10, t11
-_WE_HAVE_INSTRUCTIONS       = 0x0100  # instructions follow
-
 @_add_method(fontTools.ttLib.getTableModule('glyf').Glyph)
 def getComponentNamesFast(self, glyfTable):
   if struct.unpack(">h", self.data[:2])[0] >= 0:
@@ -998,12 +990,13 @@ def getComponentNamesFast(self, glyfTable):
     flags = int(flags)
     components.append(glyfTable.getGlyphName(int(glyphID)))
 
-    if flags & _ARG_1_AND_2_ARE_WORDS: i += 4
+    if flags & 0x0001: i += 4  # ARG_1_AND_2_ARE_WORDS
     else: i += 2
-    if flags & _WE_HAVE_A_SCALE: i += 2
-    elif flags & _WE_HAVE_AN_X_AND_Y_SCALE: i += 4
-    elif flags & _WE_HAVE_A_TWO_BY_TWO: i += 8
-    more = flags & _MORE_COMPONENTS
+    if flags & 0x0008: i += 2  # WE_HAVE_A_SCALE
+    elif flags & 0x0040: i += 4  # WE_HAVE_AN_X_AND_Y_SCALE
+    elif flags & 0x0080: i += 8  # WE_HAVE_A_TWO_BY_TWO
+    more = flags & 0x0020  # MORE_COMPONENTS
+
   return components
 
 @_add_method(fontTools.ttLib.getTableModule('glyf').Glyph)
@@ -1023,12 +1016,13 @@ def remapComponentsFast(self, indices):
     i += 4
     flags = int(flags)
 
-    if flags & _ARG_1_AND_2_ARE_WORDS: i += 4
+    if flags & 0x0001: i += 4  # ARG_1_AND_2_ARE_WORDS
     else: i += 2
-    if flags & _WE_HAVE_A_SCALE: i += 2
-    elif flags & _WE_HAVE_AN_X_AND_Y_SCALE: i += 4
-    elif flags & _WE_HAVE_A_TWO_BY_TWO: i += 8
-    more = flags & _MORE_COMPONENTS
+    if flags & 0x0008: i += 2  # WE_HAVE_A_SCALE
+    elif flags & 0x0040: i += 4  # WE_HAVE_AN_X_AND_Y_SCALE
+    elif flags & 0x0080: i += 8  # WE_HAVE_A_TWO_BY_TWO
+    more = flags & 0x0020  # MORE_COMPONENTS
+
   self.data = str(data)
 
 @_add_method(fontTools.ttLib.getTableModule('glyf').Glyph)
@@ -1050,18 +1044,19 @@ def dropInstructionsFast(self):
     while more:
       flags =(data[i] << 8) | data[i+1]
       # Turn instruction flag off
-      flags &= ~_WE_HAVE_INSTRUCTIONS
+      flags &= ~0x0100  # WE_HAVE_INSTRUCTIONS
       data[i+0] = flags >> 8
       data[i+1] = flags & 0xFF
       i += 4
       flags = int(flags)
 
-      if flags & _ARG_1_AND_2_ARE_WORDS: i += 4
+      if flags & 0x0001: i += 4  # ARG_1_AND_2_ARE_WORDS
       else: i += 2
-      if flags & _WE_HAVE_A_SCALE: i += 2
-      elif flags & _WE_HAVE_AN_X_AND_Y_SCALE: i += 4
-      elif flags & _WE_HAVE_A_TWO_BY_TWO: i += 8
-      more = flags & _MORE_COMPONENTS
+      if flags & 0x0008: i += 2  # WE_HAVE_A_SCALE
+      elif flags & 0x0040: i += 4  # WE_HAVE_AN_X_AND_Y_SCALE
+      elif flags & 0x0080: i += 8  # WE_HAVE_A_TWO_BY_TWO
+      more = flags & 0x0020  # MORE_COMPONENTS
+
     # Cut off
     data = data[:i]
   if len(data) % 4:
@@ -1512,7 +1507,7 @@ class Logger(object):
                                  ' '.join(str(x) for x in things))
     self.last_time = new_time
 
-  def glyphs(self, glyphs, glyph_names=True, font=None):
+  def glyphs(self, glyphs, font=None):
     self("Names: ", sorted(glyphs))
     if font:
       reverseGlyphMap = font.getReverseGlyphMap()
@@ -1574,7 +1569,7 @@ def main():
   log = Logger()
   args = log.parse_opts(args)
 
-  options = Subsetter.Options()
+  options = Options()
   args = options.parse_opts(args, ignore_unknown=['text'])
 
   if len(args) < 2:

@@ -4,7 +4,7 @@ import sys, pyotlss
 
 args = sys.argv[1:]
 
-options = pyotlss.Subsetter.Options ()
+options = pyotlss.Options ()
 args = options.parse_opts (args)
 
 subsetter = pyotlss.Subsetter (options=options)
