@@ -1240,107 +1240,107 @@ def prune_pre_subset(self, options):
 # TODO(behdad) Move font name loading hack to Subsetter?
 
 
-class Subsetter(object):
+class Options(object):
 
-  class Options(object):
+  class UnknownOptionError(Exception):
+    pass
 
-    class UnknownOptionError(Exception):
-      pass
+  _drop_tables_default = ['BASE', 'JSTF', 'DSIG', 'EBDT', 'EBLC', 'EBSC',
+                          'PCLT', 'LTSH']
+  _drop_tables_default += ['Feat', 'Glat', 'Gloc', 'Silf', 'Sill']  # Graphite
+  _drop_tables_default += ['CBLC', 'CBDT', 'sbix', 'COLR', 'CPAL']  # Color
+  _no_subset_tables_default = ['gasp', 'head', 'hhea', 'maxp', 'vhea', 'OS/2',
+                               'loca', 'name', 'cvt ', 'fpgm', 'prep']
+  _hinting_tables_default = ['cvt ', 'fpgm', 'prep', 'hdmx', 'VDMX']
 
-    drop_tables_default = ['BASE', 'JSTF', 'DSIG', 'EBDT', 'EBLC', 'EBSC',
-                           'PCLT', 'LTSH']
-    drop_tables_default += ['Feat', 'Glat', 'Gloc', 'Silf', 'Sill']  # Graphite
-    drop_tables_default += ['CBLC', 'CBDT', 'sbix', 'COLR', 'CPAL']  # Color
-    no_subset_tables_default = ['gasp', 'head', 'hhea', 'maxp', 'vhea', 'OS/2',
-                                'loca', 'name', 'cvt ', 'fpgm', 'prep']
-    hinting_tables_default = ['cvt ', 'fpgm', 'prep', 'hdmx', 'VDMX']
+  # Based on HarfBuzz shapers
+  _layout_features_groups = {
+    # Default shaper
+    'common': ['ccmp', 'liga', 'locl', 'mark', 'mkmk', 'rlig'],
+    'horizontal': ['calt', 'clig', 'curs', 'kern', 'rclt'],
+    'vertical':  ['valt', 'vert', 'vkrn', 'vpal', 'vrt2'],
+    'ltr': ['ltra', 'ltrm'],
+    'rtl': ['rtla', 'rtlm'],
+    # Complex shapers
+    'arabic': ['init', 'medi', 'fina', 'isol', 'med2', 'fin2', 'fin3',
+               'cswh', 'mset'],
+    'hangul': ['ljmo', 'vjmo', 'tjmo'],
+    'tibetal': ['abvs', 'blws', 'abvm', 'blwm'],
+    'indic': ['nukt', 'akhn', 'rphf', 'rkrf', 'pref', 'blwf', 'half',
+              'abvf', 'pstf', 'cfar', 'vatu', 'cjct', 'init', 'pres',
+              'abvs', 'blws', 'psts', 'haln', 'dist', 'abvm', 'blwm'],
+  }
+  _layout_features_default = _uniq_sort(sum(
+      _layout_features_groups.itervalues(), []))
 
-    # Based on HarfBuzz shapers
-    layout_features_groups = {
-      # Default shaper
-      'common': ['ccmp', 'liga', 'locl', 'mark', 'mkmk', 'rlig'],
-      'horizontal': ['calt', 'clig', 'curs', 'kern', 'rclt'],
-      'vertical':  ['valt', 'vert', 'vkrn', 'vpal', 'vrt2'],
-      'ltr': ['ltra', 'ltrm'],
-      'rtl': ['rtla', 'rtlm'],
-      # Complex shapers
-      'arabic': ['init', 'medi', 'fina', 'isol', 'med2', 'fin2', 'fin3',
-                 'cswh', 'mset'],
-      'hangul': ['ljmo', 'vjmo', 'tjmo'],
-      'tibetal': ['abvs', 'blws', 'abvm', 'blwm'],
-      'indic': ['nukt', 'akhn', 'rphf', 'rkrf', 'pref', 'blwf', 'half',
-                'abvf', 'pstf', 'cfar', 'vatu', 'cjct', 'init', 'pres',
-                'abvs', 'blws', 'psts', 'haln', 'dist', 'abvm', 'blwm'],
-    }
-    layout_features_default = _uniq_sort(sum(
-        layout_features_groups.itervalues(), []))
+  drop_tables = _drop_tables_default
+  no_subset_tables = _no_subset_tables_default
+  hinting_tables = _hinting_tables_default
+  layout_features = _layout_features_default
+  hinting = False
+  glyph_names = False
+  legacy_cmap = False
+  symbol_cmap = False
+  name_IDs = [1, 2]  # Family and Style
+  name_legacy = False
+  name_languages = [0x0409]  # English
+  mandatory_glyphs = True  # First four for TrueType, .notdef for CFF
+  recalc_bboxes = False  # Slows us down
 
-    drop_tables = drop_tables_default
-    no_subset_tables = no_subset_tables_default
-    hinting_tables = hinting_tables_default
-    layout_features = layout_features_default
-    hinting = False
-    glyph_names = False
-    legacy_cmap = False
-    symbol_cmap = False
-    name_IDs = [1, 2]  # Family and Style
-    name_legacy = False
-    name_languages = [0x0409]  # English
-    mandatory_glyphs = True  # First four for TrueType, .notdef for CFF
-    recalc_bboxes = False  # Slows us down
+  def __init__(self, **kwargs):
 
-    def __init__(self, **kwargs):
+    self.set(**kwargs)
 
-      self.set(**kwargs)
+  def set(self, **kwargs):
+    for k,v in kwargs.iteritems():
+      if not hasattr(self, k):
+        raise self.UnknownOptionError("Unknown option '%s'" % k)
+      setattr(self, k, v)
 
-    def set(self, **kwargs):
-      for k,v in kwargs.iteritems():
-        if not hasattr(self, k):
-          raise self.UnknownOptionError("Unknown option '%s'" % k)
-        setattr(self, k, v)
-
-    def parse_opts(self, argv, ignore_unknown=False):
-      ret = []
-      opts = {}
-      for a in argv:
-        orig_a = a
-        if not a.startswith('--'):
-          ret.append(a)
-          continue
-        a = a[2:]
-        i = a.find('=')
-        if i == -1:
-          if a.startswith("no-"):
-            k = a[3:]
-            v = False
-          else:
-            k = a
-            v = True
+  def parse_opts(self, argv, ignore_unknown=False):
+    ret = []
+    opts = {}
+    for a in argv:
+      orig_a = a
+      if not a.startswith('--'):
+        ret.append(a)
+        continue
+      a = a[2:]
+      i = a.find('=')
+      if i == -1:
+        if a.startswith("no-"):
+          k = a[3:]
+          v = False
         else:
-          k = a[:i]
-          v = a[i+1:]
-        k = k.replace('-', '_')
-        if not hasattr(self, k):
-          if ignore_unknown == True or k in ignore_unknown:
-            ret.append(orig_a)
-            continue
-          else:
-            raise self.UnknownOptionError("Unknown option '%s'" % a)
+          k = a
+          v = True
+      else:
+        k = a[:i]
+        v = a[i+1:]
+      k = k.replace('-', '_')
+      if not hasattr(self, k):
+        if ignore_unknown == True or k in ignore_unknown:
+          ret.append(orig_a)
+          continue
+        else:
+          raise self.UnknownOptionError("Unknown option '%s'" % a)
 
-        ov = getattr(self, k)
-        if isinstance(ov, bool):
-          v = bool(v)
-        elif isinstance(ov, int):
-          v = int(v)
-        elif isinstance(ov, list):
-          v = v.split(',')
-          v = [int(x, 0) if x[0] in range(10) else x for x in v]
+      ov = getattr(self, k)
+      if isinstance(ov, bool):
+        v = bool(v)
+      elif isinstance(ov, int):
+        v = int(v)
+      elif isinstance(ov, list):
+        v = v.split(',')
+        v = [int(x, 0) if x[0] in range(10) else x for x in v]
 
-        opts[k] = v
-      self.set(**opts)
+      opts[k] = v
+    self.set(**opts)
 
-      return ret
+    return ret
 
+
+class Subsetter(object):
 
   def __init__(self, options=None, log=None):
 
