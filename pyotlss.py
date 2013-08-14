@@ -1180,36 +1180,34 @@ def prune_post_subset(self, options):
       self.globalSubrs._used.add(self.operandStack[-1]+self.globalBias)
       fontTools.misc.psCharStrings.SimpleT2Decompiler.op_callgsubr(self, index)
 
+  class _NonrecursingT2Decompiler(fontTools.misc.psCharStrings.SimpleT2Decompiler):
+
+    def __init__(self, localSubrs, globalSubrs):
+      fontTools.misc.psCharStrings.SimpleT2Decompiler.__init__(self,
+                                                               localSubrs,
+                                                               globalSubrs)
+
+    def op_callsubr(self, index):
+      self.pop()
+
+    def op_callgsubr(self, index):
+      self.pop()
+
+  def _subset_program (p, subrs, gsubrs):
+    for i in range(1, len(p)):
+      if p[i] == 'callsubr':
+        assert type(p[i-1]) is int
+        p[i-1] = subrs._used.index(p[i-1] + subrs._old_bias) - subrs._new_bias
+      elif p[i] == 'callgsubr':
+        assert type(p[i-1]) is int
+        p[i-1] = gsubrs._used.index(p[i-1] + gsubrs._old_bias) - gsubrs._new_bias
+
   for fontname in cff.keys():
     font = cff[fontname]
     cs = font.CharStrings
 
-    # Mark all used subroutines
-    for g in font.charset:
-      c,sel = cs.getItemAndSelector(g)
-      subrs = getattr(c.private, "Subrs", [])
-      decompiler = _MarkingT2Decompiler(subrs, c.globalSubrs)
-      decompiler.execute(c)
-
-    emptyCharString = fontTools.misc.psCharStrings.T2CharString (bytecode='\x0B')
-    all_subrs = [font.GlobalSubrs]
-    all_subrs.extend(fd.Private.Subrs for fd in font.FDArray if hasattr(fd.Private, 'Subrs'))
-    for subrs in all_subrs:
-      if not subrs: continue
-      if not hasattr(subrs, '_used'):
-        subrs._used = set()
-      for i in range (subrs.count):
-        if i not in subrs._used:
-          subrs.items[i] = emptyCharString
-        else:
-          subrs[i]  # It ought to be loaded alreay, but just in case...
-      del subrs._used
-      # TODO(behdad) renumber subroutines
-      #del subrs.file, subrs.offsets
-      #subrs.offsets = []
-
+    # Drop unused FDArray items and remap FDSelect'ors
     if hasattr(font, "FDSelect"):
-      # Drop unused FDArray items; remap FDSelect'ors
       sel = font.FDSelect
       indices = _uniq_sort(sel.gidArray)
       sel.gidArray = [indices.index (ss) for ss in sel.gidArray]
@@ -1219,8 +1217,48 @@ def prune_post_subset(self, options):
       arr.count = len(arr.items)
       del arr.file, arr.offsets
 
+    # Mark all used subroutines
+    for g in font.charset:
+      c,sel = cs.getItemAndSelector(g)
+      subrs = getattr(c.private, "Subrs", [])
+      decompiler = _MarkingT2Decompiler(subrs, c.globalSubrs)
+      decompiler.execute(c)
+
+    # Renumber subroutines to remove unused ones
+    all_subrs = [font.GlobalSubrs]
+    all_subrs.extend(fd.Private.Subrs for fd in font.FDArray if hasattr(fd.Private, 'Subrs'))
+    # Prepare
+    for subrs in all_subrs:
+      if not subrs: continue
+      if not hasattr(subrs, '_used'):
+        subrs._used = set()
+      subrs._used = _uniq_sort(subrs._used)
+      subrs._old_bias = fontTools.misc.psCharStrings.calcSubrBias(subrs)
+      subrs._new_bias = fontTools.misc.psCharStrings.calcSubrBias(subrs._used)
+    # Renumber subroutines themselves
+    for subrs in all_subrs:
+      if not subrs: continue
+      decompiler = _NonrecursingT2Decompiler(subrs, font.GlobalSubrs)
+      for i in range (subrs.count):
+        if i not in subrs._used: continue
+        decompiler.reset()
+        decompiler.execute(subrs[i])
+        _subset_program (subrs[i].program, subrs, font.GlobalSubrs)
+    # Renumber glyph charstrings
+    for g in font.charset:
+      c,sel = cs.getItemAndSelector(g)
+      subrs = getattr(c.private, "Subrs", [])
+      assert c.program
+      _subset_program (c.program, subrs, font.GlobalSubrs)
+    # Cleanup
+    for subrs in all_subrs:
+      if not subrs: continue
+      subrs.items = [subrs.items[i] for i in subrs._used]
+      del subrs.file, subrs.offsets
+      del subrs._used, subrs._old_bias, subrs._new_bias
+
     if not options.hinting:
-      pass  # Drop hints
+      pass  # TODO(behdad) Drop hints
 
   return True
 
