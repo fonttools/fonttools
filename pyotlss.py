@@ -467,6 +467,7 @@ def __classify_context(self):
         self.Intersect = lambda glyphs, c, r: c.intersect_class(glyphs, r)
 
         self.ClassDef = 'InputClassDef' if Chain else 'ClassDef'
+        self.Input = 'Input' if Chain else 'Class'
 
   if self.Format not in [1, 2, 3]:
     return None  # Don't shoot the messenger; let it go
@@ -533,7 +534,7 @@ def closure_glyphs(self, s, cur_glyphs=None):
                 pos_glyphs = s.glyphs
               else:
                 pos_glyphs = ClassDef.intersect_class(s.glyphs,
-                                                       r.Input[seqi - 1])
+                                                      getattr(r, c.Input)[seqi - 1])
             lookup = s.table.LookupList.Lookup[ll.LookupListIndex]
             chaos = chaos or lookup.may_have_non_1to1()
             lookup.closure_glyphs(s, cur_glyphs=pos_glyphs)
@@ -1557,8 +1558,8 @@ def load_font(fontfile, dont_load_glyph_names=False):
 # Cleanup module space
 l = locals()
 for k,v in l.items():
-	if v == None:
-		del l[k]
+  if v == None:
+    del l[k]
 del k, v, l
 
 
