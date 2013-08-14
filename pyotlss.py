@@ -1330,7 +1330,7 @@ def prune_pre_subset(self, options):
 
 # TODO(behdad) OS/2 ulUnicodeRange / ulCodePageRange?
 # TODO(behdad) Drop unneeded GSUB/GPOS Script/LangSys entries.
-# TODO(behdad) Avoid recursing too much.
+# TODO(behdad) Avoid recursing too much (in GSUB/GPOS and in CFF)
 # TODO(behdad) Text direction considerations.
 # TODO(behdad) Text script / language considerations.
 # TODO(behdad) Drop GPOS Device records if not hinting?
