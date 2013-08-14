@@ -503,12 +503,12 @@ def closure_glyphs(self, s, cur_glyphs=None):
             if not ll: continue
             seqi = ll.SequenceIndex
             if seqi == 0:
-              pos_glyphs = set(c.Coverage(self).glyphs[i])
+              pos_glyphs = set([c.Coverage(self).glyphs[i]])
             else:
               if chaos:
                 pos_glyphs = s.glyphs
               else:
-                pos_glyphs = set(r.Input[seqi - 1])
+                pos_glyphs = set([r.Input[seqi - 1]])
             lookup = s.table.LookupList.Lookup[ll.LookupListIndex]
             chaos = chaos or lookup.may_have_non_1to1()
             lookup.closure_glyphs(s, cur_glyphs=pos_glyphs)
