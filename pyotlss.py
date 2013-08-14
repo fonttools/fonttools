@@ -466,7 +466,7 @@ def __classify_context(self):
         self.ClassDef = 'InputClassDef' if Chain else 'ClassDef'
 
   if self.Format not in [1, 2, 3]:
-    return None # Don't shoot the messenger; let it go
+    return None  # Don't shoot the messenger; let it go
   if not hasattr(self.__class__, "__ContextHelpers"):
     self.__class__.__ContextHelpers = {}
   if self.Format not in self.__class__.__ContextHelpers:
@@ -960,7 +960,7 @@ def subset_glyphs(self, s):
   self.VOriginRecords = {g:v for g,v in self.VOriginRecords.iteritems()
                          if g in s.glyphs}
   self.numVertOriginYMetrics = len(self.VOriginRecords)
-  return True # Never drop; has default metrics
+  return True  # Never drop; has default metrics
 
 @__add_method(fontTools.ttLib.getTableClass('post'))
 def prune_pre_subset(self, options):
@@ -970,7 +970,7 @@ def prune_pre_subset(self, options):
 
 @__add_method(fontTools.ttLib.getTableClass('post'))
 def subset_glyphs(self, s):
-  self.extraNames = [] # This seems to do it
+  self.extraNames = []  # This seems to do it
   return True
 
 # Copied from _g_l_y_f.py
@@ -991,7 +991,7 @@ UNSCALED_COMPONENT_OFFSET  = 0x1000  # composite designed not to have the compon
 @__add_method(fontTools.ttLib.getTableModule('glyf').Glyph)
 def getComponentNamesFast(self, glyfTable):
   if struct.unpack(">h", self.data[:2])[0] >= 0:
-    return [] # Not composite
+    return []  # Not composite
   data = self.data
   i = 10
   components = []
@@ -1013,7 +1013,7 @@ def getComponentNamesFast(self, glyfTable):
 @__add_method(fontTools.ttLib.getTableModule('glyf').Glyph)
 def remapComponentsFast(self, indices):
   if struct.unpack(">h", self.data[:2])[0] >= 0:
-    return # Not composite
+    return  # Not composite
   data = bytearray(self.data)
   i = 10
   more = 1
@@ -1041,7 +1041,7 @@ def dropInstructionsFast(self):
   data = bytearray(self.data)
   i = 10
   if numContours >= 0:
-    i += 2 * numContours # endPtsOfContours
+    i += 2 * numContours  # endPtsOfContours
     instructionLen =(data[i] << 8) | data[i+1]
     # Zero it
     data[i] = data [i+1] = 0
@@ -1110,7 +1110,7 @@ def subset_glyphs(self, s):
     if hasattr(v, "data"):
       v.remapComponentsFast(indices)
     else:
-      pass # No need
+      pass  # No need
   self.glyphOrder = [g for g in self.glyphOrder if g in s.glyphs]
   return bool(self.glyphs)
 
@@ -1146,7 +1146,7 @@ def subset_glyphs(self, s):
         cs.getItemAndSelector(g)
       csi = cs.charStringsIndex
       csi.items = [csi.items[i] for i in indices]
-      csi.offsets = [] # Don't need it; loaded all glyphs
+      csi.offsets = []  # Don't need it; loaded all glyphs
       if hasattr(font, "FDSelect"):
         sel = font.FDSelect
         sel.format = None
@@ -1165,7 +1165,7 @@ def subset_glyphs(self, s):
 @__add_method(fontTools.ttLib.getTableClass('glyf'))
 def prune_post_subset(self, options):
   if not options.hinting:
-    pass # Drop hints
+    pass  # Drop hints
   return True
 
 @__add_method(fontTools.ttLib.getTableClass('cmap'))
@@ -1231,7 +1231,7 @@ def prune_pre_subset(self, options):
                   if n.platformID == 3 and n.platEncID == 1]
   if '*' not in options.name_languages:
     self.names = [n for n in self.names if n.langID in options.name_languages]
-  return True # Retain even if empty
+  return True  # Retain even if empty
 
 
 # TODO OS/2 ulUnicodeRange / ulCodePageRange?
@@ -1253,8 +1253,8 @@ class Subsetter:
 
     drop_tables_default = ['BASE', 'JSTF', 'DSIG', 'EBDT', 'EBLC', 'EBSC',
                            'PCLT', 'LTSH']
-    drop_tables_default += ['Feat', 'Glat', 'Gloc', 'Silf', 'Sill'] # Graphite
-    drop_tables_default += ['CBLC', 'CBDT', 'sbix', 'COLR', 'CPAL'] # Color
+    drop_tables_default += ['Feat', 'Glat', 'Gloc', 'Silf', 'Sill']  # Graphite
+    drop_tables_default += ['CBLC', 'CBDT', 'sbix', 'COLR', 'CPAL']  # Color
     no_subset_tables_default = ['gasp', 'head', 'hhea', 'maxp', 'vhea', 'OS/2',
                                 'loca', 'name', 'cvt ', 'fpgm', 'prep']
     hinting_tables_default = ['cvt ', 'fpgm', 'prep', 'hdmx', 'VDMX']
@@ -1287,11 +1287,11 @@ class Subsetter:
     glyph_names = False
     legacy_cmap = False
     symbol_cmap = False
-    name_IDs = [1, 2] # Family and Style
+    name_IDs = [1, 2]  # Family and Style
     name_legacy = False
-    name_languages = [0x0409] # English
-    mandatory_glyphs = True # First four for TrueType, .notdef for CFF
-    recalc_bboxes = False # Slows us down
+    name_languages = [0x0409]  # English
+    mandatory_glyphs = True  # First four for TrueType, .notdef for CFF
+    recalc_bboxes = False  # Slows us down
 
     def __init__(self, **kwargs):
 
@@ -1529,7 +1529,7 @@ class Logger:
       return
     import xmlWriter
     writer = xmlWriter.XMLWriter(file)
-    font.disassembleInstructions = False # Work around ttx bug
+    font.disassembleInstructions = False  # Work around ttx bug
     for tag in font.keys():
       writer.begintag(tag)
       writer.newline()
