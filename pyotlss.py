@@ -1566,6 +1566,14 @@ def load_font(fontfile, dont_load_glyph_names=False):
   return font
 
 
+# Cleanup module space
+l = locals()
+for k,v in l.items():
+	if v == None:
+		del l[k]
+del l
+
+
 def main():
 
   args = sys.argv[1:]
