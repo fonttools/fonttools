@@ -1562,9 +1562,9 @@ for k,v in l.items():
 del k, v, l
 
 
-def main():
+def main(args=sys.argv):
 
-  args = sys.argv[1:]
+  arg0, args = args[0], args[1:]
 
   log = Logger()
   args = log.parse_opts(args)
@@ -1573,7 +1573,7 @@ def main():
   args = options.parse_opts(args, ignore_unknown=['text'])
 
   if len(args) < 2:
-    print >>sys.stderr, "usage: pyotlss.py font-file glyph..."
+    print >>sys.stderr, "usage: %s font-file glyph..." % arg0
     sys.exit(1)
 
   fontfile = args[0]
