@@ -1371,7 +1371,7 @@ class Subsetter(object):
     self.glyphs_requested.update(glyphs)
     self.glyphs.update(glyphs)
 
-  def pre_prune(self, font):
+  def _prune_pre_subset(self, font):
 
     for tag in font.keys():
       if tag == 'GlyphOrder': continue
@@ -1395,7 +1395,7 @@ class Subsetter(object):
         else:
           self.log(tag, "pruned")
 
-  def closure_glyphs(self, font):
+  def _closure_glyphs(self, font):
 
     self.glyphs = self.glyphs_requested.copy()
 
@@ -1438,7 +1438,7 @@ class Subsetter(object):
 
     self.log("Retaining %d glyphs: " % len(self.glyphs_all))
 
-  def subset_glyphs(self, font):
+  def _subset_glyphs(self, font):
     for tag in font.keys():
       if tag == 'GlyphOrder': continue
       clazz = fontTools.ttLib.getTableClass(tag)
@@ -1466,7 +1466,7 @@ class Subsetter(object):
     font._buildReverseGlyphOrderDict()
     self.log.lapse("subset GlyphOrder")
 
-  def post_prune(self, font):
+  def _prune_post_subset(self, font):
     for tag in font.keys():
       if tag == 'GlyphOrder': continue
       clazz = fontTools.ttLib.getTableClass(tag)
@@ -1484,10 +1484,10 @@ class Subsetter(object):
 
     font.recalcBBoxes = self.options.recalc_bboxes
 
-    self.pre_prune(font)
-    self.closure_glyphs(font)
-    self.subset_glyphs(font)
-    self.post_prune(font)
+    self._prune_pre_subset(font)
+    self._closure_glyphs(font)
+    self._subset_glyphs(font)
+    self._prune_post_subset(font)
 
 
 class Logger(object):
