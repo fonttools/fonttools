@@ -1124,21 +1124,48 @@ def prune_pre_subset(self, s):
   cff.fontNames = cff.fontNames[:1]
   return bool(cff.fontNames)
 
+
+class _MarkingT2Decompiler(fontTools.misc.psCharStrings.SimpleT2Decompiler):
+
+  def __init__(self, localSubrs, globalSubrs):
+    fontTools.misc.psCharStrings.SimpleT2Decompiler.__init__(self,
+                                                             localSubrs,
+                                                             globalSubrs)
+    if self.localSubrs and not hasattr(self.localSubrs, "_used"):
+      self.localSubrs._used = set()
+    if self.globalSubrs and not hasattr(self.globalSubrs, "_used"):
+      self.globalSubrs._used = set()
+
+  def op_callsubr(self, index):
+    self.localSubrs._used.add(self.operandStack[-1]+self.localBias)
+    fontTools.misc.psCharStrings.SimpleT2Decompiler.op_callsubr(self, index)
+
+  def op_callgsubr(self, index):
+    self.globalSubrs._used.add(self.operandStack[-1]+self.globalBias)
+    fontTools.misc.psCharStrings.SimpleT2Decompiler.op_callgsubr(self, index)
+
+
 @_add_method(fontTools.ttLib.getTableClass('CFF '))
 def subset_glyphs(self, s):
   cff = self.cff
   for fontname in cff.keys():
     font = cff[fontname]
     cs = font.CharStrings
+
+    # Load all glyphs; also mark all used subroutines
+    for g in font.charset:
+      if g not in s.glyphs: continue
+      c,sel = cs.getItemAndSelector(g)
+      subrs = getattr(c.private, "Subrs", [])
+      decompiler = _MarkingT2Decompiler(subrs, c.globalSubrs)
+      decompiler.execute(c)
+
     if cs.charStringsAreIndexed:
       indices = [i for i,g in enumerate(font.charset) if g in s.glyphs]
-      # Load all glyphs
-      for g in font.charset:
-        if g not in s.glyphs: continue
-        cs.getItemAndSelector(g)
       csi = cs.charStringsIndex
       csi.items = [csi.items[i] for i in indices]
       csi.offsets = []  # Don't need it; loaded all glyphs
+      csi.count = len(csi.items)
       if hasattr(font, "FDSelect"):
         sel = font.FDSelect
         sel.format = None
@@ -1152,6 +1179,23 @@ def subset_glyphs(self, s):
                         if g in s.glyphs}
     font.charset = [g for g in font.charset if g in s.glyphs]
     font.numGlyphs = len(font.charset)
+
+    emptyCharString = fontTools.misc.psCharStrings.T2CharString (bytecode='\x0B')
+    all_subrs = [font.GlobalSubrs]
+    all_subrs.extend(fd.Private.Subrs for fd in font.FDArray if hasattr(fd.Private, 'Subrs'))
+    for subrs in all_subrs:
+      if not subrs: continue
+      if not hasattr(subrs, '_used'):
+        subrs._used = set()
+      for i in range (subrs.count):
+        if i not in subrs._used:
+          subrs.items[i] = emptyCharString
+        else:
+          subrs[i]  # It ought to be loaded alreay, but just in case...
+      del subrs._used
+      #subrs.offsets = []
+    # TODO(behdad) Drop unused FDArray items; remap FDSelect'ors
+
   return any(cff[fontname].numGlyphs for fontname in cff.keys())
 
 @_add_method(fontTools.ttLib.getTableClass('glyf'))
