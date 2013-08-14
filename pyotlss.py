@@ -1564,7 +1564,7 @@ l = locals()
 for k,v in l.items():
 	if v == None:
 		del l[k]
-del l
+del k, v, l
 
 
 def main():
