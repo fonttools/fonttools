@@ -1566,7 +1566,9 @@ def load_font(fontfile, dont_load_glyph_names=False):
   return font
 
 
-def main(args):
+def main():
+
+  args = sys.argv[1:]
 
   log = Logger()
   args = log.parse_opts(args)
@@ -1640,4 +1642,4 @@ def main(args):
   font.close()
 
 if __name__ == '__main__':
-  main(sys.argv[1:])
+  main()
