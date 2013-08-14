@@ -1562,8 +1562,9 @@ for k,v in l.items():
 del k, v, l
 
 
-def main(args=sys.argv):
+def main(args=None):
 
+  if args == None: args = sys.argv
   arg0, args = args[0], args[1:]
 
   log = Logger()
