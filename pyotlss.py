@@ -1236,6 +1236,11 @@ def prune_post_subset(self, options):
       subrs._used = _uniq_sort(subrs._used)
       subrs._old_bias = fontTools.misc.psCharStrings.calcSubrBias(subrs)
       subrs._new_bias = fontTools.misc.psCharStrings.calcSubrBias(subrs._used)
+    # Renumber glyph charstrings
+    for g in font.charset:
+      c,sel = cs.getItemAndSelector(g)
+      subrs = getattr(c.private, "Subrs", [])
+      c.subset_subroutines (subrs, font.GlobalSubrs)
     # Renumber subroutines themselves
     for subrs in all_subrs:
       if not subrs: continue
@@ -1245,11 +1250,6 @@ def prune_post_subset(self, options):
         decompiler.reset()
         decompiler.execute(subrs[i])
         subrs[i].subset_subroutines (subrs, font.GlobalSubrs)
-    # Renumber glyph charstrings
-    for g in font.charset:
-      c,sel = cs.getItemAndSelector(g)
-      subrs = getattr(c.private, "Subrs", [])
-      c.subset_subroutines (subrs, font.GlobalSubrs)
     # Cleanup
     for subrs in all_subrs:
       if not subrs: continue
