@@ -1694,11 +1694,18 @@ def main(args=None):
   subsetter.populate(glyphs=glyphs, unicodes=unicodes, text=text)
   subsetter.subset(font)
 
-  font.save(fontfile + '.subset')
+  outfile = fontfile + '.subset'
+
+  font.save(outfile)
   log.lapse("compile and save font")
 
   log.last_time = log.start_time
   log.lapse("make one with everything(TOTAL TIME)")
+
+  if log.verbose:
+    import os
+    log("Input  font: %d bytes" % os.path.getsize(fontfile))
+    log("Subset font: %d bytes" % os.path.getsize(outfile))
 
   log.font(font)
 
