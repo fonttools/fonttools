@@ -1333,7 +1333,6 @@ def prune_pre_subset(self, options):
 # TODO(behdad) Avoid recursing too much.
 # TODO(behdad) Text direction considerations.
 # TODO(behdad) Text script / language considerations.
-# TODO(behdad) Drop unknown tables?  Using DefaultTable.prune?
 # TODO(behdad) Drop GPOS Device records if not hinting?
 # TODO(behdad) Move font name loading hack to Subsetter?
 
