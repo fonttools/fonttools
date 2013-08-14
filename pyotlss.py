@@ -52,7 +52,7 @@ def _uniq_sort(l):
 @_add_method(fontTools.ttLib.tables.otTables.Coverage)
 def intersect(self, glyphs):
   "Returns ascending list of matching coverage values."
-  return [i for(i,g) in enumerate(self.glyphs) if g in glyphs]
+  return [i for i,g in enumerate(self.glyphs) if g in glyphs]
 
 @_add_method(fontTools.ttLib.tables.otTables.Coverage)
 def intersect_glyphs(self, glyphs):
@@ -728,7 +728,7 @@ def may_have_non_1to1(self):
 @_add_method(fontTools.ttLib.tables.otTables.LookupList)
 def subset_glyphs(self, s):
   "Returns the indices of nonempty lookups."
-  return [i for(i,l) in enumerate(self.Lookup) if l and l.subset_glyphs(s)]
+  return [i for i,l in enumerate(self.Lookup) if l and l.subset_glyphs(s)]
 
 @_add_method(fontTools.ttLib.tables.otTables.LookupList)
 def subset_lookups(self, lookup_indices):
@@ -770,7 +770,7 @@ def collect_lookups(self):
 @_add_method(fontTools.ttLib.tables.otTables.FeatureList)
 def subset_lookups(self, lookup_indices):
   "Returns the indices of nonempty features."
-  feature_indices = [i for(i,f) in enumerate(self.FeatureRecord)
+  feature_indices = [i for i,f in enumerate(self.FeatureRecord)
                      if f.Feature.subset_lookups(lookup_indices)]
   self.subset_features(feature_indices)
   return feature_indices
@@ -883,7 +883,7 @@ def prune_lookups(self):
 @_add_method(fontTools.ttLib.getTableClass('GSUB'),
              fontTools.ttLib.getTableClass('GPOS'))
 def subset_feature_tags(self, feature_tags):
-  feature_indices = [i for(i,f) in
+  feature_indices = [i for i,f in
                      enumerate(self.table.FeatureList.FeatureRecord)
                      if f.FeatureTag in feature_tags]
   self.table.FeatureList.subset_features(feature_indices)
@@ -942,7 +942,7 @@ def prune_pre_subset(self, options):
 def subset_glyphs(self, s):
   glyphs = s.glyphs_gsubed
   for t in self.kernTables:
-    t.kernTable = {(a,b):v for((a,b),v) in t.kernTable.iteritems()
+    t.kernTable = {(a,b):v for (a,b),v in t.kernTable.iteritems()
                    if a in glyphs and b in glyphs}
   self.kernTables = [t for t in self.kernTables if t.kernTable]
   return bool(self.kernTables)
@@ -956,7 +956,7 @@ def subset_glyphs(self, s):
 @_add_method(fontTools.ttLib.getTableClass('hdmx'))
 def subset_glyphs(self, s):
   self.hdmx = {sz:{g:v for g,v in l.iteritems() if g in s.glyphs}
-               for(sz,l) in self.hdmx.iteritems()}
+               for sz,l in self.hdmx.iteritems()}
   return bool(self.hdmx)
 
 @_add_method(fontTools.ttLib.getTableClass('VORG'))
@@ -1302,14 +1302,14 @@ def subset_glyphs(self, s):
       pass
     if t.format == 14:
       # TODO(behdad) XXX We drop all the default-UVS mappings(g==None).
-      t.uvsDict = {v:[(u,g) for(u,g) in l if g in s.glyphs]
-                   for(v,l) in t.uvsDict.iteritems()}
-      t.uvsDict = {v:l for(v,l) in t.uvsDict.iteritems() if l}
+      t.uvsDict = {v:[(u,g) for u,g in l if g in s.glyphs]
+                   for v,l in t.uvsDict.iteritems()}
+      t.uvsDict = {v:l for v,l in t.uvsDict.iteritems() if l}
     else:
-      t.cmap = {u:g for(u,g) in t.cmap.iteritems()
+      t.cmap = {u:g for u,g in t.cmap.iteritems()
                 if g in s.glyphs_requested or u in s.unicodes_requested}
   self.tables = [t for t in self.tables
-                 if(t.cmap if t.format != 14 else t.uvsDict)]
+                 if (t.cmap if t.format != 14 else t.uvsDict)]
   # TODO(behdad) Convert formats when needed.
   # In particular, if we have a format=12 without non-BMP
   # characters, either drop format=12 one or convert it
