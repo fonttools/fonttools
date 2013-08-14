@@ -1208,14 +1208,13 @@ def prune_post_subset(self, options):
     font = cff[fontname]
     cs = font.CharStrings
 
-    # Drop unused FDArray items and remap FDSelect'ors
+    # Drop unused FontDictionaries
     if hasattr(font, "FDSelect"):
       sel = font.FDSelect
       indices = _uniq_sort(sel.gidArray)
       sel.gidArray = [indices.index (ss) for ss in sel.gidArray]
       arr = font.FDArray
-      [arr[i] for i in indices]  # Make sure they are all loaded
-      arr.items = [arr.items[i] for i in indices]
+      arr.items = [arr[i] for i in indices]
       arr.count = len(arr.items)
       del arr.file, arr.offsets
 
