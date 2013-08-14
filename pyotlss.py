@@ -1158,6 +1158,17 @@ def subset_glyphs(self, s):
 
   return any(cff[fontname].numGlyphs for fontname in cff.keys())
 
+@_add_method(fontTools.misc.psCharStrings.T2CharString)
+def subset_subroutines(self, subrs, gsubrs):
+  p = self.program
+  for i in range(1, len(p)):
+    if p[i] == 'callsubr':
+      assert type(p[i-1]) is int
+      p[i-1] = subrs._used.index(p[i-1] + subrs._old_bias) - subrs._new_bias
+    elif p[i] == 'callgsubr':
+      assert type(p[i-1]) is int
+      p[i-1] = gsubrs._used.index(p[i-1] + gsubrs._old_bias) - gsubrs._new_bias
+
 @_add_method(fontTools.ttLib.getTableClass('CFF '))
 def prune_post_subset(self, options):
   cff = self.cff
@@ -1192,15 +1203,6 @@ def prune_post_subset(self, options):
 
     def op_callgsubr(self, index):
       self.pop()
-
-  def _subset_program (p, subrs, gsubrs):
-    for i in range(1, len(p)):
-      if p[i] == 'callsubr':
-        assert type(p[i-1]) is int
-        p[i-1] = subrs._used.index(p[i-1] + subrs._old_bias) - subrs._new_bias
-      elif p[i] == 'callgsubr':
-        assert type(p[i-1]) is int
-        p[i-1] = gsubrs._used.index(p[i-1] + gsubrs._old_bias) - gsubrs._new_bias
 
   for fontname in cff.keys():
     font = cff[fontname]
@@ -1243,13 +1245,12 @@ def prune_post_subset(self, options):
         if i not in subrs._used: continue
         decompiler.reset()
         decompiler.execute(subrs[i])
-        _subset_program (subrs[i].program, subrs, font.GlobalSubrs)
+        subrs[i].subset_subroutines (subrs, font.GlobalSubrs)
     # Renumber glyph charstrings
     for g in font.charset:
       c,sel = cs.getItemAndSelector(g)
       subrs = getattr(c.private, "Subrs", [])
-      assert c.program
-      _subset_program (c.program, subrs, font.GlobalSubrs)
+      c.subset_subroutines (subrs, font.GlobalSubrs)
     # Cleanup
     for subrs in all_subrs:
       if not subrs: continue
