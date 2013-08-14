@@ -1214,8 +1214,7 @@ def prune_post_subset(self, options):
       indices = _uniq_sort(sel.gidArray)
       sel.gidArray = [indices.index (ss) for ss in sel.gidArray]
       arr = font.FDArray
-      for i in indices:
-        arr[i]  # Make sure it's loaded
+      [arr[i] for i in indices]  # Make sure they are all loaded
       arr.items = [arr.items[i] for i in indices]
       arr.count = len(arr.items)
       del arr.file, arr.offsets
