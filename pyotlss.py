@@ -977,19 +977,12 @@ def subset_glyphs(self, s):
   return True
 
 # Copied from _g_l_y_f.py
-ARG_1_AND_2_ARE_WORDS      = 0x0001  # if set args are words otherwise they are bytes
-ARGS_ARE_XY_VALUES         = 0x0002  # if set args are xy values, otherwise they are points
-ROUND_XY_TO_GRID           = 0x0004  # for the xy values if above is true
-WE_HAVE_A_SCALE            = 0x0008  # Sx = Sy, otherwise scale == 1.0
-NON_OVERLAPPING            = 0x0010  # set to same value for all components(obsolete!)
-MORE_COMPONENTS            = 0x0020  # indicates at least one more glyph after this one
-WE_HAVE_AN_X_AND_Y_SCALE   = 0x0040  # Sx, Sy
-WE_HAVE_A_TWO_BY_TWO       = 0x0080  # t00, t01, t10, t11
-WE_HAVE_INSTRUCTIONS       = 0x0100  # instructions follow
-USE_MY_METRICS             = 0x0200  # apply these metrics to parent glyph
-OVERLAP_COMPOUND           = 0x0400  # used by Apple in GX fonts
-SCALED_COMPONENT_OFFSET    = 0x0800  # composite designed to have the component offset scaled(designed for Apple)
-UNSCALED_COMPONENT_OFFSET  = 0x1000  # composite designed not to have the component offset scaled(designed for MS)
+_ARG_1_AND_2_ARE_WORDS      = 0x0001  # args are words or bytes
+_WE_HAVE_A_SCALE            = 0x0008  # Sx = Sy, otherwise scale == 1.0
+_MORE_COMPONENTS            = 0x0020  # at least one more glyph after this one
+_WE_HAVE_AN_X_AND_Y_SCALE   = 0x0040  # Sx, Sy
+_WE_HAVE_A_TWO_BY_TWO       = 0x0080  # t00, t01, t10, t11
+_WE_HAVE_INSTRUCTIONS       = 0x0100  # instructions follow
 
 @_add_method(fontTools.ttLib.getTableModule('glyf').Glyph)
 def getComponentNamesFast(self, glyfTable):
@@ -1005,12 +998,12 @@ def getComponentNamesFast(self, glyfTable):
     flags = int(flags)
     components.append(glyfTable.getGlyphName(int(glyphID)))
 
-    if flags & ARG_1_AND_2_ARE_WORDS:  i += 4
-    else:          i += 2
-    if flags & WE_HAVE_A_SCALE:    i += 2
-    elif flags & WE_HAVE_AN_X_AND_Y_SCALE:  i += 4
-    elif flags & WE_HAVE_A_TWO_BY_TWO:  i += 8
-    more = flags & MORE_COMPONENTS
+    if flags & _ARG_1_AND_2_ARE_WORDS: i += 4
+    else: i += 2
+    if flags & _WE_HAVE_A_SCALE: i += 2
+    elif flags & _WE_HAVE_AN_X_AND_Y_SCALE: i += 4
+    elif flags & _WE_HAVE_A_TWO_BY_TWO: i += 8
+    more = flags & _MORE_COMPONENTS
   return components
 
 @_add_method(fontTools.ttLib.getTableModule('glyf').Glyph)
@@ -1030,12 +1023,12 @@ def remapComponentsFast(self, indices):
     i += 4
     flags = int(flags)
 
-    if flags & ARG_1_AND_2_ARE_WORDS:  i += 4
-    else:          i += 2
-    if flags & WE_HAVE_A_SCALE:    i += 2
-    elif flags & WE_HAVE_AN_X_AND_Y_SCALE:  i += 4
-    elif flags & WE_HAVE_A_TWO_BY_TWO:  i += 8
-    more = flags & MORE_COMPONENTS
+    if flags & _ARG_1_AND_2_ARE_WORDS: i += 4
+    else: i += 2
+    if flags & _WE_HAVE_A_SCALE: i += 2
+    elif flags & _WE_HAVE_AN_X_AND_Y_SCALE: i += 4
+    elif flags & _WE_HAVE_A_TWO_BY_TWO: i += 8
+    more = flags & _MORE_COMPONENTS
   self.data = str(data)
 
 @_add_method(fontTools.ttLib.getTableModule('glyf').Glyph)
@@ -1057,18 +1050,18 @@ def dropInstructionsFast(self):
     while more:
       flags =(data[i] << 8) | data[i+1]
       # Turn instruction flag off
-      flags &= ~WE_HAVE_INSTRUCTIONS
+      flags &= ~_WE_HAVE_INSTRUCTIONS
       data[i+0] = flags >> 8
       data[i+1] = flags & 0xFF
       i += 4
       flags = int(flags)
 
-      if flags & ARG_1_AND_2_ARE_WORDS:  i += 4
-      else:          i += 2
-      if flags & WE_HAVE_A_SCALE:    i += 2
-      elif flags & WE_HAVE_AN_X_AND_Y_SCALE:  i += 4
-      elif flags & WE_HAVE_A_TWO_BY_TWO:  i += 8
-      more = flags & MORE_COMPONENTS
+      if flags & _ARG_1_AND_2_ARE_WORDS: i += 4
+      else: i += 2
+      if flags & _WE_HAVE_A_SCALE: i += 2
+      elif flags & _WE_HAVE_AN_X_AND_Y_SCALE: i += 4
+      elif flags & _WE_HAVE_A_TWO_BY_TWO: i += 8
+      more = flags & _MORE_COMPONENTS
     # Cut off
     data = data[:i]
   if len(data) % 4:
