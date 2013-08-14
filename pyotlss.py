@@ -384,7 +384,7 @@ def may_have_non_1to1(self):
 	      fontTools.ttLib.tables.otTables.ChainContextPos)
 def __classify_context(self):
 
-  class ContextHelper:
+  class ContextHelper(object):
     def __init__(self, klass, Format):
       if klass.__name__.endswith('Subst'):
         Typ = 'Sub'
@@ -1244,9 +1244,9 @@ def prune_pre_subset(self, options):
 # TODO Move font name loading hack to Subsetter?
 
 
-class Subsetter:
+class Subsetter(object):
 
-  class Options:
+  class Options(object):
 
     class UnknownOptionError(Exception):
       pass
@@ -1489,7 +1489,7 @@ class Subsetter:
 
 import sys, time
 
-class Logger:
+class Logger(object):
 
   def __init__(self, verbose=False, xml=False, timing=False):
     self.verbose = verbose
