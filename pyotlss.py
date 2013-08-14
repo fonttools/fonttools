@@ -42,7 +42,7 @@ def __add_method(*clazzes):
     return None
   return wrapper
 
-def unique_sorted(l):
+def __uniq_sort(l):
   return sorted(set(l))
 
 
@@ -71,7 +71,7 @@ def remap(self, coverage_map):
 @__add_method(fontTools.ttLib.tables.otTables.ClassDef)
 def intersect(self, glyphs):
   "Returns ascending list of matching class values."
-  return unique_sorted(
+  return __uniq_sort(
      ([0] if any(g not in self.classDefs for g in glyphs) else []) +
       [v for g,v in self.classDefs.iteritems() if g in glyphs])
 
@@ -89,7 +89,7 @@ def subset(self, glyphs, remap=False):
   self.classDefs = {g:v for g,v in self.classDefs.iteritems() if g in glyphs}
   # Note: while class 0 has the special meaning of "not matched",
   # if no glyph will ever /not match/, we can optimize class 0 out too.
-  indices = unique_sorted(
+  indices = __uniq_sort(
      ([0] if any(g not in self.classDefs for g in glyphs) else []) +
       self.classDefs.itervalues())
   if remap:
@@ -276,7 +276,7 @@ def subset_glyphs(self, s):
                                  for i in base_indices]
     self.BaseArray.BaseCount = len(self.BaseArray.BaseRecord)
     # Prune empty classes
-    class_indices = unique_sorted(v.Class for v in self.MarkArray.MarkRecord)
+    class_indices = __uniq_sort(v.Class for v in self.MarkArray.MarkRecord)
     self.ClassCount = len(class_indices)
     for m in self.MarkArray.MarkRecord:
       m.Class = class_indices.index(m.Class)
@@ -300,7 +300,7 @@ def subset_glyphs(self, s):
                                          for i in ligature_indices]
     self.LigatureArray.LigatureCount = len(self.LigatureArray.LigatureAttach)
     # Prune empty classes
-    class_indices = unique_sorted(v.Class for v in self.MarkArray.MarkRecord)
+    class_indices = __uniq_sort(v.Class for v in self.MarkArray.MarkRecord)
     self.ClassCount = len(class_indices)
     for m in self.MarkArray.MarkRecord:
       m.Class = class_indices.index(m.Class)
@@ -325,7 +325,7 @@ def subset_glyphs(self, s):
                                    for i in mark2_indices]
     self.Mark2Array.MarkCount = len(self.Mark2Array.Mark2Record)
     # Prune empty classes
-    class_indices = unique_sorted(v.Class for v in self.Mark1Array.MarkRecord)
+    class_indices = __uniq_sort(v.Class for v in self.Mark1Array.MarkRecord)
     self.ClassCount = len(class_indices)
     for m in self.Mark1Array.MarkRecord:
       m.Class = class_indices.index(m.Class)
@@ -714,8 +714,8 @@ def subset_lookups(self, lookup_indices):
 
 @__add_method(fontTools.ttLib.tables.otTables.Lookup)
 def collect_lookups(self):
-  return unique_sorted(sum((st.collect_lookups() for st in self.SubTable
-                        if st), []))
+  return __uniq_sort(sum((st.collect_lookups() for st in self.SubTable
+                          if st), []))
 
 @__add_method(fontTools.ttLib.tables.otTables.Lookup)
 def may_have_non_1to1(self):
@@ -736,7 +736,7 @@ def subset_lookups(self, lookup_indices):
 
 @__add_method(fontTools.ttLib.tables.otTables.LookupList)
 def closure_lookups(self, lookup_indices):
-  lookup_indices = unique_sorted(lookup_indices)
+  lookup_indices = __uniq_sort(lookup_indices)
   recurse = lookup_indices
   while True:
     recurse_lookups = sum((self.Lookup[i].collect_lookups()
@@ -744,8 +744,8 @@ def closure_lookups(self, lookup_indices):
     recurse_lookups = [l for l in recurse_lookups
                        if l not in lookup_indices and l < self.LookupCount]
     if not recurse_lookups:
-      return unique_sorted(lookup_indices)
-    recurse_lookups = unique_sorted(recurse_lookups)
+      return __uniq_sort(lookup_indices)
+    recurse_lookups = __uniq_sort(recurse_lookups)
     lookup_indices.extend(recurse_lookups)
     recurse = recurse_lookups
 
@@ -773,9 +773,9 @@ def subset_lookups(self, lookup_indices):
 
 @__add_method(fontTools.ttLib.tables.otTables.FeatureList)
 def collect_lookups(self, feature_indices):
-  return unique_sorted(sum((self.FeatureRecord[i].Feature.collect_lookups()
-                              for i in feature_indices
-                              if i < self.FeatureCount), []))
+  return __uniq_sort(sum((self.FeatureRecord[i].Feature.collect_lookups()
+                          for i in feature_indices
+                          if i < self.FeatureCount), []))
 
 @__add_method(fontTools.ttLib.tables.otTables.FeatureList)
 def subset_features(self, feature_indices):
@@ -803,7 +803,7 @@ def collect_features(self):
   feature_indices = self.FeatureIndex[:]
   if self.ReqFeatureIndex != 65535:
     feature_indices.append(self.ReqFeatureIndex)
-  return unique_sorted(feature_indices)
+  return __uniq_sort(feature_indices)
 
 @__add_method(fontTools.ttLib.tables.otTables.Script)
 def subset_features(self, feature_indices):
@@ -820,7 +820,7 @@ def collect_features(self):
   feature_indices = [l.LangSys.collect_features() for l in self.LangSysRecord]
   if self.DefaultLangSys:
     feature_indices.append(self.DefaultLangSys.collect_features())
-  return unique_sorted(sum(feature_indices, []))
+  return __uniq_sort(sum(feature_indices, []))
 
 @__add_method(fontTools.ttLib.tables.otTables.ScriptList)
 def subset_features(self, feature_indices):
@@ -831,8 +831,8 @@ def subset_features(self, feature_indices):
 
 @__add_method(fontTools.ttLib.tables.otTables.ScriptList)
 def collect_features(self):
-  return unique_sorted(sum((s.Script.collect_features()
-                              for s in self.ScriptRecord), []))
+  return __uniq_sort(sum((s.Script.collect_features()
+                          for s in self.ScriptRecord), []))
 
 @__add_method(fontTools.ttLib.getTableClass('GSUB'))
 def closure_glyphs(self, s):
@@ -1276,8 +1276,8 @@ class Subsetter:
                 'abvf', 'pstf', 'cfar', 'vatu', 'cjct', 'init', 'pres',
                 'abvs', 'blws', 'psts', 'haln', 'dist', 'abvm', 'blwm'],
     }
-    layout_features_default = unique_sorted(sum(
-        layout_features_groups.itervalues(), []))
+    layout_features_default = sorted(set(sum(
+        layout_features_groups.itervalues(), [])))
 
     drop_tables = drop_tables_default
     no_subset_tables = no_subset_tables_default
