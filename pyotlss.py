@@ -94,7 +94,7 @@ def subset(self, glyphs, remap=False):
   # if no glyph will ever /not match/, we can optimize class 0 out too.
   indices = _uniq_sort(
      ([0] if any(g not in self.classDefs for g in glyphs) else []) +
-      self.classDefs.itervalues())
+      self.classDefs.values())
   if remap:
     self.remap(indices)
   return indices
