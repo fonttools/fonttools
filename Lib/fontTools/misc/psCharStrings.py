@@ -589,6 +589,51 @@ class SimpleT2Decompiler:
 		args = self.popall()
 		self.hintCount = self.hintCount + len(args) / 2
 
+	# misc
+	def op_and(self, index):
+		raise NotImplementedError
+	def op_or(self, index):
+		raise NotImplementedError
+	def op_not(self, index):
+		raise NotImplementedError
+	def op_store(self, index):
+		raise NotImplementedError
+	def op_abs(self, index):
+		raise NotImplementedError
+	def op_add(self, index):
+		raise NotImplementedError
+	def op_sub(self, index):
+		raise NotImplementedError
+	def op_div(self, index):
+		raise NotImplementedError
+	def op_load(self, index):
+		raise NotImplementedError
+	def op_neg(self, index):
+		raise NotImplementedError
+	def op_eq(self, index):
+		raise NotImplementedError
+	def op_drop(self, index):
+		raise NotImplementedError
+	def op_put(self, index):
+		raise NotImplementedError
+	def op_get(self, index):
+		raise NotImplementedError
+	def op_ifelse(self, index):
+		raise NotImplementedError
+	def op_random(self, index):
+		raise NotImplementedError
+	def op_mul(self, index):
+		raise NotImplementedError
+	def op_sqrt(self, index):
+		raise NotImplementedError
+	def op_dup(self, index):
+		raise NotImplementedError
+	def op_exch(self, index):
+		raise NotImplementedError
+	def op_index(self, index):
+		raise NotImplementedError
+	def op_roll(self, index):
+		raise NotImplementedError
 
 class T2OutlineExtractor(SimpleT2Decompiler):
 	
