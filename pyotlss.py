@@ -1655,6 +1655,9 @@ def load_font(fontfile, dont_load_glyph_names=False):
 
   return font
 
+def save_font(font, outfile, reorderTables=False):
+  font.save(outfile, reorderTables=reorderTables)
+
 
 # Cleanup module space
 l = locals()
@@ -1732,7 +1735,7 @@ def main(args=None):
 
   outfile = fontfile + '.subset'
 
-  font.save(outfile)
+  save_font (font, outfile)
   log.lapse("compile and save font")
 
   log.last_time = log.start_time
