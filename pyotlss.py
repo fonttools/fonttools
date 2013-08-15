@@ -892,7 +892,7 @@ def subset_feature_tags(self, feature_tags):
 @_add_method(fontTools.ttLib.getTableClass('GSUB'),
              fontTools.ttLib.getTableClass('GPOS'))
 def prune_pre_subset(self, options):
-  if options.layout_features and '*' not in options.layout_features:
+  if '*' not in options.layout_features:
     self.subset_feature_tags(options.layout_features)
   self.prune_lookups()
   return True
@@ -1391,7 +1391,7 @@ class Options(object):
   def set(self, **kwargs):
     for k,v in kwargs.iteritems():
       if not hasattr(self, k):
-        raise self.UnknownOptionError("Unknown option '%s'" % k)
+        raise self.UnknownOptionError("Unknown option '%s'" % a)
       setattr(self, k, v)
 
   def parse_opts(self, argv, ignore_unknown=False):
@@ -1404,6 +1404,7 @@ class Options(object):
         continue
       a = a[2:]
       i = a.find('=')
+      op = '='
       if i == -1:
         if a.startswith("no-"):
           k = a[3:]
@@ -1413,6 +1414,9 @@ class Options(object):
           v = True
       else:
         k = a[:i]
+        if k[-1] in "-+":
+          op = k[-1]+'='  # Ops is '-=' or '+=' now.
+          k = k[:-1]
         v = a[i+1:]
       k = k.replace('-', '_')
       if not hasattr(self, k):
@@ -1428,8 +1432,22 @@ class Options(object):
       elif isinstance(ov, int):
         v = int(v)
       elif isinstance(ov, list):
-        v = v.split(',')
-        v = [int(x, 0) if x[0] in range(10) else x for x in v]
+        vv = v.split(',')
+        if vv == ['']:
+          vv = []
+        vv = [int(x, 0) if len(x) and x[0] in range(10) else x for x in vv]
+        if op == '=':
+          v = vv
+        elif op == '+=':
+          v = ov
+          v.extend(vv)
+        elif op == '-=':
+          v = ov
+          for x in vv:
+            if x in v:
+              v.remove(x)
+        else:
+          assert 0
 
       opts[k] = v
     self.set(**opts)
