@@ -1685,7 +1685,7 @@ def main(args=None):
   args = options.parse_opts(args, ignore_unknown=['text'])
 
   if len(args) < 2:
-    print >>sys.stderr, "usage: %s font-file glyph..." % arg0
+    print >>sys.stderr, "usage: %s font-file glyph... [--text=ABC]... [--option=value]..." % arg0
     sys.exit(1)
 
   fontfile = args[0]
