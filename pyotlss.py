@@ -1382,6 +1382,7 @@ class Options(object):
   name_legacy = False
   name_languages = [0x0409]  # English
   mandatory_glyphs = True  # First four for TrueType, .notdef for CFF
+  flavor = None # May be 'woff'
 
   def __init__(self, **kwargs):
 
@@ -1655,8 +1656,11 @@ def load_font(fontFile,
 
   return font
 
-def save_font(font, outfile,
+def save_font(font, outfile, options,
               reorderTables=False):
+  if options.flavor and not hasattr(font, 'flavor'):
+    raise Exception("fonttools version does not support flavors.")
+  font.flavor = options.flavor
   font.save(outfile, reorderTables=reorderTables)
 
 
@@ -1736,7 +1740,7 @@ def main(args=None):
 
   outfile = fontfile + '.subset'
 
-  save_font (font, outfile)
+  save_font (font, outfile, options)
   log.lapse("compile and save font")
 
   log.last_time = log.start_time
