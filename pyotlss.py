@@ -1382,7 +1382,6 @@ class Options(object):
   name_legacy = False
   name_languages = [0x0409]  # English
   mandatory_glyphs = True  # First four for TrueType, .notdef for CFF
-  recalc_bboxes = False  # Slows us down
 
   def __init__(self, **kwargs):
 
@@ -1572,8 +1571,6 @@ class Subsetter(object):
 
   def subset(self, font):
 
-    font.recalcBBoxes = self.options.recalc_bboxes
-
     self._prune_pre_subset(font)
     self._closure_glyphs(font)
     self._subset_glyphs(font)
@@ -1629,11 +1626,16 @@ class Logger(object):
       writer.newline()
 
 
-def load_font(fontfile, dont_load_glyph_names=False):
+def load_font(fontFile,
+              checkChecksums=False,
+              recalcBBoxes=False,
+              dontLoadGlyphNames=False):
 
   # TODO(behdad) Option for ignoreDecompileErrors?
 
-  font = fontTools.ttx.TTFont(fontfile)
+  font = fontTools.ttx.TTFont(fontFile,
+                              checkChecksums=checkChecksums,
+                              recalcBBoxes=recalcBBoxes)
 
   # Hack:
   #
@@ -1644,7 +1646,7 @@ def load_font(fontfile, dont_load_glyph_names=False):
   # Ideally ttLib should provide a way to ask it to skip loading
   # glyph names.  But it currently doesn't provide such a thing.
   #
-  if dont_load_glyph_names:
+  if dontLoadGlyphNames:
     post = fontTools.ttLib.getTableClass('post')
     saved = post.decode_format_2_0
     post.decode_format_2_0 = post.decode_format_3_0
@@ -1685,12 +1687,12 @@ def main(args=None):
   fontfile = args[0]
   args = args[1:]
 
-  dont_load_glyph_names =(not options.glyph_names and
+  dontLoadGlyphNames =(not options.glyph_names and
          all(any(g.startswith(p)
              for p in ['gid', 'glyph', 'uni', 'U+'])
               for g in args))
 
-  font = load_font(fontfile, dont_load_glyph_names=dont_load_glyph_names)
+  font = load_font(fontfile, dontLoadGlyphNames=dontLoadGlyphNames)
   subsetter = Subsetter(options=options, log=log)
   log.lapse("load font")
 
