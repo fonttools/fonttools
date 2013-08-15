@@ -22,14 +22,14 @@ class SFNTReader:
 	def __init__(self, file, checkChecksums=1, fontNumber=-1):
 		self.file = file
 		self.checkChecksums = checkChecksums
-		data = self.file.read(sfntDirectorySize)
-		if len(data) <> sfntDirectorySize:
-			from fontTools import ttLib
-			raise ttLib.TTLibError, "Not a TrueType or OpenType font (not enough data)"
-		sstruct.unpack(sfntDirectoryFormat, data, self)
+
+		self.flavor = None
+		self.flavorData = None
+		self.DirectoryEntry = SFNTDirectoryEntry
+		self.sfntVersion = self.file.read(4)
+		self.file.seek(0)
 		if self.sfntVersion == "ttcf":
-			assert ttcHeaderSize == sfntDirectorySize
-			sstruct.unpack(ttcHeaderFormat, data, self)
+			sstruct.unpack(ttcHeaderFormat, self.file.read(ttcHeaderSize), self)
 			assert self.Version == 0x00010000 or self.Version == 0x00020000, "unrecognized TTC version 0x%08x" % self.Version
 			if not 0 <= fontNumber < self.numFonts:
 				from fontTools import ttLib
@@ -38,14 +38,20 @@ class SFNTReader:
 			if self.Version == 0x00020000:
 				pass # ignoring version 2.0 signatures
 			self.file.seek(offsetTable[fontNumber])
-			data = self.file.read(sfntDirectorySize)
-			sstruct.unpack(sfntDirectoryFormat, data, self)
+			sstruct.unpack(sfntDirectoryFormat, self.file.read(sfntDirectorySize), self)
+		elif self.sfntVersion == "wOFF":
+			self.flavor = "woff"
+			self.DirectoryEntry = WOFFDirectoryEntry
+			sstruct.unpack(woffDirectoryFormat, self.file.read(woffDirectorySize), self)
+		else:
+			sstruct.unpack(sfntDirectoryFormat, self.file.read(sfntDirectorySize), self)
+
 		if self.sfntVersion not in ("\000\001\000\000", "OTTO", "true"):
 			from fontTools import ttLib
 			raise ttLib.TTLibError, "Not a TrueType or OpenType font (bad sfntVersion)"
 		self.tables = {}
 		for i in range(self.numTables):
-			entry = SFNTDirectoryEntry()
+			entry = self.DirectoryEntry()
 			entry.fromFile(self.file)
 			if entry.length > 0:
 				self.tables[entry.tag] = entry
@@ -55,7 +61,11 @@ class SFNTReader:
 				# Besides, at least one font has been sighted which actually
 				# *has* a zero-length table.
 				pass
-	
+
+		# Load flavor data if any
+		if self.flavor == "woff":
+			self.flavorData = WOFFFlavorData(self)
+
 	def has_key(self, tag):
 		return self.tables.has_key(tag)
 	
@@ -65,8 +75,7 @@ class SFNTReader:
 	def __getitem__(self, tag):
 		"""Fetch the raw table data."""
 		entry = self.tables[tag]
-		self.file.seek(entry.offset)
-		data = self.file.read(entry.length)
+		data = entry.loadData (self.file)
 		if self.checkChecksums:
 			if tag == 'head':
 				# Beh: we have to special-case the 'head' table.
@@ -214,23 +223,105 @@ sfntDirectoryEntryFormat = """
 
 sfntDirectoryEntrySize = sstruct.calcsize(sfntDirectoryEntryFormat)
 
-class SFNTDirectoryEntry:
+woffDirectoryFormat = """
+		> # big endian
+		signature:      4s   # "wOFF"
+		sfntVersion:    4s
+		length:         L    # total woff file size
+		numTables:      H    # number of tables
+		reserved:       H    # set to 0
+		totalSfntSize:  L    # uncompressed size
+		majorVersion:   H    # major version of WOFF file
+		minorVersion:   H    # minor version of WOFF file
+		metaOffset:     L    # offset to metadata block
+		metaLength:     L    # length of compressed metadata
+		metaOrigLength: L    # length of uncompressed metadata
+		privOffset:     L    # offset to private data block
+		privLength:     L    # length of private data block
+"""
+
+woffDirectorySize = sstruct.calcsize(woffDirectoryFormat)
+
+woffDirectoryEntryFormat = """
+		> # big endian
+		tag:            4s
+		offset:         L
+		length:         L    # compressed length
+		origLength:     L    # original length
+		checksum:       L    # original checksum
+"""
+
+woffDirectoryEntrySize = sstruct.calcsize(woffDirectoryEntryFormat)
+
+
+class DirectoryEntry:
 	
 	def fromFile(self, file):
-		sstruct.unpack(sfntDirectoryEntryFormat, 
-				file.read(sfntDirectoryEntrySize), self)
+		sstruct.unpack(self.format, file.read(self.formatSize), self)
 	
 	def fromString(self, str):
-		sstruct.unpack(sfntDirectoryEntryFormat, str, self)
+		sstruct.unpack(self.format, str, self)
 	
 	def toString(self):
-		return sstruct.pack(sfntDirectoryEntryFormat, self)
+		return sstruct.pack(self.format, self)
 	
 	def __repr__(self):
 		if hasattr(self, "tag"):
-			return "<SFNTDirectoryEntry '%s' at %x>" % (self.tag, id(self))
+			return "<%s '%s' at %x>" % (self.__class__.__name__, self.tag, id(self))
 		else:
-			return "<SFNTDirectoryEntry at %x>" % id(self)
+			return "<%s at %x>" % (self.__class__.__name__, id(self))
+
+	def loadData(self, file):
+		file.seek(self.offset)
+		data = file.read(self.length)
+		assert len(data) == self.length
+		return self.decodeData (data)
+
+	def decodeData(self, rawData):
+		return rawData
+
+class SFNTDirectoryEntry(DirectoryEntry):
+
+	format = sfntDirectoryEntryFormat
+	formatSize = sfntDirectoryEntrySize
+
+class WOFFDirectoryEntry(DirectoryEntry):
+
+	format = woffDirectoryEntryFormat
+	formatSize = woffDirectoryEntrySize
+
+	def decodeData(self, rawData):
+		import zlib
+		if self.length == self.origLength:
+			data = rawData
+		else:
+			assert self.length < self.origLength
+			data = zlib.decompress(rawData)
+			assert len (data) == self.origLength
+		return data
+
+class WOFFFlavorData():
+
+	def __init__(self, reader=None):
+		self.majorVersion = None
+		self.minorVersion = None
+		self.metaData = None
+		self.privData = None
+		if reader:
+			self.majorVersion = reader.majorVersion
+			self.minorVersion = reader.minorVersion
+			if reader.metaLength:
+				reader.file.seek(reader.metaOffset)
+				rawData = read.file.read(reader.metaLength)
+				assert len(rawData) == reader.metaLength
+				data = zlib.decompress(rawData)
+				assert len(data) == reader.metaOrigLength
+				self.metaData = data
+			if reader.privLength:
+				reader.file.seek(reader.privOffset)
+				data = read.file.read(reader.privLength)
+				assert len(data) == reader.privLength
+				self.privData = data
 
 
 def calcChecksum(data):

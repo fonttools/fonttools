@@ -69,7 +69,7 @@ class TTFont:
 	"""
 	
 	def __init__(self, file=None, res_name_or_index=None,
-			sfntVersion="\000\001\000\000", checkChecksums=0,
+			sfntVersion="\000\001\000\000", flavor=None, checkChecksums=0,
 			verbose=0, recalcBBoxes=1, allowVID=0, ignoreDecompileErrors=False,
 			fontNumber=-1):
 		
@@ -91,7 +91,8 @@ class TTFont:
 		
 		The TTFont constructor can also be called without a 'file' 
 		argument: this is the way to create a new empty font. 
-		In this case you can optionally supply the 'sfntVersion' argument.
+		In this case you can optionally supply the 'sfntVersion' argument,
+		and a 'flavor' which can be None, or 'woff'.
 		
 		If the recalcBBoxes argument is false, a number of things will *not*
 		be recalculated upon save/compile:
@@ -135,6 +136,8 @@ class TTFont:
 
 		if not file:
 			self.sfntVersion = sfntVersion
+			self.flavor = flavor
+			self.flavorData = None
 			return
 		if not hasattr(file, "read"):
 			# assume file is a string
@@ -155,6 +158,8 @@ class TTFont:
 			pass # assume "file" is a readable file object
 		self.reader = sfnt.SFNTReader(file, checkChecksums, fontNumber=fontNumber)
 		self.sfntVersion = self.reader.sfntVersion
+		self.flavor = self.reader.flavor
+		self.flavorData = self.reader.flavorData
 	
 	def close(self):
 		"""If we still have a reader object, close it."""
