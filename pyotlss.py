@@ -1628,6 +1628,7 @@ class Logger(object):
 
 
 def load_font(fontFile,
+              options,
               checkChecksums=False,
               recalcBBoxes=False,
               dontLoadGlyphNames=False):
@@ -1695,7 +1696,7 @@ def main(args=None):
              for p in ['gid', 'glyph', 'uni', 'U+'])
               for g in args))
 
-  font = load_font(fontfile, dontLoadGlyphNames=dontLoadGlyphNames)
+  font = load_font(fontfile, options, dontLoadGlyphNames=dontLoadGlyphNames)
   subsetter = Subsetter(options=options, log=log)
   log.lapse("load font")
 
