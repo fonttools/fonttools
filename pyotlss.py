@@ -1631,8 +1631,6 @@ def load_font(fontFile,
               recalcBBoxes=False,
               dontLoadGlyphNames=False):
 
-  # TODO(behdad) Option for ignoreDecompileErrors?
-
   font = fontTools.ttx.TTFont(fontFile,
                               checkChecksums=checkChecksums,
                               recalcBBoxes=recalcBBoxes)
@@ -1657,7 +1655,8 @@ def load_font(fontFile,
 
   return font
 
-def save_font(font, outfile, reorderTables=False):
+def save_font(font, outfile,
+              reorderTables=False):
   font.save(outfile, reorderTables=reorderTables)
 
 
