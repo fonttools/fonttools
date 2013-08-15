@@ -41,6 +41,10 @@ def _add_method(*clazzes):
   def wrapper(method):
     for clazz in clazzes:
       assert clazz.__name__ != 'DefaultTable', 'Oops, table class not found.'
+      assert not hasattr(clazz, method.func_name) or \
+          len([c for c in clazzes if c == clazz or c in clazz.__bases__]) > 1, \
+          "Oops, class '%s' has method '%s'." % (clazz.__name__,
+                                                 method.func_name)
       setattr(clazz, method.func_name, method)
     return None
   return wrapper
@@ -231,6 +235,13 @@ def subset_glyphs(self, s):
   else:
     assert 0, "unknown format: %s" % self.Format
 
+@_add_method(fontTools.ttLib.tables.otTables.SinglePos)
+def prune_post_subset(self, options):
+  if not options.hinting:
+    # Drop device tables
+    self.ValueFormat &= ~0x00F0
+  return True
+
 @_add_method(fontTools.ttLib.tables.otTables.PairPos)
 def subset_glyphs(self, s):
   if self.Format == 1:
@@ -257,6 +268,14 @@ def subset_glyphs(self, s):
   else:
     assert 0, "unknown format: %s" % self.Format
 
+@_add_method(fontTools.ttLib.tables.otTables.PairPos)
+def prune_post_subset(self, options):
+  if not options.hinting:
+    # Drop device tables
+    self.ValueFormat1 &= ~0x00F0
+    self.ValueFormat2 &= ~0x00F0
+  return True
+
 @_add_method(fontTools.ttLib.tables.otTables.CursivePos)
 def subset_glyphs(self, s):
   if self.Format == 1:
@@ -266,6 +285,19 @@ def subset_glyphs(self, s):
     return bool(self.EntryExitCount)
   else:
     assert 0, "unknown format: %s" % self.Format
+
+@_add_method(fontTools.ttLib.tables.otTables.Anchor)
+def prune_hints(self):
+  # Drop device tables / contour anchor point
+  self.Format = 1
+
+@_add_method(fontTools.ttLib.tables.otTables.CursivePos)
+def prune_post_subset(self, options):
+  if not options.hinting:
+    for rec in self.EntryExitRecord:
+      if rec.EntryAnchor: rec.EntryAnchor.prune_hints()
+      if rec.ExitAnchor: rec.ExitAnchor.prune_hints()
+  return True
 
 @_add_method(fontTools.ttLib.tables.otTables.MarkBasePos)
 def subset_glyphs(self, s):
@@ -290,6 +322,16 @@ def subset_glyphs(self, s):
                  self.BaseArray.BaseCount)
   else:
     assert 0, "unknown format: %s" % self.Format
+
+@_add_method(fontTools.ttLib.tables.otTables.MarkBasePos)
+def prune_post_subset(self, options):
+    if not options.hinting:
+      for m in self.MarkArray.MarkRecord:
+        m.MarkAnchor.prune_hints()
+      for b in self.BaseArray.BaseRecord:
+        for a in b.BaseAnchor:
+          a.prune_hints()
+    return True
 
 @_add_method(fontTools.ttLib.tables.otTables.MarkLigPos)
 def subset_glyphs(self, s):
@@ -316,6 +358,17 @@ def subset_glyphs(self, s):
   else:
     assert 0, "unknown format: %s" % self.Format
 
+@_add_method(fontTools.ttLib.tables.otTables.MarkLigPos)
+def prune_post_subset(self, options):
+    if not options.hinting:
+      for m in self.MarkArray.MarkRecord:
+        m.MarkAnchor.prune_hints()
+      for l in self.LigatureArray.LigatureAttach:
+        for c in l.ComponentRecord:
+          for a in c.LigatureAnchor:
+            a.prune_hints()
+    return True
+
 @_add_method(fontTools.ttLib.tables.otTables.MarkMarkPos)
 def subset_glyphs(self, s):
   if self.Format == 1:
@@ -339,6 +392,17 @@ def subset_glyphs(self, s):
                  self.Mark2Array.MarkCount)
   else:
     assert 0, "unknown format: %s" % self.Format
+
+@_add_method(fontTools.ttLib.tables.otTables.MarkMarkPos)
+def prune_post_subset(self, options):
+    if not options.hinting:
+      # Drop device tables or contour anchor point
+      for m in self.Mark1Array.MarkRecord:
+        m.MarkAnchor.prune_hints()
+      for b in self.Mark2Array.Mark2Record:
+        for m in rec.Mark2Anchor:
+          m.prune_hints()
+    return True
 
 @_add_method(fontTools.ttLib.tables.otTables.SingleSubst,
              fontTools.ttLib.tables.otTables.MultipleSubst,
@@ -367,6 +431,36 @@ def subset_lookups(self, lookup_indices):
              fontTools.ttLib.tables.otTables.MarkMarkPos)
 def collect_lookups(self):
   return []
+
+@_add_method(fontTools.ttLib.tables.otTables.SingleSubst,
+             fontTools.ttLib.tables.otTables.MultipleSubst,
+             fontTools.ttLib.tables.otTables.AlternateSubst,
+             fontTools.ttLib.tables.otTables.LigatureSubst,
+             fontTools.ttLib.tables.otTables.ContextSubst,
+             fontTools.ttLib.tables.otTables.ChainContextSubst,
+             fontTools.ttLib.tables.otTables.ReverseChainSingleSubst,
+             fontTools.ttLib.tables.otTables.SinglePos,
+             fontTools.ttLib.tables.otTables.PairPos,
+             fontTools.ttLib.tables.otTables.CursivePos,
+             fontTools.ttLib.tables.otTables.MarkBasePos,
+             fontTools.ttLib.tables.otTables.MarkLigPos,
+             fontTools.ttLib.tables.otTables.MarkMarkPos,
+             fontTools.ttLib.tables.otTables.ContextPos,
+             fontTools.ttLib.tables.otTables.ChainContextPos)
+def prune_pre_subset(self, options):
+  return True
+
+@_add_method(fontTools.ttLib.tables.otTables.SingleSubst,
+             fontTools.ttLib.tables.otTables.MultipleSubst,
+             fontTools.ttLib.tables.otTables.AlternateSubst,
+             fontTools.ttLib.tables.otTables.LigatureSubst,
+             fontTools.ttLib.tables.otTables.ReverseChainSingleSubst,
+             fontTools.ttLib.tables.otTables.ContextSubst,
+             fontTools.ttLib.tables.otTables.ChainContextSubst,
+             fontTools.ttLib.tables.otTables.ContextPos,
+             fontTools.ttLib.tables.otTables.ChainContextPos)
+def prune_post_subset(self, options):
+  return True
 
 @_add_method(fontTools.ttLib.tables.otTables.SingleSubst,
              fontTools.ttLib.tables.otTables.AlternateSubst,
@@ -677,9 +771,25 @@ def may_have_non_1to1(self):
 
 @_add_method(fontTools.ttLib.tables.otTables.ExtensionSubst,
              fontTools.ttLib.tables.otTables.ExtensionPos)
+def prune_pre_subset(self, options):
+  if self.Format == 1:
+    return self.ExtSubTable.prune_pre_subset(options)
+  else:
+    assert 0, "unknown format: %s" % self.Format
+
+@_add_method(fontTools.ttLib.tables.otTables.ExtensionSubst,
+             fontTools.ttLib.tables.otTables.ExtensionPos)
 def subset_glyphs(self, s):
   if self.Format == 1:
     return self.ExtSubTable.subset_glyphs(s)
+  else:
+    assert 0, "unknown format: %s" % self.Format
+
+@_add_method(fontTools.ttLib.tables.otTables.ExtensionSubst,
+             fontTools.ttLib.tables.otTables.ExtensionPos)
+def prune_post_subset(self, options):
+  if self.Format == 1:
+    return self.ExtSubTable.prune_post_subset(options)
   else:
     assert 0, "unknown format: %s" % self.Format
 
@@ -706,10 +816,26 @@ def closure_glyphs(self, s, cur_glyphs=None):
     st.closure_glyphs(s, cur_glyphs)
 
 @_add_method(fontTools.ttLib.tables.otTables.Lookup)
+def prune_pre_subset(self, options):
+  ret = False
+  for st in self.SubTable:
+    if not st: continue
+    if st.prune_pre_subset(options): ret = True
+  return ret
+
+@_add_method(fontTools.ttLib.tables.otTables.Lookup)
 def subset_glyphs(self, s):
   self.SubTable = [st for st in self.SubTable if st and st.subset_glyphs(s)]
   self.SubTableCount = len(self.SubTable)
   return bool(self.SubTableCount)
+
+@_add_method(fontTools.ttLib.tables.otTables.Lookup)
+def prune_post_subset(self, options):
+  ret = False
+  for st in self.SubTable:
+    if not st: continue
+    if st.prune_post_subset(options): ret = True
+  return ret
 
 @_add_method(fontTools.ttLib.tables.otTables.Lookup)
 def subset_lookups(self, lookup_indices):
@@ -726,9 +852,25 @@ def may_have_non_1to1(self):
   return any(st.may_have_non_1to1() for st in self.SubTable if st)
 
 @_add_method(fontTools.ttLib.tables.otTables.LookupList)
+def prune_pre_subset(self, options):
+  ret = False
+  for l in self.Lookup:
+    if not l: continue
+    if l.prune_pre_subset(options): ret = True
+  return ret
+
+@_add_method(fontTools.ttLib.tables.otTables.LookupList)
 def subset_glyphs(self, s):
   "Returns the indices of nonempty lookups."
   return [i for i,l in enumerate(self.Lookup) if l and l.subset_glyphs(s)]
+
+@_add_method(fontTools.ttLib.tables.otTables.LookupList)
+def prune_post_subset(self, options):
+  ret = False
+  for l in self.Lookup:
+    if not l: continue
+    if l.prune_post_subset(options): ret = True
+  return ret
 
 @_add_method(fontTools.ttLib.tables.otTables.LookupList)
 def subset_lookups(self, lookup_indices):
@@ -895,6 +1037,13 @@ def prune_pre_subset(self, options):
   if '*' not in options.layout_features:
     self.subset_feature_tags(options.layout_features)
   self.prune_lookups()
+  self.table.LookupList.prune_pre_subset(options);
+  return True
+
+@_add_method(fontTools.ttLib.getTableClass('GSUB'),
+             fontTools.ttLib.getTableClass('GPOS'))
+def prune_post_subset(self, options):
+  self.table.LookupList.prune_post_subset(options);
   return True
 
 @_add_method(fontTools.ttLib.getTableClass('GDEF'))
@@ -1333,7 +1482,6 @@ def prune_pre_subset(self, options):
 # TODO(behdad) Avoid recursing too much (in GSUB/GPOS and in CFF)
 # TODO(behdad) Text direction considerations.
 # TODO(behdad) Text script / language considerations.
-# TODO(behdad) Drop GPOS Device records if not hinting?
 # TODO(behdad) Move font name loading hack to Subsetter?
 
 
