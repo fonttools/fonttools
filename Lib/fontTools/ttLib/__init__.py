@@ -198,7 +198,7 @@ class TTFont:
 			tmp = tempfile.TemporaryFile(prefix="ttx-fonttools")
 		else:
 			tmp = file
-		writer = sfnt.SFNTWriter(tmp, numTables, self.sfntVersion)
+		writer = sfnt.SFNTWriter(tmp, numTables, self.sfntVersion, self.flavor, self.flavorData)
 		
 		done = []
 		for tag in tags:
@@ -923,7 +923,7 @@ def reorderFontTables(inFile, outFile, tableOrder=None, checkChecksums=0):
 	"""
 	from fontTools.ttLib.sfnt import SFNTReader, SFNTWriter
 	reader = SFNTReader(inFile, checkChecksums=checkChecksums)
-	writer = SFNTWriter(outFile, reader.numTables, reader.sfntVersion)
+	writer = SFNTWriter(outFile, reader.numTables, reader.sfntVersion, reader.flavor, reader.flavorData)
 	tables = reader.keys()
 	for tag in sortedTagList(tables, tableOrder):
 		writer[tag] = reader[tag]
