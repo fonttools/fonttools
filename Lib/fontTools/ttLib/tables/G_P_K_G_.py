@@ -23,7 +23,7 @@ class table_G_P_K_G_(DefaultTable.DefaultTable):
 	def decompile(self, data, ttFont):
 		dummy, newData = sstruct.unpack2(GPKGFormat, data, self)
 
-		GMAPoffsets = array.array("L")
+		GMAPoffsets = array.array("I")
 		endPos = (self.numGMAPs+1) * 4
 		GMAPoffsets.fromstring(newData[:endPos])
 		if sys.byteorder <> "big":
@@ -35,7 +35,7 @@ class table_G_P_K_G_(DefaultTable.DefaultTable):
 			self.GMAPs.append(data[start:end])
 		pos = endPos
 		endPos = pos + (self.numGlyplets + 1)*4
-		glyphletOffsets = array.array("L")
+		glyphletOffsets = array.array("I")
 		glyphletOffsets.fromstring(newData[pos:endPos])
 		if sys.byteorder <> "big":
 			glyphletOffsets.byteswap()
