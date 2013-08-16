@@ -41,8 +41,7 @@ def _add_method(*clazzes):
   def wrapper(method):
     for clazz in clazzes:
       assert clazz.__name__ != 'DefaultTable', 'Oops, table class not found.'
-      assert not hasattr(clazz, method.func_name) or \
-          len([c for c in clazzes if c == clazz or c in clazz.__bases__]) > 1, \
+      assert not hasattr(clazz, method.func_name), \
           "Oops, class '%s' has method '%s'." % (clazz.__name__,
                                                  method.func_name)
       setattr(clazz, method.func_name, method)
@@ -1109,8 +1108,8 @@ def subset_glyphs(self, s):
   self.kernTables = [t for t in self.kernTables if t.kernTable]
   return bool(self.kernTables)
 
-@_add_method(fontTools.ttLib.getTableClass('hmtx'),
-             fontTools.ttLib.getTableClass('vmtx'))
+@_add_method(fontTools.ttLib.getTableClass('vmtx'),
+             fontTools.ttLib.getTableClass('hmtx'))
 def subset_glyphs(self, s):
   self.metrics = _dict((g,v) for g,v in self.metrics.iteritems() if g in s.glyphs)
   return bool(self.metrics)
