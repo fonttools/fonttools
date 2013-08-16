@@ -19,6 +19,7 @@ import struct, sstruct
 import DefaultTable
 from fontTools import ttLib
 from fontTools.misc.textTools import safeEval, readHex
+from fontTools.misc.arrayTools import matMult
 import ttProgram
 import array
 import numpy
@@ -592,10 +593,10 @@ class Glyph:
 					if scale_component_offset:
 						# the Apple way: first move, then scale (ie. scale the component offset)
 						coordinates = coordinates + move
-						coordinates = numpy.dot(coordinates, compo.transform)
+						coordinates = numpy.array(matMult(coordinates, compo.transform))
 					else:
 						# the MS way: first scale, then move
-						coordinates = numpy.dot(coordinates, compo.transform)
+						coordinates = numpy.array(matMult(coordinates, compo.transform))
 						coordinates = coordinates + move
 					# due to the transformation the coords. are now floats;
 					# round them off nicely, and cast to short
@@ -655,6 +656,7 @@ class GlyphComponent:
 		self.glyphName = glyfTable.getGlyphName(int(glyphID))
 		#print ">>", reprflag(self.flags)
 		data = data[4:]
+		x4000 = float(0x4000)
 		
 		if self.flags & ARG_1_AND_2_ARE_WORDS:
 			if self.flags & ARGS_ARE_XY_VALUES:
@@ -673,19 +675,17 @@ class GlyphComponent:
 		
 		if self.flags & WE_HAVE_A_SCALE:
 			scale, = struct.unpack(">h", data[:2])
-			self.transform = numpy.array(
-					[[scale, 0], [0, scale]]) / float(0x4000)  # fixed 2.14
+			self.transform = [[scale/x4000, 0], [0, scale/x4000]]  # fixed 2.14
 			data = data[2:]
 		elif self.flags & WE_HAVE_AN_X_AND_Y_SCALE:
 			xscale, yscale = struct.unpack(">hh", data[:4])
-			self.transform = numpy.array(
-					[[xscale, 0], [0, yscale]]) / float(0x4000)  # fixed 2.14
+			self.transform = [[xscale/x4000, 0], [0, yscale/x4000]]  # fixed 2.14
 			data = data[4:]
 		elif self.flags & WE_HAVE_A_TWO_BY_TWO:
 			(xscale, scale01, 
 					scale10, yscale) = struct.unpack(">hhhh", data[:8])
-			self.transform = numpy.array(
-					[[xscale, scale01], [scale10, yscale]]) / float(0x4000)  # fixed 2.14
+			self.transform = [[xscale/x4000, scale01/x4000],
+					  [scale10/x4000, yscale/x4000]] # fixed 2.14
 			data = data[8:]
 		more = self.flags & MORE_COMPONENTS
 		haveInstructions = self.flags & WE_HAVE_INSTRUCTIONS
@@ -721,8 +721,7 @@ class GlyphComponent:
 				flags = flags | ARG_1_AND_2_ARE_WORDS
 		
 		if hasattr(self, "transform"):
-			# XXX needs more testing
-			transform = numpy.floor(self.transform * 0x4000 + 0.5)
+			transform = [[int(x * 0x4000 + .5) for x in row] for row in self.transform]
 			if transform[0][1] or transform[1][0]:
 				flags = flags | WE_HAVE_A_TWO_BY_TWO
 				data = data + struct.pack(">hhhh", 
@@ -748,7 +747,6 @@ class GlyphComponent:
 			attrs = attrs + [("firstPt", self.firstPt), ("secondPt", self.secondPt)]
 		
 		if hasattr(self, "transform"):
-			# XXX needs more testing
 			transform = self.transform
 			if transform[0][1] or transform[1][0]:
 				attrs = attrs + [
@@ -778,28 +776,18 @@ class GlyphComponent:
 			scale01 = safeEval(attrs["scale01"])
 			scale10 = safeEval(attrs["scale10"])
 			scaley = safeEval(attrs["scaley"])
-			self.transform = numpy.array([[scalex, scale01], [scale10, scaley]])
+			self.transform = [[scalex, scale01], [scale10, scaley]]
 		elif attrs.has_key("scalex"):
 			scalex = safeEval(attrs["scalex"])
 			scaley = safeEval(attrs["scaley"])
-			self.transform = numpy.array([[scalex, 0], [0, scaley]])
+			self.transform = [[scalex, 0], [0, scaley]]
 		elif attrs.has_key("scale"):
 			scale = safeEval(attrs["scale"])
-			self.transform = numpy.array([[scale, 0], [0, scale]])
+			self.transform = [[scale, 0], [0, scale]]
 		self.flags = safeEval(attrs["flags"])
 	
 	def __cmp__(self, other):
-		if hasattr(self, "transform"):
-			if numpy.alltrue(numpy.equal(self.transform, other.transform)):
-				selfdict = self.__dict__.copy()
-				otherdict = other.__dict__.copy()
-				del selfdict["transform"]
-				del otherdict["transform"]
-				return cmp(selfdict, otherdict)
-			else:
-				return 1
-		else:
-			return cmp(self.__dict__, other.__dict__)
+		return cmp(self.__dict__, other.__dict__)
 
 
 def reprflag(flag):
