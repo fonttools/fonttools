@@ -2,7 +2,6 @@ import sys
 import DefaultTable
 import sstruct
 import array
-import numpy
 from types import StringType
 from fontTools.misc.textTools import safeEval, readHex
 from fontTools import ttLib
@@ -59,18 +58,18 @@ class table_G_P_K_G_(DefaultTable.DefaultTable):
 		for i in range(1, self.numGMAPs +1):
 			pos += len(self.GMAPs[i-1])
 			GMAPoffsets[i] = pos
-		gmapArray = numpy.array(GMAPoffsets, numpy.uint32)
+		gmapArray = array.array("I", GMAPoffsets)
 		if sys.byteorder <> "big":
-			gmapArray = gmapArray.byteswap()
+			gmapArray.byteswap()
 		dataList.append(gmapArray.tostring())
 
 		glyphletOffsets[0] = pos
 		for i in range(1, self.numGlyplets +1):
 			pos += len(self.glyphlets[i-1])
 			glyphletOffsets[i] = pos
-		glyphletArray = numpy.array(glyphletOffsets, numpy.uint32)
+		glyphletArray = array.array("I", glyphletOffsets)
 		if sys.byteorder <> "big":
-			glyphletArray = glyphletArray.byteswap()
+			glyphletArray.byteswap()
 		dataList.append(glyphletArray.tostring())
 		dataList += self.GMAPs
 		dataList += self.glyphlets
