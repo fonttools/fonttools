@@ -2,7 +2,6 @@ import sys
 import DefaultTable
 import struct
 import array
-import numpy
 import operator
 from fontTools import ttLib
 from fontTools.misc.textTools import safeEval, readHex
@@ -197,7 +196,7 @@ class cmap_format_0(CmapSubtable):
 		assert charCodes == range(256)
 		valueList = map(ttFont.getGlyphID, valueList)
 
-		glyphIdArray = numpy.array(valueList, numpy.int8)
+		glyphIdArray = array.array("B", valueList)
 		data = struct.pack(">HHH", 0, 262, self.language) + glyphIdArray.tostring()
 		assert len(data) == 262
 		return data
@@ -799,13 +798,13 @@ class cmap_format_4(CmapSubtable):
 		entrySelector = maxExponent
 		rangeShift = 2 * segCount - searchRange
 		
-		charCodeArray = numpy.array( endCode + [0] + startCode, numpy.uint16)
-		idDeltaeArray = numpy.array(idDelta, numpy.int16)
-		restArray = numpy.array(idRangeOffset + glyphIndexArray, numpy.uint16)
+		charCodeArray = array.array("H", endCode + [0] + startCode)
+		idDeltaeArray = array.array("h", idDelta)
+		restArray = array.array("H", idRangeOffset + glyphIndexArray)
 		if sys.byteorder <> "big":
-			charCodeArray = charCodeArray.byteswap()
-			idDeltaeArray = idDeltaeArray.byteswap()
-			restArray = restArray.byteswap()
+			charCodeArray.byteswap()
+			idDeltaeArray.byteswap()
+			restArray.byteswap()
 		data = charCodeArray.tostring() + idDeltaeArray.tostring() + restArray.tostring()
 
 		length = struct.calcsize(cmap_format_4_format) + len(data)
@@ -873,9 +872,9 @@ class cmap_format_6(CmapSubtable):
 			firstCode = codes[0]
 			valueList = map(operator.getitem, [cmap]*lenCodes, codes)
 			valueList = map(ttFont.getGlyphID, valueList)
-			glyphIndexArray = numpy.array(valueList, numpy.uint16)
+			glyphIndexArray = array.array("H", valueList)
 			if sys.byteorder <> "big":
-				glyphIndexArray = glyphIndexArray.byteswap()
+				glyphIndexArray.byteswap()
 			data = glyphIndexArray.tostring()
 		else:
 			data = ""
