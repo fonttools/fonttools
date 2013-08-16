@@ -22,12 +22,6 @@ Later grown into full OpenType subsetter, supporting all standard tables.
 """
 
 
-# Try running on PyPy
-try:
-  import numpypy
-except ImportError:
-  pass
-
 import sys
 import struct
 import time
