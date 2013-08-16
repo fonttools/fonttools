@@ -19,13 +19,11 @@ import struct, sstruct
 import DefaultTable
 from fontTools import ttLib
 from fontTools.misc.textTools import safeEval, readHex
-from fontTools.misc.arrayTools import matMult
+from fontTools.misc.arrayTools import calcBounds
 import ttProgram
 import array
-import numpy
 from types import StringType, TupleType
 import warnings
-
 
 class table__g_l_y_f(DefaultTable.DefaultTable):
 	
@@ -283,7 +281,7 @@ class Glyph:
 			if self.numberOfContours < 0:
 				raise ttLib.TTLibError, "can't mix composites and contours in glyph"
 			self.numberOfContours = self.numberOfContours + 1
-			coordinates = []
+			coordinates = GlyphCoords()
 			flags = []
 			for element in content:
 				if type(element) <> TupleType:
@@ -293,14 +291,13 @@ class Glyph:
 					continue  # ignore anything but "pt"
 				coordinates.append([safeEval(attrs["x"]), safeEval(attrs["y"])])
 				flags.append(not not safeEval(attrs["on"]))
-			coordinates = numpy.array(coordinates, numpy.int16)
 			flags = array.array("B", flags)
 			if not hasattr(self, "coordinates"):
 				self.coordinates = coordinates
 				self.flags = flags
 				self.endPtsOfContours = [len(coordinates)-1]
 			else:
-				self.coordinates = numpy.concatenate((self.coordinates, coordinates))
+				self.coordinates.extend (coordinates)
 				self.flags.extend(flags)
 				self.endPtsOfContours.append(len(self.coordinates)-1)
 		elif name == "component":
@@ -376,7 +373,7 @@ class Glyph:
 				self.decompileCoordinatesRaw(nCoordinates, data)
 		
 		# fill in repetitions and apply signs
-		coordinates = numpy.zeros((nCoordinates, 2), numpy.int16)
+		self.coordinates = coordinates = GlyphCoordinates.zeros(nCoordinates)
 		xIndex = 0
 		yIndex = 0
 		for i in range(nCoordinates):
@@ -408,8 +405,7 @@ class Glyph:
 			coordinates[i] = (x, y)
 		assert xIndex == len(xCoordinates)
 		assert yIndex == len(yCoordinates)
-		# convert relative to absolute coordinates
-		self.coordinates = numpy.add.accumulate(coordinates)
+		coordinates.relativeToAbsolute()
 		# discard all flags but for "flagOnCurve"
 		self.flags = array.array("B", (f & flagOnCurve for f in flags))
 
@@ -481,10 +477,8 @@ class Glyph:
 		data = data + struct.pack(">h", len(instructions)) + instructions
 		nCoordinates = len(self.coordinates)
 		
-		# make a copy
-		coordinates = numpy.array(self.coordinates)
-		# absolute to relative coordinates
-		coordinates[1:] = numpy.subtract(coordinates[1:], coordinates[:-1])
+		coordinates = self.coordinates.copy()
+		coordinates.absoluteToRelative()
 		flags = self.flags
 		compressedflags = []
 		xPoints = []
@@ -540,7 +534,7 @@ class Glyph:
 				compressedflags.append(flag)
 			lastflag = flag
 		data = data + array.array("B", compressedflags).tostring()
-		xPoints = map(int, xPoints)  # work around numpy vs. struct >= 2.5 bug
+		xPoints = map(int, xPoints)  # work around struct >= 2.5 bug
 		yPoints = map(int, yPoints)
 		data = data + apply(struct.pack, (xFormat,)+tuple(xPoints))
 		data = data + apply(struct.pack, (yFormat,)+tuple(yPoints))
@@ -549,8 +543,7 @@ class Glyph:
 	def recalcBounds(self, glyfTable):
 		coordinates, endPts, flags = self.getCoordinates(glyfTable)
 		if len(coordinates) > 0:
-			self.xMin, self.yMin = numpy.minimum.reduce(coordinates)
-			self.xMax, self.yMax = numpy.maximum.reduce(coordinates)
+			self.xMin, self.yMin, self.xMax, self.yMax = calcBounds(coordinates)
 		else:
 			self.xMin, self.yMin, self.xMax, self.yMax = (0, 0, 0, 0)
 	
@@ -575,13 +568,14 @@ class Glyph:
 				coordinates, endPts, flags = g.getCoordinates(glyfTable)
 				if hasattr(compo, "firstPt"):
 					# move according to two reference points
-					move = allCoords[compo.firstPt] - coordinates[compo.secondPt]
+					x1,y1 = allCoords[compo.firstPt]
+					x2,y2 = coordinates[compo.secondPt]
+					move = x1-x2, y1-y2
 				else:
 					move = compo.x, compo.y
 				
 				if not hasattr(compo, "transform"):
-					if len(coordinates) > 0:
-						coordinates = coordinates + move  # I love NumPy!
+					coordinates.translate(move)
 				else:
 					apple_way = compo.flags & SCALED_COMPONENT_OFFSET
 					ms_way = compo.flags & UNSCALED_COMPONENT_OFFSET
@@ -592,42 +586,27 @@ class Glyph:
 						scale_component_offset = apple_way
 					if scale_component_offset:
 						# the Apple way: first move, then scale (ie. scale the component offset)
-						coordinates = coordinates + move
-						coordinates = numpy.array(matMult(coordinates, compo.transform))
+						coordinates.translate(move)
+						coordinates.transform(compo.transform)
 					else:
 						# the MS way: first scale, then move
-						coordinates = numpy.array(matMult(coordinates, compo.transform))
-						coordinates = coordinates + move
-					# due to the transformation the coords. are now floats;
-					# round them off nicely, and cast to short
-					coordinates = numpy.floor(coordinates + 0.5).astype(numpy.int16)
+						coordinates.transform(compo.transform)
+						coordinates.translate(move)
 				if allCoords is None or len(allCoords) == 0:
 					allCoords = coordinates
 					allEndPts = endPts
 					allFlags = flags
 				else:
-					allEndPts = allEndPts + (numpy.array(endPts) + len(allCoords)).tolist()
-					if len(coordinates) > 0:
-						allCoords = numpy.concatenate((allCoords, coordinates))
-						allFlags.extend(flags)
+					offset = len(allCoords)
+					allEndPts.extend(e + offset for e in endPts)
+					allCoords.extend(coordinates)
+					allFlags.extend(flags)
 			return allCoords, allEndPts, allFlags
 		else:
-			return numpy.array([], numpy.int16), [], array.array("B")
+			return GlyphCoordinates(), [], array.array("B")
 	
 	def __cmp__(self, other):
-		if self.numberOfContours <= 0:
-			return cmp(self.__dict__, other.__dict__)
-		else:
-			if cmp(len(self.coordinates), len(other.coordinates)):
-				return 1
-			ctest = numpy.alltrue(numpy.alltrue(numpy.equal(self.coordinates, other.coordinates)))
-			ftest = cmp(self.flags, other.flags)
-			if not ctest or not ftest:
-				return 1
-			return (
-					cmp(self.endPtsOfContours, other.endPtsOfContours) or
-					cmp(self.program, other.instructions)
-				)
+		return cmp(self.__dict__, other.__dict__)
 
 
 class GlyphComponent:
@@ -788,6 +767,79 @@ class GlyphComponent:
 	
 	def __cmp__(self, other):
 		return cmp(self.__dict__, other.__dict__)
+
+class GlyphCoordinates:
+
+	def __init__(self, iterable=[]):
+		self._a = array.array("h")
+		self.extend(iterable)
+
+	@staticmethod
+	def zeros(count):
+		return GlyphCoordinates([(0,0)] * count)
+
+	def copy(self):
+		c = GlyphCoordinates()
+		c._a.extend(self._a)
+		return c
+
+	def __len__(self):
+		return len(self._a) / 2
+
+	def __getitem__(self, k):
+		if isinstance(k, slice):
+			indices = xrange(k.indices(len(self)))
+			return [self[i] for i in indices]
+		return self._a[2*k],self._a[2*k+1]
+
+	def __setitem__(self, k, v):
+		if isinstance(k, slice):
+			indices = xrange(k.indices(len(self)))
+			for j,i in enumerate(indices):
+				self[i] = v[j]
+		self._a[2*k],self._a[2*k+1] = v
+
+	def __repr__(self):
+		return 'GlyphCoordinates(['+','.join(str(c) for c in self)+'])'
+
+	def append(self, (x,y)):
+		self._a.append((x,y))
+
+	def extend(self, iterable):
+		for x,y in iterable:
+			self._a.extend((x,y))
+
+	def relativeToAbsolute(self):
+		a = self._a
+		x,y = 0,0
+		for i in range(len(a) / 2):
+			a[2*i  ] = x = a[2*i  ] + x
+			a[2*i+1] = y = a[2*i+1] + y
+
+	def absoluteToRelative(self):
+		a = self._a
+		x,y = 0,0
+		for i in range(len(a) / 2):
+			dx = a[2*i  ] - x
+			dy = a[2*i+1] - y
+			x = a[2*i  ]
+			y = a[2*i+1]
+			a[2*i  ] = dx
+			a[2*i+1] = dy
+
+	def translate(self, (x,y)):
+		a = self._a
+		for i in range(len(a) / 2):
+			a[2*i  ] += x
+			a[2*i+1] += y
+
+	def transform(self, t):
+		a = self._a
+		for i in range(len(a) / 2):
+			x = a[2*i  ]
+			y = a[2*i+1]
+			a[2*i  ] = int(.5 + x * t[0][0] + y * t[1][0])
+			a[2*i+1] = int(.5 + x * t[0][1] + y * t[1][1])
 
 
 def reprflag(flag):

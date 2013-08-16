@@ -6,13 +6,6 @@
 
 import math
 
-def matMult(a,b):
-    """Returns the matrix multiplication of two matrices. Matrices
-    are represented as lists of lists, row-major."""
-    r1 = range(len(a[0]))
-    r2 = range(len(b[0]))
-    return [[sum(r[i]*b[i][j] for i in r1) for j in r2] for r in a]
-
 def calcBounds(array):
     """Return the bounding rectangle of a 2D points array as a tuple:
     (xMin, yMin, xMax, yMax)
