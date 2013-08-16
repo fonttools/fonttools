@@ -25,6 +25,7 @@ Later grown into full OpenType subsetter, supporting all standard tables.
 import sys
 import struct
 import time
+import array
 
 import fontTools.ttx
 
@@ -1156,7 +1157,7 @@ def getComponentNamesFast(self, glyfTable):
 def remapComponentsFast(self, indices):
   if struct.unpack(">h", self.data[:2])[0] >= 0:
     return  # Not composite
-  data = bytearray(self.data)
+  data = array.array("B", self.data)
   i = 10
   more = 1
   while more:
@@ -1176,12 +1177,12 @@ def remapComponentsFast(self, indices):
     elif flags & 0x0080: i += 8  # WE_HAVE_A_TWO_BY_TWO
     more = flags & 0x0020  # MORE_COMPONENTS
 
-  self.data = str(data)
+  self.data = data.tostring()
 
 @_add_method(fontTools.ttLib.getTableModule('glyf').Glyph)
 def dropInstructionsFast(self):
   numContours = struct.unpack(">h", self.data[:2])[0]
-  data = bytearray(self.data)
+  data = array.array("B", self.data)
   i = 10
   if numContours >= 0:
     i += 2 * numContours  # endPtsOfContours
@@ -1217,7 +1218,7 @@ def dropInstructionsFast(self):
     nPadBytes = 4 -(len(data) % 4)
     for i in range(nPadBytes):
       data.append(0)
-  self.data = str(data)
+  self.data = data.tostring()
 
 @_add_method(fontTools.ttLib.getTableClass('glyf'))
 def closure_glyphs(self, s):
