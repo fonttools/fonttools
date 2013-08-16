@@ -131,7 +131,7 @@ def closure_glyphs(self, s, cur_glyphs=None):
   if cur_glyphs == None: cur_glyphs = s.glyphs
   if self.Format == 1:
     indices = self.Coverage.intersect(cur_glyphs)
-    _set_udpate(s.glyphs, *(self.Sequence[i].Substitute for i in indices))
+    _set_update(s.glyphs, *(self.Sequence[i].Substitute for i in indices))
   else:
     assert 0, "unknown format: %s" % self.Format
 
