@@ -293,14 +293,14 @@ class Glyph:
 				coordinates.append([safeEval(attrs["x"]), safeEval(attrs["y"])])
 				flags.append(not not safeEval(attrs["on"]))
 			coordinates = numpy.array(coordinates, numpy.int16)
-			flags = numpy.array(flags, numpy.int8)
+			flags = array.array("B", flags)
 			if not hasattr(self, "coordinates"):
 				self.coordinates = coordinates
 				self.flags = flags
 				self.endPtsOfContours = [len(coordinates)-1]
 			else:
 				self.coordinates = numpy.concatenate((self.coordinates, coordinates))
-				self.flags = numpy.concatenate((self.flags, flags))
+				self.flags.extend(flags)
 				self.endPtsOfContours.append(len(self.coordinates)-1)
 		elif name == "component":
 			if self.numberOfContours > 0:
@@ -410,11 +410,11 @@ class Glyph:
 		# convert relative to absolute coordinates
 		self.coordinates = numpy.add.accumulate(coordinates)
 		# discard all flags but for "flagOnCurve"
-		self.flags = numpy.bitwise_and(flags, flagOnCurve).astype(numpy.int8)
+		self.flags = array.array("B", (f & flagOnCurve for f in flags))
 
 	def decompileCoordinatesRaw(self, nCoordinates, data):
 		# unpack flags and prepare unpacking of coordinates
-		flags = numpy.array([0] * nCoordinates, numpy.int8)
+		flags = array.array("B", [0] * nCoordinates)
 		# Warning: deep Python trickery going on. We use the struct module to unpack
 		# the coordinates. We build a format string based on the flags, so we can
 		# unpack the coordinates in one struct.unpack() call.
@@ -494,7 +494,7 @@ class Glyph:
 		repeat = 0
 		for i in range(len(coordinates)):
 			# Oh, the horrors of TrueType
-			flag = self.flags[i]
+			flag = flags[i]
 			x, y = coordinates[i]
 			# do x
 			if x == 0:
@@ -608,10 +608,10 @@ class Glyph:
 					allEndPts = allEndPts + (numpy.array(endPts) + len(allCoords)).tolist()
 					if len(coordinates) > 0:
 						allCoords = numpy.concatenate((allCoords, coordinates))
-						allFlags = numpy.concatenate((allFlags, flags))
+						allFlags.extend(flags)
 			return allCoords, allEndPts, allFlags
 		else:
-			return numpy.array([], numpy.int16), [], numpy.array([], numpy.int8)
+			return numpy.array([], numpy.int16), [], array.array("B")
 	
 	def __cmp__(self, other):
 		if self.numberOfContours <= 0:
@@ -620,7 +620,7 @@ class Glyph:
 			if cmp(len(self.coordinates), len(other.coordinates)):
 				return 1
 			ctest = numpy.alltrue(numpy.alltrue(numpy.equal(self.coordinates, other.coordinates)))
-			ftest = numpy.alltrue(numpy.equal(self.flags, other.flags))
+			ftest = cmp(self.flags, other.flags)
 			if not ctest or not ftest:
 				return 1
 			return (
