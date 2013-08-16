@@ -45,6 +45,12 @@ def _add_method(*clazzes):
 def _uniq_sort(l):
   return sorted(set(l))
 
+def _set_update(s, *others):
+  # Jython's set.update only takes one other argument.
+  # Emulate real set.update...
+  for other in others:
+    s.update(other)
+
 
 @_add_method(fontTools.ttLib.tables.otTables.Coverage)
 def intersect(self, glyphs):
@@ -124,7 +130,7 @@ def closure_glyphs(self, s, cur_glyphs=None):
   if cur_glyphs == None: cur_glyphs = s.glyphs
   if self.Format == 1:
     indices = self.Coverage.intersect(cur_glyphs)
-    s.glyphs.update(*(self.Sequence[i].Substitute for i in indices))
+    _set_udpate(s.glyphs, *(self.Sequence[i].Substitute for i in indices))
   else:
     assert 0, "unknown format: %s" % self.Format
 
@@ -147,8 +153,8 @@ def subset_glyphs(self, s):
 def closure_glyphs(self, s, cur_glyphs=None):
   if cur_glyphs == None: cur_glyphs = s.glyphs
   if self.Format == 1:
-    s.glyphs.update(*(vlist for g,vlist in self.alternates.iteritems()
-                       if g in cur_glyphs))
+    _set_update(s.glyphs, *(vlist for g,vlist in self.alternates.iteritems()
+                            if g in cur_glyphs))
   else:
     assert 0, "unknown format: %s" % self.Format
 
@@ -167,10 +173,10 @@ def subset_glyphs(self, s):
 def closure_glyphs(self, s, cur_glyphs=None):
   if cur_glyphs == None: cur_glyphs = s.glyphs
   if self.Format == 1:
-    s.glyphs.update(*([seq.LigGlyph for seq in seqs
-                        if all(c in s.glyphs for c in seq.Component)]
-                       for g,seqs in self.ligatures.iteritems()
-                       if g in cur_glyphs))
+    _set_update(s.glyphs, *([seq.LigGlyph for seq in seqs
+                             if all(c in s.glyphs for c in seq.Component)]
+                            for g,seqs in self.ligatures.iteritems()
+                            if g in cur_glyphs))
   else:
     assert 0, "unknown format: %s" % self.Format
 
