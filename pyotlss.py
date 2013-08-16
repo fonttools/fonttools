@@ -1532,6 +1532,8 @@ class Options(object):
   name_legacy = False
   name_languages = [0x0409]  # English
   mandatory_glyphs = True  # First four for TrueType, .notdef for CFF
+  recalc_bounds = False # Recalculate font bounding boxes
+  canonical_order = True # Order tables as recommended
   flavor = None # May be 'woff'
 
   def __init__(self, **kwargs):
@@ -1798,12 +1800,11 @@ class Logger(object):
 def load_font(fontFile,
               options,
               checkChecksums=False,
-              recalcBBoxes=False,
               dontLoadGlyphNames=False):
 
   font = fontTools.ttx.TTFont(fontFile,
                               checkChecksums=checkChecksums,
-                              recalcBBoxes=recalcBBoxes)
+                              recalcBBoxes=options.recalc_bounds)
 
   # Hack:
   #
@@ -1825,12 +1826,11 @@ def load_font(fontFile,
 
   return font
 
-def save_font(font, outfile, options,
-              reorderTables=False):
+def save_font(font, outfile, options):
   if options.flavor and not hasattr(font, 'flavor'):
     raise Exception("fonttools version does not support flavors.")
   font.flavor = options.flavor
-  font.save(outfile, reorderTables=reorderTables)
+  font.save(outfile, reorderTables=options.canonical_order)
 
 
 # Cleanup module space
