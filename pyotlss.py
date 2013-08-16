@@ -1836,10 +1836,13 @@ def save_font(font, outfile, options):
 
 # Cleanup module space
 l = locals()
-for k,v in l.items():
-  if v == None:
-    del l[k]
-del k, v, l
+# Some versions of Jython don't like locals().items()
+if isinstance(l, dict):
+  for k,v in l.items():
+    if v == None:
+      del l[k]
+  del k, v
+del l
 
 
 def main(args=None):
