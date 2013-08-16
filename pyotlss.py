@@ -1313,7 +1313,7 @@ def subset_glyphs(self, s):
 @_add_method(fontTools.misc.psCharStrings.T2CharString)
 def subset_subroutines(self, subrs, gsubrs):
   p = self.program
-  for i in range(1, len(p)):
+  for i in xrange(1, len(p)):
     if p[i] == 'callsubr':
       assert type(p[i-1]) is int
       p[i-1] = subrs._used.index(p[i-1] + subrs._old_bias) - subrs._new_bias
@@ -1397,7 +1397,7 @@ def prune_post_subset(self, options):
     for subrs in all_subrs:
       if not subrs: continue
       decompiler = _NonrecursingT2Decompiler(subrs, font.GlobalSubrs)
-      for i in range (subrs.count):
+      for i in xrange (subrs.count):
         if i not in subrs._used: continue
         decompiler.reset()
         decompiler.execute(subrs[i])
@@ -1587,7 +1587,7 @@ class Options(object):
         vv = v.split(',')
         if vv == ['']:
           vv = []
-        vv = [int(x, 0) if len(x) and x[0] in range(10) else x for x in vv]
+        vv = [int(x, 0) if len(x) and x[0] in "0123456789" else x for x in vv]
         if op == '=':
           v = vv
         elif op == '+=':
