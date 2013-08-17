@@ -5,6 +5,8 @@ pygtk.require('2.0')
 import gtk
 
 import fontTools.ttx
+import fontTools.ttLib
+import fontTools.cffLib
 
 class FontTreeStoreBuilder:
 
@@ -17,9 +19,13 @@ class FontTreeStoreBuilder:
 			getattr(value, "asdf")
 		except AttributeError:
 			pass
-		if value.__class__ == fontTools.ttLib.getTableModule('glyf').Glyph:
+		if isinstance(value, fontTools.ttLib.getTableModule('glyf').Glyph):
 			# Glyph type needs explicit expanding to be useful
 			value.expand(self.font['glyf'])
+		if isinstance(value, fontTools.cffLib.Index):
+			# Load all items
+			for i in range(len(value)):
+				value[i]
 
 		item = self.ts.append(parent, [key, '%s' % value.__class__.__name__])
 		for k,v in sorted(value.__dict__.items()):
