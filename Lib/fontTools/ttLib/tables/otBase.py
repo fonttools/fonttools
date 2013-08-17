@@ -288,10 +288,11 @@ class OTTableWriter:
 		return hash(self.items)
 	
 	def __cmp__(self, other):
-		if hasattr(other, "items"):
-			return cmp(self.items, other.items)
-		else:
+		if type(self) != type(other) or \
+		   self.__class__ != other.__class__:
 			return cmp(id(self), id(other))
+
+		return cmp(self.items, other.items)
 	
 	def _doneWriting(self, internedTables=None):
 		# Convert CountData references to data string items
@@ -670,14 +671,11 @@ class BaseTable:
 			setattr(self, conv.name, value)
 	
 	def __cmp__(self, other):
-		# this is only for debugging, so it's ok to barf
-		# when 'other' has no __dict__ or __class__
-		rv = cmp(self.__class__, other.__class__)
-		if not rv:
-			rv = cmp(self.__dict__, other.__dict__)
-			return rv
-		else:
-			return rv
+		if type(self) != type(other) or \
+		   self.__class__ != other.__class__:
+			return cmp(id(self), id(other))
+
+		return cmp(self.__dict__, other.__dict__)
 
 
 class FormatSwitchingBaseTable(BaseTable):
@@ -837,12 +835,8 @@ class ValueRecord:
 			setattr(self, name, value)
 	
 	def __cmp__(self, other):
-		# this is only for debugging, so it's ok to barf
-		# when 'other' has no __dict__ or __class__
-		rv = cmp(self.__class__, other.__class__)
-		if not rv:
-			rv = cmp(self.__dict__, other.__dict__)
-			return rv
-		else:
-			return rv
+		if type(self) != type(other) or \
+		   self.__class__ != other.__class__:
+			return cmp(id(self), id(other))
 
+		return cmp(self.__dict__, other.__dict__)

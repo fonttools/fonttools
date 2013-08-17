@@ -164,6 +164,10 @@ class KernTable_format_0:
 		del self.kernTable[pair]
 	
 	def __cmp__(self, other):
+		if type(self) != type(other) or \
+		   self.__class__ != other.__class__:
+			return cmp(id(self), id(other))
+
 		return cmp(self.__dict__, other.__dict__)
 
 

@@ -90,6 +90,10 @@ class table__h_e_a_d(DefaultTable.DefaultTable):
 		setattr(self, name, value)
 	
 	def __cmp__(self, other):
+		if type(self) != type(other) or \
+		   self.__class__ != other.__class__:
+			return cmp(id(self), id(other))
+
 		selfdict = self.__dict__.copy()
 		otherdict = other.__dict__.copy()
 		# for testing purposes, compare without the modified and checkSumAdjustment

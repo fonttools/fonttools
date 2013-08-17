@@ -151,6 +151,10 @@ class CmapSubtable:
 			writer.newline()
 	
 	def __cmp__(self, other):
+		if type(self) != type(other) or \
+		   self.__class__ != other.__class__:
+			return cmp(id(self), id(other))
+
 		# implemented so that list.sort() sorts according to the cmap spec.
 		selfTuple = (
 					self.platformID,

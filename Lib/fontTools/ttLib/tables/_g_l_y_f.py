@@ -606,6 +606,10 @@ class Glyph:
 			return GlyphCoordinates(), [], array.array("B")
 	
 	def __cmp__(self, other):
+		if type(self) != type(other) or \
+		   self.__class__ != other.__class__:
+			return cmp(id(self), id(other))
+
 		return cmp(self.__dict__, other.__dict__)
 
 
@@ -766,6 +770,10 @@ class GlyphComponent:
 		self.flags = safeEval(attrs["flags"])
 	
 	def __cmp__(self, other):
+		if type(self) != type(other) or \
+		   self.__class__ != other.__class__:
+			return cmp(id(self), id(other))
+
 		return cmp(self.__dict__, other.__dict__)
 
 class GlyphCoordinates:

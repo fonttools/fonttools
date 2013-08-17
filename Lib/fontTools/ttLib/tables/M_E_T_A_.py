@@ -236,6 +236,11 @@ class GlyphRecord:
 	def __cmp__(self, other):
 		"""Compare method, so a list of NameRecords can be sorted
 		according to the spec by just sorting it..."""
+
+		if type(self) != type(other) or \
+		   self.__class__ != other.__class__:
+			return cmp(id(self), id(other))
+
 		return cmp(self.glyphID, other.glyphID)
 	
 	def __repr__(self):
@@ -321,6 +326,11 @@ class StringRecord:
 	def __cmp__(self, other):
 		"""Compare method, so a list of NameRecords can be sorted
 		according to the spec by just sorting it..."""
+
+		if type(self) != type(other) or \
+		   self.__class__ != other.__class__:
+			return cmp(id(self), id(other))
+
 		return cmp(self.labelID, other.labelID)
 	
 	def __repr__(self):

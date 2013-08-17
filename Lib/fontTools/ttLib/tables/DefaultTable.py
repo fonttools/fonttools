@@ -37,5 +37,9 @@ class DefaultTable:
 		return "<'%s' table at %x>" % (self.tableTag, id(self))
 	
 	def __cmp__(self, other):
+		if type(self) != type(other) or \
+		   self.__class__ != other.__class__:
+			return cmp(id(self), id(other))
+
 		return cmp(self.__dict__, other.__dict__)
 
