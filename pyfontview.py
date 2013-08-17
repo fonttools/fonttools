@@ -71,6 +71,10 @@ class FontTreeStoreBuilder:
 			self.add_dict(parent, key, value)
 			return
 
+		if isinstance(value, basestring):
+			item = self.ts.append(parent, [key, '"'+value+'"'])
+			return
+
 		# Everything else
 		item = self.ts.append(parent, [key, value])
 
