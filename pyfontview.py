@@ -23,6 +23,8 @@ class FontTreeStoreBuilder:
 
 		item = self.ts.append(parent, [key, '%s' % value.__class__.__name__])
 		for k,v in sorted(value.__dict__.items()):
+			if k[0] == '_':
+				continue
 			self.add_thing (item, k, v)
 
 	def add_dict(self, parent, key, value):
