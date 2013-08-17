@@ -34,8 +34,10 @@ class FontTreeStoreBuilder:
 			self.add_thing (item, k, v)
 
 	def add_list(self, parent, key, value):
-		item = self.ts.append(parent, [key, '%s of %d items' %
-						    (value.__class__.__name__, len(value))])
+		name = '%s of %d items' % (value.__class__.__name__, len(value))
+		if len(value) and len(value) <= 32:
+			name = str(value)
+		item = self.ts.append(parent, [key, name])
 		for k,v in enumerate(value):
 			self.add_thing (item, k, v)
 
