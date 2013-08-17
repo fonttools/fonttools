@@ -17,7 +17,7 @@ class FontTreeStoreBuilder:
 			getattr(value, "asdf")
 		except AttributeError:
 			pass
-		if hasattr(value, "expand"):
+		if value.__class__ == fontTools.ttLib.getTableModule('glyf').Glyph:
 			# Glyph type needs explicit expanding to be useful
 			value.expand(self.font['glyf'])
 
@@ -92,7 +92,7 @@ class PyFontView:
 	#self.treeview.set_reorderable(True)
 
 	font = fontTools.ttx.TTFont("abc.woff")
-	font = fontTools.ttx.TTFont("IranNastaliq2.ttf")
+	#font = fontTools.ttx.TTFont("IranNastaliq2.ttf")
 	builder = FontTreeStoreBuilder(self.treestore)
 	builder.add_font (font)
 
