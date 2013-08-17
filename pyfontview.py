@@ -28,8 +28,8 @@ class FontTreeStoreBuilder:
 			self.add_thing (item, k, v)
 
 	def add_dict(self, parent, key, value):
-		item = self.ts.append(parent, [key, '%s of %d items' %
-						    (value.__class__.__name__, len(value))])
+		name = '%s of %d items' % (value.__class__.__name__, len(value))
+		item = self.ts.append(parent, [key, name])
 		for k,v in sorted(value.items()):
 			self.add_thing (item, k, v)
 
