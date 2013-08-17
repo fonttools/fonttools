@@ -25,7 +25,10 @@ class FontTreeStoreBuilder:
 		if isinstance(value, fontTools.cffLib.Index):
 			# Load all items
 			for i in range(len(value)):
-				value[i]
+				print value[i]
+			# Discard offsets as should not be needed anymore
+			if hasattr(value, 'offsets'):
+				del value.offsets
 
 		item = self.ts.append(parent, [key, '%s' % value.__class__.__name__])
 		for k,v in sorted(value.__dict__.items()):
@@ -50,7 +53,7 @@ class FontTreeStoreBuilder:
 	def add_thing(self, parent, key, value):
 		if value == self.font:
 			return
-		if key == 'reader':
+		if key in ['reader', 'file', 'tableTag', 'compileStatus', 'recurse']:
 			return
 		if not isinstance(value, basestring):
 			# Sequences
@@ -109,13 +112,16 @@ class PyFontView:
 	self.window.add(self.scrolled_window)
 
 	self.treestore = gtk.TreeStore(str, str)
-	self.treeview = gtk.TreeView(self.treestore)
-	#self.treeview.set_reorderable(True)
 
 	font = fontTools.ttx.TTFont("abc.woff")
 	#font = fontTools.ttx.TTFont("IranNastaliq2.ttf")
+	#font = fontTools.ttx.TTFont("KozGoPr6N-Medium.otf")
+	#font = fontTools.ttx.TTFont("SmaGoSS07262013-Book.otf")
 	builder = FontTreeStoreBuilder(self.treestore)
 	builder.add_font (font)
+
+	self.treeview = gtk.TreeView(self.treestore)
+	#self.treeview.set_reorderable(True)
 
 	for i in range(2):
 
