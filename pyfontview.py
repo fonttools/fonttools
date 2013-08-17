@@ -42,17 +42,14 @@ class FontTreeStoreBuilder:
 			return
 		if key == 'reader':
 			return
-		if hasattr(value, '__dict__'):
-			self.add_object(parent, key, value)
-			return
-		if hasattr(value, 'items'):
-			self.add_dict(parent, key, value)
-			return
 		if not isinstance(value, basestring):
 			# Sequences
 			try:
 				len(value)
 				iter(value)
+				# It's hard to differentiate list-type sequences
+				# from dict-type ones.  Try fetching item 0.
+				value[0]
 				self.add_list(parent, key, value)
 				return
 			except TypeError:
@@ -61,6 +58,14 @@ class FontTreeStoreBuilder:
 				pass
 			except KeyError:
 				pass
+			except IndexError:
+				pass
+		if hasattr(value, '__dict__'):
+			self.add_object(parent, key, value)
+			return
+		if hasattr(value, 'items'):
+			self.add_dict(parent, key, value)
+			return
 
 		# Everything else
 		item = self.ts.append(parent, [key, value])
