@@ -48,22 +48,24 @@ class FontTreeStoreBuilder:
 			return
 		if not isinstance(value, basestring):
 			# Sequences
+			is_sequence = True
 			try:
 				len(value)
 				iter(value)
 				# It's hard to differentiate list-type sequences
 				# from dict-type ones.  Try fetching item 0.
 				value[0]
+			except TypeError:
+				is_sequence = False
+			except AttributeError:
+				is_sequence = False
+			except KeyError:
+				is_sequence = False
+			except IndexError:
+				is_sequence = False
+			if is_sequence:
 				self.add_list(parent, key, value)
 				return
-			except TypeError:
-				pass
-			except AttributeError:
-				pass
-			except KeyError:
-				pass
-			except IndexError:
-				pass
 		if hasattr(value, '__dict__'):
 			self.add_object(parent, key, value)
 			return
