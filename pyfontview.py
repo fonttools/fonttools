@@ -103,7 +103,6 @@ class Row(object):
 	def _add_dict(self, key, value):
 		self._value_str = '%s of %d items' % (value.__class__.__name__, len(value))
 		self._items = sorted(value.items())
-		self._filter_items()
 
 	def _add_list(self, key, value):
 		if len(value) and len(value) <= 32:
@@ -111,12 +110,14 @@ class Row(object):
 		else:
 			self._value_str = '%s of %d items' % (value.__class__.__name__,
 							      len(value))
-		self._items = enumerate(value)
-		self._filter_items()
+		self._items = list(enumerate(value))
 
 	def __len__(self):
-		self._ensure_children()
-		return len(self._children)
+		if hasattr(self, '_children'):
+			return len(self._children)
+		if hasattr(self, '_items'):
+			return len(self._items)
+		assert 0
 
 	def _ensure_children(self):
 		if hasattr(self, '_children'):
@@ -128,11 +129,16 @@ class Row(object):
 		del self._items
 
 	def __getitem__(self, n):
-		self._ensure_children()
-		if n < len(self._children):
-			return self._children[n]
-		else:
+		if n >= len(self):
 			return None
+		if not hasattr(self, '_children'):
+			self._children = [None] * len(self)
+		c = self._children[n]
+		if c is None:
+			k,v = self._items[n]
+			c = self._children[n] = Row(self, n, k, v)
+			self._items[n] = None
+		return c
 
 	def get_parent(self):
 		return self._parent
