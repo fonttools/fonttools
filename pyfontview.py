@@ -85,6 +85,9 @@ class Row(object):
 		if isinstance(value, fontTools.ttLib.getTableModule('glyf').Glyph):
 			# Glyph type needs explicit expanding to be useful
 			value.expand(self.font['glyf'])
+		if isinstance(value, fontTools.cffLib.BaseDict):
+			for k in value.rawDict.keys():
+				getattr(value, k)
 		if isinstance(value, fontTools.cffLib.Index):
 			# Load all items
 			for i in range(len(value)):
