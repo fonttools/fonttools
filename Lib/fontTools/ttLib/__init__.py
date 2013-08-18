@@ -362,7 +362,7 @@ class TTFont:
 			return self.tables[tag]
 		except KeyError:
 			if tag == "GlyphOrder":
-				table = GlyphOrder(tag)
+				table = GlyphOrder(self)
 				self.tables[tag] = table
 				return table
 			if self.reader is not None:
@@ -738,17 +738,22 @@ class GlyphOrder:
 	"""A pseudo table. The glyph order isn't in the font as a separate
 	table, but it's nice to present it as such in the TTX format.
 	"""
+
+	def __init__(self, ttFont):
+		self.glyphOrder = ttFont.getGlyphOrder()
 	
-	def __init__(self, tag):
-		pass
+	def __len__(self):
+		return len(self.glyphOrder)
 	
+	def __getitem__(self, i):
+		return self.glyphOrder[i]
+
 	def toXML(self, writer, ttFont):
-		glyphOrder = ttFont.getGlyphOrder()
 		writer.comment("The 'id' attribute is only for humans; "
 				"it is ignored when parsed.")
 		writer.newline()
-		for i in range(len(glyphOrder)):
-			glyphName = glyphOrder[i]
+		for i in range(len(self.glyphOrder)):
+			glyphName = self.glyphOrder[i]
 			writer.simpletag("GlyphID", id=i, name=glyphName)
 			writer.newline()
 	
