@@ -118,9 +118,6 @@ class Row(object):
 		self._ensure_children()
 		return len(self._children)
 
-	def get_parent(self):
-		return self._parent
-
 	def _ensure_children(self):
 		if hasattr(self, '_children'):
 			return
@@ -130,20 +127,18 @@ class Row(object):
 		self._children = children
 		del self._items
 
-	def get_children(self):
-		self._ensure_children()
-		return self._children
-
-	def get_children(self):
-		self._ensure_children()
-		return self._children
-
-	def get_nth_child(self, n):
+	def __getitem__(self, n):
 		self._ensure_children()
 		if n < len(self._children):
 			return self._children[n]
 		else:
 			return None
+
+	def get_parent(self):
+		return self._parent
+
+	def get_index(self):
+		return self._index
 
 	def get_key(self):
 		return self._key
@@ -152,23 +147,9 @@ class Row(object):
 		return self._value
 
 	def get_value_str(self):
-		if hasattr(self, '_value_str'):
+		if hasattr(self,'_value_str'):
 			return self._value_str
 		return str(self._value)
-
-	def get_iter(self, path):
-		if not path:
-			return self
-		return self.get_nth_child(path[0]).get_iter(path[1:])
-
-	def iter_next(self):
-		if not self._parent:
-			return None
-		return self._parent.get_nth_child(self._index + 1)
-
-	def get_path(self):
-		if not self._parent: return ()
-		return self._parent.get_path() + (self._index,)
 
 class FontTreeModel(gtk.GenericTreeModel):
 
@@ -190,10 +171,19 @@ class FontTreeModel(gtk.GenericTreeModel):
 		return self._columns[index]
 
 	def on_get_iter(self, path):
-		return self._root.get_iter(path)
+		rowref = self._root
+		while path:
+			rowref = rowref[path[0]]
+			path = path[1:]
+		return rowref
 
 	def on_get_path(self, rowref):
-		return rowref.get_path()
+		path = []
+		while rowref != self._root:
+			path.append(rowref.get_index())
+			rowref = rowref.get_parent()
+		path.reverse()
+		return tuple(path)
 
 	def on_get_value(self, rowref, column):
 		if column == 0:
@@ -202,10 +192,10 @@ class FontTreeModel(gtk.GenericTreeModel):
 			return rowref.get_value_str()
 
 	def on_iter_next(self, rowref):
-		return rowref.iter_next()
+		return rowref.get_parent()[rowref.get_index() + 1]
 
 	def on_iter_children(self, rowref):
-		return rowref.get_nth_child(0)
+		return rowref[0]
 
 	def on_iter_has_child(self, rowref):
 		return bool(len(rowref))
@@ -215,7 +205,7 @@ class FontTreeModel(gtk.GenericTreeModel):
 
 	def on_iter_nth_child(self, rowref, n):
 		if not rowref: rowref = self._root
-		return rowref.get_nth_child(n)
+		return rowref[n]
 
 	def on_iter_parent(self, rowref):
 		return rowref.get_parent()
