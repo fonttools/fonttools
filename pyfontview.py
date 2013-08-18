@@ -9,11 +9,6 @@ import fontTools.ttx
 import fontTools.ttLib
 import fontTools.cffLib
 
-class FontTreeStoreBuilder:
-
-	def __init__(self, treestore):
-		self.ts = treestore
-
 
 class Row(object):
 	def __init__(self, parent, index, key, value):
