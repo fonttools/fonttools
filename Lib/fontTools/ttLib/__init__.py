@@ -121,7 +121,7 @@ class TTFont:
 		binary data.
 		"""
 		
-		import sfnt
+		from fontTools.ttLib import sfnt
 		self.verbose = verbose
 		self.recalcBBoxes = recalcBBoxes
 		self.tables = {}
