@@ -27,7 +27,11 @@ import struct
 import time
 import array
 
-import fontTools.ttx
+import fontTools.ttLib
+import fontTools.ttLib.tables
+import fontTools.ttLib.tables.otTables
+import fontTools.cffLib
+import fontTools.misc.psCharStrings
 
 
 def _add_method(*clazzes):
@@ -1789,7 +1793,7 @@ class Logger(object):
       return
     import xmlWriter
     writer = xmlWriter.XMLWriter(file)
-    font.disassembleInstructions = False  # Work around ttx bug
+    font.disassembleInstructions = False  # Work around ttLib bug
     for tag in font.keys():
       writer.begintag(tag)
       writer.newline()
@@ -1803,9 +1807,9 @@ def load_font(fontFile,
               checkChecksums=False,
               dontLoadGlyphNames=False):
 
-  font = fontTools.ttx.TTFont(fontFile,
-                              checkChecksums=checkChecksums,
-                              recalcBBoxes=options.recalc_bounds)
+  font = fontTools.ttLib.TTFont(fontFile,
+                                checkChecksums=checkChecksums,
+                                recalcBBoxes=options.recalc_bounds)
 
   # Hack:
   #
