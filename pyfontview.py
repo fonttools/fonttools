@@ -24,7 +24,6 @@ pygtk.require('2.0')
 import gtk
 import sys
 
-import fontTools.ttx
 import fontTools.ttLib
 import fontTools.cffLib
 
@@ -36,7 +35,7 @@ class Row(object):
 		self._key = key
 		self._value = value
 
-		if isinstance(value, fontTools.ttx.TTFont):
+		if isinstance(value, fontTools.ttLib.TTFont):
 			self._add_font(value)
 			return
 
@@ -78,7 +77,7 @@ class Row(object):
 	def _filter_items(self):
 		items = []
 		for k,v in self._items:
-			if isinstance(v, fontTools.ttx.TTFont):
+			if isinstance(v, fontTools.ttLib.TTFont):
 				continue
 			if k in ['reader', 'file', 'tableTag', 'compileStatus', 'recurse']:
 				continue
@@ -251,7 +250,7 @@ class PyFontView:
 		self.scrolled_window = gtk.ScrolledWindow()
 		self.window.add(self.scrolled_window)
 
-		self.font = fontTools.ttx.TTFont(fontfile)
+		self.font = fontTools.ttLib.TTFont(fontfile)
 		self.treemodel = FontTreeModel(self.font)
 		self.treeview = gtk.TreeView(self.treemodel)
 		#self.treeview.set_reorderable(True)
