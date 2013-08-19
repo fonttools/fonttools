@@ -211,7 +211,8 @@ class TTFont:
 			file.close()
 	
 	def saveXML(self, fileOrPath, progress=None, 
-			tables=None, skipTables=None, splitTables=0, disassembleInstructions=1):
+			tables=None, skipTables=None, splitTables=0, disassembleInstructions=1,
+			bitmapGlyphDataFormat='raw'):
 		"""Export the font as TTX (an XML-based text file), or as a series of text
 		files when splitTables is true. In the latter case, the 'fileOrPath'
 		argument should be a path to a directory.
@@ -223,6 +224,7 @@ class TTFont:
 		import xmlWriter
 		
 		self.disassembleInstructions = disassembleInstructions
+		self.bitmapGlyphDataFormat = bitmapGlyphDataFormat
 		if not tables:
 			tables = self.keys()
 			if "GlyphOrder" not in tables:
