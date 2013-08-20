@@ -9,7 +9,7 @@ INDENT = "  "
 
 class XMLWriter:
 	
-	def __init__(self, fileOrPath, indentwhite=INDENT, idlefunc=None, encoding="ISO-8859-1"):
+	def __init__(self, fileOrPath, indentwhite=INDENT, idlefunc=None, encoding="utf-8"):
 		if not hasattr(fileOrPath, "write"):
 			self.file = open(fileOrPath, "w")
 		else:
