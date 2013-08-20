@@ -602,11 +602,11 @@ def closure_glyphs(self, s, cur_glyphs=None):
           for ll in getattr(r, c.LookupRecord):
             if not ll: continue
             seqi = ll.SequenceIndex
-            if seqi == 0:
-              pos_glyphs = set([c.Coverage(self).glyphs[i]])
+            if chaos:
+              pos_glyphs = s.glyphs
             else:
-              if chaos:
-                pos_glyphs = s.glyphs
+              if seqi == 0:
+                pos_glyphs = set([c.Coverage(self).glyphs[i]])
               else:
                 pos_glyphs = set([r.Input[seqi - 1]])
             lookup = s.table.LookupList.Lookup[ll.LookupListIndex]
@@ -627,11 +627,11 @@ def closure_glyphs(self, s, cur_glyphs=None):
           for ll in getattr(r, c.LookupRecord):
             if not ll: continue
             seqi = ll.SequenceIndex
-            if seqi == 0:
-              pos_glyphs = ClassDef.intersect_class(cur_glyphs, i)
+            if chaos:
+              pos_glyphs = s.glyphs
             else:
-              if chaos:
-                pos_glyphs = s.glyphs
+              if seqi == 0:
+                pos_glyphs = ClassDef.intersect_class(cur_glyphs, i)
               else:
                 pos_glyphs = ClassDef.intersect_class(s.glyphs,
                                                       getattr(r, c.Input)[seqi - 1])
@@ -646,11 +646,11 @@ def closure_glyphs(self, s, cur_glyphs=None):
     for ll in getattr(r, c.LookupRecord):
       if not ll: continue
       seqi = ll.SequenceIndex
-      if seqi == 0:
-        pos_glyphs = cur_glyphs
+      if chaos:
+        pos_glyphs = s.glyphs
       else:
-        if chaos:
-          pos_glyphs = s.glyphs
+        if seqi == 0:
+          pos_glyphs = cur_glyphs
         else:
           pos_glyphs = r.InputCoverage[seqi].intersect_glyphs(s.glyphs)
       lookup = s.table.LookupList.Lookup[ll.LookupListIndex]
