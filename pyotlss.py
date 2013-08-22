@@ -1837,18 +1837,6 @@ def save_font(font, outfile, options):
   font.flavor = options.flavor
   font.save(outfile, reorderTables=options.canonical_order)
 
-
-# Cleanup module space
-l = locals()
-# Some versions of Jython don't like locals().items()
-if isinstance(l, dict):
-  for k,v in l.items():
-    if v == None:
-      del l[k]
-  del k, v
-del l
-
-
 def main(args=None):
 
   if args == None: args = sys.argv
@@ -1931,6 +1919,16 @@ def main(args=None):
   log.font(font)
 
   font.close()
+
+
+__all__ = [
+	'Options',
+	'Subsetter',
+	'Logger',
+	'load_font',
+	'save_font',
+	'main'
+]
 
 if __name__ == '__main__':
   main()
