@@ -22,6 +22,7 @@ def _moduleFinderHint():
 	import M_E_T_A_
 	import O_S_2f_2
 	import S_I_N_G_
+	import S_V_G_
 	import T_S_I_B_
 	import T_S_I_D_
 	import T_S_I_J_
