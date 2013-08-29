@@ -11,12 +11,6 @@ except ImportError:
 	pass
 
 try:
-	import numpy
-except ImportError:
-	print "*** Warning: FontTools needs the numpy library, see:"
-	print "        http://numpy.scipy.org/"
-
-try:
 	import xml.parsers.expat
 except ImportError:
 	print "*** Warning: FontTools needs PyXML, see:"
@@ -96,9 +90,6 @@ setup(
 				library_dirs=[],
 				libraries=[],
 			)
-		],
-		install_requires=[
-			'numpy',
 		],
 		scripts = ["Tools/ttx"],
 		console = ["Tools/ttx"],
