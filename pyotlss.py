@@ -1272,7 +1272,8 @@ def subset_glyphs(self, s):
     else:
       pass  # No need
   self.glyphOrder = [g for g in self.glyphOrder if g in s.glyphs]
-  return bool(self.glyphs)
+  # Don't drop empty 'glyf' tables, otherwise 'loca' doesn't get subset.
+  return True
 
 @_add_method(fontTools.ttLib.getTableClass('glyf'))
 def prune_post_subset(self, options):
