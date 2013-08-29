@@ -1299,7 +1299,7 @@ def prune_pre_subset(self, options):
       c.bytecode = '\x0e' # endchar
       c.program = None
 
-  return bool(cff.fontNames)
+  return True # bool(cff.fontNames)
 
 @_add_method(fontTools.ttLib.getTableClass('CFF '))
 def subset_glyphs(self, s):
@@ -1333,7 +1333,7 @@ def subset_glyphs(self, s):
     font.charset = [g for g in font.charset if g in s.glyphs]
     font.numGlyphs = len(font.charset)
 
-  return any(cff[fontname].numGlyphs for fontname in cff.keys())
+  return True # any(cff[fontname].numGlyphs for fontname in cff.keys())
 
 @_add_method(fontTools.misc.psCharStrings.T2CharString)
 def subset_subroutines(self, subrs, gsubrs):
