@@ -1538,7 +1538,7 @@ class Options(object):
   name_languages = [0x0409]  # English
   mandatory_glyphs = True  # First four for TrueType, .notdef for CFF
   recalc_bounds = False # Recalculate font bounding boxes
-  canonical_order = True # Order tables as recommended
+  canonical_order = False # Order tables as recommended
   flavor = None # May be 'woff'
 
   def __init__(self, **kwargs):
