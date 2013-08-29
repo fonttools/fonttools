@@ -1136,7 +1136,7 @@ def subset_glyphs(self, s):
 
 @_add_method(fontTools.ttLib.getTableModule('glyf').Glyph)
 def getComponentNamesFast(self, glyfTable):
-  if struct.unpack(">h", self.data[:2])[0] >= 0:
+  if not self.data or struct.unpack(">h", self.data[:2])[0] >= 0:
     return []  # Not composite
   data = self.data
   i = 10
@@ -1159,7 +1159,7 @@ def getComponentNamesFast(self, glyfTable):
 
 @_add_method(fontTools.ttLib.getTableModule('glyf').Glyph)
 def remapComponentsFast(self, indices):
-  if struct.unpack(">h", self.data[:2])[0] >= 0:
+  if not self.data or struct.unpack(">h", self.data[:2])[0] >= 0:
     return  # Not composite
   data = array.array("B", self.data)
   i = 10
@@ -1185,6 +1185,8 @@ def remapComponentsFast(self, indices):
 
 @_add_method(fontTools.ttLib.getTableModule('glyf').Glyph)
 def dropInstructionsFast(self):
+  if not self.data:
+    return
   numContours = struct.unpack(">h", self.data[:2])[0]
   data = array.array("B", self.data)
   i = 10
@@ -1252,6 +1254,15 @@ def closure_glyphs(self, s):
     s.glyphs.update(components)
 
 @_add_method(fontTools.ttLib.getTableClass('glyf'))
+def prune_pre_subset(self, options):
+  if options.notdef_glyph and not options.notdef_outline:
+    g = self[self.glyphOrder[0]]
+    # Yay, easy!
+    g.__dict__.clear()
+    g.data = ""
+  return True
+
+@_add_method(fontTools.ttLib.getTableClass('glyf'))
 def subset_glyphs(self, s):
   self.glyphs = dict((g,v) for g,v in self.glyphs.iteritems() if g in s.glyphs)
   indices = [i for i,g in enumerate(self.glyphOrder) if g in s.glyphs]
@@ -1279,6 +1290,14 @@ def prune_pre_subset(self, options):
   cff = self.cff
   # CFF table should have one font only
   cff.fontNames = cff.fontNames[:1]
+
+  if options.notdef_glyph and not options.notdef_outline:
+    for fontname in cff.keys():
+      font = cff[fontname]
+      c,_ = font.CharStrings.getItemAndSelector('.notdef')
+      c.bytecode = '\x0e' # endchar
+      c.program = None
+
   return bool(cff.fontNames)
 
 @_add_method(fontTools.ttLib.getTableClass('CFF '))
@@ -1537,6 +1556,7 @@ class Options(object):
   name_legacy = False
   name_languages = [0x0409]  # English
   notdef_glyph = True # gid0 for TrueType / .notdef for CFF
+  notdef_outline = False # No need for notdef to have an outline really
   recommended_glyphs = False  # gid1, gid2, gid3 for TrueType
   recalc_bounds = False # Recalculate font bounding boxes
   canonical_order = False # Order tables as recommended
