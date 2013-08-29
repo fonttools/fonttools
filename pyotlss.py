@@ -1536,7 +1536,8 @@ class Options(object):
   name_IDs = [1, 2]  # Family and Style
   name_legacy = False
   name_languages = [0x0409]  # English
-  mandatory_glyphs = True  # First four for TrueType, .notdef for CFF
+  notdef_glyph = True # gid0 for TrueType / .notdef for CFF
+  recommended_glyphs = False  # gid1, gid2, gid3 for TrueType
   recalc_bounds = False # Recalculate font bounding boxes
   canonical_order = False # Order tables as recommended
   flavor = None # May be 'woff'
@@ -1668,14 +1669,18 @@ class Subsetter(object):
       font['cmap'].closure_glyphs(self)
     self.glyphs_cmaped = self.glyphs
 
-    if self.options.mandatory_glyphs:
+    if self.options.notdef_glyph:
+      if 'glyf' in font:
+        self.glyphs.add(font.getGlyphName(0))
+        self.log("Added gid0 to subset")
+      else:
+        self.glyphs.add('.notdef')
+        self.log("Added .notdef to subset")
+    if self.options.recommended_glyphs:
       if 'glyf' in font:
         for i in range(4):
           self.glyphs.add(font.getGlyphName(i))
         self.log("Added first four glyphs to subset")
-      else:
-        self.glyphs.add('.notdef')
-        self.log("Added .notdef glyph to subset")
 
     if 'GSUB' in font:
       self.log("Closing glyph list over 'GSUB': %d glyphs before" %
