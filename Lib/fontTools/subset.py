@@ -1401,7 +1401,9 @@ def prune_post_subset(self, options):
 
     # Renumber subroutines to remove unused ones
     all_subrs = [font.GlobalSubrs]
-    all_subrs.extend(fd.Private.Subrs for fd in font.FDArray if hasattr(fd.Private, 'Subrs'))
+    all_subrs.append(font.Private.Subrs)
+    if hasattr(font, 'FDSelect'):
+      all_subrs.extend(fd.Private.Subrs for fd in font.FDArray if hasattr(fd.Private, 'Subrs'))
     # Prepare
     for subrs in all_subrs:
       if not subrs: continue
@@ -1423,7 +1425,14 @@ def prune_post_subset(self, options):
         if i not in subrs._used: continue
         decompiler.reset()
         decompiler.execute(subrs[i])
-        subrs[i].subset_subroutines (subrs, font.GlobalSubrs)
+        if subrs == font.GlobalSubrs:
+          if not hasattr(font, 'FDSelect'):
+            local_subrs = font.Private.Subrs
+          else:
+            local_subrs = []
+        else:
+          local_subrs = subrs
+        subrs[i].subset_subroutines (local_subrs, font.GlobalSubrs)
     # Cleanup
     for subrs in all_subrs:
       if not subrs: continue
