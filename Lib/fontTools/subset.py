@@ -1401,9 +1401,10 @@ def prune_post_subset(self, options):
 
     # Renumber subroutines to remove unused ones
     all_subrs = [font.GlobalSubrs]
-    all_subrs.append(font.Private.Subrs)
     if hasattr(font, 'FDSelect'):
       all_subrs.extend(fd.Private.Subrs for fd in font.FDArray if hasattr(fd.Private, 'Subrs'))
+    else:
+      all_subrs.append(font.Private.Subrs)
     # Prepare
     for subrs in all_subrs:
       if not subrs: continue
