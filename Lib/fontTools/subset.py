@@ -1403,7 +1403,7 @@ def prune_post_subset(self, options):
     all_subrs = [font.GlobalSubrs]
     if hasattr(font, 'FDSelect'):
       all_subrs.extend(fd.Private.Subrs for fd in font.FDArray if hasattr(fd.Private, 'Subrs'))
-    else:
+    elif hasattr(font.Private, 'Subrs'):
       all_subrs.append(font.Private.Subrs)
     # Prepare
     for subrs in all_subrs:
@@ -1427,7 +1427,7 @@ def prune_post_subset(self, options):
         decompiler.reset()
         decompiler.execute(subrs[i])
         if subrs == font.GlobalSubrs:
-          if not hasattr(font, 'FDSelect'):
+          if not hasattr(font, 'FDSelect') and hasattr(font.Private, 'Subrs'):
             local_subrs = font.Private.Subrs
           else:
             local_subrs = []
