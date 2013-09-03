@@ -91,7 +91,7 @@ class Row(object):
 	def _add_object(self, key, value):
 		# Make sure item is decompiled
 		try:
-			getattr(value, "asdf")
+			value["asdf"]
 		except AttributeError:
 			pass
 		if isinstance(value, fontTools.ttLib.getTableModule('glyf').Glyph):
@@ -276,7 +276,7 @@ def main(args):
 		print >>sys.stderr, "usage: pyftfontview font..."
 		sys.exit(1)
 	for arg in args:
-		viewer = FontView(arg)
+		FontView(arg)
 	gtk.main()
 
 if __name__ == "__main__":

@@ -1579,7 +1579,7 @@ class Options(object):
   def set(self, **kwargs):
     for k,v in kwargs.iteritems():
       if not hasattr(self, k):
-        raise self.UnknownOptionError("Unknown option '%s'" % a)
+        raise self.UnknownOptionError("Unknown option '%s'" % k)
       setattr(self, k, v)
 
   def parse_opts(self, argv, ignore_unknown=False):
