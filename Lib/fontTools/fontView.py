@@ -27,11 +27,12 @@ import fontTools.cffLib
 
 
 class Row(object):
-	def __init__(self, parent, index, key, value):
+	def __init__(self, parent, index, key, value, font):
 		self._parent = parent
 		self._index = index
 		self._key = key
 		self._value = value
+		self._font = font
 
 		if isinstance(value, fontTools.ttLib.TTFont):
 			self._add_font(value)
@@ -95,7 +96,7 @@ class Row(object):
 			pass
 		if isinstance(value, fontTools.ttLib.getTableModule('glyf').Glyph):
 			# Glyph type needs explicit expanding to be useful
-			value.expand(self.font['glyf'])
+			value.expand(self._font['glyf'])
 		if isinstance(value, fontTools.misc.psCharStrings.T2CharString):
 			try:
 				value.decompile()
@@ -140,7 +141,7 @@ class Row(object):
 			return
 		children = []
 		for i,(k,v) in enumerate(self._items):
-			children.append(Row(self, i, k, v))
+			children.append(Row(self, i, k, v, self._font))
 		self._children = children
 		del self._items
 
@@ -152,7 +153,7 @@ class Row(object):
 		c = self._children[n]
 		if c is None:
 			k,v = self._items[n]
-			c = self._children[n] = Row(self, n, k, v)
+			c = self._children[n] = Row(self, n, k, v, self._font)
 			self._items[n] = None
 		return c
 
@@ -181,7 +182,7 @@ class FontTreeModel(gtk.GenericTreeModel):
 		super(FontTreeModel, self).__init__()
 		self._columns = (str, str)
 		self.font = font
-		self._root = Row(None, 0, "font", font)
+		self._root = Row(None, 0, "font", font, font)
 
 	def on_get_flags(self):
 		return 0
