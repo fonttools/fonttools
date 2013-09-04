@@ -47,13 +47,7 @@ class Row(object):
 				# It's hard to differentiate list-type sequences
 				# from dict-type ones.  Try fetching item 0.
 				value[0]
-			except TypeError:
-				is_sequence = False
-			except AttributeError:
-				is_sequence = False
-			except KeyError:
-				is_sequence = False
-			except IndexError:
+			except (TypeError, AttributeError, KeyError, IndexError):
 				is_sequence = False
 			if is_sequence:
 				self._add_list(key, value)
