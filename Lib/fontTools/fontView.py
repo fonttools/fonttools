@@ -92,7 +92,7 @@ class Row(object):
 		# Make sure item is decompiled
 		try:
 			value["asdf"]
-		except AttributeError:
+		except (AttributeError, KeyError):
 			pass
 		if isinstance(value, fontTools.ttLib.getTableModule('glyf').Glyph):
 			# Glyph type needs explicit expanding to be useful
@@ -255,17 +255,14 @@ class FontView:
 		#self.treeview.set_reorderable(True)
 
 		for i in range(2):
-
-			col = gtk.TreeViewColumn('Column %d' % i)
-
+			col_name = ('Key', 'Value')[i]
+			col = gtk.TreeViewColumn(col_name)
+			col.set_sort_column_id(-1)
 			self.treeview.append_column(col)
 
 			cell = gtk.CellRendererText()
 			col.pack_start(cell, True)
-
 			col.add_attribute(cell, 'text', i)
-
-			col.set_sort_column_id(i)
 
 		self.treeview.set_search_column(1)
 		self.scrolled_window.add(self.treeview)
