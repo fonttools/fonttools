@@ -289,7 +289,7 @@ class Glyph:
 				name, attrs, content = element
 				if name <> "pt":
 					continue  # ignore anything but "pt"
-				coordinates.append([safeEval(attrs["x"]), safeEval(attrs["y"])])
+				coordinates.append((safeEval(attrs["x"]), safeEval(attrs["y"])))
 				flags.append(not not safeEval(attrs["on"]))
 			flags = array.array("B", flags)
 			if not hasattr(self, "coordinates"):
@@ -784,7 +784,7 @@ class GlyphCoordinates:
 
 	@staticmethod
 	def zeros(count):
-		return GlyphCoordinates([0,0] * count)
+		return GlyphCoordinates([(0,0)] * count)
 
 	def copy(self):
 		c = GlyphCoordinates()
@@ -814,7 +814,8 @@ class GlyphCoordinates:
 		self._a.extend((x,y))
 
 	def extend(self, iterable):
-		self._a.extend(iterable)
+		for x,y in iterable:
+			self._a.extend((x,y))
 
 	def relativeToAbsolute(self):
 		a = self._a
