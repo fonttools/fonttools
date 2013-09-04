@@ -18,6 +18,8 @@ usage: ttx [options] inputfile1 [... inputfileN]
     -o <outputfile> Specify a file to write the output to.
     -v Verbose: more messages will be written to stdout about what
        is being done.
+    -q Quiet: No messages will be written to stdout about what
+       is being done.
     -a allow virtual glyphs ID's on compile or decompile.
 
     Dump options:
@@ -104,6 +106,7 @@ class Options:
 	outputDir = None
 	outputFile = None
 	verbose = 0
+	quiet = 0
 	splitTables = 0
 	disassembleInstructions = 1
 	mergeFile = None
@@ -130,6 +133,8 @@ class Options:
 				self.outputFile = value
 			elif option == "-v":
 				self.verbose = 1
+			elif option == "-q":
+				self.quiet = 1
 			# dump options
 			elif option == "-l":
 				self.listTables = 1
@@ -188,7 +193,8 @@ def ttList(input, output, options):
 
 
 def ttDump(input, output, options):
-	print 'Dumping "%s" to "%s"...' % (input, output)
+	if not options.quiet:
+		print 'Dumping "%s" to "%s"...' % (input, output)
 	ttf = TTFont(input, 0, verbose=options.verbose, allowVID=options.allowVID,
 			ignoreDecompileErrors=options.ignoreDecompileErrors,
 			fontNumber=options.fontNumber)
@@ -202,11 +208,12 @@ def ttDump(input, output, options):
 
 
 def ttCompile(input, output, options):
-	print 'Compiling "%s" to "%s"...' % (input, output)
+	if not options.quiet:
+		print 'Compiling "%s" to "%s"...' % (input, output)
 	ttf = TTFont(options.mergeFile,
 			recalcBBoxes=options.recalcBBoxes,
 			verbose=options.verbose, allowVID=options.allowVID)
-	ttf.importXML(input)
+	ttf.importXML(input, quiet=options.quiet)
 	try:
 		ttf.save(output)
 	except OTLOffsetOverflowError, e:

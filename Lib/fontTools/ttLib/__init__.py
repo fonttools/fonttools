@@ -312,7 +312,7 @@ class TTFont:
 		writer.newline()
 		writer.newline()
 	
-	def importXML(self, file, progress=None):
+	def importXML(self, file, progress=None, quiet=None):
 		"""Import a TTX file (an XML-based text format), so as to recreate
 		a font object.
 		"""
@@ -323,7 +323,7 @@ class TTFont:
 			# glyph names from (ie. 'post', 'cmap' or 'CFF ').
 			self.getGlyphOrder()
 		import xmlImport
-		xmlImport.importXML(self, file, progress)
+		xmlImport.importXML(self, file, progress, quiet)
 	
 	def isLoaded(self, tag):
 		"""Return true if the table identified by 'tag' has been 
