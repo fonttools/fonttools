@@ -814,8 +814,7 @@ class GlyphCoordinates:
 		self._a.extend((x,y))
 
 	def extend(self, iterable):
-		for x,y in iterable:
-			self._a.extend((x,y))
+		self._a.extend(iterable)
 
 	def relativeToAbsolute(self):
 		a = self._a
