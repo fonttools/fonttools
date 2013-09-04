@@ -208,11 +208,12 @@ def ttDump(input, output, options):
 
 
 def ttCompile(input, output, options):
-	print 'Compiling "%s" to "%s"...' % (input, output)
+	if not options.quiet:
+		print 'Compiling "%s" to "%s"...' % (input, output)
 	ttf = TTFont(options.mergeFile,
 			recalcBBoxes=options.recalcBBoxes,
 			verbose=options.verbose, allowVID=options.allowVID)
-	ttf.importXML(input)
+	ttf.importXML(input, quiet=options.quiet)
 	try:
 		ttf.save(output)
 	except OTLOffsetOverflowError, e:
