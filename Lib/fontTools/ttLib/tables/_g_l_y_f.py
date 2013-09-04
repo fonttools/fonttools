@@ -560,9 +560,9 @@ class Glyph:
 			return self.coordinates, self.endPtsOfContours, self.flags
 		elif self.isComposite():
 			# it's a composite
-			allCoords = None
-			allFlags = None
-			allEndPts = None
+			allCoords = GlyphCoordinates()
+			allFlags = array.array("B")
+			allEndPts = []
 			for compo in self.components:
 				g = glyfTable[compo.glyphName]
 				coordinates, endPts, flags = g.getCoordinates(glyfTable)
@@ -592,15 +592,10 @@ class Glyph:
 						# the MS way: first scale, then move
 						coordinates.transform(compo.transform)
 						coordinates.translate(move)
-				if allCoords is None or len(allCoords) == 0:
-					allCoords = coordinates
-					allEndPts = endPts
-					allFlags = flags
-				else:
-					offset = len(allCoords)
-					allEndPts.extend(e + offset for e in endPts)
-					allCoords.extend(coordinates)
-					allFlags.extend(flags)
+				offset = len(allCoords)
+				allEndPts.extend(e + offset for e in endPts)
+				allCoords.extend(coordinates)
+				allFlags.extend(flags)
 			return allCoords, allEndPts, allFlags
 		else:
 			return GlyphCoordinates(), [], array.array("B")
