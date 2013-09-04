@@ -71,7 +71,7 @@ class TTFont:
 	def __init__(self, file=None, res_name_or_index=None,
 			sfntVersion="\000\001\000\000", flavor=None, checkChecksums=0,
 			verbose=0, recalcBBoxes=1, allowVID=0, ignoreDecompileErrors=False,
-			fontNumber=-1):
+			fontNumber=-1, quiet=0):
 		
 		"""The constructor can be called with a few different arguments.
 		When reading a font from disk, 'file' should be either a pathname
@@ -123,6 +123,7 @@ class TTFont:
 		
 		from fontTools.ttLib import sfnt
 		self.verbose = verbose
+		self.quiet = quiet
 		self.recalcBBoxes = recalcBBoxes
 		self.tables = {}
 		self.reader = None
@@ -215,7 +216,7 @@ class TTFont:
 		if closeStream:
 			file.close()
 	
-	def saveXML(self, fileOrPath, progress=None, 
+	def saveXML(self, fileOrPath, progress=None, quiet=None, 
 			tables=None, skipTables=None, splitTables=0, disassembleInstructions=1,
 			bitmapGlyphDataFormat='raw'):
 		"""Export the font as TTX (an XML-based text file), or as a series of text
@@ -271,7 +272,7 @@ class TTFont:
 				writer.newline()
 			else:
 				tableWriter = writer
-			self._tableToXML(tableWriter, tag, progress)
+			self._tableToXML(tableWriter, tag, progress, quiet)
 			if splitTables:
 				tableWriter.endtag("ttFont")
 				tableWriter.newline()
@@ -284,7 +285,7 @@ class TTFont:
 		if self.verbose:
 			debugmsg("Done dumping TTX")
 	
-	def _tableToXML(self, writer, tag, progress):
+	def _tableToXML(self, writer, tag, progress, quiet):
 		if self.has_key(tag):
 			table = self[tag]
 			report = "Dumping '%s' table..." % tag
@@ -295,7 +296,8 @@ class TTFont:
 		elif self.verbose:
 			debugmsg(report)
 		else:
-			print report
+			if not quiet:
+				print report
 		if not self.has_key(tag):
 			return
 		xmlTag = tagToXML(tag)

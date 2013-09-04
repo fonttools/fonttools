@@ -196,9 +196,11 @@ def ttDump(input, output, options):
 	if not options.quiet:
 		print 'Dumping "%s" to "%s"...' % (input, output)
 	ttf = TTFont(input, 0, verbose=options.verbose, allowVID=options.allowVID,
+			quiet=options.quiet,
 			ignoreDecompileErrors=options.ignoreDecompileErrors,
 			fontNumber=options.fontNumber)
 	ttf.saveXML(output,
+			quiet=options.quiet, 
 			tables=options.onlyTables,
 			skipTables=options.skipTables, 
 			splitTables=options.splitTables,
