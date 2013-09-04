@@ -91,7 +91,7 @@ class Row(object):
 		# Make sure item is decompiled
 		try:
 			value["asdf"]
-		except (AttributeError, KeyError):
+		except (AttributeError, KeyError, ttLib.TTLibError):
 			pass
 		if isinstance(value, ttLib.getTableModule('glyf').Glyph):
 			# Glyph type needs explicit expanding to be useful
