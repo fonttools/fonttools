@@ -274,7 +274,7 @@ def guessFileType(fileName):
 
 def parseOptions(args):
 	try:
-		rawOptions, files = getopt.getopt(args, "ld:o:vht:x:sim:z:baey:")
+		rawOptions, files = getopt.getopt(args, "ld:o:vqht:x:sim:z:baey:")
 	except getopt.GetoptError:
 		usage()
 	
