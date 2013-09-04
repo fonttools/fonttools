@@ -281,7 +281,7 @@ class Glyph:
 			if self.numberOfContours < 0:
 				raise ttLib.TTLibError, "can't mix composites and contours in glyph"
 			self.numberOfContours = self.numberOfContours + 1
-			coordinates = GlyphCoords()
+			coordinates = GlyphCoordinates()
 			flags = []
 			for element in content:
 				if type(element) <> TupleType:
@@ -784,7 +784,7 @@ class GlyphCoordinates:
 
 	@staticmethod
 	def zeros(count):
-		return GlyphCoordinates([(0,0)] * count)
+		return GlyphCoordinates([0,0] * count)
 
 	def copy(self):
 		c = GlyphCoordinates()
@@ -811,7 +811,7 @@ class GlyphCoordinates:
 		return 'GlyphCoordinates(['+','.join(str(c) for c in self)+'])'
 
 	def append(self, (x,y)):
-		self._a.append((x,y))
+		self._a.extend((x,y))
 
 	def extend(self, iterable):
 		for x,y in iterable:

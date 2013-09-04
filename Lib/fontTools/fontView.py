@@ -21,9 +21,9 @@ import pygtk
 pygtk.require('2.0')
 import gtk
 import sys
+import array
 
-import fontTools.ttLib
-import fontTools.cffLib
+from . import misc, ttLib, cffLib
 
 
 class Row(object):
@@ -34,7 +34,7 @@ class Row(object):
 		self._value = value
 		self._font = font
 
-		if isinstance(value, fontTools.ttLib.TTFont):
+		if isinstance(value, ttLib.TTFont):
 			self._add_font(value)
 			return
 
@@ -47,13 +47,7 @@ class Row(object):
 				# It's hard to differentiate list-type sequences
 				# from dict-type ones.  Try fetching item 0.
 				value[0]
-			except TypeError:
-				is_sequence = False
-			except AttributeError:
-				is_sequence = False
-			except KeyError:
-				is_sequence = False
-			except IndexError:
+			except (TypeError, AttributeError, KeyError, IndexError):
 				is_sequence = False
 			if is_sequence:
 				self._add_list(key, value)
@@ -76,7 +70,7 @@ class Row(object):
 	def _filter_items(self):
 		items = []
 		for k,v in self._items:
-			if isinstance(v, fontTools.ttLib.TTFont):
+			if isinstance(v, ttLib.TTFont):
 				continue
 			if k in ['reader', 'file', 'tableTag', 'compileStatus', 'recurse']:
 				continue
@@ -92,20 +86,20 @@ class Row(object):
 		# Make sure item is decompiled
 		try:
 			value["asdf"]
-		except AttributeError:
+		except (AttributeError, KeyError, ttLib.TTLibError):
 			pass
-		if isinstance(value, fontTools.ttLib.getTableModule('glyf').Glyph):
+		if isinstance(value, ttLib.getTableModule('glyf').Glyph):
 			# Glyph type needs explicit expanding to be useful
 			value.expand(self._font['glyf'])
-		if isinstance(value, fontTools.misc.psCharStrings.T2CharString):
+		if isinstance(value, misc.psCharStrings.T2CharString):
 			try:
 				value.decompile()
 			except TypeError:  # Subroutines can't be decompiled
 				pass
-		if isinstance(value, fontTools.cffLib.BaseDict):
+		if isinstance(value, cffLib.BaseDict):
 			for k in value.rawDict.keys():
 				getattr(value, k)
-		if isinstance(value, fontTools.cffLib.Index):
+		if isinstance(value, cffLib.Index):
 			# Load all items
 			for i in range(len(value)):
 				value[i]
@@ -114,6 +108,8 @@ class Row(object):
 				del value.offsets
 
 		self._value_str = value.__class__.__name__
+		if isinstance(value, ttLib.tables.DefaultTable.DefaultTable):
+			self._value_str += ' (%d Bytes)' % self._font.reader.tables[key].length
 		self._items = sorted(value.__dict__.items())
 		self._filter_items()
 
@@ -249,23 +245,20 @@ class FontView:
 		self.scrolled_window = gtk.ScrolledWindow()
 		self.window.add(self.scrolled_window)
 
-		self.font = fontTools.ttLib.TTFont(fontfile)
+		self.font = ttLib.TTFont(fontfile)
 		self.treemodel = FontTreeModel(self.font)
 		self.treeview = gtk.TreeView(self.treemodel)
 		#self.treeview.set_reorderable(True)
 
 		for i in range(2):
-
-			col = gtk.TreeViewColumn('Column %d' % i)
-
+			col_name = ('Key', 'Value')[i]
+			col = gtk.TreeViewColumn(col_name)
+			col.set_sort_column_id(-1)
 			self.treeview.append_column(col)
 
 			cell = gtk.CellRendererText()
 			col.pack_start(cell, True)
-
 			col.add_attribute(cell, 'text', i)
-
-			col.set_sort_column_id(i)
 
 		self.treeview.set_search_column(1)
 		self.scrolled_window.add(self.treeview)
