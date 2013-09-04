@@ -23,7 +23,7 @@ import gtk
 import sys
 import array
 
-from . import misc, ttLib, cffLib
+from fontTools import misc, ttLib, cffLib
 
 
 class Row(object):
