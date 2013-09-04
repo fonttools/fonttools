@@ -16,7 +16,7 @@ def MyOpenResFile(path):
 	mode = 1  # read only
 	try:
 		resref = Res.FSOpenResFile(path, mode)
-	except Res.Error:
+	except:
 		# try data fork
 		resref = Res.FSOpenResourceFile(path, u'', mode)
 	return resref
