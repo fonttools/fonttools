@@ -21,6 +21,7 @@ import pygtk
 pygtk.require('2.0')
 import gtk
 import sys
+import array
 
 from . import misc, ttLib, cffLib
 
@@ -113,6 +114,8 @@ class Row(object):
 				del value.offsets
 
 		self._value_str = value.__class__.__name__
+		if isinstance(value, ttLib.tables.DefaultTable.DefaultTable):
+			self._value_str += ' (%d Bytes)' % self._font.reader.tables[key].length
 		self._items = sorted(value.__dict__.items())
 		self._filter_items()
 
