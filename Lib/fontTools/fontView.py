@@ -22,8 +22,7 @@ pygtk.require('2.0')
 import gtk
 import sys
 
-import fontTools.ttLib
-import fontTools.cffLib
+from . import misc, ttLib, cffLib
 
 
 class Row(object):
@@ -34,7 +33,7 @@ class Row(object):
 		self._value = value
 		self._font = font
 
-		if isinstance(value, fontTools.ttLib.TTFont):
+		if isinstance(value, ttLib.TTFont):
 			self._add_font(value)
 			return
 
@@ -76,7 +75,7 @@ class Row(object):
 	def _filter_items(self):
 		items = []
 		for k,v in self._items:
-			if isinstance(v, fontTools.ttLib.TTFont):
+			if isinstance(v, ttLib.TTFont):
 				continue
 			if k in ['reader', 'file', 'tableTag', 'compileStatus', 'recurse']:
 				continue
@@ -94,18 +93,18 @@ class Row(object):
 			value["asdf"]
 		except (AttributeError, KeyError):
 			pass
-		if isinstance(value, fontTools.ttLib.getTableModule('glyf').Glyph):
+		if isinstance(value, ttLib.getTableModule('glyf').Glyph):
 			# Glyph type needs explicit expanding to be useful
 			value.expand(self._font['glyf'])
-		if isinstance(value, fontTools.misc.psCharStrings.T2CharString):
+		if isinstance(value, misc.psCharStrings.T2CharString):
 			try:
 				value.decompile()
 			except TypeError:  # Subroutines can't be decompiled
 				pass
-		if isinstance(value, fontTools.cffLib.BaseDict):
+		if isinstance(value, cffLib.BaseDict):
 			for k in value.rawDict.keys():
 				getattr(value, k)
-		if isinstance(value, fontTools.cffLib.Index):
+		if isinstance(value, cffLib.Index):
 			# Load all items
 			for i in range(len(value)):
 				value[i]
@@ -249,7 +248,7 @@ class FontView:
 		self.scrolled_window = gtk.ScrolledWindow()
 		self.window.add(self.scrolled_window)
 
-		self.font = fontTools.ttLib.TTFont(fontfile)
+		self.font = ttLib.TTFont(fontfile)
 		self.treemodel = FontTreeModel(self.font)
 		self.treeview = gtk.TreeView(self.treemodel)
 		#self.treeview.set_reorderable(True)
