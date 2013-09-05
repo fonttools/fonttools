@@ -1365,19 +1365,6 @@ def prune_post_subset(self, options):
       self.globalSubrs._used.add(self.operandStack[-1]+self.globalBias)
       fontTools.misc.psCharStrings.SimpleT2Decompiler.op_callgsubr(self, index)
 
-  class _NonrecursingT2Decompiler(fontTools.misc.psCharStrings.SimpleT2Decompiler):
-
-    def __init__(self, localSubrs, globalSubrs):
-      fontTools.misc.psCharStrings.SimpleT2Decompiler.__init__(self,
-                                                               localSubrs,
-                                                               globalSubrs)
-
-    def op_callsubr(self, index):
-      self.pop()
-
-    def op_callgsubr(self, index):
-      self.pop()
-
   for fontname in cff.keys():
     font = cff[fontname]
     cs = font.CharStrings
@@ -1421,11 +1408,8 @@ def prune_post_subset(self, options):
     # Renumber subroutines themselves
     for subrs in all_subrs:
       if not subrs: continue
-      decompiler = _NonrecursingT2Decompiler(subrs, font.GlobalSubrs)
       for i in xrange (subrs.count):
         if i not in subrs._used: continue
-        decompiler.reset()
-        decompiler.execute(subrs[i])
         if subrs == font.GlobalSubrs:
           if not hasattr(font, 'FDSelect') and hasattr(font.Private, 'Subrs'):
             local_subrs = font.Private.Subrs
