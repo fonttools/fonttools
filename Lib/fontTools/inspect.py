@@ -14,7 +14,7 @@
 #
 # Google Author(s): Behdad Esfahbod
 
-"""GUI Font Viewer.
+"""GUI font inspector.
 """
 
 import pygtk
@@ -229,7 +229,7 @@ class FontTreeModel(gtk.GenericTreeModel):
 	def on_iter_parent(self, rowref):
 		return rowref.get_parent()
 
-class FontView:
+class Inspect:
 
 	def _delete_event(self, widget, event, data=None):
 		gtk.main_quit()
@@ -238,7 +238,7 @@ class FontView:
 	def __init__(self, fontfile):
 
 		self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
-		self.window.set_title("%s - FontView" % fontfile)
+		self.window.set_title("%s - pyftinspect" % fontfile)
 		self.window.connect("delete_event", self._delete_event)
 		self.window.set_size_request(400, 600)
 
@@ -269,7 +269,7 @@ def main(args):
 		print >>sys.stderr, "usage: pyftfontview font..."
 		sys.exit(1)
 	for arg in args:
-		FontView(arg)
+		Inspect(arg)
 	gtk.main()
 
 if __name__ == "__main__":
