@@ -1468,14 +1468,15 @@ class _DehintingT2Decompiler(fontTools.misc.psCharStrings.SimpleT2Decompiler):
     hints.has_hintmask = True
     if hints.status != 2 and hints.has_hint:
       # Check from last_check, see if we may be an implicit vstem
-      for i in xrange(hints.last_checked, index):
+      for i in xrange(hints.last_checked, index - 1):
         if type(cs.program[i]) == str:
+          hints.status = 2
           break;
-      if i == index - 1:
+      if hints.status != 2:
         # We are an implicit vstem
         hints.last_hint = index + 1
-      hints.status = 2
-      hints.last_checked = index
+        hints.status = 0
+      hints.last_checked = index + 1
 
   def processHint(self, index):
     cs = self.callingStack[-1]
