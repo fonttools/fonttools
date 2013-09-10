@@ -1286,7 +1286,7 @@ def prune_post_subset(self, options):
 @_add_method(fontTools.ttLib.getTableClass('CFF '))
 def prune_pre_subset(self, options):
   cff = self.cff
-  # CFF table should have one font only
+  # CFF table must have one font only
   cff.fontNames = cff.fontNames[:1]
 
   if options.notdef_glyph and not options.notdef_outline:
@@ -1335,6 +1335,7 @@ def subset_glyphs(self, s):
 @_add_method(fontTools.misc.psCharStrings.T2CharString)
 def subset_subroutines(self, subrs, gsubrs):
   p = self.program
+  assert len(p)
   for i in xrange(1, len(p)):
     if p[i] == 'callsubr':
       assert type(p[i-1]) is int
@@ -1343,33 +1344,183 @@ def subset_subroutines(self, subrs, gsubrs):
       assert type(p[i-1]) is int
       p[i-1] = gsubrs._used.index(p[i-1] + gsubrs._old_bias) - gsubrs._new_bias
 
+@_add_method(fontTools.misc.psCharStrings.T2CharString)
+def drop_hints(self):
+  hints = self._hints
+
+  if hints.has_hint:
+    self.program = self.program[hints.last_hint:]
+
+  if hints.has_hintmask:
+    i = 0
+    p = self.program
+    while i < len(p):
+      if p[i] in ['hintmask', 'cntrmask']:
+        assert i + 1 <= len(p)
+        del p[i:i+2]
+        continue
+      i += 1
+
+  assert len(self.program)
+
+  del self._hints
+
+class _MarkingT2Decompiler(fontTools.misc.psCharStrings.SimpleT2Decompiler):
+
+  def __init__(self, localSubrs, globalSubrs):
+    fontTools.misc.psCharStrings.SimpleT2Decompiler.__init__(self,
+                                                             localSubrs,
+                                                             globalSubrs)
+    for subrs in [localSubrs, globalSubrs]:
+      if subrs and not hasattr(subrs, "_used"):
+        subrs._used = set()
+
+  def op_callsubr(self, index):
+    self.localSubrs._used.add(self.operandStack[-1]+self.localBias)
+    fontTools.misc.psCharStrings.SimpleT2Decompiler.op_callsubr(self, index)
+
+  def op_callgsubr(self, index):
+    self.globalSubrs._used.add(self.operandStack[-1]+self.globalBias)
+    fontTools.misc.psCharStrings.SimpleT2Decompiler.op_callgsubr(self, index)
+
+class _DehintingT2Decompiler(fontTools.misc.psCharStrings.SimpleT2Decompiler):
+
+  class Hints:
+    def __init__(self):
+      # Whether calling this charstring produces any hint stems
+      self.has_hint = False
+      # Index to start at to drop all hints
+      self.last_hint = 0
+      # Index up to which we know more hints are possible.  Only
+      # relevant if status is 0 or 1.
+      self.last_checked = 0
+      # The status means:
+      # 0: after dropping hints, this charstring is empty
+      # 1: after dropping hints, there may be more hints continuing after this
+      # 2: no more hints possible after this charstring
+      self.status = 0
+      # Has hintmask instructions; not recursive
+      self.has_hintmask = False
+    pass
+
+  def __init__(self, css, localSubrs, globalSubrs):
+    self._css = css
+    fontTools.misc.psCharStrings.SimpleT2Decompiler.__init__(self,
+                                                             localSubrs,
+                                                             globalSubrs)
+
+  def execute(self, charString):
+    old_hints = charString._hints if hasattr(charString, '_hints') else None
+    charString._hints = self.Hints()
+
+    fontTools.misc.psCharStrings.SimpleT2Decompiler.execute(self, charString)
+
+    hints = charString._hints
+
+    if hints.has_hint or hints.has_hintmask:
+      self._css.add(charString)
+
+    if hints.status != 2:
+      # Check from last_check, make sure we didn't have any operators.
+      for i in xrange(hints.last_checked, len(charString.program) - 1):
+        if type(charString.program[i]) == str:
+          hints.status = 2
+          break;
+        else:
+          hints.status = 1 # There's *something* here
+      hints.last_checked = len(charString.program)
+
+    if old_hints:
+      assert hints.__dict__ == old_hints.__dict__
+
+  def op_callsubr(self, index):
+    subr = self.localSubrs[self.operandStack[-1]+self.localBias]
+    fontTools.misc.psCharStrings.SimpleT2Decompiler.op_callsubr(self, index)
+    self.processSubr(index, subr)
+
+  def op_callgsubr(self, index):
+    subr = self.globalSubrs[self.operandStack[-1]+self.globalBias]
+    fontTools.misc.psCharStrings.SimpleT2Decompiler.op_callgsubr(self, index)
+    self.processSubr(index, subr)
+
+  def op_hstem(self, index):
+    fontTools.misc.psCharStrings.SimpleT2Decompiler.op_hstem(self, index)
+    self.processHint(index)
+  def op_vstem(self, index):
+    fontTools.misc.psCharStrings.SimpleT2Decompiler.op_vstem(self, index)
+    self.processHint(index)
+  def op_hstemhm(self, index):
+    fontTools.misc.psCharStrings.SimpleT2Decompiler.op_hstemhm(self, index)
+    self.processHint(index)
+  def op_vstemhm(self, index):
+    fontTools.misc.psCharStrings.SimpleT2Decompiler.op_vstemhm(self, index)
+    self.processHint(index)
+  def op_hintmask(self, index):
+    fontTools.misc.psCharStrings.SimpleT2Decompiler.op_hintmask(self, index)
+    self.processHintmask(index)
+  def op_cntrmask(self, index):
+    fontTools.misc.psCharStrings.SimpleT2Decompiler.op_cntrmask(self, index)
+    self.processHintmask(index)
+
+  def processHintmask(self, index):
+    cs = self.callingStack[-1]
+    hints = cs._hints
+    hints.has_hintmask = True
+    if hints.status != 2 and hints.has_hint:
+      # Check from last_check, see if we may be an implicit vstem
+      for i in xrange(hints.last_checked, index):
+        if type(cs.program[i]) == str:
+          break;
+      if i == index - 1:
+        # We are an implicit vstem
+        hints.last_hint = index + 1
+      hints.status = 2
+      hints.last_checked = index
+
+  def processHint(self, index):
+    cs = self.callingStack[-1]
+    hints = cs._hints
+    hints.has_hint = True
+    hints.last_hint = index
+    hints.last_checked = index
+
+  def processSubr(self, index, subr):
+    cs = self.callingStack[-1]
+    hints = cs._hints
+    subr_hints = subr._hints
+
+    if subr_hints.has_hint:
+      assert hints.status != 2
+      hints.has_hint = True
+      self.last_checked = index
+      self.status = subr_hints.status
+      # Decide where to chop off from
+      if subr_hints.status == 0:
+        self.last_hint = index
+      else:
+        self.last_hint = index - 2 # Leave the subr call in
+    else:
+      hints.status = max(hints.status, subr_hints.status)
+      if hints.status != 2:
+        # Check from last_check, make sure we didn't have
+        # any operators.
+        for i in xrange(hints.last_checked, index - 1):
+          if type(cs.program[i]) == str:
+            hints.status = 2
+            break;
+        hints.last_checked = index
+
 @_add_method(fontTools.ttLib.getTableClass('CFF '))
 def prune_post_subset(self, options):
   cff = self.cff
-
-  class _MarkingT2Decompiler(fontTools.misc.psCharStrings.SimpleT2Decompiler):
-
-    def __init__(self, localSubrs, globalSubrs):
-      fontTools.misc.psCharStrings.SimpleT2Decompiler.__init__(self,
-                                                               localSubrs,
-                                                               globalSubrs)
-      for subrs in [localSubrs, globalSubrs]:
-        if subrs and not hasattr(subrs, "_used"):
-          subrs._used = set()
-
-    def op_callsubr(self, index):
-      self.localSubrs._used.add(self.operandStack[-1]+self.localBias)
-      fontTools.misc.psCharStrings.SimpleT2Decompiler.op_callsubr(self, index)
-
-    def op_callgsubr(self, index):
-      self.globalSubrs._used.add(self.operandStack[-1]+self.globalBias)
-      fontTools.misc.psCharStrings.SimpleT2Decompiler.op_callgsubr(self, index)
-
   for fontname in cff.keys():
     font = cff[fontname]
     cs = font.CharStrings
 
+
+    #
     # Drop unused FontDictionaries
+    #
     if hasattr(font, "FDSelect"):
       sel = font.FDSelect
       indices = _uniq_sort(sel.gidArray)
@@ -1379,6 +1530,46 @@ def prune_post_subset(self, options):
       arr.count = len(arr.items)
       del arr.file, arr.offsets
 
+
+    #
+    # Drop hints if not needed
+    #
+    if not options.hinting:
+
+      #
+      # This can be tricky, but doesn't have to.  What we do is:
+      #
+      # - Run all used glyph charstrings and recurse into subroutines,
+      # - For each charstring (including subroutines), if it has any
+      #   of the hint stem operators, we mark it as such.  Upon returning,
+      #   for each charstring we note all the subroutine calls it makes
+      #   that (recursively) contain a stem,
+      # - Dropping hinting then consists of the following two ops:
+      #   * Drop the piece of the program in each charstring before the
+      #     last call to a stem op or a stem-calling subroutine,
+      #   * Drop all hintmask operations.
+      # - It's trickier... A hintmask right after hints and a few numbers
+      #   will act as an implicit vstemhm.  As such, we track whether
+      #   we have seen any non-hint operators so far and do the right
+      #   thing, recursively...  Good luck understanding that :(
+      #
+      css = set()
+      for g in font.charset:
+        c,sel = cs.getItemAndSelector(g)
+        # Make sure it's decompiled.  We want our "decompiler" to walk
+        # the program, not the bytecode.
+        c.decompile()
+        subrs = getattr(c.private, "Subrs", [])
+        decompiler = _DehintingT2Decompiler(css, subrs, c.globalSubrs)
+        decompiler.execute(c)
+      for charstring in css:
+        charstring.drop_hints()
+
+
+    #
+    # Renumber subroutines to remove unused ones
+    #
+
     # Mark all used subroutines
     for g in font.charset:
       c,sel = cs.getItemAndSelector(g)
@@ -1386,47 +1577,51 @@ def prune_post_subset(self, options):
       decompiler = _MarkingT2Decompiler(subrs, c.globalSubrs)
       decompiler.execute(c)
 
-    # Renumber subroutines to remove unused ones
     all_subrs = [font.GlobalSubrs]
     if hasattr(font, 'FDSelect'):
-      all_subrs.extend(fd.Private.Subrs for fd in font.FDArray if hasattr(fd.Private, 'Subrs'))
-    elif hasattr(font.Private, 'Subrs'):
+      all_subrs.extend(fd.Private.Subrs for fd in font.FDArray if hasattr(fd.Private, 'Subrs') and fd.Private.Subrs)
+    elif hasattr(font.Private, 'Subrs') and font.Private.Subrs:
       all_subrs.append(font.Private.Subrs)
+
+    subrs = set(subrs) # Remove duplicates
+
     # Prepare
     for subrs in all_subrs:
-      if not subrs: continue
       if not hasattr(subrs, '_used'):
         subrs._used = set()
       subrs._used = _uniq_sort(subrs._used)
       subrs._old_bias = fontTools.misc.psCharStrings.calcSubrBias(subrs)
       subrs._new_bias = fontTools.misc.psCharStrings.calcSubrBias(subrs._used)
+
     # Renumber glyph charstrings
     for g in font.charset:
       c,sel = cs.getItemAndSelector(g)
       subrs = getattr(c.private, "Subrs", [])
       c.subset_subroutines (subrs, font.GlobalSubrs)
+
     # Renumber subroutines themselves
     for subrs in all_subrs:
-      if not subrs: continue
-      for i in xrange (subrs.count):
-        if i not in subrs._used: continue
-        if subrs == font.GlobalSubrs:
-          if not hasattr(font, 'FDSelect') and hasattr(font.Private, 'Subrs'):
-            local_subrs = font.Private.Subrs
-          else:
-            local_subrs = []
+
+      if subrs == font.GlobalSubrs:
+        if not hasattr(font, 'FDSelect') and hasattr(font.Private, 'Subrs'):
+          local_subrs = font.Private.Subrs
         else:
-          local_subrs = subrs
+          local_subrs = []
+      else:
+        local_subrs = subrs
+
+      subrs.items = [subrs.items[i] for i in subrs._used]
+      subrs.count = len(subrs.items)
+      del subrs.file
+      if hasattr(subrs, 'offsets'):
+        del subrs.offsets
+
+      for i in xrange (subrs.count):
         subrs[i].subset_subroutines (local_subrs, font.GlobalSubrs)
+
     # Cleanup
     for subrs in all_subrs:
-      if not subrs: continue
-      subrs.items = [subrs.items[i] for i in subrs._used]
-      del subrs.file, subrs.offsets
       del subrs._used, subrs._old_bias, subrs._new_bias
-
-    if not options.hinting:
-      pass  # TODO(behdad) Drop hints
 
   return True
 
