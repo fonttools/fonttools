@@ -2083,6 +2083,9 @@ def main(args):
   unicodes = []
   text = ""
   for g in args:
+    if g == '*':
+      glyphs.extend(font.getGlyphOrder())
+      continue
     if g in names:
       glyphs.append(g)
       continue
