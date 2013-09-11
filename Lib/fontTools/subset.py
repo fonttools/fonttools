@@ -1873,6 +1873,7 @@ class Subsetter(object):
 
       if hasattr(clazz, 'prune_pre_subset'):
         table = font[tag]
+        self.log.lapse("load '%s'" % tag)
         retain = table.prune_pre_subset(self.options)
         self.log.lapse("prune  '%s'" % tag)
         if not retain:
