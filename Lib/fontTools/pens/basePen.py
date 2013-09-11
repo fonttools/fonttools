@@ -37,7 +37,7 @@ sequence of length 2 will do.
 """
 
 
-__all__ = ["AbstractPen", "BasePen",
+__all__ = ["AbstractPen", "NullPen", "BasePen",
            "decomposeSuperBezierSegment", "decomposeQuadraticSegment"]
 
 
@@ -110,6 +110,33 @@ class AbstractPen(object):
 		sequence containing 6 numbers.
 		"""
 		raise NotImplementedError
+
+
+class NullPen(object):
+
+	"""A pen that does nothing.
+	"""
+
+	def moveTo(self, pt):
+		pass
+
+	def lineTo(self, pt):
+		pass
+
+	def curveTo(self, *points):
+		pass
+
+	def qCurveTo(self, *points):
+		pass
+
+	def closePath(self):
+		pass
+
+	def endPath(self):
+		pass
+
+	def addComponent(self, glyphName, transformation):
+		pass
 
 
 class BasePen(AbstractPen):

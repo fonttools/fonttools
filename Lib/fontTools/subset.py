@@ -29,6 +29,7 @@ import fontTools.ttLib.tables
 import fontTools.ttLib.tables.otTables
 import fontTools.cffLib
 import fontTools.misc.psCharStrings
+import fontTools.pens.basePen
 
 
 def _add_method(*clazzes):
@@ -1350,6 +1351,10 @@ def drop_hints(self):
 
   if hints.has_hint:
     self.program = self.program[hints.last_hint:]
+    if hasattr(self, 'width'):
+      # Insert width back if needed
+      if self.width != self.private.defaultWidthX:
+        self.program.insert(0,  self.width - self.private.nominalWidthX)
 
   if hints.has_hintmask:
     i = 0
@@ -1491,15 +1496,21 @@ class _DehintingT2Decompiler(fontTools.misc.psCharStrings.SimpleT2Decompiler):
     subr_hints = subr._hints
 
     if subr_hints.has_hint:
-      assert hints.status != 2
-      hints.has_hint = True
-      self.last_checked = index
-      self.status = subr_hints.status
-      # Decide where to chop off from
-      if subr_hints.status == 0:
-        self.last_hint = index
+      if hints.status != 2:
+        hints.has_hint = True
+        self.last_checked = index
+        self.status = subr_hints.status
+        # Decide where to chop off from
+        if subr_hints.status == 0:
+          self.last_hint = index
+        else:
+          self.last_hint = index - 2 # Leave the subr call in
       else:
-        self.last_hint = index - 2 # Leave the subr call in
+        # In my understanding, this is a font bug.  Ie. it has hint stems
+        # *after* path construction.  I've seen this in widespread fonts.
+        # Best to ignore the hints I suppose...
+        pass
+        #assert 0
     else:
       hints.status = max(hints.status, subr_hints.status)
       if hints.status != 2:
@@ -1559,7 +1570,7 @@ def prune_post_subset(self, options):
         c,sel = cs.getItemAndSelector(g)
         # Make sure it's decompiled.  We want our "decompiler" to walk
         # the program, not the bytecode.
-        c.decompile()
+        c.draw(fontTools.pens.basePen.NullPen())
         subrs = getattr(c.private, "Subrs", [])
         decompiler = _DehintingT2Decompiler(css, subrs, c.globalSubrs)
         decompiler.execute(c)
