@@ -91,7 +91,7 @@ setup(
 				libraries=[],
 			)
 		],
-		scripts = ["Tools/ttx", "Tools/pyftsubset", "Tools/pyftfontview"],
+		scripts = ["Tools/ttx", "Tools/pyftsubset", "Tools/pyftinspect"],
 		console = ["Tools/ttx", "Tools/pyftsubset"],
 		cmdclass = {"build_ext": build_ext_optional},
 		data_files = [('share/man/man1', ["Doc/ttx.1"])],
