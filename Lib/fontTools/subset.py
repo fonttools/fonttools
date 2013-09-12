@@ -1354,7 +1354,7 @@ def drop_hints(self):
     if hasattr(self, 'width'):
       # Insert width back if needed
       if self.width != self.private.defaultWidthX:
-        self.program.insert(0,  self.width - self.private.nominalWidthX)
+        self.program.insert(0, self.width - self.private.nominalWidthX)
 
   if hints.has_hintmask:
     i = 0
@@ -1498,13 +1498,13 @@ class _DehintingT2Decompiler(fontTools.misc.psCharStrings.SimpleT2Decompiler):
     if subr_hints.has_hint:
       if hints.status != 2:
         hints.has_hint = True
-        self.last_checked = index
-        self.status = subr_hints.status
+        hints.last_checked = index
+        hints.status = subr_hints.status
         # Decide where to chop off from
         if subr_hints.status == 0:
-          self.last_hint = index
+          hints.last_hint = index
         else:
-          self.last_hint = index - 2 # Leave the subr call in
+          hints.last_hint = index - 2 # Leave the subr call in
       else:
         # In my understanding, this is a font bug.  Ie. it has hint stems
         # *after* path construction.  I've seen this in widespread fonts.
