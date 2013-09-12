@@ -1294,6 +1294,7 @@ def prune_pre_subset(self, options):
     for fontname in cff.keys():
       font = cff[fontname]
       c,_ = font.CharStrings.getItemAndSelector('.notdef')
+      # XXX we should preserve the glyph width
       c.bytecode = '\x0e' # endchar
       c.program = None
 
@@ -1710,6 +1711,7 @@ def prune_pre_subset(self, options):
 # TODO(behdad) Avoid recursing too much (in GSUB/GPOS and in CFF)
 # TODO(behdad) Text direction considerations.
 # TODO(behdad) Text script / language considerations.
+# TODO(behdad) Option to drop hmtx for CFF?
 
 
 class Options(object):
