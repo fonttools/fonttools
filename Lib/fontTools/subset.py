@@ -404,7 +404,7 @@ def prune_post_subset(self, options):
       for m in self.Mark1Array.MarkRecord:
         m.MarkAnchor.prune_hints()
       for b in self.Mark2Array.Mark2Record:
-        for m in rec.Mark2Anchor:
+        for m in b.Mark2Anchor:
           m.prune_hints()
     return True
 
