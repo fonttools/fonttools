@@ -1,5 +1,5 @@
 import DefaultTable
-import sstruct
+from fontTools.misc import sstruct
 import string
 
 hdmxHeaderFormat = """

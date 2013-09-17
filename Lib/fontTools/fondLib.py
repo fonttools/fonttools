@@ -1,5 +1,6 @@
 import os
-import struct, sstruct
+import struct
+from fontTools.misc import sstruct
 import string
 try:
 	from Carbon import Res

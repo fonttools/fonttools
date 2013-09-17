@@ -1,6 +1,6 @@
 import sys
 import DefaultTable
-import sstruct
+from fontTools.misc import sstruct
 import array
 from types import StringType
 from fontTools.misc.textTools import safeEval, readHex

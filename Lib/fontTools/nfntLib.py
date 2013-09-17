@@ -1,4 +1,5 @@
-import struct, sstruct
+import struct
+from fontTools.misc import sstruct
 import string
 import types
 

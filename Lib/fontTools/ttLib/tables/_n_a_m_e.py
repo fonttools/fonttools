@@ -1,5 +1,6 @@
 import DefaultTable
-import struct, sstruct
+import struct
+from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval
 import string
 import types

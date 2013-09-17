@@ -1,6 +1,6 @@
 import DefaultTable
 from fontTools.misc.textTools import safeEval
-import sstruct
+from fontTools.misc import sstruct
 
 DSIG_HeaderFormat = """
 	> # big endian

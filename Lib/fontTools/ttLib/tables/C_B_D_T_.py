@@ -2,7 +2,7 @@
 import E_B_D_T_
 import string
 import struct
-import sstruct
+from fontTools.misc import sstruct
 from BitmapGlyphMetrics import BigGlyphMetrics, bigGlyphMetricsFormat, SmallGlyphMetrics, smallGlyphMetricsFormat
 from E_B_D_T_ import BitmapGlyph, BitmapPlusSmallMetricsMixin, BitmapPlusBigMetricsMixin
 

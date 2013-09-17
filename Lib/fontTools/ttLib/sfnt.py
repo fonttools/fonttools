@@ -13,7 +13,8 @@ a table's length chages you need to rewrite the whole file anyway.
 """
 
 import sys
-import struct, sstruct
+import struct
+from fontTools.misc import sstruct
 import os
 
 

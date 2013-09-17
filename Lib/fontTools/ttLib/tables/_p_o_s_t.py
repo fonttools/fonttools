@@ -1,7 +1,8 @@
 import sys
 from fontTools.ttLib.standardGlyphOrder import standardGlyphOrder
 import DefaultTable
-import struct, sstruct
+import struct
+from fontTools.misc import sstruct
 import array
 from fontTools import ttLib
 from fontTools.misc.textTools import safeEval, readHex

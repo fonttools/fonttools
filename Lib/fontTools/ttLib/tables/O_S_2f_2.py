@@ -1,5 +1,5 @@
 import DefaultTable
-import sstruct
+from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval, num2binary, binary2num
 from types import TupleType
 

@@ -2,7 +2,7 @@
 import DefaultTable
 import string
 import struct
-import sstruct
+from fontTools.misc import sstruct
 import itertools
 from types import TupleType
 from collections import deque
