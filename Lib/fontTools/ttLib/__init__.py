@@ -226,7 +226,7 @@ class TTFont:
 		to skip, but only when the 'tables' argument is false.
 		"""
 		from fontTools import version
-		import xmlWriter
+		from fontTools.misc import xmlWriter
 		
 		self.disassembleInstructions = disassembleInstructions
 		self.bitmapGlyphDataFormat = bitmapGlyphDataFormat
