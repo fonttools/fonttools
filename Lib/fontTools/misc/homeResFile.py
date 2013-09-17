@@ -1,6 +1,6 @@
 """Mac-only module to find the home file of a resource."""
 
-import sstruct
+from fontTools.misc import sstruct
 import array
 import calldll
 import macfs, Res

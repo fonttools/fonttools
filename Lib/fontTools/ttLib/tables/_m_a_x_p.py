@@ -1,5 +1,5 @@
 import DefaultTable
-import sstruct
+from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval
 
 maxpFormat_0_5 = """

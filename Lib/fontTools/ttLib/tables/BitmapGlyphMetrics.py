@@ -1,6 +1,6 @@
 # Since bitmap glyph metrics are shared between EBLC and EBDT
 # this class gets its own python file.
-import sstruct
+from fontTools.misc import sstruct
 from types import TupleType
 from fontTools.misc.textTools import safeEval
 

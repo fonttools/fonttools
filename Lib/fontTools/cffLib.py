@@ -4,7 +4,8 @@
 # $Id: cffLib.py,v 1.34 2008-03-07 19:56:17 jvr Exp $
 #
 
-import struct, sstruct
+import struct
+from fontTools.misc import sstruct
 import string
 from fontTools.misc import psCharStrings
 from fontTools.misc.textTools import safeEval

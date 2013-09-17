@@ -1,5 +1,5 @@
 import DefaultTable
-import sstruct
+from fontTools.misc import sstruct
 import time
 import string
 from fontTools.misc.textTools import safeEval, num2binary, binary2num

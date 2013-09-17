@@ -3,7 +3,7 @@ import DefaultTable
 import os
 import string
 import struct
-import sstruct
+from fontTools.misc import sstruct
 import itertools
 from types import TupleType
 from fontTools.misc.textTools import safeEval, readHex, hexStr, deHexStr

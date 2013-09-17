@@ -43,7 +43,8 @@ the number of <colorParamUINameID> elements.
 """
 
 import DefaultTable
-import struct, sstruct
+import struct
+from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval
 try:
     import xml.etree.cElementTree as ET
