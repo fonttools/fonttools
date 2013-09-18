@@ -2020,7 +2020,7 @@ class Logger(object):
   def font(self, font, file=sys.stdout):
     if not self.xml:
       return
-    import xmlWriter
+    from fontTools.misc import xmlWriter
     writer = xmlWriter.XMLWriter(file)
     font.disassembleInstructions = False  # Work around ttLib bug
     for tag in font.keys():
