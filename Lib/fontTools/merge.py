@@ -71,6 +71,16 @@ def merge(self, tables, fonts):
 		setattr(self, key, -getattr(self, key))
 	return True
 
+@_add_method(fontTools.ttLib.getTableClass('OS/2'))
+def merge(self, tables, fonts):
+	# TODO Check that weight/width/subscript/superscript/etc are the same.
+	# TODO Bitwise ops for UnicodeRange/CodePageRange.
+	# TODO Pretty much all fields generated here have bogus values.
+	# Get max over members
+	for key in set(sum((vars(table).keys() for table in tables), [])):
+		setattr(self, key, max(getattr(table, key) for table in tables))
+	return True
+
 @_add_method(fontTools.ttLib.getTableClass('post'))
 def merge(self, tables, fonts):
 	# TODO Check that italicAngle, underlinePosition, underlineThickness are the same.
@@ -123,6 +133,29 @@ def merge(self, tables, fonts):
 	     fontTools.ttLib.getTableClass('cvt '))
 def merge(self, tables, fonts):
 	return False # Will be computed automatically
+
+@_add_method(fontTools.ttLib.getTableClass('cmap'))
+def merge(self, tables, fonts):
+	# TODO Handle format=14.
+	cmapTables = [t for table in tables for t in table.tables
+		      if t.platformID == 3 and t.platEncID in [1, 10]]
+	# TODO Better handle format-4 and format-12 coexisting in same font.
+	# TODO Insert both a format-4 and format-12 if needed.
+	module = fontTools.ttLib.getTableModule('cmap')
+	assert all(t.format in [4, 12] for t in cmapTables)
+	format = max(t.format for t in cmapTables)
+	cmapTable = module.cmap_classes[format](format)
+	cmapTable.cmap = {}
+	cmapTable.platformID = 3
+	cmapTable.platEncID = max(t.platEncID for t in cmapTables)
+	cmapTable.language = 0
+	for table in cmapTables:
+		# TODO handle duplicates.
+		cmapTable.cmap.update(table.cmap)
+	self.tableVersion = 0
+	self.tables = [cmapTable]
+	self.numSubTables = len(self.tables)
+	return True
 
 
 class Options(object):
