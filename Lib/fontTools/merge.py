@@ -31,7 +31,37 @@ def merge(self, tables, fonts):
 	# TODO Assumes that all tables have format 1.0; safe assumption.
 	for key in set(sum((vars(table).keys() for table in tables), [])):
 			setattr(self, key, max(getattr(table, key) for table in tables))
-	return self
+	return True
+
+@_add_method(fontTools.ttLib.getTableClass('hhea'))
+def merge(self, tables, fonts):
+	# TODO Check that ascent, descent, slope, etc are the same.
+	minMembers = ['descent', 'minLeftSideBearing', 'minRightSideBearing']
+	# Negate some members
+	for key in minMembers:
+		for table in tables:
+			setattr(table, key, -getattr(table, key))
+	# Get max over members
+	for key in set(sum((vars(table).keys() for table in tables), [])):
+		setattr(self, key, max(getattr(table, key) for table in tables))
+	# Negate them back
+	for key in minMembers:
+		for table in tables:
+			setattr(table, key, -getattr(table, key))
+		setattr(self, key, -getattr(self, key))
+	return True
+
+@_add_method(fontTools.ttLib.getTableClass('vmtx'),
+             fontTools.ttLib.getTableClass('hmtx'))
+def merge(self, tables, fonts):
+	self.metrics = {}
+	for table in tables:
+		self.metrics.update(table.metrics)
+	return True
+
+@_add_method(fontTools.ttLib.getTableClass('loca'))
+def merge(self, tables, fonts):
+	return False # Will be computed automatically
 
 class Merger:
 
@@ -69,9 +99,11 @@ class Merger:
 			# TODO For now assume all fonts have the same tables.
 			tables = [font[tag] for font in fonts]
 			table = clazz(tag)
-			table.merge (tables, fonts)
-			mega[tag] = table
-			print "Merged '%s'." % tag
+			if table.merge (tables, fonts):
+				mega[tag] = table
+				print "Merged '%s'." % tag
+			else:
+				print "Dropped '%s'.  No need to merge explicitly." % tag
 
 		return mega
 
