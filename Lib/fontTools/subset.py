@@ -1652,6 +1652,7 @@ def prune_pre_subset(self, options):
   # TODO(behdad) Only keep one subtable?
   # For now, drop format=0 which can't be subset_glyphs easily?
   self.tables = [t for t in self.tables if t.format != 0]
+  self.numSubTables = len(self.tables)
   return bool(self.tables)
 
 @_add_method(fontTools.ttLib.getTableClass('cmap'))
@@ -1674,6 +1675,7 @@ def subset_glyphs(self, s):
                     if g in s.glyphs_requested or u in s.unicodes_requested)
   self.tables = [t for t in self.tables
                  if (t.cmap if t.format != 14 else t.uvsDict)]
+  self.numSubTables = len(self.tables)
   # TODO(behdad) Convert formats when needed.
   # In particular, if we have a format=12 without non-BMP
   # characters, either drop format=12 one or convert it
