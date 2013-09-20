@@ -125,10 +125,15 @@ def merge(self, m):
 def merge(self, m):
 	self.glyphs = {}
 	for table in m.tables:
+		for g in table.glyphs.values():
+			# Drop hints for now, since we don't remap
+			# functions / CVT values.
+			g.removeHinting()
+			# Expand composite glyphs to load their
+			# composite glyph names.
+			if g.isComposite():
+				g.expand(table)
 		self.glyphs.update(table.glyphs)
-	# Drop hints for now, since we don't remap functions / CVT values.
-	for g in self.glyphs.values():
-		g.removeHinting()
 	return True
 
 @_add_method(ttLib.getTableClass('prep'),
