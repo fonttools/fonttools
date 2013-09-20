@@ -12,17 +12,17 @@ import fontTools
 from fontTools import misc, ttLib, cffLib
 
 def _add_method(*clazzes):
-  """Returns a decorator function that adds a new method to one or
-  more classes."""
-  def wrapper(method):
-    for clazz in clazzes:
-      assert clazz.__name__ != 'DefaultTable', 'Oops, table class not found.'
-      assert not hasattr(clazz, method.func_name), \
-          "Oops, class '%s' has method '%s'." % (clazz.__name__,
-                                                 method.func_name)
-      setattr(clazz, method.func_name, method)
-    return None
-  return wrapper
+	"""Returns a decorator function that adds a new method to one or
+	more classes."""
+	def wrapper(method):
+		for clazz in clazzes:
+			assert clazz.__name__ != 'DefaultTable', 'Oops, table class not found.'
+			assert not hasattr(clazz, method.func_name), \
+				"Oops, class '%s' has method '%s'." % (clazz.__name__,
+								       method.func_name)
+		setattr(clazz, method.func_name, method)
+		return None
+	return wrapper
 
 
 @_add_method(fontTools.ttLib.getTableClass('maxp'))
