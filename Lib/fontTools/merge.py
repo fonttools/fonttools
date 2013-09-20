@@ -31,7 +31,7 @@ def merge(self, m):
 	# maxFunctionDefs, maxInstructionDefs, maxSizeOfInstructions
 	# TODO Assumes that all tables have format 1.0; safe assumption.
 	for key in set(sum((vars(table).keys() for table in m.tables), [])):
-			setattr(self, key, max(getattr(table, key) for table in m.tables))
+		setattr(self, key, max(getattr(table, key) for table in m.tables))
 	return True
 
 @_add_method(ttLib.getTableClass('head'))
@@ -263,7 +263,8 @@ class Merger:
 		# TODO Is it necessary to reload font?  I think it is.  At least
 		# it's safer, in case tables were loaded to provide glyph names.
 		fonts = [ttLib.TTFont(fontfile) for fontfile in fontfiles]
-		map(ttLib.TTFont.setGlyphOrder, fonts, glyphOrders)
+		for font,glyphOrder in zip(fonts, glyphOrders):
+			font.setGlyphOrder(glyphOrder)
 		mega.setGlyphOrder(megaGlyphOrder)
 
 		allTags = set(sum([font.keys() for font in fonts], []))
