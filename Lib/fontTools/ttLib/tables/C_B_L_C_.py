@@ -1,3 +1,6 @@
+# Copyright 2013 Google, Inc. All Rights Reserved.
+#
+# Google Author(s): Matt Fontaine
 
 import E_B_L_C_
 

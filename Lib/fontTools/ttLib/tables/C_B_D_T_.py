@@ -1,3 +1,7 @@
+# Copyright 2013 Google, Inc. All Rights Reserved.
+#
+# Google Author(s): Matt Fontaine
+
 
 import E_B_D_T_
 import string

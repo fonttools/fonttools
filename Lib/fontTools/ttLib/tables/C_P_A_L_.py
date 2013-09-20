@@ -1,3 +1,7 @@
+# Copyright 2013 Google, Inc. All Rights Reserved.
+#
+# Google Author(s): Behdad Esfahbod
+
 import operator
 import DefaultTable
 import struct
