@@ -25,7 +25,7 @@ def _add_method(*clazzes):
 	return wrapper
 
 
-@_add_method(fontTools.ttLib.getTableClass('maxp'))
+@_add_method(ttLib.getTableClass('maxp'))
 def merge(self, m):
 	# TODO When we correctly merge hinting data, update these values:
 	# maxFunctionDefs, maxInstructionDefs, maxSizeOfInstructions
@@ -34,7 +34,7 @@ def merge(self, m):
 			setattr(self, key, max(getattr(table, key) for table in m.tables))
 	return True
 
-@_add_method(fontTools.ttLib.getTableClass('head'))
+@_add_method(ttLib.getTableClass('head'))
 def merge(self, m):
 	# TODO Check that unitsPerEm are the same.
 	# TODO Use bitwise ops for flags, macStyle, fontDirectionHint
@@ -53,7 +53,7 @@ def merge(self, m):
 		setattr(self, key, -getattr(self, key))
 	return True
 
-@_add_method(fontTools.ttLib.getTableClass('hhea'))
+@_add_method(ttLib.getTableClass('hhea'))
 def merge(self, m):
 	# TODO Check that ascent, descent, slope, etc are the same.
 	minMembers = ['descent', 'minLeftSideBearing', 'minRightSideBearing']
@@ -71,7 +71,7 @@ def merge(self, m):
 		setattr(self, key, -getattr(self, key))
 	return True
 
-@_add_method(fontTools.ttLib.getTableClass('OS/2'))
+@_add_method(ttLib.getTableClass('OS/2'))
 def merge(self, m):
 	# TODO Check that weight/width/subscript/superscript/etc are the same.
 	# TODO Bitwise ops for UnicodeRange/CodePageRange.
@@ -81,7 +81,7 @@ def merge(self, m):
 		setattr(self, key, max(getattr(table, key) for table in m.tables))
 	return True
 
-@_add_method(fontTools.ttLib.getTableClass('post'))
+@_add_method(ttLib.getTableClass('post'))
 def merge(self, m):
 	# TODO Check that italicAngle, underlinePosition, underlineThickness are the same.
 	minMembers = ['underlinePosition', 'minMemType42', 'minMemType1']
@@ -108,19 +108,19 @@ def merge(self, m):
 	self.extraNames = []
 	return True
 
-@_add_method(fontTools.ttLib.getTableClass('vmtx'),
-             fontTools.ttLib.getTableClass('hmtx'))
+@_add_method(ttLib.getTableClass('vmtx'),
+             ttLib.getTableClass('hmtx'))
 def merge(self, m):
 	self.metrics = {}
 	for table in m.tables:
 		self.metrics.update(table.metrics)
 	return True
 
-@_add_method(fontTools.ttLib.getTableClass('loca'))
+@_add_method(ttLib.getTableClass('loca'))
 def merge(self, m):
 	return True # Will be computed automatically
 
-@_add_method(fontTools.ttLib.getTableClass('glyf'))
+@_add_method(ttLib.getTableClass('glyf'))
 def merge(self, m):
 	self.glyphs = {}
 	for table in m.tables:
@@ -128,20 +128,20 @@ def merge(self, m):
 	# TODO Drop hints?
 	return True
 
-@_add_method(fontTools.ttLib.getTableClass('prep'),
-	     fontTools.ttLib.getTableClass('fpgm'),
-	     fontTools.ttLib.getTableClass('cvt '))
+@_add_method(ttLib.getTableClass('prep'),
+	     ttLib.getTableClass('fpgm'),
+	     ttLib.getTableClass('cvt '))
 def merge(self, m):
 	return False # Will be computed automatically
 
-@_add_method(fontTools.ttLib.getTableClass('cmap'))
+@_add_method(ttLib.getTableClass('cmap'))
 def merge(self, m):
 	# TODO Handle format=14.
 	cmapTables = [t for table in m.tables for t in table.tables
 		      if t.platformID == 3 and t.platEncID in [1, 10]]
 	# TODO Better handle format-4 and format-12 coexisting in same font.
 	# TODO Insert both a format-4 and format-12 if needed.
-	module = fontTools.ttLib.getTableModule('cmap')
+	module = ttLib.getTableModule('cmap')
 	assert all(t.format in [4, 12] for t in cmapTables)
 	format = max(t.format for t in cmapTables)
 	cmapTable = module.cmap_classes[format](format)
