@@ -1119,29 +1119,6 @@ def subset_glyphs(self, s):
   return True
 
 @_add_method(ttLib.getTableModule('glyf').Glyph)
-def getComponentNamesFast(self, glyfTable):
-  if not self.data or struct.unpack(">h", self.data[:2])[0] >= 0:
-    return []  # Not composite
-  data = self.data
-  i = 10
-  components = []
-  more = 1
-  while more:
-    flags, glyphID = struct.unpack(">HH", data[i:i+4])
-    i += 4
-    flags = int(flags)
-    components.append(glyfTable.getGlyphName(int(glyphID)))
-
-    if flags & 0x0001: i += 4  # ARG_1_AND_2_ARE_WORDS
-    else: i += 2
-    if flags & 0x0008: i += 2  # WE_HAVE_A_SCALE
-    elif flags & 0x0040: i += 4  # WE_HAVE_AN_X_AND_Y_SCALE
-    elif flags & 0x0080: i += 8  # WE_HAVE_A_TWO_BY_TWO
-    more = flags & 0x0020  # MORE_COMPONENTS
-
-  return components
-
-@_add_method(ttLib.getTableModule('glyf').Glyph)
 def remapComponentsFast(self, indices):
   if not self.data or struct.unpack(">h", self.data[:2])[0] >= 0:
     return  # Not composite
@@ -1167,49 +1144,6 @@ def remapComponentsFast(self, indices):
 
   self.data = data.tostring()
 
-@_add_method(ttLib.getTableModule('glyf').Glyph)
-def dropInstructionsFast(self):
-  if not self.data:
-    return
-  numContours = struct.unpack(">h", self.data[:2])[0]
-  data = array.array("B", self.data)
-  i = 10
-  if numContours >= 0:
-    i += 2 * numContours  # endPtsOfContours
-    instructionLen =(data[i] << 8) | data[i+1]
-    # Zero it
-    data[i] = data [i+1] = 0
-    i += 2
-    if instructionLen:
-      # Splice it out
-      data = data[:i] + data[i+instructionLen:]
-  else:
-    more = 1
-    while more:
-      flags =(data[i] << 8) | data[i+1]
-      # Turn instruction flag off
-      flags &= ~0x0100  # WE_HAVE_INSTRUCTIONS
-      data[i+0] = flags >> 8
-      data[i+1] = flags & 0xFF
-      i += 4
-      flags = int(flags)
-
-      if flags & 0x0001: i += 4  # ARG_1_AND_2_ARE_WORDS
-      else: i += 2
-      if flags & 0x0008: i += 2  # WE_HAVE_A_SCALE
-      elif flags & 0x0040: i += 4  # WE_HAVE_AN_X_AND_Y_SCALE
-      elif flags & 0x0080: i += 8  # WE_HAVE_A_TWO_BY_TWO
-      more = flags & 0x0020  # MORE_COMPONENTS
-
-    # Cut off
-    data = data[:i]
-  if len(data) % 4:
-    # add pad bytes
-    nPadBytes = 4 -(len(data) % 4)
-    for i in range(nPadBytes):
-      data.append(0)
-  self.data = data.tostring()
-
 @_add_method(ttLib.getTableClass('glyf'))
 def closure_glyphs(self, s):
   decompose = s.glyphs
@@ -1221,16 +1155,9 @@ def closure_glyphs(self, s):
       if g not in self.glyphs:
         continue
       gl = self.glyphs[g]
-      if hasattr(gl, "data"):
-        for c in gl.getComponentNamesFast(self):
-          if c not in s.glyphs:
-            components.add(c)
-      else:
-        # TTX seems to expand gid0..3 always
-        if gl.isComposite():
-          for c in gl.components:
-            if c.glyphName not in s.glyphs:
-              components.add(c.glyphName)
+      for c in gl.getComponents(self):
+        if c not in s.glyphs:
+          components.add(c)
     components = set(c for c in components if c not in s.glyphs)
     if not components:
       break
@@ -1263,11 +1190,7 @@ def subset_glyphs(self, s):
 def prune_post_subset(self, options):
   if not options.hinting:
     for v in self.glyphs.itervalues():
-      if hasattr(v, "data"):
-        v.dropInstructionsFast()
-      else:
-        v.program = ttLib.tables.ttProgram.Program()
-        v.program.fromBytecode([])
+      v.removeHinting()
   return True
 
 @_add_method(ttLib.getTableClass('CFF '))
