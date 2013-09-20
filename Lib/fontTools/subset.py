@@ -2007,8 +2007,8 @@ def main(args):
               for g in args))
 
   font = load_font(fontfile, options, dontLoadGlyphNames=dontLoadGlyphNames)
-  subsetter = Subsetter(options=options, log=log)
   log.lapse("load font")
+  subsetter = Subsetter(options=options, log=log)
 
   names = font.getGlyphNames()
   log.lapse("loading glyph names")

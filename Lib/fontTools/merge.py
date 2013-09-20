@@ -273,13 +273,13 @@ class Merger:
 		for tag in allTags:
 
 			if tag in self.options.drop_tables:
-				print "Dropping '%s'." % tag
+				self.log("Dropping '%s'." % tag)
 				continue
 
 			clazz = ttLib.getTableClass(tag)
 
 			if not hasattr(clazz, 'merge'):
-				print "Don't know how to merge '%s', dropped." % tag
+				self.log("Don't know how to merge '%s', dropped." % tag)
 				continue
 
 			# TODO For now assume all fonts have the same tables.
@@ -287,9 +287,10 @@ class Merger:
 			table = clazz(tag)
 			if table.merge (tables, fonts):
 				mega[tag] = table
-				print "Merged '%s'." % tag
+				self.log("Merged '%s'." % tag)
 			else:
-				print "Dropped '%s'.  No need to merge explicitly." % tag
+				self.log("Dropped '%s'.  No need to merge explicitly." % tag)
+			self.log.lapse("merge '%s'" % tag)
 
 		return mega
 
@@ -381,6 +382,10 @@ def main(args):
 	font = merger.merge(args)
 	outfile = 'merged.ttf'
 	font.save(outfile)
+	log.lapse("compile and save font")
+
+	log.last_time = log.start_time
+	log.lapse("make one with everything(TOTAL TIME)")
 
 if __name__ == "__main__":
 	main(sys.argv[1:])
