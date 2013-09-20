@@ -10,6 +10,7 @@ import time
 
 import fontTools
 from fontTools import misc, ttLib, cffLib
+from fontTools.ttLib.tables import otTables
 
 def _add_method(*clazzes):
 	"""Returns a decorator function that adds a new method to one or
@@ -157,6 +158,67 @@ def merge(self, m):
 	self.numSubTables = len(self.tables)
 	return True
 
+@_add_method(ttLib.getTableClass('GDEF'))
+def merge(self, m):
+	self.table = otTables.GDEF()
+	self.table.Version = 1.0
+
+	if any(t.table.LigCaretList for t in m.tables):
+		glyphs = []
+		ligGlyphs = []
+		for table in m.tables:
+			if table.table.LigCaretList:
+				glyphs.extend(table.table.LigCaretList.Coverage.glyphs)
+				ligGlyphs.extend(table.table.LigCaretList.LigGlyph)
+		coverage = otTables.Coverage()
+		coverage.glyphs = glyphs
+		ligCaretList = otTables.LigCaretList()
+		ligCaretList.Coverage = coverage
+		ligCaretList.LigGlyph = ligGlyphs
+		ligCaretList.GlyphCount = len(ligGlyphs)
+		self.table.LigCaretList = ligCaretList
+	else:
+		self.table.LigCaretList = None
+
+	if any(t.table.MarkAttachClassDef for t in m.tables):
+		classDefs = {}
+		for table in m.tables:
+			if table.table.MarkAttachClassDef:
+				classDefs.update(table.table.MarkAttachClassDef.classDefs)
+		self.table.MarkAttachClassDef = otTables.MarkAttachClassDef()
+		self.table.MarkAttachClassDef.classDefs = classDefs
+	else:
+		self.table.MarkAttachClassDef = None
+
+	if any(t.table.GlyphClassDef for t in m.tables):
+		classDefs = {}
+		for table in m.tables:
+			if table.table.GlyphClassDef:
+				classDefs.update(table.table.GlyphClassDef.classDefs)
+		self.table.GlyphClassDef = otTables.GlyphClassDef()
+		self.table.GlyphClassDef.classDefs = classDefs
+	else:
+		self.table.GlyphClassDef = None
+
+	if any(t.table.AttachList for t in m.tables):
+		glyphs = []
+		attachPoints = []
+		for table in m.tables:
+			if table.table.AttachList:
+				glyphs.extend(table.table.AttachList.Coverage.glyphs)
+				attachPoints.extend(table.table.AttachList.AttachPoint)
+		coverage = otTables.Coverage()
+		coverage.glyphs = glyphs
+		attachList = otTables.AttachList()
+		attachList.Coverage = coverage
+		attachList.AttachPoint = attachPoints
+		attachList.GlyphCount = len(attachPoints)
+		self.table.AttachList = attachList
+	else:
+		self.table.AttachList = None
+
+	return True
+
 
 class Options(object):
 
@@ -267,7 +329,7 @@ class Merger:
 			font.setGlyphOrder(glyphOrder)
 		mega.setGlyphOrder(megaGlyphOrder)
 
-		allTags = set(sum([font.keys() for font in fonts], []))
+		allTags = reduce(set.union, (font.keys() for font in fonts), set())
 		allTags.remove('GlyphOrder')
 		for tag in allTags:
 
