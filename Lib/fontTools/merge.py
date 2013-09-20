@@ -266,8 +266,6 @@ class Merger:
 		map(ttLib.TTFont.setGlyphOrder, fonts, glyphOrders)
 		mega.setGlyphOrder(megaGlyphOrder)
 
-		cmaps = [self._get_cmap(font) for font in fonts]
-
 		allTags = set(sum([font.keys() for font in fonts], []))
 		allTags.remove('GlyphOrder')
 		for tag in allTags:
@@ -293,16 +291,6 @@ class Merger:
 			self.log.lapse("merge '%s'" % tag)
 
 		return mega
-
-	def _get_cmap(self, font):
-		cmap = font['cmap']
-		tables = [t for t in cmap.tables
-			    if t.platformID == 3 and t.platEncID in [1, 10]]
-		# XXX Handle format=14
-		assert len(tables)
-		# Pick table that has largest coverage
-		table = max(tables, key=lambda t: len(t.cmap))
-		return table
 
 	def _mergeGlyphOrders(self, glyphOrders):
 		"""Modifies passed-in glyphOrders to reflect new glyph names."""
