@@ -579,6 +579,7 @@ class Glyph:
 				else:
 					move = compo.x, compo.y
 				
+				coordinates = GlyphCoordinates(coordinates)
 				if not hasattr(compo, "transform"):
 					coordinates.translate(move)
 				else:
