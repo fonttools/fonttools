@@ -651,6 +651,7 @@ class Glyph:
 		i = 10
 		if numContours >= 0:
 			i += 2 * numContours # endPtsOfContours
+			nCoordinates = ((data[i-2] << 8) | data[i-1]) + 1
 			instructionLen = (data[i] << 8) | data[i+1]
 			# Zero it
 			data[i] = data [i+1] = 0
@@ -658,6 +659,36 @@ class Glyph:
 			if instructionLen:
 				# Splice it out
 				data = data[:i] + data[i+instructionLen:]
+				if instructionLen % 4:
+					# We now have to go ahead and drop
+					# the old padding.  Otherwise with
+					# padding we have to add, we may
+					# end up with more than 3 bytes of
+					# padding.
+					coordBytes = 0
+					j = 0
+					while 1:
+						flag = data[i]
+						i = i + 1
+						repeat = 1
+						if flag & flagRepeat:
+							repeat = data[i] + 1
+							i = i + 1
+						xBytes = yBytes = 0
+						if flag & flagXShort:
+							xBytes = 1
+						elif not (flag & flagXsame):
+							xBytes = 2
+						if flag & flagYShort:
+							yBytes = 1
+						elif not (flag & flagYsame):
+							yBytes = 2
+						coordBytes += (xBytes + yBytes) * repeat
+						j += repeat
+						if j >= nCoordinates:
+							break
+					assert j == nCoordinates, "bad glyph flags"
+					data = data[:i + coordBytes]
 		else:
 			more = 1
 			while more:
@@ -679,13 +710,14 @@ class Glyph:
 			# Cut off
 			data = data[:i]
 
+		data = data.tostring()
+
 		if len(data) % 4:
 			# add pad bytes
-			nPadBytes = 4 -(len(data) % 4)
-			for i in range(nPadBytes):
-				data.append(0)
+			nPadBytes = 4 - (len(data) % 4)
+			data = data + "\0" * nPadBytes
 
-		self.data = data.tostring()
+		self.data = data
 	
 	def __cmp__(self, other):
 		if type(self) != type(other) or \
