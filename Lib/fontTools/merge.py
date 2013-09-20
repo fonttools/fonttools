@@ -26,83 +26,83 @@ def _add_method(*clazzes):
 
 
 @_add_method(fontTools.ttLib.getTableClass('maxp'))
-def merge(self, tables, fonts):
+def merge(self, m):
 	# TODO When we correctly merge hinting data, update these values:
 	# maxFunctionDefs, maxInstructionDefs, maxSizeOfInstructions
 	# TODO Assumes that all tables have format 1.0; safe assumption.
-	for key in set(sum((vars(table).keys() for table in tables), [])):
-			setattr(self, key, max(getattr(table, key) for table in tables))
+	for key in set(sum((vars(table).keys() for table in m.tables), [])):
+			setattr(self, key, max(getattr(table, key) for table in m.tables))
 	return True
 
 @_add_method(fontTools.ttLib.getTableClass('head'))
-def merge(self, tables, fonts):
+def merge(self, m):
 	# TODO Check that unitsPerEm are the same.
 	# TODO Use bitwise ops for flags, macStyle, fontDirectionHint
 	minMembers = ['xMin', 'yMin']
 	# Negate some members
 	for key in minMembers:
-		for table in tables:
+		for table in m.tables:
 			setattr(table, key, -getattr(table, key))
 	# Get max over members
-	for key in set(sum((vars(table).keys() for table in tables), [])):
-		setattr(self, key, max(getattr(table, key) for table in tables))
+	for key in set(sum((vars(table).keys() for table in m.tables), [])):
+		setattr(self, key, max(getattr(table, key) for table in m.tables))
 	# Negate them back
 	for key in minMembers:
-		for table in tables:
+		for table in m.tables:
 			setattr(table, key, -getattr(table, key))
 		setattr(self, key, -getattr(self, key))
 	return True
 
 @_add_method(fontTools.ttLib.getTableClass('hhea'))
-def merge(self, tables, fonts):
+def merge(self, m):
 	# TODO Check that ascent, descent, slope, etc are the same.
 	minMembers = ['descent', 'minLeftSideBearing', 'minRightSideBearing']
 	# Negate some members
 	for key in minMembers:
-		for table in tables:
+		for table in m.tables:
 			setattr(table, key, -getattr(table, key))
 	# Get max over members
-	for key in set(sum((vars(table).keys() for table in tables), [])):
-		setattr(self, key, max(getattr(table, key) for table in tables))
+	for key in set(sum((vars(table).keys() for table in m.tables), [])):
+		setattr(self, key, max(getattr(table, key) for table in m.tables))
 	# Negate them back
 	for key in minMembers:
-		for table in tables:
+		for table in m.tables:
 			setattr(table, key, -getattr(table, key))
 		setattr(self, key, -getattr(self, key))
 	return True
 
 @_add_method(fontTools.ttLib.getTableClass('OS/2'))
-def merge(self, tables, fonts):
+def merge(self, m):
 	# TODO Check that weight/width/subscript/superscript/etc are the same.
 	# TODO Bitwise ops for UnicodeRange/CodePageRange.
 	# TODO Pretty much all fields generated here have bogus values.
 	# Get max over members
-	for key in set(sum((vars(table).keys() for table in tables), [])):
-		setattr(self, key, max(getattr(table, key) for table in tables))
+	for key in set(sum((vars(table).keys() for table in m.tables), [])):
+		setattr(self, key, max(getattr(table, key) for table in m.tables))
 	return True
 
 @_add_method(fontTools.ttLib.getTableClass('post'))
-def merge(self, tables, fonts):
+def merge(self, m):
 	# TODO Check that italicAngle, underlinePosition, underlineThickness are the same.
 	minMembers = ['underlinePosition', 'minMemType42', 'minMemType1']
 	# Negate some members
 	for key in minMembers:
-		for table in tables:
+		for table in m.tables:
 			setattr(table, key, -getattr(table, key))
 	# Get max over members
-	keys = set(sum((vars(table).keys() for table in tables), []))
+	keys = set(sum((vars(table).keys() for table in m.tables), []))
 	if 'mapping' in keys:
 		keys.remove('mapping')
 	keys.remove('extraNames')
 	for key in keys:
-		setattr(self, key, max(getattr(table, key) for table in tables))
+		setattr(self, key, max(getattr(table, key) for table in m.tables))
 	# Negate them back
 	for key in minMembers:
-		for table in tables:
+		for table in m.tables:
 			setattr(table, key, -getattr(table, key))
 		setattr(self, key, -getattr(self, key))
 	self.mapping = {}
-	for table in tables:
+	for table in m.tables:
 		if hasattr(table, 'mapping'):
 			self.mapping.update(table.mapping)
 	self.extraNames = []
@@ -110,20 +110,20 @@ def merge(self, tables, fonts):
 
 @_add_method(fontTools.ttLib.getTableClass('vmtx'),
              fontTools.ttLib.getTableClass('hmtx'))
-def merge(self, tables, fonts):
+def merge(self, m):
 	self.metrics = {}
-	for table in tables:
+	for table in m.tables:
 		self.metrics.update(table.metrics)
 	return True
 
 @_add_method(fontTools.ttLib.getTableClass('loca'))
-def merge(self, tables, fonts):
+def merge(self, m):
 	return True # Will be computed automatically
 
 @_add_method(fontTools.ttLib.getTableClass('glyf'))
-def merge(self, tables, fonts):
+def merge(self, m):
 	self.glyphs = {}
-	for table in tables:
+	for table in m.tables:
 		self.glyphs.update(table.glyphs)
 	# TODO Drop hints?
 	return True
@@ -131,13 +131,13 @@ def merge(self, tables, fonts):
 @_add_method(fontTools.ttLib.getTableClass('prep'),
 	     fontTools.ttLib.getTableClass('fpgm'),
 	     fontTools.ttLib.getTableClass('cvt '))
-def merge(self, tables, fonts):
+def merge(self, m):
 	return False # Will be computed automatically
 
 @_add_method(fontTools.ttLib.getTableClass('cmap'))
-def merge(self, tables, fonts):
+def merge(self, m):
 	# TODO Handle format=14.
-	cmapTables = [t for table in tables for t in table.tables
+	cmapTables = [t for table in m.tables for t in table.tables
 		      if t.platformID == 3 and t.platEncID in [1, 10]]
 	# TODO Better handle format-4 and format-12 coexisting in same font.
 	# TODO Insert both a format-4 and format-12 if needed.
@@ -281,14 +281,15 @@ class Merger:
 				continue
 
 			# TODO For now assume all fonts have the same tables.
-			tables = [font[tag] for font in fonts]
+			self.tables = [font[tag] for font in fonts]
 			table = clazz(tag)
-			if table.merge (tables, fonts):
+			if table.merge (self):
 				mega[tag] = table
 				self.log("Merged '%s'." % tag)
 			else:
 				self.log("Dropped '%s'.  No need to merge explicitly." % tag)
 			self.log.lapse("merge '%s'" % tag)
+			del self.tables
 
 		return mega
 
