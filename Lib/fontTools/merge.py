@@ -126,7 +126,9 @@ def merge(self, m):
 	self.glyphs = {}
 	for table in m.tables:
 		self.glyphs.update(table.glyphs)
-	# TODO Drop hints?
+	# Drop hints for now, since we don't remap functions / CVT values.
+	for g in self.glyphs.values():
+		g.removeHinting()
 	return True
 
 @_add_method(ttLib.getTableClass('prep'),
@@ -357,8 +359,11 @@ class Merger:
 		return mega
 
 	def _mergeGlyphOrders(self, glyphOrders):
-		"""Modifies passed-in glyphOrders to reflect new glyph names."""
+		"""Modifies passed-in glyphOrders to reflect new glyph names.
+		Returns glyphOrder for the merged font."""
 		# Simply append font index to the glyph name for now.
+		# TODO Even this simplistic numbering can result in conflicts.
+		# But then again, we have to improve this soon anyway.
 		mega = []
 		for n,glyphOrder in enumerate(glyphOrders):
 			for i,glyphName in enumerate(glyphOrder):
