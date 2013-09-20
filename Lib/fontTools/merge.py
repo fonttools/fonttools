@@ -31,7 +31,8 @@ def merge(self, m):
 	# TODO When we correctly merge hinting data, update these values:
 	# maxFunctionDefs, maxInstructionDefs, maxSizeOfInstructions
 	# TODO Assumes that all tables have format 1.0; safe assumption.
-	for key in set(sum((vars(table).keys() for table in m.tables), [])):
+	allKeys = reduce(set.union, (vars(table).keys() for table in m.tables), set())
+	for key in allKeys:
 		setattr(self, key, max(getattr(table, key) for table in m.tables))
 	return True
 
@@ -45,7 +46,8 @@ def merge(self, m):
 		for table in m.tables:
 			setattr(table, key, -getattr(table, key))
 	# Get max over members
-	for key in set(sum((vars(table).keys() for table in m.tables), [])):
+	allKeys = reduce(set.union, (vars(table).keys() for table in m.tables), set())
+	for key in allKeys:
 		setattr(self, key, max(getattr(table, key) for table in m.tables))
 	# Negate them back
 	for key in minMembers:
@@ -63,7 +65,8 @@ def merge(self, m):
 		for table in m.tables:
 			setattr(table, key, -getattr(table, key))
 	# Get max over members
-	for key in set(sum((vars(table).keys() for table in m.tables), [])):
+	allKeys = reduce(set.union, (vars(table).keys() for table in m.tables), set())
+	for key in allKeys:
 		setattr(self, key, max(getattr(table, key) for table in m.tables))
 	# Negate them back
 	for key in minMembers:
@@ -78,7 +81,8 @@ def merge(self, m):
 	# TODO Bitwise ops for UnicodeRange/CodePageRange.
 	# TODO Pretty much all fields generated here have bogus values.
 	# Get max over members
-	for key in set(sum((vars(table).keys() for table in m.tables), [])):
+	allKeys = reduce(set.union, (vars(table).keys() for table in m.tables), set())
+	for key in allKeys:
 		setattr(self, key, max(getattr(table, key) for table in m.tables))
 	return True
 
@@ -91,11 +95,11 @@ def merge(self, m):
 		for table in m.tables:
 			setattr(table, key, -getattr(table, key))
 	# Get max over members
-	keys = set(sum((vars(table).keys() for table in m.tables), []))
-	if 'mapping' in keys:
-		keys.remove('mapping')
-	keys.remove('extraNames')
-	for key in keys:
+	allKeys = reduce(set.union, (vars(table).keys() for table in m.tables), set())
+	if 'mapping' in allKeys:
+		allKeys.remove('mapping')
+	allKeys.remove('extraNames')
+	for key in allKeys:
 		setattr(self, key, max(getattr(table, key) for table in m.tables))
 	# Negate them back
 	for key in minMembers:
