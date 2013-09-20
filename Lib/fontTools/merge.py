@@ -140,7 +140,7 @@ def merge(self, m):
 	     ttLib.getTableClass('fpgm'),
 	     ttLib.getTableClass('cvt '))
 def merge(self, m):
-	return False # Will be computed automatically
+	return False # TODO We don't merge hinting data currently.
 
 @_add_method(ttLib.getTableClass('cmap'))
 def merge(self, m):
@@ -168,7 +168,7 @@ def merge(self, m):
 @_add_method(ttLib.getTableClass('GDEF'))
 def merge(self, m):
 	self.table = otTables.GDEF()
-	self.table.Version = 1.0
+	self.table.Version = 1.0 # TODO version 1.2...
 
 	if any(t.table.LigCaretList for t in m.tables):
 		glyphs = []
