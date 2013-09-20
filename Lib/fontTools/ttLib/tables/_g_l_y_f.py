@@ -549,7 +549,11 @@ class Glyph:
 			self.xMin, self.yMin, self.xMax, self.yMax = (0, 0, 0, 0)
 	
 	def isComposite(self):
-		return self.numberOfContours == -1
+		"""Can be called on compact or expanded glyph."""
+		if hasattr(self, "data"):
+			return struct.unpack(">h", self.data[:2])[0] == -1
+		else:
+			return self.numberOfContours == -1
 	
 	def __getitem__(self, componentIndex):
 		if not self.isComposite():
@@ -600,6 +604,88 @@ class Glyph:
 			return allCoords, allEndPts, allFlags
 		else:
 			return GlyphCoordinates(), [], array.array("B")
+
+	def getComponents(self, glyfTable):
+		if not hasattr(self, "data"):
+			if self.isComposite():
+				return self.components
+			else:
+				return []
+
+		# Extract components without expanding glyph
+
+		if not self.data or struct.unpack(">h", self.data[:2])[0] >= 0:
+			return []  # Not composite
+
+		data = self.data
+		i = 10
+		components = []
+		more = 1
+		while more:
+			flags, glyphID = struct.unpack(">HH", data[i:i+4])
+			i += 4
+			flags = int(flags)
+			components.append(glyfTable.getGlyphName(int(glyphID)))
+
+			if flags & ARG_1_AND_2_ARE_WORDS: i += 4
+			else: i += 2
+			if flags & WE_HAVE_A_SCALE: i += 2
+			elif flags & WE_HAVE_AN_X_AND_Y_SCALE: i += 4
+			elif flags & WE_HAVE_A_TWO_BY_TWO: i += 8
+			more = flags & MORE_COMPONENTS
+
+		return components
+
+	def removeHinting(self):
+		if not hasattr(self, "data"):
+			self.program = ttLib.tables.ttProgram.Program()
+			self.program.fromBytecode([])
+			return
+
+		# Remove instructions without expanding glyph
+
+		if not self.data:
+			return
+		numContours = struct.unpack(">h", self.data[:2])[0]
+		data = array.array("B", self.data)
+		i = 10
+		if numContours >= 0:
+			i += 2 * numContours # endPtsOfContours
+			instructionLen = (data[i] << 8) | data[i+1]
+			# Zero it
+			data[i] = data [i+1] = 0
+			i += 2
+			if instructionLen:
+				# Splice it out
+				data = data[:i] + data[i+instructionLen:]
+		else:
+			more = 1
+			while more:
+				flags =(data[i] << 8) | data[i+1]
+				# Turn instruction flag off
+				flags &= ~WE_HAVE_INSTRUCTIONS
+				data[i+0] = flags >> 8
+				data[i+1] = flags & 0xFF
+				i += 4
+				flags = int(flags)
+
+				if flags & ARG_1_AND_2_ARE_WORDS: i += 4
+				else: i += 2
+				if flags & WE_HAVE_A_SCALE: i += 2
+				elif flags & WE_HAVE_AN_X_AND_Y_SCALE: i += 4
+				elif flags & WE_HAVE_A_TWO_BY_TWO: i += 8
+				more = flags & MORE_COMPONENTS
+
+			# Cut off
+			data = data[:i]
+
+		if len(data) % 4:
+			# add pad bytes
+			nPadBytes = 4 -(len(data) % 4)
+			for i in range(nPadBytes):
+				data.append(0)
+
+		self.data = data.tostring()
 	
 	def __cmp__(self, other):
 		if type(self) != type(other) or \
