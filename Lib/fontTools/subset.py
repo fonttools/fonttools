@@ -1155,7 +1155,7 @@ def closure_glyphs(self, s):
       if g not in self.glyphs:
         continue
       gl = self.glyphs[g]
-      for c in gl.getComponents(self):
+      for c in gl.getComponentNames(self):
         if c not in s.glyphs:
           components.add(c)
     components = set(c for c in components if c not in s.glyphs)

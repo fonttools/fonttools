@@ -606,10 +606,10 @@ class Glyph:
 		else:
 			return GlyphCoordinates(), [], array.array("B")
 
-	def getComponents(self, glyfTable):
+	def getComponentNames(self, glyfTable):
 		if not hasattr(self, "data"):
 			if self.isComposite():
-				return self.components
+				return [c.glyphName for c in self.components]
 			else:
 				return []
 
