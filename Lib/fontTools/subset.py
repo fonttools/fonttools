@@ -1147,8 +1147,6 @@ def remapComponentsFast(self, indices):
 @_add_method(ttLib.getTableClass('glyf'))
 def closure_glyphs(self, s):
   decompose = s.glyphs
-  # I don't know if component glyphs can be composite themselves.
-  # We handle them anyway.
   while True:
     components = set()
     for g in decompose:
