@@ -911,15 +911,16 @@ class GlyphCoordinates:
 
 	def __getitem__(self, k):
 		if isinstance(k, slice):
-			indices = xrange(k.indices(len(self)))
+			indices = xrange(*k.indices(len(self)))
 			return [self[i] for i in indices]
 		return self._a[2*k],self._a[2*k+1]
 
 	def __setitem__(self, k, v):
 		if isinstance(k, slice):
-			indices = xrange(k.indices(len(self)))
+			indices = xrange(*k.indices(len(self)))
 			for j,i in enumerate(indices):
 				self[i] = v[j]
+			return
 		self._a[2*k],self._a[2*k+1] = v
 
 	def __repr__(self):
