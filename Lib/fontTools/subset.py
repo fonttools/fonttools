@@ -1485,6 +1485,19 @@ def prune_post_subset(self, options):
       for charstring in css:
         charstring.drop_hints()
 
+      # Drop font-wide hinting values
+      all_privs = []
+      if hasattr(font, 'FDSelect'):
+        all_privs.extend(fd.Private for fd in font.FDArray)
+      else:
+        all_privs.append(font.Private)
+      for priv in all_privs:
+        priv.BlueValues = []
+        for k in ['OtherBlues', 'StemSnapH', 'StemSnapV', 'StdHW', 'StdVW', \
+                  'FamilyBlues', 'FamilyOtherBlues']:
+          if hasattr(priv, k):
+            setattr(priv, k, None)
+
 
     #
     # Renumber subroutines to remove unused ones
@@ -1620,8 +1633,6 @@ def prune_pre_subset(self, options):
 # TODO(behdad) Avoid recursing too much (in GSUB/GPOS and in CFF)
 # TODO(behdad) Text direction considerations.
 # TODO(behdad) Text script / language considerations.
-# TODO(behdad) Option to drop hmtx for CFF?
-
 
 class Options(object):
 
