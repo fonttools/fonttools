@@ -11,10 +11,11 @@ BUFSIZE = 0x4000
 
 class ExpatParser:
 	
-	def __init__(self, ttFont, fileName, progress=None):
+	def __init__(self, ttFont, fileName, progress=None, quiet=None):
 		self.ttFont = ttFont
 		self.fileName = fileName
 		self.progress = progress
+		self.quiet = quiet
 		self.root = None
 		self.contentStack = []
 		self.stackSize = 0
@@ -69,7 +70,8 @@ class ExpatParser:
 			elif self.ttFont.verbose:
 				ttLib.debugmsg(msg)
 			else:
-				print msg
+				if not self.quiet:
+					print msg
 			if tag == "GlyphOrder":
 				tableClass = ttLib.GlyphOrder
 			elif attrs.has_key("ERROR"):
@@ -123,13 +125,13 @@ class ProgressPrinter:
 		print text
 
 
-def importXML(ttFont, fileName, progress=None):
+def importXML(ttFont, fileName, progress=None, quiet=None):
 	"""Import a TTX file (an XML-based text format), so as to recreate
 	a font object.
 	"""
 	if progress:
 		import stat
 		progress.set(0, os.stat(fileName)[stat.ST_SIZE] / 100 or 1)
-	p = ExpatParser(ttFont, fileName, progress)
+	p = ExpatParser(ttFont, fileName, progress, quiet)
 	p.parse()
 
