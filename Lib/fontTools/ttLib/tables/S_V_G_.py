@@ -112,9 +112,7 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 	def decompile_format_0(self, data, ttFont):
 		dummy, data2 = sstruct.unpack2(SVG_format_0, data, self)
 		# read in SVG Documents Index
-		pos = self.offsetToSVGDocIndex
-		self.numEntries = numEntries = struct.unpack(">H", data[pos:pos+2])[0]
-		self.decompileEntryList(data, pos+2)
+		self.decompileEntryList(data)
 
 		# read in colorPalettes table.
 		self.colorPalettes = colorPalettes = ColorPalettes()
@@ -156,8 +154,11 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 		pos += 2
 		self.decompileEntryList(data, pos)
 
-	def decompileEntryList(self, data, pos):
+	def decompileEntryList(self, data):
 		# data starts with the first entry of the entry list.
+		pos = subTableStart = self.offsetToSVGDocIndex
+		self.numEntries = numEntries = struct.unpack(">H", data[pos:pos+2])[0]
+		pos += 2
 		if self.numEntries > 0:
 			data2 = data[pos:]
 			self.docList = []
@@ -169,7 +170,7 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 				i += 1
 
 			for entry in entries:
-				start = entry.svgDocOffset
+				start = entry.svgDocOffset + subTableStart
 				end = start + entry.svgDocLength
 				doc = data[start:end]
 				self.docList.append( [doc, entry.startGlyphID, entry.endGlyphID] )
@@ -184,14 +185,13 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 	def compileFormat0(self, ttFont):
 		version = 0
 		offsetToSVGDocIndex = SVG_format_0Size # I start the SVGDocIndex right after the header.
-
 		# get SGVDoc info.
 		docList = []
 		entryList = []
 		numEntries = len(self.docList)
 		datum = struct.pack(">H",numEntries)
 		entryList.append(datum)
-		curOffset = offsetToSVGDocIndex + len(datum) + doc_index_entry_format_0Size*numEntries
+		curOffset = len(datum) + doc_index_entry_format_0Size*numEntries
 		for doc, startGlyphID, endGlyphID in self.docList:
 			docOffset = curOffset
 			docLength = len(doc)
@@ -259,7 +259,7 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 			writer.endtag("svgDoc")
 			writer.newline()
 
-		if self.colorPalettes.numColorParams != None:
+		if (self.colorPalettes != None) and (self.colorPalettes.numColorParams != None):
 			writer.begintag("colorPalettes")
 			writer.newline()
 			for uiNameID in self.colorPalettes.colorParamUINameIDs:
