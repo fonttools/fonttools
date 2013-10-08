@@ -1096,7 +1096,7 @@ def subset_glyphs(self, s):
 
 @_add_method(ttLib.getTableClass('hdmx'))
 def subset_glyphs(self, s):
-  self.hdmx = dict((sz,_dict((g,v) for g,v in l.iteritems() if g in s.glyphs))
+  self.hdmx = dict((sz,dict((g,v) for g,v in l.iteritems() if g in s.glyphs))
                    for sz,l in self.hdmx.iteritems())
   return bool(self.hdmx)
 
