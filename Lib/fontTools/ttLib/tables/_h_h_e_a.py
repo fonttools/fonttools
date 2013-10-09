@@ -41,10 +41,11 @@ class table__h_h_e_a(DefaultTable.DefaultTable):
 		hmtxTable = ttFont['hmtx']
 		if ttFont.has_key('glyf'):
 			glyfTable = ttFont['glyf']
-			advanceWidthMax = -100000    # arbitrary big negative number
-			minLeftSideBearing = 100000  # arbitrary big number
-			minRightSideBearing = 100000 # arbitrary big number
-			xMaxExtent = -100000         # arbitrary big negative number
+			INFINITY = 100000
+			advanceWidthMax = -INFINITY     # arbitrary big negative number
+			minLeftSideBearing = +INFINITY  # arbitrary big number
+			minRightSideBearing = +INFINITY # arbitrary big number
+			xMaxExtent = -INFINITY          # arbitrary big negative number
 			
 			for name in ttFont.getGlyphOrder():
 				width, lsb = hmtxTable[name]
@@ -57,6 +58,12 @@ class table__h_h_e_a(DefaultTable.DefaultTable):
 				minRightSideBearing = min(minRightSideBearing, rsb)
 				extent = lsb + (g.xMax - g.xMin)
 				xMaxExtent = max(xMaxExtent, extent)
+			if advanceWidthMax == -INFINITY:
+				self.advanceWidthMax = 0
+				self.minLeftSideBearing = 0
+				self.minRightSideBearing = 0
+				self.xMaxExtent = 0
+			else:
 			self.advanceWidthMax = advanceWidthMax
 			self.minLeftSideBearing = minLeftSideBearing
 			self.minRightSideBearing = minRightSideBearing
