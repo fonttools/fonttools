@@ -27,7 +27,7 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
 					">HHl", data[4+i*8:4+(i+1)*8])
 			platformID, platEncID = int(platformID), int(platEncID)
 			format, length = struct.unpack(">HH", data[offset:offset+4])
-			if format in [8,10,12]:
+			if format in [8,10,12,13]:
 				format, reserved, length = struct.unpack(">HHL", data[offset:offset+8])
 			elif format in [14]:
 				format, length = struct.unpack(">HL", data[offset:offset+6])
@@ -902,7 +902,7 @@ class cmap_format_6(CmapSubtable):
 			cmap[safeEval(attrs["code"])] = attrs["name"]
 
 
-class cmap_format_12(CmapSubtable):
+class cmap_format_12_or_13(CmapSubtable):
 	
 	def __init__(self, format):
 		self.format = format
@@ -912,7 +912,7 @@ class cmap_format_12(CmapSubtable):
 
 	def decompileHeader(self, data, ttFont):
 		format, reserved, length, language, nGroups = struct.unpack(">HHLLL", data[:16])
-		assert len(data) == (16 + nGroups*12) == (length), "corrupt cmap table format 12 (data length: %d, header length: %d)" % (len(data), length)
+		assert len(data) == (16 + nGroups*12) == (length), "corrupt cmap table format %d (data length: %d, header length: %d)" % (format, len(data), length)
 		self.format = format
 		self.reserved = reserved
 		self.length = length
@@ -938,7 +938,7 @@ class cmap_format_12(CmapSubtable):
 			pos += 12
 			lenGroup = 1 + endCharCode - startCharCode
 			charCodes += range(startCharCode, endCharCode +1)
-			gids += range(glyphID, glyphID + lenGroup)
+			gids += self._computeGIDs(glyphID, lenGroup)
 		self.data = data = None
 		self.cmap = cmap = {}
 		lenCmap = len(gids)
@@ -952,7 +952,7 @@ class cmap_format_12(CmapSubtable):
 	
 	def compile(self, ttFont):
 		if self.data:
-			return struct.pack(">HHLLL", self.format, self.reserved , self.length, self.language, self.nGroups) + self.data
+			return struct.pack(">HHLLL", self.format, self.reserved, self.length, self.language, self.nGroups) + self.data
 		charCodes = self.cmap.keys()
 		lenCharCodes = len(charCodes) 
 		names = self.cmap.values()
@@ -987,7 +987,7 @@ class cmap_format_12(CmapSubtable):
 		index = 0
 		startCharCode = charCodes[0]
 		startGlyphID = cmap[startCharCode]
-		lastGlyphID =  startGlyphID - 1
+		lastGlyphID = startGlyphID - self._format_step
 		lastCharCode = startCharCode - 1
 		nGroups = 0
 		dataList =  []
@@ -995,7 +995,7 @@ class cmap_format_12(CmapSubtable):
 		for index in range(maxIndex):
 			charCode = charCodes[index]
 			glyphID = cmap[charCode]
-			if (glyphID != 1 + lastGlyphID) or (charCode != 1 + lastCharCode):
+			if not self._IsInSameRun(glyphID, lastGlyphID, charCode, lastCharCode):
 				dataList.append(struct.pack(">LLL", startCharCode, lastCharCode, startGlyphID))
 				startCharCode = charCode
 				startGlyphID = glyphID
@@ -1043,6 +1043,30 @@ class cmap_format_12(CmapSubtable):
 			if name <> "map":
 				continue
 			cmap[safeEval(attrs["code"])] = attrs["name"]
+
+
+class cmap_format_12(cmap_format_12_or_13):
+	def __init__(self, format):
+		cmap_format_12_or_13.__init__(self, format)
+		self._format_step = 1
+
+	def _computeGIDs(self, startingGlyph, numberOfGlyphs):
+		return range(startingGlyph, startingGlyph + numberOfGlyphs)
+
+	def _IsInSameRun(self, glyphID, lastGlyphID, charCode, lastCharCode):
+		return (glyphID == 1 + lastGlyphID) and (charCode == 1 + lastCharCode)
+
+
+class cmap_format_13(cmap_format_12_or_13):
+	def __init__(self, format):
+		cmap_format_12_or_13.__init__(self, format)
+		self._format_step = 0
+
+	def _computeGIDs(self, startingGlyph, numberOfGlyphs):
+		return [startingGlyph] * numberOfGlyphs
+
+	def _IsInSameRun(self, glyphID, lastGlyphID, charCode, lastCharCode):
+		return (glyphID == lastGlyphID) and (charCode == 1 + lastCharCode)
 
 
 def  cvtToUVS(threeByteString):
@@ -1294,5 +1318,6 @@ cmap_classes = {
 		4: cmap_format_4,
 		6: cmap_format_6,
 		12: cmap_format_12,
+		13: cmap_format_13,
 		14: cmap_format_14,
 		}
