@@ -932,7 +932,7 @@ def reorderFontTables(inFile, outFile, tableOrder=None, checkChecksums=0):
 	"""
 	from fontTools.ttLib.sfnt import SFNTReader, SFNTWriter
 	reader = SFNTReader(inFile, checkChecksums=checkChecksums)
-	writer = SFNTWriter(outFile, reader.numTables, reader.sfntVersion, reader.flavor, reader.flavorData)
+	writer = SFNTWriter(outFile, len(reader.tables), reader.sfntVersion, reader.flavor, reader.flavorData)
 	tables = reader.keys()
 	for tag in sortedTagList(tables, tableOrder):
 		writer[tag] = reader[tag]

@@ -60,10 +60,11 @@ class table__m_a_x_p(DefaultTable.DefaultTable):
 		hmtxTable = ttFont['hmtx']
 		headTable = ttFont['head']
 		self.numGlyphs = len(glyfTable)
-		xMin = 100000
-		yMin = 100000
-		xMax = -100000
-		yMax = -100000
+		INFINITY = 100000
+		xMin = +INFINITY
+		yMin = +INFINITY
+		xMax = -INFINITY
+		yMax = -INFINITY
 		maxPoints = 0
 		maxContours = 0
 		maxCompositePoints = 0
@@ -90,6 +91,12 @@ class table__m_a_x_p(DefaultTable.DefaultTable):
 					maxCompositeContours = max(maxCompositeContours, nContours)
 					maxComponentElements = max(maxComponentElements, len(g.components))
 					maxComponentDepth = max(maxComponentDepth, componentDepth)
+		if xMin == +INFINITY:
+			headTable.xMin = 0
+			headTable.yMin = 0
+			headTable.xMax = 0
+			headTable.yMax = 0
+		else:
 		headTable.xMin = xMin
 		headTable.yMin = yMin
 		headTable.xMax = xMax
