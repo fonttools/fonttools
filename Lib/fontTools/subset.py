@@ -317,10 +317,12 @@ def subset_glyphs(self, s):
 def prune_post_subset(self, options):
     if not options.hinting:
       for m in self.MarkArray.MarkRecord:
-        m.MarkAnchor.prune_hints()
+        if m.MarkAnchor:
+          m.MarkAnchor.prune_hints()
       for b in self.BaseArray.BaseRecord:
         for a in b.BaseAnchor:
-          a.prune_hints()
+          if a:
+            a.prune_hints()
     return True
 
 @_add_method(otTables.MarkLigPos)
@@ -352,11 +354,13 @@ def subset_glyphs(self, s):
 def prune_post_subset(self, options):
     if not options.hinting:
       for m in self.MarkArray.MarkRecord:
-        m.MarkAnchor.prune_hints()
+        if m.MarkAnchor:
+          m.MarkAnchor.prune_hints()
       for l in self.LigatureArray.LigatureAttach:
         for c in l.ComponentRecord:
           for a in c.LigatureAnchor:
-            a.prune_hints()
+            if a:
+              a.prune_hints()
     return True
 
 @_add_method(otTables.MarkMarkPos)
@@ -388,10 +392,12 @@ def prune_post_subset(self, options):
     if not options.hinting:
       # Drop device tables or contour anchor point
       for m in self.Mark1Array.MarkRecord:
-        m.MarkAnchor.prune_hints()
+        if m.MarkAnchor:
+          m.MarkAnchor.prune_hints()
       for b in self.Mark2Array.Mark2Record:
         for m in b.Mark2Anchor:
-          m.prune_hints()
+          if m:
+            m.prune_hints()
     return True
 
 @_add_method(otTables.SingleSubst,
