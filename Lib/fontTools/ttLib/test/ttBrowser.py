@@ -38,9 +38,9 @@ class TableBrowser:
 		tables = self.ttFont.keys()
 		tables.sort()
 		self.w = w = W.Window((500, 300), title, minsize = (400, 200))
-		w.browsetablebutton = W.Button((hmargin, 32, buttonwidth, 16), "Browse tableä", 
+		w.browsetablebutton = W.Button((hmargin, 32, buttonwidth, 16), "Browse table", 
 				self.browsetable)
-		w.browsefontbutton = W.Button((hmargin, vmargin, buttonwidth, 16), "Browse fontä", 
+		w.browsefontbutton = W.Button((hmargin, vmargin, buttonwidth, 16), "Browse font", 
 				self.browsefont)
 		w.tablelist = W.List((hmargin, 56, buttonwidth, -128), tables, self.tablelisthit)
 		
@@ -80,9 +80,9 @@ class TableBrowser:
 		
 		w.tocurrentfont = W.Button((hmargin, -120, buttonwidth, 16), "Copy to current font", self.copytocurrentfont)
 		w.fromcurrentfont = W.Button((hmargin, -96, buttonwidth, 16), "Copy from current font", self.copyfromcurrentfont)
-		w.saveflat = W.Button((hmargin, -72, buttonwidth, 16), "Save as flat fileä", self.saveflat)
-		w.savesuitcasebutton = W.Button((hmargin, -48, buttonwidth, 16), "Save as suitcaseä", self.savesuitcase)
-		w.savexmlbutton = W.Button((hmargin, -24, buttonwidth, 16), "Save as XMLä", self.saveXML)
+		w.saveflat = W.Button((hmargin, -72, buttonwidth, 16), "Save as flat file", self.saveflat)
+		w.savesuitcasebutton = W.Button((hmargin, -48, buttonwidth, 16), "Save as suitcase", self.savesuitcase)
+		w.savexmlbutton = W.Button((hmargin, -24, buttonwidth, 16), "Save as XML", self.saveXML)
 		
 		w.open()
 		w.browsetablebutton.enable(0)
@@ -115,7 +115,7 @@ class TableBrowser:
 		path = putfile("Save font as XML text file:", self.filename, ".ttx")
 		if path:
 			W.SetCursor('watch')
-			pb = macUtils.ProgressBar("Saving %s as XMLä" % self.filename)
+			pb = macUtils.ProgressBar("Saving %s as XML" % self.filename)
 			try:
 				self.ttFont.saveXML(path, pb)
 			finally:
