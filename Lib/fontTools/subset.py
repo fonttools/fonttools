@@ -1665,7 +1665,7 @@ class Options(object):
     'arabic': ['init', 'medi', 'fina', 'isol', 'med2', 'fin2', 'fin3',
                'cswh', 'mset'],
     'hangul': ['ljmo', 'vjmo', 'tjmo'],
-    'tibetal': ['abvs', 'blws', 'abvm', 'blwm'],
+    'tibetan': ['abvs', 'blws', 'abvm', 'blwm'],
     'indic': ['nukt', 'akhn', 'rphf', 'rkrf', 'pref', 'blwf', 'half',
               'abvf', 'pstf', 'cfar', 'vatu', 'cjct', 'init', 'pres',
               'abvs', 'blws', 'psts', 'haln', 'dist', 'abvm', 'blwm'],
