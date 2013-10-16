@@ -17,6 +17,75 @@ from fontTools.ttLib.tables import otTables
 from fontTools.misc import psCharStrings
 from fontTools.pens import basePen
 
+__doc__="""
+usage: pyftsubset font-file glyph... [--text=ABC]... [--option=value]...
+
+  pyftsubset -- Subsetting OpenType
+  
+  General otpions:
+  --text=<text>
+       Specify characters to base the subsetting on. All the characters
+       and their required glyphs will be in the subsetted font.
+  --text-file=<file>
+       Specify a text file to use for characters to base the subsetting on.
+  --drop-tables+=<tables>
+  --drop-tables-=<tables>  
+       Add or remove tables to be dropped.
+       By default the following tables are dropped:
+       'BASE', 'JSTF', 'DSIG', 'EBDT', 'EBLC', 'EBSC', 'SVG ', 'PCLT', 'LTSH'
+       as well as Graphite tables 'Feat', 'Glat', 'Gloc', 'Silf', 'Sill'
+       or color tables 'CBLC', 'CBDT', 'sbix', 'COLR', 'CPAL'.
+         --drop-tables-=BASE
+            * the BASE table is not dropped
+         --drop-tables+=GSUB
+            * the GSUB table is dropped
+  --no-subset-tables+=<tables>
+       Add tables to the list that will no be subsetted.
+  --hinting-tables+=<tables>
+  --hinting-tables-=<tables>
+       Add or remove tables to the list of hinting tables to be dropped.
+       By default 'cvt ', 'fpgm', 'prep', 'hdmx', 'VDMX' are dropped.
+         --hinting-tables-='cvt '
+            * the 'cvt ' table will not be dropped
+  --layout-features+=<features>
+  --layout-features-=<features>
+       Add or remove OpenType features from the default required set.
+         --layout-features+='pnum'
+            * add 'pnum' to the features preserved.
+         --layout-features-='ccmp'
+            * remove 'ccmp' from the features preserved.
+  --hinting
+       Preserve hinting. You need to specify this argument if you want
+       to preserve hinting, otherwise it will be dropped.
+       'cvt ', 'fpgm', 'prep', 'hdmx', 'VDMX'
+  --glyph-names
+       Preserve PS glyph names. You need to specify this argument if you want
+       to preserve glyph names, otherwise they will be dropped to save space.
+  --legacy_cmap
+       Preserves the legacy cmap.
+  --symbol_cmap
+       Preserves the symbol cmap.
+  --name-IDs=<IDs>
+       IDs can be '*' to preserve all name table IDs.
+       By default only name ID 1 and ID 2 (Family and Stlye) are preserved.
+  --name-legacy
+       Preserve legacy cmap table for Unicode fonts on Windows.
+  --name-languages=<code>
+       code can be '*'
+  --notdef-glyph
+       Preserve .notdef glyph in font.
+  --notdef-outline
+       Keep the outline of .notdef.
+  --recommended_glyphs
+       Keep first three glyphs recommended in TrueType standard:
+       NULL or .null, CR, space
+  --recalc_bounds
+       Recalculate font bounding boxes
+  --canonical_order
+       Order tables as recommended in standard.
+  --flavor=<type>
+       May be 'woff'
+"""
 
 def _add_method(*clazzes):
   """Returns a decorator function that adds a new method to one or
@@ -2004,10 +2073,11 @@ def main(args):
   args = log.parse_opts(args)
 
   options = Options()
-  args = options.parse_opts(args, ignore_unknown=['text'])
+  args = options.parse_opts(args, ignore_unknown=['text', 'text_file',
+                            'glyphtext_file'])
 
   if len(args) < 2:
-    print >>sys.stderr, "usage: pyftsubset font-file glyph... [--text=ABC]... [--option=value]..."
+    print >>sys.stderr, __doc__
     sys.exit(1)
 
   fontfile = args[0]
@@ -2037,6 +2107,23 @@ def main(args):
       continue
     if g.startswith('--text='):
       text += g[7:]
+      continue
+    if g.startswith('--text-file='):
+      try:
+        tf = open(g[12:], 'r') # text is decoded in utf8 later
+      except IOError:
+        raise Exception("Could not open file: %s" % g[12:])
+      text += "".join([line for line in tf]) 
+      continue
+    if g.startswith('--glyphtext-file='):
+      try:
+        gtf = open(g[17:], 'r')
+      except IOError:
+        raise Exception("Could not open file: %s" % g[17:])
+      for line in gtf:
+        if not line.startswith('#') or line.strip() == '':
+          for gn in line.split():
+            glyphs.append(gn)
       continue
     if g.startswith('uni') or g.startswith('U+'):
       if g.startswith('uni') and len(g) > 3:
