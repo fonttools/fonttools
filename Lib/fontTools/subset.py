@@ -317,10 +317,12 @@ def subset_glyphs(self, s):
 def prune_post_subset(self, options):
     if not options.hinting:
       for m in self.MarkArray.MarkRecord:
-        m.MarkAnchor.prune_hints()
+        if m.MarkAnchor:
+          m.MarkAnchor.prune_hints()
       for b in self.BaseArray.BaseRecord:
         for a in b.BaseAnchor:
-          a.prune_hints()
+          if a:
+            a.prune_hints()
     return True
 
 @_add_method(otTables.MarkLigPos)
@@ -352,11 +354,13 @@ def subset_glyphs(self, s):
 def prune_post_subset(self, options):
     if not options.hinting:
       for m in self.MarkArray.MarkRecord:
-        m.MarkAnchor.prune_hints()
+        if m.MarkAnchor:
+          m.MarkAnchor.prune_hints()
       for l in self.LigatureArray.LigatureAttach:
         for c in l.ComponentRecord:
           for a in c.LigatureAnchor:
-            a.prune_hints()
+            if a:
+              a.prune_hints()
     return True
 
 @_add_method(otTables.MarkMarkPos)
@@ -388,10 +392,12 @@ def prune_post_subset(self, options):
     if not options.hinting:
       # Drop device tables or contour anchor point
       for m in self.Mark1Array.MarkRecord:
-        m.MarkAnchor.prune_hints()
+        if m.MarkAnchor:
+          m.MarkAnchor.prune_hints()
       for b in self.Mark2Array.Mark2Record:
         for m in b.Mark2Anchor:
-          m.prune_hints()
+          if m:
+            m.prune_hints()
     return True
 
 @_add_method(otTables.SingleSubst,
@@ -551,6 +557,7 @@ def __classify_context(self):
         self.Intersect = lambda glyphs, c, r: c.intersect_class(glyphs, r)
 
         self.ClassDef = 'InputClassDef' if Chain else 'ClassDef'
+        self.ClassDefIndex = 1 if Chain else 0
         self.Input = 'Input' if Chain else 'Class'
 
   if self.Format not in [1, 2, 3]:
@@ -670,12 +677,21 @@ def subset_glyphs(self, s):
   elif self.Format == 2:
     if not self.Coverage.subset(s.glyphs):
       return False
-    indices = getattr(self, c.ClassDef).subset(self.Coverage.glyphs,
-                                                 remap=False)
-    rss = getattr(self, c.RuleSet)
-    rss = [rss[i] for i in indices]
     ContextData = c.ContextData(self)
     klass_maps = [x.subset(s.glyphs, remap=True) for x in ContextData]
+
+    # Keep rulesets for class numbers that survived.
+    indices = klass_maps[c.ClassDefIndex]
+    rss = getattr(self, c.RuleSet)
+    rssCount = getattr(self, c.RuleSetCount)
+    rss = [rss[i] for i in indices if i < rssCount]
+    del rssCount
+    # Delete, but not renumber, unreachable rulesets.
+    indices = getattr(self, c.ClassDef).intersect(self.Coverage.glyphs)
+    rss = [rss if i in indices else None for i,rss in enumerate(rss)]
+    while rss and rss[-1] == None:
+      del rss[-1]
+
     for rs in rss:
       if not rs: continue
       ss = getattr(rs, c.Rule)
@@ -689,10 +705,6 @@ def subset_glyphs(self, s):
       for r in ss:
         c.SetRuleData(r, [[klass_map.index(k) for k in klist]
                for klass_map,klist in zip(klass_maps, c.RuleData(r))])
-    # Prune empty subrulesets
-    rss = [rs for rs in rss if rs and getattr(rs, c.Rule)]
-    setattr(self, c.RuleSet, rss)
-    setattr(self, c.RuleSetCount, len(rss))
     return bool(rss)
   elif self.Format == 3:
     return all(x.subset(s.glyphs) for x in c.RuleData(self))
@@ -1659,7 +1671,7 @@ class Options(object):
     'arabic': ['init', 'medi', 'fina', 'isol', 'med2', 'fin2', 'fin3',
                'cswh', 'mset'],
     'hangul': ['ljmo', 'vjmo', 'tjmo'],
-    'tibetal': ['abvs', 'blws', 'abvm', 'blwm'],
+    'tibetan': ['abvs', 'blws', 'abvm', 'blwm'],
     'indic': ['nukt', 'akhn', 'rphf', 'rkrf', 'pref', 'blwf', 'half',
               'abvf', 'pstf', 'cfar', 'vatu', 'cjct', 'init', 'pres',
               'abvs', 'blws', 'psts', 'haln', 'dist', 'abvm', 'blwm'],
