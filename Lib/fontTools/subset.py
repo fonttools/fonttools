@@ -1639,6 +1639,7 @@ def prune_pre_subset(self, options):
 
 
 # TODO(behdad) OS/2 ulUnicodeRange / ulCodePageRange?
+# TODO(behdad) Drop AAT tables.
 # TODO(behdad) Drop unneeded GSUB/GPOS Script/LangSys entries.
 # TODO(behdad) Drop empty GSUB/GPOS, and GDEF if no GSUB/GPOS left
 # TODO(behdad) Drop GDEF subitems if unused by lookups
