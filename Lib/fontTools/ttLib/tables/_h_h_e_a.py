@@ -64,10 +64,10 @@ class table__h_h_e_a(DefaultTable.DefaultTable):
 				self.minRightSideBearing = 0
 				self.xMaxExtent = 0
 			else:
-			    self.advanceWidthMax = advanceWidthMax
-			    self.minLeftSideBearing = minLeftSideBearing
-			    self.minRightSideBearing = minRightSideBearing
-			    self.xMaxExtent = xMaxExtent
+				self.advanceWidthMax = advanceWidthMax
+				self.minLeftSideBearing = minLeftSideBearing
+				self.minRightSideBearing = minRightSideBearing
+				self.xMaxExtent = xMaxExtent
 		else:
 			# XXX CFF recalc...
 			pass
