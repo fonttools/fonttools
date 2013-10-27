@@ -36,7 +36,7 @@ class XMLParser:
 
 	def _expatParseFile(self, pathOrFile):
 		parser = ParserCreate()
-		parser.returns_unicode = 0  # XXX, Don't remember why. It sucks, though.
+		parser.returns_unicode = 1  # XXX, Don't remember why. It sucks, though.
 		parser.StartElementHandler = self.startElementHandler
 		parser.EndElementHandler = self.endElementHandler
 		parser.CharacterDataHandler = self.characterDataHandler
