@@ -152,19 +152,18 @@ class CmapSubtable:
 	
 	def __cmp__(self, other):
 		if type(self) != type(other): return cmp(type(self), type(other))
-		if self.__class__ != other.__class__: return cmp(self.__class__, other.__class__)
 
 		# implemented so that list.sort() sorts according to the cmap spec.
 		selfTuple = (
-					self.platformID,
-					self.platEncID,
-					self.language,
-					self.__dict__)
+			getattr(self, "platformID", None),
+			getattr(self, "platEncID", None),
+			getattr(self, "language", None),
+			self.__dict__)
 		otherTuple = (
-					other.platformID,
-					other.platEncID,
-					other.language,
-					other.__dict__)
+			getattr(other, "platformID", None),
+			getattr(other, "platEncID", None),
+			getattr(other, "language", None),
+			other.__dict__)
 		return cmp(selfTuple, otherTuple)
 
 
