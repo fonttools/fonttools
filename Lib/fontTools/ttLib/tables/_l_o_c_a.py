@@ -60,9 +60,8 @@ class table__l_o_c_a(DefaultTable.DefaultTable):
 		return len(self.locations)
 	
 	def __cmp__(self, other):
-		if type(self) != type(other) or \
-		   self.__class__ != other.__class__:
-			return cmp(id(self), id(other))
+		if type(self) != type(other): return cmp(type(self), type(other))
+		if self.__class__ != other.__class__: return cmp(self.__class__, other.__class__)
 
 		return cmp(self.locations, other.locations)
 

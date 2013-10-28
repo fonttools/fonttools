@@ -288,9 +288,8 @@ class OTTableWriter:
 		return hash(self.items)
 	
 	def __cmp__(self, other):
-		if type(self) != type(other) or \
-		   self.__class__ != other.__class__:
-			return cmp(id(self), id(other))
+		if type(self) != type(other): return cmp(type(self), type(other))
+		if self.__class__ != other.__class__: return cmp(self.__class__, other.__class__)
 
 		return cmp(self.items, other.items)
 	
@@ -671,9 +670,8 @@ class BaseTable:
 			setattr(self, conv.name, value)
 	
 	def __cmp__(self, other):
-		if type(self) != type(other) or \
-		   self.__class__ != other.__class__:
-			return cmp(id(self), id(other))
+		if type(self) != type(other): return cmp(type(self), type(other))
+		if self.__class__ != other.__class__: return cmp(self.__class__, other.__class__)
 
 		return cmp(self.__dict__, other.__dict__)
 
@@ -835,8 +833,7 @@ class ValueRecord:
 			setattr(self, name, value)
 	
 	def __cmp__(self, other):
-		if type(self) != type(other) or \
-		   self.__class__ != other.__class__:
-			return cmp(id(self), id(other))
+		if type(self) != type(other): return cmp(type(self), type(other))
+		if self.__class__ != other.__class__: return cmp(self.__class__, other.__class__)
 
 		return cmp(self.__dict__, other.__dict__)
