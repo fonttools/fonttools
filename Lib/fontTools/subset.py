@@ -1508,9 +1508,9 @@ def prune_post_subset(self, options):
       else:
         all_privs.append(font.Private)
       for priv in all_privs:
-        priv.BlueValues = []
-        for k in ['OtherBlues', 'StemSnapH', 'StemSnapV', 'StdHW', 'StdVW', \
-                  'FamilyBlues', 'FamilyOtherBlues']:
+        for k in ['BlueValues', 'OtherBlues', 'FamilyBlues', 'FamilyOtherBlues',
+                  'BlueScale', 'BlueShift', 'BlueFuzz',
+                  'StemSnapH', 'StemSnapV', 'StdHW', 'StdVW']:
           if hasattr(priv, k):
             setattr(priv, k, None)
 
