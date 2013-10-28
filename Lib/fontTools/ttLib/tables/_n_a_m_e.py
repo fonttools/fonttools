@@ -139,18 +139,21 @@ class NameRecord:
 		according to the spec by just sorting it..."""
 
 		if type(self) != type(other): return cmp(type(self), type(other))
-		if self.__class__ != other.__class__: return cmp(self.__class__, other.__class__)
 
-		selftuple = (self.platformID,
-				self.platEncID,
-				self.langID,
-				self.nameID,
-				self.string)
-		othertuple = (other.platformID,
-				other.platEncID,
-				other.langID,
-				other.nameID,
-				other.string)
+		selftuple = (
+			getattr(self, "platformID", None),
+			getattr(self, "platEncID", None),
+			getattr(self, "langID", None),
+			getattr(self, "nameID", None),
+			getattr(self, "string", None),
+		)
+		othertuple = (
+			getattr(other, "platformID", None),
+			getattr(other, "platEncID", None),
+			getattr(other, "langID", None),
+			getattr(other, "nameID", None),
+			getattr(other, "string", None),
+		)
 		return cmp(selftuple, othertuple)
 	
 	def __repr__(self):
