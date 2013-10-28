@@ -1100,11 +1100,15 @@ def subset_glyphs(self, s):
   self.kernTables = [t for t in self.kernTables if t.kernTable]
   return bool(self.kernTables)
 
-@_add_method(ttLib.getTableClass('vmtx'),
-             ttLib.getTableClass('hmtx'))
+@_add_method(ttLib.getTableClass('vmtx'))
 def subset_glyphs(self, s):
   self.metrics = dict((g,v) for g,v in self.metrics.iteritems() if g in s.glyphs)
   return bool(self.metrics)
+
+@_add_method(ttLib.getTableClass('hmtx'))
+def subset_glyphs(self, s):
+  self.metrics = dict((g,v) for g,v in self.metrics.iteritems() if g in s.glyphs)
+  return True # Required table
 
 @_add_method(ttLib.getTableClass('hdmx'))
 def subset_glyphs(self, s):
@@ -1123,12 +1127,12 @@ def subset_glyphs(self, s):
 def prune_pre_subset(self, options):
   if not options.glyph_names:
     self.formatType = 3.0
-  return True
+  return True # Required table
 
 @_add_method(ttLib.getTableClass('post'))
 def subset_glyphs(self, s):
   self.extraNames = []  # This seems to do it
-  return True
+  return True # Required table
 
 @_add_method(ttLib.getTableModule('glyf').Glyph)
 def remapComponentsFast(self, indices):
@@ -1597,7 +1601,7 @@ def prune_pre_subset(self, options):
   # For now, drop format=0 which can't be subset_glyphs easily?
   self.tables = [t for t in self.tables if t.format != 0]
   self.numSubTables = len(self.tables)
-  return bool(self.tables)
+  return True # Required table
 
 @_add_method(ttLib.getTableClass('cmap'))
 def subset_glyphs(self, s):
@@ -1624,7 +1628,7 @@ def subset_glyphs(self, s):
   # In particular, if we have a format=12 without non-BMP
   # characters, either drop format=12 one or convert it
   # to format=4 if there's not one.
-  return bool(self.tables)
+  return True # Required table
 
 @_add_method(ttLib.getTableClass('name'))
 def prune_pre_subset(self, options):
@@ -1635,7 +1639,7 @@ def prune_pre_subset(self, options):
                   if n.platformID == 3 and n.platEncID == 1]
   if '*' not in options.name_languages:
     self.names = [n for n in self.names if n.langID in options.name_languages]
-  return True  # Retain even if empty
+  return True  # Required table
 
 
 # TODO(behdad) OS/2 ulUnicodeRange / ulCodePageRange?
