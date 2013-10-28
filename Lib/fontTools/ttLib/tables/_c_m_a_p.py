@@ -151,9 +151,8 @@ class CmapSubtable:
 			writer.newline()
 	
 	def __cmp__(self, other):
-		if type(self) != type(other) or \
-		   self.__class__ != other.__class__:
-			return cmp(id(self), id(other))
+		if type(self) != type(other): return cmp(type(self), type(other))
+		if self.__class__ != other.__class__: return cmp(self.__class__, other.__class__)
 
 		# implemented so that list.sort() sorts according to the cmap spec.
 		selfTuple = (

@@ -89,9 +89,8 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 		return None # not found
 	
 	def __cmp__(self, other):
-		if type(self) != type(other) or \
-		   self.__class__ != other.__class__:
-			return cmp(id(self), id(other))
+		if type(self) != type(other): return cmp(type(self), type(other))
+		if self.__class__ != other.__class__: return cmp(self.__class__, other.__class__)
 
 		return cmp(self.names, other.names)
 	
@@ -139,9 +138,8 @@ class NameRecord:
 		"""Compare method, so a list of NameRecords can be sorted
 		according to the spec by just sorting it..."""
 
-		if type(self) != type(other) or \
-		   self.__class__ != other.__class__:
-			return cmp(id(self), id(other))
+		if type(self) != type(other): return cmp(type(self), type(other))
+		if self.__class__ != other.__class__: return cmp(self.__class__, other.__class__)
 
 		selftuple = (self.platformID,
 				self.platEncID,
