@@ -1290,6 +1290,8 @@ def drop_hints(self):
         continue
       i += 1
 
+  # TODO: we currently don't drop calls to "empty" subroutines.
+
   assert len(self.program)
 
   del self._hints
@@ -1405,7 +1407,7 @@ class _DehintingT2Decompiler(psCharStrings.SimpleT2Decompiler):
         # We are an implicit vstem
         hints.last_hint = index + 1
         hints.status = 0
-      hints.last_checked = index + 1
+    hints.last_checked = index + 1
 
   def processHint(self, index):
     cs = self.callingStack[-1]
@@ -1445,6 +1447,12 @@ class _DehintingT2Decompiler(psCharStrings.SimpleT2Decompiler):
             hints.status = 2
             break;
         hints.last_checked = index
+      if hints.status != 2:
+        # Decide where to chop off from
+        if subr_hints.status == 0:
+          hints.last_hint = index
+        else:
+          hints.last_hint = index - 2 # Leave the subr call in
 
 @_add_method(ttLib.getTableClass('CFF '))
 def prune_post_subset(self, options):
