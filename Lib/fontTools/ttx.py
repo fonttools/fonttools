@@ -81,7 +81,7 @@ def usage():
 	sys.exit(2)
 
 	
-numberAddedRE = re.compile("(.*)#\d+$")
+numberAddedRE = re.compile("#\d+$")
 opentypeheaderRE = re.compile('''sfntVersion=['"]OTTO["']''')
 
 def makeOutputFileName(input, outputDir, extension):
@@ -90,7 +90,7 @@ def makeOutputFileName(input, outputDir, extension):
 	if outputDir:
 		dir = outputDir
 	output = os.path.join(dir, file + extension)
-	m = numberAddedRE.match(file)
+	m = numberAddedRE.search(file)
 	if m:
 		file = m.group(1)
 	n = 1
@@ -267,7 +267,7 @@ def guessFileType(fileName):
 	elif head in ("\0\1\0\0", "true"):
 		return "TTF"
 	elif head.lower() == "<?xm":
-		if opentypeheaderRE.match(header):
+		if opentypeheaderRE.search(header):
 			return "OTX"
 		else:
 			return "TTX"
