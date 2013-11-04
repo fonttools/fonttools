@@ -1765,7 +1765,7 @@ class Options(object):
   no_subset_tables = _no_subset_tables_default
   hinting_tables = _hinting_tables_default
   layout_features = _layout_features_default
-  hinting = False
+  hinting = True
   glyph_names = False
   legacy_cmap = False
   symbol_cmap = False
