@@ -1,3 +1,8 @@
+### What it is ?
+
+Quoting from [TTX/FontTools Sourceforge Project](http://sourceforge.net/projects/fonttools/) 
+> a tool to convert OpenType and TrueType fonts to and from XML. FontTools is a library for manipulating fonts, written in Python. It supports TrueType, OpenType, AFM and to an extent Type 1 and some Mac-specific formats.   
+
 ### Quick start
 
 ```python setup.py install```
