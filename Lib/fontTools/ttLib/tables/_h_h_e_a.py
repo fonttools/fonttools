@@ -50,9 +50,9 @@ class table__h_h_e_a(DefaultTable.DefaultTable):
 			for name in ttFont.getGlyphOrder():
 				width, lsb = hmtxTable[name]
 				g = glyfTable[name]
+				advanceWidthMax = max(advanceWidthMax, width)
 				if g.numberOfContours <= 0:
 					continue
-				advanceWidthMax = max(advanceWidthMax, width)
 				minLeftSideBearing = min(minLeftSideBearing, lsb)
 				rsb = width - lsb - (g.xMax - g.xMin)
 				minRightSideBearing = min(minRightSideBearing, rsb)
