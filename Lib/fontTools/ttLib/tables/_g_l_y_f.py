@@ -68,7 +68,8 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 			dataList.append(glyphData)
 		locations.append(currentLocation)
 		data = string.join(dataList, "")
-		ttFont['loca'].set(locations)
+		if 'loca' in ttFont:
+			ttFont['loca'].set(locations)
 		ttFont['maxp'].numGlyphs = len(self.glyphs)
 		return data
 	
