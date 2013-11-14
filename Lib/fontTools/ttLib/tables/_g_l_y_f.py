@@ -525,10 +525,8 @@ class Glyph:
 				repeat = repeat + 1
 				if repeat == 1:
 					compressedflags.append(flag)
-				elif repeat > 1:
-					compressedflags[-2] = flag | flagRepeat
-					compressedflags[-1] = repeat
 				else:
+					compressedflags[-2] = flag | flagRepeat
 					compressedflags[-1] = repeat
 			else:
 				repeat = 0
