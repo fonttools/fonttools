@@ -51,8 +51,12 @@ class table__h_h_e_a(DefaultTable.DefaultTable):
 				width, lsb = hmtxTable[name]
 				g = glyfTable[name]
 				advanceWidthMax = max(advanceWidthMax, width)
-				if g.numberOfContours <= 0:
+				if g.numberOfContours == 0:
 					continue
+				if g.numberOfContours < 0 and not hasattr(g, "xMax"):
+					# Composite glyph without extents set.
+					# Calculate those.
+					g.recalcBounds(glyfTable)
 				minLeftSideBearing = min(minLeftSideBearing, lsb)
 				rsb = width - lsb - (g.xMax - g.xMin)
 				minRightSideBearing = min(minRightSideBearing, rsb)
