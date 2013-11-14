@@ -49,8 +49,8 @@ class table__h_h_e_a(DefaultTable.DefaultTable):
 			
 			for name in ttFont.getGlyphOrder():
 				width, lsb = hmtxTable[name]
-				g = glyfTable[name]
 				advanceWidthMax = max(advanceWidthMax, width)
+				g = glyfTable[name]
 				if g.numberOfContours == 0:
 					continue
 				if g.numberOfContours < 0 and not hasattr(g, "xMax"):
