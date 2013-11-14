@@ -521,7 +521,7 @@ class Glyph:
 				yPoints.append(y)
 				yFormat = yFormat + 'h'
 			# handle repeating flags
-			if flag == lastflag:
+			if flag == lastflag and repeat != 255:
 				repeat = repeat + 1
 				if repeat == 1:
 					compressedflags.append(flag)
