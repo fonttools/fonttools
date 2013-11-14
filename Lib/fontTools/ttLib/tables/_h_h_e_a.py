@@ -42,7 +42,7 @@ class table__h_h_e_a(DefaultTable.DefaultTable):
 		if ttFont.has_key('glyf'):
 			glyfTable = ttFont['glyf']
 			INFINITY = 100000
-			advanceWidthMax = -INFINITY     # arbitrary big negative number
+			advanceWidthMax = 0
 			minLeftSideBearing = +INFINITY  # arbitrary big number
 			minRightSideBearing = +INFINITY # arbitrary big number
 			xMaxExtent = -INFINITY          # arbitrary big negative number
@@ -62,18 +62,17 @@ class table__h_h_e_a(DefaultTable.DefaultTable):
 				minRightSideBearing = min(minRightSideBearing, rsb)
 				extent = lsb + (g.xMax - g.xMin)
 				xMaxExtent = max(xMaxExtent, extent)
-			if advanceWidthMax == -INFINITY:
-				self.advanceWidthMax = 0
-			else:
-				self.advanceWidthMax = advanceWidthMax
+
                         if xMaxExtent == -INFINITY:
-				self.minLeftSideBearing = 0
-				self.minRightSideBearing = 0
-				self.xMaxExtent = 0
-			else:
-				self.minLeftSideBearing = minLeftSideBearing
-				self.minRightSideBearing = minRightSideBearing
-				self.xMaxExtent = xMaxExtent
+				# No glyph has outlines.
+				minLeftSideBearing = 0
+				minRightSideBearing = 0
+				xMaxExtent = 0
+
+			self.advanceWidthMax = advanceWidthMax
+			self.minLeftSideBearing = minLeftSideBearing
+			self.minRightSideBearing = minRightSideBearing
+			self.xMaxExtent = xMaxExtent
 		else:
 			# XXX CFF recalc...
 			pass
