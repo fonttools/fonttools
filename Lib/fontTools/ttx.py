@@ -90,9 +90,9 @@ def makeOutputFileName(input, outputDir, extension):
 	if outputDir:
 		dir = outputDir
 	output = os.path.join(dir, file + extension)
-	m = numberAddedRE.search(file)
-	if m:
-		file = m.group(1)
+	m = numberAddedRE.split(file)
+	if len(m) > 1:
+		file = m[0]
 	n = 1
 	while os.path.exists(output):
 		output = os.path.join(dir, file + "#" + repr(n) + extension)
