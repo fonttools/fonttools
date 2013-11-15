@@ -63,7 +63,7 @@ class table__h_h_e_a(DefaultTable.DefaultTable):
 				extent = lsb + (g.xMax - g.xMin)
 				xMaxExtent = max(xMaxExtent, extent)
 
-                        if xMaxExtent == -INFINITY:
+			if xMaxExtent == -INFINITY:
 				# No glyph has outlines.
 				minLeftSideBearing = 0
 				minRightSideBearing = 0
