@@ -350,40 +350,40 @@ class Program:
 			try:
 				mnemonic, argBits, argoffset = opcodeDict[op]
 			except KeyError:
-				try:
+				if op in streamOpcodeDict:
 					mnemonic, argBits, argoffset = streamOpcodeDict[op]
-				except KeyError:
+					pushBytes = pushWords = 0
+					if argBits:
+						if mnemonic == "PUSHB":
+							pushBytes = op - argoffset + 1
+						else:
+							pushWords = op - argoffset + 1
+					else:
+						i = i + 1
+						if mnemonic == "NPUSHB":
+							pushBytes = bytecode[i]
+						else:
+							pushWords = bytecode[i]
+					i = i + 1
+					nValues = pushBytes or pushWords
+					assert nValues > 0
+					if nValues == 1:
+						assembly.append("%s[ ]  /* %s value pushed */" % (mnemonic, nValues))
+					else:
+						assembly.append("%s[ ]  /* %s values pushed */" % (mnemonic, nValues))
+					for j in range(pushBytes):
+						value = bytecode[i]
+						assembly.append(`value`)
+						i = i + 1
+					for j in range(pushWords):
+						# cast to signed int16
+						value = (bytecode[i] << 8) | bytecode[i+1]
+						if value >= 0x8000:
+							value = value - 0x10000
+						assembly.append(`value`)
+						i = i + 2
+				else:
 					raise tt_instructions_error, "illegal opcode: 0x%.2x" % op
-				pushBytes = pushWords = 0
-				if argBits:
-					if mnemonic == "PUSHB":
-						pushBytes = op - argoffset + 1
-					else:
-						pushWords = op - argoffset + 1
-				else:
-					i = i + 1
-					if mnemonic == "NPUSHB":
-						pushBytes = bytecode[i]
-					else:
-						pushWords = bytecode[i]
-				i = i + 1
-				nValues = pushBytes or pushWords
-				assert nValues > 0
-				if nValues == 1:
-					assembly.append("%s[ ]  /* %s value pushed */" % (mnemonic, nValues))
-				else:
-					assembly.append("%s[ ]  /* %s values pushed */" % (mnemonic, nValues))
-				for j in range(pushBytes):
-					value = bytecode[i]
-					assembly.append(`value`)
-					i = i + 1
-				for j in range(pushWords):
-					# cast to signed int16
-					value = (bytecode[i] << 8) | bytecode[i+1]
-					if value >= 0x8000:
-						value = value - 0x10000
-					assembly.append(`value`)
-					i = i + 2
 			else:
 				if argBits:
 					assembly.append(mnemonic + "[%s]" % num2binary(op - argoffset, argBits))
