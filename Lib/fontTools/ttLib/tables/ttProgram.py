@@ -161,13 +161,13 @@ def _makeDict(instructionList):
 	mnemonicDict = {}
 	for op, mnemonic, argBits, name, pops, pushes in instructionList:
 		assert _mnemonicPat.match(mnemonic)
-		mnemonicDict[mnemonic] = op, argBits, name
+		mnemonicDict[mnemonic] = op, argBits
 		if argBits:
 			argoffset = op
 			for i in range(1 << argBits):
-				opcodeDict[op+i] = mnemonic, argBits, argoffset, name
+				opcodeDict[op+i] = mnemonic, argBits, argoffset
 		else:
-				opcodeDict[op] = mnemonic, 0, 0, name
+				opcodeDict[op] = mnemonic, 0, 0
 	return opcodeDict, mnemonicDict
 
 streamOpcodeDict, streamMnemonicDict = _makeDict(streamInstructions)
@@ -286,7 +286,7 @@ class Program:
 			
 			arg = strip(arg)
 			if mnemonic not in ("NPUSHB", "NPUSHW", "PUSHB", "PUSHW"):
-				op, argBits, name = mnemonicDict[mnemonic]
+				op, argBits = mnemonicDict[mnemonic]
 				if len(arg) <> argBits:
 					raise tt_instructions_error, "Incorrect number of argument bits (%s[%s])" % (mnemonic, arg)
 				if arg:
@@ -316,12 +316,12 @@ class Program:
 					mnemonic = "PUSHB"
 				nArgs = len(args)
 				if nArgs <= 8:
-					op, argBits, name = streamMnemonicDict[mnemonic]
+					op, argBits = streamMnemonicDict[mnemonic]
 					op = op + nArgs - 1
 					push(op)
 				elif nArgs < 256:
 					mnemonic = "N" + mnemonic
-					op, argBits, name = streamMnemonicDict[mnemonic]
+					op, argBits = streamMnemonicDict[mnemonic]
 					push(op)
 					push(nArgs)
 				else:
@@ -348,10 +348,10 @@ class Program:
 			op = bytecode[i]
 			arg = 0
 			try:
-				mnemonic, argBits, argoffset, name = opcodeDict[op]
+				mnemonic, argBits, argoffset = opcodeDict[op]
 			except KeyError:
 				try:
-					mnemonic, argBits, argoffset, name = streamOpcodeDict[op]
+					mnemonic, argBits, argoffset = streamOpcodeDict[op]
 				except KeyError:
 					raise tt_instructions_error, "illegal opcode: 0x%.2x" % op
 				pushBytes = pushWords = 0
