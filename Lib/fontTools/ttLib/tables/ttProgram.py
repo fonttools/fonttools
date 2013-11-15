@@ -285,7 +285,11 @@ class Program:
 				continue
 			
 			arg = strip(arg)
-			if mnemonic not in ("NPUSHB", "NPUSHW", "PUSHB", "PUSHW"):
+			if mnemonic.startswith("INSTR"):
+				# Unknown instruction
+				op = int(mnemonic[5:])
+				push(op)
+			elif mnemonic not in ("NPUSHB", "NPUSHW", "PUSHB", "PUSHW"):
 				op, argBits = mnemonicDict[mnemonic]
 				if len(arg) <> argBits:
 					raise tt_instructions_error, "Incorrect number of argument bits (%s[%s])" % (mnemonic, arg)
@@ -383,7 +387,8 @@ class Program:
 						assembly.append(`value`)
 						i = i + 2
 				else:
-					raise tt_instructions_error, "illegal opcode: 0x%.2x" % op
+					assembly.append("INSTR%d[ ]" % op)
+					i = i + 1
 			else:
 				if argBits:
 					assembly.append(mnemonic + "[%s]" % num2binary(op - argoffset, argBits))
