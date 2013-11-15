@@ -986,22 +986,29 @@ def collect_features(self):
 def closure_glyphs(self, s):
   s.table = self.table
   feature_indices = self.table.ScriptList.collect_features()
-  lookup_indices = self.table.FeatureList.collect_lookups(feature_indices)
-  while True:
-    orig_glyphs = s.glyphs.copy()
-    for i in lookup_indices:
-      if i >= self.table.LookupList.LookupCount: continue
-      if not self.table.LookupList.Lookup[i]: continue
-      self.table.LookupList.Lookup[i].closure_glyphs(s)
-    if orig_glyphs == s.glyphs:
-      break
+  if self.table.FeatureList:
+    lookup_indices = self.table.FeatureList.collect_lookups(feature_indices)
+  else:
+    lookup_indices = []
+  if self.table.LookupList:
+    while True:
+      orig_glyphs = s.glyphs.copy()
+      for i in lookup_indices:
+        if i >= self.table.LookupList.LookupCount: continue
+        if not self.table.LookupList.Lookup[i]: continue
+        self.table.LookupList.Lookup[i].closure_glyphs(s)
+      if orig_glyphs == s.glyphs:
+        break
   del s.table
 
 @_add_method(ttLib.getTableClass('GSUB'),
              ttLib.getTableClass('GPOS'))
 def subset_glyphs(self, s):
   s.glyphs = s.glyphs_gsubed
-  lookup_indices = self.table.LookupList.subset_glyphs(s)
+  if self.table.LookupList:
+    lookup_indices = self.table.LookupList.subset_glyphs(s)
+  else:
+    lookup_indices = []
   self.subset_lookups(lookup_indices)
   self.prune_lookups()
   return True
@@ -1011,8 +1018,12 @@ def subset_glyphs(self, s):
 def subset_lookups(self, lookup_indices):
   """Retrains specified lookups, then removes empty features, language
      systems, and scripts."""
-  self.table.LookupList.subset_lookups(lookup_indices)
-  feature_indices = self.table.FeatureList.subset_lookups(lookup_indices)
+  if self.table.LookupList:
+    self.table.LookupList.subset_lookups(lookup_indices)
+  if self.table.FeatureList:
+    feature_indices = self.table.FeatureList.subset_lookups(lookup_indices)
+  else:
+    feature_indices = []
   self.table.ScriptList.subset_features(feature_indices)
 
 @_add_method(ttLib.getTableClass('GSUB'),
@@ -1020,17 +1031,26 @@ def subset_lookups(self, lookup_indices):
 def prune_lookups(self):
   "Remove unreferenced lookups"
   feature_indices = self.table.ScriptList.collect_features()
-  lookup_indices = self.table.FeatureList.collect_lookups(feature_indices)
-  lookup_indices = self.table.LookupList.closure_lookups(lookup_indices)
+  if self.table.FeatureList:
+    lookup_indices = self.table.FeatureList.collect_lookups(feature_indices)
+  else:
+    lookup_indices = []
+  if self.table.LookupList:
+    lookup_indices = self.table.LookupList.closure_lookups(lookup_indices)
+  else:
+    lookup_indices = []
   self.subset_lookups(lookup_indices)
 
 @_add_method(ttLib.getTableClass('GSUB'),
              ttLib.getTableClass('GPOS'))
 def subset_feature_tags(self, feature_tags):
-  feature_indices = [i for i,f in
-                     enumerate(self.table.FeatureList.FeatureRecord)
-                     if f.FeatureTag in feature_tags]
-  self.table.FeatureList.subset_features(feature_indices)
+  if self.table.FeatureList:
+    feature_indices = [i for i,f in
+                       enumerate(self.table.FeatureList.FeatureRecord)
+                       if f.FeatureTag in feature_tags]
+    self.table.FeatureList.subset_features(feature_indices)
+  else:
+    feature_indices = []
   self.table.ScriptList.subset_features(feature_indices)
 
 @_add_method(ttLib.getTableClass('GSUB'),
@@ -1039,13 +1059,15 @@ def prune_pre_subset(self, options):
   if '*' not in options.layout_features:
     self.subset_feature_tags(options.layout_features)
   self.prune_lookups()
-  self.table.LookupList.prune_pre_subset(options);
+  if self.table.LookupList:
+    self.table.LookupList.prune_pre_subset(options);
   return True
 
 @_add_method(ttLib.getTableClass('GSUB'),
              ttLib.getTableClass('GPOS'))
 def prune_post_subset(self, options):
-  self.table.LookupList.prune_post_subset(options);
+  if self.table.LookupList:
+    self.table.LookupList.prune_post_subset(options);
   return True
 
 @_add_method(ttLib.getTableClass('GDEF'))
