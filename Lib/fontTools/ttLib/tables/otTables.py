@@ -39,12 +39,18 @@ class Coverage(FormatSwitchingBaseTable):
 					(r.StartCoverageIndex, len(glyphs))
 				start = r.Start
 				end = r.End
-				startID = font.getGlyphID(start)
-				endID = font.getGlyphID(end)
+				try:
+					startID = font.getGlyphID(start, requireReal=1)
+				except KeyError:
+					continue
+				try:
+					endID = font.getGlyphID(end, requireReal=1)
+				except KeyError:
+					endID = len(glyphOrder)
 				glyphs.append(start)
 				rangeList = [glyphOrder[glyphID] for glyphID in range(startID + 1, endID) ]
 				glyphs += rangeList
-				if start != end:
+				if start != end and endID < len(glyphOrder):
 					glyphs.append(end)
 		else:
 			assert 0, "unknown format: %s" % self.Format
