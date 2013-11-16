@@ -7,6 +7,7 @@ converter objects from otConverters.py.
 import operator
 from otBase import BaseTable, FormatSwitchingBaseTable
 from types import TupleType
+import warnings
 
 
 class LookupOrder(BaseTable):
@@ -42,10 +43,12 @@ class Coverage(FormatSwitchingBaseTable):
 				try:
 					startID = font.getGlyphID(start, requireReal=1)
 				except KeyError:
+					warnings.warn("Coverage table has start glyph ID out of range: %s." % start)
 					continue
 				try:
 					endID = font.getGlyphID(end, requireReal=1)
 				except KeyError:
+					warnings.warn("Coverage table has end glyph ID out of range: %s." % end)
 					endID = len(glyphOrder)
 				glyphs.append(start)
 				rangeList = [glyphOrder[glyphID] for glyphID in range(startID + 1, endID) ]
