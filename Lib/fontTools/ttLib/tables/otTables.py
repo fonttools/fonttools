@@ -35,6 +35,14 @@ class Coverage(FormatSwitchingBaseTable):
 			glyphs = self.glyphs = []
 			ranges = rawTable["RangeRecord"]
 			glyphOrder = font.getGlyphOrder()
+			# Some SIL fonts have coverage entries that don't have sorted
+			# StartCoverageIndex.  If it is so, fixup and warn.  We undo
+			# this when writing font out.
+			sorted_ranges = sorted(ranges, cmp=lambda a,b: cmp(a.StartCoverageIndex,b.StartCoverageIndex))
+			if ranges != sorted_ranges:
+				warnings.warn("GSUB/GPOS Coverage is not sorted by glyph ids.")
+				ranges = sorted_ranges
+			del sorted_ranges
 			for r in ranges:
 				assert r.StartCoverageIndex == len(glyphs), \
 					(r.StartCoverageIndex, len(glyphs))
@@ -68,6 +76,7 @@ class Coverage(FormatSwitchingBaseTable):
 		if glyphs:
 			# find out whether Format 2 is more compact or not
 			glyphIDs = [getGlyphID(glyphName) for glyphName in glyphs ]
+			brokenOrder = sorted(glyphIDs) != glyphIDs
 			
 			last = glyphIDs[0]
 			ranges = [[last]]
@@ -78,17 +87,23 @@ class Coverage(FormatSwitchingBaseTable):
 				last = glyphID
 			ranges[-1].append(last)
 			
-			if len(ranges) * 3 < len(glyphs):  # 3 words vs. 1 word
+			if brokenOrder or len(ranges) * 3 < len(glyphs):  # 3 words vs. 1 word
 				# Format 2 is more compact
 				index = 0
 				for i in range(len(ranges)):
 					start, end = ranges[i]
 					r = RangeRecord()
+					r.StartID = start
 					r.Start = font.getGlyphName(start)
 					r.End = font.getGlyphName(end)
 					r.StartCoverageIndex = index
 					ranges[i] = r
 					index = index + end - start + 1
+				if brokenOrder:
+					warnings.warn("GSUB/GPOS Coverage is not sorted by glyph ids.")
+					ranges.sort(cmp=lambda a,b: cmp(a.StartID,b.StartID))
+				for r in ranges:
+					del r.StartID
 				format = 2
 				rawTable = {"RangeRecord": ranges}
 			#else:
