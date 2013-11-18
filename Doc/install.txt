@@ -68,9 +68,9 @@ If you want to follow the development of FontTools closely, or would like to
 contribute, you can also subscribe to the fonttools-checkins mailing list.
 
 
-Anonymous SVN-access
+Anonymous VCS access
 
-The FontTools sources are also accessible through SVN, see:
+The FontTools sources are also accessible here:
   http://sourceforge.net/projects/fonttools/
 Let me know if you'd like to become a co-developer.
 
