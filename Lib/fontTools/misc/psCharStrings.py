@@ -242,7 +242,7 @@ class T2CharString(ByteCodeBase):
 		self.bytecode = bytecode
 		self.program = program
 		self.private = private
-		self.globalSubrs = globalSubrs
+		self.globalSubrs = globalSubrs if globalSubrs is not None else []
 	
 	def __repr__(self):
 		if self.bytecode is None:
