@@ -80,12 +80,19 @@ OS2_format_2_addition =  OS2_format_1_addition + """
 	usMaxContex:        H
 """
 
+OS2_format_5_addition =  OS2_format_2_addition + """
+	usLowerOpticalPointSize:    H
+	usUpperOpticalPointSize:    H
+"""
+
 bigendian = "	>	# big endian\n"
 
 OS2_format_1 = OS2_format_0 + OS2_format_1_addition
 OS2_format_2 = OS2_format_0 + OS2_format_2_addition
+OS2_format_5 = OS2_format_0 + OS2_format_5_addition
 OS2_format_1_addition = bigendian + OS2_format_1_addition
 OS2_format_2_addition = bigendian + OS2_format_2_addition
+OS2_format_5_addition = bigendian + OS2_format_5_addition
 
 
 class table_O_S_2f_2(DefaultTable.DefaultTable):
@@ -102,6 +109,8 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 		elif len(data) == sstruct.calcsize(OS2_format_2_addition):
 			if self.version not in (2, 3, 4):
 				self.version = 1
+		elif len(data) == sstruct.calcsize(OS2_format_5_addition):
+			self.version = 5
 		else:
 			from fontTools import ttLib
 			raise ttLib.TTLibError, "unknown format for OS/2 table (incorrect length): version %s" % (self.version, len(data))
@@ -109,6 +118,8 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 			sstruct.unpack2(OS2_format_1_addition, data, self)
 		elif self.version in (2, 3, 4):
 			sstruct.unpack2(OS2_format_2_addition, data, self)
+		elif self.version == 5:
+			sstruct.unpack2(OS2_format_5_addition, data, self)
 		elif self.version <> 0:
 			from fontTools import ttLib
 			raise ttLib.TTLibError, "unknown format for OS/2 table: version %s" % self.version
@@ -123,6 +134,8 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 			data = sstruct.pack(OS2_format_1, self)
 		elif self.version in (2, 3, 4):
 			data = sstruct.pack(OS2_format_2, self)
+		elif self.version == 5:
+			data = sstruct.pack(OS2_format_5, self)
 		else:
 			from fontTools import ttLib
 			raise ttLib.TTLibError, "unknown format for OS/2 table: version %s" % self.version
@@ -134,6 +147,8 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 			format = OS2_format_1
 		elif self.version in (2, 3, 4):
 			format = OS2_format_2
+		elif self.version == 5:
+			format = OS2_format_5
 		else:
 			format = OS2_format_0
 		formatstring, names, fixes = sstruct.getformat(format)
