@@ -300,8 +300,8 @@ class Program:
 					push(op)
 			else:
 				args = []
+				pos = skipWhite(assembly, pos)
 				while pos < lenAssembly:
-					pos = skipWhite(assembly, pos)
 					m = _tokenRE.match(assembly, pos)
 					if m is None:
 						raise tt_instructions_error, "Syntax error in TT program (%s)" % assembly[pos:pos+15]
@@ -309,6 +309,7 @@ class Program:
 					if number is None and comment is None:
 						break
 					pos = m.regs[0][1]
+					pos = skipWhite(assembly, pos)
 					if comment is not None:
 						continue
 					args.append(int(number))
