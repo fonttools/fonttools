@@ -514,7 +514,7 @@ class TableStack:
 		raise KeyError, name
 
 
-class BaseTable:
+class BaseTable(object):
 	def __init__(self):
 		self.compileStatus = 0 # 0 means table was created
 									# 1 means the table.read() function was called by a table which is subject
