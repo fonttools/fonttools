@@ -583,8 +583,9 @@ def closure_glyphs(self, s, cur_glyphs=None):
   if self.Format == 1:
     ContextData = c.ContextData(self)
     rss = getattr(self, c.RuleSet)
+    rssCount = getattr(self, c.RuleSetCount)
     for i in indices:
-      if not rss[i]: continue
+      if i >= rssCount or not rss[i]: continue
       for r in getattr(rss[i], c.Rule):
         if not r: continue
         if all(all(c.Intersect(s.glyphs, cd, k) for k in klist)
@@ -608,8 +609,9 @@ def closure_glyphs(self, s, cur_glyphs=None):
     indices = ClassDef.intersect(cur_glyphs)
     ContextData = c.ContextData(self)
     rss = getattr(self, c.RuleSet)
+    rssCount = getattr(self, c.RuleSetCount)
     for i in indices:
-      if not rss[i]: continue
+      if i >= rssCount or not rss[i]: continue
       for r in getattr(rss[i], c.Rule):
         if not r: continue
         if all(all(c.Intersect(s.glyphs, cd, k) for k in klist)
