@@ -1099,8 +1099,10 @@ def subset_glyphs(self, s):
       table.GlyphClassDef = None
   if table.AttachList:
     indices = table.AttachList.Coverage.subset(glyphs)
+    GlyphCount = table.AttachList.GlyphCount
     table.AttachList.AttachPoint = [table.AttachList.AttachPoint[i]
-                                    for i in indices]
+                                    for i in indices
+                                    if i < GlyphCount]
     table.AttachList.GlyphCount = len(table.AttachList.AttachPoint)
     if not table.AttachList.GlyphCount:
       table.AttachList = None
