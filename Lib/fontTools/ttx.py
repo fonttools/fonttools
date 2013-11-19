@@ -70,7 +70,7 @@ import sys
 import os
 import getopt
 import re
-from fontTools.ttLib import TTFont
+from fontTools.ttLib import TTFont, TTLibError
 from fontTools.ttLib.tables.otBase import OTLOffsetOverflowError
 from fontTools.ttLib.tables.otTables import fixLookupOverFlows, fixSubTableOverFlows
 from fontTools.misc.macCreatorType import getMacCreatorAndType
@@ -335,6 +335,8 @@ def main(args):
 			waitForKeyPress()
 		else:
 			raise
+	except TTLibError, e:
+		print "Error:",e
 	except:
 		if sys.platform == "win32":
 			import traceback
