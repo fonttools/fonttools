@@ -1,5 +1,6 @@
 from types import TupleType
 from fontTools.misc.textTools import safeEval
+from otBase import TableStack
 
 
 def buildConverters(tableSpec, tableNamespace):
@@ -169,7 +170,16 @@ class Table(Struct):
 			return None
 		subReader = reader.getSubReader(offset)
 		table = self.tableClass()
-		table.decompile(subReader, font, tableStack)
+		# For now, we lazy-decompile all tables.  Perhaps we should
+		# use a more sophisticated heuristic here.
+		if 1:
+			# Lazy decompile
+			table.reader = subReader
+			table.font = font
+			table.compileStatus = 1
+			table.tableStack = TableStack(tableStack)
+		else:
+			table.decompile(subReader, font, tableStack)
 		return table
 	
 	def write(self, writer, font, tableStack, value, repeatIndex=None):
@@ -206,6 +216,7 @@ class ExtSubTable(Table):
 		table.reader = subReader
 		table.font = font
 		table.compileStatus = 1
+		table.tableStack = TableStack(tableStack)
 		table.start = table.reader.offset
 		return table
 	
