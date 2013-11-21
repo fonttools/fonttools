@@ -172,7 +172,7 @@ class Table(Struct):
 		table = self.tableClass()
 		# For now, we lazy-decompile all tables.  Perhaps we should
 		# use a more sophisticated heuristic here.
-		if 1:
+		if True:
 			# Lazy decompile
 			table.reader = subReader
 			table.font = font
