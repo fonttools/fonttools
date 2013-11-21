@@ -491,8 +491,8 @@ def packULong(value):
 class TableStack:
 	"""A stack of table dicts, working as a stack of namespaces so we can
 	retrieve values from (and store values to) tables higher up the stack."""
-	def __init__(self):
-		self.stack = []
+	def __init__(self, other=None):
+		self.stack = other.stack[:] if other else []
 	def push(self, table):
 		self.stack.append(table)
 	def pop(self):
@@ -514,7 +514,7 @@ class TableStack:
 		raise KeyError, name
 
 
-class BaseTable:
+class BaseTable(object):
 	def __init__(self):
 		self.compileStatus = 0 # 0 means table was created
 									# 1 means the table.read() function was called by a table which is subject
@@ -537,9 +537,7 @@ class BaseTable:
 			# this guards against self.decompile NOT setting compileStatus to other than 1.
 			raise AttributeError, attr 
 		if self.compileStatus == 1:
-			# table.read() has been called, but table has not yet been decompiled
-			# This happens only for extension tables.
-			self.decompile(self.reader, self.font)
+			self.ensureDecompiled()
 			val = getattr(self, attr)
 			self.recurse -=1
 			return val
@@ -580,6 +578,12 @@ class BaseTable:
 		tableStack.pop()
 		self.postRead(table, font)
 		del self.__rawTable  # succeeded, get rid of debugging info
+
+	def ensureDecompiled(self):
+		if self.compileStatus != 1:
+			return
+		self.decompile(self.reader, self.font, self.tableStack)
+		del self.reader, self.font, self.tableStack
 
 	def preCompile(self):
 		pass # used only by the LookupList class
@@ -626,6 +630,7 @@ class BaseTable:
 		self.__dict__.update(table)
 	
 	def preWrite(self, font):
+		self.ensureDecompiled()
 		return self.__dict__.copy()
 	
 	def toXML(self, xmlWriter, font, attrs=None):
@@ -672,6 +677,8 @@ class BaseTable:
 	def __cmp__(self, other):
 		if type(self) != type(other): return cmp(type(self), type(other))
 		if self.__class__ != other.__class__: return cmp(self.__class__, other.__class__)
+
+		self.ensureDecompiled()
 
 		return cmp(self.__dict__, other.__dict__)
 
