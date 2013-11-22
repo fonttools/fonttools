@@ -159,7 +159,9 @@ class Struct(BaseConverter):
 
 class Table(Struct):
 	
-	def read(self, reader, font, tableStack):
+	def read(self, reader, font, tableStack, lazy=True):
+		# For now, we lazy-decompile all tables.  Perhaps we should
+		# use a more sophisticated heuristic here.
 		offset = reader.readUShort()
 		if offset == 0:
 			return None
@@ -168,11 +170,9 @@ class Table(Struct):
 			print "*** Warning: offset is not 0, yet suspiciously low (%s). table: %s" \
 					% (offset, self.tableClass.__name__)
 			return None
-		subReader = reader.getSubReader(offset)
+		subReader = reader.getSubReader(offset, persistent=lazy)
 		table = self.tableClass()
-		# For now, we lazy-decompile all tables.  Perhaps we should
-		# use a more sophisticated heuristic here.
-		if True:
+		if lazy:
 			# Lazy decompile
 			table.reader = subReader
 			table.font = font

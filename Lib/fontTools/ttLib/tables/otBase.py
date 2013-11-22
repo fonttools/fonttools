@@ -98,16 +98,19 @@ class OTTableReader:
 		self.valueFormat = valueFormat
 		self.cachingStats = cachingStats
 	
-	def getSubReader(self, offset):
+	def getSubReader(self, offset, persistent=False):
 		offset = self.offset + offset
 		if self.cachingStats is not None:
 			try:
 				self.cachingStats[offset] = self.cachingStats[offset] + 1
 			except KeyError:
 				self.cachingStats[offset] = 1
-		
+		valueFormat = self.valueFormat
+		if persistent:
+			valueFormat = tuple(ValueRecordFactory(v) for v in valueFormat)
+
 		subReader = self.__class__(self.data, self.tableType, offset,
-			self.valueFormat, self.cachingStats)
+			valueFormat, self.cachingStats)
 		return subReader
 	
 	def readUShort(self):
@@ -743,6 +746,9 @@ valueRecordFormatDict = _buildDict()
 class ValueRecordFactory:
 	
 	"""Given a format code, this object convert ValueRecords."""
+
+	def __init__(self, other=None):
+		self.format = other.format if other else None
 	
 	def setFormat(self, valueFormat):
 		format = []
