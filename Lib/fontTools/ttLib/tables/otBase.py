@@ -31,12 +31,12 @@ class BaseTTXConverter(DefaultTable):
 	
 	def decompile(self, data, font):
 		import otTables
-		cachingStats = None
+		cachingStats = None if True else {}
 		reader = OTTableReader(data, self.tableTag, cachingStats=cachingStats)
 		tableClass = getattr(otTables, self.tableTag)
 		self.table = tableClass()
 		self.table.decompile(reader, font)
-		if 0:
+		if cachingStats:
 			stats = [(v, k) for k, v in cachingStats.items()]
 			stats.sort()
 			stats.reverse()

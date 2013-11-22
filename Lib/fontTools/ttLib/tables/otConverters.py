@@ -173,7 +173,6 @@ class Table(Struct):
 		subReader = reader.getSubReader(offset, persistent=lazy)
 		table = self.tableClass()
 		if lazy:
-			# Lazy decompile
 			table.reader = subReader
 			table.font = font
 			table.compileStatus = 1
@@ -207,17 +206,20 @@ class ExtSubTable(Table):
 		tableClass = lookupTypes[lookupType]
 		return ExtSubTable(self.name, self.repeat, self.repeatOffset, tableClass)
 	
-	def read(self, reader, font, tableStack):
+	def read(self, reader, font, tableStack, lazy=True):
 		offset = reader.readULong()
 		if offset == 0:
 			return None
 		subReader = reader.getSubReader(offset)
 		table = self.tableClass()
-		table.reader = subReader
-		table.font = font
-		table.compileStatus = 1
-		table.tableStack = TableStack(tableStack)
-		table.start = table.reader.offset
+		table.start = subReader.offset
+		if lazy:
+			table.reader = subReader
+			table.font = font
+			table.compileStatus = 1
+			table.tableStack = TableStack(tableStack)
+		else:
+			table.decompile(subReader, font, tableStack)
 		return table
 	
 	def write(self, writer, font, tableStack, value, repeatIndex=None):
