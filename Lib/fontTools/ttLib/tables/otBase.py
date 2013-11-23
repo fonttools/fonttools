@@ -94,7 +94,7 @@ class OTTableReader:
 		self.pos = offset
 		self.tableType = tableType
 		if valueFormat is None:
-			valueFormat = (ValueRecordFactory(), ValueRecordFactory())
+			valueFormat = [None, None]
 		self.valueFormat = valueFormat
 		self.cachingStats = cachingStats
 	
@@ -105,12 +105,9 @@ class OTTableReader:
 				self.cachingStats[offset] = self.cachingStats[offset] + 1
 			except KeyError:
 				self.cachingStats[offset] = 1
-		valueFormat = self.valueFormat
-		if persistent:
-			valueFormat = tuple(ValueRecordFactory(v) for v in valueFormat)
 
 		subReader = self.__class__(self.data, self.tableType, offset,
-			valueFormat, self.cachingStats)
+			self.valueFormat, self.cachingStats)
 		return subReader
 	
 	def readUShort(self):
@@ -161,7 +158,7 @@ class OTTableReader:
 		return values
 	
 	def setValueFormat(self, format, which):
-		self.valueFormat[which].setFormat(format)
+		self.valueFormat[which] = ValueRecordFactory(format)
 	
 	def readValueRecord(self, font, which):
 		return self.valueFormat[which].readValueRecord(self, font)
@@ -175,7 +172,7 @@ class OTTableWriter:
 		self.items = []
 		self.tableType = tableType
 		if valueFormat is None:
-			valueFormat = ValueRecordFactory(), ValueRecordFactory()
+			valueFormat = [None, None]
 		self.valueFormat = valueFormat
 		self.pos = None
 	
@@ -432,7 +429,7 @@ class OTTableWriter:
 		self.items.append(data)
 	
 	def setValueFormat(self, format, which):
-		self.valueFormat[which].setFormat(format)
+		self.valueFormat[which] = ValueRecordFactory(format)
 	
 	def writeValueRecord(self, value, font, which):
 		return self.valueFormat[which].writeValueRecord(self, font, value)
@@ -745,10 +742,7 @@ class ValueRecordFactory:
 	
 	"""Given a format code, this object convert ValueRecords."""
 
-	def __init__(self, other=None):
-		self.format = other.format if other else None
-	
-	def setFormat(self, valueFormat):
+	def __init__(self, valueFormat=0):
 		format = []
 		for mask, name, isDevice, signed in valueRecordFormat:
 			if valueFormat & mask:
