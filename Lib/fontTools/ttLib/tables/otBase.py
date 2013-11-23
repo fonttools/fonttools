@@ -31,12 +31,12 @@ class BaseTTXConverter(DefaultTable):
 	
 	def decompile(self, data, font):
 		import otTables
-		cachingStats = None
+		cachingStats = None if True else {}
 		reader = OTTableReader(data, self.tableTag, cachingStats=cachingStats)
 		tableClass = getattr(otTables, self.tableTag)
 		self.table = tableClass()
 		self.table.decompile(reader, font)
-		if 0:
+		if cachingStats:
 			stats = [(v, k) for k, v in cachingStats.items()]
 			stats.sort()
 			stats.reverse()
@@ -84,9 +84,11 @@ class BaseTTXConverter(DefaultTable):
 		self.table.fromXML((name, attrs, content), font)
 
 
-class OTTableReader:
+class OTTableReader(object):
 	
 	"""Helper class to retrieve data from an OpenType table."""
+
+	__slots__ = ('data', 'offset', 'pos', 'tableType', 'valueFormat', 'cachingStats')
 	
 	def __init__(self, data, tableType, offset=0, valueFormat=None, cachingStats=None):
 		self.data = data
@@ -94,18 +96,18 @@ class OTTableReader:
 		self.pos = offset
 		self.tableType = tableType
 		if valueFormat is None:
-			valueFormat = (ValueRecordFactory(), ValueRecordFactory())
+			valueFormat = [None, None]
 		self.valueFormat = valueFormat
 		self.cachingStats = cachingStats
 	
-	def getSubReader(self, offset):
+	def getSubReader(self, offset, persistent=False):
 		offset = self.offset + offset
 		if self.cachingStats is not None:
 			try:
 				self.cachingStats[offset] = self.cachingStats[offset] + 1
 			except KeyError:
 				self.cachingStats[offset] = 1
-		
+
 		subReader = self.__class__(self.data, self.tableType, offset,
 			self.valueFormat, self.cachingStats)
 		return subReader
@@ -158,13 +160,13 @@ class OTTableReader:
 		return values
 	
 	def setValueFormat(self, format, which):
-		self.valueFormat[which].setFormat(format)
+		self.valueFormat[which] = ValueRecordFactory(format)
 	
 	def readValueRecord(self, font, which):
 		return self.valueFormat[which].readValueRecord(self, font)
 
 
-class OTTableWriter:
+class OTTableWriter(object):
 	
 	"""Helper class to gather and assemble data for OpenType tables."""
 	
@@ -172,7 +174,7 @@ class OTTableWriter:
 		self.items = []
 		self.tableType = tableType
 		if valueFormat is None:
-			valueFormat = ValueRecordFactory(), ValueRecordFactory()
+			valueFormat = [None, None]
 		self.valueFormat = valueFormat
 		self.pos = None
 	
@@ -429,7 +431,7 @@ class OTTableWriter:
 		self.items.append(data)
 	
 	def setValueFormat(self, format, which):
-		self.valueFormat[which].setFormat(format)
+		self.valueFormat[which] = ValueRecordFactory(format)
 	
 	def writeValueRecord(self, value, font, which):
 		return self.valueFormat[which].writeValueRecord(self, font, value)
@@ -487,33 +489,6 @@ def packULong(value):
 	return struct.pack(">L", value)
 
 
-
-class TableStack:
-	"""A stack of table dicts, working as a stack of namespaces so we can
-	retrieve values from (and store values to) tables higher up the stack."""
-	def __init__(self, other=None):
-		self.stack = other.stack[:] if other else []
-	def push(self, table):
-		self.stack.append(table)
-	def pop(self):
-		self.stack.pop()
-	def getTop(self):
-		return self.stack[-1]
-	def getValue(self, name):
-		return self.__findTable(name)[name]
-	def storeValue(self, name, value):
-		table = self.__findTable(name)
-		if table[name] is None:
-			table[name] = value
-		else:
-			assert table[name] == value, (table[name], value)
-	def __findTable(self, name):
-		for table in reversed(self.stack):
-			if table.has_key(name):
-				return table
-		raise KeyError, name
-
-
 class BaseTable(object):
 	def __init__(self):
 		self.compileStatus = 0 # 0 means table was created
@@ -553,15 +528,16 @@ class BaseTable(object):
 	def getConverterByName(self, name):
 		return self.convertersByName[name]
 	
-	def decompile(self, reader, font, tableStack=None):
+	def decompile(self, reader, font, countVars=None):
 		self.compileStatus = 2 # table has been decompiled.
-		if tableStack is None:
-			tableStack = TableStack()
+		if countVars is None:
+			countVars = {}
 		self.readFormat(reader)
+		counts = []
 		table = {}
 		self.__rawTable = table  # for debugging
-		tableStack.push(table)
-		for conv in self.getConverters():
+		converters = self.getConverters()
+		for conv in converters:
 			if conv.name == "SubTable":
 				conv = conv.getConverter(reader.tableType,
 						table["LookupType"])
@@ -570,55 +546,79 @@ class BaseTable(object):
 						table["ExtensionLookupType"])
 			if conv.repeat:
 				l = []
-				for i in range(tableStack.getValue(conv.repeat) + conv.repeatOffset):
-					l.append(conv.read(reader, font, tableStack))
+				for i in range(countVars[conv.repeat] + conv.repeatOffset):
+					l.append(conv.read(reader, font, countVars))
 				table[conv.name] = l
+				if conv.repeat in counts:
+					del countVars[conv.repeat]
+					counts.remove(conv.repeat)
+
 			else:
-				table[conv.name] = conv.read(reader, font, tableStack)
-		tableStack.pop()
+				table[conv.name] = conv.read(reader, font, countVars)
+				if conv.isCount:
+					counts.append(conv.name)
+					countVars[conv.name] = table[conv.name]
+
+		for count in counts:
+			del countVars[count]
+
 		self.postRead(table, font)
+
 		del self.__rawTable  # succeeded, get rid of debugging info
 
 	def ensureDecompiled(self):
 		if self.compileStatus != 1:
 			return
-		self.decompile(self.reader, self.font, self.tableStack)
-		del self.reader, self.font, self.tableStack
+		self.decompile(self.reader, self.font, self.countVars)
+		del self.reader, self.font, self.countVars
 
 	def preCompile(self):
 		pass # used only by the LookupList class
 
-	def compile(self, writer, font, tableStack=None):
-		if tableStack is None:
-			tableStack = TableStack()
+	def compile(self, writer, font, countVars=None):
+		if countVars is None:
+			countVars = {}
+		counts = []
 		table = self.preWrite(font)
 
 		if hasattr(self, 'sortCoverageLast'):
 			writer.sortCoverageLast = 1
 
 		self.writeFormat(writer)
-		tableStack.push(table)
 		for conv in self.getConverters():
 			value = table.get(conv.name)
 			if conv.repeat:
 				if value is None:
 					value = []
-				tableStack.storeValue(conv.repeat, len(value) - conv.repeatOffset)
+				countVars[conv.repeat](len(value) - conv.repeatOffset)
 				for i in range(len(value)):
-					conv.write(writer, font, tableStack, value[i], i)
+					conv.write(writer, font, countVars, value[i], i)
+				if conv.repeat in counts:
+					del countVars[conv.repeat]
+					counts.remove(conv.repeat)
 			elif conv.isCount:
 				# Special-case Count values.
 				# Assumption: a Count field will *always* precede
 				# the actual array.
 				# We need a default value, as it may be set later by a nested
-				# table. TableStack.storeValue() will then find it here.
+				# table. We will later store it here.
 				table[conv.name] = None
 				# We add a reference: by the time the data is assembled
 				# the Count value will be filled in.
-				writer.writeCountReference(table, conv.name)
+				name = conv.name
+				writer.writeCountReference(table, name)
+				counts.append(name)
+				def storeValue(value):
+					if table[name] is None:
+						table[name] = value
+					else:
+						assert table[name] == value, (table[name], value)
+				countVars[name] = storeValue
 			else:
-				conv.write(writer, font, tableStack, value)
-		tableStack.pop()
+				conv.write(writer, font, countVars, value)
+
+		for count in counts:
+			del countVars[count]
 	
 	def readFormat(self, reader):
 		pass
@@ -743,8 +743,8 @@ valueRecordFormatDict = _buildDict()
 class ValueRecordFactory:
 	
 	"""Given a format code, this object convert ValueRecords."""
-	
-	def setFormat(self, valueFormat):
+
+	def __init__(self, valueFormat=0):
 		format = []
 		for mask, name, isDevice, signed in valueRecordFormat:
 			if valueFormat & mask:
