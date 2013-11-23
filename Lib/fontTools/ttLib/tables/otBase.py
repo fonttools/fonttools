@@ -84,9 +84,11 @@ class BaseTTXConverter(DefaultTable):
 		self.table.fromXML((name, attrs, content), font)
 
 
-class OTTableReader:
+class OTTableReader(object):
 	
 	"""Helper class to retrieve data from an OpenType table."""
+
+	__slots__ = ('data', 'offset', 'pos', 'tableType', 'valueFormat', 'cachingStats')
 	
 	def __init__(self, data, tableType, offset=0, valueFormat=None, cachingStats=None):
 		self.data = data
@@ -164,7 +166,7 @@ class OTTableReader:
 		return self.valueFormat[which].readValueRecord(self, font)
 
 
-class OTTableWriter:
+class OTTableWriter(object):
 	
 	"""Helper class to gather and assemble data for OpenType tables."""
 	
