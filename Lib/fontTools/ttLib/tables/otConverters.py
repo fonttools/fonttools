@@ -76,7 +76,7 @@ class SimpleValue(BaseConverter):
 
 class IntValue(SimpleValue):
 	def xmlRead(self, attrs, content, font):
-		return int(attrs["value"])
+		return int(attrs["value"], 0)
 
 class Long(IntValue):
 	def read(self, reader, font, countVars):
