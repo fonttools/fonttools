@@ -608,12 +608,14 @@ class BaseTable(object):
 				name = conv.name
 				writer.writeCountReference(table, name)
 				counts.append(name)
-				def storeValue(value):
-					if table[name] is None:
-						table[name] = value
-					else:
-						assert table[name] == value, (table[name], value)
-				countVars[name] = storeValue
+				def storeValueFactory(table, name):
+					def storeValue(value):
+						if table[name] is None:
+							table[name] = value
+						else:
+							assert table[name] == value, (table[name], value)
+					return storeValue
+				countVars[name] = storeValueFactory(table, name)
 			else:
 				conv.write(writer, font, countVars, value)
 
@@ -744,7 +746,7 @@ class ValueRecordFactory:
 	
 	"""Given a format code, this object convert ValueRecords."""
 
-	def __init__(self, valueFormat=0):
+	def __init__(self, valueFormat):
 		format = []
 		for mask, name, isDevice, signed in valueRecordFormat:
 			if valueFormat & mask:
