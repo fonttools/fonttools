@@ -330,7 +330,6 @@ converterMapping = {
 	# type         class
 	"int16":       Short,
 	"uint16":      UShort,
-	"ULONG":       Long,
 	"Fixed":       Fixed,
 	"Tag":         Tag,
 	"GlyphID":     GlyphID,
