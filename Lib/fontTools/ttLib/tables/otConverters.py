@@ -46,7 +46,6 @@ class BaseConverter:
 		self.repeatOffset = repeatOffset
 		self.tableClass = tableClass
 		self.isCount = name.endswith("Count")
-		self.isSize = name.endswith("Size") or name=="DeltaFormat"
 	
 	def read(self, reader, font, tableDict):
 		"""Read a value from the reader."""
@@ -283,9 +282,9 @@ class ValueRecord(ValueFormat):
 class DeltaValue(BaseConverter):
 	
 	def read(self, reader, font, tableDict):
-		StartSize = reader.getCount("StartSize")
-		EndSize = reader.getCount("EndSize")
-		DeltaFormat = reader.getCount("DeltaFormat")
+		StartSize = tableDict["StartSize"]
+		EndSize = tableDict["EndSize"]
+		DeltaFormat = tableDict["DeltaFormat"]
 		assert DeltaFormat in (1, 2, 3), "illegal DeltaFormat"
 		nItems = EndSize - StartSize + 1
 		nBits = 1 << DeltaFormat
@@ -306,9 +305,9 @@ class DeltaValue(BaseConverter):
 		return DeltaValue
 	
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
-		StartSize = writer.getCount("StartSize")
-		EndSize = writer.getCount("EndSize")
-		DeltaFormat = writer.getCount("DeltaFormat")
+		StartSize = tableDict["StartSize"]
+		EndSize = tableDict["EndSize"]
+		DeltaFormat = tableDict["DeltaFormat"]
 		DeltaValue = value
 		assert DeltaFormat in (1, 2, 3), "illegal DeltaFormat"
 		nItems = EndSize - StartSize + 1

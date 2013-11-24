@@ -574,7 +574,7 @@ class BaseTable(object):
 
 			else:
 				table[conv.name] = conv.read(reader, font, table)
-				if conv.isCount or conv.isSize:
+				if conv.isCount:
 					reader.setCount(conv.name, table[conv.name])
 
 		self.postRead(table, font)
@@ -617,8 +617,6 @@ class BaseTable(object):
 				writer.writeCountReference(table, conv.name)
 			else:
 				conv.write(writer, font, table, value)
-				if conv.isSize:
-					writer.setCount(conv.name, value)
 	
 	def readFormat(self, reader):
 		pass
