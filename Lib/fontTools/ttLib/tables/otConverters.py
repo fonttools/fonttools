@@ -12,9 +12,6 @@ def buildConverters(tableSpec, tableNamespace):
 		if name.startswith("ValueFormat"):
 			assert tp == "uint16"
 			converterClass = ValueFormat
-		elif name == "DeltaValue":
-			assert tp == "uint16"
-			converterClass = DeltaValue
 		elif name.endswith("Count"):
 			assert tp == "uint16"
 			converterClass = Count
@@ -354,5 +351,6 @@ converterMapping = {
 	"Offset":      Table,
 	"LOffset":     ExtSubTable,
 	"ValueRecord": ValueRecord,
+	"DeltaValue":  DeltaValue,
 }
 
