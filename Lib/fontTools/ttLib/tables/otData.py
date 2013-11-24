@@ -110,7 +110,7 @@ otData = [
 	#
 
 	('GPOS', [
-		('Fixed', 'Version', None, None, 'Version of the GPOS table-initially = 0x00010000'),
+		('Version', 'Version', None, None, 'Version of the GPOS table-initially = 0x00010000'),
 		('Offset', 'ScriptList', None, None, 'Offset to ScriptList table-from beginning of GPOS table'),
 		('Offset', 'FeatureList', None, None, 'Offset to FeatureList table-from beginning of GPOS table'),
 		('Offset', 'LookupList', None, None, 'Offset to LookupList table-from beginning of GPOS table'),
@@ -410,7 +410,7 @@ otData = [
 	#
 
 	('GSUB', [
-		('Fixed', 'Version', None, None, 'Version of the GSUB table-initially set to 0x00010000'),
+		('Version', 'Version', None, None, 'Version of the GSUB table-initially set to 0x00010000'),
 		('Offset', 'ScriptList', None, None, 'Offset to ScriptList table-from beginning of GSUB table'),
 		('Offset', 'FeatureList', None, None, 'Offset to FeatureList table-from beginning of GSUB table'),
 		('Offset', 'LookupList', None, None, 'Offset to LookupList table-from beginning of GSUB table'),
@@ -606,7 +606,7 @@ otData = [
 	#
 
 	('GDEF', [
-		('Fixed', 'Version', None, None, 'Version of the GDEF table-initially 0x00010000'),
+		('Version', 'Version', None, None, 'Version of the GDEF table-initially 0x00010000'),
 		('Offset', 'GlyphClassDef', None, None, 'Offset to class definition table for glyph type-from beginning of GDEF header (may be NULL)'),
 		('Offset', 'AttachList', None, None, 'Offset to list of glyphs with attachment points-from beginning of GDEF header (may be NULL)'),
 		('Offset', 'LigCaretList', None, None, 'Offset to list of positioning points for ligature carets-from beginning of GDEF header (may be NULL)'),
@@ -657,7 +657,7 @@ otData = [
 	#
 
 	('BASE', [
-		('Fixed', 'Version', None, None, 'Version of the BASE table-initially 0x00010000'),
+		('Version', 'Version', None, None, 'Version of the BASE table-initially 0x00010000'),
 		('Offset', 'HorizAxis', None, None, 'Offset to horizontal Axis table-from beginning of BASE table-may be NULL'),
 		('Offset', 'VertAxis', None, None, 'Offset to vertical Axis table-from beginning of BASE table-may be NULL'),
 	]),
@@ -737,7 +737,7 @@ otData = [
 	#
 
 	('JSTF', [
-		('Fixed', 'Version', None, None, 'Version of the JSTF table-initially set to 0x00010000'),
+		('Version', 'Version', None, None, 'Version of the JSTF table-initially set to 0x00010000'),
 		('uint16', 'JstfScriptCount', None, None, 'Number of JstfScriptRecords in this table'),
 		('struct', 'JstfScriptRecord', 'JstfScriptCount', 0, 'Array of JstfScriptRecords-in alphabetical order, by JstfScriptTag'),
 	]),

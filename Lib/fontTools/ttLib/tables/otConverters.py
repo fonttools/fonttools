@@ -84,13 +84,31 @@ class Long(IntValue):
 	def write(self, writer, font, countVars, value, repeatIndex=None):
 		writer.writeLong(value)
 
-class Fixed(IntValue):
+class Version(BaseConverter):
 	def read(self, reader, font, countVars):
-		return float(reader.readLong()) / 0x10000
+		value = reader.readLong()
+		assert (value >> 16) == 1, "Unsupported version 0x%08x" % value
+		return float(value) / 0x10000
 	def write(self, writer, font, countVars, value, repeatIndex=None):
-		writer.writeLong(int(round(value * 0x10000)))
+		if value < 0x10000:
+			value *= 0x10000
+		value = int(round(value))
+		assert (value >> 16) == 1, "Unsupported version 0x%08x" % value
+		writer.writeLong(value)
 	def xmlRead(self, attrs, content, font):
-		return float(attrs["value"])
+		value = attrs["value"]
+		value = float(int(value, 0)) if value.startswith("0") else float(value)
+		if value >= 0x10000:
+			value = float(value) / 0x10000
+		return value
+	def xmlWrite(self, xmlWriter, font, value, name, attrs):
+		if value >= 0x10000:
+			value = float(value) / 0x10000
+		if value % 1 != 0:
+			# Write as hex
+			value = "0x%08x" % (int(round(value * 0x10000)))
+		xmlWriter.simpletag(name, attrs + [("value", value)])
+		xmlWriter.newline()
 
 class Short(IntValue):
 	def read(self, reader, font, countVars):
@@ -330,7 +348,7 @@ converterMapping = {
 	# type         class
 	"int16":       Short,
 	"uint16":      UShort,
-	"Fixed":       Fixed,
+	"Version":     Version,
 	"Tag":         Tag,
 	"GlyphID":     GlyphID,
 	"struct":      Struct,
