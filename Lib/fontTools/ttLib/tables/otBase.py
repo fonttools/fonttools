@@ -744,7 +744,7 @@ class ValueRecordFactory:
 	
 	"""Given a format code, this object convert ValueRecords."""
 
-	def __init__(self, valueFormat=0):
+	def __init__(self, valueFormat):
 		format = []
 		for mask, name, isDevice, signed in valueRecordFormat:
 			if valueFormat & mask:
