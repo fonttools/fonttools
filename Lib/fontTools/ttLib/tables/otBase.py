@@ -184,7 +184,7 @@ class OTTableWriter(object):
 		if valueFormat is None:
 			valueFormat = [None, None]
 		self.valueFormat = valueFormat
-		self.counts = None
+		self.counts = counts
 		self.pos = None
 
 	def setValueFormat(self, format, which):
@@ -442,7 +442,7 @@ class OTTableWriter(object):
 	def writeCountReference(self, table, name):
 		ref = CountReference(table, name)
 		self.items.append(ref)
-		self.setCount(name, ref)
+		return ref
 	
 	def writeStruct(self, format, values):
 		data = apply(struct.pack, (format,) + values)
@@ -568,13 +568,17 @@ class BaseTable(object):
 						table["ExtensionLookupType"])
 			if conv.repeat:
 				l = []
-				for i in range(reader.getCount(conv.repeat) + conv.repeatOffset):
+				if conv.repeat in table:
+					countValue = table[conv.repeat]
+				else:
+					# conv.repeat is a propagated count
+					countValue = reader.getCount(conv.repeat)
+				for i in range(countValue + conv.repeatOffset):
 					l.append(conv.read(reader, font, table))
 				table[conv.name] = l
-
 			else:
 				table[conv.name] = conv.read(reader, font, table)
-				if conv.isCount:
+				if conv.isPropagatedCount:
 					reader.setCount(conv.name, table[conv.name])
 
 		self.postRead(table, font)
@@ -602,19 +606,30 @@ class BaseTable(object):
 			if conv.repeat:
 				if value is None:
 					value = []
-				writer.getCount(conv.repeat).setValue(len(value) - conv.repeatOffset)
+				countValue = len(value) - conv.repeatOffset
+				if conv.repeat in table:
+					ref = table[conv.repeat]
+					table[conv.repeat] = None
+					ref.setValue(countValue)
+				else:
+					# conv.repeat is a propagated count
+					writer.getCount(conv.repeat).setValue(countValue)
 				for i in range(len(value)):
 					conv.write(writer, font, table, value[i], i)
 			elif conv.isCount:
 				# Special-case Count values.
 				# Assumption: a Count field will *always* precede
-				# the actual array.
+				# the actual array(s).
 				# We need a default value, as it may be set later by a nested
 				# table. We will later store it here.
-				table[conv.name] = None
 				# We add a reference: by the time the data is assembled
 				# the Count value will be filled in.
-				writer.writeCountReference(table, conv.name)
+				ref = writer.writeCountReference(table, conv.name)
+				if conv.isPropagatedCount:
+					table[conv.name] = None
+					writer.setCount(conv.name, ref)
+				else:
+					table[conv.name] = ref
 			else:
 				conv.write(writer, font, table, value)
 	
