@@ -555,7 +555,7 @@ class BaseTable(object):
 
 			else:
 				table[conv.name] = conv.read(reader, font, countVars)
-				if conv.isCount:
+				if conv.isCount or conv.isSize:
 					counts.append(conv.name)
 					countVars[conv.name] = table[conv.name]
 
@@ -618,6 +618,9 @@ class BaseTable(object):
 				countVars[name] = storeValueFactory(table, name)
 			else:
 				conv.write(writer, font, countVars, value)
+				if conv.isSize:
+					countVars[conv.name] = value
+					counts.append(conv.name)
 
 		for count in counts:
 			del countVars[count]
