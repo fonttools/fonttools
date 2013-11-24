@@ -101,7 +101,7 @@ class OTTableReader(object):
 		self.valueFormat = valueFormat
 		self.cachingStats = cachingStats
 
-	def getSubReader(self, offset, persistent=False):
+	def getSubReader(self, offset):
 		offset = self.offset + offset
 		if self.cachingStats is not None:
 			try:
