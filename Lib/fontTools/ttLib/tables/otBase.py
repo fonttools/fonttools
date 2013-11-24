@@ -553,10 +553,8 @@ class BaseTable(object):
 	def getConverterByName(self, name):
 		return self.convertersByName[name]
 	
-	def decompile(self, reader, font, countVars=None):
+	def decompile(self, reader, font):
 		self.compileStatus = 2 # table has been decompiled.
-		if countVars is None:
-			countVars = {}
 		self.readFormat(reader)
 		table = {}
 		self.__rawTable = table  # for debugging
@@ -571,11 +569,11 @@ class BaseTable(object):
 			if conv.repeat:
 				l = []
 				for i in range(reader.getCount(conv.repeat) + conv.repeatOffset):
-					l.append(conv.read(reader, font, countVars))
+					l.append(conv.read(reader, font, table))
 				table[conv.name] = l
 
 			else:
-				table[conv.name] = conv.read(reader, font, countVars)
+				table[conv.name] = conv.read(reader, font, table)
 				if conv.isCount or conv.isSize:
 					reader.setCount(conv.name, table[conv.name])
 
@@ -586,15 +584,13 @@ class BaseTable(object):
 	def ensureDecompiled(self):
 		if self.compileStatus != 1:
 			return
-		self.decompile(self.reader, self.font, self.countVars)
-		del self.reader, self.font, self.countVars
+		self.decompile(self.reader, self.font)
+		del self.reader, self.font
 
 	def preCompile(self):
 		pass # used only by the LookupList class
 
-	def compile(self, writer, font, countVars=None):
-		if countVars is None:
-			countVars = {}
+	def compile(self, writer, font):
 		table = self.preWrite(font)
 
 		if hasattr(self, 'sortCoverageLast'):
@@ -608,7 +604,7 @@ class BaseTable(object):
 					value = []
 				writer.getCount(conv.repeat).setValue(len(value) - conv.repeatOffset)
 				for i in range(len(value)):
-					conv.write(writer, font, countVars, value[i], i)
+					conv.write(writer, font, table, value[i], i)
 			elif conv.isCount:
 				# Special-case Count values.
 				# Assumption: a Count field will *always* precede
@@ -618,10 +614,9 @@ class BaseTable(object):
 				table[conv.name] = None
 				# We add a reference: by the time the data is assembled
 				# the Count value will be filled in.
-				name = conv.name
-				writer.writeCountReference(table, name)
+				writer.writeCountReference(table, conv.name)
 			else:
-				conv.write(writer, font, countVars, value)
+				conv.write(writer, font, table, value)
 				if conv.isSize:
 					writer.setCount(conv.name, value)
 	

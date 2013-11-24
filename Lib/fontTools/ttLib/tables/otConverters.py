@@ -48,11 +48,11 @@ class BaseConverter:
 		self.isCount = name.endswith("Count")
 		self.isSize = name.endswith("Size") or name=="DeltaFormat"
 	
-	def read(self, reader, font, countVars):
+	def read(self, reader, font, tableDict):
 		"""Read a value from the reader."""
 		raise NotImplementedError, self
 	
-	def write(self, writer, font, countVars, value, repeatIndex=None):
+	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		"""Write a value to the writer."""
 		raise NotImplementedError, self
 	
@@ -77,17 +77,17 @@ class IntValue(SimpleValue):
 		return int(attrs["value"], 0)
 
 class Long(IntValue):
-	def read(self, reader, font, countVars):
+	def read(self, reader, font, tableDict):
 		return reader.readLong()
-	def write(self, writer, font, countVars, value, repeatIndex=None):
+	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		writer.writeLong(value)
 
 class Version(BaseConverter):
-	def read(self, reader, font, countVars):
+	def read(self, reader, font, tableDict):
 		value = reader.readLong()
 		assert (value >> 16) == 1, "Unsupported version 0x%08x" % value
 		return float(value) / 0x10000
-	def write(self, writer, font, countVars, value, repeatIndex=None):
+	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		if value < 0x10000:
 			value *= 0x10000
 		value = int(round(value))
@@ -109,15 +109,15 @@ class Version(BaseConverter):
 		xmlWriter.newline()
 
 class Short(IntValue):
-	def read(self, reader, font, countVars):
+	def read(self, reader, font, tableDict):
 		return reader.readShort()
-	def write(self, writer, font, countVars, value, repeatIndex=None):
+	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		writer.writeShort(value)
 
 class UShort(IntValue):
-	def read(self, reader, font, countVars):
+	def read(self, reader, font, tableDict):
 		return reader.readUShort()
-	def write(self, writer, font, countVars, value, repeatIndex=None):
+	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		writer.writeUShort(value)
 
 class Count(Short):
@@ -126,31 +126,31 @@ class Count(Short):
 		xmlWriter.newline()
 
 class Tag(SimpleValue):
-	def read(self, reader, font, countVars):
+	def read(self, reader, font, tableDict):
 		return reader.readTag()
-	def write(self, writer, font, countVars, value, repeatIndex=None):
+	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		writer.writeTag(value)
 
 class GlyphID(SimpleValue):
-	def read(self, reader, font, countVars):
+	def read(self, reader, font, tableDict):
 		value = reader.readUShort()
 		value =  font.getGlyphName(value)
 		return value
 
-	def write(self, writer, font, countVars, value, repeatIndex=None):
+	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		value =  font.getGlyphID(value)
 		writer.writeUShort(value)
 
 
 class Struct(BaseConverter):
 	
-	def read(self, reader, font, countVars):
+	def read(self, reader, font, tableDict):
 		table = self.tableClass()
-		table.decompile(reader, font, countVars)
+		table.decompile(reader, font)
 		return table
 	
-	def write(self, writer, font, countVars, value, repeatIndex=None):
-		value.compile(writer, font, countVars)
+	def write(self, writer, font, tableDict, value, repeatIndex=None):
+		value.compile(writer, font)
 	
 	def xmlWrite(self, xmlWriter, font, value, name, attrs):
 		if value is None:
@@ -174,7 +174,7 @@ class Struct(BaseConverter):
 
 class Table(Struct):
 	
-	def read(self, reader, font, countVars, lazy=True):
+	def read(self, reader, font, tableDict, lazy=True):
 		offset = reader.readUShort()
 		if offset == 0:
 			return None
@@ -189,12 +189,11 @@ class Table(Struct):
 			table.reader = subReader
 			table.font = font
 			table.compileStatus = 1
-			table.countVars = countVars.copy()
 		else:
-			table.decompile(subReader, font, countVars)
+			table.decompile(subReader, font)
 		return table
 	
-	def write(self, writer, font, countVars, value, repeatIndex=None):
+	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		if value is None:
 			writer.writeUShort(0)
 		else:
@@ -204,7 +203,7 @@ class Table(Struct):
 				subWriter.repeatIndex = repeatIndex
 			value.preCompile()
 			writer.writeSubTable(subWriter)
-			value.compile(subWriter, font, countVars)
+			value.compile(subWriter, font)
 
 class SubTable(Table):
 	def getConverter(self, tableType, lookupType):
@@ -219,7 +218,7 @@ class ExtSubTable(Table):
 		tableClass = lookupTypes[lookupType]
 		return ExtSubTable(self.name, self.repeat, self.repeatOffset, tableClass)
 	
-	def read(self, reader, font, countVars, lazy=True):
+	def read(self, reader, font, tableDict, lazy=True):
 		offset = reader.readULong()
 		if offset == 0:
 			return None
@@ -230,19 +229,15 @@ class ExtSubTable(Table):
 			table.reader = subReader
 			table.font = font
 			table.compileStatus = 1
-			table.countVars = countVars.copy()
 		else:
-			table.decompile(subReader, font, countVars)
+			table.decompile(subReader, font)
 		return table
 	
-	def write(self, writer, font, countVars, value, repeatIndex=None):
+	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		writer.Extension = 1 # actually, mere presence of the field flags it as an Ext Subtable writer.
 		if value is None:
 			writer.writeULong(0)
 		else:
-			# If the subtable has not yet been decompiled, we need to do so.
-			if  value.compileStatus == 1:
-				value.decompile(value.reader, value.font, countVars)
 			subWriter = writer.getSubWriter()
 			subWriter.name = self.name
 			writer.writeSubTable(subWriter)
@@ -252,26 +247,26 @@ class ExtSubTable(Table):
 				data = value.reader.data[value.start:value.end]
 				subWriter.writeData(data)
 			else:
-				value.compile(subWriter, font, countVars)
+				value.compile(subWriter, font)
 
 
 class ValueFormat(IntValue):
 	def __init__(self, name, repeat, repeatOffset, tableClass):
 		BaseConverter.__init__(self, name, repeat, repeatOffset, tableClass)
 		self.which = name[-1] == "2"
-	def read(self, reader, font, countVars):
+	def read(self, reader, font, tableDict):
 		format = reader.readUShort()
 		reader.setValueFormat(format, self.which)
 		return format
-	def write(self, writer, font, countVars, format, repeatIndex=None):
+	def write(self, writer, font, tableDict, format, repeatIndex=None):
 		writer.writeUShort(format)
 		writer.setValueFormat(format, self.which)
 
 
 class ValueRecord(ValueFormat):
-	def read(self, reader, font, countVars):
+	def read(self, reader, font, tableDict):
 		return reader.readValueRecord(font, self.which)
-	def write(self, writer, font, countVars, value, repeatIndex=None):
+	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		writer.writeValueRecord(value, font, self.which)
 	def xmlWrite(self, xmlWriter, font, value, name, attrs):
 		if value is None:
@@ -287,7 +282,7 @@ class ValueRecord(ValueFormat):
 
 class DeltaValue(BaseConverter):
 	
-	def read(self, reader, font, countVars):
+	def read(self, reader, font, tableDict):
 		StartSize = reader.getCount("StartSize")
 		EndSize = reader.getCount("EndSize")
 		DeltaFormat = reader.getCount("DeltaFormat")
@@ -310,7 +305,7 @@ class DeltaValue(BaseConverter):
 			DeltaValue.append(value)
 		return DeltaValue
 	
-	def write(self, writer, font, countVars, value, repeatIndex=None):
+	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		StartSize = writer.getCount("StartSize")
 		EndSize = writer.getCount("EndSize")
 		DeltaFormat = writer.getCount("DeltaFormat")
