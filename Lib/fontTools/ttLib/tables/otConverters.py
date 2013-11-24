@@ -183,14 +183,13 @@ class Table(Struct):
 			print "*** Warning: offset is not 0, yet suspiciously low (%s). table: %s" \
 					% (offset, self.tableClass.__name__)
 			return None
-		subReader = reader.getSubReader(offset)
 		table = self.tableClass()
-		if lazy:
-			table.reader = subReader
-			table.font = font
-			table.compileStatus = 1
-		else:
-			table.decompile(subReader, font)
+		table.reader = reader
+		table.offset = offset
+		table.font = font
+		table.compileStatus = 1
+		if not lazy:
+			table.ensureDecompiled()
 		return table
 	
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
@@ -222,15 +221,14 @@ class ExtSubTable(Table):
 		offset = reader.readULong()
 		if offset == 0:
 			return None
-		subReader = reader.getSubReader(offset)
 		table = self.tableClass()
-		table.start = subReader.offset
-		if lazy:
-			table.reader = subReader
-			table.font = font
-			table.compileStatus = 1
-		else:
-			table.decompile(subReader, font)
+		table.start = reader.offset + offset
+		table.reader = reader
+		table.offset = offset
+		table.font = font
+		table.compileStatus = 1
+		if not lazy:
+			table.ensureDecompiled()
 		return table
 	
 	def write(self, writer, font, tableDict, value, repeatIndex=None):

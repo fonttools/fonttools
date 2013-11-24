@@ -585,8 +585,9 @@ class BaseTable(object):
 	def ensureDecompiled(self):
 		if self.compileStatus != 1:
 			return
-		self.decompile(self.reader, self.font)
-		del self.reader, self.font
+		subReader = self.reader.getSubReader(self.offset)
+		self.decompile(subReader, self.font)
+		del self.reader, self.font, self.offset
 
 	def preCompile(self):
 		pass # used only by the LookupList class
