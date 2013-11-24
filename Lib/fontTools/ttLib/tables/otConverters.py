@@ -340,6 +340,5 @@ converterMapping = {
 }
 
 # equivalents:
-converterMapping["USHORT"] = converterMapping["uint16"]
 converterMapping["fixed32"] = converterMapping["Fixed"]
 
