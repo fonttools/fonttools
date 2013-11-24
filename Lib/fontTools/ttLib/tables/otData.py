@@ -1,7 +1,7 @@
 otData = [
 
 	#
-	# common (generated from chapter2.htm)
+	# common
 	#
 
 	('ScriptList', [
@@ -106,7 +106,7 @@ otData = [
 
 
 	#
-	# gpos (generated from gpos.htm)
+	# gpos
 	#
 
 	('GPOS', [
@@ -406,7 +406,7 @@ otData = [
 
 
 	#
-	# gsub (generated from gsub.htm)
+	# gsub
 	#
 
 	('GSUB', [
@@ -602,7 +602,7 @@ otData = [
 	]),
 
 	#
-	# gdef (generated from gdef.htm)
+	# gdef
 	#
 
 	('GDEF', [
@@ -653,7 +653,7 @@ otData = [
 
 
 	#
-	# base (generated from base.htm)
+	# base
 	#
 
 	('BASE', [
@@ -733,7 +733,7 @@ otData = [
 
 
 	#
-	# jstf (generated from jstf.htm)
+	# jstf
 	#
 
 	('JSTF', [
