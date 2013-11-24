@@ -46,6 +46,7 @@ class BaseConverter:
 		self.repeatOffset = repeatOffset
 		self.tableClass = tableClass
 		self.isCount = name.endswith("Count")
+		self.isPropagatedCount = name in ["ClassCount", "Class2Count"]
 	
 	def read(self, reader, font, tableDict):
 		"""Read a value from the reader."""
