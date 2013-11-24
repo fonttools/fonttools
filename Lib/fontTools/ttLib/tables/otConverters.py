@@ -288,9 +288,9 @@ class ValueRecord(ValueFormat):
 class DeltaValue(BaseConverter):
 	
 	def read(self, reader, font, countVars):
-		StartSize = countVars["StartSize"]
-		EndSize = countVars["EndSize"]
-		DeltaFormat = countVars["DeltaFormat"]
+		StartSize = reader.getCount("StartSize")
+		EndSize = reader.getCount("EndSize")
+		DeltaFormat = reader.getCount("DeltaFormat")
 		assert DeltaFormat in (1, 2, 3), "illegal DeltaFormat"
 		nItems = EndSize - StartSize + 1
 		nBits = 1 << DeltaFormat
@@ -311,9 +311,9 @@ class DeltaValue(BaseConverter):
 		return DeltaValue
 	
 	def write(self, writer, font, countVars, value, repeatIndex=None):
-		StartSize = countVars["StartSize"]
-		EndSize = countVars["EndSize"]
-		DeltaFormat = countVars["DeltaFormat"]
+		StartSize = writer.getCount("StartSize")
+		EndSize = writer.getCount("EndSize")
+		DeltaFormat = writer.getCount("DeltaFormat")
 		DeltaValue = value
 		assert DeltaFormat in (1, 2, 3), "illegal DeltaFormat"
 		nItems = EndSize - StartSize + 1
