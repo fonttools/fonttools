@@ -339,6 +339,3 @@ converterMapping = {
 	"ValueRecord": ValueRecord,
 }
 
-# equivalents:
-converterMapping["fixed32"] = converterMapping["Fixed"]
-
