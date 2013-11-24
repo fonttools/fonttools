@@ -71,7 +71,7 @@ class TTFont:
 	def __init__(self, file=None, res_name_or_index=None,
 			sfntVersion="\000\001\000\000", flavor=None, checkChecksums=0,
 			verbose=0, recalcBBoxes=1, allowVID=0, ignoreDecompileErrors=False,
-			fontNumber=-1, quiet=0):
+			fontNumber=-1, quiet=False):
 		
 		"""The constructor can be called with a few different arguments.
 		When reading a font from disk, 'file' should be either a pathname
@@ -216,8 +216,8 @@ class TTFont:
 		if closeStream:
 			file.close()
 	
-	def saveXML(self, fileOrPath, progress=None, quiet=None, 
-			tables=None, skipTables=None, splitTables=0, disassembleInstructions=1,
+	def saveXML(self, fileOrPath, progress=None, quiet=False,
+			tables=None, skipTables=None, splitTables=False, disassembleInstructions=True,
 			bitmapGlyphDataFormat='raw'):
 		"""Export the font as TTX (an XML-based text file), or as a series of text
 		files when splitTables is true. In the latter case, the 'fileOrPath'
@@ -314,7 +314,7 @@ class TTFont:
 		writer.newline()
 		writer.newline()
 	
-	def importXML(self, file, progress=None, quiet=None):
+	def importXML(self, file, progress=None, quiet=False):
 		"""Import a TTX file (an XML-based text format), so as to recreate
 		a font object.
 		"""

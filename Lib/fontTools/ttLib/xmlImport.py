@@ -11,7 +11,7 @@ BUFSIZE = 0x4000
 
 class ExpatParser:
 	
-	def __init__(self, ttFont, fileName, progress=None, quiet=None):
+	def __init__(self, ttFont, fileName, progress=None, quiet=False):
 		self.ttFont = ttFont
 		self.fileName = fileName
 		self.progress = progress
@@ -125,7 +125,7 @@ class ProgressPrinter:
 		print text
 
 
-def importXML(ttFont, fileName, progress=None, quiet=None):
+def importXML(ttFont, fileName, progress=None, quiet=True):
 	"""Import a TTX file (an XML-based text format), so as to recreate
 	a font object.
 	"""
