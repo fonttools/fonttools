@@ -4,9 +4,9 @@
 import string
 
 
-def safeEval(data, eval=eval):
+def safeEval(data, eval=eval, locals={}):
 	"""A (kindof) safe replacement for eval."""
-	return eval(data, {"__builtins__":{}}, {})
+	return eval(data, {"__builtins__":{}}, locals)
 
 
 def readHex(content):
