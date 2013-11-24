@@ -104,10 +104,7 @@ class OTTableReader(object):
 	def getSubReader(self, offset):
 		offset = self.offset + offset
 		if self.cachingStats is not None:
-			try:
-				self.cachingStats[offset] = self.cachingStats[offset] + 1
-			except KeyError:
-				self.cachingStats[offset] = 1
+			self.cachingStats[offset] = self.cachingStats.get(offset, 0) + 1
 
 		subReader = self.__class__(self.data, self.tableType, offset,
 			self.valueFormat, self.counts, self.cachingStats)
