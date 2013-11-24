@@ -183,7 +183,7 @@ class Table(Struct):
 			print "*** Warning: offset is not 0, yet suspiciously low (%s). table: %s" \
 					% (offset, self.tableClass.__name__)
 			return None
-		subReader = reader.getSubReader(offset, persistent=lazy)
+		subReader = reader.getSubReader(offset)
 		table = self.tableClass()
 		if lazy:
 			table.reader = subReader
