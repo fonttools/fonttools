@@ -657,7 +657,7 @@ otData = [
 	#
 
 	('BASE', [
-		('fixed32', 'Version', None, None, 'Version of the BASE table-initially 0x00010000'),
+		('Fixed', 'Version', None, None, 'Version of the BASE table-initially 0x00010000'),
 		('Offset', 'HorizAxis', None, None, 'Offset to horizontal Axis table-from beginning of BASE table-may be NULL'),
 		('Offset', 'VertAxis', None, None, 'Offset to vertical Axis table-from beginning of BASE table-may be NULL'),
 	]),
@@ -737,7 +737,7 @@ otData = [
 	#
 
 	('JSTF', [
-		('fixed32', 'Version', None, None, 'Version of the JSTF table-initially set to 0x00010000'),
+		('Fixed', 'Version', None, None, 'Version of the JSTF table-initially set to 0x00010000'),
 		('uint16', 'JstfScriptCount', None, None, 'Number of JstfScriptRecords in this table'),
 		('struct', 'JstfScriptRecord', 'JstfScriptCount', 0, 'Array of JstfScriptRecords-in alphabetical order, by JstfScriptTag'),
 	]),
