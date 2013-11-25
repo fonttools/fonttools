@@ -1108,7 +1108,9 @@ def subset_glyphs(self, s):
   if hasattr(table, "MarkGlyphSetsDef") and table.MarkGlyphSetsDef:
     for coverage in table.MarkGlyphSetsDef.Coverage:
       coverage.subset(glyphs)
-    table.MarkGlyphSetsDef.Coverage = [c for c in table.MarkGlyphSetsDef.Coverage if c.glyphs]
+    # TODO: The following is disabled.  If enabling, we need to go fixup all
+    # lookups that use MarkFilteringSet and map their set.
+    #indices = table.MarkGlyphSetsDef.Coverage = [c for c in table.MarkGlyphSetsDef.Coverage if c.glyphs]
   return True
 
 @_add_method(ttLib.getTableClass('GDEF'))
