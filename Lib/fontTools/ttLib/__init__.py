@@ -71,7 +71,7 @@ class TTFont:
 	def __init__(self, file=None, res_name_or_index=None,
 			sfntVersion="\000\001\000\000", flavor=None, checkChecksums=0,
 			verbose=0, recalcBBoxes=1, allowVID=0, ignoreDecompileErrors=False,
-			fontNumber=-1, quiet=False):
+			fontNumber=-1, lazy=True, quiet=False):
 		
 		"""The constructor can be called with a few different arguments.
 		When reading a font from disk, 'file' should be either a pathname
@@ -119,11 +119,15 @@ class TTFont:
 		individual tables during decompilation will be ignored, falling
 		back to the DefaultTable implementation, which simply keeps the
 		binary data.
+
+		If lazy is set to True, many data structures are loaded lazily, upon
+		access only.
 		"""
 		
 		from fontTools.ttLib import sfnt
 		self.verbose = verbose
 		self.quiet = quiet
+		self.lazy = lazy
 		self.recalcBBoxes = recalcBBoxes
 		self.tables = {}
 		self.reader = None
