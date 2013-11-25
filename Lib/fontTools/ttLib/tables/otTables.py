@@ -124,55 +124,6 @@ class Coverage(FormatSwitchingBaseTable):
 		glyphs.append(attrs["value"])
 
 
-class LookupList(BaseTable):
-	def preCompile(self):
-		""" This function is used to optimize writing out extension subtables. This is useful
-		when a font has been read in, modified, and we are now writing out a new version. If the
-		the extension subtables have not been touched (proof being that they have not been decompiled)
-		then we can write them out using the original data, and do not have to recompile them. This can save
-		20-30% of the compile time for fonts with large extension tables, such as Japanese Pro fonts."""
-
-		if hasattr(self, 'LookupCount'): #not defined if loading from xml
-			lookupCount = self.LookupCount
-		else:
-			return # The optimization of not recompiling extension lookup subtables is not possible
-					# when reading from XML.
- 
-		liRange = range(lookupCount)
-		extTables = []
-		for li in liRange:
-			lookup = self.Lookup[li]
-			if hasattr(lookup, 'SubTableCount'): #not defined if loading from xml
-				subtableCount = lookup.SubTableCount
-			else:
-				subtableCount = len(lookup.SubTable)
-			siRange = range(subtableCount)
-			for si in siRange:
-				subtable = lookup.SubTable[si]
-				if hasattr(subtable, 'ExtSubTable'):
-					extTable = subtable.ExtSubTable
-					extTables.append([extTable.start, extTable] )
-
-		# Since offsets in one subtable can and do point forward into later
-		# subtables, we can afford to simply copy data only for the last subtables 
-		# which were not decompiled. So we start figuring out the
-		# data segments starting with the last subtTable, and work our way towards
-		# the first subtable, and then quit as soon as we see a subtable that was decompiled.
-		if  extTables:
-			extTables.sort()
-			extTables.reverse()
-			lastTable = extTables[0][1]
-			if lastTable.compileStatus == 1:
-				lastTable.end = len(lastTable.reader.data)
-				lastTable.compileStatus = 3
-				for i in range(1, len(extTables)):
-					extTable = extTables[i][1]
-					if extTable.compileStatus != 1:
-						break
-					extTable.end = lastTable.start
-					extTable.compileStatus = 3
-					lastTable = extTable
-
 def doModulo(value):
 	if value < 0:
 		return value + 65536

@@ -200,7 +200,6 @@ class Table(Struct):
 			subWriter.name = self.name
 			if repeatIndex is not None:
 				subWriter.repeatIndex = repeatIndex
-			value.preCompile()
 			writer.writeSubTable(subWriter)
 			value.compile(subWriter, font)
 
@@ -239,13 +238,7 @@ class ExtSubTable(Table):
 			subWriter = writer.getSubWriter()
 			subWriter.name = self.name
 			writer.writeSubTable(subWriter)
-			# If the subtable has been sorted and we can just write the original
-			# data, then do so.
-			if value.compileStatus == 3:
-				data = value.reader.data[value.start:value.end]
-				subWriter.writeData(data)
-			else:
-				value.compile(subWriter, font)
+			value.compile(subWriter, font)
 
 
 class ValueFormat(IntValue):
