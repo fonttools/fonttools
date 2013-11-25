@@ -551,7 +551,7 @@ class BaseTable(object):
 				else:
 					# conv.repeat is a propagated count
 					countValue = reader.getCount(conv.repeat)
-				for i in range(countValue + conv.repeatOffset):
+				for i in range(countValue + conv.aux):
 					l.append(conv.read(reader, font, table))
 				table[conv.name] = l
 			else:
@@ -582,7 +582,7 @@ class BaseTable(object):
 			if conv.repeat:
 				if value is None:
 					value = []
-				countValue = len(value) - conv.repeatOffset
+				countValue = len(value) - conv.aux
 				if conv.repeat in table:
 					ref = table[conv.repeat]
 					table[conv.repeat] = None
