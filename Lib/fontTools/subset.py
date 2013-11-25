@@ -1068,8 +1068,15 @@ def prune_pre_subset(self, options):
 @_add_method(ttLib.getTableClass('GSUB'),
              ttLib.getTableClass('GPOS'))
 def prune_post_subset(self, options):
-  if self.table.LookupList:
-    self.table.LookupList.prune_post_subset(options);
+  table = self.table
+  if table.ScriptList and not table.ScriptList.ScriptRecord:
+    table.ScriptList = None
+  if table.FeatureList and not table.FeatureList.FeatureRecord:
+    table.FeatureList = None
+  if table.LookupList:
+    table.LookupList.prune_post_subset(options);
+    if not table.LookupList.Lookup:
+      table.LookupList = None
   return True
 
 @_add_method(ttLib.getTableClass('GDEF'))
