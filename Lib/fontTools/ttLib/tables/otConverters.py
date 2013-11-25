@@ -1,5 +1,9 @@
 from __future__ import print_function, division
 from fontTools.misc.textTools import safeEval
+<<<<<<< HEAD
+=======
+from fontTools.ttLib.tables otBase import TableStack
+>>>>>>> 8037352... Initial Python 2 and 3 modifications:
 
 
 def buildConverters(tableSpec, tableNamespace):

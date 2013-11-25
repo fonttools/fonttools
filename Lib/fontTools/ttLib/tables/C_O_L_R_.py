@@ -100,8 +100,13 @@ class table_C_O_L_R_(DefaultTable.DefaultTable):
 			writer.endtag("ColorGlyph")
 			writer.newline()
 
+<<<<<<< HEAD
+	def fromXML(self, element, ttFont):
+		name, attrs, content = element
+=======
 	def fromXML(self, args, ttFont):
 		(name, attrs, content) = args
+>>>>>>> 8037352... Initial Python 2 and 3 modifications:
 		if not hasattr(self, "ColorLayers"):
 			self.ColorLayers = {}
 		self.getGlyphName = ttFont.getGlyphName # for use in get/set item functions, for access by GID
@@ -153,8 +158,13 @@ class LayerRecord:
 		writer.simpletag("layer", name=self.name, colorID=self.colorID)
 		writer.newline()
 
+<<<<<<< HEAD
+	def fromXML(self, element, ttFont):
+		eltname, attrs, content = element
+=======
 	def fromXML(self, args, ttFont):
 		(eltname, attrs, content) = args
+>>>>>>> 8037352... Initial Python 2 and 3 modifications:
 		for (name, value) in attrs.items():
 			if name == "name":
 				if isinstance(value, int):

@@ -52,8 +52,13 @@ class table_C_P_A_L_(DefaultTable.DefaultTable):
 			writer.endtag("palette")
 			writer.newline()
 
+<<<<<<< HEAD
+	def fromXML(self, element, ttFont):
+		name, attrs, content = element
+=======
 	def fromXML(self, args, ttFont):
 		(name, attrs, content) = args
+>>>>>>> 8037352... Initial Python 2 and 3 modifications:
 		if not hasattr(self, "palettes"):
 			self.palettes = []
 		if name == "palette":
@@ -91,8 +96,13 @@ class Color:
 		writer.simpletag("color", value=self.hex(), index=index)
 		writer.newline()
 
+<<<<<<< HEAD
+	def fromXML(self, element, ttFont):
+		eltname, attrs, content = element
+=======
 	def fromXML(self, args, ttFont):
 		(eltname, attrs, content) = args
+>>>>>>> 8037352... Initial Python 2 and 3 modifications:
 		value = attrs["value"]
 		if value[0] == '#':
 			value = value[1:]

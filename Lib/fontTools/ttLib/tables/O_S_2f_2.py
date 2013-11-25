@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 import warnings
+=======
+>>>>>>> 8037352... Initial Python 2 and 3 modifications:
 from fontTools.ttLib.tables import DefaultTable
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval, num2binary, binary2num
@@ -106,10 +109,25 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 	
 	def decompile(self, data, ttFont):
 		dummy, data = sstruct.unpack2(OS2_format_0, data, self)
+<<<<<<< HEAD
 
+=======
+		# workarounds for buggy fonts (Apple, mona)
+		if not data:
+			self.version = 0
+		elif len(data) == sstruct.calcsize(OS2_format_1_addition):
+			self.version = 1
+		elif len(data) == sstruct.calcsize(OS2_format_2_addition):
+			if self.version not in (2, 3, 4):
+				self.version = 1
+		else:
+			from fontTools import ttLib
+			raise ttLib.TTLibError("unknown format for OS/2 table (incorrect length): version %s" % (self.version, len(data)))
+>>>>>>> 8037352... Initial Python 2 and 3 modifications:
 		if self.version == 1:
 			dummy, data = sstruct.unpack2(OS2_format_1_addition, data, self)
 		elif self.version in (2, 3, 4):
+<<<<<<< HEAD
 			dummy, data = sstruct.unpack2(OS2_format_2_addition, data, self)
 		elif self.version == 5:
 			dummy, data = sstruct.unpack2(OS2_format_5_addition, data, self)
@@ -121,6 +139,12 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 		if len(data):
 			warnings.warn("too much 'OS/2' table data")
 
+=======
+			sstruct.unpack2(OS2_format_2_addition, data, self)
+		elif self.version != 0:
+			from fontTools import ttLib
+			raise ttLib.TTLibError("unknown format for OS/2 table: version %s" % self.version)
+>>>>>>> 8037352... Initial Python 2 and 3 modifications:
 		self.panose = sstruct.unpack(panoseFormat, self.panose, Panose())
 	
 	def compile(self, ttFont):

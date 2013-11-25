@@ -152,8 +152,13 @@ class table_E_B_D_T_(DefaultTable.DefaultTable):
 			writer.endtag('strikedata')
 			writer.newline()
 
+<<<<<<< HEAD
+	def fromXML(self, element, ttFont):
+		name, attrs, content = element
+=======
 	def fromXML(self, args, ttFont):
 		(name, attrs, content) = args
+>>>>>>> 8037352... Initial Python 2 and 3 modifications:
 		if name == 'header':
 			self.version = safeEval(attrs['version'])
 		elif name == 'strikedata':
@@ -195,8 +200,13 @@ class EbdtComponent:
 		writer.endtag('ebdtComponent')
 		writer.newline()
 
+<<<<<<< HEAD
+	def fromXML(self, element, ttFont):
+		name, attrs, content = element
+=======
 	def fromXML(self, args, ttFont):
 		(name, attrs, content) = args
+>>>>>>> 8037352... Initial Python 2 and 3 modifications:
 		self.name = attrs['name']
 		componentNames = set(sstruct.getformat(ebdtComponentFormat)[1][1:])
 		for element in content:
@@ -270,8 +280,13 @@ def _writeRawImageData(strikeIndex, glyphName, bitmapObject, writer, ttFont):
 	writer.endtag('rawimagedata')
 	writer.newline()
 
+<<<<<<< HEAD
+def _readRawImageData(bitmapObject, element, ttFont):
+	name, attrs, content = element
+=======
 def _readRawImageData(bitmapObject, args, ttFont):
 	(name, attrs, content) = args
+>>>>>>> 8037352... Initial Python 2 and 3 modifications:
 	bitmapObject.imageData = readHex(content)
 
 def _writeRowImageData(strikeIndex, glyphName, bitmapObject, writer, ttFont):
@@ -289,8 +304,13 @@ def _writeRowImageData(strikeIndex, glyphName, bitmapObject, writer, ttFont):
 	writer.endtag('rowimagedata')
 	writer.newline()
 
+<<<<<<< HEAD
+def _readRowImageData(bitmapObject, element, ttFont):
+	name, attrs, content = element
+=======
 def _readRowImageData(bitmapObject, args, ttFont):
 	(name, attrs, content) = args
+>>>>>>> 8037352... Initial Python 2 and 3 modifications:
 	bitDepth = safeEval(attrs['bitDepth'])
 	metrics = SmallGlyphMetrics()
 	metrics.width = safeEval(attrs['width'])
@@ -327,8 +347,13 @@ def _writeBitwiseImageData(strikeIndex, glyphName, bitmapObject, writer, ttFont)
 	writer.endtag('bitwiseimagedata')
 	writer.newline()
 
+<<<<<<< HEAD
+def _readBitwiseImageData(bitmapObject, element, ttFont):
+	name, attrs, content = element
+=======
 def _readBitwiseImageData(bitmapObject, args, ttFont):
 	(name, attrs, content) = args
+>>>>>>> 8037352... Initial Python 2 and 3 modifications:
 	bitDepth = safeEval(attrs['bitDepth'])
 	metrics = SmallGlyphMetrics()
 	metrics.width = safeEval(attrs['width'])
@@ -366,8 +391,13 @@ def _writeExtFileImageData(strikeIndex, glyphName, bitmapObject, writer, ttFont)
 	with open(fullPath, "wb") as file:
 		file.write(bitmapObject.imageData)
 
+<<<<<<< HEAD
+def _readExtFileImageData(bitmapObject, element, ttFont):
+	name, attrs, content = element
+=======
 def _readExtFileImageData(bitmapObject, args, ttFont):
 	(name, attrs, content) = args
+>>>>>>> 8037352... Initial Python 2 and 3 modifications:
 	fullPath = attrs['value']
 	with open(fullPath, "rb") as file:
 		bitmapObject.imageData = file.read()
@@ -404,7 +434,11 @@ class BitmapGlyph:
 		# Allow lazy decompile.
 		if attr[:2] == '__':
 			raise AttributeError(attr)
+<<<<<<< HEAD
 		if not hasattr(self, "data"):
+=======
+		if self.data == None:
+>>>>>>> 8037352... Initial Python 2 and 3 modifications:
 			raise AttributeError(attr)
 		self.decompile()
 		del self.data
@@ -425,8 +459,13 @@ class BitmapGlyph:
 		writer.endtag(self.__class__.__name__)
 		writer.newline()
 
+<<<<<<< HEAD
+	def fromXML(self, element, ttFont):
+		name, attrs, content = element
+=======
 	def fromXML(self, args, ttFont):
 		(name, attrs, content) = args
+>>>>>>> 8037352... Initial Python 2 and 3 modifications:
 		self.readMetrics((name, attrs, content), ttFont)
 		for element in content:
 			if type(element) != tuple:
@@ -443,8 +482,13 @@ class BitmapGlyph:
 		pass
 
 	# The opposite of write metrics.
+<<<<<<< HEAD
+	def readMetrics(self, element, ttFont):
+		name, attrs, content = element
+=======
 	def readMetrics(self, args, ttFont):
 		(name, attrs, content) = args
+>>>>>>> 8037352... Initial Python 2 and 3 modifications:
 		pass
 
 	def writeData(self, strikeIndex, glyphName, writer, ttFont):
@@ -454,8 +498,13 @@ class BitmapGlyph:
 			writeFunc = _writeRawImageData
 		writeFunc(strikeIndex, glyphName, self, writer, ttFont)
 
+<<<<<<< HEAD
+	def readData(self, element, ttFont):
+		name, attrs, content = element
+=======
 	def readData(self, args, ttFont):
 		(name, attrs, content) = args
+>>>>>>> 8037352... Initial Python 2 and 3 modifications:
 		# Chop off 'imagedata' from the tag to get just the option.
 		option = name[:-len('imagedata')]
 		writeFunc, readFunc = self.__class__.xmlDataFunctions[option]
@@ -478,8 +527,13 @@ def _createBitmapPlusMetricsMixin(metricsClass):
 		def writeMetrics(self, writer, ttFont):
 			self.metrics.toXML(writer, ttFont)
 
+<<<<<<< HEAD
+		def readMetrics(self, element, ttFont):
+			name, attrs, content = element
+=======
 		def readMetrics(self, args, ttFont):
 			(name, attrs, content) = args
+>>>>>>> 8037352... Initial Python 2 and 3 modifications:
 			for element in content:
 				if type(element) != tuple:
 					continue
@@ -685,8 +739,13 @@ class ComponentBitmapGlyph(BitmapGlyph):
 		writer.endtag(self.__class__.__name__)
 		writer.newline()
 
+<<<<<<< HEAD
+	def fromXML(self, element, ttFont):
+		name, attrs, content = element
+=======
 	def fromXML(self, args, ttFont):
 		(name, attrs, content) = args
+>>>>>>> 8037352... Initial Python 2 and 3 modifications:
 		self.readMetrics((name, attrs, content), ttFont)
 		for element in content:
 			if type(element) != tuple:
