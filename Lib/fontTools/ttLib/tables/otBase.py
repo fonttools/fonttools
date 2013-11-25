@@ -217,13 +217,9 @@ class OTTableWriter(object):
 	def getDataLength(self):
 		"""Return the length of this table in bytes, without subtables."""
 		l = 0
-		if hasattr(self, "Extension"):
-			longOffset = 1
-		else:
-			longOffset = 0
 		for item in self.items:
 			if hasattr(item, "getData") or hasattr(item, "getCountData"):
-				if longOffset:
+				if self.longOffset:
 					l = l + 4  # sizeof(ULong)
 				else:
 					l = l + 2  # sizeof(UShort)
@@ -234,17 +230,13 @@ class OTTableWriter(object):
 	def getData(self):
 		"""Assemble the data for this writer/table, without subtables."""
 		items = list(self.items)  # make a shallow copy
-		if hasattr(self,"Extension"):
-			longOffset = 1
-		else:
-			longOffset = 0
 		pos = self.pos
 		numItems = len(items)
 		for i in range(numItems):
 			item = items[i]
 			
 			if hasattr(item, "getData"):
-				if longOffset:
+				if self.longOffset:
 					items[i] = packULong(item.pos - pos)
 				else:
 					try:

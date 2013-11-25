@@ -35,7 +35,7 @@ def buildConverters(tableSpec, tableNamespace):
 	return converters, convertersByName
 
 
-class BaseConverter:
+class BaseConverter(object):
 	
 	"""Base class for converter objects. Apart from the constructor, this
 	is an abstract class."""
@@ -174,6 +174,8 @@ class Struct(BaseConverter):
 
 class Table(Struct):
 
+	longOffset = False
+
 	def readOffset(self, reader):
 		return reader.readUShort()
 
@@ -202,6 +204,7 @@ class Table(Struct):
 		return table
 	
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
+		writer.longOffset = self.longOffset
 		if value is None:
 			self.writeNullOffset(writer)
 		else:
@@ -212,16 +215,21 @@ class Table(Struct):
 			writer.writeSubTable(subWriter)
 			value.compile(subWriter, font)
 
+class LTable(Table):
+
+	longOffset = True
+
+	def readOffset(self, reader):
+		return reader.readULong()
+
+
 class SubTable(Table):
 	def getConverter(self, tableType, lookupType):
 		tableClass = self.lookupTypes[tableType][lookupType]
 		return self.__class__(self.name, self.repeat, self.repeatOffset, tableClass)
 
 
-class ExtSubTable(SubTable):
-	
-	def readOffset(self, reader):
-		return reader.readULong()
+class ExtSubTable(LTable, SubTable):
 	
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		writer.Extension = 1 # actually, mere presence of the field flags it as an Ext Subtable writer.
@@ -322,7 +330,7 @@ converterMapping = {
 	"GlyphID":     GlyphID,
 	"struct":      Struct,
 	"Offset":      Table,
-	"LOffset":     ExtSubTable,
+	"LOffset":     LTable,
 	"ValueRecord": ValueRecord,
 	"DeltaValue":  DeltaValue,
 }
