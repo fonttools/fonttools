@@ -120,6 +120,8 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 			sstruct.unpack2(OS2_format_2_addition, data, self)
 		elif self.version == 5:
 			sstruct.unpack2(OS2_format_5_addition, data, self)
+			self.usLowerOpticalPointSize /= 20.
+			self.usUpperOpticalPointSize /= 20.
 		elif self.version <> 0:
 			from fontTools import ttLib
 			raise ttLib.TTLibError, "unknown format for OS/2 table: version %s" % self.version
@@ -135,7 +137,13 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 		elif self.version in (2, 3, 4):
 			data = sstruct.pack(OS2_format_2, self)
 		elif self.version == 5:
+			lower = self.usLowerOpticalPointSize
+			upper = self.usUpperOpticalPointSize
+			self.usLowerOpticalPointSize = int(round(self.usLowerOpticalPointSize * 20))
+			self.usUpperOpticalPointSize = int(round(self.usUpperOpticalPointSize * 20))
 			data = sstruct.pack(OS2_format_5, self)
+			self.usLowerOpticalPointSize = lower
+			self.usUpperOpticalPointSize = upper
 		else:
 			from fontTools import ttLib
 			raise ttLib.TTLibError, "unknown format for OS/2 table: version %s" % self.version
