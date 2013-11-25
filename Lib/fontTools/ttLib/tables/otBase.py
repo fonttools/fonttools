@@ -555,6 +555,8 @@ class BaseTable(object):
 					l.append(conv.read(reader, font, table))
 				table[conv.name] = l
 			else:
+				if conv.aux and not eval(conv.aux, None, table):
+					continue
 				table[conv.name] = conv.read(reader, font, table)
 				if conv.isPropagatedCount:
 					reader.setCount(conv.name, table[conv.name])
@@ -607,6 +609,8 @@ class BaseTable(object):
 				else:
 					table[conv.name] = ref
 			else:
+				if conv.aux and not eval(conv.aux, None, table):
+					continue
 				conv.write(writer, font, table, value)
 	
 	def readFormat(self, reader):
@@ -639,13 +643,16 @@ class BaseTable(object):
 		# This is because in TTX our parent writes our main tag, and in otBase.py we
 		# do it ourselves. I think I'm getting schizophrenic...
 		for conv in self.getConverters():
-			value = getattr(self, conv.name)
 			if conv.repeat:
+				value = getattr(self, conv.name)
 				for i in range(len(value)):
 					item = value[i]
 					conv.xmlWrite(xmlWriter, font, item, conv.name,
 							[("index", i)])
 			else:
+				if conv.aux and not eval(conv.aux, None, vars(self)):
+					continue
+				value = getattr(self, conv.name)
 				conv.xmlWrite(xmlWriter, font, value, conv.name, [])
 	
 	def fromXML(self, (name, attrs, content), font):
