@@ -115,7 +115,7 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 			from fontTools import ttLib
 			raise ttLib.TTLibError, "unknown format for OS/2 table: version %s" % self.version
 		if len(data):
-			warnings.warn("too much 'glyf' table data")
+			warnings.warn("too much 'OS/2' table data")
 
 		self.panose = sstruct.unpack(panoseFormat, self.panose, Panose())
 	
