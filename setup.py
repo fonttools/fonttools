@@ -77,7 +77,6 @@ setup(
 			"fontTools.pens",
 			"fontTools.ttLib",
 			"fontTools.ttLib.tables",
-			"fontTools.ttLib.test",
 		],
 		package_dir = {'': 'Lib'},
 		extra_path = 'FontTools',
