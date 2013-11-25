@@ -251,7 +251,7 @@ class OTTableWriter(object):
 						items[i] = packUShort(item.pos - pos)
 					except AssertionError:
 						# provide data to fix overflow problem.
-						# If the overflow is to a lookup, or from a lookup to a subtable, 
+						# If the overflow is to a lookup, or from a lookup to a subtable,
 						# just report the current item.
 						if self.name in [ 'LookupList', 'Lookup']:
 							overflowErrorRecord = self.getOverflowErrorRecord(item)
@@ -577,9 +577,6 @@ class BaseTable(object):
 		subReader = self.reader.getSubReader(self.offset)
 		self.decompile(subReader, self.font)
 		del self.reader, self.font, self.offset
-
-	def preCompile(self):
-		pass # used only by the LookupList class
 
 	def compile(self, writer, font):
 		table = self.preWrite(font)
