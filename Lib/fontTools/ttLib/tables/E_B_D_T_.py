@@ -383,15 +383,18 @@ class BitmapGlyph:
 	def __init__(self, data, ttFont):
 		self.data = data
 		self.ttFont = ttFont
+		if not ttFont.lazy:
+			self.decompile()
+			del self.data
 
 	def __getattr__(self, attr):
 		# Allow lazy decompile.
 		if attr[:2] == '__':
 			raise AttributeError, attr
-		if self.data == None:
+		if not hasattr(self, "data"):
 			raise AttributeError, attr
 		self.decompile()
-		self.data = None
+		del self.data
 		return getattr(self, attr)
 
 	# Not a fan of this but it is needed for safer safety checking.
