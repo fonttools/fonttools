@@ -146,17 +146,6 @@ class OTTableReader(object):
 		self.pos = newpos
 		return value
 
-	def readStruct(self, format, size=None):
-		if size is None:
-			size = struct.calcsize(format)
-		else:
-			assert size == struct.calcsize(format)
-		pos = self.pos
-		newpos = pos + size
-		values = struct.unpack(format, self.data[pos:newpos])
-		self.pos = newpos
-		return values
-
 	def setValueFormat(self, format, which):
 		self.valueFormat[which] = ValueRecordFactory(format)
 
