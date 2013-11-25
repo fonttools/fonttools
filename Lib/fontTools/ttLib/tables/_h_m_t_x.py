@@ -57,11 +57,13 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 		metrics = metrics[:lastIndex]
 		setattr(ttFont[self.headerTag], self.numberOfMetricsName, len(metrics))
 		
-		metrics = sum(metrics,[])
-		metrics = array.array("h", metrics)
+		allMetrics = []
+		for item in metrics:
+			allMetrics.extend(item)
+		allMetrics = array.array("h", allMetrics)
 		if sys.byteorder <> "big":
-			metrics.byteswap()
-		data = metrics.tostring()
+			allMetrics.byteswap()
+		data = allMetrics.tostring()
 		
 		additionalMetrics = array.array("h", additionalMetrics)
 		if sys.byteorder <> "big":
