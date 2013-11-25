@@ -174,7 +174,7 @@ class Struct(BaseConverter):
 
 class Table(Struct):
 	
-	def read(self, reader, font, tableDict, lazy=True):
+	def read(self, reader, font, tableDict):
 		offset = reader.readUShort()
 		if offset == 0:
 			return None
@@ -188,7 +188,7 @@ class Table(Struct):
 		table.offset = offset
 		table.font = font
 		table.compileStatus = 1
-		if not lazy:
+		if not font.lazy:
 			table.ensureDecompiled()
 		return table
 	
@@ -217,7 +217,7 @@ class ExtSubTable(Table):
 		tableClass = lookupTypes[lookupType]
 		return ExtSubTable(self.name, self.repeat, self.repeatOffset, tableClass)
 	
-	def read(self, reader, font, tableDict, lazy=True):
+	def read(self, reader, font, tableDict):
 		offset = reader.readULong()
 		if offset == 0:
 			return None
@@ -227,7 +227,7 @@ class ExtSubTable(Table):
 		table.offset = offset
 		table.font = font
 		table.compileStatus = 1
-		if not lazy:
+		if not font.lazy:
 			table.ensureDecompiled()
 		return table
 	
