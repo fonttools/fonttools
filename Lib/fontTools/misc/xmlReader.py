@@ -9,9 +9,9 @@ class TTXParseError(Exception): pass
 BUFSIZE = 0x4000
 
 
-class ExpatParser:
+class XMLReader:
 	
-	def __init__(self, ttFont, fileName, progress=None, quiet=None):
+	def __init__(self, fileName, ttFont, progress=None, quiet=False):
 		self.ttFont = ttFont
 		self.fileName = fileName
 		self.progress = progress
@@ -20,18 +20,21 @@ class ExpatParser:
 		self.contentStack = []
 		self.stackSize = 0
 	
-	def parse(self):
+	def read(self):
+		if self.progress:
+			import stat
+			self.progress.set(0, os.stat(fileName)[stat.ST_SIZE] / 100 or 1)
 		file = open(self.fileName)
-		self.parseFile(file)
+		self._parseFile(file)
 		file.close()
 	
-	def parseFile(self, file):
+	def _parseFile(self, file):
 		from xml.parsers.expat import ParserCreate
 		parser = ParserCreate()
 		parser.returns_unicode = 0
-		parser.StartElementHandler = self.startElementHandler
-		parser.EndElementHandler = self.endElementHandler
-		parser.CharacterDataHandler = self.characterDataHandler
+		parser.StartElementHandler = self._startElementHandler
+		parser.EndElementHandler = self._endElementHandler
+		parser.CharacterDataHandler = self._characterDataHandler
 		
 		pos = 0
 		while 1:
@@ -44,7 +47,7 @@ class ExpatParser:
 				self.progress.set(pos / 100)
 			parser.Parse(chunk, 0)
 	
-	def startElementHandler(self, name, attrs):
+	def _startElementHandler(self, name, attrs):
 		stackSize = self.stackSize
 		self.stackSize = stackSize + 1
 		if not stackSize:
@@ -60,7 +63,8 @@ class ExpatParser:
 			subFile = attrs.get("src")
 			if subFile is not None:
 				subFile = os.path.join(os.path.dirname(self.fileName), subFile)
-				importXML(self.ttFont, subFile, self.progress)
+				subReader = XMLReader(subFile, self.ttFont, self.progress, self.quiet)
+				subReader.read()
 				self.contentStack.append([])
 				return
 			tag = ttLib.xmlToTag(name)
@@ -96,11 +100,11 @@ class ExpatParser:
 			self.contentStack[-1].append((name, attrs, list))
 			self.contentStack.append(list)
 	
-	def characterDataHandler(self, data):
+	def _characterDataHandler(self, data):
 		if self.stackSize > 1:
 			self.contentStack[-1].append(data)
 	
-	def endElementHandler(self, name):
+	def _endElementHandler(self, name):
 		self.stackSize = self.stackSize - 1
 		del self.contentStack[-1]
 		if self.stackSize == 1:
@@ -123,15 +127,4 @@ class ProgressPrinter:
 	
 	def setLabel(self, text):
 		print text
-
-
-def importXML(ttFont, fileName, progress=None, quiet=None):
-	"""Import a TTX file (an XML-based text format), so as to recreate
-	a font object.
-	"""
-	if progress:
-		import stat
-		progress.set(0, os.stat(fileName)[stat.ST_SIZE] / 100 or 1)
-	p = ExpatParser(ttFont, fileName, progress, quiet)
-	p.parse()
 

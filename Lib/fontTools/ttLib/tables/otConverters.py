@@ -8,13 +8,10 @@ def buildConverters(tableSpec, tableNamespace):
 	the results are assigned to the corresponding class in otTables.py."""
 	converters = []
 	convertersByName = {}
-	for tp, name, repeat, repeatOffset, descr in tableSpec:
+	for tp, name, repeat, aux, descr in tableSpec:
 		if name.startswith("ValueFormat"):
 			assert tp == "uint16"
 			converterClass = ValueFormat
-		elif name == "DeltaValue":
-			assert tp == "uint16"
-			converterClass = DeltaValue
 		elif name.endswith("Count"):
 			assert tp == "uint16"
 			converterClass = Count
@@ -25,36 +22,37 @@ def buildConverters(tableSpec, tableNamespace):
 		else:
 			converterClass = converterMapping[tp]
 		tableClass = tableNamespace.get(name)
-		conv = converterClass(name, repeat, repeatOffset, tableClass)
+		conv = converterClass(name, repeat, aux, tableClass)
 		if name in ["SubTable", "ExtSubTable"]:
 			conv.lookupTypes = tableNamespace['lookupTypes']
 			# also create reverse mapping
 			for t in conv.lookupTypes.values():
 				for cls in t.values():
-					convertersByName[cls.__name__] = Table(name, repeat, repeatOffset, cls)
+					convertersByName[cls.__name__] = Table(name, repeat, aux, cls)
 		converters.append(conv)
 		assert not convertersByName.has_key(name)
 		convertersByName[name] = conv
 	return converters, convertersByName
 
 
-class BaseConverter:
+class BaseConverter(object):
 	
 	"""Base class for converter objects. Apart from the constructor, this
 	is an abstract class."""
 	
-	def __init__(self, name, repeat, repeatOffset, tableClass):
+	def __init__(self, name, repeat, aux, tableClass):
 		self.name = name
 		self.repeat = repeat
-		self.repeatOffset = repeatOffset
+		self.aux = aux
 		self.tableClass = tableClass
 		self.isCount = name.endswith("Count")
+		self.isPropagatedCount = name in ["ClassCount", "Class2Count"]
 	
-	def read(self, reader, font, countVars):
+	def read(self, reader, font, tableDict):
 		"""Read a value from the reader."""
 		raise NotImplementedError, self
 	
-	def write(self, writer, font, countVars, value, repeatIndex=None):
+	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		"""Write a value to the writer."""
 		raise NotImplementedError, self
 	
@@ -79,17 +77,17 @@ class IntValue(SimpleValue):
 		return int(attrs["value"], 0)
 
 class Long(IntValue):
-	def read(self, reader, font, countVars):
+	def read(self, reader, font, tableDict):
 		return reader.readLong()
-	def write(self, writer, font, countVars, value, repeatIndex=None):
+	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		writer.writeLong(value)
 
 class Version(BaseConverter):
-	def read(self, reader, font, countVars):
+	def read(self, reader, font, tableDict):
 		value = reader.readLong()
 		assert (value >> 16) == 1, "Unsupported version 0x%08x" % value
 		return float(value) / 0x10000
-	def write(self, writer, font, countVars, value, repeatIndex=None):
+	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		if value < 0x10000:
 			value *= 0x10000
 		value = int(round(value))
@@ -111,15 +109,15 @@ class Version(BaseConverter):
 		xmlWriter.newline()
 
 class Short(IntValue):
-	def read(self, reader, font, countVars):
+	def read(self, reader, font, tableDict):
 		return reader.readShort()
-	def write(self, writer, font, countVars, value, repeatIndex=None):
+	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		writer.writeShort(value)
 
 class UShort(IntValue):
-	def read(self, reader, font, countVars):
+	def read(self, reader, font, tableDict):
 		return reader.readUShort()
-	def write(self, writer, font, countVars, value, repeatIndex=None):
+	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		writer.writeUShort(value)
 
 class Count(Short):
@@ -128,31 +126,31 @@ class Count(Short):
 		xmlWriter.newline()
 
 class Tag(SimpleValue):
-	def read(self, reader, font, countVars):
+	def read(self, reader, font, tableDict):
 		return reader.readTag()
-	def write(self, writer, font, countVars, value, repeatIndex=None):
+	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		writer.writeTag(value)
 
 class GlyphID(SimpleValue):
-	def read(self, reader, font, countVars):
+	def read(self, reader, font, tableDict):
 		value = reader.readUShort()
 		value =  font.getGlyphName(value)
 		return value
 
-	def write(self, writer, font, countVars, value, repeatIndex=None):
+	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		value =  font.getGlyphID(value)
 		writer.writeUShort(value)
 
 
 class Struct(BaseConverter):
 	
-	def read(self, reader, font, countVars):
+	def read(self, reader, font, tableDict):
 		table = self.tableClass()
-		table.decompile(reader, font, countVars)
+		table.decompile(reader, font)
 		return table
 	
-	def write(self, writer, font, countVars, value, repeatIndex=None):
-		value.compile(writer, font, countVars)
+	def write(self, writer, font, tableDict, value, repeatIndex=None):
+		value.compile(writer, font)
 	
 	def xmlWrite(self, xmlWriter, font, value, name, attrs):
 		if value is None:
@@ -175,9 +173,20 @@ class Struct(BaseConverter):
 
 
 class Table(Struct):
+
+	longOffset = False
+
+	def readOffset(self, reader):
+		return reader.readUShort()
+
+	def writeNullOffset(self, writer):
+		if hasattr(self, "Extension"):
+			writer.writeULong(0)
+		else:
+			writer.writeUShort(0)
 	
-	def read(self, reader, font, countVars, lazy=True):
-		offset = reader.readUShort()
+	def read(self, reader, font, tableDict):
+		offset = self.readOffset(reader)
 		if offset == 0:
 			return None
 		if offset <= 3:
@@ -185,95 +194,65 @@ class Table(Struct):
 			print "*** Warning: offset is not 0, yet suspiciously low (%s). table: %s" \
 					% (offset, self.tableClass.__name__)
 			return None
-		subReader = reader.getSubReader(offset, persistent=lazy)
 		table = self.tableClass()
-		if lazy:
-			table.reader = subReader
-			table.font = font
-			table.compileStatus = 1
-			table.countVars = countVars.copy()
-		else:
-			table.decompile(subReader, font, countVars)
+		table.reader = reader
+		table.offset = offset
+		table.font = font
+		table.compileStatus = 1
+		if not font.lazy:
+			table.ensureDecompiled()
 		return table
 	
-	def write(self, writer, font, countVars, value, repeatIndex=None):
+	def write(self, writer, font, tableDict, value, repeatIndex=None):
+		writer.longOffset = self.longOffset
 		if value is None:
-			writer.writeUShort(0)
+			self.writeNullOffset(writer)
 		else:
 			subWriter = writer.getSubWriter()
 			subWriter.name = self.name
 			if repeatIndex is not None:
 				subWriter.repeatIndex = repeatIndex
-			value.preCompile()
 			writer.writeSubTable(subWriter)
-			value.compile(subWriter, font, countVars)
+			value.compile(subWriter, font)
+
+class LTable(Table):
+
+	longOffset = True
+
+	def readOffset(self, reader):
+		return reader.readULong()
+
 
 class SubTable(Table):
 	def getConverter(self, tableType, lookupType):
-		lookupTypes = self.lookupTypes[tableType]
-		tableClass = lookupTypes[lookupType]
-		return SubTable(self.name, self.repeat, self.repeatOffset, tableClass)
+		tableClass = self.lookupTypes[tableType][lookupType]
+		return self.__class__(self.name, self.repeat, self.aux, tableClass)
 
 
-class ExtSubTable(Table):
-	def getConverter(self, tableType, lookupType):
-		lookupTypes = self.lookupTypes[tableType]
-		tableClass = lookupTypes[lookupType]
-		return ExtSubTable(self.name, self.repeat, self.repeatOffset, tableClass)
+class ExtSubTable(LTable, SubTable):
 	
-	def read(self, reader, font, countVars, lazy=True):
-		offset = reader.readULong()
-		if offset == 0:
-			return None
-		subReader = reader.getSubReader(offset)
-		table = self.tableClass()
-		table.start = subReader.offset
-		if lazy:
-			table.reader = subReader
-			table.font = font
-			table.compileStatus = 1
-			table.countVars = countVars.copy()
-		else:
-			table.decompile(subReader, font, countVars)
-		return table
-	
-	def write(self, writer, font, countVars, value, repeatIndex=None):
+	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		writer.Extension = 1 # actually, mere presence of the field flags it as an Ext Subtable writer.
-		if value is None:
-			writer.writeULong(0)
-		else:
-			# If the subtable has not yet been decompiled, we need to do so.
-			if  value.compileStatus == 1:
-				value.decompile(value.reader, value.font, countVars)
-			subWriter = writer.getSubWriter()
-			subWriter.name = self.name
-			writer.writeSubTable(subWriter)
-			# If the subtable has been sorted and we can just write the original
-			# data, then do so.
-			if value.compileStatus == 3:
-				data = value.reader.data[value.start:value.end]
-				subWriter.writeData(data)
-			else:
-				value.compile(subWriter, font, countVars)
+		Table.write(self, writer, font, tableDict, value, repeatIndex)
 
 
 class ValueFormat(IntValue):
-	def __init__(self, name, repeat, repeatOffset, tableClass):
-		BaseConverter.__init__(self, name, repeat, repeatOffset, tableClass)
+	def __init__(self, name, repeat, aux, tableClass):
+		BaseConverter.__init__(self, name, repeat, aux, tableClass)
 		self.which = name[-1] == "2"
-	def read(self, reader, font, countVars):
+	def read(self, reader, font, tableDict):
 		format = reader.readUShort()
 		reader.setValueFormat(format, self.which)
 		return format
-	def write(self, writer, font, countVars, format, repeatIndex=None):
+	def write(self, writer, font, tableDict, format, repeatIndex=None):
 		writer.writeUShort(format)
 		writer.setValueFormat(format, self.which)
 
 
 class ValueRecord(ValueFormat):
-	def read(self, reader, font, countVars):
+	def read(self, reader, font, tableDict):
 		return reader.readValueRecord(font, self.which)
-	def write(self, writer, font, countVars, value, repeatIndex=None):
+	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		writer.writeValueRecord(value, font, self.which)
 	def xmlWrite(self, xmlWriter, font, value, name, attrs):
 		if value is None:
@@ -289,11 +268,10 @@ class ValueRecord(ValueFormat):
 
 class DeltaValue(BaseConverter):
 	
-	def read(self, reader, font, countVars):
-		table = countVars.getTop()
-		StartSize = table["StartSize"]
-		EndSize = table["EndSize"]
-		DeltaFormat = table["DeltaFormat"]
+	def read(self, reader, font, tableDict):
+		StartSize = tableDict["StartSize"]
+		EndSize = tableDict["EndSize"]
+		DeltaFormat = tableDict["DeltaFormat"]
 		assert DeltaFormat in (1, 2, 3), "illegal DeltaFormat"
 		nItems = EndSize - StartSize + 1
 		nBits = 1 << DeltaFormat
@@ -313,12 +291,11 @@ class DeltaValue(BaseConverter):
 			DeltaValue.append(value)
 		return DeltaValue
 	
-	def write(self, writer, font, countVars, value, repeatIndex=None):
-		table = countVars.getTop()
-		StartSize = table["StartSize"]
-		EndSize = table["EndSize"]
-		DeltaFormat = table["DeltaFormat"]
-		DeltaValue = table["DeltaValue"]
+	def write(self, writer, font, tableDict, value, repeatIndex=None):
+		StartSize = tableDict["StartSize"]
+		EndSize = tableDict["EndSize"]
+		DeltaFormat = tableDict["DeltaFormat"]
+		DeltaValue = value
 		assert DeltaFormat in (1, 2, 3), "illegal DeltaFormat"
 		nItems = EndSize - StartSize + 1
 		nBits = 1 << DeltaFormat
@@ -353,7 +330,8 @@ converterMapping = {
 	"GlyphID":     GlyphID,
 	"struct":      Struct,
 	"Offset":      Table,
-	"LOffset":     ExtSubTable,
+	"LOffset":     LTable,
 	"ValueRecord": ValueRecord,
+	"DeltaValue":  DeltaValue,
 }
 

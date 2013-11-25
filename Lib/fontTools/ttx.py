@@ -100,16 +100,16 @@ def makeOutputFileName(input, outputDir, extension):
 
 class Options:
 
-	listTables = 0
+	listTables = False
 	outputDir = None
 	outputFile = None
-	verbose = 0
-	quiet = 0
-	splitTables = 0
-	disassembleInstructions = 1
+	verbose = False
+	quiet = False
+	splitTables = False
+	disassembleInstructions = True
 	mergeFile = None
-	recalcBBoxes = 1
-	allowVID = 0
+	recalcBBoxes = True
+	allowVID = False
 	ignoreDecompileErrors = True
 	bitmapGlyphDataFormat = 'raw'
 
@@ -130,20 +130,20 @@ class Options:
 			elif option == "-o":
 				self.outputFile = value
 			elif option == "-v":
-				self.verbose = 1
+				self.verbose = True
 			elif option == "-q":
-				self.quiet = 1
+				self.quiet = True
 			# dump options
 			elif option == "-l":
-				self.listTables = 1
+				self.listTables = True
 			elif option == "-t":
 				self.onlyTables.append(value)
 			elif option == "-x":
 				self.skipTables.append(value)
 			elif option == "-s":
-				self.splitTables = 1
+				self.splitTables = True
 			elif option == "-i":
-				self.disassembleInstructions = 0
+				self.disassembleInstructions = False
 			elif option == "-z":
 				validOptions = ('raw', 'row', 'bitwise', 'extfile')
 				if value not in validOptions:
@@ -156,9 +156,9 @@ class Options:
 			elif option == "-m":
 				self.mergeFile = value
 			elif option == "-b":
-				self.recalcBBoxes = 0
+				self.recalcBBoxes = False
 			elif option == "-a":
-				self.allowVID = 1
+				self.allowVID = True
 			elif option == "-e":
 				self.ignoreDecompileErrors = False
 		if self.onlyTables and self.skipTables:
@@ -171,7 +171,7 @@ class Options:
 
 def ttList(input, output, options):
 	import string
-	ttf = TTFont(input, fontNumber=options.fontNumber)
+	ttf = TTFont(input, fontNumber=options.fontNumber, lazy=True)
 	reader = ttf.reader
 	tags = reader.keys()
 	tags.sort()
@@ -194,13 +194,14 @@ def ttDump(input, output, options):
 	if not options.quiet:
 		print 'Dumping "%s" to "%s"...' % (input, output)
 	ttf = TTFont(input, 0, verbose=options.verbose, allowVID=options.allowVID,
+			lazy=False,
 			quiet=options.quiet,
 			ignoreDecompileErrors=options.ignoreDecompileErrors,
 			fontNumber=options.fontNumber)
 	ttf.saveXML(output,
-			quiet=options.quiet, 
+			quiet=options.quiet,
 			tables=options.onlyTables,
-			skipTables=options.skipTables, 
+			skipTables=options.skipTables,
 			splitTables=options.splitTables,
 			disassembleInstructions=options.disassembleInstructions,
 			bitmapGlyphDataFormat=options.bitmapGlyphDataFormat)
@@ -211,6 +212,7 @@ def ttCompile(input, output, options):
 	if not options.quiet:
 		print 'Compiling "%s" to "%s"...' % (input, output)
 	ttf = TTFont(options.mergeFile,
+			lazy=False,
 			recalcBBoxes=options.recalcBBoxes,
 			verbose=options.verbose, allowVID=options.allowVID)
 	ttf.importXML(input, quiet=options.quiet)

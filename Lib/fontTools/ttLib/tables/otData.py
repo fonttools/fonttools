@@ -101,7 +101,7 @@ otData = [
 		('uint16', 'StartSize', None, None, 'Smallest size to correct-in ppem'),
 		('uint16', 'EndSize', None, None, 'Largest size to correct-in ppem'),
 		('uint16', 'DeltaFormat', None, None, 'Format of DeltaValue array data: 1, 2, or 3'),
-		('uint16', 'DeltaValue', '', 0, 'Array of compressed data'),
+		('DeltaValue', 'DeltaValue', '', 0, 'Array of compressed data'),
 	]),
 
 
@@ -611,6 +611,7 @@ otData = [
 		('Offset', 'AttachList', None, None, 'Offset to list of glyphs with attachment points-from beginning of GDEF header (may be NULL)'),
 		('Offset', 'LigCaretList', None, None, 'Offset to list of positioning points for ligature carets-from beginning of GDEF header (may be NULL)'),
 		('Offset', 'MarkAttachClassDef', None, None, 'Offset to class definition table for mark attachment type-from beginning of GDEF header (may be NULL)'),
+		('Offset', 'MarkGlyphSetsDef', None, 'Version >= 0x00010002 / float(0x10000)', 'Offset to the table of mark set definitions-from beginning of GDEF header (may be NULL)'),
 	]),
 
 	('AttachList', [
@@ -651,6 +652,11 @@ otData = [
 		('Offset', 'DeviceTable', None, None, 'Offset to Device table for X or Y value-from beginning of CaretValue table'),
 	]),
 
+	('MarkGlyphSetsDef', [
+		('uint16', 'MarkSetTableFormat', None, None, 'Format identifier == 1'),
+		('uint16', 'MarkSetCount', None, None, 'Number of mark sets defined'),
+		('LOffset', 'Coverage', 'MarkSetCount', 0, 'Array of offsets to mark set coverage tables.'),
+	]),
 
 	#
 	# base

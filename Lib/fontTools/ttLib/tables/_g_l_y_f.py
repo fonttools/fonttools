@@ -51,6 +51,9 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 			warnings.warn("too much 'glyf' table data")
 		if noname:
 			warnings.warn('%s glyphs have no name' % i)
+		if not ttFont.lazy:
+			for glyph in self.glyphs.values():
+				glyph.expand(self)
 	
 	def compile(self, ttFont):
 		if not hasattr(self, "glyphOrder"):

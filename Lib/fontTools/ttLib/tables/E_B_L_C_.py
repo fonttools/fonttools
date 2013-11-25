@@ -325,16 +325,18 @@ class EblcIndexSubTable:
 	def __init__(self, data, ttFont):
 		self.data = data
 		self.ttFont = ttFont
+		if not ttFont.lazy:
+			self.decompile()
+			del self.data, self.ttFont
 
 	def __getattr__(self, attr):
 		# Allow lazy decompile.
 		if attr[:2] == '__':
 			raise AttributeError, attr
-		if self.data == None:
+		if not hasattr(self, "data"):
 			raise AttributeError, attr
 		self.decompile()
-		self.data = None
-		self.ttFont = None
+		del self.data, self.ttFont
 		return getattr(self, attr)
 
 	# This method just takes care of the indexSubHeader. Implementing subclasses

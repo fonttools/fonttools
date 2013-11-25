@@ -71,7 +71,7 @@ class TTFont:
 	def __init__(self, file=None, res_name_or_index=None,
 			sfntVersion="\000\001\000\000", flavor=None, checkChecksums=0,
 			verbose=0, recalcBBoxes=1, allowVID=0, ignoreDecompileErrors=False,
-			fontNumber=-1, quiet=0):
+			fontNumber=-1, lazy=True, quiet=False):
 		
 		"""The constructor can be called with a few different arguments.
 		When reading a font from disk, 'file' should be either a pathname
@@ -119,11 +119,15 @@ class TTFont:
 		individual tables during decompilation will be ignored, falling
 		back to the DefaultTable implementation, which simply keeps the
 		binary data.
+
+		If lazy is set to True, many data structures are loaded lazily, upon
+		access only.
 		"""
 		
 		from fontTools.ttLib import sfnt
 		self.verbose = verbose
 		self.quiet = quiet
+		self.lazy = lazy
 		self.recalcBBoxes = recalcBBoxes
 		self.tables = {}
 		self.reader = None
@@ -216,8 +220,8 @@ class TTFont:
 		if closeStream:
 			file.close()
 	
-	def saveXML(self, fileOrPath, progress=None, quiet=None, 
-			tables=None, skipTables=None, splitTables=0, disassembleInstructions=1,
+	def saveXML(self, fileOrPath, progress=None, quiet=False,
+			tables=None, skipTables=None, splitTables=False, disassembleInstructions=True,
 			bitmapGlyphDataFormat='raw'):
 		"""Export the font as TTX (an XML-based text file), or as a series of text
 		files when splitTables is true. In the latter case, the 'fileOrPath'
@@ -314,7 +318,7 @@ class TTFont:
 		writer.newline()
 		writer.newline()
 	
-	def importXML(self, file, progress=None, quiet=None):
+	def importXML(self, file, progress=None, quiet=False):
 		"""Import a TTX file (an XML-based text format), so as to recreate
 		a font object.
 		"""
@@ -324,8 +328,11 @@ class TTFont:
 			# contain the table which was originally used to extract the
 			# glyph names from (ie. 'post', 'cmap' or 'CFF ').
 			self.getGlyphOrder()
-		import xmlImport
-		xmlImport.importXML(self, file, progress, quiet)
+
+		from fontTools.misc import xmlReader
+
+		reader = xmlReader.XMLReader(file, self, progress, quiet)
+		reader.read()
 	
 	def isLoaded(self, tag):
 		"""Return true if the table identified by 'tag' has been 
