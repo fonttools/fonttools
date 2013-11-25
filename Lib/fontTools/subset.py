@@ -1081,22 +1081,16 @@ def subset_glyphs(self, s):
     table.LigCaretList.LigGlyph = [table.LigCaretList.LigGlyph[i]
                                    for i in indices]
     table.LigCaretList.LigGlyphCount = len(table.LigCaretList.LigGlyph)
-    if not table.LigCaretList.LigGlyphCount:
-      table.LigCaretList = None
   if table.MarkAttachClassDef:
     table.MarkAttachClassDef.classDefs = dict((g,v) for g,v in
                                               table.MarkAttachClassDef.
                                                 classDefs.iteritems()
                                               if g in glyphs)
-    if not table.MarkAttachClassDef.classDefs:
-      table.MarkAttachClassDef = None
   if table.GlyphClassDef:
     table.GlyphClassDef.classDefs = dict((g,v) for g,v in
                                          table.GlyphClassDef.
                                            classDefs.iteritems()
                                          if g in glyphs)
-    if not table.GlyphClassDef.classDefs:
-      table.GlyphClassDef = None
   if table.AttachList:
     indices = table.AttachList.Coverage.subset(glyphs)
     GlyphCount = table.AttachList.GlyphCount
@@ -1104,12 +1098,32 @@ def subset_glyphs(self, s):
                                     for i in indices
                                     if i < GlyphCount]
     table.AttachList.GlyphCount = len(table.AttachList.AttachPoint)
-    if not table.AttachList.GlyphCount:
-      table.AttachList = None
+  if hasattr(table, "MarkGlyphSetsDef") and table.MarkGlyphSetsDef:
+    for coverage in table.MarkGlyphSetsDef.Coverage:
+      coverage.subset(glyphs)
+    table.MarkGlyphSetsDef.Coverage = [c for c in table.MarkGlyphSetsDef.Coverage if c.glyphs]
+  return True
+
+@_add_method(ttLib.getTableClass('GDEF'))
+def prune_post_subset(self, options):
+  table = self.table
+  if table.LigCaretList and not table.LigCaretList.LigGlyphCount:
+    table.LigCaretList = None
+  if table.MarkAttachClassDef and not table.MarkAttachClassDef.classDefs:
+    table.MarkAttachClassDef = None
+  if table.GlyphClassDef and not table.GlyphClassDef.classDefs:
+    table.GlyphClassDef = None
+  if table.AttachList and not table.AttachList.GlyphCount:
+    table.AttachList = None
+  if hasattr(table, "MarkGlyphSetsDef") and table.MarkGlyphSetsDef and not table.MarkGlyphSetsDef.Coverage:
+    table.MarkGlyphSetsDef = None
+    if table.Version == float(0x00010002)/0x10000:
+      table.Version = 1.0
   return bool(table.LigCaretList or
-               table.MarkAttachClassDef or
-               table.GlyphClassDef or
-               table.AttachList)
+              table.MarkAttachClassDef or
+              table.GlyphClassDef or
+              table.AttachList or
+              (table.Version >= float(0x00010002)/0x10000 and table.MarkGlyphSetsDef))
 
 @_add_method(ttLib.getTableClass('kern'))
 def prune_pre_subset(self, options):
