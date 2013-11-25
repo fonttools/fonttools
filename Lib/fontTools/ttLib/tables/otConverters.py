@@ -180,7 +180,7 @@ class Table(Struct):
 		return reader.readUShort()
 
 	def writeNullOffset(self, writer):
-		if hasattr(self, "Extension"):
+		if self.longOffset:
 			writer.writeULong(0)
 		else:
 			writer.writeUShort(0)
@@ -204,11 +204,11 @@ class Table(Struct):
 		return table
 	
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
-		writer.longOffset = self.longOffset
 		if value is None:
 			self.writeNullOffset(writer)
 		else:
 			subWriter = writer.getSubWriter()
+			subWriter.longOffset = self.longOffset
 			subWriter.name = self.name
 			if repeatIndex is not None:
 				subWriter.repeatIndex = repeatIndex
