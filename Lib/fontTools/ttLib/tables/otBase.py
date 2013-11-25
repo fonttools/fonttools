@@ -219,7 +219,7 @@ class OTTableWriter(object):
 		l = 0
 		for item in self.items:
 			if hasattr(item, "getData") or hasattr(item, "getCountData"):
-				if self.longOffset:
+				if item.longOffset:
 					l = l + 4  # sizeof(ULong)
 				else:
 					l = l + 2  # sizeof(UShort)
@@ -236,7 +236,7 @@ class OTTableWriter(object):
 			item = items[i]
 			
 			if hasattr(item, "getData"):
-				if self.longOffset:
+				if item.longOffset:
 					items[i] = packULong(item.pos - pos)
 				else:
 					try:
