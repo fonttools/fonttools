@@ -6,5 +6,5 @@ fontToolsDir = os.path.dirname(os.path.dirname(os.path.normpath(
 		os.path.join(os.getcwd(), sys.argv[0]))))
 
 os.chdir(fontToolsDir)
-os.system("svn2cl -o Doc/ChangeLog https://svn.code.sf.net/p/fonttools/code/trunk")
+os.system("git2cl > Doc/ChangeLog")
 print "done."
