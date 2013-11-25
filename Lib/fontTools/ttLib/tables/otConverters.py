@@ -8,7 +8,7 @@ def buildConverters(tableSpec, tableNamespace):
 	the results are assigned to the corresponding class in otTables.py."""
 	converters = []
 	convertersByName = {}
-	for tp, name, repeat, repeatOffset, descr in tableSpec:
+	for tp, name, repeat, aux, descr in tableSpec:
 		if name.startswith("ValueFormat"):
 			assert tp == "uint16"
 			converterClass = ValueFormat
@@ -22,13 +22,13 @@ def buildConverters(tableSpec, tableNamespace):
 		else:
 			converterClass = converterMapping[tp]
 		tableClass = tableNamespace.get(name)
-		conv = converterClass(name, repeat, repeatOffset, tableClass)
+		conv = converterClass(name, repeat, aux, tableClass)
 		if name in ["SubTable", "ExtSubTable"]:
 			conv.lookupTypes = tableNamespace['lookupTypes']
 			# also create reverse mapping
 			for t in conv.lookupTypes.values():
 				for cls in t.values():
-					convertersByName[cls.__name__] = Table(name, repeat, repeatOffset, cls)
+					convertersByName[cls.__name__] = Table(name, repeat, aux, cls)
 		converters.append(conv)
 		assert not convertersByName.has_key(name)
 		convertersByName[name] = conv
@@ -40,10 +40,10 @@ class BaseConverter(object):
 	"""Base class for converter objects. Apart from the constructor, this
 	is an abstract class."""
 	
-	def __init__(self, name, repeat, repeatOffset, tableClass):
+	def __init__(self, name, repeat, aux, tableClass):
 		self.name = name
 		self.repeat = repeat
-		self.repeatOffset = repeatOffset
+		self.aux = aux
 		self.tableClass = tableClass
 		self.isCount = name.endswith("Count")
 		self.isPropagatedCount = name in ["ClassCount", "Class2Count"]
@@ -226,7 +226,7 @@ class LTable(Table):
 class SubTable(Table):
 	def getConverter(self, tableType, lookupType):
 		tableClass = self.lookupTypes[tableType][lookupType]
-		return self.__class__(self.name, self.repeat, self.repeatOffset, tableClass)
+		return self.__class__(self.name, self.repeat, self.aux, tableClass)
 
 
 class ExtSubTable(LTable, SubTable):
@@ -237,8 +237,8 @@ class ExtSubTable(LTable, SubTable):
 
 
 class ValueFormat(IntValue):
-	def __init__(self, name, repeat, repeatOffset, tableClass):
-		BaseConverter.__init__(self, name, repeat, repeatOffset, tableClass)
+	def __init__(self, name, repeat, aux, tableClass):
+		BaseConverter.__init__(self, name, repeat, aux, tableClass)
 		self.which = name[-1] == "2"
 	def read(self, reader, font, tableDict):
 		format = reader.readUShort()
