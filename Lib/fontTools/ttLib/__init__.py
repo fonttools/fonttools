@@ -324,8 +324,11 @@ class TTFont:
 			# contain the table which was originally used to extract the
 			# glyph names from (ie. 'post', 'cmap' or 'CFF ').
 			self.getGlyphOrder()
-		import xmlImport
-		xmlImport.importXML(self, file, progress, quiet)
+
+		from fontTools.misc import xmlReader
+
+		reader = xmlReader.XMLReader(file, self, progress, quiet)
+		reader.read()
 	
 	def isLoaded(self, tag):
 		"""Return true if the table identified by 'tag' has been 
