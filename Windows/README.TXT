@@ -15,7 +15,7 @@ APPROACH I: Using py2exe and InnoSetup
 3. Install InnoSetup 4: http://www.jrsoftware.org/
 4. Download the latest released source code of TTX/FontTools at
    http://sourceforge.net/projects/fonttools/
-   Or alternatively grab the sources from SVN:
+   Or alternatively grab the sources from the VCS:
    http://fonttools.sourceforge.net/
 5. Unzip the source code of TTX/FontTools into a folder.
 6. In the folder where you unzipped TTX/FontTools, type:
@@ -36,7 +36,7 @@ APPROACH II: Using McMillan Installer and InnoSetup
 5. Put UPX somewhere within your PATH: http://upx.sourceforge.net/
 6. Download the latest released source code of TTX/FontTools at
    http://sourceforge.net/projects/fonttools/
-   Or alternatively grab the sources from SVN:
+   Or alternatively grab the sources from the VCS:
    http://fonttools.sourceforge.net/
 7. Unzip the source code of TTX/FontTools into a folder.
 8. In the folder where you unzipped TTX/FontTools, type:

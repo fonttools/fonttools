@@ -2,6 +2,7 @@ import DefaultTable
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval, num2binary, binary2num
 from types import TupleType
+import warnings
 
 
 # panose classification
@@ -80,12 +81,19 @@ OS2_format_2_addition =  OS2_format_1_addition + """
 	usMaxContex:        H
 """
 
+OS2_format_5_addition =  OS2_format_2_addition + """
+	usLowerOpticalPointSize:    H
+	usUpperOpticalPointSize:    H
+"""
+
 bigendian = "	>	# big endian\n"
 
 OS2_format_1 = OS2_format_0 + OS2_format_1_addition
 OS2_format_2 = OS2_format_0 + OS2_format_2_addition
+OS2_format_5 = OS2_format_0 + OS2_format_5_addition
 OS2_format_1_addition = bigendian + OS2_format_1_addition
 OS2_format_2_addition = bigendian + OS2_format_2_addition
+OS2_format_5_addition = bigendian + OS2_format_5_addition
 
 
 class table_O_S_2f_2(DefaultTable.DefaultTable):
@@ -94,24 +102,21 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 	
 	def decompile(self, data, ttFont):
 		dummy, data = sstruct.unpack2(OS2_format_0, data, self)
-		# workarounds for buggy fonts (Apple, mona)
-		if not data:
-			self.version = 0
-		elif len(data) == sstruct.calcsize(OS2_format_1_addition):
-			self.version = 1
-		elif len(data) == sstruct.calcsize(OS2_format_2_addition):
-			if self.version not in (2, 3, 4):
-				self.version = 1
-		else:
-			from fontTools import ttLib
-			raise ttLib.TTLibError, "unknown format for OS/2 table (incorrect length): version %s" % (self.version, len(data))
+
 		if self.version == 1:
-			sstruct.unpack2(OS2_format_1_addition, data, self)
+			dummy, data = sstruct.unpack2(OS2_format_1_addition, data, self)
 		elif self.version in (2, 3, 4):
-			sstruct.unpack2(OS2_format_2_addition, data, self)
+			dummy, data = sstruct.unpack2(OS2_format_2_addition, data, self)
+		elif self.version == 5:
+			dummy, data = sstruct.unpack2(OS2_format_5_addition, data, self)
+			self.usLowerOpticalPointSize /= 20.
+			self.usUpperOpticalPointSize /= 20.
 		elif self.version <> 0:
 			from fontTools import ttLib
 			raise ttLib.TTLibError, "unknown format for OS/2 table: version %s" % self.version
+		if len(data):
+			warnings.warn("too much 'OS/2' table data")
+
 		self.panose = sstruct.unpack(panoseFormat, self.panose, Panose())
 	
 	def compile(self, ttFont):
@@ -123,6 +128,14 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 			data = sstruct.pack(OS2_format_1, self)
 		elif self.version in (2, 3, 4):
 			data = sstruct.pack(OS2_format_2, self)
+		elif self.version == 5:
+			lower = self.usLowerOpticalPointSize
+			upper = self.usUpperOpticalPointSize
+			self.usLowerOpticalPointSize = int(round(self.usLowerOpticalPointSize * 20))
+			self.usUpperOpticalPointSize = int(round(self.usUpperOpticalPointSize * 20))
+			data = sstruct.pack(OS2_format_5, self)
+			self.usLowerOpticalPointSize = lower
+			self.usUpperOpticalPointSize = upper
 		else:
 			from fontTools import ttLib
 			raise ttLib.TTLibError, "unknown format for OS/2 table: version %s" % self.version
@@ -134,6 +147,8 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 			format = OS2_format_1
 		elif self.version in (2, 3, 4):
 			format = OS2_format_2
+		elif self.version == 5:
+			format = OS2_format_5
 		else:
 			format = OS2_format_0
 		formatstring, names, fixes = sstruct.getformat(format)
