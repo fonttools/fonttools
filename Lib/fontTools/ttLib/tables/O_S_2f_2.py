@@ -110,7 +110,7 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 			if self.version not in (2, 3, 4):
 				self.version = 1
 		elif len(data) == sstruct.calcsize(OS2_format_5_addition):
-			self.version = 5
+			assert self.version == 5
 		else:
 			from fontTools import ttLib
 			raise ttLib.TTLibError, "unknown format for OS/2 table (incorrect length): version %s" % (self.version, len(data))
