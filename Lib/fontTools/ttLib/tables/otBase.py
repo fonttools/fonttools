@@ -499,8 +499,6 @@ class BaseTable(object):
 									# to delayed compilation
 									# 2 means that it was subject to delayed compilation, and 
 									# has been decompiled
-									# 3 means that the start and end fields have been filled out, and that we
-									# can use the data string rather than compiling from the table data.
 
 		self.recurse = 0
 	
