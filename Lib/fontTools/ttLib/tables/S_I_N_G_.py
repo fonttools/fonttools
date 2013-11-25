@@ -1,9 +1,13 @@
-import DefaultTable
-from fontTools.misc import sstruct
 import struct
 import time
-import string
+from fontTools.ttLib.tables import DefaultTable
+from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval, num2binary, binary2num
+
+try:
+	long
+except NameError:
+	long = int
 
 SINGFormat = """
 		>	# big endian
@@ -90,7 +94,8 @@ class table_S_I_N_G_(DefaultTable.DefaultTable):
 		writer.simpletag("baseGlyphName", value=self.baseGlyphName)
 		writer.newline()
 		
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, element, ttFont):
+		name, attrs, content = element
 		value = attrs["value"]
 		if name in ["uniqueName", "METAMD5", "baseGlyphName"]:
 			setattr(self, name, value)

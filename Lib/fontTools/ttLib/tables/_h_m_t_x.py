@@ -1,9 +1,9 @@
 import sys
-import DefaultTable
 import array
+import warnings
+from fontTools.ttLib.tables import DefaultTable
 from fontTools import ttLib
 from fontTools.misc.textTools import safeEval
-import warnings
 
 
 class table__h_m_t_x(DefaultTable.DefaultTable):
@@ -20,14 +20,14 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 			numberOfMetrics = numGlyphs # We warn later.
 		# Note: advanceWidth is unsigned, but we read/write as signed.
 		metrics = array.array("h", data[:4 * numberOfMetrics])
-		if sys.byteorder <> "big":
+		if sys.byteorder != "big":
 			metrics.byteswap()
 		data = data[4 * numberOfMetrics:]
 		numberOfSideBearings = numGlyphs - numberOfMetrics
 		sideBearings = array.array("h", data[:2 * numberOfSideBearings])
 		data = data[2 * numberOfSideBearings:]
 
-		if sys.byteorder <> "big":
+		if sys.byteorder != "big":
 			sideBearings.byteswap()
 		if data:
 			sys.stderr.write("too much data for hmtx/vmtx table\n")
@@ -61,19 +61,18 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 		for item in metrics:
 			allMetrics.extend(item)
 		allMetrics = array.array("h", allMetrics)
-		if sys.byteorder <> "big":
+		if sys.byteorder != "big":
 			allMetrics.byteswap()
 		data = allMetrics.tostring()
 		
 		additionalMetrics = array.array("h", additionalMetrics)
-		if sys.byteorder <> "big":
+		if sys.byteorder != "big":
 			additionalMetrics.byteswap()
 		data = data + additionalMetrics.tostring()
 		return data
 	
 	def toXML(self, writer, ttFont):
-		names = self.metrics.keys()
-		names.sort()
+		names = sorted(self.metrics.keys())
 		for glyphName in names:
 			advance, sb = self.metrics[glyphName]
 			writer.simpletag("mtx", [
@@ -83,7 +82,8 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 					])
 			writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, element, ttFont):
+		name, attrs, content = element
 		if not hasattr(self, "metrics"):
 			self.metrics = {}
 		if name == "mtx":
@@ -93,6 +93,6 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 	def __getitem__(self, glyphName):
 		return self.metrics[glyphName]
 	
-	def __setitem__(self, glyphName, (advance, sb)):
-		self.metrics[glyphName] = advance, sb
+	def __setitem__(self, glyphName, advance_sb):
+		self.metrics[glyphName] = advance_sb
 

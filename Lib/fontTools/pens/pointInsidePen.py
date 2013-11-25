@@ -2,6 +2,7 @@
 for shapes.
 """
 
+from __future__ import division
 from fontTools.pens.basePen import BasePen
 from fontTools.misc.bezierTools import solveQuadratic, solveCubic
 
@@ -96,7 +97,7 @@ class PointInsidePen(BasePen):
 
 		dx = x2 - x1
 		dy = y2 - y1
-		t = float(y - y1) / dy
+		t = (y - y1) / dy
 		ix = dx * t + x1
 		if ix < x:
 			return

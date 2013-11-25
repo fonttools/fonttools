@@ -1,10 +1,12 @@
-import DefaultTable
 import struct
+import sys
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval
-import string
-from types import FloatType, ListType, StringType, TupleType
-import sys
+from fontTools.ttLib.tables import DefaultTable
+
+if sys.version > '3':
+	long = int
+
 METAHeaderFormat = """
 		>	# big endian
 		tableVersionMajor:			H
@@ -166,14 +168,15 @@ class table_M_E_T_A_(DefaultTable.DefaultTable):
 		for glyphRec in self.glyphRecords:
 			glyphRec.toXML(writer, ttFont)
 		
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, element, ttFont):
+		name, attrs, content = element
 		if name == "GlyphRecord":
 			if not hasattr(self, "glyphRecords"):
 				self.glyphRecords = []
 			glyphRec = GlyphRecord()
 			self.glyphRecords.append(glyphRec)
 			for element in content:
-				if isinstance(element, StringType):
+				if isinstance(element, str):
 					continue
 				glyphRec.fromXML(element, ttFont)
 			glyphRec.offset = -1
@@ -187,7 +190,7 @@ class table_M_E_T_A_(DefaultTable.DefaultTable):
 			setattr(self, name, value)
 
 
-class GlyphRecord:
+class GlyphRecord(object):
 	def __init__(self):
 		self.glyphID = -1
 		self.nMetaEntry = -1
@@ -207,12 +210,13 @@ class GlyphRecord:
 		writer.newline()
 
 
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, element, ttFont):
+		name, attrs, content = element
 		if name == "StringRecord":
 			stringRec = StringRecord()
 			self.stringRecs.append(stringRec)
 			for element in content:
-				if isinstance(element, StringType):
+				if isinstance(element, str):
 					continue
 				stringRec.fromXML(element, ttFont)
 			stringRec.stringLen = len(stringRec.string)
@@ -248,7 +252,11 @@ class GlyphRecord:
 
 
 def mapXMLToUTF8(string):
-	uString = u""
+	if sys.version > '3':
+		uString = ""
+		unichr = chr
+	else:
+		uString = u""
 	strLen = len(string)
 	i = 0
 	while i < strLen:
@@ -273,7 +281,10 @@ def mapXMLToUTF8(string):
 
 
 def mapUTF8toXML(string):
-	uString = string.decode('utf8')
+	try:
+		uString = string.decode('utf8')
+	except AttributeError:
+		uString = string
 	string = ""
 	for uChar in uString:
 		i = ord(uChar)
@@ -284,7 +295,7 @@ def mapUTF8toXML(string):
 	return string
 
 
-class StringRecord:
+class StringRecord(object):
 	def __init__(self):
 		self.labelID = -1
 		self.string = ""
@@ -303,7 +314,8 @@ class StringRecord:
 		writer.endtag("StringRecord")
 		writer.newline()
 
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, element, ttFont):
+		name, attrs, content = element
 		value = attrs["value"]
 		if name == "string":
 			self.string = mapXMLToUTF8(value)

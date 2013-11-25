@@ -6,7 +6,13 @@ charstring encryption algorithm as used by PostScript Type 1 fonts.
 # all four public functions get overridden by the *much* faster 
 # C extension module eexecOp, if available.
 
+from __future__ import print_function
 import string
+
+try:
+	long
+except NameError:
+	long = int
 
 error = "eexec.error"
 
@@ -14,13 +20,13 @@ error = "eexec.error"
 def _decryptChar(cipher, R):
 	cipher = ord(cipher)
 	plain = ( (cipher ^ (R>>8)) ) & 0xFF
-	R = ( (cipher + R) * 52845L + 22719L ) & 0xFFFF
+	R = ( (cipher + R) * long(52845) + long(22719) ) & 0xFFFF
 	return chr(plain), R
 
 def _encryptChar(plain, R):
 	plain = ord(plain)
 	cipher = ( (plain ^ (R>>8)) ) & 0xFF
-	R = ( (cipher + R) * 52845L + 22719L ) & 0xFFFF
+	R = ( (cipher + R) * long(52845) + long(22719) ) & 0xFFFF
 	return chr(cipher), R
 
 
@@ -56,10 +62,10 @@ def deHexString(h):
 def _test():
 	import fontTools.misc.eexecOp as eexecOp
 	testStr = "\0\0asdadads asds\265"
-	print decrypt, decrypt(testStr, 12321)
-	print eexecOp.decrypt, eexecOp.decrypt(testStr, 12321)
-	print encrypt, encrypt(testStr, 12321)
-	print eexecOp.encrypt, eexecOp.encrypt(testStr, 12321)
+	print(decrypt, decrypt(testStr, 12321))
+	print(eexecOp.decrypt, eexecOp.decrypt(testStr, 12321))
+	print(encrypt, encrypt(testStr, 12321))
+	print(eexecOp.encrypt, eexecOp.encrypt(testStr, 12321))
 
 
 if __name__ == "__main__":

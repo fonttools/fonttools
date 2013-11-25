@@ -2,10 +2,8 @@
 CFF dictionary data and Type1/Type2 CharStrings.
 """
 
-import types
+from __future__ import print_function, division
 import struct
-import string
-
 
 DEBUG = 0
 
@@ -35,7 +33,7 @@ for _i in range(len(realNibbles)):
 	realNibblesDict[realNibbles[_i]] = _i
 
 
-class ByteCodeBase:
+class ByteCodeBase(object):
 	
 	def read_byte(self, b0, data, index):
 		return b0 - 139, index
@@ -87,7 +85,7 @@ def buildOperatorDict(operatorList):
 			oper[item[0]] = item[1]
 		else:
 			oper[item[0]] = item[1:]
-		if type(item[0]) == types.TupleType:
+		if isinstance(item[0], tuple):
 			opc[item[1]] = item[0]
 		else:
 			opc[item[1]] = (item[0],)
@@ -242,7 +240,7 @@ class T2CharString(ByteCodeBase):
 		self.bytecode = bytecode
 		self.program = program
 		self.private = private
-		self.globalSubrs = globalSubrs if globalSubrs is not None else []
+		self.globalSubrs = globalSubrs
 	
 	def __repr__(self):
 		if self.bytecode is None:
@@ -286,25 +284,24 @@ class T2CharString(ByteCodeBase):
 		while i < end:
 			token = program[i]
 			i = i + 1
-			tp = type(token)
-			if tp == types.StringType:
+			if isinstance(token, basestring):
 				try:
-					bytecode.extend(map(chr, opcodes[token]))
+					bytecode.extend([chr(x) for x in opcodes[token]])
 				except KeyError:
-					raise CharStringCompileError, "illegal operator: %s" % token
+					raise CharStringCompileError("illegal operator: %s" % token)
 				if token in ('hintmask', 'cntrmask'):
 					bytecode.append(program[i])  # hint mask
 					i = i + 1
-			elif tp == types.IntType:
+			elif isinstance(token, int):
 				bytecode.append(encodeInt(token))
-			elif tp == types.FloatType:
+			elif isinstance(token, float):
 				bytecode.append(encodeFixed(token))
 			else:
-				assert 0, "unsupported type: %s" % tp
+				assert 0, "unsupported type: %s" % type (token)
 		try:
 			bytecode = "".join(bytecode)
 		except TypeError:
-			print bytecode
+			print(bytecode)
 			raise
 		self.setBytecode(bytecode)
 	
@@ -320,7 +317,7 @@ class T2CharString(ByteCodeBase):
 		self.program = None
 	
 	def getToken(self, index, 
-			len=len, ord=ord, getattr=getattr, type=type, StringType=types.StringType):
+			len=len, ord=ord, getattr=getattr, type=type, StringType=str):
 		if self.bytecode is not None:
 			if index >= len(self.bytecode):
 				return None, 0, 0
@@ -334,7 +331,7 @@ class T2CharString(ByteCodeBase):
 				return None, 0, 0
 			token = self.program[index]
 			index = index + 1
-		isOperator = type(token) == StringType
+		isOperator = isinstance(token, str)
 		return token, isOperator, index
 	
 	def getBytes(self, index, nBytes):
@@ -369,23 +366,24 @@ class T2CharString(ByteCodeBase):
 				if token is None:
 					break
 				if isOperator:
-					args = map(str, args)
+					args = [str(arg) for arg in args]
 					if token in ('hintmask', 'cntrmask'):
 						hintMask, isOperator, index = self.getToken(index)
 						bits = []
 						for byte in hintMask:
 							bits.append(num2binary(ord(byte), 8))
-						hintMask = string.join(bits, "")
-						line = string.join(args + [token, hintMask], " ")
+						hintMask = "".join(bits)
+						line = " ".join(args + [token, hintMask])
 					else:
-						line = string.join(args + [token], " ")
+						line = " ".join(args + [token])
 					xmlWriter.write(line)
 					xmlWriter.newline()
 					args = []
 				else:
 					args.append(token)
 	
-	def fromXML(self, (name, attrs, content)):
+	def fromXML(self, element):
+		name, attrs, content = element
 		from fontTools.misc.textTools import binary2num, readHex
 		if attrs.get("raw"):
 			self.setBytecode(readHex(content))
@@ -485,7 +483,7 @@ class T1CharString(T2CharString):
 		self.width = extractor.width
 
 
-class SimpleT2Decompiler:
+class SimpleT2Decompiler(object):
 	
 	def __init__(self, localSubrs, globalSubrs):
 		self.localSubrs = localSubrs
@@ -579,7 +577,7 @@ class SimpleT2Decompiler:
 	def op_hintmask(self, index):
 		if not self.hintMaskBytes:
 			self.countHints()
-			self.hintMaskBytes = (self.hintCount + 7) / 8
+			self.hintMaskBytes = (self.hintCount + 7) // 8
 		hintMaskBytes, index = self.callingStack[-1].getBytes(index, self.hintMaskBytes)
 		return hintMaskBytes, index
 	
@@ -587,7 +585,7 @@ class SimpleT2Decompiler:
 	
 	def countHints(self):
 		args = self.popall()
-		self.hintCount = self.hintCount + len(args) / 2
+		self.hintCount = self.hintCount + len(args) // 2
 
 	# misc
 	def op_and(self, index):
@@ -695,7 +693,7 @@ class T2OutlineExtractor(SimpleT2Decompiler):
 	
 	def countHints(self):
 		args = self.popallWidth()
-		self.hintCount = self.hintCount + len(args) / 2
+		self.hintCount = self.hintCount + len(args) // 2
 	
 	#
 	# hint operators
@@ -918,7 +916,7 @@ class T2OutlineExtractor(SimpleT2Decompiler):
 		raise NotImplementedError
 	
 	#
-	# miscelaneous helpers
+	# miscellaneous helpers
 	#
 	def alternatingLineto(self, isHorizontal):
 		args = self.popall()
@@ -1027,7 +1025,7 @@ class T1OutlineExtractor(T2OutlineExtractor):
 	def op_callothersubr(self, index):
 		subrIndex = self.pop()
 		nArgs = self.pop()
-		#print nArgs, subrIndex, "callothersubr"
+		#print(nArgs, subrIndex, "callothersubr")
 		if subrIndex == 0 and nArgs == 3:
 			self.doFlex()
 			self.flexing = 0
@@ -1143,7 +1141,7 @@ class DictDecompiler(ByteCodeBase):
 		return None, index
 	
 	def handle_operator(self, operator, argType):
-		if type(argType) == type(()):
+		if isinstance(argType, tuple):
 			value = ()
 			for i in range(len(argType)-1, -1, -1):
 				arg = argType[i]

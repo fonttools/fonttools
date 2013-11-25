@@ -16,15 +16,17 @@ SCALE_COMPONENT_OFFSET_DEFAULT = 0   # 0 == MS, 1 == Apple
 
 import sys
 import struct
+import array
+import warnings
 from fontTools.misc import sstruct
-import DefaultTable
+from fontTools.ttLib.tables import DefaultTable
 from fontTools import ttLib
 from fontTools.misc.textTools import safeEval, readHex
 from fontTools.misc.arrayTools import calcBounds
-import ttProgram
-import array
-from types import StringType, TupleType
-import warnings
+from fontTools.ttLib.tables import ttProgram
+
+if sys.version < '3':
+    range = xrange
 
 class table__g_l_y_f(DefaultTable.DefaultTable):
 	
@@ -42,8 +44,8 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 				glyphName = 'ttxautoglyph%s' % i
 			next = int(loca[i+1])
 			glyphdata = data[last:next]
-			if len(glyphdata) <> (next - last):
-				raise ttLib.TTLibError, "not enough 'glyf' table data"
+			if len(glyphdata) != (next - last):
+				raise ttLib.TTLibError("not enough 'glyf' table data")
 			glyph = Glyph(glyphdata)
 			self.glyphs[glyphName] = glyph
 			last = next
@@ -88,7 +90,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 		for glyphName in glyphNames:
 			if not counter % progressStep and progress is not None:
 				progress.setLabel("Dumping 'glyf' table... (%s)" % glyphName)
-				progress.increment(progressStep / float(numGlyphs))
+				progress.increment(progressStep / numGlyphs)
 			counter = counter + 1
 			glyph = self[glyphName]
 			if glyph.numberOfContours:
@@ -109,8 +111,9 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 				writer.newline()
 			writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
-		if name <> "TTGlyph":
+	def fromXML(self, element, ttFont):
+		name, attrs, content = element
+		if name != "TTGlyph":
 			return
 		if not hasattr(self, "glyphs"):
 			self.glyphs = {}
@@ -124,7 +127,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 			setattr(glyph, attr, safeEval(attrs.get(attr, '0')))
 		self.glyphs[glyphName] = glyph
 		for element in content:
-			if type(element) <> TupleType:
+			if not isinstance(element, tuple):
 				continue
 			glyph.fromXML(element, ttFont)
 		if not ttFont.recalcBBoxes:
@@ -144,7 +147,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 		return self.glyphs.keys()
 	
 	def has_key(self, glyphName):
-		return self.glyphs.has_key(glyphName)
+		return glyphName in self.glyphs
 	
 	__contains__ = has_key
 	
@@ -202,7 +205,7 @@ SCALED_COMPONENT_OFFSET    = 0x0800  # composite designed to have the component 
 UNSCALED_COMPONENT_OFFSET  = 0x1000  # composite designed not to have the component offset scaled (designed for MS) 
 
 
-class Glyph:
+class Glyph(object):
 	
 	def __init__(self, data=""):
 		if not data:
@@ -281,18 +284,19 @@ class Glyph:
 				writer.endtag("instructions")
 				writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, element, ttFont):
+		name, attrs, content = element
 		if name == "contour":
 			if self.numberOfContours < 0:
-				raise ttLib.TTLibError, "can't mix composites and contours in glyph"
+				raise ttLib.TTLibError("can't mix composites and contours in glyph")
 			self.numberOfContours = self.numberOfContours + 1
 			coordinates = GlyphCoordinates()
 			flags = []
 			for element in content:
-				if type(element) <> TupleType:
+				if not isinstance(element, tuple):
 					continue
 				name, attrs, content = element
-				if name <> "pt":
+				if name != "pt":
 					continue  # ignore anything but "pt"
 				coordinates.append((safeEval(attrs["x"]), safeEval(attrs["y"])))
 				flags.append(not not safeEval(attrs["on"]))
@@ -307,7 +311,7 @@ class Glyph:
 				self.endPtsOfContours.append(len(self.coordinates)-1)
 		elif name == "component":
 			if self.numberOfContours > 0:
-				raise ttLib.TTLibError, "can't mix composites and contours in glyph"
+				raise ttLib.TTLibError("can't mix composites and contours in glyph")
 			self.numberOfContours = -1
 			if not hasattr(self, "components"):
 				self.components = []
@@ -317,7 +321,7 @@ class Glyph:
 		elif name == "instructions":
 			self.program = ttProgram.Program()
 			for element in content:
-				if type(element) <> TupleType:
+				if not isinstance(element, tuple):
 					continue
 				self.program.fromXML(element, ttFont)
 	
@@ -362,7 +366,7 @@ class Glyph:
 	def decompileCoordinates(self, data):
 		endPtsOfContours = array.array("h")
 		endPtsOfContours.fromstring(data[:2*self.numberOfContours])
-		if sys.byteorder <> "big":
+		if sys.byteorder != "big":
 			endPtsOfContours.byteswap()
 		self.endPtsOfContours = endPtsOfContours.tolist()
 		
@@ -475,7 +479,7 @@ class Glyph:
 		assert len(self.coordinates) == len(self.flags)
 		data = ""
 		endPtsOfContours = array.array("h", self.endPtsOfContours)
-		if sys.byteorder <> "big":
+		if sys.byteorder != "big":
 			endPtsOfContours.byteswap()
 		data = data + endPtsOfContours.tostring()
 		instructions = self.program.getBytecode()
@@ -537,10 +541,10 @@ class Glyph:
 				compressedflags.append(flag)
 			lastflag = flag
 		data = data + array.array("B", compressedflags).tostring()
-		xPoints = map(int, xPoints)  # work around struct >= 2.5 bug
-		yPoints = map(int, yPoints)
-		data = data + apply(struct.pack, (xFormat,)+tuple(xPoints))
-		data = data + apply(struct.pack, (yFormat,)+tuple(yPoints))
+		xPoints = [int(x) for x in xPoints]  # work around struct >= 2.5 bug
+		yPoints = [int(y) for y in yPoints]
+		data = data + struct.pack(*(xFormat,)+tuple(xPoints))
+		data = data + struct.pack(*(yFormat,)+tuple(yPoints))
 		return data
 	
 	def recalcBounds(self, glyfTable):
@@ -559,7 +563,7 @@ class Glyph:
 	
 	def __getitem__(self, componentIndex):
 		if not self.isComposite():
-			raise ttLib.TTLibError, "can't use glyph as sequence"
+			raise ttLib.TTLibError("can't use glyph as sequence")
 		return self.components[componentIndex]
 	
 	def getCoordinates(self, glyfTable):
@@ -729,7 +733,7 @@ class Glyph:
 		return cmp(self.__dict__, other.__dict__)
 
 
-class GlyphComponent:
+class GlyphComponent(object):
 	
 	def __init__(self):
 		pass
@@ -753,7 +757,7 @@ class GlyphComponent:
 		self.flags = int(flags)
 		glyphID = int(glyphID)
 		self.glyphName = glyfTable.getGlyphName(int(glyphID))
-		#print ">>", reprflag(self.flags)
+		#print(">>", reprflag(self.flags))
 		data = data[4:]
 		x4000 = float(0x4000)
 		
@@ -826,7 +830,7 @@ class GlyphComponent:
 				data = data + struct.pack(">hhhh", 
 						transform[0][0], transform[0][1],
 						transform[1][0], transform[1][1])
-			elif transform[0][0] <> transform[1][1]:
+			elif transform[0][0] != transform[1][1]:
 				flags = flags | WE_HAVE_AN_X_AND_Y_SCALE
 				data = data + struct.pack(">hh", 
 						transform[0][0], transform[1][1])
@@ -852,7 +856,7 @@ class GlyphComponent:
 						("scalex", transform[0][0]), ("scale01", transform[0][1]),
 						("scale10", transform[1][0]), ("scaley", transform[1][1]),
 						]
-			elif transform[0][0] <> transform[1][1]:
+			elif transform[0][0] != transform[1][1]:
 				attrs = attrs + [
 						("scalex", transform[0][0]), ("scaley", transform[1][1]),
 						]
@@ -862,25 +866,26 @@ class GlyphComponent:
 		writer.simpletag("component", attrs)
 		writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, element, ttFont):
+		name, attrs, content = element
 		self.glyphName = attrs["glyphName"]
-		if attrs.has_key("firstPt"):
+		if "firstPt" in attrs:
 			self.firstPt = safeEval(attrs["firstPt"])
 			self.secondPt = safeEval(attrs["secondPt"])
 		else:
 			self.x = safeEval(attrs["x"])
 			self.y = safeEval(attrs["y"])
-		if attrs.has_key("scale01"):
+		if "scale01" in attrs:
 			scalex = safeEval(attrs["scalex"])
 			scale01 = safeEval(attrs["scale01"])
 			scale10 = safeEval(attrs["scale10"])
 			scaley = safeEval(attrs["scaley"])
 			self.transform = [[scalex, scale01], [scale10, scaley]]
-		elif attrs.has_key("scalex"):
+		elif "scalex" in attrs:
 			scalex = safeEval(attrs["scalex"])
 			scaley = safeEval(attrs["scaley"])
 			self.transform = [[scalex, 0], [0, scaley]]
-		elif attrs.has_key("scale"):
+		elif "scale" in attrs:
 			scale = safeEval(attrs["scale"])
 			self.transform = [[scale, 0], [0, scale]]
 		self.flags = safeEval(attrs["flags"])
@@ -911,13 +916,13 @@ class GlyphCoordinates:
 
 	def __getitem__(self, k):
 		if isinstance(k, slice):
-			indices = xrange(*k.indices(len(self)))
+			indices = range(*k.indices(len(self)))
 			return [self[i] for i in indices]
 		return self._a[2*k],self._a[2*k+1]
 
 	def __setitem__(self, k, v):
 		if isinstance(k, slice):
-			indices = xrange(*k.indices(len(self)))
+			indices = range(*k.indices(len(self)))
 			for j,i in enumerate(indices):
 				self[i] = v[j]
 			return
@@ -926,7 +931,8 @@ class GlyphCoordinates:
 	def __repr__(self):
 		return 'GlyphCoordinates(['+','.join(str(c) for c in self)+'])'
 
-	def append(self, (x,y)):
+	def append(self, pt):
+		(x,y) = pt
 		self._a.extend((x,y))
 
 	def extend(self, iterable):
@@ -951,7 +957,8 @@ class GlyphCoordinates:
 			a[2*i  ] = dx
 			a[2*i+1] = dy
 
-	def translate(self, (x,y)):
+	def translate(self, pt):
+		(x,y) = pt
 		a = self._a
 		for i in range(len(a) / 2):
 			a[2*i  ] += x
@@ -968,7 +975,7 @@ class GlyphCoordinates:
 
 def reprflag(flag):
 	bin = ""
-	if type(flag) == StringType:
+	if isinstance(flag, str):
 		flag = ord(flag)
 	while flag:
 		if flag & 0x01:

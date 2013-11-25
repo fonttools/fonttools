@@ -3,11 +3,10 @@
 # Google Author(s): Behdad Esfahbod
 
 import operator
-import DefaultTable
 import struct
+from fontTools.ttLib.tables import DefaultTable
 from fontTools.ttLib import sfnt
 from fontTools.misc.textTools import safeEval, readHex
-from types import IntType, StringType
 
 
 class table_C_P_A_L_(DefaultTable.DefaultTable):
@@ -53,23 +52,24 @@ class table_C_P_A_L_(DefaultTable.DefaultTable):
 			writer.endtag("palette")
 			writer.newline()
 
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, args, ttFont):
+		(name, attrs, content) = args
 		if not hasattr(self, "palettes"):
 			self.palettes = []
 		if name == "palette":
 			palette = []
 			for element in content:
-				if isinstance(element, StringType):
+				if isinstance(element, str):
 					continue
 			palette = []
 			for element in content:
-				if isinstance(element, StringType):
+				if isinstance(element, str):
 					continue
 				color = Color()
 				color.fromXML(element, ttFont)
 				palette.append (color)
 			self.palettes.append(palette)
-		elif attrs.has_key("value"):
+		elif "value" in attrs:
 			value =  safeEval(attrs["value"])
 			setattr(self, name, value)
 
@@ -91,7 +91,8 @@ class Color:
 		writer.simpletag("color", value=self.hex(), index=index)
 		writer.newline()
 
-	def fromXML(self, (eltname, attrs, content), ttFont):
+	def fromXML(self, args, ttFont):
+		(eltname, attrs, content) = args
 		value = attrs["value"]
 		if value[0] == '#':
 			value = value[1:]

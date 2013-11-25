@@ -46,6 +46,8 @@ Examples:
 """
 
 
+from __future__ import division
+
 __all__ = ["Transform", "Identity", "Offset", "Scale"]
 
 
@@ -64,7 +66,7 @@ def _normSinCos(v):
 	return v
 
 
-class Transform:
+class Transform(object):
 
 	"""2x2 transformation matrix plus offset, a.k.a. Affine transform.
 	Transform instances are immutable: all transforming methods, eg.
@@ -96,7 +98,7 @@ class Transform:
 		"""
 		self.__affine = xx, xy, yx, yy, dx, dy
 
-	def transformPoint(self, (x, y)):
+	def transformPoint(self, point):
 		"""Transform a point.
 
 		Example:
@@ -105,6 +107,7 @@ class Transform:
 			>>> t.transformPoint((100, 100))
 			(250.0, 550.0)
 		"""
+		x, y = point
 		xx, xy, yx, yy, dx, dy = self.__affine
 		return (xx*x + yx*y + dx, xy*x + yy*y + dy)
 
@@ -359,7 +362,8 @@ def Scale(x, y=None):
 
 
 def _test():
-	import doctest, transform
+	import doctest
+	from fonttools.misc import transform
 	return doctest.testmod(transform)
 
 if __name__ == "__main__":

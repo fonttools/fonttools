@@ -1,5 +1,5 @@
-import DefaultTable
 import string
+from fontTools.ttLib.tables import DefaultTable
 
 class table_T_S_I__1(DefaultTable.DefaultTable):
 	
@@ -48,7 +48,7 @@ class table_T_S_I__1(DefaultTable.DefaultTable):
 			if len(data) % 2:
 				data = data + "\015"  # align on 2-byte boundaries, fill with return chars. Yum.
 			name = glyphNames[i]
-			if self.glyphPrograms.has_key(name):
+			if name in self.glyphPrograms:
 				text = self.glyphPrograms[name]
 			else:
 				text = ""
@@ -59,13 +59,12 @@ class table_T_S_I__1(DefaultTable.DefaultTable):
 			data = data + text
 		
 		extra_indices = []
-		codes = self.extras.items()
-		codes.sort()
+		codes = sorted(self.extras.items())
 		for i in range(len(codes)):
 			if len(data) % 2:
 				data = data + "\015"  # align on 2-byte boundaries, fill with return chars.
 			code, name = codes[i]
-			if self.extraPrograms.has_key(name):
+			if name in self.extraPrograms:
 				text = self.extraPrograms[name]
 			else:
 				text = ""
@@ -78,8 +77,7 @@ class table_T_S_I__1(DefaultTable.DefaultTable):
 		return data
 	
 	def toXML(self, writer, ttFont):
-		names = self.glyphPrograms.keys()
-		names.sort()
+		names = sorted(self.glyphPrograms.keys())
 		writer.newline()
 		for name in names:
 			text = self.glyphPrograms[name]
@@ -92,8 +90,7 @@ class table_T_S_I__1(DefaultTable.DefaultTable):
 			writer.endtag("glyphProgram")
 			writer.newline()
 			writer.newline()
-		extra_names = self.extraPrograms.keys()
-		extra_names.sort()
+		extra_names = sorted(self.extraPrograms.keys())
 		for name in extra_names:
 			text = self.extraPrograms[name]
 			if not text:
@@ -106,7 +103,8 @@ class table_T_S_I__1(DefaultTable.DefaultTable):
 			writer.newline()
 			writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, element, ttFont):
+		name, attrs, content = element
 		if not hasattr(self, "glyphPrograms"):
 			self.glyphPrograms = {}
 			self.extraPrograms = {}

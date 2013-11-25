@@ -13,14 +13,14 @@ class CocoaPen(BasePen):
 			path = NSBezierPath.bezierPath()
 		self.path = path
 
-	def _moveTo(self, (x, y)):
-		self.path.moveToPoint_((x, y))
+	def _moveTo(self, point):
+		self.path.moveToPoint_(point)
 
-	def _lineTo(self, (x, y)):
-		self.path.lineToPoint_((x, y))
+	def _lineTo(self, point):
+		self.path.lineToPoint_(point)
 
-	def _curveToOne(self, (x1, y1), (x2, y2), (x3, y3)):
-		self.path.curveToPoint_controlPoint1_controlPoint2_((x3, y3), (x1, y1), (x2, y2))
+	def _curveToOne(self, point1, point2, point3):
+		self.path.curveToPoint_controlPoint1_controlPoint2_(point3, point1, point2)
 
 	def _closePath(self):
 		self.path.closePath()

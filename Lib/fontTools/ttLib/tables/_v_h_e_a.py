@@ -1,6 +1,11 @@
-import DefaultTable
+from fontTools.ttLib.tables import DefaultTable
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval
+
+try:
+	long
+except NameError:
+	long = int
 
 vheaFormat = """
 		>	# big endian
@@ -36,7 +41,7 @@ class table__v_h_e_a(DefaultTable.DefaultTable):
 	
 	def recalc(self, ttFont):
 		vtmxTable = ttFont['vmtx']
-		if ttFont.has_key('glyf'):
+		if 'glyf' in ttFont:
 			if not ttFont.isLoaded('glyf'):
 				return
 			glyfTable = ttFont['glyf']
@@ -68,11 +73,12 @@ class table__v_h_e_a(DefaultTable.DefaultTable):
 		formatstring, names, fixes = sstruct.getformat(vheaFormat)
 		for name in names:
 			value = getattr(self, name)
-			if type(value) == type(0L):
+			if isinstance(value, long):
 				value = int(value)
 			writer.simpletag(name, value=value)
 			writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, element, ttFont):
+		name, attrs, content = element
 		setattr(self, name, safeEval(attrs["value"]))
 

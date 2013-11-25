@@ -1,4 +1,4 @@
-from otBase import BaseTTXConverter
+from fontTools.ttLib.tables.otBase import BaseTTXConverter
 
 
 class table_G_D_E_F_(BaseTTXConverter):

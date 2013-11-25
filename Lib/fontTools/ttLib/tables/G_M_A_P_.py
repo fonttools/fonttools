@@ -1,7 +1,12 @@
-import DefaultTable
+from __future__ import division
+from fontTools.ttLib.tables import DefaultTable
 from fontTools.misc import sstruct
-from types import StringType
 from fontTools.misc.textTools import safeEval, num2binary, binary2num
+
+try:
+	long
+except NameError:
+	long = int
 
 GMAPFormat = """
 		>	# big endian
@@ -26,7 +31,7 @@ GMAPRecordFormat1 = """
 		
 
 
-class GMAPRecord:
+class GMAPRecord(object):
 	def __init__(self, uv = 0, cid = 0, gid = 0, ggid = 0, name = ""):
 		self.UV = uv
 		self.cid = cid
@@ -51,7 +56,8 @@ class GMAPRecord:
 		writer.newline()
 
 
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, element, ttFont):
+		name, attrs, content = element
 		value = attrs["value"]
 		if name == "GlyphletName":
 			self.name = value
@@ -95,7 +101,7 @@ class table_G_M_A_P_(DefaultTable.DefaultTable):
 	def compile(self, ttFont):
 		self.recordsCount = len(self.gmapRecords)
 		self.fontNameLength = len(self.psFontName)
-		self.recordsOffset = 4 *(((self.fontNameLength + 12)  + 3) /4)
+		self.recordsOffset = 4 *(((self.fontNameLength + 12)  + 3) // 4)
 		data = sstruct.pack(GMAPFormat, self)
 		data = data + self.psFontName
 		data = data + "\0" * (self.recordsOffset - len(data))
@@ -117,14 +123,15 @@ class table_G_M_A_P_(DefaultTable.DefaultTable):
 		for gmapRecord in self.gmapRecords:
 			gmapRecord.toXML(writer, ttFont)
 		
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, element, ttFont):
+		name, attrs, content = element
 		if name == "GMAPRecord":
 			if not hasattr(self, "gmapRecords"):
 				self.gmapRecords = []
 			gmapRecord = GMAPRecord()
 			self.gmapRecords.append(gmapRecord)
 			for element in content:
-				if isinstance(element, StringType):
+				if isinstance(element, str):
 					continue
 				gmapRecord.fromXML(element, ttFont)
 		else:

@@ -1,6 +1,7 @@
 """Main TTX application, Mac-only"""
 
 
+from __future__ import print_function
 #make sure we don't lose events to SIOUX
 import MacOS
 MacOS.EnableAppswitch(-1)
@@ -28,8 +29,9 @@ import EasyDialogs
 import Res
 import macfs
 import os
-import sys, time
-import re, string
+import sys
+import time
+import re
 import traceback
 from fontTools import ttLib, version
 from fontTools.ttLib import xmlImport
@@ -77,7 +79,7 @@ class TTX(FrameWork.Application, MiniAEFrame.AEServer):
 			self.opendocument(fss.as_pathname())
 	
 	def handle_opendocumentsevent(self, docs, **kwargs):
-		if type(docs) <> type([]):
+		if not isinstance(docs, list):
 			docs = [docs]
 		for doc in docs:
 			fss, a = doc.Resolve()
@@ -109,8 +111,8 @@ class TTX(FrameWork.Application, MiniAEFrame.AEServer):
 				# otherwise we'll get an error waaay at the end of
 				# the parse procedure
 				testref = Res.FSpOpenResFile(macfs.FSSpec(dst), 3)  # read-write
-			except Res.Error, why:
-				if why[0] <> -43: # file not found
+			except Res.Error as why:
+				if why[0] != -43: # file not found
 					EasyDialogs.Message("Can't create '%s'; file already open" % dst)
 					return
 			else:
@@ -118,7 +120,7 @@ class TTX(FrameWork.Application, MiniAEFrame.AEServer):
 		else:
 			try:
 				f = open(dst, "wb")
-			except IOError, why:
+			except IOError as why:
 				EasyDialogs.Message("Can't create '%s'; file already open" % dst)
 				return
 			else:
@@ -168,7 +170,7 @@ class TTX(FrameWork.Application, MiniAEFrame.AEServer):
 				res = Res.Get1IndResource('sfnt', i)
 				resid, restype, resname = res.GetResInfo()
 				if not resname:
-					resname = filename + `i`
+					resname = filename + repr(i)
 				pb = ProgressBar("Dumping '%s' to XML..." % resname)
 				dst = os.path.join(dstfolder, resname + ".ttx")
 				try:
@@ -181,7 +183,7 @@ class TTX(FrameWork.Application, MiniAEFrame.AEServer):
 	
 	def handle_python_file(self, path):
 		pass
-		#print "python", path
+		#print("python", path)
 	
 	def handle_unknown_file(self, path):
 		EasyDialogs.Message("Cannot open '%s': unknown file kind" % os.path.basename(path))
@@ -199,12 +201,12 @@ class TTX(FrameWork.Application, MiniAEFrame.AEServer):
 				pass
 			except KeyboardInterrupt:
 				pass
-			except ttLib.xmlImport.xml_parse_error, why:
+			except ttLib.xmlImport.xml_parse_error as why:
 				EasyDialogs.Message(
 					"An error occurred while parsing the XML file:\n" + why)
 			except:
-				exc = traceback.format_exception(sys.exc_type, sys.exc_value, None)[0]
-				exc = string.strip(exc)
+				exc = traceback.format_exception(sys.exc_info()[0], sys.exc_info()[1], None)[0]
+				exc = exc.strip()
 				EasyDialogs.Message("An error occurred!\n%s\n[see the logfile '%s' for details]" % 
 						(exc, LOGFILENAME))
 				traceback.print_exc()
@@ -259,20 +261,20 @@ def getprefs(path=PREFSFILENAME):
 			line = line[:-1]
 		try:
 			name, value = re.split(":", line, 1)
-			prefs[string.strip(name)] = eval(value)
+			prefs[name.strip()] = eval(value)
 		except:
 			pass
 	return prefs
 
 
-class dummy_stdin:
+class dummy_stdin(object):
 	def readline(self):
 		return ""
 sys.stdin = dummy_stdin()
 
 # redirect all output to a log file
 sys.stdout = sys.stderr = open(LOGFILENAME, "w", 0)  # unbuffered
-print "Starting TTX at " + time.ctime(time.time())
+print("Starting TTX at " + time.ctime(time.time()))
 
 # fire it up!
 ttx = TTX()

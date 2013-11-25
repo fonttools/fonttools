@@ -3,12 +3,15 @@
 # Google Author(s): Behdad Esfahbod
 
 import operator
-import DefaultTable
 import struct
+from fontTools.ttLib.tables import DefaultTable
 from fontTools.ttLib import sfnt
 from fontTools.misc.textTools import safeEval, readHex
-from types import IntType, StringType
 
+try:
+	long
+except NameError:
+	long = int # Python 3
 
 class table_C_O_L_R_(DefaultTable.DefaultTable):
 
@@ -44,12 +47,12 @@ class table_C_O_L_R_(DefaultTable.DefaultTable):
 
 		self.ColorLayers = colorLayerLists = {}
 		try:
-			names = map(operator.getitem, [glyphOrder]*numBaseGlyphRecords, gids)
+			names = [glyphOrder(gid) for gid in gids]
 		except IndexError:
 			getGlyphName = self.getGlyphName
-			names = map(getGlyphName, gids )
+			names = [getGlyphName(gid) for gid in gids]
 
-		map(operator.setitem, [colorLayerLists]*numBaseGlyphRecords, names, layerLists)
+		colorLayerLists = dict(zip(names, layerLists))
 
 
 	def compile(self, ttFont):
@@ -97,46 +100,47 @@ class table_C_O_L_R_(DefaultTable.DefaultTable):
 			writer.endtag("ColorGlyph")
 			writer.newline()
 
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, args, ttFont):
+		(name, attrs, content) = args
 		if not hasattr(self, "ColorLayers"):
 			self.ColorLayers = {}
 		self.getGlyphName = ttFont.getGlyphName # for use in get/set item functions, for access by GID
 		if name == "ColorGlyph":
 			glyphName = attrs["name"]
 			for element in content:
-				if isinstance(element, StringType):
+				if isinstance(element, str):
 					continue
 			layers = []
 			for element in content:
-				if isinstance(element, StringType):
+				if isinstance(element, str):
 					continue
 				layer = LayerRecord()
 				layer.fromXML(element, ttFont)
 				layers.append (layer)
 			operator.setitem(self, glyphName, layers)
-		elif attrs.has_key("value"):
+		elif "value" in attrs:
 			value =  safeEval(attrs["value"])
 			setattr(self, name, value)
 
 
 	def __getitem__(self, glyphSelector):
-		if type(glyphSelector) == IntType:
+		if isinstance(glyphSelector, int):
 			# its a gid, convert to glyph name
 			glyphSelector = self.getGlyphName(glyphSelector)
 
-		if not self.ColorLayers.has_key(glyphSelector):
+		if glyphSelector not in self.ColorLayers:
 			return None
 			
 		return self.ColorLayers[glyphSelector]
 
 	def __setitem__(self, glyphSelector, value):
-		if type(glyphSelector) == IntType:
+		if isinstance(glyphSelector, int):
 			# its a gid, convert to glyph name
 			glyphSelector = self.getGlyphName(glyphSelector)
 
 		if  value:
 			self.ColorLayers[glyphSelector] = value
-		elif self.ColorLayers.has_key(glyphSelector):
+		elif glyphSelector in self.ColorLayers:
 			del self.ColorLayers[glyphSelector]
 
 class LayerRecord:
@@ -149,10 +153,11 @@ class LayerRecord:
 		writer.simpletag("layer", name=self.name, colorID=self.colorID)
 		writer.newline()
 
-	def fromXML(self, (eltname, attrs, content), ttFont):
+	def fromXML(self, args, ttFont):
+		(eltname, attrs, content) = args
 		for (name, value) in attrs.items():
 			if name == "name":
-				if type(value) == IntType:
+				if isinstance(value, int):
 					value = ttFont.getGlyphName(value)
 				setattr(self, name, value)
 			else:

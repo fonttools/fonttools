@@ -1,9 +1,12 @@
-import DefaultTable
-from fontTools.misc import sstruct
 import time
-import string
+from fontTools.ttLib.tables import DefaultTable
+from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval, num2binary, binary2num
 
+try:
+	long
+except NameError:
+	long = int
 
 headFormat = """
 		>	# big endian
@@ -67,7 +70,7 @@ class table__h_e_a_d(DefaultTable.DefaultTable):
 					value = time.asctime(time.gmtime(0))
 			if name in ("magicNumber", "checkSumAdjustment"):
 				if value < 0:
-					value = value + 0x100000000L
+					value = value + long(0x100000000)
 				value = hex(value)
 				if value[-1:] == "L":
 					value = value[:-1]
@@ -76,7 +79,8 @@ class table__h_e_a_d(DefaultTable.DefaultTable):
 			writer.simpletag(name, value=value)
 			writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, element, ttFont):
+		name, attrs, content = element
 		value = attrs["value"]
 		if name in ("created", "modified"):
 			value = parse_date(value) - mac_epoch_diff
@@ -122,23 +126,23 @@ _months = ['   ', 'jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug',
 _weekdays = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
 
 def parse_date(datestring):
-	datestring = string.lower(datestring)
-	weekday, month, day, tim, year = string.split(datestring)
+	datestring = datestring.lower()
+	weekday, month, day, tim, year = datestring.split()
 	weekday = _weekdays.index(weekday)
 	month = _months.index(month)
 	year = int(year)
 	day = int(day)
-	hour, minute, second = map(int, string.split(tim, ":"))
+	hour, minute, second = [int(x) for x in tim.split(":")]
 	t = (year, month, day, hour, minute, second, weekday, 0, 0)
 	try:
 		return long(time.mktime(t) - time.timezone)
 	except OverflowError:
-		return 0L
+		return long(0)
 
 
 def bin2long(data):
 	# thanks </F>!
-	v = 0L
+	v = long(0)
 	for i in map(ord, data):
 	    v = v<<8 | i
 	return v

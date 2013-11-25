@@ -42,17 +42,15 @@ the number of <colorParamUINameID> elements.
 
 """
 
-import DefaultTable
 import struct
+import re
+from fontTools.ttLib.tables import DefaultTable
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval
 try:
     import xml.etree.cElementTree as ET
 except ImportError:
     import xml.etree.ElementTree as ET
-import string
-import types
-import re
 
 XML = ET.XML
 XMLElement = ET.Element
@@ -105,7 +103,7 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 			self.decompile_format_1(data, ttFont)
 		else:
 			if self.version != 0:
-				print "Unknown SVG table version '%s'. Decompiling as version 0." % (self.version)
+				print("Unknown SVG table version '%s'. Decompiling as version 0." % (self.version))
 			self.decompile_format_0(data, ttFont)
 
 
@@ -196,7 +194,7 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 			docOffset = curOffset
 			docLength = len(doc)
 			curOffset += docLength
-		 	entry = struct.pack(">HHLL", startGlyphID, endGlyphID, docOffset, docLength)
+			entry = struct.pack(">HHLL", startGlyphID, endGlyphID, docOffset, docLength)
 		 	entryList.append(entry)
 		 	docList.append(doc)
 		entryList.extend(docList)
@@ -290,7 +288,8 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 			writer.endtag("colorPalettes")
 			writer.newline()
 
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, args, ttFont):
+		(name, attrs, content) = args
 		import re
 		if name == "svgDoc":
 			if not hasattr(self, "docList"):
@@ -306,7 +305,7 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 			if self.colorPalettes.numColorParams == 0:
 				self.colorPalettes = None
 		else:
-			print "Unknown", name, content
+			print("Unknown", name, content)
 
 class DocumentIndexEntry:
 	def __init__(self):
@@ -325,9 +324,10 @@ class ColorPalettes:
 		self.numColorPalettes = None # USHORT
 		self.colorPaletteList = [] # list of ColorPalette records
 
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, args, ttFont):
+		(name, attrs, content) = args
 		for element in content:
-			if type(element) == type(""):
+			if isinstance(element, str):
 				continue
 			name, attrib, content = element
 			if name == "colorParamUINameID":
@@ -349,10 +349,11 @@ class ColorPalette:
 		self.uiNameID = None # USHORT. name table ID that describes user interface strings associated with this color palette. 
 		self.paletteColors = [] # list of ColorRecords
 
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, args, ttFont):
+		(name, attrs, content) = args
 		self.uiNameID = int(attrs["uiNameID"])
 		for element in content:
-			if type(element) == type(""):
+			if isinstance(element, str):
 				continue
 			name, attrib, content = element
 			if name == "colorRecord":

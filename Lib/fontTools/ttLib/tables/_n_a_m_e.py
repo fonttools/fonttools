@@ -1,9 +1,8 @@
-import DefaultTable
+from __future__ import print_function
 import struct
+from fontTools.ttLib.tables import DefaultTable
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval
-import string
-import types
 
 nameRecordFormat = """
 		>	# big endian
@@ -25,8 +24,8 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 		expectedStringOffset = 6 + n * nameRecordSize
 		if stringOffset != expectedStringOffset:
 			# XXX we need a warn function
-			print "Warning: 'name' table stringOffset incorrect.",
-			print "Expected: %s; Actual: %s" % (expectedStringOffset, stringOffset)
+			print("Warning: 'name' table stringOffset incorrect.")
+			print("Expected: %s; Actual: %s" % (expectedStringOffset, stringOffset))
 		stringData = data[stringOffset:]
 		data = data[6:]
 		self.names = []
@@ -58,7 +57,7 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 		lastoffset = 0
 		done = {}  # remember the data so we can reuse the "pointers"
 		for name in self.names:
-			if done.has_key(name.string):
+			if name.string in done:
 				name.offset, name.length = done[name.string]
 			else:
 				name.offset, name.length = done[name.string] = len(stringData), len(name.string)
@@ -70,8 +69,9 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 		for name in self.names:
 			name.toXML(writer, ttFont)
 	
-	def fromXML(self, (name, attrs, content), ttFont):
-		if name <> "namerecord":
+	def fromXML(self, element, ttFont):
+		name, attrs, content = element
+		if name != "namerecord":
 			return # ignore unknown tags
 		if not hasattr(self, "names"):
 			self.names = []
@@ -95,7 +95,7 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 		return cmp(self.names, other.names)
 	
 
-class NameRecord:
+class NameRecord(object):
 	
 	def toXML(self, writer, ttFont):
 		writer.begintag("namerecord", [
@@ -118,7 +118,8 @@ class NameRecord:
 		writer.endtag("namerecord")
 		writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, element, ttFont):
+		name, attrs, content = element
 		self.nameID = safeEval(attrs["nameID"])
 		self.platformID = safeEval(attrs["platformID"])
 		self.platEncID = safeEval(attrs["platEncID"])
@@ -127,12 +128,18 @@ class NameRecord:
 			s = ""
 			for element in content:
 				s = s + element
-			s = unicode(s, "utf8")
+			try:
+				s = unicode(s, "utf8")
+			except NameError:
+				pass # no unicode() in Python 3
 			s = s.strip()
 			self.string = s.encode("utf_16_be")
 		else:
-			s = string.strip(string.join(content, ""))
-			self.string = unicode(s, "utf8").encode("latin1")
+			s = "".join(content).strip()
+			try:
+				self.string = unicode(s, "utf8").encode("latin1")
+			except NameError:
+				self.string = s.encode("latin1")
 	
 	def __cmp__(self, other):
 		"""Compare method, so a list of NameRecords can be sorted

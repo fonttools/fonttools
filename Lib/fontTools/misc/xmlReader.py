@@ -1,3 +1,4 @@
+from __future__ import print_function, division
 from fontTools import ttLib
 from fontTools.misc.textTools import safeEval
 from fontTools.ttLib.tables.DefaultTable import DefaultTable
@@ -9,7 +10,7 @@ class TTXParseError(Exception): pass
 BUFSIZE = 0x4000
 
 
-class XMLReader:
+class XMLReader(object):
 	
 	def __init__(self, fileName, ttFont, progress=None, quiet=False):
 		self.ttFont = ttFont
@@ -44,18 +45,18 @@ class XMLReader:
 				break
 			pos = pos + len(chunk)
 			if self.progress:
-				self.progress.set(pos / 100)
+				self.progress.set(pos // 100)
 			parser.Parse(chunk, 0)
 	
 	def _startElementHandler(self, name, attrs):
 		stackSize = self.stackSize
 		self.stackSize = stackSize + 1
 		if not stackSize:
-			if name <> "ttFont":
-				raise TTXParseError, "illegal root tag: %s" % name
+			if name != "ttFont":
+				raise TTXParseError("illegal root tag: %s" % name)
 			sfntVersion = attrs.get("sfntVersion")
 			if sfntVersion is not None:
-				if len(sfntVersion) <> 4:
+				if len(sfntVersion) != 4:
 					sfntVersion = safeEval('"' + sfntVersion + '"')
 				self.ttFont.sfntVersion = sfntVersion
 			self.contentStack.append([])
@@ -75,16 +76,16 @@ class XMLReader:
 				ttLib.debugmsg(msg)
 			else:
 				if not self.quiet:
-					print msg
+					print(msg)
 			if tag == "GlyphOrder":
 				tableClass = ttLib.GlyphOrder
-			elif attrs.has_key("ERROR"):
+			elif "ERROR" in attrs:
 				tableClass = DefaultTable
 			else:
 				tableClass = ttLib.getTableClass(tag)
 				if tableClass is None:
 					tableClass = DefaultTable
-			if tag == 'loca' and self.ttFont.has_key(tag):
+			if tag == 'loca' and tag in self.ttFont:
 				# Special-case the 'loca' table as we need the
 				#    original if the 'glyf' table isn't recompiled.
 				self.currentTable = self.ttFont[tag]
@@ -114,10 +115,10 @@ class XMLReader:
 			self.root = None
 
 
-class ProgressPrinter:
+class ProgressPrinter(object):
 	
 	def __init__(self, title, maxval=100):
-		print title
+		print(title)
 	
 	def set(self, val, maxval=None):
 		pass
@@ -126,5 +127,5 @@ class ProgressPrinter:
 		pass
 	
 	def setLabel(self, text):
-		print text
+		print(text)
 

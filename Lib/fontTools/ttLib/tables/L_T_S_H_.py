@@ -1,6 +1,6 @@
-import DefaultTable
 import array
 import struct
+from fontTools.ttLib.tables import DefaultTable
 from fontTools.misc.textTools import safeEval
 
 # XXX I've lowered the strictness, to make sure Apple's own Chicago
@@ -24,7 +24,7 @@ class table_L_T_S_H_(DefaultTable.DefaultTable):
 	
 	def compile(self, ttFont):
 		version = 0
-		names = self.yPels.keys()
+		names = list(self.yPels.keys())
 		numGlyphs = len(names)
 		yPels = [0] * numGlyphs
 		# ouch: the assertion is not true in Chicago!
@@ -35,16 +35,16 @@ class table_L_T_S_H_(DefaultTable.DefaultTable):
 		return struct.pack(">HH", version, numGlyphs) + yPels.tostring()
 	
 	def toXML(self, writer, ttFont):
-		names = self.yPels.keys()
-		names.sort()
+		names = sorted(self.yPels.keys())
 		for name in names:
 			writer.simpletag("yPel", name=name, value=self.yPels[name])
 			writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, element, ttFont):
+		name, attrs, content = element
 		if not hasattr(self, "yPels"):
 			self.yPels = {}
-		if name <> "yPel":
+		if name != "yPel":
 			return # ignore unknown tags
 		self.yPels[attrs["name"]] = safeEval(attrs["value"])
 

@@ -58,7 +58,7 @@ class XMLWriter:
 	
 	def comment(self, data):
 		data = escape(data)
-		lines = string.split(data, "\n")
+		lines = data.split("\n")
 		self.writeraw("<!-- " + lines[0])
 		for line in lines[1:]:
 			self.newline()
@@ -66,12 +66,12 @@ class XMLWriter:
 		self.writeraw(" -->")
 	
 	def simpletag(self, _TAG_, *args, **kwargs):
-		attrdata = apply(self.stringifyattrs, args, kwargs)
+		attrdata = self.stringifyattrs(*args, **kwargs)
 		data = "<%s%s/>" % (_TAG_, attrdata)
 		self.writeraw(data)
 	
 	def begintag(self, _TAG_, *args, **kwargs):
-		attrdata = apply(self.stringifyattrs, args, kwargs)
+		attrdata = self.stringifyattrs(*args, **kwargs)
 		data = "<%s%s>" % (_TAG_, attrdata)
 		self.writeraw(data)
 		self.stack.append(_TAG_)
@@ -108,8 +108,7 @@ class XMLWriter:
 	def stringifyattrs(self, *args, **kwargs):
 		if kwargs:
 			assert not args
-			attributes = kwargs.items()
-			attributes.sort()
+			attributes = sorted(kwargs.items())
 		elif args:
 			assert len(args) == 1
 			attributes = args[0]
@@ -122,14 +121,14 @@ class XMLWriter:
 	
 
 def escape(data):
-	data = string.replace(data, "&", "&amp;")
-	data = string.replace(data, "<", "&lt;")
+	data = data.replace("&", "&amp;")
+	data = data.replace("<", "&lt;")
 	return data
 
 def escapeattr(data):
-	data = string.replace(data, "&", "&amp;")
-	data = string.replace(data, "<", "&lt;")
-	data = string.replace(data, '"', "&quot;")
+	data = data.replace("&", "&amp;")
+	data = data.replace("<", "&lt;")
+	data = data.replace('"', "&quot;")
 	return data
 
 def escape8bit(data):
@@ -143,8 +142,8 @@ def escape8bit(data):
 		elif 32 <= n <= 127:
 			return c
 		else:
-			return "&#" + `n` + ";"
-	return string.join(map(escapechar, data), "")
+			return "&#" + repr(n) + ";"
+	return "".join([escapechar(x) for x in data])
 
 needswap = struct.pack("h", 1) == "\001\000"
 
@@ -162,8 +161,8 @@ def escape16bit(data):
 		elif 32 <= n <= 127:
 			return chr(n)
 		else:
-			return "&#" + `n` + ";"
-	return string.join(map(escapenum, a), "")
+			return "&#" + repr(n) + ";"
+	return "".join([escapenum(x) for x in a])
 
 
 def hexStr(s):

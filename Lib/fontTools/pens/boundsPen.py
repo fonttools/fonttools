@@ -1,3 +1,4 @@
+from __future__ import print_function
 from fontTools.pens.basePen import BasePen
 from fontTools.misc.arrayTools import updateBounds, pointInRect, unionRect
 from fontTools.misc.bezierTools import calcCubicBounds, calcQuadraticBounds
@@ -86,8 +87,8 @@ if __name__ == "__main__":
 
 	pen = ControlBoundsPen(None)
 	draw(pen)
-	print pen.bounds
+	print(pen.bounds)
 
 	pen = BoundsPen(None)
 	draw(pen)
-	print pen.bounds
+	print(pen.bounds)

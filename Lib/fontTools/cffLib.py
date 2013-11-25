@@ -4,9 +4,9 @@
 # $Id: cffLib.py,v 1.34 2008-03-07 19:56:17 jvr Exp $
 #
 
+from __future__ import print_function, division
 import struct
 from fontTools.misc import sstruct
-import string
 from fontTools.misc import psCharStrings
 from fontTools.misc.textTools import safeEval
 
@@ -20,7 +20,14 @@ cffHeaderFormat = """
 	offSize: B
 """
 
-class CFFFontSet:
+try:
+	type(unicode)
+except:
+	unicode = str
+
+class CFFError(Exception): pass
+
+class CFFFontSet(object):
 	
 	def __init__(self):
 		pass
@@ -51,7 +58,7 @@ class CFFFontSet:
 		try:
 			index = self.fontNames.index(name)
 		except ValueError:
-			raise KeyError, name
+			raise KeyError(name)
 		return self.topDictIndex[index]
 	
 	def compile(self, file, otFont):
@@ -94,7 +101,8 @@ class CFFFontSet:
 		xmlWriter.newline()
 		xmlWriter.newline()
 	
-	def fromXML(self, (name, attrs, content)):
+	def fromXML(self, element):
+		name, attrs, content = element
 		if not hasattr(self, "GlobalSubrs"):
 			self.GlobalSubrs = GlobalSubrsIndex()
 			self.major = 1
@@ -111,12 +119,12 @@ class CFFFontSet:
 			self.fontNames.append(fontName)
 			self.topDictIndex.append(topDict)
 			for element in content:
-				if isinstance(element, basestring):
+				if isinstance(element, (str, unicode)):
 					continue
 				topDict.fromXML(element)
 		elif name == "GlobalSubrs":
 			for element in content:
-				if isinstance(element, basestring):
+				if isinstance(element, (str, unicode)):
 					continue
 				name, attrs, content = element
 				subr = psCharStrings.T2CharString()
@@ -124,7 +132,7 @@ class CFFFontSet:
 				self.GlobalSubrs.append(subr)
 
 
-class CFFWriter:
+class CFFWriter(object):
 	
 	def __init__(self):
 		self.data = []
@@ -137,7 +145,7 @@ class CFFWriter:
 		count = 1
 		while 1:
 			if DEBUG:
-				print "CFFWriter.toFile() iteration:", count
+				print("CFFWriter.toFile() iteration: %i" %count)
 			count = count + 1
 			pos = 0
 			posList = [pos]
@@ -154,7 +162,7 @@ class CFFWriter:
 				break
 			lastPosList = posList
 		if DEBUG:
-			print "CFFWriter.toFile() writing to file."
+			print("CFFWriter.toFile() writing to file.")
 		begin = file.tell()
 		posList = [0]
 		for item in self.data:
@@ -178,7 +186,7 @@ def calcOffSize(largestOffset):
 	return offSize
 
 
-class IndexCompiler:
+class IndexCompiler(object):
 	
 	def __init__(self, items, strings, parent):
 		self.items = self.getItems(items, strings)
@@ -301,7 +309,7 @@ class CharStringsCompiler(GlobalSubrsCompiler):
 		self.parent.rawDict["CharStrings"] = pos
 
 
-class Index:
+class Index(object):
 	
 	"""This class represents what the CFF spec calls an INDEX."""
 	
@@ -313,7 +321,7 @@ class Index:
 			self.items = []
 			return
 		if DEBUG:
-			print "loading %s at %s" % (name, file.tell())
+			print("loading %s at %s" % (name, file.tell()))
 		self.file = file
 		count = readCard16(file)
 		self.count = count
@@ -323,7 +331,7 @@ class Index:
 			return
 		offSize = readCard8(file)
 		if DEBUG:
-			print "    index count: %s offSize: %s" % (count, offSize)
+			print("    index count: %s offSize: %s" % (count, offSize))
 		assert offSize <= 4, "offSize too large: %s" % offSize
 		self.offsets = offsets = []
 		pad = '\0' * (4 - offSize)
@@ -335,7 +343,7 @@ class Index:
 		self.offsetBase = file.tell() - 1
 		file.seek(self.offsetBase + offsets[-1])  # pretend we've read the whole lot
 		if DEBUG:
-			print "    end of %s at %s" % (name, file.tell())
+			print("    end of %s at %s" % (name, file.tell()))
 	
 	def __len__(self):
 		return len(self.items)
@@ -400,8 +408,9 @@ class GlobalSubrsIndex(Index):
 			xmlWriter.endtag("CharString")
 			xmlWriter.newline()
 	
-	def fromXML(self, (name, attrs, content)):
-		if name <> "CharString":
+	def fromXML(self, element):
+		name, attrs, content = element
+		if name != "CharString":
 			return
 		subr = psCharStrings.T2CharString()
 		subr.fromXML((name, attrs, content))
@@ -440,18 +449,19 @@ class FDArrayIndex(TopDictIndex):
 	
 	compilerClass = FDArrayIndexCompiler
 
-	def fromXML(self, (name, attrs, content)):
-		if name <> "FontDict":
+	def fromXML(self, element):
+		name, attrs, content = element
+		if name != "FontDict":
 			return
 		fontDict = FontDict()
 		for element in content:
-			if isinstance(element, basestring):
+			if isinstance(element, (str, unicode)):
 				continue
 			fontDict.fromXML(element)
 		self.append(fontDict)
 
 
-class	FDSelect:
+class FDSelect(object):
 	def __init__(self, file = None, numGlyphs = None, format=None):
 		if file:
 			# read data in from file
@@ -497,7 +507,7 @@ class	FDSelect:
 		self.gidArray.append(fdSelectValue)
 	
 
-class CharStrings:
+class CharStrings(object):
 	
 	def __init__(self, file, charset, globalSubrs, private, fdSelect, fdArray):
 		if file is not None:
@@ -526,7 +536,9 @@ class CharStrings:
 			return self.charStrings.values()
 	
 	def has_key(self, name):
-		return self.charStrings.has_key(name)
+		return name in self.charStrings
+	
+	__contains__ = has_key
 	
 	def __len__(self):
 		return len(self.charStrings)
@@ -556,7 +568,7 @@ class CharStrings:
 			return self.charStrings[name], sel
 	
 	def toXML(self, xmlWriter, progress):
-		names = self.keys()
+		names = list(self.keys())
 		names.sort()
 		i = 0
 		step = 10
@@ -578,15 +590,16 @@ class CharStrings:
 			xmlWriter.newline()
 			if not i % step and progress is not None:
 				progress.setLabel("Dumping 'CFF ' table... (%s)" % name)
-				progress.increment(step / float(numGlyphs))
+				progress.increment(step / numGlyphs)
 			i = i + 1
 	
-	def fromXML(self, (name, attrs, content)):
+	def fromXML(self, element):
+		name, attrs, content = element
 		for element in content:
-			if isinstance(element, basestring):
+			if isinstance(element, (str, unicode)):
 				continue
 			name, attrs, content = element
-			if name <> "CharString":
+			if name != "CharString":
 				continue
 			fdID = -1
 			if hasattr(self, "fdArray"):
@@ -660,7 +673,7 @@ def buildConverters(table):
 	return d
 
 
-class SimpleConverter:
+class SimpleConverter(object):
 	def read(self, parent, value):
 		return value
 	def write(self, parent, value):
@@ -668,7 +681,8 @@ class SimpleConverter:
 	def xmlWrite(self, xmlWriter, name, value, progress):
 		xmlWriter.simpletag(name, value=value)
 		xmlWriter.newline()
-	def xmlRead(self, (name, attrs, content), parent):
+	def xmlRead(self, element, parent):
+		name, attrs, content = element
 		return attrs["value"]
 
 class Latin1Converter(SimpleConverter):
@@ -677,8 +691,9 @@ class Latin1Converter(SimpleConverter):
 		value = unicode(value, "latin-1").encode("utf-8")
 		xmlWriter.simpletag(name, value=value)
 		xmlWriter.newline()
-	def xmlRead(self, (name, attrs, content), parent):
-		s = unicode(attrs["value"], "utf-8")
+	def xmlRead(self, element, parent):
+		name, attrs, content = element
+		s = str(attrs["value"]).decode("utf-8")
 		return s.encode("latin-1")
 
 
@@ -690,17 +705,19 @@ def parseNum(s):
 	return value
 
 class NumberConverter(SimpleConverter):
-	def xmlRead(self, (name, attrs, content), parent):
+	def xmlRead(self, element, parent):
+		name, attrs, content = element
 		return parseNum(attrs["value"])
 
 class ArrayConverter(SimpleConverter):
 	def xmlWrite(self, xmlWriter, name, value, progress):
-		value = map(str, value)
+		value = [str(x) for x in value]
 		xmlWriter.simpletag(name, value=" ".join(value))
 		xmlWriter.newline()
-	def xmlRead(self, (name, attrs, content), parent):
+	def xmlRead(self, element, parent):
+		name, attrs, content = element
 		values = attrs["value"].split()
-		return map(parseNum, values)
+		return [parseNum(x) for x in values]
 
 class TableConverter(SimpleConverter):
 	def xmlWrite(self, xmlWriter, name, value, progress):
@@ -709,7 +726,8 @@ class TableConverter(SimpleConverter):
 		value.toXML(xmlWriter, progress)
 		xmlWriter.endtag(name)
 		xmlWriter.newline()
-	def xmlRead(self, (name, attrs, content), parent):
+	def xmlRead(self, element, parent):
+		name, attrs, content = element
 		ob = self.getClass()()
 		for element in content:
 			if isinstance(element, basestring):
@@ -757,7 +775,8 @@ class CharStringsConverter(TableConverter):
 		return CharStrings(file, charset, globalSubrs, private, fdSelect, fdArray)
 	def write(self, parent, value):
 		return 0  # dummy value
-	def xmlRead(self, (name, attrs, content), parent):
+	def xmlRead(self, element, parent):
+		name, attrs, content = element
 		if hasattr(parent, "ROS"):
 			# if it is a CID-keyed font, then the private Dict is extracted from the parent.FDArray 
 			private, fdSelect, fdArray = None, parent.FDSelect, parent.FDArray
@@ -768,7 +787,7 @@ class CharStringsConverter(TableConverter):
 		charStrings.fromXML((name, attrs, content))
 		return charStrings
 
-class CharsetConverter:
+class CharsetConverter(object):
 	def read(self, parent, value):
 		isCID = hasattr(parent, "ROS")
 		if value > 2:
@@ -776,7 +795,7 @@ class CharsetConverter:
 			file = parent.file
 			file.seek(value)
 			if DEBUG:
-				print "loading charset at %s" % value
+				print("loading charset at %s" % value)
 			format = readCard8(file)
 			if format == 0:
 				charset = parseCharset0(numGlyphs, file, parent.strings, isCID)
@@ -786,9 +805,9 @@ class CharsetConverter:
 				raise NotImplementedError
 			assert len(charset) == numGlyphs
 			if DEBUG:
-				print "    charset end at %s" % file.tell()
+				print("    charset end at %s" % file.tell())
 		else: # offset == 0 -> no charset data.
-			if isCID or not parent.rawDict.has_key("CharStrings"): 
+			if isCID or "CharStrings" not in parent.rawDict:
 				assert value == 0 # We get here only when processing fontDicts from the FDArray of CFF-CID fonts. Only the real topDict references the chrset.
 				charset = None
 			elif value == 0:
@@ -807,12 +826,13 @@ class CharsetConverter:
 		##xmlWriter.simpletag("charset")
 		xmlWriter.comment("charset is dumped separately as the 'GlyphOrder' element")
 		xmlWriter.newline()
-	def xmlRead(self, (name, attrs, content), parent):
+	def xmlRead(self, element, parent):
+		name, attrs, content = element
 		if 0:
 			return safeEval(attrs["value"])
 
 
-class CharsetCompiler:
+class CharsetCompiler(object):
 	
 	def __init__(self, strings, charset, parent):
 		assert charset[0] == '.notdef'
@@ -868,7 +888,7 @@ def packCharset(charset, isCID, strings):
 		SID = getNameID(name, strings)
 		if first is None:
 			first = SID
-		elif end + 1 <> SID:
+		elif end + 1 != SID:
 			nLeft = end - first
 			if nLeft > 255:
 				format = 2
@@ -894,7 +914,7 @@ def parseCharset0(numGlyphs, file, strings, isCID):
 	if isCID:
 		for i in range(numGlyphs - 1):
 			CID = readCard16(file)
-			charset.append("cid" + string.zfill(str(CID), 5) )
+			charset.append("cid" + str(CID).zfill(5) )
 	else:
 		for i in range(numGlyphs - 1):
 			SID = readCard16(file)
@@ -913,7 +933,7 @@ def parseCharset(numGlyphs, file, strings, isCID, format):
 		nLeft = nLeftFunc(file)
 		if isCID:
 			for CID in range(first, first+nLeft+1):
-				charset.append("cid" + string.zfill(str(CID), 5) )
+				charset.append("cid" + str(CID).zfill(5) )
 		else:
 			for SID in range(first, first+nLeft+1):
 				charset.append(strings[SID])
@@ -921,10 +941,10 @@ def parseCharset(numGlyphs, file, strings, isCID, format):
 	return charset
 
 
-class EncodingCompiler:
+class EncodingCompiler(object):
 
 	def __init__(self, strings, encoding, parent):
-		assert not isinstance(encoding, basestring)
+		assert not isinstance(encoding, (str, unicode))
 		data0 = packEncoding0(parent.dictObj.charset, encoding, parent.strings)
 		data1 = packEncoding1(parent.dictObj.charset, encoding, parent.strings)
 		if len(data0) < len(data1):
@@ -955,11 +975,11 @@ class EncodingConverter(SimpleConverter):
 			file = parent.file
 			file.seek(value)
 			if DEBUG:
-				print "loading Encoding at %s" % value
+				print("loading Encoding at %s" % value)
 			format = readCard8(file)
 			haveSupplement = format & 0x80
 			if haveSupplement:
-				raise NotImplementedError, "Encoding supplements are not yet supported"
+				raise NotImplementedError("Encoding supplements are not yet supported")
 			format = format & 0x7f
 			if format == 0:
 				encoding = parseEncoding0(parent.charset, file, haveSupplement,
@@ -991,12 +1011,13 @@ class EncodingConverter(SimpleConverter):
 		xmlWriter.endtag(name)
 		xmlWriter.newline()
 
-	def xmlRead(self, (name, attrs, content), parent):
-		if attrs.has_key("name"):
+	def xmlRead(self, element, parent):
+		name, attrs, content = element
+		if "name" in attrs:
 			return attrs["name"]
 		encoding = [".notdef"] * 256
 		for element in content:
-			if isinstance(element, basestring):
+			if isinstance(element, (str, unicode)):
 				continue
 			name, attrs, content = element
 			code = safeEval(attrs["code"])
@@ -1063,7 +1084,7 @@ def packEncoding1(charset, encoding, strings):
 		code = m.get(name, -1)
 		if first is None:
 			first = code
-		elif end + 1 <> code:
+		elif end + 1 != code:
 			nLeft = end - first
 			ranges.append((first, nLeft))
 			first = code
@@ -1096,16 +1117,17 @@ class FDArrayConverter(TableConverter):
 	def write(self, parent, value):
 		return 0  # dummy value
 
-	def xmlRead(self, (name, attrs, content), parent):
+	def xmlRead(self, element, parent):
+		name, attrs, content = element
 		fdArray = FDArrayIndex()
 		for element in content:
-			if isinstance(element, basestring):
+			if isinstance(element, (str, unicode)):
 				continue
 			fdArray.fromXML(element)
 		return fdArray
 
 
-class FDSelectConverter:
+class FDSelectConverter(object):
 
 	def read(self, parent, value):
 		file = parent.file
@@ -1122,7 +1144,8 @@ class FDSelectConverter:
 		xmlWriter.simpletag(name, [('format', value.format)])
 		xmlWriter.newline()
 
-	def xmlRead(self, (name, attrs, content), parent):
+	def xmlRead(self, element, parent):
+		name, attrs, content = element
 		format = safeEval(attrs["format"])
 		file = None
 		numGlyphs = None
@@ -1161,7 +1184,7 @@ def packFDSelect3(fdSelectArray):
 	return "".join(data)
 
 
-class FDSelectCompiler:
+class FDSelectCompiler(object):
 	
 	def __init__(self, fdSelect, parent):
 		format = fdSelect.format
@@ -1201,7 +1224,8 @@ class ROSConverter(SimpleConverter):
 			('Supplement', supplement)])
 		xmlWriter.newline()
 
-	def xmlRead(self, (name, attrs, content), parent):
+	def xmlRead(self, element, parent):
+		name, attrs, content = element
 		return (attrs['Registry'], attrs['Order'], safeEval(attrs['Supplement']))
 
 
@@ -1299,7 +1323,7 @@ class PrivateDictDecompiler(psCharStrings.DictDecompiler):
 	operators = buildOperatorDict(privateDictOperators)
 
 
-class DictCompiler:
+class DictCompiler(object):
 	
 	def __init__(self, dictObj, strings, parent):
 		assert isinstance(strings, IndexedStrings)
@@ -1326,8 +1350,8 @@ class DictCompiler:
 	
 	def compile(self, reason):
 		if DEBUG:
-			print "-- compiling %s for %s" % (self.__class__.__name__, reason)
-			print "in baseDict: ", self
+			print("-- compiling %s for %s" % (self.__class__.__name__, reason))
+			print("in baseDict: %s" %str(self))
 		rawDict = self.rawDict
 		data = []
 		for name in self.dictObj.order:
@@ -1390,7 +1414,7 @@ class TopDictCompiler(DictCompiler):
 			children.append(CharsetCompiler(strings, self.dictObj.charset, self))
 		if hasattr(self.dictObj, "Encoding"):
 			encoding = self.dictObj.Encoding
-			if not isinstance(encoding, basestring):
+			if not isinstance(encoding, (str, unicode)):
 				children.append(EncodingCompiler(strings, encoding, self))
 		if hasattr(self.dictObj, "FDSelect"):
 			# I have not yet supported merging a ttx CFF-CID font, as there are interesting
@@ -1455,12 +1479,12 @@ class PrivateDictCompiler(DictCompiler):
 		return children
 
 
-class BaseDict:
+class BaseDict(object):
 	
 	def __init__(self, strings=None, file=None, offset=None):
 		self.rawDict = {}
 		if DEBUG:
-			print "loading %s at %s" % (self.__class__.__name__, offset)
+			print("loading %s at %s" % (self.__class__.__name__, offset))
 		self.file = file
 		self.offset = offset
 		self.strings = strings
@@ -1468,7 +1492,7 @@ class BaseDict:
 	
 	def decompile(self, data):
 		if DEBUG:
-			print "    length %s is %s" % (self.__class__.__name__, len(data))
+			print("    length %s is %s" % (self.__class__.__name__, len(data)))
 		dec = self.decompilerClass(self.strings)
 		dec.decompile(data)
 		self.rawDict = dec.getDict()
@@ -1485,7 +1509,7 @@ class BaseDict:
 		if value is None:
 			value = self.defaults.get(name)
 		if value is None:
-			raise AttributeError, name
+			raise AttributeError(name)
 		conv = self.converters[name]
 		value = conv.read(self, value)
 		setattr(self, name, value)
@@ -1501,7 +1525,8 @@ class BaseDict:
 			conv = self.converters[name]
 			conv.xmlWrite(xmlWriter, name, value, progress)
 	
-	def fromXML(self, (name, attrs, content)):
+	def fromXML(self, element):
+		name, attrs, content = element
 		conv = self.converters[name]
 		value = conv.xmlRead((name, attrs, content), self)
 		setattr(self, name, value)
@@ -1549,10 +1574,10 @@ class TopDict(BaseDict):
 			try:
 				charString.decompile()
 			except:
-				print "Error in charstring ", i
+				print("Error in charstring %i" %i)
 				import sys
 				type, value = sys. exc_info()[0:2]
-				raise type(value)
+				raise CFFError(type(value))
 			if not i % 30 and progress:
 				progress.increment(0)  # update
 			i = i + 1
@@ -1587,7 +1612,7 @@ class PrivateDict(BaseDict):
 	compilerClass = PrivateDictCompiler
 
 
-class IndexedStrings:
+class IndexedStrings(object):
 	
 	"""SID -> string mapping."""
 	
@@ -1613,9 +1638,9 @@ class IndexedStrings:
 	def getSID(self, s):
 		if not hasattr(self, "stringMapping"):
 			self.buildStringMapping()
-		if cffStandardStringMapping.has_key(s):
+		if s in cffStandardStringMapping:
 			SID = cffStandardStringMapping[s]
-		elif self.stringMapping.has_key(s):
+		elif s in self.stringMapping:
 			SID = self.stringMapping[s]
 		else:
 			SID = len(self.strings) + cffStandardStringCount

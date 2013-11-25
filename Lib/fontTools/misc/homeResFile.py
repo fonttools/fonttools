@@ -1,9 +1,10 @@
 """Mac-only module to find the home file of a resource."""
 
-from fontTools.misc import sstruct
+from __future__ import print_function
 import array
 import calldll
 import macfs, Res
+from fontTools.misc import sstruct
 
 
 def HomeResFile(res):
@@ -49,7 +50,7 @@ _FCBPBFormat = """
 	ioFCBParID:   l
 """
 
-class ParamBlock:
+class ParamBlock(object):
 	
 	"""Wrapper for the very low level FCBPB record."""
 	
@@ -70,7 +71,7 @@ class ParamBlock:
 		ptr = buf.buffer_info()[0]
 		err = _getInfo(ptr)
 		if err:
-			raise Res.Error, ("can't get file info", err)
+			raise Res.Error("can't get file info", err)
 		sstruct.unpack(_FCBPBFormat, buf.tostring(), self)
 		self.__haveInfo = 1
 	
@@ -91,4 +92,4 @@ class ParamBlock:
 
 if __name__ == "__main__":
 	fond = Res.GetNamedResource("FOND", "Helvetica")
-	print HomeResFile(fond)
+	print(HomeResFile(fond))

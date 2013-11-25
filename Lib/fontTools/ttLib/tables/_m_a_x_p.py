@@ -1,6 +1,12 @@
-import DefaultTable
+from __future__ import print_function
+from fontTools.ttLib.tables import DefaultTable
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval
+
+try:
+	long
+except NameError:
+	long = int
 
 maxpFormat_0_5 = """
 		>	# big endian
@@ -38,7 +44,7 @@ class table__m_a_x_p(DefaultTable.DefaultTable):
 		assert len(data) == 0
 	
 	def compile(self, ttFont):
-		if ttFont.has_key('glyf'):
+		if 'glyf' in ttFont:
 			if ttFont.isLoaded('glyf') and ttFont.recalcBBoxes:
 				self.recalc(ttFont)
 		else:
@@ -75,7 +81,7 @@ class table__m_a_x_p(DefaultTable.DefaultTable):
 		for glyphName in ttFont.getGlyphOrder():
 			g = glyfTable[glyphName]
 			if g.numberOfContours:
-				if hmtxTable[glyphName][1] <> g.xMin:
+				if hmtxTable[glyphName][1] != g.xMin:
 					allXMaxIsLsb = 0
 				xMin = min(xMin, g.xMin)
 				yMin = min(yMin, g.yMin)
@@ -112,12 +118,11 @@ class table__m_a_x_p(DefaultTable.DefaultTable):
 			headTable.flags = headTable.flags & ~0x2
 	
 	def testrepr(self):
-		items = self.__dict__.items()
-		items.sort()
-		print ". . . . . . . . ."
+		items = sorted(self.__dict__.items())
+		print(". . . . . . . . .")
 		for combo in items:
-			print "  %s: %s" % combo
-		print ". . . . . . . . ."
+			print("  %s: %s" % combo)
+		print(". . . . . . . . .")
 	
 	def toXML(self, writer, ttFont):
 		if self.tableVersion != 0x00005000:
@@ -129,14 +134,15 @@ class table__m_a_x_p(DefaultTable.DefaultTable):
 			names = names + names_1_0
 		for name in names:
 			value = getattr(self, name)
-			if type(value) == type(0L):
-				value=int(value)
+			if isinstance(value, long):
+				value = int(value)
 			if name == "tableVersion":
 				value = hex(value)
 			writer.simpletag(name, value=value)
 			writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, element, ttFont):
+		name, attrs, content = element
 		setattr(self, name, safeEval(attrs["value"]))
 		
 
