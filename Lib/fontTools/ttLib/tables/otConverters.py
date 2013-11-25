@@ -173,9 +173,18 @@ class Struct(BaseConverter):
 
 
 class Table(Struct):
+
+	def readOffset(self, reader):
+		return reader.readUShort()
+
+	def writeNullOffset(self, writer):
+		if hasattr(self, "Extension"):
+			writer.writeULong(0)
+		else:
+			writer.writeUShort(0)
 	
 	def read(self, reader, font, tableDict):
-		offset = reader.readUShort()
+		offset = self.readOffset(reader)
 		if offset == 0:
 			return None
 		if offset <= 3:
@@ -194,7 +203,7 @@ class Table(Struct):
 	
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		if value is None:
-			writer.writeUShort(0)
+			self.writeNullOffset(writer)
 		else:
 			subWriter = writer.getSubWriter()
 			subWriter.name = self.name
@@ -205,40 +214,18 @@ class Table(Struct):
 
 class SubTable(Table):
 	def getConverter(self, tableType, lookupType):
-		lookupTypes = self.lookupTypes[tableType]
-		tableClass = lookupTypes[lookupType]
-		return SubTable(self.name, self.repeat, self.repeatOffset, tableClass)
+		tableClass = self.lookupTypes[tableType][lookupType]
+		return self.__class__(self.name, self.repeat, self.repeatOffset, tableClass)
 
 
-class ExtSubTable(Table):
-	def getConverter(self, tableType, lookupType):
-		lookupTypes = self.lookupTypes[tableType]
-		tableClass = lookupTypes[lookupType]
-		return ExtSubTable(self.name, self.repeat, self.repeatOffset, tableClass)
+class ExtSubTable(SubTable):
 	
-	def read(self, reader, font, tableDict):
-		offset = reader.readULong()
-		if offset == 0:
-			return None
-		table = self.tableClass()
-		table.start = reader.offset + offset
-		table.reader = reader
-		table.offset = offset
-		table.font = font
-		table.compileStatus = 1
-		if not font.lazy:
-			table.ensureDecompiled()
-		return table
+	def readOffset(self, reader):
+		return reader.readULong()
 	
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		writer.Extension = 1 # actually, mere presence of the field flags it as an Ext Subtable writer.
-		if value is None:
-			writer.writeULong(0)
-		else:
-			subWriter = writer.getSubWriter()
-			subWriter.name = self.name
-			writer.writeSubTable(subWriter)
-			value.compile(subWriter, font)
+		Table.write(self, writer, font, tableDict, value, repeatIndex)
 
 
 class ValueFormat(IntValue):
