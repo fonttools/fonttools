@@ -213,13 +213,8 @@ class table_E_B_L_C_(DefaultTable.DefaultTable):
 		for curIndex, curStrike in enumerate(self.strikes):
 			curStrike.toXML(curIndex, writer, ttFont)
 
-<<<<<<< HEAD
 	def fromXML(self, element, ttFont):
 		name, attrs, content = element
-=======
-	def fromXML(self, args, ttFont):
-		(name, attrs, content) = args
->>>>>>> 8037352... Initial Python 2 and 3 modifications:
 		if name == 'header':
 			self.version = safeEval(attrs['version'])
 		elif name == 'strike':
@@ -253,13 +248,8 @@ class Strike:
 		writer.endtag('strike')
 		writer.newline()
 
-<<<<<<< HEAD
 	def fromXML(self, element, ttFont, locator):
 		name, attrs, content = element
-=======
-	def fromXML(self, args, ttFont, locator):
-		(name, attrs, content) = args
->>>>>>> 8037352... Initial Python 2 and 3 modifications:
 		for element in content:
 			if type(element) != tuple:
 				continue
@@ -296,17 +286,10 @@ class BitmapSizeTable:
 		writer.endtag('bitmapSizeTable')
 		writer.newline()
 
-<<<<<<< HEAD
 	def fromXML(self, element, ttFont):
 		# Create a lookup for all the simple names that make sense to
 		# bitmap size table. Only read the information from these names.
 		name, attrs, content = element
-=======
-	def fromXML(self, args, ttFont):
-		# Create a lookup for all the simple names that make sense to
-		# bitmap size table. Only read the information from these names.
-		(name, attrs, content) = args
->>>>>>> 8037352... Initial Python 2 and 3 modifications:
 		dataNames = set(self._getXMLMetricNames())
 		for element in content:
 			if type(element) != tuple:
@@ -335,13 +318,8 @@ class SbitLineMetrics:
 		writer.endtag('sbitLineMetrics')
 		writer.newline()
 
-<<<<<<< HEAD
 	def fromXML(self, element, ttFont):
 		name, attrs, content = element
-=======
-	def fromXML(self, args, ttFont):
-		(name, attrs, content) = args
->>>>>>> 8037352... Initial Python 2 and 3 modifications:
 		metricNames = set(sstruct.getformat(sbitLineMetricsFormat)[1])
 		for element in content:
 			if type(element) != tuple:
@@ -366,11 +344,7 @@ class EblcIndexSubTable:
 		# Allow lazy decompile.
 		if attr[:2] == '__':
 			raise AttributeError(attr)
-<<<<<<< HEAD
 		if not hasattr(self, "data"):
-=======
-		if self.data == None:
->>>>>>> 8037352... Initial Python 2 and 3 modifications:
 			raise AttributeError(attr)
 		self.decompile()
 		del self.data, self.ttFont
@@ -403,19 +377,11 @@ class EblcIndexSubTable:
 		writer.endtag(self.__class__.__name__)
 		writer.newline()
 
-<<<<<<< HEAD
 	def fromXML(self, element, ttFont):
 		# Read all the attributes. Even though the glyph indices are
 		# recalculated, they are still read in case there needs to
 		# be an immediate export of the data.
 		name, attrs, content = element
-=======
-	def fromXML(self, args, ttFont):
-		# Read all the attributes. Even though the glyph indices are
-		# recalculated, they are still read in case there needs to
-		# be an immediate export of the data.
-		(name, attrs, content) = args
->>>>>>> 8037352... Initial Python 2 and 3 modifications:
 		self.imageFormat = safeEval(attrs['imageFormat'])
 		self.firstGlyphIndex = safeEval(attrs['firstGlyphIndex'])
 		self.lastGlyphIndex = safeEval(attrs['lastGlyphIndex'])
@@ -437,13 +403,8 @@ class EblcIndexSubTable:
 		pass
 
 	# A helper method that is the inverse of writeMetrics.
-<<<<<<< HEAD
 	def readMetrics(self, element, ttFont):
 		name, attrs, content = element
-=======
-	def readMetrics(self, args, ttFont):
-		(name, attrs, content) = args
->>>>>>> 8037352... Initial Python 2 and 3 modifications:
 		pass
 
 	# This method is for fixed glyph data sizes. There are formats where
@@ -544,13 +505,8 @@ class FixedSizeIndexSubTableMixin:
 		writer.newline()
 		self.metrics.toXML(writer, ttFont)
 
-<<<<<<< HEAD
 	def readMetrics(self, element, ttFont):
 		name, attrs, content = element
-=======
-	def readMetrics(self, args, ttFont):
-		(name, attrs, content) = args
->>>>>>> 8037352... Initial Python 2 and 3 modifications:
 		for element in content:
 			if type(element) != tuple:
 				continue

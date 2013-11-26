@@ -36,13 +36,8 @@ class BitmapGlyphMetrics:
 		writer.endtag(self.__class__.__name__)
 		writer.newline()
 
-<<<<<<< HEAD
 	def fromXML(self, element, ttFont):
 		name, attrs, content = element
-=======
-	def fromXML(self, args, ttFont):
-		(name, attrs, content) = args
->>>>>>> 8037352... Initial Python 2 and 3 modifications:
 		metricNames = set(sstruct.getformat(self.__class__.binaryFormat)[1])
 		for element in content:
 			if type(element) != tuple:
