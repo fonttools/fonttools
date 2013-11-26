@@ -313,7 +313,6 @@ class DeltaValue(BaseConverter):
 			writer.writeUShort(tmp)
 	
 	def xmlWrite(self, xmlWriter, font, value, name, attrs):
-		# XXX this could do with a nicer format
 		xmlWriter.simpletag(name, attrs + [("value", value)])
 		xmlWriter.newline()
 	
