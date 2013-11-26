@@ -468,7 +468,7 @@ class CountReference:
 		if table[name] is None:
 			table[name] = value
 		else:
-			assert table[name] == value, (table[name], value)
+			assert table[name] == value, (name, table[name], value)
 	def getCountData(self):
 		return packUShort(self.table[self.name])
 
