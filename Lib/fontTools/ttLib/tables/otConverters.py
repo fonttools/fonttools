@@ -1,5 +1,6 @@
 from types import TupleType
 from fontTools.misc.textTools import safeEval
+from otBase import ValueRecordFactory
 
 
 def buildConverters(tableSpec, tableNamespace):
@@ -239,21 +240,21 @@ class ExtSubTable(LTable, SubTable):
 class ValueFormat(IntValue):
 	def __init__(self, name, repeat, aux, tableClass):
 		BaseConverter.__init__(self, name, repeat, aux, tableClass)
-		self.which = name[-1] == "2"
+		self.which = "ValueFormat" + ("2" if name[-1] == "2" else "1")
 	def read(self, reader, font, tableDict):
 		format = reader.readUShort()
-		reader.setValueFormat(format, self.which)
+		reader[self.which] = ValueRecordFactory(format)
 		return format
 	def write(self, writer, font, tableDict, format, repeatIndex=None):
 		writer.writeUShort(format)
-		writer.setValueFormat(format, self.which)
+		writer[self.which] = ValueRecordFactory(format)
 
 
 class ValueRecord(ValueFormat):
 	def read(self, reader, font, tableDict):
-		return reader.readValueRecord(font, self.which)
+		return reader[self.which].readValueRecord(reader, font)
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
-		writer.writeValueRecord(value, font, self.which)
+		writer[self.which].writeValueRecord(writer, font, value)
 	def xmlWrite(self, xmlWriter, font, value, name, attrs):
 		if value is None:
 			pass  # NULL table, ignore
