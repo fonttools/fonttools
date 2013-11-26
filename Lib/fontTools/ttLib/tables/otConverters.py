@@ -196,8 +196,7 @@ class Table(Struct):
 					% (offset, self.tableClass.__name__)
 			return None
 		table = self.tableClass()
-		table.reader = reader
-		table.offset = offset
+		table.reader = reader.getSubReader(offset)
 		table.font = font
 		table.compileStatus = 1
 		if not font.lazy:

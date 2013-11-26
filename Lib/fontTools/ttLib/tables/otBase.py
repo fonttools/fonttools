@@ -557,9 +557,8 @@ class BaseTable(object):
 	def ensureDecompiled(self):
 		if self.compileStatus != 1:
 			return
-		subReader = self.reader.getSubReader(self.offset)
-		self.decompile(subReader, self.font)
-		del self.reader, self.font, self.offset
+		self.decompile(self.reader, self.font)
+		del self.reader, self.font
 
 	def compile(self, writer, font):
 		table = self.preWrite(font)
