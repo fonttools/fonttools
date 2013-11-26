@@ -868,11 +868,9 @@ class cmap_format_6(CmapSubtable):
 		cmap = self.cmap
 		codes = cmap.keys()
 		if codes: # yes, there are empty cmap tables.
-			codes.sort()
-			lenCodes = len(codes)
-			assert codes == range(codes[0], codes[0] + lenCodes)
+			codes = range(codes[0], codes[-1] + 1)
 			firstCode = codes[0]
-			valueList = map(operator.getitem, [cmap]*lenCodes, codes)
+			valueList = [cmap.get(code, ".notdef") for code in codes]
 			valueList = map(ttFont.getGlyphID, valueList)
 			glyphIndexArray = array.array("H", valueList)
 			if sys.byteorder <> "big":
