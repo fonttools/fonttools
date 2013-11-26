@@ -341,7 +341,7 @@ def main(args):
 		else:
 			raise
 	except TTLibError, e:
-		print "Error:",e
+		print("Error:",e)
 	except:
 		if sys.platform == "win32":
 			import traceback

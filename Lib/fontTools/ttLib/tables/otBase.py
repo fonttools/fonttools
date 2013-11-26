@@ -31,11 +31,7 @@ class BaseTTXConverter(DefaultTable):
 	
 	def decompile(self, data, font):
 		from fontTools.ttLib.tables import otTables
-<<<<<<< HEAD
 		cachingStats = None if True else {}
-=======
-		cachingStats = None
->>>>>>> 8037352... Initial Python 2 and 3 modifications:
 		reader = OTTableReader(data, self.tableTag, cachingStats=cachingStats)
 		tableClass = getattr(otTables, self.tableTag)
 		self.table = tableClass()
@@ -90,11 +86,7 @@ class BaseTTXConverter(DefaultTable):
 
 
 class OTTableReader(object):
-<<<<<<< HEAD
 
-=======
-	
->>>>>>> 8037352... Initial Python 2 and 3 modifications:
 	"""Helper class to retrieve data from an OpenType table."""
 
 	__slots__ = ('data', 'offset', 'pos', 'tableType', 'valueFormat', 'counts', 'cachingStats')
@@ -168,10 +160,7 @@ class OTTableReader(object):
 	def getCount(self, name):
 		return self.counts[name]
 
-<<<<<<< HEAD
 
-=======
->>>>>>> 8037352... Initial Python 2 and 3 modifications:
 class OTTableWriter(object):
 	
 	"""Helper class to gather and assemble data for OpenType tables."""
@@ -503,36 +492,6 @@ def packULong(value):
 	return struct.pack(">L", value)
 
 
-<<<<<<< HEAD
-=======
-
-class TableStack(object):
-	"""A stack of table dicts, working as a stack of namespaces so we can
-	retrieve values from (and store values to) tables higher up the stack."""
-	def __init__(self, other=None):
-		self.stack = other.stack[:] if other else []
-	def push(self, table):
-		self.stack.append(table)
-	def pop(self):
-		self.stack.pop()
-	def getTop(self):
-		return self.stack[-1]
-	def getValue(self, name):
-		return self.__findTable(name)[name]
-	def storeValue(self, name, value):
-		table = self.__findTable(name)
-		if table[name] is None:
-			table[name] = value
-		else:
-			assert table[name] == value, (table[name], value)
-	def __findTable(self, name):
-		for table in reversed(self.stack):
-			if name in table:
-				return table
-		raise KeyError(name)
-
-
->>>>>>> 8037352... Initial Python 2 and 3 modifications:
 class BaseTable(object):
 	def __init__(self):
 		self.compileStatus = 0 # 0 means table was created

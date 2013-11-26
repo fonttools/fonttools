@@ -10,11 +10,7 @@ class TTXParseError(Exception): pass
 BUFSIZE = 0x4000
 
 
-<<<<<<< HEAD:Lib/fontTools/misc/xmlReader.py
 class XMLReader(object):
-=======
-class ExpatParser(object):
->>>>>>> 8037352... Initial Python 2 and 3 modifications::Lib/fontTools/ttLib/xmlImport.py
 	
 	def __init__(self, fileName, ttFont, progress=None, quiet=False):
 		self.ttFont = ttFont
@@ -132,18 +128,4 @@ class ProgressPrinter(object):
 	
 	def setLabel(self, text):
 		print(text)
-<<<<<<< HEAD:Lib/fontTools/misc/xmlReader.py
-=======
-
-
-def importXML(ttFont, fileName, progress=None, quiet=None):
-	"""Import a TTX file (an XML-based text format), so as to recreate
-	a font object.
-	"""
-	if progress:
-		import stat
-		progress.set(0, os.stat(fileName)[stat.ST_SIZE] // 100 or 1)
-	p = ExpatParser(ttFont, fileName, progress, quiet)
-	p.parse()
->>>>>>> 8037352... Initial Python 2 and 3 modifications::Lib/fontTools/ttLib/xmlImport.py
 
