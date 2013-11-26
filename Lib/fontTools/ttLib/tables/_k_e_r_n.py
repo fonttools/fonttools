@@ -1,9 +1,9 @@
-import DefaultTable
+from __future__ import division
 import struct
+import warnings
+from fontTools.ttLib.tables import DefaultTable
 from fontTools.ttLib import sfnt
 from fontTools.misc.textTools import safeEval, readHex
-from types import TupleType
-import warnings
 
 
 class table__k_e_r_n(DefaultTable.DefaultTable):
@@ -20,7 +20,7 @@ class table__k_e_r_n(DefaultTable.DefaultTable):
 		if (len(data) >= 8) and (version == 1):
 			# AAT Apple's "new" format. Hm.
 			version, nTables = struct.unpack(">LL", data[:8])
-			self.version = version / float(0x10000)
+			self.version = version / 0x10000
 			data = data[8:]
 			apple = True
 		else:
@@ -36,7 +36,7 @@ class table__k_e_r_n(DefaultTable.DefaultTable):
 			else:
 				version, length = struct.unpack(">HH", data[:4])
 			length = int(length)
-			if not kern_classes.has_key(version):
+			if version not in kern_classes:
 				subtable = KernTable_format_unkown(version)
 			else:
 				subtable = kern_classes[version]()
@@ -66,16 +66,17 @@ class table__k_e_r_n(DefaultTable.DefaultTable):
 		for subtable in self.kernTables:
 			subtable.toXML(writer, ttFont)
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, element, ttFont):
+		name, attrs, content = element
 		if name == "version":
 			self.version = safeEval(attrs["value"])
 			return
-		if name <> "kernsubtable":
+		if name != "kernsubtable":
 			return
 		if not hasattr(self, "kernTables"):
 			self.kernTables = []
 		format = safeEval(attrs["format"])
-		if not kern_classes.has_key(format):
+		if format not in kern_classes:
 			subtable = KernTable_format_unkown(format)
 		else:
 			subtable = kern_classes[format]()
@@ -83,7 +84,7 @@ class table__k_e_r_n(DefaultTable.DefaultTable):
 		subtable.fromXML((name, attrs, content), ttFont)
 
 
-class KernTable_format_0:
+class KernTable_format_0(object):
 	
 	def decompile(self, data, ttFont):
 		version, length, coverage = (0,0,0)
@@ -120,9 +121,7 @@ class KernTable_format_0:
 		data = struct.pack(">HHHH", nPairs, searchRange, entrySelector, rangeShift)
 		
 		# yeehee! (I mean, turn names into indices)
-		kernTable = map(lambda ((left, right), value), getGlyphID=ttFont.getGlyphID:
-					(getGlyphID(left), getGlyphID(right), value), 
-				self.kernTable.items())
+		kernTable = [(ttFont.getGlyphID(left), ttFont.getGlyphID(right), value) for (left, right) in self.kernTable.items()]
 		kernTable.sort()
 		for left, right, value in kernTable:
 			data = data + struct.pack(">HHh", left, right, value)
@@ -131,8 +130,7 @@ class KernTable_format_0:
 	def toXML(self, writer, ttFont):
 		writer.begintag("kernsubtable", coverage=self.coverage, format=0)
 		writer.newline()
-		items = self.kernTable.items()
-		items.sort()
+		items = sorted(self.kernTable.items())
 		for (left, right), value in items:
 			writer.simpletag("pair", [
 					("l", left),
@@ -143,13 +141,14 @@ class KernTable_format_0:
 		writer.endtag("kernsubtable")
 		writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, element, ttFont):
+		name, attrs, content = element
 		self.coverage = safeEval(attrs["coverage"])
 		self.version = safeEval(attrs["format"])
 		if not hasattr(self, "kernTable"):
 			self.kernTable = {}
 		for element in content:
-			if type(element) <> TupleType:
+			if not isinstance(element, tuple):
 				continue
 			name, attrs, content = element
 			self.kernTable[(attrs["l"], attrs["r"])] = safeEval(attrs["v"])
@@ -170,7 +169,7 @@ class KernTable_format_0:
 		return cmp(self.__dict__, other.__dict__)
 
 
-class KernTable_format_2:
+class KernTable_format_2(object):
 	
 	def decompile(self, data, ttFont):
 		self.data = data
@@ -185,11 +184,12 @@ class KernTable_format_2:
 		writer.endtag("kernsubtable")
 		writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, element, ttFont):
+		name, attrs, content = element
 		self.decompile(readHex(content), ttFont)
 
 
-class KernTable_format_unkown:
+class KernTable_format_unkown(object):
 	
 	def __init__(self, format):
 		self.format = format
@@ -209,7 +209,8 @@ class KernTable_format_unkown:
 		writer.endtag("kernsubtable")
 		writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, element, ttFont):
+		name, attrs, content = element
 		self.decompile(readHex(content), ttFont)
 
 

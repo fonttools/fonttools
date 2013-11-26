@@ -1,7 +1,11 @@
-import DefaultTable
+from fontTools.ttLib.tables import DefaultTable
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval
 
+try:
+	long
+except NameError:
+	long = int
 
 hheaFormat = """
 		>  # big endian
@@ -86,6 +90,7 @@ class table__h_h_e_a(DefaultTable.DefaultTable):
 			writer.simpletag(name, value=value)
 			writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, element, ttFont):
+		name, attrs, content = element
 		setattr(self, name, safeEval(attrs["value"]))
 

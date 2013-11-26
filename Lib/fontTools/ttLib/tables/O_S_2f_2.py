@@ -1,9 +1,12 @@
-import DefaultTable
+import warnings
+from fontTools.ttLib.tables import DefaultTable
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval, num2binary, binary2num
-from types import TupleType
-import warnings
 
+try:
+	long
+except NameError:
+	long = int
 
 # panose classification
 
@@ -20,7 +23,7 @@ panoseFormat = """
 	bXHeight:           B
 """
 
-class Panose:
+class Panose(object):
 	
 	def toXML(self, writer, ttFont):
 		formatstring, names, fixes = sstruct.getformat(panoseFormat)
@@ -28,7 +31,8 @@ class Panose:
 			writer.simpletag(name, value=getattr(self, name))
 			writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, element, ttFont):
+		name, attrs, content = element
 		setattr(self, name, safeEval(attrs["value"]))
 
 
@@ -111,7 +115,7 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 			dummy, data = sstruct.unpack2(OS2_format_5_addition, data, self)
 			self.usLowerOpticalPointSize /= 20.
 			self.usUpperOpticalPointSize /= 20.
-		elif self.version <> 0:
+		elif self.version != 0:
 			from fontTools import ttLib
 			raise ttLib.TTLibError, "unknown format for OS/2 table: version %s" % self.version
 		if len(data):
@@ -138,7 +142,7 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 			self.usUpperOpticalPointSize = upper
 		else:
 			from fontTools import ttLib
-			raise ttLib.TTLibError, "unknown format for OS/2 table: version %s" % self.version
+			raise ttLib.TTLibError("unknown format for OS/2 table: version %s" % self.version)
 		self.panose = panose
 		return data
 	
@@ -154,7 +158,7 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 		formatstring, names, fixes = sstruct.getformat(format)
 		for name in names:
 			value = getattr(self, name)
-			if type(value) == type(0L):
+			if isinstance(value, long):
 				value = int(value)
 			if name=="panose":
 				writer.begintag("panose")
@@ -173,11 +177,12 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 				writer.simpletag(name, value=value)
 			writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, element, ttFont):
+		name, attrs, content = element
 		if name == "panose":
 			self.panose = panose = Panose()
 			for element in content:
-				if type(element) == TupleType:
+				if isinstance(element, tuple):
 					panose.fromXML(element, ttFont)
 		elif name in ("ulUnicodeRange1", "ulUnicodeRange2", 
 				"ulUnicodeRange3", "ulUnicodeRange4",

@@ -1,14 +1,14 @@
+from __future__ import print_function
 import os
 import struct
 from fontTools.misc import sstruct
-import string
 try:
 	from Carbon import Res
 except ImportError:
 	import Res
 
 
-error = "fondLib.error"
+class FondError(Exception): pass
 
 DEBUG = 0
 
@@ -29,12 +29,12 @@ headerformat = """
 
 FONDheadersize = 52
 
-class FontFamily:
+class FontFamily(object):
 	
 	def __init__(self, theRes, mode = 'r'):
 		self.ID, type, self.name = theRes.GetResInfo()
-		if type <> 'FOND':
-			raise ValueError, "FOND resource required"
+		if type != 'FOND':
+			raise ValueError("FOND resource required")
 		self.FOND = theRes
 		self.mode = mode
 		self.changed = 0
@@ -68,8 +68,8 @@ class FontFamily:
 		self.fondClass = flags
 	
 	def save(self, destresfile = None):
-		if self.mode <> 'w':
-			raise error, "can't save font: no write permission"
+		if self.mode != 'w':
+			raise FondError("can't save font: no write permission")
 		self._buildfontassociationtable()
 		self._buildoffsettable()
 		self._buildboundingboxtable()
@@ -139,13 +139,13 @@ class FontFamily:
 	
 	def _buildheader(self):
 		header = sstruct.pack(headerformat, self)
-		header = header + apply(struct.pack, (">9h",) + self.ffProperty)
-		header = header + apply(struct.pack, (">hh",) + self.ffIntl)
+		header = header + struct.pack(*(">9h",) + self.ffProperty)
+		header = header + struct.pack(*(">hh",) + self.ffIntl)
 		header = header + struct.pack(">h", self.ffVersion)
 		if DEBUG:
-			print "header is the same?", self._rawheader == header and 'yes.' or 'no.'
-			if self._rawheader <> header:
-				print len(self._rawheader), len(header)
+			print("header is the same?", self._rawheader == header and 'yes.' or 'no.')
+			if self._rawheader != header:
+				print(len(self._rawheader), len(header))
 		self._rawheader = header
 	
 	def _getfontassociationtable(self):
@@ -169,9 +169,9 @@ class FontFamily:
 			data = data + struct.pack(">3h", size, stype, ID)
 		
 		if DEBUG:
-			print "font association table is the same?", self._rawfontassociationtable == data and 'yes.' or 'no.'
-			if self._rawfontassociationtable <> data:
-				print len(self._rawfontassociationtable), len(data)
+			print("font association table is the same?", self._rawfontassociationtable == data and 'yes.' or 'no.')
+			if self._rawfontassociationtable != data:
+				print(len(self._rawfontassociationtable), len(data))
 		self._rawfontassociationtable = data
 	
 	def _getoffsettable(self):
@@ -192,7 +192,7 @@ class FontFamily:
 	
 	def _getboundingboxtable(self):
 		self.boundingBoxes = None
-		if self._rawoffsettable[:6] <> '\0\0\0\0\0\6':  # XXX ????
+		if self._rawoffsettable[:6] != '\0\0\0\0\0\6':  # XXX ????
 			return
 		boxes = {}
 		data = self._rawoffsettable[6:]
@@ -206,8 +206,7 @@ class FontFamily:
 	
 	def _buildboundingboxtable(self):
 		if self.boundingBoxes and self._rawoffsettable[:6] == '\0\0\0\0\0\6':
-			boxes = self.boundingBoxes.items()
-			boxes.sort()
+			boxes = sorted(self.boundingBoxes.items())
 			data = '\0\0\0\0\0\6' + struct.pack(">h", len(boxes) - 1)
 			for style, (l, b, r, t) in boxes:
 				data = data + struct.pack(">hhhhh", style, l, b, r, t)
@@ -241,16 +240,15 @@ class FontFamily:
 			return
 		numberofentries = len(self.widthTables)
 		data = struct.pack('>h', numberofentries - 1)
-		tables = self.widthTables.items()
-		tables.sort()
+		tables = sorted(self.widthTables.items())
 		for stylecode, table in tables:
 			data = data + struct.pack('>h', stylecode)
-			if len(table) <> (3 + self.ffLastChar - self.ffFirstChar):
-				raise error, "width table has wrong length"
+			if len(table) != (3 + self.ffLastChar - self.ffFirstChar):
+				raise FondError("width table has wrong length")
 			for width in table:
 				data = data + struct.pack('>h', width)
 		if DEBUG:
-			print "glyph width table is the same?", self._rawglyphwidthtable == data and 'yes.' or 'no.'
+			print("glyph width table is the same?", self._rawglyphwidthtable == data and 'yes.' or 'no.')
 		self._rawglyphwidthtable = data
 	
 	def _getkerningtables(self):
@@ -284,20 +282,19 @@ class FontFamily:
 			return
 		numberofentries = len(self.kernTables)
 		data = [struct.pack('>h', numberofentries - 1)]
-		tables = self.kernTables.items()
-		tables.sort()
+		tables = sorted(self.kernTables.items())
 		for stylecode, table in tables:
 			data.append(struct.pack('>h', stylecode))
 			data.append(struct.pack('>h', len(table)))  # numberofpairs
 			for firstchar, secondchar, kerndistance in table:
 				data.append(struct.pack(">cch", chr(firstchar), chr(secondchar), kerndistance))
 		
-		data = string.join(data, '')
+		data = ''.join(data)
 		
 		if DEBUG:
-			print "kerning table is the same?", self._rawkerningtables == data and 'yes.' or 'no.'
-			if self._rawkerningtables <> data:
-				print len(self._rawkerningtables), len(data)
+			print("kerning table is the same?", self._rawkerningtables == data and 'yes.' or 'no.')
+			if self._rawkerningtables != data:
+				print(len(self._rawkerningtables), len(data))
 		self._rawkerningtables = data
 	
 	def _getstylemappingtable(self):
@@ -337,7 +334,7 @@ class FontFamily:
 					self.styleMappingReserved)
 		
 		self._packstylestrings()
-		data = data + apply(struct.pack, (">48b",) + self.styleIndices)
+		data = data + struct.pack(*(">48b",) + self.styleIndices)
 		
 		stringcount = len(self.styleStrings)
 		data = data + struct.pack(">h", stringcount)
@@ -348,7 +345,7 @@ class FontFamily:
 			data = data + '\0'
 		
 		if DEBUG:
-			print "style mapping table is the same?", self._rawstylemappingtable == data and 'yes.' or 'no.'
+			print("style mapping table is the same?", self._rawstylemappingtable == data and 'yes.' or 'no.')
 		self._rawstylemappingtable = data
 	
 	def _unpackstylestrings(self):
@@ -360,7 +357,7 @@ class FontFamily:
 				psNames[i] = self.styleStrings[0]
 			else:
 				style = self.styleStrings[0]
-				codes = map(ord, self.styleStrings[index - 1])
+				codes = [ord(x) for x in self.styleStrings[index - 1]]
 				for code in codes:
 					style = style + self.styleStrings[code - 1]
 				psNames[i] = style
@@ -375,10 +372,8 @@ class FontFamily:
 			for part in split:
 				nameparts[part] = None
 		del nameparts[self.ffFamilyName]
-		nameparts = nameparts.keys()
-		nameparts.sort()
-		items = splitnames.items()
-		items.sort()
+		nameparts = sorted(nameparts.keys())
+		items = sorted(splitnames.items())
 		numindices = 0
 		for style, split in items:
 			if len(split) > 1:
@@ -433,8 +428,7 @@ class FontFamily:
 			return
 		numberofentries = len(self.glyphEncoding)
 		data = struct.pack(">h", numberofentries)
-		items = self.glyphEncoding.items()
-		items.sort()
+		items = sorted(self.glyphEncoding.items())
 		for glyphcode, glyphname in items:
 			data = data + chr(glyphcode) + chr(len(glyphname)) + glyphname
 		self._rawglyphencodingsubtable = data
@@ -445,8 +439,8 @@ uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 def splitname(name, famname = None):
 	# XXX this goofs up MM font names: but how should it be done??
 	if famname:
-		if name[:len(famname)] <> famname:
-			raise error, "first part of name should be same as family name"
+		if name[:len(famname)] != famname:
+			raise FondError("first part of name should be same as family name")
 		name = name[len(famname):]
 		split = [famname]
 	else:
@@ -466,11 +460,11 @@ def makeLWFNfilename(name):
 	split = splitname(name)
 	lwfnname = split[0][:5]
 	for part in split[1:]:
-		if part <> '-':
+		if part != '-':
 			lwfnname = lwfnname + part[:3]
 	return lwfnname
 
-class BitmapFontFile:
+class BitmapFontFile(object):
 	
 	def __init__(self, path, mode='r'):
 		if mode == 'r':
@@ -478,7 +472,7 @@ class BitmapFontFile:
 		elif mode == 'w':
 			permission = 3	# exclusive r/w
 		else:
-			raise error, 'mode should be either "r" or "w"'
+			raise FondError('mode should be either "r" or "w"')
 		self.mode = mode
 		self.resref = Res.FSOpenResFile(path, permission)
 		Res.UseResFile(self.resref)
@@ -497,8 +491,7 @@ class BitmapFontFile:
 		for fond in self.fonds:
 			fond.parse()
 			if hasattr(fond, "psNames") and fond.psNames:
-				psNames = fond.psNames.values()
-				psNames.sort()
+				psNames = sorted(fond.psNames.values())
 				self.fondsbyname[psNames[0]] = fond
 	
 	def minimalparse(self):
@@ -506,7 +499,7 @@ class BitmapFontFile:
 			fond.minimalparse()
 	
 	def close(self):
-		if self.resref <> None:
+		if self.resref != None:
 			try:
 				Res.CloseResFile(self.resref)
 			except Res.Error:
@@ -514,12 +507,12 @@ class BitmapFontFile:
 			self.resref = None
 
 
-class FondSelector:
+class FondSelector(object):
 	
 	def __init__(self, fondlist):
 		import W
 		if not fondlist:
-			raise ValueError, "expected at least one FOND entry"
+			raise ValueError("expected at least one FOND entry")
 		if len(fondlist) == 1:
 			self.choice = 0
 			return
@@ -549,6 +542,6 @@ class FondSelector:
 		sel = self.w.l.getselection()
 		if not sel:
 			self.w.l.setselection([0])
-		elif len(sel) <> 1:
+		elif len(sel) != 1:
 			self.w.l.setselection([sel[0]])
 			

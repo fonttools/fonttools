@@ -1,5 +1,5 @@
 import string
-import DefaultTable
+from fontTools.ttLib.tables import DefaultTable
 
 
 class asciiTable(DefaultTable.DefaultTable):
@@ -16,7 +16,8 @@ class asciiTable(DefaultTable.DefaultTable):
 		writer.endtag("source")
 		writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, element, ttFont):
+		name, attrs, content = element
 		lines = string.split(string.replace(string.join(content, ""), "\r", "\n"), "\n")
 		self.data = string.join(lines[1:-1], "\r")
 

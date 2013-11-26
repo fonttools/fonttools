@@ -1,5 +1,5 @@
-import DefaultTable
 import struct
+from fontTools.ttLib.tables import DefaultTable
 from fontTools.misc.textTools import safeEval
 
 
@@ -25,8 +25,7 @@ class table__g_a_s_p(DefaultTable.DefaultTable):
 		version = 0 # ignore self.version
 		numRanges = len(self.gaspRange)
 		data = ""
-		items = self.gaspRange.items()
-		items.sort()
+		items = sorted(self.gaspRange.items())
 		for rangeMaxPPEM, rangeGaspBehavior in items:
 			data = data + struct.pack(">HH", rangeMaxPPEM, rangeGaspBehavior)
 			if rangeGaspBehavior & ~(GASP_GRIDFIT | GASP_DOGRAY):
@@ -35,16 +34,16 @@ class table__g_a_s_p(DefaultTable.DefaultTable):
 		return data
 	
 	def toXML(self, writer, ttFont):
-		items = self.gaspRange.items()
-		items.sort()
+		items = sorted(self.gaspRange.items())
 		for rangeMaxPPEM, rangeGaspBehavior in items:
 			writer.simpletag("gaspRange", [
 					("rangeMaxPPEM", rangeMaxPPEM),
 					("rangeGaspBehavior", rangeGaspBehavior)])
 			writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
-		if name <> "gaspRange":
+	def fromXML(self, element, ttFont):
+		name, attrs, content = element
+		if name != "gaspRange":
 			return
 		if not hasattr(self, "gaspRange"):
 			self.gaspRange = {}

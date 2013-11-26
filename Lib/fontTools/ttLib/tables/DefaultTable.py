@@ -1,7 +1,6 @@
-import string
 import sys
 
-class DefaultTable:
+class DefaultTable(object):
 	
 	dependencies = []
 	
@@ -26,11 +25,13 @@ class DefaultTable:
 		writer.endtag("hexdata")
 		writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, element, ttFont):
+		name, attrs, content = element
 		from fontTools.misc.textTools import readHex
 		from fontTools import ttLib
-		if name <> "hexdata":
-			raise ttLib.TTLibError, "can't handle '%s' element" % name
+		(name, attrs, content) = args
+		if name != "hexdata":
+			raise ttLib.TTLibError("can't handle '%s' element" % name)
 		self.decompile(readHex(content), ttFont)
 	
 	def __repr__(self):

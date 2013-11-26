@@ -37,6 +37,8 @@ sequence of length 2 will do.
 """
 
 
+from __future__ import print_function, division
+
 __all__ = ["AbstractPen", "NullPen", "BasePen",
            "decomposeSuperBezierSegment", "decomposeQuadraticSegment"]
 
@@ -248,7 +250,7 @@ class BasePen(AbstractPen):
 		elif n == 0:
 			self.lineTo(points[0])
 		else:
-			raise AssertionError, "can't get there from here"
+			raise AssertionError("can't get there from here")
 
 	def qCurveTo(self, *points):
 		n = len(points) - 1  # 'n' is the number of control points
@@ -339,14 +341,14 @@ def decomposeQuadraticSegment(points):
 class _TestPen(BasePen):
 	"""Test class that prints PostScript to stdout."""
 	def _moveTo(self, pt):
-		print "%s %s moveto" % (pt[0], pt[1])
+		print("%s %s moveto" % (pt[0], pt[1]))
 	def _lineTo(self, pt):
-		print "%s %s lineto" % (pt[0], pt[1])
+		print("%s %s lineto" % (pt[0], pt[1]))
 	def _curveToOne(self, bcp1, bcp2, pt):
-		print "%s %s %s %s %s %s curveto" % (bcp1[0], bcp1[1],
-				bcp2[0], bcp2[1], pt[0], pt[1])
+		print("%s %s %s %s %s %s curveto" % (bcp1[0], bcp1[1],
+				bcp2[0], bcp2[1], pt[0], pt[1]))
 	def _closePath(self):
-		print "closepath"
+		print("closepath")
 
 
 if __name__ == "__main__":

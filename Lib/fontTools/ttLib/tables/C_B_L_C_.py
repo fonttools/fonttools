@@ -2,7 +2,7 @@
 #
 # Google Author(s): Matt Fontaine
 
-import E_B_L_C_
+from fontTools.ttLib.tables import E_B_L_C_
 
 class table_C_B_L_C_(E_B_L_C_.table_E_B_L_C_):
 

@@ -1,9 +1,10 @@
+from __future__ import division
 import sys
-import DefaultTable
 import array
-from fontTools import ttLib
 import struct
 import warnings
+from fontTools.ttLib.tables import DefaultTable
+from fontTools import ttLib
 
 class table__l_o_c_a(DefaultTable.DefaultTable):
 	
@@ -17,7 +18,7 @@ class table__l_o_c_a(DefaultTable.DefaultTable):
 			format = "H"
 		locations = array.array(format)
 		locations.fromstring(data)
-		if sys.byteorder <> "big":
+		if sys.byteorder != "big":
 			locations.byteswap()
 		if not longFormat:
 			l = array.array("I")
@@ -42,7 +43,7 @@ class table__l_o_c_a(DefaultTable.DefaultTable):
 		else:
 			locations = array.array("I", self.locations)
 			ttFont['head'].indexToLocFormat = 1
-		if sys.byteorder <> "big":
+		if sys.byteorder != "big":
 			locations.byteswap()
 		return locations.tostring()
 	

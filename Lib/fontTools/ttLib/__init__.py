@@ -45,6 +45,7 @@ Dumping 'prep' table...
 # $Id: __init__.py,v 1.51 2009-02-22 08:55:00 pabs3 Exp $
 #
 
+from __future__ import print_function
 import sys
 import os
 import string
@@ -60,7 +61,7 @@ elif sys.platform == "darwin" and sys.version_info[:3] != (2, 2, 0):
 class TTLibError(Exception): pass
 
 
-class TTFont:
+class TTFont(object):
 	
 	"""The main font object. It manages file input and output, and offers
 	a convenient way of accessing tables. 
@@ -148,7 +149,7 @@ class TTFont:
 			# assume file is a string
 			if haveMacSupport and res_name_or_index is not None:
 				# on the mac, we deal with sfnt resources as well as flat files
-				import macUtils
+				from fontTools.ttLib import macUtils
 				if res_name_or_index == 0:
 					if macUtils.getSFNTResIndices(file):
 						# get the first available sfnt font.
@@ -183,7 +184,7 @@ class TTFont:
 		if not hasattr(file, "write"):
 			closeStream = 1
 			if os.name == "mac" and makeSuitcase:
-				import macUtils
+				from fontTools.ttLib import macUtils
 				file = macUtils.SFNTResourceWriter(file, self)
 			else:
 				file = open(file, "wb")
@@ -194,7 +195,7 @@ class TTFont:
 			# assume "file" is a writable file object
 			closeStream = 0
 		
-		tags = self.keys()
+		tags = list(self.keys())
 		if "GlyphOrder" in tags:
 			tags.remove("GlyphOrder")
 		numTables = len(tags)
@@ -236,7 +237,7 @@ class TTFont:
 		self.disassembleInstructions = disassembleInstructions
 		self.bitmapGlyphDataFormat = bitmapGlyphDataFormat
 		if not tables:
-			tables = self.keys()
+			tables = list(self.keys())
 			if "GlyphOrder" not in tables:
 				tables = ["GlyphOrder"] + tables
 			if skipTables:
@@ -251,7 +252,7 @@ class TTFont:
 			idlefunc = None
 		
 		writer = xmlWriter.XMLWriter(fileOrPath, idlefunc=idlefunc)
-		writer.begintag("ttFont", sfntVersion=`self.sfntVersion`[1:-1], 
+		writer.begintag("ttFont", sfntVersion=repr(self.sfntVersion)[1:-1], 
 				ttLibVersion=version)
 		writer.newline()
 		
@@ -290,7 +291,7 @@ class TTFont:
 			debugmsg("Done dumping TTX")
 	
 	def _tableToXML(self, writer, tag, progress, quiet):
-		if self.has_key(tag):
+		if tag in self:
 			table = self[tag]
 			report = "Dumping '%s' table..." % tag
 		else:
@@ -301,8 +302,8 @@ class TTFont:
 			debugmsg(report)
 		else:
 			if not quiet:
-				print report
-		if not self.has_key(tag):
+				print(report)
+		if tag not in self:
 			return
 		xmlTag = tagToXML(tag)
 		if hasattr(table, "ERROR"):
@@ -322,7 +323,7 @@ class TTFont:
 		"""Import a TTX file (an XML-based text format), so as to recreate
 		a font object.
 		"""
-		if self.has_key("maxp") and self.has_key("post"):
+		if "maxp" in self and "post" in self:
 			# Make sure the glyph order is loaded, as it otherwise gets
 			# lost if the XML doesn't contain the glyph order, yet does
 			# contain the table which was originally used to extract the
@@ -337,12 +338,12 @@ class TTFont:
 	def isLoaded(self, tag):
 		"""Return true if the table identified by 'tag' has been 
 		decompiled and loaded into memory."""
-		return self.tables.has_key(tag)
+		return tag in self.tables
 	
 	def has_key(self, tag):
 		if self.isLoaded(tag):
 			return 1
-		elif self.reader and self.reader.has_key(tag):
+		elif self.reader and tag in self.reader:
 			return 1
 		elif tag == "GlyphOrder":
 			return 1
@@ -352,7 +353,7 @@ class TTFont:
 	__contains__ = has_key
 	
 	def keys(self):
-		keys = self.tables.keys()
+		keys = list(self.tables.keys())
 		if self.reader:
 			for key in self.reader.keys():
 				if key not in keys:
@@ -390,10 +391,13 @@ class TTFont:
 					if not self.ignoreDecompileErrors:
 						raise
 					# fall back to DefaultTable, retaining the binary table data
-					print "An exception occurred during the decompilation of the '%s' table" % tag
-					from tables.DefaultTable import DefaultTable
-					import StringIO
-					file = StringIO.StringIO()
+					print("An exception occurred during the decompilation of the '%s' table" % tag)
+					from fontTools.ttLib.tables.DefaultTable import DefaultTable
+					try:
+						from io import StringIO
+					except:
+						from StringIO import StringIO
+					file = StringIO()
 					traceback.print_exc(file=file)
 					table = DefaultTable(tag)
 					table.ERROR = file.getvalue()
@@ -401,17 +405,17 @@ class TTFont:
 					table.decompile(data, self)
 				return table
 			else:
-				raise KeyError, "'%s' table not found" % tag
+				raise KeyError("'%s' table not found" % tag)
 	
 	def __setitem__(self, tag, table):
 		self.tables[tag] = table
 	
 	def __delitem__(self, tag):
-		if not self.has_key(tag):
-			raise KeyError, "'%s' table not found" % tag
-		if self.tables.has_key(tag):
+		if tag not in self:
+			raise KeyError("'%s' table not found" % tag)
+		if tag in self.tables:
 			del self.tables[tag]
-		if self.reader and self.reader.has_key(tag):
+		if self.reader and tag in self.reader:
 			del self.reader[tag]
 	
 	def setGlyphOrder(self, glyphOrder):
@@ -422,10 +426,10 @@ class TTFont:
 			return self.glyphOrder
 		except AttributeError:
 			pass
-		if self.has_key('CFF '):
+		if 'CFF ' in self:
 			cff = self['CFF ']
 			self.glyphOrder = cff.getGlyphOrder()
-		elif self.has_key('post'):
+		elif 'post' in self:
 			# TrueType font
 			glyphOrder = self['post'].getGlyphOrder()
 			if glyphOrder is None:
@@ -490,9 +494,9 @@ class TTFont:
 			allNames = {}
 			for i in range(numGlyphs):
 				tempName = glyphOrder[i]
-				if reversecmap.has_key(tempName):
+				if tempName in reversecmap:
 					unicode = reversecmap[tempName]
-					if agl.UV2AGL.has_key(unicode):
+					if unicode in agl.UV2AGL:
 						# get name from the Adobe Glyph List
 						glyphName = agl.UV2AGL[unicode]
 					else:
@@ -501,8 +505,8 @@ class TTFont:
 								hex(unicode)[2:], 4))
 					tempName = glyphName
 					n = 1
-					while allNames.has_key(tempName):
-						tempName = glyphName + "#" + `n`
+					while tempName in allNames:
+						tempName = glyphName + "#" + repr(n)
 						n = n + 1
 					glyphOrder[i] = tempName
 					allNames[tempName] = 1
@@ -554,13 +558,13 @@ class TTFont:
 			self._buildReverseGlyphOrderDict()
 		glyphOrder = self.getGlyphOrder()
 		d = self._reverseGlyphOrderDict
-		if not d.has_key(glyphName):
+		if not glyphName in d:
 			if glyphName in glyphOrder:
 				self._buildReverseGlyphOrderDict()
 				return self.getGlyphID(glyphName)
 			else:
 				if requireReal or not self.allowVID:
-					raise KeyError, glyphName
+					raise KeyError(glyphName)
 				else:
 					# user intends virtual GID support 	
 					try:
@@ -580,7 +584,7 @@ class TTFont:
 					return glyphID
 
 		glyphID = d[glyphName]
-		if glyphName <> glyphOrder[glyphID]:
+		if glyphName != glyphOrder[glyphID]:
 			self._buildReverseGlyphOrderDict()
 			return self.getGlyphID(glyphName)
 		return glyphID
@@ -605,7 +609,7 @@ class TTFont:
 		tableClass = getTableClass(tag)
 		for masterTable in tableClass.dependencies:
 			if masterTable not in done:
-				if self.has_key(masterTable):
+				if masterTable in self:
 					self._writeTable(masterTable, writer, done)
 				else:
 					done.append(masterTable)
@@ -622,12 +626,12 @@ class TTFont:
 			if self.verbose:
 				debugmsg("compiling '%s' table" % tag)
 			return self.tables[tag].compile(self)
-		elif self.reader and self.reader.has_key(tag):
+		elif self.reader and tag in self.reader:
 			if self.verbose:
 				debugmsg("Reading '%s' table from disk" % tag)
 			return self.reader[tag]
 		else:
-			raise KeyError, tag
+			raise KeyError(tag)
 	
 	def getGlyphSet(self, preferCFF=1):
 		"""Return a generic GlyphSet, which is a dict-like object
@@ -641,16 +645,16 @@ class TTFont:
 		If the font contains both a 'CFF ' and a 'glyf' table, you can use
 		the 'preferCFF' argument to specify which one should be taken.
 		"""
-		if preferCFF and self.has_key("CFF "):
-			return self["CFF "].cff.values()[0].CharStrings
-		if self.has_key("glyf"):
+		if preferCFF and "CFF " in self:
+			return list(self["CFF "].cff.values())[0].CharStrings
+		if "glyf" in self:
 			return _TTGlyphSet(self)
-		if self.has_key("CFF "):
-			return self["CFF "].cff.values()[0].CharStrings
-		raise TTLibError, "Font contains no outlines"
+		if "CFF " in self:
+			return list(self["CFF "].cff.values())[0].CharStrings
+		raise TTLibError("Font contains no outlines")
 
 
-class _TTGlyphSet:
+class _TTGlyphSet(object):
 	
 	"""Generic dict-like GlyphSet class, meant as a TrueType counterpart
 	to CFF's CharString dict. See TTFont.getGlyphSet().
@@ -667,7 +671,7 @@ class _TTGlyphSet:
 		return self._ttFont["glyf"].keys()
 	
 	def has_key(self, glyphName):
-		return self._ttFont["glyf"].has_key(glyphName)
+		return glyphName in self._ttFont["glyf"]
 	
 	__contains__ = has_key
 
@@ -681,7 +685,7 @@ class _TTGlyphSet:
 			return default
 
 
-class _TTGlyph:
+class _TTGlyph(object):
 	
 	"""Wrapper for a TrueType glyph that supports the Pen protocol, meaning
 	that it has a .draw() method that takes a pen object as its only
@@ -742,7 +746,7 @@ class _TTGlyph:
 				pen.closePath()
 
 
-class GlyphOrder:
+class GlyphOrder(object):
 	
 	"""A pseudo table. The glyph order isn't in the font as a separate
 	table, but it's nice to present it as such in the TTX format.
@@ -761,7 +765,8 @@ class GlyphOrder:
 			writer.simpletag("GlyphID", id=i, name=glyphName)
 			writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, element, ttFont):
+		name, attrs, content = element
 		if not hasattr(self, "glyphOrder"):
 			self.glyphOrder = []
 			ttFont.setGlyphOrder(self.glyphOrder)
@@ -773,11 +778,11 @@ def getTableModule(tag):
 	"""Fetch the packer/unpacker module for a table. 
 	Return None when no module is found.
 	"""
-	import tables
+	from fontTools.ttLib import tables
 	pyTag = tagToIdentifier(tag)
 	try:
 		__import__("fontTools.ttLib.tables." + pyTag)
-	except ImportError, err:
+	except ImportError as err:
 		# If pyTag is found in the ImportError message,
 		# means table is not implemented.  If it's not
 		# there, then some other module is missing, don't
@@ -796,7 +801,7 @@ def getTableClass(tag):
 	"""
 	module = getTableModule(tag)
 	if module is None:
-		from tables.DefaultTable import DefaultTable
+		from fontTools.ttLib.tables.DefaultTable import DefaultTable
 		return DefaultTable
 	pyTag = tagToIdentifier(tag)
 	tableClass = getattr(module, "table_" + pyTag)
@@ -897,7 +902,7 @@ def xmlToTag(tag):
 
 def debugmsg(msg):
 	import time
-	print msg + time.strftime("  (%H:%M:%S)", time.localtime(time.time()))
+	print(msg + time.strftime("  (%H:%M:%S)", time.localtime(time.time())))
 
 
 # Table order as recommended in the OpenType specification 1.4
@@ -913,8 +918,7 @@ def sortedTagList(tagList, tableOrder=None):
 	specification, or according to a custom tableOrder. If given and not
 	None, tableOrder needs to be a list of tag names.
 	"""
-	tagList = list(tagList)
-	tagList.sort()
+	tagList = sorted(tagList)
 	if tableOrder is None:
 		if "DSIG" in tagList:
 			# DSIG should be last (XXX spec reference?)

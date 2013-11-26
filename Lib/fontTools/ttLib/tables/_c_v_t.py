@@ -1,6 +1,6 @@
 import sys
-import DefaultTable
 import array
+from fontTools.ttLib.tables import DefaultTable
 from fontTools import ttLib
 from fontTools.misc.textTools import safeEval
 
@@ -9,13 +9,13 @@ class table__c_v_t(DefaultTable.DefaultTable):
 	def decompile(self, data, ttFont):
 		values = array.array("h")
 		values.fromstring(data)
-		if sys.byteorder <> "big":
+		if sys.byteorder != "big":
 			values.byteswap()
 		self.values = values
 	
 	def compile(self, ttFont):
 		values = self.values[:]
-		if sys.byteorder <> "big":
+		if sys.byteorder != "big":
 			values.byteswap()
 		return values.tostring()
 	
@@ -25,7 +25,8 @@ class table__c_v_t(DefaultTable.DefaultTable):
 			writer.simpletag("cv", value=value, index=i)
 			writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, element, ttFont):
+		name, attrs, content = element
 		if not hasattr(self, "values"):
 			self.values = array.array("h")
 		if name == "cv":

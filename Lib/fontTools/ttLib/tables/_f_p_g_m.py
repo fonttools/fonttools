@@ -1,6 +1,6 @@
-import DefaultTable
 import array
-import ttProgram
+from fontTools.ttLib.tables import DefaultTable
+from fontTools.ttLib.tables import ttProgram
 
 class table__f_p_g_m(DefaultTable.DefaultTable):
 	
@@ -16,7 +16,8 @@ class table__f_p_g_m(DefaultTable.DefaultTable):
 		self.program.toXML(writer, ttFont)
 		writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, element, ttFont):
+		name, attrs, content = element
 		program = ttProgram.Program()
 		program.fromXML((name, attrs, content), ttFont)
 		self.program = program

@@ -1,9 +1,9 @@
-from DefaultTable import DefaultTable
-import otData
+from __future__ import print_function
 import struct
-from types import TupleType
+from fontTools.ttLib.tables.DefaultTable import DefaultTable
+from fontTools.ttLib.tables import otData
 
-class OverflowErrorRecord:
+class OverflowErrorRecord(object):
 	def __init__(self, overflowTuple):
 		self.tableType = overflowTuple[0]
 		self.LookupListIndex = overflowTuple[1]
@@ -30,7 +30,7 @@ class BaseTTXConverter(DefaultTable):
 	"""
 	
 	def decompile(self, data, font):
-		import otTables
+		from fontTools.ttLib.tables import otTables
 		cachingStats = None if True else {}
 		reader = OTTableReader(data, self.tableTag, cachingStats=cachingStats)
 		tableClass = getattr(otTables, self.tableTag)
@@ -40,12 +40,12 @@ class BaseTTXConverter(DefaultTable):
 			stats = [(v, k) for k, v in cachingStats.items()]
 			stats.sort()
 			stats.reverse()
-			print "cachingsstats for ", self.tableTag
+			print("cachingsstats for ", self.tableTag)
 			for v, k in stats:
 				if v < 2:
 					break
-				print v, k
-			print "---", len(stats)
+				print(v, k)
+			print("---", len(stats))
 	
 	def compile(self, font):
 		""" Create a top-level OTFWriter for the GPOS/GSUB table.
@@ -76,8 +76,9 @@ class BaseTTXConverter(DefaultTable):
 	def toXML(self, writer, font):
 		self.table.toXML2(writer, font)
 	
-	def fromXML(self, (name, attrs, content), font):
-		import otTables
+	def fromXML(self, element, font):
+		name, attrs, content = element
+		from fontTools.ttLib.tables import otTables
 		if not hasattr(self, "table"):
 			tableClass = getattr(otTables, self.tableTag)
 			self.table = tableClass()
@@ -278,7 +279,7 @@ class OTTableWriter(object):
 						overflowErrorRecord = self.getOverflowErrorRecord(item)
 						
 						
-						raise OTLOffsetOverflowError, overflowErrorRecord
+						raise OTLOffsetOverflowError(overflowErrorRecord)
 
 		return "".join(items)
 	
@@ -318,7 +319,7 @@ class OTTableWriter(object):
 					item._doneWriting()
 				else:
 					item._doneWriting(internedTables)
-					if internedTables.has_key(item):
+					if item in internedTables:
 						items[i] = item = internedTables[item]
 					else:
 						internedTables[item] = item
@@ -340,8 +341,7 @@ class OTTableWriter(object):
 		done[self] = 1
 
 		numItems = len(self.items)
-		iRange = range(numItems)
-		iRange.reverse()
+		iRange = reversed(range(numItems))
 
 		if hasattr(self, "Extension"):
 			appendExtensions = 1
@@ -357,7 +357,7 @@ class OTTableWriter(object):
 				if hasattr(item, "name") and (item.name == "Coverage"):
 					sortCoverageLast = 1
 					break
-			if not done.has_key(item):
+			if item not in done:
 				item._gatherTables(tables, extTables, done)
 			else:
 				index = max(item.parent.keys())
@@ -378,7 +378,7 @@ class OTTableWriter(object):
 				newDone = {}
 				item._gatherTables(extTables, None, newDone)
 
-			elif not done.has_key(item):
+			elif item not in done:
 				item._gatherTables(tables, extTables, done)
 			else:
 				index = max(item.parent.keys())
@@ -423,7 +423,7 @@ class OTTableWriter(object):
 		return ref
 	
 	def writeStruct(self, format, values):
-		data = apply(struct.pack, (format,) + values)
+		data = struct.pack(*(format,) + values)
 		self.items.append(data)
 	
 	def writeData(self, data):
@@ -466,7 +466,7 @@ class OTTableWriter(object):
 		return OverflowErrorRecord( (self.tableType, LookupListIndex, SubTableIndex, itemName, itemIndex) )
 
 
-class CountReference:
+class CountReference(object):
 	"""A reference to a Count value, not a count of references."""
 	def __init__(self, table, name):
 		self.table = table
@@ -513,14 +513,14 @@ class BaseTable(object):
 		if self.recurse > 2:
 			# shouldn't ever get here - we should only get to two levels of recursion.
 			# this guards against self.decompile NOT setting compileStatus to other than 1.
-			raise AttributeError, attr 
+			raise AttributeError(attr)
 		if self.compileStatus == 1:
 			self.ensureDecompiled()
 			val = getattr(self, attr)
 			self.recurse -=1
 			return val
 			
-		raise AttributeError, attr 
+		raise AttributeError(attr)
 
 
 	"""Generic base class for all OpenType (sub)tables."""
@@ -655,7 +655,8 @@ class BaseTable(object):
 				value = getattr(self, conv.name)
 				conv.xmlWrite(xmlWriter, font, value, conv.name, [])
 	
-	def fromXML(self, (name, attrs, content), font):
+	def fromXML(self, element, font):
+		name, attrs, content = element
 		try:
 			conv = self.getConverterByName(name)
 		except KeyError:
@@ -692,7 +693,7 @@ class FormatSwitchingBaseTable(BaseTable):
 	
 	def readFormat(self, reader):
 		self.Format = reader.readUShort()
-		assert self.Format <> 0, (self, reader.pos, len(reader.data))
+		assert self.Format != 0, (self, reader.pos, len(reader.data))
 	
 	def writeFormat(self, writer):
 		writer.writeUShort(self.Format)
@@ -736,7 +737,7 @@ def _buildDict():
 valueRecordFormatDict = _buildDict()
 
 
-class ValueRecordFactory:
+class ValueRecordFactory(object):
 	
 	"""Given a format code, this object convert ValueRecords."""
 
@@ -759,7 +760,7 @@ class ValueRecordFactory:
 				value = reader.readUShort()
 			if isDevice:
 				if value:
-					import otTables
+					from fontTools.ttLib.tables import otTables
 					subReader = reader.getSubReader(value)
 					value = getattr(otTables, name)()
 					value.decompile(subReader, font)
@@ -784,7 +785,7 @@ class ValueRecordFactory:
 				writer.writeUShort(value)
 
 
-class ValueRecord:
+class ValueRecord(object):
 	
 	# see ValueRecordFactory
 	
@@ -820,17 +821,18 @@ class ValueRecord:
 			xmlWriter.simpletag(valueName, simpleItems)
 			xmlWriter.newline()
 	
-	def fromXML(self, (name, attrs, content), font):
-		import otTables
+	def fromXML(self, element, font):
+		name, attrs, content = element
+		from fontTools.ttLib.tables import otTables
 		for k, v in attrs.items():
 			setattr(self, k, int(v))
 		for element in content:
-			if type(element) <> TupleType:
+			if not isinstance(element, tuple):
 				continue
 			name, attrs, content = element
 			value = getattr(otTables, name)()
 			for elem2 in content:
-				if type(elem2) <> TupleType:
+				if not isinstance(elem2, tuple):
 					continue
 				value.fromXML(elem2, font)
 			setattr(self, name, value)

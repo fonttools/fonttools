@@ -1,6 +1,6 @@
-import DefaultTable
+from __future__ import division
 from fontTools.misc import sstruct
-import string
+from fontTools.ttLib.tables import DefaultTable
 
 hdmxHeaderFormat = """
 	>   # big endian!
@@ -30,12 +30,11 @@ class table__h_d_m_x(DefaultTable.DefaultTable):
 		self.version = 0
 		numGlyphs = ttFont['maxp'].numGlyphs
 		glyphOrder = ttFont.getGlyphOrder()
-		self.recordSize = 4 * ((2 + numGlyphs + 3) / 4)
+		self.recordSize = 4 * ((2 + numGlyphs + 3) // 4)
 		pad = (self.recordSize - 2 - numGlyphs) * "\0"
 		self.numRecords = len(self.hdmx)
 		data = sstruct.pack(hdmxHeaderFormat, self)
-		items = self.hdmx.items()
-		items.sort()
+		items = sorted(self.hdmx.items())
 		for ppem, widths in items:
 			data = data + chr(ppem) + chr(max(widths.values()))
 			for glyphID in range(len(glyphOrder)):
@@ -47,8 +46,7 @@ class table__h_d_m_x(DefaultTable.DefaultTable):
 	def toXML(self, writer, ttFont):
 		writer.begintag("hdmxData")
 		writer.newline()
-		ppems = self.hdmx.keys()
-		ppems.sort()
+		ppems = sorted(self.hdmx.keys())
 		records = []
 		format = ""
 		for ppem in ppems:
@@ -57,8 +55,8 @@ class table__h_d_m_x(DefaultTable.DefaultTable):
 			format = format + "%4d"
 		glyphNames = ttFont.getGlyphOrder()[:]
 		glyphNames.sort()
-		maxNameLen = max(map(len, glyphNames))
-		format = "%" + `maxNameLen` + 's:' + format + ' ;'
+		maxNameLen = max([len(name) for name in glyphNames])
+		format = "%" + repr(maxNameLen) + 's:' + format + ' ;'
 		writer.write(format % (("ppem",) + tuple(ppems)))
 		writer.newline()
 		writer.newline()
@@ -74,18 +72,19 @@ class table__h_d_m_x(DefaultTable.DefaultTable):
 		writer.endtag("hdmxData")
 		writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
-		if name <> "hdmxData":
+	def fromXML(self, element, ttFont):
+		name, attrs, content = element
+		if name != "hdmxData":
 			return
-		content = string.join(content, "")
-		lines = string.split(content, ";")
-		topRow = string.split(lines[0])
+		content = "".join(content)
+		lines = content.split(";")
+		topRow = lines[0].split()
 		assert topRow[0] == "ppem:", "illegal hdmx format"
-		ppems = map(int, topRow[1:])
+		ppems = [int(x) for x in topRow[1:]]
 		self.hdmx = hdmx = {}
 		for ppem in ppems:
 			hdmx[ppem] = {}
-		lines = map(string.split, lines[1:])
+		lines = [line.split() for line in lines[1:]]
 		for line in lines:
 			if not line:
 				continue
@@ -94,7 +93,7 @@ class table__h_d_m_x(DefaultTable.DefaultTable):
 			if "\\" in glyphName:
 				from fontTools.misc.textTools import safeEval
 				glyphName = safeEval('"""' + glyphName + '"""')
-			line = map(int, line[1:])
+			line = [int(x) for x in line[1:]]
 			assert len(line) == len(ppems), "illegal hdmx format"
 			for i in range(len(ppems)):
 				hdmx[ppems[i]][glyphName] = line[i]

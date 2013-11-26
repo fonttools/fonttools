@@ -1,4 +1,4 @@
-import DefaultTable
+from fontTools.ttLib.tables import DefaultTable
 from fontTools.misc.textTools import safeEval
 from fontTools.misc import sstruct
 
@@ -80,7 +80,8 @@ class table_D_S_I_G_(DefaultTable.DefaultTable):
 			sigrec.toXML(xmlWriter, ttFont)
 		xmlWriter.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, element, ttFont):
+		name, attrs, content = element
 		if name == "tableHeader":
 			self.signatureRecords = []
 			self.ulVersion = safeEval(attrs["version"])
@@ -96,7 +97,7 @@ pem_spam = lambda l, spam = {
 	"-----BEGIN PKCS7-----": True, "-----END PKCS7-----": True, "": True
 }: not spam.get(l.strip())
 
-class SignatureRecord:
+class SignatureRecord(object):
 	def __repr__(self):
 		return "<%s: %s>" % (self.__class__.__name__, self.__dict__)
 	
@@ -108,7 +109,8 @@ class SignatureRecord:
 		writer.write_noindent("-----END PKCS7-----\n")
 		writer.endtag(self.__class__.__name__)
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, element, ttFont):
+		name, attrs, content = element
 		self.ulFormat = safeEval(attrs["format"])
 		self.usReserved1 = safeEval(attrs.get("reserved1", "0"))
 		self.usReserved2 = safeEval(attrs.get("reserved2", "0"))

@@ -1,4 +1,4 @@
-from types import TupleType
+from __future__ import print_function, division
 from fontTools.misc.textTools import safeEval
 
 
@@ -30,7 +30,7 @@ def buildConverters(tableSpec, tableNamespace):
 				for cls in t.values():
 					convertersByName[cls.__name__] = Table(name, repeat, aux, cls)
 		converters.append(conv)
-		assert not convertersByName.has_key(name)
+		assert name not in convertersByName
 		convertersByName[name] = conv
 	return converters, convertersByName
 
@@ -50,19 +50,19 @@ class BaseConverter(object):
 	
 	def read(self, reader, font, tableDict):
 		"""Read a value from the reader."""
-		raise NotImplementedError, self
+		raise NotImplementedError(self)
 	
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		"""Write a value to the writer."""
-		raise NotImplementedError, self
+		raise NotImplementedError(self)
 	
 	def xmlRead(self, attrs, content, font):
 		"""Read a value from XML."""
-		raise NotImplementedError, self
+		raise NotImplementedError(self)
 	
 	def xmlWrite(self, xmlWriter, font, value, name, attrs):
 		"""Write a value to XML."""
-		raise NotImplementedError, self
+		raise NotImplementedError(self)
 
 
 class SimpleValue(BaseConverter):
@@ -164,7 +164,7 @@ class Struct(BaseConverter):
 		if Format is not None:
 			table.Format = int(Format)
 		for element in content:
-			if type(element) == TupleType:
+			if isinstance(element, tuple):
 				name, attrs, content = element
 				table.fromXML((name, attrs, content), font)
 			else:
@@ -191,8 +191,8 @@ class Table(Struct):
 			return None
 		if offset <= 3:
 			# XXX hack to work around buggy pala.ttf
-			print "*** Warning: offset is not 0, yet suspiciously low (%s). table: %s" \
-					% (offset, self.tableClass.__name__)
+			print("*** Warning: offset is not 0, yet suspiciously low (%s). table: %s" \
+					% (offset, self.tableClass.__name__))
 			return None
 		table = self.tableClass()
 		table.reader = reader
@@ -260,7 +260,7 @@ class ValueRecord(ValueFormat):
 		else:
 			value.toXML(xmlWriter, font, self.name, attrs)
 	def xmlRead(self, attrs, content, font):
-		from otBase import ValueRecord
+		from fontTools.ttLib.tables.otBase import ValueRecord
 		value = ValueRecord()
 		value.fromXML((None, attrs, content), font)
 		return value
@@ -309,7 +309,7 @@ class DeltaValue(BaseConverter):
 			if shift == 0:
 				writer.writeUShort(tmp)
 				tmp, shift = 0, 16
-		if shift <> 16:
+		if shift != 16:
 			writer.writeUShort(tmp)
 	
 	def xmlWrite(self, xmlWriter, font, value, name, attrs):

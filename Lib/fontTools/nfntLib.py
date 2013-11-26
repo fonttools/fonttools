@@ -1,7 +1,6 @@
+from __future__ import print_function, division
 import struct
 from fontTools.misc import sstruct
-import string
-import types
 
 
 # FontRec header
@@ -25,7 +24,7 @@ headerSize = sstruct.calcsize(nfntHeaderFormat)
 assert headerSize == 26
 
 
-class NFNT:
+class NFNT(object):
 	
 	def __init__(self, data=None):
 		if data is not None:
@@ -44,15 +43,15 @@ class NFNT:
 		self.bits = data[headerSize:headerSize + bitmapSize]
 		
 		# XXX deal with self.nDescent being a positive number
-		assert (headerSize + bitmapSize + tableSize - 16) / 2 == self.owTLoc  # ugh...
+		assert (headerSize + bitmapSize + tableSize - 16) // 2 == self.owTLoc  # ugh...
 		
 		locTable = data[headerSize + bitmapSize:headerSize + bitmapSize + tableSize]
-		if len(locTable) <> tableSize:
-			raise ValueError, 'invalid NFNT format'
+		if len(locTable) != tableSize:
+			raise ValueError('invalid NFNT format')
 		
 		owTable = data[headerSize + bitmapSize + tableSize:headerSize + bitmapSize + 2 * tableSize]
-		if len(owTable) <> tableSize:
-			raise ValueError, 'invalid NFNT format'
+		if len(owTable) != tableSize:
+			raise ValueError('invalid NFNT format')
 		
 		# fill tables
 		self.offsetTable = []
@@ -72,8 +71,8 @@ class NFNT:
 		for i in range(nEntries):
 			owTable[i] = chr(self.offsetTable[i]) + chr(self.widthTable[i])
 			locTable[i] = struct.pack("h", self.locTable[i])
-		owTable = string.join(owTable, "")
-		locTable = string.join(locTable, "")
+		owTable = "".join(owTable)
+		locTable = "".join(locTable)
 		assert len(locTable) == len(owTable) == 2 * (self.lastChar - self.firstChar + 3)
 		return header + self.bits + locTable + owTable
 	
@@ -128,9 +127,9 @@ class NFNT:
 			fRectWidth = max(fRectWidth, glyph.pixels.shape[0] + glyph.offset)
 		
 		fRectWidth = fRectWidth - kernMax
-		imageWidth = 16 * ((imageWidth - 1) / 16 + 1)
-		rowBytes = imageWidth / 8
-		rowWords = rowBytes / 2
+		imageWidth = 16 * ((imageWidth - 1) // 16 + 1)
+		rowBytes = imageWidth // 8
+		rowWords = rowBytes // 2
 		bitImage = numpy.zeros((imageWidth, imageHeight), numpy.int8)
 		locTable = []
 		widthTable = []
@@ -159,7 +158,7 @@ class NFNT:
 				for x in range(8):
 					byte = byte | ((bitImage[8 * xByte + x, y] & 0x01) << (7 - x))
 				bits.append(chr(byte))
-		bits = string.join(bits, "")
+		bits = "".join(bits)
 		
 		# assign values
 		self.fontType = 0x9000
@@ -173,7 +172,7 @@ class NFNT:
 		self.rowWords = rowWords
 		
 		tableSize = 2 * (self.lastChar - self.firstChar + 3)
-		self.owTLoc = (headerSize + len(bits) + tableSize - 16) / 2
+		self.owTLoc = (headerSize + len(bits) + tableSize - 16) // 2
 		
 		self.bits = bits
 		self.locTable = locTable
@@ -185,7 +184,7 @@ class NFNT:
 	
 	def __getitem__(self, charNum):
 		if charNum > self.lastChar or charNum < 0:
-			raise IndexError, "no such character"
+			raise IndexError("no such character")
 		index = charNum - self.firstChar
 		if index < 0:
 			return None
@@ -193,10 +192,10 @@ class NFNT:
 	
 	def __setitem__(self, charNum, glyph):
 		if charNum > self.lastChar or charNum < 0:
-			raise IndexError, "no such character"
+			raise IndexError("no such character")
 		index = charNum - self.firstChar
 		if index < 0:
-			raise IndexError, "no such character"
+			raise IndexError("no such character")
 		self.glyphs[index] = glyph
 	
 	def __len__(self):
@@ -248,7 +247,7 @@ class NFNT:
 		offset = self.offsetTable[cindex]
 		width = self.widthTable[cindex]
 		if offset == 255 and width == 255:
-			raise ValueError, "character not defined"
+			raise ValueError("character not defined")
 		location0 = self.locTable[cindex]
 		location1 = self.locTable[cindex + 1]
 		srcbounds = (location0, 0, location1, self.fRectHeight)
@@ -259,7 +258,7 @@ class NFNT:
 		return width, srcbounds, destbounds
 
 
-class Glyph:
+class Glyph(object):
 	
 	def __init__(self, width, offset, pixels=None, pixelDepth=1):
 		self.width = width
@@ -276,7 +275,7 @@ def dataFromFile(pathOrFSSpec, nameOrID="", resType='NFNT'):
 		if not nameOrID:
 			# just take the first in the file
 			res = Res.Get1IndResource(resType, 1)
-		elif type(nameOrID) == types.IntType:
+		elif isinstance(nameOrID, int):
 			res = Res.Get1Resource(resType, nameOrID)
 		else:
 			res = Res.Get1NamedResource(resType, nameOrID)
@@ -301,4 +300,4 @@ if __name__ == "__main__":
 		font.unpackGlyphs()
 		font.packGlyphs()
 		data2 = font.compile()
-		print "xxxxx", data == data2, len(data) == len(data2)
+		print("xxxxx", data == data2, len(data) == len(data2))

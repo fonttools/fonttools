@@ -2,6 +2,8 @@
 """
 
 
+from __future__ import print_function, division
+
 __all__ = [
     "calcQuadraticBounds",
     "calcCubicBounds",
@@ -48,7 +50,7 @@ def calcCubicBounds(pt1, pt2, pt3, pt4):
         (0, 0, 100, 75.0)
         >>> calcCubicBounds((0, 0), (50, 0), (100, 50), (100, 100))
         (0.0, 0.0, 100, 100)
-        >>> print "%f %f %f %f" % calcCubicBounds((50, 0), (0, 100), (100, 100), (50, 0))
+        >>> print("%f %f %f %f" % calcCubicBounds((50, 0), (0, 100), (100, 100), (50, 0)))
         35.566243 0.000000 64.433757 75.000000
     """
     (ax, ay), (bx, by), (cx, cy), (dx, dy) = calcCubicParameters(pt1, pt2, pt3, pt4)
@@ -402,7 +404,7 @@ def printSegments(segments):
     segments on a single line as a tuple.
     """
     for segment in segments:
-        print _segmentrepr(segment)
+        print(_segmentrepr(segment))
 
 if __name__ == "__main__":
     import doctest

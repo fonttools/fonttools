@@ -1,11 +1,12 @@
+from __future__ import print_function, division
+from future_builtins import zip
 import sys
-import DefaultTable
 import struct
 import array
 import operator
+from fontTools.ttLib.tables import DefaultTable
 from fontTools import ttLib
 from fontTools.misc.textTools import safeEval, readHex
-from types import TupleType
 
 
 class table__c_m_a_p(DefaultTable.DefaultTable):
@@ -33,9 +34,9 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
 				format, length = struct.unpack(">HL", data[offset:offset+6])
 				
 			if not length:
-				print "Error: cmap subtable is reported as having zero length: platformID %s, platEncID %s,  format %s offset %s. Skipping table." % (platformID, platEncID,format, offset)
+				print("Error: cmap subtable is reported as having zero length: platformID %s, platEncID %s,  format %s offset %s. Skipping table." % (platformID, platEncID,format, offset))
 				continue
-			if not cmap_classes.has_key(format):
+			if format not in cmap_classes:
 				table = cmap_format_unknown(format)
 			else:
 				table = cmap_classes[format](format)
@@ -45,7 +46,7 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
 			# any other data gets decompiled only when an attribute of the
 			# subtable is referenced.
 			table.decompileHeader(data[offset:offset+int(length)], ttFont)
-			if seenOffsets.has_key(offset):
+			if offset in seenOffsets:
 				table.cmap = tables[seenOffsets[offset]].cmap
 			else:
 				seenOffsets[offset] = i
@@ -64,7 +65,7 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
 				offset = seen[id(table.cmap)]
 			except KeyError:
 				chunk = table.compile(ttFont)
-				if done.has_key(chunk):
+				if chunk in done:
 					offset = done[chunk]
 				else:
 					offset = seen[id(table.cmap)] = done[chunk] = totalOffset + len(tableData)
@@ -78,16 +79,17 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
 		for table in self.tables:
 			table.toXML(writer, ttFont)
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, element, ttFont):
+		name, attrs, content = element
 		if name == "tableVersion":
 			self.tableVersion = safeEval(attrs["version"])
 			return
-		if name[:12] <> "cmap_format_":
+		if name[:12] != "cmap_format_":
 			return
 		if not hasattr(self, "tables"):
 			self.tables = []
 		format = safeEval(name[12:])
-		if not cmap_classes.has_key(format):
+		if format not in cmap_classes:
 			table = cmap_format_unknown(format)
 		else:
 			table = cmap_classes[format](format)
@@ -97,7 +99,7 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
 		self.tables.append(table)
 
 
-class CmapSubtable:
+class CmapSubtable(object):
 	
 	def __init__(self, format):
 		self.format = format
@@ -107,9 +109,9 @@ class CmapSubtable:
 	def __getattr__(self, attr):
 		# allow lazy decompilation of subtables.
 		if attr[:2] == '__': # don't handle requests for member functions like '__lt__'
-			raise AttributeError, attr
+			raise AttributeError(attr)
 		if self.data == None:
-			raise AttributeError, attr
+			raise AttributeError(attr)
 		self.decompile(None, None) # use saved data.
 		self.data = None # Once this table has been decompiled, make sure we don't
 						# just return the original data. Also avoids recursion when
@@ -132,8 +134,7 @@ class CmapSubtable:
 				("language", self.language),
 				])
 		writer.newline()
-		codes = self.cmap.items()
-		codes.sort()
+		codes = sorted(self.cmap.items())
 		self._writeCodes(codes, writer)
 		writer.endtag(self.__class__.__name__)
 		writer.newline()
@@ -182,43 +183,43 @@ class cmap_format_0(CmapSubtable):
 		glyphIdArray.fromstring(self.data)
 		self.cmap = cmap = {}
 		lenArray = len(glyphIdArray)
-		charCodes = range(lenArray)
-		names = map(self.ttFont.getGlyphName, glyphIdArray)
-		map(operator.setitem, [cmap]*lenArray, charCodes, names)
+		charCodes = list(range(lenArray))
+		names = [self.ttFont.getGlyphName(x) for x in glyphIdArray]
+		cmap = dict(zip(charCodes, names))
 
 	
 	def compile(self, ttFont):
 		if self.data:
 			return struct.pack(">HHH", 0, 262, self.language) + self.data
 
-		charCodeList = self.cmap.items()
-		charCodeList.sort()
+		charCodeList = sorted(self.cmap.items())
 		charCodes = [entry[0] for entry in charCodeList]
 		valueList = [entry[1] for entry in charCodeList]
-		assert charCodes == range(256)
-		valueList = map(ttFont.getGlyphID, valueList)
+		assert charCodes == list(range(256))
+		valueList = [ttFont.getGlyphID(x) for x in valueList]
 
 		glyphIdArray = array.array("B", valueList)
 		data = struct.pack(">HHH", 0, 262, self.language) + glyphIdArray.tostring()
 		assert len(data) == 262
 		return data
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, element, ttFont):
+		name, attrs, content = element
 		self.language = safeEval(attrs["language"])
 		if not hasattr(self, "cmap"):
 			self.cmap = {}
 		cmap = self.cmap
 		for element in content:
-			if type(element) <> TupleType:
+			if not isinstance(element, tuple):
 				continue
 			name, attrs, content = element
-			if name <> "map":
+			if name != "map":
 				continue
 			cmap[safeEval(attrs["code"])] = attrs["name"]
 
 
 subHeaderFormat = ">HHhH"
-class SubHeader:
+class SubHeader(object):
 	def __init__(self):
 		self.firstCode = None
 		self.entryCount = None
@@ -272,9 +273,9 @@ class cmap_format_2(CmapSubtable):
 		allKeys = array.array("H")
 		allKeys.fromstring(data[:512])
 		data = data[512:]
-		if sys.byteorder <> "big":
+		if sys.byteorder != "big":
 			allKeys.byteswap()
-		subHeaderKeys = [ key/8 for key in allKeys]
+		subHeaderKeys = [ key//8 for key in allKeys]
 		maxSubHeaderindex = max(subHeaderKeys)
 	
 		#Load subHeaders
@@ -288,7 +289,7 @@ class cmap_format_2(CmapSubtable):
 			giDataPos = pos + subHeader.idRangeOffset-2
 			giList = array.array("H")
 			giList.fromstring(data[giDataPos:giDataPos + subHeader.entryCount*2])
-			if sys.byteorder <> "big":
+			if sys.byteorder != "big":
 				giList.byteswap()
 			subHeader.glyphIndexArray = giList
 			subHeaderList.append(subHeader)
@@ -363,15 +364,15 @@ class cmap_format_2(CmapSubtable):
 				# same as mapping it to .notdef.
 		# cmap values are GID's.
 		glyphOrder = self.ttFont.getGlyphOrder()
-		gids = cmap.values()
-		charCodes = cmap.keys()
+		gids = list(cmap.values())
+		charCodes = list(cmap.keys())
 		lenCmap = len(gids)
 		try:
-			names = map(operator.getitem, [glyphOrder]*lenCmap, gids )
+			names = [glyphOrder[gid] for gid in gids]
 		except IndexError:
 			getGlyphName = self.ttFont.getGlyphName
-			names = map(getGlyphName, gids )
-		map(operator.setitem, [cmap]*lenCmap, charCodes, names)
+			names = [getGlyphName(gid) for gid in gids]
+		cmap = dict(zip(charCodes, names))
 	
 		
 	def compile(self, ttFont):
@@ -380,18 +381,17 @@ class cmap_format_2(CmapSubtable):
 		kEmptyTwoCharCodeRange = -1
 		notdefGI = 0
 
-		items = self.cmap.items()
-		items.sort()
+		items = sorted(self.cmap.items())
 		charCodes = [item[0] for item in items]
 		names = [item[1] for item in items]
 		nameMap = ttFont.getReverseGlyphMap()
 		lenCharCodes = len(charCodes) 
 		try:
-			gids = map(operator.getitem, [nameMap]*lenCharCodes, names)
+			gids = [nameMap[name] for name in names]
 		except KeyError:
 			nameMap = ttFont.getReverseGlyphMap(rebuild=1)
 			try:
-				gids = map(operator.getitem, [nameMap]*lenCharCodes, names)
+				gids = [nameMap[name] for name in names]
 			except KeyError:
 				# allow virtual GIDs in format 2 tables
 				gids = []
@@ -522,17 +522,18 @@ class cmap_format_2(CmapSubtable):
 		return data
 
 
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, element, ttFont):
+		name, attrs, content = element
 		self.language = safeEval(attrs["language"])
 		if not hasattr(self, "cmap"):
 			self.cmap = {}
 		cmap = self.cmap
 
 		for element in content:
-			if type(element) <> TupleType:
+			if not isinstance(element, tuple):
 				continue
 			name, attrs, content = element
-			if name <> "map":
+			if name != "map":
 				continue
 			cmap[safeEval(attrs["code"])] = attrs["name"]
 
@@ -639,13 +640,13 @@ class cmap_format_4(CmapSubtable):
 		(segCountX2, searchRange, entrySelector, rangeShift) = \
 					struct.unpack(">4H", data[:8])
 		data = data[8:]
-		segCount = segCountX2 / 2
+		segCount = segCountX2 // 2
 		
 		allCodes = array.array("H")
 		allCodes.fromstring(data)
 		self.data = data = None
 
-		if sys.byteorder <> "big":
+		if sys.byteorder != "big":
 			allCodes.byteswap()
 		
 		# divide the data
@@ -663,7 +664,7 @@ class cmap_format_4(CmapSubtable):
 		charCodes = []
 		gids = []
 		for i in range(len(startCode) - 1):	# don't do 0xffff!
-			rangeCharCodes = range(startCode[i], endCode[i] + 1)
+			rangeCharCodes = list(range(startCode[i], endCode[i] + 1))
 			charCodes = charCodes + rangeCharCodes
 			for charCode in rangeCharCodes:
 				rangeOffset = idRangeOffset[i]
@@ -671,9 +672,9 @@ class cmap_format_4(CmapSubtable):
 					glyphID = charCode + idDelta[i]
 				else:
 					# *someone* needs to get killed.
-					index = idRangeOffset[i] / 2 + (charCode - startCode[i]) + i - len(idRangeOffset)
+					index = idRangeOffset[i] // 2 + (charCode - startCode[i]) + i - len(idRangeOffset)
 					assert (index < lenGIArray), "In format 4 cmap, range (%d), the calculated index (%d) into the glyph index array  is not less than the length of the array (%d) !" % (i, index, lenGIArray)
-					if glyphIndexArray[index] <> 0:  # if not missing glyph
+					if glyphIndexArray[index] != 0:  # if not missing glyph
 						glyphID = glyphIndexArray[index] + idDelta[i]
 					else:
 						glyphID = 0  # missing glyph
@@ -683,11 +684,12 @@ class cmap_format_4(CmapSubtable):
 		lenCmap = len(gids)
 		glyphOrder = self.ttFont.getGlyphOrder()
 		try:
-			names = map(operator.getitem, [glyphOrder]*lenCmap, gids )
+			names = [glyphOrder[gid] for gid in gids]
 		except IndexError:
 			getGlyphName = self.ttFont.getGlyphName
-			names = map(getGlyphName, gids )
-		map(operator.setitem, [cmap]*lenCmap, charCodes, names)
+			names = [getGlyphName(gid) for gid in  gids]
+		cmap = dict(zip(charCodes, names))
+
 		
 
 
@@ -718,21 +720,20 @@ class cmap_format_4(CmapSubtable):
 
 		from fontTools.ttLib.sfnt import maxPowerOfTwo
 		
-		charCodes = self.cmap.keys()
+		charCodes = sorted(self.cmap.keys())
 		lenCharCodes = len(charCodes)
 		if lenCharCodes == 0:
 			startCode = [0xffff]
 			endCode = [0xffff]
 		else:
-			charCodes.sort()
-			names = map(operator.getitem, [self.cmap]*lenCharCodes, charCodes)
+			names = [self.cmap[charCode] for charCode in charCodes]
 			nameMap = ttFont.getReverseGlyphMap()
 			try:
-				gids = map(operator.getitem, [nameMap]*lenCharCodes, names)
+				gids = [nameMap[name] for name in names]
 			except KeyError:
 				nameMap = ttFont.getReverseGlyphMap(rebuild=1)
 				try:
-					gids = map(operator.getitem, [nameMap]*lenCharCodes, names)
+					gids = [nameMap[name] for name in names]
 				except KeyError:
 					# allow virtual GIDs in format 4 tables
 					gids = []
@@ -749,8 +750,7 @@ class cmap_format_4(CmapSubtable):
 								raise KeyError(name)
 	
 						gids.append(gid)
-			cmap = {}  # code:glyphID mapping
-			map(operator.setitem, [cmap]*len(charCodes), charCodes, gids)
+			cmap = dict(zip(charCodes, gids))  # code:glyphID mapping
 		
 			# Build startCode and endCode lists.
 			# Split the char codes in ranges of consecutive char codes, then split
@@ -780,7 +780,7 @@ class cmap_format_4(CmapSubtable):
 			indices = []
 			for charCode in range(startCode[i], endCode[i] + 1):
 				indices.append(cmap[charCode])
-			if  (indices == range(indices[0], indices[0] + len(indices))):
+			if  (indices == list(range(indices[0], indices[0] + len(indices)))):
 				idDeltaTemp = self.setIDDelta(indices[0] - startCode[i])
 				idDelta.append( idDeltaTemp)
 				idRangeOffset.append(0)
@@ -803,7 +803,7 @@ class cmap_format_4(CmapSubtable):
 		charCodeArray = array.array("H", endCode + [0] + startCode)
 		idDeltaeArray = array.array("h", idDelta)
 		restArray = array.array("H", idRangeOffset + glyphIndexArray)
-		if sys.byteorder <> "big":
+		if sys.byteorder != "big":
 			charCodeArray.byteswap()
 			idDeltaeArray.byteswap()
 			restArray.byteswap()
@@ -814,17 +814,18 @@ class cmap_format_4(CmapSubtable):
 				segCountX2, searchRange, entrySelector, rangeShift)
 		return header + data
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, element, ttFont):
+		name, attrs, content = element
 		self.language = safeEval(attrs["language"])
 		if not hasattr(self, "cmap"):
 			self.cmap = {}
 		cmap = self.cmap
 
 		for element in content:
-			if type(element) <> TupleType:
+			if not isinstance(element, tuple):
 				continue
 			nameMap, attrsMap, dummyContent = element
-			if nameMap <> "map":
+			if nameMap != "map":
 				assert 0, "Unrecognized keyword in cmap subtable"
 			cmap[safeEval(attrsMap["code"])] = attrsMap["name"]
 
@@ -846,34 +847,32 @@ class cmap_format_6(CmapSubtable):
 		#assert len(data) == 2 * entryCount  # XXX not true in Apple's Helvetica!!!
 		glyphIndexArray = array.array("H")
 		glyphIndexArray.fromstring(data[:2 * int(entryCount)])
-		if sys.byteorder <> "big":
+		if sys.byteorder != "big":
 			glyphIndexArray.byteswap()
 		self.data = data = None
 
 		self.cmap = cmap = {}
 
 		lenArray = len(glyphIndexArray)
-		charCodes = range(firstCode, firstCode + lenArray )
+		charCodes = list(range(firstCode, firstCode + lenArray))
 		glyphOrder = self.ttFont.getGlyphOrder()
 		try:
-			names = map(operator.getitem, [glyphOrder]*lenArray, glyphIndexArray )
+			names = [glyphOrder[gi] for gi in glyphIndexArray]
 		except IndexError:
 			getGlyphName = self.ttFont.getGlyphName
-			names = map(getGlyphName, glyphIndexArray )
+			names = [getGlyphName(gi) for gi in glyphIndexArray]
 		map(operator.setitem, [cmap]*lenArray, charCodes, names)
 	
 	def compile(self, ttFont):
 		if self.data:
 			return struct.pack(">HHH", self.format, self.length, self.language) + self.data
 		cmap = self.cmap
-		codes = cmap.keys()
+		codes = sorted(cmap.keys())
 		if codes: # yes, there are empty cmap tables.
-			codes.sort()
 			lenCodes = len(codes)
 			assert codes == range(codes[0], codes[0] + lenCodes)
 			firstCode = codes[0]
-			valueList = map(operator.getitem, [cmap]*lenCodes, codes)
-			valueList = map(ttFont.getGlyphID, valueList)
+			valueList = [ttFont.getGlyphID(cmap[code]) for code in codes]
 			glyphIndexArray = array.array("H", valueList)
 			if sys.byteorder <> "big":
 				glyphIndexArray.byteswap()
@@ -885,17 +884,18 @@ class cmap_format_6(CmapSubtable):
 				6, len(data) + 10, self.language, firstCode, len(codes))
 		return header + data
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, element, ttFont):
+		name, attrs, content = element
 		self.language = safeEval(attrs["language"])
 		if not hasattr(self, "cmap"):
 			self.cmap = {}
 		cmap = self.cmap
 
 		for element in content:
-			if type(element) <> TupleType:
+			if not isinstance(element, tuple):
 				continue
 			name, attrs, content = element
-			if name <> "map":
+			if name != "map":
 				continue
 			cmap[safeEval(attrs["code"])] = attrs["name"]
 
@@ -935,32 +935,32 @@ class cmap_format_12_or_13(CmapSubtable):
 			startCharCode, endCharCode, glyphID = struct.unpack(">LLL",data[pos:pos+12] )
 			pos += 12
 			lenGroup = 1 + endCharCode - startCharCode
-			charCodes += range(startCharCode, endCharCode +1)
+			charCodes += list(range(startCharCode, endCharCode +1))
 			gids += self._computeGIDs(glyphID, lenGroup)
 		self.data = data = None
 		self.cmap = cmap = {}
 		lenCmap = len(gids)
 		glyphOrder = self.ttFont.getGlyphOrder()
 		try:
-			names = map(operator.getitem, [glyphOrder]*lenCmap, gids )
+			names = [glyphOrder(gid) for gid in gids]
 		except IndexError:
 			getGlyphName = self.ttFont.getGlyphName
-			names = map(getGlyphName, gids )
-		map(operator.setitem, [cmap]*lenCmap, charCodes, names)
+			names = [getGlyphName(gid) for gid in gids]
+		cmap = dict(zip(charCodes, names))
 	
 	def compile(self, ttFont):
 		if self.data:
 			return struct.pack(">HHLLL", self.format, self.reserved, self.length, self.language, self.nGroups) + self.data
-		charCodes = self.cmap.keys()
+		charCodes = list(self.cmap.keys())
 		lenCharCodes = len(charCodes) 
-		names = self.cmap.values()
+		names = list(self.cmap.values())
 		nameMap = ttFont.getReverseGlyphMap()
 		try:
-			gids = map(operator.getitem, [nameMap]*lenCharCodes, names)
+			gids = [nameMap[name] for name in names]
 		except KeyError:
 			nameMap = ttFont.getReverseGlyphMap(rebuild=1)
 			try:
-				gids = map(operator.getitem, [nameMap]*lenCharCodes, names)
+				gids = [nameMap[name] for name in names]
 			except KeyError:
 				# allow virtual GIDs in format 12 tables
 				gids = []
@@ -978,8 +978,7 @@ class cmap_format_12_or_13(CmapSubtable):
 
 					gids.append(gid)
 		
-		cmap = {}  # code:glyphID mapping
-		map(operator.setitem, [cmap]*len(charCodes), charCodes, gids)
+		cmap = dict(zip(charCodes, gids)) # code:glyphID mapping
 
 		charCodes.sort()
 		index = 0
@@ -1018,13 +1017,13 @@ class cmap_format_12_or_13(CmapSubtable):
 				("nGroups", self.nGroups),
 				])
 		writer.newline()
-		codes = self.cmap.items()
-		codes.sort()
+		codes = sorted(self.cmap.items())
 		self._writeCodes(codes, writer)
 		writer.endtag(self.__class__.__name__)
 		writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, element, ttFont):
+		name, attrs, content = element
 		self.format = safeEval(attrs["format"])
 		self.reserved = safeEval(attrs["reserved"])
 		self.length = safeEval(attrs["length"])
@@ -1035,10 +1034,10 @@ class cmap_format_12_or_13(CmapSubtable):
 		cmap = self.cmap
 
 		for element in content:
-			if type(element) <> TupleType:
+			if not isinstance(element, tuple):
 				continue
 			name, attrs, content = element
-			if name <> "map":
+			if name != "map":
 				continue
 			cmap[safeEval(attrs["code"])] = attrs["name"]
 
@@ -1049,7 +1048,7 @@ class cmap_format_12(cmap_format_12_or_13):
 		self._format_step = 1
 
 	def _computeGIDs(self, startingGlyph, numberOfGlyphs):
-		return range(startingGlyph, startingGlyph + numberOfGlyphs)
+		return list(range(startingGlyph, startingGlyph + numberOfGlyphs))
 
 	def _IsInSameRun(self, glyphID, lastGlyphID, charCode, lastCharCode):
 		return (glyphID == 1 + lastGlyphID) and (charCode == 1 + lastCharCode)
@@ -1068,7 +1067,7 @@ class cmap_format_13(cmap_format_12_or_13):
 
 
 def  cvtToUVS(threeByteString):
-	if sys.byteorder <> "big":
+	if sys.byteorder != "big":
 		data = "\0" +threeByteString
 	else:
 		data = threeByteString + "\0"
@@ -1076,7 +1075,7 @@ def  cvtToUVS(threeByteString):
 	return val
 
 def  cvtFromUVS(val):
-	if sys.byteorder <> "big":
+	if sys.byteorder != "big":
 		threeByteString = struct.pack(">L", val)[1:]
 	else:
 		threeByteString = struct.pack(">L", val)[:3]
@@ -1130,9 +1129,9 @@ class cmap_format_14(CmapSubtable):
 					startOffset += 4
 					firstBaseUV = cvtToUVS(uv)
 					cnt = addtlCnt+1
-					baseUVList = range(firstBaseUV, firstBaseUV+cnt)
+					baseUVList = list(range(firstBaseUV, firstBaseUV+cnt))
 					glyphList = [None]*cnt
-					localUVList = zip(baseUVList, glyphList)
+					localUVList = list(zip(baseUVList, glyphList))
 					try:
 						uvsDict[varUVS].extend(localUVList)
 					except KeyError:
@@ -1166,8 +1165,7 @@ class cmap_format_14(CmapSubtable):
 				])
 		writer.newline()
 		uvsDict = self.uvsDict
-		uvsList = uvsDict.keys()
-		uvsList.sort()
+		uvsList = sorted(uvsDict.keys())
 		for uvs in uvsList:
 			uvList = uvsDict[uvs]
 			uvList.sort(cmpUVSListEntry)
@@ -1180,7 +1178,8 @@ class cmap_format_14(CmapSubtable):
 		writer.endtag(self.__class__.__name__)
 		writer.newline()
 
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, element, ttFont):
+		name, attrs, content = element
 		self.format = safeEval(attrs["format"])
 		self.length = safeEval(attrs["length"])
 		self.numVarSelectorRecords = safeEval(attrs["numVarSelectorRecords"])
@@ -1192,10 +1191,10 @@ class cmap_format_14(CmapSubtable):
 			uvsDict = self.uvsDict 
 
 		for element in content:
-			if type(element) <> TupleType:
+			if not isinstance(element, tuple):
 				continue
 			name, attrs, content = element
-			if name <> "map":
+			if name != "map":
 				continue
 			uvs = safeEval(attrs["uvs"])
 			uv = safeEval(attrs["uv"])
@@ -1213,8 +1212,7 @@ class cmap_format_14(CmapSubtable):
 			return struct.pack(">HLL", self.format, self.length , self.numVarSelectorRecords) + self.data
 
 		uvsDict = self.uvsDict
-		uvsList = uvsDict.keys()
-		uvsList.sort()
+		uvsList = sorted(uvsDict.keys())
 		self.numVarSelectorRecords = len(uvsList)
 		offset = 10 + self.numVarSelectorRecords*11 # current value is end of VarSelectorRecords block.
 		data = []
@@ -1222,9 +1220,9 @@ class cmap_format_14(CmapSubtable):
 		for uvs in uvsList:
 			entryList = uvsDict[uvs]
 
-			defList = filter(lambda entry: entry[1] == None, entryList)
+			defList = [entry for entry in entryList if entry[1] == None]
 			if defList:
-				defList = map(lambda entry: entry[0], defList)
+				defList = [entry[0] for entry in defList]
 				defOVSOffset = offset
 				defList.sort()
 
@@ -1249,7 +1247,7 @@ class cmap_format_14(CmapSubtable):
 			else:
 				defOVSOffset = 0
 
-			ndefList = filter(lambda entry: entry[1] != None, entryList)
+			ndefList = [entry for entry in entryList if entry[1] != None]
 			if ndefList:
 				nonDefUVSOffset = offset
 				ndefList.sort()
@@ -1288,7 +1286,8 @@ class cmap_format_unknown(CmapSubtable):
 		writer.endtag(cmapName)
 		writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, element, ttFont):
+		name, attrs, content = element
 		self.data = readHex(content)
 		self.cmap = {}
 	

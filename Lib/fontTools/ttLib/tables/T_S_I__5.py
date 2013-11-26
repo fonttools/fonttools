@@ -1,7 +1,7 @@
 import sys
-import DefaultTable
 import array
 from fontTools import ttLib
+from fontTools.ttLib.tables import DefaultTable
 from fontTools.misc.textTools import safeEval
 
 
@@ -12,7 +12,7 @@ class table_T_S_I__5(DefaultTable.DefaultTable):
 		assert len(data) == 2 * numGlyphs
 		a = array.array("H")
 		a.fromstring(data)
-		if sys.byteorder <> "big":
+		if sys.byteorder != "big":
 			a.byteswap()
 		self.glyphGrouping = {}
 		for i in range(numGlyphs):
@@ -23,21 +23,21 @@ class table_T_S_I__5(DefaultTable.DefaultTable):
 		a = array.array("H")
 		for i in range(len(glyphNames)):
 			a.append(self.glyphGrouping[glyphNames[i]])
-		if sys.byteorder <> "big":
+		if sys.byteorder != "big":
 			a.byteswap()
 		return a.tostring()
 	
 	def toXML(self, writer, ttFont):
-		names = self.glyphGrouping.keys()
-		names.sort()
+		names = sorted(self.glyphGrouping.keys())
 		for glyphName in names:
 			writer.simpletag("glyphgroup", name=glyphName, value=self.glyphGrouping[glyphName])
 			writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, element, ttFont):
+		name, attrs, content = element
 		if not hasattr(self, "glyphGrouping"):
 			self.glyphGrouping = {}
-		if name <> "glyphgroup":
+		if name != "glyphgroup":
 			return
 		self.glyphGrouping[attrs["name"]] = safeEval(attrs["value"])
 
