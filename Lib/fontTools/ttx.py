@@ -266,6 +266,8 @@ def guessFileType(fileName):
 		return "TTC"
 	elif head in ("\0\1\0\0", "true"):
 		return "TTF"
+	elif head in ("wOFF", "true"):
+		return "WOFF"
 	elif head.lower() == "<?xm":
 		if opentypeheaderRE.search(header):
 			return "OTX"
@@ -288,7 +290,7 @@ def parseOptions(args):
 	
 	for input in files:
 		tp = guessFileType(input)
-		if tp in ("OTF", "TTF", "TTC"):
+		if tp in ("OTF", "TTF", "TTC", "WOFF"):
 			extension = ".ttx"
 			if options.listTables:
 				action = ttList
