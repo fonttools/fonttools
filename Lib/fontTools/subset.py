@@ -1312,10 +1312,10 @@ def subset_subroutines(self, subrs, gsubrs):
   assert len(p)
   for i in range(1, len(p)):
     if p[i] == 'callsubr':
-      assert type(p[i-1]) is int
+      assert isinstance(p[i-1], int)
       p[i-1] = subrs._used.index(p[i-1] + subrs._old_bias) - subrs._new_bias
     elif p[i] == 'callgsubr':
-      assert type(p[i-1]) is int
+      assert isinstance(p[i-1], int)
       p[i-1] = gsubrs._used.index(p[i-1] + gsubrs._old_bias) - gsubrs._new_bias
 
 @_add_method(psCharStrings.T2CharString)
@@ -1403,7 +1403,7 @@ class _DehintingT2Decompiler(psCharStrings.SimpleT2Decompiler):
     if hints.status != 2:
       # Check from last_check, make sure we didn't have any operators.
       for i in range(hints.last_checked, len(charString.program) - 1):
-        if type(charString.program[i]) == str:
+        if isinstance(charString.program[i], str):
           hints.status = 2
           break;
         else:
@@ -1449,7 +1449,7 @@ class _DehintingT2Decompiler(psCharStrings.SimpleT2Decompiler):
     if hints.status != 2 and hints.has_hint:
       # Check from last_check, see if we may be an implicit vstem
       for i in range(hints.last_checked, index - 1):
-        if type(cs.program[i]) == str:
+        if isinstance(cs.program[i], str):
           hints.status = 2
           break;
       if hints.status != 2:
@@ -1492,7 +1492,7 @@ class _DehintingT2Decompiler(psCharStrings.SimpleT2Decompiler):
         # Check from last_check, make sure we didn't have
         # any operators.
         for i in range(hints.last_checked, index - 1):
-          if type(cs.program[i]) == str:
+          if isinstance(cs.program[i], str):
             hints.status = 2
             break;
         hints.last_checked = index
