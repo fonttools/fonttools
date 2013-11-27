@@ -93,7 +93,7 @@ class table_V_O_R_G_(DefaultTable.DefaultTable):
 					continue
 				vOriginRec.fromXML(element, ttFont)
 			self.VOriginRecords[vOriginRec.glyphName] = vOriginRec.vOrigin
-		elif attrs.has_key("value"):
+		elif "value" in attrs:
 			value =  safeEval(attrs["value"])
 			setattr(self, name, value)
 
@@ -103,7 +103,7 @@ class table_V_O_R_G_(DefaultTable.DefaultTable):
 			# its a gid, convert to glyph name
 			glyphSelector = self.getGlyphName(glyphSelector)
 
-		if not self.VOriginRecords.has_key(glyphSelector):
+		if glyphSelector not in self.VOriginRecords:
 			return self.defaultVertOriginY
 			
 		return self.VOriginRecords[glyphSelector]
@@ -115,7 +115,7 @@ class table_V_O_R_G_(DefaultTable.DefaultTable):
 
 		if  value != self.defaultVertOriginY:
 			self.VOriginRecords[glyphSelector] = value
-		elif self.VOriginRecords.has_key(glyphSelector):
+		elif glyphSelector in self.VOriginRecords:
 			del self.VOriginRecords[glyphSelector]
 
 class VOriginRecord:

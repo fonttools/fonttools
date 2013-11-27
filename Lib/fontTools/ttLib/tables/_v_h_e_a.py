@@ -36,7 +36,7 @@ class table__v_h_e_a(DefaultTable.DefaultTable):
 	
 	def recalc(self, ttFont):
 		vtmxTable = ttFont['vmtx']
-		if ttFont.has_key('glyf'):
+		if 'glyf' in ttFont:
 			if not ttFont.isLoaded('glyf'):
 				return
 			glyfTable = ttFont['glyf']

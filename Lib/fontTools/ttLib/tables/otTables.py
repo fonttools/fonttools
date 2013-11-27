@@ -662,7 +662,7 @@ def _buildClasses():
 			# XxxFormatN subtable, we only add the "base" table
 			name = m.group(1)
 			baseClass = FormatSwitchingBaseTable
-		if not namespace.has_key(name):
+		if name not in namespace:
 			# the class doesn't exist yet, so the base implementation is used.
 			cls = new.classobj(name, (baseClass,), {})
 			namespace[name] = cls

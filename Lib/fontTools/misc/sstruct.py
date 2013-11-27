@@ -67,7 +67,7 @@ def pack(format, object):
 		object = object.__dict__
 	for name in names:
 		value = object[name]
-		if fixes.has_key(name):
+		if name in fixes:
 			# fixed point conversion
 			value = int(round(value*fixes[name]))
 		elements.append(value)
@@ -86,7 +86,7 @@ def unpack(format, data, object=None):
 	for i in range(len(names)):
 		name = names[i]
 		value = elements[i]
-		if fixes.has_key(name):
+		if name in fixes:
 			# fixed point conversion
 			value = value / fixes[name]
 		dict[name] = value

@@ -69,7 +69,7 @@ class table_C_P_A_L_(DefaultTable.DefaultTable):
 				color.fromXML(element, ttFont)
 				palette.append (color)
 			self.palettes.append(palette)
-		elif attrs.has_key("value"):
+		elif "value" in attrs:
 			value =  safeEval(attrs["value"])
 			setattr(self, name, value)
 

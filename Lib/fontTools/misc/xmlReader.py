@@ -78,13 +78,13 @@ class XMLReader:
 					print msg
 			if tag == "GlyphOrder":
 				tableClass = ttLib.GlyphOrder
-			elif attrs.has_key("ERROR"):
+			elif "ERROR" in attrs:
 				tableClass = DefaultTable
 			else:
 				tableClass = ttLib.getTableClass(tag)
 				if tableClass is None:
 					tableClass = DefaultTable
-			if tag == 'loca' and self.ttFont.has_key(tag):
+			if tag == 'loca' and tag in self.ttFont:
 				# Special-case the 'loca' table as we need the
 				#    original if the 'glyf' table isn't recompiled.
 				self.currentTable = self.ttFont[tag]

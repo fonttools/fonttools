@@ -320,7 +320,7 @@ class OTTableWriter(object):
 					item._doneWriting()
 				else:
 					item._doneWriting(internedTables)
-					if internedTables.has_key(item):
+					if item in internedTables:
 						items[i] = item = internedTables[item]
 					else:
 						internedTables[item] = item
@@ -359,7 +359,7 @@ class OTTableWriter(object):
 				if hasattr(item, "name") and (item.name == "Coverage"):
 					sortCoverageLast = 1
 					break
-			if not done.has_key(item):
+			if item not in done:
 				item._gatherTables(tables, extTables, done)
 			else:
 				index = max(item.parent.keys())
@@ -380,7 +380,7 @@ class OTTableWriter(object):
 				newDone = {}
 				item._gatherTables(extTables, None, newDone)
 
-			elif not done.has_key(item):
+			elif item not in done:
 				item._gatherTables(tables, extTables, done)
 			else:
 				index = max(item.parent.keys())

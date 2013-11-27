@@ -39,7 +39,7 @@ class table__h_h_e_a(DefaultTable.DefaultTable):
 	
 	def recalc(self, ttFont):
 		hmtxTable = ttFont['hmtx']
-		if ttFont.has_key('glyf'):
+		if 'glyf' in ttFont:
 			glyfTable = ttFont['glyf']
 			INFINITY = 100000
 			advanceWidthMax = 0
