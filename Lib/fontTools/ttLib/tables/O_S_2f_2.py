@@ -151,8 +151,6 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 		formatstring, names, fixes = sstruct.getformat(format)
 		for name in names:
 			value = getattr(self, name)
-			if type(value) == type(0L):
-				value = int(value)
 			if name=="panose":
 				writer.begintag("panose")
 				writer.newline()
