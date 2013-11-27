@@ -6,7 +6,7 @@ class DefaultTable:
 	dependencies = []
 	
 	def __init__(self, tag):
-		self.tableTag = tag
+		self.tableTag = Tag(tag)
 	
 	def decompile(self, data, ttFont):
 		self.data = data

@@ -368,6 +368,7 @@ class TTFont:
 		return len(list(self.keys()))
 	
 	def __getitem__(self, tag):
+		tag = Tag(tag)
 		try:
 			return self.tables[tag]
 		except KeyError:
