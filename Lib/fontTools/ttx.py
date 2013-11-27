@@ -181,7 +181,7 @@ def ttList(input, output, options):
 	print format % ("----", "----------", "-------", "-------")
 	for tag in tags:
 		entry = reader.tables[tag]
-		checkSum = long(entry.checkSum)
+		checkSum = int(entry.checkSum)
 		if checkSum < 0:
 			checkSum = checkSum + 0x100000000
 		checksum = "0x" + string.zfill(hex(checkSum)[2:-1], 8)

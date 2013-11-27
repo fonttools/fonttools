@@ -115,8 +115,7 @@ class table_C_O_L_R_(DefaultTable.DefaultTable):
 				layers.append (layer)
 			operator.setitem(self, glyphName, layers)
 		elif "value" in attrs:
-			value =  safeEval(attrs["value"])
-			setattr(self, name, value)
+			setattr(self, name, safeEval(attrs["value"]))
 
 
 	def __getitem__(self, glyphSelector):
@@ -156,8 +155,4 @@ class LayerRecord:
 					value = ttFont.getGlyphName(value)
 				setattr(self, name, value)
 			else:
-				try:
-					value = safeEval(value)
-				except OverflowError:
-					value = long(value)
-				setattr(self, name, value)
+				setattr(self, name, safeEval(value))
