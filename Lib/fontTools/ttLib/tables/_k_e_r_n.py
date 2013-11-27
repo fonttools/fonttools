@@ -119,9 +119,8 @@ class KernTable_format_0:
 		data = struct.pack(">HHHH", nPairs, searchRange, entrySelector, rangeShift)
 		
 		# yeehee! (I mean, turn names into indices)
-		kernTable = sorted(map(lambda ((left, right), value), getGlyphID=ttFont.getGlyphID:
-					(getGlyphID(left), getGlyphID(right), value), 
-				self.kernTable.items()))
+		getGlyphID = ttFont.getGlyphID
+		kernTable = sorted((getGlyphID(left), getGlyphID(right), value) for ((left,right),value) in self.kernTable.items())
 		for left, right, value in kernTable:
 			data = data + struct.pack(">HHh", left, right, value)
 		return struct.pack(">HHH", self.version, len(data) + 6, self.coverage) + data
