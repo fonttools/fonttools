@@ -539,8 +539,8 @@ class Glyph:
 		data = data + array.array("B", compressedflags).tostring()
 		xPoints = map(int, xPoints)  # work around struct >= 2.5 bug
 		yPoints = map(int, yPoints)
-		data = data + apply(struct.pack, (xFormat,)+tuple(xPoints))
-		data = data + apply(struct.pack, (yFormat,)+tuple(yPoints))
+		data = data + struct.pack(*(xFormat,)+tuple(xPoints))
+		data = data + struct.pack(*(yFormat,)+tuple(yPoints))
 		return data
 	
 	def recalcBounds(self, glyfTable):

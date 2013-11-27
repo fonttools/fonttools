@@ -71,7 +71,7 @@ def pack(format, object):
 			# fixed point conversion
 			value = int(round(value*fixes[name]))
 		elements.append(value)
-	data = apply(struct.pack, (formatstring,) + tuple(elements))
+	data = struct.pack(*(formatstring,) + tuple(elements))
 	return data
 
 def unpack(format, data, object=None):

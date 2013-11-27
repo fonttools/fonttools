@@ -66,12 +66,12 @@ class XMLWriter:
 		self.writeraw(" -->")
 	
 	def simpletag(self, _TAG_, *args, **kwargs):
-		attrdata = apply(self.stringifyattrs, args, kwargs)
+		attrdata = self.stringifyattrs(*args, **kwargs)
 		data = "<%s%s/>" % (_TAG_, attrdata)
 		self.writeraw(data)
 	
 	def begintag(self, _TAG_, *args, **kwargs):
-		attrdata = apply(self.stringifyattrs, args, kwargs)
+		attrdata = self.stringifyattrs(*args, **kwargs)
 		data = "<%s%s>" % (_TAG_, attrdata)
 		self.writeraw(data)
 		self.stack.append(_TAG_)
