@@ -24,10 +24,10 @@ def _add_method(*clazzes):
   def wrapper(method):
     for clazz in clazzes:
       assert clazz.__name__ != 'DefaultTable', 'Oops, table class not found.'
-      assert not hasattr(clazz, method.func_name), \
+      assert not hasattr(clazz, method.__name__), \
           "Oops, class '%s' has method '%s'." % (clazz.__name__,
-                                                 method.func_name)
-      setattr(clazz, method.func_name, method)
+                                                 method.__name__)
+      setattr(clazz, method.__name__, method)
     return None
   return wrapper
 
