@@ -1220,7 +1220,7 @@ class cmap_format_14(CmapSubtable):
 		for uvs in uvsList:
 			entryList = uvsDict[uvs]
 
-			defList = filter(lambda entry: entry[1] == None, entryList)
+			defList = [entry for entry in entryList if entry[1] == None]
 			if defList:
 				defList = map(lambda entry: entry[0], defList)
 				defOVSOffset = offset
@@ -1247,7 +1247,7 @@ class cmap_format_14(CmapSubtable):
 			else:
 				defOVSOffset = 0
 
-			ndefList = filter(lambda entry: entry[1] != None, entryList)
+			ndefList = [entry for entry in entryList if entry[1] != None]
 			if ndefList:
 				nonDefUVSOffset = offset
 				ndefList.sort()
