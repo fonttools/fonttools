@@ -7,16 +7,16 @@
 Later grown into full OpenType subsetter, supporting all standard tables.
 """
 
-import sys
-import struct
-import time
-import array
-
+from __future__ import print_function
+from fontTools.misc.py23 import *
 from fontTools import ttLib
 from fontTools.ttLib.tables import otTables
 from fontTools.misc import psCharStrings
 from fontTools.pens import basePen
-from fontTools.misc.py23 import *
+import sys
+import struct
+import time
+import array
 
 
 def _add_method(*clazzes):
@@ -2071,7 +2071,7 @@ def main(args):
   args = options.parse_opts(args, ignore_unknown=['text'])
 
   if len(args) < 2:
-    print("usage: pyftsubset font-file glyph... [--text=ABC]... [--option=value]...")
+    print("usage: pyftsubset font-file glyph... [--text=ABC]... [--option=value]...", file=sys.stderr)
     sys.exit(1)
 
   fontfile = args[0]
