@@ -1,5 +1,5 @@
 
-import DefaultTable
+from . import DefaultTable
 import string
 import struct
 from fontTools.misc import sstruct
@@ -7,7 +7,7 @@ import itertools
 from types import TupleType
 from collections import deque
 from fontTools.misc.textTools import safeEval
-from BitmapGlyphMetrics import BigGlyphMetrics, bigGlyphMetricsFormat, SmallGlyphMetrics, smallGlyphMetricsFormat
+from .BitmapGlyphMetrics import BigGlyphMetrics, bigGlyphMetricsFormat, SmallGlyphMetrics, smallGlyphMetricsFormat
 
 eblcHeaderFormat = """
 	> # big endian

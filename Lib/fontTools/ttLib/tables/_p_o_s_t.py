@@ -1,6 +1,6 @@
 import sys
 from fontTools.ttLib.standardGlyphOrder import standardGlyphOrder
-import DefaultTable
+from . import DefaultTable
 import struct
 from fontTools.misc import sstruct
 import array

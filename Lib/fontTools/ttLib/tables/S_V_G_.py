@@ -42,7 +42,7 @@ the number of <colorParamUINameID> elements.
 
 """
 
-import DefaultTable
+from . import DefaultTable
 import struct
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval

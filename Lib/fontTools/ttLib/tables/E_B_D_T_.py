@@ -1,5 +1,5 @@
 
-import DefaultTable
+from . import DefaultTable
 import os
 import string
 import struct
@@ -7,7 +7,7 @@ from fontTools.misc import sstruct
 import itertools
 from types import TupleType
 from fontTools.misc.textTools import safeEval, readHex, hexStr, deHexStr
-from BitmapGlyphMetrics import BigGlyphMetrics, bigGlyphMetricsFormat, SmallGlyphMetrics, smallGlyphMetricsFormat
+from .BitmapGlyphMetrics import BigGlyphMetrics, bigGlyphMetricsFormat, SmallGlyphMetrics, smallGlyphMetricsFormat
 
 ebdtTableVersionFormat = """
 	> # big endian

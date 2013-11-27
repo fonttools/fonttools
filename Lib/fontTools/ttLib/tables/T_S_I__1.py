@@ -1,4 +1,4 @@
-import DefaultTable
+from . import DefaultTable
 import string
 
 class table_T_S_I__1(DefaultTable.DefaultTable):

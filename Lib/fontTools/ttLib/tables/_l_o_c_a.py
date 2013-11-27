@@ -1,5 +1,5 @@
 import sys
-import DefaultTable
+from . import DefaultTable
 import array
 from fontTools import ttLib
 import struct
