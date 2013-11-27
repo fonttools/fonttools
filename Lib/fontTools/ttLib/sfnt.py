@@ -28,7 +28,7 @@ class SFNTReader:
 		self.DirectoryEntry = SFNTDirectoryEntry
 		self.sfntVersion = self.file.read(4)
 		self.file.seek(0)
-		if self.sfntVersion == "ttcf":
+		if self.sfntVersion == b"ttcf":
 			sstruct.unpack(ttcHeaderFormat, self.file.read(ttcHeaderSize), self)
 			assert self.Version == 0x00010000 or self.Version == 0x00020000, "unrecognized TTC version 0x%08x" % self.Version
 			if not 0 <= fontNumber < self.numFonts:
@@ -39,14 +39,15 @@ class SFNTReader:
 				pass # ignoring version 2.0 signatures
 			self.file.seek(offsetTable[fontNumber])
 			sstruct.unpack(sfntDirectoryFormat, self.file.read(sfntDirectorySize), self)
-		elif self.sfntVersion == "wOFF":
+		elif self.sfntVersion == b"wOFF":
 			self.flavor = "woff"
 			self.DirectoryEntry = WOFFDirectoryEntry
 			sstruct.unpack(woffDirectoryFormat, self.file.read(woffDirectorySize), self)
 		else:
 			sstruct.unpack(sfntDirectoryFormat, self.file.read(sfntDirectorySize), self)
+		self.sfntVersion = Tag(self.sfntVersion)
 
-		if self.sfntVersion not in ("\000\001\000\000", "OTTO", "true"):
+		if self.sfntVersion not in ("\x00\x01\x00\x00", "OTTO", "true"):
 			from fontTools import ttLib
 			raise ttLib.TTLibError("Not a TrueType or OpenType font (bad sfntVersion)")
 		self.tables = {}
@@ -76,7 +77,7 @@ class SFNTReader:
 	
 	def __getitem__(self, tag):
 		"""Fetch the raw table data."""
-		entry = self.tables[tag]
+		entry = self.tables[Tag(tag)]
 		data = entry.loadData (self.file)
 		if self.checkChecksums:
 			if tag == 'head':
@@ -93,7 +94,7 @@ class SFNTReader:
 		return data
 	
 	def __delitem__(self, tag):
-		del self.tables[tag]
+		del self.tables[Tag(tag)]
 	
 	def close(self):
 		self.file.close()
@@ -105,7 +106,7 @@ class SFNTWriter:
 		     flavor=None, flavorData=None):
 		self.file = file
 		self.numTables = numTables
-		self.sfntVersion = sfntVersion
+		self.sfntVersion = Tag(sfntVersion)
 		self.flavor = flavor
 		self.flavorData = flavorData
 
@@ -178,7 +179,7 @@ class SFNTWriter:
 			raise ttLib.TTLibError("wrong number of tables; expected %d, found %d" % (self.numTables, len(tables)))
 
 		if self.flavor == "woff":
-			self.signature = "wOFF"
+			self.signature = b"wOFF"
 			self.reserved = 0
 
 			self.totalSfntSize = 12

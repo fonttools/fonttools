@@ -258,14 +258,14 @@ def guessFileType(fileName):
 	if ext == ".dfont":
 		return "TTF"
 	header = f.read(256)
-	head = header[:4]
+	head = Tag(header[:4])
 	if head == "OTTO":
 		return "OTF"
 	elif head == "ttcf":
 		return "TTC"
 	elif head in ("\0\1\0\0", "true"):
 		return "TTF"
-	elif head in ("wOFF", "true"):
+	elif head == "wOFF":
 		return "WOFF"
 	elif head.lower() == "<?xm":
 		if opentypeheaderRE.search(header):
