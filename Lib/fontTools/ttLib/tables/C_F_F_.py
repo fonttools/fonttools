@@ -1,4 +1,4 @@
-import DefaultTable
+from . import DefaultTable
 from fontTools import cffLib
 
 

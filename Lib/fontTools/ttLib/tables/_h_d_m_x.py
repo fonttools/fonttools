@@ -1,4 +1,4 @@
-import DefaultTable
+from . import DefaultTable
 from fontTools.misc import sstruct
 import string
 

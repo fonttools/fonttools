@@ -1,5 +1,5 @@
 import sys
-import DefaultTable
+from . import DefaultTable
 import struct
 import array
 import operator

@@ -148,7 +148,7 @@ class TTFont:
 			# assume file is a string
 			if haveMacSupport and res_name_or_index is not None:
 				# on the mac, we deal with sfnt resources as well as flat files
-				import macUtils
+				from . import macUtils
 				if res_name_or_index == 0:
 					if macUtils.getSFNTResIndices(file):
 						# get the first available sfnt font.
@@ -183,7 +183,7 @@ class TTFont:
 		if not hasattr(file, "write"):
 			closeStream = 1
 			if os.name == "mac" and makeSuitcase:
-				import macUtils
+				from . import macUtils
 				file = macUtils.SFNTResourceWriter(file, self)
 			else:
 				file = open(file, "wb")
@@ -391,7 +391,7 @@ class TTFont:
 						raise
 					# fall back to DefaultTable, retaining the binary table data
 					print "An exception occurred during the decompilation of the '%s' table" % tag
-					from tables.DefaultTable import DefaultTable
+					from .tables.DefaultTable import DefaultTable
 					import StringIO
 					file = StringIO.StringIO()
 					traceback.print_exc(file=file)
@@ -773,7 +773,7 @@ def getTableModule(tag):
 	"""Fetch the packer/unpacker module for a table. 
 	Return None when no module is found.
 	"""
-	import tables
+	from . import tables
 	pyTag = tagToIdentifier(tag)
 	try:
 		__import__("fontTools.ttLib.tables." + pyTag)
@@ -796,7 +796,7 @@ def getTableClass(tag):
 	"""
 	module = getTableModule(tag)
 	if module is None:
-		from tables.DefaultTable import DefaultTable
+		from .tables.DefaultTable import DefaultTable
 		return DefaultTable
 	pyTag = tagToIdentifier(tag)
 	tableClass = getattr(module, "table_" + pyTag)

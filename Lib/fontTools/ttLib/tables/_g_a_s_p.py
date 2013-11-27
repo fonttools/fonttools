@@ -1,4 +1,4 @@
-import DefaultTable
+from . import DefaultTable
 import struct
 from fontTools.misc.textTools import safeEval
 

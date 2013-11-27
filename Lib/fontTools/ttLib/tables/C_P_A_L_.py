@@ -3,7 +3,7 @@
 # Google Author(s): Behdad Esfahbod
 
 import operator
-import DefaultTable
+from . import DefaultTable
 import struct
 from fontTools.ttLib import sfnt
 from fontTools.misc.textTools import safeEval, readHex

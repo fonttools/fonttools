@@ -1,6 +1,6 @@
 from types import TupleType
 from fontTools.misc.textTools import safeEval
-from otBase import ValueRecordFactory
+from .otBase import ValueRecordFactory
 
 
 def buildConverters(tableSpec, tableNamespace):
@@ -298,7 +298,7 @@ class ValueRecord(ValueFormat):
 		else:
 			value.toXML(xmlWriter, font, self.name, attrs)
 	def xmlRead(self, attrs, content, font):
-		from otBase import ValueRecord
+		from .otBase import ValueRecord
 		value = ValueRecord()
 		value.fromXML((None, attrs, content), font)
 		return value

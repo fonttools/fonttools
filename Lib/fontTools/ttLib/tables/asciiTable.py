@@ -1,5 +1,5 @@
 import string
-import DefaultTable
+from . import DefaultTable
 
 
 class asciiTable(DefaultTable.DefaultTable):

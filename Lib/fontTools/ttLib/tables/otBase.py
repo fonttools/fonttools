@@ -1,5 +1,5 @@
-from DefaultTable import DefaultTable
-import otData
+from .DefaultTable import DefaultTable
+from . import otData
 import struct
 from types import TupleType
 
@@ -30,7 +30,7 @@ class BaseTTXConverter(DefaultTable):
 	"""
 	
 	def decompile(self, data, font):
-		import otTables
+		from . import otTables
 		cachingStats = None if True else {}
 		class GlobalState:
 			def __init__(self, tableType, cachingStats):
@@ -87,7 +87,7 @@ class BaseTTXConverter(DefaultTable):
 		self.table.toXML2(writer, font)
 	
 	def fromXML(self, (name, attrs, content), font):
-		import otTables
+		from . import otTables
 		if not hasattr(self, "table"):
 			tableClass = getattr(otTables, self.tableTag)
 			self.table = tableClass()
@@ -763,7 +763,7 @@ class ValueRecordFactory:
 				value = reader.readUShort()
 			if isDevice:
 				if value:
-					import otTables
+					from . import otTables
 					subReader = reader.getSubReader(value)
 					value = getattr(otTables, name)()
 					value.decompile(subReader, font)
@@ -825,7 +825,7 @@ class ValueRecord:
 			xmlWriter.newline()
 	
 	def fromXML(self, (name, attrs, content), font):
-		import otTables
+		from . import otTables
 		for k, v in attrs.items():
 			setattr(self, k, int(v))
 		for element in content:

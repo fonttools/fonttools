@@ -1,4 +1,4 @@
-import DefaultTable
+from . import DefaultTable
 import struct
 
 tsi0Format = '>HHl'

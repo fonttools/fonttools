@@ -1,5 +1,5 @@
 import sys
-import DefaultTable
+from . import DefaultTable
 from fontTools.misc import sstruct
 import array
 from types import StringType

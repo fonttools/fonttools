@@ -1,6 +1,6 @@
-import DefaultTable
+from . import DefaultTable
 import array
-import ttProgram
+from . import ttProgram
 
 class table__f_p_g_m(DefaultTable.DefaultTable):
 	

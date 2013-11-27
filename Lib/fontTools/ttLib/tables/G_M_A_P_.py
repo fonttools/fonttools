@@ -1,4 +1,4 @@
-import DefaultTable
+from . import DefaultTable
 from fontTools.misc import sstruct
 from types import StringType
 from fontTools.misc.textTools import safeEval, num2binary, binary2num

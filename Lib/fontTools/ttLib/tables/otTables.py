@@ -5,7 +5,7 @@ Most are constructed upon import from data in otData.py, all are populated with
 converter objects from otConverters.py.
 """
 import operator
-from otBase import BaseTable, FormatSwitchingBaseTable
+from .otBase import BaseTable, FormatSwitchingBaseTable
 from types import TupleType
 import warnings
 
@@ -649,7 +649,7 @@ def fixSubTableOverFlows(ttf, overflowRecord):
 
 def _buildClasses():
 	import new, re
-	from otData import otData
+	from .otData import otData
 	
 	formatPat = re.compile("([A-Za-z0-9]+)Format(\d+)$")
 	namespace = globals()
@@ -711,7 +711,7 @@ def _buildClasses():
 		featureParamTypes['cv%02d' % i] = FeatureParamsCharacterVariants
 	
 	# add converters to classes
-	from otConverters import buildConverters
+	from .otConverters import buildConverters
 	for name, table in otData:
 		m = formatPat.match(name)
 		if m:

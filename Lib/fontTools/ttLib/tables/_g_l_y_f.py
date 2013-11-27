@@ -17,11 +17,11 @@ SCALE_COMPONENT_OFFSET_DEFAULT = 0   # 0 == MS, 1 == Apple
 import sys
 import struct
 from fontTools.misc import sstruct
-import DefaultTable
+from . import DefaultTable
 from fontTools import ttLib
 from fontTools.misc.textTools import safeEval, readHex
 from fontTools.misc.arrayTools import calcBounds
-import ttProgram
+from . import ttProgram
 import array
 from types import StringType, TupleType
 import warnings
