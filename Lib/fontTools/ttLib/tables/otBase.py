@@ -137,7 +137,7 @@ class OTTableReader(object):
 	def readUInt24(self):
 		pos = self.pos
 		newpos = pos + 3
-		value = (ord(self.data[pos]) << 16) | (ord(self.data[pos+1]) << 8) | ord(self.data[pos+2])
+		value = (byteord(self.data[pos]) << 16) | (byteord(self.data[pos+1]) << 8) | byteord(self.data[pos+2])
 		value, = struct.unpack(">H", self.data[pos:newpos])
 		self.pos = newpos
 		return value

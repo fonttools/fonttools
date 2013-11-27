@@ -217,7 +217,7 @@ def unpackPStrings(data):
 	index = 0
 	dataLen = len(data)
 	while index < dataLen:
-		length = ord(data[index])
+		length = byteord(data[index])
 		strings.append(data[index+1:index+1+length])
 		index = index + 1 + length
 	return strings

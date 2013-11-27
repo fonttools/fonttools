@@ -18,11 +18,11 @@ class table__h_d_m_x(DefaultTable.DefaultTable):
 		dummy, data = sstruct.unpack2(hdmxHeaderFormat, data, self)
 		self.hdmx = {}
 		for i in range(self.numRecords):
-			ppem = ord(data[0])
-			maxSize = ord(data[1])
+			ppem = byteord(data[0])
+			maxSize = byteord(data[1])
 			widths = {}
 			for glyphID in range(numGlyphs):
-				widths[glyphOrder[glyphID]] = ord(data[glyphID+2])
+				widths[glyphOrder[glyphID]] = byteord(data[glyphID+2])
 			self.hdmx[ppem] = widths
 			data = data[self.recordSize:]
 		assert len(data) == 0, "too much hdmx data"

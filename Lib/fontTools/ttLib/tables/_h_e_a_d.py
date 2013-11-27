@@ -134,7 +134,7 @@ def parse_date(datestring):
 def bin2long(data):
 	# thanks </F>!
 	v = 0
-	for i in map(ord, data):
+	for i in map(byteord, data):
 	    v = v<<8 | i
 	return v
 
