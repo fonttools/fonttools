@@ -52,7 +52,7 @@ class table_E_B_D_T_(DefaultTable.DefaultTable):
 			bitmapGlyphDict = {}
 			self.strikeData.append(bitmapGlyphDict)
 			for indexSubTable in curStrike.indexSubTables:
-				dataIter = itertools.izip(indexSubTable.names, indexSubTable.locations)
+				dataIter = zip(indexSubTable.names, indexSubTable.locations)
 				for curName, curLoc in dataIter:
 					# Don't create duplicate data entries for the same glyphs.
 					# Instead just use the structures that already exist if they exist.
@@ -82,7 +82,7 @@ class table_E_B_D_T_(DefaultTable.DefaultTable):
 		# recalculation is defered to the EblcIndexSubTable class and just
 		# pass what is known about bitmap glyphs from this particular table.
 		locator = ttFont[self.__class__.locatorName]
-		for curStrike, curGlyphDict in itertools.izip(locator.strikes, self.strikeData):
+		for curStrike, curGlyphDict in zip(locator.strikes, self.strikeData):
 			for curIndexSubTable in curStrike.indexSubTables:
 				dataLocations = []
 				for curName in curIndexSubTable.names:
@@ -122,7 +122,7 @@ class table_E_B_D_T_(DefaultTable.DefaultTable):
 		# In this case populate the bitmaps with "export metrics".
 		if ttFont.bitmapGlyphDataFormat in ('row', 'bitwise'):
 			locator = ttFont[self.__class__.locatorName]
-			for curStrike, curGlyphDict in itertools.izip(locator.strikes, self.strikeData):
+			for curStrike, curGlyphDict in zip(locator.strikes, self.strikeData):
 				for curIndexSubTable in curStrike.indexSubTables:
 					for curName in curIndexSubTable.names:
 						glyph = curGlyphDict[curName]
@@ -332,7 +332,7 @@ def _readBitwiseImageData(bitmapObject, name, attrs, content, ttFont):
 			continue
 		name, attr, content = element
 		if name == 'row':
-			mapParams = itertools.izip(attr['value'], itertools.repeat('1'))
+			mapParams = zip(attr['value'], itertools.repeat('1'))
 			rowData = string.join(itertools.starmap(binaryConv.get, mapParams), "")
 			dataRows.append(_binary2data(rowData))
 
@@ -551,7 +551,7 @@ class BitAlignedBitmapMixin:
 		for row, data in enumerate(dataRows):
 			bitRange = self._getBitRange(row, bitDepth, metrics)
 			stepRange = bitRange + (8,)
-			for curBit, curByte in itertools.izip(range(*stepRange), data):
+			for curBit, curByte in zip(range(*stepRange), data):
 				endBit = min(curBit+8, bitRange[1])
 				cutPoint = curBit % 8
 				firstByteLoc = curBit / 8

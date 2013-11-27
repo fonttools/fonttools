@@ -360,7 +360,7 @@ class EblcIndexSubTable:
 		# For font debugging of consecutive formats the ids are also written.
 		# The ids are not read when moving from the XML format.
 		glyphIds = map(ttFont.getGlyphID, self.names)
-		for glyphName, glyphId in itertools.izip(self.names, glyphIds):
+		for glyphName, glyphId in zip(self.names, glyphIds):
 			writer.simpletag('glyphLoc', name=glyphName, id=glyphId)
 			writer.newline()
 		writer.endtag(self.__class__.__name__)
@@ -443,7 +443,7 @@ def _createOffsetArrayIndexSubTableMixin(formatStringForDataType):
 		def compile(self, ttFont):
 			# First make sure that all the data lines up properly. Formats 1 and 3
 			# must have all its data lined up consecutively. If not this will fail.
-			for curLoc, nxtLoc in itertools.izip(self.locations, self.locations[1:]):
+			for curLoc, nxtLoc in zip(self.locations, self.locations[1:]):
 				assert curLoc[1] == nxtLoc[0], "Data must be consecutive in indexSubTable offset formats"
 
 			glyphIds = map(ttFont.getGlyphID, self.names)
@@ -560,7 +560,7 @@ class eblc_index_sub_table_4(EblcIndexSubTable):
 	def compile(self, ttFont):
 		# First make sure that all the data lines up properly. Format 4
 		# must have all its data lined up consecutively. If not this will fail.
-		for curLoc, nxtLoc in itertools.izip(self.locations, self.locations[1:]):
+		for curLoc, nxtLoc in zip(self.locations, self.locations[1:]):
 			assert curLoc[1] == nxtLoc[0], "Data must be consecutive in indexSubTable format 4"
 
 		offsets = list(self.locations[0]) + [loc[1] for loc in self.locations[1:]]
@@ -575,7 +575,7 @@ class eblc_index_sub_table_4(EblcIndexSubTable):
 
 		dataList = [EblcIndexSubTable.compile(self, ttFont)]
 		dataList.append(struct.pack(">L", len(glyphIds)))
-		tmp = [struct.pack(codeOffsetPairFormat, *cop) for cop in itertools.izip(idsPlusPad, offsets)]
+		tmp = [struct.pack(codeOffsetPairFormat, *cop) for cop in zip(idsPlusPad, offsets)]
 		dataList += tmp
 		data = string.join(dataList, "")
 		return data
