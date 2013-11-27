@@ -412,7 +412,7 @@ class EblcIndexSubTable:
 			(name, (startByte, endByte)) = args
 			return startByte < endByte
 		# Remove all skip glyphs.
-		dataPairs = filter(isValidLocation, zip(self.names, self.locations))
+		dataPairs = list(filter(isValidLocation, zip(self.names, self.locations)))
 		self.names, self.locations = map(list, zip(*dataPairs))
 
 # A closure for creating a custom mixin. This is done because formats 1 and 3
