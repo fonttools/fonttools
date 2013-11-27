@@ -1,5 +1,9 @@
 from . import DefaultTable
 from fontTools import cffLib
+try:
+	from cStringIO import StringIO
+except ImportError:
+	from io import StringIO
 
 
 class table_C_F_F_(DefaultTable.DefaultTable):
@@ -10,12 +14,10 @@ class table_C_F_F_(DefaultTable.DefaultTable):
 		self._gaveGlyphOrder = 0
 	
 	def decompile(self, data, otFont):
-		from cStringIO import StringIO
 		self.cff.decompile(StringIO(data), otFont)
 		assert len(self.cff) == 1, "can't deal with multi-font CFF tables."
 	
 	def compile(self, otFont):
-		from cStringIO import StringIO
 		f = StringIO()
 		self.cff.compile(f, otFont)
 		return f.getvalue()

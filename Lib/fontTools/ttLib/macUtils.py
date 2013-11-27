@@ -5,7 +5,10 @@ import os
 if sys.platform not in ("mac", "darwin"):
 	raise ImportError("This module is Mac-only!")
 
-import cStringIO
+try:
+	from cStringIO import StringIO
+except ImportError:
+	from io import StringIO
 try:
 	from Carbon import Res
 except ImportError:
@@ -64,7 +67,7 @@ class SFNTResourceReader:
 			res = Res.Get1NamedResource('sfnt', res_name_or_index)
 		else:
 			res = Res.Get1IndResource('sfnt', res_name_or_index)
-		self.file = cStringIO.StringIO(res.data)
+		self.file = StringIO(res.data)
 		Res.CloseResFile(resref)
 		self.name = path
 	
@@ -78,7 +81,7 @@ class SFNTResourceWriter:
 	"""Simple (Mac-only) file wrapper for 'sfnt' resources."""
 	
 	def __init__(self, path, ttFont, res_id=None):
-		self.file = cStringIO.StringIO()
+		self.file = StringIO()
 		self.name = path
 		self.closed = 0
 		fullname = ttFont['name'].getName(4, 1, 0) # Full name, mac, default encoding

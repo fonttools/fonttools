@@ -392,8 +392,11 @@ class TTFont:
 					# fall back to DefaultTable, retaining the binary table data
 					print("An exception occurred during the decompilation of the '%s' table" % tag)
 					from .tables.DefaultTable import DefaultTable
-					import StringIO
-					file = StringIO.StringIO()
+					try:
+						from cStringIO import StringIO
+					except ImportError:
+						from io import StringIO
+					file = StringIO()
 					traceback.print_exc(file=file)
 					table = DefaultTable(tag)
 					table.ERROR = file.getvalue()
