@@ -95,8 +95,4 @@ class table_S_I_N_G_(DefaultTable.DefaultTable):
 		if name in ["uniqueName", "METAMD5", "baseGlyphName"]:
 			setattr(self, name, value)
 		else:
-			try:
-				value = safeEval(value)
-			except OverflowError:
-				value = long(value)
-			setattr(self, name, value)
+			setattr(self, name, safeEval(value))

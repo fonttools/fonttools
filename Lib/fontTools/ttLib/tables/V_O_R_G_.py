@@ -92,8 +92,7 @@ class table_V_O_R_G_(DefaultTable.DefaultTable):
 				vOriginRec.fromXML(name, attrs, content, ttFont)
 			self.VOriginRecords[vOriginRec.glyphName] = vOriginRec.vOrigin
 		elif "value" in attrs:
-			value =  safeEval(attrs["value"])
-			setattr(self, name, value)
+			setattr(self, name, safeEval(attrs["value"]))
 
 
 	def __getitem__(self, glyphSelector):
@@ -137,8 +136,4 @@ class VOriginRecord:
 		if name == "glyphName":
 			setattr(self, name, value)
 		else:
-			try:
-				value = safeEval(value)
-			except OverflowError:
-				value = long(value)
-			setattr(self, name, value)
+			setattr(self, name, safeEval(value))

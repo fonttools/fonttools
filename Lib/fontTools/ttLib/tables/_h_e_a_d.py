@@ -35,12 +35,12 @@ class table__h_e_a_d(DefaultTable.DefaultTable):
 		if rest:
 			# this is quite illegal, but there seem to be fonts out there that do this
 			assert rest == "\0\0"
-		self.unitsPerEm = int(self.unitsPerEm)
-		self.flags = int(self.flags)
+		self.unitsPerEm = self.unitsPerEm
+		self.flags = self.flags
 		self.strings2dates()
 	
 	def compile(self, ttFont):
-		self.modified = long(time.time() - mac_epoch_diff)
+		self.modified = int(time.time() - mac_epoch_diff)
 		self.dates2strings()
 		data = sstruct.pack(headFormat, self)
 		self.strings2dates()
@@ -83,10 +83,7 @@ class table__h_e_a_d(DefaultTable.DefaultTable):
 		elif name in ("macStyle", "flags"):
 			value = binary2num(value)
 		else:
-			try:
-				value = safeEval(value)
-			except OverflowError:
-				value = long(value)
+			value = safeEval(value)
 		setattr(self, name, value)
 	
 	def __cmp__(self, other):
@@ -112,7 +109,7 @@ def calc_mac_epoch_diff():
 	# This assert fails in certain time zones, with certain daylight settings
 	#assert time.gmtime(safe_epoch)[:6] == safe_epoch_t[:6]
 	seconds1904to1972 = 60 * 60 * 24 * (365 * (1972-1904) + 17) # thanks, Laurence!
-	return long(safe_epoch - seconds1904to1972)
+	return int(safe_epoch - seconds1904to1972)
 
 mac_epoch_diff = calc_mac_epoch_diff()
 
@@ -130,10 +127,7 @@ def parse_date(datestring):
 	day = int(day)
 	hour, minute, second = map(int, string.split(tim, ":"))
 	t = (year, month, day, hour, minute, second, weekday, 0, 0)
-	try:
-		return long(time.mktime(t) - time.timezone)
-	except OverflowError:
-		return 0
+	return int(time.mktime(t) - time.timezone)
 
 
 def bin2long(data):
@@ -144,7 +138,7 @@ def bin2long(data):
 	return v
 
 def long2bin(v, bytes=8):
-	mask = long("FF" * bytes, 16)
+	mask = int("FF" * bytes, 16)
 	data = ""
 	while v:
 		data = chr(v & 0xff) + data

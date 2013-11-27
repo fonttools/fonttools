@@ -56,11 +56,7 @@ class GMAPRecord:
 		if name == "GlyphletName":
 			self.name = value
 		else:
-			try:
-				value = safeEval(value)
-			except OverflowError:
-				value = long(value)
-			setattr(self, name, value)
+			setattr(self, name, safeEval(value))
 		
 
 	def compile(self, ttFont):
@@ -133,8 +129,4 @@ class table_G_M_A_P_(DefaultTable.DefaultTable):
 			if name == "PSFontName":
 				self.psFontName = value
 			else:	
-				try:
-					value = safeEval(value)
-				except OverflowError:
-					value = long(value)
-				setattr(self, name, value)
+				setattr(self, name, safeEval(value))

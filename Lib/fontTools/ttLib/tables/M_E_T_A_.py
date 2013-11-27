@@ -180,12 +180,7 @@ class table_M_E_T_A_(DefaultTable.DefaultTable):
 			glyphRec.offset = -1
 			glyphRec.nMetaEntry = len(glyphRec.stringRecs)
 		else:			
-			value = attrs["value"]
-			try:
-				value = safeEval(value)
-			except OverflowError:
-				value = long(value)
-			setattr(self, name, value)
+			setattr(self, name, safeEval(attrs["value"]))
 
 
 class GlyphRecord:
@@ -218,12 +213,7 @@ class GlyphRecord:
 				stringRec.fromXML(name, attrs, content, ttFont)
 			stringRec.stringLen = len(stringRec.string)
 		else:			
-			value = attrs["value"]
-			try:
-				value = safeEval(value)
-			except OverflowError:
-				value = long(value)
-			setattr(self, name, value)
+			setattr(self, name, safeEval(attrs["value"]))
 
 	def compile(self, parentTable):
 		data = sstruct.pack(METAGlyphRecordFormat, self)
@@ -309,11 +299,7 @@ class StringRecord:
 		if name == "string":
 			self.string = mapXMLToUTF8(value)
 		else:
-			try:
-				value = safeEval(value)
-			except OverflowError:
-				value = long(value)
-			setattr(self, name, value)
+			setattr(self, name, safeEval(value))
 
 	def compile(self, parentTable):
 		data = sstruct.pack(METAStringRecordFormat, self)

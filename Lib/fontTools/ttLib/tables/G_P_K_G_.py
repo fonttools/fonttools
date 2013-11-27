@@ -127,9 +127,4 @@ class table_G_P_K_G_(DefaultTable.DefaultTable):
 				if itemName == "hexdata":
 					self.glyphlets.append(readHex(itemContent))
 		else:	
-			value = attrs["value"]
-			try:
-				value = safeEval(value)
-			except OverflowError:
-				value = long(value)
-			setattr(self, name, value)
+			setattr(self, name, safeEval(value))
