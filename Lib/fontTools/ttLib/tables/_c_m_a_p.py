@@ -182,7 +182,7 @@ class cmap_format_0(CmapSubtable):
 		glyphIdArray.fromstring(self.data)
 		self.cmap = cmap = {}
 		lenArray = len(glyphIdArray)
-		charCodes = range(lenArray)
+		charCodes = list(range(lenArray))
 		names = map(self.ttFont.getGlyphName, glyphIdArray)
 		map(operator.setitem, [cmap]*lenArray, charCodes, names)
 
@@ -195,7 +195,7 @@ class cmap_format_0(CmapSubtable):
 		charCodeList.sort()
 		charCodes = [entry[0] for entry in charCodeList]
 		valueList = [entry[1] for entry in charCodeList]
-		assert charCodes == range(256)
+		assert charCodes == list(range(256))
 		valueList = map(ttFont.getGlyphID, valueList)
 
 		glyphIdArray = array.array("B", valueList)
@@ -663,7 +663,7 @@ class cmap_format_4(CmapSubtable):
 		charCodes = []
 		gids = []
 		for i in range(len(startCode) - 1):	# don't do 0xffff!
-			rangeCharCodes = range(startCode[i], endCode[i] + 1)
+			rangeCharCodes = list(range(startCode[i], endCode[i] + 1))
 			charCodes = charCodes + rangeCharCodes
 			for charCode in rangeCharCodes:
 				rangeOffset = idRangeOffset[i]
@@ -780,7 +780,7 @@ class cmap_format_4(CmapSubtable):
 			indices = []
 			for charCode in range(startCode[i], endCode[i] + 1):
 				indices.append(cmap[charCode])
-			if  (indices == range(indices[0], indices[0] + len(indices))):
+			if  (indices == list(range(indices[0], indices[0] + len(indices)))):
 				idDeltaTemp = self.setIDDelta(indices[0] - startCode[i])
 				idDelta.append( idDeltaTemp)
 				idRangeOffset.append(0)
@@ -853,7 +853,7 @@ class cmap_format_6(CmapSubtable):
 		self.cmap = cmap = {}
 
 		lenArray = len(glyphIndexArray)
-		charCodes = range(firstCode, firstCode + lenArray )
+		charCodes = list(range(firstCode, firstCode + lenArray))
 		glyphOrder = self.ttFont.getGlyphOrder()
 		try:
 			names = map(operator.getitem, [glyphOrder]*lenArray, glyphIndexArray )
@@ -868,7 +868,7 @@ class cmap_format_6(CmapSubtable):
 		cmap = self.cmap
 		codes = cmap.keys()
 		if codes: # yes, there are empty cmap tables.
-			codes = range(codes[0], codes[-1] + 1)
+			codes = list(range(codes[0], codes[-1] + 1))
 			firstCode = codes[0]
 			valueList = [cmap.get(code, ".notdef") for code in codes]
 			valueList = map(ttFont.getGlyphID, valueList)
@@ -933,7 +933,7 @@ class cmap_format_12_or_13(CmapSubtable):
 			startCharCode, endCharCode, glyphID = struct.unpack(">LLL",data[pos:pos+12] )
 			pos += 12
 			lenGroup = 1 + endCharCode - startCharCode
-			charCodes += range(startCharCode, endCharCode +1)
+			charCodes += list(range(startCharCode, endCharCode +1))
 			gids += self._computeGIDs(glyphID, lenGroup)
 		self.data = data = None
 		self.cmap = cmap = {}
@@ -1047,7 +1047,7 @@ class cmap_format_12(cmap_format_12_or_13):
 		self._format_step = 1
 
 	def _computeGIDs(self, startingGlyph, numberOfGlyphs):
-		return range(startingGlyph, startingGlyph + numberOfGlyphs)
+		return list(range(startingGlyph, startingGlyph + numberOfGlyphs))
 
 	def _IsInSameRun(self, glyphID, lastGlyphID, charCode, lastCharCode):
 		return (glyphID == 1 + lastGlyphID) and (charCode == 1 + lastCharCode)
@@ -1128,7 +1128,7 @@ class cmap_format_14(CmapSubtable):
 					startOffset += 4
 					firstBaseUV = cvtToUVS(uv)
 					cnt = addtlCnt+1
-					baseUVList = range(firstBaseUV, firstBaseUV+cnt)
+					baseUVList = list(range(firstBaseUV, firstBaseUV+cnt))
 					glyphList = [None]*cnt
 					localUVList = zip(baseUVList, glyphList)
 					try:

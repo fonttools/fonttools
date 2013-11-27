@@ -305,7 +305,7 @@ class OTTableWriter(object):
 		if internedTables is None:
 			internedTables = {}
 		items = self.items
-		iRange = range(len(items))
+		iRange = list(range(len(items)))
 		
 		if hasattr(self, "Extension"):
 			newTree = 1
@@ -342,7 +342,7 @@ class OTTableWriter(object):
 		done[self] = 1
 
 		numItems = len(self.items)
-		iRange = range(numItems)
+		iRange = list(range(numItems))
 		iRange.reverse()
 
 		if hasattr(self, "Extension"):

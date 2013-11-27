@@ -76,7 +76,7 @@ class table_E_B_L_C_(DefaultTable.DefaultTable):
 		dummy, data = sstruct.unpack2(eblcHeaderFormat, data, self)
 
 		self.strikes = []
-		for curStrikeIndex in xrange(self.numSizes):
+		for curStrikeIndex in range(self.numSizes):
 			curStrike = Strike()
 			self.strikes.append(curStrike)
 			curTable = curStrike.bitmapSizeTable
@@ -89,7 +89,7 @@ class table_E_B_L_C_(DefaultTable.DefaultTable):
 
 		for curStrike in self.strikes:
 			curTable = curStrike.bitmapSizeTable
-			for subtableIndex in xrange(curTable.numberOfIndexSubTables):
+			for subtableIndex in range(curTable.numberOfIndexSubTables):
 				lowerBound = curTable.indexSubTableArrayOffset + subtableIndex * indexSubTableArraySize
 				upperBound = lowerBound + indexSubTableArraySize
 				data = origData[lowerBound:upperBound]
@@ -429,11 +429,11 @@ def _createOffsetArrayIndexSubTableMixin(formatStringForDataType):
 		def decompile(self):
 
 			numGlyphs = self.lastGlyphIndex - self.firstGlyphIndex + 1
-			indexingOffsets = [glyphIndex * offsetDataSize for glyphIndex in xrange(numGlyphs+2)]
+			indexingOffsets = [glyphIndex * offsetDataSize for glyphIndex in range(numGlyphs+2)]
 			indexingLocations = zip(indexingOffsets, indexingOffsets[1:])
 			offsetArray = [struct.unpack(dataFormat, self.data[slice(*loc)])[0] for loc in indexingLocations]
 
-			glyphIds = range(self.firstGlyphIndex, self.lastGlyphIndex+1)
+			glyphIds = list(range(self.firstGlyphIndex, self.lastGlyphIndex+1))
 			modifiedOffsets = [offset + self.imageDataOffset for offset in offsetArray]
 			self.locations = zip(modifiedOffsets, modifiedOffsets[1:])
 
@@ -448,13 +448,13 @@ def _createOffsetArrayIndexSubTableMixin(formatStringForDataType):
 
 			glyphIds = map(ttFont.getGlyphID, self.names)
 			# Make sure that all ids are sorted strictly increasing.
-			assert all(glyphIds[i] < glyphIds[i+1] for i in xrange(len(glyphIds)-1))
+			assert all(glyphIds[i] < glyphIds[i+1] for i in range(len(glyphIds)-1))
 
 			# Run a simple algorithm to add skip glyphs to the data locations at
 			# the places where an id is not present.
 			idQueue = deque(glyphIds)
 			locQueue = deque(self.locations)
-			allGlyphIds = range(self.firstGlyphIndex, self.lastGlyphIndex+1)
+			allGlyphIds = list(range(self.firstGlyphIndex, self.lastGlyphIndex+1))
 			allLocations = []
 			for curId in allGlyphIds:
 				if curId != idQueue[0]:
@@ -521,15 +521,15 @@ class eblc_index_sub_table_2(FixedSizeIndexSubTableMixin, EblcIndexSubTable):
 		(self.imageSize,) = struct.unpack(">L", self.data[:4])
 		self.metrics = BigGlyphMetrics()
 		sstruct.unpack2(bigGlyphMetricsFormat, self.data[4:], self.metrics)
-		glyphIds = range(self.firstGlyphIndex, self.lastGlyphIndex+1)
-		offsets = [self.imageSize * i + self.imageDataOffset for i in xrange(len(glyphIds)+1)]
+		glyphIds = list(range(self.firstGlyphIndex, self.lastGlyphIndex+1))
+		offsets = [self.imageSize * i + self.imageDataOffset for i in range(len(glyphIds)+1)]
 		self.locations = zip(offsets, offsets[1:])
 		self.names = map(self.ttFont.getGlyphName, glyphIds)
 
 	def compile(self, ttFont):
 		glyphIds = map(ttFont.getGlyphID, self.names)
 		# Make sure all the ids are consecutive. This is required by Format 2.
-		assert glyphIds == range(self.firstGlyphIndex, self.lastGlyphIndex+1), "Format 2 ids must be consecutive."
+		assert glyphIds == list(range(self.firstGlyphIndex, self.lastGlyphIndex+1)), "Format 2 ids must be consecutive."
 		self.imageDataOffset = min(zip(*self.locations)[0])
 
 		dataList = [EblcIndexSubTable.compile(self, ttFont)]
@@ -546,7 +546,7 @@ class eblc_index_sub_table_4(EblcIndexSubTable):
 
 		(numGlyphs,) = struct.unpack(">L", self.data[:4])
 		data = self.data[4:]
-		indexingOffsets = [glyphIndex * codeOffsetPairSize for glyphIndex in xrange(numGlyphs+2)]
+		indexingOffsets = [glyphIndex * codeOffsetPairSize for glyphIndex in range(numGlyphs+2)]
 		indexingLocations = zip(indexingOffsets, indexingOffsets[1:])
 		glyphArray = [struct.unpack(codeOffsetPairFormat, data[slice(*loc)]) for loc in indexingLocations]
 		glyphIds, offsets = map(list, zip(*glyphArray))
@@ -589,9 +589,9 @@ class eblc_index_sub_table_5(FixedSizeIndexSubTableMixin, EblcIndexSubTable):
 		self.metrics, data = sstruct.unpack2(bigGlyphMetricsFormat, data, BigGlyphMetrics())
 		(numGlyphs,) = struct.unpack(">L", data[:4])
 		data = data[4:]
-		glyphIds = [struct.unpack(">H", data[2*i:2*(i+1)])[0] for i in xrange(numGlyphs)]
+		glyphIds = [struct.unpack(">H", data[2*i:2*(i+1)])[0] for i in range(numGlyphs)]
 
-		offsets = [self.imageSize * i + self.imageDataOffset for i in xrange(len(glyphIds)+1)]
+		offsets = [self.imageSize * i + self.imageDataOffset for i in range(len(glyphIds)+1)]
 		self.locations = zip(offsets, offsets[1:])
 		self.names = map(self.ttFont.getGlyphName, glyphIds)
 
