@@ -1,6 +1,5 @@
 from . import DefaultTable
 from fontTools.misc import sstruct
-from types import StringType
 from fontTools.misc.textTools import safeEval, num2binary, binary2num
 
 GMAPFormat = """
@@ -120,7 +119,7 @@ class table_G_M_A_P_(DefaultTable.DefaultTable):
 			gmapRecord = GMAPRecord()
 			self.gmapRecords.append(gmapRecord)
 			for element in content:
-				if isinstance(element, StringType):
+				if isinstance(element, str):
 					continue
 				name, attrs, content = element
 				gmapRecord.fromXML(name, attrs, content, ttFont)

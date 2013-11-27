@@ -2,7 +2,6 @@
 CFF dictionary data and Type1/Type2 CharStrings.
 """
 
-import types
 import struct
 import string
 

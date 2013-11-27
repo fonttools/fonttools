@@ -7,7 +7,6 @@ from . import DefaultTable
 import struct
 from fontTools.ttLib import sfnt
 from fontTools.misc.textTools import safeEval, readHex
-from types import IntType, StringType
 
 
 class table_C_P_A_L_(DefaultTable.DefaultTable):
@@ -59,11 +58,11 @@ class table_C_P_A_L_(DefaultTable.DefaultTable):
 		if name == "palette":
 			palette = []
 			for element in content:
-				if isinstance(element, StringType):
+				if isinstance(element, str):
 					continue
 			palette = []
 			for element in content:
-				if isinstance(element, StringType):
+				if isinstance(element, str):
 					continue
 				color = Color()
 				color.fromXML(element[0], element[1], element[2], ttFont)

@@ -6,7 +6,6 @@ converter objects from otConverters.py.
 """
 import operator
 from .otBase import BaseTable, FormatSwitchingBaseTable
-from types import TupleType
 import warnings
 
 
@@ -345,7 +344,7 @@ class AlternateSubst(FormatSwitchingBaseTable):
 		set = []
 		alternates[glyphName] = set
 		for element in content:
-			if not isinstance(element, TupleType):
+			if not isinstance(element, tuple):
 				continue
 			name, attrs, content = element
 			set.append(attrs["glyph"])
@@ -412,7 +411,7 @@ class LigatureSubst(FormatSwitchingBaseTable):
 		ligs = []
 		ligatures[glyphName] = ligs
 		for element in content:
-			if not isinstance(element, TupleType):
+			if not isinstance(element, tuple):
 				continue
 			name, attrs, content = element
 			lig = Ligature()

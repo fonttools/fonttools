@@ -3,7 +3,6 @@ from . import DefaultTable
 import struct
 from fontTools.ttLib import sfnt
 from fontTools.misc.textTools import safeEval, readHex
-from types import IntType, StringType
 
 
 class table_V_O_R_G_(DefaultTable.DefaultTable):
@@ -86,7 +85,7 @@ class table_V_O_R_G_(DefaultTable.DefaultTable):
 		if name == "VOriginRecord":
 			vOriginRec = VOriginRecord()
 			for element in content:
-				if isinstance(element, StringType):
+				if isinstance(element, str):
 					continue
 				name, attrs, content = element
 				vOriginRec.fromXML(name, attrs, content, ttFont)
@@ -96,7 +95,7 @@ class table_V_O_R_G_(DefaultTable.DefaultTable):
 
 
 	def __getitem__(self, glyphSelector):
-		if isinstance(glyphSelector, IntType):
+		if isinstance(glyphSelector, int):
 			# its a gid, convert to glyph name
 			glyphSelector = self.getGlyphName(glyphSelector)
 
@@ -106,7 +105,7 @@ class table_V_O_R_G_(DefaultTable.DefaultTable):
 		return self.VOriginRecords[glyphSelector]
 
 	def __setitem__(self, glyphSelector, value):
-		if isinstance(glyphSelector, IntType):
+		if isinstance(glyphSelector, int):
 			# its a gid, convert to glyph name
 			glyphSelector = self.getGlyphName(glyphSelector)
 

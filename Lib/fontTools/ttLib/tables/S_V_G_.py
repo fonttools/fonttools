@@ -51,7 +51,6 @@ try:
 except ImportError:
     import xml.etree.ElementTree as ET
 import string
-import types
 import re
 
 XML = ET.XML

@@ -6,7 +6,6 @@
 
 import re
 import string
-import types
 
 __version__ = "$Id: afmLib.py,v 1.6 2003-05-24 12:50:47 jvr Exp $"
 

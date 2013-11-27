@@ -1,7 +1,6 @@
 # Since bitmap glyph metrics are shared between EBLC and EBDT
 # this class gets its own python file.
 from fontTools.misc import sstruct
-from types import TupleType
 from fontTools.misc.textTools import safeEval
 
 
@@ -40,7 +39,7 @@ class BitmapGlyphMetrics:
 	def fromXML(self, name, attrs, content, ttFont):
 		metricNames = set(sstruct.getformat(self.__class__.binaryFormat)[1])
 		for element in content:
-			if not isinstance(element, TupleType):
+			if not isinstance(element, tuple):
 				continue
 			name, attrs, content = element
 			# Make sure this is a metric that is needed by GlyphMetrics.

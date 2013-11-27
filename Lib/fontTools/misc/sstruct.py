@@ -55,7 +55,6 @@ __copyright__ = "Copyright 1998, Just van Rossum <just@letterror.com>"
 
 import struct
 import re
-import types
 
 
 error = "sstruct.error"

@@ -3,8 +3,9 @@ import struct
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval
 import string
-from types import FloatType, ListType, StringType, TupleType
 import sys
+
+
 METAHeaderFormat = """
 		>	# big endian
 		tableVersionMajor:			H
@@ -173,7 +174,7 @@ class table_M_E_T_A_(DefaultTable.DefaultTable):
 			glyphRec = GlyphRecord()
 			self.glyphRecords.append(glyphRec)
 			for element in content:
-				if isinstance(element, StringType):
+				if isinstance(element, str):
 					continue
 				name, attrs, content = element
 				glyphRec.fromXML(name, attrs, content, ttFont)
@@ -208,7 +209,7 @@ class GlyphRecord:
 			stringRec = StringRecord()
 			self.stringRecs.append(stringRec)
 			for element in content:
-				if isinstance(element, StringType):
+				if isinstance(element, str):
 					continue
 				stringRec.fromXML(name, attrs, content, ttFont)
 			stringRec.stringLen = len(stringRec.string)
