@@ -51,11 +51,11 @@ class XMLReader:
 		stackSize = self.stackSize
 		self.stackSize = stackSize + 1
 		if not stackSize:
-			if name <> "ttFont":
+			if name != "ttFont":
 				raise TTXParseError, "illegal root tag: %s" % name
 			sfntVersion = attrs.get("sfntVersion")
 			if sfntVersion is not None:
-				if len(sfntVersion) <> 4:
+				if len(sfntVersion) != 4:
 					sfntVersion = safeEval('"' + sfntVersion + '"')
 				self.ttFont.sfntVersion = sfntVersion
 			self.contentStack.append([])

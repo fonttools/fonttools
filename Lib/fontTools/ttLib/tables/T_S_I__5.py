@@ -12,7 +12,7 @@ class table_T_S_I__5(DefaultTable.DefaultTable):
 		assert len(data) == 2 * numGlyphs
 		a = array.array("H")
 		a.fromstring(data)
-		if sys.byteorder <> "big":
+		if sys.byteorder != "big":
 			a.byteswap()
 		self.glyphGrouping = {}
 		for i in range(numGlyphs):
@@ -23,7 +23,7 @@ class table_T_S_I__5(DefaultTable.DefaultTable):
 		a = array.array("H")
 		for i in range(len(glyphNames)):
 			a.append(self.glyphGrouping[glyphNames[i]])
-		if sys.byteorder <> "big":
+		if sys.byteorder != "big":
 			a.byteswap()
 		return a.tostring()
 	
@@ -37,7 +37,7 @@ class table_T_S_I__5(DefaultTable.DefaultTable):
 	def fromXML(self, (name, attrs, content), ttFont):
 		if not hasattr(self, "glyphGrouping"):
 			self.glyphGrouping = {}
-		if name <> "glyphgroup":
+		if name != "glyphgroup":
 			return
 		self.glyphGrouping[attrs["name"]] = safeEval(attrs["value"])
 

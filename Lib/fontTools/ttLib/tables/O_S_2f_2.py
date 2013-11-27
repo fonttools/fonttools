@@ -111,7 +111,7 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 			dummy, data = sstruct.unpack2(OS2_format_5_addition, data, self)
 			self.usLowerOpticalPointSize /= 20.
 			self.usUpperOpticalPointSize /= 20.
-		elif self.version <> 0:
+		elif self.version != 0:
 			from fontTools import ttLib
 			raise ttLib.TTLibError, "unknown format for OS/2 table: version %s" % self.version
 		if len(data):

@@ -75,7 +75,7 @@ class table__m_a_x_p(DefaultTable.DefaultTable):
 		for glyphName in ttFont.getGlyphOrder():
 			g = glyfTable[glyphName]
 			if g.numberOfContours:
-				if hmtxTable[glyphName][1] <> g.xMin:
+				if hmtxTable[glyphName][1] != g.xMin:
 					allXMaxIsLsb = 0
 				xMin = min(xMin, g.xMin)
 				yMin = min(yMin, g.yMin)

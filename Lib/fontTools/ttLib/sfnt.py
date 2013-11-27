@@ -88,7 +88,7 @@ class SFNTReader:
 			if self.checkChecksums > 1:
 				# Be obnoxious, and barf when it's wrong
 				assert checksum == entry.checksum, "bad checksum for '%s' table" % tag
-			elif checksum <> entry.checkSum:
+			elif checksum != entry.checkSum:
 				# Be friendly, and just print a warning.
 				print "bad checksum for '%s' table" % tag
 		return data
@@ -139,7 +139,7 @@ class SFNTWriter:
 			# of the data is still the same, we allow overwriting it.
 			entry = self.tables[tag]
 			assert not hasattr(entry.__class__, 'encodeData')
-			if len(data) <> entry.length:
+			if len(data) != entry.length:
 				from fontTools import ttLib
 				raise ttLib.TTLibError, "cannot rewrite '%s' table: length does not match directory entry" % tag
 			reuse = True
@@ -175,7 +175,7 @@ class SFNTWriter:
 		"""
 		tables = self.tables.items()
 		tables.sort()
-		if len(tables) <> self.numTables:
+		if len(tables) != self.numTables:
 			from fontTools import ttLib
 			raise ttLib.TTLibError, "wrong number of tables; expected %d, found %d" % (self.numTables, len(tables))
 

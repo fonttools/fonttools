@@ -70,7 +70,7 @@ class table__k_e_r_n(DefaultTable.DefaultTable):
 		if name == "version":
 			self.version = safeEval(attrs["value"])
 			return
-		if name <> "kernsubtable":
+		if name != "kernsubtable":
 			return
 		if not hasattr(self, "kernTables"):
 			self.kernTables = []
@@ -149,7 +149,7 @@ class KernTable_format_0:
 		if not hasattr(self, "kernTable"):
 			self.kernTable = {}
 		for element in content:
-			if type(element) <> TupleType:
+			if type(element) != TupleType:
 				continue
 			name, attrs, content = element
 			self.kernTable[(attrs["l"], attrs["r"])] = safeEval(attrs["v"])

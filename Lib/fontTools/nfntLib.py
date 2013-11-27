@@ -47,11 +47,11 @@ class NFNT:
 		assert (headerSize + bitmapSize + tableSize - 16) / 2 == self.owTLoc  # ugh...
 		
 		locTable = data[headerSize + bitmapSize:headerSize + bitmapSize + tableSize]
-		if len(locTable) <> tableSize:
+		if len(locTable) != tableSize:
 			raise ValueError, 'invalid NFNT format'
 		
 		owTable = data[headerSize + bitmapSize + tableSize:headerSize + bitmapSize + 2 * tableSize]
-		if len(owTable) <> tableSize:
+		if len(owTable) != tableSize:
 			raise ValueError, 'invalid NFNT format'
 		
 		# fill tables

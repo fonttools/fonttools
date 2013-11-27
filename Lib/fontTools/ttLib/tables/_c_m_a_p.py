@@ -82,7 +82,7 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
 		if name == "tableVersion":
 			self.tableVersion = safeEval(attrs["version"])
 			return
-		if name[:12] <> "cmap_format_":
+		if name[:12] != "cmap_format_":
 			return
 		if not hasattr(self, "tables"):
 			self.tables = []
@@ -209,10 +209,10 @@ class cmap_format_0(CmapSubtable):
 			self.cmap = {}
 		cmap = self.cmap
 		for element in content:
-			if type(element) <> TupleType:
+			if type(element) != TupleType:
 				continue
 			name, attrs, content = element
-			if name <> "map":
+			if name != "map":
 				continue
 			cmap[safeEval(attrs["code"])] = attrs["name"]
 
@@ -272,7 +272,7 @@ class cmap_format_2(CmapSubtable):
 		allKeys = array.array("H")
 		allKeys.fromstring(data[:512])
 		data = data[512:]
-		if sys.byteorder <> "big":
+		if sys.byteorder != "big":
 			allKeys.byteswap()
 		subHeaderKeys = [ key/8 for key in allKeys]
 		maxSubHeaderindex = max(subHeaderKeys)
@@ -288,7 +288,7 @@ class cmap_format_2(CmapSubtable):
 			giDataPos = pos + subHeader.idRangeOffset-2
 			giList = array.array("H")
 			giList.fromstring(data[giDataPos:giDataPos + subHeader.entryCount*2])
-			if sys.byteorder <> "big":
+			if sys.byteorder != "big":
 				giList.byteswap()
 			subHeader.glyphIndexArray = giList
 			subHeaderList.append(subHeader)
@@ -529,10 +529,10 @@ class cmap_format_2(CmapSubtable):
 		cmap = self.cmap
 
 		for element in content:
-			if type(element) <> TupleType:
+			if type(element) != TupleType:
 				continue
 			name, attrs, content = element
-			if name <> "map":
+			if name != "map":
 				continue
 			cmap[safeEval(attrs["code"])] = attrs["name"]
 
@@ -645,7 +645,7 @@ class cmap_format_4(CmapSubtable):
 		allCodes.fromstring(data)
 		self.data = data = None
 
-		if sys.byteorder <> "big":
+		if sys.byteorder != "big":
 			allCodes.byteswap()
 		
 		# divide the data
@@ -673,7 +673,7 @@ class cmap_format_4(CmapSubtable):
 					# *someone* needs to get killed.
 					index = idRangeOffset[i] / 2 + (charCode - startCode[i]) + i - len(idRangeOffset)
 					assert (index < lenGIArray), "In format 4 cmap, range (%d), the calculated index (%d) into the glyph index array  is not less than the length of the array (%d) !" % (i, index, lenGIArray)
-					if glyphIndexArray[index] <> 0:  # if not missing glyph
+					if glyphIndexArray[index] != 0:  # if not missing glyph
 						glyphID = glyphIndexArray[index] + idDelta[i]
 					else:
 						glyphID = 0  # missing glyph
@@ -803,7 +803,7 @@ class cmap_format_4(CmapSubtable):
 		charCodeArray = array.array("H", endCode + [0] + startCode)
 		idDeltaeArray = array.array("h", idDelta)
 		restArray = array.array("H", idRangeOffset + glyphIndexArray)
-		if sys.byteorder <> "big":
+		if sys.byteorder != "big":
 			charCodeArray.byteswap()
 			idDeltaeArray.byteswap()
 			restArray.byteswap()
@@ -821,10 +821,10 @@ class cmap_format_4(CmapSubtable):
 		cmap = self.cmap
 
 		for element in content:
-			if type(element) <> TupleType:
+			if type(element) != TupleType:
 				continue
 			nameMap, attrsMap, dummyContent = element
-			if nameMap <> "map":
+			if nameMap != "map":
 				assert 0, "Unrecognized keyword in cmap subtable"
 			cmap[safeEval(attrsMap["code"])] = attrsMap["name"]
 
@@ -846,7 +846,7 @@ class cmap_format_6(CmapSubtable):
 		#assert len(data) == 2 * entryCount  # XXX not true in Apple's Helvetica!!!
 		glyphIndexArray = array.array("H")
 		glyphIndexArray.fromstring(data[:2 * int(entryCount)])
-		if sys.byteorder <> "big":
+		if sys.byteorder != "big":
 			glyphIndexArray.byteswap()
 		self.data = data = None
 
@@ -873,7 +873,7 @@ class cmap_format_6(CmapSubtable):
 			valueList = [cmap.get(code, ".notdef") for code in codes]
 			valueList = map(ttFont.getGlyphID, valueList)
 			glyphIndexArray = array.array("H", valueList)
-			if sys.byteorder <> "big":
+			if sys.byteorder != "big":
 				glyphIndexArray.byteswap()
 			data = glyphIndexArray.tostring()
 		else:
@@ -890,10 +890,10 @@ class cmap_format_6(CmapSubtable):
 		cmap = self.cmap
 
 		for element in content:
-			if type(element) <> TupleType:
+			if type(element) != TupleType:
 				continue
 			name, attrs, content = element
-			if name <> "map":
+			if name != "map":
 				continue
 			cmap[safeEval(attrs["code"])] = attrs["name"]
 
@@ -1033,10 +1033,10 @@ class cmap_format_12_or_13(CmapSubtable):
 		cmap = self.cmap
 
 		for element in content:
-			if type(element) <> TupleType:
+			if type(element) != TupleType:
 				continue
 			name, attrs, content = element
-			if name <> "map":
+			if name != "map":
 				continue
 			cmap[safeEval(attrs["code"])] = attrs["name"]
 
@@ -1066,7 +1066,7 @@ class cmap_format_13(cmap_format_12_or_13):
 
 
 def  cvtToUVS(threeByteString):
-	if sys.byteorder <> "big":
+	if sys.byteorder != "big":
 		data = "\0" +threeByteString
 	else:
 		data = threeByteString + "\0"
@@ -1074,7 +1074,7 @@ def  cvtToUVS(threeByteString):
 	return val
 
 def  cvtFromUVS(val):
-	if sys.byteorder <> "big":
+	if sys.byteorder != "big":
 		threeByteString = struct.pack(">L", val)[1:]
 	else:
 		threeByteString = struct.pack(">L", val)[:3]
@@ -1190,10 +1190,10 @@ class cmap_format_14(CmapSubtable):
 			uvsDict = self.uvsDict 
 
 		for element in content:
-			if type(element) <> TupleType:
+			if type(element) != TupleType:
 				continue
 			name, attrs, content = element
-			if name <> "map":
+			if name != "map":
 				continue
 			uvs = safeEval(attrs["uvs"])
 			uv = safeEval(attrs["uv"])

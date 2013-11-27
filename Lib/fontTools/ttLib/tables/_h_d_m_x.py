@@ -75,7 +75,7 @@ class table__h_d_m_x(DefaultTable.DefaultTable):
 		writer.newline()
 	
 	def fromXML(self, (name, attrs, content), ttFont):
-		if name <> "hdmxData":
+		if name != "hdmxData":
 			return
 		content = string.join(content, "")
 		lines = string.split(content, ";")

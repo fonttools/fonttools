@@ -580,7 +580,7 @@ class TTFont:
 					return glyphID
 
 		glyphID = d[glyphName]
-		if glyphName <> glyphOrder[glyphID]:
+		if glyphName != glyphOrder[glyphID]:
 			self._buildReverseGlyphOrderDict()
 			return self.getGlyphID(glyphName)
 		return glyphID

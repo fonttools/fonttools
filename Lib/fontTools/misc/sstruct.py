@@ -139,7 +139,7 @@ def getformat(format):
 			m = _extraRE.match(line)
 			if m:
 				formatchar = m.group(1)
-				if formatchar <> 'x' and formatstring:
+				if formatchar != 'x' and formatstring:
 					raise error, "a special format char must be first"
 			else:
 				m = _elementRE.match(line)

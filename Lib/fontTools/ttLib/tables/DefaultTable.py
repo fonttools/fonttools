@@ -29,7 +29,7 @@ class DefaultTable:
 	def fromXML(self, (name, attrs, content), ttFont):
 		from fontTools.misc.textTools import readHex
 		from fontTools import ttLib
-		if name <> "hexdata":
+		if name != "hexdata":
 			raise ttLib.TTLibError, "can't handle '%s' element" % name
 		self.decompile(readHex(content), ttFont)
 	

@@ -151,7 +151,7 @@ def readLWFN(path, onlyHeader=0):
 		for i in range(501, 501 + n):
 			res = Res.Get1Resource('POST', i)
 			code = ord(res.data[0])
-			if ord(res.data[1]) <> 0:
+			if ord(res.data[1]) != 0:
 				raise T1Error, 'corrupt LWFN file'
 			if code in [1, 2]:
 				if onlyHeader and code == 2:
@@ -178,7 +178,7 @@ def readPFB(path, onlyHeader=0):
 	f = open(path, "rb")
 	data = []
 	while 1:
-		if f.read(1) <> chr(128):
+		if f.read(1) != chr(128):
 			raise T1Error, 'corrupt PFB file'
 		code = ord(f.read(1))
 		if code in [1, 2]:
@@ -297,8 +297,8 @@ def decryptType1(data):
 				chunk = deHexString(chunk)
 			decrypted, R = eexec.decrypt(chunk, 55665)
 			decrypted = decrypted[4:]
-			if decrypted[-len(EEXECINTERNALEND)-1:-1] <> EEXECINTERNALEND \
-					and decrypted[-len(EEXECINTERNALEND)-2:-2] <> EEXECINTERNALEND:
+			if decrypted[-len(EEXECINTERNALEND)-1:-1] != EEXECINTERNALEND \
+					and decrypted[-len(EEXECINTERNALEND)-2:-2] != EEXECINTERNALEND:
 				raise T1Error, "invalid end of eexec part"
 			decrypted = decrypted[:-len(EEXECINTERNALEND)-2] + '\r'
 			data.append(EEXECBEGINMARKER + decrypted + EEXECENDMARKER)
@@ -363,7 +363,7 @@ def longToString(long):
 	return str
 
 def stringToLong(str):
-	if len(str) <> 4:
+	if len(str) != 4:
 		raise ValueError, 'string must be 4 bytes long'
 	long = 0
 	for i in range(4):

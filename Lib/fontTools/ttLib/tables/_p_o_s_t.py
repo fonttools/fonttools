@@ -79,7 +79,7 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 		data = data[2:]
 		indices = array.array("H")
 		indices.fromstring(data[:2*numGlyphs])
-		if sys.byteorder <> "big":
+		if sys.byteorder != "big":
 			indices.byteswap()
 		data = data[2*numGlyphs:]
 		self.extraNames = extraNames = unpackPStrings(data)
@@ -145,7 +145,7 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 				extraDict[psName] = len(extraNames)
 				extraNames.append(psName)
 			indices.append(index)
-		if sys.byteorder <> "big":
+		if sys.byteorder != "big":
 			indices.byteswap()
 		return struct.pack(">H", numGlyphs) + indices.tostring() + packPStrings(extraNames)
 	
@@ -195,7 +195,7 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 		elif name == "psNames":
 			self.mapping = {}
 			for element in content:
-				if type(element) <> TupleType:
+				if type(element) != TupleType:
 					continue
 				name, attrs, content = element
 				if name == "psName":
@@ -203,7 +203,7 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 		elif name == "extraNames":
 			self.extraNames = []
 			for element in content:
-				if type(element) <> TupleType:
+				if type(element) != TupleType:
 					continue
 				name, attrs, content = element
 				if name == "psName":

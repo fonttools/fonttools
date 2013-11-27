@@ -90,11 +90,11 @@ class SFNTResourceWriter:
 		self.fullname = fullname.string
 		self.familyname = familyname.string
 		self.psname = psname.string
-		if self.familyname <> self.psname[:len(self.familyname)]:
+		if self.familyname != self.psname[:len(self.familyname)]:
 			# ugh. force fam name to be the same as first part of ps name,
 			# fondLib otherwise barfs.
 			for i in range(min(len(self.psname), len(self.familyname))):
-				if self.familyname[i] <> self.psname[i]:
+				if self.familyname[i] != self.psname[i]:
 					break
 			self.familyname = self.psname[:i]
 		

@@ -20,14 +20,14 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 			numberOfMetrics = numGlyphs # We warn later.
 		# Note: advanceWidth is unsigned, but we read/write as signed.
 		metrics = array.array("h", data[:4 * numberOfMetrics])
-		if sys.byteorder <> "big":
+		if sys.byteorder != "big":
 			metrics.byteswap()
 		data = data[4 * numberOfMetrics:]
 		numberOfSideBearings = numGlyphs - numberOfMetrics
 		sideBearings = array.array("h", data[:2 * numberOfSideBearings])
 		data = data[2 * numberOfSideBearings:]
 
-		if sys.byteorder <> "big":
+		if sys.byteorder != "big":
 			sideBearings.byteswap()
 		if data:
 			sys.stderr.write("too much data for hmtx/vmtx table\n")
@@ -61,12 +61,12 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 		for item in metrics:
 			allMetrics.extend(item)
 		allMetrics = array.array("h", allMetrics)
-		if sys.byteorder <> "big":
+		if sys.byteorder != "big":
 			allMetrics.byteswap()
 		data = allMetrics.tostring()
 		
 		additionalMetrics = array.array("h", additionalMetrics)
-		if sys.byteorder <> "big":
+		if sys.byteorder != "big":
 			additionalMetrics.byteswap()
 		data = data + additionalMetrics.tostring()
 		return data

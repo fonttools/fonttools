@@ -347,7 +347,7 @@ class DeltaValue(BaseConverter):
 			if shift == 0:
 				writer.writeUShort(tmp)
 				tmp, shift = 0, 16
-		if shift <> 16:
+		if shift != 16:
 			writer.writeUShort(tmp)
 	
 	def xmlWrite(self, xmlWriter, font, value, name, attrs):

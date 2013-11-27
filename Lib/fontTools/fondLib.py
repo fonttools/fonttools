@@ -33,7 +33,7 @@ class FontFamily:
 	
 	def __init__(self, theRes, mode = 'r'):
 		self.ID, type, self.name = theRes.GetResInfo()
-		if type <> 'FOND':
+		if type != 'FOND':
 			raise ValueError, "FOND resource required"
 		self.FOND = theRes
 		self.mode = mode
@@ -68,7 +68,7 @@ class FontFamily:
 		self.fondClass = flags
 	
 	def save(self, destresfile = None):
-		if self.mode <> 'w':
+		if self.mode != 'w':
 			raise error, "can't save font: no write permission"
 		self._buildfontassociationtable()
 		self._buildoffsettable()
@@ -144,7 +144,7 @@ class FontFamily:
 		header = header + struct.pack(">h", self.ffVersion)
 		if DEBUG:
 			print "header is the same?", self._rawheader == header and 'yes.' or 'no.'
-			if self._rawheader <> header:
+			if self._rawheader != header:
 				print len(self._rawheader), len(header)
 		self._rawheader = header
 	
@@ -170,7 +170,7 @@ class FontFamily:
 		
 		if DEBUG:
 			print "font association table is the same?", self._rawfontassociationtable == data and 'yes.' or 'no.'
-			if self._rawfontassociationtable <> data:
+			if self._rawfontassociationtable != data:
 				print len(self._rawfontassociationtable), len(data)
 		self._rawfontassociationtable = data
 	
@@ -192,7 +192,7 @@ class FontFamily:
 	
 	def _getboundingboxtable(self):
 		self.boundingBoxes = None
-		if self._rawoffsettable[:6] <> '\0\0\0\0\0\6':  # XXX ????
+		if self._rawoffsettable[:6] != '\0\0\0\0\0\6':  # XXX ????
 			return
 		boxes = {}
 		data = self._rawoffsettable[6:]
@@ -245,7 +245,7 @@ class FontFamily:
 		tables.sort()
 		for stylecode, table in tables:
 			data = data + struct.pack('>h', stylecode)
-			if len(table) <> (3 + self.ffLastChar - self.ffFirstChar):
+			if len(table) != (3 + self.ffLastChar - self.ffFirstChar):
 				raise error, "width table has wrong length"
 			for width in table:
 				data = data + struct.pack('>h', width)
@@ -296,7 +296,7 @@ class FontFamily:
 		
 		if DEBUG:
 			print "kerning table is the same?", self._rawkerningtables == data and 'yes.' or 'no.'
-			if self._rawkerningtables <> data:
+			if self._rawkerningtables != data:
 				print len(self._rawkerningtables), len(data)
 		self._rawkerningtables = data
 	
@@ -445,7 +445,7 @@ uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 def splitname(name, famname = None):
 	# XXX this goofs up MM font names: but how should it be done??
 	if famname:
-		if name[:len(famname)] <> famname:
+		if name[:len(famname)] != famname:
 			raise error, "first part of name should be same as family name"
 		name = name[len(famname):]
 		split = [famname]
@@ -466,7 +466,7 @@ def makeLWFNfilename(name):
 	split = splitname(name)
 	lwfnname = split[0][:5]
 	for part in split[1:]:
-		if part <> '-':
+		if part != '-':
 			lwfnname = lwfnname + part[:3]
 	return lwfnname
 
@@ -506,7 +506,7 @@ class BitmapFontFile:
 			fond.minimalparse()
 	
 	def close(self):
-		if self.resref <> None:
+		if self.resref != None:
 			try:
 				Res.CloseResFile(self.resref)
 			except Res.Error:
@@ -549,6 +549,6 @@ class FondSelector:
 		sel = self.w.l.getselection()
 		if not sel:
 			self.w.l.setselection([0])
-		elif len(sel) <> 1:
+		elif len(sel) != 1:
 			self.w.l.setselection([sel[0]])
 			

@@ -25,7 +25,7 @@ class table_G_P_K_G_(DefaultTable.DefaultTable):
 		GMAPoffsets = array.array("I")
 		endPos = (self.numGMAPs+1) * 4
 		GMAPoffsets.fromstring(newData[:endPos])
-		if sys.byteorder <> "big":
+		if sys.byteorder != "big":
 			GMAPoffsets.byteswap()
 		self.GMAPs = []
 		for i in range(self.numGMAPs):
@@ -36,7 +36,7 @@ class table_G_P_K_G_(DefaultTable.DefaultTable):
 		endPos = pos + (self.numGlyplets + 1)*4
 		glyphletOffsets = array.array("I")
 		glyphletOffsets.fromstring(newData[pos:endPos])
-		if sys.byteorder <> "big":
+		if sys.byteorder != "big":
 			glyphletOffsets.byteswap()
 		self.glyphlets = []
 		for i in range(self.numGlyplets):
@@ -59,7 +59,7 @@ class table_G_P_K_G_(DefaultTable.DefaultTable):
 			pos += len(self.GMAPs[i-1])
 			GMAPoffsets[i] = pos
 		gmapArray = array.array("I", GMAPoffsets)
-		if sys.byteorder <> "big":
+		if sys.byteorder != "big":
 			gmapArray.byteswap()
 		dataList.append(gmapArray.tostring())
 
@@ -68,7 +68,7 @@ class table_G_P_K_G_(DefaultTable.DefaultTable):
 			pos += len(self.glyphlets[i-1])
 			glyphletOffsets[i] = pos
 		glyphletArray = array.array("I", glyphletOffsets)
-		if sys.byteorder <> "big":
+		if sys.byteorder != "big":
 			glyphletArray.byteswap()
 		dataList.append(glyphletArray.tostring())
 		dataList += self.GMAPs

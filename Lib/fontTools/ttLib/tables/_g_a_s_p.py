@@ -44,7 +44,7 @@ class table__g_a_s_p(DefaultTable.DefaultTable):
 			writer.newline()
 	
 	def fromXML(self, (name, attrs, content), ttFont):
-		if name <> "gaspRange":
+		if name != "gaspRange":
 			return
 		if not hasattr(self, "gaspRange"):
 			self.gaspRange = {}
