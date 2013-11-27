@@ -79,7 +79,7 @@ class table__h_d_m_x(DefaultTable.DefaultTable):
 		lines = string.split(content, ";")
 		topRow = string.split(lines[0])
 		assert topRow[0] == "ppem:", "illegal hdmx format"
-		ppems = map(int, topRow[1:])
+		ppems = list(map(int, topRow[1:]))
 		self.hdmx = hdmx = {}
 		for ppem in ppems:
 			hdmx[ppem] = {}
@@ -92,7 +92,7 @@ class table__h_d_m_x(DefaultTable.DefaultTable):
 			if "\\" in glyphName:
 				from fontTools.misc.textTools import safeEval
 				glyphName = safeEval('"""' + glyphName + '"""')
-			line = map(int, line[1:])
+			line = list(map(int, line[1:]))
 			assert len(line) == len(ppems), "illegal hdmx format"
 			for i in range(len(ppems)):
 				hdmx[ppems[i]][glyphName] = line[i]

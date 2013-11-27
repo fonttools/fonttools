@@ -125,7 +125,7 @@ def parse_date(datestring):
 	month = _months.index(month)
 	year = int(year)
 	day = int(day)
-	hour, minute, second = map(int, string.split(tim, ":"))
+	hour, minute, second = [int(item) for item in string.split(tim, ":")]
 	t = (year, month, day, hour, minute, second, weekday, 0, 0)
 	return int(time.mktime(t) - time.timezone)
 

@@ -696,12 +696,12 @@ class NumberConverter(SimpleConverter):
 
 class ArrayConverter(SimpleConverter):
 	def xmlWrite(self, xmlWriter, name, value, progress):
-		value = map(str, value)
-		xmlWriter.simpletag(name, value=" ".join(value))
+		value = " ".join(map(str, value))
+		xmlWriter.simpletag(name, value=value)
 		xmlWriter.newline()
 	def xmlRead(self, name, attrs, content, parent):
 		values = attrs["value"].split()
-		return map(parseNum, values)
+		return [parseNum(value) for value in values]
 
 class TableConverter(SimpleConverter):
 	def xmlWrite(self, xmlWriter, name, value, progress):

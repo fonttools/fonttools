@@ -30,12 +30,12 @@ class table_V_O_R_G_(DefaultTable.DefaultTable):
 		self.VOriginRecords = vOrig = {}
 		glyphOrder = ttFont.getGlyphOrder()
 		try:
-			names = map(operator.getitem, [glyphOrder]*self.numVertOriginYMetrics, gids )
+			names = map(operator.getitem, [glyphOrder]*self.numVertOriginYMetrics, gids)
 		except IndexError:
 			getGlyphName = self.getGlyphName
 			names = map(getGlyphName, gids )
 
-		map(operator.setitem, [vOrig]*self.numVertOriginYMetrics, names, vids)
+		list(map(operator.setitem, [vOrig]*self.numVertOriginYMetrics, names, vids))
 
 
 	def compile(self, ttFont):
@@ -48,7 +48,7 @@ class table_V_O_R_G_(DefaultTable.DefaultTable):
 		except KeyError:
 			nameMap = ttFont.getReverseGlyphMap(rebuild=1)
 			gids = map(operator.getitem, [nameMap]*lenRecords, names)
-		vOriginTable = map(None, gids, vorgs)
+		vOriginTable = list(zip(gids, vorgs))
 		self.numVertOriginYMetrics = lenRecords
 		vOriginTable.sort() # must be in ascending GID order
 		dataList = [ struct.pack(">Hh", rec[0], rec[1]) for rec in vOriginTable]

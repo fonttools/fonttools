@@ -44,12 +44,12 @@ class table_C_O_L_R_(DefaultTable.DefaultTable):
 
 		self.ColorLayers = colorLayerLists = {}
 		try:
-			names = map(operator.getitem, [glyphOrder]*numBaseGlyphRecords, gids)
+			names = list(map(operator.getitem, [glyphOrder]*numBaseGlyphRecords, gids))
 		except IndexError:
 			getGlyphName = self.getGlyphName
-			names = map(getGlyphName, gids )
+			names = list(map(getGlyphName, gids ))
 
-		map(operator.setitem, [colorLayerLists]*numBaseGlyphRecords, names, layerLists)
+		list(map(operator.setitem, [colorLayerLists]*numBaseGlyphRecords, names, layerLists))
 
 
 	def compile(self, ttFont):

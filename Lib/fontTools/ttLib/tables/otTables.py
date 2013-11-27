@@ -142,16 +142,16 @@ class SingleSubst(FormatSwitchingBaseTable):
 		if self.Format == 1:
 			delta = rawTable["DeltaGlyphID"]
 			inputGIDS =  [ font.getGlyphID(name) for name in input ]
-			inputGIDS = map(doModulo, inputGIDS) 
+			inputGIDS = map(doModulo, inputGIDS)
 			outGIDS = [ glyphID + delta for glyphID in inputGIDS ]
-			outGIDS = map(doModulo, outGIDS) 
+			outGIDS = map(doModulo, outGIDS)
 			outNames = [ font.getGlyphName(glyphID) for glyphID in outGIDS ]
-			map(operator.setitem, [mapping]*lenMapping, input, outNames)
+			list(map(operator.setitem, [mapping]*lenMapping, input, outNames))
 		elif self.Format == 2:
 			assert len(input) == rawTable["GlyphCount"], \
 					"invalid SingleSubstFormat2 table"
 			subst = rawTable["Substitute"]
-			map(operator.setitem, [mapping]*lenMapping, input, subst)
+			list(map(operator.setitem, [mapping]*lenMapping, input, subst))
 		else:
 			assert 0, "unknown format: %s" % self.Format
 		self.mapping = mapping
@@ -220,7 +220,7 @@ class ClassDef(FormatSwitchingBaseTable):
 			gidList = list(range(glyphID, glyphID + len(classList)))
 			keyList = [getGlyphName(glyphID) for glyphID in gidList]
 
-			map(operator.setitem, [classDefs]*lenList, keyList, classList)
+			list(map(operator.setitem, [classDefs]*lenList, keyList, classList))
 
 		elif self.Format == 2:
 			records = rawTable["ClassRangeRecord"]
@@ -232,7 +232,7 @@ class ClassDef(FormatSwitchingBaseTable):
 				glyphIDs = list(range(font.getGlyphID(start) + 1, font.getGlyphID(end)))
 				lenList = len(glyphIDs)
 				keyList = [getGlyphName(glyphID) for glyphID in glyphIDs]
-				map(operator.setitem,  [classDefs]*lenList, keyList, [cls]*lenList)
+				list(map(operator.setitem,  [classDefs]*lenList, keyList, [cls]*lenList))
 				classDefs[end] = cls
 		else:
 			assert 0, "unknown format: %s" % self.Format

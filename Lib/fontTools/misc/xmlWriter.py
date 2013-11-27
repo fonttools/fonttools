@@ -143,7 +143,7 @@ def escape8bit(data):
 			return c
 		else:
 			return "&#" + repr(n) + ";"
-	return string.join(map(escapechar, data), "")
+	return "".join(map(escapechar, data))
 
 needswap = struct.pack("h", 1) == "\001\000"
 
@@ -162,7 +162,7 @@ def escape16bit(data):
 			return chr(n)
 		else:
 			return "&#" + repr(n) + ";"
-	return string.join(map(escapenum, a), "")
+	return "".join(map(escapenum, a))
 
 
 def hexStr(s):
