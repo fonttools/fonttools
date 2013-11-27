@@ -20,6 +20,8 @@ def buildConverters(tableSpec, tableNamespace):
 			converterClass = SubTable
 		elif name == "ExtSubTable":
 			converterClass = ExtSubTable
+		elif name == "FeatureParams":
+			converterClass = FeatureParams
 		else:
 			converterClass = converterMapping[tp]
 		tableClass = tableNamespace.get(name)
@@ -30,6 +32,11 @@ def buildConverters(tableSpec, tableNamespace):
 			for t in conv.lookupTypes.values():
 				for cls in t.values():
 					convertersByName[cls.__name__] = Table(name, repeat, aux, cls)
+		if name == "FeatureParams":
+			conv.featureParamTypes = tableNamespace['featureParamTypes']
+			conv.defaultFeatureParams = tableNamespace['FeatureParams']
+			for cls in conv.featureParamTypes.values():
+				convertersByName[cls.__name__] = Table(name, repeat, aux, cls)
 		converters.append(conv)
 		assert not convertersByName.has_key(name)
 		convertersByName[name] = conv
@@ -47,7 +54,7 @@ class BaseConverter(object):
 		self.aux = aux
 		self.tableClass = tableClass
 		self.isCount = name.endswith("Count")
-		self.isPropagatedCount = name in ["ClassCount", "Class2Count"]
+		self.isPropagated = name in ["ClassCount", "Class2Count", "FeatureTag"]
 	
 	def read(self, reader, font, tableDict):
 		"""Read a value from the reader."""
@@ -120,6 +127,12 @@ class UShort(IntValue):
 		return reader.readUShort()
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		writer.writeUShort(value)
+
+class UInt24(IntValue):
+	def read(self, reader, font, tableDict):
+		return reader.readUInt24()
+	def write(self, writer, font, tableDict, value, repeatIndex=None):
+		writer.writeUInt24(value)
 
 class Count(Short):
 	def xmlWrite(self, xmlWriter, font, value, name, attrs):
@@ -244,6 +257,11 @@ class ExtSubTable(LTable, SubTable):
 		writer.Extension = 1 # actually, mere presence of the field flags it as an Ext Subtable writer.
 		Table.write(self, writer, font, tableDict, value, repeatIndex)
 
+class FeatureParams(Table):
+	def getConverter(self, featureTag):
+		tableClass = self.featureParamTypes.get(featureTag, self.defaultFeatureParams)
+		return self.__class__(self.name, self.repeat, self.aux, tableClass)
+
 
 class ValueFormat(IntValue):
 	def __init__(self, name, repeat, aux, tableClass):
@@ -333,6 +351,7 @@ converterMapping = {
 	# type         class
 	"int16":       Short,
 	"uint16":      UShort,
+	"uint24":      UInt24,
 	"Version":     Version,
 	"Tag":         Tag,
 	"GlyphID":     GlyphID,

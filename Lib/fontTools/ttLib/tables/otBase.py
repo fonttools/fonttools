@@ -135,6 +135,14 @@ class OTTableReader(object):
 		self.pos = newpos
 		return value
 
+	def readUInt24(self):
+		pos = self.pos
+		newpos = pos + 3
+		value = (ord(self.data[pos]) << 16) | (ord(self.data[pos+1]) << 8) | ord(self.data[pos+2])
+		value, = struct.unpack(">H", self.data[pos:newpos])
+		self.pos = newpos
+		return value
+
 	def readULong(self):
 		pos = self.pos
 		newpos = pos + 4
@@ -397,6 +405,10 @@ class OTTableWriter(object):
 	
 	def writeShort(self, value):
 		self.items.append(struct.pack(">h", value))
+
+	def writeUInt24(self, value):
+		assert 0 <= value < 0x1000000
+		self.items.append(''.join(chr(v) for v in (value>>16, (value>>8)&0xFF, value&0xff)))
 	
 	def writeLong(self, value):
 		self.items.append(struct.pack(">l", value))
@@ -533,6 +545,8 @@ class BaseTable(object):
 			if conv.name == "ExtSubTable":
 				conv = conv.getConverter(reader.globalState.tableType,
 						table["ExtensionLookupType"])
+			if conv.name == "FeatureParams":
+				conv = conv.getConverter(reader["FeatureTag"])
 			if conv.repeat:
 				l = []
 				if conv.repeat in table:
@@ -547,7 +561,7 @@ class BaseTable(object):
 				if conv.aux and not eval(conv.aux, None, table):
 					continue
 				table[conv.name] = conv.read(reader, font, table)
-				if conv.isPropagatedCount:
+				if conv.isPropagated:
 					reader[conv.name] = table[conv.name]
 
 		self.postRead(table, font)
@@ -591,7 +605,7 @@ class BaseTable(object):
 				# We add a reference: by the time the data is assembled
 				# the Count value will be filled in.
 				ref = writer.writeCountReference(table, conv.name)
-				if conv.isPropagatedCount:
+				if conv.isPropagated:
 					table[conv.name] = None
 					writer[conv.name] = ref
 				else:
@@ -600,6 +614,8 @@ class BaseTable(object):
 				if conv.aux and not eval(conv.aux, None, table):
 					continue
 				conv.write(writer, font, table, value)
+				if conv.isPropagated:
+					writer[conv.name] = value
 	
 	def readFormat(self, reader):
 		pass

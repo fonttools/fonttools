@@ -13,16 +13,20 @@ import warnings
 class LookupOrder(BaseTable):
 	"""Dummy class; this table isn't defined, but is used, and is always NULL."""
 
-
 class FeatureParams(BaseTable):
-	"""This class has been used by Adobe, but but this one implementation was done wrong.
-	No other use has been made, becuase there is no way to know how to interpret
-	the data at the offset.. For now, if we see one, just skip the data on
-	decompiling and dumping to XML. """
-	# XXX The above is no longer true; the 'size' feature uses FeatureParams now.
-	def __init__(self):
-		BaseTable.__init__(self)
-		self.converters = []
+
+	def compile(self, writer, font):
+		assert featureParamTypes.get(writer['FeatureTag'], None) == self.__class__, "Wrong FeatureParams type for feature '%s': %s" % (writer['FeatureTag'], self.__class__.__name__)
+		BaseTable.compile(self, writer, font)
+
+class FeatureParamsSize(FeatureParams):
+	pass
+
+class FeatureParamsStylisticSet(FeatureParams):
+	pass
+
+class FeatureParamsCharacterVariants(FeatureParams):
+	pass
 
 class Coverage(FormatSwitchingBaseTable):
 	
@@ -696,6 +700,15 @@ def _buildClasses():
 	for lookupEnum in lookupTypes.values():
 		for enum, cls in lookupEnum.items():
 			cls.LookupType = enum
+
+	global featureParamTypes
+	featureParamTypes = {
+		'size': FeatureParamsSize,
+	}
+	for i in range(1, 20+1):
+		featureParamTypes['ss%02d' % i] = FeatureParamsStylisticSet
+	for i in range(1, 99+1):
+		featureParamTypes['cv%02d' % i] = FeatureParamsCharacterVariants
 	
 	# add converters to classes
 	from otConverters import buildConverters
