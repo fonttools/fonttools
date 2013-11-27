@@ -1,6 +1,7 @@
+from __future__ import print_function
+from fontTools.misc.py23 import *
 from . import DefaultTable
 from . import ttProgram
-from fontTools.misc.py23 import *
 
 class table__f_p_g_m(DefaultTable.DefaultTable):
 	

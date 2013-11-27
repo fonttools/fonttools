@@ -12,9 +12,10 @@ classes, since whenever to number of tables changes or whenever
 a table's length chages you need to rewrite the whole file anyway.
 """
 
-import struct
-from fontTools.misc import sstruct
+from __future__ import print_function
 from fontTools.misc.py23 import *
+from fontTools.misc import sstruct
+import struct
 
 
 class SFNTReader:

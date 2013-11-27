@@ -1,6 +1,7 @@
-import struct
-from fontTools.misc import sstruct
+from __future__ import print_function
 from fontTools.misc.py23 import *
+from fontTools.misc import sstruct
+import struct
 
 
 # FontRec header

@@ -1,8 +1,9 @@
-from . import DefaultTable
+from __future__ import print_function
+from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval, num2binary, binary2num
+from . import DefaultTable
 import warnings
-from fontTools.misc.py23 import *
 
 
 # panose classification

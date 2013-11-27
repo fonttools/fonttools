@@ -1,6 +1,7 @@
+from __future__ import print_function
+from fontTools.misc.py23 import *
 from . import DefaultTable
 import struct
-from fontTools.misc.py23 import *
 
 tsi0Format = '>HHl'
 

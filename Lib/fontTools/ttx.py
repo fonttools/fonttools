@@ -66,16 +66,17 @@ usage: ttx [options] inputfile1 [... inputfileN]
 """
 
 
-import sys
-import os
-import getopt
-import re
+from __future__ import print_function
+from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont, TTLibError
 from fontTools.ttLib.tables.otBase import OTLOffsetOverflowError
 from fontTools.ttLib.tables.otTables import fixLookupOverFlows, fixSubTableOverFlows
 from fontTools.misc.macCreatorType import getMacCreatorAndType
 from fontTools import version
-from fontTools.misc.py23 import *
+import os
+import sys
+import getopt
+import re
 
 def usage():
 	print(__doc__ % version)

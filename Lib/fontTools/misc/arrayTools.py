@@ -4,8 +4,9 @@
 #
 
 
+from __future__ import print_function
+from fontTools.misc.py23 import *
 import math
-from .py23 import *
 
 def calcBounds(array):
     """Return the bounding rectangle of a 2D points array as a tuple:

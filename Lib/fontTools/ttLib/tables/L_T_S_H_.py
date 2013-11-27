@@ -1,8 +1,9 @@
-from . import DefaultTable
-import array
-import struct
-from fontTools.misc.textTools import safeEval
+from __future__ import print_function
 from fontTools.misc.py23 import *
+from fontTools.misc.textTools import safeEval
+from . import DefaultTable
+import struct
+import array
 
 # XXX I've lowered the strictness, to make sure Apple's own Chicago
 # XXX gets through. They're looking into it, I hope to raise the standards

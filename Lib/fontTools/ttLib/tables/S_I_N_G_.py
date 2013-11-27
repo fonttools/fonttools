@@ -1,7 +1,8 @@
-from . import DefaultTable
+from __future__ import print_function
+from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval
-from fontTools.misc.py23 import *
+from . import DefaultTable
 
 SINGFormat = """
 		>	# big endian

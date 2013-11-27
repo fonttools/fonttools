@@ -1,5 +1,6 @@
-from fontTools.pens.basePen import BasePen
+from __future__ import print_function
 from fontTools.misc.py23 import *
+from fontTools.pens.basePen import BasePen
 
 
 __all__ = ["CocoaPen"]

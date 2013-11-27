@@ -45,9 +45,10 @@ Dumping 'prep' table...
 # $Id: __init__.py,v 1.51 2009-02-22 08:55:00 pabs3 Exp $
 #
 
-import sys
-import os
+from __future__ import print_function
 from fontTools.misc.py23 import *
+import os
+import sys
 
 haveMacSupport = 0
 if sys.platform == "mac":

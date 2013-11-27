@@ -1,12 +1,13 @@
-from . import DefaultTable
-import sys
-import struct
-import array
+from __future__ import print_function
+from fontTools.misc.py23 import *
 from fontTools import ttLib
 from fontTools.ttLib.standardGlyphOrder import standardGlyphOrder
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval, readHex
-from fontTools.misc.py23 import *
+from . import DefaultTable
+import sys
+import struct
+import array
 
 
 postFormat = """

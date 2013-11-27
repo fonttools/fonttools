@@ -42,15 +42,16 @@ the number of <colorParamUINameID> elements.
 
 """
 
-from . import DefaultTable
-import struct
+from __future__ import print_function
+from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
+from . import DefaultTable
 try:
     import xml.etree.cElementTree as ET
 except ImportError:
     import xml.etree.ElementTree as ET
+import struct
 import re
-from fontTools.misc.py23 import *
 
 XML = ET.XML
 XMLElement = ET.Element

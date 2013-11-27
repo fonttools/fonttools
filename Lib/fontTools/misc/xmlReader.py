@@ -1,8 +1,9 @@
+from __future__ import print_function
+from fontTools.misc.py23 import *
 from fontTools import ttLib
 from fontTools.misc.textTools import safeEval
 from fontTools.ttLib.tables.DefaultTable import DefaultTable
 import os
-from .py23 import *
 
 
 class TTXParseError(Exception): pass

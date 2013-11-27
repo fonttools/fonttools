@@ -2,10 +2,11 @@
 #
 # Google Author(s): Behdad Esfahbod
 
+from __future__ import print_function
+from fontTools.misc.py23 import *
+from fontTools.misc.textTools import safeEval
 from . import DefaultTable
 import struct
-from fontTools.misc.textTools import safeEval
-from fontTools.misc.py23 import *
 
 
 class table_C_P_A_L_(DefaultTable.DefaultTable):

@@ -1,3 +1,5 @@
+from __future__ import print_function
+from fontTools.misc.py23 import *
 import sys
 try:
 	import MacOS

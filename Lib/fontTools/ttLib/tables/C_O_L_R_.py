@@ -2,11 +2,12 @@
 #
 # Google Author(s): Behdad Esfahbod
 
-import operator
-from . import DefaultTable
-import struct
-from fontTools.misc.textTools import safeEval
+from __future__ import print_function
 from fontTools.misc.py23 import *
+from fontTools.misc.textTools import safeEval
+from . import DefaultTable
+import operator
+import struct
 
 
 class table_C_O_L_R_(DefaultTable.DefaultTable):

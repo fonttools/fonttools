@@ -1,6 +1,9 @@
 # The table below is taken from
 # http://www.adobe.com/devnet/opentype/archives/aglfn.txt
 
+from __future__ import print_function
+from fontTools.misc.py23 import *
+
 _aglText = """\
 # -----------------------------------------------------------
 # Copyright 2003, 2005-2008, 2010 Adobe Systems Incorporated.

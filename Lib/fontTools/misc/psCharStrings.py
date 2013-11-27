@@ -2,8 +2,9 @@
 CFF dictionary data and Type1/Type2 CharStrings.
 """
 
+from __future__ import print_function
+from fontTools.misc.py23 import *
 import struct
-from .py23 import *
 
 
 DEBUG = 0

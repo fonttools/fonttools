@@ -1,8 +1,9 @@
-from . import DefaultTable
-from fontTools.misc import sstruct
-import time
-from fontTools.misc.textTools import safeEval, num2binary, binary2num
+from __future__ import print_function
 from fontTools.misc.py23 import *
+from fontTools.misc import sstruct
+from fontTools.misc.textTools import safeEval, num2binary, binary2num
+from . import DefaultTable
+import time
 
 
 headFormat = """

@@ -1,16 +1,16 @@
 """ttLib.macUtils.py -- Various Mac-specific stuff."""
 
+from __future__ import print_function
+from fontTools.misc.py23 import *
 import sys
 import os
 if sys.platform not in ("mac", "darwin"):
 	raise ImportError("This module is Mac-only!")
-
 try:
 	from Carbon import Res
 except ImportError:
 	import Res
 
-from fontTools.misc.py23 import *
 
 
 def MyOpenResFile(path):
