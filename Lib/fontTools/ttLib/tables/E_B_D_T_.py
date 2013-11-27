@@ -206,7 +206,7 @@ def _data2binary(data, numBits):
 	for curByte in data:
 		value = ord(curByte)
 		numBitsCut = min(8, numBits)
-		for i in xrange(numBitsCut):
+		for i in range(numBitsCut):
 			if value & 0x1:
 				binaryList.append('1')
 			else:
@@ -217,7 +217,7 @@ def _data2binary(data, numBits):
 
 def _binary2data(binary):
 	byteList = []
-	for bitLoc in xrange(0, len(binary), 8):
+	for bitLoc in range(0, len(binary), 8):
 		byteString = binary[bitLoc:bitLoc+8]
 		curByte = 0
 		for curBit in reversed(byteString):
@@ -246,7 +246,7 @@ def _reverseBytes(data):
 		return string.join(map(_reverseBytes, data), "")
 	byte = ord(data)
 	result = 0
-	for i in xrange(8):
+	for i in range(8):
 		result = result << 1
 		result |= byte & 1
 		byte = byte >> 1
@@ -272,7 +272,7 @@ def _writeRowImageData(strikeIndex, glyphName, bitmapObject, writer, ttFont):
 
 	writer.begintag('rowimagedata', bitDepth=bitDepth, width=metrics.width, height=metrics.height)
 	writer.newline()
-	for curRow in xrange(metrics.height):
+	for curRow in range(metrics.height):
 		rowData = bitmapObject.getRow(curRow, bitDepth=bitDepth, metrics=metrics)
 		writer.simpletag('row', value=hexStr(rowData))
 		writer.newline()
@@ -306,7 +306,7 @@ def _writeBitwiseImageData(strikeIndex, glyphName, bitmapObject, writer, ttFont)
 
 	writer.begintag('bitwiseimagedata', bitDepth=bitDepth, width=metrics.width, height=metrics.height)
 	writer.newline()
-	for curRow in xrange(metrics.height):
+	for curRow in range(metrics.height):
 		rowData = bitmapObject.getRow(curRow, bitDepth=1, metrics=metrics, reverseBytes=True)
 		rowData = _data2binary(rowData, metrics.width)
 		# Make the output a readable ASCII art form.
@@ -512,7 +512,7 @@ class BitAlignedBitmapMixin:
 		dataList = []
 		bitRange = self._getBitRange(row, bitDepth, metrics)
 		stepRange = bitRange + (8,)
-		for curBit in xrange(*stepRange):
+		for curBit in range(*stepRange):
 			endBit = min(curBit+8, bitRange[1])
 			numBits = endBit - curBit
 			cutPoint = curBit % 8
@@ -551,7 +551,7 @@ class BitAlignedBitmapMixin:
 		for row, data in enumerate(dataRows):
 			bitRange = self._getBitRange(row, bitDepth, metrics)
 			stepRange = bitRange + (8,)
-			for curBit, curByte in itertools.izip(xrange(*stepRange), data):
+			for curBit, curByte in itertools.izip(range(*stepRange), data):
 				endBit = min(curBit+8, bitRange[1])
 				cutPoint = curBit % 8
 				firstByteLoc = curBit / 8
@@ -698,7 +698,7 @@ class ebdt_bitmap_format_8(BitmapPlusSmallMetricsMixin, ComponentBitmapGlyph):
 		(numComponents,) = struct.unpack(">H", data[:2])
 		data = data[2:]
 		self.componentArray = []
-		for i in xrange(numComponents):
+		for i in range(numComponents):
 			curComponent = EbdtComponent()
 			dummy, data = sstruct.unpack2(ebdtComponentFormat, data, curComponent)
 			curComponent.name = self.ttFont.getGlyphName(curComponent.glyphCode)
@@ -723,7 +723,7 @@ class ebdt_bitmap_format_9(BitmapPlusBigMetricsMixin, ComponentBitmapGlyph):
 		(numComponents,) = struct.unpack(">H", data[:2])
 		data = data[2:]
 		self.componentArray = []
-		for i in xrange(numComponents):
+		for i in range(numComponents):
 			curComponent = EbdtComponent()
 			dummy, data = sstruct.unpack2(ebdtComponentFormat, data, curComponent)
 			curComponent.name = self.ttFont.getGlyphName(curComponent.glyphCode)

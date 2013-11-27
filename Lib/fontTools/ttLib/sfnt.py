@@ -463,7 +463,7 @@ def calcChecksum(data):
 	value = 0
 	blockSize = 4096
 	assert blockSize % 4 == 0
-	for i in xrange(0, len(data), blockSize):
+	for i in range(0, len(data), blockSize):
 		block = data[i:i+blockSize]
 		longs = struct.unpack(">%dL" % (len(block) // 4), block)
 		value = (value + sum(longs)) & 0xffffffff

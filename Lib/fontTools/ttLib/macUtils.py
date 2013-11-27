@@ -31,7 +31,7 @@ def getSFNTResIndices(path):
 	Res.UseResFile(resref)
 	numSFNTs = Res.Count1Resources('sfnt')
 	Res.CloseResFile(resref)
-	return range(1, numSFNTs + 1)
+	return list(range(1, numSFNTs + 1))
 
 
 def openTTFonts(path):

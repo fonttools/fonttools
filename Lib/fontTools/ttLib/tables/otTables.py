@@ -219,7 +219,7 @@ class ClassDef(FormatSwitchingBaseTable):
 			classList = rawTable["ClassValueArray"]
 			lenList = len(classList)
 			glyphID = font.getGlyphID(start)
-			gidList = range(glyphID, glyphID + len(classList))
+			gidList = list(range(glyphID, glyphID + len(classList)))
 			keyList = [getGlyphName(glyphID) for glyphID in gidList]
 
 			map(operator.setitem, [classDefs]*lenList, keyList, classList)
@@ -231,7 +231,7 @@ class ClassDef(FormatSwitchingBaseTable):
 				end = rec.End
 				cls = rec.Class
 				classDefs[start] = cls
-				glyphIDs = range(font.getGlyphID(start) + 1, font.getGlyphID(end))
+				glyphIDs = list(range(font.getGlyphID(start) + 1, font.getGlyphID(end)))
 				lenList = len(glyphIDs)
 				keyList = [getGlyphName(glyphID) for glyphID in glyphIDs]
 				map(operator.setitem,  [classDefs]*lenList, keyList, [cls]*lenList)
