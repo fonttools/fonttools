@@ -7,7 +7,7 @@
 Later grown into full OpenType subsetter, supporting all standard tables.
 """
 
-from __future__ import print_function
+from __future__ import print_function, division
 from fontTools.misc.py23 import *
 from fontTools import ttLib
 from fontTools.ttLib.tables import otTables
@@ -1127,13 +1127,13 @@ def prune_post_subset(self, options):
     table.AttachList = None
   if hasattr(table, "MarkGlyphSetsDef") and table.MarkGlyphSetsDef and not table.MarkGlyphSetsDef.Coverage:
     table.MarkGlyphSetsDef = None
-    if table.Version == float(0x00010002)/0x10000:
+    if table.Version == 0x00010002/0x10000:
       table.Version = 1.0
   return bool(table.LigCaretList or
               table.MarkAttachClassDef or
               table.GlyphClassDef or
               table.AttachList or
-              (table.Version >= float(0x00010002)/0x10000 and table.MarkGlyphSetsDef))
+              (table.Version >= 0x00010002/0x10000 and table.MarkGlyphSetsDef))
 
 @_add_method(ttLib.getTableClass('kern'))
 def prune_pre_subset(self, options):
