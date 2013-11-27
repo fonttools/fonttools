@@ -4,11 +4,12 @@
 # $Id: cffLib.py,v 1.34 2008-03-07 19:56:17 jvr Exp $
 #
 
-import struct
+from __future__ import print_function
+from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from fontTools.misc import psCharStrings
 from fontTools.misc.textTools import safeEval
-from fontTools.misc.py23 import *
+import struct
 
 DEBUG = 0
 

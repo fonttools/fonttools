@@ -4,10 +4,11 @@ OpenType subtables.
 Most are constructed upon import from data in otData.py, all are populated with
 converter objects from otConverters.py.
 """
-import operator
-from .otBase import BaseTable, FormatSwitchingBaseTable
-import warnings
+from __future__ import print_function
 from fontTools.misc.py23 import *
+from .otBase import BaseTable, FormatSwitchingBaseTable
+import operator
+import warnings
 
 
 class LookupOrder(BaseTable):

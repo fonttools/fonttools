@@ -1,6 +1,19 @@
 """_g_l_y_f.py -- Converter classes for the 'glyf' table."""
 
 
+from __future__ import print_function
+from fontTools.misc.py23 import *
+from fontTools.misc import sstruct
+from fontTools import ttLib
+from fontTools.misc.textTools import safeEval
+from fontTools.misc.arrayTools import calcBounds
+from . import DefaultTable
+from . import ttProgram
+import sys
+import struct
+import array
+import warnings
+
 #
 # The Apple and MS rasterizers behave differently for 
 # scaled composite components: one does scale first and then translate
@@ -13,18 +26,6 @@
 #
 SCALE_COMPONENT_OFFSET_DEFAULT = 0   # 0 == MS, 1 == Apple
 
-
-import sys
-import struct
-from fontTools.misc import sstruct
-from . import DefaultTable
-from fontTools import ttLib
-from fontTools.misc.textTools import safeEval
-from fontTools.misc.arrayTools import calcBounds
-from . import ttProgram
-import array
-import warnings
-from fontTools.misc.py23 import *
 
 class table__g_l_y_f(DefaultTable.DefaultTable):
 	

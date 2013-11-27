@@ -4,8 +4,9 @@
 # It does not implement the full spec (Adobe Technote 5004, Adobe Font Metrics
 # File Format Specification). Still, it should read most "common" AFM files.
 
-import re
+from __future__ import print_function
 from fontTools.misc.py23 import *
+import re
 
 __version__ = "$Id: afmLib.py,v 1.6 2003-05-24 12:50:47 jvr Exp $"
 

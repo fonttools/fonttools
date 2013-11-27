@@ -1,8 +1,9 @@
 """fontTools.misc.textTools.py -- miscelaneous routines."""
 
 
+from __future__ import print_function
+from fontTools.misc.py23 import *
 import string
-from .py23 import *
 
 
 def safeEval(data, eval=eval):

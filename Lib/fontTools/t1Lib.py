@@ -20,11 +20,12 @@ __author__ = "jvr"
 __version__ = "1.0b2"
 DEBUG = 0
 
+from __future__ import print_function
+from fontTools.misc.py23 import *
 from fontTools.misc import eexec
 from fontTools.misc.macCreatorType import getMacCreatorAndType
-import re
 import os
-from fontTools.misc.py23 import *
+import re
 
 
 try:

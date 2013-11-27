@@ -1,6 +1,7 @@
+from __future__ import print_function
+from fontTools.misc.py23 import *
 from .DefaultTable import DefaultTable
 import struct
-from fontTools.misc.py23 import *
 
 class OverflowErrorRecord:
 	def __init__(self, overflowTuple):

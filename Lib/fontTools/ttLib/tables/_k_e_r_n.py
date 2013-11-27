@@ -1,9 +1,10 @@
-from . import DefaultTable
-import struct
+from __future__ import print_function
+from fontTools.misc.py23 import *
 from fontTools.ttLib import sfnt
 from fontTools.misc.textTools import safeEval, readHex
+from . import DefaultTable
+import struct
 import warnings
-from fontTools.misc.py23 import *
 
 
 class table__k_e_r_n(DefaultTable.DefaultTable):

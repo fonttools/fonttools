@@ -1,8 +1,9 @@
 # Since bitmap glyph metrics are shared between EBLC and EBDT
 # this class gets its own python file.
+from __future__ import print_function
+from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval
-from fontTools.misc.py23 import *
 
 
 bigGlyphMetricsFormat = """

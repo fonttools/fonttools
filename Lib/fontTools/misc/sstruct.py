@@ -46,16 +46,13 @@ calcsize(format)
 	it returns the size of the data in bytes.
 """
 
-# XXX I would like to support pascal strings, too, but I'm not
-# sure if that's wise. Would be nice if struct supported them
-# "properly", but that would certainly break calcsize()...
+from __future__ import print_function
+from fontTools.misc.py23 import *
+import struct
+import re
 
 __version__ = "1.2"
 __copyright__ = "Copyright 1998, Just van Rossum <just@letterror.com>"
-
-import struct
-import re
-from .py23 import *
 
 
 error = "sstruct.error"

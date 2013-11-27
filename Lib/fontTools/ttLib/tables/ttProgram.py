@@ -1,9 +1,10 @@
 """ttLib.tables.ttProgram.py -- Assembler/disassembler for TrueType bytecode programs."""
 
+from __future__ import print_function
+from fontTools.misc.py23 import *
+from fontTools.misc.textTools import num2binary, binary2num, readHex
 import array
 import re
-from fontTools.misc.textTools import num2binary, binary2num, readHex
-from fontTools.misc.py23 import *
 
 # first, the list of instructions that eat bytes or words from the instruction stream
 

@@ -1,6 +1,7 @@
-from . import DefaultTable
-from fontTools import cffLib
+from __future__ import print_function
 from fontTools.misc.py23 import *
+from fontTools import cffLib
+from . import DefaultTable
 
 
 class table_C_F_F_(DefaultTable.DefaultTable):

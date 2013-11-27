@@ -1,5 +1,7 @@
 """Python 2/3 compat layer."""
 
+from __future__ import print_function
+
 try:
 	basestring
 except NameError:

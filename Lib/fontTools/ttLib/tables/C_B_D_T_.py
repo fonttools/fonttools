@@ -3,12 +3,13 @@
 # Google Author(s): Matt Fontaine
 
 
-from . import E_B_D_T_
-import struct
+from __future__ import print_function
+from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
+from . import E_B_D_T_
 from .BitmapGlyphMetrics import BigGlyphMetrics, bigGlyphMetricsFormat, SmallGlyphMetrics, smallGlyphMetricsFormat
 from .E_B_D_T_ import BitmapGlyph, BitmapPlusSmallMetricsMixin, BitmapPlusBigMetricsMixin
-from fontTools.misc.py23 import *
+import struct
 
 class table_C_B_D_T_(E_B_D_T_.table_E_B_D_T_):
 

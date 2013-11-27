@@ -1,9 +1,10 @@
+from __future__ import print_function
+from fontTools.misc.py23 import *
+from fontTools.misc import sstruct
+from fontTools.misc.textTools import safeEval, readHex
 from . import DefaultTable
 import sys
 import array
-from fontTools.misc import sstruct
-from fontTools.misc.textTools import safeEval, readHex
-from fontTools.misc.py23 import *
 
 GPKGFormat = """
 		>	# big endian

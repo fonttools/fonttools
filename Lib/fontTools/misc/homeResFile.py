@@ -1,10 +1,11 @@
 """Mac-only module to find the home file of a resource."""
 
+from __future__ import print_function
+from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 import array
 import calldll
 import macfs, Res
-from .py23 import *
 
 
 def HomeResFile(res):

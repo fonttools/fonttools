@@ -1,11 +1,12 @@
-from . import DefaultTable
-import os
-import struct
+from __future__ import print_function
+from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
-import itertools
 from fontTools.misc.textTools import safeEval, readHex, hexStr, deHexStr
 from .BitmapGlyphMetrics import BigGlyphMetrics, bigGlyphMetricsFormat, SmallGlyphMetrics, smallGlyphMetricsFormat
-from fontTools.misc.py23 import *
+from . import DefaultTable
+import itertools
+import os
+import struct
 
 ebdtTableVersionFormat = """
 	> # big endian

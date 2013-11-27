@@ -1,8 +1,9 @@
-import sys
+from __future__ import print_function
+from fontTools.misc.py23 import *
 from . import DefaultTable
+import sys
 import array
 import warnings
-from fontTools.misc.py23 import *
 
 class table__l_o_c_a(DefaultTable.DefaultTable):
 	

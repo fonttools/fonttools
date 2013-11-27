@@ -1,8 +1,9 @@
-import sys
-from . import DefaultTable
-import array
-from fontTools.misc.textTools import safeEval
+from __future__ import print_function
 from fontTools.misc.py23 import *
+from fontTools.misc.textTools import safeEval
+from . import DefaultTable
+import sys
+import array
 
 class table__c_v_t(DefaultTable.DefaultTable):
 	

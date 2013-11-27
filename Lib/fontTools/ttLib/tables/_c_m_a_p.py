@@ -1,10 +1,11 @@
-import sys
+from __future__ import print_function
+from fontTools.misc.py23 import *
+from fontTools.misc.textTools import safeEval, readHex
 from . import DefaultTable
+import sys
 import struct
 import array
 import operator
-from fontTools.misc.textTools import safeEval, readHex
-from fontTools.misc.py23 import *
 
 
 class table__c_m_a_p(DefaultTable.DefaultTable):

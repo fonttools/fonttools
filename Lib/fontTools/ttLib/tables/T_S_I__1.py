@@ -1,5 +1,6 @@
-from . import DefaultTable
+from __future__ import print_function
 from fontTools.misc.py23 import *
+from . import DefaultTable
 
 class table_T_S_I__1(DefaultTable.DefaultTable):
 	
