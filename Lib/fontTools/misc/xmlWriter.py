@@ -143,7 +143,7 @@ def escape8bit(data):
 		elif 32 <= n <= 127:
 			return c
 		else:
-			return "&#" + `n` + ";"
+			return "&#" + repr(n) + ";"
 	return string.join(map(escapechar, data), "")
 
 needswap = struct.pack("h", 1) == "\001\000"
@@ -162,7 +162,7 @@ def escape16bit(data):
 		elif 32 <= n <= 127:
 			return chr(n)
 		else:
-			return "&#" + `n` + ";"
+			return "&#" + repr(n) + ";"
 	return string.join(map(escapenum, a), "")
 
 

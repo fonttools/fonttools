@@ -251,7 +251,7 @@ class TTFont:
 			idlefunc = None
 		
 		writer = xmlWriter.XMLWriter(fileOrPath, idlefunc=idlefunc)
-		writer.begintag("ttFont", sfntVersion=`self.sfntVersion`[1:-1], 
+		writer.begintag("ttFont", sfntVersion=repr(self.sfntVersion)[1:-1], 
 				ttLibVersion=version)
 		writer.newline()
 		
@@ -502,7 +502,7 @@ class TTFont:
 					tempName = glyphName
 					n = 1
 					while tempName in allNames:
-						tempName = glyphName + "#" + `n`
+						tempName = glyphName + "#" + repr(n)
 						n = n + 1
 					glyphOrder[i] = tempName
 					allNames[tempName] = 1
