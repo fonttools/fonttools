@@ -243,7 +243,7 @@ def _memoize(f):
 @_memoize
 def _reverseBytes(data):
 	if len(data) != 1:
-		return string.join(map(_reverseBytes, data), "")
+		return "".join(map(_reverseBytes, data))
 	byte = ord(data)
 	result = 0
 	for i in range(8):
@@ -310,7 +310,7 @@ def _writeBitwiseImageData(strikeIndex, glyphName, bitmapObject, writer, ttFont)
 		rowData = bitmapObject.getRow(curRow, bitDepth=1, metrics=metrics, reverseBytes=True)
 		rowData = _data2binary(rowData, metrics.width)
 		# Make the output a readable ASCII art form.
-		rowData = string.join(map(binaryConv.get, rowData), "")
+		rowData = "".join(map(binaryConv.get, rowData))
 		writer.simpletag('row', value=rowData)
 		writer.newline()
 	writer.endtag('bitwiseimagedata')
@@ -542,7 +542,7 @@ class BitAlignedBitmapMixin:
 		if metrics == None:
 			metrics = self.metrics
 		if not reverseBytes:
-			dataRows = map(_reverseBytes, dataRows)
+			dataRows = list(map(_reverseBytes, dataRows))
 
 		# Keep track of a list of ordinal values as they are easier to modify
 		# than a list of strings. Map to actual strings later.
@@ -568,7 +568,7 @@ class BitAlignedBitmapMixin:
 					ordDataList[secondByteLoc] |= secondByte
 
 		# Save the image data with the bits going the correct way.
-		self.imageData = _reverseBytes(string.join(map(chr, ordDataList), ""))
+		self.imageData = _reverseBytes("".join(map(chr, ordDataList)))
 
 class ByteAlignedBitmapMixin:
 
@@ -592,7 +592,7 @@ class ByteAlignedBitmapMixin:
 			metrics = self.metrics
 		if reverseBytes:
 			dataRows = map(_reverseBytes, dataRows)
-		self.imageData = string.join(dataRows, "")
+		self.imageData = "".join(dataRows)
 
 class ebdt_bitmap_format_1(ByteAlignedBitmapMixin, BitmapPlusSmallMetricsMixin, BitmapGlyph):
 

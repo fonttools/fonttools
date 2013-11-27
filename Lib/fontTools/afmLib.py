@@ -141,7 +141,7 @@ class AFM:
 			things.append(rest[fr:to])
 		charname = things[2]
 		del things[2]
-		charnum, width, l, b, r, t = map(string.atoi, things)
+		charnum, width, l, b, r, t = [string.atoi(thing) for thing in things]
 		self._chars[charname] = charnum, width, (l, b, r, t)
 	
 	def parsekernpair(self, rest):
@@ -157,7 +157,7 @@ class AFM:
 	
 	def parseattr(self, word, rest):
 		if word == "FontBBox":
-			l, b, r, t = map(string.atoi, string.split(rest))
+			l, b, r, t = [string.atoi(thing) for thing in string.split(rest)]
 			self._attrs[word] = l, b, r, t
 		elif word == "Comment":
 			self._comments.append(rest)
@@ -223,9 +223,7 @@ class AFM:
 		
 		# write char metrics
 		lines.append("StartCharMetrics " + repr(len(self._chars)))
-		items = map(lambda charname_charnum_width_box:
-			(charname_charnum_width_box[1][0], (charname_charnum_width_box[0], charname_charnum_width_box[1][1], charname_charnum_width_box[1][2])),
-			self._chars.items())
+		items = [(charnum, (charname, width, box)) for charname, (charnum, width, box) in self._chars.items()]
 		
 		def myCmp(a, b):
 			"""Custom compare function to make sure unencoded chars (-1) 

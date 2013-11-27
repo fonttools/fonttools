@@ -183,7 +183,7 @@ class cmap_format_0(CmapSubtable):
 		lenArray = len(glyphIdArray)
 		charCodes = list(range(lenArray))
 		names = map(self.ttFont.getGlyphName, glyphIdArray)
-		map(operator.setitem, [cmap]*lenArray, charCodes, names)
+		list(map(operator.setitem, [cmap]*lenArray, charCodes, names))
 
 	
 	def compile(self, ttFont):
@@ -365,11 +365,11 @@ class cmap_format_2(CmapSubtable):
 		charCodes = cmap.keys()
 		lenCmap = len(gids)
 		try:
-			names = map(operator.getitem, [glyphOrder]*lenCmap, gids )
+			names = list(map(operator.getitem, [glyphOrder]*lenCmap, gids ))
 		except IndexError:
 			getGlyphName = self.ttFont.getGlyphName
-			names = map(getGlyphName, gids )
-		map(operator.setitem, [cmap]*lenCmap, charCodes, names)
+			names = list(map(getGlyphName, gids ))
+		list(map(operator.setitem, [cmap]*lenCmap, charCodes, names))
 	
 		
 	def compile(self, ttFont):
@@ -384,11 +384,11 @@ class cmap_format_2(CmapSubtable):
 		nameMap = ttFont.getReverseGlyphMap()
 		lenCharCodes = len(charCodes) 
 		try:
-			gids = map(operator.getitem, [nameMap]*lenCharCodes, names)
+			gids = list(map(operator.getitem, [nameMap]*lenCharCodes, names))
 		except KeyError:
 			nameMap = ttFont.getReverseGlyphMap(rebuild=1)
 			try:
-				gids = map(operator.getitem, [nameMap]*lenCharCodes, names)
+				gids = list(map(operator.getitem, [nameMap]*lenCharCodes, names))
 			except KeyError:
 				# allow virtual GIDs in format 2 tables
 				gids = []
@@ -680,11 +680,11 @@ class cmap_format_4(CmapSubtable):
 		lenCmap = len(gids)
 		glyphOrder = self.ttFont.getGlyphOrder()
 		try:
-			names = map(operator.getitem, [glyphOrder]*lenCmap, gids )
+			names = list(map(operator.getitem, [glyphOrder]*lenCmap, gids ))
 		except IndexError:
 			getGlyphName = self.ttFont.getGlyphName
-			names = map(getGlyphName, gids )
-		map(operator.setitem, [cmap]*lenCmap, charCodes, names)
+			names = list(map(getGlyphName, gids ))
+		list(map(operator.setitem, [cmap]*lenCmap, charCodes, names))
 		
 
 
@@ -722,14 +722,14 @@ class cmap_format_4(CmapSubtable):
 			endCode = [0xffff]
 		else:
 			charCodes.sort()
-			names = map(operator.getitem, [self.cmap]*lenCharCodes, charCodes)
+			names = list(map(operator.getitem, [self.cmap]*lenCharCodes, charCodes))
 			nameMap = ttFont.getReverseGlyphMap()
 			try:
-				gids = map(operator.getitem, [nameMap]*lenCharCodes, names)
+				gids = list(map(operator.getitem, [nameMap]*lenCharCodes, names))
 			except KeyError:
 				nameMap = ttFont.getReverseGlyphMap(rebuild=1)
 				try:
-					gids = map(operator.getitem, [nameMap]*lenCharCodes, names)
+					gids = list(map(operator.getitem, [nameMap]*lenCharCodes, names))
 				except KeyError:
 					# allow virtual GIDs in format 4 tables
 					gids = []
@@ -747,7 +747,7 @@ class cmap_format_4(CmapSubtable):
 	
 						gids.append(gid)
 			cmap = {}  # code:glyphID mapping
-			map(operator.setitem, [cmap]*len(charCodes), charCodes, gids)
+			list(map(operator.setitem, [cmap]*len(charCodes), charCodes, gids))
 		
 			# Build startCode and endCode lists.
 			# Split the char codes in ranges of consecutive char codes, then split
@@ -853,11 +853,11 @@ class cmap_format_6(CmapSubtable):
 		charCodes = list(range(firstCode, firstCode + lenArray))
 		glyphOrder = self.ttFont.getGlyphOrder()
 		try:
-			names = map(operator.getitem, [glyphOrder]*lenArray, glyphIndexArray )
+			names = list(map(operator.getitem, [glyphOrder]*lenArray, glyphIndexArray ))
 		except IndexError:
 			getGlyphName = self.ttFont.getGlyphName
-			names = map(getGlyphName, glyphIndexArray )
-		map(operator.setitem, [cmap]*lenArray, charCodes, names)
+			names = list(map(getGlyphName, glyphIndexArray ))
+		list(map(operator.setitem, [cmap]*lenArray, charCodes, names))
 	
 	def compile(self, ttFont):
 		if self.data:
@@ -937,11 +937,11 @@ class cmap_format_12_or_13(CmapSubtable):
 		lenCmap = len(gids)
 		glyphOrder = self.ttFont.getGlyphOrder()
 		try:
-			names = map(operator.getitem, [glyphOrder]*lenCmap, gids )
+			names = list(map(operator.getitem, [glyphOrder]*lenCmap, gids ))
 		except IndexError:
 			getGlyphName = self.ttFont.getGlyphName
-			names = map(getGlyphName, gids )
-		map(operator.setitem, [cmap]*lenCmap, charCodes, names)
+			names = list(map(getGlyphName, gids ))
+		list(map(operator.setitem, [cmap]*lenCmap, charCodes, names))
 	
 	def compile(self, ttFont):
 		if self.data:
@@ -951,11 +951,11 @@ class cmap_format_12_or_13(CmapSubtable):
 		names = self.cmap.values()
 		nameMap = ttFont.getReverseGlyphMap()
 		try:
-			gids = map(operator.getitem, [nameMap]*lenCharCodes, names)
+			gids = list(map(operator.getitem, [nameMap]*lenCharCodes, names))
 		except KeyError:
 			nameMap = ttFont.getReverseGlyphMap(rebuild=1)
 			try:
-				gids = map(operator.getitem, [nameMap]*lenCharCodes, names)
+				gids = list(map(operator.getitem, [nameMap]*lenCharCodes, names))
 			except KeyError:
 				# allow virtual GIDs in format 12 tables
 				gids = []
@@ -974,7 +974,7 @@ class cmap_format_12_or_13(CmapSubtable):
 					gids.append(gid)
 		
 		cmap = {}  # code:glyphID mapping
-		map(operator.setitem, [cmap]*len(charCodes), charCodes, gids)
+		list(map(operator.setitem, [cmap]*len(charCodes), charCodes, gids))
 
 		charCodes.sort()
 		index = 0
@@ -1216,7 +1216,7 @@ class cmap_format_14(CmapSubtable):
 
 			defList = [entry for entry in entryList if entry[1] == None]
 			if defList:
-				defList = map(lambda entry: entry[0], defList)
+				defList = [entry[0] for entry in defList]
 				defOVSOffset = offset
 				defList.sort()
 

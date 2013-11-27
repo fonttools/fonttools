@@ -171,7 +171,7 @@ class table_E_B_L_C_(DefaultTable.DefaultTable):
 			indexSubTableDataList = []
 			for indexSubTable in curStrike.indexSubTables:
 				indexSubTable.additionalOffsetToIndexSubtable = dataSize - curTable.indexSubTableArrayOffset
-				glyphIds = map(ttFont.getGlyphID, indexSubTable.names)
+				glyphIds = list(map(ttFont.getGlyphID, indexSubTable.names))
 				indexSubTable.firstGlyphIndex = min(glyphIds)
 				indexSubTable.lastGlyphIndex = max(glyphIds)
 				data = indexSubTable.compile(ttFont)
@@ -413,7 +413,7 @@ class EblcIndexSubTable:
 			return startByte < endByte
 		# Remove all skip glyphs.
 		dataPairs = list(filter(isValidLocation, zip(self.names, self.locations)))
-		self.names, self.locations = map(list, zip(*dataPairs))
+		self.names, self.locations = list(map(list, zip(*dataPairs)))
 
 # A closure for creating a custom mixin. This is done because formats 1 and 3
 # are very similar. The only difference between them is the size per offset
@@ -437,7 +437,7 @@ def _createOffsetArrayIndexSubTableMixin(formatStringForDataType):
 			modifiedOffsets = [offset + self.imageDataOffset for offset in offsetArray]
 			self.locations = list(zip(modifiedOffsets, modifiedOffsets[1:]))
 
-			self.names = map(self.ttFont.getGlyphName, glyphIds)
+			self.names = list(map(self.ttFont.getGlyphName, glyphIds))
 			self.removeSkipGlyphs()
 
 		def compile(self, ttFont):
@@ -446,7 +446,7 @@ def _createOffsetArrayIndexSubTableMixin(formatStringForDataType):
 			for curLoc, nxtLoc in zip(self.locations, self.locations[1:]):
 				assert curLoc[1] == nxtLoc[0], "Data must be consecutive in indexSubTable offset formats"
 
-			glyphIds = map(ttFont.getGlyphID, self.names)
+			glyphIds = list(map(ttFont.getGlyphID, self.names))
 			# Make sure that all ids are sorted strictly increasing.
 			assert all(glyphIds[i] < glyphIds[i+1] for i in range(len(glyphIds)-1))
 
@@ -524,10 +524,10 @@ class eblc_index_sub_table_2(FixedSizeIndexSubTableMixin, EblcIndexSubTable):
 		glyphIds = list(range(self.firstGlyphIndex, self.lastGlyphIndex+1))
 		offsets = [self.imageSize * i + self.imageDataOffset for i in range(len(glyphIds)+1)]
 		self.locations = list(zip(offsets, offsets[1:]))
-		self.names = map(self.ttFont.getGlyphName, glyphIds)
+		self.names = list(map(self.ttFont.getGlyphName, glyphIds))
 
 	def compile(self, ttFont):
-		glyphIds = map(ttFont.getGlyphID, self.names)
+		glyphIds = list(map(ttFont.getGlyphID, self.names))
 		# Make sure all the ids are consecutive. This is required by Format 2.
 		assert glyphIds == list(range(self.firstGlyphIndex, self.lastGlyphIndex+1)), "Format 2 ids must be consecutive."
 		self.imageDataOffset = min(zip(*self.locations)[0])
@@ -549,13 +549,13 @@ class eblc_index_sub_table_4(EblcIndexSubTable):
 		indexingOffsets = [glyphIndex * codeOffsetPairSize for glyphIndex in range(numGlyphs+2)]
 		indexingLocations = zip(indexingOffsets, indexingOffsets[1:])
 		glyphArray = [struct.unpack(codeOffsetPairFormat, data[slice(*loc)]) for loc in indexingLocations]
-		glyphIds, offsets = map(list, zip(*glyphArray))
+		glyphIds, offsets = list(map(list, zip(*glyphArray)))
 		# There are one too many glyph ids. Get rid of the last one.
 		glyphIds.pop()
 
 		offsets = [offset + self.imageDataOffset for offset in offsets]
 		self.locations = list(zip(offsets, offsets[1:]))
-		self.names = map(self.ttFont.getGlyphName, glyphIds)
+		self.names = list(map(self.ttFont.getGlyphName, glyphIds))
 
 	def compile(self, ttFont):
 		# First make sure that all the data lines up properly. Format 4
@@ -569,7 +569,7 @@ class eblc_index_sub_table_4(EblcIndexSubTable):
 		# and allows imageDataOffset to not be required to be in the XML version.
 		self.imageDataOffset = min(offsets)
 		offsets = [offset - self.imageDataOffset for offset in offsets]
-		glyphIds = map(ttFont.getGlyphID, self.names)
+		glyphIds = list(map(ttFont.getGlyphID, self.names))
 		# Create an iterator over the ids plus a padding value.
 		idsPlusPad = list(itertools.chain(glyphIds, [0]))
 
@@ -593,14 +593,14 @@ class eblc_index_sub_table_5(FixedSizeIndexSubTableMixin, EblcIndexSubTable):
 
 		offsets = [self.imageSize * i + self.imageDataOffset for i in range(len(glyphIds)+1)]
 		self.locations = list(zip(offsets, offsets[1:]))
-		self.names = map(self.ttFont.getGlyphName, glyphIds)
+		self.names = list(map(self.ttFont.getGlyphName, glyphIds))
 
 	def compile(self, ttFont):
 		self.imageDataOffset = min(zip(*self.locations)[0])
 		dataList = [EblcIndexSubTable.compile(self, ttFont)]
 		dataList.append(struct.pack(">L", self.imageSize))
 		dataList.append(sstruct.pack(bigGlyphMetricsFormat, self.metrics))
-		glyphIds = map(ttFont.getGlyphID, self.names)
+		glyphIds = list(map(ttFont.getGlyphID, self.names))
 		dataList.append(struct.pack(">L", len(glyphIds)))
 		dataList += [struct.pack(">H", curId) for curId in glyphIds]
 		if len(glyphIds) % 2 == 1:

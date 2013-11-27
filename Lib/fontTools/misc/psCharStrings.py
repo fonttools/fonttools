@@ -289,7 +289,7 @@ class T2CharString(ByteCodeBase):
 			tp = type(token)
 			if tp == types.StringType:
 				try:
-					bytecode.extend(map(chr, opcodes[token]))
+					bytecode.extend(chr(b) for b in opcodes[token])
 				except KeyError:
 					raise CharStringCompileError("illegal operator: %s" % token)
 				if token in ('hintmask', 'cntrmask'):
@@ -369,7 +369,7 @@ class T2CharString(ByteCodeBase):
 				if token is None:
 					break
 				if isOperator:
-					args = map(str, args)
+					args = [str(arg) for arg in args]
 					if token in ('hintmask', 'cntrmask'):
 						hintMask, isOperator, index = self.getToken(index)
 						bits = []
