@@ -116,7 +116,7 @@ class AFM:
 				continue
 			m = identifierRE.match(line)
 			if m is None:
-				raise error("syntax error in AFM file: " + `line`)
+				raise error("syntax error in AFM file: " + repr(line))
 			
 			pos = m.regs[1][1]
 			word = line[:pos]
@@ -135,7 +135,7 @@ class AFM:
 	def parsechar(self, rest):
 		m = charRE.match(rest)
 		if m is None:
-			raise error("syntax error in AFM file: " + `rest`)
+			raise error("syntax error in AFM file: " + repr(rest))
 		things = []
 		for fr, to in m.regs[1:]:
 			things.append(rest[fr:to])
@@ -147,7 +147,7 @@ class AFM:
 	def parsekernpair(self, rest):
 		m = kernRE.match(rest)
 		if m is None:
-			raise error("syntax error in AFM file: " + `rest`)
+			raise error("syntax error in AFM file: " + repr(rest))
 		things = []
 		for fr, to in m.regs[1:]:
 			things.append(rest[fr:to])
@@ -172,7 +172,7 @@ class AFM:
 	def parsecomposite(self, rest):
 		m = compositeRE.match(rest)
 		if m is None:
-			raise error("syntax error in AFM file: " + `rest`)
+			raise error("syntax error in AFM file: " + repr(rest))
 		charname = m.group(1)
 		ncomponents = int(m.group(2))
 		rest = rest[m.regs[0][1]:]
@@ -180,7 +180,7 @@ class AFM:
 		while 1:
 			m = componentRE.match(rest)
 			if m is None:
-				raise error("syntax error in AFM file: " + `rest`)
+				raise error("syntax error in AFM file: " + repr(rest))
 			basechar = m.group(1)
 			xoffset = int(m.group(2))
 			yoffset = int(m.group(3))
@@ -223,7 +223,7 @@ class AFM:
 			lines.append(attr + " " + str(value))
 		
 		# write char metrics
-		lines.append("StartCharMetrics " + `len(self._chars)`)
+		lines.append("StartCharMetrics " + repr(len(self._chars)))
 		items = map(lambda (charname, (charnum, width, box)):
 			(charnum, (charname, width, box)),
 			self._chars.items())
@@ -245,7 +245,7 @@ class AFM:
 		
 		# write kerning info
 		lines.append("StartKernData")
-		lines.append("StartKernPairs " + `len(self._kerning)`)
+		lines.append("StartKernPairs " + repr(len(self._kerning)))
 		items = self._kerning.items()
 		items.sort()		# XXX is order important?
 		for (leftchar, rightchar), value in items:

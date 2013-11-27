@@ -166,7 +166,7 @@ def readLWFN(path, onlyHeader=0):
 			elif code == 0:
 				pass # comment, ignore
 			else:
-				raise T1Error('bad chunk code: ' + `code`)
+				raise T1Error('bad chunk code: ' + repr(code))
 	finally:
 		Res.CloseResFile(resRef)
 	data = string.join(data, '')
@@ -189,7 +189,7 @@ def readPFB(path, onlyHeader=0):
 		elif code == 3:
 			break
 		else:
-			raise T1Error('bad chunk code: ' + `code`)
+			raise T1Error('bad chunk code: ' + repr(code))
 		if onlyHeader:
 			break
 	f.close()

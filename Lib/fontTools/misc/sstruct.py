@@ -194,7 +194,7 @@ def _test():
 	i.afixed = 1.5
 	
 	data = pack(format, i)
-	print 'data:', `data`
+	print 'data:', repr(data)
 	print unpack(format, data)
 	i2 = foo()
 	unpack(format, data, i2)

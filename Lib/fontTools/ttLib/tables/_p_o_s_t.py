@@ -109,7 +109,7 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 				# make up a new glyphName that's unique
 				n = allNames[glyphName]
 				allNames[glyphName] = n + 1
-				glyphName = glyphName + "#" + `n`
+				glyphName = glyphName + "#" + repr(n)
 				self.glyphOrder[i] = glyphName
 				mapping[glyphName] = psName
 			else:

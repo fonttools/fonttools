@@ -58,7 +58,7 @@ class table__h_d_m_x(DefaultTable.DefaultTable):
 		glyphNames = ttFont.getGlyphOrder()[:]
 		glyphNames.sort()
 		maxNameLen = max(map(len, glyphNames))
-		format = "%" + `maxNameLen` + 's:' + format + ' ;'
+		format = "%" + repr(maxNameLen) + 's:' + format + ' ;'
 		writer.write(format % (("ppem",) + tuple(ppems)))
 		writer.newline()
 		writer.newline()
