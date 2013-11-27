@@ -614,13 +614,13 @@ def readCard16(file):
 	return value
 
 def writeCard8(file, value):
-	file.write(chr(value))
+	file.write(bytechr(value))
 
 def writeCard16(file, value):
 	file.write(struct.pack(">H", value))
 
 def packCard8(value):
-	return chr(value)
+	return bytechr(value)
 
 def packCard16(value):
 	return struct.pack(">H", value)
@@ -635,9 +635,9 @@ def buildOpcodeDict(table):
 	d = {}
 	for op, name, arg, default, conv in table:
 		if isinstance(op, tuple):
-			op = chr(op[0]) + chr(op[1])
+			op = bytechr(op[0]) + bytechr(op[1])
 		else:
-			op = chr(op)
+			op = bytechr(op)
 		d[name] = (op, arg)
 	return d
 

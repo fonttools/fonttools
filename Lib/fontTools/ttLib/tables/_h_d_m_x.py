@@ -36,10 +36,10 @@ class table__h_d_m_x(DefaultTable.DefaultTable):
 		data = sstruct.pack(hdmxHeaderFormat, self)
 		items = sorted(self.hdmx.items())
 		for ppem, widths in items:
-			data = data + chr(ppem) + chr(max(widths.values()))
+			data = data + bytechr(ppem) + bytechr(max(widths.values()))
 			for glyphID in range(len(glyphOrder)):
 				width = widths[glyphOrder[glyphID]]
-				data = data + chr(width)
+				data = data + bytechr(width)
 			data = data + pad
 		return data
 	

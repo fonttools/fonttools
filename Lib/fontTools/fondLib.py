@@ -286,7 +286,7 @@ class FontFamily:
 			data.append(struct.pack('>h', stylecode))
 			data.append(struct.pack('>h', len(table)))  # numberofpairs
 			for firstchar, secondchar, kerndistance in table:
-				data.append(struct.pack(">cch", chr(firstchar), chr(secondchar), kerndistance))
+				data.append(struct.pack(">cch", bytechr(firstchar), bytechr(secondchar), kerndistance))
 		
 		data = ''.join(data)
 		
@@ -338,7 +338,7 @@ class FontFamily:
 		stringcount = len(self.styleStrings)
 		data = data + struct.pack(">h", stringcount)
 		for string in self.styleStrings:
-			data = data + chr(len(string)) + string
+			data = data + bytechr(len(string)) + string
 		
 		if len(data) % 2:
 			data = data + '\0'
@@ -385,7 +385,7 @@ class FontFamily:
 				continue
 			indices = ""
 			for part in split[1:]:
-				indices = indices + chr(nameparts.index(part) + numindices + 2)
+				indices = indices + bytechr(nameparts.index(part) + numindices + 2)
 			styleStrings[self.styleIndices[style] - 1] = indices
 		self.styleStrings = styleStrings
 	
@@ -429,7 +429,7 @@ class FontFamily:
 		data = struct.pack(">h", numberofentries)
 		items = sorted(self.glyphEncoding.items())
 		for glyphcode, glyphname in items:
-			data = data + chr(glyphcode) + chr(len(glyphname)) + glyphname
+			data = data + bytechr(glyphcode) + bytechr(len(glyphname)) + glyphname
 		self._rawglyphencodingsubtable = data
 	
 

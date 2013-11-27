@@ -222,7 +222,7 @@ def _binary2data(binary):
 			curByte = curByte << 1
 			if curBit == '1':
 				curByte |= 1
-		byteList.append(chr(curByte))
+		byteList.append(bytechr(curByte))
 	return ''.join(byteList)
 
 def _memoize(f):
@@ -248,7 +248,7 @@ def _reverseBytes(data):
 		result = result << 1
 		result |= byte & 1
 		byte = byte >> 1
-	return chr(result)
+	return bytechr(result)
 
 # This section of code is for reading and writing image data to/from XML.
 
@@ -528,7 +528,7 @@ class BitAlignedBitmapMixin:
 				curByte = _reverseBytes(self.imageData[secondByteLoc])
 				secondHalf = ord(curByte) << numBitsCut
 				newByte = (firstHalf | secondHalf) & ((1<<numBits)-1)
-			dataList.append(chr(newByte))
+			dataList.append(bytechr(newByte))
 
 		# The way the data is kept is opposite the algorithm used.
 		data = ''.join(dataList)
@@ -566,7 +566,7 @@ class BitAlignedBitmapMixin:
 					ordDataList[secondByteLoc] |= secondByte
 
 		# Save the image data with the bits going the correct way.
-		self.imageData = _reverseBytes("".join(map(chr, ordDataList)))
+		self.imageData = _reverseBytes("".join(map(bytechr, ordDataList)))
 
 class ByteAlignedBitmapMixin:
 

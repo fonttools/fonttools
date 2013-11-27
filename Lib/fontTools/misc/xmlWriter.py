@@ -159,7 +159,7 @@ def escape16bit(data):
 		elif n == lt:
 			return "&lt;"
 		elif 32 <= n <= 127:
-			return chr(n)
+			return bytechr(n)
 		else:
 			return "&#" + repr(n) + ";"
 	return "".join(map(escapenum, a))

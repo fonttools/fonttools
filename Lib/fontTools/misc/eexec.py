@@ -15,13 +15,13 @@ def _decryptChar(cipher, R):
 	cipher = ord(cipher)
 	plain = ( (cipher ^ (R>>8)) ) & 0xFF
 	R = ( (cipher + R) * 52845 + 22719 ) & 0xFFFF
-	return chr(plain), R
+	return bytechr(plain), R
 
 def _encryptChar(plain, R):
 	plain = ord(plain)
 	cipher = ( (plain ^ (R>>8)) ) & 0xFF
 	R = ( (cipher + R) * 52845 + 22719 ) & 0xFFFF
-	return chr(cipher), R
+	return bytechr(cipher), R
 
 
 def decrypt(cipherstring, R):

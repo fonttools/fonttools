@@ -21,7 +21,7 @@ def deHexStr(hexdata):
 		hexdata = hexdata + "0"
 	data = []
 	for i in range(0, len(hexdata), 2):
-		data.append(chr(int(hexdata[i:i+2], 16)))
+		data.append(bytechr(int(hexdata[i:i+2], 16)))
 	return "".join(data)
 
 
