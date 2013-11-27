@@ -2,7 +2,7 @@
 charstring encryption algorithm as used by PostScript Type 1 fonts.
 """
 
-from __future__ import print_function
+from __future__ import print_function, division
 from fontTools.misc.py23 import *
 
 # Warning: Although a Python implementation is provided here, 

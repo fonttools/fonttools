@@ -1,6 +1,6 @@
 """xmlWriter.py -- Simple XML authoring class"""
 
-from __future__ import print_function
+from __future__ import print_function, division
 from fontTools.misc.py23 import *
 import string
 import struct

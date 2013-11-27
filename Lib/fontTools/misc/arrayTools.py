@@ -4,7 +4,7 @@
 #
 
 
-from __future__ import print_function
+from __future__ import print_function, division
 from fontTools.misc.py23 import *
 import math
 
@@ -161,9 +161,9 @@ def _test():
     >>> unionRect((0, 10, 20, 30), (0, 40, 20, 50))
     (0, 10, 20, 50)
     >>> rectCenter((0, 0, 100, 200))
-    (50, 100)
+    (50.0, 100.0)
     >>> rectCenter((0, 0, 100, 199.0))
-    (50, 99.5)
+    (50.0, 99.5)
     >>> intRect((0.9, 2.9, 3.1, 4.1))
     (0, 2, 4, 5)
     """

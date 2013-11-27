@@ -1,7 +1,7 @@
 """fontTools.misc.bezierTools.py -- tools for working with bezier path segments.
 """
 
-from __future__ import print_function
+from __future__ import print_function, division
 from fontTools.misc.py23 import *
 
 __all__ = [
@@ -100,7 +100,7 @@ def splitLine(pt1, pt2, where, isHorizontal):
     if ax == 0:
         return [(pt1, pt2)]
         
-    t = float(where - (bx, by)[isHorizontal]) / ax
+    t = (where - (bx, by)[isHorizontal]) / ax
     if 0 <= t < 1:
         midPt = ax * t + bx, ay * t + by
         return [(pt1, midPt), (midPt, pt2)]

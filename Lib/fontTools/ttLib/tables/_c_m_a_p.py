@@ -1,4 +1,4 @@
-from __future__ import print_function
+from __future__ import print_function, division
 from fontTools.misc.py23 import *
 from fontTools.misc.textTools import safeEval, readHex
 from . import DefaultTable
@@ -272,7 +272,7 @@ class cmap_format_2(CmapSubtable):
 		data = data[512:]
 		if sys.byteorder != "big":
 			allKeys.byteswap()
-		subHeaderKeys = [ key/8 for key in allKeys]
+		subHeaderKeys = [ key//8 for key in allKeys]
 		maxSubHeaderindex = max(subHeaderKeys)
 	
 		#Load subHeaders
@@ -636,7 +636,7 @@ class cmap_format_4(CmapSubtable):
 		(segCountX2, searchRange, entrySelector, rangeShift) = \
 					struct.unpack(">4H", data[:8])
 		data = data[8:]
-		segCount = segCountX2 / 2
+		segCount = segCountX2 // 2
 		
 		allCodes = array.array("H")
 		allCodes.fromstring(data)
@@ -668,7 +668,7 @@ class cmap_format_4(CmapSubtable):
 					glyphID = charCode + idDelta[i]
 				else:
 					# *someone* needs to get killed.
-					index = idRangeOffset[i] / 2 + (charCode - startCode[i]) + i - len(idRangeOffset)
+					index = idRangeOffset[i] // 2 + (charCode - startCode[i]) + i - len(idRangeOffset)
 					assert (index < lenGIArray), "In format 4 cmap, range (%d), the calculated index (%d) into the glyph index array  is not less than the length of the array (%d) !" % (i, index, lenGIArray)
 					if glyphIndexArray[index] != 0:  # if not missing glyph
 						glyphID = glyphIndexArray[index] + idDelta[i]

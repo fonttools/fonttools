@@ -1,4 +1,4 @@
-from __future__ import print_function
+from __future__ import print_function, division
 from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval, readHex, hexStr, deHexStr
@@ -515,8 +515,8 @@ class BitAlignedBitmapMixin:
 			endBit = min(curBit+8, bitRange[1])
 			numBits = endBit - curBit
 			cutPoint = curBit % 8
-			firstByteLoc = curBit / 8
-			secondByteLoc = endBit / 8
+			firstByteLoc = curBit // 8
+			secondByteLoc = endBit // 8
 			if firstByteLoc < secondByteLoc:
 				numBitsCut = 8 - cutPoint
 			else:
@@ -545,7 +545,7 @@ class BitAlignedBitmapMixin:
 
 		# Keep track of a list of ordinal values as they are easier to modify
 		# than a list of strings. Map to actual strings later.
-		numBytes = (self._getBitRange(len(dataRows), bitDepth, metrics)[0] + 7) / 8
+		numBytes = (self._getBitRange(len(dataRows), bitDepth, metrics)[0] + 7) // 8
 		ordDataList = [0] * numBytes
 		for row, data in enumerate(dataRows):
 			bitRange = self._getBitRange(row, bitDepth, metrics)
@@ -553,8 +553,8 @@ class BitAlignedBitmapMixin:
 			for curBit, curByte in zip(range(*stepRange), data):
 				endBit = min(curBit+8, bitRange[1])
 				cutPoint = curBit % 8
-				firstByteLoc = curBit / 8
-				secondByteLoc = endBit / 8
+				firstByteLoc = curBit // 8
+				secondByteLoc = endBit // 8
 				if firstByteLoc < secondByteLoc:
 					numBitsCut = 8 - cutPoint
 				else:
@@ -572,7 +572,7 @@ class BitAlignedBitmapMixin:
 class ByteAlignedBitmapMixin:
 
 	def _getByteRange(self, row, bitDepth, metrics):
-		rowBytes = (bitDepth * metrics.width + 7) / 8
+		rowBytes = (bitDepth * metrics.width + 7) // 8
 		byteOffset = row * rowBytes
 		return (byteOffset, byteOffset+rowBytes)
 

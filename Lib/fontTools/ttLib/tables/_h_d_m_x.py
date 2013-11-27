@@ -1,4 +1,4 @@
-from __future__ import print_function
+from __future__ import print_function, division
 from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from . import DefaultTable
@@ -31,7 +31,7 @@ class table__h_d_m_x(DefaultTable.DefaultTable):
 		self.version = 0
 		numGlyphs = ttFont['maxp'].numGlyphs
 		glyphOrder = ttFont.getGlyphOrder()
-		self.recordSize = 4 * ((2 + numGlyphs + 3) / 4)
+		self.recordSize = 4 * ((2 + numGlyphs + 3) // 4)
 		pad = (self.recordSize - 2 - numGlyphs) * "\0"
 		self.numRecords = len(self.hdmx)
 		data = sstruct.pack(hdmxHeaderFormat, self)

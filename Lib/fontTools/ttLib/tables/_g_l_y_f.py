@@ -1,7 +1,7 @@
 """_g_l_y_f.py -- Converter classes for the 'glyf' table."""
 
 
-from __future__ import print_function
+from __future__ import print_function, division
 from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from fontTools import ttLib
@@ -88,7 +88,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 		for glyphName in glyphNames:
 			if not counter % progressStep and progress is not None:
 				progress.setLabel("Dumping 'glyf' table... (%s)" % glyphName)
-				progress.increment(progressStep / float(numGlyphs))
+				progress.increment(progressStep / numGlyphs)
 			counter = counter + 1
 			glyph = self[glyphName]
 			if glyph.numberOfContours:
@@ -757,7 +757,6 @@ class GlyphComponent:
 		self.glyphName = glyfTable.getGlyphName(int(glyphID))
 		#print ">>", reprflag(self.flags)
 		data = data[4:]
-		x4000 = float(0x4000)
 		
 		if self.flags & ARG_1_AND_2_ARE_WORDS:
 			if self.flags & ARGS_ARE_XY_VALUES:
@@ -776,17 +775,17 @@ class GlyphComponent:
 		
 		if self.flags & WE_HAVE_A_SCALE:
 			scale, = struct.unpack(">h", data[:2])
-			self.transform = [[scale/x4000, 0], [0, scale/x4000]]  # fixed 2.14
+			self.transform = [[scale/0x4000, 0], [0, scale/0x4000]]  # fixed 2.14
 			data = data[2:]
 		elif self.flags & WE_HAVE_AN_X_AND_Y_SCALE:
 			xscale, yscale = struct.unpack(">hh", data[:4])
-			self.transform = [[xscale/x4000, 0], [0, yscale/x4000]]  # fixed 2.14
+			self.transform = [[xscale/0x4000, 0], [0, yscale/0x4000]]  # fixed 2.14
 			data = data[4:]
 		elif self.flags & WE_HAVE_A_TWO_BY_TWO:
 			(xscale, scale01, 
 					scale10, yscale) = struct.unpack(">hhhh", data[:8])
-			self.transform = [[xscale/x4000, scale01/x4000],
-					  [scale10/x4000, yscale/x4000]] # fixed 2.14
+			self.transform = [[xscale/0x4000, scale01/0x4000],
+					  [scale10/0x4000, yscale/0x4000]] # fixed 2.14
 			data = data[8:]
 		more = self.flags & MORE_COMPONENTS
 		haveInstructions = self.flags & WE_HAVE_INSTRUCTIONS
@@ -909,7 +908,7 @@ class GlyphCoordinates:
 		return c
 
 	def __len__(self):
-		return len(self._a) / 2
+		return len(self._a) // 2
 
 	def __getitem__(self, k):
 		if isinstance(k, slice):
@@ -938,14 +937,14 @@ class GlyphCoordinates:
 	def relativeToAbsolute(self):
 		a = self._a
 		x,y = 0,0
-		for i in range(len(a) / 2):
+		for i in range(len(a) // 2):
 			a[2*i  ] = x = a[2*i  ] + x
 			a[2*i+1] = y = a[2*i+1] + y
 
 	def absoluteToRelative(self):
 		a = self._a
 		x,y = 0,0
-		for i in range(len(a) / 2):
+		for i in range(len(a) // 2):
 			dx = a[2*i  ] - x
 			dy = a[2*i+1] - y
 			x = a[2*i  ]
@@ -956,13 +955,13 @@ class GlyphCoordinates:
 	def translate(self, p):
 		(x,y) = p
 		a = self._a
-		for i in range(len(a) / 2):
+		for i in range(len(a) // 2):
 			a[2*i  ] += x
 			a[2*i+1] += y
 
 	def transform(self, t):
 		a = self._a
-		for i in range(len(a) / 2):
+		for i in range(len(a) // 2):
 			x = a[2*i  ]
 			y = a[2*i+1]
 			a[2*i  ] = int(.5 + x * t[0][0] + y * t[1][0])

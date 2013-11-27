@@ -1,7 +1,7 @@
 """fontTools.misc.textTools.py -- miscelaneous routines."""
 
 
-from __future__ import print_function
+from __future__ import print_function, division
 from fontTools.misc.py23 import *
 import string
 

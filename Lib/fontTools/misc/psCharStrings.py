@@ -2,7 +2,7 @@
 CFF dictionary data and Type1/Type2 CharStrings.
 """
 
-from __future__ import print_function
+from __future__ import print_function, division
 from fontTools.misc.py23 import *
 import struct
 
@@ -61,7 +61,7 @@ class ByteCodeBase:
 	def read_fixed1616(self, b0, data, index):
 		bin = data[index] + data[index+1] + data[index+2] + data[index+3]
 		value, = struct.unpack(">l", bin)
-		return value / 65536.0, index+4
+		return value / 65536, index+4
 	
 	def read_realNumber(self, b0, data, index):
 		number = ''
@@ -579,7 +579,7 @@ class SimpleT2Decompiler:
 	def op_hintmask(self, index):
 		if not self.hintMaskBytes:
 			self.countHints()
-			self.hintMaskBytes = (self.hintCount + 7) / 8
+			self.hintMaskBytes = (self.hintCount + 7) // 8
 		hintMaskBytes, index = self.callingStack[-1].getBytes(index, self.hintMaskBytes)
 		return hintMaskBytes, index
 	
@@ -587,7 +587,7 @@ class SimpleT2Decompiler:
 	
 	def countHints(self):
 		args = self.popall()
-		self.hintCount = self.hintCount + len(args) / 2
+		self.hintCount = self.hintCount + len(args) // 2
 
 	# misc
 	def op_and(self, index):
@@ -695,7 +695,7 @@ class T2OutlineExtractor(SimpleT2Decompiler):
 	
 	def countHints(self):
 		args = self.popallWidth()
-		self.hintCount = self.hintCount + len(args) / 2
+		self.hintCount = self.hintCount + len(args) // 2
 	
 	#
 	# hint operators
@@ -882,8 +882,8 @@ class T2OutlineExtractor(SimpleT2Decompiler):
 	def op_div(self, index):
 		num2 = self.pop()
 		num1 = self.pop()
-		d1 = num1/num2
-		d2 = float(num1)/num2
+		d1 = num1//num2
+		d2 = num1/num2
 		if d1 == d2:
 			self.push(d1)
 		else:

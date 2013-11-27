@@ -1,6 +1,6 @@
 """ttLib.macUtils.py -- Various Mac-specific stuff."""
 
-from __future__ import print_function
+from __future__ import print_function, division
 from fontTools.misc.py23 import *
 import sys
 import os
@@ -158,7 +158,7 @@ class SFNTResourceWriter:
 		fond.styleMappingReserved = 0
 		
 		# calc:
-		scale = 4096.0 / self.ttFont['head'].unitsPerEm
+		scale = 4096 / self.ttFont['head'].unitsPerEm
 		fond.ffAscent = scale * self.ttFont['hhea'].ascent
 		fond.ffDescent = scale * self.ttFont['hhea'].descent
 		fond.ffWidMax = scale * self.ttFont['hhea'].advanceWidthMax

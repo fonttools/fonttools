@@ -66,7 +66,7 @@ usage: ttx [options] inputfile1 [... inputfileN]
 """
 
 
-from __future__ import print_function
+from __future__ import print_function, division
 from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont, TTLibError
 from fontTools.ttLib.tables.otBase import OTLOffsetOverflowError

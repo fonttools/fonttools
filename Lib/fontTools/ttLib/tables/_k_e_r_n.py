@@ -1,4 +1,4 @@
-from __future__ import print_function
+from __future__ import print_function, division
 from fontTools.misc.py23 import *
 from fontTools.ttLib import sfnt
 from fontTools.misc.textTools import safeEval, readHex
@@ -21,7 +21,7 @@ class table__k_e_r_n(DefaultTable.DefaultTable):
 		if (len(data) >= 8) and (version == 1):
 			# AAT Apple's "new" format. Hm.
 			version, nTables = struct.unpack(">LL", data[:8])
-			self.version = version / float(0x10000)
+			self.version = version / 0x10000
 			data = data[8:]
 			apple = True
 		else:

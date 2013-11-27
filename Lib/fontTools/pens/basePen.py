@@ -36,7 +36,7 @@ Coordinates are usually expressed as (x, y) tuples, but generally any
 sequence of length 2 will do.
 """
 
-from __future__ import print_function
+from __future__ import print_function, division
 from fontTools.misc.py23 import *
 
 __all__ = ["AbstractPen", "NullPen", "BasePen",
@@ -298,9 +298,8 @@ def decomposeSuperBezierSegment(points):
 	for i in range(2, n+1):
 		# calculate points in between control points.
 		nDivisions = min(i, 3, n-i+2)
-		d = float(nDivisions)
 		for j in range(1, nDivisions):
-			factor = j / d
+			factor = j / nDivisions
 			temp1 = points[i-1]
 			temp2 = points[i-2]
 			temp = (temp2[0] + factor * (temp1[0] - temp2[0]),
