@@ -189,7 +189,7 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 			writer.endtag("hexdata")
 			writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		if name not in ("psNames", "extraNames", "hexdata"):
 			setattr(self, name, safeEval(attrs["value"]))
 		elif name == "psNames":

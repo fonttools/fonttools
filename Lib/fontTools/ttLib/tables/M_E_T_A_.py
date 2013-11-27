@@ -166,7 +166,7 @@ class table_M_E_T_A_(DefaultTable.DefaultTable):
 		for glyphRec in self.glyphRecords:
 			glyphRec.toXML(writer, ttFont)
 		
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		if name == "GlyphRecord":
 			if not hasattr(self, "glyphRecords"):
 				self.glyphRecords = []
@@ -175,7 +175,8 @@ class table_M_E_T_A_(DefaultTable.DefaultTable):
 			for element in content:
 				if isinstance(element, StringType):
 					continue
-				glyphRec.fromXML(element, ttFont)
+				name, attrs, content = element
+				glyphRec.fromXML(name, attrs, content, ttFont)
 			glyphRec.offset = -1
 			glyphRec.nMetaEntry = len(glyphRec.stringRecs)
 		else:			
@@ -207,14 +208,14 @@ class GlyphRecord:
 		writer.newline()
 
 
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		if name == "StringRecord":
 			stringRec = StringRecord()
 			self.stringRecs.append(stringRec)
 			for element in content:
 				if isinstance(element, StringType):
 					continue
-				stringRec.fromXML(element, ttFont)
+				stringRec.fromXML(name, attrs, content, ttFont)
 			stringRec.stringLen = len(stringRec.string)
 		else:			
 			value = attrs["value"]
@@ -303,7 +304,7 @@ class StringRecord:
 		writer.endtag("StringRecord")
 		writer.newline()
 
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		value = attrs["value"]
 		if name == "string":
 			self.string = mapXMLToUTF8(value)

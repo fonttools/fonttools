@@ -96,7 +96,7 @@ class Transform:
 		"""
 		self.__affine = xx, xy, yx, yy, dx, dy
 
-	def transformPoint(self, (x, y)):
+	def transformPoint(self, p):
 		"""Transform a point.
 
 		Example:
@@ -105,6 +105,7 @@ class Transform:
 			>>> t.transformPoint((100, 100))
 			(250.0, 550.0)
 		"""
+		(x, y) = p
 		xx, xy, yx, yy, dx, dy = self.__affine
 		return (xx*x + yx*y + dx, xy*x + yy*y + dy)
 

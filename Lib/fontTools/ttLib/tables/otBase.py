@@ -86,12 +86,12 @@ class BaseTTXConverter(DefaultTable):
 	def toXML(self, writer, font):
 		self.table.toXML2(writer, font)
 	
-	def fromXML(self, (name, attrs, content), font):
+	def fromXML(self, name, attrs, content, font):
 		from . import otTables
 		if not hasattr(self, "table"):
 			tableClass = getattr(otTables, self.tableTag)
 			self.table = tableClass()
-		self.table.fromXML((name, attrs, content), font)
+		self.table.fromXML(name, attrs, content, font)
 
 
 class OTTableReader(object):
@@ -659,7 +659,7 @@ class BaseTable(object):
 				value = getattr(self, conv.name)
 				conv.xmlWrite(xmlWriter, font, value, conv.name, [])
 	
-	def fromXML(self, (name, attrs, content), font):
+	def fromXML(self, name, attrs, content, font):
 		try:
 			conv = self.getConverterByName(name)
 		except KeyError:
@@ -824,7 +824,7 @@ class ValueRecord:
 			xmlWriter.simpletag(valueName, simpleItems)
 			xmlWriter.newline()
 	
-	def fromXML(self, (name, attrs, content), font):
+	def fromXML(self, name, attrs, content, font):
 		from . import otTables
 		for k, v in attrs.items():
 			setattr(self, k, int(v))
@@ -836,7 +836,8 @@ class ValueRecord:
 			for elem2 in content:
 				if type(elem2) != TupleType:
 					continue
-				value.fromXML(elem2, font)
+				name2, attrs2, content2 = elem2
+				value.fromXML(name2, attrs2, content2, font)
 			setattr(self, name, value)
 	
 	def __cmp__(self, other):

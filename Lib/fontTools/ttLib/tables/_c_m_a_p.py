@@ -78,7 +78,7 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
 		for table in self.tables:
 			table.toXML(writer, ttFont)
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		if name == "tableVersion":
 			self.tableVersion = safeEval(attrs["version"])
 			return
@@ -93,7 +93,7 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
 			table = cmap_classes[format](format)
 		table.platformID = safeEval(attrs["platformID"])
 		table.platEncID = safeEval(attrs["platEncID"])
-		table.fromXML((name, attrs, content), ttFont)
+		table.fromXML(name, attrs, content, ttFont)
 		self.tables.append(table)
 
 
@@ -203,7 +203,7 @@ class cmap_format_0(CmapSubtable):
 		assert len(data) == 262
 		return data
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		self.language = safeEval(attrs["language"])
 		if not hasattr(self, "cmap"):
 			self.cmap = {}
@@ -522,7 +522,7 @@ class cmap_format_2(CmapSubtable):
 		return data
 
 
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		self.language = safeEval(attrs["language"])
 		if not hasattr(self, "cmap"):
 			self.cmap = {}
@@ -814,7 +814,7 @@ class cmap_format_4(CmapSubtable):
 				segCountX2, searchRange, entrySelector, rangeShift)
 		return header + data
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		self.language = safeEval(attrs["language"])
 		if not hasattr(self, "cmap"):
 			self.cmap = {}
@@ -883,7 +883,7 @@ class cmap_format_6(CmapSubtable):
 				6, len(data) + 10, self.language, firstCode, len(codes))
 		return header + data
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		self.language = safeEval(attrs["language"])
 		if not hasattr(self, "cmap"):
 			self.cmap = {}
@@ -1022,7 +1022,7 @@ class cmap_format_12_or_13(CmapSubtable):
 		writer.endtag(self.__class__.__name__)
 		writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		self.format = safeEval(attrs["format"])
 		self.reserved = safeEval(attrs["reserved"])
 		self.length = safeEval(attrs["length"])
@@ -1178,7 +1178,7 @@ class cmap_format_14(CmapSubtable):
 		writer.endtag(self.__class__.__name__)
 		writer.newline()
 
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		self.format = safeEval(attrs["format"])
 		self.length = safeEval(attrs["length"])
 		self.numVarSelectorRecords = safeEval(attrs["numVarSelectorRecords"])
@@ -1286,7 +1286,7 @@ class cmap_format_unknown(CmapSubtable):
 		writer.endtag(cmapName)
 		writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		self.data = readHex(content)
 		self.cmap = {}
 	

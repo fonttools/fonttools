@@ -224,8 +224,8 @@ class AFM:
 		
 		# write char metrics
 		lines.append("StartCharMetrics " + repr(len(self._chars)))
-		items = map(lambda (charname, (charnum, width, box)):
-			(charnum, (charname, width, box)),
+		items = map(lambda charname_charnum_width_box:
+			(charname_charnum_width_box[1][0], (charname_charnum_width_box[0], charname_charnum_width_box[1][1], charname_charnum_width_box[1][2])),
 			self._chars.items())
 		
 		def myCmp(a, b):

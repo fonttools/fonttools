@@ -25,7 +25,7 @@ class table__c_v_t(DefaultTable.DefaultTable):
 			writer.simpletag("cv", value=value, index=i)
 			writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		if not hasattr(self, "values"):
 			self.values = array.array("h")
 		if name == "cv":

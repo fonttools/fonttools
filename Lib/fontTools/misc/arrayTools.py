@@ -16,13 +16,15 @@ def calcBounds(array):
     ys = [y for x, y in array]
     return min(xs), min(ys), max(xs), max(ys)
 
-def updateBounds(bounds, (x, y), min=min, max=max):
+def updateBounds(bounds, p, min=min, max=max):
     """Return the bounding recangle of rectangle bounds and point (x, y)."""
+    (x, y) = p
     xMin, yMin, xMax, yMax = bounds
     return min(xMin, x), min(yMin, y), max(xMax, x), max(yMax, y)
 
-def pointInRect((x, y), rect):
+def pointInRect(p, rect):
     """Return True when point (x, y) is inside rect."""
+    (x, y) = p
     xMin, yMin, xMax, yMax = rect
     return (xMin <= x <= xMax) and (yMin <= y <= yMax)
 
@@ -45,52 +47,62 @@ def asInt16(array):
     return [int(math.floor(i+0.5)) for i in array]
     
 
-def normRect((xMin, yMin, xMax, yMax)):
+def normRect(rect):
     """Normalize the rectangle so that the following holds:
         xMin <= xMax and yMin <= yMax
     """
+    (xMin, yMin, xMax, yMax) = rect
     return min(xMin, xMax), min(yMin, yMax), max(xMin, xMax), max(yMin, yMax)
 
-def scaleRect((xMin, yMin, xMax, yMax), x, y):
+def scaleRect(rect, x, y):
     """Scale the rectangle by x, y."""
+    (xMin, yMin, xMax, yMax) = rect
     return xMin * x, yMin * y, xMax * x, yMax * y
 
-def offsetRect((xMin, yMin, xMax, yMax), dx, dy):
+def offsetRect(rect, dx, dy):
     """Offset the rectangle by dx, dy."""
+    (xMin, yMin, xMax, yMax) = rect
     return xMin+dx, yMin+dy, xMax+dx, yMax+dy
 
-def insetRect((xMin, yMin, xMax, yMax), dx, dy):
+def insetRect(rect, dx, dy):
     """Inset the rectangle by dx, dy on all sides."""
+    (xMin, yMin, xMax, yMax) = rect
     return xMin+dx, yMin+dy, xMax-dx, yMax-dy
 
-def sectRect((xMin1, yMin1, xMax1, yMax1), (xMin2, yMin2, xMax2, yMax2)):
+def sectRect(rect1, rect2):
     """Return a boolean and a rectangle. If the input rectangles intersect, return
     True and the intersecting rectangle. Return False and (0, 0, 0, 0) if the input
     rectangles don't intersect.
     """
+    (xMin1, yMin1, xMax1, yMax1) = rect1
+    (xMin2, yMin2, xMax2, yMax2) = rect2
     xMin, yMin, xMax, yMax = (max(xMin1, xMin2), max(yMin1, yMin2),
                               min(xMax1, xMax2), min(yMax1, yMax2))
     if xMin >= xMax or yMin >= yMax:
         return 0, (0, 0, 0, 0)
     return 1, (xMin, yMin, xMax, yMax)
 
-def unionRect((xMin1, yMin1, xMax1, yMax1), (xMin2, yMin2, xMax2, yMax2)):
+def unionRect(rect1, rect2):
     """Return the smallest rectangle in which both input rectangles are fully
     enclosed. In other words, return the total bounding rectangle of both input
     rectangles.
     """
+    (xMin1, yMin1, xMax1, yMax1) = rect1
+    (xMin2, yMin2, xMax2, yMax2) = rect2
     xMin, yMin, xMax, yMax = (min(xMin1, xMin2), min(yMin1, yMin2),
                               max(xMax1, xMax2), max(yMax1, yMax2))
     return (xMin, yMin, xMax, yMax)
 
-def rectCenter((xMin, yMin, xMax, yMax)):
+def rectCenter(rect0):
     """Return the center of the rectangle as an (x, y) coordinate."""
+    (xMin, yMin, xMax, yMax) = rect0
     return (xMin+xMax)/2, (yMin+yMax)/2
 
-def intRect((xMin, yMin, xMax, yMax)):
+def intRect(rect1):
     """Return the rectangle, rounded off to integer values, but guaranteeing that
     the resulting rectangle is NOT smaller than the original.
     """
+    (xMin, yMin, xMax, yMax) = rect1
     import math
     xMin = int(math.floor(xMin))
     yMin = int(math.floor(yMin))

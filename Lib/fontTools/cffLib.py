@@ -94,7 +94,7 @@ class CFFFontSet:
 		xmlWriter.newline()
 		xmlWriter.newline()
 	
-	def fromXML(self, (name, attrs, content)):
+	def fromXML(self, name, attrs, content):
 		if not hasattr(self, "GlobalSubrs"):
 			self.GlobalSubrs = GlobalSubrsIndex()
 			self.major = 1
@@ -113,14 +113,15 @@ class CFFFontSet:
 			for element in content:
 				if isinstance(element, basestring):
 					continue
-				topDict.fromXML(element)
+				name, attrs, content = element
+				topDict.fromXML(name, attrs, content)
 		elif name == "GlobalSubrs":
 			for element in content:
 				if isinstance(element, basestring):
 					continue
 				name, attrs, content = element
 				subr = psCharStrings.T2CharString()
-				subr.fromXML((name, attrs, content))
+				subr.fromXML(name, attrs, content)
 				self.GlobalSubrs.append(subr)
 
 
@@ -400,11 +401,11 @@ class GlobalSubrsIndex(Index):
 			xmlWriter.endtag("CharString")
 			xmlWriter.newline()
 	
-	def fromXML(self, (name, attrs, content)):
+	def fromXML(self, name, attrs, content):
 		if name != "CharString":
 			return
 		subr = psCharStrings.T2CharString()
-		subr.fromXML((name, attrs, content))
+		subr.fromXML(name, attrs, content)
 		self.append(subr)
 	
 	def getItemAndSelector(self, index):
@@ -440,14 +441,15 @@ class FDArrayIndex(TopDictIndex):
 	
 	compilerClass = FDArrayIndexCompiler
 
-	def fromXML(self, (name, attrs, content)):
+	def fromXML(self, name, attrs, content):
 		if name != "FontDict":
 			return
 		fontDict = FontDict()
 		for element in content:
 			if isinstance(element, basestring):
 				continue
-			fontDict.fromXML(element)
+			name, attrs, content = element
+			fontDict.fromXML(name, attrs, content)
 		self.append(fontDict)
 
 
@@ -581,7 +583,7 @@ class CharStrings:
 				progress.increment(step / float(numGlyphs))
 			i = i + 1
 	
-	def fromXML(self, (name, attrs, content)):
+	def fromXML(self, name, attrs, content):
 		for element in content:
 			if isinstance(element, basestring):
 				continue
@@ -599,7 +601,7 @@ class CharStrings:
 			charString = psCharStrings.T2CharString(
 					private=private,
 					globalSubrs=self.globalSubrs)
-			charString.fromXML((name, attrs, content))
+			charString.fromXML(name, attrs, content)
 			if fdID >= 0:
 				charString.fdSelectIndex = fdID
 			self[glyphName] = charString
@@ -668,7 +670,7 @@ class SimpleConverter:
 	def xmlWrite(self, xmlWriter, name, value, progress):
 		xmlWriter.simpletag(name, value=value)
 		xmlWriter.newline()
-	def xmlRead(self, (name, attrs, content), parent):
+	def xmlRead(self, name, attrs, content, parent):
 		return attrs["value"]
 
 class Latin1Converter(SimpleConverter):
@@ -677,7 +679,7 @@ class Latin1Converter(SimpleConverter):
 		value = unicode(value, "latin-1").encode("utf-8")
 		xmlWriter.simpletag(name, value=value)
 		xmlWriter.newline()
-	def xmlRead(self, (name, attrs, content), parent):
+	def xmlRead(self, name, attrs, content, parent):
 		s = unicode(attrs["value"], "utf-8")
 		return s.encode("latin-1")
 
@@ -690,7 +692,7 @@ def parseNum(s):
 	return value
 
 class NumberConverter(SimpleConverter):
-	def xmlRead(self, (name, attrs, content), parent):
+	def xmlRead(self, name, attrs, content, parent):
 		return parseNum(attrs["value"])
 
 class ArrayConverter(SimpleConverter):
@@ -698,7 +700,7 @@ class ArrayConverter(SimpleConverter):
 		value = map(str, value)
 		xmlWriter.simpletag(name, value=" ".join(value))
 		xmlWriter.newline()
-	def xmlRead(self, (name, attrs, content), parent):
+	def xmlRead(self, name, attrs, content, parent):
 		values = attrs["value"].split()
 		return map(parseNum, values)
 
@@ -709,12 +711,13 @@ class TableConverter(SimpleConverter):
 		value.toXML(xmlWriter, progress)
 		xmlWriter.endtag(name)
 		xmlWriter.newline()
-	def xmlRead(self, (name, attrs, content), parent):
+	def xmlRead(self, name, attrs, content, parent):
 		ob = self.getClass()()
 		for element in content:
 			if isinstance(element, basestring):
 				continue
-			ob.fromXML(element)
+			name, attrs, content = element
+			ob.fromXML(name, attrs, content)
 		return ob
 
 class PrivateDictConverter(TableConverter):
@@ -757,7 +760,7 @@ class CharStringsConverter(TableConverter):
 		return CharStrings(file, charset, globalSubrs, private, fdSelect, fdArray)
 	def write(self, parent, value):
 		return 0  # dummy value
-	def xmlRead(self, (name, attrs, content), parent):
+	def xmlRead(self, name, attrs, content, parent):
 		if hasattr(parent, "ROS"):
 			# if it is a CID-keyed font, then the private Dict is extracted from the parent.FDArray 
 			private, fdSelect, fdArray = None, parent.FDSelect, parent.FDArray
@@ -765,7 +768,7 @@ class CharStringsConverter(TableConverter):
 			# if it is a name-keyed font, then the private dict is in the top dict, and there is no fdArray. 
 			private, fdSelect, fdArray = parent.Private, None, None
 		charStrings = CharStrings(None, None, parent.GlobalSubrs, private, fdSelect, fdArray)
-		charStrings.fromXML((name, attrs, content))
+		charStrings.fromXML(name, attrs, content)
 		return charStrings
 
 class CharsetConverter:
@@ -807,7 +810,7 @@ class CharsetConverter:
 		##xmlWriter.simpletag("charset")
 		xmlWriter.comment("charset is dumped separately as the 'GlyphOrder' element")
 		xmlWriter.newline()
-	def xmlRead(self, (name, attrs, content), parent):
+	def xmlRead(self, name, attrs, content, parent):
 		if 0:
 			return safeEval(attrs["value"])
 
@@ -991,7 +994,7 @@ class EncodingConverter(SimpleConverter):
 		xmlWriter.endtag(name)
 		xmlWriter.newline()
 
-	def xmlRead(self, (name, attrs, content), parent):
+	def xmlRead(self, name, attrs, content, parent):
 		if "name" in attrs:
 			return attrs["name"]
 		encoding = [".notdef"] * 256
@@ -1096,12 +1099,13 @@ class FDArrayConverter(TableConverter):
 	def write(self, parent, value):
 		return 0  # dummy value
 
-	def xmlRead(self, (name, attrs, content), parent):
+	def xmlRead(self, name, attrs, content, parent):
 		fdArray = FDArrayIndex()
 		for element in content:
 			if isinstance(element, basestring):
 				continue
-			fdArray.fromXML(element)
+			name, attrs, content = element
+			fdArray.fromXML(name, attrs, content)
 		return fdArray
 
 
@@ -1122,7 +1126,7 @@ class FDSelectConverter:
 		xmlWriter.simpletag(name, [('format', value.format)])
 		xmlWriter.newline()
 
-	def xmlRead(self, (name, attrs, content), parent):
+	def xmlRead(self, name, attrs, content, parent):
 		format = safeEval(attrs["format"])
 		file = None
 		numGlyphs = None
@@ -1201,7 +1205,7 @@ class ROSConverter(SimpleConverter):
 			('Supplement', supplement)])
 		xmlWriter.newline()
 
-	def xmlRead(self, (name, attrs, content), parent):
+	def xmlRead(self, name, attrs, content, parent):
 		return (attrs['Registry'], attrs['Order'], safeEval(attrs['Supplement']))
 
 
@@ -1501,9 +1505,9 @@ class BaseDict:
 			conv = self.converters[name]
 			conv.xmlWrite(xmlWriter, name, value, progress)
 	
-	def fromXML(self, (name, attrs, content)):
+	def fromXML(self, name, attrs, content):
 		conv = self.converters[name]
-		value = conv.xmlRead((name, attrs, content), self)
+		value = conv.xmlRead(name, attrs, content, self)
 		setattr(self, name, value)
 
 

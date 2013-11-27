@@ -37,7 +37,7 @@ class BitmapGlyphMetrics:
 		writer.endtag(self.__class__.__name__)
 		writer.newline()
 
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		metricNames = set(sstruct.getformat(self.__class__.binaryFormat)[1])
 		for element in content:
 			if type(element) != TupleType:

@@ -16,7 +16,7 @@ class asciiTable(DefaultTable.DefaultTable):
 		writer.endtag("source")
 		writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		lines = string.split(string.replace(string.join(content, ""), "\r", "\n"), "\n")
 		self.data = string.join(lines[1:-1], "\r")
 

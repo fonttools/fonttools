@@ -76,7 +76,7 @@ class table__h_e_a_d(DefaultTable.DefaultTable):
 			writer.simpletag(name, value=value)
 			writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		value = attrs["value"]
 		if name in ("created", "modified"):
 			value = parse_date(value) - mac_epoch_diff

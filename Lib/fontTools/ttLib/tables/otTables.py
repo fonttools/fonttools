@@ -120,7 +120,7 @@ class Coverage(FormatSwitchingBaseTable):
 			xmlWriter.simpletag("Glyph", value=glyphName)
 			xmlWriter.newline()
 	
-	def fromXML(self, (name, attrs, content), font):
+	def fromXML(self, name, attrs, content, font):
 		glyphs = getattr(self, "glyphs", None)
 		if glyphs is None:
 			glyphs = []
@@ -200,7 +200,7 @@ class SingleSubst(FormatSwitchingBaseTable):
 					[("in", inGlyph), ("out", outGlyph)])
 			xmlWriter.newline()
 	
-	def fromXML(self, (name, attrs, content), font):
+	def fromXML(self, name, attrs, content, font):
 		mapping = getattr(self, "mapping", None)
 		if mapping is None:
 			mapping = {}
@@ -279,7 +279,7 @@ class ClassDef(FormatSwitchingBaseTable):
 			xmlWriter.simpletag("ClassDef", [("glyph", glyphName), ("class", cls)])
 			xmlWriter.newline()
 	
-	def fromXML(self, (name, attrs, content), font):
+	def fromXML(self, name, attrs, content, font):
 		classDefs = getattr(self, "classDefs", None)
 		if classDefs is None:
 			classDefs = {}
@@ -340,7 +340,7 @@ class AlternateSubst(FormatSwitchingBaseTable):
 			xmlWriter.endtag("AlternateSet")
 			xmlWriter.newline()
 	
-	def fromXML(self, (name, attrs, content), font):
+	def fromXML(self, name, attrs, content, font):
 		alternates = getattr(self, "alternates", None)
 		if alternates is None:
 			alternates = {}
@@ -408,7 +408,7 @@ class LigatureSubst(FormatSwitchingBaseTable):
 			xmlWriter.endtag("LigatureSet")
 			xmlWriter.newline()
 	
-	def fromXML(self, (name, attrs, content), font):
+	def fromXML(self, name, attrs, content, font):
 		ligatures = getattr(self, "ligatures", None)
 		if ligatures is None:
 			ligatures = {}

@@ -41,7 +41,7 @@ class table_L_T_S_H_(DefaultTable.DefaultTable):
 			writer.simpletag("yPel", name=name, value=self.yPels[name])
 			writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		if not hasattr(self, "yPels"):
 			self.yPels = {}
 		if name != "yPel":

@@ -145,7 +145,7 @@ class table_E_B_D_T_(DefaultTable.DefaultTable):
 			writer.endtag('strikedata')
 			writer.newline()
 
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		if name == 'header':
 			self.version = safeEval(attrs['version'])
 		elif name == 'strikedata':
@@ -163,7 +163,7 @@ class table_E_B_D_T_(DefaultTable.DefaultTable):
 					glyphName = attrs['name']
 					imageFormatClass = self.getImageFormatClass(imageFormat)
 					curGlyph = imageFormatClass(None, None)
-					curGlyph.fromXML(element, ttFont)
+					curGlyph.fromXML(name, attrs, content, ttFont)
 					assert glyphName not in bitmapGlyphDict, "Duplicate glyphs with the same name '%s' in the same strike." % glyphName
 					bitmapGlyphDict[glyphName] = curGlyph
 				else:
@@ -187,7 +187,7 @@ class EbdtComponent:
 		writer.endtag('ebdtComponent')
 		writer.newline()
 
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		self.name = attrs['name']
 		componentNames = set(sstruct.getformat(ebdtComponentFormat)[1][1:])
 		for element in content:
@@ -261,7 +261,7 @@ def _writeRawImageData(strikeIndex, glyphName, bitmapObject, writer, ttFont):
 	writer.endtag('rawimagedata')
 	writer.newline()
 
-def _readRawImageData(bitmapObject, (name, attrs, content), ttFont):
+def _readRawImageData(bitmapObject, name, attrs, content, ttFont):
 	bitmapObject.imageData = readHex(content)
 
 def _writeRowImageData(strikeIndex, glyphName, bitmapObject, writer, ttFont):
@@ -279,7 +279,7 @@ def _writeRowImageData(strikeIndex, glyphName, bitmapObject, writer, ttFont):
 	writer.endtag('rowimagedata')
 	writer.newline()
 
-def _readRowImageData(bitmapObject, (name, attrs, content), ttFont):
+def _readRowImageData(bitmapObject, name, attrs, content, ttFont):
 	bitDepth = safeEval(attrs['bitDepth'])
 	metrics = SmallGlyphMetrics()
 	metrics.width = safeEval(attrs['width'])
@@ -316,7 +316,7 @@ def _writeBitwiseImageData(strikeIndex, glyphName, bitmapObject, writer, ttFont)
 	writer.endtag('bitwiseimagedata')
 	writer.newline()
 
-def _readBitwiseImageData(bitmapObject, (name, attrs, content), ttFont):
+def _readBitwiseImageData(bitmapObject, name, attrs, content, ttFont):
 	bitDepth = safeEval(attrs['bitDepth'])
 	metrics = SmallGlyphMetrics()
 	metrics.width = safeEval(attrs['width'])
@@ -354,7 +354,7 @@ def _writeExtFileImageData(strikeIndex, glyphName, bitmapObject, writer, ttFont)
 	with open(fullPath, "wb") as file:
 		file.write(bitmapObject.imageData)
 
-def _readExtFileImageData(bitmapObject, (name, attrs, content), ttFont):
+def _readExtFileImageData(bitmapObject, name, attrs, content, ttFont):
 	fullPath = attrs['value']
 	with open(fullPath, "rb") as file:
 		bitmapObject.imageData = file.read()
@@ -412,8 +412,8 @@ class BitmapGlyph:
 		writer.endtag(self.__class__.__name__)
 		writer.newline()
 
-	def fromXML(self, (name, attrs, content), ttFont):
-		self.readMetrics((name, attrs, content), ttFont)
+	def fromXML(self, name, attrs, content, ttFont):
+		self.readMetrics(name, attrs, content, ttFont)
 		for element in content:
 			if type(element) != TupleType:
 				continue
@@ -421,7 +421,7 @@ class BitmapGlyph:
 			# Chop off 'imagedata' from the tag to get just the option.
 			option = name[:-len('imagedata')]
 			if option in self.__class__.xmlDataFunctions:
-				self.readData(element, ttFont)
+				self.readData(name, attrs, content, ttFont)
 
 	# Some of the glyphs have the metrics. This allows for metrics to be
 	# added if the glyph format has them. Default behavior is to do nothing.
@@ -429,7 +429,7 @@ class BitmapGlyph:
 		pass
 
 	# The opposite of write metrics.
-	def readMetrics(self, (name, attrs, content), ttFont):
+	def readMetrics(self, name, attrs, content, ttFont):
 		pass
 
 	def writeData(self, strikeIndex, glyphName, writer, ttFont):
@@ -439,11 +439,11 @@ class BitmapGlyph:
 			writeFunc = _writeRawImageData
 		writeFunc(strikeIndex, glyphName, self, writer, ttFont)
 
-	def readData(self, (name, attrs, content), ttFont):
+	def readData(self, name, attrs, content, ttFont):
 		# Chop off 'imagedata' from the tag to get just the option.
 		option = name[:-len('imagedata')]
 		writeFunc, readFunc = self.__class__.xmlDataFunctions[option]
-		readFunc(self, (name, attrs, content), ttFont)
+		readFunc(self, name, attrs, content, ttFont)
 
 
 # A closure for creating a mixin for the two types of metrics handling.
@@ -462,14 +462,14 @@ def _createBitmapPlusMetricsMixin(metricsClass):
 		def writeMetrics(self, writer, ttFont):
 			self.metrics.toXML(writer, ttFont)
 
-		def readMetrics(self, (name, attrs, content), ttFont):
+		def readMetrics(self, name, attrs, content, ttFont):
 			for element in content:
 				if type(element) != TupleType:
 					continue
 				name, attrs, content = element
 				if name == curMetricsName:
 					self.metrics = metricsClass()
-					self.metrics.fromXML(element, ttFont)
+					self.metrics.fromXML(name, attrs, content, ttFont)
 				elif name == oppositeMetricsName:
 					print "Warning: %s being ignored in format %d." % oppositeMetricsName, self.getFormat()
 
@@ -668,8 +668,8 @@ class ComponentBitmapGlyph(BitmapGlyph):
 		writer.endtag(self.__class__.__name__)
 		writer.newline()
 
-	def fromXML(self, (name, attrs, content), ttFont):
-		self.readMetrics((name, attrs, content), ttFont)
+	def fromXML(self, name, attrs, content, ttFont):
+		self.readMetrics(name, attrs, content, ttFont)
 		for element in content:
 			if type(element) != TupleType:
 				continue
@@ -679,10 +679,10 @@ class ComponentBitmapGlyph(BitmapGlyph):
 				for compElement in content:
 					if type(compElement) != TupleType:
 						continue
-					name, attr, content = compElement
+					name, attrs, content = compElement
 					if name == 'ebdtComponent':
 						curComponent = EbdtComponent()
-						curComponent.fromXML(compElement, ttFont)
+						curComponent.fromXML(name, attrs, content, ttFont)
 						self.componentArray.append(curComponent)
 					else:
 						print "Warning: '%s' being ignored in component array." % name
