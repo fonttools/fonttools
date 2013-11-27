@@ -19,11 +19,12 @@ import struct
 from fontTools.misc import sstruct
 from . import DefaultTable
 from fontTools import ttLib
-from fontTools.misc.textTools import safeEval, readHex
+from fontTools.misc.textTools import safeEval
 from fontTools.misc.arrayTools import calcBounds
 from . import ttProgram
 import array
 import warnings
+from fontTools.misc.py23 import *
 
 class table__g_l_y_f(DefaultTable.DefaultTable):
 	
@@ -641,7 +642,7 @@ class Glyph:
 
 	def removeHinting(self):
 		if not hasattr(self, "data"):
-			self.program = ttLib.tables.ttProgram.Program()
+			self.program = ttProgram.Program()
 			self.program.fromBytecode([])
 			return
 

@@ -1,4 +1,5 @@
 from fontTools.pens.basePen import AbstractPen
+from fontTools.misc.py23 import *
 
 
 __all__ = ["TransformPen"]

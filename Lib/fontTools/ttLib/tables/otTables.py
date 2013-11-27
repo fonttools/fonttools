@@ -7,6 +7,7 @@ converter objects from otConverters.py.
 import operator
 from .otBase import BaseTable, FormatSwitchingBaseTable
 import warnings
+from fontTools.misc.py23 import *
 
 
 class LookupOrder(BaseTable):

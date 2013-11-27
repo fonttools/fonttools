@@ -45,6 +45,7 @@ Examples:
 	>>>
 """
 
+from .py23 import *
 
 __all__ = ["Transform", "Identity", "Offset", "Scale"]
 

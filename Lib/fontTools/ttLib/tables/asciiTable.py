@@ -1,4 +1,5 @@
 from . import DefaultTable
+from fontTools.misc.py23 import *
 
 
 class asciiTable(DefaultTable.DefaultTable):

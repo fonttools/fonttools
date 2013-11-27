@@ -3,6 +3,7 @@ import struct
 from fontTools.ttLib import sfnt
 from fontTools.misc.textTools import safeEval, readHex
 import warnings
+from fontTools.misc.py23 import *
 
 
 class table__k_e_r_n(DefaultTable.DefaultTable):

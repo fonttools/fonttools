@@ -1,6 +1,7 @@
 from . import DefaultTable
 from fontTools.misc import sstruct
-from fontTools.misc.textTools import safeEval, num2binary, binary2num
+from fontTools.misc.textTools import safeEval
+from fontTools.misc.py23 import *
 
 GMAPFormat = """
 		>	# big endian

@@ -1,4 +1,3 @@
-
 from . import DefaultTable
 import os
 import struct
@@ -6,6 +5,7 @@ from fontTools.misc import sstruct
 import itertools
 from fontTools.misc.textTools import safeEval, readHex, hexStr, deHexStr
 from .BitmapGlyphMetrics import BigGlyphMetrics, bigGlyphMetricsFormat, SmallGlyphMetrics, smallGlyphMetricsFormat
+from fontTools.misc.py23 import *
 
 ebdtTableVersionFormat = """
 	> # big endian

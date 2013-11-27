@@ -2,6 +2,7 @@ from fontTools import ttLib
 from fontTools.misc.textTools import safeEval
 from fontTools.ttLib.tables.DefaultTable import DefaultTable
 import os
+from .py23 import *
 
 
 class TTXParseError(Exception): pass

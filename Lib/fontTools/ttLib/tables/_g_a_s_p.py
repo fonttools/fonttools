@@ -1,6 +1,7 @@
 from . import DefaultTable
 import struct
 from fontTools.misc.textTools import safeEval
+from fontTools.misc.py23 import *
 
 
 GASP_SYMMETRIC_GRIDFIT = 0x0004

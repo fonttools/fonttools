@@ -1,9 +1,6 @@
 from . import DefaultTable
 from fontTools import cffLib
-try:
-	from cStringIO import StringIO
-except ImportError:
-	from io import StringIO
+from fontTools.misc.py23 import *
 
 
 class table_C_F_F_(DefaultTable.DefaultTable):

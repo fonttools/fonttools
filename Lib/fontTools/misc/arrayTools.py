@@ -5,6 +5,7 @@
 
 
 import math
+from .py23 import *
 
 def calcBounds(array):
     """Return the bounding rectangle of a 2D points array as a tuple:

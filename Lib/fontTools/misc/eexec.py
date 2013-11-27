@@ -2,6 +2,8 @@
 charstring encryption algorithm as used by PostScript Type 1 fonts.
 """
 
+from .py23 import *
+
 # Warning: Although a Python implementation is provided here, 
 # all four public functions get overridden by the *much* faster 
 # C extension module eexecOp, if available.

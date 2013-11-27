@@ -3,6 +3,7 @@ try:
 	import MacOS
 except ImportError:
 	MacOS = None
+from .py23 import *
 
 def _reverseString(s):
 	s = list(s)

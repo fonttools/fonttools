@@ -5,8 +5,8 @@
 import operator
 from . import DefaultTable
 import struct
-from fontTools.ttLib import sfnt
-from fontTools.misc.textTools import safeEval, readHex
+from fontTools.misc.textTools import safeEval
+from fontTools.misc.py23 import *
 
 
 class table_C_O_L_R_(DefaultTable.DefaultTable):
