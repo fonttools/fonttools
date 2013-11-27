@@ -136,7 +136,7 @@ class CFFWriter:
 	def toFile(self, file):
 		lastPosList = None
 		count = 1
-		while 1:
+		while True:
 			if DEBUG:
 				print "CFFWriter.toFile() iteration:", count
 			count = count + 1
@@ -558,8 +558,7 @@ class CharStrings:
 			return self.charStrings[name], sel
 	
 	def toXML(self, xmlWriter, progress):
-		names = self.keys()
-		names.sort()
+		names = sorted(self.keys())
 		i = 0
 		step = 10
 		numGlyphs = len(names)

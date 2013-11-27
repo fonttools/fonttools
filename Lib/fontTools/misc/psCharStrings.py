@@ -65,7 +65,7 @@ class ByteCodeBase:
 	
 	def read_realNumber(self, b0, data, index):
 		number = ''
-		while 1:
+		while True:
 			b = ord(data[index])
 			index = index + 1
 			nibble0 = (b & 0xf0) >> 4
@@ -87,7 +87,7 @@ def buildOperatorDict(operatorList):
 			oper[item[0]] = item[1]
 		else:
 			oper[item[0]] = item[1:]
-		if type(item[0]) == types.TupleType:
+		if isinstance(item[0], types.TupleType):
 			opc[item[1]] = item[0]
 		else:
 			opc[item[1]] = (item[0],)
@@ -334,7 +334,7 @@ class T2CharString(ByteCodeBase):
 				return None, 0, 0
 			token = self.program[index]
 			index = index + 1
-		isOperator = type(token) == StringType
+		isOperator = isinstance(token, StringType)
 		return token, isOperator, index
 	
 	def getBytes(self, index, nBytes):
@@ -364,7 +364,7 @@ class T2CharString(ByteCodeBase):
 		else:
 			index = 0
 			args = []
-			while 1:
+			while True:
 				token, isOperator, index = self.getToken(index)
 				if token is None:
 					break
@@ -472,7 +472,7 @@ class T1CharString(T2CharString):
 			return
 		program = []
 		index = 0
-		while 1:
+		while True:
 			token, isOperator, index = self.getToken(index)
 			if token is None:
 				break
@@ -510,7 +510,7 @@ class SimpleT2Decompiler:
 			pushToProgram = lambda x: None
 		pushToStack = self.operandStack.append
 		index = 0
-		while 1:
+		while True:
 			token, isOperator, index = charString.getToken(index)
 			if token is None:
 				break  # we're done!
@@ -1143,7 +1143,7 @@ class DictDecompiler(ByteCodeBase):
 		return None, index
 	
 	def handle_operator(self, operator, argType):
-		if type(argType) == type(()):
+		if isinstance(argType, type(())):
 			value = ()
 			for i in range(len(argType)-1, -1, -1):
 				arg = argType[i]

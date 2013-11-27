@@ -28,8 +28,7 @@ class table_T_S_I__5(DefaultTable.DefaultTable):
 		return a.tostring()
 	
 	def toXML(self, writer, ttFont):
-		names = self.glyphGrouping.keys()
-		names.sort()
+		names = sorted(self.glyphGrouping.keys())
 		for glyphName in names:
 			writer.simpletag("glyphgroup", name=glyphName, value=self.glyphGrouping[glyphName])
 			writer.newline()

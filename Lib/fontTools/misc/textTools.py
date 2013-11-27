@@ -77,8 +77,7 @@ def caselessSort(alist):
 			(lower(item), item), alist)
 	except TypeError:
 		# at least one element in alist is not a string, proceed the normal way...
-		alist = alist[:]
-		alist.sort()
+		alist = sorted(alist[:])
 		return alist
 	else:
 		tupledlist.sort()

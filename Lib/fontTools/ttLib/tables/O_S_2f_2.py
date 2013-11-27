@@ -172,7 +172,7 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 		if name == "panose":
 			self.panose = panose = Panose()
 			for element in content:
-				if type(element) == TupleType:
+				if isinstance(element, TupleType):
 					name, attrs, content = element
 					panose.fromXML(name, attrs, content, ttFont)
 		elif name in ("ulUnicodeRange1", "ulUnicodeRange2", 

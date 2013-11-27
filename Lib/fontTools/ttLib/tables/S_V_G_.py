@@ -327,7 +327,7 @@ class ColorPalettes:
 
 	def fromXML(self, name, attrs, content, ttFont):
 		for element in content:
-			if type(element) == type(""):
+			if isinstance(element, type("")):
 				continue
 			name, attrib, content = element
 			if name == "colorParamUINameID":
@@ -352,7 +352,7 @@ class ColorPalette:
 	def fromXML(self, name, attrs, content, ttFont):
 		self.uiNameID = int(attrs["uiNameID"])
 		for element in content:
-			if type(element) == type(""):
+			if isinstance(element, type("")):
 				continue
 			name, attrib, content = element
 			if name == "colorRecord":

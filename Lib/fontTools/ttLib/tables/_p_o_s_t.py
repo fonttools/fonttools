@@ -165,8 +165,7 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 						"ps name mapping for those cases where they differ. That's what\n"
 						"you see below.\n")
 			writer.newline()
-			items = self.mapping.items()
-			items.sort()
+			items = sorted(self.mapping.items())
 			for name, psName in items:
 				writer.simpletag("psName", name=name, psName=psName)
 				writer.newline()
@@ -195,7 +194,7 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 		elif name == "psNames":
 			self.mapping = {}
 			for element in content:
-				if type(element) != TupleType:
+				if not isinstance(element, TupleType):
 					continue
 				name, attrs, content = element
 				if name == "psName":
@@ -203,7 +202,7 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 		elif name == "extraNames":
 			self.extraNames = []
 			for element in content:
-				if type(element) != TupleType:
+				if not isinstance(element, TupleType):
 					continue
 				name, attrs, content = element
 				if name == "psName":

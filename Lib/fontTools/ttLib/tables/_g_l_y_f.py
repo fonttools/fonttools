@@ -124,7 +124,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 			setattr(glyph, attr, safeEval(attrs.get(attr, '0')))
 		self.glyphs[glyphName] = glyph
 		for element in content:
-			if type(element) != TupleType:
+			if not isinstance(element, TupleType):
 				continue
 			name, attrs, content = element
 			glyph.fromXML(name, attrs, content, ttFont)
@@ -290,7 +290,7 @@ class Glyph:
 			coordinates = GlyphCoordinates()
 			flags = []
 			for element in content:
-				if type(element) != TupleType:
+				if not isinstance(element, TupleType):
 					continue
 				name, attrs, content = element
 				if name != "pt":
@@ -318,7 +318,7 @@ class Glyph:
 		elif name == "instructions":
 			self.program = ttProgram.Program()
 			for element in content:
-				if type(element) != TupleType:
+				if not isinstance(element, TupleType):
 					continue
 				name, attrs, content = element
 				self.program.fromXML(name, attrs, content, ttFont)
@@ -425,7 +425,7 @@ class Glyph:
 		xFormat = ">" # big endian
 		yFormat = ">" # big endian
 		i = j = 0
-		while 1:
+		while True:
 			flag = ord(data[i])
 			i = i + 1
 			repeat = 1
@@ -672,7 +672,7 @@ class Glyph:
 					# padding.
 					coordBytes = 0
 					j = 0
-					while 1:
+					while True:
 						flag = data[i]
 						i = i + 1
 						repeat = 1
@@ -725,7 +725,7 @@ class Glyph:
 		self.data = data
 	
 	def __cmp__(self, other):
-		if type(self) != type(other): return cmp(type(self), type(other))
+		if not isinstance(self, type(other)): return cmp(type(self), type(other))
 		if self.__class__ != other.__class__: return cmp(self.__class__, other.__class__)
 
 		return cmp(self.__dict__, other.__dict__)
@@ -888,7 +888,7 @@ class GlyphComponent:
 		self.flags = safeEval(attrs["flags"])
 	
 	def __cmp__(self, other):
-		if type(self) != type(other): return cmp(type(self), type(other))
+		if not isinstance(self, type(other)): return cmp(type(self), type(other))
 		if self.__class__ != other.__class__: return cmp(self.__class__, other.__class__)
 
 		return cmp(self.__dict__, other.__dict__)
@@ -971,7 +971,7 @@ class GlyphCoordinates:
 
 def reprflag(flag):
 	bin = ""
-	if type(flag) == StringType:
+	if isinstance(flag, StringType):
 		flag = ord(flag)
 	while flag:
 		if flag & 0x01:

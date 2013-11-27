@@ -25,8 +25,7 @@ class table__g_a_s_p(DefaultTable.DefaultTable):
 		version = 0 # ignore self.version
 		numRanges = len(self.gaspRange)
 		data = ""
-		items = self.gaspRange.items()
-		items.sort()
+		items = sorted(self.gaspRange.items())
 		for rangeMaxPPEM, rangeGaspBehavior in items:
 			data = data + struct.pack(">HH", rangeMaxPPEM, rangeGaspBehavior)
 			if rangeGaspBehavior & ~(GASP_GRIDFIT | GASP_DOGRAY):
@@ -35,8 +34,7 @@ class table__g_a_s_p(DefaultTable.DefaultTable):
 		return data
 	
 	def toXML(self, writer, ttFont):
-		items = self.gaspRange.items()
-		items.sort()
+		items = sorted(self.gaspRange.items())
 		for rangeMaxPPEM, rangeGaspBehavior in items:
 			writer.simpletag("gaspRange", [
 					("rangeMaxPPEM", rangeMaxPPEM),

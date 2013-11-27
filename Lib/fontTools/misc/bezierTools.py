@@ -132,8 +132,7 @@ def splitQuadratic(pt1, pt2, pt3, where, isHorizontal):
     a, b, c = calcQuadraticParameters(pt1, pt2, pt3)
     solutions = solveQuadratic(a[isHorizontal], b[isHorizontal],
         c[isHorizontal] - where)
-    solutions = [t for t in solutions if 0 <= t < 1]
-    solutions.sort()
+    solutions = sorted([t for t in solutions if 0 <= t < 1])
     if not solutions:
         return [(pt1, pt2, pt3)]
     return _splitQuadraticAtT(a, b, c, *solutions)
@@ -157,8 +156,7 @@ def splitCubic(pt1, pt2, pt3, pt4, where, isHorizontal):
     a, b, c, d = calcCubicParameters(pt1, pt2, pt3, pt4)
     solutions = solveCubic(a[isHorizontal], b[isHorizontal], c[isHorizontal],
         d[isHorizontal] - where)
-    solutions = [t for t in solutions if 0 <= t < 1]
-    solutions.sort()
+    solutions = sorted([t for t in solutions if 0 <= t < 1])
     if not solutions:
         return [(pt1, pt2, pt3, pt4)]
     return _splitCubicAtT(a, b, c, d, *solutions)

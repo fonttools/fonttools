@@ -519,8 +519,7 @@ class TTFont:
 	
 	def getGlyphNames(self):
 		"""Get a list of glyph names, sorted alphabetically."""
-		glyphNames = self.getGlyphOrder()[:]
-		glyphNames.sort()
+		glyphNames = sorted(self.getGlyphOrder()[:])
 		return glyphNames
 	
 	def getGlyphNames2(self):
@@ -913,8 +912,7 @@ def sortedTagList(tagList, tableOrder=None):
 	specification, or according to a custom tableOrder. If given and not
 	None, tableOrder needs to be a list of tag names.
 	"""
-	tagList = list(tagList)
-	tagList.sort()
+	tagList = sorted(tagList)
 	if tableOrder is None:
 		if "DSIG" in tagList:
 			# DSIG should be last (XXX spec reference?)

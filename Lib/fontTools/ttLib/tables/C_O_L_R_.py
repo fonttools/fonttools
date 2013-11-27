@@ -119,7 +119,7 @@ class table_C_O_L_R_(DefaultTable.DefaultTable):
 
 
 	def __getitem__(self, glyphSelector):
-		if type(glyphSelector) == IntType:
+		if isinstance(glyphSelector, IntType):
 			# its a gid, convert to glyph name
 			glyphSelector = self.getGlyphName(glyphSelector)
 
@@ -129,7 +129,7 @@ class table_C_O_L_R_(DefaultTable.DefaultTable):
 		return self.ColorLayers[glyphSelector]
 
 	def __setitem__(self, glyphSelector, value):
-		if type(glyphSelector) == IntType:
+		if isinstance(glyphSelector, IntType):
 			# its a gid, convert to glyph name
 			glyphSelector = self.getGlyphName(glyphSelector)
 
@@ -151,7 +151,7 @@ class LayerRecord:
 	def fromXML(self, eltname, attrs, content, ttFont):
 		for (name, value) in attrs.items():
 			if name == "name":
-				if type(value) == IntType:
+				if isinstance(value, IntType):
 					value = ttFont.getGlyphName(value)
 				setattr(self, name, value)
 			else:

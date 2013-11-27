@@ -242,7 +242,7 @@ class Strike:
 
 	def fromXML(self, name, attrs, content, ttFont, locator):
 		for element in content:
-			if type(element) != TupleType:
+			if not isinstance(element, TupleType):
 				continue
 			name, attrs, content = element
 			if name == 'bitmapSizeTable':
@@ -282,7 +282,7 @@ class BitmapSizeTable:
 		# bitmap size table. Only read the information from these names.
 		dataNames = set(self._getXMLMetricNames())
 		for element in content:
-			if type(element) != TupleType:
+			if not isinstance(element, TupleType):
 				continue
 			name, attrs, content = element
 			if name == 'sbitLineMetrics':
@@ -311,7 +311,7 @@ class SbitLineMetrics:
 	def fromXML(self, name, attrs, content, ttFont):
 		metricNames = set(sstruct.getformat(sbitLineMetricsFormat)[1])
 		for element in content:
-			if type(element) != TupleType:
+			if not isinstance(element, TupleType):
 				continue
 			name, attrs, content = element
 			if name in metricNames:
@@ -378,7 +378,7 @@ class EblcIndexSubTable:
 
 		self.names = []
 		for element in content:
-			if type(element) != TupleType:
+			if not isinstance(element, TupleType):
 				continue
 			name, attrs, content = element
 			if name == 'glyphLoc':
@@ -494,7 +494,7 @@ class FixedSizeIndexSubTableMixin:
 
 	def readMetrics(self, name, attrs, content, ttFont):
 		for element in content:
-			if type(element) != TupleType:
+			if not isinstance(element, TupleType):
 				continue
 			name, attrs, content = element
 			if name == 'imageSize':

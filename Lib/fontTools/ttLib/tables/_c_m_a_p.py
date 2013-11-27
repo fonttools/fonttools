@@ -132,8 +132,7 @@ class CmapSubtable:
 				("language", self.language),
 				])
 		writer.newline()
-		codes = self.cmap.items()
-		codes.sort()
+		codes = sorted(self.cmap.items())
 		self._writeCodes(codes, writer)
 		writer.endtag(self.__class__.__name__)
 		writer.newline()
@@ -151,7 +150,7 @@ class CmapSubtable:
 			writer.newline()
 	
 	def __cmp__(self, other):
-		if type(self) != type(other): return cmp(type(self), type(other))
+		if not isinstance(self, type(other)): return cmp(type(self), type(other))
 
 		# implemented so that list.sort() sorts according to the cmap spec.
 		selfTuple = (
@@ -191,8 +190,7 @@ class cmap_format_0(CmapSubtable):
 		if self.data:
 			return struct.pack(">HHH", 0, 262, self.language) + self.data
 
-		charCodeList = self.cmap.items()
-		charCodeList.sort()
+		charCodeList = sorted(self.cmap.items())
 		charCodes = [entry[0] for entry in charCodeList]
 		valueList = [entry[1] for entry in charCodeList]
 		assert charCodes == list(range(256))
@@ -209,7 +207,7 @@ class cmap_format_0(CmapSubtable):
 			self.cmap = {}
 		cmap = self.cmap
 		for element in content:
-			if type(element) != TupleType:
+			if not isinstance(element, TupleType):
 				continue
 			name, attrs, content = element
 			if name != "map":
@@ -380,8 +378,7 @@ class cmap_format_2(CmapSubtable):
 		kEmptyTwoCharCodeRange = -1
 		notdefGI = 0
 
-		items = self.cmap.items()
-		items.sort()
+		items = sorted(self.cmap.items())
 		charCodes = [item[0] for item in items]
 		names = [item[1] for item in items]
 		nameMap = ttFont.getReverseGlyphMap()
@@ -529,7 +526,7 @@ class cmap_format_2(CmapSubtable):
 		cmap = self.cmap
 
 		for element in content:
-			if type(element) != TupleType:
+			if not isinstance(element, TupleType):
 				continue
 			name, attrs, content = element
 			if name != "map":
@@ -821,7 +818,7 @@ class cmap_format_4(CmapSubtable):
 		cmap = self.cmap
 
 		for element in content:
-			if type(element) != TupleType:
+			if not isinstance(element, TupleType):
 				continue
 			nameMap, attrsMap, dummyContent = element
 			if nameMap != "map":
@@ -890,7 +887,7 @@ class cmap_format_6(CmapSubtable):
 		cmap = self.cmap
 
 		for element in content:
-			if type(element) != TupleType:
+			if not isinstance(element, TupleType):
 				continue
 			name, attrs, content = element
 			if name != "map":
@@ -1016,8 +1013,7 @@ class cmap_format_12_or_13(CmapSubtable):
 				("nGroups", self.nGroups),
 				])
 		writer.newline()
-		codes = self.cmap.items()
-		codes.sort()
+		codes = sorted(self.cmap.items())
 		self._writeCodes(codes, writer)
 		writer.endtag(self.__class__.__name__)
 		writer.newline()
@@ -1033,7 +1029,7 @@ class cmap_format_12_or_13(CmapSubtable):
 		cmap = self.cmap
 
 		for element in content:
-			if type(element) != TupleType:
+			if not isinstance(element, TupleType):
 				continue
 			name, attrs, content = element
 			if name != "map":
@@ -1164,8 +1160,7 @@ class cmap_format_14(CmapSubtable):
 				])
 		writer.newline()
 		uvsDict = self.uvsDict
-		uvsList = uvsDict.keys()
-		uvsList.sort()
+		uvsList = sorted(uvsDict.keys())
 		for uvs in uvsList:
 			uvList = uvsDict[uvs]
 			uvList.sort(cmpUVSListEntry)
@@ -1190,7 +1185,7 @@ class cmap_format_14(CmapSubtable):
 			uvsDict = self.uvsDict 
 
 		for element in content:
-			if type(element) != TupleType:
+			if not isinstance(element, TupleType):
 				continue
 			name, attrs, content = element
 			if name != "map":
@@ -1211,8 +1206,7 @@ class cmap_format_14(CmapSubtable):
 			return struct.pack(">HLL", self.format, self.length , self.numVarSelectorRecords) + self.data
 
 		uvsDict = self.uvsDict
-		uvsList = uvsDict.keys()
-		uvsList.sort()
+		uvsList = sorted(uvsDict.keys())
 		self.numVarSelectorRecords = len(uvsList)
 		offset = 10 + self.numVarSelectorRecords*11 # current value is end of VarSelectorRecords block.
 		data = []

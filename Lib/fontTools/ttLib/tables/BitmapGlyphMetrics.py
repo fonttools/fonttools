@@ -40,7 +40,7 @@ class BitmapGlyphMetrics:
 	def fromXML(self, name, attrs, content, ttFont):
 		metricNames = set(sstruct.getformat(self.__class__.binaryFormat)[1])
 		for element in content:
-			if type(element) != TupleType:
+			if not isinstance(element, TupleType):
 				continue
 			name, attrs, content = element
 			# Make sure this is a metric that is needed by GlyphMetrics.

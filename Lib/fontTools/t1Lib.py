@@ -177,7 +177,7 @@ def readPFB(path, onlyHeader=0):
 	"""reads a PFB font file, returns raw data"""
 	f = open(path, "rb")
 	data = []
-	while 1:
+	while True:
 		if f.read(1) != chr(128):
 			raise T1Error('corrupt PFB file')
 		code = ord(f.read(1))
@@ -311,7 +311,7 @@ def decryptType1(data):
 
 def findEncryptedChunks(data):
 	chunks = []
-	while 1:
+	while True:
 		eBegin = string.find(data, EEXECBEGIN)
 		if eBegin < 0:
 			break

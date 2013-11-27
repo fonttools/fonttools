@@ -63,7 +63,7 @@ error = "sstruct.error"
 def pack(format, object):
 	formatstring, names, fixes = getformat(format)
 	elements = []
-	if type(object) is not types.DictType:
+	if not isinstance(object, types.DictType):
 		object = object.__dict__
 	for name in names:
 		value = object[name]
@@ -78,7 +78,7 @@ def unpack(format, data, object=None):
 	if object is None:
 		object = {}
 	formatstring, names, fixes = getformat(format)
-	if type(object) is types.DictType:
+	if isinstance(object, types.DictType):
 		dict = object
 	else:
 		dict = object.__dict__

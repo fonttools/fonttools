@@ -112,8 +112,7 @@ class table__m_a_x_p(DefaultTable.DefaultTable):
 			headTable.flags = headTable.flags & ~0x2
 	
 	def testrepr(self):
-		items = self.__dict__.items()
-		items.sort()
+		items = sorted(self.__dict__.items())
 		print ". . . . . . . . ."
 		for combo in items:
 			print "  %s: %s" % combo

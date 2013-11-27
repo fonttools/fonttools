@@ -96,7 +96,7 @@ class table_V_O_R_G_(DefaultTable.DefaultTable):
 
 
 	def __getitem__(self, glyphSelector):
-		if type(glyphSelector) == IntType:
+		if isinstance(glyphSelector, IntType):
 			# its a gid, convert to glyph name
 			glyphSelector = self.getGlyphName(glyphSelector)
 
@@ -106,7 +106,7 @@ class table_V_O_R_G_(DefaultTable.DefaultTable):
 		return self.VOriginRecords[glyphSelector]
 
 	def __setitem__(self, glyphSelector, value):
-		if type(glyphSelector) == IntType:
+		if isinstance(glyphSelector, IntType):
 			# its a gid, convert to glyph name
 			glyphSelector = self.getGlyphName(glyphSelector)
 

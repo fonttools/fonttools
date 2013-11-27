@@ -108,8 +108,7 @@ class XMLWriter:
 	def stringifyattrs(self, *args, **kwargs):
 		if kwargs:
 			assert not args
-			attributes = kwargs.items()
-			attributes.sort()
+			attributes = sorted(kwargs.items())
 		elif args:
 			assert len(args) == 1
 			attributes = args[0]
