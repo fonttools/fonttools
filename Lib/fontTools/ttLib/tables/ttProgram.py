@@ -269,7 +269,7 @@ class Program:
 			skipWhite=_skipWhite, mnemonicDict=mnemonicDict, strip=string.strip,
 			binary2num=binary2num):
 		assembly = self.assembly
-		if type(assembly) == type([]):
+		if isinstance(assembly, type([])):
 			assembly = string.join(assembly, " ")
 		bytecode = []
 		push = bytecode.append

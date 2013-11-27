@@ -72,8 +72,7 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 		return data
 	
 	def toXML(self, writer, ttFont):
-		names = self.metrics.keys()
-		names.sort()
+		names = sorted(self.metrics.keys())
 		for glyphName in names:
 			advance, sb = self.metrics[glyphName]
 			writer.simpletag("mtx", [

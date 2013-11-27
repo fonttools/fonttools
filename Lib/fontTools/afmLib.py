@@ -177,7 +177,7 @@ class AFM:
 		ncomponents = int(m.group(2))
 		rest = rest[m.regs[0][1]:]
 		components = []
-		while 1:
+		while True:
 			m = componentRE.match(rest)
 			if m is None:
 				raise error("syntax error in AFM file: " + repr(rest))
@@ -215,8 +215,7 @@ class AFM:
 				lines.append(attr + " " + str(value))
 		# then write the attributes we don't know about,
 		# in alphabetical order
-		items = attrs.items()
-		items.sort()
+		items = sorted(attrs.items())
 		for attr, value in items:
 			if attr in preferredAttributeOrder:
 				continue
@@ -254,8 +253,7 @@ class AFM:
 		lines.append("EndKernData")
 		
 		if self._composites:
-			composites = self._composites.items()
-			composites.sort()
+			composites = sorted(self._composites.items())
 			lines.append("StartComposites %s" % len(self._composites))
 			for charname, components in composites:
 				line = "CC %s %s ;" % (charname, len(components))
@@ -316,7 +314,7 @@ class AFM:
 				raise AttributeError(attr)
 	
 	def __getitem__(self, key):
-		if type(key) == types.TupleType:
+		if isinstance(key, types.TupleType):
 			# key is a tuple, return the kernpair
 			return self._kerning[key]
 		else:
@@ -324,7 +322,7 @@ class AFM:
 			return self._chars[key]
 	
 	def __setitem__(self, key, value):
-		if type(key) == types.TupleType:
+		if isinstance(key, types.TupleType):
 			# key is a tuple, set kernpair
 			self._kerning[key] = value
 		else:
@@ -332,7 +330,7 @@ class AFM:
 			self._chars[key] = value
 	
 	def __delitem__(self, key):
-		if type(key) == types.TupleType:
+		if isinstance(key, types.TupleType):
 			# key is a tuple, del kernpair
 			del self._kerning[key]
 		else:

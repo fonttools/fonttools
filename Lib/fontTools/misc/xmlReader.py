@@ -37,7 +37,7 @@ class XMLReader:
 		parser.CharacterDataHandler = self._characterDataHandler
 		
 		pos = 0
-		while 1:
+		while True:
 			chunk = file.read(BUFSIZE)
 			if not chunk:
 				parser.Parse(chunk, 1)

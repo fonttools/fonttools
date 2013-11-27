@@ -163,8 +163,7 @@ class SingleSubst(FormatSwitchingBaseTable):
 		items = mapping.items()
 		getGlyphID = font.getGlyphID
 		gidItems = [(getGlyphID(item[0]), getGlyphID(item[1])) for item in items]
-		sortableItems = list(zip(gidItems, items))
-		sortableItems.sort()
+		sortableItems = sorted(zip(gidItems, items))
 
 		# figure out format
 		format = 2
@@ -193,8 +192,7 @@ class SingleSubst(FormatSwitchingBaseTable):
 		return rawTable
 	
 	def toXML2(self, xmlWriter, font):
-		items = self.mapping.items()
-		items.sort()
+		items = sorted(self.mapping.items())
 		for inGlyph, outGlyph in items:
 			xmlWriter.simpletag("Substitution",
 					[("in", inGlyph), ("out", outGlyph)])
@@ -273,8 +271,7 @@ class ClassDef(FormatSwitchingBaseTable):
 		return {"ClassRangeRecord": ranges}
 	
 	def toXML2(self, xmlWriter, font):
-		items = self.classDefs.items()
-		items.sort()
+		items = sorted(self.classDefs.items())
 		for glyphName, cls in items:
 			xmlWriter.simpletag("ClassDef", [("glyph", glyphName), ("class", cls)])
 			xmlWriter.newline()
@@ -329,8 +326,7 @@ class AlternateSubst(FormatSwitchingBaseTable):
 		return {"Coverage": cov, "AlternateSet": alternates}
 	
 	def toXML2(self, xmlWriter, font):
-		items = self.alternates.items()
-		items.sort()
+		items = sorted(self.alternates.items())
 		for glyphName, alternates in items:
 			xmlWriter.begintag("AlternateSet", glyph=glyphName)
 			xmlWriter.newline()
@@ -349,7 +345,7 @@ class AlternateSubst(FormatSwitchingBaseTable):
 		set = []
 		alternates[glyphName] = set
 		for element in content:
-			if type(element) != TupleType:
+			if not isinstance(element, TupleType):
 				continue
 			name, attrs, content = element
 			set.append(attrs["glyph"])
@@ -396,8 +392,7 @@ class LigatureSubst(FormatSwitchingBaseTable):
 		return {"Coverage": cov, "LigatureSet": ligSets}
 	
 	def toXML2(self, xmlWriter, font):
-		items = self.ligatures.items()
-		items.sort()
+		items = sorted(self.ligatures.items())
 		for glyphName, ligSets in items:
 			xmlWriter.begintag("LigatureSet", glyph=glyphName)
 			xmlWriter.newline()
@@ -417,7 +412,7 @@ class LigatureSubst(FormatSwitchingBaseTable):
 		ligs = []
 		ligatures[glyphName] = ligs
 		for element in content:
-			if type(element) != TupleType:
+			if not isinstance(element, TupleType):
 				continue
 			name, attrs, content = element
 			lig = Ligature()
@@ -523,8 +518,7 @@ def splitAlternateSubst(oldSubTable, newSubTable, overflowRecord):
 	if hasattr(oldSubTable, 'sortCoverageLast'):
 		newSubTable.sortCoverageLast = oldSubTable.sortCoverageLast
 	
-	oldAlts = oldSubTable.alternates.items()
-	oldAlts.sort()
+	oldAlts = sorted(oldSubTable.alternates.items())
 	oldLen = len(oldAlts)
 
 	if overflowRecord.itemName in [ 'Coverage', 'RangeRecord']:
@@ -552,8 +546,7 @@ def splitAlternateSubst(oldSubTable, newSubTable, overflowRecord):
 def splitLigatureSubst(oldSubTable, newSubTable, overflowRecord):
 	ok = 1
 	newSubTable.Format = oldSubTable.Format
-	oldLigs = oldSubTable.ligatures.items()
-	oldLigs.sort()
+	oldLigs = sorted(oldSubTable.ligatures.items())
 	oldLen = len(oldLigs)
 
 	if overflowRecord.itemName in [ 'Coverage', 'RangeRecord']:

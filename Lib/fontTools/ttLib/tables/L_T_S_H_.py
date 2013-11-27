@@ -35,8 +35,7 @@ class table_L_T_S_H_(DefaultTable.DefaultTable):
 		return struct.pack(">HH", version, numGlyphs) + yPels.tostring()
 	
 	def toXML(self, writer, ttFont):
-		names = self.yPels.keys()
-		names.sort()
+		names = sorted(self.yPels.keys())
 		for name in names:
 			writer.simpletag("yPel", name=name, value=self.yPels[name])
 			writer.newline()

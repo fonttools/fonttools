@@ -34,8 +34,7 @@ class table__h_d_m_x(DefaultTable.DefaultTable):
 		pad = (self.recordSize - 2 - numGlyphs) * "\0"
 		self.numRecords = len(self.hdmx)
 		data = sstruct.pack(hdmxHeaderFormat, self)
-		items = self.hdmx.items()
-		items.sort()
+		items = sorted(self.hdmx.items())
 		for ppem, widths in items:
 			data = data + chr(ppem) + chr(max(widths.values()))
 			for glyphID in range(len(glyphOrder)):
@@ -47,8 +46,7 @@ class table__h_d_m_x(DefaultTable.DefaultTable):
 	def toXML(self, writer, ttFont):
 		writer.begintag("hdmxData")
 		writer.newline()
-		ppems = self.hdmx.keys()
-		ppems.sort()
+		ppems = sorted(self.hdmx.keys())
 		records = []
 		format = ""
 		for ppem in ppems:

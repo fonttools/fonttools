@@ -43,8 +43,7 @@ class BaseTTXConverter(DefaultTable):
 		self.table = tableClass()
 		self.table.decompile(reader, font)
 		if cachingStats:
-			stats = [(v, k) for k, v in cachingStats.items()]
-			stats.sort()
+			stats = sorted([(v, k) for k, v in cachingStats.items()])
 			stats.reverse()
 			print "cachingsstats for ", self.tableTag
 			for v, k in stats:
@@ -289,7 +288,7 @@ class OTTableWriter(object):
 		return hash(self.items)
 	
 	def __cmp__(self, other):
-		if type(self) != type(other): return cmp(type(self), type(other))
+		if not isinstance(self, type(other)): return cmp(type(self), type(other))
 		if self.__class__ != other.__class__: return cmp(self.__class__, other.__class__)
 
 		return cmp(self.items, other.items)
@@ -675,7 +674,7 @@ class BaseTable(object):
 			setattr(self, conv.name, value)
 	
 	def __cmp__(self, other):
-		if type(self) != type(other): return cmp(type(self), type(other))
+		if not isinstance(self, type(other)): return cmp(type(self), type(other))
 		if self.__class__ != other.__class__: return cmp(self.__class__, other.__class__)
 
 		self.ensureDecompiled()
@@ -829,19 +828,19 @@ class ValueRecord:
 		for k, v in attrs.items():
 			setattr(self, k, int(v))
 		for element in content:
-			if type(element) != TupleType:
+			if not isinstance(element, TupleType):
 				continue
 			name, attrs, content = element
 			value = getattr(otTables, name)()
 			for elem2 in content:
-				if type(elem2) != TupleType:
+				if not isinstance(elem2, TupleType):
 					continue
 				name2, attrs2, content2 = elem2
 				value.fromXML(name2, attrs2, content2, font)
 			setattr(self, name, value)
 	
 	def __cmp__(self, other):
-		if type(self) != type(other): return cmp(type(self), type(other))
+		if not isinstance(self, type(other)): return cmp(type(self), type(other))
 		if self.__class__ != other.__class__: return cmp(self.__class__, other.__class__)
 
 		return cmp(self.__dict__, other.__dict__)

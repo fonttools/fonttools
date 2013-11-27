@@ -173,8 +173,7 @@ class SFNTWriter:
 		"""All tables must have been written to disk. Now write the
 		directory.
 		"""
-		tables = self.tables.items()
-		tables.sort()
+		tables = sorted(self.tables.items())
 		if len(tables) != self.numTables:
 			from fontTools import ttLib
 			raise ttLib.TTLibError("wrong number of tables; expected %d, found %d" % (self.numTables, len(tables)))
@@ -250,8 +249,7 @@ class SFNTWriter:
 			# Create a SFNT directory for checksum calculation purposes
 			self.searchRange, self.entrySelector, self.rangeShift = getSearchRange(self.numTables)
 			directory = sstruct.pack(sfntDirectoryFormat, self)
-			tables = self.tables.items()
-			tables.sort()
+			tables = sorted(self.tables.items())
 			for tag, entry in tables:
 				sfntEntry = SFNTDirectoryEntry()
 				for item in ['tag', 'checkSum', 'offset', 'length']:

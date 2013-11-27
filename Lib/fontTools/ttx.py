@@ -173,8 +173,7 @@ def ttList(input, output, options):
 	import string
 	ttf = TTFont(input, fontNumber=options.fontNumber, lazy=True)
 	reader = ttf.reader
-	tags = reader.keys()
-	tags.sort()
+	tags = sorted(reader.keys())
 	print 'Listing table info for "%s":' % input
 	format = "    %4s  %10s  %7s  %7s"
 	print format % ("tag ", "  checksum", " length", " offset")
@@ -224,7 +223,7 @@ def ttCompile(input, output, options):
 		overflowRecord = e.value
 		print "Attempting to fix OTLOffsetOverflowError", e
 		lastItem = overflowRecord 
-		while 1:
+		while True:
 			ok = 0
 			if overflowRecord.itemName == None:
 				ok = fixLookupOverFlows(ttf, overflowRecord)

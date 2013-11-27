@@ -60,7 +60,7 @@ class SFNTResourceReader:
 	def __init__(self, path, res_name_or_index):
 		resref = MyOpenResFile(path)
 		Res.UseResFile(resref)
-		if type(res_name_or_index) == type(""):
+		if isinstance(res_name_or_index, type("")):
 			res = Res.Get1NamedResource('sfnt', res_name_or_index)
 		else:
 			res = Res.Get1IndResource('sfnt', res_name_or_index)

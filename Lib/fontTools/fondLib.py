@@ -206,8 +206,7 @@ class FontFamily:
 	
 	def _buildboundingboxtable(self):
 		if self.boundingBoxes and self._rawoffsettable[:6] == '\0\0\0\0\0\6':
-			boxes = self.boundingBoxes.items()
-			boxes.sort()
+			boxes = sorted(self.boundingBoxes.items())
 			data = '\0\0\0\0\0\6' + struct.pack(">h", len(boxes) - 1)
 			for style, (l, b, r, t) in boxes:
 				data = data + struct.pack(">hhhhh", style, l, b, r, t)
@@ -241,8 +240,7 @@ class FontFamily:
 			return
 		numberofentries = len(self.widthTables)
 		data = struct.pack('>h', numberofentries - 1)
-		tables = self.widthTables.items()
-		tables.sort()
+		tables = sorted(self.widthTables.items())
 		for stylecode, table in tables:
 			data = data + struct.pack('>h', stylecode)
 			if len(table) != (3 + self.ffLastChar - self.ffFirstChar):
@@ -284,8 +282,7 @@ class FontFamily:
 			return
 		numberofentries = len(self.kernTables)
 		data = [struct.pack('>h', numberofentries - 1)]
-		tables = self.kernTables.items()
-		tables.sort()
+		tables = sorted(self.kernTables.items())
 		for stylecode, table in tables:
 			data.append(struct.pack('>h', stylecode))
 			data.append(struct.pack('>h', len(table)))  # numberofpairs
@@ -375,8 +372,7 @@ class FontFamily:
 			for part in split:
 				nameparts[part] = None
 		del nameparts[self.ffFamilyName]
-		nameparts = nameparts.keys()
-		nameparts.sort()
+		nameparts = sorted(nameparts.keys())
 		items = splitnames.items()
 		items.sort()
 		numindices = 0
@@ -433,8 +429,7 @@ class FontFamily:
 			return
 		numberofentries = len(self.glyphEncoding)
 		data = struct.pack(">h", numberofentries)
-		items = self.glyphEncoding.items()
-		items.sort()
+		items = sorted(self.glyphEncoding.items())
 		for glyphcode, glyphname in items:
 			data = data + chr(glyphcode) + chr(len(glyphname)) + glyphname
 		self._rawglyphencodingsubtable = data
@@ -497,8 +492,7 @@ class BitmapFontFile:
 		for fond in self.fonds:
 			fond.parse()
 			if hasattr(fond, "psNames") and fond.psNames:
-				psNames = fond.psNames.values()
-				psNames.sort()
+				psNames = sorted(fond.psNames.values())
 				self.fondsbyname[psNames[0]] = fond
 	
 	def minimalparse(self):

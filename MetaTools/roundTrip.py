@@ -46,7 +46,7 @@ def roundTrip(ttFile1, options, report):
 		diffcmd = 'diff -U2 -I ".*modified value\|checkSumAdjustment.*" "%s" "%s"' % (xmlFile1, xmlFile2)
 		output = os.popen(diffcmd, "r", 1)
 		lines = []
-		while 1:
+		while True:
 			line = output.readline()
 			if not line:
 				break

@@ -120,10 +120,9 @@ class KernTable_format_0:
 		data = struct.pack(">HHHH", nPairs, searchRange, entrySelector, rangeShift)
 		
 		# yeehee! (I mean, turn names into indices)
-		kernTable = map(lambda ((left, right), value), getGlyphID=ttFont.getGlyphID:
+		kernTable = sorted(map(lambda ((left, right), value), getGlyphID=ttFont.getGlyphID:
 					(getGlyphID(left), getGlyphID(right), value), 
-				self.kernTable.items())
-		kernTable.sort()
+				self.kernTable.items()))
 		for left, right, value in kernTable:
 			data = data + struct.pack(">HHh", left, right, value)
 		return struct.pack(">HHH", self.version, len(data) + 6, self.coverage) + data
@@ -131,8 +130,7 @@ class KernTable_format_0:
 	def toXML(self, writer, ttFont):
 		writer.begintag("kernsubtable", coverage=self.coverage, format=0)
 		writer.newline()
-		items = self.kernTable.items()
-		items.sort()
+		items = sorted(self.kernTable.items())
 		for (left, right), value in items:
 			writer.simpletag("pair", [
 					("l", left),
@@ -149,7 +147,7 @@ class KernTable_format_0:
 		if not hasattr(self, "kernTable"):
 			self.kernTable = {}
 		for element in content:
-			if type(element) != TupleType:
+			if not isinstance(element, TupleType):
 				continue
 			name, attrs, content = element
 			self.kernTable[(attrs["l"], attrs["r"])] = safeEval(attrs["v"])
@@ -164,7 +162,7 @@ class KernTable_format_0:
 		del self.kernTable[pair]
 	
 	def __cmp__(self, other):
-		if type(self) != type(other): return cmp(type(self), type(other))
+		if not isinstance(self, type(other)): return cmp(type(self), type(other))
 		if self.__class__ != other.__class__: return cmp(self.__class__, other.__class__)
 
 		return cmp(self.__dict__, other.__dict__)
