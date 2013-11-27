@@ -1996,14 +1996,14 @@ class Logger(object):
   def __call__(self, *things):
     if not self.verbose:
       return
-    print ' '.join(str(x) for x in things)
+    print(' '.join(str(x) for x in things))
 
   def lapse(self, *things):
     if not self.timing:
       return
     new_time = time.time()
-    print "Took %0.3fs to %s" %(new_time - self.last_time,
-                                 ' '.join(str(x) for x in things))
+    print("Took %0.3fs to %s" %(new_time - self.last_time,
+                                 ' '.join(str(x) for x in things)))
     self.last_time = new_time
 
   def glyphs(self, glyphs, font=None):
@@ -2070,7 +2070,7 @@ def main(args):
   args = options.parse_opts(args, ignore_unknown=['text'])
 
   if len(args) < 2:
-    print >>sys.stderr, "usage: pyftsubset font-file glyph... [--text=ABC]... [--option=value]..."
+    print("usage: pyftsubset font-file glyph... [--text=ABC]... [--option=value]...")
     sys.exit(1)
 
   fontfile = args[0]
