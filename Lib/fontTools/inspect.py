@@ -13,6 +13,11 @@ import array
 
 from fontTools import misc, ttLib, cffLib
 
+try:
+	basestring
+except NameError:
+	basestring = str
+
 
 class Row(object):
 	def __init__(self, parent, index, key, value, font):
