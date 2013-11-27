@@ -47,7 +47,6 @@ Dumping 'prep' table...
 
 import sys
 import os
-import string
 
 haveMacSupport = 0
 if sys.platform == "mac":
@@ -500,8 +499,7 @@ class TTFont:
 						glyphName = agl.UV2AGL[unicode]
 					else:
 						# create uni<CODE> name
-						glyphName = "uni" + string.upper(string.zfill(
-								hex(unicode)[2:], 4))
+						glyphName = "uni%04X" % unicode
 					tempName = glyphName
 					n = 1
 					while tempName in allNames:
@@ -881,7 +879,7 @@ def tagToXML(tag):
 	elif tag == "GlyphOrder":
 		return tag
 	if re.match("[A-Za-z_][A-Za-z_0-9]* *$", tag):
-		return string.strip(tag)
+		return tag.strip()
 	else:
 		return tagToIdentifier(tag)
 

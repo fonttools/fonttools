@@ -58,7 +58,7 @@ class XMLWriter:
 	
 	def comment(self, data):
 		data = escape(data)
-		lines = string.split(data, "\n")
+		lines = data.split("\n")
 		self.writeraw("<!-- " + lines[0])
 		for line in lines[1:]:
 			self.newline()
@@ -121,14 +121,14 @@ class XMLWriter:
 	
 
 def escape(data):
-	data = string.replace(data, "&", "&amp;")
-	data = string.replace(data, "<", "&lt;")
+	data = data.replace("&", "&amp;")
+	data = data.replace("<", "&lt;")
 	return data
 
 def escapeattr(data):
-	data = string.replace(data, "&", "&amp;")
-	data = string.replace(data, "<", "&lt;")
-	data = string.replace(data, '"', "&quot;")
+	data = data.replace("&", "&amp;")
+	data = data.replace("<", "&lt;")
+	data = data.replace('"', "&quot;")
 	return data
 
 def escape8bit(data):

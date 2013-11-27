@@ -57,7 +57,6 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 	def compile(self, ttFont):
 		if not hasattr(self, "glyphOrder"):
 			self.glyphOrder = ttFont.getGlyphOrder()
-		import string
 		locations = []
 		currentLocation = 0
 		dataList = []
@@ -69,7 +68,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 			currentLocation = currentLocation + len(glyphData)
 			dataList.append(glyphData)
 		locations.append(currentLocation)
-		data = string.join(dataList, "")
+		data = ''.join(dataList)
 		if 'loca' in ttFont:
 			ttFont['loca'].set(locations)
 		ttFont['maxp'].numGlyphs = len(self.glyphs)

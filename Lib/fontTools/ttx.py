@@ -170,7 +170,6 @@ class Options:
 
 
 def ttList(input, output, options):
-	import string
 	ttf = TTFont(input, fontNumber=options.fontNumber, lazy=True)
 	reader = ttf.reader
 	tags = sorted(reader.keys())
@@ -183,7 +182,7 @@ def ttList(input, output, options):
 		checkSum = int(entry.checkSum)
 		if checkSum < 0:
 			checkSum = checkSum + 0x100000000
-		checksum = "0x" + string.zfill(hex(checkSum)[2:-1], 8)
+		checksum = "0x%08X" % checkSum
 		print(format % (tag, checksum, entry.length, entry.offset))
 	print()
 	ttf.close()

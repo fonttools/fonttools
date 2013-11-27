@@ -1,5 +1,4 @@
 from . import DefaultTable
-import string
 
 class table_T_S_I__1(DefaultTable.DefaultTable):
 	
@@ -85,7 +84,7 @@ class table_T_S_I__1(DefaultTable.DefaultTable):
 				continue
 			writer.begintag("glyphProgram", name=name)
 			writer.newline()
-			writer.write_noindent(string.replace(text, "\r", "\n"))
+			writer.write_noindent(text.replace("\r", "\n"))
 			writer.newline()
 			writer.endtag("glyphProgram")
 			writer.newline()
@@ -98,7 +97,7 @@ class table_T_S_I__1(DefaultTable.DefaultTable):
 				continue
 			writer.begintag("extraProgram", name=name)
 			writer.newline()
-			writer.write_noindent(string.replace(text, "\r", "\n"))
+			writer.write_noindent(text.replace("\r", "\n"))
 			writer.newline()
 			writer.endtag("extraProgram")
 			writer.newline()
@@ -108,8 +107,8 @@ class table_T_S_I__1(DefaultTable.DefaultTable):
 		if not hasattr(self, "glyphPrograms"):
 			self.glyphPrograms = {}
 			self.extraPrograms = {}
-		lines = string.split(string.replace(string.join(content, ""), "\r", "\n"), "\n")
-		text = string.join(lines[1:-1], "\r")
+		lines = ''.join(content).replace("\r", "\n").split("\n")
+		text = '\r'.join(lines[1:-1])
 		if name == "glyphProgram":
 			self.glyphPrograms[attrs["name"]] = text
 		elif name == "extraProgram":

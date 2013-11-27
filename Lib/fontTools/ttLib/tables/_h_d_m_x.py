@@ -1,6 +1,5 @@
 from . import DefaultTable
 from fontTools.misc import sstruct
-import string
 
 hdmxHeaderFormat = """
 	>   # big endian!
@@ -75,15 +74,15 @@ class table__h_d_m_x(DefaultTable.DefaultTable):
 	def fromXML(self, name, attrs, content, ttFont):
 		if name != "hdmxData":
 			return
-		content = string.join(content, "")
-		lines = string.split(content, ";")
-		topRow = string.split(lines[0])
+		content = ''.join(content)
+		lines = content.split(";")
+		topRow = lines[0].split()
 		assert topRow[0] == "ppem:", "illegal hdmx format"
 		ppems = list(map(int, topRow[1:]))
 		self.hdmx = hdmx = {}
 		for ppem in ppems:
 			hdmx[ppem] = {}
-		lines = map(string.split, lines[1:])
+		lines = (line.split() for line in lines[1:])
 		for line in lines:
 			if not line:
 				continue

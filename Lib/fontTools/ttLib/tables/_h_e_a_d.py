@@ -1,7 +1,6 @@
 from . import DefaultTable
 from fontTools.misc import sstruct
 import time
-import string
 from fontTools.misc.textTools import safeEval, num2binary, binary2num
 
 
@@ -119,13 +118,13 @@ _months = ['   ', 'jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug',
 _weekdays = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
 
 def parse_date(datestring):
-	datestring = string.lower(datestring)
-	weekday, month, day, tim, year = string.split(datestring)
+	datestring = datestring.lower()
+	weekday, month, day, tim, year = datestring.split()
 	weekday = _weekdays.index(weekday)
 	month = _months.index(month)
 	year = int(year)
 	day = int(day)
-	hour, minute, second = [int(item) for item in string.split(tim, ":")]
+	hour, minute, second = [int(item) for item in tim.split(":")]
 	t = (year, month, day, hour, minute, second, weekday, 0, 0)
 	return int(time.mktime(t) - time.timezone)
 
