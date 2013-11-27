@@ -5,7 +5,7 @@
 """GUI font inspector.
 """
 
-from __future__ import print_function
+from __future__ import print_function, division
 from fontTools.misc.py23 import *
 from fontTools import misc, ttLib, cffLib
 import pygtk
