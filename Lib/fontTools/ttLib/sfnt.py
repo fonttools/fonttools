@@ -238,7 +238,7 @@ class SFNTWriter:
 
 	def _calcMasterChecksum(self, directory):
 		# calculate checkSumAdjustment
-		tags = self.tables.keys()
+		tags = list(self.tables.keys())
 		checksums = []
 		for i in range(len(tags)):
 			checksums.append(self.tables[tags[i]].checkSum)

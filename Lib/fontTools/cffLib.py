@@ -523,13 +523,13 @@ class CharStrings:
 				self.fdArray = fdArray
 	
 	def keys(self):
-		return self.charStrings.keys()
+		return list(self.charStrings.keys())
 	
 	def values(self):
 		if self.charStringsAreIndexed:
 			return self.charStringsIndex
 		else:
-			return self.charStrings.values()
+			return list(self.charStrings.values())
 	
 	def has_key(self, name):
 		return name in self.charStrings

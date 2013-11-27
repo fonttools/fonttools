@@ -24,7 +24,7 @@ class table_L_T_S_H_(DefaultTable.DefaultTable):
 	
 	def compile(self, ttFont):
 		version = 0
-		names = self.yPels.keys()
+		names = list(self.yPels.keys())
 		numGlyphs = len(names)
 		yPels = [0] * numGlyphs
 		# ouch: the assertion is not true in Chicago!

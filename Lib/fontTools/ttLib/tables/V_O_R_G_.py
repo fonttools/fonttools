@@ -38,8 +38,8 @@ class table_V_O_R_G_(DefaultTable.DefaultTable):
 
 
 	def compile(self, ttFont):
-		vorgs = self.VOriginRecords.values()
-		names = self.VOriginRecords.keys()
+		vorgs = list(self.VOriginRecords.values())
+		names = list(self.VOriginRecords.keys())
 		nameMap = ttFont.getReverseGlyphMap()
 		lenRecords = len(vorgs) 
 		try:
