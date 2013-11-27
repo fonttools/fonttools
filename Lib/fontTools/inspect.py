@@ -12,11 +12,7 @@ import sys
 import array
 
 from fontTools import misc, ttLib, cffLib
-
-try:
-	basestring
-except NameError:
-	basestring = str
+from fontTools.misc.py23 import *
 
 
 class Row(object):
