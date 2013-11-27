@@ -254,7 +254,7 @@ class Inspect:
 
 def main(args):
 	if len(args) < 1:
-		print >>sys.stderr, "usage: pyftinspect font..."
+		print("usage: pyftinspect font...")
 		sys.exit(1)
 	for arg in args:
 		Inspect(arg)
