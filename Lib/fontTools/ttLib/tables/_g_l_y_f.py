@@ -43,7 +43,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 			next = int(loca[i+1])
 			glyphdata = data[last:next]
 			if len(glyphdata) != (next - last):
-				raise ttLib.TTLibError, "not enough 'glyf' table data"
+				raise ttLib.TTLibError("not enough 'glyf' table data")
 			glyph = Glyph(glyphdata)
 			self.glyphs[glyphName] = glyph
 			last = next
@@ -284,7 +284,7 @@ class Glyph:
 	def fromXML(self, (name, attrs, content), ttFont):
 		if name == "contour":
 			if self.numberOfContours < 0:
-				raise ttLib.TTLibError, "can't mix composites and contours in glyph"
+				raise ttLib.TTLibError("can't mix composites and contours in glyph")
 			self.numberOfContours = self.numberOfContours + 1
 			coordinates = GlyphCoordinates()
 			flags = []
@@ -307,7 +307,7 @@ class Glyph:
 				self.endPtsOfContours.append(len(self.coordinates)-1)
 		elif name == "component":
 			if self.numberOfContours > 0:
-				raise ttLib.TTLibError, "can't mix composites and contours in glyph"
+				raise ttLib.TTLibError("can't mix composites and contours in glyph")
 			self.numberOfContours = -1
 			if not hasattr(self, "components"):
 				self.components = []
@@ -559,7 +559,7 @@ class Glyph:
 	
 	def __getitem__(self, componentIndex):
 		if not self.isComposite():
-			raise ttLib.TTLibError, "can't use glyph as sequence"
+			raise ttLib.TTLibError("can't use glyph as sequence")
 		return self.components[componentIndex]
 	
 	def getCoordinates(self, glyfTable):

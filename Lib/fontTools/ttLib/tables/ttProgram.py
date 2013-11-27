@@ -278,7 +278,7 @@ class Program:
 		while pos < lenAssembly:
 			m = _tokenRE.match(assembly, pos)
 			if m is None:
-				raise tt_instructions_error, "Syntax error in TT program (%s)" % assembly[pos-5:pos+15]
+				raise tt_instructions_error("Syntax error in TT program (%s)" % assembly[pos-5:pos+15])
 			dummy, mnemonic, arg, number, comment = m.groups()
 			pos = m.regs[0][1]
 			if comment:
@@ -292,7 +292,7 @@ class Program:
 			elif mnemonic not in ("NPUSHB", "NPUSHW", "PUSHB", "PUSHW"):
 				op, argBits = mnemonicDict[mnemonic]
 				if len(arg) != argBits:
-					raise tt_instructions_error, "Incorrect number of argument bits (%s[%s])" % (mnemonic, arg)
+					raise tt_instructions_error("Incorrect number of argument bits (%s[%s])" % (mnemonic, arg))
 				if arg:
 					arg = binary2num(arg)
 					push(op + arg)
@@ -304,7 +304,7 @@ class Program:
 				while pos < lenAssembly:
 					m = _tokenRE.match(assembly, pos)
 					if m is None:
-						raise tt_instructions_error, "Syntax error in TT program (%s)" % assembly[pos:pos+15]
+						raise tt_instructions_error("Syntax error in TT program (%s)" % assembly[pos:pos+15])
 					dummy, mnemonic, arg, number, comment = m.groups()
 					if number is None and comment is None:
 						break
@@ -330,7 +330,7 @@ class Program:
 					push(op)
 					push(nArgs)
 				else:
-					raise tt_instructions_error, "More than 255 push arguments (%s)" % nArgs
+					raise tt_instructions_error("More than 255 push arguments (%s)" % nArgs)
 				if words:
 					for value in args:
 						push((value >> 8) & 0xff)

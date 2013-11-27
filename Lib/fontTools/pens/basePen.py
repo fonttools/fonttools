@@ -248,7 +248,7 @@ class BasePen(AbstractPen):
 		elif n == 0:
 			self.lineTo(points[0])
 		else:
-			raise AssertionError, "can't get there from here"
+			raise AssertionError("can't get there from here")
 
 	def qCurveTo(self, *points):
 		n = len(points) - 1  # 'n' is the number of control points

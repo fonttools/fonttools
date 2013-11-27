@@ -3,7 +3,7 @@
 import sys
 import os
 if sys.platform not in ("mac", "darwin"):
-	raise ImportError, "This module is Mac-only!"
+	raise ImportError("This module is Mac-only!")
 
 import cStringIO
 try:
@@ -49,7 +49,7 @@ def openTTFonts(path):
 		for index in sfnts:
 			fonts.append(ttLib.TTFont(path, index))
 		if not fonts:
-			raise ttLib.TTLibError, "no fonts found in file '%s'" % path
+			raise ttLib.TTLibError("no fonts found in file '%s'" % path)
 	return fonts
 
 
@@ -86,7 +86,7 @@ class SFNTResourceWriter:
 		psname = ttFont['name'].getName(6, 1, 0) # PostScript name, etc.
 		if fullname is None or fullname is None or psname is None:
 			from fontTools import ttLib
-			raise ttLib.TTLibError, "can't make 'sfnt' resource, no Macintosh 'name' table found"
+			raise ttLib.TTLibError("can't make 'sfnt' resource, no Macintosh 'name' table found")
 		self.fullname = fullname.string
 		self.familyname = familyname.string
 		self.psname = psname.string

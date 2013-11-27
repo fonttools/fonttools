@@ -48,11 +48,11 @@ class NFNT:
 		
 		locTable = data[headerSize + bitmapSize:headerSize + bitmapSize + tableSize]
 		if len(locTable) != tableSize:
-			raise ValueError, 'invalid NFNT format'
+			raise ValueError('invalid NFNT format')
 		
 		owTable = data[headerSize + bitmapSize + tableSize:headerSize + bitmapSize + 2 * tableSize]
 		if len(owTable) != tableSize:
-			raise ValueError, 'invalid NFNT format'
+			raise ValueError('invalid NFNT format')
 		
 		# fill tables
 		self.offsetTable = []
@@ -185,7 +185,7 @@ class NFNT:
 	
 	def __getitem__(self, charNum):
 		if charNum > self.lastChar or charNum < 0:
-			raise IndexError, "no such character"
+			raise IndexError("no such character")
 		index = charNum - self.firstChar
 		if index < 0:
 			return None
@@ -193,10 +193,10 @@ class NFNT:
 	
 	def __setitem__(self, charNum, glyph):
 		if charNum > self.lastChar or charNum < 0:
-			raise IndexError, "no such character"
+			raise IndexError("no such character")
 		index = charNum - self.firstChar
 		if index < 0:
-			raise IndexError, "no such character"
+			raise IndexError("no such character")
 		self.glyphs[index] = glyph
 	
 	def __len__(self):
@@ -248,7 +248,7 @@ class NFNT:
 		offset = self.offsetTable[cindex]
 		width = self.widthTable[cindex]
 		if offset == 255 and width == 255:
-			raise ValueError, "character not defined"
+			raise ValueError("character not defined")
 		location0 = self.locTable[cindex]
 		location1 = self.locTable[cindex + 1]
 		srcbounds = (location0, 0, location1, self.fRectHeight)

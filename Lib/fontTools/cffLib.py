@@ -51,7 +51,7 @@ class CFFFontSet:
 		try:
 			index = self.fontNames.index(name)
 		except ValueError:
-			raise KeyError, name
+			raise KeyError(name)
 		return self.topDictIndex[index]
 	
 	def compile(self, file, otFont):
@@ -959,7 +959,7 @@ class EncodingConverter(SimpleConverter):
 			format = readCard8(file)
 			haveSupplement = format & 0x80
 			if haveSupplement:
-				raise NotImplementedError, "Encoding supplements are not yet supported"
+				raise NotImplementedError("Encoding supplements are not yet supported")
 			format = format & 0x7f
 			if format == 0:
 				encoding = parseEncoding0(parent.charset, file, haveSupplement,
@@ -1485,7 +1485,7 @@ class BaseDict:
 		if value is None:
 			value = self.defaults.get(name)
 		if value is None:
-			raise AttributeError, name
+			raise AttributeError(name)
 		conv = self.converters[name]
 		value = conv.read(self, value)
 		setattr(self, name, value)

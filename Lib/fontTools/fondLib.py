@@ -34,7 +34,7 @@ class FontFamily:
 	def __init__(self, theRes, mode = 'r'):
 		self.ID, type, self.name = theRes.GetResInfo()
 		if type != 'FOND':
-			raise ValueError, "FOND resource required"
+			raise ValueError("FOND resource required")
 		self.FOND = theRes
 		self.mode = mode
 		self.changed = 0
@@ -69,7 +69,7 @@ class FontFamily:
 	
 	def save(self, destresfile = None):
 		if self.mode != 'w':
-			raise error, "can't save font: no write permission"
+			raise error("can't save font: no write permission")
 		self._buildfontassociationtable()
 		self._buildoffsettable()
 		self._buildboundingboxtable()
@@ -246,7 +246,7 @@ class FontFamily:
 		for stylecode, table in tables:
 			data = data + struct.pack('>h', stylecode)
 			if len(table) != (3 + self.ffLastChar - self.ffFirstChar):
-				raise error, "width table has wrong length"
+				raise error("width table has wrong length")
 			for width in table:
 				data = data + struct.pack('>h', width)
 		if DEBUG:
@@ -446,7 +446,7 @@ def splitname(name, famname = None):
 	# XXX this goofs up MM font names: but how should it be done??
 	if famname:
 		if name[:len(famname)] != famname:
-			raise error, "first part of name should be same as family name"
+			raise error("first part of name should be same as family name")
 		name = name[len(famname):]
 		split = [famname]
 	else:
@@ -478,7 +478,7 @@ class BitmapFontFile:
 		elif mode == 'w':
 			permission = 3	# exclusive r/w
 		else:
-			raise error, 'mode should be either "r" or "w"'
+			raise error('mode should be either "r" or "w"')
 		self.mode = mode
 		self.resref = Res.FSOpenResFile(path, permission)
 		Res.UseResFile(self.resref)
@@ -519,7 +519,7 @@ class FondSelector:
 	def __init__(self, fondlist):
 		import W
 		if not fondlist:
-			raise ValueError, "expected at least one FOND entry"
+			raise ValueError("expected at least one FOND entry")
 		if len(fondlist) == 1:
 			self.choice = 0
 			return

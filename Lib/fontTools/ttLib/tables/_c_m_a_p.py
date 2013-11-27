@@ -107,9 +107,9 @@ class CmapSubtable:
 	def __getattr__(self, attr):
 		# allow lazy decompilation of subtables.
 		if attr[:2] == '__': # don't handle requests for member functions like '__lt__'
-			raise AttributeError, attr
+			raise AttributeError(attr)
 		if self.data == None:
-			raise AttributeError, attr
+			raise AttributeError(attr)
 		self.decompile(None, None) # use saved data.
 		self.data = None # Once this table has been decompiled, make sure we don't
 						# just return the original data. Also avoids recursion when

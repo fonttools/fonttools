@@ -280,7 +280,7 @@ class OTTableWriter(object):
 						overflowErrorRecord = self.getOverflowErrorRecord(item)
 						
 						
-						raise OTLOffsetOverflowError, overflowErrorRecord
+						raise OTLOffsetOverflowError(overflowErrorRecord)
 
 		return "".join(items)
 	
@@ -514,14 +514,14 @@ class BaseTable(object):
 		if self.recurse > 2:
 			# shouldn't ever get here - we should only get to two levels of recursion.
 			# this guards against self.decompile NOT setting compileStatus to other than 1.
-			raise AttributeError, attr 
+			raise AttributeError(attr) 
 		if self.compileStatus == 1:
 			self.ensureDecompiled()
 			val = getattr(self, attr)
 			self.recurse -=1
 			return val
 			
-		raise AttributeError, attr 
+		raise AttributeError(attr) 
 
 
 	"""Generic base class for all OpenType (sub)tables."""
