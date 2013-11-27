@@ -8,11 +8,7 @@ import struct
 from fontTools.misc import sstruct
 from fontTools.misc import psCharStrings
 from fontTools.misc.textTools import safeEval
-
-try:
-	basestring
-except NameError:
-	basestring = str
+from fontTools.misc.py23 import *
 
 DEBUG = 0
 

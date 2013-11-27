@@ -3,6 +3,7 @@ import struct
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval
 import sys
+from fontTools.misc.py23 import *
 
 
 METAHeaderFormat = """
@@ -239,7 +240,7 @@ class GlyphRecord:
 
 
 def mapXMLToUTF8(string):
-	uString = u""
+	uString = unicode()
 	strLen = len(string)
 	i = 0
 	while i < strLen:
@@ -265,11 +266,11 @@ def mapXMLToUTF8(string):
 
 def mapUTF8toXML(string):
 	uString = string.decode('utf8')
-	string = ""
+	string = bytes()
 	for uChar in uString:
 		i = ord(uChar)
 		if (i < 0x80) and (i > 0x1F):
-			string = string + chr(i)
+			string = string + bytechr(i)
 		else:
 			string = string + "&#x" + hex(i)[2:] + ";"
 	return string
