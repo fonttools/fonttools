@@ -1310,7 +1310,7 @@ def subset_glyphs(self, s):
 def subset_subroutines(self, subrs, gsubrs):
   p = self.program
   assert len(p)
-  for i in xrange(1, len(p)):
+  for i in range(1, len(p)):
     if p[i] == 'callsubr':
       assert type(p[i-1]) is int
       p[i-1] = subrs._used.index(p[i-1] + subrs._old_bias) - subrs._new_bias
@@ -1402,7 +1402,7 @@ class _DehintingT2Decompiler(psCharStrings.SimpleT2Decompiler):
 
     if hints.status != 2:
       # Check from last_check, make sure we didn't have any operators.
-      for i in xrange(hints.last_checked, len(charString.program) - 1):
+      for i in range(hints.last_checked, len(charString.program) - 1):
         if type(charString.program[i]) == str:
           hints.status = 2
           break;
@@ -1448,7 +1448,7 @@ class _DehintingT2Decompiler(psCharStrings.SimpleT2Decompiler):
     hints.has_hintmask = True
     if hints.status != 2 and hints.has_hint:
       # Check from last_check, see if we may be an implicit vstem
-      for i in xrange(hints.last_checked, index - 1):
+      for i in range(hints.last_checked, index - 1):
         if type(cs.program[i]) == str:
           hints.status = 2
           break;
@@ -1491,7 +1491,7 @@ class _DehintingT2Decompiler(psCharStrings.SimpleT2Decompiler):
       if hints.status != 2:
         # Check from last_check, make sure we didn't have
         # any operators.
-        for i in xrange(hints.last_checked, index - 1):
+        for i in range(hints.last_checked, index - 1):
           if type(cs.program[i]) == str:
             hints.status = 2
             break;
@@ -1622,7 +1622,7 @@ def prune_post_subset(self, options):
       if hasattr(subrs, 'offsets'):
         del subrs.offsets
 
-      for i in xrange (subrs.count):
+      for i in range (subrs.count):
         subrs[i].subset_subroutines (local_subrs, font.GlobalSubrs)
 
     # Cleanup
