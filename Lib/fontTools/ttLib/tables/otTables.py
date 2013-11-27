@@ -640,7 +640,7 @@ def fixSubTableOverFlows(ttf, overflowRecord):
 
 
 def _buildClasses():
-	import new, re
+	import re
 	from .otData import otData
 	
 	formatPat = re.compile("([A-Za-z0-9]+)Format(\d+)$")
@@ -656,13 +656,13 @@ def _buildClasses():
 			baseClass = FormatSwitchingBaseTable
 		if name not in namespace:
 			# the class doesn't exist yet, so the base implementation is used.
-			cls = new.classobj(name, (baseClass,), {})
+			cls = type(name, (baseClass,), {})
 			namespace[name] = cls
 	
 	for base, alts in _equivalents.items():
 		base = namespace[base]
 		for alt in alts:
-			namespace[alt] = new.classobj(alt, (base,), {})
+			namespace[alt] = type(alt, (base,), {})
 	
 	global lookupTypes
 	lookupTypes = {
