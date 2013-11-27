@@ -16,6 +16,7 @@ from fontTools import ttLib
 from fontTools.ttLib.tables import otTables
 from fontTools.misc import psCharStrings
 from fontTools.pens import basePen
+from fontTools.misc.py23 import *
 
 
 def _add_method(*clazzes):
