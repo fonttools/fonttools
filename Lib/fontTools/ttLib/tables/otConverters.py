@@ -155,6 +155,17 @@ class GlyphID(SimpleValue):
 		value =  font.getGlyphID(value)
 		writer.writeUShort(value)
 
+class FloatValue(SimpleValue):
+	def xmlRead(self, attrs, content, font):
+		return float(attrs["value"])
+
+class DeciPoints(FloatValue):
+	def read(self, reader, font, tableDict):
+		value = reader.readUShort()
+		return value / 10.
+
+	def write(self, writer, font, tableDict, value, repeatIndex=None):
+		writer.writeUShort(int(round(value * 10)))
 
 class Struct(BaseConverter):
 	
@@ -355,6 +366,7 @@ converterMapping = {
 	"Version":     Version,
 	"Tag":         Tag,
 	"GlyphID":     GlyphID,
+	"DeciPoints":  DeciPoints,
 	"struct":      Struct,
 	"Offset":      Table,
 	"LOffset":     LTable,
