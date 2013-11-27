@@ -141,7 +141,7 @@ def long2bin(v, bytes=8):
 	mask = int("FF" * bytes, 16)
 	data = ""
 	while v:
-		data = chr(v & 0xff) + data
+		data = bytechr(v & 0xff) + data
 		v = (v >> 8) & mask
 	data = (bytes - len(data)) * "\0" + data
 	assert len(data) == 8, "long too long"

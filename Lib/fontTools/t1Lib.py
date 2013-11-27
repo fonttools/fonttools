@@ -178,7 +178,7 @@ def readPFB(path, onlyHeader=0):
 	f = open(path, "rb")
 	data = []
 	while True:
-		if f.read(1) != chr(128):
+		if f.read(1) != bytechr(128):
 			raise T1Error('corrupt PFB file')
 		code = ord(f.read(1))
 		if code in [1, 2]:
@@ -228,11 +228,11 @@ def writeLWFN(path, data):
 			else:
 				code = 1
 			while chunk:
-				res = Res.Resource(chr(code) + '\0' + chunk[:LWFNCHUNKSIZE - 2])
+				res = Res.Resource(bytechr(code) + '\0' + chunk[:LWFNCHUNKSIZE - 2])
 				res.AddResource('POST', resID, '')
 				chunk = chunk[LWFNCHUNKSIZE - 2:]
 				resID = resID + 1
-		res = Res.Resource(chr(5) + '\0')
+		res = Res.Resource(bytechr(5) + '\0')
 		res.AddResource('POST', resID, '')
 	finally:
 		Res.CloseResFile(resRef)
@@ -246,10 +246,10 @@ def writePFB(path, data):
 				code = 2
 			else:
 				code = 1
-			f.write(chr(128) + chr(code))
+			f.write(bytechr(128) + bytechr(code))
 			f.write(longToString(len(chunk)))
 			f.write(chunk)
-		f.write(chr(128) + chr(3))
+		f.write(bytechr(128) + bytechr(3))
 	finally:
 		f.close()
 
@@ -359,7 +359,7 @@ def assertType1(data):
 def longToString(long):
 	str = ""
 	for i in range(4):
-		str = str + chr((long & (0xff << (i * 8))) >> i * 8)
+		str = str + bytechr((long & (0xff << (i * 8))) >> i * 8)
 	return str
 
 def stringToLong(str):

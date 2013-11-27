@@ -859,7 +859,7 @@ def identifierToTag(ident):
 			tag = tag + ident[i]
 		else:
 			# assume hex
-			tag = tag + chr(int(ident[i:i+2], 16))
+			tag = tag + bytechr(int(ident[i:i+2], 16))
 	# append trailing spaces
 	tag = tag + (4 - len(tag)) * ' '
 	return tag

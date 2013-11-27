@@ -153,27 +153,27 @@ t2Operators = [
 
 def getIntEncoder(format):
 	if format == "cff":
-		fourByteOp = chr(29)
+		fourByteOp = bytechr(29)
 	elif format == "t1":
-		fourByteOp = chr(255)
+		fourByteOp = bytechr(255)
 	else:
 		assert format == "t2"
 		fourByteOp = None
 	
-	def encodeInt(value, fourByteOp=fourByteOp, chr=chr,
+	def encodeInt(value, fourByteOp=fourByteOp, bytechr=bytechr,
 			pack=struct.pack, unpack=struct.unpack):
 		if -107 <= value <= 107:
-			code = chr(value + 139)
+			code = bytechr(value + 139)
 		elif 108 <= value <= 1131:
 			value = value - 108
-			code = chr((value >> 8) + 247) + chr(value & 0xFF)
+			code = bytechr((value >> 8) + 247) + bytechr(value & 0xFF)
 		elif -1131 <= value <= -108:
 			value = -value - 108
-			code = chr((value >> 8) + 251) + chr(value & 0xFF)
+			code = bytechr((value >> 8) + 251) + bytechr(value & 0xFF)
 		elif fourByteOp is None:
 			# T2 only supports 2 byte ints
 			if -32768 <= value <= 32767:
-				code = chr(28) + pack(">h", value)
+				code = bytechr(28) + pack(">h", value)
 			else:
 				# Backwards compatible hack: due to a previous bug in FontTools,
 				# 16.16 fixed numbers were written out as 4-byte ints. When
@@ -187,7 +187,7 @@ def getIntEncoder(format):
 				sys.stderr.write("Warning: 4-byte T2 number got passed to the "
 					"IntType handler. This should happen only when reading in "
 					"old XML files.\n")
-				code = chr(255) + pack(">l", value)
+				code = bytechr(255) + pack(">l", value)
 		else:
 			code = fourByteOp + pack(">l", value)
 		return code
@@ -221,9 +221,9 @@ def encodeFloat(f):
 	nibbles.append(0xf)
 	if len(nibbles) % 2:
 		nibbles.append(0xf)
-	d = chr(30)
+	d = bytechr(30)
 	for i in range(0, len(nibbles), 2):
-		d = d + chr(nibbles[i] << 4 | nibbles[i+1])
+		d = d + bytechr(nibbles[i] << 4 | nibbles[i+1])
 	return d
 
 
@@ -288,7 +288,7 @@ class T2CharString(ByteCodeBase):
 			tp = type(token)
 			if tp == str:
 				try:
-					bytecode.extend(chr(b) for b in opcodes[token])
+					bytecode.extend(bytechr(b) for b in opcodes[token])
 				except KeyError:
 					raise CharStringCompileError("illegal operator: %s" % token)
 				if token in ('hintmask', 'cntrmask'):
@@ -408,7 +408,7 @@ class T2CharString(ByteCodeBase):
 						mask = content[i]
 						maskBytes = ""
 						for j in range(0, len(mask), 8):
-							maskBytes = maskBytes + chr(binary2num(mask[j:j+8]))
+							maskBytes = maskBytes + bytechr(binary2num(mask[j:j+8]))
 						program.append(maskBytes)
 						i = i + 1
 				else:

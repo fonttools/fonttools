@@ -69,7 +69,7 @@ class NFNT:
 		owTable = [None] * nEntries
 		locTable = [None] * nEntries
 		for i in range(nEntries):
-			owTable[i] = chr(self.offsetTable[i]) + chr(self.widthTable[i])
+			owTable[i] = bytechr(self.offsetTable[i]) + bytechr(self.widthTable[i])
 			locTable[i] = struct.pack("h", self.locTable[i])
 		owTable = ''.join(owTable)
 		locTable = ''.join(locTable)
@@ -157,7 +157,7 @@ class NFNT:
 				byte = 0
 				for x in range(8):
 					byte = byte | ((bitImage[8 * xByte + x, y] & 0x01) << (7 - x))
-				bits.append(chr(byte))
+				bits.append(bytechr(byte))
 		bits = ''.join(bits)
 		
 		# assign values

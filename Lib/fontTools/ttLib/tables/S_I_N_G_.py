@@ -57,12 +57,12 @@ class table_S_I_N_G_(DefaultTable.DefaultTable):
 		
 		
 	def compile(self, ttFont):
-		self.nameLength = chr(len(self.baseGlyphName))
+		self.nameLength = bytechr(len(self.baseGlyphName))
 		self.uniqueName = self.compilecompileUniqueName(self.uniqueName, 28)
 		METAMD5List = eval(self.METAMD5)
 		self.METAMD5 = ""
 		for val in METAMD5List:
-			self.METAMD5 = self.METAMD5 + chr(val)
+			self.METAMD5 = self.METAMD5 + bytechr(val)
 		assert (len(self.METAMD5) == 16), "Failed to pack 16 byte MD5 hash in SING table"
 		data = sstruct.pack(SINGFormat, self)
 		data = data + self.baseGlyphName

@@ -225,6 +225,6 @@ def unpackPStrings(data):
 def packPStrings(strings):
 	data = ""
 	for s in strings:
-		data = data + chr(len(s)) + s
+		data = data + bytechr(len(s)) + s
 	return data
 
