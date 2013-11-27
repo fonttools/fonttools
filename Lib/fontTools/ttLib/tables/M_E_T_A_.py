@@ -224,16 +224,6 @@ class GlyphRecord:
 			datum = struct.pack(">L", self.offset)
 		data = data + datum
 		return data
-
-
-	def __cmp__(self, other):
-		"""Compare method, so a list of NameRecords can be sorted
-		according to the spec by just sorting it..."""
-
-		if not isinstance(self, type(other)): return cmp(type(self), type(other))
-		if self.__class__ != other.__class__: return cmp(self.__class__, other.__class__)
-
-		return cmp(self.glyphID, other.glyphID)
 	
 	def __repr__(self):
 		return "GlyphRecord[ glyphID: " + str(self.glyphID) + ", nMetaEntry: " + str(self.nMetaEntry) + ", offset: " + str(self.offset) + " ]"
@@ -311,15 +301,6 @@ class StringRecord:
 			datum = struct.pack(">L", self.offset)
 		data = data + datum
 		return data
-
-	def __cmp__(self, other):
-		"""Compare method, so a list of NameRecords can be sorted
-		according to the spec by just sorting it..."""
-
-		if not isinstance(self, type(other)): return cmp(type(self), type(other))
-		if self.__class__ != other.__class__: return cmp(self.__class__, other.__class__)
-
-		return cmp(self.labelID, other.labelID)
 	
 	def __repr__(self):
 		return "StringRecord [ labelID: " + str(self.labelID) + " aka " + getLabelString(self.labelID) \

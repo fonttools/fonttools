@@ -48,7 +48,7 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 			# only happens when there are NO name table entries read
 			# from the TTX file
 			self.names = []
-		self.names.sort()  # sort according to the spec; see NameRecord.__cmp__()
+		self.names.sort()  # sort according to the spec; see NameRecord.__lt__()
 		stringData = ""
 		format = 0
 		n = len(self.names)
@@ -87,12 +87,6 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 					return namerecord
 		return None # not found
 	
-	def __cmp__(self, other):
-		if not isinstance(self, type(other)): return cmp(type(self), type(other))
-		if self.__class__ != other.__class__: return cmp(self.__class__, other.__class__)
-
-		return cmp(self.names, other.names)
-	
 
 class NameRecord:
 	
@@ -128,27 +122,26 @@ class NameRecord:
 		else:
 			self.string = s.encode("latin1")
 	
-	def __cmp__(self, other):
-		"""Compare method, so a list of NameRecords can be sorted
-		according to the spec by just sorting it..."""
+	def __lt__(self, other):
+		if type(self) != type(other):
+			raise TypeError("unordered types %s() < %s()", type(self), type(other))
 
-		if not isinstance(self, type(other)): return cmp(type(self), type(other))
-
-		selftuple = (
+		# implemented so that list.sort() sorts according to the spec.
+		selfTuple = (
 			getattr(self, "platformID", None),
 			getattr(self, "platEncID", None),
 			getattr(self, "langID", None),
 			getattr(self, "nameID", None),
 			getattr(self, "string", None),
 		)
-		othertuple = (
+		otherTuple = (
 			getattr(other, "platformID", None),
 			getattr(other, "platEncID", None),
 			getattr(other, "langID", None),
 			getattr(other, "nameID", None),
 			getattr(other, "string", None),
 		)
-		return cmp(selftuple, othertuple)
+		return selfTuple < otherTuple
 	
 	def __repr__(self):
 		return "<NameRecord NameID=%d; PlatformID=%d; LanguageID=%d>" % (

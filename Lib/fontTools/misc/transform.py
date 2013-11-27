@@ -280,7 +280,7 @@ class Transform:
 		"""
 		return self.__affine[i:j]
 
-	def __cmp__(self, other):
+	def __lt__(self, other):
 		"""Transform instances are comparable:
 			>>> t1 = Identity.scale(2, 3).translate(4, 6)
 			>>> t2 = Identity.translate(8, 18).scale(2, 3)
@@ -301,7 +301,31 @@ class Transform:
 		"""
 		xx1, xy1, yx1, yy1, dx1, dy1 = self.__affine
 		xx2, xy2, yx2, yy2, dx2, dy2 = other
-		return cmp((xx1, xy1, yx1, yy1, dx1, dy1),
+		return (xx1, xy1, yx1, yy1, dx1, dy1) <
+				(xx2, xy2, yx2, yy2, dx2, dy2))
+
+	def __eq__(self, other):
+		"""Transform instances are comparable:
+			>>> t1 = Identity.scale(2, 3).translate(4, 6)
+			>>> t2 = Identity.translate(8, 18).scale(2, 3)
+			>>> t1 == t2
+			1
+			>>>
+
+		But beware of floating point rounding errors:
+			>>> t1 = Identity.scale(0.2, 0.3).translate(0.4, 0.6)
+			>>> t2 = Identity.translate(0.08, 0.18).scale(0.2, 0.3)
+			>>> t1
+			<Transform [0.2 0.0 0.0 0.3 0.08 0.18]>
+			>>> t2
+			<Transform [0.2 0.0 0.0 0.3 0.08 0.18]>
+			>>> t1 == t2
+			0
+			>>>
+		"""
+		xx1, xy1, yx1, yy1, dx1, dy1 = self.__affine
+		xx2, xy2, yx2, yy2, dx2, dy2 = other
+		return (xx1, xy1, yx1, yy1, dx1, dy1) ==
 				(xx2, xy2, yx2, yy2, dx2, dy2))
 
 	def __hash__(self):

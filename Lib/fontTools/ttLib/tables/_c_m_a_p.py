@@ -52,7 +52,7 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
 			tables.append(table)
 	
 	def compile(self, ttFont):
-		self.tables.sort()    # sort according to the spec; see CmapSubtable.__cmp__()
+		self.tables.sort()    # sort according to the spec; see CmapSubtable.__lt__()
 		numSubTables = len(self.tables)
 		totalOffset = 4 + 8 * numSubTables
 		data = struct.pack(">HH", self.tableVersion, numSubTables)
@@ -149,10 +149,11 @@ class CmapSubtable:
 				writer.comment(Unicode[code])
 			writer.newline()
 	
-	def __cmp__(self, other):
-		if not isinstance(self, type(other)): return cmp(type(self), type(other))
+	def __lt__(self, other):
+		if not isinstance(other, CmapSubtable):
+			raise TypeError("unordered types %s() < %s()", type(self), type(other))
 
-		# implemented so that list.sort() sorts according to the cmap spec.
+		# implemented so that list.sort() sorts according to the spec.
 		selfTuple = (
 			getattr(self, "platformID", None),
 			getattr(self, "platEncID", None),
@@ -163,7 +164,7 @@ class CmapSubtable:
 			getattr(other, "platEncID", None),
 			getattr(other, "language", None),
 			other.__dict__)
-		return cmp(selfTuple, otherTuple)
+		return selfTuple < otherTuple
 
 
 class cmap_format_0(CmapSubtable):
@@ -1076,21 +1077,7 @@ def  cvtFromUVS(val):
 		threeByteString = struct.pack(">L", val)[:3]
 	return threeByteString
 
-def cmpUVSListEntry(first, second):
-	uv1, glyphName1 = first
-	uv2, glyphName2 = second
-	
-	if (glyphName1 == None) and (glyphName2 != None):
-		return -1
-	elif (glyphName2 == None) and (glyphName1 != None):
-		return 1
-		
-	ret = cmp(uv1, uv2)
-	if ret:
-		return ret
-	return cmp(glyphName1, glyphName2)
-		
-		
+
 class cmap_format_14(CmapSubtable):
 
 	def decompileHeader(self, data, ttFont):
@@ -1163,7 +1150,7 @@ class cmap_format_14(CmapSubtable):
 		uvsList = sorted(uvsDict.keys())
 		for uvs in uvsList:
 			uvList = uvsDict[uvs]
-			uvList.sort(cmpUVSListEntry)
+			uvList.sort(key=lambda item: (item[1] != None, item[0], item[1]))
 			for uv, gname in uvList:
 				if gname == None:
 					gname = "None"
@@ -1177,7 +1164,7 @@ class cmap_format_14(CmapSubtable):
 		self.format = safeEval(attrs["format"])
 		self.length = safeEval(attrs["length"])
 		self.numVarSelectorRecords = safeEval(attrs["numVarSelectorRecords"])
-		self.language = 0xFF # provide a value so that  CmapSubtable.__cmp__() won't fail
+		self.language = 0xFF # provide a value so that  CmapSubtable.__lt__() won't fail
 		if not hasattr(self, "cmap"):
 			self.cmap = {} # so that clients that expect this to exist in a cmap table won't fail.
 		if not hasattr(self, "uvsDict"):

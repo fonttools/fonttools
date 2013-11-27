@@ -36,9 +36,7 @@ class DefaultTable:
 	def __repr__(self):
 		return "<'%s' table at %x>" % (self.tableTag, id(self))
 	
-	def __cmp__(self, other):
-		if not isinstance(self, type(other)): return cmp(type(self), type(other))
-		if self.__class__ != other.__class__: return cmp(self.__class__, other.__class__)
-
-		return cmp(self.__dict__, other.__dict__)
-
+	def __eq__(self, other):
+		if type(self) != type(other):
+			raise TypeError("unordered types %s() < %s()", type(self), type(other))
+		return self.__dict__ == other.__dict__

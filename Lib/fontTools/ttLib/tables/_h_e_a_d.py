@@ -86,19 +86,6 @@ class table__h_e_a_d(DefaultTable.DefaultTable):
 		else:
 			value = safeEval(value)
 		setattr(self, name, value)
-	
-	def __cmp__(self, other):
-		if not isinstance(self, type(other)): return cmp(type(self), type(other))
-		if self.__class__ != other.__class__: return cmp(self.__class__, other.__class__)
-
-		selfdict = self.__dict__.copy()
-		otherdict = other.__dict__.copy()
-		# for testing purposes, compare without the modified and checkSumAdjustment
-		# fields, since they are allowed to be different.
-		for key in ["modified", "checkSumAdjustment"]:
-			del selfdict[key]
-			del otherdict[key]
-		return cmp(selfdict, otherdict)
 
 
 def calc_mac_epoch_diff():

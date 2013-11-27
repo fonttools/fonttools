@@ -287,11 +287,10 @@ class OTTableWriter(object):
 		# only works after self._doneWriting() has been called
 		return hash(self.items)
 	
-	def __cmp__(self, other):
-		if not isinstance(self, type(other)): return cmp(type(self), type(other))
-		if self.__class__ != other.__class__: return cmp(self.__class__, other.__class__)
-
-		return cmp(self.items, other.items)
+	def __eq__(self, other):
+		if type(self) != type(other):
+			raise TypeError("unordered types %s() < %s()", type(self), type(other))
+		return self.items == other.items
 	
 	def _doneWriting(self, internedTables=None):
 		# Convert CountData references to data string items
@@ -674,13 +673,14 @@ class BaseTable(object):
 		else:
 			setattr(self, conv.name, value)
 	
-	def __cmp__(self, other):
-		if not isinstance(self, type(other)): return cmp(type(self), type(other))
-		if self.__class__ != other.__class__: return cmp(self.__class__, other.__class__)
+	def __eq__(self, other):
+		if type(self) != type(other):
+			raise TypeError("unordered types %s() < %s()", type(self), type(other))
 
 		self.ensureDecompiled()
+		other.ensureDecompiled()
 
-		return cmp(self.__dict__, other.__dict__)
+		return self.__dict__ == other.__dict__
 
 
 class FormatSwitchingBaseTable(BaseTable):
@@ -840,8 +840,7 @@ class ValueRecord:
 				value.fromXML(name2, attrs2, content2, font)
 			setattr(self, name, value)
 	
-	def __cmp__(self, other):
-		if not isinstance(self, type(other)): return cmp(type(self), type(other))
-		if self.__class__ != other.__class__: return cmp(self.__class__, other.__class__)
-
-		return cmp(self.__dict__, other.__dict__)
+	def __eq__(self, other):
+		if type(self) != type(other):
+			raise TypeError("unordered types %s() < %s()", type(self), type(other))
+		return self.__dict__ == other.__dict__

@@ -723,12 +723,11 @@ class Glyph:
 			data = data + "\0" * nPadBytes
 
 		self.data = data
-	
-	def __cmp__(self, other):
-		if not isinstance(self, type(other)): return cmp(type(self), type(other))
-		if self.__class__ != other.__class__: return cmp(self.__class__, other.__class__)
 
-		return cmp(self.__dict__, other.__dict__)
+	def __eq__(self, other):
+		if type(self) != type(other):
+			raise TypeError("unordered types %s() < %s()", type(self), type(other))
+		return self.__dict__ == other.__dict__
 
 
 class GlyphComponent:
@@ -886,11 +885,10 @@ class GlyphComponent:
 			self.transform = [[scale, 0], [0, scale]]
 		self.flags = safeEval(attrs["flags"])
 	
-	def __cmp__(self, other):
-		if not isinstance(self, type(other)): return cmp(type(self), type(other))
-		if self.__class__ != other.__class__: return cmp(self.__class__, other.__class__)
-
-		return cmp(self.__dict__, other.__dict__)
+	def __eq__(self, other):
+		if type(self) != type(other):
+			raise TypeError("unordered types %s() < %s()", type(self), type(other))
+		return self.__dict__ == other.__dict__
 
 class GlyphCoordinates:
 
@@ -966,6 +964,11 @@ class GlyphCoordinates:
 			y = a[2*i+1]
 			a[2*i  ] = int(.5 + x * t[0][0] + y * t[1][0])
 			a[2*i+1] = int(.5 + x * t[0][1] + y * t[1][1])
+
+	def __eq__(self, other):
+		if type(self) != type(other):
+			raise TypeError("unordered types %s() < %s()", type(self), type(other))
+		return self._a == other._a
 
 
 def reprflag(flag):

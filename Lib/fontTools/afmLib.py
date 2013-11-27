@@ -225,15 +225,13 @@ class AFM:
 		lines.append("StartCharMetrics " + repr(len(self._chars)))
 		items = [(charnum, (charname, width, box)) for charname, (charnum, width, box) in self._chars.items()]
 		
-		def myCmp(a, b):
-			"""Custom compare function to make sure unencoded chars (-1) 
+		def myKey(a):
+			"""Custom key function to make sure unencoded chars (-1) 
 			end up at the end of the list after sorting."""
 			if a[0] == -1:
 				a = (0xffff,) + a[1:]  # 0xffff is an arbitrary large number
-			if b[0] == -1:
-				b = (0xffff,) + b[1:]
-			return cmp(a, b)
-		items.sort(myCmp)
+			return a
+		items.sort(key=myKey)
 		
 		for charnum, (charname, width, (l, b, r, t)) in items:
 			lines.append("C %d ; WX %d ; N %s ; B %d %d %d %d ;" %
