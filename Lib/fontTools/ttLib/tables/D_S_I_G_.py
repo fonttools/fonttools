@@ -1,6 +1,7 @@
 from . import DefaultTable
 from fontTools.misc.textTools import safeEval
 from fontTools.misc import sstruct
+from fontTools.misc.py23 import *
 
 DSIG_HeaderFormat = """
 	> # big endian

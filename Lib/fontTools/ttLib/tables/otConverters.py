@@ -1,5 +1,6 @@
 from fontTools.misc.textTools import safeEval
 from .otBase import ValueRecordFactory
+from fontTools.misc.py23 import *
 
 
 def buildConverters(tableSpec, tableNamespace):

@@ -2,6 +2,7 @@
 
 
 import string
+from .py23 import *
 
 
 def safeEval(data, eval=eval):

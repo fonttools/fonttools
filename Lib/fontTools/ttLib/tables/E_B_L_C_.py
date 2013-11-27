@@ -1,4 +1,3 @@
-
 from . import DefaultTable
 import struct
 from fontTools.misc import sstruct
@@ -6,6 +5,7 @@ import itertools
 from collections import deque
 from fontTools.misc.textTools import safeEval
 from .BitmapGlyphMetrics import BigGlyphMetrics, bigGlyphMetricsFormat, SmallGlyphMetrics, smallGlyphMetricsFormat
+from fontTools.misc.py23 import *
 
 eblcHeaderFormat = """
 	> # big endian

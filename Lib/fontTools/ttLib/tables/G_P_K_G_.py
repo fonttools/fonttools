@@ -1,9 +1,9 @@
-import sys
 from . import DefaultTable
-from fontTools.misc import sstruct
+import sys
 import array
+from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval, readHex
-from fontTools import ttLib
+from fontTools.misc.py23 import *
 
 GPKGFormat = """
 		>	# big endian

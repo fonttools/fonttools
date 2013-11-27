@@ -1,4 +1,4 @@
-import sys
+from fontTools.misc.py23 import *
 
 class DefaultTable:
 	

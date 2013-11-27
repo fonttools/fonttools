@@ -1,6 +1,6 @@
 from .DefaultTable import DefaultTable
-from . import otData
 import struct
+from fontTools.misc.py23 import *
 
 class OverflowErrorRecord:
 	def __init__(self, overflowTuple):

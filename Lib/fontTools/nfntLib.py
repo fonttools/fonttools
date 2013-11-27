@@ -1,5 +1,6 @@
 import struct
 from fontTools.misc import sstruct
+from fontTools.misc.py23 import *
 
 
 # FontRec header

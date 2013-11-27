@@ -2,6 +2,7 @@ from . import DefaultTable
 import struct
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval
+from fontTools.misc.py23 import *
 
 nameRecordFormat = """
 		>	# big endian

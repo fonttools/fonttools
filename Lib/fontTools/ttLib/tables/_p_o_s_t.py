@@ -1,11 +1,12 @@
-import sys
-from fontTools.ttLib.standardGlyphOrder import standardGlyphOrder
 from . import DefaultTable
+import sys
 import struct
-from fontTools.misc import sstruct
 import array
 from fontTools import ttLib
+from fontTools.ttLib.standardGlyphOrder import standardGlyphOrder
+from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval, readHex
+from fontTools.misc.py23 import *
 
 
 postFormat = """

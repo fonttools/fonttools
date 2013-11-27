@@ -1,5 +1,6 @@
 from . import DefaultTable
 from fontTools.misc import sstruct
+from fontTools.misc.py23 import *
 
 hdmxHeaderFormat = """
 	>   # big endian!

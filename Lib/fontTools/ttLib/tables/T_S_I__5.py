@@ -1,8 +1,8 @@
-import sys
 from . import DefaultTable
+import sys
 import array
-from fontTools import ttLib
 from fontTools.misc.textTools import safeEval
+from fontTools.misc.py23 import *
 
 
 class table_T_S_I__5(DefaultTable.DefaultTable):

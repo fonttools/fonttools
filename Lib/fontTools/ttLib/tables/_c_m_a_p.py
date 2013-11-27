@@ -3,8 +3,8 @@ from . import DefaultTable
 import struct
 import array
 import operator
-from fontTools import ttLib
 from fontTools.misc.textTools import safeEval, readHex
+from fontTools.misc.py23 import *
 
 
 class table__c_m_a_p(DefaultTable.DefaultTable):

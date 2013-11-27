@@ -1,9 +1,8 @@
 import sys
 from . import DefaultTable
 import array
-from fontTools import ttLib
-import struct
 import warnings
+from fontTools.misc.py23 import *
 
 class table__l_o_c_a(DefaultTable.DefaultTable):
 	

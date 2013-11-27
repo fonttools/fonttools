@@ -4,6 +4,7 @@ for shapes.
 
 from fontTools.pens.basePen import BasePen
 from fontTools.misc.bezierTools import solveQuadratic, solveCubic
+from fontTools.misc.py23 import *
 
 
 __all__ = ["PointInsidePen"]

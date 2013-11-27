@@ -1,10 +1,10 @@
-import os
 import struct
 from fontTools.misc import sstruct
 try:
 	from Carbon import Res
 except ImportError:
 	import Res
+from fontTools.misc.py23 import *
 
 
 error = "fondLib.error"

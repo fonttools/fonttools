@@ -75,6 +75,7 @@ from fontTools.ttLib.tables.otBase import OTLOffsetOverflowError
 from fontTools.ttLib.tables.otTables import fixLookupOverFlows, fixSubTableOverFlows
 from fontTools.misc.macCreatorType import getMacCreatorAndType
 from fontTools import version
+from fontTools.misc.py23 import *
 
 def usage():
 	print(__doc__ % version)

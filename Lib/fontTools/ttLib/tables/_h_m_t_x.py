@@ -1,9 +1,9 @@
 import sys
 from . import DefaultTable
 import array
-from fontTools import ttLib
 from fontTools.misc.textTools import safeEval
 import warnings
+from fontTools.misc.py23 import *
 
 
 class table__h_m_t_x(DefaultTable.DefaultTable):

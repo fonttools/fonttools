@@ -1,8 +1,8 @@
-import operator
 from . import DefaultTable
+import operator
 import struct
-from fontTools.ttLib import sfnt
-from fontTools.misc.textTools import safeEval, readHex
+from fontTools.misc.textTools import safeEval
+from fontTools.misc.py23 import *
 
 
 class table_V_O_R_G_(DefaultTable.DefaultTable):

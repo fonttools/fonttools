@@ -36,6 +36,7 @@ Coordinates are usually expressed as (x, y) tuples, but generally any
 sequence of length 2 will do.
 """
 
+from fontTools.misc.py23 import *
 
 __all__ = ["AbstractPen", "NullPen", "BasePen",
            "decomposeSuperBezierSegment", "decomposeQuadraticSegment"]

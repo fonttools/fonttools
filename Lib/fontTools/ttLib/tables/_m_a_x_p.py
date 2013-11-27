@@ -1,6 +1,7 @@
 from . import DefaultTable
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval
+from fontTools.misc.py23 import *
 
 maxpFormat_0_5 = """
 		>	# big endian

@@ -2,7 +2,7 @@
 
 import string
 import struct
-import os
+from .py23 import *
 
 INDENT = "  "
 

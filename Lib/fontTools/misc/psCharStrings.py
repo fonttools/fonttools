@@ -3,6 +3,7 @@ CFF dictionary data and Type1/Type2 CharStrings.
 """
 
 import struct
+from .py23 import *
 
 
 DEBUG = 0

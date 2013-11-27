@@ -1,4 +1,5 @@
 from . import DefaultTable
+from fontTools.misc.py23 import *
 
 class table_T_S_I__1(DefaultTable.DefaultTable):
 	

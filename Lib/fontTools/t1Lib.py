@@ -24,6 +24,7 @@ from fontTools.misc import eexec
 from fontTools.misc.macCreatorType import getMacCreatorAndType
 import re
 import os
+from fontTools.misc.py23 import *
 
 
 try:

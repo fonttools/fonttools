@@ -2,6 +2,7 @@ from . import DefaultTable
 from fontTools.misc import sstruct
 import time
 from fontTools.misc.textTools import safeEval, num2binary, binary2num
+from fontTools.misc.py23 import *
 
 
 headFormat = """
