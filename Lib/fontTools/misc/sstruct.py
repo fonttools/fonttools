@@ -46,7 +46,7 @@ calcsize(format)
 	it returns the size of the data in bytes.
 """
 
-from __future__ import print_function
+from __future__ import print_function, division
 from fontTools.misc.py23 import *
 import struct
 import re

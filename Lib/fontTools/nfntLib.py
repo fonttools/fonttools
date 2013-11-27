@@ -1,4 +1,4 @@
-from __future__ import print_function
+from __future__ import print_function, division
 from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 import struct
@@ -44,7 +44,7 @@ class NFNT:
 		self.bits = data[headerSize:headerSize + bitmapSize]
 		
 		# XXX deal with self.nDescent being a positive number
-		assert (headerSize + bitmapSize + tableSize - 16) / 2 == self.owTLoc  # ugh...
+		assert (headerSize + bitmapSize + tableSize - 16) // 2 == self.owTLoc  # ugh...
 		
 		locTable = data[headerSize + bitmapSize:headerSize + bitmapSize + tableSize]
 		if len(locTable) != tableSize:
@@ -128,9 +128,9 @@ class NFNT:
 			fRectWidth = max(fRectWidth, glyph.pixels.shape[0] + glyph.offset)
 		
 		fRectWidth = fRectWidth - kernMax
-		imageWidth = 16 * ((imageWidth - 1) / 16 + 1)
-		rowBytes = imageWidth / 8
-		rowWords = rowBytes / 2
+		imageWidth = 16 * ((imageWidth - 1) // 16 + 1)
+		rowBytes = imageWidth // 8
+		rowWords = rowBytes // 2
 		bitImage = numpy.zeros((imageWidth, imageHeight), numpy.int8)
 		locTable = []
 		widthTable = []
@@ -173,7 +173,7 @@ class NFNT:
 		self.rowWords = rowWords
 		
 		tableSize = 2 * (self.lastChar - self.firstChar + 3)
-		self.owTLoc = (headerSize + len(bits) + tableSize - 16) / 2
+		self.owTLoc = (headerSize + len(bits) + tableSize - 16) // 2
 		
 		self.bits = bits
 		self.locTable = locTable

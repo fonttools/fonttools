@@ -1,4 +1,4 @@
-from __future__ import print_function
+from __future__ import print_function, division
 from fontTools.misc.py23 import *
 from fontTools import ttLib
 from fontTools.misc.textTools import safeEval
@@ -25,7 +25,7 @@ class XMLReader:
 	def read(self):
 		if self.progress:
 			import stat
-			self.progress.set(0, os.stat(fileName)[stat.ST_SIZE] / 100 or 1)
+			self.progress.set(0, os.stat(fileName)[stat.ST_SIZE] // 100 or 1)
 		file = open(self.fileName)
 		self._parseFile(file)
 		file.close()
@@ -46,7 +46,7 @@ class XMLReader:
 				break
 			pos = pos + len(chunk)
 			if self.progress:
-				self.progress.set(pos / 100)
+				self.progress.set(pos // 100)
 			parser.Parse(chunk, 0)
 	
 	def _startElementHandler(self, name, attrs):

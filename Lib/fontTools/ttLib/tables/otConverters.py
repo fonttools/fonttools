@@ -1,4 +1,4 @@
-from __future__ import print_function
+from __future__ import print_function, division
 from fontTools.misc.py23 import *
 from fontTools.misc.textTools import safeEval
 from .otBase import ValueRecordFactory
@@ -95,7 +95,7 @@ class Version(BaseConverter):
 	def read(self, reader, font, tableDict):
 		value = reader.readLong()
 		assert (value >> 16) == 1, "Unsupported version 0x%08x" % value
-		return float(value) / 0x10000
+		return value / 0x10000
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		if value < 0x10000:
 			value *= 0x10000
@@ -106,11 +106,11 @@ class Version(BaseConverter):
 		value = attrs["value"]
 		value = float(int(value, 0)) if value.startswith("0") else float(value)
 		if value >= 0x10000:
-			value = float(value) / 0x10000
+			value = value / 0x10000
 		return value
 	def xmlWrite(self, xmlWriter, font, value, name, attrs):
 		if value >= 0x10000:
-			value = float(value) / 0x10000
+			value = value / 0x10000
 		if value % 1 != 0:
 			# Write as hex
 			value = "0x%08x" % (int(round(value * 0x10000)))
@@ -163,7 +163,7 @@ class FloatValue(SimpleValue):
 class DeciPoints(FloatValue):
 	def read(self, reader, font, tableDict):
 		value = reader.readUShort()
-		return value / 10.
+		return value / 10
 
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		writer.writeUShort(int(round(value * 10)))

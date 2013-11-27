@@ -4,7 +4,7 @@
 # $Id: cffLib.py,v 1.34 2008-03-07 19:56:17 jvr Exp $
 #
 
-from __future__ import print_function
+from __future__ import print_function, division
 from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from fontTools.misc import psCharStrings
@@ -580,7 +580,7 @@ class CharStrings:
 			xmlWriter.newline()
 			if not i % step and progress is not None:
 				progress.setLabel("Dumping 'CFF ' table... (%s)" % name)
-				progress.increment(step / float(numGlyphs))
+				progress.increment(step / numGlyphs)
 			i = i + 1
 	
 	def fromXML(self, name, attrs, content):

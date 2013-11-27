@@ -4,7 +4,7 @@ OpenType subtables.
 Most are constructed upon import from data in otData.py, all are populated with
 converter objects from otConverters.py.
 """
-from __future__ import print_function
+from __future__ import print_function, division
 from fontTools.misc.py23 import *
 from .otBase import BaseTable, FormatSwitchingBaseTable
 import operator
@@ -525,7 +525,7 @@ def splitAlternateSubst(oldSubTable, newSubTable, overflowRecord):
 	if overflowRecord.itemName in [ 'Coverage', 'RangeRecord']:
 		# Coverage table is written last. overflow is to or within the
 		# the coverage table. We will just cut the subtable in half.
-		newLen = int(oldLen/2)
+		newLen = oldLen//2
 
 	elif overflowRecord.itemName == 'AlternateSet':
 		# We just need to back up by two items 
@@ -553,7 +553,7 @@ def splitLigatureSubst(oldSubTable, newSubTable, overflowRecord):
 	if overflowRecord.itemName in [ 'Coverage', 'RangeRecord']:
 		# Coverage table is written last. overflow is to or within the
 		# the coverage table. We will just cut the subtable in half.
-		newLen = int(oldLen/2)
+		newLen = oldLen//2
 
 	elif overflowRecord.itemName == 'LigatureSet':
 		# We just need to back up by two items 

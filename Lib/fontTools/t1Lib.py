@@ -20,7 +20,7 @@ __author__ = "jvr"
 __version__ = "1.0b2"
 DEBUG = 0
 
-from __future__ import print_function
+from __future__ import print_function, division
 from fontTools.misc.py23 import *
 from fontTools.misc import eexec
 from fontTools.misc.macCreatorType import getMacCreatorAndType
@@ -258,7 +258,7 @@ def writeOther(path, data, dohex = 0):
 	chunks = findEncryptedChunks(data)
 	f = open(path, "wb")
 	try:
-		hexlinelen = HEXLINELENGTH / 2
+		hexlinelen = HEXLINELENGTH // 2
 		for isEncrypted, chunk in chunks:
 			if isEncrypted:
 				code = 2

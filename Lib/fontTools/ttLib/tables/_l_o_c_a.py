@@ -1,4 +1,4 @@
-from __future__ import print_function
+from __future__ import print_function, division
 from fontTools.misc.py23 import *
 from . import DefaultTable
 import sys
@@ -37,7 +37,7 @@ class table__l_o_c_a(DefaultTable.DefaultTable):
 		if max_location < 0x20000:
 			locations = array.array("H")
 			for i in range(len(self.locations)):
-				locations.append(self.locations[i] / 2)
+				locations.append(self.locations[i] // 2)
 			ttFont['head'].indexToLocFormat = 0
 		else:
 			locations = array.array("I", self.locations)

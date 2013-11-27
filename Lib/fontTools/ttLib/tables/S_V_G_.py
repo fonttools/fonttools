@@ -42,7 +42,7 @@ the number of <colorParamUINameID> elements.
 
 """
 
-from __future__ import print_function
+from __future__ import print_function, division
 from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from . import DefaultTable

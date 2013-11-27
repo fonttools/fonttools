@@ -1,4 +1,4 @@
-from __future__ import print_function
+from __future__ import print_function, division
 from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval
@@ -92,7 +92,7 @@ class table_G_M_A_P_(DefaultTable.DefaultTable):
 	def compile(self, ttFont):
 		self.recordsCount = len(self.gmapRecords)
 		self.fontNameLength = len(self.psFontName)
-		self.recordsOffset = 4 *(((self.fontNameLength + 12)  + 3) /4)
+		self.recordsOffset = 4 *(((self.fontNameLength + 12)  + 3) // 4)
 		data = sstruct.pack(GMAPFormat, self)
 		data = data + self.psFontName
 		data = data + "\0" * (self.recordsOffset - len(data))

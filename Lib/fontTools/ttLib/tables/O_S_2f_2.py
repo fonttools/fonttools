@@ -1,4 +1,4 @@
-from __future__ import print_function
+from __future__ import print_function, division
 from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval, num2binary, binary2num
@@ -110,8 +110,8 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 			dummy, data = sstruct.unpack2(OS2_format_2_addition, data, self)
 		elif self.version == 5:
 			dummy, data = sstruct.unpack2(OS2_format_5_addition, data, self)
-			self.usLowerOpticalPointSize /= 20.
-			self.usUpperOpticalPointSize /= 20.
+			self.usLowerOpticalPointSize /= 20
+			self.usUpperOpticalPointSize /= 20
 		elif self.version != 0:
 			from fontTools import ttLib
 			raise ttLib.TTLibError("unknown format for OS/2 table: version %s" % self.version)

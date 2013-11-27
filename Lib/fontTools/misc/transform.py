@@ -45,7 +45,7 @@ Examples:
 	>>>
 """
 
-from __future__ import print_function
+from __future__ import print_function, division
 from fontTools.misc.py23 import *
 
 __all__ = ["Transform", "Identity", "Offset", "Scale"]
@@ -236,7 +236,7 @@ class Transform:
 		if self.__affine == (1, 0, 0, 1, 0, 0):
 			return self
 		xx, xy, yx, yy, dx, dy = self.__affine
-		det = float(xx*yy - yx*xy)
+		det = xx*yy - yx*xy
 		xx, xy, yx, yy = yy/det, -xy/det, -yx/det, xx/det
 		dx, dy = -xx*dx - yx*dy, -xy*dx - yy*dy
 		return self.__class__(xx, xy, yx, yy, dx, dy)

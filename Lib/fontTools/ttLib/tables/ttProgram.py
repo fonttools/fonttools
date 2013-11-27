@@ -1,6 +1,6 @@
 """ttLib.tables.ttProgram.py -- Assembler/disassembler for TrueType bytecode programs."""
 
-from __future__ import print_function
+from __future__ import print_function, division
 from fontTools.misc.py23 import *
 from fontTools.misc.textTools import num2binary, binary2num, readHex
 import array
