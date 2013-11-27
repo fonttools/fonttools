@@ -43,7 +43,7 @@ class Coverage(FormatSwitchingBaseTable):
 			# Some SIL fonts have coverage entries that don't have sorted
 			# StartCoverageIndex.  If it is so, fixup and warn.  We undo
 			# this when writing font out.
-			sorted_ranges = sorted(ranges, cmp=lambda a,b: cmp(a.StartCoverageIndex,b.StartCoverageIndex))
+			sorted_ranges = sorted(ranges, key=lambda a: a.StartCoverageIndex)
 			if ranges != sorted_ranges:
 				warnings.warn("GSUB/GPOS Coverage is not sorted by glyph ids.")
 				ranges = sorted_ranges
@@ -106,7 +106,7 @@ class Coverage(FormatSwitchingBaseTable):
 					index = index + end - start + 1
 				if brokenOrder:
 					warnings.warn("GSUB/GPOS Coverage is not sorted by glyph ids.")
-					ranges.sort(cmp=lambda a,b: cmp(a.StartID,b.StartID))
+					ranges.sort(key=lambda a: a.StartID)
 				for r in ranges:
 					del r.StartID
 				format = 2

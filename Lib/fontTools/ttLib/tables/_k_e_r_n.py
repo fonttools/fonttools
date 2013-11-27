@@ -160,12 +160,6 @@ class KernTable_format_0:
 	
 	def __delitem__(self, pair):
 		del self.kernTable[pair]
-	
-	def __cmp__(self, other):
-		if not isinstance(self, type(other)): return cmp(type(self), type(other))
-		if self.__class__ != other.__class__: return cmp(self.__class__, other.__class__)
-
-		return cmp(self.__dict__, other.__dict__)
 
 
 class KernTable_format_2:
