@@ -152,7 +152,7 @@ class OTTableReader(object):
 	def readTag(self):
 		pos = self.pos
 		newpos = pos + 4
-		value = self.data[pos:newpos]
+		value = Tag(self.data[pos:newpos])
 		assert len(value) == 4
 		self.pos = newpos
 		return value
@@ -416,6 +416,7 @@ class OTTableWriter(object):
 		self.items.append(struct.pack(">L", value))
 	
 	def writeTag(self, tag):
+		tag = Tag(tag).tobytes()
 		assert len(tag) == 4
 		self.items.append(tag)
 	
