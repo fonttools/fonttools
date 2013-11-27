@@ -679,12 +679,11 @@ class SimpleConverter:
 class Latin1Converter(SimpleConverter):
 	def xmlWrite(self, xmlWriter, name, value, progress):
 		# Store as UTF-8
-		value = unicode(value, "latin-1").encode("utf-8")
+		value = value.decode("latin-1").encode("utf-8")
 		xmlWriter.simpletag(name, value=value)
 		xmlWriter.newline()
 	def xmlRead(self, name, attrs, content, parent):
-		s = unicode(attrs["value"], "utf-8")
-		return s.encode("latin-1")
+		return attrs["value"].decode("utf-8").encode("latin-1")
 
 
 def parseNum(s):
