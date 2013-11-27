@@ -435,7 +435,7 @@ def _createOffsetArrayIndexSubTableMixin(formatStringForDataType):
 
 			glyphIds = list(range(self.firstGlyphIndex, self.lastGlyphIndex+1))
 			modifiedOffsets = [offset + self.imageDataOffset for offset in offsetArray]
-			self.locations = zip(modifiedOffsets, modifiedOffsets[1:])
+			self.locations = list(zip(modifiedOffsets, modifiedOffsets[1:]))
 
 			self.names = map(self.ttFont.getGlyphName, glyphIds)
 			self.removeSkipGlyphs()
@@ -523,7 +523,7 @@ class eblc_index_sub_table_2(FixedSizeIndexSubTableMixin, EblcIndexSubTable):
 		sstruct.unpack2(bigGlyphMetricsFormat, self.data[4:], self.metrics)
 		glyphIds = list(range(self.firstGlyphIndex, self.lastGlyphIndex+1))
 		offsets = [self.imageSize * i + self.imageDataOffset for i in range(len(glyphIds)+1)]
-		self.locations = zip(offsets, offsets[1:])
+		self.locations = list(zip(offsets, offsets[1:]))
 		self.names = map(self.ttFont.getGlyphName, glyphIds)
 
 	def compile(self, ttFont):
@@ -554,7 +554,7 @@ class eblc_index_sub_table_4(EblcIndexSubTable):
 		glyphIds.pop()
 
 		offsets = [offset + self.imageDataOffset for offset in offsets]
-		self.locations = zip(offsets, offsets[1:])
+		self.locations = list(zip(offsets, offsets[1:]))
 		self.names = map(self.ttFont.getGlyphName, glyphIds)
 
 	def compile(self, ttFont):
@@ -592,7 +592,7 @@ class eblc_index_sub_table_5(FixedSizeIndexSubTableMixin, EblcIndexSubTable):
 		glyphIds = [struct.unpack(">H", data[2*i:2*(i+1)])[0] for i in range(numGlyphs)]
 
 		offsets = [self.imageSize * i + self.imageDataOffset for i in range(len(glyphIds)+1)]
-		self.locations = zip(offsets, offsets[1:])
+		self.locations = list(zip(offsets, offsets[1:]))
 		self.names = map(self.ttFont.getGlyphName, glyphIds)
 
 	def compile(self, ttFont):
