@@ -575,6 +575,7 @@ class BaseTable(object):
 		del self.reader, self.font
 
 	def compile(self, writer, font):
+		self.ensureDecompiled()
 		table = self.preWrite(font)
 
 		if hasattr(self, 'sortCoverageLast'):
@@ -627,7 +628,6 @@ class BaseTable(object):
 		self.__dict__.update(table)
 	
 	def preWrite(self, font):
-		self.ensureDecompiled()
 		return self.__dict__.copy()
 	
 	def toXML(self, xmlWriter, font, attrs=None):

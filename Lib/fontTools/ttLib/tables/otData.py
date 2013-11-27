@@ -52,11 +52,11 @@ otData = [
 	]),
 
 	('FeatureParamsSize', [
-		('uint16', 'DesignSize', None, None, 'The design size in 720/inch units (decipoints).'),
+		('DeciPoints', 'DesignSize', None, None, 'The design size in 720/inch units (decipoints).'),
 		('uint16', 'SubfamilyID', None, None, 'Serves as an identifier that associates fonts in a subfamily.'),
 		('uint16', 'SubfamilyNameID', None, None, 'Subfamily NameID.'),
-		('uint16', 'RangeStart', None, None, 'Small end of recommended usage range (exclusive) in 720/inch units.'),
-		('uint16', 'RangeEnd', None, None, 'Large end of recommended usage range (inclusive) in 720/inch units.'),
+		('DeciPoints', 'RangeStart', None, None, 'Small end of recommended usage range (exclusive) in 720/inch units.'),
+		('DeciPoints', 'RangeEnd', None, None, 'Large end of recommended usage range (inclusive) in 720/inch units.'),
 	]),
 
 	('FeatureParamsStylisticSet', [
