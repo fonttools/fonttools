@@ -105,7 +105,7 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 		allNames = {}
 		for i in range(ttFont['maxp'].numGlyphs):
 			glyphName = psName = self.glyphOrder[i]
-			if allNames.has_key(glyphName):
+			if glyphName in allNames:
 				# make up a new glyphName that's unique
 				n = allNames[glyphName]
 				allNames[glyphName] = n + 1
@@ -132,11 +132,11 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 			extraDict[extraNames[i]] = i
 		for glyphID in range(numGlyphs):
 			glyphName = glyphOrder[glyphID]
-			if self.mapping.has_key(glyphName):
+			if glyphName in self.mapping:
 				psName = self.mapping[glyphName]
 			else:
 				psName = glyphName
-			if extraDict.has_key(psName):
+			if psName in extraDict:
 				index = 258 + extraDict[psName]
 			elif psName in standardGlyphOrder:
 				index = standardGlyphOrder.index(psName)

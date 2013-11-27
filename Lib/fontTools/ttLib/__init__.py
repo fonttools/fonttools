@@ -290,7 +290,7 @@ class TTFont:
 			debugmsg("Done dumping TTX")
 	
 	def _tableToXML(self, writer, tag, progress, quiet):
-		if self.has_key(tag):
+		if tag in self:
 			table = self[tag]
 			report = "Dumping '%s' table..." % tag
 		else:
@@ -302,7 +302,7 @@ class TTFont:
 		else:
 			if not quiet:
 				print report
-		if not self.has_key(tag):
+		if tag not in self:
 			return
 		xmlTag = tagToXML(tag)
 		if hasattr(table, "ERROR"):
@@ -322,7 +322,7 @@ class TTFont:
 		"""Import a TTX file (an XML-based text format), so as to recreate
 		a font object.
 		"""
-		if self.has_key("maxp") and self.has_key("post"):
+		if "maxp" in self and "post" in self:
 			# Make sure the glyph order is loaded, as it otherwise gets
 			# lost if the XML doesn't contain the glyph order, yet does
 			# contain the table which was originally used to extract the
@@ -337,12 +337,12 @@ class TTFont:
 	def isLoaded(self, tag):
 		"""Return true if the table identified by 'tag' has been 
 		decompiled and loaded into memory."""
-		return self.tables.has_key(tag)
+		return tag in self.tables
 	
 	def has_key(self, tag):
 		if self.isLoaded(tag):
 			return 1
-		elif self.reader and self.reader.has_key(tag):
+		elif self.reader and tag in self.reader:
 			return 1
 		elif tag == "GlyphOrder":
 			return 1
@@ -407,11 +407,11 @@ class TTFont:
 		self.tables[tag] = table
 	
 	def __delitem__(self, tag):
-		if not self.has_key(tag):
+		if tag not in self:
 			raise KeyError, "'%s' table not found" % tag
-		if self.tables.has_key(tag):
+		if tag in self.tables:
 			del self.tables[tag]
-		if self.reader and self.reader.has_key(tag):
+		if self.reader and tag in self.reader:
 			del self.reader[tag]
 	
 	def setGlyphOrder(self, glyphOrder):
@@ -422,10 +422,10 @@ class TTFont:
 			return self.glyphOrder
 		except AttributeError:
 			pass
-		if self.has_key('CFF '):
+		if 'CFF ' in self:
 			cff = self['CFF ']
 			self.glyphOrder = cff.getGlyphOrder()
-		elif self.has_key('post'):
+		elif 'post' in self:
 			# TrueType font
 			glyphOrder = self['post'].getGlyphOrder()
 			if glyphOrder is None:
@@ -490,9 +490,9 @@ class TTFont:
 			allNames = {}
 			for i in range(numGlyphs):
 				tempName = glyphOrder[i]
-				if reversecmap.has_key(tempName):
+				if tempName in reversecmap:
 					unicode = reversecmap[tempName]
-					if agl.UV2AGL.has_key(unicode):
+					if unicode in agl.UV2AGL:
 						# get name from the Adobe Glyph List
 						glyphName = agl.UV2AGL[unicode]
 					else:
@@ -501,7 +501,7 @@ class TTFont:
 								hex(unicode)[2:], 4))
 					tempName = glyphName
 					n = 1
-					while allNames.has_key(tempName):
+					while tempName in allNames:
 						tempName = glyphName + "#" + `n`
 						n = n + 1
 					glyphOrder[i] = tempName
@@ -554,7 +554,7 @@ class TTFont:
 			self._buildReverseGlyphOrderDict()
 		glyphOrder = self.getGlyphOrder()
 		d = self._reverseGlyphOrderDict
-		if not d.has_key(glyphName):
+		if glyphName not in d:
 			if glyphName in glyphOrder:
 				self._buildReverseGlyphOrderDict()
 				return self.getGlyphID(glyphName)
@@ -605,7 +605,7 @@ class TTFont:
 		tableClass = getTableClass(tag)
 		for masterTable in tableClass.dependencies:
 			if masterTable not in done:
-				if self.has_key(masterTable):
+				if masterTable in self:
 					self._writeTable(masterTable, writer, done)
 				else:
 					done.append(masterTable)
@@ -622,7 +622,7 @@ class TTFont:
 			if self.verbose:
 				debugmsg("compiling '%s' table" % tag)
 			return self.tables[tag].compile(self)
-		elif self.reader and self.reader.has_key(tag):
+		elif self.reader and tag in self.reader:
 			if self.verbose:
 				debugmsg("Reading '%s' table from disk" % tag)
 			return self.reader[tag]
@@ -641,11 +641,11 @@ class TTFont:
 		If the font contains both a 'CFF ' and a 'glyf' table, you can use
 		the 'preferCFF' argument to specify which one should be taken.
 		"""
-		if preferCFF and self.has_key("CFF "):
+		if preferCFF and "CFF " in self:
 			return self["CFF "].cff.values()[0].CharStrings
-		if self.has_key("glyf"):
+		if "glyf" in self:
 			return _TTGlyphSet(self)
-		if self.has_key("CFF "):
+		if "CFF " in self:
 			return self["CFF "].cff.values()[0].CharStrings
 		raise TTLibError, "Font contains no outlines"
 
@@ -667,7 +667,7 @@ class _TTGlyphSet:
 		return self._ttFont["glyf"].keys()
 	
 	def has_key(self, glyphName):
-		return self._ttFont["glyf"].has_key(glyphName)
+		return glyphName in self._ttFont["glyf"]
 	
 	__contains__ = has_key
 

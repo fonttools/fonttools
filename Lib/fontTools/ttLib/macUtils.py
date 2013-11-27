@@ -172,20 +172,20 @@ class SFNTResourceWriter:
 			names = {}
 			for code, name in cmap.cmap.items():
 				names[name] = code
-			if self.ttFont.has_key('kern'):
+			if 'kern' in self.ttFont:
 				kern = self.ttFont['kern'].getkern(0)
 				if kern:
 					fondkerning = []
 					for (left, right), value in kern.kernTable.items():
-						if names.has_key(left) and names.has_key(right):
+						if left in names and right in names:
 							fondkerning.append((names[left], names[right], scale * value))
 					fondkerning.sort()
 					fond.kernTables = {0: fondkerning}
-			if self.ttFont.has_key('hmtx'):
+			if 'hmtx' in self.ttFont:
 				hmtx = self.ttFont['hmtx']
 				fondwidths = [2048] * 256 + [0, 0]  # default width, + plus two zeros.
 				for name, (width, lsb) in hmtx.metrics.items():
-					if names.has_key(name):
+					if name in names:
 						fondwidths[names[name]] = scale * width
 				fond.widthTables = {0: fondwidths}
 		fond.save()

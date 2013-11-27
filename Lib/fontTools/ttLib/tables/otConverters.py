@@ -38,7 +38,7 @@ def buildConverters(tableSpec, tableNamespace):
 			for cls in conv.featureParamTypes.values():
 				convertersByName[cls.__name__] = Table(name, repeat, aux, cls)
 		converters.append(conv)
-		assert not convertersByName.has_key(name)
+		assert name not in convertersByName
 		convertersByName[name] = conv
 	return converters, convertersByName
 

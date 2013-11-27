@@ -114,7 +114,7 @@ class table_C_O_L_R_(DefaultTable.DefaultTable):
 				layer.fromXML(element, ttFont)
 				layers.append (layer)
 			operator.setitem(self, glyphName, layers)
-		elif attrs.has_key("value"):
+		elif "value" in attrs:
 			value =  safeEval(attrs["value"])
 			setattr(self, name, value)
 
@@ -124,7 +124,7 @@ class table_C_O_L_R_(DefaultTable.DefaultTable):
 			# its a gid, convert to glyph name
 			glyphSelector = self.getGlyphName(glyphSelector)
 
-		if not self.ColorLayers.has_key(glyphSelector):
+		if glyphSelector not in self.ColorLayers:
 			return None
 			
 		return self.ColorLayers[glyphSelector]
@@ -136,7 +136,7 @@ class table_C_O_L_R_(DefaultTable.DefaultTable):
 
 		if  value:
 			self.ColorLayers[glyphSelector] = value
-		elif self.ColorLayers.has_key(glyphSelector):
+		elif glyphSelector in self.ColorLayers:
 			del self.ColorLayers[glyphSelector]
 
 class LayerRecord:

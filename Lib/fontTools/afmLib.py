@@ -208,7 +208,7 @@ class AFM:
 		# a preferred order
 		attrs = self._attrs
 		for attr in preferredAttributeOrder:
-			if attrs.has_key(attr):
+			if attr in attrs:
 				value = attrs[attr]
 				if attr == "FontBBox":
 					value = "%s %s %s %s" % value
@@ -269,13 +269,13 @@ class AFM:
 		writelines(path, lines, sep)
 	
 	def has_kernpair(self, pair):
-		return self._kerning.has_key(pair)
+		return pair in self._kerning
 	
 	def kernpairs(self):
 		return self._kerning.keys()
 	
 	def has_char(self, char):
-		return self._chars.has_key(char)
+		return char in self._chars
 	
 	def chars(self):
 		return self._chars.keys()
@@ -290,7 +290,7 @@ class AFM:
 		self._composites[glyphName] = components
 	
 	def __getattr__(self, attr):
-		if self._attrs.has_key(attr):
+		if attr in self._attrs:
 			return self._attrs[attr]
 		else:
 			raise AttributeError, attr

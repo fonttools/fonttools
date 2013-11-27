@@ -526,7 +526,7 @@ class CharStrings:
 			return self.charStrings.values()
 	
 	def has_key(self, name):
-		return self.charStrings.has_key(name)
+		return name in self.charStrings
 	
 	def __len__(self):
 		return len(self.charStrings)
@@ -788,7 +788,7 @@ class CharsetConverter:
 			if DEBUG:
 				print "    charset end at %s" % file.tell()
 		else: # offset == 0 -> no charset data.
-			if isCID or not parent.rawDict.has_key("CharStrings"): 
+			if isCID or "CharStrings" not in parent.rawDict: 
 				assert value == 0 # We get here only when processing fontDicts from the FDArray of CFF-CID fonts. Only the real topDict references the chrset.
 				charset = None
 			elif value == 0:
@@ -992,7 +992,7 @@ class EncodingConverter(SimpleConverter):
 		xmlWriter.newline()
 
 	def xmlRead(self, (name, attrs, content), parent):
-		if attrs.has_key("name"):
+		if "name" in attrs:
 			return attrs["name"]
 		encoding = [".notdef"] * 256
 		for element in content:
@@ -1613,9 +1613,9 @@ class IndexedStrings:
 	def getSID(self, s):
 		if not hasattr(self, "stringMapping"):
 			self.buildStringMapping()
-		if cffStandardStringMapping.has_key(s):
+		if s in cffStandardStringMapping:
 			SID = cffStandardStringMapping[s]
-		elif self.stringMapping.has_key(s):
+		elif s in self.stringMapping:
 			SID = self.stringMapping[s]
 		else:
 			SID = len(self.strings) + cffStandardStringCount

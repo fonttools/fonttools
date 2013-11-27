@@ -38,7 +38,7 @@ class table__m_a_x_p(DefaultTable.DefaultTable):
 		assert len(data) == 0
 	
 	def compile(self, ttFont):
-		if ttFont.has_key('glyf'):
+		if 'glyf' in ttFont:
 			if ttFont.isLoaded('glyf') and ttFont.recalcBBoxes:
 				self.recalc(ttFont)
 		else:

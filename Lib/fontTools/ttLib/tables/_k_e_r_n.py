@@ -36,7 +36,7 @@ class table__k_e_r_n(DefaultTable.DefaultTable):
 			else:
 				version, length = struct.unpack(">HH", data[:4])
 			length = int(length)
-			if not kern_classes.has_key(version):
+			if version not in kern_classes:
 				subtable = KernTable_format_unkown(version)
 			else:
 				subtable = kern_classes[version]()
@@ -75,7 +75,7 @@ class table__k_e_r_n(DefaultTable.DefaultTable):
 		if not hasattr(self, "kernTables"):
 			self.kernTables = []
 		format = safeEval(attrs["format"])
-		if not kern_classes.has_key(format):
+		if format not in kern_classes:
 			subtable = KernTable_format_unkown(format)
 		else:
 			subtable = kern_classes[format]()

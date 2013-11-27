@@ -58,7 +58,7 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 		lastoffset = 0
 		done = {}  # remember the data so we can reuse the "pointers"
 		for name in self.names:
-			if done.has_key(name.string):
+			if name.string in done:
 				name.offset, name.length = done[name.string]
 			else:
 				name.offset, name.length = done[name.string] = len(stringData), len(name.string)

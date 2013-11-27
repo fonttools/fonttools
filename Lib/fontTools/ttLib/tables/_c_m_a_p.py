@@ -35,7 +35,7 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
 			if not length:
 				print "Error: cmap subtable is reported as having zero length: platformID %s, platEncID %s,  format %s offset %s. Skipping table." % (platformID, platEncID,format, offset)
 				continue
-			if not cmap_classes.has_key(format):
+			if format not in cmap_classes:
 				table = cmap_format_unknown(format)
 			else:
 				table = cmap_classes[format](format)
@@ -45,7 +45,7 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
 			# any other data gets decompiled only when an attribute of the
 			# subtable is referenced.
 			table.decompileHeader(data[offset:offset+int(length)], ttFont)
-			if seenOffsets.has_key(offset):
+			if offset in seenOffsets:
 				table.cmap = tables[seenOffsets[offset]].cmap
 			else:
 				seenOffsets[offset] = i
@@ -64,7 +64,7 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
 				offset = seen[id(table.cmap)]
 			except KeyError:
 				chunk = table.compile(ttFont)
-				if done.has_key(chunk):
+				if chunk in done:
 					offset = done[chunk]
 				else:
 					offset = seen[id(table.cmap)] = done[chunk] = totalOffset + len(tableData)
@@ -87,7 +87,7 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
 		if not hasattr(self, "tables"):
 			self.tables = []
 		format = safeEval(name[12:])
-		if not cmap_classes.has_key(format):
+		if format not in cmap_classes:
 			table = cmap_format_unknown(format)
 		else:
 			table = cmap_classes[format](format)

@@ -48,7 +48,7 @@ class table_T_S_I__1(DefaultTable.DefaultTable):
 			if len(data) % 2:
 				data = data + "\015"  # align on 2-byte boundaries, fill with return chars. Yum.
 			name = glyphNames[i]
-			if self.glyphPrograms.has_key(name):
+			if name in self.glyphPrograms:
 				text = self.glyphPrograms[name]
 			else:
 				text = ""
@@ -65,7 +65,7 @@ class table_T_S_I__1(DefaultTable.DefaultTable):
 			if len(data) % 2:
 				data = data + "\015"  # align on 2-byte boundaries, fill with return chars.
 			code, name = codes[i]
-			if self.extraPrograms.has_key(name):
+			if name in self.extraPrograms:
 				text = self.extraPrograms[name]
 			else:
 				text = ""

@@ -144,7 +144,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 		return self.glyphs.keys()
 	
 	def has_key(self, glyphName):
-		return self.glyphs.has_key(glyphName)
+		return glyphName in self.glyphs
 	
 	__contains__ = has_key
 	
@@ -864,23 +864,23 @@ class GlyphComponent:
 	
 	def fromXML(self, (name, attrs, content), ttFont):
 		self.glyphName = attrs["glyphName"]
-		if attrs.has_key("firstPt"):
+		if "firstPt" in attrs:
 			self.firstPt = safeEval(attrs["firstPt"])
 			self.secondPt = safeEval(attrs["secondPt"])
 		else:
 			self.x = safeEval(attrs["x"])
 			self.y = safeEval(attrs["y"])
-		if attrs.has_key("scale01"):
+		if "scale01" in attrs:
 			scalex = safeEval(attrs["scalex"])
 			scale01 = safeEval(attrs["scale01"])
 			scale10 = safeEval(attrs["scale10"])
 			scaley = safeEval(attrs["scaley"])
 			self.transform = [[scalex, scale01], [scale10, scaley]]
-		elif attrs.has_key("scalex"):
+		elif "scalex" in attrs:
 			scalex = safeEval(attrs["scalex"])
 			scaley = safeEval(attrs["scaley"])
 			self.transform = [[scalex, 0], [0, scaley]]
-		elif attrs.has_key("scale"):
+		elif "scale" in attrs:
 			scale = safeEval(attrs["scale"])
 			self.transform = [[scale, 0], [0, scale]]
 		self.flags = safeEval(attrs["flags"])
