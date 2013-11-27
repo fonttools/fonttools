@@ -1,7 +1,6 @@
 import os
 import struct
 from fontTools.misc import sstruct
-import string
 try:
 	from Carbon import Res
 except ImportError:
@@ -289,7 +288,7 @@ class FontFamily:
 			for firstchar, secondchar, kerndistance in table:
 				data.append(struct.pack(">cch", chr(firstchar), chr(secondchar), kerndistance))
 		
-		data = string.join(data, '')
+		data = ''.join(data)
 		
 		if DEBUG:
 			print("kerning table is the same?", self._rawkerningtables == data and 'yes.' or 'no.')

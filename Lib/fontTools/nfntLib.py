@@ -1,6 +1,5 @@
 import struct
 from fontTools.misc import sstruct
-import string
 
 
 # FontRec header
@@ -71,8 +70,8 @@ class NFNT:
 		for i in range(nEntries):
 			owTable[i] = chr(self.offsetTable[i]) + chr(self.widthTable[i])
 			locTable[i] = struct.pack("h", self.locTable[i])
-		owTable = string.join(owTable, "")
-		locTable = string.join(locTable, "")
+		owTable = ''.join(owTable)
+		locTable = ''.join(locTable)
 		assert len(locTable) == len(owTable) == 2 * (self.lastChar - self.firstChar + 3)
 		return header + self.bits + locTable + owTable
 	
@@ -158,7 +157,7 @@ class NFNT:
 				for x in range(8):
 					byte = byte | ((bitImage[8 * xByte + x, y] & 0x01) << (7 - x))
 				bits.append(chr(byte))
-		bits = string.join(bits, "")
+		bits = ''.join(bits)
 		
 		# assign values
 		self.fontType = 0x9000

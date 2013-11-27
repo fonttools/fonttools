@@ -50,7 +50,6 @@ try:
     import xml.etree.cElementTree as ET
 except ImportError:
     import xml.etree.ElementTree as ET
-import string
 import re
 
 XML = ET.XML

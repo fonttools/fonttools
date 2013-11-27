@@ -15,13 +15,12 @@ def readHex(content):
 
 def deHexStr(hexdata):
 	"""Convert a hex string to binary data."""
-	parts = string.split(hexdata)
-	hexdata = string.join(parts, "")
+	hexdata = ''.join(hexdata.split())
 	if len(hexdata) % 2:
 		hexdata = hexdata + "0"
 	data = []
 	for i in range(0, len(hexdata), 2):
-		data.append(chr(string.atoi(hexdata[i:i+2], 16)))
+		data.append(chr(int(hexdata[i:i+2], 16)))
 	return "".join(data)
 
 
@@ -51,11 +50,11 @@ def num2binary(l, bits=32):
 		all.append(bin)
 	all.reverse()
 	assert l in (0, -1), "number doesn't fit in number of bits"
-	return string.join(all, " ")
+	return ' '.join(all)
 
 
 def binary2num(bin):
-	bin = string.join(string.split(bin), "")
+	bin = ''.join(bin.split())
 	l = 0
 	for digit in bin:
 		l = l << 1

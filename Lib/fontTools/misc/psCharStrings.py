@@ -3,7 +3,6 @@ CFF dictionary data and Type1/Type2 CharStrings.
 """
 
 import struct
-import string
 
 
 DEBUG = 0
@@ -374,10 +373,10 @@ class T2CharString(ByteCodeBase):
 						bits = []
 						for byte in hintMask:
 							bits.append(num2binary(ord(byte), 8))
-						hintMask = string.join(bits, "")
-						line = string.join(args + [token, hintMask], " ")
+						hintMask = ''.join(bits)
+						line = ' '.join(args + [token, hintMask])
 					else:
-						line = string.join(args + [token], " ")
+						line = ' '.join(args + [token])
 					xmlWriter.write(line)
 					xmlWriter.newline()
 					args = []

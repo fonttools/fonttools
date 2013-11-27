@@ -22,7 +22,6 @@ DEBUG = 0
 
 from fontTools.misc import eexec
 from fontTools.misc.macCreatorType import getMacCreatorAndType
-import string
 import re
 import os
 
@@ -102,7 +101,7 @@ class T1Font:
 
 def read(path, onlyHeader=0):
 	"""reads any Type 1 font file, returns raw data"""
-	normpath = string.lower(path)
+	normpath = path.lower()
 	creator, type = getMacCreatorAndType(path)
 	if type == 'LWFN':
 		return readLWFN(path, onlyHeader), 'LWFN'
@@ -113,7 +112,7 @@ def read(path, onlyHeader=0):
 
 def write(path, data, kind='OTHER', dohex=0):
 	assertType1(data)
-	kind = string.upper(kind)
+	kind = kind.upper()
 	try:
 		os.remove(path)
 	except os.error:
@@ -169,7 +168,7 @@ def readLWFN(path, onlyHeader=0):
 				raise T1Error('bad chunk code: ' + repr(code))
 	finally:
 		Res.CloseResFile(resRef)
-	data = string.join(data, '')
+	data = ''.join(data)
 	assertType1(data)
 	return data
 
@@ -193,7 +192,7 @@ def readPFB(path, onlyHeader=0):
 		if onlyHeader:
 			break
 	f.close()
-	data = string.join(data, '')
+	data = ''.join(data)
 	assertType1(data)
 	return data
 
@@ -211,7 +210,7 @@ def readOther(path):
 			data.append(deHexString(chunk))
 		else:
 			data.append(chunk)
-	return string.join(data, '')
+	return ''.join(data)
 
 # file writing tools
 
@@ -307,23 +306,23 @@ def decryptType1(data):
 				data.append(chunk[:-len(EEXECBEGIN)-1])
 			else:
 				data.append(chunk)
-	return string.join(data, '')
+	return ''.join(data)
 
 def findEncryptedChunks(data):
 	chunks = []
 	while True:
-		eBegin = string.find(data, EEXECBEGIN)
+		eBegin = data.find(EEXECBEGIN)
 		if eBegin < 0:
 			break
 		eBegin = eBegin + len(EEXECBEGIN) + 1
-		eEnd = string.find(data, EEXECEND, eBegin)
+		eEnd = data.find(EEXECEND, eBegin)
 		if eEnd < 0:
 			raise T1Error("can't find end of eexec part")
 		cypherText = data[eBegin:eEnd + 2]
 		if isHex(cypherText[:4]):
 			cypherText = deHexString(cypherText)
 		plainText, R = eexec.decrypt(cypherText, 55665)
-		eEndLocal = string.find(plainText, EEXECINTERNALEND)
+		eEndLocal = plainText.find(EEXECINTERNALEND)
 		if eEndLocal < 0:
 			raise T1Error("can't find end of eexec part")
 		chunks.append((0, data[:eBegin]))
@@ -333,7 +332,7 @@ def findEncryptedChunks(data):
 	return chunks
 
 def deHexString(hexstring):
-	return eexec.deHexString(string.join(string.split(hexstring), ""))
+	return eexec.deHexString(''.join(hexstring.split()))
 
 
 # Type 1 assertion
@@ -348,7 +347,7 @@ def assertType1(data):
 		raise T1Error("not a PostScript font")
 	if not _fontType1RE.search(data):
 		raise T1Error("not a Type 1 font")
-	if string.find(data, "currentfile eexec") < 0:
+	if data.find("currentfile eexec") < 0:
 		raise T1Error("not an encrypted Type 1 font")
 	# XXX what else?
 	return data

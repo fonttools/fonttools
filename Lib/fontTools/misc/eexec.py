@@ -6,8 +6,6 @@ charstring encryption algorithm as used by PostScript Type 1 fonts.
 # all four public functions get overridden by the *much* faster 
 # C extension module eexecOp, if available.
 
-import string
-
 error = "eexec.error"
 
 
@@ -31,7 +29,7 @@ def decrypt(cipherstring, R):
 	for cipher in cipherstring:
 		plain, R = _decryptChar(cipher, R)
 		plainList.append(plain)
-	plainstring = string.join(plainList, '')
+	plainstring = ''.join(plainList)
 	return plainstring, int(R)
 
 def encrypt(plainstring, R):
@@ -39,7 +37,7 @@ def encrypt(plainstring, R):
 	for plain in plainstring:
 		cipher, R = _encryptChar(plain, R)
 		cipherList.append(cipher)
-	cipherstring = string.join(cipherList, '')
+	cipherstring = ''.join(cipherList)
 	return cipherstring, int(R)
 
 

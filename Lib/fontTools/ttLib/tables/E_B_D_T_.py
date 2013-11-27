@@ -1,7 +1,6 @@
 
 from . import DefaultTable
 import os
-import string
 import struct
 from fontTools.misc import sstruct
 import itertools
@@ -113,7 +112,7 @@ class table_E_B_D_T_(DefaultTable.DefaultTable):
 				# of any of the problems in the convertion that may arise.
 				curIndexSubTable.locations = dataLocations
 
-		return string.join(dataList, "")
+		return ''.join(dataList)
 
 	def toXML(self, writer, ttFont):
 		# When exporting to XML if one of the data export formats
@@ -212,7 +211,7 @@ def _data2binary(data, numBits):
 				binaryList.append('0')
 			value = value >> 1
 		numBits -= numBitsCut
-	return string.join(binaryList, "")
+	return ''.join(binaryList)
 
 def _binary2data(binary):
 	byteList = []
@@ -224,7 +223,7 @@ def _binary2data(binary):
 			if curBit == '1':
 				curByte |= 1
 		byteList.append(chr(curByte))
-	return string.join(byteList, "")
+	return ''.join(byteList)
 
 def _memoize(f):
 	class memodict(dict):
@@ -332,7 +331,7 @@ def _readBitwiseImageData(bitmapObject, name, attrs, content, ttFont):
 		name, attr, content = element
 		if name == 'row':
 			mapParams = zip(attr['value'], itertools.repeat('1'))
-			rowData = string.join(itertools.starmap(binaryConv.get, mapParams), "")
+			rowData = ''.join(itertools.starmap(binaryConv.get, mapParams))
 			dataRows.append(_binary2data(rowData))
 
 	bitmapObject.setRows(dataRows, bitDepth=bitDepth, metrics=metrics, reverseBytes=True)
@@ -532,7 +531,7 @@ class BitAlignedBitmapMixin:
 			dataList.append(chr(newByte))
 
 		# The way the data is kept is opposite the algorithm used.
-		data = string.join(dataList, "")
+		data = ''.join(dataList)
 		if not reverseBytes:
 			data = _reverseBytes(data)
 		return data
@@ -711,7 +710,7 @@ class ebdt_bitmap_format_8(BitmapPlusSmallMetricsMixin, ComponentBitmapGlyph):
 		for curComponent in self.componentArray:
 			curComponent.glyphCode = ttFont.getGlyphID(curComponent.name)
 			dataList.append(sstruct.pack(ebdtComponentFormat, curComponent))
-		return string.join(dataList, "")
+		return ''.join(dataList)
 
 
 class ebdt_bitmap_format_9(BitmapPlusBigMetricsMixin, ComponentBitmapGlyph):
@@ -735,7 +734,7 @@ class ebdt_bitmap_format_9(BitmapPlusBigMetricsMixin, ComponentBitmapGlyph):
 		for curComponent in self.componentArray:
 			curComponent.glyphCode = ttFont.getGlyphID(curComponent.name)
 			dataList.append(sstruct.pack(ebdtComponentFormat, curComponent))
-		return string.join(dataList, "")
+		return ''.join(dataList)
 
 
 # Dictionary of bitmap formats to the class representing that format

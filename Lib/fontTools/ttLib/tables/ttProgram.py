@@ -1,7 +1,7 @@
 """ttLib.tables.ttProgram.py -- Assembler/disassembler for TrueType bytecode programs."""
 
 import array
-import re, string
+import re
 from fontTools.misc.textTools import num2binary, binary2num, readHex
 
 # first, the list of instructions that eat bytes or words from the instruction stream
@@ -242,11 +242,11 @@ class Program:
 					j = 0
 					for j in range(nValues):
 						if j and not (j % 25):
-							writer.write(string.join(line, " "))
+							writer.write(' '.join(line))
 							writer.newline()
 							line = []
 						line.append(assembly[i+j])
-					writer.write(string.join(line, " "))
+					writer.write(' '.join(line))
 					writer.newline()
 					i = i + j + 1
 			writer.endtag("assembly")
@@ -258,7 +258,7 @@ class Program:
 	
 	def fromXML(self, name, attrs, content, ttFont):
 		if name == "assembly":
-			self.fromAssembly(string.join(content, ""))
+			self.fromAssembly(''.join(content))
 			self._assemble()
 			del self.assembly
 		else:
@@ -266,11 +266,11 @@ class Program:
 			self.fromBytecode(readHex(content))
 	
 	def _assemble(self, 
-			skipWhite=_skipWhite, mnemonicDict=mnemonicDict, strip=string.strip,
+			skipWhite=_skipWhite, mnemonicDict=mnemonicDict,
 			binary2num=binary2num):
 		assembly = self.assembly
 		if isinstance(assembly, type([])):
-			assembly = string.join(assembly, " ")
+			assembly = ' '.join(assembly)
 		bytecode = []
 		push = bytecode.append
 		lenAssembly = len(assembly)
@@ -284,7 +284,7 @@ class Program:
 			if comment:
 				continue
 			
-			arg = strip(arg)
+			arg = arg.strip()
 			if mnemonic.startswith("INSTR"):
 				# Unknown instruction
 				op = int(mnemonic[5:])

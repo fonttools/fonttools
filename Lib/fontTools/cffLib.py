@@ -6,7 +6,6 @@
 
 import struct
 from fontTools.misc import sstruct
-import string
 from fontTools.misc import psCharStrings
 from fontTools.misc.textTools import safeEval
 
@@ -896,7 +895,7 @@ def parseCharset0(numGlyphs, file, strings, isCID):
 	if isCID:
 		for i in range(numGlyphs - 1):
 			CID = readCard16(file)
-			charset.append("cid" + string.zfill(str(CID), 5) )
+			charset.append("cid" + str(CID).zfill(5))
 	else:
 		for i in range(numGlyphs - 1):
 			SID = readCard16(file)
@@ -915,7 +914,7 @@ def parseCharset(numGlyphs, file, strings, isCID, format):
 		nLeft = nLeftFunc(file)
 		if isCID:
 			for CID in range(first, first+nLeft+1):
-				charset.append("cid" + string.zfill(str(CID), 5) )
+				charset.append("cid" + str(CID).zfill(5))
 		else:
 			for SID in range(first, first+nLeft+1):
 				charset.append(strings[SID])

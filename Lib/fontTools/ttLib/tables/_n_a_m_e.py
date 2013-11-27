@@ -2,7 +2,6 @@ from . import DefaultTable
 import struct
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval
-import string
 
 nameRecordFormat = """
 		>	# big endian
@@ -129,7 +128,7 @@ class NameRecord:
 			s = s.strip()
 			self.string = s.encode("utf_16_be")
 		else:
-			s = string.strip(string.join(content, ""))
+			s = ''.join(content).strip()
 			self.string = unicode(s, "utf8").encode("latin1")
 	
 	def __cmp__(self, other):
