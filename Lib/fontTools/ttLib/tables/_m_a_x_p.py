@@ -113,10 +113,10 @@ class table__m_a_x_p(DefaultTable.DefaultTable):
 	
 	def testrepr(self):
 		items = sorted(self.__dict__.items())
-		print ". . . . . . . . ."
+		print(". . . . . . . . .")
 		for combo in items:
-			print "  %s: %s" % combo
-		print ". . . . . . . . ."
+			print("  %s: %s" % combo)
+		print(". . . . . . . . .")
 	
 	def toXML(self, writer, ttFont):
 		if self.tableVersion != 0x00005000:

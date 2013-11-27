@@ -25,7 +25,7 @@ class Error(Exception): pass
 
 
 def usage():
-	print __doc__
+	print(__doc__)
 	sys.exit(2)
 
 
@@ -58,7 +58,7 @@ def roundTrip(ttFile1, options, report):
 			report.write("-------------------------------------------------------------\n")
 			report.writelines(lines)
 		else:
-			print "(TTX files are the same)"
+			print("(TTX files are the same)")
 	finally:
 		for tmpFile in (xmlFile1, ttFile2, xmlFile2):
 			if os.path.exists(tmpFile):
@@ -80,10 +80,10 @@ def main(args):
 		try:
 			roundTrip(ttFile, options, report)
 		except KeyboardInterrupt:
-			print "(Cancelled)"
+			print("(Cancelled)")
 			break
 		except:
-			print "*** round tripping aborted ***"
+			print("*** round tripping aborted ***")
 			traceback.print_exc()
 			report.write("=============================================================\n")
 			report.write("  An exception occurred while round tripping")

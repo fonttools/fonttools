@@ -304,7 +304,7 @@ class T2CharString(ByteCodeBase):
 		try:
 			bytecode = "".join(bytecode)
 		except TypeError:
-			print bytecode
+			print(bytecode)
 			raise
 		self.setBytecode(bytecode)
 	

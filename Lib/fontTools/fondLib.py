@@ -143,9 +143,9 @@ class FontFamily:
 		header = header + struct.pack(*(">hh",) + self.ffIntl)
 		header = header + struct.pack(">h", self.ffVersion)
 		if DEBUG:
-			print "header is the same?", self._rawheader == header and 'yes.' or 'no.'
+			print("header is the same?", self._rawheader == header and 'yes.' or 'no.')
 			if self._rawheader != header:
-				print len(self._rawheader), len(header)
+				print(len(self._rawheader), len(header))
 		self._rawheader = header
 	
 	def _getfontassociationtable(self):
@@ -169,9 +169,9 @@ class FontFamily:
 			data = data + struct.pack(">3h", size, stype, ID)
 		
 		if DEBUG:
-			print "font association table is the same?", self._rawfontassociationtable == data and 'yes.' or 'no.'
+			print("font association table is the same?", self._rawfontassociationtable == data and 'yes.' or 'no.')
 			if self._rawfontassociationtable != data:
-				print len(self._rawfontassociationtable), len(data)
+				print(len(self._rawfontassociationtable), len(data))
 		self._rawfontassociationtable = data
 	
 	def _getoffsettable(self):
@@ -248,7 +248,7 @@ class FontFamily:
 			for width in table:
 				data = data + struct.pack('>h', width)
 		if DEBUG:
-			print "glyph width table is the same?", self._rawglyphwidthtable == data and 'yes.' or 'no.'
+			print("glyph width table is the same?", self._rawglyphwidthtable == data and 'yes.' or 'no.')
 		self._rawglyphwidthtable = data
 	
 	def _getkerningtables(self):
@@ -292,9 +292,9 @@ class FontFamily:
 		data = string.join(data, '')
 		
 		if DEBUG:
-			print "kerning table is the same?", self._rawkerningtables == data and 'yes.' or 'no.'
+			print("kerning table is the same?", self._rawkerningtables == data and 'yes.' or 'no.')
 			if self._rawkerningtables != data:
-				print len(self._rawkerningtables), len(data)
+				print(len(self._rawkerningtables), len(data))
 		self._rawkerningtables = data
 	
 	def _getstylemappingtable(self):
@@ -345,7 +345,7 @@ class FontFamily:
 			data = data + '\0'
 		
 		if DEBUG:
-			print "style mapping table is the same?", self._rawstylemappingtable == data and 'yes.' or 'no.'
+			print("style mapping table is the same?", self._rawstylemappingtable == data and 'yes.' or 'no.')
 		self._rawstylemappingtable = data
 	
 	def _unpackstylestrings(self):

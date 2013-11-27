@@ -25,8 +25,7 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 		expectedStringOffset = 6 + n * nameRecordSize
 		if stringOffset != expectedStringOffset:
 			# XXX we need a warn function
-			print "Warning: 'name' table stringOffset incorrect.",
-			print "Expected: %s; Actual: %s" % (expectedStringOffset, stringOffset)
+			print("Warning: 'name' table stringOffset incorrect. Expected: %s; Actual: %s" % (expectedStringOffset, stringOffset))
 		stringData = data[stringOffset:]
 		data = data[6:]
 		self.names = []

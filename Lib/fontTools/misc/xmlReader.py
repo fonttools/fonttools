@@ -75,7 +75,7 @@ class XMLReader:
 				ttLib.debugmsg(msg)
 			else:
 				if not self.quiet:
-					print msg
+					print(msg)
 			if tag == "GlyphOrder":
 				tableClass = ttLib.GlyphOrder
 			elif "ERROR" in attrs:
@@ -118,7 +118,7 @@ class XMLReader:
 class ProgressPrinter:
 	
 	def __init__(self, title, maxval=100):
-		print title
+		print(title)
 	
 	def set(self, val, maxval=None):
 		pass
@@ -127,5 +127,5 @@ class ProgressPrinter:
 		pass
 	
 	def setLabel(self, text):
-		print text
+		print(text)
 

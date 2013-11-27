@@ -86,8 +86,8 @@ if __name__ == "__main__":
 
 	pen = ControlBoundsPen(None)
 	draw(pen)
-	print pen.bounds
+	print(pen.bounds)
 
 	pen = BoundsPen(None)
 	draw(pen)
-	print pen.bounds
+	print(pen.bounds)

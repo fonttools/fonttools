@@ -47,7 +47,7 @@ class BitmapGlyphMetrics:
 			if name in metricNames:
 				vars(self)[name] = safeEval(attrs['value'])
 			else:
-				print "Warning: unknown name '%s' being ignored in %s." % name, self.__class__.__name__
+				print("Warning: unknown name '%s' being ignored in %s." % name, self.__class__.__name__)
 
 
 class BigGlyphMetrics(BitmapGlyphMetrics):

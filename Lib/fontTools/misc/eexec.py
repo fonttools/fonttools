@@ -56,10 +56,10 @@ def deHexString(h):
 def _test():
 	import fontTools.misc.eexecOp as eexecOp
 	testStr = "\0\0asdadads asds\265"
-	print decrypt, decrypt(testStr, 12321)
-	print eexecOp.decrypt, eexecOp.decrypt(testStr, 12321)
-	print encrypt, encrypt(testStr, 12321)
-	print eexecOp.encrypt, eexecOp.encrypt(testStr, 12321)
+	print(decrypt, decrypt(testStr, 12321))
+	print(eexecOp.decrypt, eexecOp.decrypt(testStr, 12321))
+	print(encrypt, encrypt(testStr, 12321))
+	print(eexecOp.encrypt, eexecOp.encrypt(testStr, 12321))
 
 
 if __name__ == "__main__":
