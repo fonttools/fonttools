@@ -193,7 +193,7 @@ class TTFont:
 			# assume "file" is a writable file object
 			closeStream = 0
 		
-		tags = self.keys()
+		tags = list(self.keys())
 		if "GlyphOrder" in tags:
 			tags.remove("GlyphOrder")
 		numTables = len(tags)
@@ -235,7 +235,7 @@ class TTFont:
 		self.disassembleInstructions = disassembleInstructions
 		self.bitmapGlyphDataFormat = bitmapGlyphDataFormat
 		if not tables:
-			tables = self.keys()
+			tables = list(self.keys())
 			if "GlyphOrder" not in tables:
 				tables = ["GlyphOrder"] + tables
 			if skipTables:
@@ -351,9 +351,9 @@ class TTFont:
 	__contains__ = has_key
 	
 	def keys(self):
-		keys = self.tables.keys()
+		keys = list(self.tables.keys())
 		if self.reader:
-			for key in self.reader.keys():
+			for key in list(self.reader.keys()):
 				if key not in keys:
 					keys.append(key)
 
@@ -363,7 +363,7 @@ class TTFont:
 		return ["GlyphOrder"] + keys
 	
 	def __len__(self):
-		return len(self.keys())
+		return len(list(self.keys()))
 	
 	def __getitem__(self, tag):
 		try:
@@ -487,7 +487,7 @@ class TTFont:
 			cmap = tempcmap.cmap
 			# create a reverse cmap dict
 			reversecmap = {}
-			for unicode, name in cmap.items():
+			for unicode, name in list(cmap.items()):
 				reversecmap[name] = unicode
 			allNames = {}
 			for i in range(numGlyphs):
@@ -642,11 +642,11 @@ class TTFont:
 		the 'preferCFF' argument to specify which one should be taken.
 		"""
 		if preferCFF and "CFF " in self:
-			return self["CFF "].cff.values()[0].CharStrings
+			return list(self["CFF "].cff.values())[0].CharStrings
 		if "glyf" in self:
 			return _TTGlyphSet(self)
 		if "CFF " in self:
-			return self["CFF "].cff.values()[0].CharStrings
+			return list(self["CFF "].cff.values())[0].CharStrings
 		raise TTLibError("Font contains no outlines")
 
 
@@ -664,7 +664,7 @@ class _TTGlyphSet:
 		self._ttFont = ttFont
 	
 	def keys(self):
-		return self._ttFont["glyf"].keys()
+		return list(self._ttFont["glyf"].keys())
 	
 	def has_key(self, glyphName):
 		return glyphName in self._ttFont["glyf"]
@@ -939,7 +939,7 @@ def reorderFontTables(inFile, outFile, tableOrder=None, checkChecksums=0):
 	from fontTools.ttLib.sfnt import SFNTReader, SFNTWriter
 	reader = SFNTReader(inFile, checkChecksums=checkChecksums)
 	writer = SFNTWriter(outFile, len(reader.tables), reader.sfntVersion, reader.flavor, reader.flavorData)
-	tables = reader.keys()
+	tables = list(reader.keys())
 	for tag in sortedTagList(tables, tableOrder):
 		writer[tag] = reader[tag]
 	writer.close()

@@ -159,7 +159,7 @@ class SingleSubst(FormatSwitchingBaseTable):
 		mapping = getattr(self, "mapping", None)
 		if mapping is None:
 			mapping = self.mapping = {}
-		items = mapping.items()
+		items = list(mapping.items())
 		getGlyphID = font.getGlyphID
 		gidItems = [(getGlyphID(item[0]), getGlyphID(item[1])) for item in items]
 		sortableItems = sorted(zip(gidItems, items))
@@ -241,7 +241,7 @@ class ClassDef(FormatSwitchingBaseTable):
 		classDefs = getattr(self, "classDefs", None)
 		if classDefs is None:
 			classDefs = self.classDefs = {}
-		items = classDefs.items()
+		items = list(classDefs.items())
 		getGlyphID = font.getGlyphID
 		for i in range(len(items)):
 			glyphName, cls = items[i]
@@ -303,7 +303,7 @@ class AlternateSubst(FormatSwitchingBaseTable):
 		alternates = getattr(self, "alternates", None)
 		if alternates is None:
 			alternates = self.alternates = {}
-		items = alternates.items()
+		items = list(alternates.items())
 		for i in range(len(items)):
 			glyphName, set = items[i]
 			items[i] = font.getGlyphID(glyphName), glyphName, set
@@ -368,7 +368,7 @@ class LigatureSubst(FormatSwitchingBaseTable):
 		ligatures = getattr(self, "ligatures", None)
 		if ligatures is None:
 			ligatures = self.ligatures = {}
-		items = ligatures.items()
+		items = list(ligatures.items())
 		for i in range(len(items)):
 			glyphName, set = items[i]
 			items[i] = font.getGlyphID(glyphName), glyphName, set

@@ -372,8 +372,7 @@ class FontFamily:
 				nameparts[part] = None
 		del nameparts[self.ffFamilyName]
 		nameparts = sorted(nameparts.keys())
-		items = splitnames.items()
-		items.sort()
+		items = sorted(splitnames.items())
 		numindices = 0
 		for style, split in items:
 			if len(split) > 1:

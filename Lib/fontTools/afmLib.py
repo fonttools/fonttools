@@ -241,8 +241,7 @@ class AFM:
 		# write kerning info
 		lines.append("StartKernData")
 		lines.append("StartKernPairs " + repr(len(self._kerning)))
-		items = self._kerning.items()
-		items.sort()		# XXX is order important?
+		items = sorted(self._kerning.items())
 		for (leftchar, rightchar), value in items:
 			lines.append("KPX %s %s %d" % (leftchar, rightchar, value))
 		lines.append("EndKernPairs")
@@ -266,13 +265,13 @@ class AFM:
 		return pair in self._kerning
 	
 	def kernpairs(self):
-		return self._kerning.keys()
+		return list(self._kerning.keys())
 	
 	def has_char(self, char):
 		return char in self._chars
 	
 	def chars(self):
-		return self._chars.keys()
+		return list(self._chars.keys())
 	
 	def comments(self):
 		return self._comments

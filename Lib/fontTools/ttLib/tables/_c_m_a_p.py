@@ -360,8 +360,8 @@ class cmap_format_2(CmapSubtable):
 				# same as mapping it to .notdef.
 		# cmap values are GID's.
 		glyphOrder = self.ttFont.getGlyphOrder()
-		gids = cmap.values()
-		charCodes = cmap.keys()
+		gids = list(cmap.values())
+		charCodes = list(cmap.keys())
 		lenCmap = len(gids)
 		try:
 			names = list(map(operator.getitem, [glyphOrder]*lenCmap, gids ))
@@ -714,7 +714,7 @@ class cmap_format_4(CmapSubtable):
 
 		from fontTools.ttLib.sfnt import maxPowerOfTwo
 		
-		charCodes = self.cmap.keys()
+		charCodes = list(self.cmap.keys())
 		lenCharCodes = len(charCodes)
 		if lenCharCodes == 0:
 			startCode = [0xffff]
@@ -862,7 +862,7 @@ class cmap_format_6(CmapSubtable):
 		if self.data:
 			return struct.pack(">HHH", self.format, self.length, self.language) + self.data
 		cmap = self.cmap
-		codes = cmap.keys()
+		codes = list(cmap.keys())
 		if codes: # yes, there are empty cmap tables.
 			codes = list(range(codes[0], codes[-1] + 1))
 			firstCode = codes[0]
@@ -945,9 +945,9 @@ class cmap_format_12_or_13(CmapSubtable):
 	def compile(self, ttFont):
 		if self.data:
 			return struct.pack(">HHLLL", self.format, self.reserved, self.length, self.language, self.nGroups) + self.data
-		charCodes = self.cmap.keys()
+		charCodes = list(self.cmap.keys())
 		lenCharCodes = len(charCodes) 
-		names = self.cmap.values()
+		names = list(self.cmap.values())
 		nameMap = ttFont.getReverseGlyphMap()
 		try:
 			gids = list(map(operator.getitem, [nameMap]*lenCharCodes, names))

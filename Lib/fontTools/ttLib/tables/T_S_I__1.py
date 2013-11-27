@@ -89,8 +89,7 @@ class table_T_S_I__1(DefaultTable.DefaultTable):
 			writer.endtag("glyphProgram")
 			writer.newline()
 			writer.newline()
-		extra_names = self.extraPrograms.keys()
-		extra_names.sort()
+		extra_names = sorted(self.extraPrograms.keys()))
 		for name in extra_names:
 			text = self.extraPrograms[name]
 			if not text:
