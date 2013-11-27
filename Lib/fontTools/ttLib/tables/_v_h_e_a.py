@@ -68,8 +68,6 @@ class table__v_h_e_a(DefaultTable.DefaultTable):
 		formatstring, names, fixes = sstruct.getformat(vheaFormat)
 		for name in names:
 			value = getattr(self, name)
-			if type(value) == type(0L):
-				value = int(value)
 			writer.simpletag(name, value=value)
 			writer.newline()
 	

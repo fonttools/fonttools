@@ -67,7 +67,7 @@ class table__h_e_a_d(DefaultTable.DefaultTable):
 					value = time.asctime(time.gmtime(0))
 			if name in ("magicNumber", "checkSumAdjustment"):
 				if value < 0:
-					value = value + 0x100000000L
+					value = value + 0x100000000
 				value = hex(value)
 				if value[-1:] == "L":
 					value = value[:-1]
@@ -133,12 +133,12 @@ def parse_date(datestring):
 	try:
 		return long(time.mktime(t) - time.timezone)
 	except OverflowError:
-		return 0L
+		return 0
 
 
 def bin2long(data):
 	# thanks </F>!
-	v = 0L
+	v = 0
 	for i in map(ord, data):
 	    v = v<<8 | i
 	return v

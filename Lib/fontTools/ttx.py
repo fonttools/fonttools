@@ -183,7 +183,7 @@ def ttList(input, output, options):
 		entry = reader.tables[tag]
 		checkSum = long(entry.checkSum)
 		if checkSum < 0:
-			checkSum = checkSum + 0x100000000L
+			checkSum = checkSum + 0x100000000
 		checksum = "0x" + string.zfill(hex(checkSum)[2:-1], 8)
 		print format % (tag, checksum, entry.length, entry.offset)
 	print

@@ -129,8 +129,6 @@ class table__m_a_x_p(DefaultTable.DefaultTable):
 			names = names + names_1_0
 		for name in names:
 			value = getattr(self, name)
-			if type(value) == type(0L):
-				value=int(value)
 			if name == "tableVersion":
 				value = hex(value)
 			writer.simpletag(name, value=value)
