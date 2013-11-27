@@ -832,6 +832,7 @@ def tagToIdentifier(tag):
 		'OS/2' -> 'O_S_2f_2'
 	"""
 	import re
+	tag = Tag(tag)
 	if tag == "GlyphOrder":
 		return tag
 	assert len(tag) == 4, "tag should be 4 characters long"
@@ -863,7 +864,7 @@ def identifierToTag(ident):
 			tag = tag + bytechr(int(ident[i:i+2], 16))
 	# append trailing spaces
 	tag = tag + (4 - len(tag)) * ' '
-	return tag
+	return Tag(tag)
 
 
 def tagToXML(tag):
@@ -872,6 +873,7 @@ def tagToXML(tag):
 	case sensitive, this is a fairly simple/readable translation.
 	"""
 	import re
+	tag = Tag(tag)
 	if tag == "OS/2":
 		return "OS_2"
 	elif tag == "GlyphOrder":
@@ -890,7 +892,7 @@ def xmlToTag(tag):
 		return identifierToTag(tag)
 	else:
 		return tag + " " * (4 - len(tag))
-	return tag
+	return Tag(tag)
 
 
 def debugmsg(msg):
