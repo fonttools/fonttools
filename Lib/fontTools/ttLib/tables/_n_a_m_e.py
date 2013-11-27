@@ -120,16 +120,11 @@ class NameRecord:
 		self.platformID = safeEval(attrs["platformID"])
 		self.platEncID = safeEval(attrs["platEncID"])
 		self.langID =  safeEval(attrs["langID"])
+		s = ''.join(content).decode("utf8").strip()
 		if self.platformID == 0 or (self.platformID == 3 and self.platEncID in (0, 1)):
-			s = ""
-			for element in content:
-				s = s + element
-			s = unicode(s, "utf8")
-			s = s.strip()
 			self.string = s.encode("utf_16_be")
 		else:
-			s = ''.join(content).strip()
-			self.string = unicode(s, "utf8").encode("latin1")
+			self.string = s.encode("latin1")
 	
 	def __cmp__(self, other):
 		"""Compare method, so a list of NameRecords can be sorted
