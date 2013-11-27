@@ -59,7 +59,7 @@ def binary2num(bin):
 	l = 0
 	for digit in bin:
 		l = l << 1
-		if digit <> "0":
+		if digit != "0":
 			l = l | 0x1
 	return l
 

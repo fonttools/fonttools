@@ -71,7 +71,7 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 			name.toXML(writer, ttFont)
 	
 	def fromXML(self, (name, attrs, content), ttFont):
-		if name <> "namerecord":
+		if name != "namerecord":
 			return # ignore unknown tags
 		if not hasattr(self, "names"):
 			self.names = []

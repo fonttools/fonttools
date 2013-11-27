@@ -401,7 +401,7 @@ class GlobalSubrsIndex(Index):
 			xmlWriter.newline()
 	
 	def fromXML(self, (name, attrs, content)):
-		if name <> "CharString":
+		if name != "CharString":
 			return
 		subr = psCharStrings.T2CharString()
 		subr.fromXML((name, attrs, content))
@@ -441,7 +441,7 @@ class FDArrayIndex(TopDictIndex):
 	compilerClass = FDArrayIndexCompiler
 
 	def fromXML(self, (name, attrs, content)):
-		if name <> "FontDict":
+		if name != "FontDict":
 			return
 		fontDict = FontDict()
 		for element in content:
@@ -586,7 +586,7 @@ class CharStrings:
 			if isinstance(element, basestring):
 				continue
 			name, attrs, content = element
-			if name <> "CharString":
+			if name != "CharString":
 				continue
 			fdID = -1
 			if hasattr(self, "fdArray"):
@@ -868,7 +868,7 @@ def packCharset(charset, isCID, strings):
 		SID = getNameID(name, strings)
 		if first is None:
 			first = SID
-		elif end + 1 <> SID:
+		elif end + 1 != SID:
 			nLeft = end - first
 			if nLeft > 255:
 				format = 2
@@ -1063,7 +1063,7 @@ def packEncoding1(charset, encoding, strings):
 		code = m.get(name, -1)
 		if first is None:
 			first = code
-		elif end + 1 <> code:
+		elif end + 1 != code:
 			nLeft = end - first
 			ranges.append((first, nLeft))
 			first = code

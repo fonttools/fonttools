@@ -291,7 +291,7 @@ class Program:
 				push(op)
 			elif mnemonic not in ("NPUSHB", "NPUSHW", "PUSHB", "PUSHW"):
 				op, argBits = mnemonicDict[mnemonic]
-				if len(arg) <> argBits:
+				if len(arg) != argBits:
 					raise tt_instructions_error, "Incorrect number of argument bits (%s[%s])" % (mnemonic, arg)
 				if arg:
 					arg = binary2num(arg)

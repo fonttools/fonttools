@@ -42,7 +42,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 				glyphName = 'ttxautoglyph%s' % i
 			next = int(loca[i+1])
 			glyphdata = data[last:next]
-			if len(glyphdata) <> (next - last):
+			if len(glyphdata) != (next - last):
 				raise ttLib.TTLibError, "not enough 'glyf' table data"
 			glyph = Glyph(glyphdata)
 			self.glyphs[glyphName] = glyph
@@ -110,7 +110,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 			writer.newline()
 	
 	def fromXML(self, (name, attrs, content), ttFont):
-		if name <> "TTGlyph":
+		if name != "TTGlyph":
 			return
 		if not hasattr(self, "glyphs"):
 			self.glyphs = {}
@@ -124,7 +124,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 			setattr(glyph, attr, safeEval(attrs.get(attr, '0')))
 		self.glyphs[glyphName] = glyph
 		for element in content:
-			if type(element) <> TupleType:
+			if type(element) != TupleType:
 				continue
 			glyph.fromXML(element, ttFont)
 		if not ttFont.recalcBBoxes:
@@ -289,10 +289,10 @@ class Glyph:
 			coordinates = GlyphCoordinates()
 			flags = []
 			for element in content:
-				if type(element) <> TupleType:
+				if type(element) != TupleType:
 					continue
 				name, attrs, content = element
-				if name <> "pt":
+				if name != "pt":
 					continue  # ignore anything but "pt"
 				coordinates.append((safeEval(attrs["x"]), safeEval(attrs["y"])))
 				flags.append(not not safeEval(attrs["on"]))
@@ -317,7 +317,7 @@ class Glyph:
 		elif name == "instructions":
 			self.program = ttProgram.Program()
 			for element in content:
-				if type(element) <> TupleType:
+				if type(element) != TupleType:
 					continue
 				self.program.fromXML(element, ttFont)
 	
@@ -362,7 +362,7 @@ class Glyph:
 	def decompileCoordinates(self, data):
 		endPtsOfContours = array.array("h")
 		endPtsOfContours.fromstring(data[:2*self.numberOfContours])
-		if sys.byteorder <> "big":
+		if sys.byteorder != "big":
 			endPtsOfContours.byteswap()
 		self.endPtsOfContours = endPtsOfContours.tolist()
 		
@@ -475,7 +475,7 @@ class Glyph:
 		assert len(self.coordinates) == len(self.flags)
 		data = ""
 		endPtsOfContours = array.array("h", self.endPtsOfContours)
-		if sys.byteorder <> "big":
+		if sys.byteorder != "big":
 			endPtsOfContours.byteswap()
 		data = data + endPtsOfContours.tostring()
 		instructions = self.program.getBytecode()
@@ -826,7 +826,7 @@ class GlyphComponent:
 				data = data + struct.pack(">hhhh", 
 						transform[0][0], transform[0][1],
 						transform[1][0], transform[1][1])
-			elif transform[0][0] <> transform[1][1]:
+			elif transform[0][0] != transform[1][1]:
 				flags = flags | WE_HAVE_AN_X_AND_Y_SCALE
 				data = data + struct.pack(">hh", 
 						transform[0][0], transform[1][1])
@@ -852,7 +852,7 @@ class GlyphComponent:
 						("scalex", transform[0][0]), ("scale01", transform[0][1]),
 						("scale10", transform[1][0]), ("scaley", transform[1][1]),
 						]
-			elif transform[0][0] <> transform[1][1]:
+			elif transform[0][0] != transform[1][1]:
 				attrs = attrs + [
 						("scalex", transform[0][0]), ("scaley", transform[1][1]),
 						]

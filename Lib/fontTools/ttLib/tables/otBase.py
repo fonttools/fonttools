@@ -696,7 +696,7 @@ class FormatSwitchingBaseTable(BaseTable):
 	
 	def readFormat(self, reader):
 		self.Format = reader.readUShort()
-		assert self.Format <> 0, (self, reader.pos, len(reader.data))
+		assert self.Format != 0, (self, reader.pos, len(reader.data))
 	
 	def writeFormat(self, writer):
 		writer.writeUShort(self.Format)
@@ -829,12 +829,12 @@ class ValueRecord:
 		for k, v in attrs.items():
 			setattr(self, k, int(v))
 		for element in content:
-			if type(element) <> TupleType:
+			if type(element) != TupleType:
 				continue
 			name, attrs, content = element
 			value = getattr(otTables, name)()
 			for elem2 in content:
-				if type(elem2) <> TupleType:
+				if type(elem2) != TupleType:
 					continue
 				value.fromXML(elem2, font)
 			setattr(self, name, value)

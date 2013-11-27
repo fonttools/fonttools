@@ -44,7 +44,7 @@ class table_L_T_S_H_(DefaultTable.DefaultTable):
 	def fromXML(self, (name, attrs, content), ttFont):
 		if not hasattr(self, "yPels"):
 			self.yPels = {}
-		if name <> "yPel":
+		if name != "yPel":
 			return # ignore unknown tags
 		self.yPels[attrs["name"]] = safeEval(attrs["value"])
 
