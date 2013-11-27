@@ -87,7 +87,7 @@ def buildOperatorDict(operatorList):
 			oper[item[0]] = item[1]
 		else:
 			oper[item[0]] = item[1:]
-		if isinstance(item[0], types.TupleType):
+		if isinstance(item[0], tuple):
 			opc[item[1]] = item[0]
 		else:
 			opc[item[1]] = (item[0],)
@@ -287,7 +287,7 @@ class T2CharString(ByteCodeBase):
 			token = program[i]
 			i = i + 1
 			tp = type(token)
-			if tp == types.StringType:
+			if tp == str:
 				try:
 					bytecode.extend(chr(b) for b in opcodes[token])
 				except KeyError:
@@ -295,9 +295,9 @@ class T2CharString(ByteCodeBase):
 				if token in ('hintmask', 'cntrmask'):
 					bytecode.append(program[i])  # hint mask
 					i = i + 1
-			elif tp == types.IntType:
+			elif tp == int:
 				bytecode.append(encodeInt(token))
-			elif tp == types.FloatType:
+			elif tp == float:
 				bytecode.append(encodeFixed(token))
 			else:
 				assert 0, "unsupported type: %s" % tp
@@ -320,7 +320,7 @@ class T2CharString(ByteCodeBase):
 		self.program = None
 	
 	def getToken(self, index, 
-			len=len, ord=ord, getattr=getattr, type=type, StringType=types.StringType):
+			len=len, ord=ord, getattr=getattr, type=type, StringType=str):
 		if self.bytecode is not None:
 			if index >= len(self.bytecode):
 				return None, 0, 0

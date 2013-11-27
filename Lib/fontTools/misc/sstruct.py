@@ -63,7 +63,7 @@ error = "sstruct.error"
 def pack(format, object):
 	formatstring, names, fixes = getformat(format)
 	elements = []
-	if not isinstance(object, types.DictType):
+	if not isinstance(object, dict):
 		object = object.__dict__
 	for name in names:
 		value = object[name]
@@ -78,10 +78,10 @@ def unpack(format, data, object=None):
 	if object is None:
 		object = {}
 	formatstring, names, fixes = getformat(format)
-	if isinstance(object, types.DictType):
-		dict = object
+	if isinstance(object, dict):
+		d = object
 	else:
-		dict = object.__dict__
+		d = object.__dict__
 	elements = struct.unpack(formatstring, data)
 	for i in range(len(names)):
 		name = names[i]
@@ -89,7 +89,7 @@ def unpack(format, data, object=None):
 		if name in fixes:
 			# fixed point conversion
 			value = value / fixes[name]
-		dict[name] = value
+		d[name] = value
 	return object
 
 def unpack2(format, data, object=None):

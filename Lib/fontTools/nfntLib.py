@@ -276,7 +276,7 @@ def dataFromFile(pathOrFSSpec, nameOrID="", resType='NFNT'):
 		if not nameOrID:
 			# just take the first in the file
 			res = Res.Get1IndResource(resType, 1)
-		elif isinstance(nameOrID, types.IntType):
+		elif isinstance(nameOrID, int):
 			res = Res.Get1Resource(resType, nameOrID)
 		else:
 			res = Res.Get1NamedResource(resType, nameOrID)
