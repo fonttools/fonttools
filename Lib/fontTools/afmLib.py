@@ -312,7 +312,7 @@ class AFM:
 				raise AttributeError(attr)
 	
 	def __getitem__(self, key):
-		if isinstance(key, types.TupleType):
+		if isinstance(key, tuple):
 			# key is a tuple, return the kernpair
 			return self._kerning[key]
 		else:
@@ -320,7 +320,7 @@ class AFM:
 			return self._chars[key]
 	
 	def __setitem__(self, key, value):
-		if isinstance(key, types.TupleType):
+		if isinstance(key, tuple):
 			# key is a tuple, set kernpair
 			self._kerning[key] = value
 		else:
@@ -328,7 +328,7 @@ class AFM:
 			self._chars[key] = value
 	
 	def __delitem__(self, key):
-		if isinstance(key, types.TupleType):
+		if isinstance(key, tuple):
 			# key is a tuple, del kernpair
 			del self._kerning[key]
 		else:
