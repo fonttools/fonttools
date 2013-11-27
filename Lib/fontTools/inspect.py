@@ -5,14 +5,15 @@
 """GUI font inspector.
 """
 
+from __future__ import print_function
+from fontTools.misc.py23 import *
+from fontTools import misc, ttLib, cffLib
 import pygtk
 pygtk.require('2.0')
 import gtk
 import sys
 import array
 
-from fontTools import misc, ttLib, cffLib
-from fontTools.misc.py23 import *
 
 
 class Row(object):
@@ -255,7 +256,7 @@ class Inspect:
 
 def main(args):
 	if len(args) < 1:
-		print("usage: pyftinspect font...")
+		print("usage: pyftinspect font...", file=sys.stderr)
 		sys.exit(1)
 	for arg in args:
 		Inspect(arg)
