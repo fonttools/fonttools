@@ -91,4 +91,4 @@ class ParamBlock:
 
 if __name__ == "__main__":
 	fond = Res.GetNamedResource("FOND", "Helvetica")
-	print HomeResFile(fond)
+	print(HomeResFile(fond))

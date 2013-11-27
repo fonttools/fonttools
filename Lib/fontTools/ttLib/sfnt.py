@@ -90,7 +90,7 @@ class SFNTReader:
 				assert checksum == entry.checksum, "bad checksum for '%s' table" % tag
 			elif checksum != entry.checkSum:
 				# Be friendly, and just print a warning.
-				print "bad checksum for '%s' table" % tag
+				print("bad checksum for '%s' table" % tag)
 		return data
 	
 	def __delitem__(self, tag):

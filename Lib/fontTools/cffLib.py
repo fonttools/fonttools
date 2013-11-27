@@ -138,7 +138,7 @@ class CFFWriter:
 		count = 1
 		while True:
 			if DEBUG:
-				print "CFFWriter.toFile() iteration:", count
+				print("CFFWriter.toFile() iteration:", count)
 			count = count + 1
 			pos = 0
 			posList = [pos]
@@ -155,7 +155,7 @@ class CFFWriter:
 				break
 			lastPosList = posList
 		if DEBUG:
-			print "CFFWriter.toFile() writing to file."
+			print("CFFWriter.toFile() writing to file.")
 		begin = file.tell()
 		posList = [0]
 		for item in self.data:
@@ -314,7 +314,7 @@ class Index:
 			self.items = []
 			return
 		if DEBUG:
-			print "loading %s at %s" % (name, file.tell())
+			print("loading %s at %s" % (name, file.tell()))
 		self.file = file
 		count = readCard16(file)
 		self.count = count
@@ -324,7 +324,7 @@ class Index:
 			return
 		offSize = readCard8(file)
 		if DEBUG:
-			print "    index count: %s offSize: %s" % (count, offSize)
+			print("    index count: %s offSize: %s" % (count, offSize))
 		assert offSize <= 4, "offSize too large: %s" % offSize
 		self.offsets = offsets = []
 		pad = '\0' * (4 - offSize)
@@ -336,7 +336,7 @@ class Index:
 		self.offsetBase = file.tell() - 1
 		file.seek(self.offsetBase + offsets[-1])  # pretend we've read the whole lot
 		if DEBUG:
-			print "    end of %s at %s" % (name, file.tell())
+			print("    end of %s at %s" % (name, file.tell()))
 	
 	def __len__(self):
 		return len(self.items)
@@ -778,7 +778,7 @@ class CharsetConverter:
 			file = parent.file
 			file.seek(value)
 			if DEBUG:
-				print "loading charset at %s" % value
+				print("loading charset at %s" % value)
 			format = readCard8(file)
 			if format == 0:
 				charset = parseCharset0(numGlyphs, file, parent.strings, isCID)
@@ -788,7 +788,7 @@ class CharsetConverter:
 				raise NotImplementedError
 			assert len(charset) == numGlyphs
 			if DEBUG:
-				print "    charset end at %s" % file.tell()
+				print("    charset end at %s" % file.tell())
 		else: # offset == 0 -> no charset data.
 			if isCID or "CharStrings" not in parent.rawDict: 
 				assert value == 0 # We get here only when processing fontDicts from the FDArray of CFF-CID fonts. Only the real topDict references the chrset.
@@ -957,7 +957,7 @@ class EncodingConverter(SimpleConverter):
 			file = parent.file
 			file.seek(value)
 			if DEBUG:
-				print "loading Encoding at %s" % value
+				print("loading Encoding at %s" % value)
 			format = readCard8(file)
 			haveSupplement = format & 0x80
 			if haveSupplement:
@@ -1329,8 +1329,8 @@ class DictCompiler:
 	
 	def compile(self, reason):
 		if DEBUG:
-			print "-- compiling %s for %s" % (self.__class__.__name__, reason)
-			print "in baseDict: ", self
+			print("-- compiling %s for %s" % (self.__class__.__name__, reason))
+			print("in baseDict: ", self)
 		rawDict = self.rawDict
 		data = []
 		for name in self.dictObj.order:
@@ -1463,7 +1463,7 @@ class BaseDict:
 	def __init__(self, strings=None, file=None, offset=None):
 		self.rawDict = {}
 		if DEBUG:
-			print "loading %s at %s" % (self.__class__.__name__, offset)
+			print("loading %s at %s" % (self.__class__.__name__, offset))
 		self.file = file
 		self.offset = offset
 		self.strings = strings
@@ -1471,7 +1471,7 @@ class BaseDict:
 	
 	def decompile(self, data):
 		if DEBUG:
-			print "    length %s is %s" % (self.__class__.__name__, len(data))
+			print("    length %s is %s" % (self.__class__.__name__, len(data)))
 		dec = self.decompilerClass(self.strings)
 		dec.decompile(data)
 		self.rawDict = dec.getDict()
@@ -1552,7 +1552,7 @@ class TopDict(BaseDict):
 			try:
 				charString.decompile()
 			except:
-				print "Error in charstring ", i
+				print("Error in charstring ", i)
 				import sys
 				type, value = sys. exc_info()[0:2]
 				raise type(value)

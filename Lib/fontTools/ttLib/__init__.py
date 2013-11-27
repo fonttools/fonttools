@@ -301,7 +301,7 @@ class TTFont:
 			debugmsg(report)
 		else:
 			if not quiet:
-				print report
+				print(report)
 		if tag not in self:
 			return
 		xmlTag = tagToXML(tag)
@@ -390,7 +390,7 @@ class TTFont:
 					if not self.ignoreDecompileErrors:
 						raise
 					# fall back to DefaultTable, retaining the binary table data
-					print "An exception occurred during the decompilation of the '%s' table" % tag
+					print("An exception occurred during the decompilation of the '%s' table" % tag)
 					from .tables.DefaultTable import DefaultTable
 					import StringIO
 					file = StringIO.StringIO()
@@ -896,7 +896,7 @@ def xmlToTag(tag):
 
 def debugmsg(msg):
 	import time
-	print msg + time.strftime("  (%H:%M:%S)", time.localtime(time.time()))
+	print(msg + time.strftime("  (%H:%M:%S)", time.localtime(time.time())))
 
 
 # Table order as recommended in the OpenType specification 1.4

@@ -294,7 +294,7 @@ class BitmapSizeTable:
 			elif name in dataNames:
 				vars(self)[name] = safeEval(attrs['value'])
 			else:
-				print "Warning: unknown name '%s' being ignored in BitmapSizeTable." % name
+				print("Warning: unknown name '%s' being ignored in BitmapSizeTable." % name)
 
 
 class SbitLineMetrics:
@@ -503,7 +503,7 @@ class FixedSizeIndexSubTableMixin:
 				self.metrics = BigGlyphMetrics()
 				self.metrics.fromXML(name, attrs, content, ttFont)
 			elif name == SmallGlyphMetrics.__name__:
-				print "Warning: SmallGlyphMetrics being ignored in format %d." % self.indexFormat
+				print("Warning: SmallGlyphMetrics being ignored in format %d." % self.indexFormat)
 
 	def padBitmapData(self, data):
 		# Make sure that the data isn't bigger than the fixed size.

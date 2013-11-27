@@ -33,7 +33,7 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
 				format, length = struct.unpack(">HL", data[offset:offset+6])
 				
 			if not length:
-				print "Error: cmap subtable is reported as having zero length: platformID %s, platEncID %s,  format %s offset %s. Skipping table." % (platformID, platEncID,format, offset)
+				print("Error: cmap subtable is reported as having zero length: platformID %s, platEncID %s,  format %s offset %s. Skipping table." % (platformID, platEncID,format, offset))
 				continue
 			if format not in cmap_classes:
 				table = cmap_format_unknown(format)

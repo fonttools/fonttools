@@ -33,10 +33,10 @@ class ReportLabPen(BasePen):
 if __name__=="__main__":
 	import sys
 	if len(sys.argv) < 3:
-		print "Usage: reportLabPen.py <OTF/TTF font> <glyphname> [<image file to create>]"
-		print "  If no image file name is created, by default <glyphname>.png is created."
-		print "  example: reportLabPen.py Arial.TTF R test.png"
-		print "  (The file format will be PNG, regardless of the image file name supplied)"
+		print("Usage: reportLabPen.py <OTF/TTF font> <glyphname> [<image file to create>]")
+		print("  If no image file name is created, by default <glyphname>.png is created.")
+		print("  example: reportLabPen.py Arial.TTF R test.png")
+		print("  (The file format will be PNG, regardless of the image file name supplied)")
 		sys.exit(0)
 
 	from fontTools.ttLib import TTFont

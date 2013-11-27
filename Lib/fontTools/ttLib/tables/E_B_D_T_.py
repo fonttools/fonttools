@@ -167,7 +167,7 @@ class table_E_B_D_T_(DefaultTable.DefaultTable):
 					assert glyphName not in bitmapGlyphDict, "Duplicate glyphs with the same name '%s' in the same strike." % glyphName
 					bitmapGlyphDict[glyphName] = curGlyph
 				else:
-					print "Warning: %s being ignored by %s", name, self.__class__.__name__
+					print("Warning: %s being ignored by %s", name, self.__class__.__name__)
 
 			# Grow the strike data array to the appropriate size. The XML
 			# format allows the strike index value to be out of order.
@@ -197,7 +197,7 @@ class EbdtComponent:
 			if name in componentNames:
 				vars(self)[name] = safeEval(attrs['value'])
 			else:
-				print "Warning: unknown name '%s' being ignored by EbdtComponent." % name
+				print("Warning: unknown name '%s' being ignored by EbdtComponent." % name)
 
 # Helper functions for dealing with binary.
 
@@ -471,7 +471,7 @@ def _createBitmapPlusMetricsMixin(metricsClass):
 					self.metrics = metricsClass()
 					self.metrics.fromXML(name, attrs, content, ttFont)
 				elif name == oppositeMetricsName:
-					print "Warning: %s being ignored in format %d." % oppositeMetricsName, self.getFormat()
+					print("Warning: %s being ignored in format %d." % oppositeMetricsName, self.getFormat())
 
 	return BitmapPlusMetricsMixin
 
@@ -685,7 +685,7 @@ class ComponentBitmapGlyph(BitmapGlyph):
 						curComponent.fromXML(name, attrs, content, ttFont)
 						self.componentArray.append(curComponent)
 					else:
-						print "Warning: '%s' being ignored in component array." % name
+						print("Warning: '%s' being ignored in component array." % name)
 
 
 class ebdt_bitmap_format_8(BitmapPlusSmallMetricsMixin, ComponentBitmapGlyph):

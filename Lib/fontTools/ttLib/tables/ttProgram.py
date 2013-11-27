@@ -406,5 +406,5 @@ if __name__ == "__main__":
 	p.fromBytecode(bc)
 	asm = p.getAssembly()
 	p.fromAssembly(asm)
-	print bc == p.getBytecode()
+	print(bc == p.getBytecode())
 

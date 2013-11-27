@@ -105,7 +105,7 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 			self.decompile_format_1(data, ttFont)
 		else:
 			if self.version != 0:
-				print "Unknown SVG table version '%s'. Decompiling as version 0." % (self.version)
+				print("Unknown SVG table version '%s'. Decompiling as version 0." % (self.version))
 			self.decompile_format_0(data, ttFont)
 
 
@@ -306,7 +306,7 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 			if self.colorPalettes.numColorParams == 0:
 				self.colorPalettes = None
 		else:
-			print "Unknown", name, content
+			print("Unknown", name, content)
 
 class DocumentIndexEntry:
 	def __init__(self):

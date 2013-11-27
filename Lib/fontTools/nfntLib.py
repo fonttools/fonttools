@@ -301,4 +301,4 @@ if __name__ == "__main__":
 		font.unpackGlyphs()
 		font.packGlyphs()
 		data2 = font.compile()
-		print "xxxxx", data == data2, len(data) == len(data2)
+		print("xxxxx", data == data2, len(data) == len(data2))

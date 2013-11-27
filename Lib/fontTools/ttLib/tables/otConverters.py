@@ -225,8 +225,8 @@ class Table(Struct):
 			return None
 		if offset <= 3:
 			# XXX hack to work around buggy pala.ttf
-			print "*** Warning: offset is not 0, yet suspiciously low (%s). table: %s" \
-					% (offset, self.tableClass.__name__)
+			print("*** Warning: offset is not 0, yet suspiciously low (%s). table: %s" \
+					% (offset, self.tableClass.__name__))
 			return None
 		table = self.tableClass()
 		table.reader = reader.getSubReader(offset)

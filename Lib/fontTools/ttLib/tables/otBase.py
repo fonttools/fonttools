@@ -45,12 +45,12 @@ class BaseTTXConverter(DefaultTable):
 		if cachingStats:
 			stats = sorted([(v, k) for k, v in cachingStats.items()])
 			stats.reverse()
-			print "cachingsstats for ", self.tableTag
+			print("cachingsstats for ", self.tableTag)
 			for v, k in stats:
 				if v < 2:
 					break
-				print v, k
-			print "---", len(stats)
+				print(v, k)
+			print("---", len(stats))
 	
 	def compile(self, font):
 		""" Create a top-level OTFWriter for the GPOS/GSUB table.

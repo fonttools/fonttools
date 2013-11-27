@@ -177,7 +177,7 @@ def _test():
 		afixed: 16.16F
 	"""
 	
-	print 'size:', calcsize(format)
+	print('size:', calcsize(format))
 	
 	class foo:
 		pass
@@ -194,11 +194,11 @@ def _test():
 	i.afixed = 1.5
 	
 	data = pack(format, i)
-	print 'data:', repr(data)
-	print unpack(format, data)
+	print('data:', repr(data))
+	print(unpack(format, data))
 	i2 = foo()
 	unpack(format, data, i2)
-	print vars(i2)
+	print(vars(i2))
 
 if __name__ == "__main__":
 	_test()

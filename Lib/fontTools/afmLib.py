@@ -369,16 +369,16 @@ if __name__ == "__main__":
 		afm = AFM(path)
 		char = 'A'
 		if afm.has_char(char):
-			print afm[char]	# print charnum, width and boundingbox
+			print(afm[char])	# print charnum, width and boundingbox
 		pair = ('A', 'V')
 		if afm.has_kernpair(pair):
-			print afm[pair]	# print kerning value for pair
-		print afm.Version	# various other afm entries have become attributes
-		print afm.Weight
+			print(afm[pair])	# print kerning value for pair
+		print(afm.Version)	# various other afm entries have become attributes
+		print(afm.Weight)
 		# afm.comments() returns a list of all Comment lines found in the AFM
-		print afm.comments()
+		print(afm.comments())
 		#print afm.chars()
 		#print afm.kernpairs()
-		print afm
+		print(afm)
 		afm.write(path + ".muck")
 
