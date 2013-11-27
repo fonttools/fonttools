@@ -217,7 +217,7 @@ def ttCompile(input, output, options):
 	ttf.importXML(input, quiet=options.quiet)
 	try:
 		ttf.save(output)
-	except OTLOffsetOverflowError, e:
+	except OTLOffsetOverflowError as e:
 		# XXX This shouldn't be here at all, it should be as close to the
 		# OTL code as possible.
 		overflowRecord = e.value
@@ -235,7 +235,7 @@ def ttCompile(input, output, options):
 			try:
 				ttf.save(output)
 				break
-			except OTLOffsetOverflowError, e:
+			except OTLOffsetOverflowError as e:
 				print("Attempting to fix OTLOffsetOverflowError", e)
 				overflowRecord = e.value
 				if overflowRecord == lastItem:
@@ -338,7 +338,7 @@ def main(args):
 			waitForKeyPress()
 		else:
 			raise
-	except TTLibError, e:
+	except TTLibError as e:
 		print("Error:",e)
 	except:
 		if sys.platform == "win32":

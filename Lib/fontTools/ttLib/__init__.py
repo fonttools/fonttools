@@ -779,7 +779,7 @@ def getTableModule(tag):
 	pyTag = tagToIdentifier(tag)
 	try:
 		__import__("fontTools.ttLib.tables." + pyTag)
-	except ImportError, err:
+	except ImportError as err:
 		# If pyTag is found in the ImportError message,
 		# means table is not implemented.  If it's not
 		# there, then some other module is missing, don't
