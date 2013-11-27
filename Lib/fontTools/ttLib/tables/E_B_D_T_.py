@@ -5,7 +5,6 @@ import string
 import struct
 from fontTools.misc import sstruct
 import itertools
-from types import TupleType
 from fontTools.misc.textTools import safeEval, readHex, hexStr, deHexStr
 from .BitmapGlyphMetrics import BigGlyphMetrics, bigGlyphMetricsFormat, SmallGlyphMetrics, smallGlyphMetricsFormat
 
@@ -155,7 +154,7 @@ class table_E_B_D_T_(DefaultTable.DefaultTable):
 
 			bitmapGlyphDict = {}
 			for element in content:
-				if not isinstance(element, TupleType):
+				if not isinstance(element, tuple):
 					continue
 				name, attrs, content = element
 				if name[4:].startswith(_bitmapGlyphSubclassPrefix[4:]):
@@ -191,7 +190,7 @@ class EbdtComponent:
 		self.name = attrs['name']
 		componentNames = set(sstruct.getformat(ebdtComponentFormat)[1][1:])
 		for element in content:
-			if not isinstance(element, TupleType):
+			if not isinstance(element, tuple):
 				continue
 			name, attrs, content = element
 			if name in componentNames:
@@ -287,7 +286,7 @@ def _readRowImageData(bitmapObject, name, attrs, content, ttFont):
 
 	dataRows = []
 	for element in content:
-		if not isinstance(element, TupleType):
+		if not isinstance(element, tuple):
 			continue
 		name, attr, content = element
 		# Chop off 'imagedata' from the tag to get just the option.
@@ -328,7 +327,7 @@ def _readBitwiseImageData(bitmapObject, name, attrs, content, ttFont):
 
 	dataRows = []
 	for element in content:
-		if not isinstance(element, TupleType):
+		if not isinstance(element, tuple):
 			continue
 		name, attr, content = element
 		if name == 'row':
@@ -415,7 +414,7 @@ class BitmapGlyph:
 	def fromXML(self, name, attrs, content, ttFont):
 		self.readMetrics(name, attrs, content, ttFont)
 		for element in content:
-			if not isinstance(element, TupleType):
+			if not isinstance(element, tuple):
 				continue
 			name, attr, content = element
 			# Chop off 'imagedata' from the tag to get just the option.
@@ -464,7 +463,7 @@ def _createBitmapPlusMetricsMixin(metricsClass):
 
 		def readMetrics(self, name, attrs, content, ttFont):
 			for element in content:
-				if not isinstance(element, TupleType):
+				if not isinstance(element, tuple):
 					continue
 				name, attrs, content = element
 				if name == curMetricsName:
@@ -671,13 +670,13 @@ class ComponentBitmapGlyph(BitmapGlyph):
 	def fromXML(self, name, attrs, content, ttFont):
 		self.readMetrics(name, attrs, content, ttFont)
 		for element in content:
-			if not isinstance(element, TupleType):
+			if not isinstance(element, tuple):
 				continue
 			name, attr, content = element
 			if name == 'components':
 				self.componentArray = []
 				for compElement in content:
-					if not isinstance(compElement, TupleType):
+					if not isinstance(compElement, tuple):
 						continue
 					name, attrs, content = compElement
 					if name == 'ebdtComponent':

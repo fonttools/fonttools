@@ -1,7 +1,6 @@
 from .DefaultTable import DefaultTable
 from . import otData
 import struct
-from types import TupleType
 
 class OverflowErrorRecord:
 	def __init__(self, overflowTuple):
@@ -828,12 +827,12 @@ class ValueRecord:
 		for k, v in attrs.items():
 			setattr(self, k, int(v))
 		for element in content:
-			if not isinstance(element, TupleType):
+			if not isinstance(element, tuple):
 				continue
 			name, attrs, content = element
 			value = getattr(otTables, name)()
 			for elem2 in content:
-				if not isinstance(elem2, TupleType):
+				if not isinstance(elem2, tuple):
 					continue
 				name2, attrs2, content2 = elem2
 				value.fromXML(name2, attrs2, content2, font)

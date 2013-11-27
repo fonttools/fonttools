@@ -1,4 +1,3 @@
-from types import TupleType
 from fontTools.misc.textTools import safeEval
 from .otBase import ValueRecordFactory
 
@@ -198,7 +197,7 @@ class Struct(BaseConverter):
 		if Format is not None:
 			table.Format = int(Format)
 		for element in content:
-			if isinstance(element, TupleType):
+			if isinstance(element, tuple):
 				name, attrs, content = element
 				table.fromXML(name, attrs, content, font)
 			else:

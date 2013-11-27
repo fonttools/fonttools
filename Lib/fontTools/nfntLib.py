@@ -1,7 +1,6 @@
 import struct
 from fontTools.misc import sstruct
 import string
-import types
 
 
 # FontRec header

@@ -2,7 +2,6 @@ import sys
 from . import DefaultTable
 from fontTools.misc import sstruct
 import array
-from types import StringType
 from fontTools.misc.textTools import safeEval, readHex
 from fontTools import ttLib
 
@@ -112,7 +111,7 @@ class table_G_P_K_G_(DefaultTable.DefaultTable):
 			if not hasattr(self, "GMAPs"):
 				self.GMAPs = []
 			for element in content:
-				if isinstance(element, StringType):
+				if isinstance(element, str):
 					continue
 				itemName, itemAttrs, itemContent = element
 				if itemName == "hexdata":
@@ -121,7 +120,7 @@ class table_G_P_K_G_(DefaultTable.DefaultTable):
 			if not hasattr(self, "glyphlets"):
 				self.glyphlets = []
 			for element in content:
-				if isinstance(element, StringType):
+				if isinstance(element, str):
 					continue
 				itemName, itemAttrs, itemContent = element
 				if itemName == "hexdata":

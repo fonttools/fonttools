@@ -5,7 +5,6 @@ import array
 import operator
 from fontTools import ttLib
 from fontTools.misc.textTools import safeEval, readHex
-from types import TupleType
 
 
 class table__c_m_a_p(DefaultTable.DefaultTable):
@@ -207,7 +206,7 @@ class cmap_format_0(CmapSubtable):
 			self.cmap = {}
 		cmap = self.cmap
 		for element in content:
-			if not isinstance(element, TupleType):
+			if not isinstance(element, tuple):
 				continue
 			name, attrs, content = element
 			if name != "map":
@@ -526,7 +525,7 @@ class cmap_format_2(CmapSubtable):
 		cmap = self.cmap
 
 		for element in content:
-			if not isinstance(element, TupleType):
+			if not isinstance(element, tuple):
 				continue
 			name, attrs, content = element
 			if name != "map":
@@ -818,7 +817,7 @@ class cmap_format_4(CmapSubtable):
 		cmap = self.cmap
 
 		for element in content:
-			if not isinstance(element, TupleType):
+			if not isinstance(element, tuple):
 				continue
 			nameMap, attrsMap, dummyContent = element
 			if nameMap != "map":
@@ -887,7 +886,7 @@ class cmap_format_6(CmapSubtable):
 		cmap = self.cmap
 
 		for element in content:
-			if not isinstance(element, TupleType):
+			if not isinstance(element, tuple):
 				continue
 			name, attrs, content = element
 			if name != "map":
@@ -1029,7 +1028,7 @@ class cmap_format_12_or_13(CmapSubtable):
 		cmap = self.cmap
 
 		for element in content:
-			if not isinstance(element, TupleType):
+			if not isinstance(element, tuple):
 				continue
 			name, attrs, content = element
 			if name != "map":
@@ -1185,7 +1184,7 @@ class cmap_format_14(CmapSubtable):
 			uvsDict = self.uvsDict 
 
 		for element in content:
-			if not isinstance(element, TupleType):
+			if not isinstance(element, tuple):
 				continue
 			name, attrs, content = element
 			if name != "map":

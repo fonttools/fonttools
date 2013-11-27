@@ -7,7 +7,6 @@ from . import DefaultTable
 import struct
 from fontTools.ttLib import sfnt
 from fontTools.misc.textTools import safeEval, readHex
-from types import IntType, StringType
 
 
 class table_C_O_L_R_(DefaultTable.DefaultTable):
@@ -104,11 +103,11 @@ class table_C_O_L_R_(DefaultTable.DefaultTable):
 		if name == "ColorGlyph":
 			glyphName = attrs["name"]
 			for element in content:
-				if isinstance(element, StringType):
+				if isinstance(element, str):
 					continue
 			layers = []
 			for element in content:
-				if isinstance(element, StringType):
+				if isinstance(element, str):
 					continue
 				layer = LayerRecord()
 				layer.fromXML(element[0], element[1], element[2], ttFont)
@@ -119,7 +118,7 @@ class table_C_O_L_R_(DefaultTable.DefaultTable):
 
 
 	def __getitem__(self, glyphSelector):
-		if isinstance(glyphSelector, IntType):
+		if isinstance(glyphSelector, int):
 			# its a gid, convert to glyph name
 			glyphSelector = self.getGlyphName(glyphSelector)
 
@@ -129,7 +128,7 @@ class table_C_O_L_R_(DefaultTable.DefaultTable):
 		return self.ColorLayers[glyphSelector]
 
 	def __setitem__(self, glyphSelector, value):
-		if isinstance(glyphSelector, IntType):
+		if isinstance(glyphSelector, int):
 			# its a gid, convert to glyph name
 			glyphSelector = self.getGlyphName(glyphSelector)
 
@@ -151,7 +150,7 @@ class LayerRecord:
 	def fromXML(self, eltname, attrs, content, ttFont):
 		for (name, value) in attrs.items():
 			if name == "name":
-				if isinstance(value, IntType):
+				if isinstance(value, int):
 					value = ttFont.getGlyphName(value)
 				setattr(self, name, value)
 			else:

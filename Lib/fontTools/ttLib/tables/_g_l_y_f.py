@@ -23,7 +23,6 @@ from fontTools.misc.textTools import safeEval, readHex
 from fontTools.misc.arrayTools import calcBounds
 from . import ttProgram
 import array
-from types import StringType, TupleType
 import warnings
 
 class table__g_l_y_f(DefaultTable.DefaultTable):
@@ -124,7 +123,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 			setattr(glyph, attr, safeEval(attrs.get(attr, '0')))
 		self.glyphs[glyphName] = glyph
 		for element in content:
-			if not isinstance(element, TupleType):
+			if not isinstance(element, tuple):
 				continue
 			name, attrs, content = element
 			glyph.fromXML(name, attrs, content, ttFont)
@@ -290,7 +289,7 @@ class Glyph:
 			coordinates = GlyphCoordinates()
 			flags = []
 			for element in content:
-				if not isinstance(element, TupleType):
+				if not isinstance(element, tuple):
 					continue
 				name, attrs, content = element
 				if name != "pt":
@@ -318,7 +317,7 @@ class Glyph:
 		elif name == "instructions":
 			self.program = ttProgram.Program()
 			for element in content:
-				if not isinstance(element, TupleType):
+				if not isinstance(element, tuple):
 					continue
 				name, attrs, content = element
 				self.program.fromXML(name, attrs, content, ttFont)
@@ -971,7 +970,7 @@ class GlyphCoordinates:
 
 def reprflag(flag):
 	bin = ""
-	if isinstance(flag, StringType):
+	if isinstance(flag, str):
 		flag = ord(flag)
 	while flag:
 		if flag & 0x01:
