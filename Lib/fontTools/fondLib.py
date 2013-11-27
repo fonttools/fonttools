@@ -139,8 +139,8 @@ class FontFamily:
 	
 	def _buildheader(self):
 		header = sstruct.pack(headerformat, self)
-		header = header + apply(struct.pack, (">9h",) + self.ffProperty)
-		header = header + apply(struct.pack, (">hh",) + self.ffIntl)
+		header = header + struct.pack(*(">9h",) + self.ffProperty)
+		header = header + struct.pack(*(">hh",) + self.ffIntl)
 		header = header + struct.pack(">h", self.ffVersion)
 		if DEBUG:
 			print "header is the same?", self._rawheader == header and 'yes.' or 'no.'
@@ -337,7 +337,7 @@ class FontFamily:
 					self.styleMappingReserved)
 		
 		self._packstylestrings()
-		data = data + apply(struct.pack, (">48b",) + self.styleIndices)
+		data = data + struct.pack(*(">48b",) + self.styleIndices)
 		
 		stringcount = len(self.styleStrings)
 		data = data + struct.pack(">h", stringcount)

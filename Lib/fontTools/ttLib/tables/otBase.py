@@ -429,7 +429,7 @@ class OTTableWriter(object):
 		return ref
 	
 	def writeStruct(self, format, values):
-		data = apply(struct.pack, (format,) + values)
+		data = struct.pack(*(format,) + values)
 		self.items.append(data)
 	
 	def writeData(self, data):
