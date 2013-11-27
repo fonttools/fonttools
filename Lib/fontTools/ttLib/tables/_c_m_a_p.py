@@ -868,11 +868,9 @@ class cmap_format_6(CmapSubtable):
 		cmap = self.cmap
 		codes = cmap.keys()
 		if codes: # yes, there are empty cmap tables.
-			codes.sort()
-			lenCodes = len(codes)
-			assert codes == range(codes[0], codes[0] + lenCodes)
+			codes = range(codes[0], codes[-1] + 1)
 			firstCode = codes[0]
-			valueList = map(operator.getitem, [cmap]*lenCodes, codes)
+			valueList = [cmap.get(code, ".notdef") for code in codes]
 			valueList = map(ttFont.getGlyphID, valueList)
 			glyphIndexArray = array.array("H", valueList)
 			if sys.byteorder <> "big":
@@ -1108,7 +1106,7 @@ class cmap_format_14(CmapSubtable):
 		self.language = 0xFF # has no language.
 
 	def decompile(self, data, ttFont):
-		if ttFont.lazy and data != None and ttFont != None:
+		if data != None and ttFont != None and ttFont.lazy:
 			self.decompileHeader(data, ttFont)
 		else:
 			assert (data == None and ttFont == None), "Need both data and ttFont arguments"

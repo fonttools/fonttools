@@ -907,7 +907,7 @@ def subset_lookups(self, lookup_indices):
   self.LookupListIndex = [lookup_indices.index(l)
                           for l in self.LookupListIndex]
   self.LookupCount = len(self.LookupListIndex)
-  return self.LookupCount
+  return self.LookupCount or self.FeatureParams
 
 @_add_method(otTables.Feature)
 def collect_lookups(self):

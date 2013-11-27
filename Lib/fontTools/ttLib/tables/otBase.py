@@ -32,7 +32,13 @@ class BaseTTXConverter(DefaultTable):
 	def decompile(self, data, font):
 		import otTables
 		cachingStats = None if True else {}
-		reader = OTTableReader(data, self.tableTag, cachingStats=cachingStats)
+		class GlobalState:
+			def __init__(self, tableType, cachingStats):
+				self.tableType = tableType
+				self.cachingStats = cachingStats
+		globalState = GlobalState(tableType=self.tableTag,
+					  cachingStats=cachingStats)
+		reader = OTTableReader(data, globalState)
 		tableClass = getattr(otTables, self.tableTag)
 		self.table = tableClass()
 		self.table.decompile(reader, font)
@@ -68,7 +74,11 @@ class BaseTTXConverter(DefaultTable):
 
 				If a lookup subtable overflows an offset, we have to start all over. 
 		"""
-		writer = OTTableWriter(self.tableTag)
+		class GlobalState:
+			def __init__(self, tableType):
+				self.tableType = tableType
+		globalState = GlobalState(tableType=self.tableTag)
+		writer = OTTableWriter(globalState)
 		writer.parent = None
 		self.table.compile(writer, font)
 		return writer.getAllData()
@@ -88,27 +98,21 @@ class OTTableReader(object):
 
 	"""Helper class to retrieve data from an OpenType table."""
 
-	__slots__ = ('data', 'offset', 'pos', 'tableType', 'valueFormat', 'counts', 'cachingStats')
+	__slots__ = ('data', 'offset', 'pos', 'globalState', 'localState')
 
-	def __init__(self, data, tableType, offset=0, valueFormat=None, counts=None, cachingStats=None):
+	def __init__(self, data, globalState={}, localState=None, offset=0):
 		self.data = data
 		self.offset = offset
 		self.pos = offset
-		self.tableType = tableType
-		if valueFormat is None:
-			valueFormat = [None, None]
-		self.counts = counts
-		self.valueFormat = valueFormat
-		self.cachingStats = cachingStats
+		self.globalState = globalState
+		self.localState = localState
 
 	def getSubReader(self, offset):
 		offset = self.offset + offset
-		if self.cachingStats is not None:
-			self.cachingStats[offset] = self.cachingStats.get(offset, 0) + 1
-
-		subReader = self.__class__(self.data, self.tableType, offset,
-			self.valueFormat, self.counts, self.cachingStats)
-		return subReader
+		cachingStats = self.globalState.cachingStats
+		if cachingStats is not None:
+			cachingStats[offset] = cachingStats.get(offset, 0) + 1
+		return self.__class__(self.data, self.globalState, self.localState, offset)
 
 	def readUShort(self):
 		pos = self.pos
@@ -131,6 +135,14 @@ class OTTableReader(object):
 		self.pos = newpos
 		return value
 
+	def readUInt24(self):
+		pos = self.pos
+		newpos = pos + 3
+		value = (ord(self.data[pos]) << 16) | (ord(self.data[pos+1]) << 8) | ord(self.data[pos+2])
+		value, = struct.unpack(">H", self.data[pos:newpos])
+		self.pos = newpos
+		return value
+
 	def readULong(self):
 		pos = self.pos
 		newpos = pos + 4
@@ -146,42 +158,32 @@ class OTTableReader(object):
 		self.pos = newpos
 		return value
 
-	def setValueFormat(self, format, which):
-		self.valueFormat[which] = ValueRecordFactory(format)
+	def __setitem__(self, name, value):
+		state = self.localState.copy() if self.localState else dict()
+		state[name] = value
+		self.localState = state
 
-	def readValueRecord(self, font, which):
-		return self.valueFormat[which].readValueRecord(self, font)
-
-	def setCount(self, name, value):
-		self.counts = self.counts.copy() if self.counts else dict()
-		self.counts[name] = value
-
-	def getCount(self, name):
-		return self.counts[name]
+	def __getitem__(self, name):
+		return self.localState[name]
 
 
 class OTTableWriter(object):
 	
 	"""Helper class to gather and assemble data for OpenType tables."""
 	
-	def __init__(self, tableType, valueFormat=None, counts=None):
+	def __init__(self, globalState, localState=None):
 		self.items = []
-		self.tableType = tableType
-		if valueFormat is None:
-			valueFormat = [None, None]
-		self.valueFormat = valueFormat
-		self.counts = counts
 		self.pos = None
+		self.globalState = globalState
+		self.localState = localState
 
-	def setValueFormat(self, format, which):
-		self.valueFormat[which] = ValueRecordFactory(format)
+	def __setitem__(self, name, value):
+		state = self.localState.copy() if self.localState else dict()
+		state[name] = value
+		self.localState = state
 
-	def setCount(self, name, value):
-		self.counts = self.counts.copy() if self.counts else dict()
-		self.counts[name] = value
-
-	def getCount(self, name):
-		return self.counts[name]
+	def __getitem__(self, name):
+		return self.localState[name]
 
 	# assembler interface
 	
@@ -391,7 +393,7 @@ class OTTableWriter(object):
 	# interface for gathering data, as used by table.compile()
 	
 	def getSubWriter(self):
-		subwriter = self.__class__(self.tableType, self.valueFormat, self.counts)
+		subwriter = self.__class__(self.globalState, self.localState)
 		subwriter.parent = {0:self} # because some subtables have idential values, we discard
 									# the duplicates under the getAllData method. Hence some
 									# subtable writers can have more than one parent writer.
@@ -403,6 +405,10 @@ class OTTableWriter(object):
 	
 	def writeShort(self, value):
 		self.items.append(struct.pack(">h", value))
+
+	def writeUInt24(self, value):
+		assert 0 <= value < 0x1000000
+		self.items.append(''.join(chr(v) for v in (value>>16, (value>>8)&0xFF, value&0xff)))
 	
 	def writeLong(self, value):
 		self.items.append(struct.pack(">l", value))
@@ -428,9 +434,6 @@ class OTTableWriter(object):
 	
 	def writeData(self, data):
 		self.items.append(data)
-	
-	def writeValueRecord(self, value, font, which):
-		return self.valueFormat[which].writeValueRecord(self, font, value)
 
 	def	getOverflowErrorRecord(self, item):
 		LookupListIndex = SubTableIndex = itemName = itemIndex = None
@@ -463,7 +466,7 @@ class OTTableWriter(object):
 						LookupListIndex = self.parent[0].repeatIndex
 						SubTableIndex = self.repeatIndex
 
-		return OverflowErrorRecord( (self.tableType, LookupListIndex, SubTableIndex, itemName, itemIndex) )
+		return OverflowErrorRecord( (self.globalState.tableType, LookupListIndex, SubTableIndex, itemName, itemIndex) )
 
 
 class CountReference:
@@ -477,7 +480,7 @@ class CountReference:
 		if table[name] is None:
 			table[name] = value
 		else:
-			assert table[name] == value, (table[name], value)
+			assert table[name] == value, (name, table[name], value)
 	def getCountData(self):
 		return packUShort(self.table[self.name])
 
@@ -499,8 +502,6 @@ class BaseTable(object):
 									# to delayed compilation
 									# 2 means that it was subject to delayed compilation, and 
 									# has been decompiled
-									# 3 means that the start and end fields have been filled out, and that we
-									# can use the data string rather than compiling from the table data.
 
 		self.recurse = 0
 	
@@ -539,18 +540,20 @@ class BaseTable(object):
 		converters = self.getConverters()
 		for conv in converters:
 			if conv.name == "SubTable":
-				conv = conv.getConverter(reader.tableType,
+				conv = conv.getConverter(reader.globalState.tableType,
 						table["LookupType"])
 			if conv.name == "ExtSubTable":
-				conv = conv.getConverter(reader.tableType,
+				conv = conv.getConverter(reader.globalState.tableType,
 						table["ExtensionLookupType"])
+			if conv.name == "FeatureParams":
+				conv = conv.getConverter(reader["FeatureTag"])
 			if conv.repeat:
 				l = []
 				if conv.repeat in table:
 					countValue = table[conv.repeat]
 				else:
 					# conv.repeat is a propagated count
-					countValue = reader.getCount(conv.repeat)
+					countValue = reader[conv.repeat]
 				for i in range(countValue + conv.aux):
 					l.append(conv.read(reader, font, table))
 				table[conv.name] = l
@@ -558,8 +561,8 @@ class BaseTable(object):
 				if conv.aux and not eval(conv.aux, None, table):
 					continue
 				table[conv.name] = conv.read(reader, font, table)
-				if conv.isPropagatedCount:
-					reader.setCount(conv.name, table[conv.name])
+				if conv.isPropagated:
+					reader[conv.name] = table[conv.name]
 
 		self.postRead(table, font)
 
@@ -568,11 +571,11 @@ class BaseTable(object):
 	def ensureDecompiled(self):
 		if self.compileStatus != 1:
 			return
-		subReader = self.reader.getSubReader(self.offset)
-		self.decompile(subReader, self.font)
-		del self.reader, self.font, self.offset
+		self.decompile(self.reader, self.font)
+		del self.reader, self.font
 
 	def compile(self, writer, font):
+		self.ensureDecompiled()
 		table = self.preWrite(font)
 
 		if hasattr(self, 'sortCoverageLast'):
@@ -591,7 +594,7 @@ class BaseTable(object):
 					ref.setValue(countValue)
 				else:
 					# conv.repeat is a propagated count
-					writer.getCount(conv.repeat).setValue(countValue)
+					writer[conv.repeat].setValue(countValue)
 				for i in range(len(value)):
 					conv.write(writer, font, table, value[i], i)
 			elif conv.isCount:
@@ -603,15 +606,17 @@ class BaseTable(object):
 				# We add a reference: by the time the data is assembled
 				# the Count value will be filled in.
 				ref = writer.writeCountReference(table, conv.name)
-				if conv.isPropagatedCount:
+				if conv.isPropagated:
 					table[conv.name] = None
-					writer.setCount(conv.name, ref)
+					writer[conv.name] = ref
 				else:
 					table[conv.name] = ref
 			else:
 				if conv.aux and not eval(conv.aux, None, table):
 					continue
 				conv.write(writer, font, table, value)
+				if conv.isPropagated:
+					writer[conv.name] = value
 	
 	def readFormat(self, reader):
 		pass
@@ -623,7 +628,6 @@ class BaseTable(object):
 		self.__dict__.update(table)
 	
 	def preWrite(self, font):
-		self.ensureDecompiled()
 		return self.__dict__.copy()
 	
 	def toXML(self, xmlWriter, font, attrs=None):

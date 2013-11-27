@@ -48,6 +48,33 @@ otData = [
 		('uint16', 'LookupListIndex', 'LookupCount', 0, 'Array of LookupList indices for this feature -zero-based (first lookup is LookupListIndex = 0)'),
 	]),
 
+	('FeatureParams', [
+	]),
+
+	('FeatureParamsSize', [
+		('DeciPoints', 'DesignSize', None, None, 'The design size in 720/inch units (decipoints).'),
+		('uint16', 'SubfamilyID', None, None, 'Serves as an identifier that associates fonts in a subfamily.'),
+		('uint16', 'SubfamilyNameID', None, None, 'Subfamily NameID.'),
+		('DeciPoints', 'RangeStart', None, None, 'Small end of recommended usage range (exclusive) in 720/inch units.'),
+		('DeciPoints', 'RangeEnd', None, None, 'Large end of recommended usage range (inclusive) in 720/inch units.'),
+	]),
+
+	('FeatureParamsStylisticSet', [
+		('uint16', 'Version', None, None, 'Set to 0.'),
+		('uint16', 'UINameID', None, None, 'UI NameID.'),
+	]),
+
+	('FeatureParamsCharacterVariants', [
+		('uint16', 'Format', None, None, 'Set to 0.'),
+		('uint16', 'FeatUILabelNameID', None, None, 'Feature UI label NameID.'),
+		('uint16', 'FeatUITooltipTextNameID', None, None, 'Feature UI tooltip text NameID.'),
+		('uint16', 'SampleTextNameID', None, None, 'Sample text NameID.'),
+		('uint16', 'NumNamedParameters', None, None, 'Number of named parameters.'),
+		('uint16', 'FirstParamUILabelNameID', None, None, 'First NameID of UI feature parameters.'),
+		('uint16', 'CharCount', None, None, 'Count of characters this feature provides glyph variants for.'),
+		('uint24', 'Character', 'CharCount', 0, 'Unicode characters for which this feature provides glyph variants.'),
+	]),
+
 	('LookupList', [
 		('uint16', 'LookupCount', None, None, 'Number of lookups in this table'),
 		('Offset', 'Lookup', 'LookupCount', 0, 'Array of offsets to Lookup tables-from beginning of LookupList -zero based (first lookup is Lookup index = 0)'),

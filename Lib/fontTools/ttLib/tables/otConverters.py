@@ -1,5 +1,6 @@
 from types import TupleType
 from fontTools.misc.textTools import safeEval
+from otBase import ValueRecordFactory
 
 
 def buildConverters(tableSpec, tableNamespace):
@@ -19,6 +20,8 @@ def buildConverters(tableSpec, tableNamespace):
 			converterClass = SubTable
 		elif name == "ExtSubTable":
 			converterClass = ExtSubTable
+		elif name == "FeatureParams":
+			converterClass = FeatureParams
 		else:
 			converterClass = converterMapping[tp]
 		tableClass = tableNamespace.get(name)
@@ -29,6 +32,11 @@ def buildConverters(tableSpec, tableNamespace):
 			for t in conv.lookupTypes.values():
 				for cls in t.values():
 					convertersByName[cls.__name__] = Table(name, repeat, aux, cls)
+		if name == "FeatureParams":
+			conv.featureParamTypes = tableNamespace['featureParamTypes']
+			conv.defaultFeatureParams = tableNamespace['FeatureParams']
+			for cls in conv.featureParamTypes.values():
+				convertersByName[cls.__name__] = Table(name, repeat, aux, cls)
 		converters.append(conv)
 		assert not convertersByName.has_key(name)
 		convertersByName[name] = conv
@@ -46,7 +54,7 @@ class BaseConverter(object):
 		self.aux = aux
 		self.tableClass = tableClass
 		self.isCount = name.endswith("Count")
-		self.isPropagatedCount = name in ["ClassCount", "Class2Count"]
+		self.isPropagated = name in ["ClassCount", "Class2Count", "FeatureTag"]
 	
 	def read(self, reader, font, tableDict):
 		"""Read a value from the reader."""
@@ -120,6 +128,12 @@ class UShort(IntValue):
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		writer.writeUShort(value)
 
+class UInt24(IntValue):
+	def read(self, reader, font, tableDict):
+		return reader.readUInt24()
+	def write(self, writer, font, tableDict, value, repeatIndex=None):
+		writer.writeUInt24(value)
+
 class Count(Short):
 	def xmlWrite(self, xmlWriter, font, value, name, attrs):
 		xmlWriter.comment("%s=%s" % (name, value))
@@ -141,6 +155,17 @@ class GlyphID(SimpleValue):
 		value =  font.getGlyphID(value)
 		writer.writeUShort(value)
 
+class FloatValue(SimpleValue):
+	def xmlRead(self, attrs, content, font):
+		return float(attrs["value"])
+
+class DeciPoints(FloatValue):
+	def read(self, reader, font, tableDict):
+		value = reader.readUShort()
+		return value / 10.
+
+	def write(self, writer, font, tableDict, value, repeatIndex=None):
+		writer.writeUShort(int(round(value * 10)))
 
 class Struct(BaseConverter):
 	
@@ -154,12 +179,21 @@ class Struct(BaseConverter):
 	
 	def xmlWrite(self, xmlWriter, font, value, name, attrs):
 		if value is None:
-			pass  # NULL table, ignore
+			if attrs:
+				# If there are attributes (probably index), then
+				# don't drop this even if it's NULL.  It will mess
+				# up the array indices of the containing element.
+				xmlWriter.simpletag(name, attrs + [("empty", True)])
+				xmlWriter.newline()
+			else:
+				pass # NULL table, ignore
 		else:
 			value.toXML(xmlWriter, font, attrs)
 	
 	def xmlRead(self, attrs, content, font):
 		table = self.tableClass()
+		if attrs.get("empty"):
+			return None
 		Format = attrs.get("Format")
 		if Format is not None:
 			table.Format = int(Format)
@@ -195,8 +229,7 @@ class Table(Struct):
 					% (offset, self.tableClass.__name__)
 			return None
 		table = self.tableClass()
-		table.reader = reader
-		table.offset = offset
+		table.reader = reader.getSubReader(offset)
 		table.font = font
 		table.compileStatus = 1
 		if not font.lazy:
@@ -235,25 +268,30 @@ class ExtSubTable(LTable, SubTable):
 		writer.Extension = 1 # actually, mere presence of the field flags it as an Ext Subtable writer.
 		Table.write(self, writer, font, tableDict, value, repeatIndex)
 
+class FeatureParams(Table):
+	def getConverter(self, featureTag):
+		tableClass = self.featureParamTypes.get(featureTag, self.defaultFeatureParams)
+		return self.__class__(self.name, self.repeat, self.aux, tableClass)
+
 
 class ValueFormat(IntValue):
 	def __init__(self, name, repeat, aux, tableClass):
 		BaseConverter.__init__(self, name, repeat, aux, tableClass)
-		self.which = name[-1] == "2"
+		self.which = "ValueFormat" + ("2" if name[-1] == "2" else "1")
 	def read(self, reader, font, tableDict):
 		format = reader.readUShort()
-		reader.setValueFormat(format, self.which)
+		reader[self.which] = ValueRecordFactory(format)
 		return format
 	def write(self, writer, font, tableDict, format, repeatIndex=None):
 		writer.writeUShort(format)
-		writer.setValueFormat(format, self.which)
+		writer[self.which] = ValueRecordFactory(format)
 
 
 class ValueRecord(ValueFormat):
 	def read(self, reader, font, tableDict):
-		return reader.readValueRecord(font, self.which)
+		return reader[self.which].readValueRecord(reader, font)
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
-		writer.writeValueRecord(value, font, self.which)
+		writer[self.which].writeValueRecord(writer, font, value)
 	def xmlWrite(self, xmlWriter, font, value, name, attrs):
 		if value is None:
 			pass  # NULL table, ignore
@@ -313,7 +351,6 @@ class DeltaValue(BaseConverter):
 			writer.writeUShort(tmp)
 	
 	def xmlWrite(self, xmlWriter, font, value, name, attrs):
-		# XXX this could do with a nicer format
 		xmlWriter.simpletag(name, attrs + [("value", value)])
 		xmlWriter.newline()
 	
@@ -325,9 +362,11 @@ converterMapping = {
 	# type         class
 	"int16":       Short,
 	"uint16":      UShort,
+	"uint24":      UInt24,
 	"Version":     Version,
 	"Tag":         Tag,
 	"GlyphID":     GlyphID,
+	"DeciPoints":  DeciPoints,
 	"struct":      Struct,
 	"Offset":      Table,
 	"LOffset":     LTable,
