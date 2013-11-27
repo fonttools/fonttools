@@ -163,7 +163,7 @@ class SingleSubst(FormatSwitchingBaseTable):
 		items = mapping.items()
 		getGlyphID = font.getGlyphID
 		gidItems = [(getGlyphID(item[0]), getGlyphID(item[1])) for item in items]
-		sortableItems = zip(gidItems, items)
+		sortableItems = list(zip(gidItems, items))
 		sortableItems.sort()
 
 		# figure out format

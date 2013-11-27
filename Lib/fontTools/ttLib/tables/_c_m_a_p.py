@@ -1134,7 +1134,7 @@ class cmap_format_14(CmapSubtable):
 					try:
 						uvsDict[varUVS].extend(localUVList)
 					except KeyError:
-						uvsDict[varUVS] = localUVList
+						uvsDict[varUVS] = list(localUVList)
 				
 			if nonDefUVSOffset:
 				startOffset = nonDefUVSOffset  - 10
