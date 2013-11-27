@@ -6,13 +6,11 @@ if sys.platform not in ("mac", "darwin"):
 	raise ImportError("This module is Mac-only!")
 
 try:
-	from cStringIO import StringIO
-except ImportError:
-	from io import StringIO
-try:
 	from Carbon import Res
 except ImportError:
 	import Res
+
+from fontTools.misc.py23 import *
 
 
 def MyOpenResFile(path):
@@ -21,7 +19,7 @@ def MyOpenResFile(path):
 		resref = Res.FSOpenResFile(path, mode)
 	except Res.Error:
 		# try data fork
-		resref = Res.FSOpenResourceFile(path, u'', mode)
+		resref = Res.FSOpenResourceFile(path, unicode(), mode)
 	return resref
 
 
