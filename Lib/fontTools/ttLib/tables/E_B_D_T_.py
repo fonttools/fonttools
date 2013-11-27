@@ -390,9 +390,9 @@ class BitmapGlyph:
 	def __getattr__(self, attr):
 		# Allow lazy decompile.
 		if attr[:2] == '__':
-			raise AttributeError, attr
+			raise AttributeError(attr)
 		if not hasattr(self, "data"):
-			raise AttributeError, attr
+			raise AttributeError(attr)
 		self.decompile()
 		del self.data
 		return getattr(self, attr)

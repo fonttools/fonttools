@@ -152,7 +152,7 @@ def readLWFN(path, onlyHeader=0):
 			res = Res.Get1Resource('POST', i)
 			code = ord(res.data[0])
 			if ord(res.data[1]) != 0:
-				raise T1Error, 'corrupt LWFN file'
+				raise T1Error('corrupt LWFN file')
 			if code in [1, 2]:
 				if onlyHeader and code == 2:
 					break
@@ -166,7 +166,7 @@ def readLWFN(path, onlyHeader=0):
 			elif code == 0:
 				pass # comment, ignore
 			else:
-				raise T1Error, 'bad chunk code: ' + `code`
+				raise T1Error('bad chunk code: ' + `code`)
 	finally:
 		Res.CloseResFile(resRef)
 	data = string.join(data, '')
@@ -179,7 +179,7 @@ def readPFB(path, onlyHeader=0):
 	data = []
 	while 1:
 		if f.read(1) != chr(128):
-			raise T1Error, 'corrupt PFB file'
+			raise T1Error('corrupt PFB file')
 		code = ord(f.read(1))
 		if code in [1, 2]:
 			chunklen = stringToLong(f.read(4))
@@ -189,7 +189,7 @@ def readPFB(path, onlyHeader=0):
 		elif code == 3:
 			break
 		else:
-			raise T1Error, 'bad chunk code: ' + `code`
+			raise T1Error('bad chunk code: ' + `code`)
 		if onlyHeader:
 			break
 	f.close()
@@ -299,7 +299,7 @@ def decryptType1(data):
 			decrypted = decrypted[4:]
 			if decrypted[-len(EEXECINTERNALEND)-1:-1] != EEXECINTERNALEND \
 					and decrypted[-len(EEXECINTERNALEND)-2:-2] != EEXECINTERNALEND:
-				raise T1Error, "invalid end of eexec part"
+				raise T1Error("invalid end of eexec part")
 			decrypted = decrypted[:-len(EEXECINTERNALEND)-2] + '\r'
 			data.append(EEXECBEGINMARKER + decrypted + EEXECENDMARKER)
 		else:
@@ -318,14 +318,14 @@ def findEncryptedChunks(data):
 		eBegin = eBegin + len(EEXECBEGIN) + 1
 		eEnd = string.find(data, EEXECEND, eBegin)
 		if eEnd < 0:
-			raise T1Error, "can't find end of eexec part"
+			raise T1Error("can't find end of eexec part")
 		cypherText = data[eBegin:eEnd + 2]
 		if isHex(cypherText[:4]):
 			cypherText = deHexString(cypherText)
 		plainText, R = eexec.decrypt(cypherText, 55665)
 		eEndLocal = string.find(plainText, EEXECINTERNALEND)
 		if eEndLocal < 0:
-			raise T1Error, "can't find end of eexec part"
+			raise T1Error("can't find end of eexec part")
 		chunks.append((0, data[:eBegin]))
 		chunks.append((1, cypherText[:eEndLocal + len(EEXECINTERNALEND) + 1]))
 		data = data[eEnd:]
@@ -345,11 +345,11 @@ def assertType1(data):
 		if data[:len(head)] == head:
 			break
 	else:
-		raise T1Error, "not a PostScript font"
+		raise T1Error("not a PostScript font")
 	if not _fontType1RE.search(data):
-		raise T1Error, "not a Type 1 font"
+		raise T1Error("not a Type 1 font")
 	if string.find(data, "currentfile eexec") < 0:
-		raise T1Error, "not an encrypted Type 1 font"
+		raise T1Error("not an encrypted Type 1 font")
 	# XXX what else?
 	return data
 
@@ -364,7 +364,7 @@ def longToString(long):
 
 def stringToLong(str):
 	if len(str) != 4:
-		raise ValueError, 'string must be 4 bytes long'
+		raise ValueError('string must be 4 bytes long')
 	long = 0
 	for i in range(4):
 		long = long + (ord(str[i]) << (i * 8))

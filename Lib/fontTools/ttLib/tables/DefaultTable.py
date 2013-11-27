@@ -30,7 +30,7 @@ class DefaultTable:
 		from fontTools.misc.textTools import readHex
 		from fontTools import ttLib
 		if name != "hexdata":
-			raise ttLib.TTLibError, "can't handle '%s' element" % name
+			raise ttLib.TTLibError("can't handle '%s' element" % name)
 		self.decompile(readHex(content), ttFont)
 	
 	def __repr__(self):

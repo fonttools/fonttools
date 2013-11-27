@@ -401,14 +401,14 @@ class TTFont:
 					table.decompile(data, self)
 				return table
 			else:
-				raise KeyError, "'%s' table not found" % tag
+				raise KeyError("'%s' table not found" % tag)
 	
 	def __setitem__(self, tag, table):
 		self.tables[tag] = table
 	
 	def __delitem__(self, tag):
 		if tag not in self:
-			raise KeyError, "'%s' table not found" % tag
+			raise KeyError("'%s' table not found" % tag)
 		if tag in self.tables:
 			del self.tables[tag]
 		if self.reader and tag in self.reader:
@@ -560,7 +560,7 @@ class TTFont:
 				return self.getGlyphID(glyphName)
 			else:
 				if requireReal or not self.allowVID:
-					raise KeyError, glyphName
+					raise KeyError(glyphName)
 				else:
 					# user intends virtual GID support 	
 					try:
@@ -627,7 +627,7 @@ class TTFont:
 				debugmsg("Reading '%s' table from disk" % tag)
 			return self.reader[tag]
 		else:
-			raise KeyError, tag
+			raise KeyError(tag)
 	
 	def getGlyphSet(self, preferCFF=1):
 		"""Return a generic GlyphSet, which is a dict-like object
@@ -647,7 +647,7 @@ class TTFont:
 			return _TTGlyphSet(self)
 		if "CFF " in self:
 			return self["CFF "].cff.values()[0].CharStrings
-		raise TTLibError, "Font contains no outlines"
+		raise TTLibError("Font contains no outlines")
 
 
 class _TTGlyphSet:

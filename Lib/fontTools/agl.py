@@ -719,7 +719,7 @@ def _builddicts():
 			continue
 		m = parseAGL_RE.match(line)
 		if not m:
-			raise AGLError, "syntax error in glyphlist.txt: %s" % repr(line[:20])
+			raise AGLError("syntax error in glyphlist.txt: %s" % repr(line[:20]))
 		unicode = m.group(1)
 		assert len(unicode) == 4
 		unicode = int(unicode, 16)

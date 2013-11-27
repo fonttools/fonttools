@@ -291,7 +291,7 @@ class T2CharString(ByteCodeBase):
 				try:
 					bytecode.extend(map(chr, opcodes[token]))
 				except KeyError:
-					raise CharStringCompileError, "illegal operator: %s" % token
+					raise CharStringCompileError("illegal operator: %s" % token)
 				if token in ('hintmask', 'cntrmask'):
 					bytecode.append(program[i])  # hint mask
 					i = i + 1

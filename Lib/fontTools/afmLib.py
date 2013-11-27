@@ -116,7 +116,7 @@ class AFM:
 				continue
 			m = identifierRE.match(line)
 			if m is None:
-				raise error, "syntax error in AFM file: " + `line`
+				raise error("syntax error in AFM file: " + `line`)
 			
 			pos = m.regs[1][1]
 			word = line[:pos]
@@ -135,7 +135,7 @@ class AFM:
 	def parsechar(self, rest):
 		m = charRE.match(rest)
 		if m is None:
-			raise error, "syntax error in AFM file: " + `rest`
+			raise error("syntax error in AFM file: " + `rest`)
 		things = []
 		for fr, to in m.regs[1:]:
 			things.append(rest[fr:to])
@@ -147,7 +147,7 @@ class AFM:
 	def parsekernpair(self, rest):
 		m = kernRE.match(rest)
 		if m is None:
-			raise error, "syntax error in AFM file: " + `rest`
+			raise error("syntax error in AFM file: " + `rest`)
 		things = []
 		for fr, to in m.regs[1:]:
 			things.append(rest[fr:to])
@@ -172,7 +172,7 @@ class AFM:
 	def parsecomposite(self, rest):
 		m = compositeRE.match(rest)
 		if m is None:
-			raise error, "syntax error in AFM file: " + `rest`
+			raise error("syntax error in AFM file: " + `rest`)
 		charname = m.group(1)
 		ncomponents = int(m.group(2))
 		rest = rest[m.regs[0][1]:]
@@ -180,7 +180,7 @@ class AFM:
 		while 1:
 			m = componentRE.match(rest)
 			if m is None:
-				raise error, "syntax error in AFM file: " + `rest`
+				raise error("syntax error in AFM file: " + `rest`)
 			basechar = m.group(1)
 			xoffset = int(m.group(2))
 			yoffset = int(m.group(3))
@@ -293,7 +293,7 @@ class AFM:
 		if attr in self._attrs:
 			return self._attrs[attr]
 		else:
-			raise AttributeError, attr
+			raise AttributeError(attr)
 	
 	def __setattr__(self, attr, value):
 		# all attrs *not* starting with "_" are consider to be AFM keywords
@@ -308,12 +308,12 @@ class AFM:
 			try:
 				del self.__dict__[attr]
 			except KeyError:
-				raise AttributeError, attr
+				raise AttributeError(attr)
 		else:
 			try:
 				del self._attrs[attr]
 			except KeyError:
-				raise AttributeError, attr
+				raise AttributeError(attr)
 	
 	def __getitem__(self, key):
 		if type(key) == types.TupleType:

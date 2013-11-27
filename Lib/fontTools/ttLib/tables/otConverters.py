@@ -58,19 +58,19 @@ class BaseConverter(object):
 	
 	def read(self, reader, font, tableDict):
 		"""Read a value from the reader."""
-		raise NotImplementedError, self
+		raise NotImplementedError(self)
 	
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		"""Write a value to the writer."""
-		raise NotImplementedError, self
+		raise NotImplementedError(self)
 	
 	def xmlRead(self, attrs, content, font):
 		"""Read a value from XML."""
-		raise NotImplementedError, self
+		raise NotImplementedError(self)
 	
 	def xmlWrite(self, xmlWriter, font, value, name, attrs):
 		"""Write a value to XML."""
-		raise NotImplementedError, self
+		raise NotImplementedError(self)
 
 
 class SimpleValue(BaseConverter):

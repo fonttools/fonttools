@@ -29,7 +29,7 @@ class table_C_F_F_(DefaultTable.DefaultTable):
 	def getGlyphOrder(self):
 		if self._gaveGlyphOrder:
 			from fontTools import ttLib
-			raise ttLib.TTLibError, "illegal use of getGlyphOrder()"
+			raise ttLib.TTLibError("illegal use of getGlyphOrder()")
 		self._gaveGlyphOrder = 1
 		return self.cff[self.cff.fontNames[0]].getGlyphOrder()
 	

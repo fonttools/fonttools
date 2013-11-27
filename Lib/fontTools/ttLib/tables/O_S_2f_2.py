@@ -113,7 +113,7 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 			self.usUpperOpticalPointSize /= 20.
 		elif self.version != 0:
 			from fontTools import ttLib
-			raise ttLib.TTLibError, "unknown format for OS/2 table: version %s" % self.version
+			raise ttLib.TTLibError("unknown format for OS/2 table: version %s" % self.version)
 		if len(data):
 			warnings.warn("too much 'OS/2' table data")
 
@@ -135,7 +135,7 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 			data = sstruct.pack(OS2_format_5, d)
 		else:
 			from fontTools import ttLib
-			raise ttLib.TTLibError, "unknown format for OS/2 table: version %s" % self.version
+			raise ttLib.TTLibError("unknown format for OS/2 table: version %s" % self.version)
 		self.panose = panose
 		return data
 	

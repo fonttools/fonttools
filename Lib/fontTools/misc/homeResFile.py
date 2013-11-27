@@ -70,7 +70,7 @@ class ParamBlock:
 		ptr = buf.buffer_info()[0]
 		err = _getInfo(ptr)
 		if err:
-			raise Res.Error, ("can't get file info", err)
+			raise Res.Error("can't get file info", err)
 		sstruct.unpack(_FCBPBFormat, buf.tostring(), self)
 		self.__haveInfo = 1
 	

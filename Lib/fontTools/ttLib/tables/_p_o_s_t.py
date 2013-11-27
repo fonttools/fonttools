@@ -38,7 +38,7 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 			self.decode_format_3_0(data, ttFont)
 		else:
 			# supported format
-			raise ttLib.TTLibError, "'post' table format %f not supported" % self.formatType
+			raise ttLib.TTLibError("'post' table format %f not supported" % self.formatType)
 	
 	def compile(self, ttFont):
 		data = sstruct.pack(postFormat, self)
@@ -50,7 +50,7 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 			pass # we're done
 		else:
 			# supported format
-			raise ttLib.TTLibError, "'post' table format %f not supported" % self.formatType
+			raise ttLib.TTLibError("'post' table format %f not supported" % self.formatType)
 		return data
 	
 	def getGlyphOrder(self):
@@ -59,7 +59,7 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 		or its relatives instead!
 		"""
 		if not hasattr(self, "glyphOrder"):
-			raise ttLib.TTLibError, "illegal use of getGlyphOrder()"
+			raise ttLib.TTLibError("illegal use of getGlyphOrder()")
 		glyphOrder = self.glyphOrder
 		del self.glyphOrder
 		return glyphOrder
