@@ -15,10 +15,13 @@ except NameError:
 try:
 	unichr
 	bytechr = chr
+	byteord = ord
 except:
 	unichr = chr
 	def bytechr(n):
 		return bytes([n])
+	def byteord(c):
+		return ord(c) if isinstance(c, str) else c
 
 try:
 	from cStringIO import StringIO

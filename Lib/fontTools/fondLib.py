@@ -268,7 +268,7 @@ class FontFamily:
 			kerntable = self.kernTables[stylecode] = []
 			for j in range(numberofpairs):
 				firstchar, secondchar, kerndistance = struct.unpack(">cch", data[count:count+4])
-				kerntable.append((ord(firstchar), ord(secondchar), kerndistance))
+				kerntable.append((byteord(firstchar), byteord(secondchar), kerndistance))
 				count = count + 4
 		
 		if DEBUG:
@@ -313,7 +313,7 @@ class FontFamily:
 		
 		count = offset + 60
 		for i in range(stringcount):
-			str_len = ord(data[count])
+			str_len = byteord(data[count])
 			self.styleStrings.append(data[count + 1:count + 1 + str_len])
 			count = count + 1 + str_len
 		
@@ -357,7 +357,7 @@ class FontFamily:
 				psNames[i] = self.styleStrings[0]
 			else:
 				style = self.styleStrings[0]
-				codes = map(ord, self.styleStrings[index - 1])
+				codes = map(byteord, self.styleStrings[index - 1])
 				for code in codes:
 					style = style + self.styleStrings[code - 1]
 				psNames[i] = style
@@ -410,9 +410,9 @@ class FontFamily:
 		numberofentries, = struct.unpack(">h", data[offset:offset+2])
 		count = offset + 2
 		for i in range(numberofentries):
-			glyphcode = ord(data[count])
+			glyphcode = byteord(data[count])
 			count = count + 1
-			strlen = ord(data[count])
+			strlen = byteord(data[count])
 			count = count + 1
 			glyphname = data[count:count+strlen]
 			glyphEncoding[glyphcode] = glyphname

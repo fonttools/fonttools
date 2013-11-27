@@ -426,11 +426,11 @@ class Glyph:
 		yFormat = ">" # big endian
 		i = j = 0
 		while True:
-			flag = ord(data[i])
+			flag = byteord(data[i])
 			i = i + 1
 			repeat = 1
 			if flag & flagRepeat:
-				repeat = ord(data[i]) + 1
+				repeat = byteord(data[i]) + 1
 				i = i + 1
 			for k in range(repeat):
 				if flag & flagXShort:
@@ -971,7 +971,7 @@ class GlyphCoordinates:
 def reprflag(flag):
 	bin = ""
 	if isinstance(flag, str):
-		flag = ord(flag)
+		flag = byteord(flag)
 	while flag:
 		if flag & 0x01:
 			bin = "1" + bin

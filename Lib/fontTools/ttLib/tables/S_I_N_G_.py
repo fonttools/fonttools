@@ -29,20 +29,20 @@ class table_S_I_N_G_(DefaultTable.DefaultTable):
 	def decompile(self, data, ttFont):
 		dummy, rest = sstruct.unpack2(SINGFormat, data, self)
 		self.uniqueName = self.decompileUniqueName(self.uniqueName)
-		self.nameLength = ord(self.nameLength)
+		self.nameLength = byteord(self.nameLength)
 		assert len(rest) == self.nameLength
 		self.baseGlyphName = rest
 		
 		rawMETAMD5 = self.METAMD5
-		self.METAMD5 = "[" + hex(ord(self.METAMD5[0]))
+		self.METAMD5 = "[" + hex(byteord(self.METAMD5[0]))
 		for char in rawMETAMD5[1:]:
-			self.METAMD5 = self.METAMD5 + ", " + hex(ord(char))
+			self.METAMD5 = self.METAMD5 + ", " + hex(byteord(char))
 		self.METAMD5 = self.METAMD5 + "]"
 		
 	def decompileUniqueName(self, data):
 		name = ""
 		for char in data:
-			val = ord(char)
+			val = byteord(char)
 			if val == 0:
 				break
 			if (val > 31) or (val < 128):

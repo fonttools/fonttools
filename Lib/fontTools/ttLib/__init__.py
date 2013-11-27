@@ -815,7 +815,7 @@ def _escapechar(c):
 	elif re.match("[A-Z]", c):
 		return c + "_"
 	else:
-		return hex(ord(c))[2:]
+		return hex(byteord(c))[2:]
 
 
 def tagToIdentifier(tag):

@@ -203,7 +203,7 @@ class EbdtComponent:
 def _data2binary(data, numBits):
 	binaryList = []
 	for curByte in data:
-		value = ord(curByte)
+		value = byteord(curByte)
 		numBitsCut = min(8, numBits)
 		for i in range(numBitsCut):
 			if value & 0x1:
@@ -243,7 +243,7 @@ def _memoize(f):
 def _reverseBytes(data):
 	if len(data) != 1:
 		return "".join(map(_reverseBytes, data))
-	byte = ord(data)
+	byte = byteord(data)
 	result = 0
 	for i in range(8):
 		result = result << 1
@@ -522,12 +522,12 @@ class BitAlignedBitmapMixin:
 			else:
 				numBitsCut = endBit - curBit
 			curByte = _reverseBytes(self.imageData[firstByteLoc])
-			firstHalf = ord(curByte) >> cutPoint
+			firstHalf = byteord(curByte) >> cutPoint
 			firstHalf = ((1<<numBitsCut)-1) & firstHalf
 			newByte = firstHalf
 			if firstByteLoc < secondByteLoc and secondByteLoc < len(self.imageData):
 				curByte = _reverseBytes(self.imageData[secondByteLoc])
-				secondHalf = ord(curByte) << numBitsCut
+				secondHalf = byteord(curByte) << numBitsCut
 				newByte = (firstHalf | secondHalf) & ((1<<numBits)-1)
 			dataList.append(bytechr(newByte))
 
@@ -559,7 +559,7 @@ class BitAlignedBitmapMixin:
 					numBitsCut = 8 - cutPoint
 				else:
 					numBitsCut = endBit - curBit
-				curByte = ord(curByte)
+				curByte = byteord(curByte)
 				firstByte = curByte & ((1<<numBitsCut)-1)
 				ordDataList[firstByteLoc] |= (firstByte << cutPoint)
 				if firstByteLoc < secondByteLoc and secondByteLoc < numBytes:

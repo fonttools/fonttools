@@ -59,8 +59,8 @@ class NFNT:
 		self.widthTable = []
 		self.locTable = []
 		for i in range(0, tableSize, 2):
-			self.offsetTable.append(ord(owTable[i]))
-			self.widthTable.append(ord(owTable[i+1]))
+			self.offsetTable.append(byteord(owTable[i]))
+			self.widthTable.append(byteord(owTable[i+1]))
 			loc, = struct.unpack("h", locTable[i:i+2])
 			self.locTable.append(loc)
 	
@@ -93,7 +93,7 @@ class NFNT:
 				byte = bits[y * rowBytes + xByte]
 				for xBit in range(8):
 					x = 8 * xByte + xBit
-					bit = (ord(byte) >> (7 - xBit)) & 0x01
+					bit = (byteord(byte) >> (7 - xBit)) & 0x01
 					bitImage[x, y] = bit
 		
 		for i in range(nGlyphs):
@@ -231,14 +231,14 @@ class NFNT:
 		return width
 	
 	def charwidth(self, ch):
-		cindex = ord(ch) - self.firstChar
+		cindex = byteord(ch) - self.firstChar
 		if cindex > self.lastChar or 	\
 				(self.offsetTable[cindex] == 255 and self.widthTable[cindex] == 255):
 			cindex = -2		# missing char
 		return self.widthTable[cindex]
 	
 	def getcharbounds(self, ch):
-		cindex = ord(ch) - self.firstChar
+		cindex = byteord(ch) - self.firstChar
 		if cindex > self.lastChar or 	\
 				(self.offsetTable[cindex] == 255 and self.widthTable[cindex] == 255):
 			return self.getcharboundsindex(-2)	# missing char

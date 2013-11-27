@@ -31,7 +31,7 @@ def hexStr(data):
 	h = string.hexdigits
 	r = ''
 	for c in data:
-		i = ord(c)
+		i = byteord(c)
 		r = r + h[(i >> 4) & 0xF] + h[i & 0xF]
 	return r
 

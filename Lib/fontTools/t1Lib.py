@@ -151,8 +151,8 @@ def readLWFN(path, onlyHeader=0):
 		data = []
 		for i in range(501, 501 + n):
 			res = Res.Get1Resource('POST', i)
-			code = ord(res.data[0])
-			if ord(res.data[1]) != 0:
+			code = byteord(res.data[0])
+			if byteord(res.data[1]) != 0:
 				raise T1Error('corrupt LWFN file')
 			if code in [1, 2]:
 				if onlyHeader and code == 2:
@@ -181,7 +181,7 @@ def readPFB(path, onlyHeader=0):
 	while True:
 		if f.read(1) != bytechr(128):
 			raise T1Error('corrupt PFB file')
-		code = ord(f.read(1))
+		code = byteord(f.read(1))
 		if code in [1, 2]:
 			chunklen = stringToLong(f.read(4))
 			chunk = f.read(chunklen)
@@ -368,6 +368,6 @@ def stringToLong(str):
 		raise ValueError('string must be 4 bytes long')
 	long = 0
 	for i in range(4):
-		long = long + (ord(str[i]) << (i * 8))
+		long = long + (byteord(str[i]) << (i * 8))
 	return long
 

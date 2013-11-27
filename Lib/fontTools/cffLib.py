@@ -608,7 +608,7 @@ class CharStrings:
 
 
 def readCard8(file):
-	return ord(file.read(1))
+	return byteord(file.read(1))
 
 def readCard16(file):
 	value, = struct.unpack(">H", file.read(2))

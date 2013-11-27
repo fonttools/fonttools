@@ -238,6 +238,7 @@ class GlyphRecord:
 	def __repr__(self):
 		return "GlyphRecord[ glyphID: " + str(self.glyphID) + ", nMetaEntry: " + str(self.nMetaEntry) + ", offset: " + str(self.offset) + " ]"
 
+# XXX The following two functions are really broken around UTF-8 vs Unicode
 
 def mapXMLToUTF8(string):
 	uString = unicode()
@@ -258,7 +259,7 @@ def mapXMLToUTF8(string):
 			
 			uString = uString + unichr(eval('0x' + valStr))
 		else:
-			uString = uString + unichr(ord(string[i]))
+			uString = uString + unichr(byteord(string[i]))
 		i = i +1
 			
 	return uString.encode('utf8')
@@ -268,7 +269,7 @@ def mapUTF8toXML(string):
 	uString = string.decode('utf8')
 	string = bytes()
 	for uChar in uString:
-		i = ord(uChar)
+		i = byteord(uChar)
 		if (i < 0x80) and (i > 0x1F):
 			string = string + bytechr(i)
 		else:

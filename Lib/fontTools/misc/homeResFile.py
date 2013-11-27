@@ -79,7 +79,7 @@ class ParamBlock:
 	def getFileName(self):
 		self.getInfo()
 		data = self.__fileName.tostring()
-		return data[1:ord(data[0])+1]
+		return data[1:byteord(data[0])+1]
 	
 	def getFSSpec(self):
 		self.getInfo()

@@ -134,7 +134,7 @@ def escapeattr(data):
 
 def escape8bit(data):
 	def escapechar(c):
-		n = ord(c)
+		n = byteord(c)
 		if c in "<&":
 			if c == "&":
 				return "&amp;"
@@ -154,7 +154,7 @@ def escape16bit(data):
 	a.fromstring(data)
 	if needswap:
 		a.byteswap()
-	def escapenum(n, amp=ord("&"), lt=ord("<")):
+	def escapenum(n, amp=byteord("&"), lt=byteord("<")):
 		if n == amp:
 			return "&amp;"
 		elif n == lt:
@@ -170,7 +170,7 @@ def hexStr(s):
 	h = string.hexdigits
 	r = ''
 	for c in s:
-		i = ord(c)
+		i = byteord(c)
 		r = r + h[(i >> 4) & 0xF] + h[i & 0xF]
 	return r
 

@@ -41,11 +41,11 @@ class ByteCodeBase:
 		return b0 - 139, index
 	
 	def read_smallInt1(self, b0, data, index):
-		b1 = ord(data[index])
+		b1 = byteord(data[index])
 		return (b0-247)*256 + b1 + 108, index+1
 	
 	def read_smallInt2(self, b0, data, index):
-		b1 = ord(data[index])
+		b1 = byteord(data[index])
 		return -(b0-251)*256 - b1 - 108, index+1
 	
 	def read_shortInt(self, b0, data, index):
@@ -66,7 +66,7 @@ class ByteCodeBase:
 	def read_realNumber(self, b0, data, index):
 		number = ''
 		while True:
-			b = ord(data[index])
+			b = byteord(data[index])
 			index = index + 1
 			nibble0 = (b & 0xf0) >> 4
 			nibble1 = b & 0x0f
@@ -320,11 +320,11 @@ class T2CharString(ByteCodeBase):
 		self.program = None
 	
 	def getToken(self, index, 
-			len=len, ord=ord, getattr=getattr, type=type, StringType=str):
+			len=len, byteord=byteord, getattr=getattr, type=type, StringType=str):
 		if self.bytecode is not None:
 			if index >= len(self.bytecode):
 				return None, 0, 0
-			b0 = ord(self.bytecode[index])
+			b0 = byteord(self.bytecode[index])
 			index = index + 1
 			code = self.operandEncoding[b0]
 			handler = getattr(self, code)
@@ -350,7 +350,7 @@ class T2CharString(ByteCodeBase):
 	
 	def do_operator(self, b0, data, index):
 		if b0 == 12:
-			op = (b0, ord(data[index]))
+			op = (b0, byteord(data[index]))
 			index = index+1
 		else:
 			op = b0
@@ -374,7 +374,7 @@ class T2CharString(ByteCodeBase):
 						hintMask, isOperator, index = self.getToken(index)
 						bits = []
 						for byte in hintMask:
-							bits.append(num2binary(ord(byte), 8))
+							bits.append(num2binary(byteord(byte), 8))
 						hintMask = ''.join(bits)
 						line = ' '.join(args + [token, hintMask])
 					else:
@@ -1114,7 +1114,7 @@ class DictDecompiler(ByteCodeBase):
 		lenData = len(data)
 		push = self.stack.append
 		while index < lenData:
-			b0 = ord(data[index])
+			b0 = byteord(data[index])
 			index = index + 1
 			code = self.operandEncoding[b0]
 			handler = getattr(self, code)
@@ -1134,7 +1134,7 @@ class DictDecompiler(ByteCodeBase):
 	
 	def do_operator(self, b0, data, index):
 		if b0 == 12:
-			op = (b0, ord(data[index]))
+			op = (b0, byteord(data[index]))
 			index = index+1
 		else:
 			op = b0
