@@ -1849,7 +1849,7 @@ class Subsetter(object):
 
   def populate(self, glyphs=[], unicodes=[], text=""):
     self.unicodes_requested.update(unicodes)
-    if isinstance(text, str):
+    if isinstance(text, bytes):
       text = text.decode("utf8")
     for u in text:
       self.unicodes_requested.add(ord(u))
