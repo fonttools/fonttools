@@ -106,7 +106,7 @@ class table_T_S_I__1(DefaultTable.DefaultTable):
 			writer.newline()
 			writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		if not hasattr(self, "glyphPrograms"):
 			self.glyphPrograms = {}
 			self.extraPrograms = {}

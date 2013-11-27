@@ -107,7 +107,7 @@ class table_G_P_K_G_(DefaultTable.DefaultTable):
 		writer.endtag("glyphlets")
 		writer.newline()
 
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		if name == "GMAPs":
 			if not hasattr(self, "GMAPs"):
 				self.GMAPs = []

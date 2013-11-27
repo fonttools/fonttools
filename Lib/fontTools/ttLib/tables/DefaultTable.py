@@ -26,7 +26,7 @@ class DefaultTable:
 		writer.endtag("hexdata")
 		writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		from fontTools.misc.textTools import readHex
 		from fontTools import ttLib
 		if name != "hexdata":

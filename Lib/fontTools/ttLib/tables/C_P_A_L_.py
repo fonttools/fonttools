@@ -53,7 +53,7 @@ class table_C_P_A_L_(DefaultTable.DefaultTable):
 			writer.endtag("palette")
 			writer.newline()
 
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		if not hasattr(self, "palettes"):
 			self.palettes = []
 		if name == "palette":
@@ -66,7 +66,7 @@ class table_C_P_A_L_(DefaultTable.DefaultTable):
 				if isinstance(element, StringType):
 					continue
 				color = Color()
-				color.fromXML(element, ttFont)
+				color.fromXML(element[0], element[1], element[2], ttFont)
 				palette.append (color)
 			self.palettes.append(palette)
 		elif "value" in attrs:
@@ -91,7 +91,7 @@ class Color:
 		writer.simpletag("color", value=self.hex(), index=index)
 		writer.newline()
 
-	def fromXML(self, (eltname, attrs, content), ttFont):
+	def fromXML(self, eltname, attrs, content, ttFont):
 		value = attrs["value"]
 		if value[0] == '#':
 			value = value[1:]

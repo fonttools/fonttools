@@ -66,7 +66,7 @@ class table__k_e_r_n(DefaultTable.DefaultTable):
 		for subtable in self.kernTables:
 			subtable.toXML(writer, ttFont)
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		if name == "version":
 			self.version = safeEval(attrs["value"])
 			return
@@ -80,7 +80,7 @@ class table__k_e_r_n(DefaultTable.DefaultTable):
 		else:
 			subtable = kern_classes[format]()
 		self.kernTables.append(subtable)
-		subtable.fromXML((name, attrs, content), ttFont)
+		subtable.fromXML(name, attrs, content, ttFont)
 
 
 class KernTable_format_0:
@@ -143,7 +143,7 @@ class KernTable_format_0:
 		writer.endtag("kernsubtable")
 		writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		self.coverage = safeEval(attrs["coverage"])
 		self.version = safeEval(attrs["format"])
 		if not hasattr(self, "kernTable"):
@@ -185,7 +185,7 @@ class KernTable_format_2:
 		writer.endtag("kernsubtable")
 		writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		self.decompile(readHex(content), ttFont)
 
 
@@ -209,7 +209,7 @@ class KernTable_format_unkown:
 		writer.endtag("kernsubtable")
 		writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		self.decompile(readHex(content), ttFont)
 
 

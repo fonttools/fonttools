@@ -109,7 +109,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 				writer.newline()
 			writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		if name != "TTGlyph":
 			return
 		if not hasattr(self, "glyphs"):
@@ -126,7 +126,8 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 		for element in content:
 			if type(element) != TupleType:
 				continue
-			glyph.fromXML(element, ttFont)
+			name, attrs, content = element
+			glyph.fromXML(name, attrs, content, ttFont)
 		if not ttFont.recalcBBoxes:
 			glyph.compact(self, 0)
 	
@@ -281,7 +282,7 @@ class Glyph:
 				writer.endtag("instructions")
 				writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		if name == "contour":
 			if self.numberOfContours < 0:
 				raise ttLib.TTLibError("can't mix composites and contours in glyph")
@@ -313,13 +314,14 @@ class Glyph:
 				self.components = []
 			component = GlyphComponent()
 			self.components.append(component)
-			component.fromXML((name, attrs, content), ttFont)
+			component.fromXML(name, attrs, content, ttFont)
 		elif name == "instructions":
 			self.program = ttProgram.Program()
 			for element in content:
 				if type(element) != TupleType:
 					continue
-				self.program.fromXML(element, ttFont)
+				name, attrs, content = element
+				self.program.fromXML(name, attrs, content, ttFont)
 	
 	def getCompositeMaxpValues(self, glyfTable, maxComponentDepth=1):
 		assert self.isComposite()
@@ -862,7 +864,7 @@ class GlyphComponent:
 		writer.simpletag("component", attrs)
 		writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		self.glyphName = attrs["glyphName"]
 		if "firstPt" in attrs:
 			self.firstPt = safeEval(attrs["firstPt"])
@@ -926,8 +928,8 @@ class GlyphCoordinates:
 	def __repr__(self):
 		return 'GlyphCoordinates(['+','.join(str(c) for c in self)+'])'
 
-	def append(self, (x,y)):
-		self._a.extend((x,y))
+	def append(self, p):
+		self._a.extend(tuple(p))
 
 	def extend(self, iterable):
 		for x,y in iterable:
@@ -951,7 +953,8 @@ class GlyphCoordinates:
 			a[2*i  ] = dx
 			a[2*i+1] = dy
 
-	def translate(self, (x,y)):
+	def translate(self, p):
+		(x,y) = p
 		a = self._a
 		for i in range(len(a) / 2):
 			a[2*i  ] += x

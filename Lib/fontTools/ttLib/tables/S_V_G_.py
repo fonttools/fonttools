@@ -290,7 +290,7 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 			writer.endtag("colorPalettes")
 			writer.newline()
 
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		import re
 		if name == "svgDoc":
 			if not hasattr(self, "docList"):
@@ -302,7 +302,7 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 			self.docList.append( [doc, startGID, endGID] )
 		elif  name == "colorPalettes":
 			self.colorPalettes = ColorPalettes()
-			self.colorPalettes.fromXML((name, attrs, content), ttFont)
+			self.colorPalettes.fromXML(name, attrs, content, ttFont)
 			if self.colorPalettes.numColorParams == 0:
 				self.colorPalettes = None
 		else:
@@ -325,7 +325,7 @@ class ColorPalettes:
 		self.numColorPalettes = None # USHORT
 		self.colorPaletteList = [] # list of ColorPalette records
 
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		for element in content:
 			if type(element) == type(""):
 				continue
@@ -349,7 +349,7 @@ class ColorPalette:
 		self.uiNameID = None # USHORT. name table ID that describes user interface strings associated with this color palette. 
 		self.paletteColors = [] # list of ColorRecords
 
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		self.uiNameID = int(attrs["uiNameID"])
 		for element in content:
 			if type(element) == type(""):

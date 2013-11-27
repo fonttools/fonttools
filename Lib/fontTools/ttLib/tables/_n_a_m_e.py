@@ -70,14 +70,14 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 		for name in self.names:
 			name.toXML(writer, ttFont)
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		if name != "namerecord":
 			return # ignore unknown tags
 		if not hasattr(self, "names"):
 			self.names = []
 		name = NameRecord()
 		self.names.append(name)
-		name.fromXML((name, attrs, content), ttFont)
+		name.fromXML(name, attrs, content, ttFont)
 	
 	def getName(self, nameID, platformID, platEncID, langID=None):
 		for namerecord in self.names:
@@ -118,7 +118,7 @@ class NameRecord:
 		writer.endtag("namerecord")
 		writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		self.nameID = safeEval(attrs["nameID"])
 		self.platformID = safeEval(attrs["platformID"])
 		self.platEncID = safeEval(attrs["platEncID"])

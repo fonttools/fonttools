@@ -51,7 +51,7 @@ class GMAPRecord:
 		writer.newline()
 
 
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		value = attrs["value"]
 		if name == "GlyphletName":
 			self.name = value
@@ -117,7 +117,7 @@ class table_G_M_A_P_(DefaultTable.DefaultTable):
 		for gmapRecord in self.gmapRecords:
 			gmapRecord.toXML(writer, ttFont)
 		
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		if name == "GMAPRecord":
 			if not hasattr(self, "gmapRecords"):
 				self.gmapRecords = []
@@ -126,7 +126,8 @@ class table_G_M_A_P_(DefaultTable.DefaultTable):
 			for element in content:
 				if isinstance(element, StringType):
 					continue
-				gmapRecord.fromXML(element, ttFont)
+				name, attrs, content = element
+				gmapRecord.fromXML(name, attrs, content, ttFont)
 		else:
 			value = attrs["value"]
 			if name == "PSFontName":

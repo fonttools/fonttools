@@ -41,8 +41,8 @@ class table_C_F_F_(DefaultTable.DefaultTable):
 	def toXML(self, writer, otFont, progress=None):
 		self.cff.toXML(writer, progress)
 	
-	def fromXML(self, (name, attrs, content), otFont):
+	def fromXML(self, name, attrs, content, otFont):
 		if not hasattr(self, "cff"):
 			self.cff = cffLib.CFFFontSet()
-		self.cff.fromXML((name, attrs, content))
+		self.cff.fromXML(name, attrs, content)
 

@@ -90,7 +90,7 @@ class table_S_I_N_G_(DefaultTable.DefaultTable):
 		writer.simpletag("baseGlyphName", value=self.baseGlyphName)
 		writer.newline()
 		
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		value = attrs["value"]
 		if name in ["uniqueName", "METAMD5", "baseGlyphName"]:
 			setattr(self, name, value)

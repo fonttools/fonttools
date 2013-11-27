@@ -79,19 +79,17 @@ class table_V_O_R_G_(DefaultTable.DefaultTable):
 			vOriginRec = VOriginRecord(entry[1], entry[2])
 			vOriginRec.toXML(writer, ttFont)
 
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		if not hasattr(self, "VOriginRecords"):
 			self.VOriginRecords = {}
 		self.getGlyphName = ttFont.getGlyphName # for use in get/set item functions, for access by GID
 		if name == "VOriginRecord":
-			for element in content:
-				if isinstance(element, StringType):
-					continue
 			vOriginRec = VOriginRecord()
 			for element in content:
 				if isinstance(element, StringType):
 					continue
-				vOriginRec.fromXML(element, ttFont)
+				name, attrs, content = element
+				vOriginRec.fromXML(name, attrs, content, ttFont)
 			self.VOriginRecords[vOriginRec.glyphName] = vOriginRec.vOrigin
 		elif "value" in attrs:
 			value =  safeEval(attrs["value"])
@@ -134,7 +132,7 @@ class VOriginRecord:
 		writer.endtag("VOriginRecord")
 		writer.newline()
 
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		value = attrs["value"]
 		if name == "glyphName":
 			setattr(self, name, value)

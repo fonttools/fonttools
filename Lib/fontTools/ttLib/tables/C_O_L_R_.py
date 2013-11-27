@@ -97,7 +97,7 @@ class table_C_O_L_R_(DefaultTable.DefaultTable):
 			writer.endtag("ColorGlyph")
 			writer.newline()
 
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		if not hasattr(self, "ColorLayers"):
 			self.ColorLayers = {}
 		self.getGlyphName = ttFont.getGlyphName # for use in get/set item functions, for access by GID
@@ -111,7 +111,7 @@ class table_C_O_L_R_(DefaultTable.DefaultTable):
 				if isinstance(element, StringType):
 					continue
 				layer = LayerRecord()
-				layer.fromXML(element, ttFont)
+				layer.fromXML(element[0], element[1], element[2], ttFont)
 				layers.append (layer)
 			operator.setitem(self, glyphName, layers)
 		elif "value" in attrs:
@@ -149,7 +149,7 @@ class LayerRecord:
 		writer.simpletag("layer", name=self.name, colorID=self.colorID)
 		writer.newline()
 
-	def fromXML(self, (eltname, attrs, content), ttFont):
+	def fromXML(self, eltname, attrs, content, ttFont):
 		for (name, value) in attrs.items():
 			if name == "name":
 				if type(value) == IntType:

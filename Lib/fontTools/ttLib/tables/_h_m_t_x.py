@@ -83,7 +83,7 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 					])
 			writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		if not hasattr(self, "metrics"):
 			self.metrics = {}
 		if name == "mtx":
@@ -93,6 +93,6 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 	def __getitem__(self, glyphName):
 		return self.metrics[glyphName]
 	
-	def __setitem__(self, glyphName, (advance, sb)):
-		self.metrics[glyphName] = advance, sb
+	def __setitem__(self, glyphName, advance_sb_pair):
+		self.metrics[glyphName] = tuple(advance_sb_pair)
 

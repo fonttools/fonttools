@@ -28,7 +28,7 @@ class Panose:
 			writer.simpletag(name, value=getattr(self, name))
 			writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		setattr(self, name, safeEval(attrs["value"]))
 
 
@@ -170,12 +170,13 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 				writer.simpletag(name, value=value)
 			writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		if name == "panose":
 			self.panose = panose = Panose()
 			for element in content:
 				if type(element) == TupleType:
-					panose.fromXML(element, ttFont)
+					name, attrs, content = element
+					panose.fromXML(name, attrs, content, ttFont)
 		elif name in ("ulUnicodeRange1", "ulUnicodeRange2", 
 				"ulUnicodeRange3", "ulUnicodeRange4",
 				"ulCodePageRange1", "ulCodePageRange2",

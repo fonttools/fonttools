@@ -43,7 +43,7 @@ class table__g_a_s_p(DefaultTable.DefaultTable):
 					("rangeGaspBehavior", rangeGaspBehavior)])
 			writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		if name != "gaspRange":
 			return
 		if not hasattr(self, "gaspRange"):

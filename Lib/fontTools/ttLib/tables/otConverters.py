@@ -200,7 +200,7 @@ class Struct(BaseConverter):
 		for element in content:
 			if type(element) == TupleType:
 				name, attrs, content = element
-				table.fromXML((name, attrs, content), font)
+				table.fromXML(name, attrs, content, font)
 			else:
 				pass
 		return table
@@ -300,7 +300,7 @@ class ValueRecord(ValueFormat):
 	def xmlRead(self, attrs, content, font):
 		from .otBase import ValueRecord
 		value = ValueRecord()
-		value.fromXML((None, attrs, content), font)
+		value.fromXML(None, attrs, content, font)
 		return value
 
 

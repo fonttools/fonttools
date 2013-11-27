@@ -80,7 +80,7 @@ class table_D_S_I_G_(DefaultTable.DefaultTable):
 			sigrec.toXML(xmlWriter, ttFont)
 		xmlWriter.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		if name == "tableHeader":
 			self.signatureRecords = []
 			self.ulVersion = safeEval(attrs["version"])
@@ -89,7 +89,7 @@ class table_D_S_I_G_(DefaultTable.DefaultTable):
 			return
 		if name == "SignatureRecord":
 			sigrec = SignatureRecord()
-			sigrec.fromXML((name, attrs, content), ttFont)
+			sigrec.fromXML(name, attrs, content, ttFont)
 			self.signatureRecords.append(sigrec)
 
 pem_spam = lambda l, spam = {
@@ -108,7 +108,7 @@ class SignatureRecord:
 		writer.write_noindent("-----END PKCS7-----\n")
 		writer.endtag(self.__class__.__name__)
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		self.ulFormat = safeEval(attrs["format"])
 		self.usReserved1 = safeEval(attrs.get("reserved1", "0"))
 		self.usReserved2 = safeEval(attrs.get("reserved2", "0"))

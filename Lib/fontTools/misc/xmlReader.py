@@ -110,7 +110,8 @@ class XMLReader:
 		if self.stackSize == 1:
 			self.root = None
 		elif self.stackSize == 2:
-			self.currentTable.fromXML(self.root, self.ttFont)
+			name, attrs, content = self.root
+			self.currentTable.fromXML(name, attrs, content, self.ttFont)
 			self.root = None
 
 

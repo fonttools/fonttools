@@ -256,7 +256,7 @@ class Program:
 			writer.dumphex(self.getBytecode())
 			writer.endtag("bytecode")
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		if name == "assembly":
 			self.fromAssembly(string.join(content, ""))
 			self._assemble()

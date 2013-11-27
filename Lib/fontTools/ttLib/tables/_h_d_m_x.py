@@ -74,7 +74,7 @@ class table__h_d_m_x(DefaultTable.DefaultTable):
 		writer.endtag("hdmxData")
 		writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		if name != "hdmxData":
 			return
 		content = string.join(content, "")

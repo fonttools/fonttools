@@ -206,7 +206,7 @@ class table_E_B_L_C_(DefaultTable.DefaultTable):
 		for curIndex, curStrike in enumerate(self.strikes):
 			curStrike.toXML(curIndex, writer, ttFont)
 
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		if name == 'header':
 			self.version = safeEval(attrs['version'])
 		elif name == 'strike':
@@ -214,7 +214,7 @@ class table_E_B_L_C_(DefaultTable.DefaultTable):
 				self.strikes = []
 			strikeIndex = safeEval(attrs['index'])
 			curStrike = Strike()
-			curStrike.fromXML((name, attrs, content), ttFont, self)
+			curStrike.fromXML(name, attrs, content, ttFont, self)
 
 			# Grow the strike array to the appropriate size. The XML format
 			# allows for the strike index value to be out of order.
@@ -240,19 +240,19 @@ class Strike:
 		writer.endtag('strike')
 		writer.newline()
 
-	def fromXML(self, (name, attrs, content), ttFont, locator):
+	def fromXML(self, name, attrs, content, ttFont, locator):
 		for element in content:
 			if type(element) != TupleType:
 				continue
 			name, attrs, content = element
 			if name == 'bitmapSizeTable':
-				self.bitmapSizeTable.fromXML(element, ttFont)
+				self.bitmapSizeTable.fromXML(name, attrs, content, ttFont)
 			elif name.startswith(_indexSubTableSubclassPrefix):
 				indexFormat = safeEval(name[len(_indexSubTableSubclassPrefix):])
 				indexFormatClass = locator.getIndexFormatClass(indexFormat)
 				indexSubTable = indexFormatClass(None, None)
 				indexSubTable.indexFormat = indexFormat
-				indexSubTable.fromXML(element, ttFont)
+				indexSubTable.fromXML(name, attrs, content, ttFont)
 				self.indexSubTables.append(indexSubTable)
 
 
@@ -277,7 +277,7 @@ class BitmapSizeTable:
 		writer.endtag('bitmapSizeTable')
 		writer.newline()
 
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		# Create a lookup for all the simple names that make sense to
 		# bitmap size table. Only read the information from these names.
 		dataNames = set(self._getXMLMetricNames())
@@ -289,7 +289,7 @@ class BitmapSizeTable:
 				direction = attrs['direction']
 				assert direction in ('hori', 'vert'), "SbitLineMetrics direction specified invalid."
 				metricObj = SbitLineMetrics()
-				metricObj.fromXML(element, ttFont)
+				metricObj.fromXML(name, attrs, content, ttFont)
 				vars(self)[direction] = metricObj
 			elif name in dataNames:
 				vars(self)[name] = safeEval(attrs['value'])
@@ -308,7 +308,7 @@ class SbitLineMetrics:
 		writer.endtag('sbitLineMetrics')
 		writer.newline()
 
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		metricNames = set(sstruct.getformat(sbitLineMetricsFormat)[1])
 		for element in content:
 			if type(element) != TupleType:
@@ -366,7 +366,7 @@ class EblcIndexSubTable:
 		writer.endtag(self.__class__.__name__)
 		writer.newline()
 
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		# Read all the attributes. Even though the glyph indices are
 		# recalculated, they are still read in case there needs to
 		# be an immediate export of the data.
@@ -374,7 +374,7 @@ class EblcIndexSubTable:
 		self.firstGlyphIndex = safeEval(attrs['firstGlyphIndex'])
 		self.lastGlyphIndex = safeEval(attrs['lastGlyphIndex'])
 
-		self.readMetrics((name, attrs, content), ttFont)
+		self.readMetrics(name, attrs, content, ttFont)
 
 		self.names = []
 		for element in content:
@@ -391,7 +391,7 @@ class EblcIndexSubTable:
 		pass
 
 	# A helper method that is the inverse of writeMetrics.
-	def readMetrics(self, (name, attrs, content), ttFont):
+	def readMetrics(self, name, attrs, content, ttFont):
 		pass
 
 	# This method is for fixed glyph data sizes. There are formats where
@@ -408,7 +408,8 @@ class EblcIndexSubTable:
 	def removeSkipGlyphs(self):
 		# Determines if a name, location pair is a valid data location.
 		# Skip glyphs are marked when the size is equal to zero.
-		def isValidLocation((name, (startByte, endByte))):
+		def isValidLocation(args):
+			(name, (startByte, endByte)) = args
 			return startByte < endByte
 		# Remove all skip glyphs.
 		dataPairs = filter(isValidLocation, zip(self.names, self.locations))
@@ -491,7 +492,7 @@ class FixedSizeIndexSubTableMixin:
 		writer.newline()
 		self.metrics.toXML(writer, ttFont)
 
-	def readMetrics(self, (name, attrs, content), ttFont):
+	def readMetrics(self, name, attrs, content, ttFont):
 		for element in content:
 			if type(element) != TupleType:
 				continue
@@ -500,7 +501,7 @@ class FixedSizeIndexSubTableMixin:
 				self.imageSize = safeEval(attrs['value'])
 			elif name == BigGlyphMetrics.__name__:
 				self.metrics = BigGlyphMetrics()
-				self.metrics.fromXML(element, ttFont)
+				self.metrics.fromXML(name, attrs, content, ttFont)
 			elif name == SmallGlyphMetrics.__name__:
 				print "Warning: SmallGlyphMetrics being ignored in format %d." % self.indexFormat
 

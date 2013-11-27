@@ -34,7 +34,7 @@ class table_T_S_I__5(DefaultTable.DefaultTable):
 			writer.simpletag("glyphgroup", name=glyphName, value=self.glyphGrouping[glyphName])
 			writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		if not hasattr(self, "glyphGrouping"):
 			self.glyphGrouping = {}
 		if name != "glyphgroup":
