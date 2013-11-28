@@ -3,7 +3,7 @@ from fontTools.misc.py23 import *
 from .DefaultTable import DefaultTable
 import struct
 
-class OverflowErrorRecord:
+class OverflowErrorRecord(object):
 	def __init__(self, overflowTuple):
 		self.tableType = overflowTuple[0]
 		self.LookupListIndex = overflowTuple[1]
@@ -32,7 +32,7 @@ class BaseTTXConverter(DefaultTable):
 	def decompile(self, data, font):
 		from . import otTables
 		cachingStats = None if True else {}
-		class GlobalState:
+		class GlobalState(object):
 			def __init__(self, tableType, cachingStats):
 				self.tableType = tableType
 				self.cachingStats = cachingStats
@@ -73,7 +73,7 @@ class BaseTTXConverter(DefaultTable):
 
 				If a lookup subtable overflows an offset, we have to start all over. 
 		"""
-		class GlobalState:
+		class GlobalState(object):
 			def __init__(self, tableType):
 				self.tableType = tableType
 		globalState = GlobalState(tableType=self.tableTag)
@@ -468,7 +468,7 @@ class OTTableWriter(object):
 		return OverflowErrorRecord( (self.globalState.tableType, LookupListIndex, SubTableIndex, itemName, itemIndex) )
 
 
-class CountReference:
+class CountReference(object):
 	"""A reference to a Count value, not a count of references."""
 	def __init__(self, table, name):
 		self.table = table
@@ -740,7 +740,7 @@ def _buildDict():
 valueRecordFormatDict = _buildDict()
 
 
-class ValueRecordFactory:
+class ValueRecordFactory(object):
 	
 	"""Given a format code, this object convert ValueRecords."""
 
@@ -788,7 +788,7 @@ class ValueRecordFactory:
 				writer.writeUShort(value)
 
 
-class ValueRecord:
+class ValueRecord(object):
 	
 	# see ValueRecordFactory
 	

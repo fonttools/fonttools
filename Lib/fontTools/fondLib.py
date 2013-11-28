@@ -29,7 +29,7 @@ headerformat = """
 
 FONDheadersize = 52
 
-class FontFamily:
+class FontFamily(object):
 	
 	def __init__(self, theRes, mode = 'r'):
 		self.ID, type, self.name = theRes.GetResInfo()
@@ -464,7 +464,7 @@ def makeLWFNfilename(name):
 			lwfnname = lwfnname + part[:3]
 	return lwfnname
 
-class BitmapFontFile:
+class BitmapFontFile(object):
 	
 	def __init__(self, path, mode='r'):
 		if mode == 'r':
@@ -507,7 +507,7 @@ class BitmapFontFile:
 			self.resref = None
 
 
-class FondSelector:
+class FondSelector(object):
 	
 	def __init__(self, fondlist):
 		import W

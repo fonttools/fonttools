@@ -21,7 +21,7 @@ panoseFormat = """
 	bXHeight:           B
 """
 
-class Panose:
+class Panose(object):
 	
 	def toXML(self, writer, ttFont):
 		formatstring, names, fixes = sstruct.getformat(panoseFormat)

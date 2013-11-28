@@ -9,7 +9,7 @@ import struct
 INDENT = "  "
 
 
-class XMLWriter:
+class XMLWriter(object):
 	
 	def __init__(self, fileOrPath, indentwhite=INDENT, idlefunc=None):
 		if not hasattr(fileOrPath, "write"):

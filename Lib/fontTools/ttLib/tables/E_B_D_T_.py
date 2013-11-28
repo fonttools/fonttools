@@ -175,7 +175,7 @@ class table_E_B_D_T_(DefaultTable.DefaultTable):
 			assert self.strikeData[strikeIndex] == None, "Duplicate strike EBDT indices."
 			self.strikeData[strikeIndex] = bitmapGlyphDict
 
-class EbdtComponent:
+class EbdtComponent(object):
 
 	def toXML(self, writer, ttFont):
 		writer.begintag('ebdtComponent', [('name', self.name)])
@@ -364,7 +364,7 @@ def _readExtFileImageData(bitmapObject, name, attrs, content, ttFont):
 # in XML.
 _bitmapGlyphSubclassPrefix = 'ebdt_bitmap_format_'
 
-class BitmapGlyph:
+class BitmapGlyph(object):
 
 	# For the external file format. This can be changed in subclasses. This way
 	# when the extfile option is turned on files have the form: glyphName.ext
@@ -459,7 +459,7 @@ def _createBitmapPlusMetricsMixin(metricsClass):
 	metricsId = metricStrings.index(curMetricsName)
 	oppositeMetricsName = metricStrings[1-metricsId]
 
-	class BitmapPlusMetricsMixin:
+	class BitmapPlusMetricsMixin(object):
 
 		def writeMetrics(self, writer, ttFont):
 			self.metrics.toXML(writer, ttFont)
@@ -484,7 +484,7 @@ BitmapPlusSmallMetricsMixin = _createBitmapPlusMetricsMixin(SmallGlyphMetrics)
 # Data that is bit aligned can be tricky to deal with. These classes implement
 # helper functionality for dealing with the data and getting a particular row
 # of bitwise data. Also helps implement fancy data export/import in XML.
-class BitAlignedBitmapMixin:
+class BitAlignedBitmapMixin(object):
 
 	def _getBitRange(self, row, bitDepth, metrics):
 		rowBits = (bitDepth * metrics.width)
@@ -572,7 +572,7 @@ class BitAlignedBitmapMixin:
 		# Save the image data with the bits going the correct way.
 		self.imageData = _reverseBytes(bytesjoin(map(bytechr, ordDataList)))
 
-class ByteAlignedBitmapMixin:
+class ByteAlignedBitmapMixin(object):
 
 	def _getByteRange(self, row, bitDepth, metrics):
 		rowBytes = (bitDepth * metrics.width + 7) // 8

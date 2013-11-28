@@ -25,7 +25,7 @@ headerSize = sstruct.calcsize(nfntHeaderFormat)
 assert headerSize == 26
 
 
-class NFNT:
+class NFNT(object):
 	
 	def __init__(self, data=None):
 		if data is not None:
@@ -259,7 +259,7 @@ class NFNT:
 		return width, srcbounds, destbounds
 
 
-class Glyph:
+class Glyph(object):
 	
 	def __init__(self, width, offset, pixels=None, pixelDepth=1):
 		self.width = width

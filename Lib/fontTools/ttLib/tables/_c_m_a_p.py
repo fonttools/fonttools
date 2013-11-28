@@ -97,7 +97,7 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
 		self.tables.append(table)
 
 
-class CmapSubtable:
+class CmapSubtable(object):
 	
 	def __init__(self, format):
 		self.format = format
@@ -217,7 +217,7 @@ class cmap_format_0(CmapSubtable):
 
 
 subHeaderFormat = ">HHhH"
-class SubHeader:
+class SubHeader(object):
 	def __init__(self):
 		self.firstCode = None
 		self.entryCount = None

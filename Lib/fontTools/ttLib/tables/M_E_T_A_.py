@@ -184,7 +184,7 @@ class table_M_E_T_A_(DefaultTable.DefaultTable):
 			setattr(self, name, safeEval(attrs["value"]))
 
 
-class GlyphRecord:
+class GlyphRecord(object):
 	def __init__(self):
 		self.glyphID = -1
 		self.nMetaEntry = -1
@@ -267,7 +267,7 @@ def mapUTF8toXML(string):
 	return string
 
 
-class StringRecord:
+class StringRecord(object):
 	def __init__(self):
 		self.labelID = -1
 		self.string = ""

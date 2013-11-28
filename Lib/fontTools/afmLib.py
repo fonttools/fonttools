@@ -83,7 +83,7 @@ preferredAttributeOrder = [
 class error(Exception): pass
 
 
-class AFM:
+class AFM(object):
 	
 	_attrs = None
 	

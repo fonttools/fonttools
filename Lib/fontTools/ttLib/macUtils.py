@@ -54,7 +54,7 @@ def openTTFonts(path):
 	return fonts
 
 
-class SFNTResourceReader:
+class SFNTResourceReader(object):
 	
 	"""Simple (Mac-only) read-only file wrapper for 'sfnt' resources."""
 	
@@ -74,7 +74,7 @@ class SFNTResourceReader:
 		return getattr(self.file, attr)
 
 
-class SFNTResourceWriter:
+class SFNTResourceWriter(object):
 	
 	"""Simple (Mac-only) file wrapper for 'sfnt' resources."""
 	

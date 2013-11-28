@@ -18,7 +18,7 @@ from fontTools.misc import sstruct
 import struct
 
 
-class SFNTReader:
+class SFNTReader(object):
 	
 	def __init__(self, file, checkChecksums=1, fontNumber=-1):
 		self.file = file
@@ -101,7 +101,7 @@ class SFNTReader:
 		self.file.close()
 
 
-class SFNTWriter:
+class SFNTWriter(object):
 	
 	def __init__(self, file, numTables, sfntVersion="\000\001\000\000",
 		     flavor=None, flavorData=None):
@@ -340,7 +340,7 @@ woffDirectoryEntryFormat = """
 woffDirectoryEntrySize = sstruct.calcsize(woffDirectoryEntryFormat)
 
 
-class DirectoryEntry:
+class DirectoryEntry(object):
 	
 	def __init__(self):
 		self.uncompressed = False # if True, always embed entry raw

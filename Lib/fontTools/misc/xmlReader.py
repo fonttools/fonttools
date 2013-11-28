@@ -11,7 +11,7 @@ class TTXParseError(Exception): pass
 BUFSIZE = 0x4000
 
 
-class XMLReader:
+class XMLReader(object):
 	
 	def __init__(self, fileName, ttFont, progress=None, quiet=False):
 		self.ttFont = ttFont
@@ -116,7 +116,7 @@ class XMLReader:
 			self.root = None
 
 
-class ProgressPrinter:
+class ProgressPrinter(object):
 	
 	def __init__(self, title, maxval=100):
 		print(title)

@@ -61,7 +61,7 @@ elif sys.platform == "darwin" and sys.version_info[:3] != (2, 2, 0):
 class TTLibError(Exception): pass
 
 
-class TTFont:
+class TTFont(object):
 	
 	"""The main font object. It manages file input and output, and offers
 	a convenient way of accessing tables. 
@@ -650,7 +650,7 @@ class TTFont:
 		raise TTLibError("Font contains no outlines")
 
 
-class _TTGlyphSet:
+class _TTGlyphSet(object):
 	
 	"""Generic dict-like GlyphSet class, meant as a TrueType counterpart
 	to CFF's CharString dict. See TTFont.getGlyphSet().
@@ -681,7 +681,7 @@ class _TTGlyphSet:
 			return default
 
 
-class _TTGlyph:
+class _TTGlyph(object):
 	
 	"""Wrapper for a TrueType glyph that supports the Pen protocol, meaning
 	that it has a .draw() method that takes a pen object as its only
@@ -742,7 +742,7 @@ class _TTGlyph:
 				pen.closePath()
 
 
-class GlyphOrder:
+class GlyphOrder(object):
 	
 	"""A pseudo table. The glyph order isn't in the font as a separate
 	table, but it's nice to present it as such in the TTX format.

@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 from fontTools.misc.py23 import *
 
-class DefaultTable:
+class DefaultTable(object):
 	
 	dependencies = []
 	
