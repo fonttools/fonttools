@@ -104,11 +104,11 @@ class table_C_O_L_R_(DefaultTable.DefaultTable):
 		if name == "ColorGlyph":
 			glyphName = attrs["name"]
 			for element in content:
-				if isinstance(element, str):
+				if isinstance(element, basestring):
 					continue
 			layers = []
 			for element in content:
-				if isinstance(element, str):
+				if isinstance(element, basestring):
 					continue
 				layer = LayerRecord()
 				layer.fromXML(element[0], element[1], element[2], ttFont)

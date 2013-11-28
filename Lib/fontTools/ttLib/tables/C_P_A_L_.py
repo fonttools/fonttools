@@ -58,11 +58,11 @@ class table_C_P_A_L_(DefaultTable.DefaultTable):
 		if name == "palette":
 			palette = []
 			for element in content:
-				if isinstance(element, str):
+				if isinstance(element, basestring):
 					continue
 			palette = []
 			for element in content:
-				if isinstance(element, str):
+				if isinstance(element, basestring):
 					continue
 				color = Color()
 				color.fromXML(element[0], element[1], element[2], ttFont)

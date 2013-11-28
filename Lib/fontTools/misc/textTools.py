@@ -13,7 +13,7 @@ def safeEval(data, eval=eval):
 
 def readHex(content):
 	"""Convert a list of hex strings to binary data."""
-	return deHexStr(strjoin([ chunk for chunk in content if isinstance(chunk,str) ]))
+	return deHexStr(strjoin(chunk for chunk in content if isinstance(chunk, basestring)))
 
 def deHexStr(hexdata):
 	"""Convert a hex string to binary data."""

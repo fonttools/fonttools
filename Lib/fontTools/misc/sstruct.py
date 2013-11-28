@@ -68,7 +68,7 @@ def pack(format, object):
 		if name in fixes:
 			# fixed point conversion
 			value = int(round(value*fixes[name]))
-		elif isinstance(value, str):
+		elif isinstance(value, basestring):
 			value = tobytes(value)
 		elements.append(value)
 	data = struct.pack(*(formatstring,) + tuple(elements))

@@ -86,7 +86,7 @@ class table_V_O_R_G_(DefaultTable.DefaultTable):
 		if name == "VOriginRecord":
 			vOriginRec = VOriginRecord()
 			for element in content:
-				if isinstance(element, str):
+				if isinstance(element, basestring):
 					continue
 				name, attrs, content = element
 				vOriginRec.fromXML(name, attrs, content, ttFont)
