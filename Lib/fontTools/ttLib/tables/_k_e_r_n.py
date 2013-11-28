@@ -2,6 +2,7 @@ from __future__ import print_function, division
 from fontTools.misc.py23 import *
 from fontTools.ttLib import sfnt
 from fontTools.misc.textTools import safeEval, readHex
+from fontTools.misc.fixedTools import fixedToFloat as fi2fl, floatToFixed as fl2fi
 from . import DefaultTable
 import struct
 import warnings
@@ -21,7 +22,7 @@ class table__k_e_r_n(DefaultTable.DefaultTable):
 		if (len(data) >= 8) and (version == 1):
 			# AAT Apple's "new" format. Hm.
 			version, nTables = struct.unpack(">LL", data[:8])
-			self.version = version / 0x10000
+			self.version = fi2fl(version, 16)
 			data = data[8:]
 			apple = True
 		else:
@@ -53,7 +54,7 @@ class table__k_e_r_n(DefaultTable.DefaultTable):
 			nTables = 0
 		if self.version == 1.0:
 			# AAT Apple's "new" format.
-			data = struct.pack(">ll", self.version * 0x10000, nTables)
+			data = struct.pack(">ll", fl2fi(self.version, 16), nTables)
 		else:
 			data = struct.pack(">HH", self.version, nTables)
 		if hasattr(self, "kernTables"):

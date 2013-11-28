@@ -48,6 +48,7 @@ calcsize(format)
 
 from __future__ import print_function, division
 from fontTools.misc.py23 import *
+from fontTools.misc.fixedTools import fixedToFloat as fi2fl, floatToFixed as fl2fi
 import struct
 import re
 
@@ -67,7 +68,7 @@ def pack(format, object):
 		value = object[name]
 		if name in fixes:
 			# fixed point conversion
-			value = int(round(value*fixes[name]))
+			value = fl2fi(value, fixes[name])
 		elif isinstance(value, basestring):
 			value = tobytes(value)
 		elements.append(value)
@@ -89,7 +90,7 @@ def unpack(format, data, object=None):
 		value = elements[i]
 		if name in fixes:
 			# fixed point conversion
-			value = value / fixes[name]
+			value = fi2fl(value, fixes[name])
 		elif isinstance(value, bytes):
 			try:
 				value = tostr(value)
@@ -163,7 +164,7 @@ def getformat(format):
 						raise Error("fixed point must be 8, 16 or 32 bits long")
 					formatchar = _fixedpointmappings[bits]
 					assert m.group(5) == "F"
-					fixes[name] = float(1 << after)
+					fixes[name] = after
 			formatstring = formatstring + formatchar
 		_formatcache[format] = formatstring, names, fixes
 	return formatstring, names, fixes
