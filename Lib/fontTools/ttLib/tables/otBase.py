@@ -137,8 +137,7 @@ class OTTableReader(object):
 	def readUInt24(self):
 		pos = self.pos
 		newpos = pos + 3
-		value = (byteord(self.data[pos]) << 16) | (byteord(self.data[pos+1]) << 8) | byteord(self.data[pos+2])
-		value, = struct.unpack(">H", self.data[pos:newpos])
+		value, = struct.unpack(">l", b'\0'+self.data[pos:newpos])
 		self.pos = newpos
 		return value
 
@@ -406,7 +405,8 @@ class OTTableWriter(object):
 
 	def writeUInt24(self, value):
 		assert 0 <= value < 0x1000000
-		self.items.append(bytesjoin(bytechr(v) for v in (value>>16, (value>>8)&0xFF, value&0xff)))
+		b = struct.pack(">L", value)
+		self.items.append(b[1:])
 	
 	def writeLong(self, value):
 		self.items.append(struct.pack(">l", value))
