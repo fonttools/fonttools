@@ -284,7 +284,7 @@ class T2CharString(ByteCodeBase):
 			token = program[i]
 			i = i + 1
 			tp = type(token)
-			if tp == str:
+			if issubclass(tp, basestring):
 				try:
 					bytecode.extend(bytechr(b) for b in opcodes[token])
 				except KeyError:
@@ -404,7 +404,7 @@ class T2CharString(ByteCodeBase):
 					program.append(token)
 					if token in ('hintmask', 'cntrmask'):
 						mask = content[i]
-						maskBytes = ""
+						maskBytes = b""
 						for j in range(0, len(mask), 8):
 							maskBytes = maskBytes + bytechr(binary2num(mask[j:j+8]))
 						program.append(maskBytes)
