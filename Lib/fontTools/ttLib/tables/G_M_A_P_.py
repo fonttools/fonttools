@@ -79,7 +79,7 @@ class table_G_M_A_P_(DefaultTable.DefaultTable):
 	
 	def decompile(self, data, ttFont):
 		dummy, newData = sstruct.unpack2(GMAPFormat, data, self)
-		self.psFontName = newData[:self.fontNameLength]
+		self.psFontName = tostr(newData[:self.fontNameLength])
 		assert (self.recordsOffset % 4) == 0, "GMAP error: recordsOffset is not 32 bit aligned."
 		newData = data[self.recordsOffset:]
 		self.gmapRecords = []
@@ -94,8 +94,8 @@ class table_G_M_A_P_(DefaultTable.DefaultTable):
 		self.fontNameLength = len(self.psFontName)
 		self.recordsOffset = 4 *(((self.fontNameLength + 12)  + 3) // 4)
 		data = sstruct.pack(GMAPFormat, self)
-		data = data + self.psFontName
-		data = data + "\0" * (self.recordsOffset - len(data))
+		data = data + tobytes(self.psFontName)
+		data = data + b"\0" * (self.recordsOffset - len(data))
 		for record in self.gmapRecords:
 			data = data + record.compile(ttFont)
 		return data
