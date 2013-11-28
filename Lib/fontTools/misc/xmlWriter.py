@@ -41,33 +41,29 @@ class XMLWriter:
 		"""Writes text in a CDATA section."""
 		self._writeraw("<![CDATA[" + string + "]]>")
 
-	def writeutf16be(self, data):
-		"""Writes a UTF-16 bytes() sequence into the XML
-		as native Unicode.  When this is read in xmlReader,
-		the original bytes can be recovered by encoding to
-		'utf-16-be'."""
-		self._writeraw(escape(data.decode('utf-16-be')))
-
-	def write8bit(self, data):
+	def write8bit(self, data, strip=False):
 		"""Writes a bytes() sequence into the XML, escaping
 		non-ASCII bytes.  When this is read in xmlReader,
 		the original bytes can be recovered by encoding to
 		'latin-1'."""
-		self._writeraw(escape8bit(data))
+		self._writeraw(escape8bit(data), strip=strip)
 
-	def write16bit(self, data):
-		self._writeraw(escape16bit(data))
+	def write16bit(self, data, strip=False):
+		self._writeraw(escape16bit(data), strip=strip)
 	
 	def write_noindent(self, string):
 		"""Writes text without indentation."""
 		self._writeraw(escape(string), indent=False)
 	
-	def _writeraw(self, data, indent=True):
+	def _writeraw(self, data, indent=True, strip=False):
 		"""Writes bytes, possibly indented."""
 		if indent and self.needindent:
 			self.file.write(self.indentlevel * self.indentwhite)
 			self.needindent = 0
-		self.file.write(tostr(data, encoding="utf-8"))
+		s = tostr(data, encoding="utf-8")
+		if (strip):
+			s = s.strip()
+		self.file.write(s)
 	
 	def newline(self):
 		self.file.write("\n")
