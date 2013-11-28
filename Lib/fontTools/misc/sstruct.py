@@ -55,7 +55,8 @@ __version__ = "1.2"
 __copyright__ = "Copyright 1998, Just van Rossum <just@letterror.com>"
 
 
-error = "sstruct.error"
+class Error(Exception):
+	pass
 
 def pack(format, object):
 	formatstring, names, fixes = getformat(format)
@@ -145,11 +146,11 @@ def getformat(format):
 			if m:
 				formatchar = m.group(1)
 				if formatchar != 'x' and formatstring:
-					raise error("a special format char must be first")
+					raise Error("a special format char must be first")
 			else:
 				m = _elementRE.match(line)
 				if not m:
-					raise error("syntax error in format: '%s'" % line)
+					raise Error("syntax error in format: '%s'" % line)
 				name = m.group(1)
 				names.append(name)
 				formatchar = m.group(2)
@@ -159,7 +160,7 @@ def getformat(format):
 					after = int(m.group(4))
 					bits = before + after
 					if bits not in [8, 16, 32]:
-						raise error("fixed point must be 8, 16 or 32 bits long")
+						raise Error("fixed point must be 8, 16 or 32 bits long")
 					formatchar = _fixedpointmappings[bits]
 					assert m.group(5) == "F"
 					fixes[name] = float(1 << after)
