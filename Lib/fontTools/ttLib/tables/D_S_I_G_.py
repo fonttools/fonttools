@@ -3,6 +3,7 @@ from fontTools.misc.py23 import *
 from fontTools.misc.textTools import safeEval
 from fontTools.misc import sstruct
 from . import DefaultTable
+import base64
 
 DSIG_HeaderFormat = """
 	> # big endian
@@ -98,6 +99,16 @@ pem_spam = lambda l, spam = {
 	"-----BEGIN PKCS7-----": True, "-----END PKCS7-----": True, "": True
 }: not spam.get(l.strip())
 
+def b64encode(b):
+	s = base64.b64encode(b)
+	# Line-break at 76 chars.
+	items = []
+	while s:
+		items.append(tostr(s[:76]))
+		items.append('\n')
+		s = s[76:]
+	return strjoin(items)
+
 class SignatureRecord:
 	def __repr__(self):
 		return "<%s: %s>" % (self.__class__.__name__, self.__dict__)
@@ -106,7 +117,7 @@ class SignatureRecord:
 		writer.begintag(self.__class__.__name__, format=self.ulFormat)
 		writer.newline()
 		writer.write_noindent("-----BEGIN PKCS7-----\n")
-		writer.write_noindent(self.pkcs7.encode('base64'))
+		writer.write_noindent(b64encode(self.pkcs7))
 		writer.write_noindent("-----END PKCS7-----\n")
 		writer.endtag(self.__class__.__name__)
 	
@@ -114,4 +125,4 @@ class SignatureRecord:
 		self.ulFormat = safeEval(attrs["format"])
 		self.usReserved1 = safeEval(attrs.get("reserved1", "0"))
 		self.usReserved2 = safeEval(attrs.get("reserved2", "0"))
-		self.pkcs7 = strjoin(filter(pem_spam, content)).decode('base64')
+		self.pkcs7 = base64.b64decode(tobytes(strjoin(filter(pem_spam, content))))
