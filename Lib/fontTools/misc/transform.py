@@ -268,18 +268,6 @@ class Transform:
 		"""
 		return self.__affine[index]
 
-	def __getslice__(self, i, j):
-		"""Transform instances also behave like sequences and even support
-		slicing:
-			>>> t = Offset(100, 200)
-			>>> t
-			<Transform [1 0 0 1 100 200]>
-			>>> t[4:]
-			(100, 200)
-			>>>
-		"""
-		return self.__affine[i:j]
-
 	def __lt__(self, other):
 		"""Transform instances are comparable:
 			>>> t1 = Identity.scale(2, 3).translate(4, 6)
