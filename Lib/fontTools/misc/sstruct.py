@@ -67,6 +67,8 @@ def pack(format, object):
 		if name in fixes:
 			# fixed point conversion
 			value = int(round(value*fixes[name]))
+		elif isinstance(value, str):
+			value = tobytes(value)
 		elements.append(value)
 	data = struct.pack(*(formatstring,) + tuple(elements))
 	return data
@@ -74,6 +76,7 @@ def pack(format, object):
 def unpack(format, data, object=None):
 	if object is None:
 		object = {}
+	data = tobytes(data)
 	formatstring, names, fixes = getformat(format)
 	if isinstance(object, dict):
 		d = object
@@ -86,6 +89,11 @@ def unpack(format, data, object=None):
 		if name in fixes:
 			# fixed point conversion
 			value = value / fixes[name]
+		elif isinstance(value, bytes):
+			try:
+				value = tostr(value)
+			except UnicodeDecodeError:
+				pass
 		d[name] = value
 	return object
 
