@@ -1063,19 +1063,14 @@ class cmap_format_13(cmap_format_12_or_13):
 
 
 def  cvtToUVS(threeByteString):
-	if sys.byteorder != "big":
-		data = b"\0" +threeByteString
-	else:
-		data = threeByteString + b"\0"
+	data = b"\0" + threeByteString
 	val, = struct.unpack(">L", data)
 	return val
 
 def  cvtFromUVS(val):
-	if sys.byteorder != "big":
-		threeByteString = struct.pack(">L", val)[1:]
-	else:
-		threeByteString = struct.pack(">L", val)[:3]
-	return threeByteString
+	assert 0 <= val < 0x1000000
+	fourByteString = struct.pack(">L", val)
+	return fourByteString[1:]
 
 
 class cmap_format_14(CmapSubtable):
