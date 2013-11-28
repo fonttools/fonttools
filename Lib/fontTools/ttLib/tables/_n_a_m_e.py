@@ -60,6 +60,7 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 			if name.string in done:
 				name.offset, name.length = done[name.string]
 			else:
+				# TODO Convert to UTF-16?
 				name.offset, name.length = done[name.string] = len(stringData), len(name.string)
 				stringData = stringData + name.string
 			data = data + sstruct.pack(nameRecordFormat, name)
@@ -98,13 +99,13 @@ class NameRecord:
 				("langID", hex(self.langID)),
 						])
 		writer.newline()
-		if self.platformID == 0 or (self.platformID == 3 and self.platEncID in (0, 1)):
+		if self.platformID == 0 or (self.platformID == 3 and self.platEncID in (0, 1, 10)):
+			string = self.string
 			if len(self.string) % 2:
 				# no, shouldn't happen, but some of the Apple
 				# tools cause this anyway :-(
-				writer.write16bit(self.string + "\0")
-			else:
-				writer.write16bit(self.string)
+				string = string + b'\0'
+			writer.writeutf16be(string)
 		else:
 			writer.write8bit(self.string)
 		writer.newline()
@@ -117,9 +118,11 @@ class NameRecord:
 		self.platEncID = safeEval(attrs["platEncID"])
 		self.langID =  safeEval(attrs["langID"])
 		s = strjoin(content).strip()
-		if self.platformID == 0 or (self.platformID == 3 and self.platEncID in (0, 1)):
-			self.string = s.encode("utf_16_be")
+		if self.platformID == 0 or (self.platformID == 3 and self.platEncID in (0, 1, 10)):
+			# This is the inverse of writeutf16be.
+			self.string = s.encode("utf-16-be")
 		else:
+			# This is the inverse of write8bit...
 			self.string = s.encode("latin1")
 	
 	def __lt__(self, other):
