@@ -226,7 +226,7 @@ class IndexCompiler:
 			if hasattr(item, "toFile"):
 				item.toFile(file)
 			else:
-				file.write(item)
+				file.write(tobytes(item))
 
 
 class IndexedStringsCompiler(IndexCompiler):
@@ -1611,7 +1611,7 @@ class IndexedStrings:
 		if file is None:
 			strings = []
 		else:
-			strings = list(Index(file))
+			strings = [tostr(s) for s in Index(file)]
 		self.strings = strings
 	
 	def getCompiler(self):
