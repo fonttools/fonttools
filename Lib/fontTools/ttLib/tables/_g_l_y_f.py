@@ -7,6 +7,7 @@ from fontTools.misc import sstruct
 from fontTools import ttLib
 from fontTools.misc.textTools import safeEval
 from fontTools.misc.arrayTools import calcBounds
+from fontTools.misc.fixedTools import fixedToFloat as fi2fl, floatToFixed as fl2fi
 from . import DefaultTable
 from . import ttProgram
 import sys
@@ -774,17 +775,17 @@ class GlyphComponent(object):
 		
 		if self.flags & WE_HAVE_A_SCALE:
 			scale, = struct.unpack(">h", data[:2])
-			self.transform = [[scale/0x4000, 0], [0, scale/0x4000]]  # fixed 2.14
+			self.transform = [[fi2fl(scale,14), 0], [0, fi2fl(scale,14)]]  # fixed 2.14
 			data = data[2:]
 		elif self.flags & WE_HAVE_AN_X_AND_Y_SCALE:
 			xscale, yscale = struct.unpack(">hh", data[:4])
-			self.transform = [[xscale/0x4000, 0], [0, yscale/0x4000]]  # fixed 2.14
+			self.transform = [[fi2fl(xscale,14), 0], [0, fi2fl(yscale,14)]]  # fixed 2.14
 			data = data[4:]
 		elif self.flags & WE_HAVE_A_TWO_BY_TWO:
 			(xscale, scale01, 
 					scale10, yscale) = struct.unpack(">hhhh", data[:8])
-			self.transform = [[xscale/0x4000, scale01/0x4000],
-					  [scale10/0x4000, yscale/0x4000]] # fixed 2.14
+			self.transform = [[fi2fl(xscale,14), fi2fl(scale01,14)],
+					  [fi2fl(scale10,14), fi2fl(yscale,14)]] # fixed 2.14
 			data = data[8:]
 		more = self.flags & MORE_COMPONENTS
 		haveInstructions = self.flags & WE_HAVE_INSTRUCTIONS
@@ -820,7 +821,7 @@ class GlyphComponent(object):
 				flags = flags | ARG_1_AND_2_ARE_WORDS
 		
 		if hasattr(self, "transform"):
-			transform = [[int(x * 0x4000 + .5) for x in row] for row in self.transform]
+			transform = [[fl2fi(x,14) for x in row] for row in self.transform]
 			if transform[0][1] or transform[1][0]:
 				flags = flags | WE_HAVE_A_TWO_BY_TWO
 				data = data + struct.pack(">hhhh", 
