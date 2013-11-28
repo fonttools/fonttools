@@ -32,7 +32,7 @@ def decrypt(cipherstring, R):
 	for cipher in cipherstring:
 		plain, R = _decryptChar(cipher, R)
 		plainList.append(plain)
-	plainstring = ''.join(plainList)
+	plainstring = strjoin(plainList)
 	return plainstring, int(R)
 
 def encrypt(plainstring, R):
@@ -40,7 +40,7 @@ def encrypt(plainstring, R):
 	for plain in plainstring:
 		cipher, R = _encryptChar(plain, R)
 		cipherList.append(cipher)
-	cipherstring = ''.join(cipherList)
+	cipherstring = strjoin(cipherList)
 	return cipherstring, int(R)
 
 
@@ -50,7 +50,7 @@ def hexString(s):
 
 def deHexString(h):
 	import binascii
-	h = "".join(h.split())
+	h = strjoin(h.split())
 	return binascii.unhexlify(h)
 
 

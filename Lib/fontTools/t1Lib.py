@@ -170,7 +170,7 @@ def readLWFN(path, onlyHeader=0):
 				raise T1Error('bad chunk code: ' + repr(code))
 	finally:
 		Res.CloseResFile(resRef)
-	data = ''.join(data)
+	data = bytesjoin(data)
 	assertType1(data)
 	return data
 
@@ -194,7 +194,7 @@ def readPFB(path, onlyHeader=0):
 		if onlyHeader:
 			break
 	f.close()
-	data = ''.join(data)
+	data = bytesjoin(data)
 	assertType1(data)
 	return data
 
@@ -212,7 +212,7 @@ def readOther(path):
 			data.append(deHexString(chunk))
 		else:
 			data.append(chunk)
-	return ''.join(data)
+	return bytesjoin(data)
 
 # file writing tools
 
@@ -308,7 +308,7 @@ def decryptType1(data):
 				data.append(chunk[:-len(EEXECBEGIN)-1])
 			else:
 				data.append(chunk)
-	return ''.join(data)
+	return bytesjoin(data)
 
 def findEncryptedChunks(data):
 	chunks = []
@@ -334,7 +334,7 @@ def findEncryptedChunks(data):
 	return chunks
 
 def deHexString(hexstring):
-	return eexec.deHexString(''.join(hexstring.split()))
+	return eexec.deHexString(strjoin(hexstring.split()))
 
 
 # Type 1 assertion

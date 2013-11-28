@@ -406,7 +406,7 @@ class OTTableWriter(object):
 
 	def writeUInt24(self, value):
 		assert 0 <= value < 0x1000000
-		self.items.append(''.join(bytechr(v) for v in (value>>16, (value>>8)&0xFF, value&0xff)))
+		self.items.append(bytesjoin(bytechr(v) for v in (value>>16, (value>>8)&0xFF, value&0xff)))
 	
 	def writeLong(self, value):
 		self.items.append(struct.pack(">l", value))

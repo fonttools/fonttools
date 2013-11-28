@@ -73,7 +73,7 @@ class table_G_P_K_G_(DefaultTable.DefaultTable):
 		dataList.append(glyphletArray.tostring())
 		dataList += self.GMAPs
 		dataList += self.glyphlets
-		data = "".join(dataList)
+		data = bytesjoin(dataList)
 		return data
 	
 	def toXML(self, writer, ttFont):

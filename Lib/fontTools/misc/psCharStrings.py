@@ -49,18 +49,15 @@ class ByteCodeBase:
 		return -(b0-251)*256 - b1 - 108, index+1
 	
 	def read_shortInt(self, b0, data, index):
-		bin = data[index] + data[index+1]
-		value, = struct.unpack(">h", bin)
+		value, = struct.unpack(">h", data[index:index+2])
 		return value, index+2
 	
 	def read_longInt(self, b0, data, index):
-		bin = data[index] + data[index+1] + data[index+2] + data[index+3]
-		value, = struct.unpack(">l", bin)
+		value, = struct.unpack(">l", data[index:index+4])
 		return value, index+4
 	
 	def read_fixed1616(self, b0, data, index):
-		bin = data[index] + data[index+1] + data[index+2] + data[index+3]
-		value, = struct.unpack(">l", bin)
+		value, = struct.unpack(">l", data[index:index+4])
 		return value / 65536, index+4
 	
 	def read_realNumber(self, b0, data, index):
@@ -202,7 +199,7 @@ encodeIntT2 = getIntEncoder("t2")
 
 def encodeFixed(f, pack=struct.pack):
 	# For T2 only
-	return "\xff" + pack(">l", int(round(f * 65536)))
+	return b"\xff" + pack(">l", int(round(f * 65536)))
 
 def encodeFloat(f):
 	# For CFF only, used in cffLib
@@ -302,7 +299,7 @@ class T2CharString(ByteCodeBase):
 			else:
 				assert 0, "unsupported type: %s" % tp
 		try:
-			bytecode = "".join(bytecode)
+			bytecode = bytesjoin(bytecode)
 		except TypeError:
 			print(bytecode)
 			raise
@@ -375,7 +372,7 @@ class T2CharString(ByteCodeBase):
 						bits = []
 						for byte in hintMask:
 							bits.append(num2binary(byteord(byte), 8))
-						hintMask = ''.join(bits)
+						hintMask = strjoin(bits)
 						line = ' '.join(args + [token, hintMask])
 					else:
 						line = ' '.join(args + [token])
@@ -390,7 +387,7 @@ class T2CharString(ByteCodeBase):
 		if attrs.get("raw"):
 			self.setBytecode(readHex(content))
 			return
-		content = "".join(content)
+		content = strjoin(content)
 		content = content.split()
 		program = []
 		end = len(content)

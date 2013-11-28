@@ -515,7 +515,7 @@ class cmap_format_2(CmapSubtable):
 		for subhead in 	subHeaderList[:-1]:
 			for gi in subhead.glyphIndexArray:
 				dataList.append(struct.pack(">H", gi))
-		data = "".join(dataList)
+		data = bytesjoin(dataList)
 		assert (len(data) == length), "Error: cmap format 2 is not same length as calculated! actual: " + str(len(data))+ " calc : " + str(length)
 		return data
 
@@ -998,7 +998,7 @@ class cmap_format_12_or_13(CmapSubtable):
 			lastCharCode = charCode
 		dataList.append(struct.pack(">LLL", startCharCode, lastCharCode, startGlyphID))
 		nGroups = nGroups + 1
-		data = "".join(dataList)
+		data = bytesjoin(dataList)
 		lengthSubtable = len(data) +16
 		assert len(data) == (nGroups*12) == (lengthSubtable-16) 
 		return struct.pack(">HHLLL", self.format, self.reserved , lengthSubtable, self.language, nGroups) + data
@@ -1246,7 +1246,7 @@ class cmap_format_14(CmapSubtable):
 			vrec = struct.pack(">3sLL", cvtFromUVS(uvs), defOVSOffset, nonDefUVSOffset)
 			varSelectorRecords.append(vrec)
 				
-		data = "".join(varSelectorRecords) + "".join(data)
+		data = bytesjoin(varSelectorRecords) + bytesjoin(data)
 		self.length = 10 + len(data)
 		headerdata = struct.pack(">HLL", self.format, self.length , self.numVarSelectorRecords)
 		self.data = headerdata + data

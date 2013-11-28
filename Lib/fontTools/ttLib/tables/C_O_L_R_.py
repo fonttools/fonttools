@@ -74,7 +74,7 @@ class table_C_O_L_R_(DefaultTable.DefaultTable):
 		dataList = [struct.pack(">HHLLH", self.version, len(glyphMap), 14, 14+6*len(glyphMap), len(layerMap))]
 		dataList.extend(glyphMap)
 		dataList.extend(layerMap)
-		data = "".join(dataList)
+		data = bytesjoin(dataList)
 		return data
 
 	def toXML(self, writer, ttFont):

@@ -197,7 +197,7 @@ class table_E_B_L_C_(DefaultTable.DefaultTable):
 			dataList.append(data)
 		dataList.extend(indexSubTablePairDataList)
 
-		return ''.join(dataList)
+		return bytesjoin(dataList)
 
 	def toXML(self, writer, ttFont):
 		writer.simpletag('header', [('version', self.version)])
@@ -477,7 +477,7 @@ def _createOffsetArrayIndexSubTableMixin(formatStringForDataType):
 			# Take care of any padding issues. Only occurs in format 3.
 			if offsetDataSize * len(dataList) % 4 != 0:
 				dataList.append(struct.pack(dataFormat, 0))
-			return ''.join(dataList)
+			return bytesjoin(dataList)
 
 	return OffsetArrayIndexSubTableMixin
 
@@ -508,7 +508,7 @@ class FixedSizeIndexSubTableMixin:
 		# Make sure that the data isn't bigger than the fixed size.
 		assert len(data) <= self.imageSize, "Data in indexSubTable format %d must be less than the fixed size." % self.indexFormat
 		# Pad the data so that it matches the fixed size.
-		pad = (self.imageSize - len(data)) * '\0'
+		pad = (self.imageSize - len(data)) * b'\0'
 		return data + pad
 
 class eblc_index_sub_table_1(_createOffsetArrayIndexSubTableMixin('L'), EblcIndexSubTable):
@@ -534,7 +534,7 @@ class eblc_index_sub_table_2(FixedSizeIndexSubTableMixin, EblcIndexSubTable):
 		dataList = [EblcIndexSubTable.compile(self, ttFont)]
 		dataList.append(struct.pack(">L", self.imageSize))
 		dataList.append(sstruct.pack(bigGlyphMetricsFormat, self.metrics))
-		return ''.join(dataList)
+		return bytesjoin(dataList)
 
 class eblc_index_sub_table_3(_createOffsetArrayIndexSubTableMixin('H'), EblcIndexSubTable):
 	pass
@@ -576,7 +576,7 @@ class eblc_index_sub_table_4(EblcIndexSubTable):
 		dataList.append(struct.pack(">L", len(glyphIds)))
 		tmp = [struct.pack(codeOffsetPairFormat, *cop) for cop in zip(idsPlusPad, offsets)]
 		dataList += tmp
-		data = ''.join(dataList)
+		data = bytesjoin(dataList)
 		return data
 
 class eblc_index_sub_table_5(FixedSizeIndexSubTableMixin, EblcIndexSubTable):
@@ -604,7 +604,7 @@ class eblc_index_sub_table_5(FixedSizeIndexSubTableMixin, EblcIndexSubTable):
 		dataList += [struct.pack(">H", curId) for curId in glyphIds]
 		if len(glyphIds) % 2 == 1:
 			dataList.append(struct.pack(">H", 0))
-		return ''.join(dataList)
+		return bytesjoin(dataList)
 
 # Dictionary of indexFormat to the class representing that format.
 eblc_sub_table_classes = {

@@ -260,7 +260,7 @@ class Program:
 	
 	def fromXML(self, name, attrs, content, ttFont):
 		if name == "assembly":
-			self.fromAssembly(''.join(content))
+			self.fromAssembly(strjoin(content))
 			self._assemble()
 			del self.assembly
 		else:

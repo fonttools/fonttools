@@ -328,7 +328,7 @@ class Index:
 			print("    index count: %s offSize: %s" % (count, offSize))
 		assert offSize <= 4, "offSize too large: %s" % offSize
 		self.offsets = offsets = []
-		pad = '\0' * (4 - offSize)
+		pad = b'\0' * (4 - offSize)
 		for index in range(count+1):
 			chunk = file.read(offSize)
 			chunk = pad + chunk
@@ -853,7 +853,7 @@ def packCharset0(charset, isCID, strings):
 
 	for name in charset[1:]:
 		data.append(packCard16(getNameID(name,strings)))
-	return "".join(data)
+	return bytesjoin(data)
 
 
 def packCharset(charset, isCID, strings):
@@ -889,7 +889,7 @@ def packCharset(charset, isCID, strings):
 		nLeftFunc = packCard16
 	for first, nLeft in ranges:
 		data.append(packCard16(first) + nLeftFunc(nLeft))
-	return "".join(data)
+	return bytesjoin(data)
 
 def parseCharset0(numGlyphs, file, strings, isCID):
 	charset = [".notdef"]
@@ -1049,7 +1049,7 @@ def packEncoding0(charset, encoding, strings):
 		if code is None:
 			code = 0
 		data.append(packCard8(code))
-	return "".join(data)
+	return bytesjoin(data)
 
 def packEncoding1(charset, encoding, strings):
 	format = 1
@@ -1082,7 +1082,7 @@ def packEncoding1(charset, encoding, strings):
 		if first == -1:  # unencoded
 			first = 0
 		data.append(packCard8(first) + packCard8(nLeft))
-	return "".join(data)
+	return bytesjoin(data)
 
 
 class FDArrayConverter(TableConverter):
@@ -1138,7 +1138,7 @@ def packFDSelect0(fdSelectArray):
 	data = [packCard8(format)]
 	for index in fdSelectArray:
 		data.append(packCard8(index))
-	return "".join(data)
+	return bytesjoin(data)
 
 
 def packFDSelect3(fdSelectArray):
@@ -1161,7 +1161,7 @@ def packFDSelect3(fdSelectArray):
 		data.append(packCard16(fdRange[0]))
 		data.append(packCard8(fdRange[1]))
 	data.append(packCard16(sentinelGID))
-	return "".join(data)
+	return bytesjoin(data)
 
 
 class FDSelectCompiler:
@@ -1350,7 +1350,7 @@ class DictCompiler:
 				arghandler = getattr(self, "arg_" + argType)
 				data.append(arghandler(value))
 			data.append(op)
-		return "".join(data)
+		return bytesjoin(data)
 	
 	def toFile(self, file):
 		file.write(self.compile("toFile"))
@@ -1363,7 +1363,7 @@ class DictCompiler:
 		data = []
 		for num in value:
 			data.append(encodeNumber(num))
-		return "".join(data)
+		return bytesjoin(data)
 	def arg_delta(self, value):
 		out = []
 		last = 0
@@ -1373,7 +1373,7 @@ class DictCompiler:
 		data = []
 		for num in out:
 			data.append(encodeNumber(num))
-		return "".join(data)
+		return bytesjoin(data)
 
 
 def encodeNumber(num):

@@ -289,7 +289,7 @@ class FontFamily:
 			for firstchar, secondchar, kerndistance in table:
 				data.append(struct.pack(">cch", bytechr(firstchar), bytechr(secondchar), kerndistance))
 		
-		data = ''.join(data)
+		data = bytesjoin(data)
 		
 		if DEBUG:
 			print("kerning table is the same?", self._rawkerningtables == data and 'yes.' or 'no.')
