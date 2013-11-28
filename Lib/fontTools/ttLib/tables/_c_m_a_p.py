@@ -1064,9 +1064,9 @@ class cmap_format_13(cmap_format_12_or_13):
 
 def  cvtToUVS(threeByteString):
 	if sys.byteorder != "big":
-		data = "\0" +threeByteString
+		data = b"\0" +threeByteString
 	else:
-		data = threeByteString + "\0"
+		data = threeByteString + b"\0"
 	val, = struct.unpack(">L", data)
 	return val
 
