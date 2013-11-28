@@ -219,7 +219,7 @@ class FontTreeModel(gtk.GenericTreeModel):
 	def on_iter_parent(self, rowref):
 		return rowref.get_parent()
 
-class Inspect:
+class Inspect(object):
 
 	def _delete_event(self, widget, event, data=None):
 		gtk.main_quit()
