@@ -31,7 +31,7 @@ class table_S_I_N_G_(DefaultTable.DefaultTable):
 		self.uniqueName = self.decompileUniqueName(self.uniqueName)
 		self.nameLength = byteord(self.nameLength)
 		assert len(rest) == self.nameLength
-		self.baseGlyphName = rest
+		self.baseGlyphName = tostr(rest)
 		
 		rawMETAMD5 = self.METAMD5
 		self.METAMD5 = "[" + hex(byteord(self.METAMD5[0]))
@@ -46,35 +46,36 @@ class table_S_I_N_G_(DefaultTable.DefaultTable):
 			if val == 0:
 				break
 			if (val > 31) or (val < 128):
-				name = name + char
+				name += chr(val)
 			else:
 				octString = oct(val)
 				if len(octString) > 3:
 					octString = octString[1:] # chop off that leading zero.
 				elif len(octString) < 3:
 					octString.zfill(3)
-				name = name + "\\" + octString
+				name += "\\" + octString
 		return name
 		
 		
 	def compile(self, ttFont):
-		self.nameLength = bytechr(len(self.baseGlyphName))
-		self.uniqueName = self.compilecompileUniqueName(self.uniqueName, 28)
+		d = self.__dict__.copy()
+		d["nameLength"] = bytechr(len(self.baseGlyphName))
+		d["uniqueName"] = self.compilecompileUniqueName(self.uniqueName, 28)
 		METAMD5List = eval(self.METAMD5)
-		self.METAMD5 = ""
+		d["METAMD5"] = b""
 		for val in METAMD5List:
-			self.METAMD5 = self.METAMD5 + bytechr(val)
-		assert (len(self.METAMD5) == 16), "Failed to pack 16 byte MD5 hash in SING table"
-		data = sstruct.pack(SINGFormat, self)
-		data = data + self.baseGlyphName
+			d["METAMD5"] += bytechr(val)
+		assert (len(d["METAMD5"]) == 16), "Failed to pack 16 byte MD5 hash in SING table"
+		data = sstruct.pack(SINGFormat, d)
+		data = data + tobytes(self.baseGlyphName)
 		return data
 	
 	def compilecompileUniqueName(self, name, length):
 		nameLen = len(name)
 		if length <= nameLen:
-			name[:length-1] + "\000"
+			name = name[:length-1] + "\000"
 		else:
-			name.join( (nameLen - length)* "\000")
+			name += (nameLen - length) * "\000"
 		return name
 
 

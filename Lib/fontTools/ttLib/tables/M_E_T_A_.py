@@ -257,22 +257,17 @@ def mapXMLToUTF8(string):
 
 def mapUTF8toXML(string):
 	uString = string.decode('utf8')
-	string = bytes()
+	string = ""
 	for uChar in uString:
-		i = byteord(uChar)
+		i = ord(uChar)
 		if (i < 0x80) and (i > 0x1F):
-			string = string + bytechr(i)
+			string = string + uChar
 		else:
 			string = string + "&#x" + hex(i)[2:] + ";"
 	return string
 
 
 class StringRecord(object):
-	def __init__(self):
-		self.labelID = -1
-		self.string = ""
-		self.stringLen = -1
-		self.offset = -1
 
 	def toXML(self, writer, ttFont):
 		writer.begintag("StringRecord")
@@ -287,11 +282,15 @@ class StringRecord(object):
 		writer.newline()
 
 	def fromXML(self, name, attrs, content, ttFont):
-		value = attrs["value"]
-		if name == "string":
-			self.string = mapXMLToUTF8(value)
-		else:
-			setattr(self, name, safeEval(value))
+		for element in content:
+			if isinstance(element, basestring):
+				continue
+			name, attrs, content = element
+			value = attrs["value"]
+			if name == "string":
+				self.string = mapXMLToUTF8(value)
+			else:
+				setattr(self, name, safeEval(value))
 
 	def compile(self, parentTable):
 		data = sstruct.pack(METAStringRecordFormat, self)
