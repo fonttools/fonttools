@@ -253,7 +253,7 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 		for doc, startGID, endGID in self.docList:
 			writer.begintag("svgDoc", startGlyphID=startGID, endGlyphID=endGID)
 			writer.newline()
-			writer.writeraw("<![CDATA["+ doc + "]]>")
+			writer.writecdata("<![CDATA[" + doc + "]]>")
 			writer.newline()
 			writer.endtag("svgDoc")
 			writer.newline()
@@ -263,7 +263,7 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 			writer.newline()
 			for uiNameID in self.colorPalettes.colorParamUINameIDs:
 				writer.begintag("colorParamUINameID")
-				writer.writeraw(str(uiNameID))
+				writer.write(uiNameID)
 				writer.endtag("colorParamUINameID")
 				writer.newline()
 			for colorPalette in self.colorPalettes.colorPaletteList:
