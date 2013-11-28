@@ -418,10 +418,12 @@ class BitmapGlyph:
 			if not isinstance(element, tuple):
 				continue
 			name, attr, content = element
+			if not name.endswith('imagedata'):
+				continue
 			# Chop off 'imagedata' from the tag to get just the option.
 			option = name[:-len('imagedata')]
-			if option in self.__class__.xmlDataFunctions:
-				self.readData(name, attrs, content, ttFont)
+			assert option in self.__class__.xmlDataFunctions
+			self.readData(name, attrs, content, ttFont)
 
 	# Some of the glyphs have the metrics. This allows for metrics to be
 	# added if the glyph format has them. Default behavior is to do nothing.

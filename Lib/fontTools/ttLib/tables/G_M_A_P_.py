@@ -121,7 +121,7 @@ class table_G_M_A_P_(DefaultTable.DefaultTable):
 			gmapRecord = GMAPRecord()
 			self.gmapRecords.append(gmapRecord)
 			for element in content:
-				if isinstance(element, str):
+				if isinstance(element, basestring):
 					continue
 				name, attrs, content = element
 				gmapRecord.fromXML(name, attrs, content, ttFont)

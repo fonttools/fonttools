@@ -112,7 +112,7 @@ class table_G_P_K_G_(DefaultTable.DefaultTable):
 			if not hasattr(self, "GMAPs"):
 				self.GMAPs = []
 			for element in content:
-				if isinstance(element, str):
+				if isinstance(element, basestring):
 					continue
 				itemName, itemAttrs, itemContent = element
 				if itemName == "hexdata":
@@ -121,7 +121,7 @@ class table_G_P_K_G_(DefaultTable.DefaultTable):
 			if not hasattr(self, "glyphlets"):
 				self.glyphlets = []
 			for element in content:
-				if isinstance(element, str):
+				if isinstance(element, basestring):
 					continue
 				itemName, itemAttrs, itemContent = element
 				if itemName == "hexdata":
