@@ -33,7 +33,6 @@ class XMLReader:
 	def _parseFile(self, file):
 		from xml.parsers.expat import ParserCreate
 		parser = ParserCreate()
-		parser.returns_unicode = 0
 		parser.StartElementHandler = self._startElementHandler
 		parser.EndElementHandler = self._endElementHandler
 		parser.CharacterDataHandler = self._characterDataHandler
