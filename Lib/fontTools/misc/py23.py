@@ -39,7 +39,7 @@ if str == bytes:
 			if isinstance(self, bytes):
 				return self
 			else:
-				return self.encode('latin-1')
+				return self.encode('latin1')
 
 	def tostr(s, encoding='ascii'):
 		if not isinstance(s, str):
