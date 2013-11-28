@@ -72,6 +72,9 @@ class table_D_S_I_G_(DefaultTable.DefaultTable):
 			sigrec.ulOffset = offset
 			headers.append(sstruct.pack(DSIG_SignatureFormat, sigrec))
 			offset += sigrec.ulLength
+		if offset % 2:
+			# Pad to even bytes
+			data.append(b'\0')
 		return bytesjoin(headers+data)
 	
 	def toXML(self, xmlWriter, ttFont):
