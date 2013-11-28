@@ -1366,7 +1366,7 @@ class _MarkingT2Decompiler(psCharStrings.SimpleT2Decompiler):
 
 class _DehintingT2Decompiler(psCharStrings.SimpleT2Decompiler):
 
-  class Hints:
+  class Hints(object):
     def __init__(self):
       # Whether calling this charstring produces any hint stems
       self.has_hint = False
