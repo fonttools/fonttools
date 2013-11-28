@@ -108,7 +108,7 @@ class table_T_S_I__1(DefaultTable.DefaultTable):
 		if not hasattr(self, "glyphPrograms"):
 			self.glyphPrograms = {}
 			self.extraPrograms = {}
-		lines = ''.join(content).replace("\r", "\n").split("\n")
+		lines = strjoin(content).replace("\r", "\n").split("\n")
 		text = '\r'.join(lines[1:-1])
 		if name == "glyphProgram":
 			self.glyphPrograms[attrs["name"]] = text

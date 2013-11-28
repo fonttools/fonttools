@@ -54,7 +54,7 @@ class table_V_O_R_G_(DefaultTable.DefaultTable):
 		dataList = [ struct.pack(">Hh", rec[0], rec[1]) for rec in vOriginTable]
 		header = struct.pack(">HHhH", self.majorVersion, self.minorVersion, self.defaultVertOriginY, self.numVertOriginYMetrics)
 		dataList.insert(0, header)
-		data = "".join(dataList)
+		data = bytesjoin(dataList)
 		return data
 
 	def toXML(self, writer, ttFont):

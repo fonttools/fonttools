@@ -72,8 +72,8 @@ class NFNT:
 		for i in range(nEntries):
 			owTable[i] = bytechr(self.offsetTable[i]) + bytechr(self.widthTable[i])
 			locTable[i] = struct.pack("h", self.locTable[i])
-		owTable = ''.join(owTable)
-		locTable = ''.join(locTable)
+		owTable = bytesjoin(owTable)
+		locTable = bytesjoin(locTable)
 		assert len(locTable) == len(owTable) == 2 * (self.lastChar - self.firstChar + 3)
 		return header + self.bits + locTable + owTable
 	
@@ -159,7 +159,7 @@ class NFNT:
 				for x in range(8):
 					byte = byte | ((bitImage[8 * xByte + x, y] & 0x01) << (7 - x))
 				bits.append(bytechr(byte))
-		bits = ''.join(bits)
+		bits = bytesjoin(bits)
 		
 		# assign values
 		self.fontType = 0x9000

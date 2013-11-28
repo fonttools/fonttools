@@ -13,17 +13,17 @@ def safeEval(data, eval=eval):
 
 def readHex(content):
 	"""Convert a list of hex strings to binary data."""
-	return deHexStr(''.join([ chunk for chunk in content if isinstance(chunk,str) ]))
+	return deHexStr(strjoin([ chunk for chunk in content if isinstance(chunk,str) ]))
 
 def deHexStr(hexdata):
 	"""Convert a hex string to binary data."""
-	hexdata = ''.join(hexdata.split())
+	hexdata = strjoin(hexdata.split())
 	if len(hexdata) % 2:
 		hexdata = hexdata + "0"
 	data = []
 	for i in range(0, len(hexdata), 2):
 		data.append(bytechr(int(hexdata[i:i+2], 16)))
-	return "".join(data)
+	return bytesjoin(data)
 
 
 def hexStr(data):
@@ -56,7 +56,7 @@ def num2binary(l, bits=32):
 
 
 def binary2num(bin):
-	bin = ''.join(bin.split())
+	bin = strjoin(bin.split())
 	l = 0
 	for digit in bin:
 		l = l << 1

@@ -171,7 +171,7 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 			for entry in entries:
 				start = entry.svgDocOffset + subTableStart
 				end = start + entry.svgDocLength
-				doc = data[start:end]
+				doc = tostr(data[start:end], "utf-8")
 				self.docList.append( [doc, entry.startGlyphID, entry.endGlyphID] )
 
 	def compile(self, ttFont):
@@ -195,11 +195,11 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 			docOffset = curOffset
 			docLength = len(doc)
 			curOffset += docLength
-		 	entry = struct.pack(">HHLL", startGlyphID, endGlyphID, docOffset, docLength)
-		 	entryList.append(entry)
-		 	docList.append(doc)
+			entry = struct.pack(">HHLL", startGlyphID, endGlyphID, docOffset, docLength)
+			entryList.append(entry)
+			docList.append(tobytes(doc, encoding="utf-8"))
 		entryList.extend(docList)
-		svgDocData = "".join(entryList)
+		svgDocData = bytesjoin(entryList)
 
 		# get colorpalette info.
 		if self.colorPalettes == None:
@@ -223,11 +223,11 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 				for colorRecord in colorPalette.paletteColors:
 					data = struct.pack(">BBBB", colorRecord.red, colorRecord.green, colorRecord.blue, colorRecord.alpha)
 					dataList.append(data)
-			palettesData = "".join(dataList)
+			palettesData = bytesjoin(dataList)
 
 		header = struct.pack(">HLL", version, offsetToSVGDocIndex, offsetToColorPalettes)
 		data = [header, svgDocData, palettesData]
-		data = "".join(data)
+		data = bytesjoin(data)
 		return data
 
 	def compileFormat1(self, ttFont):
@@ -241,11 +241,11 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 			docOffset = curOffset
 			docLength = len(doc)
 			curOffset += docLength
-		 	entry = struct.pack(">HHLL", startGlyphID, endGlyphID, docOffset, docLength)
-		 	dataList.append(entry)
-		 	docList.append(doc)
+			entry = struct.pack(">HHLL", startGlyphID, endGlyphID, docOffset, docLength)
+			dataList.append(entry)
+			docList.append(tobytes(doc, encoding="utf-8"))
 		dataList.extend(docList)
-		data = "".join(dataList)
+		data = bytesjoin(dataList)
 		return data
 
 	def toXML(self, writer, ttFont):
@@ -294,7 +294,7 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 		if name == "svgDoc":
 			if not hasattr(self, "docList"):
 				self.docList = []
-			doc = "".join(content)
+			doc = strjoin(content)
 			doc = doc.strip()
 			startGID = int(attrs["startGlyphID"])
 			endGID = int(attrs["endGlyphID"])

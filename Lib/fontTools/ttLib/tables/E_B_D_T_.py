@@ -113,7 +113,7 @@ class table_E_B_D_T_(DefaultTable.DefaultTable):
 				# of any of the problems in the convertion that may arise.
 				curIndexSubTable.locations = dataLocations
 
-		return ''.join(dataList)
+		return bytesjoin(dataList)
 
 	def toXML(self, writer, ttFont):
 		# When exporting to XML if one of the data export formats
@@ -212,7 +212,7 @@ def _data2binary(data, numBits):
 				binaryList.append('0')
 			value = value >> 1
 		numBits -= numBitsCut
-	return ''.join(binaryList)
+	return strjoin(binaryList)
 
 def _binary2data(binary):
 	byteList = []
@@ -224,7 +224,7 @@ def _binary2data(binary):
 			if curBit == '1':
 				curByte |= 1
 		byteList.append(bytechr(curByte))
-	return ''.join(byteList)
+	return bytesjoin(byteList)
 
 def _memoize(f):
 	class memodict(dict):
@@ -242,7 +242,7 @@ def _memoize(f):
 @_memoize
 def _reverseBytes(data):
 	if len(data) != 1:
-		return "".join(map(_reverseBytes, data))
+		return bytesjoin(map(_reverseBytes, data))
 	byte = byteord(data)
 	result = 0
 	for i in range(8):
@@ -309,7 +309,7 @@ def _writeBitwiseImageData(strikeIndex, glyphName, bitmapObject, writer, ttFont)
 		rowData = bitmapObject.getRow(curRow, bitDepth=1, metrics=metrics, reverseBytes=True)
 		rowData = _data2binary(rowData, metrics.width)
 		# Make the output a readable ASCII art form.
-		rowData = "".join(map(binaryConv.get, rowData))
+		rowData = strjoin(map(binaryConv.get, rowData))
 		writer.simpletag('row', value=rowData)
 		writer.newline()
 	writer.endtag('bitwiseimagedata')
@@ -332,7 +332,7 @@ def _readBitwiseImageData(bitmapObject, name, attrs, content, ttFont):
 		name, attr, content = element
 		if name == 'row':
 			mapParams = zip(attr['value'], itertools.repeat('1'))
-			rowData = ''.join(itertools.starmap(binaryConv.get, mapParams))
+			rowData = strjoin(itertools.starmap(binaryConv.get, mapParams))
 			dataRows.append(_binary2data(rowData))
 
 	bitmapObject.setRows(dataRows, bitDepth=bitDepth, metrics=metrics, reverseBytes=True)
@@ -532,7 +532,7 @@ class BitAlignedBitmapMixin:
 			dataList.append(bytechr(newByte))
 
 		# The way the data is kept is opposite the algorithm used.
-		data = ''.join(dataList)
+		data = bytesjoin(dataList)
 		if not reverseBytes:
 			data = _reverseBytes(data)
 		return data
@@ -567,7 +567,7 @@ class BitAlignedBitmapMixin:
 					ordDataList[secondByteLoc] |= secondByte
 
 		# Save the image data with the bits going the correct way.
-		self.imageData = _reverseBytes("".join(map(bytechr, ordDataList)))
+		self.imageData = _reverseBytes(bytesjoin(map(bytechr, ordDataList)))
 
 class ByteAlignedBitmapMixin:
 
@@ -591,7 +591,7 @@ class ByteAlignedBitmapMixin:
 			metrics = self.metrics
 		if reverseBytes:
 			dataRows = map(_reverseBytes, dataRows)
-		self.imageData = "".join(dataRows)
+		self.imageData = bytesjoin(dataRows)
 
 class ebdt_bitmap_format_1(ByteAlignedBitmapMixin, BitmapPlusSmallMetricsMixin, BitmapGlyph):
 
@@ -706,12 +706,12 @@ class ebdt_bitmap_format_8(BitmapPlusSmallMetricsMixin, ComponentBitmapGlyph):
 	def compile(self, ttFont):
 		dataList = []
 		dataList.append(sstruct.pack(smallGlyphMetricsFormat, self.metrics))
-		dataList.append('\0')
+		dataList.append(b'\0')
 		dataList.append(struct.pack(">H", len(self.componentArray)))
 		for curComponent in self.componentArray:
 			curComponent.glyphCode = ttFont.getGlyphID(curComponent.name)
 			dataList.append(sstruct.pack(ebdtComponentFormat, curComponent))
-		return ''.join(dataList)
+		return bytesjoin(dataList)
 
 
 class ebdt_bitmap_format_9(BitmapPlusBigMetricsMixin, ComponentBitmapGlyph):
@@ -735,7 +735,7 @@ class ebdt_bitmap_format_9(BitmapPlusBigMetricsMixin, ComponentBitmapGlyph):
 		for curComponent in self.componentArray:
 			curComponent.glyphCode = ttFont.getGlyphID(curComponent.name)
 			dataList.append(sstruct.pack(ebdtComponentFormat, curComponent))
-		return ''.join(dataList)
+		return bytesjoin(dataList)
 
 
 # Dictionary of bitmap formats to the class representing that format

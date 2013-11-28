@@ -146,7 +146,7 @@ def escape8bit(data):
 			return c
 		else:
 			return "&#" + repr(n) + ";"
-	return "".join(map(escapechar, data))
+	return strjoin(map(escapechar, data))
 
 def escape16bit(data):
 	import array
@@ -163,7 +163,7 @@ def escape16bit(data):
 			return chr(n)
 		else:
 			return "&#" + repr(n) + ";"
-	return "".join(map(escapenum, a))
+	return strjoin(map(escapenum, a))
 
 
 def hexStr(s):

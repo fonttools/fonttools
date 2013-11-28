@@ -71,7 +71,7 @@ class table_D_S_I_G_(DefaultTable.DefaultTable):
 			sigrec.ulOffset = offset
 			headers.append(sstruct.pack(DSIG_SignatureFormat, sigrec))
 			offset += sigrec.ulLength
-		return ''.join(headers+data)
+		return bytesjoin(headers+data)
 	
 	def toXML(self, xmlWriter, ttFont):
 		xmlWriter.comment("note that the Digital Signature will be invalid after recompilation!")
@@ -114,4 +114,4 @@ class SignatureRecord:
 		self.ulFormat = safeEval(attrs["format"])
 		self.usReserved1 = safeEval(attrs.get("reserved1", "0"))
 		self.usReserved2 = safeEval(attrs.get("reserved2", "0"))
-		self.pkcs7 = "".join(filter(pem_spam, content)).decode('base64')
+		self.pkcs7 = strjoin(filter(pem_spam, content)).decode('base64')

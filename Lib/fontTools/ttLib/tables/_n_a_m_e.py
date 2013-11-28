@@ -116,7 +116,7 @@ class NameRecord:
 		self.platformID = safeEval(attrs["platformID"])
 		self.platEncID = safeEval(attrs["platEncID"])
 		self.langID =  safeEval(attrs["langID"])
-		s = ''.join(content).decode("utf8").strip()
+		s = strjoin(content).decode("utf8").strip()
 		if self.platformID == 0 or (self.platformID == 3 and self.platEncID in (0, 1)):
 			self.string = s.encode("utf_16_be")
 		else:

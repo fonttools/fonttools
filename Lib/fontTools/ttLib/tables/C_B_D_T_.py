@@ -52,7 +52,7 @@ class cbdt_bitmap_format_17(BitmapPlusSmallMetricsMixin, ColorBitmapGlyph):
 		dataList.append(sstruct.pack(smallGlyphMetricsFormat, self.metrics))
 		dataList.append(struct.pack(">L", len(self.imageData)))
 		dataList.append(self.imageData)
-		return ''.join(dataList)
+		return bytesjoin(dataList)
 
 class cbdt_bitmap_format_18(BitmapPlusBigMetricsMixin, ColorBitmapGlyph):
 
@@ -71,7 +71,7 @@ class cbdt_bitmap_format_18(BitmapPlusBigMetricsMixin, ColorBitmapGlyph):
 		dataList.append(sstruct.pack(bigGlyphMetricsFormat, self.metrics))
 		dataList.append(struct.pack(">L", len(self.imageData)))
 		dataList.append(self.imageData)
-		return ''.join(dataList)
+		return bytesjoin(dataList)
 
 class cbdt_bitmap_format_19(ColorBitmapGlyph):
 

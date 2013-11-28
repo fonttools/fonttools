@@ -32,7 +32,7 @@ class table__h_d_m_x(DefaultTable.DefaultTable):
 		numGlyphs = ttFont['maxp'].numGlyphs
 		glyphOrder = ttFont.getGlyphOrder()
 		self.recordSize = 4 * ((2 + numGlyphs + 3) // 4)
-		pad = (self.recordSize - 2 - numGlyphs) * "\0"
+		pad = (self.recordSize - 2 - numGlyphs) * b"\0"
 		self.numRecords = len(self.hdmx)
 		data = sstruct.pack(hdmxHeaderFormat, self)
 		items = sorted(self.hdmx.items())
@@ -76,7 +76,7 @@ class table__h_d_m_x(DefaultTable.DefaultTable):
 	def fromXML(self, name, attrs, content, ttFont):
 		if name != "hdmxData":
 			return
-		content = ''.join(content)
+		content = strjoin(content)
 		lines = content.split(";")
 		topRow = lines[0].split()
 		assert topRow[0] == "ppem:", "illegal hdmx format"

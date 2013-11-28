@@ -31,6 +31,8 @@ except ImportError:
 	except ImportError:
 		from io import BytesIO as StringIO
 
+def strjoin(iterable):
+	return ''.join(iterable)
 if str == bytes:
 	class Tag(str):
 		def tobytes(self):
@@ -39,15 +41,14 @@ if str == bytes:
 			else:
 				return self.encode('latin-1')
 
-	def tostr(s):
+	def tostr(s, encoding='ascii'):
 		if not isinstance(s, str):
-			return s.encode('ascii')
+			return s.encode(encoding)
 		else:
 			return s
 	tobytes = tostr
 
-	def bytesjoin(iterable):
-		return ''.join(iterable)
+	bytesjoin = strjoin
 else:
 	class Tag(str):
 
@@ -68,14 +69,14 @@ else:
 		def tobytes(self):
 			return self.encode('latin-1')
 
-	def tostr(s):
+	def tostr(s, encoding='ascii'):
 		if not isinstance(s, str):
-			return s.decode('ascii')
+			return s.decode(encoding)
 		else:
 			return s
-	def tobytes(s):
+	def tobytes(s, encoding='ascii'):
 		if not isinstance(s, bytes):
-			return s.encode('ascii')
+			return s.encode(encoding)
 		else:
 			return s
 

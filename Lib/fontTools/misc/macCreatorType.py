@@ -10,7 +10,7 @@ from .py23 import *
 def _reverseString(s):
 	s = list(s)
 	s.reverse()
-	return "".join(s)
+	return strjoin(s)
 
 
 def getMacCreatorAndType(path):

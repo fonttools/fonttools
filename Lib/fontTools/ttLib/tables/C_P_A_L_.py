@@ -35,7 +35,7 @@ class table_C_P_A_L_(DefaultTable.DefaultTable):
 			assert(len(palette) == self.numPaletteEntries)
 			for color in palette:
 				dataList.append(struct.pack(">BBBB", color.blue,color.green,color.red,color.alpha))
-		data = "".join(dataList)
+		data = bytesjoin(dataList)
 		return data
 
 	def toXML(self, writer, ttFont):
