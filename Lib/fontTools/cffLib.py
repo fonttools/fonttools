@@ -21,7 +21,7 @@ cffHeaderFormat = """
 	offSize: B
 """
 
-class CFFFontSet:
+class CFFFontSet(object):
 	
 	def __init__(self):
 		pass
@@ -126,7 +126,7 @@ class CFFFontSet:
 				self.GlobalSubrs.append(subr)
 
 
-class CFFWriter:
+class CFFWriter(object):
 	
 	def __init__(self):
 		self.data = []
@@ -180,7 +180,7 @@ def calcOffSize(largestOffset):
 	return offSize
 
 
-class IndexCompiler:
+class IndexCompiler(object):
 	
 	def __init__(self, items, strings, parent):
 		self.items = self.getItems(items, strings)
@@ -303,7 +303,7 @@ class CharStringsCompiler(GlobalSubrsCompiler):
 		self.parent.rawDict["CharStrings"] = pos
 
 
-class Index:
+class Index(object):
 	
 	"""This class represents what the CFF spec calls an INDEX."""
 	
@@ -500,7 +500,7 @@ class	FDSelect:
 		self.gidArray.append(fdSelectValue)
 	
 
-class CharStrings:
+class CharStrings(object):
 	
 	def __init__(self, file, charset, globalSubrs, private, fdSelect, fdArray):
 		if file is not None:
@@ -662,7 +662,7 @@ def buildConverters(table):
 	return d
 
 
-class SimpleConverter:
+class SimpleConverter(object):
 	def read(self, parent, value):
 		return value
 	def write(self, parent, value):
@@ -783,7 +783,7 @@ class CharStringsConverter(TableConverter):
 		charStrings.fromXML(name, attrs, content)
 		return charStrings
 
-class CharsetConverter:
+class CharsetConverter(object):
 	def read(self, parent, value):
 		isCID = hasattr(parent, "ROS")
 		if value > 2:
@@ -827,7 +827,7 @@ class CharsetConverter:
 			return safeEval(attrs["value"])
 
 
-class CharsetCompiler:
+class CharsetCompiler(object):
 	
 	def __init__(self, strings, charset, parent):
 		assert charset[0] == '.notdef'
@@ -936,7 +936,7 @@ def parseCharset(numGlyphs, file, strings, isCID, format):
 	return charset
 
 
-class EncodingCompiler:
+class EncodingCompiler(object):
 
 	def __init__(self, strings, encoding, parent):
 		assert not isinstance(encoding, basestring)
@@ -1121,7 +1121,7 @@ class FDArrayConverter(TableConverter):
 		return fdArray
 
 
-class FDSelectConverter:
+class FDSelectConverter(object):
 
 	def read(self, parent, value):
 		file = parent.file
@@ -1177,7 +1177,7 @@ def packFDSelect3(fdSelectArray):
 	return bytesjoin(data)
 
 
-class FDSelectCompiler:
+class FDSelectCompiler(object):
 	
 	def __init__(self, fdSelect, parent):
 		format = fdSelect.format
@@ -1315,7 +1315,7 @@ class PrivateDictDecompiler(psCharStrings.DictDecompiler):
 	operators = buildOperatorDict(privateDictOperators)
 
 
-class DictCompiler:
+class DictCompiler(object):
 	
 	def __init__(self, dictObj, strings, parent):
 		assert isinstance(strings, IndexedStrings)
@@ -1471,7 +1471,7 @@ class PrivateDictCompiler(DictCompiler):
 		return children
 
 
-class BaseDict:
+class BaseDict(object):
 	
 	def __init__(self, strings=None, file=None, offset=None):
 		self.rawDict = {}
@@ -1603,7 +1603,7 @@ class PrivateDict(BaseDict):
 	compilerClass = PrivateDictCompiler
 
 
-class IndexedStrings:
+class IndexedStrings(object):
 	
 	"""SID -> string mapping."""
 	

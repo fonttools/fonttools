@@ -203,7 +203,7 @@ SCALED_COMPONENT_OFFSET    = 0x0800  # composite designed to have the component 
 UNSCALED_COMPONENT_OFFSET  = 0x1000  # composite designed not to have the component offset scaled (designed for MS) 
 
 
-class Glyph:
+class Glyph(object):
 	
 	def __init__(self, data=""):
 		if not data:
@@ -730,7 +730,7 @@ class Glyph:
 		return self.__dict__ == other.__dict__
 
 
-class GlyphComponent:
+class GlyphComponent(object):
 	
 	def __init__(self):
 		pass
@@ -890,7 +890,7 @@ class GlyphComponent:
 			raise TypeError("unordered types %s() < %s()", type(self), type(other))
 		return self.__dict__ == other.__dict__
 
-class GlyphCoordinates:
+class GlyphCoordinates(object):
 
 	def __init__(self, iterable=[]):
 		self._a = array.array("h")

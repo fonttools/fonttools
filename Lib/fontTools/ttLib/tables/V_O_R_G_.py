@@ -115,7 +115,7 @@ class table_V_O_R_G_(DefaultTable.DefaultTable):
 		elif glyphSelector in self.VOriginRecords:
 			del self.VOriginRecords[glyphSelector]
 
-class VOriginRecord:
+class VOriginRecord(object):
 
 	def __init__(self, name = None, vOrigin = None):
 		self.glyphName = name

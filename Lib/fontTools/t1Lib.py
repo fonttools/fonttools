@@ -43,7 +43,7 @@ else:
 class T1Error(Exception): pass
 
 
-class T1Font:
+class T1Font(object):
 	
 	"""Type 1 font class.
 	

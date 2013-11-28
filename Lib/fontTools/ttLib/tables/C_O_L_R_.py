@@ -138,7 +138,7 @@ class table_C_O_L_R_(DefaultTable.DefaultTable):
 		elif glyphSelector in self.ColorLayers:
 			del self.ColorLayers[glyphSelector]
 
-class LayerRecord:
+class LayerRecord(object):
 
 	def __init__(self, name = None, colorID = None):
 		self.name = name

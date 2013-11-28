@@ -84,7 +84,7 @@ class table__k_e_r_n(DefaultTable.DefaultTable):
 		subtable.fromXML(name, attrs, content, ttFont)
 
 
-class KernTable_format_0:
+class KernTable_format_0(object):
 	
 	def decompile(self, data, ttFont):
 		version, length, coverage = (0,0,0)
@@ -162,7 +162,7 @@ class KernTable_format_0:
 		del self.kernTable[pair]
 
 
-class KernTable_format_2:
+class KernTable_format_2(object):
 	
 	def decompile(self, data, ttFont):
 		self.data = data
@@ -181,7 +181,7 @@ class KernTable_format_2:
 		self.decompile(readHex(content), ttFont)
 
 
-class KernTable_format_unkown:
+class KernTable_format_unkown(object):
 	
 	def __init__(self, format):
 		self.format = format

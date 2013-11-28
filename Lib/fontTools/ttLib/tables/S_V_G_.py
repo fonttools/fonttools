@@ -307,7 +307,7 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 		else:
 			print("Unknown", name, content)
 
-class DocumentIndexEntry:
+class DocumentIndexEntry(object):
 	def __init__(self):
 		self.startGlyphID = None # USHORT
 		self.endGlyphID = None # USHORT
@@ -317,7 +317,7 @@ class DocumentIndexEntry:
 	def __repr__(self):
 		return "startGlyphID: %s, endGlyphID: %s, svgDocOffset: %s, svgDocLength: %s" % (self.startGlyphID, self.endGlyphID, self.svgDocOffset, self.svgDocLength)
 
-class ColorPalettes:
+class ColorPalettes(object):
 	def __init__(self):
 		self.numColorParams = None # USHORT
 		self.colorParamUINameIDs = [] # list of name table name ID values that provide UI description of each color palette.
@@ -343,7 +343,7 @@ class ColorPalettes:
 			if len(colorPalette.paletteColors) != self.numColorParams:
 				raise ValueError("Number of color records in a colorPalette ('%s') does not match the number of colorParamUINameIDs elements ('%s')." % (len(colorPalette.paletteColors), self.numColorParams))
 
-class ColorPalette:
+class ColorPalette(object):
 	def __init__(self):
 		self.uiNameID = None # USHORT. name table ID that describes user interface strings associated with this color palette. 
 		self.paletteColors = [] # list of ColorRecords
@@ -362,7 +362,7 @@ class ColorPalette:
 				colorRecord.blue = eval(attrib["blue"])
 				colorRecord.alpha = eval(attrib["alpha"])
 
-class ColorRecord:
+class ColorRecord(object):
 	def __init__(self):
 		self.red = 255 # all are one byte values.
 		self.green = 255

@@ -185,7 +185,7 @@ def _test():
 	
 	print('size:', calcsize(format))
 	
-	class foo:
+	class foo(object):
 		pass
 	
 	i = foo()

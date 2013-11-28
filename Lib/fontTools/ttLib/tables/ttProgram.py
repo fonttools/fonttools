@@ -200,7 +200,7 @@ def _skipWhite(data, pos, _whiteRE=_whiteRE):
 	return newPos
 
 
-class Program:
+class Program(object):
 	
 	def __init__(self):
 		pass

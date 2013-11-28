@@ -51,7 +51,7 @@ _FCBPBFormat = """
 	ioFCBParID:   l
 """
 
-class ParamBlock:
+class ParamBlock(object):
 	
 	"""Wrapper for the very low level FCBPB record."""
 	

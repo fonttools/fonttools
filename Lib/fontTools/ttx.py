@@ -100,7 +100,7 @@ def makeOutputFileName(input, outputDir, extension):
 	return output
 
 
-class Options:
+class Options(object):
 
 	listTables = False
 	outputDir = None

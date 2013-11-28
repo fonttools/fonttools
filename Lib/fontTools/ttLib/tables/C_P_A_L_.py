@@ -72,7 +72,7 @@ class table_C_P_A_L_(DefaultTable.DefaultTable):
 			value =  safeEval(attrs["value"])
 			setattr(self, name, value)
 
-class Color:
+class Color(object):
 
 	def __init__(self, blue=None, green=None, red=None, alpha=None):
 		self.blue  = blue

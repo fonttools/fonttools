@@ -222,7 +222,7 @@ class table_E_B_L_C_(DefaultTable.DefaultTable):
 			assert self.strikes[strikeIndex] == None, "Duplicate strike EBLC indices."
 			self.strikes[strikeIndex] = curStrike
 
-class Strike:
+class Strike(object):
 
 	def __init__(self):
 		self.bitmapSizeTable = BitmapSizeTable()
@@ -255,7 +255,7 @@ class Strike:
 				self.indexSubTables.append(indexSubTable)
 
 
-class BitmapSizeTable:
+class BitmapSizeTable(object):
 
 	# Returns all the simple metric names that bitmap size table
 	# cares about in terms of XML creation.
@@ -296,7 +296,7 @@ class BitmapSizeTable:
 				print("Warning: unknown name '%s' being ignored in BitmapSizeTable." % name)
 
 
-class SbitLineMetrics:
+class SbitLineMetrics(object):
 
 	def toXML(self, name, writer, ttFont):
 		writer.begintag('sbitLineMetrics', [('direction', name)])
@@ -319,7 +319,7 @@ class SbitLineMetrics:
 # Important information about the naming scheme. Used for identifying subtables.
 _indexSubTableSubclassPrefix = 'eblc_index_sub_table_'
 
-class EblcIndexSubTable:
+class EblcIndexSubTable(object):
 
 	def __init__(self, data, ttFont):
 		self.data = data
@@ -424,7 +424,7 @@ def _createOffsetArrayIndexSubTableMixin(formatStringForDataType):
 	dataFormat = '>'+formatStringForDataType
 	offsetDataSize = struct.calcsize(dataFormat)
 
-	class OffsetArrayIndexSubTableMixin:
+	class OffsetArrayIndexSubTableMixin(object):
 
 		def decompile(self):
 
@@ -485,7 +485,7 @@ def _createOffsetArrayIndexSubTableMixin(formatStringForDataType):
 # A Mixin for functionality shared between the different kinds
 # of fixed sized data handling. Both kinds have big metrics so
 # that kind of special processing is also handled in this mixin.
-class FixedSizeIndexSubTableMixin:
+class FixedSizeIndexSubTableMixin(object):
 
 	def writeMetrics(self, writer, ttFont):
 		writer.simpletag('imageSize', value=self.imageSize)

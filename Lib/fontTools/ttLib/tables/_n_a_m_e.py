@@ -88,7 +88,7 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 		return None # not found
 	
 
-class NameRecord:
+class NameRecord(object):
 	
 	def toXML(self, writer, ttFont):
 		writer.begintag("namerecord", [

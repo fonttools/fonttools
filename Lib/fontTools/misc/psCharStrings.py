@@ -35,7 +35,7 @@ for _i in range(len(realNibbles)):
 	realNibblesDict[realNibbles[_i]] = _i
 
 
-class ByteCodeBase:
+class ByteCodeBase(object):
 	
 	def read_byte(self, b0, data, index):
 		return b0 - 139, index
@@ -482,7 +482,7 @@ class T1CharString(T2CharString):
 		self.width = extractor.width
 
 
-class SimpleT2Decompiler:
+class SimpleT2Decompiler(object):
 	
 	def __init__(self, localSubrs, globalSubrs):
 		self.localSubrs = localSubrs
