@@ -56,7 +56,7 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
 		numSubTables = len(self.tables)
 		totalOffset = 4 + 8 * numSubTables
 		data = struct.pack(">HH", self.tableVersion, numSubTables)
-		tableData = ""
+		tableData = b""
 		seen = {}  # Some tables are the same object reference. Don't compile them twice.
 		done = {}  # Some tables are different objects, but compile to the same data chunk
 		for table in self.tables:

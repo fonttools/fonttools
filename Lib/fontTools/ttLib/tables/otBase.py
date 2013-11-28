@@ -213,7 +213,7 @@ class OTTableWriter(object):
 			tableData = table.getData()
 			data.append(tableData)
 
-		return "".join(data)
+		return bytesjoin(data)
 	
 	def getDataLength(self):
 		"""Return the length of this table in bytes, without subtables."""
@@ -281,7 +281,7 @@ class OTTableWriter(object):
 						
 						raise OTLOffsetOverflowError(overflowErrorRecord)
 
-		return "".join(items)
+		return bytesjoin(items)
 	
 	def __hash__(self):
 		# only works after self._doneWriting() has been called

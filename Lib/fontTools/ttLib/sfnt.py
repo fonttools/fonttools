@@ -83,7 +83,7 @@ class SFNTReader:
 		if self.checkChecksums:
 			if tag == 'head':
 				# Beh: we have to special-case the 'head' table.
-				checksum = calcChecksum(data[:8] + '\0\0\0\0' + data[12:])
+				checksum = calcChecksum(data[:8] + b'\0\0\0\0' + data[12:])
 			else:
 				checksum = calcChecksum(data)
 			if self.checkChecksums > 1:
@@ -129,7 +129,7 @@ class SFNTWriter:
 		# clear out directory area
 		self.file.seek(self.nextTableOffset)
 		# make sure we're actually where we want to be. (old cStringIO bug)
-		self.file.write('\0' * (self.nextTableOffset - self.file.tell()))
+		self.file.write(b'\0' * (self.nextTableOffset - self.file.tell()))
 		self.tables = {}
 	
 	def __setitem__(self, tag, data):
@@ -149,7 +149,7 @@ class SFNTWriter:
 			entry.tag = tag
 
 		if tag == 'head':
-			entry.checkSum = calcChecksum(data[:8] + '\0\0\0\0' + data[12:])
+			entry.checkSum = calcChecksum(data[:8] + b'\0\0\0\0' + data[12:])
 			self.headTable = data
 			entry.uncompressed = True
 		else:
@@ -165,7 +165,7 @@ class SFNTWriter:
 		# Don't depend on f.seek() as we need to add the padding even if no
 		# subsequent write follows (seek is lazy), ie. after the final table
 		# in the font.
-		self.file.write('\0' * (self.nextTableOffset - self.file.tell()))
+		self.file.write(b'\0' * (self.nextTableOffset - self.file.tell()))
 		assert self.nextTableOffset == self.file.tell()
 		
 		self.tables[tag] = entry
@@ -451,14 +451,14 @@ def calcChecksum(data):
 	If the data length is not a multiple of four, it assumes
 	it is to be padded with null byte. 
 
-		>>> print calcChecksum("abcd")
+		>>> print calcChecksum(b"abcd")
 		1633837924
-		>>> print calcChecksum("abcdxyz")
+		>>> print calcChecksum(b"abcdxyz")
 		3655064932
 	"""
 	remainder = len(data) % 4
 	if remainder:
-		data += "\0" * (4 - remainder)
+		data += b"\0" * (4 - remainder)
 	value = 0
 	blockSize = 4096
 	assert blockSize % 4 == 0
