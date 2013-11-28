@@ -56,7 +56,7 @@ class SFNTReader:
 			entry = self.DirectoryEntry()
 			entry.fromFile(self.file)
 			if entry.length > 0:
-				self.tables[entry.tag] = entry
+				self.tables[Tag(entry.tag)] = entry
 			else:
 				# Ignore zero-length tables. This doesn't seem to be documented,
 				# yet it's apparently how the Windows TT rasterizer behaves.

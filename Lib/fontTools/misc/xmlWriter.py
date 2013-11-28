@@ -2,6 +2,7 @@
 
 from __future__ import print_function, division
 from fontTools.misc.py23 import *
+import sys
 import string
 import struct
 
@@ -122,17 +123,18 @@ class XMLWriter:
 	
 
 def escape(data):
+	data = tostr(data)
 	data = data.replace("&", "&amp;")
 	data = data.replace("<", "&lt;")
 	return data
 
 def escapeattr(data):
-	data = data.replace("&", "&amp;")
-	data = data.replace("<", "&lt;")
+	data = escape(data)
 	data = data.replace('"', "&quot;")
 	return data
 
 def escape8bit(data):
+	data = tostr(data)
 	def escapechar(c):
 		n = byteord(c)
 		if c in "<&":
@@ -146,13 +148,11 @@ def escape8bit(data):
 			return "&#" + repr(n) + ";"
 	return "".join(map(escapechar, data))
 
-needswap = struct.pack("h", 1) == "\001\000"
-
 def escape16bit(data):
 	import array
 	a = array.array("H")
 	a.fromstring(data)
-	if needswap:
+	if sys.byteorder != "big":
 		a.byteswap()
 	def escapenum(n, amp=byteord("&"), lt=byteord("<")):
 		if n == amp:
@@ -160,7 +160,7 @@ def escape16bit(data):
 		elif n == lt:
 			return "&lt;"
 		elif 32 <= n <= 127:
-			return bytechr(n)
+			return chr(n)
 		else:
 			return "&#" + repr(n) + ";"
 	return "".join(map(escapenum, a))
