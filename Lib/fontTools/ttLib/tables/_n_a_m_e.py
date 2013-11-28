@@ -102,11 +102,11 @@ class NameRecord:
 			if len(self.string) % 2:
 				# no, shouldn't happen, but some of the Apple
 				# tools cause this anyway :-(
-				writer.write16bit(self.string + b"\0")
+				writer.write16bit(self.string + b"\0", strip=True)
 			else:
-				writer.write16bit(self.string)
+				writer.write16bit(self.string, strip=True)
 		else:
-			writer.write8bit(self.string)
+			writer.write8bit(self.string, strip=True)
 		writer.newline()
 		writer.endtag("namerecord")
 		writer.newline()
