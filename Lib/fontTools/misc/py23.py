@@ -42,6 +42,9 @@ if str == bytes:
 		else:
 			return s
 	tobytes = tostr
+
+	def bytesjoin(iterable):
+		return ''.join(iterable)
 else:
 	class Tag(str):
 
@@ -72,3 +75,6 @@ else:
 			return s.encode('ascii')
 		else:
 			return s
+
+	def bytesjoin(iterable):
+		return sum((tobytes(item) for item in iterable), b'')

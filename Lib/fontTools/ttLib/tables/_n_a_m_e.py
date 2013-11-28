@@ -49,7 +49,7 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 			# from the TTX file
 			self.names = []
 		self.names.sort()  # sort according to the spec; see NameRecord.__lt__()
-		stringData = ""
+		stringData = b""
 		format = 0
 		n = len(self.names)
 		stringOffset = 6 + n * sstruct.calcsize(nameRecordFormat)
