@@ -26,7 +26,10 @@ except:
 try:
 	from cStringIO import StringIO
 except ImportError:
-	from io import StringIO
+	try:
+		from StringIO import StringIO
+	except ImportError:
+		from io import BytesIO as StringIO
 
 if str == bytes:
 	class Tag(str):
