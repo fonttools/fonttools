@@ -324,9 +324,10 @@ class EblcIndexSubTable:
 	def __init__(self, data, ttFont):
 		self.data = data
 		self.ttFont = ttFont
-		if not ttFont.lazy:
-			self.decompile()
-			del self.data, self.ttFont
+		# TODO Currently non-lazy decompiling doesn't work for this class...
+		#if not ttFont.lazy:
+		#	self.decompile()
+		#	del self.data, self.ttFont
 
 	def __getattr__(self, attr):
 		# Allow lazy decompile.

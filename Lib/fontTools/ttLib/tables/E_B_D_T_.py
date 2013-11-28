@@ -382,9 +382,10 @@ class BitmapGlyph:
 	def __init__(self, data, ttFont):
 		self.data = data
 		self.ttFont = ttFont
-		if not ttFont.lazy:
-			self.decompile()
-			del self.data
+		# TODO Currently non-lazy decompilation is untested here...
+		#if not ttFont.lazy:
+		#	self.decompile()
+		#	del self.data
 
 	def __getattr__(self, attr):
 		# Allow lazy decompile.
