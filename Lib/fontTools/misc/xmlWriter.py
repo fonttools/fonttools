@@ -52,8 +52,11 @@ class XMLWriter:
 		"""Writes a bytes() sequence into the XML, escaping
 		non-ASCII bytes.  When this is read in xmlReader,
 		the original bytes can be recovered by encoding to
-		'latin1'."""
-		self._writeraw(escape8bit(data.decode('latin1')))
+		'latin-1'."""
+		self._writeraw(escape8bit(data))
+
+	def write16bit(self, data):
+		self._writeraw(escape16bit(data))
 	
 	def write_noindent(self, string):
 		"""Writes text without indentation."""
@@ -158,7 +161,25 @@ def escape8bit(data):
 			return c
 		else:
 			return "&#" + repr(n) + ";"
-	return strjoin(map(escapechar, data))
+	return strjoin(map(escapechar, data.decode('latin-1')))
+
+def escape16bit(data):
+	import array
+	a = array.array("H")
+	a.fromstring(data)
+	if sys.byteorder != "big":
+		a.byteswap()
+	def escapenum(n, amp=byteord("&"), lt=byteord("<")):
+		if n == amp:
+			return "&amp;"
+		elif n == lt:
+			return "&lt;"
+		elif 32 <= n <= 127:
+			return chr(n)
+		else:
+			return "&#" + repr(n) + ";"
+	return strjoin(map(escapenum, a))
+
 
 def hexStr(s):
 	h = string.hexdigits
