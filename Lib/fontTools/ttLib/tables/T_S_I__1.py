@@ -40,19 +40,19 @@ class table_T_S_I__1(DefaultTable.DefaultTable):
 		if not hasattr(self, "glyphPrograms"):
 			self.glyphPrograms = {}
 			self.extraPrograms = {}
-		data = ''
+		data = b''
 		indextable = ttFont[self.indextable]
 		glyphNames = ttFont.getGlyphOrder()
 		
 		indices = []
 		for i in range(len(glyphNames)):
 			if len(data) % 2:
-				data = data + "\015"  # align on 2-byte boundaries, fill with return chars. Yum.
+				data = data + b"\015"  # align on 2-byte boundaries, fill with return chars. Yum.
 			name = glyphNames[i]
 			if name in self.glyphPrograms:
 				text = self.glyphPrograms[name]
 			else:
-				text = ""
+				text = b""
 			textLength = len(text)
 			if textLength >= 0x8000:
 				textLength = 0x8000  # XXX ???
@@ -63,12 +63,12 @@ class table_T_S_I__1(DefaultTable.DefaultTable):
 		codes = sorted(self.extras.items())
 		for i in range(len(codes)):
 			if len(data) % 2:
-				data = data + "\015"  # align on 2-byte boundaries, fill with return chars.
+				data = data + b"\015"  # align on 2-byte boundaries, fill with return chars.
 			code, name = codes[i]
 			if name in self.extraPrograms:
 				text = self.extraPrograms[name]
 			else:
-				text = ""
+				text = b""
 			textLength = len(text)
 			if textLength >= 0x8000:
 				textLength = 0x8000  # XXX ???
