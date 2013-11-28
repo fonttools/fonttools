@@ -52,8 +52,8 @@ class XMLWriter:
 		"""Writes a bytes() sequence into the XML, escaping
 		non-ASCII bytes.  When this is read in xmlReader,
 		the original bytes can be recovered by encoding to
-		'latin-1'."""
-		self._writeraw(escape8bit(data.decode('latin-1')))
+		'latin1'."""
+		self._writeraw(escape8bit(data.decode('latin1')))
 	
 	def write_noindent(self, string):
 		"""Writes text without indentation."""
