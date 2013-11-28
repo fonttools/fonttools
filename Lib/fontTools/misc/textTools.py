@@ -71,17 +71,7 @@ def caselessSort(alist):
 	"""
 	
 	try:
-		# turn ['FOO',  'aaBc', 'ABcD'] into 
-		# [('foo', 'FOO'), ('aabc', 'aaBc'), ('abcd', 'ABcD')], 
-		# but only if all elements are strings
-		tupledlist = [(item.lower(), item) for item in alist]
+		return sorted(alist, key=lambda a: (a.lower(), a))
 	except TypeError:
-		# at least one element in alist is not a string, proceed the normal way...
-		alist = sorted(alist[:])
-		return alist
-	else:
-		tupledlist.sort()
-		# turn [('aabc', 'aaBc'), ('abcd', 'ABcD'), ('foo', 'FOO')] into 
-		# ['aaBc', 'ABcD', 'FOO']
-		return [x[1] for x in tupledlist]
+		return sorted(alist)
 
