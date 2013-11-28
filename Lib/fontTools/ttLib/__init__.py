@@ -405,7 +405,7 @@ class TTFont:
 				raise KeyError("'%s' table not found" % tag)
 	
 	def __setitem__(self, tag, table):
-		self.tables[tag] = table
+		self.tables[Tag(tag)] = table
 	
 	def __delitem__(self, tag):
 		if tag not in self:
@@ -617,6 +617,7 @@ class TTFont:
 	def getTableData(self, tag):
 		"""Returns raw table data, whether compiled or directly read from disk.
 		"""
+		tag = Tag(tag)
 		if self.isLoaded(tag):
 			if self.verbose:
 				debugmsg("compiling '%s' table" % tag)

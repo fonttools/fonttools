@@ -35,6 +35,13 @@ if str == bytes:
 				return self
 			else:
 				return self.encode('latin-1')
+
+	def tostr(s):
+		if not isinstance(s, str):
+			return s.encode('ascii')
+		else:
+			return s
+	tobytes = tostr
 else:
 	class Tag(str):
 
@@ -54,3 +61,14 @@ else:
 
 		def tobytes(self):
 			return self.encode('latin-1')
+
+	def tostr(s):
+		if not isinstance(s, str):
+			return s.decode('ascii')
+		else:
+			return s
+	def tobytes(s):
+		if not isinstance(s, bytes):
+			return s.encode('ascii')
+		else:
+			return s
