@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 from fontTools.misc.py23 import *
 from fontTools.misc.textTools import safeEval
+from fontTools.misc.fixedTools import fixedToFloat as fi2fl, floatToFixed as fl2fi
 from .otBase import ValueRecordFactory
 
 
@@ -95,10 +96,10 @@ class Version(BaseConverter):
 	def read(self, reader, font, tableDict):
 		value = reader.readLong()
 		assert (value >> 16) == 1, "Unsupported version 0x%08x" % value
-		return value / 0x10000
+		return  fi2fl(value, 16)
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		if value < 0x10000:
-			value *= 0x10000
+			value = fl2fi(value, 16)
 		value = int(round(value))
 		assert (value >> 16) == 1, "Unsupported version 0x%08x" % value
 		writer.writeLong(value)
@@ -106,14 +107,14 @@ class Version(BaseConverter):
 		value = attrs["value"]
 		value = float(int(value, 0)) if value.startswith("0") else float(value)
 		if value >= 0x10000:
-			value = value / 0x10000
+			value = fi2fl(value, 16)
 		return value
 	def xmlWrite(self, xmlWriter, font, value, name, attrs):
 		if value >= 0x10000:
-			value = value / 0x10000
+			value = fi2fl(value, 16)
 		if value % 1 != 0:
 			# Write as hex
-			value = "0x%08x" % (int(round(value * 0x10000)))
+			value = "0x%08x" % fl2fi(value, 16)
 		xmlWriter.simpletag(name, attrs + [("value", value)])
 		xmlWriter.newline()
 
