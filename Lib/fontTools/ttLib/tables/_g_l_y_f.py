@@ -250,7 +250,7 @@ class Glyph:
 		if len(data) % 4:
 			# add pad bytes
 			nPadBytes = 4 - (len(data) % 4)
-			data = data + "\0" * nPadBytes
+			data = data + b"\0" * nPadBytes
 		return data
 	
 	def toXML(self, writer, ttFont):
@@ -457,7 +457,7 @@ class Glyph:
 		return flags, xCoordinates, yCoordinates
 	
 	def compileComponents(self, glyfTable):
-		data = ""
+		data = b""
 		lastcomponent = len(self.components) - 1
 		more = 1
 		haveInstructions = 0
@@ -475,7 +475,7 @@ class Glyph:
 	
 	def compileCoordinates(self):
 		assert len(self.coordinates) == len(self.flags)
-		data = ""
+		data = b""
 		endPtsOfContours = array.array("h", self.endPtsOfContours)
 		if sys.byteorder != "big":
 			endPtsOfContours.byteswap()
@@ -720,7 +720,7 @@ class Glyph:
 		if len(data) % 4:
 			# add pad bytes
 			nPadBytes = 4 - (len(data) % 4)
-			data = data + "\0" * nPadBytes
+			data = data + b"\0" * nPadBytes
 
 		self.data = data
 
@@ -794,7 +794,7 @@ class GlyphComponent:
 		return more, haveInstructions, data
 	
 	def compile(self, more, haveInstructions, glyfTable):
-		data = ""
+		data = b""
 		
 		# reset all flags we will calculate ourselves
 		flags = self.flags & (ROUND_XY_TO_GRID | USE_MY_METRICS | 

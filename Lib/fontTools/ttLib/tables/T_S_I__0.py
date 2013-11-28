@@ -31,7 +31,7 @@ class table_T_S_I__0(DefaultTable.DefaultTable):
 			# We have no corresponging table (TSI1 or TSI3); let's return
 			# no data, which effectively means "ignore us".
 			return ""
-		data = ""
+		data = b""
 		for index, textLength, textOffset in self.indices:
 			data = data + struct.pack(tsi0Format, index, textLength, textOffset)
 		data = data + struct.pack(tsi0Format, 0XFFFE, 0, -1409540300)  # 0xABFC1F34

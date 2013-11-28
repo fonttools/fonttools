@@ -26,7 +26,7 @@ class table__g_a_s_p(DefaultTable.DefaultTable):
 	def compile(self, ttFont):
 		version = 0 # ignore self.version
 		numRanges = len(self.gaspRange)
-		data = ""
+		data = b""
 		items = sorted(self.gaspRange.items())
 		for rangeMaxPPEM, rangeGaspBehavior in items:
 			data = data + struct.pack(">HH", rangeMaxPPEM, rangeGaspBehavior)

@@ -224,8 +224,8 @@ def unpackPStrings(data):
 
 
 def packPStrings(strings):
-	data = ""
+	data = b""
 	for s in strings:
-		data = data + bytechr(len(s)) + s
+		data = data + bytechr(len(s)) + tobytes(s)
 	return data
 

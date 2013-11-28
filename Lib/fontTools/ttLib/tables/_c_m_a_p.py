@@ -328,7 +328,7 @@ class cmap_format_2(CmapSubtable):
 		# add it to the glyphID to get the final glyphIndex
 		# value. In this case the final glyph index = 3+ 42 -> 45 for the final glyphIndex. Whew!
 		
-		self.data = ""
+		self.data = b""
 		self.cmap = cmap = {}
 		notdefGI = 0
 		for firstByte in range(256):
@@ -875,7 +875,7 @@ class cmap_format_6(CmapSubtable):
 				glyphIndexArray.byteswap()
 			data = glyphIndexArray.tostring()
 		else:
-			data = ""
+			data = b""
 			firstCode = 0
 		header = struct.pack(">HHHHH", 
 				6, len(data) + 10, self.language, firstCode, len(codes))

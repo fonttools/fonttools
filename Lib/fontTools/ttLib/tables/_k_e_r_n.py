@@ -104,7 +104,7 @@ class KernTable_format_0:
 		for k in range(nPairs):
 			if len(data) < 6:
 				# buggy kern table
-				data = ""
+				data = b""
 				break
 			left, right, value = struct.unpack(">HHh", data[:6])
 			data = data[6:]
