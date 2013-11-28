@@ -21,7 +21,7 @@ except:
 	def bytechr(n):
 		return bytes([n])
 	def byteord(c):
-		return ord(c) if isinstance(c, str) else c
+		return c if isinstance(c, int) else ord(c)
 
 try:
 	from cStringIO import StringIO
