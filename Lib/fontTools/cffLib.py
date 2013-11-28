@@ -81,7 +81,7 @@ class CFFFontSet:
 	def toXML(self, xmlWriter, progress=None):
 		xmlWriter.newline()
 		for fontName in self.fontNames:
-			xmlWriter.begintag("CFFFont", name=fontName)
+			xmlWriter.begintag("CFFFont", name=tostr(fontName))
 			xmlWriter.newline()
 			font = self[fontName]
 			font.toXML(xmlWriter, progress)
@@ -673,14 +673,27 @@ class SimpleConverter:
 	def xmlRead(self, name, attrs, content, parent):
 		return attrs["value"]
 
-class Latin1Converter(SimpleConverter):
+class ASCIIConverter(SimpleConverter):
+	def read(self, parent, value):
+		return tostr(value, encoding='ascii')
+	def write(self, parent, value):
+		return tobytes(value, encoding='ascii')
 	def xmlWrite(self, xmlWriter, name, value, progress):
-		# Store as UTF-8
-		value = value.decode("latin1").encode("utf-8")
-		xmlWriter.simpletag(name, value=value)
+		xmlWriter.simpletag(name, value=tostr(value, encoding="ascii"))
 		xmlWriter.newline()
 	def xmlRead(self, name, attrs, content, parent):
-		return attrs["value"].decode("utf-8").encode("latin1")
+		return tobytes(attrs["value"], encoding=("ascii"))
+
+class Latin1Converter(SimpleConverter):
+	def read(self, parent, value):
+		return tostr(value, encoding='latin1')
+	def write(self, parent, value):
+		return tobytes(value, encoding='latin1')
+	def xmlWrite(self, xmlWriter, name, value, progress):
+		xmlWriter.simpletag(name, value=tostr(value, encoding="latin1"))
+		xmlWriter.newline()
+	def xmlRead(self, name, attrs, content, parent):
+		return tobytes(attrs["value"], encoding=("latin1"))
 
 
 def parseNum(s):
@@ -1200,7 +1213,7 @@ class ROSConverter(SimpleConverter):
 
 	def xmlWrite(self, xmlWriter, name, value, progress):
 		registry, order, supplement = value
-		xmlWriter.simpletag(name, [('Registry', registry), ('Order', order),
+		xmlWriter.simpletag(name, [('Registry', tostr(registry)), ('Order', tostr(order)),
 			('Supplement', supplement)])
 		xmlWriter.newline()
 
@@ -1285,7 +1298,7 @@ def addConverters(table):
 		elif arg == "number":
 			conv = NumberConverter()
 		elif arg == "SID":
-			conv = SimpleConverter()
+			conv = ASCIIConverter()
 		else:
 			assert 0
 		table[i] = op, name, arg, default, conv
