@@ -1,12 +1,13 @@
-import sys
-from fontTools.ttLib.standardGlyphOrder import standardGlyphOrder
-import DefaultTable
-import struct
-from fontTools.misc import sstruct
-import array
+from __future__ import print_function, division
+from fontTools.misc.py23 import *
 from fontTools import ttLib
+from fontTools.ttLib.standardGlyphOrder import standardGlyphOrder
+from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval, readHex
-from types import TupleType
+from . import DefaultTable
+import sys
+import struct
+import array
 
 
 postFormat = """
@@ -38,7 +39,7 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 			self.decode_format_3_0(data, ttFont)
 		else:
 			# supported format
-			raise ttLib.TTLibError, "'post' table format %f not supported" % self.formatType
+			raise ttLib.TTLibError("'post' table format %f not supported" % self.formatType)
 	
 	def compile(self, ttFont):
 		data = sstruct.pack(postFormat, self)
@@ -50,7 +51,7 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 			pass # we're done
 		else:
 			# supported format
-			raise ttLib.TTLibError, "'post' table format %f not supported" % self.formatType
+			raise ttLib.TTLibError("'post' table format %f not supported" % self.formatType)
 		return data
 	
 	def getGlyphOrder(self):
@@ -59,7 +60,7 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 		or its relatives instead!
 		"""
 		if not hasattr(self, "glyphOrder"):
-			raise ttLib.TTLibError, "illegal use of getGlyphOrder()"
+			raise ttLib.TTLibError("illegal use of getGlyphOrder()")
 		glyphOrder = self.glyphOrder
 		del self.glyphOrder
 		return glyphOrder
@@ -79,7 +80,7 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 		data = data[2:]
 		indices = array.array("H")
 		indices.fromstring(data[:2*numGlyphs])
-		if sys.byteorder <> "big":
+		if sys.byteorder != "big":
 			indices.byteswap()
 		data = data[2*numGlyphs:]
 		self.extraNames = extraNames = unpackPStrings(data)
@@ -105,11 +106,11 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 		allNames = {}
 		for i in range(ttFont['maxp'].numGlyphs):
 			glyphName = psName = self.glyphOrder[i]
-			if allNames.has_key(glyphName):
+			if glyphName in allNames:
 				# make up a new glyphName that's unique
 				n = allNames[glyphName]
 				allNames[glyphName] = n + 1
-				glyphName = glyphName + "#" + `n`
+				glyphName = glyphName + "#" + repr(n)
 				self.glyphOrder[i] = glyphName
 				mapping[glyphName] = psName
 			else:
@@ -132,11 +133,11 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 			extraDict[extraNames[i]] = i
 		for glyphID in range(numGlyphs):
 			glyphName = glyphOrder[glyphID]
-			if self.mapping.has_key(glyphName):
+			if glyphName in self.mapping:
 				psName = self.mapping[glyphName]
 			else:
 				psName = glyphName
-			if extraDict.has_key(psName):
+			if psName in extraDict:
 				index = 258 + extraDict[psName]
 			elif psName in standardGlyphOrder:
 				index = standardGlyphOrder.index(psName)
@@ -145,7 +146,7 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 				extraDict[psName] = len(extraNames)
 				extraNames.append(psName)
 			indices.append(index)
-		if sys.byteorder <> "big":
+		if sys.byteorder != "big":
 			indices.byteswap()
 		return struct.pack(">H", numGlyphs) + indices.tostring() + packPStrings(extraNames)
 	
@@ -165,8 +166,7 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 						"ps name mapping for those cases where they differ. That's what\n"
 						"you see below.\n")
 			writer.newline()
-			items = self.mapping.items()
-			items.sort()
+			items = sorted(self.mapping.items())
 			for name, psName in items:
 				writer.simpletag("psName", name=name, psName=psName)
 				writer.newline()
@@ -189,13 +189,13 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 			writer.endtag("hexdata")
 			writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		if name not in ("psNames", "extraNames", "hexdata"):
 			setattr(self, name, safeEval(attrs["value"]))
 		elif name == "psNames":
 			self.mapping = {}
 			for element in content:
-				if type(element) <> TupleType:
+				if not isinstance(element, tuple):
 					continue
 				name, attrs, content = element
 				if name == "psName":
@@ -203,7 +203,7 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 		elif name == "extraNames":
 			self.extraNames = []
 			for element in content:
-				if type(element) <> TupleType:
+				if not isinstance(element, tuple):
 					continue
 				name, attrs, content = element
 				if name == "psName":
@@ -217,15 +217,15 @@ def unpackPStrings(data):
 	index = 0
 	dataLen = len(data)
 	while index < dataLen:
-		length = ord(data[index])
-		strings.append(data[index+1:index+1+length])
+		length = byteord(data[index])
+		strings.append(tostr(data[index+1:index+1+length]))
 		index = index + 1 + length
 	return strings
 
 
 def packPStrings(strings):
-	data = ""
+	data = b""
 	for s in strings:
-		data = data + chr(len(s)) + s
+		data = data + bytechr(len(s)) + tobytes(s)
 	return data
 

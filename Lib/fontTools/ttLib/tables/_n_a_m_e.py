@@ -1,9 +1,9 @@
-import DefaultTable
-import struct
+from __future__ import print_function, division
+from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval
-import string
-import types
+from . import DefaultTable
+import struct
 
 nameRecordFormat = """
 		>	# big endian
@@ -25,8 +25,7 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 		expectedStringOffset = 6 + n * nameRecordSize
 		if stringOffset != expectedStringOffset:
 			# XXX we need a warn function
-			print "Warning: 'name' table stringOffset incorrect.",
-			print "Expected: %s; Actual: %s" % (expectedStringOffset, stringOffset)
+			print("Warning: 'name' table stringOffset incorrect. Expected: %s; Actual: %s" % (expectedStringOffset, stringOffset))
 		stringData = data[stringOffset:]
 		data = data[6:]
 		self.names = []
@@ -49,8 +48,8 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 			# only happens when there are NO name table entries read
 			# from the TTX file
 			self.names = []
-		self.names.sort()  # sort according to the spec; see NameRecord.__cmp__()
-		stringData = ""
+		self.names.sort()  # sort according to the spec; see NameRecord.__lt__()
+		stringData = b""
 		format = 0
 		n = len(self.names)
 		stringOffset = 6 + n * sstruct.calcsize(nameRecordFormat)
@@ -58,7 +57,7 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 		lastoffset = 0
 		done = {}  # remember the data so we can reuse the "pointers"
 		for name in self.names:
-			if done.has_key(name.string):
+			if name.string in done:
 				name.offset, name.length = done[name.string]
 			else:
 				name.offset, name.length = done[name.string] = len(stringData), len(name.string)
@@ -70,14 +69,14 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 		for name in self.names:
 			name.toXML(writer, ttFont)
 	
-	def fromXML(self, (name, attrs, content), ttFont):
-		if name <> "namerecord":
+	def fromXML(self, name, attrs, content, ttFont):
+		if name != "namerecord":
 			return # ignore unknown tags
 		if not hasattr(self, "names"):
 			self.names = []
 		name = NameRecord()
 		self.names.append(name)
-		name.fromXML((name, attrs, content), ttFont)
+		name.fromXML(name, attrs, content, ttFont)
 	
 	def getName(self, nameID, platformID, platEncID, langID=None):
 		for namerecord in self.names:
@@ -88,14 +87,8 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 					return namerecord
 		return None # not found
 	
-	def __cmp__(self, other):
-		if type(self) != type(other): return cmp(type(self), type(other))
-		if self.__class__ != other.__class__: return cmp(self.__class__, other.__class__)
 
-		return cmp(self.names, other.names)
-	
-
-class NameRecord:
+class NameRecord(object):
 	
 	def toXML(self, writer, ttFont):
 		writer.begintag("namerecord", [
@@ -109,52 +102,47 @@ class NameRecord:
 			if len(self.string) % 2:
 				# no, shouldn't happen, but some of the Apple
 				# tools cause this anyway :-(
-				writer.write16bit(self.string + "\0")
+				writer.write16bit(self.string + b"\0", strip=True)
 			else:
-				writer.write16bit(self.string)
+				writer.write16bit(self.string, strip=True)
 		else:
-			writer.write8bit(self.string)
+			writer.write8bit(self.string, strip=True)
 		writer.newline()
 		writer.endtag("namerecord")
 		writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		self.nameID = safeEval(attrs["nameID"])
 		self.platformID = safeEval(attrs["platformID"])
 		self.platEncID = safeEval(attrs["platEncID"])
 		self.langID =  safeEval(attrs["langID"])
+		s = strjoin(content).strip()
 		if self.platformID == 0 or (self.platformID == 3 and self.platEncID in (0, 1)):
-			s = ""
-			for element in content:
-				s = s + element
-			s = unicode(s, "utf8")
-			s = s.strip()
 			self.string = s.encode("utf_16_be")
 		else:
-			s = string.strip(string.join(content, ""))
-			self.string = unicode(s, "utf8").encode("latin1")
+			# This is the inverse of write8bit...
+			self.string = s.encode("latin1")
 	
-	def __cmp__(self, other):
-		"""Compare method, so a list of NameRecords can be sorted
-		according to the spec by just sorting it..."""
+	def __lt__(self, other):
+		if type(self) != type(other):
+			raise TypeError("unordered types %s() < %s()", type(self), type(other))
 
-		if type(self) != type(other): return cmp(type(self), type(other))
-
-		selftuple = (
+		# implemented so that list.sort() sorts according to the spec.
+		selfTuple = (
 			getattr(self, "platformID", None),
 			getattr(self, "platEncID", None),
 			getattr(self, "langID", None),
 			getattr(self, "nameID", None),
 			getattr(self, "string", None),
 		)
-		othertuple = (
+		otherTuple = (
 			getattr(other, "platformID", None),
 			getattr(other, "platEncID", None),
 			getattr(other, "langID", None),
 			getattr(other, "nameID", None),
 			getattr(other, "string", None),
 		)
-		return cmp(selftuple, othertuple)
+		return selfTuple < otherTuple
 	
 	def __repr__(self):
 		return "<NameRecord NameID=%d; PlatformID=%d; LanguageID=%d>" % (

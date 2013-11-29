@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+from fontTools.misc.py23 import *
 from fontTools import ttLib
 from fontTools.misc.textTools import safeEval
 from fontTools.ttLib.tables.DefaultTable import DefaultTable
@@ -9,7 +11,7 @@ class TTXParseError(Exception): pass
 BUFSIZE = 0x4000
 
 
-class XMLReader:
+class XMLReader(object):
 	
 	def __init__(self, fileName, ttFont, progress=None, quiet=False):
 		self.ttFont = ttFont
@@ -23,7 +25,7 @@ class XMLReader:
 	def read(self):
 		if self.progress:
 			import stat
-			self.progress.set(0, os.stat(fileName)[stat.ST_SIZE] / 100 or 1)
+			self.progress.set(0, os.stat(fileName)[stat.ST_SIZE] // 100 or 1)
 		file = open(self.fileName)
 		self._parseFile(file)
 		file.close()
@@ -31,31 +33,30 @@ class XMLReader:
 	def _parseFile(self, file):
 		from xml.parsers.expat import ParserCreate
 		parser = ParserCreate()
-		parser.returns_unicode = 0
 		parser.StartElementHandler = self._startElementHandler
 		parser.EndElementHandler = self._endElementHandler
 		parser.CharacterDataHandler = self._characterDataHandler
 		
 		pos = 0
-		while 1:
+		while True:
 			chunk = file.read(BUFSIZE)
 			if not chunk:
 				parser.Parse(chunk, 1)
 				break
 			pos = pos + len(chunk)
 			if self.progress:
-				self.progress.set(pos / 100)
+				self.progress.set(pos // 100)
 			parser.Parse(chunk, 0)
 	
 	def _startElementHandler(self, name, attrs):
 		stackSize = self.stackSize
 		self.stackSize = stackSize + 1
 		if not stackSize:
-			if name <> "ttFont":
-				raise TTXParseError, "illegal root tag: %s" % name
+			if name != "ttFont":
+				raise TTXParseError("illegal root tag: %s" % name)
 			sfntVersion = attrs.get("sfntVersion")
 			if sfntVersion is not None:
-				if len(sfntVersion) <> 4:
+				if len(sfntVersion) != 4:
 					sfntVersion = safeEval('"' + sfntVersion + '"')
 				self.ttFont.sfntVersion = sfntVersion
 			self.contentStack.append([])
@@ -75,16 +76,16 @@ class XMLReader:
 				ttLib.debugmsg(msg)
 			else:
 				if not self.quiet:
-					print msg
+					print(msg)
 			if tag == "GlyphOrder":
 				tableClass = ttLib.GlyphOrder
-			elif attrs.has_key("ERROR"):
+			elif "ERROR" in attrs:
 				tableClass = DefaultTable
 			else:
 				tableClass = ttLib.getTableClass(tag)
 				if tableClass is None:
 					tableClass = DefaultTable
-			if tag == 'loca' and self.ttFont.has_key(tag):
+			if tag == 'loca' and tag in self.ttFont:
 				# Special-case the 'loca' table as we need the
 				#    original if the 'glyf' table isn't recompiled.
 				self.currentTable = self.ttFont[tag]
@@ -110,14 +111,15 @@ class XMLReader:
 		if self.stackSize == 1:
 			self.root = None
 		elif self.stackSize == 2:
-			self.currentTable.fromXML(self.root, self.ttFont)
+			name, attrs, content = self.root
+			self.currentTable.fromXML(name, attrs, content, self.ttFont)
 			self.root = None
 
 
-class ProgressPrinter:
+class ProgressPrinter(object):
 	
 	def __init__(self, title, maxval=100):
-		print title
+		print(title)
 	
 	def set(self, val, maxval=None):
 		pass
@@ -126,5 +128,5 @@ class ProgressPrinter:
 		pass
 	
 	def setLabel(self, text):
-		print text
+		print(text)
 

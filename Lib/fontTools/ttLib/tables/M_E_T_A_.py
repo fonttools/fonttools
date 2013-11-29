@@ -1,10 +1,11 @@
-import DefaultTable
-import struct
+from __future__ import print_function, division
+from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval
-import string
-from types import FloatType, ListType, StringType, TupleType
-import sys
+from . import DefaultTable
+import struct
+
+
 METAHeaderFormat = """
 		>	# big endian
 		tableVersionMajor:			H
@@ -166,28 +167,24 @@ class table_M_E_T_A_(DefaultTable.DefaultTable):
 		for glyphRec in self.glyphRecords:
 			glyphRec.toXML(writer, ttFont)
 		
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		if name == "GlyphRecord":
 			if not hasattr(self, "glyphRecords"):
 				self.glyphRecords = []
 			glyphRec = GlyphRecord()
 			self.glyphRecords.append(glyphRec)
 			for element in content:
-				if isinstance(element, StringType):
+				if isinstance(element, basestring):
 					continue
-				glyphRec.fromXML(element, ttFont)
+				name, attrs, content = element
+				glyphRec.fromXML(name, attrs, content, ttFont)
 			glyphRec.offset = -1
 			glyphRec.nMetaEntry = len(glyphRec.stringRecs)
 		else:			
-			value = attrs["value"]
-			try:
-				value = safeEval(value)
-			except OverflowError:
-				value = long(value)
-			setattr(self, name, value)
+			setattr(self, name, safeEval(attrs["value"]))
 
 
-class GlyphRecord:
+class GlyphRecord(object):
 	def __init__(self):
 		self.glyphID = -1
 		self.nMetaEntry = -1
@@ -207,22 +204,17 @@ class GlyphRecord:
 		writer.newline()
 
 
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		if name == "StringRecord":
 			stringRec = StringRecord()
 			self.stringRecs.append(stringRec)
 			for element in content:
-				if isinstance(element, StringType):
+				if isinstance(element, basestring):
 					continue
-				stringRec.fromXML(element, ttFont)
+				stringRec.fromXML(name, attrs, content, ttFont)
 			stringRec.stringLen = len(stringRec.string)
 		else:			
-			value = attrs["value"]
-			try:
-				value = safeEval(value)
-			except OverflowError:
-				value = long(value)
-			setattr(self, name, value)
+			setattr(self, name, safeEval(attrs["value"]))
 
 	def compile(self, parentTable):
 		data = sstruct.pack(METAGlyphRecordFormat, self)
@@ -232,23 +224,14 @@ class GlyphRecord:
 			datum = struct.pack(">L", self.offset)
 		data = data + datum
 		return data
-
-
-	def __cmp__(self, other):
-		"""Compare method, so a list of NameRecords can be sorted
-		according to the spec by just sorting it..."""
-
-		if type(self) != type(other): return cmp(type(self), type(other))
-		if self.__class__ != other.__class__: return cmp(self.__class__, other.__class__)
-
-		return cmp(self.glyphID, other.glyphID)
 	
 	def __repr__(self):
 		return "GlyphRecord[ glyphID: " + str(self.glyphID) + ", nMetaEntry: " + str(self.nMetaEntry) + ", offset: " + str(self.offset) + " ]"
 
+# XXX The following two functions are really broken around UTF-8 vs Unicode
 
 def mapXMLToUTF8(string):
-	uString = u""
+	uString = unicode()
 	strLen = len(string)
 	i = 0
 	while i < strLen:
@@ -266,7 +249,7 @@ def mapXMLToUTF8(string):
 			
 			uString = uString + unichr(eval('0x' + valStr))
 		else:
-			uString = uString + unichr(ord(string[i]))
+			uString = uString + unichr(byteord(string[i]))
 		i = i +1
 			
 	return uString.encode('utf8')
@@ -278,18 +261,13 @@ def mapUTF8toXML(string):
 	for uChar in uString:
 		i = ord(uChar)
 		if (i < 0x80) and (i > 0x1F):
-			string = string + chr(i)
+			string = string + uChar
 		else:
 			string = string + "&#x" + hex(i)[2:] + ";"
 	return string
 
 
-class StringRecord:
-	def __init__(self):
-		self.labelID = -1
-		self.string = ""
-		self.stringLen = -1
-		self.offset = -1
+class StringRecord(object):
 
 	def toXML(self, writer, ttFont):
 		writer.begintag("StringRecord")
@@ -303,16 +281,16 @@ class StringRecord:
 		writer.endtag("StringRecord")
 		writer.newline()
 
-	def fromXML(self, (name, attrs, content), ttFont):
-		value = attrs["value"]
-		if name == "string":
-			self.string = mapXMLToUTF8(value)
-		else:
-			try:
-				value = safeEval(value)
-			except OverflowError:
-				value = long(value)
-			setattr(self, name, value)
+	def fromXML(self, name, attrs, content, ttFont):
+		for element in content:
+			if isinstance(element, basestring):
+				continue
+			name, attrs, content = element
+			value = attrs["value"]
+			if name == "string":
+				self.string = mapXMLToUTF8(value)
+			else:
+				setattr(self, name, safeEval(value))
 
 	def compile(self, parentTable):
 		data = sstruct.pack(METAStringRecordFormat, self)
@@ -322,15 +300,6 @@ class StringRecord:
 			datum = struct.pack(">L", self.offset)
 		data = data + datum
 		return data
-
-	def __cmp__(self, other):
-		"""Compare method, so a list of NameRecords can be sorted
-		according to the spec by just sorting it..."""
-
-		if type(self) != type(other): return cmp(type(self), type(other))
-		if self.__class__ != other.__class__: return cmp(self.__class__, other.__class__)
-
-		return cmp(self.labelID, other.labelID)
 	
 	def __repr__(self):
 		return "StringRecord [ labelID: " + str(self.labelID) + " aka " + getLabelString(self.labelID) \

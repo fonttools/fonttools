@@ -1,8 +1,8 @@
+from __future__ import print_function, division
+from fontTools.misc.py23 import *
+from . import DefaultTable
 import sys
-import DefaultTable
 import array
-from fontTools import ttLib
-import struct
 import warnings
 
 class table__l_o_c_a(DefaultTable.DefaultTable):
@@ -17,7 +17,7 @@ class table__l_o_c_a(DefaultTable.DefaultTable):
 			format = "H"
 		locations = array.array(format)
 		locations.fromstring(data)
-		if sys.byteorder <> "big":
+		if sys.byteorder != "big":
 			locations.byteswap()
 		if not longFormat:
 			l = array.array("I")
@@ -37,12 +37,12 @@ class table__l_o_c_a(DefaultTable.DefaultTable):
 		if max_location < 0x20000:
 			locations = array.array("H")
 			for i in range(len(self.locations)):
-				locations.append(self.locations[i] / 2)
+				locations.append(self.locations[i] // 2)
 			ttFont['head'].indexToLocFormat = 0
 		else:
 			locations = array.array("I", self.locations)
 			ttFont['head'].indexToLocFormat = 1
-		if sys.byteorder <> "big":
+		if sys.byteorder != "big":
 			locations.byteswap()
 		return locations.tostring()
 	
@@ -58,10 +58,4 @@ class table__l_o_c_a(DefaultTable.DefaultTable):
 	
 	def __len__(self):
 		return len(self.locations)
-	
-	def __cmp__(self, other):
-		if type(self) != type(other): return cmp(type(self), type(other))
-		if self.__class__ != other.__class__: return cmp(self.__class__, other.__class__)
-
-		return cmp(self.locations, other.locations)
 

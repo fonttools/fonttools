@@ -1,6 +1,8 @@
-import DefaultTable
-import struct
+from __future__ import print_function, division
+from fontTools.misc.py23 import *
 from fontTools.misc.textTools import safeEval
+from . import DefaultTable
+import struct
 
 
 GASP_SYMMETRIC_GRIDFIT = 0x0004
@@ -24,9 +26,8 @@ class table__g_a_s_p(DefaultTable.DefaultTable):
 	def compile(self, ttFont):
 		version = 0 # ignore self.version
 		numRanges = len(self.gaspRange)
-		data = ""
-		items = self.gaspRange.items()
-		items.sort()
+		data = b""
+		items = sorted(self.gaspRange.items())
 		for rangeMaxPPEM, rangeGaspBehavior in items:
 			data = data + struct.pack(">HH", rangeMaxPPEM, rangeGaspBehavior)
 			if rangeGaspBehavior & ~(GASP_GRIDFIT | GASP_DOGRAY):
@@ -35,16 +36,15 @@ class table__g_a_s_p(DefaultTable.DefaultTable):
 		return data
 	
 	def toXML(self, writer, ttFont):
-		items = self.gaspRange.items()
-		items.sort()
+		items = sorted(self.gaspRange.items())
 		for rangeMaxPPEM, rangeGaspBehavior in items:
 			writer.simpletag("gaspRange", [
 					("rangeMaxPPEM", rangeMaxPPEM),
 					("rangeGaspBehavior", rangeGaspBehavior)])
 			writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
-		if name <> "gaspRange":
+	def fromXML(self, name, attrs, content, ttFont):
+		if name != "gaspRange":
 			return
 		if not hasattr(self, "gaspRange"):
 			self.gaspRange = {}

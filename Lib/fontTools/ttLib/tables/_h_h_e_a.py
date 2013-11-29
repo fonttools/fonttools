@@ -1,6 +1,8 @@
-import DefaultTable
+from __future__ import print_function, division
+from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval
+from . import DefaultTable
 
 
 hheaFormat = """
@@ -39,7 +41,7 @@ class table__h_h_e_a(DefaultTable.DefaultTable):
 	
 	def recalc(self, ttFont):
 		hmtxTable = ttFont['hmtx']
-		if ttFont.has_key('glyf'):
+		if 'glyf' in ttFont:
 			glyfTable = ttFont['glyf']
 			INFINITY = 100000
 			advanceWidthMax = 0
@@ -81,11 +83,9 @@ class table__h_h_e_a(DefaultTable.DefaultTable):
 		formatstring, names, fixes = sstruct.getformat(hheaFormat)
 		for name in names:
 			value = getattr(self, name)
-			if type(value) == type(0L):
-				value = int(value)
 			writer.simpletag(name, value=value)
 			writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		setattr(self, name, safeEval(attrs["value"]))
 

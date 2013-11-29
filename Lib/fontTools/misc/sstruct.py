@@ -46,50 +46,57 @@ calcsize(format)
 	it returns the size of the data in bytes.
 """
 
-# XXX I would like to support pascal strings, too, but I'm not
-# sure if that's wise. Would be nice if struct supported them
-# "properly", but that would certainly break calcsize()...
+from __future__ import print_function, division
+from fontTools.misc.py23 import *
+from fontTools.misc.fixedTools import fixedToFloat as fi2fl, floatToFixed as fl2fi
+import struct
+import re
 
 __version__ = "1.2"
 __copyright__ = "Copyright 1998, Just van Rossum <just@letterror.com>"
 
-import struct
-import re
-import types
 
-
-error = "sstruct.error"
+class Error(Exception):
+	pass
 
 def pack(format, object):
 	formatstring, names, fixes = getformat(format)
 	elements = []
-	if type(object) is not types.DictType:
+	if not isinstance(object, dict):
 		object = object.__dict__
 	for name in names:
 		value = object[name]
-		if fixes.has_key(name):
+		if name in fixes:
 			# fixed point conversion
-			value = int(round(value*fixes[name]))
+			value = fl2fi(value, fixes[name])
+		elif isinstance(value, basestring):
+			value = tobytes(value)
 		elements.append(value)
-	data = apply(struct.pack, (formatstring,) + tuple(elements))
+	data = struct.pack(*(formatstring,) + tuple(elements))
 	return data
 
 def unpack(format, data, object=None):
 	if object is None:
 		object = {}
+	data = tobytes(data)
 	formatstring, names, fixes = getformat(format)
-	if type(object) is types.DictType:
-		dict = object
+	if isinstance(object, dict):
+		d = object
 	else:
-		dict = object.__dict__
+		d = object.__dict__
 	elements = struct.unpack(formatstring, data)
 	for i in range(len(names)):
 		name = names[i]
 		value = elements[i]
-		if fixes.has_key(name):
+		if name in fixes:
 			# fixed point conversion
-			value = value / fixes[name]
-		dict[name] = value
+			value = fi2fl(value, fixes[name])
+		elif isinstance(value, bytes):
+			try:
+				value = tostr(value)
+			except UnicodeDecodeError:
+				pass
+		d[name] = value
 	return object
 
 def unpack2(format, data, object=None):
@@ -139,12 +146,12 @@ def getformat(format):
 			m = _extraRE.match(line)
 			if m:
 				formatchar = m.group(1)
-				if formatchar <> 'x' and formatstring:
-					raise error, "a special format char must be first"
+				if formatchar != 'x' and formatstring:
+					raise Error("a special format char must be first")
 			else:
 				m = _elementRE.match(line)
 				if not m:
-					raise error, "syntax error in format: '%s'" % line
+					raise Error("syntax error in format: '%s'" % line)
 				name = m.group(1)
 				names.append(name)
 				formatchar = m.group(2)
@@ -154,10 +161,10 @@ def getformat(format):
 					after = int(m.group(4))
 					bits = before + after
 					if bits not in [8, 16, 32]:
-						raise error, "fixed point must be 8, 16 or 32 bits long"
+						raise Error("fixed point must be 8, 16 or 32 bits long")
 					formatchar = _fixedpointmappings[bits]
 					assert m.group(5) == "F"
-					fixes[name] = float(1 << after)
+					fixes[name] = after
 			formatstring = formatstring + formatchar
 		_formatcache[format] = formatstring, names, fixes
 	return formatstring, names, fixes
@@ -177,9 +184,9 @@ def _test():
 		afixed: 16.16F
 	"""
 	
-	print 'size:', calcsize(format)
+	print('size:', calcsize(format))
 	
-	class foo:
+	class foo(object):
 		pass
 	
 	i = foo()
@@ -194,11 +201,11 @@ def _test():
 	i.afixed = 1.5
 	
 	data = pack(format, i)
-	print 'data:', `data`
-	print unpack(format, data)
+	print('data:', repr(data))
+	print(unpack(format, data))
 	i2 = foo()
 	unpack(format, data, i2)
-	print vars(i2)
+	print(vars(i2))
 
 if __name__ == "__main__":
 	_test()

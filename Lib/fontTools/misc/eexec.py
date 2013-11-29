@@ -2,26 +2,27 @@
 charstring encryption algorithm as used by PostScript Type 1 fonts.
 """
 
+from __future__ import print_function, division
+from fontTools.misc.py23 import *
+
 # Warning: Although a Python implementation is provided here, 
 # all four public functions get overridden by the *much* faster 
 # C extension module eexecOp, if available.
-
-import string
 
 error = "eexec.error"
 
 
 def _decryptChar(cipher, R):
-	cipher = ord(cipher)
+	cipher = byteord(cipher)
 	plain = ( (cipher ^ (R>>8)) ) & 0xFF
-	R = ( (cipher + R) * 52845L + 22719L ) & 0xFFFF
-	return chr(plain), R
+	R = ( (cipher + R) * 52845 + 22719 ) & 0xFFFF
+	return bytechr(plain), R
 
 def _encryptChar(plain, R):
-	plain = ord(plain)
+	plain = byteord(plain)
 	cipher = ( (plain ^ (R>>8)) ) & 0xFF
-	R = ( (cipher + R) * 52845L + 22719L ) & 0xFFFF
-	return chr(cipher), R
+	R = ( (cipher + R) * 52845 + 22719 ) & 0xFFFF
+	return bytechr(cipher), R
 
 
 def decrypt(cipherstring, R):
@@ -31,7 +32,7 @@ def decrypt(cipherstring, R):
 	for cipher in cipherstring:
 		plain, R = _decryptChar(cipher, R)
 		plainList.append(plain)
-	plainstring = string.join(plainList, '')
+	plainstring = strjoin(plainList)
 	return plainstring, int(R)
 
 def encrypt(plainstring, R):
@@ -39,7 +40,7 @@ def encrypt(plainstring, R):
 	for plain in plainstring:
 		cipher, R = _encryptChar(plain, R)
 		cipherList.append(cipher)
-	cipherstring = string.join(cipherList, '')
+	cipherstring = strjoin(cipherList)
 	return cipherstring, int(R)
 
 
@@ -49,17 +50,17 @@ def hexString(s):
 
 def deHexString(h):
 	import binascii
-	h = "".join(h.split())
+	h = strjoin(h.split())
 	return binascii.unhexlify(h)
 
 
 def _test():
 	import fontTools.misc.eexecOp as eexecOp
 	testStr = "\0\0asdadads asds\265"
-	print decrypt, decrypt(testStr, 12321)
-	print eexecOp.decrypt, eexecOp.decrypt(testStr, 12321)
-	print encrypt, encrypt(testStr, 12321)
-	print eexecOp.encrypt, eexecOp.encrypt(testStr, 12321)
+	print(decrypt, decrypt(testStr, 12321))
+	print(eexecOp.decrypt, eexecOp.decrypt(testStr, 12321))
+	print(encrypt, encrypt(testStr, 12321))
+	print(eexecOp.encrypt, eexecOp.encrypt(testStr, 12321))
 
 
 if __name__ == "__main__":

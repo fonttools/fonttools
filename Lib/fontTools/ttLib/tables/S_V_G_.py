@@ -1,3 +1,14 @@
+from __future__ import print_function, division
+from fontTools.misc.py23 import *
+from fontTools.misc import sstruct
+from . import DefaultTable
+try:
+    import xml.etree.cElementTree as ET
+except ImportError:
+    import xml.etree.ElementTree as ET
+import struct
+import re
+
 __doc__="""
 Compiles/decompiles version 0 and 1 SVG tables from/to XML.
 
@@ -41,18 +52,6 @@ The number of color records in each </colorPalette> must be the same as
 the number of <colorParamUINameID> elements.
 
 """
-
-import DefaultTable
-import struct
-from fontTools.misc import sstruct
-from fontTools.misc.textTools import safeEval
-try:
-    import xml.etree.cElementTree as ET
-except ImportError:
-    import xml.etree.ElementTree as ET
-import string
-import types
-import re
 
 XML = ET.XML
 XMLElement = ET.Element
@@ -105,7 +104,7 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 			self.decompile_format_1(data, ttFont)
 		else:
 			if self.version != 0:
-				print "Unknown SVG table version '%s'. Decompiling as version 0." % (self.version)
+				print("Unknown SVG table version '%s'. Decompiling as version 0." % (self.version))
 			self.decompile_format_0(data, ttFont)
 
 
@@ -172,7 +171,7 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 			for entry in entries:
 				start = entry.svgDocOffset + subTableStart
 				end = start + entry.svgDocLength
-				doc = data[start:end]
+				doc = tostr(data[start:end], "utf-8")
 				self.docList.append( [doc, entry.startGlyphID, entry.endGlyphID] )
 
 	def compile(self, ttFont):
@@ -196,11 +195,11 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 			docOffset = curOffset
 			docLength = len(doc)
 			curOffset += docLength
-		 	entry = struct.pack(">HHLL", startGlyphID, endGlyphID, docOffset, docLength)
-		 	entryList.append(entry)
-		 	docList.append(doc)
+			entry = struct.pack(">HHLL", startGlyphID, endGlyphID, docOffset, docLength)
+			entryList.append(entry)
+			docList.append(tobytes(doc, encoding="utf-8"))
 		entryList.extend(docList)
-		svgDocData = "".join(entryList)
+		svgDocData = bytesjoin(entryList)
 
 		# get colorpalette info.
 		if self.colorPalettes == None:
@@ -224,11 +223,11 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 				for colorRecord in colorPalette.paletteColors:
 					data = struct.pack(">BBBB", colorRecord.red, colorRecord.green, colorRecord.blue, colorRecord.alpha)
 					dataList.append(data)
-			palettesData = "".join(dataList)
+			palettesData = bytesjoin(dataList)
 
 		header = struct.pack(">HLL", version, offsetToSVGDocIndex, offsetToColorPalettes)
 		data = [header, svgDocData, palettesData]
-		data = "".join(data)
+		data = bytesjoin(data)
 		return data
 
 	def compileFormat1(self, ttFont):
@@ -242,11 +241,11 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 			docOffset = curOffset
 			docLength = len(doc)
 			curOffset += docLength
-		 	entry = struct.pack(">HHLL", startGlyphID, endGlyphID, docOffset, docLength)
-		 	dataList.append(entry)
-		 	docList.append(doc)
+			entry = struct.pack(">HHLL", startGlyphID, endGlyphID, docOffset, docLength)
+			dataList.append(entry)
+			docList.append(tobytes(doc, encoding="utf-8"))
 		dataList.extend(docList)
-		data = "".join(dataList)
+		data = bytesjoin(dataList)
 		return data
 
 	def toXML(self, writer, ttFont):
@@ -254,7 +253,7 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 		for doc, startGID, endGID in self.docList:
 			writer.begintag("svgDoc", startGlyphID=startGID, endGlyphID=endGID)
 			writer.newline()
-			writer.writeraw("<![CDATA["+ doc + "]]>")
+			writer.writecdata(doc)
 			writer.newline()
 			writer.endtag("svgDoc")
 			writer.newline()
@@ -290,25 +289,25 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 			writer.endtag("colorPalettes")
 			writer.newline()
 
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		import re
 		if name == "svgDoc":
 			if not hasattr(self, "docList"):
 				self.docList = []
-			doc = "".join(content)
+			doc = strjoin(content)
 			doc = doc.strip()
 			startGID = int(attrs["startGlyphID"])
 			endGID = int(attrs["endGlyphID"])
 			self.docList.append( [doc, startGID, endGID] )
 		elif  name == "colorPalettes":
 			self.colorPalettes = ColorPalettes()
-			self.colorPalettes.fromXML((name, attrs, content), ttFont)
+			self.colorPalettes.fromXML(name, attrs, content, ttFont)
 			if self.colorPalettes.numColorParams == 0:
 				self.colorPalettes = None
 		else:
-			print "Unknown", name, content
+			print("Unknown", name, content)
 
-class DocumentIndexEntry:
+class DocumentIndexEntry(object):
 	def __init__(self):
 		self.startGlyphID = None # USHORT
 		self.endGlyphID = None # USHORT
@@ -318,16 +317,16 @@ class DocumentIndexEntry:
 	def __repr__(self):
 		return "startGlyphID: %s, endGlyphID: %s, svgDocOffset: %s, svgDocLength: %s" % (self.startGlyphID, self.endGlyphID, self.svgDocOffset, self.svgDocLength)
 
-class ColorPalettes:
+class ColorPalettes(object):
 	def __init__(self):
 		self.numColorParams = None # USHORT
 		self.colorParamUINameIDs = [] # list of name table name ID values that provide UI description of each color palette.
 		self.numColorPalettes = None # USHORT
 		self.colorPaletteList = [] # list of ColorPalette records
 
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		for element in content:
-			if type(element) == type(""):
+			if isinstance(element, type("")):
 				continue
 			name, attrib, content = element
 			if name == "colorParamUINameID":
@@ -344,15 +343,15 @@ class ColorPalettes:
 			if len(colorPalette.paletteColors) != self.numColorParams:
 				raise ValueError("Number of color records in a colorPalette ('%s') does not match the number of colorParamUINameIDs elements ('%s')." % (len(colorPalette.paletteColors), self.numColorParams))
 
-class ColorPalette:
+class ColorPalette(object):
 	def __init__(self):
 		self.uiNameID = None # USHORT. name table ID that describes user interface strings associated with this color palette. 
 		self.paletteColors = [] # list of ColorRecords
 
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		self.uiNameID = int(attrs["uiNameID"])
 		for element in content:
-			if type(element) == type(""):
+			if isinstance(element, type("")):
 				continue
 			name, attrib, content = element
 			if name == "colorRecord":
@@ -363,7 +362,7 @@ class ColorPalette:
 				colorRecord.blue = eval(attrib["blue"])
 				colorRecord.alpha = eval(attrib["alpha"])
 
-class ColorRecord:
+class ColorRecord(object):
 	def __init__(self):
 		self.red = 255 # all are one byte values.
 		self.green = 255

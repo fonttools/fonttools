@@ -36,6 +36,8 @@ Coordinates are usually expressed as (x, y) tuples, but generally any
 sequence of length 2 will do.
 """
 
+from __future__ import print_function, division
+from fontTools.misc.py23 import *
 
 __all__ = ["AbstractPen", "NullPen", "BasePen",
            "decomposeSuperBezierSegment", "decomposeQuadraticSegment"]
@@ -248,7 +250,7 @@ class BasePen(AbstractPen):
 		elif n == 0:
 			self.lineTo(points[0])
 		else:
-			raise AssertionError, "can't get there from here"
+			raise AssertionError("can't get there from here")
 
 	def qCurveTo(self, *points):
 		n = len(points) - 1  # 'n' is the number of control points
@@ -296,9 +298,8 @@ def decomposeSuperBezierSegment(points):
 	for i in range(2, n+1):
 		# calculate points in between control points.
 		nDivisions = min(i, 3, n-i+2)
-		d = float(nDivisions)
 		for j in range(1, nDivisions):
-			factor = j / d
+			factor = j / nDivisions
 			temp1 = points[i-1]
 			temp2 = points[i-2]
 			temp = (temp2[0] + factor * (temp1[0] - temp2[0]),
@@ -339,14 +340,14 @@ def decomposeQuadraticSegment(points):
 class _TestPen(BasePen):
 	"""Test class that prints PostScript to stdout."""
 	def _moveTo(self, pt):
-		print "%s %s moveto" % (pt[0], pt[1])
+		print("%s %s moveto" % (pt[0], pt[1]))
 	def _lineTo(self, pt):
-		print "%s %s lineto" % (pt[0], pt[1])
+		print("%s %s lineto" % (pt[0], pt[1]))
 	def _curveToOne(self, bcp1, bcp2, pt):
-		print "%s %s %s %s %s %s curveto" % (bcp1[0], bcp1[1],
-				bcp2[0], bcp2[1], pt[0], pt[1])
+		print("%s %s %s %s %s %s curveto" % (bcp1[0], bcp1[1],
+				bcp2[0], bcp2[1], pt[0], pt[1]))
 	def _closePath(self):
-		print "closepath"
+		print("closepath")
 
 
 if __name__ == "__main__":

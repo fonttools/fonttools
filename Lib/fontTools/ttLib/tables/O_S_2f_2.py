@@ -1,7 +1,8 @@
-import DefaultTable
+from __future__ import print_function, division
+from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval, num2binary, binary2num
-from types import TupleType
+from . import DefaultTable
 import warnings
 
 
@@ -20,7 +21,7 @@ panoseFormat = """
 	bXHeight:           B
 """
 
-class Panose:
+class Panose(object):
 	
 	def toXML(self, writer, ttFont):
 		formatstring, names, fixes = sstruct.getformat(panoseFormat)
@@ -28,7 +29,7 @@ class Panose:
 			writer.simpletag(name, value=getattr(self, name))
 			writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		setattr(self, name, safeEval(attrs["value"]))
 
 
@@ -109,11 +110,11 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 			dummy, data = sstruct.unpack2(OS2_format_2_addition, data, self)
 		elif self.version == 5:
 			dummy, data = sstruct.unpack2(OS2_format_5_addition, data, self)
-			self.usLowerOpticalPointSize /= 20.
-			self.usUpperOpticalPointSize /= 20.
-		elif self.version <> 0:
+			self.usLowerOpticalPointSize /= 20
+			self.usUpperOpticalPointSize /= 20
+		elif self.version != 0:
 			from fontTools import ttLib
-			raise ttLib.TTLibError, "unknown format for OS/2 table: version %s" % self.version
+			raise ttLib.TTLibError("unknown format for OS/2 table: version %s" % self.version)
 		if len(data):
 			warnings.warn("too much 'OS/2' table data")
 
@@ -135,7 +136,7 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 			data = sstruct.pack(OS2_format_5, d)
 		else:
 			from fontTools import ttLib
-			raise ttLib.TTLibError, "unknown format for OS/2 table: version %s" % self.version
+			raise ttLib.TTLibError("unknown format for OS/2 table: version %s" % self.version)
 		self.panose = panose
 		return data
 	
@@ -151,8 +152,6 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 		formatstring, names, fixes = sstruct.getformat(format)
 		for name in names:
 			value = getattr(self, name)
-			if type(value) == type(0L):
-				value = int(value)
 			if name=="panose":
 				writer.begintag("panose")
 				writer.newline()
@@ -170,12 +169,13 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 				writer.simpletag(name, value=value)
 			writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		if name == "panose":
 			self.panose = panose = Panose()
 			for element in content:
-				if type(element) == TupleType:
-					panose.fromXML(element, ttFont)
+				if isinstance(element, tuple):
+					name, attrs, content = element
+					panose.fromXML(name, attrs, content, ttFont)
 		elif name in ("ulUnicodeRange1", "ulUnicodeRange2", 
 				"ulUnicodeRange3", "ulUnicodeRange4",
 				"ulCodePageRange1", "ulCodePageRange2",

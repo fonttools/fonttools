@@ -24471,7 +24471,7 @@ def _makeunicodes():
 	return unicodes
 
 
-class _Unicode:
+class _Unicode(object):
 
 	def __init__(self):
 		self.codes = _makeunicodes()

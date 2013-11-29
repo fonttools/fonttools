@@ -1,7 +1,8 @@
 # Since bitmap glyph metrics are shared between EBLC and EBDT
 # this class gets its own python file.
+from __future__ import print_function, division
+from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
-from types import TupleType
 from fontTools.misc.textTools import safeEval
 
 
@@ -26,7 +27,7 @@ smallGlyphMetricsFormat = """
   Advance:  B
 """
 
-class BitmapGlyphMetrics:
+class BitmapGlyphMetrics(object):
 
 	def toXML(self, writer, ttFont):
 		writer.begintag(self.__class__.__name__)
@@ -37,17 +38,17 @@ class BitmapGlyphMetrics:
 		writer.endtag(self.__class__.__name__)
 		writer.newline()
 
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		metricNames = set(sstruct.getformat(self.__class__.binaryFormat)[1])
 		for element in content:
-			if type(element) != TupleType:
+			if not isinstance(element, tuple):
 				continue
 			name, attrs, content = element
 			# Make sure this is a metric that is needed by GlyphMetrics.
 			if name in metricNames:
 				vars(self)[name] = safeEval(attrs['value'])
 			else:
-				print "Warning: unknown name '%s' being ignored in %s." % name, self.__class__.__name__
+				print("Warning: unknown name '%s' being ignored in %s." % name, self.__class__.__name__)
 
 
 class BigGlyphMetrics(BitmapGlyphMetrics):

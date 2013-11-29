@@ -2,12 +2,11 @@
 #
 # Google Author(s): Behdad Esfahbod
 
-import operator
-import DefaultTable
+from __future__ import print_function, division
+from fontTools.misc.py23 import *
+from fontTools.misc.textTools import safeEval
+from . import DefaultTable
 import struct
-from fontTools.ttLib import sfnt
-from fontTools.misc.textTools import safeEval, readHex
-from types import IntType, StringType
 
 
 class table_C_P_A_L_(DefaultTable.DefaultTable):
@@ -36,7 +35,7 @@ class table_C_P_A_L_(DefaultTable.DefaultTable):
 			assert(len(palette) == self.numPaletteEntries)
 			for color in palette:
 				dataList.append(struct.pack(">BBBB", color.blue,color.green,color.red,color.alpha))
-		data = "".join(dataList)
+		data = bytesjoin(dataList)
 		return data
 
 	def toXML(self, writer, ttFont):
@@ -53,27 +52,27 @@ class table_C_P_A_L_(DefaultTable.DefaultTable):
 			writer.endtag("palette")
 			writer.newline()
 
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		if not hasattr(self, "palettes"):
 			self.palettes = []
 		if name == "palette":
 			palette = []
 			for element in content:
-				if isinstance(element, StringType):
+				if isinstance(element, basestring):
 					continue
 			palette = []
 			for element in content:
-				if isinstance(element, StringType):
+				if isinstance(element, basestring):
 					continue
 				color = Color()
-				color.fromXML(element, ttFont)
+				color.fromXML(element[0], element[1], element[2], ttFont)
 				palette.append (color)
 			self.palettes.append(palette)
-		elif attrs.has_key("value"):
+		elif "value" in attrs:
 			value =  safeEval(attrs["value"])
 			setattr(self, name, value)
 
-class Color:
+class Color(object):
 
 	def __init__(self, blue=None, green=None, red=None, alpha=None):
 		self.blue  = blue
@@ -91,7 +90,7 @@ class Color:
 		writer.simpletag("color", value=self.hex(), index=index)
 		writer.newline()
 
-	def fromXML(self, (eltname, attrs, content), ttFont):
+	def fromXML(self, eltname, attrs, content, ttFont):
 		value = attrs["value"]
 		if value[0] == '#':
 			value = value[1:]

@@ -12,13 +12,13 @@ classes, since whenever to number of tables changes or whenever
 a table's length chages you need to rewrite the whole file anyway.
 """
 
-import sys
-import struct
+from __future__ import print_function, division
+from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
-import os
+import struct
 
 
-class SFNTReader:
+class SFNTReader(object):
 	
 	def __init__(self, file, checkChecksums=1, fontNumber=-1):
 		self.file = file
@@ -29,33 +29,34 @@ class SFNTReader:
 		self.DirectoryEntry = SFNTDirectoryEntry
 		self.sfntVersion = self.file.read(4)
 		self.file.seek(0)
-		if self.sfntVersion == "ttcf":
+		if self.sfntVersion == b"ttcf":
 			sstruct.unpack(ttcHeaderFormat, self.file.read(ttcHeaderSize), self)
 			assert self.Version == 0x00010000 or self.Version == 0x00020000, "unrecognized TTC version 0x%08x" % self.Version
 			if not 0 <= fontNumber < self.numFonts:
 				from fontTools import ttLib
-				raise ttLib.TTLibError, "specify a font number between 0 and %d (inclusive)" % (self.numFonts - 1)
+				raise ttLib.TTLibError("specify a font number between 0 and %d (inclusive)" % (self.numFonts - 1))
 			offsetTable = struct.unpack(">%dL" % self.numFonts, self.file.read(self.numFonts * 4))
 			if self.Version == 0x00020000:
 				pass # ignoring version 2.0 signatures
 			self.file.seek(offsetTable[fontNumber])
 			sstruct.unpack(sfntDirectoryFormat, self.file.read(sfntDirectorySize), self)
-		elif self.sfntVersion == "wOFF":
+		elif self.sfntVersion == b"wOFF":
 			self.flavor = "woff"
 			self.DirectoryEntry = WOFFDirectoryEntry
 			sstruct.unpack(woffDirectoryFormat, self.file.read(woffDirectorySize), self)
 		else:
 			sstruct.unpack(sfntDirectoryFormat, self.file.read(sfntDirectorySize), self)
+		self.sfntVersion = Tag(self.sfntVersion)
 
-		if self.sfntVersion not in ("\000\001\000\000", "OTTO", "true"):
+		if self.sfntVersion not in ("\x00\x01\x00\x00", "OTTO", "true"):
 			from fontTools import ttLib
-			raise ttLib.TTLibError, "Not a TrueType or OpenType font (bad sfntVersion)"
+			raise ttLib.TTLibError("Not a TrueType or OpenType font (bad sfntVersion)")
 		self.tables = {}
 		for i in range(self.numTables):
 			entry = self.DirectoryEntry()
 			entry.fromFile(self.file)
 			if entry.length > 0:
-				self.tables[entry.tag] = entry
+				self.tables[Tag(entry.tag)] = entry
 			else:
 				# Ignore zero-length tables. This doesn't seem to be documented,
 				# yet it's apparently how the Windows TT rasterizer behaves.
@@ -68,43 +69,45 @@ class SFNTReader:
 			self.flavorData = WOFFFlavorData(self)
 
 	def has_key(self, tag):
-		return self.tables.has_key(tag)
+		return tag in self.tables
+
+	__contains__ = has_key
 	
 	def keys(self):
 		return self.tables.keys()
 	
 	def __getitem__(self, tag):
 		"""Fetch the raw table data."""
-		entry = self.tables[tag]
+		entry = self.tables[Tag(tag)]
 		data = entry.loadData (self.file)
 		if self.checkChecksums:
 			if tag == 'head':
 				# Beh: we have to special-case the 'head' table.
-				checksum = calcChecksum(data[:8] + '\0\0\0\0' + data[12:])
+				checksum = calcChecksum(data[:8] + b'\0\0\0\0' + data[12:])
 			else:
 				checksum = calcChecksum(data)
 			if self.checkChecksums > 1:
 				# Be obnoxious, and barf when it's wrong
 				assert checksum == entry.checksum, "bad checksum for '%s' table" % tag
-			elif checksum <> entry.checkSum:
+			elif checksum != entry.checkSum:
 				# Be friendly, and just print a warning.
-				print "bad checksum for '%s' table" % tag
+				print("bad checksum for '%s' table" % tag)
 		return data
 	
 	def __delitem__(self, tag):
-		del self.tables[tag]
+		del self.tables[Tag(tag)]
 	
 	def close(self):
 		self.file.close()
 
 
-class SFNTWriter:
+class SFNTWriter(object):
 	
 	def __init__(self, file, numTables, sfntVersion="\000\001\000\000",
 		     flavor=None, flavorData=None):
 		self.file = file
 		self.numTables = numTables
-		self.sfntVersion = sfntVersion
+		self.sfntVersion = Tag(sfntVersion)
 		self.flavor = flavor
 		self.flavorData = flavorData
 
@@ -126,27 +129,27 @@ class SFNTWriter:
 		# clear out directory area
 		self.file.seek(self.nextTableOffset)
 		# make sure we're actually where we want to be. (old cStringIO bug)
-		self.file.write('\0' * (self.nextTableOffset - self.file.tell()))
+		self.file.write(b'\0' * (self.nextTableOffset - self.file.tell()))
 		self.tables = {}
 	
 	def __setitem__(self, tag, data):
 		"""Write raw table data to disk."""
 		reuse = False
-		if self.tables.has_key(tag):
+		if tag in self.tables:
 			# We've written this table to file before. If the length
 			# of the data is still the same, we allow overwriting it.
 			entry = self.tables[tag]
 			assert not hasattr(entry.__class__, 'encodeData')
-			if len(data) <> entry.length:
+			if len(data) != entry.length:
 				from fontTools import ttLib
-				raise ttLib.TTLibError, "cannot rewrite '%s' table: length does not match directory entry" % tag
+				raise ttLib.TTLibError("cannot rewrite '%s' table: length does not match directory entry" % tag)
 			reuse = True
 		else:
 			entry = self.DirectoryEntry()
 			entry.tag = tag
 
 		if tag == 'head':
-			entry.checkSum = calcChecksum(data[:8] + '\0\0\0\0' + data[12:])
+			entry.checkSum = calcChecksum(data[:8] + b'\0\0\0\0' + data[12:])
 			self.headTable = data
 			entry.uncompressed = True
 		else:
@@ -162,7 +165,7 @@ class SFNTWriter:
 		# Don't depend on f.seek() as we need to add the padding even if no
 		# subsequent write follows (seek is lazy), ie. after the final table
 		# in the font.
-		self.file.write('\0' * (self.nextTableOffset - self.file.tell()))
+		self.file.write(b'\0' * (self.nextTableOffset - self.file.tell()))
 		assert self.nextTableOffset == self.file.tell()
 		
 		self.tables[tag] = entry
@@ -171,14 +174,13 @@ class SFNTWriter:
 		"""All tables must have been written to disk. Now write the
 		directory.
 		"""
-		tables = self.tables.items()
-		tables.sort()
-		if len(tables) <> self.numTables:
+		tables = sorted(self.tables.items())
+		if len(tables) != self.numTables:
 			from fontTools import ttLib
-			raise ttLib.TTLibError, "wrong number of tables; expected %d, found %d" % (self.numTables, len(tables))
+			raise ttLib.TTLibError("wrong number of tables; expected %d, found %d" % (self.numTables, len(tables)))
 
 		if self.flavor == "woff":
-			self.signature = "wOFF"
+			self.signature = b"wOFF"
 			self.reserved = 0
 
 			self.totalSfntSize = 12
@@ -237,7 +239,7 @@ class SFNTWriter:
 
 	def _calcMasterChecksum(self, directory):
 		# calculate checkSumAdjustment
-		tags = self.tables.keys()
+		tags = list(self.tables.keys())
 		checksums = []
 		for i in range(len(tags)):
 			checksums.append(self.tables[tags[i]].checkSum)
@@ -248,8 +250,7 @@ class SFNTWriter:
 			# Create a SFNT directory for checksum calculation purposes
 			self.searchRange, self.entrySelector, self.rangeShift = getSearchRange(self.numTables)
 			directory = sstruct.pack(sfntDirectoryFormat, self)
-			tables = self.tables.items()
-			tables.sort()
+			tables = sorted(self.tables.items())
 			for tag, entry in tables:
 				sfntEntry = SFNTDirectoryEntry()
 				for item in ['tag', 'checkSum', 'offset', 'length']:
@@ -339,7 +340,7 @@ woffDirectoryEntryFormat = """
 woffDirectoryEntrySize = sstruct.calcsize(woffDirectoryEntryFormat)
 
 
-class DirectoryEntry:
+class DirectoryEntry(object):
 	
 	def __init__(self):
 		self.uncompressed = False # if True, always embed entry raw
@@ -450,18 +451,18 @@ def calcChecksum(data):
 	If the data length is not a multiple of four, it assumes
 	it is to be padded with null byte. 
 
-		>>> print calcChecksum("abcd")
+		>>> print calcChecksum(b"abcd")
 		1633837924
-		>>> print calcChecksum("abcdxyz")
+		>>> print calcChecksum(b"abcdxyz")
 		3655064932
 	"""
 	remainder = len(data) % 4
 	if remainder:
-		data += "\0" * (4 - remainder)
+		data += b"\0" * (4 - remainder)
 	value = 0
 	blockSize = 4096
 	assert blockSize % 4 == 0
-	for i in xrange(0, len(data), blockSize):
+	for i in range(0, len(data), blockSize):
 		block = data[i:i+blockSize]
 		longs = struct.unpack(">%dL" % (len(block) // 4), block)
 		value = (value + sum(longs)) & 0xffffffff

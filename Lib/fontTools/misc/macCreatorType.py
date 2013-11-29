@@ -1,13 +1,16 @@
+from __future__ import print_function, division
+from fontTools.misc.py23 import *
 import sys
 try:
 	import MacOS
 except ImportError:
 	MacOS = None
+from .py23 import *
 
 def _reverseString(s):
 	s = list(s)
 	s.reverse()
-	return "".join(s)
+	return strjoin(s)
 
 
 def getMacCreatorAndType(path):

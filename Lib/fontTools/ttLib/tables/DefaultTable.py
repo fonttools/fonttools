@@ -1,12 +1,12 @@
-import string
-import sys
+from __future__ import print_function, division
+from fontTools.misc.py23 import *
 
-class DefaultTable:
+class DefaultTable(object):
 	
 	dependencies = []
 	
 	def __init__(self, tag):
-		self.tableTag = tag
+		self.tableTag = Tag(tag)
 	
 	def decompile(self, data, ttFont):
 		self.data = data
@@ -26,19 +26,17 @@ class DefaultTable:
 		writer.endtag("hexdata")
 		writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		from fontTools.misc.textTools import readHex
 		from fontTools import ttLib
-		if name <> "hexdata":
-			raise ttLib.TTLibError, "can't handle '%s' element" % name
+		if name != "hexdata":
+			raise ttLib.TTLibError("can't handle '%s' element" % name)
 		self.decompile(readHex(content), ttFont)
 	
 	def __repr__(self):
 		return "<'%s' table at %x>" % (self.tableTag, id(self))
 	
-	def __cmp__(self, other):
-		if type(self) != type(other): return cmp(type(self), type(other))
-		if self.__class__ != other.__class__: return cmp(self.__class__, other.__class__)
-
-		return cmp(self.__dict__, other.__dict__)
-
+	def __eq__(self, other):
+		if type(self) != type(other):
+			raise TypeError("unordered types %s() < %s()", type(self), type(other))
+		return self.__dict__ == other.__dict__

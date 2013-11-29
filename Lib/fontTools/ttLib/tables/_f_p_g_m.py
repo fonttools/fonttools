@@ -1,6 +1,7 @@
-import DefaultTable
-import array
-import ttProgram
+from __future__ import print_function, division
+from fontTools.misc.py23 import *
+from . import DefaultTable
+from . import ttProgram
 
 class table__f_p_g_m(DefaultTable.DefaultTable):
 	
@@ -16,9 +17,9 @@ class table__f_p_g_m(DefaultTable.DefaultTable):
 		self.program.toXML(writer, ttFont)
 		writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		program = ttProgram.Program()
-		program.fromXML((name, attrs, content), ttFont)
+		program.fromXML(name, attrs, content, ttFont)
 		self.program = program
 	
 	def __len__(self):

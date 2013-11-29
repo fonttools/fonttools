@@ -66,18 +66,20 @@ usage: ttx [options] inputfile1 [... inputfileN]
 """
 
 
-import sys
-import os
-import getopt
-import re
+from __future__ import print_function, division
+from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont, TTLibError
 from fontTools.ttLib.tables.otBase import OTLOffsetOverflowError
 from fontTools.ttLib.tables.otTables import fixLookupOverFlows, fixSubTableOverFlows
 from fontTools.misc.macCreatorType import getMacCreatorAndType
 from fontTools import version
+import os
+import sys
+import getopt
+import re
 
 def usage():
-	print __doc__ % version
+	print(__doc__ % version)
 	sys.exit(2)
 
 	
@@ -98,7 +100,7 @@ def makeOutputFileName(input, outputDir, extension):
 	return output
 
 
-class Options:
+class Options(object):
 
 	listTables = False
 	outputDir = None
@@ -120,11 +122,11 @@ class Options:
 		for option, value in rawOptions:
 			# general options
 			if option == "-h":
-				print __doc__ % version
+				print(__doc__ % version)
 				sys.exit(0)
 			elif option == "-d":
 				if not os.path.isdir(value):
-					print "The -d option value must be an existing directory"
+					print("The -d option value must be an existing directory")
 					sys.exit(2)
 				self.outputDir = value
 			elif option == "-o":
@@ -147,7 +149,7 @@ class Options:
 			elif option == "-z":
 				validOptions = ('raw', 'row', 'bitwise', 'extfile')
 				if value not in validOptions:
-					print "-z does not allow %s as a format. Use %s" % (option, validOptions)
+					print("-z does not allow %s as a format. Use %s" % (option, validOptions))
 					sys.exit(2)
 				self.bitmapGlyphDataFormat = value
 			elif option == "-y":
@@ -162,37 +164,35 @@ class Options:
 			elif option == "-e":
 				self.ignoreDecompileErrors = False
 		if self.onlyTables and self.skipTables:
-			print "-t and -x options are mutually exclusive"
+			print("-t and -x options are mutually exclusive")
 			sys.exit(2)
 		if self.mergeFile and numFiles > 1:
-			print "Must specify exactly one TTX source file when using -m"
+			print("Must specify exactly one TTX source file when using -m")
 			sys.exit(2)
 
 
 def ttList(input, output, options):
-	import string
 	ttf = TTFont(input, fontNumber=options.fontNumber, lazy=True)
 	reader = ttf.reader
-	tags = reader.keys()
-	tags.sort()
-	print 'Listing table info for "%s":' % input
+	tags = sorted(reader.keys())
+	print('Listing table info for "%s":' % input)
 	format = "    %4s  %10s  %7s  %7s"
-	print format % ("tag ", "  checksum", " length", " offset")
-	print format % ("----", "----------", "-------", "-------")
+	print(format % ("tag ", "  checksum", " length", " offset"))
+	print(format % ("----", "----------", "-------", "-------"))
 	for tag in tags:
 		entry = reader.tables[tag]
-		checkSum = long(entry.checkSum)
+		checkSum = int(entry.checkSum)
 		if checkSum < 0:
-			checkSum = checkSum + 0x100000000L
-		checksum = "0x" + string.zfill(hex(checkSum)[2:-1], 8)
-		print format % (tag, checksum, entry.length, entry.offset)
-	print
+			checkSum = checkSum + 0x100000000
+		checksum = "0x%08X" % checkSum
+		print(format % (tag, checksum, entry.length, entry.offset))
+	print()
 	ttf.close()
 
 
 def ttDump(input, output, options):
 	if not options.quiet:
-		print 'Dumping "%s" to "%s"...' % (input, output)
+		print('Dumping "%s" to "%s"...' % (input, output))
 	ttf = TTFont(input, 0, verbose=options.verbose, allowVID=options.allowVID,
 			lazy=False,
 			quiet=options.quiet,
@@ -210,7 +210,7 @@ def ttDump(input, output, options):
 
 def ttCompile(input, output, options):
 	if not options.quiet:
-		print 'Compiling "%s" to "%s"...' % (input, output)
+		print('Compiling "%s" to "%s"...' % (input, output))
 	ttf = TTFont(options.mergeFile,
 			lazy=False,
 			recalcBBoxes=options.recalcBBoxes,
@@ -218,13 +218,13 @@ def ttCompile(input, output, options):
 	ttf.importXML(input, quiet=options.quiet)
 	try:
 		ttf.save(output)
-	except OTLOffsetOverflowError, e:
+	except OTLOffsetOverflowError as e:
 		# XXX This shouldn't be here at all, it should be as close to the
 		# OTL code as possible.
 		overflowRecord = e.value
-		print "Attempting to fix OTLOffsetOverflowError", e
+		print("Attempting to fix OTLOffsetOverflowError", e)
 		lastItem = overflowRecord 
-		while 1:
+		while True:
 			ok = 0
 			if overflowRecord.itemName == None:
 				ok = fixLookupOverFlows(ttf, overflowRecord)
@@ -236,15 +236,15 @@ def ttCompile(input, output, options):
 			try:
 				ttf.save(output)
 				break
-			except OTLOffsetOverflowError, e:
-				print "Attempting to fix OTLOffsetOverflowError", e
+			except OTLOffsetOverflowError as e:
+				print("Attempting to fix OTLOffsetOverflowError", e)
 				overflowRecord = e.value
 				if overflowRecord == lastItem:
 					raise
 
 	if options.verbose:
 		import time
-		print "finished at", time.strftime("%H:%M:%S", time.localtime(time.time()))
+		print("finished at", time.strftime("%H:%M:%S", time.localtime(time.time())))
 
 
 def guessFileType(fileName):
@@ -259,16 +259,18 @@ def guessFileType(fileName):
 	if ext == ".dfont":
 		return "TTF"
 	header = f.read(256)
-	head = header[:4]
+	head = Tag(header[:4])
 	if head == "OTTO":
 		return "OTF"
 	elif head == "ttcf":
 		return "TTC"
 	elif head in ("\0\1\0\0", "true"):
 		return "TTF"
-	elif head in ("wOFF", "true"):
+	elif head == "wOFF":
 		return "WOFF"
 	elif head.lower() == "<?xm":
+		# Use 'latin1' because that can't fail.
+		header = tostr(header, 'latin1')
 		if opentypeheaderRE.search(header):
 			return "OTX"
 		else:
@@ -303,7 +305,7 @@ def parseOptions(args):
 			extension = ".otf"
 			action = ttCompile
 		else:
-			print 'Unknown file type: "%s"' % input
+			print('Unknown file type: "%s"' % input)
 			continue
 		
 		if options.outputFile:
@@ -323,7 +325,7 @@ def waitForKeyPress():
 	"""Force the DOS Prompt window to stay open so the user gets
 	a chance to see what's wrong."""
 	import msvcrt
-	print '(Hit any key to exit)'
+	print('(Hit any key to exit)')
 	while not msvcrt.kbhit():
 		pass
 
@@ -333,14 +335,14 @@ def main(args):
 	try:
 		process(jobs, options)
 	except KeyboardInterrupt:
-		print "(Cancelled.)"
+		print("(Cancelled.)")
 	except SystemExit:
 		if sys.platform == "win32":
 			waitForKeyPress()
 		else:
 			raise
-	except TTLibError, e:
-		print "Error:",e
+	except TTLibError as e:
+		print("Error:",e)
 	except:
 		if sys.platform == "win32":
 			import traceback

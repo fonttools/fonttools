@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+from fontTools.misc.py23 import *
 from fontTools.pens.basePen import BasePen
 
 
@@ -12,13 +14,18 @@ class ReportLabPen(BasePen):
 			path = Path()
 		self.path = path
 
-	def _moveTo(self, (x,y)):
+	def _moveTo(self, p):
+		(x,y) = p
 		self.path.moveTo(x,y)
 
-	def _lineTo(self, (x,y)):
+	def _lineTo(self, p):
+		(x,y) = p
 		self.path.lineTo(x,y)
 
-	def _curveToOne(self, (x1,y1), (x2,y2), (x3,y3)):
+	def _curveToOne(self, p1, p2, p3):
+		(x1,y1) = p1
+		(x2,y2) = p2
+		(x3,y3) = p3
 		self.path.curveTo(x1, y1, x2, y2, x3, y3)
 
 	def _closePath(self):
@@ -28,10 +35,10 @@ class ReportLabPen(BasePen):
 if __name__=="__main__":
 	import sys
 	if len(sys.argv) < 3:
-		print "Usage: reportLabPen.py <OTF/TTF font> <glyphname> [<image file to create>]"
-		print "  If no image file name is created, by default <glyphname>.png is created."
-		print "  example: reportLabPen.py Arial.TTF R test.png"
-		print "  (The file format will be PNG, regardless of the image file name supplied)"
+		print("Usage: reportLabPen.py <OTF/TTF font> <glyphname> [<image file to create>]")
+		print("  If no image file name is created, by default <glyphname>.png is created.")
+		print("  example: reportLabPen.py Arial.TTF R test.png")
+		print("  (The file format will be PNG, regardless of the image file name supplied)")
 		sys.exit(0)
 
 	from fontTools.ttLib import TTFont

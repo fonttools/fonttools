@@ -1,7 +1,8 @@
-import DefaultTable
+from __future__ import print_function, division
+from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
-from types import StringType
-from fontTools.misc.textTools import safeEval, num2binary, binary2num
+from fontTools.misc.textTools import safeEval
+from . import DefaultTable
 
 GMAPFormat = """
 		>	# big endian
@@ -26,7 +27,7 @@ GMAPRecordFormat1 = """
 		
 
 
-class GMAPRecord:
+class GMAPRecord(object):
 	def __init__(self, uv = 0, cid = 0, gid = 0, ggid = 0, name = ""):
 		self.UV = uv
 		self.cid = cid
@@ -51,16 +52,12 @@ class GMAPRecord:
 		writer.newline()
 
 
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		value = attrs["value"]
 		if name == "GlyphletName":
 			self.name = value
 		else:
-			try:
-				value = safeEval(value)
-			except OverflowError:
-				value = long(value)
-			setattr(self, name, value)
+			setattr(self, name, safeEval(value))
 		
 
 	def compile(self, ttFont):
@@ -82,7 +79,7 @@ class table_G_M_A_P_(DefaultTable.DefaultTable):
 	
 	def decompile(self, data, ttFont):
 		dummy, newData = sstruct.unpack2(GMAPFormat, data, self)
-		self.psFontName = newData[:self.fontNameLength]
+		self.psFontName = tostr(newData[:self.fontNameLength])
 		assert (self.recordsOffset % 4) == 0, "GMAP error: recordsOffset is not 32 bit aligned."
 		newData = data[self.recordsOffset:]
 		self.gmapRecords = []
@@ -95,10 +92,10 @@ class table_G_M_A_P_(DefaultTable.DefaultTable):
 	def compile(self, ttFont):
 		self.recordsCount = len(self.gmapRecords)
 		self.fontNameLength = len(self.psFontName)
-		self.recordsOffset = 4 *(((self.fontNameLength + 12)  + 3) /4)
+		self.recordsOffset = 4 *(((self.fontNameLength + 12)  + 3) // 4)
 		data = sstruct.pack(GMAPFormat, self)
-		data = data + self.psFontName
-		data = data + "\0" * (self.recordsOffset - len(data))
+		data = data + tobytes(self.psFontName)
+		data = data + b"\0" * (self.recordsOffset - len(data))
 		for record in self.gmapRecords:
 			data = data + record.compile(ttFont)
 		return data
@@ -117,23 +114,20 @@ class table_G_M_A_P_(DefaultTable.DefaultTable):
 		for gmapRecord in self.gmapRecords:
 			gmapRecord.toXML(writer, ttFont)
 		
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		if name == "GMAPRecord":
 			if not hasattr(self, "gmapRecords"):
 				self.gmapRecords = []
 			gmapRecord = GMAPRecord()
 			self.gmapRecords.append(gmapRecord)
 			for element in content:
-				if isinstance(element, StringType):
+				if isinstance(element, basestring):
 					continue
-				gmapRecord.fromXML(element, ttFont)
+				name, attrs, content = element
+				gmapRecord.fromXML(name, attrs, content, ttFont)
 		else:
 			value = attrs["value"]
 			if name == "PSFontName":
 				self.psFontName = value
 			else:	
-				try:
-					value = safeEval(value)
-				except OverflowError:
-					value = long(value)
-				setattr(self, name, value)
+				setattr(self, name, safeEval(value))

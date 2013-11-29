@@ -1,6 +1,9 @@
-import DefaultTable
+from __future__ import print_function, division
+from fontTools.misc.py23 import *
 from fontTools.misc.textTools import safeEval
 from fontTools.misc import sstruct
+from . import DefaultTable
+import base64
 
 DSIG_HeaderFormat = """
 	> # big endian
@@ -69,7 +72,10 @@ class table_D_S_I_G_(DefaultTable.DefaultTable):
 			sigrec.ulOffset = offset
 			headers.append(sstruct.pack(DSIG_SignatureFormat, sigrec))
 			offset += sigrec.ulLength
-		return ''.join(headers+data)
+		if offset % 2:
+			# Pad to even bytes
+			data.append(b'\0')
+		return bytesjoin(headers+data)
 	
 	def toXML(self, xmlWriter, ttFont):
 		xmlWriter.comment("note that the Digital Signature will be invalid after recompilation!")
@@ -80,7 +86,7 @@ class table_D_S_I_G_(DefaultTable.DefaultTable):
 			sigrec.toXML(xmlWriter, ttFont)
 		xmlWriter.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		if name == "tableHeader":
 			self.signatureRecords = []
 			self.ulVersion = safeEval(attrs["version"])
@@ -89,14 +95,24 @@ class table_D_S_I_G_(DefaultTable.DefaultTable):
 			return
 		if name == "SignatureRecord":
 			sigrec = SignatureRecord()
-			sigrec.fromXML((name, attrs, content), ttFont)
+			sigrec.fromXML(name, attrs, content, ttFont)
 			self.signatureRecords.append(sigrec)
 
 pem_spam = lambda l, spam = {
 	"-----BEGIN PKCS7-----": True, "-----END PKCS7-----": True, "": True
 }: not spam.get(l.strip())
 
-class SignatureRecord:
+def b64encode(b):
+	s = base64.b64encode(b)
+	# Line-break at 76 chars.
+	items = []
+	while s:
+		items.append(tostr(s[:76]))
+		items.append('\n')
+		s = s[76:]
+	return strjoin(items)
+
+class SignatureRecord(object):
 	def __repr__(self):
 		return "<%s: %s>" % (self.__class__.__name__, self.__dict__)
 	
@@ -104,12 +120,12 @@ class SignatureRecord:
 		writer.begintag(self.__class__.__name__, format=self.ulFormat)
 		writer.newline()
 		writer.write_noindent("-----BEGIN PKCS7-----\n")
-		writer.write_noindent(self.pkcs7.encode('base64'))
+		writer.write_noindent(b64encode(self.pkcs7))
 		writer.write_noindent("-----END PKCS7-----\n")
 		writer.endtag(self.__class__.__name__)
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		self.ulFormat = safeEval(attrs["format"])
 		self.usReserved1 = safeEval(attrs.get("reserved1", "0"))
 		self.usReserved2 = safeEval(attrs.get("reserved2", "0"))
-		self.pkcs7 = "".join(filter(pem_spam, content)).decode('base64')
+		self.pkcs7 = base64.b64decode(tobytes(strjoin(filter(pem_spam, content))))
