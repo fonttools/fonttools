@@ -71,7 +71,6 @@ setup(
 		long_description = long_description,
 		
 		packages = [
-			"",
 			"fontTools",
 			"fontTools.encodings",
 			"fontTools.misc",
