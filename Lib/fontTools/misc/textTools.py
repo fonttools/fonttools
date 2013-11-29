@@ -1,4 +1,4 @@
-"""fontTools.misc.textTools.py -- miscelaneous routines."""
+"""fontTools.misc.textTools.py -- miscellaneous routines."""
 
 
 from __future__ import print_function, division
