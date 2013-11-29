@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 
+from __future__ import print_function
 import os, sys
 from distutils.core import setup, Extension
 from distutils.command.build_ext import build_ext
@@ -13,8 +14,8 @@ except ImportError:
 try:
 	import xml.parsers.expat
 except ImportError:
-	print "*** Warning: FontTools needs PyXML, see:"
-	print "        http://sourceforge.net/projects/pyxml/"
+	print("*** Warning: FontTools needs PyXML, see:")
+	print("        http://sourceforge.net/projects/pyxml/")
 
 
 class build_ext_optional(build_ext):

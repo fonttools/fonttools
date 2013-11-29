@@ -81,4 +81,4 @@ else:
 			return s
 
 	def bytesjoin(iterable):
-		return sum((tobytes(item) for item in iterable), b'')
+		return b''.join(tobytes(item) for item in iterable)
