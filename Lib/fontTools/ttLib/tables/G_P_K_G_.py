@@ -1,10 +1,10 @@
-import sys
-import DefaultTable
+from __future__ import print_function, division
+from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
-import array
-from types import StringType
 from fontTools.misc.textTools import safeEval, readHex
-from fontTools import ttLib
+from . import DefaultTable
+import sys
+import array
 
 GPKGFormat = """
 		>	# big endian
@@ -25,7 +25,7 @@ class table_G_P_K_G_(DefaultTable.DefaultTable):
 		GMAPoffsets = array.array("I")
 		endPos = (self.numGMAPs+1) * 4
 		GMAPoffsets.fromstring(newData[:endPos])
-		if sys.byteorder <> "big":
+		if sys.byteorder != "big":
 			GMAPoffsets.byteswap()
 		self.GMAPs = []
 		for i in range(self.numGMAPs):
@@ -36,7 +36,7 @@ class table_G_P_K_G_(DefaultTable.DefaultTable):
 		endPos = pos + (self.numGlyplets + 1)*4
 		glyphletOffsets = array.array("I")
 		glyphletOffsets.fromstring(newData[pos:endPos])
-		if sys.byteorder <> "big":
+		if sys.byteorder != "big":
 			glyphletOffsets.byteswap()
 		self.glyphlets = []
 		for i in range(self.numGlyplets):
@@ -59,7 +59,7 @@ class table_G_P_K_G_(DefaultTable.DefaultTable):
 			pos += len(self.GMAPs[i-1])
 			GMAPoffsets[i] = pos
 		gmapArray = array.array("I", GMAPoffsets)
-		if sys.byteorder <> "big":
+		if sys.byteorder != "big":
 			gmapArray.byteswap()
 		dataList.append(gmapArray.tostring())
 
@@ -68,12 +68,12 @@ class table_G_P_K_G_(DefaultTable.DefaultTable):
 			pos += len(self.glyphlets[i-1])
 			glyphletOffsets[i] = pos
 		glyphletArray = array.array("I", glyphletOffsets)
-		if sys.byteorder <> "big":
+		if sys.byteorder != "big":
 			glyphletArray.byteswap()
 		dataList.append(glyphletArray.tostring())
 		dataList += self.GMAPs
 		dataList += self.glyphlets
-		data = "".join(dataList)
+		data = bytesjoin(dataList)
 		return data
 	
 	def toXML(self, writer, ttFont):
@@ -107,12 +107,12 @@ class table_G_P_K_G_(DefaultTable.DefaultTable):
 		writer.endtag("glyphlets")
 		writer.newline()
 
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		if name == "GMAPs":
 			if not hasattr(self, "GMAPs"):
 				self.GMAPs = []
 			for element in content:
-				if isinstance(element, StringType):
+				if isinstance(element, basestring):
 					continue
 				itemName, itemAttrs, itemContent = element
 				if itemName == "hexdata":
@@ -121,15 +121,10 @@ class table_G_P_K_G_(DefaultTable.DefaultTable):
 			if not hasattr(self, "glyphlets"):
 				self.glyphlets = []
 			for element in content:
-				if isinstance(element, StringType):
+				if isinstance(element, basestring):
 					continue
 				itemName, itemAttrs, itemContent = element
 				if itemName == "hexdata":
 					self.glyphlets.append(readHex(itemContent))
 		else:	
-			value = attrs["value"]
-			try:
-				value = safeEval(value)
-			except OverflowError:
-				value = long(value)
-			setattr(self, name, value)
+			setattr(self, name, safeEval(value))

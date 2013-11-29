@@ -1,13 +1,12 @@
-
-import DefaultTable
-import string
-import struct
+from __future__ import print_function, division
+from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
-import itertools
-from types import TupleType
-from collections import deque
+from . import DefaultTable
 from fontTools.misc.textTools import safeEval
-from BitmapGlyphMetrics import BigGlyphMetrics, bigGlyphMetricsFormat, SmallGlyphMetrics, smallGlyphMetricsFormat
+from .BitmapGlyphMetrics import BigGlyphMetrics, bigGlyphMetricsFormat, SmallGlyphMetrics, smallGlyphMetricsFormat
+import struct
+import itertools
+from collections import deque
 
 eblcHeaderFormat = """
 	> # big endian
@@ -76,7 +75,7 @@ class table_E_B_L_C_(DefaultTable.DefaultTable):
 		dummy, data = sstruct.unpack2(eblcHeaderFormat, data, self)
 
 		self.strikes = []
-		for curStrikeIndex in xrange(self.numSizes):
+		for curStrikeIndex in range(self.numSizes):
 			curStrike = Strike()
 			self.strikes.append(curStrike)
 			curTable = curStrike.bitmapSizeTable
@@ -89,7 +88,7 @@ class table_E_B_L_C_(DefaultTable.DefaultTable):
 
 		for curStrike in self.strikes:
 			curTable = curStrike.bitmapSizeTable
-			for subtableIndex in xrange(curTable.numberOfIndexSubTables):
+			for subtableIndex in range(curTable.numberOfIndexSubTables):
 				lowerBound = curTable.indexSubTableArrayOffset + subtableIndex * indexSubTableArraySize
 				upperBound = lowerBound + indexSubTableArraySize
 				data = origData[lowerBound:upperBound]
@@ -171,7 +170,7 @@ class table_E_B_L_C_(DefaultTable.DefaultTable):
 			indexSubTableDataList = []
 			for indexSubTable in curStrike.indexSubTables:
 				indexSubTable.additionalOffsetToIndexSubtable = dataSize - curTable.indexSubTableArrayOffset
-				glyphIds = map(ttFont.getGlyphID, indexSubTable.names)
+				glyphIds = list(map(ttFont.getGlyphID, indexSubTable.names))
 				indexSubTable.firstGlyphIndex = min(glyphIds)
 				indexSubTable.lastGlyphIndex = max(glyphIds)
 				data = indexSubTable.compile(ttFont)
@@ -198,7 +197,7 @@ class table_E_B_L_C_(DefaultTable.DefaultTable):
 			dataList.append(data)
 		dataList.extend(indexSubTablePairDataList)
 
-		return string.join(dataList, "")
+		return bytesjoin(dataList)
 
 	def toXML(self, writer, ttFont):
 		writer.simpletag('header', [('version', self.version)])
@@ -206,7 +205,7 @@ class table_E_B_L_C_(DefaultTable.DefaultTable):
 		for curIndex, curStrike in enumerate(self.strikes):
 			curStrike.toXML(curIndex, writer, ttFont)
 
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		if name == 'header':
 			self.version = safeEval(attrs['version'])
 		elif name == 'strike':
@@ -214,7 +213,7 @@ class table_E_B_L_C_(DefaultTable.DefaultTable):
 				self.strikes = []
 			strikeIndex = safeEval(attrs['index'])
 			curStrike = Strike()
-			curStrike.fromXML((name, attrs, content), ttFont, self)
+			curStrike.fromXML(name, attrs, content, ttFont, self)
 
 			# Grow the strike array to the appropriate size. The XML format
 			# allows for the strike index value to be out of order.
@@ -223,7 +222,7 @@ class table_E_B_L_C_(DefaultTable.DefaultTable):
 			assert self.strikes[strikeIndex] == None, "Duplicate strike EBLC indices."
 			self.strikes[strikeIndex] = curStrike
 
-class Strike:
+class Strike(object):
 
 	def __init__(self):
 		self.bitmapSizeTable = BitmapSizeTable()
@@ -240,23 +239,23 @@ class Strike:
 		writer.endtag('strike')
 		writer.newline()
 
-	def fromXML(self, (name, attrs, content), ttFont, locator):
+	def fromXML(self, name, attrs, content, ttFont, locator):
 		for element in content:
-			if type(element) != TupleType:
+			if not isinstance(element, tuple):
 				continue
 			name, attrs, content = element
 			if name == 'bitmapSizeTable':
-				self.bitmapSizeTable.fromXML(element, ttFont)
+				self.bitmapSizeTable.fromXML(name, attrs, content, ttFont)
 			elif name.startswith(_indexSubTableSubclassPrefix):
 				indexFormat = safeEval(name[len(_indexSubTableSubclassPrefix):])
 				indexFormatClass = locator.getIndexFormatClass(indexFormat)
 				indexSubTable = indexFormatClass(None, None)
 				indexSubTable.indexFormat = indexFormat
-				indexSubTable.fromXML(element, ttFont)
+				indexSubTable.fromXML(name, attrs, content, ttFont)
 				self.indexSubTables.append(indexSubTable)
 
 
-class BitmapSizeTable:
+class BitmapSizeTable(object):
 
 	# Returns all the simple metric names that bitmap size table
 	# cares about in terms of XML creation.
@@ -277,27 +276,27 @@ class BitmapSizeTable:
 		writer.endtag('bitmapSizeTable')
 		writer.newline()
 
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		# Create a lookup for all the simple names that make sense to
 		# bitmap size table. Only read the information from these names.
 		dataNames = set(self._getXMLMetricNames())
 		for element in content:
-			if type(element) != TupleType:
+			if not isinstance(element, tuple):
 				continue
 			name, attrs, content = element
 			if name == 'sbitLineMetrics':
 				direction = attrs['direction']
 				assert direction in ('hori', 'vert'), "SbitLineMetrics direction specified invalid."
 				metricObj = SbitLineMetrics()
-				metricObj.fromXML(element, ttFont)
+				metricObj.fromXML(name, attrs, content, ttFont)
 				vars(self)[direction] = metricObj
 			elif name in dataNames:
 				vars(self)[name] = safeEval(attrs['value'])
 			else:
-				print "Warning: unknown name '%s' being ignored in BitmapSizeTable." % name
+				print("Warning: unknown name '%s' being ignored in BitmapSizeTable." % name)
 
 
-class SbitLineMetrics:
+class SbitLineMetrics(object):
 
 	def toXML(self, name, writer, ttFont):
 		writer.begintag('sbitLineMetrics', [('direction', name)])
@@ -308,10 +307,10 @@ class SbitLineMetrics:
 		writer.endtag('sbitLineMetrics')
 		writer.newline()
 
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		metricNames = set(sstruct.getformat(sbitLineMetricsFormat)[1])
 		for element in content:
-			if type(element) != TupleType:
+			if not isinstance(element, tuple):
 				continue
 			name, attrs, content = element
 			if name in metricNames:
@@ -320,21 +319,22 @@ class SbitLineMetrics:
 # Important information about the naming scheme. Used for identifying subtables.
 _indexSubTableSubclassPrefix = 'eblc_index_sub_table_'
 
-class EblcIndexSubTable:
+class EblcIndexSubTable(object):
 
 	def __init__(self, data, ttFont):
 		self.data = data
 		self.ttFont = ttFont
-		if not ttFont.lazy:
-			self.decompile()
-			del self.data, self.ttFont
+		# TODO Currently non-lazy decompiling doesn't work for this class...
+		#if not ttFont.lazy:
+		#	self.decompile()
+		#	del self.data, self.ttFont
 
 	def __getattr__(self, attr):
 		# Allow lazy decompile.
 		if attr[:2] == '__':
-			raise AttributeError, attr
+			raise AttributeError(attr)
 		if not hasattr(self, "data"):
-			raise AttributeError, attr
+			raise AttributeError(attr)
 		self.decompile()
 		del self.data, self.ttFont
 		return getattr(self, attr)
@@ -360,13 +360,13 @@ class EblcIndexSubTable:
 		# For font debugging of consecutive formats the ids are also written.
 		# The ids are not read when moving from the XML format.
 		glyphIds = map(ttFont.getGlyphID, self.names)
-		for glyphName, glyphId in itertools.izip(self.names, glyphIds):
+		for glyphName, glyphId in zip(self.names, glyphIds):
 			writer.simpletag('glyphLoc', name=glyphName, id=glyphId)
 			writer.newline()
 		writer.endtag(self.__class__.__name__)
 		writer.newline()
 
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		# Read all the attributes. Even though the glyph indices are
 		# recalculated, they are still read in case there needs to
 		# be an immediate export of the data.
@@ -374,11 +374,11 @@ class EblcIndexSubTable:
 		self.firstGlyphIndex = safeEval(attrs['firstGlyphIndex'])
 		self.lastGlyphIndex = safeEval(attrs['lastGlyphIndex'])
 
-		self.readMetrics((name, attrs, content), ttFont)
+		self.readMetrics(name, attrs, content, ttFont)
 
 		self.names = []
 		for element in content:
-			if type(element) != TupleType:
+			if not isinstance(element, tuple):
 				continue
 			name, attrs, content = element
 			if name == 'glyphLoc':
@@ -391,7 +391,7 @@ class EblcIndexSubTable:
 		pass
 
 	# A helper method that is the inverse of writeMetrics.
-	def readMetrics(self, (name, attrs, content), ttFont):
+	def readMetrics(self, name, attrs, content, ttFont):
 		pass
 
 	# This method is for fixed glyph data sizes. There are formats where
@@ -408,11 +408,12 @@ class EblcIndexSubTable:
 	def removeSkipGlyphs(self):
 		# Determines if a name, location pair is a valid data location.
 		# Skip glyphs are marked when the size is equal to zero.
-		def isValidLocation((name, (startByte, endByte))):
+		def isValidLocation(args):
+			(name, (startByte, endByte)) = args
 			return startByte < endByte
 		# Remove all skip glyphs.
-		dataPairs = filter(isValidLocation, zip(self.names, self.locations))
-		self.names, self.locations = map(list, zip(*dataPairs))
+		dataPairs = list(filter(isValidLocation, zip(self.names, self.locations)))
+		self.names, self.locations = list(map(list, zip(*dataPairs)))
 
 # A closure for creating a custom mixin. This is done because formats 1 and 3
 # are very similar. The only difference between them is the size per offset
@@ -423,37 +424,37 @@ def _createOffsetArrayIndexSubTableMixin(formatStringForDataType):
 	dataFormat = '>'+formatStringForDataType
 	offsetDataSize = struct.calcsize(dataFormat)
 
-	class OffsetArrayIndexSubTableMixin:
+	class OffsetArrayIndexSubTableMixin(object):
 
 		def decompile(self):
 
 			numGlyphs = self.lastGlyphIndex - self.firstGlyphIndex + 1
-			indexingOffsets = [glyphIndex * offsetDataSize for glyphIndex in xrange(numGlyphs+2)]
+			indexingOffsets = [glyphIndex * offsetDataSize for glyphIndex in range(numGlyphs+2)]
 			indexingLocations = zip(indexingOffsets, indexingOffsets[1:])
 			offsetArray = [struct.unpack(dataFormat, self.data[slice(*loc)])[0] for loc in indexingLocations]
 
-			glyphIds = range(self.firstGlyphIndex, self.lastGlyphIndex+1)
+			glyphIds = list(range(self.firstGlyphIndex, self.lastGlyphIndex+1))
 			modifiedOffsets = [offset + self.imageDataOffset for offset in offsetArray]
-			self.locations = zip(modifiedOffsets, modifiedOffsets[1:])
+			self.locations = list(zip(modifiedOffsets, modifiedOffsets[1:]))
 
-			self.names = map(self.ttFont.getGlyphName, glyphIds)
+			self.names = list(map(self.ttFont.getGlyphName, glyphIds))
 			self.removeSkipGlyphs()
 
 		def compile(self, ttFont):
 			# First make sure that all the data lines up properly. Formats 1 and 3
 			# must have all its data lined up consecutively. If not this will fail.
-			for curLoc, nxtLoc in itertools.izip(self.locations, self.locations[1:]):
+			for curLoc, nxtLoc in zip(self.locations, self.locations[1:]):
 				assert curLoc[1] == nxtLoc[0], "Data must be consecutive in indexSubTable offset formats"
 
-			glyphIds = map(ttFont.getGlyphID, self.names)
+			glyphIds = list(map(ttFont.getGlyphID, self.names))
 			# Make sure that all ids are sorted strictly increasing.
-			assert all(glyphIds[i] < glyphIds[i+1] for i in xrange(len(glyphIds)-1))
+			assert all(glyphIds[i] < glyphIds[i+1] for i in range(len(glyphIds)-1))
 
 			# Run a simple algorithm to add skip glyphs to the data locations at
 			# the places where an id is not present.
 			idQueue = deque(glyphIds)
 			locQueue = deque(self.locations)
-			allGlyphIds = range(self.firstGlyphIndex, self.lastGlyphIndex+1)
+			allGlyphIds = list(range(self.firstGlyphIndex, self.lastGlyphIndex+1))
 			allLocations = []
 			for curId in allGlyphIds:
 				if curId != idQueue[0]:
@@ -477,38 +478,38 @@ def _createOffsetArrayIndexSubTableMixin(formatStringForDataType):
 			# Take care of any padding issues. Only occurs in format 3.
 			if offsetDataSize * len(dataList) % 4 != 0:
 				dataList.append(struct.pack(dataFormat, 0))
-			return string.join(dataList, "")
+			return bytesjoin(dataList)
 
 	return OffsetArrayIndexSubTableMixin
 
 # A Mixin for functionality shared between the different kinds
 # of fixed sized data handling. Both kinds have big metrics so
 # that kind of special processing is also handled in this mixin.
-class FixedSizeIndexSubTableMixin:
+class FixedSizeIndexSubTableMixin(object):
 
 	def writeMetrics(self, writer, ttFont):
 		writer.simpletag('imageSize', value=self.imageSize)
 		writer.newline()
 		self.metrics.toXML(writer, ttFont)
 
-	def readMetrics(self, (name, attrs, content), ttFont):
+	def readMetrics(self, name, attrs, content, ttFont):
 		for element in content:
-			if type(element) != TupleType:
+			if not isinstance(element, tuple):
 				continue
 			name, attrs, content = element
 			if name == 'imageSize':
 				self.imageSize = safeEval(attrs['value'])
 			elif name == BigGlyphMetrics.__name__:
 				self.metrics = BigGlyphMetrics()
-				self.metrics.fromXML(element, ttFont)
+				self.metrics.fromXML(name, attrs, content, ttFont)
 			elif name == SmallGlyphMetrics.__name__:
-				print "Warning: SmallGlyphMetrics being ignored in format %d." % self.indexFormat
+				print("Warning: SmallGlyphMetrics being ignored in format %d." % self.indexFormat)
 
 	def padBitmapData(self, data):
 		# Make sure that the data isn't bigger than the fixed size.
 		assert len(data) <= self.imageSize, "Data in indexSubTable format %d must be less than the fixed size." % self.indexFormat
 		# Pad the data so that it matches the fixed size.
-		pad = (self.imageSize - len(data)) * '\0'
+		pad = (self.imageSize - len(data)) * b'\0'
 		return data + pad
 
 class eblc_index_sub_table_1(_createOffsetArrayIndexSubTableMixin('L'), EblcIndexSubTable):
@@ -520,21 +521,21 @@ class eblc_index_sub_table_2(FixedSizeIndexSubTableMixin, EblcIndexSubTable):
 		(self.imageSize,) = struct.unpack(">L", self.data[:4])
 		self.metrics = BigGlyphMetrics()
 		sstruct.unpack2(bigGlyphMetricsFormat, self.data[4:], self.metrics)
-		glyphIds = range(self.firstGlyphIndex, self.lastGlyphIndex+1)
-		offsets = [self.imageSize * i + self.imageDataOffset for i in xrange(len(glyphIds)+1)]
-		self.locations = zip(offsets, offsets[1:])
-		self.names = map(self.ttFont.getGlyphName, glyphIds)
+		glyphIds = list(range(self.firstGlyphIndex, self.lastGlyphIndex+1))
+		offsets = [self.imageSize * i + self.imageDataOffset for i in range(len(glyphIds)+1)]
+		self.locations = list(zip(offsets, offsets[1:]))
+		self.names = list(map(self.ttFont.getGlyphName, glyphIds))
 
 	def compile(self, ttFont):
-		glyphIds = map(ttFont.getGlyphID, self.names)
+		glyphIds = list(map(ttFont.getGlyphID, self.names))
 		# Make sure all the ids are consecutive. This is required by Format 2.
-		assert glyphIds == range(self.firstGlyphIndex, self.lastGlyphIndex+1), "Format 2 ids must be consecutive."
+		assert glyphIds == list(range(self.firstGlyphIndex, self.lastGlyphIndex+1)), "Format 2 ids must be consecutive."
 		self.imageDataOffset = min(zip(*self.locations)[0])
 
 		dataList = [EblcIndexSubTable.compile(self, ttFont)]
 		dataList.append(struct.pack(">L", self.imageSize))
 		dataList.append(sstruct.pack(bigGlyphMetricsFormat, self.metrics))
-		return string.join(dataList, "")
+		return bytesjoin(dataList)
 
 class eblc_index_sub_table_3(_createOffsetArrayIndexSubTableMixin('H'), EblcIndexSubTable):
 	pass
@@ -545,21 +546,21 @@ class eblc_index_sub_table_4(EblcIndexSubTable):
 
 		(numGlyphs,) = struct.unpack(">L", self.data[:4])
 		data = self.data[4:]
-		indexingOffsets = [glyphIndex * codeOffsetPairSize for glyphIndex in xrange(numGlyphs+2)]
+		indexingOffsets = [glyphIndex * codeOffsetPairSize for glyphIndex in range(numGlyphs+2)]
 		indexingLocations = zip(indexingOffsets, indexingOffsets[1:])
 		glyphArray = [struct.unpack(codeOffsetPairFormat, data[slice(*loc)]) for loc in indexingLocations]
-		glyphIds, offsets = map(list, zip(*glyphArray))
+		glyphIds, offsets = list(map(list, zip(*glyphArray)))
 		# There are one too many glyph ids. Get rid of the last one.
 		glyphIds.pop()
 
 		offsets = [offset + self.imageDataOffset for offset in offsets]
-		self.locations = zip(offsets, offsets[1:])
-		self.names = map(self.ttFont.getGlyphName, glyphIds)
+		self.locations = list(zip(offsets, offsets[1:]))
+		self.names = list(map(self.ttFont.getGlyphName, glyphIds))
 
 	def compile(self, ttFont):
 		# First make sure that all the data lines up properly. Format 4
 		# must have all its data lined up consecutively. If not this will fail.
-		for curLoc, nxtLoc in itertools.izip(self.locations, self.locations[1:]):
+		for curLoc, nxtLoc in zip(self.locations, self.locations[1:]):
 			assert curLoc[1] == nxtLoc[0], "Data must be consecutive in indexSubTable format 4"
 
 		offsets = list(self.locations[0]) + [loc[1] for loc in self.locations[1:]]
@@ -568,15 +569,15 @@ class eblc_index_sub_table_4(EblcIndexSubTable):
 		# and allows imageDataOffset to not be required to be in the XML version.
 		self.imageDataOffset = min(offsets)
 		offsets = [offset - self.imageDataOffset for offset in offsets]
-		glyphIds = map(ttFont.getGlyphID, self.names)
+		glyphIds = list(map(ttFont.getGlyphID, self.names))
 		# Create an iterator over the ids plus a padding value.
 		idsPlusPad = list(itertools.chain(glyphIds, [0]))
 
 		dataList = [EblcIndexSubTable.compile(self, ttFont)]
 		dataList.append(struct.pack(">L", len(glyphIds)))
-		tmp = [struct.pack(codeOffsetPairFormat, *cop) for cop in itertools.izip(idsPlusPad, offsets)]
+		tmp = [struct.pack(codeOffsetPairFormat, *cop) for cop in zip(idsPlusPad, offsets)]
 		dataList += tmp
-		data = string.join(dataList, "")
+		data = bytesjoin(dataList)
 		return data
 
 class eblc_index_sub_table_5(FixedSizeIndexSubTableMixin, EblcIndexSubTable):
@@ -588,23 +589,23 @@ class eblc_index_sub_table_5(FixedSizeIndexSubTableMixin, EblcIndexSubTable):
 		self.metrics, data = sstruct.unpack2(bigGlyphMetricsFormat, data, BigGlyphMetrics())
 		(numGlyphs,) = struct.unpack(">L", data[:4])
 		data = data[4:]
-		glyphIds = [struct.unpack(">H", data[2*i:2*(i+1)])[0] for i in xrange(numGlyphs)]
+		glyphIds = [struct.unpack(">H", data[2*i:2*(i+1)])[0] for i in range(numGlyphs)]
 
-		offsets = [self.imageSize * i + self.imageDataOffset for i in xrange(len(glyphIds)+1)]
-		self.locations = zip(offsets, offsets[1:])
-		self.names = map(self.ttFont.getGlyphName, glyphIds)
+		offsets = [self.imageSize * i + self.imageDataOffset for i in range(len(glyphIds)+1)]
+		self.locations = list(zip(offsets, offsets[1:]))
+		self.names = list(map(self.ttFont.getGlyphName, glyphIds))
 
 	def compile(self, ttFont):
 		self.imageDataOffset = min(zip(*self.locations)[0])
 		dataList = [EblcIndexSubTable.compile(self, ttFont)]
 		dataList.append(struct.pack(">L", self.imageSize))
 		dataList.append(sstruct.pack(bigGlyphMetricsFormat, self.metrics))
-		glyphIds = map(ttFont.getGlyphID, self.names)
+		glyphIds = list(map(ttFont.getGlyphID, self.names))
 		dataList.append(struct.pack(">L", len(glyphIds)))
 		dataList += [struct.pack(">H", curId) for curId in glyphIds]
 		if len(glyphIds) % 2 == 1:
 			dataList.append(struct.pack(">H", 0))
-		return string.join(dataList, "")
+		return bytesjoin(dataList)
 
 # Dictionary of indexFormat to the class representing that format.
 eblc_sub_table_classes = {

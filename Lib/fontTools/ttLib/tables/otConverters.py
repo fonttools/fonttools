@@ -1,6 +1,8 @@
-from types import TupleType
+from __future__ import print_function, division
+from fontTools.misc.py23 import *
 from fontTools.misc.textTools import safeEval
-from otBase import ValueRecordFactory
+from fontTools.misc.fixedTools import fixedToFloat as fi2fl, floatToFixed as fl2fi
+from .otBase import ValueRecordFactory
 
 
 def buildConverters(tableSpec, tableNamespace):
@@ -38,7 +40,7 @@ def buildConverters(tableSpec, tableNamespace):
 			for cls in conv.featureParamTypes.values():
 				convertersByName[cls.__name__] = Table(name, repeat, aux, cls)
 		converters.append(conv)
-		assert not convertersByName.has_key(name)
+		assert name not in convertersByName
 		convertersByName[name] = conv
 	return converters, convertersByName
 
@@ -58,19 +60,19 @@ class BaseConverter(object):
 	
 	def read(self, reader, font, tableDict):
 		"""Read a value from the reader."""
-		raise NotImplementedError, self
+		raise NotImplementedError(self)
 	
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		"""Write a value to the writer."""
-		raise NotImplementedError, self
+		raise NotImplementedError(self)
 	
 	def xmlRead(self, attrs, content, font):
 		"""Read a value from XML."""
-		raise NotImplementedError, self
+		raise NotImplementedError(self)
 	
 	def xmlWrite(self, xmlWriter, font, value, name, attrs):
 		"""Write a value to XML."""
-		raise NotImplementedError, self
+		raise NotImplementedError(self)
 
 
 class SimpleValue(BaseConverter):
@@ -94,10 +96,10 @@ class Version(BaseConverter):
 	def read(self, reader, font, tableDict):
 		value = reader.readLong()
 		assert (value >> 16) == 1, "Unsupported version 0x%08x" % value
-		return float(value) / 0x10000
+		return  fi2fl(value, 16)
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		if value < 0x10000:
-			value *= 0x10000
+			value = fl2fi(value, 16)
 		value = int(round(value))
 		assert (value >> 16) == 1, "Unsupported version 0x%08x" % value
 		writer.writeLong(value)
@@ -105,14 +107,14 @@ class Version(BaseConverter):
 		value = attrs["value"]
 		value = float(int(value, 0)) if value.startswith("0") else float(value)
 		if value >= 0x10000:
-			value = float(value) / 0x10000
+			value = fi2fl(value, 16)
 		return value
 	def xmlWrite(self, xmlWriter, font, value, name, attrs):
 		if value >= 0x10000:
-			value = float(value) / 0x10000
+			value = fi2fl(value, 16)
 		if value % 1 != 0:
 			# Write as hex
-			value = "0x%08x" % (int(round(value * 0x10000)))
+			value = "0x%08x" % fl2fi(value, 16)
 		xmlWriter.simpletag(name, attrs + [("value", value)])
 		xmlWriter.newline()
 
@@ -162,7 +164,7 @@ class FloatValue(SimpleValue):
 class DeciPoints(FloatValue):
 	def read(self, reader, font, tableDict):
 		value = reader.readUShort()
-		return value / 10.
+		return value / 10
 
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		writer.writeUShort(int(round(value * 10)))
@@ -198,9 +200,9 @@ class Struct(BaseConverter):
 		if Format is not None:
 			table.Format = int(Format)
 		for element in content:
-			if type(element) == TupleType:
+			if isinstance(element, tuple):
 				name, attrs, content = element
-				table.fromXML((name, attrs, content), font)
+				table.fromXML(name, attrs, content, font)
 			else:
 				pass
 		return table
@@ -225,8 +227,8 @@ class Table(Struct):
 			return None
 		if offset <= 3:
 			# XXX hack to work around buggy pala.ttf
-			print "*** Warning: offset is not 0, yet suspiciously low (%s). table: %s" \
-					% (offset, self.tableClass.__name__)
+			print("*** Warning: offset is not 0, yet suspiciously low (%s). table: %s" \
+					% (offset, self.tableClass.__name__))
 			return None
 		table = self.tableClass()
 		table.reader = reader.getSubReader(offset)
@@ -298,9 +300,9 @@ class ValueRecord(ValueFormat):
 		else:
 			value.toXML(xmlWriter, font, self.name, attrs)
 	def xmlRead(self, attrs, content, font):
-		from otBase import ValueRecord
+		from .otBase import ValueRecord
 		value = ValueRecord()
-		value.fromXML((None, attrs, content), font)
+		value.fromXML(None, attrs, content, font)
 		return value
 
 
@@ -347,7 +349,7 @@ class DeltaValue(BaseConverter):
 			if shift == 0:
 				writer.writeUShort(tmp)
 				tmp, shift = 0, 16
-		if shift <> 16:
+		if shift != 16:
 			writer.writeUShort(tmp)
 	
 	def xmlWrite(self, xmlWriter, font, value, name, attrs):

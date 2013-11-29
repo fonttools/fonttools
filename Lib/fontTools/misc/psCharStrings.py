@@ -2,9 +2,9 @@
 CFF dictionary data and Type1/Type2 CharStrings.
 """
 
-import types
+from __future__ import print_function, division
+from fontTools.misc.py23 import *
 import struct
-import string
 
 
 DEBUG = 0
@@ -35,38 +35,35 @@ for _i in range(len(realNibbles)):
 	realNibblesDict[realNibbles[_i]] = _i
 
 
-class ByteCodeBase:
+class ByteCodeBase(object):
 	
 	def read_byte(self, b0, data, index):
 		return b0 - 139, index
 	
 	def read_smallInt1(self, b0, data, index):
-		b1 = ord(data[index])
+		b1 = byteord(data[index])
 		return (b0-247)*256 + b1 + 108, index+1
 	
 	def read_smallInt2(self, b0, data, index):
-		b1 = ord(data[index])
+		b1 = byteord(data[index])
 		return -(b0-251)*256 - b1 - 108, index+1
 	
 	def read_shortInt(self, b0, data, index):
-		bin = data[index] + data[index+1]
-		value, = struct.unpack(">h", bin)
+		value, = struct.unpack(">h", data[index:index+2])
 		return value, index+2
 	
 	def read_longInt(self, b0, data, index):
-		bin = data[index] + data[index+1] + data[index+2] + data[index+3]
-		value, = struct.unpack(">l", bin)
+		value, = struct.unpack(">l", data[index:index+4])
 		return value, index+4
 	
 	def read_fixed1616(self, b0, data, index):
-		bin = data[index] + data[index+1] + data[index+2] + data[index+3]
-		value, = struct.unpack(">l", bin)
-		return value / 65536.0, index+4
+		value, = struct.unpack(">l", data[index:index+4])
+		return value / 65536, index+4
 	
 	def read_realNumber(self, b0, data, index):
 		number = ''
-		while 1:
-			b = ord(data[index])
+		while True:
+			b = byteord(data[index])
 			index = index + 1
 			nibble0 = (b & 0xf0) >> 4
 			nibble1 = b & 0x0f
@@ -87,7 +84,7 @@ def buildOperatorDict(operatorList):
 			oper[item[0]] = item[1]
 		else:
 			oper[item[0]] = item[1:]
-		if type(item[0]) == types.TupleType:
+		if isinstance(item[0], tuple):
 			opc[item[1]] = item[0]
 		else:
 			opc[item[1]] = (item[0],)
@@ -154,27 +151,27 @@ t2Operators = [
 
 def getIntEncoder(format):
 	if format == "cff":
-		fourByteOp = chr(29)
+		fourByteOp = bytechr(29)
 	elif format == "t1":
-		fourByteOp = chr(255)
+		fourByteOp = bytechr(255)
 	else:
 		assert format == "t2"
 		fourByteOp = None
 	
-	def encodeInt(value, fourByteOp=fourByteOp, chr=chr,
+	def encodeInt(value, fourByteOp=fourByteOp, bytechr=bytechr,
 			pack=struct.pack, unpack=struct.unpack):
 		if -107 <= value <= 107:
-			code = chr(value + 139)
+			code = bytechr(value + 139)
 		elif 108 <= value <= 1131:
 			value = value - 108
-			code = chr((value >> 8) + 247) + chr(value & 0xFF)
+			code = bytechr((value >> 8) + 247) + bytechr(value & 0xFF)
 		elif -1131 <= value <= -108:
 			value = -value - 108
-			code = chr((value >> 8) + 251) + chr(value & 0xFF)
+			code = bytechr((value >> 8) + 251) + bytechr(value & 0xFF)
 		elif fourByteOp is None:
 			# T2 only supports 2 byte ints
 			if -32768 <= value <= 32767:
-				code = chr(28) + pack(">h", value)
+				code = bytechr(28) + pack(">h", value)
 			else:
 				# Backwards compatible hack: due to a previous bug in FontTools,
 				# 16.16 fixed numbers were written out as 4-byte ints. When
@@ -188,7 +185,7 @@ def getIntEncoder(format):
 				sys.stderr.write("Warning: 4-byte T2 number got passed to the "
 					"IntType handler. This should happen only when reading in "
 					"old XML files.\n")
-				code = chr(255) + pack(">l", value)
+				code = bytechr(255) + pack(">l", value)
 		else:
 			code = fourByteOp + pack(">l", value)
 		return code
@@ -202,7 +199,7 @@ encodeIntT2 = getIntEncoder("t2")
 
 def encodeFixed(f, pack=struct.pack):
 	# For T2 only
-	return "\xff" + pack(">l", int(round(f * 65536)))
+	return b"\xff" + pack(">l", int(round(f * 65536)))
 
 def encodeFloat(f):
 	# For CFF only, used in cffLib
@@ -222,9 +219,9 @@ def encodeFloat(f):
 	nibbles.append(0xf)
 	if len(nibbles) % 2:
 		nibbles.append(0xf)
-	d = chr(30)
+	d = bytechr(30)
 	for i in range(0, len(nibbles), 2):
-		d = d + chr(nibbles[i] << 4 | nibbles[i+1])
+		d = d + bytechr(nibbles[i] << 4 | nibbles[i+1])
 	return d
 
 
@@ -287,24 +284,24 @@ class T2CharString(ByteCodeBase):
 			token = program[i]
 			i = i + 1
 			tp = type(token)
-			if tp == types.StringType:
+			if issubclass(tp, basestring):
 				try:
-					bytecode.extend(map(chr, opcodes[token]))
+					bytecode.extend(bytechr(b) for b in opcodes[token])
 				except KeyError:
-					raise CharStringCompileError, "illegal operator: %s" % token
+					raise CharStringCompileError("illegal operator: %s" % token)
 				if token in ('hintmask', 'cntrmask'):
 					bytecode.append(program[i])  # hint mask
 					i = i + 1
-			elif tp == types.IntType:
+			elif tp == int:
 				bytecode.append(encodeInt(token))
-			elif tp == types.FloatType:
+			elif tp == float:
 				bytecode.append(encodeFixed(token))
 			else:
 				assert 0, "unsupported type: %s" % tp
 		try:
-			bytecode = "".join(bytecode)
+			bytecode = bytesjoin(bytecode)
 		except TypeError:
-			print bytecode
+			print(bytecode)
 			raise
 		self.setBytecode(bytecode)
 	
@@ -320,11 +317,11 @@ class T2CharString(ByteCodeBase):
 		self.program = None
 	
 	def getToken(self, index, 
-			len=len, ord=ord, getattr=getattr, type=type, StringType=types.StringType):
+			len=len, byteord=byteord, getattr=getattr, type=type, StringType=str):
 		if self.bytecode is not None:
 			if index >= len(self.bytecode):
 				return None, 0, 0
-			b0 = ord(self.bytecode[index])
+			b0 = byteord(self.bytecode[index])
 			index = index + 1
 			code = self.operandEncoding[b0]
 			handler = getattr(self, code)
@@ -334,7 +331,7 @@ class T2CharString(ByteCodeBase):
 				return None, 0, 0
 			token = self.program[index]
 			index = index + 1
-		isOperator = type(token) == StringType
+		isOperator = isinstance(token, StringType)
 		return token, isOperator, index
 	
 	def getBytes(self, index, nBytes):
@@ -350,7 +347,7 @@ class T2CharString(ByteCodeBase):
 	
 	def do_operator(self, b0, data, index):
 		if b0 == 12:
-			op = (b0, ord(data[index]))
+			op = (b0, byteord(data[index]))
 			index = index+1
 		else:
 			op = b0
@@ -364,33 +361,33 @@ class T2CharString(ByteCodeBase):
 		else:
 			index = 0
 			args = []
-			while 1:
+			while True:
 				token, isOperator, index = self.getToken(index)
 				if token is None:
 					break
 				if isOperator:
-					args = map(str, args)
+					args = [str(arg) for arg in args]
 					if token in ('hintmask', 'cntrmask'):
 						hintMask, isOperator, index = self.getToken(index)
 						bits = []
 						for byte in hintMask:
-							bits.append(num2binary(ord(byte), 8))
-						hintMask = string.join(bits, "")
-						line = string.join(args + [token, hintMask], " ")
+							bits.append(num2binary(byteord(byte), 8))
+						hintMask = strjoin(bits)
+						line = ' '.join(args + [token, hintMask])
 					else:
-						line = string.join(args + [token], " ")
+						line = ' '.join(args + [token])
 					xmlWriter.write(line)
 					xmlWriter.newline()
 					args = []
 				else:
 					args.append(token)
 	
-	def fromXML(self, (name, attrs, content)):
+	def fromXML(self, name, attrs, content):
 		from fontTools.misc.textTools import binary2num, readHex
 		if attrs.get("raw"):
 			self.setBytecode(readHex(content))
 			return
-		content = "".join(content)
+		content = strjoin(content)
 		content = content.split()
 		program = []
 		end = len(content)
@@ -407,9 +404,9 @@ class T2CharString(ByteCodeBase):
 					program.append(token)
 					if token in ('hintmask', 'cntrmask'):
 						mask = content[i]
-						maskBytes = ""
+						maskBytes = b""
 						for j in range(0, len(mask), 8):
-							maskBytes = maskBytes + chr(binary2num(mask[j:j+8]))
+							maskBytes = maskBytes + bytechr(binary2num(mask[j:j+8]))
 						program.append(maskBytes)
 						i = i + 1
 				else:
@@ -472,7 +469,7 @@ class T1CharString(T2CharString):
 			return
 		program = []
 		index = 0
-		while 1:
+		while True:
 			token, isOperator, index = self.getToken(index)
 			if token is None:
 				break
@@ -485,7 +482,7 @@ class T1CharString(T2CharString):
 		self.width = extractor.width
 
 
-class SimpleT2Decompiler:
+class SimpleT2Decompiler(object):
 	
 	def __init__(self, localSubrs, globalSubrs):
 		self.localSubrs = localSubrs
@@ -510,7 +507,7 @@ class SimpleT2Decompiler:
 			pushToProgram = lambda x: None
 		pushToStack = self.operandStack.append
 		index = 0
-		while 1:
+		while True:
 			token, isOperator, index = charString.getToken(index)
 			if token is None:
 				break  # we're done!
@@ -579,7 +576,7 @@ class SimpleT2Decompiler:
 	def op_hintmask(self, index):
 		if not self.hintMaskBytes:
 			self.countHints()
-			self.hintMaskBytes = (self.hintCount + 7) / 8
+			self.hintMaskBytes = (self.hintCount + 7) // 8
 		hintMaskBytes, index = self.callingStack[-1].getBytes(index, self.hintMaskBytes)
 		return hintMaskBytes, index
 	
@@ -587,7 +584,7 @@ class SimpleT2Decompiler:
 	
 	def countHints(self):
 		args = self.popall()
-		self.hintCount = self.hintCount + len(args) / 2
+		self.hintCount = self.hintCount + len(args) // 2
 
 	# misc
 	def op_and(self, index):
@@ -695,7 +692,7 @@ class T2OutlineExtractor(SimpleT2Decompiler):
 	
 	def countHints(self):
 		args = self.popallWidth()
-		self.hintCount = self.hintCount + len(args) / 2
+		self.hintCount = self.hintCount + len(args) // 2
 	
 	#
 	# hint operators
@@ -882,8 +879,8 @@ class T2OutlineExtractor(SimpleT2Decompiler):
 	def op_div(self, index):
 		num2 = self.pop()
 		num1 = self.pop()
-		d1 = num1/num2
-		d2 = float(num1)/num2
+		d1 = num1//num2
+		d2 = num1/num2
 		if d1 == d2:
 			self.push(d1)
 		else:
@@ -1114,7 +1111,7 @@ class DictDecompiler(ByteCodeBase):
 		lenData = len(data)
 		push = self.stack.append
 		while index < lenData:
-			b0 = ord(data[index])
+			b0 = byteord(data[index])
 			index = index + 1
 			code = self.operandEncoding[b0]
 			handler = getattr(self, code)
@@ -1134,7 +1131,7 @@ class DictDecompiler(ByteCodeBase):
 	
 	def do_operator(self, b0, data, index):
 		if b0 == 12:
-			op = (b0, ord(data[index]))
+			op = (b0, byteord(data[index]))
 			index = index+1
 		else:
 			op = b0
@@ -1143,7 +1140,7 @@ class DictDecompiler(ByteCodeBase):
 		return None, index
 	
 	def handle_operator(self, operator, argType):
-		if type(argType) == type(()):
+		if isinstance(argType, type(())):
 			value = ()
 			for i in range(len(argType)-1, -1, -1):
 				arg = argType[i]

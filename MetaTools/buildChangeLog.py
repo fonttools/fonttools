@@ -7,4 +7,4 @@ fontToolsDir = os.path.dirname(os.path.dirname(os.path.normpath(
 
 os.chdir(fontToolsDir)
 os.system("git2cl > Doc/ChangeLog")
-print "done."
+print("done.")

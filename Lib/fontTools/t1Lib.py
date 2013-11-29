@@ -15,16 +15,16 @@ write(path, data, kind='OTHER', dohex=0)
 	part should be written as hexadecimal or binary, but only if kind
 	is 'LWFN' or 'PFB'.
 """
+from __future__ import print_function, division
+from fontTools.misc.py23 import *
+from fontTools.misc import eexec
+from fontTools.misc.macCreatorType import getMacCreatorAndType
+import os
+import re
 
 __author__ = "jvr"
 __version__ = "1.0b2"
 DEBUG = 0
-
-from fontTools.misc import eexec
-from fontTools.misc.macCreatorType import getMacCreatorAndType
-import string
-import re
-import os
 
 
 try:
@@ -42,7 +42,7 @@ else:
 class T1Error(Exception): pass
 
 
-class T1Font:
+class T1Font(object):
 	
 	"""Type 1 font class.
 	
@@ -102,7 +102,7 @@ class T1Font:
 
 def read(path, onlyHeader=0):
 	"""reads any Type 1 font file, returns raw data"""
-	normpath = string.lower(path)
+	normpath = path.lower()
 	creator, type = getMacCreatorAndType(path)
 	if type == 'LWFN':
 		return readLWFN(path, onlyHeader), 'LWFN'
@@ -113,7 +113,7 @@ def read(path, onlyHeader=0):
 
 def write(path, data, kind='OTHER', dohex=0):
 	assertType1(data)
-	kind = string.upper(kind)
+	kind = kind.upper()
 	try:
 		os.remove(path)
 	except os.error:
@@ -150,9 +150,9 @@ def readLWFN(path, onlyHeader=0):
 		data = []
 		for i in range(501, 501 + n):
 			res = Res.Get1Resource('POST', i)
-			code = ord(res.data[0])
-			if ord(res.data[1]) <> 0:
-				raise T1Error, 'corrupt LWFN file'
+			code = byteord(res.data[0])
+			if byteord(res.data[1]) != 0:
+				raise T1Error('corrupt LWFN file')
 			if code in [1, 2]:
 				if onlyHeader and code == 2:
 					break
@@ -166,10 +166,10 @@ def readLWFN(path, onlyHeader=0):
 			elif code == 0:
 				pass # comment, ignore
 			else:
-				raise T1Error, 'bad chunk code: ' + `code`
+				raise T1Error('bad chunk code: ' + repr(code))
 	finally:
 		Res.CloseResFile(resRef)
-	data = string.join(data, '')
+	data = bytesjoin(data)
 	assertType1(data)
 	return data
 
@@ -177,10 +177,10 @@ def readPFB(path, onlyHeader=0):
 	"""reads a PFB font file, returns raw data"""
 	f = open(path, "rb")
 	data = []
-	while 1:
-		if f.read(1) <> chr(128):
-			raise T1Error, 'corrupt PFB file'
-		code = ord(f.read(1))
+	while True:
+		if f.read(1) != bytechr(128):
+			raise T1Error('corrupt PFB file')
+		code = byteord(f.read(1))
 		if code in [1, 2]:
 			chunklen = stringToLong(f.read(4))
 			chunk = f.read(chunklen)
@@ -189,11 +189,11 @@ def readPFB(path, onlyHeader=0):
 		elif code == 3:
 			break
 		else:
-			raise T1Error, 'bad chunk code: ' + `code`
+			raise T1Error('bad chunk code: ' + repr(code))
 		if onlyHeader:
 			break
 	f.close()
-	data = string.join(data, '')
+	data = bytesjoin(data)
 	assertType1(data)
 	return data
 
@@ -211,7 +211,7 @@ def readOther(path):
 			data.append(deHexString(chunk))
 		else:
 			data.append(chunk)
-	return string.join(data, '')
+	return bytesjoin(data)
 
 # file writing tools
 
@@ -228,11 +228,11 @@ def writeLWFN(path, data):
 			else:
 				code = 1
 			while chunk:
-				res = Res.Resource(chr(code) + '\0' + chunk[:LWFNCHUNKSIZE - 2])
+				res = Res.Resource(bytechr(code) + '\0' + chunk[:LWFNCHUNKSIZE - 2])
 				res.AddResource('POST', resID, '')
 				chunk = chunk[LWFNCHUNKSIZE - 2:]
 				resID = resID + 1
-		res = Res.Resource(chr(5) + '\0')
+		res = Res.Resource(bytechr(5) + '\0')
 		res.AddResource('POST', resID, '')
 	finally:
 		Res.CloseResFile(resRef)
@@ -246,10 +246,10 @@ def writePFB(path, data):
 				code = 2
 			else:
 				code = 1
-			f.write(chr(128) + chr(code))
+			f.write(bytechr(128) + bytechr(code))
 			f.write(longToString(len(chunk)))
 			f.write(chunk)
-		f.write(chr(128) + chr(3))
+		f.write(bytechr(128) + bytechr(3))
 	finally:
 		f.close()
 
@@ -257,7 +257,7 @@ def writeOther(path, data, dohex = 0):
 	chunks = findEncryptedChunks(data)
 	f = open(path, "wb")
 	try:
-		hexlinelen = HEXLINELENGTH / 2
+		hexlinelen = HEXLINELENGTH // 2
 		for isEncrypted, chunk in chunks:
 			if isEncrypted:
 				code = 2
@@ -297,9 +297,9 @@ def decryptType1(data):
 				chunk = deHexString(chunk)
 			decrypted, R = eexec.decrypt(chunk, 55665)
 			decrypted = decrypted[4:]
-			if decrypted[-len(EEXECINTERNALEND)-1:-1] <> EEXECINTERNALEND \
-					and decrypted[-len(EEXECINTERNALEND)-2:-2] <> EEXECINTERNALEND:
-				raise T1Error, "invalid end of eexec part"
+			if decrypted[-len(EEXECINTERNALEND)-1:-1] != EEXECINTERNALEND \
+					and decrypted[-len(EEXECINTERNALEND)-2:-2] != EEXECINTERNALEND:
+				raise T1Error("invalid end of eexec part")
 			decrypted = decrypted[:-len(EEXECINTERNALEND)-2] + '\r'
 			data.append(EEXECBEGINMARKER + decrypted + EEXECENDMARKER)
 		else:
@@ -307,25 +307,25 @@ def decryptType1(data):
 				data.append(chunk[:-len(EEXECBEGIN)-1])
 			else:
 				data.append(chunk)
-	return string.join(data, '')
+	return bytesjoin(data)
 
 def findEncryptedChunks(data):
 	chunks = []
-	while 1:
-		eBegin = string.find(data, EEXECBEGIN)
+	while True:
+		eBegin = data.find(EEXECBEGIN)
 		if eBegin < 0:
 			break
 		eBegin = eBegin + len(EEXECBEGIN) + 1
-		eEnd = string.find(data, EEXECEND, eBegin)
+		eEnd = data.find(EEXECEND, eBegin)
 		if eEnd < 0:
-			raise T1Error, "can't find end of eexec part"
+			raise T1Error("can't find end of eexec part")
 		cypherText = data[eBegin:eEnd + 2]
 		if isHex(cypherText[:4]):
 			cypherText = deHexString(cypherText)
 		plainText, R = eexec.decrypt(cypherText, 55665)
-		eEndLocal = string.find(plainText, EEXECINTERNALEND)
+		eEndLocal = plainText.find(EEXECINTERNALEND)
 		if eEndLocal < 0:
-			raise T1Error, "can't find end of eexec part"
+			raise T1Error("can't find end of eexec part")
 		chunks.append((0, data[:eBegin]))
 		chunks.append((1, cypherText[:eEndLocal + len(EEXECINTERNALEND) + 1]))
 		data = data[eEnd:]
@@ -333,7 +333,7 @@ def findEncryptedChunks(data):
 	return chunks
 
 def deHexString(hexstring):
-	return eexec.deHexString(string.join(string.split(hexstring), ""))
+	return eexec.deHexString(strjoin(hexstring.split()))
 
 
 # Type 1 assertion
@@ -345,11 +345,11 @@ def assertType1(data):
 		if data[:len(head)] == head:
 			break
 	else:
-		raise T1Error, "not a PostScript font"
+		raise T1Error("not a PostScript font")
 	if not _fontType1RE.search(data):
-		raise T1Error, "not a Type 1 font"
-	if string.find(data, "currentfile eexec") < 0:
-		raise T1Error, "not an encrypted Type 1 font"
+		raise T1Error("not a Type 1 font")
+	if data.find("currentfile eexec") < 0:
+		raise T1Error("not an encrypted Type 1 font")
 	# XXX what else?
 	return data
 
@@ -359,14 +359,14 @@ def assertType1(data):
 def longToString(long):
 	str = ""
 	for i in range(4):
-		str = str + chr((long & (0xff << (i * 8))) >> i * 8)
+		str = str + bytechr((long & (0xff << (i * 8))) >> i * 8)
 	return str
 
 def stringToLong(str):
-	if len(str) <> 4:
-		raise ValueError, 'string must be 4 bytes long'
+	if len(str) != 4:
+		raise ValueError('string must be 4 bytes long')
 	long = 0
 	for i in range(4):
-		long = long + (ord(str[i]) << (i * 8))
+		long = long + (byteord(str[i]) << (i * 8))
 	return long
 

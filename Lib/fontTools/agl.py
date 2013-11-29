@@ -1,6 +1,9 @@
 # The table below is taken from
 # http://www.adobe.com/devnet/opentype/archives/aglfn.txt
 
+from __future__ import print_function, division
+from fontTools.misc.py23 import *
+
 _aglText = """\
 # -----------------------------------------------------------
 # Copyright 2003, 2005-2008, 2010 Adobe Systems Incorporated.
@@ -719,12 +722,12 @@ def _builddicts():
 			continue
 		m = parseAGL_RE.match(line)
 		if not m:
-			raise AGLError, "syntax error in glyphlist.txt: %s" % repr(line[:20])
+			raise AGLError("syntax error in glyphlist.txt: %s" % repr(line[:20]))
 		unicode = m.group(1)
 		assert len(unicode) == 4
 		unicode = int(unicode, 16)
 		glyphName = m.group(2)
-		if AGL2UV.has_key(glyphName):
+		if glyphName in AGL2UV:
 			# the above table contains identical duplicates
 			assert AGL2UV[glyphName] == unicode
 		else:

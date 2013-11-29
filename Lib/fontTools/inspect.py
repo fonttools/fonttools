@@ -5,13 +5,15 @@
 """GUI font inspector.
 """
 
+from __future__ import print_function, division
+from fontTools.misc.py23 import *
+from fontTools import misc, ttLib, cffLib
 import pygtk
 pygtk.require('2.0')
 import gtk
 import sys
 import array
 
-from fontTools import misc, ttLib, cffLib
 
 
 class Row(object):
@@ -217,7 +219,7 @@ class FontTreeModel(gtk.GenericTreeModel):
 	def on_iter_parent(self, rowref):
 		return rowref.get_parent()
 
-class Inspect:
+class Inspect(object):
 
 	def _delete_event(self, widget, event, data=None):
 		gtk.main_quit()
@@ -254,7 +256,7 @@ class Inspect:
 
 def main(args):
 	if len(args) < 1:
-		print >>sys.stderr, "usage: pyftinspect font..."
+		print("usage: pyftinspect font...", file=sys.stderr)
 		sys.exit(1)
 	for arg in args:
 		Inspect(arg)

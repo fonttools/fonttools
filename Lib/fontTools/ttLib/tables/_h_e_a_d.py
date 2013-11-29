@@ -1,8 +1,9 @@
-import DefaultTable
+from __future__ import print_function, division
+from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
-import time
-import string
 from fontTools.misc.textTools import safeEval, num2binary, binary2num
+from . import DefaultTable
+import time
 
 
 headFormat = """
@@ -35,12 +36,12 @@ class table__h_e_a_d(DefaultTable.DefaultTable):
 		if rest:
 			# this is quite illegal, but there seem to be fonts out there that do this
 			assert rest == "\0\0"
-		self.unitsPerEm = int(self.unitsPerEm)
-		self.flags = int(self.flags)
+		self.unitsPerEm = self.unitsPerEm
+		self.flags = self.flags
 		self.strings2dates()
 	
 	def compile(self, ttFont):
-		self.modified = long(time.time() - mac_epoch_diff)
+		self.modified = int(time.time() - mac_epoch_diff)
 		self.dates2strings()
 		data = sstruct.pack(headFormat, self)
 		self.strings2dates()
@@ -67,7 +68,7 @@ class table__h_e_a_d(DefaultTable.DefaultTable):
 					value = time.asctime(time.gmtime(0))
 			if name in ("magicNumber", "checkSumAdjustment"):
 				if value < 0:
-					value = value + 0x100000000L
+					value = value + 0x100000000
 				value = hex(value)
 				if value[-1:] == "L":
 					value = value[:-1]
@@ -76,31 +77,15 @@ class table__h_e_a_d(DefaultTable.DefaultTable):
 			writer.simpletag(name, value=value)
 			writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		value = attrs["value"]
 		if name in ("created", "modified"):
 			value = parse_date(value) - mac_epoch_diff
 		elif name in ("macStyle", "flags"):
 			value = binary2num(value)
 		else:
-			try:
-				value = safeEval(value)
-			except OverflowError:
-				value = long(value)
+			value = safeEval(value)
 		setattr(self, name, value)
-	
-	def __cmp__(self, other):
-		if type(self) != type(other): return cmp(type(self), type(other))
-		if self.__class__ != other.__class__: return cmp(self.__class__, other.__class__)
-
-		selfdict = self.__dict__.copy()
-		otherdict = other.__dict__.copy()
-		# for testing purposes, compare without the modified and checkSumAdjustment
-		# fields, since they are allowed to be different.
-		for key in ["modified", "checkSumAdjustment"]:
-			del selfdict[key]
-			del otherdict[key]
-		return cmp(selfdict, otherdict)
 
 
 def calc_mac_epoch_diff():
@@ -112,7 +97,7 @@ def calc_mac_epoch_diff():
 	# This assert fails in certain time zones, with certain daylight settings
 	#assert time.gmtime(safe_epoch)[:6] == safe_epoch_t[:6]
 	seconds1904to1972 = 60 * 60 * 24 * (365 * (1972-1904) + 17) # thanks, Laurence!
-	return long(safe_epoch - seconds1904to1972)
+	return int(safe_epoch - seconds1904to1972)
 
 mac_epoch_diff = calc_mac_epoch_diff()
 
@@ -122,34 +107,31 @@ _months = ['   ', 'jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug',
 _weekdays = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
 
 def parse_date(datestring):
-	datestring = string.lower(datestring)
-	weekday, month, day, tim, year = string.split(datestring)
+	datestring = datestring.lower()
+	weekday, month, day, tim, year = datestring.split()
 	weekday = _weekdays.index(weekday)
 	month = _months.index(month)
 	year = int(year)
 	day = int(day)
-	hour, minute, second = map(int, string.split(tim, ":"))
+	hour, minute, second = [int(item) for item in tim.split(":")]
 	t = (year, month, day, hour, minute, second, weekday, 0, 0)
-	try:
-		return long(time.mktime(t) - time.timezone)
-	except OverflowError:
-		return 0L
+	return int(time.mktime(t) - time.timezone)
 
 
 def bin2long(data):
 	# thanks </F>!
-	v = 0L
-	for i in map(ord, data):
+	v = 0
+	for i in map(byteord, data):
 	    v = v<<8 | i
 	return v
 
 def long2bin(v, bytes=8):
-	mask = long("FF" * bytes, 16)
-	data = ""
+	mask = int("FF" * bytes, 16)
+	data = b""
 	while v:
-		data = chr(v & 0xff) + data
+		data = bytechr(v & 0xff) + data
 		v = (v >> 8) & mask
-	data = (bytes - len(data)) * "\0" + data
+	data = (bytes - len(data)) * b"\0" + data
 	assert len(data) == 8, "long too long"
 	return data
 

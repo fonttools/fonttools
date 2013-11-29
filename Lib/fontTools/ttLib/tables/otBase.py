@@ -1,9 +1,9 @@
-from DefaultTable import DefaultTable
-import otData
+from __future__ import print_function, division
+from fontTools.misc.py23 import *
+from .DefaultTable import DefaultTable
 import struct
-from types import TupleType
 
-class OverflowErrorRecord:
+class OverflowErrorRecord(object):
 	def __init__(self, overflowTuple):
 		self.tableType = overflowTuple[0]
 		self.LookupListIndex = overflowTuple[1]
@@ -30,9 +30,9 @@ class BaseTTXConverter(DefaultTable):
 	"""
 	
 	def decompile(self, data, font):
-		import otTables
+		from . import otTables
 		cachingStats = None if True else {}
-		class GlobalState:
+		class GlobalState(object):
 			def __init__(self, tableType, cachingStats):
 				self.tableType = tableType
 				self.cachingStats = cachingStats
@@ -43,15 +43,14 @@ class BaseTTXConverter(DefaultTable):
 		self.table = tableClass()
 		self.table.decompile(reader, font)
 		if cachingStats:
-			stats = [(v, k) for k, v in cachingStats.items()]
-			stats.sort()
+			stats = sorted([(v, k) for k, v in cachingStats.items()])
 			stats.reverse()
-			print "cachingsstats for ", self.tableTag
+			print("cachingsstats for ", self.tableTag)
 			for v, k in stats:
 				if v < 2:
 					break
-				print v, k
-			print "---", len(stats)
+				print(v, k)
+			print("---", len(stats))
 	
 	def compile(self, font):
 		""" Create a top-level OTFWriter for the GPOS/GSUB table.
@@ -74,7 +73,7 @@ class BaseTTXConverter(DefaultTable):
 
 				If a lookup subtable overflows an offset, we have to start all over. 
 		"""
-		class GlobalState:
+		class GlobalState(object):
 			def __init__(self, tableType):
 				self.tableType = tableType
 		globalState = GlobalState(tableType=self.tableTag)
@@ -86,12 +85,12 @@ class BaseTTXConverter(DefaultTable):
 	def toXML(self, writer, font):
 		self.table.toXML2(writer, font)
 	
-	def fromXML(self, (name, attrs, content), font):
-		import otTables
+	def fromXML(self, name, attrs, content, font):
+		from . import otTables
 		if not hasattr(self, "table"):
 			tableClass = getattr(otTables, self.tableTag)
 			self.table = tableClass()
-		self.table.fromXML((name, attrs, content), font)
+		self.table.fromXML(name, attrs, content, font)
 
 
 class OTTableReader(object):
@@ -138,8 +137,7 @@ class OTTableReader(object):
 	def readUInt24(self):
 		pos = self.pos
 		newpos = pos + 3
-		value = (ord(self.data[pos]) << 16) | (ord(self.data[pos+1]) << 8) | ord(self.data[pos+2])
-		value, = struct.unpack(">H", self.data[pos:newpos])
+		value, = struct.unpack(">l", b'\0'+self.data[pos:newpos])
 		self.pos = newpos
 		return value
 
@@ -153,7 +151,7 @@ class OTTableReader(object):
 	def readTag(self):
 		pos = self.pos
 		newpos = pos + 4
-		value = self.data[pos:newpos]
+		value = Tag(self.data[pos:newpos])
 		assert len(value) == 4
 		self.pos = newpos
 		return value
@@ -214,7 +212,7 @@ class OTTableWriter(object):
 			tableData = table.getData()
 			data.append(tableData)
 
-		return "".join(data)
+		return bytesjoin(data)
 	
 	def getDataLength(self):
 		"""Return the length of this table in bytes, without subtables."""
@@ -280,19 +278,18 @@ class OTTableWriter(object):
 						overflowErrorRecord = self.getOverflowErrorRecord(item)
 						
 						
-						raise OTLOffsetOverflowError, overflowErrorRecord
+						raise OTLOffsetOverflowError(overflowErrorRecord)
 
-		return "".join(items)
+		return bytesjoin(items)
 	
 	def __hash__(self):
 		# only works after self._doneWriting() has been called
 		return hash(self.items)
 	
-	def __cmp__(self, other):
-		if type(self) != type(other): return cmp(type(self), type(other))
-		if self.__class__ != other.__class__: return cmp(self.__class__, other.__class__)
-
-		return cmp(self.items, other.items)
+	def __eq__(self, other):
+		if type(self) != type(other):
+			raise TypeError("unordered types %s() < %s()", type(self), type(other))
+		return self.items == other.items
 	
 	def _doneWriting(self, internedTables=None):
 		# Convert CountData references to data string items
@@ -305,7 +302,7 @@ class OTTableWriter(object):
 		if internedTables is None:
 			internedTables = {}
 		items = self.items
-		iRange = range(len(items))
+		iRange = list(range(len(items)))
 		
 		if hasattr(self, "Extension"):
 			newTree = 1
@@ -320,7 +317,7 @@ class OTTableWriter(object):
 					item._doneWriting()
 				else:
 					item._doneWriting(internedTables)
-					if internedTables.has_key(item):
+					if item in internedTables:
 						items[i] = item = internedTables[item]
 					else:
 						internedTables[item] = item
@@ -342,7 +339,7 @@ class OTTableWriter(object):
 		done[self] = 1
 
 		numItems = len(self.items)
-		iRange = range(numItems)
+		iRange = list(range(numItems))
 		iRange.reverse()
 
 		if hasattr(self, "Extension"):
@@ -359,7 +356,7 @@ class OTTableWriter(object):
 				if hasattr(item, "name") and (item.name == "Coverage"):
 					sortCoverageLast = 1
 					break
-			if not done.has_key(item):
+			if item not in done:
 				item._gatherTables(tables, extTables, done)
 			else:
 				index = max(item.parent.keys())
@@ -380,7 +377,7 @@ class OTTableWriter(object):
 				newDone = {}
 				item._gatherTables(extTables, None, newDone)
 
-			elif not done.has_key(item):
+			elif item not in done:
 				item._gatherTables(tables, extTables, done)
 			else:
 				index = max(item.parent.keys())
@@ -408,7 +405,8 @@ class OTTableWriter(object):
 
 	def writeUInt24(self, value):
 		assert 0 <= value < 0x1000000
-		self.items.append(''.join(chr(v) for v in (value>>16, (value>>8)&0xFF, value&0xff)))
+		b = struct.pack(">L", value)
+		self.items.append(b[1:])
 	
 	def writeLong(self, value):
 		self.items.append(struct.pack(">l", value))
@@ -417,6 +415,7 @@ class OTTableWriter(object):
 		self.items.append(struct.pack(">L", value))
 	
 	def writeTag(self, tag):
+		tag = Tag(tag).tobytes()
 		assert len(tag) == 4
 		self.items.append(tag)
 	
@@ -429,7 +428,7 @@ class OTTableWriter(object):
 		return ref
 	
 	def writeStruct(self, format, values):
-		data = apply(struct.pack, (format,) + values)
+		data = struct.pack(*(format,) + values)
 		self.items.append(data)
 	
 	def writeData(self, data):
@@ -469,7 +468,7 @@ class OTTableWriter(object):
 		return OverflowErrorRecord( (self.globalState.tableType, LookupListIndex, SubTableIndex, itemName, itemIndex) )
 
 
-class CountReference:
+class CountReference(object):
 	"""A reference to a Count value, not a count of references."""
 	def __init__(self, table, name):
 		self.table = table
@@ -514,14 +513,14 @@ class BaseTable(object):
 		if self.recurse > 2:
 			# shouldn't ever get here - we should only get to two levels of recursion.
 			# this guards against self.decompile NOT setting compileStatus to other than 1.
-			raise AttributeError, attr 
+			raise AttributeError(attr) 
 		if self.compileStatus == 1:
 			self.ensureDecompiled()
 			val = getattr(self, attr)
 			self.recurse -=1
 			return val
 			
-		raise AttributeError, attr 
+		raise AttributeError(attr) 
 
 
 	"""Generic base class for all OpenType (sub)tables."""
@@ -659,7 +658,7 @@ class BaseTable(object):
 				value = getattr(self, conv.name)
 				conv.xmlWrite(xmlWriter, font, value, conv.name, [])
 	
-	def fromXML(self, (name, attrs, content), font):
+	def fromXML(self, name, attrs, content, font):
 		try:
 			conv = self.getConverterByName(name)
 		except KeyError:
@@ -674,13 +673,14 @@ class BaseTable(object):
 		else:
 			setattr(self, conv.name, value)
 	
-	def __cmp__(self, other):
-		if type(self) != type(other): return cmp(type(self), type(other))
-		if self.__class__ != other.__class__: return cmp(self.__class__, other.__class__)
+	def __eq__(self, other):
+		if type(self) != type(other):
+			raise TypeError("unordered types %s() < %s()", type(self), type(other))
 
 		self.ensureDecompiled()
+		other.ensureDecompiled()
 
-		return cmp(self.__dict__, other.__dict__)
+		return self.__dict__ == other.__dict__
 
 
 class FormatSwitchingBaseTable(BaseTable):
@@ -696,7 +696,7 @@ class FormatSwitchingBaseTable(BaseTable):
 	
 	def readFormat(self, reader):
 		self.Format = reader.readUShort()
-		assert self.Format <> 0, (self, reader.pos, len(reader.data))
+		assert self.Format != 0, (self, reader.pos, len(reader.data))
 	
 	def writeFormat(self, writer):
 		writer.writeUShort(self.Format)
@@ -740,7 +740,7 @@ def _buildDict():
 valueRecordFormatDict = _buildDict()
 
 
-class ValueRecordFactory:
+class ValueRecordFactory(object):
 	
 	"""Given a format code, this object convert ValueRecords."""
 
@@ -763,7 +763,7 @@ class ValueRecordFactory:
 				value = reader.readUShort()
 			if isDevice:
 				if value:
-					import otTables
+					from . import otTables
 					subReader = reader.getSubReader(value)
 					value = getattr(otTables, name)()
 					value.decompile(subReader, font)
@@ -788,7 +788,7 @@ class ValueRecordFactory:
 				writer.writeUShort(value)
 
 
-class ValueRecord:
+class ValueRecord(object):
 	
 	# see ValueRecordFactory
 	
@@ -824,23 +824,23 @@ class ValueRecord:
 			xmlWriter.simpletag(valueName, simpleItems)
 			xmlWriter.newline()
 	
-	def fromXML(self, (name, attrs, content), font):
-		import otTables
+	def fromXML(self, name, attrs, content, font):
+		from . import otTables
 		for k, v in attrs.items():
 			setattr(self, k, int(v))
 		for element in content:
-			if type(element) <> TupleType:
+			if not isinstance(element, tuple):
 				continue
 			name, attrs, content = element
 			value = getattr(otTables, name)()
 			for elem2 in content:
-				if type(elem2) <> TupleType:
+				if not isinstance(elem2, tuple):
 					continue
-				value.fromXML(elem2, font)
+				name2, attrs2, content2 = elem2
+				value.fromXML(name2, attrs2, content2, font)
 			setattr(self, name, value)
 	
-	def __cmp__(self, other):
-		if type(self) != type(other): return cmp(type(self), type(other))
-		if self.__class__ != other.__class__: return cmp(self.__class__, other.__class__)
-
-		return cmp(self.__dict__, other.__dict__)
+	def __eq__(self, other):
+		if type(self) != type(other):
+			raise TypeError("unordered types %s() < %s()", type(self), type(other))
+		return self.__dict__ == other.__dict__

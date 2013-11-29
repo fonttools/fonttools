@@ -1,5 +1,7 @@
 """Mac-only module to find the home file of a resource."""
 
+from __future__ import print_function, division
+from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 import array
 import calldll
@@ -49,7 +51,7 @@ _FCBPBFormat = """
 	ioFCBParID:   l
 """
 
-class ParamBlock:
+class ParamBlock(object):
 	
 	"""Wrapper for the very low level FCBPB record."""
 	
@@ -70,14 +72,14 @@ class ParamBlock:
 		ptr = buf.buffer_info()[0]
 		err = _getInfo(ptr)
 		if err:
-			raise Res.Error, ("can't get file info", err)
+			raise Res.Error("can't get file info", err)
 		sstruct.unpack(_FCBPBFormat, buf.tostring(), self)
 		self.__haveInfo = 1
 	
 	def getFileName(self):
 		self.getInfo()
 		data = self.__fileName.tostring()
-		return data[1:ord(data[0])+1]
+		return data[1:byteord(data[0])+1]
 	
 	def getFSSpec(self):
 		self.getInfo()
@@ -91,4 +93,4 @@ class ParamBlock:
 
 if __name__ == "__main__":
 	fond = Res.GetNamedResource("FOND", "Helvetica")
-	print HomeResFile(fond)
+	print(HomeResFile(fond))

@@ -2,6 +2,8 @@
 for shapes.
 """
 
+from __future__ import print_function, division
+from fontTools.misc.py23 import *
 from fontTools.pens.basePen import BasePen
 from fontTools.misc.bezierTools import solveQuadratic, solveCubic
 
@@ -96,7 +98,7 @@ class PointInsidePen(BasePen):
 
 		dx = x2 - x1
 		dy = y2 - y1
-		t = float(y - y1) / dy
+		t = (y - y1) / dy
 		ix = dx * t + x1
 		if ix < x:
 			return
@@ -120,8 +122,7 @@ class PointInsidePen(BasePen):
 		cy = (y2 - dy) * 3.0
 		by = (y3 - y2) * 3.0 - cy
 		ay = y4 - dy - cy - by
-		solutions = solveCubic(ay, by, cy, dy - y)
-		solutions.sort()
+		solutions = sorted(solveCubic(ay, by, cy, dy - y))
 		solutions = [t for t in solutions if ZERO_MINUS_EPSILON <= t <= ONE_PLUS_EPSILON]
 		if not solutions:
 			return
@@ -176,8 +177,7 @@ class PointInsidePen(BasePen):
 		c = y1
 		b = (y2 - c) * 2.0
 		a = y3 - c - b
-		solutions = solveQuadratic(a, b, c - y)
-		solutions.sort()
+		solutions = sorted(solveQuadratic(a, b, c - y))
 		solutions = [t for t in solutions if ZERO_MINUS_EPSILON <= t <= ONE_PLUS_EPSILON]
 		if not solutions:
 			return

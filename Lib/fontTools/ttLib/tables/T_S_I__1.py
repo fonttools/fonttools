@@ -1,5 +1,6 @@
-import DefaultTable
-import string
+from __future__ import print_function, division
+from fontTools.misc.py23 import *
+from . import DefaultTable
 
 class table_T_S_I__1(DefaultTable.DefaultTable):
 	
@@ -39,19 +40,19 @@ class table_T_S_I__1(DefaultTable.DefaultTable):
 		if not hasattr(self, "glyphPrograms"):
 			self.glyphPrograms = {}
 			self.extraPrograms = {}
-		data = ''
+		data = b''
 		indextable = ttFont[self.indextable]
 		glyphNames = ttFont.getGlyphOrder()
 		
 		indices = []
 		for i in range(len(glyphNames)):
 			if len(data) % 2:
-				data = data + "\015"  # align on 2-byte boundaries, fill with return chars. Yum.
+				data = data + b"\015"  # align on 2-byte boundaries, fill with return chars. Yum.
 			name = glyphNames[i]
-			if self.glyphPrograms.has_key(name):
+			if name in self.glyphPrograms:
 				text = self.glyphPrograms[name]
 			else:
-				text = ""
+				text = b""
 			textLength = len(text)
 			if textLength >= 0x8000:
 				textLength = 0x8000  # XXX ???
@@ -59,16 +60,15 @@ class table_T_S_I__1(DefaultTable.DefaultTable):
 			data = data + text
 		
 		extra_indices = []
-		codes = self.extras.items()
-		codes.sort()
+		codes = sorted(self.extras.items())
 		for i in range(len(codes)):
 			if len(data) % 2:
-				data = data + "\015"  # align on 2-byte boundaries, fill with return chars.
+				data = data + b"\015"  # align on 2-byte boundaries, fill with return chars.
 			code, name = codes[i]
-			if self.extraPrograms.has_key(name):
+			if name in self.extraPrograms:
 				text = self.extraPrograms[name]
 			else:
-				text = ""
+				text = b""
 			textLength = len(text)
 			if textLength >= 0x8000:
 				textLength = 0x8000  # XXX ???
@@ -78,8 +78,7 @@ class table_T_S_I__1(DefaultTable.DefaultTable):
 		return data
 	
 	def toXML(self, writer, ttFont):
-		names = self.glyphPrograms.keys()
-		names.sort()
+		names = sorted(self.glyphPrograms.keys())
 		writer.newline()
 		for name in names:
 			text = self.glyphPrograms[name]
@@ -87,31 +86,30 @@ class table_T_S_I__1(DefaultTable.DefaultTable):
 				continue
 			writer.begintag("glyphProgram", name=name)
 			writer.newline()
-			writer.write_noindent(string.replace(text, "\r", "\n"))
+			writer.write_noindent(text.replace("\r", "\n"))
 			writer.newline()
 			writer.endtag("glyphProgram")
 			writer.newline()
 			writer.newline()
-		extra_names = self.extraPrograms.keys()
-		extra_names.sort()
+		extra_names = sorted(self.extraPrograms.keys())
 		for name in extra_names:
 			text = self.extraPrograms[name]
 			if not text:
 				continue
 			writer.begintag("extraProgram", name=name)
 			writer.newline()
-			writer.write_noindent(string.replace(text, "\r", "\n"))
+			writer.write_noindent(text.replace("\r", "\n"))
 			writer.newline()
 			writer.endtag("extraProgram")
 			writer.newline()
 			writer.newline()
 	
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		if not hasattr(self, "glyphPrograms"):
 			self.glyphPrograms = {}
 			self.extraPrograms = {}
-		lines = string.split(string.replace(string.join(content, ""), "\r", "\n"), "\n")
-		text = string.join(lines[1:-1], "\r")
+		lines = strjoin(content).replace("\r", "\n").split("\n")
+		text = '\r'.join(lines[1:-1])
 		if name == "glyphProgram":
 			self.glyphPrograms[attrs["name"]] = text
 		elif name == "extraProgram":

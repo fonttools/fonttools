@@ -1,15 +1,16 @@
 """ttLib.macUtils.py -- Various Mac-specific stuff."""
 
+from __future__ import print_function, division
+from fontTools.misc.py23 import *
 import sys
 import os
 if sys.platform not in ("mac", "darwin"):
-	raise ImportError, "This module is Mac-only!"
-
-import cStringIO
+	raise ImportError("This module is Mac-only!")
 try:
 	from Carbon import Res
 except ImportError:
 	import Res
+
 
 
 def MyOpenResFile(path):
@@ -18,7 +19,7 @@ def MyOpenResFile(path):
 		resref = Res.FSOpenResFile(path, mode)
 	except Res.Error:
 		# try data fork
-		resref = Res.FSOpenResourceFile(path, u'', mode)
+		resref = Res.FSOpenResourceFile(path, unicode(), mode)
 	return resref
 
 
@@ -31,7 +32,7 @@ def getSFNTResIndices(path):
 	Res.UseResFile(resref)
 	numSFNTs = Res.Count1Resources('sfnt')
 	Res.CloseResFile(resref)
-	return range(1, numSFNTs + 1)
+	return list(range(1, numSFNTs + 1))
 
 
 def openTTFonts(path):
@@ -49,22 +50,22 @@ def openTTFonts(path):
 		for index in sfnts:
 			fonts.append(ttLib.TTFont(path, index))
 		if not fonts:
-			raise ttLib.TTLibError, "no fonts found in file '%s'" % path
+			raise ttLib.TTLibError("no fonts found in file '%s'" % path)
 	return fonts
 
 
-class SFNTResourceReader:
+class SFNTResourceReader(object):
 	
 	"""Simple (Mac-only) read-only file wrapper for 'sfnt' resources."""
 	
 	def __init__(self, path, res_name_or_index):
 		resref = MyOpenResFile(path)
 		Res.UseResFile(resref)
-		if type(res_name_or_index) == type(""):
+		if isinstance(res_name_or_index, basestring):
 			res = Res.Get1NamedResource('sfnt', res_name_or_index)
 		else:
 			res = Res.Get1IndResource('sfnt', res_name_or_index)
-		self.file = cStringIO.StringIO(res.data)
+		self.file = StringIO(res.data)
 		Res.CloseResFile(resref)
 		self.name = path
 	
@@ -73,12 +74,12 @@ class SFNTResourceReader:
 		return getattr(self.file, attr)
 
 
-class SFNTResourceWriter:
+class SFNTResourceWriter(object):
 	
 	"""Simple (Mac-only) file wrapper for 'sfnt' resources."""
 	
 	def __init__(self, path, ttFont, res_id=None):
-		self.file = cStringIO.StringIO()
+		self.file = StringIO()
 		self.name = path
 		self.closed = 0
 		fullname = ttFont['name'].getName(4, 1, 0) # Full name, mac, default encoding
@@ -86,15 +87,15 @@ class SFNTResourceWriter:
 		psname = ttFont['name'].getName(6, 1, 0) # PostScript name, etc.
 		if fullname is None or fullname is None or psname is None:
 			from fontTools import ttLib
-			raise ttLib.TTLibError, "can't make 'sfnt' resource, no Macintosh 'name' table found"
+			raise ttLib.TTLibError("can't make 'sfnt' resource, no Macintosh 'name' table found")
 		self.fullname = fullname.string
 		self.familyname = familyname.string
 		self.psname = psname.string
-		if self.familyname <> self.psname[:len(self.familyname)]:
+		if self.familyname != self.psname[:len(self.familyname)]:
 			# ugh. force fam name to be the same as first part of ps name,
 			# fondLib otherwise barfs.
 			for i in range(min(len(self.psname), len(self.familyname))):
-				if self.familyname[i] <> self.psname[i]:
+				if self.familyname[i] != self.psname[i]:
 					break
 			self.familyname = self.psname[:i]
 		
@@ -157,7 +158,7 @@ class SFNTResourceWriter:
 		fond.styleMappingReserved = 0
 		
 		# calc:
-		scale = 4096.0 / self.ttFont['head'].unitsPerEm
+		scale = 4096 / self.ttFont['head'].unitsPerEm
 		fond.ffAscent = scale * self.ttFont['hhea'].ascent
 		fond.ffDescent = scale * self.ttFont['hhea'].descent
 		fond.ffWidMax = scale * self.ttFont['hhea'].advanceWidthMax
@@ -172,20 +173,20 @@ class SFNTResourceWriter:
 			names = {}
 			for code, name in cmap.cmap.items():
 				names[name] = code
-			if self.ttFont.has_key('kern'):
+			if 'kern' in self.ttFont:
 				kern = self.ttFont['kern'].getkern(0)
 				if kern:
 					fondkerning = []
 					for (left, right), value in kern.kernTable.items():
-						if names.has_key(left) and names.has_key(right):
+						if left in names and right in names:
 							fondkerning.append((names[left], names[right], scale * value))
 					fondkerning.sort()
 					fond.kernTables = {0: fondkerning}
-			if self.ttFont.has_key('hmtx'):
+			if 'hmtx' in self.ttFont:
 				hmtx = self.ttFont['hmtx']
 				fondwidths = [2048] * 256 + [0, 0]  # default width, + plus two zeros.
 				for name, (width, lsb) in hmtx.metrics.items():
-					if names.has_key(name):
+					if name in names:
 						fondwidths[names[name]] = scale * width
 				fond.widthTables = {0: fondwidths}
 		fond.save()

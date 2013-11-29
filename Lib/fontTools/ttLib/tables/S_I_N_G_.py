@@ -1,9 +1,8 @@
-import DefaultTable
+from __future__ import print_function, division
+from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
-import struct
-import time
-import string
-from fontTools.misc.textTools import safeEval, num2binary, binary2num
+from fontTools.misc.textTools import safeEval
+from . import DefaultTable
 
 SINGFormat = """
 		>	# big endian
@@ -30,52 +29,53 @@ class table_S_I_N_G_(DefaultTable.DefaultTable):
 	def decompile(self, data, ttFont):
 		dummy, rest = sstruct.unpack2(SINGFormat, data, self)
 		self.uniqueName = self.decompileUniqueName(self.uniqueName)
-		self.nameLength = ord(self.nameLength)
+		self.nameLength = byteord(self.nameLength)
 		assert len(rest) == self.nameLength
-		self.baseGlyphName = rest
+		self.baseGlyphName = tostr(rest)
 		
 		rawMETAMD5 = self.METAMD5
-		self.METAMD5 = "[" + hex(ord(self.METAMD5[0]))
+		self.METAMD5 = "[" + hex(byteord(self.METAMD5[0]))
 		for char in rawMETAMD5[1:]:
-			self.METAMD5 = self.METAMD5 + ", " + hex(ord(char))
+			self.METAMD5 = self.METAMD5 + ", " + hex(byteord(char))
 		self.METAMD5 = self.METAMD5 + "]"
 		
 	def decompileUniqueName(self, data):
 		name = ""
 		for char in data:
-			val = ord(char)
+			val = byteord(char)
 			if val == 0:
 				break
 			if (val > 31) or (val < 128):
-				name = name + char
+				name += chr(val)
 			else:
 				octString = oct(val)
 				if len(octString) > 3:
 					octString = octString[1:] # chop off that leading zero.
 				elif len(octString) < 3:
 					octString.zfill(3)
-				name = name + "\\" + octString
+				name += "\\" + octString
 		return name
 		
 		
 	def compile(self, ttFont):
-		self.nameLength = chr(len(self.baseGlyphName))
-		self.uniqueName = self.compilecompileUniqueName(self.uniqueName, 28)
+		d = self.__dict__.copy()
+		d["nameLength"] = bytechr(len(self.baseGlyphName))
+		d["uniqueName"] = self.compilecompileUniqueName(self.uniqueName, 28)
 		METAMD5List = eval(self.METAMD5)
-		self.METAMD5 = ""
+		d["METAMD5"] = b""
 		for val in METAMD5List:
-			self.METAMD5 = self.METAMD5 + chr(val)
-		assert (len(self.METAMD5) == 16), "Failed to pack 16 byte MD5 hash in SING table"
-		data = sstruct.pack(SINGFormat, self)
-		data = data + self.baseGlyphName
+			d["METAMD5"] += bytechr(val)
+		assert (len(d["METAMD5"]) == 16), "Failed to pack 16 byte MD5 hash in SING table"
+		data = sstruct.pack(SINGFormat, d)
+		data = data + tobytes(self.baseGlyphName)
 		return data
 	
 	def compilecompileUniqueName(self, name, length):
 		nameLen = len(name)
 		if length <= nameLen:
-			name[:length-1] + "\000"
+			name = name[:length-1] + "\000"
 		else:
-			name.join( (nameLen - length)* "\000")
+			name += (nameLen - length) * "\000"
 		return name
 
 
@@ -90,13 +90,9 @@ class table_S_I_N_G_(DefaultTable.DefaultTable):
 		writer.simpletag("baseGlyphName", value=self.baseGlyphName)
 		writer.newline()
 		
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		value = attrs["value"]
 		if name in ["uniqueName", "METAMD5", "baseGlyphName"]:
 			setattr(self, name, value)
 		else:
-			try:
-				value = safeEval(value)
-			except OverflowError:
-				value = long(value)
-			setattr(self, name, value)
+			setattr(self, name, safeEval(value))

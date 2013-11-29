@@ -1,13 +1,12 @@
-
-import DefaultTable
-import os
-import string
-import struct
+from __future__ import print_function, division
+from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
-import itertools
-from types import TupleType
 from fontTools.misc.textTools import safeEval, readHex, hexStr, deHexStr
-from BitmapGlyphMetrics import BigGlyphMetrics, bigGlyphMetricsFormat, SmallGlyphMetrics, smallGlyphMetricsFormat
+from .BitmapGlyphMetrics import BigGlyphMetrics, bigGlyphMetricsFormat, SmallGlyphMetrics, smallGlyphMetricsFormat
+from . import DefaultTable
+import itertools
+import os
+import struct
 
 ebdtTableVersionFormat = """
 	> # big endian
@@ -52,7 +51,7 @@ class table_E_B_D_T_(DefaultTable.DefaultTable):
 			bitmapGlyphDict = {}
 			self.strikeData.append(bitmapGlyphDict)
 			for indexSubTable in curStrike.indexSubTables:
-				dataIter = itertools.izip(indexSubTable.names, indexSubTable.locations)
+				dataIter = zip(indexSubTable.names, indexSubTable.locations)
 				for curName, curLoc in dataIter:
 					# Don't create duplicate data entries for the same glyphs.
 					# Instead just use the structures that already exist if they exist.
@@ -82,7 +81,7 @@ class table_E_B_D_T_(DefaultTable.DefaultTable):
 		# recalculation is defered to the EblcIndexSubTable class and just
 		# pass what is known about bitmap glyphs from this particular table.
 		locator = ttFont[self.__class__.locatorName]
-		for curStrike, curGlyphDict in itertools.izip(locator.strikes, self.strikeData):
+		for curStrike, curGlyphDict in zip(locator.strikes, self.strikeData):
 			for curIndexSubTable in curStrike.indexSubTables:
 				dataLocations = []
 				for curName in curIndexSubTable.names:
@@ -114,7 +113,7 @@ class table_E_B_D_T_(DefaultTable.DefaultTable):
 				# of any of the problems in the convertion that may arise.
 				curIndexSubTable.locations = dataLocations
 
-		return string.join(dataList, "")
+		return bytesjoin(dataList)
 
 	def toXML(self, writer, ttFont):
 		# When exporting to XML if one of the data export formats
@@ -122,7 +121,7 @@ class table_E_B_D_T_(DefaultTable.DefaultTable):
 		# In this case populate the bitmaps with "export metrics".
 		if ttFont.bitmapGlyphDataFormat in ('row', 'bitwise'):
 			locator = ttFont[self.__class__.locatorName]
-			for curStrike, curGlyphDict in itertools.izip(locator.strikes, self.strikeData):
+			for curStrike, curGlyphDict in zip(locator.strikes, self.strikeData):
 				for curIndexSubTable in curStrike.indexSubTables:
 					for curName in curIndexSubTable.names:
 						glyph = curGlyphDict[curName]
@@ -145,7 +144,7 @@ class table_E_B_D_T_(DefaultTable.DefaultTable):
 			writer.endtag('strikedata')
 			writer.newline()
 
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		if name == 'header':
 			self.version = safeEval(attrs['version'])
 		elif name == 'strikedata':
@@ -155,7 +154,7 @@ class table_E_B_D_T_(DefaultTable.DefaultTable):
 
 			bitmapGlyphDict = {}
 			for element in content:
-				if type(element) != TupleType:
+				if not isinstance(element, tuple):
 					continue
 				name, attrs, content = element
 				if name[4:].startswith(_bitmapGlyphSubclassPrefix[4:]):
@@ -163,11 +162,11 @@ class table_E_B_D_T_(DefaultTable.DefaultTable):
 					glyphName = attrs['name']
 					imageFormatClass = self.getImageFormatClass(imageFormat)
 					curGlyph = imageFormatClass(None, None)
-					curGlyph.fromXML(element, ttFont)
+					curGlyph.fromXML(name, attrs, content, ttFont)
 					assert glyphName not in bitmapGlyphDict, "Duplicate glyphs with the same name '%s' in the same strike." % glyphName
 					bitmapGlyphDict[glyphName] = curGlyph
 				else:
-					print "Warning: %s being ignored by %s", name, self.__class__.__name__
+					print("Warning: %s being ignored by %s", name, self.__class__.__name__)
 
 			# Grow the strike data array to the appropriate size. The XML
 			# format allows the strike index value to be out of order.
@@ -176,7 +175,7 @@ class table_E_B_D_T_(DefaultTable.DefaultTable):
 			assert self.strikeData[strikeIndex] == None, "Duplicate strike EBDT indices."
 			self.strikeData[strikeIndex] = bitmapGlyphDict
 
-class EbdtComponent:
+class EbdtComponent(object):
 
 	def toXML(self, writer, ttFont):
 		writer.begintag('ebdtComponent', [('name', self.name)])
@@ -187,45 +186,45 @@ class EbdtComponent:
 		writer.endtag('ebdtComponent')
 		writer.newline()
 
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		self.name = attrs['name']
 		componentNames = set(sstruct.getformat(ebdtComponentFormat)[1][1:])
 		for element in content:
-			if type(element) != TupleType:
+			if not isinstance(element, tuple):
 				continue
 			name, attrs, content = element
 			if name in componentNames:
 				vars(self)[name] = safeEval(attrs['value'])
 			else:
-				print "Warning: unknown name '%s' being ignored by EbdtComponent." % name
+				print("Warning: unknown name '%s' being ignored by EbdtComponent." % name)
 
 # Helper functions for dealing with binary.
 
 def _data2binary(data, numBits):
 	binaryList = []
 	for curByte in data:
-		value = ord(curByte)
+		value = byteord(curByte)
 		numBitsCut = min(8, numBits)
-		for i in xrange(numBitsCut):
+		for i in range(numBitsCut):
 			if value & 0x1:
 				binaryList.append('1')
 			else:
 				binaryList.append('0')
 			value = value >> 1
 		numBits -= numBitsCut
-	return string.join(binaryList, "")
+	return strjoin(binaryList)
 
 def _binary2data(binary):
 	byteList = []
-	for bitLoc in xrange(0, len(binary), 8):
+	for bitLoc in range(0, len(binary), 8):
 		byteString = binary[bitLoc:bitLoc+8]
 		curByte = 0
 		for curBit in reversed(byteString):
 			curByte = curByte << 1
 			if curBit == '1':
 				curByte |= 1
-		byteList.append(chr(curByte))
-	return string.join(byteList, "")
+		byteList.append(bytechr(curByte))
+	return bytesjoin(byteList)
 
 def _memoize(f):
 	class memodict(dict):
@@ -243,14 +242,14 @@ def _memoize(f):
 @_memoize
 def _reverseBytes(data):
 	if len(data) != 1:
-		return string.join(map(_reverseBytes, data), "")
-	byte = ord(data)
+		return bytesjoin(map(_reverseBytes, data))
+	byte = byteord(data)
 	result = 0
-	for i in xrange(8):
+	for i in range(8):
 		result = result << 1
 		result |= byte & 1
 		byte = byte >> 1
-	return chr(result)
+	return bytechr(result)
 
 # This section of code is for reading and writing image data to/from XML.
 
@@ -261,7 +260,7 @@ def _writeRawImageData(strikeIndex, glyphName, bitmapObject, writer, ttFont):
 	writer.endtag('rawimagedata')
 	writer.newline()
 
-def _readRawImageData(bitmapObject, (name, attrs, content), ttFont):
+def _readRawImageData(bitmapObject, name, attrs, content, ttFont):
 	bitmapObject.imageData = readHex(content)
 
 def _writeRowImageData(strikeIndex, glyphName, bitmapObject, writer, ttFont):
@@ -272,14 +271,14 @@ def _writeRowImageData(strikeIndex, glyphName, bitmapObject, writer, ttFont):
 
 	writer.begintag('rowimagedata', bitDepth=bitDepth, width=metrics.width, height=metrics.height)
 	writer.newline()
-	for curRow in xrange(metrics.height):
+	for curRow in range(metrics.height):
 		rowData = bitmapObject.getRow(curRow, bitDepth=bitDepth, metrics=metrics)
 		writer.simpletag('row', value=hexStr(rowData))
 		writer.newline()
 	writer.endtag('rowimagedata')
 	writer.newline()
 
-def _readRowImageData(bitmapObject, (name, attrs, content), ttFont):
+def _readRowImageData(bitmapObject, name, attrs, content, ttFont):
 	bitDepth = safeEval(attrs['bitDepth'])
 	metrics = SmallGlyphMetrics()
 	metrics.width = safeEval(attrs['width'])
@@ -287,7 +286,7 @@ def _readRowImageData(bitmapObject, (name, attrs, content), ttFont):
 
 	dataRows = []
 	for element in content:
-		if type(element) != TupleType:
+		if not isinstance(element, tuple):
 			continue
 		name, attr, content = element
 		# Chop off 'imagedata' from the tag to get just the option.
@@ -306,17 +305,17 @@ def _writeBitwiseImageData(strikeIndex, glyphName, bitmapObject, writer, ttFont)
 
 	writer.begintag('bitwiseimagedata', bitDepth=bitDepth, width=metrics.width, height=metrics.height)
 	writer.newline()
-	for curRow in xrange(metrics.height):
+	for curRow in range(metrics.height):
 		rowData = bitmapObject.getRow(curRow, bitDepth=1, metrics=metrics, reverseBytes=True)
 		rowData = _data2binary(rowData, metrics.width)
 		# Make the output a readable ASCII art form.
-		rowData = string.join(map(binaryConv.get, rowData), "")
+		rowData = strjoin(map(binaryConv.get, rowData))
 		writer.simpletag('row', value=rowData)
 		writer.newline()
 	writer.endtag('bitwiseimagedata')
 	writer.newline()
 
-def _readBitwiseImageData(bitmapObject, (name, attrs, content), ttFont):
+def _readBitwiseImageData(bitmapObject, name, attrs, content, ttFont):
 	bitDepth = safeEval(attrs['bitDepth'])
 	metrics = SmallGlyphMetrics()
 	metrics.width = safeEval(attrs['width'])
@@ -328,12 +327,12 @@ def _readBitwiseImageData(bitmapObject, (name, attrs, content), ttFont):
 
 	dataRows = []
 	for element in content:
-		if type(element) != TupleType:
+		if not isinstance(element, tuple):
 			continue
 		name, attr, content = element
 		if name == 'row':
-			mapParams = itertools.izip(attr['value'], itertools.repeat('1'))
-			rowData = string.join(itertools.starmap(binaryConv.get, mapParams), "")
+			mapParams = zip(attr['value'], itertools.repeat('1'))
+			rowData = strjoin(itertools.starmap(binaryConv.get, mapParams))
 			dataRows.append(_binary2data(rowData))
 
 	bitmapObject.setRows(dataRows, bitDepth=bitDepth, metrics=metrics, reverseBytes=True)
@@ -354,7 +353,7 @@ def _writeExtFileImageData(strikeIndex, glyphName, bitmapObject, writer, ttFont)
 	with open(fullPath, "wb") as file:
 		file.write(bitmapObject.imageData)
 
-def _readExtFileImageData(bitmapObject, (name, attrs, content), ttFont):
+def _readExtFileImageData(bitmapObject, name, attrs, content, ttFont):
 	fullPath = attrs['value']
 	with open(fullPath, "rb") as file:
 		bitmapObject.imageData = file.read()
@@ -365,7 +364,7 @@ def _readExtFileImageData(bitmapObject, (name, attrs, content), ttFont):
 # in XML.
 _bitmapGlyphSubclassPrefix = 'ebdt_bitmap_format_'
 
-class BitmapGlyph:
+class BitmapGlyph(object):
 
 	# For the external file format. This can be changed in subclasses. This way
 	# when the extfile option is turned on files have the form: glyphName.ext
@@ -383,16 +382,17 @@ class BitmapGlyph:
 	def __init__(self, data, ttFont):
 		self.data = data
 		self.ttFont = ttFont
-		if not ttFont.lazy:
-			self.decompile()
-			del self.data
+		# TODO Currently non-lazy decompilation is untested here...
+		#if not ttFont.lazy:
+		#	self.decompile()
+		#	del self.data
 
 	def __getattr__(self, attr):
 		# Allow lazy decompile.
 		if attr[:2] == '__':
-			raise AttributeError, attr
+			raise AttributeError(attr)
 		if not hasattr(self, "data"):
-			raise AttributeError, attr
+			raise AttributeError(attr)
 		self.decompile()
 		del self.data
 		return getattr(self, attr)
@@ -412,16 +412,18 @@ class BitmapGlyph:
 		writer.endtag(self.__class__.__name__)
 		writer.newline()
 
-	def fromXML(self, (name, attrs, content), ttFont):
-		self.readMetrics((name, attrs, content), ttFont)
+	def fromXML(self, name, attrs, content, ttFont):
+		self.readMetrics(name, attrs, content, ttFont)
 		for element in content:
-			if type(element) != TupleType:
+			if not isinstance(element, tuple):
 				continue
 			name, attr, content = element
+			if not name.endswith('imagedata'):
+				continue
 			# Chop off 'imagedata' from the tag to get just the option.
 			option = name[:-len('imagedata')]
-			if option in self.__class__.xmlDataFunctions:
-				self.readData(element, ttFont)
+			assert option in self.__class__.xmlDataFunctions
+			self.readData(name, attrs, content, ttFont)
 
 	# Some of the glyphs have the metrics. This allows for metrics to be
 	# added if the glyph format has them. Default behavior is to do nothing.
@@ -429,7 +431,7 @@ class BitmapGlyph:
 		pass
 
 	# The opposite of write metrics.
-	def readMetrics(self, (name, attrs, content), ttFont):
+	def readMetrics(self, name, attrs, content, ttFont):
 		pass
 
 	def writeData(self, strikeIndex, glyphName, writer, ttFont):
@@ -439,11 +441,11 @@ class BitmapGlyph:
 			writeFunc = _writeRawImageData
 		writeFunc(strikeIndex, glyphName, self, writer, ttFont)
 
-	def readData(self, (name, attrs, content), ttFont):
+	def readData(self, name, attrs, content, ttFont):
 		# Chop off 'imagedata' from the tag to get just the option.
 		option = name[:-len('imagedata')]
 		writeFunc, readFunc = self.__class__.xmlDataFunctions[option]
-		readFunc(self, (name, attrs, content), ttFont)
+		readFunc(self, name, attrs, content, ttFont)
 
 
 # A closure for creating a mixin for the two types of metrics handling.
@@ -457,21 +459,21 @@ def _createBitmapPlusMetricsMixin(metricsClass):
 	metricsId = metricStrings.index(curMetricsName)
 	oppositeMetricsName = metricStrings[1-metricsId]
 
-	class BitmapPlusMetricsMixin:
+	class BitmapPlusMetricsMixin(object):
 
 		def writeMetrics(self, writer, ttFont):
 			self.metrics.toXML(writer, ttFont)
 
-		def readMetrics(self, (name, attrs, content), ttFont):
+		def readMetrics(self, name, attrs, content, ttFont):
 			for element in content:
-				if type(element) != TupleType:
+				if not isinstance(element, tuple):
 					continue
 				name, attrs, content = element
 				if name == curMetricsName:
 					self.metrics = metricsClass()
-					self.metrics.fromXML(element, ttFont)
+					self.metrics.fromXML(name, attrs, content, ttFont)
 				elif name == oppositeMetricsName:
-					print "Warning: %s being ignored in format %d." % oppositeMetricsName, self.getFormat()
+					print("Warning: %s being ignored in format %d." % oppositeMetricsName, self.getFormat())
 
 	return BitmapPlusMetricsMixin
 
@@ -482,7 +484,7 @@ BitmapPlusSmallMetricsMixin = _createBitmapPlusMetricsMixin(SmallGlyphMetrics)
 # Data that is bit aligned can be tricky to deal with. These classes implement
 # helper functionality for dealing with the data and getting a particular row
 # of bitwise data. Also helps implement fancy data export/import in XML.
-class BitAlignedBitmapMixin:
+class BitAlignedBitmapMixin(object):
 
 	def _getBitRange(self, row, bitDepth, metrics):
 		rowBits = (bitDepth * metrics.width)
@@ -512,28 +514,28 @@ class BitAlignedBitmapMixin:
 		dataList = []
 		bitRange = self._getBitRange(row, bitDepth, metrics)
 		stepRange = bitRange + (8,)
-		for curBit in xrange(*stepRange):
+		for curBit in range(*stepRange):
 			endBit = min(curBit+8, bitRange[1])
 			numBits = endBit - curBit
 			cutPoint = curBit % 8
-			firstByteLoc = curBit / 8
-			secondByteLoc = endBit / 8
+			firstByteLoc = curBit // 8
+			secondByteLoc = endBit // 8
 			if firstByteLoc < secondByteLoc:
 				numBitsCut = 8 - cutPoint
 			else:
 				numBitsCut = endBit - curBit
 			curByte = _reverseBytes(self.imageData[firstByteLoc])
-			firstHalf = ord(curByte) >> cutPoint
+			firstHalf = byteord(curByte) >> cutPoint
 			firstHalf = ((1<<numBitsCut)-1) & firstHalf
 			newByte = firstHalf
 			if firstByteLoc < secondByteLoc and secondByteLoc < len(self.imageData):
 				curByte = _reverseBytes(self.imageData[secondByteLoc])
-				secondHalf = ord(curByte) << numBitsCut
+				secondHalf = byteord(curByte) << numBitsCut
 				newByte = (firstHalf | secondHalf) & ((1<<numBits)-1)
-			dataList.append(chr(newByte))
+			dataList.append(bytechr(newByte))
 
 		# The way the data is kept is opposite the algorithm used.
-		data = string.join(dataList, "")
+		data = bytesjoin(dataList)
 		if not reverseBytes:
 			data = _reverseBytes(data)
 		return data
@@ -542,25 +544,25 @@ class BitAlignedBitmapMixin:
 		if metrics == None:
 			metrics = self.metrics
 		if not reverseBytes:
-			dataRows = map(_reverseBytes, dataRows)
+			dataRows = list(map(_reverseBytes, dataRows))
 
 		# Keep track of a list of ordinal values as they are easier to modify
 		# than a list of strings. Map to actual strings later.
-		numBytes = (self._getBitRange(len(dataRows), bitDepth, metrics)[0] + 7) / 8
+		numBytes = (self._getBitRange(len(dataRows), bitDepth, metrics)[0] + 7) // 8
 		ordDataList = [0] * numBytes
 		for row, data in enumerate(dataRows):
 			bitRange = self._getBitRange(row, bitDepth, metrics)
 			stepRange = bitRange + (8,)
-			for curBit, curByte in itertools.izip(xrange(*stepRange), data):
+			for curBit, curByte in zip(range(*stepRange), data):
 				endBit = min(curBit+8, bitRange[1])
 				cutPoint = curBit % 8
-				firstByteLoc = curBit / 8
-				secondByteLoc = endBit / 8
+				firstByteLoc = curBit // 8
+				secondByteLoc = endBit // 8
 				if firstByteLoc < secondByteLoc:
 					numBitsCut = 8 - cutPoint
 				else:
 					numBitsCut = endBit - curBit
-				curByte = ord(curByte)
+				curByte = byteord(curByte)
 				firstByte = curByte & ((1<<numBitsCut)-1)
 				ordDataList[firstByteLoc] |= (firstByte << cutPoint)
 				if firstByteLoc < secondByteLoc and secondByteLoc < numBytes:
@@ -568,12 +570,12 @@ class BitAlignedBitmapMixin:
 					ordDataList[secondByteLoc] |= secondByte
 
 		# Save the image data with the bits going the correct way.
-		self.imageData = _reverseBytes(string.join(map(chr, ordDataList), ""))
+		self.imageData = _reverseBytes(bytesjoin(map(bytechr, ordDataList)))
 
-class ByteAlignedBitmapMixin:
+class ByteAlignedBitmapMixin(object):
 
 	def _getByteRange(self, row, bitDepth, metrics):
-		rowBytes = (bitDepth * metrics.width + 7) / 8
+		rowBytes = (bitDepth * metrics.width + 7) // 8
 		byteOffset = row * rowBytes
 		return (byteOffset, byteOffset+rowBytes)
 
@@ -592,7 +594,7 @@ class ByteAlignedBitmapMixin:
 			metrics = self.metrics
 		if reverseBytes:
 			dataRows = map(_reverseBytes, dataRows)
-		self.imageData = string.join(dataRows, "")
+		self.imageData = bytesjoin(dataRows)
 
 class ebdt_bitmap_format_1(ByteAlignedBitmapMixin, BitmapPlusSmallMetricsMixin, BitmapGlyph):
 
@@ -668,24 +670,24 @@ class ComponentBitmapGlyph(BitmapGlyph):
 		writer.endtag(self.__class__.__name__)
 		writer.newline()
 
-	def fromXML(self, (name, attrs, content), ttFont):
-		self.readMetrics((name, attrs, content), ttFont)
+	def fromXML(self, name, attrs, content, ttFont):
+		self.readMetrics(name, attrs, content, ttFont)
 		for element in content:
-			if type(element) != TupleType:
+			if not isinstance(element, tuple):
 				continue
 			name, attr, content = element
 			if name == 'components':
 				self.componentArray = []
 				for compElement in content:
-					if type(compElement) != TupleType:
+					if not isinstance(compElement, tuple):
 						continue
-					name, attr, content = compElement
+					name, attrs, content = compElement
 					if name == 'ebdtComponent':
 						curComponent = EbdtComponent()
-						curComponent.fromXML(compElement, ttFont)
+						curComponent.fromXML(name, attrs, content, ttFont)
 						self.componentArray.append(curComponent)
 					else:
-						print "Warning: '%s' being ignored in component array." % name
+						print("Warning: '%s' being ignored in component array." % name)
 
 
 class ebdt_bitmap_format_8(BitmapPlusSmallMetricsMixin, ComponentBitmapGlyph):
@@ -698,7 +700,7 @@ class ebdt_bitmap_format_8(BitmapPlusSmallMetricsMixin, ComponentBitmapGlyph):
 		(numComponents,) = struct.unpack(">H", data[:2])
 		data = data[2:]
 		self.componentArray = []
-		for i in xrange(numComponents):
+		for i in range(numComponents):
 			curComponent = EbdtComponent()
 			dummy, data = sstruct.unpack2(ebdtComponentFormat, data, curComponent)
 			curComponent.name = self.ttFont.getGlyphName(curComponent.glyphCode)
@@ -707,12 +709,12 @@ class ebdt_bitmap_format_8(BitmapPlusSmallMetricsMixin, ComponentBitmapGlyph):
 	def compile(self, ttFont):
 		dataList = []
 		dataList.append(sstruct.pack(smallGlyphMetricsFormat, self.metrics))
-		dataList.append('\0')
+		dataList.append(b'\0')
 		dataList.append(struct.pack(">H", len(self.componentArray)))
 		for curComponent in self.componentArray:
 			curComponent.glyphCode = ttFont.getGlyphID(curComponent.name)
 			dataList.append(sstruct.pack(ebdtComponentFormat, curComponent))
-		return string.join(dataList, "")
+		return bytesjoin(dataList)
 
 
 class ebdt_bitmap_format_9(BitmapPlusBigMetricsMixin, ComponentBitmapGlyph):
@@ -723,7 +725,7 @@ class ebdt_bitmap_format_9(BitmapPlusBigMetricsMixin, ComponentBitmapGlyph):
 		(numComponents,) = struct.unpack(">H", data[:2])
 		data = data[2:]
 		self.componentArray = []
-		for i in xrange(numComponents):
+		for i in range(numComponents):
 			curComponent = EbdtComponent()
 			dummy, data = sstruct.unpack2(ebdtComponentFormat, data, curComponent)
 			curComponent.name = self.ttFont.getGlyphName(curComponent.glyphCode)
@@ -736,7 +738,7 @@ class ebdt_bitmap_format_9(BitmapPlusBigMetricsMixin, ComponentBitmapGlyph):
 		for curComponent in self.componentArray:
 			curComponent.glyphCode = ttFont.getGlyphID(curComponent.name)
 			dataList.append(sstruct.pack(ebdtComponentFormat, curComponent))
-		return string.join(dataList, "")
+		return bytesjoin(dataList)
 
 
 # Dictionary of bitmap formats to the class representing that format

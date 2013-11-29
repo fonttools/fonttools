@@ -3,12 +3,13 @@
 # Google Author(s): Matt Fontaine
 
 
-import E_B_D_T_
-import string
-import struct
+from __future__ import print_function, division
+from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
-from BitmapGlyphMetrics import BigGlyphMetrics, bigGlyphMetricsFormat, SmallGlyphMetrics, smallGlyphMetricsFormat
-from E_B_D_T_ import BitmapGlyph, BitmapPlusSmallMetricsMixin, BitmapPlusBigMetricsMixin
+from . import E_B_D_T_
+from .BitmapGlyphMetrics import BigGlyphMetrics, bigGlyphMetricsFormat, SmallGlyphMetrics, smallGlyphMetricsFormat
+from .E_B_D_T_ import BitmapGlyph, BitmapPlusSmallMetricsMixin, BitmapPlusBigMetricsMixin
+import struct
 
 class table_C_B_D_T_(E_B_D_T_.table_E_B_D_T_):
 
@@ -51,7 +52,7 @@ class cbdt_bitmap_format_17(BitmapPlusSmallMetricsMixin, ColorBitmapGlyph):
 		dataList.append(sstruct.pack(smallGlyphMetricsFormat, self.metrics))
 		dataList.append(struct.pack(">L", len(self.imageData)))
 		dataList.append(self.imageData)
-		return string.join(dataList, "")
+		return bytesjoin(dataList)
 
 class cbdt_bitmap_format_18(BitmapPlusBigMetricsMixin, ColorBitmapGlyph):
 
@@ -70,7 +71,7 @@ class cbdt_bitmap_format_18(BitmapPlusBigMetricsMixin, ColorBitmapGlyph):
 		dataList.append(sstruct.pack(bigGlyphMetricsFormat, self.metrics))
 		dataList.append(struct.pack(">L", len(self.imageData)))
 		dataList.append(self.imageData)
-		return string.join(dataList, "")
+		return bytesjoin(dataList)
 
 class cbdt_bitmap_format_19(ColorBitmapGlyph):
 
