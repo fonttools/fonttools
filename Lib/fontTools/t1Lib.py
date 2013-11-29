@@ -15,17 +15,16 @@ write(path, data, kind='OTHER', dohex=0)
 	part should be written as hexadecimal or binary, but only if kind
 	is 'LWFN' or 'PFB'.
 """
-
-__author__ = "jvr"
-__version__ = "1.0b2"
-DEBUG = 0
-
 from __future__ import print_function, division
 from fontTools.misc.py23 import *
 from fontTools.misc import eexec
 from fontTools.misc.macCreatorType import getMacCreatorAndType
 import os
 import re
+
+__author__ = "jvr"
+__version__ = "1.0b2"
+DEBUG = 0
 
 
 try:

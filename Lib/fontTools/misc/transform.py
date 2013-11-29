@@ -289,8 +289,8 @@ class Transform(object):
 		"""
 		xx1, xy1, yx1, yy1, dx1, dy1 = self.__affine
 		xx2, xy2, yx2, yy2, dx2, dy2 = other
-		return (xx1, xy1, yx1, yy1, dx1, dy1) <
-				(xx2, xy2, yx2, yy2, dx2, dy2))
+		return (xx1, xy1, yx1, yy1, dx1, dy1) < \
+				(xx2, xy2, yx2, yy2, dx2, dy2)
 
 	def __eq__(self, other):
 		"""Transform instances are comparable:
@@ -313,8 +313,8 @@ class Transform(object):
 		"""
 		xx1, xy1, yx1, yy1, dx1, dy1 = self.__affine
 		xx2, xy2, yx2, yy2, dx2, dy2 = other
-		return (xx1, xy1, yx1, yy1, dx1, dy1) ==
-				(xx2, xy2, yx2, yy2, dx2, dy2))
+		return (xx1, xy1, yx1, yy1, dx1, dy1) == \
+				(xx2, xy2, yx2, yy2, dx2, dy2)
 
 	def __hash__(self):
 		"""Transform instances are hashable, meaning you can use them as
@@ -343,7 +343,7 @@ class Transform(object):
 		return hash(self.__affine)
 
 	def __repr__(self):
-		return "<%s [%s %s %s %s %s %s]>" % ((self.__class__.__name__,)
+		return "<%s [%s %s %s %s %s %s]>" % ((self.__class__.__name__,) \
 				 + tuple(map(str, self.__affine)))
 
 
