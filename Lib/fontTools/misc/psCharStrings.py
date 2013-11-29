@@ -915,7 +915,7 @@ class T2OutlineExtractor(SimpleT2Decompiler):
 		raise NotImplementedError
 	
 	#
-	# miscelaneous helpers
+	# miscellaneous helpers
 	#
 	def alternatingLineto(self, isHorizontal):
 		args = self.popall()

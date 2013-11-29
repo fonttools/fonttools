@@ -28,7 +28,7 @@ class table_T_S_I__0(DefaultTable.DefaultTable):
 	
 	def compile(self, ttFont):
 		if not hasattr(self, "indices"):
-			# We have no corresponging table (TSI1 or TSI3); let's return
+			# We have no corresponding table (TSI1 or TSI3); let's return
 			# no data, which effectively means "ignore us".
 			return ""
 		data = b""
