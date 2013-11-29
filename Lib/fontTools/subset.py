@@ -1707,6 +1707,7 @@ def prune_pre_subset(self, options):
 # TODO(behdad) Avoid recursing too much (in GSUB/GPOS and in CFF)
 # TODO(behdad) Text direction considerations.
 # TODO(behdad) Text script / language considerations.
+# TODO(behdad) Optionally drop 'kern' table if GPOS available
 
 class Options(object):
 
