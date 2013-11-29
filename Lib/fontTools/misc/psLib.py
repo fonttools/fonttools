@@ -1,10 +1,10 @@
-import re
-import types
-from string import whitespace
-import StringIO
-
+from __future__ import print_function, division
+from fontTools.misc.py23 import *
 from fontTools.misc import eexec
 from psOperators import *
+import re
+import collections
+from string import whitespace
 
 
 ps_special = '()<>[]{}%'	# / is one too, but we take care of that one differently
@@ -38,9 +38,9 @@ class PSTokenError(Exception): pass
 class PSError(Exception): pass
 
 
-class PSTokenizer(StringIO.StringIO):
+class PSTokenizer(StringIO):
 	
-	def getnexttoken(self, 
+	def getnexttoken(self,
 			# localize some stuff, for performance
 			len=len,
 			ps_special=ps_special,
@@ -69,18 +69,18 @@ class PSTokenizer(StringIO.StringIO):
 				tokentype = 'do_string'
 				m = stringmatch(buf, pos)
 				if m is None:
-					raise PSTokenError, 'bad string at character %d' % pos
+					raise PSTokenError('bad string at character %d' % pos)
 				_, nextpos = m.span()
 				token = buf[pos:nextpos]
 			elif char == '<':
 				tokentype = 'do_hexstring'
 				m = hexstringmatch(buf, pos)
 				if m is None:
-					raise PSTokenError, 'bad hexstring at character %d' % pos
+					raise PSTokenError('bad hexstring at character %d' % pos)
 				_, nextpos = m.span()
 				token = buf[pos:nextpos]
 			else:
-				raise PSTokenError, 'bad token at character %d' % pos
+				raise PSTokenError('bad token at character %d' % pos)
 		else:
 			if char == '/':
 				tokentype = 'do_literal'
@@ -89,7 +89,7 @@ class PSTokenizer(StringIO.StringIO):
 				tokentype = ''
 				m = endmatch(buf, pos)
 			if m is None:
-				raise PSTokenError, 'bad token at character %d' % pos
+				raise PSTokenError('bad token at character %d' % pos)
 			_, nextpos = m.span()
 			token = buf[pos:nextpos]
 		self.pos = pos + len(token)
@@ -143,7 +143,7 @@ class PSInterpreter(PSOperators):
 	def suckoperators(self, systemdict, klass):
 		for name in dir(klass):
 			attr = getattr(self, name)
-			if callable(attr) and name[:3] == 'ps_':
+			if isinstance(attr, collections.Callable) and name[:3] == 'ps_':
 				name = name[3:]
 				systemdict[name] = ps_operator(name, attr)
 		for baseclass in klass.__bases__:
@@ -172,15 +172,15 @@ class PSInterpreter(PSOperators):
 		finally:
 			if self.tokenizer is not None:
 				if 0:
-					print 'ps error:\n- - - - - - -'
-					print self.tokenizer.buf[self.tokenizer.pos-50:self.tokenizer.pos]
-					print '>>>'
-					print self.tokenizer.buf[self.tokenizer.pos:self.tokenizer.pos+50]
-					print '- - - - - - -'
+					print('ps error:\n- - - - - - -')
+					print(self.tokenizer.buf[self.tokenizer.pos-50:self.tokenizer.pos])
+					print('>>>')
+					print(self.tokenizer.buf[self.tokenizer.pos:self.tokenizer.pos+50])
+					print('- - - - - - -')
 	
 	def handle_object(self, object):
 		if not (self.proclevel or object.literal or object.type == 'proceduretype'):
-			if object.type <> 'operatortype':
+			if object.type != 'operatortype':
 				object = self.resolve_name(object.value)
 			if object.literal:
 				self.push(object)
@@ -200,9 +200,9 @@ class PSInterpreter(PSOperators):
 	def resolve_name(self, name):
 		dictstack = self.dictstack
 		for i in range(len(dictstack)-1, -1, -1):
-			if dictstack[i].has_key(name):
+			if name in dictstack[i]:
 				return dictstack[i][name]
-		raise PSError, 'name error: ' + str(name)
+		raise PSError('name error: ' + str(name))
 	
 	def do_token(self, token,
 				int=int, 
@@ -270,7 +270,7 @@ class PSInterpreter(PSOperators):
 		elif token == ']':
 			return ps_name(']')
 		else:
-			raise PSTokenError, 'huh?'
+			raise PSTokenError('huh?')
 	
 	def push(self, object):
 		self.stack.append(object)
@@ -278,11 +278,11 @@ class PSInterpreter(PSOperators):
 	def pop(self, *types):
 		stack = self.stack
 		if not stack:
-			raise PSError, 'stack underflow'
+			raise PSError('stack underflow')
 		object = stack[-1]
 		if types:
 			if object.type not in types:
-				raise PSError, 'typecheck, expected %s, found %s' % (`types`, object.type)
+				raise PSError('typecheck, expected %s, found %s' % (repr(types), object.type))
 		del stack[-1]
 		return object
 	
@@ -304,11 +304,11 @@ class PSInterpreter(PSOperators):
 
 def unpack_item(item):
 	tp = type(item.value)
-	if tp == types.DictionaryType:
+	if tp == dict:
 		newitem = {}
 		for key, value in item.value.items():
 			newitem[key] = unpack_item(value)
-	elif tp == types.ListType:
+	elif tp == list:
 		newitem = [None] * len(item.value)
 		for i in range(len(item.value)):
 			newitem[i] = unpack_item(item.value[i])
@@ -329,11 +329,11 @@ def suckfont(data):
 	interpreter.interpret("/Helvetica 4 dict dup /Encoding StandardEncoding put definefont pop")
 	interpreter.interpret(data)
 	fontdir = interpreter.dictstack[0]['FontDirectory'].value
-	if fontdir.has_key(fontName):
+	if fontName in fontdir:
 		rawfont = fontdir[fontName]
 	else:
 		# fall back, in case fontName wasn't found
-		fontNames = fontdir.keys()
+		fontNames = list(fontdir.keys())
 		if len(fontNames) > 1:
 			fontNames.remove("Helvetica")
 		fontNames.sort()
