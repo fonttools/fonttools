@@ -1,3 +1,6 @@
+from __future__ import print_function, division
+from fontTools.misc.py23 import *
+
 _accessstrings = {0: "", 1: "readonly", 2: "executeonly", 3: "noaccess"}
 
 
@@ -116,13 +119,12 @@ def _type1_Encoding_repr(encoding, access):
 	psstring = "/Encoding 256 array\n0 1 255 {1 index exch /.notdef put} for\n"
 	for i in range(256):
 		name = encoding[i].value
-		if name <> '.notdef':
+		if name != '.notdef':
 			psstring = psstring + "dup %d /%s put\n" % (i, name)
 	return psstring + access + "def\n"
 
 def _type1_CharString_repr(charstrings):
-	items = charstrings.items()
-	items.sort()
+	items = sorted(charstrings.items())
 	return 'xxx'
 
 class ps_font(ps_object):
@@ -135,8 +137,7 @@ class ps_font(ps_object):
 				pass
 			else:
 				psstring = psstring + _type1_item_repr(key, value)
-		items = self.value.items()
-		items.sort()
+		items = sorted(self.value.items())
 		for key, value in items:
 			if key not in _type1_pre_eexec_order + _type1_post_eexec_order:
 				psstring = psstring + _type1_item_repr(key, value)
@@ -159,8 +160,7 @@ class ps_file(ps_object):
 class ps_dict(ps_object):
 	def __str__(self):
 		psstring = "%d dict dup begin\n" % len(self.value)
-		items = self.value.items()
-		items.sort()
+		items = sorted(self.value.items())
 		dictrepr = "%d dict dup begin\n" % len(items)
 		for key, value in items:
 			access = _accessstrings[value.access]
@@ -194,15 +194,15 @@ class ps_boolean(ps_object):
 
 class ps_string(ps_object):
 	def __str__(self):
-		return "(%s)" % `self.value`[1:-1]
+		return "(%s)" % repr(self.value)[1:-1]
 
 class ps_integer(ps_object):
 	def __str__(self):
-		return `self.value`
+		return repr(self.value)
 
 class ps_real(ps_object):
 	def __str__(self):
-		return `self.value`
+		return repr(self.value)
 
 
 class PSOperators:
@@ -234,7 +234,7 @@ class PSOperators:
 	
 	def ps_exch(self):
 		if len(self.stack) < 2:
-			raise RuntimeError, 'stack underflow'
+			raise RuntimeError('stack underflow')
 		obj1 = self.pop()
 		obj2 = self.pop()
 		self.push(obj1)
@@ -242,7 +242,7 @@ class PSOperators:
 	
 	def ps_dup(self):
 		if not self.stack:
-			raise RuntimeError, 'stack underflow'
+			raise RuntimeError('stack underflow')
 		self.push(self.stack[-1])
 	
 	def ps_exec(self):
@@ -263,7 +263,7 @@ class PSOperators:
 	def ps_ne(self):
 		any1 = self.pop()
 		any2 = self.pop()
-		self.push(ps_boolean(any1.value <> any2.value))
+		self.push(ps_boolean(any1.value != any2.value))
 	
 	def ps_cvx(self):
 		obj = self.pop()
@@ -287,7 +287,7 @@ class PSOperators:
 		key = self.pop()
 		name = key.value
 		for i in range(len(self.dictstack)-1, -1, -1):
-			if self.dictstack[i].has_key(name):
+			if name in self.dictstack[i]:
 				self.dictstack[i][name] = value
 				break
 		self.dictstack[-1][name] = value
@@ -320,7 +320,7 @@ class PSOperators:
 	
 	def ps_cleartomark(self):
 		obj = self.pop()
-		while obj <> self.mark:
+		while obj != self.mark:
 			obj = self.pop()
 	
 	def ps_readstring(self,
@@ -340,7 +340,7 @@ class PSOperators:
 	def ps_known(self):
 		key = self.pop()
 		dict = self.pop('dicttype', 'fonttype')
-		self.push(ps_boolean(dict.value.has_key(key.value)))
+		self.push(ps_boolean(key.value in dict.value))
 	
 	def ps_if(self):
 		proc = self.pop('proceduretype')
@@ -384,7 +384,7 @@ class PSOperators:
 	
 	def ps_print(self):
 		str = self.pop('stringtype')
-		print 'PS output --->', str.value
+		print('PS output --->', str.value)
 	
 	def ps_anchorsearch(self):
 		seek = self.pop('stringtype')
@@ -472,7 +472,7 @@ class PSOperators:
 	def ps_index(self):
 		n = self.pop('integertype').value
 		if n < 0:
-			raise RuntimeError, 'index may not be negative'
+			raise RuntimeError('index may not be negative')
 		self.push(self.stack[-1-n])
 	
 	def ps_for(self):
@@ -540,9 +540,9 @@ class PSOperators:
 		if len(self.dictstack) > 2:
 			del self.dictstack[-1]
 		else:
-			raise RuntimeError, 'dictstack underflow'
+			raise RuntimeError('dictstack underflow')
 	
 notdef = '.notdef'
 from fontTools.encodings.StandardEncoding import StandardEncoding
-ps_StandardEncoding = map(ps_name, StandardEncoding)
+ps_StandardEncoding = list(map(ps_name, StandardEncoding))
 
