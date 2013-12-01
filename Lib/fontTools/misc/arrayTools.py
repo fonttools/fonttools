@@ -18,6 +18,18 @@ def calcBounds(array):
     ys = [y for x, y in array]
     return min(xs), min(ys), max(xs), max(ys)
 
+def calcIntBounds(array):
+    """Return the integer bounding rectangle of a 2D points array as a
+    tuple: (xMin, yMin, xMax, yMax)
+    """
+    xMin, yMin, xMax, yMax = calcBounds(array)
+    xMin = int(math.floor(xMin))
+    xMax = int(math.ceil(xMax))
+    yMin = int(math.floor(yMin))
+    yMax = int(math.ceil(yMax))
+    return xMin, yMin, xMax, yMax
+
+
 def updateBounds(bounds, p, min=min, max=max):
     """Return the bounding recangle of rectangle bounds and point (x, y)."""
     (x, y) = p
