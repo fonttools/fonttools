@@ -6,7 +6,8 @@ from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from fontTools import ttLib
 from fontTools.misc.textTools import safeEval
-from fontTools.misc.arrayTools import calcBounds
+from fontTools.misc.arrayTools import calcBounds, calcIntBounds, pointInRect
+from fontTools.misc.bezierTools import calcQuadraticBounds
 from fontTools.misc.fixedTools import fixedToFloat as fi2fl, floatToFixed as fl2fi
 from . import DefaultTable
 from . import ttProgram
@@ -540,16 +541,69 @@ class Glyph(object):
 				compressedflags.append(flag)
 			lastflag = flag
 		data = data + array.array("B", compressedflags).tostring()
-		xPoints = list(map(int, xPoints))  # work around struct >= 2.5 bug
-		yPoints = list(map(int, yPoints))
+		if coordinates.isFloat():
+			# Warn?
+			xPoints = [int(round(x)) for x in xPoints]
+			yPoints = [int(round(y)) for y in xPoints]
 		data = data + struct.pack(*(xFormat,)+tuple(xPoints))
 		data = data + struct.pack(*(yFormat,)+tuple(yPoints))
 		return data
 	
 	def recalcBounds(self, glyfTable):
-		coordinates, endPts, flags = self.getCoordinates(glyfTable)
-		if len(coordinates) > 0:
-			self.xMin, self.yMin, self.xMax, self.yMax = calcBounds(coordinates)
+		coords, endPts, flags = self.getCoordinates(glyfTable)
+		if len(coords) > 0:
+			if 0:
+				# This branch calculates exact glyph outline bounds
+				# analytically, handling cases without on-curve
+				# extremas, etc.  However, the glyf table header
+				# simply says that the bounds should be min/max x/y
+				# "for coordinate data", so I suppose that means no
+				# fancy thing here, just get extremas of all coord
+				# points (on and off).  As such, this branch is
+				# disabled.
+
+				# Collect on-curve points
+				onCurveCoords = [coords[j] for j in range(len(coords))
+						 if flags[j] & flagOnCurve]
+				# Add implicit on-curve points
+				start = 0
+				for end in endPts:
+					last = end
+					for j in range(start, end + 1):
+						if not ((flags[j] | flags[last]) & flagOnCurve):
+							x = (coords[last][0] + coords[j][0]) / 2
+							y = (coords[last][1] + coords[j][1]) / 2
+							onCurveCoords.append((x,y))
+						last = j
+					start = end + 1
+				# Add bounds for curves without an explicit extrema
+				start = 0
+				for end in endPts:
+					last = end
+					for j in range(start, end + 1):
+						if not (flags[j] & flagOnCurve):
+							next = j + 1 if j < end else start
+							bbox = calcBounds([coords[last], coords[next]])
+							if not pointInRect(coords[j], bbox):
+								# Ouch!
+								warnings.warn("Outline has curve with implicit extrema.")
+								# Ouch!  Find analytical curve bounds.
+								pthis = coords[j]
+								plast = coords[last]
+								if not (flags[last] & flagOnCurve):
+									plast = ((pthis[0]+plast[0])/2, (pthis[1]+plast[1])/2)
+								pnext = coords[next]
+								if not (flags[next] & flagOnCurve):
+									pnext = ((pthis[0]+pnext[0])/2, (pthis[1]+pnext[1])/2)
+								bbox = calcQuadraticBounds(plast, pthis, pnext)
+								onCurveCoords.append((bbox[0],bbox[1]))
+								onCurveCoords.append((bbox[2],bbox[3]))
+						last = j
+					start = end + 1
+
+				self.xMin, self.yMin, self.xMax, self.yMax = calcIntBounds(onCurveCoords)
+			else:
+				self.xMin, self.yMin, self.xMax, self.yMax = calcIntBounds(coords)
 		else:
 			self.xMin, self.yMin, self.xMax, self.yMax = (0, 0, 0, 0)
 	
@@ -897,6 +951,22 @@ class GlyphCoordinates(object):
 		self._a = array.array("h")
 		self.extend(iterable)
 
+	def isFloat(self):
+		return self._a.typecode == 'f'
+
+	def _ensureFloat(self):
+		if self.isFloat():
+			return
+		self._a = array.array("f", self._a)
+
+	def _checkFloat(self, p):
+		if not any(isinstance(v, float) for v in p):
+			return
+		p = [int(v) if int(v) == v else v for v in p]
+		if not any(isinstance(v, float) for v in p):
+			return
+		self._ensureFloat()
+
 	@staticmethod
 	def zeros(count):
 		return GlyphCoordinates([(0,0)] * count)
@@ -921,17 +991,20 @@ class GlyphCoordinates(object):
 			for j,i in enumerate(indices):
 				self[i] = v[j]
 			return
+		self._checkFloat(v)
 		self._a[2*k],self._a[2*k+1] = v
 
 	def __repr__(self):
 		return 'GlyphCoordinates(['+','.join(str(c) for c in self)+'])'
 
 	def append(self, p):
+		self._checkFloat(p)
 		self._a.extend(tuple(p))
 
 	def extend(self, iterable):
-		for x,y in iterable:
-			self._a.extend((x,y))
+		for p in iterable:
+			self._checkFloat(p)
+			self._a.extend(p)
 
 	def relativeToAbsolute(self):
 		a = self._a
@@ -963,8 +1036,9 @@ class GlyphCoordinates(object):
 		for i in range(len(a) // 2):
 			x = a[2*i  ]
 			y = a[2*i+1]
-			a[2*i  ] = int(.5 + x * t[0][0] + y * t[1][0])
-			a[2*i+1] = int(.5 + x * t[0][1] + y * t[1][1])
+			px = x * t[0][0] + y * t[1][0]
+			py = x * t[0][1] + y * t[1][1]
+			self[i] = (px, py)
 
 	def __eq__(self, other):
 		if type(self) != type(other):
