@@ -244,6 +244,8 @@ class ClassDef(FormatSwitchingBaseTable):
 		if classDefs is None:
 			classDefs = self.classDefs = {}
 		items = list(classDefs.items())
+		format = 2
+		rawTable = {"ClassRangeRecord": []}
 		getGlyphID = font.getGlyphID
 		for i in range(len(items)):
 			glyphName, cls = items[i]
@@ -251,25 +253,41 @@ class ClassDef(FormatSwitchingBaseTable):
 		items.sort()
 		if items:
 			last, lastName, lastCls = items[0]
-			rec = ClassRangeRecord()
-			rec.Start = lastName
-			rec.Class = lastCls
-			ranges = [rec]
+			ranges = [[lastCls, last, lastName]]
 			for glyphID, glyphName, cls in items[1:]:
 				if glyphID != last + 1 or cls != lastCls:
-					rec.End = lastName
-					rec = ClassRangeRecord()
-					rec.Start = glyphName
-					rec.Class = cls
-					ranges.append(rec)
+					ranges[-1].extend([last, lastName])
+					ranges.append([cls, glyphID, glyphName])
 				last = glyphID
 				lastName = glyphName
 				lastCls = cls
-			rec.End = lastName
-		else:
-			ranges = []
-		self.Format = 2  # currently no support for Format 1
-		return {"ClassRangeRecord": ranges}
+			ranges[-1].extend([last, lastName])
+
+			startGlyph = ranges[0][1]
+			endGlyph = ranges[-1][3]
+			glyphCount = endGlyph - startGlyph + 1
+			if len(ranges) * 3 < glyphCount + 1:
+				# Format 2 is more compact
+				for i in range(len(ranges)):
+					cls, start, startName, end, endName = ranges[i]
+					rec = ClassRangeRecord()
+					rec.Start = startName
+					rec.End = endName
+					rec.Class = cls
+					ranges[i] = rec
+				format = 2
+				rawTable = {"ClassRangeRecord": ranges}
+			else:
+				# Format 1 is more compact
+				startGlyphName = ranges[0][2]
+				classes = [0] * glyphCount
+				for cls, start, startName, end, endName in ranges:
+					for g in range(start - startGlyph, end - startGlyph + 1):
+						classes[g] = cls
+				format = 1
+				rawTable = {"StartGlyph": startGlyphName, "ClassValueArray": classes}
+		self.Format = format
+		return rawTable
 	
 	def toXML2(self, xmlWriter, font):
 		items = sorted(self.classDefs.items())
