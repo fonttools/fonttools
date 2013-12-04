@@ -15,9 +15,9 @@ class XMLWriter(object):
 		if not hasattr(fileOrPath, "write"):
 			try:
 				# Python3 has encoding support.
-				self.file = open(fileOrPath, "w")
-			except TypeError:
 				self.file = open(fileOrPath, "w", encoding="utf-8")
+			except TypeError:
+				self.file = open(fileOrPath, "w")
 		else:
 			# assume writable file object
 			self.file = fileOrPath
