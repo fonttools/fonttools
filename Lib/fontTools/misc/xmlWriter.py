@@ -4,7 +4,6 @@ from __future__ import print_function, division
 from fontTools.misc.py23 import *
 import sys
 import string
-import struct
 
 INDENT = "  "
 

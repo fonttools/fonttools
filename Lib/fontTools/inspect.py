@@ -12,7 +12,6 @@ import pygtk
 pygtk.require('2.0')
 import gtk
 import sys
-import array
 
 
 
@@ -120,7 +119,7 @@ class Row(object):
 			return len(self._children)
 		if hasattr(self, '_items'):
 			return len(self._items)
-		assert 0
+		assert False
 
 	def _ensure_children(self):
 		if hasattr(self, '_children'):

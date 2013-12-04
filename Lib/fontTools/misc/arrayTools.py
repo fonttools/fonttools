@@ -117,7 +117,6 @@ def intRect(rect1):
     the resulting rectangle is NOT smaller than the original.
     """
     (xMin, yMin, xMax, yMax) = rect1
-    import math
     xMin = int(math.floor(xMin))
     yMin = int(math.floor(yMin))
     xMax = int(math.ceil(xMax))

@@ -161,7 +161,6 @@ class ps_dict(ps_object):
 	def __str__(self):
 		psstring = "%d dict dup begin\n" % len(self.value)
 		items = sorted(self.value.items())
-		dictrepr = "%d dict dup begin\n" % len(items)
 		for key, value in items:
 			access = _accessstrings[value.access]
 			if access:
@@ -208,9 +207,9 @@ class ps_real(ps_object):
 class PSOperators:
 	
 	def ps_def(self):
-		object = self.pop()
+		obj = self.pop()
 		name = self.pop()
-		self.dictstack[-1][name.value] = object
+		self.dictstack[-1][name.value] = obj
 	
 	def ps_bind(self):
 		proc = self.pop('proceduretype')
@@ -225,12 +224,12 @@ class PSOperators:
 			else:
 				if not item.literal:
 					try:
-						object = self.resolve_name(item.value)
+						obj = self.resolve_name(item.value)
 					except:
 						pass
 					else:
-						if object.type == 'operatortype':
-							proc.value[i] = object
+						if obj.type == 'operatortype':
+							proc.value[i] = obj
 	
 	def ps_exch(self):
 		if len(self.stack) < 2:
@@ -246,11 +245,11 @@ class PSOperators:
 		self.push(self.stack[-1])
 	
 	def ps_exec(self):
-		object = self.pop()
-		if object.type == 'proceduretype':
-			self.call_procedure(object)
+		obj = self.pop()
+		if obj.type == 'proceduretype':
+			self.call_procedure(obj)
 		else:
-			self.handle_object(object)
+			self.handle_object(obj)
 	
 	def ps_count(self):
 		self.push(ps_integer(len(self.stack)))
@@ -310,13 +309,13 @@ class PSOperators:
 		self.push(ps_file(self.tokenizer))
 	
 	def ps_eexec(self):
-		file = self.pop('filetype').value
-		file.starteexec()
+		f = self.pop('filetype').value
+		f.starteexec()
 	
 	def ps_closefile(self):
-		file = self.pop('filetype').value
-		file.skipwhite()
-		file.stopeexec()
+		f = self.pop('filetype').value
+		f.skipwhite()
+		f.stopeexec()
 	
 	def ps_cleartomark(self):
 		obj = self.pop()
@@ -328,31 +327,29 @@ class PSOperators:
 				len = len):
 		s = self.pop('stringtype')
 		oldstr = s.value
-		file = self.pop('filetype')
+		f = self.pop('filetype')
 		#pad = file.value.read(1)
 		# for StringIO, this is faster
-		file.value.pos = file.value.pos + 1
-		newstr = file.value.read(len(oldstr))
+		f.value.pos = f.value.pos + 1
+		newstr = f.value.read(len(oldstr))
 		s.value = newstr
 		self.push(s)
 		self.push(ps_boolean(len(oldstr) == len(newstr)))
 	
 	def ps_known(self):
 		key = self.pop()
-		dict = self.pop('dicttype', 'fonttype')
-		self.push(ps_boolean(key.value in dict.value))
+		d = self.pop('dicttype', 'fonttype')
+		self.push(ps_boolean(key.value in d.value))
 	
 	def ps_if(self):
 		proc = self.pop('proceduretype')
-		bool = self.pop('booleantype')
-		if bool.value:
+		if self.pop('booleantype').value:
 			self.call_procedure(proc)
 	
 	def ps_ifelse(self):
 		proc2 = self.pop('proceduretype')
 		proc1 = self.pop('proceduretype')
-		bool = self.pop('booleantype')
-		if bool.value:
+		if self.pop('booleantype').value:
 			self.call_procedure(proc1)
 		else:
 			self.call_procedure(proc2)
@@ -411,8 +408,7 @@ class PSOperators:
 	
 	def ps_load(self):
 		name = self.pop()
-		object = self.resolve_name(name.value)
-		self.push(object)
+		self.push(self.resolve_name(name.value))
 	
 	def ps_put(self):
 		obj1 = self.pop()
@@ -440,7 +436,7 @@ class PSOperators:
 		elif tp == 'stringtype':
 			self.push(ps_integer(ord(obj2.value[obj1.value])))
 		else:
-			assert 0, "shouldn't get here"
+			assert False, "shouldn't get here"
 	
 	def ps_getinterval(self):
 		obj1 = self.pop('integertype')
@@ -466,8 +462,7 @@ class PSOperators:
 			obj3.value = newstr
 	
 	def ps_cvn(self):
-		str = self.pop('stringtype')
-		self.push(ps_name(str.value))
+		self.push(ps_name(self.pop('stringtype').value))
 	
 	def ps_index(self):
 		n = self.pop('integertype').value
@@ -528,13 +523,11 @@ class PSOperators:
 		self.pop()
 	
 	def ps_dict(self):
-		num = self.pop('integertype')
-		dict = ps_dict({})
-		self.push(dict)
+		self.pop('integertype')
+		self.push(ps_dict({}))
 	
 	def ps_begin(self):
-		dict = self.pop('dicttype')
-		self.dictstack.append(dict.value)
+		self.dictstack.append(self.pop('dicttype')value)
 	
 	def ps_end(self):
 		if len(self.dictstack) > 2:

@@ -88,18 +88,16 @@ def splitLine(pt1, pt2, where, isHorizontal):
     """
     pt1x, pt1y = pt1
     pt2x, pt2y = pt2
-    
+
     ax = (pt2x - pt1x)
     ay = (pt2y - pt1y)
-    
+
     bx = pt1x
     by = pt1y
-    
-    ax1 = (ax, ay)[isHorizontal]
-    
+
     if ax == 0:
         return [(pt1, pt2)]
-        
+
     t = (where - (bx, by)[isHorizontal]) / ax
     if 0 <= t < 1:
         midPt = ax * t + bx, ay * t + by
@@ -281,8 +279,7 @@ def solveQuadratic(a, b, c,
     return roots
 
 
-def solveCubic(a, b, c, d,
-        abs=abs, pow=pow, sqrt=sqrt, cos=cos, acos=acos, pi=pi):
+def solveCubic(a, b, c, d):
     """Solve a cubic equation where a, b, c and d are real.
         a*x*x*x + b*x*x + c*x + d = 0
     This function returns a list of roots. Note that the returned list

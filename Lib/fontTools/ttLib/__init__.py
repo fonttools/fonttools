@@ -889,12 +889,11 @@ def tagToXML(tag):
 def xmlToTag(tag):
 	"""The opposite of tagToXML()"""
 	if tag == "OS_2":
-		return "OS/2"
+		return Tag("OS/2")
 	if len(tag) == 8:
 		return identifierToTag(tag)
 	else:
-		return tag + " " * (4 - len(tag))
-	return Tag(tag)
+		return Tag(tag + " " * (4 - len(tag)))
 
 
 def debugmsg(msg):
