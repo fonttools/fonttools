@@ -227,7 +227,7 @@ def ttCompile(input, output, options):
 		lastItem = overflowRecord 
 		while True:
 			ok = 0
-			if overflowRecord.itemName == None:
+			if overflowRecord.itemName is None:
 				ok = fixLookupOverFlows(ttf, overflowRecord)
 			else:
 				ok = fixSubTableOverFlows(ttf, overflowRecord)

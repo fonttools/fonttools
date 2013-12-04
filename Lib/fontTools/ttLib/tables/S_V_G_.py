@@ -202,7 +202,7 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 		svgDocData = bytesjoin(entryList)
 
 		# get colorpalette info.
-		if self.colorPalettes == None:
+		if self.colorPalettes is None:
 			offsetToColorPalettes = 0
 			palettesData = ""
 		else:
@@ -258,7 +258,7 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 			writer.endtag("svgDoc")
 			writer.newline()
 
-		if (self.colorPalettes != None) and (self.colorPalettes.numColorParams != None):
+		if (self.colorPalettes is not None) and (self.colorPalettes.numColorParams is not None):
 			writer.begintag("colorPalettes")
 			writer.newline()
 			for uiNameID in self.colorPalettes.colorParamUINameIDs:

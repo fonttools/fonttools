@@ -61,7 +61,7 @@ class GMAPRecord(object):
 		
 
 	def compile(self, ttFont):
-		if 	self.UV == None:
+		if 	self.UV is None:
 			self.UV = 0
 		nameLen =  len(self.name)
 		if nameLen < 32:

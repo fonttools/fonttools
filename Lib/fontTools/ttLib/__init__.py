@@ -571,7 +571,7 @@ class TTFont(object):
 								glyphID = int(glyphName[5:])
 							except (NameError, ValueError):
 								glyphID = None
-						if glyphID == None:
+						if glyphID is None:
 							glyphID = self.last_vid -1
 							self.last_vid = glyphID
 						self.reverseVIDDict[glyphName] = glyphID

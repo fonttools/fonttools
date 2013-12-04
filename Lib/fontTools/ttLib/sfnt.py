@@ -189,7 +189,7 @@ class SFNTWriter(object):
 				self.totalSfntSize += (entry.origLength + 3) & ~3
 
 			data = self.flavorData if self.flavorData else WOFFFlavorData()
-			if data.majorVersion != None and data.minorVersion != None:
+			if data.majorVersion is not None and data.minorVersion is not None:
 				self.majorVersion = data.majorVersion
 				self.minorVersion = data.minorVersion
 			else:
