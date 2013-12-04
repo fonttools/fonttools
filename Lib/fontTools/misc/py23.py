@@ -26,10 +26,7 @@ except:
 try:
 	from StringIO import StringIO
 except ImportError:
-	try:
-		from StringIO import StringIO
-	except ImportError:
-		from io import BytesIO as StringIO
+	from io import BytesIO as StringIO
 
 def strjoin(iterable):
 	return ''.join(iterable)
