@@ -527,7 +527,7 @@ class PSOperators:
 		self.push(ps_dict({}))
 	
 	def ps_begin(self):
-		self.dictstack.append(self.pop('dicttype')value)
+		self.dictstack.append(self.pop('dicttype').value)
 	
 	def ps_end(self):
 		if len(self.dictstack) > 2:
