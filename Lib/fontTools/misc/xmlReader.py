@@ -26,7 +26,8 @@ class XMLReader(object):
 		if self.progress:
 			import stat
 			self.progress.set(0, os.stat(self.fileName)[stat.ST_SIZE] // 100 or 1)
-		self._parseFile(open(self.fileName))
+		file = open(self.fileName)
+		self._parseFile(file)
 		file.close()
 	
 	def _parseFile(self, file):
