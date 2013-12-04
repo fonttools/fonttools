@@ -37,22 +37,22 @@ def hexStr(data):
 
 
 def num2binary(l, bits=32):
-	all = []
-	bin = ""
+	items = []
+	binary = ""
 	for i in range(bits):
 		if l & 0x1:
-			bin = "1" + bin
+			binary = "1" + binary
 		else:
-			bin = "0" + bin
+			binary = "0" + binary
 		l = l >> 1
 		if not ((i+1) % 8):
-			all.append(bin)
-			bin = ""
-	if bin:
-		all.append(bin)
-	all.reverse()
+			items.append(binary)
+			binary = ""
+	if binary:
+		items.append(binary)
+	items.reverse()
 	assert l in (0, -1), "number doesn't fit in number of bits"
-	return ' '.join(all)
+	return ' '.join(items)
 
 
 def binary2num(bin):

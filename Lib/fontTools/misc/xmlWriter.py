@@ -4,7 +4,6 @@ from __future__ import print_function, division
 from fontTools.misc.py23 import *
 import sys
 import string
-import struct
 
 INDENT = "  "
 
@@ -15,9 +14,9 @@ class XMLWriter(object):
 		if not hasattr(fileOrPath, "write"):
 			try:
 				# Python3 has encoding support.
-				self.file = open(fileOrPath, "w")
-			except TypeError:
 				self.file = open(fileOrPath, "w", encoding="utf-8")
+			except TypeError:
+				self.file = open(fileOrPath, "w")
 		else:
 			# assume writable file object
 			self.file = fileOrPath

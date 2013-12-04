@@ -25,7 +25,7 @@ class XMLReader(object):
 	def read(self):
 		if self.progress:
 			import stat
-			self.progress.set(0, os.stat(fileName)[stat.ST_SIZE] // 100 or 1)
+			self.progress.set(0, os.stat(self.fileName)[stat.ST_SIZE] // 100 or 1)
 		file = open(self.fileName)
 		self._parseFile(file)
 		file.close()
@@ -97,9 +97,9 @@ class XMLReader(object):
 			self.contentStack.append([])
 			self.root = (name, attrs, self.contentStack[-1])
 		else:
-			list = []
-			self.contentStack[-1].append((name, attrs, list))
-			self.contentStack.append(list)
+			l = []
+			self.contentStack[-1].append((name, attrs, l))
+			self.contentStack.append(l)
 	
 	def _characterDataHandler(self, data):
 		if self.stackSize > 1:

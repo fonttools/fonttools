@@ -5,14 +5,14 @@ bind names to struct elements. The interface is similar to
 struct, except the objects passed and returned are not tuples 
 (or argument lists), but dictionaries or instances. 
 
-Just like struct, we use format strings to describe a data 
+Just like struct, we use fmt strings to describe a data 
 structure, except we use one line per element. Lines are 
 separated by newlines or semi-colons. Each line contains 
 either one of the special struct characters ('@', '=', '<', 
 '>' or '!') or a 'name:formatchar' combo (eg. 'myFloat:f'). 
 Repetitions, like the struct module offers them are not useful 
 in this context, except for fixed length strings  (eg. 'myInt:5h' 
-is not allowed but 'myString:5s' is). The 'x' format character 
+is not allowed but 'myString:5s' is). The 'x' fmt character 
 (pad byte) is treated as 'special', since it is by definition 
 anonymous. Extra whitespace is allowed everywhere.
 
@@ -22,14 +22,14 @@ as "n.mF", where n is the number of bits before the point, and m
 the number of bits after the point. Fixed point numbers get 
 converted to floats.
 
-pack(format, object):
+pack(fmt, object):
 	'object' is either a dictionary or an instance (or actually
 	anything that has a __dict__ attribute). If it is a dictionary, 
 	its keys are used for names. If it is an instance, it's 
 	attributes are used to grab struct elements from. Returns
 	a string containing the data.
 
-unpack(format, data, object=None)
+unpack(fmt, data, object=None)
 	If 'object' is omitted (or None), a new dictionary will be 
 	returned. If 'object' is a dictionary, it will be used to add 
 	struct elements to. If it is an instance (or in fact anything
@@ -37,12 +37,12 @@ unpack(format, data, object=None)
 	each struct element. In the latter two cases, 'object' itself 
 	is returned.
 
-unpack2(format, data, object=None)
+unpack2(fmt, data, object=None)
 	Convenience function. Same as unpack, except data may be longer 
 	than needed. The returned value is a tuple: (object, leftoverdata).
 
-calcsize(format)
-	like struct.calcsize(), but uses our own format strings:
+calcsize(fmt)
+	like struct.calcsize(), but uses our own fmt strings:
 	it returns the size of the data in bytes.
 """
 
@@ -59,13 +59,13 @@ __copyright__ = "Copyright 1998, Just van Rossum <just@letterror.com>"
 class Error(Exception):
 	pass
 
-def pack(format, object):
-	formatstring, names, fixes = getformat(format)
+def pack(fmt, obj):
+	formatstring, names, fixes = getformat(fmt)
 	elements = []
-	if not isinstance(object, dict):
-		object = object.__dict__
+	if not isinstance(obj, dict):
+		obj = obj.__dict__
 	for name in names:
-		value = object[name]
+		value = obj[name]
 		if name in fixes:
 			# fixed point conversion
 			value = fl2fi(value, fixes[name])
@@ -75,15 +75,15 @@ def pack(format, object):
 	data = struct.pack(*(formatstring,) + tuple(elements))
 	return data
 
-def unpack(format, data, object=None):
-	if object is None:
-		object = {}
+def unpack(fmt, data, obj=None):
+	if obj is None:
+		obj = {}
 	data = tobytes(data)
-	formatstring, names, fixes = getformat(format)
-	if isinstance(object, dict):
-		d = object
+	formatstring, names, fixes = getformat(fmt)
+	if isinstance(obj, dict):
+		d = obj
 	else:
-		d = object.__dict__
+		d = obj.__dict__
 	elements = struct.unpack(formatstring, data)
 	for i in range(len(names)):
 		name = names[i]
@@ -97,14 +97,14 @@ def unpack(format, data, object=None):
 			except UnicodeDecodeError:
 				pass
 		d[name] = value
-	return object
+	return obj
 
-def unpack2(format, data, object=None):
-	length = calcsize(format)
-	return unpack(format, data[:length], object), data[length:]
+def unpack2(fmt, data, obj=None):
+	length = calcsize(fmt)
+	return unpack(fmt, data[:length], obj), data[length:]
 
-def calcsize(format):
-	formatstring, names, fixes = getformat(format)
+def calcsize(fmt):
+	formatstring, names, fixes = getformat(fmt)
 	return struct.calcsize(formatstring)
 
 
@@ -119,7 +119,7 @@ _elementRE = re.compile(
 		"(#.*)?$"						# [comment] + end of string
 	)
 
-# matches the special struct format chars and 'x' (pad byte)
+# matches the special struct fmt chars and 'x' (pad byte)
 _extraRE = re.compile("\s*([x@=<>!])\s*(#.*)?$")
 
 # matches an "empty" string, possibly containing whitespace and/or a comment
@@ -132,11 +132,11 @@ _fixedpointmappings = {
 
 _formatcache = {}
 
-def getformat(format):
+def getformat(fmt):
 	try:
-		formatstring, names, fixes = _formatcache[format]
+		formatstring, names, fixes = _formatcache[fmt]
 	except KeyError:
-		lines = re.split("[\n;]", format)
+		lines = re.split("[\n;]", fmt)
 		formatstring = ""
 		names = []
 		fixes = {}
@@ -147,11 +147,11 @@ def getformat(format):
 			if m:
 				formatchar = m.group(1)
 				if formatchar != 'x' and formatstring:
-					raise Error("a special format char must be first")
+					raise Error("a special fmt char must be first")
 			else:
 				m = _elementRE.match(line)
 				if not m:
-					raise Error("syntax error in format: '%s'" % line)
+					raise Error("syntax error in fmt: '%s'" % line)
 				name = m.group(1)
 				names.append(name)
 				formatchar = m.group(2)
@@ -166,11 +166,11 @@ def getformat(format):
 					assert m.group(5) == "F"
 					fixes[name] = after
 			formatstring = formatstring + formatchar
-		_formatcache[format] = formatstring, names, fixes
+		_formatcache[fmt] = formatstring, names, fixes
 	return formatstring, names, fixes
 
 def _test():
-	format = """
+	fmt = """
 		# comments are allowed
 		>  # big endian (see documentation for struct)
 		# empty lines are allowed:
@@ -184,7 +184,7 @@ def _test():
 		afixed: 16.16F
 	"""
 	
-	print('size:', calcsize(format))
+	print('size:', calcsize(fmt))
 	
 	class foo(object):
 		pass
@@ -200,11 +200,11 @@ def _test():
 	i.adouble = 0.5
 	i.afixed = 1.5
 	
-	data = pack(format, i)
+	data = pack(fmt, i)
 	print('data:', repr(data))
-	print(unpack(format, data))
+	print(unpack(fmt, data))
 	i2 = foo()
-	unpack(format, data, i2)
+	unpack(fmt, data, i2)
 	print(vars(i2))
 
 if __name__ == "__main__":

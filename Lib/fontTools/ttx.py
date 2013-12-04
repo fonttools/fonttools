@@ -72,13 +72,13 @@ from fontTools.ttLib import TTFont, TTLibError
 from fontTools.ttLib.tables.otBase import OTLOffsetOverflowError
 from fontTools.ttLib.tables.otTables import fixLookupOverFlows, fixSubTableOverFlows
 from fontTools.misc.macCreatorType import getMacCreatorAndType
-from fontTools import version
 import os
 import sys
 import getopt
 import re
 
 def usage():
+	from fontTools import version
 	print(__doc__ % version)
 	sys.exit(2)
 
@@ -87,15 +87,15 @@ numberAddedRE = re.compile("#\d+$")
 opentypeheaderRE = re.compile('''sfntVersion=['"]OTTO["']''')
 
 def makeOutputFileName(input, outputDir, extension):
-	dir, file = os.path.split(input)
-	file, ext = os.path.splitext(file)
+	dirName, fileName = os.path.split(input)
+	fileName, ext = os.path.splitext(fileName)
 	if outputDir:
-		dir = outputDir
-	file = numberAddedRE.split(file)[0]
-	output = os.path.join(dir, file + extension)
+		dirName = outputDir
+	fileName = numberAddedRE.split(fileName)[0]
+	output = os.path.join(dirName, fileName + extension)
 	n = 1
 	while os.path.exists(output):
-		output = os.path.join(dir, file + "#" + repr(n) + extension)
+		output = os.path.join(dirName, fileName + "#" + repr(n) + extension)
 		n = n + 1
 	return output
 
@@ -122,6 +122,7 @@ class Options(object):
 		for option, value in rawOptions:
 			# general options
 			if option == "-h":
+				from fontTools import version
 				print(__doc__ % version)
 				sys.exit(0)
 			elif option == "-d":

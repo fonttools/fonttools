@@ -103,8 +103,8 @@ class T1Font(object):
 def read(path, onlyHeader=0):
 	"""reads any Type 1 font file, returns raw data"""
 	normpath = path.lower()
-	creator, type = getMacCreatorAndType(path)
-	if type == 'LWFN':
+	creator, typ = getMacCreatorAndType(path)
+	if typ == 'LWFN':
 		return readLWFN(path, onlyHeader), 'LWFN'
 	if normpath[-4:] == '.pfb':
 		return readPFB(path, onlyHeader), 'PFB'
@@ -357,16 +357,16 @@ def assertType1(data):
 # pfb helpers
 
 def longToString(long):
-	str = ""
+	s = ""
 	for i in range(4):
-		str = str + bytechr((long & (0xff << (i * 8))) >> i * 8)
-	return str
+		s += bytechr((long & (0xff << (i * 8))) >> i * 8)
+	return s
 
-def stringToLong(str):
-	if len(str) != 4:
+def stringToLong(s):
+	if len(s) != 4:
 		raise ValueError('string must be 4 bytes long')
-	long = 0
+	l = 0
 	for i in range(4):
-		long = long + (byteord(str[i]) << (i * 8))
-	return long
+		l += byteord(s[i]) << (i * 8)
+	return l
 
