@@ -24,7 +24,7 @@ except:
 		return c if isinstance(c, int) else ord(c)
 
 try:
-	from cStringIO import StringIO
+	from StringIO import StringIO
 except ImportError:
 	try:
 		from StringIO import StringIO
