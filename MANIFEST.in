@@ -5,10 +5,6 @@ include Doc/ChangeLog
 include Doc/*.txt
 include Doc/*.html
 include MetaTools/*.py
-include MetaTools/*.diff
-include Mac/TTX.py
-include Mac/README.txt
-include Mac/TTX.rsrc.hqx
 include Windows/mcmillan.bat
 include Windows/ttx.ico
 include Windows/README.TXT
