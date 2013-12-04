@@ -465,7 +465,7 @@ class T1CharString(T2CharString):
 			raise TypeError("Type 1 charstrings don't support floating point operands")
 
 	def decompile(self):
-		if self.program is not None:
+		if self.bytecode is None:
 			return
 		program = []
 		index = 0
