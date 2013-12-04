@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 from fontTools.misc.py23 import *
 from fontTools.pens.basePen import BasePen
+from reportlab.graphics.shapes import Path
 
 
 class ReportLabPen(BasePen):
@@ -10,7 +11,6 @@ class ReportLabPen(BasePen):
 	def __init__(self, glyphSet, path=None):
 		BasePen.__init__(self, glyphSet)
 		if path is None:
-			from reportlab.graphics.shapes import Path
 			path = Path()
 		self.path = path
 
@@ -43,7 +43,6 @@ if __name__=="__main__":
 
 	from fontTools.ttLib import TTFont
 	from reportlab.lib import colors
-	from reportlab.graphics.shapes import Path
 
 	path = sys.argv[1]
 	glyphName = sys.argv[2]

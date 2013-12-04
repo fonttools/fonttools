@@ -1824,7 +1824,7 @@ class Options(object):
             if x in v:
               v.remove(x)
         else:
-          assert 0
+          assert False
 
       opts[k] = v
     self.set(**opts)

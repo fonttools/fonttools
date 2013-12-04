@@ -479,7 +479,7 @@ class	FDSelect:
 						gidArray[glyphID] = fd
 				self.gidArray = gidArray
 			else:
-				assert 0, "unsupported FDSelect format: %s" % format
+				assert False, "unsupported FDSelect format: %s" % format
 		else:
 			# reading from XML. Make empty gidArray,, and leave format as passed in.
 			# format == None will result in the smallest representation being used.
@@ -741,7 +741,7 @@ class PrivateDictConverter(TableConverter):
 		priv = PrivateDict(parent.strings, file, offset)
 		file.seek(offset)
 		data = file.read(size)
-		len(data) == size
+		assert len(data) == size
 		priv.decompile(data)
 		return priv
 	def write(self, parent, value):
@@ -857,8 +857,8 @@ def getSIDfromName(name, strings):
 	return strings.getSID(name)
 
 def packCharset0(charset, isCID, strings):
-	format = 0
-	data = [packCard8(format)]
+	fmt = 0
+	data = [packCard8(fmt)]
 	if isCID:
 		getNameID = getCIDfromName
 	else:
@@ -870,7 +870,7 @@ def packCharset0(charset, isCID, strings):
 
 
 def packCharset(charset, isCID, strings):
-	format = 1
+	fmt = 1
 	ranges = []
 	first = None
 	end = 0
@@ -886,17 +886,17 @@ def packCharset(charset, isCID, strings):
 		elif end + 1 != SID:
 			nLeft = end - first
 			if nLeft > 255:
-				format = 2
+				fmt = 2
 			ranges.append((first, nLeft))
 			first = SID
 		end = SID
 	nLeft = end - first
 	if nLeft > 255:
-		format = 2
+		fmt = 2
 	ranges.append((first, nLeft))
 	
-	data = [packCard8(format)]
-	if format == 1:
+	data = [packCard8(fmt)]
+	if fmt == 1:
 		nLeftFunc = packCard8
 	else:
 		nLeftFunc = packCard16
@@ -916,10 +916,10 @@ def parseCharset0(numGlyphs, file, strings, isCID):
 			charset.append(strings[SID])
 	return charset
 
-def parseCharset(numGlyphs, file, strings, isCID, format):
+def parseCharset(numGlyphs, file, strings, isCID, fmt):
 	charset = ['.notdef']
 	count = 1
-	if format == 1:
+	if fmt == 1:
 		nLeftFunc = readCard8
 	else:
 		nLeftFunc = readCard16
@@ -971,15 +971,15 @@ class EncodingConverter(SimpleConverter):
 			file.seek(value)
 			if DEBUG:
 				print("loading Encoding at %s" % value)
-			format = readCard8(file)
-			haveSupplement = format & 0x80
+			fmt = readCard8(file)
+			haveSupplement = fmt & 0x80
 			if haveSupplement:
 				raise NotImplementedError("Encoding supplements are not yet supported")
-			format = format & 0x7f
-			if format == 0:
+			fmt = fmt & 0x7f
+			if fmt == 0:
 				encoding = parseEncoding0(parent.charset, file, haveSupplement,
 						parent.strings)
-			elif format == 1:
+			elif fmt == 1:
 				encoding = parseEncoding1(parent.charset, file, haveSupplement,
 						parent.strings)
 			return encoding
@@ -1043,7 +1043,7 @@ def parseEncoding1(charset, file, haveSupplement, strings):
 	return encoding
 
 def packEncoding0(charset, encoding, strings):
-	format = 0
+	fmt = 0
 	m = {}
 	for code in range(len(encoding)):
 		name = encoding[code]
@@ -1057,7 +1057,7 @@ def packEncoding0(charset, encoding, strings):
 	while codes and codes[-1] is None:
 		codes.pop()
 
-	data = [packCard8(format), packCard8(len(codes))]
+	data = [packCard8(fmt), packCard8(len(codes))]
 	for code in codes:
 		if code is None:
 			code = 0
@@ -1065,7 +1065,7 @@ def packEncoding0(charset, encoding, strings):
 	return bytesjoin(data)
 
 def packEncoding1(charset, encoding, strings):
-	format = 1
+	fmt = 1
 	m = {}
 	for code in range(len(encoding)):
 		name = encoding[code]
@@ -1090,7 +1090,7 @@ def packEncoding1(charset, encoding, strings):
 	while ranges and ranges[-1][0] == -1:
 		ranges.pop()
 
-	data = [packCard8(format), packCard8(len(ranges))]
+	data = [packCard8(fmt), packCard8(len(ranges))]
 	for first, nLeft in ranges:
 		if first == -1:  # unencoded
 			first = 0
@@ -1139,23 +1139,23 @@ class FDSelectConverter(object):
 		xmlWriter.newline()
 
 	def xmlRead(self, name, attrs, content, parent):
-		format = safeEval(attrs["format"])
+		fmt = safeEval(attrs["format"])
 		file = None
 		numGlyphs = None
-		fdSelect = FDSelect(file, numGlyphs, format)
+		fdSelect = FDSelect(file, numGlyphs, fmt)
 		return fdSelect
 		
 
 def packFDSelect0(fdSelectArray):
-	format = 0
-	data = [packCard8(format)]
+	fmt = 0
+	data = [packCard8(fmt)]
 	for index in fdSelectArray:
 		data.append(packCard8(index))
 	return bytesjoin(data)
 
 
 def packFDSelect3(fdSelectArray):
-	format = 3
+	fmt = 3
 	fdRanges = []
 	first = None
 	end = 0
@@ -1168,7 +1168,7 @@ def packFDSelect3(fdSelectArray):
 			lastFDIndex = fdIndex
 	sentinelGID = i + 1
 		
-	data = [packCard8(format)]
+	data = [packCard8(fmt)]
 	data.append(packCard16( len(fdRanges) ))
 	for fdRange in fdRanges:
 		data.append(packCard16(fdRange[0]))
@@ -1180,11 +1180,11 @@ def packFDSelect3(fdSelectArray):
 class FDSelectCompiler(object):
 	
 	def __init__(self, fdSelect, parent):
-		format = fdSelect.format
+		fmt = fdSelect.format
 		fdSelectArray = fdSelect.gidArray
-		if format == 0:
+		if fmt == 0:
 			self.data = packFDSelect0(fdSelectArray)
-		elif format == 3:
+		elif fmt == 3:
 			self.data = packFDSelect3(fdSelectArray)
 		else:
 			# choose smaller of the two formats
@@ -1300,7 +1300,7 @@ def addConverters(table):
 		elif arg == "SID":
 			conv = ASCIIConverter()
 		else:
-			assert 0
+			assert False
 		table[i] = op, name, arg, default, conv
 
 addConverters(privateDictOperators)
@@ -1417,7 +1417,6 @@ class TopDictCompiler(DictCompiler):
 			if len(fdSelect) == 0: # probably read in from XML; assume fdIndex in CharString data
 				charStrings = self.dictObj.CharStrings
 				for name in self.dictObj.charset:
-					charstring = charStrings[name]
 					fdSelect.append(charStrings[name].fdSelectIndex)
 			fdSelectComp = FDSelectCompiler(fdSelect, self)
 			children.append(fdSelectComp)
@@ -1567,8 +1566,8 @@ class TopDict(BaseDict):
 			except:
 				print("Error in charstring ", i)
 				import sys
-				type, value = sys. exc_info()[0:2]
-				raise type(value)
+				typ, value = sys.exc_info()[0:2]
+				raise typ(value)
 			if not i % 30 and progress:
 				progress.increment(0)  # update
 			i = i + 1

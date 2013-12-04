@@ -373,9 +373,6 @@ def Scale(x, y=None):
 	return Transform(x, 0, 0, y, 0, 0)
 
 
-def _test():
-	import doctest, transform
-	return doctest.testmod(transform)
-
 if __name__ == "__main__":
-	_test()
+	import doctest
+	doctest.testmod()

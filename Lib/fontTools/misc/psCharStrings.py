@@ -859,7 +859,7 @@ class T2OutlineExtractor(SimpleT2Decompiler):
 	# MultipleMaster. Well...
 	#
 	def op_blend(self, index):
-		args = self.popall()
+		self.popall()
 	
 	# misc
 	def op_and(self, index):
@@ -1125,9 +1125,9 @@ class DictDecompiler(ByteCodeBase):
 		return value
 	
 	def popall(self):
-		all = self.stack[:]
+		args = self.stack[:]
 		del self.stack[:]
-		return all
+		return args
 	
 	def do_operator(self, b0, data, index):
 		if b0 == 12:

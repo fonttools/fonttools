@@ -201,6 +201,7 @@ class SFNTWriter(object):
 				self.metaOrigLength = len(data.metaData)
 				self.file.seek(0,2)
 				self.metaOffset = self.file.tell()
+				import zlib
 				compressedMetaData = zlib.compress(data.metaData)
 				self.metaLength = len(compressedMetaData)
 				self.file.write(compressedMetaData)
@@ -430,14 +431,15 @@ class WOFFFlavorData():
 			self.minorVersion = reader.minorVersion
 			if reader.metaLength:
 				reader.file.seek(reader.metaOffset)
-				rawData = read.file.read(reader.metaLength)
+				rawData = reader.file.read(reader.metaLength)
 				assert len(rawData) == reader.metaLength
+				import zlib
 				data = zlib.decompress(rawData)
 				assert len(data) == reader.metaOrigLength
 				self.metaData = data
 			if reader.privLength:
 				reader.file.seek(reader.privOffset)
-				data = read.file.read(reader.privLength)
+				data = reader.file.read(reader.privLength)
 				assert len(data) == reader.privLength
 				self.privData = data
 
@@ -485,7 +487,6 @@ def getSearchRange(n):
 	sfnt directory. 'n' is the number of tables.
 	"""
 	# This stuff needs to be stored in the file, because?
-	import math
 	exponent = maxPowerOfTwo(n)
 	searchRange = (2 ** exponent) * 16
 	entrySelector = exponent

@@ -193,7 +193,7 @@ _whiteRE = re.compile(r"\s*")
 _pushCountPat = re.compile(r"[A-Z][A-Z0-9]*\s*\[.*?\]\s*/\* ([0-9]*).*?\*/")
 
 
-def _skipWhite(data, pos, _whiteRE=_whiteRE):
+def _skipWhite(data, pos):
 	m = _whiteRE.match(data, pos)
 	newPos = m.regs[0][1]
 	assert newPos >= pos
@@ -267,16 +267,14 @@ class Program(object):
 			assert name == "bytecode"
 			self.fromBytecode(readHex(content))
 	
-	def _assemble(self, 
-			skipWhite=_skipWhite, mnemonicDict=mnemonicDict,
-			binary2num=binary2num):
+	def _assemble(self):
 		assembly = self.assembly
 		if isinstance(assembly, type([])):
 			assembly = ' '.join(assembly)
 		bytecode = []
 		push = bytecode.append
 		lenAssembly = len(assembly)
-		pos = skipWhite(assembly, 0)
+		pos = _skipWhite(assembly, 0)
 		while pos < lenAssembly:
 			m = _tokenRE.match(assembly, pos)
 			if m is None:
@@ -302,7 +300,7 @@ class Program(object):
 					push(op)
 			else:
 				args = []
-				pos = skipWhite(assembly, pos)
+				pos = _skipWhite(assembly, pos)
 				while pos < lenAssembly:
 					m = _tokenRE.match(assembly, pos)
 					if m is None:
@@ -311,7 +309,7 @@ class Program(object):
 					if number is None and comment is None:
 						break
 					pos = m.regs[0][1]
-					pos = skipWhite(assembly, pos)
+					pos = _skipWhite(assembly, pos)
 					if comment is not None:
 						continue
 					args.append(int(number))
@@ -340,7 +338,7 @@ class Program(object):
 				else:
 					for value in args:
 						push(value)
-			pos = skipWhite(assembly, pos)
+			pos = _skipWhite(assembly, pos)
 		
 		if bytecode:
 			assert max(bytecode) < 256 and min(bytecode) >= 0
@@ -353,7 +351,6 @@ class Program(object):
 		numBytecode = len(bytecode)
 		while i < numBytecode:
 			op = bytecode[i]
-			arg = 0
 			try:
 				mnemonic, argBits, argoffset = opcodeDict[op]
 			except KeyError:
