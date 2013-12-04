@@ -100,7 +100,7 @@ def remap(self, class_map):
 
 @_add_method(otTables.SingleSubst)
 def closure_glyphs(self, s, cur_glyphs=None):
-  if cur_glyphs == None: cur_glyphs = s.glyphs
+  if cur_glyphs is None: cur_glyphs = s.glyphs
   if self.Format in [1, 2]:
     s.glyphs.update(v for g,v in self.mapping.items() if g in cur_glyphs)
   else:
@@ -117,7 +117,7 @@ def subset_glyphs(self, s):
 
 @_add_method(otTables.MultipleSubst)
 def closure_glyphs(self, s, cur_glyphs=None):
-  if cur_glyphs == None: cur_glyphs = s.glyphs
+  if cur_glyphs is None: cur_glyphs = s.glyphs
   if self.Format == 1:
     indices = self.Coverage.intersect(cur_glyphs)
     _set_update(s.glyphs, *(self.Sequence[i].Substitute for i in indices))
@@ -141,7 +141,7 @@ def subset_glyphs(self, s):
 
 @_add_method(otTables.AlternateSubst)
 def closure_glyphs(self, s, cur_glyphs=None):
-  if cur_glyphs == None: cur_glyphs = s.glyphs
+  if cur_glyphs is None: cur_glyphs = s.glyphs
   if self.Format == 1:
     _set_update(s.glyphs, *(vlist for g,vlist in self.alternates.items()
                             if g in cur_glyphs))
@@ -161,7 +161,7 @@ def subset_glyphs(self, s):
 
 @_add_method(otTables.LigatureSubst)
 def closure_glyphs(self, s, cur_glyphs=None):
-  if cur_glyphs == None: cur_glyphs = s.glyphs
+  if cur_glyphs is None: cur_glyphs = s.glyphs
   if self.Format == 1:
     _set_update(s.glyphs, *([seq.LigGlyph for seq in seqs
                              if all(c in s.glyphs for c in seq.Component)]
@@ -186,7 +186,7 @@ def subset_glyphs(self, s):
 
 @_add_method(otTables.ReverseChainSingleSubst)
 def closure_glyphs(self, s, cur_glyphs=None):
-  if cur_glyphs == None: cur_glyphs = s.glyphs
+  if cur_glyphs is None: cur_glyphs = s.glyphs
   if self.Format == 1:
     indices = self.Coverage.intersect(cur_glyphs)
     if(not indices or
@@ -573,7 +573,7 @@ def __classify_context(self):
 @_add_method(otTables.ContextSubst,
              otTables.ChainContextSubst)
 def closure_glyphs(self, s, cur_glyphs=None):
-  if cur_glyphs == None: cur_glyphs = s.glyphs
+  if cur_glyphs is None: cur_glyphs = s.glyphs
   c = self.__classify_context()
 
   indices = c.Coverage(self).intersect(s.glyphs)
@@ -692,7 +692,7 @@ def subset_glyphs(self, s):
     # Delete, but not renumber, unreachable rulesets.
     indices = getattr(self, c.ClassDef).intersect(self.Coverage.glyphs)
     rss = [rss if i in indices else None for i,rss in enumerate(rss)]
-    while rss and rss[-1] == None:
+    while rss and rss[-1] is None:
       del rss[-1]
 
     for rs in rss:
@@ -1797,7 +1797,7 @@ class Options(object):
         v = a[i+1:]
       k = k.replace('-', '_')
       if not hasattr(self, k):
-        if ignore_unknown == True or k in ignore_unknown:
+        if ignore_unknown is True or k in ignore_unknown:
           ret.append(orig_a)
           continue
         else:

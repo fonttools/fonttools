@@ -108,7 +108,7 @@ class CmapSubtable(object):
 		# allow lazy decompilation of subtables.
 		if attr[:2] == '__': # don't handle requests for member functions like '__lt__'
 			raise AttributeError(attr)
-		if self.data == None:
+		if self.data is None:
 			raise AttributeError(attr)
 		self.decompile(None, None) # use saved data.
 		self.data = None # Once this table has been decompiled, make sure we don't
@@ -172,10 +172,10 @@ class cmap_format_0(CmapSubtable):
 	def decompile(self, data, ttFont):
 		# we usually get here indirectly from the subtable __getattr__ function, in which case both args must be None.
 		# If not, someone is calling  the subtable decompile() directly, and must provide both args.
-		if data != None and ttFont != None:
+		if data is not None and ttFont is not None:
 			self.decompileHeader(data[offset:offset+int(length)], ttFont)
 		else:
-			assert (data == None and ttFont == None), "Need both data and ttFont arguments"
+			assert (data is None and ttFont is None), "Need both data and ttFont arguments"
 		data = self.data # decompileHeader assigns the data after the header to self.data
 		assert 262 == self.length, "Format 0 cmap subtable not 262 bytes"
 		glyphIdArray = array.array("B")
@@ -259,10 +259,10 @@ class cmap_format_2(CmapSubtable):
 	def decompile(self, data, ttFont):
 		# we usually get here indirectly from the subtable __getattr__ function, in which case both args must be None.
 		# If not, someone is calling  the subtable decompile() directly, and must provide both args.
-		if data != None and ttFont != None:
+		if data is not None and ttFont is not None:
 			self.decompileHeader(data[offset:offset+int(length)], ttFont)
 		else:
-			assert (data == None and ttFont == None), "Need both data and ttFont arguments"
+			assert (data is None and ttFont is None), "Need both data and ttFont arguments"
 
 		data = self.data # decompileHeader assigns the data after the header to self.data
 		subHeaderKeys = []
@@ -628,10 +628,10 @@ class cmap_format_4(CmapSubtable):
 	def decompile(self, data, ttFont):
 		# we usually get here indirectly from the subtable __getattr__ function, in which case both args must be None.
 		# If not, someone is calling  the subtable decompile() directly, and must provide both args.
-		if data != None and ttFont != None:
+		if data is not None and ttFont is not None:
 			self.decompileHeader(self.data[offset:offset+int(length)], ttFont)
 		else:
-			assert (data == None and ttFont == None), "Need both data and ttFont arguments"
+			assert (data is None and ttFont is None), "Need both data and ttFont arguments"
 
 		data = self.data # decompileHeader assigns the data after the header to self.data
 		(segCountX2, searchRange, entrySelector, rangeShift) = \
@@ -832,10 +832,10 @@ class cmap_format_6(CmapSubtable):
 	def decompile(self, data, ttFont):
 		# we usually get here indirectly from the subtable __getattr__ function, in which case both args must be None.
 		# If not, someone is calling  the subtable decompile() directly, and must provide both args.
-		if data != None and ttFont != None:
+		if data is not None and ttFont is not None:
 			self.decompileHeader(data[offset:offset+int(length)], ttFont)
 		else:
-			assert (data == None and ttFont == None), "Need both data and ttFont arguments"
+			assert (data is None and ttFont is None), "Need both data and ttFont arguments"
 
 		data = self.data # decompileHeader assigns the data after the header to self.data
 		firstCode, entryCount = struct.unpack(">HH", data[:4])
@@ -918,10 +918,10 @@ class cmap_format_12_or_13(CmapSubtable):
 	def decompile(self, data, ttFont):
 		# we usually get here indirectly from the subtable __getattr__ function, in which case both args must be None.
 		# If not, someone is calling  the subtable decompile() directly, and must provide both args.
-		if data != None and ttFont != None:
+		if data is not None and ttFont is not None:
 			self.decompileHeader(data[offset:offset+int(length)], ttFont)
 		else:
-			assert (data == None and ttFont == None), "Need both data and ttFont arguments"
+			assert (data is None and ttFont is None), "Need both data and ttFont arguments"
 
 		data = self.data # decompileHeader assigns the data after the header to self.data
 		charCodes = []
@@ -1084,10 +1084,10 @@ class cmap_format_14(CmapSubtable):
 		self.language = 0xFF # has no language.
 
 	def decompile(self, data, ttFont):
-		if data != None and ttFont != None and ttFont.lazy:
+		if data is not None and ttFont is not None and ttFont.lazy:
 			self.decompileHeader(data, ttFont)
 		else:
-			assert (data == None and ttFont == None), "Need both data and ttFont arguments"
+			assert (data is None and ttFont is None), "Need both data and ttFont arguments"
 		data = self.data
 		
 		self.cmap = {} # so that clients that expect this to exist in a cmap table won't fail.
@@ -1145,9 +1145,9 @@ class cmap_format_14(CmapSubtable):
 		uvsList = sorted(uvsDict.keys())
 		for uvs in uvsList:
 			uvList = uvsDict[uvs]
-			uvList.sort(key=lambda item: (item[1] != None, item[0], item[1]))
+			uvList.sort(key=lambda item: (item[1] is not None, item[0], item[1]))
 			for uv, gname in uvList:
-				if gname == None:
+				if gname is None:
 					gname = "None"
 				# I use the arg rather than th keyword syntax in order to preserve the attribute order.
 				writer.simpletag("map", [ ("uvs",hex(uvs)), ("uv",hex(uv)), ("name", gname)]  )
@@ -1196,7 +1196,7 @@ class cmap_format_14(CmapSubtable):
 		for uvs in uvsList:
 			entryList = uvsDict[uvs]
 
-			defList = [entry for entry in entryList if entry[1] == None]
+			defList = [entry for entry in entryList if entry[1] is None]
 			if defList:
 				defList = [entry[0] for entry in defList]
 				defOVSOffset = offset
@@ -1223,7 +1223,7 @@ class cmap_format_14(CmapSubtable):
 			else:
 				defOVSOffset = 0
 
-			ndefList = [entry for entry in entryList if entry[1] != None]
+			ndefList = [entry for entry in entryList if entry[1] is not None]
 			if ndefList:
 				nonDefUVSOffset = offset
 				ndefList.sort()
@@ -1273,10 +1273,10 @@ class cmap_format_unknown(CmapSubtable):
 	def decompile(self, data, ttFont):
 		# we usually get here indirectly from the subtable __getattr__ function, in which case both args must be None.
 		# If not, someone is calling  the subtable decompile() directly, and must provide both args.
-		if data != None and ttFont != None:
+		if data is not None and ttFont is not None:
 			self.decompileHeader(data[offset:offset+int(length)], ttFont)
 		else:
-			assert (data == None and ttFont == None), "Need both data and ttFont arguments"
+			assert (data is None and ttFont is None), "Need both data and ttFont arguments"
 
 	def compile(self, ttFont):
 		if self.data:

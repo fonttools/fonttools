@@ -219,7 +219,7 @@ class table_E_B_L_C_(DefaultTable.DefaultTable):
 			# allows for the strike index value to be out of order.
 			if strikeIndex >= len(self.strikes):
 				self.strikes += [None] * (strikeIndex + 1 - len(self.strikes))
-			assert self.strikes[strikeIndex] == None, "Duplicate strike EBLC indices."
+			assert self.strikes[strikeIndex] is None, "Duplicate strike EBLC indices."
 			self.strikes[strikeIndex] = curStrike
 
 class Strike(object):

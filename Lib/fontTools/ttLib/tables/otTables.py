@@ -494,14 +494,14 @@ def fixLookupOverFlows(ttf, overflowRecord):
 					SubTable[0] and contents
 					...
 					SubTable[n] and contents
-	If the offset to a lookup overflowed (SubTableIndex == None)
+	If the offset to a lookup overflowed (SubTableIndex is None)
 		we must promote the *previous*	lookup to an Extension type.
 	If the offset from a lookup to subtable overflowed, then we must promote it 
 		to an Extension Lookup type.
 	"""
 	ok = 0
 	lookupIndex = overflowRecord.LookupListIndex
-	if (overflowRecord.SubTableIndex == None):
+	if (overflowRecord.SubTableIndex is None):
 		lookupIndex = lookupIndex - 1
 	if lookupIndex < 0:
 		return ok

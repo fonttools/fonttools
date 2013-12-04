@@ -482,7 +482,7 @@ class	FDSelect:
 				assert False, "unsupported FDSelect format: %s" % format
 		else:
 			# reading from XML. Make empty gidArray,, and leave format as passed in.
-			# format == None will result in the smallest representation being used.
+			# format is None will result in the smallest representation being used.
 			self.format = format
 			self.gidArray = []
 
@@ -514,9 +514,9 @@ class CharStrings(object):
 			self.charStringsAreIndexed = 0
 			self.globalSubrs = globalSubrs
 			self.private = private
-			if fdSelect != None:
+			if fdSelect is not None:
 				self.fdSelect = fdSelect
-			if fdArray!= None:
+			if fdArray is not None:
 				self.fdArray = fdArray
 	
 	def keys(self):

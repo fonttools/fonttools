@@ -172,7 +172,7 @@ class table_E_B_D_T_(DefaultTable.DefaultTable):
 			# format allows the strike index value to be out of order.
 			if strikeIndex >= len(self.strikeData):
 				self.strikeData += [None] * (strikeIndex + 1 - len(self.strikeData))
-			assert self.strikeData[strikeIndex] == None, "Duplicate strike EBDT indices."
+			assert self.strikeData[strikeIndex] is None, "Duplicate strike EBDT indices."
 			self.strikeData[strikeIndex] = bitmapGlyphDict
 
 class EbdtComponent(object):
@@ -492,7 +492,7 @@ class BitAlignedBitmapMixin(object):
 		return (bitOffset, bitOffset+rowBits)
 
 	def getRow(self, row, bitDepth=1, metrics=None, reverseBytes=False):
-		if metrics == None:
+		if metrics is None:
 			metrics = self.metrics
 		assert 0 <= row and row < metrics.height, "Illegal row access in bitmap"
 
@@ -541,7 +541,7 @@ class BitAlignedBitmapMixin(object):
 		return data
 
 	def setRows(self, dataRows, bitDepth=1, metrics=None, reverseBytes=False):
-		if metrics == None:
+		if metrics is None:
 			metrics = self.metrics
 		if not reverseBytes:
 			dataRows = list(map(_reverseBytes, dataRows))
@@ -580,7 +580,7 @@ class ByteAlignedBitmapMixin(object):
 		return (byteOffset, byteOffset+rowBytes)
 
 	def getRow(self, row, bitDepth=1, metrics=None, reverseBytes=False):
-		if metrics == None:
+		if metrics is None:
 			metrics = self.metrics
 		assert 0 <= row and row < metrics.height, "Illegal row access in bitmap"
 		byteRange = self._getByteRange(row, bitDepth, metrics)
@@ -590,7 +590,7 @@ class ByteAlignedBitmapMixin(object):
 		return data
 
 	def setRows(self, dataRows, bitDepth=1, metrics=None, reverseBytes=False):
-		if metrics == None:
+		if metrics is None:
 			metrics = self.metrics
 		if reverseBytes:
 			dataRows = map(_reverseBytes, dataRows)
