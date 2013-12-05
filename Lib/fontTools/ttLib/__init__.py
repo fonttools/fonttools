@@ -558,8 +558,15 @@ class TTFont(object):
 				self._buildReverseGlyphOrderDict()
 				return self.getGlyphID(glyphName)
 			else:
-				if requireReal or not self.allowVID:
+				if requireReal:
 					raise KeyError(glyphName)
+				elif not self.allowVID:
+					# Handle glyphXXX only
+					if glyphName[:5] == "glyph":
+						try:
+							return int(glyphName[5:])
+						except (NameError, ValueError):
+							raise KeyError(glyphName)
 				else:
 					# user intends virtual GID support 	
 					try:
