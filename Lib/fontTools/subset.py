@@ -2037,12 +2037,14 @@ class Logger(object):
 
 def load_font(fontFile,
               options,
+              allowVID=False,
               checkChecksums=False,
               dontLoadGlyphNames=False):
 
   font = ttLib.TTFont(fontFile,
-                                checkChecksums=checkChecksums,
-                                recalcBBoxes=options.recalc_bounds)
+                      allowVID=allowVID,
+                      checkChecksums=checkChecksums,
+                      recalcBBoxes=options.recalc_bounds)
 
   # Hack:
   #
