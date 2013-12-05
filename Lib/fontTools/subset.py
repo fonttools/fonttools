@@ -988,7 +988,10 @@ def collect_features(self):
 @_add_method(ttLib.getTableClass('GSUB'))
 def closure_glyphs(self, s):
   s.table = self.table
-  feature_indices = self.table.ScriptList.collect_features()
+  if self.table.ScriptList:
+    feature_indices = self.table.ScriptList.collect_features()
+  else:
+    feature_indices = []
   if self.table.FeatureList:
     lookup_indices = self.table.FeatureList.collect_lookups(feature_indices)
   else:
@@ -1027,13 +1030,17 @@ def subset_lookups(self, lookup_indices):
     feature_indices = self.table.FeatureList.subset_lookups(lookup_indices)
   else:
     feature_indices = []
-  self.table.ScriptList.subset_features(feature_indices)
+  if self.table.ScriptList:
+    self.table.ScriptList.subset_features(feature_indices)
 
 @_add_method(ttLib.getTableClass('GSUB'),
              ttLib.getTableClass('GPOS'))
 def prune_lookups(self):
   "Remove unreferenced lookups"
-  feature_indices = self.table.ScriptList.collect_features()
+  if self.table.ScriptList:
+    feature_indices = self.table.ScriptList.collect_features()
+  else:
+    feature_indices = []
   if self.table.FeatureList:
     lookup_indices = self.table.FeatureList.collect_lookups(feature_indices)
   else:
@@ -1054,7 +1061,8 @@ def subset_feature_tags(self, feature_tags):
     self.table.FeatureList.subset_features(feature_indices)
   else:
     feature_indices = []
-  self.table.ScriptList.subset_features(feature_indices)
+  if self.table.ScriptList:
+    self.table.ScriptList.subset_features(feature_indices)
 
 @_add_method(ttLib.getTableClass('GSUB'),
              ttLib.getTableClass('GPOS'))
