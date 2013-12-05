@@ -140,7 +140,6 @@ class SingleSubst(FormatSwitchingBaseTable):
 		if self.Format == 1:
 			delta = rawTable["DeltaGlyphID"]
 			inputGIDS =  [ font.getGlyphID(name) for name in input ]
-			inputGIDS = map(doModulo, inputGIDS)
 			outGIDS = [ glyphID + delta for glyphID in inputGIDS ]
 			outGIDS = map(doModulo, outGIDS)
 			outNames = [ font.getGlyphName(glyphID) for glyphID in outGIDS ]
@@ -160,7 +159,7 @@ class SingleSubst(FormatSwitchingBaseTable):
 			mapping = self.mapping = {}
 		items = list(mapping.items())
 		getGlyphID = font.getGlyphID
-		gidItems = ((getGlyphID(a), getGlyphID(b)) for a,b in items)
+		gidItems = [(getGlyphID(a), getGlyphID(b)) for a,b in items]
 		sortableItems = sorted(zip(gidItems, items))
 
 		# figure out format
@@ -169,6 +168,10 @@ class SingleSubst(FormatSwitchingBaseTable):
 		for inID, outID in gidItems:
 			if delta is None:
 				delta = outID - inID
+				if delta < -32768:
+					delta += 65536
+				elif delta > 32767:
+					delta -= 65536
 			else:
 				if delta != outID - inID:
 					break
