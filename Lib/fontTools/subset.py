@@ -2016,6 +2016,8 @@ class Logger(object):
     self.last_time = new_time
 
   def glyphs(self, glyphs, font=None):
+    if not self.verbose:
+      return
     self("Names: ", sorted(glyphs))
     if font:
       reverseGlyphMap = font.getReverseGlyphMap()
