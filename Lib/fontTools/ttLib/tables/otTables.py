@@ -62,7 +62,11 @@ class Coverage(FormatSwitchingBaseTable):
 				try:
 					endID = font.getGlyphID(end, requireReal=True) + 1
 				except KeyError:
-					warnings.warn("Coverage table has end glyph ID out of range: %s." % end)
+					# Apparently some tools use 65535 to "match all" the range
+					if end != 'glyph65535':
+						warnings.warn("Coverage table has end glyph ID out of range: %s." % end)
+					# NOTE: We clobber out-of-range things here.  There are legit uses for those,
+					# but none that we have seen in the wild.
 					endID = len(glyphOrder)
 				glyphs.extend(glyphOrder[glyphID] for glyphID in range(startID, endID))
 		else:
@@ -224,6 +228,8 @@ class ClassDef(FormatSwitchingBaseTable):
 			endID = startID + len(classList)
 			if endID > len(glyphOrder):
 				warnings.warn("ClassDef table has entries for out of range glyph IDs: %s,%s." % (start, len(classList)))
+				# NOTE: We clobber out-of-range things here.  There are legit uses for those,
+				# but none that we have seen in the wild.
 				endID = len(glyphOrder)
 
 			for glyphID, cls in zip(range(startID, endID), classList):
@@ -243,7 +249,11 @@ class ClassDef(FormatSwitchingBaseTable):
 				try:
 					endID = font.getGlyphID(end, requireReal=True)
 				except KeyError:
-					warnings.warn("ClassDef table has end glyph ID out of range: %s." % end)
+					# Apparently some tools use 65535 to "match all" the range
+					if end != 'glyph65535':
+						warnings.warn("ClassDef table has end glyph ID out of range: %s." % end)
+					# NOTE: We clobber out-of-range things here.  There are legit uses for those,
+					# but none that we have seen in the wild.
 					endID = len(glyphOrder)
 				for glyphID in range(startID, endID):
 					classDefs[glyphOrder[glyphID]] = cls
