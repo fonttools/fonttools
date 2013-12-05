@@ -110,7 +110,7 @@ class TTFont(object):
 		supported. Asking for a glyph ID with a glyph name or GID that is not in
 		the font will return a virtual GID.   This is valid for GSUB and cmap
 		tables. For SING glyphlets, the cmap table is used to specify Unicode
-		values for virtual GI's used in GSUB/GPOS rules. If the gid Nis requested
+		values for virtual GI's used in GSUB/GPOS rules. If the gid N is requested
 		and does not exist in the font, or the glyphname has the form glyphN
 		and does not exist in the font, then N is used as the virtual GID.
 		Else, the first virtual GID is assigned as 0x1000 -1; for subsequent new
