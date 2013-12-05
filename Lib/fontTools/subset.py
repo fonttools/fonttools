@@ -1891,10 +1891,13 @@ class Subsetter(object):
 
   def _closure_glyphs(self, font):
 
+    realGlyphs = set(font.getGlyphOrder())
+
     self.glyphs = self.glyphs_requested.copy()
 
     if 'cmap' in font:
       font['cmap'].closure_glyphs(self)
+      self.glyphs.intersection_update(realGlyphs)
     self.glyphs_cmaped = self.glyphs
 
     if self.options.notdef_glyph:
@@ -1906,7 +1909,7 @@ class Subsetter(object):
         self.log("Added .notdef to subset")
     if self.options.recommended_glyphs:
       if 'glyf' in font:
-        for i in range(4):
+        for i in min(range(4), len(font.getGlyphOrder())):
           self.glyphs.add(font.getGlyphName(i))
         self.log("Added first four glyphs to subset")
 
@@ -1915,6 +1918,7 @@ class Subsetter(object):
                 len(self.glyphs))
       self.log.glyphs(self.glyphs, font=font)
       font['GSUB'].closure_glyphs(self)
+      self.glyphs.intersection_update(realGlyphs)
       self.log("Closed  glyph list over 'GSUB': %d glyphs after" %
                 len(self.glyphs))
       self.log.glyphs(self.glyphs, font=font)
@@ -1926,6 +1930,7 @@ class Subsetter(object):
                 len(self.glyphs))
       self.log.glyphs(self.glyphs, font=font)
       font['glyf'].closure_glyphs(self)
+      self.glyphs.intersection_update(realGlyphs)
       self.log("Closed  glyph list over 'glyf': %d glyphs after" %
                 len(self.glyphs))
       self.log.glyphs(self.glyphs, font=font)
