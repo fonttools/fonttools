@@ -100,7 +100,7 @@ def remap(self, class_map):
 
 @_add_method(otTables.SingleSubst)
 def closure_glyphs(self, s, cur_glyphs=None):
-  if cur_glyphs == None: cur_glyphs = s.glyphs
+  if cur_glyphs is None: cur_glyphs = s.glyphs
   if self.Format in [1, 2]:
     s.glyphs.update(v for g,v in self.mapping.items() if g in cur_glyphs)
   else:
@@ -117,7 +117,7 @@ def subset_glyphs(self, s):
 
 @_add_method(otTables.MultipleSubst)
 def closure_glyphs(self, s, cur_glyphs=None):
-  if cur_glyphs == None: cur_glyphs = s.glyphs
+  if cur_glyphs is None: cur_glyphs = s.glyphs
   if self.Format == 1:
     indices = self.Coverage.intersect(cur_glyphs)
     _set_update(s.glyphs, *(self.Sequence[i].Substitute for i in indices))
@@ -141,7 +141,7 @@ def subset_glyphs(self, s):
 
 @_add_method(otTables.AlternateSubst)
 def closure_glyphs(self, s, cur_glyphs=None):
-  if cur_glyphs == None: cur_glyphs = s.glyphs
+  if cur_glyphs is None: cur_glyphs = s.glyphs
   if self.Format == 1:
     _set_update(s.glyphs, *(vlist for g,vlist in self.alternates.items()
                             if g in cur_glyphs))
@@ -161,7 +161,7 @@ def subset_glyphs(self, s):
 
 @_add_method(otTables.LigatureSubst)
 def closure_glyphs(self, s, cur_glyphs=None):
-  if cur_glyphs == None: cur_glyphs = s.glyphs
+  if cur_glyphs is None: cur_glyphs = s.glyphs
   if self.Format == 1:
     _set_update(s.glyphs, *([seq.LigGlyph for seq in seqs
                              if all(c in s.glyphs for c in seq.Component)]
@@ -186,7 +186,7 @@ def subset_glyphs(self, s):
 
 @_add_method(otTables.ReverseChainSingleSubst)
 def closure_glyphs(self, s, cur_glyphs=None):
-  if cur_glyphs == None: cur_glyphs = s.glyphs
+  if cur_glyphs is None: cur_glyphs = s.glyphs
   if self.Format == 1:
     indices = self.Coverage.intersect(cur_glyphs)
     if(not indices or
@@ -573,7 +573,7 @@ def __classify_context(self):
 @_add_method(otTables.ContextSubst,
              otTables.ChainContextSubst)
 def closure_glyphs(self, s, cur_glyphs=None):
-  if cur_glyphs == None: cur_glyphs = s.glyphs
+  if cur_glyphs is None: cur_glyphs = s.glyphs
   c = self.__classify_context()
 
   indices = c.Coverage(self).intersect(s.glyphs)
@@ -692,7 +692,7 @@ def subset_glyphs(self, s):
     # Delete, but not renumber, unreachable rulesets.
     indices = getattr(self, c.ClassDef).intersect(self.Coverage.glyphs)
     rss = [rss if i in indices else None for i,rss in enumerate(rss)]
-    while rss and rss[-1] == None:
+    while rss and rss[-1] is None:
       del rss[-1]
 
     for rs in rss:
@@ -988,7 +988,10 @@ def collect_features(self):
 @_add_method(ttLib.getTableClass('GSUB'))
 def closure_glyphs(self, s):
   s.table = self.table
-  feature_indices = self.table.ScriptList.collect_features()
+  if self.table.ScriptList:
+    feature_indices = self.table.ScriptList.collect_features()
+  else:
+    feature_indices = []
   if self.table.FeatureList:
     lookup_indices = self.table.FeatureList.collect_lookups(feature_indices)
   else:
@@ -1027,13 +1030,17 @@ def subset_lookups(self, lookup_indices):
     feature_indices = self.table.FeatureList.subset_lookups(lookup_indices)
   else:
     feature_indices = []
-  self.table.ScriptList.subset_features(feature_indices)
+  if self.table.ScriptList:
+    self.table.ScriptList.subset_features(feature_indices)
 
 @_add_method(ttLib.getTableClass('GSUB'),
              ttLib.getTableClass('GPOS'))
 def prune_lookups(self):
   "Remove unreferenced lookups"
-  feature_indices = self.table.ScriptList.collect_features()
+  if self.table.ScriptList:
+    feature_indices = self.table.ScriptList.collect_features()
+  else:
+    feature_indices = []
   if self.table.FeatureList:
     lookup_indices = self.table.FeatureList.collect_lookups(feature_indices)
   else:
@@ -1054,7 +1061,8 @@ def subset_feature_tags(self, feature_tags):
     self.table.FeatureList.subset_features(feature_indices)
   else:
     feature_indices = []
-  self.table.ScriptList.subset_features(feature_indices)
+  if self.table.ScriptList:
+    self.table.ScriptList.subset_features(feature_indices)
 
 @_add_method(ttLib.getTableClass('GSUB'),
              ttLib.getTableClass('GPOS'))
@@ -1797,7 +1805,7 @@ class Options(object):
         v = a[i+1:]
       k = k.replace('-', '_')
       if not hasattr(self, k):
-        if ignore_unknown == True or k in ignore_unknown:
+        if ignore_unknown is True or k in ignore_unknown:
           ret.append(orig_a)
           continue
         else:
@@ -1883,10 +1891,13 @@ class Subsetter(object):
 
   def _closure_glyphs(self, font):
 
+    realGlyphs = set(font.getGlyphOrder())
+
     self.glyphs = self.glyphs_requested.copy()
 
     if 'cmap' in font:
       font['cmap'].closure_glyphs(self)
+      self.glyphs.intersection_update(realGlyphs)
     self.glyphs_cmaped = self.glyphs
 
     if self.options.notdef_glyph:
@@ -1898,7 +1909,7 @@ class Subsetter(object):
         self.log("Added .notdef to subset")
     if self.options.recommended_glyphs:
       if 'glyf' in font:
-        for i in range(4):
+        for i in min(range(4), len(font.getGlyphOrder())):
           self.glyphs.add(font.getGlyphName(i))
         self.log("Added first four glyphs to subset")
 
@@ -1907,6 +1918,7 @@ class Subsetter(object):
                 len(self.glyphs))
       self.log.glyphs(self.glyphs, font=font)
       font['GSUB'].closure_glyphs(self)
+      self.glyphs.intersection_update(realGlyphs)
       self.log("Closed  glyph list over 'GSUB': %d glyphs after" %
                 len(self.glyphs))
       self.log.glyphs(self.glyphs, font=font)
@@ -1918,6 +1930,7 @@ class Subsetter(object):
                 len(self.glyphs))
       self.log.glyphs(self.glyphs, font=font)
       font['glyf'].closure_glyphs(self)
+      self.glyphs.intersection_update(realGlyphs)
       self.log("Closed  glyph list over 'glyf': %d glyphs after" %
                 len(self.glyphs))
       self.log.glyphs(self.glyphs, font=font)
@@ -1927,6 +1940,9 @@ class Subsetter(object):
     self.glyphs_all = self.glyphs.copy()
 
     self.log("Retaining %d glyphs: " % len(self.glyphs_all))
+
+    del self.glyphs
+
 
   def _subset_glyphs(self, font):
     for tag in font.keys():
@@ -1939,7 +1955,7 @@ class Subsetter(object):
         table = font[tag]
         self.glyphs = self.glyphs_all
         retain = table.subset_glyphs(self)
-        self.glyphs = self.glyphs_all
+        del self.glyphs
         self.log.lapse("subset '%s'" % tag)
         if not retain:
           self.log(tag, "subsetted to empty; dropped")
@@ -2008,6 +2024,8 @@ class Logger(object):
     self.last_time = new_time
 
   def glyphs(self, glyphs, font=None):
+    if not self.verbose:
+      return
     self("Names: ", sorted(glyphs))
     if font:
       reverseGlyphMap = font.getReverseGlyphMap()
@@ -2029,12 +2047,14 @@ class Logger(object):
 
 def load_font(fontFile,
               options,
+              allowVID=False,
               checkChecksums=False,
               dontLoadGlyphNames=False):
 
   font = ttLib.TTFont(fontFile,
-                                checkChecksums=checkChecksums,
-                                recalcBBoxes=options.recalc_bounds)
+                      allowVID=allowVID,
+                      checkChecksums=checkChecksums,
+                      recalcBBoxes=options.recalc_bounds)
 
   # Hack:
   #
@@ -2116,7 +2136,7 @@ def main(args):
       elif g.startswith('glyph') and len(g) > 5:
         g = g[5:]
       try:
-        glyphs.append(font.getGlyphName(int(g), requireReal=1))
+        glyphs.append(font.getGlyphName(int(g), requireReal=True))
       except ValueError:
         raise Exception("Invalid glyph identifier: %s" % g)
       continue

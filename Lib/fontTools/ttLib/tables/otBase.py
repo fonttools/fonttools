@@ -373,7 +373,7 @@ class OTTableWriter(object):
 				continue
 
 			if appendExtensions:
-				assert extTables != None, "Program or XML editing error. Extension subtables cannot contain extensions subtables"
+				assert extTables is not None, "Program or XML editing error. Extension subtables cannot contain extensions subtables"
 				newDone = {}
 				item._gatherTables(extTables, None, newDone)
 

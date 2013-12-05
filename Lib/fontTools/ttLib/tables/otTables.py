@@ -35,6 +35,7 @@ class Coverage(FormatSwitchingBaseTable):
 	
 	def postRead(self, rawTable, font):
 		if self.Format == 1:
+			# TODO only allow glyphs that are valid?
 			self.glyphs = rawTable["GlyphArray"]
 		elif self.Format == 2:
 			glyphs = self.glyphs = []
@@ -54,20 +55,20 @@ class Coverage(FormatSwitchingBaseTable):
 				start = r.Start
 				end = r.End
 				try:
-					startID = font.getGlyphID(start, requireReal=1)
+					startID = font.getGlyphID(start, requireReal=True)
 				except KeyError:
 					warnings.warn("Coverage table has start glyph ID out of range: %s." % start)
 					continue
 				try:
-					endID = font.getGlyphID(end, requireReal=1)
+					endID = font.getGlyphID(end, requireReal=True) + 1
 				except KeyError:
-					warnings.warn("Coverage table has end glyph ID out of range: %s." % end)
+					# Apparently some tools use 65535 to "match all" the range
+					if end != 'glyph65535':
+						warnings.warn("Coverage table has end glyph ID out of range: %s." % end)
+					# NOTE: We clobber out-of-range things here.  There are legit uses for those,
+					# but none that we have seen in the wild.
 					endID = len(glyphOrder)
-				glyphs.append(start)
-				rangeList = [glyphOrder[glyphID] for glyphID in range(startID + 1, endID) ]
-				glyphs += rangeList
-				if start != end and endID < len(glyphOrder):
-					glyphs.append(end)
+				glyphs.extend(glyphOrder[glyphID] for glyphID in range(startID, endID))
 		else:
 			assert 0, "unknown format: %s" % self.Format
 	
@@ -143,7 +144,6 @@ class SingleSubst(FormatSwitchingBaseTable):
 		if self.Format == 1:
 			delta = rawTable["DeltaGlyphID"]
 			inputGIDS =  [ font.getGlyphID(name) for name in input ]
-			inputGIDS = map(doModulo, inputGIDS)
 			outGIDS = [ glyphID + delta for glyphID in inputGIDS ]
 			outGIDS = map(doModulo, outGIDS)
 			outNames = [ font.getGlyphName(glyphID) for glyphID in outGIDS ]
@@ -163,7 +163,7 @@ class SingleSubst(FormatSwitchingBaseTable):
 			mapping = self.mapping = {}
 		items = list(mapping.items())
 		getGlyphID = font.getGlyphID
-		gidItems = [(getGlyphID(item[0]), getGlyphID(item[1])) for item in items]
+		gidItems = [(getGlyphID(a), getGlyphID(b)) for a,b in items]
 		sortableItems = sorted(zip(gidItems, items))
 
 		# figure out format
@@ -172,6 +172,10 @@ class SingleSubst(FormatSwitchingBaseTable):
 		for inID, outID in gidItems:
 			if delta is None:
 				delta = outID - inID
+				if delta < -32768:
+					delta += 65536
+				elif delta > 32767:
+					delta -= 65536
 			else:
 				if delta != outID - inID:
 					break
@@ -211,17 +215,25 @@ class ClassDef(FormatSwitchingBaseTable):
 	
 	def postRead(self, rawTable, font):
 		classDefs = {}
-		getGlyphName = font.getGlyphName
+		glyphOrder = font.getGlyphOrder()
 
 		if self.Format == 1:
 			start = rawTable["StartGlyph"]
 			classList = rawTable["ClassValueArray"]
-			lenList = len(classList)
-			glyphID = font.getGlyphID(start)
-			gidList = list(range(glyphID, glyphID + len(classList)))
-			keyList = [getGlyphName(glyphID) for glyphID in gidList]
+			try:
+				startID = font.getGlyphID(start, requireReal=True)
+			except KeyError:
+				warnings.warn("ClassDef table has start glyph ID out of range: %s." % start)
+				startID = len(glyphOrder)
+			endID = startID + len(classList)
+			if endID > len(glyphOrder):
+				warnings.warn("ClassDef table has entries for out of range glyph IDs: %s,%s." % (start, len(classList)))
+				# NOTE: We clobber out-of-range things here.  There are legit uses for those,
+				# but none that we have seen in the wild.
+				endID = len(glyphOrder)
 
-			list(map(operator.setitem, [classDefs]*lenList, keyList, classList))
+			for glyphID, cls in zip(range(startID, endID), classList):
+				classDefs[glyphOrder[glyphID]] = cls
 
 		elif self.Format == 2:
 			records = rawTable["ClassRangeRecord"]
@@ -229,12 +241,22 @@ class ClassDef(FormatSwitchingBaseTable):
 				start = rec.Start
 				end = rec.End
 				cls = rec.Class
-				classDefs[start] = cls
-				glyphIDs = list(range(font.getGlyphID(start) + 1, font.getGlyphID(end)))
-				lenList = len(glyphIDs)
-				keyList = [getGlyphName(glyphID) for glyphID in glyphIDs]
-				list(map(operator.setitem,  [classDefs]*lenList, keyList, [cls]*lenList))
-				classDefs[end] = cls
+				try:
+					startID = font.getGlyphID(start, requireReal=True)
+				except KeyError:
+					warnings.warn("ClassDef table has start glyph ID out of range: %s." % start)
+					continue
+				try:
+					endID = font.getGlyphID(end, requireReal=True)
+				except KeyError:
+					# Apparently some tools use 65535 to "match all" the range
+					if end != 'glyph65535':
+						warnings.warn("ClassDef table has end glyph ID out of range: %s." % end)
+					# NOTE: We clobber out-of-range things here.  There are legit uses for those,
+					# but none that we have seen in the wild.
+					endID = len(glyphOrder)
+				for glyphID in range(startID, endID):
+					classDefs[glyphOrder[glyphID]] = cls
 		else:
 			assert 0, "unknown format: %s" % self.Format
 		self.classDefs = classDefs
@@ -494,14 +516,14 @@ def fixLookupOverFlows(ttf, overflowRecord):
 					SubTable[0] and contents
 					...
 					SubTable[n] and contents
-	If the offset to a lookup overflowed (SubTableIndex == None)
+	If the offset to a lookup overflowed (SubTableIndex is None)
 		we must promote the *previous*	lookup to an Extension type.
 	If the offset from a lookup to subtable overflowed, then we must promote it 
 		to an Extension Lookup type.
 	"""
 	ok = 0
 	lookupIndex = overflowRecord.LookupListIndex
-	if (overflowRecord.SubTableIndex == None):
+	if (overflowRecord.SubTableIndex is None):
 		lookupIndex = lookupIndex - 1
 	if lookupIndex < 0:
 		return ok

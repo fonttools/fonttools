@@ -31,7 +31,7 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 		if sys.byteorder != "big":
 			sideBearings.byteswap()
 		if data:
-			sys.stderr.write("too much data for hmtx/vmtx table\n")
+			warnings.warn("too much 'hmtx'/'vmtx' table data")
 		self.metrics = {}
 		for i in range(numberOfMetrics):
 			glyphName = ttFont.getGlyphName(i)
