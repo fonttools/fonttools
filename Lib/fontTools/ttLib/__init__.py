@@ -70,8 +70,8 @@ class TTFont(object):
 	"""
 	
 	def __init__(self, file=None, res_name_or_index=None,
-			sfntVersion="\000\001\000\000", flavor=None, checkChecksums=0,
-			verbose=0, recalcBBoxes=1, allowVID=0, ignoreDecompileErrors=False,
+			sfntVersion="\000\001\000\000", flavor=None, checkChecksums=False,
+			verbose=False, recalcBBoxes=True, allowVID=False, ignoreDecompileErrors=False,
 			fontNumber=-1, lazy=True, quiet=False):
 		
 		"""The constructor can be called with a few different arguments.
@@ -172,7 +172,7 @@ class TTFont(object):
 		if self.reader is not None:
 			self.reader.close()
 	
-	def save(self, file, makeSuitcase=0, reorderTables=1):
+	def save(self, file, makeSuitcase=False, reorderTables=True):
 		"""Save the font to disk. Similarly to the constructor, 
 		the 'file' argument can be either a pathname or a writable
 		file object.
@@ -342,13 +342,13 @@ class TTFont(object):
 	
 	def has_key(self, tag):
 		if self.isLoaded(tag):
-			return 1
+			return True
 		elif self.reader and tag in self.reader:
-			return 1
+			return True
 		elif tag == "GlyphOrder":
-			return 1
+			return True
 		else:
-			return 0
+			return False
 	
 	__contains__ = has_key
 	
@@ -529,7 +529,7 @@ class TTFont(object):
 		from fontTools.misc import textTools
 		return textTools.caselessSort(self.getGlyphOrder())
 	
-	def getGlyphName(self, glyphID, requireReal=0):
+	def getGlyphName(self, glyphID, requireReal=False):
 		try:
 			return self.getGlyphOrder()[glyphID]
 		except IndexError:
@@ -548,7 +548,7 @@ class TTFont(object):
 					self.VIDDict[glyphID] = glyphName
 				return glyphName
 
-	def getGlyphID(self, glyphName, requireReal = 0):
+	def getGlyphID(self, glyphName, requireReal=False):
 		if not hasattr(self, "_reverseGlyphOrderDict"):
 			self._buildReverseGlyphOrderDict()
 		glyphOrder = self.getGlyphOrder()
@@ -584,7 +584,7 @@ class TTFont(object):
 			return self.getGlyphID(glyphName)
 		return glyphID
 
-	def getReverseGlyphMap(self, rebuild=0):
+	def getReverseGlyphMap(self, rebuild=False):
 		if rebuild or not hasattr(self, "_reverseGlyphOrderDict"):
 			self._buildReverseGlyphOrderDict()
 		return self._reverseGlyphOrderDict
@@ -629,7 +629,7 @@ class TTFont(object):
 		else:
 			raise KeyError(tag)
 	
-	def getGlyphSet(self, preferCFF=1):
+	def getGlyphSet(self, preferCFF=True):
 		"""Return a generic GlyphSet, which is a dict-like object
 		mapping glyph names to glyph objects. The returned glyph objects
 		have a .draw() method that supports the Pen protocol, and will
@@ -933,7 +933,7 @@ def sortedTagList(tagList, tableOrder=None):
 	return orderedTables
 
 
-def reorderFontTables(inFile, outFile, tableOrder=None, checkChecksums=0):
+def reorderFontTables(inFile, outFile, tableOrder=None, checkChecksums=False):
 	"""Rewrite a font file, ordering the tables as recommended by the
 	OpenType specification 1.4.
 	"""

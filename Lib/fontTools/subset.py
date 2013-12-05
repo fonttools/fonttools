@@ -2124,7 +2124,7 @@ def main(args):
       elif g.startswith('glyph') and len(g) > 5:
         g = g[5:]
       try:
-        glyphs.append(font.getGlyphName(int(g), requireReal=1))
+        glyphs.append(font.getGlyphName(int(g), requireReal=True))
       except ValueError:
         raise Exception("Invalid glyph identifier: %s" % g)
       continue

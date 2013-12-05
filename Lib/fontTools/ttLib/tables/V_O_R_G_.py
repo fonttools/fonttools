@@ -46,7 +46,7 @@ class table_V_O_R_G_(DefaultTable.DefaultTable):
 		try:
 			gids = map(operator.getitem, [nameMap]*lenRecords, names)
 		except KeyError:
-			nameMap = ttFont.getReverseGlyphMap(rebuild=1)
+			nameMap = ttFont.getReverseGlyphMap(rebuild=True)
 			gids = map(operator.getitem, [nameMap]*lenRecords, names)
 		vOriginTable = list(zip(gids, vorgs))
 		self.numVertOriginYMetrics = lenRecords
