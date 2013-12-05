@@ -1936,6 +1936,9 @@ class Subsetter(object):
 
     self.log("Retaining %d glyphs: " % len(self.glyphs_all))
 
+    del self.glyphs
+
+
   def _subset_glyphs(self, font):
     for tag in font.keys():
       if tag == 'GlyphOrder': continue
@@ -1947,7 +1950,7 @@ class Subsetter(object):
         table = font[tag]
         self.glyphs = self.glyphs_all
         retain = table.subset_glyphs(self)
-        self.glyphs = self.glyphs_all
+        del self.glyphs
         self.log.lapse("subset '%s'" % tag)
         if not retain:
           self.log(tag, "subsetted to empty; dropped")
