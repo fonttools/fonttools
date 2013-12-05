@@ -35,6 +35,7 @@ class Coverage(FormatSwitchingBaseTable):
 	
 	def postRead(self, rawTable, font):
 		if self.Format == 1:
+			# TODO only allow glyphs that are valid?
 			self.glyphs = rawTable["GlyphArray"]
 		elif self.Format == 2:
 			glyphs = self.glyphs = []
@@ -59,14 +60,11 @@ class Coverage(FormatSwitchingBaseTable):
 					warnings.warn("Coverage table has start glyph ID out of range: %s." % start)
 					continue
 				try:
-					endID = font.getGlyphID(end, requireReal=True)
+					endID = font.getGlyphID(end, requireReal=True) + 1
 				except KeyError:
 					warnings.warn("Coverage table has end glyph ID out of range: %s." % end)
 					endID = len(glyphOrder)
-				glyphs.append(start)
-				glyphs.extend(glyphOrder[glyphID] for glyphID in range(startID + 1, endID))
-				if start != end and endID < len(glyphOrder):
-					glyphs.append(end)
+				glyphs.extend(glyphOrder[glyphID] for glyphID in range(startID, endID))
 		else:
 			assert 0, "unknown format: %s" % self.Format
 	
