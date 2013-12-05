@@ -64,8 +64,7 @@ class Coverage(FormatSwitchingBaseTable):
 					warnings.warn("Coverage table has end glyph ID out of range: %s." % end)
 					endID = len(glyphOrder)
 				glyphs.append(start)
-				rangeList = [glyphOrder[glyphID] for glyphID in range(startID + 1, endID) ]
-				glyphs += rangeList
+				glyphs.extend(glyphOrder[glyphID] for glyphID in range(startID + 1, endID))
 				if start != end and endID < len(glyphOrder):
 					glyphs.append(end)
 		else:
@@ -211,17 +210,23 @@ class ClassDef(FormatSwitchingBaseTable):
 	
 	def postRead(self, rawTable, font):
 		classDefs = {}
-		getGlyphName = font.getGlyphName
+		glyphOrder = font.getGlyphOrder()
 
 		if self.Format == 1:
 			start = rawTable["StartGlyph"]
 			classList = rawTable["ClassValueArray"]
-			lenList = len(classList)
-			glyphID = font.getGlyphID(start)
-			gidList = list(range(glyphID, glyphID + len(classList)))
-			keyList = [getGlyphName(glyphID) for glyphID in gidList]
+			try:
+				startID = font.getGlyphID(start, requireReal=True)
+			except KeyError:
+				warnings.warn("ClassDef table has start glyph ID out of range: %s." % start)
+				startID = len(glyphOrder)
+			endID = startID + len(classList)
+			if endID > len(glyphOrder):
+				warnings.warn("ClassDef table has entries for out of range glyph IDs: %s,%s." % (start, len(classList)))
+				endID = len(glyphOrder)
 
-			list(map(operator.setitem, [classDefs]*lenList, keyList, classList))
+			for glyphID, cls in zip(range(startID, endID), classList):
+				classDefs[glyphOrder[glyphID]] = cls
 
 		elif self.Format == 2:
 			records = rawTable["ClassRangeRecord"]
@@ -229,12 +234,18 @@ class ClassDef(FormatSwitchingBaseTable):
 				start = rec.Start
 				end = rec.End
 				cls = rec.Class
-				classDefs[start] = cls
-				glyphIDs = list(range(font.getGlyphID(start) + 1, font.getGlyphID(end)))
-				lenList = len(glyphIDs)
-				keyList = [getGlyphName(glyphID) for glyphID in glyphIDs]
-				list(map(operator.setitem,  [classDefs]*lenList, keyList, [cls]*lenList))
-				classDefs[end] = cls
+				try:
+					startID = font.getGlyphID(start, requireReal=True)
+				except KeyError:
+					warnings.warn("ClassDef table has start glyph ID out of range: %s." % start)
+					continue
+				try:
+					endID = font.getGlyphID(end, requireReal=True)
+				except KeyError:
+					warnings.warn("ClassDef table has end glyph ID out of range: %s." % end)
+					endID = len(glyphOrder)
+				for glyphID in range(startID, endID):
+					classDefs[glyphOrder[glyphID]] = cls
 		else:
 			assert 0, "unknown format: %s" % self.Format
 		self.classDefs = classDefs
