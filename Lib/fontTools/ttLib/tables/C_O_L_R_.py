@@ -54,7 +54,7 @@ class table_C_O_L_R_(DefaultTable.DefaultTable):
 
 	def compile(self, ttFont):
 		ordered = []
-		ttFont.getReverseGlyphMap(rebuild=1)
+		ttFont.getReverseGlyphMap(rebuild=True)
 		glyphNames = self.ColorLayers.keys()
 		for glyphName in glyphNames:
 			try:

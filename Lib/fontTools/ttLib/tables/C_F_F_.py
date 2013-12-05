@@ -9,7 +9,7 @@ class table_C_F_F_(DefaultTable.DefaultTable):
 	def __init__(self, tag):
 		DefaultTable.DefaultTable.__init__(self, tag)
 		self.cff = cffLib.CFFFontSet()
-		self._gaveGlyphOrder = 0
+		self._gaveGlyphOrder = False
 	
 	def decompile(self, data, otFont):
 		self.cff.decompile(StringIO(data), otFont)
@@ -22,15 +22,15 @@ class table_C_F_F_(DefaultTable.DefaultTable):
 	
 	def haveGlyphNames(self):
 		if hasattr(self.cff[self.cff.fontNames[0]], "ROS"):
-			return 0  # CID-keyed font
+			return False  # CID-keyed font
 		else:
-			return 1
+			return True
 	
 	def getGlyphOrder(self):
 		if self._gaveGlyphOrder:
 			from fontTools import ttLib
 			raise ttLib.TTLibError("illegal use of getGlyphOrder()")
-		self._gaveGlyphOrder = 1
+		self._gaveGlyphOrder = True
 		return self.cff[self.cff.fontNames[0]].getGlyphOrder()
 	
 	def setGlyphOrder(self, glyphOrder):

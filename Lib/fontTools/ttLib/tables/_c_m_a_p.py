@@ -387,7 +387,7 @@ class cmap_format_2(CmapSubtable):
 		try:
 			gids = list(map(operator.getitem, [nameMap]*lenCharCodes, names))
 		except KeyError:
-			nameMap = ttFont.getReverseGlyphMap(rebuild=1)
+			nameMap = ttFont.getReverseGlyphMap(rebuild=True)
 			try:
 				gids = list(map(operator.getitem, [nameMap]*lenCharCodes, names))
 			except KeyError:
@@ -728,7 +728,7 @@ class cmap_format_4(CmapSubtable):
 			try:
 				gids = list(map(operator.getitem, [nameMap]*lenCharCodes, names))
 			except KeyError:
-				nameMap = ttFont.getReverseGlyphMap(rebuild=1)
+				nameMap = ttFont.getReverseGlyphMap(rebuild=True)
 				try:
 					gids = list(map(operator.getitem, [nameMap]*lenCharCodes, names))
 				except KeyError:
@@ -954,7 +954,7 @@ class cmap_format_12_or_13(CmapSubtable):
 		try:
 			gids = list(map(operator.getitem, [nameMap]*lenCharCodes, names))
 		except KeyError:
-			nameMap = ttFont.getReverseGlyphMap(rebuild=1)
+			nameMap = ttFont.getReverseGlyphMap(rebuild=True)
 			try:
 				gids = list(map(operator.getitem, [nameMap]*lenCharCodes, names))
 			except KeyError:

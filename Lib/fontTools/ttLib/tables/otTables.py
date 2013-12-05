@@ -54,12 +54,12 @@ class Coverage(FormatSwitchingBaseTable):
 				start = r.Start
 				end = r.End
 				try:
-					startID = font.getGlyphID(start, requireReal=1)
+					startID = font.getGlyphID(start, requireReal=True)
 				except KeyError:
 					warnings.warn("Coverage table has start glyph ID out of range: %s." % start)
 					continue
 				try:
-					endID = font.getGlyphID(end, requireReal=1)
+					endID = font.getGlyphID(end, requireReal=True)
 				except KeyError:
 					warnings.warn("Coverage table has end glyph ID out of range: %s." % end)
 					endID = len(glyphOrder)

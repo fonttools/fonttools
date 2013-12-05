@@ -214,7 +214,7 @@ class Glyph(object):
 			return
 		self.data = data
 	
-	def compact(self, glyfTable, recalcBBoxes=1):
+	def compact(self, glyfTable, recalcBBoxes=True):
 		data = self.compile(glyfTable, recalcBBoxes)
 		self.__dict__.clear()
 		self.data = data
@@ -234,7 +234,7 @@ class Glyph(object):
 		else:
 			self.decompileCoordinates(data)
 	
-	def compile(self, glyfTable, recalcBBoxes=1):
+	def compile(self, glyfTable, recalcBBoxes=True):
 		if hasattr(self, "data"):
 			return self.data
 		if self.numberOfContours == 0:

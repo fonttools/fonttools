@@ -93,8 +93,8 @@ def sectRect(rect1, rect2):
     xMin, yMin, xMax, yMax = (max(xMin1, xMin2), max(yMin1, yMin2),
                               min(xMax1, xMax2), min(yMax1, yMax2))
     if xMin >= xMax or yMin >= yMax:
-        return 0, (0, 0, 0, 0)
-    return 1, (xMin, yMin, xMax, yMax)
+        return False, (0, 0, 0, 0)
+    return True, (xMin, yMin, xMax, yMax)
 
 def unionRect(rect1, rect2):
     """Return the smallest rectangle in which both input rectangles are fully

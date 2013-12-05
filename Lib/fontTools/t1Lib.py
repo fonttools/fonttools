@@ -8,7 +8,7 @@ read(path)
 	to by 'path'. 
 	Raises an error when the file does not contain valid Type 1 data.
 
-write(path, data, kind='OTHER', dohex=0)
+write(path, data, kind='OTHER', dohex=False)
 	writes raw Type 1 data to the file pointed to by 'path'. 
 	'kind' can be one of 'LWFN', 'PFB' or 'OTHER'; it defaults to 'OTHER'.
 	'dohex' is a flag which determines whether the eexec encrypted
@@ -100,7 +100,7 @@ class T1Font(object):
 
 # low level T1 data read and write functions
 
-def read(path, onlyHeader=0):
+def read(path, onlyHeader=False):
 	"""reads any Type 1 font file, returns raw data"""
 	normpath = path.lower()
 	creator, typ = getMacCreatorAndType(path)
@@ -111,7 +111,7 @@ def read(path, onlyHeader=0):
 	else:
 		return readOther(path), 'OTHER'
 
-def write(path, data, kind='OTHER', dohex=0):
+def write(path, data, kind='OTHER', dohex=False):
 	assertType1(data)
 	kind = kind.upper()
 	try:
@@ -141,7 +141,7 @@ LWFNCHUNKSIZE = 2000
 HEXLINELENGTH = 80
 
 
-def readLWFN(path, onlyHeader=0):
+def readLWFN(path, onlyHeader=False):
 	"""reads an LWFN font file, returns raw data"""
 	resRef = Res.FSOpenResFile(path, 1)  # read-only
 	try:
@@ -173,7 +173,7 @@ def readLWFN(path, onlyHeader=0):
 	assertType1(data)
 	return data
 
-def readPFB(path, onlyHeader=0):
+def readPFB(path, onlyHeader=False):
 	"""reads a PFB font file, returns raw data"""
 	f = open(path, "rb")
 	data = []
@@ -253,7 +253,7 @@ def writePFB(path, data):
 	finally:
 		f.close()
 
-def writeOther(path, data, dohex = 0):
+def writeOther(path, data, dohex=False):
 	chunks = findEncryptedChunks(data)
 	f = open(path, "wb")
 	try:
