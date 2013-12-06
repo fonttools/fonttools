@@ -36,8 +36,6 @@ class table__h_e_a_d(DefaultTable.DefaultTable):
 		if rest:
 			# this is quite illegal, but there seem to be fonts out there that do this
 			assert rest == "\0\0"
-		self.unitsPerEm = self.unitsPerEm
-		self.flags = self.flags
 		self.strings2dates()
 	
 	def compile(self, ttFont):
