@@ -4,6 +4,7 @@ from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval, num2binary, binary2num
 from . import DefaultTable
 import time
+import calendar
 
 
 headFormat = """
@@ -67,7 +68,7 @@ class table__h_e_a_d(DefaultTable.DefaultTable):
 	def fromXML(self, name, attrs, content, ttFont):
 		value = attrs["value"]
 		if name in ("created", "modified"):
-			value = parse_date(value) - mac_epoch_diff
+			value = calendar.timegm(time.strptime(value)) - mac_epoch_diff
 		elif name in ("macStyle", "flags"):
 			value = binary2num(value)
 		else:
@@ -92,14 +93,3 @@ mac_epoch_diff = calc_mac_epoch_diff()
 _months = ['   ', 'jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug',
 		'sep', 'oct', 'nov', 'dec']
 _weekdays = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
-
-def parse_date(datestring):
-	datestring = datestring.lower()
-	weekday, month, day, tim, year = datestring.split()
-	weekday = _weekdays.index(weekday)
-	month = _months.index(month)
-	year = int(year)
-	day = int(day)
-	hour, minute, second = [int(item) for item in tim.split(":")]
-	t = (year, month, day, hour, minute, second, weekday, 0, 0)
-	return int(time.mktime(t) - time.timezone)
