@@ -14,8 +14,8 @@ headFormat = """
 		magicNumber:        I
 		flags:              H
 		unitsPerEm:         H
-		created:            8s
-		modified:           8s
+		created:            Q
+		modified:           Q
 		xMin:               h
 		yMin:               h
 		xMax:               h
@@ -36,22 +36,11 @@ class table__h_e_a_d(DefaultTable.DefaultTable):
 		if rest:
 			# this is quite illegal, but there seem to be fonts out there that do this
 			assert rest == "\0\0"
-		self.strings2dates()
 	
 	def compile(self, ttFont):
 		self.modified = int(time.time() - mac_epoch_diff)
-		self.dates2strings()
 		data = sstruct.pack(headFormat, self)
-		self.strings2dates()
 		return data
-	
-	def strings2dates(self):
-		self.created = bin2long(self.created)
-		self.modified = bin2long(self.modified)
-	
-	def dates2strings(self):
-		self.created = long2bin(self.created)
-		self.modified = long2bin(self.modified)
 	
 	def toXML(self, writer, ttFont):
 		writer.comment("Most of this table will be recalculated by the compiler")
@@ -114,22 +103,3 @@ def parse_date(datestring):
 	hour, minute, second = [int(item) for item in tim.split(":")]
 	t = (year, month, day, hour, minute, second, weekday, 0, 0)
 	return int(time.mktime(t) - time.timezone)
-
-
-def bin2long(data):
-	# thanks </F>!
-	v = 0
-	for i in map(byteord, data):
-	    v = v<<8 | i
-	return v
-
-def long2bin(v, bytes=8):
-	mask = int("FF" * bytes, 16)
-	data = b""
-	while v:
-		data = bytechr(v & 0xff) + data
-		v = (v >> 8) & mask
-	data = (bytes - len(data)) * b"\0" + data
-	assert len(data) == 8, "long too long"
-	return data
-
