@@ -76,18 +76,8 @@ class table__h_e_a_d(DefaultTable.DefaultTable):
 		setattr(self, name, value)
 
 
-def calc_mac_epoch_diff():
-	"""calculate the difference between the original Mac epoch (1904)
-	to the epoch on this machine.
-	"""
-	safe_epoch_t = (1972, 1, 1, 0, 0, 0, 0, 0, 0)
-	safe_epoch = time.mktime(safe_epoch_t) - time.timezone
-	# This assert fails in certain time zones, with certain daylight settings
-	#assert time.gmtime(safe_epoch)[:6] == safe_epoch_t[:6]
-	seconds1904to1972 = 60 * 60 * 24 * (365 * (1972-1904) + 17) # thanks, Laurence!
-	return int(safe_epoch - seconds1904to1972)
-
-mac_epoch_diff = calc_mac_epoch_diff()
+# Difference between the original Mac epoch (1904) to the epoch on this machine.
+mac_epoch_diff = calendar.timegm((1904, 1, 1, 0, 0, 0, 0, 0, 0))
 
 
 _months = ['   ', 'jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug',
