@@ -78,8 +78,3 @@ class table__h_e_a_d(DefaultTable.DefaultTable):
 
 # Difference between the original Mac epoch (1904) to the epoch on this machine.
 mac_epoch_diff = calendar.timegm((1904, 1, 1, 0, 0, 0, 0, 0, 0))
-
-
-_months = ['   ', 'jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug',
-		'sep', 'oct', 'nov', 'dec']
-_weekdays = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
