@@ -286,6 +286,8 @@ class OTTableWriter(object):
 		# only works after self._doneWriting() has been called
 		return hash(self.items)
 	
+	def __ne__(self, other):
+		return not self.__eq__(other)
 	def __eq__(self, other):
 		if type(self) != type(other):
 			raise TypeError("unordered types %s() < %s()", type(self), type(other))
@@ -673,6 +675,8 @@ class BaseTable(object):
 		else:
 			setattr(self, conv.name, value)
 	
+	def __ne__(self, other):
+		return not self.__eq__(other)
 	def __eq__(self, other):
 		if type(self) != type(other):
 			raise TypeError("unordered types %s() < %s()", type(self), type(other))
@@ -840,6 +844,8 @@ class ValueRecord(object):
 				value.fromXML(name2, attrs2, content2, font)
 			setattr(self, name, value)
 	
+	def __ne__(self, other):
+		return not self.__eq__(other)
 	def __eq__(self, other):
 		if type(self) != type(other):
 			raise TypeError("unordered types %s() < %s()", type(self), type(other))
