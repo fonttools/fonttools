@@ -1067,9 +1067,12 @@ def subset_feature_tags(self, feature_tags):
 @_add_method(ttLib.getTableClass('GSUB'),
              ttLib.getTableClass('GPOS'))
 def prune_pre_subset(self, options):
+  # Drop undesired features
   if '*' not in options.layout_features:
     self.subset_feature_tags(options.layout_features)
+  # Drop unreferenced lookups
   self.prune_lookups()
+  # Prune lookups themselves
   if self.table.LookupList:
     self.table.LookupList.prune_pre_subset(options);
   return True
@@ -1082,6 +1085,7 @@ def prune_post_subset(self, options):
     table.ScriptList = None
   if table.FeatureList and not table.FeatureList.FeatureRecord:
     table.FeatureList = None
+  # Prune lookups themselves
   if table.LookupList:
     table.LookupList.prune_post_subset(options);
     if not table.LookupList.Lookup:
