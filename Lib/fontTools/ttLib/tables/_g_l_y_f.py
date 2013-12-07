@@ -964,12 +964,11 @@ class GlyphCoordinates(object):
 		self._a = array.array("f", self._a)
 
 	def _checkFloat(self, p):
-		if not any(isinstance(v, float) for v in p):
-			return
-		p = [int(v) if int(v) == v else v for v in p]
-		if not any(isinstance(v, float) for v in p):
-			return
-		self._ensureFloat()
+		if any(isinstance(v, float) for v in p):
+			p = [int(v) if int(v) == v else v for v in p]
+			if any(isinstance(v, float) for v in p):
+				self._ensureFloat()
+		return p
 
 	@staticmethod
 	def zeros(count):
@@ -995,19 +994,19 @@ class GlyphCoordinates(object):
 			for j,i in enumerate(indices):
 				self[i] = v[j]
 			return
-		self._checkFloat(v)
+		v = self._checkFloat(v)
 		self._a[2*k],self._a[2*k+1] = v
 
 	def __repr__(self):
 		return 'GlyphCoordinates(['+','.join(str(c) for c in self)+'])'
 
 	def append(self, p):
-		self._checkFloat(p)
+		p = self._checkFloat(p)
 		self._a.extend(tuple(p))
 
 	def extend(self, iterable):
 		for p in iterable:
-			self._checkFloat(p)
+			p = self._checkFloat(p)
 			self._a.extend(p)
 
 	def relativeToAbsolute(self):
