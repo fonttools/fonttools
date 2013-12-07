@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 from fontTools.misc.py23 import *
 from fontTools.misc import eexec
-from psOperators import *
+from .psOperators import *
 import re
 import collections
 from string import whitespace
@@ -320,13 +320,13 @@ def unpack_item(item):
 
 def suckfont(data):
 	import re
-	m = re.search(r"/FontName\s+/([^ \t\n\r]+)\s+def", data)
+	m = re.search(br"/FontName\s+/([^ \t\n\r]+)\s+def", data)
 	if m:
 		fontName = m.group(1)
 	else:
 		fontName = None
 	interpreter = PSInterpreter()
-	interpreter.interpret("/Helvetica 4 dict dup /Encoding StandardEncoding put definefont pop")
+	interpreter.interpret(b"/Helvetica 4 dict dup /Encoding StandardEncoding put definefont pop")
 	interpreter.interpret(data)
 	fontdir = interpreter.dictstack[0]['FontDirectory'].value
 	if fontName in fontdir:
