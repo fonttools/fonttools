@@ -24,7 +24,7 @@ bitmap set:
 
 USHORT        size                     height and width in pixels
 USHORT        resolution               ?
-offsetRecord  offsetRecord[]  
+offsetRecord  offsetRecord[]
 (Variable)    storage for bitmaps
 
 
@@ -64,7 +64,7 @@ class table__s_b_i_x(DefaultTable.DefaultTable):
 		self.numSets = 0
 		self.bitmapSets = {}
 		self.bitmapSetOffsets = []
-	
+
 	def decompile(self, data, ttFont):
 		# read table header
 		sstruct.unpack(sbixHeaderFormat, data[ : sbixHeaderFormatSize], self)
@@ -76,7 +76,7 @@ class table__s_b_i_x(DefaultTable.DefaultTable):
 				data[myOffset : myOffset+sbixBitmapSetOffsetFormatSize], \
 				offsetEntry)
 			self.bitmapSetOffsets.append(offsetEntry.offset)
-		
+
 		# decompile BitmapSets
 		for i in range(self.numSets-1, -1, -1):
 			myBitmapSet = BitmapSet(rawdata=data[self.bitmapSetOffsets[i]:])
@@ -88,18 +88,18 @@ class table__s_b_i_x(DefaultTable.DefaultTable):
 				from fontTools import ttLib
 				raise(ttLib.TTLibError, "Pixel 'size' must be unique for each BitmapSet")
 			self.bitmapSets[myBitmapSet.size] = myBitmapSet
-		
+
 		# after the bitmaps have been extracted, we don't need the offsets anymore
 		del self.bitmapSetOffsets
-	
+
 	def compile(self, ttFont):
 		sbixData = ""
 		self.numSets = len(self.bitmapSets)
 		sbixHeader = sstruct.pack(sbixHeaderFormat, self)
-		
+
 		# calculate offset to start of first bitmap set
 		setOffset = sbixHeaderFormatSize + sbixBitmapSetOffsetFormatSize * self.numSets
-		
+
 		for si in sorted(self.bitmapSets.keys()):
 			myBitmapSet = self.bitmapSets[si]
 			myBitmapSet.compile(ttFont)
@@ -108,9 +108,9 @@ class table__s_b_i_x(DefaultTable.DefaultTable):
 			sbixHeader += sstruct.pack(sbixBitmapSetOffsetFormat, myBitmapSet)
 			setOffset += sbixBitmapSetHeaderFormatSize + len(myBitmapSet.data)
 			sbixData += myBitmapSet.data
-		
+
 		return sbixHeader + sbixData
-	
+
 	def toXML(self, xmlWriter, ttFont):
 		xmlWriter.simpletag("usVal1", value=self.usVal1)
 		xmlWriter.newline()
@@ -118,7 +118,7 @@ class table__s_b_i_x(DefaultTable.DefaultTable):
 		xmlWriter.newline()
 		for i in sorted(self.bitmapSets.keys()):
 			self.bitmapSets[i].toXML(xmlWriter, ttFont)
-	
+
 	def fromXML(self, (name, attrs, content), ttFont):
 		if name in ["usVal1", "usVal2"]:
 			setattr(self, name, int(attrs["value"]))
