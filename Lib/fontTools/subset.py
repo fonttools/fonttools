@@ -1022,7 +1022,7 @@ def subset_glyphs(self, s):
 @_add_method(ttLib.getTableClass('GSUB'),
              ttLib.getTableClass('GPOS'))
 def subset_lookups(self, lookup_indices):
-  """Retrains specified lookups, then removes empty features, language
+  """Retains specified lookups, then removes empty features, language
      systems, and scripts."""
   if self.table.LookupList:
     self.table.LookupList.subset_lookups(lookup_indices)
