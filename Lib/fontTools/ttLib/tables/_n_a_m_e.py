@@ -127,7 +127,7 @@ class NameRecord(object):
 	
 	def __lt__(self, other):
 		if type(self) != type(other):
-			raise TypeError("unordered types %s() < %s()", type(self), type(other))
+			return NotImplemented
 
 		# implemented so that list.sort() sorts according to the spec.
 		selfTuple = (

@@ -783,7 +783,7 @@ class Glyph(object):
 		return not self.__eq__(other)
 	def __eq__(self, other):
 		if type(self) != type(other):
-			raise TypeError("unordered types %s() < %s()", type(self), type(other))
+			return NotImplemented
 		return self.__dict__ == other.__dict__
 
 
@@ -946,7 +946,7 @@ class GlyphComponent(object):
 		return not self.__eq__(other)
 	def __eq__(self, other):
 		if type(self) != type(other):
-			raise TypeError("unordered types %s() < %s()", type(self), type(other))
+			return NotImplemented
 		return self.__dict__ == other.__dict__
 
 class GlyphCoordinates(object):
@@ -1048,7 +1048,7 @@ class GlyphCoordinates(object):
 		return not self.__eq__(other)
 	def __eq__(self, other):
 		if type(self) != type(other):
-			raise TypeError("unordered types %s() < %s()", type(self), type(other))
+			return NotImplemented
 		return self._a == other._a
 
 
