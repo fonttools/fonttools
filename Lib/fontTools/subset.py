@@ -2104,7 +2104,6 @@ class Logger(object):
       return
     from fontTools.misc import xmlWriter
     writer = xmlWriter.XMLWriter(file)
-    font.disassembleInstructions = False  # Work around ttLib bug
     for tag in font.keys():
       writer.begintag(tag)
       writer.newline()
