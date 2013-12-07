@@ -36,7 +36,9 @@ class DefaultTable(object):
 	def __repr__(self):
 		return "<'%s' table at %x>" % (self.tableTag, id(self))
 	
+	def __ne__(self, other):
+		return not self.__eq__(other)
 	def __eq__(self, other):
 		if type(self) != type(other):
-			raise TypeError("unordered types %s() < %s()", type(self), type(other))
+			return NotImplemented
 		return self.__dict__ == other.__dict__

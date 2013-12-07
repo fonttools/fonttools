@@ -247,7 +247,7 @@ class ClassDef(FormatSwitchingBaseTable):
 					warnings.warn("ClassDef table has start glyph ID out of range: %s." % start)
 					continue
 				try:
-					endID = font.getGlyphID(end, requireReal=True)
+					endID = font.getGlyphID(end, requireReal=True) + 1
 				except KeyError:
 					# Apparently some tools use 65535 to "match all" the range
 					if end != 'glyph65535':

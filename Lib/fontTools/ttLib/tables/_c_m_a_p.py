@@ -151,7 +151,7 @@ class CmapSubtable(object):
 	
 	def __lt__(self, other):
 		if not isinstance(other, CmapSubtable):
-			raise TypeError("unordered types %s() < %s()", type(self), type(other))
+			return NotImplemented
 
 		# implemented so that list.sort() sorts according to the spec.
 		selfTuple = (

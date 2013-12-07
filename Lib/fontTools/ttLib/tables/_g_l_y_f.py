@@ -779,9 +779,11 @@ class Glyph(object):
 
 		self.data = data
 
+	def __ne__(self, other):
+		return not self.__eq__(other)
 	def __eq__(self, other):
 		if type(self) != type(other):
-			raise TypeError("unordered types %s() < %s()", type(self), type(other))
+			return NotImplemented
 		return self.__dict__ == other.__dict__
 
 
@@ -940,9 +942,11 @@ class GlyphComponent(object):
 			self.transform = [[scale, 0], [0, scale]]
 		self.flags = safeEval(attrs["flags"])
 	
+	def __ne__(self, other):
+		return not self.__eq__(other)
 	def __eq__(self, other):
 		if type(self) != type(other):
-			raise TypeError("unordered types %s() < %s()", type(self), type(other))
+			return NotImplemented
 		return self.__dict__ == other.__dict__
 
 class GlyphCoordinates(object):
@@ -960,12 +964,11 @@ class GlyphCoordinates(object):
 		self._a = array.array("f", self._a)
 
 	def _checkFloat(self, p):
-		if not any(isinstance(v, float) for v in p):
-			return
-		p = [int(v) if int(v) == v else v for v in p]
-		if not any(isinstance(v, float) for v in p):
-			return
-		self._ensureFloat()
+		if any(isinstance(v, float) for v in p):
+			p = [int(v) if int(v) == v else v for v in p]
+			if any(isinstance(v, float) for v in p):
+				self._ensureFloat()
+		return p
 
 	@staticmethod
 	def zeros(count):
@@ -991,19 +994,19 @@ class GlyphCoordinates(object):
 			for j,i in enumerate(indices):
 				self[i] = v[j]
 			return
-		self._checkFloat(v)
+		v = self._checkFloat(v)
 		self._a[2*k],self._a[2*k+1] = v
 
 	def __repr__(self):
 		return 'GlyphCoordinates(['+','.join(str(c) for c in self)+'])'
 
 	def append(self, p):
-		self._checkFloat(p)
+		p = self._checkFloat(p)
 		self._a.extend(tuple(p))
 
 	def extend(self, iterable):
 		for p in iterable:
-			self._checkFloat(p)
+			p = self._checkFloat(p)
 			self._a.extend(p)
 
 	def relativeToAbsolute(self):
@@ -1040,9 +1043,11 @@ class GlyphCoordinates(object):
 			py = x * t[0][1] + y * t[1][1]
 			self[i] = (px, py)
 
+	def __ne__(self, other):
+		return not self.__eq__(other)
 	def __eq__(self, other):
 		if type(self) != type(other):
-			raise TypeError("unordered types %s() < %s()", type(self), type(other))
+			return NotImplemented
 		return self._a == other._a
 
 

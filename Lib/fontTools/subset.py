@@ -1022,7 +1022,7 @@ def subset_glyphs(self, s):
 @_add_method(ttLib.getTableClass('GSUB'),
              ttLib.getTableClass('GPOS'))
 def subset_lookups(self, lookup_indices):
-  """Retrains specified lookups, then removes empty features, language
+  """Retains specified lookups, then removes empty features, language
      systems, and scripts."""
   if self.table.LookupList:
     self.table.LookupList.subset_lookups(lookup_indices)
@@ -1066,26 +1066,94 @@ def subset_feature_tags(self, feature_tags):
 
 @_add_method(ttLib.getTableClass('GSUB'),
              ttLib.getTableClass('GPOS'))
+def prune_features(self):
+  "Remove unreferenced featurs"
+  if self.table.ScriptList:
+    feature_indices = self.table.ScriptList.collect_features()
+  else:
+    feature_indices = []
+  if self.table.FeatureList:
+    self.table.FeatureList.subset_features(feature_indices)
+  if self.table.ScriptList:
+    self.table.ScriptList.subset_features(feature_indices)
+
+@_add_method(ttLib.getTableClass('GSUB'),
+             ttLib.getTableClass('GPOS'))
 def prune_pre_subset(self, options):
+  # Drop undesired features
   if '*' not in options.layout_features:
     self.subset_feature_tags(options.layout_features)
+  # Drop unreferenced lookups
   self.prune_lookups()
+  # Prune lookups themselves
   if self.table.LookupList:
     self.table.LookupList.prune_pre_subset(options);
   return True
 
 @_add_method(ttLib.getTableClass('GSUB'),
              ttLib.getTableClass('GPOS'))
+def remove_redundant_langsys(self):
+  table = self.table
+  if not table.ScriptList or not table.FeatureList:
+    return
+
+  features = table.FeatureList.FeatureRecord
+
+  for s in table.ScriptList.ScriptRecord:
+    d = s.Script.DefaultLangSys
+    if not d:
+      continue
+    for lr in s.Script.LangSysRecord[:]:
+      l = lr.LangSys
+      # Compare d and l
+      if len(d.FeatureIndex) != len(l.FeatureIndex):
+        continue
+      if (d.ReqFeatureIndex == 65535) != (l.ReqFeatureIndex == 65535):
+        continue
+
+      if d.ReqFeatureIndex != 65535:
+        if features[d.ReqFeatureIndex] != features[l.ReqFeatureIndex]:
+          continue
+
+      for i in range(len(d.FeatureIndex)):
+        if features[d.FeatureIndex[i]] != features[l.FeatureIndex[i]]:
+          print(i)
+	  print (features[d.FeatureIndex[i]])
+	  print (features[l.FeatureIndex[i]])
+          print(features[d.FeatureIndex[i]] == features[l.FeatureIndex[i]])
+          print(features[d.FeatureIndex[i]] != features[l.FeatureIndex[i]])
+          break
+      else:
+        # LangSys and default are equal; delete LangSys
+        s.Script.LangSysRecord.remove(lr)
+
+@_add_method(ttLib.getTableClass('GSUB'),
+             ttLib.getTableClass('GPOS'))
 def prune_post_subset(self, options):
   table = self.table
-  if table.ScriptList and not table.ScriptList.ScriptRecord:
-    table.ScriptList = None
-  if table.FeatureList and not table.FeatureList.FeatureRecord:
-    table.FeatureList = None
+
+  # LookupList looks good.  Just prune lookups themselves
   if table.LookupList:
     table.LookupList.prune_post_subset(options);
     if not table.LookupList.Lookup:
       table.LookupList = None
+
+  if not table.LookupList:
+    table.FeatureList = None
+
+  if table.FeatureList:
+    self.remove_redundant_langsys()
+    # Remove unreferenced features
+    self.prune_features()
+
+  if table.FeatureList and not table.FeatureList.FeatureRecord:
+    table.FeatureList = None
+
+  # Never drop scripts themselves as them just being available
+  # holds semantic significance.
+  if table.ScriptList and not table.ScriptList.ScriptRecord:
+    table.ScriptList = None
+
   return True
 
 @_add_method(ttLib.getTableClass('GDEF'))

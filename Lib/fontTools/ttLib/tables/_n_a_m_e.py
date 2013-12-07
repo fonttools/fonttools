@@ -86,7 +86,7 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 				if langID is None or namerecord.langID == langID:
 					return namerecord
 		return None # not found
-	
+
 
 class NameRecord(object):
 	
@@ -125,7 +125,7 @@ class NameRecord(object):
 	
 	def __lt__(self, other):
 		if type(self) != type(other):
-			raise TypeError("unordered types %s() < %s()", type(self), type(other))
+			return NotImplemented
 
 		# implemented so that list.sort() sorts according to the spec.
 		selfTuple = (
