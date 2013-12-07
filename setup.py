@@ -80,16 +80,6 @@ setup(
 		],
 		package_dir = {'': 'Lib'},
 		extra_path = 'FontTools',
-		ext_modules = [
-			Extension(
-				"fontTools.misc.eexecOp",
-				["Src/eexecOp/eexecOpmodule.c"],
-				include_dirs=[],
-				define_macros=[],
-				library_dirs=[],
-				libraries=[],
-			)
-		],
 		scripts = ["Tools/ttx", "Tools/pyftsubset", "Tools/pyftinspect"],
 		cmdclass = {"build_ext": build_ext_optional},
 		data_files = [('share/man/man1', ["Doc/ttx.1"])],
