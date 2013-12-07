@@ -3,7 +3,6 @@ from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval
 from . import DefaultTable
-from functools import total_ordering
 import struct
 
 nameRecordFormat = """
@@ -89,7 +88,6 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 		return None # not found
 
 
-@total_ordering
 class NameRecord(object):
 	
 	def toXML(self, writer, ttFont):
