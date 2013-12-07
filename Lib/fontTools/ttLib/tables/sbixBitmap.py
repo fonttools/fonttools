@@ -30,12 +30,12 @@ class Bitmap(object):
 		self.glyphName = ttFont.getGlyphName(self.gid)
 		if self.rawdata is None:
 			from fontTools import ttLib
-			raise(ttLib.TTLibError, "No table data to decompile.")
+			raise ttLib.TTLibError("No table data to decompile")
 		if len(self.rawdata) > 0:
 			if len(self.rawdata) < sbixBitmapHeaderFormatSize:
 				from fontTools import ttLib
 				#print "Bitmap %i header too short: Expected %x, got %x." % (self.gid, sbixBitmapHeaderFormatSize, len(self.rawdata))
-				raise(ttLib.TTLibError, "Bitmap header too short.")
+				raise ttLib.TTLibError("Bitmap header too short.")
 
 			sstruct.unpack(sbixBitmapHeaderFormat, self.rawdata[:sbixBitmapHeaderFormatSize], self)
 
@@ -53,7 +53,7 @@ class Bitmap(object):
 	def compile(self, ttFont):
 		if self.glyphName is None:
 			from fontTools import ttLib
-			raise ttLib.TTLibError, "Can't compile bitmap without glyph name"
+			raise ttLib.TTLibError("Can't compile bitmap without glyph name")
 			# TODO: if ttFont has no maxp, cmap etc., ignore glyph names and compile by index?
 			# (needed if you just want to compile the sbix table on its own)
 		self.gid = struct.pack(">H", ttFont.getGlyphID(self.glyphName))
@@ -88,7 +88,7 @@ class Bitmap(object):
 		xmlWriter.endtag("bitmap")
 		xmlWriter.newline()
 
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		#if name in ["usReserved1", "usReserved2"]:
 		#	setattr(self, name, int(attrs["value"]))
 		#elif
@@ -101,4 +101,4 @@ class Bitmap(object):
 			self.imageData = readHex(content)
 		else:
 			from fontTools import ttLib
-			raise ttLib.TTLibError, "can't handle '%s' element" % name
+			raise ttLib.TTLibError("can't handle '%s' element" % name)

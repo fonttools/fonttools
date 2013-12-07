@@ -30,7 +30,7 @@ class BitmapSet(object):
 	def decompile(self, ttFont):
 		if self.data is None:
 			from fontTools import ttLib
-			raise(ttLib.TTLibError, "No table data to decompile.")
+			raise ttLib.TTLibError
 		if len(self.data) < sbixBitmapSetHeaderFormatSize:
 			from fontTools import ttLib
 			raise(ttLib.TTLibError, "BitmapSet header too short: Expected %x, got %x.") \
@@ -42,7 +42,7 @@ class BitmapSet(object):
 		# calculate number of bitmaps
 		firstBitmapOffset, = struct.unpack(">L", \
 			self.data[sbixBitmapSetHeaderFormatSize : sbixBitmapSetHeaderFormatSize + sbixBitmapOffsetEntryFormatSize])
-		self.numBitmaps = (firstBitmapOffset - sbixBitmapSetHeaderFormatSize) / sbixBitmapOffsetEntryFormatSize - 1
+		self.numBitmaps = (firstBitmapOffset - sbixBitmapSetHeaderFormatSize) // sbixBitmapOffsetEntryFormatSize - 1
 		# ^ -1 because there's one more offset than bitmaps
 
 		# build offset list for single bitmap offsets
@@ -113,25 +113,26 @@ class BitmapSet(object):
 		xmlWriter.endtag("bitmapSet")
 		xmlWriter.newline()
 
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		if name in ["size", "resolution"]:
 			setattr(self, name, int(attrs["value"]))
 		elif name == "bitmap":
-			if attrs.has_key("format"):
+			if "format" in attrs:
 				myFormat = attrs["format"]
 			else:
 				myFormat = None
-			if attrs.has_key("glyphname"):
+			if "glyphname" in attrs:
 				myGlyphName = attrs["glyphname"]
 			else:
 				from fontTools import ttLib
-				raise ttLib.TTLibError, "Bitmap must have a glyph name."
+				raise ttLib.TTLibError("Bitmap must have a glyph name.")
 			myBitmap = Bitmap(glyphName=myGlyphName, imageFormatTag=myFormat)
 			for element in content:
-				if type(element) == TupleType:
-					myBitmap.fromXML(element, ttFont)
+				if isinstance(element, tuple):
+					name, attrs, content = element
+					myBitmap.fromXML(name, attrs, content, ttFont)
 					myBitmap.compile(ttFont)
 			self.bitmaps[myBitmap.glyphName] = myBitmap
 		else:
 			from fontTools import ttLib
-			raise ttLib.TTLibError, "can't handle '%s' element" % name
+			raise ttLib.TTLibError("can't handle '%s' element" % name)

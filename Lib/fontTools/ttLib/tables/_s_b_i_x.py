@@ -88,7 +88,7 @@ class table__s_b_i_x(DefaultTable.DefaultTable):
 			#print "Number of Bitmaps:", myBitmapSet.numBitmaps
 			if myBitmapSet.size in self.bitmapSets:
 				from fontTools import ttLib
-				raise(ttLib.TTLibError, "Pixel 'size' must be unique for each BitmapSet")
+				raise ttLib.TTLibError("Pixel 'size' must be unique for each BitmapSet")
 			self.bitmapSets[myBitmapSet.size] = myBitmapSet
 
 		# after the bitmaps have been extracted, we don't need the offsets anymore
@@ -121,18 +121,19 @@ class table__s_b_i_x(DefaultTable.DefaultTable):
 		for i in sorted(self.bitmapSets.keys()):
 			self.bitmapSets[i].toXML(xmlWriter, ttFont)
 
-	def fromXML(self, (name, attrs, content), ttFont):
+	def fromXML(self, name, attrs, content, ttFont):
 		if name in ["usVal1", "usVal2"]:
 			setattr(self, name, int(attrs["value"]))
 		elif name == "bitmapSet":
 			myBitmapSet = BitmapSet()
 			for element in content:
-				if type(element) == TupleType:
-					myBitmapSet.fromXML(element, ttFont)
+				if isinstance(element, tuple):
+					name, attrs, content = element
+					myBitmapSet.fromXML(name, attrs, content, ttFont)
 			self.bitmapSets[myBitmapSet.size] = myBitmapSet
 		else:
 			from fontTools import ttLib
-			raise ttLib.TTLibError, "can't handle '%s' element" % name
+			raise ttLib.TTLibError("can't handle '%s' element" % name)
 
 
 # Helper classes
