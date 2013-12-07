@@ -1066,6 +1066,19 @@ def subset_feature_tags(self, feature_tags):
 
 @_add_method(ttLib.getTableClass('GSUB'),
              ttLib.getTableClass('GPOS'))
+def prune_features(self):
+  "Remove unreferenced featurs"
+  if self.table.ScriptList:
+    feature_indices = self.table.ScriptList.collect_features()
+  else:
+    feature_indices = []
+  if self.table.FeatureList:
+    self.table.FeatureList.subset_features(feature_indices)
+  if self.table.ScriptList:
+    self.table.ScriptList.subset_features(feature_indices)
+
+@_add_method(ttLib.getTableClass('GSUB'),
+             ttLib.getTableClass('GPOS'))
 def prune_pre_subset(self, options):
   # Drop undesired features
   if '*' not in options.layout_features:
@@ -1081,15 +1094,28 @@ def prune_pre_subset(self, options):
              ttLib.getTableClass('GPOS'))
 def prune_post_subset(self, options):
   table = self.table
-  if table.ScriptList and not table.ScriptList.ScriptRecord:
-    table.ScriptList = None
-  if table.FeatureList and not table.FeatureList.FeatureRecord:
-    table.FeatureList = None
-  # Prune lookups themselves
+
+  # LookupList looks good.  Just prune lookups themselves
   if table.LookupList:
     table.LookupList.prune_post_subset(options);
     if not table.LookupList.Lookup:
       table.LookupList = None
+
+  if not table.LookupList:
+    table.FeatureList = None
+
+  if table.FeatureList:
+    # Remove unreferenced features
+    self.prune_features()
+
+  if table.FeatureList and not table.FeatureList.FeatureRecord:
+    table.FeatureList = None
+
+  # Never drop scripts themselves as them just being available
+  # holds semantic significance.
+  if table.ScriptList and not table.ScriptList.ScriptRecord:
+    table.ScriptList = None
+
   return True
 
 @_add_method(ttLib.getTableClass('GDEF'))
