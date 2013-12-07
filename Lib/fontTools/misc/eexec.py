@@ -55,7 +55,7 @@ def deHexString(h):
 
 
 def _test():
-	import fontTools.misc.eexecOp
+	from fontTools.misc import eexecOp
 	testStr = "\0\0asdadads asds\265"
 	print(decrypt, decrypt(testStr, 12321))
 	print(eexecOp.decrypt, eexecOp.decrypt(testStr, 12321))
