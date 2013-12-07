@@ -2,6 +2,7 @@ from __future__ import print_function, division
 from fontTools.misc.py23 import *
 from fontTools.misc.textTools import safeEval, readHex
 from . import DefaultTable
+from functools import total_ordering
 import sys
 import struct
 import array
@@ -97,6 +98,7 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
 		self.tables.append(table)
 
 
+@total_ordering
 class CmapSubtable(object):
 	
 	def __init__(self, format):
