@@ -21,7 +21,7 @@ class Bitmap(object):
 		self.rawdata = rawdata
 		self.imageFormatTag = imageFormatTag
 		self.imageData = imageData
-	
+
 	def decompile(self, ttFont):
 		self.glyphName = ttFont.getGlyphName(self.gid)
 		if self.rawdata is None:
@@ -32,9 +32,9 @@ class Bitmap(object):
 				from fontTools import ttLib
 				#print "Bitmap %i header too short: Expected %x, got %x." % (self.gid, sbixBitmapHeaderFormatSize, len(self.rawdata))
 				raise(ttLib.TTLibError, "Bitmap header too short.")
-			
+
 			sstruct.unpack(sbixBitmapHeaderFormat, self.rawdata[:sbixBitmapHeaderFormatSize], self)
-			
+
 			if self.imageFormatTag == "dupe":
 				# bitmap is a reference to another glyph's bitmap
 				gid, = struct.unpack(">H", self.rawdata[sbixBitmapHeaderFormatSize:])
@@ -45,7 +45,7 @@ class Bitmap(object):
 		# clean up
 		del self.rawdata
 		del self.gid
-		
+
 	def compile(self, ttFont):
 		if self.glyphName is None:
 			from fontTools import ttLib
@@ -57,7 +57,7 @@ class Bitmap(object):
 			self.rawdata = ""
 		else:
 			self.rawdata = sstruct.pack(sbixBitmapHeaderFormat, self) + self.imageData
-	
+
 	def toXML(self, xmlWriter, ttFont):
 		if self.imageFormatTag == None:
 			# TODO: ignore empty bitmaps?
