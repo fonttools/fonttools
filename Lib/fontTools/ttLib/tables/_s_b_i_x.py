@@ -1,9 +1,11 @@
-import DefaultTable
-import struct, sstruct
-#from fontTools.misc.textTools import readHex
-from types import TupleType
-from sbixBitmapSet import *
-from sbixBitmap import *
+from __future__ import print_function, division
+from fontTools.misc.py23 import *
+from fontTools.misc import sstruct
+from fontTools.misc.textTools import readHex
+from . import DefaultTable
+from .sbixBitmap import *
+from .sbixBitmapSet import *
+import struct
 
 """
 sbix Table organization:
