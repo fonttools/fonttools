@@ -779,6 +779,8 @@ class Glyph(object):
 
 		self.data = data
 
+	def __ne__(self, other):
+		return not self.__eq__(other)
 	def __eq__(self, other):
 		if type(self) != type(other):
 			raise TypeError("unordered types %s() < %s()", type(self), type(other))
@@ -940,6 +942,8 @@ class GlyphComponent(object):
 			self.transform = [[scale, 0], [0, scale]]
 		self.flags = safeEval(attrs["flags"])
 	
+	def __ne__(self, other):
+		return not self.__eq__(other)
 	def __eq__(self, other):
 		if type(self) != type(other):
 			raise TypeError("unordered types %s() < %s()", type(self), type(other))
@@ -1040,6 +1044,8 @@ class GlyphCoordinates(object):
 			py = x * t[0][1] + y * t[1][1]
 			self[i] = (px, py)
 
+	def __ne__(self, other):
+		return not self.__eq__(other)
 	def __eq__(self, other):
 		if type(self) != type(other):
 			raise TypeError("unordered types %s() < %s()", type(self), type(other))

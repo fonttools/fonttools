@@ -57,6 +57,8 @@ else:
 
 		def __new__(self, content):
 			return str.__new__(self, self.transcode(content))
+		def __ne__(self, other):
+			return not self.__eq__(other)
 		def __eq__(self, other):
 			return str.__eq__(self, self.transcode(other))
 

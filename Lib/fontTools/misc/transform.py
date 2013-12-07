@@ -292,6 +292,8 @@ class Transform(object):
 		return (xx1, xy1, yx1, yy1, dx1, dy1) < \
 				(xx2, xy2, yx2, yy2, dx2, dy2)
 
+	def __ne__(self, other):
+		return not self.__eq__(other)
 	def __eq__(self, other):
 		"""Transform instances are comparable:
 			>>> t1 = Identity.scale(2, 3).translate(4, 6)
