@@ -11,4 +11,3 @@ include Windows/README.TXT
 include Windows/fonttools-win-setup.iss
 include Windows/fonttools-win-setup.txt
 include Lib/fontTools/ttLib/tables/table_API_readme.txt
-include Src/eexecOp/README.txt
