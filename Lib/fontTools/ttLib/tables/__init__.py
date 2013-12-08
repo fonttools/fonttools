@@ -12,6 +12,7 @@ def _moduleFinderHint():
 	from . import D_S_I_G_
 	from . import E_B_D_T_
 	from . import E_B_L_C_
+	from . import F_F_T_M_
 	from . import G_D_E_F_
 	from . import G_M_A_P_
 	from . import G_P_K_G_
