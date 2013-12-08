@@ -1977,7 +1977,7 @@ class Subsetter(object):
         self.log("Added .notdef to subset")
     if self.options.recommended_glyphs:
       if 'glyf' in font:
-        for i in min(range(4), len(font.getGlyphOrder())):
+        for i in range(min(4, len(font.getGlyphOrder()))):
           self.glyphs.add(font.getGlyphName(i))
         self.log("Added first four glyphs to subset")
 
