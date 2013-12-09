@@ -477,7 +477,8 @@ _equivalents = {
 	'LangSys': ('DefaultLangSys',),
 	'Coverage': ('MarkCoverage', 'BaseCoverage', 'LigatureCoverage', 'Mark1Coverage',
 			'Mark2Coverage', 'BacktrackCoverage', 'InputCoverage',
-			'LookAheadCoverage'),
+			'LookAheadCoverage', 'VertGlyphCoverage', 'HorizGlyphCoverage',
+			'TopAccentCoverage', 'ExtendedShapeCoverage', 'MathKernCoverage'),
 	'ClassDef': ('ClassDef1', 'ClassDef2', 'BacktrackClassDef', 'InputClassDef',
 			'LookAheadClassDef', 'GlyphClassDef', 'MarkAttachClassDef'),
 	'Anchor': ('EntryAnchor', 'ExitAnchor', 'BaseAnchor', 'LigatureAnchor',
@@ -493,6 +494,9 @@ _equivalents = {
 	'JstfGPOSModList': ('ShrinkageEnableGPOS', 'ShrinkageDisableGPOS', 'ExtensionEnableGPOS',
 			'ExtensionDisableGPOS',),
 	'JstfMax': ('ShrinkageJstfMax', 'ExtensionJstfMax',),
+	'MathKern': ('TopRightMathKern', 'TopLeftMathKern', 'BottomRightMathKern',
+			'BottomLeftMathKern'),
+	'MathGlyphConstruction': ('VertGlyphConstruction', 'HorizGlyphConstruction'),
 }
 
 #
