@@ -627,8 +627,8 @@ class BaseTable(object):
 	def preWrite(self, font):
 		return self.__dict__.copy()
 	
-	def toXML(self, xmlWriter, font, attrs=None):
-		tableName = self.__class__.__name__
+	def toXML(self, xmlWriter, font, attrs=None, name=None):
+		tableName = name if name else self.__class__.__name__
 		if attrs is None:
 			attrs = []
 		if hasattr(self, "Format"):
@@ -700,6 +700,9 @@ class FormatSwitchingBaseTable(BaseTable):
 	
 	def writeFormat(self, writer):
 		writer.writeUShort(self.Format)
+
+	def toXML(self, xmlWriter, font, attrs=None, name=None):
+		BaseTable.toXML(self, xmlWriter, font, attrs, name=self.__class__.__name__)
 
 
 #

@@ -12,6 +12,7 @@ def buildConverters(tableSpec, tableNamespace):
 	converters = []
 	convertersByName = {}
 	for tp, name, repeat, aux, descr in tableSpec:
+		tableName = name
 		if name.startswith("ValueFormat"):
 			assert tp == "uint16"
 			converterClass = ValueFormat
@@ -25,8 +26,12 @@ def buildConverters(tableSpec, tableNamespace):
 		elif name == "FeatureParams":
 			converterClass = FeatureParams
 		else:
-			converterClass = converterMapping[tp]
-		tableClass = tableNamespace.get(name)
+			if not tp in converterMapping:
+				tableName = tp
+				converterClass = Struct
+			else:
+				converterClass = converterMapping[tp]
+		tableClass = tableNamespace.get(tableName)
 		conv = converterClass(name, repeat, aux, tableClass)
 		if name in ["SubTable", "ExtSubTable"]:
 			conv.lookupTypes = tableNamespace['lookupTypes']
@@ -40,7 +45,7 @@ def buildConverters(tableSpec, tableNamespace):
 			for cls in conv.featureParamTypes.values():
 				convertersByName[cls.__name__] = Table(name, repeat, aux, cls)
 		converters.append(conv)
-		assert name not in convertersByName
+		assert name not in convertersByName, name
 		convertersByName[name] = conv
 	return converters, convertersByName
 
@@ -190,7 +195,7 @@ class Struct(BaseConverter):
 			else:
 				pass # NULL table, ignore
 		else:
-			value.toXML(xmlWriter, font, attrs)
+			value.toXML(xmlWriter, font, attrs, name=name)
 	
 	def xmlRead(self, attrs, content, font):
 		table = self.tableClass()
