@@ -590,9 +590,7 @@ class BaseTable(object):
 					value = []
 				countValue = len(value) - conv.aux
 				if conv.repeat in table:
-					ref = table[conv.repeat]
-					table[conv.repeat] = None
-					ref.setValue(countValue)
+					CountReference(table, conv.repeat).setValue(countValue)
 				else:
 					# conv.repeat is a propagated count
 					writer[conv.repeat].setValue(countValue)
@@ -607,11 +605,9 @@ class BaseTable(object):
 				# We add a reference: by the time the data is assembled
 				# the Count value will be filled in.
 				ref = writer.writeCountReference(table, conv.name)
+				table[conv.name] = None
 				if conv.isPropagated:
-					table[conv.name] = None
 					writer[conv.name] = ref
-				else:
-					table[conv.name] = ref
 			else:
 				if conv.aux and not eval(conv.aux, None, table):
 					continue
