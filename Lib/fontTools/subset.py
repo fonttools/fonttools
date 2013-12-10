@@ -1130,8 +1130,10 @@ def prune_post_subset(self, options):
   # LookupList looks good.  Just prune lookups themselves
   if table.LookupList:
     table.LookupList.prune_post_subset(options);
-    if not table.LookupList.Lookup:
-      table.LookupList = None
+    # XXX Next two lines disabled because OTS is stupid and
+    # doesn't like NULL offsetse here.
+    #if not table.LookupList.Lookup:
+    #  table.LookupList = None
 
   if not table.LookupList:
     table.FeatureList = None
@@ -1141,13 +1143,17 @@ def prune_post_subset(self, options):
     # Remove unreferenced features
     self.prune_features()
 
-  if table.FeatureList and not table.FeatureList.FeatureRecord:
-    table.FeatureList = None
+  # XXX Next two lines disabled because OTS is stupid and
+  # doesn't like NULL offsetse here.
+  #if table.FeatureList and not table.FeatureList.FeatureRecord:
+  #  table.FeatureList = None
 
   # Never drop scripts themselves as them just being available
   # holds semantic significance.
-  if table.ScriptList and not table.ScriptList.ScriptRecord:
-    table.ScriptList = None
+  # XXX Next two lines disabled because OTS is stupid and
+  # doesn't like NULL offsetse here.
+  #if table.ScriptList and not table.ScriptList.ScriptRecord:
+  #  table.ScriptList = None
 
   return True
 
