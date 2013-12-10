@@ -1610,7 +1610,7 @@ class IndexedStrings(object):
 		if file is None:
 			strings = []
 		else:
-			strings = [tostr(s) for s in Index(file)]
+			strings = [tostr(s, encoding="latin1") for s in Index(file)]
 		self.strings = strings
 	
 	def getCompiler(self):
