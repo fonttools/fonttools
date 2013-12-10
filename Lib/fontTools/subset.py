@@ -1117,11 +1117,6 @@ def remove_redundant_langsys(self):
 
       for i in range(len(d.FeatureIndex)):
         if features[d.FeatureIndex[i]] != features[l.FeatureIndex[i]]:
-          print(i)
-	  print (features[d.FeatureIndex[i]])
-	  print (features[l.FeatureIndex[i]])
-          print(features[d.FeatureIndex[i]] == features[l.FeatureIndex[i]])
-          print(features[d.FeatureIndex[i]] != features[l.FeatureIndex[i]])
           break
       else:
         # LangSys and default are equal; delete LangSys
