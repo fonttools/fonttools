@@ -79,7 +79,6 @@ class CFFFontSet(object):
 		writer.toFile(file)
 	
 	def toXML(self, xmlWriter, progress=None):
-		xmlWriter.newline()
 		for fontName in self.fontNames:
 			xmlWriter.begintag("CFFFont", name=tostr(fontName))
 			xmlWriter.newline()
@@ -92,7 +91,6 @@ class CFFFontSet(object):
 		xmlWriter.newline()
 		self.GlobalSubrs.toXML(xmlWriter, progress)
 		xmlWriter.endtag("GlobalSubrs")
-		xmlWriter.newline()
 		xmlWriter.newline()
 	
 	def fromXML(self, name, attrs, content):
