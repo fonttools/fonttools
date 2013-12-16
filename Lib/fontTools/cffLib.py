@@ -226,7 +226,7 @@ class IndexCompiler(object):
 			if hasattr(item, "toFile"):
 				item.toFile(file)
 			else:
-				file.write(tobytes(item))
+				file.write(tobytes(item, encoding="latin1"))
 
 
 class IndexedStringsCompiler(IndexCompiler):
