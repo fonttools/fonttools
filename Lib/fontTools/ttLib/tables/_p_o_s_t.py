@@ -218,7 +218,7 @@ def unpackPStrings(data):
 	dataLen = len(data)
 	while index < dataLen:
 		length = byteord(data[index])
-		strings.append(tostr(data[index+1:index+1+length]))
+		strings.append(tostr(data[index+1:index+1+length], encoding="latin1"))
 		index = index + 1 + length
 	return strings
 
@@ -226,6 +226,6 @@ def unpackPStrings(data):
 def packPStrings(strings):
 	data = b""
 	for s in strings:
-		data = data + bytechr(len(s)) + tobytes(s)
+		data = data + bytechr(len(s)) + tobytes(s, encoding="latin1")
 	return data
 
