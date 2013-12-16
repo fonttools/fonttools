@@ -1194,6 +1194,7 @@ def subset_glyphs(self, s):
 @_add_method(ttLib.getTableClass('GDEF'))
 def prune_post_subset(self, options):
   table = self.table
+  # XXX check these against OTS
   if table.LigCaretList and not table.LigCaretList.LigGlyphCount:
     table.LigCaretList = None
   if table.MarkAttachClassDef and not table.MarkAttachClassDef.classDefs:
@@ -1786,6 +1787,9 @@ def prune_pre_subset(self, options):
 # TODO(behdad) Text direction considerations.
 # TODO(behdad) Text script / language considerations.
 # TODO(behdad) Optionally drop 'kern' table if GPOS available
+# TODO(behdad) Implement --unicode='*' to choose all cmap'ed
+# TODO(behdad) Drop old-spec Indic scripts
+
 
 class Options(object):
 
