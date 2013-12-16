@@ -280,6 +280,7 @@ def subset_glyphs(self, s):
 @_add_method(otTables.Anchor)
 def prune_hints(self):
   # Drop device tables / contour anchor point
+  self.ensureDecompiled()
   self.Format = 1
 
 @_add_method(otTables.CursivePos)
@@ -879,6 +880,7 @@ def prune_post_subset(self, options):
 
 @_add_method(otTables.LookupList)
 def subset_lookups(self, lookup_indices):
+  self.ensureDecompiled()
   self.Lookup = [self.Lookup[i] for i in lookup_indices
                  if i < self.LookupCount]
   self.LookupCount = len(self.Lookup)
@@ -930,6 +932,7 @@ def collect_lookups(self, feature_indices):
 
 @_add_method(otTables.FeatureList)
 def subset_features(self, feature_indices):
+  self.ensureDecompiled()
   self.FeatureRecord = [self.FeatureRecord[i] for i in feature_indices]
   self.FeatureCount = len(self.FeatureRecord)
   return bool(self.FeatureCount)
