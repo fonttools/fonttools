@@ -2124,12 +2124,14 @@ def load_font(fontFile,
               options,
               allowVID=False,
               checkChecksums=False,
-              dontLoadGlyphNames=False):
+              dontLoadGlyphNames=False,
+              lazy=True):
 
   font = ttLib.TTFont(fontFile,
                       allowVID=allowVID,
                       checkChecksums=checkChecksums,
-                      recalcBBoxes=options.recalc_bounds)
+                      recalcBBoxes=options.recalc_bounds,
+                      lazy=lazy)
 
   # Hack:
   #
