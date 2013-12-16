@@ -234,7 +234,7 @@ class Inspect(object):
 		self.scrolled_window = gtk.ScrolledWindow()
 		self.window.add(self.scrolled_window)
 
-		self.font = ttLib.TTFont(fontfile)
+		self.font = ttLib.TTFont(fontfile, lazy=True)
 		self.treemodel = FontTreeModel(self.font)
 		self.treeview = gtk.TreeView(self.treemodel)
 		#self.treeview.set_reorderable(True)

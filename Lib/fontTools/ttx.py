@@ -195,7 +195,6 @@ def ttDump(input, output, options):
 	if not options.quiet:
 		print('Dumping "%s" to "%s"...' % (input, output))
 	ttf = TTFont(input, 0, verbose=options.verbose, allowVID=options.allowVID,
-			lazy=False,
 			quiet=options.quiet,
 			ignoreDecompileErrors=options.ignoreDecompileErrors,
 			fontNumber=options.fontNumber)
@@ -213,7 +212,6 @@ def ttCompile(input, output, options):
 	if not options.quiet:
 		print('Compiling "%s" to "%s"...' % (input, output))
 	ttf = TTFont(options.mergeFile,
-			lazy=False,
 			recalcBBoxes=options.recalcBBoxes,
 			verbose=options.verbose, allowVID=options.allowVID)
 	ttf.importXML(input, quiet=options.quiet)
