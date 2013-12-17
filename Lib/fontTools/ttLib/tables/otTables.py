@@ -17,7 +17,7 @@ class LookupOrder(BaseTable):
 class FeatureParams(BaseTable):
 
 	def compile(self, writer, font):
-		assert featureParamTypes.get(writer['FeatureTag'], None) == self.__class__, "Wrong FeatureParams type for feature '%s': %s" % (writer['FeatureTag'], self.__class__.__name__)
+		assert featureParamTypes.get(writer['FeatureTag']) == self.__class__, "Wrong FeatureParams type for feature '%s': %s" % (writer['FeatureTag'], self.__class__.__name__)
 		BaseTable.compile(self, writer, font)
 
 	def toXML(self, xmlWriter, font, attrs=None, name=None):
