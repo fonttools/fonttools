@@ -323,7 +323,7 @@ class Program(object):
 						nBytes = 0
 						while nWords+nBytes < nArgs and nBytes < 255 and 0 <= args[nWords+nBytes] <= 255:
 							nBytes += 1
-						if nBytes < 3 and nWords + nBytes < 255 and nWords + nBytes != nArgs:
+						if nBytes < 2 and nWords + nBytes < 255 and nWords + nBytes != nArgs:
 							# Will write bytes as words
 							nWords += nBytes
 							continue
