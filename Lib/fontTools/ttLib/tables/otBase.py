@@ -319,8 +319,9 @@ class OTTableWriter(object):
 					item._doneWriting()
 				else:
 					item._doneWriting(internedTables)
-					if item in internedTables:
-						items[i] = item = internedTables[item]
+					internedItem = internedTables.get(item)
+					if internedItem:
+						items[i] = item = internedItem
 					else:
 						internedTables[item] = item
 		self.items = tuple(items)
