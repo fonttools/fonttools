@@ -74,6 +74,7 @@ class Coverage(FormatSwitchingBaseTable):
 				glyphs.extend(glyphOrder[glyphID] for glyphID in range(startID, endID))
 		else:
 			assert 0, "unknown format: %s" % self.Format
+		del self.Format # Don't need this anymore
 	
 	def preWrite(self, font):
 		glyphs = getattr(self, "glyphs", None)
@@ -159,6 +160,7 @@ class SingleSubst(FormatSwitchingBaseTable):
 		else:
 			assert 0, "unknown format: %s" % self.Format
 		self.mapping = mapping
+		del self.Format # Don't need this anymore
 	
 	def preWrite(self, font):
 		mapping = getattr(self, "mapping", None)
@@ -263,6 +265,7 @@ class ClassDef(FormatSwitchingBaseTable):
 		else:
 			assert 0, "unknown format: %s" % self.Format
 		self.classDefs = classDefs
+		del self.Format # Don't need this anymore
 	
 	def preWrite(self, font):
 		classDefs = getattr(self, "classDefs", None)
@@ -342,6 +345,7 @@ class AlternateSubst(FormatSwitchingBaseTable):
 		else:
 			assert 0, "unknown format: %s" % self.Format
 		self.alternates = alternates
+		del self.Format # Don't need this anymore
 	
 	def preWrite(self, font):
 		self.Format = 1
@@ -408,8 +412,10 @@ class LigatureSubst(FormatSwitchingBaseTable):
 		else:
 			assert 0, "unknown format: %s" % self.Format
 		self.ligatures = ligatures
+		del self.Format # Don't need this anymore
 	
 	def preWrite(self, font):
+		self.Format = 1
 		ligatures = getattr(self, "ligatures", None)
 		if ligatures is None:
 			ligatures = self.ligatures = {}
