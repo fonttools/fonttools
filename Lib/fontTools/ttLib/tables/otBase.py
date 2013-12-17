@@ -241,7 +241,7 @@ class OTTableWriter(object):
 				else:
 					try:
 						items[i] = packUShort(item.pos - pos)
-					except AssertionError:
+					except struct.error:
 						# provide data to fix overflow problem.
 						# If the overflow is to a lookup, or from a lookup to a subtable,
 						# just report the current item.
@@ -454,18 +454,18 @@ class OTTableWriter(object):
 				LookupListIndex = self.parent[0].parent[0].repeatIndex
 				SubTableIndex = self.parent[0].repeatIndex
 			else: # who knows how far below the SubTable level we are! Climb back up to the nearest subtable.
-				itemName = ".".join(self.name, item.name)
+				itemName = ".".join([self.name, item.name])
 				p1 = self.parent[0]
 				while p1 and p1.name not in ['ExtSubTable', 'SubTable']:
-					itemName = ".".join(p1.name, item.name)
+					itemName = ".".join([p1.name, item.name])
 					p1 = p1.parent[0]
 				if p1:
 					if p1.name == 'ExtSubTable':
-						LookupListIndex = self.parent[0].parent[0].repeatIndex
-						SubTableIndex = self.parent[0].repeatIndex
+						LookupListIndex = p1.parent[0].parent[0].repeatIndex
+						SubTableIndex = p1.parent[0].repeatIndex
 					else:
-						LookupListIndex = self.parent[0].repeatIndex
-						SubTableIndex = self.repeatIndex
+						LookupListIndex = p1.parent[0].repeatIndex
+						SubTableIndex = p1.repeatIndex
 
 		return OverflowErrorRecord( (self.globalState.tableType, LookupListIndex, SubTableIndex, itemName, itemIndex) )
 
@@ -487,7 +487,6 @@ class CountReference(object):
 
 
 def packUShort(value):
-	assert 0 <= value < 0x10000, value
 	return struct.pack(">H", value)
 
 

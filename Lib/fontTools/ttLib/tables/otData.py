@@ -387,7 +387,7 @@ otData = [
 	('ExtensionPosFormat1', [
 		('uint16', 'ExtFormat', None, None, 'Format identifier. Set to 1.'),
 		('uint16', 'ExtensionLookupType', None, None, 'Lookup type of subtable referenced by ExtensionOffset (i.e. the extension subtable).'),
-		('LOffset', 'ExtSubTable', None, None, 'Array of offsets to Lookup tables-from beginning of LookupList -zero based (first lookup is Lookup index = 0)'),
+		('LOffset', 'ExtSubTable', None, None, 'Offset to SubTable'),
 	]),
 
 	('ValueRecord', [
