@@ -919,8 +919,13 @@ def collect_lookups(self):
 @_add_method(otTables.FeatureList)
 def subset_lookups(self, lookup_indices):
   "Returns the indices of nonempty features."
+  # Note: Never ever drop feature 'pref', even if it's empty.
+  # HarfBuzz chooses shaper for Khmer based on presence of this
+  # feature.  See thread at:
+  # http://lists.freedesktop.org/archives/harfbuzz/2012-November/002660.html
   feature_indices = [i for i,f in enumerate(self.FeatureRecord)
-                     if f.Feature.subset_lookups(lookup_indices)]
+                     if (f.Feature.subset_lookups(lookup_indices) or
+                         f.FeatureTag == 'pref')]
   self.subset_features(feature_indices)
   return feature_indices
 
