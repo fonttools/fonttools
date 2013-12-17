@@ -400,7 +400,7 @@ class LigatureSubst(FormatSwitchingBaseTable):
 	def postRead(self, rawTable, font):
 		ligatures = {}
 		if self.Format == 1:
-			input = rawTable["Coverage"].glyphs
+			input = _getGlyphsFromCoverageTable(rawTable["Coverage"])
 			ligSets = rawTable["LigatureSet"]
 			assert len(input) == len(ligSets)
 			for i in range(len(input)):
