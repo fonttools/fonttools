@@ -365,7 +365,6 @@ class OTTableWriter(object):
 				index = max(item.parent.keys())
 				item.parent[index + 1] = self
 
-		saveItem = None
 		for i in iRange:
 			item = self.items[i]
 			if not hasattr(item, "getData"):
