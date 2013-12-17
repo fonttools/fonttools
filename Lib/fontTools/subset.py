@@ -101,88 +101,64 @@ def remap(self, class_map):
 @_add_method(otTables.SingleSubst)
 def closure_glyphs(self, s, cur_glyphs=None):
   if cur_glyphs is None: cur_glyphs = s.glyphs
-  if self.Format in [1, 2]:
-    s.glyphs.update(v for g,v in self.mapping.items() if g in cur_glyphs)
-  else:
-    assert 0, "unknown format: %s" % self.Format
+  s.glyphs.update(v for g,v in self.mapping.items() if g in cur_glyphs)
 
 @_add_method(otTables.SingleSubst)
 def subset_glyphs(self, s):
-  if self.Format in [1, 2]:
-    self.mapping = dict((g,v) for g,v in self.mapping.items()
-                        if g in s.glyphs and v in s.glyphs)
-    return bool(self.mapping)
-  else:
-    assert 0, "unknown format: %s" % self.Format
+  self.mapping = dict((g,v) for g,v in self.mapping.items()
+                      if g in s.glyphs and v in s.glyphs)
+  return bool(self.mapping)
 
 @_add_method(otTables.MultipleSubst)
 def closure_glyphs(self, s, cur_glyphs=None):
   if cur_glyphs is None: cur_glyphs = s.glyphs
-  if self.Format == 1:
-    indices = self.Coverage.intersect(cur_glyphs)
-    _set_update(s.glyphs, *(self.Sequence[i].Substitute for i in indices))
-  else:
-    assert 0, "unknown format: %s" % self.Format
+  indices = self.Coverage.intersect(cur_glyphs)
+  _set_update(s.glyphs, *(self.Sequence[i].Substitute for i in indices))
 
 @_add_method(otTables.MultipleSubst)
 def subset_glyphs(self, s):
-  if self.Format == 1:
-    indices = self.Coverage.subset(s.glyphs)
-    self.Sequence = [self.Sequence[i] for i in indices]
-    # Now drop rules generating glyphs we don't want
-    indices = [i for i,seq in enumerate(self.Sequence)
-         if all(sub in s.glyphs for sub in seq.Substitute)]
-    self.Sequence = [self.Sequence[i] for i in indices]
-    self.Coverage.remap(indices)
-    self.SequenceCount = len(self.Sequence)
-    return bool(self.SequenceCount)
-  else:
-    assert 0, "unknown format: %s" % self.Format
+  indices = self.Coverage.subset(s.glyphs)
+  self.Sequence = [self.Sequence[i] for i in indices]
+  # Now drop rules generating glyphs we don't want
+  indices = [i for i,seq in enumerate(self.Sequence)
+       if all(sub in s.glyphs for sub in seq.Substitute)]
+  self.Sequence = [self.Sequence[i] for i in indices]
+  self.Coverage.remap(indices)
+  self.SequenceCount = len(self.Sequence)
+  return bool(self.SequenceCount)
 
 @_add_method(otTables.AlternateSubst)
 def closure_glyphs(self, s, cur_glyphs=None):
   if cur_glyphs is None: cur_glyphs = s.glyphs
-  if self.Format == 1:
-    _set_update(s.glyphs, *(vlist for g,vlist in self.alternates.items()
-                            if g in cur_glyphs))
-  else:
-    assert 0, "unknown format: %s" % self.Format
+  _set_update(s.glyphs, *(vlist for g,vlist in self.alternates.items()
+                          if g in cur_glyphs))
 
 @_add_method(otTables.AlternateSubst)
 def subset_glyphs(self, s):
-  if self.Format == 1:
-    self.alternates = dict((g,vlist)
-                           for g,vlist in self.alternates.items()
-                           if g in s.glyphs and
-                              all(v in s.glyphs for v in vlist))
-    return bool(self.alternates)
-  else:
-    assert 0, "unknown format: %s" % self.Format
+  self.alternates = dict((g,vlist)
+                         for g,vlist in self.alternates.items()
+                         if g in s.glyphs and
+                            all(v in s.glyphs for v in vlist))
+  return bool(self.alternates)
 
 @_add_method(otTables.LigatureSubst)
 def closure_glyphs(self, s, cur_glyphs=None):
   if cur_glyphs is None: cur_glyphs = s.glyphs
-  if self.Format == 1:
-    _set_update(s.glyphs, *([seq.LigGlyph for seq in seqs
-                             if all(c in s.glyphs for c in seq.Component)]
-                            for g,seqs in self.ligatures.items()
-                            if g in cur_glyphs))
-  else:
-    assert 0, "unknown format: %s" % self.Format
+  _set_update(s.glyphs, *([seq.LigGlyph for seq in seqs
+                           if all(c in s.glyphs for c in seq.Component)]
+                          for g,seqs in self.ligatures.items()
+                          if g in cur_glyphs))
 
 @_add_method(otTables.LigatureSubst)
 def subset_glyphs(self, s):
-  if self.Format == 1:
-    self.ligatures = dict((g,v) for g,v in self.ligatures.items()
-                          if g in s.glyphs)
-    self.ligatures = dict((g,[seq for seq in seqs
-                              if seq.LigGlyph in s.glyphs and
-                                 all(c in s.glyphs for c in seq.Component)])
-                           for g,seqs in self.ligatures.items())
-    self.ligatures = dict((g,v) for g,v in self.ligatures.items() if v)
-    return bool(self.ligatures)
-  else:
-    assert 0, "unknown format: %s" % self.Format
+  self.ligatures = dict((g,v) for g,v in self.ligatures.items()
+                        if g in s.glyphs)
+  self.ligatures = dict((g,[seq for seq in seqs
+                            if seq.LigGlyph in s.glyphs and
+                               all(c in s.glyphs for c in seq.Component)])
+                         for g,seqs in self.ligatures.items())
+  self.ligatures = dict((g,v) for g,v in self.ligatures.items() if v)
+  return bool(self.ligatures)
 
 @_add_method(otTables.ReverseChainSingleSubst)
 def closure_glyphs(self, s, cur_glyphs=None):
