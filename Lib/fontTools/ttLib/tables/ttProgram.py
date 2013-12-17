@@ -362,36 +362,32 @@ class Program(object):
 			except KeyError:
 				if op in streamOpcodeDict:
 					mnemonic, argBits, argoffset = streamOpcodeDict[op]
-					pushBytes = pushWords = 0
+					words = mnemonic[-1] == "W"
 					if argBits:
-						if mnemonic == "PUSHB":
-							pushBytes = op - argoffset + 1
-						else:
-							pushWords = op - argoffset + 1
+						nValues = op - argoffset + 1
 					else:
 						i = i + 1
-						if mnemonic == "NPUSHB":
-							pushBytes = bytecode[i]
-						else:
-							pushWords = bytecode[i]
+						nValues = bytecode[i]
 					i = i + 1
-					nValues = pushBytes or pushWords
 					assert nValues > 0
+					mnemonic = "PUSH" # Discard variant distinction now
 					if nValues == 1:
 						assembly.append("%s[ ]  /* %s value pushed */" % (mnemonic, nValues))
 					else:
 						assembly.append("%s[ ]  /* %s values pushed */" % (mnemonic, nValues))
-					for j in range(pushBytes):
-						value = bytecode[i]
-						assembly.append(repr(value))
-						i = i + 1
-					for j in range(pushWords):
-						# cast to signed int16
-						value = (bytecode[i] << 8) | bytecode[i+1]
-						if value >= 0x8000:
-							value = value - 0x10000
-						assembly.append(repr(value))
-						i = i + 2
+					if not words:
+						for j in range(nValues):
+							value = bytecode[i]
+							assembly.append(repr(value))
+							i = i + 1
+					else:
+						for j in range(nValues):
+							# cast to signed int16
+							value = (bytecode[i] << 8) | bytecode[i+1]
+							if value >= 0x8000:
+								value = value - 0x10000
+							assembly.append(repr(value))
+							i = i + 2
 				else:
 					assembly.append("INSTR%d[ ]" % op)
 					i = i + 1
