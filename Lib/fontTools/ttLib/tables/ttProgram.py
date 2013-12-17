@@ -289,7 +289,7 @@ class Program(object):
 				# Unknown instruction
 				op = int(mnemonic[5:])
 				push(op)
-			elif mnemonic not in ("NPUSHB", "NPUSHW", "PUSHB", "PUSHW"):
+			elif mnemonic not in ("PUSH", "NPUSHB", "NPUSHW", "PUSHB", "PUSHW"):
 				op, argBits = mnemonicDict[mnemonic]
 				if len(arg) != argBits:
 					raise tt_instructions_error("Incorrect number of argument bits (%s[%s])" % (mnemonic, arg))
@@ -305,7 +305,7 @@ class Program(object):
 					m = _tokenRE.match(assembly, pos)
 					if m is None:
 						raise tt_instructions_error("Syntax error in TT program (%s)" % assembly[pos:pos+15])
-					dummy, mnemonic, arg, number, comment = m.groups()
+					dummy, _mnemonic, arg, number, comment = m.groups()
 					if number is None and comment is None:
 						break
 					pos = m.regs[0][1]
@@ -313,31 +313,37 @@ class Program(object):
 					if comment is not None:
 						continue
 					args.append(int(number))
-				if max(args) > 255 or min(args) < 0:
-					words = 1
-					mnemonic = "PUSHW"
-				else:
-					words = 0
-					mnemonic = "PUSHB"
 				nArgs = len(args)
-				if nArgs <= 8:
-					op, argBits = streamMnemonicDict[mnemonic]
+				if mnemonic == "PUSH":
+					if nArgs > 8:
+						mnemonic = "N" + mnemonic
+					if max(args) > 255 or min(args) < 0:
+						mnemonic += "W"
+					else:
+						mnemonic += "B"
+
+				words = mnemonic[-1] == "W"
+				op, argBits = streamMnemonicDict[mnemonic]
+				if mnemonic[0] != "N":
+					assert nArgs <= 8, nArgs
 					op = op + nArgs - 1
+
+				while nArgs:
 					push(op)
-				elif nArgs < 256:
-					mnemonic = "N" + mnemonic
-					op, argBits = streamMnemonicDict[mnemonic]
-					push(op)
-					push(nArgs)
-				else:
-					raise tt_instructions_error("More than 255 push arguments (%s)" % nArgs)
-				if words:
-					for value in args:
-						push((value >> 8) & 0xff)
-						push(value & 0xff)
-				else:
-					for value in args:
-						push(value)
+					num = min(nArgs, 255)
+					if mnemonic[0] == "N":
+						push(num)
+					if words:
+						for value in args[:num]:
+							assert -32768 <= value < 32768, "PUSHW value out of range %d" % value
+							push((value >> 8) & 0xff)
+							push(value & 0xff)
+					else:
+						for value in args:
+							assert 0 <= value < 256, "PUSHB value out of range %d" % value
+							push(value)
+					args = args[num:]
+					nArgs -= num
 			pos = _skipWhite(assembly, pos)
 		
 		if bytecode:
