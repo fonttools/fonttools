@@ -244,10 +244,8 @@ class OTTableWriter(object):
 					except struct.error:
 						# provide data to fix overflow problem.
 						# If the overflow is to a lookup, or from a lookup to a subtable,
-						# just report the current item.
-						if self.name in [ 'LookupList', 'Lookup']:
-							overflowErrorRecord = self.getOverflowErrorRecord(item)
-						else:
+						# just report the current item.  Otherwise...
+						if self.name not in [ 'LookupList', 'Lookup']:
 							# overflow is within a subTable. Life is more complicated.
 							# If we split the sub-table just before the current item, we may still suffer overflow.
 							# This is because duplicate table merging is done only within an Extension subTable tree;
