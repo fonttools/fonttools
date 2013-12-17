@@ -236,11 +236,12 @@ class Table(Struct):
 					% (offset, self.tableClass.__name__))
 			return None
 		table = self.tableClass()
-		table.reader = reader.getSubReader(offset)
-		table.font = font
-		table.compileStatus = 1
-		if not font.lazy:
-			table.ensureDecompiled()
+		reader = reader.getSubReader(offset)
+		if font.lazy:
+			table.reader = reader
+			table.font = font
+		else:
+			table.decompile(reader, font)
 		return table
 	
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
