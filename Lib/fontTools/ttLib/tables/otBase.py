@@ -497,14 +497,13 @@ def packULong(value):
 
 
 class BaseTable(object):
-	def __init__(self):
-		self.compileStatus = 0 # 0 means table was created
-									# 1 means the table.read() function was called by a table which is subject
-									# to delayed compilation
-									# 2 means that it was subject to delayed compilation, and 
-									# has been decompiled
 
-		self.recurse = 0
+	compileStatus = 0 # 0 means table was created
+			  # 1 means the table.read() function was called by a table
+			  #   which is subject to delayed compilation
+			  # 2 means that it was subject to delayed compilation, and
+			  # has been decompiled
+	recurse = 0
 	
 	def __getattr__(self, attr):
 		# we get here only when the table does not have the attribute.
