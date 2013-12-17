@@ -498,30 +498,16 @@ def packULong(value):
 
 class BaseTable(object):
 
-	compileStatus = 0 # 0 means table was created
-			  # 1 means the table.read() function was called by a table
-			  #   which is subject to delayed compilation
-			  # 2 means that it was subject to delayed compilation, and
-			  # has been decompiled
-	recurse = 0
-	
 	def __getattr__(self, attr):
-		# we get here only when the table does not have the attribute.
-		# This method ovveride exists so that we can try to de-compile
-		# a table which is subject to delayed decompilation, and then try
-		# to get the value again after decompilation.
-		self.recurse +=1
-		if self.recurse > 2:
-			# shouldn't ever get here - we should only get to two levels of recursion.
-			# this guards against self.decompile NOT setting compileStatus to other than 1.
-			raise AttributeError(attr) 
-		if self.compileStatus == 1:
-			self.ensureDecompiled()
-			val = getattr(self, attr)
-			self.recurse -=1
-			return val
-			
-		raise AttributeError(attr) 
+		reader = self.__dict__.get("reader", None)
+		if reader:
+			del self.reader
+			font = self.font
+			del self.font
+			self.decompile(reader, font)
+			return getattr(self, attr)
+
+		raise AttributeError(attr)
 
 
 	"""Generic base class for all OpenType (sub)tables."""
@@ -533,7 +519,6 @@ class BaseTable(object):
 		return self.convertersByName[name]
 	
 	def decompile(self, reader, font):
-		self.compileStatus = 2 # table has been decompiled.
 		self.readFormat(reader)
 		table = {}
 		self.__rawTable = table  # for debugging
@@ -569,10 +554,12 @@ class BaseTable(object):
 		del self.__rawTable  # succeeded, get rid of debugging info
 
 	def ensureDecompiled(self):
-		if self.compileStatus != 1:
-			return
-		self.decompile(self.reader, self.font)
-		del self.reader, self.font
+		reader = self.__dict__.get("reader", None)
+		if reader:
+			del self.reader
+			font = self.font
+			del self.font
+			self.decompile(reader, font)
 
 	def compile(self, writer, font):
 		self.ensureDecompiled()
