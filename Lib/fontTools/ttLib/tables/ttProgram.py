@@ -361,33 +361,40 @@ class Program(object):
 				mnemonic, argBits, argoffset = opcodeDict[op]
 			except KeyError:
 				if op in streamOpcodeDict:
-					mnemonic, argBits, argoffset = streamOpcodeDict[op]
-					words = mnemonic[-1] == "W"
-					if argBits:
-						nValues = op - argoffset + 1
-					else:
-						i = i + 1
-						nValues = bytecode[i]
-					i = i + 1
-					assert nValues > 0
-					mnemonic = "PUSH" # Discard variant distinction now
-					if nValues == 1:
-						assembly.append("%s[ ]  /* %s value pushed */" % (mnemonic, nValues))
-					else:
-						assembly.append("%s[ ]  /* %s values pushed */" % (mnemonic, nValues))
-					if not words:
-						for j in range(nValues):
-							value = bytecode[i]
-							assembly.append(repr(value))
+					values = []
+
+					# Merge consecutive PUSH operations
+					while bytecode[i] in streamOpcodeDict:
+						op = bytecode[i]
+						mnemonic, argBits, argoffset = streamOpcodeDict[op]
+						words = mnemonic[-1] == "W"
+						if argBits:
+							nValues = op - argoffset + 1
+						else:
 							i = i + 1
+							nValues = bytecode[i]
+						i = i + 1
+						assert nValues > 0
+						if not words:
+							for j in range(nValues):
+								value = bytecode[i]
+								values.append(repr(value))
+								i = i + 1
+						else:
+							for j in range(nValues):
+								# cast to signed int16
+								value = (bytecode[i] << 8) | bytecode[i+1]
+								if value >= 0x8000:
+									value = value - 0x10000
+								values.append(repr(value))
+								i = i + 2
+
+					nValues = len(values)
+					if nValues == 1:
+						assembly.append("PUSH[ ]")
 					else:
-						for j in range(nValues):
-							# cast to signed int16
-							value = (bytecode[i] << 8) | bytecode[i+1]
-							if value >= 0x8000:
-								value = value - 0x10000
-							assembly.append(repr(value))
-							i = i + 2
+						assembly.append("PUSH[ ]  /* %s values pushed */" % nValues)
+					assembly.extend(values)
 				else:
 					assembly.append("INSTR%d[ ]" % op)
 					i = i + 1
