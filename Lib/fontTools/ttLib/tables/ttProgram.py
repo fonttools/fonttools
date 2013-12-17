@@ -315,26 +315,66 @@ class Program(object):
 					args.append(int(number))
 				nArgs = len(args)
 				if mnemonic == "PUSH":
-					if nArgs > 8:
-						mnemonic = "N" + mnemonic
-					if max(args) > 255 or min(args) < 0:
-						mnemonic += "W"
+					# Automatically choose the most compact representation
+					nWords = 0
+					while nArgs:
+						while nWords < nArgs and nWords < 255 and not (0 <= args[nWords] <= 255):
+							nWords += 1
+						nBytes = 0
+						while nWords+nBytes < nArgs and nBytes < 255 and 0 <= args[nWords+nBytes] <= 255:
+							nBytes += 1
+						if nBytes < 3 and nWords + nBytes < 255 and nWords + nBytes != nArgs:
+							# Will write bytes as words
+							nWords += nBytes
+							continue
+
+						# Write words
+						if nWords:
+							if nWords <= 8:
+								op, argBits = streamMnemonicDict["PUSHW"]
+								op = op + nWords - 1
+								push(op)
+							else:
+								op, argBits = streamMnemonicDict["NPUSHW"]
+								push(op)
+								push(nWords)
+							for value in args[:nWords]:
+								assert -32768 <= value < 32768, "PUSH value out of range %d" % value
+								push((value >> 8) & 0xff)
+								push(value & 0xff)
+
+						# Write bytes
+						if nBytes:
+							pass
+							if nBytes <= 8:
+								op, argBits = streamMnemonicDict["PUSHB"]
+								op = op + nBytes - 1
+								push(op)
+							else:
+								op, argBits = streamMnemonicDict["NPUSHB"]
+								push(op)
+								push(nBytes)
+							for value in args[nWords:nWords+nBytes]:
+								push(value)
+
+						nTotal = nWords + nBytes
+						args = args[nTotal:]
+						nArgs -= nTotal
+						nWords = 0
+				else:
+					# Write exactly what we've been asked to
+					words = mnemonic[-1] == "W"
+					op, argBits = streamMnemonicDict[mnemonic]
+					if mnemonic[0] != "N":
+						assert nArgs <= 8, nArgs
+						op = op + nArgs - 1
+						push(op)
 					else:
-						mnemonic += "B"
-
-				words = mnemonic[-1] == "W"
-				op, argBits = streamMnemonicDict[mnemonic]
-				if mnemonic[0] != "N":
-					assert nArgs <= 8, nArgs
-					op = op + nArgs - 1
-
-				while nArgs:
-					push(op)
-					num = min(nArgs, 255)
-					if mnemonic[0] == "N":
-						push(num)
+						assert nArgs < 256
+						push(op)
+						push(nArgs)
 					if words:
-						for value in args[:num]:
+						for value in args:
 							assert -32768 <= value < 32768, "PUSHW value out of range %d" % value
 							push((value >> 8) & 0xff)
 							push(value & 0xff)
@@ -342,8 +382,7 @@ class Program(object):
 						for value in args:
 							assert 0 <= value < 256, "PUSHB value out of range %d" % value
 							push(value)
-					args = args[num:]
-					nArgs -= num
+
 			pos = _skipWhite(assembly, pos)
 		
 		if bytecode:
