@@ -568,6 +568,9 @@ class BaseTable(object):
 		if hasattr(self, 'sortCoverageLast'):
 			writer.sortCoverageLast = 1
 
+		if hasattr(self.__class__, 'LookupType'):
+			writer['LookupType'].setValue(self.__class__.LookupType)
+
 		self.writeFormat(writer)
 		for conv in self.getConverters():
 			value = table.get(conv.name)
@@ -594,6 +597,10 @@ class BaseTable(object):
 				table[conv.name] = None
 				if conv.isPropagated:
 					writer[conv.name] = ref
+			elif conv.isLookupType:
+				ref = writer.writeCountReference(table, conv.name)
+				table[conv.name] = None
+				writer['LookupType'] = ref
 			else:
 				if conv.aux and not eval(conv.aux, None, table):
 					continue
