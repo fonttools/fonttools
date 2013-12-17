@@ -498,7 +498,7 @@ def packULong(value):
 class BaseTable(object):
 
 	def __getattr__(self, attr):
-		reader = self.__dict__.get("reader", None)
+		reader = self.__dict__.get("reader")
 		if reader:
 			del self.reader
 			font = self.font
@@ -553,7 +553,7 @@ class BaseTable(object):
 		del self.__rawTable  # succeeded, get rid of debugging info
 
 	def ensureDecompiled(self):
-		reader = self.__dict__.get("reader", None)
+		reader = self.__dict__.get("reader")
 		if reader:
 			del self.reader
 			font = self.font
