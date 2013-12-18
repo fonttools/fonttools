@@ -8,7 +8,7 @@
 from __future__ import print_function, division
 from fontTools.misc.py23 import *
 from fontTools import ttLib, cffLib
-from fontTools.ttLib.tables import otTables
+from fontTools.ttLib.tables import otTables, _h_e_a_d
 from functools import reduce
 import sys
 import time
@@ -31,10 +31,26 @@ def _add_method(*clazzes):
 def assert_equal(lst):
 	first = lst[0]
 	assert all([item == first for item in lst])
+	return first
 
 def first(lst):
 	return lst[0]
 
+def recalculate(lst):
+	# Just return the first value, assume will be recalculated when saved
+	return lst[0]
+
+def current_time(lst):
+	return long(time.time() - _h_e_a_d.mac_epoch_diff)
+
+def bitwise_or(lst):
+	ret = 0
+	for item in lst:
+		ret |= item
+	return ret
+
+def ignore(lst):
+	assert False, "This function should not be called."
 
 @_add_method(ttLib.getTableClass('maxp'))
 def merge(self, m):
@@ -53,74 +69,88 @@ def merge(self, m):
 
 @_add_method(ttLib.getTableClass('head'))
 def merge(self, m):
-	# TODO Check that unitsPerEm are the same.
-	# TODO Use bitwise ops for flags, macStyle, fontDirectionHint
-	minMembers = ['xMin', 'yMin']
-	# Negate some members
-	for key in minMembers:
-		for table in m.tables:
-			setattr(table, key, -getattr(table, key))
-	# Get max over members
-	allKeys = reduce(set.union, (list(vars(table).keys()) for table in m.tables), set())
-	for key in allKeys:
-		setattr(self, key, max(getattr(table, key) for table in m.tables))
-	# Negate them back
-	for key in minMembers:
-		for table in m.tables:
-			setattr(table, key, -getattr(table, key))
-		setattr(self, key, -getattr(self, key))
+	logic = {
+		'tableVersion': max,
+		'fontRevision': max,
+		'checkSumAdjustment': recalculate,
+		'magicNumber': assert_equal,
+		'flags': first, # FIXME: replace with bit-sensitive code
+		'unitsPerEm': assert_equal,
+		'created': current_time,
+		'modified': current_time,
+		'xMin': min,
+		'yMin': min,
+		'xMax': max,
+		'yMax': max,
+		'macStyle': first,
+		'lowestRecPPEM': max,
+		'fontDirectionHint': lambda lst: 2,
+		'indexToLocFormat': recalculate,
+		'glyphDataFormat': assert_equal,
+	}
+	m._mergeKeys(self, logic)
 	return True
 
 @_add_method(ttLib.getTableClass('hhea'))
 def merge(self, m):
-	# TODO Check that ascent, descent, slope, etc are the same.
-	minMembers = ['descent', 'minLeftSideBearing', 'minRightSideBearing']
-	# Negate some members
-	for key in minMembers:
-		for table in m.tables:
-			setattr(table, key, -getattr(table, key))
-	# Get max over members
-	allKeys = reduce(set.union, (list(vars(table).keys()) for table in m.tables), set())
-	for key in allKeys:
-		setattr(self, key, max(getattr(table, key) for table in m.tables))
-	# Negate them back
-	for key in minMembers:
-		for table in m.tables:
-			setattr(table, key, -getattr(table, key))
-		setattr(self, key, -getattr(self, key))
+	logic = {
+		'*': assert_equal,
+		'tableVersion': max,
+		'ascent': max,
+		'descent': min,
+		'lineGap': max,
+		'advanceWidthMax': max,
+		'minLeftSideBearing': min,
+		'minRightSideBearing': min,
+		'xMaxExtent': max,
+		'caretSlopeRise': first, # FIXME
+		'caretSlopeRun': first, # FIXME
+		'caretOffset': first, # FIXME
+		'numberOfHMetrics': recalculate,
+	}
+	m._mergeKeys(self, logic)
 	return True
 
 @_add_method(ttLib.getTableClass('OS/2'))
 def merge(self, m):
-	# TODO Check that weight/width/subscript/superscript/etc are the same.
-	# TODO Bitwise ops for UnicodeRange/CodePageRange.
-	# TODO Pretty much all fields generated here have bogus values.
-	# Get max over members
-	allKeys = reduce(set.union, (list(vars(table).keys()) for table in m.tables), set())
-	for key in allKeys:
-		setattr(self, key, max(getattr(table, key) for table in m.tables))
+	logic = {
+		'*': first,
+		'version': max,
+		'xAvgCharWidth': recalculate,
+		'fsType': first, # FIXME
+		'panose': first, # FIXME?
+		'ulUnicodeRange1': bitwise_or,
+		'ulUnicodeRange2': bitwise_or,
+		'ulUnicodeRange3': bitwise_or,
+		'ulUnicodeRange4': bitwise_or,
+		'fsFirstCharIndex': min,
+		'fsLastCharIndex': max,
+		'sTypoAscender': max,
+		'sTypoDescender': min,
+		'sTypoLineGap': max,
+		'usWinAscent': max,
+		'usWinDescent': max,
+		'ulCodePageRange1': bitwise_or,
+		'ulCodePageRange2': bitwise_or,
+		'usMaxContex': max,
+	}
+	m._mergeKeys(self, logic)
 	return True
 
 @_add_method(ttLib.getTableClass('post'))
 def merge(self, m):
-	# TODO Check that italicAngle, underlinePosition, underlineThickness are the same.
-	minMembers = ['underlinePosition', 'minMemType42', 'minMemType1']
-	# Negate some members
-	for key in minMembers:
-		for table in m.tables:
-			setattr(table, key, -getattr(table, key))
-	# Get max over members
-	allKeys = reduce(set.union, (list(vars(table).keys()) for table in m.tables), set())
-	if 'mapping' in allKeys:
-		allKeys.remove('mapping')
-	allKeys.remove('extraNames')
-	for key in allKeys:
-		setattr(self, key, max(getattr(table, key) for table in m.tables))
-	# Negate them back
-	for key in minMembers:
-		for table in m.tables:
-			setattr(table, key, -getattr(table, key))
-		setattr(self, key, -getattr(self, key))
+	logic = {
+		'*': first,
+		'formatType': max,
+		'isFixedPitch': min,
+		'minMemType42': max,
+		'maxMemType42': lambda lst: 0,
+		'minMemType1': max,
+		'maxMemType1': lambda lst: 0,
+		'mapping': ignore,
+		'extraNames': ignore
+	}
+	m._mergeKeys(self, logic)
 	self.mapping = {}
 	for table in m.tables:
 		if hasattr(table, 'mapping'):
@@ -400,7 +430,12 @@ class Merger:
 		logic['tableTag'] = assert_equal
 		allKeys = set.union(set(), *(vars(table).keys() for table in self.tables))
 		for key in allKeys:
-			merge_logic = logic.get(key, logic['*'])
+			try:
+				merge_logic = logic[key]
+			except KeyError:
+				merge_logic = logic['*']
+			if merge_logic == ignore:
+				continue
 			key_value = merge_logic([getattr(table, key) for table in self.tables])
 			setattr(return_table, key, key_value)
 
