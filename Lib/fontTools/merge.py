@@ -12,6 +12,7 @@ from fontTools.ttLib.tables import otTables, _h_e_a_d
 from functools import reduce
 import sys
 import time
+import operator
 
 
 def _add_method(*clazzes):
@@ -28,26 +29,24 @@ def _add_method(*clazzes):
 	return wrapper
 
 # General utility functions for merging values from different fonts
-def assert_equal(lst):
-	first = lst[0]
-	assert all([item == first for item in lst])
+def equal(lst):
+	t = iter(lst)
+	first = next(t)
+	assert all(item == first for item in t)
 	return first
 
 def first(lst):
-	return lst[0]
+	return next(iter(lst))
 
 def recalculate(lst):
 	# Just return the first value, assume will be recalculated when saved
-	return lst[0]
+	return first(lst)
 
 def current_time(lst):
-	return long(time.time() - _h_e_a_d.mac_epoch_diff)
+	return int(time.time() - _h_e_a_d.mac_epoch_diff)
 
 def bitwise_or(lst):
-	ret = 0
-	for item in lst:
-		ret |= item
-	return ret
+	return reduce(operator.or_, lst)
 
 def ignore(lst):
 	assert False, "This function should not be called."
@@ -56,7 +55,7 @@ def ignore(lst):
 def merge(self, m):
 	logic = {
 		'*': max,
-		'tableVersion': assert_equal,
+		'tableVersion': equal,
 		'numGlyphs': sum,
 		'maxStorage': max, # FIXME: may need to be changed to sum
 		'maxFunctionDefs': sum,
@@ -73,9 +72,9 @@ def merge(self, m):
 		'tableVersion': max,
 		'fontRevision': max,
 		'checkSumAdjustment': recalculate,
-		'magicNumber': assert_equal,
+		'magicNumber': equal,
 		'flags': first, # FIXME: replace with bit-sensitive code
-		'unitsPerEm': assert_equal,
+		'unitsPerEm': equal,
 		'created': current_time,
 		'modified': current_time,
 		'xMin': min,
@@ -86,7 +85,7 @@ def merge(self, m):
 		'lowestRecPPEM': max,
 		'fontDirectionHint': lambda lst: 2,
 		'indexToLocFormat': recalculate,
-		'glyphDataFormat': assert_equal,
+		'glyphDataFormat': equal,
 	}
 	m._mergeKeys(self, logic)
 	return True
@@ -94,7 +93,7 @@ def merge(self, m):
 @_add_method(ttLib.getTableClass('hhea'))
 def merge(self, m):
 	logic = {
-		'*': assert_equal,
+		'*': equal,
 		'tableVersion': max,
 		'ascent': max,
 		'descent': min,
@@ -427,7 +426,7 @@ class Merger:
 		return mega
 
 	def _mergeKeys(self, return_table, logic):
-		logic['tableTag'] = assert_equal
+		logic['tableTag'] = equal
 		allKeys = set.union(set(), *(vars(table).keys() for table in self.tables))
 		for key in allKeys:
 			try:
