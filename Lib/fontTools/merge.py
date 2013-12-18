@@ -5,12 +5,14 @@
 """Font merger.
 """
 
+from __future__ import print_function, division
+from fontTools.misc.py23 import *
+from fontTools import ttLib, cffLib
+from fontTools.ttLib.tables import otTables
+from functools import reduce
 import sys
 import time
 
-import fontTools
-from fontTools import misc, ttLib, cffLib
-from fontTools.ttLib.tables import otTables
 
 def _add_method(*clazzes):
 	"""Returns a decorator function that adds a new method to one or
@@ -18,10 +20,10 @@ def _add_method(*clazzes):
 	def wrapper(method):
 		for clazz in clazzes:
 			assert clazz.__name__ != 'DefaultTable', 'Oops, table class not found.'
-			assert not hasattr(clazz, method.func_name), \
+			assert not hasattr(clazz, method.__name__), \
 				"Oops, class '%s' has method '%s'." % (clazz.__name__,
-								       method.func_name)
-		setattr(clazz, method.func_name, method)
+								       method.__name__)
+		setattr(clazz, method.__name__, method)
 		return None
 	return wrapper
 
@@ -31,7 +33,7 @@ def merge(self, m):
 	# TODO When we correctly merge hinting data, update these values:
 	# maxFunctionDefs, maxInstructionDefs, maxSizeOfInstructions
 	# TODO Assumes that all tables have format 1.0; safe assumption.
-	allKeys = reduce(set.union, (vars(table).keys() for table in m.tables), set())
+	allKeys = reduce(set.union, (list(vars(table).keys()) for table in m.tables), set())
 	for key in allKeys:
 		setattr(self, key, max(getattr(table, key) for table in m.tables))
 	return True
@@ -46,7 +48,7 @@ def merge(self, m):
 		for table in m.tables:
 			setattr(table, key, -getattr(table, key))
 	# Get max over members
-	allKeys = reduce(set.union, (vars(table).keys() for table in m.tables), set())
+	allKeys = reduce(set.union, (list(vars(table).keys()) for table in m.tables), set())
 	for key in allKeys:
 		setattr(self, key, max(getattr(table, key) for table in m.tables))
 	# Negate them back
@@ -65,7 +67,7 @@ def merge(self, m):
 		for table in m.tables:
 			setattr(table, key, -getattr(table, key))
 	# Get max over members
-	allKeys = reduce(set.union, (vars(table).keys() for table in m.tables), set())
+	allKeys = reduce(set.union, (list(vars(table).keys()) for table in m.tables), set())
 	for key in allKeys:
 		setattr(self, key, max(getattr(table, key) for table in m.tables))
 	# Negate them back
@@ -81,7 +83,7 @@ def merge(self, m):
 	# TODO Bitwise ops for UnicodeRange/CodePageRange.
 	# TODO Pretty much all fields generated here have bogus values.
 	# Get max over members
-	allKeys = reduce(set.union, (vars(table).keys() for table in m.tables), set())
+	allKeys = reduce(set.union, (list(vars(table).keys()) for table in m.tables), set())
 	for key in allKeys:
 		setattr(self, key, max(getattr(table, key) for table in m.tables))
 	return True
@@ -95,7 +97,7 @@ def merge(self, m):
 		for table in m.tables:
 			setattr(table, key, -getattr(table, key))
 	# Get max over members
-	allKeys = reduce(set.union, (vars(table).keys() for table in m.tables), set())
+	allKeys = reduce(set.union, (list(vars(table).keys()) for table in m.tables), set())
 	if 'mapping' in allKeys:
 		allKeys.remove('mapping')
 	allKeys.remove('extraNames')
@@ -244,7 +246,7 @@ class Options(object):
     self.set(**kwargs)
 
   def set(self, **kwargs):
-    for k,v in kwargs.iteritems():
+    for k,v in kwargs.items():
       if not hasattr(self, k):
         raise self.UnknownOptionError("Unknown option '%s'" % k)
       setattr(self, k, v)
@@ -340,7 +342,7 @@ class Merger:
 			font.setGlyphOrder(glyphOrder)
 		mega.setGlyphOrder(megaGlyphOrder)
 
-		allTags = reduce(set.union, (font.keys() for font in fonts), set())
+		allTags = reduce(set.union, (list(font.keys()) for font in fonts), set())
 		allTags.remove('GlyphOrder')
 		for tag in allTags:
 
@@ -376,7 +378,7 @@ class Merger:
 		mega = []
 		for n,glyphOrder in enumerate(glyphOrders):
 			for i,glyphName in enumerate(glyphOrder):
-				glyphName += "#" + `n`
+				glyphName += "#" + repr(n)
 				glyphOrder[i] = glyphName
 				mega.append(glyphName)
 		return mega
@@ -401,14 +403,14 @@ class Logger(object):
   def __call__(self, *things):
     if not self.verbose:
       return
-    print ' '.join(str(x) for x in things)
+    print(' '.join(str(x) for x in things))
 
   def lapse(self, *things):
     if not self.timing:
       return
     new_time = time.time()
-    print "Took %0.3fs to %s" %(new_time - self.last_time,
-                                 ' '.join(str(x) for x in things))
+    print("Took %0.3fs to %s" %(new_time - self.last_time,
+                                 ' '.join(str(x) for x in things)))
     self.last_time = new_time
 
   def font(self, font, file=sys.stdout):
@@ -441,7 +443,7 @@ def main(args):
 	args = options.parse_opts(args)
 
 	if len(args) < 1:
-		print >>sys.stderr, "usage: pyftmerge font..."
+		print("usage: pyftmerge font...", file=sys.stderr)
 		sys.exit(1)
 
 	merger = Merger(options=options, log=log)
