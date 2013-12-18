@@ -1,6 +1,6 @@
 # Copyright 2013 Google, Inc. All Rights Reserved.
 #
-# Google Author(s): Behdad Esfahbod
+# Google Author(s): Behdad Esfahbod, Roozbeh Pournader
 
 """Font merger.
 """
@@ -27,15 +27,28 @@ def _add_method(*clazzes):
 		return None
 	return wrapper
 
+# General utility functions for merging values from different fonts
+def assert_equal(lst):
+	first = lst[0]
+	assert all([item == first for item in lst])
+
+def first(lst):
+	return lst[0]
+
 
 @_add_method(ttLib.getTableClass('maxp'))
 def merge(self, m):
+	logic = {
+		'*': max,
+		'tableVersion': assert_equal,
+		'numGlyphs': sum,
+		'maxStorage': max, # FIXME: may need to be changed to sum
+		'maxFunctionDefs': sum,
+		'maxInstructionDefs': sum,
+	}
 	# TODO When we correctly merge hinting data, update these values:
 	# maxFunctionDefs, maxInstructionDefs, maxSizeOfInstructions
-	# TODO Assumes that all tables have format 1.0; safe assumption.
-	allKeys = reduce(set.union, (list(vars(table).keys()) for table in m.tables), set())
-	for key in allKeys:
-		setattr(self, key, max(getattr(table, key) for table in m.tables))
+	m._mergeKeys(self, logic)
 	return True
 
 @_add_method(ttLib.getTableClass('head'))
@@ -382,6 +395,14 @@ class Merger:
 				glyphOrder[i] = glyphName
 				mega.append(glyphName)
 		return mega
+
+	def _mergeKeys(self, return_table, logic):
+		logic['tableTag'] = assert_equal
+		allKeys = set.union(set(), *(vars(table).keys() for table in self.tables))
+		for key in allKeys:
+			merge_logic = logic.get(key, logic['*'])
+			key_value = merge_logic([getattr(table, key) for table in self.tables])
+			setattr(return_table, key, key_value)
 
 
 class Logger(object):
