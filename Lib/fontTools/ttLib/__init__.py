@@ -414,6 +414,12 @@ class TTFont(object):
 			del self.tables[tag]
 		if self.reader and tag in self.reader:
 			del self.reader[tag]
+
+	def get(self, tag, default=None):
+		try:
+			return self[tag]
+		except KeyError:
+			return default
 	
 	def setGlyphOrder(self, glyphOrder):
 		self.glyphOrder = glyphOrder
