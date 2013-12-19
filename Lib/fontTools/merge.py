@@ -55,6 +55,7 @@ def ignore(lst):
 def merge(self, m):
 	logic = {
 		'*': max,
+		'tableTag': equal,
 		'tableVersion': equal,
 		'numGlyphs': sum,
 		'maxStorage': max, # FIXME: may need to be changed to sum
@@ -69,6 +70,7 @@ def merge(self, m):
 @_add_method(ttLib.getTableClass('head'))
 def merge(self, m):
 	logic = {
+		'tableTag': equal,
 		'tableVersion': max,
 		'fontRevision': max,
 		'checkSumAdjustment': recalculate,
@@ -94,6 +96,7 @@ def merge(self, m):
 def merge(self, m):
 	logic = {
 		'*': equal,
+		'tableTag': equal,
 		'tableVersion': max,
 		'ascent': max,
 		'descent': min,
@@ -112,8 +115,10 @@ def merge(self, m):
 
 @_add_method(ttLib.getTableClass('OS/2'))
 def merge(self, m):
+	# TODO version 5
 	logic = {
 		'*': first,
+		'tableTag': equal,
 		'version': max,
 		'xAvgCharWidth': recalculate,
 		'fsType': first, # FIXME
@@ -140,6 +145,7 @@ def merge(self, m):
 def merge(self, m):
 	logic = {
 		'*': first,
+		'tableTag': equal,
 		'formatType': max,
 		'isFixedPitch': min,
 		'minMemType42': max,
@@ -426,7 +432,6 @@ class Merger:
 		return mega
 
 	def _mergeKeys(self, return_table, logic):
-		logic['tableTag'] = equal
 		allKeys = set.union(set(), *(vars(table).keys() for table in self.tables))
 		for key in allKeys:
 			try:
@@ -435,7 +440,7 @@ class Merger:
 				merge_logic = logic['*']
 			if merge_logic == ignore:
 				continue
-			key_value = merge_logic([getattr(table, key) for table in self.tables])
+			key_value = merge_logic(getattr(table, key) for table in self.tables)
 			setattr(return_table, key, key_value)
 
 
