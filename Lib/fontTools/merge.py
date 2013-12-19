@@ -90,6 +90,34 @@ def sumDicts(lst):
 		d.update(item)
 	return d
 
+def mergeObjects(lst):
+	lst = [item for item in lst if item is not None and item is not NotImplemented]
+	if not lst:
+		return None # Not all can be NotImplemented
+
+	clazz = lst[0].__class__
+	assert all(type(item) == clazz for item in lst), lst
+	logic = clazz.mergeMap
+	returnTable = clazz()
+
+	allKeys = set.union(set(), *(vars(table).keys() for table in lst))
+	for key in allKeys:
+		try:
+			mergeLogic = logic[key]
+		except KeyError:
+			try:
+				mergeLogic = logic['*']
+			except KeyError:
+				raise Exception("Don't know how to merge key %s of class %s" %
+						(key, clazz.__name__))
+		if mergeLogic is NotImplemented:
+			continue
+		value = mergeLogic(getattr(table, key, NotImplemented) for table in lst)
+		if value is not NotImplemented:
+			setattr(returnTable, key, value)
+
+	return returnTable
+
 
 @_add_method(DefaultTable, allowDefaultTable=True)
 def merge(self, m, tables):
@@ -242,67 +270,44 @@ def merge(self, m, tables):
 	self.numSubTables = len(self.tables)
 	return self
 
-@_add_method(ttLib.getTableClass('GDEF'))
-def merge(self, m, tables):
-	self.table = otTables.GDEF()
-	self.table.Version = 1.0 # TODO version 1.2...
 
-	if any(t.table.LigCaretList for t in tables):
-		glyphs = []
-		ligGlyphs = []
-		for table in tables:
-			if table.table.LigCaretList:
-				glyphs.extend(table.table.LigCaretList.Coverage.glyphs)
-				ligGlyphs.extend(table.table.LigCaretList.LigGlyph)
-		coverage = otTables.Coverage()
-		coverage.glyphs = glyphs
-		ligCaretList = otTables.LigCaretList()
-		ligCaretList.Coverage = coverage
-		ligCaretList.LigGlyph = ligGlyphs
-		ligCaretList.GlyphCount = len(ligGlyphs)
-		self.table.LigCaretList = ligCaretList
-	else:
-		self.table.LigCaretList = None
+otTables.Coverage.mergeMap = {
+	'glyphs': sumLists,
+}
 
-	if any(t.table.MarkAttachClassDef for t in tables):
-		classDefs = {}
-		for table in tables:
-			if table.table.MarkAttachClassDef:
-				classDefs.update(table.table.MarkAttachClassDef.classDefs)
-		self.table.MarkAttachClassDef = otTables.MarkAttachClassDef()
-		self.table.MarkAttachClassDef.classDefs = classDefs
-	else:
-		self.table.MarkAttachClassDef = None
+otTables.ClassDef.mergeMap = {
+	'classDefs': sumDicts,
+}
 
-	if any(t.table.GlyphClassDef for t in tables):
-		classDefs = {}
-		for table in tables:
-			if table.table.GlyphClassDef:
-				classDefs.update(table.table.GlyphClassDef.classDefs)
-		self.table.GlyphClassDef = otTables.GlyphClassDef()
-		self.table.GlyphClassDef.classDefs = classDefs
-	else:
-		self.table.GlyphClassDef = None
+otTables.LigCaretList.mergeMap = {
+	'Coverage': mergeObjects,
+	'LigGlyphCount': sum,
+	'LigGlyph': sumLists,
+}
 
-	if any(t.table.AttachList for t in tables):
-		glyphs = []
-		attachPoints = []
-		for table in tables:
-			if table.table.AttachList:
-				glyphs.extend(table.table.AttachList.Coverage.glyphs)
-				attachPoints.extend(table.table.AttachList.AttachPoint)
-		coverage = otTables.Coverage()
-		coverage.glyphs = glyphs
-		attachList = otTables.AttachList()
-		attachList.Coverage = coverage
-		attachList.AttachPoint = attachPoints
-		attachList.GlyphCount = len(attachPoints)
-		self.table.AttachList = attachList
-	else:
-		self.table.AttachList = None
+otTables.AttachList.mergeMap = {
+	'Coverage': mergeObjects,
+	'GlyphCount': sum,
+	'AttachPoint': sumLists,
+}
 
-	return self
+# XXX Renumber MarkFilterSets of lookups
+otTables.MarkGlyphSetsDef.mergeMap = {
+	'MarkSetTableFormat': equal,
+	'MarkSetCount': sum,
+	'Coverage': sumLists,
+}
 
+otTables.GDEF.mergeMap = {
+	'*': mergeObjects,
+	'Version': max,
+}
+
+ttLib.getTableClass('GDEF').mergeMap = {
+	'tableTag': equal,
+	'Version': max,
+	'table': mergeObjects,
+}
 
 class Options(object):
 
