@@ -79,12 +79,12 @@ def sumDicts(lst):
 
 
 @_add_method(DefaultTable, allowDefaultTable=True)
-def merge(self, m):
+def merge(self, m, tables):
 	if not hasattr(self, 'mergeMap'):
 		m.log("Don't know how to merge '%s'." % self.tableTag)
 		return False
 
-	m._mergeKeys(self, self.mergeMap)
+	m._mergeKeys(self, self.mergeMap, tables)
 	return True
 
 ttLib.getTableClass('maxp').mergeMap = {
@@ -174,10 +174,10 @@ ttLib.getTableClass('post').mergeMap = {
 	'extraNames': ignore,
 }
 @_add_method(ttLib.getTableClass('post'))
-def merge(self, m):
-	DefaultTable.merge(self, m)
+def merge(self, m, tables):
+	DefaultTable.merge(self, m, tables)
 	self.mapping = {}
-	for table in m.tables:
+	for table in tables:
 		if hasattr(table, 'mapping'):
 			self.mapping.update(table.mapping)
 	self.extraNames = []
@@ -200,8 +200,8 @@ ttLib.getTableClass('glyf').mergeMap = {
 }
 
 @_add_method(ttLib.getTableClass('glyf'))
-def merge(self, m):
-	for table in m.tables:
+def merge(self, m, tables):
+	for table in tables:
 		for g in table.glyphs.values():
 			# Drop hints for now, since we don't remap
 			# functions / CVT values.
@@ -210,7 +210,7 @@ def merge(self, m):
 			# composite glyph names.
 			if g.isComposite():
 				g.expand(table)
-	DefaultTable.merge(self, m)
+	DefaultTable.merge(self, m, tables)
 	return True
 
 @_add_method(ttLib.getTableClass('prep'),
@@ -220,9 +220,9 @@ def merge(self, m):
 	return False # TODO We don't merge hinting data currently.
 
 @_add_method(ttLib.getTableClass('cmap'))
-def merge(self, m):
+def merge(self, m, tables):
 	# TODO Handle format=14.
-	cmapTables = [t for table in m.tables for t in table.tables
+	cmapTables = [t for table in tables for t in table.tables
 		      if t.platformID == 3 and t.platEncID in [1, 10]]
 	# TODO Better handle format-4 and format-12 coexisting in same font.
 	# TODO Insert both a format-4 and format-12 if needed.
@@ -243,14 +243,14 @@ def merge(self, m):
 	return True
 
 @_add_method(ttLib.getTableClass('GDEF'))
-def merge(self, m):
+def merge(self, m, tables):
 	self.table = otTables.GDEF()
 	self.table.Version = 1.0 # TODO version 1.2...
 
-	if any(t.table.LigCaretList for t in m.tables):
+	if any(t.table.LigCaretList for t in tables):
 		glyphs = []
 		ligGlyphs = []
-		for table in m.tables:
+		for table in tables:
 			if table.table.LigCaretList:
 				glyphs.extend(table.table.LigCaretList.Coverage.glyphs)
 				ligGlyphs.extend(table.table.LigCaretList.LigGlyph)
@@ -264,9 +264,9 @@ def merge(self, m):
 	else:
 		self.table.LigCaretList = None
 
-	if any(t.table.MarkAttachClassDef for t in m.tables):
+	if any(t.table.MarkAttachClassDef for t in tables):
 		classDefs = {}
-		for table in m.tables:
+		for table in tables:
 			if table.table.MarkAttachClassDef:
 				classDefs.update(table.table.MarkAttachClassDef.classDefs)
 		self.table.MarkAttachClassDef = otTables.MarkAttachClassDef()
@@ -274,9 +274,9 @@ def merge(self, m):
 	else:
 		self.table.MarkAttachClassDef = None
 
-	if any(t.table.GlyphClassDef for t in m.tables):
+	if any(t.table.GlyphClassDef for t in tables):
 		classDefs = {}
-		for table in m.tables:
+		for table in tables:
 			if table.table.GlyphClassDef:
 				classDefs.update(table.table.GlyphClassDef.classDefs)
 		self.table.GlyphClassDef = otTables.GlyphClassDef()
@@ -284,10 +284,10 @@ def merge(self, m):
 	else:
 		self.table.GlyphClassDef = None
 
-	if any(t.table.AttachList for t in m.tables):
+	if any(t.table.AttachList for t in tables):
 		glyphs = []
 		attachPoints = []
-		for table in m.tables:
+		for table in tables:
 			if table.table.AttachList:
 				glyphs.extend(table.table.AttachList.Coverage.glyphs)
 				attachPoints.extend(table.table.AttachList.AttachPoint)
@@ -424,15 +424,14 @@ class Merger(object):
 			clazz = ttLib.getTableClass(tag)
 
 			# TODO For now assume all fonts have the same tables.
-			self.tables = [font[tag] for font in fonts]
+			tables = [font[tag] for font in fonts]
 			table = clazz(tag)
-			if table.merge (self):
+			if table.merge (self, tables):
 				mega[tag] = table
 				self.log("Merged '%s'." % tag)
 			else:
 				self.log("Dropped '%s'." % tag)
 			self.log.lapse("merge '%s'" % tag)
-			del self.tables
 
 		return mega
 
@@ -450,8 +449,8 @@ class Merger(object):
 				mega.append(glyphName)
 		return mega
 
-	def _mergeKeys(self, return_table, logic):
-		allKeys = set.union(set(), *(vars(table).keys() for table in self.tables))
+	def _mergeKeys(self, return_table, logic, tables):
+		allKeys = set.union(set(), *(vars(table).keys() for table in tables))
 		for key in allKeys:
 			try:
 				merge_logic = logic[key]
@@ -462,7 +461,7 @@ class Merger(object):
 					raise Exception("Don't know how to merge key %s" % key)
 			if merge_logic == ignore:
 				continue
-			key_value = merge_logic(getattr(table, key) for table in self.tables)
+			key_value = merge_logic(getattr(table, key) for table in tables)
 			setattr(return_table, key, key_value)
 
 
