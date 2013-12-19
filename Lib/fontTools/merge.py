@@ -9,22 +9,24 @@ from __future__ import print_function, division
 from fontTools.misc.py23 import *
 from fontTools import ttLib, cffLib
 from fontTools.ttLib.tables import otTables, _h_e_a_d
+from fontTools.ttLib.tables.DefaultTable import DefaultTable
 from functools import reduce
 import sys
 import time
 import operator
 
 
-def _add_method(*clazzes):
+def _add_method(*clazzes, **kwargs):
 	"""Returns a decorator function that adds a new method to one or
 	more classes."""
 	def wrapper(method):
 		for clazz in clazzes:
-			assert clazz.__name__ != 'DefaultTable', 'Oops, table class not found.'
-			assert not hasattr(clazz, method.__name__), \
+			if not kwargs.get('allowDefaultTable', False):
+				assert clazz != DefaultTable, 'Oops, table class not found.'
+			assert method.__name__ not in clazz.__dict__, \
 				"Oops, class '%s' has method '%s'." % (clazz.__name__,
 								       method.__name__)
-		setattr(clazz, method.__name__, method)
+			setattr(clazz, method.__name__, method)
 		return None
 	return wrapper
 
@@ -51,111 +53,129 @@ def bitwise_or(lst):
 def ignore(lst):
 	assert False, "This function should not be called."
 
-@_add_method(ttLib.getTableClass('maxp'))
+def maybenone(func):
+	"""Returns a filter func that when called with a list,
+	only calls func on the non-None items of the list, and
+	only so if there's at least one non-None item in the
+	list."""
+
+	def wrapper(lst):
+		items = [item for item in lst if item is not None]
+		return func(items) if items else None
+
+	return wrapper
+
+def sumLists(lst):
+	l = []
+	for item in lst:
+		l.extend(item)
+	return l
+
+def sumDicts(lst):
+	d = {}
+	for item in lst:
+		d.update(item)
+	return d
+
+
+@_add_method(DefaultTable, allowDefaultTable=True)
 def merge(self, m):
-	logic = {
-		'*': max,
-		'tableTag': equal,
-		'tableVersion': equal,
-		'numGlyphs': sum,
-		'maxStorage': max, # FIXME: may need to be changed to sum
-		'maxFunctionDefs': sum,
-		'maxInstructionDefs': sum,
-	}
+	if not hasattr(self, 'mergeMap'):
+		m.log("Don't know how to merge '%s'." % self.tableTag)
+		return False
+
+	m._mergeKeys(self, self.mergeMap)
+	return True
+
+ttLib.getTableClass('maxp').mergeMap = {
+	'*': max,
+	'tableTag': equal,
+	'tableVersion': equal,
+	'numGlyphs': sum,
+	'maxStorage': max, # FIXME: may need to be changed to sum
+	'maxFunctionDefs': sum,
+	'maxInstructionDefs': sum,
 	# TODO When we correctly merge hinting data, update these values:
 	# maxFunctionDefs, maxInstructionDefs, maxSizeOfInstructions
-	m._mergeKeys(self, logic)
-	return True
+}
 
-@_add_method(ttLib.getTableClass('head'))
-def merge(self, m):
-	logic = {
-		'tableTag': equal,
-		'tableVersion': max,
-		'fontRevision': max,
-		'checkSumAdjustment': recalculate,
-		'magicNumber': equal,
-		'flags': first, # FIXME: replace with bit-sensitive code
-		'unitsPerEm': equal,
-		'created': current_time,
-		'modified': current_time,
-		'xMin': min,
-		'yMin': min,
-		'xMax': max,
-		'yMax': max,
-		'macStyle': first,
-		'lowestRecPPEM': max,
-		'fontDirectionHint': lambda lst: 2,
-		'indexToLocFormat': recalculate,
-		'glyphDataFormat': equal,
-	}
-	m._mergeKeys(self, logic)
-	return True
+ttLib.getTableClass('head').mergeMap = {
+	'tableTag': equal,
+	'tableVersion': max,
+	'fontRevision': max,
+	'checkSumAdjustment': recalculate,
+	'magicNumber': equal,
+	'flags': first, # FIXME: replace with bit-sensitive code
+	'unitsPerEm': equal,
+	'created': current_time,
+	'modified': current_time,
+	'xMin': min,
+	'yMin': min,
+	'xMax': max,
+	'yMax': max,
+	'macStyle': first,
+	'lowestRecPPEM': max,
+	'fontDirectionHint': lambda lst: 2,
+	'indexToLocFormat': recalculate,
+	'glyphDataFormat': equal,
+}
 
-@_add_method(ttLib.getTableClass('hhea'))
-def merge(self, m):
-	logic = {
-		'*': equal,
-		'tableTag': equal,
-		'tableVersion': max,
-		'ascent': max,
-		'descent': min,
-		'lineGap': max,
-		'advanceWidthMax': max,
-		'minLeftSideBearing': min,
-		'minRightSideBearing': min,
-		'xMaxExtent': max,
-		'caretSlopeRise': first, # FIXME
-		'caretSlopeRun': first, # FIXME
-		'caretOffset': first, # FIXME
-		'numberOfHMetrics': recalculate,
-	}
-	m._mergeKeys(self, logic)
-	return True
+ttLib.getTableClass('hhea').mergeMap = {
+	'*': equal,
+	'tableTag': equal,
+	'tableVersion': max,
+	'ascent': max,
+	'descent': min,
+	'lineGap': max,
+	'advanceWidthMax': max,
+	'minLeftSideBearing': min,
+	'minRightSideBearing': min,
+	'xMaxExtent': max,
+	'caretSlopeRise': first, # FIXME
+	'caretSlopeRun': first, # FIXME
+	'caretOffset': first, # FIXME
+	'numberOfHMetrics': recalculate,
+}
 
-@_add_method(ttLib.getTableClass('OS/2'))
-def merge(self, m):
+ttLib.getTableClass('OS/2').mergeMap = {
+	'*': first,
+	'tableTag': equal,
+	'version': max,
+	'xAvgCharWidth': recalculate,
+	'fsType': first, # FIXME
+	'panose': first, # FIXME?
+	'ulUnicodeRange1': bitwise_or,
+	'ulUnicodeRange2': bitwise_or,
+	'ulUnicodeRange3': bitwise_or,
+	'ulUnicodeRange4': bitwise_or,
+	'fsFirstCharIndex': min,
+	'fsLastCharIndex': max,
+	'sTypoAscender': max,
+	'sTypoDescender': min,
+	'sTypoLineGap': max,
+	'usWinAscent': max,
+	'usWinDescent': max,
+	'ulCodePageRange1': bitwise_or,
+	'ulCodePageRange2': bitwise_or,
+	'usMaxContex': max,
 	# TODO version 5
-	logic = {
-		'*': first,
-		'tableTag': equal,
-		'version': max,
-		'xAvgCharWidth': recalculate,
-		'fsType': first, # FIXME
-		'panose': first, # FIXME?
-		'ulUnicodeRange1': bitwise_or,
-		'ulUnicodeRange2': bitwise_or,
-		'ulUnicodeRange3': bitwise_or,
-		'ulUnicodeRange4': bitwise_or,
-		'fsFirstCharIndex': min,
-		'fsLastCharIndex': max,
-		'sTypoAscender': max,
-		'sTypoDescender': min,
-		'sTypoLineGap': max,
-		'usWinAscent': max,
-		'usWinDescent': max,
-		'ulCodePageRange1': bitwise_or,
-		'ulCodePageRange2': bitwise_or,
-		'usMaxContex': max,
-	}
-	m._mergeKeys(self, logic)
-	return True
+}
 
+ttLib.getTableClass('post').mergeMap = {
+	'*': first,
+	'tableTag': equal,
+	'formatType': max,
+	'isFixedPitch': min,
+	'minMemType42': max,
+	'maxMemType42': lambda lst: 0,
+	'minMemType1': max,
+	'maxMemType1': lambda lst: 0,
+	'mapping': ignore,
+	'extraNames': ignore,
+}
 @_add_method(ttLib.getTableClass('post'))
 def merge(self, m):
-	logic = {
-		'*': first,
-		'tableTag': equal,
-		'formatType': max,
-		'isFixedPitch': min,
-		'minMemType42': max,
-		'maxMemType42': lambda lst: 0,
-		'minMemType1': max,
-		'maxMemType1': lambda lst: 0,
-		'mapping': ignore,
-		'extraNames': ignore
-	}
-	m._mergeKeys(self, logic)
+	DefaultTable.merge(self, m)
 	self.mapping = {}
 	for table in m.tables:
 		if hasattr(table, 'mapping'):
@@ -163,21 +183,24 @@ def merge(self, m):
 	self.extraNames = []
 	return True
 
-@_add_method(ttLib.getTableClass('vmtx'),
-             ttLib.getTableClass('hmtx'))
-def merge(self, m):
-	self.metrics = {}
-	for table in m.tables:
-		self.metrics.update(table.metrics)
-	return True
+ttLib.getTableClass('vmtx').mergeMap = ttLib.getTableClass('hmtx').mergeMap = {
+	'tableTag': equal,
+	'metrics': sumDicts,
+}
 
-@_add_method(ttLib.getTableClass('loca'))
-def merge(self, m):
-	return True # Will be computed automatically
+ttLib.getTableClass('loca').mergeMap = {
+	'*': ignore,
+	'tableTag': equal,
+}
+
+ttLib.getTableClass('glyf').mergeMap = {
+	'tableTag': equal,
+	'glyphs': sumDicts,
+	'glyphOrder': sumLists,
+}
 
 @_add_method(ttLib.getTableClass('glyf'))
 def merge(self, m):
-	self.glyphs = {}
 	for table in m.tables:
 		for g in table.glyphs.values():
 			# Drop hints for now, since we don't remap
@@ -187,7 +210,7 @@ def merge(self, m):
 			# composite glyph names.
 			if g.isComposite():
 				g.expand(table)
-		self.glyphs.update(table.glyphs)
+	DefaultTable.merge(self, m)
 	return True
 
 @_add_method(ttLib.getTableClass('prep'),
@@ -360,7 +383,7 @@ class Options(object):
     return ret
 
 
-class Merger:
+class Merger(object):
 
 	def __init__(self, options=None, log=None):
 
@@ -400,10 +423,6 @@ class Merger:
 
 			clazz = ttLib.getTableClass(tag)
 
-			if not hasattr(clazz, 'merge'):
-				self.log("Don't know how to merge '%s', dropped." % tag)
-				continue
-
 			# TODO For now assume all fonts have the same tables.
 			self.tables = [font[tag] for font in fonts]
 			table = clazz(tag)
@@ -411,7 +430,7 @@ class Merger:
 				mega[tag] = table
 				self.log("Merged '%s'." % tag)
 			else:
-				self.log("Dropped '%s'.  No need to merge explicitly." % tag)
+				self.log("Dropped '%s'." % tag)
 			self.log.lapse("merge '%s'" % tag)
 			del self.tables
 
@@ -437,7 +456,10 @@ class Merger:
 			try:
 				merge_logic = logic[key]
 			except KeyError:
-				merge_logic = logic['*']
+				try:
+					merge_logic = logic['*']
+				except KeyError:
+					raise Exception("Don't know how to merge key %s" % key)
 			if merge_logic == ignore:
 				continue
 			key_value = merge_logic(getattr(table, key) for table in self.tables)
