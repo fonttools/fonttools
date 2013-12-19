@@ -84,7 +84,7 @@ def merge(self, m, tables):
 		m.log("Don't know how to merge '%s'." % self.tableTag)
 		return False
 
-	m._mergeKeys(self, self.mergeMap, tables)
+	m.mergeObjects(self, self.mergeMap, tables)
 	return True
 
 ttLib.getTableClass('maxp').mergeMap = {
@@ -449,20 +449,21 @@ class Merger(object):
 				mega.append(glyphName)
 		return mega
 
-	def _mergeKeys(self, return_table, logic, tables):
+	def mergeObjects(self, returnTable, logic, tables):
 		allKeys = set.union(set(), *(vars(table).keys() for table in tables))
 		for key in allKeys:
 			try:
-				merge_logic = logic[key]
+				mergeLogic = logic[key]
 			except KeyError:
 				try:
-					merge_logic = logic['*']
+					mergeLogic = logic['*']
 				except KeyError:
-					raise Exception("Don't know how to merge key %s" % key)
-			if merge_logic == ignore:
+					raise Exception("Don't know how to merge key %s of class %s" % 
+							(key, returnTable.__class__.__name__))
+			if mergeLogic == ignore:
 				continue
-			key_value = merge_logic(getattr(table, key) for table in tables)
-			setattr(return_table, key, key_value)
+			key_value = mergeLogic(getattr(table, key) for table in tables)
+			setattr(returnTable, key, key_value)
 
 
 class Logger(object):
