@@ -271,6 +271,21 @@ def merge(self, m, tables):
 	return self
 
 
+otTables.ScriptList.mergeMap = {
+	'ScriptCount': sum,
+	'ScriptRecord': sumLists,
+}
+
+otTables.FeatureList.mergeMap = {
+	'FeatureCount': sum,
+	'FeatureRecord': sumLists,
+}
+
+otTables.LookupList.mergeMap = {
+	'LookupCount': sum,
+	'Lookup': sumLists,
+}
+
 otTables.Coverage.mergeMap = {
 	'glyphs': sumLists,
 }
@@ -303,11 +318,54 @@ otTables.GDEF.mergeMap = {
 	'Version': max,
 }
 
-ttLib.getTableClass('GDEF').mergeMap = {
-	'tableTag': equal,
+otTables.GSUB.mergeMap = otTables.GPOS.mergeMap = {
+	'*': mergeObjects,
 	'Version': max,
+}
+
+ttLib.getTableClass('GDEF').mergeMap = \
+ttLib.getTableClass('GSUB').mergeMap = \
+ttLib.getTableClass('GPOS').mergeMap = \
+ttLib.getTableClass('BASE').mergeMap = \
+ttLib.getTableClass('JSTF').mergeMap = \
+ttLib.getTableClass('MATH').mergeMap = \
+{
+	'tableTag': equal,
 	'table': mergeObjects,
 }
+
+
+@_add_method(otTables.Feature)
+def mapLookups(self, lookupMap):
+	self.LookupListIndex = [lookupMap[i] for i in self.LookupListIndex]
+
+@_add_method(otTables.FeatureList)
+def mapLookups(self, lookupMap):
+	for f in self.FeatureRecord:
+		if not f or not f.Feature: continue
+		f.Feature.mapLookups(lookupMap)
+
+@_add_method(otTables.DefaultLangSys,
+             otTables.LangSys)
+def mapFeatures(self, featureMap):
+	self.FeatureIndex = [featureMap[i] for i in self.FeatureIndex]
+	if self.ReqFeatureIndex != 65535:
+		self.ReqFeatureIndex = featureMap[self.ReqFeatureIndex]
+
+@_add_method(otTables.Script)
+def mapFeatures(self, featureMap):
+	if self.DefaultLangSys:
+		self.DefaultLangSys.mapFeatures(featureMap)
+	for l in self.LangSysRecord:
+		if not l or not l.LangSys: continue
+		l.LangSys.mapFeatures(featureMap)
+
+@_add_method(otTables.ScriptList)
+def mapFeatures(self, feature_indices):
+	for s in self.ScriptRecord:
+		if not s or not s.Script: continue
+		s.Script.mapFeatures(featureMap)
+
 
 class Options(object):
 
@@ -415,13 +473,16 @@ class Merger(object):
 			font.setGlyphOrder(glyphOrder)
 		mega.setGlyphOrder(megaGlyphOrder)
 
+		for font in fonts:
+			self._preMerge(font)
+
 		allTags = reduce(set.union, (list(font.keys()) for font in fonts), set())
 		allTags.remove('GlyphOrder')
 		for tag in allTags:
 
 			clazz = ttLib.getTableClass(tag)
 
-			tables = [font[tag] if font.has_key(tag) else NotImplemented for font in fonts]
+			tables = [font.get(tag, NotImplemented) for font in fonts]
 			table = clazz(tag).merge(self, tables)
 			if table is not NotImplemented and table is not False:
 				mega[tag] = table
@@ -429,6 +490,8 @@ class Merger(object):
 			else:
 				self.log("Dropped '%s'." % tag)
 			self.log.lapse("merge '%s'" % tag)
+
+		self._postMerge(mega)
 
 		return mega
 
@@ -470,6 +533,23 @@ class Merger(object):
 				setattr(returnTable, key, value)
 
 		return returnTable
+
+	def _preMerge(self, font):
+
+		return
+		GDEF = font.get('GDEF')
+		GSUB = font.get('GSUB')
+		GPOS = font.get('GPOS')
+
+		for t in [GSUB, GPOS]:
+			if not t or not t.table.LookupList or not t.table.FeatureList: continue
+			lookupMap = dict(enumerate(t.table.LookupList.Lookup))
+			t.table.FeatureList.mapLookups(lookupMap)
+
+		# TODO FeatureParams nameIDs
+
+	def _postMerge(self, font):
+		pass
 
 
 class Logger(object):
