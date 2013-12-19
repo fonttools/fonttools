@@ -220,6 +220,17 @@ ttLib.getTableClass('vmtx').mergeMap = ttLib.getTableClass('hmtx').mergeMap = {
 	'metrics': sumDicts,
 }
 
+ttLib.getTableClass('gasp').mergeMap = {
+	'tableTag': equal,
+	'version': max,
+	'gaspRange': first, # FIXME? Appears irreconcilable
+}
+
+ttLib.getTableClass('name').mergeMap = {
+	'tableTag': equal,
+	'names': first, # FIXME? Does mixing name records make sense?
+}
+
 ttLib.getTableClass('loca').mergeMap = {
 	'*': recalculate,
 	'tableTag': equal,
