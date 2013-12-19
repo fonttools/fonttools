@@ -362,7 +362,7 @@ def mapFeatures(self, featureMap):
 		l.LangSys.mapFeatures(featureMap)
 
 @_add_method(otTables.ScriptList)
-def mapFeatures(self, feature_indices):
+def mapFeatures(self, featureMap):
 	for s in self.ScriptRecord:
 		if not s or not s.Script: continue
 		s.Script.mapFeatures(featureMap)
@@ -537,20 +537,43 @@ class Merger(object):
 
 	def _preMerge(self, font):
 
-		return
 		GDEF = font.get('GDEF')
 		GSUB = font.get('GSUB')
 		GPOS = font.get('GPOS')
 
 		for t in [GSUB, GPOS]:
-			if not t or not t.table.LookupList or not t.table.FeatureList: continue
-			lookupMap = dict(enumerate(t.table.LookupList.Lookup))
-			t.table.FeatureList.mapLookups(lookupMap)
+			if not t: continue
 
+			if t.table.LookupList and t.table.FeatureList:
+				lookupMap = dict(enumerate(t.table.LookupList.Lookup))
+				t.table.FeatureList.mapLookups(lookupMap)
+
+			if t.table.FeatureList and t.table.ScriptList:
+				featureMap = dict(enumerate(t.table.FeatureList.FeatureRecord))
+				t.table.ScriptList.mapFeatures(featureMap)
+
+		# TODO GDEF/Lookup MarkFilteringSets
 		# TODO FeatureParams nameIDs
 
 	def _postMerge(self, font):
-		pass
+
+		GDEF = font.get('GDEF')
+		GSUB = font.get('GSUB')
+		GPOS = font.get('GPOS')
+
+		for t in [GSUB, GPOS]:
+			if not t: continue
+
+			if t.table.LookupList and t.table.FeatureList:
+				lookupMap = dict((v,i) for i,v in enumerate(t.table.LookupList.Lookup))
+				t.table.FeatureList.mapLookups(lookupMap)
+
+			if t.table.FeatureList and t.table.ScriptList:
+				featureMap = dict((v,i) for i,v in enumerate(t.table.FeatureList.FeatureRecord))
+				t.table.ScriptList.mapFeatures(featureMap)
+
+		# TODO GDEF/Lookup MarkFilteringSets
+		# TODO FeatureParams nameIDs
 
 
 class Logger(object):
