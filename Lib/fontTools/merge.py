@@ -19,9 +19,10 @@ import operator
 def _add_method(*clazzes, **kwargs):
 	"""Returns a decorator function that adds a new method to one or
 	more classes."""
+	allowDefault = kwargs.get('allowDefaultTable', False)
 	def wrapper(method):
 		for clazz in clazzes:
-			if not kwargs.get('allowDefaultTable', False):
+			if not allowDefault:
 				assert clazz != DefaultTable, 'Oops, table class not found.'
 			assert method.__name__ not in clazz.__dict__, \
 				"Oops, class '%s' has method '%s'." % (clazz.__name__,
@@ -211,7 +212,7 @@ ttLib.getTableClass('post').mergeMap = {
 	'minMemType1': max,
 	'maxMemType1': lambda lst: 0,
 	'mapping': implemented(sumDicts),
-	'extraNames': lambda lst: [][:],
+	'extraNames': lambda lst: [],
 }
 
 ttLib.getTableClass('vmtx').mergeMap = ttLib.getTableClass('hmtx').mergeMap = {
