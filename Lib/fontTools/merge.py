@@ -31,6 +31,7 @@ def _add_method(*clazzes, **kwargs):
 	return wrapper
 
 # General utility functions for merging values from different fonts
+
 def equal(lst):
 	t = iter(lst)
 	first = next(t)
@@ -41,8 +42,7 @@ def first(lst):
 	return next(iter(lst))
 
 def recalculate(lst):
-	# Just return the first value, assume will be recalculated when saved
-	return first(lst)
+	return NotImplemented
 
 def current_time(lst):
 	return int(time.time() - _h_e_a_d.mac_epoch_diff)
@@ -50,18 +50,31 @@ def current_time(lst):
 def bitwise_or(lst):
 	return reduce(operator.or_, lst)
 
-def ignore(lst):
-	assert False, "This function should not be called."
+def avg_int(lst):
+	lst = list(lst)
+	return sum(lst) // len(lst)
 
-def maybenone(func):
+def nonnone(func):
 	"""Returns a filter func that when called with a list,
 	only calls func on the non-None items of the list, and
 	only so if there's at least one non-None item in the
-	list."""
+	list.  Otherwise returns None."""
 
 	def wrapper(lst):
 		items = [item for item in lst if item is not None]
 		return func(items) if items else None
+
+	return wrapper
+
+def implemented(func):
+	"""Returns a filter func that when called with a list,
+	only calls func on the non-NotImplemented items of the list,
+	and only so if there's at least one item remaining.
+	Otherwise returns NotImplemented."""
+
+	def wrapper(lst):
+		items = [item for item in lst if item is not NotImplemented]
+		return func(items) if items else NotImplemented
 
 	return wrapper
 
@@ -82,10 +95,9 @@ def sumDicts(lst):
 def merge(self, m, tables):
 	if not hasattr(self, 'mergeMap'):
 		m.log("Don't know how to merge '%s'." % self.tableTag)
-		return False
+		return NotImplemented
 
-	m.mergeObjects(self, self.mergeMap, tables)
-	return True
+	return m.mergeObjects(self, self.mergeMap, tables)
 
 ttLib.getTableClass('maxp').mergeMap = {
 	'*': max,
@@ -103,7 +115,7 @@ ttLib.getTableClass('head').mergeMap = {
 	'tableTag': equal,
 	'tableVersion': max,
 	'fontRevision': max,
-	'checkSumAdjustment': recalculate,
+	'checkSumAdjustment': lambda lst: 0, # We need *something* here
 	'magicNumber': equal,
 	'flags': first, # FIXME: replace with bit-sensitive code
 	'unitsPerEm': equal,
@@ -141,7 +153,7 @@ ttLib.getTableClass('OS/2').mergeMap = {
 	'*': first,
 	'tableTag': equal,
 	'version': max,
-	'xAvgCharWidth': recalculate,
+	'xAvgCharWidth': avg_int, # Apparently fontTools doesn't recalc this
 	'fsType': first, # FIXME
 	'panose': first, # FIXME?
 	'ulUnicodeRange1': bitwise_or,
@@ -170,18 +182,9 @@ ttLib.getTableClass('post').mergeMap = {
 	'maxMemType42': lambda lst: 0,
 	'minMemType1': max,
 	'maxMemType1': lambda lst: 0,
-	'mapping': ignore,
-	'extraNames': ignore,
+	'mapping': implemented(sumDicts),
+	'extraNames': lambda lst: [][:],
 }
-@_add_method(ttLib.getTableClass('post'))
-def merge(self, m, tables):
-	DefaultTable.merge(self, m, tables)
-	self.mapping = {}
-	for table in tables:
-		if hasattr(table, 'mapping'):
-			self.mapping.update(table.mapping)
-	self.extraNames = []
-	return True
 
 ttLib.getTableClass('vmtx').mergeMap = ttLib.getTableClass('hmtx').mergeMap = {
 	'tableTag': equal,
@@ -189,7 +192,7 @@ ttLib.getTableClass('vmtx').mergeMap = ttLib.getTableClass('hmtx').mergeMap = {
 }
 
 ttLib.getTableClass('loca').mergeMap = {
-	'*': ignore,
+	'*': recalculate,
 	'tableTag': equal,
 }
 
@@ -210,14 +213,11 @@ def merge(self, m, tables):
 			# composite glyph names.
 			if g.isComposite():
 				g.expand(table)
-	DefaultTable.merge(self, m, tables)
-	return True
+	return DefaultTable.merge(self, m, tables)
 
-@_add_method(ttLib.getTableClass('prep'),
-	     ttLib.getTableClass('fpgm'),
-	     ttLib.getTableClass('cvt '))
-def merge(self, m):
-	return False # TODO We don't merge hinting data currently.
+ttLib.getTableClass('prep').mergeMap = NotImplemented
+ttLib.getTableClass('fpgm').mergeMap = NotImplemented
+ttLib.getTableClass('cvt ').mergeMap = NotImplemented
 
 @_add_method(ttLib.getTableClass('cmap'))
 def merge(self, m, tables):
@@ -240,7 +240,7 @@ def merge(self, m, tables):
 	self.tableVersion = 0
 	self.tables = [cmapTable]
 	self.numSubTables = len(self.tables)
-	return True
+	return self
 
 @_add_method(ttLib.getTableClass('GDEF'))
 def merge(self, m, tables):
@@ -301,16 +301,13 @@ def merge(self, m, tables):
 	else:
 		self.table.AttachList = None
 
-	return True
+	return self
 
 
 class Options(object):
 
   class UnknownOptionError(Exception):
     pass
-
-  _drop_tables_default = ['fpgm', 'prep', 'cvt ', 'gasp']
-  drop_tables = _drop_tables_default
 
   def __init__(self, **kwargs):
 
@@ -417,16 +414,11 @@ class Merger(object):
 		allTags.remove('GlyphOrder')
 		for tag in allTags:
 
-			if tag in self.options.drop_tables:
-				self.log("Dropping '%s'." % tag)
-				continue
-
 			clazz = ttLib.getTableClass(tag)
 
-			# TODO For now assume all fonts have the same tables.
-			tables = [font[tag] for font in fonts]
-			table = clazz(tag)
-			if table.merge (self, tables):
+			tables = [font[tag] if font.has_key(tag) else NotImplemented for font in fonts]
+			table = clazz(tag).merge(self, tables)
+			if table is not NotImplemented and table is not False:
 				mega[tag] = table
 				self.log("Merged '%s'." % tag)
 			else:
@@ -450,7 +442,13 @@ class Merger(object):
 		return mega
 
 	def mergeObjects(self, returnTable, logic, tables):
-		allKeys = set.union(set(), *(vars(table).keys() for table in tables))
+		# Right now we don't use self at all.  Will use in the future
+		# for options and logging.
+
+		if logic is NotImplemented:
+			return NotImplemented
+
+		allKeys = set.union(set(), *(vars(table).keys() for table in tables if table is not NotImplemented))
 		for key in allKeys:
 			try:
 				mergeLogic = logic[key]
@@ -460,10 +458,13 @@ class Merger(object):
 				except KeyError:
 					raise Exception("Don't know how to merge key %s of class %s" % 
 							(key, returnTable.__class__.__name__))
-			if mergeLogic == ignore:
+			if mergeLogic is NotImplemented:
 				continue
-			key_value = mergeLogic(getattr(table, key) for table in tables)
-			setattr(returnTable, key, key_value)
+			value = mergeLogic(getattr(table, key, NotImplemented) for table in tables)
+			if value is not NotImplemented:
+				setattr(returnTable, key, value)
+
+		return returnTable
 
 
 class Logger(object):
