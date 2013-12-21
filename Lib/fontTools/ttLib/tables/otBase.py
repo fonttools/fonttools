@@ -77,10 +77,32 @@ class BaseTTXConverter(DefaultTable):
 			def __init__(self, tableType):
 				self.tableType = tableType
 		globalState = GlobalState(tableType=self.tableTag)
-		writer = OTTableWriter(globalState)
-		writer.parent = None
-		self.table.compile(writer, font)
-		return writer.getAllData()
+		overflowRecord = None
+
+		while True:
+			try:
+				writer = OTTableWriter(globalState)
+				self.table.compile(writer, font)
+				return writer.getAllData()
+
+			except OTLOffsetOverflowError as e:
+
+				if overflowRecord == e.value:
+					raise # Oh well...
+
+				overflowRecord = e.value
+				print("Attempting to fix OTLOffsetOverflowError", e)
+				lastItem = overflowRecord
+
+				ok = 0
+				if overflowRecord.itemName is None:
+					from .otTables import fixLookupOverFlows
+					ok = fixLookupOverFlows(font, overflowRecord)
+				else:
+					from .otTables import fixSubTableOverFlows
+					ok = fixSubTableOverFlows(font, overflowRecord)
+				if not ok:
+					raise
 
 	def toXML(self, writer, font):
 		self.table.toXML2(writer, font)
@@ -174,6 +196,7 @@ class OTTableWriter(object):
 		self.pos = None
 		self.globalState = globalState
 		self.localState = localState
+		self.parent = None
 
 	def __setitem__(self, name, value):
 		state = self.localState.copy() if self.localState else dict()

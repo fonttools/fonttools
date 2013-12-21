@@ -69,8 +69,6 @@ usage: ttx [options] inputfile1 [... inputfileN]
 from __future__ import print_function, division
 from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont, TTLibError
-from fontTools.ttLib.tables.otBase import OTLOffsetOverflowError
-from fontTools.ttLib.tables.otTables import fixLookupOverFlows, fixSubTableOverFlows
 from fontTools.misc.macCreatorType import getMacCreatorAndType
 import os
 import sys
@@ -215,31 +213,7 @@ def ttCompile(input, output, options):
 			recalcBBoxes=options.recalcBBoxes,
 			verbose=options.verbose, allowVID=options.allowVID)
 	ttf.importXML(input, quiet=options.quiet)
-	try:
-		ttf.save(output)
-	except OTLOffsetOverflowError as e:
-		# XXX This shouldn't be here at all, it should be as close to the
-		# OTL code as possible.
-		overflowRecord = e.value
-		print("Attempting to fix OTLOffsetOverflowError", e)
-		lastItem = overflowRecord 
-		while True:
-			ok = 0
-			if overflowRecord.itemName is None:
-				ok = fixLookupOverFlows(ttf, overflowRecord)
-			else:
-				ok = fixSubTableOverFlows(ttf, overflowRecord)
-			if not ok:
-				raise
-
-			try:
-				ttf.save(output)
-				break
-			except OTLOffsetOverflowError as e:
-				print("Attempting to fix OTLOffsetOverflowError", e)
-				overflowRecord = e.value
-				if overflowRecord == lastItem:
-					raise
+	ttf.save(output)
 
 	if options.verbose:
 		import time
