@@ -496,9 +496,6 @@ def packULong(value):
 
 class BaseTable(object):
 
-	def __hash__(self):
-		return id(self)
-
 	def __getattr__(self, attr):
 		reader = self.__dict__.get("reader")
 		if reader:

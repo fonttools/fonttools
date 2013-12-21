@@ -556,11 +556,11 @@ class Merger(object):
 			if not t: continue
 
 			if t.table.LookupList and t.table.FeatureList:
-				lookupMap = dict(enumerate(t.table.LookupList.Lookup))
+				lookupMap = {i:id(v) for i,v in enumerate(t.table.LookupList.Lookup)}
 				t.table.FeatureList.mapLookups(lookupMap)
 
 			if t.table.FeatureList and t.table.ScriptList:
-				featureMap = dict(enumerate(t.table.FeatureList.FeatureRecord))
+				featureMap = {i:id(v) for i,v in enumerate(t.table.FeatureList.FeatureRecord)}
 				t.table.ScriptList.mapFeatures(featureMap)
 
 		# TODO GDEF/Lookup MarkFilteringSets
@@ -576,11 +576,11 @@ class Merger(object):
 			if not t: continue
 
 			if t.table.LookupList and t.table.FeatureList:
-				lookupMap = dict((v,i) for i,v in enumerate(t.table.LookupList.Lookup))
+				lookupMap = {id(v):i for i,v in enumerate(t.table.LookupList.Lookup)}
 				t.table.FeatureList.mapLookups(lookupMap)
 
 			if t.table.FeatureList and t.table.ScriptList:
-				featureMap = dict((v,i) for i,v in enumerate(t.table.FeatureList.FeatureRecord))
+				featureMap = {id(v):i for i,v in enumerate(t.table.FeatureList.FeatureRecord)}
 				t.table.ScriptList.mapFeatures(featureMap)
 
 		# TODO GDEF/Lookup MarkFilteringSets
