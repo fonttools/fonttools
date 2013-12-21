@@ -80,7 +80,7 @@ setup(
 		],
 		package_dir = {'': 'Lib'},
 		extra_path = 'FontTools',
-		scripts = ["Tools/ttx", "Tools/pyftsubset", "Tools/pyftinspect"],
+		scripts = ["Tools/ttx", "Tools/pyftsubset", "Tools/pyftinspect", "Tools/pyftmerge"],
 		cmdclass = {"build_ext": build_ext_optional},
 		data_files = [('share/man/man1', ["Doc/ttx.1"])],
 		**classifiers

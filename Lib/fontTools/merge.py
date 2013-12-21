@@ -47,6 +47,9 @@ def recalculate(lst):
 def current_time(lst):
 	return int(time.time() - _h_e_a_d.mac_epoch_diff)
 
+def bitwise_and(lst):
+	return reduce(operator.and_, lst)
+
 def bitwise_or(lst):
 	return reduce(operator.or_, lst)
 
@@ -118,6 +121,22 @@ def mergeObjects(lst):
 
 	return returnTable
 
+def mergeBits(logic, lst):
+	lst = list(lst)
+	returnValue = 0
+	for bitNumber in range(logic['size']):
+		try:
+			mergeLogic = logic[bitNumber]
+		except KeyError:
+			try:
+				mergeLogic = logic['*']
+			except KeyError:
+				raise Exception("Don't know how to merge bit %s" % bitNumber)
+		shiftedBit = 1 << bitNumber
+		mergedValue = mergeLogic(bool(item & shiftedBit) for item in lst)
+		returnValue |= mergedValue << bitNumber
+	return returnValue
+
 
 @_add_method(DefaultTable, allowDefaultTable=True)
 def merge(self, m, tables):
@@ -139,13 +158,27 @@ ttLib.getTableClass('maxp').mergeMap = {
 	# maxFunctionDefs, maxInstructionDefs, maxSizeOfInstructions
 }
 
+headFlagsMergeMap = {
+	'size': 16,
+	'*': bitwise_or,
+	1: bitwise_and, # Baseline at y = 0
+	2: bitwise_and, # lsb at x = 0
+	3: bitwise_and, # Force ppem to integer values. FIXME?
+	5: bitwise_and, # Font is vertical
+	6: lambda bit: 0, # Always set to zero
+	11: bitwise_and, # Font data is 'lossless'
+	13: bitwise_and, # Optimized for ClearType
+	14: bitwise_and, # Last resort font. FIXME? equal or first may be better
+	15: lambda bit: 0, # Always set to zero
+}
+
 ttLib.getTableClass('head').mergeMap = {
 	'tableTag': equal,
 	'tableVersion': max,
 	'fontRevision': max,
 	'checkSumAdjustment': lambda lst: 0, # We need *something* here
 	'magicNumber': equal,
-	'flags': first, # FIXME: replace with bit-sensitive code
+	'flags': lambda lst: mergeBits(headFlagsMergeMap, lst),
 	'unitsPerEm': equal,
 	'created': current_time,
 	'modified': current_time,
@@ -171,19 +204,53 @@ ttLib.getTableClass('hhea').mergeMap = {
 	'minLeftSideBearing': min,
 	'minRightSideBearing': min,
 	'xMaxExtent': max,
-	'caretSlopeRise': first, # FIXME
-	'caretSlopeRun': first, # FIXME
-	'caretOffset': first, # FIXME
+	'caretSlopeRise': first,
+	'caretSlopeRun': first,
+	'caretOffset': first,
 	'numberOfHMetrics': recalculate,
 }
+
+os2FsTypeMergeMap = {
+	'size': 16,
+	'*': lambda bit: 0,
+	1: bitwise_or, # no embedding permitted
+	2: bitwise_and, # allow previewing and printing documents
+	3: bitwise_and, # allow editing documents
+	8: bitwise_or, # no subsetting permitted
+	9: bitwise_or, # no embedding of outlines permitted
+}
+
+def mergeOs2FsType(lst):
+	lst = list(lst)
+	if all(item == 0 for item in lst):
+		return 0
+
+	# Compute least restrictive logic for each fsType value
+	for i in range(len(lst)):
+		# unset bit 1 (no embedding permitted) if either bit 2 or 3 is set
+		if lst[i] & 0x000C:
+			lst[i] &= ~0x0002
+		# set bit 2 (allow previewing) if bit 3 is set (allow editing)
+		elif lst[i] & 0x0008:
+			lst[i] |= 0x0004
+		# set bits 2 and 3 if everything is allowed
+		elif lst[i] == 0:
+			lst[i] = 0x000C
+
+	fsType = mergeBits(os2FsTypeMergeMap, lst)
+	# unset bits 2 and 3 if bit 1 is set (some font is "no embedding")
+	if fsType & 0x0002:
+		fsType &= ~0x000C
+	return fsType
+
 
 ttLib.getTableClass('OS/2').mergeMap = {
 	'*': first,
 	'tableTag': equal,
 	'version': max,
 	'xAvgCharWidth': avg_int, # Apparently fontTools doesn't recalc this
-	'fsType': first, # FIXME
-	'panose': first, # FIXME?
+	'fsType': mergeOs2FsType, # Will be overwritten
+	'panose': first, # FIXME: should really be the first Latin font
 	'ulUnicodeRange1': bitwise_or,
 	'ulUnicodeRange2': bitwise_or,
 	'ulUnicodeRange3': bitwise_or,
@@ -200,6 +267,20 @@ ttLib.getTableClass('OS/2').mergeMap = {
 	'usMaxContex': max,
 	# TODO version 5
 }
+
+@_add_method(ttLib.getTableClass('OS/2'))
+def merge(self, m, tables):
+	DefaultTable.merge(self, m, tables)
+	if self.version < 2:
+		# bits 8 and 9 are reserved and should be set to zero
+		self.fsType &= ~0x0300
+	if self.version >= 3:
+		# Only one of bits 1, 2, and 3 may be set. We already take
+		# care of bit 1 implications in mergeOs2FsType. So unset
+		# bit 2 if bit 3 is already set.
+		if self.fsType & 0x0008:
+			self.fsType &= ~0x0004
+	return self
 
 ttLib.getTableClass('post').mergeMap = {
 	'*': first,
