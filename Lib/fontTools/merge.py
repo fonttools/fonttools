@@ -353,7 +353,7 @@ def merge(self, m, tables):
 
 otTables.ScriptList.mergeMap = {
 	'ScriptCount': sum,
-	'ScriptRecord': sumLists, # XXX sort
+	'ScriptRecord': lambda lst: sorted(sumLists(lst), key=lambda s: s.ScriptTag),
 }
 
 otTables.FeatureList.mergeMap = {
