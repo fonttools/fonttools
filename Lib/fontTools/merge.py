@@ -57,19 +57,7 @@ def avg_int(lst):
 	lst = list(lst)
 	return sum(lst) // len(lst)
 
-def nonnone(func):
-	"""Returns a filter func that when called with a list,
-	only calls func on the non-None items of the list, and
-	only so if there's at least one non-None item in the
-	list.  Otherwise returns None."""
-
-	def wrapper(lst):
-		items = [item for item in lst if item is not None]
-		return func(items) if items else None
-
-	return wrapper
-
-def implemented(func):
+def implementedFilter(func):
 	"""Returns a filter func that when called with a list,
 	only calls func on the non-NotImplemented items of the list,
 	and only so if there's at least one item remaining.
@@ -291,7 +279,7 @@ ttLib.getTableClass('post').mergeMap = {
 	'maxMemType42': lambda lst: 0,
 	'minMemType1': max,
 	'maxMemType1': lambda lst: 0,
-	'mapping': implemented(sumDicts),
+	'mapping': implementedFilter(sumDicts),
 	'extraNames': lambda lst: [],
 }
 
@@ -365,7 +353,7 @@ def merge(self, m, tables):
 
 otTables.ScriptList.mergeMap = {
 	'ScriptCount': sum,
-	'ScriptRecord': sumLists,
+	'ScriptRecord': sumLists, # XXX sort
 }
 
 otTables.FeatureList.mergeMap = {
