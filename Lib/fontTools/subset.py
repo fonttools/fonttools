@@ -17,6 +17,7 @@ import sys
 import struct
 import time
 import array
+import re
 
 
 def _add_method(*clazzes):
@@ -1819,12 +1820,16 @@ class Options(object):
   name_IDs = [1, 2]  # Family and Style
   name_legacy = False
   name_languages = [0x0409]  # English
+  text = "" # characters to include in the subset, as UTF-8 string
+  text_file = "" # path to a text file containing characters to include in the subset, as UTF-8 string
+  glyphs_file = "" # file with a list of glyphs, separated by \s
   notdef_glyph = True # gid0 for TrueType / .notdef for CFF
   notdef_outline = False # No need for notdef to have an outline really
   recommended_glyphs = False  # gid1, gid2, gid3 for TrueType
   recalc_bounds = False # Recalculate font bounding boxes
   canonical_order = False # Order tables as recommended
   flavor = None # May be 'woff'
+  output = "" # output fontfile path
 
   def __init__(self, **kwargs):
 
@@ -1857,7 +1862,7 @@ class Options(object):
       else:
         k = a[:i]
         if k[-1] in "-+":
-          op = k[-1]+'='  # Ops is '-=' or '+=' now.
+          op = k[-1]+'='  # op is '-=' or '+=' now.
           k = k[:-1]
         v = a[i+1:]
       k = k.replace('-', '_')
@@ -1873,6 +1878,8 @@ class Options(object):
         v = bool(v)
       elif isinstance(ov, int):
         v = int(v)
+      elif isinstance(ov, str):
+        v = str(v)
       elif isinstance(ov, list):
         vv = v.split(',')
         if vv == ['']:
@@ -2146,9 +2153,10 @@ def main(args):
   args = log.parse_opts(args)
 
   options = Options()
-  args = options.parse_opts(args, ignore_unknown=['text'])
+  args = options.parse_opts(args)
+  otherinput = options.text or options.text_file or options.glyphs_file
 
-  if len(args) < 2:
+  if len(args) < 2 and not (len(args) == 1 and otherinput):
     print("usage: pyftsubset font-file glyph... [--text=ABC]... [--option=value]...", file=sys.stderr)
     sys.exit(1)
 
@@ -2169,16 +2177,33 @@ def main(args):
 
   glyphs = []
   unicodes = []
-  text = ""
+  text = options.text
+
+  # get text from file
+  if options.text_file:
+  	try:
+  		fp = open(options.text_file, "r")
+  		content = fp.read()
+  		fp.close()
+  	except:
+  		raise Exception("Could not open file: %s" % options.text_file)
+  	text+=re.sub(r"\s", "", content) # delete whitespace characers from the text
+  # get glyphs from file
+  if options.glyphs_file:
+  	try:
+  		fp = open(options.glyphs_file, "r")
+  		content = fp.read()
+  		fp.close()
+  	except:
+  		raise Exception("Could not open file: %s" % options.glyphs_file)
+  	glyphs.extend(re.findall(r"\S+(?=\s)", content+" ")) # the space at the end is important (David: methink)
+  # parse the glyphs
   for g in args:
     if g == '*':
       glyphs.extend(font.getGlyphOrder())
       continue
     if g in names:
       glyphs.append(g)
-      continue
-    if g.startswith('--text='):
-      text += g[7:]
       continue
     if g.startswith('uni') or g.startswith('U+'):
       if g.startswith('uni') and len(g) > 3:
@@ -2202,11 +2227,14 @@ def main(args):
   log.lapse("compile glyph list")
   log("Unicodes:", unicodes)
   log("Glyphs:", glyphs)
-
+	
   subsetter.populate(glyphs=glyphs, unicodes=unicodes, text=text)
   subsetter.subset(font)
 
-  outfile = fontfile + '.subset'
+  if options.output:
+  	outfile = options.output
+  else:
+    outfile = fontfile + '.subset'
 
   save_font (font, outfile, options)
   log.lapse("compile and save font")
