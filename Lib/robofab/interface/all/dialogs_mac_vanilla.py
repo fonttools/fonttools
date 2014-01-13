@@ -208,7 +208,7 @@ def SelectFont(message="Select a font:", title='RoboFab', allFonts=None):
     items.sort()
     w = _listController(items, message, title, showSearch=False)
     value = w.get()
-    return data[value]
+    return data.get(value, None)
 
 def SelectGlyph(aFont, message="Select a glyph:", title='RoboFab'):
     items = aFont.keys()
