@@ -5,7 +5,7 @@
 """Font merger.
 """
 
-from __future__ import print_function, division
+from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools import ttLib, cffLib
 from fontTools.ttLib.tables import otTables, _h_e_a_d
