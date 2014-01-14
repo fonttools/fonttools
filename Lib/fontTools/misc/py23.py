@@ -1,6 +1,6 @@
 """Python 2/3 compat layer."""
 
-from __future__ import print_function, division
+from __future__ import print_function, division, absolute_import
 
 try:
 	basestring

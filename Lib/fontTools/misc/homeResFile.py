@@ -1,6 +1,6 @@
 """Mac-only module to find the home file of a resource."""
 
-from __future__ import print_function, division
+from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 import array

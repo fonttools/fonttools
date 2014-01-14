@@ -45,7 +45,7 @@ Examples:
 	>>>
 """
 
-from __future__ import print_function, division
+from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 
 __all__ = ["Transform", "Identity", "Offset", "Scale"]
