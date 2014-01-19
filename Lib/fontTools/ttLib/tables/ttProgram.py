@@ -389,7 +389,7 @@ class Program(object):
 			assert max(bytecode) < 256 and min(bytecode) >= 0
 		self.bytecode = array.array("B", bytecode)
 	
-	def _disassemble(self):
+	def _disassemble(self, preserve=False):
 		assembly = []
 		i = 0
 		bytecode = self.bytecode
@@ -427,12 +427,16 @@ class Program(object):
 									value = value - 0x10000
 								values.append(repr(value))
 								i = i + 2
+						if preserve:
+							break
 
+					if not preserve:
+						mnemonic = "PUSH"
 					nValues = len(values)
 					if nValues == 1:
-						assembly.append("PUSH[ ]")
+						assembly.append("%s[ ]" % mnemonic)
 					else:
-						assembly.append("PUSH[ ]  /* %s values pushed */" % nValues)
+						assembly.append("%s[ ]  /* %s values pushed */" % (mnemonic, nValues))
 					assembly.extend(values)
 				else:
 					assembly.append("INSTR%d[ ]" % op)
