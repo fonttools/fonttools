@@ -178,16 +178,18 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 		numGlyphs = ttFont['maxp'].numGlyphs
 		glyphOrder = ttFont.getGlyphOrder()
 		assert len(glyphOrder) == numGlyphs
-		data = ''
+		indices = array.array("H")
 		for glyphID in glyphOrder:
 			glyphID = glyphID.split('#')[0]
 			if glyphID in agl.AGL2UV:
-				data += struct.pack(">H", agl.AGL2UV[glyphID])
+				indices.append(agl.AGL2UV[glyphID])
 			elif len(glyphID) == 7 and glyphID[:3] == 'uni':
-				data += struct.pack(">H", int(glyphID[3:],16))
+				indices.append(int(glyphID[3:],16))
 			else:
-				data += struct.pack(">H", 0xFFFF)
-		return data
+				indices.append(0xFFFF)
+		if sys.byteorder != "big":
+			indices.byteswap()
+		return indices.tostring()
 
 	def toXML(self, writer, ttFont):
 		formatstring, names, fixes = sstruct.getformat(postFormat)
