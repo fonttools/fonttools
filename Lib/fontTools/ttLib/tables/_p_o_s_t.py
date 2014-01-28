@@ -129,7 +129,10 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 	def decode_format_4_0(self, data, ttFont):
 		from fontTools import agl
 		numGlyphs = ttFont['maxp'].numGlyphs
-		indices = struct.unpack(">"+str(int(len(data)/2))+"H", data)
+		indices = array.array("H")
+		indices.fromstring(data)
+		if sys.byteorder != "big":
+			indices.byteswap()
 		# In some older fonts, the size of the post table doesn't match
 		# the number of glyphs. Sometimes it's bigger, sometimes smaller.
 		self.glyphOrder = glyphOrder = [''] * int(numGlyphs)
