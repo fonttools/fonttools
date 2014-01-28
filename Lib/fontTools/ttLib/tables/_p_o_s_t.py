@@ -37,6 +37,8 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 			self.decode_format_2_0(data, ttFont)
 		elif self.formatType == 3.0:
 			self.decode_format_3_0(data, ttFont)
+		elif self.formatType == 4.0:
+			self.decode_format_4_0(data, ttFont)
 		else:
 			# supported format
 			raise ttLib.TTLibError("'post' table format %f not supported" % self.formatType)
@@ -49,6 +51,8 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 			data = data + self.encode_format_2_0(ttFont)
 		elif self.formatType == 3.0:
 			pass # we're done
+		elif self.formatType == 4.0:
+			data = data + self.encode_format_4_0(ttFont)
 		else:
 			# supported format
 			raise ttLib.TTLibError("'post' table format %f not supported" % self.formatType)
@@ -122,6 +126,22 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 		# try and construct glyph names from a Unicode cmap table.
 		self.glyphOrder = None
 	
+	def decode_format_4_0(self, data, ttFont):
+		from fontTools import agl
+		numGlyphs = ttFont['maxp'].numGlyphs
+		indices = struct.unpack(">"+str(int(len(data)/2))+"H", data)
+		# In some older fonts, the size of the post table doesn't match
+		# the number of glyphs. Sometimes it's bigger, sometimes smaller.
+		self.glyphOrder = glyphOrder = [''] * int(numGlyphs)
+		for i in range(min(len(indices),numGlyphs)):
+			if indices[i] == 0xFFFF:
+				self.glyphOrder[i] = ''
+			elif indices[i] in agl.UV2AGL:
+				self.glyphOrder[i] = agl.UV2AGL[indices[i]]
+			else:
+				self.glyphOrder[i] = "uni%04X" % indices[i]
+		self.build_psNameMapping(ttFont)
+
 	def encode_format_2_0(self, ttFont):
 		numGlyphs = ttFont['maxp'].numGlyphs
 		glyphOrder = ttFont.getGlyphOrder()
@@ -150,6 +170,22 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 			indices.byteswap()
 		return struct.pack(">H", numGlyphs) + indices.tostring() + packPStrings(extraNames)
 	
+	def encode_format_4_0(self, ttFont):
+		from fontTools import agl
+		numGlyphs = ttFont['maxp'].numGlyphs
+		glyphOrder = ttFont.getGlyphOrder()
+		assert len(glyphOrder) == numGlyphs
+		data = ''
+		for glyphID in glyphOrder:
+			glyphID = glyphID.split('#')[0]
+			if glyphID in agl.AGL2UV:
+				data += struct.pack(">H", agl.AGL2UV[glyphID])
+			elif len(glyphID) == 7 and glyphID[:3] == 'uni':
+				data += struct.pack(">H", int(glyphID[3:],16))
+			else:
+				data += struct.pack(">H", 0xFFFF)
+		return data
+
 	def toXML(self, writer, ttFont):
 		formatstring, names, fixes = sstruct.getformat(postFormat)
 		for name in names:
