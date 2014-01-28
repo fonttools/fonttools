@@ -132,16 +132,22 @@ def merge(self, m, tables):
 		m.log("Don't know how to merge '%s'." % self.tableTag)
 		return NotImplemented
 
-	return m.mergeObjects(self, self.mergeMap, tables)
+	logic = self.mergeMap
+
+	if isinstance(logic, dict):
+		return m.mergeObjects(self, self.mergeMap, tables)
+	else:
+		return logic(tables)
+
 
 ttLib.getTableClass('maxp').mergeMap = {
 	'*': max,
 	'tableTag': equal,
 	'tableVersion': equal,
 	'numGlyphs': sum,
-	'maxStorage': max, # FIXME: may need to be changed to sum
-	'maxFunctionDefs': sum,
-	'maxInstructionDefs': sum,
+	'maxStorage': first,
+	'maxFunctionDefs': first,
+	'maxInstructionDefs': first,
 	# TODO When we correctly merge hinting data, update these values:
 	# maxFunctionDefs, maxInstructionDefs, maxSizeOfInstructions
 }
@@ -312,20 +318,21 @@ ttLib.getTableClass('glyf').mergeMap = {
 
 @_add_method(ttLib.getTableClass('glyf'))
 def merge(self, m, tables):
-	for table in tables:
+	for i,table in enumerate(tables):
 		for g in table.glyphs.values():
-			# Drop hints for now, since we don't remap
-			# functions / CVT values.
-			g.removeHinting()
+			if i:
+				# Drop hints for all but first font, since
+				# we don't map functions / CVT values.
+				g.removeHinting()
 			# Expand composite glyphs to load their
 			# composite glyph names.
 			if g.isComposite():
 				g.expand(table)
 	return DefaultTable.merge(self, m, tables)
 
-ttLib.getTableClass('prep').mergeMap = NotImplemented
-ttLib.getTableClass('fpgm').mergeMap = NotImplemented
-ttLib.getTableClass('cvt ').mergeMap = NotImplemented
+ttLib.getTableClass('prep').mergeMap = lambda self, lst: first(lst)
+ttLib.getTableClass('fpgm').mergeMap = lambda self, lst: first(lst)
+ttLib.getTableClass('cvt ').mergeMap = lambda self, lst: first(lst)
 
 @_add_method(ttLib.getTableClass('cmap'))
 def merge(self, m, tables):
