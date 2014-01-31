@@ -79,7 +79,7 @@ class XMLReader(object):
 					print(msg)
 			if tag == "GlyphOrder":
 				tableClass = ttLib.GlyphOrder
-			elif "ERROR" in attrs:
+			elif "ERROR" in attrs or ('raw' in attrs and safeEval(attrs['raw'])):
 				tableClass = DefaultTable
 			else:
 				tableClass = ttLib.getTableClass(tag)
