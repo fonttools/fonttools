@@ -893,7 +893,7 @@ def kerningValidator(kerning, groups):
 	...     ("public.kern1.O", "F") : -200,
 	...     ("D", "F") : -300,
 	... }
-	>>> kerningValidator(kerning, groups)
+	>>> kerningValidator(kerning, groups)[0]
 	True
 	>>> kerning = {
 	...     ("public.kern1.O", "public.kern2.E") : -100,
@@ -901,7 +901,7 @@ def kerningValidator(kerning, groups):
 	...     ("Q", "public.kern2.E") : -250,
 	...     ("D", "F") : -300,
 	... }
-	>>> kerningValidator(kerning, groups)
+	>>> kerningValidator(kerning, groups)[0]
 	False
 	"""
 	# flatten the groups
@@ -917,6 +917,7 @@ def kerningValidator(kerning, groups):
 		for glyphName in glyphList:
 			d[glyphName] = groupName
 	# search for conflicts
+	errors = []
 	for first, second in kerning.keys():
 		firstIsGroup = first.startswith("public.kern1.")
 		secondIsGroup = second.startswith("public.kern2.")
@@ -948,16 +949,18 @@ def kerningValidator(kerning, groups):
 			secondGroup = flatSecondGroups[second]
 			for glyph in firstOptions:
 				if (glyph, secondGroup) in kerning:
-					return False
+					errors.append("%s, %s (%d) conflicts with %s, %s (%d)" % (glyph, secondGroup, kerning[glyph, secondGroup], first, second, kerning[first, second]))
 		# validate glyph + group
 		if secondIsGroup:
 			secondOptions = groups[second]
 			firstGroup = flatFirstGroups[first]
 			for glyph in secondOptions:
 				if (firstGroup, glyph) in kerning:
-					return False
+					errors.append("%s, %s (%d) conflicts with %s, %s (%d)" % (firstGroup, glyph, kerning[firstGroup, glyph], first, second, kerning[first, second]))
+	if errors:
+		return False, errors
 	# fallback
-	return True
+	return True, errors
 
 # -------------
 # lib.plist/lib
