@@ -422,6 +422,99 @@ ttLib.getTableClass('MATH').mergeMap = \
 }
 
 
+@_add_method(otTables.SingleSubst,
+             otTables.MultipleSubst,
+             otTables.AlternateSubst,
+             otTables.LigatureSubst,
+             otTables.ReverseChainSingleSubst,
+             otTables.SinglePos,
+             otTables.PairPos,
+             otTables.CursivePos,
+             otTables.MarkBasePos,
+             otTables.MarkLigPos,
+             otTables.MarkMarkPos)
+def mapLookups(self, lookupMap):
+  pass
+
+# Copied and trimmed down from subset.py
+@_add_method(otTables.ContextSubst,
+             otTables.ChainContextSubst,
+             otTables.ContextPos,
+             otTables.ChainContextPos)
+def __classify_context(self):
+
+  class ContextHelper(object):
+    def __init__(self, klass, Format):
+      if klass.__name__.endswith('Subst'):
+        Typ = 'Sub'
+        Type = 'Subst'
+      else:
+        Typ = 'Pos'
+        Type = 'Pos'
+      if klass.__name__.startswith('Chain'):
+        Chain = 'Chain'
+      else:
+        Chain = ''
+      ChainTyp = Chain+Typ
+
+      self.Typ = Typ
+      self.Type = Type
+      self.Chain = Chain
+      self.ChainTyp = ChainTyp
+
+      self.LookupRecord = Type+'LookupRecord'
+
+      if Format == 1:
+        self.Rule = ChainTyp+'Rule'
+        self.RuleSet = ChainTyp+'RuleSet'
+      elif Format == 2:
+        self.Rule = ChainTyp+'ClassRule'
+        self.RuleSet = ChainTyp+'ClassSet'
+
+  if self.Format not in [1, 2, 3]:
+    return None  # Don't shoot the messenger; let it go
+  if not hasattr(self.__class__, "__ContextHelpers"):
+    self.__class__.__ContextHelpers = {}
+  if self.Format not in self.__class__.__ContextHelpers:
+    helper = ContextHelper(self.__class__, self.Format)
+    self.__class__.__ContextHelpers[self.Format] = helper
+  return self.__class__.__ContextHelpers[self.Format]
+
+
+@_add_method(otTables.ContextSubst,
+             otTables.ChainContextSubst,
+             otTables.ContextPos,
+             otTables.ChainContextPos)
+def mapLookups(self, lookupMap):
+  c = self.__classify_context()
+
+  if self.Format in [1, 2]:
+    for rs in getattr(self, c.RuleSet):
+      if not rs: continue
+      for r in getattr(rs, c.Rule):
+        if not r: continue
+        for ll in getattr(r, c.LookupRecord):
+          if not ll: continue
+          ll.LookupListIndex = lookupMap[ll.LookupListIndex]
+  elif self.Format == 3:
+    for ll in getattr(self, c.LookupRecord):
+      if not ll: continue
+      ll.LookupListIndex = lookupMap[ll.LookupListIndex]
+  else:
+    assert 0, "unknown format: %s" % self.Format
+
+@_add_method(otTables.Lookup)
+def mapLookups(self, lookupMap):
+	for st in self.SubTable:
+		if not st: continue
+		st.mapLookups(lookupMap)
+
+@_add_method(otTables.LookupList)
+def mapLookups(self, lookupMap):
+	for l in self.Lookup:
+		if not l: continue
+		l.mapLookups(lookupMap)
+
 @_add_method(otTables.Feature)
 def mapLookups(self, lookupMap):
 	self.LookupListIndex = [lookupMap[i] for i in self.LookupListIndex]
@@ -630,9 +723,12 @@ class Merger(object):
 		for t in [GSUB, GPOS]:
 			if not t: continue
 
-			if t.table.LookupList and t.table.FeatureList:
+			if t.table.LookupList:
 				lookupMap = {i:id(v) for i,v in enumerate(t.table.LookupList.Lookup)}
-				t.table.FeatureList.mapLookups(lookupMap)
+				t.table.LookupList.mapLookups(lookupMap)
+				if t.table.FeatureList:
+					# XXX Handle present FeatureList but absent LookupList
+					t.table.FeatureList.mapLookups(lookupMap)
 
 			if t.table.FeatureList and t.table.ScriptList:
 				featureMap = {i:id(v) for i,v in enumerate(t.table.FeatureList.FeatureRecord)}
@@ -650,11 +746,15 @@ class Merger(object):
 		for t in [GSUB, GPOS]:
 			if not t: continue
 
-			if t.table.LookupList and t.table.FeatureList:
+			if t.table.LookupList:
 				lookupMap = {id(v):i for i,v in enumerate(t.table.LookupList.Lookup)}
-				t.table.FeatureList.mapLookups(lookupMap)
+				t.table.LookupList.mapLookups(lookupMap)
+				if t.table.FeatureList:
+					# XXX Handle present FeatureList but absent LookupList
+					t.table.FeatureList.mapLookups(lookupMap)
 
 			if t.table.FeatureList and t.table.ScriptList:
+				# XXX Handle present ScriptList but absent FeatureList
 				featureMap = {id(v):i for i,v in enumerate(t.table.FeatureList.FeatureRecord)}
 				t.table.ScriptList.mapFeatures(featureMap)
 
