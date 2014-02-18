@@ -6,8 +6,7 @@ import unittest
 import tempfile
 import codecs
 from plistlib import writePlist, readPlist
-from ufoLib import convertUFOFormatVersion1ToFormatVersion2, convertUFOFormatVersion2ToFormatVersion1,\
-	UFOReader
+from ufoLib import convertUFOFormatVersion1ToFormatVersion2, UFOReader
 from testSupport import expectedFontInfo1To2Conversion, expectedFontInfo2To1Conversion
 
 
@@ -114,12 +113,12 @@ class ConversionFunctionsTestCase(unittest.TestCase):
 		convertUFOFormatVersion1ToFormatVersion2(path1, path2)
 		self.compareFileStructures(path2, path3, expectedFontInfo1To2Conversion, False)
 
-	def test2To1(self):
-		path1 = self.getFontPath("TestFont1 (UFO2).ufo")
-		path2 = self.getFontPath("TestFont1 (UFO2) converted.ufo")
-		path3 = self.getFontPath("TestFont1 (UFO1).ufo")
-		convertUFOFormatVersion2ToFormatVersion1(path1, path2)
-		self.compareFileStructures(path2, path3, expectedFontInfo2To1Conversion, False)
+#	def test2To1(self):
+#		path1 = self.getFontPath("TestFont1 (UFO2).ufo")
+#		path2 = self.getFontPath("TestFont1 (UFO2) converted.ufo")
+#		path3 = self.getFontPath("TestFont1 (UFO1).ufo")
+#		convertUFOFormatVersion2ToFormatVersion1(path1, path2)
+#		self.compareFileStructures(path2, path3, expectedFontInfo2To1Conversion, False)
 
 
 # ---------------------
@@ -132,16 +131,16 @@ class TestInfoObject(object): pass
 class KerningUpConversionTestCase(unittest.TestCase):
 
 	expectedKerning = {
-		("@KERN_1_BGroup", "@KERN_2_CGroup"): 7,
-		("@KERN_1_BGroup", "@KERN_2_DGroup"): 8,
-		("@KERN_1_BGroup", "A"): 5,
-		("@KERN_1_BGroup", "B"): 6,
-		("@KERN_1_CGroup", "@KERN_2_CGroup"): 11,
-		("@KERN_1_CGroup", "@KERN_2_DGroup"): 12,
-		("@KERN_1_CGroup", "A"): 9,
-		("@KERN_1_CGroup", "B"): 10,
-		("A", "@KERN_2_CGroup"): 3,
-		("A", "@KERN_2_DGroup"): 4,
+		("public.kern1.BGroup", "public.kern2.CGroup"): 7,
+		("public.kern1.BGroup", "public.kern2.DGroup"): 8,
+		("public.kern1.BGroup", "A"): 5,
+		("public.kern1.BGroup", "B"): 6,
+		("public.kern1.CGroup", "public.kern2.CGroup"): 11,
+		("public.kern1.CGroup", "public.kern2.DGroup"): 12,
+		("public.kern1.CGroup", "A"): 9,
+		("public.kern1.CGroup", "B"): 10,
+		("A", "public.kern2.CGroup"): 3,
+		("A", "public.kern2.DGroup"): 4,
 		("A", "A"): 1,
 		("A", "B"): 2
 	}
@@ -150,10 +149,10 @@ class KerningUpConversionTestCase(unittest.TestCase):
 		"BGroup": ["B"],
 		"CGroup": ["C", "Ccedilla"],
 		"DGroup": ["D"],
-		"@KERN_1_BGroup": ["B"],
-		"@KERN_1_CGroup": ["C", "Ccedilla"],
-		"@KERN_2_CGroup": ["C", "Ccedilla"],
-		"@KERN_2_DGroup": ["D"],
+		"public.kern1.BGroup": ["B"],
+		"public.kern1.CGroup": ["C", "Ccedilla"],
+		"public.kern2.CGroup": ["C", "Ccedilla"],
+		"public.kern2.DGroup": ["D"],
 		"Not A Kerning Group" : ["A"]
 	}
 
@@ -225,8 +224,6 @@ class KerningUpConversionTestCase(unittest.TestCase):
 		self.assertEqual(self.expectedGroups, groups)
 		info = TestInfoObject()
 		reader.readInfo(info)
-		self.assertEqual("@KERN_1_", info.firstKerningGroupPrefix)
-		self.assertEqual("@KERN_2_", info.secondKerningGroupPrefix)
 
 	def testUFO2(self):
 		self.makeUFO(formatVersion=2)
@@ -237,8 +234,6 @@ class KerningUpConversionTestCase(unittest.TestCase):
 		self.assertEqual(self.expectedGroups, groups)
 		info = TestInfoObject()
 		reader.readInfo(info)
-		self.assertEqual("@KERN_1_", info.firstKerningGroupPrefix)
-		self.assertEqual("@KERN_2_", info.secondKerningGroupPrefix)
 
 
 if __name__ == "__main__":
