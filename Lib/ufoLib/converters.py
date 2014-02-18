@@ -2,7 +2,7 @@
 Conversion functions.
 """
 
-# taken form the UFO spec
+# adapted from the UFO spec
 
 def convertUFO1OrUFO2KerningToUFO3Kerning(kerning, groups):
     # Make lists of groups referenced in kerning pairs.
@@ -55,6 +55,51 @@ def convertUFO1OrUFO2KerningToUFO3Kerning(kerning, groups):
         groups[newName] = group
     # Return the kerning and the groups.
     return newKerning, groups, dict(side1=firstRenamedGroups, side2=secondRenamedGroups)
+
+def findKnownKerningGroups(groups):
+    """
+    This will find kerning groups with known prefixes.
+    These are the prefixes and sides that are handled:
+    @MMK_L_ - side 1
+    @MMK_R_ - side 2
+
+    >>> testGroups = {
+    ...     "@MMK_L_1" : None,
+    ...     "@MMK_L_2" : None,
+    ...     "@MMK_L_3" : None,
+    ...     "@MMK_R_1" : None,
+    ...     "@MMK_R_2" : None,
+    ...     "@MMK_R_3" : None,
+    ...     "@MMK_l_1" : None,
+    ...     "@MMK_r_1" : None,
+    ...     "@MMK_X_1" : None,
+    ...     "foo" : None,
+    ... }
+    >>> first, second = findKnownKerningGroups(testGroups)
+    >>> sorted(first)
+    ['@MMK_L_1', '@MMK_L_2', '@MMK_L_3']
+    >>> sorted(second)
+    ['@MMK_R_1', '@MMK_R_2', '@MMK_R_3']
+    """
+    knownFirstGroupPrefixes = [
+        "@MMK_L_"
+    ]
+    knownSecondGroupPrefixes = [
+        "@MMK_R_"
+    ]
+    firstGroups = set()
+    secondGroups = set()
+    for groupName in groups.keys():
+        for firstPrefix in knownFirstGroupPrefixes:
+            if groupName.startswith(firstPrefix):
+                firstGroups.add(groupName)
+                break
+        for secondPrefix in knownSecondGroupPrefixes:
+            if groupName.startswith(secondPrefix):
+                secondGroups.add(groupName)
+                break
+    return firstGroups, secondGroups
+
 
 def makeUniqueGroupName(name, groupNames, counter=0):
     # Add a number to the name if the counter is higher than zero.
@@ -132,5 +177,5 @@ def test():
     """
 
 if __name__ == "__main__":
-	import doctest
-	doctest.testmod()
+    import doctest
+    doctest.testmod()
