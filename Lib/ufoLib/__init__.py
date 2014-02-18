@@ -591,6 +591,7 @@ class UFOWriter(object):
 		self._path = path
 		self._formatVersion = formatVersion
 		self._fileCreator = fileCreator
+		self._downConversionKerningData = None
 		# if the file already exists, get the format version.
 		# this will be needed for up and down conversion.
 		previousFormatVersion = None
@@ -815,14 +816,67 @@ class UFOWriter(object):
 
 	# groups.plist
 
+	def setKerningGroupConversionRenameMaps(self, maps):
+		"""
+		Set maps defining the renaming that should be done
+		when writing groups and kerning in UFO 1 and UFO 2.
+		This will effectively undo the conversion done when
+		UFOReader reads this data. The dictionary should have
+		this form:
+
+			{
+				"side1" : {"group name to use when writing" : "group name in data"},
+				"side2" : {"group name to use when writing" : "group name in data"}
+			}
+
+		This is the same form returned by UFOReader's
+		getKerningGroupConversionRenameMaps method.
+		"""
+		if self._formatVersion >= 3:
+			return # XXX raise an error here
+		# flip the dictionaries
+		remap = {}
+		for side in ("side1", "side2"):
+			for writeName, dataName in maps[side].items():
+				remap[dataName] = writeName
+		self._downConversionKerningData = dict(groupRenameMap=remap)
+
 	def writeGroups(self, groups):
 		"""
 		Write groups.plist. This method requires a
 		dict of glyph groups as an argument.
 		"""
+		# validate the data structure
 		valid, message = groupsValidator(groups)
 		if not valid:
 			raise UFOLibError(message)
+		# down convert
+		if self._formatVersion < 3 and self._downConversionKerningData is not None:
+			remap = self._downConversionKerningData["groupRenameMap"]
+			remappedGroups = {}
+			# there are some edge cases here that are ignored:
+			# 1. if a group is being renamed to a name that
+			#    already exists, the existing group is always
+			#    overwritten. (this is why there are two loops
+			#    below.) there doesn't seem to be a logical
+			#    solution to groups mismatching and overwriting
+			#    with the specifiecd group seems like a better
+			#    solution than throwing an error.
+			# 2. if side 1 and side 2 groups are being renamed
+			#    to the same group name there is no check to
+			#    ensure that the contents are identical. that
+			#    is left up to the caller.
+			for name, contents in groups.items():
+				if name in remap:
+					continue
+				remappedGroups[name] = contents
+			for name, contents in groups.items():
+				if name not in remap:
+					continue
+				name = remap[name]
+				remappedGroups[name] = contents
+			groups = remappedGroups
+		# pack and write
 		self._makeDirectory()
 		path = os.path.join(self._path, GROUPS_FILENAME)
 		groupsNew = {}
@@ -881,6 +935,7 @@ class UFOWriter(object):
 		regards to conflicting pairs. The assumption is that the
 		kerning data being passed is standards compliant.
 		"""
+		# validate the data structure
 		invalidFormatMessage = "The kerning is not properly formatted."
 		if not isDictEnough(kerning):
 			raise UFOLibError(invalidFormatMessage)
@@ -895,6 +950,16 @@ class UFOWriter(object):
 				raise UFOLibError(invalidFormatMessage)
 			if not isinstance(value, (int, float)):
 				raise UFOLibError(invalidFormatMessage)
+		# down convert
+		if self._formatVersion < 3 and self._downConversionKerningData is not None:
+			remap = self._downConversionKerningData["groupRenameMap"]
+			remappedKerning = {}
+			for (side1, side2), value in kerning.items():
+				side1 = remap.get(side1, side1)
+				side2 = remap.get(side2, side2)
+				remappedKerning[side1, side2] = value
+			kerning = remappedKerning
+		# pack and write
 		self._makeDirectory()
 		path = os.path.join(self._path, KERNING_FILENAME)
 		kerningDict = {}
