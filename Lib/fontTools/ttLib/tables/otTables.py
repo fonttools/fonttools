@@ -548,7 +548,7 @@ def fixLookupOverFlows(ttf, overflowRecord):
 	lookups = ttf[overflowRecord.tableType].table.LookupList.Lookup
 	lookup = lookups[lookupIndex]
 	# If the previous lookup is an extType, look further back. Very unlikely, but possible.
-	while lookup.LookupType == extType:
+	while lookup.SubTable[0].__class__.LookupType == extType:
 		lookupIndex = lookupIndex -1
 		if lookupIndex < 0:
 			return ok
@@ -559,10 +559,8 @@ def fixLookupOverFlows(ttf, overflowRecord):
 		extSubTableClass = lookupTypes[overflowRecord.tableType][extType]
 		extSubTable = extSubTableClass()
 		extSubTable.Format = 1
-		extSubTable.ExtensionLookupType = lookup.LookupType
 		extSubTable.ExtSubTable = subTable
 		lookup.SubTable[si] = extSubTable
-	lookup.LookupType = extType
 	ok = 1
 	return ok
 
@@ -662,20 +660,19 @@ def fixSubTableOverFlows(ttf, overflowRecord):
 		# We split the subtable of the Extension table, and add a new Extension table
 		# to contain the new subtable.
 
-		subTableType = subtable.ExtensionLookupType
+		subTableType = subtable.ExtSubTable.__class__.LookupType
 		extSubTable = subtable
 		subtable = extSubTable.ExtSubTable
-		newExtSubTableClass = lookupTypes[overflowRecord.tableType][lookup.LookupType]
+		newExtSubTableClass = lookupTypes[overflowRecord.tableType][subtable.__class__.LookupType]
 		newExtSubTable = newExtSubTableClass()
 		newExtSubTable.Format = extSubTable.Format
-		newExtSubTable.ExtensionLookupType = extSubTable.ExtensionLookupType
 		lookup.SubTable.insert(subIndex + 1, newExtSubTable)
 
 		newSubTableClass = lookupTypes[overflowRecord.tableType][subTableType]
 		newSubTable = newSubTableClass()
 		newExtSubTable.ExtSubTable = newSubTable
 	else:
-		subTableType = lookup.LookupType
+		subTableType = subtable.__class__.LookupType
 		newSubTableClass = lookupTypes[overflowRecord.tableType][subTableType]
 		newSubTable = newSubTableClass()
 		lookup.SubTable.insert(subIndex + 1, newSubTable)
