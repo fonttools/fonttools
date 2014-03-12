@@ -1736,8 +1736,12 @@ def subset_glyphs(self, s):
                        for v,l in t.uvsDict.items())
       t.uvsDict = dict((v,l) for v,l in t.uvsDict.items() if l)
     else:
-      t.cmap = dict((u,g) for u,g in t.cmap.items()
-                    if g in s.glyphs_requested or u in s.unicodes_requested)
+      if t.isUnicode():
+        t.cmap = dict((u,g) for u,g in t.cmap.items()
+                      if g in s.glyphs_requested or u in s.unicodes_requested)
+      else:
+        t.cmap = dict((u,g) for u,g in t.cmap.items()
+                      if g in s.glyphs_requested)
   self.tables = [t for t in self.tables
                  if (t.cmap if t.format != 14 else t.uvsDict)]
   self.numSubTables = len(self.tables)
