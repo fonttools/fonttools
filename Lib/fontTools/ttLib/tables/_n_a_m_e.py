@@ -90,6 +90,10 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 
 class NameRecord(object):
 	
+	def isUnicode(self):
+		return (self.platformID == 0 or
+			(self.platformID == 3 and self.platEncID in [0, 1, 10]))
+
 	def toXML(self, writer, ttFont):
 		writer.begintag("namerecord", [
 				("nameID", self.nameID),
@@ -98,7 +102,7 @@ class NameRecord(object):
 				("langID", hex(self.langID)),
 						])
 		writer.newline()
-		if self.platformID == 0 or (self.platformID == 3 and self.platEncID in (0, 1)):
+		if self.isUnicode():
 			if len(self.string) % 2:
 				# no, shouldn't happen, but some of the Apple
 				# tools cause this anyway :-(
@@ -117,7 +121,7 @@ class NameRecord(object):
 		self.platEncID = safeEval(attrs["platEncID"])
 		self.langID =  safeEval(attrs["langID"])
 		s = strjoin(content).strip()
-		if self.platformID == 0 or (self.platformID == 3 and self.platEncID in (0, 1)):
+		if self.isUnicode():
 			self.string = s.encode("utf_16_be")
 		else:
 			# This is the inverse of write8bit...
