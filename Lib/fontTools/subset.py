@@ -1696,8 +1696,7 @@ def prune_post_subset(self, options):
 
 @_add_method(ttLib.getTableClass('cmap'))
 def closure_glyphs(self, s):
-  tables = [t for t in self.tables
-            if t.platformID == 3 and t.platEncID in [1, 10]]
+  tables = [t for t in self.tables if t.isUnicode()]
   for u in s.unicodes_requested:
     found = False
     for table in tables:
@@ -1712,11 +1711,9 @@ def closure_glyphs(self, s):
 def prune_pre_subset(self, options):
   if not options.legacy_cmap:
     # Drop non-Unicode / non-Symbol cmaps
-    self.tables = [t for t in self.tables
-                   if t.platformID == 3 and t.platEncID in [0, 1, 10]]
+    self.tables = [t for t in self.tables if t.isUnicode() or t.isSymbol()]
   if not options.symbol_cmap:
-    self.tables = [t for t in self.tables
-                   if t.platformID == 3 and t.platEncID in [1, 10]]
+    self.tables = [t for t in self.tables if not t.isSymbol()]
   # TODO(behdad) Only keep one subtable?
   # For now, drop format=0 which can't be subset_glyphs easily?
   self.tables = [t for t in self.tables if t.format != 0]
