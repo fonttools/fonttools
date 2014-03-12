@@ -338,7 +338,7 @@ ttLib.getTableClass('cvt ').mergeMap = lambda self, lst: first(lst)
 def merge(self, m, tables):
 	# TODO Handle format=14.
 	cmapTables = [t for table in tables for t in table.tables
-		      if t.platformID == 3 and t.platEncID in [1, 10]]
+		      if t.isUnicode()]
 	# TODO Better handle format-4 and format-12 coexisting in same font.
 	# TODO Insert both a format-4 and format-12 if needed.
 	module = ttLib.getTableModule('cmap')
