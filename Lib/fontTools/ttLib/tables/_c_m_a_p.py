@@ -1,6 +1,7 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.misc.textTools import safeEval, readHex
+from fontTools.unicode import Unicode
 from . import DefaultTable
 import sys
 import struct
@@ -137,12 +138,15 @@ class CmapSubtable(object):
 		writer.endtag(self.__class__.__name__)
 		writer.newline()
 
+	def isUnicode(self):
+		return (self.platformID == 0 or
+			(self.platformID == 3 and self.platEncID in [1, 10]))
+
+	def isSymbol(self):
+		return self.platformID == 3 and self.platEncID == 0
+
 	def _writeCodes(self, codes, writer):
-		if (self.platformID, self.platEncID) == (3, 1) or (self.platformID, self.platEncID) == (3, 10) or self.platformID == 0:
-			from fontTools.unicode import Unicode
-			isUnicode = 1
-		else:
-			isUnicode = 0
+		isUnicode = self.isUnicode()
 		for code, name in codes:
 			writer.simpletag("map", code=hex(code), name=name)
 			if isUnicode:
