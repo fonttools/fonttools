@@ -1752,9 +1752,10 @@ def prune_pre_subset(self, options):
   if '*' not in options.name_IDs:
     self.names = [n for n in self.names if n.nameID in options.name_IDs]
   if not options.name_legacy:
-    self.names = [n for n in self.names
-                  if n.platformID == 3 and n.platEncID == 1]
+    self.names = [n for n in self.names if n.isUnicode()]
+  # TODO(behdad) Option to keep only one platform's
   if '*' not in options.name_languages:
+    # TODO(behdad) This is Windows-platform specific!
     self.names = [n for n in self.names if n.langID in options.name_languages]
   return True  # Required table
 
