@@ -706,9 +706,6 @@ class Merger(object):
 		# Right now we don't use self at all.  Will use in the future
 		# for options and logging.
 
-		if logic is NotImplemented:
-			return NotImplemented
-
 		allKeys = set.union(set(), *(vars(table).keys() for table in tables if table is not NotImplemented))
 		for key in allKeys:
 			try:
