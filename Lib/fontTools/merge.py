@@ -673,10 +673,13 @@ class Merger(object):
 		allTags.remove('GlyphOrder')
 		for tag in allTags:
 
-			clazz = ttLib.getTableClass(tag)
 
 			tables = [font.get(tag, NotImplemented) for font in fonts]
+
+			clazz = ttLib.getTableClass(tag)
 			table = clazz(tag).merge(self, tables)
+			# XXX Clean this up and use:  table = mergeObjects(tables)
+
 			if table is not NotImplemented and table is not False:
 				mega[tag] = table
 				self.log("Merged '%s'." % tag)
