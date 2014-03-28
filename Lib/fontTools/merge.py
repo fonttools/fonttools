@@ -113,21 +113,25 @@ def mergeObjects(lst):
 
 	return returnTable
 
-def mergeBits(bitmap, lst):
-	lst = list(lst)
-	returnValue = 0
-	for bitNumber in range(bitmap['size']):
-		try:
-			mergeLogic = bitmap[bitNumber]
-		except KeyError:
+def mergeBits(bitmap):
+
+	def wrapper(lst):
+		lst = list(lst)
+		returnValue = 0
+		for bitNumber in range(bitmap['size']):
 			try:
-				mergeLogic = bitmap['*']
+				mergeLogic = bitmap[bitNumber]
 			except KeyError:
-				raise Exception("Don't know how to merge bit %s" % bitNumber)
-		shiftedBit = 1 << bitNumber
-		mergedValue = mergeLogic(bool(item & shiftedBit) for item in lst)
-		returnValue |= mergedValue << bitNumber
-	return returnValue
+				try:
+					mergeLogic = bitmap['*']
+				except KeyError:
+					raise Exception("Don't know how to merge bit %s" % bitNumber)
+			shiftedBit = 1 << bitNumber
+			mergedValue = mergeLogic(bool(item & shiftedBit) for item in lst)
+			returnValue |= mergedValue << bitNumber
+		return returnValue
+
+	return wrapper
 
 
 @_add_method(DefaultTable, allowDefaultTable=True)
@@ -176,7 +180,7 @@ ttLib.getTableClass('head').mergeMap = {
 	'fontRevision': max,
 	'checkSumAdjustment': lambda lst: 0, # We need *something* here
 	'magicNumber': equal,
-	'flags': lambda lst: mergeBits(headFlagsMergeBitMap, lst),
+	'flags': mergeBits(headFlagsMergeBitMap),
 	'unitsPerEm': equal,
 	'created': current_time,
 	'modified': current_time,
@@ -235,7 +239,7 @@ def mergeOs2FsType(lst):
 		elif lst[i] == 0:
 			lst[i] = 0x000C
 
-	fsType = mergeBits(os2FsTypeMergeBitMap, lst)
+	fsType = mergeBits(os2FsTypeMergeBitMap)(lst)
 	# unset bits 2 and 3 if bit 1 is set (some font is "no embedding")
 	if fsType & 0x0002:
 		fsType &= ~0x000C
