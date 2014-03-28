@@ -260,9 +260,9 @@ ttLib.getTableClass('OS/2').mergeMap = {
 	'sTypoLineGap': max,
 	'usWinAscent': max,
 	'usWinDescent': max,
-	'ulCodePageRange1': bitwise_or,
-	'ulCodePageRange2': bitwise_or,
-	'usMaxContex': max,
+	'ulCodePageRange1': onlyExisting(bitwise_or),
+	'ulCodePageRange2': onlyExisting(bitwise_or),
+	'usMaxContex': onlyExisting(max),
 	# TODO version 5
 }
 
