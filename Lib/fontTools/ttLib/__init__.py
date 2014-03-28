@@ -816,6 +816,15 @@ def getTableClass(tag):
 	return tableClass
 
 
+def getClassTag(klass):
+	"""Fetch the table tag for a class object."""
+	name = klass.__name__
+	assert name[:6] == 'table_'
+	name = name[6:] # Chop 'table_'
+	return identifierToTag(name)
+
+
+
 def newTable(tag):
 	"""Return a new instance of a table."""
 	tableClass = getTableClass(tag)
