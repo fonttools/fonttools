@@ -58,7 +58,7 @@ def avg_int(lst):
 	lst = list(lst)
 	return sum(lst) // len(lst)
 
-def implementedFilter(func):
+def onlyExisting(func):
 	"""Returns a filter func that when called with a list,
 	only calls func on the non-NotImplemented items of the list,
 	and only so if there's at least one item remaining.
@@ -286,7 +286,7 @@ ttLib.getTableClass('post').mergeMap = {
 	'maxMemType42': lambda lst: 0,
 	'minMemType1': max,
 	'maxMemType1': lambda lst: 0,
-	'mapping': implementedFilter(sumDicts),
+	'mapping': onlyExisting(sumDicts),
 	'extraNames': lambda lst: [],
 }
 
@@ -418,7 +418,7 @@ ttLib.getTableClass('BASE').mergeMap = \
 ttLib.getTableClass('JSTF').mergeMap = \
 ttLib.getTableClass('MATH').mergeMap = \
 {
-	'tableTag': implementedFilter(equal), # XXX clean me up
+	'tableTag': onlyExisting(equal), # XXX clean me up
 	'table': mergeObjects,
 }
 
