@@ -91,6 +91,7 @@ def mergeObjects(lst):
 	assert all(type(item) == clazz for item in lst), lst
 	logic = clazz.mergeMap
 	returnTable = clazz()
+	returnDict = {}
 
 	allKeys = set.union(set(), *(vars(table).keys() for table in lst))
 	for key in allKeys:
@@ -106,7 +107,9 @@ def mergeObjects(lst):
 			continue
 		value = mergeLogic(getattr(table, key, NotImplemented) for table in lst)
 		if value is not NotImplemented:
-			setattr(returnTable, key, value)
+			returnDict[key] = value
+
+	returnTable.__dict__ = returnDict
 
 	return returnTable
 
