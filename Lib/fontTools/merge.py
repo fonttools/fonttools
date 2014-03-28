@@ -671,8 +671,10 @@ class Merger(object):
 
 		allTags = reduce(set.union, (list(font.keys()) for font in fonts), set())
 		allTags.remove('GlyphOrder')
+		allTags.remove('cmap')
+		allTags.remove('GSUB')
+		allTags = ['cmap', 'GSUB'] + list(allTags)
 		for tag in allTags:
-
 
 			tables = [font.get(tag, NotImplemented) for font in fonts]
 
