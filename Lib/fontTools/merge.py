@@ -418,7 +418,7 @@ ttLib.getTableClass('BASE').mergeMap = \
 ttLib.getTableClass('JSTF').mergeMap = \
 ttLib.getTableClass('MATH').mergeMap = \
 {
-	'tableTag': equal,
+	'tableTag': implementedFilter(equal), # XXX clean me up
 	'table': mergeObjects,
 }
 
