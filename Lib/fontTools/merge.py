@@ -33,9 +33,10 @@ def _add_method(*clazzes, **kwargs):
 # General utility functions for merging values from different fonts
 
 def equal(lst):
+	lst = list(lst)
 	t = iter(lst)
 	first = next(t)
-	assert all(item == first for item in t)
+	assert all(item == first for item in t), "Expected all items to be equal: %s" % lst
 	return first
 
 def first(lst):
