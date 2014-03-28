@@ -110,15 +110,15 @@ def mergeObjects(lst):
 
 	return returnTable
 
-def mergeBits(logic, lst):
+def mergeBits(bitmap, lst):
 	lst = list(lst)
 	returnValue = 0
-	for bitNumber in range(logic['size']):
+	for bitNumber in range(bitmap['size']):
 		try:
-			mergeLogic = logic[bitNumber]
+			mergeLogic = bitmap[bitNumber]
 		except KeyError:
 			try:
-				mergeLogic = logic['*']
+				mergeLogic = bitmap['*']
 			except KeyError:
 				raise Exception("Don't know how to merge bit %s" % bitNumber)
 		shiftedBit = 1 << bitNumber
@@ -153,7 +153,7 @@ ttLib.getTableClass('maxp').mergeMap = {
 	# maxFunctionDefs, maxInstructionDefs, maxSizeOfInstructions
 }
 
-headFlagsMergeMap = {
+headFlagsMergeBitMap = {
 	'size': 16,
 	'*': bitwise_or,
 	1: bitwise_and, # Baseline at y = 0
@@ -173,7 +173,7 @@ ttLib.getTableClass('head').mergeMap = {
 	'fontRevision': max,
 	'checkSumAdjustment': lambda lst: 0, # We need *something* here
 	'magicNumber': equal,
-	'flags': lambda lst: mergeBits(headFlagsMergeMap, lst),
+	'flags': lambda lst: mergeBits(headFlagsMergeBitMap, lst),
 	'unitsPerEm': equal,
 	'created': current_time,
 	'modified': current_time,
@@ -205,7 +205,7 @@ ttLib.getTableClass('hhea').mergeMap = {
 	'numberOfHMetrics': recalculate,
 }
 
-os2FsTypeMergeMap = {
+os2FsTypeMergeBitMap = {
 	'size': 16,
 	'*': lambda bit: 0,
 	1: bitwise_or, # no embedding permitted
@@ -232,7 +232,7 @@ def mergeOs2FsType(lst):
 		elif lst[i] == 0:
 			lst[i] = 0x000C
 
-	fsType = mergeBits(os2FsTypeMergeMap, lst)
+	fsType = mergeBits(os2FsTypeMergeBitMap, lst)
 	# unset bits 2 and 3 if bit 1 is set (some font is "no embedding")
 	if fsType & 0x0002:
 		fsType &= ~0x000C
