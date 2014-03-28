@@ -83,12 +83,16 @@ def sumDicts(lst):
 	return d
 
 def mergeObjects(lst):
-	lst = [item for item in lst if item is not None and item is not NotImplemented]
+	lst = [item for item in lst if item is not NotImplemented]
 	if not lst:
-		return None # Not all can be NotImplemented
+		return NotImplemented
+	lst = [item for item in lst if item is not None]
+	if not lst:
+		return None
 
 	clazz = lst[0].__class__
 	assert all(type(item) == clazz for item in lst), lst
+
 	logic = clazz.mergeMap
 	returnTable = clazz()
 	returnDict = {}
