@@ -761,7 +761,7 @@ class GlyphOrder(object):
 	table, but it's nice to present it as such in the TTX format.
 	"""
 	
-	def __init__(self, tag):
+	def __init__(self, tag=None):
 		pass
 	
 	def toXML(self, writer, ttFont):
