@@ -350,21 +350,30 @@ ttLib.getTableClass('cvt ').mergeMap = lambda self, lst: first(lst)
 @_add_method(ttLib.getTableClass('cmap'))
 def merge(self, m, tables):
 	# TODO Handle format=14.
-	cmapTables = [t for table in tables for t in table.tables
+	cmapTables = [(t,fontIdx) for fontIdx,table in enumerate(tables) for t in table.tables
 		      if t.isUnicode()]
 	# TODO Better handle format-4 and format-12 coexisting in same font.
 	# TODO Insert both a format-4 and format-12 if needed.
 	module = ttLib.getTableModule('cmap')
-	assert all(t.format in [4, 12] for t in cmapTables)
-	format = max(t.format for t in cmapTables)
+	assert all(t.format in [4, 12] for t,_ in cmapTables)
+	format = max(t.format for t,_ in cmapTables)
 	cmapTable = module.cmap_classes[format](format)
 	cmapTable.cmap = {}
 	cmapTable.platformID = 3
-	cmapTable.platEncID = max(t.platEncID for t in cmapTables)
+	cmapTable.platEncID = max(t.platEncID for t,_ in cmapTables)
 	cmapTable.language = 0
-	for table in cmapTables:
+	cmap = cmapTable.cmap
+	for table,fontIdx in cmapTables:
 		# TODO handle duplicates.
-		cmapTable.cmap.update(table.cmap)
+		for uni,gid in table.cmap.items():
+			oldgid = cmap.get(uni, None)
+			if oldgid is None:
+				cmap[uni] = gid
+			elif oldgid != gid:
+				# Char previously mapped to oldgid, now to gid.
+				# Record, to fix up in GSUB 'locl' later.
+				assert m.duplicateGlyphsPerFont[fontIdx].get(oldgid, gid) == gid
+				m.duplicateGlyphsPerFont[fontIdx][oldgid] = gid
 	self.tableVersion = 0
 	self.tables = [cmapTable]
 	self.numSubTables = len(self.tables)
@@ -433,6 +442,58 @@ ttLib.getTableClass('MATH').mergeMap = \
 	'tableTag': onlyExisting(equal), # XXX clean me up
 	'table': mergeObjects,
 }
+
+@_add_method(ttLib.getTableClass('GSUB'))
+def merge(self, m, tables):
+
+	assert len(tables) == len(m.duplicateGlyphsPerFont)
+	for i,(table,dups) in enumerate(zip(tables, m.duplicateGlyphsPerFont)):
+		if not dups: continue
+		assert (table is not None and table is not NotImplemented), "Have duplicates to resolve for font %d but no GSUB" % (i + 1)
+		lookupMap = {id(v):v for v in table.table.LookupList.Lookup}
+		featureMap = {id(v):v for v in table.table.FeatureList.FeatureRecord}
+		synthFeature = None
+		synthLookup = None
+		for script in table.table.ScriptList.ScriptRecord:
+			if script.ScriptTag == 'DFLT': continue # XXX
+			for langsys in [script.Script.DefaultLangSys] + [l.LangSys for l in script.Script.LangSysRecord]:
+				feature = [featureMap[v] for v in langsys.FeatureIndex if featureMap[v].FeatureTag == 'locl']
+				assert len(feature) <= 1
+				if feature:
+					feature = feature[0]
+				else:
+					if not synthFeature:
+						synthFeature = otTables.FeatureRecord()
+						synthFeature.FeatureTag = 'locl'
+						f = synthFeature.Feature = otTables.Feature()
+						f.FeatureParams = None
+						f.LookupCount = 0
+						f.LookupListIndex = []
+						langsys.FeatureIndex.append(id(synthFeature))
+						featureMap[id(synthFeature)] = synthFeature
+						langsys.FeatureIndex.sort(key=lambda v: featureMap[v].FeatureTag)
+						table.table.FeatureList.FeatureRecord.append(synthFeature)
+						table.table.FeatureList.FeatureCount += 1
+					feature = synthFeature
+
+				if not synthLookup:
+					subtable = otTables.SingleSubst()
+					subtable.mapping = dups
+					synthLookup = otTables.Lookup()
+					synthLookup.LookupFlag = 0
+					synthLookup.LookupType = 1
+					synthLookup.SubTableCount = 1
+					synthLookup.SubTable = [subtable]
+					table.table.LookupList.Lookup.append(synthLookup)
+					table.table.LookupList.LookupCount += 1
+
+				feature.Feature.LookupListIndex[:0] = [id(synthLookup)]
+				feature.Feature.LookupCount += 1
+
+
+	DefaultTable.merge(self, m, tables)
+	return self
+
 
 
 @_add_method(otTables.SingleSubst,
@@ -669,6 +730,8 @@ class Merger(object):
 		for font in fonts:
 			self._preMerge(font)
 
+		self.duplicateGlyphsPerFont = [{} for f in fonts]
+
 		allTags = reduce(set.union, (list(font.keys()) for font in fonts), set())
 		allTags.remove('GlyphOrder')
 		allTags.remove('cmap')
@@ -688,6 +751,8 @@ class Merger(object):
 			else:
 				self.log("Dropped '%s'." % tag)
 			self.log.lapse("merge '%s'" % tag)
+
+		del self.duplicateGlyphsPerFont
 
 		self._postMerge(mega)
 
@@ -731,6 +796,8 @@ class Merger(object):
 
 	def _preMerge(self, font):
 
+		# Map indices to references
+
 		GDEF = font.get('GDEF')
 		GSUB = font.get('GSUB')
 		GPOS = font.get('GPOS')
@@ -753,6 +820,8 @@ class Merger(object):
 		# TODO FeatureParams nameIDs
 
 	def _postMerge(self, font):
+
+		# Map references back to indices
 
 		GDEF = font.get('GDEF')
 		GSUB = font.get('GSUB')
