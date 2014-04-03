@@ -450,8 +450,8 @@ def merge(self, m, tables):
 	for i,(table,dups) in enumerate(zip(tables, m.duplicateGlyphsPerFont)):
 		if not dups: continue
 		assert (table is not None and table is not NotImplemented), "Have duplicates to resolve for font %d but no GSUB" % (i + 1)
-		lookupMap = {id(v):v for v in table.table.LookupList.Lookup}
-		featureMap = {id(v):v for v in table.table.FeatureList.FeatureRecord}
+		lookupMap = dict((id(v),v) for v in table.table.LookupList.Lookup)
+		featureMap = dict((id(v),v) for v in table.table.FeatureList.FeatureRecord)
 		synthFeature = None
 		synthLookup = None
 		for script in table.table.ScriptList.ScriptRecord:
@@ -806,14 +806,14 @@ class Merger(object):
 			if not t: continue
 
 			if t.table.LookupList:
-				lookupMap = {i:id(v) for i,v in enumerate(t.table.LookupList.Lookup)}
+				lookupMap = dict((i,id(v)) for i,v in enumerate(t.table.LookupList.Lookup))
 				t.table.LookupList.mapLookups(lookupMap)
 				if t.table.FeatureList:
 					# XXX Handle present FeatureList but absent LookupList
 					t.table.FeatureList.mapLookups(lookupMap)
 
 			if t.table.FeatureList and t.table.ScriptList:
-				featureMap = {i:id(v) for i,v in enumerate(t.table.FeatureList.FeatureRecord)}
+				featureMap = dict((i,id(v)) for i,v in enumerate(t.table.FeatureList.FeatureRecord))
 				t.table.ScriptList.mapFeatures(featureMap)
 
 		# TODO GDEF/Lookup MarkFilteringSets
@@ -831,7 +831,7 @@ class Merger(object):
 			if not t: continue
 
 			if t.table.LookupList:
-				lookupMap = {id(v):i for i,v in enumerate(t.table.LookupList.Lookup)}
+				lookupMap = dict((id(v),i) for i,v in enumerate(t.table.LookupList.Lookup))
 				t.table.LookupList.mapLookups(lookupMap)
 				if t.table.FeatureList:
 					# XXX Handle present FeatureList but absent LookupList
@@ -839,7 +839,7 @@ class Merger(object):
 
 			if t.table.FeatureList and t.table.ScriptList:
 				# XXX Handle present ScriptList but absent FeatureList
-				featureMap = {id(v):i for i,v in enumerate(t.table.FeatureList.FeatureRecord)}
+				featureMap = dict((id(v),i) for i,v in enumerate(t.table.FeatureList.FeatureRecord))
 				t.table.ScriptList.mapFeatures(featureMap)
 
 		# TODO GDEF/Lookup MarkFilteringSets
