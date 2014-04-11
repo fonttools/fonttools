@@ -2,9 +2,11 @@ from pstates import States as states
 class root_instruct(object):
     def __init__(self):
 	self.data = []
+    def add_data(self,new_data):
+        self.data.append(new_data.value)
     def prettyPrinter(self):
         #TODO:implement printy printer
-        pass
+        print(self.__class__,self.data)
 class all():
 
     class PUSH(root_instruct):

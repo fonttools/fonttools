@@ -17,10 +17,6 @@ class instructionConstructor():
                 else:
                     break
             self.typed_instruction = self.construct(instructions.all,self.instruction[:i]) 
-    #this will combine the intruction with associated data
-    def parser(self):
-        #TODO:
-        pass
     def construct(self,idClasses, builderName):
         try:
             targetClass = getattr(idClasses, builderName)

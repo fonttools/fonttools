@@ -13,13 +13,26 @@ def extractFunctions(fpgm_program):
     label = 1
     #for instruction in fpgm_program:
 def constructInstructions(instructions):
+    thisinstruction = None
+    instructions_list = []
     for instruction in instructions:
         instructionCons = instructionConstructor.instructionConstructor(instruction)
         instruction = instructionCons.getClass()
+        if isinstance(instruction, instructionConstructor.data):
+            #print(instruction)
+            combineInstrcutionData(thisinstruction,instruction)
+        else:
+            #print("not data",instruction)
+            if instruction is not None:
+                instructions_list.append(thisinstruction)
+            thisinstruction = instruction 
+    for instruct in instructions_list:
         try:
-            print(instruction.__dict__ )
+            instruct.prettyPrinter()
         except:
             pass
+def combineInstrcutionData(instruction,data):
+        instruction.add_data(data)
 def main(args):
 	input = args[0]
 	ttf = TTFont()
