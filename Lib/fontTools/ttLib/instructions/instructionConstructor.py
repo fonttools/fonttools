@@ -18,11 +18,9 @@ class instructionConstructor():
                     break
             self.typed_instruction = self.construct(instructions.all,self.instruction[:i]) 
     def construct(self,idClasses, builderName):
-        try:
-            targetClass = getattr(idClasses, builderName)
-            return targetClass()
-        except:
-            pass
+        targetClass = getattr(idClasses, builderName)
+        return targetClass()
+
 class data():
     def __init__(self,str_data):
         self.value = int(str_data)

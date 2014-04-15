@@ -7,7 +7,7 @@ program_env = pe.ProgramEnvironment()
 def ConstructCVTTable(values):
     key = 1
     for value in values:
-    	program_env.cvt_table[key] = value
+        program_env.cvt_table[key] = value
         key = key + 1
 def extractFunctions(fpgm_program):
     label = 1
@@ -34,7 +34,9 @@ def constructInstructions(instructions):
 def combineInstrcutionData(instruction,data):
         instruction.add_data(data)
 def main(args):
-	input = args[0]
+	#assume input is .ttx file
+        #TODO:input is .ttf file
+        input = args[0]
 	ttf = TTFont()
 	ttf.importXML(input,quiet=True)
 	#build cvt table
