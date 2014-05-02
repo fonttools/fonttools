@@ -72,7 +72,7 @@ class TTFont(object):
 	def __init__(self, file=None, res_name_or_index=None,
 			sfntVersion="\000\001\000\000", flavor=None, checkChecksums=False,
 			verbose=False, recalcBBoxes=True, allowVID=False, ignoreDecompileErrors=False,
-			fontNumber=-1, lazy=False, quiet=False):
+			recalcTimestamp=True, fontNumber=-1, lazy=False, quiet=False):
 		
 		"""The constructor can be called with a few different arguments.
 		When reading a font from disk, 'file' should be either a pathname
@@ -106,6 +106,9 @@ class TTFont(object):
 		greatly, and therefore should have some impact on the time needed 
 		to parse/compile large fonts.
 
+		If the recalcTimestamp argument is false, the modified timestamp in the
+		'head' table will *not* be recalculated upon save/compile.
+
 		If the allowVID argument is set to true, then virtual GID's are
 		supported. Asking for a glyph ID with a glyph name or GID that is not in
 		the font will return a virtual GID.   This is valid for GSUB and cmap
@@ -130,6 +133,7 @@ class TTFont(object):
 		self.quiet = quiet
 		self.lazy = lazy
 		self.recalcBBoxes = recalcBBoxes
+		self.recalcTimestamp = recalcTimestamp
 		self.tables = {}
 		self.reader = None
 

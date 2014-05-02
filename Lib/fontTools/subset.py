@@ -1824,6 +1824,7 @@ class Options(object):
   notdef_outline = False # No need for notdef to have an outline really
   recommended_glyphs = False  # gid1, gid2, gid3 for TrueType
   recalc_bounds = False # Recalculate font bounding boxes
+  recalc_timestamp = False # Recalculate font modified timestamp
   canonical_order = False # Order tables as recommended
   flavor = None # May be 'woff'
 
@@ -2113,6 +2114,7 @@ def load_font(fontFile,
                       allowVID=allowVID,
                       checkChecksums=checkChecksums,
                       recalcBBoxes=options.recalc_bounds,
+                      recalcTimestamp=options.recalc_timestamp,
                       lazy=lazy)
 
   # Hack:
