@@ -136,16 +136,25 @@ class root_instruct(object):
     def __init__(self):
 	self.data = []
         self.successor = None 
+        self.top = None
     def add_data(self,new_data):
         self.data.append(new_data.value)
-    def set_top_value(self,value):
+    def set_top(self,value):
         self.top = value
+    def get_pop_num(self):
+        return self.pop_num
+    def get_push_num(self):
+        return self.push_num
+    def set_input(self,data):
+        self.data = data
     def get_successor(self):
         return self.successor
     def set_successor(self,successor):
         self.successor = successor
+    def get_result(self):
+        return self.data
     def prettyPrinter(self):
-        print(self.__class__.__name__,self.data)
+        print(self.__class__.__name__,self.data,self.top)
 class all():
 """
 
@@ -157,7 +166,7 @@ class all():
             emit(fp,"class PUSH(root_instruct):",1)
             emit(fp,"def __init__(self):",2)
             emit(fp,"root_instruct.__init__(self)",3)
-            emit(fp,"self.push_num = 1",3)
+            emit(fp,"self.push_num = len(self.data)",3)
             emit(fp,"self.pop_num = 0",3)
             emit(fp,"def action(self):",2)
             emit(fp,"pass ",3)
@@ -168,7 +177,7 @@ class all():
                 emit(fp,"root_instruct.__init__(self) ", 3)
                 emit(fp,"self.push_num =  %s "  %(pushes), 3)
                 emit(fp,"self.pop_num =  %s "  %(pops), 3)
-                emit(fp,"def action(self, space):", 2)
+                emit(fp,"def action(self):", 2)
                 emit(fp,"pass ", 3)
                 emit(fp,"")
         finally:

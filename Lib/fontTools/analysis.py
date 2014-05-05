@@ -13,11 +13,30 @@ class Global(object):
         self.cvt = cvt
     def insert_function():
         pass
-class abstractExecution(object):
-    def __init__(global):
-        this_global = global
-    def execute():
 
+class AbstractExecutor(object):
+    def __init__(self,prgm_global):
+        self.global_env = prgm_global
+        self.data = []
+    def execute(self,instruction):
+        #get data from global, feed it to instructions
+        self.program_stack = self.global_env.program_stack
+        self.instruction = instruction
+        if len(self.program_stack)>0:
+            self.instruction.set_top(self.program_stack[-1])
+        if self.instruction.get_pop_num()> 0: 
+            for i in range(self.instruction.get_pop_num()+1):
+                self.data.append(self.program_stack[-1])
+                self.program_stack.pop()
+            print("stack after pop",self.program_stack)
+            self.instruction.set_input(self.data)
+        self.instruction.action()
+        print(self.instruction.get_push_num())
+        if self.instruction.get_push_num()> 0: 
+            self.result = self.instruction.get_result()
+            for data in self.result:
+                self.global_env.program_stack.append(data)
+        print("stack",self.program_stack)
 #individual tags 
 class Tag(object):
     def __init__(self,tag,ttf,id=0):
@@ -77,9 +96,6 @@ def constructInstructions(tag):
                 instructions_list.append(thisinstruction)
                 #print(thisinstruction)
             thisinstruction = instruction
-
-    #for instruct in instructions_list:
-        #instruct.prettyPrinter()
     tag.instructions = instructions_list
 def combineInstrcutionData(instruction,data):
         instruction.add_data(data)
@@ -102,10 +118,22 @@ def main(args):
 	#print(ttf['cvt '].__dict__)
 	fpgm_program = Tag('fpgm',ttf)
 
-	#print(fpgm_program)
+
         constructInstructions(fpgm_program)
         constructSuccessor(fpgm_program)
-        testSuccessor(fpgm_program)
+        #testSuccessor(fpgm_program)
+        font_global = Global()
+        executor = AbstractExecutor(font_global)
+
+        instruction = fpgm_program.instructions[0]
+        
+        while instruction.get_successor() is not None:
+            executor.execute(instruction)
+            instruction.prettyPrinter()
+            instruction = instruction.get_successor()
+
+    
+
 	#print(fpgm_program)
         #extractFunctions(fpgm_program)
 	'''
