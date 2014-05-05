@@ -2,18 +2,26 @@
 class root_instruct(object):
     def __init__(self):
 	self.data = []
+        self.successor = None 
     def add_data(self,new_data):
         self.data.append(new_data.value)
+    def set_top_value(self,value):
+        self.top = value
+    def get_successor(self):
+        return self.successor
+    def set_successor(self,successor):
+        self.successor = successor
     def prettyPrinter(self):
         print(self.__class__.__name__,self.data)
 class all():
     class PUSH(root_instruct):
         def __init__(self):
-            root_instruct.__init__(self) 
-            self.push_num =  0 
-            self.pop_num =  1 
-        def action(self, space):
+            root_instruct.__init__(self)
+            self.push_num = 1
+            self.pop_num = 0
+        def action(self):
             pass 
+
     class AA(root_instruct):
         def __init__(self):
             root_instruct.__init__(self) 

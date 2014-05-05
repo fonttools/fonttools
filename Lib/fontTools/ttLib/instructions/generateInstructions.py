@@ -135,14 +135,17 @@ def constructInstructionClasses(instructionList):
 class root_instruct(object):
     def __init__(self):
 	self.data = []
+        self.successor = None 
     def add_data(self,new_data):
         self.data.append(new_data.value)
     def set_top_value(self,value):
         self.top = value
+    def get_successor(self):
+        return self.successor
     def set_successor(self,successor):
         self.successor = successor
     def prettyPrinter(self):
-        print(self.__class__.__name__,self.data,self.top)
+        print(self.__class__.__name__,self.data)
 class all():
 """
 
@@ -151,6 +154,14 @@ class all():
 	fp = open(out_file, "w")
         try:
             fp.write(HEAD)
+            emit(fp,"class PUSH(root_instruct):",1)
+            emit(fp,"def __init__(self):",2)
+            emit(fp,"root_instruct.__init__(self)",3)
+            emit(fp,"self.push_num = 1",3)
+            emit(fp,"self.pop_num = 0",3)
+            emit(fp,"def action(self):",2)
+            emit(fp,"pass ",3)
+            emit(fp,"")
             for op, mnemonic, argBits, name, pops, pushes in instructionList:
                 emit(fp,"class %s(root_instruct):" % (mnemonic),1)
                 emit(fp,"def __init__(self):", 2)
