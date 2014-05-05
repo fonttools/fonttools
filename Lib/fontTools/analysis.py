@@ -17,15 +17,16 @@ class Global(object):
 class AbstractExecutor(object):
     def __init__(self,prgm_global):
         self.global_env = prgm_global
-        self.data = []
+        
     def execute(self,instruction):
+        self.data = []
         #get data from global, feed it to instructions
         self.program_stack = self.global_env.program_stack
         self.instruction = instruction
         if len(self.program_stack)>0:
             self.instruction.set_top(self.program_stack[-1])
         if self.instruction.get_pop_num()> 0: 
-            for i in range(self.instruction.get_pop_num()+1):
+            for i in range(self.instruction.get_pop_num()):
                 self.data.append(self.program_stack[-1])
                 self.program_stack.pop()
             print("stack after pop",self.program_stack)
