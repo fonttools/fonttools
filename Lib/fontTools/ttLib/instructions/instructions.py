@@ -236,6 +236,7 @@ class all():
     class FDEF(root_instruct):
         def __init__(self):
             root_instruct.__init__(self) 
+            #self.content = []
             self.push_num =  0 
             self.pop_num =  1 
         def action(self):

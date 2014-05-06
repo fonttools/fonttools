@@ -6,7 +6,7 @@ import sys
 class Global(object):
     def __init__(self):
         self.cvt = []
-        self.function_table = []
+        self.function_table = {}
         self.state = 1
         self.program_stack = []
     def set_cvt_table(self,cvt):
@@ -25,20 +25,27 @@ class AbstractExecutor(object):
         self.instruction = instruction
         if len(self.program_stack)>0:
             self.instruction.set_top(self.program_stack[-1])
+
         if self.instruction.get_pop_num()> 0: 
             for i in range(self.instruction.get_pop_num()):
                 self.data.append(self.program_stack[-1])
                 self.program_stack.pop()
-            print("stack after pop",self.program_stack)
-            self.instruction.set_input(self.data)
-        self.instruction.action()
-        print(self.instruction.get_push_num())
-        if self.instruction.get_push_num()> 0: 
+           
+            
+        
+        if self.instruction.get_push_num()> 0:
+            if len(self.data) > 0:
+                self.instruction.set_input(self.data)
+            self.instruction.action()
             self.result = self.instruction.get_result()
             for data in self.result:
                 self.global_env.program_stack.append(data)
-        print("stack",self.program_stack)
-#individual tags 
+
+        
+        if isinstance(self.instruction,instructions.all.FDEF):
+            self.global_env.function_table[self.instruction.top] = self.instruction.data
+
+
 class Tag(object):
     def __init__(self,tag,ttf,id=0):
         self.tag = tag
@@ -55,19 +62,31 @@ class Tag(object):
 global_env = Global()
 def constructSuccessor(tag):
     tag_instructions = tag.instructions
-    for i in range(len(tag_instructions)-1):
+    this_fdef = None
+
+    for i in range(len(tag_instructions)):
+        if this_fdef is not None and this_fdef.get_successor() is None:
+            this_fdef.data.append(tag_instructions[i])
+        #recording function instructions if this FDEF hasn't met ENDF yet
         if isinstance(tag_instructions[i],instructions.all.FDEF):
             this_fdef = tag_instructions[i]
-        else:
+        elif i < len(tag_instructions)-1:
             tag_instructions[i].set_successor(tag_instructions[i+1])
+
         if isinstance(tag_instructions[i],instructions.all.ENDF):
+           
             this_fdef.set_successor(tag_instructions[i])
-            #print(this_fdef.__dict__)
+        
         if isinstance(tag_instructions[i],instructions.all.IF):
             this_if = tag_instructions[i]
         elif isinstance(tag_instructions[i],instructions.all.ELSE):
             this_if.set_successor(tag_instructions[i])
-        #print(tag_instructions[i].__dict__) 
+        
+        
+        
+
+   
+        
 def ConstructCVTTable(values):
     key = 1
     cvt_table = {}
@@ -84,20 +103,23 @@ def constructInstructions(tag):
     instructions = tag.instructions
 
     for instruction in instructions:
-        #print(instruction)
+        
         instructionCons = instructionConstructor.instructionConstructor(instruction)
         instruction = instructionCons.getClass()
-        #instruction.set_pe(pe)
+        
         if isinstance(instruction, instructionConstructor.data):
-            #print(instruction)
+            
             combineInstrcutionData(thisinstruction,instruction)
         else:
-            #print("not data",instruction)
+           
             if thisinstruction is not None:
                 instructions_list.append(thisinstruction)
-                #print(thisinstruction)
+               
             thisinstruction = instruction
+
+    instructions_list.append(thisinstruction)
     tag.instructions = instructions_list
+    
 def combineInstrcutionData(instruction,data):
         instruction.add_data(data)
 def testSuccessor(tag):
@@ -116,7 +138,6 @@ def main(args):
 	ttf.importXML(input,quiet=True)
 	#build cvt table
 	ConstructCVTTable(ttf['cvt '].values)
-	#print(ttf['cvt '].__dict__)
 	fpgm_program = Tag('fpgm',ttf)
 
 
@@ -133,10 +154,8 @@ def main(args):
             instruction.prettyPrinter()
             instruction = instruction.get_successor()
 
-    
-
-	#print(fpgm_program)
-        #extractFunctions(fpgm_program)
+        for key,value in font_global.function_table.items():
+            print(key,value)
 	'''
 	prep_program = ttf['prep'].program.getAssembly()
 
