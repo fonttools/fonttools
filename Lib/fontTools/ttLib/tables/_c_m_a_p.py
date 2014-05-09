@@ -673,7 +673,7 @@ class cmap_format_4(CmapSubtable):
 					glyphID = charCode + idDelta[i]
 				else:
 					# *someone* needs to get killed.
-					index = idRangeOffset[i] // 2 + (charCode - startCode[i]) + i - len(idRangeOffset)
+					index = rangeOffset // 2 + (charCode - startCode[i]) + i - len(idRangeOffset)
 					assert (index < lenGIArray), "In format 4 cmap, range (%d), the calculated index (%d) into the glyph index array  is not less than the length of the array (%d) !" % (i, index, lenGIArray)
 					if glyphIndexArray[index] != 0:  # if not missing glyph
 						glyphID = glyphIndexArray[index] + idDelta[i]
