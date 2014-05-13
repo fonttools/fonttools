@@ -218,7 +218,10 @@ def subset_glyphs(self, s):
       p.PairValueRecord = [r for r in p.PairValueRecord
                            if r.SecondGlyph in s.glyphs]
       p.PairValueCount = len(p.PairValueRecord)
-    self.PairSet = [p for p in self.PairSet if p.PairValueCount]
+    # Remove empty pairsets
+    indices = [i for i,p in enumerate(self.PairSet) if p.PairValueCount]
+    self.Coverage.remap(indices)
+    self.PairSet = [self.PairSet[i] for i in indices]
     self.PairSetCount = len(self.PairSet)
     return bool(self.PairSetCount)
   elif self.Format == 2:
