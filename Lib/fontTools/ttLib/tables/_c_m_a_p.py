@@ -939,8 +939,8 @@ class cmap_format_12_or_13(CmapSubtable):
 			startCharCode, endCharCode, glyphID = struct.unpack(">LLL",data[pos:pos+12] )
 			pos += 12
 			lenGroup = 1 + endCharCode - startCharCode
-			charCodes += list(range(startCharCode, endCharCode +1))
-			gids += self._computeGIDs(glyphID, lenGroup)
+			charCodes.extend(list(range(startCharCode, endCharCode +1)))
+			gids.extend(self._computeGIDs(glyphID, lenGroup))
 		self.data = data = None
 		self.cmap = cmap = {}
 		lenCmap = len(gids)
