@@ -666,7 +666,7 @@ class cmap_format_4(CmapSubtable):
 		gids = []
 		for i in range(len(startCode) - 1):	# don't do 0xffff!
 			rangeCharCodes = list(range(startCode[i], endCode[i] + 1))
-			charCodes = charCodes + rangeCharCodes
+			charCodes.extend(rangeCharCodes)
 			for charCode in rangeCharCodes:
 				rangeOffset = idRangeOffset[i]
 				if rangeOffset == 0:
