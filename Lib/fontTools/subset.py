@@ -1701,6 +1701,7 @@ def prune_post_subset(self, options):
 def closure_glyphs(self, s):
   tables = [t for t in self.tables if t.isUnicode()]
   for u in s.unicodes_requested:
+    found = False
     for table in tables:
       if table.format == 14:
         for l in table.uvsDict.values():
