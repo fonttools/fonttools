@@ -673,17 +673,17 @@ class cmap_format_4(CmapSubtable):
 
 			rangeCharCodes = list(range(startCode[i], endCode[i] + 1))
 			charCodes.extend(rangeCharCodes)
-			for charCode in rangeCharCodes:
-				if rangeOffset == 0:
-					glyphID = charCode + delta
-				else:
+			if rangeOffset == 0:
+				gids.extend([(charCode + delta) & 0xFFFF for charCode in rangeCharCodes])
+			else:
+				for charCode in rangeCharCodes:
 					index = charCode + partial
 					assert (index < lenGIArray), "In format 4 cmap, range (%d), the calculated index (%d) into the glyph index array  is not less than the length of the array (%d) !" % (i, index, lenGIArray)
 					if glyphIndexArray[index] != 0:  # if not missing glyph
 						glyphID = glyphIndexArray[index] + delta
 					else:
 						glyphID = 0  # missing glyph
-				gids.append(glyphID % 0x10000)
+					gids.append(glyphID & 0xFFFF)
 
 		self.cmap = cmap = {}
 		lenCmap = len(gids)
