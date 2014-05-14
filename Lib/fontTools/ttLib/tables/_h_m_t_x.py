@@ -90,6 +90,9 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 		if name == "mtx":
 			self.metrics[attrs["name"]] = [safeEval(attrs[self.advanceName]), 
 					safeEval(attrs[self.sideBearingName])]
+
+	def __delitem__(self, glyphName):
+		del self.metrics[glyphName]
 	
 	def __getitem__(self, glyphName):
 		return self.metrics[glyphName]

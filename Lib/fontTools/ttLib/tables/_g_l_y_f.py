@@ -991,6 +991,8 @@ class GlyphCoordinates(object):
 	def __setitem__(self, k, v):
 		if isinstance(k, slice):
 			indices = range(*k.indices(len(self)))
+			# XXX This only works if len(v) == len(indices)
+			# TODO Implement __delitem__
 			for j,i in enumerate(indices):
 				self[i] = v[j]
 			return
