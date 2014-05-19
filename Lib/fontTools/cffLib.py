@@ -1,9 +1,5 @@
 """cffLib.py -- read/write tools for Adobe CFF fonts."""
 
-#
-# $Id: cffLib.py,v 1.34 2008-03-07 19:56:17 jvr Exp $
-#
-
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
