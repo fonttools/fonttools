@@ -665,21 +665,25 @@ class cmap_format_4(CmapSubtable):
 		charCodes = []
 		gids = []
 		for i in range(len(startCode) - 1):	# don't do 0xffff!
+			start = startCode[i]
+			delta = idDelta[i]
+			rangeOffset = idRangeOffset[i]
+			# *someone* needs to get killed.
+			partial = rangeOffset // 2 - start + i - len(idRangeOffset)
+
 			rangeCharCodes = list(range(startCode[i], endCode[i] + 1))
-			charCodes = charCodes + rangeCharCodes
-			for charCode in rangeCharCodes:
-				rangeOffset = idRangeOffset[i]
-				if rangeOffset == 0:
-					glyphID = charCode + idDelta[i]
-				else:
-					# *someone* needs to get killed.
-					index = idRangeOffset[i] // 2 + (charCode - startCode[i]) + i - len(idRangeOffset)
+			charCodes.extend(rangeCharCodes)
+			if rangeOffset == 0:
+				gids.extend([(charCode + delta) & 0xFFFF for charCode in rangeCharCodes])
+			else:
+				for charCode in rangeCharCodes:
+					index = charCode + partial
 					assert (index < lenGIArray), "In format 4 cmap, range (%d), the calculated index (%d) into the glyph index array  is not less than the length of the array (%d) !" % (i, index, lenGIArray)
 					if glyphIndexArray[index] != 0:  # if not missing glyph
-						glyphID = glyphIndexArray[index] + idDelta[i]
+						glyphID = glyphIndexArray[index] + delta
 					else:
 						glyphID = 0  # missing glyph
-				gids.append(glyphID % 0x10000)
+					gids.append(glyphID & 0xFFFF)
 
 		self.cmap = cmap = {}
 		lenCmap = len(gids)
@@ -935,8 +939,8 @@ class cmap_format_12_or_13(CmapSubtable):
 			startCharCode, endCharCode, glyphID = struct.unpack(">LLL",data[pos:pos+12] )
 			pos += 12
 			lenGroup = 1 + endCharCode - startCharCode
-			charCodes += list(range(startCharCode, endCharCode +1))
-			gids += self._computeGIDs(glyphID, lenGroup)
+			charCodes.extend(list(range(startCharCode, endCharCode +1)))
+			gids.extend(self._computeGIDs(glyphID, lenGroup))
 		self.data = data = None
 		self.cmap = cmap = {}
 		lenCmap = len(gids)

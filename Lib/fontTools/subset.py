@@ -218,7 +218,10 @@ def subset_glyphs(self, s):
       p.PairValueRecord = [r for r in p.PairValueRecord
                            if r.SecondGlyph in s.glyphs]
       p.PairValueCount = len(p.PairValueRecord)
-    self.PairSet = [p for p in self.PairSet if p.PairValueCount]
+    # Remove empty pairsets
+    indices = [i for i,p in enumerate(self.PairSet) if p.PairValueCount]
+    self.Coverage.remap(indices)
+    self.PairSet = [self.PairSet[i] for i in indices]
     self.PairSetCount = len(self.PairSet)
     return bool(self.PairSetCount)
   elif self.Format == 2:
@@ -1700,12 +1703,18 @@ def closure_glyphs(self, s):
   for u in s.unicodes_requested:
     found = False
     for table in tables:
-      if u in table.cmap:
-        s.glyphs.add(table.cmap[u])
-        found = True
-        break
+      if table.format == 14:
+        for l in table.uvsDict.values():
+          # TODO(behdad) Speed this up!
+          gids = [g for uc,g in l if u == uc and g is not None]
+          s.glyphs.update(gids)
+          # Intentionally not setting found=True here.
+      else:
+        if u in table.cmap:
+          s.glyphs.add(table.cmap[u])
+          found = True
     if not found:
-      s.log("No glyph for Unicode value %s; skipping." % u)
+      s.log("No default glyph for Unicode %04X found." % u)
 
 @_add_method(ttLib.getTableClass('cmap'))
 def prune_pre_subset(self, options):
@@ -1731,8 +1740,10 @@ def subset_glyphs(self, s):
     except AttributeError:
       pass
     if t.format == 14:
-      # TODO(behdad) XXX We drop all the default-UVS mappings(g==None).
-      t.uvsDict = dict((v,[(u,g) for u,g in l if g in s.glyphs])
+      # TODO(behdad) We drop all the default-UVS mappings for glyphs_requested.
+      # I don't think we care about that...
+      t.uvsDict = dict((v,[(u,g) for u,g in l
+                           if g in s.glyphs or u in s.unicodes_requested])
                        for v,l in t.uvsDict.items())
       t.uvsDict = dict((v,l) for v,l in t.uvsDict.items() if l)
     elif t.isUnicode():
