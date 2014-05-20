@@ -3,17 +3,26 @@ from fontTools.ttLib import TTFont
 from ttLib.instructions import *
 import sys
 
+#global class represents the global environment single font file 
 class Global(object):
     def __init__(self):
-        self.cvt = []
+        #cvt_table(dict) location to value
+        self.cvt_table = {}
+        #function table function label to list of instructions
         self.function_table = {}
+        #storage_area(dict) location to value
+        self.storage_area = {}
         self.state = 1
         self.program_stack = []
     def set_cvt_table(self,cvt):
         self.cvt = cvt
+
     def insert_function():
         pass
-
+'''
+AbstractExecutor class takes instrunction from instruction stream and modify the global(interpreter stack
+    cvt table and storage area)
+'''
 class AbstractExecutor(object):
     def __init__(self,prgm_global):
         self.global_env = prgm_global
