@@ -712,7 +712,7 @@ class cmap_format_4(CmapSubtable):
 
 		if idDelta > 0x7FFF:
 			idDelta = idDelta - 0x10000
-		elif idDelta <  -0x7FFF:
+		elif idDelta <  -0x8000:
 			idDelta = idDelta + 0x10000
 
 		return idDelta
