@@ -807,13 +807,13 @@ class cmap_format_4(CmapSubtable):
 		rangeShift = 2 * segCount - searchRange
 		
 		charCodeArray = array.array("H", endCode + [0] + startCode)
-		idDeltaeArray = array.array("h", idDelta)
+		idDeltaArray = array.array("h", idDelta)
 		restArray = array.array("H", idRangeOffset + glyphIndexArray)
 		if sys.byteorder != "big":
 			charCodeArray.byteswap()
-			idDeltaeArray.byteswap()
+			idDeltaArray.byteswap()
 			restArray.byteswap()
-		data = charCodeArray.tostring() + idDeltaeArray.tostring() + restArray.tostring()
+		data = charCodeArray.tostring() + idDeltaArray.tostring() + restArray.tostring()
 
 		length = struct.calcsize(cmap_format_4_format) + len(data)
 		header = struct.pack(cmap_format_4_format, self.format, length, self.language, 
