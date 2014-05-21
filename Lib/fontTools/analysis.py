@@ -3,27 +3,49 @@ from fontTools.ttLib import TTFont
 from ttLib.instructions import *
 import sys
 
-#global class represents the global environment single font file 
 class Global(object):
+    """Abstractly represents the global environment at a single point in time. 
+
+The global environment consists of a Control Variable Table (CVT),
+function table, and storage area, as well as a state and program
+stack.
+
+The cvt_table consists of a dict mapping locations to 16-bit signed
+integers.  [do we actually need to keep this in the abstract store?]
+
+The function_table consists of a dict mapping function labels to lists
+of instructions.
+
+The storage_area consists of a dict mapping locations to 32-bit numbers.
+[again, same comment as for cvt_table].
+
+State appears to always be 1 at the moment.
+
+The program stack abstractly represents the program stack. This is the
+critical part of the abstract state, since TrueType consists of an
+stack-based virtual machine.
+
+    """
     def __init__(self):
-        #cvt_table(dict) location to value
+        # cvt_table: location -> value
         self.cvt_table = {}
-        #function table function label to list of instructions
+        # function_table: function label -> list of instructions
         self.function_table = {}
-        #storage_area(dict) location to value
+        # storage_area: location -> value
         self.storage_area = {}
         self.state = 1
         self.program_stack = []
-    def set_cvt_table(self,cvt):
-        self.cvt = cvt
 
     def insert_function():
         pass
-'''
-AbstractExecutor class takes instrunction from instruction stream and modify the global(interpreter stack
-    cvt table and storage area)
-'''
+
 class AbstractExecutor(object):
+    """Given a TrueType instruction, abstractly transform the global state.
+
+Produces a new global state accounting for the effects of that
+instruction. Modifies the stack, CVT table, and storage area.
+
+    """
     def __init__(self,prgm_global):
         self.global_env = prgm_global
         
@@ -35,25 +57,21 @@ class AbstractExecutor(object):
         if len(self.program_stack)>0:
             self.instruction.set_top(self.program_stack[-1])
 
-        if self.instruction.get_pop_num()> 0: 
+        if self.instruction.get_pop_num()>0: 
             for i in range(self.instruction.get_pop_num()):
                 self.data.append(self.program_stack[-1])
                 self.program_stack.pop()
-           
-            
         
-        if self.instruction.get_push_num()> 0:
-            if len(self.data) > 0:
+        if self.instruction.get_push_num()>0:
+            if len(self.data)>0:
                 self.instruction.set_input(self.data)
             self.instruction.action()
             self.result = self.instruction.get_result()
             for data in self.result:
                 self.global_env.program_stack.append(data)
 
-        
         if isinstance(self.instruction,instructions.all.FDEF):
             self.global_env.function_table[self.instruction.top] = self.instruction.data
-
 
 class Tag(object):
     def __init__(self,tag,ttf,id=0):
@@ -91,18 +109,13 @@ def constructSuccessor(tag):
         elif isinstance(tag_instructions[i],instructions.all.ELSE):
             this_if.set_successor(tag_instructions[i])
         
-        
-        
-
-   
-        
-def ConstructCVTTable(values):
+def constructCVTTable(values):
     key = 1
-    cvt_table = {}
+    global_env.cvt_table = {}
     for value in values:
-        cvt_table[key] = value
+        global_env.cvt_table[key] = value
         key = key + 1
-    global_env.set_cvt_table(cvt_table)
+        
 def extractFunctions(fpgm_program):
     label = 1
     #for instruction in fpgm_program:
@@ -145,10 +158,8 @@ def main(args):
         input = args[0]
 	ttf = TTFont()
 	ttf.importXML(input,quiet=True)
-	#build cvt table
-	ConstructCVTTable(ttf['cvt '].values)
+	constructCVTTable(ttf['cvt '].values)
 	fpgm_program = Tag('fpgm',ttf)
-
 
         constructInstructions(fpgm_program)
         constructSuccessor(fpgm_program)
