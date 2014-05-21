@@ -1,7 +1,7 @@
 #instructions classes are generated from instructionList
 class root_instruct(object):
     def __init__(self):
-	self.data = []
+        self.data = []
         self.successor = None 
         self.top = None
     def add_data(self,new_data):
