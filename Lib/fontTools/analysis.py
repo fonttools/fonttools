@@ -76,9 +76,7 @@ instruction. Modifies the stack, CVT table, and storage area.
 class Tag(object):
     def __init__(self,tag,ttf,id=0):
         self.tag = tag
-
         self.instructions = ttf[self.tag].program.getAssembly()
-       
         self.pe = pe.ProgramEnvironment()
         self.id = id 
     def set_instructions(instructions):
@@ -100,8 +98,7 @@ def constructSuccessor(tag):
         elif i < len(tag_instructions)-1:
             tag_instructions[i].set_successor(tag_instructions[i+1])
 
-        if isinstance(tag_instructions[i],instructions.all.ENDF):
-           
+        if isinstance(tag_instructions[i],instructions.all.ENDF):           
             this_fdef.set_successor(tag_instructions[i])
         
         if isinstance(tag_instructions[i],instructions.all.IF):
@@ -130,13 +127,10 @@ def constructInstructions(tag):
         instruction = instructionCons.getClass()
         
         if isinstance(instruction, instructionConstructor.data):
-            
             combineInstrcutionData(thisinstruction,instruction)
         else:
-           
             if thisinstruction is not None:
                 instructions_list.append(thisinstruction)
-               
             thisinstruction = instruction
 
     instructions_list.append(thisinstruction)
@@ -148,18 +142,17 @@ def testSuccessor(tag):
         instruction = tag.instructions[0]
         
         while instruction.get_successor() is not None:
-            
             instruction.prettyPrinter()
             instruction = instruction.get_successor()
     
 def main(args):
-	#assume input is .ttx file
+        #assume input is .ttx file
         #TODO:input is .ttf file
         input = args[0]
-	ttf = TTFont()
-	ttf.importXML(input,quiet=True)
-	constructCVTTable(ttf['cvt '].values)
-	fpgm_program = Tag('fpgm',ttf)
+        ttf = TTFont()
+        ttf.importXML(input,quiet=True)
+        constructCVTTable(ttf['cvt '].values)
+        fpgm_program = Tag('fpgm',ttf)
 
         constructInstructions(fpgm_program)
         constructSuccessor(fpgm_program)
@@ -176,18 +169,17 @@ def main(args):
 
         for key,value in font_global.function_table.items():
             print(key,value)
-	'''
-	prep_program = ttf['prep'].program.getAssembly()
+        '''
+        prep_program = ttf['prep'].program.getAssembly()
 
-	glyfs_ids = ttf['glyf'].glyphOrder
-	for glyf in glyfs_ids:
-		try:
-			glyfinstructions = ttf['glyf'][glyf].program.getAssembly()
-			#print(glyfinstructions)
-		except:
-			pass
-	'''
+        glyfs_ids = ttf['glyf'].glyphOrder
+        for glyf in glyfs_ids:
+                try:
+                        glyfinstructions = ttf['glyf'][glyf].program.getAssembly()
+                        #print(glyfinstructions)
+                except:
+                        pass
+        '''
 
-	
 if __name__ == "__main__":
-	main(sys.argv[1:])
+        main(sys.argv[1:])
