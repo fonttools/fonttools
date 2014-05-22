@@ -77,12 +77,9 @@ class Tag(object):
     def __init__(self,tag,ttf,id=0):
         self.tag = tag
         self.instructions = ttf[self.tag].program.getAssembly()
-        self.pe = pe.ProgramEnvironment()
         self.id = id 
     def set_instructions(instructions):
         self.instructions = instructions
-    def set_pe(pe):
-        self.pe = pe
 
 global_env = Global()
 def constructSuccessor(tag):
