@@ -1,4 +1,5 @@
-import instructions
+from . import instructions
+
 #this will parse str to instruct or data classes
 class instructionConstructor():
     def __init__(self,instruction):
