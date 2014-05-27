@@ -118,7 +118,7 @@ class KernTable_format_0(object):
 		nPairs = len(self.kernTable)
 		entrySelector = sfnt.maxPowerOfTwo(nPairs)
 		searchRange = (2 ** entrySelector) * 6
-		rangeShift = (nPairs - (2 ** entrySelector)) * 6
+		rangeShift = max(0, (nPairs - (2 ** entrySelector)) * 6)
 		data = struct.pack(">HHHH", nPairs, searchRange, entrySelector, rangeShift)
 		
 		# yeehee! (I mean, turn names into indices)
