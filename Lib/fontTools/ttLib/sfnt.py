@@ -483,7 +483,7 @@ def getSearchRange(n):
 	exponent = maxPowerOfTwo(n)
 	searchRange = (2 ** exponent) * 16
 	entrySelector = exponent
-	rangeShift = n * 16 - searchRange
+	rangeShift = max(0, n * 16 - searchRange)
 	return searchRange, entrySelector, rangeShift
 
 

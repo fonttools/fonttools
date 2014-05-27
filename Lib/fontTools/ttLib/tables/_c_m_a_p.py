@@ -781,7 +781,7 @@ class cmap_format_4(CmapSubtable):
 		maxExponent = maxPowerOfTwo(segCount)
 		searchRange = 2 * (2 ** maxExponent)
 		entrySelector = maxExponent
-		rangeShift = 2 * segCount - searchRange
+		rangeShift = max(0, 2 * segCount - searchRange)
 		
 		charCodeArray = array.array("H", endCode + [0] + startCode)
 		idDeltaArray = array.array("H", idDelta)
