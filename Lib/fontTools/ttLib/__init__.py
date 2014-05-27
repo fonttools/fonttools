@@ -966,3 +966,25 @@ def reorderFontTables(inFile, outFile, tableOrder=None, checkChecksums=False):
 	for tag in sortedTagList(tables, tableOrder):
 		writer[tag] = reader[tag]
 	writer.close()
+
+
+def maxPowerOfTwo(x):
+	"""Return the highest exponent of two, so that
+	(2 ** exponent) <= x.  Return 0 if x is 0.
+	"""
+	exponent = 0
+	while x:
+		x = x >> 1
+		exponent = exponent + 1
+	return max(exponent - 1, 0)
+
+
+def getSearchRange(n, itemSize):
+	"""Calculate searchRange, entrySelector, rangeShift.
+	"""
+	# This stuff needs to be stored in the file, because?
+	exponent = maxPowerOfTwo(n)
+	searchRange = (2 ** exponent) * itemSize
+	entrySelector = exponent
+	rangeShift = max(0, n * itemSize - searchRange)
+	return searchRange, entrySelector, rangeShift
