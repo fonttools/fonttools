@@ -506,12 +506,11 @@ class TTFont(object):
 						# create uni<CODE> name
 						glyphName = "uni%04X" % unicode
 					tempName = glyphName
-					n = 1
-					while tempName in allNames:
-						tempName = glyphName + "#" + repr(n)
-						n = n + 1
+					n = allNames.get(tempName, 0)
+					if n:
+						tempName = glyphName + "#" + str(n)
 					glyphOrder[i] = tempName
-					allNames[tempName] = 1
+					allNames[tempName] = n + 1
 			# Delete the temporary cmap table from the cache, so it can
 			# be parsed again with the right names.
 			del self.tables['cmap']
