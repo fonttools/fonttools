@@ -1,6 +1,7 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.misc.textTools import safeEval, readHex
+from fontTools.ttLib import getSearchRange
 from fontTools.unicode import Unicode
 from . import DefaultTable
 import sys
@@ -699,8 +700,6 @@ class cmap_format_4(CmapSubtable):
 	def compile(self, ttFont):
 		if self.data:
 			return struct.pack(">HHH", self.format, self.length, self.language) + self.data
-
-		from fontTools.ttLib.sfnt import maxPowerOfTwo
 		
 		charCodes = list(self.cmap.keys())
 		lenCharCodes = len(charCodes)
@@ -775,13 +774,10 @@ class cmap_format_4(CmapSubtable):
 		idDelta.append(1)  # 0xffff + 1 == (tadaa!) 0. So this end code maps to .notdef
 		idRangeOffset.append(0)
 		
-		# Insane. 
+		# Insane.
 		segCount = len(endCode)
 		segCountX2 = segCount * 2
-		maxExponent = maxPowerOfTwo(segCount)
-		searchRange = 2 * (2 ** maxExponent)
-		entrySelector = maxExponent
-		rangeShift = 2 * segCount - searchRange
+		searchRange, entrySelector, rangeShift = getSearchRange(segCount, 2)
 		
 		charCodeArray = array.array("H", endCode + [0] + startCode)
 		idDeltaArray = array.array("H", idDelta)

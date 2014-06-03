@@ -1,6 +1,6 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
-from fontTools.ttLib import sfnt
+from fontTools.ttLib import getSearchRange
 from fontTools.misc.textTools import safeEval, readHex
 from fontTools.misc.fixedTools import fixedToFloat as fi2fl, floatToFixed as fl2fi
 from . import DefaultTable
@@ -116,9 +116,7 @@ class KernTable_format_0(object):
 	
 	def compile(self, ttFont):
 		nPairs = len(self.kernTable)
-		entrySelector = sfnt.maxPowerOfTwo(nPairs)
-		searchRange = (2 ** entrySelector) * 6
-		rangeShift = (nPairs - (2 ** entrySelector)) * 6
+		searchRange, entrySelector, rangeShift = getSearchRange(nPairs, 6)
 		data = struct.pack(">HHHH", nPairs, searchRange, entrySelector, rangeShift)
 		
 		# yeehee! (I mean, turn names into indices)
