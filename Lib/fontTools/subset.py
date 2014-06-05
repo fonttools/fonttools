@@ -674,6 +674,8 @@ def subset_glyphs(self, s):
     rss = [rss if i in indices else None for i,rss in enumerate(rss)]
     while rss and rss[-1] is None:
       del rss[-1]
+    setattr(self, c.RuleSet, rss)
+    setattr(self, c.RuleSetCount, len(rss))
 
     for rs in rss:
       if not rs: continue
