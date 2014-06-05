@@ -672,10 +672,6 @@ def subset_glyphs(self, s):
     # Delete, but not renumber, unreachable rulesets.
     indices = getattr(self, c.ClassDef).intersect(self.Coverage.glyphs)
     rss = [rss if i in indices else None for i,rss in enumerate(rss)]
-    while rss and rss[-1] is None:
-      del rss[-1]
-    setattr(self, c.RuleSet, rss)
-    setattr(self, c.RuleSetCount, len(rss))
 
     for rs in rss:
       if not rs: continue
@@ -690,6 +686,14 @@ def subset_glyphs(self, s):
       for r in ss:
         c.SetRuleData(r, [[klass_map.index(k) for k in klist]
                for klass_map,klist in zip(klass_maps, c.RuleData(r))])
+
+    # Prune empty subrulesets
+    rss = [rs if rs and getattr(rs, c.Rule) else None for rs in rss]
+    while rss and rss[-1] is None:
+      del rss[-1]
+    setattr(self, c.RuleSet, rss)
+    setattr(self, c.RuleSetCount, len(rss))
+
     return bool(rss)
   elif self.Format == 3:
     return all(x.subset(s.glyphs) for x in c.RuleData(self))
