@@ -3,6 +3,7 @@ from fontTools.ttLib import TTFont
 from ttLib.instructions import *
 import sys
 
+
 class Global(object):
     """Abstractly represents the global environment at a single point in time. 
 
@@ -34,7 +35,6 @@ stack-based virtual machine.
         # storage_area: location -> value
         self.storage_area = {}
         self.program_stack = []
-        self.graphics_state = {}
     def insert_function():
         pass
 
@@ -52,7 +52,9 @@ instruction. Modifies the stack, CVT table, and storage area.
         self.data = []
         #get data from global, feed it to instructions
         self.program_stack = self.global_env.program_stack
+        
         self.instruction = instruction
+        print("program stack",self.program_stack,self.instruction.get_pop_num())
         if len(self.program_stack)>0:
             self.instruction.set_top(self.program_stack[-1])
 
@@ -86,21 +88,27 @@ def constructSuccessor(tag):
     this_fdef = None
 
     for i in range(len(tag_instructions)):
-        if this_fdef is not None and this_fdef.get_successor() is None:
+
+        #recording mode: all the instructions betwen FDEF and ENDF are considered
+        #as data in functions 
+        #TODO:add a seperate function class   
+        if this_fdef is not None and this_fdef.successor_size() is 0:
             this_fdef.data.append(tag_instructions[i])
-        #recording function instructions if this FDEF hasn't met ENDF yet
+        
         if isinstance(tag_instructions[i],instructions.all.FDEF):
             this_fdef = tag_instructions[i]
+        #any instructions expect for the FDEF should have at least 
+        #the next instruction in stream as a successor
         elif i < len(tag_instructions)-1:
-            tag_instructions[i].set_successor(tag_instructions[i+1])
-
+            tag_instructions[i].add_successor(tag_instructions[i+1])
+        #FDEF should be followed by ENDF
         if isinstance(tag_instructions[i],instructions.all.ENDF):           
-            this_fdef.set_successor(tag_instructions[i])
-        
+            this_fdef.add_successor(tag_instructions[i])
+        #IF statement should have two successors (depends on the condition)
         if isinstance(tag_instructions[i],instructions.all.IF):
             this_if = tag_instructions[i]
         elif isinstance(tag_instructions[i],instructions.all.ELSE):
-            this_if.set_successor(tag_instructions[i])
+            this_if.add_successor(tag_instructions[i])
         
 def constructCVTTable(values):
     key = 1
@@ -147,35 +155,31 @@ def main(args):
         input = args[0]
         ttf = TTFont()
         ttf.importXML(input,quiet=True)
+        #load the data and initialize the cvt table 
         constructCVTTable(ttf['cvt '].values)
+        #TODO:for now just analyze the font program file, later
+        #should add the prep and all the glyph tags
         fpgm_program = Tag('fpgm',ttf)
-
+        #construct instructions with the data in instruction stream
         constructInstructions(fpgm_program)
+        #build successors for every instruction
         constructSuccessor(fpgm_program)
-        #testSuccessor(fpgm_program)
+        
         font_global = Global()
         executor = AbstractExecutor(font_global)
 
         instruction = fpgm_program.instructions[0]
         
-        while instruction.get_successor() is not None:
+        while instruction.successor_size() is not 0:
             executor.execute(instruction)
             instruction.prettyPrinter()
             instruction = instruction.get_successor()
 
         for key,value in font_global.function_table.items():
-            print(key,value)
-        '''
-        prep_program = ttf['prep'].program.getAssembly()
-
-        glyfs_ids = ttf['glyf'].glyphOrder
-        for glyf in glyfs_ids:
-                try:
-                        glyfinstructions = ttf['glyf'][glyf].program.getAssembly()
-                        #print(glyfinstructions)
-                except:
-                        pass
-        '''
+            print(key)
+            for instruction in value:
+                instruction.prettyPrinter()
+        
 
 if __name__ == "__main__":
         main(sys.argv[1:])
