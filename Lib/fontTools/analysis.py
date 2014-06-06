@@ -3,7 +3,6 @@ from fontTools.ttLib import TTFont
 from ttLib.instructions import *
 import sys
 
-
 class Global(object):
     """Abstractly represents the global environment at a single point in time. 
 
@@ -86,7 +85,7 @@ global_env = Global()
 def constructSuccessor(tag):
     tag_instructions = tag.instructions
     this_fdef = None
-
+    #TODO revise this for loop and use iteration
     for i in range(len(tag_instructions)):
 
         #recording mode: all the instructions betwen FDEF and ENDF are considered
