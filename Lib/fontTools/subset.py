@@ -643,7 +643,8 @@ def subset_glyphs(self, s):
   if self.Format == 1:
     indices = self.Coverage.subset(s.glyphs)
     rss = getattr(self, c.RuleSet)
-    rss = [rss[i] for i in indices]
+    rssCount = getattr(self, c.RuleSetCount)
+    rss = [rss[i] for i in indices if i < rssCount]
     for rs in rss:
       if not rs: continue
       ss = getattr(rs, c.Rule)
@@ -652,8 +653,10 @@ def subset_glyphs(self, s):
               for glist in c.RuleData(r))]
       setattr(rs, c.Rule, ss)
       setattr(rs, c.RuleCount, len(ss))
-    # Prune empty subrulesets
-    rss = [rs for rs in rss if rs and getattr(rs, c.Rule)]
+    # Prune empty rulesets
+    indices = [i for i,rs in enumerate(rss) if rs and getattr(rs, c.Rule)]
+    self.Coverage.remap(indices)
+    rss = [rss[i] for i in indices]
     setattr(self, c.RuleSet, rss)
     setattr(self, c.RuleSetCount, len(rss))
     return bool(rss)
@@ -672,8 +675,6 @@ def subset_glyphs(self, s):
     # Delete, but not renumber, unreachable rulesets.
     indices = getattr(self, c.ClassDef).intersect(self.Coverage.glyphs)
     rss = [rss if i in indices else None for i,rss in enumerate(rss)]
-    while rss and rss[-1] is None:
-      del rss[-1]
 
     for rs in rss:
       if not rs: continue
@@ -688,6 +689,19 @@ def subset_glyphs(self, s):
       for r in ss:
         c.SetRuleData(r, [[klass_map.index(k) for k in klist]
                for klass_map,klist in zip(klass_maps, c.RuleData(r))])
+
+    # Prune empty rulesets
+    rss = [rs if rs and getattr(rs, c.Rule) else None for rs in rss]
+    while rss and rss[-1] is None:
+      del rss[-1]
+    setattr(self, c.RuleSet, rss)
+    setattr(self, c.RuleSetCount, len(rss))
+
+    # TODO: We can do a second round of remapping class values based
+    # on classes that are actually used in at least one rule.  Right
+    # now we subset classes to c.glyphs only.  Or better, rewrite
+    # the above to do that.
+
     return bool(rss)
   elif self.Format == 3:
     return all(x.subset(s.glyphs) for x in c.RuleData(self))
