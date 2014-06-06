@@ -697,6 +697,11 @@ def subset_glyphs(self, s):
     setattr(self, c.RuleSet, rss)
     setattr(self, c.RuleSetCount, len(rss))
 
+    # TODO: We can do a second round of remapping class values based
+    # on classes that are actually used in at least one rule.  Right
+    # now we subset classes to c.glyphs only.  Or better, rewrite
+    # the above to do that.
+
     return bool(rss)
   elif self.Format == 3:
     return all(x.subset(s.glyphs) for x in c.RuleData(self))
