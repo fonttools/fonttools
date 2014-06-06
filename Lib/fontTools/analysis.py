@@ -95,14 +95,8 @@ def constructSuccessor(body):
         
         if isinstance(body_instructions[i],instructions.all.FDEF):
             this_fdef = body_instructions[i]
-        #any instructions expect for the FDEF should have at least 
+        #any instructions except for the FDEF should have at least 
         #the next instruction in stream as a successor
-        elif isinstance(body_instructions[i],instructions.all.JMPR):
-            pass
-        elif isinstance(body_instructions[i],instructions.all.JROT):
-            pass
-        elif isinstance(body_instructions[i],instructions.all.JROF):
-            pass
         elif i < len(body_instructions)-1:
             body_instructions[i].add_successor(body_instructions[i+1])
         #FDEF should be followed by ENDF
