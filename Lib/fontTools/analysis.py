@@ -3,7 +3,6 @@ from fontTools.ttLib import TTFont
 import fontTools.ttLib.instructions
 import sys
 
-
 class Global(object):
     """Abstractly represents the global environment at a single point in time. 
 
@@ -85,7 +84,7 @@ global_env = Global()
 def constructSuccessor(body):
     body_instructions = body.instructions
     this_fdef = None
-
+    #TODO revise this for loop and use iteration
     for i in range(len(body_instructions)):
 
         #recording mode: all the instructions betwen FDEF and ENDF are considered
@@ -98,6 +97,12 @@ def constructSuccessor(body):
             this_fdef = body_instructions[i]
         #any instructions expect for the FDEF should have at least 
         #the next instruction in stream as a successor
+        elif isinstance(body_instructions[i],instructions.all.JMPR):
+            pass
+        elif isinstance(body_instructions[i],instructions.all.JROT):
+            pass
+        elif isinstance(body_instructions[i],instructions.all.JROF):
+            pass
         elif i < len(body_instructions)-1:
             body_instructions[i].add_successor(body_instructions[i+1])
         #FDEF should be followed by ENDF
@@ -109,14 +114,15 @@ def constructSuccessor(body):
         elif isinstance(body_instructions[i],instructions.all.ELSE):
             this_if.add_successor(body_instructions[i])
         elif isinstance(body_instructions[i],instructions.all.EIF):
-            pass
+            pass # TODO
 
+        # We don't think these instructions are actually ever used.
         if isinstance(body_instructions[i],instructions.all.JMPR):
-            pass
+            raise NotImplementedError
         elif isinstance(body_instructions[i],instructions.all.JROT):
-            pass
+            raise NotImplementedError
         elif isinstance(body_instructions[i],instructions.all.JROF):
-            pass
+            raise NotImplementedError
 
         # what about CALL statements? I think add_successor is an
         # intraprocedural CFG, so CALL is probably opaque to
