@@ -12,9 +12,9 @@ five categories of instructions:
 '''
 
 instructions = [
-#   ------  -----------  -----  ------------------------ ---  ------ ----- ------ ------- ----------------------------------  --------------
-#   opcode     mnemonic  argBits        descriptive name pops pushes input output acticion                               pops          pushes
-#   ------  -----------  -----  ------------------------ ---  ------ ----- ------ ------- ----------------------------------  --------------
+#   ------  -----------  -----  ------------------------ ---  ------ ----------------------------------  --------------
+#   opcode     mnemonic  argBits        descriptive name pops pushes                               pops          pushes
+#   ------  -----------  -----  ------------------------ ---  ------ ----------------------------------  --------------
     (0x7f,        'AA',     0,            'AdjustAngle',  1,  0), #                                    p               -
     (0x64,       'ABS',     0,               'Absolute',  1,  1), #                                    n             |n|
     (0x60,       'ADD',     0,                    'Add',  2,  1), #                               n2, n1       (n1 + n2)
@@ -137,8 +137,10 @@ instructions = [
 ]
 cvt_table_related = ['RCVT','WCVTF','WCVTP','SCVTCI']
 storage_area_related = ['WS','RS']
-graphics_state_related = ['SVTCA','SPVTCA','SFVTCA','SPVTL','SFVTL','SFVTPV','SDPVTL','SVPTL','SPVFS','SFVFS','SRP0'
+graphics_state_related = ['SVTCA','SPVTCA','SFVTCA','SPVTL','SFVTL','SFVTPV','SDPVTL','SVPTL','SPVFS','SFVFS','SRP0']
 function_table_related = ['FDEF','ENDF']
+repeat_instruction = ['ALIGNRP','FLIPPT','IP','SHP','SHPIX']
+skip_graphics_state_related  = True
 def emit(stream, line, level=0):
         indent = "    "*level
         stream.write(indent + line + "\n")
@@ -147,7 +149,7 @@ def constructInstructionClasses(instructionList):
 class root_instruct(object):
     def __init__(self):
 	self.data = []
-        self.successor = None 
+        self.successor = [] 
         self.top = None
     def add_data(self,new_data):
         self.data.append(new_data.value)
@@ -159,10 +161,13 @@ class root_instruct(object):
         return self.push_num
     def set_input(self,data):
         self.data = data
-    def get_successor(self):
-        return self.successor
-    def set_successor(self,successor):
-        self.successor = successor
+    def successor_size(self):
+        return len(self.successor)
+    def get_successor(self,index=0):
+        return self.successor[index]
+    def add_successor(self,successor):
+        self.successor.append(successor)
+
     def get_result(self):
         return self.data
     def prettyPrinter(self):
@@ -171,7 +176,7 @@ class all():
 """
 
         here = os.path.dirname(__file__)
-   	out_file = os.path.join(here, ".", "instructions_abstract.py")
+   	out_file = os.path.join(here, ".", "instructions.py")
 	fp = open(out_file, "w")
         try:
             fp.write(HEAD)
@@ -191,18 +196,18 @@ class all():
                     emit(fp, "self.in_source = 'program_stack' ",3)
                     emit(fp, "self.out_source = 'program_stack'",3)
                 elif pops == 0 and pushes != 0:
-                    if op in cvt_related_instructions:
+                    if op in cvt_table_related:
                         emit(fp,"self.in_source = 'cvt'",3)
-                    elif op in storage_area_related_instructions:
+                    elif op in storage_area_related:
                         emit(fp,"self.in_source = 'storage_area'",3)
                     else:
                         emit(fp,"self.in_source = 'None'",3)
                     emit(fp,"self.out_source = 'program_stack'",3)
                 elif pushes == 0 and pops != 0:
                     emit(fp,"self.in_source = 'program_stack'",3)
-                    if op in cvt_related_instructions:
+                    if op in cvt_table_related:
                         emit(fp,"self.out_source = 'cvt'",3)
-                    elif op in storage_area_related_instructions:
+                    elif op in storage_area_related:
                         emit(fp,"self.out_source = 'storage_area'",3)
                     else:
                         emit(fp,"self.in_source = 'None'",3)
@@ -210,7 +215,12 @@ class all():
                     emit(fp,"self.in_source = 'self'",3)
                     emit(fp,"self.out_source = 'graphic_state'",3)
                 emit(fp,"self.push_num =  %s "  %(pushes), 3)
-                emit(fp,"self.pop_num =  %s "  %(pops), 3)
+                if pops>=0:
+                    emit(fp,"self.pop_num =  %s "  %(pops), 3)
+                else:
+                    emit(fp,"self.pop_num =   'ALL' ", 3)
+                if pops>=0:
+                    emit(fp,"self.total_num = %s" %(pushes-pops),3)
                 emit(fp,"def action(self, input):", 2)
                 emit(fp,"pass ", 3)
                 emit(fp,"")
