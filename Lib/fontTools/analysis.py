@@ -108,8 +108,22 @@ def constructSuccessor(tag):
         if isinstance(tag_instructions[i],instructions.all.IF):
             this_if = tag_instructions[i]
         elif isinstance(tag_instructions[i],instructions.all.ELSE):
-            this_if.add_successor(tag_instructions[i])
-        
+            this_if.set_successor(tag_instructions[i])
+        elif isinstance(tag_instructions[i],instructions.all.EIF):
+            pass
+
+        if isinstance(tag_instructions[i],instructions.all.JMPR):
+            pass
+        elif isinstance(tag_instructions[i],instructions.all.JROT):
+            pass
+        elif isinstance(tag_instructions[i],instructions.all.JROF):
+            pass
+
+        # what about CALL statements? I think set_successor is an
+        # intraprocedural CFG, so CALL is probably opaque to
+        # set_successor.
+        # also: LOOPCALL
+
 def constructCVTTable(values):
     key = 1
     global_env.cvt_table = {}
