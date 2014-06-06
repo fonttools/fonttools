@@ -33,9 +33,8 @@ stack-based virtual machine.
         self.function_table = {}
         # storage_area: location -> value
         self.storage_area = {}
-        self.state = 1
         self.program_stack = []
-
+        self.graphics_state = {}
     def insert_function():
         pass
 

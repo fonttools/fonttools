@@ -1,11 +1,20 @@
 import os
 import sys
 # next, the list of "normal" instructions
+'''
+five categories of instructions:
+   Pushing data onto the interpreter stack
+   Managing the Storage Area
+   Managing the Control Value Table
+   Modifying Graphics State settings
+   Managing outlines
+   General purpose instructions
+'''
 
 instructions = [
-#   ------  -----------  -----  ------------------------ ---  ------  ----------------------------------  --------------
-#   opcode     mnemonic  argBits        descriptive name pops pushes                                pops          pushes
-#   ------  -----------  -----  ------------------------ ---  ------  ----------------------------------  --------------
+#   ------  -----------  -----  ------------------------ ---  ------ ----- ------ ------- ----------------------------------  --------------
+#   opcode     mnemonic  argBits        descriptive name pops pushes input output acticion                               pops          pushes
+#   ------  -----------  -----  ------------------------ ---  ------ ----- ------ ------- ----------------------------------  --------------
     (0x7f,        'AA',     0,            'AdjustAngle',  1,  0), #                                    p               -
     (0x64,       'ABS',     0,               'Absolute',  1,  1), #                                    n             |n|
     (0x60,       'ADD',     0,                    'Add',  2,  1), #                               n2, n1       (n1 + n2)
@@ -126,7 +135,10 @@ instructions = [
     (0x42,        'WS',     0,             'WriteStore',  2,  0), #                                 v, l               -
 #   ------  -----------  -----  ------------------------ ---  ------  ----------------------------------  --------------
 ]
-
+cvt_table_related = ['RCVT','WCVTF','WCVTP','SCVTCI']
+storage_area_related = ['WS','RS']
+graphics_state_related = ['SVTCA','SPVTCA','SFVTCA','SPVTL','SFVTL','SFVTPV','SDPVTL','SVPTL','SPVFS','SFVFS','SRP0'
+function_table_related = ['FDEF','ENDF']
 def emit(stream, line, level=0):
         indent = "    "*level
         stream.write(indent + line + "\n")
@@ -159,7 +171,7 @@ class all():
 """
 
         here = os.path.dirname(__file__)
-   	out_file = os.path.join(here, ".", "instructions.py")
+   	out_file = os.path.join(here, ".", "instructions_abstract.py")
 	fp = open(out_file, "w")
         try:
             fp.write(HEAD)
@@ -175,9 +187,31 @@ class all():
                 emit(fp,"class %s(root_instruct):" % (mnemonic),1)
                 emit(fp,"def __init__(self):", 2)
                 emit(fp,"root_instruct.__init__(self) ", 3)
+                if pops != 0 and pushes != 0:
+                    emit(fp, "self.in_source = 'program_stack' ",3)
+                    emit(fp, "self.out_source = 'program_stack'",3)
+                elif pops == 0 and pushes != 0:
+                    if op in cvt_related_instructions:
+                        emit(fp,"self.in_source = 'cvt'",3)
+                    elif op in storage_area_related_instructions:
+                        emit(fp,"self.in_source = 'storage_area'",3)
+                    else:
+                        emit(fp,"self.in_source = 'None'",3)
+                    emit(fp,"self.out_source = 'program_stack'",3)
+                elif pushes == 0 and pops != 0:
+                    emit(fp,"self.in_source = 'program_stack'",3)
+                    if op in cvt_related_instructions:
+                        emit(fp,"self.out_source = 'cvt'",3)
+                    elif op in storage_area_related_instructions:
+                        emit(fp,"self.out_source = 'storage_area'",3)
+                    else:
+                        emit(fp,"self.in_source = 'None'",3)
+                else:
+                    emit(fp,"self.in_source = 'self'",3)
+                    emit(fp,"self.out_source = 'graphic_state'",3)
                 emit(fp,"self.push_num =  %s "  %(pushes), 3)
                 emit(fp,"self.pop_num =  %s "  %(pops), 3)
-                emit(fp,"def action(self):", 2)
+                emit(fp,"def action(self, input):", 2)
                 emit(fp,"pass ", 3)
                 emit(fp,"")
         finally:

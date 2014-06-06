@@ -1,6 +1,7 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.misc.textTools import safeEval, readHex
+from fontTools.ttLib import getSearchRange
 from fontTools.unicode import Unicode
 from . import DefaultTable
 import sys
@@ -694,35 +695,11 @@ class cmap_format_4(CmapSubtable):
 			getGlyphName = self.ttFont.getGlyphName
 			names = list(map(getGlyphName, gids ))
 		list(map(operator.setitem, [cmap]*lenCmap, charCodes, names))
-		
-
-
-	def setIDDelta(self, idDelta):
-		# The lowest gid in glyphIndexArray, after subtracting idDelta, must be 1.
-		# idDelta is a short, and must be between -32K and 32K
-		# startCode can be between 0 and 64K-1, and the first glyph index can be between 1 and 64K-1
-		# This means that we have a problem because we can need to assign to idDelta values
-		# between -(64K-2) and 64K -1.
-		# Since the final gi is reconstructed from the glyphArray GID by:
-		#    (short)finalGID = (gid +  idDelta) % 0x10000),
-		# we can get from a startCode of 0 to a final GID of 64 -1K by subtracting 1, and casting the
-		# negative number to an unsigned short.
-		# Similarly , we can get from a startCode of 64K-1 to a final GID of 1 by adding 2, because of
-		# the modulo arithmetic.
-
-		if idDelta > 0x7FFF:
-			idDelta = idDelta - 0x10000
-		elif idDelta <  -0x7FFF:
-			idDelta = idDelta + 0x10000
-
-		return idDelta
 
 
 	def compile(self, ttFont):
 		if self.data:
 			return struct.pack(">HHH", self.format, self.length, self.language) + self.data
-
-		from fontTools.ttLib.sfnt import maxPowerOfTwo
 		
 		charCodes = list(self.cmap.keys())
 		lenCharCodes = len(charCodes)
@@ -787,8 +764,7 @@ class cmap_format_4(CmapSubtable):
 			for charCode in range(startCode[i], endCode[i] + 1):
 				indices.append(cmap[charCode])
 			if  (indices == list(range(indices[0], indices[0] + len(indices)))):
-				idDeltaTemp = self.setIDDelta(indices[0] - startCode[i])
-				idDelta.append( idDeltaTemp)
+				idDelta.append((indices[0] - startCode[i]) % 0x10000)
 				idRangeOffset.append(0)
 			else:
 				# someone *definitely* needs to get killed.
@@ -798,22 +774,19 @@ class cmap_format_4(CmapSubtable):
 		idDelta.append(1)  # 0xffff + 1 == (tadaa!) 0. So this end code maps to .notdef
 		idRangeOffset.append(0)
 		
-		# Insane. 
+		# Insane.
 		segCount = len(endCode)
 		segCountX2 = segCount * 2
-		maxExponent = maxPowerOfTwo(segCount)
-		searchRange = 2 * (2 ** maxExponent)
-		entrySelector = maxExponent
-		rangeShift = 2 * segCount - searchRange
+		searchRange, entrySelector, rangeShift = getSearchRange(segCount, 2)
 		
 		charCodeArray = array.array("H", endCode + [0] + startCode)
-		idDeltaeArray = array.array("h", idDelta)
+		idDeltaArray = array.array("H", idDelta)
 		restArray = array.array("H", idRangeOffset + glyphIndexArray)
 		if sys.byteorder != "big":
 			charCodeArray.byteswap()
-			idDeltaeArray.byteswap()
+			idDeltaArray.byteswap()
 			restArray.byteswap()
-		data = charCodeArray.tostring() + idDeltaeArray.tostring() + restArray.tostring()
+		data = charCodeArray.tostring() + idDeltaArray.tostring() + restArray.tostring()
 
 		length = struct.calcsize(cmap_format_4_format) + len(data)
 		header = struct.pack(cmap_format_4_format, self.format, length, self.language, 
