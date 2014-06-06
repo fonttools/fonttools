@@ -74,54 +74,53 @@ instruction. Modifies the stack, CVT table, and storage area.
         if isinstance(self.instruction,instructions.all.FDEF):
             self.global_env.function_table[self.instruction.top] = self.instruction.data
 
-class Tag(object):
-    def __init__(self,tag,ttf,id=0):
-        self.tag = tag
-        self.instructions = ttf[self.tag].program.getAssembly()
+class Body(object):
+    """ Encapsulates a set of instructions. """
+    def __init__(self,body,ttf,id=0):
+        self.body = body
+        self.instructions = ttf[self.body].program.getAssembly()
         self.id = id 
-    def set_instructions(instructions):
-        self.instructions = instructions
 
 global_env = Global()
-def constructSuccessor(tag):
-    tag_instructions = tag.instructions
+def constructSuccessor(body):
+    body_instructions = body.instructions
     this_fdef = None
 
-    for i in range(len(tag_instructions)):
+    for i in range(len(body_instructions)):
 
         #recording mode: all the instructions betwen FDEF and ENDF are considered
         #as data in functions 
         #TODO:add a seperate function class   
         if this_fdef is not None and this_fdef.successor_size() is 0:
-            this_fdef.data.append(tag_instructions[i])
+            this_fdef.data.append(body_instructions[i])
         
-        if isinstance(tag_instructions[i],instructions.all.FDEF):
-            this_fdef = tag_instructions[i]
+        if isinstance(body_instructions[i],instructions.all.FDEF):
+            this_fdef = body_instructions[i]
         #any instructions expect for the FDEF should have at least 
         #the next instruction in stream as a successor
-        elif i < len(tag_instructions)-1:
-            tag_instructions[i].add_successor(tag_instructions[i+1])
+        elif i < len(body_instructions)-1:
+            body_instructions[i].add_successor(body_instructions[i+1])
         #FDEF should be followed by ENDF
-        if isinstance(tag_instructions[i],instructions.all.ENDF):           
-            this_fdef.add_successor(tag_instructions[i])
+        if isinstance(body_instructions[i],instructions.all.ENDF):           
+            this_fdef.add_successor(body_instructions[i])
         #IF statement should have two successors (depends on the condition)
-        if isinstance(tag_instructions[i],instructions.all.IF):
-            this_if = tag_instructions[i]
-        elif isinstance(tag_instructions[i],instructions.all.ELSE):
-            this_if.set_successor(tag_instructions[i])
-        elif isinstance(tag_instructions[i],instructions.all.EIF):
+        if isinstance(body_instructions[i],instructions.all.IF):
+            this_if = body_instructions[i]
+        elif isinstance(body_instructions[i],instructions.all.ELSE):
+            this_if.add_successor(body_instructions[i])
+        elif isinstance(body_instructions[i],instructions.all.EIF):
             pass
 
-        if isinstance(tag_instructions[i],instructions.all.JMPR):
+        if isinstance(body_instructions[i],instructions.all.JMPR):
             pass
-        elif isinstance(tag_instructions[i],instructions.all.JROT):
+        elif isinstance(body_instructions[i],instructions.all.JROT):
             pass
-        elif isinstance(tag_instructions[i],instructions.all.JROF):
+        elif isinstance(body_instructions[i],instructions.all.JROF):
             pass
 
-        # what about CALL statements? I think set_successor is an
+        # what about CALL statements? I think add_successor is an
         # intraprocedural CFG, so CALL is probably opaque to
-        # set_successor.
+        # add_successor.
         # also: LOOPCALL
 
 def constructCVTTable(values):
@@ -133,31 +132,31 @@ def constructCVTTable(values):
         
 def extractFunctions(fpgm_program):
     label = 1
-    #for instruction in fpgm_program:
-def constructInstructions(tag):
+
+def constructInstructions(body):
     thisinstruction = None
     instructions_list = []
-    instructions = tag.instructions
+    instructions = body.instructions
 
     for instruction in instructions:
-        
         instructionCons = instructionConstructor.instructionConstructor(instruction)
         instruction = instructionCons.getClass()
         
         if isinstance(instruction, instructionConstructor.data):
-            combineInstrcutionData(thisinstruction,instruction)
+            combineInstructionData(thisinstruction,instruction)
         else:
             if thisinstruction is not None:
                 instructions_list.append(thisinstruction)
             thisinstruction = instruction
 
     instructions_list.append(thisinstruction)
-    tag.instructions = instructions_list
+    body.instructions = instructions_list
     
-def combineInstrcutionData(instruction,data):
+def combineInstructionData(instruction,data):
         instruction.add_data(data)
-def testSuccessor(tag):
-        instruction = tag.instructions[0]
+        
+def testSuccessor(body):
+        instruction = body.instructions[0]
         
         while instruction.get_successor() is not None:
             instruction.prettyPrinter()
@@ -172,8 +171,8 @@ def main(args):
         #load the data and initialize the cvt table 
         constructCVTTable(ttf['cvt '].values)
         #TODO:for now just analyze the font program file, later
-        #should add the prep and all the glyph tags
-        fpgm_program = Tag('fpgm',ttf)
+        #should add the prep and all the glyphs
+        fpgm_program = Body('fpgm',ttf)
         #construct instructions with the data in instruction stream
         constructInstructions(fpgm_program)
         #build successors for every instruction
