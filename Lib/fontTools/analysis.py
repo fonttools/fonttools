@@ -99,6 +99,12 @@ def constructSuccessor(tag):
             this_fdef = tag_instructions[i]
         #any instructions expect for the FDEF should have at least 
         #the next instruction in stream as a successor
+        elif isinstance(tag_instructions[i],instructions.all.JMPR):
+            pass
+        elif isinstance(tag_instructions[i],instructions.all.JROT):
+            pass
+        elif isinstance(tag_instructions[i],instructions.all.JROF):
+            pass
         elif i < len(tag_instructions)-1:
             tag_instructions[i].add_successor(tag_instructions[i+1])
         #FDEF should be followed by ENDF
@@ -108,16 +114,8 @@ def constructSuccessor(tag):
         if isinstance(tag_instructions[i],instructions.all.IF):
             this_if = tag_instructions[i]
         elif isinstance(tag_instructions[i],instructions.all.ELSE):
-            this_if.set_successor(tag_instructions[i])
-        elif isinstance(tag_instructions[i],instructions.all.EIF):
-            pass
-
-        if isinstance(tag_instructions[i],instructions.all.JMPR):
-            pass
-        elif isinstance(tag_instructions[i],instructions.all.JROT):
-            pass
-        elif isinstance(tag_instructions[i],instructions.all.JROF):
-            pass
+            this_if.add_successor(tag_instructions[i])
+        #TODO add elif process
 
         # what about CALL statements? I think set_successor is an
         # intraprocedural CFG, so CALL is probably opaque to
