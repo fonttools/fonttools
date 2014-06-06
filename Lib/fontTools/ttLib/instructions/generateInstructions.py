@@ -185,6 +185,8 @@ class all():
             emit(fp,"root_instruct.__init__(self)",3)
             emit(fp,"self.push_num = len(self.data)",3)
             emit(fp,"self.pop_num = 0",3)
+            emit(fp,"def get_push_num(self):",2)
+            emit(fp,"return len(self.data)",3)
             emit(fp,"def action(self):",2)
             emit(fp,"pass ",3)
             emit(fp,"")
@@ -210,7 +212,7 @@ class all():
                     elif op in storage_area_related:
                         emit(fp,"self.out_source = 'storage_area'",3)
                     else:
-                        emit(fp,"self.in_source = 'None'",3)
+                        emit(fp,"self.out_source = 'None'",3)
                 else:
                     emit(fp,"self.in_source = 'self'",3)
                     emit(fp,"self.out_source = 'graphic_state'",3)
