@@ -94,14 +94,25 @@ def constructSuccessor(body):
             this_fdef.data.append(body_instructions[i])
         
         if isinstance(body_instructions[i],instructions.all.FDEF):
+            assert this_def is None
             this_fdef = body_instructions[i]
+        # We don't think jump instructions are actually ever used.
+        elif isinstance(body_instructions[i],instructions.all.JMPR):
+            raise NotImplementedError
+        elif isinstance(body_instructions[i],instructions.all.JROT):
+            raise NotImplementedError
+        elif isinstance(body_instructions[i],instructions.all.JROF):
+            raise NotImplementedError
         #any instructions except for the FDEF should have at least 
         #the next instruction in stream as a successor
         elif i < len(body_instructions)-1:
             body_instructions[i].add_successor(body_instructions[i+1])
-        #FDEF should be followed by ENDF
+            
+        # FDEF should be followed by ENDF
         if isinstance(body_instructions[i],instructions.all.ENDF):           
             this_fdef.add_successor(body_instructions[i])
+            this_fdef = None
+            
         #IF statement should have two successors (depends on the condition)
         if isinstance(body_instructions[i],instructions.all.IF):
             this_if = body_instructions[i]
@@ -109,14 +120,6 @@ def constructSuccessor(body):
             this_if.add_successor(body_instructions[i])
         elif isinstance(body_instructions[i],instructions.all.EIF):
             pass # TODO
-
-        # We don't think these instructions are actually ever used.
-        if isinstance(body_instructions[i],instructions.all.JMPR):
-            raise NotImplementedError
-        elif isinstance(body_instructions[i],instructions.all.JROT):
-            raise NotImplementedError
-        elif isinstance(body_instructions[i],instructions.all.JROF):
-            raise NotImplementedError
 
         # what about CALL statements? I think add_successor is an
         # intraprocedural CFG, so CALL is probably opaque to
