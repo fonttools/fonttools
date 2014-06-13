@@ -39,16 +39,10 @@ class root_instruct(object):
         return self.push_num
     def set_input(self,data):
         self.data = data
-    def successor_size(self):
-        return len(self.successor)
-    def get_successor(self,index=0):
-        return self.successor[index]
-    def add_successor(self,successor):
-        self.successor.append(successor)
 
     def get_result(self):
         return self.data
-    def prettyPrinter(self):
+    def prettyPrint(self):
         print(self.__class__.__name__,self.data,self.top)
 class all():
 """
