@@ -524,6 +524,8 @@ class CharStrings(object):
 	
 	def has_key(self, name):
 		return name in self.charStrings
+
+	__contains__ = has_key
 	
 	def __len__(self):
 		return len(self.charStrings)
