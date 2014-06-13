@@ -91,6 +91,8 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 		self.glyphOrder = glyphOrder = [""] * int(ttFont['maxp'].numGlyphs)
 		for glyphID in range(numGlyphs):
 			index = indices[glyphID]
+			if index > 32767: # reserved for future use; ignore
+				name = ""
 			if index > 257:
 				name = extraNames[index-258]
 			else:
