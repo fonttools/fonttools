@@ -95,53 +95,76 @@ class Body(object):
     def __init__(self,containing_font,tag,ttf,id=0):
         self.containing_font = containing_font
         self.instructions = ttf[tag].program.getAssembly()
+        # successors, predecessors: instruction -> list[instructions]
+        self.successors = {}
+        self.predecessors = {}
         self.id = id 
 
 global_env = Environment()
 def constructSuccessor(body):
-    body_instructions = body.instructions
-    this_fdef = None
-    #TODO revise this for loop and use iteration
-    for i in range(len(body_instructions)):
-
-        #recording mode: all the instructions betwen FDEF and ENDF are considered
-        #as data in functions 
-        #TODO:add a seperate function class   
-        if this_fdef is not None and this_fdef.successor_size() is 0:
-            this_fdef.data.append(body_instructions[i])
+    containing_fdef = None
+    containing_if = []
+    for index in range(len(body.instructions)):
+        i = body.instructions[index]
         
-        if isinstance(body_instructions[i],instructions.all.FDEF):
-            assert this_fdef is None
-            this_fdef = body_instructions[i]
+        #recording mode: all the instructions betwen FDEF and ENDF are considered
+        #as data in functions
+        #TODO:add a seperate function class
+        if containing_fdef is not None and not containing_fdef in body.successors:
+            containing_fdef.data.append(i)
+
+        if isinstance(i,instructions.all.FDEF):
+            assert containing_fdef is None # enforce non-nesting of FDEF
+            containing_fdef = i
         # We don't think jump instructions are actually ever used.
-        elif isinstance(body_instructions[i],instructions.all.JMPR):
+        elif isinstance(i,instructions.all.JMPR):
             raise NotImplementedError
-        elif isinstance(body_instructions[i],instructions.all.JROT):
+        elif isinstance(i,instructions.all.JROT):
             raise NotImplementedError
-        elif isinstance(body_instructions[i],instructions.all.JROF):
+        elif isinstance(i,instructions.all.JROF):
             raise NotImplementedError
         #any instructions except for the FDEF should have at least 
         #the next instruction in stream as a successor
-        elif i < len(body_instructions)-1:
-            body_instructions[i].add_successor(body_instructions[i+1])
-            
-        # FDEF should be followed by ENDF
-        if isinstance(body_instructions[i],instructions.all.ENDF):           
-            this_fdef.add_successor(body_instructions[i])
-            this_fdef = None
-            
-        #IF statement should have two successors (depends on the condition)
-        if isinstance(body_instructions[i],instructions.all.IF):
-            this_if = body_instructions[i]
-        elif isinstance(body_instructions[i],instructions.all.ELSE):
-            this_if.add_successor(body_instructions[i])
-        elif isinstance(body_instructions[i],instructions.all.EIF):
-            pass # TODO
+        elif index < len(body.instructions)-1:
+            body.successors[i] = [body.instructions[index+1]]
 
-        # what about CALL statements? I think add_successor is an
-        # intraprocedural CFG, so CALL is probably opaque to
-        # add_successor.
+        # FDEF should be followed by ENDF
+        if isinstance(i,instructions.all.ENDF):
+            body.successors[containing_fdef] = [i]
+            containing_fdef = None
+            
+        # An IF statement should have two successors:
+        #  one already added (index+1); one at the ELSE/ENDIF.
+        if isinstance(i,instructions.all.IF):
+            # at the IF, push it onto the stack
+            containing_if.append((i,None))
+        elif isinstance(i,instructions.all.ELSE):
+            cif_info = containing_if.pop()
+            # prev inst's successor is invalid; it will be the EIF
+            body.successors[body.instructions[index-1]].pop()
+            # hence, record this inst for use at EIF:
+            containing_if.append((cif_info[0], i))
+            # set a second succ of the IF inst to this:
+            body.successors[cif_info[0]].append(i)
+        elif isinstance(i,instructions.all.EIF):
+            cif_info = containing_if.pop()
+            if (cif_info[1] is None):
+                # if there was no ELSE,
+                # then 2nd succ of the IF should be i
+                body.successors[cif_info[0]].append(i)
+            else:
+                # otherwise, set the succ of the inst before ELSE to this
+                body.successors[cif_info[1]].append(i)
+
+        # what about CALL statements? I think .successors is an
+        # intraprocedural CFG, so CALL is probably opaque to .successors.
         # also: LOOPCALL
+
+def constructPredecessor(body):
+    for src, dests in body.successors.iteritems():
+        for d in dests:
+            if not d in body.predecessors: body.predecessors[d] = []
+            body.predecessors[d].append(src)
 
 def constructCVTTable(values):
     key = 1
@@ -179,7 +202,7 @@ def testSuccessor(body):
         instruction = body.instructions[0]
         
         while instruction.get_successor() is not None:
-            instruction.prettyPrinter()
+            instruction.prettyPrint()
             instruction = instruction.get_successor()
     
 def main(args):
@@ -197,21 +220,22 @@ def main(args):
 
         constructInstructions(body)
         constructSuccessor(body)
+        constructPredecessor(body)
         
         current_state = Environment()
         executor = AbstractExecutor(bytecode_font)
 
         instruction = body.instructions[0]
         
-        while instruction.successor_size() is not 0:
+        while instruction in body.successors:
             executor.execute(instruction, current_state)
-            instruction.prettyPrinter()
-            instruction = instruction.get_successor()
+            instruction.prettyPrint()
+            instruction = body.successors[instruction][0]
 
         for key,value in bytecode_font.function_table.items():
-            print(key)
+            print('Function #{0}:'.format(key))
             for instruction in value:
-                instruction.prettyPrinter()
+                instruction.prettyPrint()
         
 
 if __name__ == "__main__":
