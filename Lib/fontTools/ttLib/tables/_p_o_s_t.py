@@ -167,6 +167,7 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 				index = standardGlyphOrder.index(psName)
 			else:
 				index = 258 + len(extraNames)
+				assert index < 32768, "Too many glyph names for 'post' table format 2"
 				extraDict[psName] = len(extraNames)
 				extraNames.append(psName)
 			indices.append(index)
