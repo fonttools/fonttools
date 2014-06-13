@@ -113,7 +113,7 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 			if glyphName in allNames:
 				# make up a new glyphName that's unique
 				n = allNames[glyphName]
-				while allNames.has_key(glyphName + "#" + str(n)):
+				while (glyphName + "#" + str(n)) in allNames:
 					n += 1
 				allNames[glyphName] = n + 1
 				glyphName = glyphName + "#" + str(n)
