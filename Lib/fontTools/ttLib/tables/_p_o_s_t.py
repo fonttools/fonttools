@@ -88,7 +88,7 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 			indices.byteswap()
 		data = data[2*numGlyphs:]
 		self.extraNames = extraNames = unpackPStrings(data)
-		self.glyphOrder = glyphOrder = [None] * int(ttFont['maxp'].numGlyphs)
+		self.glyphOrder = glyphOrder = [""] * int(ttFont['maxp'].numGlyphs)
 		for glyphID in range(numGlyphs):
 			index = indices[glyphID]
 			if index > 257:
@@ -97,12 +97,6 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 				# fetch names from standard list
 				name = standardGlyphOrder[index]
 			glyphOrder[glyphID] = name
-		#AL990511: code added to handle the case of new glyphs without
-		#          entries into the 'post' table
-		if numGlyphs < ttFont['maxp'].numGlyphs:
-			for i in range(numGlyphs, ttFont['maxp'].numGlyphs):
-				glyphOrder[i] = "glyph#%.5d" % i
-				self.extraNames.append(glyphOrder[i])
 		self.build_psNameMapping(ttFont)
 	
 	def build_psNameMapping(self, ttFont):
@@ -110,6 +104,8 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 		allNames = {}
 		for i in range(ttFont['maxp'].numGlyphs):
 			glyphName = psName = self.glyphOrder[i]
+			if glyphName == "":
+				glyphName = "glyph%.5d" % i
 			if glyphName in allNames:
 				# make up a new glyphName that's unique
 				n = allNames[glyphName]
@@ -117,9 +113,12 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 					n += 1
 				allNames[glyphName] = n + 1
 				glyphName = glyphName + "#" + str(n)
-				self.glyphOrder[i] = glyphName
-				mapping[glyphName] = psName
+
+			self.glyphOrder[i] = glyphName
 			allNames[glyphName] = 1
+			if glyphName != psName:
+				mapping[glyphName] = psName
+
 		self.mapping = mapping
 	
 	def decode_format_3_0(self, data, ttFont):
