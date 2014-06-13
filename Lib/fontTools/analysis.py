@@ -104,7 +104,6 @@ global_env = Environment()
 def constructSuccessor(body):
     containing_fdef = None
     containing_if = []
-    #TODO revise this for loop and use iteration
     for index in range(len(body.instructions)):
         i = body.instructions[index]
         
@@ -157,14 +156,15 @@ def constructSuccessor(body):
                 # otherwise, set the succ of the inst before ELSE to this
                 body.successors[cif_info[1]].append(i)
 
-        # what about CALL statements? I think add_successor is an
-        # intraprocedural CFG, so CALL is probably opaque to
-        # add_successor.
+        # what about CALL statements? I think .successors is an
+        # intraprocedural CFG, so CALL is probably opaque to .successors.
         # also: LOOPCALL
 
 def constructPredecessor(body):
-    for i in range(len(body_instructions)):
-        pass
+    for src, dests in body.successors.iteritems():
+        for d in dests:
+            if not d in body.predecessors: body.predecessors[d] = []
+            body.predecessors[d].append(src)
 
 def constructCVTTable(values):
     key = 1
@@ -220,6 +220,7 @@ def main(args):
 
         constructInstructions(body)
         constructSuccessor(body)
+        constructPredecessor(body)
         
         current_state = Environment()
         executor = AbstractExecutor(bytecode_font)
@@ -232,7 +233,7 @@ def main(args):
             instruction = body.successors[instruction][0]
 
         for key,value in bytecode_font.function_table.items():
-            print(key)
+            print('Function #{0}:'.format(key))
             for instruction in value:
                 instruction.prettyPrint()
         
