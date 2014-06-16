@@ -304,19 +304,17 @@ class Index(object):
 	compilerClass = IndexCompiler
 	
 	def __init__(self, file=None):
+		self.items = []
 		name = self.__class__.__name__
 		if file is None:
-			self.items = []
 			return
 		if DEBUG:
 			print("loading %s at %s" % (name, file.tell()))
 		self.file = file
 		count = readCard16(file)
-		self.count = count
-		self.items = [None] * count
 		if count == 0:
-			self.items = []
 			return
+		self.items = [None] * count
 		offSize = readCard8(file)
 		if DEBUG:
 			print("    index count: %s offSize: %s" % (count, offSize))

@@ -1368,7 +1368,6 @@ def subset_glyphs(self, s):
       indices = [i for i,g in enumerate(font.charset) if g in s.glyphs]
       csi = cs.charStringsIndex
       csi.items = [csi.items[i] for i in indices]
-      csi.count = len(csi.items)
       del csi.file, csi.offsets
       if hasattr(font, "FDSelect"):
         sel = font.FDSelect
@@ -1600,7 +1599,6 @@ def prune_post_subset(self, options):
       sel.gidArray = [indices.index (ss) for ss in sel.gidArray]
       arr = font.FDArray
       arr.items = [arr[i] for i in indices]
-      arr.count = len(arr.items)
       del arr.file, arr.offsets
 
 
@@ -1697,7 +1695,6 @@ def prune_post_subset(self, options):
         local_subrs = subrs
 
       subrs.items = [subrs.items[i] for i in subrs._used]
-      subrs.count = len(subrs.items)
       del subrs.file
       if hasattr(subrs, 'offsets'):
         del subrs.offsets
