@@ -330,8 +330,9 @@ class T2CharString(ByteCodeBase):
 		self.bytecode = bytecode
 		self.program = None
 	
-	def getToken(self, index, 
-			len=len, byteord=byteord, getattr=getattr, type=type, StringType=str):
+	def getToken(self, index,
+		     len=len, byteord=byteord, basestring=basestring,
+		     isinstance=isinstance):
 		if self.bytecode is not None:
 			if index >= len(self.bytecode):
 				return None, 0, 0
@@ -344,7 +345,7 @@ class T2CharString(ByteCodeBase):
 				return None, 0, 0
 			token = self.program[index]
 			index = index + 1
-		isOperator = isinstance(token, StringType)
+		isOperator = isinstance(token, basestring)
 		return token, isOperator, index
 	
 	def getBytes(self, index, nBytes):
