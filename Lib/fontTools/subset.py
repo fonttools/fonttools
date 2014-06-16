@@ -1702,8 +1702,8 @@ def prune_post_subset(self, options):
       if hasattr(subrs, 'offsets'):
         del subrs.offsets
 
-      for i in range (subrs.count):
-        subrs[i].subset_subroutines (local_subrs, font.GlobalSubrs)
+      for subr in subrs.items:
+        subr.subset_subroutines (local_subrs, font.GlobalSubrs)
 
     # Cleanup
     for subrs in all_subrs:
