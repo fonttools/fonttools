@@ -30,9 +30,7 @@ cffDictOperandEncoding[255] = "reserved"
 
 realNibbles = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 
 		'.', 'E', 'E-', None, '-']
-realNibblesDict = {}
-for _i in range(len(realNibbles)):
-	realNibblesDict[realNibbles[_i]] = _i
+realNibblesDict = dict((v,i) for i,v in enumerate(realNibbles))
 
 
 class ByteCodeBase(object):
