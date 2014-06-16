@@ -93,7 +93,7 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 			index = indices[glyphID]
 			if index > 32767: # reserved for future use; ignore
 				name = ""
-			if index > 257:
+			elif index > 257:
 				name = extraNames[index-258]
 			else:
 				# fetch names from standard list
