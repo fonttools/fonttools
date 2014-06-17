@@ -522,8 +522,8 @@ class SimpleT2Decompiler(object):
 			pushToProgram(token)
 			if isOperator:
 				handlerName = "op_" + token
-				if hasattr(self, handlerName):
-					handler = getattr(self, handlerName)
+				handler = getattr(self, handlerName, None)
+				if handler is not None:
 					rv = handler(index)
 					if rv:
 						hintMaskBytes, index = rv
