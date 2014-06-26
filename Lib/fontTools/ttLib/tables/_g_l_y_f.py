@@ -609,7 +609,7 @@ class Glyph(object):
 	
 	def isComposite(self):
 		"""Can be called on compact or expanded glyph."""
-		if hasattr(self, "data"):
+		if hasattr(self, "data") and self.data:
 			return struct.unpack(">h", self.data[:2])[0] == -1
 		else:
 			return self.numberOfContours == -1
