@@ -11,6 +11,8 @@ INDENT = "  "
 class XMLWriter(object):
 	
 	def __init__(self, fileOrPath, indentwhite=INDENT, idlefunc=None):
+		if fileOrPath == '-':
+			fileOrPath = sys.stdout
 		if not hasattr(fileOrPath, "write"):
 			try:
 				# Python3 has encoding support.
