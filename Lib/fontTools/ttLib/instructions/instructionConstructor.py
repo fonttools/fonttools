@@ -1,4 +1,4 @@
-from . import instructions
+from . import statements
 
 #this will parse str to instruct or data classes
 class instructionConstructor():
@@ -17,7 +17,7 @@ class instructionConstructor():
                     i = i+1
                 else:
                     break
-            self.typed_instruction = self.construct(instructions.all,self.instruction[:i]) 
+            self.typed_instruction = self.construct(statements.all,self.instruction[:i]+"_Statement") 
     def construct(self,idClasses, builderName):
         targetClass = getattr(idClasses, builderName)
         return targetClass()

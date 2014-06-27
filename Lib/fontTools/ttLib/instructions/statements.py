@@ -1,5 +1,5 @@
 #instructions classes are generated from instructionList
-class root_instruct(object):
+class root_statement(object):
     def __init__(self):
 	self.data = []
         #one instruction may have mutiple successors
@@ -24,9 +24,9 @@ class root_instruct(object):
     def prettyPrint(self):
         print(self.__class__.__name__,self.data)
 class all():
-    class PUSH(root_instruct):
+    class PUSH_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self)
+            root_statement.__init__(self)
             self.push_num = len(self.data)
             self.pop_num = 0
         def get_push_num(self):
@@ -34,9 +34,9 @@ class all():
         def action(self):
             pass 
 
-    class AA(root_instruct):
+    class AA_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -45,9 +45,9 @@ class all():
         def action(self, input):
             pass 
 
-    class ABS(root_instruct):
+    class ABS_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack' 
             self.out_source = 'program_stack'
             self.push_num =  1 
@@ -56,9 +56,9 @@ class all():
         def action(self, input):
             pass 
 
-    class ADD(root_instruct):
+    class ADD_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack' 
             self.out_source = 'program_stack'
             self.push_num =  1 
@@ -67,9 +67,9 @@ class all():
         def action(self, input):
             pass 
 
-    class ALIGNPTS(root_instruct):
+    class ALIGNPTS_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -78,9 +78,9 @@ class all():
         def action(self, input):
             pass 
 
-    class ALIGNRP(root_instruct):
+    class ALIGNRP_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -88,9 +88,9 @@ class all():
         def action(self, input):
             pass 
 
-    class AND(root_instruct):
+    class AND_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack' 
             self.out_source = 'program_stack'
             self.push_num =  1 
@@ -99,9 +99,9 @@ class all():
         def action(self, input):
             pass 
 
-    class CALL(root_instruct):
+    class CALL_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -110,9 +110,9 @@ class all():
         def action(self, input):
             pass 
 
-    class CEILING(root_instruct):
+    class CEILING_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack' 
             self.out_source = 'program_stack'
             self.push_num =  1 
@@ -121,9 +121,9 @@ class all():
         def action(self, input):
             pass 
 
-    class CINDEX(root_instruct):
+    class CINDEX_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack' 
             self.out_source = 'program_stack'
             self.push_num =  1 
@@ -132,9 +132,9 @@ class all():
         def action(self, input):
             pass 
 
-    class CLEAR(root_instruct):
+    class CLEAR_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -142,9 +142,9 @@ class all():
         def action(self, input):
             pass 
 
-    class DEBUG(root_instruct):
+    class DEBUG_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -153,9 +153,9 @@ class all():
         def action(self, input):
             pass 
 
-    class DELTAC1(root_instruct):
+    class DELTAC1_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -163,9 +163,9 @@ class all():
         def action(self, input):
             pass 
 
-    class DELTAC2(root_instruct):
+    class DELTAC2_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -173,9 +173,9 @@ class all():
         def action(self, input):
             pass 
 
-    class DELTAC3(root_instruct):
+    class DELTAC3_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -183,9 +183,9 @@ class all():
         def action(self, input):
             pass 
 
-    class DELTAP1(root_instruct):
+    class DELTAP1_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -193,9 +193,9 @@ class all():
         def action(self, input):
             pass 
 
-    class DELTAP2(root_instruct):
+    class DELTAP2_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -203,9 +203,9 @@ class all():
         def action(self, input):
             pass 
 
-    class DELTAP3(root_instruct):
+    class DELTAP3_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -213,9 +213,9 @@ class all():
         def action(self, input):
             pass 
 
-    class DEPTH(root_instruct):
+    class DEPTH_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'None'
             self.out_source = 'program_stack'
             self.push_num =  1 
@@ -224,9 +224,9 @@ class all():
         def action(self, input):
             pass 
 
-    class DIV(root_instruct):
+    class DIV_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack' 
             self.out_source = 'program_stack'
             self.push_num =  1 
@@ -235,9 +235,9 @@ class all():
         def action(self, input):
             pass 
 
-    class DUP(root_instruct):
+    class DUP_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack' 
             self.out_source = 'program_stack'
             self.push_num =  2 
@@ -246,9 +246,9 @@ class all():
         def action(self, input):
             pass 
 
-    class EIF(root_instruct):
+    class EIF_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'self'
             self.out_source = 'graphic_state'
             self.push_num =  0 
@@ -257,9 +257,9 @@ class all():
         def action(self, input):
             pass 
 
-    class ELSE(root_instruct):
+    class ELSE_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'self'
             self.out_source = 'graphic_state'
             self.push_num =  0 
@@ -268,9 +268,9 @@ class all():
         def action(self, input):
             pass 
 
-    class ENDF(root_instruct):
+    class ENDF_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'self'
             self.out_source = 'graphic_state'
             self.push_num =  0 
@@ -279,9 +279,9 @@ class all():
         def action(self, input):
             pass 
 
-    class EQ(root_instruct):
+    class EQ_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack' 
             self.out_source = 'program_stack'
             self.push_num =  1 
@@ -290,9 +290,9 @@ class all():
         def action(self, input):
             pass 
 
-    class EVEN(root_instruct):
+    class EVEN_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack' 
             self.out_source = 'program_stack'
             self.push_num =  1 
@@ -301,9 +301,9 @@ class all():
         def action(self, input):
             pass 
 
-    class FDEF(root_instruct):
+    class FDEF_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -312,9 +312,9 @@ class all():
         def action(self, input):
             pass 
 
-    class FLIPOFF(root_instruct):
+    class FLIPOFF_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'self'
             self.out_source = 'graphic_state'
             self.push_num =  0 
@@ -323,9 +323,9 @@ class all():
         def action(self, input):
             pass 
 
-    class FLIPON(root_instruct):
+    class FLIPON_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'self'
             self.out_source = 'graphic_state'
             self.push_num =  0 
@@ -334,9 +334,9 @@ class all():
         def action(self, input):
             pass 
 
-    class FLIPPT(root_instruct):
+    class FLIPPT_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -344,9 +344,9 @@ class all():
         def action(self, input):
             pass 
 
-    class FLIPRGOFF(root_instruct):
+    class FLIPRGOFF_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -355,9 +355,9 @@ class all():
         def action(self, input):
             pass 
 
-    class FLIPRGON(root_instruct):
+    class FLIPRGON_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -366,9 +366,9 @@ class all():
         def action(self, input):
             pass 
 
-    class FLOOR(root_instruct):
+    class FLOOR_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack' 
             self.out_source = 'program_stack'
             self.push_num =  1 
@@ -377,9 +377,9 @@ class all():
         def action(self, input):
             pass 
 
-    class GC(root_instruct):
+    class GC_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack' 
             self.out_source = 'program_stack'
             self.push_num =  1 
@@ -388,9 +388,9 @@ class all():
         def action(self, input):
             pass 
 
-    class GETINFO(root_instruct):
+    class GETINFO_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack' 
             self.out_source = 'program_stack'
             self.push_num =  1 
@@ -399,9 +399,9 @@ class all():
         def action(self, input):
             pass 
 
-    class GFV(root_instruct):
+    class GFV_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'None'
             self.out_source = 'program_stack'
             self.push_num =  2 
@@ -410,9 +410,9 @@ class all():
         def action(self, input):
             pass 
 
-    class GPV(root_instruct):
+    class GPV_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'None'
             self.out_source = 'program_stack'
             self.push_num =  2 
@@ -421,9 +421,9 @@ class all():
         def action(self, input):
             pass 
 
-    class GT(root_instruct):
+    class GT_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack' 
             self.out_source = 'program_stack'
             self.push_num =  1 
@@ -432,9 +432,9 @@ class all():
         def action(self, input):
             pass 
 
-    class GTEQ(root_instruct):
+    class GTEQ_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack' 
             self.out_source = 'program_stack'
             self.push_num =  1 
@@ -443,9 +443,9 @@ class all():
         def action(self, input):
             pass 
 
-    class IDEF(root_instruct):
+    class IDEF_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -454,9 +454,9 @@ class all():
         def action(self, input):
             pass 
 
-    class IF(root_instruct):
+    class IF_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -465,9 +465,9 @@ class all():
         def action(self, input):
             pass 
 
-    class INSTCTRL(root_instruct):
+    class INSTCTRL_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -476,9 +476,9 @@ class all():
         def action(self, input):
             pass 
 
-    class IP(root_instruct):
+    class IP_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -486,9 +486,9 @@ class all():
         def action(self, input):
             pass 
 
-    class ISECT(root_instruct):
+    class ISECT_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -497,9 +497,9 @@ class all():
         def action(self, input):
             pass 
 
-    class IUP(root_instruct):
+    class IUP_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'self'
             self.out_source = 'graphic_state'
             self.push_num =  0 
@@ -508,9 +508,9 @@ class all():
         def action(self, input):
             pass 
 
-    class JMPR(root_instruct):
+    class JMPR_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -519,9 +519,9 @@ class all():
         def action(self, input):
             pass 
 
-    class JROF(root_instruct):
+    class JROF_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -530,9 +530,9 @@ class all():
         def action(self, input):
             pass 
 
-    class JROT(root_instruct):
+    class JROT_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -541,9 +541,9 @@ class all():
         def action(self, input):
             pass 
 
-    class LOOPCALL(root_instruct):
+    class LOOPCALL_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -552,9 +552,9 @@ class all():
         def action(self, input):
             pass 
 
-    class LT(root_instruct):
+    class LT_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack' 
             self.out_source = 'program_stack'
             self.push_num =  1 
@@ -563,9 +563,9 @@ class all():
         def action(self, input):
             pass 
 
-    class LTEQ(root_instruct):
+    class LTEQ_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack' 
             self.out_source = 'program_stack'
             self.push_num =  1 
@@ -574,9 +574,9 @@ class all():
         def action(self, input):
             pass 
 
-    class MAX(root_instruct):
+    class MAX_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack' 
             self.out_source = 'program_stack'
             self.push_num =  1 
@@ -585,9 +585,9 @@ class all():
         def action(self, input):
             pass 
 
-    class MD(root_instruct):
+    class MD_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack' 
             self.out_source = 'program_stack'
             self.push_num =  1 
@@ -596,9 +596,9 @@ class all():
         def action(self, input):
             pass 
 
-    class MDAP(root_instruct):
+    class MDAP_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -607,9 +607,9 @@ class all():
         def action(self, input):
             pass 
 
-    class MDRP(root_instruct):
+    class MDRP_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -618,9 +618,9 @@ class all():
         def action(self, input):
             pass 
 
-    class MIAP(root_instruct):
+    class MIAP_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -629,9 +629,9 @@ class all():
         def action(self, input):
             pass 
 
-    class MIN(root_instruct):
+    class MIN_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack' 
             self.out_source = 'program_stack'
             self.push_num =  1 
@@ -640,9 +640,9 @@ class all():
         def action(self, input):
             pass 
 
-    class MINDEX(root_instruct):
+    class MINDEX_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack' 
             self.out_source = 'program_stack'
             self.push_num =  1 
@@ -651,9 +651,9 @@ class all():
         def action(self, input):
             pass 
 
-    class MIRP(root_instruct):
+    class MIRP_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -662,9 +662,9 @@ class all():
         def action(self, input):
             pass 
 
-    class MPPEM(root_instruct):
+    class MPPEM_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'None'
             self.out_source = 'program_stack'
             self.push_num =  1 
@@ -673,9 +673,9 @@ class all():
         def action(self, input):
             pass 
 
-    class MPS(root_instruct):
+    class MPS_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'None'
             self.out_source = 'program_stack'
             self.push_num =  1 
@@ -684,9 +684,9 @@ class all():
         def action(self, input):
             pass 
 
-    class MSIRP(root_instruct):
+    class MSIRP_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -695,9 +695,9 @@ class all():
         def action(self, input):
             pass 
 
-    class MUL(root_instruct):
+    class MUL_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack' 
             self.out_source = 'program_stack'
             self.push_num =  1 
@@ -706,9 +706,9 @@ class all():
         def action(self, input):
             pass 
 
-    class NEG(root_instruct):
+    class NEG_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack' 
             self.out_source = 'program_stack'
             self.push_num =  1 
@@ -717,9 +717,9 @@ class all():
         def action(self, input):
             pass 
 
-    class NEQ(root_instruct):
+    class NEQ_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack' 
             self.out_source = 'program_stack'
             self.push_num =  1 
@@ -728,9 +728,9 @@ class all():
         def action(self, input):
             pass 
 
-    class NOT(root_instruct):
+    class NOT_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack' 
             self.out_source = 'program_stack'
             self.push_num =  1 
@@ -739,9 +739,9 @@ class all():
         def action(self, input):
             pass 
 
-    class NROUND(root_instruct):
+    class NROUND_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack' 
             self.out_source = 'program_stack'
             self.push_num =  1 
@@ -750,9 +750,9 @@ class all():
         def action(self, input):
             pass 
 
-    class ODD(root_instruct):
+    class ODD_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack' 
             self.out_source = 'program_stack'
             self.push_num =  1 
@@ -761,9 +761,9 @@ class all():
         def action(self, input):
             pass 
 
-    class OR(root_instruct):
+    class OR_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack' 
             self.out_source = 'program_stack'
             self.push_num =  1 
@@ -772,9 +772,9 @@ class all():
         def action(self, input):
             pass 
 
-    class POP(root_instruct):
+    class POP_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -783,9 +783,9 @@ class all():
         def action(self, input):
             pass 
 
-    class RCVT(root_instruct):
+    class RCVT_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack' 
             self.out_source = 'program_stack'
             self.push_num =  1 
@@ -794,9 +794,9 @@ class all():
         def action(self, input):
             pass 
 
-    class RDTG(root_instruct):
+    class RDTG_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'self'
             self.out_source = 'graphic_state'
             self.push_num =  0 
@@ -805,9 +805,9 @@ class all():
         def action(self, input):
             pass 
 
-    class ROFF(root_instruct):
+    class ROFF_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'self'
             self.out_source = 'graphic_state'
             self.push_num =  0 
@@ -816,9 +816,9 @@ class all():
         def action(self, input):
             pass 
 
-    class ROLL(root_instruct):
+    class ROLL_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack' 
             self.out_source = 'program_stack'
             self.push_num =  3 
@@ -827,9 +827,9 @@ class all():
         def action(self, input):
             pass 
 
-    class ROUND(root_instruct):
+    class ROUND_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack' 
             self.out_source = 'program_stack'
             self.push_num =  1 
@@ -838,9 +838,9 @@ class all():
         def action(self, input):
             pass 
 
-    class RS(root_instruct):
+    class RS_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack' 
             self.out_source = 'program_stack'
             self.push_num =  1 
@@ -849,9 +849,9 @@ class all():
         def action(self, input):
             pass 
 
-    class RTDG(root_instruct):
+    class RTDG_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'self'
             self.out_source = 'graphic_state'
             self.push_num =  0 
@@ -860,9 +860,9 @@ class all():
         def action(self, input):
             pass 
 
-    class RTG(root_instruct):
+    class RTG_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'self'
             self.out_source = 'graphic_state'
             self.push_num =  0 
@@ -871,9 +871,9 @@ class all():
         def action(self, input):
             pass 
 
-    class RTHG(root_instruct):
+    class RTHG_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'self'
             self.out_source = 'graphic_state'
             self.push_num =  0 
@@ -882,9 +882,9 @@ class all():
         def action(self, input):
             pass 
 
-    class RUTG(root_instruct):
+    class RUTG_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'self'
             self.out_source = 'graphic_state'
             self.push_num =  0 
@@ -893,9 +893,9 @@ class all():
         def action(self, input):
             pass 
 
-    class S45ROUND(root_instruct):
+    class S45ROUND_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -904,9 +904,9 @@ class all():
         def action(self, input):
             pass 
 
-    class SANGW(root_instruct):
+    class SANGW_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -915,9 +915,9 @@ class all():
         def action(self, input):
             pass 
 
-    class SCANCTRL(root_instruct):
+    class SCANCTRL_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -926,9 +926,9 @@ class all():
         def action(self, input):
             pass 
 
-    class SCANTYPE(root_instruct):
+    class SCANTYPE_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -937,9 +937,9 @@ class all():
         def action(self, input):
             pass 
 
-    class SCFS(root_instruct):
+    class SCFS_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -948,9 +948,9 @@ class all():
         def action(self, input):
             pass 
 
-    class SCVTCI(root_instruct):
+    class SCVTCI_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -959,9 +959,9 @@ class all():
         def action(self, input):
             pass 
 
-    class SDB(root_instruct):
+    class SDB_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -970,9 +970,9 @@ class all():
         def action(self, input):
             pass 
 
-    class SDPVTL(root_instruct):
+    class SDPVTL_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -981,9 +981,9 @@ class all():
         def action(self, input):
             pass 
 
-    class SDS(root_instruct):
+    class SDS_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -992,9 +992,9 @@ class all():
         def action(self, input):
             pass 
 
-    class SFVFS(root_instruct):
+    class SFVFS_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -1003,9 +1003,9 @@ class all():
         def action(self, input):
             pass 
 
-    class SFVTCA(root_instruct):
+    class SFVTCA_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'self'
             self.out_source = 'graphic_state'
             self.push_num =  0 
@@ -1014,9 +1014,9 @@ class all():
         def action(self, input):
             pass 
 
-    class SFVTL(root_instruct):
+    class SFVTL_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -1025,9 +1025,9 @@ class all():
         def action(self, input):
             pass 
 
-    class SFVTPV(root_instruct):
+    class SFVTPV_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'self'
             self.out_source = 'graphic_state'
             self.push_num =  0 
@@ -1036,9 +1036,9 @@ class all():
         def action(self, input):
             pass 
 
-    class SHC(root_instruct):
+    class SHC_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -1047,9 +1047,9 @@ class all():
         def action(self, input):
             pass 
 
-    class SHP(root_instruct):
+    class SHP_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -1057,9 +1057,9 @@ class all():
         def action(self, input):
             pass 
 
-    class SHPIX(root_instruct):
+    class SHPIX_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -1067,9 +1067,9 @@ class all():
         def action(self, input):
             pass 
 
-    class SHZ(root_instruct):
+    class SHZ_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -1078,9 +1078,9 @@ class all():
         def action(self, input):
             pass 
 
-    class SLOOP(root_instruct):
+    class SLOOP_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -1089,9 +1089,9 @@ class all():
         def action(self, input):
             pass 
 
-    class SMD(root_instruct):
+    class SMD_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -1100,9 +1100,9 @@ class all():
         def action(self, input):
             pass 
 
-    class SPVFS(root_instruct):
+    class SPVFS_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -1111,9 +1111,9 @@ class all():
         def action(self, input):
             pass 
 
-    class SPVTCA(root_instruct):
+    class SPVTCA_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'self'
             self.out_source = 'graphic_state'
             self.push_num =  0 
@@ -1122,9 +1122,9 @@ class all():
         def action(self, input):
             pass 
 
-    class SPVTL(root_instruct):
+    class SPVTL_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -1133,9 +1133,9 @@ class all():
         def action(self, input):
             pass 
 
-    class SROUND(root_instruct):
+    class SROUND_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -1144,9 +1144,9 @@ class all():
         def action(self, input):
             pass 
 
-    class SRP0(root_instruct):
+    class SRP0_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -1155,9 +1155,9 @@ class all():
         def action(self, input):
             pass 
 
-    class SRP1(root_instruct):
+    class SRP1_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -1166,9 +1166,9 @@ class all():
         def action(self, input):
             pass 
 
-    class SRP2(root_instruct):
+    class SRP2_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -1177,9 +1177,9 @@ class all():
         def action(self, input):
             pass 
 
-    class SSW(root_instruct):
+    class SSW_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -1188,9 +1188,9 @@ class all():
         def action(self, input):
             pass 
 
-    class SSWCI(root_instruct):
+    class SSWCI_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -1199,9 +1199,9 @@ class all():
         def action(self, input):
             pass 
 
-    class SUB(root_instruct):
+    class SUB_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack' 
             self.out_source = 'program_stack'
             self.push_num =  1 
@@ -1210,9 +1210,9 @@ class all():
         def action(self, input):
             pass 
 
-    class SVTCA(root_instruct):
+    class SVTCA_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'self'
             self.out_source = 'graphic_state'
             self.push_num =  0 
@@ -1221,9 +1221,9 @@ class all():
         def action(self, input):
             pass 
 
-    class SWAP(root_instruct):
+    class SWAP_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack' 
             self.out_source = 'program_stack'
             self.push_num =  2 
@@ -1232,9 +1232,9 @@ class all():
         def action(self, input):
             pass 
 
-    class SZP0(root_instruct):
+    class SZP0_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -1243,9 +1243,9 @@ class all():
         def action(self, input):
             pass 
 
-    class SZP1(root_instruct):
+    class SZP1_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -1254,9 +1254,9 @@ class all():
         def action(self, input):
             pass 
 
-    class SZP2(root_instruct):
+    class SZP2_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -1265,9 +1265,9 @@ class all():
         def action(self, input):
             pass 
 
-    class SZPS(root_instruct):
+    class SZPS_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -1276,9 +1276,9 @@ class all():
         def action(self, input):
             pass 
 
-    class UTP(root_instruct):
+    class UTP_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -1287,9 +1287,9 @@ class all():
         def action(self, input):
             pass 
 
-    class WCVTF(root_instruct):
+    class WCVTF_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -1298,9 +1298,9 @@ class all():
         def action(self, input):
             pass 
 
-    class WCVTP(root_instruct):
+    class WCVTP_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
@@ -1309,9 +1309,9 @@ class all():
         def action(self, input):
             pass 
 
-    class WS(root_instruct):
+    class WS_Statement(root_statement):
         def __init__(self):
-            root_instruct.__init__(self) 
+            root_statement.__init__(self) 
             self.in_source = 'program_stack'
             self.out_source = 'None'
             self.push_num =  0 
