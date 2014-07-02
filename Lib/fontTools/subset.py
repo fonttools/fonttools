@@ -492,22 +492,22 @@ def __classify_context(self):
         Coverage = lambda r: r.Coverage
         ChainCoverage = lambda r: r.Coverage
         ContextData = lambda r:(r.ClassDef,)
-        ChainContextData = lambda r:(r.LookAheadClassDef,
-                                      r.InputClassDef,
-                                      r.BacktrackClassDef)
+        ChainContextData = lambda r:(r.BacktrackClassDef,
+                                     r.InputClassDef,
+                                     r.LookAheadClassDef)
         RuleData = lambda r:(r.Class,)
-        ChainRuleData = lambda r:(r.LookAhead, r.Input, r.Backtrack)
+        ChainRuleData = lambda r:(r.Backtrack, r.Input, r.LookAhead)
         def SetRuleData(r, d):(r.Class,) = d
-        def ChainSetRuleData(r, d):(r.LookAhead, r.Input, r.Backtrack) = d
+        def ChainSetRuleData(r, d):(r.Backtrack, r.Input, r.LookAhead) = d
       elif Format == 3:
         Coverage = lambda r: r.Coverage[0]
         ChainCoverage = lambda r: r.InputCoverage[0]
         ContextData = None
         ChainContextData = None
         RuleData = lambda r: r.Coverage
-        ChainRuleData = lambda r:(r.LookAheadCoverage +
-                                   r.InputCoverage +
-                                   r.BacktrackCoverage)
+        ChainRuleData = lambda r:(r.BacktrackCoverage +
+                                  r.InputCoverage +
+                                  r.LookAheadCoverage)
         SetRuleData = None
         ChainSetRuleData = None
       else:
