@@ -535,7 +535,8 @@ def __classify_context(self):
         self.RuleCount = ChainTyp+'ClassRuleCount'
         self.RuleSet = ChainTyp+'ClassSet'
         self.RuleSetCount = ChainTyp+'ClassSetCount'
-        self.Intersect = lambda glyphs, c, r: c.intersect_class(glyphs, r)
+        self.Intersect = lambda glyphs, c, r: (c.intersect_class(glyphs, r) if c
+                                               else (set(glyphs) if r == 0 else set()))
 
         self.ClassDef = 'InputClassDef' if Chain else 'ClassDef'
         self.ClassDefIndex = 1 if Chain else 0
