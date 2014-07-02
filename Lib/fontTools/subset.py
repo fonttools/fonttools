@@ -665,7 +665,7 @@ def subset_glyphs(self, s):
     if not self.Coverage.subset(s.glyphs):
       return False
     ContextData = c.ContextData(self)
-    klass_maps = [x.subset(s.glyphs, remap=True) for x in ContextData]
+    klass_maps = [x.subset(s.glyphs, remap=True) if x else None for x in ContextData]
 
     # Keep rulesets for class numbers that survived.
     indices = klass_maps[c.ClassDefIndex]
