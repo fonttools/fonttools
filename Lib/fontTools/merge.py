@@ -577,6 +577,14 @@ def mapLookups(self, lookupMap):
   else:
     assert 0, "unknown format: %s" % self.Format
 
+@_add_method(otTables.ExtensionSubst,
+             otTables.ExtensionPos)
+def mapLookups(self, lookupMap):
+  if self.Format == 1:
+    self.ExtSubTable.mapLookups(lookupMap)
+  else:
+    assert 0, "unknown format: %s" % self.Format
+
 @_add_method(otTables.Lookup)
 def mapLookups(self, lookupMap):
 	for st in self.SubTable:
