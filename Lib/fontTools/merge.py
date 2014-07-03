@@ -384,6 +384,10 @@ otTables.ScriptList.mergeMap = {
 	'ScriptCount': sum,
 	'ScriptRecord': lambda lst: sorted(sumLists(lst), key=lambda s: s.ScriptTag),
 }
+otTables.BaseScriptList.mergeMap = {
+	'BaseScriptCount': sum,
+	'BaseScriptRecord': lambda lst: sorted(sumLists(lst), key=lambda s: s.BaseScriptTag),
+}
 
 otTables.FeatureList.mergeMap = {
 	'FeatureCount': sum,
@@ -422,12 +426,23 @@ otTables.MarkGlyphSetsDef.mergeMap = {
 	'Coverage': sumLists,
 }
 
-otTables.GDEF.mergeMap = {
+otTables.Axis.mergeMap = {
 	'*': mergeObjects,
-	'Version': max,
 }
 
-otTables.GSUB.mergeMap = otTables.GPOS.mergeMap = {
+# XXX Fix BASE table merging
+otTables.BaseTagList.mergeMap = {
+	'BaseTagCount': sum,
+	'BaselineTag': sumLists,
+}
+
+otTables.GDEF.mergeMap = \
+otTables.GSUB.mergeMap = \
+otTables.GPOS.mergeMap = \
+otTables.BASE.mergeMap = \
+otTables.JSTF.mergeMap = \
+otTables.MATH.mergeMap = \
+{
 	'*': mergeObjects,
 	'Version': max,
 }
