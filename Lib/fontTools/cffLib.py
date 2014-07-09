@@ -884,10 +884,11 @@ def packCharset(charset, isCID, strings):
 			ranges.append((first, nLeft))
 			first = SID
 		end = SID
-	nLeft = end - first
-	if nLeft > 255:
-		fmt = 2
-	ranges.append((first, nLeft))
+	if end:
+		nLeft = end - first
+		if nLeft > 255:
+			fmt = 2
+		ranges.append((first, nLeft))
 	
 	data = [packCard8(fmt)]
 	if fmt == 1:
