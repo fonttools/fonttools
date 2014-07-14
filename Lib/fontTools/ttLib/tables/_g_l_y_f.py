@@ -247,11 +247,15 @@ class Glyph(object):
 		else:
 			data = data + self.compileCoordinates()
 		# From the spec: "Note that the local offsets should be word-aligned"
-		# From a later MS spec: "Note that the local offsets should be long-aligned"
-		# Let's be modern and align on 4-byte boundaries.
-		if len(data) % 4:
+		# From a later MS spec: "Note that the local offsets should be long-aligned,
+		# Offsets which are not long-aligned may seriously degrade performance of
+		# some processors."  We don't believe that long-alignment is required or
+		# has significant implications, so we align by two, which on average
+		# saves two bytes per glyph.
+		alignment = 2
+		if len(data) % alignment:
 			# add pad bytes
-			nPadBytes = 4 - (len(data) % 4)
+			nPadBytes = alignment - (len(data) % alignment)
 			data = data + b"\0" * nPadBytes
 		return data
 	
