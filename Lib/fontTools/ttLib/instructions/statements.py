@@ -23,6 +23,8 @@ class root_statement(object):
         return self.data
     def prettyPrint(self):
         print(self.__class__.__name__,self.data)
+    def __repr__(self):
+        return "%s(%r)" % (self.__class__.__name__.split("_")[0],self.data)
 class all():
     class PUSH_Statement(root_statement):
         def __init__(self):
