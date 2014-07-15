@@ -68,7 +68,7 @@ class TTFont(object):
 	def __init__(self, file=None, res_name_or_index=None,
 			sfntVersion="\000\001\000\000", flavor=None, checkChecksums=False,
 			verbose=False, recalcBBoxes=True, allowVID=False, ignoreDecompileErrors=False,
-			recalcTimestamp=True, fontNumber=-1, lazy=False, quiet=False):
+			recalcTimestamp=True, fontNumber=-1, lazy=None, quiet=False):
 		
 		"""The constructor can be called with a few different arguments.
 		When reading a font from disk, 'file' should be either a pathname
@@ -121,7 +121,8 @@ class TTFont(object):
 		binary data.
 
 		If lazy is set to True, many data structures are loaded lazily, upon
-		access only.
+		access only.  If it is set to False, many data structures are loaded
+		immediately.  The default is lazy=None which is somewhere in between.
 		"""
 		
 		from fontTools.ttLib import sfnt
