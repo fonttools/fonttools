@@ -54,7 +54,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 			warnings.warn("too much 'glyf' table data")
 		if noname:
 			warnings.warn('%s glyphs have no name' % i)
-		if not ttFont.lazy:
+		if ttFont.lazy is False: # Be lazy for None and True
 			for glyph in self.glyphs.values():
 				glyph.expand(self)
 	
