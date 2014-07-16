@@ -8,16 +8,57 @@ class Body(object):
     Encapsulates a set of statements.
     This is a tree structure of statments 
     """
-    def __init__(self,statement_root):
-        self.statement_root = statement_root
+    def __init__(self,*args, **kwargs):
+        if kwargs.get('statement_root') is not None:
+            self.statement_root = kwargs.get('statement_root')
+        if kwargs.get('instructions') is not None:
+            input_instructions = kwargs.get('instructions')
+            self.statement_root = self.constructSuccessorAndPredecessor(input_instructions)
     def num_of_branches(self):
         #TODO
         self.num_of_branches = 0
     def compute_stack_level(self):
         #TODO
         pass
-    def pinterHelper(self, indent):
-        print("    ", indent)
+    def constructSuccessorAndPredecessor(self,input_statements):
+        def is_not_divid_branch(instruction):
+            if isinstance(instruction,statements.all.EIF_Statement):
+                return False
+            elif isinstance(instruction,statements.all.ELSE_Statement):
+                return False
+            else:
+                return True
+        if_waited = []
+        for index in range(len(input_statements)): 
+            this_instruction = input_statements[index]
+            # We don't think jump statements are actually ever used.
+            if isinstance(this_instruction,statements.all.JMPR_Statement):
+                raise NotImplementedError
+            elif isinstance(this_instruction,statements.all.JROT_Statement):
+                raise NotImplementedError
+            elif isinstance(this_instruction,statements.all.JROF_Statement):
+                raise NotImplementedError
+            #other statements should have at least 
+            #the next instruction in stream as a successor
+            elif index < len(input_statements)-1 and is_not_divid_branch(input_statements[index+1]):
+                this_instruction.add_successor(input_statements[index+1])
+                input_statements[index+1].set_predecessor(this_instruction)
+            # An IF statement should have two successors:
+            #  one already added (index+1); one at the ELSE/ENDIF.
+            if isinstance(this_instruction,statements.all.IF_Statement):
+                if_waited.append(this_instruction)
+            elif isinstance(this_instruction,statements.all.ELSE_Statement):
+                this_if = if_waited[-1]
+                this_if.add_successor(this_instruction)
+            elif isinstance(this_instruction,statements.all.EIF_Statement):
+                this_if = if_waited[-1]
+                this_if.add_successor(this_instruction)
+                if_waited.pop()
+        return input_statements[0]
+        # what about CALL statements? I think .successors is an
+        # intraprocedural CFG, so CALL is probably opaque to .successors.
+        # also: LOOPCALL
+
     def pretty_print(self):
         level = 1
         instruction = self.statement_root
@@ -41,7 +82,6 @@ class Body(object):
                 instruction_stack.extend(reverse_successor)
             else:
                 instruction_stack.extend(top_instruction.successors)
-        print("number of branches", self.num_of_branches)
 
     '''
     the transform function will make break the stack-based truetype bytecode and 
@@ -63,8 +103,15 @@ class Function(object):
         pass
     def constructBody(self):
         #convert the list to tree structure
-        self.body = Body(constructSuccessorAndPredecessor(self.instructions))
+        self.body = Body(instructions = self.instructions)
     def printBody(self):
+        self.body.pretty_print()
+#per glyph instructions
+class Program(object):
+    def __init__(self, input):
+        self.body = Body(instructions = input)
+    
+    def print_program(self):
         self.body.pretty_print()
 
 class BytecodeFont(object):
@@ -72,17 +119,34 @@ class BytecodeFont(object):
     def __init__(self):
         # CVT Table (initial)
         self.cvt_table = {}
+        self.global_program = {}
         # tag id -> Program
-        self.programs = {}
+        self.local_programs = {}
         self.body = {}
         # function_table: function label -> Function
         self.function_table = {}
-    def set_programs(self, programs):
-        self.programs = programs
-
+    def setup(self,programs):
+        self.global_program['fpgm'] = programs['fpgm']
+        self.global_program['prep'] = programs['prep']
+        self.setup_global_programs()
+        self.setup_local_programs(programs)
+    
+    def setup_global_programs(self):
+        self.extractFunctions()
+        self.pre_compute()
+    def setup_local_programs(self, programs):
+        for key, instr in programs.items():
+            if key is not 'fpgm' and key is not 'prep':
+                program = Program(instr)
+                self.local_programs[key] =  program
+        
+        #for key, value in self.local_programs.items():
+            #print(key)
+            #value.print_program()
+        
     #preprocess and get the function definitions
-    def extractFunctions(self):
-        instructions = self.programs['fpgm']
+    def extractFunctions(self,):
+        instructions = self.global_program['fpgm']
         functionsLabels = []
         skip = False
         function_ptr = None
@@ -101,11 +165,12 @@ class BytecodeFont(object):
                     self.function_table[function_label] = function_ptr
                 else:
                     function_ptr.appendInstruction(instruction)
+        
         for key, value in self.function_table.items():
-            #print(key)
+            print(key)
             value.constructBody()
-            #value.printBody()
-
+            value.printBody()
+        
 class Environment(object):
     """Abstractly represents the global environment at a single point in time. 
 
@@ -178,44 +243,6 @@ class AbstractExecutor(object):
                 
 #one ttFont object for one ttx file       
 ttFont = BytecodeFont()
-def constructSuccessorAndPredecessor(input_statements):
-    def is_not_divid_branch(instruction):
-        if isinstance(instruction,statements.all.EIF_Statement):
-            return False
-        elif isinstance(instruction,statements.all.ELSE_Statement):
-            return False
-        else:
-            return True
-    if_waited = []
-    for index in range(len(input_statements)): 
-        this_instruction = input_statements[index]
-        # We don't think jump statements are actually ever used.
-        if isinstance(this_instruction,statements.all.JMPR_Statement):
-            raise NotImplementedError
-        elif isinstance(this_instruction,statements.all.JROT_Statement):
-            raise NotImplementedError
-        elif isinstance(this_instruction,statements.all.JROF_Statement):
-            raise NotImplementedError
-        #other statements should have at least 
-        #the next instruction in stream as a successor
-        elif index < len(input_statements)-1 and is_not_divid_branch(input_statements[index+1]):
-            this_instruction.add_successor(input_statements[index+1])
-            input_statements[index+1].set_predecessor(this_instruction)
-        # An IF statement should have two successors:
-        #  one already added (index+1); one at the ELSE/ENDIF.
-        if isinstance(this_instruction,statements.all.IF_Statement):
-            if_waited.append(this_instruction)
-        elif isinstance(this_instruction,statements.all.ELSE_Statement):
-            this_if = if_waited[-1]
-            this_if.add_successor(this_instruction)
-        elif isinstance(this_instruction,statements.all.EIF_Statement):
-            this_if = if_waited[-1]
-            this_if.add_successor(this_instruction)
-            if_waited.pop()
-    return input_statements[0]
-        # what about CALL statements? I think .successors is an
-        # intraprocedural CFG, so CALL is probably opaque to .successors.
-        # also: LOOPCALL
 
 def constructCVTTable(tt):
     values = tt['cvt '].values
@@ -234,7 +261,7 @@ def constructInstructions(instructions):
         instructionCons = instructionConstructor.instructionConstructor(instruction)
         instruction = instructionCons.getClass()
         
-        if isinstance(instruction, instructionConstructor.data):
+        if isinstance(instruction, instructionConstructor.Data):
             combineInstructionData(thisinstruction,instruction)
         else:
             if thisinstruction is not None:
@@ -262,7 +289,7 @@ def extractProgram(tt):
                 addTagsWithBytecode(tt[key],tag+key)
 
     addTagsWithBytecode(tt,"")
-    ttp = ttFont.set_programs(tag_to_program)
+    ttp = ttFont.setup(tag_to_program)
 
 def main(args):
     if len(args)<1:
@@ -278,7 +305,6 @@ def main(args):
         raise NotImplementedError
     constructCVTTable(tt)
     extractProgram(tt)
-    ttFont.extractFunctions()
 
 if __name__ == "__main__":
         main(sys.argv[1:])

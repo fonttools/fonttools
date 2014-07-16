@@ -9,20 +9,31 @@ class instructionConstructor():
         return self.typed_instruction
     def tokenizer(self):
         try:
-            self.typed_instruction = data(self.instruction)
+            self.typed_instruction = Data(self.instruction)
         except ValueError:
-
+            data = 0
+            flag = False
+            has_data = False
             for i in range(len(self.instruction)):
-                if self.instruction[i]!='[':
-                    i = i+1
-                else:
+                #print(self.instruction[i], self.instruction[i].isdigit())
+                if self.instruction[i]=='[':
+                    flag = True
+                    self.typed_instruction = self.construct(statements.all,self.instruction[:i]+"_Statement")
+                elif self.instruction[i].isdigit() and flag:
+                    has_data = True
+                    data = int(self.instruction[i])+data*10
+                if self.instruction[i]=='/' and self.instruction[i+1] == "*":
                     break
-            self.typed_instruction = self.construct(statements.all,self.instruction[:i]+"_Statement") 
+            if has_data:
+                self.typed_instruction.add_data(Data(data))
     def construct(self,idClasses, builderName):
         targetClass = getattr(idClasses, builderName)
         return targetClass()
 
-class data():
-    def __init__(self,str_data):
-        self.value = int(str_data)
+class Data():
+    def __init__(self, data):
+        if type(data)==str:
+            self.value = int(data)
+        if type(data)==int:
+             self.value = data
     
