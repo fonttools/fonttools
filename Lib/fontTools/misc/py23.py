@@ -30,6 +30,18 @@ except ImportError:
 
 def strjoin(iterable):
 	return ''.join(iterable)
+
+def tobytes(s, encoding='ascii'):
+	if not isinstance(s, bytes):
+		return s.encode(encoding)
+	else:
+		return s
+def tounicode(s, encoding='ascii'):
+	if not isinstance(s, unicode):
+		return s.decode(encoding)
+	else:
+		return s
+
 if str == bytes:
 	class Tag(str):
 		def tobytes(self):
@@ -38,12 +50,7 @@ if str == bytes:
 			else:
 				return self.encode('latin1')
 
-	def tostr(s, encoding='ascii'):
-		if not isinstance(s, str):
-			return s.encode(encoding)
-		else:
-			return s
-	tobytes = tostr
+	tostr = tobytes
 
 	bytesjoin = strjoin
 else:
@@ -68,16 +75,7 @@ else:
 		def tobytes(self):
 			return self.encode('latin-1')
 
-	def tostr(s, encoding='ascii'):
-		if not isinstance(s, str):
-			return s.decode(encoding)
-		else:
-			return s
-	def tobytes(s, encoding='ascii'):
-		if not isinstance(s, bytes):
-			return s.encode(encoding)
-		else:
-			return s
+	tostr = tounicode
 
 	def bytesjoin(iterable):
 		return b''.join(tobytes(item) for item in iterable)
