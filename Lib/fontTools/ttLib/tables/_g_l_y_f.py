@@ -73,6 +73,21 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 			currentLocation = currentLocation + len(glyphData)
 			dataList.append(glyphData)
 		locations.append(currentLocation)
+
+		if currentLocation < 0x20000:
+			# See if we can pad any odd-lengthed glyphs to allow loca
+			# table to use the short offsets.
+			indices = [i for i,glyphData in enumerate(dataList)]
+			if currentLocation + len(indices) < 0x20000:
+				# Do it.
+				for i in indices:
+					dataList[i] = dataList[i] + '\0'
+				currentLocation = 0;
+				for i,glyphData in enumerate(dataList):
+					locations[i] = currentLocation
+					currentLocation += len(glyphData)
+				locations[len(dataList)] = currentLocation
+
 		data = bytesjoin(dataList)
 		if 'loca' in ttFont:
 			ttFont['loca'].set(locations)
@@ -247,17 +262,6 @@ class Glyph(object):
 			data = data + self.compileComponents(glyfTable)
 		else:
 			data = data + self.compileCoordinates()
-		# From the spec: "Note that the local offsets should be word-aligned"
-		# From a later MS spec: "Note that the local offsets should be long-aligned,
-		# Offsets which are not long-aligned may seriously degrade performance of
-		# some processors."  We don't believe that long-alignment is required or
-		# has significant implications, so we align by two, which on average
-		# saves two bytes per glyph.
-		alignment = 2
-		if len(data) % alignment:
-			# add pad bytes
-			nPadBytes = alignment - (len(data) % alignment)
-			data = data + b"\0" * nPadBytes
 		return data
 	
 	def toXML(self, writer, ttFont):
@@ -724,12 +728,17 @@ class Glyph(object):
 			if instructionLen:
 				# Splice it out
 				data = data[:i] + data[i+instructionLen:]
-				if instructionLen % 4:
-					# We now have to go ahead and drop
-					# the old padding.  Otherwise with
-					# padding we have to add, we may
-					# end up with more than 3 bytes of
-					# padding.
+				if instructionLen % 2:
+					# We now go ahead and remove any
+					# previous padding, so we get
+					# correct padding added in:
+					#
+					# Technically speaking we can do
+					# this unconditionally.  But if
+					# the font had correct padding
+					# already, we don't need to do
+					# anything if we are removing
+					# even number of bytes.
 					coordBytes = 0
 					j = 0
 					while True:
