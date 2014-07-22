@@ -50,8 +50,9 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 			glyph = Glyph(glyphdata)
 			self.glyphs[glyphName] = glyph
 			last = next
-		if len(data) > next:
-			warnings.warn("too much 'glyf' table data")
+		if len(data) - next >= 4:
+			warnings.warn("too much 'glyf' table data: expected %d, received %d bytes" %
+					(next, len(data)))
 		if noname:
 			warnings.warn('%s glyphs have no name' % i)
 		if ttFont.lazy is False: # Be lazy for None and True
