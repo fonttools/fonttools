@@ -370,7 +370,8 @@ class Glyph(object):
 			self.program = ttProgram.Program()
 			self.program.fromBytecode(data[:numInstructions])
 			data = data[numInstructions:]
-			assert len(data) < 4, "bad composite data"
+			if len(data) >= 4:
+				warnings.warn("too much glyph data at the end of composite glyph: %d excess bytes" % len(data))
 	
 	def decompileCoordinates(self, data):
 		endPtsOfContours = array.array("h")
