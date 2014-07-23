@@ -784,14 +784,7 @@ class Glyph(object):
 			# Cut off
 			data = data[:i]
 
-		data = data.tostring()
-
-		if len(data) % 4:
-			# add pad bytes
-			nPadBytes = 4 - (len(data) % 4)
-			data = data + b"\0" * nPadBytes
-
-		self.data = data
+		self.data = data.tostring()
 
 	def __ne__(self, other):
 		return not self.__eq__(other)
