@@ -77,7 +77,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 		if currentLocation < 0x20000:
 			# See if we can pad any odd-lengthed glyphs to allow loca
 			# table to use the short offsets.
-			indices = [i for i,glyphData in enumerate(dataList)]
+			indices = [i for i,glyphData in enumerate(dataList) if len(glyphData) % 2 == 1]
 			if indices and currentLocation + len(indices) < 0x20000:
 				# It fits.  Do it.
 				for i in indices:
