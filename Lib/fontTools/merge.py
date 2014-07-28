@@ -384,6 +384,10 @@ otTables.ScriptList.mergeMap = {
 	'ScriptCount': sum,
 	'ScriptRecord': lambda lst: sorted(sumLists(lst), key=lambda s: s.ScriptTag),
 }
+otTables.BaseScriptList.mergeMap = {
+	'BaseScriptCount': sum,
+	'BaseScriptRecord': lambda lst: sorted(sumLists(lst), key=lambda s: s.BaseScriptTag),
+}
 
 otTables.FeatureList.mergeMap = {
 	'FeatureCount': sum,
@@ -422,12 +426,23 @@ otTables.MarkGlyphSetsDef.mergeMap = {
 	'Coverage': sumLists,
 }
 
-otTables.GDEF.mergeMap = {
+otTables.Axis.mergeMap = {
 	'*': mergeObjects,
-	'Version': max,
 }
 
-otTables.GSUB.mergeMap = otTables.GPOS.mergeMap = {
+# XXX Fix BASE table merging
+otTables.BaseTagList.mergeMap = {
+	'BaseTagCount': sum,
+	'BaselineTag': sumLists,
+}
+
+otTables.GDEF.mergeMap = \
+otTables.GSUB.mergeMap = \
+otTables.GPOS.mergeMap = \
+otTables.BASE.mergeMap = \
+otTables.JSTF.mergeMap = \
+otTables.MATH.mergeMap = \
+{
 	'*': mergeObjects,
 	'Version': max,
 }
@@ -574,6 +589,14 @@ def mapLookups(self, lookupMap):
     for ll in getattr(self, c.LookupRecord):
       if not ll: continue
       ll.LookupListIndex = lookupMap[ll.LookupListIndex]
+  else:
+    assert 0, "unknown format: %s" % self.Format
+
+@_add_method(otTables.ExtensionSubst,
+             otTables.ExtensionPos)
+def mapLookups(self, lookupMap):
+  if self.Format == 1:
+    self.ExtSubTable.mapLookups(lookupMap)
   else:
     assert 0, "unknown format: %s" % self.Format
 
@@ -734,9 +757,15 @@ class Merger(object):
 
 		allTags = reduce(set.union, (list(font.keys()) for font in fonts), set())
 		allTags.remove('GlyphOrder')
-		allTags.remove('cmap')
-		allTags.remove('GSUB')
-		allTags = ['cmap', 'GSUB'] + list(allTags)
+
+		# Make sure we process cmap before GSUB as we have a dependency there.
+		if 'GSUB' in allTags:
+			allTags.remove('GSUB')
+			allTags = ['GSUB'] + list(allTags)
+		if 'cmap' in allTags:
+			allTags.remove('cmap')
+			allTags = ['cmap'] + list(allTags)
+
 		for tag in allTags:
 
 			tables = [font.get(tag, NotImplemented) for font in fonts]

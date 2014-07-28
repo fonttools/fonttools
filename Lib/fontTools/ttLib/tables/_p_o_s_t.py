@@ -88,21 +88,17 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 			indices.byteswap()
 		data = data[2*numGlyphs:]
 		self.extraNames = extraNames = unpackPStrings(data)
-		self.glyphOrder = glyphOrder = [None] * int(ttFont['maxp'].numGlyphs)
+		self.glyphOrder = glyphOrder = [""] * int(ttFont['maxp'].numGlyphs)
 		for glyphID in range(numGlyphs):
 			index = indices[glyphID]
-			if index > 257:
+			if index > 32767: # reserved for future use; ignore
+				name = ""
+			elif index > 257:
 				name = extraNames[index-258]
 			else:
 				# fetch names from standard list
 				name = standardGlyphOrder[index]
 			glyphOrder[glyphID] = name
-		#AL990511: code added to handle the case of new glyphs without
-		#          entries into the 'post' table
-		if numGlyphs < ttFont['maxp'].numGlyphs:
-			for i in range(numGlyphs, ttFont['maxp'].numGlyphs):
-				glyphOrder[i] = "glyph#%.5d" % i
-				self.extraNames.append(glyphOrder[i])
 		self.build_psNameMapping(ttFont)
 	
 	def build_psNameMapping(self, ttFont):
@@ -110,16 +106,21 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 		allNames = {}
 		for i in range(ttFont['maxp'].numGlyphs):
 			glyphName = psName = self.glyphOrder[i]
+			if glyphName == "":
+				glyphName = "glyph%.5d" % i
 			if glyphName in allNames:
 				# make up a new glyphName that's unique
 				n = allNames[glyphName]
-				while allNames.has_key(glyphName + "#" + str(n)):
+				while (glyphName + "#" + str(n)) in allNames:
 					n += 1
 				allNames[glyphName] = n + 1
 				glyphName = glyphName + "#" + str(n)
-				self.glyphOrder[i] = glyphName
-				mapping[glyphName] = psName
+
+			self.glyphOrder[i] = glyphName
 			allNames[glyphName] = 1
+			if glyphName != psName:
+				mapping[glyphName] = psName
+
 		self.mapping = mapping
 	
 	def decode_format_3_0(self, data, ttFont):
@@ -167,6 +168,7 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 				index = standardGlyphOrder.index(psName)
 			else:
 				index = 258 + len(extraNames)
+				assert index < 32768, "Too many glyph names for 'post' table format 2"
 				extraDict[psName] = len(extraNames)
 				extraNames.append(psName)
 			indices.append(index)

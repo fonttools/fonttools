@@ -50,11 +50,12 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 			glyph = Glyph(glyphdata)
 			self.glyphs[glyphName] = glyph
 			last = next
-		if len(data) > next:
-			warnings.warn("too much 'glyf' table data")
+		if len(data) - next >= 4:
+			warnings.warn("too much 'glyf' table data: expected %d, received %d bytes" %
+					(next, len(data)))
 		if noname:
 			warnings.warn('%s glyphs have no name' % i)
-		if not ttFont.lazy:
+		if ttFont.lazy is False: # Be lazy for None and True
 			for glyph in self.glyphs.values():
 				glyph.expand(self)
 	
@@ -72,6 +73,21 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 			currentLocation = currentLocation + len(glyphData)
 			dataList.append(glyphData)
 		locations.append(currentLocation)
+
+		if currentLocation < 0x20000:
+			# See if we can pad any odd-lengthed glyphs to allow loca
+			# table to use the short offsets.
+			indices = [i for i,glyphData in enumerate(dataList) if len(glyphData) % 2 == 1]
+			if indices and currentLocation + len(indices) < 0x20000:
+				# It fits.  Do it.
+				for i in indices:
+					dataList[i] += '\0'
+				currentLocation = 0;
+				for i,glyphData in enumerate(dataList):
+					locations[i] = currentLocation
+					currentLocation += len(glyphData)
+				locations[len(dataList)] = currentLocation
+
 		data = bytesjoin(dataList)
 		if 'loca' in ttFont:
 			ttFont['loca'].set(locations)
@@ -246,13 +262,6 @@ class Glyph(object):
 			data = data + self.compileComponents(glyfTable)
 		else:
 			data = data + self.compileCoordinates()
-		# From the spec: "Note that the local offsets should be word-aligned"
-		# From a later MS spec: "Note that the local offsets should be long-aligned"
-		# Let's be modern and align on 4-byte boundaries.
-		if len(data) % 4:
-			# add pad bytes
-			nPadBytes = 4 - (len(data) % 4)
-			data = data + b"\0" * nPadBytes
 		return data
 	
 	def toXML(self, writer, ttFont):
@@ -361,7 +370,8 @@ class Glyph(object):
 			self.program = ttProgram.Program()
 			self.program.fromBytecode(data[:numInstructions])
 			data = data[numInstructions:]
-			assert len(data) < 4, "bad composite data"
+			if len(data) >= 4:
+				warnings.warn("too much glyph data at the end of composite glyph: %d excess bytes" % len(data))
 	
 	def decompileCoordinates(self, data):
 		endPtsOfContours = array.array("h")
@@ -609,7 +619,7 @@ class Glyph(object):
 	
 	def isComposite(self):
 		"""Can be called on compact or expanded glyph."""
-		if hasattr(self, "data"):
+		if hasattr(self, "data") and self.data:
 			return struct.unpack(">h", self.data[:2])[0] == -1
 		else:
 			return self.numberOfContours == -1
@@ -719,12 +729,17 @@ class Glyph(object):
 			if instructionLen:
 				# Splice it out
 				data = data[:i] + data[i+instructionLen:]
-				if instructionLen % 4:
-					# We now have to go ahead and drop
-					# the old padding.  Otherwise with
-					# padding we have to add, we may
-					# end up with more than 3 bytes of
-					# padding.
+				if instructionLen % 2:
+					# We now go ahead and remove any
+					# previous padding, so we get
+					# correct padding added in:
+					#
+					# Technically speaking we can do
+					# this unconditionally.  But if
+					# the font had correct padding
+					# already, we don't need to do
+					# anything if we are removing
+					# even number of bytes.
 					coordBytes = 0
 					j = 0
 					while True:
@@ -770,14 +785,7 @@ class Glyph(object):
 			# Cut off
 			data = data[:i]
 
-		data = data.tostring()
-
-		if len(data) % 4:
-			# add pad bytes
-			nPadBytes = 4 - (len(data) % 4)
-			data = data + b"\0" * nPadBytes
-
-		self.data = data
+		self.data = data.tostring()
 
 	def __ne__(self, other):
 		return not self.__eq__(other)

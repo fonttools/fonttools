@@ -304,19 +304,17 @@ class Index(object):
 	compilerClass = IndexCompiler
 	
 	def __init__(self, file=None):
+		self.items = []
 		name = self.__class__.__name__
 		if file is None:
-			self.items = []
 			return
 		if DEBUG:
 			print("loading %s at %s" % (name, file.tell()))
 		self.file = file
 		count = readCard16(file)
-		self.count = count
-		self.items = [None] * count
 		if count == 0:
-			self.items = []
 			return
+		self.items = [None] * count
 		offSize = readCard8(file)
 		if DEBUG:
 			print("    index count: %s offSize: %s" % (count, offSize))
@@ -524,6 +522,8 @@ class CharStrings(object):
 	
 	def has_key(self, name):
 		return name in self.charStrings
+
+	__contains__ = has_key
 	
 	def __len__(self):
 		return len(self.charStrings)
@@ -884,10 +884,11 @@ def packCharset(charset, isCID, strings):
 			ranges.append((first, nLeft))
 			first = SID
 		end = SID
-	nLeft = end - first
-	if nLeft > 255:
-		fmt = 2
-	ranges.append((first, nLeft))
+	if end:
+		nLeft = end - first
+		if nLeft > 255:
+			fmt = 2
+		ranges.append((first, nLeft))
 	
 	data = [packCard8(fmt)]
 	if fmt == 1:

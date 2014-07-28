@@ -1065,7 +1065,7 @@ class cmap_format_14(CmapSubtable):
 		self.language = 0xFF # has no language.
 
 	def decompile(self, data, ttFont):
-		if data is not None and ttFont is not None and ttFont.lazy:
+		if data is not None and ttFont is not None:
 			self.decompileHeader(data, ttFont)
 		else:
 			assert (data is None and ttFont is None), "Need both data and ttFont arguments"
