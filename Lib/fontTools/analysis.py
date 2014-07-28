@@ -1,8 +1,8 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.ttLib import TTFont
-from fontTools.ttLib.instructions import statements, instructionConstructor
+from fontTools.ttLib.instructions import statements, instructionConstructor, stackValues
 import sys
-
+import math
 class Body(object):
     """ 
     Encapsulates a set of statements.
@@ -21,13 +21,13 @@ class Body(object):
         #TODO
         pass
     def constructSuccessorAndPredecessor(self,input_statements):
-        def is_not_divid_branch(instruction):
+        def is_branch(instruction):
             if isinstance(instruction,statements.all.EIF_Statement):
-                return False
-            elif isinstance(instruction,statements.all.ELSE_Statement):
-                return False
-            else:
                 return True
+            elif isinstance(instruction,statements.all.ELSE_Statement):
+                return True
+            else:
+                return False
         if_waited = []
         for index in range(len(input_statements)): 
             this_instruction = input_statements[index]
@@ -40,7 +40,7 @@ class Body(object):
                 raise NotImplementedError
             #other statements should have at least 
             #the next instruction in stream as a successor
-            elif index < len(input_statements)-1 and is_not_divid_branch(input_statements[index+1]):
+            elif index < len(input_statements)-1 and not is_branch(input_statements[index+1]):
                 this_instruction.add_successor(input_statements[index+1])
                 input_statements[index+1].set_predecessor(this_instruction)
             # An IF statement should have two successors:
@@ -133,7 +133,7 @@ class BytecodeFont(object):
     
     def setup_global_programs(self):
         self.extractFunctions()
-        self.pre_compute()
+
     def setup_local_programs(self, programs):
         for key, instr in programs.items():
             if key is not 'fpgm' and key is not 'prep':
@@ -171,7 +171,7 @@ class BytecodeFont(object):
             value.constructBody()
             value.printBody()
         
-class Environment(object):
+class ExecutionContext(object):
     """Abstractly represents the global environment at a single point in time. 
 
     The global environment consists of a Control Variable Table (CVT) and
@@ -196,9 +196,138 @@ class Environment(object):
         self.cvt_table = {}
         # storage_area: location -> Value
         self.storage_area = {}
-        self.graphics_state = {}
+        self.set_graphics_state_to_default()
+        self.program_stack = []
+    def set_graphics_state_to_default(self):
+        self.graphics_state = {
+            'pv':                [0x4000, 0], # Unit vector along the X axis.
+            'fv':                [0x4000, 0],
+            'dv':                [0x4000, 0],
+            'zp':                [1,1,1],
+            'controlValueCutIn': (17 << 6) / 16, # 17/16 as an f26dot6.
+            'deltaBase':         9,
+            'deltaShift':        3,
+            'minDist':           1 << 6, # 1 as an f26dot6.
+            'loop':              1,
+            'roundPeriod':       1 << 6, # 1 as an f26dot6.
+            'roundThreshold':    1 << 5, # 1/2 as an f26dot6.
+            'roundSuper45':      False,
+            'autoFlip':          True
+            }
+
+    def set_storage_area(self, index, value):
+        self.storage_area[index] = value
+
+    def read_storage_area(self,index):
+        return self.storage_area[index]
+    def program_stack_pop(num=1):
+        for i in range(num):
+            self.program_stack.pop()
+    def exec_AdjustAngle(self):
+        pass
+    def exec_Absolute(self):
+        top = self.program_stack[-1]
+        if  top< 0:
+            top = -top
+            self.program_stack[-1] = top
+    def exec_Add(self):
+        add1 = self.program_stack[-1]
+        add2 = self.program_stack[-2]
+        self.program_stack.pop()
+        self.program_stack[-1] = add1 + add2
+    def exec_AlignPts(self):
+        '''
+        move to points, has no further effect on the stack
+        '''
+        program_stack_pop(2)
+
+    def exec_AlignRelativePt(self):
+        loopValue = self.graphics_state['loop']
+        if len(self.program_stack)<loopValue:
+            raise Exception("truetype: hinting: stack underflow")
+        program_stack_pop(loopValue)
+    
+    def exec_Ceiling(self):
+        self.program_stack[-1] = math.ceil(self.program_stack[-1])
+
+    def exec_CopyXToTopStack(self):
+        index = self.program_stack[-1]
+        #the index start from 1
+        top = self.program_stack[index-1]
+        self.program_stack.push(top)
+
+    def exec_ClearStack(self):
         self.program_stack = []
 
+    def exec_DebugCall(self):
+        program_stack_pop()
+
+    def exec_DeltaExceptionC1(self):
+
+    def exec_GetDepthStack(self):
+        self.program_stack.push(len(self.program_stack))
+    
+    def exec_Divide(self):
+        divisor = self.program_stack[-1]
+        dividend = self.program_stack[-2]
+        program_stack_pop(2)
+        #Todo:check the type of the result
+        result = dividend/divisor
+        self.program_stack.push(result)
+
+    def exec_DuplicateTopStack(self):
+        self.program_stack.push(self.program_stack[-1])
+
+    def exec_Equal(self):
+        op1 = self.program_stack[-1]
+        op2 = self.program_stack[-2]
+        result = False 
+        if op1 == op2:
+            result = True
+        self.program_stack.push(result)
+    def round(self,value):
+        if self.graphics_state['roundPeriod'] == 0:
+            # Rounding is off.
+            return value
+        
+        if value >= 0:
+            result = value - self.graphics_state['roundPhase'] + self.graphics_state['roundThreshold']
+            if self.graphics_state['roundSuper45']:
+                result = result / self.graphics_state['roundPeriod']
+                result = result * self.graphics_state['roundPeriod']
+            else:
+                result = result & (-self.graphics_state['roundPeriod'])
+            if result < 0:
+                result = 0
+            return ret + self.graphics_state['roundPhase']
+        
+        ret := -x - h.gs.roundPhase + h.gs.roundThreshold
+        if h.gs.roundSuper45 {
+        ret /= h.gs.roundPeriod
+        ret *= h.gs.roundPeriod
+        } else {
+        ret &= -h.gs.roundPeriod
+        }
+        if ret < 0 {
+        ret = 0
+        }
+        return -ret - h.gs.roundPhase
+    def exec_Even(self):
+
+    def exec_SuperRound45Degrees(self):
+
+    def exec_SetAngleWeight(self):
+
+    def exec_ScanConversionControl(self):
+
+    def exec_ScanType(self):
+
+    def exec_SetCoordFromStackFP(self):
+
+    def exec_SetCVTCutIn(self):
+
+    def exec_SetDeltaBaseInGState(self):
+        
 class Value(object):
     """Represents either a concrete or abstract TrueType value."""
     pass
@@ -218,29 +347,16 @@ class AbstractExecutor(object):
 
     """
     def __init__(self,font):
-        self.function_table = font.function_table
-        
+        #maps instruction to Environment
+        self.instruction_state = {}
+        self.environment = Environment()
+        self.program_ptr = 
+        self.body =
     def execute(self,instruction,incoming_state):
-        self.data = []
-        #get data from incoming, feed it to instructions
-        self.program_stack = incoming_state.program_stack
-         
-        if isinstance(instruction,instructions.all.FDEF):
-            self.function_table[self.program_stack[-1]] = Function(instruction.data)
 
-        if instruction.get_pop_num()>0: 
-            for i in range(instruction.get_pop_num()):
-                self.data.append(self.program_stack[-1])
-                self.program_stack.pop()
-        
-        if instruction.get_push_num()>0:
-            if len(self.data)>0:
-                instruction.set_input(self.data)
-            instruction.action()
-            self.result = instruction.get_result()
-            for data in self.result:
-                incoming_state.program_stack.append(data)
-                
+
+    def exec_CallFunction(self):
+
 #one ttFont object for one ttx file       
 ttFont = BytecodeFont()
 
