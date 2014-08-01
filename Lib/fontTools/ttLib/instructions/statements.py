@@ -33,1292 +33,1053 @@ class all():
             self.pop_num = 0
         def get_push_num(self):
             return len(self.data)
-        def action(self):
-            pass 
-
     class AA_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 127
+            self.mnemonic = 'AA'
+            self.name = 'AdjustAngle'
             self.push_num =  0 
             self.pop_num =  1 
             self.total_num = -1
-        def action(self, input):
-            pass 
-
     class ABS_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack' 
-            self.out_source = 'program_stack'
+            self.opcode = 100
+            self.mnemonic = 'ABS'
+            self.name = 'Absolute'
             self.push_num =  1 
             self.pop_num =  1 
             self.total_num = 0
-        def action(self, input):
-            pass 
-
     class ADD_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack' 
-            self.out_source = 'program_stack'
+            self.opcode = 96
+            self.mnemonic = 'ADD'
+            self.name = 'Add'
             self.push_num =  1 
             self.pop_num =  2 
             self.total_num = -1
-        def action(self, input):
-            pass 
-
     class ALIGNPTS_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 39
+            self.mnemonic = 'ALIGNPTS'
+            self.name = 'AlignPts'
             self.push_num =  0 
             self.pop_num =  2 
             self.total_num = -2
-        def action(self, input):
-            pass 
-
     class ALIGNRP_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 60
+            self.mnemonic = 'ALIGNRP'
+            self.name = 'AlignRelativePt'
             self.push_num =  0 
             self.pop_num =   'ALL' 
-        def action(self, input):
-            pass 
-
     class AND_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack' 
-            self.out_source = 'program_stack'
+            self.opcode = 90
+            self.mnemonic = 'AND'
+            self.name = 'LogicalAnd'
             self.push_num =  1 
             self.pop_num =  2 
             self.total_num = -1
-        def action(self, input):
-            pass 
-
     class CALL_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 43
+            self.mnemonic = 'CALL'
+            self.name = 'CallFunction'
             self.push_num =  0 
             self.pop_num =  1 
             self.total_num = -1
-        def action(self, input):
-            pass 
-
     class CEILING_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack' 
-            self.out_source = 'program_stack'
+            self.opcode = 103
+            self.mnemonic = 'CEILING'
+            self.name = 'Ceiling'
             self.push_num =  1 
             self.pop_num =  1 
             self.total_num = 0
-        def action(self, input):
-            pass 
-
     class CINDEX_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack' 
-            self.out_source = 'program_stack'
+            self.opcode = 37
+            self.mnemonic = 'CINDEX'
+            self.name = 'CopyXToTopStack'
             self.push_num =  1 
             self.pop_num =  1 
             self.total_num = 0
-        def action(self, input):
-            pass 
-
     class CLEAR_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 34
+            self.mnemonic = 'CLEAR'
+            self.name = 'ClearStack'
             self.push_num =  0 
             self.pop_num =   'ALL' 
-        def action(self, input):
-            pass 
-
     class DEBUG_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 79
+            self.mnemonic = 'DEBUG'
+            self.name = 'DebugCall'
             self.push_num =  0 
             self.pop_num =  1 
             self.total_num = -1
-        def action(self, input):
-            pass 
-
     class DELTAC1_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 115
+            self.mnemonic = 'DELTAC1'
+            self.name = 'DeltaExceptionC1'
             self.push_num =  0 
             self.pop_num =   'ALL' 
-        def action(self, input):
-            pass 
-
     class DELTAC2_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 116
+            self.mnemonic = 'DELTAC2'
+            self.name = 'DeltaExceptionC2'
             self.push_num =  0 
             self.pop_num =   'ALL' 
-        def action(self, input):
-            pass 
-
     class DELTAC3_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 117
+            self.mnemonic = 'DELTAC3'
+            self.name = 'DeltaExceptionC3'
             self.push_num =  0 
             self.pop_num =   'ALL' 
-        def action(self, input):
-            pass 
-
     class DELTAP1_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 93
+            self.mnemonic = 'DELTAP1'
+            self.name = 'DeltaExceptionP1'
             self.push_num =  0 
             self.pop_num =   'ALL' 
-        def action(self, input):
-            pass 
-
     class DELTAP2_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 113
+            self.mnemonic = 'DELTAP2'
+            self.name = 'DeltaExceptionP2'
             self.push_num =  0 
             self.pop_num =   'ALL' 
-        def action(self, input):
-            pass 
-
     class DELTAP3_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 114
+            self.mnemonic = 'DELTAP3'
+            self.name = 'DeltaExceptionP3'
             self.push_num =  0 
             self.pop_num =   'ALL' 
-        def action(self, input):
-            pass 
-
     class DEPTH_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'None'
-            self.out_source = 'program_stack'
+            self.opcode = 36
+            self.mnemonic = 'DEPTH'
+            self.name = 'GetDepthStack'
             self.push_num =  1 
             self.pop_num =  0 
             self.total_num = 1
-        def action(self, input):
-            pass 
-
     class DIV_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack' 
-            self.out_source = 'program_stack'
+            self.opcode = 98
+            self.mnemonic = 'DIV'
+            self.name = 'Divide'
             self.push_num =  1 
             self.pop_num =  2 
             self.total_num = -1
-        def action(self, input):
-            pass 
-
     class DUP_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack' 
-            self.out_source = 'program_stack'
+            self.opcode = 32
+            self.mnemonic = 'DUP'
+            self.name = 'DuplicateTopStack'
             self.push_num =  2 
             self.pop_num =  1 
             self.total_num = 1
-        def action(self, input):
-            pass 
-
     class EIF_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'self'
-            self.out_source = 'graphic_state'
+            self.opcode = 89
+            self.mnemonic = 'EIF'
+            self.name = 'EndIf'
             self.push_num =  0 
             self.pop_num =  0 
             self.total_num = 0
-        def action(self, input):
-            pass 
-
     class ELSE_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'self'
-            self.out_source = 'graphic_state'
+            self.opcode = 27
+            self.mnemonic = 'ELSE'
+            self.name = 'Else'
             self.push_num =  0 
             self.pop_num =  0 
             self.total_num = 0
-        def action(self, input):
-            pass 
-
     class ENDF_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'self'
-            self.out_source = 'graphic_state'
+            self.opcode = 45
+            self.mnemonic = 'ENDF'
+            self.name = 'EndFunctionDefinition'
             self.push_num =  0 
             self.pop_num =  0 
             self.total_num = 0
-        def action(self, input):
-            pass 
-
     class EQ_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack' 
-            self.out_source = 'program_stack'
+            self.opcode = 84
+            self.mnemonic = 'EQ'
+            self.name = 'Equal'
             self.push_num =  1 
             self.pop_num =  2 
             self.total_num = -1
-        def action(self, input):
-            pass 
-
     class EVEN_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack' 
-            self.out_source = 'program_stack'
+            self.opcode = 87
+            self.mnemonic = 'EVEN'
+            self.name = 'Even'
             self.push_num =  1 
             self.pop_num =  1 
             self.total_num = 0
-        def action(self, input):
-            pass 
-
     class FDEF_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 44
+            self.mnemonic = 'FDEF'
+            self.name = 'FunctionDefinition'
             self.push_num =  0 
             self.pop_num =  1 
             self.total_num = -1
-        def action(self, input):
-            pass 
-
     class FLIPOFF_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'self'
-            self.out_source = 'graphic_state'
+            self.opcode = 78
+            self.mnemonic = 'FLIPOFF'
+            self.name = 'SetAutoFlipOff'
             self.push_num =  0 
             self.pop_num =  0 
             self.total_num = 0
-        def action(self, input):
-            pass 
-
     class FLIPON_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'self'
-            self.out_source = 'graphic_state'
+            self.opcode = 77
+            self.mnemonic = 'FLIPON'
+            self.name = 'SetAutoFlipOn'
             self.push_num =  0 
             self.pop_num =  0 
             self.total_num = 0
-        def action(self, input):
-            pass 
-
     class FLIPPT_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 128
+            self.mnemonic = 'FLIPPT'
+            self.name = 'FlipPoint'
             self.push_num =  0 
             self.pop_num =   'ALL' 
-        def action(self, input):
-            pass 
-
     class FLIPRGOFF_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 130
+            self.mnemonic = 'FLIPRGOFF'
+            self.name = 'FlipRangeOff'
             self.push_num =  0 
             self.pop_num =  2 
             self.total_num = -2
-        def action(self, input):
-            pass 
-
     class FLIPRGON_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 129
+            self.mnemonic = 'FLIPRGON'
+            self.name = 'FlipRangeOn'
             self.push_num =  0 
             self.pop_num =  2 
             self.total_num = -2
-        def action(self, input):
-            pass 
-
     class FLOOR_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack' 
-            self.out_source = 'program_stack'
+            self.opcode = 102
+            self.mnemonic = 'FLOOR'
+            self.name = 'Floor'
             self.push_num =  1 
             self.pop_num =  1 
             self.total_num = 0
-        def action(self, input):
-            pass 
-
     class GC_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack' 
-            self.out_source = 'program_stack'
+            self.opcode = 70
+            self.mnemonic = 'GC'
+            self.name = 'GetCoordOnPVector'
             self.push_num =  1 
             self.pop_num =  1 
             self.total_num = 0
-        def action(self, input):
-            pass 
-
     class GETINFO_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack' 
-            self.out_source = 'program_stack'
+            self.opcode = 136
+            self.mnemonic = 'GETINFO'
+            self.name = 'GetInfo'
             self.push_num =  1 
             self.pop_num =  1 
             self.total_num = 0
-        def action(self, input):
-            pass 
-
     class GFV_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'None'
-            self.out_source = 'program_stack'
+            self.opcode = 13
+            self.mnemonic = 'GFV'
+            self.name = 'GetFVector'
             self.push_num =  2 
             self.pop_num =  0 
             self.total_num = 2
-        def action(self, input):
-            pass 
-
     class GPV_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'None'
-            self.out_source = 'program_stack'
+            self.opcode = 12
+            self.mnemonic = 'GPV'
+            self.name = 'GetPVector'
             self.push_num =  2 
             self.pop_num =  0 
             self.total_num = 2
-        def action(self, input):
-            pass 
-
     class GT_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack' 
-            self.out_source = 'program_stack'
+            self.opcode = 82
+            self.mnemonic = 'GT'
+            self.name = 'GreaterThan'
             self.push_num =  1 
             self.pop_num =  2 
             self.total_num = -1
-        def action(self, input):
-            pass 
-
     class GTEQ_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack' 
-            self.out_source = 'program_stack'
+            self.opcode = 83
+            self.mnemonic = 'GTEQ'
+            self.name = 'GreaterThanOrEqual'
             self.push_num =  1 
             self.pop_num =  2 
             self.total_num = -1
-        def action(self, input):
-            pass 
-
     class IDEF_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 137
+            self.mnemonic = 'IDEF'
+            self.name = 'InstructionDefinition'
             self.push_num =  0 
             self.pop_num =  1 
             self.total_num = -1
-        def action(self, input):
-            pass 
-
     class IF_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 88
+            self.mnemonic = 'IF'
+            self.name = 'If'
             self.push_num =  0 
             self.pop_num =  1 
             self.total_num = -1
-        def action(self, input):
-            pass 
-
     class INSTCTRL_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 142
+            self.mnemonic = 'INSTCTRL'
+            self.name = 'SetInstrExecControl'
             self.push_num =  0 
             self.pop_num =  2 
             self.total_num = -2
-        def action(self, input):
-            pass 
-
     class IP_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 57
+            self.mnemonic = 'IP'
+            self.name = 'InterpolatePts'
             self.push_num =  0 
             self.pop_num =   'ALL' 
-        def action(self, input):
-            pass 
-
     class ISECT_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 15
+            self.mnemonic = 'ISECT'
+            self.name = 'MovePtToIntersect'
             self.push_num =  0 
             self.pop_num =  5 
             self.total_num = -5
-        def action(self, input):
-            pass 
-
     class IUP_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'self'
-            self.out_source = 'graphic_state'
+            self.opcode = 48
+            self.mnemonic = 'IUP'
+            self.name = 'InterpolateUntPts'
             self.push_num =  0 
             self.pop_num =  0 
             self.total_num = 0
-        def action(self, input):
-            pass 
-
     class JMPR_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 28
+            self.mnemonic = 'JMPR'
+            self.name = 'Jump'
             self.push_num =  0 
             self.pop_num =  1 
             self.total_num = -1
-        def action(self, input):
-            pass 
-
     class JROF_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 121
+            self.mnemonic = 'JROF'
+            self.name = 'JumpRelativeOnFalse'
             self.push_num =  0 
             self.pop_num =  2 
             self.total_num = -2
-        def action(self, input):
-            pass 
-
     class JROT_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 120
+            self.mnemonic = 'JROT'
+            self.name = 'JumpRelativeOnTrue'
             self.push_num =  0 
             self.pop_num =  2 
             self.total_num = -2
-        def action(self, input):
-            pass 
-
     class LOOPCALL_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 42
+            self.mnemonic = 'LOOPCALL'
+            self.name = 'LoopAndCallFunction'
             self.push_num =  0 
             self.pop_num =  2 
             self.total_num = -2
-        def action(self, input):
-            pass 
-
     class LT_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack' 
-            self.out_source = 'program_stack'
+            self.opcode = 80
+            self.mnemonic = 'LT'
+            self.name = 'LessThan'
             self.push_num =  1 
             self.pop_num =  2 
             self.total_num = -1
-        def action(self, input):
-            pass 
-
     class LTEQ_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack' 
-            self.out_source = 'program_stack'
+            self.opcode = 81
+            self.mnemonic = 'LTEQ'
+            self.name = 'LessThenOrEqual'
             self.push_num =  1 
             self.pop_num =  2 
             self.total_num = -1
-        def action(self, input):
-            pass 
-
     class MAX_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack' 
-            self.out_source = 'program_stack'
+            self.opcode = 139
+            self.mnemonic = 'MAX'
+            self.name = 'Maximum'
             self.push_num =  1 
             self.pop_num =  2 
             self.total_num = -1
-        def action(self, input):
-            pass 
-
     class MD_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack' 
-            self.out_source = 'program_stack'
+            self.opcode = 73
+            self.mnemonic = 'MD'
+            self.name = 'MeasureDistance'
             self.push_num =  1 
             self.pop_num =  2 
             self.total_num = -1
-        def action(self, input):
-            pass 
-
     class MDAP_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 46
+            self.mnemonic = 'MDAP'
+            self.name = 'MoveDirectAbsPt'
             self.push_num =  0 
             self.pop_num =  1 
             self.total_num = -1
-        def action(self, input):
-            pass 
-
     class MDRP_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 192
+            self.mnemonic = 'MDRP'
+            self.name = 'MoveDirectRelPt'
             self.push_num =  0 
             self.pop_num =  1 
             self.total_num = -1
-        def action(self, input):
-            pass 
-
     class MIAP_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 62
+            self.mnemonic = 'MIAP'
+            self.name = 'MoveIndirectAbsPt'
             self.push_num =  0 
             self.pop_num =  2 
             self.total_num = -2
-        def action(self, input):
-            pass 
-
     class MIN_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack' 
-            self.out_source = 'program_stack'
+            self.opcode = 140
+            self.mnemonic = 'MIN'
+            self.name = 'Minimum'
             self.push_num =  1 
             self.pop_num =  2 
             self.total_num = -1
-        def action(self, input):
-            pass 
-
     class MINDEX_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack' 
-            self.out_source = 'program_stack'
+            self.opcode = 38
+            self.mnemonic = 'MINDEX'
+            self.name = 'MoveXToTopStack'
             self.push_num =  1 
             self.pop_num =  1 
             self.total_num = 0
-        def action(self, input):
-            pass 
-
     class MIRP_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 224
+            self.mnemonic = 'MIRP'
+            self.name = 'MoveIndirectRelPt'
             self.push_num =  0 
             self.pop_num =  2 
             self.total_num = -2
-        def action(self, input):
-            pass 
-
     class MPPEM_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'None'
-            self.out_source = 'program_stack'
+            self.opcode = 75
+            self.mnemonic = 'MPPEM'
+            self.name = 'MeasurePixelPerEm'
             self.push_num =  1 
             self.pop_num =  0 
             self.total_num = 1
-        def action(self, input):
-            pass 
-
     class MPS_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'None'
-            self.out_source = 'program_stack'
+            self.opcode = 76
+            self.mnemonic = 'MPS'
+            self.name = 'MeasurePointSize'
             self.push_num =  1 
             self.pop_num =  0 
             self.total_num = 1
-        def action(self, input):
-            pass 
-
     class MSIRP_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 58
+            self.mnemonic = 'MSIRP'
+            self.name = 'MoveStackIndirRelPt'
             self.push_num =  0 
             self.pop_num =  2 
             self.total_num = -2
-        def action(self, input):
-            pass 
-
     class MUL_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack' 
-            self.out_source = 'program_stack'
+            self.opcode = 99
+            self.mnemonic = 'MUL'
+            self.name = 'Multiply'
             self.push_num =  1 
             self.pop_num =  2 
             self.total_num = -1
-        def action(self, input):
-            pass 
-
     class NEG_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack' 
-            self.out_source = 'program_stack'
+            self.opcode = 101
+            self.mnemonic = 'NEG'
+            self.name = 'Negate'
             self.push_num =  1 
             self.pop_num =  1 
             self.total_num = 0
-        def action(self, input):
-            pass 
-
     class NEQ_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack' 
-            self.out_source = 'program_stack'
+            self.opcode = 85
+            self.mnemonic = 'NEQ'
+            self.name = 'NotEqual'
             self.push_num =  1 
             self.pop_num =  2 
             self.total_num = -1
-        def action(self, input):
-            pass 
-
     class NOT_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack' 
-            self.out_source = 'program_stack'
+            self.opcode = 92
+            self.mnemonic = 'NOT'
+            self.name = 'LogicalNot'
             self.push_num =  1 
             self.pop_num =  1 
             self.total_num = 0
-        def action(self, input):
-            pass 
-
     class NROUND_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack' 
-            self.out_source = 'program_stack'
+            self.opcode = 108
+            self.mnemonic = 'NROUND'
+            self.name = 'NoRound'
             self.push_num =  1 
             self.pop_num =  1 
             self.total_num = 0
-        def action(self, input):
-            pass 
-
     class ODD_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack' 
-            self.out_source = 'program_stack'
+            self.opcode = 86
+            self.mnemonic = 'ODD'
+            self.name = 'Odd'
             self.push_num =  1 
             self.pop_num =  1 
             self.total_num = 0
-        def action(self, input):
-            pass 
-
     class OR_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack' 
-            self.out_source = 'program_stack'
+            self.opcode = 91
+            self.mnemonic = 'OR'
+            self.name = 'LogicalOr'
             self.push_num =  1 
             self.pop_num =  2 
             self.total_num = -1
-        def action(self, input):
-            pass 
-
     class POP_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 33
+            self.mnemonic = 'POP'
+            self.name = 'PopTopStack'
             self.push_num =  0 
             self.pop_num =  1 
             self.total_num = -1
-        def action(self, input):
-            pass 
-
     class RCVT_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack' 
-            self.out_source = 'program_stack'
+            self.opcode = 69
+            self.mnemonic = 'RCVT'
+            self.name = 'ReadCVT'
             self.push_num =  1 
             self.pop_num =  1 
             self.total_num = 0
-        def action(self, input):
-            pass 
-
     class RDTG_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'self'
-            self.out_source = 'graphic_state'
+            self.opcode = 125
+            self.mnemonic = 'RDTG'
+            self.name = 'RoundDownToGrid'
             self.push_num =  0 
             self.pop_num =  0 
             self.total_num = 0
-        def action(self, input):
-            pass 
-
     class ROFF_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'self'
-            self.out_source = 'graphic_state'
+            self.opcode = 122
+            self.mnemonic = 'ROFF'
+            self.name = 'RoundOff'
             self.push_num =  0 
             self.pop_num =  0 
             self.total_num = 0
-        def action(self, input):
-            pass 
-
     class ROLL_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack' 
-            self.out_source = 'program_stack'
+            self.opcode = 138
+            self.mnemonic = 'ROLL'
+            self.name = 'RollTopThreeStack'
             self.push_num =  3 
             self.pop_num =  3 
             self.total_num = 0
-        def action(self, input):
-            pass 
-
     class ROUND_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack' 
-            self.out_source = 'program_stack'
+            self.opcode = 104
+            self.mnemonic = 'ROUND'
+            self.name = 'Round'
             self.push_num =  1 
             self.pop_num =  1 
             self.total_num = 0
-        def action(self, input):
-            pass 
-
     class RS_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack' 
-            self.out_source = 'program_stack'
+            self.opcode = 67
+            self.mnemonic = 'RS'
+            self.name = 'ReadStore'
             self.push_num =  1 
             self.pop_num =  1 
             self.total_num = 0
-        def action(self, input):
-            pass 
-
     class RTDG_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'self'
-            self.out_source = 'graphic_state'
+            self.opcode = 61
+            self.mnemonic = 'RTDG'
+            self.name = 'RoundToDoubleGrid'
             self.push_num =  0 
             self.pop_num =  0 
             self.total_num = 0
-        def action(self, input):
-            pass 
-
     class RTG_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'self'
-            self.out_source = 'graphic_state'
+            self.opcode = 24
+            self.mnemonic = 'RTG'
+            self.name = 'RoundToGrid'
             self.push_num =  0 
             self.pop_num =  0 
             self.total_num = 0
-        def action(self, input):
-            pass 
-
     class RTHG_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'self'
-            self.out_source = 'graphic_state'
+            self.opcode = 25
+            self.mnemonic = 'RTHG'
+            self.name = 'RoundToHalfGrid'
             self.push_num =  0 
             self.pop_num =  0 
             self.total_num = 0
-        def action(self, input):
-            pass 
-
     class RUTG_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'self'
-            self.out_source = 'graphic_state'
+            self.opcode = 124
+            self.mnemonic = 'RUTG'
+            self.name = 'RoundUpToGrid'
             self.push_num =  0 
             self.pop_num =  0 
             self.total_num = 0
-        def action(self, input):
-            pass 
-
     class S45ROUND_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 119
+            self.mnemonic = 'S45ROUND'
+            self.name = 'SuperRound45Degrees'
             self.push_num =  0 
             self.pop_num =  1 
             self.total_num = -1
-        def action(self, input):
-            pass 
-
     class SANGW_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 126
+            self.mnemonic = 'SANGW'
+            self.name = 'SetAngleWeight'
             self.push_num =  0 
             self.pop_num =  1 
             self.total_num = -1
-        def action(self, input):
-            pass 
-
     class SCANCTRL_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 133
+            self.mnemonic = 'SCANCTRL'
+            self.name = 'ScanConversionControl'
             self.push_num =  0 
             self.pop_num =  1 
             self.total_num = -1
-        def action(self, input):
-            pass 
-
     class SCANTYPE_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 141
+            self.mnemonic = 'SCANTYPE'
+            self.name = 'ScanType'
             self.push_num =  0 
             self.pop_num =  1 
             self.total_num = -1
-        def action(self, input):
-            pass 
-
     class SCFS_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 72
+            self.mnemonic = 'SCFS'
+            self.name = 'SetCoordFromStackFP'
             self.push_num =  0 
             self.pop_num =  2 
             self.total_num = -2
-        def action(self, input):
-            pass 
-
     class SCVTCI_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 29
+            self.mnemonic = 'SCVTCI'
+            self.name = 'SetCVTCutIn'
             self.push_num =  0 
             self.pop_num =  1 
             self.total_num = -1
-        def action(self, input):
-            pass 
-
     class SDB_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 94
+            self.mnemonic = 'SDB'
+            self.name = 'SetDeltaBaseInGState'
             self.push_num =  0 
             self.pop_num =  1 
             self.total_num = -1
-        def action(self, input):
-            pass 
-
     class SDPVTL_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 134
+            self.mnemonic = 'SDPVTL'
+            self.name = 'SetDualPVectorToLine'
             self.push_num =  0 
             self.pop_num =  2 
             self.total_num = -2
-        def action(self, input):
-            pass 
-
     class SDS_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 95
+            self.mnemonic = 'SDS'
+            self.name = 'SetDeltaShiftInGState'
             self.push_num =  0 
             self.pop_num =  1 
             self.total_num = -1
-        def action(self, input):
-            pass 
-
     class SFVFS_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 11
+            self.mnemonic = 'SFVFS'
+            self.name = 'SetFVectorFromStack'
             self.push_num =  0 
             self.pop_num =  2 
             self.total_num = -2
-        def action(self, input):
-            pass 
-
     class SFVTCA_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'self'
-            self.out_source = 'graphic_state'
+            self.opcode = 4
+            self.mnemonic = 'SFVTCA'
+            self.name = 'SetFVectorToAxis'
             self.push_num =  0 
             self.pop_num =  0 
             self.total_num = 0
-        def action(self, input):
-            pass 
-
     class SFVTL_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 8
+            self.mnemonic = 'SFVTL'
+            self.name = 'SetFVectorToLine'
             self.push_num =  0 
             self.pop_num =  2 
             self.total_num = -2
-        def action(self, input):
-            pass 
-
     class SFVTPV_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'self'
-            self.out_source = 'graphic_state'
+            self.opcode = 14
+            self.mnemonic = 'SFVTPV'
+            self.name = 'SetFVectorToPVector'
             self.push_num =  0 
             self.pop_num =  0 
             self.total_num = 0
-        def action(self, input):
-            pass 
-
     class SHC_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 52
+            self.mnemonic = 'SHC'
+            self.name = 'ShiftContourByLastPt'
             self.push_num =  0 
             self.pop_num =  1 
             self.total_num = -1
-        def action(self, input):
-            pass 
-
     class SHP_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 50
+            self.mnemonic = 'SHP'
+            self.name = 'ShiftPointByLastPoint'
             self.push_num =  0 
             self.pop_num =   'ALL' 
-        def action(self, input):
-            pass 
-
     class SHPIX_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 56
+            self.mnemonic = 'SHPIX'
+            self.name = 'ShiftZoneByPixel'
             self.push_num =  0 
             self.pop_num =   'ALL' 
-        def action(self, input):
-            pass 
-
     class SHZ_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 54
+            self.mnemonic = 'SHZ'
+            self.name = 'ShiftZoneByLastPoint'
             self.push_num =  0 
             self.pop_num =  1 
             self.total_num = -1
-        def action(self, input):
-            pass 
-
     class SLOOP_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 23
+            self.mnemonic = 'SLOOP'
+            self.name = 'SetLoopVariable'
             self.push_num =  0 
             self.pop_num =  1 
             self.total_num = -1
-        def action(self, input):
-            pass 
-
     class SMD_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 26
+            self.mnemonic = 'SMD'
+            self.name = 'SetMinimumDistance'
             self.push_num =  0 
             self.pop_num =  1 
             self.total_num = -1
-        def action(self, input):
-            pass 
-
     class SPVFS_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 10
+            self.mnemonic = 'SPVFS'
+            self.name = 'SetPVectorFromStack'
             self.push_num =  0 
             self.pop_num =  2 
             self.total_num = -2
-        def action(self, input):
-            pass 
-
     class SPVTCA_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'self'
-            self.out_source = 'graphic_state'
+            self.opcode = 2
+            self.mnemonic = 'SPVTCA'
+            self.name = 'SetPVectorToAxis'
             self.push_num =  0 
             self.pop_num =  0 
             self.total_num = 0
-        def action(self, input):
-            pass 
-
     class SPVTL_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 6
+            self.mnemonic = 'SPVTL'
+            self.name = 'SetPVectorToLine'
             self.push_num =  0 
             self.pop_num =  2 
             self.total_num = -2
-        def action(self, input):
-            pass 
-
     class SROUND_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 118
+            self.mnemonic = 'SROUND'
+            self.name = 'SuperRound'
             self.push_num =  0 
             self.pop_num =  1 
             self.total_num = -1
-        def action(self, input):
-            pass 
-
     class SRP0_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 16
+            self.mnemonic = 'SRP0'
+            self.name = 'SetRefPoint0'
             self.push_num =  0 
             self.pop_num =  1 
             self.total_num = -1
-        def action(self, input):
-            pass 
-
     class SRP1_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 17
+            self.mnemonic = 'SRP1'
+            self.name = 'SetRefPoint1'
             self.push_num =  0 
             self.pop_num =  1 
             self.total_num = -1
-        def action(self, input):
-            pass 
-
     class SRP2_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 18
+            self.mnemonic = 'SRP2'
+            self.name = 'SetRefPoint2'
             self.push_num =  0 
             self.pop_num =  1 
             self.total_num = -1
-        def action(self, input):
-            pass 
-
     class SSW_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 31
+            self.mnemonic = 'SSW'
+            self.name = 'SetSingleWidth'
             self.push_num =  0 
             self.pop_num =  1 
             self.total_num = -1
-        def action(self, input):
-            pass 
-
     class SSWCI_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 30
+            self.mnemonic = 'SSWCI'
+            self.name = 'SetSingleWidthCutIn'
             self.push_num =  0 
             self.pop_num =  1 
             self.total_num = -1
-        def action(self, input):
-            pass 
-
     class SUB_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack' 
-            self.out_source = 'program_stack'
+            self.opcode = 97
+            self.mnemonic = 'SUB'
+            self.name = 'Subtract'
             self.push_num =  1 
             self.pop_num =  2 
             self.total_num = -1
-        def action(self, input):
-            pass 
-
     class SVTCA_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'self'
-            self.out_source = 'graphic_state'
+            self.opcode = 0
+            self.mnemonic = 'SVTCA'
+            self.name = 'SetFPVectorToAxis'
             self.push_num =  0 
             self.pop_num =  0 
             self.total_num = 0
-        def action(self, input):
-            pass 
-
     class SWAP_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack' 
-            self.out_source = 'program_stack'
+            self.opcode = 35
+            self.mnemonic = 'SWAP'
+            self.name = 'SwapTopStack'
             self.push_num =  2 
             self.pop_num =  2 
             self.total_num = 0
-        def action(self, input):
-            pass 
-
     class SZP0_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 19
+            self.mnemonic = 'SZP0'
+            self.name = 'SetZonePointer0'
             self.push_num =  0 
             self.pop_num =  1 
             self.total_num = -1
-        def action(self, input):
-            pass 
-
     class SZP1_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 20
+            self.mnemonic = 'SZP1'
+            self.name = 'SetZonePointer1'
             self.push_num =  0 
             self.pop_num =  1 
             self.total_num = -1
-        def action(self, input):
-            pass 
-
     class SZP2_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 21
+            self.mnemonic = 'SZP2'
+            self.name = 'SetZonePointer2'
             self.push_num =  0 
             self.pop_num =  1 
             self.total_num = -1
-        def action(self, input):
-            pass 
-
     class SZPS_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 22
+            self.mnemonic = 'SZPS'
+            self.name = 'SetZonePointerS'
             self.push_num =  0 
             self.pop_num =  1 
             self.total_num = -1
-        def action(self, input):
-            pass 
-
     class UTP_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 41
+            self.mnemonic = 'UTP'
+            self.name = 'UnTouchPt'
             self.push_num =  0 
             self.pop_num =  1 
             self.total_num = -1
-        def action(self, input):
-            pass 
-
     class WCVTF_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 112
+            self.mnemonic = 'WCVTF'
+            self.name = 'WriteCVTInFUnits'
             self.push_num =  0 
             self.pop_num =  2 
             self.total_num = -2
-        def action(self, input):
-            pass 
-
     class WCVTP_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 68
+            self.mnemonic = 'WCVTP'
+            self.name = 'WriteCVTInPixels'
             self.push_num =  0 
             self.pop_num =  2 
             self.total_num = -2
-        def action(self, input):
-            pass 
-
     class WS_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 
-            self.in_source = 'program_stack'
-            self.out_source = 'None'
+            self.opcode = 66
+            self.mnemonic = 'WS'
+            self.name = 'WriteStore'
             self.push_num =  0 
             self.pop_num =  2 
             self.total_num = -2
-        def action(self, input):
-            pass 
-

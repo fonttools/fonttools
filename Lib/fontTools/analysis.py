@@ -132,6 +132,7 @@ class BytecodeFont(object):
         self.setup_local_programs(programs)
     
     def setup_global_programs(self):
+        #build the function table
         self.extractFunctions()
 
     def setup_local_programs(self, programs):
@@ -140,12 +141,8 @@ class BytecodeFont(object):
                 program = Program(instr)
                 self.local_programs[key] =  program
         
-        #for key, value in self.local_programs.items():
-            #print(key)
-            #value.print_program()
-        
     #preprocess and get the function definitions
-    def extractFunctions(self,):
+    def extractFunctions(self):
         instructions = self.global_program['fpgm']
         functionsLabels = []
         skip = False
@@ -167,9 +164,9 @@ class BytecodeFont(object):
                     function_ptr.appendInstruction(instruction)
         
         for key, value in self.function_table.items():
-            print(key)
+            #print(key)
             value.constructBody()
-            value.printBody()
+            #value.printBody()
         
 class ExecutionContext(object):
     """Abstractly represents the global environment at a single point in time. 
@@ -198,19 +195,25 @@ class ExecutionContext(object):
         self.storage_area = {}
         self.set_graphics_state_to_default()
         self.program_stack = []
+        self.current_instruction = None
+
+    def set_currentInstruction(self, instruction):
+        self.current_instruction = instruction
+
     def set_graphics_state_to_default(self):
         self.graphics_state = {
             'pv':                [0x4000, 0], # Unit vector along the X axis.
             'fv':                [0x4000, 0],
             'dv':                [0x4000, 0],
             'zp':                [1,1,1],
-            'controlValueCutIn': (17 << 6) / 16, # 17/16 as an f26dot6.
+            'controlValueCutIn': 17/16, #(17 << 6) / 16, 17/16 as an f26dot6.
             'deltaBase':         9,
             'deltaShift':        3,
-            'minDist':           1 << 6, # 1 as an f26dot6.
+            'minDist':           1, #1 << 6 1 as an f26dot6.
             'loop':              1,
-            'roundPeriod':       1 << 6, # 1 as an f26dot6.
-            'roundThreshold':    1 << 5, # 1/2 as an f26dot6.
+            'roundPhase':        1,
+            'roundPeriod':       1,#1 << 6,1 as an f26dot6.
+            'roundThreshold':    0.5,#1 << 5, 1/2 as an f26dot6.
             'roundSuper45':      False,
             'autoFlip':          True
             }
@@ -223,51 +226,55 @@ class ExecutionContext(object):
     def program_stack_pop(num=1):
         for i in range(num):
             self.program_stack.pop()
-    def exec_AdjustAngle(self):
+
+    def exec_AA(self):#AdjustAngle
         pass
-    def exec_Absolute(self):
+    def exec_ABS(self):#Absolute
         top = self.program_stack[-1]
         if  top< 0:
             top = -top
             self.program_stack[-1] = top
-    def exec_Add(self):
+
+    def exec_ADD(self):
         add1 = self.program_stack[-1]
         add2 = self.program_stack[-2]
         self.program_stack.pop()
         self.program_stack[-1] = add1 + add2
-    def exec_AlignPts(self):
+
+    def exec_ALIGNPTS(self):
         '''
         move to points, has no further effect on the stack
         '''
         program_stack_pop(2)
 
-    def exec_AlignRelativePt(self):
+    def exec_ALIGNRP(self):
         loopValue = self.graphics_state['loop']
         if len(self.program_stack)<loopValue:
             raise Exception("truetype: hinting: stack underflow")
         program_stack_pop(loopValue)
-    
-    def exec_Ceiling(self):
+    def exec_AND(self):
+
+    def exec_CEILING(self):
         self.program_stack[-1] = math.ceil(self.program_stack[-1])
 
-    def exec_CopyXToTopStack(self):
+    def exec_CINDEX(self):#CopyXToTopStack
         index = self.program_stack[-1]
         #the index start from 1
         top = self.program_stack[index-1]
         self.program_stack.push(top)
 
-    def exec_ClearStack(self):
+    def exec_CLEAR(self):#ClearStack
         self.program_stack = []
 
-    def exec_DebugCall(self):
+    def exec_DEBUG(self):#DebugCall
         program_stack_pop()
 
-    def exec_DeltaExceptionC1(self):
+    def exec_DELTAC1(self):#DeltaExceptionC1
 
-    def exec_GetDepthStack(self):
+    def exec_DEPTH(self):#GetDepthStack
         self.program_stack.push(len(self.program_stack))
     
-    def exec_Divide(self):
+    def exec_DIV(self):#Divide
         divisor = self.program_stack[-1]
         dividend = self.program_stack[-2]
         program_stack_pop(2)
@@ -275,9 +282,126 @@ class ExecutionContext(object):
         result = dividend/divisor
         self.program_stack.push(result)
 
-    def exec_DuplicateTopStack(self):
+    def exec_DUP(self):#DuplicateTopStack
         self.program_stack.push(self.program_stack[-1])
 
+    def exec_FLIPOFF(self):
+        self.graphics_state['autoFlip'] = False
+
+    def exec_FLIPON(self):
+        self.graphics_state['autoFlip'] = True
+
+    def exec_FLIPPT(self):
+        loopValue = self.graphics_state['loop']
+        if len(self.program_stack)<loopValue:
+            raise Exception("truetype: hinting: stack underflow")
+        program_stack_pop(loopValue)
+
+    def exec_FLIPRGOFF(self):
+        program_stack_pop(2)
+
+    def exec_FLIPRGON(self):
+        program_stack_pop(2)
+
+    def exec_FLOOR(self):
+        self.program_stack[-1] = math.floor(self.program_stack[-1])
+
+    def exec_GC(self):
+        top = self.program_stack[-1]
+        program_stack_pop(1)
+
+    def exec_GETINFO(self):
+
+    def exec_GPV(self):
+
+    def exec_GFV(self):
+
+    def exec_GT(self):
+
+    def exec_GTEQ(self):
+
+    def exec_IDEF(self):
+
+    def exec_INSTCTRL(self):
+
+    def exec_IP(self):
+
+    def exec_ISECT(self):
+
+    def exec_IUP(self):
+
+    def exec_LOOPCALL(self):
+
+    def exec_LT(self):
+
+    def exec_LTEQ(self):
+
+    def exec_MAX(self):
+
+    def exec_MD(self):
+    def exec_MDAP(self):
+    def exec_MDRP(self):
+    def exec_MIAP(self):
+    def exec_MIN(self):
+    def exec_MINDEX(self):
+    def exec_MIRP(self):
+    def exec_MPPEM(self):
+    def exec_MPS(self):
+    def exec_MSIRP(self):
+    def exec_MUL(self):
+    def exec_NEG(self):
+    def exec_NEQ(self):
+    def exec_NOT(self):
+    def exec_NROUND(self):
+    def exec_ODD(self):
+    def exec_OR(self):
+    def exec_POP(self):
+    def exec_RCVT(self):
+    def exec_RDTG(self):
+    def exec_ROFF(self):
+    def exec_ROLL(self):
+    def exec_ROUND(self):
+    def exec_RS(self):
+    def exec_RTDG(self):
+    def exec_RTG(self):
+    def exec_RTHG(self):
+    def exec_RUTG(self):
+    def exec_S45ROUND(self):
+    def exec_SANGW(self):
+    def exec_SCANCTRL(self):
+    def exec_SCANTYPE(self):
+    def exec_SCFS(self):
+    def exec_SCVTCI(self):
+    def exec_SDBV(self):
+    def exec_SDPVTL(self):
+    def exec_SDS(self):
+    def exec_SFVFS(self):
+    def exec_SFVTCA(self):
+    def exec_SFVTL(self):
+    def exec_SFVTPV(self):
+    def exec_SHC(self):
+    def exec_SHP(self):
+    def exec_SHPIX(self):
+    def exec_SHZ(self):
+    def exec_SLOOP(self):
+    def exec_SMD(self):
+    def exec_SPVFS(self):
+    def exec_SPVTCA(self):
+    def exec_SPVTL(self):
+    def exec_SROUND(self):
+    def exec_SSW(self):
+    def exec_SSWCI(self):
+    def exec_SUB(self):
+    def exec_SVTCA(self):
+    def exec_SWAP(self):
+    def exec_SZP0(self):
+    def exec_SZP1(self):
+    def exec_SZP2(self):
+    def exec_SZPS(self):
+    def exec_UTP(self):
+    def exec_WCVTF(self):
+    def exec_WCVTP(self):
+    def exec_WS(self):
     def exec_Equal(self):
         op1 = self.program_stack[-1]
         op2 = self.program_stack[-2]
@@ -312,7 +436,27 @@ class ExecutionContext(object):
         ret = 0
         }
         return -ret - h.gs.roundPhase
-    def exec_Even(self):
+    def exec_RTDG(self):#RoundToDoubleGrid
+        self.graphics_state['roundPeriod']
+        
+    def exec_RTG(self):#RoundToGrid
+        self.graphics_state['roundPeriod']
+
+    def exec_RUTG(self):#RoundUpToGrid
+        self.graphics_state['roundPeriod']
+
+    def exec_SRP(self,index):#SetRefPoint
+        self.graphics_state['rp'][index] = self.program_stack[-1]
+        program_stack_pop(1)
+
+    def exec_SRP0(self):
+        self.exec_SetRefPoint(0)
+    
+    def exec_SRP1(self):
+        self.exec_SetRefPoint(1)
+
+    def exec_SRP2(self):
+        self.exec_SetRefPoint(2)
 
     def exec_SuperRound45Degrees(self):
 
@@ -325,6 +469,8 @@ class ExecutionContext(object):
     def exec_SetCoordFromStackFP(self):
 
     def exec_SetCVTCutIn(self):
+        self.graphics_state['controlValueCutIn'] = self.program_stack[-1]
+        program_stack_pop(1)
 
     def exec_SetDeltaBaseInGState(self):
         
@@ -345,18 +491,35 @@ class AbstractExecutor(object):
     Produces a new global state accounting for the effects of that
     instruction. Modifies the stack, CVT table, and storage area.
 
+    This class manages the program pointer like jump to function call
     """
     def __init__(self,font):
-        #maps instruction to Environment
+        self.font = font
+        #maps instruction to ExecutionContext
         self.instruction_state = {}
-        self.environment = Environment()
+        self.environment = ExecutionContext()
         self.program_ptr = 
-        self.body =
-    def execute(self,instruction,incoming_state):
+        self.body = 
+    def execute(self):
+        back_ptr = None
+        while len(program_ptr.successors)>0 or back_ptr != None:
+            self.environment.set_currentInstruction(self.program_ptr)
+            getattr(self.environment,"exec_"+self.program_ptr.mnemonic)()
+            if len(program_ptr.successors) == 1:
+                self.program_ptr = program_ptr.successors[0]
+                successors_index = 1
+                continue
+            if len(program_ptr.successors) > 1 and successors_index<len(program_ptr.successors):
+                back_ptr = program_ptr
 
+                successors_index = 1
+                continue
+            if len(program_ptr.successors)==0:
+                self.program_ptr = back_ptr
+                continue
 
-    def exec_CallFunction(self):
-
+    def exec_CALL(self):
+        pass
 #one ttFont object for one ttx file       
 ttFont = BytecodeFont()
 
@@ -421,6 +584,7 @@ def main(args):
         raise NotImplementedError
     constructCVTTable(tt)
     extractProgram(tt)
-
+    absExecutor = AbstractExecutor(ttFont)
+    
 if __name__ == "__main__":
         main(sys.argv[1:])
