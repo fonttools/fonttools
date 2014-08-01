@@ -423,19 +423,8 @@ class ExecutionContext(object):
                 result = result & (-self.graphics_state['roundPeriod'])
             if result < 0:
                 result = 0
-            return ret + self.graphics_state['roundPhase']
-        
-        ret := -x - h.gs.roundPhase + h.gs.roundThreshold
-        if h.gs.roundSuper45 {
-        ret /= h.gs.roundPeriod
-        ret *= h.gs.roundPeriod
-        } else {
-        ret &= -h.gs.roundPeriod
-        }
-        if ret < 0 {
-        ret = 0
-        }
-        return -ret - h.gs.roundPhase
+        #TODO
+       
     def exec_RTDG(self):#RoundToDoubleGrid
         self.graphics_state['roundPeriod']
         
@@ -585,6 +574,6 @@ def main(args):
     constructCVTTable(tt)
     extractProgram(tt)
     absExecutor = AbstractExecutor(ttFont)
-    
+
 if __name__ == "__main__":
         main(sys.argv[1:])
