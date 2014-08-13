@@ -65,7 +65,7 @@ Glyph set specification for subsetting:
       Specify characters to include in the subset, as UTF-8 string.
   --text-file=<path>
       Specify a text file containing characters to include in the subset,
-      as UTF-8 string.
+      as UTF-8 strings.
   --notdef-glyph
       Add the '.notdef' glyph to the subset (ie, keep it). [default]
   --no-notdef-glyph
@@ -2413,7 +2413,7 @@ def main(args):
   args = log.parse_opts(args)
 
   options = Options()
-  args = options.parse_opts(args, ignore_unknown=['text'])
+  args = options.parse_opts(args, ignore_unknown=['text', 'text_file'])
 
   if len(args) < 2:
     print("usage:", __usage__, file=sys.stderr)
@@ -2447,6 +2447,9 @@ def main(args):
       continue
     if g.startswith('--text='):
       text += g[7:]
+      continue
+    if g.startswith('--text-file='):
+      text += ''.join(open(g[12:], 'r').readlines())
       continue
     if g.startswith('uni') or g.startswith('U+'):
       if g.startswith('uni') and len(g) > 3:
