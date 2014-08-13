@@ -30,8 +30,8 @@ pyftsubset -- OpenType font subsetter and optimizer
 Usage:
   """+__usage__+"""
 
-  At least one glyph or one of of --text, --text-file, --glyphs, --glyphs-file
-  or --glyphs must be specified.
+  At least one glyph or one of --text, --text-file, --glyphs, --glyphs-file,
+  --unicodes, or --unicodes-file must be specified.
 
   To see the current value of an option, pass a value of '?' to it, with
   or without a '='.
@@ -62,20 +62,26 @@ Output options:
       Specify flavor of output font file. May be 'woff'.
 
 Glyph set specification:
+  These options populate the initial glyph set. Same option can appear
+  multiple times, and the results are accummulated.
+  --glyphs=<glyphname>[,<glyphname>...]
+      Specify comma/whitespace-separated PS glyph names to add to the subset.
+      Note that only PS glyph names are accepted, not gidNNN, U+XXXX, etc
+      that are accepted on the command line.
+  --glyphs-file=<path>
+      Like --glyphs but reads from a file. Anything after a '#' on any line
+      is ignored as comments.
   --text=<text>
       Specify characters to include in the subset, as UTF-8 string.
   --text-file=<path>
-      Specify a text file containing characters to include in the subset,
-      as UTF-8 strings.
-  --glyphs[+]=<glyphname>[,<glyphname>...]
-      Specify comma/whitespace-separated PS glyph names to add to the subset.
-      Note that unlike other options, --glyphs=... and --glyphs+=... have the
-      same effect.  Also note that only PS glyph names are accepted, not
-      gidNNN, U+XXXX, etc that are accepted on the command line.
-  --glyphs-file=<path>
-      Specify a text file containing whitespace-separated list of PS glyph
-      names to include in the subset.  Anything after a '#' on any line is
-      ignored as comments.
+      Like --text but reads from a file. Newline character are not added to
+      the subset.
+  --unicodes=<XXXX>[,<XXXX>...]
+      Specify comma/whitespace-separated list of Unicode codepoints as
+      hex numbers, optionally prefixed with 'U+', 'u', etc.
+  --unicodes-file=<path>
+      Like --unicodes, but reads from a file. Anything after a '#' on any
+      line in the file is ignored as comments.
 
 Glyph set expansion:
   These options control how additional glyphs are added to the subset.
@@ -107,7 +113,7 @@ Glyph set expansion:
       Glyph variants used by the preserved features are added to the
       specified subset glyph set. By default, 'calt', 'ccmp', 'clig', 'curs',
       'kern', 'liga', 'locl', 'mark', 'mkmk', 'rclt', 'rlig' and all features
-      required for script shaping are preserved.  To see the full list, try
+      required for script shaping are preserved. To see the full list, try
       '--layout-features=?'. Use '*' to keep all features.
       Multiple --layout-features options can be provided if necessary.
       Examples:
@@ -178,7 +184,7 @@ Hinting options:
             * Keep all font-wide hinting tables (but strip hints from glyphs).
 
 Font naming options:
-  These options control what is retained in the 'name' table.  For numerical
+  These options control what is retained in the 'name' table. For numerical
   codes, see: http://www.microsoft.com/typography/otspec/name.htm
   --name-IDs[+|-]=<nameID>[,<nameID>...]
       Specify (=), add to (+=) or exclude from (-=) the set of 'name' table
@@ -2418,6 +2424,12 @@ def save_font(font, outfile, options):
   font.flavor = options.flavor
   font.save(outfile, reorderTables=options.canonical_order)
 
+def parse_unicodes(s):
+  import re
+  s = re.sub (r"0[xX]", " ", s)
+  s = re.sub (r"[<+>,;&#\\xXuU\n  ]", " ", s)
+  return [int (x, 16) for x in s.split (' ') if len (x)]
+
 def main(args):
 
   if '--help' in args:
@@ -2431,6 +2443,7 @@ def main(args):
   args = options.parse_opts(args,
     ignore_unknown=['text', 'text-file',
                     'glyphs', 'glyphs-file',
+                    'unicodes', 'unicodes-file',
                     'output-file'])
 
   if len(args) < 2:
@@ -2468,10 +2481,17 @@ def main(args):
       text += g[7:]
       continue
     if g.startswith('--text-file='):
-      text += ''.join(open(g[12:], 'r').readlines())
+      text += open(g[12:], 'r').read().replace('\n', '')
       continue
-    if g.startswith('--glyphs=') or g.startswith('--glyphs+='):
-      items = g[g.find('=')+1:].replace(',', ' ').split()
+    if g.startswith('--unicodes='):
+      unicodes.extend(parse_unicodes(g[11:]))
+      continue
+    if g.startswith('--unicodes-file='):
+      for line in open(g[16:], 'r').readlines():
+          unicodes.extend(parse_unicodes(line.split('#')[0]))
+      continue
+    if g.startswith('--glyphs='):
+      items = g[9:].replace(',', ' ').split()
       for g in items:
         if g == '':
           continue
@@ -2481,7 +2501,7 @@ def main(args):
           raise Exception("Invalid glyph identifier: %s" % g)
     if g.startswith('--glyphs-file='):
       for line in open(g[14:], 'r').readlines():
-          items = line.split('#')[0].split()
+          items = line.split('#')[0].replace(',', ' ').split()
           for g in items:
             if g in names:
               glyphs.append(g)
@@ -2549,6 +2569,7 @@ __all__ = [
   'Logger',
   'load_font',
   'save_font',
+  'parse_unicodes',
   'main'
 ]
 
