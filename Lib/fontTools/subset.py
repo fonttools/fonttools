@@ -30,7 +30,7 @@ pyftsubset -- OpenType font subsetter and optimizer
 Usage:
   """+__usage__+"""
 
-  At least one glyph or --text should be specified.
+  At least one glyph, --text, --text-file, or --glyph-file should be specified.
 
   To see the current value of an option, pass a value of '?' to it, with
   or without a '='.
@@ -48,7 +48,7 @@ Arguments:
     The input font file.
   glyph
     Specify one or more glyph identifiers to include in the subset. Can be:
-      * a Postscript glyph name
+      * a PS glyph name
       * glyphNNN or gidNNN where NNN is the decimal glyph ID
       * uniXXXX or U+XXXX where XXXX is the hex Unicode character codepoint
       * Special string '*' to keep the entire glyph set
@@ -66,6 +66,11 @@ Glyph set specification for subsetting:
   --text-file=<path>
       Specify a text file containing characters to include in the subset,
       as UTF-8 strings.
+  --glyph-file=<path>
+      Specify a text file containing list of glyphs to include in the
+      subset.  Only PS glyph namese are currently accepted, as opposed to
+      gidNNN, U+XXXX, etc on the command line.  Anything after a '#' on any
+      line is ignored as comments.
   --notdef-glyph
       Add the '.notdef' glyph to the subset (ie, keep it). [default]
   --no-notdef-glyph
@@ -2120,7 +2125,7 @@ class Options(object):
       ok = k
       k = k.replace('-', '_')
       if not hasattr(self, k):
-        if ignore_unknown is True or k in ignore_unknown:
+        if ignore_unknown is True or ok in ignore_unknown:
           ret.append(orig_a)
           continue
         else:
@@ -2413,7 +2418,7 @@ def main(args):
   args = log.parse_opts(args)
 
   options = Options()
-  args = options.parse_opts(args, ignore_unknown=['text', 'text_file'])
+  args = options.parse_opts(args, ignore_unknown=['text', 'text-file', 'glyph-file'])
 
   if len(args) < 2:
     print("usage:", __usage__, file=sys.stderr)
@@ -2442,14 +2447,23 @@ def main(args):
     if g == '*':
       glyphs.extend(font.getGlyphOrder())
       continue
-    if g in names:
-      glyphs.append(g)
-      continue
     if g.startswith('--text='):
       text += g[7:]
       continue
     if g.startswith('--text-file='):
       text += ''.join(open(g[12:], 'r').readlines())
+      continue
+    if g.startswith('--glyph-file='):
+      for line in open(g[13:], 'r').readlines():
+          items = line.split('#')[0].split()
+          for g in items:
+            if g in names:
+              glyphs.append(g)
+            else:
+              raise Exception("Invalid glyph identifier: %s" % g)
+      continue
+    if g in names:
+      glyphs.append(g)
       continue
     if g.startswith('uni') or g.startswith('U+'):
       if g.startswith('uni') and len(g) > 3:
