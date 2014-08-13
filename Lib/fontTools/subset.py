@@ -30,7 +30,7 @@ pyftsubset -- OpenType font subsetter and optimizer
 Usage:
   """+__usage__+"""
 
-  At least one glyph, --text, --text-file, or --glyph-file should be specified.
+  At least one glyph, --text, --text-file, or --glyphs-file should be specified.
 
   To see the current value of an option, pass a value of '?' to it, with
   or without a '='.
@@ -66,7 +66,7 @@ Glyph set specification for subsetting:
   --text-file=<path>
       Specify a text file containing characters to include in the subset,
       as UTF-8 strings.
-  --glyph-file=<path>
+  --glyphs-file=<path>
       Specify a text file containing list of glyphs to include in the
       subset.  Only PS glyph namese are currently accepted, as opposed to
       gidNNN, U+XXXX, etc on the command line.  Anything after a '#' on any
@@ -2421,7 +2421,7 @@ def main(args):
 
   options = Options()
   args = options.parse_opts(args,
-    ignore_unknown=['text', 'text-file', 'glyph-file', 'output-file'])
+    ignore_unknown=['text', 'text-file', 'glyphs-file', 'output-file'])
 
   if len(args) < 2:
     print("usage:", __usage__, file=sys.stderr)
@@ -2460,8 +2460,8 @@ def main(args):
     if g.startswith('--text-file='):
       text += ''.join(open(g[12:], 'r').readlines())
       continue
-    if g.startswith('--glyph-file='):
-      for line in open(g[13:], 'r').readlines():
+    if g.startswith('--glyphs-file='):
+      for line in open(g[14:], 'r').readlines():
           items = line.split('#')[0].split()
           for g in items:
             if g in names:
