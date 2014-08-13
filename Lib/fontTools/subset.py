@@ -2019,8 +2019,8 @@ def prune_pre_subset(self, options):
 
 class Options(object):
 
-  class UnknownOptionError(Exception):
-    pass
+  class OptionError(Exception): pass
+  class UnknownOptionError(OptionError): pass
 
   _drop_tables_default = ['BASE', 'JSTF', 'DSIG', 'EBDT', 'EBLC', 'EBSC', 'SVG ',
                           'PCLT', 'LTSH']
@@ -2117,6 +2117,8 @@ class Options(object):
       elif isinstance(ov, int):
         v = int(v)
       elif isinstance(ov, list):
+        if isinstance(v, bool):
+          raise self.OptionError("Option '%s' requires values to be specified using '='" % a)
         vv = v.split(',')
         if vv == ['']:
           vv = []
