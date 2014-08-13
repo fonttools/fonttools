@@ -61,7 +61,7 @@ Output options:
   --flavor=<type>
       Specify flavor of output font file. May be 'woff'.
 
-Glyph set specification for subsetting:
+Glyph set specification:
   --text=<text>
       Specify characters to include in the subset, as UTF-8 string.
   --text-file=<path>
@@ -76,6 +76,9 @@ Glyph set specification for subsetting:
       Specify a text file containing whitespace-separated list of PS glyph
       names to include in the subset.  Anything after a '#' on any line is
       ignored as comments.
+
+Glyph set expansion:
+  These options control how additional glyphs are added to the subset.
   --notdef-glyph
       Add the '.notdef' glyph to the subset (ie, keep it). [default]
   --no-notdef-glyph
