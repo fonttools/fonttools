@@ -56,7 +56,7 @@ Arguments:
 Output options:
   --output-file=<path>
       The output font file. If not specified, the subsetted font
-      will be saved in as 'font-file.subset'.
+      will be saved in as font-file.subset.
   --flavor=<type>
       Specify flavor of output font file. May be 'woff'.
 
@@ -2420,7 +2420,8 @@ def main(args):
   args = log.parse_opts(args)
 
   options = Options()
-  args = options.parse_opts(args, ignore_unknown=['text', 'text-file', 'glyph-file'])
+  args = options.parse_opts(args,
+    ignore_unknown=['text', 'text-file', 'glyph-file', 'output-file'])
 
   if len(args) < 2:
     print("usage:", __usage__, file=sys.stderr)
@@ -2442,12 +2443,16 @@ def main(args):
   names = font.getGlyphNames()
   log.lapse("loading glyph names")
 
+  outfile = fontfile + '.subset'
   glyphs = []
   unicodes = []
   text = ""
   for g in args:
     if g == '*':
       glyphs.extend(font.getGlyphOrder())
+      continue
+    if g.startswith('--output-file='):
+      outfile = g[14:]
       continue
     if g.startswith('--text='):
       text += g[7:]
@@ -2493,8 +2498,6 @@ def main(args):
   subsetter.populate(glyphs=glyphs, unicodes=unicodes, text=text)
   subsetter.subset(font)
 
-  outfile = fontfile + '.subset'
-
   save_font (font, outfile, options)
   log.lapse("compile and save font")
 
@@ -2503,8 +2506,8 @@ def main(args):
 
   if log.verbose:
     import os
-    log("Input  font: %d bytes" % os.path.getsize(fontfile))
-    log("Subset font: %d bytes" % os.path.getsize(outfile))
+    log("Input  font:% 7d bytes: %s" % (os.path.getsize(fontfile), fontfile))
+    log("Subset font:% 7d bytes: %s" % (os.path.getsize(outfile), outfile))
 
   log.font(font)
 
