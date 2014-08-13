@@ -2119,7 +2119,7 @@ class Options(object):
       else:
         k = a[:i]
         if k[-1] in "-+":
-          op = k[-1]+'='  # Ops is '-=' or '+=' now.
+          op = k[-1]+'='  # Op is '-=' or '+=' now.
           k = k[:-1]
         v = a[i+1:]
       ok = k
@@ -2139,6 +2139,8 @@ class Options(object):
         v = bool(v)
       elif isinstance(ov, int):
         v = int(v)
+      elif isinstance(ov, str):
+        v = str(v) # redundant
       elif isinstance(ov, list):
         if isinstance(v, bool):
           raise self.OptionError("Option '%s' requires values to be specified using '='" % a)
