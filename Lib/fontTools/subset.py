@@ -13,7 +13,7 @@ import struct
 import time
 import array
 
-__usage__ = "pyftsubset font-file [glyph...] [--text=ABC]... [--option=value]..."
+__usage__ = "pyftsubset font-file [glyph...] [--option=value]..."
 
 __doc__="""\
 pyftsubset -- OpenType font subsetter and optimizer
@@ -30,7 +30,8 @@ pyftsubset -- OpenType font subsetter and optimizer
 Usage:
   """+__usage__+"""
 
-  At least one glyph, --text, --text-file, or --glyphs-file should be specified.
+  At least one glyph or one of of --text, --text-file, --glyphs, --glyphs-file
+  or --glyphs must be specified.
 
   To see the current value of an option, pass a value of '?' to it, with
   or without a '='.
@@ -66,11 +67,15 @@ Glyph set specification for subsetting:
   --text-file=<path>
       Specify a text file containing characters to include in the subset,
       as UTF-8 strings.
+  --glyphs[+]=<glyphname>[,<glyphname>...]
+      Specify comma-separated PS glyph names to add to the subset.  Note that
+      unlike other options, --glyphs=... and --glyphs+=... have the same
+      effect.  Also note that only PS glyph names are accepted, not gidNNN,
+      U+XXXX, etc that are accepted on the command line.
   --glyphs-file=<path>
-      Specify a text file containing list of glyphs to include in the
-      subset.  Only PS glyph namese are currently accepted, as opposed to
-      gidNNN, U+XXXX, etc on the command line.  Anything after a '#' on any
-      line is ignored as comments.
+      Specify a text file containing whitespace-separated list of PS glyph
+      names to include in the subset.  Anything after a '#' on any line is
+      ignored as comments.
   --notdef-glyph
       Add the '.notdef' glyph to the subset (ie, keep it). [default]
   --no-notdef-glyph
@@ -2421,7 +2426,9 @@ def main(args):
 
   options = Options()
   args = options.parse_opts(args,
-    ignore_unknown=['text', 'text-file', 'glyphs-file', 'output-file'])
+    ignore_unknown=['text', 'text-file',
+                    'glyphs', 'glyphs-file',
+                    'output-file'])
 
   if len(args) < 2:
     print("usage:", __usage__, file=sys.stderr)
@@ -2460,6 +2467,15 @@ def main(args):
     if g.startswith('--text-file='):
       text += ''.join(open(g[12:], 'r').readlines())
       continue
+    if g.startswith('--glyphs=') or g.startswith('--glyphs+='):
+      items = g[g.find('=')+1:].split(',')
+      for g in items:
+        if g == '':
+          continue
+        if g in names:
+          glyphs.append(g)
+        else:
+          raise Exception("Invalid glyph identifier: %s" % g)
     if g.startswith('--glyphs-file='):
       for line in open(g[14:], 'r').readlines():
           items = line.split('#')[0].split()
@@ -2491,6 +2507,8 @@ def main(args):
         raise Exception("Invalid glyph identifier: %s" % g)
       continue
     raise Exception("Invalid glyph identifier: %s" % g)
+  if '' in glyphs:
+    glyphs.remove([''])
   log.lapse("compile glyph list")
   log("Unicodes:", unicodes)
   log("Glyphs:", glyphs)
