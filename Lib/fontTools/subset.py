@@ -32,6 +32,17 @@ Usage:
 
   At least one glyph or --text should be specified.
 
+  To see the current value of an option, pass a value of '?' to it, with
+  or without a '='.
+  Examples:
+    $ pyftsubset --glyph-names?
+    Current setting for 'glyph-names' is: False
+    $ ./pyftsubset --name-IDs=?
+    Current setting for 'name-IDs' is: [1, 2]
+    $ ./pyftsubset --hinting? --no-hinting --hinting?
+    Current setting for 'hinting' is: True
+    Current setting for 'hinting' is: False
+
 Arguments:
   font-file
     The input font file.
@@ -83,7 +94,8 @@ Glyph set specification for subsetting:
       Glyph variants used by the preserved features are added to the
       specified subset glyph set. By default, 'calt', 'ccmp', 'clig', 'curs',
       'kern', 'liga', 'locl', 'mark', 'mkmk', 'rclt', 'rlig' and all features
-      required for script shaping are preserved. Use '*' to keep all features.
+      required for script shaping are preserved.  To see the full list, try
+      '--layout-features=?'. Use '*' to keep all features.
       Multiple --layout-features options can be provided if necessary.
       Examples:
         --layout-features+=onum,pnum,ss01
@@ -2081,7 +2093,6 @@ class Options(object):
 
   def parse_opts(self, argv, ignore_unknown=False):
     ret = []
-    opts = {}
     for a in argv:
       orig_a = a
       if not a.startswith('--'):
@@ -2097,12 +2108,16 @@ class Options(object):
         else:
           k = a
           v = True
+        if k.endswith("?"):
+          k = k[:-1]
+          v = '?'
       else:
         k = a[:i]
         if k[-1] in "-+":
           op = k[-1]+'='  # Ops is '-=' or '+=' now.
           k = k[:-1]
         v = a[i+1:]
+      ok = k
       k = k.replace('-', '_')
       if not hasattr(self, k):
         if ignore_unknown is True or k in ignore_unknown:
@@ -2112,6 +2127,9 @@ class Options(object):
           raise self.UnknownOptionError("Unknown option '%s'" % a)
 
       ov = getattr(self, k)
+      if v == '?':
+          print("Current setting for '%s' is: %s" % (ok, ov))
+          continue
       if isinstance(ov, bool):
         v = bool(v)
       elif isinstance(ov, int):
@@ -2136,8 +2154,7 @@ class Options(object):
         else:
           assert False
 
-      opts[k] = v
-    self.set(**opts)
+      setattr(self, k, v)
 
     return ret
 
