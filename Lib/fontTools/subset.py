@@ -2493,22 +2493,30 @@ def main(args):
       continue
     if g.startswith('uni') or g.startswith('U+'):
       if g.startswith('uni') and len(g) > 3:
-        g = g[3:]
+        n = g[3:]
       elif g.startswith('U+') and len(g) > 2:
-        g = g[2:]
-      u = int(g, 16)
-      unicodes.append(u)
-      continue
+        n = g[2:]
+      try:
+        u = int(n, 16)
+        unicodes.append(u)
+        continue
+      except ValueError: # int() failed, not hex
+        pass
     if g.startswith('gid') or g.startswith('glyph'):
       if g.startswith('gid') and len(g) > 3:
-        g = g[3:]
+        n = g[3:]
       elif g.startswith('glyph') and len(g) > 5:
-        g = g[5:]
+        n = g[5:]
       try:
-        glyphs.append(font.getGlyphName(int(g), requireReal=True))
-      except ValueError:
-        raise Exception("Invalid glyph identifier: %s" % g)
-      continue
+        try:
+          n = int(n)
+          glyphs.append(font.getGlyphName(n, requireReal=True))
+        except ValueError:
+          raise Exception("Invalid glyph identifier: %s" % g)
+        continue
+      except ValueError: # int() failed, not decimal
+        pass
+    # No way to interpret this.
     raise Exception("Invalid glyph identifier: %s" % g)
   if '' in glyphs:
     glyphs.remove([''])
