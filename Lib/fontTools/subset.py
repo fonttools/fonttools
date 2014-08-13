@@ -130,6 +130,22 @@ Glyph set expansion:
         --layout-features+=aalt --layout-features-=vrt2
             * Keep default set of features plus 'aalt', but drop 'vrt2'.
 
+Hinting options:
+  --hinting
+      Keep hinting [default]
+  --no-hinting
+      Drop glyph-specific hinting and font-wide hinting tables, as well
+      as remove hinting-related bits and pieces from other tables (eg. GPOS).
+      See --hinting-tables for list of tables that are dropped by default.
+      Instructions and hints are stripped from 'glyf' and 'CFF ' tables
+      respectively. This produces (sometimes up to 30%) smaller fonts that
+      are suitable for extremely high-resolution systems, like high-end
+      mobile devices and retina displays.
+      XXX Note: Currently there is a known bug in 'CFF ' hint stripping that
+      might make the font unusable as a webfont as they will be rejected by
+      OpenType Sanitizer used in common browsers. For more information see:
+      https://github.com/behdad/fonttools/issues/144
+
 Font table options:
   --drop-tables[+|-]=<table>[,<table>...]
       Specify (=), add to (+=) or exclude from (-=) the comma-separated
@@ -153,30 +169,15 @@ Font table options:
       By default, the following tables are included in this list, as
       they do not need subsetting (ignore the fact that 'loca' is listed
       here): 'gasp', 'head', 'hhea', 'maxp', 'vhea', 'OS/2', 'loca',
-      'name', 'cvt ', 'fpgm', 'prep'. Tables that the tool does not know
-      how to subset and are not specified here will be dropped from the font.
+      'name', 'cvt ', 'fpgm', 'prep', and 'VMDX'. Tables that the tool does
+      not know how to subset and are not specified here will be dropped from
+      the font.
       Example:
          --no-subset-tables+=FFTM
             * Keep 'FFTM' table in the font by preventing subsetting.
-
-Hinting options:
-  --hinting
-      Keep hinting [default]
-  --no-hinting
-      Drop glyph-specific hinting and font-wide hinting tables, as well
-      as remove hinting-related bits and pieces from other tables (eg. GPOS).
-      By default, 'cvt ', 'fpgm', 'prep', 'hdmx', 'VDMX' tables are dropped,
-      and instructions and hints stripped from 'glyf' and 'CFF ' tables
-      respectively. This produces (sometimes up to 30%) smaller fonts that
-      are suitable for extremely high-resolution systems, like high-end
-      mobile devices and retina displays.
-      XXX Note: Currently there is a known bug in 'CFF ' hint stripping that
-      might make the font unusable as a webfont as they will be rejected by
-      OpenType Sanitizer used in common browsers. For more information see:
-      https://github.com/behdad/fonttools/issues/144
   --hinting-tables[-]=<table>[,<table>...]
-      If --no-hinting is specified, specify (=), add to (+=) or exclude
-      from (-=) the list of font-wide hinting tables that will be dropped.
+      Specify (=), add to (+=) or exclude from (-=) the list of font-wide
+      hinting tables that will be dropped if --no-hinting is specified,
       Examples:
         --hinting-tables-='VDMX'
             * Drop font-wide hinting tables except 'VDMX'.
@@ -2058,7 +2059,7 @@ class Options(object):
   _drop_tables_default += ['Feat', 'Glat', 'Gloc', 'Silf', 'Sill']  # Graphite
   _drop_tables_default += ['CBLC', 'CBDT', 'sbix', 'COLR', 'CPAL']  # Color
   _no_subset_tables_default = ['gasp', 'head', 'hhea', 'maxp', 'vhea', 'OS/2',
-                               'loca', 'name', 'cvt ', 'fpgm', 'prep']
+                               'loca', 'name', 'cvt ', 'fpgm', 'prep', 'VDMX']
   _hinting_tables_default = ['cvt ', 'fpgm', 'prep', 'hdmx', 'VDMX']
 
   # Based on HarfBuzz shapers
