@@ -68,10 +68,10 @@ Glyph set specification for subsetting:
       Specify a text file containing characters to include in the subset,
       as UTF-8 strings.
   --glyphs[+]=<glyphname>[,<glyphname>...]
-      Specify comma-separated PS glyph names to add to the subset.  Note that
-      unlike other options, --glyphs=... and --glyphs+=... have the same
-      effect.  Also note that only PS glyph names are accepted, not gidNNN,
-      U+XXXX, etc that are accepted on the command line.
+      Specify comma/whitespace-separated PS glyph names to add to the subset.
+      Note that unlike other options, --glyphs=... and --glyphs+=... have the
+      same effect.  Also note that only PS glyph names are accepted, not
+      gidNNN, U+XXXX, etc that are accepted on the command line.
   --glyphs-file=<path>
       Specify a text file containing whitespace-separated list of PS glyph
       names to include in the subset.  Anything after a '#' on any line is
@@ -2149,7 +2149,7 @@ class Options(object):
       elif isinstance(ov, list):
         if isinstance(v, bool):
           raise self.OptionError("Option '%s' requires values to be specified using '='" % a)
-        vv = v.split(',')
+        vv = v.replace(',', ' ').split()
         if vv == ['']:
           vv = []
         vv = [int(x, 0) if len(x) and x[0] in "0123456789" else x for x in vv]
@@ -2468,7 +2468,7 @@ def main(args):
       text += ''.join(open(g[12:], 'r').readlines())
       continue
     if g.startswith('--glyphs=') or g.startswith('--glyphs+='):
-      items = g[g.find('=')+1:].split(',')
+      items = g[g.find('=')+1:].replace(',', ' ').split()
       for g in items:
         if g == '':
           continue
