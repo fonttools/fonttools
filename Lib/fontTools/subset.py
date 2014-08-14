@@ -31,7 +31,7 @@ Usage:
   """+__usage__+"""
 
   At least one glyph or one of --text, --text-file, --glyphs, --glyphs-file,
-  --unicodes, or --unicodes-file must be specified.
+  --unicodes, --unicodes-file, or --gids must be specified.
 
   To see the current value of an option, pass a value of '?' to it, with
   or without a '='.
@@ -84,6 +84,10 @@ Glyph set specification:
   --unicodes-file=<path>
       Like --unicodes, but reads from a file. Anything after a '#' on any
       line in the file is ignored as comments.
+  --gids=<NNN>[,<NNN>...]
+      Specify comma/whitespace-separated list of glyph IDs or ranges as
+      decimal numbers.  For example, --gids=10-12,14 adds glyphs with
+      numbers 10, 11, 12, and 14.
 
 Glyph set expansion:
   These options control how additional glyphs are added to the subset.
@@ -2369,10 +2373,10 @@ class Logger(object):
   def glyphs(self, glyphs, font=None):
     if not self.verbose:
       return
-    self("Names: ", sorted(glyphs))
+    self("Glyph names:", sorted(glyphs))
     if font:
       reverseGlyphMap = font.getReverseGlyphMap()
-      self("Gids : ", sorted(reverseGlyphMap[g] for g in glyphs))
+      self("Glyph IDs:  ", sorted(reverseGlyphMap[g] for g in glyphs))
 
   def font(self, font, file=sys.stdout):
     if not self.xml:
@@ -2455,7 +2459,7 @@ def main(args):
     ignore_unknown=['text', 'text-file',
                     'glyphs', 'glyphs-file',
                     'unicodes', 'unicodes-file',
-                    'output-file'])
+                    'gids', 'output-file'])
 
   if len(args) < 2:
     print("usage:", __usage__, file=sys.stderr)
@@ -2501,23 +2505,36 @@ def main(args):
       for line in open(g[16:], 'r').readlines():
           unicodes.extend(parse_unicodes(line.split('#')[0]))
       continue
+    if g.startswith('--gids='):
+      items = g[7:].replace(',', ' ').split()
+      for item in items:
+        fields = item.split('-')
+        if len(fields) == 1:
+          numbers = [int(fields[0])]
+        else:
+          numbers = range(int(fields[0]), int(fields[1])+1)
+        for n in numbers:
+          if n < len(names):
+            glyphs.append(names[n])
+          else:
+            raise Exception("Invalid glyph identifier: %s" % n)
+      continue
     if g.startswith('--glyphs='):
       items = g[9:].replace(',', ' ').split()
-      for g in items:
-        if g == '':
-          continue
-        if g in names:
-          glyphs.append(g)
+      for n in items:
+        if n in names:
+          glyphs.append(n)
         else:
-          raise Exception("Invalid glyph identifier: %s" % g)
+          raise Exception("Invalid glyph identifier: %s" % n)
+      continue
     if g.startswith('--glyphs-file='):
       for line in open(g[14:], 'r').readlines():
           items = line.split('#')[0].replace(',', ' ').split()
-          for g in items:
-            if g in names:
-              glyphs.append(g)
+          for n in items:
+            if n in names:
+              glyphs.append(n)
             else:
-              raise Exception("Invalid glyph identifier: %s" % g)
+              raise Exception("Invalid glyph identifier: %s" % n)
       continue
     if g in names:
       glyphs.append(g)
@@ -2539,12 +2556,10 @@ def main(args):
       elif g.startswith('glyph') and len(g) > 5:
         n = g[5:]
       try:
-        try:
-          n = int(n)
-          glyphs.append(font.getGlyphName(n, requireReal=True))
-        except ValueError:
-          raise Exception("Invalid glyph identifier: %s" % g)
-        continue
+        n = int(n)
+        if n < len(names):
+          glyphs.append(names[n])
+          continue
       except ValueError: # int() failed, not decimal
         pass
     # No way to interpret this.
