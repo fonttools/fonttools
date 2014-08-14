@@ -30,8 +30,8 @@ pyftsubset -- OpenType font subsetter and optimizer
 Usage:
   """+__usage__+"""
 
-  At least one glyph or one of --text, --text-file, --glyphs, --glyphs-file,
-  --unicodes, --unicodes-file, or --gids must be specified.
+  At least one glyph or one of --gids, --gids-file, --glyphs, --glyphs-file,
+  --text, --text-file, --unicodes, or --unicodes-file, must be specified.
 
 Arguments:
   font-file
@@ -43,6 +43,13 @@ Arguments:
 Initial glyph set specification:
   These options populate the initial glyph set. Same option can appear
   multiple times, and the results are accummulated.
+  --gids=<NNN>[,<NNN>...]
+      Specify comma/whitespace-separated list of glyph IDs or ranges as
+      decimal numbers.  For example, --gids=10-12,14 adds glyphs with
+      numbers 10, 11, 12, and 14.
+  --gids-file=<path>
+      Like --gids but reads from a file. Anything after a '#' on any line
+      is ignored as comments.
   --glyphs=<glyphname>[,<glyphname>...]
       Specify comma/whitespace-separated PS glyph names to add to the subset.
       Note that only PS glyph names are accepted, not gidNNN, U+XXXX, etc
@@ -50,10 +57,6 @@ Initial glyph set specification:
   --glyphs-file=<path>
       Like --glyphs but reads from a file. Anything after a '#' on any line
       is ignored as comments.
-  --gids=<NNN>[,<NNN>...]
-      Specify comma/whitespace-separated list of glyph IDs or ranges as
-      decimal numbers.  For example, --gids=10-12,14 adds glyphs with
-      numbers 10, 11, 12, and 14.
   --text=<text>
       Specify characters to include in the subset, as UTF-8 string.
   --text-file=<path>
@@ -2487,6 +2490,19 @@ def parse_unicodes(s):
       l.extend(range(int(start, 16), int(end, 16)+1))
   return l
 
+def parse_gids(s):
+  l = []
+  for item in s.replace(',', ' ').split():
+    fields = item.split('-')
+    if len(fields) == 1:
+      l.append(int(fields[0]))
+    else:
+      l.extend(range(int(fields[0]), int(fields[1])+1))
+  return l
+
+def parse_glyphs(s):
+  return s.replace(',', ' ').split()
+
 def main(args):
 
   if '--help' in args:
@@ -2498,10 +2514,11 @@ def main(args):
 
   options = Options()
   args = options.parse_opts(args,
-    ignore_unknown=['text', 'text-file',
+    ignore_unknown=['gids', 'gids-file',
                     'glyphs', 'glyphs-file',
+                    'text', 'text-file',
                     'unicodes', 'unicodes-file',
-                    'gids', 'output-file'])
+                    'output-file'])
 
   if len(args) < 2:
     print("usage:", __usage__, file=sys.stderr)
@@ -2529,30 +2546,28 @@ def main(args):
       text += g[7:]
       continue
     if g.startswith('--text-file='):
-      text += open(g[12:], 'r').read().replace('\n', '')
+      text += open(g[12:]).read().replace('\n', '')
       continue
     if g.startswith('--unicodes='):
       unicodes.extend(parse_unicodes(g[11:]))
       continue
     if g.startswith('--unicodes-file='):
-      for line in open(g[16:], 'r').readlines():
-          unicodes.extend(parse_unicodes(line.split('#')[0]))
+      for line in open(g[16:]).readlines():
+        unicodes.extend(parse_unicodes(line.split('#')[0]))
       continue
     if g.startswith('--gids='):
-      items = g[7:].replace(',', ' ').split()
-      for item in items:
-        fields = item.split('-')
-        if len(fields) == 1:
-          gids.append(int(fields[0]))
-        else:
-          gids.extend(range(int(fields[0]), int(fields[1])+1))
+      gids.extend(parse_gids(g[7:]))
+      continue
+    if g.startswith('--gids-file='):
+      for line in open(g[12:]).readlines():
+        gids.extend(parse_gids(line.split('#')[0]))
       continue
     if g.startswith('--glyphs='):
-      glyphs.extend(g[9:].replace(',', ' ').split())
+      glyphs.extend(parse_glyphs(g[9:]))
       continue
     if g.startswith('--glyphs-file='):
-      for line in open(g[14:], 'r').readlines():
-          glyphs.extend(line.split('#')[0].replace(',', ' ').split())
+      for line in open(g[14:]).readlines():
+        glyphs.extend(parse_glyphs(line.split('#')[0]))
       continue
     glyphs.append(g)
 
@@ -2594,6 +2609,8 @@ __all__ = [
   'Logger',
   'load_font',
   'save_font',
+  'parse_gids',
+  'parse_glyphs',
   'parse_unicodes',
   'main'
 ]
