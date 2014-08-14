@@ -77,8 +77,10 @@ Glyph set specification:
       Like --text but reads from a file. Newline character are not added to
       the subset.
   --unicodes=<XXXX>[,<XXXX>...]
-      Specify comma/whitespace-separated list of Unicode codepoints as
-      hex numbers, optionally prefixed with 'U+', 'u', etc.
+      Specify comma/whitespace-separated list of Unicode codepoints or
+      ranges as hex numbers, optionally prefixed with 'U+', 'u', etc.
+      For example, --unicodes=41-5a,61-7a adds ASCII letters, so does
+      the more verbose --unicodes=U+0041-005A,U+0061-007A.
   --unicodes-file=<path>
       Like --unicodes, but reads from a file. Anything after a '#' on any
       line in the file is ignored as comments.
