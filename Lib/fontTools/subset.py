@@ -33,35 +33,14 @@ Usage:
   At least one glyph or one of --text, --text-file, --glyphs, --glyphs-file,
   --unicodes, --unicodes-file, or --gids must be specified.
 
-  To see the current value of an option, pass a value of '?' to it, with
-  or without a '='.
-  Examples:
-    $ pyftsubset --glyph-names?
-    Current setting for 'glyph-names' is: False
-    $ ./pyftsubset --name-IDs=?
-    Current setting for 'name-IDs' is: [1, 2]
-    $ ./pyftsubset --hinting? --no-hinting --hinting?
-    Current setting for 'hinting' is: True
-    Current setting for 'hinting' is: False
-
 Arguments:
   font-file
     The input font file.
   glyph
-    Specify one or more glyph identifiers to include in the subset. Can be:
-      * a PS glyph name
-      * glyphNNN or gidNNN where NNN is the decimal glyph ID
-      * uniXXXX or U+XXXX where XXXX is the hex Unicode character codepoint
-      * Special string '*' to keep the entire glyph set
+    Specify one or more glyph identifiers to include in the subset. Must be
+    PS glyph names, or the pecial string '*' to keep the entire glyph set.
 
-Output options:
-  --output-file=<path>
-      The output font file. If not specified, the subsetted font
-      will be saved in as font-file.subset.
-  --flavor=<type>
-      Specify flavor of output font file. May be 'woff'.
-
-Glyph set specification:
+Initial glyph set specification:
   These options populate the initial glyph set. Same option can appear
   multiple times, and the results are accummulated.
   --glyphs=<glyphname>[,<glyphname>...]
@@ -104,6 +83,25 @@ Glyph set specification:
       Note the default discrepancy between ignoring missing glyphs versus
       unicodes.  This is for historical reasons and in the future
       --no-ignore-missing-unicodes might become default.
+
+Other options:
+  For the other options listed below, to see the current value of the option,
+  pass a value of '?' to it, with or without a '='.
+  Examples:
+    $ pyftsubset --glyph-names?
+    Current setting for 'glyph-names' is: False
+    $ ./pyftsubset --name-IDs=?
+    Current setting for 'name-IDs' is: [1, 2]
+    $ ./pyftsubset --hinting? --no-hinting --hinting?
+    Current setting for 'hinting' is: True
+    Current setting for 'hinting' is: False
+
+Output options:
+  --output-file=<path>
+      The output font file. If not specified, the subsetted font
+      will be saved in as font-file.subset.
+  --flavor=<type>
+      Specify flavor of output font file. May be 'woff'.
 
 Glyph set expansion:
   These options control how additional glyphs are added to the subset.
@@ -2513,26 +2511,16 @@ def main(args):
   fontfile = args[0]
   args = args[1:]
 
-  dontLoadGlyphNames =(not options.glyph_names and
-         all(any(g.startswith(p)
-             for p in ['gid', 'glyph', 'uni', 'U+'])
-              for g in args))
-
-  font = load_font(fontfile, options, dontLoadGlyphNames=dontLoadGlyphNames)
-  log.lapse("load font")
   subsetter = Subsetter(options=options, log=log)
-
-  names = font.getGlyphNames()
-  log.lapse("loading glyph names")
-
   outfile = fontfile + '.subset'
   glyphs = []
   gids = []
   unicodes = []
+  wildcard = False
   text = ""
   for g in args:
     if g == '*':
-      glyphs.extend(font.getGlyphOrder())
+      wildcard = True
       continue
     if g.startswith('--output-file='):
       outfile = g[14:]
@@ -2566,37 +2554,20 @@ def main(args):
       for line in open(g[14:], 'r').readlines():
           glyphs.extend(line.split('#')[0].replace(',', ' ').split())
       continue
-    if g in names:
-      glyphs.append(g)
-      continue
-    if g.startswith('uni') or g.startswith('U+'):
-      if g.startswith('uni') and len(g) > 3:
-        n = g[3:]
-      elif g.startswith('U+') and len(g) > 2:
-        n = g[2:]
-      try:
-        u = int(n, 16)
-        unicodes.append(u)
-        continue
-      except ValueError: # int() failed, not hex
-        pass
-    if g.startswith('gid') or g.startswith('glyph'):
-      if g.startswith('gid') and len(g) > 3:
-        n = g[3:]
-      elif g.startswith('glyph') and len(g) > 5:
-        n = g[5:]
-      try:
-        gids.append(int(n))
-        continue
-      except ValueError: # int() failed, not decimal
-        pass
     glyphs.append(g)
 
-  if '' in glyphs:
-    glyphs.remove([''])
+  dontLoadGlyphNames = not options.glyph_names and not glyphs
+  font = load_font(fontfile, options, dontLoadGlyphNames=dontLoadGlyphNames)
+  log.lapse("load font")
+  if wildcard:
+      glyphs.extend(font.getGlyphOrder())
+  assert '' not in glyphs
+
   log.lapse("compile glyph list")
+  log("Text: '%s'" % text)
   log("Unicodes:", unicodes)
   log("Glyphs:", glyphs)
+  log("Gids:", gids)
 
   subsetter.populate(glyphs=glyphs, gids=gids, unicodes=unicodes, text=text)
   subsetter.subset(font)
