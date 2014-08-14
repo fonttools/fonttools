@@ -71,6 +71,10 @@ Glyph set specification:
   --glyphs-file=<path>
       Like --glyphs but reads from a file. Anything after a '#' on any line
       is ignored as comments.
+  --gids=<NNN>[,<NNN>...]
+      Specify comma/whitespace-separated list of glyph IDs or ranges as
+      decimal numbers.  For example, --gids=10-12,14 adds glyphs with
+      numbers 10, 11, 12, and 14.
   --text=<text>
       Specify characters to include in the subset, as UTF-8 string.
   --text-file=<path>
@@ -84,10 +88,22 @@ Glyph set specification:
   --unicodes-file=<path>
       Like --unicodes, but reads from a file. Anything after a '#' on any
       line in the file is ignored as comments.
-  --gids=<NNN>[,<NNN>...]
-      Specify comma/whitespace-separated list of glyph IDs or ranges as
-      decimal numbers.  For example, --gids=10-12,14 adds glyphs with
-      numbers 10, 11, 12, and 14.
+  --ignore-missing-glyphs
+      Do not fail if some requested glyphs or gids are not available in
+      the font.
+  --no-ignore-missing-glyphs
+      Stop and fail if some requested glyphs or gids are not available
+      in the font. [default]
+  --ignore-missing-unicodes [default]
+      Do not fail if some requested Unicode characters (including those
+      indirectly specified using --text or --text-file) are not available
+      in the font.
+  --no-ignore-missing-unicodes
+      Stop and fail if some requested Unicode characters are not available
+      in the font.
+      Note the default discrepancy between ignoring missing glyphs versus
+      unicodes.  This is for historical reasons and in the future
+      --no-ignore-missing-unicodes might become default.
 
 Glyph set expansion:
   These options control how additional glyphs are added to the subset.
@@ -1982,7 +1998,7 @@ def closure_glyphs(self, s):
           s.glyphs.add(table.cmap[u])
           found = True
     if not found:
-      s.log("No default glyph for Unicode %04X found." % u)
+      s.unicodes_missing.add(u)
 
 @_add_method(ttLib.getTableClass('cmap'))
 def prune_pre_subset(self, options):
@@ -2092,6 +2108,8 @@ class Options(object):
   no_subset_tables = _no_subset_tables_default
   hinting_tables = _hinting_tables_default
   layout_features = _layout_features_default
+  ignore_missing_glyphs = False
+  ignore_missing_unicodes = True
   hinting = True
   glyph_names = False
   legacy_cmap = False
@@ -2189,6 +2207,10 @@ class Options(object):
 
 class Subsetter(object):
 
+  class SubsettingError(Exception): pass
+  class MissingGlyphsSubsettingError(SubsettingError): pass
+  class MissingUnicodesSubsettingError(SubsettingError): pass
+
   def __init__(self, options=None, log=None):
 
     if not log:
@@ -2199,17 +2221,17 @@ class Subsetter(object):
     self.options = options
     self.log = log
     self.unicodes_requested = set()
-    self.glyphs_requested = set()
-    self.glyphs = set()
+    self.glyph_names_requested = set()
+    self.glyph_ids_requested = set()
 
-  def populate(self, glyphs=[], unicodes=[], text=""):
+  def populate(self, glyphs=[], gids=[], unicodes=[], text=""):
     self.unicodes_requested.update(unicodes)
     if isinstance(text, bytes):
       text = text.decode("utf8")
     for u in text:
       self.unicodes_requested.add(ord(u))
-    self.glyphs_requested.update(glyphs)
-    self.glyphs.update(glyphs)
+    self.glyph_names_requested.update(glyphs)
+    self.glyph_ids_requested.update(gids)
 
   def _prune_pre_subset(self, font):
 
@@ -2239,13 +2261,35 @@ class Subsetter(object):
   def _closure_glyphs(self, font):
 
     realGlyphs = set(font.getGlyphOrder())
+    glyph_order = font.getGlyphOrder()
+
+    self.glyphs_requested = set()
+    self.glyphs_requested.update(self.glyph_names_requested)
+    self.glyphs_requested.update(glyph_order[i] for i in self.glyph_ids_requested
+                                 if i < len(glyph_order))
+
+    self.glyphs_missing = set()
+    self.glyphs_missing.update(self.glyphs_requested.difference(realGlyphs))
+    self.glyphs_missing.update(i for i in self.glyph_ids_requested
+                               if i >= len(glyph_order))
+    if self.glyphs_missing:
+      self.log("Missing requested glyphs: %s" % self.glyphs_missing)
+      if not self.options.ignore_missing_glyphs:
+        raise self.MissingGlyphsSubsettingError(self.glyphs_missing)
 
     self.glyphs = self.glyphs_requested.copy()
 
+    self.unicodes_missing = set()
     if 'cmap' in font:
       font['cmap'].closure_glyphs(self)
       self.glyphs.intersection_update(realGlyphs)
     self.glyphs_cmaped = self.glyphs
+    if self.unicodes_missing:
+      missing = ["U+%04X" % u for u in self.unicodes_missing]
+      self.log("Missing glyphs for requested Unicodes: %s" % missing)
+      if not self.options.ignore_missing_unicodes:
+        raise self.MissingUnicodesSubsettingError(missing)
+      del missing
 
     if self.options.notdef_glyph:
       if 'glyf' in font:
@@ -2483,6 +2527,7 @@ def main(args):
 
   outfile = fontfile + '.subset'
   glyphs = []
+  gids = []
   unicodes = []
   text = ""
   for g in args:
@@ -2510,31 +2555,16 @@ def main(args):
       for item in items:
         fields = item.split('-')
         if len(fields) == 1:
-          numbers = [int(fields[0])]
+          gids.append(int(fields[0]))
         else:
-          numbers = range(int(fields[0]), int(fields[1])+1)
-        for n in numbers:
-          if n < len(names):
-            glyphs.append(names[n])
-          else:
-            raise Exception("Invalid glyph identifier: %s" % n)
+          gids.extend(range(int(fields[0]), int(fields[1])+1))
       continue
     if g.startswith('--glyphs='):
-      items = g[9:].replace(',', ' ').split()
-      for n in items:
-        if n in names:
-          glyphs.append(n)
-        else:
-          raise Exception("Invalid glyph identifier: %s" % n)
+      glyphs.extend(g[9:].replace(',', ' ').split())
       continue
     if g.startswith('--glyphs-file='):
       for line in open(g[14:], 'r').readlines():
-          items = line.split('#')[0].replace(',', ' ').split()
-          for n in items:
-            if n in names:
-              glyphs.append(n)
-            else:
-              raise Exception("Invalid glyph identifier: %s" % n)
+          glyphs.extend(line.split('#')[0].replace(',', ' ').split())
       continue
     if g in names:
       glyphs.append(g)
@@ -2556,21 +2586,19 @@ def main(args):
       elif g.startswith('glyph') and len(g) > 5:
         n = g[5:]
       try:
-        n = int(n)
-        if n < len(names):
-          glyphs.append(names[n])
-          continue
+        gids.append(int(n))
+        continue
       except ValueError: # int() failed, not decimal
         pass
-    # No way to interpret this.
-    raise Exception("Invalid glyph identifier: %s" % g)
+    glyphs.append(g)
+
   if '' in glyphs:
     glyphs.remove([''])
   log.lapse("compile glyph list")
   log("Unicodes:", unicodes)
   log("Glyphs:", glyphs)
 
-  subsetter.populate(glyphs=glyphs, unicodes=unicodes, text=text)
+  subsetter.populate(glyphs=glyphs, gids=gids, unicodes=unicodes, text=text)
   subsetter.subset(font)
 
   save_font (font, outfile, options)
