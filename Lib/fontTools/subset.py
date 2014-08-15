@@ -1598,9 +1598,9 @@ def subset_glyphs(self, s):
 
 @_add_method(ttLib.getTableClass('glyf'))
 def prune_post_subset(self, options):
-  if not options.hinting:
-    for v in self.glyphs.values():
-      v.removeHinting()
+  remove_hinting = not options.hinting
+  for v in self.glyphs.values():
+    v.trim(remove_hinting=remove_hinting)
   return True
 
 @_add_method(ttLib.getTableClass('CFF '))
