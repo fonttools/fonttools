@@ -51,7 +51,7 @@ usage: ttx [options] inputfile1 [... inputfileN]
          -z bitwise
             * export each row as binary in an ASCII art style
          -z extfile
-            * export the data as external files with XML refences
+            * export the data as external files with XML references
        If no export format is specified 'raw' format is used.
     -e Don't ignore decompilation errors, but show a full traceback
        and abort.
