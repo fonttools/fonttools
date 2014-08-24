@@ -307,10 +307,13 @@ class TTFont(object):
 		if tag not in self:
 			return
 		xmlTag = tagToXML(tag)
+		attrs = dict()
 		if hasattr(table, "ERROR"):
-			writer.begintag(xmlTag, ERROR="decompilation error")
-		else:
-			writer.begintag(xmlTag)
+			attrs['ERROR'] = "decompilation error"
+		from .tables.DefaultTable import DefaultTable
+		if table.__class__ == DefaultTable:
+			attrs['raw'] = True
+		writer.begintag(xmlTag, **attrs)
 		writer.newline()
 		if tag in ("glyf", "CFF "):
 			table.toXML(writer, self, progress)
