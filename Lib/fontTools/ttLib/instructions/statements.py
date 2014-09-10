@@ -30,6 +30,7 @@ class all():
         def __init__(self):
             root_statement.__init__(self)
             self.push_num = len(self.data)
+            self.mnemonic = 'PUSH'
             self.pop_num = 0
         def get_push_num(self):
             return len(self.data)
