@@ -5,21 +5,50 @@ from fontTools.ttLib.data import dataType
 import sys
 import math
 import pdb
-import logging 
+import logging
+
+class Expression(self):
+    def __init__(self):
+        self.op1 = None
+        self.op2 = None
+        self.operation = None
+
+def eval(expression):
+    options = {'<':less,
+                '<=':lessEqual,
+                '>':greater,
+                '>=':greaterEqual,
+                '==':equal,
+                '&&':logicAnd,
+                '||':logicOr}
+    if op1 isinstance AbstractValue() or op2 isinstance AbstractValue():
+        return 'uncertain'
+    return options[expression.operation](expression.op1,expression.op2)
+    def less(op1,op2):
+        return op1 < op2
+    def lessEqual(op1,op2):
+        return op1 <= op2
+    def greater(op1,op2):
+        return op1 > op2
+    def greaterEqual(op1,op2):
+        return op1 >= op2
+    def logicAnd(op1,op2):
+        return (op1 and op2)
+    def logicOr(op1,op2):
+        return (op1 or op2)
+
 class Body(object):
-    """ 
-    Encapsulates a set of statements.
-    This is a tree structure of statments 
-    """
+    '''
+    Encapsulates a list of statements.
+    '''
     def __init__(self,*args, **kwargs):
         if kwargs.get('statement_root') is not None:
             self.statement_root = kwargs.get('statement_root')
         if kwargs.get('instructions') is not None:
             input_instructions = kwargs.get('instructions')
             self.statement_root = self.constructSuccessorAndPredecessor(input_instructions)
-    def num_of_branches(self):
-        #TODO
-        self.num_of_branches = 0
+    def condition(self):
+
     def compute_stack_level(self):
         #TODO
         pass
@@ -758,7 +787,7 @@ def analysis(tt):
 def main(args):
     if len(args)<1:
         print("usage : please use the path of the font file as input")
-    fileformat =args[0].split('.')[-1] 
+    fileformat = args[0].split('.')[-1] 
     if fileformat == 'ttf':
     #TODO:transform ttf file to ttx and feed it to the analysis
         raise NotImplementedError
