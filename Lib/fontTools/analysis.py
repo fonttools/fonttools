@@ -7,7 +7,7 @@ import math
 import pdb
 import logging
 
-class Expression(self):
+class Expression(object):
     def __init__(self):
         self.op1 = None
         self.op2 = None
@@ -21,7 +21,7 @@ def eval(expression):
                 '==':equal,
                 '&&':logicAnd,
                 '||':logicOr}
-    if op1 isinstance AbstractValue() or op2 isinstance AbstractValue():
+    if isinstance(op1, AbstractValue) or isinstance(op2, AbstractValue):
         return 'uncertain'
     return options[expression.operation](expression.op1,expression.op2)
     def less(op1,op2):
@@ -47,8 +47,10 @@ class Body(object):
         if kwargs.get('instructions') is not None:
             input_instructions = kwargs.get('instructions')
             self.statement_root = self.constructSuccessorAndPredecessor(input_instructions)
-    def condition(self):
+        self.condition = None
 
+    def set_condition(self,expression):
+        self.condition = expression #the eval(expression) should return true for choosing this 
     def compute_stack_level(self):
         #TODO
         pass
@@ -117,13 +119,6 @@ class Body(object):
             else:
                 instruction_stack.extend(top_instruction.successors)
 
-    '''
-    the transform function will make break the stack-based truetype bytecode and 
-    make the instruction in a format : op [data]
-    '''
-    def transform(self):
-        pass
-
 class Function(object):
     def __init__(self, instructions=None):
         #function contains a function body
@@ -155,15 +150,17 @@ class Program(object):
 
 class BytecodeFont(object):
     """ Represents the original bytecode-related global data for a TrueType font. """
-    def __init__(self):
-        # CVT Table (initial)
-        self.cvt_table = {}
+    def __init__(self, tt):
         self.global_program = {}
         # tag id -> Program
         self.local_programs = {}
         # function_table: function label -> Function
         self.function_table = {}
         self.programs = {}
+        #preprocess the static value to construct cvt table
+        self.constructCVTTable(tt)
+        #extract instructions from font file
+        self.extractProgram(tt)
 
     def setup(self,programs):
         self.programs = programs
@@ -172,6 +169,36 @@ class BytecodeFont(object):
         self.setup_global_programs()
         self.setup_local_programs(programs)
         self.programs = dict(self.global_program.items() + self.local_programs.items())
+    
+    def constructCVTTable(self, tt):
+        self.cvt_table = {}
+        values = tt['cvt '].values
+        key = 1
+        for value in values:
+            self.cvt_table[key] = value
+            key = key + 1
+    
+    #tested#
+    def extractProgram(self, tt):
+        '''
+        a dictionary maps tag->Program to extract all the bytecodes
+        in a single font file
+        '''
+        tag_to_program = {}
+    
+        def addTagsWithBytecode(tt,tag):
+            for key in tt.keys():
+                if hasattr(tt[key], 'program'):
+                    if len(tag) != 0:
+                        program_tag = tag+"."+key
+                    else:
+                        program_tag = key
+                    tag_to_program[program_tag] = constructInstructions(tt[key].program.getAssembly())
+                if hasattr(tt[key], 'keys'):
+                    addTagsWithBytecode(tt[key],tag+key)
+
+        addTagsWithBytecode(tt,"")
+        ttp = self.setup(tag_to_program)
     def setup_global_programs(self):
         #build the function table
         self.extractFunctions()
@@ -724,15 +751,7 @@ class AbstractExecutor(object):
 
     def exec_CALL(self):
         pass
-#one ttFont object for one ttx file       
-ttFont = BytecodeFont()
 
-def constructCVTTable(tt):
-    values = tt['cvt '].values
-    key = 1
-    for value in values:
-        ttFont.cvt_table[key] = value
-        key = key + 1
 
 def constructInstructions(instructions):
     thisinstruction = None
@@ -754,33 +773,11 @@ def constructInstructions(instructions):
     instructions_list.append(thisinstruction)
     return instructions_list
 
-#tested#
-def extractProgram(tt):
-    '''
-    a dictionary maps tag->Program to extract all the bytecodes
-    in a single font file
-    '''
-    tag_to_program = {}
-    
-    def addTagsWithBytecode(tt,tag):
-        for key in tt.keys():
-            if hasattr(tt[key], 'program'):
-                if len(tag) != 0:
-                    program_tag = tag+"."+key
-                else:
-                    program_tag = key
-                tag_to_program[program_tag] = constructInstructions(tt[key].program.getAssembly())
-            if hasattr(tt[key], 'keys'):
-                addTagsWithBytecode(tt[key],tag+key)
 
-    addTagsWithBytecode(tt,"")
-    ttp = ttFont.setup(tag_to_program)
 
 def analysis(tt):
-    #preprocess the static value to construct cvt table
-    constructCVTTable(tt)
-    #extract instructions from font file
-    extractProgram(tt)
+    ttFont = BytecodeFont(tt)
+    #one ttFont object for one ttx file       
     absExecutor = AbstractExecutor(ttFont)
     absExecutor.execute('prep')
 
