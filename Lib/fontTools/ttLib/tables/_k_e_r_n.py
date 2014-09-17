@@ -169,7 +169,7 @@ class KernTable_format_2(object):
 	def compile(self, ttFont):
 		return self.data
 	
-	def toXML(self, writer):
+	def toXML(self, writer, ttFont):
 		writer.begintag("kernsubtable", format=2)
 		writer.newline()
 		writer.dumphex(self.data)
