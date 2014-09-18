@@ -161,25 +161,6 @@ class KernTable_format_0(object):
 		del self.kernTable[pair]
 
 
-class KernTable_format_2(object):
-	
-	def decompile(self, data, ttFont):
-		self.data = data
-	
-	def compile(self, ttFont):
-		return self.data
-	
-	def toXML(self, writer):
-		writer.begintag("kernsubtable", format=2)
-		writer.newline()
-		writer.dumphex(self.data)
-		writer.endtag("kernsubtable")
-		writer.newline()
-	
-	def fromXML(self, name, attrs, content, ttFont):
-		self.decompile(readHex(content), ttFont)
-
-
 class KernTable_format_unkown(object):
 	
 	def __init__(self, format):
@@ -205,4 +186,4 @@ class KernTable_format_unkown(object):
 
 
 
-kern_classes = {0: KernTable_format_0, 2: KernTable_format_2}
+kern_classes = {0: KernTable_format_0}
