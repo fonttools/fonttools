@@ -3,8 +3,8 @@ from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import readHex
 from . import DefaultTable
-from .sbixBitmap import *
-from .sbixBitmapSet import *
+from .sbixGlyphData import *
+from .sbixStrike import *
 import struct
 
 """
