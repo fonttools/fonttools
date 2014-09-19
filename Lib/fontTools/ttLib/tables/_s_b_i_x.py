@@ -3,7 +3,7 @@ from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import readHex
 from . import DefaultTable
-from .sbixGlyphData import *
+from .sbixGlyph import *
 from .sbixStrike import *
 import struct
 
@@ -44,8 +44,8 @@ char[4]       format                   data type, e.g. "png "
 
 sbixHeaderFormat = """
 	>
-	version:         H    # 00 01
-	flags:           H    #       00 01
+	usVal1:          H    # 00 01
+	usVal2:          H    #       00 01
 	numSets:         L    # 00 00 00 02 # number of bitmap sets
 """
 sbixHeaderFormatSize = sstruct.calcsize(sbixHeaderFormat)
@@ -61,8 +61,8 @@ sbixBitmapSetOffsetFormatSize = sstruct.calcsize(sbixBitmapSetOffsetFormat)
 class table__s_b_i_x(DefaultTable.DefaultTable):
 	def __init__(self, tag):
 		self.tableTag = tag
-		self.version = 1
-		self.flags = 1
+		self.usVal1 = 1
+		self.usVal2 = 1
 		self.numSets = 0
 		self.bitmapSets = {}
 		self.bitmapSetOffsets = []
@@ -114,15 +114,15 @@ class table__s_b_i_x(DefaultTable.DefaultTable):
 		return sbixHeader + sbixData
 
 	def toXML(self, xmlWriter, ttFont):
-		xmlWriter.simpletag("version", value=self.version)
+		xmlWriter.simpletag("usVal1", value=self.usVal1)
 		xmlWriter.newline()
-		xmlWriter.simpletag("flags", value=self.flags)
+		xmlWriter.simpletag("usVal2", value=self.usVal2)
 		xmlWriter.newline()
 		for i in sorted(self.bitmapSets.keys()):
 			self.bitmapSets[i].toXML(xmlWriter, ttFont)
 
 	def fromXML(self, name, attrs, content, ttFont):
-		if name in ["version", "flags"]:
+		if name in ["usVal1", "usVal2"]:
 			setattr(self, name, int(attrs["value"]))
 		elif name == "bitmapSet":
 			myBitmapSet = BitmapSet()
