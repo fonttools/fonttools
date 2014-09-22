@@ -121,7 +121,20 @@ class Strike(object):
 			else:
 				from fontTools import ttLib
 				raise ttLib.TTLibError("Bitmap must have a glyph name.")
-			myBitmap = Bitmap(glyphName=myGlyphName, imageFormatTag=myFormat)
+			if "originOffsetX" in attrs:
+				myOffsetX = int(attrs["originOffsetX"])
+			else:
+				myOffsetX = 0
+			if "originOffsetY" in attrs:
+				myOffsetY = int(attrs["originOffsetY"])
+			else:
+				myOffsetY = 0
+			myBitmap = Bitmap(
+				glyphName=myGlyphName,
+				imageFormatTag=myFormat,
+				originOffsetX=myOffsetX,
+				originOffsetY=myOffsetY,
+			)
 			for element in content:
 				if isinstance(element, tuple):
 					name, attrs, content = element
