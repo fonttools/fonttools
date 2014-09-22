@@ -6,22 +6,28 @@ import struct
 
 
 sbixBitmapHeaderFormat = """
-	>
-	usReserved1:     H    # 00 00
-	usReserved2:     H    #       00 00
-	imageFormatTag:  4s   # e.g. "png "
+  >
+  originOffsetX:   h    # The x-value of the point in the glyph relative to its
+                        # lower-left corner which corresponds to the origin of
+                        # the glyph on the screen, that is the point on the
+                        # baseline at the left edge of the glyph.
+  originOffsetY:   h    # The y-value of the point in the glyph relative to its
+                        # lower-left corner which corresponds to the origin of
+                        # the glyph on the screen, that is the point on the
+                        # baseline at the left edge of the glyph.
+  imageFormatTag:  4s   # e.g. "png "
 """
 
 sbixBitmapHeaderFormatSize = sstruct.calcsize(sbixBitmapHeaderFormat)
 
 
 class Bitmap(object):
-	def __init__(self, glyphName=None, referenceGlyphName=None, usReserved1=0, usReserved2=0, imageFormatTag=None, imageData=None, rawdata=None, gid=0):
+	def __init__(self, glyphName=None, referenceGlyphName=None, originOffsetX=0, originOffsetY=0, imageFormatTag=None, imageData=None, rawdata=None, gid=0):
 		self.gid = gid
 		self.glyphName = glyphName
 		self.referenceGlyphName = referenceGlyphName
-		self.usReserved1 = usReserved1
-		self.usReserved2 = usReserved2
+		self.originOffsetX = originOffsetX
+		self.originOffsetY = originOffsetY
 		self.rawdata = rawdata
 		self.imageFormatTag = imageFormatTag
 		self.imageData = imageData
@@ -70,12 +76,13 @@ class Bitmap(object):
 			xmlWriter.simpletag("bitmap", glyphname=self.glyphName)
 			xmlWriter.newline()
 			return
-		xmlWriter.begintag("bitmap", format=self.imageFormatTag, glyphname=self.glyphName)
+		xmlWriter.begintag("bitmap",
+			format=self.imageFormatTag,
+			glyphname=self.glyphName,
+			originOffsetX=self.originOffsetX,
+			originOffsetY=self.originOffsetY,
+		)
 		xmlWriter.newline()
-		#xmlWriter.simpletag("usReserved1", value=self.usReserved1)
-		#xmlWriter.newline()
-		#xmlWriter.simpletag("usReserved2", value=self.usReserved2)
-		#xmlWriter.newline()
 		if self.imageFormatTag == "dupe":
 			# format == "dupe" is apparently a reference to another glyph id.
 			xmlWriter.simpletag("ref", glyphname=self.referenceGlyphName)
@@ -89,9 +96,6 @@ class Bitmap(object):
 		xmlWriter.newline()
 
 	def fromXML(self, name, attrs, content, ttFont):
-		#if name in ["usReserved1", "usReserved2"]:
-		#	setattr(self, name, int(attrs["value"]))
-		#elif
 		if name == "ref":
 			# bitmap is a "dupe", i.e. a reference to another bitmap.
 			# in this case imageData contains the glyph id of the reference glyph
