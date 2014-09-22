@@ -86,16 +86,16 @@ class table__s_b_i_x(DefaultTable.DefaultTable):
 				offsetEntry)
 			self.bitmapSetOffsets.append(offsetEntry.offset)
 
-		# decompile BitmapSets
+		# decompile Strikes
 		for i in range(self.numStrikes-1, -1, -1):
-			myBitmapSet = BitmapSet(rawdata=data[self.bitmapSetOffsets[i]:])
+			myBitmapSet = Strike(rawdata=data[self.bitmapSetOffsets[i]:])
 			data = data[:self.bitmapSetOffsets[i]]
 			myBitmapSet.decompile(ttFont)
-			#print "  BitmapSet length: %xh" % len(bitmapSetData)
+			#print "  Strike length: %xh" % len(bitmapSetData)
 			#print "Number of Bitmaps:", myBitmapSet.numBitmaps
 			if myBitmapSet.size in self.bitmapSets:
 				from fontTools import ttLib
-				raise ttLib.TTLibError("Pixel 'size' must be unique for each BitmapSet")
+				raise ttLib.TTLibError("Pixel 'size' must be unique for each Strike")
 			self.bitmapSets[myBitmapSet.size] = myBitmapSet
 
 		# after the bitmaps have been extracted, we don't need the offsets anymore
@@ -131,8 +131,8 @@ class table__s_b_i_x(DefaultTable.DefaultTable):
 	def fromXML(self, name, attrs, content, ttFont):
 		if name in ["version", "flags"]:
 			setattr(self, name, int(attrs["value"]))
-		elif name == "bitmapSet":
-			myBitmapSet = BitmapSet()
+		elif name == "strike":
+			myBitmapSet = Strike()
 			for element in content:
 				if isinstance(element, tuple):
 					name, attrs, content = element

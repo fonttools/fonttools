@@ -20,7 +20,7 @@ sbixBitmapSetHeaderFormatSize = sstruct.calcsize(sbixBitmapSetHeaderFormat)
 sbixBitmapOffsetEntryFormatSize = sstruct.calcsize(sbixBitmapOffsetEntryFormat)
 
 
-class BitmapSet(object):
+class Strike(object):
 	def __init__(self, rawdata=None, size=0, resolution=72):
 		self.data = rawdata
 		self.size = size
@@ -33,10 +33,10 @@ class BitmapSet(object):
 			raise ttLib.TTLibError
 		if len(self.data) < sbixBitmapSetHeaderFormatSize:
 			from fontTools import ttLib
-			raise(ttLib.TTLibError, "BitmapSet header too short: Expected %x, got %x.") \
+			raise(ttLib.TTLibError, "Strike header too short: Expected %x, got %x.") \
 				% (sbixBitmapSetHeaderFormatSize, len(self.data))
 
-		# read BitmapSet header from raw data
+		# read Strike header from raw data
 		sstruct.unpack(sbixBitmapSetHeaderFormat, self.data[:sbixBitmapSetHeaderFormatSize], self)
 
 		# calculate number of bitmaps
@@ -92,7 +92,7 @@ class BitmapSet(object):
 		self.data += self.bitmapOffsets + self.bitmapData
 
 	def toXML(self, xmlWriter, ttFont):
-		xmlWriter.begintag("bitmapSet")
+		xmlWriter.begintag("strike")
 		xmlWriter.newline()
 		xmlWriter.simpletag("size", value=self.size)
 		xmlWriter.newline()
@@ -103,7 +103,7 @@ class BitmapSet(object):
 			if glyphOrder[i] in self.bitmaps:
 				self.bitmaps[glyphOrder[i]].toXML(xmlWriter, ttFont)
 				# TODO: what if there are more bitmaps than glyphs?
-		xmlWriter.endtag("bitmapSet")
+		xmlWriter.endtag("strike")
 		xmlWriter.newline()
 
 	def fromXML(self, name, attrs, content, ttFont):
