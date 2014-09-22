@@ -1,4 +1,9 @@
 from fontTools.ttLib.data import dataType
+class DataFlowRegion(object):
+    def __init__(self):
+        self.condition = None
+        self.outRegion = []
+        self.inRegion = None
 class ExecutionContext(object):
     """Abstractly represents the global environment at a single point in time. 
 
@@ -37,16 +42,16 @@ class ExecutionContext(object):
 
     def set_graphics_state_to_default(self):
         self.graphics_state = {
-            'pv':                [0x4000, 0], # Unit vector along the X axis.
-            'fv':                [0x4000, 0],
-            'dv':                [0x4000, 0],
+            'pv':                [1, 0], # Unit vector along the X axis.
+            'fv':                [1, 0],
+            'dv':                [1, 0],
             'rp':                [0,0,0],
             'zp':                [1,1,1],
             #'controlValueCutIn': 17/16, #(17 << 6) / 16, 17/16 as an f26dot6.
             #'deltaBase':         9,
             #'deltaShift':        3,
             #'minDist':           1, #1 << 6 1 as an f26dot6.
-            #'loop':              1,
+            'loop':              1,
             #'roundPhase':        1,
             #'roundPeriod':       1,#1 << 6,1 as an f26dot6.
             #'roundThreshold':    0.5,#1 << 5, 1/2 as an f26dot6.
@@ -68,7 +73,9 @@ class ExecutionContext(object):
             self.program_stack.append(item)
     #don't execute any cfg-related instructions
     def exec_IF(self):
-        pass
+        res = self.program_stack[-1]
+        self.program_stack.pop()
+        return res
     def exec_EIF(self):
         pass
     def exec_ELSE(self):
@@ -149,7 +156,7 @@ class ExecutionContext(object):
         self.program_stack.append(len(self.program_stack))
     
     def exec_DIV(self):#Divide
-        binary_operation('DIV')
+        self.binary_operation('DIV')
 
     def exec_DUP(self):#DuplicateTopStack
         self.program_stack.append(self.program_stack[-1])
@@ -263,7 +270,7 @@ class ExecutionContext(object):
     def exec_MIRP(self):
         pass
     def exec_MPPEM(self):
-        if self.graphics_state['pv'] == [0, 0x4000]:
+        if self.graphics_state['pv'] == (0, 1):
             self.program_stack.append(dataType.PPEM_Y())
         else:
             self.program_stack.append(dataType.PPEM_X())
@@ -333,9 +340,9 @@ class ExecutionContext(object):
         data = self.current_instruction.data[0]
         assert (data is 1 or data is 0)
         if data == 0:
-            self.graphics_state['fv'] = [0, 0x4000]
+            self.graphics_state['fv'] = (0, 1)
         if data == 1:
-            self.graphics_state['fv'] = [0x4000, 0]
+            self.graphics_state['fv'] = (1, 0)
            
     def exec_SFVTL(self):#Set Freedom Vector To Line
     #Todo: finish it
@@ -377,11 +384,11 @@ class ExecutionContext(object):
         data = self.current_instruction.data[0]
         assert (data is 1 or data is 0)
         if data == 0:
-            self.graphics_state['pv'] = (0, 0x4000)
-            self.graphics_state['dv'] = (0, 0x4000)
+            self.graphics_state['pv'] = (0, 1)
+            self.graphics_state['dv'] = (0, 1)
         if data == 1:
-            self.graphics_state['pv'] = (0x4000, 0)
-            self.graphics_state['dv'] = (0x4000, 0)
+            self.graphics_state['pv'] = (1, 0)
+            self.graphics_state['dv'] = (1, 0)
 
     def exec_SPVTL(self):
         pass
@@ -397,13 +404,13 @@ class ExecutionContext(object):
         data = self.current_instruction.data[0]
         assert (data is 1 or data is 0)
         if data == 0:
-            self.graphics_state['pv'] = [0, 0x4000]
-            self.graphics_state['fv'] = [0, 0x4000]
-            self.graphics_state['dv'] = [0, 0x4000]
+            self.graphics_state['pv'] = (0, 1)
+            self.graphics_state['fv'] = (0, 1)
+            self.graphics_state['dv'] = (0, 1)
         if data == 1:
-            self.graphics_state['pv'] = [0x4000, 0]
-            self.graphics_state['fv'] = [0x4000, 0]
-            self.graphics_state['dv'] = [0x4000, 0]
+            self.graphics_state['pv'] = (1, 0)
+            self.graphics_state['fv'] = (1, 0)
+            self.graphics_state['dv'] = (1, 0)
 
     def exec_SWAP(self):
         pass
@@ -480,6 +487,8 @@ class ExecutionContext(object):
     def exec_SCVTCI(self):
         self.graphics_state['controlValueCutIn'] = self.program_stack[-1]
         self.program_stack_pop(1)
+    def exec_CALL(self):
+        self.program_stack_pop(1)
 
     def exec_SDB(self):
         pass
@@ -502,6 +511,12 @@ class Executor(object):
         self.environment = ExecutionContext(font)
         self.program_ptr = None
         self.body = None
+        '''
+        mode 1 normal Execution
+        mode 2 calling a method
+        mode 3 traversing if branches
+        '''
+        self.mode = 1
     def execute_all(self):
         for key in self.font.local_programs.keys():
             self.execute(key)
@@ -509,32 +524,52 @@ class Executor(object):
     def excute_CALL(self):
         top = self.environment.program_stack[-1]
         self.program_ptr = self.font.function_table[top].start_ptr()
+        self.environment.program_stack.pop()
+        
+        print("jump to call function "+self.program_ptr.mnemonic)
 
     def execute(self,tag):
         self.program_ptr = self.font.programs[tag].start_ptr()
-
-        back_ptr = None
-        while len(self.program_ptr.successors)>0 or back_ptr != None:
-            print("executing..." + self.program_ptr.mnemonic)
-            self.environment.set_currentInstruction(self.program_ptr)
-            if self.program_ptr.mnemonic == 'CALL':
+        is_backptr = False
+        pre_environment = None
+        back_ptr = []
+        top_regin = DataFlowRegion()
+        successors_index = -1
+        while len(self.program_ptr.successors)>0 or len(back_ptr)>0:
+            print("executing..." + self.program_ptr.mnemonic , self.program_ptr.data)
+            if self.program_ptr.mnemonic == 'CALL' and is_backptr == False:
+                back_ptr.append((self.program_ptr,pre_environment))
                 self.excute_CALL()
-            else:
-                self.environment.execute()
-            
-            
+                
+            if self.program_ptr.mnemonic == 'IF':
+                back_ptr.append((self.program_ptr,pre_environment))
+            self.environment.set_currentInstruction(self.program_ptr)
+            self.environment.execute()
             self.environment.pretty_print()
-            if len(self.program_ptr.successors) == 1:
-                self.program_ptr = self.program_ptr.successors[0]
-                successors_index = 1
-                continue
-            if len(self.program_ptr.successors) > 1 and successors_index<len(program_ptr.successors):
-                back_ptr = self.program_ptr
-                successors_index = 1
-                continue
+            if len(back_ptr) != 0:
+                print('back_ptr',back_ptr)
             if len(self.program_ptr.successors)==0:
-                self.program_ptr = back_ptr
+                self.program_ptr = back_ptr[-1][0]
+                print("program pointer back to", self.program_ptr)
+                self.environment = back_ptr[-1][1]
+                back_ptr.pop()
+
+            if len(self.program_ptr.successors) > 1:
+                successors_index = successors_index + 1
+                self.program_ptr = self.program_ptr.successors[successors_index]
+                is_backptr = False
+                if successors_index == 1:
+                    successors_index = -1
                 continue
+            
+            if len(self.program_ptr.successors) == 1:
+                #pre_ptr = self.program_ptr
+                pre_environment = self.environment
+                self.program_ptr = self.program_ptr.successors[0]
+                is_backptr = False
+
+                
+            
 
 
     def exec_CALL(self):
