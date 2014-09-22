@@ -108,7 +108,7 @@ class table__s_b_i_x(DefaultTable.DefaultTable):
 			# append offset to this bitmap set to table header
 			myBitmapSet.offset = setOffset
 			sbixHeader += sstruct.pack(sbixBitmapSetOffsetFormat, myBitmapSet)
-			setOffset += sbixBitmapSetHeaderFormatSize + len(myBitmapSet.data)
+			setOffset += len(myBitmapSet.data)
 			sbixData += myBitmapSet.data
 
 		return sbixHeader + sbixData
