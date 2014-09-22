@@ -86,17 +86,10 @@ class BitmapSet(object):
 		dummy.ulOffset = bitmapOffset
 		self.bitmapOffsets += sstruct.pack(sbixBitmapOffsetEntryFormat, dummy)
 
-		# bitmap sets are padded to 4 byte boundaries
-		dataLength = len(self.bitmapOffsets) + len(self.bitmapData)
-		if dataLength % 4 != 0:
-			padding = 4 - (dataLength % 4)
-		else:
-			padding = 0
-
 		# pack header
 		self.data = sstruct.pack(sbixBitmapSetHeaderFormat, self)
 		# add offset, image data and padding after header
-		self.data += self.bitmapOffsets + self.bitmapData + "\0" * padding
+		self.data += self.bitmapOffsets + self.bitmapData
 
 	def toXML(self, xmlWriter, ttFont):
 		xmlWriter.begintag("bitmapSet")
