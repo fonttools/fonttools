@@ -24,15 +24,15 @@ UInt32        offset                   offset from table start to bitmap set
 
 bitmap set:
 
-USHORT        size                     height and width in pixels
-USHORT        resolution               ?
-offsetRecord  offsetRecord[]
+UInt16        ppem
+UInt16        resolution
+UInt32        offsetRecord[numGlyphs+1]
 (Variable)    storage for bitmaps
 
 
 offsetRecord:
 
-ULONG         bitmapOffset             offset from start of bitmap set to individual bitmap
+UInt32        bitmapOffset             offset from start of bitmap set to individual bitmap
 
 
 bitmap:
@@ -93,10 +93,10 @@ class table__s_b_i_x(DefaultTable.DefaultTable):
 			myBitmapSet.decompile(ttFont)
 			#print "  Strike length: %xh" % len(bitmapSetData)
 			#print "Number of Bitmaps:", myBitmapSet.numBitmaps
-			if myBitmapSet.size in self.bitmapSets:
+			if myBitmapSet.ppem in self.bitmapSets:
 				from fontTools import ttLib
-				raise ttLib.TTLibError("Pixel 'size' must be unique for each Strike")
-			self.bitmapSets[myBitmapSet.size] = myBitmapSet
+				raise ttLib.TTLibError("Pixel 'ppem' must be unique for each Strike")
+			self.bitmapSets[myBitmapSet.ppem] = myBitmapSet
 
 		# after the bitmaps have been extracted, we don't need the offsets anymore
 		del self.bitmapSetOffsets
@@ -137,7 +137,7 @@ class table__s_b_i_x(DefaultTable.DefaultTable):
 				if isinstance(element, tuple):
 					name, attrs, content = element
 					myBitmapSet.fromXML(name, attrs, content, ttFont)
-			self.bitmapSets[myBitmapSet.size] = myBitmapSet
+			self.bitmapSets[myBitmapSet.ppem] = myBitmapSet
 		else:
 			from fontTools import ttLib
 			raise ttLib.TTLibError("can't handle '%s' element" % name)

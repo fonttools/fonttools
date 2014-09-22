@@ -6,9 +6,11 @@ from .sbixGlyph import *
 import struct
 
 sbixBitmapSetHeaderFormat = """
-	>
-	size:            H    # 00 28
-	resolution:      H    #       00 48
+  >
+  ppem:            H    # The PPEM for which this strike was designed (e.g., 9,
+                        # 12, 24)
+  resolution:      H    # The screen resolution (in dpi) for which this strike
+                        # was designed (e.g., 72)
 """
 
 sbixBitmapOffsetEntryFormat = """
@@ -21,9 +23,9 @@ sbixBitmapOffsetEntryFormatSize = sstruct.calcsize(sbixBitmapOffsetEntryFormat)
 
 
 class Strike(object):
-	def __init__(self, rawdata=None, size=0, resolution=72):
+	def __init__(self, rawdata=None, ppem=0, resolution=72):
 		self.data = rawdata
-		self.size = size
+		self.ppem = ppem
 		self.resolution = resolution
 		self.bitmaps = {}
 
@@ -94,7 +96,7 @@ class Strike(object):
 	def toXML(self, xmlWriter, ttFont):
 		xmlWriter.begintag("strike")
 		xmlWriter.newline()
-		xmlWriter.simpletag("size", value=self.size)
+		xmlWriter.simpletag("ppem", value=self.ppem)
 		xmlWriter.newline()
 		xmlWriter.simpletag("resolution", value=self.resolution)
 		xmlWriter.newline()
@@ -107,7 +109,7 @@ class Strike(object):
 		xmlWriter.newline()
 
 	def fromXML(self, name, attrs, content, ttFont):
-		if name in ["size", "resolution"]:
+		if name in ["ppem", "resolution"]:
 			setattr(self, name, int(attrs["value"]))
 		elif name == "bitmap":
 			if "format" in attrs:
