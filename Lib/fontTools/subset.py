@@ -308,6 +308,13 @@ def _set_update(s, *others):
     s.update(other)
 
 
+@_add_method(ttLib.TTFont)
+def has_GPOS_kern(self):
+  if 'GPOS' in self:
+    GPOS_features = self['GPOS'].table.FeatureList.FeatureRecord
+    return 'kern' in [f.FeatureTag for f in GPOS_features]
+  return False
+
 @_add_method(otTables.Coverage)
 def intersect(self, glyphs):
   "Returns ascending list of matching coverage values."
@@ -2118,6 +2125,7 @@ class Options(object):
   name_IDs = [1, 2]  # Family and Style
   name_legacy = False
   name_languages = [0x0409]  # English
+  legacy_kern = False  # drop 'kern' table if GPOS available
   notdef_glyph = True # gid0 for TrueType / .notdef for CFF
   notdef_outline = False # No need for notdef to have an outline really
   recommended_glyphs = False  # gid1, gid2, gid3 for TrueType
@@ -2240,7 +2248,8 @@ class Subsetter(object):
       if tag == 'GlyphOrder': continue
 
       if(tag in self.options.drop_tables or
-         (tag in self.options.hinting_tables and not self.options.hinting)):
+         (tag in self.options.hinting_tables and not self.options.hinting) or
+         (tag == 'kern' and (not self.options.legacy_kern and font.has_GPOS_kern()))):
         self.log(tag, "dropped")
         del font[tag]
         continue
