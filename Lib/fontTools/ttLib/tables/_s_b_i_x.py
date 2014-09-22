@@ -10,16 +10,16 @@ import struct
 """
 sbix Table organization:
 
-USHORT        version?
-USHORT        version?
-USHORT        count                    number of bitmap sets
+UInt16        version
+UInt16        flags
+UInt32        count                    number of bitmap sets
 offsetEntry   offsetEntry[count]       offsetEntries
 (Variable)    storage for bitmap sets
 
 
 offsetEntry:
 
-ULONG         offset                   offset from table start to bitmap set
+UInt32        offset                   offset from table start to bitmap set
 
 
 bitmap set:
@@ -37,16 +37,23 @@ ULONG         bitmapOffset             offset from start of bitmap set to indivi
 
 bitmap:
 
-ULONG         reserved                 00 00 00 00
+SInt16        reserved                 00 00
+SInt16        reserved                       00 00
 char[4]       format                   data type, e.g. "png "
 (Variable)    bitmap data
 """
 
 sbixHeaderFormat = """
-	>
-	usVal1:          H    # 00 01
-	usVal2:          H    #       00 01
-	numSets:         L    # 00 00 00 02 # number of bitmap sets
+  >
+  version:         H    # Version number (set to 1)
+  flags:           H    # The only two bits used in the flags field are bits 0
+                        # and 1. For historical reasons, bit 0 must always be 1.
+                        # Bit 1 is a sbixDrawOutlines flag and is interpreted as
+                        # follows:
+                        #     0: Draw only 'sbix' bitmaps
+                        #     1: Draw both 'sbix' bitmaps and outlines, in that
+                        #        order
+  numSets:         L    # Number of bitmap strikes to follow
 """
 sbixHeaderFormatSize = sstruct.calcsize(sbixHeaderFormat)
 
@@ -61,8 +68,8 @@ sbixBitmapSetOffsetFormatSize = sstruct.calcsize(sbixBitmapSetOffsetFormat)
 class table__s_b_i_x(DefaultTable.DefaultTable):
 	def __init__(self, tag):
 		self.tableTag = tag
-		self.usVal1 = 1
-		self.usVal2 = 1
+		self.version = 1
+		self.flags = 1
 		self.numSets = 0
 		self.bitmapSets = {}
 		self.bitmapSetOffsets = []
@@ -114,15 +121,15 @@ class table__s_b_i_x(DefaultTable.DefaultTable):
 		return sbixHeader + sbixData
 
 	def toXML(self, xmlWriter, ttFont):
-		xmlWriter.simpletag("usVal1", value=self.usVal1)
+		xmlWriter.simpletag("version", value=self.version)
 		xmlWriter.newline()
-		xmlWriter.simpletag("usVal2", value=self.usVal2)
+		xmlWriter.simpletag("flags", value=self.flags)
 		xmlWriter.newline()
 		for i in sorted(self.bitmapSets.keys()):
 			self.bitmapSets[i].toXML(xmlWriter, ttFont)
 
 	def fromXML(self, name, attrs, content, ttFont):
-		if name in ["usVal1", "usVal2"]:
+		if name in ["version", "flags"]:
 			setattr(self, name, int(attrs["value"]))
 		elif name == "bitmapSet":
 			myBitmapSet = BitmapSet()
