@@ -38,7 +38,7 @@ Arguments:
     The input font file.
   glyph
     Specify one or more glyph identifiers to include in the subset. Must be
-    PS glyph names, or the pecial string '*' to keep the entire glyph set.
+    PS glyph names, or the special string '*' to keep the entire glyph set.
 
 Initial glyph set specification:
   These options populate the initial glyph set. Same option can appear
@@ -53,7 +53,8 @@ Initial glyph set specification:
   --glyphs=<glyphname>[,<glyphname>...]
       Specify comma/whitespace-separated PS glyph names to add to the subset.
       Note that only PS glyph names are accepted, not gidNNN, U+XXXX, etc
-      that are accepted on the command line.
+      that are accepted on the command line.  The special string '*' wil keep
+      the entire glyph set.
   --glyphs-file=<path>
       Like --glyphs but reads from a file. Anything after a '#' on any line
       is ignored as comments.
@@ -67,6 +68,8 @@ Initial glyph set specification:
       ranges as hex numbers, optionally prefixed with 'U+', 'u', etc.
       For example, --unicodes=41-5a,61-7a adds ASCII letters, so does
       the more verbose --unicodes=U+0041-005A,U+0061-007A.
+      The special strings '*' will choose all Unicode characters mapped
+      by the font.
   --unicodes-file=<path>
       Like --unicodes, but reads from a file. Anything after a '#' on any
       line in the file is ignored as comments.
@@ -2533,11 +2536,12 @@ def main(args):
   glyphs = []
   gids = []
   unicodes = []
-  wildcard = False
+  wildcard_glyphs = False
+  wildcard_unicodes = False
   text = ""
   for g in args:
     if g == '*':
-      wildcard = True
+      wildcard_glyphs = True
       continue
     if g.startswith('--output-file='):
       outfile = g[14:]
@@ -2549,7 +2553,10 @@ def main(args):
       text += open(g[12:]).read().replace('\n', '')
       continue
     if g.startswith('--unicodes='):
-      unicodes.extend(parse_unicodes(g[11:]))
+      if g[11:] == '*':
+        wildcard_unicodes = True
+      else:
+        unicodes.extend(parse_unicodes(g[11:]))
       continue
     if g.startswith('--unicodes-file='):
       for line in open(g[16:]).readlines():
@@ -2563,7 +2570,10 @@ def main(args):
         gids.extend(parse_gids(line.split('#')[0]))
       continue
     if g.startswith('--glyphs='):
-      glyphs.extend(parse_glyphs(g[9:]))
+      if g[9:] == '*':
+        wildcard_glyphs = True
+      else:
+        glyphs.extend(parse_glyphs(g[9:]))
       continue
     if g.startswith('--glyphs-file='):
       for line in open(g[14:]).readlines():
@@ -2574,8 +2584,12 @@ def main(args):
   dontLoadGlyphNames = not options.glyph_names and not glyphs
   font = load_font(fontfile, options, dontLoadGlyphNames=dontLoadGlyphNames)
   log.lapse("load font")
-  if wildcard:
+  if wildcard_glyphs:
       glyphs.extend(font.getGlyphOrder())
+  if wildcard_unicodes:
+      for t in font['cmap'].tables:
+        if t.isUnicode():
+          unicodes.extend(t.cmap.keys())
   assert '' not in glyphs
 
   log.lapse("compile glyph list")
