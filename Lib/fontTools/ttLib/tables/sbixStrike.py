@@ -88,7 +88,7 @@ class BitmapSet(object):
 
 		# pack header
 		self.data = sstruct.pack(sbixBitmapSetHeaderFormat, self)
-		# add offset, image data and padding after header
+		# add offsets and image data after header
 		self.data += self.bitmapOffsets + self.bitmapData
 
 	def toXML(self, xmlWriter, ttFont):
