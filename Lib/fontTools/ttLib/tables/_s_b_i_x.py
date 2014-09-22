@@ -12,8 +12,8 @@ sbix Table organization:
 
 UInt16        version
 UInt16        flags
-UInt32        count                    number of bitmap sets
-offsetEntry   offsetEntry[count]       offsetEntries
+UInt32        numStrikes               number of strikes (bitmap set for a specific size)
+offsetEntry   offsetEntry[numStrikes]  offsetEntries
 (Variable)    storage for bitmap sets
 
 
@@ -53,7 +53,7 @@ sbixHeaderFormat = """
                         #     0: Draw only 'sbix' bitmaps
                         #     1: Draw both 'sbix' bitmaps and outlines, in that
                         #        order
-  numSets:         L    # Number of bitmap strikes to follow
+  numStrikes:      L    # Number of bitmap strikes to follow
 """
 sbixHeaderFormatSize = sstruct.calcsize(sbixHeaderFormat)
 
@@ -70,7 +70,7 @@ class table__s_b_i_x(DefaultTable.DefaultTable):
 		self.tableTag = tag
 		self.version = 1
 		self.flags = 1
-		self.numSets = 0
+		self.numStrikes = 0
 		self.bitmapSets = {}
 		self.bitmapSetOffsets = []
 
@@ -78,7 +78,7 @@ class table__s_b_i_x(DefaultTable.DefaultTable):
 		# read table header
 		sstruct.unpack(sbixHeaderFormat, data[ : sbixHeaderFormatSize], self)
 		# collect offsets to individual bitmap sets in self.bitmapSetOffsets
-		for i in range(self.numSets):
+		for i in range(self.numStrikes):
 			myOffset = sbixHeaderFormatSize + i * sbixBitmapSetOffsetFormatSize
 			offsetEntry = sbixBitmapSetOffset()
 			sstruct.unpack(sbixBitmapSetOffsetFormat, \
@@ -87,7 +87,7 @@ class table__s_b_i_x(DefaultTable.DefaultTable):
 			self.bitmapSetOffsets.append(offsetEntry.offset)
 
 		# decompile BitmapSets
-		for i in range(self.numSets-1, -1, -1):
+		for i in range(self.numStrikes-1, -1, -1):
 			myBitmapSet = BitmapSet(rawdata=data[self.bitmapSetOffsets[i]:])
 			data = data[:self.bitmapSetOffsets[i]]
 			myBitmapSet.decompile(ttFont)
@@ -103,11 +103,11 @@ class table__s_b_i_x(DefaultTable.DefaultTable):
 
 	def compile(self, ttFont):
 		sbixData = ""
-		self.numSets = len(self.bitmapSets)
+		self.numStrikes = len(self.bitmapSets)
 		sbixHeader = sstruct.pack(sbixHeaderFormat, self)
 
 		# calculate offset to start of first bitmap set
-		setOffset = sbixHeaderFormatSize + sbixBitmapSetOffsetFormatSize * self.numSets
+		setOffset = sbixHeaderFormatSize + sbixBitmapSetOffsetFormatSize * self.numStrikes
 
 		for si in sorted(self.bitmapSets.keys()):
 			myBitmapSet = self.bitmapSets[si]
