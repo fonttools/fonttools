@@ -2,13 +2,15 @@ from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import readHex
-from .sbixBitmap import *
+from .sbixGlyph import *
 import struct
 
 sbixBitmapSetHeaderFormat = """
-	>
-	size:            H    # 00 28
-	resolution:      H    #       00 48
+  >
+  ppem:            H    # The PPEM for which this strike was designed (e.g., 9,
+                        # 12, 24)
+  resolution:      H    # The screen resolution (in dpi) for which this strike
+                        # was designed (e.g., 72)
 """
 
 sbixBitmapOffsetEntryFormat = """
@@ -20,10 +22,10 @@ sbixBitmapSetHeaderFormatSize = sstruct.calcsize(sbixBitmapSetHeaderFormat)
 sbixBitmapOffsetEntryFormatSize = sstruct.calcsize(sbixBitmapOffsetEntryFormat)
 
 
-class BitmapSet(object):
-	def __init__(self, rawdata=None, size=0, resolution=72):
+class Strike(object):
+	def __init__(self, rawdata=None, ppem=0, resolution=72):
 		self.data = rawdata
-		self.size = size
+		self.ppem = ppem
 		self.resolution = resolution
 		self.bitmaps = {}
 
@@ -33,10 +35,10 @@ class BitmapSet(object):
 			raise ttLib.TTLibError
 		if len(self.data) < sbixBitmapSetHeaderFormatSize:
 			from fontTools import ttLib
-			raise(ttLib.TTLibError, "BitmapSet header too short: Expected %x, got %x.") \
+			raise(ttLib.TTLibError, "Strike header too short: Expected %x, got %x.") \
 				% (sbixBitmapSetHeaderFormatSize, len(self.data))
 
-		# read BitmapSet header from raw data
+		# read Strike header from raw data
 		sstruct.unpack(sbixBitmapSetHeaderFormat, self.data[:sbixBitmapSetHeaderFormatSize], self)
 
 		# calculate number of bitmaps
@@ -86,22 +88,15 @@ class BitmapSet(object):
 		dummy.ulOffset = bitmapOffset
 		self.bitmapOffsets += sstruct.pack(sbixBitmapOffsetEntryFormat, dummy)
 
-		# bitmap sets are padded to 4 byte boundaries
-		dataLength = len(self.bitmapOffsets) + len(self.bitmapData)
-		if dataLength % 4 != 0:
-			padding = 4 - (dataLength % 4)
-		else:
-			padding = 0
-
 		# pack header
 		self.data = sstruct.pack(sbixBitmapSetHeaderFormat, self)
-		# add offset, image data and padding after header
-		self.data += self.bitmapOffsets + self.bitmapData + "\0" * padding
+		# add offsets and image data after header
+		self.data += self.bitmapOffsets + self.bitmapData
 
 	def toXML(self, xmlWriter, ttFont):
-		xmlWriter.begintag("bitmapSet")
+		xmlWriter.begintag("strike")
 		xmlWriter.newline()
-		xmlWriter.simpletag("size", value=self.size)
+		xmlWriter.simpletag("ppem", value=self.ppem)
 		xmlWriter.newline()
 		xmlWriter.simpletag("resolution", value=self.resolution)
 		xmlWriter.newline()
@@ -110,11 +105,11 @@ class BitmapSet(object):
 			if glyphOrder[i] in self.bitmaps:
 				self.bitmaps[glyphOrder[i]].toXML(xmlWriter, ttFont)
 				# TODO: what if there are more bitmaps than glyphs?
-		xmlWriter.endtag("bitmapSet")
+		xmlWriter.endtag("strike")
 		xmlWriter.newline()
 
 	def fromXML(self, name, attrs, content, ttFont):
-		if name in ["size", "resolution"]:
+		if name in ["ppem", "resolution"]:
 			setattr(self, name, int(attrs["value"]))
 		elif name == "bitmap":
 			if "format" in attrs:
@@ -126,7 +121,20 @@ class BitmapSet(object):
 			else:
 				from fontTools import ttLib
 				raise ttLib.TTLibError("Bitmap must have a glyph name.")
-			myBitmap = Bitmap(glyphName=myGlyphName, imageFormatTag=myFormat)
+			if "originOffsetX" in attrs:
+				myOffsetX = int(attrs["originOffsetX"])
+			else:
+				myOffsetX = 0
+			if "originOffsetY" in attrs:
+				myOffsetY = int(attrs["originOffsetY"])
+			else:
+				myOffsetY = 0
+			myBitmap = Bitmap(
+				glyphName=myGlyphName,
+				imageFormatTag=myFormat,
+				originOffsetX=myOffsetX,
+				originOffsetY=myOffsetY,
+			)
 			for element in content:
 				if isinstance(element, tuple):
 					name, attrs, content = element
