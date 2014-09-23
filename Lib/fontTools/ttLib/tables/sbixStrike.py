@@ -5,7 +5,7 @@ from fontTools.misc.textTools import readHex
 from .sbixGlyph import *
 import struct
 
-sbixBitmapSetHeaderFormat = """
+sbixStrikeHeaderFormat = """
   >
   ppem:            H    # The PPEM for which this strike was designed (e.g., 9,
                         # 12, 24)
@@ -19,7 +19,7 @@ sbixGlyphDataOffsetFormat = """
                         # to data for the individual glyph
 """
 
-sbixBitmapSetHeaderFormatSize = sstruct.calcsize(sbixBitmapSetHeaderFormat)
+sbixStrikeHeaderFormatSize = sstruct.calcsize(sbixStrikeHeaderFormat)
 sbixGlyphDataOffsetFormatSize = sstruct.calcsize(sbixGlyphDataOffsetFormat)
 
 
@@ -34,24 +34,24 @@ class Strike(object):
 		if self.data is None:
 			from fontTools import ttLib
 			raise ttLib.TTLibError
-		if len(self.data) < sbixBitmapSetHeaderFormatSize:
+		if len(self.data) < sbixStrikeHeaderFormatSize:
 			from fontTools import ttLib
 			raise(ttLib.TTLibError, "Strike header too short: Expected %x, got %x.") \
-				% (sbixBitmapSetHeaderFormatSize, len(self.data))
+				% (sbixStrikeHeaderFormatSize, len(self.data))
 
 		# read Strike header from raw data
-		sstruct.unpack(sbixBitmapSetHeaderFormat, self.data[:sbixBitmapSetHeaderFormatSize], self)
+		sstruct.unpack(sbixStrikeHeaderFormat, self.data[:sbixStrikeHeaderFormatSize], self)
 
 		# calculate number of bitmaps
 		firstGlyphDataOffset, = struct.unpack(">L", \
-			self.data[sbixBitmapSetHeaderFormatSize : sbixBitmapSetHeaderFormatSize + sbixGlyphDataOffsetFormatSize])
-		self.numBitmaps = (firstGlyphDataOffset - sbixBitmapSetHeaderFormatSize) // sbixGlyphDataOffsetFormatSize - 1
+			self.data[sbixStrikeHeaderFormatSize : sbixStrikeHeaderFormatSize + sbixGlyphDataOffsetFormatSize])
+		self.numBitmaps = (firstGlyphDataOffset - sbixStrikeHeaderFormatSize) // sbixGlyphDataOffsetFormatSize - 1
 		# ^ -1 because there's one more offset than bitmaps
 
 		# build offset list for single bitmap offsets
 		self.glyphDataOffsets = []
 		for i in range(self.numBitmaps + 1): # + 1 because there's one more offset than bitmaps
-			start = i * sbixGlyphDataOffsetFormatSize + sbixBitmapSetHeaderFormatSize
+			start = i * sbixGlyphDataOffsetFormatSize + sbixStrikeHeaderFormatSize
 			myOffset, = struct.unpack(">L", self.data[start : start + sbixGlyphDataOffsetFormatSize])
 			self.glyphDataOffsets.append(myOffset)
 
@@ -70,7 +70,7 @@ class Strike(object):
 		glyphOrder = ttFont.getGlyphOrder()
 
 		# first bitmap starts right after the header
-		currentGlyphDataOffset = sbixBitmapSetHeaderFormatSize + sbixGlyphDataOffsetFormatSize * (len(glyphOrder) + 1)
+		currentGlyphDataOffset = sbixStrikeHeaderFormatSize + sbixGlyphDataOffsetFormatSize * (len(glyphOrder) + 1)
 		for glyphName in glyphOrder:
 			if glyphName in self.bitmaps:
 				# we have a bitmap for this glyph
@@ -90,7 +90,7 @@ class Strike(object):
 		self.glyphDataOffsets += sstruct.pack(sbixGlyphDataOffsetFormat, dummy)
 
 		# pack header
-		self.data = sstruct.pack(sbixBitmapSetHeaderFormat, self)
+		self.data = sstruct.pack(sbixStrikeHeaderFormat, self)
 		# add offsets and image data after header
 		self.data += self.glyphDataOffsets + self.bitmapData
 
