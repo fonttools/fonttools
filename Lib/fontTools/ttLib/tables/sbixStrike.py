@@ -120,9 +120,11 @@ class Strike(object):
 				myFormat = None
 			if "glyphname" in attrs:
 				myGlyphName = attrs["glyphname"]
+			elif "name" in attrs:
+				myGlyphName = attrs["name"]
 			else:
 				from fontTools import ttLib
-				raise ttLib.TTLibError("Bitmap must have a glyph name.")
+				raise ttLib.TTLibError("Glyph must have a glyph name.")
 			if "originOffsetX" in attrs:
 				myOffsetX = int(attrs["originOffsetX"])
 			else:

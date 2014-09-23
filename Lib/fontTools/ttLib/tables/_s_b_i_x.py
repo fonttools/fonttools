@@ -101,6 +101,7 @@ class table__s_b_i_x(DefaultTable.DefaultTable):
 
 		# after the glyph data records have been extracted, we don't need the offsets anymore
 		del self.strikeOffsets
+		del self.numStrikes
 
 	def compile(self, ttFont):
 		sbixData = ""
