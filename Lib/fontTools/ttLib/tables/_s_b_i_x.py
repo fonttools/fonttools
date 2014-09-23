@@ -17,30 +17,30 @@ UInt32        strikeOffset[numStrikes] offsetEntries
 (Variable)    storage for bitmap sets
 
 
-offsetEntry:
+strikeOffset:
 
 UInt32        strikeOffset             Offset from begining of table to data for the individual strike
 
 
-bitmap set:
+strike:
 
 UInt16        ppem
 UInt16        resolution
 UInt32        glyphDataOffset[numGlyphs+1]
-(Variable)    storage for bitmaps
+(Variable)    storage for glyph data
 
 
-offsetRecord:
+glyphDataOffset:
 
 UInt32        glyphDataOffset          offset from start of bitmap set to individual bitmap
 
 
-bitmap:
+glyph:
 
 SInt16        originOffsetX            00 00
 SInt16        originOffsetY                  00 00
 char[4]       format                   data type, e.g. "png "
-(Variable)    bitmap data
+(Variable)    glyph data
 """
 
 sbixHeaderFormat = """
@@ -93,13 +93,13 @@ class table__s_b_i_x(DefaultTable.DefaultTable):
 			data = data[:self.strikeOffsets[i]]
 			myBitmapSet.decompile(ttFont)
 			#print "  Strike length: %xh" % len(bitmapSetData)
-			#print "Number of Bitmaps:", myBitmapSet.numBitmaps
+			#print "Number of Bitmaps:", len(myBitmapSet.glyphs)
 			if myBitmapSet.ppem in self.strikes:
 				from fontTools import ttLib
 				raise ttLib.TTLibError("Pixel 'ppem' must be unique for each Strike")
 			self.strikes[myBitmapSet.ppem] = myBitmapSet
 
-		# after the bitmaps have been extracted, we don't need the offsets anymore
+		# after the glyph data records have been extracted, we don't need the offsets anymore
 		del self.strikeOffsets
 
 	def compile(self, ttFont):
@@ -107,13 +107,13 @@ class table__s_b_i_x(DefaultTable.DefaultTable):
 		self.numStrikes = len(self.strikes)
 		sbixHeader = sstruct.pack(sbixHeaderFormat, self)
 
-		# calculate offset to start of first bitmap set
+		# calculate offset to start of first strike
 		setOffset = sbixHeaderFormatSize + sbixStrikeOffsetFormatSize * self.numStrikes
 
 		for si in sorted(self.strikes.keys()):
 			myBitmapSet = self.strikes[si]
 			myBitmapSet.compile(ttFont)
-			# append offset to this bitmap set to table header
+			# append offset to this strike to table header
 			myBitmapSet.strikeOffset = setOffset
 			sbixHeader += sstruct.pack(sbixStrikeOffsetFormat, myBitmapSet)
 			setOffset += len(myBitmapSet.data)
