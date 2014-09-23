@@ -28,7 +28,7 @@ class Strike(object):
 		self.data = rawdata
 		self.ppem = ppem
 		self.resolution = resolution
-		self.bitmaps = {}
+		self.glyphs = {}
 
 	def decompile(self, ttFont):
 		if self.data is None:
@@ -42,25 +42,26 @@ class Strike(object):
 		# read Strike header from raw data
 		sstruct.unpack(sbixStrikeHeaderFormat, self.data[:sbixStrikeHeaderFormatSize], self)
 
-		# calculate number of bitmaps
+		# calculate number of glyphs
 		firstGlyphDataOffset, = struct.unpack(">L", \
 			self.data[sbixStrikeHeaderFormatSize : sbixStrikeHeaderFormatSize + sbixGlyphDataOffsetFormatSize])
-		self.numBitmaps = (firstGlyphDataOffset - sbixStrikeHeaderFormatSize) // sbixGlyphDataOffsetFormatSize - 1
-		# ^ -1 because there's one more offset than bitmaps
+		self.numGlyphs = (firstGlyphDataOffset - sbixStrikeHeaderFormatSize) // sbixGlyphDataOffsetFormatSize - 1
+		# ^ -1 because there's one more offset than glyphs
 
-		# build offset list for single bitmap offsets
+		# build offset list for single glyph data offsets
 		self.glyphDataOffsets = []
-		for i in range(self.numBitmaps + 1): # + 1 because there's one more offset than bitmaps
+		for i in range(self.numGlyphs + 1): # + 1 because there's one more offset than glyphs
 			start = i * sbixGlyphDataOffsetFormatSize + sbixStrikeHeaderFormatSize
 			myOffset, = struct.unpack(">L", self.data[start : start + sbixGlyphDataOffsetFormatSize])
 			self.glyphDataOffsets.append(myOffset)
 
-		# iterate through offset list and slice raw data into bitmaps
-		for i in range(self.numBitmaps):
+		# iterate through offset list and slice raw data into glyph data records
+		for i in range(self.numGlyphs):
 			myBitmap = Bitmap(rawdata=self.data[self.glyphDataOffsets[i] : self.glyphDataOffsets[i+1]], gid=i)
 			myBitmap.decompile(ttFont)
-			self.bitmaps[myBitmap.glyphName] = myBitmap
+			self.glyphs[myBitmap.glyphName] = myBitmap
 		del self.glyphDataOffsets
+		del self.numGlyphs
 		del self.data
 
 	def compile(self, ttFont):
@@ -69,14 +70,14 @@ class Strike(object):
 
 		glyphOrder = ttFont.getGlyphOrder()
 
-		# first bitmap starts right after the header
+		# first glyph starts right after the header
 		currentGlyphDataOffset = sbixStrikeHeaderFormatSize + sbixGlyphDataOffsetFormatSize * (len(glyphOrder) + 1)
 		for glyphName in glyphOrder:
-			if glyphName in self.bitmaps:
-				# we have a bitmap for this glyph
-				myBitmap = self.bitmaps[glyphName]
+			if glyphName in self.glyphs:
+				# we have glyph data for this glyph
+				myBitmap = self.glyphs[glyphName]
 			else:
-				# must add empty bitmap for this glyph
+				# must add empty glyph data record for this glyph
 				myBitmap = Bitmap(glyphName=glyphName)
 			myBitmap.compile(ttFont)
 			myBitmap.glyphDataOffset = currentGlyphDataOffset
@@ -84,7 +85,7 @@ class Strike(object):
 			currentGlyphDataOffset += len(myBitmap.rawdata)
 			self.glyphDataOffsets += sstruct.pack(sbixGlyphDataOffsetFormat, myBitmap)
 
-		# add last "offset", really the end address of the last bitmap
+		# add last "offset", really the end address of the last glyph data record
 		dummy = Bitmap()
 		dummy.glyphDataOffset = currentGlyphDataOffset
 		self.glyphDataOffsets += sstruct.pack(sbixGlyphDataOffsetFormat, dummy)
@@ -103,16 +104,16 @@ class Strike(object):
 		xmlWriter.newline()
 		glyphOrder = ttFont.getGlyphOrder()
 		for i in range(len(glyphOrder)):
-			if glyphOrder[i] in self.bitmaps:
-				self.bitmaps[glyphOrder[i]].toXML(xmlWriter, ttFont)
-				# TODO: what if there are more bitmaps than glyphs?
+			if glyphOrder[i] in self.glyphs:
+				self.glyphs[glyphOrder[i]].toXML(xmlWriter, ttFont)
+				# TODO: what if there are more glyph data records than (glyf table) glyphs?
 		xmlWriter.endtag("strike")
 		xmlWriter.newline()
 
 	def fromXML(self, name, attrs, content, ttFont):
 		if name in ["ppem", "resolution"]:
 			setattr(self, name, int(attrs["value"]))
-		elif name == "bitmap":
+		elif name == "glyph":
 			if "format" in attrs:
 				myFormat = attrs["format"]
 			else:
@@ -141,7 +142,7 @@ class Strike(object):
 					name, attrs, content = element
 					myBitmap.fromXML(name, attrs, content, ttFont)
 					myBitmap.compile(ttFont)
-			self.bitmaps[myBitmap.glyphName] = myBitmap
+			self.glyphs[myBitmap.glyphName] = myBitmap
 		else:
 			from fontTools import ttLib
 			raise ttLib.TTLibError("can't handle '%s' element" % name)
