@@ -26,19 +26,19 @@ bitmap set:
 
 UInt16        ppem
 UInt16        resolution
-UInt32        offsetRecord[numGlyphs+1]
+UInt32        glyphDataOffset[numGlyphs+1]
 (Variable)    storage for bitmaps
 
 
 offsetRecord:
 
-UInt32        bitmapOffset             offset from start of bitmap set to individual bitmap
+UInt32        glyphDataOffset          offset from start of bitmap set to individual bitmap
 
 
 bitmap:
 
-SInt16        reserved                 00 00
-SInt16        reserved                       00 00
+SInt16        originOffsetX            00 00
+SInt16        originOffsetY                  00 00
 char[4]       format                   data type, e.g. "png "
 (Variable)    bitmap data
 """
