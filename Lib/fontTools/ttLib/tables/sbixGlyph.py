@@ -70,13 +70,13 @@ class Bitmap(object):
 
 	def toXML(self, xmlWriter, ttFont):
 		if self.imageFormatTag == None:
-			# TODO: ignore empty bitmaps?
-			# a bitmap entry is required for each glyph,
+			# TODO: ignore empty glyphs?
+			# a glyph data entry is required for each glyph,
 			# but empty ones can be calculated at compile time
-			xmlWriter.simpletag("bitmap", glyphname=self.glyphName)
+			xmlWriter.simpletag("glyph", glyphname=self.glyphName)
 			xmlWriter.newline()
 			return
-		xmlWriter.begintag("bitmap",
+		xmlWriter.begintag("glyph",
 			format=self.imageFormatTag,
 			glyphname=self.glyphName,
 			originOffsetX=self.originOffsetX,
@@ -92,12 +92,12 @@ class Bitmap(object):
 			xmlWriter.dumphex(self.imageData)
 			xmlWriter.endtag("hexdata")
 		xmlWriter.newline()
-		xmlWriter.endtag("bitmap")
+		xmlWriter.endtag("glyph")
 		xmlWriter.newline()
 
 	def fromXML(self, name, attrs, content, ttFont):
 		if name == "ref":
-			# bitmap is a "dupe", i.e. a reference to another bitmap.
+			# glyph is a "dupe", i.e. a reference to another glyph's image data.
 			# in this case imageData contains the glyph id of the reference glyph
 			# get glyph id from glyphname
 			self.imageData = struct.pack(">H", ttFont.getGlyphID(attrs["glyphname"]))
