@@ -31,7 +31,7 @@ class Glyph(object):
 		self.rawdata = rawdata
 		self.graphicType = graphicType
 		self.imageData = imageData
-		
+
 		# fix self.graphicType if it is null terminated or too short
 		if self.graphicType is not None:
 			if self.graphicType[-1] == "\0":
