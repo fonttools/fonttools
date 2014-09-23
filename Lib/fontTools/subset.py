@@ -206,6 +206,10 @@ Font table options:
             * Drop font-wide hinting tables except 'VDMX'.
         --hinting-tables=''
             * Keep all font-wide hinting tables (but strip hints from glyphs).
+  --legacy-kern
+      keep TrueType 'kern' table even when OpenType 'GPOS' is available.
+  --no-legacy-kern
+      drop TrueType 'kern' table if OpenType 'GPOS' is available. [default]
 
 Font naming options:
   These options control what is retained in the 'name' table. For numerical
@@ -307,13 +311,6 @@ def _set_update(s, *others):
   for other in others:
     s.update(other)
 
-
-@_add_method(ttLib.TTFont)
-def has_GPOS_kern(self):
-  if 'GPOS' in self:
-    GPOS_features = self['GPOS'].table.FeatureList.FeatureRecord
-    return 'kern' in [f.FeatureTag for f in GPOS_features]
-  return False
 
 @_add_method(otTables.Coverage)
 def intersect(self, glyphs):
@@ -2249,7 +2246,7 @@ class Subsetter(object):
 
       if(tag in self.options.drop_tables or
          (tag in self.options.hinting_tables and not self.options.hinting) or
-         (tag == 'kern' and (not self.options.legacy_kern and font.has_GPOS_kern()))):
+         (tag == 'kern' and (not self.options.legacy_kern and 'GPOS' in font))):
         self.log(tag, "dropped")
         del font[tag]
         continue
