@@ -13,13 +13,14 @@ sbixBitmapSetHeaderFormat = """
                         # was designed (e.g., 72)
 """
 
-sbixBitmapOffsetEntryFormat = """
-	>
-	ulOffset:        L    # 00 00 07 E0 # Offset from start of first offset entry to each bitmap
+sbixGlyphDataOffsetFormat = """
+  >
+  glyphDataOffset: L    # Offset from the beginning of the strike data record
+                        # to data for the individual glyph
 """
 
 sbixBitmapSetHeaderFormatSize = sstruct.calcsize(sbixBitmapSetHeaderFormat)
-sbixBitmapOffsetEntryFormatSize = sstruct.calcsize(sbixBitmapOffsetEntryFormat)
+sbixGlyphDataOffsetFormatSize = sstruct.calcsize(sbixGlyphDataOffsetFormat)
 
 
 class Strike(object):
@@ -42,34 +43,34 @@ class Strike(object):
 		sstruct.unpack(sbixBitmapSetHeaderFormat, self.data[:sbixBitmapSetHeaderFormatSize], self)
 
 		# calculate number of bitmaps
-		firstBitmapOffset, = struct.unpack(">L", \
-			self.data[sbixBitmapSetHeaderFormatSize : sbixBitmapSetHeaderFormatSize + sbixBitmapOffsetEntryFormatSize])
-		self.numBitmaps = (firstBitmapOffset - sbixBitmapSetHeaderFormatSize) // sbixBitmapOffsetEntryFormatSize - 1
+		firstGlyphDataOffset, = struct.unpack(">L", \
+			self.data[sbixBitmapSetHeaderFormatSize : sbixBitmapSetHeaderFormatSize + sbixGlyphDataOffsetFormatSize])
+		self.numBitmaps = (firstGlyphDataOffset - sbixBitmapSetHeaderFormatSize) // sbixGlyphDataOffsetFormatSize - 1
 		# ^ -1 because there's one more offset than bitmaps
 
 		# build offset list for single bitmap offsets
-		self.bitmapOffsets = []
+		self.glyphDataOffsets = []
 		for i in range(self.numBitmaps + 1): # + 1 because there's one more offset than bitmaps
-			start = i * sbixBitmapOffsetEntryFormatSize + sbixBitmapSetHeaderFormatSize
-			myOffset, = struct.unpack(">L", self.data[start : start + sbixBitmapOffsetEntryFormatSize])
-			self.bitmapOffsets.append(myOffset)
+			start = i * sbixGlyphDataOffsetFormatSize + sbixBitmapSetHeaderFormatSize
+			myOffset, = struct.unpack(">L", self.data[start : start + sbixGlyphDataOffsetFormatSize])
+			self.glyphDataOffsets.append(myOffset)
 
 		# iterate through offset list and slice raw data into bitmaps
 		for i in range(self.numBitmaps):
-			myBitmap = Bitmap(rawdata=self.data[self.bitmapOffsets[i] : self.bitmapOffsets[i+1]], gid=i)
+			myBitmap = Bitmap(rawdata=self.data[self.glyphDataOffsets[i] : self.glyphDataOffsets[i+1]], gid=i)
 			myBitmap.decompile(ttFont)
 			self.bitmaps[myBitmap.glyphName] = myBitmap
-		del self.bitmapOffsets
+		del self.glyphDataOffsets
 		del self.data
 
 	def compile(self, ttFont):
-		self.bitmapOffsets = ""
+		self.glyphDataOffsets = ""
 		self.bitmapData = ""
 
 		glyphOrder = ttFont.getGlyphOrder()
 
 		# first bitmap starts right after the header
-		bitmapOffset = sbixBitmapSetHeaderFormatSize + sbixBitmapOffsetEntryFormatSize * (len(glyphOrder) + 1)
+		currentGlyphDataOffset = sbixBitmapSetHeaderFormatSize + sbixGlyphDataOffsetFormatSize * (len(glyphOrder) + 1)
 		for glyphName in glyphOrder:
 			if glyphName in self.bitmaps:
 				# we have a bitmap for this glyph
@@ -78,20 +79,20 @@ class Strike(object):
 				# must add empty bitmap for this glyph
 				myBitmap = Bitmap(glyphName=glyphName)
 			myBitmap.compile(ttFont)
-			myBitmap.ulOffset = bitmapOffset
+			myBitmap.glyphDataOffset = currentGlyphDataOffset
 			self.bitmapData += myBitmap.rawdata
-			bitmapOffset += len(myBitmap.rawdata)
-			self.bitmapOffsets += sstruct.pack(sbixBitmapOffsetEntryFormat, myBitmap)
+			currentGlyphDataOffset += len(myBitmap.rawdata)
+			self.glyphDataOffsets += sstruct.pack(sbixGlyphDataOffsetFormat, myBitmap)
 
 		# add last "offset", really the end address of the last bitmap
 		dummy = Bitmap()
-		dummy.ulOffset = bitmapOffset
-		self.bitmapOffsets += sstruct.pack(sbixBitmapOffsetEntryFormat, dummy)
+		dummy.glyphDataOffset = currentGlyphDataOffset
+		self.glyphDataOffsets += sstruct.pack(sbixGlyphDataOffsetFormat, dummy)
 
 		# pack header
 		self.data = sstruct.pack(sbixBitmapSetHeaderFormat, self)
 		# add offsets and image data after header
-		self.data += self.bitmapOffsets + self.bitmapData
+		self.data += self.glyphDataOffsets + self.bitmapData
 
 	def toXML(self, xmlWriter, ttFont):
 		xmlWriter.begintag("strike")
