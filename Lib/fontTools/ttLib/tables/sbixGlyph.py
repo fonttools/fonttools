@@ -73,12 +73,12 @@ class Bitmap(object):
 			# TODO: ignore empty glyphs?
 			# a glyph data entry is required for each glyph,
 			# but empty ones can be calculated at compile time
-			xmlWriter.simpletag("glyph", glyphname=self.glyphName)
+			xmlWriter.simpletag("glyph", name=self.glyphName)
 			xmlWriter.newline()
 			return
 		xmlWriter.begintag("glyph",
 			format=self.imageFormatTag,
-			glyphname=self.glyphName,
+			name=self.glyphName,
 			originOffsetX=self.originOffsetX,
 			originOffsetY=self.originOffsetY,
 		)
