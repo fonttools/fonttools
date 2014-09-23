@@ -5,7 +5,7 @@ from fontTools.misc.textTools import readHex
 import struct
 
 
-sbixBitmapHeaderFormat = """
+sbixGlyphHeaderFormat = """
   >
   originOffsetX:   h    # The x-value of the point in the glyph relative to its
                         # lower-left corner which corresponds to the origin of
@@ -18,7 +18,7 @@ sbixBitmapHeaderFormat = """
   imageFormatTag:  4s   # e.g. "png "
 """
 
-sbixBitmapHeaderFormatSize = sstruct.calcsize(sbixBitmapHeaderFormat)
+sbixGlyphHeaderFormatSize = sstruct.calcsize(sbixGlyphHeaderFormat)
 
 
 class Bitmap(object):
@@ -38,19 +38,19 @@ class Bitmap(object):
 			from fontTools import ttLib
 			raise ttLib.TTLibError("No table data to decompile")
 		if len(self.rawdata) > 0:
-			if len(self.rawdata) < sbixBitmapHeaderFormatSize:
+			if len(self.rawdata) < sbixGlyphHeaderFormatSize:
 				from fontTools import ttLib
-				#print "Bitmap %i header too short: Expected %x, got %x." % (self.gid, sbixBitmapHeaderFormatSize, len(self.rawdata))
+				#print "Bitmap %i header too short: Expected %x, got %x." % (self.gid, sbixGlyphHeaderFormatSize, len(self.rawdata))
 				raise ttLib.TTLibError("Bitmap header too short.")
 
-			sstruct.unpack(sbixBitmapHeaderFormat, self.rawdata[:sbixBitmapHeaderFormatSize], self)
+			sstruct.unpack(sbixGlyphHeaderFormat, self.rawdata[:sbixGlyphHeaderFormatSize], self)
 
 			if self.imageFormatTag == "dupe":
 				# bitmap is a reference to another glyph's bitmap
-				gid, = struct.unpack(">H", self.rawdata[sbixBitmapHeaderFormatSize:])
+				gid, = struct.unpack(">H", self.rawdata[sbixGlyphHeaderFormatSize:])
 				self.referenceGlyphName = ttFont.getGlyphName(gid)
 			else:
-				self.imageData = self.rawdata[sbixBitmapHeaderFormatSize:]
+				self.imageData = self.rawdata[sbixGlyphHeaderFormatSize:]
 				self.referenceGlyphName = None
 		# clean up
 		del self.rawdata
@@ -66,7 +66,7 @@ class Bitmap(object):
 		if self.imageFormatTag is None:
 			self.rawdata = ""
 		else:
-			self.rawdata = sstruct.pack(sbixBitmapHeaderFormat, self) + self.imageData
+			self.rawdata = sstruct.pack(sbixGlyphHeaderFormat, self) + self.imageData
 
 	def toXML(self, xmlWriter, ttFont):
 		if self.imageFormatTag == None:
