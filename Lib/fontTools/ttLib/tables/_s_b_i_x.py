@@ -13,13 +13,13 @@ sbix Table organization:
 UInt16        version
 UInt16        flags
 UInt32        numStrikes               number of strikes (bitmap set for a specific size)
-offsetEntry   offsetEntry[numStrikes]  offsetEntries
+UInt32        strikeOffset[numStrikes] offsetEntries
 (Variable)    storage for bitmap sets
 
 
 offsetEntry:
 
-UInt32        offset                   offset from table start to bitmap set
+UInt32        strikeOffset             Offset from begining of table to data for the individual strike
 
 
 bitmap set:
@@ -58,11 +58,12 @@ sbixHeaderFormat = """
 sbixHeaderFormatSize = sstruct.calcsize(sbixHeaderFormat)
 
 
-sbixBitmapSetOffsetFormat = """
-	>
-	offset:          L    # 00 00 00 10 # offset from table start to each bitmap set
+sbixStrikeOffsetFormat = """
+  >
+  strikeOffset:    L    # Offset from begining of table to data for the
+                        # individual strike
 """
-sbixBitmapSetOffsetFormatSize = sstruct.calcsize(sbixBitmapSetOffsetFormat)
+sbixStrikeOffsetFormatSize = sstruct.calcsize(sbixStrikeOffsetFormat)
 
 
 class table__s_b_i_x(DefaultTable.DefaultTable):
@@ -79,12 +80,12 @@ class table__s_b_i_x(DefaultTable.DefaultTable):
 		sstruct.unpack(sbixHeaderFormat, data[ : sbixHeaderFormatSize], self)
 		# collect offsets to individual bitmap sets in self.bitmapSetOffsets
 		for i in range(self.numStrikes):
-			myOffset = sbixHeaderFormatSize + i * sbixBitmapSetOffsetFormatSize
+			myOffset = sbixHeaderFormatSize + i * sbixStrikeOffsetFormatSize
 			offsetEntry = sbixBitmapSetOffset()
-			sstruct.unpack(sbixBitmapSetOffsetFormat, \
-				data[myOffset : myOffset+sbixBitmapSetOffsetFormatSize], \
+			sstruct.unpack(sbixStrikeOffsetFormat, \
+				data[myOffset : myOffset+sbixStrikeOffsetFormatSize], \
 				offsetEntry)
-			self.bitmapSetOffsets.append(offsetEntry.offset)
+			self.bitmapSetOffsets.append(offsetEntry.strikeOffset)
 
 		# decompile Strikes
 		for i in range(self.numStrikes-1, -1, -1):
@@ -107,14 +108,14 @@ class table__s_b_i_x(DefaultTable.DefaultTable):
 		sbixHeader = sstruct.pack(sbixHeaderFormat, self)
 
 		# calculate offset to start of first bitmap set
-		setOffset = sbixHeaderFormatSize + sbixBitmapSetOffsetFormatSize * self.numStrikes
+		setOffset = sbixHeaderFormatSize + sbixStrikeOffsetFormatSize * self.numStrikes
 
 		for si in sorted(self.bitmapSets.keys()):
 			myBitmapSet = self.bitmapSets[si]
 			myBitmapSet.compile(ttFont)
 			# append offset to this bitmap set to table header
-			myBitmapSet.offset = setOffset
-			sbixHeader += sstruct.pack(sbixBitmapSetOffsetFormat, myBitmapSet)
+			myBitmapSet.strikeOffset = setOffset
+			sbixHeader += sstruct.pack(sbixStrikeOffsetFormat, myBitmapSet)
 			setOffset += len(myBitmapSet.data)
 			sbixData += myBitmapSet.data
 
