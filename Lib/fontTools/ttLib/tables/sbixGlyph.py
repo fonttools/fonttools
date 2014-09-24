@@ -1,7 +1,7 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
-from fontTools.misc.textTools import readHex
+from fontTools.misc.textTools import readHex, safeEval
 import struct
 
 
@@ -100,7 +100,7 @@ class Glyph(object):
 			# glyph is a "dupe", i.e. a reference to another glyph's image data.
 			# in this case imageData contains the glyph id of the reference glyph
 			# get glyph id from glyphname
-			self.imageData = struct.pack(">H", ttFont.getGlyphID(attrs["glyphname"]))
+			self.imageData = struct.pack(">H", ttFont.getGlyphID(safeEval("'''" + attrs["glyphname"] + "'''")))
 		elif name == "hexdata":
 			self.imageData = readHex(content)
 		else:

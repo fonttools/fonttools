@@ -112,10 +112,10 @@ class Strike(object):
 
 	def fromXML(self, name, attrs, content, ttFont):
 		if name in ["ppem", "resolution"]:
-			setattr(self, name, int(attrs["value"]))
+			setattr(self, name, safeEval(attrs["value"]))
 		elif name == "glyph":
 			if "graphicType" in attrs:
-				myFormat = attrs["graphicType"]
+				myFormat = safeEval("'''" + attrs["graphicType"] + "'''")
 				if len(myFormat) > 4:
 					from fontTools import ttLib
 					raise ttLib.TTLibError("graphicType must not be longer than 4 characters.")
@@ -125,18 +125,18 @@ class Strike(object):
 			else:
 				myFormat = None
 			if "glyphname" in attrs:
-				myGlyphName = attrs["glyphname"]
+				myGlyphName = safeEval("'''" + attrs["glyphname"] + "'''")
 			elif "name" in attrs:
-				myGlyphName = attrs["name"]
+				myGlyphName = safeEval("'''" + attrs["name"] + "'''")
 			else:
 				from fontTools import ttLib
 				raise ttLib.TTLibError("Glyph must have a glyph name.")
 			if "originOffsetX" in attrs:
-				myOffsetX = int(attrs["originOffsetX"])
+				myOffsetX = safeEval(attrs["originOffsetX"])
 			else:
 				myOffsetX = 0
 			if "originOffsetY" in attrs:
-				myOffsetY = int(attrs["originOffsetY"])
+				myOffsetY = safeEval(attrs["originOffsetY"])
 			else:
 				myOffsetY = 0
 			current_glyph = Glyph(
