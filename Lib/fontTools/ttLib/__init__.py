@@ -730,8 +730,8 @@ class _TTGlyph(object):
 			start = 0
 			for end in endPts:
 				end = end + 1
-				contour = coordinates[start:end].tolist()
-				cFlags = flags[start:end].tolist()
+				contour = coordinates[start:end]
+				cFlags = flags[start:end]
 				start = end
 				if 1 not in cFlags:
 					# There is not a single on-curve point on the curve,
