@@ -116,6 +116,12 @@ class Strike(object):
 		elif name == "glyph":
 			if "graphicType" in attrs:
 				myFormat = safeEval("'''" + attrs["graphicType"] + "'''")
+				if len(myFormat) > 4:
+					from fontTools import ttLib
+					raise ttLib.TTLibError("graphicType must not be longer than 4 characters.")
+				elif len(myFormat) < 4:
+					# pad with spaces
+					myFormat += " " * (4 - len(myFormat))
 			else:
 				myFormat = None
 			if "glyphname" in attrs:
