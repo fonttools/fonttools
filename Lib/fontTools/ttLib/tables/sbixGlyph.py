@@ -31,6 +31,17 @@ class Glyph(object):
 		self.rawdata = rawdata
 		self.graphicType = graphicType
 		self.imageData = imageData
+		
+		# fix self.graphicType if it is null terminated or too short
+		if self.graphicType is not None:
+			if self.graphicType[-1] == "\0":
+				self.graphicType = self.graphicType[:-1]
+			if len(self.graphicType) > 4:
+				from fontTools import ttLib
+				raise ttLib.TTLibError("Glyph.graphicType must not be longer than 4 characters.")
+			elif len(self.graphicType) < 4:
+				# pad with spaces
+				self.graphicType += "    "[:(4 - len(self.graphicType))]
 
 		# fix self.graphicType if it is null terminated or too short
 		if self.graphicType is not None:
