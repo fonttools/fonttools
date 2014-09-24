@@ -1,7 +1,7 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
-from fontTools.misc.textTools import readHex
+from fontTools.misc.textTools import readHex, num2binary, binary2num
 from . import DefaultTable
 from .sbixGlyph import *
 from .sbixStrike import *
@@ -125,14 +125,16 @@ class table__s_b_i_x(DefaultTable.DefaultTable):
 	def toXML(self, xmlWriter, ttFont):
 		xmlWriter.simpletag("version", value=self.version)
 		xmlWriter.newline()
-		xmlWriter.simpletag("flags", value=self.flags)
+		xmlWriter.simpletag("flags", value=num2binary(self.flags, 16))
 		xmlWriter.newline()
 		for i in sorted(self.strikes.keys()):
 			self.strikes[i].toXML(xmlWriter, ttFont)
 
 	def fromXML(self, name, attrs, content, ttFont):
-		if name in ["version", "flags"]:
+		if name =="version":
 			setattr(self, name, int(attrs["value"]))
+		elif name == "flags":
+			setattr(self, name, binary2num(attrs["value"]))
 		elif name == "strike":
 			current_strike = Strike()
 			for element in content:
