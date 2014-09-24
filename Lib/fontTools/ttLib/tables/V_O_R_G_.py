@@ -115,9 +115,6 @@ class table_V_O_R_G_(DefaultTable.DefaultTable):
 		elif glyphSelector in self.VOriginRecords:
 			del self.VOriginRecords[glyphSelector]
 
-	def __delitem__(self, glyphSelector):
-		del self.VOriginRecords[glyphSelector]
-
 class VOriginRecord(object):
 
 	def __init__(self, name = None, vOrigin = None):

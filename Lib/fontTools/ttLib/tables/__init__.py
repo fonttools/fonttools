@@ -20,7 +20,6 @@ def _moduleFinderHint():
 	from . import G_S_U_B_
 	from . import J_S_T_F_
 	from . import L_T_S_H_
-	from . import M_A_T_H_
 	from . import M_E_T_A_
 	from . import O_S_2f_2
 	from . import S_I_N_G_
@@ -36,7 +35,6 @@ def _moduleFinderHint():
 	from . import T_S_I__2
 	from . import T_S_I__3
 	from . import T_S_I__5
-	from . import V_D_M_X_
 	from . import V_O_R_G_
 	from . import _c_m_a_p
 	from . import _c_v_t

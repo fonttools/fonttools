@@ -1,14 +1,11 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
-from fontTools.ttLib import getClassTag
 
 class DefaultTable(object):
 	
 	dependencies = []
 	
-	def __init__(self, tag=None):
-		if tag is None:
-			tag = getClassTag(self.__class__)
+	def __init__(self, tag):
 		self.tableTag = Tag(tag)
 	
 	def decompile(self, data, ttFont):

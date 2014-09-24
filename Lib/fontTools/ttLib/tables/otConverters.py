@@ -191,7 +191,7 @@ class Struct(BaseConverter):
 				# If there are attributes (probably index), then
 				# don't drop this even if it's NULL.  It will mess
 				# up the array indices of the containing element.
-				xmlWriter.simpletag(name, attrs + [("empty", 1)])
+				xmlWriter.simpletag(name, attrs + [("empty", True)])
 				xmlWriter.newline()
 			else:
 				pass # NULL table, ignore
@@ -199,9 +199,9 @@ class Struct(BaseConverter):
 			value.toXML(xmlWriter, font, attrs, name=name)
 	
 	def xmlRead(self, attrs, content, font):
-		if "empty" in attrs and safeEval(attrs["empty"]):
-			return None
 		table = self.tableClass()
+		if attrs.get("empty"):
+			return None
 		Format = attrs.get("Format")
 		if Format is not None:
 			table.Format = int(Format)

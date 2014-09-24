@@ -1,6 +1,6 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
-from fontTools.ttLib import getSearchRange
+from fontTools.ttLib import sfnt
 from fontTools.misc.textTools import safeEval, readHex
 from fontTools.misc.fixedTools import fixedToFloat as fi2fl, floatToFixed as fl2fi
 from . import DefaultTable
@@ -116,7 +116,9 @@ class KernTable_format_0(object):
 	
 	def compile(self, ttFont):
 		nPairs = len(self.kernTable)
-		searchRange, entrySelector, rangeShift = getSearchRange(nPairs, 6)
+		entrySelector = sfnt.maxPowerOfTwo(nPairs)
+		searchRange = (2 ** entrySelector) * 6
+		rangeShift = (nPairs - (2 ** entrySelector)) * 6
 		data = struct.pack(">HHHH", nPairs, searchRange, entrySelector, rangeShift)
 		
 		# yeehee! (I mean, turn names into indices)
@@ -161,6 +163,25 @@ class KernTable_format_0(object):
 		del self.kernTable[pair]
 
 
+class KernTable_format_2(object):
+	
+	def decompile(self, data, ttFont):
+		self.data = data
+	
+	def compile(self, ttFont):
+		return self.data
+	
+	def toXML(self, writer):
+		writer.begintag("kernsubtable", format=2)
+		writer.newline()
+		writer.dumphex(self.data)
+		writer.endtag("kernsubtable")
+		writer.newline()
+	
+	def fromXML(self, name, attrs, content, ttFont):
+		self.decompile(readHex(content), ttFont)
+
+
 class KernTable_format_unkown(object):
 	
 	def __init__(self, format):
@@ -186,4 +207,4 @@ class KernTable_format_unkown(object):
 
 
 
-kern_classes = {0: KernTable_format_0}
+kern_classes = {0: KernTable_format_0, 2: KernTable_format_2}
