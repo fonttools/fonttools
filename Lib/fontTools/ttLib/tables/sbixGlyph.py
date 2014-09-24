@@ -15,21 +15,21 @@ sbixGlyphHeaderFormat = """
                         # lower-left corner which corresponds to the origin of
                         # the glyph on the screen, that is the point on the
                         # baseline at the left edge of the glyph.
-  imageFormatTag:  4s   # e.g. "png "
+  graphicType:     4s   # e.g. "png "
 """
 
 sbixGlyphHeaderFormatSize = sstruct.calcsize(sbixGlyphHeaderFormat)
 
 
 class Bitmap(object):
-	def __init__(self, glyphName=None, referenceGlyphName=None, originOffsetX=0, originOffsetY=0, imageFormatTag=None, imageData=None, rawdata=None, gid=0):
+	def __init__(self, glyphName=None, referenceGlyphName=None, originOffsetX=0, originOffsetY=0, graphicType=None, imageData=None, rawdata=None, gid=0):
 		self.gid = gid
 		self.glyphName = glyphName
 		self.referenceGlyphName = referenceGlyphName
 		self.originOffsetX = originOffsetX
 		self.originOffsetY = originOffsetY
 		self.rawdata = rawdata
-		self.imageFormatTag = imageFormatTag
+		self.graphicType = graphicType
 		self.imageData = imageData
 
 	def decompile(self, ttFont):
@@ -45,7 +45,7 @@ class Bitmap(object):
 
 			sstruct.unpack(sbixGlyphHeaderFormat, self.rawdata[:sbixGlyphHeaderFormatSize], self)
 
-			if self.imageFormatTag == "dupe":
+			if self.graphicType == "dupe":
 				# bitmap is a reference to another glyph's bitmap
 				gid, = struct.unpack(">H", self.rawdata[sbixGlyphHeaderFormatSize:])
 				self.referenceGlyphName = ttFont.getGlyphName(gid)
@@ -63,13 +63,13 @@ class Bitmap(object):
 			# TODO: if ttFont has no maxp, cmap etc., ignore glyph names and compile by index?
 			# (needed if you just want to compile the sbix table on its own)
 		self.gid = struct.pack(">H", ttFont.getGlyphID(self.glyphName))
-		if self.imageFormatTag is None:
+		if self.graphicType is None:
 			self.rawdata = ""
 		else:
 			self.rawdata = sstruct.pack(sbixGlyphHeaderFormat, self) + self.imageData
 
 	def toXML(self, xmlWriter, ttFont):
-		if self.imageFormatTag == None:
+		if self.graphicType == None:
 			# TODO: ignore empty glyphs?
 			# a glyph data entry is required for each glyph,
 			# but empty ones can be calculated at compile time
@@ -77,14 +77,14 @@ class Bitmap(object):
 			xmlWriter.newline()
 			return
 		xmlWriter.begintag("glyph",
-			format=self.imageFormatTag,
+			graphicType=self.graphicType,
 			name=self.glyphName,
 			originOffsetX=self.originOffsetX,
 			originOffsetY=self.originOffsetY,
 		)
 		xmlWriter.newline()
-		if self.imageFormatTag == "dupe":
-			# format == "dupe" is apparently a reference to another glyph id.
+		if self.graphicType == "dupe":
+			# graphicType == "dupe" is a reference to another glyph id.
 			xmlWriter.simpletag("ref", glyphname=self.referenceGlyphName)
 		else:
 			xmlWriter.begintag("hexdata")
