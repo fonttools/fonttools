@@ -33,13 +33,12 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 		if data:
 			warnings.warn("too much 'hmtx'/'vmtx' table data")
 		self.metrics = {}
-		glyphOrder = ttFont.getGlyphOrder()
 		for i in range(numberOfMetrics):
-			glyphName = glyphOrder[i]
+			glyphName = ttFont.getGlyphName(i)
 			self.metrics[glyphName] = list(metrics[i*2:i*2+2])
 		lastAdvance = metrics[-2]
 		for i in range(numberOfSideBearings):
-			glyphName = glyphOrder[i + numberOfMetrics]
+			glyphName = ttFont.getGlyphName(i + numberOfMetrics)
 			self.metrics[glyphName] = [lastAdvance, sideBearings[i]]
 	
 	def compile(self, ttFont):
@@ -90,9 +89,6 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 		if name == "mtx":
 			self.metrics[attrs["name"]] = [safeEval(attrs[self.advanceName]), 
 					safeEval(attrs[self.sideBearingName])]
-
-	def __delitem__(self, glyphName):
-		del self.metrics[glyphName]
 	
 	def __getitem__(self, glyphName):
 		return self.metrics[glyphName]

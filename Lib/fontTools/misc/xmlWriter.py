@@ -10,13 +10,7 @@ INDENT = "  "
 
 class XMLWriter(object):
 	
-	def __init__(self, fileOrPath, indentwhite=INDENT, idlefunc=None, encoding=None):
-		if encoding is None:
-			encoding = 'utf-8'
-		if encoding.lower().replace('-','') != 'utf8':
-			raise Exception('Only UTF-8 encoding is supported.')
-		if fileOrPath == '-':
-			fileOrPath = sys.stdout
+	def __init__(self, fileOrPath, indentwhite=INDENT, idlefunc=None):
 		if not hasattr(fileOrPath, "write"):
 			try:
 				# Python3 has encoding support.

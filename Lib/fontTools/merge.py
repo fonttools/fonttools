@@ -33,10 +33,9 @@ def _add_method(*clazzes, **kwargs):
 # General utility functions for merging values from different fonts
 
 def equal(lst):
-	lst = list(lst)
 	t = iter(lst)
 	first = next(t)
-	assert all(item == first for item in t), "Expected all items to be equal: %s" % lst
+	assert all(item == first for item in t)
 	return first
 
 def first(lst):
@@ -58,7 +57,7 @@ def avg_int(lst):
 	lst = list(lst)
 	return sum(lst) // len(lst)
 
-def onlyExisting(func):
+def implementedFilter(func):
 	"""Returns a filter func that when called with a list,
 	only calls func on the non-NotImplemented items of the list,
 	and only so if there's at least one item remaining.
@@ -83,19 +82,14 @@ def sumDicts(lst):
 	return d
 
 def mergeObjects(lst):
-	lst = [item for item in lst if item is not NotImplemented]
+	lst = [item for item in lst if item is not None and item is not NotImplemented]
 	if not lst:
-		return NotImplemented
-	lst = [item for item in lst if item is not None]
-	if not lst:
-		return None
+		return None # Not all can be NotImplemented
 
 	clazz = lst[0].__class__
 	assert all(type(item) == clazz for item in lst), lst
-
 	logic = clazz.mergeMap
 	returnTable = clazz()
-	returnDict = {}
 
 	allKeys = set.union(set(), *(vars(table).keys() for table in lst))
 	for key in allKeys:
@@ -111,31 +105,25 @@ def mergeObjects(lst):
 			continue
 		value = mergeLogic(getattr(table, key, NotImplemented) for table in lst)
 		if value is not NotImplemented:
-			returnDict[key] = value
-
-	returnTable.__dict__ = returnDict
+			setattr(returnTable, key, value)
 
 	return returnTable
 
-def mergeBits(bitmap):
-
-	def wrapper(lst):
-		lst = list(lst)
-		returnValue = 0
-		for bitNumber in range(bitmap['size']):
+def mergeBits(logic, lst):
+	lst = list(lst)
+	returnValue = 0
+	for bitNumber in range(logic['size']):
+		try:
+			mergeLogic = logic[bitNumber]
+		except KeyError:
 			try:
-				mergeLogic = bitmap[bitNumber]
+				mergeLogic = logic['*']
 			except KeyError:
-				try:
-					mergeLogic = bitmap['*']
-				except KeyError:
-					raise Exception("Don't know how to merge bit %s" % bitNumber)
-			shiftedBit = 1 << bitNumber
-			mergedValue = mergeLogic(bool(item & shiftedBit) for item in lst)
-			returnValue |= mergedValue << bitNumber
-		return returnValue
-
-	return wrapper
+				raise Exception("Don't know how to merge bit %s" % bitNumber)
+		shiftedBit = 1 << bitNumber
+		mergedValue = mergeLogic(bool(item & shiftedBit) for item in lst)
+		returnValue |= mergedValue << bitNumber
+	return returnValue
 
 
 @_add_method(DefaultTable, allowDefaultTable=True)
@@ -164,7 +152,7 @@ ttLib.getTableClass('maxp').mergeMap = {
 	# maxFunctionDefs, maxInstructionDefs, maxSizeOfInstructions
 }
 
-headFlagsMergeBitMap = {
+headFlagsMergeMap = {
 	'size': 16,
 	'*': bitwise_or,
 	1: bitwise_and, # Baseline at y = 0
@@ -184,7 +172,7 @@ ttLib.getTableClass('head').mergeMap = {
 	'fontRevision': max,
 	'checkSumAdjustment': lambda lst: 0, # We need *something* here
 	'magicNumber': equal,
-	'flags': mergeBits(headFlagsMergeBitMap),
+	'flags': lambda lst: mergeBits(headFlagsMergeMap, lst),
 	'unitsPerEm': equal,
 	'created': current_time,
 	'modified': current_time,
@@ -216,7 +204,7 @@ ttLib.getTableClass('hhea').mergeMap = {
 	'numberOfHMetrics': recalculate,
 }
 
-os2FsTypeMergeBitMap = {
+os2FsTypeMergeMap = {
 	'size': 16,
 	'*': lambda bit: 0,
 	1: bitwise_or, # no embedding permitted
@@ -243,7 +231,7 @@ def mergeOs2FsType(lst):
 		elif lst[i] == 0:
 			lst[i] = 0x000C
 
-	fsType = mergeBits(os2FsTypeMergeBitMap)(lst)
+	fsType = mergeBits(os2FsTypeMergeMap, lst)
 	# unset bits 2 and 3 if bit 1 is set (some font is "no embedding")
 	if fsType & 0x0002:
 		fsType &= ~0x000C
@@ -268,10 +256,9 @@ ttLib.getTableClass('OS/2').mergeMap = {
 	'sTypoLineGap': max,
 	'usWinAscent': max,
 	'usWinDescent': max,
-	# Version 2,3,4
-	'ulCodePageRange1': onlyExisting(bitwise_or),
-	'ulCodePageRange2': onlyExisting(bitwise_or),
-	'usMaxContex': onlyExisting(max),
+	'ulCodePageRange1': bitwise_or,
+	'ulCodePageRange2': bitwise_or,
+	'usMaxContex': max,
 	# TODO version 5
 }
 
@@ -298,7 +285,7 @@ ttLib.getTableClass('post').mergeMap = {
 	'maxMemType42': lambda lst: 0,
 	'minMemType1': max,
 	'maxMemType1': lambda lst: 0,
-	'mapping': onlyExisting(sumDicts),
+	'mapping': implementedFilter(sumDicts),
 	'extraNames': lambda lst: [],
 }
 
@@ -350,30 +337,21 @@ ttLib.getTableClass('cvt ').mergeMap = lambda self, lst: first(lst)
 @_add_method(ttLib.getTableClass('cmap'))
 def merge(self, m, tables):
 	# TODO Handle format=14.
-	cmapTables = [(t,fontIdx) for fontIdx,table in enumerate(tables) for t in table.tables
-		      if t.isUnicode()]
+	cmapTables = [t for table in tables for t in table.tables
+		      if t.platformID == 3 and t.platEncID in [1, 10]]
 	# TODO Better handle format-4 and format-12 coexisting in same font.
 	# TODO Insert both a format-4 and format-12 if needed.
 	module = ttLib.getTableModule('cmap')
-	assert all(t.format in [4, 12] for t,_ in cmapTables)
-	format = max(t.format for t,_ in cmapTables)
+	assert all(t.format in [4, 12] for t in cmapTables)
+	format = max(t.format for t in cmapTables)
 	cmapTable = module.cmap_classes[format](format)
 	cmapTable.cmap = {}
 	cmapTable.platformID = 3
-	cmapTable.platEncID = max(t.platEncID for t,_ in cmapTables)
+	cmapTable.platEncID = max(t.platEncID for t in cmapTables)
 	cmapTable.language = 0
-	cmap = cmapTable.cmap
-	for table,fontIdx in cmapTables:
+	for table in cmapTables:
 		# TODO handle duplicates.
-		for uni,gid in table.cmap.items():
-			oldgid = cmap.get(uni, None)
-			if oldgid is None:
-				cmap[uni] = gid
-			elif oldgid != gid:
-				# Char previously mapped to oldgid, now to gid.
-				# Record, to fix up in GSUB 'locl' later.
-				assert m.duplicateGlyphsPerFont[fontIdx].get(oldgid, gid) == gid
-				m.duplicateGlyphsPerFont[fontIdx][oldgid] = gid
+		cmapTable.cmap.update(table.cmap)
 	self.tableVersion = 0
 	self.tables = [cmapTable]
 	self.numSubTables = len(self.tables)
@@ -383,10 +361,6 @@ def merge(self, m, tables):
 otTables.ScriptList.mergeMap = {
 	'ScriptCount': sum,
 	'ScriptRecord': lambda lst: sorted(sumLists(lst), key=lambda s: s.ScriptTag),
-}
-otTables.BaseScriptList.mergeMap = {
-	'BaseScriptCount': sum,
-	'BaseScriptRecord': lambda lst: sorted(sumLists(lst), key=lambda s: s.BaseScriptTag),
 }
 
 otTables.FeatureList.mergeMap = {
@@ -426,23 +400,12 @@ otTables.MarkGlyphSetsDef.mergeMap = {
 	'Coverage': sumLists,
 }
 
-otTables.Axis.mergeMap = {
+otTables.GDEF.mergeMap = {
 	'*': mergeObjects,
+	'Version': max,
 }
 
-# XXX Fix BASE table merging
-otTables.BaseTagList.mergeMap = {
-	'BaseTagCount': sum,
-	'BaselineTag': sumLists,
-}
-
-otTables.GDEF.mergeMap = \
-otTables.GSUB.mergeMap = \
-otTables.GPOS.mergeMap = \
-otTables.BASE.mergeMap = \
-otTables.JSTF.mergeMap = \
-otTables.MATH.mergeMap = \
-{
+otTables.GSUB.mergeMap = otTables.GPOS.mergeMap = {
 	'*': mergeObjects,
 	'Version': max,
 }
@@ -454,61 +417,9 @@ ttLib.getTableClass('BASE').mergeMap = \
 ttLib.getTableClass('JSTF').mergeMap = \
 ttLib.getTableClass('MATH').mergeMap = \
 {
-	'tableTag': onlyExisting(equal), # XXX clean me up
+	'tableTag': equal,
 	'table': mergeObjects,
 }
-
-@_add_method(ttLib.getTableClass('GSUB'))
-def merge(self, m, tables):
-
-	assert len(tables) == len(m.duplicateGlyphsPerFont)
-	for i,(table,dups) in enumerate(zip(tables, m.duplicateGlyphsPerFont)):
-		if not dups: continue
-		assert (table is not None and table is not NotImplemented), "Have duplicates to resolve for font %d but no GSUB" % (i + 1)
-		lookupMap = dict((id(v),v) for v in table.table.LookupList.Lookup)
-		featureMap = dict((id(v),v) for v in table.table.FeatureList.FeatureRecord)
-		synthFeature = None
-		synthLookup = None
-		for script in table.table.ScriptList.ScriptRecord:
-			if script.ScriptTag == 'DFLT': continue # XXX
-			for langsys in [script.Script.DefaultLangSys] + [l.LangSys for l in script.Script.LangSysRecord]:
-				feature = [featureMap[v] for v in langsys.FeatureIndex if featureMap[v].FeatureTag == 'locl']
-				assert len(feature) <= 1
-				if feature:
-					feature = feature[0]
-				else:
-					if not synthFeature:
-						synthFeature = otTables.FeatureRecord()
-						synthFeature.FeatureTag = 'locl'
-						f = synthFeature.Feature = otTables.Feature()
-						f.FeatureParams = None
-						f.LookupCount = 0
-						f.LookupListIndex = []
-						langsys.FeatureIndex.append(id(synthFeature))
-						featureMap[id(synthFeature)] = synthFeature
-						langsys.FeatureIndex.sort(key=lambda v: featureMap[v].FeatureTag)
-						table.table.FeatureList.FeatureRecord.append(synthFeature)
-						table.table.FeatureList.FeatureCount += 1
-					feature = synthFeature
-
-				if not synthLookup:
-					subtable = otTables.SingleSubst()
-					subtable.mapping = dups
-					synthLookup = otTables.Lookup()
-					synthLookup.LookupFlag = 0
-					synthLookup.LookupType = 1
-					synthLookup.SubTableCount = 1
-					synthLookup.SubTable = [subtable]
-					table.table.LookupList.Lookup.append(synthLookup)
-					table.table.LookupList.LookupCount += 1
-
-				feature.Feature.LookupListIndex[:0] = [id(synthLookup)]
-				feature.Feature.LookupCount += 1
-
-
-	DefaultTable.merge(self, m, tables)
-	return self
-
 
 
 @_add_method(otTables.SingleSubst,
@@ -589,14 +500,6 @@ def mapLookups(self, lookupMap):
     for ll in getattr(self, c.LookupRecord):
       if not ll: continue
       ll.LookupListIndex = lookupMap[ll.LookupListIndex]
-  else:
-    assert 0, "unknown format: %s" % self.Format
-
-@_add_method(otTables.ExtensionSubst,
-             otTables.ExtensionPos)
-def mapLookups(self, lookupMap):
-  if self.Format == 1:
-    self.ExtSubTable.mapLookups(lookupMap)
   else:
     assert 0, "unknown format: %s" % self.Format
 
@@ -753,35 +656,20 @@ class Merger(object):
 		for font in fonts:
 			self._preMerge(font)
 
-		self.duplicateGlyphsPerFont = [{} for f in fonts]
-
 		allTags = reduce(set.union, (list(font.keys()) for font in fonts), set())
 		allTags.remove('GlyphOrder')
-
-		# Make sure we process cmap before GSUB as we have a dependency there.
-		if 'GSUB' in allTags:
-			allTags.remove('GSUB')
-			allTags = ['GSUB'] + list(allTags)
-		if 'cmap' in allTags:
-			allTags.remove('cmap')
-			allTags = ['cmap'] + list(allTags)
-
 		for tag in allTags:
 
-			tables = [font.get(tag, NotImplemented) for font in fonts]
-
 			clazz = ttLib.getTableClass(tag)
-			table = clazz(tag).merge(self, tables)
-			# XXX Clean this up and use:  table = mergeObjects(tables)
 
+			tables = [font.get(tag, NotImplemented) for font in fonts]
+			table = clazz(tag).merge(self, tables)
 			if table is not NotImplemented and table is not False:
 				mega[tag] = table
 				self.log("Merged '%s'." % tag)
 			else:
 				self.log("Dropped '%s'." % tag)
 			self.log.lapse("merge '%s'" % tag)
-
-		del self.duplicateGlyphsPerFont
 
 		self._postMerge(mega)
 
@@ -805,6 +693,9 @@ class Merger(object):
 		# Right now we don't use self at all.  Will use in the future
 		# for options and logging.
 
+		if logic is NotImplemented:
+			return NotImplemented
+
 		allKeys = set.union(set(), *(vars(table).keys() for table in tables if table is not NotImplemented))
 		for key in allKeys:
 			try:
@@ -825,8 +716,6 @@ class Merger(object):
 
 	def _preMerge(self, font):
 
-		# Map indices to references
-
 		GDEF = font.get('GDEF')
 		GSUB = font.get('GSUB')
 		GPOS = font.get('GPOS')
@@ -835,14 +724,14 @@ class Merger(object):
 			if not t: continue
 
 			if t.table.LookupList:
-				lookupMap = dict((i,id(v)) for i,v in enumerate(t.table.LookupList.Lookup))
+				lookupMap = {i:id(v) for i,v in enumerate(t.table.LookupList.Lookup)}
 				t.table.LookupList.mapLookups(lookupMap)
 				if t.table.FeatureList:
 					# XXX Handle present FeatureList but absent LookupList
 					t.table.FeatureList.mapLookups(lookupMap)
 
 			if t.table.FeatureList and t.table.ScriptList:
-				featureMap = dict((i,id(v)) for i,v in enumerate(t.table.FeatureList.FeatureRecord))
+				featureMap = {i:id(v) for i,v in enumerate(t.table.FeatureList.FeatureRecord)}
 				t.table.ScriptList.mapFeatures(featureMap)
 
 		# TODO GDEF/Lookup MarkFilteringSets
@@ -850,8 +739,6 @@ class Merger(object):
 
 	def _postMerge(self, font):
 
-		# Map references back to indices
-
 		GDEF = font.get('GDEF')
 		GSUB = font.get('GSUB')
 		GPOS = font.get('GPOS')
@@ -860,7 +747,7 @@ class Merger(object):
 			if not t: continue
 
 			if t.table.LookupList:
-				lookupMap = dict((id(v),i) for i,v in enumerate(t.table.LookupList.Lookup))
+				lookupMap = {id(v):i for i,v in enumerate(t.table.LookupList.Lookup)}
 				t.table.LookupList.mapLookups(lookupMap)
 				if t.table.FeatureList:
 					# XXX Handle present FeatureList but absent LookupList
@@ -868,7 +755,7 @@ class Merger(object):
 
 			if t.table.FeatureList and t.table.ScriptList:
 				# XXX Handle present ScriptList but absent FeatureList
-				featureMap = dict((id(v),i) for i,v in enumerate(t.table.FeatureList.FeatureRecord))
+				featureMap = {id(v):i for i,v in enumerate(t.table.FeatureList.FeatureRecord)}
 				t.table.ScriptList.mapFeatures(featureMap)
 
 		# TODO GDEF/Lookup MarkFilteringSets
