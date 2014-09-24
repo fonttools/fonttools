@@ -52,14 +52,14 @@ class Strike(object):
 		self.glyphDataOffsets = []
 		for i in range(self.numGlyphs + 1): # + 1 because there's one more offset than glyphs
 			start = i * sbixGlyphDataOffsetFormatSize + sbixStrikeHeaderFormatSize
-			myOffset, = struct.unpack(">L", self.data[start : start + sbixGlyphDataOffsetFormatSize])
-			self.glyphDataOffsets.append(myOffset)
+			current_offset, = struct.unpack(">L", self.data[start : start + sbixGlyphDataOffsetFormatSize])
+			self.glyphDataOffsets.append(current_offset)
 
 		# iterate through offset list and slice raw data into glyph data records
 		for i in range(self.numGlyphs):
-			myBitmap = Bitmap(rawdata=self.data[self.glyphDataOffsets[i] : self.glyphDataOffsets[i+1]], gid=i)
-			myBitmap.decompile(ttFont)
-			self.glyphs[myBitmap.glyphName] = myBitmap
+			current_glyph = Glyph(rawdata=self.data[self.glyphDataOffsets[i] : self.glyphDataOffsets[i+1]], gid=i)
+			current_glyph.decompile(ttFont)
+			self.glyphs[current_glyph.glyphName] = current_glyph
 		del self.glyphDataOffsets
 		del self.numGlyphs
 		del self.data
@@ -75,18 +75,18 @@ class Strike(object):
 		for glyphName in glyphOrder:
 			if glyphName in self.glyphs:
 				# we have glyph data for this glyph
-				myBitmap = self.glyphs[glyphName]
+				current_glyph = self.glyphs[glyphName]
 			else:
 				# must add empty glyph data record for this glyph
-				myBitmap = Bitmap(glyphName=glyphName)
-			myBitmap.compile(ttFont)
-			myBitmap.glyphDataOffset = currentGlyphDataOffset
-			self.bitmapData += myBitmap.rawdata
-			currentGlyphDataOffset += len(myBitmap.rawdata)
-			self.glyphDataOffsets += sstruct.pack(sbixGlyphDataOffsetFormat, myBitmap)
+				current_glyph = Glyph(glyphName=glyphName)
+			current_glyph.compile(ttFont)
+			current_glyph.glyphDataOffset = currentGlyphDataOffset
+			self.bitmapData += current_glyph.rawdata
+			currentGlyphDataOffset += len(current_glyph.rawdata)
+			self.glyphDataOffsets += sstruct.pack(sbixGlyphDataOffsetFormat, current_glyph)
 
 		# add last "offset", really the end address of the last glyph data record
-		dummy = Bitmap()
+		dummy = Glyph()
 		dummy.glyphDataOffset = currentGlyphDataOffset
 		self.glyphDataOffsets += sstruct.pack(sbixGlyphDataOffsetFormat, dummy)
 
@@ -133,7 +133,7 @@ class Strike(object):
 				myOffsetY = int(attrs["originOffsetY"])
 			else:
 				myOffsetY = 0
-			myBitmap = Bitmap(
+			current_glyph = Glyph(
 				glyphName=myGlyphName,
 				graphicType=myFormat,
 				originOffsetX=myOffsetX,
@@ -142,9 +142,9 @@ class Strike(object):
 			for element in content:
 				if isinstance(element, tuple):
 					name, attrs, content = element
-					myBitmap.fromXML(name, attrs, content, ttFont)
-					myBitmap.compile(ttFont)
-			self.glyphs[myBitmap.glyphName] = myBitmap
+					current_glyph.fromXML(name, attrs, content, ttFont)
+					current_glyph.compile(ttFont)
+			self.glyphs[current_glyph.glyphName] = current_glyph
 		else:
 			from fontTools import ttLib
 			raise ttLib.TTLibError("can't handle '%s' element" % name)
