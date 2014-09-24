@@ -10,84 +10,70 @@ import struct
 DEBUG = 0
 
 
-def read_operator(self, b0, data, index):
-	if b0 == 12:
-		op = (b0, byteord(data[index]))
-		index = index+1
-	else:
-		op = b0
-	operator = self.operators[op]
-	value = self.handle_operator(operator)
-	return value, index
-
-def read_byte(self, b0, data, index):
-	return b0 - 139, index
-
-def read_smallInt1(self, b0, data, index):
-	b1 = byteord(data[index])
-	return (b0-247)*256 + b1 + 108, index+1
-
-def read_smallInt2(self, b0, data, index):
-	b1 = byteord(data[index])
-	return -(b0-251)*256 - b1 - 108, index+1
-
-def read_shortInt(self, b0, data, index):
-	value, = struct.unpack(">h", data[index:index+2])
-	return value, index+2
-
-def read_longInt(self, b0, data, index):
-	value, = struct.unpack(">l", data[index:index+4])
-	return value, index+4
-
-def read_fixed1616(self, b0, data, index):
-	value, = struct.unpack(">l", data[index:index+4])
-	return value / 65536, index+4
-
-def read_reserved(self, b0, data, index):
-	assert NotImplementedError
-	return NotImplemented, index
-
-def read_realNumber(self, b0, data, index):
-	number = ''
-	while True:
-		b = byteord(data[index])
-		index = index + 1
-		nibble0 = (b & 0xf0) >> 4
-		nibble1 = b & 0x0f
-		if nibble0 == 0xf:
-			break
-		number = number + realNibbles[nibble0]
-		if nibble1 == 0xf:
-			break
-		number = number + realNibbles[nibble1]
-	return float(number), index
-
-
 t1OperandEncoding = [None] * 256
-t1OperandEncoding[0:32] = (32) * [read_operator]
-t1OperandEncoding[32:247] = (247 - 32) * [read_byte]
-t1OperandEncoding[247:251] = (251 - 247) * [read_smallInt1]
-t1OperandEncoding[251:255] = (255 - 251) * [read_smallInt2]
-t1OperandEncoding[255] = read_longInt
+t1OperandEncoding[0:32] = (32) * ["do_operator"]
+t1OperandEncoding[32:247] = (247 - 32) * ["read_byte"]
+t1OperandEncoding[247:251] = (251 - 247) * ["read_smallInt1"]
+t1OperandEncoding[251:255] = (255 - 251) * ["read_smallInt2"]
+t1OperandEncoding[255] = "read_longInt"
 assert len(t1OperandEncoding) == 256
 
 t2OperandEncoding = t1OperandEncoding[:]
-t2OperandEncoding[28] = read_shortInt
-t2OperandEncoding[255] = read_fixed1616
+t2OperandEncoding[28] = "read_shortInt"
+t2OperandEncoding[255] = "read_fixed1616"
 
 cffDictOperandEncoding = t2OperandEncoding[:]
-cffDictOperandEncoding[29] = read_longInt
-cffDictOperandEncoding[30] = read_realNumber
-cffDictOperandEncoding[255] = read_reserved
+cffDictOperandEncoding[29] = "read_longInt"
+cffDictOperandEncoding[30] = "read_realNumber"
+cffDictOperandEncoding[255] = "reserved"
 
 
 realNibbles = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 
 		'.', 'E', 'E-', None, '-']
-realNibblesDict = dict((v,i) for i,v in enumerate(realNibbles))
+realNibblesDict = {}
+for _i in range(len(realNibbles)):
+	realNibblesDict[realNibbles[_i]] = _i
 
 
 class ByteCodeBase(object):
-	pass
+	
+	def read_byte(self, b0, data, index):
+		return b0 - 139, index
+	
+	def read_smallInt1(self, b0, data, index):
+		b1 = byteord(data[index])
+		return (b0-247)*256 + b1 + 108, index+1
+	
+	def read_smallInt2(self, b0, data, index):
+		b1 = byteord(data[index])
+		return -(b0-251)*256 - b1 - 108, index+1
+	
+	def read_shortInt(self, b0, data, index):
+		value, = struct.unpack(">h", data[index:index+2])
+		return value, index+2
+	
+	def read_longInt(self, b0, data, index):
+		value, = struct.unpack(">l", data[index:index+4])
+		return value, index+4
+	
+	def read_fixed1616(self, b0, data, index):
+		value, = struct.unpack(">l", data[index:index+4])
+		return value / 65536, index+4
+	
+	def read_realNumber(self, b0, data, index):
+		number = ''
+		while True:
+			b = byteord(data[index])
+			index = index + 1
+			nibble0 = (b & 0xf0) >> 4
+			nibble1 = b & 0x0f
+			if nibble0 == 0xf:
+				break
+			number = number + realNibbles[nibble0]
+			if nibble1 == 0xf:
+				break
+			number = number + realNibbles[nibble1]
+		return float(number), index
 
 
 def buildOperatorDict(operatorList):
@@ -330,22 +316,22 @@ class T2CharString(ByteCodeBase):
 		self.bytecode = bytecode
 		self.program = None
 	
-	def getToken(self, index,
-		     len=len, byteord=byteord, basestring=basestring,
-		     isinstance=isinstance):
+	def getToken(self, index, 
+			len=len, byteord=byteord, getattr=getattr, type=type, StringType=str):
 		if self.bytecode is not None:
 			if index >= len(self.bytecode):
 				return None, 0, 0
 			b0 = byteord(self.bytecode[index])
 			index = index + 1
-			handler = self.operandEncoding[b0]
-			token, index = handler(self, b0, self.bytecode, index)
+			code = self.operandEncoding[b0]
+			handler = getattr(self, code)
+			token, index = handler(b0, self.bytecode, index)
 		else:
 			if index >= len(self.program):
 				return None, 0, 0
 			token = self.program[index]
 			index = index + 1
-		isOperator = isinstance(token, basestring)
+		isOperator = isinstance(token, StringType)
 		return token, isOperator, index
 	
 	def getBytes(self, index, nBytes):
@@ -359,8 +345,14 @@ class T2CharString(ByteCodeBase):
 		assert len(bytes) == nBytes
 		return bytes, index
 	
-	def handle_operator(self, operator):
-		return operator
+	def do_operator(self, b0, data, index):
+		if b0 == 12:
+			op = (b0, byteord(data[index]))
+			index = index+1
+		else:
+			op = b0
+		operator = self.operators[op]
+		return operator, index
 	
 	def toXML(self, xmlWriter):
 		from fontTools.misc.textTools import num2binary
@@ -522,8 +514,8 @@ class SimpleT2Decompiler(object):
 			pushToProgram(token)
 			if isOperator:
 				handlerName = "op_" + token
-				handler = getattr(self, handlerName, None)
-				if handler is not None:
+				if hasattr(self, handlerName):
+					handler = getattr(self, handlerName)
 					rv = handler(index)
 					if rv:
 						hintMaskBytes, index = rv
@@ -1121,8 +1113,9 @@ class DictDecompiler(ByteCodeBase):
 		while index < lenData:
 			b0 = byteord(data[index])
 			index = index + 1
-			handler = self.operandEncoding[b0]
-			value, index = handler(self, b0, data, index)
+			code = self.operandEncoding[b0]
+			handler = getattr(self, code)
+			value, index = handler(b0, data, index)
 			if value is not None:
 				push(value)
 	
@@ -1136,8 +1129,17 @@ class DictDecompiler(ByteCodeBase):
 		del self.stack[:]
 		return args
 	
-	def handle_operator(self, operator):
-		operator, argType = operator
+	def do_operator(self, b0, data, index):
+		if b0 == 12:
+			op = (b0, byteord(data[index]))
+			index = index+1
+		else:
+			op = b0
+		operator, argType = self.operators[op]
+		self.handle_operator(operator, argType)
+		return None, index
+	
+	def handle_operator(self, operator, argType):
 		if isinstance(argType, type(())):
 			value = ()
 			for i in range(len(argType)-1, -1, -1):

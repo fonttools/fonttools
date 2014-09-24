@@ -423,7 +423,7 @@ class BitmapGlyph(object):
 			# Chop off 'imagedata' from the tag to get just the option.
 			option = name[:-len('imagedata')]
 			assert option in self.__class__.xmlDataFunctions
-			self.readData(name, attr, content, ttFont)
+			self.readData(name, attrs, content, ttFont)
 
 	# Some of the glyphs have the metrics. This allows for metrics to be
 	# added if the glyph format has them. Default behavior is to do nothing.

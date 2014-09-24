@@ -4,6 +4,7 @@ from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval
 from . import DefaultTable
 
+
 hheaFormat = """
 		>  # big endian
 		tableVersion:           16.16F
@@ -27,9 +28,7 @@ hheaFormat = """
 
 
 class table__h_h_e_a(DefaultTable.DefaultTable):
-
-	# Note: Keep in sync with table__v_h_e_a
-
+	
 	dependencies = ['hmtx', 'glyf']
 	
 	def decompile(self, data, ttFont):
@@ -49,7 +48,7 @@ class table__h_h_e_a(DefaultTable.DefaultTable):
 			minLeftSideBearing = +INFINITY  # arbitrary big number
 			minRightSideBearing = +INFINITY # arbitrary big number
 			xMaxExtent = -INFINITY          # arbitrary big negative number
-
+			
 			for name in ttFont.getGlyphOrder():
 				width, lsb = hmtxTable[name]
 				advanceWidthMax = max(advanceWidthMax, width)

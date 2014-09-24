@@ -39,8 +39,7 @@ class table__h_e_a_d(DefaultTable.DefaultTable):
 			assert rest == "\0\0"
 	
 	def compile(self, ttFont):
-		if ttFont.recalcTimestamp:
-			self.modified = int(time.time() - mac_epoch_diff)
+		self.modified = int(time.time() - mac_epoch_diff)
 		data = sstruct.pack(headFormat, self)
 		return data
 	
