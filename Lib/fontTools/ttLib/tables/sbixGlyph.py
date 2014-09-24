@@ -21,7 +21,7 @@ sbixGlyphHeaderFormat = """
 sbixGlyphHeaderFormatSize = sstruct.calcsize(sbixGlyphHeaderFormat)
 
 
-class Bitmap(object):
+class Glyph(object):
 	def __init__(self, glyphName=None, referenceGlyphName=None, originOffsetX=0, originOffsetY=0, graphicType=None, imageData=None, rawdata=None, gid=0):
 		self.gid = gid
 		self.glyphName = glyphName
@@ -40,13 +40,13 @@ class Bitmap(object):
 		if len(self.rawdata) > 0:
 			if len(self.rawdata) < sbixGlyphHeaderFormatSize:
 				from fontTools import ttLib
-				#print "Bitmap %i header too short: Expected %x, got %x." % (self.gid, sbixGlyphHeaderFormatSize, len(self.rawdata))
-				raise ttLib.TTLibError("Bitmap header too short.")
+				#print "Glyph %i header too short: Expected %x, got %x." % (self.gid, sbixGlyphHeaderFormatSize, len(self.rawdata))
+				raise ttLib.TTLibError("Glyph header too short.")
 
 			sstruct.unpack(sbixGlyphHeaderFormat, self.rawdata[:sbixGlyphHeaderFormatSize], self)
 
 			if self.graphicType == "dupe":
-				# bitmap is a reference to another glyph's bitmap
+				# this glyph is a reference to another glyph's image data
 				gid, = struct.unpack(">H", self.rawdata[sbixGlyphHeaderFormatSize:])
 				self.referenceGlyphName = ttFont.getGlyphName(gid)
 			else:
@@ -59,7 +59,7 @@ class Bitmap(object):
 	def compile(self, ttFont):
 		if self.glyphName is None:
 			from fontTools import ttLib
-			raise ttLib.TTLibError("Can't compile bitmap without glyph name")
+			raise ttLib.TTLibError("Can't compile Glyph without glyph name")
 			# TODO: if ttFont has no maxp, cmap etc., ignore glyph names and compile by index?
 			# (needed if you just want to compile the sbix table on its own)
 		self.gid = struct.pack(">H", ttFont.getGlyphID(self.glyphName))

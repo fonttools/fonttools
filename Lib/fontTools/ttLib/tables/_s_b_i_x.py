@@ -80,24 +80,24 @@ class table__s_b_i_x(DefaultTable.DefaultTable):
 		sstruct.unpack(sbixHeaderFormat, data[ : sbixHeaderFormatSize], self)
 		# collect offsets to individual strikes in self.strikeOffsets
 		for i in range(self.numStrikes):
-			myOffset = sbixHeaderFormatSize + i * sbixStrikeOffsetFormatSize
-			offsetEntry = sbixBitmapSetOffset()
+			current_offset = sbixHeaderFormatSize + i * sbixStrikeOffsetFormatSize
+			offset_entry = sbixStrikeOffset()
 			sstruct.unpack(sbixStrikeOffsetFormat, \
-				data[myOffset : myOffset+sbixStrikeOffsetFormatSize], \
-				offsetEntry)
-			self.strikeOffsets.append(offsetEntry.strikeOffset)
+				data[current_offset : current_offset+sbixStrikeOffsetFormatSize], \
+				offset_entry)
+			self.strikeOffsets.append(offset_entry.strikeOffset)
 
 		# decompile Strikes
 		for i in range(self.numStrikes-1, -1, -1):
-			myBitmapSet = Strike(rawdata=data[self.strikeOffsets[i]:])
+			current_strike = Strike(rawdata=data[self.strikeOffsets[i]:])
 			data = data[:self.strikeOffsets[i]]
-			myBitmapSet.decompile(ttFont)
+			current_strike.decompile(ttFont)
 			#print "  Strike length: %xh" % len(bitmapSetData)
-			#print "Number of Bitmaps:", len(myBitmapSet.glyphs)
-			if myBitmapSet.ppem in self.strikes:
+			#print "Number of Glyph entries:", len(current_strike.glyphs)
+			if current_strike.ppem in self.strikes:
 				from fontTools import ttLib
 				raise ttLib.TTLibError("Pixel 'ppem' must be unique for each Strike")
-			self.strikes[myBitmapSet.ppem] = myBitmapSet
+			self.strikes[current_strike.ppem] = current_strike
 
 		# after the glyph data records have been extracted, we don't need the offsets anymore
 		del self.strikeOffsets
@@ -112,13 +112,13 @@ class table__s_b_i_x(DefaultTable.DefaultTable):
 		setOffset = sbixHeaderFormatSize + sbixStrikeOffsetFormatSize * self.numStrikes
 
 		for si in sorted(self.strikes.keys()):
-			myBitmapSet = self.strikes[si]
-			myBitmapSet.compile(ttFont)
+			current_strike = self.strikes[si]
+			current_strike.compile(ttFont)
 			# append offset to this strike to table header
-			myBitmapSet.strikeOffset = setOffset
-			sbixHeader += sstruct.pack(sbixStrikeOffsetFormat, myBitmapSet)
-			setOffset += len(myBitmapSet.data)
-			sbixData += myBitmapSet.data
+			current_strike.strikeOffset = setOffset
+			sbixHeader += sstruct.pack(sbixStrikeOffsetFormat, current_strike)
+			setOffset += len(current_strike.data)
+			sbixData += current_strike.data
 
 		return sbixHeader + sbixData
 
@@ -134,12 +134,12 @@ class table__s_b_i_x(DefaultTable.DefaultTable):
 		if name in ["version", "flags"]:
 			setattr(self, name, int(attrs["value"]))
 		elif name == "strike":
-			myBitmapSet = Strike()
+			current_strike = Strike()
 			for element in content:
 				if isinstance(element, tuple):
 					name, attrs, content = element
-					myBitmapSet.fromXML(name, attrs, content, ttFont)
-			self.strikes[myBitmapSet.ppem] = myBitmapSet
+					current_strike.fromXML(name, attrs, content, ttFont)
+			self.strikes[current_strike.ppem] = current_strike
 		else:
 			from fontTools import ttLib
 			raise ttLib.TTLibError("can't handle '%s' element" % name)
@@ -147,5 +147,5 @@ class table__s_b_i_x(DefaultTable.DefaultTable):
 
 # Helper classes
 
-class sbixBitmapSetOffset(object):
+class sbixStrikeOffset(object):
 	pass
