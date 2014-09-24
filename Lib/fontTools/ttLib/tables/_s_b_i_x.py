@@ -7,41 +7,6 @@ from .sbixGlyph import *
 from .sbixStrike import *
 import struct
 
-"""
-sbix Table organization:
-
-UInt16        version
-UInt16        flags
-UInt32        numStrikes               number of strikes (bitmap set for a specific size)
-UInt32        strikeOffset[numStrikes] offsetEntries
-(Variable)    storage for bitmap sets
-
-
-strikeOffset:
-
-UInt32        strikeOffset             Offset from begining of table to data for the individual strike
-
-
-strike:
-
-UInt16        ppem
-UInt16        resolution
-UInt32        glyphDataOffset[numGlyphs+1]
-(Variable)    storage for glyph data
-
-
-glyphDataOffset:
-
-UInt32        glyphDataOffset          offset from start of bitmap set to individual bitmap
-
-
-glyph:
-
-SInt16        originOffsetX            00 00
-SInt16        originOffsetY                  00 00
-FourCharCode  graphicType              data type, e.g. "png "
-(Variable)    glyph data
-"""
 
 sbixHeaderFormat = """
   >
