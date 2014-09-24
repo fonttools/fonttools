@@ -114,8 +114,8 @@ class Strike(object):
 		if name in ["ppem", "resolution"]:
 			setattr(self, name, int(attrs["value"]))
 		elif name == "glyph":
-			if "format" in attrs:
-				myFormat = attrs["format"]
+			if "graphicType" in attrs:
+				myFormat = attrs["graphicType"]
 			else:
 				myFormat = None
 			if "glyphname" in attrs:
@@ -135,7 +135,7 @@ class Strike(object):
 				myOffsetY = 0
 			myBitmap = Bitmap(
 				glyphName=myGlyphName,
-				imageFormatTag=myFormat,
+				graphicType=myFormat,
 				originOffsetX=myOffsetX,
 				originOffsetY=myOffsetY,
 			)

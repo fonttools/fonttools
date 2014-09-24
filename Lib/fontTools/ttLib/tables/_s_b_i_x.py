@@ -39,7 +39,7 @@ glyph:
 
 SInt16        originOffsetX            00 00
 SInt16        originOffsetY                  00 00
-char[4]       format                   data type, e.g. "png "
+FourCharCode  graphicType              data type, e.g. "png "
 (Variable)    glyph data
 """
 
