@@ -41,10 +41,6 @@ Dumping 'prep' table...
 
 """
 
-#
-# $Id: __init__.py,v 1.51 2009-02-22 08:55:00 pabs3 Exp $
-#
-
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 import os
@@ -72,7 +68,7 @@ class TTFont(object):
 	def __init__(self, file=None, res_name_or_index=None,
 			sfntVersion="\000\001\000\000", flavor=None, checkChecksums=False,
 			verbose=False, recalcBBoxes=True, allowVID=False, ignoreDecompileErrors=False,
-			fontNumber=-1, lazy=False, quiet=False):
+			recalcTimestamp=True, fontNumber=-1, lazy=None, quiet=False):
 		
 		"""The constructor can be called with a few different arguments.
 		When reading a font from disk, 'file' should be either a pathname
@@ -106,6 +102,9 @@ class TTFont(object):
 		greatly, and therefore should have some impact on the time needed 
 		to parse/compile large fonts.
 
+		If the recalcTimestamp argument is false, the modified timestamp in the
+		'head' table will *not* be recalculated upon save/compile.
+
 		If the allowVID argument is set to true, then virtual GID's are
 		supported. Asking for a glyph ID with a glyph name or GID that is not in
 		the font will return a virtual GID.   This is valid for GSUB and cmap
@@ -122,7 +121,8 @@ class TTFont(object):
 		binary data.
 
 		If lazy is set to True, many data structures are loaded lazily, upon
-		access only.
+		access only.  If it is set to False, many data structures are loaded
+		immediately.  The default is lazy=None which is somewhere in between.
 		"""
 		
 		from fontTools.ttLib import sfnt
@@ -130,6 +130,7 @@ class TTFont(object):
 		self.quiet = quiet
 		self.lazy = lazy
 		self.recalcBBoxes = recalcBBoxes
+		self.recalcTimestamp = recalcTimestamp
 		self.tables = {}
 		self.reader = None
 
@@ -306,10 +307,13 @@ class TTFont(object):
 		if tag not in self:
 			return
 		xmlTag = tagToXML(tag)
+		attrs = dict()
 		if hasattr(table, "ERROR"):
-			writer.begintag(xmlTag, ERROR="decompilation error")
-		else:
-			writer.begintag(xmlTag)
+			attrs['ERROR'] = "decompilation error"
+		from .tables.DefaultTable import DefaultTable
+		if table.__class__ == DefaultTable:
+			attrs['raw'] = True
+		writer.begintag(xmlTag, **attrs)
 		writer.newline()
 		if tag in ("glyf", "CFF "):
 			table.toXML(writer, self, progress)
@@ -506,12 +510,11 @@ class TTFont(object):
 						# create uni<CODE> name
 						glyphName = "uni%04X" % unicode
 					tempName = glyphName
-					n = 1
-					while tempName in allNames:
-						tempName = glyphName + "#" + repr(n)
-						n = n + 1
+					n = allNames.get(tempName, 0)
+					if n:
+						tempName = glyphName + "#" + str(n)
 					glyphOrder[i] = tempName
-					allNames[tempName] = 1
+					allNames[tempName] = n + 1
 			# Delete the temporary cmap table from the cache, so it can
 			# be parsed again with the right names.
 			del self.tables['cmap']
@@ -727,8 +730,8 @@ class _TTGlyph(object):
 			start = 0
 			for end in endPts:
 				end = end + 1
-				contour = coordinates[start:end].tolist()
-				cFlags = flags[start:end].tolist()
+				contour = coordinates[start:end]
+				cFlags = flags[start:end]
 				start = end
 				if 1 not in cFlags:
 					# There is not a single on-curve point on the curve,
@@ -761,7 +764,7 @@ class GlyphOrder(object):
 	table, but it's nice to present it as such in the TTX format.
 	"""
 	
-	def __init__(self, tag):
+	def __init__(self, tag=None):
 		pass
 	
 	def toXML(self, writer, ttFont):
@@ -814,6 +817,15 @@ def getTableClass(tag):
 	pyTag = tagToIdentifier(tag)
 	tableClass = getattr(module, "table_" + pyTag)
 	return tableClass
+
+
+def getClassTag(klass):
+	"""Fetch the table tag for a class object."""
+	name = klass.__name__
+	assert name[:6] == 'table_'
+	name = name[6:] # Chop 'table_'
+	return identifierToTag(name)
+
 
 
 def newTable(tag):
@@ -876,7 +888,7 @@ def identifierToTag(ident):
 			tag = tag + ident[i]
 		else:
 			# assume hex
-			tag = tag + bytechr(int(ident[i:i+2], 16))
+			tag = tag + chr(int(ident[i:i+2], 16))
 	# append trailing spaces
 	tag = tag + (4 - len(tag)) * ' '
 	return Tag(tag)
@@ -957,3 +969,25 @@ def reorderFontTables(inFile, outFile, tableOrder=None, checkChecksums=False):
 	for tag in sortedTagList(tables, tableOrder):
 		writer[tag] = reader[tag]
 	writer.close()
+
+
+def maxPowerOfTwo(x):
+	"""Return the highest exponent of two, so that
+	(2 ** exponent) <= x.  Return 0 if x is 0.
+	"""
+	exponent = 0
+	while x:
+		x = x >> 1
+		exponent = exponent + 1
+	return max(exponent - 1, 0)
+
+
+def getSearchRange(n, itemSize):
+	"""Calculate searchRange, entrySelector, rangeShift.
+	"""
+	# This stuff needs to be stored in the file, because?
+	exponent = maxPowerOfTwo(n)
+	searchRange = (2 ** exponent) * itemSize
+	entrySelector = exponent
+	rangeShift = max(0, n * itemSize - searchRange)
+	return searchRange, entrySelector, rangeShift

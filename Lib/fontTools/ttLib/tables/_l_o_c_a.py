@@ -34,7 +34,7 @@ class table__l_o_c_a(DefaultTable.DefaultTable):
 		except AttributeError:
 			self.set([])
 			max_location = 0
-		if max_location < 0x20000:
+		if max_location < 0x20000 and all(l % 2 == 0 for l in self.locations):
 			locations = array.array("H")
 			for i in range(len(self.locations)):
 				locations.append(self.locations[i] // 2)

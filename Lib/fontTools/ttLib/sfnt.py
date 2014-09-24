@@ -15,6 +15,7 @@ a table's length chages you need to rewrite the whole file anyway.
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
+from fontTools.ttLib import getSearchRange
 import struct
 
 
@@ -116,7 +117,7 @@ class SFNTWriter(object):
 			self.directorySize = sfntDirectorySize
 			self.DirectoryEntry = SFNTDirectoryEntry
 
-			self.searchRange, self.entrySelector, self.rangeShift = getSearchRange(numTables)
+			self.searchRange, self.entrySelector, self.rangeShift = getSearchRange(numTables, 16)
 
 		self.nextTableOffset = self.directorySize + numTables * self.DirectoryEntry.formatSize
 		# clear out directory area
@@ -242,7 +243,7 @@ class SFNTWriter(object):
 		# Haven't debugged.
 		if self.DirectoryEntry != SFNTDirectoryEntry:
 			# Create a SFNT directory for checksum calculation purposes
-			self.searchRange, self.entrySelector, self.rangeShift = getSearchRange(self.numTables)
+			self.searchRange, self.entrySelector, self.rangeShift = getSearchRange(self.numTables, 16)
 			directory = sstruct.pack(sfntDirectoryFormat, self)
 			tables = sorted(self.tables.items())
 			for tag, entry in tables:
@@ -462,29 +463,6 @@ def calcChecksum(data):
 		longs = struct.unpack(">%dL" % (len(block) // 4), block)
 		value = (value + sum(longs)) & 0xffffffff
 	return value
-
-
-def maxPowerOfTwo(x):
-	"""Return the highest exponent of two, so that
-	(2 ** exponent) <= x
-	"""
-	exponent = 0
-	while x:
-		x = x >> 1
-		exponent = exponent + 1
-	return max(exponent - 1, 0)
-
-
-def getSearchRange(n):
-	"""Calculate searchRange, entrySelector, rangeShift for the
-	sfnt directory. 'n' is the number of tables.
-	"""
-	# This stuff needs to be stored in the file, because?
-	exponent = maxPowerOfTwo(n)
-	searchRange = (2 ** exponent) * 16
-	entrySelector = exponent
-	rangeShift = n * 16 - searchRange
-	return searchRange, entrySelector, rangeShift
 
 
 if __name__ == "__main__":

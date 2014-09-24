@@ -1,6 +1,8 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.misc.textTools import safeEval, readHex
+from fontTools.ttLib import getSearchRange
+from fontTools.unicode import Unicode
 from . import DefaultTable
 import sys
 import struct
@@ -137,12 +139,15 @@ class CmapSubtable(object):
 		writer.endtag(self.__class__.__name__)
 		writer.newline()
 
+	def isUnicode(self):
+		return (self.platformID == 0 or
+			(self.platformID == 3 and self.platEncID in [1, 10]))
+
+	def isSymbol(self):
+		return self.platformID == 3 and self.platEncID == 0
+
 	def _writeCodes(self, codes, writer):
-		if (self.platformID, self.platEncID) == (3, 1) or (self.platformID, self.platEncID) == (3, 10) or self.platformID == 0:
-			from fontTools.unicode import Unicode
-			isUnicode = 1
-		else:
-			isUnicode = 0
+		isUnicode = self.isUnicode()
 		for code, name in codes:
 			writer.simpletag("map", code=hex(code), name=name)
 			if isUnicode:
@@ -661,21 +666,25 @@ class cmap_format_4(CmapSubtable):
 		charCodes = []
 		gids = []
 		for i in range(len(startCode) - 1):	# don't do 0xffff!
+			start = startCode[i]
+			delta = idDelta[i]
+			rangeOffset = idRangeOffset[i]
+			# *someone* needs to get killed.
+			partial = rangeOffset // 2 - start + i - len(idRangeOffset)
+
 			rangeCharCodes = list(range(startCode[i], endCode[i] + 1))
-			charCodes = charCodes + rangeCharCodes
-			for charCode in rangeCharCodes:
-				rangeOffset = idRangeOffset[i]
-				if rangeOffset == 0:
-					glyphID = charCode + idDelta[i]
-				else:
-					# *someone* needs to get killed.
-					index = idRangeOffset[i] // 2 + (charCode - startCode[i]) + i - len(idRangeOffset)
+			charCodes.extend(rangeCharCodes)
+			if rangeOffset == 0:
+				gids.extend([(charCode + delta) & 0xFFFF for charCode in rangeCharCodes])
+			else:
+				for charCode in rangeCharCodes:
+					index = charCode + partial
 					assert (index < lenGIArray), "In format 4 cmap, range (%d), the calculated index (%d) into the glyph index array  is not less than the length of the array (%d) !" % (i, index, lenGIArray)
 					if glyphIndexArray[index] != 0:  # if not missing glyph
-						glyphID = glyphIndexArray[index] + idDelta[i]
+						glyphID = glyphIndexArray[index] + delta
 					else:
 						glyphID = 0  # missing glyph
-				gids.append(glyphID % 0x10000)
+					gids.append(glyphID & 0xFFFF)
 
 		self.cmap = cmap = {}
 		lenCmap = len(gids)
@@ -686,35 +695,11 @@ class cmap_format_4(CmapSubtable):
 			getGlyphName = self.ttFont.getGlyphName
 			names = list(map(getGlyphName, gids ))
 		list(map(operator.setitem, [cmap]*lenCmap, charCodes, names))
-		
-
-
-	def setIDDelta(self, idDelta):
-		# The lowest gid in glyphIndexArray, after subtracting idDelta, must be 1.
-		# idDelta is a short, and must be between -32K and 32K
-		# startCode can be between 0 and 64K-1, and the first glyph index can be between 1 and 64K-1
-		# This means that we have a problem because we can need to assign to idDelta values
-		# between -(64K-2) and 64K -1.
-		# Since the final gi is reconstructed from the glyphArray GID by:
-		#    (short)finalGID = (gid +  idDelta) % 0x10000),
-		# we can get from a startCode of 0 to a final GID of 64 -1K by subtracting 1, and casting the
-		# negative number to an unsigned short.
-		# Similarly , we can get from a startCode of 64K-1 to a final GID of 1 by adding 2, because of
-		# the modulo arithmetic.
-
-		if idDelta > 0x7FFF:
-			idDelta = idDelta - 0x10000
-		elif idDelta <  -0x7FFF:
-			idDelta = idDelta + 0x10000
-
-		return idDelta
 
 
 	def compile(self, ttFont):
 		if self.data:
 			return struct.pack(">HHH", self.format, self.length, self.language) + self.data
-
-		from fontTools.ttLib.sfnt import maxPowerOfTwo
 		
 		charCodes = list(self.cmap.keys())
 		lenCharCodes = len(charCodes)
@@ -779,8 +764,7 @@ class cmap_format_4(CmapSubtable):
 			for charCode in range(startCode[i], endCode[i] + 1):
 				indices.append(cmap[charCode])
 			if  (indices == list(range(indices[0], indices[0] + len(indices)))):
-				idDeltaTemp = self.setIDDelta(indices[0] - startCode[i])
-				idDelta.append( idDeltaTemp)
+				idDelta.append((indices[0] - startCode[i]) % 0x10000)
 				idRangeOffset.append(0)
 			else:
 				# someone *definitely* needs to get killed.
@@ -790,22 +774,19 @@ class cmap_format_4(CmapSubtable):
 		idDelta.append(1)  # 0xffff + 1 == (tadaa!) 0. So this end code maps to .notdef
 		idRangeOffset.append(0)
 		
-		# Insane. 
+		# Insane.
 		segCount = len(endCode)
 		segCountX2 = segCount * 2
-		maxExponent = maxPowerOfTwo(segCount)
-		searchRange = 2 * (2 ** maxExponent)
-		entrySelector = maxExponent
-		rangeShift = 2 * segCount - searchRange
+		searchRange, entrySelector, rangeShift = getSearchRange(segCount, 2)
 		
 		charCodeArray = array.array("H", endCode + [0] + startCode)
-		idDeltaeArray = array.array("h", idDelta)
+		idDeltaArray = array.array("H", idDelta)
 		restArray = array.array("H", idRangeOffset + glyphIndexArray)
 		if sys.byteorder != "big":
 			charCodeArray.byteswap()
-			idDeltaeArray.byteswap()
+			idDeltaArray.byteswap()
 			restArray.byteswap()
-		data = charCodeArray.tostring() + idDeltaeArray.tostring() + restArray.tostring()
+		data = charCodeArray.tostring() + idDeltaArray.tostring() + restArray.tostring()
 
 		length = struct.calcsize(cmap_format_4_format) + len(data)
 		header = struct.pack(cmap_format_4_format, self.format, length, self.language, 
@@ -931,8 +912,8 @@ class cmap_format_12_or_13(CmapSubtable):
 			startCharCode, endCharCode, glyphID = struct.unpack(">LLL",data[pos:pos+12] )
 			pos += 12
 			lenGroup = 1 + endCharCode - startCharCode
-			charCodes += list(range(startCharCode, endCharCode +1))
-			gids += self._computeGIDs(glyphID, lenGroup)
+			charCodes.extend(list(range(startCharCode, endCharCode +1)))
+			gids.extend(self._computeGIDs(glyphID, lenGroup))
 		self.data = data = None
 		self.cmap = cmap = {}
 		lenCmap = len(gids)
@@ -1084,7 +1065,7 @@ class cmap_format_14(CmapSubtable):
 		self.language = 0xFF # has no language.
 
 	def decompile(self, data, ttFont):
-		if data is not None and ttFont is not None and ttFont.lazy:
+		if data is not None and ttFont is not None:
 			self.decompileHeader(data, ttFont)
 		else:
 			assert (data is None and ttFont is None), "Need both data and ttFont arguments"

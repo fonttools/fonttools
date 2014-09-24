@@ -59,13 +59,13 @@ TrueType/OpenType fonts to and from an XML-based format.
 
 setup(
 		name = "fonttools",
-		version = "2.4",
+		version = "2.5",
 		description = "Tools to manipulate font files",
 		author = "Just van Rossum",
 		author_email = "just@letterror.com",
-		maintainer = "Just van Rossum",
-		maintainer_email = "just@letterror.com",
-		url = "http://fonttools.sourceforge.net/",
+		maintainer = "Behdad Esfahbod",
+		maintainer_email = "behdad@behdad.org",
+		url = "http://github.com/behdad/fonttools",
 		license = "OpenSource, BSD-style",
 		platforms = ["Any"],
 		long_description = long_description,

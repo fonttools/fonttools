@@ -50,11 +50,12 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 			glyph = Glyph(glyphdata)
 			self.glyphs[glyphName] = glyph
 			last = next
-		if len(data) > next:
-			warnings.warn("too much 'glyf' table data")
+		if len(data) - next >= 4:
+			warnings.warn("too much 'glyf' table data: expected %d, received %d bytes" %
+					(next, len(data)))
 		if noname:
 			warnings.warn('%s glyphs have no name' % i)
-		if not ttFont.lazy:
+		if ttFont.lazy is False: # Be lazy for None and True
 			for glyph in self.glyphs.values():
 				glyph.expand(self)
 	
@@ -72,6 +73,21 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 			currentLocation = currentLocation + len(glyphData)
 			dataList.append(glyphData)
 		locations.append(currentLocation)
+
+		if currentLocation < 0x20000:
+			# See if we can pad any odd-lengthed glyphs to allow loca
+			# table to use the short offsets.
+			indices = [i for i,glyphData in enumerate(dataList) if len(glyphData) % 2 == 1]
+			if indices and currentLocation + len(indices) < 0x20000:
+				# It fits.  Do it.
+				for i in indices:
+					dataList[i] += '\0'
+				currentLocation = 0;
+				for i,glyphData in enumerate(dataList):
+					locations[i] = currentLocation
+					currentLocation += len(glyphData)
+				locations[len(dataList)] = currentLocation
+
 		data = bytesjoin(dataList)
 		if 'loca' in ttFont:
 			ttFont['loca'].set(locations)
@@ -246,13 +262,6 @@ class Glyph(object):
 			data = data + self.compileComponents(glyfTable)
 		else:
 			data = data + self.compileCoordinates()
-		# From the spec: "Note that the local offsets should be word-aligned"
-		# From a later MS spec: "Note that the local offsets should be long-aligned"
-		# Let's be modern and align on 4-byte boundaries.
-		if len(data) % 4:
-			# add pad bytes
-			nPadBytes = 4 - (len(data) % 4)
-			data = data + b"\0" * nPadBytes
 		return data
 	
 	def toXML(self, writer, ttFont):
@@ -361,7 +370,8 @@ class Glyph(object):
 			self.program = ttProgram.Program()
 			self.program.fromBytecode(data[:numInstructions])
 			data = data[numInstructions:]
-			assert len(data) < 4, "bad composite data"
+			if len(data) >= 4:
+				warnings.warn("too much glyph data at the end of composite glyph: %d excess bytes" % len(data))
 	
 	def decompileCoordinates(self, data):
 		endPtsOfContours = array.array("h")
@@ -609,7 +619,7 @@ class Glyph(object):
 	
 	def isComposite(self):
 		"""Can be called on compact or expanded glyph."""
-		if hasattr(self, "data"):
+		if hasattr(self, "data") and self.data:
 			return struct.unpack(">h", self.data[:2])[0] == -1
 		else:
 			return self.numberOfContours == -1
@@ -696,14 +706,16 @@ class Glyph(object):
 
 		return components
 
-	def removeHinting(self):
+	def trim(self, remove_hinting=False):
+		"""Remove padding and, if requested, hinting, from a glyph.
+		   This works on both expanded and compacted glyphs, without
+		   expanding it."""
 		if not hasattr(self, "data"):
-			self.program = ttProgram.Program()
-			self.program.fromBytecode([])
+			if remove_hinting:
+				self.program = ttProgram.Program()
+				self.program.fromBytecode([])
+			# No padding to trim.
 			return
-
-		# Remove instructions without expanding glyph
-
 		if not self.data:
 			return
 		numContours = struct.unpack(">h", self.data[:2])[0]
@@ -713,48 +725,52 @@ class Glyph(object):
 			i += 2 * numContours # endPtsOfContours
 			nCoordinates = ((data[i-2] << 8) | data[i-1]) + 1
 			instructionLen = (data[i] << 8) | data[i+1]
-			# Zero it
-			data[i] = data [i+1] = 0
-			i += 2
-			if instructionLen:
-				# Splice it out
-				data = data[:i] + data[i+instructionLen:]
-				if instructionLen % 4:
-					# We now have to go ahead and drop
-					# the old padding.  Otherwise with
-					# padding we have to add, we may
-					# end up with more than 3 bytes of
-					# padding.
-					coordBytes = 0
-					j = 0
-					while True:
-						flag = data[i]
-						i = i + 1
-						repeat = 1
-						if flag & flagRepeat:
-							repeat = data[i] + 1
-							i = i + 1
-						xBytes = yBytes = 0
-						if flag & flagXShort:
-							xBytes = 1
-						elif not (flag & flagXsame):
-							xBytes = 2
-						if flag & flagYShort:
-							yBytes = 1
-						elif not (flag & flagYsame):
-							yBytes = 2
-						coordBytes += (xBytes + yBytes) * repeat
-						j += repeat
-						if j >= nCoordinates:
-							break
-					assert j == nCoordinates, "bad glyph flags"
-					data = data[:i + coordBytes]
+			if remove_hinting:
+				# Zero instruction length
+				data[i] = data [i+1] = 0
+				i += 2
+				if instructionLen:
+					# Splice it out
+					data = data[:i] + data[i+instructionLen:]
+				instructionLen = 0
+			else:
+				i += 2 + instructionLen
+
+			coordBytes = 0
+			j = 0
+			while True:
+				flag = data[i]
+				i = i + 1
+				repeat = 1
+				if flag & flagRepeat:
+					repeat = data[i] + 1
+					i = i + 1
+				xBytes = yBytes = 0
+				if flag & flagXShort:
+					xBytes = 1
+				elif not (flag & flagXsame):
+					xBytes = 2
+				if flag & flagYShort:
+					yBytes = 1
+				elif not (flag & flagYsame):
+					yBytes = 2
+				coordBytes += (xBytes + yBytes) * repeat
+				j += repeat
+				if j >= nCoordinates:
+					break
+			assert j == nCoordinates, "bad glyph flags"
+			i += coordBytes
+			# Remove padding
+			data = data[:i]
 		else:
 			more = 1
+			we_have_instructions = False
 			while more:
 				flags =(data[i] << 8) | data[i+1]
-				# Turn instruction flag off
-				flags &= ~WE_HAVE_INSTRUCTIONS
+				if remove_hinting:
+					flags &= ~WE_HAVE_INSTRUCTIONS
+				if flags & WE_HAVE_INSTRUCTIONS:
+					we_have_instructions = True
 				data[i+0] = flags >> 8
 				data[i+1] = flags & 0xFF
 				i += 4
@@ -766,18 +782,16 @@ class Glyph(object):
 				elif flags & WE_HAVE_AN_X_AND_Y_SCALE: i += 4
 				elif flags & WE_HAVE_A_TWO_BY_TWO: i += 8
 				more = flags & MORE_COMPONENTS
-
-			# Cut off
+			if we_have_instructions:
+				instructionLen = (data[i] << 8) | data[i+1]
+				i += 2 + instructionLen
+			# Remove padding
 			data = data[:i]
 
-		data = data.tostring()
+		self.data = data.tostring()
 
-		if len(data) % 4:
-			# add pad bytes
-			nPadBytes = 4 - (len(data) % 4)
-			data = data + b"\0" * nPadBytes
-
-		self.data = data
+	def removeHinting(self):
+		self.trim (remove_hinting=True)
 
 	def __ne__(self, other):
 		return not self.__eq__(other)
@@ -991,6 +1005,8 @@ class GlyphCoordinates(object):
 	def __setitem__(self, k, v):
 		if isinstance(k, slice):
 			indices = range(*k.indices(len(self)))
+			# XXX This only works if len(v) == len(indices)
+			# TODO Implement __delitem__
 			for j,i in enumerate(indices):
 				self[i] = v[j]
 			return

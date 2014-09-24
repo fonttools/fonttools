@@ -15,7 +15,8 @@ usage: ttx [options] inputfile1 [... inputfileN]
     -h Help: print this message
     -d <outputfolder> Specify a directory where the output files are
        to be created.
-    -o <outputfile> Specify a file to write the output to.
+    -o <outputfile> Specify a file to write the output to. A special
+       value of of - would use the standard output.
     -v Verbose: more messages will be written to stdout about what
        is being done.
     -q Quiet: No messages will be written to stdout about what
@@ -50,7 +51,7 @@ usage: ttx [options] inputfile1 [... inputfileN]
          -z bitwise
             * export each row as binary in an ASCII art style
          -z extfile
-            * export the data as external files with XML refences
+            * export the data as external files with XML references
        If no export format is specified 'raw' format is used.
     -e Don't ignore decompilation errors, but show a full traceback
        and abort.
