@@ -2059,6 +2059,17 @@ def prune_pre_subset(self, options):
   if '*' not in options.name_languages:
     # TODO(behdad) This is Windows-platform specific!
     self.names = [n for n in self.names if n.langID in options.name_languages]
+  if options.obfuscate_names:
+    namerecs = []
+    for n in self.names:
+      if n.nameID in [1, 4]:
+        n.string = ".\x7f".encode('utf-16be') if n.isUnicode() else ".\x7f"
+      elif n.nameID in [2, 6]:
+        n.string = "\x7f".encode('utf-16be') if n.isUnicode() else "\x7f"
+      elif n.nameID == 3:
+        n.string = ""
+      namerecs.append(n)
+    self.names = namerecs
   return True  # Required table
 
 
@@ -2121,6 +2132,7 @@ class Options(object):
   name_IDs = [1, 2]  # Family and Style
   name_legacy = False
   name_languages = [0x0409]  # English
+  obfuscate_names = False  # to make webfont unusable as a system font
   notdef_glyph = True # gid0 for TrueType / .notdef for CFF
   notdef_outline = False # No need for notdef to have an outline really
   recommended_glyphs = False  # gid1, gid2, gid3 for TrueType
