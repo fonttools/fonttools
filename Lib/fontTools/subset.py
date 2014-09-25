@@ -210,9 +210,9 @@ Font table options:
         --hinting-tables=''
             * Keep all font-wide hinting tables (but strip hints from glyphs).
   --legacy-kern
-      keep TrueType 'kern' table even when OpenType 'GPOS' is available.
+      Keep TrueType 'kern' table even when OpenType 'GPOS' is available.
   --no-legacy-kern
-      drop TrueType 'kern' table if OpenType 'GPOS' is available. [default]
+      Drop TrueType 'kern' table if OpenType 'GPOS' is available. [default]
 
 Font naming options:
   These options control what is retained in the 'name' table. For numerical
