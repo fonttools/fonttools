@@ -7,6 +7,7 @@ from fontTools.misc.py23 import *
 from fontTools import ttLib
 from fontTools.ttLib.tables import otTables
 from fontTools.misc import psCharStrings
+from fontTools.misc.textTools import num2binary, binary2num
 from fontTools.pens import basePen
 import sys
 import struct
@@ -275,6 +276,25 @@ Other font-specific options:
       required by the standard, nor by any known implementation.
   --no-canonical-order
       Keep original order of font tables. This is faster. [default]
+  --fsType=<option>,[<option>]
+      Modify the 'OS/2' table font embedding settings (fsType) choosing among
+      the following options, each corresponding to specific bit flags:
+        * 'installable':              Bit 0      0x0000      00000000 00000000
+        * 'restricted':               Bit 1      0x0002      00000000 00000010
+        * 'preview-and-print':        Bit 2      0x0004      00000000 00000100
+        * 'editable':                 Bit 3      0x0008      00000000 00001000
+        * 'no-subsetting':            Bit 8      0x0100      00000001 00000000
+        * 'bitmap-only':              Bit 9      0x0200      00000010 00000000
+      The first four bits (0-3) are intended as mutually exclusive. In case of
+      conflicts, the least restrictive of them gets precedence.
+      For info, see http://www.microsoft.com/typography/otspec/os2.htm#fst
+      Examples:
+        --fsType=installable
+            * Installable / Allow subsetting
+        --fsType=preview-and-print,no-subsetting
+            * Preview & Print / No subsetting
+        --fsType=editable,bitmap-only
+            * Editable / Allow subsetting / Bitmap embedding only
 
 Application options:
   --verbose
@@ -2147,6 +2167,7 @@ class Options(object):
   recalc_bounds = False # Recalculate font bounding boxes
   recalc_timestamp = False # Recalculate font modified timestamp
   canonical_order = False # Order tables as recommended
+  fsType = []
   flavor = None # May be 'woff'
 
   def __init__(self, **kwargs):
@@ -2268,6 +2289,28 @@ class Subsetter(object):
         self.log(tag, "dropped")
         del font[tag]
         continue
+
+      if tag == 'OS/2' and self.options.fsType:
+        flags = list('0000000000000000')
+        for opt in self.options.fsType:
+          if opt == 'installable':
+            continue
+          elif opt == 'restricted':
+            flags[-2] = '1'
+          elif opt == 'preview-and-print':
+            flags[-3] = '1'
+          elif opt == 'editable':
+            flags[-4] = '1'
+          elif opt == 'no-subsetting':
+            flags[-9] = '1'
+          elif opt == 'bitmap-only':
+            flags[-10] = '1'
+          else:
+            raise self.options.UnknownOptionError("Unknown option '%s'" % opt)
+        if 'installable' in self.options.fsType:
+          flags[-4:] = '0000'
+        font['OS/2'].fsType = binary2num("".join(flags))
+        self.log("Set OS/2 fsType to '%s'" % "', '".join(self.options.fsType))
 
       clazz = ttLib.getTableClass(tag)
 
