@@ -16,13 +16,13 @@ class QtPen(BasePen):
 		self.path = path
 
 	def _moveTo(self, p):
-		self.path.moveTo(p)
+		self.path.moveTo(*p)
 
 	def _lineTo(self, p):
-		self.path.lineTo(p)
+		self.path.lineTo(*p)
 
 	def _curveToOne(self, p1, p2, p3):
-		self.path.cubicTo(p1, p2, p3)
+		self.path.cubicTo(*p1+p2+p3)
 
 	def _closePath(self):
 		self.path.closeSubpath()
