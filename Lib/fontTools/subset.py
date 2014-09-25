@@ -209,6 +209,10 @@ Font table options:
             * Drop font-wide hinting tables except 'VDMX'.
         --hinting-tables=''
             * Keep all font-wide hinting tables (but strip hints from glyphs).
+  --legacy-kern
+      keep TrueType 'kern' table even when OpenType 'GPOS' is available.
+  --no-legacy-kern
+      drop TrueType 'kern' table if OpenType 'GPOS' is available. [default]
 
 Font naming options:
   These options control what is retained in the 'name' table. For numerical
@@ -2121,6 +2125,7 @@ class Options(object):
   name_IDs = [1, 2]  # Family and Style
   name_legacy = False
   name_languages = [0x0409]  # English
+  legacy_kern = False  # drop 'kern' table if GPOS available
   notdef_glyph = True # gid0 for TrueType / .notdef for CFF
   notdef_outline = False # No need for notdef to have an outline really
   recommended_glyphs = False  # gid1, gid2, gid3 for TrueType
@@ -2243,7 +2248,8 @@ class Subsetter(object):
       if tag == 'GlyphOrder': continue
 
       if(tag in self.options.drop_tables or
-         (tag in self.options.hinting_tables and not self.options.hinting)):
+         (tag in self.options.hinting_tables and not self.options.hinting) or
+         (tag == 'kern' and (not self.options.legacy_kern and 'GPOS' in font))):
         self.log(tag, "dropped")
         del font[tag]
         continue
