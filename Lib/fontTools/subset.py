@@ -7,6 +7,8 @@ from fontTools.misc.py23 import *
 from fontTools import ttLib
 from fontTools.ttLib.tables import otTables
 from fontTools.misc import psCharStrings
+from fontTools.misc.textTools import binary2num
+from fontTools.ttx import makeOutputFileName
 from fontTools.pens import basePen
 import sys
 import struct
@@ -209,6 +211,10 @@ Font table options:
             * Drop font-wide hinting tables except 'VDMX'.
         --hinting-tables=''
             * Keep all font-wide hinting tables (but strip hints from glyphs).
+  --legacy-kern
+      Keep TrueType 'kern' table even when OpenType 'GPOS' is available.
+  --no-legacy-kern
+      Drop TrueType 'kern' table if OpenType 'GPOS' is available. [default]
 
 Font naming options:
   These options control what is retained in the 'name' table. For numerical
@@ -271,6 +277,25 @@ Other font-specific options:
       required by the standard, nor by any known implementation.
   --no-canonical-order
       Keep original order of font tables. This is faster. [default]
+  --fsType=<option>,[<option>]
+      Modify the 'OS/2' table font embedding settings (fsType) choosing among
+      the following options, each corresponding to specific bit flags:
+        * 'installable':              Bit 0      0x0000      00000000 00000000
+        * 'restricted':               Bit 1      0x0002      00000000 00000010
+        * 'preview-and-print':        Bit 2      0x0004      00000000 00000100
+        * 'editable':                 Bit 3      0x0008      00000000 00001000
+        * 'no-subsetting':            Bit 8      0x0100      00000001 00000000
+        * 'bitmap-only':              Bit 9      0x0200      00000010 00000000
+      The first four bits (0-3) are intended as mutually exclusive. In case of
+      conflicts, the least restrictive of them gets precedence.
+      For info, see http://www.microsoft.com/typography/otspec/os2.htm#fst
+      Examples:
+        --fsType=installable
+            * Installable / Allow subsetting
+        --fsType=preview-and-print,no-subsetting
+            * Preview & Print / No subsetting
+        --fsType=editable,bitmap-only
+            * Editable / Allow subsetting / Bitmap embedding only
 
 Application options:
   --verbose
@@ -2125,6 +2150,7 @@ class Options(object):
   drop_tables = _drop_tables_default
   no_subset_tables = _no_subset_tables_default
   hinting_tables = _hinting_tables_default
+  legacy_kern = False  # drop 'kern' table if GPOS available
   layout_features = _layout_features_default
   ignore_missing_glyphs = False
   ignore_missing_unicodes = True
@@ -2142,6 +2168,7 @@ class Options(object):
   recalc_bounds = False # Recalculate font bounding boxes
   recalc_timestamp = False # Recalculate font modified timestamp
   canonical_order = False # Order tables as recommended
+  fsType = []
   flavor = None # May be 'woff'
 
   def __init__(self, **kwargs):
@@ -2258,10 +2285,33 @@ class Subsetter(object):
       if tag == 'GlyphOrder': continue
 
       if(tag in self.options.drop_tables or
-         (tag in self.options.hinting_tables and not self.options.hinting)):
+         (tag in self.options.hinting_tables and not self.options.hinting) or
+         (tag == 'kern' and (not self.options.legacy_kern and 'GPOS' in font))):
         self.log(tag, "dropped")
         del font[tag]
         continue
+
+      if tag == 'OS/2' and self.options.fsType:
+        flags = list('0000000000000000')
+        for opt in self.options.fsType:
+          if opt == 'installable':
+            continue
+          elif opt == 'restricted':
+            flags[-2] = '1'
+          elif opt == 'preview-and-print':
+            flags[-3] = '1'
+          elif opt == 'editable':
+            flags[-4] = '1'
+          elif opt == 'no-subsetting':
+            flags[-9] = '1'
+          elif opt == 'bitmap-only':
+            flags[-10] = '1'
+          else:
+            raise self.options.UnknownOptionError("Unknown option '%s'" % opt)
+        if 'installable' in self.options.fsType:
+          flags[-4:] = '0000'
+        font['OS/2'].fsType = binary2num("".join(flags))
+        self.log("Set OS/2 fsType to '%s'" % "', '".join(self.options.fsType))
 
       clazz = ttLib.getTableClass(tag)
 
@@ -2544,10 +2594,18 @@ def main(args):
     sys.exit(1)
 
   fontfile = args[0]
+  if options.flavor:
+    ext = "."+options.flavor.lower()
+  else:
+    i = fontfile.rfind('.')
+    if i != -1:
+      ext = fontfile[i:]
+    else:
+      ext = '.subset'
   args = args[1:]
 
   subsetter = Subsetter(options=options, log=log)
-  outfile = fontfile + '.subset'
+  outfile = makeOutputFileName(fontfile, outputDir=None, extension=ext)
   glyphs = []
   gids = []
   unicodes = []
