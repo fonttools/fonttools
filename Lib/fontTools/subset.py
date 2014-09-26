@@ -8,6 +8,7 @@ from fontTools import ttLib
 from fontTools.ttLib.tables import otTables
 from fontTools.misc import psCharStrings
 from fontTools.misc.textTools import binary2num
+from fontTools.ttx import makeOutputFileName
 from fontTools.pens import basePen
 import sys
 import struct
@@ -2593,10 +2594,18 @@ def main(args):
     sys.exit(1)
 
   fontfile = args[0]
+  if options.flavor:
+    ext = "."+options.flavor.lower()
+  else:
+    i = fontfile.rfind('.')
+    if i != -1:
+      ext = fontfile[i:]
+    else:
+      ext = '.subset'
   args = args[1:]
 
   subsetter = Subsetter(options=options, log=log)
-  outfile = fontfile + '.subset'
+  outfile = makeOutputFileName(fontfile, outputDir=None, extension=ext)
   glyphs = []
   gids = []
   unicodes = []
