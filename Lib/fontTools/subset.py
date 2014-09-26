@@ -7,7 +7,7 @@ from fontTools.misc.py23 import *
 from fontTools import ttLib
 from fontTools.ttLib.tables import otTables
 from fontTools.misc import psCharStrings
-from fontTools.misc.textTools import num2binary, binary2num
+from fontTools.misc.textTools import binary2num
 from fontTools.pens import basePen
 import sys
 import struct
