@@ -7,35 +7,6 @@ import math
 import pdb
 import logging
 
-class Expression(object):
-    def __init__(self,op1 = None,op2 = None,operation = None):
-        self.op1 = op1
-        self.op2 = op2
-        self.operation = operation
-
-    def eval(self):
-        options = {'LT':less,
-                'LTEQ':lessEqual,
-                'GT':greater,
-                'GTEQ':greaterEqual,
-                'EQ':equal,
-                'AND':logicAnd,
-                'OR':logicOr}
-        if isinstance(op1, AbstractValue) or isinstance(op2, AbstractValue):
-            return 'uncertain'
-        return options[self.operation](self.op1,self.op2)
-        def less(op1,op2):
-            return op1 < op2
-        def lessEqual(op1,op2):
-            return op1 <= op2
-        def greater(op1,op2):
-            return op1 > op2
-        def greaterEqual(op1,op2):
-            return op1 >= op2
-        def logicAnd(op1,op2):
-            return (op1 and op2)
-        def logicOr(op1,op2):
-            return (op1 or op2)
 
 class Body(object):
     '''
@@ -142,6 +113,7 @@ class Function(object):
 class Program(object):
     def __init__(self, input):
         self.body = Body(instructions = input)
+        self.call_function_set = []
     
     def start_ptr(self):
         return self.body.statement_root
@@ -151,12 +123,10 @@ class Program(object):
 class BytecodeFont(object):
     """ Represents the original bytecode-related global data for a TrueType font. """
     def __init__(self, tt):
-        self.global_program = {}
         # tag id -> Program
-        self.local_programs = {}
+        self.programs = {}
         # function_table: function label -> Function
         self.function_table = {}
-        self.programs = {}
         #preprocess the static value to construct cvt table
         self.constructCVTTable(tt)
         #extract instructions from font file
@@ -164,11 +134,8 @@ class BytecodeFont(object):
 
     def setup(self,programs):
         self.programs = programs
-        self.global_program['fpgm'] = programs['fpgm']
-        self.global_program['prep'] = programs['prep']
-        self.setup_global_programs()
-        self.setup_local_programs(programs)
-        self.programs = dict(self.global_program.items() + self.local_programs.items())
+        self.extractFunctions(programs)
+        self.setup_programs(programs)
     
     def constructCVTTable(self, tt):
         self.cvt_table = {}
@@ -218,20 +185,17 @@ class BytecodeFont(object):
 
         addTagsWithBytecode(tt,"")
         ttp = self.setup(tag_to_program)
-    def setup_global_programs(self):
-        #build the function table
-        self.extractFunctions()
-
+        
     #transform list of instructions -> Program 
-    def setup_local_programs(self, programs):
+    def setup_programs(self, programs):
         for key, instr in programs.items():
             if key is not 'fpgm':
                 program = Program(instr)
-                self.local_programs[key] =  program
+                self.programs[key] =  program
         
     #preprocess the function definition instructions between <fpgm></fpgm>
-    def extractFunctions(self):
-        instructions = self.global_program['fpgm']
+    def extractFunctions(self, programs):
+        instructions = programs['fpgm']
         functionsLabels = []
         skip = False
         function_ptr = None
@@ -270,7 +234,7 @@ def main(args):
     #TODO:transform ttf file to ttx and feed it to the analysis
         raise NotImplementedError
     if fileformat == 'ttx':
-        tt = TTFont()
+        tt = TTFont()#libary class
         tt.importXML(args[0])
     else:
         raise NotImplementedError

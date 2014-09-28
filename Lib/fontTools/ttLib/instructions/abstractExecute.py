@@ -1,4 +1,5 @@
 from fontTools.ttLib.data import dataType
+import logging
 class DataFlowRegion(object):
     def __init__(self):
         self.condition = None
@@ -35,7 +36,7 @@ class ExecutionContext(object):
         self.current_instruction = None
     def pretty_print(self):
         #print('graphics_state',self.graphics_state,'program_stack',self.program_stack)
-        print('storage_area',self.storage_area,'program_stack',self.program_stack)
+        print('storage', self.storage_area, 'stack', self.program_stack[-10:])
 
     def set_currentInstruction(self, instruction):
         self.current_instruction = instruction
@@ -51,7 +52,7 @@ class ExecutionContext(object):
             #'deltaBase':         9,
             #'deltaShift':        3,
             #'minDist':           1, #1 << 6 1 as an f26dot6.
-            'loop':              1,
+            'loop':               1,
             #'roundPhase':        1,
             #'roundPeriod':       1,#1 << 6,1 as an f26dot6.
             #'roundThreshold':    0.5,#1 << 5, 1/2 as an f26dot6.
@@ -66,6 +67,7 @@ class ExecutionContext(object):
         return self.storage_area[index]
 
     def program_stack_pop(self, num=1):
+        self.current_instruction.data = self.program_stack[-1*self.current_instruction.get_pop_num():]
         for i in range(num):
             self.program_stack.pop()
     def exec_PUSH(self):
@@ -92,7 +94,7 @@ class ExecutionContext(object):
     def exec_ADD(self):
         add1 = self.program_stack[-1]
         add2 = self.program_stack[-2]
-        self.program_stack.pop()
+        self.program_stack_pop()
         self.program_stack[-1] = add1 + add2
     
     def binary_operation(self,action):
@@ -100,6 +102,7 @@ class ExecutionContext(object):
         op2 = self.program_stack[-1]
         if isinstance(op1,dataType.AbstractValue) or isinstance(op2,dataType.AbstractValue):
             res = dataType.Expression(op1,op2,action)
+        
         elif action is 'GT':
             res = op1 > op2
         elif action is 'GTEQ':
@@ -201,6 +204,8 @@ class ExecutionContext(object):
         #We set no other bits, as we do not support rotated or stretched glyphs.
         h.stack[-1] = res
         '''
+        self.program_stack_pop()
+        self.program_stack.append(dataType.EngineInfo())
         pass
 
     def exec_GPV(self):
@@ -225,7 +230,9 @@ class ExecutionContext(object):
         raise NotImplementedError
 
     def exec_INSTCTRL(self):
-        raise NotImplementedError
+        #raise NotImplementedError
+        self.program_stack_pop(2)
+        #XX
     
     def exec_IP(self):
         loopValue = self.graphics_state['loop']
@@ -306,6 +313,7 @@ class ExecutionContext(object):
         pass
     def exec_RS(self):
         op = self.program_stack[-1]
+        self.program_stack_pop()
         res = self.storage_area[op]
         self.program_stack.append(res) 
     def exec_RTDG(self):
@@ -320,10 +328,13 @@ class ExecutionContext(object):
         pass
     def exec_SANGW(self):
         pass
+
     def exec_SCANCTRL(self):
-        pass
+        self.program_stack_pop()
+    
     def exec_SCANTYPE(self):
-        pass
+        self.program_stack_pop()
+    
     def exec_SCFS(self):
         pass
     def exec_SCVTCI(self):
@@ -453,17 +464,20 @@ class ExecutionContext(object):
         #TODO
        
     def exec_RTDG(self):#RoundToDoubleGrid
-        self.graphics_state['roundPeriod']
+        pass
+        #self.graphics_state['roundPeriod']
         
     def exec_RTG(self):#RoundToGrid
-        self.graphics_state['roundPeriod']
+        pass
+        #self.graphics_state['roundPeriod']
 
     def exec_RUTG(self):#RoundUpToGrid
-        self.graphics_state['roundPeriod']
+        pass
+        #self.graphics_state['roundPeriod']
 
     def exec_SRP(self,index):#SetRefPoint
         self.graphics_state['rp'][index] = self.program_stack[-1]
-        self.program_stack_pop(1)
+        self.program_stack_pop()
 
     def exec_SRP0(self):
         self.exec_SRP(0)
@@ -478,17 +492,14 @@ class ExecutionContext(object):
         pass
     def exec_SANGW(self):
         pass
-    def exec_SCANCTRL(self):
-        pass
-    def exec_SCANTYPE(self):
-        pass
+    
     def exec_SCFS(self):
         pass
     def exec_SCVTCI(self):
         self.graphics_state['controlValueCutIn'] = self.program_stack[-1]
-        self.program_stack_pop(1)
+        self.program_stack_pop()
     def exec_CALL(self):
-        self.program_stack_pop(1)
+        self.program_stack_pop()
 
     def exec_SDB(self):
         pass
@@ -511,6 +522,7 @@ class Executor(object):
         self.environment = ExecutionContext(font)
         self.program_ptr = None
         self.body = None
+        self.program = None
         '''
         mode 1 normal Execution
         mode 2 calling a method
@@ -523,35 +535,45 @@ class Executor(object):
 
     def excute_CALL(self):
         top = self.environment.program_stack[-1]
+        self.program.call_function_set.append(top)
+        logging.basicConfig(level=logging.INFO)
+        logger = logging.getLogger(__name__)
+
+        logger.warning('ADD CALL SET:%s', top)
+        logger.warning('ADD CALL SET:%s', self.program.call_function_set)
         self.program_ptr = self.font.function_table[top].start_ptr()
+        self.font.function_table[top].printBody()
         self.environment.program_stack.pop()
         
         print("jump to call function "+self.program_ptr.mnemonic)
 
     def execute(self,tag):
-        self.program_ptr = self.font.programs[tag].start_ptr()
+        self.program = self.font.programs[tag]
+        self.program_ptr = self.program.start_ptr()
         is_backptr = False
         pre_environment = None
         back_ptr = []
         top_regin = DataFlowRegion()
         successors_index = -1
         while len(self.program_ptr.successors)>0 or len(back_ptr)>0:
-            print("executing..." + self.program_ptr.mnemonic , self.program_ptr.data)
+            print("executing..." + self.program_ptr.mnemonic)
             if self.program_ptr.mnemonic == 'CALL' and is_backptr == False:
-                back_ptr.append((self.program_ptr,pre_environment))
+                back_ptr.append((self.program_ptr,None))
                 self.excute_CALL()
                 
             if self.program_ptr.mnemonic == 'IF':
                 back_ptr.append((self.program_ptr,pre_environment))
             self.environment.set_currentInstruction(self.program_ptr)
             self.environment.execute()
+            print(self.program_ptr.data)
             self.environment.pretty_print()
             if len(back_ptr) != 0:
                 print('back_ptr',back_ptr)
             if len(self.program_ptr.successors)==0:
                 self.program_ptr = back_ptr[-1][0]
                 print("program pointer back to", self.program_ptr)
-                self.environment = back_ptr[-1][1]
+                if back_ptr[-1][1] is not None:
+                    self.environment = back_ptr[-1][1]
                 back_ptr.pop()
 
             if len(self.program_ptr.successors) > 1:
@@ -567,10 +589,6 @@ class Executor(object):
                 pre_environment = self.environment
                 self.program_ptr = self.program_ptr.successors[0]
                 is_backptr = False
-
-                
-            
-
 
     def exec_CALL(self):
         pass
