@@ -102,7 +102,7 @@ class ExecutionContext(object):
         op2 = self.program_stack[-1]
         if isinstance(op1,dataType.AbstractValue) or isinstance(op2,dataType.AbstractValue):
             res = dataType.Expression(op1,op2,action)
-        
+
         elif action is 'GT':
             res = op1 > op2
         elif action is 'GTEQ':
@@ -300,7 +300,7 @@ class ExecutionContext(object):
     def exec_OR(self):
         self.binary_operation('OR')
     def exec_POP(self):
-        pass
+        self.program_stack_pop()
     def exec_RCVT(self):
         pass
     def exec_RDTG(self):
@@ -424,7 +424,10 @@ class ExecutionContext(object):
             self.graphics_state['dv'] = (1, 0)
 
     def exec_SWAP(self):
-        pass
+        tmp = self.program_stack[-1]
+        self.program_stack[-1] = self.program_stack[-2]
+        self.program_stack[-2] = tmp
+
     def exec_SZP0(self):
         pass
     def exec_SZP1(self):
@@ -541,7 +544,7 @@ class Executor(object):
 
         logger.warning('ADD CALL SET:%s', top)
         logger.warning('ADD CALL SET:%s', self.program.call_function_set)
-        self.program_ptr = self.font.function_table[top].start_ptr()
+        self.program_ptr = self.font.function_table[top].start()
         self.font.function_table[top].printBody()
         self.environment.program_stack.pop()
         
@@ -549,20 +552,20 @@ class Executor(object):
 
     def execute(self,tag):
         self.program = self.font.programs[tag]
-        self.program_ptr = self.program.start_ptr()
+        self.program_ptr = self.program.start()
         is_backptr = False
         pre_environment = None
         back_ptr = []
         top_regin = DataFlowRegion()
-        successors_index = -1
+        successors_index = []
         while len(self.program_ptr.successors)>0 or len(back_ptr)>0:
             print("executing..." + self.program_ptr.mnemonic)
             if self.program_ptr.mnemonic == 'CALL' and is_backptr == False:
                 back_ptr.append((self.program_ptr,None))
                 self.excute_CALL()
-                
             if self.program_ptr.mnemonic == 'IF':
-                back_ptr.append((self.program_ptr,pre_environment))
+                successors_index.append(0)
+                back_ptr.append((self.program_ptr, pre_environment))
             self.environment.set_currentInstruction(self.program_ptr)
             self.environment.execute()
             print(self.program_ptr.data)
@@ -577,11 +580,12 @@ class Executor(object):
                 back_ptr.pop()
 
             if len(self.program_ptr.successors) > 1:
-                successors_index = successors_index + 1
-                self.program_ptr = self.program_ptr.successors[successors_index]
+                self.program_ptr = self.program_ptr.successors[successors_index[-1]]
+                if successors_index[-1]+1<=1:
+                    successors_index.append(1)
+                else:
+                    successors_index.pop()
                 is_backptr = False
-                if successors_index == 1:
-                    successors_index = -1
                 continue
             
             if len(self.program_ptr.successors) == 1:

@@ -22,9 +22,7 @@ class Body(object):
 
     def set_condition(self,expression):
         self.condition = expression #the eval(expression) should return true for choosing this 
-    def compute_stack_level(self):
-        #TODO
-        pass
+
     def constructSuccessorAndPredecessor(self,input_statements):
         def is_branch(instruction):
             if isinstance(instruction,statements.all.EIF_Statement):
@@ -62,9 +60,6 @@ class Body(object):
                 this_instruction.set_predecessor(this_if)
                 if_waited.pop()
         return input_statements[0]
-        # what about CALL statements? I think .successors is an
-        # intraprocedural CFG, so CALL is probably opaque to .successors.
-        # also: LOOPCALL
 
     def pretty_print(self):
         level = 1
@@ -106,17 +101,18 @@ class Function(object):
         self.body = Body(instructions = self.instructions)
     def printBody(self):
         self.body.pretty_print()
-    def start_ptr(self):
+    def start(self):
         return self.body.statement_root
 
 #per glyph instructions
 class Program(object):
     def __init__(self, input):
         self.body = Body(instructions = input)
-        self.call_function_set = []
+        self.call_function_set = []#a set of function being called in the tag program
     
-    def start_ptr(self):
+    def start(self):
         return self.body.statement_root
+    
     def print_program(self):
         self.body.pretty_print()
 
