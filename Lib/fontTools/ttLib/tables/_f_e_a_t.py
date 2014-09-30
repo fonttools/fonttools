@@ -1,12 +1,9 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
-from fontTools.misc.textTools import safeEval, num2binary, binary2num
+from fontTools.misc.textTools import safeEval
 from fontTools.misc.fixedTools import fixedToFloat as fi2fl, floatToFixed as fl2fi
 from . import DefaultTable
-from .. import debugmsg
-import time
-import calendar
 import struct
 
 class FeatureName(object):
