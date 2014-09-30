@@ -31,12 +31,22 @@ class ExecutionContext(object):
         self.cvt_table = ttFont.cvt_table
         # storage_area: location -> Value
         self.storage_area = {}
+        self.cvt = ttFont.cvt_table
         self.set_graphics_state_to_default()
         self.program_stack = []
         self.current_instruction = None
+
+    def merge(self,executionContext2):
+        '''
+        merge the executionContext of the if-else
+        '''
+        pass
     def pretty_print(self):
         #print('graphics_state',self.graphics_state,'program_stack',self.program_stack)
-        print('storage', self.storage_area, 'stack', self.program_stack[-10:])
+        print('cvt',self.cvt)
+        print('storage', self.storage_area)
+        print('stack', self.program_stack[-10:])
+        pass
 
     def set_currentInstruction(self, instruction):
         self.current_instruction = instruction
@@ -83,7 +93,7 @@ class ExecutionContext(object):
     def exec_ELSE(self):
         pass
     def exec_AA(self):#AdjustAngle
-        pass
+        self.program_stack.pop()
 
     def exec_ABS(self):#Absolute
         top = self.program_stack[-1]
@@ -115,11 +125,20 @@ class ExecutionContext(object):
             res = op1/op2
         elif action is 'EQ':
             res = op1 == op2
+        elif action is 'NEQ':
+            res = op1 != op2
         elif action is 'LT':
             res = op1 < op2
         elif action is 'LTEQ':
             res = op1 <= op2
-
+        elif action is 'MAX':
+            res = max(op1,op2)
+        elif action is 'MIN':
+            res = min(op1,op2)
+        elif action is 'SUB':
+            res = op1 - op2
+        else:
+            raise NotImplementedError
         self.program_stack_pop(2)
         self.program_stack.append(res)
 
@@ -154,7 +173,7 @@ class ExecutionContext(object):
         self.program_stack_pop()
 
     def exec_DELTAC1(self):#DeltaExceptionC1
-        pass
+        raise NotImplementedError
     def exec_DEPTH(self):#GetDepthStack
         self.program_stack.append(len(self.program_stack))
     
@@ -206,7 +225,6 @@ class ExecutionContext(object):
         '''
         self.program_stack_pop()
         self.program_stack.append(dataType.EngineInfo())
-        pass
 
     def exec_GPV(self):
         op1 = self.program_stack[-2]
@@ -227,6 +245,7 @@ class ExecutionContext(object):
         self.binary_operation('GTEQ')
 
     def exec_IDEF(self):
+        #self.program_stack_pop()
         raise NotImplementedError
 
     def exec_INSTCTRL(self):
@@ -239,18 +258,25 @@ class ExecutionContext(object):
         if len(self.program_stack)<loopValue:
             raise Exception("truetype: hinting: stack underflow")
         self.program_stack_pop(loopValue)
+
     def exec_ISECT(self):
         self.program_stack_pop(5)
-    def exec_IUP(self):
+
+    def exec_IUP(self):#drawing-only 
         pass
+
     def exec_LOOPCALL(self):
-        pass
+        raise NotImplementedError
+
     def exec_LT(self):
         self.binary_operation('LT')
+
     def exec_LTEQ(self):
         self.binary_operation('LTEQ')
+
     def exec_MAX(self):
-        pass
+        self.binary_operation('MAX')
+
     def exec_MD(self):
         op1 = self.program_stack[-2]
         op2 = self.program_stack[-1]
@@ -258,76 +284,92 @@ class ExecutionContext(object):
         assert isinstance(op1, dataType.PointValue) and (op1, dataType.PointValue)
         res = dataType.Distance()
         self.program_stack.append(res)
+
     def exec_MDAP(self):
         op = self.program_stack[-1]
         assert isinstance(op, dataType.PointValue)
         self.program_stack_pop(1)
+
     def exec_MDRP(self):
         op = self.program_stack[-1]
         assert isinstance(op, dataType.PointValue)
         self.program_stack_pop(1)
+
     def exec_MIAP(self):
         op1 = self.program_stack[-2]
         op2 = self.program_stack[-1]
         self.program_stack_pop(2)
+
     def exec_MIN(self):
-        pass
+        self.binary_operation('MIN')
+
     def exec_MINDEX(self):
-        pass
+        raise NotImplementedError
+
     def exec_MIRP(self):
-        pass
+        raise NotImplementedError
+
     def exec_MPPEM(self):
         if self.graphics_state['pv'] == (0, 1):
             self.program_stack.append(dataType.PPEM_Y())
         else:
             self.program_stack.append(dataType.PPEM_X())
     def exec_MPS(self):
-        pass
+        raise NotImplementedError
     def exec_MSIRP(self):
-        pass
+        raise NotImplementedError
     def exec_MUL(self):
-        pass
+        self.program_stack_pop(2)
+        self.program_stack.append(dataType.F26Dot6())
     def exec_NEG(self):
-        pass
+        raise NotImplementedError
     def exec_NEQ(self):
-        pass
+        self.binary_operation('NEQ')
     def exec_NOT(self):
-        pass
+        raise NotImplementedError
     def exec_NROUND(self):
-        pass
+        raise NotImplementedError
     def exec_ODD(self):
-        pass
+        raise NotImplementedError
     def exec_OR(self):
         self.binary_operation('OR')
     def exec_POP(self):
         self.program_stack_pop()
     def exec_RCVT(self):
-        pass
+        op = self.program_stack[-1]
+        self.program_stack_pop()
+        res = self.cvt[op]
+        self.program_stack.append(res)
     def exec_RDTG(self):
-        pass
+        raise NotImplementedError
+
     def exec_ROFF(self):
-        pass
+        raise NotImplementedError
+
     def exec_ROLL(self):
-        pass
+        raise NotImplementedError
+
     def exec_ROUND(self):
-        pass
+        self.program_stack_pop()
+        self.program_stack.append(dataType.F26Dot6())
+
     def exec_RS(self):
         op = self.program_stack[-1]
         self.program_stack_pop()
         res = self.storage_area[op]
         self.program_stack.append(res) 
     def exec_RTDG(self):
-        pass
+        raise NotImplementedError
     def exec_RTG(self):
-        pass
+        raise NotImplementedError
     def exec_RTHG(self):
-        pass
+        raise NotImplementedError
     def exec_RUTG(self):
-        pass
+        raise NotImplementedError
     def exec_S45ROUND(self):
-        pass
+        raise NotImplementedError
     def exec_SANGW(self):
-        pass
+        raise NotImplementedError
 
     def exec_SCANCTRL(self):
         self.program_stack_pop()
@@ -336,17 +378,23 @@ class ExecutionContext(object):
         self.program_stack_pop()
     
     def exec_SCFS(self):
-        pass
+        self.program_stack_pop(2)
+
     def exec_SCVTCI(self):
-        pass
-    def exec_SDBV(self):
-        pass
+        self.program_stack_pop()
+
+    def exec_SDB(self):
+        self.program_stack_pop()
+
     def exec_SDPVTL(self):
-        pass
+        self.program_stack_pop(2)
+
     def exec_SDS(self):
-        pass
+        self.program_stack_pop()
+
     def exec_SFVFS(self):
-        pass
+        self.program_stack_pop(2)
+
     def exec_SFVTCA(self):#Set Freedom Vector To Coordinate Axis
         data = self.current_instruction.data[0]
         assert (data is 1 or data is 0)
@@ -356,41 +404,28 @@ class ExecutionContext(object):
             self.graphics_state['fv'] = (1, 0)
            
     def exec_SFVTL(self):#Set Freedom Vector To Line
-    #Todo: finish it
-        '''
-        op1 = self.program_stack[-2]
-        op2 = self.program_stack[-1]
-        point1 = (0, 0, op1)
-        point2 = (0, 0, op2)
-        self.program_stack_pop(2)
-        dx := point2[0] - point1[0]
-        dy := point2[1] - point1[1]
-        data = int(self.current_instruction.data[0])
-        if data == 1:
-            dy = -dy#data is 1:p1->p2
-        '''
-        logging.info("Set Freedom Vector To Line")
+        raise NotImplementedError
 
     def exec_SFVTPV(self):#Set Freedom Vector To Projection Vector
         self.graphics_state['fv'] = self.graphics_state['gv']
 
     def exec_SHC(self):
-        pass
+        raise NotImplementedError
     def exec_SHP(self):
-        pass
+        raise NotImplementedError
     def exec_SHPIX(self):
-        pass
+        raise NotImplementedError
     def exec_SHZ(self):
-        pass
+        raise NotImplementedError
     def exec_SLOOP(self):
-        pass
+        raise NotImplementedError
     def exec_SMD(self):
         op = self.program_stack[-1]
         assert isinstance(op, dataType.Distance)
-        self.program_stack_pop(1)
+        self.program_stack_pop()
 
     def exec_SPVFS(self):
-        pass
+        raise NotImplementedError
     def exec_SPVTCA(self):
         data = self.current_instruction.data[0]
         assert (data is 1 or data is 0)
@@ -402,15 +437,20 @@ class ExecutionContext(object):
             self.graphics_state['dv'] = (1, 0)
 
     def exec_SPVTL(self):
-        pass
+        self.program_stack_pop(2)
+
     def exec_SROUND(self):
-        pass
+        self.program_stack_pop()
+
     def exec_SSW(self):
-        pass
+        self.program_stack_pop()
+
     def exec_SSWCI(self):
-        pass
+        self.program_stack_pop()
+
     def exec_SUB(self):
-        pass
+        self.binary_operation('SUB')
+
     def exec_SVTCA(self):
         data = self.current_instruction.data[0]
         assert (data is 1 or data is 0)
@@ -429,42 +469,40 @@ class ExecutionContext(object):
         self.program_stack[-2] = tmp
 
     def exec_SZP0(self):
-        pass
+        self.program_stack_pop()
+
     def exec_SZP1(self):
-        pass
+        self.program_stack_pop()
+
     def exec_SZP2(self):
-        pass
+        self.program_stack_pop()
+
     def exec_SZPS(self):
-        pass
+        self.program_stack_pop()
+
     def exec_UTP(self):
-        pass
+        self.program_stack_pop()
+
     def exec_WCVTF(self):
-        pass
+        op1 = self.program_stack[-2]
+        op2 = self.program_stack[-1]
+        self.program_stack_pop(2)
+        self.cvt[op1] = op2
+
     def exec_WCVTP(self):
-        pass
+        op1 = self.program_stack[-2]
+        op2 = self.program_stack[-1]
+        self.program_stack_pop(2)
+        self.cvt[op1] = op2
+
     def exec_WS(self):
         op1 = self.program_stack[-2]
         op2 = self.program_stack[-1]
         self.program_stack_pop(2)
         self.storage_area[op1] = op2
+
     def exec_EQ(self):
         self.binary_operation('EQ')
-
-    def round(self,value):
-        if self.graphics_state['roundPeriod'] == 0:
-            # Rounding is off.
-            return value
-        
-        if value >= 0:
-            result = value - self.graphics_state['roundPhase'] + self.graphics_state['roundThreshold']
-            if self.graphics_state['roundSuper45']:
-                result = result / self.graphics_state['roundPeriod']
-                result = result * self.graphics_state['roundPeriod']
-            else:
-                result = result & (-self.graphics_state['roundPeriod'])
-            if result < 0:
-                result = 0
-        #TODO
        
     def exec_RTDG(self):#RoundToDoubleGrid
         pass
@@ -492,20 +530,23 @@ class ExecutionContext(object):
         self.exec_SRP(2)
 
     def exec_S45ROUND(self):
-        pass
+        self.program_stack_pop()
+
     def exec_SANGW(self):
-        pass
+        self.program_stack_pop()
     
     def exec_SCFS(self):
-        pass
+        self.program_stack_pop(2)
+
     def exec_SCVTCI(self):
         self.graphics_state['controlValueCutIn'] = self.program_stack[-1]
         self.program_stack_pop()
+
     def exec_CALL(self):
         self.program_stack_pop()
 
     def exec_SDB(self):
-        pass
+        self.program_stack_pop()
     def execute(self):
         getattr(self,"exec_"+self.current_instruction.mnemonic)()
 
@@ -559,20 +600,24 @@ class Executor(object):
         top_regin = DataFlowRegion()
         successors_index = []
         while len(self.program_ptr.successors)>0 or len(back_ptr)>0:
+           # print("executing..." + self.program_ptr.mnemonic)
             print("executing..." + self.program_ptr.mnemonic)
             if self.program_ptr.mnemonic == 'CALL' and is_backptr == False:
                 back_ptr.append((self.program_ptr,None))
                 self.excute_CALL()
+            
             if self.program_ptr.mnemonic == 'IF':
                 successors_index.append(0)
                 back_ptr.append((self.program_ptr, pre_environment))
+
             self.environment.set_currentInstruction(self.program_ptr)
             self.environment.execute()
-            print(self.program_ptr.data)
+            #print(self.program_ptr.data)
             self.environment.pretty_print()
             if len(back_ptr) != 0:
                 print('back_ptr',back_ptr)
-            if len(self.program_ptr.successors)==0:
+
+            if len(self.program_ptr.successors) == 0:
                 self.program_ptr = back_ptr[-1][0]
                 print("program pointer back to", self.program_ptr)
                 if back_ptr[-1][1] is not None:
@@ -581,8 +626,8 @@ class Executor(object):
 
             if len(self.program_ptr.successors) > 1:
                 self.program_ptr = self.program_ptr.successors[successors_index[-1]]
-                if successors_index[-1]+1<=1:
-                    successors_index.append(1)
+                if successors_index[-1]==0:
+                    successors_index[-1] = successors_index[-1] + 1
                 else:
                     successors_index.pop()
                 is_backptr = False
@@ -593,6 +638,3 @@ class Executor(object):
                 pre_environment = self.environment
                 self.program_ptr = self.program_ptr.successors[0]
                 is_backptr = False
-
-    def exec_CALL(self):
-        pass

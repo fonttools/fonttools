@@ -7,6 +7,7 @@ class root_statement(object):
         #one instruction has one predecessor
         self.predecessor = None
         self.top = None
+        self.id = (0,0)
     def add_successor(self,successor):
         self.successors.append(successor)
     def set_predecessor(self, predecessor):

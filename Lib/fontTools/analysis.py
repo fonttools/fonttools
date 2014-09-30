@@ -128,7 +128,7 @@ class BytecodeFont(object):
         #extract instructions from font file
         self.extractProgram(tt)
 
-    def setup(self,programs):
+    def setup(self, programs):
         self.programs = programs
         self.extractFunctions(programs)
         self.setup_programs(programs)
@@ -148,12 +148,12 @@ class BytecodeFont(object):
         in a single font file
         '''
         tag_to_program = {}
-        def constructInstructions(instructions):
+        def constructInstructions(program_tag, instructions):
             thisinstruction = None
             instructions_list = []
             def combineInstructionData(instruction,data):
                 instruction.add_data(data)
-
+            number = 0
             for instruction in instructions:
                 instructionCons = instructionConstructor.instructionConstructor(instruction)
                 instruction = instructionCons.getClass()
@@ -162,7 +162,10 @@ class BytecodeFont(object):
                     combineInstructionData(thisinstruction,instruction)
                 else:
                     if thisinstruction is not None:
+                        thisinstruction.id = program_tag + '.' + str(number)
+                        print(thisinstruction.id)
                         instructions_list.append(thisinstruction)
+                        number = number+1
                     thisinstruction = instruction
 
             instructions_list.append(thisinstruction)
@@ -175,12 +178,12 @@ class BytecodeFont(object):
                         program_tag = tag+"."+key
                     else:
                         program_tag = key
-                    tag_to_program[program_tag] = constructInstructions(tt[key].program.getAssembly())
+                    tag_to_program[program_tag] = constructInstructions(program_tag, tt[key].program.getAssembly())
                 if hasattr(tt[key], 'keys'):
                     addTagsWithBytecode(tt[key],tag+key)
 
         addTagsWithBytecode(tt,"")
-        ttp = self.setup(tag_to_program)
+        self.setup(tag_to_program)
         
     #transform list of instructions -> Program 
     def setup_programs(self, programs):
@@ -211,10 +214,15 @@ class BytecodeFont(object):
                 else:
                     function_ptr.appendInstruction(instruction)
         
+        
         for key, value in self.function_table.items():
-            print(key)
             value.constructBody()
+            '''
+            #debug purpose print out the function table
+            print(key)
             value.printBody()
+            '''
+        
         
 def analysis(tt):
     ttFont = BytecodeFont(tt)
