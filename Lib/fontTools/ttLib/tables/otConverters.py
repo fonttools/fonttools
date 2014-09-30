@@ -98,6 +98,12 @@ class Long(IntValue):
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		writer.writeLong(value)
 
+class ULong(IntValue):
+	def read(self, reader, font, tableDict):
+		return reader.readULong()
+	def write(self, writer, font, tableDict, value, repeatIndex=None):
+		writer.writeULong(value)
+
 class Version(BaseConverter):
 	def read(self, reader, font, tableDict):
 		value = reader.readLong()
@@ -372,6 +378,7 @@ converterMapping = {
 	"int16":       Short,
 	"uint16":      UShort,
 	"uint24":      UInt24,
+	"uint32":      ULong,
 	"Version":     Version,
 	"Tag":         Tag,
 	"GlyphID":     GlyphID,
