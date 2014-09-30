@@ -62,7 +62,7 @@ class BaseConverter(object):
 		self.tableClass = tableClass
 		self.isCount = name.endswith("Count")
 		self.isLookupType = name.endswith("LookupType")
-		self.isPropagated = name in ["ClassCount", "Class2Count", "FeatureTag"]
+		self.isPropagated = name in ["ClassCount", "Class2Count", "FeatureTag", "SettingsCount"]
 	
 	def read(self, reader, font, tableDict):
 		"""Read a value from the reader."""

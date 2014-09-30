@@ -979,4 +979,38 @@ otData = [
 		('uint16', 'PartFlags', None, None, 'Part qualifiers. PartFlags enumeration currently uses only one bit: 0x0001 fExtender: If set, the part can be skipped or repeated. 0xFFFE Reserved'),
 	]),
 
+
+	##
+	## Apple Advanced Typography (AAT) tables
+	##
+
+	#
+	# feat
+	#
+
+	('feat', [
+		('Version', 'Version', None, None, 'Version of the feat table-initially set to 0x00010000.'),
+		('uint16', 'FeatureNameCount', None, None, 'Number of entries in the feature name array.'),
+		('uint16', 'Reserved1', None, None, 'Reserved (set to zero).'),
+		('uint32', 'Reserved2', None, None, 'Reserved (set to zero).'),
+		('FeatureName', 'FeatureNames', 'FeatureNameCount', 0, 'The feature name array.'),
+	]),
+
+	('FeatureName', [
+		('uint16', 'FeatureType', None, None, 'Feature type.'),
+		('uint16', 'SettingsCount', None, None, 'The number of records in the setting name array.'),
+		('LOffset', 'Settings', None, None, 'Offset to setting table for this feature.'),
+		('uint16', 'FeatureFlags', None, None, 'Single-bit flags associated with the feature type.'),
+		('uint16', 'FeatureNameID', None, None, 'The name table index for the feature name.'),
+	]),
+
+	('Settings', [
+		('Setting', 'Setting', 'SettingsCount', 0, 'The setting array.'),
+	]),
+
+	('Setting', [
+		('uint16', 'SettingValue', None, None, 'The setting.'),
+		('uint16', 'SettingNameID', None, None, 'The name table index for the setting name.'),
+	]),
+
 ]
