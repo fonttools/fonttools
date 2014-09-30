@@ -40,6 +40,7 @@ def _moduleFinderHint():
 	from . import V_O_R_G_
 	from . import _c_m_a_p
 	from . import _c_v_t
+	from . import _f_e_a_t
 	from . import _f_p_g_m
 	from . import _g_a_s_p
 	from . import _g_l_y_f
