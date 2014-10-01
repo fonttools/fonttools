@@ -7,6 +7,7 @@ from fontTools.misc.py23 import *
 from fontTools import ttLib
 from fontTools.ttLib.tables import otTables
 from fontTools.misc import psCharStrings
+from fontTools.misc.textTools import binary2num
 from fontTools.pens import basePen
 import sys
 import struct
@@ -275,6 +276,15 @@ Other font-specific options:
       required by the standard, nor by any known implementation.
   --no-canonical-order
       Keep original order of font tables. This is faster. [default]
+  --fsType=<int>
+      Set the 'fsType' font embedding settings in the 'OS/2' table to an
+      integer <int>. For the available numerical values and their meaning, see:
+      http://www.microsoft.com/typography/otspec/os2.htm#fst
+      Examples:
+        --fsType=8
+            * Editable / Allow subsetting
+        --fsType=772
+            * Preview & Print / No subsetting / Bitmap embedding only
 
 Application options:
   --verbose
@@ -293,6 +303,25 @@ Example:
     --notdef-glyph --notdef-outline --recommended-glyphs \\
     --name-IDs='*' --name-legacy --name-languages='*'
 """
+
+FSTYPE_PRESETS = (
+  0,    # Installable     | Allow Subsetting
+  2,    # Restricted      | Allow Subsetting
+  4,    # Preview & Print | Allow Subsetting
+  8,    # Editable        | Allow Subsetting
+  256,  # Installable     | No Subsetting
+  258,  # Restricted      | No Subsetting
+  260,  # Preview & Print | No Subsetting
+  264,  # Editable        | No Subsetting
+  512,  # Installable     | Allow subsetting  | Bitmap-Only Subsetting
+  514,  # Restricted      | Allow subsetting  | Bitmap-Only Subsetting
+  516,  # Preview & Print | Allow Subsetting  | Bitmap-Only Subsetting
+  520,  # Editable        | Allow Subsetting  | Bitmap-Only Subsetting
+  768,  # Installable     | No Subsetting     | Bitmap-Only Subsetting
+  770,  # Restricted      | No Subsetting     | Bitmap-Only Subsetting
+  772,  # Preview & Print | No Subsetting     | Bitmap-Only Subsetting
+  776   # Editable        | No Subsetting     | Bitmap-Only Subsetting
+  )
 
 
 def _add_method(*clazzes):
@@ -2147,6 +2176,7 @@ class Options(object):
   recalc_bounds = False # Recalculate font bounding boxes
   recalc_timestamp = False # Recalculate font modified timestamp
   canonical_order = False # Order tables as recommended
+  fsType = -1  # No change
   flavor = None # May be 'woff'
 
   def __init__(self, **kwargs):
@@ -2268,6 +2298,14 @@ class Subsetter(object):
         self.log(tag, "dropped")
         del font[tag]
         continue
+
+      if tag == 'OS/2' and self.options.fsType != -1:
+        if self.options.fsType in FSTYPE_PRESETS:
+          font['OS/2'].fsType = self.options.fsType
+          self.log("OS/2 fsType:", self.options.fsType)
+        else:
+          raise self.options.UnknownOptionError(
+            "Invalid fsType value: %s" % self.options.fsType)
 
       clazz = ttLib.getTableClass(tag)
 
