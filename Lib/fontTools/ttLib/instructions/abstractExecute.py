@@ -1,5 +1,7 @@
 from fontTools.ttLib.data import dataType
 import logging
+logging.basicConfig(level = logging.INFO)
+logger = logging.getLogger(" ")
 class DataFlowRegion(object):
     def __init__(self):
         self.condition = None
@@ -35,6 +37,8 @@ class ExecutionContext(object):
         self.set_graphics_state_to_default()
         self.program_stack = []
         self.current_instruction = None
+    def __repr__(self):
+        return str('storage' + str(self.storage_area) + 'stack' + str(self.program_stack[-3:]))
 
     def merge(self,executionContext2):
         '''
@@ -43,9 +47,9 @@ class ExecutionContext(object):
         pass
     def pretty_print(self):
         #print('graphics_state',self.graphics_state,'program_stack',self.program_stack)
-        print('cvt',self.cvt)
-        print('storage', self.storage_area)
-        print('stack', self.program_stack[-10:])
+        #print('cvt',self.cvt)
+        logger.info('storage%s', str(self.storage_area))
+        logger.info('stack%s', str(self.program_stack[-3:]))
         pass
 
     def set_currentInstruction(self, instruction):
@@ -567,12 +571,7 @@ class Executor(object):
         self.program_ptr = None
         self.body = None
         self.program = None
-        '''
-        mode 1 normal Execution
-        mode 2 calling a method
-        mode 3 traversing if branches
-        '''
-        self.mode = 1
+
     def execute_all(self):
         for key in self.font.local_programs.keys():
             self.execute(key)
@@ -580,48 +579,46 @@ class Executor(object):
     def excute_CALL(self):
         top = self.environment.program_stack[-1]
         self.program.call_function_set.append(top)
-        logging.basicConfig(level=logging.INFO)
-        logger = logging.getLogger(__name__)
-
-        logger.warning('ADD CALL SET:%s', top)
-        logger.warning('ADD CALL SET:%s', self.program.call_function_set)
+        logger.info('ADD CALL SET:%s', top)
+        logger.info('ADD CALL SET:%s', self.program.call_function_set)
         self.program_ptr = self.font.function_table[top].start()
         self.font.function_table[top].printBody()
         self.environment.program_stack.pop()
         
-        print("jump to call function "+self.program_ptr.mnemonic)
+        logger.info("jump to call function "+self.program_ptr.mnemonic)
 
     def execute(self,tag):
         self.program = self.font.programs[tag]
         self.program_ptr = self.program.start()
         is_backptr = False
-        pre_environment = None
+        #pre_environment = None
         back_ptr = []
         top_regin = DataFlowRegion()
         successors_index = []
         while len(self.program_ptr.successors)>0 or len(back_ptr)>0:
-           # print("executing..." + self.program_ptr.mnemonic)
-            print("executing..." + self.program_ptr.mnemonic)
+            logger.info("%s->%s",self.program_ptr.id,self.program_ptr.mnemonic)
             if self.program_ptr.mnemonic == 'CALL' and is_backptr == False:
                 back_ptr.append((self.program_ptr,None))
                 self.excute_CALL()
-            
-            if self.program_ptr.mnemonic == 'IF':
-                successors_index.append(0)
-                back_ptr.append((self.program_ptr, pre_environment))
 
             self.environment.set_currentInstruction(self.program_ptr)
             self.environment.execute()
-            #print(self.program_ptr.data)
+
+            if self.program_ptr.mnemonic == 'IF':
+                successors_index.append(0)
+                back_ptr.append((self.program_ptr, self.environment))
+
             self.environment.pretty_print()
             if len(back_ptr) != 0:
-                print('back_ptr',back_ptr)
+                logger.info('back%s', str(back_ptr))
 
             if len(self.program_ptr.successors) == 0:
                 self.program_ptr = back_ptr[-1][0]
-                print("program pointer back to", self.program_ptr)
+                logger.info("program pointer back to %s", str(self.program_ptr))
                 if back_ptr[-1][1] is not None:
                     self.environment = back_ptr[-1][1]
+                    logger.info("program environment recover to")
+                    self.environment.pretty_print()
                 back_ptr.pop()
 
             if len(self.program_ptr.successors) > 1:
@@ -635,6 +632,6 @@ class Executor(object):
             
             if len(self.program_ptr.successors) == 1:
                 #pre_ptr = self.program_ptr
-                pre_environment = self.environment
+                #pre_environment = self.environment
                 self.program_ptr = self.program_ptr.successors[0]
                 is_backptr = False

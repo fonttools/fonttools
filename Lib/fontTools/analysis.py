@@ -163,7 +163,6 @@ class BytecodeFont(object):
                 else:
                     if thisinstruction is not None:
                         thisinstruction.id = program_tag + '.' + str(number)
-                        print(thisinstruction.id)
                         instructions_list.append(thisinstruction)
                         number = number+1
                     thisinstruction = instruction
