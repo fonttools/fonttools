@@ -272,25 +272,15 @@ Other font-specific options:
       required by the standard, nor by any known implementation.
   --no-canonical-order
       Keep original order of font tables. This is faster. [default]
-  --fsType=<option>,[<option>]
-      Modify the 'OS/2' table font embedding settings (fsType) choosing among
-      the following options, each corresponding to specific bit flags:
-        * 'installable':              Bit 0      0x0000      00000000 00000000
-        * 'restricted':               Bit 1      0x0002      00000000 00000010
-        * 'preview-and-print':        Bit 2      0x0004      00000000 00000100
-        * 'editable':                 Bit 3      0x0008      00000000 00001000
-        * 'no-subsetting':            Bit 8      0x0100      00000001 00000000
-        * 'bitmap-only':              Bit 9      0x0200      00000010 00000000
-      The first four bits (0-3) are intended as mutually exclusive. In case of
-      conflicts, the least restrictive of them gets precedence.
-      For info, see http://www.microsoft.com/typography/otspec/os2.htm#fst
+  --fsType=<int>
+      Set the 'fsType' font embedding settings in the 'OS/2' table to an
+      integer <int>. For the available numerical values and their meaning, see:
+      http://www.microsoft.com/typography/otspec/os2.htm#fst
       Examples:
-        --fsType=installable
-            * Installable / Allow subsetting
-        --fsType=preview-and-print,no-subsetting
-            * Preview & Print / No subsetting
-        --fsType=editable,bitmap-only
-            * Editable / Allow subsetting / Bitmap embedding only
+        --fsType=8
+            * Editable / Allow subsetting
+        --fsType=772
+            * Preview & Print / No subsetting / Bitmap embedding only
 
 Application options:
   --verbose
@@ -309,6 +299,25 @@ Example:
     --notdef-glyph --notdef-outline --recommended-glyphs \\
     --name-IDs='*' --name-legacy --name-languages='*'
 """
+
+FSTYPE_PRESETS = (
+  0,    # Installable     | Allow Subsetting
+  2,    # Restricted      | Allow Subsetting
+  4,    # Preview & Print | Allow Subsetting
+  8,    # Editable        | Allow Subsetting
+  256,  # Installable     | No Subsetting
+  258,  # Restricted      | No Subsetting
+  260,  # Preview & Print | No Subsetting
+  264,  # Editable        | No Subsetting
+  512,  # Installable     | Allow subsetting  | Bitmap-Only Subsetting
+  514,  # Restricted      | Allow subsetting  | Bitmap-Only Subsetting
+  516,  # Preview & Print | Allow Subsetting  | Bitmap-Only Subsetting
+  520,  # Editable        | Allow Subsetting  | Bitmap-Only Subsetting
+  768,  # Installable     | No Subsetting     | Bitmap-Only Subsetting
+  770,  # Restricted      | No Subsetting     | Bitmap-Only Subsetting
+  772,  # Preview & Print | No Subsetting     | Bitmap-Only Subsetting
+  776   # Editable        | No Subsetting     | Bitmap-Only Subsetting
+  )
 
 
 def _add_method(*clazzes):
@@ -2162,7 +2171,7 @@ class Options(object):
   recalc_bounds = False # Recalculate font bounding boxes
   recalc_timestamp = False # Recalculate font modified timestamp
   canonical_order = False # Order tables as recommended
-  fsType = []
+  fsType = -1  # No change
   flavor = None # May be 'woff'
 
   def __init__(self, **kwargs):
@@ -2284,27 +2293,13 @@ class Subsetter(object):
         del font[tag]
         continue
 
-      if tag == 'OS/2' and self.options.fsType:
-        flags = list('0000000000000000')
-        for opt in self.options.fsType:
-          if opt == 'installable':
-            continue
-          elif opt == 'restricted':
-            flags[-2] = '1'
-          elif opt == 'preview-and-print':
-            flags[-3] = '1'
-          elif opt == 'editable':
-            flags[-4] = '1'
-          elif opt == 'no-subsetting':
-            flags[-9] = '1'
-          elif opt == 'bitmap-only':
-            flags[-10] = '1'
-          else:
-            raise self.options.UnknownOptionError("Unknown option '%s'" % opt)
-        if 'installable' in self.options.fsType:
-          flags[-4:] = '0000'
-        font['OS/2'].fsType = binary2num("".join(flags))
-        self.log("Set OS/2 fsType to '%s'" % "', '".join(self.options.fsType))
+      if tag == 'OS/2' and self.options.fsType != -1:
+        if self.options.fsType in FSTYPE_PRESETS:
+          font['OS/2'].fsType = self.options.fsType
+          self.log("OS/2 fsType:", self.options.fsType)
+        else:
+          raise self.options.UnknownOptionError(
+            "Invalid fsType value: %s" % self.options.fsType)
 
       clazz = ttLib.getTableClass(tag)
 
