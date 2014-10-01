@@ -5,7 +5,7 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools import ttLib
-from fontTools.ttLib.tables import otTables
+from fontTools.ttLib.tables import otTables, unicodeRanges
 from fontTools.misc import psCharStrings
 from fontTools.pens import basePen
 import sys
@@ -261,6 +261,12 @@ Glyph naming and encoding options:
       Drop the 3.0 symbol 'cmap'. [default]
 
 Other font-specific options:
+  --update-unicode-ranges
+      Recalculate the 'OS/2 ulUnicodeRange' bits by intersecting the Unicode
+      codepoints specified in the font's 'cmap' tables with the standard block
+      ranges defined in the current OpenType specification v1.6.
+  --no-update-unicode-ranges
+      Don't change the 'OS/2 ulUnicodeRange' bits. [default]
   --recalc-bounds
       Recalculate font bounding boxes.
   --no-recalc-bounds
@@ -2141,6 +2147,7 @@ class Options(object):
   name_legacy = False
   name_languages = [0x0409]  # English
   obfuscate_names = False  # to make webfont unusable as a system font
+  update_unicode_ranges = False  # calculate 'ulUnicodeRange' bits
   notdef_glyph = True # gid0 for TrueType / .notdef for CFF
   notdef_outline = False # No need for notdef to have an outline really
   recommended_glyphs = False  # gid1, gid2, gid3 for TrueType
@@ -2391,6 +2398,12 @@ class Subsetter(object):
   def _prune_post_subset(self, font):
     for tag in font.keys():
       if tag == 'GlyphOrder': continue
+
+      if(tag == 'OS/2' and self.options.update_unicode_ranges and
+         unicodeRanges.updateRanges(font)):
+        uranges = unicodeRanges.getRanges(font)
+        self.log(tag, "Unicode ranges updated: %s" % sorted(uranges.items()))
+
       clazz = ttLib.getTableClass(tag)
       if hasattr(clazz, 'prune_post_subset'):
         table = font[tag]
