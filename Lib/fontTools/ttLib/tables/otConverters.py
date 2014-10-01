@@ -62,7 +62,7 @@ class BaseConverter(object):
 		self.tableClass = tableClass
 		self.isCount = name.endswith("Count")
 		self.isLookupType = name.endswith("LookupType")
-		self.isPropagated = name in ["ClassCount", "Class2Count", "FeatureTag"]
+		self.isPropagated = name in ["ClassCount", "Class2Count", "FeatureTag", "SettingsCount"]
 	
 	def read(self, reader, font, tableDict):
 		"""Read a value from the reader."""
@@ -97,6 +97,12 @@ class Long(IntValue):
 		return reader.readLong()
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		writer.writeLong(value)
+
+class ULong(IntValue):
+	def read(self, reader, font, tableDict):
+		return reader.readULong()
+	def write(self, writer, font, tableDict, value, repeatIndex=None):
+		writer.writeULong(value)
 
 class Version(BaseConverter):
 	def read(self, reader, font, tableDict):
@@ -372,6 +378,7 @@ converterMapping = {
 	"int16":       Short,
 	"uint16":      UShort,
 	"uint24":      UInt24,
+	"uint32":      ULong,
 	"Version":     Version,
 	"Tag":         Tag,
 	"GlyphID":     GlyphID,

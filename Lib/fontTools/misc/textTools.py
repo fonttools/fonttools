@@ -8,7 +8,7 @@ import string
 
 def safeEval(data, eval=eval):
 	"""A (kindof) safe replacement for eval."""
-	return eval(data, {"__builtins__":{}})
+	return eval(data, {"__builtins__":{"True":True,"False":False}})
 
 
 def readHex(content):

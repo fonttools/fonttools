@@ -209,6 +209,10 @@ Font table options:
             * Drop font-wide hinting tables except 'VDMX'.
         --hinting-tables=''
             * Keep all font-wide hinting tables (but strip hints from glyphs).
+  --legacy-kern
+      Keep TrueType 'kern' table even when OpenType 'GPOS' is available.
+  --no-legacy-kern
+      Drop TrueType 'kern' table if OpenType 'GPOS' is available. [default]
 
 Font naming options:
   These options control what is retained in the 'name' table. For numerical
@@ -234,6 +238,9 @@ Font naming options:
       Specify (=), add to (+=) or exclude from (-=) the set of 'name' table
       langIDs that will be preserved. By default only records with langID
       0x0409 (English) are preserved. Use '*' to keep all langIDs.
+  --obfuscate-names
+      Make the font unusable as a system font by replacing name IDs 1, 2, 3, 4,
+      and 6 with dummy strings (it is still fully functional as webfont).
 
 Glyph naming and encoding options:
   --glyph-names
@@ -2059,6 +2066,17 @@ def prune_pre_subset(self, options):
   if '*' not in options.name_languages:
     # TODO(behdad) This is Windows-platform specific!
     self.names = [n for n in self.names if n.langID in options.name_languages]
+  if options.obfuscate_names:
+    namerecs = []
+    for n in self.names:
+      if n.nameID in [1, 4]:
+        n.string = ".\x7f".encode('utf-16be') if n.isUnicode() else ".\x7f"
+      elif n.nameID in [2, 6]:
+        n.string = "\x7f".encode('utf-16be') if n.isUnicode() else "\x7f"
+      elif n.nameID == 3:
+        n.string = ""
+      namerecs.append(n)
+    self.names = namerecs
   return True  # Required table
 
 
@@ -2111,6 +2129,7 @@ class Options(object):
   drop_tables = _drop_tables_default
   no_subset_tables = _no_subset_tables_default
   hinting_tables = _hinting_tables_default
+  legacy_kern = False  # drop 'kern' table if GPOS available
   layout_features = _layout_features_default
   ignore_missing_glyphs = False
   ignore_missing_unicodes = True
@@ -2121,6 +2140,7 @@ class Options(object):
   name_IDs = [1, 2]  # Family and Style
   name_legacy = False
   name_languages = [0x0409]  # English
+  obfuscate_names = False  # to make webfont unusable as a system font
   notdef_glyph = True # gid0 for TrueType / .notdef for CFF
   notdef_outline = False # No need for notdef to have an outline really
   recommended_glyphs = False  # gid1, gid2, gid3 for TrueType
@@ -2243,7 +2263,8 @@ class Subsetter(object):
       if tag == 'GlyphOrder': continue
 
       if(tag in self.options.drop_tables or
-         (tag in self.options.hinting_tables and not self.options.hinting)):
+         (tag in self.options.hinting_tables and not self.options.hinting) or
+         (tag == 'kern' and (not self.options.legacy_kern and 'GPOS' in font))):
         self.log(tag, "dropped")
         del font[tag]
         continue
