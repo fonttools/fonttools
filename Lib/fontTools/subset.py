@@ -261,6 +261,12 @@ Glyph naming and encoding options:
       Drop the 3.0 symbol 'cmap'. [default]
 
 Other font-specific options:
+  --recalc-unicode-ranges
+      Recalculate the 'OS/2 ulUnicodeRange' bits by intersecting the Unicode
+      code points specified in the font's 'cmap' tables with the Unicode ranges
+      defined in the OpenType specification v1.6.
+  --no-update-unicode-ranges
+      Don't change the 'OS/2 ulUnicodeRange' bits. [default]
   --recalc-bounds
       Recalculate font bounding boxes.
   --no-recalc-bounds
@@ -2146,6 +2152,7 @@ class Options(object):
   recommended_glyphs = False  # gid1, gid2, gid3 for TrueType
   recalc_bounds = False # Recalculate font bounding boxes
   recalc_timestamp = False # Recalculate font modified timestamp
+  recalc_unicode_ranges = False  # Recalculate font Unicode ranges
   canonical_order = False # Order tables as recommended
   flavor = None # May be 'woff'
 
@@ -2391,6 +2398,9 @@ class Subsetter(object):
   def _prune_post_subset(self, font):
     for tag in font.keys():
       if tag == 'GlyphOrder': continue
+      if tag == 'OS/2' and self.options.recalc_unicode_ranges:
+        # must decompile OS/2 before recalculating Unicode ranges upon save
+        table = font[tag]
       clazz = ttLib.getTableClass(tag)
       if hasattr(clazz, 'prune_post_subset'):
         table = font[tag]
@@ -2472,6 +2482,7 @@ def load_font(fontFile,
                       checkChecksums=checkChecksums,
                       recalcBBoxes=options.recalc_bounds,
                       recalcTimestamp=options.recalc_timestamp,
+                      recalcUnicodeRanges=options.recalc_unicode_ranges,
                       lazy=lazy)
 
   # Hack:
