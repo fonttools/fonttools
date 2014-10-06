@@ -106,7 +106,7 @@ class TTFont(object):
 		If the recalcTimestamp argument is false, the modified timestamp in the
 		'head' table will *not* be recalculated upon save/compile.
 
-		if the recalcUnicodeRanges argument is true, the OS/2 'ulUnicodeRange'
+		If the recalcUnicodeRanges argument is true, the OS/2 'ulUnicodeRange'
 		values will be recalculated upon save/compile according to the Unicode
 		code points specified in the font's cmap tables.
 
