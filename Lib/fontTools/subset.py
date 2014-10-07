@@ -2069,9 +2069,9 @@ def prune_pre_subset(self, options):
   if options.obfuscate_names:
     namerecs = []
     for n in self.names:
-      if n.nameID in [1, 4]:
+      if n.nameID in [1, 4, 16, 18]:
         n.string = ".\x7f".encode('utf-16be') if n.isUnicode() else ".\x7f"
-      elif n.nameID in [2, 6]:
+      elif n.nameID in [2, 6, 17]:
         n.string = "\x7f".encode('utf-16be') if n.isUnicode() else "\x7f"
       elif n.nameID == 3:
         n.string = ""
