@@ -732,7 +732,7 @@ def may_have_non_1to1(self):
              otTables.ChainContextSubst,
              otTables.ContextPos,
              otTables.ChainContextPos)
-def __classify_context(self):
+def __subset_classify_context(self):
 
   class ContextHelper(object):
     def __init__(self, klass, Format):
@@ -831,7 +831,7 @@ def __classify_context(self):
              otTables.ChainContextSubst)
 def closure_glyphs(self, s, cur_glyphs=None):
   if cur_glyphs is None: cur_glyphs = s.glyphs
-  c = self.__classify_context()
+  c = self.__subset_classify_context()
 
   indices = c.Coverage(self).intersect(s.glyphs)
   if not indices:
@@ -915,7 +915,7 @@ def closure_glyphs(self, s, cur_glyphs=None):
              otTables.ChainContextSubst,
              otTables.ChainContextPos)
 def subset_glyphs(self, s):
-  c = self.__classify_context()
+  c = self.__subset_classify_context()
 
   if self.Format == 1:
     indices = self.Coverage.subset(s.glyphs)
@@ -990,7 +990,7 @@ def subset_glyphs(self, s):
              otTables.ContextPos,
              otTables.ChainContextPos)
 def subset_lookups(self, lookup_indices):
-  c = self.__classify_context()
+  c = self.__subset_classify_context()
 
   if self.Format in [1, 2]:
     for rs in getattr(self, c.RuleSet):
@@ -1018,7 +1018,7 @@ def subset_lookups(self, lookup_indices):
              otTables.ContextPos,
              otTables.ChainContextPos)
 def collect_lookups(self):
-  c = self.__classify_context()
+  c = self.__subset_classify_context()
 
   if self.Format in [1, 2]:
     return [ll.LookupListIndex
