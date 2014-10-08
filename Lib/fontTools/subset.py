@@ -240,7 +240,8 @@ Font naming options:
       0x0409 (English) are preserved. Use '*' to keep all langIDs.
   --obfuscate-names
       Make the font unusable as a system font by replacing name IDs 1, 2, 3, 4,
-      and 6 with dummy strings (it is still fully functional as webfont).
+      6, 16, 17 and 18 with dummy strings (it is still fully functional as
+      webfont).
 
 Glyph naming and encoding options:
   --glyph-names
