@@ -106,8 +106,13 @@ Other options:
 
 Output options:
   --output-file=<path>
-      The output font file. If not specified, the subsetted font
-      will be saved in as font-file.subset.
+      The output font file. If not specified, the subsetted font will be
+      saved in as the input font file, with an incremental number appended
+      to its name. If output-file is not specified but --flavor is, then
+      the subsetted font will use the flavor's extension.
+      Examples:
+        Font.ttf -> Font#1.ttf
+        Font.ttf -> Font.woff
   --flavor=<type>
       Specify flavor of output font file. May be 'woff'.
 
