@@ -1,8 +1,19 @@
+"""\
+usage: pyftanalysis [options] inputfile
+
+    pyftanalysis %s -- TrueType Bytecode Analysis Tool
+
+    General options:
+    -h Help: print this message
+    -s State: print the graphics state after executing prep
+"""
+
 from __future__ import print_function, division, absolute_import
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.instructions import statements, instructionConstructor, abstractExecute
 from fontTools.ttLib.data import dataType
 import sys
+import getopt
 import math
 import pdb
 import logging
@@ -228,20 +239,57 @@ def analysis(tt):
     #one ttFont object for one ttx file       
     absExecutor = abstractExecute.Executor(ttFont)
     absExecutor.execute('prep')
+    return absExecutor
+
+class Options(object):
+    outputState = False
+    def __init__(self, rawOptions, numFiles):
+        for option, value in rawOptions:
+            # general options
+            if option == "-h":
+                from fontTools import version
+                print(__doc__ % version)
+                sys.exit(0)
+            elif option == "-s":
+                self.outputState = True
+
+def usage():
+    from fontTools import version
+    print(__doc__ % version)
+    sys.exit(2)
+
+def process(jobs, options):
+    for input in jobs:
+        tt = TTFont()
+        tt.importXML(input)
+        ae = analysis(tt)
+
+def parseOptions(args):
+    try:
+        rawOptions, files = getopt.getopt(args, "hs")
+    except getopt.GetoptError:
+        usage()
+
+    if not files:
+        usage()
+
+    options = Options(rawOptions, len(files))
+    jobs = []
+
+    for input in files:
+        fileformat = input.split('.')[-1]
+        if fileformat == 'ttf':
+            #TODO: transform ttf file to ttx and feed it to the analysis
+            raise NotImplementedError
+        if fileformat == 'ttx':
+            jobs.append(input)
+        else:
+            raise NotImplementedError
+    return jobs, options
 
 def main(args):
-    if len(args)<1:
-        print("usage : please use the path of the font file as input")
-    fileformat = args[0].split('.')[-1] 
-    if fileformat == 'ttf':
-    #TODO:transform ttf file to ttx and feed it to the analysis
-        raise NotImplementedError
-    if fileformat == 'ttx':
-        tt = TTFont()#libary class
-        tt.importXML(args[0])
-    else:
-        raise NotImplementedError
-    analysis(tt)
+    jobs, options = parseOptions(args)
+    process(jobs, options)
     
 if __name__ == "__main__":
         main(sys.argv[1:])
