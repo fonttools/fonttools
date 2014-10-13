@@ -617,7 +617,7 @@ class Executor(object):
         for key in self.font.local_programs.keys():
             self.execute(key)
 
-    def excute_CALL(self):
+    def execute_CALL(self):
         for item in self.program_state:
             if item.startswith('fpgm'):
                 self.program_state[item] = []
@@ -647,7 +647,7 @@ class Executor(object):
                 logger.info("%s->%s",self.program_ptr.id,self.program_ptr.mnemonic)
             if self.program_ptr.mnemonic == 'CALL' and not is_back_ptr:
                 back_ptr.append((self.program_ptr,None))
-                self.excute_CALL()
+                self.execute_CALL()
 
             self.environment.set_currentInstruction(self.program_ptr)
             self.environment.execute()
