@@ -148,7 +148,7 @@ class BytecodeFont(object):
     def constructCVTTable(self, tt):
         self.cvt_table = {}
         values = tt['cvt '].values
-        key = 1
+        key = 0
         for value in values:
             self.cvt_table[key] = value
             key = key + 1
