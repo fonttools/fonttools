@@ -44,21 +44,26 @@ class ExecutionContext(object):
         '''
         merge the executionContext of the if-else
         '''
-        pass
+        if len(executionContext2.program_stack)!=len(self.program_stack):
+            logger.warn("merge different len stack")
+        for item in executionContext2.storage_area:
+            if item not in self.storage_area:
+                self.append(item)
+
     def pretty_print(self):
         #print('graphics_state',self.graphics_state,'program_stack',self.program_stack)
         #print('cvt',self.cvt)
-        logger.info('storage%s', str(self.storage_area))
-        logger.info('stack%s', str(self.program_stack[-3:]))
-        pass
+        logger.info('storage%sstack%s', str(self.storage_area),  str(self.program_stack[-10:]))
+            #, str(self.cvt))
+        
 
     def set_currentInstruction(self, instruction):
         self.current_instruction = instruction
 
     def set_graphics_state_to_default(self):
         self.graphics_state = {
-            'pv':                [1, 0], # Unit vector along the X axis.
-            'fv':                [1, 0],
+            'pv':                (1, 0), # Unit vector along the X axis.
+            'fv':                (1, 0),
             'dv':                [1, 0],
             'rp':                [0,0,0],
             'zp':                [1,1,1],
@@ -81,7 +86,7 @@ class ExecutionContext(object):
         return self.storage_area[index]
 
     def program_stack_pop(self, num=1):
-        self.current_instruction.data = self.program_stack[-1*self.current_instruction.get_pop_num():]
+        #self.current_instruction.data = self.program_stack[-1*self.current_instruction.get_pop_num():]
         for i in range(num):
             self.program_stack.pop()
     def exec_PUSH(self):
@@ -106,17 +111,15 @@ class ExecutionContext(object):
             self.program_stack[-1] = top
 
     def exec_ADD(self):
-        add1 = self.program_stack[-1]
-        add2 = self.program_stack[-2]
-        self.program_stack_pop()
-        self.program_stack[-1] = add1 + add2
+        self.binary_operation('ADD')
     
     def binary_operation(self,action):
         op1 = self.program_stack[-2]
         op2 = self.program_stack[-1]
         if isinstance(op1,dataType.AbstractValue) or isinstance(op2,dataType.AbstractValue):
             res = dataType.Expression(op1,op2,action)
-
+        elif action is 'ADD':
+            res = op1 + op2
         elif action is 'GT':
             res = op1 > op2
         elif action is 'GTEQ':
@@ -166,8 +169,9 @@ class ExecutionContext(object):
 
     def exec_CINDEX(self):#CopyXToTopStack
         index = self.program_stack[-1]
+        self.program_stack.pop()
         #the index start from 1
-        top = self.program_stack[index-1]
+        top = self.program_stack[-index]
         self.program_stack.append(top)
 
     def exec_CLEAR(self):#ClearStack
@@ -285,18 +289,18 @@ class ExecutionContext(object):
         op1 = self.program_stack[-2]
         op2 = self.program_stack[-1]
         self.program_stack_pop(2)
-        assert isinstance(op1, dataType.PointValue) and (op1, dataType.PointValue)
+        #assert isinstance(op1, dataType.PointValue) and (op1, dataType.PointValue)
         res = dataType.Distance()
         self.program_stack.append(res)
 
     def exec_MDAP(self):
         op = self.program_stack[-1]
-        assert isinstance(op, dataType.PointValue)
+        #assert isinstance(op, dataType.PointValue)
         self.program_stack_pop(1)
 
     def exec_MDRP(self):
         op = self.program_stack[-1]
-        assert isinstance(op, dataType.PointValue)
+        #assert isinstance(op, dataType.PointValue)
         self.program_stack_pop(1)
 
     def exec_MIAP(self):
@@ -311,7 +315,7 @@ class ExecutionContext(object):
         raise NotImplementedError
 
     def exec_MIRP(self):
-        raise NotImplementedError
+        self.program_stack_pop(2)
 
     def exec_MPPEM(self):
         if self.graphics_state['pv'] == (0, 1):
@@ -326,7 +330,10 @@ class ExecutionContext(object):
         self.program_stack_pop(2)
         self.program_stack.append(dataType.F26Dot6())
     def exec_NEG(self):
-        raise NotImplementedError
+        if isinstance(self.program_stack[-1], dataType.AbstractValue):
+            pass
+        else:
+            self.program_stack[-1] = -self.program_stack[-1]
     def exec_NEQ(self):
         self.binary_operation('NEQ')
     def exec_NOT(self):
@@ -351,7 +358,11 @@ class ExecutionContext(object):
         raise NotImplementedError
 
     def exec_ROLL(self):
-        raise NotImplementedError
+        op1 = self.program_stack[-1]
+        op2 = self.program_stack[-2]
+        self.program_stack[-1] = self.program_stack[-3]
+        self.program_stack[-3] = self.program_stack[-2]
+        self.program_stack[-2] = self.program_stack[-1]
 
     def exec_ROUND(self):
         self.program_stack_pop()
@@ -360,8 +371,12 @@ class ExecutionContext(object):
     def exec_RS(self):
         op = self.program_stack[-1]
         self.program_stack_pop()
-        res = self.storage_area[op]
-        self.program_stack.append(res) 
+        try:
+            res = self.storage_area[op]
+            self.program_stack.append(res)
+        except KeyError:
+            raise KeyError
+            #self.program_stack.append(0)
     def exec_RTDG(self):
         raise NotImplementedError
     def exec_RTG(self):
@@ -416,9 +431,15 @@ class ExecutionContext(object):
     def exec_SHC(self):
         raise NotImplementedError
     def exec_SHP(self):
-        raise NotImplementedError
+        loopValue = self.graphics_state['loop']
+        if len(self.program_stack)<loopValue:
+            raise Exception("truetype: hinting: stack underflow")
+        self.program_stack_pop(loopValue)
     def exec_SHPIX(self):
-        raise NotImplementedError
+        loopValue = self.graphics_state['loop']
+        if len(self.program_stack)<loopValue:
+            raise Exception("truetype: hinting: stack underflow")
+        self.program_stack_pop(loopValue)
     def exec_SHZ(self):
         raise NotImplementedError
     def exec_SLOOP(self):
@@ -503,6 +524,8 @@ class ExecutionContext(object):
         op1 = self.program_stack[-2]
         op2 = self.program_stack[-1]
         self.program_stack_pop(2)
+        assert not isinstance(op1,dataType.AbstractValue)
+
         self.storage_area[op1] = op2
 
     def exec_EQ(self):
@@ -578,6 +601,7 @@ class Executor(object):
 
     def excute_CALL(self):
         top = self.environment.program_stack[-1]
+        #if top not in self.program.call_function_set:
         self.program.call_function_set.append(top)
         logger.info('ADD CALL SET:%s', top)
         logger.info('ADD CALL SET:%s', self.program.call_function_set)
@@ -590,48 +614,63 @@ class Executor(object):
     def execute(self,tag):
         self.program = self.font.programs[tag]
         self.program_ptr = self.program.start()
-        is_backptr = False
-        #pre_environment = None
+        is_back_ptr = False
         back_ptr = []
-        top_regin = DataFlowRegion()
         successors_index = []
+        top_if = None
+        program_state = {}
         while len(self.program_ptr.successors)>0 or len(back_ptr)>0:
             logger.info("%s->%s",self.program_ptr.id,self.program_ptr.mnemonic)
-            if self.program_ptr.mnemonic == 'CALL' and is_backptr == False:
+            if self.program_ptr.mnemonic == 'CALL' and not is_back_ptr:
                 back_ptr.append((self.program_ptr,None))
                 self.excute_CALL()
 
             self.environment.set_currentInstruction(self.program_ptr)
             self.environment.execute()
-
+            
             if self.program_ptr.mnemonic == 'IF':
+                top_if = self.program_ptr
                 successors_index.append(0)
                 back_ptr.append((self.program_ptr, self.environment))
 
             self.environment.pretty_print()
             if len(back_ptr) != 0:
                 logger.info('back%s', str(back_ptr))
-
+                if len(back_ptr)>0 and back_ptr[-1][0].mnemonic == 'IF':
+                    top_if = back_ptr[-1][0]
+                self.environment.pretty_print()
             if len(self.program_ptr.successors) == 0:
+                if top_if.id not in program_state:
+                    program_state[top_if.id] = [self.environment]
+                    if back_ptr[-1][1] is not None:
+                        logger.info("program environment recover to")
+                        self.environment = back_ptr[-1][1]
+                        self.environment.pretty_print()
+                else:
+                    program_state[top_if.id].append(self.environment)
+                    logger.warn("STORE %s program state ", top_if.id)
+                    if len(program_state[top_if.id])==2:
+                        program_state[top_if.id][0].merge(program_state[top_if.id][1])
+                        self.environment = program_state[top_if.id][0]
+                        logger.warn("program environment merged")
+                        self.environment.pretty_print()
                 self.program_ptr = back_ptr[-1][0]
-                logger.info("program pointer back to %s", str(self.program_ptr))
-                if back_ptr[-1][1] is not None:
-                    self.environment = back_ptr[-1][1]
-                    logger.info("program environment recover to")
-                    self.environment.pretty_print()
+                logger.info("program pointer back to %s %s", str(self.program_ptr),str(self.program_ptr.id))
                 back_ptr.pop()
+                is_back_ptr = True
 
             if len(self.program_ptr.successors) > 1:
                 self.program_ptr = self.program_ptr.successors[successors_index[-1]]
+                is_back_ptr = False
                 if successors_index[-1]==0:
                     successors_index[-1] = successors_index[-1] + 1
                 else:
                     successors_index.pop()
-                is_backptr = False
                 continue
             
             if len(self.program_ptr.successors) == 1:
-                #pre_ptr = self.program_ptr
-                #pre_environment = self.environment
                 self.program_ptr = self.program_ptr.successors[0]
-                is_backptr = False
+                is_back_ptr = False
+
+
+               
