@@ -627,7 +627,6 @@ class Executor(object):
         logger.info('ADD CALL SET:%s', top)
         logger.info('ADD CALL SET:%s', self.program.call_function_set)
         self.program_ptr = self.font.function_table[top].start()
-        self.font.function_table[top].printBody()
         self.environment.program_stack.pop()
         
         logger.info("jump to call function "+self.program_ptr.mnemonic)
