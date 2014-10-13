@@ -6,6 +6,7 @@ usage: pyftanalysis [options] inputfile
     General options:
     -h Help: print this message
     -s State: print the graphics state after executing prep
+    -v Verbose: be more verbose
 """
 
 from __future__ import print_function, division, absolute_import
@@ -242,7 +243,9 @@ def analysis(tt):
     return absExecutor
 
 class Options(object):
+    verbose = False
     outputState = False
+
     def __init__(self, rawOptions, numFiles):
         for option, value in rawOptions:
             # general options
@@ -252,6 +255,13 @@ class Options(object):
                 sys.exit(0)
             elif option == "-s":
                 self.outputState = True
+            elif option == "-v":
+                self.verbose = True
+
+        if (self.verbose):
+            logging.basicConfig(level = logging.INFO)
+        else:
+            logging.basicConfig(level = logging.ERROR)
 
 def usage():
     from fontTools import version
@@ -266,7 +276,7 @@ def process(jobs, options):
 
 def parseOptions(args):
     try:
-        rawOptions, files = getopt.getopt(args, "hs")
+        rawOptions, files = getopt.getopt(args, "hsv")
     except getopt.GetoptError:
         usage()
 

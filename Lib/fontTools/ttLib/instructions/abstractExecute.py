@@ -1,7 +1,6 @@
 from fontTools.ttLib.data import dataType
 import logging
 import copy
-logging.basicConfig(level = logging.INFO)
 logger = logging.getLogger(" ")
 
 class DataFlowRegion(object):
