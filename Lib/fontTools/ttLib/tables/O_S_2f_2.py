@@ -86,7 +86,7 @@ OS2_UNICODE_RANGES = (
 	[(0x3200, 0x32FF)],  # 54: Enclosed CJK Letters And Months
 	[(0x3300, 0x33FF)],  # 55: CJK Compatibility
 	[(0xAC00, 0xD7AF)],  # 56: Hangul Syllables
-	[(0xD800, 0xDFFF)],  # 57: Non-Plane 0 *
+	[(0xD800, 0xDFFF)],  # 57: Non-Plane 0 (if at least one codepoint > 0xFFFF)
 	[(0x10900, 0x1091F)],  # 58: Phoenician
 	[(0x2E80, 0x2EFF),   # 59: CJK Radicals Supplement
 		(0x2F00, 0x2FDF),    # Kangxi Radicals
@@ -386,6 +386,9 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 					elif 96 <= bit < 123:
 						ulUnicodeRange4 |= 1 << (bit - 96)
 					break
+		# set the special bit 57 if at least one codepoint is beyond the BMP
+		if not set(range(0x10000, 0x110000)).isdisjoint(unicodes):
+			ulUnicodeRange2 |= 1 << (57 - 32)
 		self.ulUnicodeRange1 = ulUnicodeRange1
 		self.ulUnicodeRange2 = ulUnicodeRange2
 		self.ulUnicodeRange3 = ulUnicodeRange3
