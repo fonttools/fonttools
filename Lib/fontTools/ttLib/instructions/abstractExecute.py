@@ -349,7 +349,7 @@ class ExecutionContext(object):
             pass
         if (op == 0):
             self.program_stack[-1] = 1
-        else
+        else:
             self.program_stack[-1] = 0
     def exec_NROUND(self):
         raise NotImplementedError
