@@ -1,6 +1,6 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.ttLib import TTFont
-from fontTools.ttLib.instructions import statements, instructionConstructor, stackValues, abstractExecute
+from fontTools.ttLib.instructions import statements, instructionConstructor, abstractExecute
 from fontTools.ttLib.data import dataType
 import sys
 import math
