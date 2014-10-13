@@ -47,7 +47,9 @@ class ExecutionContext(object):
         merge the executionContext of the if-else
         '''
         if len(executionContext2.program_stack)!=len(self.program_stack):
-            logger.warn("merge different len stack")
+            executionContext2.pretty_print()
+            self.pretty_print()
+        assert len(executionContext2.program_stack)==len(self.program_stack)
         for item in executionContext2.storage_area:
             if item not in self.storage_area:
                 self.append(item)
@@ -610,12 +612,15 @@ class Executor(object):
         self.program_ptr = None
         self.body = None
         self.program = None
-
+        self.program_state = {}
     def execute_all(self):
         for key in self.font.local_programs.keys():
             self.execute(key)
 
     def excute_CALL(self):
+        for item in self.program_state:
+            if item.startswith('fpgm'):
+                self.program_state[item] = []
         top = self.environment.program_stack[-1]
         #if top not in self.program.call_function_set:
         self.program.call_function_set.append(top)
@@ -634,7 +639,7 @@ class Executor(object):
         back_ptr = []
         successors_index = []
         top_if = None
-        program_state = {}
+        self.program_state = {}
         while len(self.program_ptr.successors)>0 or len(back_ptr)>0:
             if self.program_ptr.data is not None:
                 logger.info("%s->%s%s",self.program_ptr.id,self.program_ptr.mnemonic,self.program_ptr.data)
@@ -664,16 +669,15 @@ class Executor(object):
                     self.environment = back_ptr[-1][1]
                     self.environment.pretty_print()
                 if top_if is not None:
-                    if top_if.id not in program_state:
-                        program_state[top_if.id] = [self.environment]
-                        
+                    logger.warn("STORE %s program state ", top_if.id)
+                    if top_if.id not in self.program_state:
+                        self.program_state[top_if.id] = [self.environment]
                     else:
-                        program_state[top_if.id].append(self.environment)
-                        logger.warn("STORE %s program state ", top_if.id)
-                        if len(program_state[top_if.id])==2:
-                            program_state[top_if.id][0].merge(program_state[top_if.id][1])
-                            self.environment = program_state[top_if.id][0]
-                            logger.warn("program environment merged")
+                        self.program_state[top_if.id].append(self.environment)
+                        if len(self.program_state[top_if.id])==2:
+                            logger.warn("program environment will be merged")
+                            self.program_state[top_if.id][0].merge(self.program_state[top_if.id][1])
+                            self.environment = self.program_state[top_if.id][0]
                             self.environment.pretty_print()
                 self.program_ptr = back_ptr[-1][0]
                 logger.info("program pointer back to %s %s", str(self.program_ptr),str(self.program_ptr.id))
