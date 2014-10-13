@@ -6,6 +6,9 @@ usage: pyftanalysis [options] inputfile
     General options:
     -h Help: print this message
     -s State: print the graphics state after executing prep
+    -c CVT: print the CVT after executing prep
+    -f Functions: print out function and prep bytecodes
+    -v Verbose: be more verbose
 """
 
 from __future__ import print_function, division, absolute_import
@@ -110,8 +113,6 @@ class Function(object):
     def constructBody(self):
         #convert the list to tree structure
         self.body = Body(instructions = self.instructions)
-    def printBody(self):
-        self.body.pretty_print()
     def start(self):
         return self.body.statement_root
 
@@ -224,25 +225,22 @@ class BytecodeFont(object):
                 else:
                     function_ptr.appendInstruction(instruction)
         
-        
         for key, value in self.function_table.items():
             value.constructBody()
-            
-            #debug purpose print out the function table
-            print(key)
-            value.printBody()
-            
-        
+
         
 def analysis(tt):
-    ttFont = BytecodeFont(tt)
     #one ttFont object for one ttx file       
-    absExecutor = abstractExecute.Executor(ttFont)
+    absExecutor = abstractExecute.Executor(tt)
     absExecutor.execute('prep')
     return absExecutor
 
 class Options(object):
+    verbose = False
     outputState = False
+    outputCVT = False
+    outputFunctions = False
+
     def __init__(self, rawOptions, numFiles):
         for option, value in rawOptions:
             # general options
@@ -252,6 +250,17 @@ class Options(object):
                 sys.exit(0)
             elif option == "-s":
                 self.outputState = True
+            elif option == "-c":
+                self.outputCVT = True
+            elif option == "-f":
+                self.outputFunctions = True
+            elif option == "-v":
+                self.verbose = True
+
+        if (self.verbose):
+            logging.basicConfig(level = logging.INFO)
+        else:
+            logging.basicConfig(level = logging.ERROR)
 
 def usage():
     from fontTools import version
@@ -262,11 +271,21 @@ def process(jobs, options):
     for input in jobs:
         tt = TTFont()
         tt.importXML(input)
-        ae = analysis(tt)
+        ttFont = BytecodeFont(tt)
+        ae = analysis(ttFont)
+        if (options.outputFunctions):
+            print("PREP")
+            ttFont.programs['prep'].body.pretty_print()
+            for key, value in ttFont.function_table.items():
+                print("Function #%d" % (key))
+                value.body.pretty_print()
+
+        if (options.outputState):
+            ae.environment.pretty_print()
 
 def parseOptions(args):
     try:
-        rawOptions, files = getopt.getopt(args, "hs")
+        rawOptions, files = getopt.getopt(args, "hscfv")
     except getopt.GetoptError:
         usage()
 
