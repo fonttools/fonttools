@@ -49,6 +49,9 @@ class ExecutionContext(object):
         for item in executionContext2.storage_area:
             if item not in self.storage_area:
                 self.append(item)
+        '''
+        deal with 
+        '''
 
     def pretty_print(self):
         #print('graphics_state',self.graphics_state,'program_stack',self.program_stack)
@@ -620,7 +623,10 @@ class Executor(object):
         top_if = None
         program_state = {}
         while len(self.program_ptr.successors)>0 or len(back_ptr)>0:
-            logger.info("%s->%s",self.program_ptr.id,self.program_ptr.mnemonic)
+            if self.program_ptr.data is not None:
+                logger.info("%s->%s%s",self.program_ptr.id,self.program_ptr.mnemonic,self.program_ptr.data)
+            else:
+                logger.info("%s->%s",self.program_ptr.id,self.program_ptr.mnemonic)
             if self.program_ptr.mnemonic == 'CALL' and not is_back_ptr:
                 back_ptr.append((self.program_ptr,None))
                 self.excute_CALL()
