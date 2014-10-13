@@ -336,14 +336,21 @@ class ExecutionContext(object):
         self.program_stack_pop(2)
         self.program_stack.append(dataType.F26Dot6())
     def exec_NEG(self):
-        if isinstance(self.program_stack[-1], dataType.AbstractValue):
+        op = self.program_stack[-1]
+        if isinstance(op, dataType.AbstractValue):
             pass
         else:
-            self.program_stack[-1] = -self.program_stack[-1]
+            self.program_stack[-1] = -op
     def exec_NEQ(self):
         self.binary_operation('NEQ')
     def exec_NOT(self):
-        raise NotImplementedError
+        op = self.program_stack[-1]
+        if isinstance(op, dataType.AbstractValue):
+            pass
+        if (op == 0):
+            self.program_stack[-1] = 1
+        else
+            self.program_stack[-1] = 0
     def exec_NROUND(self):
         raise NotImplementedError
     def exec_ODD(self):
