@@ -61,7 +61,6 @@ class ExecutionContext(object):
         #print('cvt',self.cvt)
         logger.info('storage%sstack%s', str(self.storage_area),  str(self.program_stack[-10:]))
             #, str(self.cvt))
-        
 
     def set_currentInstruction(self, instruction):
         self.current_instruction = instruction
@@ -95,30 +94,7 @@ class ExecutionContext(object):
         #self.current_instruction.data = self.program_stack[-1*self.current_instruction.get_pop_num():]
         for i in range(num):
             self.program_stack.pop()
-    def exec_PUSH(self):
-        for item in self.current_instruction.data:
-            self.program_stack.append(item)
-    #don't execute any cfg-related instructions
-    def exec_IF(self):
-        res = self.program_stack[-1]
-        self.program_stack.pop()
-        return res
-    def exec_EIF(self):
-        pass
-    def exec_ELSE(self):
-        pass
-    def exec_AA(self):#AdjustAngle
-        self.program_stack.pop()
 
-    def exec_ABS(self):#Absolute
-        top = self.program_stack[-1]
-        if  top< 0:
-            top = -top
-            self.program_stack[-1] = top
-
-    def exec_ADD(self):
-        self.binary_operation('ADD')
-    
     def binary_operation(self,action):
         op1 = self.program_stack[-2]
         op2 = self.program_stack[-1]
@@ -154,6 +130,33 @@ class ExecutionContext(object):
             raise NotImplementedError
         self.program_stack_pop(2)
         self.program_stack.append(res)
+
+    def exec_PUSH(self):
+        for item in self.current_instruction.data:
+            self.program_stack.append(item)
+
+    # Don't execute any cfg-related instructions
+    # This has the effect of "executing both branches".
+    def exec_IF(self):
+        res = self.program_stack[-1]
+        self.program_stack.pop()
+        return res
+    def exec_EIF(self):
+        pass
+    def exec_ELSE(self):
+        pass
+
+    def exec_AA(self):#AdjustAngle
+        self.program_stack.pop()
+
+    def exec_ABS(self):#Absolute
+        top = self.program_stack[-1]
+        if  top< 0:
+            top = -top
+            self.program_stack[-1] = top
+
+    def exec_ADD(self):
+        self.binary_operation('ADD')
 
     def exec_ALIGNPTS(self):
         '''
@@ -337,14 +340,21 @@ class ExecutionContext(object):
         self.program_stack_pop(2)
         self.program_stack.append(dataType.F26Dot6())
     def exec_NEG(self):
-        if isinstance(self.program_stack[-1], dataType.AbstractValue):
+        op = self.program_stack[-1]
+        if isinstance(op, dataType.AbstractValue):
             pass
         else:
-            self.program_stack[-1] = -self.program_stack[-1]
+            self.program_stack[-1] = -op
     def exec_NEQ(self):
         self.binary_operation('NEQ')
     def exec_NOT(self):
-        raise NotImplementedError
+        op = self.program_stack[-1]
+        if isinstance(op, dataType.AbstractValue):
+            pass
+        if (op == 0):
+            self.program_stack[-1] = 1
+        else:
+            self.program_stack[-1] = 0
     def exec_NROUND(self):
         raise NotImplementedError
     def exec_ODD(self):
