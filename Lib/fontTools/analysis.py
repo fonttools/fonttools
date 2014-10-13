@@ -216,11 +216,11 @@ class BytecodeFont(object):
         
         for key, value in self.function_table.items():
             value.constructBody()
-            '''
+            
             #debug purpose print out the function table
             print(key)
             value.printBody()
-            '''
+            
         
         
 def analysis(tt):

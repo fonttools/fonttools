@@ -1,12 +1,15 @@
 from fontTools.ttLib.data import dataType
 import logging
+import copy
 logging.basicConfig(level = logging.INFO)
 logger = logging.getLogger(" ")
+
 class DataFlowRegion(object):
     def __init__(self):
         self.condition = None
         self.outRegion = []
         self.inRegion = None
+
 class ExecutionContext(object):
     """Abstractly represents the global environment at a single point in time. 
 
@@ -50,7 +53,7 @@ class ExecutionContext(object):
             if item not in self.storage_area:
                 self.append(item)
         '''
-        deal with 
+        deal with Graphics state
         '''
 
     def pretty_print(self):
@@ -79,7 +82,7 @@ class ExecutionContext(object):
             #'roundPeriod':       1,#1 << 6,1 as an f26dot6.
             #'roundThreshold':    0.5,#1 << 5, 1/2 as an f26dot6.
             #'roundSuper45':      False,
-            #'autoFlip':          True
+            'autoFlip':          True
             }
 
     def set_storage_area(self, index, value):
@@ -184,7 +187,8 @@ class ExecutionContext(object):
         self.program_stack_pop()
 
     def exec_DELTAC1(self):#DeltaExceptionC1
-        raise NotImplementedError
+        self.program_stack_pop()
+
     def exec_DEPTH(self):#GetDepthStack
         self.program_stack.append(len(self.program_stack))
     
@@ -637,7 +641,7 @@ class Executor(object):
             if self.program_ptr.mnemonic == 'IF':
                 top_if = self.program_ptr
                 successors_index.append(0)
-                back_ptr.append((self.program_ptr, self.environment))
+                back_ptr.append((self.program_ptr, copy.deepcopy(self.environment)))
 
             self.environment.pretty_print()
             if len(back_ptr) != 0:
@@ -646,20 +650,22 @@ class Executor(object):
                     top_if = back_ptr[-1][0]
                 self.environment.pretty_print()
             if len(self.program_ptr.successors) == 0:
-                if top_if.id not in program_state:
-                    program_state[top_if.id] = [self.environment]
-                    if back_ptr[-1][1] is not None:
-                        logger.info("program environment recover to")
-                        self.environment = back_ptr[-1][1]
-                        self.environment.pretty_print()
-                else:
-                    program_state[top_if.id].append(self.environment)
-                    logger.warn("STORE %s program state ", top_if.id)
-                    if len(program_state[top_if.id])==2:
-                        program_state[top_if.id][0].merge(program_state[top_if.id][1])
-                        self.environment = program_state[top_if.id][0]
-                        logger.warn("program environment merged")
-                        self.environment.pretty_print()
+                if back_ptr[-1][1] is not None:
+                    logger.warn("program environment recover to")
+                    self.environment = back_ptr[-1][1]
+                    self.environment.pretty_print()
+                if top_if is not None:
+                    if top_if.id not in program_state:
+                        program_state[top_if.id] = [self.environment]
+                        
+                    else:
+                        program_state[top_if.id].append(self.environment)
+                        logger.warn("STORE %s program state ", top_if.id)
+                        if len(program_state[top_if.id])==2:
+                            program_state[top_if.id][0].merge(program_state[top_if.id][1])
+                            self.environment = program_state[top_if.id][0]
+                            logger.warn("program environment merged")
+                            self.environment.pretty_print()
                 self.program_ptr = back_ptr[-1][0]
                 logger.info("program pointer back to %s %s", str(self.program_ptr),str(self.program_ptr.id))
                 back_ptr.pop()
