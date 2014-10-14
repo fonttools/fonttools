@@ -245,7 +245,8 @@ class ExecutionContext(object):
 
     def exec_GC(self):
         top = self.program_stack[-1]
-        self.program_stack_pop(1)
+        self.program_stack_pop()
+        self.program_stack.append(dataType.AbstractValue())
 
     def exec_GETINFO(self):
         '''
