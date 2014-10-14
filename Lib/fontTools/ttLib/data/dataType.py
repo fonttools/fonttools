@@ -8,14 +8,19 @@ class Value(object):
 
 class AbstractValue(Value):
     def __init__(self):
+        self.value = None
         #currently there are greater->[] equal->[] greater or equal->[]
         self.conditions = {};
     def __repr__(self):
         return self.__class__.__name__
     def __str__(self):
         return self.__class__.__name__
+class UncertainValue(AbstractValue):
+    def __init__(self, inputValue= None):
+        self.possibleValues = inputValue
 class F26Dot6(AbstractValue):
-    pass
+    def __init__(self, value=None):
+        self.value = value
     
 class PPEM_X(AbstractValue):
     pass
@@ -67,3 +72,9 @@ class Expression(AbstractValue):
             return (op1 and op2)
         def logicOr(op1,op2):
             return (op1 or op2)
+class UnaryExpression(Expression):
+    def __init__(self, op = None, operation = None):
+        self.op = op
+        self.operation = operation
+    def __repr(self):
+        return str(self.operation) + ' ' + str(self.op)

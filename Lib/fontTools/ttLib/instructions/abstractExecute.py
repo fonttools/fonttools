@@ -1,6 +1,7 @@
 from fontTools.ttLib.data import dataType
 import logging
 import copy
+import math
 logger = logging.getLogger(" ")
 
 class DataFlowRegion(object):
@@ -39,6 +40,7 @@ class ExecutionContext(object):
         self.set_graphics_state_to_default()
         self.program_stack = []
         self.current_instruction = None
+
     def __repr__(self):
         return str('storage = ' + str(self.storage_area) + ', graphics_state = ' + str(self.graphics_state) + ', stack = ' + str(self.program_stack[-3:]))
 
@@ -56,12 +58,15 @@ class ExecutionContext(object):
         '''
         deal with Graphics state
         '''
+        for gs_key in self.graphics_state:
+            if self.graphics_state[gs_key] != executionContext2.graphics_state[gs_key]:
+                logger.info("graphics_state%s become uncertain", gs_key)
+                self.graphics_state[gs_key] = dataType.UncertainValue([self.graphics_state[gs_key],
+                                        executionContext2.graphics_state[gs_key]])
+                logger.info("possible values are %s", str(self.graphics_state[gs_key].possibleValues))
 
     def pretty_print(self):
-        #print('graphics_state',self.graphics_state,'program_stack',self.program_stack)
-        #print('cvt',self.cvt)
         print self.__repr__()
-            #, str(self.cvt))
 
     def set_currentInstruction(self, instruction):
         self.current_instruction = instruction
@@ -70,9 +75,9 @@ class ExecutionContext(object):
         self.graphics_state = {
             'pv':                (1, 0), # Unit vector along the X axis.
             'fv':                (1, 0),
-            'dv':                [1, 0],
-            'rp':                [0,0,0],
-            'zp':                [1,1,1],
+            'dv':                (1, 0),
+            'rp':                (0,0,0),
+            'zp':                (1,1,1),
             #'controlValueCutIn': 17/16, #(17 << 6) / 16, 17/16 as an f26dot6.
             #'deltaBase':         9,
             #'deltaShift':        3,
@@ -92,15 +97,21 @@ class ExecutionContext(object):
         return self.storage_area[index]
 
     def program_stack_pop(self, num=1):
-        #self.current_instruction.data = self.program_stack[-1*self.current_instruction.get_pop_num():]
         for i in range(num):
             self.program_stack.pop()
-
-    def binary_operation(self,action):
+    def unary_operation(self, op, action):
+        if isinstance(op, dataType.AbstractValue):
+            res = Expression(op1, action)
+        elif action is 'ceil':
+            res = math.ceil(op)
+        elif action is 'abs':
+            res = math.fabs(op)
+        return res
+    def binary_operation(self, action):
         op1 = self.program_stack[-2]
         op2 = self.program_stack[-1]
         if isinstance(op1,dataType.AbstractValue) or isinstance(op2,dataType.AbstractValue):
-            res = dataType.Expression(op1,op2,action)
+            res = dataType.Expression(op1, op2, action)
         elif action is 'ADD':
             res = op1 + op2
         elif action is 'GT':
@@ -112,7 +123,7 @@ class ExecutionContext(object):
         elif action is 'OR':
             res = op1 or op2
         elif action is 'DIV':
-            res = op1/op2
+            res = op1 / op2
         elif action is 'EQ':
             res = op1 == op2
         elif action is 'NEQ':
@@ -151,10 +162,7 @@ class ExecutionContext(object):
         self.program_stack.pop()
 
     def exec_ABS(self):#Absolute
-        top = self.program_stack[-1]
-        if  top< 0:
-            top = -top
-            self.program_stack[-1] = top
+        self.program_stack[-1] = self.unary_operation(self.program_stack[-1],'abs')
 
     def exec_ADD(self):
         self.binary_operation('ADD')
@@ -175,7 +183,7 @@ class ExecutionContext(object):
         self.binary_operation('AND')
 
     def exec_CEILING(self):
-        self.program_stack[-1] = math.ceil(self.program_stack[-1])
+        self.program_stack[-1] = self.unary_operation(self.program_stack[-1],'ceil')
 
     def exec_CINDEX(self):#CopyXToTopStack
         index = self.program_stack[-1]
@@ -190,8 +198,16 @@ class ExecutionContext(object):
     def exec_DEBUG(self):#DebugCall
         self.program_stack_pop()
 
-    def exec_DELTAC1(self):#DeltaExceptionC1
+    def exec_DELTA(self):
+        number = self.program_stack[-1]
         self.program_stack_pop()
+        self.program_stack_pop(2*number)
+    def exec_DELTAC1(self):#DeltaExceptionC1
+        self.exec_DELTA()
+    def exec_DELTAC2(self):#DeltaExceptionC2
+        self.exec_DELTA()
+    def exec_DELTAC3(self):#DeltaExceptionC3
+        self.exec_DELTA()
 
     def exec_DEPTH(self):#GetDepthStack
         self.program_stack.append(len(self.program_stack))
@@ -644,6 +660,7 @@ class Executor(object):
         successors_index = []
         top_if = None
         self.program_state = {}
+        
         while len(self.program_ptr.successors)>0 or len(back_ptr)>0:
             if self.program_ptr.data is not None:
                 logger.info("%s->%s%s",self.program_ptr.id,self.program_ptr.mnemonic,self.program_ptr.data)
