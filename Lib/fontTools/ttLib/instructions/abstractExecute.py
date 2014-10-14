@@ -403,10 +403,9 @@ class ExecutionContext(object):
 
     def exec_ROLL(self):
         op1 = self.program_stack[-1]
-        op2 = self.program_stack[-2]
         self.program_stack[-1] = self.program_stack[-3]
         self.program_stack[-3] = self.program_stack[-2]
-        self.program_stack[-2] = self.program_stack[-1]
+        self.program_stack[-2] = op1
 
     def exec_ROUND(self):
         self.program_stack_pop()
