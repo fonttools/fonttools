@@ -637,6 +637,7 @@ class Executor(object):
         self.body = None
         self.program = None
         self.program_state = {}
+        self.maximum_stack_depth = 0
     def execute_all(self):
         for key in self.font.local_programs.keys():
             self.execute(key)
@@ -675,6 +676,8 @@ class Executor(object):
 
             self.environment.set_currentInstruction(self.program_ptr)
             self.environment.execute()
+            if (len(self.environment.program_stack) > self.maximum_stack_depth):
+                self.maximum_stack_depth = len(self.environment.program_stack)
             
             if self.program_ptr.mnemonic == 'IF':
                 top_if = self.program_ptr

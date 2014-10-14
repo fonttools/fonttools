@@ -5,10 +5,12 @@ usage: pyftanalysis [options] inputfile
 
     General options:
     -h Help: print this message
+    -m MaxStackDepth: print out the maximum stack depth for the executed code
     -s State: print the graphics state after executing prep
     -c CVT: print the CVT after executing prep
     -f Functions: print out function and prep bytecodes
     -g NAME Glyph: execute prep plus hints for glyph NAME
+    -G AllGlyphs: execute prep plus hints for all glyphs in font
     -v Verbose: be more verbose
 """
 
@@ -21,7 +23,7 @@ import getopt
 import math
 import pdb
 import logging
-
+import copy
 
 class Body(object):
     '''
@@ -229,8 +231,10 @@ def analysis(tt, glyphs=[]):
     #one ttFont object for one ttx file       
     absExecutor = abstractExecute.Executor(tt)
     absExecutor.execute('prep')
+    environment_after_prep = copy.deepcopy(absExecutor.environment)
     for glyph in glyphs:
-        absExecutor.execute('glyf.'+glyph)
+        absExecutor.environment = copy.deepcopy(environment_after_prep)
+        absExecutor.execute(glyph)
     return absExecutor
 
 class Options(object):
@@ -238,7 +242,9 @@ class Options(object):
     outputState = False
     outputCVT = False
     outputFunctions = False
+    outputMaxStackDepth = False
     glyphs = []
+    allGlyphs = False
 
     def __init__(self, rawOptions, numFiles):
         for option, value in rawOptions:
@@ -251,10 +257,14 @@ class Options(object):
                 self.outputState = True
             elif option == "-c":
                 self.outputCVT = True
+            elif option == "-m":
+                self.outputMaxStackDepth = True
             elif option == "-f":
                 self.outputFunctions = True
             elif option == "-g":
                 self.glyphs.append(value)
+            elif option == "-G":
+                self.allGlyphs = True
             elif option == "-v":
                 self.verbose = True
 
@@ -273,7 +283,13 @@ def process(jobs, options):
         tt = TTFont()
         tt.importXML(input, quiet=True)
         ttFont = BytecodeFont(tt)
-        ae = analysis(ttFont, options.glyphs)
+
+        if (options.allGlyphs):
+            glyphs = filter(lambda x: x != 'fpgm' and x != 'prep', ttFont.programs.keys())
+        else:
+            glyphs = map(lambda x: 'glyf.'+x, options.glyphs)
+
+        ae = analysis(ttFont, glyphs)
         if (options.outputFunctions):
             print("PREP")
             ttFont.programs['prep'].body.pretty_print()
@@ -285,10 +301,12 @@ def process(jobs, options):
             ae.environment.pretty_print()
         if (options.outputCVT):
             print("CVT = ", ae.environment.cvt)
+        if (options.outputMaxStackDepth):
+            print("Max Stack Depth =", ae.maximum_stack_depth)
 
 def parseOptions(args):
     try:
-        rawOptions, files = getopt.getopt(args, "hscfg:v")
+        rawOptions, files = getopt.getopt(args, "hscfGmg:v")
     except getopt.GetoptError:
         usage()
 
