@@ -42,9 +42,16 @@ class ExecutionContext(object):
         self.current_instruction = None
 
     def __repr__(self):
+<<<<<<< HEAD
         return str('storage = ' + str(self.storage_area) 
             + ', graphics_state = ' + str(self.graphics_state) 
             + ', stack = ' + str(self.program_stack[-3:]) + str(len(self.program_stack)) ) 
+=======
+        stackRep = str(self.program_stack[-3:])
+        if (len(self.program_stack) > 3):
+            stackRep = '[..., ' + stackRep[1:]
+        return str('storage = ' + str(self.storage_area) + ', graphics_state = ' + str(self.graphics_state) + ', stack = ' + stackRep)
+>>>>>>> 2697054e05b4ae08518ea8179be5e65f846d945f
 
     def merge(self,executionContext2):
         '''
