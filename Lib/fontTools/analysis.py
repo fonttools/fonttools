@@ -103,13 +103,8 @@ class Function(object):
     def __init__(self, instructions=None):
         #function contains a function body
         self.instructions = []
-    def appendInstruction(self,instruction):
-        self.instructions.append(instruction)
     def pretty_printer(self):
         self.body.pretty_printer()
-    #pre-compute the amount of data a function consumes
-    def argumentNum(self):
-        pass
     def constructBody(self):
         #convert the list to tree structure
         self.body = Body(instructions = self.instructions)
@@ -223,7 +218,7 @@ class BytecodeFont(object):
                     functionsLabels.pop()
                     self.function_table[function_label] = function_ptr
                 else:
-                    function_ptr.appendInstruction(instruction)
+                    function_ptr.instructions.append(instruction)
         
         for key, value in self.function_table.items():
             value.constructBody()

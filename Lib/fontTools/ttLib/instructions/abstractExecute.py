@@ -323,7 +323,12 @@ class ExecutionContext(object):
         self.binary_operation('MIN')
 
     def exec_MINDEX(self):
-        raise NotImplementedError
+        index = self.program_stack[-1]
+        self.program_stack.pop()
+        #the index start from 1
+        top = self.program_stack[-index]
+        del self.program_stack[-index]
+        self.program_stack.append(top)
 
     def exec_MIRP(self):
         self.program_stack_pop(2)
