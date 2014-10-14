@@ -2098,8 +2098,8 @@ def prune_unicode_ranges(ttFont):
     # Unicode) and platform 3, encoding ID 10 (Microsoft platform, UCS-4)".
     if table.platformID == 3 and table.platEncID in [1, 10]:
       unicodes.update(table.cmap.keys())
-  os2_uncode_ranges = ttLib.getTableModule('OS/2').OS2_UNICODE_RANGES
-  for bit, unicode_range in enumerate(os2_uncode_ranges):
+  os2_unicode_ranges = ttLib.getTableModule('OS/2').OS2_UNICODE_RANGES
+  for bit, unicode_range in enumerate(os2_unicode_ranges):
     # build a set containing all the ranges defined for each bit
     unicode_range_set = set()
     for start, stop in unicode_range:
