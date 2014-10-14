@@ -42,7 +42,9 @@ class ExecutionContext(object):
         self.current_instruction = None
 
     def __repr__(self):
-        return str('storage = ' + str(self.storage_area) + ', graphics_state = ' + str(self.graphics_state) + ', stack = ' + str(self.program_stack[-3:]))
+        return str('storage = ' + str(self.storage_area) 
+            + ', graphics_state = ' + str(self.graphics_state) 
+            + ', stack = ' + str(self.program_stack[-3:]) + str(len(self.program_stack)) ) 
 
     def merge(self,executionContext2):
         '''
@@ -683,7 +685,6 @@ class Executor(object):
                 logger.info('back%s', str(back_ptr))
                 if len(back_ptr)>0 and back_ptr[-1][0].mnemonic == 'IF':
                     top_if = back_ptr[-1][0]
-                logger.info(self.environment.__repr__())
             if len(self.program_ptr.successors) == 0 and len(back_ptr)!=0:
                 if back_ptr[-1][1] is not None:
                     logger.warn("program environment recover to")
