@@ -40,7 +40,7 @@ class ExecutionContext(object):
         self.program_stack = []
         self.current_instruction = None
     def __repr__(self):
-        return str('storage' + str(self.storage_area) + 'stack' + str(self.program_stack[-3:]))
+        return str('storage = ' + str(self.storage_area) + ', graphics_state = ' + str(self.graphics_state) + ', stack = ' + str(self.program_stack[-3:]))
 
     def merge(self,executionContext2):
         '''
@@ -60,7 +60,7 @@ class ExecutionContext(object):
     def pretty_print(self):
         #print('graphics_state',self.graphics_state,'program_stack',self.program_stack)
         #print('cvt',self.cvt)
-        logger.info('storage%sstack%s', str(self.storage_area),  str(self.program_stack[-10:]))
+        print self.__repr__()
             #, str(self.cvt))
 
     def set_currentInstruction(self, instruction):
@@ -661,17 +661,17 @@ class Executor(object):
                 successors_index.append(0)
                 back_ptr.append((self.program_ptr, copy.deepcopy(self.environment)))
 
-            self.environment.pretty_print()
+            logger.info(self.environment.__repr__())
             if len(back_ptr) != 0:
                 logger.info('back%s', str(back_ptr))
                 if len(back_ptr)>0 and back_ptr[-1][0].mnemonic == 'IF':
                     top_if = back_ptr[-1][0]
-                self.environment.pretty_print()
+                logger.info(self.environment.__repr__())
             if len(self.program_ptr.successors) == 0:
                 if back_ptr[-1][1] is not None:
                     logger.warn("program environment recover to")
                     self.environment = back_ptr[-1][1]
-                    self.environment.pretty_print()
+                    logger.info(self.environment.__repr__())
                 if top_if is not None:
                     logger.warn("STORE %s program state ", top_if.id)
                     if top_if.id not in self.program_state:
@@ -682,7 +682,7 @@ class Executor(object):
                             logger.warn("program environment will be merged")
                             self.program_state[top_if.id][0].merge(self.program_state[top_if.id][1])
                             self.environment = self.program_state[top_if.id][0]
-                            self.environment.pretty_print()
+                            logger.info(self.environment.__repr__())
                 self.program_ptr = back_ptr[-1][0]
                 logger.info("program pointer back to %s %s", str(self.program_ptr),str(self.program_ptr.id))
                 back_ptr.pop()

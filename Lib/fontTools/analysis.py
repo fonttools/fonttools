@@ -282,6 +282,8 @@ def process(jobs, options):
 
         if (options.outputState):
             ae.environment.pretty_print()
+        if (options.outputCVT):
+            print("CVT = ", ae.environment.cvt)
 
 def parseOptions(args):
     try:
