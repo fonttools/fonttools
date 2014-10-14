@@ -76,8 +76,8 @@ class ExecutionContext(object):
             'pv':                (1, 0), # Unit vector along the X axis.
             'fv':                (1, 0),
             'dv':                (1, 0),
-            'rp':                (0,0,0),
-            'zp':                (1,1,1),
+            'rp':                [0,0,0],
+            'zp':                [1,1,1],
             #'controlValueCutIn': 17/16, #(17 << 6) / 16, 17/16 as an f26dot6.
             #'deltaBase':         9,
             #'deltaShift':        3,
