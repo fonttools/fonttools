@@ -1,2 +1,2 @@
-storage = {}, graphics_state = {'rp': [0, 0, 0], 'fv': (0, 1), 'autoFlip': True, 'controlValueCutIn': 70, 'dv': (0, 1), 'pv': (0, 1), 'zp': [1, 1, 1], 'loop': 1}, stack = [20]
+storage = {}, graphics_state = {'rp': [0, 0, 0], 'fv': (0, 1), 'autoFlip': True, 'controlValueCutIn': 70, 'dv': (0, 1), 'pv': (0, 1), 'zp': [1, 1, 1], 'loop': 1}, stack = [], length = 0
 CVT =  {0: 0, 1: 417, 2: 563, 3: 41, 4: 41, 5: 38, 6: 35, 7: 46, 8: 44, 9: 33, 10: 28, 11: 26, 12: 30, 13: 49}
