@@ -265,7 +265,7 @@ def usage():
 def process(jobs, options):
     for input in jobs:
         tt = TTFont()
-        tt.importXML(input)
+        tt.importXML(input, quiet=True)
         ttFont = BytecodeFont(tt)
         ae = analysis(ttFont)
         if (options.outputFunctions):
@@ -308,4 +308,4 @@ def main(args):
     process(jobs, options)
     
 if __name__ == "__main__":
-        main(sys.argv[1:])
+    main(sys.argv[1:])

@@ -1,0 +1,1 @@
+storage = {}, graphics_state = {'rp': [0, 0, 0], 'fv': (1, 0), 'autoFlip': True, 'dv': [1, 0], 'pv': (1, 0), 'zp': [1, 1, 1], 'loop': 1}, stack = [0]
