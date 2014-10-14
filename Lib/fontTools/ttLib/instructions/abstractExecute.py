@@ -391,10 +391,10 @@ class ExecutionContext(object):
         res = self.cvt[op]
         self.program_stack.append(res)
     def exec_RDTG(self):
-        raise NotImplementedError
+        pass
 
     def exec_ROFF(self):
-        raise NotImplementedError
+        pass
 
     def exec_ROLL(self):
         op1 = self.program_stack[-1]
@@ -660,8 +660,8 @@ class Executor(object):
         successors_index = []
         top_if = None
         self.program_state = {}
-        
-        while len(self.program_ptr.successors)>0 or len(back_ptr)>0:
+
+        while self.program_ptr is not None:
             if self.program_ptr.data is not None:
                 logger.info("%s->%s%s",self.program_ptr.id,self.program_ptr.mnemonic,self.program_ptr.data)
             else:
@@ -684,7 +684,7 @@ class Executor(object):
                 if len(back_ptr)>0 and back_ptr[-1][0].mnemonic == 'IF':
                     top_if = back_ptr[-1][0]
                 logger.info(self.environment.__repr__())
-            if len(self.program_ptr.successors) == 0:
+            if len(self.program_ptr.successors) == 0 and len(back_ptr)!=0:
                 if back_ptr[-1][1] is not None:
                     logger.warn("program environment recover to")
                     self.environment = back_ptr[-1][1]
@@ -717,6 +717,6 @@ class Executor(object):
             if len(self.program_ptr.successors) == 1:
                 self.program_ptr = self.program_ptr.successors[0]
                 is_back_ptr = False
-
-
-               
+                continue
+            if len(self.program_ptr.successors) == 0 and len(back_ptr)==0:
+                self.program_ptr = None
