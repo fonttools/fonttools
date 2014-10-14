@@ -48,7 +48,7 @@ class ExecutionContext(object):
             stackRep = '[..., ' + stackRep[1:]
         return str('storage = ' + str(self.storage_area) + 
             ', graphics_state = ' + str(self.graphics_state) 
-            + ', stack = ' + stackRep + str(len(self.program_stack)))
+            + ', stack = ' + stackRep + ', length = ' + str(len(self.program_stack)))
 
     def merge(self,executionContext2):
         '''
