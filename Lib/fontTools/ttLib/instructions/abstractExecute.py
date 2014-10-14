@@ -391,10 +391,10 @@ class ExecutionContext(object):
         res = self.cvt[op]
         self.program_stack.append(res)
     def exec_RDTG(self):
-        raise NotImplementedError
+        pass
 
     def exec_ROFF(self):
-        raise NotImplementedError
+        pass
 
     def exec_ROLL(self):
         op1 = self.program_stack[-1]
