@@ -107,7 +107,7 @@ class Function(object):
         self.instructions.append(instruction)
     def pretty_printer(self):
         self.body.pretty_printer()
-    #pre-compute the number of data a funtion consumes
+    #pre-compute the amount of data a function consumes
     def argumentNum(self):
         pass
     def constructBody(self):
@@ -270,7 +270,7 @@ def usage():
 def process(jobs, options):
     for input in jobs:
         tt = TTFont()
-        tt.importXML(input)
+        tt.importXML(input, quiet=True)
         ttFont = BytecodeFont(tt)
         ae = analysis(ttFont)
         if (options.outputFunctions):
@@ -313,4 +313,4 @@ def main(args):
     process(jobs, options)
     
 if __name__ == "__main__":
-        main(sys.argv[1:])
+    main(sys.argv[1:])

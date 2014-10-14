@@ -146,9 +146,6 @@
       PUSH[ ]
       0
       FDEF[ ]
-      PUSH[ ]
-      0
-      POP[ ]
       ENDF[ ]
     </assembly>
   </fpgm>
