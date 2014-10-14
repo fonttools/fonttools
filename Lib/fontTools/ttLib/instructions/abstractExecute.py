@@ -105,7 +105,7 @@ class ExecutionContext(object):
             self.program_stack.pop()
     def unary_operation(self, op, action):
         if isinstance(op, dataType.AbstractValue):
-            res = Expression(op1, action)
+            res = dataType.Expression(op, action)
         elif action is 'ceil':
             res = math.ceil(op)
         elif action is 'abs':
