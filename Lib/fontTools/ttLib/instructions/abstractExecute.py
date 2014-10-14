@@ -46,7 +46,9 @@ class ExecutionContext(object):
         stackRep = str(self.program_stack[-3:])
         if (len(self.program_stack) > 3):
             stackRep = '[..., ' + stackRep[1:]
-        return str('storage = ' + str(self.storage_area) + ', graphics_state = ' + str(self.graphics_state) + ', stack = ' + stackRep)
+        return str('storage = ' + str(self.storage_area) + 
+            ', graphics_state = ' + str(self.graphics_state) 
+            + ', stack = ' + stackRep + str(len(self.program_stack)))
 
     def merge(self,executionContext2):
         '''
@@ -638,6 +640,7 @@ class Executor(object):
         self.body = None
         self.program = None
         self.program_state = {}
+
     def execute_all(self):
         for key in self.font.local_programs.keys():
             self.execute(key)
@@ -682,7 +685,7 @@ class Executor(object):
                 successors_index.append(0)
                 back_ptr.append((self.program_ptr, copy.deepcopy(self.environment)))
 
-            logger.info(self.environment.__repr__())
+            logger.info(self.environment)
             if len(back_ptr) != 0:
                 logger.info('back%s', str(back_ptr))
                 if len(back_ptr)>0 and back_ptr[-1][0].mnemonic == 'IF':
@@ -691,7 +694,7 @@ class Executor(object):
                 if back_ptr[-1][1] is not None:
                     logger.warn("program environment recover to")
                     self.environment = back_ptr[-1][1]
-                    logger.info(self.environment.__repr__())
+                    logger.info(self.environment)
                 if top_if is not None:
                     logger.warn("STORE %s program state ", top_if.id)
                     if top_if.id not in self.program_state:
@@ -702,7 +705,7 @@ class Executor(object):
                             logger.warn("program environment will be merged")
                             self.program_state[top_if.id][0].merge(self.program_state[top_if.id][1])
                             self.environment = self.program_state[top_if.id][0]
-                            logger.info(self.environment.__repr__())
+                            logger.info(self.environment)
                 self.program_ptr = back_ptr[-1][0]
                 logger.info("program pointer back to %s %s", str(self.program_ptr),str(self.program_ptr.id))
                 back_ptr.pop()
