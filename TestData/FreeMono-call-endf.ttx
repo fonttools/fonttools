@@ -238,48 +238,7 @@
         <pt x="286" y="522" on="1"/>
         <pt x="178" y="229" on="1"/>
       </contour>
-      <instructions><assembly>
-          SVTCA[0]
-          PUSH[ ]  /* 3 values pushed */
-          8 0 0
-          CALL[ ]
-          PUSH[ ]
-          26
-          SHP[1]
-          PUSH[ ]  /* 2 values pushed */
-          12 3
-          MIRP[01001]
-          PUSH[ ]  /* 3 values pushed */
-          2 21 31
-          SHP[0]
-          SHP[0]
-          SHP[0]
-          PUSH[ ]  /* 3 values pushed */
-          19 2 0
-          CALL[ ]
-          PUSH[ ]  /* 2 values pushed */
-          15 3
-          MIRP[01001]
-          PUSH[ ]
-          34
-          SHP[0]
-          PUSH[ ]  /* 5 values pushed */
-          1 36 8 19 13
-          CALL[ ]
-          PUSH[ ]  /* 2 values pushed */
-          1 3
-          MIRP[01001]
-          SVTCA[1]
-          PUSH[ ]
-          37
-          MDAP[1]
-          PUSH[ ]  /* 2 values pushed */
-          38 1
-          CALL[ ]
-          SVTCA[0]
-          IUP[0]
-          IUP[1]
-        </assembly></instructions>
+      <instructions><assembly></assembly></instructions>
     </TTGlyph>
 
   </glyf>
