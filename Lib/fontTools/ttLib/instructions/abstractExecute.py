@@ -181,6 +181,7 @@ class ExecutionContext(object):
 
     def exec_ALIGNRP(self):
         loopValue = self.graphics_state['loop']
+        self.graphics_state['loop'] = 1
         if len(self.program_stack)<loopValue:
             raise Exception("truetype: hinting: stack underflow")
         self.program_stack_pop(loopValue)
@@ -232,6 +233,7 @@ class ExecutionContext(object):
 
     def exec_FLIPPT(self):
         loopValue = self.graphics_state['loop']
+        self.graphics_state['loop'] = 1
         if len(self.program_stack)<loopValue:
             raise Exception("truetype: hinting: stack underflow")
         self.program_stack_pop(loopValue)
@@ -297,6 +299,7 @@ class ExecutionContext(object):
     
     def exec_IP(self):
         loopValue = self.graphics_state['loop']
+        self.graphics_state['loop'] = 1
         if len(self.program_stack)<loopValue:
             raise Exception("truetype: hinting: stack underflow")
         self.program_stack_pop(loopValue)
@@ -477,18 +480,21 @@ class ExecutionContext(object):
         raise NotImplementedError
     def exec_SHP(self):
         loopValue = self.graphics_state['loop']
+        self.graphics_state['loop'] = 1
         if len(self.program_stack)<loopValue:
             raise Exception("truetype: hinting: stack underflow")
         self.program_stack_pop(loopValue)
     def exec_SHPIX(self):
         loopValue = self.graphics_state['loop']
+        self.graphics_state['loop'] = 1
         if len(self.program_stack)<loopValue:
             raise Exception("truetype: hinting: stack underflow")
         self.program_stack_pop(loopValue)
     def exec_SHZ(self):
         raise NotImplementedError
     def exec_SLOOP(self):
-        raise NotImplementedError
+        self.graphics_state['loop'] = self.program_stack[-1]
+        self.program_stack_pop()
     def exec_SMD(self):
         self.program_stack_pop()
 
