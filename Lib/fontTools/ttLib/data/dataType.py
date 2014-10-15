@@ -28,12 +28,6 @@ class PPEM_X(AbstractValue):
 class PPEM_Y(AbstractValue):
     pass
 
-class VECTOR_X(AbstractValue):
-    pass
-
-class VECTOR_Y(AbstractValue):
-    pass
-
 class PointValue(AbstractValue):
     pass
 class EngineInfo(AbstractValue):
