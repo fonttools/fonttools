@@ -288,7 +288,7 @@ Example:
   Produce a subset containing the characters ' !"#$%' without performing
   size-reducing optimizations:
 
-  $ pyftsubset font.ttf U+0020 U+0021 U+0022 U+0023 U+0024 U+0025 \\
+  $ pyftsubset font.ttf --unicodes="U+0020-0025" \\
     --layout-features='*' --glyph-names --symbol-cmap --legacy-cmap \\
     --notdef-glyph --notdef-outline --recommended-glyphs \\
     --name-IDs='*' --name-legacy --name-languages='*'
