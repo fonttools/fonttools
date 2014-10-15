@@ -32,6 +32,8 @@ class TestAnalysis(unittest.TestCase):
 
     def test_empty_fdef(self):
         analysis.main(["-s", "TestData/FreeMono-empty-fdef.ttx"])
+    def test_call_call_endf_endf(self):
+        self.regressionTest(["TestData/FreeMono-call-endf.ttx"], "TestData/empty.output")
     def test_subset_A(self):
         self.regressionTest(["-sc", "TestData/FreeMono-subset-A.ttx"], "TestData/FreeMono-subset-A-state-csv.output")
 
