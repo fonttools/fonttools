@@ -490,8 +490,6 @@ class ExecutionContext(object):
     def exec_SLOOP(self):
         raise NotImplementedError
     def exec_SMD(self):
-        op = self.program_stack[-1]
-        assert isinstance(op, dataType.Distance)
         self.program_stack_pop()
 
     def exec_SPVFS(self):
