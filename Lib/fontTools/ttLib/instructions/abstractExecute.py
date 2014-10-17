@@ -692,21 +692,14 @@ class Executor(object):
             if self.program_ptr.mnemonic == 'IF':
                 top_if = self.program_ptr
                 successors_index.append(0)
-                '''
-                for successor in top_if.successors:
-                    logger.info("%s.%s",successor.id,successor.mnemonic)
-                    if len(successor.successors) > 0:
-                        logger.info("%s.%s",successor.successors[0].id,successor.successors[0].mnemonic)
-                #assert len(top_if.successors) == 2
-                '''
                 back_ptr.append((self.program_ptr, copy.deepcopy(self.environment)))
 
             logger.info(self.environment)
             if len(back_ptr) > 1:
                 s = ''
-                #for back in back_ptr:
-                    #s = s + str(back[0].id) +'->'+ str(back[0].mnemonic) + ' '
-                logger.info('back%s',back_ptr)
+                for back in back_ptr:
+                    s = s + str(back[0].id) +'->'+ str(back[0].mnemonic) + ' '
+                logger.info('back%s',s)
         
             if (len(self.program_ptr.successors) == 0 or self.program_ptr.mnemonic == 'EIF'):
                 if top_if is not None:
