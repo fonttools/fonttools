@@ -692,41 +692,59 @@ class Executor(object):
             if self.program_ptr.mnemonic == 'IF':
                 top_if = self.program_ptr
                 successors_index.append(0)
+                '''
+                for successor in top_if.successors:
+                    logger.info("%s.%s",successor.id,successor.mnemonic)
+                    if len(successor.successors) > 0:
+                        logger.info("%s.%s",successor.successors[0].id,successor.successors[0].mnemonic)
+                #assert len(top_if.successors) == 2
+                '''
                 back_ptr.append((self.program_ptr, copy.deepcopy(self.environment)))
 
             logger.info(self.environment)
-            if len(back_ptr) != 0:
-                logger.info('back%s', str(back_ptr))
-                if len(back_ptr)>0 and back_ptr[-1][0].mnemonic == 'IF':
-                    top_if = back_ptr[-1][0]
-            if len(self.program_ptr.successors) == 0 and len(back_ptr)!=0:
-                if back_ptr[-1][1] is not None:
-                    logger.warn("program environment recover to")
-                    self.environment = back_ptr[-1][1]
-                    logger.info(self.environment)
+            if len(back_ptr) > 1:
+                s = ''
+                #for back in back_ptr:
+                    #s = s + str(back[0].id) +'->'+ str(back[0].mnemonic) + ' '
+                logger.info('back%s',back_ptr)
+        
+            if (len(self.program_ptr.successors) == 0 or self.program_ptr.mnemonic == 'EIF'):
                 if top_if is not None:
-                    logger.warn("STORE %s program state ", top_if.id)
-                    if top_if.id not in self.program_state:
+                    if top_if.id not in self.program_state or len(self.program_state[top_if.id])==0:
+                        logger.warn("STORE %s program state ", top_if.id)
                         self.program_state[top_if.id] = [self.environment]
-                    else:
+                    elif not (self.program_ptr.mnemonic == 'EIF' and len(self.program_state[top_if.id])==2):
+                        logger.warn("APPEND %s program state ", top_if.id)
                         self.program_state[top_if.id].append(self.environment)
-                        if len(self.program_state[top_if.id])==2:
-                            logger.warn("program environment will be merged")
-                            self.program_state[top_if.id][0].merge(self.program_state[top_if.id][1])
-                            self.environment = self.program_state[top_if.id][0]
-                            logger.info(self.environment)
+                        logger.warn("program environment will be merged")
+                        logger.info('len%s',len(self.program_state[top_if.id]))
+                        self.program_state[top_if.id][0].merge(self.program_state[top_if.id][1])
+                        self.environment = self.program_state[top_if.id][0]
+                        logger.info(self.environment)
+            if len(back_ptr)>0 and len(self.program_ptr.successors) == 0:
                 self.program_ptr = back_ptr[-1][0]
                 logger.info("program pointer back to %s %s", str(self.program_ptr),str(self.program_ptr.id))
-                back_ptr.pop()
+                if len(back_ptr)>0 and back_ptr[-1][0].mnemonic == 'IF':
+                    top_if = back_ptr[-1][0]
                 is_back_ptr = True
+                if back_ptr[-1][1] is None:
+                    back_ptr.pop()
 
             if len(self.program_ptr.successors) > 1:
                 self.program_ptr = self.program_ptr.successors[successors_index[-1]]
+                if successors_index[-1]>0 and (self.program_ptr.mnemonic != 'EIF' or successors_index[-1] != 2):
+                    logger.warn("program environment recover to")
+                    self.environment = back_ptr[-1][1]
+                    logger.info(self.environment)
+                logger.info("traverse another branch %s->%s", self.program_ptr.id, self.program_ptr.mnemonic)
                 is_back_ptr = False
-                if successors_index[-1]==0:
-                    successors_index[-1] = successors_index[-1] + 1
-                else:
+                if self.program_ptr.mnemonic == 'EIF':
                     successors_index.pop()
+                    back_ptr.pop()
+                    top_if = None
+                else:
+                    successors_index[-1] = successors_index[-1] + 1
+                    
                 continue
             
             if len(self.program_ptr.successors) == 1:
