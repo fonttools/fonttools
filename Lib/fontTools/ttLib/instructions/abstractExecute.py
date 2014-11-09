@@ -119,7 +119,7 @@ class ExecutionContext(object):
     def program_stack_pop(self, num=1):
         for i in range(num):
             tempVariableName = self.nameHelper.getNameForTag(self.current_instruction.id.split(".")[0])
-            tempVariable = IR.Variable(tempVariableName, self.program_stack[-i])
+            tempVariable = IR.Variable(tempVariableName, self.program_stack[-1])
             self.current_instruction_intermediate.append(IR.AssignmentStatement(tempVariable))
             self.program_stack.pop()
 
@@ -647,6 +647,10 @@ class ExecutionContext(object):
 
     def exec_SDB(self):
         self.program_stack_pop()
+
+    def exec_CALL(self):
+        self.program_stack_pop()
+
     def execute(self):
         self.current_instruction_intermediate = []
         getattr(self,"exec_"+self.current_instruction.mnemonic)()
@@ -685,8 +689,10 @@ class Executor(object):
         self.program.call_function_set.append(top)
         logger.info('ADD CALL SET:%s', top)
         logger.info('ADD CALL SET:%s', self.program.call_function_set)
+        self.environment.set_currentInstruction(self.program_ptr)
+        intermediateCodes = self.environment.execute()
+        self.intermediateCodes = self.intermediateCodes+ intermediateCodes
         self.program_ptr = self.font.function_table[top].start()
-        self.environment.program_stack.pop()
         
         logger.info("jump to call function "+self.program_ptr.mnemonic)
 
@@ -774,4 +780,6 @@ class Executor(object):
             if len(self.program_ptr.successors) == 0 and len(back_ptr)==0:
                 self.program_ptr = None
 
-        print self.intermediateCodes
+        for intermediateCode in self.intermediateCodes:
+            print intermediateCode
+        
