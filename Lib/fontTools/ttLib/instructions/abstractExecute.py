@@ -2,7 +2,20 @@ from fontTools.ttLib.data import dataType
 import logging
 import copy
 import math
+import IntermediateCode as IR
 logger = logging.getLogger(" ")
+
+class VariableNameHelper(object):
+    def __init__(self):
+        self.countTable = {}
+    def getNameForTag(self, tag):
+        if tag in self.countTable:
+            number = self.countTable[tag]
+        else:
+            number = 0
+            self.countTable[tag] = 0
+        self.countTable[tag] = self.countTable[tag] + 1
+        return '$' + tag + str(number)
 
 class DataFlowRegion(object):
     def __init__(self):
@@ -40,7 +53,8 @@ class ExecutionContext(object):
         self.set_graphics_state_to_default()
         self.program_stack = []
         self.current_instruction = None
-
+        self.current_instruction_intermediate = []
+        self.nameHelper = VariableNameHelper()
     def __repr__(self):
 
         stackRep = str(self.program_stack[-3:])
@@ -104,7 +118,11 @@ class ExecutionContext(object):
 
     def program_stack_pop(self, num=1):
         for i in range(num):
+            tempVariableName = self.nameHelper.getNameForTag(self.current_instruction.id.split(".")[0])
+            tempVariable = IR.Variable(tempVariableName, self.program_stack[-i])
+            self.current_instruction_intermediate.append(IR.AssignmentStatement(tempVariable))
             self.program_stack.pop()
+
     def unary_operation(self, op, action):
         if isinstance(op, dataType.AbstractValue):
             res = dataType.Expression(op, action)
@@ -214,6 +232,12 @@ class ExecutionContext(object):
     def exec_DELTAC2(self):#DeltaExceptionC2
         self.exec_DELTA()
     def exec_DELTAC3(self):#DeltaExceptionC3
+        self.exec_DELTA()
+    def exec_DELTAP1(self):#DeltaExceptionC1
+        self.exec_DELTA()
+    def exec_DELTAP2(self):#DeltaExceptionC2
+        self.exec_DELTA()
+    def exec_DELTAP3(self):#DeltaExceptionC3
         self.exec_DELTA()
 
     def exec_DEPTH(self):#GetDepthStack
@@ -624,7 +648,9 @@ class ExecutionContext(object):
     def exec_SDB(self):
         self.program_stack_pop()
     def execute(self):
+        self.current_instruction_intermediate = []
         getattr(self,"exec_"+self.current_instruction.mnemonic)()
+        return self.current_instruction_intermediate
 
 class Executor(object):
     """
@@ -645,7 +671,7 @@ class Executor(object):
         self.program = None
         self.program_state = {}
         self.maximum_stack_depth = 0
-
+        self.intermediateCodes = []
     def execute_all(self):
         for key in self.font.local_programs.keys():
             self.execute(key)
@@ -685,7 +711,8 @@ class Executor(object):
                     self.execute_CALL()
             
                 self.environment.set_currentInstruction(self.program_ptr)
-                self.environment.execute()
+                intermediateCodes = self.environment.execute()
+                self.intermediateCodes = self.intermediateCodes+ intermediateCodes
             if (len(self.environment.program_stack) > self.maximum_stack_depth):
                 self.maximum_stack_depth = len(self.environment.program_stack)
             
@@ -701,7 +728,7 @@ class Executor(object):
                     s = s + str(back[0].id) +'->'+ str(back[0].mnemonic) + ' '
                 logger.info('back%s',s)
         
-            if (len(self.program_ptr.successors) == 0 or self.program_ptr.mnemonic == 'EIF'):
+            if len(self.program_ptr.successors) == 0 or self.program_ptr.mnemonic == 'EIF':
                 if top_if is not None:
                     if top_if.id not in self.program_state or len(self.program_state[top_if.id])==0:
                         logger.warn("STORE %s program state ", top_if.id)
@@ -746,3 +773,5 @@ class Executor(object):
                 continue
             if len(self.program_ptr.successors) == 0 and len(back_ptr)==0:
                 self.program_ptr = None
+
+        print self.intermediateCodes

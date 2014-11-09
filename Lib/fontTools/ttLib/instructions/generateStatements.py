@@ -15,6 +15,7 @@ from fontTools.ttLib.tables.ttProgram import instructions
 def emit(stream, line, level=0):
     indent = "    "*level
     stream.write(indent + line + "\n")
+ 
 def constructInstructionClasses(instructionList):
     HEAD = """#instructions classes are generated from instructionList
 class root_statement(object):

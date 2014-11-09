@@ -61,7 +61,6 @@ class Body(object):
             #other statements should have at least 
             #the next instruction in stream as a successor
             elif index < len(input_statements)-1 and not is_branch(input_statements[index+1]):
-                #or (is_branch(input_statements[index]) and is_branch(input_statements[index+1]))):
                 this_instruction.add_successor(input_statements[index+1])
                 input_statements[index+1].set_predecessor(this_instruction)
             # An IF statement should have two successors:
