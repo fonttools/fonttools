@@ -22,7 +22,7 @@ class DataFlowRegion(object):
         self.condition = None
         self.outRegion = []
         self.inRegion = None
-
+nameHelper = VariableNameHelper()
 class ExecutionContext(object):
     """Abstractly represents the global environment at a single point in time. 
 
@@ -54,7 +54,8 @@ class ExecutionContext(object):
         self.program_stack = []
         self.current_instruction = None
         self.current_instruction_intermediate = []
-        self.nameHelper = VariableNameHelper()
+        self.current_variables = []
+        
     def __repr__(self):
 
         stackRep = str(self.program_stack[-3:])
@@ -118,8 +119,9 @@ class ExecutionContext(object):
 
     def program_stack_pop(self, num=1):
         for i in range(num):
-            tempVariableName = self.nameHelper.getNameForTag(self.current_instruction.id.split(".")[0])
+            tempVariableName = nameHelper.getNameForTag(self.current_instruction.id.split(".")[0])
             tempVariable = IR.Variable(tempVariableName, self.program_stack[-1])
+            self.current_variables.append(tempVariable)
             self.current_instruction_intermediate.append(IR.AssignmentStatement(tempVariable))
             self.program_stack.pop()
 
@@ -650,9 +652,12 @@ class ExecutionContext(object):
 
     def exec_CALL(self):
         self.program_stack_pop()
+        self.current_instruction_intermediate.append(IR.CallStatement(self.current_variables[-1]))
+        self.current_variables.pop()
 
     def execute(self):
         self.current_instruction_intermediate = []
+        self.current_variables = []
         getattr(self,"exec_"+self.current_instruction.mnemonic)()
         return self.current_instruction_intermediate
 
