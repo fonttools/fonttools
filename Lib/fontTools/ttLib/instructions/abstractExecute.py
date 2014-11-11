@@ -5,10 +5,10 @@ import math
 import IntermediateCode as IR
 logger = logging.getLogger(" ")
 
-class VariableNameHelper(object):
+class IdentifierGenerator(object):
     def __init__(self):
         self.countTable = {}
-    def getNameForTag(self, tag):
+    def generateIdentifier(self, tag):
         if tag in self.countTable:
             number = self.countTable[tag]
         else:
@@ -22,7 +22,8 @@ class DataFlowRegion(object):
         self.condition = None
         self.outRegion = []
         self.inRegion = None
-nameHelper = VariableNameHelper()
+
+identifierGenerator = IdentifierGenerator()
 class ExecutionContext(object):
     """Abstractly represents the global environment at a single point in time. 
 
@@ -91,6 +92,7 @@ class ExecutionContext(object):
 
     def set_currentInstruction(self, instruction):
         self.current_instruction = instruction
+        self.tag = (str(instruction.id)).split(".")[0]
 
     def set_graphics_state_to_default(self):
         self.graphics_state = {
@@ -119,10 +121,10 @@ class ExecutionContext(object):
 
     def program_stack_pop(self, num=1):
         for i in range(num):
-            tempVariableName = nameHelper.getNameForTag(self.current_instruction.id.split(".")[0])
+            tempVariableName = identifierGenerator.generateIdentifier(self.tag)
             tempVariable = IR.Variable(tempVariableName, self.program_stack[-1])
             self.current_variables.append(tempVariable)
-            self.current_instruction_intermediate.append(IR.AssignmentStatement(tempVariable))
+            self.current_instruction_intermediate.append(IR.CopyStatement(tempVariable))
             self.program_stack.pop()
 
     def unary_operation(self, op, action):
@@ -192,6 +194,13 @@ class ExecutionContext(object):
 
     def exec_ADD(self):
         self.binary_operation('ADD')
+        op1 = self.current_variables[-1]
+        self.current_variables.pop()
+        op2 = self.current_variables[-1]
+        self.current_variables.pop()
+        expression = IR.BinaryExpression(op1,op2,IR.AddOperator())
+        op3 = IR.Variable(identifierGenerator.generateIdentifier(self.tag),expression)
+        self.current_instruction_intermediate.append(IR.OperationAssignmentStatement(op3, expression))
 
     def exec_ALIGNPTS(self):
         '''
@@ -229,16 +238,22 @@ class ExecutionContext(object):
         number = self.program_stack[-1]
         self.program_stack_pop()
         self.program_stack_pop(2*number)
+
     def exec_DELTAC1(self):#DeltaExceptionC1
         self.exec_DELTA()
+
     def exec_DELTAC2(self):#DeltaExceptionC2
         self.exec_DELTA()
+
     def exec_DELTAC3(self):#DeltaExceptionC3
         self.exec_DELTA()
+
     def exec_DELTAP1(self):#DeltaExceptionC1
         self.exec_DELTA()
+
     def exec_DELTAP2(self):#DeltaExceptionC2
         self.exec_DELTA()
+
     def exec_DELTAP3(self):#DeltaExceptionC3
         self.exec_DELTA()
 
