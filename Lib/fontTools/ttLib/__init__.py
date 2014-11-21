@@ -49,9 +49,11 @@ import sys
 haveMacSupport = 0
 if sys.platform == "mac":
 	haveMacSupport = 1
-elif sys.platform == "darwin" and sys.version_info[:3] != (2, 2, 0):
-	# Python 2.2's Mac support is broken, so don't enable it there.
-	haveMacSupport = 1
+elif sys.platform == "darwin":
+	if sys.version_info[:3] != (2, 2, 0) and sys.version_info[:1] < (3,):
+		# Python 2.2's Mac support is broken, so don't enable it there.
+		# Python 3 does not have Res used by macUtils
+		haveMacSupport = 1
 
 
 class TTLibError(Exception): pass
