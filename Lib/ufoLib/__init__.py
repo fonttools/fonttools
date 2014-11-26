@@ -159,22 +159,29 @@ class UFOReader(object):
 
 	_checkForFile = staticmethod(os.path.exists)
 
-	def _readPlist(self, path):
+	def _getPlist(self, fileName, default=None):
 		"""
-		Read a property list. The errors that
+		Read a property list relative to the
+		path argument of UFOReader. If the file
+		is missing and default is None a
+		UFOLibError will be raised otherwise
+		default is returned. The errors that
 		could be raised during the reading of
 		a plist are unpredictable and/or too
 		large to list, so, a blind try: except:
 		is done. If an exception occurs, a
 		UFOLibError will be raised.
 		"""
-		originalPath = path
-		path = os.path.join(self._path, path)
+		path = os.path.join(self._path, fileName)
+		if not os.path.exists(path):
+			if default is not None:
+				return default
+			else:
+				raise UFOLibError("%s is missing in %s. This file is required" % (fileName, self._path))
 		try:
-			data = readPlist(path)
-			return data
+			return readPlist(path)
 		except:
-			raise UFOLibError("The file %s could not be read." % originalPath)
+			raise UFOLibError("The file %s could not be read." % fileName)
 
 	def readBytesFromPath(self, path, encoding=None):
 		"""
@@ -227,13 +234,10 @@ class UFOReader(object):
 		"""
 		Read metainfo.plist. Only used for internal operations.
 		"""
-		path = os.path.join(self._path, METAINFO_FILENAME)
-		if not self._checkForFile(path):
-			raise UFOLibError("metainfo.plist is missing in %s. This file is required." % self._path)
 		# should there be a blind try/except with a UFOLibError
 		# raised in except here (and elsewhere)? It would be nice to
 		# provide external callers with a single exception to catch.
-		data = self._readPlist(path)
+		data = self._getPlist(METAINFO_FILENAME)
 		if not isinstance(data, dict):
 			raise UFOLibError("maetainfo.plist is not properly formatted.")
 		formatVersion = data["formatVersion"]
@@ -244,11 +248,7 @@ class UFOReader(object):
 	# groups.plist
 
 	def _readGroups(self):
-		path = os.path.join(self._path, GROUPS_FILENAME)
-		if not self._checkForFile(path):
-			return {}
-		data = self._readPlist(path)
-		return data
+		return self._getPlist(GROUPS_FILENAME, {})
 
 	def readGroups(self):
 		"""
@@ -290,10 +290,7 @@ class UFOReader(object):
 	# fontinfo.plist
 
 	def _readInfo(self):
-		path = os.path.join(self._path, FONTINFO_FILENAME)
-		if not self._checkForFile(path):
-			return {}
-		data = self._readPlist(path)
+		data = self._getPlist(FONTINFO_FILENAME, {})
 		if not isinstance(data, dict):
 			raise UFOLibError("fontinfo.plist is not properly formatted.")
 		return data
@@ -305,12 +302,7 @@ class UFOReader(object):
 		version 3 specification. This will write the attributes
 		defined in the file into the object.
 		"""
-		path = os.path.join(self._path, FONTINFO_FILENAME)
-		if not self._checkForFile(path):
-			return {}
-		infoDict = self._readPlist(path)
-		if not isinstance(infoDict, dict):
-			raise UFOLibError("fontinfo.plist is not properly formatted.")
+		infoDict = self._readInfo()
 		infoDataToSet = {}
 		# version 1
 		if self._formatVersion == 1:
@@ -350,10 +342,7 @@ class UFOReader(object):
 	# kerning.plist
 
 	def _readKerning(self):
-		path = os.path.join(self._path, KERNING_FILENAME)
-		if not self._checkForFile(path):
-			return {}
-		data = self._readPlist(path)
+		data = self._getPlist(KERNING_FILENAME, {})
 		invalidFormatMessage = "kerning.plist is not properly formatted."
 		if not isinstance(data, dict):
 			raise UFOLibError(invalidFormatMessage)
@@ -401,10 +390,7 @@ class UFOReader(object):
 		"""
 		Read lib.plist. Returns a dict.
 		"""
-		path = os.path.join(self._path, LIB_FILENAME)
-		if not self._checkForFile(path):
-			return {}
-		data = self._readPlist(path)
+		data = self._getPlist(LIB_FILENAME, {})
 		valid, message = fontLibValidator(data)
 		if not valid:
 			raise UFOLibError(message)
@@ -434,14 +420,10 @@ class UFOReader(object):
 		if self._formatVersion < 3:
 			return [(DEFAULT_LAYER_NAME, DEFAULT_GLYPHS_DIRNAME)]
 		# read the file on disk
-		path = os.path.join(self._path, LAYERCONTENTS_FILENAME)
-		if not os.path.exists(path):
-			raise UFOLibError("layercontents.plist is missing.")
-		if os.path.exists(path):
-			contents = self._readPlist(path)
-			valid, error = layerContentsValidator(contents, self._path)
-			if not valid:
-				raise UFOLibError(error)
+		contents = self._getPlist(LAYERCONTENTS_FILENAME)
+		valid, error = layerContentsValidator(contents, self._path)
+		if not valid:
+			raise UFOLibError(error)
 		return contents
 
 	def getLayerNames(self):
