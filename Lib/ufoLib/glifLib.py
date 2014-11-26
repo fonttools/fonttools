@@ -541,7 +541,11 @@ def writeGlyphToString(glyphName, glyphObject=None, drawPointsFunc=None, writer=
 	The GLIF format version can be specified with the formatVersion argument.
 	"""
 	if writer is None:
-		from xmlWriter import XMLWriter
+		try:
+			from xmlWriter import XMLWriter
+		except ImportError:
+			# try the other location
+			from fontTools.misc.xmlWriter import XMLWriter
 		aFile = StringIO()
 		writer = XMLWriter(aFile, encoding="UTF-8")
 	else:
