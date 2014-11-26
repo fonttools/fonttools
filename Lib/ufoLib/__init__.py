@@ -157,11 +157,7 @@ class UFOReader(object):
 
 	# support methods
 
-	def _checkForFile(self, path):
-		if not os.path.exists(path):
-			return False
-		else:
-			return True
+	_checkForFile = staticmethod(os.path.exists)
 
 	def _readPlist(self, path):
 		"""
