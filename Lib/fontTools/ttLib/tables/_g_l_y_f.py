@@ -81,7 +81,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 			if indices and currentLocation + len(indices) < 0x20000:
 				# It fits.  Do it.
 				for i in indices:
-					dataList[i] += '\0'
+					dataList[i] += b'\0'
 				currentLocation = 0;
 				for i,glyphData in enumerate(dataList):
 					locations[i] = currentLocation
