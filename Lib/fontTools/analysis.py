@@ -145,11 +145,14 @@ class BytecodeFont(object):
     
     def constructCVTTable(self, tt):
         self.cvt_table = {}
-        values = tt['cvt '].values
-        key = 0
-        for value in values:
-            self.cvt_table[key] = value
-            key = key + 1
+        try:
+            values = tt['cvt '].values
+            key = 0
+            for value in values:
+                self.cvt_table[key] = value
+                key = key + 1
+        except:
+            pass
     
     #tested#
     def extractProgram(self, tt):

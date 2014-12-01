@@ -55,7 +55,7 @@ class ExecutionContext(object):
         self.program_stack = []
         self.current_instruction = None
         self.current_instruction_intermediate = []
-        self.current_variables = []
+        self.variables = []
         
     def __repr__(self):
 
@@ -119,12 +119,25 @@ class ExecutionContext(object):
     def read_storage_area(self, index):
         return self.storage_area[index]
 
+    def getVariable(self, data = None):
+        if len(self.variables) == 0:
+            self.putVariable()
+        self.data = data
+        res = self.variables[-1]
+        self.variables.pop()
+        return res  
+
+    def assignVariable(self, var, data):
+        self.current_instruction_intermediate.append(IR.CopyStatement(var, data))
+
+    def putVariable(self):
+        tempVariableName = identifierGenerator.generateIdentifier(self.tag)
+        tempVariable = IR.Variable(tempVariableName)
+        self.variables.append(tempVariable)
+        
+
     def program_stack_pop(self, num=1):
         for i in range(num):
-            tempVariableName = identifierGenerator.generateIdentifier(self.tag)
-            tempVariable = IR.Variable(tempVariableName, self.program_stack[-1])
-            self.current_variables.append(tempVariable)
-            self.current_instruction_intermediate.append(IR.CopyStatement(tempVariable))
             self.program_stack.pop()
 
     def unary_operation(self, op, action):
@@ -132,44 +145,74 @@ class ExecutionContext(object):
             res = dataType.Expression(op, action)
         elif action is 'ceil':
             res = math.ceil(op)
+        elif action is 'floor':
+            res = math.floor(op)
         elif action is 'abs':
             res = math.fabs(op)
         return res
+
     def binary_operation(self, action):
         op1 = self.program_stack[-2]
         op2 = self.program_stack[-1]
+        self.program_stack_pop(2)
+        v_op1 = self.getVariable()
+        v_op2 = self.getVariable()
+        if v_op1.data == None:
+            self.assignVariable(v_op1, op1)
+        if v_op2.data == None:
+            self.assignVariable(v_op2, op2)
+            
+        expression = None
         if isinstance(op1,dataType.AbstractValue) or isinstance(op2,dataType.AbstractValue):
             res = dataType.Expression(op1, op2, action)
+            expression = IR.BinaryExpression(v_op1, v_op2, getattr(IR,action+'Operator')())
         elif action is 'ADD':
             res = op1 + op2
+            expression = IR.BinaryExpression(v_op1,v_op2,IR.ADDOperator())
         elif action is 'GT':
             res = op1 > op2
+            expression = IR.BinaryExpression(v_op1,v_op2,IR.GTOperator())
         elif action is 'GTEQ':
             res = op1 >= op2
+            expression = IR.BinaryExpression(v_op1,v_op2,IR.GTEQOperator())
         elif action is 'AND':
             res = op1 and op2
+            expression = IR.BinaryExpression(v_op1,v_op2,IR.ANDOperator())
         elif action is 'OR':
             res = op1 or op2
+            expression = IR.BinaryExpression(v_op1,v_op2,IR.OROperator())
         elif action is 'DIV':
             res = op1 / op2
+            expression = IR.BinaryExpression(v_op1,v_op2,IR.DIVOperator())
         elif action is 'EQ':
             res = op1 == op2
+            expression = IR.BinaryExpression(v_op1,v_op2,IR.EQOperator())
         elif action is 'NEQ':
             res = op1 != op2
+            expression = IR.BinaryExpression(v_op1,v_op2,IR.NEQOperator())
         elif action is 'LT':
             res = op1 < op2
+            expression = IR.BinaryExpression(v_op1,v_op2,IR.LTOperator())
         elif action is 'LTEQ':
             res = op1 <= op2
+            expression = IR.BinaryExpression(v_op1,v_op2,IR.LTEQOperator())
         elif action is 'MAX':
             res = max(op1,op2)
         elif action is 'MIN':
             res = min(op1,op2)
         elif action is 'SUB':
             res = op1 - op2
+            expression = IR.BinaryExpression(v_op1,v_op2,IR.SubOperator())
         else:
             raise NotImplementedError
-        self.program_stack_pop(2)
+        
         self.program_stack.append(res)
+        resVariable = self.getVariable(expression)
+        if action is 'MAX' or action is 'MIN':
+            three_address_code = getattr(IR, action+'MethodCall')([v_op1,v_op2], resVariable)
+            self.current_instruction_intermediate.append(three_address_code)
+        else:
+            self.current_instruction_intermediate.append(IR.OperationAssignmentStatement(resVariable, expression))
 
     def exec_PUSH(self):
         for item in self.current_instruction.data:
@@ -190,17 +233,18 @@ class ExecutionContext(object):
         self.program_stack.pop()
 
     def exec_ABS(self):#Absolute
-        self.program_stack[-1] = self.unary_operation(self.program_stack[-1],'abs')
+        op1 = self.program_stack[-1]
+        res = self.unary_operation(op1, 'abs')
+        self.program_stack[-1] = res
+        v_op = self.getVariable()
+        if v_op.data == None:
+            self.assignVariable(v_op, op1)
+        resVar = self.getVariable(res)
+        self.current_instruction_intermediate.append(IR.ABSMethodCall([v_op],resVar))
 
     def exec_ADD(self):
         self.binary_operation('ADD')
-        op1 = self.current_variables[-1]
-        self.current_variables.pop()
-        op2 = self.current_variables[-1]
-        self.current_variables.pop()
-        expression = IR.BinaryExpression(op1,op2,IR.AddOperator())
-        op3 = IR.Variable(identifierGenerator.generateIdentifier(self.tag),expression)
-        self.current_instruction_intermediate.append(IR.OperationAssignmentStatement(op3, expression))
+        
 
     def exec_ALIGNPTS(self):
         '''
@@ -219,7 +263,14 @@ class ExecutionContext(object):
         self.binary_operation('AND')
 
     def exec_CEILING(self):
-        self.program_stack[-1] = self.unary_operation(self.program_stack[-1],'ceil')
+        op1 = self.program_stack[-1]
+        res = self.unary_operation(op1, 'ceil')
+        self.program_stack[-1] = res
+        v_op = self.getVariable()
+        if v_op.data == None:
+            self.assignVariable(v_op, op1)
+        resVar = self.getVariable(res)
+        self.current_instruction_intermediate.append(IR.CEILINGMethodCall([v_op],resVar))
 
     def exec_CINDEX(self):#CopyXToTopStack
         index = self.program_stack[-1]
@@ -268,9 +319,11 @@ class ExecutionContext(object):
 
     def exec_FLIPOFF(self):
         self.graphics_state['autoFlip'] = False
+        self.current_instruction_intermediate.append(IR.CopyStatement(IR.AutoFlip(),IR.Boolean('false')))
 
     def exec_FLIPON(self):
         self.graphics_state['autoFlip'] = True
+        self.current_instruction_intermediate.append(IR.CopyStatement(IR.AutoFlip(),IR.Boolean('true')))
 
     def exec_FLIPPT(self):
         loopValue = self.graphics_state['loop']
@@ -282,11 +335,19 @@ class ExecutionContext(object):
     def exec_FLIPRGOFF(self):
         self.program_stack_pop(2)
 
+
     def exec_FLIPRGON(self):
         self.program_stack_pop(2)
-
+        
     def exec_FLOOR(self):
-        self.program_stack[-1] = math.floor(self.program_stack[-1])
+        op1 = self.program_stack[-1]
+        res = self.unary_operation(op1, 'floor')
+        self.program_stack[-1] = res
+        v_op = self.getVariable()
+        if v_op.data == None:
+            self.assignVariable(v_op, op1)
+        resVar = self.getVariable(res)
+        self.current_instruction_intermediate.append(IR.FLOORMethodCall([v_op],resVar))
 
     def exec_GC(self):
         top = self.program_stack[-1]
@@ -572,11 +633,12 @@ class ExecutionContext(object):
         if data == 0:
             self.graphics_state['pv'] = (0, 1)
             self.graphics_state['fv'] = (0, 1)
-            self.graphics_state['dv'] = (0, 1)
+            
         if data == 1:
             self.graphics_state['pv'] = (1, 0)
             self.graphics_state['fv'] = (1, 0)
-            self.graphics_state['dv'] = (1, 0)
+        self.current_instruction_intermediate.append(IR.CopyStatement(IR.FreedomVector(),IR.Constant(data)))
+        self.current_instruction_intermediate.append(IR.CopyStatement(IR.ProjectionVector(),IR.Constant(data)))
 
     def exec_SWAP(self):
         tmp = self.program_stack[-1]
@@ -599,24 +661,34 @@ class ExecutionContext(object):
         self.program_stack_pop()
 
     def exec_WCVTF(self):
-        op1 = self.program_stack[-2]
-        op2 = self.program_stack[-1]
-        self.program_stack_pop(2)
-        self.cvt[op1] = op2
+        self.exec_WCVTP()
 
     def exec_WCVTP(self):
+        res = self.getOpandVar()
+        self.cvt[res[0]] = res[1]
+        assert not isinstance(res[0], dataType.AbstractValue)
+        self.current_instruction_intermediate.append(IR.CVTStorageStatement(res[2],res[3]))
+       
+    def getOpandVar(self):
         op1 = self.program_stack[-2]
         op2 = self.program_stack[-1]
         self.program_stack_pop(2)
-        self.cvt[op1] = op2
+
+        v2 = self.getVariable()
+        if v2.data == None:
+            self.assignVariable(v2,op2)
+        v1 = self.getVariable()
+        if v1.data == None:
+            self.assignVariable(v1,op1)
+        return [op1,op2,v1,v2]
 
     def exec_WS(self):
-        op1 = self.program_stack[-2]
-        op2 = self.program_stack[-1]
-        self.program_stack_pop(2)
-        assert not isinstance(op1,dataType.AbstractValue)
+        res = self.getOpandVar()
+        self.current_instruction_intermediate.append(IR.WriteStorageStatement(res[2],res[3]))
 
-        self.storage_area[op1] = op2
+        assert not isinstance(res[0], dataType.AbstractValue)
+
+        self.storage_area[res[0]] = res[1]
 
     def exec_EQ(self):
         self.binary_operation('EQ')
@@ -659,22 +731,35 @@ class ExecutionContext(object):
         self.graphics_state['controlValueCutIn'] = self.program_stack[-1]
         self.program_stack_pop()
 
-    def exec_CALL(self):
-        self.program_stack_pop()
-
     def exec_SDB(self):
         self.program_stack_pop()
 
     def exec_CALL(self):
+        data = self.program_stack[-1]
         self.program_stack_pop()
-        self.current_instruction_intermediate.append(IR.CallStatement(self.current_variables[-1]))
-        self.current_variables.pop()
+        var = self.getVariable()
+        if var.data == None:
+            self.assignVariable(var,data)
+        self.current_instruction_intermediate.append(IR.CallStatement(var))
+        
 
     def execute(self):
         self.current_instruction_intermediate = []
-        self.current_variables = []
         getattr(self,"exec_"+self.current_instruction.mnemonic)()
         return self.current_instruction_intermediate
+
+def setGSDefaults():
+    intermediateCodes = []
+    intermediateCodes.append(IR.CopyStatement(IR.AutoFlip(),IR.Boolean('true')))
+    intermediateCodes.append(IR.CopyStatement(IR.FreedomVector(),IR.Constant(1)))
+    intermediateCodes.append(IR.CopyStatement(IR.ProjectionVector(),IR.Constant(1)))
+    intermediateCodes.append(IR.CopyStatement(IR.ZP0(),IR.Constant(1)))
+    intermediateCodes.append(IR.CopyStatement(IR.ZP1(),IR.Constant(1)))
+    intermediateCodes.append(IR.CopyStatement(IR.ZP2(),IR.Constant(1)))
+    intermediateCodes.append(IR.CopyStatement(IR.RP0(),IR.Constant(0)))
+    intermediateCodes.append(IR.CopyStatement(IR.RP1(),IR.Constant(0)))
+    intermediateCodes.append(IR.CopyStatement(IR.RP2(),IR.Constant(0)))
+    return intermediateCodes
 
 class Executor(object):
     """
@@ -724,6 +809,7 @@ class Executor(object):
         successors_index = []
         top_if = None
         self.program_state = {}
+        self.intermediateCodes = setGSDefaults()
 
         while self.program_ptr is not None:
             if self.program_ptr.data is not None:
