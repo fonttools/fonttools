@@ -86,7 +86,7 @@ class table_T_S_I__1(DefaultTable.DefaultTable):
 				continue
 			writer.begintag("glyphProgram", name=name)
 			writer.newline()
-			writer.write_noindent(text.replace("\r", "\n"))
+			writer.write_noindent(text.replace(b"\r", b"\n"))
 			writer.newline()
 			writer.endtag("glyphProgram")
 			writer.newline()
@@ -98,7 +98,7 @@ class table_T_S_I__1(DefaultTable.DefaultTable):
 				continue
 			writer.begintag("extraProgram", name=name)
 			writer.newline()
-			writer.write_noindent(text.replace("\r", "\n"))
+			writer.write_noindent(text.replace(b"\r", b"\n"))
 			writer.newline()
 			writer.endtag("extraProgram")
 			writer.newline()
