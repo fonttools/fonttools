@@ -4,7 +4,7 @@ import copy
 import math
 import IntermediateCode as IR
 logger = logging.getLogger(" ")
-
+labelCounter = 0
 class IdentifierGenerator(object):
     def __init__(self):
         self.countTable = {}
@@ -56,7 +56,9 @@ class ExecutionContext(object):
         self.current_instruction = None
         self.current_instruction_intermediate = []
         self.variables = []
-        
+    def topVar(self):
+        return  self.variables[-1]
+
     def __repr__(self):
 
         stackRep = str(self.program_stack[-3:])
@@ -119,10 +121,7 @@ class ExecutionContext(object):
     def read_storage_area(self, index):
         return self.storage_area[index]
 
-    def getVariable(self, data = None):
-        if len(self.variables) == 0:
-            self.putVariable()
-        self.data = data
+    def getVariable(self):
         res = self.variables[-1]
         self.variables.pop()
         return res  
@@ -130,9 +129,11 @@ class ExecutionContext(object):
     def assignVariable(self, var, data):
         self.current_instruction_intermediate.append(IR.CopyStatement(var, data))
 
-    def putVariable(self):
+    def putVariable(self, data=None, assign = True):
         tempVariableName = identifierGenerator.generateIdentifier(self.tag)
-        tempVariable = IR.Variable(tempVariableName)
+        tempVariable = IR.Variable(tempVariableName, data)
+        if data is not None and assign:
+            self.assignVariable(tempVariable, data)
         self.variables.append(tempVariable)
         
 
@@ -157,10 +158,6 @@ class ExecutionContext(object):
         self.program_stack_pop(2)
         v_op1 = self.getVariable()
         v_op2 = self.getVariable()
-        if v_op1.data == None:
-            self.assignVariable(v_op1, op1)
-        if v_op2.data == None:
-            self.assignVariable(v_op2, op2)
             
         expression = None
         if isinstance(op1,dataType.AbstractValue) or isinstance(op2,dataType.AbstractValue):
@@ -207,7 +204,8 @@ class ExecutionContext(object):
             raise NotImplementedError
         
         self.program_stack.append(res)
-        resVariable = self.getVariable(expression)
+        self.putVariable(expression, False)
+        resVariable = self.topVar()
         if action is 'MAX' or action is 'MIN':
             three_address_code = getattr(IR, action+'MethodCall')([v_op1,v_op2], resVariable)
             self.current_instruction_intermediate.append(three_address_code)
@@ -217,6 +215,7 @@ class ExecutionContext(object):
     def exec_PUSH(self):
         for item in self.current_instruction.data:
             self.program_stack.append(item)
+            self.putVariable(item)
 
     # Don't execute any cfg-related instructions
     # This has the effect of "executing both branches".
@@ -237,9 +236,8 @@ class ExecutionContext(object):
         res = self.unary_operation(op1, 'abs')
         self.program_stack[-1] = res
         v_op = self.getVariable()
-        if v_op.data == None:
-            self.assignVariable(v_op, op1)
-        resVar = self.getVariable(res)
+        self.putVariable(res, False)
+        resVar = self.topVar()
         self.current_instruction_intermediate.append(IR.ABSMethodCall([v_op],resVar))
 
     def exec_ADD(self):
@@ -267,9 +265,8 @@ class ExecutionContext(object):
         res = self.unary_operation(op1, 'ceil')
         self.program_stack[-1] = res
         v_op = self.getVariable()
-        if v_op.data == None:
-            self.assignVariable(v_op, op1)
-        resVar = self.getVariable(res)
+        self.putVariable(res, False)
+        resVar = self.topVar()
         self.current_instruction_intermediate.append(IR.CEILINGMethodCall([v_op],resVar))
 
     def exec_CINDEX(self):#CopyXToTopStack
@@ -278,6 +275,7 @@ class ExecutionContext(object):
         #the index start from 1
         top = self.program_stack[-index]
         self.program_stack.append(top)
+        self.putVariable(top)
 
     def exec_CLEAR(self):#ClearStack
         self.program_stack = []
@@ -309,13 +307,17 @@ class ExecutionContext(object):
         self.exec_DELTA()
 
     def exec_DEPTH(self):#GetDepthStack
-        self.program_stack.append(len(self.program_stack))
+        depth = len(self.program_stack)
+        self.program_stack.append()
+        self.putVariable(depth)
     
     def exec_DIV(self):#Divide
         self.binary_operation('DIV')
 
     def exec_DUP(self):#DuplicateTopStack
-        self.program_stack.append(self.program_stack[-1])
+        top = self.program_stack[-1]
+        self.program_stack.append(top)
+        self.putVariable(top)
 
     def exec_FLIPOFF(self):
         self.graphics_state['autoFlip'] = False
@@ -335,7 +337,6 @@ class ExecutionContext(object):
     def exec_FLIPRGOFF(self):
         self.program_stack_pop(2)
 
-
     def exec_FLIPRGON(self):
         self.program_stack_pop(2)
         
@@ -344,16 +345,18 @@ class ExecutionContext(object):
         res = self.unary_operation(op1, 'floor')
         self.program_stack[-1] = res
         v_op = self.getVariable()
-        if v_op.data == None:
-            self.assignVariable(v_op, op1)
-        resVar = self.getVariable(res)
+        self.putVariable(res, False)
+        resVar = self.topVar()
         self.current_instruction_intermediate.append(IR.FLOORMethodCall([v_op],resVar))
 
     def exec_GC(self):
         top = self.program_stack[-1]
         self.program_stack_pop()
+        v_op = self.getVariable()
         self.program_stack.append(dataType.AbstractValue())
-
+        self.putVariable(dataType.AbstractValue(), False)
+        resVar = self.getVariable()
+        self.current_instruction_intermediate.append(IR.GCMethodCall([v_op],resVar))
     def exec_GETINFO(self):
         '''
         if h.stack[-1]&(1<<0) != 0:
@@ -370,7 +373,11 @@ class ExecutionContext(object):
         h.stack[-1] = res
         '''
         self.program_stack_pop()
+        v_op = self.getVariable()
+        self.putVariable(dataType.EngineInfo(), False)
+        resVar = self.getVariable()
         self.program_stack.append(dataType.EngineInfo())
+        self.current_instruction_intermediate.append(IR.GETINFOMethodCall([v_op],resVar))
 
     def exec_GPV(self):
         op1 = self.program_stack[-2]
@@ -464,8 +471,10 @@ class ExecutionContext(object):
     def exec_MPPEM(self):
         if self.graphics_state['pv'] == (0, 1):
             self.program_stack.append(dataType.PPEM_Y())
+            self.putVariable(dataType.PPEM_Y())
         else:
             self.program_stack.append(dataType.PPEM_X())
+            self.putVariable(dataType.PPEM_X())
     def exec_MPS(self):
         raise NotImplementedError
     def exec_MSIRP(self):
@@ -502,6 +511,7 @@ class ExecutionContext(object):
         self.program_stack_pop()
         res = self.cvt[op]
         self.program_stack.append(res)
+        self.putVariable(res)
     def exec_RDTG(self):
         pass
 
@@ -526,7 +536,7 @@ class ExecutionContext(object):
             self.program_stack.append(res)
         except KeyError:
             raise KeyError
-            #self.program_stack.append(0)
+        
     def exec_RTDG(self):
         raise NotImplementedError
     def exec_RTG(self):
@@ -675,11 +685,7 @@ class ExecutionContext(object):
         self.program_stack_pop(2)
 
         v2 = self.getVariable()
-        if v2.data == None:
-            self.assignVariable(v2,op2)
         v1 = self.getVariable()
-        if v1.data == None:
-            self.assignVariable(v1,op1)
         return [op1,op2,v1,v2]
 
     def exec_WS(self):
@@ -738,8 +744,6 @@ class ExecutionContext(object):
         data = self.program_stack[-1]
         self.program_stack_pop()
         var = self.getVariable()
-        if var.data == None:
-            self.assignVariable(var,data)
         self.current_instruction_intermediate.append(IR.CallStatement(var))
         
 
@@ -751,8 +755,15 @@ class ExecutionContext(object):
 def setGSDefaults():
     intermediateCodes = []
     intermediateCodes.append(IR.CopyStatement(IR.AutoFlip(),IR.Boolean('true')))
+    intermediateCodes.append(IR.CopyStatement(IR.ScanControl(),IR.Boolean('false')))
+    intermediateCodes.append(IR.CopyStatement(IR.SingleWidthCutIn(),IR.Constant(0)))
+    intermediateCodes.append(IR.CopyStatement(IR.SingleWidthValue(),IR.Constant(0)))
     intermediateCodes.append(IR.CopyStatement(IR.FreedomVector(),IR.Constant(1)))
     intermediateCodes.append(IR.CopyStatement(IR.ProjectionVector(),IR.Constant(1)))
+    intermediateCodes.append(IR.CopyStatement(IR.LoopValue(),IR.Constant(1)))
+    intermediateCodes.append(IR.CopyStatement(IR.InstructControl(),IR.Constant(0)))
+    intermediateCodes.append(IR.CopyStatement(IR.MinimumDistance(),IR.Constant(1)))
+    intermediateCodes.append(IR.CopyStatement(IR.RoundState(),IR.Constant(1)))
     intermediateCodes.append(IR.CopyStatement(IR.ZP0(),IR.Constant(1)))
     intermediateCodes.append(IR.CopyStatement(IR.ZP1(),IR.Constant(1)))
     intermediateCodes.append(IR.CopyStatement(IR.ZP2(),IR.Constant(1)))
@@ -781,6 +792,8 @@ class Executor(object):
         self.program_state = {}
         self.maximum_stack_depth = 0
         self.intermediateCodes = []
+        self.conditionBlock = None
+        
     def execute_all(self):
         for key in self.font.local_programs.keys():
             self.execute(key)
