@@ -18,7 +18,7 @@ See [install.txt](https://github.com/behdad/fonttools/blob/master/Doc/install.tx
 
 #### What is TTX ?
 
-See [documentation.html](https://github.com/behdad/fonttools/blob/master/Doc/documentation.html) in the "Doc" subdirectory for TTX usage instructions and information about the TTX file format.
+See [documentation.html](https://rawgit.com/behdad/fonttools/master/Doc/documentation.html) in the "Doc" subdirectory for TTX usage instructions and information about the TTX file format.
 
 #### History
 
