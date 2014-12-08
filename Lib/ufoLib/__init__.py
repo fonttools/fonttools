@@ -87,6 +87,34 @@ DEFAULT_LAYER_NAME = "public.default"
 supportedUFOFormatVersions = [1, 2, 3]
 
 
+# --------------
+# Shared Methods
+# --------------
+
+def _getPlist(self, fileName, default=None):
+	"""
+	Read a property list relative to the
+	path argument of UFOReader. If the file
+	is missing and default is None a
+	UFOLibError will be raised otherwise
+	default is returned. The errors that
+	could be raised during the reading of
+	a plist are unpredictable and/or too
+	large to list, so, a blind try: except:
+	is done. If an exception occurs, a
+	UFOLibError will be raised.
+	"""
+	path = os.path.join(self._path, fileName)
+	if not os.path.exists(path):
+		if default is not None:
+			return default
+		else:
+			raise UFOLibError("%s is missing in %s. This file is required" % (fileName, self._path))
+	try:
+		return readPlist(path)
+	except:
+		raise UFOLibError("The file %s could not be read." % fileName)
+
 # ----------
 # UFO Reader
 # ----------
@@ -159,29 +187,7 @@ class UFOReader(object):
 
 	_checkForFile = staticmethod(os.path.exists)
 
-	def _getPlist(self, fileName, default=None):
-		"""
-		Read a property list relative to the
-		path argument of UFOReader. If the file
-		is missing and default is None a
-		UFOLibError will be raised otherwise
-		default is returned. The errors that
-		could be raised during the reading of
-		a plist are unpredictable and/or too
-		large to list, so, a blind try: except:
-		is done. If an exception occurs, a
-		UFOLibError will be raised.
-		"""
-		path = os.path.join(self._path, fileName)
-		if not os.path.exists(path):
-			if default is not None:
-				return default
-			else:
-				raise UFOLibError("%s is missing in %s. This file is required" % (fileName, self._path))
-		try:
-			return readPlist(path)
-		except:
-			raise UFOLibError("The file %s could not be read." % fileName)
+	_getPlist = _getPlist
 
 	def readBytesFromPath(self, path, encoding=None):
 		"""
