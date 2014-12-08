@@ -580,10 +580,7 @@ class UFOWriter(object):
 		# this will be needed for up and down conversion.
 		previousFormatVersion = None
 		if os.path.exists(path):
-			p = os.path.join(path, METAINFO_FILENAME)
-			if not os.path.exists(p):
-				raise UFOLibError("The metainfo.plist file is not in the existing UFO.")
-			metaInfo = self._readPlist(METAINFO_FILENAME)
+			metaInfo = self._getPlist(METAINFO_FILENAME)
 			previousFormatVersion = metaInfo.get("formatVersion")
 			try:
 				previousFormatVersion = int(previousFormatVersion)
@@ -627,22 +624,7 @@ class UFOWriter(object):
 
 	# support methods
 
-	def _readPlist(self, path):
-		"""
-		Read a property list. The errors that
-		could be raised during the reading of
-		a plist are unpredictable and/or too
-		large to list, so, a blind try: except:
-		is done. If an exception occurs, a
-		UFOLibError will be raised.
-		"""
-		originalPath = path
-		path = os.path.join(self._path, path)
-		try:
-			data = readPlist(path)
-			return data
-		except:
-			raise UFOLibError("The file %s could not be read." % originalPath)
+	_getPlist = _getPlist
 
 	def _writePlist(self, data, path):
 		"""
@@ -997,18 +979,14 @@ class UFOWriter(object):
 		are available on disk.
 		"""
 		# read the file on disk
-		path = os.path.join(self._path, LAYERCONTENTS_FILENAME)
-		if not os.path.exists(path):
-			raise UFOLibError("layercontents.plist is missing.")
+		raw = self._getPlist(LAYERCONTENTS_FILENAME)
 		contents = {}
-		if os.path.exists(path):
-			raw = self._readPlist(path)
-			valid, error = layerContentsValidator(raw, self._path)
-			if not valid:
-				raise UFOLibError(error)
-			for entry in raw:
-				layerName, directoryName = entry
-				contents[layerName] = directoryName
+		valid, error = layerContentsValidator(raw, self._path)
+		if not valid:
+			raise UFOLibError(error)
+		for entry in raw:
+			layerName, directoryName = entry
+			contents[layerName] = directoryName
 		self.layerContents = contents
 
 	def writeLayerContents(self, layerOrder=None):
