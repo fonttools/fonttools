@@ -991,12 +991,15 @@ class UFOWriter(object):
 		"""
 		if self.formatVersion < 3:
 			return
-		newOrder = []
-		for layerName in layerOrder:
-			if layerName is None:
-				layerName = DEFAULT_LAYER_NAME
-			newOrder.append(layerName)
-		layerOrder = newOrder
+		if layerOrder is not None:
+			newOrder = []
+			for layerName in layerOrder:
+				if layerName is None:
+					layerName = DEFAULT_LAYER_NAME
+				newOrder.append(layerName)
+			layerOrder = newOrder
+		else:
+			layerOrder = self.layerContents.keys()
 		if set(layerOrder) != set(self.layerContents.keys()):
 			raise UFOLibError("The layer order contents does not match the glyph sets that have been created.")
 		layerContents = [(layerName, self.layerContents[layerName]) for layerName in layerOrder]
