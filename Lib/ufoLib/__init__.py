@@ -626,7 +626,7 @@ class UFOWriter(object):
 
 	_getPlist = _getPlist
 
-	def _writePlist(self, data, path):
+	def _writePlist(self, fileName, data):
 		"""
 		Write a property list. The errors that
 		could be raised during the writing of
@@ -635,12 +635,17 @@ class UFOWriter(object):
 		is done. If an exception occurs, a
 		UFOLibError will be raised.
 		"""
-		originalPath = path
-		path = os.path.join(self._path, path)
+		self._makeDirectory()
+		path = os.path.join(self._path, fileName)
 		try:
 			data = writePlistAtomically(data, path)
 		except:
-			raise UFOLibError("The data for the file %s could not be written because it is not properly formatted." % originalPath)
+			raise UFOLibError("The data for the file %s could not be written because it is not properly formatted." % fileName)
+
+	def _deleteFile(self, fileName):
+		path = os.path.join(self._path, fileName)
+		if os.path.exists(path):
+			os.remove(path)
 
 	def _makeDirectory(self, subDirectory=None):
 		path = self._path
@@ -772,13 +777,11 @@ class UFOWriter(object):
 	# metainfo.plist
 
 	def _writeMetaInfo(self):
-		self._makeDirectory()
-		path = os.path.join(self._path, METAINFO_FILENAME)
 		metaInfo = dict(
 			creator=self._fileCreator,
 			formatVersion=self._formatVersion
 		)
-		self._writePlist(metaInfo, path)
+		self._writePlist(METAINFO_FILENAME, metaInfo)
 
 	# groups.plist
 
@@ -843,15 +846,13 @@ class UFOWriter(object):
 				remappedGroups[name] = contents
 			groups = remappedGroups
 		# pack and write
-		self._makeDirectory()
-		path = os.path.join(self._path, GROUPS_FILENAME)
 		groupsNew = {}
 		for key, value in groups.items():
 			groupsNew[key] = list(value)
 		if groupsNew:
-			self._writePlist(groupsNew, path)
-		elif os.path.exists(path):
-			os.remove(path)
+			self._writePlist(GROUPS_FILENAME, groupsNew)
+		else:
+			self._deleteFile(GROUPS_FILENAME)
 
 	# fontinfo.plist
 
@@ -863,8 +864,6 @@ class UFOWriter(object):
 		will be taken from the given object and written
 		into the file.
 		"""
-		self._makeDirectory()
-		path = os.path.join(self._path, FONTINFO_FILENAME)
 		# gather version 3 data
 		infoData = {}
 		for attr in fontInfoAttributesVersion3ValueData.keys():
@@ -887,7 +886,7 @@ class UFOWriter(object):
 			infoData = validateInfoVersion2Data(infoData)
 			infoData = _convertFontInfoDataVersion2ToVersion1(infoData)
 		# write file
-		self._writePlist(infoData, path)
+		self._writePlist(FONTINFO_FILENAME, infoData)
 
 	# kerning.plist
 
@@ -926,8 +925,6 @@ class UFOWriter(object):
 				remappedKerning[side1, side2] = value
 			kerning = remappedKerning
 		# pack and write
-		self._makeDirectory()
-		path = os.path.join(self._path, KERNING_FILENAME)
 		kerningDict = {}
 		for left, right in kerning.keys():
 			value = kerning[left, right]
@@ -935,9 +932,9 @@ class UFOWriter(object):
 				kerningDict[left] = {}
 			kerningDict[left][right] = value
 		if kerningDict:
-			self._writePlist(kerningDict, path)
-		elif os.path.exists(path):
-			os.remove(path)
+			self._writePlist(KERNING_FILENAME, kerningDict)
+		else:
+			self._deleteFile(KERNING_FILENAME)
 
 	# lib.plist
 
@@ -949,12 +946,10 @@ class UFOWriter(object):
 		valid, message = fontLibValidator(libDict)
 		if not valid:
 			raise UFOLibError(message)
-		self._makeDirectory()
-		path = os.path.join(self._path, LIB_FILENAME)
 		if libDict:
-			self._writePlist(libDict, path)
-		elif os.path.exists(path):
-			os.remove(path)
+			self._writePlist(LIB_FILENAME, libDict)
+		else:
+			self._deleteFile(LIB_FILENAME)
 
 	# features.fea
 
@@ -1004,10 +999,8 @@ class UFOWriter(object):
 		layerOrder = newOrder
 		if set(layerOrder) != set(self.layerContents.keys()):
 			raise UFOLibError("The layer order contents does not match the glyph sets that have been created.")
-		self._makeDirectory()
-		path = os.path.join(self._path, LAYERCONTENTS_FILENAME)
 		layerContents = [(layerName, self.layerContents[layerName]) for layerName in layerOrder]
-		self._writePlist(layerContents, path)
+		self._writePlist(LAYERCONTENTS_FILENAME, layerContents)
 
 	def _findDirectoryForLayerName(self, layerName):
 		foundDirectory = None
