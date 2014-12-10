@@ -2056,6 +2056,18 @@ def subset_glyphs(self, s):
   # to format=4 if there's not one.
   return True # Required table
 
+@_add_method(ttLib.getTableClass('maxp'))
+def prune_pre_subset(self, options):
+  if not options.hinting:
+    if self.tableVersion == 0x00010000:
+      self.maxZones = 1
+      self.maxTwilightPoints = 0
+      self.maxFunctionDefs = 0
+      self.maxInstructionDefs = 0
+      self.maxStackElements = 0
+      self.maxSizeOfInstructions = 0
+  return True
+
 @_add_method(ttLib.getTableClass('name'))
 def prune_pre_subset(self, options):
   if '*' not in options.name_IDs:
