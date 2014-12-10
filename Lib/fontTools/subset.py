@@ -195,9 +195,9 @@ Font table options:
       By default, the following tables are included in this list, as
       they do not need subsetting (ignore the fact that 'loca' is listed
       here): 'gasp', 'head', 'hhea', 'maxp', 'vhea', 'OS/2', 'loca',
-      'name', 'cvt ', 'fpgm', 'prep', and 'VMDX'. Tables that the tool does
-      not know how to subset and are not specified here will be dropped from
-      the font.
+      'name', 'cvt ', 'fpgm', 'prep', 'VMDX', and 'DSIG'. Tables that the tool
+      does not know how to subset and are not specified here will be dropped
+      from the font.
       Example:
          --no-subset-tables+=FFTM
             * Keep 'FFTM' table in the font by preventing subsetting.
@@ -2056,6 +2056,13 @@ def subset_glyphs(self, s):
   # to format=4 if there's not one.
   return True # Required table
 
+@_add_method(ttLib.getTableClass('DSIG'))
+def prune_pre_subset(self, options):
+  # Drop all signatures since they will be invalid
+  self.usNumSigs = 0
+  self.signatureRecords = []
+  return True
+
 @_add_method(ttLib.getTableClass('maxp'))
 def prune_pre_subset(self, options):
   if not options.hinting:
@@ -2117,7 +2124,8 @@ class Options(object):
   _drop_tables_default += ['Feat', 'Glat', 'Gloc', 'Silf', 'Sill']  # Graphite
   _drop_tables_default += ['CBLC', 'CBDT', 'sbix', 'COLR', 'CPAL']  # Color
   _no_subset_tables_default = ['gasp', 'head', 'hhea', 'maxp', 'vhea', 'OS/2',
-                               'loca', 'name', 'cvt ', 'fpgm', 'prep', 'VDMX']
+                               'loca', 'name', 'cvt ', 'fpgm', 'prep', 'VDMX',
+			       'DSIG']
   _hinting_tables_default = ['cvt ', 'fpgm', 'prep', 'hdmx', 'VDMX']
 
   # Based on HarfBuzz shapers
