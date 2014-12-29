@@ -15,28 +15,30 @@ def fixedToFloat(value, precisionBits):
 	fixed number in a 2.14 format, use precisionBits=14.  This is
 	pretty slow compared to a simple division.  Use sporadically.
 	
+	# Note: Python 3 prints 1.0 as "1", while Python 2 prints as "1.0".
+	# As such we avoid depending on that in the tests below.
 	>>> fixedToFloat(13107, 14)
 	0.8
 	>>> fixedToFloat(0, 14)
 	0.0
-	>>> fixedToFloat(0x4000, 14)
-	1.0
-	>>> fixedToFloat(-16384, 14)
-	-1.0
+	>>> fixedToFloat(0x4000, 14) == 1
+	True
+	>>> fixedToFloat(-16384, 14) == -1
+	True
 	>>> fixedToFloat(-16383, 14)
 	-0.99994
-	>>> fixedToFloat(16384, 14)
-	1.0
+	>>> fixedToFloat(16384, 14) == 1
+	True
 	>>> fixedToFloat(16383, 14)
 	0.99994
 	>>> fixedToFloat(-639, 6)
 	-9.99
-	>>> fixedToFloat(-640, 6)
-	-10.0
+	>>> fixedToFloat(-640, 6) == -10
+	True
 	>>> fixedToFloat(639, 6)
 	9.99
-	>>> fixedToFloat(640, 6)
-	10.0
+	>>> fixedToFloat(640, 6) == 10
+	True
 	"""
 
 	if not value: return 0.0
@@ -44,23 +46,24 @@ def fixedToFloat(value, precisionBits):
 	scale = 1 << precisionBits
 	value /= scale
 	eps = .5 / scale
-	digits = (precisionBits + 2) // 3
-	fmt = "%%.%df" % digits
-	lo = fmt % (value - eps)
-	hi = fmt % (value + eps)
-	assert (lo[0] != '-') == (hi[0] != '-') # Both should result in same sign
-	out = []
+	lo = value - eps
+	hi = value + eps
+	# If the range of valid choices spans an integer, return the integer.
+	if int(lo) != int(hi):
+		return round(value)
+	fmt = "%%.%df" % ((precisionBits + 2) // 3)
+	lo = fmt % lo
+	hi = fmt % hi
+	i = 0
 	length = min(len(lo), len(hi))
-	for i in range(length):
-		if lo[i] != hi[i]:
-			break;
-		out.append(lo[i])
-	outlen = len(out)
-	if outlen < length:
-		l = lo[outlen]
-		h = hi[outlen]
-		out.append(str((int(l) + int(h) + 1) // 2))
-	return float(strjoin(out))
+	while i < length and lo[i] == hi[i]:
+		i += 1
+	out = lo[:i]
+	assert -1 != out.find('.') # Both ends should be the same past decimal point
+	if i < length:
+		# Append mid-point digit of half-open range (l,h].
+		out = out + str((int(lo[i]) + int(hi[i]) + 1) // 2)
+	return float(out)
 
 def floatToFixed(value, precisionBits):
 	"""Converts a float to a fixed-point number given the number of
