@@ -21,6 +21,14 @@ def fixedToFloat(value, precisionBits):
 	0.0
 	>>> fixedToFloat(0x4000, 14)
 	1.0
+	>>> fixedToFloat(-16384, 14)
+	-1.0
+	>>> fixedToFloat(-16383, 14)
+	-0.99994
+	>>> fixedToFloat(16384, 14)
+	1.0
+	>>> fixedToFloat(16383, 14)
+	0.99994
 	"""
 
 	if not value: return 0.0
@@ -32,6 +40,7 @@ def fixedToFloat(value, precisionBits):
 	fmt = "%%.%df" % digits
 	lo = fmt % (value - eps)
 	hi = fmt % (value + eps)
+	assert (lo[0] != '-') == (hi[0] != '-') # Both should result in same sign
 	out = []
 	length = min(len(lo), len(hi))
 	for i in range(length):
@@ -40,7 +49,9 @@ def fixedToFloat(value, precisionBits):
 		out.append(lo[i])
 	outlen = len(out)
 	if outlen < length:
-		out.append(max(lo[outlen], hi[outlen]))
+		l = lo[outlen]
+		h = hi[outlen]
+		out.append(str((int(l) + int(h) + 1) // 2))
 	return float(strjoin(out))
 
 def floatToFixed(value, precisionBits):
