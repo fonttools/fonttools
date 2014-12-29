@@ -29,6 +29,14 @@ def fixedToFloat(value, precisionBits):
 	1.0
 	>>> fixedToFloat(16383, 14)
 	0.99994
+	>>> fixedToFloat(-639, 6)
+	-9.99
+	>>> fixedToFloat(-640, 6)
+	-10.0
+	>>> fixedToFloat(639, 6)
+	9.99
+	>>> fixedToFloat(640, 6)
+	10.0
 	"""
 
 	if not value: return 0.0
@@ -64,6 +72,10 @@ def floatToFixed(value, precisionBits):
 	16384
 	>>> floatToFixed(1, 14)
 	16384
+	>>> floatToFixed(-1.0, 14)
+	-16384
+	>>> floatToFixed(-1, 14)
+	-16384
 	>>> floatToFixed(0, 14)
 	0
 	"""
