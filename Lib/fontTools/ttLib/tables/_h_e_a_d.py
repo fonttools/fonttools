@@ -39,7 +39,7 @@ class table__h_e_a_d(DefaultTable.DefaultTable):
 	
 	def compile(self, ttFont):
 		if ttFont.recalcTimestamp:
-			self.modified = int(time.time() - epoch_diff)
+			self.modified = timestampNow()
 		data = sstruct.pack(headFormat, self)
 		return data
 	
