@@ -1,10 +1,8 @@
 from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval
-from ._h_e_a_d import mac_epoch_diff
+from fontTools.misc.timeTools import timestampFromString, timestampToString
 from . import DefaultTable
-import time
-import calendar
 
 FFTMFormat = """
 		>	# big endian
@@ -30,17 +28,14 @@ class table_F_F_T_M_(DefaultTable.DefaultTable):
     for name in names:
       value = getattr(self, name)
       if name in ("FFTimeStamp", "sourceCreated", "sourceModified"):
-        try:
-          value = time.asctime(time.gmtime(max(0, value + mac_epoch_diff)))
-        except ValueError:
-          value = time.asctime(time.gmtime(0))
+        value = timestampToString(value)
       writer.simpletag(name, value=value)
       writer.newline()
 
   def fromXML(self, name, attrs, content, ttFont):
     value = attrs["value"]
     if name in ("FFTimeStamp", "sourceCreated", "sourceModified"):
-      value = calendar.timegm(time.strptime(value)) - mac_epoch_diff
+      value = timestampFromString(value)
     else:
       value = safeEval(value)
     setattr(self, name, value)
