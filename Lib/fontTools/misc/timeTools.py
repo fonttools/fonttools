@@ -17,6 +17,7 @@ def timestampToString(value):
 		value = time.asctime(time.gmtime(max(0, value + epoch_diff)))
 	except (OverflowError, ValueError):
 		value = time.asctime(time.gmtime(0))
+	return value
 
 def timestampFromString(value):
 	return calendar.timegm(time.strptime(value)) - epoch_diff
