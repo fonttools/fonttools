@@ -50,6 +50,10 @@ class table__h_e_a_d(DefaultTable.DefaultTable):
 				warnings.warn("'%s' timestamp out of range; ignoring top bytes" % stamp)
 				value &= 0xFFFFFFFF
 				setattr(self, stamp, value)
+			if value < 0x7C259DC0: # January 1, 1970 00:00:00
+				warnings.warn("'%s' timestamp seems very low; regarding as unix timestamp" % stamp)
+				value += 0x7C259DC0
+				setattr(self, stamp, value)
 	
 	def compile(self, ttFont):
 		if ttFont.recalcTimestamp:
