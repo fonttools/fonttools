@@ -163,13 +163,13 @@ def _makeDict(instructionList):
 	mnemonicDict = {}
 	for op, mnemonic, argBits, name, pops, pushes in instructionList:
 		assert _mnemonicPat.match(mnemonic)
-		mnemonicDict[mnemonic] = op, argBits
+		mnemonicDict[mnemonic] = op, argBits, name
 		if argBits:
 			argoffset = op
 			for i in range(1 << argBits):
-				opcodeDict[op+i] = mnemonic, argBits, argoffset
+				opcodeDict[op+i] = mnemonic, argBits, argoffset, name
 		else:
-				opcodeDict[op] = mnemonic, 0, 0
+				opcodeDict[op] = mnemonic, 0, 0, name
 	return opcodeDict, mnemonicDict
 
 streamOpcodeDict, streamMnemonicDict = _makeDict(streamInstructions)
@@ -190,7 +190,7 @@ _token = "(%s)|(%s)|(%s)" % (_instruction, _number, _comment)
 _tokenRE = re.compile(_token)
 _whiteRE = re.compile(r"\s*")
 
-_pushCountPat = re.compile(r"[A-Z][A-Z0-9]*\s*\[.*?\]\s*/\* ([0-9]*).*?\*/")
+_pushCountPat = re.compile(r"[A-Z][A-Z0-9]*\s*\[.*?\]\s*/\* ([0-9]+).*?\*/")
 
 
 def _skipWhite(data, pos):
@@ -282,6 +282,7 @@ class Program(object):
 			dummy, mnemonic, arg, number, comment = m.groups()
 			pos = m.regs[0][1]
 			if comment:
+				pos = _skipWhite(assembly, pos)
 				continue
 			
 			arg = arg.strip()
@@ -290,7 +291,7 @@ class Program(object):
 				op = int(mnemonic[5:])
 				push(op)
 			elif mnemonic not in ("PUSH", "NPUSHB", "NPUSHW", "PUSHB", "PUSHW"):
-				op, argBits = mnemonicDict[mnemonic]
+				op, argBits, name = mnemonicDict[mnemonic]
 				if len(arg) != argBits:
 					raise tt_instructions_error("Incorrect number of argument bits (%s[%s])" % (mnemonic, arg))
 				if arg:
@@ -364,7 +365,7 @@ class Program(object):
 				else:
 					# Write exactly what we've been asked to
 					words = mnemonic[-1] == "W"
-					op, argBits = streamMnemonicDict[mnemonic]
+					op, argBits, name = streamMnemonicDict[mnemonic]
 					if mnemonic[0] != "N":
 						assert nArgs <= 8, nArgs
 						op = op + nArgs - 1
@@ -397,7 +398,7 @@ class Program(object):
 		while i < numBytecode:
 			op = bytecode[i]
 			try:
-				mnemonic, argBits, argoffset = opcodeDict[op]
+				mnemonic, argBits, argoffset, name = opcodeDict[op]
 			except KeyError:
 				if op in streamOpcodeDict:
 					values = []
@@ -405,7 +406,7 @@ class Program(object):
 					# Merge consecutive PUSH operations
 					while bytecode[i] in streamOpcodeDict:
 						op = bytecode[i]
-						mnemonic, argBits, argoffset = streamOpcodeDict[op]
+						mnemonic, argBits, argoffset, name = streamOpcodeDict[op]
 						words = mnemonic[-1] == "W"
 						if argBits:
 							nValues = op - argoffset + 1
@@ -434,7 +435,7 @@ class Program(object):
 						mnemonic = "PUSH"
 					nValues = len(values)
 					if nValues == 1:
-						assembly.append("%s[ ]" % mnemonic)
+						assembly.append("%s[ ]  /* 1 value pushed */" % mnemonic)
 					else:
 						assembly.append("%s[ ]  /* %s values pushed */" % (mnemonic, nValues))
 					assembly.extend(values)
@@ -443,9 +444,9 @@ class Program(object):
 					i = i + 1
 			else:
 				if argBits:
-					assembly.append(mnemonic + "[%s]" % num2binary(op - argoffset, argBits))
+					assembly.append(mnemonic + "[%s]  /* %s */" % (num2binary(op - argoffset, argBits), name))
 				else:
-					assembly.append(mnemonic + "[ ]")
+					assembly.append(mnemonic + "[ ]  /* %s */" % name)
 				i = i + 1
 		self.assembly = assembly
 
