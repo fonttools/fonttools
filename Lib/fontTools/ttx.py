@@ -17,6 +17,7 @@ usage: ttx [options] inputfile1 [... inputfileN]
        to be created.
     -o <outputfile> Specify a file to write the output to. A special
        value of of - would use the standard output.
+    -p use standard file name but don't append something, thous overwrite existing files.
     -v Verbose: more messages will be written to stdout about what
        is being done.
     -q Quiet: No messages will be written to stdout about what
@@ -85,7 +86,7 @@ def usage():
 numberAddedRE = re.compile("#\d+$")
 opentypeheaderRE = re.compile('''sfntVersion=['"]OTTO["']''')
 
-def makeOutputFileName(input, outputDir, extension):
+def makeOutputFileName(input, outputDir, extension, overWrite):
 	dirName, fileName = os.path.split(input)
 	fileName, ext = os.path.splitext(fileName)
 	if outputDir:
@@ -93,9 +94,10 @@ def makeOutputFileName(input, outputDir, extension):
 	fileName = numberAddedRE.split(fileName)[0]
 	output = os.path.join(dirName, fileName + extension)
 	n = 1
-	while os.path.exists(output):
-		output = os.path.join(dirName, fileName + "#" + repr(n) + extension)
-		n = n + 1
+	if not overWrite:
+		while os.path.exists(output):
+			output = os.path.join(dirName, fileName + "#" + repr(n) + extension)
+			n = n + 1
 	return output
 
 
@@ -104,6 +106,7 @@ class Options(object):
 	listTables = False
 	outputDir = None
 	outputFile = None
+	overWrite = False
 	verbose = False
 	quiet = False
 	splitTables = False
@@ -131,6 +134,8 @@ class Options(object):
 				self.outputDir = value
 			elif option == "-o":
 				self.outputFile = value
+			elif option == "-p":
+				self.overWrite = True
 			elif option == "-v":
 				self.verbose = True
 			elif option == "-q":
@@ -254,7 +259,7 @@ def guessFileType(fileName):
 
 def parseOptions(args):
 	try:
-		rawOptions, files = getopt.getopt(args, "ld:o:vqht:x:sim:z:baey:")
+		rawOptions, files = getopt.getopt(args, "ld:o:pvqht:x:sim:z:baey:")
 	except getopt.GetoptError:
 		usage()
 	
@@ -285,7 +290,7 @@ def parseOptions(args):
 		if options.outputFile:
 			output = options.outputFile
 		else:
-			output = makeOutputFileName(input, options.outputDir, extension)
+			output = makeOutputFileName(input, options.outputDir, extension, options.overWrite)
 		jobs.append((action, input, output))
 	return jobs, options
 
