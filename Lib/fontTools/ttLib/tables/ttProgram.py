@@ -435,18 +435,18 @@ class Program(object):
 						mnemonic = "PUSH"
 					nValues = len(values)
 					if nValues == 1:
-						assembly.append("%s[ ]  /* 1 value pushed */" % mnemonic)
+						assembly.append("%s[ ]	/* 1 value pushed */" % mnemonic)
 					else:
-						assembly.append("%s[ ]  /* %s values pushed */" % (mnemonic, nValues))
+						assembly.append("%s[ ]	/* %s values pushed */" % (mnemonic, nValues))
 					assembly.extend(values)
 				else:
 					assembly.append("INSTR%d[ ]" % op)
 					i = i + 1
 			else:
 				if argBits:
-					assembly.append(mnemonic + "[%s]  /* %s */" % (num2binary(op - argoffset, argBits), name))
+					assembly.append(mnemonic + "[%s]	/* %s */" % (num2binary(op - argoffset, argBits), name))
 				else:
-					assembly.append(mnemonic + "[ ]  /* %s */" % name)
+					assembly.append(mnemonic + "[ ]	/* %s */" % name)
 				i = i + 1
 		self.assembly = assembly
 
