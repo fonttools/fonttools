@@ -222,7 +222,7 @@ class Program(object):
 	
 	def getAssembly(self):
 		if not hasattr(self, "assembly"):
-			self._disassemble()
+			self._disassemble(preserve=True)
 		return self.assembly
 	
 	def toXML(self, writer, ttFont):
