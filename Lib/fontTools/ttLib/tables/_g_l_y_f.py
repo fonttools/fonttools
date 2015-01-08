@@ -793,6 +793,47 @@ class Glyph(object):
 	def removeHinting(self):
 		self.trim (remove_hinting=True)
 
+	def draw(self, pen, glyfTable, offset=0):
+
+		if self.isComposite():
+			for component in self.components:
+				glyphName, transform = component.getComponentInfo()
+				pen.addComponent(glyphName, transform)
+			return
+
+		coordinates, endPts, flags = self.getCoordinates(glyfTable)
+		if offset:
+			coordinates = coordinates + (offset, 0)
+		start = 0
+		for end in endPts:
+			end = end + 1
+			contour = coordinates[start:end]
+			cFlags = flags[start:end]
+			start = end
+			if 1 not in cFlags:
+				# There is not a single on-curve point on the curve,
+				# use pen.qCurveTo's special case by specifying None
+				# as the on-curve point.
+				contour.append(None)
+				pen.qCurveTo(*contour)
+			else:
+				# Shuffle the points so that contour the is guaranteed
+				# to *end* in an on-curve point, which we'll use for
+				# the moveTo.
+				firstOnCurve = cFlags.index(1) + 1
+				contour = contour[firstOnCurve:] + contour[:firstOnCurve]
+				cFlags = cFlags[firstOnCurve:] + cFlags[:firstOnCurve]
+				pen.moveTo(contour[-1])
+				while contour:
+					nextOnCurve = cFlags.index(1) + 1
+					if nextOnCurve == 1:
+						pen.lineTo(contour[0])
+					else:
+						pen.qCurveTo(*contour[:nextOnCurve])
+					contour = contour[nextOnCurve:]
+					cFlags = cFlags[nextOnCurve:]
+			pen.closePath()
+
 	def __ne__(self, other):
 		return not self.__eq__(other)
 	def __eq__(self, other):
