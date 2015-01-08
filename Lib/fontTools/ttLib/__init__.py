@@ -651,53 +651,53 @@ class TTFont(object):
 		"""Return a generic GlyphSet, which is a dict-like object
 		mapping glyph names to glyph objects. The returned glyph objects
 		have a .draw() method that supports the Pen protocol, and will
-		have an attribute named 'width', but only *after* the .draw() method
-		has been called.
+		have an attribute named 'width'.
 		
 		If the font is CFF-based, the outlines will be taken from the 'CFF '
 		table. Otherwise the outlines will be taken from the 'glyf' table.
 		If the font contains both a 'CFF ' and a 'glyf' table, you can use
 		the 'preferCFF' argument to specify which one should be taken.
 		"""
-		if preferCFF and "CFF " in self:
-			return list(self["CFF "].cff.values())[0].CharStrings
-		if "glyf" in self:
-			return _TTGlyphSet(self)
-		if "CFF " in self:
-			return list(self["CFF "].cff.values())[0].CharStrings
-		raise TTLibError("Font contains no outlines")
+		glyphs = None
+		if (preferCFF and "CFF " in self) or "glyf" not in self:
+			glyphs = _TTGlyphSet(self, list(self["CFF "].cff.values())[0].CharStrings, _TTGlyphCFF)
+
+		if glyphs is None and "glyf" in self:
+			glyphs = _TTGlyphSet(self, self["glyf"], _TTGlyphGlyf)
+
+		if glyphs is None:
+			raise TTLibError("Font contains no outlines")
+
+		return glyphs
 
 
 class _TTGlyphSet(object):
 	
-	"""Generic dict-like GlyphSet class, meant as a TrueType counterpart
-	to CFF's CharString dict. See TTFont.getGlyphSet().
+	"""Generic dict-like GlyphSet class that pulls metrics from hmtx and
+	glyph shape from TrueType or CFF.
 	"""
 	
-	# This class is distinct from the 'glyf' table itself because we need
-	# access to the 'hmtx' table, which could cause a dependency problem
-	# there when reading from XML.
-	
-	def __init__(self, ttFont):
-		self._ttFont = ttFont
+	def __init__(self, ttFont, glyphs, glyphType):
+		self._glyphs = glyphs
+		self._hmtx = ttFont['hmtx']
+		self._glyphType = glyphType
 	
 	def keys(self):
-		return list(self._ttFont["glyf"].keys())
+		return list(self._glyphs.keys())
 	
 	def has_key(self, glyphName):
-		return glyphName in self._ttFont["glyf"]
+		return glyphName in self._glyphs
 	
 	__contains__ = has_key
 
 	def __getitem__(self, glyphName):
-		return _TTGlyph(glyphName, self._ttFont)
+		return self._glyphType(self, self._glyphs[glyphName], self._hmtx[glyphName])
 
 	def get(self, glyphName, default=None):
 		try:
 			return self[glyphName]
 		except KeyError:
 			return default
-
 
 class _TTGlyph(object):
 	
@@ -706,17 +706,28 @@ class _TTGlyph(object):
 	argument. Additionally there is a 'width' attribute.
 	"""
 	
-	def __init__(self, glyphName, ttFont):
-		self._glyphName = glyphName
-		self._ttFont = ttFont
-		self.width, self.lsb = self._ttFont['hmtx'][self._glyphName]
-	
+	def __init__(self, glyphset, glyph, metrics):
+		self._glyphset = glyphset
+		self._glyph = glyph
+		self.width, self.lsb = metrics
+
 	def draw(self, pen):
 		"""Draw the glyph onto Pen. See fontTools.pens.basePen for details
 		how that works.
 		"""
-		glyfTable = self._ttFont['glyf']
-		glyph = glyfTable[self._glyphName]
+		self._glyph.draw(pen)
+
+class _TTGlyphCFF(_TTGlyph):
+	pass
+
+class _TTGlyphGlyf(_TTGlyph):
+
+	def draw(self, pen):
+		"""Draw the glyph onto Pen. See fontTools.pens.basePen for details
+		how that works.
+		"""
+		glyfTable = self._glyphset._glyphs
+		glyph = self._glyph
 		offset = self.lsb - glyph.xMin if hasattr(glyph, "xMin") else 0
 		glyph.draw(pen, glyfTable, offset)
 
