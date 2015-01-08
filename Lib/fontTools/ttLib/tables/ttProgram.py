@@ -332,11 +332,11 @@ class Program(object):
 						# Write words
 						if nWords:
 							if nWords <= 8:
-								op, argBits = streamMnemonicDict["PUSHW"]
+								op, argBits, name = streamMnemonicDict["PUSHW"]
 								op = op + nWords - 1
 								push(op)
 							else:
-								op, argBits = streamMnemonicDict["NPUSHW"]
+								op, argBits, name = streamMnemonicDict["NPUSHW"]
 								push(op)
 								push(nWords)
 							for value in args[:nWords]:
@@ -348,11 +348,11 @@ class Program(object):
 						if nBytes:
 							pass
 							if nBytes <= 8:
-								op, argBits = streamMnemonicDict["PUSHB"]
+								op, argBits, name = streamMnemonicDict["PUSHB"]
 								op = op + nBytes - 1
 								push(op)
 							else:
-								op, argBits = streamMnemonicDict["NPUSHB"]
+								op, argBits, name = streamMnemonicDict["NPUSHB"]
 								push(op)
 								push(nBytes)
 							for value in args[nWords:nWords+nBytes]:
