@@ -990,10 +990,14 @@ otData = [
 
 	('feat', [
 		('Version', 'Version', None, None, 'Version of the feat table-initially set to 0x00010000.'),
+		('FeatureNames', 'FeatureNames', None, None, 'The feature names.'),
+	]),
+
+	('FeatureNames', [
 		('uint16', 'FeatureNameCount', None, None, 'Number of entries in the feature name array.'),
 		('uint16', 'Reserved1', None, None, 'Reserved (set to zero).'),
 		('uint32', 'Reserved2', None, None, 'Reserved (set to zero).'),
-		('FeatureName', 'FeatureNames', 'FeatureNameCount', 0, 'The feature name array.'),
+		('FeatureName', 'FeatureName', 'FeatureNameCount', 0, 'The feature name array.'),
 	]),
 
 	('FeatureName', [
