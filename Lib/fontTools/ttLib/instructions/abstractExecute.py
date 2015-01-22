@@ -4,7 +4,7 @@ import copy
 import math
 import IntermediateCode as IR
 logger = logging.getLogger(" ")
-labelCounter = 0
+global_fucntion_table = {}
 class IdentifierGenerator(object):
     def __init__(self):
         self.countTable = {}
@@ -162,7 +162,8 @@ class ExecutionContext(object):
         expression = None
         if isinstance(op1,dataType.AbstractValue) or isinstance(op2,dataType.AbstractValue):
             res = dataType.Expression(op1, op2, action)
-            expression = IR.BinaryExpression(v_op1, v_op2, getattr(IR,action+'Operator')())
+            if action is not 'MAX' and action is not 'MIN':
+                expression = IR.BinaryExpression(v_op1, v_op2, getattr(IR,action+'Operator')())
         elif action is 'ADD':
             res = op1 + op2
             expression = IR.BinaryExpression(v_op1,v_op2,IR.ADDOperator())
@@ -199,7 +200,7 @@ class ExecutionContext(object):
             res = min(op1,op2)
         elif action is 'SUB':
             res = op1 - op2
-            expression = IR.BinaryExpression(v_op1,v_op2,IR.SubOperator())
+            expression = IR.BinaryExpression(v_op1,v_op2,IR.SUBOperator())
         else:
             raise NotImplementedError
         
@@ -220,9 +221,7 @@ class ExecutionContext(object):
     # Don't execute any cfg-related instructions
     # This has the effect of "executing both branches".
     def exec_IF(self):
-        res = self.program_stack[-1]
-        self.program_stack.pop()
-        return res
+        pass
     def exec_EIF(self):
         pass
     def exec_ELSE(self):
@@ -476,9 +475,9 @@ class ExecutionContext(object):
             self.program_stack.append(dataType.PPEM_X())
             self.putVariable(dataType.PPEM_X())
     def exec_MPS(self):
-        raise NotImplementedError
+        self.program_stack.append(dataType.PointSize())
     def exec_MSIRP(self):
-        raise NotImplementedError
+        self.program_stack_pop(2)
     def exec_MUL(self):
         self.program_stack_pop(2)
         self.program_stack.append(dataType.F26Dot6())
@@ -499,7 +498,7 @@ class ExecutionContext(object):
         else:
             self.program_stack[-1] = 0
     def exec_NROUND(self):
-        raise NotImplementedError
+        pass
     def exec_ODD(self):
         raise NotImplementedError
     def exec_OR(self):
@@ -538,17 +537,17 @@ class ExecutionContext(object):
             raise KeyError
         
     def exec_RTDG(self):
-        raise NotImplementedError
+        pass
     def exec_RTG(self):
-        raise NotImplementedError
+        pass
     def exec_RTHG(self):
-        raise NotImplementedError
+        pass
     def exec_RUTG(self):
-        raise NotImplementedError
+        pass
     def exec_S45ROUND(self):
-        raise NotImplementedError
+        self.program_stack_pop()
     def exec_SANGW(self):
-        raise NotImplementedError
+        self.program_stack_pop()
 
     def exec_SCANCTRL(self):
         self.program_stack_pop()
@@ -583,13 +582,13 @@ class ExecutionContext(object):
             self.graphics_state['fv'] = (1, 0)
            
     def exec_SFVTL(self):#Set Freedom Vector To Line
-        raise NotImplementedError
+        self.program_stack_pop(2)
 
     def exec_SFVTPV(self):#Set Freedom Vector To Projection Vector
         self.graphics_state['fv'] = self.graphics_state['gv']
 
     def exec_SHC(self):
-        raise NotImplementedError
+        self.program_stack_pop(1)
     def exec_SHP(self):
         loopValue = self.graphics_state['loop']
         self.graphics_state['loop'] = 1
@@ -597,13 +596,14 @@ class ExecutionContext(object):
             raise Exception("truetype: hinting: stack underflow")
         self.program_stack_pop(loopValue)
     def exec_SHPIX(self):
+        self.program_stack_pop()
         loopValue = self.graphics_state['loop']
         self.graphics_state['loop'] = 1
         if len(self.program_stack)<loopValue:
             raise Exception("truetype: hinting: stack underflow")
         self.program_stack_pop(loopValue)
     def exec_SHZ(self):
-        raise NotImplementedError
+        self.program_stack_pop(1)
     def exec_SLOOP(self):
         self.graphics_state['loop'] = self.program_stack[-1]
         self.program_stack_pop()
@@ -611,7 +611,8 @@ class ExecutionContext(object):
         self.program_stack_pop()
 
     def exec_SPVFS(self):
-        raise NotImplementedError
+        self.program_stack_pop(2)
+
     def exec_SPVTCA(self):
         data = self.current_instruction.data[0]
         assert (data is 1 or data is 0)
@@ -712,7 +713,7 @@ class ExecutionContext(object):
         #self.graphics_state['roundPeriod']
 
     def exec_SRP(self,index):#SetRefPoint
-        self.graphics_state['rp'][index] = self.program_stack[-1]
+        #self.graphics_state['rp'][index] = self.program_stack[-1]
         self.program_stack_pop()
 
     def exec_SRP0(self):
@@ -805,6 +806,10 @@ class Executor(object):
         top = self.environment.program_stack[-1]
         #if top not in self.program.call_function_set:
         self.program.call_function_set.append(top)
+        if top not in global_fucntion_table:
+            global_fucntion_table[top] = 1
+        else:
+            global_fucntion_table[top] += 1 
         logger.info('ADD CALL SET:%s', top)
         logger.info('ADD CALL SET:%s', self.program.call_function_set)
         self.environment.set_currentInstruction(self.program_ptr)
@@ -837,15 +842,35 @@ class Executor(object):
             
                 self.environment.set_currentInstruction(self.program_ptr)
                 intermediateCodes = self.environment.execute()
-                self.intermediateCodes = self.intermediateCodes+ intermediateCodes
+                if self.conditionBlock is None:
+                    self.intermediateCodes = self.intermediateCodes+ intermediateCodes
+                else:
+                    self.conditionBlock.appendStatements(intermediateCodes)
+
             if (len(self.environment.program_stack) > self.maximum_stack_depth):
                 self.maximum_stack_depth = len(self.environment.program_stack)
             
             if self.program_ptr.mnemonic == 'IF':
+                newBlock = IR.IfElseBlock(self.environment.variables[-1])
+                self.environment.program_stack.pop()
+                self.environment.variables.pop()
+                newBlock.setParent(self.conditionBlock)
+                self.conditionBlock = newBlock
+                self.conditionBlock.mode = 'IF'
                 top_if = self.program_ptr
                 successors_index.append(0)
                 back_ptr.append((self.program_ptr, copy.deepcopy(self.environment)))
+            
+            if self.program_ptr.mnemonic == 'ELSE':
+                self.conditionBlock.mode = 'else'
 
+            if self.program_ptr.mnemonic == 'EIF':
+                if self.conditionBlock.parentBlock == None:
+                    self.intermediateCodes.append(self.conditionBlock)
+                else:
+                    self.conditionBlock.parentBlock.appendStatement(self.conditionBlock)
+                self.conditionBlock = self.conditionBlock.parentBlock
+            
             logger.info(self.environment)
             if len(back_ptr) > 1:
                 s = ''
@@ -900,5 +925,10 @@ class Executor(object):
                 self.program_ptr = None
 
         for intermediateCode in self.intermediateCodes:
-            print intermediateCode
-        
+            try:
+                print intermediateCode
+            except:
+                pass
+        print self.program.call_function_set
+        for item in global_fucntion_table.items():
+            print item

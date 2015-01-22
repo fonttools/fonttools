@@ -236,6 +236,7 @@ def analysis(tt, glyphs=[]):
     absExecutor.execute('prep')
     environment_after_prep = copy.deepcopy(absExecutor.environment)
     for glyph in glyphs:
+        print(glyph)
         absExecutor.environment = copy.deepcopy(environment_after_prep)
         absExecutor.execute(glyph)
     return absExecutor
@@ -294,7 +295,6 @@ def process(jobs, options):
 
         ae = analysis(ttFont, glyphs)
         if (options.outputFunctions):
-            print("PREP")
             ttFont.programs['prep'].body.pretty_print()
             for key, value in ttFont.function_table.items():
                 print("Function #%d" % (key))
