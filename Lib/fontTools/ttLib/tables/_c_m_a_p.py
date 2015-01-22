@@ -751,7 +751,9 @@ class cmap_format_4(CmapSubtable):
 				endCode.extend(end)
 				startCode.append(charCode)
 				lastCode = charCode
-			endCode.append(lastCode)
+			start, end = splitRange(startCode[-1], lastCode, cmap)
+			startCode.extend(start)
+			endCode.extend(end)
 			startCode.append(0xffff)
 			endCode.append(0xffff)
 		
