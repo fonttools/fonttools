@@ -3,6 +3,7 @@ from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval, num2binary, binary2num
 from fontTools.misc.timeTools import timestampFromString, timestampToString, timestampNow
+from fontTools.misc.timeTools import epoch_diff as mac_epoch_diff # For backward compat
 from . import DefaultTable
 import warnings
 
