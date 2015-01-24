@@ -307,7 +307,7 @@ class ExecutionContext(object):
 
     def exec_DEPTH(self):#GetDepthStack
         depth = len(self.program_stack)
-        self.program_stack.append()
+        self.program_stack.append(depth)
         self.putVariable(depth)
     
     def exec_DIV(self):#Divide
