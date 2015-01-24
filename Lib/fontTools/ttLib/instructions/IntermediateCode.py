@@ -213,8 +213,7 @@ class MethodCallStatement(object):
         if self.returnVal is not None:
             repS = str(self.returnVal) + '='
     	repS += '{}('.format(self.methodName)
-        for parameter in self.parameters:
-	    repS += parameter.identifier
+        repS += ','.join(map(lambda x: str(x.identifier), self.parameters))
         repS += ')'
 	return repS
 
