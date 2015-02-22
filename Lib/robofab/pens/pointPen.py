@@ -17,7 +17,7 @@ class BasePointToSegmentPen(AbstractPointPen):
 	def __init__(self):
 		self.currentPath = None
 
-	def beginPath(self):
+	def beginPath(self, **kwargs):
 		assert self.currentPath is None
 		self.currentPath = []
 
