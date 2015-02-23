@@ -193,11 +193,12 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 		curOffset = len(datum) + doc_index_entry_format_0Size*numEntries
 		for doc, startGlyphID, endGlyphID in self.docList:
 			docOffset = curOffset
-			docLength = len(doc)
+                        docBytes = tobytes(doc, encoding="utf-8")
+			docLength = len(docBytes)
 			curOffset += docLength
 			entry = struct.pack(">HHLL", startGlyphID, endGlyphID, docOffset, docLength)
 			entryList.append(entry)
-			docList.append(tobytes(doc, encoding="utf-8"))
+			docList.append(docBytes)
 		entryList.extend(docList)
 		svgDocData = bytesjoin(entryList)
 
@@ -239,11 +240,12 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 		curOffset = SVG_format_1Size + doc_index_entry_format_0Size*numEntries
 		for doc, startGlyphID, endGlyphID in self.docList:
 			docOffset = curOffset
-			docLength = len(doc)
+                        docBytes = tobytes(doc, encoding="utf-8")
+			docLength = len(docBytes)
 			curOffset += docLength
 			entry = struct.pack(">HHLL", startGlyphID, endGlyphID, docOffset, docLength)
 			dataList.append(entry)
-			docList.append(tobytes(doc, encoding="utf-8"))
+			docList.append(docBytes)
 		dataList.extend(docList)
 		data = bytesjoin(dataList)
 		return data
