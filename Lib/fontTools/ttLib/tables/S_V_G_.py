@@ -163,7 +163,15 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 			for entry in entries:
 				start = entry.svgDocOffset + subTableStart
 				end = start + entry.svgDocLength
-				doc = tostr(data[start:end], "utf-8")
+				doc = data[start:end]
+				if doc.startswith(b"\x1f\x8b"):
+					import gzip
+					stringIO = StringIO(doc)
+					with gzip.GzipFile(None, "r", fileobj=stringIO) as gunzipper:
+						doc = gunzipper.read()
+					self.compressed = True
+					del stringIO
+				doc = tostr(doc, "utf-8")
 				self.docList.append( [doc, entry.startGlyphID, entry.endGlyphID] )
 
 	def compile(self, ttFont):
@@ -186,6 +194,15 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 		for doc, startGlyphID, endGlyphID in self.docList:
 			docOffset = curOffset
 			docBytes = tobytes(doc, encoding="utf-8")
+			if getattr(self, "compressed", False) and not docBytes.startswith(b"\x1f\x8b"):
+				import gzip
+				stringIO = StringIO()
+				with gzip.GzipFile(None, "w", fileobj=stringIO) as gzipper:
+					gzipper.write(docBytes)
+				gzipped = stringIO.getvalue()
+				if len(gzipped) < len(docBytes):
+					docBytes = gzipped
+				del gzipped, stringIO
 			docLength = len(docBytes)
 			curOffset += docLength
 			entry = struct.pack(">HHLL", startGlyphID, endGlyphID, docOffset, docLength)
