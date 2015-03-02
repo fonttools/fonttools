@@ -121,31 +121,25 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 			if numColorParams > 0:
 				colorPalettes.colorParamUINameIDs = colorParamUINameIDs = []
 				pos = pos + 2
-				i = 0
-				while i < numColorParams:
+				for i in range(numColorParams):
 					nameID = struct.unpack(">H", data[pos:pos+2])[0]
 					colorParamUINameIDs.append(nameID)
 					pos = pos + 2
-					i += 1
 
 				colorPalettes.numColorPalettes = numColorPalettes = struct.unpack(">H", data[pos:pos+2])[0]
 				pos = pos + 2
 				if numColorPalettes > 0:
 					colorPalettes.colorPaletteList = colorPaletteList = []
-					i = 0
-					while i < numColorPalettes:
+					for i in range(numColorPalettes):
 						colorPalette = ColorPalette()
 						colorPaletteList.append(colorPalette)
 						colorPalette.uiNameID = struct.unpack(">H", data[pos:pos+2])[0]
 						pos = pos + 2
 						colorPalette.paletteColors = paletteColors = []
-						j = 0
-						while j < numColorParams:
+						for j in range(numColorParams):
 							colorRecord, colorPaletteData = sstruct.unpack2(colorRecord_format_0, data[pos:], ColorRecord())
 							paletteColors.append(colorRecord)
-							j += 1
 							pos += 4
-						i += 1
 
 	def decompile_format_1(self, data, ttFont):
 		pos = 2
@@ -162,11 +156,9 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 			data2 = data[pos:]
 			self.docList = []
 			self.entries = entries = []
-			i = 0
-			while i < self.numEntries:
+			for i in range(self.numEntries):
 				docIndexEntry, data2 = sstruct.unpack2(doc_index_entry_format_0, data2, DocumentIndexEntry())
 				entries.append(docIndexEntry)
-				i += 1
 
 			for entry in entries:
 				start = entry.svgDocOffset + subTableStart
