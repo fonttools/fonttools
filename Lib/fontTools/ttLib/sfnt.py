@@ -436,9 +436,9 @@ def calcChecksum(data):
 	If the data length is not a multiple of four, it assumes
 	it is to be padded with null byte. 
 
-		>>> print calcChecksum(b"abcd")
+		>>> print(calcChecksum(b"abcd"))
 		1633837924
-		>>> print calcChecksum(b"abcdxyz")
+		>>> print(calcChecksum(b"abcdxyz"))
 		3655064932
 	"""
 	remainder = len(data) % 4
