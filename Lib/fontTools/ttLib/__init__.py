@@ -203,6 +203,12 @@ class TTFont(object):
 			# assume "file" is a writable file object
 			closeStream = 0
 
+		if self.flavor == "woff2":
+			from fontTools.ttLib import woff2
+			woff2.normaliseFont(self)
+			# don't reorder tables in WOFF2 as encoder already takes care of it
+			reorderTables = False
+		
 		tags = list(self.keys())
 		if "GlyphOrder" in tags:
 			tags.remove("GlyphOrder")
