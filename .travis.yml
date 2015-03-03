@@ -5,8 +5,13 @@ python:
   - "3.2"
   - "3.3"
   - "3.4"
+env:
+  global:
+    - PYTHONPATH=Lib
 install:
   - python setup.py install
+script:
+  - git grep -l doctest | xargs -n1 python
 notifications:
   irc: "irc.freenode.org##fonts"
   email: fonttools@googlegroups.com
