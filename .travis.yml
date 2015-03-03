@@ -5,6 +5,8 @@ python:
   - "3.2"
   - "3.3"
   - "3.4"
+install:
+  - python setup.py install
 notifications:
   irc: "irc.freenode.org##fonts"
   email: fonttools@googlegroups.com
