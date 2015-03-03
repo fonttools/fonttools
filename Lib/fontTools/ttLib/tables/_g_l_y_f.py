@@ -65,9 +65,15 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 		currentLocation = 0
 		dataList = []
 		recalcBBoxes = ttFont.recalcBBoxes
+		padData = ttFont.padGlyphData
 		for glyphName in self.glyphOrder:
 			glyph = self.glyphs[glyphName]
 			glyphData = glyph.compile(self, recalcBBoxes)
+			if padData:
+				length = len(glyphData)
+				paddedLength = (length + 3) & ~3
+				padding = b'\0' * (paddedLength - length)
+				glyphData = bytesjoin([glyphData, padding])
 			locations.append(currentLocation)
 			currentLocation = currentLocation + len(glyphData)
 			dataList.append(glyphData)
