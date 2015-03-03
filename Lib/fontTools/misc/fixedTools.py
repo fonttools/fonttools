@@ -87,5 +87,5 @@ def floatToFixed(value, precisionBits):
 
 
 if __name__ == "__main__":
-    import doctest
-    doctest.testmod()
+	import doctest, sys
+	sys.exit(doctest.testmod().failed)
