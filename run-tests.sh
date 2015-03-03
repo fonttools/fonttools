@@ -6,7 +6,7 @@ ret=0
 for test in $TESTS; do
 	echo "Running tests in $test"
 	if ! python -m doctest -v $test; then
-		let ret=ret+1
+		ret=$((ret+1))
 	fi
 done
 if test $ret != 0; then
