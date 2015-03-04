@@ -15,30 +15,28 @@ def fixedToFloat(value, precisionBits):
 	fixed number in a 2.14 format, use precisionBits=14.  This is
 	pretty slow compared to a simple division.  Use sporadically.
 	
-	# Note: Python 3 prints 1.0 as "1", while Python 2 prints as "1.0".
-	# As such we avoid depending on that in the tests below.
-	>>> fixedToFloat(13107, 14)
-	0.8
-	>>> fixedToFloat(0, 14)
-	0.0
-	>>> fixedToFloat(0x4000, 14) == 1
-	True
-	>>> fixedToFloat(-16384, 14) == -1
-	True
-	>>> fixedToFloat(-16383, 14)
-	-0.99994
-	>>> fixedToFloat(16384, 14) == 1
-	True
-	>>> fixedToFloat(16383, 14)
-	0.99994
-	>>> fixedToFloat(-639, 6)
-	-9.99
-	>>> fixedToFloat(-640, 6) == -10
-	True
-	>>> fixedToFloat(639, 6)
-	9.99
-	>>> fixedToFloat(640, 6) == 10
-	True
+	>>> "%g" % fixedToFloat(13107, 14)
+	'0.8'
+	>>> "%g" % fixedToFloat(0, 14)
+	'0'
+	>>> "%g" % fixedToFloat(0x4000, 14)
+	'1'
+	>>> "%g" % fixedToFloat(-16384, 14)
+	'-1'
+	>>> "%g" % fixedToFloat(-16383, 14)
+	'-0.99994'
+	>>> "%g" % fixedToFloat(16384, 14)
+	'1'
+	>>> "%g" % fixedToFloat(16383, 14)
+	'0.99994'
+	>>> "%g" % fixedToFloat(-639, 6)
+	'-9.99'
+	>>> "%g" % fixedToFloat(-640, 6)
+	'-10'
+	>>> "%g" % fixedToFloat(639, 6)
+	'9.99'
+	>>> "%g" % fixedToFloat(640, 6)
+	'10'
 	"""
 
 	if not value: return 0.0
