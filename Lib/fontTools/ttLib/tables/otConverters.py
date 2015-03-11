@@ -62,7 +62,7 @@ class BaseConverter(object):
 		self.tableClass = tableClass
 		self.isCount = name.endswith("Count")
 		self.isLookupType = name.endswith("LookupType")
-		self.isPropagated = name in ["ClassCount", "Class2Count", "FeatureTag", "SettingsCount"]
+		self.isPropagated = name in ["ClassCount", "Class2Count", "FeatureTag", "SettingsCount", "AxisCount"]
 	
 	def read(self, reader, font, tableDict):
 		"""Read a value from the reader."""
@@ -103,32 +103,6 @@ class ULong(IntValue):
 		return reader.readULong()
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		writer.writeULong(value)
-
-class Version(BaseConverter):
-	def read(self, reader, font, tableDict):
-		value = reader.readLong()
-		assert (value >> 16) == 1, "Unsupported version 0x%08x" % value
-		return  fi2fl(value, 16)
-	def write(self, writer, font, tableDict, value, repeatIndex=None):
-		if value < 0x10000:
-			value = fl2fi(value, 16)
-		value = int(round(value))
-		assert (value >> 16) == 1, "Unsupported version 0x%08x" % value
-		writer.writeLong(value)
-	def xmlRead(self, attrs, content, font):
-		value = attrs["value"]
-		value = float(int(value, 0)) if value.startswith("0") else float(value)
-		if value >= 0x10000:
-			value = fi2fl(value, 16)
-		return value
-	def xmlWrite(self, xmlWriter, font, value, name, attrs):
-		if value >= 0x10000:
-			value = fi2fl(value, 16)
-		if value % 1 != 0:
-			# Write as hex
-			value = "0x%08x" % fl2fi(value, 16)
-		xmlWriter.simpletag(name, attrs + [("value", value)])
-		xmlWriter.newline()
 
 class Short(IntValue):
 	def read(self, reader, font, tableDict):
@@ -180,6 +154,41 @@ class DeciPoints(FloatValue):
 
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		writer.writeUShort(int(round(value * 10)))
+
+class Fixed(FloatValue):
+	def read(self, reader, font, tableDict):
+		value = reader.readLong()
+		return  fi2fl(value, 16)
+	def write(self, writer, font, tableDict, value, repeatIndex=None):
+		value = fl2fi(value, 16)
+		writer.writeLong(value)
+
+class Version(BaseConverter):
+	def read(self, reader, font, tableDict):
+		value = reader.readLong()
+		assert (value >> 16) == 1, "Unsupported version 0x%08x" % value
+		return  fi2fl(value, 16)
+	def write(self, writer, font, tableDict, value, repeatIndex=None):
+		if value < 0x10000:
+			value = fl2fi(value, 16)
+		value = int(round(value))
+		assert (value >> 16) == 1, "Unsupported version 0x%08x" % value
+		writer.writeLong(value)
+	def xmlRead(self, attrs, content, font):
+		value = attrs["value"]
+		value = float(int(value, 0)) if value.startswith("0") else float(value)
+		if value >= 0x10000:
+			value = fi2fl(value, 16)
+		return value
+	def xmlWrite(self, xmlWriter, font, value, name, attrs):
+		if value >= 0x10000:
+			value = fi2fl(value, 16)
+		if value % 1 != 0:
+			# Write as hex
+			value = "0x%08x" % fl2fi(value, 16)
+		xmlWriter.simpletag(name, attrs + [("value", value)])
+		xmlWriter.newline()
+
 
 class Struct(BaseConverter):
 	
@@ -383,6 +392,7 @@ converterMapping = {
 	"Tag":         Tag,
 	"GlyphID":     GlyphID,
 	"DeciPoints":  DeciPoints,
+	"Fixed":       Fixed,
 	"struct":      Struct,
 	"Offset":      Table,
 	"LOffset":     LTable,
