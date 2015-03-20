@@ -487,18 +487,24 @@ class Glyph(object):
 	
 	def compileCoordinates(self):
 		assert len(self.coordinates) == len(self.flags)
-		data = b""
+		data = []
 		endPtsOfContours = array.array("h", self.endPtsOfContours)
 		if sys.byteorder != "big":
 			endPtsOfContours.byteswap()
-		data = data + endPtsOfContours.tostring()
+		data.append(endPtsOfContours.tostring())
 		instructions = self.program.getBytecode()
-		data = data + struct.pack(">h", len(instructions)) + instructions
+		data.append(struct.pack(">h", len(instructions)))
+		data.append(instructions)
 		nCoordinates = len(self.coordinates)
 		
 		coordinates = self.coordinates.copy()
+		if coordinates.isFloat():
+			# Warn?
+			xPoints = [int(round(x)) for x in xPoints]
+			yPoints = [int(round(y)) for y in xPoints]
 		coordinates.absoluteToRelative()
 		flags = self.flags
+
 		compressedflags = []
 		xPoints = []
 		yPoints = []
@@ -550,14 +556,12 @@ class Glyph(object):
 				repeat = 0
 				compressedflags.append(flag)
 			lastflag = flag
-		data = data + array.array("B", compressedflags).tostring()
-		if coordinates.isFloat():
-			# Warn?
-			xPoints = [int(round(x)) for x in xPoints]
-			yPoints = [int(round(y)) for y in xPoints]
-		data = data + struct.pack(*(xFormat,)+tuple(xPoints))
-		data = data + struct.pack(*(yFormat,)+tuple(yPoints))
-		return data
+		compressedFlags = array.array("B", compressedflags).tostring()
+		compressedXs = struct.pack(*(xFormat,)+tuple(xPoints))
+		compressedYs = struct.pack(*(yFormat,)+tuple(yPoints))
+
+		data.extend([compressedFlags, compressedXs, compressedYs])
+		return bytesjoin(data)
 	
 	def recalcBounds(self, glyfTable):
 		coords, endPts, flags = self.getCoordinates(glyfTable)
