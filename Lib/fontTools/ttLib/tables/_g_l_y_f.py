@@ -513,8 +513,6 @@ class Glyph(object):
 		compressedflags = []
 		xPoints = []
 		yPoints = []
-		xFormat = ">"
-		yFormat = ">"
 		lastflag = None
 		repeat = 0
 		for flag,(x,y) in zip(flags, deltas):
@@ -528,11 +526,9 @@ class Glyph(object):
 					flag = flag | flagXsame
 				else:
 					x = -x
-				xPoints.append(x)
-				xFormat = xFormat + 'B'
+				xPoints.append(bytechr(x))
 			else:
-				xPoints.append(x)
-				xFormat = xFormat + 'h'
+				xPoints.append(struct.pack(">h", x))
 			# do y
 			if y == 0:
 				flag = flag | flagYsame
@@ -542,11 +538,9 @@ class Glyph(object):
 					flag = flag | flagYsame
 				else:
 					y = -y
-				yPoints.append(y)
-				yFormat = yFormat + 'B'
+				yPoints.append(bytechr(y))
 			else:
-				yPoints.append(y)
-				yFormat = yFormat + 'h'
+				yPoints.append(struct.pack(">h", y))
 			# handle repeating flags
 			if flag == lastflag and repeat != 255:
 				repeat = repeat + 1
@@ -560,8 +554,8 @@ class Glyph(object):
 				compressedflags.append(flag)
 			lastflag = flag
 		compressedFlags = array.array("B", compressedflags).tostring()
-		compressedXs = struct.pack(*(xFormat,)+tuple(xPoints))
-		compressedYs = struct.pack(*(yFormat,)+tuple(yPoints))
+		compressedXs = bytesjoin(xPoints)
+		compressedYs = bytesjoin(yPoints)
 		return (compressedFlags, compressedXs, compressedYs)
 	
 	def recalcBounds(self, glyfTable):
