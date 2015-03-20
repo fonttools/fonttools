@@ -495,13 +495,16 @@ class Glyph(object):
 		instructions = self.program.getBytecode()
 		data.append(struct.pack(">h", len(instructions)))
 		data.append(instructions)
+
 		deltas = self.coordinates.copy()
 		if deltas.isFloat():
 			# Warn?
 			xPoints = [int(round(x)) for x in xPoints]
 			yPoints = [int(round(y)) for y in xPoints]
 		deltas.absoluteToRelative()
-		data.extend(self.compileDeltasGreedy(self.flags, deltas))
+		deltas = self.compileDeltasGreedy(self.flags, deltas)
+
+		data.extend(deltas)
 		return bytesjoin(data)
 
 	def compileDeltasGreedy(self, flags, deltas):
