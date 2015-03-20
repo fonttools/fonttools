@@ -514,10 +514,8 @@ class Glyph(object):
 		yFormat = ">"
 		lastflag = None
 		repeat = 0
-		for i in range(len(deltas)):
+		for flag,(x,y) in zip(flags, deltas):
 			# Oh, the horrors of TrueType
-			flag = flags[i]
-			x, y = deltas[i]
 			# do x
 			if x == 0:
 				flag = flag | flagXsame
