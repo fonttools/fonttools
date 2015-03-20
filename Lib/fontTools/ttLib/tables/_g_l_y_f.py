@@ -495,16 +495,18 @@ class Glyph(object):
 		instructions = self.program.getBytecode()
 		data.append(struct.pack(">h", len(instructions)))
 		data.append(instructions)
-		nCoordinates = len(self.coordinates)
-		
-		coordinates = self.coordinates.copy()
-		if coordinates.isFloat():
+		deltas = self.coordinates.copy()
+		if deltas.isFloat():
 			# Warn?
 			xPoints = [int(round(x)) for x in xPoints]
 			yPoints = [int(round(y)) for y in xPoints]
-		coordinates.absoluteToRelative()
-		flags = self.flags
+		deltas.absoluteToRelative()
+		data.extend(self.compileDeltasGreedy(self.flags, deltas))
+		return bytesjoin(data)
 
+	def compileDeltasGreedy(self, flags, deltas):
+		# Implements greedy algorithm for packing coordinate deltas:
+		# uses shortest representation one coordinate at a time.
 		compressedflags = []
 		xPoints = []
 		yPoints = []
@@ -512,10 +514,10 @@ class Glyph(object):
 		yFormat = ">"
 		lastflag = None
 		repeat = 0
-		for i in range(len(coordinates)):
+		for i in range(len(deltas)):
 			# Oh, the horrors of TrueType
 			flag = flags[i]
-			x, y = coordinates[i]
+			x, y = deltas[i]
 			# do x
 			if x == 0:
 				flag = flag | flagXsame
@@ -559,9 +561,7 @@ class Glyph(object):
 		compressedFlags = array.array("B", compressedflags).tostring()
 		compressedXs = struct.pack(*(xFormat,)+tuple(xPoints))
 		compressedYs = struct.pack(*(yFormat,)+tuple(yPoints))
-
-		data.extend([compressedFlags, compressedXs, compressedYs])
-		return bytesjoin(data)
+		return (compressedFlags, compressedXs, compressedYs)
 	
 	def recalcBounds(self, glyfTable):
 		coords, endPts, flags = self.getCoordinates(glyfTable)
