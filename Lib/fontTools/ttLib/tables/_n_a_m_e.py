@@ -61,7 +61,7 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 				name.offset, name.length = done[name.string]
 			else:
 				name.offset, name.length = done[name.string] = len(stringData), len(name.string)
-				stringData = stringData + name.string
+				stringData = bytesjoin([stringData, name.string])
 			data = data + sstruct.pack(nameRecordFormat, name)
 		return data + stringData
 	
