@@ -141,7 +141,7 @@ class CmapSubtable(object):
 
 	def isUnicode(self):
 		return (self.platformID == 0 or
-			(self.platformID == 3 and self.platEncID in [1, 10]))
+			(self.platformID == 3 and self.platEncID in [0, 1, 10]))
 
 	def isSymbol(self):
 		return self.platformID == 3 and self.platEncID == 0
