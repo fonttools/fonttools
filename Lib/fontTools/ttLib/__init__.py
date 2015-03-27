@@ -49,9 +49,11 @@ import sys
 haveMacSupport = 0
 if sys.platform == "mac":
 	haveMacSupport = 1
-elif sys.platform == "darwin" and sys.version_info[:3] != (2, 2, 0):
-	# Python 2.2's Mac support is broken, so don't enable it there.
-	haveMacSupport = 1
+elif sys.platform == "darwin":
+	if sys.version_info[:3] != (2, 2, 0) and sys.version_info[:1] < (3,):
+		# Python 2.2's Mac support is broken, so don't enable it there.
+		# Python 3 does not have Res used by macUtils
+		haveMacSupport = 1
 
 
 class TTLibError(Exception): pass
@@ -649,53 +651,53 @@ class TTFont(object):
 		"""Return a generic GlyphSet, which is a dict-like object
 		mapping glyph names to glyph objects. The returned glyph objects
 		have a .draw() method that supports the Pen protocol, and will
-		have an attribute named 'width', but only *after* the .draw() method
-		has been called.
+		have an attribute named 'width'.
 		
 		If the font is CFF-based, the outlines will be taken from the 'CFF '
 		table. Otherwise the outlines will be taken from the 'glyf' table.
 		If the font contains both a 'CFF ' and a 'glyf' table, you can use
 		the 'preferCFF' argument to specify which one should be taken.
 		"""
-		if preferCFF and "CFF " in self:
-			return list(self["CFF "].cff.values())[0].CharStrings
-		if "glyf" in self:
-			return _TTGlyphSet(self)
-		if "CFF " in self:
-			return list(self["CFF "].cff.values())[0].CharStrings
-		raise TTLibError("Font contains no outlines")
+		glyphs = None
+		if (preferCFF and "CFF " in self) or "glyf" not in self:
+			glyphs = _TTGlyphSet(self, list(self["CFF "].cff.values())[0].CharStrings, _TTGlyphCFF)
+
+		if glyphs is None and "glyf" in self:
+			glyphs = _TTGlyphSet(self, self["glyf"], _TTGlyphGlyf)
+
+		if glyphs is None:
+			raise TTLibError("Font contains no outlines")
+
+		return glyphs
 
 
 class _TTGlyphSet(object):
 	
-	"""Generic dict-like GlyphSet class, meant as a TrueType counterpart
-	to CFF's CharString dict. See TTFont.getGlyphSet().
+	"""Generic dict-like GlyphSet class that pulls metrics from hmtx and
+	glyph shape from TrueType or CFF.
 	"""
 	
-	# This class is distinct from the 'glyf' table itself because we need
-	# access to the 'hmtx' table, which could cause a dependency problem
-	# there when reading from XML.
-	
-	def __init__(self, ttFont):
-		self._ttFont = ttFont
+	def __init__(self, ttFont, glyphs, glyphType):
+		self._glyphs = glyphs
+		self._hmtx = ttFont['hmtx']
+		self._glyphType = glyphType
 	
 	def keys(self):
-		return list(self._ttFont["glyf"].keys())
+		return list(self._glyphs.keys())
 	
 	def has_key(self, glyphName):
-		return glyphName in self._ttFont["glyf"]
+		return glyphName in self._glyphs
 	
 	__contains__ = has_key
 
 	def __getitem__(self, glyphName):
-		return _TTGlyph(glyphName, self._ttFont)
+		return self._glyphType(self, self._glyphs[glyphName], self._hmtx[glyphName])
 
 	def get(self, glyphName, default=None):
 		try:
 			return self[glyphName]
 		except KeyError:
 			return default
-
 
 class _TTGlyph(object):
 	
@@ -704,58 +706,30 @@ class _TTGlyph(object):
 	argument. Additionally there is a 'width' attribute.
 	"""
 	
-	def __init__(self, glyphName, ttFont):
-		self._glyphName = glyphName
-		self._ttFont = ttFont
-		self.width, self.lsb = self._ttFont['hmtx'][self._glyphName]
-	
+	def __init__(self, glyphset, glyph, metrics):
+		self._glyphset = glyphset
+		self._glyph = glyph
+		self.width, self.lsb = metrics
+
 	def draw(self, pen):
 		"""Draw the glyph onto Pen. See fontTools.pens.basePen for details
 		how that works.
 		"""
-		glyfTable = self._ttFont['glyf']
-		glyph = glyfTable[self._glyphName]
-		if hasattr(glyph, "xMin"):
-			offset = self.lsb - glyph.xMin
-		else:
-			offset = 0
-		if glyph.isComposite():
-			for component in glyph:
-				glyphName, transform = component.getComponentInfo()
-				pen.addComponent(glyphName, transform)
-		else:
-			coordinates, endPts, flags = glyph.getCoordinates(glyfTable)
-			if offset:
-				coordinates = coordinates + (offset, 0)
-			start = 0
-			for end in endPts:
-				end = end + 1
-				contour = coordinates[start:end]
-				cFlags = flags[start:end]
-				start = end
-				if 1 not in cFlags:
-					# There is not a single on-curve point on the curve,
-					# use pen.qCurveTo's special case by specifying None
-					# as the on-curve point.
-					contour.append(None)
-					pen.qCurveTo(*contour)
-				else:
-					# Shuffle the points so that contour the is guaranteed
-					# to *end* in an on-curve point, which we'll use for
-					# the moveTo.
-					firstOnCurve = cFlags.index(1) + 1
-					contour = contour[firstOnCurve:] + contour[:firstOnCurve]
-					cFlags = cFlags[firstOnCurve:] + cFlags[:firstOnCurve]
-					pen.moveTo(contour[-1])
-					while contour:
-						nextOnCurve = cFlags.index(1) + 1
-						if nextOnCurve == 1:
-							pen.lineTo(contour[0])
-						else:
-							pen.qCurveTo(*contour[:nextOnCurve])
-						contour = contour[nextOnCurve:]
-						cFlags = cFlags[nextOnCurve:]
-				pen.closePath()
+		self._glyph.draw(pen)
+
+class _TTGlyphCFF(_TTGlyph):
+	pass
+
+class _TTGlyphGlyf(_TTGlyph):
+
+	def draw(self, pen):
+		"""Draw the glyph onto Pen. See fontTools.pens.basePen for details
+		how that works.
+		"""
+		glyfTable = self._glyphset._glyphs
+		glyph = self._glyph
+		offset = self.lsb - glyph.xMin if hasattr(glyph, "xMin") else 0
+		glyph.draw(pen, glyfTable, offset)
 
 
 class GlyphOrder(object):

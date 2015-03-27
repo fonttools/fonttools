@@ -171,6 +171,15 @@ Hinting options:
       might make the font unusable as a webfont as they will be rejected by
       OpenType Sanitizer used in common browsers. For more information see:
       https://github.com/behdad/fonttools/issues/144
+      The --desubroutinize options works around that bug.
+
+Optimization options:
+  --desubroutinize
+      Remove CFF use of subroutinizes.  Subroutinization is a way to make CFF
+      fonts smaller.  For small subsets however, desubroutinizing might make
+      the font smaller.  Also see note under --no-hinting.
+  --no-desubroutinize [default]
+      Leave CFF subroutinizes as is, only throw away unused subroutinizes.
 
 Font table options:
   --drop-tables[+|-]=<table>[,<table>...]
@@ -195,9 +204,9 @@ Font table options:
       By default, the following tables are included in this list, as
       they do not need subsetting (ignore the fact that 'loca' is listed
       here): 'gasp', 'head', 'hhea', 'maxp', 'vhea', 'OS/2', 'loca',
-      'name', 'cvt ', 'fpgm', 'prep', and 'VMDX'. Tables that the tool does
-      not know how to subset and are not specified here will be dropped from
-      the font.
+      'name', 'cvt ', 'fpgm', 'prep', 'VMDX', and 'DSIG'. Tables that the tool
+      does not know how to subset and are not specified here will be dropped
+      from the font.
       Example:
          --no-subset-tables+=FFTM
             * Keep 'FFTM' table in the font by preventing subsetting.
@@ -288,7 +297,7 @@ Example:
   Produce a subset containing the characters ' !"#$%' without performing
   size-reducing optimizations:
 
-  $ pyftsubset font.ttf U+0020 U+0021 U+0022 U+0023 U+0024 U+0025 \\
+  $ pyftsubset font.ttf --unicodes="U+0020-0025" \\
     --layout-features='*' --glyph-names --symbol-cmap --legacy-cmap \\
     --notdef-glyph --notdef-outline --recommended-glyphs \\
     --name-IDs='*' --name-legacy --name-languages='*'
@@ -732,7 +741,7 @@ def may_have_non_1to1(self):
              otTables.ChainContextSubst,
              otTables.ContextPos,
              otTables.ChainContextPos)
-def __classify_context(self):
+def __subset_classify_context(self):
 
   class ContextHelper(object):
     def __init__(self, klass, Format):
@@ -831,7 +840,7 @@ def __classify_context(self):
              otTables.ChainContextSubst)
 def closure_glyphs(self, s, cur_glyphs=None):
   if cur_glyphs is None: cur_glyphs = s.glyphs
-  c = self.__classify_context()
+  c = self.__subset_classify_context()
 
   indices = c.Coverage(self).intersect(s.glyphs)
   if not indices:
@@ -915,7 +924,7 @@ def closure_glyphs(self, s, cur_glyphs=None):
              otTables.ChainContextSubst,
              otTables.ChainContextPos)
 def subset_glyphs(self, s):
-  c = self.__classify_context()
+  c = self.__subset_classify_context()
 
   if self.Format == 1:
     indices = self.Coverage.subset(s.glyphs)
@@ -990,7 +999,7 @@ def subset_glyphs(self, s):
              otTables.ContextPos,
              otTables.ChainContextPos)
 def subset_lookups(self, lookup_indices):
-  c = self.__classify_context()
+  c = self.__subset_classify_context()
 
   if self.Format in [1, 2]:
     for rs in getattr(self, c.RuleSet):
@@ -1018,7 +1027,7 @@ def subset_lookups(self, lookup_indices):
              otTables.ContextPos,
              otTables.ChainContextPos)
 def collect_lookups(self):
-  c = self.__classify_context()
+  c = self.__subset_classify_context()
 
   if self.Format in [1, 2]:
     return [ll.LookupListIndex
@@ -1866,6 +1875,60 @@ class _DehintingT2Decompiler(psCharStrings.SimpleT2Decompiler):
         else:
           hints.last_hint = index - 2 # Leave the subr call in
 
+class _DesubroutinizingT2Decompiler(psCharStrings.SimpleT2Decompiler):
+
+  def __init__(self, localSubrs, globalSubrs):
+    psCharStrings.SimpleT2Decompiler.__init__(self,
+                                              localSubrs,
+                                              globalSubrs)
+
+  def execute(self, charString):
+    # Note: Currently we recompute _desubroutinized each time.  This
+    # is more robust in some cases, but in other places we assume
+    # that each subroutine always expands to the same code, so
+    # maybe it doesn't matter.  To speed up we can just not
+    # recompute _desubroutinized if it's there.  For now I just
+    # double-check that it desubroutinized to the same thing.
+    old_desubroutinized = charString._desubroutinized if hasattr(charString, '_desubroutinized') else None
+
+    charString._patches = []
+    psCharStrings.SimpleT2Decompiler.execute(self, charString)
+    desubroutinized = charString.program[:]
+    for idx,expansion in reversed (charString._patches):
+      assert idx >= 2
+      assert desubroutinized[idx - 1] in ['callsubr', 'callgsubr'], desubroutinized[idx - 1]
+      assert type(desubroutinized[idx - 2]) == int
+      if expansion[-1] == 'return':
+        expansion = expansion[:-1]
+      desubroutinized[idx-2:idx] = expansion
+    if 'endchar' in desubroutinized:
+      # Cut off after first endchar
+      desubroutinized = desubroutinized[:desubroutinized.index('endchar') + 1]
+    else:
+      if not len(desubroutinized) or desubroutinized[-1] != 'return':
+        desubroutinized.append('return')
+
+    charString._desubroutinized = desubroutinized
+    del charString._patches
+
+    if old_desubroutinized:
+      assert desubroutinized == old_desubroutinized
+
+  def op_callsubr(self, index):
+    subr = self.localSubrs[self.operandStack[-1]+self.localBias]
+    psCharStrings.SimpleT2Decompiler.op_callsubr(self, index)
+    self.processSubr(index, subr)
+
+  def op_callgsubr(self, index):
+    subr = self.globalSubrs[self.operandStack[-1]+self.globalBias]
+    psCharStrings.SimpleT2Decompiler.op_callgsubr(self, index)
+    self.processSubr(index, subr)
+
+  def processSubr(self, index, subr):
+    cs = self.callingStack[-1]
+    cs._patches.append((index, subr._desubroutinized))
+
+
 @_add_method(ttLib.getTableClass('CFF '))
 def prune_post_subset(self, options):
   cff = self.cff
@@ -1884,6 +1947,18 @@ def prune_post_subset(self, options):
       arr = font.FDArray
       arr.items = [arr[i] for i in indices]
       del arr.file, arr.offsets
+
+
+    #
+    # Desubroutinize if asked for
+    if options.desubroutinize:
+      for g in font.charset:
+        c,sel = cs.getItemAndSelector(g)
+        c.decompile()
+        subrs = getattr(c.private, "Subrs", [])
+        decompiler = _DesubroutinizingT2Decompiler(subrs, c.globalSubrs)
+        decompiler.execute(c)
+        c.program = c._desubroutinized
 
 
     #
@@ -1911,14 +1986,13 @@ def prune_post_subset(self, options):
       css = set()
       for g in font.charset:
         c,sel = cs.getItemAndSelector(g)
-        # Make sure it's decompiled.  We want our "decompiler" to walk
-        # the program, not the bytecode.
-        c.draw(basePen.NullPen())
+        c.decompile()
         subrs = getattr(c.private, "Subrs", [])
         decompiler = _DehintingT2Decompiler(css, subrs, c.globalSubrs)
         decompiler.execute(c)
       for charstring in css:
         charstring.drop_hints()
+      del css
 
       # Drop font-wide hinting values
       all_privs = []
@@ -1932,7 +2006,6 @@ def prune_post_subset(self, options):
                   'StemSnapH', 'StemSnapV', 'StdHW', 'StdVW']:
           if hasattr(priv, k):
             setattr(priv, k, None)
-
 
     #
     # Renumber subroutines to remove unused ones
@@ -2056,6 +2129,25 @@ def subset_glyphs(self, s):
   # to format=4 if there's not one.
   return True # Required table
 
+@_add_method(ttLib.getTableClass('DSIG'))
+def prune_pre_subset(self, options):
+  # Drop all signatures since they will be invalid
+  self.usNumSigs = 0
+  self.signatureRecords = []
+  return True
+
+@_add_method(ttLib.getTableClass('maxp'))
+def prune_pre_subset(self, options):
+  if not options.hinting:
+    if self.tableVersion == 0x00010000:
+      self.maxZones = 1
+      self.maxTwilightPoints = 0
+      self.maxFunctionDefs = 0
+      self.maxInstructionDefs = 0
+      self.maxStackElements = 0
+      self.maxSizeOfInstructions = 0
+  return True
+
 @_add_method(ttLib.getTableClass('name'))
 def prune_pre_subset(self, options):
   if '*' not in options.name_IDs:
@@ -2075,6 +2167,8 @@ def prune_pre_subset(self, options):
         n.string = "\x7f".encode('utf-16be') if n.isUnicode() else "\x7f"
       elif n.nameID == 3:
         n.string = ""
+      elif n.nameID in [16, 17, 18]:
+        continue
       namerecs.append(n)
     self.names = namerecs
   return True  # Required table
@@ -2103,7 +2197,8 @@ class Options(object):
   _drop_tables_default += ['Feat', 'Glat', 'Gloc', 'Silf', 'Sill']  # Graphite
   _drop_tables_default += ['CBLC', 'CBDT', 'sbix', 'COLR', 'CPAL']  # Color
   _no_subset_tables_default = ['gasp', 'head', 'hhea', 'maxp', 'vhea', 'OS/2',
-                               'loca', 'name', 'cvt ', 'fpgm', 'prep', 'VDMX']
+                               'loca', 'name', 'cvt ', 'fpgm', 'prep', 'VDMX',
+			       'DSIG']
   _hinting_tables_default = ['cvt ', 'fpgm', 'prep', 'hdmx', 'VDMX']
 
   # Based on HarfBuzz shapers
@@ -2148,6 +2243,7 @@ class Options(object):
   recalc_timestamp = False # Recalculate font modified timestamp
   canonical_order = False # Order tables as recommended
   flavor = None # May be 'woff'
+  desubroutinize = False # Desubroutinize CFF CharStrings
 
   def __init__(self, **kwargs):
 

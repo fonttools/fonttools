@@ -50,7 +50,7 @@ class table_T_S_I__1(DefaultTable.DefaultTable):
 				data = data + b"\015"  # align on 2-byte boundaries, fill with return chars. Yum.
 			name = glyphNames[i]
 			if name in self.glyphPrograms:
-				text = self.glyphPrograms[name]
+				text = tobytes(self.glyphPrograms[name])
 			else:
 				text = b""
 			textLength = len(text)
@@ -66,7 +66,7 @@ class table_T_S_I__1(DefaultTable.DefaultTable):
 				data = data + b"\015"  # align on 2-byte boundaries, fill with return chars.
 			code, name = codes[i]
 			if name in self.extraPrograms:
-				text = self.extraPrograms[name]
+				text = tobytes(self.extraPrograms[name])
 			else:
 				text = b""
 			textLength = len(text)
@@ -86,7 +86,7 @@ class table_T_S_I__1(DefaultTable.DefaultTable):
 				continue
 			writer.begintag("glyphProgram", name=name)
 			writer.newline()
-			writer.write_noindent(text.replace("\r", "\n"))
+			writer.write_noindent(text.replace(b"\r", b"\n"))
 			writer.newline()
 			writer.endtag("glyphProgram")
 			writer.newline()
@@ -98,7 +98,7 @@ class table_T_S_I__1(DefaultTable.DefaultTable):
 				continue
 			writer.begintag("extraProgram", name=name)
 			writer.newline()
-			writer.write_noindent(text.replace("\r", "\n"))
+			writer.write_noindent(text.replace(b"\r", b"\n"))
 			writer.newline()
 			writer.endtag("extraProgram")
 			writer.newline()

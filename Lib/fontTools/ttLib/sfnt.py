@@ -128,33 +128,22 @@ class SFNTWriter(object):
 	
 	def __setitem__(self, tag, data):
 		"""Write raw table data to disk."""
-		reuse = False
 		if tag in self.tables:
-			# We've written this table to file before. If the length
-			# of the data is still the same, we allow overwriting it.
-			entry = self.tables[tag]
-			assert not hasattr(entry.__class__, 'encodeData')
-			if len(data) != entry.length:
-				from fontTools import ttLib
-				raise ttLib.TTLibError("cannot rewrite '%s' table: length does not match directory entry" % tag)
-			reuse = True
-		else:
-			entry = self.DirectoryEntry()
-			entry.tag = tag
+			from fontTools import ttLib
+			raise ttLib.TTLibError("cannot rewrite '%s' table: length does not match directory entry" % tag)
 
+		entry = self.DirectoryEntry()
+		entry.tag = tag
+		entry.offset = self.nextTableOffset
 		if tag == 'head':
 			entry.checkSum = calcChecksum(data[:8] + b'\0\0\0\0' + data[12:])
 			self.headTable = data
 			entry.uncompressed = True
 		else:
 			entry.checkSum = calcChecksum(data)
-
-		entry.offset = self.nextTableOffset
 		entry.saveData (self.file, data)
 
-		if not reuse:
-			self.nextTableOffset = self.nextTableOffset + ((entry.length + 3) & ~3)
-
+		self.nextTableOffset = self.nextTableOffset + ((entry.length + 3) & ~3)
 		# Add NUL bytes to pad the table data to a 4-byte boundary.
 		# Don't depend on f.seek() as we need to add the padding even if no
 		# subsequent write follows (seek is lazy), ie. after the final table
@@ -447,9 +436,9 @@ def calcChecksum(data):
 	If the data length is not a multiple of four, it assumes
 	it is to be padded with null byte. 
 
-		>>> print calcChecksum(b"abcd")
+		>>> print(calcChecksum(b"abcd"))
 		1633837924
-		>>> print calcChecksum(b"abcdxyz")
+		>>> print(calcChecksum(b"abcdxyz"))
 		3655064932
 	"""
 	remainder = len(data) % 4
@@ -466,5 +455,5 @@ def calcChecksum(data):
 
 
 if __name__ == "__main__":
-    import doctest
-    doctest.testmod()
+	import doctest, sys
+	sys.exit(doctest.testmod().failed)

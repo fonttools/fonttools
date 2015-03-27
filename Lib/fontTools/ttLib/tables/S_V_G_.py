@@ -121,31 +121,25 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 			if numColorParams > 0:
 				colorPalettes.colorParamUINameIDs = colorParamUINameIDs = []
 				pos = pos + 2
-				i = 0
-				while i < numColorParams:
+				for i in range(numColorParams):
 					nameID = struct.unpack(">H", data[pos:pos+2])[0]
 					colorParamUINameIDs.append(nameID)
 					pos = pos + 2
-					i += 1
 
 				colorPalettes.numColorPalettes = numColorPalettes = struct.unpack(">H", data[pos:pos+2])[0]
 				pos = pos + 2
 				if numColorPalettes > 0:
 					colorPalettes.colorPaletteList = colorPaletteList = []
-					i = 0
-					while i < numColorPalettes:
+					for i in range(numColorPalettes):
 						colorPalette = ColorPalette()
 						colorPaletteList.append(colorPalette)
 						colorPalette.uiNameID = struct.unpack(">H", data[pos:pos+2])[0]
 						pos = pos + 2
 						colorPalette.paletteColors = paletteColors = []
-						j = 0
-						while j < numColorParams:
+						for j in range(numColorParams):
 							colorRecord, colorPaletteData = sstruct.unpack2(colorRecord_format_0, data[pos:], ColorRecord())
 							paletteColors.append(colorRecord)
-							j += 1
 							pos += 4
-						i += 1
 
 	def decompile_format_1(self, data, ttFont):
 		pos = 2
@@ -162,16 +156,22 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 			data2 = data[pos:]
 			self.docList = []
 			self.entries = entries = []
-			i = 0
-			while i < self.numEntries:
+			for i in range(self.numEntries):
 				docIndexEntry, data2 = sstruct.unpack2(doc_index_entry_format_0, data2, DocumentIndexEntry())
 				entries.append(docIndexEntry)
-				i += 1
 
 			for entry in entries:
 				start = entry.svgDocOffset + subTableStart
 				end = start + entry.svgDocLength
-				doc = tostr(data[start:end], "utf-8")
+				doc = data[start:end]
+				if doc.startswith(b"\x1f\x8b"):
+					import gzip
+					stringIO = StringIO(doc)
+					with gzip.GzipFile(None, "r", fileobj=stringIO) as gunzipper:
+						doc = gunzipper.read()
+					self.compressed = True
+					del stringIO
+				doc = tostr(doc, "utf-8")
 				self.docList.append( [doc, entry.startGlyphID, entry.endGlyphID] )
 
 	def compile(self, ttFont):
@@ -193,11 +193,21 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 		curOffset = len(datum) + doc_index_entry_format_0Size*numEntries
 		for doc, startGlyphID, endGlyphID in self.docList:
 			docOffset = curOffset
-			docLength = len(doc)
+			docBytes = tobytes(doc, encoding="utf-8")
+			if getattr(self, "compressed", False) and not docBytes.startswith(b"\x1f\x8b"):
+				import gzip
+				stringIO = StringIO()
+				with gzip.GzipFile(None, "w", fileobj=stringIO) as gzipper:
+					gzipper.write(docBytes)
+				gzipped = stringIO.getvalue()
+				if len(gzipped) < len(docBytes):
+					docBytes = gzipped
+				del gzipped, stringIO
+			docLength = len(docBytes)
 			curOffset += docLength
 			entry = struct.pack(">HHLL", startGlyphID, endGlyphID, docOffset, docLength)
 			entryList.append(entry)
-			docList.append(tobytes(doc, encoding="utf-8"))
+			docList.append(docBytes)
 		entryList.extend(docList)
 		svgDocData = bytesjoin(entryList)
 
@@ -239,11 +249,12 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 		curOffset = SVG_format_1Size + doc_index_entry_format_0Size*numEntries
 		for doc, startGlyphID, endGlyphID in self.docList:
 			docOffset = curOffset
-			docLength = len(doc)
+			docBytes = tobytes(doc, encoding="utf-8")
+			docLength = len(docBytes)
 			curOffset += docLength
 			entry = struct.pack(">HHLL", startGlyphID, endGlyphID, docOffset, docLength)
 			dataList.append(entry)
-			docList.append(tobytes(doc, encoding="utf-8"))
+			docList.append(docBytes)
 		dataList.extend(docList)
 		data = bytesjoin(dataList)
 		return data
