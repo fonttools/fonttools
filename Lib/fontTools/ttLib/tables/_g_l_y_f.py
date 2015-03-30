@@ -205,6 +205,68 @@ flagYsame = 0x20
 flagReserved1 = 0x40
 flagReserved2 = 0x80
 
+_flagSignBytes = {
+	0: 2,
+	flagXsame: 0,
+	flagXShort|flagXsame: +1,
+	flagXShort: -1,
+	flagYsame: 0,
+	flagYShort|flagYsame: +1,
+	flagYShort: -1,
+}
+
+def flagBest(x, y, onCurve):
+	"""For a given x,y delta pair, returns the flag that packs this pair
+	most efficiently, as well as the number of byte cost of such flag."""
+
+	flag = flagOnCurve if onCurve else 0
+	cost = 0
+	# do x
+	if x == 0:
+		flag = flag | flagXsame
+	elif -255 <= x <= 255:
+		flag = flag | flagXShort
+		if x > 0:
+			flag = flag | flagXsame
+		cost += 1
+	else:
+		cost += 2
+	# do y
+	if y == 0:
+		flag = flag | flagYsame
+	elif -255 <= y <= 255:
+		flag = flag | flagYShort
+		if y > 0:
+			flag = flag | flagYsame
+		cost += 1
+	else:
+		cost += 2
+	return flag, cost
+
+def flagFits(newFlag, oldFlag, mask):
+	newBytes = _flagSignBytes[newFlag & mask]
+	oldBytes = _flagSignBytes[oldFlag & mask]
+	return newBytes == oldBytes or abs(newBytes) > abs(oldBytes)
+
+def flagSupports(newFlag, oldFlag):
+	return ((oldFlag & flagOnCurve) == (newFlag & flagOnCurve) and
+		flagFits(newFlag, oldFlag, flagXsame|flagXShort) and
+		flagFits(newFlag, oldFlag, flagYsame|flagYShort))
+
+def flagEncodeCoord(flag, mask, coord, coordBytes):
+	byteCount = _flagSignBytes[flag & mask]
+	if byteCount == 1:
+		coordBytes.append(coord)
+	elif byteCount == -1:
+		coordBytes.append(-coord)
+	elif byteCount == 2:
+		coordBytes.append((coord >> 8) & 0xFF)
+		coordBytes.append(coord & 0xFF)
+
+def flagEncodeCoords(flag, x, y, xBytes, yBytes):
+	flagEncodeCoord(flag, flagXsame|flagXShort, x, xBytes)
+	flagEncodeCoord(flag, flagYsame|flagYShort, y, yBytes)
+
 
 ARG_1_AND_2_ARE_WORDS      = 0x0001  # if set args are words otherwise they are bytes 
 ARGS_ARE_XY_VALUES         = 0x0002  # if set args are xy values, otherwise they are points 
@@ -502,7 +564,10 @@ class Glyph(object):
 			xPoints = [int(round(x)) for x in xPoints]
 			yPoints = [int(round(y)) for y in xPoints]
 		deltas.absoluteToRelative()
+
+		# TODO(behdad): Add a configuration option for this?
 		deltas = self.compileDeltasGreedy(self.flags, deltas)
+		#deltas = self.compileDeltasOptimal(self.flags, deltas)
 
 		data.extend(deltas)
 		return bytesjoin(data)
@@ -556,6 +621,62 @@ class Glyph(object):
 		compressedFlags = array.array("B", compressedflags).tostring()
 		compressedXs = bytesjoin(xPoints)
 		compressedYs = bytesjoin(yPoints)
+		return (compressedFlags, compressedXs, compressedYs)
+
+	def compileDeltasOptimal(self, flags, deltas):
+		# Implements optimal, dynaic-programming, algorithm for packing coordinate
+		# deltas.  The savings are negligible :(.
+		candidates = []
+		bestTuple = None
+		bestCost = 0
+		repeat = 0
+		for flag,(x,y) in zip(flags, deltas):
+			# Oh, the horrors of TrueType
+			flag, coordBytes = flagBest(x, y, flag)
+			bestCost += 1 + coordBytes
+			newCandidates = [(bestCost, bestTuple, flag, coordBytes),
+					 (bestCost+1, bestTuple, (flag|flagRepeat), coordBytes)]
+			for lastCost,lastTuple,lastFlag,coordBytes in candidates:
+				if lastCost + coordBytes <= bestCost + 1 and (lastFlag & flagRepeat) and (lastFlag < 0xff00) and flagSupports(lastFlag, flag):
+					if (lastFlag & 0xFF) == (flag|flagRepeat) and lastCost == bestCost + 1:
+						continue
+					newCandidates.append((lastCost + coordBytes, lastTuple, lastFlag+256, coordBytes))
+			candidates = newCandidates
+			bestTuple = min(candidates, key=lambda t:t[0])
+			bestCost = bestTuple[0]
+
+		flags = []
+		while bestTuple:
+			cost, bestTuple, flag, coordBytes = bestTuple
+			flags.append(flag)
+		flags.reverse()
+
+		compressedFlags = array.array("B")
+		compressedXs = array.array("B")
+		compressedYs = array.array("B")
+		coords = iter(deltas)
+		ff = []
+		for flag in flags:
+			repeatCount, flag = flag >> 8, flag & 0xFF
+			compressedFlags.append(flag)
+			if flag & flagRepeat:
+				assert(repeatCount > 0)
+				compressedFlags.append(repeatCount)
+			else:
+				assert(repeatCount == 0)
+			for i in range(1 + repeatCount):
+				x,y = next(coords)
+				flagEncodeCoords(flag, x, y, compressedXs, compressedYs)
+				ff.append(flag)
+		try:
+			next(coords)
+			raise Exception("internal error")
+		except StopIteration:
+			pass
+		compressedFlags = compressedFlags.tostring()
+		compressedXs = compressedXs.tostring()
+		compressedYs = compressedYs.tostring()
+
 		return (compressedFlags, compressedXs, compressedYs)
 	
 	def recalcBounds(self, glyfTable):
