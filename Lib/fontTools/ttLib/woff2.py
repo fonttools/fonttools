@@ -40,7 +40,6 @@ def normaliseFont(ttFont):
 
 	if ttFont.sfntVersion == '\x00\x01\x00\x00':
 		ttFont.recalcBBoxes = True
-		ttFont.padGlyphData = True
 		# don't be lazy so that glyph data is 'expanded' on decompile
 		ttFont.lazy = False
 		# force decompile glyf table to perform normalisation steps above
@@ -434,7 +433,7 @@ class WOFF2GlyfTable(getTableClass('glyf')):
 
 	def __init__(self):
 		self.tableTag = Tag('glyf')
-		self.ttFont = TTFont(flavor="woff2", recalcBBoxes=False, padGlyphData=True)
+		self.ttFont = TTFont(flavor="woff2", recalcBBoxes=False)
 		self.ttFont['head'] = getTableClass('head')()
 		self.ttFont['maxp'] = getTableClass('maxp')()
 		self.ttFont['loca'] = getTableClass('loca')()

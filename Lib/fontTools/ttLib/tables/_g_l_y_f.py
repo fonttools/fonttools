@@ -65,7 +65,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 		currentLocation = 0
 		dataList = []
 		recalcBBoxes = ttFont.recalcBBoxes
-		padData = ttFont.padGlyphData
+		padData = ttFont.flavor == "woff2"
 		for glyphName in self.glyphOrder:
 			glyph = self.glyphs[glyphName]
 			glyphData = glyph.compile(self, recalcBBoxes)
