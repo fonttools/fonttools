@@ -27,14 +27,16 @@ def normaliseFont(ttFont):
 	only for 'normalised' font files. Normalisation occurs before any transforms,
 	and involves:
 		- removing the DSIG table, since the encoding process can invalidate it;
+		- setting bit 11 of head 'flags' field to indicate that the font has
+		  undergone a 'lossless modifying transform'.
+	For TrueType-flavoured OpenType fonts, normalisation also involves:
 		- recalculating simple glyph bounding boxes so they don't need to be stored
 		  in the bboxStream, but are recalculated by the decoder;
 		- padding glyph offsets to multiple of 4 bytes;
-		- setting bit 11 of head 'flags' field to indicate that the font has
-		  undergone a 'lossless modifying transform'.
 	"""
 	if "DSIG" in ttFont:
 		del ttFont["DSIG"]
+		ttFont['head'].flags |= 1 << 11
 
 	if ttFont.sfntVersion == '\x00\x01\x00\x00':
 		ttFont.recalcBBoxes = True
@@ -44,8 +46,6 @@ def normaliseFont(ttFont):
 		# force decompile glyf table to perform normalisation steps above
 		if not ttFont.isLoaded('glyf'):
 			ttFont['glyf']
-		# XXX Not clear if this also applies to CFF-flavoured fonts
-		ttFont['head'].flags |= 1 << 11
 
 
 class WOFF2Reader(SFNTReader):
