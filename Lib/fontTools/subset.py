@@ -850,7 +850,7 @@ def closure_glyphs(self, s, cur_glyphs):
       for r in getattr(rss[i], c.Rule):
         if not r: continue
         if all(all(c.Intersect(s.glyphs, cd, k) for k in klist)
-          for cd,klist in zip(ContextData, c.RuleData(r))):
+               for cd,klist in zip(ContextData, c.RuleData(r))):
           chaos = False
           for ll in getattr(r, c.LookupRecord):
             if not ll: continue
@@ -877,7 +877,7 @@ def closure_glyphs(self, s, cur_glyphs):
       for r in getattr(rss[i], c.Rule):
         if not r: continue
         if all(all(c.Intersect(s.glyphs, cd, k) for k in klist)
-          for cd,klist in zip(ContextData, c.RuleData(r))):
+               for cd,klist in zip(ContextData, c.RuleData(r))):
           chaos = False
           for ll in getattr(r, c.LookupRecord):
             if not ll: continue
@@ -933,7 +933,7 @@ def subset_glyphs(self, s):
       ss = getattr(rs, c.Rule)
       ss = [r for r in ss
             if r and all(all(g in s.glyphs for g in glist)
-              for glist in c.RuleData(r))]
+                         for glist in c.RuleData(r))]
       setattr(rs, c.Rule, ss)
       setattr(rs, c.RuleCount, len(ss))
     # Prune empty rulesets
@@ -964,7 +964,7 @@ def subset_glyphs(self, s):
       ss = getattr(rs, c.Rule)
       ss = [r for r in ss
             if r and all(all(k in klass_map for k in klist)
-              for klass_map,klist in zip(klass_maps, c.RuleData(r)))]
+                         for klass_map,klist in zip(klass_maps, c.RuleData(r)))]
       setattr(rs, c.Rule, ss)
       setattr(rs, c.RuleCount, len(ss))
 
