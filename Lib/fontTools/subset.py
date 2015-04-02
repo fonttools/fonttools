@@ -836,10 +836,10 @@ def __subset_classify_context(self):
 def closure_glyphs(self, s, cur_glyphs):
   c = self.__subset_classify_context()
 
-  indices = c.Coverage(self).intersect(s.glyphs)
+  indices = c.Coverage(self).intersect(cur_glyphs)
   if not indices:
     return []
-  cur_glyphs = c.Coverage(self).intersect_glyphs(s.glyphs);
+  cur_glyphs = c.Coverage(self).intersect_glyphs(cur_glyphs);
 
   if self.Format == 1:
     ContextData = c.ContextData(self)
