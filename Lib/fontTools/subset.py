@@ -851,23 +851,24 @@ def closure_glyphs(self, s, cur_glyphs):
       if i >= rssCount or not rss[i]: continue
       for r in getattr(rss[i], c.Rule):
         if not r: continue
-        if all(all(c.Intersect(s.glyphs, cd, k) for k in klist)
-               for cd,klist in zip(ContextData, c.RuleData(r))):
-          chaos = False
-          for ll in getattr(r, c.LookupRecord):
-            if not ll: continue
-            seqi = ll.SequenceIndex
-            # XXX Go into chaos mode upon duplicate seqi
-            if chaos:
-              pos_glyphs = None
+        if not all(all(c.Intersect(s.glyphs, cd, k) for k in klist)
+                   for cd,klist in zip(ContextData, c.RuleData(r))):
+          continue
+        chaos = False
+        for ll in getattr(r, c.LookupRecord):
+          if not ll: continue
+          seqi = ll.SequenceIndex
+          # XXX Go into chaos mode upon duplicate seqi
+          if chaos:
+            pos_glyphs = None
+          else:
+            if seqi == 0:
+              pos_glyphs = frozenset([c.Coverage(self).glyphs[i]])
             else:
-              if seqi == 0:
-                pos_glyphs = frozenset([c.Coverage(self).glyphs[i]])
-              else:
-                pos_glyphs = frozenset([r.Input[seqi - 1]])
-            lookup = s.table.LookupList.Lookup[ll.LookupListIndex]
-            chaos = chaos or lookup.may_have_non_1to1()
-            recursions.add((lookup, pos_glyphs))
+              pos_glyphs = frozenset([r.Input[seqi - 1]])
+          lookup = s.table.LookupList.Lookup[ll.LookupListIndex]
+          chaos = chaos or lookup.may_have_non_1to1()
+          recursions.add((lookup, pos_glyphs))
   elif self.Format == 2:
     ClassDef = getattr(self, c.ClassDef)
     indices = ClassDef.intersect(cur_glyphs)
@@ -878,23 +879,24 @@ def closure_glyphs(self, s, cur_glyphs):
       if i >= rssCount or not rss[i]: continue
       for r in getattr(rss[i], c.Rule):
         if not r: continue
-        if all(all(c.Intersect(s.glyphs, cd, k) for k in klist)
-               for cd,klist in zip(ContextData, c.RuleData(r))):
-          chaos = False
-          for ll in getattr(r, c.LookupRecord):
-            if not ll: continue
-            seqi = ll.SequenceIndex
-            # XXX Go into chaos mode upon duplicate seqi
-            if chaos:
-              pos_glyphs = None
+        if not all(all(c.Intersect(s.glyphs, cd, k) for k in klist)
+                   for cd,klist in zip(ContextData, c.RuleData(r))):
+          continue
+        chaos = False
+        for ll in getattr(r, c.LookupRecord):
+          if not ll: continue
+          seqi = ll.SequenceIndex
+          # XXX Go into chaos mode upon duplicate seqi
+          if chaos:
+            pos_glyphs = None
+          else:
+            if seqi == 0:
+              pos_glyphs = frozenset(ClassDef.intersect_class(cur_glyphs, i))
             else:
-              if seqi == 0:
-                pos_glyphs = frozenset(ClassDef.intersect_class(cur_glyphs, i))
-              else:
-                pos_glyphs = frozenset(ClassDef.intersect_class(s.glyphs, getattr(r, c.Input)[seqi - 1]))
-            lookup = s.table.LookupList.Lookup[ll.LookupListIndex]
-            chaos = chaos or lookup.may_have_non_1to1()
-            recursions.add((lookup, pos_glyphs))
+              pos_glyphs = frozenset(ClassDef.intersect_class(s.glyphs, getattr(r, c.Input)[seqi - 1]))
+          lookup = s.table.LookupList.Lookup[ll.LookupListIndex]
+          chaos = chaos or lookup.may_have_non_1to1()
+          recursions.add((lookup, pos_glyphs))
   elif self.Format == 3:
     cur_glyphs = frozenset(cur_glyphs)
     if not all(x.intersect(s.glyphs) for x in c.RuleData(self)):
