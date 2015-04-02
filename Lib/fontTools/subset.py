@@ -384,8 +384,7 @@ def remap(self, class_map):
                          for g,v in self.classDefs.items())
 
 @_add_method(otTables.SingleSubst)
-def closure_glyphs(self, s, cur_glyphs=None):
-  if cur_glyphs is None: cur_glyphs = s.glyphs
+def closure_glyphs(self, s, cur_glyphs):
   s.glyphs.update(v for g,v in self.mapping.items() if g in cur_glyphs)
 
 @_add_method(otTables.SingleSubst)
@@ -395,8 +394,7 @@ def subset_glyphs(self, s):
   return bool(self.mapping)
 
 @_add_method(otTables.MultipleSubst)
-def closure_glyphs(self, s, cur_glyphs=None):
-  if cur_glyphs is None: cur_glyphs = s.glyphs
+def closure_glyphs(self, s, cur_glyphs):
   indices = self.Coverage.intersect(cur_glyphs)
   _set_update(s.glyphs, *(self.Sequence[i].Substitute for i in indices))
 
@@ -413,8 +411,7 @@ def subset_glyphs(self, s):
   return bool(self.SequenceCount)
 
 @_add_method(otTables.AlternateSubst)
-def closure_glyphs(self, s, cur_glyphs=None):
-  if cur_glyphs is None: cur_glyphs = s.glyphs
+def closure_glyphs(self, s, cur_glyphs):
   _set_update(s.glyphs, *(vlist for g,vlist in self.alternates.items()
                           if g in cur_glyphs))
 
@@ -427,8 +424,7 @@ def subset_glyphs(self, s):
   return bool(self.alternates)
 
 @_add_method(otTables.LigatureSubst)
-def closure_glyphs(self, s, cur_glyphs=None):
-  if cur_glyphs is None: cur_glyphs = s.glyphs
+def closure_glyphs(self, s, cur_glyphs):
   _set_update(s.glyphs, *([seq.LigGlyph for seq in seqs
                            if all(c in s.glyphs for c in seq.Component)]
                           for g,seqs in self.ligatures.items()
@@ -446,8 +442,7 @@ def subset_glyphs(self, s):
   return bool(self.ligatures)
 
 @_add_method(otTables.ReverseChainSingleSubst)
-def closure_glyphs(self, s, cur_glyphs=None):
-  if cur_glyphs is None: cur_glyphs = s.glyphs
+def closure_glyphs(self, s, cur_glyphs):
   if self.Format == 1:
     indices = self.Coverage.intersect(cur_glyphs)
     if(not indices or
@@ -838,8 +833,7 @@ def __subset_classify_context(self):
 
 @_add_method(otTables.ContextSubst,
              otTables.ChainContextSubst)
-def closure_glyphs(self, s, cur_glyphs=None):
-  if cur_glyphs is None: cur_glyphs = s.glyphs
+def closure_glyphs(self, s, cur_glyphs):
   c = self.__subset_classify_context()
 
   indices = c.Coverage(self).intersect(s.glyphs)
@@ -861,8 +855,9 @@ def closure_glyphs(self, s, cur_glyphs=None):
           for ll in getattr(r, c.LookupRecord):
             if not ll: continue
             seqi = ll.SequenceIndex
+            # XXX Go into chaos mode upon duplicate seqi
             if chaos:
-              pos_glyphs = s.glyphs
+              pos_glyphs = None
             else:
               if seqi == 0:
                 pos_glyphs = set([c.Coverage(self).glyphs[i]])
@@ -887,8 +882,9 @@ def closure_glyphs(self, s, cur_glyphs=None):
           for ll in getattr(r, c.LookupRecord):
             if not ll: continue
             seqi = ll.SequenceIndex
+            # XXX Go into chaos mode upon duplicate seqi
             if chaos:
-              pos_glyphs = s.glyphs
+              pos_glyphs = None
             else:
               if seqi == 0:
                 pos_glyphs = ClassDef.intersect_class(cur_glyphs, i)
@@ -906,8 +902,9 @@ def closure_glyphs(self, s, cur_glyphs=None):
     for ll in getattr(r, c.LookupRecord):
       if not ll: continue
       seqi = ll.SequenceIndex
+      # XXX Go into chaos mode upon duplicate seqi
       if chaos:
-        pos_glyphs = s.glyphs
+        pos_glyphs = None
       else:
         if seqi == 0:
           pos_glyphs = cur_glyphs
@@ -1041,7 +1038,7 @@ def collect_lookups(self):
     assert 0, "unknown format: %s" % self.Format
 
 @_add_method(otTables.ExtensionSubst)
-def closure_glyphs(self, s, cur_glyphs=None):
+def closure_glyphs(self, s, cur_glyphs):
   if self.Format == 1:
     self.ExtSubTable.closure_glyphs(s, cur_glyphs)
   else:
@@ -1096,9 +1093,21 @@ def collect_lookups(self):
 
 @_add_method(otTables.Lookup)
 def closure_glyphs(self, s, cur_glyphs=None):
+  if cur_glyphs is None:
+    if self in s._doneLookups:
+      return
+    s._doneLookups.add(self)
+    cur_glyphs = s.glyphs
+  #print(cur_glyphs)
+  if self in s._activeLookups:
+    raise Exception("Circular loop in lookup recursion")
+  s._activeLookups.append(self)
+  #print([id(l) for l in s._activeLookups])#xxx
   for st in self.SubTable:
     if not st: continue
     st.closure_glyphs(s, cur_glyphs)
+  assert(s._activeLookups[-1] == self)
+  del s._activeLookups[-1]
 
 @_add_method(otTables.Lookup)
 def prune_pre_subset(self, options):
@@ -1284,6 +1293,8 @@ def closure_glyphs(self, s):
   else:
     lookup_indices = []
   if self.table.LookupList:
+    s._activeLookups = []
+    s._doneLookups = set()
     while True:
       orig_glyphs = s.glyphs.copy()
       for i in lookup_indices:
@@ -1292,6 +1303,7 @@ def closure_glyphs(self, s):
         self.table.LookupList.Lookup[i].closure_glyphs(s)
       if orig_glyphs == s.glyphs:
         break
+    del s._activeLookups, s._doneLookups
   del s.table
 
 @_add_method(ttLib.getTableClass('GSUB'),
@@ -1418,7 +1430,7 @@ def prune_post_subset(self, options):
   if table.LookupList:
     table.LookupList.prune_post_subset(options);
     # XXX Next two lines disabled because OTS is stupid and
-    # doesn't like NULL offsetse here.
+    # doesn't like NULL offsets here.
     #if not table.LookupList.Lookup:
     #  table.LookupList = None
 
@@ -1431,14 +1443,14 @@ def prune_post_subset(self, options):
     self.prune_features()
 
   # XXX Next two lines disabled because OTS is stupid and
-  # doesn't like NULL offsetse here.
+  # doesn't like NULL offsets here.
   #if table.FeatureList and not table.FeatureList.FeatureRecord:
   #  table.FeatureList = None
 
   # Never drop scripts themselves as them just being available
   # holds semantic significance.
   # XXX Next two lines disabled because OTS is stupid and
-  # doesn't like NULL offsetse here.
+  # doesn't like NULL offsets here.
   #if table.ScriptList and not table.ScriptList.ScriptRecord:
   #  table.ScriptList = None
 
