@@ -89,6 +89,46 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 
 
 class NameRecord(object):
+
+	_encodingMap =	{
+		0: { # Unicode
+			0: 'utf-16be',
+			1: 'utf-16be',
+			2: 'utf-16be',
+			3: 'utf-16be',
+			4: 'utf-16be',
+			5: 'utf-16be',
+			6: 'utf-16be',
+		},
+		1: { # Macintosh
+			0: 'macroman',
+			1: 'shift-jis',
+		},
+		2: { # ISO
+			0: 'ascii',
+			1: 'utf-16be',
+			2: 'latin1',
+		},
+		3: { # Microsoft
+			0: 'utf-16be',
+			1: 'utf-16be',
+			2: 'shift-jis',
+			3: 'gb2312',
+			4: 'big5',
+			5: 'wansung',
+			6: 'johab',
+			10: 'utf-16be',
+		},
+	}
+
+	def getEncoding(self):
+		return self._encodingMap.get(self.platformID, {}).get(self.platEncID, None)
+
+	def __str__(self):
+		try:
+			return tounicode(self.string, encoding=self.getEncoding())
+		except UnicodeDecodeError:
+			return str(self.string)
 	
 	def isUnicode(self):
 		return (self.platformID == 0 or
