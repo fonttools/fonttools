@@ -5,6 +5,8 @@ python:
   - "3.2"
   - "3.3"
   - "3.4"
+  - "pypy"
+  - "pypy3"
 install:
   - make install
 script:
