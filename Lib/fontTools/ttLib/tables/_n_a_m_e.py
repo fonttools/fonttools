@@ -48,15 +48,16 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 			# only happens when there are NO name table entries read
 			# from the TTX file
 			self.names = []
-		self.names.sort()  # sort according to the spec; see NameRecord.__lt__()
+		names = self.names
+		names.sort() # sort according to the spec; see NameRecord.__lt__()
 		stringData = b""
 		format = 0
-		n = len(self.names)
+		n = len(names)
 		stringOffset = 6 + n * sstruct.calcsize(nameRecordFormat)
 		data = struct.pack(">HHH", format, n, stringOffset)
 		lastoffset = 0
 		done = {}  # remember the data so we can reuse the "pointers"
-		for name in self.names:
+		for name in names:
 			if name.string in done:
 				name.offset, name.length = done[name.string]
 			else:
