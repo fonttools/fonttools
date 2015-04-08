@@ -124,9 +124,12 @@ class NameRecord(object):
 	def getEncoding(self):
 		return self._encodingMap.get(self.platformID, {}).get(self.platEncID, None)
 
+	def encodingIsUnicodeCompatible(self):
+		return self.getEncoding() in ['utf-16be', 'ucs2be', 'ascii', 'latin1']
+
 	def __str__(self):
 		try:
-			return tounicode(self.string, encoding=self.getEncoding())
+			return self.toUnicode()
 		except UnicodeDecodeError:
 			return str(self.string)
 	
@@ -134,23 +137,32 @@ class NameRecord(object):
 		return (self.platformID == 0 or
 			(self.platformID == 3 and self.platEncID in [0, 1, 10]))
 
+	def toUnicode(self):
+		return tounicode(self.string, encoding=self.getEncoding())
+
 	def toXML(self, writer, ttFont):
-		writer.begintag("namerecord", [
+		encoding = self.getEncoding()
+		try:
+			unistr = self.toUnicode()
+		except UnicodeDecodeError:
+			unistr = None
+
+		attrs = [
 				("nameID", self.nameID),
 				("platformID", self.platformID),
 				("platEncID", self.platEncID),
 				("langID", hex(self.langID)),
-						])
+			]
+
+		if not self.encodingIsUnicodeCompatible():
+			attrs.append(("unicode", unistr is not None))
+
+		writer.begintag("namerecord", attrs)
 		writer.newline()
-		if self.isUnicode():
-			if len(self.string) % 2:
-				# no, shouldn't happen, but some of the Apple
-				# tools cause this anyway :-(
-				writer.write16bit(self.string + b"\0", strip=True)
-			else:
-				writer.write16bit(self.string, strip=True)
+		if unistr is not None:
+			writer.write(unistr)
 		else:
-			writer.write8bit(self.string, strip=True)
+			writer.write8bit(self.string)
 		writer.newline()
 		writer.endtag("namerecord")
 		writer.newline()
@@ -161,8 +173,9 @@ class NameRecord(object):
 		self.platEncID = safeEval(attrs["platEncID"])
 		self.langID =  safeEval(attrs["langID"])
 		s = strjoin(content).strip()
-		if self.isUnicode():
-			self.string = s.encode("utf_16_be")
+		encoding = self.getEncoding()
+		if self.encodingIsUnicodeCompatible() or safeEval(attrs.get("unicode", "False")):
+			self.string = s.encode(encoding)
 		else:
 			# This is the inverse of write8bit...
 			self.string = s.encode("latin1")

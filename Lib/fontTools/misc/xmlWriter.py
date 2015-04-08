@@ -53,9 +53,6 @@ class XMLWriter(object):
 		'latin-1'."""
 		self._writeraw(escape8bit(data), strip=strip)
 
-	def write16bit(self, data, strip=False):
-		self._writeraw(escape16bit(data), strip=strip)
-	
 	def write_noindent(self, string):
 		"""Writes text without indentation."""
 		self._writeraw(escape(string), indent=False)
@@ -163,24 +160,6 @@ def escape8bit(data):
 		else:
 			return "&#" + repr(n) + ";"
 	return strjoin(map(escapechar, data.decode('latin-1')))
-
-def escape16bit(data):
-	import array
-	a = array.array("H")
-	a.fromstring(data)
-	if sys.byteorder != "big":
-		a.byteswap()
-	def escapenum(n, amp=byteord("&"), lt=byteord("<")):
-		if n == amp:
-			return "&amp;"
-		elif n == lt:
-			return "&lt;"
-		elif 32 <= n <= 127:
-			return chr(n)
-		else:
-			return "&#" + repr(n) + ";"
-	return strjoin(map(escapenum, a))
-
 
 def hexStr(s):
 	h = string.hexdigits
