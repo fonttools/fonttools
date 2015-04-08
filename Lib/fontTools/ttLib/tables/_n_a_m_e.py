@@ -58,11 +58,12 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 		lastoffset = 0
 		done = {}  # remember the data so we can reuse the "pointers"
 		for name in names:
-			if name.string in done:
-				name.offset, name.length = done[name.string]
+			string = name.toBytes()
+			if string in done:
+				name.offset, name.length = done[string]
 			else:
-				name.offset, name.length = done[name.string] = len(stringData), len(name.string)
-				stringData = bytesjoin([stringData, name.string])
+				name.offset, name.length = done[string] = len(stringData), len(string)
+				stringData = bytesjoin([stringData, string])
 			data = data + sstruct.pack(nameRecordFormat, name)
 		return data + stringData
 	
@@ -140,6 +141,9 @@ class NameRecord(object):
 
 	def toUnicode(self):
 		return tounicode(self.string, encoding=self.getEncoding())
+
+	def toBytes(self):
+		return tobytes(self.string, encoding=self.getEncoding())
 
 	def toXML(self, writer, ttFont):
 		encoding = self.getEncoding()
