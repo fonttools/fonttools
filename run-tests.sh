@@ -1,11 +1,13 @@
 #!/bin/sh
-PYTHONPATH="Lib:$PYTHONPATH"
+cd Lib
+PYTHONPATH=".:$PYTHONPATH"
 export PYTHONPATH
-TESTS=`git grep -l doctest Lib/`
+TESTS=`git grep -l doctest`
 ret=0
 for test in $TESTS; do
 	echo "Running tests in $test"
-	if ! python -m doctest -v $test; then
+	test=`echo "$test" | sed 's@[/\\]@.@g;s@[.]py$@@'`
+	if ! python -m $test -v; then
 		ret=$((ret+1))
 	fi
 done
