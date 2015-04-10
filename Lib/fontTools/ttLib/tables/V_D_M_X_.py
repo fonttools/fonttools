@@ -139,7 +139,7 @@ class table_V_D_M_X_(DefaultTable.DefaultTable):
 			endsz = max(group.keys())
 			gHeader = {'recs': recs, 'startsz': startsz, 'endsz': endsz}
 			data += sstruct.pack(VDMX_GroupFmt, gHeader)
-			for yPelHeight, (yMax, yMin) in group.items():
+			for yPelHeight, (yMax, yMin) in sorted(group.items()):
 				vTable = {'yPelHeight': yPelHeight, 'yMax': yMax, 'yMin': yMin}
 				data += sstruct.pack(VDMX_vTableFmt, vTable)
 		return data
