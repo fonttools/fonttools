@@ -54,6 +54,7 @@ def _moduleFinderHint():
 	from . import _h_m_t_x
 	from . import _k_e_r_n
 	from . import _l_o_c_a
+	from . import _l_t_a_g
 	from . import _m_a_x_p
 	from . import _n_a_m_e
 	from . import _p_o_s_t
