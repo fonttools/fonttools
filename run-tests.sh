@@ -2,7 +2,7 @@
 cd Lib
 PYTHONPATH=".:$PYTHONPATH"
 export PYTHONPATH
-TESTS=`git grep -l -e doctest -e unittest`
+TESTS=`grep -r --include='*.py' -l -e doctest -e unittest *`
 ret=0
 for test in $TESTS; do
 	echo "Running tests in $test"
