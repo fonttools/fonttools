@@ -18,21 +18,26 @@ class XMLWriter(object):
 		if fileOrPath == '-':
 			fileOrPath = sys.stdout
 		if not hasattr(fileOrPath, "write"):
-			try:
-				# Python3 has encoding support.
-				self.file = open(fileOrPath, "w", encoding="utf-8")
-			except TypeError:
-				self.file = open(fileOrPath, "w")
+			self.file = open(fileOrPath, "wb")
 		else:
 			# assume writable file object
 			self.file = fileOrPath
-		self.indentwhite = indentwhite
+
+		# Figure out if writer expects bytes or unicodes
+		try:
+			self.file.write(tounicode(''))
+			self.totype = tounicode
+		except TypeError:
+			self.file.write(b'')
+			self.totype = tobytes
+		self.indentwhite = self.totype(indentwhite)
+		self.newlinestr = self.totype('\n')
 		self.indentlevel = 0
 		self.stack = []
 		self.needindent = 1
 		self.idlefunc = idlefunc
 		self.idlecounter = 0
-		self._writeraw('<?xml version="1.0" encoding="utf-8"?>')
+		self._writeraw(b'<?xml version="1.0" encoding="utf-8"?>')
 		self.newline()
 	
 	def close(self):
@@ -62,13 +67,13 @@ class XMLWriter(object):
 		if indent and self.needindent:
 			self.file.write(self.indentlevel * self.indentwhite)
 			self.needindent = 0
-		s = tostr(data, encoding="utf-8")
+		s = self.totype(data, encoding="utf-8")
 		if (strip):
 			s = s.strip()
 		self.file.write(s)
 	
 	def newline(self):
-		self.file.write("\n")
+		self.file.write(self.newlinestr)
 		self.needindent = 1
 		idlecounter = self.idlecounter
 		if not idlecounter % 100 and self.idlefunc is not None:
