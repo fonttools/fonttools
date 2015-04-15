@@ -24,7 +24,7 @@ class XMLWriter(object):
 			self.file = fileOrPath
 
 		# Figure out if writer expects bytes or unicodes
-		if 'b' in self.file.mode:
+		if isinstance(self.file, StringIO) or 'b' in self.file.mode:
 			self.totype = tobytes
 		else:
 			self.totype = tounicode
