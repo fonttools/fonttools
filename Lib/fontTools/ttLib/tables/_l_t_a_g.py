@@ -15,7 +15,7 @@ class table__l_t_a_g(DefaultTable.DefaultTable):
 		for i in range(numTags):
 			pos = 12 + i * 4
 			offset, length = struct.unpack(">HH", data[pos:pos+4])
-			tag = data[offset:offset+length]
+			tag = data[offset:offset+length].decode("ascii")
 			self.tags.append(tag)
 
 	def compile(self, ttFont):
