@@ -29,20 +29,20 @@ def normaliseFont(ttFont):
 		- removing the DSIG table, since the encoding process can invalidate it;
 		- setting bit 11 of head 'flags' field to indicate that the font has
 		  undergone a 'lossless modifying transform'.
-	For TrueType-flavoured OpenType fonts, normalisation also involves:
-		- recalculating simple glyph bounding boxes so they don't need to be stored
-		  in the bboxStream, but are recalculated by the decoder;
-		- padding glyph offsets to multiple of 4 bytes;
+	For TrueType-flavoured OpenType fonts, normalisation also involves padding
+	glyph offsets to multiple of 4 bytes.
 	"""
 	if "DSIG" in ttFont:
 		del ttFont["DSIG"]
 		ttFont['head'].flags |= 1 << 11
 
+	# The notion of "nominal size" has been removed from the WOFF2 Specification,
+	# but as of today (15 April 2015) most decoders still expects padded data.
+	# TODO(user): delete next block once glyph padding is no longer required
 	if ttFont.sfntVersion == '\x00\x01\x00\x00':
-		ttFont.recalcBBoxes = True
 		# don't be lazy so that glyph data is 'expanded' on decompile
 		ttFont.lazy = False
-		# force decompile glyf table to perform normalisation steps above
+		# decompile glyf table to perform padding normalisation upon compile
 		if not ttFont.isLoaded('glyf'):
 			ttFont['glyf']
 
@@ -193,6 +193,7 @@ class WOFF2Writer(SFNTWriter):
 		self.signature = b"wOF2"
 		self.reserved = 0
 
+		# transform glyf and loca table data
 		for tag, entry in tables:
 			if tag == "loca":
 				data = b""
@@ -204,6 +205,7 @@ class WOFF2Writer(SFNTWriter):
 				data = glyfTable.transform(entry.data)
 			else:
 				data = entry.data
+			# write tables to transformBuffer
 			entry.offset = self.nextTableOffset
 			entry.saveData(self.transformBuffer, data)
 			self.nextTableOffset += entry.length
@@ -734,15 +736,16 @@ class WOFF2GlyfTable(getTableClass('glyf')):
 		self.instructionStream += instructions
 
 	def _encodeBBox(self, glyphID, glyph):
-		if glyph.isComposite():
-			self.bboxBitmap[glyphID >> 3] |= 0x80 >> (glyphID & 7)
-			self.bboxStream += sstruct.pack(bboxFormat, glyph)
-		else:
-			assert glyph.numberOfContours > 0
-			glyphBBox = glyph.xMin, glyph.yMin, glyph.xMax, glyph.yMax
-			if glyphBBox != calcIntBounds(glyph.coordinates):
-				raise TTLibError(
-					"glyph %d bounding box doesn't match calculated value" % glyphID)
+		assert glyph.numberOfContours != 0, "empty glyph has no bbox"
+		if not glyph.isComposite():
+			# for simple glyphs, compare the encoded bounding box info with the calculated
+			# values, and if they match omit the bounding box info
+			currentBBox = glyph.xMin, glyph.yMin, glyph.xMax, glyph.yMax
+			calculatedBBox = calcIntBounds(glyph.coordinates)
+			if currentBBox == calculatedBBox:
+				return
+		self.bboxBitmap[glyphID >> 3] |= 0x80 >> (glyphID & 7)
+		self.bboxStream += sstruct.pack(bboxFormat, glyph)
 
 	def _encodeTriplets(self, glyph):
 		assert len(glyph.coordinates) == len(glyph.flags)
