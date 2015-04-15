@@ -1,15 +1,6 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 import sys
-
-try:
-	import brotli
-except ImportError:
-	print('ImportError: No module named brotli.\n'
-		  'The WOFF2 encoder requires the Brotli Python extension, available at:\n'
-		  'https://github.com/google/brotli', file=sys.stderr)
-	sys.exit(1)
-
 import array
 import struct
 from fontTools.misc import sstruct
@@ -76,6 +67,7 @@ class WOFF2Reader(SFNTReader):
 
 		totalUncompressedSize = offset
 		compressedData = self.file.read(self.totalCompressedSize)
+		import brotli
 		decompressedData = brotli.decompress(compressedData)
 		if len(decompressedData) != totalUncompressedSize:
 			raise TTLibError(
@@ -216,6 +208,7 @@ class WOFF2Writer(SFNTWriter):
 		# compress font data
 		self.transformBuffer.seek(0)
 		uncompressedData = self.transformBuffer.read()
+		import brotli
 		compressedData = brotli.compress(uncompressedData, brotli.MODE_FONT)
 		self.totalCompressedSize = len(compressedData)
 
