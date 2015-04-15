@@ -2,12 +2,15 @@
 cd Lib
 PYTHONPATH=".:$PYTHONPATH"
 export PYTHONPATH
-TESTS=`grep -r --include='*.py' -l -e doctest -e unittest *`
+test "x$PYTHON" = x && PYTHON=python
+FILTER=$1
+test "x$FILTER" = x && FILTER=.
+TESTS=`grep -r --include='*.py' -l -e doctest -e unittest * | grep "$FILTER"`
 ret=0
 for test in $TESTS; do
 	echo "Running tests in $test"
 	test=`echo "$test" | sed 's@[/\\]@.@g;s@[.]py$@@'`
-	if ! python -m $test -v; then
+	if ! $PYTHON -m $test -v; then
 		ret=$((ret+1))
 	fi
 done
