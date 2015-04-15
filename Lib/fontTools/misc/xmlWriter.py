@@ -25,11 +25,14 @@ class XMLWriter(object):
 
 		# Figure out if writer expects bytes or unicodes
 		try:
-			self.file.write(tounicode(''))
-			self.totype = tounicode
-		except TypeError:
+			# The bytes check should be first.  See:
+			# https://github.com/behdad/fonttools/pull/233
 			self.file.write(b'')
 			self.totype = tobytes
+		except TypeError:
+			# This better not fail.
+			self.file.write(tounicode(''))
+			self.totype = tounicode
 		self.indentwhite = self.totype(indentwhite)
 		self.newlinestr = self.totype('\n')
 		self.indentlevel = 0
