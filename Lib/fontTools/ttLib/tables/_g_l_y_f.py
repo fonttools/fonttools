@@ -1,6 +1,5 @@
 """_g_l_y_f.py -- Converter classes for the 'glyf' table."""
 
-
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.misc import sstruct

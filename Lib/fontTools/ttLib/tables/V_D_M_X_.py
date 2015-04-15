@@ -1,4 +1,6 @@
-from fontTools.ttLib.tables import DefaultTable
+from __future__ import print_function, division, absolute_import
+from fontTools.misc.py23 import *
+from . import DefaultTable
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval
 import struct
