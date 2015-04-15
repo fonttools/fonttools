@@ -28,8 +28,8 @@ try:
 except ImportError:
 	from io import BytesIO as StringIO
 
-def strjoin(iterable):
-	return ''.join(iterable)
+def strjoin(iterable, joiner=''):
+	return tostr(joiner).join(iterable)
 
 def tobytes(s, encoding='ascii'):
 	if not isinstance(s, bytes):
@@ -77,5 +77,5 @@ else:
 
 	tostr = tounicode
 
-	def bytesjoin(iterable):
-		return b''.join(tobytes(item) for item in iterable)
+	def bytesjoin(iterable, joiner=b''):
+		return tobytes(joiner).join(tobytes(item) for item in iterable)
