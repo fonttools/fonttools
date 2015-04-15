@@ -24,12 +24,10 @@ class XMLWriter(object):
 			self.file = fileOrPath
 
 		# Figure out if writer expects bytes or unicodes
-		try:
-			self.file.write(tounicode(''))
-			self.totype = tounicode
-		except TypeError:
-			self.file.write(b'')
+		if 'b' in self.file.mode:
 			self.totype = tobytes
+		else:
+			self.totype = tounicode
 		self.indentwhite = self.totype(indentwhite)
 		self.newlinestr = self.totype('\n')
 		self.indentlevel = 0
