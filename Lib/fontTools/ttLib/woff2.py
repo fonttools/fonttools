@@ -821,11 +821,31 @@ class WOFF2FlavorData(WOFFFlavorData):
 
 
 def unpackBase128(data):
-	""" A UIntBase128 encoded number is a sequence of bytes for which the most
-	significant bit is set for all but the last byte, and clear for the last byte.
-	The number itself is base 128 encoded in the lower 7 bits of each byte.
+	r""" Read one to five bytes from UIntBase128-encoded input string, and return
+	a tuple containing the decoded integer plus any leftover data.
+
+	>>> unpackBase128(b'\x3f\x00\x00') == (63, b"\x00\x00")
+	True
+	>>> unpackBase128(b'\x8f\xff\xff\xff\x7f')[0]
+	4294967295
+	>>> unpackBase128(b'\x80\x80\x3f')  # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	  File "<stdin>", line 1, in ?
+	TTLibError: UIntBase128 value must not start with leading zeros
+	>>> unpackBase128(b'\x8f\xff\xff\xff\xff\x7f')[0]  # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	  File "<stdin>", line 1, in ?
+	TTLibError: UIntBase128-encoded sequence is longer than 5 bytes
+	>>> unpackBase128(b'\x90\x80\x80\x80\x00')[0]  # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	  File "<stdin>", line 1, in ?
+	TTLibError: UIntBase128 value exceeds 2**32-1
 	"""
 	result = 0
+	assert len(data) > 0
+	if byteord(data[0]) == 0x80:
+		# font must be rejected if UIntBase128 value starts with 0x80
+		raise TTLibError('UIntBase128 value must not start with leading zeros')
 	for i in range(5):
 		if len(data) == 0:
 			raise TTLibError('not enough data to unpack UIntBase128')
@@ -844,6 +864,16 @@ def unpackBase128(data):
 	raise TTLibError('UIntBase128-encoded sequence is longer than 5 bytes')
 
 def base128Size(n):
+	""" Return the length in bytes of a UIntBase128-encoded sequence with value n.
+
+	>>> base128Size(0)
+	1
+	>>> base128Size(24567)
+	3
+	>>> base128Size(2**32-1)
+	5
+	"""
+	assert n >= 0
 	size = 1
 	while n >= 128:
 		size += 1
@@ -851,6 +881,18 @@ def base128Size(n):
 	return size
 
 def packBase128(n):
+	r""" Encode unsigned integer in range 0 to 2**32-1 (inclusive) to a string of
+	bytes using UIntBase128 variable-length encoding. Produce the shortest possible
+	encoding.
+
+	>>> packBase128(63) == b"\x3f"
+	True
+	>>> packBase128(2**32-1) == b'\x8f\xff\xff\xff\x7f'
+	True
+	"""
+	if n < 0 or n >= 2**32:
+		raise TTLibError(
+			"UIntBase128 format requires 0 <= integer <= 2**32-1")
 	data = b''
 	size = base128Size(n)
 	for i in range(size):
@@ -861,20 +903,39 @@ def packBase128(n):
 	return data
 
 def unpack255UShort(data):
-	"""Based on MicroType Express specification, section 6.1.1."""
+	""" Read one to three bytes from 255UInt16-encoded input string, and return a
+	tuple containing the decoded integer plus any leftover data.
+
+	>>> unpack255UShort(bytechr(252))[0]
+	252
+
+	Note that some numbers (e.g. 506) can have multiple encodings:
+	>>> unpack255UShort(struct.pack("BB", 254, 0))[0]
+	506
+	>>> unpack255UShort(struct.pack("BB", 255, 253))[0]
+	506
+	>>> unpack255UShort(struct.pack("BBB", 253, 1, 250))[0]
+	506
+	"""
 	code = byteord(data[:1])
 	data = data[1:]
 	if code == 253:
 		# read two more bytes as an unsigned short
+		if len(data) < 2:
+			raise TTLibError('not enough data to unpack 255UInt16')
 		result, = struct.unpack(">H", data[:2])
 		data = data[2:]
 	elif code == 254:
 		# read another byte, plus 253 * 2
+		if len(data) == 0:
+			raise TTLibError('not enough data to unpack 255UInt16')
 		result = byteord(data[:1])
 		result += 506
 		data = data[1:]
 	elif code == 255:
 		# read another byte, plus 253
+		if len(data) == 0:
+			raise TTLibError('not enough data to unpack 255UInt16')
 		result = byteord(data[:1])
 		result += 253
 		data = data[1:]
@@ -885,6 +946,19 @@ def unpack255UShort(data):
 	return result, data
 
 def pack255UShort(value):
+	r""" Encode unsigned integer in range 0 to 65535 (inclusive) to a bytestring
+	using 255UInt16 variable-length encoding.
+
+	>>> pack255UShort(252) == b'\xfc'
+	True
+	>>> pack255UShort(506) == b'\xfe\x00'
+	True
+	>>> pack255UShort(762) == b'\xfd\x02\xfa'
+	True
+	"""
+	if value < 0 or value > 0xFFFF:
+		raise TTLibError(
+			"255UInt16 format requires 0 <= integer <= 65535")
 	if value < 253:
 		return struct.pack(">B", value)
 	elif value < 506:
@@ -895,7 +969,21 @@ def pack255UShort(value):
 		return struct.pack(">BH", 253, value)
 
 def padData(data):
+	r""" Pad string with null bytes so that length is a multiple of 4.
+
+	>>> len(padData(b'abcd'))
+	4
+	>>> len(padData(b'abcde'))
+	8
+	>>> padData(b'abcdef') == b'abcdef\x00\x00'
+	True
+	"""
 	length = len(data)
 	paddedLength = (length + 3) & ~3
-	paddedData = data + b"\0" * (paddedLength - length)
+	paddedData = tobytes(data) + b"\0" * (paddedLength - length)
 	return paddedData
+
+
+if __name__ == "__main__":
+	import doctest, sys
+	sys.exit(doctest.testmod().failed)
