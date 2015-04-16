@@ -3,6 +3,7 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 import sys
+import os
 import string
 
 INDENT = "  "
@@ -34,7 +35,7 @@ class XMLWriter(object):
 			self.file.write(tounicode(''))
 			self.totype = tounicode
 		self.indentwhite = self.totype(indentwhite)
-		self.newlinestr = self.totype('\n')
+		self.newlinestr = self.totype(os.linesep)
 		self.indentlevel = 0
 		self.stack = []
 		self.needindent = 1
