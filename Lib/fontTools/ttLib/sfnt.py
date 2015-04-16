@@ -111,6 +111,9 @@ class SFNTWriter(object):
 			self.DirectoryEntry = WOFFDirectoryEntry
 
 			self.signature = "wOFF"
+
+			# to calculate WOFF checksum adjustment, we also need the original SFNT offsets
+			self.origNextTableOffset = sfntDirectorySize + numTables * sfntDirectoryEntrySize 
 		else:
 			assert not self.flavor,  "Unknown flavor '%s'" % self.flavor
 			self.directoryFormat = sfntDirectoryFormat
@@ -130,7 +133,7 @@ class SFNTWriter(object):
 		"""Write raw table data to disk."""
 		if tag in self.tables:
 			from fontTools import ttLib
-			raise ttLib.TTLibError("cannot rewrite '%s' table: length does not match directory entry" % tag)
+			raise ttLib.TTLibError("cannot rewrite '%s' table" % tag)
 
 		entry = self.DirectoryEntry()
 		entry.tag = tag
@@ -141,7 +144,11 @@ class SFNTWriter(object):
 			entry.uncompressed = True
 		else:
 			entry.checkSum = calcChecksum(data)
-		entry.saveData (self.file, data)
+		entry.saveData(self.file, data)
+
+		if self.flavor == "woff":
+			entry.origOffset = self.origNextTableOffset
+			self.origNextTableOffset += (entry.origLength + 3) & ~3
 
 		self.nextTableOffset = self.nextTableOffset + ((entry.length + 3) & ~3)
 		# Add NUL bytes to pad the table data to a 4-byte boundary.
@@ -228,8 +235,6 @@ class SFNTWriter(object):
 		for i in range(len(tags)):
 			checksums.append(self.tables[tags[i]].checkSum)
 
-		# TODO(behdad) I'm fairly sure the checksum for woff is not working correctly.
-		# Haven't debugged.
 		if self.DirectoryEntry != SFNTDirectoryEntry:
 			# Create a SFNT directory for checksum calculation purposes
 			self.searchRange, self.entrySelector, self.rangeShift = getSearchRange(self.numTables, 16)
@@ -237,8 +242,10 @@ class SFNTWriter(object):
 			tables = sorted(self.tables.items())
 			for tag, entry in tables:
 				sfntEntry = SFNTDirectoryEntry()
-				for item in ['tag', 'checkSum', 'offset', 'length']:
-					setattr(sfntEntry, item, getattr(entry, item))
+				sfntEntry.tag = entry.tag
+				sfntEntry.checkSum = entry.checkSum
+				sfntEntry.offset = entry.origOffset
+				sfntEntry.length = entry.origLength
 				directory = directory + sfntEntry.toString()
 
 		directory_end = sfntDirectorySize + len(self.tables) * sfntDirectoryEntrySize

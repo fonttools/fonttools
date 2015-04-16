@@ -1,11 +1,30 @@
 #!/bin/sh
-PYTHONPATH="Lib:$PYTHONPATH"
+
+# Choose python version
+if test "x$1" = x-3; then
+	PYTHON=python3
+	shift
+elif test "x$1" = x-2; then
+	PYTHON=python2
+	shift
+fi
+test "x$PYTHON" = x && PYTHON=python
+
+# Setup environment
+cd Lib
+PYTHONPATH=".:$PYTHONPATH"
 export PYTHONPATH
-TESTS=`git grep -l doctest Lib/`
+
+# Find tests
+FILTER=$1
+test "x$FILTER" = x && FILTER=.
+TESTS=`grep -r --include='*.py' -l -e doctest -e unittest * | grep "$FILTER"`
+
 ret=0
 for test in $TESTS; do
 	echo "Running tests in $test"
-	if ! python -m doctest -v $test; then
+	test=`echo "$test" | sed 's@[/\\]@.@g;s@[.]py$@@'`
+	if ! $PYTHON -m $test -v; then
 		ret=$((ret+1))
 	fi
 done

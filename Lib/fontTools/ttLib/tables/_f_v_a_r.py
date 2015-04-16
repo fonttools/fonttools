@@ -1,7 +1,7 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
-from . import asciiTable
+from .otBase import BaseTTXConverter
 
-class table_T_S_I_S_(asciiTable.asciiTable):
+
+class table__f_v_a_r(BaseTTXConverter):
 	pass
-

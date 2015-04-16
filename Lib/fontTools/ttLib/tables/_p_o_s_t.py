@@ -94,7 +94,10 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 			if index > 32767: # reserved for future use; ignore
 				name = ""
 			elif index > 257:
-				name = extraNames[index-258]
+				try:
+					name = extraNames[index-258]
+				except IndexError:
+					name = ""
 			else:
 				# fetch names from standard list
 				name = standardGlyphOrder[index]

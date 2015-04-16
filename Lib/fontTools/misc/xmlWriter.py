@@ -3,6 +3,7 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 import sys
+import os
 import string
 
 INDENT = "  "
@@ -18,21 +19,29 @@ class XMLWriter(object):
 		if fileOrPath == '-':
 			fileOrPath = sys.stdout
 		if not hasattr(fileOrPath, "write"):
-			try:
-				# Python3 has encoding support.
-				self.file = open(fileOrPath, "w", encoding="utf-8")
-			except TypeError:
-				self.file = open(fileOrPath, "w")
+			self.file = open(fileOrPath, "wb")
 		else:
 			# assume writable file object
 			self.file = fileOrPath
-		self.indentwhite = indentwhite
+
+		# Figure out if writer expects bytes or unicodes
+		try:
+			# The bytes check should be first.  See:
+			# https://github.com/behdad/fonttools/pull/233
+			self.file.write(b'')
+			self.totype = tobytes
+		except TypeError:
+			# This better not fail.
+			self.file.write(tounicode(''))
+			self.totype = tounicode
+		self.indentwhite = self.totype(indentwhite)
+		self.newlinestr = self.totype(os.linesep)
 		self.indentlevel = 0
 		self.stack = []
 		self.needindent = 1
 		self.idlefunc = idlefunc
 		self.idlecounter = 0
-		self._writeraw('<?xml version="1.0" encoding="utf-8"?>')
+		self._writeraw(b'<?xml version="1.0" encoding="utf-8"?>')
 		self.newline()
 	
 	def close(self):
@@ -53,9 +62,6 @@ class XMLWriter(object):
 		'latin-1'."""
 		self._writeraw(escape8bit(data), strip=strip)
 
-	def write16bit(self, data, strip=False):
-		self._writeraw(escape16bit(data), strip=strip)
-	
 	def write_noindent(self, string):
 		"""Writes text without indentation."""
 		self._writeraw(escape(string), indent=False)
@@ -65,13 +71,13 @@ class XMLWriter(object):
 		if indent and self.needindent:
 			self.file.write(self.indentlevel * self.indentwhite)
 			self.needindent = 0
-		s = tostr(data, encoding="utf-8")
+		s = self.totype(data, encoding="utf-8")
 		if (strip):
 			s = s.strip()
 		self.file.write(s)
 	
 	def newline(self):
-		self.file.write("\n")
+		self.file.write(self.newlinestr)
 		self.needindent = 1
 		idlecounter = self.idlecounter
 		if not idlecounter % 100 and self.idlefunc is not None:
@@ -163,24 +169,6 @@ def escape8bit(data):
 		else:
 			return "&#" + repr(n) + ";"
 	return strjoin(map(escapechar, data.decode('latin-1')))
-
-def escape16bit(data):
-	import array
-	a = array.array("H")
-	a.fromstring(data)
-	if sys.byteorder != "big":
-		a.byteswap()
-	def escapenum(n, amp=byteord("&"), lt=byteord("<")):
-		if n == amp:
-			return "&amp;"
-		elif n == lt:
-			return "&lt;"
-		elif 32 <= n <= 127:
-			return chr(n)
-		else:
-			return "&#" + repr(n) + ";"
-	return strjoin(map(escapenum, a))
-
 
 def hexStr(s):
 	h = string.hexdigits

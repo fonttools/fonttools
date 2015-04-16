@@ -2,6 +2,7 @@ from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval
+import fontTools.encodings.codecs
 from . import DefaultTable
 import struct
 
@@ -48,20 +49,22 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 			# only happens when there are NO name table entries read
 			# from the TTX file
 			self.names = []
-		self.names.sort()  # sort according to the spec; see NameRecord.__lt__()
+		names = self.names
+		names.sort() # sort according to the spec; see NameRecord.__lt__()
 		stringData = b""
 		format = 0
-		n = len(self.names)
+		n = len(names)
 		stringOffset = 6 + n * sstruct.calcsize(nameRecordFormat)
 		data = struct.pack(">HHH", format, n, stringOffset)
 		lastoffset = 0
 		done = {}  # remember the data so we can reuse the "pointers"
-		for name in self.names:
-			if name.string in done:
-				name.offset, name.length = done[name.string]
+		for name in names:
+			string = name.toBytes()
+			if string in done:
+				name.offset, name.length = done[string]
 			else:
-				name.offset, name.length = done[name.string] = len(stringData), len(name.string)
-				stringData = bytesjoin([stringData, name.string])
+				name.offset, name.length = done[string] = len(stringData), len(string)
+				stringData = bytesjoin([stringData, string])
 			data = data + sstruct.pack(nameRecordFormat, name)
 		return data + stringData
 	
@@ -89,28 +92,114 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 
 
 class NameRecord(object):
-	
+
+	# Map keyed by platformID, then platEncID, then possibly langID
+	_encodingMap =	{
+		0: { # Unicode
+			0: 'utf-16be',
+			1: 'utf-16be',
+			2: 'utf-16be',
+			3: 'utf-16be',
+			4: 'utf-16be',
+			5: 'utf-16be',
+			6: 'utf-16be',
+		},
+		1: { # Macintosh
+			# See
+			# https://github.com/behdad/fonttools/issues/236
+			0: { # Macintosh, platEncID==0, keyed by langID
+				15: "mac-iceland",
+				17: "mac-turkish",
+				18: None,
+				24: "mac-latin2",
+				25: "mac-latin2",
+				26: "mac-latin2",
+				27: "mac-latin2",
+				28: "mac-latin2",
+				36: "mac-latin2",
+				37: None,
+				38: "mac-latin2",
+				39: "mac-latin2",
+				40: "mac-latin2",
+				Ellipsis: 'mac-roman', # Other
+			},
+			1: 'x-mac-japanese-ttx',
+			2: 'x-mac-chinesetrad-ttx',
+			3: 'x-mac-korean-ttx',
+			6: 'mac-greek',
+			7: 'mac-cyrillic',
+			25: 'x-mac-chinesesimp-ttx',
+			29: 'mac-latin2',
+			35: 'mac-turkish',
+			37: 'mac-iceland',
+		},
+		2: { # ISO
+			0: 'ascii',
+			1: 'utf-16be',
+			2: 'latin1',
+		},
+		3: { # Microsoft
+			0: 'utf-16be',
+			1: 'utf-16be',
+			2: 'shift-jis',
+			3: 'gb2312',
+			4: 'big5',
+			5: 'wansung',
+			6: 'johab',
+			10: 'utf-16be',
+		},
+	}
+
+	def getEncoding(self):
+		encoding = self._encodingMap.get(self.platformID, {}).get(self.platEncID, None)
+		if isinstance(encoding, dict):
+			encoding = encoding.get(self.langID, encoding[Ellipsis])
+		return encoding
+
+	def encodingIsUnicodeCompatible(self):
+		return self.getEncoding() in ['utf-16be', 'ucs2be', 'ascii', 'latin1']
+
+	def __str__(self):
+		unistr = self.toUnicode()
+		if unistr != None:
+			return unistr
+		else:
+			return str(self.string)
+
 	def isUnicode(self):
 		return (self.platformID == 0 or
 			(self.platformID == 3 and self.platEncID in [0, 1, 10]))
 
+	def toUnicode(self):
+		encoding = self.getEncoding()
+		if encoding == None:
+			return None
+		try:
+			return tounicode(self.string, encoding=encoding)
+		except UnicodeDecodeError:
+			return None
+
+	def toBytes(self):
+		return tobytes(self.string, encoding=self.getEncoding())
+
 	def toXML(self, writer, ttFont):
-		writer.begintag("namerecord", [
+		unistr = self.toUnicode()
+		attrs = [
 				("nameID", self.nameID),
 				("platformID", self.platformID),
 				("platEncID", self.platEncID),
 				("langID", hex(self.langID)),
-						])
+			]
+
+		if not self.encodingIsUnicodeCompatible():
+			attrs.append(("unicode", unistr is not None))
+
+		writer.begintag("namerecord", attrs)
 		writer.newline()
-		if self.isUnicode():
-			if len(self.string) % 2:
-				# no, shouldn't happen, but some of the Apple
-				# tools cause this anyway :-(
-				writer.write16bit(self.string + b"\0", strip=True)
-			else:
-				writer.write16bit(self.string, strip=True)
+		if unistr is not None:
+			writer.write(unistr)
 		else:
-			writer.write8bit(self.string, strip=True)
+			writer.write8bit(self.string)
 		writer.newline()
 		writer.endtag("namerecord")
 		writer.newline()
@@ -121,8 +210,9 @@ class NameRecord(object):
 		self.platEncID = safeEval(attrs["platEncID"])
 		self.langID =  safeEval(attrs["langID"])
 		s = strjoin(content).strip()
-		if self.isUnicode():
-			self.string = s.encode("utf_16_be")
+		encoding = self.getEncoding()
+		if self.encodingIsUnicodeCompatible() or safeEval(attrs.get("unicode", "False")):
+			self.string = s.encode(encoding)
 		else:
 			# This is the inverse of write8bit...
 			self.string = s.encode("latin1")

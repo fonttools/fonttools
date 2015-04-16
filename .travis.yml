@@ -5,10 +5,12 @@ python:
   - "3.2"
   - "3.3"
   - "3.4"
+  - "pypy"
+  - "pypy3"
 install:
-  - python setup.py install
+  - make install
 script:
-  - ./run-tests.sh
+  - make check
 notifications:
   irc: "irc.freenode.org##fonts"
   email: fonttools@googlegroups.com
