@@ -42,6 +42,14 @@ class NameRecordTest(unittest.TestCase):
                     '</namerecord>'
 		], self.toXML(name))
 
+	def test_encoding_macroman_misc(self):
+		name = NameRecord()
+		name.nameID, name.platformID, name.platEncID, name.langID = (123, 1, 0, 17)
+		self.assertEqual(name.getEncoding(), "mac-turkish")
+		name.langID = 37
+		self.assertEqual(name.getEncoding(), None)
+		name.langID = 45
+		self.assertEqual(name.getEncoding(), "mac-roman")
 
 if __name__ == '__main__':
 	unittest.main()

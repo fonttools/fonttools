@@ -92,6 +92,7 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 
 class NameRecord(object):
 
+	# Map keyed by platformID, then platEncID, then possibly langID
 	_encodingMap =	{
 		0: { # Unicode
 			0: 'utf-16be',
@@ -105,7 +106,22 @@ class NameRecord(object):
 		1: { # Macintosh
 			# See
 			# https://github.com/behdad/fonttools/issues/236
-			0: 'macroman',
+			0: { # Macintosh, platEncID==0, keyed by langID
+				15: "mac-iceland",
+				17: "mac-turkish",
+				18: None,
+				24: "mac-latin2",
+				25: "mac-latin2",
+				26: "mac-latin2",
+				27: "mac-latin2",
+				28: "mac-latin2",
+				36: "mac-latin2",
+				37: None,
+				38: "mac-latin2",
+				39: "mac-latin2",
+				40: "mac-latin2",
+				Ellipsis: 'mac-roman', # Other
+			},
 			1: 'shift-jis',
 			2: 'big5',
 			3: 'euc-kr',
@@ -134,7 +150,10 @@ class NameRecord(object):
 	}
 
 	def getEncoding(self):
-		return self._encodingMap.get(self.platformID, {}).get(self.platEncID, None)
+		encoding = self._encodingMap.get(self.platformID, {}).get(self.platEncID, None)
+		if isinstance(encoding, dict):
+			encoding = encoding.get(self.langID, encoding[Ellipsis])
+		return encoding
 
 	def encodingIsUnicodeCompatible(self):
 		return self.getEncoding() in ['utf-16be', 'ucs2be', 'ascii', 'latin1']
