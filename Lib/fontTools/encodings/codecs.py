@@ -52,7 +52,7 @@ class ExtendCodec(codecs.Codec):
 
 	def error(self, e):
 		if isinstance(e, UnicodeDecodeError):
-			for end in range(e.start + 1, e.end):
+			for end in range(e.start + 1, e.end + 1):
 				s = e.object[e.start:end]
 				if s in self.mapping:
 					return self.mapping[s], end
