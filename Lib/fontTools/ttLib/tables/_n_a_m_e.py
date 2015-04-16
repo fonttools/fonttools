@@ -154,10 +154,7 @@ class NameRecord(object):
 		encoding = self.getEncoding()
 		if encoding == None:
 			return None
-		try:
-			return tounicode(self.string, encoding=encoding)
-		except UnicodeDecodeError:
-			return None
+		return tounicode(self.string, encoding=encoding)
 
 	def toBytes(self):
 		return tobytes(self.string, encoding=self.getEncoding())
