@@ -1,11 +1,25 @@
 #!/bin/sh
+
+# Choose python version
+if test "x$1" = x-3; then
+	PYTHON=python3
+	shift
+elif test "x$1" = x-2; then
+	PYTHON=python2
+	shift
+fi
+test "x$PYTHON" = x && PYTHON=python
+
+# Setup environment
 cd Lib
 PYTHONPATH=".:$PYTHONPATH"
 export PYTHONPATH
-test "x$PYTHON" = x && PYTHON=python
+
+# Find tests
 FILTER=$1
 test "x$FILTER" = x && FILTER=.
 TESTS=`grep -r --include='*.py' -l -e doctest -e unittest * | grep "$FILTER"`
+
 ret=0
 for test in $TESTS; do
 	echo "Running tests in $test"
