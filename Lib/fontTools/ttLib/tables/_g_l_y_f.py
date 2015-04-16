@@ -922,7 +922,8 @@ class Glyph(object):
 
 		coordinates, endPts, flags = self.getCoordinates(glyfTable)
 		if offset:
-			coordinates = coordinates + (offset, 0)
+			coordinates = coordinates.copy()
+			coordinates.translate((offset, 0))
 		start = 0
 		for end in endPts:
 			end = end + 1
