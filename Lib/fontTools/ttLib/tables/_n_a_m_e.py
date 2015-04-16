@@ -2,6 +2,7 @@ from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval
+import fontTools.encodings.codecs
 from . import DefaultTable
 import struct
 
@@ -122,12 +123,12 @@ class NameRecord(object):
 				40: "mac-latin2",
 				Ellipsis: 'mac-roman', # Other
 			},
-			1: 'shift-jis',
-			2: 'big5',
-			3: 'euc-kr',
+			1: 'x-mac-japanese-ttx',
+			2: 'x-mac-chinesetrad-ttx',
+			3: 'x-mac-korean-ttx',
 			6: 'mac-greek',
 			7: 'mac-cyrillic',
-			25: 'gb2312',
+			25: 'x-mac-chinesesimp-ttx',
 			29: 'mac-latin2',
 			35: 'mac-turkish',
 			37: 'mac-iceland',
