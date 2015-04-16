@@ -51,5 +51,11 @@ class NameRecordTest(unittest.TestCase):
 		name.langID = 45
 		self.assertEqual(name.getEncoding(), "mac-roman")
 
+	def test_extended_mac_encodings(self):
+		name = NameRecord()
+		name.string = b"\xfe"
+		name.nameID, name.platformID, name.platEncID, name.langID = (123, 1, 1, 0)
+		self.assertEqual(name.toUnicode(), unichr(0x2122))
+
 if __name__ == '__main__':
 	unittest.main()
