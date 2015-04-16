@@ -97,11 +97,10 @@ class WOFF2Reader(SFNTReader):
 				# make sure glyf is loaded first
 				self['glyf']
 			data = self.glyfTable.getLocaData()
-
-		if len(data) != entry.origLength:
-			raise TTLibError(
-				"reconstructed '%s' table doesn't match original size: expected %d, found %d"
-				% (tag, entry.origLength, len(data)))
+			if len(data) != entry.origLength:
+				raise TTLibError(
+					"reconstructed '%s' table doesn't match original size: expected %d, found %d"
+					% (tag, entry.origLength, len(data)))
 		entry.data = data
 		return data
 
@@ -410,6 +409,9 @@ class WOFF2DirectoryEntry(DirectoryEntry):
 		self.length = self.origLength
 		if self.tag in woff2TransformedTableTags:
 			self.length, data = unpackBase128(data)
+			if self.tag == 'loca' and self.length != 0:
+				raise TTLibError(
+					"the transformLength of the loca table must be 0")
 		# return left over data
 		return data
 
