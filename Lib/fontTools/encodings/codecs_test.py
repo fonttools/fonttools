@@ -11,7 +11,7 @@ class ExtendedCodecsTest(unittest.TestCase):
 
 	def test_encode(self):
 		self.assertEqual(b'x\xfe\xfdy',
-				 (unichr(0x78)+unichr(0x2122)+unichr(0x00A9)+unichr(0x79)).encode(encoding="x-mac-japanese-ttx"))
+				 (unichr(0x78)+unichr(0x2122)+unichr(0x00A9)+unichr(0x79)).encode("x-mac-japanese-ttx"))
 
 if __name__ == '__main__':
 	unittest.main()
