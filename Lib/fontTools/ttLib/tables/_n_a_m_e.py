@@ -130,28 +130,30 @@ class NameRecord(object):
 		return self.getEncoding() in ['utf-16be', 'ucs2be', 'ascii', 'latin1']
 
 	def __str__(self):
-		try:
-			return self.toUnicode()
-		except UnicodeDecodeError:
+		unistr = self.toUnicode()
+		if unistr != None:
+			return unistr
+		else:
 			return str(self.string)
-	
+
 	def isUnicode(self):
 		return (self.platformID == 0 or
 			(self.platformID == 3 and self.platEncID in [0, 1, 10]))
 
 	def toUnicode(self):
-		return tounicode(self.string, encoding=self.getEncoding())
+		encoding = self.getEncoding()
+		if encoding == None:
+			return None
+		try:
+			return tounicode(self.string, encoding=encoding)
+		except UnicodeDecodeError:
+			return None
 
 	def toBytes(self):
 		return tobytes(self.string, encoding=self.getEncoding())
 
 	def toXML(self, writer, ttFont):
-		encoding = self.getEncoding()
-		try:
-			unistr = self.toUnicode()
-		except UnicodeDecodeError:
-			unistr = None
-
+		unistr = self.toUnicode()
 		attrs = [
 				("nameID", self.nameID),
 				("platformID", self.platformID),
