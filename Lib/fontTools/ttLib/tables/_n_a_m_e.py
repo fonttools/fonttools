@@ -103,8 +103,18 @@ class NameRecord(object):
 			6: 'utf-16be',
 		},
 		1: { # Macintosh
+			# See
+			# https://github.com/behdad/fonttools/issues/236
 			0: 'macroman',
 			1: 'shift-jis',
+			2: 'big5',
+			3: 'euc-kr',
+			6: 'mac-greek',
+			7: 'mac-cyrillic',
+			25: 'gb2312',
+			29: 'mac-latin2',
+			35: 'mac-turkish',
+			37: 'mac-iceland',
 		},
 		2: { # ISO
 			0: 'ascii',
