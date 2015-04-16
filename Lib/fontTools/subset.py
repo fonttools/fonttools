@@ -2178,6 +2178,8 @@ def prune_pre_subset(self, options):
   if '*' not in options.name_IDs:
     self.names = [n for n in self.names if n.nameID in options.name_IDs]
   if not options.name_legacy:
+    # TODO(behdad) Sometimes (eg Apple Color Emoji) there's only a macroman
+    # entry for Latin and no Unicode names.
     self.names = [n for n in self.names if n.isUnicode()]
   # TODO(behdad) Option to keep only one platform's
   if '*' not in options.name_languages:
