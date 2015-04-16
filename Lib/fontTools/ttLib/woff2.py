@@ -819,8 +819,8 @@ def unpackBase128(data):
 
 	>>> unpackBase128(b'\x3f\x00\x00') == (63, b"\x00\x00")
 	True
-	>>> unpackBase128(b'\x8f\xff\xff\xff\x7f')[0]
-	4294967295
+	>>> unpackBase128(b'\x8f\xff\xff\xff\x7f')[0] == 4294967295
+	True
 	>>> unpackBase128(b'\x80\x80\x3f')  # doctest: +IGNORE_EXCEPTION_DETAIL
 	Traceback (most recent call last):
 	  File "<stdin>", line 1, in ?
