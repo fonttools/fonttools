@@ -31,14 +31,14 @@ except ImportError:
 def strjoin(iterable, joiner=''):
 	return tostr(joiner).join(iterable)
 
-def tobytes(s, encoding='ascii'):
+def tobytes(s, encoding='ascii', errors='strict'):
 	if not isinstance(s, bytes):
-		return s.encode(encoding)
+		return s.encode(encoding, errors)
 	else:
 		return s
-def tounicode(s, encoding='ascii'):
+def tounicode(s, encoding='ascii', errors='strict'):
 	if not isinstance(s, unicode):
-		return s.decode(encoding)
+		return s.decode(encoding, errors)
 	else:
 		return s
 

@@ -9,7 +9,7 @@ class NameRecordTest(unittest.TestCase):
 	def makeName(self, text, nameID, platformID, platEncID, langID):
 		name = NameRecord()
 		name.nameID, name.platformID, name.platEncID, name.langID = (nameID, platformID, platEncID, langID)
-		name.string = text.encode(name.getEncoding())
+		name.string = tobytes(text, encoding=name.getEncoding())
 		return name
 
 	def test_toUnicode_utf16be(self):
@@ -19,7 +19,7 @@ class NameRecordTest(unittest.TestCase):
 
 	def test_toUnicode_macroman(self):
 		name = self.makeName("Foo Italic", 222, 1, 0, 7)  # MacRoman
-		self.assertEqual("macroman", name.getEncoding())
+		self.assertEqual("mac-roman", name.getEncoding())
 		self.assertEqual("Foo Italic", name.toUnicode())
 
 	def test_toUnicode_UnicodeDecodeError(self):
@@ -50,19 +50,24 @@ class NameRecordTest(unittest.TestCase):
                     '</namerecord>'
 		], self.toXML(name))
 
-	def test_toXML_unknownPlatEncID(self):
-		name = NameRecord()
-		name.string = b"B\x8arli"
-		name.nameID, name.platformID, name.platEncID, name.langID = (333, 1, 9876, 7)
+	def test_toXML_unknownPlatEncID_nonASCII(self):
+		name = self.makeName(b"B\x8arli", 333, 1, 9876, 7) # Unknown Mac encodingID
 		self.assertEqual([
                     '<namerecord nameID="333" platformID="1" platEncID="9876" langID="0x7" unicode="False">',
                     '  B&#138;rli',
                     '</namerecord>'
 		], self.toXML(name))
 
+	def test_toXML_unknownPlatEncID_ASCII(self):
+		name = self.makeName(b"Barli", 333, 1, 9876, 7) # Unknown Mac encodingID
+		self.assertEqual([
+                    '<namerecord nameID="333" platformID="1" platEncID="9876" langID="0x7" unicode="True">',
+                    '  Barli',
+                    '</namerecord>'
+		], self.toXML(name))
+
 	def test_encoding_macroman_misc(self):
-		name = NameRecord()
-		name.nameID, name.platformID, name.platEncID, name.langID = (123, 1, 0, 17)
+		name = self.makeName('', 123, 1, 0, 17) # Mac Turkish
 		self.assertEqual(name.getEncoding(), "mac-turkish")
 		name.langID = 37
 		self.assertEqual(name.getEncoding(), None)
@@ -70,9 +75,7 @@ class NameRecordTest(unittest.TestCase):
 		self.assertEqual(name.getEncoding(), "mac-roman")
 
 	def test_extended_mac_encodings(self):
-		name = NameRecord()
-		name.string = b"\xfe"
-		name.nameID, name.platformID, name.platEncID, name.langID = (123, 1, 1, 0)
+		name = self.makeName(b'\xfe', 123, 1, 1, 0) # Mac Japanese
 		self.assertEqual(name.toUnicode(), unichr(0x2122))
 
 if __name__ == "__main__":

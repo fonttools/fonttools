@@ -150,37 +150,61 @@ class NameRecord(object):
 		},
 	}
 
-	def getEncoding(self):
-		encoding = self._encodingMap.get(self.platformID, {}).get(self.platEncID, None)
+	def getEncoding(self, default='ascii'):
+		"""Returns the Python encoding name for this name entry based on its platformID,
+		platEncID, and langID.  If encoding for these values is not known, by default
+		'ascii' is returned.  That can be overriden by passing a value to the default
+		argument.
+		"""
+		encoding = self._encodingMap.get(self.platformID, {}).get(self.platEncID, default)
 		if isinstance(encoding, dict):
 			encoding = encoding.get(self.langID, encoding[Ellipsis])
 		return encoding
 
 	def encodingIsUnicodeCompatible(self):
-		return self.getEncoding() in ['utf-16be', 'ucs2be', 'ascii', 'latin1']
+		return self.getEncoding(None) in ['utf-16be', 'ucs2be', 'ascii', 'latin1']
 
 	def __str__(self):
-		unistr = self.toUnicode()
-		if unistr != None:
-			return unistr
-		else:
+		try:
+			return self.toUnicode()
+		except UnicodeDecodeError:
 			return str(self.string)
 
 	def isUnicode(self):
 		return (self.platformID == 0 or
 			(self.platformID == 3 and self.platEncID in [0, 1, 10]))
 
-	def toUnicode(self):
-		encoding = self.getEncoding()
-		if encoding == None:
-			return None
-		return tounicode(self.string, encoding=encoding)
+	def toUnicode(self, errors='strict'):
+		"""
+		If self.string is a Unicode string, return it; otherwise try decoding the
+		bytes in self.string to a Unicode string using the encoding of this
+		entry as returned by self.getEncoding(); Note that  self.getEncoding()
+		returns 'ascii' if the encoding is unknown to the library.
 
-	def toBytes(self):
-		return tobytes(self.string, encoding=self.getEncoding())
+		If the bytes are ill-formed in that chosen encoding, the error is handled
+		according to the errors parameter to this function, which is passed to the
+		underlying decode() function; by default it throws a UnicodeDecodeError exception.
+		"""
+		return tounicode(self.string, encoding=self.getEncoding(), errors=errors)
+
+	def toBytes(self, errors='strict'):
+		""" If self.string is a bytes object, return it; otherwise try encoding
+		the Unicode string in self.string to bytes using the encoding of this
+		entry as returned by self.getEncoding(); Note that self.getEncoding()
+		returns 'ascii' if the encoding is unknown to the library.
+
+		If the Unicode string cannot be encoded to bytes in the chosen encoding,
+		the error is handled according to the errors parameter to this function,
+		which is passed to the underlying encode() function; by default it throws a
+		UnicodeEncodeError exception.
+		"""
+		return tobytes(self.string, encoding=self.getEncoding(), errors=errors)
 
 	def toXML(self, writer, ttFont):
-		unistr = self.toUnicode()
+		try:
+			unistr = self.toUnicode()
+		except UnicodeDecodeError:
+			unistr = None
 		attrs = [
 				("nameID", self.nameID),
 				("platformID", self.platformID),
