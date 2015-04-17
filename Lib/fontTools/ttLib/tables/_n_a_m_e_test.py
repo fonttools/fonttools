@@ -22,6 +22,11 @@ class NameRecordTest(unittest.TestCase):
 		self.assertEqual("mac-roman", name.getEncoding())
 		self.assertEqual("Foo Italic", name.toUnicode())
 
+	def test_toUnicode_macromanian(self):
+		name = self.makeName(b"Foo Italic\xfb", 222, 1, 0, 37)  # Mac Romanian
+		self.assertEqual("x-mac-romanian-ttx", name.getEncoding())
+		self.assertEqual("Foo Italic"+unichr(0x02DA), name.toUnicode())
+
 	def test_toUnicode_UnicodeDecodeError(self):
 		name = self.makeName("Foo Bold", 111, 0, 2, 7)
 		self.assertEqual("utf-16be", name.getEncoding())
@@ -70,13 +75,19 @@ class NameRecordTest(unittest.TestCase):
 		name = self.makeName('', 123, 1, 0, 17) # Mac Turkish
 		self.assertEqual(name.getEncoding(), "mac-turkish")
 		name.langID = 37
-		self.assertEqual(name.getEncoding(), None)
-		name.langID = 45
+		self.assertEqual(name.getEncoding(), "x-mac-romanian-ttx")
+		name.langID = 45 # Other
 		self.assertEqual(name.getEncoding(), "mac-roman")
 
 	def test_extended_mac_encodings(self):
 		name = self.makeName(b'\xfe', 123, 1, 1, 0) # Mac Japanese
 		self.assertEqual(name.toUnicode(), unichr(0x2122))
+
+	def test_extended_unknown(self):
+		name = self.makeName(b'\xfe', 123, 10, 11, 12)
+		self.assertEqual(name.getEncoding(), "ascii")
+		self.assertEqual(name.getEncoding(None), None)
+		self.assertEqual(name.getEncoding(default=None), None)
 
 if __name__ == "__main__":
 	unittest.main()
