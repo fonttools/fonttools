@@ -70,7 +70,8 @@ class TTFont(object):
 	def __init__(self, file=None, res_name_or_index=None,
 			sfntVersion="\000\001\000\000", flavor=None, checkChecksums=False,
 			verbose=False, recalcBBoxes=True, allowVID=False, ignoreDecompileErrors=False,
-			recalcTimestamp=True, fontNumber=-1, lazy=None, quiet=False):
+			recalcTimestamp=True, recalcUnicodeRanges=False, fontNumber=-1, lazy=None,
+			quiet=False):
 		
 		"""The constructor can be called with a few different arguments.
 		When reading a font from disk, 'file' should be either a pathname
@@ -107,6 +108,10 @@ class TTFont(object):
 		If the recalcTimestamp argument is false, the modified timestamp in the
 		'head' table will *not* be recalculated upon save/compile.
 
+		If the recalcUnicodeRanges argument is true, the OS/2 'ulUnicodeRange'
+		values will be recalculated upon save/compile according to the Unicode
+		code points specified in the font's cmap tables.
+
 		If the allowVID argument is set to true, then virtual GID's are
 		supported. Asking for a glyph ID with a glyph name or GID that is not in
 		the font will return a virtual GID.   This is valid for GSUB and cmap
@@ -133,6 +138,7 @@ class TTFont(object):
 		self.lazy = lazy
 		self.recalcBBoxes = recalcBBoxes
 		self.recalcTimestamp = recalcTimestamp
+		self.recalcUnicodeRanges = recalcUnicodeRanges
 		self.tables = {}
 		self.reader = None
 
