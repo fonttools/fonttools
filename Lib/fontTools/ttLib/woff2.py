@@ -635,14 +635,23 @@ class WOFF2GlyfTable(getTableClass('glyf')):
 		method).
 		"""
 		locaTable = self.ttFont['loca']
-		locaData = locaTable.compile(self.ttFont)
-		origIndexFormat = self.indexFormat
-		currIndexFormat = self.ttFont['head'].indexToLocFormat
-		if currIndexFormat != origIndexFormat:
-			raise TTLibError(
-				"reconstructed 'loca' table has wrong index format: expected %d, found %d"
-				% (origIndexFormat, currIndexFormat))
-		return locaData
+		assert hasattr(locaTable, 'locations') and hasattr(self, 'indexFormat'), \
+			"'getLocaData' must be run after 'reconstruct' method"
+		locations = locaTable.locations
+		indexFormat = self.indexFormat
+		if indexFormat == 0:
+			if max(locations) >= 0x20000:
+				raise TTLibError("indexFormat is 0 but local offsets > 0x20000")
+			if not all(l % 2 == 0 for l in locations):
+				raise TTLibError("indexFormat is 0 but local offsets not multiples of 2")
+			offsetArray = array.array("H")
+			for i in range(len(locations)):
+				offsetArray.append(locations[i] // 2)
+		else:
+			offsetArray = array.array("I", locations)
+		if sys.byteorder != "big":
+			offsetArray.byteswap()
+		return offsetArray.tostring()
 
 	def setLocaData(self, locaData, indexFormat, numGlyphs):
 		""" Decompile 'loca' table data using the specified 'indexFormat' and
