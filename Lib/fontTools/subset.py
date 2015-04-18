@@ -266,9 +266,9 @@ Other font-specific options:
       ranges defined in the OpenType specification v1.6 are intersected with
       the Unicode code points specified in the font's 'cmap' tables: when
       no overlap is found, the bit will be switched off. However, it will
-      *not* be switched on if an intersection is found.
+      *not* be switched on if an intersection is found.  [default]
   --no-update-unicode-ranges
-      Don't change the 'OS/2 ulUnicodeRange' bits. [default]
+      Don't change the 'OS/2 ulUnicodeRange' bits.
   --recalc-bounds
       Recalculate font bounding boxes.
   --no-recalc-bounds
@@ -2093,7 +2093,7 @@ def prune_pre_subset(self, options):
 def prune_unicode_ranges(ttFont):
   unicodes = set()
   for table in ttFont['cmap'].tables:
-    # when discussing 'ulUnicodeRange' bit, the OS/2 specs only references the
+    # when discussing 'ulUnicodeRange', the OS/2 specification only mentions
     # 'cmap' subtables for "platform 3, encoding ID 1 (Microsoft platform,
     # Unicode) and platform 3, encoding ID 10 (Microsoft platform, UCS-4)".
     if table.platformID == 3 and table.platEncID in [1, 10]:
@@ -2119,7 +2119,7 @@ def prune_unicode_ranges(ttFont):
         ttFont['OS/2'].ulUnicodeRange4 &= ~(1 << (bit - 96))
 
 
-# TODO(behdad) OS/2 ulUnicodeRange / ulCodePageRange?
+# TODO(behdad) OS/2 ulCodePageRange?
 # TODO(behdad) Drop AAT tables.
 # TODO(behdad) Drop unneeded GSUB/GPOS Script/LangSys entries.
 # TODO(behdad) Drop empty GSUB/GPOS, and GDEF if no GSUB/GPOS left
@@ -2185,7 +2185,7 @@ class Options(object):
   recommended_glyphs = False  # gid1, gid2, gid3 for TrueType
   recalc_bounds = False # Recalculate font bounding boxes
   recalc_timestamp = False # Recalculate font modified timestamp
-  recalc_unicode_ranges = False  # Clear unused 'ulUnicodeRange' bits
+  recalc_unicode_ranges = True  # Clear unused 'ulUnicodeRange' bits
   canonical_order = False # Order tables as recommended
   flavor = None # May be 'woff'
 
