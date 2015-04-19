@@ -18,9 +18,8 @@ export PYTHONPATH
 # Find tests
 FILTER=$1
 shift
-while test "x$#" != x0; do
-	FILTER="$FILTER|$1"
-	shift
+for arg in "$@"; do
+	FILTER="$FILTER|$arg"
 done
 
 test "x$FILTER" = x && FILTER=.
