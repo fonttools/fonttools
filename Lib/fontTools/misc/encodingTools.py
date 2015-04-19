@@ -56,7 +56,7 @@ _encodingMap =	{
 		2: 'shift_jis',
 		3: 'gb2312',
 		4: 'big5',
-		5: 'wansung', # XXX This isn't a canonical Python encoding name
+		5: 'euc_kr',
 		6: 'johab',
 		10: 'utf_16be',
 	},
