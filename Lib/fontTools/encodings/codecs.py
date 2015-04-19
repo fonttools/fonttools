@@ -373,7 +373,22 @@ def search_function(name):
 	if name in _extended_encodings:
 		if name not in _cache:
 			base_encoding, mapping = _extended_encodings[name]
-			_cache[name] = ExtendCodec(name, base_encoding, mapping)
+			assert(name[-4:] == "_ttx")
+			# Python 2 didn't have any of the encodings that we are implementing
+			# in this file.  Python 3 added aliases for the East Asian ones, mapping
+			# them "temporarily" to the same base encoding as us, with a comment
+			# suggesting that full implementation will appear some time later.
+			# As such, try the Python version of the x_mac_... first, if that is found,
+			# use *that* as our base encoding.  This would make our encoding upgrade
+			# to the full encoding when and if Python finally implements that.
+			base_encodings = [name[:-4], base_encoding]
+			for base_encoding in base_encodings:
+				try:
+					codecs.lookup(base_encoding)
+				except LookupError:
+					continue
+				_cache[name] = ExtendCodec(name, base_encoding, mapping)
+				break
 		return _cache[name].info()
 
 	return None
