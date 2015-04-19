@@ -80,8 +80,10 @@ def splitLine(pt1, pt2, where, isHorizontal):
         >>> printSegments(splitLine((0, 0), (100, 100), 100, True))
         ((0, 0), (100, 100))
         >>> printSegments(splitLine((0, 0), (100, 100), 0, True))
+        ((0, 0), (0, 0))
         ((0, 0), (100, 100))
         >>> printSegments(splitLine((0, 0), (100, 100), 0, False))
+        ((0, 0), (0, 0))
         ((0, 0), (100, 100))
         >>> printSegments(splitLine((100, 0), (0, 0), 50, False))
         ((100, 0), (50, 0))
@@ -104,7 +106,7 @@ def splitLine(pt1, pt2, where, isHorizontal):
     if a == 0:
         return [(pt1, pt2)]
     t = (where - (bx, by)[isHorizontal]) / a
-    if 0 < t < 1:
+    if 0 <= t < 1:
         midPt = ax * t + bx, ay * t + by
         return [(pt1, midPt), (midPt, pt2)]
     else:
