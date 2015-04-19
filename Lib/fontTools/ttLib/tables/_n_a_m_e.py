@@ -102,7 +102,7 @@ class NameRecord(object):
 		return getEncoding(self.platformID, self.platEncID, self.langID, default)
 
 	def encodingIsUnicodeCompatible(self):
-		return self.getEncoding(None) in ['utf-16be', 'ucs2be', 'ascii', 'latin1']
+		return self.getEncoding(None) in ['utf_16be', 'ucs2be', 'ascii', 'latin1']
 
 	def __str__(self):
 		try:
