@@ -3,8 +3,8 @@ but missing from Python.  See https://github.com/behdad/fonttools/issues/236 for
 
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
-
 import codecs
+import encodings
 
 class ExtendCodec(codecs.Codec):
 
@@ -366,15 +366,15 @@ _extended_encodings = {
 				}),
 }
 
-_codecs = {}
+_cache = {}
 
 def search_function(name):
+	name = encodings.normalize_encoding(name) # Rather undocumented...
 	if name in _extended_encodings:
-		global _codecs
-		if name not in _codecs:
+		if name not in _cache:
 			base_encoding, mapping = _extended_encodings[name]
-			_codecs[name] = ExtendCodec(name, base_encoding, mapping)
-		return _codecs[name].info()
+			_cache[name] = ExtendCodec(name, base_encoding, mapping)
+		return _cache[name].info()
 
 	return None
 
