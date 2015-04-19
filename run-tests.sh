@@ -16,13 +16,13 @@ PYTHONPATH=".:$PYTHONPATH"
 export PYTHONPATH
 
 # Find tests
-FILTER=$1
-shift
+FILTER=
 for arg in "$@"; do
-	FILTER="$FILTER|$arg"
+	test "x$FILTER" != x && FILTER="$FILTER|"
+	FILTER="$FILTER$arg"
 done
 
-test "x$FILTER" = x && FILTER=.
+test "x$FILTER" = "x" && FILTER=.
 TESTS=`grep -r --include='*.py' -l -e doctest -e unittest * | grep -E "$FILTER"`
 
 ret=0
