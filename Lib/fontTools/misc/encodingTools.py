@@ -36,11 +36,11 @@ _encodingMap =	{
 			Ellipsis: 'mac_roman', # Other
 		},
 		1: 'x_mac_japanese_ttx',
-		2: 'x_mac_trad_ttx',
+		2: 'x_mac_trad_chinese_ttx',
 		3: 'x_mac_korean_ttx',
 		6: 'mac_greek',
 		7: 'mac_cyrillic',
-		25: 'x_mac_simp_ttx',
+		25: 'x_mac_simp_chinese_ttx',
 		29: 'mac_latin2',
 		35: 'mac_turkish',
 		37: 'mac_iceland',
