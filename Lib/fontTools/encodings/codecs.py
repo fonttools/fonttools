@@ -342,7 +342,7 @@ _extended_encodings = {
 					b"\xFE":	unichr(0x2122),
 					b"\xFF":	unichr(0x2026),
 				}),
-	"x_mac_trad_ttx": ("big5", {
+	"x_mac_trad_chinese_ttx": ("big5", {
 					b"\x80 ":	unichr(0x005C),
 					b"\xA0 ":	unichr(0x00A0),
 					b"\xFD ":	unichr(0x00A9),
@@ -357,7 +357,7 @@ _extended_encodings = {
 					b"\xFE ":	unichr(0x2122),
 					b"\xFF ":	unichr(0x2026),
 				}),
-	"x_mac_simp_ttx": ("gb2312", {
+	"x_mac_simp_chinese_ttx": ("gb2312", {
 					b"\x80 ":	unichr(0x00FC),
 					b"\xA0 ":	unichr(0x00A0),
 					b"\xFD ":	unichr(0x00A9),
