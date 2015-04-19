@@ -1,6 +1,7 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.misc.textTools import safeEval, readHex
+from fontTools.misc.encodingTools import getEncoding
 from fontTools.ttLib import getSearchRange
 from fontTools.unicode import Unicode
 from . import DefaultTable
@@ -138,6 +139,18 @@ class CmapSubtable(object):
 		self._writeCodes(codes, writer)
 		writer.endtag(self.__class__.__name__)
 		writer.newline()
+
+	def getEncoding(self, default=None):
+		"""Returns the Python encoding name for this cmap subtable based on its platformID,
+		platEncID, and language.  If encoding for these values is not known, by default
+		None is returned.  That can be overriden by passing a value to the default
+		argument.
+
+		Note that if you want to choose a "preferred" cmap subtable, most of the time
+		self.isUnicode() is what you want as that one only returns true for the modern,
+		commonly used, Unicode-compatible triplets, not the legacy ones.
+		"""
+		return getEncoding(self.platformID, self.platEncID, self.language, default)
 
 	def isUnicode(self):
 		return (self.platformID == 0 or
