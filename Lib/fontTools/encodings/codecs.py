@@ -331,9 +331,9 @@ _mac_romanian_mapping = {
 }
 
 _extended_encodings = {
-	"x-mac-croatian-ttx": ("ascii", _mac_croatian_mapping),
-	"x-mac-romanian-ttx": ("ascii", _mac_romanian_mapping),
-	"x-mac-japanese-ttx": ("shift_jis", {
+	"x_mac_croatian_ttx": ("ascii", _mac_croatian_mapping),
+	"x_mac_romanian_ttx": ("ascii", _mac_romanian_mapping),
+	"x_mac_japanese_ttx": ("shift_jis", {
 					b"\xFC":	unichr(0x007C),
 					b"\x7E":	unichr(0x007E),
 					b"\x80":	unichr(0x005C),
@@ -342,14 +342,14 @@ _extended_encodings = {
 					b"\xFE":	unichr(0x2122),
 					b"\xFF":	unichr(0x2026),
 				}),
-	"x-mac-chinesetrad-ttx": ("big5", {
+	"x_mac_trad_ttx": ("big5", {
 					b"\x80 ":	unichr(0x005C),
 					b"\xA0 ":	unichr(0x00A0),
 					b"\xFD ":	unichr(0x00A9),
 					b"\xFE ":	unichr(0x2122),
 					b"\xFF ":	unichr(0x2026),
 				}),
-	"x-mac-korean-ttx": ("euc_kr", {
+	"x_mac_korean_ttx": ("euc_kr", {
 					b"\x80 ":	unichr(0x00A0),
 					b"\x81 ":	unichr(0x20A9),
 					b"\x82 ":	unichr(0x2014),
@@ -357,7 +357,7 @@ _extended_encodings = {
 					b"\xFE ":	unichr(0x2122),
 					b"\xFF ":	unichr(0x2026),
 				}),
-	"x-mac-chinesesimp-ttx": ("gb2312", {
+	"x_mac_simp_ttx": ("gb2312", {
 					b"\x80 ":	unichr(0x00FC),
 					b"\xA0 ":	unichr(0x00A0),
 					b"\xFD ":	unichr(0x00A9),

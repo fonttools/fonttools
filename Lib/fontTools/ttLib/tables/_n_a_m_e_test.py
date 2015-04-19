@@ -14,30 +14,30 @@ class NameRecordTest(unittest.TestCase):
 
 	def test_toUnicode_utf16be(self):
 		name = self.makeName("Foo Bold", 111, 0, 2, 7)
-		self.assertEqual("utf-16be", name.getEncoding())
+		self.assertEqual("utf_16be", name.getEncoding())
 		self.assertEqual("Foo Bold", name.toUnicode())
 
 	def test_toUnicode_macroman(self):
 		name = self.makeName("Foo Italic", 222, 1, 0, 7)  # MacRoman
-		self.assertEqual("mac-roman", name.getEncoding())
+		self.assertEqual("mac_roman", name.getEncoding())
 		self.assertEqual("Foo Italic", name.toUnicode())
 
 	def test_toUnicode_macromanian(self):
 		name = self.makeName(b"Foo Italic\xfb", 222, 1, 0, 37)  # Mac Romanian
-		self.assertEqual("x-mac-romanian-ttx", name.getEncoding())
+		self.assertEqual("x_mac_romanian_ttx", name.getEncoding())
 		self.assertEqual("Foo Italic"+unichr(0x02DA), name.toUnicode())
 
 	def test_toUnicode_UnicodeDecodeError(self):
 		name = self.makeName("Foo Bold", 111, 0, 2, 7)
-		self.assertEqual("utf-16be", name.getEncoding())
-		name.string = b"X"  # invalid utf-16be sequence
+		self.assertEqual("utf_16be", name.getEncoding())
+		name.string = b"X"  # invalid utf_16be sequence
 		self.assertRaises(UnicodeDecodeError, name.toUnicode)
 
 	def toXML(self, name):
 		writer = XMLWriter(StringIO())
 		name.toXML(writer, ttFont=None)
-		xml = writer.file.getvalue().decode("utf-8").strip()
-		return xml.split(writer.newlinestr.decode("utf-8"))[1:]
+		xml = writer.file.getvalue().decode("utf_8").strip()
+		return xml.split(writer.newlinestr.decode("utf_8"))[1:]
 
 	def test_toXML_utf16be(self):
 		name = self.makeName("Foo Bold", 111, 0, 2, 7)
@@ -73,11 +73,11 @@ class NameRecordTest(unittest.TestCase):
 
 	def test_encoding_macroman_misc(self):
 		name = self.makeName('', 123, 1, 0, 17) # Mac Turkish
-		self.assertEqual(name.getEncoding(), "mac-turkish")
+		self.assertEqual(name.getEncoding(), "mac_turkish")
 		name.langID = 37
-		self.assertEqual(name.getEncoding(), "x-mac-romanian-ttx")
+		self.assertEqual(name.getEncoding(), "x_mac_romanian_ttx")
 		name.langID = 45 # Other
-		self.assertEqual(name.getEncoding(), "mac-roman")
+		self.assertEqual(name.getEncoding(), "mac_roman")
 
 	def test_extended_mac_encodings(self):
 		name = self.makeName(b'\xfe', 123, 1, 1, 0) # Mac Japanese

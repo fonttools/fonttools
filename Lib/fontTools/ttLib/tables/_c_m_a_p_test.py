@@ -12,12 +12,12 @@ class CmapSubtableTest(unittest.TestCase):
 
 	def test_toUnicode_utf16be(self):
 		subtable = self.makeSubtable(0, 2, 7)
-		self.assertEqual("utf-16be", subtable.getEncoding())
+		self.assertEqual("utf_16be", subtable.getEncoding())
 		self.assertEqual(True, subtable.isUnicode())
 
 	def test_toUnicode_macroman(self):
 		subtable = self.makeSubtable(1, 0, 7)  # MacRoman
-		self.assertEqual("mac-roman", subtable.getEncoding())
+		self.assertEqual("mac_roman", subtable.getEncoding())
 		self.assertEqual(False, subtable.isUnicode())
 
 	def test_toUnicode_macromanian(self):
