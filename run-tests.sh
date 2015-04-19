@@ -17,8 +17,14 @@ export PYTHONPATH
 
 # Find tests
 FILTER=$1
+shift
+while test "x$#" != x0; do
+	FILTER="$FILTER|$1"
+	shift
+done
+
 test "x$FILTER" = x && FILTER=.
-TESTS=`grep -r --include='*.py' -l -e doctest -e unittest * | grep "$FILTER"`
+TESTS=`grep -r --include='*.py' -l -e doctest -e unittest * | grep -E "$FILTER"`
 
 ret=0
 for test in $TESTS; do
