@@ -14,6 +14,7 @@ class ExtendCodec(codecs.Codec):
 		self.mapping = mapping
 		self.reverse = dict((v,k) for k,v in mapping.items())
 		self.max_len = max(len(v) for v in mapping.values())
+		self.info = codecs.CodecInfo(name=self.name, encode=self.encode, decode=self.decode)
 		codecs.register_error(name, self.error)
 
 	def encode(self, input, errors='strict'):
@@ -63,9 +64,6 @@ class ExtendCodec(codecs.Codec):
 					return self.reverse[s], end
 		e.encoding = self.name
 		raise e
-
-	def info(self):
-		return codecs.CodecInfo(name=self.name, encode=self.encode, decode=self.decode)
 
 
 _mac_croatian_mapping = {
@@ -389,7 +387,7 @@ def search_function(name):
 					continue
 				_cache[name] = ExtendCodec(name, base_encoding, mapping)
 				break
-		return _cache[name].info()
+		return _cache[name].info
 
 	return None
 
