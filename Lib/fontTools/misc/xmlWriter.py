@@ -11,10 +11,8 @@ INDENT = "  "
 
 class XMLWriter(object):
 	
-	def __init__(self, fileOrPath, indentwhite=INDENT, idlefunc=None, encoding=None):
-		if encoding is None:
-			encoding = 'utf-8'
-		if encoding.lower().replace('-','') != 'utf8':
+	def __init__(self, fileOrPath, indentwhite=INDENT, idlefunc=None, encoding="utf-8"):
+		if encoding.lower().replace('-','').replace('_','') != 'utf8':
 			raise Exception('Only UTF-8 encoding is supported.')
 		if fileOrPath == '-':
 			fileOrPath = sys.stdout
@@ -41,7 +39,7 @@ class XMLWriter(object):
 		self.needindent = 1
 		self.idlefunc = idlefunc
 		self.idlecounter = 0
-		self._writeraw(b'<?xml version="1.0" encoding="utf-8"?>')
+		self._writeraw(b'<?xml version="1.0" encoding="%s"?>' % encoding)
 		self.newline()
 	
 	def close(self):
