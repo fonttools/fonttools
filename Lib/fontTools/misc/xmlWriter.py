@@ -39,7 +39,7 @@ class XMLWriter(object):
 		self.needindent = 1
 		self.idlefunc = idlefunc
 		self.idlecounter = 0
-		self._writeraw(b'<?xml version="1.0" encoding="%s"?>' % encoding)
+		self._writeraw('<?xml version="1.0" encoding="%s"?>' % encoding)
 		self.newline()
 	
 	def close(self):
