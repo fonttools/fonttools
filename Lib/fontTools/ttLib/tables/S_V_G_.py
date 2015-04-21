@@ -171,7 +171,7 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 						doc = gunzipper.read()
 					self.compressed = True
 					del stringIO
-				doc = tostr(doc, "utf-8")
+				doc = tostr(doc, "utf_8")
 				self.docList.append( [doc, entry.startGlyphID, entry.endGlyphID] )
 
 	def compile(self, ttFont):
@@ -193,7 +193,7 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 		curOffset = len(datum) + doc_index_entry_format_0Size*numEntries
 		for doc, startGlyphID, endGlyphID in self.docList:
 			docOffset = curOffset
-			docBytes = tobytes(doc, encoding="utf-8")
+			docBytes = tobytes(doc, encoding="utf_8")
 			if getattr(self, "compressed", False) and not docBytes.startswith(b"\x1f\x8b"):
 				import gzip
 				stringIO = StringIO()
@@ -249,7 +249,7 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 		curOffset = SVG_format_1Size + doc_index_entry_format_0Size*numEntries
 		for doc, startGlyphID, endGlyphID in self.docList:
 			docOffset = curOffset
-			docBytes = tobytes(doc, encoding="utf-8")
+			docBytes = tobytes(doc, encoding="utf_8")
 			docLength = len(docBytes)
 			curOffset += docLength
 			entry = struct.pack(">HHLL", startGlyphID, endGlyphID, docOffset, docLength)
