@@ -69,7 +69,7 @@ class XMLWriter(object):
 		if indent and self.needindent:
 			self.file.write(self.indentlevel * self.indentwhite)
 			self.needindent = 0
-		s = self.totype(data, encoding="utf-8")
+		s = self.totype(data, encoding="utf_8")
 		if (strip):
 			s = s.strip()
 		self.file.write(s)
@@ -147,7 +147,7 @@ class XMLWriter(object):
 	
 
 def escape(data):
-	data = tostr(data, 'utf-8')
+	data = tostr(data, 'utf_8')
 	data = data.replace("&", "&amp;")
 	data = data.replace("<", "&lt;")
 	data = data.replace(">", "&gt;")
