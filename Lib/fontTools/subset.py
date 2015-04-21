@@ -2189,9 +2189,9 @@ def prune_pre_subset(self, options):
     namerecs = []
     for n in self.names:
       if n.nameID in [1, 4]:
-        n.string = ".\x7f".encode('utf-16be') if n.isUnicode() else ".\x7f"
+        n.string = ".\x7f".encode('utf_16be') if n.isUnicode() else ".\x7f"
       elif n.nameID in [2, 6]:
-        n.string = "\x7f".encode('utf-16be') if n.isUnicode() else "\x7f"
+        n.string = "\x7f".encode('utf_16be') if n.isUnicode() else "\x7f"
       elif n.nameID == 3:
         n.string = ""
       elif n.nameID in [16, 17, 18]:
@@ -2374,7 +2374,7 @@ class Subsetter(object):
   def populate(self, glyphs=[], gids=[], unicodes=[], text=""):
     self.unicodes_requested.update(unicodes)
     if isinstance(text, bytes):
-      text = text.decode("utf8")
+      text = text.decode("utf_8")
     for u in text:
       self.unicodes_requested.add(ord(u))
     self.glyph_names_requested.update(glyphs)

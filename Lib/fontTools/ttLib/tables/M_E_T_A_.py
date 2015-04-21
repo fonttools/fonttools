@@ -252,11 +252,11 @@ def mapXMLToUTF8(string):
 			uString = uString + unichr(byteord(string[i]))
 		i = i +1
 			
-	return uString.encode('utf8')
+	return uString.encode('utf_8')
 
 
 def mapUTF8toXML(string):
-	uString = string.decode('utf8')
+	uString = string.decode('utf_8')
 	string = ""
 	for uChar in uString:
 		i = ord(uChar)
