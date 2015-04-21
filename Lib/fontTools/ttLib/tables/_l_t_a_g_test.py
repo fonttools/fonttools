@@ -34,14 +34,14 @@ class Test_l_t_a_g(unittest.TestCase):
 		table.decompile(self.DATA_, ttFont=None)
 		table.toXML(writer, ttFont=None)
 		expected = "\n".join([
-			'<?xml version="1.0" encoding="utf-8"?>',
+			'<?xml version="1.0" encoding="UTF-8"?>',
 			'<version value="1"/>',
 			'<flags value="0"/>',
 			'<LanguageTag tag="en"/>',
 			'<LanguageTag tag="zh-Hant"/>',
 			'<LanguageTag tag="zh"/>'
 		]) + "\n"
-		self.assertEquals(expected.encode("utf-8"), writer.file.getvalue())
+		self.assertEquals(expected.encode("utf_8"), writer.file.getvalue())
 
 
 if __name__ == '__main__':
