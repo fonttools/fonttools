@@ -17,6 +17,33 @@ class TestXMLWriter(unittest.TestCase):
 		writer.comment("Hello world\nHow are you?")
 		self.assertEqual(HEADER + b"<!-- Hello world\n     How are you? -->", writer.file.getvalue())
 
+	def test_encoding_default(self):
+		writer = XMLWriter(StringIO())
+		self.assertEqual(b'<?xml version="1.0" encoding="utf-8"?>\n',
+				 writer.file.getvalue())
+
+	def test_encoding_utf8(self):
+		# https://github.com/behdad/fonttools/issues/246
+		writer = XMLWriter(StringIO(), encoding="utf8")
+		self.assertEqual(b'<?xml version="1.0" encoding="utf8"?>\n',
+				 writer.file.getvalue())
+
+	def test_encoding_UTF_8(self):
+		# https://github.com/behdad/fonttools/issues/246
+		writer = XMLWriter(StringIO(), encoding="UTF-8")
+		self.assertEqual(b'<?xml version="1.0" encoding="UTF-8"?>\n',
+				 writer.file.getvalue())
+
+	def test_encoding_UTF8(self):
+		# https://github.com/behdad/fonttools/issues/246
+		writer = XMLWriter(StringIO(), encoding="UTF8")
+		self.assertEqual(b'<?xml version="1.0" encoding="UTF8"?>\n',
+				 writer.file.getvalue())
+
+	def test_encoding_other(self):
+		self.assertRaises(Exception, XMLWriter, StringIO(),
+				  encoding="iso-8859-1")
+
 	def test_write(self):
 		writer = XMLWriter(StringIO())
 		writer.write("foo&bar")
