@@ -3,7 +3,7 @@ from fontTools.misc.py23 import *
 import unittest
 from .xmlWriter import XMLWriter
 
-HEADER = b'<?xml version="1.0" encoding="utf-8"?>\n'
+HEADER = b'<?xml version="1.0" encoding="UTF-8"?>\n'
 
 class TestXMLWriter(unittest.TestCase):
 
@@ -19,13 +19,13 @@ class TestXMLWriter(unittest.TestCase):
 
 	def test_encoding_default(self):
 		writer = XMLWriter(StringIO())
-		self.assertEqual(b'<?xml version="1.0" encoding="utf-8"?>\n',
+		self.assertEqual(b'<?xml version="1.0" encoding="UTF-8"?>\n',
 				 writer.file.getvalue())
 
 	def test_encoding_utf8(self):
 		# https://github.com/behdad/fonttools/issues/246
 		writer = XMLWriter(StringIO(), encoding="utf8")
-		self.assertEqual(b'<?xml version="1.0" encoding="utf8"?>\n',
+		self.assertEqual(b'<?xml version="1.0" encoding="UTF-8"?>\n',
 				 writer.file.getvalue())
 
 	def test_encoding_UTF_8(self):
@@ -37,7 +37,7 @@ class TestXMLWriter(unittest.TestCase):
 	def test_encoding_UTF8(self):
 		# https://github.com/behdad/fonttools/issues/246
 		writer = XMLWriter(StringIO(), encoding="UTF8")
-		self.assertEqual(b'<?xml version="1.0" encoding="UTF8"?>\n',
+		self.assertEqual(b'<?xml version="1.0" encoding="UTF-8"?>\n',
 				 writer.file.getvalue())
 
 	def test_encoding_other(self):
