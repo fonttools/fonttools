@@ -146,9 +146,9 @@ class NameRecord(object):
 			# (Yes, I've seen all of these in the wild... sigh)
 			if byteord(string[-1]) == 0:
 				string = string[:-1]
-			elif all(byteord(b) == 0 if i % 2 else byteord(b) >= 0x20 for i,b in enumerate(string)):
+			elif all(byteord(b) == 0 if i % 2 else byteord(b) >= 0x20 and byteord(b) <= 0x7E for i,b in enumerate(string)):
 				string = b'\0' + string
-			elif byteord(string[0]) == 0 and all(byteord(b) >= 0x20 for b in string[1:]):
+			elif byteord(string[0]) == 0 and all(byteord(b) >= 0x20 and byteord(b) <= 0x7E for b in string[1:]):
 				string = bytesjoin(b'\0'+bytechr(byteord(b)) for b in string[1:])
 		return tounicode(string, encoding=encoding, errors=errors)
 
