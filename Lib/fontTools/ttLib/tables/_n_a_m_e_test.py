@@ -70,6 +70,14 @@ class NameRecordTest(unittest.TestCase):
                     '</namerecord>'
 		], self.toXML(name))
 
+	def test_toXML_macroman_actual_utf16be(self):
+		name = self.makeName("\0F\0o\0o", 222, 1, 0, 7)
+		self.assertEqual([
+                    '<namerecord nameID="222" platformID="1" platEncID="0" langID="0x7" unicode="True">',
+                    '  Foo',
+                    '</namerecord>'
+		], self.toXML(name))
+
 	def test_toXML_unknownPlatEncID_nonASCII(self):
 		name = self.makeName(b"B\x8arli", 333, 1, 9876, 7) # Unknown Mac encodingID
 		self.assertEqual([
