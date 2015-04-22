@@ -152,7 +152,7 @@ class NameRecord(object):
 				("langID", hex(self.langID)),
 			]
 
-		if not self.encodingIsUnicodeCompatible():
+		if unistr is None or not self.encodingIsUnicodeCompatible():
 			attrs.append(("unicode", unistr is not None))
 
 		writer.begintag("namerecord", attrs)
