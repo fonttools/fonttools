@@ -47,6 +47,14 @@ class NameRecordTest(unittest.TestCase):
                     '</namerecord>'
 		], self.toXML(name))
 
+	def test_toXML_utf16be_broken(self):
+		name = self.makeName(b"\0F\0o\0o\0", 111, 0, 2, 7)
+		self.assertEqual([
+                    '<namerecord nameID="111" platformID="0" platEncID="2" langID="0x7" unicode="False">',
+                    '  &#0;F&#0;o&#0;o&#0;',
+                    '</namerecord>'
+		], self.toXML(name))
+
 	def test_toXML_macroman(self):
 		name = self.makeName("Foo Italic", 222, 1, 0, 7)  # MacRoman
 		self.assertEqual([
