@@ -28,9 +28,8 @@ class NameRecordTest(unittest.TestCase):
 		self.assertEqual("Foo Italic"+unichr(0x02DA), name.toUnicode())
 
 	def test_toUnicode_UnicodeDecodeError(self):
-		name = self.makeName("Foo Bold", 111, 0, 2, 7)
+		name = self.makeName(b"\1", 111, 0, 2, 7)
 		self.assertEqual("utf_16be", name.getEncoding())
-		name.string = b"X"  # invalid utf_16be sequence
 		self.assertRaises(UnicodeDecodeError, name.toUnicode)
 
 	def toXML(self, name):
@@ -47,11 +46,19 @@ class NameRecordTest(unittest.TestCase):
                     '</namerecord>'
 		], self.toXML(name))
 
-	def test_toXML_utf16be_broken(self):
+	def test_toXML_utf16be_odd_length1(self):
 		name = self.makeName(b"\0F\0o\0o\0", 111, 0, 2, 7)
 		self.assertEqual([
-                    '<namerecord nameID="111" platformID="0" platEncID="2" langID="0x7" unicode="False">',
-                    '  &#0;F&#0;o&#0;o&#0;',
+                    '<namerecord nameID="111" platformID="0" platEncID="2" langID="0x7">',
+                    '  Foo',
+                    '</namerecord>'
+		], self.toXML(name))
+
+	def test_toXML_utf16be_odd_length2(self):
+		name = self.makeName(b"\0Fooz", 111, 0, 2, 7)
+		self.assertEqual([
+                    '<namerecord nameID="111" platformID="0" platEncID="2" langID="0x7">',
+                    '  Fooz',
                     '</namerecord>'
 		], self.toXML(name))
 
