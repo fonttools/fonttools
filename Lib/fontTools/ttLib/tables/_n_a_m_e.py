@@ -121,11 +121,36 @@ class NameRecord(object):
 		entry as returned by self.getEncoding(); Note that  self.getEncoding()
 		returns 'ascii' if the encoding is unknown to the library.
 
-		If the bytes are ill-formed in that chosen encoding, the error is handled
-		according to the errors parameter to this function, which is passed to the
-		underlying decode() function; by default it throws a UnicodeDecodeError exception.
+		Certain heuristics are performed to recover data from bytes that are
+		ill-formed in the chosen encoding, or that otherwise look misencoded
+		(mostly around bad UTF-16BE encoded bytes, or bytes that look like UTF-16BE
+		but marked otherwise).  If the bytes are ill-formed and the heuristics fail,
+		the error is handled according to the errors parameter to this function, which is
+		passed to the underlying decode() function; by default it throws a
+		UnicodeDecodeError exception.
+
+		Note: The mentioned heuristics mean that roundtripping a font to XML and back
+		to binary might recover some misencoded data whereas just loading the font
+		and saving it back will not change them.
 		"""
-		return tounicode(self.string, encoding=self.getEncoding(), errors=errors)
+		encoding = self.getEncoding()
+		string = self.string
+		if encoding == 'utf_16be' and len(string) % 2 == 1:
+			# Recover badly encoded UTF-16 strings that have an odd number of bytes:
+			# - If the last byte is zero, drop it.  Otherwise,
+			# - If all the odd bytes are zero and all the even bytes are ASCII,
+			#   prepend one zero byte.  Otherwise,
+			# - If first byte is zero and all other bytes are ASCII, insert zero
+			#   bytes between consecutive ASCII bytes.
+			#
+			# (Yes, I've seen all of these in the wild... sigh)
+			if byteord(string[-1]) == 0:
+				string = string[:-1]
+			elif all(byteord(b) == 0 if i % 2 else byteord(b) >= 0x20 for i,b in enumerate(string)):
+				string = b'\0' + string
+			elif byteord(string[0]) == 0 and all(byteord(b) >= 0x20 for b in string[1:]):
+				string = bytesjoin(b'\0'+bytechr(byteord(b)) for b in string[1:])
+		return tounicode(string, encoding=encoding, errors=errors)
 
 	def toBytes(self, errors='strict'):
 		""" If self.string is a bytes object, return it; otherwise try encoding
