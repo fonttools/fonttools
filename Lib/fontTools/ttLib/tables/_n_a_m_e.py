@@ -138,11 +138,6 @@ class NameRecord(object):
 		encoding = self.getEncoding()
 		string = self.string
 
-		if self.platformID == 1 and all(byteord(b) == 0 if i % 2 == 0 else isascii(byteord(b)) for i,b in enumerate(string)):
-			# If string claims to be Mac encoding, but looks like UTF-16BE with ASCII text,
-			# narrow it down.
-			string = bytesjoin(bytechr(byteord(b)) for b in string[1::2])
-
 		if encoding == 'utf_16be' and len(string) % 2 == 1:
 			# Recover badly encoded UTF-16 strings that have an odd number of bytes:
 			# - If the last byte is zero, drop it.  Otherwise,
@@ -159,7 +154,17 @@ class NameRecord(object):
 			elif byteord(string[0]) == 0 and all(isascii(byteord(b)) for b in string[1:]):
 				string = bytesjoin(b'\0'+bytechr(byteord(b)) for b in string[1:])
 
-		return tounicode(string, encoding=encoding, errors=errors)
+		string = tounicode(string, encoding=encoding, errors=errors)
+
+		# If decoded strings still looks like UTF-16BE, it suggests a double-encoding.
+		# Fix it up.
+		if all(ord(c) == 0 if i % 2 == 0 else isascii(ord(c)) for i,c in enumerate(string)):
+			# If string claims to be Mac encoding, but looks like UTF-16BE with ASCII text,
+			# narrow it down.
+			string = ''.join(c for c in string[1::2])
+
+		return string
+
 
 	def toBytes(self, errors='strict'):
 		""" If self.string is a bytes object, return it; otherwise try encoding
