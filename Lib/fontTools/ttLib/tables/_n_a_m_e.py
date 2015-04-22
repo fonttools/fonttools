@@ -133,8 +133,16 @@ class NameRecord(object):
 		to binary might recover some misencoded data whereas just loading the font
 		and saving it back will not change them.
 		"""
+		def isascii(b):
+			return (b >= 0x20 and b <= 0x7E) or b in [0x09, 0x0A, 0x0D]
 		encoding = self.getEncoding()
 		string = self.string
+
+		if self.platformID == 1 and all(byteord(b) == 0 if i % 2 == 0 else isascii(byteord(b)) for i,b in enumerate(string)):
+			# If string claims to be Mac encoding, but looks like UTF-16BE with ASCII text,
+			# narrow it down.
+			string = bytesjoin(bytechr(byteord(b)) for b in string[1::2])
+
 		if encoding == 'utf_16be' and len(string) % 2 == 1:
 			# Recover badly encoded UTF-16 strings that have an odd number of bytes:
 			# - If the last byte is zero, drop it.  Otherwise,
@@ -146,10 +154,11 @@ class NameRecord(object):
 			# (Yes, I've seen all of these in the wild... sigh)
 			if byteord(string[-1]) == 0:
 				string = string[:-1]
-			elif all(byteord(b) == 0 if i % 2 else byteord(b) >= 0x20 and byteord(b) <= 0x7E for i,b in enumerate(string)):
+			elif all(byteord(b) == 0 if i % 2 else isascii(byteord(b)) for i,b in enumerate(string)):
 				string = b'\0' + string
-			elif byteord(string[0]) == 0 and all(byteord(b) >= 0x20 and byteord(b) <= 0x7E for b in string[1:]):
+			elif byteord(string[0]) == 0 and all(isascii(byteord(b)) for b in string[1:]):
 				string = bytesjoin(b'\0'+bytechr(byteord(b)) for b in string[1:])
+
 		return tounicode(string, encoding=encoding, errors=errors)
 
 	def toBytes(self, errors='strict'):
