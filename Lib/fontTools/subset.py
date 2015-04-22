@@ -177,7 +177,9 @@ Optimization options:
   --desubroutinize
       Remove CFF use of subroutinizes.  Subroutinization is a way to make CFF
       fonts smaller.  For small subsets however, desubroutinizing might make
-      the font smaller.  Also see note under --no-hinting.
+      the font smaller.  It has even been reported that desubroutinized CFF
+      fonts compress better (produce smaller output) WOFF and WOFF2 fonts.
+      Also see note under --no-hinting.
   --no-desubroutinize [default]
       Leave CFF subroutinizes as is, only throw away unused subroutinizes.
 
