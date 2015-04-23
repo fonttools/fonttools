@@ -31,8 +31,9 @@ SKIA_GVAR_I = hexdecode(
 
 # Shared coordinates in the Skia font, as printed in Apple's TrueType spec.
 SKIA_SHARED_COORDS = hexdecode(
-	"00 33 20 00 00 15 20 01 00 1B 20 02 00 24 20 03 "
-	"00 15 20 04 00 26 20 07 00 0D 20 06 00 1A 20 05")
+	"40 00 00 00 C0 00 00 00 00 00 40 00 00 00 C0 00 "
+	"C0 00 C0 00 40 00 C0 00 40 00 40 00 C0 00 40 00")
+
 
 class GlyphVariationTableTest(unittest.TestCase):
 	def test_decompileOffsets_shortFormat(self):
@@ -72,9 +73,18 @@ class GlyphVariationTableTest(unittest.TestCase):
 	def test_decompileSharedCoords_Skia(self):
 		table = table__g_v_a_r()
 		table.offsetToCoord = 0
-		table.sharedCoordCount = 0
+		table.sharedCoordCount = 8
 		sharedCoords = table.decompileSharedCoords_(["wght", "wdth"], SKIA_SHARED_COORDS)
-		self.assertEqual([], sharedCoords)
+		self.assertEqual([
+			{"wght": 1.0, "wdth": 0.0},
+			{"wght": -1.0, "wdth": 0.0},
+			{"wght": 0.0, "wdth": 1.0},
+			{"wght": 0.0, "wdth": -1.0},
+			{"wght": -1.0, "wdth": -1.0},
+			{"wght": 1.0, "wdth": -1.0},
+			{"wght": 1.0, "wdth": 1.0},
+			{"wght": -1.0, "wdth": 1.0}
+		], sharedCoords)
 
 	def test_decompileSharedCoords_empty(self):
 		table = table__g_v_a_r()
