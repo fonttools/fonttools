@@ -31,6 +31,10 @@ class ExtendCodec(codecs.Codec):
 		#
 		# So we implement what codecs.encode() should have been doing: which is expect
 		# error handler to return bytes() to be added to the output.
+		#
+		# This seems to have been fixed in Python 3.3.  We should try using that and
+		# use fallback only if that failed.
+		# https://docs.python.org/3.3/library/codecs.html#codecs.register_error
 
 		length = len(input)
 		out = b''
