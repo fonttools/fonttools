@@ -14,7 +14,7 @@ import struct
 # TrueType source code for parsing 'gvar':
 # http://git.savannah.gnu.org/cgit/freetype/freetype2.git/tree/src/truetype/ttgxvar.c
 
-gvarHeaderFormat = b"""
+GVAR_HEADER_FORMAT = b"""
 	> # big endian
 	version:		H
 	reserved:		H
@@ -26,14 +26,7 @@ gvarHeaderFormat = b"""
 	offsetToData:		I
 """
 
-gvarItemFormat = b"""
-	> # big endian
-	tupleCount:	H
-	offsetToData:	H
-"""
-
-GVAR_HEADER_SIZE = sstruct.calcsize(gvarHeaderFormat)
-gvarItemSize = sstruct.calcsize(gvarItemFormat)
+GVAR_HEADER_SIZE = sstruct.calcsize(GVAR_HEADER_FORMAT)
 
 TUPLES_SHARE_POINT_NUMBERS = 0x8000
 TUPLE_COUNT_MASK = 0x0fff
@@ -50,10 +43,11 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 	def decompile(self, data, ttFont):
 		axisTags = [axis.AxisTag for axis in ttFont['fvar'].table.VariationAxis]
 		glyphs = ttFont.getGlyphOrder()
-		sstruct.unpack(gvarHeaderFormat, data[0:GVAR_HEADER_SIZE], self)
+		sstruct.unpack(GVAR_HEADER_FORMAT, data[0:GVAR_HEADER_SIZE], self)
 		assert len(glyphs) == self.glyphCount
 		assert len(axisTags) == self.axisCount
-		offsets = self.decompileOffsets_(data)
+		offsets = self.decompileOffsets_(data[GVAR_HEADER_SIZE:],
+						 format=(self.flags & 1), glyphCount=self.glyphCount)
 		sharedCoords = self.decompileSharedCoords_(axisTags, data)
 		self.variations = {}
 		for i in range(self.glyphCount):
@@ -86,17 +80,17 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 			pos += 2
 		return coord
 
-	def decompileOffsets_(self, data):
-		if (self.flags & 1) == 0:
+	@staticmethod
+	def decompileOffsets_(data, format, glyphCount):
+		if format == 0:
 			# Short format: array of UInt16
 			offsets = array.array("H")
-			offsetsSize = (self.glyphCount + 1) * 2
+			offsetsSize = (glyphCount + 1) * 2
 		else:
 			# Long format: array of UInt32
 			offsets = array.array("I")
-			offsetsSize = (self.glyphCount + 1) * 4
-		offsetsData = data[GVAR_HEADER_SIZE : GVAR_HEADER_SIZE + offsetsSize]
-		offsets.fromstring(offsetsData)
+			offsetsSize = (glyphCount + 1) * 4
+		offsets.fromstring(data[0 : offsetsSize])
 		if sys.byteorder != "big":
 			offsets.byteswap()
 
@@ -104,14 +98,37 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		# This is not documented in Apple's TrueType specification,
 		# but can be inferred from the FreeType implementation, and
 		# we could verify it with two sample GX fonts.
-		if (self.flags & 1) == 0:
+		if format == 0:
 			offsets = [off * 2 for off in offsets]
 
 		return offsets
 
+	@staticmethod
+	def compileOffsets_(offsets):
+		"""Packs a list of offsets into a 'gvar' offset table.
+
+		Returns a pair (bytestring, flag). Bytestring is the
+		packed offset table. Format indicates whether the table
+		uses short (0) or long (1) integers, and should be stored
+		into the flags field of the 'gvar' header.
+		"""
+		assert len(offsets) >= 2
+		for i in range(1, len(offsets)):
+			assert offsets[i - 1] <= offsets[i]
+		if max(offsets) <= 0xffff * 2:
+			packed = array.array(b"H", [n >> 1 for n in offsets])
+			format = 0
+		else:
+			packed = array.array(b"I", offsets)
+			format = 1
+		if sys.byteorder != "big":
+			packed.byteswap()
+		return (packed.tostring(), format)
+
 	def decompileVariations_(self, numPoints, sharedCoords, axisTags, data):
 		if len(data) < 4:
 			return []
+		tuples = []
 		tupleCount, offsetToData = struct.unpack(b">HH", data[:4])
 		tuplesSharePointNumbers = (tupleCount & TUPLES_SHARE_POINT_NUMBERS) != 0
 		tupleCount = tupleCount & TUPLE_COUNT_MASK
@@ -120,75 +137,22 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		for i in range(tupleCount):
 			tupleSize, tupleIndex = struct.unpack(b">HH", data[tuplePos:tuplePos+4])
 			if (tupleIndex & EMBEDDED_TUPLE_COORD) != 0:
-				print('****** %d ' % (tupleIndex & TUPLE_INDEX_MASK))
-				print(' '.join(x.encode('hex') for x in data))
 				coord = self.decompileCoord_(axisTags, data[tuplePos+4:])
 			else:
-				pass #coord = sharedCoords[tupleIndex & TUPLE_INDEX_MASK].copy()
-			tuplePos += self.getTupleSize(tupleIndex)
+				coord = sharedCoords[tupleIndex & TUPLE_INDEX_MASK].copy()
+			gvar = GlyphVariation(coord)
+			tuples.append(gvar)
+			tuplePos += self.getTupleSize_(tupleIndex, self.axisCount)
 		return []
 
-									     
-									     
-	# -------------------- from here comes junk ---------------------------------------------------
-	# TODO: Remove glyphName argument, it is just for debugging.
-	def OBSOLETE_decompileGlyphVariation(self, glyphName, sharedCoords, data):
-		tracing = False or (glyphName == 'I')
-		if tracing: print(' '.join(x.encode('hex') for x in data))
-		if len(data) == 0:
-			return []
-		result = []
-		tupleCount, offsetToData = struct.unpack(b">HH", data[:4])
-		tuplesSharePointNumbers = (tupleCount & 0x8000) != 0
-		tupleCount = tupleCount & 0xfff
-		pos = 4
-		dataPos = offsetToData
-		if tracing: print('tuplesSharePointNumbers=%s' % tuplesSharePointNumbers)
-		for i in range(tupleCount):
-			tupleSize, tupleIndex = struct.unpack(b">HH", data[pos:pos+4])
-			if (tupleIndex & kEmbeddedTupleCoord) != 0:
-				coord = None  # TODO: Implement
-			else:
-				coord = sharedCoords[tupleIndex & kTupleIndexMask].copy()
-			if tracing:
-				print('Tuple %d: pos=%d, tupleSize=%04x, byteSize=%d, index=%04x' % (i, pos, tupleSize, self.getTupleSize(tupleSize), tupleIndex))
-			tupleData = buffer(data, dataPos, tupleSize)
-			tuple = self.decompileTupleData(tuplesSharePointNumbers, coord, tupleData)
-			result.append(tuple)
-			pos += self.getTupleSize(tupleIndex)
-			dataPos += tupleSize
-		print(result)
-		return result
-
-	def OBSOLETE_decompileTupleData(self, tuplesSharePointNumbers, coord, data):
-		#print("    tuplesSharePointNumbers: %s" % tuplesSharePointNumbers)
-		#print("    tupleData: %s" % ' '.join([c.encode('hex') for c in data]))
-		tuple = GlyphVariation(coord)
-		#t.decompilePackedPoints(data)
-		#pos = 0
-		#numPoints = ord(data[pos])
-		#if numPoints >= 0x80:
-		#	pos += 1
-		#	numPoints = (numPoints & 0x7f) << 8 + ord(data[pos])
-		#pos += 1
-		#
-		# 0 means "all points in glyph"; TODO: how to find out this number?
-		#if numPoints != 0:
-		#	# TODO
-		#	pass
-
-		#print("    numPoints: %d" % numPoints)
-		#assert not tuplesSharePointNumbers  # TODO: implement shared point numbers
-		# TODO: decode deltas
-		return tuple
-
-	def getTupleSize(self, tupleIndex):
+	@staticmethod
+	def getTupleSize_(tupleIndex, axisCount):
 		"""Returns the byte size of a tuple given the value of its tupleIndex field."""
 		size = 4
 		if (tupleIndex & EMBEDDED_TUPLE_COORD) != 0:
-			size += self.axisCount * 2
+			size += axisCount * 2
 		if (tupleIndex & INTERMEDIATE_TUPLE) != 0:
-			size += self.axisCount * 4
+			size += axisCount * 4
 		return size
 
 	def toXML(self, writer, ttFont):
