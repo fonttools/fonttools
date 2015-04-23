@@ -36,20 +36,24 @@ SKIA_SHARED_COORDS = hexdecode(
 
 class GlyphVariationTableTest(unittest.TestCase):
 	def test_decompileOffsets_shortFormat(self):
-		table = table__g_v_a_r()
-		table.flags = 0
-		table.glyphCount = 5
-		data = b'X' * GVAR_HEADER_SIZE + hexdecode("00 11 22 33 44 55 66 77 88 99 aa bb")
+		decompileOffsets = table__g_v_a_r.decompileOffsets_
+		data = hexdecode("00 11 22 33 44 55 66 77 88 99 aa bb")
 		self.assertEqual([2*0x0011, 2*0x2233, 2*0x4455, 2*0x6677, 2*0x8899, 2*0xaabb],
-				 table.decompileOffsets_(data))
+				 list(decompileOffsets(data, format=0, glyphCount=5)))
 
 	def test_decompileOffsets_longFormat(self):
-		table = table__g_v_a_r()
-		table.flags = 1
-		table.glyphCount = 2
-		data = b'X' * GVAR_HEADER_SIZE + hexdecode("00 11 22 33 44 55 66 77 88 99 aa bb")
+		decompileOffsets = table__g_v_a_r.decompileOffsets_
+		data = hexdecode("00 11 22 33 44 55 66 77 88 99 aa bb")
 		self.assertEqual([0x00112233, 0x44556677, 0x8899aabb],
-				 list(table.decompileOffsets_(data)))
+				 list(decompileOffsets(data, format=1, glyphCount=2)))
+
+	def test_compileOffsets_shortFormat(self):
+		self.assertEqual((hexdecode("00 00 00 02 FF C0"), 0),
+				 table__g_v_a_r.compileOffsets_([0, 4, 0x1ff80]))
+
+	def test_compileOffsets_longFormat(self):
+		self.assertEqual((hexdecode("00 00 00 00 00 00 00 04 CA FE BE EF"), 1),
+				 table__g_v_a_r.compileOffsets_([0, 4, 0xCAFEBEEF]))
 
 	def test_decompileSharedCoords(self):
 		table = table__g_v_a_r()
@@ -82,7 +86,7 @@ class GlyphVariationTableTest(unittest.TestCase):
 		axes = ["wght", "wdth"]
 		table = table__g_v_a_r()
 		table.offsetToCoord = 0
-		table.sharedCoordCount = 0
+		table.sharedCoordCount = 8
 		table.axisCount = len(axes)
 		sharedCoords = table.decompileSharedCoords_(axes, SKIA_SHARED_COORDS)
 		self.assertEqual([], table.decompileVariations_(99, sharedCoords, axes, SKIA_GVAR_I))
@@ -92,23 +96,12 @@ class GlyphVariationTableTest(unittest.TestCase):
 		self.assertEqual([], table.decompileVariations_(numPoints=5, sharedCoords=[], axisTags=[], data=b""))
 
 	def test_getTupleSize(self):
-		table = table__g_v_a_r()
-		table.axisCount = 3
-		self.assertEqual(4 + table.axisCount * 2, table.getTupleSize(0x8042))
-		self.assertEqual(4 + table.axisCount * 4, table.getTupleSize(0x4077))
-		self.assertEqual(4, table.getTupleSize(0x2077))
-		self.assertEqual(4, table.getTupleSize(11))
-
-
-class GlyphVariationTest(unittest.TestCase):
-	def test_decompilePackedPoints(self):
-		pass
-		# 02 01 00 02 80 40 03 eb 81
-		# 01 00 00 80 80
-		# t = hexdecode("00 82 02 ff ff ff 83 02 01 01 01 84 91")
-		#gvar = GlyphVariation({})
-		#data = hexdecode("01 00 00 80 80")
-		#print('******* %s' % gvar.decompilePackedPoints(data))
+		getTupleSize = table__g_v_a_r.getTupleSize_
+		axisCount = 3
+		self.assertEqual(4 + axisCount * 2, getTupleSize(0x8042, axisCount))
+		self.assertEqual(4 + axisCount * 4, getTupleSize(0x4077, axisCount))
+		self.assertEqual(4, getTupleSize(0x2077, axisCount))
+		self.assertEqual(4, getTupleSize(11, axisCount))
 
 
 if __name__ == "__main__":
