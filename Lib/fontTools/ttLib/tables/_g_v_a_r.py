@@ -41,6 +41,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 	dependencies = ["fvar", "glyf"]
 
 	def decompile(self, data, ttFont):
+		data = buffer(data)  # We do a lot of slicing; no need to copy all those sub-buffers.
 		axisTags = [axis.AxisTag for axis in ttFont['fvar'].table.VariationAxis]
 		glyphs = ttFont.getGlyphOrder()
 		sstruct.unpack(GVAR_HEADER_FORMAT, data[0:GVAR_HEADER_SIZE], self)
