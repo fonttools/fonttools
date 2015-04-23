@@ -1,7 +1,7 @@
 from __future__ import print_function, division, absolute_import, unicode_literals
 from fontTools.misc.py23 import *
 import unittest
-from fontTools.ttLib.tables._g_v_a_r import table__g_v_a_r, GVAR_HEADER_SIZE, GlyphVariation
+from fontTools.ttLib.tables._g_v_a_r import table__g_v_a_r, GlyphVariation
 
 
 def hexdecode(s):
@@ -112,6 +112,18 @@ class GlyphVariationTableTest(unittest.TestCase):
 		self.assertEqual(4 + axisCount * 4, getTupleSize(0x4077, axisCount))
 		self.assertEqual(4, getTupleSize(0x2077, axisCount))
 		self.assertEqual(4, getTupleSize(11, axisCount))
+
+	def test_decompileDeltas(self):
+		decompileDeltas = table__g_v_a_r.decompileDeltas_
+		# 83 = zero values (0x80), count = 4 (1 + 0x83 & 0x3F)
+		self.assertEqual(([0, 0, 0, 0], 1), decompileDeltas(4, hexdecode("83")))
+		# 41 01 02 FF FF = signed 16-bit values (0x40), count = 2 (1 + 0x41 & 0x3F)
+		self.assertEqual(([258, -1], 5), decompileDeltas(2, hexdecode("41 01 02 FF FF")))
+		# 01 81 07 = signed 8-bit values, count = 2 (1 + 0x01 & 0x3F)
+		self.assertEqual(([-127, 7], 3), decompileDeltas(2, hexdecode("01 81 07")))
+		# combination of all three encodings, followed by unused data in buffer
+		data = hexdecode("83 40 01 02 01 81 80 DE AD BE EF")
+		self.assertEqual(([0, 0, 0, 0, 258, -127, -128], 7), decompileDeltas(7, data))
 
 
 if __name__ == "__main__":

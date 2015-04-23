@@ -36,6 +36,10 @@ INTERMEDIATE_TUPLE = 0x4000
 PRIVATE_POINT_NUMBERS = 0x2000
 TUPLE_INDEX_MASK = 0x0fff
 
+DELTAS_ARE_ZERO = 0x80
+DELTAS_ARE_WORDS = 0x40
+DELTA_RUN_COUNT_MASK = 0x3f
+
 class table__g_v_a_r(DefaultTable.DefaultTable):
 
 	dependencies = ["fvar", "glyf"]
@@ -155,6 +159,28 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		if (tupleIndex & INTERMEDIATE_TUPLE) != 0:
 			size += axisCount * 4
 		return size
+
+	@staticmethod
+	def decompileDeltas_(numDeltas, data):
+		"""(numDeltas, data) --> ([delta, delta, ...], numBytesConsumed)"""
+		result = []
+		pos = 0
+		while len(result) < numDeltas:
+			runHeader = ord(data[pos])
+			pos += 1
+			numDeltasInRun = (runHeader & DELTA_RUN_COUNT_MASK) + 1
+			if (runHeader & DELTAS_ARE_ZERO) != 0:
+				result.extend([0] * numDeltasInRun)
+			elif (runHeader & DELTAS_ARE_WORDS) != 0:
+				for i in xrange(numDeltasInRun):
+					result.append(struct.unpack(">h", data[pos:pos+2])[0])
+					pos += 2
+			else:
+				for i in xrange(numDeltasInRun):
+					result.append(struct.unpack(">b", data[pos])[0])
+					pos += 1
+		assert len(result) == numDeltas
+		return (result, pos)
 
 	def toXML(self, writer, ttFont):
 		writer.simpletag("Version", value=self.version)
