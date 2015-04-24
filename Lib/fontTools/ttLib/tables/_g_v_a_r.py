@@ -111,7 +111,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 	def compileOffsets_(offsets):
 		"""Packs a list of offsets into a 'gvar' offset table.
 
-		Returns a pair (bytestring, flag). Bytestring is the
+		Returns a pair (bytestring, format). Bytestring is the
 		packed offset table. Format indicates whether the table
 		uses short (format=0) or long (format=1) integers.
 		The returned format should get packed into the flags field
