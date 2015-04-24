@@ -55,7 +55,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 						 format=(self.flags & 1), glyphCount=self.glyphCount)
 		sharedCoords = self.decompileSharedCoords_(axisTags, data)
 		self.variations = {}
-		for i in range(self.glyphCount):
+		for i in xrange(self.glyphCount):
 			glyphName = glyphs[i]
 			glyph = ttFont["glyf"][glyphName]
 			if glyph.isComposite():
@@ -70,7 +70,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		result = []
 		pos = self.offsetToCoord
 		stride = len(axisTags) * 2
-		for i in range(self.sharedCoordCount):
+		for i in xrange(self.sharedCoordCount):
 			coord = self.decompileCoord_(axisTags, data[pos:pos+stride])
 			result.append(coord)
 			pos += stride
@@ -118,7 +118,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		into the flags field of the 'gvar' header.
 		"""
 		assert len(offsets) >= 2
-		for i in range(1, len(offsets)):
+		for i in xrange(1, len(offsets)):
 			assert offsets[i - 1] <= offsets[i]
 		if max(offsets) <= 0xffff * 2:
 			packed = array.array(b"H", [n >> 1 for n in offsets])
@@ -139,7 +139,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		tupleCount = tupleCount & TUPLE_COUNT_MASK
 		tuplePos = 4
 		dataPos = offsetToData
-		for i in range(tupleCount):
+		for i in xrange(tupleCount):
 			tupleSize, tupleIndex = struct.unpack(b">HH", data[tuplePos:tuplePos+4])
 			if (tupleIndex & EMBEDDED_TUPLE_COORD) != 0:
 				coord = self.decompileCoord_(axisTags, data[tuplePos+4:])
