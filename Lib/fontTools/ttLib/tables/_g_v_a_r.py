@@ -1,5 +1,6 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
+from fontTools import ttLib
 from fontTools.misc import sstruct
 from fontTools.misc.fixedTools import fixedToFloat
 from fontTools.misc.textTools import safeEval
@@ -39,6 +40,10 @@ TUPLE_INDEX_MASK = 0x0fff
 DELTAS_ARE_ZERO = 0x80
 DELTAS_ARE_WORDS = 0x40
 DELTA_RUN_COUNT_MASK = 0x3f
+
+POINTS_ARE_WORDS = 0x80
+POINT_RUN_COUNT_MASK = 0x7f
+
 
 class table__g_v_a_r(DefaultTable.DefaultTable):
 
@@ -161,16 +166,50 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 	@staticmethod
 	def decompileTuple_(numPoints, sharedCoords, axisTags, data, tupleData):
 		flags = struct.unpack(b">H", data[2:4])[0]
-		print('***** tuple; flags:%04x' % flags)
-		print('data: %s' % ' '.join([x.encode('hex') for x in data]))
-		print('tupleData: %s' % ' '.join([x.encode('hex') for x in tupleData]))
+		pos = 0
+		points, pos = table__g_v_a_r.decompilePoints_(numPoints, tupleData, pos)
+		#print('***** tuple; flags:%04x' % flags)
+		#print('data: %s' % ' '.join([x.encode('hex') for x in data]))
+		#print('tupleData: %s' % ' '.join([x.encode('hex') for x in tupleData]))
+		# TODO: Depending on flags, decompile deltas or take shared deltas.
 		return "TODO"
 
 	@staticmethod
-	def decompileDeltas_(numDeltas, data):
-		"""(numDeltas, data) --> ([delta, delta, ...], numBytesConsumed)"""
+	def decompilePoints_(numPoints, data, offset):
+		"""(numPoints, data, offset) --> ({point1, point2, ...}, newOffset)"""
+		pos = offset
+		numPointsInData = ord(data[pos])
+		pos += 1
+		if (numPointsInData & POINTS_ARE_WORDS) != 0:
+			numPointsInData = (numPointsInData & POINT_RUN_COUNT_MASK) << 8 | ord(data[pos])
+			pos += 1
+		if numPointsInData == 0:
+			return (set(xrange(numPoints)), pos)
 		result = []
-		pos = 0
+		while len(result) < numPointsInData:
+			runHeader = ord(data[pos])
+			pos += 1
+			numPointsInRun = (runHeader & POINT_RUN_COUNT_MASK) + 1
+			point = 0
+			if (runHeader & POINTS_ARE_WORDS) == 0:
+				for i in xrange(numPointsInRun):
+					point += ord(data[pos])
+					pos += 1
+					result.append(point)
+			else:
+				for i in xrange(numPointsInRun):
+					point += struct.unpack(">H", data[pos:pos+2])[0]
+					pos += 2
+					result.append(point)
+		if max(result) >= numPoints:
+			raise ttLib.TTLibError("malformed 'gvar' table")
+		return (set(result), pos)
+
+	@staticmethod
+	def decompileDeltas_(numDeltas, data, offset):
+		"""(numDeltas, data, offset) --> ([delta, delta, ...], newOffset)"""
+		result = []
+		pos = offset
 		while len(result) < numDeltas:
 			runHeader = ord(data[pos])
 			pos += 1
