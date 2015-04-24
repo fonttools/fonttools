@@ -7,10 +7,10 @@ class EncodingTest(unittest.TestCase):
 
 	def test_encoding_unicode(self):
 
-		self.assertEqual(getEncoding(3, 0, None), "utf_16be") # MS Symbol is Unicode as well
-		self.assertEqual(getEncoding(3, 1, None), "utf_16be")
-		self.assertEqual(getEncoding(3, 10, None), "utf_16be")
-		self.assertEqual(getEncoding(0, 3, None), "utf_16be")
+		self.assertEqual(getEncoding(3, 0, None), "utf_16_be") # MS Symbol is Unicode as well
+		self.assertEqual(getEncoding(3, 1, None), "utf_16_be")
+		self.assertEqual(getEncoding(3, 10, None), "utf_16_be")
+		self.assertEqual(getEncoding(0, 3, None), "utf_16_be")
 
 	def test_encoding_macroman_misc(self):
 		self.assertEqual(getEncoding(1, 0, 17), "mac_turkish")

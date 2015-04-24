@@ -8,13 +8,13 @@ import fontTools.encodings.codecs
 # Map keyed by platformID, then platEncID, then possibly langID
 _encodingMap =	{
 	0: { # Unicode
-		0: 'utf_16be',
-		1: 'utf_16be',
-		2: 'utf_16be',
-		3: 'utf_16be',
-		4: 'utf_16be',
-		5: 'utf_16be',
-		6: 'utf_16be',
+		0: 'utf_16_be',
+		1: 'utf_16_be',
+		2: 'utf_16_be',
+		3: 'utf_16_be',
+		4: 'utf_16_be',
+		5: 'utf_16_be',
+		6: 'utf_16_be',
 	},
 	1: { # Macintosh
 		# See
@@ -47,18 +47,18 @@ _encodingMap =	{
 	},
 	2: { # ISO
 		0: 'ascii',
-		1: 'utf_16be',
+		1: 'utf_16_be',
 		2: 'latin1',
 	},
 	3: { # Microsoft
-		0: 'utf_16be',
-		1: 'utf_16be',
+		0: 'utf_16_be',
+		1: 'utf_16_be',
 		2: 'shift_jis',
 		3: 'gb2312',
 		4: 'big5',
 		5: 'euc_kr',
 		6: 'johab',
-		10: 'utf_16be',
+		10: 'utf_16_be',
 	},
 }
 
