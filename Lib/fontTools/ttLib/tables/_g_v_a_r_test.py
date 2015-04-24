@@ -100,8 +100,11 @@ class GlyphVariationTableTest(unittest.TestCase):
 		table.sharedCoordCount = 8
 		table.axisCount = len(axes)
 		sharedCoords = table.decompileSharedCoords_(axes, SKIA_SHARED_COORDS)
-		tuples = table.decompileTuples_(99, sharedCoords, axes, SKIA_GVAR_I)
+		tuples = table.decompileTuples_(18, sharedCoords, axes, SKIA_GVAR_I)
 		self.assertEqual(8, len(tuples))
+		self.assertEqual("257,0 -127,0 -128,58 -130,90 -130,62 -130,67 -130,32 -127,0 257,0 "
+				 "259,14 260,64 260,21 260,69 258,124 0,0 130,0 0,0 0,0",
+				 " ".join(["%d,%d" % c for c in tuples[0].coordinates]))
 
 	def test_decompileTuples_empty(self):
 		table = table__g_v_a_r()
@@ -118,30 +121,30 @@ class GlyphVariationTableTest(unittest.TestCase):
 	def test_decompilePoints(self):
 		decompilePoints = table__g_v_a_r.decompilePoints_
 		numPoints = 65536
-		allPoints = set(xrange(numPoints))
+		allPoints = range(numPoints)
 		# all points in glyph
 		self.assertEqual((allPoints, 1), decompilePoints(numPoints, hexdecode("00"), 0))
 		# all points in glyph (in overly verbose encoding, not explicitly prohibited by spec)
 		self.assertEqual((allPoints, 2), decompilePoints(numPoints, hexdecode("80 00"), 0))
-		# 2 points; first run: {9, 9+6}
-		self.assertEqual(({9, 15}, 4), decompilePoints(numPoints, hexdecode("02 01 09 06"), 0))
-		# 2 points; first run: {0xBEEF, 0xCAFE}. (0x0C0F = 0xCAFE - 0xBEEF)
-		self.assertEqual(({0xBEEF, 0xCAFE}, 6), decompilePoints(numPoints, hexdecode("02 81 BE EF 0C 0F"), 0))
-		# 1 point; first run: {7}
-		self.assertEqual(({7}, 3), decompilePoints(numPoints, hexdecode("01 00 07"), 0))
-		# 1 point; first run: {7} in overly verbose encoding
-		self.assertEqual(({7}, 4), decompilePoints(numPoints, hexdecode("01 80 00 07"), 0))
-		# 1 point; first run: {65535}; requires words to be treated as unsigned numbers
-		self.assertEqual(({65535}, 4), decompilePoints(numPoints, hexdecode("01 80 FF FF"), 0))
-		# 4 points; first run: {7, 8}; second run: {255, 257}. 257 is stored in delta-encoded bytes (0xFF + 2).
-		self.assertEqual(({7, 8, 255, 257}, 7), decompilePoints(numPoints, hexdecode("04 01 07 01 01 FF 02"), 0))
+		# 2 points; first run: [9, 9+6]
+		self.assertEqual(([9, 15], 4), decompilePoints(numPoints, hexdecode("02 01 09 06"), 0))
+		# 2 points; first run: [0xBEEF, 0xCAFE]. (0x0C0F = 0xCAFE - 0xBEEF)
+		self.assertEqual(([0xBEEF, 0xCAFE], 6), decompilePoints(numPoints, hexdecode("02 81 BE EF 0C 0F"), 0))
+		# 1 point; first run: [7]
+		self.assertEqual(([7], 3), decompilePoints(numPoints, hexdecode("01 00 07"), 0))
+		# 1 point; first run: [7] in overly verbose encoding
+		self.assertEqual(([7], 4), decompilePoints(numPoints, hexdecode("01 80 00 07"), 0))
+		# 1 point; first run: [65535]; requires words to be treated as unsigned numbers
+		self.assertEqual(([65535], 4), decompilePoints(numPoints, hexdecode("01 80 FF FF"), 0))
+		# 4 points; first run: [7, 8]; second run: [255, 257]. 257 is stored in delta-encoded bytes (0xFF + 2).
+		self.assertEqual(([7, 8, 255, 257], 7), decompilePoints(numPoints, hexdecode("04 01 07 01 01 FF 02"), 0))
 		# combination of all encodings, preceded and followed by 4 bytes of unused data
 		data = hexdecode("DE AD DE AD 04 01 07 01 81 BE EF 0C 0F DE AD DE AD")
-		self.assertEqual(({7, 8, 0xBEEF, 0xCAFE}, 13), decompilePoints(numPoints, data, 4))
+		self.assertEqual(([7, 8, 0xBEEF, 0xCAFE], 13), decompilePoints(numPoints, data, 4))
 
 	def test_decompilePoints_shouldGuardAgainstBadPointNumbers(self):
 		decompilePoints = table__g_v_a_r.decompilePoints_
-		# 2 points; first run: {3, 9}.
+		# 2 points; first run: [3, 9].
 		numPoints = 8
 		self.assertRaises(ttLib.TTLibError, decompilePoints, numPoints, hexdecode("02 01 03 06"), 0)
 

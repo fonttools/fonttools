@@ -4,6 +4,7 @@ from fontTools import ttLib
 from fontTools.misc import sstruct
 from fontTools.misc.fixedTools import fixedToFloat
 from fontTools.misc.textTools import safeEval
+from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
 from . import DefaultTable
 import array
 import sys
@@ -50,7 +51,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 	dependencies = ["fvar", "glyf"]
 
 	def decompile(self, data, ttFont):
-		axisTags = [axis.AxisTag for axis in ttFont['fvar'].table.VariationAxis]
+		axisTags = [axis.AxisTag for axis in ttFont["fvar"].table.VariationAxis]
 		glyphs = ttFont.getGlyphOrder()
 		sstruct.unpack(GVAR_HEADER_FORMAT, data[0:GVAR_HEADER_SIZE], self)
 		assert len(glyphs) == self.glyphCount
@@ -140,16 +141,18 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 			return []
 		tuples = []
 		flags, offsetToData = struct.unpack(b">HH", data[:4])
-		tuplesSharePointNumbers = (flags & TUPLES_SHARE_POINT_NUMBERS) != 0
-		assert not tuplesSharePointNumbers  # TODO: Implement.
 		pos = 4
 		dataPos = offsetToData
+		if (flags & TUPLES_SHARE_POINT_NUMBERS) != 0:
+			sharedPoints, dataPos = self.decompilePoints_(numPoints, data, dataPos)
+		else:
+			sharedPoints = []
 		for i in xrange(flags & TUPLE_COUNT_MASK):
 			dataSize, flags = struct.unpack(b">HH", data[pos:pos+4])
 			tupleSize = self.getTupleSize_(flags, self.axisCount)
 			tuple = data[pos : pos + tupleSize]
 			tupleData = data[dataPos : dataPos + dataSize]
-			tuples.append(self.decompileTuple_(numPoints, sharedCoords, axisTags, tuple, tupleData))
+			tuples.append(self.decompileTuple_(numPoints, sharedCoords, sharedPoints, axisTags, tuple, tupleData))
 			pos += tupleSize
 			dataPos += dataSize
 		return tuples
@@ -164,19 +167,24 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		return size
 
 	@staticmethod
-	def decompileTuple_(numPoints, sharedCoords, axisTags, data, tupleData):
+	def decompileTuple_(numPoints, sharedCoords, sharedPoints, axisTags, data, tupleData):
 		flags = struct.unpack(b">H", data[2:4])[0]
 		pos = 0
-		points, pos = table__g_v_a_r.decompilePoints_(numPoints, tupleData, pos)
-		#print('***** tuple; flags:%04x' % flags)
-		#print('data: %s' % ' '.join([x.encode('hex') for x in data]))
-		#print('tupleData: %s' % ' '.join([x.encode('hex') for x in tupleData]))
-		# TODO: Depending on flags, decompile deltas or take shared deltas.
-		return "TODO"
+		if (flags & PRIVATE_POINT_NUMBERS) != 0:
+			points, pos = table__g_v_a_r.decompilePoints_(numPoints, tupleData, pos)
+		else:
+			points = sharedPoints
+		deltas_x, pos = table__g_v_a_r.decompileDeltas_(len(points), tupleData, pos)
+		deltas_y, pos = table__g_v_a_r.decompileDeltas_(len(points), tupleData, pos)
+		coordinates = GlyphCoordinates.zeros(numPoints)
+		for p, x, y in zip(points, deltas_x, deltas_y):
+				coordinates[p] = (x, y)
+		axes = dict([(axis, "TODO") for axis in axisTags])
+		return GlyphVariation(axes, coordinates)
 
 	@staticmethod
 	def decompilePoints_(numPoints, data, offset):
-		"""(numPoints, data, offset) --> ({point1, point2, ...}, newOffset)"""
+		"""(numPoints, data, offset) --> ([point1, point2, ...], newOffset)"""
 		pos = offset
 		numPointsInData = ord(data[pos])
 		pos += 1
@@ -184,7 +192,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 			numPointsInData = (numPointsInData & POINT_RUN_COUNT_MASK) << 8 | ord(data[pos])
 			pos += 1
 		if numPointsInData == 0:
-			return (set(xrange(numPoints)), pos)
+			return (range(numPoints), pos)
 		result = []
 		while len(result) < numPointsInData:
 			runHeader = ord(data[pos])
@@ -203,7 +211,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 					result.append(point)
 		if max(result) >= numPoints:
 			raise ttLib.TTLibError("malformed 'gvar' table")
-		return (set(result), pos)
+		return (result, pos)
 
 	@staticmethod
 	def decompileDeltas_(numDeltas, data, offset):
@@ -228,17 +236,43 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		return (result, pos)
 
 	def toXML(self, writer, ttFont):
-		writer.simpletag("Version", value=self.version)
+		writer.simpletag("version", value=self.version)
 		writer.newline()
-		writer.simpletag("Reserved", value=self.reserved)
+		writer.simpletag("reserved", value=self.reserved)
 		writer.newline()
+		for glyphName in ttFont.getGlyphOrder():
+			tuples = self.variations.get(glyphName)
+			if not tuples:
+				continue
+			writer.begintag("glyphData", glyph=glyphName)
+			writer.newline()
+			for tupleIndex in xrange(len(tuples)):
+				tuple = tuples[tupleIndex]
+				writer.comment("The 'index' attribute is only for humans; it is ignored when parsed.")
+				writer.newline()
+				writer.begintag("tuple", index=tupleIndex)
+				writer.newline()
+				wrote_any_points = False
+				for i in xrange(len(tuple.coordinates)):
+					x, y = tuple.coordinates[i]
+					if x != 0 or y != 0:
+						writer.simpletag("delta", pt=i, x=x, y=y)
+						writer.newline()
+						wrote_any_points = True
+				if not wrote_any_points:
+					writer.comment("all deltas are (0,0); this tuple has no impact")
+					writer.newline()
+				writer.endtag("tuple")
+				writer.newline()
+			writer.endtag("glyphData")
+			writer.newline()
 
 
 class GlyphVariation:
-	def __init__(self, axes):
+	def __init__(self, axes, coordinates):
 		self.axes = axes
-		self.coordinates = []
+		self.coordinates = coordinates
 
 	def __repr__(self):
-		axes = ','.join(sorted(['%s=%s' % (name, value) for (name, value) in self.axes.items()]))
-		return '<GlyphVariation %s>' % axes
+		axes = ",".join(sorted(['%s=%s' % (name, value) for (name, value) in self.axes.items()]))
+		return '<GlyphVariation %s %s>' % (axes, self.coordinates)
