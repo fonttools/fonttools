@@ -14,7 +14,7 @@ class EncodingTest(unittest.TestCase):
 
 	def test_encoding_macroman_misc(self):
 		self.assertEqual(getEncoding(1, 0, 17), "mac_turkish")
-		self.assertEqual(getEncoding(1, 0, 37), "x_mac_romanian_ttx")
+		self.assertEqual(getEncoding(1, 0, 37), "mac_romanian")
 		self.assertEqual(getEncoding(1, 0, 45), "mac_roman")
 
 	def test_extended_mac_encodings(self):
