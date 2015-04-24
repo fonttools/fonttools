@@ -24,7 +24,7 @@ class NameRecordTest(unittest.TestCase):
 
 	def test_toUnicode_macromanian(self):
 		name = self.makeName(b"Foo Italic\xfb", 222, 1, 0, 37)  # Mac Romanian
-		self.assertEqual("x_mac_romanian_ttx", name.getEncoding())
+		self.assertEqual("mac_romanian", name.getEncoding())
 		self.assertEqual("Foo Italic"+unichr(0x02DA), name.toUnicode())
 
 	def test_toUnicode_UnicodeDecodeError(self):
@@ -106,7 +106,7 @@ class NameRecordTest(unittest.TestCase):
 		name = self.makeName('', 123, 1, 0, 17) # Mac Turkish
 		self.assertEqual(name.getEncoding(), "mac_turkish")
 		name.langID = 37
-		self.assertEqual(name.getEncoding(), "x_mac_romanian_ttx")
+		self.assertEqual(name.getEncoding(), "mac_romanian")
 		name.langID = 45 # Other
 		self.assertEqual(name.getEncoding(), "mac_roman")
 
