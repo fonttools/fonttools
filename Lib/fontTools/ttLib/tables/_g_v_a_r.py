@@ -169,6 +169,13 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 	@staticmethod
 	def decompileTuple_(numPoints, sharedCoords, sharedPoints, axisTags, data, tupleData):
 		flags = struct.unpack(b">H", data[2:4])[0]
+
+		if (flags & EMBEDDED_TUPLE_COORD) == 0:
+			axes = sharedCoords[flags & TUPLE_INDEX_MASK]
+		else:
+			# TODO: Implement this properly.
+			axes = dict([(axis, "TODO") for axis in axisTags])
+
 		pos = 0
 		if (flags & PRIVATE_POINT_NUMBERS) != 0:
 			points, pos = table__g_v_a_r.decompilePoints_(numPoints, tupleData, pos)
@@ -176,11 +183,10 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 			points = sharedPoints
 		deltas_x, pos = table__g_v_a_r.decompileDeltas_(len(points), tupleData, pos)
 		deltas_y, pos = table__g_v_a_r.decompileDeltas_(len(points), tupleData, pos)
-		coordinates = GlyphCoordinates.zeros(numPoints)
+		deltas = GlyphCoordinates.zeros(numPoints)
 		for p, x, y in zip(points, deltas_x, deltas_y):
-				coordinates[p] = (x, y)
-		axes = dict([(axis, "TODO") for axis in axisTags])
-		return GlyphVariation(axes, coordinates)
+				deltas[p] = (x, y)
+		return GlyphVariation(axes, deltas)
 
 	@staticmethod
 	def decompilePoints_(numPoints, data, offset):
