@@ -102,7 +102,7 @@ class NameRecord(object):
 		return getEncoding(self.platformID, self.platEncID, self.langID, default)
 
 	def encodingIsUnicodeCompatible(self):
-		return self.getEncoding(None) in ['utf_16be', 'ucs2be', 'ascii', 'latin1']
+		return self.getEncoding(None) in ['utf_16_be', 'ucs2be', 'ascii', 'latin1']
 
 	def __str__(self):
 		try:
@@ -138,7 +138,7 @@ class NameRecord(object):
 		encoding = self.getEncoding()
 		string = self.string
 
-		if encoding == 'utf_16be' and len(string) % 2 == 1:
+		if encoding == 'utf_16_be' and len(string) % 2 == 1:
 			# Recover badly encoded UTF-16 strings that have an odd number of bytes:
 			# - If the last byte is zero, drop it.  Otherwise,
 			# - If all the odd bytes are zero and all the even bytes are ASCII,

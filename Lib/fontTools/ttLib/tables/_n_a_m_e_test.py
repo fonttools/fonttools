@@ -14,7 +14,7 @@ class NameRecordTest(unittest.TestCase):
 
 	def test_toUnicode_utf16be(self):
 		name = self.makeName("Foo Bold", 111, 0, 2, 7)
-		self.assertEqual("utf_16be", name.getEncoding())
+		self.assertEqual("utf_16_be", name.getEncoding())
 		self.assertEqual("Foo Bold", name.toUnicode())
 
 	def test_toUnicode_macroman(self):
@@ -29,7 +29,7 @@ class NameRecordTest(unittest.TestCase):
 
 	def test_toUnicode_UnicodeDecodeError(self):
 		name = self.makeName(b"\1", 111, 0, 2, 7)
-		self.assertEqual("utf_16be", name.getEncoding())
+		self.assertEqual("utf_16_be", name.getEncoding())
 		self.assertRaises(UnicodeDecodeError, name.toUnicode)
 
 	def toXML(self, name):
