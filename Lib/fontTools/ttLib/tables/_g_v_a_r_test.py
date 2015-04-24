@@ -1,5 +1,6 @@
 from __future__ import print_function, division, absolute_import, unicode_literals
 from fontTools.misc.py23 import *
+from fontTools import ttLib
 import unittest
 from fontTools.ttLib.tables._g_v_a_r import table__g_v_a_r, GlyphVariation
 
@@ -114,17 +115,47 @@ class GlyphVariationTableTest(unittest.TestCase):
 		self.assertEqual(4, getTupleSize(0x2077, axisCount))
 		self.assertEqual(4, getTupleSize(11, axisCount))
 
+	def test_decompilePoints(self):
+		decompilePoints = table__g_v_a_r.decompilePoints_
+		numPoints = 65536
+		allPoints = set(xrange(numPoints))
+		# all points in glyph
+		self.assertEqual((allPoints, 1), decompilePoints(numPoints, hexdecode("00"), 0))
+		# all points in glyph (in overly verbose encoding, not explicitly prohibited by spec)
+		self.assertEqual((allPoints, 2), decompilePoints(numPoints, hexdecode("80 00"), 0))
+		# 2 points; first run: {9, 9+6}
+		self.assertEqual(({9, 15}, 4), decompilePoints(numPoints, hexdecode("02 01 09 06"), 0))
+		# 2 points; first run: {0xBEEF, 0xCAFE}. (0x0C0F = 0xCAFE - 0xBEEF)
+		self.assertEqual(({0xBEEF, 0xCAFE}, 6), decompilePoints(numPoints, hexdecode("02 81 BE EF 0C 0F"), 0))
+		# 1 point; first run: {7}
+		self.assertEqual(({7}, 3), decompilePoints(numPoints, hexdecode("01 00 07"), 0))
+		# 1 point; first run: {7} in overly verbose encoding
+		self.assertEqual(({7}, 4), decompilePoints(numPoints, hexdecode("01 80 00 07"), 0))
+		# 1 point; first run: {65535}; requires words to be treated as unsigned numbers
+		self.assertEqual(({65535}, 4), decompilePoints(numPoints, hexdecode("01 80 FF FF"), 0))
+		# 4 points; first run: {7, 8}; second run: {255, 257}. 257 is stored in delta-encoded bytes (0xFF + 2).
+		self.assertEqual(({7, 8, 255, 257}, 7), decompilePoints(numPoints, hexdecode("04 01 07 01 01 FF 02"), 0))
+		# combination of all encodings, preceded and followed by 4 bytes of unused data
+		data = hexdecode("DE AD DE AD 04 01 07 01 81 BE EF 0C 0F DE AD DE AD")
+		self.assertEqual(({7, 8, 0xBEEF, 0xCAFE}, 13), decompilePoints(numPoints, data, 4))
+
+	def test_decompilePoints_shouldGuardAgainstBadPointNumbers(self):
+		decompilePoints = table__g_v_a_r.decompilePoints_
+		# 2 points; first run: {3, 9}.
+		numPoints = 8
+		self.assertRaises(ttLib.TTLibError, decompilePoints, numPoints, hexdecode("02 01 03 06"), 0)
+
 	def test_decompileDeltas(self):
 		decompileDeltas = table__g_v_a_r.decompileDeltas_
 		# 83 = zero values (0x80), count = 4 (1 + 0x83 & 0x3F)
-		self.assertEqual(([0, 0, 0, 0], 1), decompileDeltas(4, hexdecode("83")))
+		self.assertEqual(([0, 0, 0, 0], 1), decompileDeltas(4, hexdecode("83"), 0))
 		# 41 01 02 FF FF = signed 16-bit values (0x40), count = 2 (1 + 0x41 & 0x3F)
-		self.assertEqual(([258, -1], 5), decompileDeltas(2, hexdecode("41 01 02 FF FF")))
+		self.assertEqual(([258, -1], 5), decompileDeltas(2, hexdecode("41 01 02 FF FF"), 0))
 		# 01 81 07 = signed 8-bit values, count = 2 (1 + 0x01 & 0x3F)
-		self.assertEqual(([-127, 7], 3), decompileDeltas(2, hexdecode("01 81 07")))
-		# combination of all three encodings, followed by unused data in buffer
-		data = hexdecode("83 40 01 02 01 81 80 DE AD BE EF")
-		self.assertEqual(([0, 0, 0, 0, 258, -127, -128], 7), decompileDeltas(7, data))
+		self.assertEqual(([-127, 7], 3), decompileDeltas(2, hexdecode("01 81 07"), 0))
+		# combination of all three encodings, preceded and followed by 4 bytes of unused data
+		data = hexdecode("DE AD BE EF 83 40 01 02 01 81 80 DE AD BE EF")
+		self.assertEqual(([0, 0, 0, 0, 258, -127, -128], 11), decompileDeltas(7, data, 4))
 
 
 if __name__ == "__main__":
