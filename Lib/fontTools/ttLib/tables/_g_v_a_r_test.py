@@ -92,18 +92,19 @@ class GlyphVariationTableTest(unittest.TestCase):
 		table.sharedCoordCount = 0
 		self.assertEqual([], table.decompileSharedCoords_(["wght"], b""))
 
-	def test_decompileVariations_Skia_I(self):
+	def test_decompileTuples_Skia_I(self):
 		axes = ["wght", "wdth"]
 		table = table__g_v_a_r()
 		table.offsetToCoord = 0
 		table.sharedCoordCount = 8
 		table.axisCount = len(axes)
 		sharedCoords = table.decompileSharedCoords_(axes, SKIA_SHARED_COORDS)
-		self.assertEqual([], table.decompileVariations_(99, sharedCoords, axes, SKIA_GVAR_I))
+		tuples = table.decompileTuples_(99, sharedCoords, axes, SKIA_GVAR_I)
+		self.assertEqual(8, len(tuples))
 
-	def test_decompileVariations_empty(self):
+	def test_decompileTuples_empty(self):
 		table = table__g_v_a_r()
-		self.assertEqual([], table.decompileVariations_(numPoints=5, sharedCoords=[], axisTags=[], data=b""))
+		self.assertEqual([], table.decompileTuples_(numPoints=5, sharedCoords=[], axisTags=[], data=b""))
 
 	def test_getTupleSize(self):
 		getTupleSize = table__g_v_a_r.getTupleSize_
