@@ -102,6 +102,7 @@ class GlyphVariationTableTest(unittest.TestCase):
 		sharedCoords = table.decompileSharedCoords_(axes, SKIA_SHARED_COORDS)
 		tuples = table.decompileTuples_(18, sharedCoords, axes, SKIA_GVAR_I)
 		self.assertEqual(8, len(tuples))
+		self.assertEqual({"wdth": 0.0, "wght": 1.0}, tuples[0].axes)
 		self.assertEqual("257,0 -127,0 -128,58 -130,90 -130,62 -130,67 -130,32 -127,0 257,0 "
 				 "259,14 260,64 260,21 260,69 258,124 0,0 130,0 0,0 0,0",
 				 " ".join(["%d,%d" % c for c in tuples[0].coordinates]))
