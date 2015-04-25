@@ -11,7 +11,8 @@ fi
 test "x$PYTHON" = x && PYTHON=python
 
 # Setup environment
-cd Lib
+DIR=`dirname "$0"`
+cd "$DIR/Lib"
 PYTHONPATH=".:$PYTHONPATH"
 export PYTHONPATH
 
