@@ -170,11 +170,13 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 	def decompileTuple_(numPoints, sharedCoords, sharedPoints, axisTags, data, tupleData):
 		flags = struct.unpack(b">H", data[2:4])[0]
 
+		pos = 4
 		if (flags & EMBEDDED_TUPLE_COORD) == 0:
 			axes = sharedCoords[flags & TUPLE_INDEX_MASK]
 		else:
-			# TODO: Implement this properly.
-			axes = dict([(axis, "TODO") for axis in axisTags])
+			embeddedCoordSize = len(axisTags) * 2
+			axes = table__g_v_a_r.decompileCoord_(axisTags, data[pos:pos+embeddedCoordSize])
+			pos += embeddedCoordSize
 
 		pos = 0
 		if (flags & PRIVATE_POINT_NUMBERS) != 0:
