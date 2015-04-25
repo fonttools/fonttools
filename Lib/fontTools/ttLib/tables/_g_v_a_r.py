@@ -248,6 +248,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		writer.newline()
 		writer.simpletag("reserved", value=self.reserved)
 		writer.newline()
+		axisTags = [axis.AxisTag for axis in ttFont["fvar"].table.VariationAxis]
 		for glyphName in ttFont.getGlyphOrder():
 			tuples = self.variations.get(glyphName)
 			if not tuples:
@@ -256,10 +257,13 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 			writer.newline()
 			for tupleIndex in xrange(len(tuples)):
 				tuple = tuples[tupleIndex]
-				writer.comment("The 'index' attribute is only for humans; it is ignored when parsed.")
+				writer.begintag("tuple")
 				writer.newline()
-				writer.begintag("tuple", index=tupleIndex)
-				writer.newline()
+				for axis in axisTags:
+					value = tuple.axes.get(axis)
+					if value != None and value != 0.0:
+						writer.simpletag("coord", axis=axis, value=value)
+						writer.newline()
 				wrote_any_points = False
 				for i in xrange(len(tuple.coordinates)):
 					x, y = tuple.coordinates[i]
