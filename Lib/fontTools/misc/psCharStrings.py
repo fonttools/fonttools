@@ -1,4 +1,4 @@
-"""psCharStrings.py -- module implementing various kinds of CharStrings: 
+"""psCharStrings.py -- module implementing various kinds of CharStrings:
 CFF dictionary data and Type1/Type2 CharStrings.
 """
 
@@ -81,7 +81,7 @@ cffDictOperandEncoding[30] = read_realNumber
 cffDictOperandEncoding[255] = read_reserved
 
 
-realNibbles = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 
+realNibbles = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
 		'.', 'E', 'E-', None, '-']
 realNibblesDict = dict((v,i) for i,v in enumerate(realNibbles))
 
@@ -171,7 +171,7 @@ def getIntEncoder(format):
 	else:
 		assert format == "t2"
 		fourByteOp = None
-	
+
 	def encodeInt(value, fourByteOp=fourByteOp, bytechr=bytechr,
 			pack=struct.pack, unpack=struct.unpack):
 		if -107 <= value <= 107:
@@ -203,7 +203,7 @@ def getIntEncoder(format):
 		else:
 			code = fourByteOp + pack(">l", value)
 		return code
-	
+
 	return encodeInt
 
 
@@ -243,10 +243,10 @@ class CharStringCompileError(Exception): pass
 
 
 class T2CharString(ByteCodeBase):
-	
+
 	operandEncoding = t2OperandEncoding
 	operators, opcodes = buildOperatorDict(t2Operators)
-	
+
 	def __init__(self, bytecode=None, program=None, private=None, globalSubrs=None):
 		if program is None:
 			program = []
@@ -254,16 +254,16 @@ class T2CharString(ByteCodeBase):
 		self.program = program
 		self.private = private
 		self.globalSubrs = globalSubrs if globalSubrs is not None else []
-	
+
 	def __repr__(self):
 		if self.bytecode is None:
 			return "<%s (source) at %x>" % (self.__class__.__name__, id(self))
 		else:
 			return "<%s (bytecode) at %x>" % (self.__class__.__name__, id(self))
-	
+
 	def getIntEncoder(self):
 		return encodeIntT2
-	
+
 	def getFixedEncoder(self):
 		return encodeFixed
 
@@ -273,14 +273,14 @@ class T2CharString(ByteCodeBase):
 		subrs = getattr(self.private, "Subrs", [])
 		decompiler = SimpleT2Decompiler(subrs, self.globalSubrs)
 		decompiler.execute(self)
-	
+
 	def draw(self, pen):
 		subrs = getattr(self.private, "Subrs", [])
 		extractor = T2OutlineExtractor(pen, subrs, self.globalSubrs,
 				self.private.nominalWidthX, self.private.defaultWidthX)
 		extractor.execute(self)
 		self.width = extractor.width
-	
+
 	def compile(self):
 		if self.bytecode is not None:
 			return
@@ -318,18 +318,18 @@ class T2CharString(ByteCodeBase):
 			print(bytecode)
 			raise
 		self.setBytecode(bytecode)
-	
+
 	def needsDecompilation(self):
 		return self.bytecode is not None
-	
+
 	def setProgram(self, program):
 		self.program = program
 		self.bytecode = None
-	
+
 	def setBytecode(self, bytecode):
 		self.bytecode = bytecode
 		self.program = None
-	
+
 	def getToken(self, index,
 		     len=len, byteord=byteord, basestring=basestring,
 		     isinstance=isinstance):
@@ -347,7 +347,7 @@ class T2CharString(ByteCodeBase):
 			index = index + 1
 		isOperator = isinstance(token, basestring)
 		return token, isOperator, index
-	
+
 	def getBytes(self, index, nBytes):
 		if self.bytecode is not None:
 			newIndex = index + nBytes
@@ -358,10 +358,10 @@ class T2CharString(ByteCodeBase):
 			index = index + 1
 		assert len(bytes) == nBytes
 		return bytes, index
-	
+
 	def handle_operator(self, operator):
 		return operator
-	
+
 	def toXML(self, xmlWriter):
 		from fontTools.misc.textTools import num2binary
 		if self.bytecode is not None:
@@ -389,7 +389,7 @@ class T2CharString(ByteCodeBase):
 					args = []
 				else:
 					args.append(token)
-	
+
 	def fromXML(self, name, attrs, content):
 		from fontTools.misc.textTools import binary2num, readHex
 		if attrs.get("raw"):
@@ -454,10 +454,10 @@ t1Operators = [
 ]
 
 class T1CharString(T2CharString):
-	
+
 	operandEncoding = t1OperandEncoding
 	operators, opcodes = buildOperatorDict(t1Operators)
-	
+
 	def __init__(self, bytecode=None, program=None, subrs=None):
 		if program is None:
 			program = []
@@ -491,20 +491,20 @@ class T1CharString(T2CharString):
 
 
 class SimpleT2Decompiler(object):
-	
+
 	def __init__(self, localSubrs, globalSubrs):
 		self.localSubrs = localSubrs
 		self.localBias = calcSubrBias(localSubrs)
 		self.globalSubrs = globalSubrs
 		self.globalBias = calcSubrBias(globalSubrs)
 		self.reset()
-	
+
 	def reset(self):
 		self.callingStack = []
 		self.operandStack = []
 		self.hintCount = 0
 		self.hintMaskBytes = 0
-	
+
 	def execute(self, charString):
 		self.callingStack.append(charString)
 		needsDecompilation = charString.needsDecompilation()
@@ -538,24 +538,24 @@ class SimpleT2Decompiler(object):
 					"seac"), "illegal CharString"
 			charString.setProgram(program)
 		del self.callingStack[-1]
-	
+
 	def pop(self):
 		value = self.operandStack[-1]
 		del self.operandStack[-1]
 		return value
-	
+
 	def popall(self):
 		stack = self.operandStack[:]
 		self.operandStack[:] = []
 		return stack
-	
+
 	def push(self, value):
 		self.operandStack.append(value)
-	
+
 	def op_return(self, index):
 		if self.operandStack:
 			pass
-	
+
 	def op_endchar(self, index):
 		pass
 
@@ -566,12 +566,12 @@ class SimpleT2Decompiler(object):
 		subrIndex = self.pop()
 		subr = self.localSubrs[subrIndex+self.localBias]
 		self.execute(subr)
-	
+
 	def op_callgsubr(self, index):
 		subrIndex = self.pop()
 		subr = self.globalSubrs[subrIndex+self.globalBias]
 		self.execute(subr)
-	
+
 	def op_hstem(self, index):
 		self.countHints()
 	def op_vstem(self, index):
@@ -580,16 +580,16 @@ class SimpleT2Decompiler(object):
 		self.countHints()
 	def op_vstemhm(self, index):
 		self.countHints()
-	
+
 	def op_hintmask(self, index):
 		if not self.hintMaskBytes:
 			self.countHints()
 			self.hintMaskBytes = (self.hintCount + 7) // 8
 		hintMaskBytes, index = self.callingStack[-1].getBytes(index, self.hintMaskBytes)
 		return hintMaskBytes, index
-	
+
 	op_cntrmask = op_hintmask
-	
+
 	def countHints(self):
 		args = self.popall()
 		self.hintCount = self.hintCount + len(args) // 2
@@ -641,13 +641,13 @@ class SimpleT2Decompiler(object):
 		raise NotImplementedError
 
 class T2OutlineExtractor(SimpleT2Decompiler):
-	
+
 	def __init__(self, pen, localSubrs, globalSubrs, nominalWidthX, defaultWidthX):
 		SimpleT2Decompiler.__init__(self, localSubrs, globalSubrs)
 		self.pen = pen
 		self.nominalWidthX = nominalWidthX
 		self.defaultWidthX = defaultWidthX
-	
+
 	def reset(self):
 		SimpleT2Decompiler.reset(self)
 		self.hints = []
@@ -655,13 +655,13 @@ class T2OutlineExtractor(SimpleT2Decompiler):
 		self.width = 0
 		self.currentPoint = (0, 0)
 		self.sawMoveTo = 0
-	
+
 	def _nextPoint(self, point):
 		x, y = self.currentPoint
 		point = x + point[0], y + point[1]
 		self.currentPoint = point
 		return point
-	
+
 	def rMoveTo(self, point):
 		self.pen.moveTo(self._nextPoint(point))
 		self.sawMoveTo = 1
@@ -676,12 +676,12 @@ class T2OutlineExtractor(SimpleT2Decompiler):
 			self.rMoveTo((0, 0))
 		nextPoint = self._nextPoint
 		self.pen.curveTo(nextPoint(pt1), nextPoint(pt2), nextPoint(pt3))
-	
+
 	def closePath(self):
 		if self.sawMoveTo:
 			self.pen.closePath()
 		self.sawMoveTo = 0
-	
+
 	def endPath(self):
 		# In T2 there are no open paths, so always do a closePath when
 		# finishing a sub path.
@@ -697,11 +697,11 @@ class T2OutlineExtractor(SimpleT2Decompiler):
 				self.width = self.defaultWidthX
 			self.gotWidth = 1
 		return args
-	
+
 	def countHints(self):
 		args = self.popallWidth()
 		self.hintCount = self.hintCount + len(args) // 2
-	
+
 	#
 	# hint operators
 	#
@@ -717,7 +717,7 @@ class T2OutlineExtractor(SimpleT2Decompiler):
 	#	self.countHints()
 	#def op_cntrmask(self, index):
 	#	self.countHints()
-	
+
 	#
 	# path constructors, moveto
 	#
@@ -742,7 +742,7 @@ class T2OutlineExtractor(SimpleT2Decompiler):
 			self.pen.addComponent(baseGlyph, (1, 0, 0, 1, 0, 0))
 			accentGlyph = StandardEncoding[achar]
 			self.pen.addComponent(accentGlyph, (1, 0, 0, 1, adx, ady))
-	
+
 	#
 	# path constructors, lines
 	#
@@ -751,12 +751,12 @@ class T2OutlineExtractor(SimpleT2Decompiler):
 		for i in range(0, len(args), 2):
 			point = args[i:i+2]
 			self.rLineTo(point)
-	
+
 	def op_hlineto(self, index):
 		self.alternatingLineto(1)
 	def op_vlineto(self, index):
 		self.alternatingLineto(0)
-	
+
 	#
 	# path constructors, curves
 	#
@@ -766,7 +766,7 @@ class T2OutlineExtractor(SimpleT2Decompiler):
 		for i in range(0, len(args), 6):
 			dxa, dya, dxb, dyb, dxc, dyc, = args[i:i+6]
 			self.rCurveTo((dxa, dya), (dxb, dyb), (dxc, dyc))
-	
+
 	def op_rcurveline(self, index):
 		"""{dxa dya dxb dyb dxc dyc}+ dxd dyd rcurveline"""
 		args = self.popall()
@@ -774,7 +774,7 @@ class T2OutlineExtractor(SimpleT2Decompiler):
 			dxb, dyb, dxc, dyc, dxd, dyd = args[i:i+6]
 			self.rCurveTo((dxb, dyb), (dxc, dyc), (dxd, dyd))
 		self.rLineTo(args[-2:])
-	
+
 	def op_rlinecurve(self, index):
 		"""{dxa dya}+ dxb dyb dxc dyc dxd dyd rlinecurve"""
 		args = self.popall()
@@ -783,7 +783,7 @@ class T2OutlineExtractor(SimpleT2Decompiler):
 			self.rLineTo(lineArgs[i:i+2])
 		dxb, dyb, dxc, dyc, dxd, dyd = args[-6:]
 		self.rCurveTo((dxb, dyb), (dxc, dyc), (dxd, dyd))
-	
+
 	def op_vvcurveto(self, index):
 		"dx1? {dya dxb dyb dyc}+ vvcurveto"
 		args = self.popall()
@@ -796,7 +796,7 @@ class T2OutlineExtractor(SimpleT2Decompiler):
 			dya, dxb, dyb, dyc = args[i:i+4]
 			self.rCurveTo((dx1, dya), (dxb, dyb), (0, dyc))
 			dx1 = 0
-	
+
 	def op_hhcurveto(self, index):
 		"""dy1? {dxa dxb dyb dxc}+ hhcurveto"""
 		args = self.popall()
@@ -809,7 +809,7 @@ class T2OutlineExtractor(SimpleT2Decompiler):
 			dxa, dxb, dyb, dxc = args[i:i+4]
 			self.rCurveTo((dxa, dy1), (dxb, dyb), (dxc, 0))
 			dy1 = 0
-	
+
 	def op_vhcurveto(self, index):
 		"""dy1 dx2 dy2 dx3 {dxa dxb dyb dyc dyd dxe dye dxf}* dyf? vhcurveto (30)
 		{dya dxb dyb dxc dxd dxe dye dyf}+ dxf? vhcurveto
@@ -819,7 +819,7 @@ class T2OutlineExtractor(SimpleT2Decompiler):
 			args = self.vcurveto(args)
 			if args:
 				args = self.hcurveto(args)
-	
+
 	def op_hvcurveto(self, index):
 		"""dx1 dx2 dy2 dy3 {dya dxb dyb dxc dxd dxe dye dyf}* dxf?
 		{dxa dxb dyb dyc dyd dxe dye dxf}+ dyf?
@@ -829,7 +829,7 @@ class T2OutlineExtractor(SimpleT2Decompiler):
 			args = self.hcurveto(args)
 			if args:
 				args = self.vcurveto(args)
-	
+
 	#
 	# path constructors, flex
 	#
@@ -862,13 +862,13 @@ class T2OutlineExtractor(SimpleT2Decompiler):
 			dy6 = d6
 		self.rCurveTo((dx1, dy1), (dx2, dy2), (dx3, dy3))
 		self.rCurveTo((dx4, dy4), (dx5, dy5), (dx6, dy6))
-	
+
 	#
 	# MultipleMaster. Well...
 	#
 	def op_blend(self, index):
 		self.popall()
-	
+
 	# misc
 	def op_and(self, index):
 		raise NotImplementedError
@@ -921,7 +921,7 @@ class T2OutlineExtractor(SimpleT2Decompiler):
 		raise NotImplementedError
 	def op_roll(self, index):
 		raise NotImplementedError
-	
+
 	#
 	# miscellaneous helpers
 	#
@@ -934,7 +934,7 @@ class T2OutlineExtractor(SimpleT2Decompiler):
 				point = (0, arg)
 			self.rLineTo(point)
 			isHorizontal = not isHorizontal
-	
+
 	def vcurveto(self, args):
 		dya, dxb, dyb, dxc = args[:4]
 		args = args[4:]
@@ -945,7 +945,7 @@ class T2OutlineExtractor(SimpleT2Decompiler):
 			dyc = 0
 		self.rCurveTo((0, dya), (dxb, dyb), (dxc, dyc))
 		return args
-	
+
 	def hcurveto(self, args):
 		dxa, dxb, dyb, dyc = args[:4]
 		args = args[4:]
@@ -959,18 +959,18 @@ class T2OutlineExtractor(SimpleT2Decompiler):
 
 
 class T1OutlineExtractor(T2OutlineExtractor):
-	
+
 	def __init__(self, pen, subrs):
 		self.pen = pen
 		self.subrs = subrs
 		self.reset()
-	
+
 	def reset(self):
 		self.flexing = 0
 		self.width = 0
 		self.sbx = 0
 		T2OutlineExtractor.reset(self)
-	
+
 	def endPath(self):
 		if self.sawMoveTo:
 			self.pen.endPath()
@@ -978,11 +978,11 @@ class T1OutlineExtractor(T2OutlineExtractor):
 
 	def popallWidth(self, evenOdd=0):
 		return self.popall()
-	
+
 	def exch(self):
 		stack = self.operandStack
 		stack[-1], stack[-2] = stack[-2], stack[-1]
-	
+
 	#
 	# path constructors
 	#
@@ -1012,10 +1012,10 @@ class T1OutlineExtractor(T2OutlineExtractor):
 		args = self.popall()
 		x, y = args
 		self.currentPoint = x, y
-	
+
 	def op_endchar(self, index):
 		self.endPath()
-	
+
 	def op_hsbw(self, index):
 		sbx, wx = self.popall()
 		self.width = wx
@@ -1023,7 +1023,7 @@ class T1OutlineExtractor(T2OutlineExtractor):
 		self.currentPoint = sbx, self.currentPoint[1]
 	def op_sbw(self, index):
 		self.popall()  # XXX
-	
+
 	#
 	def op_callsubr(self, index):
 		subrIndex = self.pop()
@@ -1041,12 +1041,12 @@ class T1OutlineExtractor(T2OutlineExtractor):
 		# ignore...
 	def op_pop(self, index):
 		pass  # ignore...
-	
+
 	def doFlex(self):
 		finaly = self.pop()
 		finalx = self.pop()
 		self.pop()	# flex height is unused
-		
+
 		p3y = self.pop()
 		p3x = self.pop()
 		bcp4y = self.pop()
@@ -1061,7 +1061,7 @@ class T1OutlineExtractor(T2OutlineExtractor):
 		bcp1x = self.pop()
 		rpy = self.pop()
 		rpx = self.pop()
-		
+
 		# call rrcurveto
 		self.push(bcp1x+rpx)
 		self.push(bcp1y+rpy)
@@ -1070,7 +1070,7 @@ class T1OutlineExtractor(T2OutlineExtractor):
 		self.push(p2x)
 		self.push(p2y)
 		self.op_rrcurveto(None)
-		
+
 		# call rrcurveto
 		self.push(bcp3x)
 		self.push(bcp3y)
@@ -1079,11 +1079,11 @@ class T1OutlineExtractor(T2OutlineExtractor):
 		self.push(p3x)
 		self.push(p3y)
 		self.op_rrcurveto(None)
-		
+
 		# Push back final coords so subr 0 can find them
 		self.push(finalx)
 		self.push(finaly)
-	
+
 	def op_dotsection(self, index):
 		self.popall()  # XXX
 	def op_hstem3(self, index):
@@ -1102,18 +1102,18 @@ class T1OutlineExtractor(T2OutlineExtractor):
 
 
 class DictDecompiler(ByteCodeBase):
-	
+
 	operandEncoding = cffDictOperandEncoding
-	
+
 	def __init__(self, strings):
 		self.stack = []
 		self.strings = strings
 		self.dict = {}
-	
+
 	def getDict(self):
 		assert len(self.stack) == 0, "non-empty stack"
 		return self.dict
-	
+
 	def decompile(self, data):
 		index = 0
 		lenData = len(data)
@@ -1125,17 +1125,17 @@ class DictDecompiler(ByteCodeBase):
 			value, index = handler(self, b0, data, index)
 			if value is not None:
 				push(value)
-	
+
 	def pop(self):
 		value = self.stack[-1]
 		del self.stack[-1]
 		return value
-	
+
 	def popall(self):
 		args = self.stack[:]
 		del self.stack[:]
 		return args
-	
+
 	def handle_operator(self, operator):
 		operator, argType = operator
 		if isinstance(argType, type(())):
@@ -1148,7 +1148,7 @@ class DictDecompiler(ByteCodeBase):
 			arghandler = getattr(self, "arg_" + argType)
 			value = arghandler(operator)
 		self.dict[operator] = value
-	
+
 	def arg_number(self, name):
 		return self.pop()
 	def arg_SID(self, name):

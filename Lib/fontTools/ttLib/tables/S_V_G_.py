@@ -46,7 +46,7 @@ The XML format is:
     </colorPalettes>
 </SVG>
 
-Color values must be less than 256. 
+Color values must be less than 256.
 
 The number of color records in each </colorPalette> must be the same as
 the number of <colorParamUINameID> elements.
@@ -93,13 +93,13 @@ colorRecord_format_0 = """
 
 
 class table_S_V_G_(DefaultTable.DefaultTable):
-	
+
 	def decompile(self, data, ttFont):
 		self.docList = None
 		self.colorPalettes = None
 		pos = 0
 		self.version = struct.unpack(">H", data[pos:pos+2])[0]
-		
+
 		if self.version == 1:
 			self.decompile_format_1(data, ttFont)
 		else:
@@ -355,7 +355,7 @@ class ColorPalettes(object):
 
 class ColorPalette(object):
 	def __init__(self):
-		self.uiNameID = None # USHORT. name table ID that describes user interface strings associated with this color palette. 
+		self.uiNameID = None # USHORT. name table ID that describes user interface strings associated with this color palette.
 		self.paletteColors = [] # list of ColorRecords
 
 	def fromXML(self, name, attrs, content, ttFont):

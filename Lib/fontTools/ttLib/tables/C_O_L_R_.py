@@ -123,7 +123,7 @@ class table_C_O_L_R_(DefaultTable.DefaultTable):
 
 		if glyphSelector not in self.ColorLayers:
 			return None
-			
+
 		return self.ColorLayers[glyphSelector]
 
 	def __setitem__(self, glyphSelector, value):

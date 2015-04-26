@@ -1,4 +1,4 @@
-"""fontTools.misc.eexec.py -- Module implementing the eexec and 
+"""fontTools.misc.eexec.py -- Module implementing the eexec and
 charstring encryption algorithm as used by PostScript Type 1 fonts.
 """
 

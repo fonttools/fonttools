@@ -20,7 +20,7 @@ nameRecordSize = sstruct.calcsize(nameRecordFormat)
 
 
 class table__n_a_m_e(DefaultTable.DefaultTable):
-	
+
 	def decompile(self, data, ttFont):
 		format, n, stringOffset = struct.unpack(">HHH", data[:6])
 		expectedStringOffset = 6 + n * nameRecordSize
@@ -43,7 +43,7 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 			#		print name.__dict__
 			del name.offset, name.length
 			self.names.append(name)
-	
+
 	def compile(self, ttFont):
 		if not hasattr(self, "names"):
 			# only happens when there are NO name table entries read
@@ -67,11 +67,11 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 				stringData = bytesjoin([stringData, string])
 			data = data + sstruct.pack(nameRecordFormat, name)
 		return data + stringData
-	
+
 	def toXML(self, writer, ttFont):
 		for name in self.names:
 			name.toXML(writer, ttFont)
-	
+
 	def fromXML(self, name, attrs, content, ttFont):
 		if name != "namerecord":
 			return # ignore unknown tags
@@ -80,11 +80,11 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 		name = NameRecord()
 		self.names.append(name)
 		name.fromXML(name, attrs, content, ttFont)
-	
+
 	def getName(self, nameID, platformID, platEncID, langID=None):
 		for namerecord in self.names:
-			if (	namerecord.nameID == nameID and 
-					namerecord.platformID == platformID and 
+			if (	namerecord.nameID == nameID and
+					namerecord.platformID == platformID and
 					namerecord.platEncID == platEncID):
 				if langID is None or namerecord.langID == langID:
 					return namerecord
@@ -202,7 +202,7 @@ class NameRecord(object):
 		writer.newline()
 		writer.endtag("namerecord")
 		writer.newline()
-	
+
 	def fromXML(self, name, attrs, content, ttFont):
 		self.nameID = safeEval(attrs["nameID"])
 		self.platformID = safeEval(attrs["platformID"])
@@ -215,7 +215,7 @@ class NameRecord(object):
 		else:
 			# This is the inverse of write8bit...
 			self.string = s.encode("latin1")
-	
+
 	def __lt__(self, other):
 		if type(self) != type(other):
 			return NotImplemented
@@ -236,7 +236,7 @@ class NameRecord(object):
 			getattr(other, "string", None),
 		)
 		return selfTuple < otherTuple
-	
+
 	def __repr__(self):
 		return "<NameRecord NameID=%d; PlatformID=%d; LanguageID=%d>" % (
 				self.nameID, self.platformID, self.langID)

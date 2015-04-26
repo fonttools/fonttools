@@ -35,7 +35,7 @@ def getSFNTResIndices(path):
 
 
 def openTTFonts(path):
-	"""Given a pathname, return a list of TTFont objects. In the case 
+	"""Given a pathname, return a list of TTFont objects. In the case
 	of a flat TTF/OTF file, the list will contain just one font object;
 	but in the case of a Mac font suitcase it will contain as many
 	font objects as there are sfnt resources in the file.
@@ -54,9 +54,9 @@ def openTTFonts(path):
 
 
 class SFNTResourceReader(object):
-	
+
 	"""Simple (Mac-only) read-only file wrapper for 'sfnt' resources."""
-	
+
 	def __init__(self, path, res_name_or_index):
 		resref = MyOpenResFile(path)
 		Res.UseResFile(resref)
@@ -67,16 +67,16 @@ class SFNTResourceReader(object):
 		self.file = StringIO(res.data)
 		Res.CloseResFile(resref)
 		self.name = path
-	
+
 	def __getattr__(self, attr):
 		# cheap inheritance
 		return getattr(self.file, attr)
 
 
 class SFNTResourceWriter(object):
-	
+
 	"""Simple (Mac-only) file wrapper for 'sfnt' resources."""
-	
+
 	def __init__(self, path, ttFont, res_id=None):
 		self.file = StringIO()
 		self.name = path
@@ -97,7 +97,7 @@ class SFNTResourceWriter(object):
 				if self.familyname[i] != self.psname[i]:
 					break
 			self.familyname = self.psname[:i]
-		
+
 		self.ttFont = ttFont
 		self.res_id = res_id
 		if os.path.exists(self.name):
@@ -105,7 +105,7 @@ class SFNTResourceWriter(object):
 		# XXX datafork support
 		Res.FSpCreateResFile(self.name, 'DMOV', 'FFIL', 0)
 		self.resref = Res.FSOpenResFile(self.name, 3)  # exclusive read/write permission
-	
+
 	def close(self):
 		if self.closed:
 			return
@@ -121,20 +121,20 @@ class SFNTResourceWriter(object):
 			self.res_id = Res.Unique1ID('sfnt')
 		res.AddResource('sfnt', self.res_id, self.fullname)
 		res.ChangedResource()
-		
+
 		self.createFond()
 		del self.ttFont
 		Res.CloseResFile(self.resref)
 		self.file.close()
 		self.closed = 1
-	
+
 	def createFond(self):
 		fond_res = Res.Resource("")
 		fond_res.AddResource('FOND', self.res_id, self.fullname)
-		
+
 		from fontTools import fondLib
 		fond = fondLib.FontFamily(fond_res, "w")
-		
+
 		fond.ffFirstChar = 0
 		fond.ffLastChar = 255
 		fond.fondClass = 0
@@ -155,16 +155,16 @@ class SFNTResourceWriter(object):
 		fond.changed = 1
 		fond.glyphTableOffset = 0
 		fond.styleMappingReserved = 0
-		
+
 		# calc:
 		scale = 4096 / self.ttFont['head'].unitsPerEm
 		fond.ffAscent = scale * self.ttFont['hhea'].ascent
 		fond.ffDescent = scale * self.ttFont['hhea'].descent
 		fond.ffWidMax = scale * self.ttFont['hhea'].advanceWidthMax
-		
+
 		fond.ffFamilyName = self.familyname
 		fond.psNames = {0: self.psname}
-		
+
 		fond.widthTables = {}
 		fond.kernTables = {}
 		cmap = self.ttFont['cmap'].getcmap(1, 0)
@@ -189,11 +189,11 @@ class SFNTResourceWriter(object):
 						fondwidths[names[name]] = scale * width
 				fond.widthTables = {0: fondwidths}
 		fond.save()
-	
+
 	def __del__(self):
 		if not self.closed:
 			self.close()
-	
+
 	def __getattr__(self, attr):
 		# cheap inheritance
 		return getattr(self.file, attr)

@@ -82,7 +82,7 @@ def usage():
 	print(__doc__ % version)
 	sys.exit(2)
 
-	
+
 numberAddedRE = re.compile("#\d+$")
 opentypeheaderRE = re.compile('''sfntVersion=['"]OTTO["']''')
 
@@ -262,13 +262,13 @@ def parseOptions(args):
 		rawOptions, files = getopt.getopt(args, "ld:o:fvqht:x:sim:z:baey:")
 	except getopt.GetoptError:
 		usage()
-	
+
 	if not files:
 		usage()
-	
+
 	options = Options(rawOptions, len(files))
 	jobs = []
-	
+
 	for input in files:
 		tp = guessFileType(input)
 		if tp in ("OTF", "TTF", "TTC", "WOFF"):
@@ -286,7 +286,7 @@ def parseOptions(args):
 		else:
 			print('Unknown file type: "%s"' % input)
 			continue
-		
+
 		if options.outputFile:
 			output = options.outputFile
 		else:
@@ -329,7 +329,7 @@ def main(args):
 			waitForKeyPress()
 		else:
 			raise
-	
+
 
 if __name__ == "__main__":
 	main(sys.argv[1:])

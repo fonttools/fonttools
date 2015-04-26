@@ -20,7 +20,7 @@ VDMX_RatRangeFmt = """
 	yStartRatio: B    # Starting y-Ratio value
 	yEndRatio:   B    # Ending y-Ratio value
 """
-# followed by an array of offset[numRatios] from start of VDMX table to the 
+# followed by an array of offset[numRatios] from start of VDMX table to the
 # VDMX Group for this ratio range (offsets will be re-calculated on compile);
 # followed by an array of Group[numRecs] records;
 VDMX_GroupFmt = """

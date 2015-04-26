@@ -12,7 +12,7 @@ BUFSIZE = 0x4000
 
 
 class XMLReader(object):
-	
+
 	def __init__(self, fileName, ttFont, progress=None, quiet=False):
 		self.ttFont = ttFont
 		self.fileName = fileName
@@ -21,7 +21,7 @@ class XMLReader(object):
 		self.root = None
 		self.contentStack = []
 		self.stackSize = 0
-	
+
 	def read(self):
 		if self.progress:
 			import stat
@@ -29,14 +29,14 @@ class XMLReader(object):
 		file = open(self.fileName)
 		self._parseFile(file)
 		file.close()
-	
+
 	def _parseFile(self, file):
 		from xml.parsers.expat import ParserCreate
 		parser = ParserCreate()
 		parser.StartElementHandler = self._startElementHandler
 		parser.EndElementHandler = self._endElementHandler
 		parser.CharacterDataHandler = self._characterDataHandler
-		
+
 		pos = 0
 		while True:
 			chunk = file.read(BUFSIZE)
@@ -47,7 +47,7 @@ class XMLReader(object):
 			if self.progress:
 				self.progress.set(pos // 100)
 			parser.Parse(chunk, 0)
-	
+
 	def _startElementHandler(self, name, attrs):
 		stackSize = self.stackSize
 		self.stackSize = stackSize + 1
@@ -100,11 +100,11 @@ class XMLReader(object):
 			l = []
 			self.contentStack[-1].append((name, attrs, l))
 			self.contentStack.append(l)
-	
+
 	def _characterDataHandler(self, data):
 		if self.stackSize > 1:
 			self.contentStack[-1].append(data)
-	
+
 	def _endElementHandler(self, name):
 		self.stackSize = self.stackSize - 1
 		del self.contentStack[-1]
@@ -117,15 +117,15 @@ class XMLReader(object):
 
 
 class ProgressPrinter(object):
-	
+
 	def __init__(self, title, maxval=100):
 		print(title)
-	
+
 	def set(self, val, maxval=None):
 		pass
-	
+
 	def increment(self, val=1):
 		pass
-	
+
 	def setLabel(self, text):
 		print(text)

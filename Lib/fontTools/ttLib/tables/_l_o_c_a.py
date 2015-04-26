@@ -6,9 +6,9 @@ import array
 import warnings
 
 class table__l_o_c_a(DefaultTable.DefaultTable):
-	
+
 	dependencies = ['glyf']
-	
+
 	def decompile(self, data, ttFont):
 		longFormat = ttFont['head'].indexToLocFormat
 		if longFormat:
@@ -27,7 +27,7 @@ class table__l_o_c_a(DefaultTable.DefaultTable):
 		if len(locations) < (ttFont['maxp'].numGlyphs + 1):
 			warnings.warn("corrupt 'loca' table, or wrong numGlyphs in 'maxp': %d %d" % (len(locations) - 1, ttFont['maxp'].numGlyphs))
 		self.locations = locations
-	
+
 	def compile(self, ttFont):
 		try:
 			max_location = max(self.locations)
@@ -45,16 +45,16 @@ class table__l_o_c_a(DefaultTable.DefaultTable):
 		if sys.byteorder != "big":
 			locations.byteswap()
 		return locations.tostring()
-	
+
 	def set(self, locations):
 		self.locations = array.array("I", locations)
-	
+
 	def toXML(self, writer, ttFont):
 		writer.comment("The 'loca' table will be calculated by the compiler")
 		writer.newline()
-	
+
 	def __getitem__(self, index):
 		return self.locations[index]
-	
+
 	def __len__(self):
 		return len(self.locations)

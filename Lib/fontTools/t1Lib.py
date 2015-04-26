@@ -3,13 +3,13 @@
 Functions for reading and writing raw Type 1 data:
 
 read(path)
-	reads any Type 1 font file, returns the raw data and a type indicator: 
-	'LWFN', 'PFB' or 'OTHER', depending on the format of the file pointed 
-	to by 'path'. 
+	reads any Type 1 font file, returns the raw data and a type indicator:
+	'LWFN', 'PFB' or 'OTHER', depending on the format of the file pointed
+	to by 'path'.
 	Raises an error when the file does not contain valid Type 1 data.
 
 write(path, data, kind='OTHER', dohex=False)
-	writes raw Type 1 data to the file pointed to by 'path'. 
+	writes raw Type 1 data to the file pointed to by 'path'.
 	'kind' can be one of 'LWFN', 'PFB' or 'OTHER'; it defaults to 'OTHER'.
 	'dohex' is a flag which determines whether the eexec encrypted
 	part should be written as hexadecimal or binary, but only if kind
@@ -37,49 +37,49 @@ except ImportError:
 else:
 	haveMacSupport = 1
 	import MacOS
-	
+
 
 class T1Error(Exception): pass
 
 
 class T1Font(object):
-	
+
 	"""Type 1 font class.
-	
+
 	Uses a minimal interpeter that supports just about enough PS to parse
 	Type 1 fonts.
 	"""
-	
+
 	def __init__(self, path=None):
 		if path is not None:
 			self.data, type = read(path)
 		else:
 			pass # XXX
-	
+
 	def saveAs(self, path, type):
 		write(path, self.getData(), type)
-	
+
 	def getData(self):
 		# XXX Todo: if the data has been converted to Python object,
 		# recreate the PS stream
 		return self.data
-	
+
 	def getGlyphSet(self):
 		"""Return a generic GlyphSet, which is a dict-like object
 		mapping glyph names to glyph objects. The returned glyph objects
 		have a .draw() method that supports the Pen protocol, and will
 		have an attribute named 'width', but only *after* the .draw() method
 		has been called.
-		
+
 		In the case of Type 1, the GlyphSet is simply the CharStrings dict.
 		"""
 		return self["CharStrings"]
-	
+
 	def __getitem__(self, key):
 		if not hasattr(self, "font"):
 			self.parse()
 		return self.font[key]
-	
+
 	def parse(self):
 		from fontTools.misc import psLib
 		from fontTools.misc import psCharStrings
@@ -135,7 +135,7 @@ def write(path, data, kind='OTHER', dohex=False):
 				pass
 
 
-# -- internal -- 
+# -- internal --
 
 LWFNCHUNKSIZE = 2000
 HEXLINELENGTH = 80
@@ -203,7 +203,7 @@ def readOther(path):
 	data = f.read()
 	f.close()
 	assertType1(data)
-	
+
 	chunks = findEncryptedChunks(data)
 	data = []
 	for isEncrypted, chunk in chunks:
