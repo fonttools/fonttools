@@ -14,7 +14,6 @@ import gtk
 import sys
 
 
-
 class Row(object):
 	def __init__(self, parent, index, key, value, font):
 		self._parent = parent
@@ -110,8 +109,7 @@ class Row(object):
 		if len(value) and len(value) <= 32:
 			self._value_str = str(value)
 		else:
-			self._value_str = '%s of %d items' % (value.__class__.__name__,
-							      len(value))
+			self._value_str = '%s of %d items' % (value.__class__.__name__, len(value))
 		self._items = list(enumerate(value))
 
 	def __len__(self):

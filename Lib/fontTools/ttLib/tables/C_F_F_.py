@@ -45,4 +45,3 @@ class table_C_F_F_(DefaultTable.DefaultTable):
 		if not hasattr(self, "cff"):
 			self.cff = cffLib.CFFFontSet()
 		self.cff.fromXML(name, attrs, content)
-

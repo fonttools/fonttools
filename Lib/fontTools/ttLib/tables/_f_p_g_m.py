@@ -24,4 +24,3 @@ class table__f_p_g_m(DefaultTable.DefaultTable):
 	
 	def __len__(self):
 		return len(self.program)
-

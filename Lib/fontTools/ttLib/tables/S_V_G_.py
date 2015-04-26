@@ -107,7 +107,6 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 				print("Unknown SVG table version '%s'. Decompiling as version 0." % (self.version))
 			self.decompile_format_0(data, ttFont)
 
-
 	def decompile_format_0(self, data, ttFont):
 		dummy, data2 = sstruct.unpack2(SVG_format_0, data, self)
 		# read in SVG Documents Index

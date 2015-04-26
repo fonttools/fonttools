@@ -225,7 +225,6 @@ class OTTableWriter(object):
 			table.pos = pos
 			pos = pos + table.getDataLength()
 
-
 		data = []
 		for table in tables:
 			tableData = table.getData()
@@ -297,7 +296,6 @@ class OTTableWriter(object):
 								if length > 65535:
 									break
 						overflowErrorRecord = self.getOverflowErrorRecord(item)
-						
 						
 						raise OTLOffsetOverflowError(overflowErrorRecord)
 
@@ -405,7 +403,6 @@ class OTTableWriter(object):
 			else:
 				# We're a new parent of item
 				pass
-
 
 		tables.append(self)
 		return tables, extTables
@@ -727,24 +724,24 @@ class FormatSwitchingBaseTable(BaseTable):
 #
 
 valueRecordFormat = [
-#	Mask	 Name            isDevice  signed
-	(0x0001, "XPlacement",   0,        1),
-	(0x0002, "YPlacement",   0,        1),
-	(0x0004, "XAdvance",     0,        1),
-	(0x0008, "YAdvance",     0,        1),
-	(0x0010, "XPlaDevice",   1,        0),
-	(0x0020, "YPlaDevice",   1,        0),
-	(0x0040, "XAdvDevice",   1,        0),
-	(0x0080, "YAdvDevice",   1,        0),
-# 	reserved:
-	(0x0100, "Reserved1",    0,        0),
-	(0x0200, "Reserved2",    0,        0),
-	(0x0400, "Reserved3",    0,        0),
-	(0x0800, "Reserved4",    0,        0),
-	(0x1000, "Reserved5",    0,        0),
-	(0x2000, "Reserved6",    0,        0),
-	(0x4000, "Reserved7",    0,        0),
-	(0x8000, "Reserved8",    0,        0),
+#	Mask	 Name		isDevice signed
+	(0x0001, "XPlacement",	0,	1),
+	(0x0002, "YPlacement",	0,	1),
+	(0x0004, "XAdvance",	0,	1),
+	(0x0008, "YAdvance",	0,	1),
+	(0x0010, "XPlaDevice",	1,	0),
+	(0x0020, "YPlaDevice",	1,	0),
+	(0x0040, "XAdvDevice",	1,	0),
+	(0x0080, "YAdvDevice",	1,	0),
+#	reserved:
+	(0x0100, "Reserved1",	0,	0),
+	(0x0200, "Reserved2",	0,	0),
+	(0x0400, "Reserved3",	0,	0),
+	(0x0800, "Reserved4",	0,	0),
+	(0x1000, "Reserved5",	0,	0),
+	(0x2000, "Reserved6",	0,	0),
+	(0x4000, "Reserved7",	0,	0),
+	(0x8000, "Reserved8",	0,	0),
 ]
 
 def _buildDict():

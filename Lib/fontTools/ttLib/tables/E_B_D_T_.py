@@ -158,7 +158,7 @@ class table_E_B_D_T_(DefaultTable.DefaultTable):
 					continue
 				name, attrs, content = element
 				if name[4:].startswith(_bitmapGlyphSubclassPrefix[4:]):
-					imageFormat =	safeEval(name[len(_bitmapGlyphSubclassPrefix):])
+					imageFormat = safeEval(name[len(_bitmapGlyphSubclassPrefix):])
 					glyphName = attrs['name']
 					imageFormatClass = self.getImageFormatClass(imageFormat)
 					curGlyph = imageFormatClass(None, None)
@@ -373,10 +373,10 @@ class BitmapGlyph(object):
 
 	# Keep track of reading and writing of various forms.
 	xmlDataFunctions = {
-		'raw':       (_writeRawImageData, _readRawImageData),
-		'row':       (_writeRowImageData, _readRowImageData),
-		'bitwise':   (_writeBitwiseImageData, _readBitwiseImageData),
-		'extfile':   (_writeExtFileImageData, _readExtFileImageData),
+		'raw':		(_writeRawImageData, _readRawImageData),
+		'row':		(_writeRowImageData, _readRowImageData),
+		'bitwise':	(_writeBitwiseImageData, _readBitwiseImageData),
+		'extfile':	(_writeExtFileImageData, _readExtFileImageData),
 		}
 
 	def __init__(self, data, ttFont):

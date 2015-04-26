@@ -801,7 +801,6 @@ def getClassTag(klass):
 	return identifierToTag(name)
 
 
-
 def newTable(tag):
 	"""Return a new instance of a table."""
 	tableClass = getTableClass(tag)

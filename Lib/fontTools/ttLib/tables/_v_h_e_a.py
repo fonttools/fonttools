@@ -87,4 +87,3 @@ class table__v_h_e_a(DefaultTable.DefaultTable):
 	
 	def fromXML(self, name, attrs, content, ttFont):
 		setattr(self, name, safeEval(attrs["value"]))
-

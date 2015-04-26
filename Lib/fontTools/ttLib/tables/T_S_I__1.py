@@ -114,4 +114,3 @@ class table_T_S_I__1(DefaultTable.DefaultTable):
 			self.glyphPrograms[attrs["name"]] = text
 		elif name == "extraProgram":
 			self.extraPrograms[attrs["name"]] = text
-

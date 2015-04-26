@@ -40,4 +40,3 @@ class table_T_S_I__5(DefaultTable.DefaultTable):
 		if name != "glyphgroup":
 			return
 		self.glyphGrouping[attrs["name"]] = safeEval(attrs["value"])
-

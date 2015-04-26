@@ -20,4 +20,3 @@ class asciiTable(DefaultTable.DefaultTable):
 	def fromXML(self, name, attrs, content, ttFont):
 		lines = strjoin(content).replace("\r", "\n").split("\n")
 		self.data = tobytes("\r".join(lines[1:-1]))
-

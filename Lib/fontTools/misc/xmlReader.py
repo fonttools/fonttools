@@ -129,4 +129,3 @@ class ProgressPrinter(object):
 	
 	def setLabel(self, text):
 		print(text)
-

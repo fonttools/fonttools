@@ -145,8 +145,7 @@ class table_M_E_T_A_(DefaultTable.DefaultTable):
 				continue
 			else:
 				offsetOK = 1
-					
-								
+
 			# metaData now contains the header and all of the GlyphRecords and all of the String Records.
 			# Its length should be the offset to the first string datum.
 			for glyphRec in self.glyphRecords:
@@ -202,7 +201,6 @@ class GlyphRecord(object):
 			stringRec.toXML(writer, ttFont)
 		writer.endtag("GlyphRecord")
 		writer.newline()
-
 
 	def fromXML(self, name, attrs, content, ttFont):
 		if name == "StringRecord":
@@ -304,4 +302,3 @@ class StringRecord(object):
 	def __repr__(self):
 		return "StringRecord [ labelID: " + str(self.labelID) + " aka " + getLabelString(self.labelID) \
 			+ ", offset: " + str(self.offset) + ", length: " + str(self.stringLen) + ", string: " +self.string + " ]"
-

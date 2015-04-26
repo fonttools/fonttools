@@ -185,5 +185,4 @@ class KernTable_format_unkown(object):
 		self.decompile(readHex(content), ttFont)
 
 
-
 kern_classes = {0: KernTable_format_0}

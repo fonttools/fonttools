@@ -583,7 +583,7 @@ def splitAlternateSubst(oldSubTable, newSubTable, overflowRecord):
 		# We just need to back up by two items 
 		# from the overflowed AlternateSet index to make sure the offset
 		# to the Coverage table doesn't overflow.
-		newLen  = overflowRecord.itemIndex - 1
+		newLen = overflowRecord.itemIndex - 1
 
 	newSubTable.alternates = {}
 	for i in range(newLen, oldLen):
@@ -591,7 +591,6 @@ def splitAlternateSubst(oldSubTable, newSubTable, overflowRecord):
 		key = item[0]
 		newSubTable.alternates[key] = item[1]
 		del oldSubTable.alternates[key]
-
 
 	return ok
 
@@ -611,7 +610,7 @@ def splitLigatureSubst(oldSubTable, newSubTable, overflowRecord):
 		# We just need to back up by two items 
 		# from the overflowed AlternateSet index to make sure the offset
 		# to the Coverage table doesn't overflow.
-		newLen  = overflowRecord.itemIndex - 1
+		newLen = overflowRecord.itemIndex - 1
 
 	newSubTable.ligatures = {}
 	for i in range(newLen, oldLen):

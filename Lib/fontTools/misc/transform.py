@@ -352,5 +352,6 @@ def Scale(x, y=None):
 
 
 if __name__ == "__main__":
-	import doctest, sys
+	import sys
+	import doctest
 	sys.exit(doctest.testmod().failed)

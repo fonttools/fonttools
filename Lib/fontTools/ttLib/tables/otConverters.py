@@ -383,20 +383,19 @@ class DeltaValue(BaseConverter):
 
 
 converterMapping = {
-	# type         class
-	"int16":       Short,
-	"uint16":      UShort,
-	"uint24":      UInt24,
-	"uint32":      ULong,
-	"Version":     Version,
-	"Tag":         Tag,
-	"GlyphID":     GlyphID,
-	"DeciPoints":  DeciPoints,
-	"Fixed":       Fixed,
-	"struct":      Struct,
-	"Offset":      Table,
-	"LOffset":     LTable,
-	"ValueRecord": ValueRecord,
-	"DeltaValue":  DeltaValue,
+	# type		class
+	"int16"		Short,
+	"uint16"	UShort,
+	"uint24"	UInt24,
+	"uint32"	ULong,
+	"Version"	Version,
+	"Tag"		Tag,
+	"GlyphID"	GlyphID,
+	"DeciPoints"	DeciPoints,
+	"Fixed"		Fixed,
+	"struct"	Struct,
+	"Offset"	Table,
+	"LOffset"	LTable,
+	"ValueRecord"	ValueRecord,
+	"DeltaValue"	DeltaValue,
 }
-

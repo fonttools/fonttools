@@ -48,4 +48,3 @@ class table_L_T_S_H_(DefaultTable.DefaultTable):
 		if name != "yPel":
 			return # ignore unknown tags
 		self.yPels[attrs["name"]] = safeEval(attrs["value"])
-

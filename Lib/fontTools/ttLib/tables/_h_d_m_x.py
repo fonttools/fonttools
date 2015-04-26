@@ -97,4 +97,3 @@ class table__h_d_m_x(DefaultTable.DefaultTable):
 			assert len(line) == len(ppems), "illegal hdmx format"
 			for i in range(len(ppems)):
 				hdmx[ppems[i]][glyphName] = line[i]
-

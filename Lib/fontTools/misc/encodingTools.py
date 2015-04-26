@@ -6,7 +6,7 @@ from fontTools.misc.py23 import *
 import fontTools.encodings.codecs
 
 # Map keyed by platformID, then platEncID, then possibly langID
-_encodingMap =	{
+_encodingMap = {
 	0: { # Unicode
 		0: 'utf_16_be',
 		1: 'utf_16_be',

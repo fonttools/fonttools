@@ -447,7 +447,7 @@ class FDArrayIndex(TopDictIndex):
 
 
 class	FDSelect:
-	def __init__(self, file = None, numGlyphs = None, format=None):
+	def __init__(self, file=None, numGlyphs=None, format=None):
 		if file:
 			# read data in from file
 			self.format = readCard8(file)
@@ -477,7 +477,6 @@ class	FDSelect:
 			# format is None will result in the smallest representation being used.
 			self.format = format
 			self.gidArray = []
-
 
 	def __len__(self):
 		return len(self.gidArray)
@@ -1216,43 +1215,42 @@ class ROSConverter(SimpleConverter):
 		return (attrs['Registry'], attrs['Order'], safeEval(attrs['Supplement']))
 
 
-
 topDictOperators = [
-#	opcode     name                  argument type   default    converter
-	((12, 30), 'ROS',        ('SID','SID','number'), None,      ROSConverter()),
-	((12, 20), 'SyntheticBase',      'number',       None,      None),
-	(0,        'version',            'SID',          None,      None),
-	(1,        'Notice',             'SID',          None,      Latin1Converter()),
-	((12, 0),  'Copyright',          'SID',          None,      Latin1Converter()),
-	(2,        'FullName',           'SID',          None,      None),
-	((12, 38), 'FontName',           'SID',          None,      None),
-	(3,        'FamilyName',         'SID',          None,      None),
-	(4,        'Weight',             'SID',          None,      None),
-	((12, 1),  'isFixedPitch',       'number',       0,         None),
-	((12, 2),  'ItalicAngle',        'number',       0,         None),
-	((12, 3),  'UnderlinePosition',  'number',       None,      None),
-	((12, 4),  'UnderlineThickness', 'number',       50,        None),
-	((12, 5),  'PaintType',          'number',       0,         None),
-	((12, 6),  'CharstringType',     'number',       2,         None),
-	((12, 7),  'FontMatrix',         'array',  [0.001,0,0,0.001,0,0],  None),
-	(13,       'UniqueID',           'number',       None,      None),
-	(5,        'FontBBox',           'array',  [0,0,0,0],       None),
-	((12, 8),  'StrokeWidth',        'number',       0,         None),
-	(14,       'XUID',               'array',        None,      None),
-	((12, 21), 'PostScript',         'SID',          None,      None),
-	((12, 22), 'BaseFontName',       'SID',          None,      None),
-	((12, 23), 'BaseFontBlend',      'delta',        None,      None),
-	((12, 31), 'CIDFontVersion',     'number',       0,         None),
-	((12, 32), 'CIDFontRevision',    'number',       0,         None),
-	((12, 33), 'CIDFontType',        'number',       0,         None),
-	((12, 34), 'CIDCount',           'number',       8720,      None),
-	(15,       'charset',            'number',       0,         CharsetConverter()),
-	((12, 35), 'UIDBase',            'number',       None,      None),
-	(16,       'Encoding',           'number',       0,         EncodingConverter()),
-	(18,       'Private',       ('number','number'), None,      PrivateDictConverter()),
-	((12, 37), 'FDSelect',           'number',       None,      FDSelectConverter()),
-	((12, 36), 'FDArray',            'number',       None,      FDArrayConverter()),
-	(17,       'CharStrings',        'number',       None,      CharStringsConverter()),
+#	opcode		name			argument type	default	converter
+	((12, 30),	'ROS',	('SID', 'SID', 'number'),	None,	ROSConverter()),
+	((12, 20),	'SyntheticBase',	'number',	None,	None),
+	(0,		'version',		'SID',		None,	None),
+	(1,		'Notice',		'SID',		None,	Latin1Converter()),
+	((12, 0),	'Copyright',		'SID',		None,	Latin1Converter()),
+	(2,		'FullName',		'SID',		None,	None),
+	((12, 38),	'FontName',		'SID',		None,	None),
+	(3,		'FamilyName',		'SID',		None,	None),
+	(4,		'Weight',		'SID',		None,	None),
+	((12, 1),	'isFixedPitch',		'number',	0,	None),
+	((12, 2),	'ItalicAngle',		'number',	0,	None),
+	((12, 3),	'UnderlinePosition',	'number',	None,	None),
+	((12, 4),	'UnderlineThickness',	'number',	50,	None),
+	((12, 5),	'PaintType',		'number',	0,	None),
+	((12, 6),	'CharstringType',	'number',	2,	None),
+	((12, 7),	'FontMatrix',		'array',	[0.001, 0, 0, 0.001, 0, 0],	None),
+	(13,		'UniqueID',		'number',	None,	None),
+	(5,		'FontBBox',		'array',	[0, 0, 0, 0],	None),
+	((12, 8),	'StrokeWidth',		'number',	0,	None),
+	(14,		'XUID',			'array',	None,	None),
+	((12, 21),	'PostScript',		'SID',		None,	None),
+	((12, 22),	'BaseFontName',		'SID',		None,	None),
+	((12, 23),	'BaseFontBlend',	'delta',	None,	None),
+	((12, 31),	'CIDFontVersion',	'number',	0,	None),
+	((12, 32),	'CIDFontRevision',	'number',	0,	None),
+	((12, 33),	'CIDFontType',		'number',	0,	None),
+	((12, 34),	'CIDCount',		'number',	8720,	None),
+	(15,		'charset',		'number',	0,	CharsetConverter()),
+	((12, 35),	'UIDBase',		'number',	None,	None),
+	(16,		'Encoding',		'number',	0,	EncodingConverter()),
+	(18,		'Private',	('number', 'number'),	None,	PrivateDictConverter()),
+	((12, 37),	'FDSelect',		'number',	None,	FDSelectConverter()),
+	((12, 36),	'FDArray',		'number',	None,	FDArrayConverter()),
+	(17,		'CharStrings',		'number',	None,	CharStringsConverter()),
 ]
 
 # Note! FDSelect and FDArray must both preceed CharStrings in the output XML build order,
@@ -1260,27 +1258,27 @@ topDictOperators = [
 
 
 privateDictOperators = [
-#	opcode     name                  argument type   default    converter
-	(6,        'BlueValues',         'delta',        None,      None),
-	(7,        'OtherBlues',         'delta',        None,      None),
-	(8,        'FamilyBlues',        'delta',        None,      None),
-	(9,        'FamilyOtherBlues',   'delta',        None,      None),
-	((12, 9),  'BlueScale',          'number',       0.039625,  None),
-	((12, 10), 'BlueShift',          'number',       7,         None),
-	((12, 11), 'BlueFuzz',           'number',       1,         None),
-	(10,       'StdHW',              'number',       None,      None),
-	(11,       'StdVW',              'number',       None,      None),
-	((12, 12), 'StemSnapH',          'delta',        None,      None),
-	((12, 13), 'StemSnapV',          'delta',        None,      None),
-	((12, 14), 'ForceBold',          'number',       0,         None),
-	((12, 15), 'ForceBoldThreshold', 'number',       None,      None),  # deprecated
-	((12, 16), 'lenIV',              'number',       None,      None),  # deprecated
-	((12, 17), 'LanguageGroup',      'number',       0,         None),
-	((12, 18), 'ExpansionFactor',    'number',       0.06,      None),
-	((12, 19), 'initialRandomSeed',  'number',       0,         None),
-	(20,       'defaultWidthX',      'number',       0,         None),
-	(21,       'nominalWidthX',      'number',       0,         None),
-	(19,       'Subrs',              'number',       None,      SubrsConverter()),
+#	opcode		name			argument type	default	converter
+	(6,		'BlueValues',		'delta',	None,	None),
+	(7,		'OtherBlues',		'delta',	None,	None),
+	(8,		'FamilyBlues',		'delta',	None,	None),
+	(9,		'FamilyOtherBlues',	'delta',	None,	None),
+	((12, 9),	'BlueScale',		'number',	0.039625, None),
+	((12, 10),	'BlueShift',		'number',	7,	None),
+	((12, 11),	'BlueFuzz',		'number',	1,	None),
+	(10,		'StdHW',		'number',	None,	None),
+	(11,		'StdVW',		'number',	None,	None),
+	((12, 12),	'StemSnapH',		'delta',	None,	None),
+	((12, 13),	'StemSnapV',		'delta',	None,	None),
+	((12, 14),	'ForceBold',		'number',	0,	None),
+	((12, 15),	'ForceBoldThreshold',	'number',	None,	None), # deprecated
+	((12, 16),	'lenIV',		'number',	None,	None), # deprecated
+	((12, 17),	'LanguageGroup',	'number',	0,	None),
+	((12, 18),	'ExpansionFactor',	'number',	0.06,	None),
+	((12, 19),	'initialRandomSeed',	'number',	0,	None),
+	(20,		'defaultWidthX',	'number',	0,	None),
+	(21,		'nominalWidthX',	'number',	0,	None),
+	(19,		'Subrs',		'number',	None,	SubrsConverter()),
 ]
 
 def addConverters(table):
@@ -1586,7 +1584,6 @@ class FontDict(BaseDict):
 	def toXML(self, xmlWriter, progress):
 		self.skipNames = ['Encoding']
 		BaseDict.toXML(self, xmlWriter, progress)
-	
 
 
 class PrivateDict(BaseDict):
