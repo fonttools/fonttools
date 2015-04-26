@@ -10,5 +10,5 @@ install:
 install-user:
 	./setup.py install --user
 
-check:
+check: all
 	./run-tests.sh
