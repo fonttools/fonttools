@@ -69,15 +69,15 @@ class table_C_P_A_L_(DefaultTable.DefaultTable):
 				palette.append (color)
 			self.palettes.append(palette)
 		elif "value" in attrs:
-			value =  safeEval(attrs["value"])
+			value = safeEval(attrs["value"])
 			setattr(self, name, value)
 
 class Color(object):
 
 	def __init__(self, blue=None, green=None, red=None, alpha=None):
-		self.blue  = blue
+		self.blue = blue
 		self.green = green
-		self.red   = red
+		self.red = red
 		self.alpha = alpha
 
 	def hex(self):
@@ -94,7 +94,7 @@ class Color(object):
 		value = attrs["value"]
 		if value[0] == '#':
 			value = value[1:]
-		self.red   = int(value[0:2], 16)
+		self.red = int(value[0:2], 16)
 		self.green = int(value[2:4], 16)
-		self.blue  = int(value[4:6], 16)
+		self.blue = int(value[4:6], 16)
 		self.alpha = int(value[6:8], 16) if len (value) >= 8 else 0xFF

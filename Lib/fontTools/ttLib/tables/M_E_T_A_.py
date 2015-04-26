@@ -46,17 +46,17 @@ METAStringRecordFormat = """
 # Strings shall be Unicode UTF-8 encoded, and null-terminated.
 
 METALabelDict = {
-	0 : "MojikumiX4051", # An integer in the range 1-20
-	1 : "UNIUnifiedBaseChars",
-	2 : "BaseFontName",
-	3 : "Language",
-	4 : "CreationDate",
-	5 : "FoundryName",
-	6 : "FoundryCopyright",
-	7 : "OwnerURI",
-	8 : "WritingScript",
-	10 : "StrokeCount",
-	11 : "IndexingRadical",
+	0: "MojikumiX4051", # An integer in the range 1-20
+	1: "UNIUnifiedBaseChars",
+	2: "BaseFontName",
+	3: "Language",
+	4: "CreationDate",
+	5: "FoundryName",
+	6: "FoundryCopyright",
+	7: "OwnerURI",
+	8: "WritingScript",
+	10: "StrokeCount",
+	11: "IndexingRadical",
 }
 
 

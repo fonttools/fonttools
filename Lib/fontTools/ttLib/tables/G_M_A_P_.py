@@ -63,7 +63,7 @@ class GMAPRecord(object):
 	def compile(self, ttFont):
 		if 	self.UV is None:
 			self.UV = 0
-		nameLen =  len(self.name)
+		nameLen = len(self.name)
 		if nameLen < 32:
 			self.name = self.name + "\0"*(32 - nameLen)
 		data = sstruct.pack(GMAPRecordFormat1, self)
@@ -92,7 +92,7 @@ class table_G_M_A_P_(DefaultTable.DefaultTable):
 	def compile(self, ttFont):
 		self.recordsCount = len(self.gmapRecords)
 		self.fontNameLength = len(self.psFontName)
-		self.recordsOffset = 4 *(((self.fontNameLength + 12)  + 3) // 4)
+		self.recordsOffset = 4 * (((self.fontNameLength + 12) + 3) // 4)
 		data = sstruct.pack(GMAPFormat, self)
 		data = data + tobytes(self.psFontName)
 		data = data + b"\0" * (self.recordsOffset - len(data))
