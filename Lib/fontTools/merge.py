@@ -680,7 +680,7 @@ class Options(object):
 	v = a[i+1:]
       k = k.replace('-', '_')
       if not hasattr(self, k):
-	if ignore_unknown == True or k in ignore_unknown:
+	if ignore_unknown is True or k in ignore_unknown:
 	  ret.append(orig_a)
 	  continue
 	else:

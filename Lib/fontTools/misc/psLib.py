@@ -319,7 +319,6 @@ def unpack_item(item):
 	return newitem
 
 def suckfont(data):
-	import re
 	m = re.search(br"/FontName\s+/([^ \t\n\r]+)\s+def", data)
 	if m:
 		fontName = m.group(1)

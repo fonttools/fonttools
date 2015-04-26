@@ -705,7 +705,8 @@ _aglText = """\
 """
 
 
-AGLError = "AGLError"
+class AGLError(Exception):
+	pass
 
 AGL2UV = {}
 UV2AGL = {}
