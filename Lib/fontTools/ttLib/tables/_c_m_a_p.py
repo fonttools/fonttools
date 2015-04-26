@@ -38,10 +38,7 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
 			if not length:
 				print("Error: cmap subtable is reported as having zero length: platformID %s, platEncID %s,  format %s offset %s. Skipping table." % (platformID, platEncID,format, offset))
 				continue
-			if format not in cmap_classes:
-				table = cmap_format_unknown(format)
-			else:
-				table = cmap_classes[format](format)
+			table = CmapSubtable.newSubtable(format)
 			table.platformID = platformID
 			table.platEncID = platEncID
 			# Note that by default we decompile only the subtable header info;
@@ -90,10 +87,7 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
 		if not hasattr(self, "tables"):
 			self.tables = []
 		format = safeEval(name[12:])
-		if format not in cmap_classes:
-			table = cmap_format_unknown(format)
-		else:
-			table = cmap_classes[format](format)
+		table = CmapSubtable.newSubtable(format)
 		table.platformID = safeEval(attrs["platformID"])
 		table.platEncID = safeEval(attrs["platEncID"])
 		table.fromXML(name, attrs, content, ttFont)
@@ -101,6 +95,17 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
 
 
 class CmapSubtable(object):
+
+	@staticmethod
+	def getSubtableClass(format):
+		"""Return the subtable class for a format."""
+		return cmap_classes.get(format, cmap_format_unknown)
+
+	@staticmethod
+	def newSubtable(format):
+		"""Return a new instance of a subtable for format."""
+		subtableClass = CmapSubtable.getSubtableClass(format)
+		return subtableClass(format)
 
 	def __init__(self, format):
 		self.format = format
@@ -191,7 +196,7 @@ class cmap_format_0(CmapSubtable):
 		# we usually get here indirectly from the subtable __getattr__ function, in which case both args must be None.
 		# If not, someone is calling  the subtable decompile() directly, and must provide both args.
 		if data is not None and ttFont is not None:
-			self.decompileHeader(data[offset:offset+int(length)], ttFont)
+			self.decompileHeader(data, ttFont)
 		else:
 			assert (data is None and ttFont is None), "Need both data and ttFont arguments"
 		data = self.data # decompileHeader assigns the data after the header to self.data
@@ -276,7 +281,7 @@ class cmap_format_2(CmapSubtable):
 		# we usually get here indirectly from the subtable __getattr__ function, in which case both args must be None.
 		# If not, someone is calling  the subtable decompile() directly, and must provide both args.
 		if data is not None and ttFont is not None:
-			self.decompileHeader(data[offset:offset+int(length)], ttFont)
+			self.decompileHeader(data, ttFont)
 		else:
 			assert (data is None and ttFont is None), "Need both data and ttFont arguments"
 
@@ -642,7 +647,7 @@ class cmap_format_4(CmapSubtable):
 		# we usually get here indirectly from the subtable __getattr__ function, in which case both args must be None.
 		# If not, someone is calling  the subtable decompile() directly, and must provide both args.
 		if data is not None and ttFont is not None:
-			self.decompileHeader(self.data[offset:offset+int(length)], ttFont)
+			self.decompileHeader(data, ttFont)
 		else:
 			assert (data is None and ttFont is None), "Need both data and ttFont arguments"
 
@@ -823,7 +828,7 @@ class cmap_format_6(CmapSubtable):
 		# we usually get here indirectly from the subtable __getattr__ function, in which case both args must be None.
 		# If not, someone is calling  the subtable decompile() directly, and must provide both args.
 		if data is not None and ttFont is not None:
-			self.decompileHeader(data[offset:offset+int(length)], ttFont)
+			self.decompileHeader(data, ttFont)
 		else:
 			assert (data is None and ttFont is None), "Need both data and ttFont arguments"
 
@@ -896,7 +901,7 @@ class cmap_format_12_or_13(CmapSubtable):
 
 	def decompileHeader(self, data, ttFont):
 		format, reserved, length, language, nGroups = struct.unpack(">HHLLL", data[:16])
-		assert len(data) == (16 + nGroups*12) == (length), "corrupt cmap table format %d (data length: %d, header length: %d)" % (format, len(data), length)
+		assert len(data) == (16 + nGroups*12) == (length), "corrupt cmap table format %d (data length: %d, header length: %d)" % (self.format, len(data), length)
 		self.format = format
 		self.reserved = reserved
 		self.length = length
@@ -909,7 +914,7 @@ class cmap_format_12_or_13(CmapSubtable):
 		# we usually get here indirectly from the subtable __getattr__ function, in which case both args must be None.
 		# If not, someone is calling  the subtable decompile() directly, and must provide both args.
 		if data is not None and ttFont is not None:
-			self.decompileHeader(data[offset:offset+int(length)], ttFont)
+			self.decompileHeader(data, ttFont)
 		else:
 			assert (data is None and ttFont is None), "Need both data and ttFont arguments"
 
@@ -1029,9 +1034,11 @@ class cmap_format_12_or_13(CmapSubtable):
 
 
 class cmap_format_12(cmap_format_12_or_13):
-	def __init__(self, format):
+
+	_format_step = 1
+
+	def __init__(self, format=12):
 		cmap_format_12_or_13.__init__(self, format)
-		self._format_step = 1
 
 	def _computeGIDs(self, startingGlyph, numberOfGlyphs):
 		return list(range(startingGlyph, startingGlyph + numberOfGlyphs))
@@ -1041,9 +1048,11 @@ class cmap_format_12(cmap_format_12_or_13):
 
 
 class cmap_format_13(cmap_format_12_or_13):
-	def __init__(self, format):
+
+	_format_step = 0
+
+	def __init__(self, format=13):
 		cmap_format_12_or_13.__init__(self, format)
-		self._format_step = 0
 
 	def _computeGIDs(self, startingGlyph, numberOfGlyphs):
 		return [startingGlyph] * numberOfGlyphs
@@ -1263,7 +1272,7 @@ class cmap_format_unknown(CmapSubtable):
 		# we usually get here indirectly from the subtable __getattr__ function, in which case both args must be None.
 		# If not, someone is calling  the subtable decompile() directly, and must provide both args.
 		if data is not None and ttFont is not None:
-			self.decompileHeader(data[offset:offset+int(length)], ttFont)
+			self.decompileHeader(data, ttFont)
 		else:
 			assert (data is None and ttFont is None), "Need both data and ttFont arguments"
 
@@ -1281,4 +1290,4 @@ cmap_classes = {
 		12: cmap_format_12,
 		13: cmap_format_13,
 		14: cmap_format_14,
-		}
+}
