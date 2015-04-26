@@ -1,5 +1,6 @@
 from __future__ import print_function, division, absolute_import, unicode_literals
 from fontTools.misc.py23 import *
+from fontTools import ttLib
 import unittest
 from ._c_m_a_p import CmapSubtable
 
@@ -35,6 +36,18 @@ class CmapSubtableTest(unittest.TestCase):
 		self.assertEqual(subtable.getEncoding(), None)
 		self.assertEqual(subtable.getEncoding("ascii"), "ascii")
 		self.assertEqual(subtable.getEncoding(default="xyz"), "xyz")
+
+	def test_decompile_4(self):
+		subtable = CmapSubtable.newSubtable(4)
+		font = ttLib.TTFont()
+		font.setGlyphOrder([])
+		subtable.decompile(b'\0' * 3 + b'\x10' + b'\0' * 12, font)
+
+	def test_decompile_12(self):
+		subtable = CmapSubtable.newSubtable(12)
+		font = ttLib.TTFont()
+		font.setGlyphOrder([])
+		subtable.decompile(b'\0' * 7 + b'\x10' + b'\0' * 8, font)
 
 if __name__ == "__main__":
 	unittest.main()
