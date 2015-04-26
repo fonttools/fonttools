@@ -48,7 +48,7 @@ class table__s_b_i_x(DefaultTable.DefaultTable):
 			current_offset = sbixHeaderFormatSize + i * sbixStrikeOffsetFormatSize
 			offset_entry = sbixStrikeOffset()
 			sstruct.unpack(sbixStrikeOffsetFormat, \
-				data[current_offset : current_offset+sbixStrikeOffsetFormatSize], \
+				data[current_offset:current_offset+sbixStrikeOffsetFormatSize], \
 				offset_entry)
 			self.strikeOffsets.append(offset_entry.strikeOffset)
 

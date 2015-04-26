@@ -504,7 +504,7 @@ class cmap_format_2(CmapSubtable):
 		# since the first subrange of the GlyphIndexArray is for subHeader 0, which always starts with 
 		# charcode 0 and GID 0.
 		
-		idRangeOffset = (len(subHeaderList)-1)*8  + 2 # offset to beginning of glyphIDArray from first subheader idRangeOffset.
+		idRangeOffset = (len(subHeaderList)-1)*8 + 2 # offset to beginning of glyphIDArray from first subheader idRangeOffset.
 		subheadRangeLen = len(subHeaderList) -1 # skip last special empty-set subheader; we've already hardocodes its idRangeOffset to 2.
 		for index in range(subheadRangeLen): 
 			subHeader = subHeaderList[index]
@@ -996,8 +996,8 @@ class cmap_format_12_or_13(CmapSubtable):
 		nGroups = nGroups + 1
 		data = bytesjoin(dataList)
 		lengthSubtable = len(data) +16
-		assert len(data) == (nGroups*12) == (lengthSubtable-16) 
-		return struct.pack(">HHLLL", self.format, self.reserved , lengthSubtable, self.language, nGroups) + data
+		assert len(data) == (nGroups*12) == (lengthSubtable-16)
+		return struct.pack(">HHLLL", self.format, self.reserved, lengthSubtable, self.language, nGroups) + data
 	
 	def toXML(self, writer, ttFont):
 		writer.begintag(self.__class__.__name__, [
@@ -1094,7 +1094,7 @@ class cmap_format_14(CmapSubtable):
 			recOffset += 11
 			varUVS = cvtToUVS(uvs)
 			if defOVSOffset:
-				startOffset = defOVSOffset  - 10
+				startOffset = defOVSOffset - 10
 				numValues, = struct.unpack(">L", data[startOffset:startOffset+4])
 				startOffset +=4
 				for r in range(numValues):
@@ -1111,7 +1111,7 @@ class cmap_format_14(CmapSubtable):
 						uvsDict[varUVS] = list(localUVList)
 				
 			if nonDefUVSOffset:
-				startOffset = nonDefUVSOffset  - 10
+				startOffset = nonDefUVSOffset - 10
 				numRecs, = struct.unpack(">L", data[startOffset:startOffset+4])
 				startOffset +=4
 				localUVList = []
@@ -1181,7 +1181,7 @@ class cmap_format_14(CmapSubtable):
 
 	def compile(self, ttFont):
 		if self.data:
-			return struct.pack(">HLL", self.format, self.length , self.numVarSelectorRecords) + self.data
+			return struct.pack(">HLL", self.format, self.length, self.numVarSelectorRecords) + self.data
 
 		uvsDict = self.uvsDict
 		uvsList = sorted(uvsDict.keys())
@@ -1239,7 +1239,7 @@ class cmap_format_14(CmapSubtable):
 				
 		data = bytesjoin(varSelectorRecords) + bytesjoin(data)
 		self.length = 10 + len(data)
-		headerdata = struct.pack(">HLL", self.format, self.length , self.numVarSelectorRecords)
+		headerdata = struct.pack(">HLL", self.format, self.length, self.numVarSelectorRecords)
 		self.data = headerdata + data
 	
 		return self.data
