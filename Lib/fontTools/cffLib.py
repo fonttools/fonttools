@@ -457,6 +457,7 @@ class	FDSelect:
 			elif self.format == 3:
 				gidArray = [None] * numGlyphs
 				nRanges = readCard16(file)
+				fd = None
 				prev = None
 				for i in range(nRanges):
 					first = readCard16(file)
