@@ -22,13 +22,13 @@ panoseFormat = """
 """
 
 class Panose(object):
-	
+
 	def toXML(self, writer, ttFont):
 		formatstring, names, fixes = sstruct.getformat(panoseFormat)
 		for name in names:
 			writer.simpletag(name, value=getattr(self, name))
 			writer.newline()
-	
+
 	def fromXML(self, name, attrs, content, ttFont):
 		setattr(self, name, safeEval(attrs["value"]))
 
@@ -98,9 +98,9 @@ OS2_format_5_addition = bigendian + OS2_format_5_addition
 
 
 class table_O_S_2f_2(DefaultTable.DefaultTable):
-	
+
 	"""the OS/2 table"""
-	
+
 	def decompile(self, data, ttFont):
 		dummy, data = sstruct.unpack2(OS2_format_0, data, self)
 
@@ -119,7 +119,7 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 			warnings.warn("too much 'OS/2' table data")
 
 		self.panose = sstruct.unpack(panoseFormat, self.panose, Panose())
-	
+
 	def compile(self, ttFont):
 		panose = self.panose
 		self.panose = sstruct.pack(panoseFormat, self.panose)
@@ -139,7 +139,7 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 			raise ttLib.TTLibError("unknown format for OS/2 table: version %s" % self.version)
 		self.panose = panose
 		return data
-	
+
 	def toXML(self, writer, ttFont):
 		if self.version == 1:
 			format = OS2_format_1
@@ -157,7 +157,7 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 				writer.newline()
 				value.toXML(writer, ttFont)
 				writer.endtag("panose")
-			elif name in ("ulUnicodeRange1", "ulUnicodeRange2", 
+			elif name in ("ulUnicodeRange1", "ulUnicodeRange2",
 					"ulUnicodeRange3", "ulUnicodeRange4",
 					"ulCodePageRange1", "ulCodePageRange2"):
 				writer.simpletag(name, value=num2binary(value))
@@ -168,7 +168,7 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 			else:
 				writer.simpletag(name, value=value)
 			writer.newline()
-	
+
 	def fromXML(self, name, attrs, content, ttFont):
 		if name == "panose":
 			self.panose = panose = Panose()
@@ -176,7 +176,7 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 				if isinstance(element, tuple):
 					name, attrs, content = element
 					panose.fromXML(name, attrs, content, ttFont)
-		elif name in ("ulUnicodeRange1", "ulUnicodeRange2", 
+		elif name in ("ulUnicodeRange1", "ulUnicodeRange2",
 				"ulUnicodeRange3", "ulUnicodeRange4",
 				"ulCodePageRange1", "ulCodePageRange2",
 				"fsType", "fsSelection"):

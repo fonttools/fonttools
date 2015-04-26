@@ -7,7 +7,7 @@ import array
 
 
 class table_T_S_I__5(DefaultTable.DefaultTable):
-	
+
 	def decompile(self, data, ttFont):
 		numGlyphs = ttFont['maxp'].numGlyphs
 		assert len(data) == 2 * numGlyphs
@@ -18,7 +18,7 @@ class table_T_S_I__5(DefaultTable.DefaultTable):
 		self.glyphGrouping = {}
 		for i in range(numGlyphs):
 			self.glyphGrouping[ttFont.getGlyphName(i)] = a[i]
-	
+
 	def compile(self, ttFont):
 		glyphNames = ttFont.getGlyphOrder()
 		a = array.array("H")
@@ -27,13 +27,13 @@ class table_T_S_I__5(DefaultTable.DefaultTable):
 		if sys.byteorder != "big":
 			a.byteswap()
 		return a.tostring()
-	
+
 	def toXML(self, writer, ttFont):
 		names = sorted(self.glyphGrouping.keys())
 		for glyphName in names:
 			writer.simpletag("glyphgroup", name=glyphName, value=self.glyphGrouping[glyphName])
 			writer.newline()
-	
+
 	def fromXML(self, name, attrs, content, ttFont):
 		if not hasattr(self, "glyphGrouping"):
 			self.glyphGrouping = {}

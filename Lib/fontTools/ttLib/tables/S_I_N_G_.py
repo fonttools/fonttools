@@ -22,22 +22,22 @@ SINGFormat = """
 
 
 class table_S_I_N_G_(DefaultTable.DefaultTable):
-	
+
 	dependencies = []
-	
+
 	def decompile(self, data, ttFont):
 		dummy, rest = sstruct.unpack2(SINGFormat, data, self)
 		self.uniqueName = self.decompileUniqueName(self.uniqueName)
 		self.nameLength = byteord(self.nameLength)
 		assert len(rest) == self.nameLength
 		self.baseGlyphName = tostr(rest)
-		
+
 		rawMETAMD5 = self.METAMD5
 		self.METAMD5 = "[" + hex(byteord(self.METAMD5[0]))
 		for char in rawMETAMD5[1:]:
 			self.METAMD5 = self.METAMD5 + ", " + hex(byteord(char))
 		self.METAMD5 = self.METAMD5 + "]"
-		
+
 	def decompileUniqueName(self, data):
 		name = ""
 		for char in data:
@@ -67,7 +67,7 @@ class table_S_I_N_G_(DefaultTable.DefaultTable):
 		data = sstruct.pack(SINGFormat, d)
 		data = data + tobytes(self.baseGlyphName)
 		return data
-	
+
 	def compilecompileUniqueName(self, name, length):
 		nameLen = len(name)
 		if length <= nameLen:
@@ -86,7 +86,7 @@ class table_S_I_N_G_(DefaultTable.DefaultTable):
 			writer.newline()
 		writer.simpletag("baseGlyphName", value=self.baseGlyphName)
 		writer.newline()
-		
+
 	def fromXML(self, name, attrs, content, ttFont):
 		value = attrs["value"]
 		if name in ["uniqueName", "METAMD5", "baseGlyphName"]:

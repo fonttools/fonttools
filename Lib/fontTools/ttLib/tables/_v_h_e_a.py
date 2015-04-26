@@ -30,14 +30,14 @@ class table__v_h_e_a(DefaultTable.DefaultTable):
 	# Note: Keep in sync with table__h_h_e_a
 
 	dependencies = ['vmtx', 'glyf']
-	
+
 	def decompile(self, data, ttFont):
 		sstruct.unpack(vheaFormat, data, self)
-	
+
 	def compile(self, ttFont):
 		self.recalc(ttFont)
 		return sstruct.pack(vheaFormat, self)
-	
+
 	def recalc(self, ttFont):
 		vtmxTable = ttFont['vmtx']
 		if 'glyf' in ttFont:
@@ -77,13 +77,13 @@ class table__v_h_e_a(DefaultTable.DefaultTable):
 		else:
 			# XXX CFF recalc...
 			pass
-	
+
 	def toXML(self, writer, ttFont):
 		formatstring, names, fixes = sstruct.getformat(vheaFormat)
 		for name in names:
 			value = getattr(self, name)
 			writer.simpletag(name, value=value)
 			writer.newline()
-	
+
 	def fromXML(self, name, attrs, content, ttFont):
 		setattr(self, name, safeEval(attrs["value"]))

@@ -62,7 +62,7 @@ def calcCubicBounds(pt1, pt2, pt3, pt4):
     xRoots = [t for t in solveQuadratic(ax3, bx2, cx) if 0 <= t < 1]
     yRoots = [t for t in solveQuadratic(ay3, by2, cy) if 0 <= t < 1]
     roots = xRoots + yRoots
-    
+
     points = [(ax*t*t*t + bx*t*t + cx * t + dx, ay*t*t*t + by*t*t + cy * t + dy) for t in roots] + [pt1, pt4]
     return calcBounds(points)
 
@@ -220,7 +220,7 @@ def _splitQuadraticAtT(a, b, c, *ts):
         b1y = (2*ay*t1 + by) * delta
         c1x = ax*t1**2 + bx*t1 + cx
         c1y = ay*t1**2 + by*t1 + cy
-    
+
         pt1, pt2, pt3 = calcQuadraticPoints((a1x, a1y), (b1x, b1y), (c1x, c1y))
         segments.append((pt1, pt2, pt3))
     return segments
@@ -306,7 +306,7 @@ def solveCubic(a, b, c, d):
     a1 = b/a
     a2 = c/a
     a3 = d/a
-    
+
     Q = (a1*a1 - 3.0*a2)/9.0
     R = (2.0*a1*a1*a1 - 9.0*a1*a2 + 27.0*a3)/54.0
     R2_Q3 = R*R - Q*Q*Q

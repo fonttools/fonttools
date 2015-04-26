@@ -4,10 +4,10 @@ Defines two public classes:
 	SFNTReader
 	SFNTWriter
 
-(Normally you don't have to use these classes explicitly; they are 
+(Normally you don't have to use these classes explicitly; they are
 used automatically by ttLib.TTFont.)
 
-The reading and writing of sfnt files is separated in two distinct 
+The reading and writing of sfnt files is separated in two distinct
 classes, since whenever to number of tables changes or whenever
 a table's length chages you need to rewrite the whole file anyway.
 """
@@ -20,7 +20,7 @@ import struct
 
 
 class SFNTReader(object):
-	
+
 	def __init__(self, file, checkChecksums=1, fontNumber=-1):
 		self.file = file
 		self.checkChecksums = checkChecksums
@@ -66,10 +66,10 @@ class SFNTReader(object):
 		return tag in self.tables
 
 	__contains__ = has_key
-	
+
 	def keys(self):
 		return self.tables.keys()
-	
+
 	def __getitem__(self, tag):
 		"""Fetch the raw table data."""
 		entry = self.tables[Tag(tag)]
@@ -87,16 +87,16 @@ class SFNTReader(object):
 				# Be friendly, and just print a warning.
 				print("bad checksum for '%s' table" % tag)
 		return data
-	
+
 	def __delitem__(self, tag):
 		del self.tables[Tag(tag)]
-	
+
 	def close(self):
 		self.file.close()
 
 
 class SFNTWriter(object):
-	
+
 	def __init__(self, file, numTables, sfntVersion="\000\001\000\000",
 		     flavor=None, flavorData=None):
 		self.file = file
@@ -113,7 +113,7 @@ class SFNTWriter(object):
 			self.signature = "wOFF"
 
 			# to calculate WOFF checksum adjustment, we also need the original SFNT offsets
-			self.origNextTableOffset = sfntDirectorySize + numTables * sfntDirectoryEntrySize 
+			self.origNextTableOffset = sfntDirectorySize + numTables * sfntDirectoryEntrySize
 		else:
 			assert not self.flavor, "Unknown flavor '%s'" % self.flavor
 			self.directoryFormat = sfntDirectoryFormat
@@ -128,7 +128,7 @@ class SFNTWriter(object):
 		# make sure we're actually where we want to be. (old cStringIO bug)
 		self.file.write(b'\0' * (self.nextTableOffset - self.file.tell()))
 		self.tables = {}
-	
+
 	def __setitem__(self, tag, data):
 		"""Write raw table data to disk."""
 		if tag in self.tables:
@@ -157,9 +157,9 @@ class SFNTWriter(object):
 		# in the font.
 		self.file.write(b'\0' * (self.nextTableOffset - self.file.tell()))
 		assert self.nextTableOffset == self.file.tell()
-		
+
 		self.tables[tag] = entry
-	
+
 	def close(self):
 		"""All tables must have been written to disk. Now write the
 		directory.
@@ -214,9 +214,9 @@ class SFNTWriter(object):
 		else:
 			assert not self.flavor, "Unknown flavor '%s'" % self.flavor
 			pass
-		
+
 		directory = sstruct.pack(self.directoryFormat, self)
-		
+
 		self.file.seek(self.directorySize)
 		seenHead = 0
 		for tag, entry in tables:
@@ -332,19 +332,19 @@ woffDirectoryEntrySize = sstruct.calcsize(woffDirectoryEntryFormat)
 
 
 class DirectoryEntry(object):
-	
+
 	def __init__(self):
 		self.uncompressed = False # if True, always embed entry raw
 
 	def fromFile(self, file):
 		sstruct.unpack(self.format, file.read(self.formatSize), self)
-	
+
 	def fromString(self, str):
 		sstruct.unpack(self.format, str, self)
-	
+
 	def toString(self):
 		return sstruct.pack(self.format, self)
-	
+
 	def __repr__(self):
 		if hasattr(self, "tag"):
 			return "<%s '%s' at %x>" % (self.__class__.__name__, self.tag, id(self))
@@ -439,9 +439,9 @@ def calcChecksum(data):
 	Optionally takes a 'start' argument, which allows you to
 	calculate a checksum in chunks by feeding it a previous
 	result.
-	
+
 	If the data length is not a multiple of four, it assumes
-	it is to be padded with null byte. 
+	it is to be padded with null byte.
 
 		>>> print(calcChecksum(b"abcd"))
 		1633837924

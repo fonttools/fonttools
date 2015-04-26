@@ -13,7 +13,7 @@ GMAPFormat = """
 		recordsOffset:		H
 		fontNameLength:		H
 """
-# psFontName is a byte string which follows the record above. This is zero padded 
+# psFontName is a byte string which follows the record above. This is zero padded
 # to the beginning of the records array. The recordsOffsst is 32 bit aligned.
 
 GMAPRecordFormat1 = """
@@ -71,9 +71,9 @@ class GMAPRecord(object):
 
 
 class table_G_M_A_P_(DefaultTable.DefaultTable):
-	
+
 	dependencies = []
-	
+
 	def decompile(self, data, ttFont):
 		dummy, newData = sstruct.unpack2(GMAPFormat, data, self)
 		self.psFontName = tostr(newData[:self.fontNameLength])
@@ -108,7 +108,7 @@ class table_G_M_A_P_(DefaultTable.DefaultTable):
 		writer.newline()
 		for gmapRecord in self.gmapRecords:
 			gmapRecord.toXML(writer, ttFont)
-		
+
 	def fromXML(self, name, attrs, content, ttFont):
 		if name == "GMAPRecord":
 			if not hasattr(self, "gmapRecords"):
@@ -124,5 +124,5 @@ class table_G_M_A_P_(DefaultTable.DefaultTable):
 			value = attrs["value"]
 			if name == "PSFontName":
 				self.psFontName = value
-			else:	
+			else:
 				setattr(self, name, safeEval(value))

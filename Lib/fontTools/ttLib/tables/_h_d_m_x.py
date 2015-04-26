@@ -11,7 +11,7 @@ hdmxHeaderFormat = """
 """
 
 class table__h_d_m_x(DefaultTable.DefaultTable):
-	
+
 	def decompile(self, data, ttFont):
 		numGlyphs = ttFont['maxp'].numGlyphs
 		glyphOrder = ttFont.getGlyphOrder()
@@ -26,7 +26,7 @@ class table__h_d_m_x(DefaultTable.DefaultTable):
 			self.hdmx[ppem] = widths
 			data = data[self.recordSize:]
 		assert len(data) == 0, "too much hdmx data"
-	
+
 	def compile(self, ttFont):
 		self.version = 0
 		numGlyphs = ttFont['maxp'].numGlyphs
@@ -43,7 +43,7 @@ class table__h_d_m_x(DefaultTable.DefaultTable):
 				data = data + bytechr(width)
 			data = data + pad
 		return data
-	
+
 	def toXML(self, writer, ttFont):
 		writer.begintag("hdmxData")
 		writer.newline()
@@ -72,7 +72,7 @@ class table__h_d_m_x(DefaultTable.DefaultTable):
 			writer.newline()
 		writer.endtag("hdmxData")
 		writer.newline()
-	
+
 	def fromXML(self, name, attrs, content, ttFont):
 		if name != "hdmxData":
 			return

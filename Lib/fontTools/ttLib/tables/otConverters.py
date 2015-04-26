@@ -51,10 +51,10 @@ def buildConverters(tableSpec, tableNamespace):
 
 
 class BaseConverter(object):
-	
+
 	"""Base class for converter objects. Apart from the constructor, this
 	is an abstract class."""
-	
+
 	def __init__(self, name, repeat, aux, tableClass):
 		self.name = name
 		self.repeat = repeat
@@ -63,19 +63,19 @@ class BaseConverter(object):
 		self.isCount = name.endswith("Count")
 		self.isLookupType = name.endswith("LookupType")
 		self.isPropagated = name in ["ClassCount", "Class2Count", "FeatureTag", "SettingsCount", "AxisCount"]
-	
+
 	def read(self, reader, font, tableDict):
 		"""Read a value from the reader."""
 		raise NotImplementedError(self)
-	
+
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		"""Write a value to the writer."""
 		raise NotImplementedError(self)
-	
+
 	def xmlRead(self, attrs, content, font):
 		"""Read a value from XML."""
 		raise NotImplementedError(self)
-	
+
 	def xmlWrite(self, xmlWriter, font, value, name, attrs):
 		"""Write a value to XML."""
 		raise NotImplementedError(self)
@@ -191,15 +191,15 @@ class Version(BaseConverter):
 
 
 class Struct(BaseConverter):
-	
+
 	def read(self, reader, font, tableDict):
 		table = self.tableClass()
 		table.decompile(reader, font)
 		return table
-	
+
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		value.compile(writer, font)
-	
+
 	def xmlWrite(self, xmlWriter, font, value, name, attrs):
 		if value is None:
 			if attrs:
@@ -212,7 +212,7 @@ class Struct(BaseConverter):
 				pass # NULL table, ignore
 		else:
 			value.toXML(xmlWriter, font, attrs, name=name)
-	
+
 	def xmlRead(self, attrs, content, font):
 		if "empty" in attrs and safeEval(attrs["empty"]):
 			return None
@@ -241,7 +241,7 @@ class Table(Struct):
 			writer.writeULong(0)
 		else:
 			writer.writeUShort(0)
-	
+
 	def read(self, reader, font, tableDict):
 		offset = self.readOffset(reader)
 		if offset == 0:
@@ -259,7 +259,7 @@ class Table(Struct):
 		else:
 			table.decompile(reader, font)
 		return table
-	
+
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		if value is None:
 			self.writeNullOffset(writer)
@@ -287,7 +287,7 @@ class SubTable(Table):
 
 
 class ExtSubTable(LTable, SubTable):
-	
+
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		writer.Extension = 1 # actually, mere presence of the field flags it as an Ext Subtable writer.
 		Table.write(self, writer, font, tableDict, value, repeatIndex)
@@ -329,7 +329,7 @@ class ValueRecord(ValueFormat):
 
 
 class DeltaValue(BaseConverter):
-	
+
 	def read(self, reader, font, tableDict):
 		StartSize = tableDict["StartSize"]
 		EndSize = tableDict["EndSize"]
@@ -340,7 +340,7 @@ class DeltaValue(BaseConverter):
 		minusOffset = 1 << nBits
 		mask = (1 << nBits) - 1
 		signMask = 1 << (nBits - 1)
-		
+
 		DeltaValue = []
 		tmp, shift = 0, 0
 		for i in range(nItems):
@@ -352,7 +352,7 @@ class DeltaValue(BaseConverter):
 				value = value - minusOffset
 			DeltaValue.append(value)
 		return DeltaValue
-	
+
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		StartSize = tableDict["StartSize"]
 		EndSize = tableDict["EndSize"]
@@ -363,7 +363,7 @@ class DeltaValue(BaseConverter):
 		nBits = 1 << DeltaFormat
 		assert len(DeltaValue) == nItems
 		mask = (1 << nBits) - 1
-		
+
 		tmp, shift = 0, 16
 		for value in DeltaValue:
 			shift = shift - nBits
@@ -373,11 +373,11 @@ class DeltaValue(BaseConverter):
 				tmp, shift = 0, 16
 		if shift != 16:
 			writer.writeUShort(tmp)
-	
+
 	def xmlWrite(self, xmlWriter, font, value, name, attrs):
 		xmlWriter.simpletag(name, attrs + [("value", value)])
 		xmlWriter.newline()
-	
+
 	def xmlRead(self, attrs, content, font):
 		return safeEval(attrs["value"])
 

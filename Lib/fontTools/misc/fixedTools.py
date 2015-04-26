@@ -14,7 +14,7 @@ def fixedToFloat(value, precisionBits):
 	that has the shortest decimal reprentation.  Eg. to convert a
 	fixed number in a 2.14 format, use precisionBits=14.  This is
 	pretty slow compared to a simple division.  Use sporadically.
-	
+
 	>>> "%g" % fixedToFloat(13107, 14)
 	'0.8'
 	>>> "%g" % fixedToFloat(0, 14)

@@ -13,7 +13,7 @@ import array
 postFormat = """
 	>
 	formatType:			16.16F
-	italicAngle:		16.16F		# italic angle in degrees			
+	italicAngle:		16.16F		# italic angle in degrees
 	underlinePosition:	h
 	underlineThickness:	h
 	isFixedPitch:		L
@@ -27,7 +27,7 @@ postFormatSize = sstruct.calcsize(postFormat)
 
 
 class table__p_o_s_t(DefaultTable.DefaultTable):
-	
+
 	def decompile(self, data, ttFont):
 		sstruct.unpack(postFormat, data[:postFormatSize], self)
 		data = data[postFormatSize:]
@@ -42,7 +42,7 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 		else:
 			# supported format
 			raise ttLib.TTLibError("'post' table format %f not supported" % self.formatType)
-	
+
 	def compile(self, ttFont):
 		data = sstruct.pack(postFormat, self)
 		if self.formatType == 1.0:
@@ -57,7 +57,7 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 			# supported format
 			raise ttLib.TTLibError("'post' table format %f not supported" % self.formatType)
 		return data
-	
+
 	def getGlyphOrder(self):
 		"""This function will get called by a ttLib.TTFont instance.
 		Do not call this function yourself, use TTFont().getGlyphOrder()
@@ -68,10 +68,10 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 		glyphOrder = self.glyphOrder
 		del self.glyphOrder
 		return glyphOrder
-	
+
 	def decode_format_1_0(self, data, ttFont):
 		self.glyphOrder = standardGlyphOrder[:ttFont["maxp"].numGlyphs]
-	
+
 	def decode_format_2_0(self, data, ttFont):
 		numGlyphs, = struct.unpack(">H", data[:2])
 		numGlyphs = int(numGlyphs)
@@ -103,7 +103,7 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 				name = standardGlyphOrder[index]
 			glyphOrder[glyphID] = name
 		self.build_psNameMapping(ttFont)
-	
+
 	def build_psNameMapping(self, ttFont):
 		mapping = {}
 		allNames = {}
@@ -125,12 +125,12 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 				mapping[glyphName] = psName
 
 		self.mapping = mapping
-	
+
 	def decode_format_3_0(self, data, ttFont):
 		# Setting self.glyphOrder to None will cause the TTFont object
 		# try and construct glyph names from a Unicode cmap table.
 		self.glyphOrder = None
-	
+
 	def decode_format_4_0(self, data, ttFont):
 		from fontTools import agl
 		numGlyphs = ttFont['maxp'].numGlyphs
@@ -178,7 +178,7 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 		if sys.byteorder != "big":
 			indices.byteswap()
 		return struct.pack(">H", numGlyphs) + indices.tostring() + packPStrings(extraNames)
-	
+
 	def encode_format_4_0(self, ttFont):
 		from fontTools import agl
 		numGlyphs = ttFont['maxp'].numGlyphs
@@ -235,7 +235,7 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 			writer.dumphex(self.data)
 			writer.endtag("hexdata")
 			writer.newline()
-	
+
 	def fromXML(self, name, attrs, content, ttFont):
 		if name not in ("psNames", "extraNames", "hexdata"):
 			setattr(self, name, safeEval(attrs["value"]))

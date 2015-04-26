@@ -39,7 +39,7 @@ class PSError(Exception): pass
 
 
 class PSTokenizer(StringIO):
-	
+
 	def getnexttoken(self,
 			# localize some stuff, for performance
 			len=len,
@@ -47,9 +47,9 @@ class PSTokenizer(StringIO):
 			stringmatch=stringRE.match,
 			hexstringmatch=hexstringRE.match,
 			commentmatch=commentRE.match,
-			endmatch=endofthingRE.match, 
+			endmatch=endofthingRE.match,
 			whitematch=skipwhiteRE.match):
-		
+
 		_, nextpos = whitematch(self.buf, self.pos).span()
 		self.pos = nextpos
 		if self.pos >= self.len:
@@ -94,11 +94,11 @@ class PSTokenizer(StringIO):
 			token = buf[pos:nextpos]
 		self.pos = pos + len(token)
 		return tokentype, token
-	
+
 	def skipwhite(self, whitematch=skipwhiteRE.match):
 		_, nextpos = whitematch(self.buf, self.pos).span()
 		self.pos = nextpos
-	
+
 	def starteexec(self):
 		self.pos = self.pos + 1
 		#self.skipwhite()
@@ -106,13 +106,13 @@ class PSTokenizer(StringIO):
 		self.buf, R = eexec.decrypt(self.dirtybuf, 55665)
 		self.len = len(self.buf)
 		self.pos = 4
-	
+
 	def stopeexec(self):
 		if not hasattr(self, 'dirtybuf'):
 			return
 		self.buf = self.dirtybuf
 		del self.dirtybuf
-	
+
 	def flush(self):
 		if self.buflist:
 			self.buf = self.buf + "".join(self.buflist)
@@ -120,7 +120,7 @@ class PSTokenizer(StringIO):
 
 
 class PSInterpreter(PSOperators):
-	
+
 	def __init__(self):
 		systemdict = {}
 		userdict = {}
@@ -129,7 +129,7 @@ class PSInterpreter(PSOperators):
 		self.proclevel = 0
 		self.procmark = ps_procmark()
 		self.fillsystemdict()
-	
+
 	def fillsystemdict(self):
 		systemdict = self.dictstack[0]
 		systemdict['['] = systemdict['mark'] = self.mark = ps_mark()
@@ -139,7 +139,7 @@ class PSInterpreter(PSOperators):
 		systemdict['StandardEncoding'] = ps_array(ps_StandardEncoding)
 		systemdict['FontDirectory'] = ps_dict({})
 		self.suckoperators(systemdict, self.__class__)
-	
+
 	def suckoperators(self, systemdict, klass):
 		for name in dir(klass):
 			attr = getattr(self, name)
@@ -148,7 +148,7 @@ class PSInterpreter(PSOperators):
 				systemdict[name] = ps_operator(name, attr)
 		for baseclass in klass.__bases__:
 			self.suckoperators(systemdict, baseclass)
-	
+
 	def interpret(self, data, getattr=getattr):
 		tokenizer = self.tokenizer = PSTokenizer(data)
 		getnexttoken = tokenizer.getnexttoken
@@ -177,7 +177,7 @@ class PSInterpreter(PSOperators):
 					print('>>>')
 					print(self.tokenizer.buf[self.tokenizer.pos:self.tokenizer.pos+50])
 					print('- - - - - - -')
-	
+
 	def handle_object(self, object):
 		if not (self.proclevel or object.literal or object.type == 'proceduretype'):
 			if object.type != 'operatortype':
@@ -191,21 +191,21 @@ class PSInterpreter(PSOperators):
 					object.function()
 		else:
 			self.push(object)
-	
+
 	def call_procedure(self, proc):
 		handle_object = self.handle_object
 		for item in proc.value:
 			handle_object(item)
-	
+
 	def resolve_name(self, name):
 		dictstack = self.dictstack
 		for i in range(len(dictstack)-1, -1, -1):
 			if name in dictstack[i]:
 				return dictstack[i][name]
 		raise PSError('name error: ' + str(name))
-	
+
 	def do_token(self, token,
-				int=int, 
+				int=int,
 				float=float,
 				ps_name=ps_name,
 				ps_integer=ps_integer,
@@ -231,16 +231,16 @@ class PSInterpreter(PSOperators):
 				return ps_real(num)
 		else:
 			return ps_integer(num)
-	
+
 	def do_comment(self, token):
 		pass
-	
+
 	def do_literal(self, token):
 		return ps_literal(token[1:])
-	
+
 	def do_string(self, token):
 		return ps_string(token[1:-1])
-	
+
 	def do_hexstring(self, token):
 		hexStr = "".join(token[1:-1].split())
 		if len(hexStr) % 2:
@@ -250,7 +250,7 @@ class PSInterpreter(PSOperators):
 			cleanstr.append(chr(int(hexStr[i:i+2], 16)))
 		cleanstr = "".join(cleanstr)
 		return ps_string(cleanstr)
-	
+
 	def do_special(self, token):
 		if token == '{':
 			self.proclevel = self.proclevel + 1
@@ -271,10 +271,10 @@ class PSInterpreter(PSOperators):
 			return ps_name(']')
 		else:
 			raise PSTokenError('huh?')
-	
+
 	def push(self, object):
 		self.stack.append(object)
-	
+
 	def pop(self, *types):
 		stack = self.stack
 		if not stack:
@@ -285,7 +285,7 @@ class PSInterpreter(PSOperators):
 				raise PSError('typecheck, expected %s, found %s' % (repr(types), object.type))
 		del stack[-1]
 		return object
-	
+
 	def do_makearray(self):
 		array = []
 		while 1:
@@ -295,7 +295,7 @@ class PSInterpreter(PSOperators):
 			array.append(topobject)
 		array.reverse()
 		self.push(ps_array(array))
-	
+
 	def close(self):
 		"""Remove circular references."""
 		del self.stack

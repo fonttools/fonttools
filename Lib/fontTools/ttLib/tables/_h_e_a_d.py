@@ -30,9 +30,9 @@ headFormat = """
 """
 
 class table__h_e_a_d(DefaultTable.DefaultTable):
-	
+
 	dependencies = ['maxp', 'loca']
-	
+
 	def decompile(self, data, ttFont):
 		dummy, rest = sstruct.unpack2(headFormat, data, self)
 		if rest:
@@ -55,13 +55,13 @@ class table__h_e_a_d(DefaultTable.DefaultTable):
 				warnings.warn("'%s' timestamp seems very low; regarding as unix timestamp" % stamp)
 				value += 0x7C259DC0
 				setattr(self, stamp, value)
-	
+
 	def compile(self, ttFont):
 		if ttFont.recalcTimestamp:
 			self.modified = timestampNow()
 		data = sstruct.pack(headFormat, self)
 		return data
-	
+
 	def toXML(self, writer, ttFont):
 		writer.comment("Most of this table will be recalculated by the compiler")
 		writer.newline()
@@ -80,7 +80,7 @@ class table__h_e_a_d(DefaultTable.DefaultTable):
 				value = num2binary(value, 16)
 			writer.simpletag(name, value=value)
 			writer.newline()
-	
+
 	def fromXML(self, name, attrs, content, ttFont):
 		value = attrs["value"]
 		if name in ("created", "modified"):

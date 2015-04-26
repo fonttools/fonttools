@@ -53,18 +53,18 @@ _FCBPBFormat = """
 """
 
 class ParamBlock(object):
-	
+
 	"""Wrapper for the very low level FCBPB record."""
-	
+
 	def __init__(self, refNum):
 		self.__fileName = array.array("c", "\0" * 64)
-		sstruct.unpack(_FCBPBFormat, 
+		sstruct.unpack(_FCBPBFormat,
 				"\0" * sstruct.calcsize(_FCBPBFormat), self)
 		self.ioNamePtr = self.__fileName.buffer_info()[0]
 		self.ioRefNum = refNum
 		self.ioVRefNum = GetVRefNum(refNum)
 		self.__haveInfo = 0
-	
+
 	def getInfo(self):
 		if self.__haveInfo:
 			return
@@ -76,18 +76,18 @@ class ParamBlock(object):
 			raise Res.Error("can't get file info", err)
 		sstruct.unpack(_FCBPBFormat, buf.tostring(), self)
 		self.__haveInfo = 1
-	
+
 	def getFileName(self):
 		self.getInfo()
 		data = self.__fileName.tostring()
 		return data[1:byteord(data[0])+1]
-	
+
 	def getFSSpec(self):
 		self.getInfo()
 		vRefNum = self.ioVRefNum
 		parID = self.ioFCBParID
 		return macfs.FSSpec((vRefNum, parID, self.getFileName()))
-	
+
 	def getPath(self):
 		return self.getFSSpec().as_pathname()
 

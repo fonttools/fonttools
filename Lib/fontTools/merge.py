@@ -808,7 +808,7 @@ class Merger(object):
 				try:
 					mergeLogic = logic['*']
 				except KeyError:
-					raise Exception("Don't know how to merge key %s of class %s" % 
+					raise Exception("Don't know how to merge key %s of class %s" %
 							(key, returnTable.__class__.__name__))
 			if mergeLogic is NotImplemented:
 				continue
