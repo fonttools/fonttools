@@ -1,3 +1,7 @@
+[![Build Status](https://travis-ci.org/behdad/fonttools.svg)](https://travis-ci.org/behdad/fonttools)
+[![Health](https://landscape.io/github/behdad/fonttools/master/landscape.svg?style=flat)](https://landscape.io/github/behdad/fonttools/master)
+[![Coverage Status](https://img.shields.io/coveralls/behdad/fonttools.svg)](https://coveralls.io/r/behdad/fonttools)
+
 ### What it is ?
 
 Quoting from [TTX/FontTools Sourceforge Project](http://sourceforge.net/projects/fonttools/) 
