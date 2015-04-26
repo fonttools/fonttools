@@ -47,4 +47,3 @@ class table_T_S_I__0(DefaultTable.DefaultTable):
 	def toXML(self, writer, ttFont):
 		writer.comment("This table will be calculated by the compiler")
 		writer.newline()
-

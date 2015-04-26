@@ -12,7 +12,6 @@ except ImportError:
 	import Res
 
 
-
 def MyOpenResFile(path):
 	mode = 1  # read only
 	try:
@@ -198,5 +197,3 @@ class SFNTResourceWriter(object):
 	def __getattr__(self, attr):
 		# cheap inheritance
 		return getattr(self.file, attr)
-	
-

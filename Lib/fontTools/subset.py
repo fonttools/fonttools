@@ -841,7 +841,7 @@ def closure_glyphs(self, s, cur_glyphs):
   indices = c.Coverage(self).intersect(cur_glyphs)
   if not indices:
     return []
-  cur_glyphs = c.Coverage(self).intersect_glyphs(cur_glyphs);
+  cur_glyphs = c.Coverage(self).intersect_glyphs(cur_glyphs)
 
   recursions = set()
 
@@ -1401,7 +1401,7 @@ def prune_pre_subset(self, options):
   self.prune_lookups()
   # Prune lookups themselves
   if self.table.LookupList:
-    self.table.LookupList.prune_pre_subset(options);
+    self.table.LookupList.prune_pre_subset(options)
   return True
 
 @_add_method(ttLib.getTableClass('GSUB'),
@@ -1443,7 +1443,7 @@ def prune_post_subset(self, options):
 
   # LookupList looks good.  Just prune lookups themselves
   if table.LookupList:
-    table.LookupList.prune_post_subset(options);
+    table.LookupList.prune_post_subset(options)
     # XXX Next two lines disabled because OTS is stupid and
     # doesn't like NULL offsets here.
     #if not table.LookupList.Lookup:
@@ -1804,7 +1804,7 @@ class _DehintingT2Decompiler(psCharStrings.SimpleT2Decompiler):
       for i in range(hints.last_checked, len(charString.program) - 1):
         if isinstance(charString.program[i], str):
           hints.status = 2
-          break;
+          break
         else:
           hints.status = 1 # There's *something* here
       hints.last_checked = len(charString.program)
@@ -1850,7 +1850,7 @@ class _DehintingT2Decompiler(psCharStrings.SimpleT2Decompiler):
       for i in range(hints.last_checked, index - 1):
         if isinstance(cs.program[i], str):
           hints.status = 2
-          break;
+          break
       if hints.status != 2:
         # We are an implicit vstem
         hints.last_hint = index + 1
@@ -1893,7 +1893,7 @@ class _DehintingT2Decompiler(psCharStrings.SimpleT2Decompiler):
         for i in range(hints.last_checked, index - 1):
           if isinstance(cs.program[i], str):
             hints.status = 2
-            break;
+            break
         hints.last_checked = index
       if hints.status != 2:
         # Decide where to chop off from
@@ -1963,7 +1963,6 @@ def prune_post_subset(self, options):
     font = cff[fontname]
     cs = font.CharStrings
 
-
     #
     # Drop unused FontDictionaries
     #
@@ -1975,7 +1974,6 @@ def prune_post_subset(self, options):
       arr.items = [arr[i] for i in indices]
       del arr.file, arr.offsets
 
-
     #
     # Desubroutinize if asked for
     if options.desubroutinize:
@@ -1986,7 +1984,6 @@ def prune_post_subset(self, options):
         decompiler = _DesubroutinizingT2Decompiler(subrs, c.globalSubrs)
         decompiler.execute(c)
         c.program = c._desubroutinized
-
 
     #
     # Drop hints if not needed
@@ -2235,7 +2232,7 @@ class Options(object):
     # Default shaper
     'common': ['ccmp', 'liga', 'locl', 'mark', 'mkmk', 'rlig'],
     'horizontal': ['calt', 'clig', 'curs', 'kern', 'rclt'],
-    'vertical':  ['valt', 'vert', 'vkrn', 'vpal', 'vrt2'],
+    'vertical': ['valt', 'vert', 'vkrn', 'vpal', 'vrt2'],
     'ltr': ['ltra', 'ltrm'],
     'rtl': ['rtla', 'rtlm'],
     # Complex shapers
@@ -2483,7 +2480,6 @@ class Subsetter(object):
     self.log("Retaining %d glyphs: " % len(self.glyphs_all))
 
     del self.glyphs
-
 
   def _subset_glyphs(self, font):
     for tag in font.keys():

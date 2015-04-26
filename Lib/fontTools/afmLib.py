@@ -20,11 +20,11 @@ charRE = re.compile(
 		"([.A-Za-z0-9_]+)"		# charname
 		"\s*;\s*B\s+"			# ; B
 		"(-?\d+)"			# left
-		"\s+"				#
+		"\s+"
 		"(-?\d+)"			# bottom
-		"\s+"				#
+		"\s+"
 		"(-?\d+)"			# right
-		"\s+"				#
+		"\s+"
 		"(-?\d+)"			# top
 		"\s*;\s*"			# ;
 		)
@@ -32,29 +32,29 @@ charRE = re.compile(
 # regular expression to parse kerning lines
 kernRE = re.compile(
 		"([.A-Za-z0-9_]+)"		# leftchar
-		"\s+"				#
+		"\s+"
 		"([.A-Za-z0-9_]+)"		# rightchar
-		"\s+"				#
+		"\s+"
 		"(-?\d+)"			# value
-		"\s*"				#
+		"\s*"
 		)
 
 # regular expressions to parse composite info lines of the form:
 # Aacute 2 ; PCC A 0 0 ; PCC acute 182 211 ;
 compositeRE = re.compile(
 		"([.A-Za-z0-9_]+)"		# char name
-		"\s+"				#
+		"\s+"
 		"(\d+)"				# number of parts
-		"\s*;\s*"			#
+		"\s*;\s*"
 		)
 componentRE = re.compile(
 		"PCC\s+"			# PPC
 		"([.A-Za-z0-9_]+)"		# base char name
-		"\s+"				#
+		"\s+"
 		"(-?\d+)"			# x offset
-		"\s+"				#
+		"\s+"
 		"(-?\d+)"			# y offset
-		"\s*;\s*"			#
+		"\s*;\s*"
 		)
 
 preferredAttributeOrder = [
@@ -355,7 +355,6 @@ def writelines(path, lines, sep='\r'):
 	f.close()
 
 
-
 if __name__ == "__main__":
 	import EasyDialogs
 	path = EasyDialogs.AskFileForOpen()
@@ -375,4 +374,3 @@ if __name__ == "__main__":
 		#print afm.kernpairs()
 		print(afm)
 		afm.write(path + ".muck")
-

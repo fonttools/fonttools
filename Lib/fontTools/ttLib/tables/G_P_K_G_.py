@@ -44,7 +44,6 @@ class table_G_P_K_G_(DefaultTable.DefaultTable):
 			end = glyphletOffsets[i+1]
 			self.glyphlets.append(data[start:end])
 
-
 	def compile(self, ttFont):
 		self.numGMAPs = len(self.GMAPs)
 		self.numGlyplets = len(self.glyphlets)

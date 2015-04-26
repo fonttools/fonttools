@@ -74,4 +74,3 @@ def caselessSort(alist):
 		return sorted(alist, key=lambda a: (a.lower(), a))
 	except TypeError:
 		return sorted(alist)
-

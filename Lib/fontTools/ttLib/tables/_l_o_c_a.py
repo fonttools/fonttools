@@ -58,4 +58,3 @@ class table__l_o_c_a(DefaultTable.DefaultTable):
 	
 	def __len__(self):
 		return len(self.locations)
-

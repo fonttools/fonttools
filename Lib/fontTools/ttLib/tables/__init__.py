@@ -66,5 +66,6 @@ def _moduleFinderHint():
 	from . import _v_m_t_x
 
 if __name__ == "__main__":
-	import doctest, sys
+	import sys
+	import doctest
 	sys.exit(doctest.testmod().failed)

@@ -24,17 +24,16 @@ GMAPRecordFormat1 = """
 		ggid:		H
 		name:		32s
 """
-		
 
 
 class GMAPRecord(object):
-	def __init__(self, uv = 0, cid = 0, gid = 0, ggid = 0, name = ""):
+	def __init__(self, uv=0, cid=0, gid=0, ggid=0, name=""):
 		self.UV = uv
 		self.cid = cid
 		self.gid = gid
 		self.ggid = ggid
 		self.name = name
-		
+
 	def toXML(self, writer, ttFont):
 		writer.begintag("GMAPRecord")
 		writer.newline()
@@ -51,14 +50,12 @@ class GMAPRecord(object):
 		writer.endtag("GMAPRecord")
 		writer.newline()
 
-
 	def fromXML(self, name, attrs, content, ttFont):
 		value = attrs["value"]
 		if name == "GlyphletName":
 			self.name = value
 		else:
 			setattr(self, name, safeEval(value))
-		
 
 	def compile(self, ttFont):
 		if 	self.UV is None:
@@ -87,7 +84,6 @@ class table_G_M_A_P_(DefaultTable.DefaultTable):
 			gmapRecord, newData = sstruct.unpack2(GMAPRecordFormat1, newData, GMAPRecord())
 			gmapRecord.name = gmapRecord.name.strip('\0')
 			self.gmapRecords.append(gmapRecord)
-		
 
 	def compile(self, ttFont):
 		self.recordsCount = len(self.gmapRecords)
@@ -99,7 +95,6 @@ class table_G_M_A_P_(DefaultTable.DefaultTable):
 		for record in self.gmapRecords:
 			data = data + record.compile(ttFont)
 		return data
-	
 
 	def toXML(self, writer, ttFont):
 		writer.comment("Most of this table will be recalculated by the compiler")

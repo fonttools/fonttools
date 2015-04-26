@@ -115,7 +115,7 @@ class SFNTWriter(object):
 			# to calculate WOFF checksum adjustment, we also need the original SFNT offsets
 			self.origNextTableOffset = sfntDirectorySize + numTables * sfntDirectoryEntrySize 
 		else:
-			assert not self.flavor,  "Unknown flavor '%s'" % self.flavor
+			assert not self.flavor, "Unknown flavor '%s'" % self.flavor
 			self.directoryFormat = sfntDirectoryFormat
 			self.directorySize = sfntDirectorySize
 			self.DirectoryEntry = SFNTDirectoryEntry
@@ -212,7 +212,7 @@ class SFNTWriter(object):
 			self.length = self.file.tell()
 
 		else:
-			assert not self.flavor,  "Unknown flavor '%s'" % self.flavor
+			assert not self.flavor, "Unknown flavor '%s'" % self.flavor
 			pass
 		
 		directory = sstruct.pack(self.directoryFormat, self)
@@ -462,5 +462,6 @@ def calcChecksum(data):
 
 
 if __name__ == "__main__":
-	import doctest, sys
+	import sys
+	import doctest
 	sys.exit(doctest.testmod().failed)

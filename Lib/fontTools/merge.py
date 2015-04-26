@@ -24,8 +24,7 @@ def _add_method(*clazzes, **kwargs):
 		for clazz in clazzes:
 			assert allowDefault or clazz != DefaultTable, 'Oops, table class not found.'
 			assert method.__name__ not in clazz.__dict__, \
-				"Oops, class '%s' has method '%s'." % (clazz.__name__,
-								       method.__name__)
+				"Oops, class '%s' has method '%s'." % (clazz.__name__, method.__name__)
 			setattr(clazz, method.__name__, method)
 		return None
 	return wrapper
@@ -350,8 +349,7 @@ ttLib.getTableClass('cvt ').mergeMap = lambda self, lst: first(lst)
 @_add_method(ttLib.getTableClass('cmap'))
 def merge(self, m, tables):
 	# TODO Handle format=14.
-	cmapTables = [(t,fontIdx) for fontIdx,table in enumerate(tables) for t in table.tables
-		      if t.isUnicode()]
+	cmapTables = [(t,fontIdx) for fontIdx,table in enumerate(tables) for t in table.tables if t.isUnicode()]
 	# TODO Better handle format-4 and format-12 coexisting in same font.
 	# TODO Insert both a format-4 and format-12 if needed.
 	module = ttLib.getTableModule('cmap')
@@ -505,45 +503,42 @@ def merge(self, m, tables):
 				feature.Feature.LookupListIndex[:0] = [id(synthLookup)]
 				feature.Feature.LookupCount += 1
 
-
 	DefaultTable.merge(self, m, tables)
 	return self
 
-
-
 @_add_method(otTables.SingleSubst,
-             otTables.MultipleSubst,
-             otTables.AlternateSubst,
-             otTables.LigatureSubst,
-             otTables.ReverseChainSingleSubst,
-             otTables.SinglePos,
-             otTables.PairPos,
-             otTables.CursivePos,
-             otTables.MarkBasePos,
-             otTables.MarkLigPos,
-             otTables.MarkMarkPos)
+	     otTables.MultipleSubst,
+	     otTables.AlternateSubst,
+	     otTables.LigatureSubst,
+	     otTables.ReverseChainSingleSubst,
+	     otTables.SinglePos,
+	     otTables.PairPos,
+	     otTables.CursivePos,
+	     otTables.MarkBasePos,
+	     otTables.MarkLigPos,
+	     otTables.MarkMarkPos)
 def mapLookups(self, lookupMap):
   pass
 
 # Copied and trimmed down from subset.py
 @_add_method(otTables.ContextSubst,
-             otTables.ChainContextSubst,
-             otTables.ContextPos,
-             otTables.ChainContextPos)
+	     otTables.ChainContextSubst,
+	     otTables.ContextPos,
+	     otTables.ChainContextPos)
 def __merge_classify_context(self):
 
   class ContextHelper(object):
     def __init__(self, klass, Format):
       if klass.__name__.endswith('Subst'):
-        Typ = 'Sub'
-        Type = 'Subst'
+	Typ = 'Sub'
+	Type = 'Subst'
       else:
-        Typ = 'Pos'
-        Type = 'Pos'
+	Typ = 'Pos'
+	Type = 'Pos'
       if klass.__name__.startswith('Chain'):
-        Chain = 'Chain'
+	Chain = 'Chain'
       else:
-        Chain = ''
+	Chain = ''
       ChainTyp = Chain+Typ
 
       self.Typ = Typ
@@ -554,11 +549,11 @@ def __merge_classify_context(self):
       self.LookupRecord = Type+'LookupRecord'
 
       if Format == 1:
-        self.Rule = ChainTyp+'Rule'
-        self.RuleSet = ChainTyp+'RuleSet'
+	self.Rule = ChainTyp+'Rule'
+	self.RuleSet = ChainTyp+'RuleSet'
       elif Format == 2:
-        self.Rule = ChainTyp+'ClassRule'
-        self.RuleSet = ChainTyp+'ClassSet'
+	self.Rule = ChainTyp+'ClassRule'
+	self.RuleSet = ChainTyp+'ClassSet'
 
   if self.Format not in [1, 2, 3]:
     return None  # Don't shoot the messenger; let it go
@@ -571,9 +566,9 @@ def __merge_classify_context(self):
 
 
 @_add_method(otTables.ContextSubst,
-             otTables.ChainContextSubst,
-             otTables.ContextPos,
-             otTables.ChainContextPos)
+	     otTables.ChainContextSubst,
+	     otTables.ContextPos,
+	     otTables.ChainContextPos)
 def mapLookups(self, lookupMap):
   c = self.__merge_classify_context()
 
@@ -581,10 +576,10 @@ def mapLookups(self, lookupMap):
     for rs in getattr(self, c.RuleSet):
       if not rs: continue
       for r in getattr(rs, c.Rule):
-        if not r: continue
-        for ll in getattr(r, c.LookupRecord):
-          if not ll: continue
-          ll.LookupListIndex = lookupMap[ll.LookupListIndex]
+	if not r: continue
+	for ll in getattr(r, c.LookupRecord):
+	  if not ll: continue
+	  ll.LookupListIndex = lookupMap[ll.LookupListIndex]
   elif self.Format == 3:
     for ll in getattr(self, c.LookupRecord):
       if not ll: continue
@@ -593,7 +588,7 @@ def mapLookups(self, lookupMap):
     assert 0, "unknown format: %s" % self.Format
 
 @_add_method(otTables.ExtensionSubst,
-             otTables.ExtensionPos)
+	     otTables.ExtensionPos)
 def mapLookups(self, lookupMap):
   if self.Format == 1:
     self.ExtSubTable.mapLookups(lookupMap)
@@ -623,7 +618,7 @@ def mapLookups(self, lookupMap):
 		f.Feature.mapLookups(lookupMap)
 
 @_add_method(otTables.DefaultLangSys,
-             otTables.LangSys)
+	     otTables.LangSys)
 def mapFeatures(self, featureMap):
 	self.FeatureIndex = [featureMap[i] for i in self.FeatureIndex]
 	if self.ReqFeatureIndex != 65535:
@@ -656,7 +651,7 @@ class Options(object):
   def set(self, **kwargs):
     for k,v in kwargs.items():
       if not hasattr(self, k):
-        raise self.UnknownOptionError("Unknown option '%s'" % k)
+	raise self.UnknownOptionError("Unknown option '%s'" % k)
       setattr(self, k, v)
 
   def parse_opts(self, argv, ignore_unknown=False):
@@ -665,54 +660,54 @@ class Options(object):
     for a in argv:
       orig_a = a
       if not a.startswith('--'):
-        ret.append(a)
-        continue
+	ret.append(a)
+	continue
       a = a[2:]
       i = a.find('=')
       op = '='
       if i == -1:
-        if a.startswith("no-"):
-          k = a[3:]
-          v = False
-        else:
-          k = a
-          v = True
+	if a.startswith("no-"):
+	  k = a[3:]
+	  v = False
+	else:
+	  k = a
+	  v = True
       else:
-        k = a[:i]
-        if k[-1] in "-+":
-          op = k[-1]+'='  # Ops is '-=' or '+=' now.
-          k = k[:-1]
-        v = a[i+1:]
+	k = a[:i]
+	if k[-1] in "-+":
+	  op = k[-1]+'='  # Ops is '-=' or '+=' now.
+	  k = k[:-1]
+	v = a[i+1:]
       k = k.replace('-', '_')
       if not hasattr(self, k):
-        if ignore_unknown == True or k in ignore_unknown:
-          ret.append(orig_a)
-          continue
-        else:
-          raise self.UnknownOptionError("Unknown option '%s'" % a)
+	if ignore_unknown == True or k in ignore_unknown:
+	  ret.append(orig_a)
+	  continue
+	else:
+	  raise self.UnknownOptionError("Unknown option '%s'" % a)
 
       ov = getattr(self, k)
       if isinstance(ov, bool):
-        v = bool(v)
+	v = bool(v)
       elif isinstance(ov, int):
-        v = int(v)
+	v = int(v)
       elif isinstance(ov, list):
-        vv = v.split(',')
-        if vv == ['']:
-          vv = []
-        vv = [int(x, 0) if len(x) and x[0] in "0123456789" else x for x in vv]
-        if op == '=':
-          v = vv
-        elif op == '+=':
-          v = ov
-          v.extend(vv)
-        elif op == '-=':
-          v = ov
-          for x in vv:
-            if x in v:
-              v.remove(x)
-        else:
-          assert 0
+	vv = v.split(',')
+	if vv == ['']:
+	  vv = []
+	vv = [int(x, 0) if len(x) and x[0] in "0123456789" else x for x in vv]
+	if op == '=':
+	  v = vv
+	elif op == '+=':
+	  v = ov
+	  v.extend(vv)
+	elif op == '-=':
+	  v = ov
+	  for x in vv:
+	    if x in v:
+	      v.remove(x)
+	else:
+	  assert 0
 
       opts[k] = v
     self.set(**opts)
@@ -887,8 +882,8 @@ class Logger(object):
     argv = argv[:]
     for v in ['verbose', 'xml', 'timing']:
       if "--"+v in argv:
-        setattr(self, v, True)
-        argv.remove("--"+v)
+	setattr(self, v, True)
+	argv.remove("--"+v)
     return argv
 
   def __call__(self, *things):
@@ -901,7 +896,7 @@ class Logger(object):
       return
     new_time = time.time()
     print("Took %0.3fs to %s" %(new_time - self.last_time,
-                                 ' '.join(str(x) for x in things)))
+				 ' '.join(str(x) for x in things)))
     self.last_time = new_time
 
   def font(self, font, file=sys.stdout):

@@ -165,7 +165,6 @@ class NameRecord(object):
 
 		return string
 
-
 	def toBytes(self, errors='strict'):
 		""" If self.string is a bytes object, return it; otherwise try encoding
 		the Unicode string in self.string to bytes using the encoding of this

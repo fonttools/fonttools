@@ -47,4 +47,3 @@ class table__c_v_t(DefaultTable.DefaultTable):
 	
 	def __delitem__(self, index):
 		del self.values[index]
-

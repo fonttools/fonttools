@@ -369,4 +369,3 @@ def stringToLong(s):
 	for i in range(4):
 		l += byteord(s[i]) << (i * 8)
 	return l
-

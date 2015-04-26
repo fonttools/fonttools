@@ -185,5 +185,3 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 			setattr(self, name, safeEval("'''" + attrs["value"] + "'''"))
 		else:
 			setattr(self, name, safeEval(attrs["value"]))
-
-

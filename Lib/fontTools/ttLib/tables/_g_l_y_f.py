@@ -81,7 +81,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 				# It fits.  Do it.
 				for i in indices:
 					dataList[i] += b'\0'
-				currentLocation = 0;
+				currentLocation = 0
 				for i,glyphData in enumerate(dataList):
 					locations[i] = currentLocation
 					currentLocation += len(glyphData)
@@ -267,19 +267,19 @@ def flagEncodeCoords(flag, x, y, xBytes, yBytes):
 	flagEncodeCoord(flag, flagYsame|flagYShort, y, yBytes)
 
 
-ARG_1_AND_2_ARE_WORDS      = 0x0001  # if set args are words otherwise they are bytes 
-ARGS_ARE_XY_VALUES         = 0x0002  # if set args are xy values, otherwise they are points 
-ROUND_XY_TO_GRID           = 0x0004  # for the xy values if above is true 
-WE_HAVE_A_SCALE            = 0x0008  # Sx = Sy, otherwise scale == 1.0 
-NON_OVERLAPPING            = 0x0010  # set to same value for all components (obsolete!)
-MORE_COMPONENTS            = 0x0020  # indicates at least one more glyph after this one 
-WE_HAVE_AN_X_AND_Y_SCALE   = 0x0040  # Sx, Sy 
-WE_HAVE_A_TWO_BY_TWO       = 0x0080  # t00, t01, t10, t11 
-WE_HAVE_INSTRUCTIONS       = 0x0100  # instructions follow 
-USE_MY_METRICS             = 0x0200  # apply these metrics to parent glyph 
-OVERLAP_COMPOUND           = 0x0400  # used by Apple in GX fonts 
-SCALED_COMPONENT_OFFSET    = 0x0800  # composite designed to have the component offset scaled (designed for Apple) 
-UNSCALED_COMPONENT_OFFSET  = 0x1000  # composite designed not to have the component offset scaled (designed for MS) 
+ARG_1_AND_2_ARE_WORDS		= 0x0001  # if set args are words otherwise they are bytes 
+ARGS_ARE_XY_VALUES		= 0x0002  # if set args are xy values, otherwise they are points 
+ROUND_XY_TO_GRID		= 0x0004  # for the xy values if above is true 
+WE_HAVE_A_SCALE			= 0x0008  # Sx = Sy, otherwise scale == 1.0 
+NON_OVERLAPPING			= 0x0010  # set to same value for all components (obsolete!)
+MORE_COMPONENTS			= 0x0020  # indicates at least one more glyph after this one 
+WE_HAVE_AN_X_AND_Y_SCALE	= 0x0040  # Sx, Sy 
+WE_HAVE_A_TWO_BY_TWO		= 0x0080  # t00, t01, t10, t11 
+WE_HAVE_INSTRUCTIONS		= 0x0100  # instructions follow 
+USE_MY_METRICS			= 0x0200  # apply these metrics to parent glyph 
+OVERLAP_COMPOUND		= 0x0400  # used by Apple in GX fonts 
+SCALED_COMPONENT_OFFSET		= 0x0800  # composite designed to have the component offset scaled (designed for Apple) 
+UNSCALED_COMPONENT_OFFSET	= 0x1000  # composite designed not to have the component offset scaled (designed for MS) 
 
 
 class Glyph(object):
@@ -544,7 +544,6 @@ class Glyph(object):
 			instructions = self.program.getBytecode()
 			data = data + struct.pack(">h", len(instructions)) + instructions
 		return data
-			
 	
 	def compileCoordinates(self):
 		assert len(self.coordinates) == len(self.flags)
@@ -1241,4 +1240,3 @@ def reprflag(flag):
 		flag = flag >> 1
 	bin = (14 - len(bin)) * "0" + bin
 	return bin
-

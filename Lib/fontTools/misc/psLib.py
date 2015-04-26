@@ -149,7 +149,7 @@ class PSInterpreter(PSOperators):
 		for baseclass in klass.__bases__:
 			self.suckoperators(systemdict, baseclass)
 	
-	def interpret(self, data, getattr = getattr):
+	def interpret(self, data, getattr=getattr):
 		tokenizer = self.tokenizer = PSTokenizer(data)
 		getnexttoken = tokenizer.getnexttoken
 		do_token = self.do_token

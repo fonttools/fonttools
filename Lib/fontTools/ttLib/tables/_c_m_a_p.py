@@ -204,7 +204,6 @@ class cmap_format_0(CmapSubtable):
 		names = map(self.ttFont.getGlyphName, glyphIdArray)
 		list(map(operator.setitem, [cmap]*lenArray, charCodes, names))
 
-	
 	def compile(self, ttFont):
 		if self.data:
 			return struct.pack(">HHH", 0, 262, self.language) + self.data
@@ -272,7 +271,6 @@ class cmap_format_2(CmapSubtable):
 				gid = subHeader.glyphIndexArray[i]
 				if gid > 0: 
 					subHeader.glyphIndexArray[i] = gid - idDelta 
-
 
 	def decompile(self, data, ttFont):
 		# we usually get here indirectly from the subtable __getattr__ function, in which case both args must be None.
@@ -390,7 +388,6 @@ class cmap_format_2(CmapSubtable):
 			names = list(map(getGlyphName, gids ))
 		list(map(operator.setitem, [cmap]*lenCmap, charCodes, names))
 	
-		
 	def compile(self, ttFont):
 		if self.data:
 			return struct.pack(">HHH", self.format, self.length, self.language) + self.data
@@ -446,7 +443,6 @@ class cmap_format_2(CmapSubtable):
 			subHeader.idDelta = 0
 			subHeader.idRangeOffset = 0
 			subHeaderList.append(subHeader)
-			
 		
 		lastFirstByte = -1
 		items = zip(charCodes, gids)
@@ -536,7 +532,6 @@ class cmap_format_2(CmapSubtable):
 		data = bytesjoin(dataList)
 		assert (len(data) == length), "Error: cmap format 2 is not same length as calculated! actual: " + str(len(data))+ " calc : " + str(length)
 		return data
-
 
 	def fromXML(self, name, attrs, content, ttFont):
 		self.language = safeEval(attrs["language"])
@@ -708,7 +703,6 @@ class cmap_format_4(CmapSubtable):
 			getGlyphName = self.ttFont.getGlyphName
 			names = list(map(getGlyphName, gids ))
 		list(map(operator.setitem, [cmap]*lenCmap, charCodes, names))
-
 
 	def compile(self, ttFont):
 		if self.data:
@@ -1159,7 +1153,7 @@ class cmap_format_14(CmapSubtable):
 		if not hasattr(self, "cmap"):
 			self.cmap = {} # so that clients that expect this to exist in a cmap table won't fail.
 		if not hasattr(self, "uvsDict"):
-			self.uvsDict  = {}
+			self.uvsDict = {}
 			uvsDict = self.uvsDict 
 
 		for element in content:
@@ -1177,7 +1171,6 @@ class cmap_format_14(CmapSubtable):
 				uvsDict[uvs].append( [uv, gname])
 			except KeyError:
 				uvsDict[uvs] = [ [uv, gname] ]
-			
 
 	def compile(self, ttFont):
 		if self.data:

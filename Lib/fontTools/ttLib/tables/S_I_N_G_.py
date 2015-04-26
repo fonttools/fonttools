@@ -19,7 +19,6 @@ SINGFormat = """
 		nameLength:			1s
 """
 # baseGlyphName is a byte string which follows the record above.
-		
 
 
 class table_S_I_N_G_(DefaultTable.DefaultTable):
@@ -55,8 +54,7 @@ class table_S_I_N_G_(DefaultTable.DefaultTable):
 					octString.zfill(3)
 				name += "\\" + octString
 		return name
-		
-		
+
 	def compile(self, ttFont):
 		d = self.__dict__.copy()
 		d["nameLength"] = bytechr(len(self.baseGlyphName))
@@ -77,7 +75,6 @@ class table_S_I_N_G_(DefaultTable.DefaultTable):
 		else:
 			name += (nameLen - length) * "\000"
 		return name
-
 
 	def toXML(self, writer, ttFont):
 		writer.comment("Most of this table will be recalculated by the compiler")

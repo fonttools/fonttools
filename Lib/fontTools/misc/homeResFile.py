@@ -5,7 +5,8 @@ from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 import array
 import calldll
-import macfs, Res
+import macfs
+import Res
 
 
 def HomeResFile(res):

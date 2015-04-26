@@ -99,4 +99,3 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 	
 	def __setitem__(self, glyphName, advance_sb_pair):
 		self.metrics[glyphName] = tuple(advance_sb_pair)
-
