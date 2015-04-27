@@ -260,32 +260,8 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 				continue
 			writer.begintag("glyphVariation", glyph=glyphName)
 			writer.newline()
-			for tupleIndex in xrange(len(tuples)):
-				tuple = tuples[tupleIndex]
-				writer.begintag("tuple")
-				writer.newline()
-				for axis in axisTags:
-					value = tuple.axes.get(axis)
-					if value != None:
-						minValue, value, maxValue = value
-						if minValue == value and maxValue == value:
-							writer.simpletag("coord", axis=axis, value=value)
-						else:
-							writer.simpletag("coord", axis=axis, value=value,
-									 min=minValue, max=maxValue)
-						writer.newline()
-				wrote_any_points = False
-				for i in xrange(len(tuple.coordinates)):
-					x, y = tuple.coordinates[i]
-					if x != 0 or y != 0:
-						writer.simpletag("delta", pt=i, x=x, y=y)
-						writer.newline()
-						wrote_any_points = True
-				if not wrote_any_points:
-					writer.comment("all deltas are (0,0)")
-					writer.newline()
-				writer.endtag("tuple")
-				writer.newline()
+			for tuple in tuples:
+				tuple.toXML(writer, axisTags)
 			writer.endtag("glyphVariation")
 			writer.newline()
 
@@ -298,3 +274,29 @@ class GlyphVariation:
 	def __repr__(self):
 		axes = ",".join(sorted(['%s=%s' % (name, value) for (name, value) in self.axes.items()]))
 		return '<GlyphVariation %s %s>' % (axes, self.coordinates)
+
+	def toXML(self, writer, axisTags):
+		writer.begintag("tuple")
+		writer.newline()
+		for axis in axisTags:
+			value = self.axes.get(axis)
+			if value != None:
+				minValue, value, maxValue = value
+				if minValue == value and maxValue == value:
+					writer.simpletag("coord", axis=axis, value=value)
+				else:
+					writer.simpletag("coord", axis=axis, value=value,
+							 min=minValue, max=maxValue)
+				writer.newline()
+		wrote_any_points = False
+		for i in xrange(len(self.coordinates)):
+			x, y = self.coordinates[i]
+			if x != 0 or y != 0:
+				writer.simpletag("delta", pt=i, x=x, y=y)
+				writer.newline()
+				wrote_any_points = True
+		if not wrote_any_points:
+			writer.comment("all deltas are (0,0)")
+			writer.newline()
+		writer.endtag("tuple")
+		writer.newline()

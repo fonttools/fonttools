@@ -1,9 +1,10 @@
 from __future__ import print_function, division, absolute_import, unicode_literals
 from fontTools.misc.py23 import *
+from fontTools.misc.xmlWriter import XMLWriter
 from fontTools import ttLib
 import unittest
+from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
 from fontTools.ttLib.tables._g_v_a_r import table__g_v_a_r, GlyphVariation
-
 
 def hexdecode(s):
 	return bytesjoin([c.decode("hex") for c in s.split()])
@@ -165,6 +166,41 @@ class GlyphVariationTableTest(unittest.TestCase):
 		# combination of all three encodings, preceded and followed by 4 bytes of unused data
 		data = hexdecode("DE AD BE EF 83 40 01 02 01 81 80 DE AD BE EF")
 		self.assertEqual(([0, 0, 0, 0, 258, -127, -128], 11), decompileDeltas(7, data, 4))
+
+
+class GlyphVariationTest(unittest.TestCase):
+	def test_toXML(self):
+		writer = XMLWriter(StringIO())
+		axes = {"wdth":(0.3, 0.4, 0.5), "wght":(1.0, 1.0, 1.0)}
+		g = GlyphVariation(axes, GlyphCoordinates([(9,8), (7,6), (0,0), (-1,-2)]))
+		g.toXML(writer, ["wght", "wdth"])
+		self.assertEqual([
+			'<tuple>',
+			  '<coord axis="wght" value="1.0"/>',
+			  '<coord axis="wdth" max="0.5" min="0.3" value="0.4"/>',
+			  '<delta pt="0" x="9" y="8"/>',
+			  '<delta pt="1" x="7" y="6"/>',
+			  '<delta pt="3" x="-1" y="-2"/>',
+			'</tuple>'
+		], GlyphVariationTest.xml_lines(writer))
+
+	def test_toXML_allDeltasZero(self):
+		writer = XMLWriter(StringIO())
+		axes = {"wdth":(0.3, 0.4, 0.5), "wght":(1.0, 1.0, 1.0)}
+		g = GlyphVariation(axes, GlyphCoordinates.zeros(5))
+		g.toXML(writer, ["wght", "wdth"])
+		self.assertEqual([
+			'<tuple>',
+			  '<coord axis="wght" value="1.0"/>',
+			  '<coord axis="wdth" max="0.5" min="0.3" value="0.4"/>',
+			  '<!-- all deltas are (0,0) -->',
+			'</tuple>'
+		], GlyphVariationTest.xml_lines(writer))
+
+	@staticmethod
+	def xml_lines(writer):
+		content = writer.file.getvalue().decode("utf-8")
+		return [line.strip() for line in content.splitlines()][1:]
 
 
 if __name__ == "__main__":
