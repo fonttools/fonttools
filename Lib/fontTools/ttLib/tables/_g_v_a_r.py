@@ -129,7 +129,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		pos = 4
 		dataPos = offsetToData
 		if (flags & TUPLES_SHARE_POINT_NUMBERS) != 0:
-			sharedPoints, dataPos = self.decompilePoints_(numPoints, data, dataPos)
+			sharedPoints, dataPos = GlyphVariation.decompilePoints_(numPoints, data, dataPos)
 		else:
 			sharedPoints = []
 		for i in xrange(flags & TUPLE_COUNT_MASK):
@@ -163,68 +163,15 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 				axes[axis] = coords
 		pos = 0
 		if (flags & PRIVATE_POINT_NUMBERS) != 0:
-			points, pos = table__g_v_a_r.decompilePoints_(numPoints, tupleData, pos)
+			points, pos = GlyphVariation.decompilePoints_(numPoints, tupleData, pos)
 		else:
 			points = sharedPoints
-		deltas_x, pos = table__g_v_a_r.decompileDeltas_(len(points), tupleData, pos)
-		deltas_y, pos = table__g_v_a_r.decompileDeltas_(len(points), tupleData, pos)
+		deltas_x, pos = GlyphVariation.decompileDeltas_(len(points), tupleData, pos)
+		deltas_y, pos = GlyphVariation.decompileDeltas_(len(points), tupleData, pos)
 		deltas = GlyphCoordinates.zeros(numPoints)
 		for p, x, y in zip(points, deltas_x, deltas_y):
 				deltas[p] = (x, y)
 		return GlyphVariation(axes, deltas)
-
-	@staticmethod
-	def decompilePoints_(numPoints, data, offset):
-		"""(numPoints, data, offset) --> ([point1, point2, ...], newOffset)"""
-		pos = offset
-		numPointsInData = ord(data[pos])
-		pos += 1
-		if (numPointsInData & POINTS_ARE_WORDS) != 0:
-			numPointsInData = (numPointsInData & POINT_RUN_COUNT_MASK) << 8 | ord(data[pos])
-			pos += 1
-		if numPointsInData == 0:
-			return (range(numPoints), pos)
-		result = []
-		while len(result) < numPointsInData:
-			runHeader = ord(data[pos])
-			pos += 1
-			numPointsInRun = (runHeader & POINT_RUN_COUNT_MASK) + 1
-			point = 0
-			if (runHeader & POINTS_ARE_WORDS) == 0:
-				for i in xrange(numPointsInRun):
-					point += ord(data[pos])
-					pos += 1
-					result.append(point)
-			else:
-				for i in xrange(numPointsInRun):
-					point += struct.unpack(">H", data[pos:pos+2])[0]
-					pos += 2
-					result.append(point)
-		if max(result) >= numPoints:
-			raise ttLib.TTLibError("malformed 'gvar' table")
-		return (result, pos)
-
-	@staticmethod
-	def decompileDeltas_(numDeltas, data, offset):
-		"""(numDeltas, data, offset) --> ([delta, delta, ...], newOffset)"""
-		result = []
-		pos = offset
-		while len(result) < numDeltas:
-			runHeader = ord(data[pos])
-			pos += 1
-			numDeltasInRun = (runHeader & DELTA_RUN_COUNT_MASK) + 1
-			if (runHeader & DELTAS_ARE_ZERO) != 0:
-				result.extend([0] * numDeltasInRun)
-			elif (runHeader & DELTAS_ARE_WORDS) != 0:
-				for i in xrange(numDeltasInRun):
-					result.append(struct.unpack(">h", data[pos:pos+2])[0])
-					pos += 2
-			else:
-				for i in xrange(numDeltasInRun):
-					result.append(struct.unpack(">b", data[pos])[0])
-					pos += 1
-		assert len(result) == numDeltas
-		return (result, pos)
 
 	def toXML(self, writer, ttFont):
 		writer.simpletag("version", value=self.version)
@@ -308,6 +255,59 @@ class GlyphVariation:
 	@staticmethod
 	def compileCoords_(axisTags, coords):
 		return bytesjoin([GlyphVariation.compileCoord_(axisTags, c) for c in coords])
+
+	@staticmethod
+	def decompilePoints_(numPoints, data, offset):
+		"""(numPoints, data, offset) --> ([point1, point2, ...], newOffset)"""
+		pos = offset
+		numPointsInData = ord(data[pos])
+		pos += 1
+		if (numPointsInData & POINTS_ARE_WORDS) != 0:
+			numPointsInData = (numPointsInData & POINT_RUN_COUNT_MASK) << 8 | ord(data[pos])
+			pos += 1
+		if numPointsInData == 0:
+			return (range(numPoints), pos)
+		result = []
+		while len(result) < numPointsInData:
+			runHeader = ord(data[pos])
+			pos += 1
+			numPointsInRun = (runHeader & POINT_RUN_COUNT_MASK) + 1
+			point = 0
+			if (runHeader & POINTS_ARE_WORDS) == 0:
+				for i in xrange(numPointsInRun):
+					point += ord(data[pos])
+					pos += 1
+					result.append(point)
+			else:
+				for i in xrange(numPointsInRun):
+					point += struct.unpack(">H", data[pos:pos+2])[0]
+					pos += 2
+					result.append(point)
+		if max(result) >= numPoints:
+			raise ttLib.TTLibError("malformed 'gvar' table")
+		return (result, pos)
+
+	@staticmethod
+	def decompileDeltas_(numDeltas, data, offset):
+		"""(numDeltas, data, offset) --> ([delta, delta, ...], newOffset)"""
+		result = []
+		pos = offset
+		while len(result) < numDeltas:
+			runHeader = ord(data[pos])
+			pos += 1
+			numDeltasInRun = (runHeader & DELTA_RUN_COUNT_MASK) + 1
+			if (runHeader & DELTAS_ARE_ZERO) != 0:
+				result.extend([0] * numDeltasInRun)
+			elif (runHeader & DELTAS_ARE_WORDS) != 0:
+				for i in xrange(numDeltasInRun):
+					result.append(struct.unpack(">h", data[pos:pos+2])[0])
+					pos += 2
+			else:
+				for i in xrange(numDeltasInRun):
+					result.append(struct.unpack(">b", data[pos])[0])
+					pos += 1
+		assert len(result) == numDeltas
+		return (result, pos)
 
 	@staticmethod
 	def getTupleSize_(flags, axisCount):
