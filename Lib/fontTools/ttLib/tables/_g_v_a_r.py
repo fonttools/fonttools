@@ -63,11 +63,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		for i in xrange(self.glyphCount):
 			glyphName = glyphs[i]
 			glyph = ttFont["glyf"][glyphName]
-			if glyph.isComposite():
-				numPoints = len(glyph.components) + 4
-			else:
-				# Empty glyphs (eg. space, nonmarkingreturn) have no "coordinates" attribute.
-				numPoints = len(getattr(glyph, "coordinates", [])) + 4
+			numPoints = self.getNumPoints_(glyph)
 			gvarData = data[self.offsetToData + offsets[i] : self.offsetToData + offsets[i + 1]]
 			self.variations[glyphName] = self.decompileTuples_(numPoints, sharedCoords, axisTags, gvarData)
 
@@ -190,6 +186,39 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 			writer.endtag("glyphVariations")
 			writer.newline()
 
+	def fromXML(self, name, attrs, content, ttFont):
+		if name == "version":
+			self.version = safeEval(attrs["value"])
+		elif name == "reserved":
+			self.reserved = safeEval(attrs["value"])
+		elif name == "glyphVariations":
+			if not hasattr(self, "variations"):
+				self.variations = {}
+			glyphName = attrs["glyph"]
+			glyph = ttFont["glyf"][glyphName]
+			numPoints = self.getNumPoints_(glyph)
+			glyphVariations = []
+			for element in content:
+				if isinstance(element, tuple):
+					name, attrs, content = element
+					if name == "tuple":
+						gvar = GlyphVariation({}, GlyphCoordinates.zeros(numPoints))
+						glyphVariations.append(gvar)
+						for tupleElement in content:
+							if isinstance(tupleElement, tuple):
+								tupleName, tupleAttrs, tupleContent = tupleElement
+								gvar.fromXML(tupleName, tupleAttrs, tupleContent)
+			self.variations[glyphName] = glyphVariations
+
+	@staticmethod
+	def getNumPoints_(glyph):
+		NUM_PHANTOM_POINTS = 4
+		if glyph.isComposite():
+			return len(glyph.components) + NUM_PHANTOM_POINTS
+		else:
+			# Empty glyphs (eg. space, nonmarkingreturn) have no "coordinates" attribute.
+			return len(getattr(glyph, "coordinates", [])) + NUM_PHANTOM_POINTS
+
 
 class GlyphVariation:
 	def __init__(self, axes, coordinates):
@@ -225,6 +254,19 @@ class GlyphVariation:
 			writer.newline()
 		writer.endtag("tuple")
 		writer.newline()
+
+	def fromXML(self, name, attrs, content):
+		if name == "coord":
+			axis = attrs["axis"]
+			value = attrs["value"]
+			minValue = attrs.get("min", value)
+			maxValue = attrs.get("max", value)
+			self.axes[axis] = (safeEval(minValue), safeEval(value), safeEval(maxValue))
+		elif name == "delta":
+			point = safeEval(attrs["pt"])
+			x = safeEval(attrs["x"])
+			y = safeEval(attrs["y"])
+			self.coordinates[point] = (x, y)
 
 	@staticmethod
 	def decompileCoord_(axisTags, data, offset):
