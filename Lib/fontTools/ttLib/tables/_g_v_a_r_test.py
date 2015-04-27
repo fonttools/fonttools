@@ -9,6 +9,9 @@ from fontTools.ttLib.tables._g_v_a_r import table__g_v_a_r, GlyphVariation
 def hexdecode(s):
 	return bytesjoin([c.decode("hex") for c in s.split()])
 
+def hexencode(s):
+	return ' '.join([c.encode("hex").upper() for c in s])
+
 # Glyph variation table of uppercase I in the Skia font, as printed in Apple's
 # TrueType spec. The actual Skia font uses a different table for uppercase I.
 # https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6gvar.html
@@ -63,19 +66,31 @@ class GlyphVariationTableTest(unittest.TestCase):
 		data = hexdecode("DE AD C0 00 20 00 DE AD")
 		self.assertEqual(({"wght": -1.0, "wdth": 0.5}, 6), decompileCoord(["wght", "wdth"], data, 2))
 
-	def test_decompileSharedCoords(self):
-		table = table__g_v_a_r()
-		table.offsetToCoord = 4
-		table.sharedCoordCount = 3
-		data = b"XXXX" + hexdecode(
-			"40 00 00 00 20 00 "
-			"C0 00 00 00 10 00 "
-			"00 00 C0 00 40 00")
-		self.assertEqual([
+	def test_compileCoord(self):
+		compileCoord = table__g_v_a_r.compileCoord_
+		self.assertEqual("C0 00 20 00", hexencode(compileCoord(["wght", "wdth"], {"wght": -1.0, "wdth": 0.5})))
+
+	def test_decompileCoords(self):
+		decompileCoords = table__g_v_a_r.decompileCoords_
+		axes = ["wght", "wdth", "opsz"]
+		coords = [
 			{"wght":  1.0, "wdth": 0.0, "opsz": 0.5},
 			{"wght": -1.0, "wdth": 0.0, "opsz": 0.25},
 			{"wght":  0.0, "wdth": -1.0, "opsz": 1.0}
-		], table.decompileSharedCoords_(["wght", "wdth", "opsz"], data))
+		]
+		data = hexdecode("DE AD 40 00 00 00 20 00 C0 00 00 00 10 00 00 00 C0 00 40 00")
+		self.assertEqual((coords, 20), decompileCoords(axes, numCoords=3, data=data, offset=2))
+
+	def test_compileCoords(self):
+		compileCoords = table__g_v_a_r.compileCoords_
+		axes = ["wght", "wdth", "opsz"]
+		coords = [
+			{"wght":  1.0, "wdth": 0.0, "opsz": 0.5},
+			{"wght": -1.0, "wdth": 0.0, "opsz": 0.25},
+			{"wght":  0.0, "wdth": -1.0, "opsz": 1.0}
+		]
+		self.assertEqual("40 00 00 00 20 00 C0 00 00 00 10 00 00 00 C0 00 40 00",
+				 hexencode(compileCoords(axes, coords)))
 
 	def test_decompileSharedCoords_Skia(self):
 		table = table__g_v_a_r()
