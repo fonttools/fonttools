@@ -2,7 +2,7 @@ from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools import ttLib
 from fontTools.misc import sstruct
-from fontTools.misc.fixedTools import fixedToFloat
+from fontTools.misc.fixedTools import fixedToFloat, floatToFixed
 from fontTools.misc.textTools import safeEval
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
 from . import DefaultTable
@@ -72,11 +72,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 			self.variations[glyphName] = self.decompileTuples_(numPoints, sharedCoords, axisTags, gvarData)
 
 	def decompileSharedCoords_(self, axisTags, data):
-		result = []
-		pos = self.offsetToCoord
-		for i in xrange(self.sharedCoordCount):
-			coord, pos = self.decompileCoord_(axisTags, data, pos)
-			result.append(coord)
+		result, pos = self.decompileCoords_(axisTags, self.sharedCoordCount, data, self.offsetToCoord)
 		return result
 
 	@staticmethod
@@ -87,6 +83,27 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 			coord[axis] = fixedToFloat(struct.unpack(b">h", data[pos:pos+2])[0], 14)
 			pos += 2
 		return coord, pos
+
+	@staticmethod
+	def compileCoord_(axisTags, coord):
+		result = []
+		for axis in axisTags:
+			value = floatToFixed(coord.get(axis, 0.0), 14)
+			result.append(struct.pack(b">h", value))
+		return bytesjoin(result)
+
+	@staticmethod
+	def decompileCoords_(axisTags, numCoords, data, offset):
+		result = []
+		pos = offset
+		for i in xrange(numCoords):
+			coord, pos = table__g_v_a_r.decompileCoord_(axisTags, data, pos)
+			result.append(coord)
+		return result, pos
+
+	@staticmethod
+	def compileCoords_(axisTags, coords):
+		return bytesjoin([table__g_v_a_r.compileCoord_(axisTags, c) for c in coords])
 
 	@staticmethod
 	def decompileOffsets_(data, format, glyphCount):
