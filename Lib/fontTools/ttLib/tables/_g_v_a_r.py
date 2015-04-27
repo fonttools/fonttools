@@ -13,7 +13,7 @@ import struct
 # Apple's documentation of 'gvar':
 # https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6gvar.html
 #
-# TrueType source code for parsing 'gvar':
+# FreeType2 source code for parsing 'gvar':
 # http://git.savannah.gnu.org/cgit/freetype/freetype2.git/tree/src/truetype/ttgxvar.c
 
 GVAR_HEADER_FORMAT = b"""
@@ -171,13 +171,23 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		flags = struct.unpack(b">H", data[2:4])[0]
 
 		pos = 4
+		coordSize = len(axisTags) * 2
 		if (flags & EMBEDDED_TUPLE_COORD) == 0:
-			axes = sharedCoords[flags & TUPLE_INDEX_MASK]
+			coord = sharedCoords[flags & TUPLE_INDEX_MASK]
 		else:
-			embeddedCoordSize = len(axisTags) * 2
-			axes = table__g_v_a_r.decompileCoord_(axisTags, data[pos:pos+embeddedCoordSize])
-			pos += embeddedCoordSize
-
+			coord = table__g_v_a_r.decompileCoord_(axisTags, data[pos:pos+coordSize])
+			pos += coordSize
+		minCoord = maxCoord = coord
+		if (flags & INTERMEDIATE_TUPLE) != 0:
+			minCoord = table__g_v_a_r.decompileCoord_(axisTags, data[pos:pos+coordSize])
+			pos += coordSize
+			maxCoord = table__g_v_a_r.decompileCoord_(axisTags, data[pos:pos+coordSize])
+			pos += coordSize
+		axes = {}
+		for axis in axisTags:
+			coords = minCoord[axis], coord[axis], maxCoord[axis]
+			if coords != (0.0, 0.0, 0.0):
+				axes[axis] = coords
 		pos = 0
 		if (flags & PRIVATE_POINT_NUMBERS) != 0:
 			points, pos = table__g_v_a_r.decompilePoints_(numPoints, tupleData, pos)
@@ -253,7 +263,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 			tuples = self.variations.get(glyphName)
 			if not tuples:
 				continue
-			writer.begintag("glyphData", glyph=glyphName)
+			writer.begintag("glyphVariation", glyph=glyphName)
 			writer.newline()
 			for tupleIndex in xrange(len(tuples)):
 				tuple = tuples[tupleIndex]
@@ -261,8 +271,13 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 				writer.newline()
 				for axis in axisTags:
 					value = tuple.axes.get(axis)
-					if value != None and value != 0.0:
-						writer.simpletag("coord", axis=axis, value=value)
+					if value != None:
+						minValue, value, maxValue = value
+						if minValue == value and maxValue == value:
+							writer.simpletag("coord", axis=axis, value=value)
+						else:
+							writer.simpletag("coord", axis=axis, value=value,
+									 min=minValue, max=maxValue)
 						writer.newline()
 				wrote_any_points = False
 				for i in xrange(len(tuple.coordinates)):
@@ -272,11 +287,11 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 						writer.newline()
 						wrote_any_points = True
 				if not wrote_any_points:
-					writer.comment("all deltas are (0,0); this tuple has no impact")
+					writer.comment("all deltas are (0,0)")
 					writer.newline()
 				writer.endtag("tuple")
 				writer.newline()
-			writer.endtag("glyphData")
+			writer.endtag("glyphVariation")
 			writer.newline()
 
 
