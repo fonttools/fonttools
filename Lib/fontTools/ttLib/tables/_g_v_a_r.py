@@ -74,21 +74,19 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 	def decompileSharedCoords_(self, axisTags, data):
 		result = []
 		pos = self.offsetToCoord
-		stride = len(axisTags) * 2
 		for i in xrange(self.sharedCoordCount):
-			coord = self.decompileCoord_(axisTags, data[pos:pos+stride])
+			coord, pos = self.decompileCoord_(axisTags, data, pos)
 			result.append(coord)
-			pos += stride
 		return result
 
 	@staticmethod
-	def decompileCoord_(axisTags, data):
+	def decompileCoord_(axisTags, data, offset):
 		coord = {}
-		pos = 0
+		pos = offset
 		for axis in axisTags:
 			coord[axis] = fixedToFloat(struct.unpack(b">h", data[pos:pos+2])[0], 14)
 			pos += 2
-		return coord
+		return coord, pos
 
 	@staticmethod
 	def decompileOffsets_(data, format, glyphCount):
@@ -175,14 +173,11 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		if (flags & EMBEDDED_TUPLE_COORD) == 0:
 			coord = sharedCoords[flags & TUPLE_INDEX_MASK]
 		else:
-			coord = table__g_v_a_r.decompileCoord_(axisTags, data[pos:pos+coordSize])
-			pos += coordSize
+			coord, pos = table__g_v_a_r.decompileCoord_(axisTags, data, pos)
 		minCoord = maxCoord = coord
 		if (flags & INTERMEDIATE_TUPLE) != 0:
-			minCoord = table__g_v_a_r.decompileCoord_(axisTags, data[pos:pos+coordSize])
-			pos += coordSize
-			maxCoord = table__g_v_a_r.decompileCoord_(axisTags, data[pos:pos+coordSize])
-			pos += coordSize
+			minCoord, pos = table__g_v_a_r.decompileCoord_(axisTags, data, pos)
+			maxCoord, pos = table__g_v_a_r.decompileCoord_(axisTags, data, pos)
 		axes = {}
 		for axis in axisTags:
 			coords = minCoord[axis], coord[axis], maxCoord[axis]
