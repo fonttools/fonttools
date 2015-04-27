@@ -258,11 +258,11 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 			tuples = self.variations.get(glyphName)
 			if not tuples:
 				continue
-			writer.begintag("glyphVariation", glyph=glyphName)
+			writer.begintag("glyphVariations", glyph=glyphName)
 			writer.newline()
 			for tuple in tuples:
 				tuple.toXML(writer, axisTags)
-			writer.endtag("glyphVariation")
+			writer.endtag("glyphVariations")
 			writer.newline()
 
 
@@ -272,8 +272,8 @@ class GlyphVariation:
 		self.coordinates = coordinates
 
 	def __repr__(self):
-		axes = ",".join(sorted(['%s=%s' % (name, value) for (name, value) in self.axes.items()]))
-		return '<GlyphVariation %s %s>' % (axes, self.coordinates)
+		axes = ",".join(sorted(["%s=%s" % (name, value) for (name, value) in self.axes.items()]))
+		return "<GlyphVariation %s %s>" % (axes, self.coordinates)
 
 	def toXML(self, writer, axisTags):
 		writer.begintag("tuple")
