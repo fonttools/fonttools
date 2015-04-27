@@ -57,6 +57,11 @@ class GlyphVariationTableTest(unittest.TestCase):
 		self.assertEqual((hexdecode("00 00 00 00 00 00 00 04 CA FE BE EF"), 1),
 				 table__g_v_a_r.compileOffsets_([0, 4, 0xCAFEBEEF]))
 
+	def test_decompileCoord(self):
+		decompileCoord = table__g_v_a_r.decompileCoord_
+		data = hexdecode("DE AD C0 00 20 00 DE AD")
+		self.assertEqual(({"wght": -1.0, "wdth": 0.5}, 6), decompileCoord(["wght", "wdth"], data, 2))
+
 	def test_decompileSharedCoords(self):
 		table = table__g_v_a_r()
 		table.offsetToCoord = 4
