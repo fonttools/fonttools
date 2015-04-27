@@ -72,38 +72,8 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 			self.variations[glyphName] = self.decompileTuples_(numPoints, sharedCoords, axisTags, gvarData)
 
 	def decompileSharedCoords_(self, axisTags, data):
-		result, pos = self.decompileCoords_(axisTags, self.sharedCoordCount, data, self.offsetToCoord)
+		result, pos = GlyphVariation.decompileCoords_(axisTags, self.sharedCoordCount, data, self.offsetToCoord)
 		return result
-
-	@staticmethod
-	def decompileCoord_(axisTags, data, offset):
-		coord = {}
-		pos = offset
-		for axis in axisTags:
-			coord[axis] = fixedToFloat(struct.unpack(b">h", data[pos:pos+2])[0], 14)
-			pos += 2
-		return coord, pos
-
-	@staticmethod
-	def compileCoord_(axisTags, coord):
-		result = []
-		for axis in axisTags:
-			value = floatToFixed(coord.get(axis, 0.0), 14)
-			result.append(struct.pack(b">h", value))
-		return bytesjoin(result)
-
-	@staticmethod
-	def decompileCoords_(axisTags, numCoords, data, offset):
-		result = []
-		pos = offset
-		for i in xrange(numCoords):
-			coord, pos = table__g_v_a_r.decompileCoord_(axisTags, data, pos)
-			result.append(coord)
-		return result, pos
-
-	@staticmethod
-	def compileCoords_(axisTags, coords):
-		return bytesjoin([table__g_v_a_r.compileCoord_(axisTags, c) for c in coords])
 
 	@staticmethod
 	def decompileOffsets_(data, format, glyphCount):
@@ -164,22 +134,13 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 			sharedPoints = []
 		for i in xrange(flags & TUPLE_COUNT_MASK):
 			dataSize, flags = struct.unpack(b">HH", data[pos:pos+4])
-			tupleSize = self.getTupleSize_(flags, self.axisCount)
+			tupleSize = GlyphVariation.getTupleSize_(flags, self.axisCount)
 			tuple = data[pos : pos + tupleSize]
 			tupleData = data[dataPos : dataPos + dataSize]
 			tuples.append(self.decompileTuple_(numPoints, sharedCoords, sharedPoints, axisTags, tuple, tupleData))
 			pos += tupleSize
 			dataPos += dataSize
 		return tuples
-
-	@staticmethod
-	def getTupleSize_(flags, axisCount):
-		size = 4
-		if (flags & EMBEDDED_TUPLE_COORD) != 0:
-			size += axisCount * 2
-		if (flags & INTERMEDIATE_TUPLE) != 0:
-			size += axisCount * 4
-		return size
 
 	@staticmethod
 	def decompileTuple_(numPoints, sharedCoords, sharedPoints, axisTags, data, tupleData):
@@ -190,11 +151,11 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		if (flags & EMBEDDED_TUPLE_COORD) == 0:
 			coord = sharedCoords[flags & TUPLE_INDEX_MASK]
 		else:
-			coord, pos = table__g_v_a_r.decompileCoord_(axisTags, data, pos)
+			coord, pos = GlyphVariation.decompileCoord_(axisTags, data, pos)
 		minCoord = maxCoord = coord
 		if (flags & INTERMEDIATE_TUPLE) != 0:
-			minCoord, pos = table__g_v_a_r.decompileCoord_(axisTags, data, pos)
-			maxCoord, pos = table__g_v_a_r.decompileCoord_(axisTags, data, pos)
+			minCoord, pos = GlyphVariation.decompileCoord_(axisTags, data, pos)
+			maxCoord, pos = GlyphVariation.decompileCoord_(axisTags, data, pos)
 		axes = {}
 		for axis in axisTags:
 			coords = minCoord[axis], coord[axis], maxCoord[axis]
@@ -317,3 +278,42 @@ class GlyphVariation:
 			writer.newline()
 		writer.endtag("tuple")
 		writer.newline()
+
+	@staticmethod
+	def decompileCoord_(axisTags, data, offset):
+		coord = {}
+		pos = offset
+		for axis in axisTags:
+			coord[axis] = fixedToFloat(struct.unpack(b">h", data[pos:pos+2])[0], 14)
+			pos += 2
+		return coord, pos
+
+	@staticmethod
+	def compileCoord_(axisTags, coord):
+		result = []
+		for axis in axisTags:
+			value = floatToFixed(coord.get(axis, 0.0), 14)
+			result.append(struct.pack(b">h", value))
+		return bytesjoin(result)
+
+	@staticmethod
+	def decompileCoords_(axisTags, numCoords, data, offset):
+		result = []
+		pos = offset
+		for i in xrange(numCoords):
+			coord, pos = GlyphVariation.decompileCoord_(axisTags, data, pos)
+			result.append(coord)
+		return result, pos
+
+	@staticmethod
+	def compileCoords_(axisTags, coords):
+		return bytesjoin([GlyphVariation.compileCoord_(axisTags, c) for c in coords])
+
+	@staticmethod
+	def getTupleSize_(flags, axisCount):
+		size = 4
+		if (flags & EMBEDDED_TUPLE_COORD) != 0:
+			size += axisCount * 2
+		if (flags & INTERMEDIATE_TUPLE) != 0:
+			size += axisCount * 4
+		return size

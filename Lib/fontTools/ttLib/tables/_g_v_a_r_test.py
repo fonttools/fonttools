@@ -61,37 +61,6 @@ class GlyphVariationTableTest(unittest.TestCase):
 		self.assertEqual((hexdecode("00 00 00 00 00 00 00 04 CA FE BE EF"), 1),
 				 table__g_v_a_r.compileOffsets_([0, 4, 0xCAFEBEEF]))
 
-	def test_decompileCoord(self):
-		decompileCoord = table__g_v_a_r.decompileCoord_
-		data = hexdecode("DE AD C0 00 20 00 DE AD")
-		self.assertEqual(({"wght": -1.0, "wdth": 0.5}, 6), decompileCoord(["wght", "wdth"], data, 2))
-
-	def test_compileCoord(self):
-		compileCoord = table__g_v_a_r.compileCoord_
-		self.assertEqual("C0 00 20 00", hexencode(compileCoord(["wght", "wdth"], {"wght": -1.0, "wdth": 0.5})))
-
-	def test_decompileCoords(self):
-		decompileCoords = table__g_v_a_r.decompileCoords_
-		axes = ["wght", "wdth", "opsz"]
-		coords = [
-			{"wght":  1.0, "wdth": 0.0, "opsz": 0.5},
-			{"wght": -1.0, "wdth": 0.0, "opsz": 0.25},
-			{"wght":  0.0, "wdth": -1.0, "opsz": 1.0}
-		]
-		data = hexdecode("DE AD 40 00 00 00 20 00 C0 00 00 00 10 00 00 00 C0 00 40 00")
-		self.assertEqual((coords, 20), decompileCoords(axes, numCoords=3, data=data, offset=2))
-
-	def test_compileCoords(self):
-		compileCoords = table__g_v_a_r.compileCoords_
-		axes = ["wght", "wdth", "opsz"]
-		coords = [
-			{"wght":  1.0, "wdth": 0.0, "opsz": 0.5},
-			{"wght": -1.0, "wdth": 0.0, "opsz": 0.25},
-			{"wght":  0.0, "wdth": -1.0, "opsz": 1.0}
-		]
-		self.assertEqual("40 00 00 00 20 00 C0 00 00 00 10 00 00 00 C0 00 40 00",
-				 hexencode(compileCoords(axes, coords)))
-
 	def test_decompileSharedCoords_Skia(self):
 		table = table__g_v_a_r()
 		table.offsetToCoord = 0
@@ -131,14 +100,6 @@ class GlyphVariationTableTest(unittest.TestCase):
 	def test_decompileTuples_empty(self):
 		table = table__g_v_a_r()
 		self.assertEqual([], table.decompileTuples_(numPoints=5, sharedCoords=[], axisTags=[], data=b""))
-
-	def test_getTupleSize(self):
-		getTupleSize = table__g_v_a_r.getTupleSize_
-		axisCount = 3
-		self.assertEqual(4 + axisCount * 2, getTupleSize(0x8042, axisCount))
-		self.assertEqual(4 + axisCount * 4, getTupleSize(0x4077, axisCount))
-		self.assertEqual(4, getTupleSize(0x2077, axisCount))
-		self.assertEqual(4, getTupleSize(11, axisCount))
 
 	def test_decompilePoints(self):
 		decompilePoints = table__g_v_a_r.decompilePoints_
@@ -211,6 +172,44 @@ class GlyphVariationTest(unittest.TestCase):
 			  '<!-- all deltas are (0,0) -->',
 			'</tuple>'
 		], GlyphVariationTest.xml_lines(writer))
+
+	def test_decompileCoord(self):
+		decompileCoord = GlyphVariation.decompileCoord_
+		data = hexdecode("DE AD C0 00 20 00 DE AD")
+		self.assertEqual(({"wght": -1.0, "wdth": 0.5}, 6), decompileCoord(["wght", "wdth"], data, 2))
+
+	def test_compileCoord(self):
+		compileCoord = GlyphVariation.compileCoord_
+		self.assertEqual("C0 00 20 00", hexencode(compileCoord(["wght", "wdth"], {"wght": -1.0, "wdth": 0.5})))
+
+	def test_decompileCoords(self):
+		decompileCoords = GlyphVariation.decompileCoords_
+		axes = ["wght", "wdth", "opsz"]
+		coords = [
+			{"wght":  1.0, "wdth": 0.0, "opsz": 0.5},
+			{"wght": -1.0, "wdth": 0.0, "opsz": 0.25},
+			{"wght":  0.0, "wdth": -1.0, "opsz": 1.0}
+		]
+		data = hexdecode("DE AD 40 00 00 00 20 00 C0 00 00 00 10 00 00 00 C0 00 40 00")
+		self.assertEqual((coords, 20), decompileCoords(axes, numCoords=3, data=data, offset=2))
+
+	def test_compileCoords(self):
+		axes = ["wght", "wdth", "opsz"]
+		coords = [
+			{"wght":  1.0, "wdth": 0.0, "opsz": 0.5},
+			{"wght": -1.0, "wdth": 0.0, "opsz": 0.25},
+			{"wght":  0.0, "wdth": -1.0, "opsz": 1.0}
+		]
+		self.assertEqual("40 00 00 00 20 00 C0 00 00 00 10 00 00 00 C0 00 40 00",
+				 hexencode(GlyphVariation.compileCoords_(axes, coords)))
+
+	def test_getTupleSize(self):
+		getTupleSize = GlyphVariation.getTupleSize_
+		numAxes = 3
+		self.assertEqual(4 + numAxes * 2, getTupleSize(0x8042, numAxes))
+		self.assertEqual(4 + numAxes * 4, getTupleSize(0x4077, numAxes))
+		self.assertEqual(4, getTupleSize(0x2077, numAxes))
+		self.assertEqual(4, getTupleSize(11, numAxes))
 
 	@staticmethod
 	def xml_lines(writer):
