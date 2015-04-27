@@ -131,6 +131,15 @@ class GlyphVariationTest(unittest.TestCase):
 			'</tuple>'
 		], GlyphVariationTest.xml_lines(writer))
 
+	def test_fromXML(self):
+		g = GlyphVariation({}, GlyphCoordinates.zeros(4))
+		g.fromXML("coord", {"axis":"wght", "value":"1.0"}, [])
+		g.fromXML("coord", {"axis":"wdth", "min":"0.3", "value":"0.4", "max":"0.5"}, [])
+		g.fromXML("delta", {"pt":"1", "x":"33", "y":"44"}, [])
+		g.fromXML("delta", {"pt":"2", "x":"-2", "y":"170"}, [])
+		self.assertEqual({"wght":(1.0, 1.0, 1.0), "wdth":(0.3, 0.4, 0.5)}, g.axes)
+		self.assertEqual("0,0 33,44 -2,170 0,0", " ".join(["%d,%d" % c for c in g.coordinates]))
+
 	def test_decompileCoord(self):
 		decompileCoord = GlyphVariation.decompileCoord_
 		data = hexdecode("DE AD C0 00 20 00 DE AD")
