@@ -61,6 +61,16 @@ class GlyphVariationTableTest(unittest.TestCase):
 		self.assertEqual([0x00112233, 0x44556677, 0x8899aabb],
 				 list(decompileOffsets(data, format=1, glyphCount=2)))
 
+	def test_compileGlyph_noVariations(self):
+		table = table__g_v_a_r()
+		table.variations = {}
+		self.assertEqual(b"", table.compileGlyph_("glyphname", ["wght", "opsz"], {}))
+
+	def test_compileGlyph_emptyVariations(self):
+		table = table__g_v_a_r()
+		table.variations = {"glyphname": []}
+		self.assertEqual(b"", table.compileGlyph_("glyphname", ["wght", "opsz"], {}))
+
 	def test_compileSharedCoords(self):
 		class FakeFont:
 			def getGlyphOrder(self):
