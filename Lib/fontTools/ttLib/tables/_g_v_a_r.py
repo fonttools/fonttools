@@ -50,6 +50,68 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 
 	dependencies = ["fvar", "glyf"]
 
+	def compile(self, ttFont):
+		axisTags = [axis.AxisTag for axis in ttFont["fvar"].table.VariationAxis]
+
+		sharedCoords = self.compileSharedCoords_(ttFont, axisTags)
+		sharedCoordIndices = dict([(sharedCoords[i], i) for i in xrange(len(sharedCoords))])
+		sharedCoordSize = sum([len(c) for c in sharedCoords])
+
+		compiledGlyphs = self.compileGlyphs_(ttFont, axisTags, sharedCoordIndices)
+
+		offset = 0
+		offsets = []
+		for glyph in compiledGlyphs:
+			offsets.append(offset)
+			offset += len(glyph)
+		offsets.append(offset)
+		compiledGlyphsSize = offset
+		compiledOffsets, format = self.compileOffsets_(offsets)
+
+		header = {}
+		header["version"] = self.version
+		header["reserved"] = self.reserved
+		header["axisCount"] = len(axisTags)
+		header["sharedCoordCount"] = len(sharedCoords)
+		header["offsetToCoord"] = GVAR_HEADER_SIZE + len(compiledOffsets)
+		header["glyphCount"] = len(compiledGlyphs)
+		header["flags"] = format
+		header["offsetToData"] = header["offsetToCoord"] + sharedCoordSize
+		compiledHeader = sstruct.pack(GVAR_HEADER_FORMAT, header)
+
+		result = [compiledHeader, compiledOffsets]
+		result.extend(sharedCoords)
+		result.extend(compiledGlyphs)
+		return bytesjoin(result)
+
+	def compileSharedCoords_(self, ttFont, axisTags):
+		coordCount = {}
+		for glyph in ttFont.getGlyphOrder():
+			if glyph in self.variations:
+				for gvar in self.variations[glyph]:
+					coord = gvar.compileCoord(axisTags)
+					coordCount[coord] = coordCount.get(coord, 0) + 1
+		sharedCoords = [(count, coord) for (coord, count) in coordCount.items() if count > 1]
+		sharedCoords.sort(reverse=True)
+		MAX_NUM_SHARED_COORDS = TUPLE_INDEX_MASK + 1
+		sharedCoords = sharedCoords[:MAX_NUM_SHARED_COORDS]
+		return [c[1] for c in sharedCoords]  # Strip off counts.
+
+	def compileGlyphs_(self, ttFont, axisTags, sharedCoordIndices):
+		result = []
+		for glyph in ttFont.getGlyphOrder():
+			if glyph in self.variations:
+				glyphData = self.compileGlyph_(axisTags, sharedCoordIndices, self.variations[glyph])
+			else:
+				glyphData = b""
+			result.append(glyphData)
+		return result
+
+	def compileGlyph_(self, axisTags, sharedCoordIndices, variations):
+		if len(variations) == 0:
+			return b""
+		return b"TODO"
+
 	def decompile(self, data, ttFont):
 		axisTags = [axis.AxisTag for axis in ttFont["fvar"].table.VariationAxis]
 		glyphs = ttFont.getGlyphOrder()
@@ -268,6 +330,30 @@ class GlyphVariation:
 			y = safeEval(attrs["y"])
 			self.coordinates[point] = (x, y)
 
+	def compileCoord(self, axisTags):
+		result = []
+		for axis in axisTags:
+			minValue, value, maxValue = self.axes.get(axis, (0.0, 0.0, 0.0))
+			result.append(struct.pack(b">h", floatToFixed(value, 14)))
+		return bytesjoin(result)
+
+	def compileIntermediateCoord(self, axisTags):
+		needed = False
+		for axis in axisTags:
+			minValue, value, maxValue = self.axes.get(axis, (0.0, 0.0, 0.0))
+			if (minValue != value) or (maxValue != value):
+				needed = True
+				break
+		if not needed:
+			return None
+		minCoords = []
+		maxCoords = []
+		for axis in axisTags:
+			minValue, value, maxValue = self.axes.get(axis, (0.0, 0.0, 0.0))
+			minCoords.append(struct.pack(b">h", floatToFixed(minValue, 14)))
+			maxCoords.append(struct.pack(b">h", floatToFixed(maxValue, 14)))
+		return bytesjoin(minCoords + maxCoords)
+
 	@staticmethod
 	def decompileCoord_(axisTags, data, offset):
 		coord = {}
@@ -278,14 +364,6 @@ class GlyphVariation:
 		return coord, pos
 
 	@staticmethod
-	def compileCoord_(axisTags, coord):
-		result = []
-		for axis in axisTags:
-			value = floatToFixed(coord.get(axis, 0.0), 14)
-			result.append(struct.pack(b">h", value))
-		return bytesjoin(result)
-
-	@staticmethod
 	def decompileCoords_(axisTags, numCoords, data, offset):
 		result = []
 		pos = offset
@@ -293,10 +371,6 @@ class GlyphVariation:
 			coord, pos = GlyphVariation.decompileCoord_(axisTags, data, pos)
 			result.append(coord)
 		return result, pos
-
-	@staticmethod
-	def compileCoords_(axisTags, coords):
-		return bytesjoin([GlyphVariation.compileCoord_(axisTags, c) for c in coords])
 
 	@staticmethod
 	def decompilePoints_(numPoints, data, offset):
