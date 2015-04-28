@@ -16,9 +16,10 @@ def _reverseString(s):
 def getMacCreatorAndType(path):
 	if MacOS is not None:
 		fileCreator, fileType = MacOS.GetCreatorAndType(path)
-		if sys.byteorder == "little":
+		if sys.version_info[:2] < (2, 7) and sys.byteorder == "little":
 			# work around bug in MacOS.GetCreatorAndType() on intel:
 			# http://bugs.python.org/issue1594
+			# (fixed with Python 2.7)
 			fileCreator = _reverseString(fileCreator)
 			fileType = _reverseString(fileType)
 		return fileCreator, fileType
