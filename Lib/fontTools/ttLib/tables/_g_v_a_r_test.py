@@ -41,6 +41,14 @@ SKIA_SHARED_COORDS = hexdecode(
 
 
 class GlyphVariationTableTest(unittest.TestCase):
+	def test_compileOffsets_shortFormat(self):
+		self.assertEqual((hexdecode("00 00 00 02 FF C0"), 0),
+				 table__g_v_a_r.compileOffsets_([0, 4, 0x1ff80]))
+
+	def test_compileOffsets_longFormat(self):
+		self.assertEqual((hexdecode("00 00 00 00 00 00 00 04 CA FE BE EF"), 1),
+				 table__g_v_a_r.compileOffsets_([0, 4, 0xCAFEBEEF]))
+
 	def test_decompileOffsets_shortFormat(self):
 		decompileOffsets = table__g_v_a_r.decompileOffsets_
 		data = hexdecode("00 11 22 33 44 55 66 77 88 99 aa bb")
@@ -53,13 +61,29 @@ class GlyphVariationTableTest(unittest.TestCase):
 		self.assertEqual([0x00112233, 0x44556677, 0x8899aabb],
 				 list(decompileOffsets(data, format=1, glyphCount=2)))
 
-	def test_compileOffsets_shortFormat(self):
-		self.assertEqual((hexdecode("00 00 00 02 FF C0"), 0),
-				 table__g_v_a_r.compileOffsets_([0, 4, 0x1ff80]))
-
-	def test_compileOffsets_longFormat(self):
-		self.assertEqual((hexdecode("00 00 00 00 00 00 00 04 CA FE BE EF"), 1),
-				 table__g_v_a_r.compileOffsets_([0, 4, 0xCAFEBEEF]))
+	def test_compileSharedCoords(self):
+		class FakeFont:
+			def getGlyphOrder(self):
+				return ["A", "B", "C"]
+		font = FakeFont()
+		table = table__g_v_a_r()
+		table.variations = {}
+		table.variations["A"] = [
+			GlyphVariation({"wght": (1.0, 1.0, 1.0), "wdth": (0.5, 0.7, 1.0)}, GlyphCoordinates.zeros(4))
+		]
+		table.variations["B"] = [
+			GlyphVariation({"wght": (1.0, 1.0, 1.0), "wdth": (0.2, 0.7, 1.0)}, GlyphCoordinates.zeros(4)),
+			GlyphVariation({"wght": (1.0, 1.0, 1.0), "wdth": (0.2, 0.8, 1.0)}, GlyphCoordinates.zeros(4))
+		]
+		table.variations["C"] = [
+			GlyphVariation({"wght": (1.0, 1.0, 1.0), "wdth": (0.3, 0.7, 1.0)}, GlyphCoordinates.zeros(4)),
+			GlyphVariation({"wght": (1.0, 1.0, 1.0), "wdth": (0.3, 0.8, 1.0)}, GlyphCoordinates.zeros(4)),
+			GlyphVariation({"wght": (1.0, 1.0, 1.0), "wdth": (0.3, 0.9, 1.0)}, GlyphCoordinates.zeros(4))
+		]
+		# {"wght":1.0, "wdth":0.7} is shared 3 times; {"wght":1.0, "wdth":0.8} is shared twice.
+		# Min and max values are not part of the shared coordinate pool and should get ignored.
+		result = table.compileSharedCoords_(font, ["wght", "wdth"])
+		self.assertEquals(["40 00 2C CD", "40 00 33 33"], [hexencode(c) for c in result])
 
 	def test_decompileSharedCoords_Skia(self):
 		table = table__g_v_a_r()
@@ -140,14 +164,23 @@ class GlyphVariationTest(unittest.TestCase):
 		self.assertEqual({"wght":(1.0, 1.0, 1.0), "wdth":(0.3, 0.4, 0.5)}, g.axes)
 		self.assertEqual("0,0 33,44 -2,170 0,0", " ".join(["%d,%d" % c for c in g.coordinates]))
 
+	def test_compileCoord(self):
+		gvar = GlyphVariation({"wght": (-1.0, -1.0, -1.0), "wdth": (0.4, 0.5, 0.6)}, GlyphCoordinates.zeros(4))
+		self.assertEqual("C0 00 20 00", hexencode(gvar.compileCoord(["wght", "wdth"])))
+		self.assertEqual("20 00 C0 00", hexencode(gvar.compileCoord(["wdth", "wght"])))
+		self.assertEqual("C0 00", hexencode(gvar.compileCoord(["wght"])))
+
+	def test_compileIntermediateCoord(self):
+		gvar = GlyphVariation({"wght": (-1.0, -1.0, -1.0), "wdth": (0.4, 0.5, 0.6)}, GlyphCoordinates.zeros(4))
+		self.assertEqual("C0 00 19 9A C0 00 26 66", hexencode(gvar.compileIntermediateCoord(["wght", "wdth"])))
+		self.assertEqual("19 9A C0 00 26 66 C0 00", hexencode(gvar.compileIntermediateCoord(["wdth", "wght"])))
+		self.assertEqual(None, gvar.compileIntermediateCoord(["wght"]))
+		self.assertEqual("19 9A 26 66", hexencode(gvar.compileIntermediateCoord(["wdth"])))
+
 	def test_decompileCoord(self):
 		decompileCoord = GlyphVariation.decompileCoord_
 		data = hexdecode("DE AD C0 00 20 00 DE AD")
 		self.assertEqual(({"wght": -1.0, "wdth": 0.5}, 6), decompileCoord(["wght", "wdth"], data, 2))
-
-	def test_compileCoord(self):
-		compileCoord = GlyphVariation.compileCoord_
-		self.assertEqual("C0 00 20 00", hexencode(compileCoord(["wght", "wdth"], {"wght": -1.0, "wdth": 0.5})))
 
 	def test_decompileCoords(self):
 		decompileCoords = GlyphVariation.decompileCoords_
@@ -159,16 +192,6 @@ class GlyphVariationTest(unittest.TestCase):
 		]
 		data = hexdecode("DE AD 40 00 00 00 20 00 C0 00 00 00 10 00 00 00 C0 00 40 00")
 		self.assertEqual((coords, 20), decompileCoords(axes, numCoords=3, data=data, offset=2))
-
-	def test_compileCoords(self):
-		axes = ["wght", "wdth", "opsz"]
-		coords = [
-			{"wght":  1.0, "wdth": 0.0, "opsz": 0.5},
-			{"wght": -1.0, "wdth": 0.0, "opsz": 0.25},
-			{"wght":  0.0, "wdth": -1.0, "opsz": 1.0}
-		]
-		self.assertEqual("40 00 00 00 20 00 C0 00 00 00 10 00 00 00 C0 00 40 00",
-				 hexencode(GlyphVariation.compileCoords_(axes, coords)))
 
 	def test_decompilePoints(self):
 		decompilePoints = GlyphVariation.decompilePoints_
