@@ -98,16 +98,11 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		return [c[1] for c in sharedCoords]  # Strip off counts.
 
 	def compileGlyphs_(self, ttFont, axisTags, sharedCoordIndices):
-		result = []
-		for glyph in ttFont.getGlyphOrder():
-			if glyph in self.variations:
-				glyphData = self.compileGlyph_(axisTags, sharedCoordIndices, self.variations[glyph])
-			else:
-				glyphData = b""
-			result.append(glyphData)
+		result = [self.compileGlyph_(g, axisTags, sharedCoordIndices) for g in ttFont.getGlyphOrder()]
 		return result
 
-	def compileGlyph_(self, axisTags, sharedCoordIndices, variations):
+	def compileGlyph_(self, glyph, axisTags, sharedCoordIndices):
+		variations = self.variations.get(glyph, [])
 		if len(variations) == 0:
 			return b""
 		return b"TODO"
