@@ -71,7 +71,7 @@ class TTFont(object):
 			sfntVersion="\000\001\000\000", flavor=None, checkChecksums=False,
 			verbose=False, recalcBBoxes=True, allowVID=False, ignoreDecompileErrors=False,
 			recalcTimestamp=True, fontNumber=-1, lazy=None, quiet=False):
-		
+
 		"""The constructor can be called with a few different arguments.
 		When reading a font from disk, 'file' should be either a pathname
 		pointing to a file, or a readable file object.
@@ -212,7 +212,7 @@ class TTFont(object):
 		else:
 			tmp = file
 		writer = newSFNTWriter(tmp, numTables, self.sfntVersion, self.flavor, self.flavorData)
-		
+
 		done = []
 		for tag in tags:
 			self._writeTable(tag, writer, done)
