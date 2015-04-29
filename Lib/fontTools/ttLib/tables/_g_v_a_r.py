@@ -205,10 +205,11 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 			coord = sharedCoords[flags & TUPLE_INDEX_MASK]
 		else:
 			coord, pos = GlyphVariation.decompileCoord_(axisTags, data, pos)
-		minCoord = maxCoord = coord
 		if (flags & INTERMEDIATE_TUPLE) != 0:
 			minCoord, pos = GlyphVariation.decompileCoord_(axisTags, data, pos)
 			maxCoord, pos = GlyphVariation.decompileCoord_(axisTags, data, pos)
+		else:
+			minCoord, maxCoord = table__g_v_a_r.computeMinMaxCoord_(coord)
 		axes = {}
 		for axis in axisTags:
 			coords = minCoord[axis], coord[axis], maxCoord[axis]
@@ -225,6 +226,15 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		for p, x, y in zip(points, deltas_x, deltas_y):
 				deltas[p] = (x, y)
 		return GlyphVariation(axes, deltas)
+
+	@staticmethod
+	def computeMinMaxCoord_(coord):
+		minCoord = {}
+		maxCoord = {}
+		for (axis, value) in coord.iteritems():
+			minCoord[axis] = min(value, 0.0)  # -0.3 --> -0.3; 0.7 --> 0.0
+			maxCoord[axis] = max(value, 0.0)  # -0.3 -->  0.0; 0.7 --> 0.7
+		return (minCoord, maxCoord)
 
 	def toXML(self, writer, ttFont):
 		writer.simpletag("version", value=self.version)
@@ -293,7 +303,9 @@ class GlyphVariation:
 			value = self.axes.get(axis)
 			if value != None:
 				minValue, value, maxValue = value
-				if minValue == value and maxValue == value:
+				defaultMinValue = min(value, 0.0)  # -0.3 --> -0.3; 0.7 --> 0.0
+				defaultMaxValue = max(value, 0.0)  # -0.3 -->  0.0; 0.7 --> 0.7
+				if minValue == defaultMinValue and maxValue == defaultMaxValue:
 					writer.simpletag("coord", axis=axis, value=value)
 				else:
 					writer.simpletag("coord", axis=axis, value=value,
@@ -315,10 +327,12 @@ class GlyphVariation:
 	def fromXML(self, name, attrs, content):
 		if name == "coord":
 			axis = attrs["axis"]
-			value = attrs["value"]
-			minValue = attrs.get("min", value)
-			maxValue = attrs.get("max", value)
-			self.axes[axis] = (safeEval(minValue), safeEval(value), safeEval(maxValue))
+			value = float(attrs["value"])
+			defaultMinValue = min(value, 0.0)  # -0.3 --> -0.3; 0.7 --> 0.0
+			defaultMaxValue = max(value, 0.0)  # -0.3 -->  0.0; 0.7 --> 0.7
+			minValue = float(attrs.get("min", defaultMinValue))
+			maxValue = float(attrs.get("max", defaultMaxValue))
+			self.axes[axis] = (minValue, value, maxValue)
 		elif name == "delta":
 			point = safeEval(attrs["pt"])
 			x = safeEval(attrs["x"])
@@ -336,7 +350,9 @@ class GlyphVariation:
 		needed = False
 		for axis in axisTags:
 			minValue, value, maxValue = self.axes.get(axis, (0.0, 0.0, 0.0))
-			if (minValue != value) or (maxValue != value):
+			defaultMinValue = min(value, 0.0)  # -0.3 --> -0.3; 0.7 --> 0.0
+			defaultMaxValue = max(value, 0.0)  # -0.3 -->  0.0; 0.7 --> 0.7
+			if (minValue != defaultMinValue) or (maxValue != defaultMaxValue):
 				needed = True
 				break
 		if not needed:
