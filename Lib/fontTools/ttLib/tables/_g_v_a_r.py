@@ -122,7 +122,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 			glyph = ttFont["glyf"][glyphName]
 			numPoints = self.getNumPoints_(glyph)
 			gvarData = data[self.offsetToData + offsets[i] : self.offsetToData + offsets[i + 1]]
-			self.variations[glyphName] = self.decompileTuples_(numPoints, sharedCoords, axisTags, gvarData)
+			self.variations[glyphName] = self.decompileGlyph_(numPoints, sharedCoords, axisTags, gvarData)
 
 	def decompileSharedCoords_(self, axisTags, data):
 		result, pos = GlyphVariation.decompileCoords_(axisTags, self.sharedCoordCount, data, self.offsetToCoord)
@@ -174,7 +174,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 			packed.byteswap()
 		return (packed.tostring(), format)
 
-	def decompileTuples_(self, numPoints, sharedCoords, axisTags, data):
+	def decompileGlyph_(self, numPoints, sharedCoords, axisTags, data):
 		if len(data) < 4:
 			return []
 		tuples = []

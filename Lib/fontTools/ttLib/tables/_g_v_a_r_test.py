@@ -117,23 +117,23 @@ class GlyphVariationTableTest(unittest.TestCase):
 		table.sharedCoordCount = 0
 		self.assertEqual([], table.decompileSharedCoords_(["wght"], b""))
 
-	def test_decompileTuples_Skia_I(self):
+	def test_decompilGlyph_Skia_I(self):
 		axes = ["wght", "wdth"]
 		table = table__g_v_a_r()
 		table.offsetToCoord = 0
 		table.sharedCoordCount = 8
 		table.axisCount = len(axes)
 		sharedCoords = table.decompileSharedCoords_(axes, SKIA_SHARED_COORDS)
-		tuples = table.decompileTuples_(18, sharedCoords, axes, SKIA_GVAR_I)
+		tuples = table.decompileGlyph_(18, sharedCoords, axes, SKIA_GVAR_I)
 		self.assertEqual(8, len(tuples))
 		self.assertEqual({"wght": (0.0, 1.0, 1.0)}, tuples[0].axes)
 		self.assertEqual("257,0 -127,0 -128,58 -130,90 -130,62 -130,67 -130,32 -127,0 257,0 "
 				 "259,14 260,64 260,21 260,69 258,124 0,0 130,0 0,0 0,0",
 				 " ".join(["%d,%d" % c for c in tuples[0].coordinates]))
 
-	def test_decompileTuples_empty(self):
+	def test_decompileGlyph_empty(self):
 		table = table__g_v_a_r()
-		self.assertEqual([], table.decompileTuples_(numPoints=5, sharedCoords=[], axisTags=[], data=b""))
+		self.assertEqual([], table.decompileGlyph_(numPoints=5, sharedCoords=[], axisTags=[], data=b""))
 
 	def test_computeMinMaxCord(self):
 		coord = {"wght": -0.3, "wdth": 0.7}
