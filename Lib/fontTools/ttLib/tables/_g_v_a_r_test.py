@@ -117,7 +117,7 @@ class GlyphVariationTableTest(unittest.TestCase):
 		table.sharedCoordCount = 0
 		self.assertEqual([], table.decompileSharedCoords_(["wght"], b""))
 
-	def test_decompilGlyph_Skia_I(self):
+	def test_decompileGlyph_Skia_I(self):
 		axes = ["wght", "wdth"]
 		table = table__g_v_a_r()
 		table.offsetToCoord = 0
