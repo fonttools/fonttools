@@ -12,6 +12,13 @@ from fontTools.ttLib.sfnt import (SFNTReader, SFNTWriter, DirectoryEntry,
 	sfntDirectoryEntrySize, calcChecksum)
 from fontTools.ttLib.tables import ttProgram
 
+haveBrotli = False
+try:
+	import brotli
+	haveBrotli = True
+except ImportError:
+	pass
+
 
 def normaliseFont(ttFont):
 	""" The WOFF 2.0 conversion is guaranteed to be lossless in a bitwise sense
@@ -43,9 +50,14 @@ class WOFF2Reader(SFNTReader):
 	flavor = "woff2"
 
 	def __init__(self, file):
+		if not haveBrotli:
+			print('The WOFF2 decoder requires the Brotli Python extension, available at:\n'
+				  'https://github.com/google/brotli', file=sys.stderr)
+			raise ImportError("No module named brotli")
+
 		self.file = file
 
-		signature = self.file.read(4)
+		signature = Tag(self.file.read(4))
 		if signature != b"wOF2":
 			raise TTLibError("Not a WOFF2 font (bad signature)")
 
@@ -67,7 +79,6 @@ class WOFF2Reader(SFNTReader):
 
 		totalUncompressedSize = offset
 		compressedData = self.file.read(self.totalCompressedSize)
-		import brotli
 		decompressedData = brotli.decompress(compressedData)
 		if len(decompressedData) != totalUncompressedSize:
 			raise TTLibError(
@@ -75,18 +86,34 @@ class WOFF2Reader(SFNTReader):
 				% (totalUncompressedSize, len(decompressedData)))
 		self.transformBuffer = StringIO(decompressedData)
 
+		self.file.seek(0, 2)
+		if self.length != self.file.tell():
+			raise TTLibError("reported 'length' doesn't match the actual file size")
+
 		self.flavorData = WOFF2FlavorData(self)
 
 	def __getitem__(self, tag):
-		entry = self.tables[Tag(tag)]
+		"""Fetch the raw table data. Reconstruct transformed tables."""
+		tag = Tag(tag)
+		entry = self.tables[tag]
 		rawData = entry.loadData(self.transformBuffer)
 		if tag not in woff2TransformedTableTags:
 			return rawData
-
 		if hasattr(entry, 'data'):
-			# table already reconstructed, return compiled data
+			# already reconstructed
 			return entry.data
+		data = self.reconstructTable(tag, rawData)
+		if tag == 'loca' and len(data) != entry.origLength:
+			raise TTLibError(
+				"reconstructed 'loca' table doesn't match original size: expected %d, found %d"
+				% (entry.origLength, len(data)))
+		entry.data = data
+		return entry.data
 
+	def reconstructTable(self, tag, rawData):
+		"""Reconstruct 'glyf' or 'loca' tables from transformed 'rawData'."""
+		if tag not in woff2TransformedTableTags:
+			raise TTLibError("Transform for table '%s' is unknown" % tag)
 		if tag == 'glyf':
 			# reconstruct both glyf and loca
 			self.glyfTable = WOFF2GlyfTable()
@@ -97,11 +124,8 @@ class WOFF2Reader(SFNTReader):
 				# make sure glyf is loaded first
 				self['glyf']
 			data = self.glyfTable.getLocaData()
-			if len(data) != entry.origLength:
-				raise TTLibError(
-					"reconstructed '%s' table doesn't match original size: expected %d, found %d"
-					% (tag, entry.origLength, len(data)))
-		entry.data = data
+		else:
+			raise NotImplementedError
 		return data
 
 
@@ -111,6 +135,11 @@ class WOFF2Writer(SFNTWriter):
 
 	def __init__(self, file, numTables, sfntVersion="\000\001\000\000",
 				 flavorData=None):
+		if not haveBrotli:
+			print('The WOFF2 encoder requires the Brotli Python extension, available at:\n'
+				  'https://github.com/google/brotli', file=sys.stderr)
+			raise ImportError("No module named brotli")
+
 		self.file = file
 		self.numTables = numTables
 		self.sfntVersion = Tag(sfntVersion)
@@ -151,17 +180,7 @@ class WOFF2Writer(SFNTWriter):
 	def close(self):
 		""" All tags must have been specified. Now write the table data and directory.
 		"""
-		# According to the specs, the WOFF2 table directory must reflect the 'physical
-		# order' in which the tables have been encoded. Moreover, the glyf and loca
-		# tables must be placed 'as a pair with loca table following the glyf table'.
-		"""\
-		if 'loca' in self.tableOrder and 'glyf' in self.tableOrder:
-			glyfIndex = self.tableOrder.index('glyf')
-			locaIndex = self.tableOrder.index('loca')
-			self.tableOrder.insert(glyfIndex+1, self.tableOrder.pop(locaIndex))
-		tables = [(tag, self.tables[tag]) for tag in self.tableOrder]
-		"""
-		# However, to pass the legacy OpenType Sanitiser currently included in browsers,
+		# to pass the legacy OpenType Sanitiser currently included in browsers,
 		# we must sort the table directory and data alphabetically by tag.
 		# See:
 		# https://github.com/google/woff2/pull/3
@@ -184,19 +203,12 @@ class WOFF2Writer(SFNTWriter):
 		self.signature = b"wOF2"
 		self.reserved = 0
 
-		# transform glyf and loca table data
+		# write tables to transformBuffer
 		for tag, entry in tables:
-			if tag == "loca":
-				data = b""
-			elif tag == "glyf":
-				indexFormat, = struct.unpack(">H", self.tables['head'].data[50:52])
-				numGlyphs, = struct.unpack(">H", self.tables['maxp'].data[4:6])
-				glyfTable = WOFF2GlyfTable()
-				glyfTable.setLocaData(self.tables['loca'].data, indexFormat, numGlyphs)
-				data = glyfTable.transform(entry.data)
-			else:
-				data = entry.data
-			# write tables to transformBuffer
+			data = entry.data
+			if tag in woff2TransformedTableTags:
+				# transform glyf and loca tables
+				data = self.transformTable(tag, data)
 			entry.offset = self.nextTableOffset
 			entry.saveData(self.transformBuffer, data)
 			self.nextTableOffset += entry.length
@@ -207,7 +219,6 @@ class WOFF2Writer(SFNTWriter):
 		# compress font data
 		self.transformBuffer.seek(0)
 		uncompressedData = self.transformBuffer.read()
-		import brotli
 		compressedData = brotli.compress(uncompressedData, brotli.MODE_FONT)
 		self.totalCompressedSize = len(compressedData)
 
@@ -219,7 +230,6 @@ class WOFF2Writer(SFNTWriter):
 		offset = (offset + 3) & ~3
 
 		# calculate offsets and lengths for any metadata and/or private data
-		compressedMetaData = privData = b""
 		flavorData = self.flavorData or WOFF2FlavorData()
 		if flavorData.majorVersion is not None and flavorData.minorVersion is not None:
 			self.majorVersion = flavorData.majorVersion
@@ -235,14 +245,17 @@ class WOFF2Writer(SFNTWriter):
 			offset += self.metaLength
 		else:
 			self.metaOffset = self.metaLength = self.metaOrigLength = 0
+			compressedMetaData = b""
 		if flavorData.privData:
+			privData = flavorData.privData
 			# make sure private data is padded to 4-byte boundary
 			offset = (offset + 3) & ~3
 			self.privOffset = offset
-			self.privLength = len(flavorData.privData)
+			self.privLength = len(privData)
 			offset += self.privLength
 		else:
 			self.privOffset = self.privLength = 0
+			privData = b""
 
 		# total size of WOFF2 font, including any metadata or private data
 		self.length = offset
@@ -267,6 +280,22 @@ class WOFF2Writer(SFNTWriter):
 			self.file.seek(self.privOffset)
 			assert self.file.tell() == self.privOffset
 			self.file.write(privData)
+
+	def transformTable(self, tag, data):
+		"""Transform 'glyf' or 'loca' table data."""
+		if tag not in woff2TransformedTableTags:
+			raise TTLibError("Transform for table '%s' is unknown" % tag)
+		if tag == "loca":
+			data = b""
+		elif tag == "glyf":
+			indexFormat, = struct.unpack(">H", self.tables['head'].data[50:52])
+			numGlyphs, = struct.unpack(">H", self.tables['maxp'].data[4:6])
+			glyfTable = WOFF2GlyfTable()
+			glyfTable.setLocaData(self.tables['loca'].data, indexFormat, numGlyphs)
+			data = glyfTable.transform(data)
+		else:
+			raise NotImplementedError
+		return data
 
 	def _calcMasterChecksum(self):
 		"""Calculate checkSumAdjustment."""
@@ -802,6 +831,8 @@ class WOFF2FlavorData(WOFFFlavorData):
 	Flavor = 'woff2'
 
 	def __init__(self, reader=None):
+		if not haveBrotli:
+			raise ImportError("No module named brotli")
 		self.majorVersion = None
 		self.minorVersion = None
 		self.metaData = None
@@ -813,7 +844,6 @@ class WOFF2FlavorData(WOFFFlavorData):
 				reader.file.seek(reader.metaOffset)
 				rawData = reader.file.read(reader.metaLength)
 				assert len(rawData) == reader.metaLength
-				import brotli
 				data = brotli.decompress(rawData)
 				assert len(data) == reader.metaOrigLength
 				self.metaData = data

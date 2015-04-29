@@ -55,13 +55,6 @@ elif sys.platform == "darwin":
 		# Python 3 does not have Res used by macUtils
 		haveMacSupport = 1
 
-haveBrotli = False
-try:
-	import brotli
-	haveBrotli = True
-except ImportError:
-	pass
-
 
 class TTLibError(Exception): pass
 
@@ -822,13 +815,8 @@ def newSFNTReader(file, checkChecksums=1, fontNumber=-1):
 	sfntVersion = Tag(file.read(4))
 	file.seek(0)
 	if sfntVersion == "wOF2":
-		if haveBrotli:
-			from fontTools.ttLib.woff2 import WOFF2Reader
-			return WOFF2Reader(file)
-		else:
-			print('The WOFF2 encoder requires the Brotli Python extension, available at:\n'
-				  'https://github.com/google/brotli', file=sys.stderr)
-			raise ImportError("No module named brotli")
+		from fontTools.ttLib.woff2 import WOFF2Reader
+		return WOFF2Reader(file)
 	else:
 		from fontTools.ttLib.sfnt import SFNTReader
 		return SFNTReader(file, checkChecksums, fontNumber)
@@ -837,13 +825,8 @@ def newSFNTReader(file, checkChecksums=1, fontNumber=-1):
 def newSFNTWriter(file, numTables, sfntVersion="\000\001\000\000",
 		          flavor=None, flavorData=None):
 	if flavor == "woff2":
-		if haveBrotli:
-			from fontTools.ttLib.woff2 import WOFF2Writer
-			return WOFF2Writer(file, numTables, sfntVersion, flavorData)
-		else:
-			print('The WOFF2 encoder requires the Brotli Python extension, available at:\n'
-				  'https://github.com/google/brotli', file=sys.stderr)
-			raise ImportError("No module named brotli")
+		from fontTools.ttLib.woff2 import WOFF2Writer
+		return WOFF2Writer(file, numTables, sfntVersion, flavorData)
 	else:
 		from fontTools.ttLib.sfnt import SFNTWriter
 		return SFNTWriter(file, numTables, sfntVersion, flavor, flavorData)
