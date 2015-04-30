@@ -71,6 +71,16 @@ class GlyphVariationTableTest(unittest.TestCase):
 		table.variations = {"glyphname": []}
 		self.assertEqual(b"", table.compileGlyph_("glyphname", ["wght", "opsz"], {}))
 
+	def test_compileGlyph_onlyRedundantVariations(self):
+		table = table__g_v_a_r()
+		axes = {"wght": (0.3, 0.4, 0.5), "opsz": (0.7, 0.8, 0.9)}
+		table.variations = {"glyphname": [
+			GlyphVariation(axes, GlyphCoordinates.zeros(4)),
+			GlyphVariation(axes, GlyphCoordinates.zeros(4)),
+			GlyphVariation(axes, GlyphCoordinates.zeros(4))
+		]}
+		self.assertEqual(b"", table.compileGlyph_("glyphname", ["wght", "opsz"], {}))
+
 	def test_compileSharedCoords(self):
 		class FakeFont:
 			def getGlyphOrder(self):
@@ -142,6 +152,16 @@ class GlyphVariationTableTest(unittest.TestCase):
 		self.assertEqual({"wght": 0.0, "wdth": 0.7}, maxCoord)
 
 class GlyphVariationTest(unittest.TestCase):
+	def test_hasImpact_someDeltasNotZero(self):
+		axes = {"wght":(0.0, 1.0, 1.0)}
+		gvar = GlyphVariation(axes, GlyphCoordinates([(0,0), (9,8), (7,6)]))
+		self.assertTrue(gvar.hasImpact())
+
+	def test_hasImpact_allDeltasZero(self):
+		axes = {"wght":(0.0, 1.0, 1.0)}
+		gvar = GlyphVariation(axes, GlyphCoordinates([(0,0), (0,0), (0,0)]))
+		self.assertFalse(gvar.hasImpact())
+
 	def test_toXML(self):
 		writer = XMLWriter(StringIO())
 		axes = {"wdth":(0.3, 0.4, 0.5), "wght":(0.0, 1.0, 1.0), "opsz":(-0.7, -0.7, 0.0)}

@@ -103,6 +103,11 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 
 	def compileGlyph_(self, glyph, axisTags, sharedCoordIndices):
 		variations = self.variations.get(glyph, [])
+		# Omit variations that have no user-visible impact because their deltas
+		# are all (0, 0).  In the Apple Skia font, about 5% of all glyph variation
+		# tuples can be omitted.  On the other hand, in the JamRegular and
+		# BuffaloGalRegular fonts, all tuples have at least one non-zero delta.
+		variations = [v for v in variations if v.hasImpact()]
 		if len(variations) == 0:
 			return b""
 		return b"TODO"
@@ -295,6 +300,17 @@ class GlyphVariation:
 	def __repr__(self):
 		axes = ",".join(sorted(["%s=%s" % (name, value) for (name, value) in self.axes.items()]))
 		return "<GlyphVariation %s %s>" % (axes, self.coordinates)
+
+	def hasImpact(self):
+		"""Returns True if this GlyphVariation has any visible impact.
+
+		If the result is False, the GlyphVariation can be omitted from the font
+		without making any visible difference.
+		"""
+		for c in self.coordinates:
+			if c != (0, 0):
+				return True
+		return False
 
 	def toXML(self, writer, axisTags):
 		writer.begintag("tuple")
