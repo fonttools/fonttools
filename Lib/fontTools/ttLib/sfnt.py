@@ -82,7 +82,7 @@ class SFNTReader(object):
 				checksum = calcChecksum(data)
 			if self.checkChecksums > 1:
 				# Be obnoxious, and barf when it's wrong
-				assert checksum == entry.checksum, "bad checksum for '%s' table" % tag
+				assert checksum == entry.checkSum, "bad checksum for '%s' table" % tag
 			elif checksum != entry.checkSum:
 				# Be friendly, and just print a warning.
 				print("bad checksum for '%s' table" % tag)

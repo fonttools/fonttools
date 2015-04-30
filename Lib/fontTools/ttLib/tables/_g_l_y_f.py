@@ -53,7 +53,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 			warnings.warn("too much 'glyf' table data: expected %d, received %d bytes" %
 					(next, len(data)))
 		if noname:
-			warnings.warn('%s glyphs have no name' % i)
+			warnings.warn('%s glyphs have no name' % noname)
 		if ttFont.lazy is False: # Be lazy for None and True
 			for glyph in self.glyphs.values():
 				glyph.expand(self)
@@ -65,9 +65,15 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 		currentLocation = 0
 		dataList = []
 		recalcBBoxes = ttFont.recalcBBoxes
+		padData = ttFont.flavor == "woff2"
 		for glyphName in self.glyphOrder:
 			glyph = self.glyphs[glyphName]
 			glyphData = glyph.compile(self, recalcBBoxes)
+			if padData:
+				length = len(glyphData)
+				paddedLength = (length + 3) & ~3
+				padding = b'\0' * (paddedLength - length)
+				glyphData = bytesjoin([glyphData, padding])
 			locations.append(currentLocation)
 			currentLocation = currentLocation + len(glyphData)
 			dataList.append(glyphData)
