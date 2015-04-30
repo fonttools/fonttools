@@ -7,6 +7,7 @@ from fontTools.misc.textTools import safeEval
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
 from . import DefaultTable
 import array
+import io
 import sys
 import struct
 
@@ -101,6 +102,17 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		result = [self.compileGlyph_(g, axisTags, sharedCoordIndices) for g in ttFont.getGlyphOrder()]
 		return result
 
+	# TODO: Remove this once the code works.
+	@staticmethod
+	def visualizePoints_(points):
+		result = []
+		for p in xrange(max(points) + 1):
+			if p in points:
+				result.append("*")
+			else:
+				result.append("_")
+		return ''.join(result)
+
 	def compileGlyph_(self, glyph, axisTags, sharedCoordIndices):
 		variations = self.variations.get(glyph, [])
 		# Omit variations that have no user-visible impact because their deltas
@@ -110,6 +122,13 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		variations = [v for v in variations if v.hasImpact()]
 		if len(variations) == 0:
 			return b""
+
+		usedPoints = [gvar.getUsedPoints() for gvar in variations]
+		usedPointsUnion = set.union(*usedPoints)
+		print('-------------------- %s %s' % (glyph, len(usedPoints)))
+		for gvar, used in zip(variations, usedPoints):
+			print('    %s    len=%d' % (self.visualizePoints_(used), len(GlyphVariation.compilePoints(used))))
+		print('--> %s    len=%d' % (self.visualizePoints_(usedPointsUnion), len(GlyphVariation.compilePoints(usedPointsUnion))))
 		return b"TODO"
 
 	def decompile(self, data, ttFont):
@@ -301,6 +320,13 @@ class GlyphVariation:
 		axes = ",".join(sorted(["%s=%s" % (name, value) for (name, value) in self.axes.items()]))
 		return "<GlyphVariation %s %s>" % (axes, self.coordinates)
 
+	def getUsedPoints(self):
+		result = set()
+		for p in xrange(len(self.coordinates)):
+			if self.coordinates[p] != (0, 0):
+				result.add(p)
+		return result
+
 	def hasImpact(self):
 		"""Returns True if this GlyphVariation has any visible impact.
 
@@ -398,6 +424,55 @@ class GlyphVariation:
 			coord, pos = GlyphVariation.decompileCoord_(axisTags, data, pos)
 			result.append(coord)
 		return result, pos
+
+	@staticmethod
+	def compilePoints(points):
+		# In the 'gvar' table, the packing of point numbers is a little surprising.
+		# It consists of multiple runs, each being a delta-encoded list of integers.
+		# For example, the point set {17, 18, 19, 20, 21, 22, 23} gets encoded as
+		# [6, 17, 1, 1, 1, 1, 1, 1]. The first value (6) is the run length minus 1.
+		# There are two types of runs, with values being either 8 or 16 bit unsigned
+		# integers.
+		points = list(points)
+		points.sort()
+		numPoints = len(points)
+
+		# The binary representation starts with the total number of points in the set,
+		# encoded into one or two bytes depending on the value.
+		if numPoints < 0x80:
+			result = [bytechr(numPoints)]
+		else:
+			result = [bytechr((numPoints >> 8) | 0x80) + bytechr(numPoints & 0x7f)]
+
+		MAX_RUN_LENGTH = 127
+		pos = 0
+		while pos < numPoints:
+			run = io.BytesIO()
+			runLength = 0
+			lastValue = 0
+			useByteEncoding = (points[pos] <= 0xff)
+			while pos < numPoints and runLength <= MAX_RUN_LENGTH:
+				curValue = points[pos]
+				delta = curValue - lastValue
+				if useByteEncoding and delta > 0xff:
+					# we need to start a new run (which will not use byte encoding)
+					break
+				if useByteEncoding:
+					run.write(bytechr(delta))
+				else:
+					run.write(bytechr(delta >> 8))
+					run.write(bytechr(delta & 0xff))
+				lastValue = curValue
+				pos += 1
+				runLength += 1
+			if useByteEncoding:
+				runHeader = bytechr(runLength - 1)
+			else:
+				runHeader = bytechr((runLength - 1) | POINTS_ARE_WORDS)
+			result.append(runHeader)
+			result.append(run.getvalue())
+
+		return bytesjoin(result)
 
 	@staticmethod
 	def decompilePoints_(numPoints, data, offset):

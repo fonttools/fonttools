@@ -233,6 +233,20 @@ class GlyphVariationTest(unittest.TestCase):
 		data = hexdecode("DE AD 40 00 00 00 20 00 C0 00 00 00 10 00 00 00 C0 00 40 00")
 		self.assertEqual((coords, 20), decompileCoords(axes, numCoords=3, data=data, offset=2))
 
+	def test_compilePoints(self):
+		compilePoints = GlyphVariation.compilePoints
+		self.assertEquals("01 00 07", hexencode(compilePoints({7})))
+		self.assertEquals("01 80 FF FF", hexencode(compilePoints({65535})))
+		self.assertEquals("02 01 09 06", hexencode(compilePoints({9, 15})))
+		self.assertEquals("06 05 07 01 F7 02 01 F2", hexencode(compilePoints({7, 8, 255, 257, 258, 500})))
+		self.assertEquals("03 01 07 01 80 01 F4", hexencode(compilePoints({7, 8, 500})))
+		self.assertEquals("04 01 07 01 81 BE EF 0C 0F", hexencode(compilePoints({7, 8, 0xBEEF, 0xCAFE})))
+		self.assertEquals("81 2C" +  # 300 points (0x12c) in total
+				  " 7F 00" + (127 * " 01") +  # first run, contains 128 points: [0 .. 127]
+				  " 7F 80" + (127 * " 01") +  # second run, contains 128 points: [128 .. 511]
+				  " AB 01 00" + (43 * " 00 01"),  # third run, contains 44 points: [512 .. 299]
+				  hexencode(compilePoints(set(xrange(300)))))
+
 	def test_decompilePoints(self):
 		decompilePoints = GlyphVariation.decompilePoints_
 		numPoints = 65536
