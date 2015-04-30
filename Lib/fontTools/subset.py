@@ -843,7 +843,7 @@ def closure_glyphs(self, s, cur_glyphs):
     return []
   cur_glyphs = c.Coverage(self).intersect_glyphs(cur_glyphs)
 
-  recursions = set()
+  recursions = {}
 
   if self.Format == 1:
     ContextData = c.ContextData(self)
@@ -872,7 +872,7 @@ def closure_glyphs(self, s, cur_glyphs):
           chaos.add(seqi)
           if lookup.may_have_non_1to1():
             chaos.update(range(seqi, len(r.Input)+2))
-          recursions.add((lookup, pos_glyphs))
+          recursions[(id(lookup), pos_glyphs)] = lookup
   elif self.Format == 2:
     ClassDef = getattr(self, c.ClassDef)
     indices = ClassDef.intersect(cur_glyphs)
@@ -902,7 +902,7 @@ def closure_glyphs(self, s, cur_glyphs):
           chaos.add(seqi)
           if lookup.may_have_non_1to1():
             chaos.update(range(seqi, len(getattr(r, c.Input))+2))
-          recursions.add((lookup, pos_glyphs))
+          recursions[(id(lookup), pos_glyphs)] = lookup
   elif self.Format == 3:
     cur_glyphs = frozenset(cur_glyphs)
     if not all(x.intersect(s.glyphs) for x in c.RuleData(self)):
@@ -924,11 +924,11 @@ def closure_glyphs(self, s, cur_glyphs):
       chaos.add(seqi)
       if lookup.may_have_non_1to1():
         chaos.update(range(seqi, len(r.InputCoverage)+1))
-      recursions.add((lookup, pos_glyphs))
+      recursions[(id(lookup), pos_glyphs)] = lookup
   else:
     assert 0, "unknown format: %s" % self.Format
 
-  for lookup,cur_glyphs in recursions:
+  for (_,cur_glyphs),lookup in recursions.items():
     lookup.closure_glyphs(s, cur_glyphs=cur_glyphs)
 
 @_add_method(otTables.ContextSubst,
@@ -1109,9 +1109,9 @@ def collect_lookups(self):
 @_add_method(otTables.Lookup)
 def closure_glyphs(self, s, cur_glyphs=None):
   if cur_glyphs is None:
-    if self in s._doneLookups:
+    if id(self) in s._doneLookups:
       return
-    s._doneLookups.add(self)
+    s._doneLookups.add(id(self))
     cur_glyphs = s.glyphs
   #print(cur_glyphs)
   if self in s._activeLookups:
