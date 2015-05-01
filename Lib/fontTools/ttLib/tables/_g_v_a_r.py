@@ -4,6 +4,7 @@ from fontTools import ttLib
 from fontTools.misc import sstruct
 from fontTools.misc.fixedTools import fixedToFloat, floatToFixed
 from fontTools.misc.textTools import safeEval
+from fontTools.ttLib import TTLibError
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
 from . import DefaultTable
 import array
@@ -528,7 +529,7 @@ class GlyphVariation:
 					pos += 2
 					result.append(point)
 		if max(result) >= numPoints:
-			raise ttLib.TTLibError("malformed 'gvar' table")
+			raise TTLibError("malformed 'gvar' table")
 		return (result, pos)
 
 	@staticmethod

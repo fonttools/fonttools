@@ -279,7 +279,7 @@ class GlyphVariationTest(unittest.TestCase):
 		self.assertRaises(TTLibError, decompilePoints, numPoints, hexdecode("02 01 03 06"), 0)
 
 	def test_decompilePoints_roundTrip(self):
-		numPointsInGlyph = 500  # greater than 255, so we also test 16-bit encoding
+		numPointsInGlyph = 500  # greater than 255, so we also exercise code path for 16-bit encoding
 		compile = GlyphVariation.compilePoints
 		decompile = lambda data: set(GlyphVariation.decompilePoints_(numPointsInGlyph, data, 0)[0])
 		for i in xrange(50):
