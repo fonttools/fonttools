@@ -1,10 +1,11 @@
 from __future__ import print_function, division, absolute_import, unicode_literals
 from fontTools.misc.py23 import *
 from fontTools.misc.xmlWriter import XMLWriter
-from fontTools import ttLib
-import unittest
+from fontTools.ttLib import TTLibError
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
 from fontTools.ttLib.tables._g_v_a_r import table__g_v_a_r, GlyphVariation
+import random
+import unittest
 
 def hexdecode(s):
 	return bytesjoin([c.decode("hex") for c in s.split()])
@@ -275,7 +276,16 @@ class GlyphVariationTest(unittest.TestCase):
 		decompilePoints = GlyphVariation.decompilePoints_
 		# 2 points; first run: [3, 9].
 		numPoints = 8
-		self.assertRaises(ttLib.TTLibError, decompilePoints, numPoints, hexdecode("02 01 03 06"), 0)
+		self.assertRaises(TTLibError, decompilePoints, numPoints, hexdecode("02 01 03 06"), 0)
+
+	def test_decompilePoints_roundTrip(self):
+		numPointsInGlyph = 500  # greater than 255, so we also test 16-bit encoding
+		compile = GlyphVariation.compilePoints
+		decompile = lambda data: set(GlyphVariation.decompilePoints_(numPointsInGlyph, data, 0)[0])
+		for i in xrange(50):
+			points = set(random.sample(xrange(numPointsInGlyph), 30))
+			self.assertSetEqual(points, decompile(compile(points)),
+					    "failed round-trip decompile/compilePoints; points=%s" % points)
 
 	def test_decompileDeltas(self):
 		decompileDeltas = GlyphVariation.decompileDeltas_
