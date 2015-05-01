@@ -287,6 +287,47 @@ class GlyphVariationTest(unittest.TestCase):
 			self.assertSetEqual(points, decompile(compile(points)),
 					    "failed round-trip decompile/compilePoints; points=%s" % points)
 
+	def test_compileDeltas(self):
+		gvar = GlyphVariation({}, [(0,0), (1, 0), (2, 0), (3, 3)])
+		points = {1, 2}
+		# deltaX for points: [1, 2]; deltaY for points: [0, 0]
+		self.assertEqual("01 01 02 81", hexencode(gvar.compileDeltas(points)))
+
+	def test_compileDeltaValues(self):
+		compileDeltaValues = lambda values: hexencode(GlyphVariation.compileDeltaValues_(values))
+		# zeroes
+		self.assertEqual("80", compileDeltaValues([0]))
+		self.assertEqual("BF", compileDeltaValues([0] * 64))
+		self.assertEqual("BF 80", compileDeltaValues([0] * 65))
+		self.assertEqual("BF A3", compileDeltaValues([0] * 100))
+		self.assertEqual("BF BF BF BF", compileDeltaValues([0] * 256))
+		# bytes
+		self.assertEqual("00 01", compileDeltaValues([1]))
+		self.assertEqual("06 01 02 03 7F 80 FF FE", compileDeltaValues([1, 2, 3, 127, -128, -1, -2]))
+		self.assertEqual("3F" + (64 * " 7F"), compileDeltaValues([127] * 64))
+		self.assertEqual("3F" + (64 * " 7F") + " 00 7F", compileDeltaValues([127] * 65))
+		# words
+		self.assertEqual("40 66 66", compileDeltaValues([0x6666]))
+		self.assertEqual("43 66 66 7F FF FF FF 80 00", compileDeltaValues([0x6666, 32767, -1, -32768]))
+		self.assertEqual("7F" + (64 * " 11 22"), compileDeltaValues([0x1122] * 64))
+		self.assertEqual("7F" + (64 * " 11 22") + " 40 11 22", compileDeltaValues([0x1122] * 65))
+		# bytes, zeroes, bytes: a single zero is more compact when encoded as part of the bytes run
+		self.assertEqual("04 7F 7F 00 7F 7F", compileDeltaValues([127, 127, 0, 127, 127]))
+		self.assertEqual("01 7F 7F 81 01 7F 7F", compileDeltaValues([127, 127, 0, 0, 127, 127]))
+		self.assertEqual("01 7F 7F 82 01 7F 7F", compileDeltaValues([127, 127, 0, 0, 0, 127, 127]))
+		self.assertEqual("01 7F 7F 83 01 7F 7F", compileDeltaValues([127, 127, 0, 0, 0, 0, 127, 127]))
+		# words, bytes, words: a single byte is more compact when encoded as part of the words run
+		self.assertEqual("42 66 66 00 02 77 77", compileDeltaValues([0x6666, 2, 0x7777]))
+		self.assertEqual("40 66 66 01 02 02 40 77 77", compileDeltaValues([0x6666, 2, 2, 0x7777]))
+		# words, zeroes, words
+		self.assertEqual("40 66 66 80 40 77 77", compileDeltaValues([0x6666, 0, 0x7777]))
+		self.assertEqual("40 66 66 81 40 77 77", compileDeltaValues([0x6666, 0, 0, 0x7777]))
+		self.assertEqual("40 66 66 82 40 77 77", compileDeltaValues([0x6666, 0, 0, 0, 0x7777]))
+		# words, zeroes, bytes
+		self.assertEqual("40 66 66 80 02 01 02 03", compileDeltaValues([0x6666, 0, 1, 2, 3]))
+		self.assertEqual("40 66 66 81 02 01 02 03", compileDeltaValues([0x6666, 0, 0, 1, 2, 3]))
+		self.assertEqual("40 66 66 82 02 01 02 03", compileDeltaValues([0x6666, 0, 0, 0, 1, 2, 3]))
+
 	def test_decompileDeltas(self):
 		decompileDeltas = GlyphVariation.decompileDeltas_
 		# 83 = zero values (0x80), count = 4 (1 + 0x83 & 0x3F)

@@ -532,6 +532,114 @@ class GlyphVariation:
 			raise TTLibError("malformed 'gvar' table")
 		return (result, pos)
 
+	def compileDeltas(self, points):
+		points = sorted(list(points))
+		deltaX = [self.coordinates[p][0] for p in points]
+		deltaY = [self.coordinates[p][1] for p in points]
+		return self.compileDeltaValues_(deltaX) + self.compileDeltaValues_(deltaY)
+
+	@staticmethod
+	def compileDeltaValues_(deltas):
+		"""[value1, value2, value3, ...] --> bytestring
+
+		Emits a sequence of runs. Each run starts with a
+		byte-sized header whose 6 least significant bits
+		(header & 0x3F) indicate how many values are encoded
+		in this run. The stored length is the actual length
+		minus one; run lengths are thus in the range [1..64].
+		If the header byte has its most significant bit (0x80)
+		set, all values in this run are zero, and no data
+		follows. Otherwise, the header byte is followed by
+		((header & 0x3F) + 1) signed values.  If (header &
+		0x40) is clear, the delta values are stored as signed
+		bytes; if (header & 0x40) is set, the delta values are
+		signed 16-bit integers.
+		"""  # Explaining the format because the 'gvar' spec is hard to understand.
+		stream = io.BytesIO()
+		pos = 0
+		while pos < len(deltas):
+			value = deltas[pos]
+			if value == 0:
+				pos = GlyphVariation.encodeDeltaRunAsZeroes_(deltas, pos, stream)
+			elif value >= -128 and value <= 127:
+				pos = GlyphVariation.encodeDeltaRunAsBytes_(deltas, pos, stream)
+			else:
+				pos = GlyphVariation.encodeDeltaRunAsWords_(deltas, pos, stream)
+		return stream.getvalue()
+
+	@staticmethod
+	def encodeDeltaRunAsZeroes_(deltas, offset, stream):
+		runLength = 0
+		pos = offset
+		numDeltas = len(deltas)
+		while pos < numDeltas and runLength < 64 and deltas[pos] == 0:
+			pos += 1
+			runLength += 1
+		assert runLength >= 1 and runLength <= 64
+		stream.write(bytechr(DELTAS_ARE_ZERO | (runLength - 1)))
+		return pos
+
+	@staticmethod
+	def encodeDeltaRunAsBytes_(deltas, offset, stream):
+		runLength = 0
+		pos = offset
+		numDeltas = len(deltas)
+		while pos < numDeltas and runLength < 64:
+			value = deltas[pos]
+			if value < -128 or value > 127:
+				break
+			# Within a byte-encoded run of deltas, a single zero
+			# is best stored literally as 0x00 value. However,
+			# if are two or more zeroes in a sequence, it is
+			# better to start a new run. For example, the sequence
+			# of deltas [15, 15, 0, 15, 15] becomes 6 bytes
+			# (04 0F 0F 00 0F 0F) when storing the zero value
+			# literally, but 7 bytes (01 0F 0F 80 01 0F 0F)
+			# when starting a new run.
+			if value == 0 and pos+1 < numDeltas and deltas[pos+1] == 0:
+				break
+			pos += 1
+			runLength += 1
+		assert runLength >= 1 and runLength <= 64
+		stream.write(bytechr(runLength - 1))
+		for i in xrange(offset, pos):
+			stream.write(struct.pack('b', deltas[i]))
+		return pos
+
+	@staticmethod
+	def encodeDeltaRunAsWords_(deltas, offset, stream):
+		runLength = 0
+		pos = offset
+		numDeltas = len(deltas)
+		while pos < numDeltas and runLength < 64:
+			value = deltas[pos]
+			# Within a word-encoded run of deltas, it is easiest
+			# to start a new run (with a different encoding)
+			# whenever we encounter a zero value. For example,
+			# the sequence [0x6666, 0, 0x7777] needs 7 bytes when
+			# storing the zero literally (42 66 66 00 00 77 77),
+			# and equally 7 bytes when starting a new run
+			# (40 66 66 80 40 77 77).
+			if value == 0:
+				break
+
+			# Within a word-encoded run of deltas, a single value
+			# in the range (-128..127) should be encoded literally
+			# because it is more compact. For example, the sequence
+			# [0x6666, 2, 0x7777] becomes 7 bytes when storing
+			# the value literally (42 66 66 00 02 77 77), but 8 bytes
+			# when starting a new run (40 66 66 00 02 40 77 77).
+			isByteEncodable = lambda value: value >= -128 and value <= 127
+			if isByteEncodable(value) and pos+1 < numDeltas and isByteEncodable(deltas[pos+1]):
+				break
+			pos += 1
+			runLength += 1
+		assert runLength >= 1 and runLength <= 64
+		stream.write(bytechr(DELTAS_ARE_WORDS | (runLength - 1)))
+		for i in xrange(offset, pos):
+			stream.write(struct.pack('>h', deltas[i]))
+		return pos
+
 	@staticmethod
 	def decompileDeltas_(numDeltas, data, offset):
 		"""(numDeltas, data, offset) --> ([delta, delta, ...], newOffset)"""
