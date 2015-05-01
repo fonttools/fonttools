@@ -156,8 +156,8 @@ class ExecutionContext(object):
         op1 = self.program_stack[-2]
         op2 = self.program_stack[-1]
         self.program_stack_pop(2)
-        v_op1 = self.getVariable()
         v_op2 = self.getVariable()
+        v_op1 = self.getVariable()
             
         expression = None
         if isinstance(op1,dataType.AbstractValue) or isinstance(op2,dataType.AbstractValue):
