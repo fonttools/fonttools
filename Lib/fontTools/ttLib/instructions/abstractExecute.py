@@ -374,7 +374,7 @@ class ExecutionContext(object):
         self.program_stack_pop()
         v_op = self.getVariable()
         self.putVariable(dataType.EngineInfo(), False)
-        resVar = self.getVariable()
+        resVar = self.topVar()
         self.program_stack.append(dataType.EngineInfo())
         self.current_instruction_intermediate.append(IR.GETINFOMethodCall([v_op],resVar))
 
@@ -530,9 +530,11 @@ class ExecutionContext(object):
     def exec_RS(self):
         op = self.program_stack[-1]
         self.program_stack_pop()
+        self.variables.pop()
         try:
             res = self.storage_area[op]
             self.program_stack.append(res)
+            self.putVariable(res)
         except KeyError:
             raise KeyError
         
