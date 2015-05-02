@@ -316,6 +316,9 @@ class GlyphVariationTest(unittest.TestCase):
 		self.assertEqual("01 7F 7F 81 01 7F 7F", compileDeltaValues([127, 127, 0, 0, 127, 127]))
 		self.assertEqual("01 7F 7F 82 01 7F 7F", compileDeltaValues([127, 127, 0, 0, 0, 127, 127]))
 		self.assertEqual("01 7F 7F 83 01 7F 7F", compileDeltaValues([127, 127, 0, 0, 0, 0, 127, 127]))
+		# bytes, zeroes
+		self.assertEqual("01 01 00", compileDeltaValues([1, 0]))
+		self.assertEqual("00 01 81", compileDeltaValues([1, 0, 0]))
 		# words, bytes, words: a single byte is more compact when encoded as part of the words run
 		self.assertEqual("42 66 66 00 02 77 77", compileDeltaValues([0x6666, 2, 0x7777]))
 		self.assertEqual("40 66 66 01 02 02 40 77 77", compileDeltaValues([0x6666, 2, 2, 0x7777]))
@@ -327,6 +330,9 @@ class GlyphVariationTest(unittest.TestCase):
 		self.assertEqual("40 66 66 80 02 01 02 03", compileDeltaValues([0x6666, 0, 1, 2, 3]))
 		self.assertEqual("40 66 66 81 02 01 02 03", compileDeltaValues([0x6666, 0, 0, 1, 2, 3]))
 		self.assertEqual("40 66 66 82 02 01 02 03", compileDeltaValues([0x6666, 0, 0, 0, 1, 2, 3]))
+		# words, zeroes
+		self.assertEqual("40 66 66 80", compileDeltaValues([0x6666, 0]))
+		self.assertEqual("40 66 66 81", compileDeltaValues([0x6666, 0, 0]))
 
 	def test_decompileDeltas(self):
 		decompileDeltas = GlyphVariation.decompileDeltas_
@@ -339,6 +345,18 @@ class GlyphVariationTest(unittest.TestCase):
 		# combination of all three encodings, preceded and followed by 4 bytes of unused data
 		data = hexdecode("DE AD BE EF 83 40 01 02 01 81 80 DE AD BE EF")
 		self.assertEqual(([0, 0, 0, 0, 258, -127, -128], 11), decompileDeltas(7, data, 4))
+
+	def test_decompileDeltas_roundTrip(self):
+		numDeltas = 30
+		compile = GlyphVariation.compileDeltaValues_
+		decompile = lambda data: GlyphVariation.decompileDeltas_(numDeltas, data, 0)[0]
+		for i in xrange(50):
+			deltas = random.sample(xrange(-128, 127), 10)
+			deltas.extend(random.sample(xrange(-32768, 32767), 10))
+			deltas.extend([0] * 10)
+			random.shuffle(deltas)
+			self.assertListEqual(deltas, decompile(compile(deltas)),
+					    "failed round-trip decompile/compileDeltas; deltas=%s" % deltas)
 
 	def test_getTupleSize(self):
 		getTupleSize = GlyphVariation.getTupleSize_
