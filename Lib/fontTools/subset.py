@@ -7,7 +7,9 @@ from fontTools.misc.py23 import *
 from fontTools import ttLib
 from fontTools.ttLib.tables import otTables
 from fontTools.misc import psCharStrings
+from fontTools.ttx import makeOutputFileName
 from fontTools.pens import basePen
+import os
 import sys
 import struct
 import time
@@ -104,8 +106,13 @@ Other options:
 
 Output options:
   --output-file=<path>
-      The output font file. If not specified, the subsetted font
-      will be saved in as font-file.subset.
+      The output font file. If not specified, the subsetted font will be
+      saved in as the input font file, with an incremental number appended
+      to its name. If output-file is not specified but --flavor is, then
+      the subsetted font will use the flavor's extension.
+      Examples:
+        Font.ttf -> Font#1.ttf
+        Font.ttf -> Font.woff
   --flavor=<type>
       Specify flavor of output font file. May be 'woff'.
 
@@ -2671,10 +2678,16 @@ def main(args):
     sys.exit(1)
 
   fontfile = args[0]
+  if options.flavor:
+    ext = "."+options.flavor
+  else:
+    ext = os.path.splitext(fontfile)[1]
+    if not ext:
+      ext = '.subset'
   args = args[1:]
 
   subsetter = Subsetter(options=options, log=log)
-  outfile = fontfile + '.subset'
+  outfile = makeOutputFileName(fontfile, outputDir=None, extension=ext)
   glyphs = []
   gids = []
   unicodes = []
@@ -2750,7 +2763,6 @@ def main(args):
   log.lapse("make one with everything(TOTAL TIME)")
 
   if log.verbose:
-    import os
     log("Input  font:% 7d bytes: %s" % (os.path.getsize(fontfile), fontfile))
     log("Subset font:% 7d bytes: %s" % (os.path.getsize(outfile), outfile))
 
