@@ -121,6 +121,7 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 		self.panose = sstruct.unpack(panoseFormat, self.panose, Panose())
 
 	def compile(self, ttFont):
+		self.updateFirstAndLastCharIndex(ttFont)
 		panose = self.panose
 		self.panose = sstruct.pack(panoseFormat, self.panose)
 		if self.version == 0:
@@ -141,6 +142,10 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 		return data
 
 	def toXML(self, writer, ttFont):
+		writer.comment(
+			"The fields 'fsFirstCharIndex' and 'fsLastCharIndex'\n"
+			"will be recalculated by the compiler")
+		writer.newline()
 		if self.version == 1:
 			format = OS2_format_1
 		elif self.version in (2, 3, 4):
@@ -185,3 +190,15 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 			setattr(self, name, safeEval("'''" + attrs["value"] + "'''"))
 		else:
 			setattr(self, name, safeEval(attrs["value"]))
+
+	def updateFirstAndLastCharIndex(self, ttFont):
+		codes = set()
+		for table in ttFont['cmap'].tables:
+			if table.isUnicode():
+				codes.update(table.cmap.keys())
+		if codes:
+			minCode = min(codes)
+			maxCode = max(codes)
+			# USHORT cannot hold codepoints greater than 0xFFFF
+			self.fsFirstCharIndex = 0xFFFF if minCode > 0xFFFF else minCode
+			self.fsLastCharIndex = 0xFFFF if maxCode > 0xFFFF else maxCode
