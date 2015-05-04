@@ -60,7 +60,6 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		sharedCoordSize = sum([len(c) for c in sharedCoords])
 
 		compiledGlyphs = self.compileGlyphs_(ttFont, axisTags, sharedCoordIndices)
-
 		offset = 0
 		offsets = []
 		for glyph in compiledGlyphs:
@@ -100,7 +99,11 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		return [c[1] for c in sharedCoords]  # Strip off counts.
 
 	def compileGlyphs_(self, ttFont, axisTags, sharedCoordIndices):
-		result = [self.compileGlyph_(g, axisTags, sharedCoordIndices) for g in ttFont.getGlyphOrder()]
+		result = []
+		for glyphName in ttFont.getGlyphOrder():
+			glyph = ttFont["glyf"][glyphName]
+			numPointsInGlyph = self.getNumPoints_(glyph)
+			result.append(self.compileGlyph_(glyphName, numPointsInGlyph, axisTags, sharedCoordIndices))
 		return result
 
 	# TODO: Remove this once the code works.
@@ -114,8 +117,8 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 				result.append("_")
 		return ''.join(result)
 
-	def compileGlyph_(self, glyph, axisTags, sharedCoordIndices):
-		variations = self.variations.get(glyph, [])
+	def compileGlyph_(self, glyphName, numPointsInGlyph, axisTags, sharedCoordIndices):
+		variations = self.variations.get(glyphName, [])
 		# Omit variations that have no user-visible impact because their deltas
 		# are all (0, 0).  In the Apple Skia font, about 5% of all glyph variation
 		# tuples can be omitted.  On the other hand, in the JamRegular and
@@ -124,14 +127,12 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		if len(variations) == 0:
 			return b""
 
-		# TODO: Find a heuristic for using shared versus private point lists.
-		#
-		# The variation tuples modify a set of points. To indicate which points
-		# it affects, a single tuple can either refer to a shared set of points,
-		# or the tuple can supply its private point numbers. Because the impact
-		# of sharing can be positive (no need for private point list) or negative
-		# (need to supply 0,0 deltas for unused points), it is not obvious how
-		# to determine which tuples should take their points from the shared
+		# Each glyph variation tuples modifies a set of control points. To indicate
+		# which exact points are getting modified, a single tuple can either refer
+		# to a shared set of points, or the tuple can supply its private point numbers.
+		# Because the impact of sharing can be positive (no need for a private point list)
+		# or negative (need to supply 0,0 deltas for unused points), it is not obvious
+		# how to determine which tuples should take their points from the shared
 		# pool versus have their own. Perhaps we should resort to brute force,
 		# and try all combinations? However, if a glyph has n variation tuples,
 		# we would need to try 2^n combinations (because each tuple may or may not
@@ -140,9 +141,9 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		#   Skia.ttf: {3: 1, 5: 11, 6: 41, 7: 62, 8: 387, 13: 1, 14: 3}
 		#   JamRegular.ttf: {3: 13, 4: 122, 5: 1, 7: 4, 8: 1, 9: 1, 10: 1}
 		#   BuffaloGalRegular.ttf: {1: 16, 2: 13, 4: 2, 5: 4, 6: 19, 7: 1, 8: 3, 9: 18}
+		#   (Reading example: In Skia.ttf, 41 glyphs have 6 variation tuples).
 		#
-		# Reading example: In Skia.ttf, 41 glyphs have 6 variation tuples.
-		# Is it even worth optimizing? If we never use a shared point list,
+		# Is this even worth optimizing? If we never use a shared point list,
 		# the private lists will consume 112K for Skia, 5K for BuffaloGalRegular,
 		# and 15K for JamRegular. If we always use a shared point list,
 		# the shared lists will consume 16K for Skia, 3K for BuffaloGalRegular,
@@ -150,13 +151,51 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		# will become larger, but I haven't yet measured by how much. From
 		# gut feeling (which may be wrong), the optimum is to share some but
 		# not all points; however, then we would need to try all combinations.
-		usedPoints = [gvar.getUsedPoints() for gvar in variations]
-		usedPointsUnion = set.union(*usedPoints)
-		print('-------------------- %s %s' % (glyph, len(usedPoints)))
-		for gvar, used in zip(variations, usedPoints):
-			print('    %s    len=%d' % (self.visualizePoints_(used), len(GlyphVariation.compilePoints(used))))
-		print('--> %s    len=%d' % (self.visualizePoints_(usedPointsUnion), len(GlyphVariation.compilePoints(usedPointsUnion))))
-		return b"TODO"
+		#
+		# For the time being, we try two variants and then pick the better one:
+		# (a) each tuple supplies its own private set of points;
+		# (b) all tuples refer to a shared set of points, which consists of
+		#     "every control point in the glyph".
+		allPoints = set(xrange(numPointsInGlyph))
+		someTuplesSharePoints = False
+		tuples = []
+		serializedData = []
+		for gvar in variations:
+			coord = gvar.compileCoord(axisTags)
+			tuple = []
+			if sharedCoordIndices.has_key(coord):
+				tupleFlags = sharedCoordIndices[coord]
+			else:
+				tupleFlags = EMBEDDED_TUPLE_COORD
+				tuple.append(coord)
+			points = gvar.getUsedPoints()
+			serializedDataWithPrivatePoints = gvar.compilePoints(points) + gvar.compileDeltas(points)
+			serializedDataWithSharedPoints = gvar.compileDeltas(allPoints)
+			if len(serializedDataWithPrivatePoints) <= len(serializedDataWithSharedPoints):
+				tupleFlags = tupleFlags | PRIVATE_POINT_NUMBERS
+				serializedData.append(serializedDataWithPrivatePoints)
+				serializedDataSize = len(serializedDataWithPrivatePoints)
+			else:
+				serializedData.append(serializedDataWithSharedPoints)
+				serializedDataSize = len(serializedDataWithSharedPoints)
+				someTuplesSharePoints = True
+			intermediateCoord = gvar.compileIntermediateCoord(axisTags)
+			if intermediateCoord != None:
+				tupleFlags = tupleFlags | INTERMEDIATE_TUPLE
+				tuple.append(intermediateCoord)
+			tuples.append(struct.pack('>HH', serializedDataSize, tupleFlags) + bytesjoin(tuple))
+		if someTuplesSharePoints:
+			serializedData.insert(0, b"\0")  # 0x00 = special encoding of "all points in glyph"
+		serializedTuples = bytesjoin(tuples)
+		if someTuplesSharePoints:
+			tupleCount = TUPLES_SHARE_POINT_NUMBERS | len(tuples)
+		else:
+			tupleCount = len(tuples)
+
+		result = bytesjoin(tuples + serializedData)
+		if len(result) % 2 != 0:
+			result = result + b"\0"  # padding
+		return result
 
 	def decompile(self, data, ttFont):
 		axisTags = [axis.AxisTag for axis in ttFont["fvar"].table.VariationAxis]

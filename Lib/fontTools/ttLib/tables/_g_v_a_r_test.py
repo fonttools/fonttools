@@ -65,12 +65,12 @@ class GlyphVariationTableTest(unittest.TestCase):
 	def test_compileGlyph_noVariations(self):
 		table = table__g_v_a_r()
 		table.variations = {}
-		self.assertEqual(b"", table.compileGlyph_("glyphname", ["wght", "opsz"], {}))
+		self.assertEqual(b"", table.compileGlyph_("glyphname", 8, ["wght", "opsz"], {}))
 
 	def test_compileGlyph_emptyVariations(self):
 		table = table__g_v_a_r()
 		table.variations = {"glyphname": []}
-		self.assertEqual(b"", table.compileGlyph_("glyphname", ["wght", "opsz"], {}))
+		self.assertEqual(b"", table.compileGlyph_("glyphname", 8, ["wght", "opsz"], {}))
 
 	def test_compileGlyph_onlyRedundantVariations(self):
 		table = table__g_v_a_r()
@@ -80,7 +80,7 @@ class GlyphVariationTableTest(unittest.TestCase):
 			GlyphVariation(axes, GlyphCoordinates.zeros(4)),
 			GlyphVariation(axes, GlyphCoordinates.zeros(4))
 		]}
-		self.assertEqual(b"", table.compileGlyph_("glyphname", ["wght", "opsz"], {}))
+		self.assertEqual(b"", table.compileGlyph_("glyphname", 8, ["wght", "opsz"], {}))
 
 	def test_compileSharedCoords(self):
 		class FakeFont:
