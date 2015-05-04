@@ -151,6 +151,10 @@ class SUBOperator(Operator):
     def __repr__(self):
         return "-"
 
+class MULOperator(Operator):
+    def __repr__(self):
+        return "*"
+
 class DIVOperator(Operator):
     def __repr__(self):
         return "/"

@@ -179,6 +179,9 @@ class ExecutionContext(object):
         elif action is 'OR':
             res = op1 or op2
             expression = IR.BinaryExpression(v_op1,v_op2,IR.OROperator())
+        elif action is 'MUL':
+            res = op1 * op2
+            expression = IR.BinaryExpression(v_op1,v_op2,IR.MULOperator())
         elif action is 'DIV':
             res = op1 / op2
             expression = IR.BinaryExpression(v_op1,v_op2,IR.DIVOperator())
@@ -479,8 +482,7 @@ class ExecutionContext(object):
     def exec_MSIRP(self):
         self.program_stack_pop(2)
     def exec_MUL(self):
-        self.program_stack_pop(2)
-        self.program_stack.append(dataType.F26Dot6())
+        self.binary_operation('MUL')
     def exec_NEG(self):
         op = self.program_stack[-1]
         if isinstance(op, dataType.AbstractValue):
