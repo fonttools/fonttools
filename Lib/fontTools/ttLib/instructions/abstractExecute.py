@@ -553,10 +553,12 @@ class ExecutionContext(object):
 
     def exec_SCANCTRL(self):
         self.program_stack_pop()
-    
+        self.variables.pop()   
+ 
     def exec_SCANTYPE(self):
         self.program_stack_pop()
-    
+        self.variables.pop()    
+
     def exec_SCFS(self):
         self.program_stack_pop(2)
 
