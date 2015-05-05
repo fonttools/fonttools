@@ -163,7 +163,10 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		for gvar in variations:
 			privateTuple, privateData = gvar.compile(axisTags, sharedCoordIndices, sharedPoints=None)
 			sharedTuple, sharedData = gvar.compile(axisTags, sharedCoordIndices, sharedPoints=allPoints)
-			if (len(sharedTuple) + len(sharedData)) < (len(privateTuple) + len(privateData)):
+			# TODO: If we use shared points, Apple MacOS X 10.9.5 cannot display our fonts.
+			# This is probably a problem with our code; find the problem and fix it.
+			#if (len(sharedTuple) + len(sharedData)) < (len(privateTuple) + len(privateData)):
+			if False:
 				tuples.append(sharedTuple)
 				data.append(sharedData)
 				someTuplesSharePoints = True
