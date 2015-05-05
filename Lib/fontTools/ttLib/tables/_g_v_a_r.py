@@ -232,10 +232,10 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		for i in range(1, len(offsets)):
 			assert offsets[i - 1] <= offsets[i]
 		if max(offsets) <= 0xffff * 2:
-			packed = array.array(b"H", [n >> 1 for n in offsets])
+			packed = array.array("H", [n >> 1 for n in offsets])
 			format = 0
 		else:
-			packed = array.array(b"I", offsets)
+			packed = array.array("I", offsets)
 			format = 1
 		if sys.byteorder != "big":
 			packed.byteswap()
@@ -246,7 +246,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 			return []
 		numAxes = len(axisTags)
 		tuples = []
-		flags, offsetToData = struct.unpack(b">HH", data[:4])
+		flags, offsetToData = struct.unpack(">HH", data[:4])
 		pos = 4
 		dataPos = offsetToData
 		if (flags & TUPLES_SHARE_POINT_NUMBERS) != 0:
@@ -254,7 +254,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		else:
 			sharedPoints = []
 		for i in range(flags & TUPLE_COUNT_MASK):
-			dataSize, flags = struct.unpack(b">HH", data[pos:pos+4])
+			dataSize, flags = struct.unpack(">HH", data[pos:pos+4])
 			tupleSize = GlyphVariation.getTupleSize_(flags, numAxes)
 			tuple = data[pos : pos + tupleSize]
 			tupleData = data[dataPos : dataPos + dataSize]
@@ -265,7 +265,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 
 	@staticmethod
 	def decompileTuple_(numPoints, sharedCoords, sharedPoints, axisTags, data, tupleData):
-		flags = struct.unpack(b">H", data[2:4])[0]
+		flags = struct.unpack(">H", data[2:4])[0]
 
 		pos = 4
 		coordSize = len(axisTags) * 2
@@ -299,7 +299,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 	def computeMinMaxCoord_(coord):
 		minCoord = {}
 		maxCoord = {}
-		for (axis, value) in coord.iteritems():
+		for (axis, value) in coord.items():
 			minCoord[axis] = min(value, 0.0)  # -0.3 --> -0.3; 0.7 --> 0.0
 			maxCoord[axis] = max(value, 0.0)  # -0.3 -->  0.0; 0.7 --> 0.7
 		return (minCoord, maxCoord)
@@ -429,7 +429,7 @@ class GlyphVariation:
 		tuple = []
 
 		coord = self.compileCoord(axisTags)
-		if sharedCoordIndices.has_key(coord):
+		if coord in sharedCoordIndices:
 			flags = sharedCoordIndices[coord]
 		else:
 			flags = EMBEDDED_TUPLE_COORD
@@ -454,7 +454,7 @@ class GlyphVariation:
 		result = []
 		for axis in axisTags:
 			minValue, value, maxValue = self.axes.get(axis, (0.0, 0.0, 0.0))
-			result.append(struct.pack(b">h", floatToFixed(value, 14)))
+			result.append(struct.pack(">h", floatToFixed(value, 14)))
 		return bytesjoin(result)
 
 	def compileIntermediateCoord(self, axisTags):
@@ -472,8 +472,8 @@ class GlyphVariation:
 		maxCoords = []
 		for axis in axisTags:
 			minValue, value, maxValue = self.axes.get(axis, (0.0, 0.0, 0.0))
-			minCoords.append(struct.pack(b">h", floatToFixed(minValue, 14)))
-			maxCoords.append(struct.pack(b">h", floatToFixed(maxValue, 14)))
+			minCoords.append(struct.pack(">h", floatToFixed(minValue, 14)))
+			maxCoords.append(struct.pack(">h", floatToFixed(maxValue, 14)))
 		return bytesjoin(minCoords + maxCoords)
 
 	@staticmethod
@@ -481,7 +481,7 @@ class GlyphVariation:
 		coord = {}
 		pos = offset
 		for axis in axisTags:
-			coord[axis] = fixedToFloat(struct.unpack(b">h", data[pos:pos+2])[0], 14)
+			coord[axis] = fixedToFloat(struct.unpack(">h", data[pos:pos+2])[0], 14)
 			pos += 2
 		return coord, pos
 
@@ -699,7 +699,7 @@ class GlyphVariation:
 					pos += 2
 			else:
 				for i in range(numDeltasInRun):
-					result.append(struct.unpack(">b", data[pos])[0])
+					result.append(struct.unpack(">b", data[pos:pos+1])[0])
 					pos += 1
 		assert len(result) == numDeltas
 		return (result, pos)

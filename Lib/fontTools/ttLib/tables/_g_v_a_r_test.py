@@ -1,6 +1,6 @@
 from __future__ import print_function, division, absolute_import, unicode_literals
 from fontTools.misc.py23 import *
-from fontTools.misc.textTools import deHexStr
+from fontTools.misc.textTools import deHexStr, hexStr
 from fontTools.misc.xmlWriter import XMLWriter
 from fontTools.ttLib import TTLibError
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
@@ -9,7 +9,8 @@ import random
 import unittest
 
 def hexencode(s):
-	return ' '.join([c.encode("hex").upper() for c in s])
+	h = hexStr(s).upper()
+	return ' '.join([h[i:i+2] for i in range(0, len(h), 2)])
 
 # Glyph variation table of uppercase I in the Skia font, as printed in Apple's
 # TrueType spec. The actual Skia font uses a different table for uppercase I.
