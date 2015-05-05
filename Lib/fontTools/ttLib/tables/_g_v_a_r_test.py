@@ -361,7 +361,7 @@ class GlyphVariationTest(unittest.TestCase):
 				  " 7F 00" + (127 * " 01") +  # first run, contains 128 points: [0 .. 127]
 				  " 7F 80" + (127 * " 01") +  # second run, contains 128 points: [128 .. 511]
 				  " AB 01 00" + (43 * " 00 01"),  # third run, contains 44 points: [512 .. 299]
-				  hexencode(compilePoints(set(xrange(300)))))
+				  hexencode(compilePoints(set(range(300)))))
 
 	def test_decompilePoints(self):
 		decompilePoints = GlyphVariation.decompilePoints_
@@ -397,8 +397,8 @@ class GlyphVariationTest(unittest.TestCase):
 		numPointsInGlyph = 500  # greater than 255, so we also exercise code path for 16-bit encoding
 		compile = GlyphVariation.compilePoints
 		decompile = lambda data: set(GlyphVariation.decompilePoints_(numPointsInGlyph, data, 0)[0])
-		for i in xrange(50):
-			points = set(random.sample(xrange(numPointsInGlyph), 30))
+		for i in range(50):
+			points = set(random.sample(range(numPointsInGlyph), 30))
 			self.assertSetEqual(points, decompile(compile(points)),
 					    "failed round-trip decompile/compilePoints; points=%s" % points)
 
@@ -465,9 +465,9 @@ class GlyphVariationTest(unittest.TestCase):
 		numDeltas = 30
 		compile = GlyphVariation.compileDeltaValues_
 		decompile = lambda data: GlyphVariation.decompileDeltas_(numDeltas, data, 0)[0]
-		for i in xrange(50):
-			deltas = random.sample(xrange(-128, 127), 10)
-			deltas.extend(random.sample(xrange(-32768, 32767), 10))
+		for i in range(50):
+			deltas = random.sample(range(-128, 127), 10)
+			deltas.extend(random.sample(range(-32768, 32767), 10))
 			deltas.extend([0] * 10)
 			random.shuffle(deltas)
 			self.assertListEqual(deltas, decompile(compile(deltas)),
