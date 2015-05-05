@@ -56,7 +56,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		axisTags = [axis.AxisTag for axis in ttFont["fvar"].table.VariationAxis]
 
 		sharedCoords = self.compileSharedCoords_(ttFont, axisTags)
-		sharedCoordIndices = dict([(sharedCoords[i], i) for i in xrange(len(sharedCoords))])
+		sharedCoordIndices = dict([(sharedCoords[i], i) for i in range(len(sharedCoords))])
 		sharedCoordSize = sum([len(c) for c in sharedCoords])
 
 		compiledGlyphs = self.compileGlyphs_(ttFont, axisTags, sharedCoordIndices)
@@ -145,7 +145,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		# (a) each tuple supplies its own private set of points;
 		# (b) all tuples refer to a shared set of points, which consists of
 		#     "every control point in the glyph".
-		allPoints = set(xrange(numPointsInGlyph))
+		allPoints = set(range(numPointsInGlyph))
 		tuples = []
 		data = []
 		someTuplesSharePoints = False
@@ -184,7 +184,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 						 format=(self.flags & 1), glyphCount=self.glyphCount)
 		sharedCoords = self.decompileSharedCoords_(axisTags, data)
 		self.variations = {}
-		for i in xrange(self.glyphCount):
+		for i in range(self.glyphCount):
 			glyphName = glyphs[i]
 			glyph = ttFont["glyf"][glyphName]
 			numPoints = self.getNumPoints_(glyph)
@@ -229,7 +229,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		of the 'gvar' header.
 		"""
 		assert len(offsets) >= 2
-		for i in xrange(1, len(offsets)):
+		for i in range(1, len(offsets)):
 			assert offsets[i - 1] <= offsets[i]
 		if max(offsets) <= 0xffff * 2:
 			packed = array.array(b"H", [n >> 1 for n in offsets])
@@ -253,7 +253,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 			sharedPoints, dataPos = GlyphVariation.decompilePoints_(numPoints, data, dataPos)
 		else:
 			sharedPoints = []
-		for i in xrange(flags & TUPLE_COUNT_MASK):
+		for i in range(flags & TUPLE_COUNT_MASK):
 			dataSize, flags = struct.unpack(b">HH", data[pos:pos+4])
 			tupleSize = GlyphVariation.getTupleSize_(flags, numAxes)
 			tuple = data[pos : pos + tupleSize]
@@ -366,7 +366,7 @@ class GlyphVariation:
 
 	def getUsedPoints(self):
 		result = set()
-		for p in xrange(len(self.coordinates)):
+		for p in range(len(self.coordinates)):
 			if self.coordinates[p] != (0, 0):
 				result.add(p)
 		return result
@@ -398,7 +398,7 @@ class GlyphVariation:
 							 min=minValue, max=maxValue)
 				writer.newline()
 		wrote_any_points = False
-		for i in xrange(len(self.coordinates)):
+		for i in range(len(self.coordinates)):
 			x, y = self.coordinates[i]
 			if x != 0 or y != 0:
 				writer.simpletag("delta", pt=i, x=x, y=y)
@@ -489,7 +489,7 @@ class GlyphVariation:
 	def decompileCoords_(axisTags, numCoords, data, offset):
 		result = []
 		pos = offset
-		for i in xrange(numCoords):
+		for i in range(numCoords):
 			coord, pos = GlyphVariation.decompileCoord_(axisTags, data, pos)
 			result.append(coord)
 		return result, pos
@@ -561,12 +561,12 @@ class GlyphVariation:
 			numPointsInRun = (runHeader & POINT_RUN_COUNT_MASK) + 1
 			point = 0
 			if (runHeader & POINTS_ARE_WORDS) == 0:
-				for i in xrange(numPointsInRun):
+				for i in range(numPointsInRun):
 					point += ord(data[pos])
 					pos += 1
 					result.append(point)
 			else:
-				for i in xrange(numPointsInRun):
+				for i in range(numPointsInRun):
 					point += struct.unpack(">H", data[pos:pos+2])[0]
 					pos += 2
 					result.append(point)
@@ -644,7 +644,7 @@ class GlyphVariation:
 			runLength += 1
 		assert runLength >= 1 and runLength <= 64
 		stream.write(bytechr(runLength - 1))
-		for i in xrange(offset, pos):
+		for i in range(offset, pos):
 			stream.write(struct.pack('b', deltas[i]))
 		return pos
 
@@ -678,7 +678,7 @@ class GlyphVariation:
 			runLength += 1
 		assert runLength >= 1 and runLength <= 64
 		stream.write(bytechr(DELTAS_ARE_WORDS | (runLength - 1)))
-		for i in xrange(offset, pos):
+		for i in range(offset, pos):
 			stream.write(struct.pack('>h', deltas[i]))
 		return pos
 
@@ -694,11 +694,11 @@ class GlyphVariation:
 			if (runHeader & DELTAS_ARE_ZERO) != 0:
 				result.extend([0] * numDeltasInRun)
 			elif (runHeader & DELTAS_ARE_WORDS) != 0:
-				for i in xrange(numDeltasInRun):
+				for i in range(numDeltasInRun):
 					result.append(struct.unpack(">h", data[pos:pos+2])[0])
 					pos += 2
 			else:
-				for i in xrange(numDeltasInRun):
+				for i in range(numDeltasInRun):
 					result.append(struct.unpack(">b", data[pos])[0])
 					pos += 1
 		assert len(result) == numDeltas
