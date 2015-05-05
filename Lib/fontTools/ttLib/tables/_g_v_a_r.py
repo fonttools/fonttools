@@ -106,17 +106,6 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 			result.append(self.compileGlyph_(glyphName, numPointsInGlyph, axisTags, sharedCoordIndices))
 		return result
 
-	# TODO: Remove this once the code works.
-	@staticmethod
-	def visualizePoints_(points):
-		result = []
-		for p in xrange(max(points) + 1):
-			if p in points:
-				result.append("*")
-			else:
-				result.append("_")
-		return ''.join(result)
-
 	def compileGlyph_(self, glyphName, numPointsInGlyph, axisTags, sharedCoordIndices):
 		variations = self.variations.get(glyphName, [])
 		# Omit variations that have no user-visible impact because their deltas
