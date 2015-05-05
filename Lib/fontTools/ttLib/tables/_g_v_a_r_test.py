@@ -82,6 +82,17 @@ class GlyphVariationTableTest(unittest.TestCase):
 		]}
 		self.assertEqual(b"", table.compileGlyph_("glyphname", 8, ["wght", "opsz"], {}))
 
+	def test_compileGlyph_roundTrip(self):
+		table = table__g_v_a_r()
+		axisTags = ["wght", "wdth"]
+		numPoints = 4
+		glyphCoords = GlyphCoordinates([(1,1), (2,2), (3,3), (4,4)])
+		gvar1 = GlyphVariation({"wght": (0.5, 1.0, 1.0), "wdth": (1.0, 1.0, 1.0)}, glyphCoords)
+		gvar2 = GlyphVariation({"wght": (1.0, 1.0, 1.0), "wdth": (1.0, 1.0, 1.0)}, glyphCoords)
+		table.variations = {"oslash": [gvar1, gvar2]}
+		data = table.compileGlyph_("oslash", numPoints, axisTags, {})
+		print(table.decompileGlyph_(numPoints, {}, axisTags, data))
+
 	def test_compileSharedCoords(self):
 		class FakeFont:
 			def getGlyphOrder(self):
@@ -204,6 +215,110 @@ class GlyphVariationTest(unittest.TestCase):
 			"opsz":(-0.5, -0.5, 0.0)
 		}, g.axes)
 		self.assertEqual("0,0 33,44 -2,170 0,0", " ".join(["%d,%d" % c for c in g.coordinates]))
+
+	def test_compile_sharedCoords_nonIntermediate_sharedPoints(self):
+		gvar = GlyphVariation({"wght": (0.0, 0.5, 0.5), "wdth": (0.0, 0.8, 0.8)},
+				      GlyphCoordinates([(7,4), (8,5), (9,6)]))
+		axisTags = ["wght", "wdth"]
+		sharedCoordIndices = { gvar.compileCoord(axisTags): 0x77 }
+		tuple, data = gvar.compile(axisTags, sharedCoordIndices, sharedPoints=set({0,1,2}))
+		# len(data)=8; flags=None; tupleIndex=0x77
+		# embeddedCoord=[]; intermediateCoord=[]
+		self.assertEqual("00 08 00 77", hexencode(tuple))
+		self.assertEqual("02 07 08 09 "     # deltaX: [7, 8, 9]
+				 "02 04 05 06",     # deltaY: [4, 5, 6]
+				 hexencode(data))
+
+	def test_compile_sharedCoords_intermediate_sharedPoints(self):
+		gvar = GlyphVariation({"wght": (0.3, 0.5, 0.7), "wdth": (0.1, 0.8, 0.9)},
+				      GlyphCoordinates([(7,4), (8,5), (9,6)]))
+		axisTags = ["wght", "wdth"]
+		sharedCoordIndices = { gvar.compileCoord(axisTags): 0x77 }
+		tuple, data = gvar.compile(axisTags, sharedCoordIndices, sharedPoints=set({0,1,2}))
+		# len(data)=8; flags=INTERMEDIATE_TUPLE; tupleIndex=0x77
+		# embeddedCoord=[]; intermediateCoord=[(0.3, 0.1), (0.7, 0.9)]
+		self.assertEqual("00 08 40 77 13 33 06 66 2C CD 39 9A", hexencode(tuple))
+		self.assertEqual("02 07 08 09 "     # deltaX: [7, 8, 9]
+				 "02 04 05 06",     # deltaY: [4, 5, 6]
+				 hexencode(data))
+
+	def test_compile_sharedCoords_nonIntermediate_privatePoints(self):
+		gvar = GlyphVariation({"wght": (0.0, 0.5, 0.5), "wdth": (0.0, 0.8, 0.8)},
+				      GlyphCoordinates([(7,4), (8,5), (9,6)]))
+		axisTags = ["wght", "wdth"]
+		sharedCoordIndices = { gvar.compileCoord(axisTags): 0x77 }
+		tuple, data = gvar.compile(axisTags, sharedCoordIndices, sharedPoints=None)
+		# len(data)=13; flags=PRIVATE_POINT_NUMBERS; tupleIndex=0x77
+		# embeddedCoord=[]; intermediateCoord=[]
+		self.assertEqual("00 0D 20 77", hexencode(tuple))
+		self.assertEqual("03 02 00 01 01 "  # 3 points: [0, 1, 2]
+				 "02 07 08 09 "     # deltaX: [7, 8, 9]
+				 "02 04 05 06",     # deltaY: [4, 5, 6]
+				 hexencode(data))
+
+	def test_compile_sharedCoords_intermediate_privatePoints(self):
+		gvar = GlyphVariation({"wght": (0.0, 0.5, 1.0), "wdth": (0.0, 0.8, 1.0)},
+				      GlyphCoordinates([(7,4), (8,5), (9,6)]))
+		axisTags = ["wght", "wdth"]
+		sharedCoordIndices = { gvar.compileCoord(axisTags): 0x77 }
+		tuple, data = gvar.compile(axisTags, sharedCoordIndices, sharedPoints=None)
+		# len(data)=13; flags=PRIVATE_POINT_NUMBERS; tupleIndex=0x77
+		# embeddedCoord=[]; intermediateCoord=[(0.0, 0.0), (1.0, 1.0)]
+		self.assertEqual("00 0D 60 77 00 00 00 00 40 00 40 00", hexencode(tuple))
+		self.assertEqual("03 02 00 01 01 "  # 3 points: [0, 1, 2]
+				 "02 07 08 09 "     # deltaX: [7, 8, 9]
+				 "02 04 05 06",     # deltaY: [4, 5, 6]
+				 hexencode(data))
+
+	def test_compile_embeddedCoords_nonIntermediate_sharedPoints(self):
+		gvar = GlyphVariation({"wght": (0.0, 0.5, 0.5), "wdth": (0.0, 0.8, 0.8)},
+				      GlyphCoordinates([(7,4), (8,5), (9,6)]))
+		axisTags = ["wght", "wdth"]
+		tuple, data = gvar.compile(axisTags, sharedCoordIndices={}, sharedPoints=set({0,1,2}))
+		# len(data)=8; flags=EMBEDDED_TUPLE_COORD
+		# embeddedCoord=[(0.5, 0.8)]; intermediateCoord=[]
+		self.assertEqual("00 08 80 00 20 00 33 33", hexencode(tuple))
+		self.assertEqual("02 07 08 09 "     # deltaX: [7, 8, 9]
+				 "02 04 05 06",     # deltaY: [4, 5, 6]
+				 hexencode(data))
+
+	def test_compile_embeddedCoords_intermediate_sharedPoints(self):
+		gvar = GlyphVariation({"wght": (0.0, 0.5, 1.0), "wdth": (0.0, 0.8, 0.8)},
+				      GlyphCoordinates([(7,4), (8,5), (9,6)]))
+		axisTags = ["wght", "wdth"]
+		tuple, data = gvar.compile(axisTags, sharedCoordIndices={}, sharedPoints=set({0,1,2}))
+		# len(data)=8; flags=EMBEDDED_TUPLE_COORD
+		# embeddedCoord=[(0.5, 0.8)]; intermediateCoord=[(0.0, 0.0), (1.0, 0.8)]
+		self.assertEqual("00 08 C0 00 20 00 33 33 00 00 00 00 40 00 33 33", hexencode(tuple))
+		self.assertEqual("02 07 08 09 "     # deltaX: [7, 8, 9]
+				 "02 04 05 06",     # deltaY: [4, 5, 6]
+				 hexencode(data))
+
+	def test_compile_embeddedCoords_nonIntermediate_privatePoints(self):
+		gvar = GlyphVariation({"wght": (0.0, 0.5, 0.5), "wdth": (0.0, 0.8, 0.8)},
+				      GlyphCoordinates([(7,4), (8,5), (9,6)]))
+		axisTags = ["wght", "wdth"]
+		tuple, data = gvar.compile(axisTags, sharedCoordIndices={}, sharedPoints=None)
+		# len(data)=13; flags=PRIVATE_POINT_NUMBERS|EMBEDDED_TUPLE_COORD
+		# embeddedCoord=[(0.5, 0.8)]; intermediateCoord=[]
+		self.assertEqual("00 0D A0 00 20 00 33 33", hexencode(tuple))
+		self.assertEqual("03 02 00 01 01 "  # 3 points: [0, 1, 2]
+				 "02 07 08 09 "     # deltaX: [7, 8, 9]
+				 "02 04 05 06",     # deltaY: [4, 5, 6]
+				 hexencode(data))
+
+	def test_compile_embeddedCoords_intermediate_privatePoints(self):
+		gvar = GlyphVariation({"wght": (0.4, 0.5, 0.6), "wdth": (0.7, 0.8, 0.9)},
+				      GlyphCoordinates([(7,4), (8,5), (9,6)]))
+		axisTags = ["wght", "wdth"]
+		tuple, data = gvar.compile(axisTags, sharedCoordIndices={}, sharedPoints=None)
+		# len(data)=13; flags=PRIVATE_POINT_NUMBERS|INTERMEDIATE_TUPLE|EMBEDDED_TUPLE_COORD
+		# embeddedCoord=(0.5, 0.8); intermediateCoord=[(0.4, 0.7), (0.6, 0.9)]
+		self.assertEqual("00 0D E0 00 20 00 33 33 19 9A 2C CD 26 66 39 9A", hexencode(tuple))
+		self.assertEqual("03 02 00 01 01 "  # 3 points: [0, 1, 2]
+				 "02 07 08 09 "     # deltaX: [7, 8, 9]
+				 "02 04 05 06",     # deltaY: [4, 5, 6]
+				 hexencode(data))
 
 	def test_compileCoord(self):
 		gvar = GlyphVariation({"wght": (-1.0, -1.0, -1.0), "wdth": (0.4, 0.5, 0.6)}, GlyphCoordinates.zeros(4))

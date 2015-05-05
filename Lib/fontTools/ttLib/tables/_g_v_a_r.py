@@ -157,42 +157,27 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		# (b) all tuples refer to a shared set of points, which consists of
 		#     "every control point in the glyph".
 		allPoints = set(xrange(numPointsInGlyph))
-		someTuplesSharePoints = False
 		tuples = []
-		serializedData = []
+		data = []
+		someTuplesSharePoints = False
 		for gvar in variations:
-			coord = gvar.compileCoord(axisTags)
-			tuple = []
-			if sharedCoordIndices.has_key(coord):
-				tupleFlags = sharedCoordIndices[coord]
-			else:
-				tupleFlags = EMBEDDED_TUPLE_COORD
-				tuple.append(coord)
-			points = gvar.getUsedPoints()
-			serializedDataWithPrivatePoints = gvar.compilePoints(points) + gvar.compileDeltas(points)
-			serializedDataWithSharedPoints = gvar.compileDeltas(allPoints)
-			if len(serializedDataWithPrivatePoints) <= len(serializedDataWithSharedPoints):
-				tupleFlags = tupleFlags | PRIVATE_POINT_NUMBERS
-				serializedData.append(serializedDataWithPrivatePoints)
-				serializedDataSize = len(serializedDataWithPrivatePoints)
-			else:
-				serializedData.append(serializedDataWithSharedPoints)
-				serializedDataSize = len(serializedDataWithSharedPoints)
+			privateTuple, privateData = gvar.compile(axisTags, sharedCoordIndices, sharedPoints=None)
+			sharedTuple, sharedData = gvar.compile(axisTags, sharedCoordIndices, sharedPoints=allPoints)
+			if (len(sharedTuple) + len(sharedData)) < (len(privateTuple) + len(privateData)):
+				tuples.append(sharedTuple)
+				data.append(sharedData)
 				someTuplesSharePoints = True
-			intermediateCoord = gvar.compileIntermediateCoord(axisTags)
-			if intermediateCoord != None:
-				tupleFlags = tupleFlags | INTERMEDIATE_TUPLE
-				tuple.append(intermediateCoord)
-			tuples.append(struct.pack('>HH', serializedDataSize, tupleFlags) + bytesjoin(tuple))
+			else:
+				tuples.append(privateTuple)
+				data.append(privateData)
 		if someTuplesSharePoints:
-			serializedData.insert(0, b"\0")  # 0x00 = special encoding of "all points in glyph"
-		serializedTuples = bytesjoin(tuples)
-		if someTuplesSharePoints:
+			data = bytechr(0) + bytesjoin(data)  # 0x00 = "all points in glyph"
 			tupleCount = TUPLES_SHARE_POINT_NUMBERS | len(tuples)
 		else:
+			data = bytesjoin(data)
 			tupleCount = len(tuples)
-
-		result = bytesjoin(tuples + serializedData)
+		tuples = bytesjoin(tuples)
+		result = struct.pack(">HH", tupleCount, 4 + len(tuples)) + tuples + data
 		if len(result) % 2 != 0:
 			result = result + b"\0"  # padding
 		return result
@@ -267,6 +252,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 	def decompileGlyph_(self, numPoints, sharedCoords, axisTags, data):
 		if len(data) < 4:
 			return []
+		numAxes = len(axisTags)
 		tuples = []
 		flags, offsetToData = struct.unpack(b">HH", data[:4])
 		pos = 4
@@ -277,7 +263,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 			sharedPoints = []
 		for i in xrange(flags & TUPLE_COUNT_MASK):
 			dataSize, flags = struct.unpack(b">HH", data[pos:pos+4])
-			tupleSize = GlyphVariation.getTupleSize_(flags, self.axisCount)
+			tupleSize = GlyphVariation.getTupleSize_(flags, numAxes)
 			tuple = data[pos : pos + tupleSize]
 			tupleData = data[dataPos : dataPos + dataSize]
 			tuples.append(self.decompileTuple_(numPoints, sharedCoords, sharedPoints, axisTags, tuple, tupleData))
@@ -446,6 +432,31 @@ class GlyphVariation:
 			x = safeEval(attrs["x"])
 			y = safeEval(attrs["y"])
 			self.coordinates[point] = (x, y)
+
+	def compile(self, axisTags, sharedCoordIndices, sharedPoints):
+		tuple = []
+
+		coord = self.compileCoord(axisTags)
+		if sharedCoordIndices.has_key(coord):
+			flags = sharedCoordIndices[coord]
+		else:
+			flags = EMBEDDED_TUPLE_COORD
+			tuple.append(coord)
+
+		intermediateCoord = self.compileIntermediateCoord(axisTags)
+		if intermediateCoord != None:
+			flags |= INTERMEDIATE_TUPLE
+			tuple.append(intermediateCoord)
+
+		if sharedPoints != None:
+			data = self.compileDeltas(sharedPoints)
+		else:
+			flags |= PRIVATE_POINT_NUMBERS
+			points = self.getUsedPoints()
+			data = self.compilePoints(points) + self.compileDeltas(points)
+
+		tuple = struct.pack('>HH', len(data), flags) + bytesjoin(tuple)
+		return (tuple, data)
 
 	def compileCoord(self, axisTags):
 		result = []
