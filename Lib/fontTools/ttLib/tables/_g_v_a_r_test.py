@@ -220,7 +220,7 @@ class GlyphVariationTest(unittest.TestCase):
 				      GlyphCoordinates([(7,4), (8,5), (9,6)]))
 		axisTags = ["wght", "wdth"]
 		sharedCoordIndices = { gvar.compileCoord(axisTags): 0x77 }
-		tuple, data = gvar.compile(axisTags, sharedCoordIndices, sharedPoints=set({0,1,2}))
+		tuple, data = gvar.compile(axisTags, sharedCoordIndices, sharedPoints=set([0,1,2]))
 		# len(data)=8; flags=None; tupleIndex=0x77
 		# embeddedCoord=[]; intermediateCoord=[]
 		self.assertEqual("00 08 00 77", hexencode(tuple))
@@ -233,7 +233,7 @@ class GlyphVariationTest(unittest.TestCase):
 				      GlyphCoordinates([(7,4), (8,5), (9,6)]))
 		axisTags = ["wght", "wdth"]
 		sharedCoordIndices = { gvar.compileCoord(axisTags): 0x77 }
-		tuple, data = gvar.compile(axisTags, sharedCoordIndices, sharedPoints=set({0,1,2}))
+		tuple, data = gvar.compile(axisTags, sharedCoordIndices, sharedPoints=set([0,1,2]))
 		# len(data)=8; flags=INTERMEDIATE_TUPLE; tupleIndex=0x77
 		# embeddedCoord=[]; intermediateCoord=[(0.3, 0.1), (0.7, 0.9)]
 		self.assertEqual("00 08 40 77 13 33 06 66 2C CD 39 9A", hexencode(tuple))
@@ -273,7 +273,7 @@ class GlyphVariationTest(unittest.TestCase):
 		gvar = GlyphVariation({"wght": (0.0, 0.5, 0.5), "wdth": (0.0, 0.8, 0.8)},
 				      GlyphCoordinates([(7,4), (8,5), (9,6)]))
 		axisTags = ["wght", "wdth"]
-		tuple, data = gvar.compile(axisTags, sharedCoordIndices={}, sharedPoints=set({0,1,2}))
+		tuple, data = gvar.compile(axisTags, sharedCoordIndices={}, sharedPoints=set([0,1,2]))
 		# len(data)=8; flags=EMBEDDED_TUPLE_COORD
 		# embeddedCoord=[(0.5, 0.8)]; intermediateCoord=[]
 		self.assertEqual("00 08 80 00 20 00 33 33", hexencode(tuple))
@@ -285,7 +285,7 @@ class GlyphVariationTest(unittest.TestCase):
 		gvar = GlyphVariation({"wght": (0.0, 0.5, 1.0), "wdth": (0.0, 0.8, 0.8)},
 				      GlyphCoordinates([(7,4), (8,5), (9,6)]))
 		axisTags = ["wght", "wdth"]
-		tuple, data = gvar.compile(axisTags, sharedCoordIndices={}, sharedPoints=set({0,1,2}))
+		tuple, data = gvar.compile(axisTags, sharedCoordIndices={}, sharedPoints=set([0,1,2]))
 		# len(data)=8; flags=EMBEDDED_TUPLE_COORD
 		# embeddedCoord=[(0.5, 0.8)]; intermediateCoord=[(0.0, 0.0), (1.0, 0.8)]
 		self.assertEqual("00 08 C0 00 20 00 33 33 00 00 00 00 40 00 33 33", hexencode(tuple))
@@ -350,12 +350,12 @@ class GlyphVariationTest(unittest.TestCase):
 
 	def test_compilePoints(self):
 		compilePoints = GlyphVariation.compilePoints
-		self.assertEquals("01 00 07", hexencode(compilePoints({7})))
-		self.assertEquals("01 80 FF FF", hexencode(compilePoints({65535})))
-		self.assertEquals("02 01 09 06", hexencode(compilePoints({9, 15})))
-		self.assertEquals("06 05 07 01 F7 02 01 F2", hexencode(compilePoints({7, 8, 255, 257, 258, 500})))
-		self.assertEquals("03 01 07 01 80 01 F4", hexencode(compilePoints({7, 8, 500})))
-		self.assertEquals("04 01 07 01 81 BE EF 0C 0F", hexencode(compilePoints({7, 8, 0xBEEF, 0xCAFE})))
+		self.assertEquals("01 00 07", hexencode(compilePoints(set([7]))))
+		self.assertEquals("01 80 FF FF", hexencode(compilePoints(set([65535]))))
+		self.assertEquals("02 01 09 06", hexencode(compilePoints(set([9, 15]))))
+		self.assertEquals("06 05 07 01 F7 02 01 F2", hexencode(compilePoints(set([7, 8, 255, 257, 258, 500]))))
+		self.assertEquals("03 01 07 01 80 01 F4", hexencode(compilePoints(set([7, 8, 500]))))
+		self.assertEquals("04 01 07 01 81 BE EF 0C 0F", hexencode(compilePoints(set([7, 8, 0xBEEF, 0xCAFE]))))
 		self.assertEquals("81 2C" +  # 300 points (0x12c) in total
 				  " 7F 00" + (127 * " 01") +  # first run, contains 128 points: [0 .. 127]
 				  " 7F 80" + (127 * " 01") +  # second run, contains 128 points: [128 .. 511]
@@ -398,12 +398,17 @@ class GlyphVariationTest(unittest.TestCase):
 		decompile = lambda data: set(GlyphVariation.decompilePoints_(numPointsInGlyph, data, 0)[0])
 		for i in range(50):
 			points = set(random.sample(range(numPointsInGlyph), 30))
-			self.assertSetEqual(points, decompile(compile(points)),
-					    "failed round-trip decompile/compilePoints; points=%s" % points)
+			if hasattr(self, "assertSetEqual"):
+				# Python 2.7 and later
+				self.assertSetEqual(points, decompile(compile(points)),
+						    "failed round-trip decompile/compilePoints; points=%s" % points)
+			else:
+				self.assertEqual(points, decompile(compile(points)),
+						 "failed round-trip decompile/compilePoints; points=%s" % points)
 
 	def test_compileDeltas(self):
 		gvar = GlyphVariation({}, [(0,0), (1, 0), (2, 0), (3, 3)])
-		points = {1, 2}
+		points = set([1, 2])
 		# deltaX for points: [1, 2]; deltaY for points: [0, 0]
 		self.assertEqual("01 01 02 81", hexencode(gvar.compileDeltas(points)))
 
@@ -469,8 +474,14 @@ class GlyphVariationTest(unittest.TestCase):
 			deltas.extend(random.sample(range(-32768, 32767), 10))
 			deltas.extend([0] * 10)
 			random.shuffle(deltas)
-			self.assertListEqual(deltas, decompile(compile(deltas)),
-					    "failed round-trip decompile/compileDeltas; deltas=%s" % deltas)
+			if hasattr(self, "assertListEqual"):
+				# Python 2.7 and later
+				self.assertListEqual(deltas, decompile(compile(deltas)),
+						     "failed round-trip decompile/compileDeltas; deltas=%s" % deltas)
+			else:
+				# Python 2.6
+				self.assertEqual(deltas, decompile(compile(deltas)),
+						 "failed round-trip decompile/compileDeltas; deltas=%s" % deltas)
 
 	def test_getTupleSize(self):
 		getTupleSize = GlyphVariation.getTupleSize_
