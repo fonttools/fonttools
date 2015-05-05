@@ -18,7 +18,7 @@ import struct
 # FreeType2 source code for parsing 'gvar':
 # http://git.savannah.gnu.org/cgit/freetype/freetype2.git/tree/src/truetype/ttgxvar.c
 
-GVAR_HEADER_FORMAT = b"""
+GVAR_HEADER_FORMAT = """
 	> # big endian
 	version:		H
 	reserved:		H
@@ -547,22 +547,22 @@ class GlyphVariation:
 	def decompilePoints_(numPoints, data, offset):
 		"""(numPoints, data, offset) --> ([point1, point2, ...], newOffset)"""
 		pos = offset
-		numPointsInData = ord(data[pos])
+		numPointsInData = byteord(data[pos])
 		pos += 1
 		if (numPointsInData & POINTS_ARE_WORDS) != 0:
-			numPointsInData = (numPointsInData & POINT_RUN_COUNT_MASK) << 8 | ord(data[pos])
+			numPointsInData = (numPointsInData & POINT_RUN_COUNT_MASK) << 8 | byteord(data[pos])
 			pos += 1
 		if numPointsInData == 0:
 			return (range(numPoints), pos)
 		result = []
 		while len(result) < numPointsInData:
-			runHeader = ord(data[pos])
+			runHeader = byteord(data[pos])
 			pos += 1
 			numPointsInRun = (runHeader & POINT_RUN_COUNT_MASK) + 1
 			point = 0
 			if (runHeader & POINTS_ARE_WORDS) == 0:
 				for i in range(numPointsInRun):
-					point += ord(data[pos])
+					point += byteord(data[pos])
 					pos += 1
 					result.append(point)
 			else:
@@ -688,7 +688,7 @@ class GlyphVariation:
 		result = []
 		pos = offset
 		while len(result) < numDeltas:
-			runHeader = ord(data[pos])
+			runHeader = byteord(data[pos])
 			pos += 1
 			numDeltasInRun = (runHeader & DELTA_RUN_COUNT_MASK) + 1
 			if (runHeader & DELTAS_ARE_ZERO) != 0:
