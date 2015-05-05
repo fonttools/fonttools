@@ -232,6 +232,7 @@ class ExecutionContext(object):
 
     def exec_AA(self):#AdjustAngle
         self.program_stack.pop()
+        self.variables.pop()
 
     def exec_ABS(self):#Absolute
         op1 = self.program_stack[-1]
@@ -251,6 +252,8 @@ class ExecutionContext(object):
         move to points, has no further effect on the stack
         '''
         self.program_stack_pop(2)
+        for i in range(2):
+            self.variables.pop()
 
     def exec_ALIGNRP(self):
         loopValue = self.graphics_state['loop']
@@ -258,6 +261,8 @@ class ExecutionContext(object):
         if len(self.program_stack)<loopValue:
             raise Exception("truetype: hinting: stack underflow")
         self.program_stack_pop(loopValue)
+        for i in range(loopValue):  
+            self.variables.pop()
 
     def exec_AND(self):
         self.binary_operation('AND')
@@ -284,11 +289,14 @@ class ExecutionContext(object):
 
     def exec_DEBUG(self):#DebugCall
         self.program_stack_pop()
+        self.variables.pop()
 
     def exec_DELTA(self):
         number = self.program_stack[-1]
-        self.program_stack_pop()
-        self.program_stack_pop(2*number)
+        loopValue = 1 + (2*number)
+        self.program_stack_pop(loopValue)
+        for i in range(loopValue):
+            self.variables.pop()
 
     def exec_DELTAC1(self):#DeltaExceptionC1
         self.exec_DELTA()
@@ -335,13 +343,19 @@ class ExecutionContext(object):
         if len(self.program_stack)<loopValue:
             raise Exception("truetype: hinting: stack underflow")
         self.program_stack_pop(loopValue)
+        for i in range(loopValue):
+            self.variables.pop()
 
     def exec_FLIPRGOFF(self):
         self.program_stack_pop(2)
+        self.variables.pop()
+        self.variables.pop()
 
     def exec_FLIPRGON(self):
         self.program_stack_pop(2)
-        
+        self.variables.pop()        
+        self.variables.pop()
+
     def exec_FLOOR(self):
         op1 = self.program_stack[-1]
         res = self.unary_operation(op1, 'floor')
@@ -359,6 +373,7 @@ class ExecutionContext(object):
         self.putVariable(dataType.AbstractValue(), False)
         resVar = self.getVariable()
         self.current_instruction_intermediate.append(IR.GCMethodCall([v_op],resVar))
+    
     def exec_GETINFO(self):
         '''
         if h.stack[-1]&(1<<0) != 0:
@@ -386,6 +401,8 @@ class ExecutionContext(object):
         op2 = self.program_stack[-1]
         self.graphics_state['pv'] = (op1,op2)
         self.program_stack_pop(2)
+        self.variables.pop()
+        self.variables.pop()
 
     def exec_GFV(self):
         op1 = self.graphics_state['fv'][0]
@@ -406,6 +423,8 @@ class ExecutionContext(object):
     def exec_INSTCTRL(self):
         #raise NotImplementedError
         self.program_stack_pop(2)
+        self.variables.pop()
+        self.variables.pop()
         #XX
     
     def exec_IP(self):
@@ -414,9 +433,13 @@ class ExecutionContext(object):
         if len(self.program_stack)<loopValue:
             raise Exception("truetype: hinting: stack underflow")
         self.program_stack_pop(loopValue)
+        for i in range(loopValue):
+            self.variables.pop()
 
     def exec_ISECT(self):
         self.program_stack_pop(5)
+        for i in range(5):
+            self.variables.pop()
 
     def exec_IUP(self):#drawing-only 
         pass
@@ -437,24 +460,31 @@ class ExecutionContext(object):
         op1 = self.program_stack[-2]
         op2 = self.program_stack[-1]
         self.program_stack_pop(2)
+        self.variables.pop()
+        self.variables.pop()
         #assert isinstance(op1, dataType.PointValue) and (op1, dataType.PointValue)
         res = dataType.Distance()
         self.program_stack.append(res)
+        putVariable(res)
 
     def exec_MDAP(self):
         op = self.program_stack[-1]
         #assert isinstance(op, dataType.PointValue)
         self.program_stack_pop(1)
+        self.variables.pop()
 
     def exec_MDRP(self):
         op = self.program_stack[-1]
         #assert isinstance(op, dataType.PointValue)
         self.program_stack_pop(1)
+        self.variables.pop()
 
     def exec_MIAP(self):
         op1 = self.program_stack[-2]
         op2 = self.program_stack[-1]
         self.program_stack_pop(2)
+        self.variables.pop()
+        self.variables.pop()
 
     def exec_MIN(self):
         self.binary_operation('MIN')
@@ -469,6 +499,8 @@ class ExecutionContext(object):
 
     def exec_MIRP(self):
         self.program_stack_pop(2)
+        self.variables.pop()
+        self.variables.pop()
 
     def exec_MPPEM(self):
         if self.graphics_state['pv'] == (0, 1):
@@ -477,20 +509,29 @@ class ExecutionContext(object):
         else:
             self.program_stack.append(dataType.PPEM_X())
             self.putVariable(dataType.PPEM_X())
+    
     def exec_MPS(self):
         self.program_stack.append(dataType.PointSize())
+        self.putVariable(dataType.PointSize())
+
     def exec_MSIRP(self):
         self.program_stack_pop(2)
+        self.variavles.pop()
+        self.variavles.pop()
+
     def exec_MUL(self):
         self.binary_operation('MUL')
+
     def exec_NEG(self):
         op = self.program_stack[-1]
         if isinstance(op, dataType.AbstractValue):
             pass
         else:
             self.program_stack[-1] = -op
+
     def exec_NEQ(self):
         self.binary_operation('NEQ')
+
     def exec_NOT(self):
         op = self.program_stack[-1]
         if isinstance(op, dataType.AbstractValue):
@@ -499,20 +540,28 @@ class ExecutionContext(object):
             self.program_stack[-1] = 1
         else:
             self.program_stack[-1] = 0
+
     def exec_NROUND(self):
         pass
+
     def exec_ODD(self):
         raise NotImplementedError
+
     def exec_OR(self):
         self.binary_operation('OR')
+
     def exec_POP(self):
         self.program_stack_pop()
+        self.variables.pop()
+
     def exec_RCVT(self):
         op = self.program_stack[-1]
         self.program_stack_pop()
+        self.variables.pop()
         res = self.cvt[op]
         self.program_stack.append(res)
         self.putVariable(res)
+
     def exec_RDTG(self):
         pass
 
@@ -527,7 +576,9 @@ class ExecutionContext(object):
 
     def exec_ROUND(self):
         self.program_stack_pop()
+        self.variables.pop()
         self.program_stack.append(dataType.F26Dot6())
+        self.putVariable(dataType.F26Dot6())
 
     def exec_RS(self):
         op = self.program_stack[-1]
@@ -548,10 +599,14 @@ class ExecutionContext(object):
         pass
     def exec_RUTG(self):
         pass
+
     def exec_S45ROUND(self):
         self.program_stack_pop()
+        self.variables.pop()
+
     def exec_SANGW(self):
         self.program_stack_pop()
+        self.variables.pop()
 
     def exec_SCANCTRL(self):
         self.program_stack_pop()
@@ -563,21 +618,30 @@ class ExecutionContext(object):
 
     def exec_SCFS(self):
         self.program_stack_pop(2)
+        self.variables.pop()    
+        self.variables.pop()    
 
     def exec_SCVTCI(self):
         self.program_stack_pop()
+        self.variables.pop()    
 
     def exec_SDB(self):
         self.program_stack_pop()
+        self.variables.pop()    
 
     def exec_SDPVTL(self):
         self.program_stack_pop(2)
+        self.variables.pop()    
+        self.variables.pop()    
 
     def exec_SDS(self):
         self.program_stack_pop()
+        self.variables.pop()    
 
     def exec_SFVFS(self):
         self.program_stack_pop(2)
+        self.variables.pop()    
+        self.variables.pop()    
 
     def exec_SFVTCA(self):#Set Freedom Vector To Coordinate Axis
         data = self.current_instruction.data[0]
@@ -589,35 +653,53 @@ class ExecutionContext(object):
            
     def exec_SFVTL(self):#Set Freedom Vector To Line
         self.program_stack_pop(2)
+        self.variables.pop()    
+        self.variables.pop()    
 
     def exec_SFVTPV(self):#Set Freedom Vector To Projection Vector
         self.graphics_state['fv'] = self.graphics_state['gv']
 
     def exec_SHC(self):
         self.program_stack_pop(1)
+        self.variables.pop()   
+ 
     def exec_SHP(self):
         loopValue = self.graphics_state['loop']
         self.graphics_state['loop'] = 1
         if len(self.program_stack)<loopValue:
             raise Exception("truetype: hinting: stack underflow")
         self.program_stack_pop(loopValue)
+        for i in range(loopValue):
+            self.variables.pop()
+
     def exec_SHPIX(self):
         self.program_stack_pop()
+        self.variables.pop()
         loopValue = self.graphics_state['loop']
         self.graphics_state['loop'] = 1
         if len(self.program_stack)<loopValue:
             raise Exception("truetype: hinting: stack underflow")
         self.program_stack_pop(loopValue)
+        for i in range(loopValue):
+            self.variables.pop()
+
     def exec_SHZ(self):
         self.program_stack_pop(1)
+        self.variables.pop() 
+  
     def exec_SLOOP(self):
         self.graphics_state['loop'] = self.program_stack[-1]
         self.program_stack_pop()
+        self.variables.pop() 
+
     def exec_SMD(self):
         self.program_stack_pop()
+        self.variables.pop() 
 
     def exec_SPVFS(self):
         self.program_stack_pop(2)
+        self.variables.pop() 
+        self.variables.pop() 
 
     def exec_SPVTCA(self):
         data = self.current_instruction.data[0]
@@ -631,15 +713,20 @@ class ExecutionContext(object):
 
     def exec_SPVTL(self):
         self.program_stack_pop(2)
+        self.variables.pop() 
+        self.variables.pop() 
 
     def exec_SROUND(self):
         self.program_stack_pop()
+        self.variables.pop() 
 
     def exec_SSW(self):
         self.program_stack_pop()
+        self.variables.pop() 
 
     def exec_SSWCI(self):
         self.program_stack_pop()
+        self.variables.pop() 
 
     def exec_SUB(self):
         self.binary_operation('SUB')
@@ -664,18 +751,23 @@ class ExecutionContext(object):
 
     def exec_SZP0(self):
         self.program_stack_pop()
+        self.variables.pop() 
 
     def exec_SZP1(self):
         self.program_stack_pop()
+        self.variables.pop() 
 
     def exec_SZP2(self):
         self.program_stack_pop()
+        self.variables.pop() 
 
     def exec_SZPS(self):
         self.program_stack_pop()
+        self.variables.pop() 
 
     def exec_UTP(self):
         self.program_stack_pop()
+        self.variables.pop() 
 
     def exec_WCVTF(self):
         self.exec_WCVTP()
@@ -733,19 +825,25 @@ class ExecutionContext(object):
 
     def exec_S45ROUND(self):
         self.program_stack_pop()
+        self.variables.pop() 
 
     def exec_SANGW(self):
         self.program_stack_pop()
+        self.variables.pop() 
     
     def exec_SCFS(self):
         self.program_stack_pop(2)
+        self.variables.pop() 
+        self.variables.pop() 
 
     def exec_SCVTCI(self):
         self.graphics_state['controlValueCutIn'] = self.program_stack[-1]
         self.program_stack_pop()
+        self.variables.pop() 
 
     def exec_SDB(self):
         self.program_stack_pop()
+        self.variables.pop() 
 
     def exec_CALL(self):
         data = self.program_stack[-1]
