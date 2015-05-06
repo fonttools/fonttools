@@ -90,7 +90,7 @@ class GlyphVariationTableTest(unittest.TestCase):
 		gvar2 = GlyphVariation({"wght": (1.0, 1.0, 1.0), "wdth": (1.0, 1.0, 1.0)}, glyphCoords)
 		table.variations = {"oslash": [gvar1, gvar2]}
 		data = table.compileGlyph_("oslash", numPoints, axisTags, {})
-		print(table.decompileGlyph_(numPoints, {}, axisTags, data))
+		self.assertEqual([gvar1, gvar2], table.decompileGlyph_(numPoints, {}, axisTags, data))
 
 	def test_compileSharedCoords(self):
 		class FakeFont:
@@ -163,6 +163,21 @@ class GlyphVariationTableTest(unittest.TestCase):
 		self.assertEqual({"wght": 0.0, "wdth": 0.7}, maxCoord)
 
 class GlyphVariationTest(unittest.TestCase):
+	def test_equal(self):
+		gvar1 = GlyphVariation({"wght":(0.0, 1.0, 1.0)}, GlyphCoordinates([(0,0), (9,8), (7,6)]))
+		gvar2 = GlyphVariation({"wght":(0.0, 1.0, 1.0)}, GlyphCoordinates([(0,0), (9,8), (7,6)]))
+		self.assertEqual(gvar1, gvar2)
+
+	def test_equal_differentAxes(self):
+		gvar1 = GlyphVariation({"wght":(0.0, 1.0, 1.0)}, GlyphCoordinates([(0,0), (9,8), (7,6)]))
+		gvar2 = GlyphVariation({"wght":(0.7, 0.8, 0.9)}, GlyphCoordinates([(0,0), (9,8), (7,6)]))
+		self.assertNotEqual(gvar1, gvar2)
+
+	def test_equal_differentCoordinates(self):
+		gvar1 = GlyphVariation({"wght":(0.0, 1.0, 1.0)}, GlyphCoordinates([(0,0), (9,8), (7,6)]))
+		gvar2 = GlyphVariation({"wght":(0.0, 1.0, 1.0)}, GlyphCoordinates([(0,0), (9,8)]))
+		self.assertNotEqual(gvar1, gvar2)
+
 	def test_hasImpact_someDeltasNotZero(self):
 		axes = {"wght":(0.0, 1.0, 1.0)}
 		gvar = GlyphVariation(axes, GlyphCoordinates([(0,0), (9,8), (7,6)]))
