@@ -114,7 +114,7 @@ class GlyphVariationTableTest(unittest.TestCase):
 		# {"wght":1.0, "wdth":0.7} is shared 3 times; {"wght":1.0, "wdth":0.8} is shared twice.
 		# Min and max values are not part of the shared coordinate pool and should get ignored.
 		result = table.compileSharedCoords_(font, ["wght", "wdth"])
-		self.assertEquals(["40 00 2C CD", "40 00 33 33"], [hexencode(c) for c in result])
+		self.assertEqual(["40 00 2C CD", "40 00 33 33"], [hexencode(c) for c in result])
 
 	def test_decompileSharedCoords_Skia(self):
 		table = table__g_v_a_r()
@@ -365,17 +365,17 @@ class GlyphVariationTest(unittest.TestCase):
 
 	def test_compilePoints(self):
 		compilePoints = GlyphVariation.compilePoints
-		self.assertEquals("01 00 07", hexencode(compilePoints(set([7]))))
-		self.assertEquals("01 80 FF FF", hexencode(compilePoints(set([65535]))))
-		self.assertEquals("02 01 09 06", hexencode(compilePoints(set([9, 15]))))
-		self.assertEquals("06 05 07 01 F7 02 01 F2", hexencode(compilePoints(set([7, 8, 255, 257, 258, 500]))))
-		self.assertEquals("03 01 07 01 80 01 F4", hexencode(compilePoints(set([7, 8, 500]))))
-		self.assertEquals("04 01 07 01 81 BE EF 0C 0F", hexencode(compilePoints(set([7, 8, 0xBEEF, 0xCAFE]))))
-		self.assertEquals("81 2C" +  # 300 points (0x12c) in total
-				  " 7F 00" + (127 * " 01") +  # first run, contains 128 points: [0 .. 127]
-				  " 7F 80" + (127 * " 01") +  # second run, contains 128 points: [128 .. 511]
-				  " AB 01 00" + (43 * " 00 01"),  # third run, contains 44 points: [512 .. 299]
-				  hexencode(compilePoints(set(range(300)))))
+		self.assertEqual("01 00 07", hexencode(compilePoints(set([7]))))
+		self.assertEqual("01 80 FF FF", hexencode(compilePoints(set([65535]))))
+		self.assertEqual("02 01 09 06", hexencode(compilePoints(set([9, 15]))))
+		self.assertEqual("06 05 07 01 F7 02 01 F2", hexencode(compilePoints(set([7, 8, 255, 257, 258, 500]))))
+		self.assertEqual("03 01 07 01 80 01 F4", hexencode(compilePoints(set([7, 8, 500]))))
+		self.assertEqual("04 01 07 01 81 BE EF 0C 0F", hexencode(compilePoints(set([7, 8, 0xBEEF, 0xCAFE]))))
+		self.assertEqual("81 2C" +  # 300 points (0x12c) in total
+				 " 7F 00" + (127 * " 01") +  # first run, contains 128 points: [0 .. 127]
+				 " 7F 80" + (127 * " 01") +  # second run, contains 128 points: [128 .. 511]
+				 " AB 01 00" + (43 * " 00 01"),  # third run, contains 44 points: [512 .. 299]
+				 hexencode(compilePoints(set(range(300)))))
 
 	def test_decompilePoints(self):
 		decompilePoints = GlyphVariation.decompilePoints_
