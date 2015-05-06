@@ -66,8 +66,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 			offsets.append(offset)
 			offset += len(glyph)
 		offsets.append(offset)
-		compiledGlyphsSize = offset
-		compiledOffsets, format = self.compileOffsets_(offsets)
+		compiledOffsets, tableFormat = self.compileOffsets_(offsets)
 
 		header = {}
 		header["version"] = self.version
@@ -76,7 +75,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		header["sharedCoordCount"] = len(sharedCoords)
 		header["offsetToCoord"] = GVAR_HEADER_SIZE + len(compiledOffsets)
 		header["glyphCount"] = len(compiledGlyphs)
-		header["flags"] = format
+		header["flags"] = tableFormat
 		header["offsetToData"] = header["offsetToCoord"] + sharedCoordSize
 		compiledHeader = sstruct.pack(GVAR_HEADER_FORMAT, header)
 
@@ -180,8 +179,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		sstruct.unpack(GVAR_HEADER_FORMAT, data[0:GVAR_HEADER_SIZE], self)
 		assert len(glyphs) == self.glyphCount
 		assert len(axisTags) == self.axisCount
-		offsets = self.decompileOffsets_(data[GVAR_HEADER_SIZE:],
-						 format=(self.flags & 1), glyphCount=self.glyphCount)
+		offsets = self.decompileOffsets_(data[GVAR_HEADER_SIZE:], tableFormat=(self.flags & 1), glyphCount=self.glyphCount)
 		sharedCoords = self.decompileSharedCoords_(axisTags, data)
 		self.variations = {}
 		for i in range(self.glyphCount):
@@ -192,12 +190,12 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 			self.variations[glyphName] = self.decompileGlyph_(numPoints, sharedCoords, axisTags, gvarData)
 
 	def decompileSharedCoords_(self, axisTags, data):
-		result, pos = GlyphVariation.decompileCoords_(axisTags, self.sharedCoordCount, data, self.offsetToCoord)
+		result, _pos = GlyphVariation.decompileCoords_(axisTags, self.sharedCoordCount, data, self.offsetToCoord)
 		return result
 
 	@staticmethod
-	def decompileOffsets_(data, format, glyphCount):
-		if format == 0:
+	def decompileOffsets_(data, tableFormat, glyphCount):
+		if tableFormat == 0:
 			# Short format: array of UInt16
 			offsets = array.array("H")
 			offsetsSize = (glyphCount + 1) * 2
@@ -213,7 +211,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		# This is not documented in Apple's TrueType specification,
 		# but can be inferred from the FreeType implementation, and
 		# we could verify it with two sample GX fonts.
-		if format == 0:
+		if tableFormat == 0:
 			offsets = [off * 2 for off in offsets]
 
 		return offsets
@@ -222,10 +220,10 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 	def compileOffsets_(offsets):
 		"""Packs a list of offsets into a 'gvar' offset table.
 
-		Returns a pair (bytestring, format). Bytestring is the
+		Returns a pair (bytestring, tableFormat). Bytestring is the
 		packed offset table. Format indicates whether the table
-		uses short (format=0) or long (format=1) integers.
-		The returned format should get packed into the flags field
+		uses short (tableFormat=0) or long (tableFormat=1) integers.
+		The returned tableFormat should get packed into the flags field
 		of the 'gvar' header.
 		"""
 		assert len(offsets) >= 2
@@ -233,13 +231,13 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 			assert offsets[i - 1] <= offsets[i]
 		if max(offsets) <= 0xffff * 2:
 			packed = array.array("H", [n >> 1 for n in offsets])
-			format = 0
+			tableFormat = 0
 		else:
 			packed = array.array("I", offsets)
-			format = 1
+			tableFormat = 1
 		if sys.byteorder != "big":
 			packed.byteswap()
-		return (packed.tostring(), format)
+		return (packed.tostring(), tableFormat)
 
 	def decompileGlyph_(self, numPoints, sharedCoords, axisTags, data):
 		if len(data) < 4:
@@ -253,12 +251,12 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 			sharedPoints, dataPos = GlyphVariation.decompilePoints_(numPoints, data, dataPos)
 		else:
 			sharedPoints = []
-		for i in range(flags & TUPLE_COUNT_MASK):
+		for _ in range(flags & TUPLE_COUNT_MASK):
 			dataSize, flags = struct.unpack(">HH", data[pos:pos+4])
 			tupleSize = GlyphVariation.getTupleSize_(flags, numAxes)
-			tuple = data[pos : pos + tupleSize]
-			tupleData = data[dataPos : dataPos + dataSize]
-			tuples.append(self.decompileTuple_(numPoints, sharedCoords, sharedPoints, axisTags, tuple, tupleData))
+			tupleData = data[pos : pos + tupleSize]
+			pointDeltaData = data[dataPos : dataPos + dataSize]
+			tuples.append(self.decompileTuple_(numPoints, sharedCoords, sharedPoints, axisTags, tupleData, pointDeltaData))
 			pos += tupleSize
 			dataPos += dataSize
 		return tuples
@@ -268,7 +266,6 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		flags = struct.unpack(">H", data[2:4])[0]
 
 		pos = 4
-		coordSize = len(axisTags) * 2
 		if (flags & EMBEDDED_TUPLE_COORD) == 0:
 			coord = sharedCoords[flags & TUPLE_INDEX_MASK]
 		else:
@@ -304,20 +301,20 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 			maxCoord[axis] = max(value, 0.0)  # -0.3 -->  0.0; 0.7 --> 0.7
 		return (minCoord, maxCoord)
 
-	def toXML(self, writer, ttFont):
+	def toXML(self, writer, ttFont, progress=None):
 		writer.simpletag("version", value=self.version)
 		writer.newline()
 		writer.simpletag("reserved", value=self.reserved)
 		writer.newline()
 		axisTags = [axis.AxisTag for axis in ttFont["fvar"].table.VariationAxis]
 		for glyphName in ttFont.getGlyphOrder():
-			tuples = self.variations.get(glyphName)
-			if not tuples:
+			variations = self.variations.get(glyphName)
+			if not variations:
 				continue
 			writer.begintag("glyphVariations", glyph=glyphName)
 			writer.newline()
-			for tuple in tuples:
-				tuple.toXML(writer, axisTags)
+			for gvar in variations:
+				gvar.toXML(writer, axisTags)
 			writer.endtag("glyphVariations")
 			writer.newline()
 
@@ -355,7 +352,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 			return len(getattr(glyph, "coordinates", [])) + NUM_PHANTOM_POINTS
 
 
-class GlyphVariation:
+class GlyphVariation(object):
 	def __init__(self, axes, coordinates):
 		self.axes = axes
 		self.coordinates = coordinates
@@ -390,15 +387,14 @@ class GlyphVariation:
 		writer.newline()
 		for axis in axisTags:
 			value = self.axes.get(axis)
-			if value != None:
+			if value is not None:
 				minValue, value, maxValue = value
 				defaultMinValue = min(value, 0.0)  # -0.3 --> -0.3; 0.7 --> 0.0
 				defaultMaxValue = max(value, 0.0)  # -0.3 -->  0.0; 0.7 --> 0.7
 				if minValue == defaultMinValue and maxValue == defaultMaxValue:
 					writer.simpletag("coord", axis=axis, value=value)
 				else:
-					writer.simpletag("coord", axis=axis, value=value,
-							 min=minValue, max=maxValue)
+					writer.simpletag("coord", axis=axis, value=value, min=minValue, max=maxValue)
 				writer.newline()
 		wrote_any_points = False
 		for i in range(len(self.coordinates)):
@@ -413,7 +409,7 @@ class GlyphVariation:
 		writer.endtag("tuple")
 		writer.newline()
 
-	def fromXML(self, name, attrs, content):
+	def fromXML(self, name, attrs, _content):
 		if name == "coord":
 			axis = attrs["axis"]
 			value = float(attrs["value"])
@@ -429,34 +425,34 @@ class GlyphVariation:
 			self.coordinates[point] = (x, y)
 
 	def compile(self, axisTags, sharedCoordIndices, sharedPoints):
-		tuple = []
+		tupleData = []
 
 		coord = self.compileCoord(axisTags)
 		if coord in sharedCoordIndices:
 			flags = sharedCoordIndices[coord]
 		else:
 			flags = EMBEDDED_TUPLE_COORD
-			tuple.append(coord)
+			tupleData.append(coord)
 
 		intermediateCoord = self.compileIntermediateCoord(axisTags)
-		if intermediateCoord != None:
+		if intermediateCoord is not None:
 			flags |= INTERMEDIATE_TUPLE
-			tuple.append(intermediateCoord)
+			tupleData.append(intermediateCoord)
 
-		if sharedPoints != None:
-			data = self.compileDeltas(sharedPoints)
+		if sharedPoints is not None:
+			auxData = self.compileDeltas(sharedPoints)
 		else:
 			flags |= PRIVATE_POINT_NUMBERS
 			points = self.getUsedPoints()
-			data = self.compilePoints(points) + self.compileDeltas(points)
+			auxData = self.compilePoints(points) + self.compileDeltas(points)
 
-		tuple = struct.pack('>HH', len(data), flags) + bytesjoin(tuple)
-		return (tuple, data)
+		tupleData = struct.pack('>HH', len(auxData), flags) + bytesjoin(tupleData)
+		return (tupleData, auxData)
 
 	def compileCoord(self, axisTags):
 		result = []
 		for axis in axisTags:
-			minValue, value, maxValue = self.axes.get(axis, (0.0, 0.0, 0.0))
+			_minValue, value, _maxValue = self.axes.get(axis, (0.0, 0.0, 0.0))
 			result.append(struct.pack(">h", floatToFixed(value, 14)))
 		return bytesjoin(result)
 
@@ -492,7 +488,7 @@ class GlyphVariation:
 	def decompileCoords_(axisTags, numCoords, data, offset):
 		result = []
 		pos = offset
-		for i in range(numCoords):
+		for _ in range(numCoords):
 			coord, pos = GlyphVariation.decompileCoord_(axisTags, data, pos)
 			result.append(coord)
 		return result, pos
@@ -564,12 +560,12 @@ class GlyphVariation:
 			numPointsInRun = (runHeader & POINT_RUN_COUNT_MASK) + 1
 			point = 0
 			if (runHeader & POINTS_ARE_WORDS) == 0:
-				for i in range(numPointsInRun):
+				for _ in range(numPointsInRun):
 					point += byteord(data[pos])
 					pos += 1
 					result.append(point)
 			else:
-				for i in range(numPointsInRun):
+				for _ in range(numPointsInRun):
 					point += struct.unpack(">H", data[pos:pos+2])[0]
 					pos += 2
 					result.append(point)
@@ -697,11 +693,11 @@ class GlyphVariation:
 			if (runHeader & DELTAS_ARE_ZERO) != 0:
 				result.extend([0] * numDeltasInRun)
 			elif (runHeader & DELTAS_ARE_WORDS) != 0:
-				for i in range(numDeltasInRun):
+				for _ in range(numDeltasInRun):
 					result.append(struct.unpack(">h", data[pos:pos+2])[0])
 					pos += 2
 			else:
-				for i in range(numDeltasInRun):
+				for _ in range(numDeltasInRun):
 					result.append(struct.unpack(">b", data[pos:pos+1])[0])
 					pos += 1
 		assert len(result) == numDeltas

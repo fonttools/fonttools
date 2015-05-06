@@ -53,13 +53,13 @@ class GlyphVariationTableTest(unittest.TestCase):
 		decompileOffsets = table__g_v_a_r.decompileOffsets_
 		data = deHexStr("00 11 22 33 44 55 66 77 88 99 aa bb")
 		self.assertEqual([2*0x0011, 2*0x2233, 2*0x4455, 2*0x6677, 2*0x8899, 2*0xaabb],
-				 list(decompileOffsets(data, format=0, glyphCount=5)))
+				 list(decompileOffsets(data, tableFormat=0, glyphCount=5)))
 
 	def test_decompileOffsets_longFormat(self):
 		decompileOffsets = table__g_v_a_r.decompileOffsets_
 		data = deHexStr("00 11 22 33 44 55 66 77 88 99 aa bb")
 		self.assertEqual([0x00112233, 0x44556677, 0x8899aabb],
-				 list(decompileOffsets(data, format=1, glyphCount=2)))
+				 list(decompileOffsets(data, tableFormat=1, glyphCount=2)))
 
 	def test_compileGlyph_noVariations(self):
 		table = table__g_v_a_r()
