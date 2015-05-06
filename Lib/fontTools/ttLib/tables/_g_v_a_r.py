@@ -364,6 +364,9 @@ class GlyphVariation:
 		axes = ",".join(sorted(["%s=%s" % (name, value) for (name, value) in self.axes.items()]))
 		return "<GlyphVariation %s %s>" % (axes, self.coordinates)
 
+	def __eq__(self, other):
+		return self.coordinates == other.coordinates and self.axes == other.axes
+
 	def getUsedPoints(self):
 		result = set()
 		for p in range(len(self.coordinates)):
