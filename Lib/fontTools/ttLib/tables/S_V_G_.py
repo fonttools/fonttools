@@ -300,7 +300,6 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 			writer.newline()
 
 	def fromXML(self, name, attrs, content, ttFont):
-		import re
 		if name == "svgDoc":
 			if not hasattr(self, "docList"):
 				self.docList = []

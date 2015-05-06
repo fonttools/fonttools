@@ -7,7 +7,6 @@ from fontTools.misc.py23 import *
 from fontTools import ttLib
 from fontTools.ttLib.tables import otTables
 from fontTools.misc import psCharStrings
-from fontTools.pens import basePen
 import sys
 import struct
 import time

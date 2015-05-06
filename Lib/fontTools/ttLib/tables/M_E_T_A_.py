@@ -3,6 +3,7 @@ from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval
 from . import DefaultTable
+import pdb
 import struct
 
 
@@ -103,10 +104,10 @@ class table_M_E_T_A_(DefaultTable.DefaultTable):
 		offsetOK = 0
 		self.nMetaRecs = len(self.glyphRecords)
 		count = 0
-		while ( offsetOK != 1):
+		while (offsetOK != 1):
 			count = count + 1
 			if count > 4:
-				pdb_set_trace()
+				pdb.set_trace()
 			metaData = sstruct.pack(METAHeaderFormat, self)
 			stringRecsOffset = len(metaData) + self.nMetaRecs * (6 + 2*(self.metaFlags & 1))
 			stringRecSize = (6 + 2*(self.metaFlags & 1))
@@ -119,7 +120,7 @@ class table_M_E_T_A_(DefaultTable.DefaultTable):
 				metaData = metaData + glyphRec.compile(self)
 				stringRecsOffset = stringRecsOffset + (glyphRec.nMetaEntry * stringRecSize)
 				# this will be the String Record offset for the next GlyphRecord.
-			if 	offsetOK == -1:
+			if offsetOK == -1:
 				offsetOK = 0
 				continue
 
