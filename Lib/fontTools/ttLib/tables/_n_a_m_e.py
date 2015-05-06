@@ -181,9 +181,7 @@ class NameRecord(object):
 	def toXML(self, writer, ttFont):
 		try:
 			unistr = self.toUnicode()
-		except (UnicodeDecodeError, CodecRegistryError):
-			# CodeRegistryError might happen with messed up Python codecs.
-			# We've observed that with Jython before.
+		except UnicodeDecodeError:
 			unistr = None
 		attrs = [
 				("nameID", self.nameID),
