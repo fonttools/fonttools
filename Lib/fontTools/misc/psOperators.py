@@ -4,7 +4,7 @@ from fontTools.misc.py23 import *
 _accessstrings = {0: "", 1: "readonly", 2: "executeonly", 3: "noaccess"}
 
 
-class ps_object:
+class ps_object(object):
 
 	literal = 1
 	access = 0
@@ -204,7 +204,7 @@ class ps_real(ps_object):
 		return repr(self.value)
 
 
-class PSOperators:
+class PSOperators(object):
 
 	def ps_def(self):
 		obj = self.pop()
