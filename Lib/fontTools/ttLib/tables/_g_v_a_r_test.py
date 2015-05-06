@@ -378,28 +378,31 @@ class GlyphVariationTest(unittest.TestCase):
 				 hexencode(compilePoints(set(range(300)))))
 
 	def test_decompilePoints(self):
-		decompilePoints = GlyphVariation.decompilePoints_
 		numPoints = 65536
-		allPoints = range(numPoints)
+		allPoints = list(range(numPoints))
+		def decompilePoints(data, offset):
+			points, offset = GlyphVariation.decompilePoints_(numPoints, deHexStr(data), offset)
+			# Conversion to list only needed for Python 3.2.
+			return (list(points), offset)
 		# all points in glyph
-		self.assertEqual((allPoints, 1), decompilePoints(numPoints, deHexStr("00"), 0))
+		self.assertEqual((allPoints, 1), decompilePoints("00", 0))
 		# all points in glyph (in overly verbose encoding, not explicitly prohibited by spec)
-		self.assertEqual((allPoints, 2), decompilePoints(numPoints, deHexStr("80 00"), 0))
+		self.assertEqual((allPoints, 2), decompilePoints("80 00", 0))
 		# 2 points; first run: [9, 9+6]
-		self.assertEqual(([9, 15], 4), decompilePoints(numPoints, deHexStr("02 01 09 06"), 0))
+		self.assertEqual(([9, 15], 4), decompilePoints("02 01 09 06", 0))
 		# 2 points; first run: [0xBEEF, 0xCAFE]. (0x0C0F = 0xCAFE - 0xBEEF)
-		self.assertEqual(([0xBEEF, 0xCAFE], 6), decompilePoints(numPoints, deHexStr("02 81 BE EF 0C 0F"), 0))
+		self.assertEqual(([0xBEEF, 0xCAFE], 6), decompilePoints("02 81 BE EF 0C 0F", 0))
 		# 1 point; first run: [7]
-		self.assertEqual(([7], 3), decompilePoints(numPoints, deHexStr("01 00 07"), 0))
+		self.assertEqual(([7], 3), decompilePoints("01 00 07", 0))
 		# 1 point; first run: [7] in overly verbose encoding
-		self.assertEqual(([7], 4), decompilePoints(numPoints, deHexStr("01 80 00 07"), 0))
+		self.assertEqual(([7], 4), decompilePoints("01 80 00 07", 0))
 		# 1 point; first run: [65535]; requires words to be treated as unsigned numbers
-		self.assertEqual(([65535], 4), decompilePoints(numPoints, deHexStr("01 80 FF FF"), 0))
+		self.assertEqual(([65535], 4), decompilePoints("01 80 FF FF", 0))
 		# 4 points; first run: [7, 8]; second run: [255, 257]. 257 is stored in delta-encoded bytes (0xFF + 2).
-		self.assertEqual(([7, 8, 255, 257], 7), decompilePoints(numPoints, deHexStr("04 01 07 01 01 FF 02"), 0))
+		self.assertEqual(([7, 8, 255, 257], 7), decompilePoints("04 01 07 01 01 FF 02", 0))
 		# combination of all encodings, preceded and followed by 4 bytes of unused data
-		data = deHexStr("DE AD DE AD 04 01 07 01 81 BE EF 0C 0F DE AD DE AD")
-		self.assertEqual(([7, 8, 0xBEEF, 0xCAFE], 13), decompilePoints(numPoints, data, 4))
+		data = "DE AD DE AD 04 01 07 01 81 BE EF 0C 0F DE AD DE AD"
+		self.assertEqual(([7, 8, 0xBEEF, 0xCAFE], 13), decompilePoints(data, 4))
 
 	def test_decompilePoints_shouldGuardAgainstBadPointNumbers(self):
 		decompilePoints = GlyphVariation.decompilePoints_
