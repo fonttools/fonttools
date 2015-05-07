@@ -271,6 +271,14 @@ Glyph naming and encoding options:
       Drop the 3.0 symbol 'cmap'. [default]
 
 Other font-specific options:
+  --recalc-unicode-ranges
+      Update the 'OS/2 ulUnicodeRange' bits after subsetting. The Unicode
+      ranges defined in the OpenType specification v1.6 are intersected with
+      the Unicode code points specified in the font's 'cmap' tables: when
+      no overlap is found, the bit will be switched off. However, it will
+      *not* be switched on if an intersection is found.  [default]
+  --no-update-unicode-ranges
+      Don't change the 'OS/2 ulUnicodeRange' bits.
   --recalc-bounds
       Recalculate font bounding boxes.
   --no-recalc-bounds
@@ -2199,7 +2207,36 @@ def prune_pre_subset(self, options):
   return True  # Required table
 
 
-# TODO(behdad) OS/2 ulUnicodeRange / ulCodePageRange?
+def prune_unicode_ranges(ttFont):
+  unicodes = set()
+  for table in ttFont['cmap'].tables:
+    # when discussing 'ulUnicodeRange', the OS/2 specification only mentions
+    # 'cmap' subtables for "platform 3, encoding ID 1 (Microsoft platform,
+    # Unicode) and platform 3, encoding ID 10 (Microsoft platform, UCS-4)".
+    if table.platformID == 3 and table.platEncID in [1, 10]:
+      unicodes.update(table.cmap.keys())
+  os2_unicode_ranges = ttLib.getTableModule('OS/2').OS2_UNICODE_RANGES
+  for bit, unicode_range in enumerate(os2_unicode_ranges):
+    # build a set containing all the ranges defined for each bit
+    unicode_range_set = set()
+    for start, stop in unicode_range:
+      unicode_range_set.update(range(start, stop+1))
+    # the special bit 57 also includes all the codepoints beyond the BMP
+    if bit == 57:
+      unicode_range_set.update(range(0x10000, 0x110000))
+    # clear bit if the set does not intersect the code points
+    if unicode_range_set.isdisjoint(unicodes):
+      if 0 <= bit < 32:
+        ttFont['OS/2'].ulUnicodeRange1 &= ~(1 << bit)
+      elif 32 <= bit < 64:
+        ttFont['OS/2'].ulUnicodeRange2 &= ~(1 << (bit - 32))
+      elif 64 <= bit < 96:
+        ttFont['OS/2'].ulUnicodeRange3 &= ~(1 << (bit - 64))
+      elif 96 <= bit < 123:
+        ttFont['OS/2'].ulUnicodeRange4 &= ~(1 << (bit - 96))
+
+
+# TODO(behdad) OS/2 ulCodePageRange?
 # TODO(behdad) Drop AAT tables.
 # TODO(behdad) Drop unneeded GSUB/GPOS Script/LangSys entries.
 # TODO(behdad) Drop empty GSUB/GPOS, and GDEF if no GSUB/GPOS left
@@ -2266,6 +2303,7 @@ class Options(object):
   recommended_glyphs = False  # gid1, gid2, gid3 for TrueType
   recalc_bounds = False # Recalculate font bounding boxes
   recalc_timestamp = False # Recalculate font modified timestamp
+  recalc_unicode_ranges = True  # Clear unused 'ulUnicodeRange' bits
   canonical_order = False # Order tables as recommended
   flavor = None # May be 'woff'
   desubroutinize = False # Desubroutinize CFF CharStrings
@@ -2511,6 +2549,9 @@ class Subsetter(object):
   def _prune_post_subset(self, font):
     for tag in font.keys():
       if tag == 'GlyphOrder': continue
+      if tag == 'OS/2' and self.options.recalc_unicode_ranges:
+        prune_unicode_ranges(font)
+        self.log(tag, "Unicode ranges pruned")
       clazz = ttLib.getTableClass(tag)
       if hasattr(clazz, 'prune_post_subset'):
         table = font[tag]
