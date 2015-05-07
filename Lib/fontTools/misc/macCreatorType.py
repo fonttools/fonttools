@@ -29,9 +29,10 @@ def getMacCreatorAndType(path):
 
 def setMacCreatorAndType(path, fileCreator, fileType):
 	if MacOS is not None:
-		if sys.byteorder == "little":
+		if sys.version_info[:2] < (2, 7) and sys.byteorder == "little":
 			# work around bug in MacOS.SetCreatorAndType() on intel:
 			# http://bugs.python.org/issue1594
+			# (fixed with Python 2.7)
 			fileCreator = _reverseString(fileCreator)
 			fileType = _reverseString(fileType)
 		MacOS.SetCreatorAndType(path, fileCreator, fileType)
