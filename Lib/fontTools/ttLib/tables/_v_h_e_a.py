@@ -25,65 +25,66 @@ vheaFormat = """
 		numberOfVMetrics:	H
 """
 
+
 class table__v_h_e_a(DefaultTable.DefaultTable):
 
-	# Note: Keep in sync with table__h_h_e_a
+    # Note: Keep in sync with table__h_h_e_a
 
-	dependencies = ['vmtx', 'glyf']
+    dependencies = ['vmtx', 'glyf']
 
-	def decompile(self, data, ttFont):
-		sstruct.unpack(vheaFormat, data, self)
+    def decompile(self, data, ttFont):
+        sstruct.unpack(vheaFormat, data, self)
 
-	def compile(self, ttFont):
-		self.recalc(ttFont)
-		return sstruct.pack(vheaFormat, self)
+    def compile(self, ttFont):
+        self.recalc(ttFont)
+        return sstruct.pack(vheaFormat, self)
 
-	def recalc(self, ttFont):
-		vtmxTable = ttFont['vmtx']
-		if 'glyf' in ttFont:
-			glyfTable = ttFont['glyf']
-			INFINITY = 100000
-			advanceHeightMax = 0
-			minTopSideBearing = +INFINITY    # arbitrary big number
-			minBottomSideBearing = +INFINITY # arbitrary big number
-			yMaxExtent = -INFINITY           # arbitrary big negative number
+    def recalc(self, ttFont):
+        vtmxTable = ttFont['vmtx']
+        if 'glyf' in ttFont:
+            glyfTable = ttFont['glyf']
+            INFINITY = 100000
+            advanceHeightMax = 0
+            minTopSideBearing = +INFINITY    # arbitrary big number
+            minBottomSideBearing = +INFINITY  # arbitrary big number
+            yMaxExtent = -INFINITY           # arbitrary big negative number
 
-			for name in ttFont.getGlyphOrder():
-				height, tsb = vtmxTable[name]
-				advanceHeightMax = max(advanceHeightMax, height)
-				g = glyfTable[name]
-				if g.numberOfContours == 0:
-					continue
-				if g.numberOfContours < 0 and not hasattr(g, "yMax"):
-					# Composite glyph without extents set.
-					# Calculate those.
-					g.recalcBounds(glyfTable)
-				minTopSideBearing = min(minTopSideBearing, tsb)
-				bsb = height - tsb - (g.yMax - g.yMin)
-				minBottomSideBearing = min(minBottomSideBearing, bsb)
-				extent = tsb + (g.yMax - g.yMin)
-				yMaxExtent = max(yMaxExtent, extent)
+            for name in ttFont.getGlyphOrder():
+                height, tsb = vtmxTable[name]
+                advanceHeightMax = max(advanceHeightMax, height)
+                g = glyfTable[name]
+                if g.numberOfContours == 0:
+                    continue
+                if g.numberOfContours < 0 and not hasattr(g, "yMax"):
+                    # Composite glyph without extents set.
+                    # Calculate those.
+                    g.recalcBounds(glyfTable)
+                minTopSideBearing = min(minTopSideBearing, tsb)
+                bsb = height - tsb - (g.yMax - g.yMin)
+                minBottomSideBearing = min(minBottomSideBearing, bsb)
+                extent = tsb + (g.yMax - g.yMin)
+                yMaxExtent = max(yMaxExtent, extent)
 
-			if yMaxExtent == -INFINITY:
-				# No glyph has outlines.
-				minTopSideBearing = 0
-				minBottomSideBearing = 0
-				yMaxExtent = 0
+            if yMaxExtent == -INFINITY:
+                # No glyph has outlines.
+                minTopSideBearing = 0
+                minBottomSideBearing = 0
+                yMaxExtent = 0
 
-			self.advanceHeightMax = advanceHeightMax
-			self.minTopSideBearing = minTopSideBearing
-			self.minBottomSideBearing = minBottomSideBearing
-			self.yMaxExtent = yMaxExtent
-		else:
-			# XXX CFF recalc...
-			pass
+            self.advanceHeightMax = advanceHeightMax
+            self.minTopSideBearing = minTopSideBearing
+            self.minBottomSideBearing = minBottomSideBearing
+            self.yMaxExtent = yMaxExtent
+        else:
+            # XXX CFF recalc...
+            pass
 
-	def toXML(self, writer, ttFont):
-		formatstring, names, fixes = sstruct.getformat(vheaFormat)
-		for name in names:
-			value = getattr(self, name)
-			writer.simpletag(name, value=value)
-			writer.newline()
+    def toXML(self, writer, ttFont):
+        formatstring, names, fixes = sstruct.getformat(vheaFormat)
+        for name in names:
+            value = getattr(self, name)
+            writer.simpletag(name, value=value)
+            writer.newline()
 
-	def fromXML(self, name, attrs, content, ttFont):
-		setattr(self, name, safeEval(attrs["value"]))
+    def fromXML(self, name, attrs, content, ttFont):
+        setattr(self, name, safeEval(attrs["value"]))
