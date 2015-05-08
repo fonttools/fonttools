@@ -55,13 +55,13 @@ class ExecutionContext(object):
         self.program_stack = []
         self.current_instruction = None
         self.current_instruction_intermediate = []
-        self.variables = []
-    def topVar(self):
-        return  self.variables[-1]
 
     def __repr__(self):
 
-        stackRep = str(self.program_stack[-3:])
+        stackVars = []
+        for i in self.program_stack[-3:]:
+            stackVars.append(i.data)
+        stackRep = str(stackVars[-3:])
         if (len(self.program_stack) > 3):
             stackRep = '[..., ' + stackRep[1:]
         return str('storage = ' + str(self.storage_area) + 
@@ -121,33 +121,24 @@ class ExecutionContext(object):
     def read_storage_area(self, index):
         return self.storage_area[index]
 
-    def getVariable(self):
-        res = self.variables[-1]
-        self.variables.pop()
-        return res  
-
     def assignVariable(self, var, data):
         self.current_instruction_intermediate.append(IR.CopyStatement(var, data))
-
-    def putVariable(self, data=None, assign = True):
+        
+    def program_stack_push(self, data = None, assign = True):
         tempVariableName = identifierGenerator.generateIdentifier(self.tag)
         tempVariable = IR.Variable(tempVariableName, data)
         if data is not None and assign:
             self.assignVariable(tempVariable, data)
-        self.variables.append(tempVariable)
-        
+        self.program_stack.append(tempVariable)
+        return tempVariable
 
     def program_stack_pop(self, num=1):
         for i in range(num):
             self.program_stack.pop()
 
-    def variables_stack_pop(self, num=1):
-        for i in range(num):
-            self.variables.pop() 
-
     def unary_operation(self, op, action):
         if isinstance(op, dataType.AbstractValue):
-            res = dataType.Expression(op, action)
+            res = dataType.UnaryExpression(op, action)
         elif action is 'ceil':
             res = math.ceil(op)
         elif action is 'floor':
@@ -160,70 +151,65 @@ class ExecutionContext(object):
         op1 = self.program_stack[-2]
         op2 = self.program_stack[-1]
         self.program_stack_pop(2)
-        v_op2 = self.getVariable()
-        v_op1 = self.getVariable()
-            
+
         expression = None
-        if isinstance(op1,dataType.AbstractValue) or isinstance(op2,dataType.AbstractValue):
-            res = dataType.Expression(op1, op2, action)
+        if isinstance(op1.data,dataType.AbstractValue) or isinstance(op2.data,dataType.AbstractValue):
+            res = dataType.Expression(op1.data, op2.data, action)
             if action is not 'MAX' and action is not 'MIN':
-                expression = IR.BinaryExpression(v_op1, v_op2, getattr(IR,action+'Operator')())
+                expression = IR.BinaryExpression(op1, op2, getattr(IR,action+'Operator')())
+            else:
+                 expression = getattr(IR, action+'MethodCall')([op1.data,op2.data])
         elif action is 'ADD':
-            res = op1 + op2
-            expression = IR.BinaryExpression(v_op1,v_op2,IR.ADDOperator())
+            res = op1.data + op2.data
+            expression = IR.BinaryExpression(op1,op2,IR.ADDOperator())
         elif action is 'GT':
-            res = op1 > op2
-            expression = IR.BinaryExpression(v_op1,v_op2,IR.GTOperator())
+            res = op1.data > op2.data
+            expression = IR.BinaryExpression(op1,op2,IR.GTOperator())
         elif action is 'GTEQ':
-            res = op1 >= op2
-            expression = IR.BinaryExpression(v_op1,v_op2,IR.GTEQOperator())
+            res = op1.data >= op2.data
+            expression = IR.BinaryExpression(op1,op2,IR.GTEQOperator())
         elif action is 'AND':
-            res = op1 and op2
-            expression = IR.BinaryExpression(v_op1,v_op2,IR.ANDOperator())
+            res = op1.data and op2.data
+            expression = IR.BinaryExpression(op1,op2,IR.ANDOperator())
         elif action is 'OR':
-            res = op1 or op2
-            expression = IR.BinaryExpression(v_op1,v_op2,IR.OROperator())
+            res = op1.data or op2.data
+            expression = IR.BinaryExpression(op1,op2,IR.OROperator())
         elif action is 'MUL':
-            res = op1 * op2
-            expression = IR.BinaryExpression(v_op1,v_op2,IR.MULOperator())
+            res = op1.data * op2.data
+            expression = IR.BinaryExpression(op1,op2,IR.MULOperator())
         elif action is 'DIV':
-            res = op1 / op2
-            expression = IR.BinaryExpression(v_op1,v_op2,IR.DIVOperator())
+            res = op1.data / op2.data
+            expression = IR.BinaryExpression(op1,op2,IR.DIVOperator())
         elif action is 'EQ':
-            res = op1 == op2
-            expression = IR.BinaryExpression(v_op1,v_op2,IR.EQOperator())
+            res = op1.data == op2.data
+            expression = IR.BinaryExpression(op1,op2,IR.EQOperator())
         elif action is 'NEQ':
-            res = op1 != op2
-            expression = IR.BinaryExpression(v_op1,v_op2,IR.NEQOperator())
+            res = op1.data != op2.data
+            expression = IR.BinaryExpression(op1,op2,IR.NEQOperator())
         elif action is 'LT':
-            res = op1 < op2
-            expression = IR.BinaryExpression(v_op1,v_op2,IR.LTOperator())
+            res = op1.data < op2.data
+            expression = IR.BinaryExpression(op1,op2,IR.LTOperator())
         elif action is 'LTEQ':
-            res = op1 <= op2
-            expression = IR.BinaryExpression(v_op1,v_op2,IR.LTEQOperator())
+            res = op1.data <= op2.data
+            expression = IR.BinaryExpression(op1,op2,IR.LTEQOperator())
         elif action is 'MAX':
-            res = max(op1,op2)
+            res = max(op1.data,op2.data)
+            expression = getattr(IR, action+'MethodCall')([op1,op2])
         elif action is 'MIN':
-            res = min(op1,op2)
+            res = min(op1.data,op2.data)
+            expression = getattr(IR, action+'MethodCall')([op1,op2])
         elif action is 'SUB':
-            res = op1 - op2
-            expression = IR.BinaryExpression(v_op1,v_op2,IR.SUBOperator())
+            res = op1.data - op2.data
+            expression = IR.BinaryExpression(op1,op2,IR.SUBOperator())
         else:
             raise NotImplementedError
         
-        self.program_stack.append(res)
-        self.putVariable(expression, False)
-        resVariable = self.topVar()
-        if action is 'MAX' or action is 'MIN':
-            three_address_code = getattr(IR, action+'MethodCall')([v_op1,v_op2], resVariable)
-            self.current_instruction_intermediate.append(three_address_code)
-        else:
-            self.current_instruction_intermediate.append(IR.OperationAssignmentStatement(resVariable, expression))
+        var = self.program_stack_push(res, False)
+        self.current_instruction_intermediate.append(IR.OperationAssignmentStatement(var, expression))
 
     def exec_PUSH(self):
         for item in self.current_instruction.data:
-            self.program_stack.append(item)
-            self.putVariable(item)
+            self.program_stack_push(item)
 
     # Don't execute any cfg-related instructions
     # This has the effect of "executing both branches".
@@ -235,28 +221,23 @@ class ExecutionContext(object):
         pass
 
     def exec_AA(self):#AdjustAngle
-        self.program_stack.pop()
-        self.variables_stack_pop()
+        self.program_stack_pop()
 
     def exec_ABS(self):#Absolute
         op1 = self.program_stack[-1]
-        res = self.unary_operation(op1, 'abs')
-        self.program_stack[-1] = res
-        v_op = self.getVariable()
-        self.putVariable(res, False)
-        resVar = self.topVar()
-        self.current_instruction_intermediate.append(IR.ABSMethodCall([v_op],resVar))
+        self.program_stack_pop()
+        res = self.unary_operation(op1.data, 'abs')
+        var = self.program_stack_push(res, False)
+        self.current_instruction_intermediate.append(IR.ABSMethodCall([op1],var))
 
     def exec_ADD(self):
         self.binary_operation('ADD')
         
-
     def exec_ALIGNPTS(self):
         '''
         move to points, has no further effect on the stack
         '''
         self.program_stack_pop(2)
-        self.variables_stack_pop(2)
 
     def exec_ALIGNRP(self):
         loopValue = self.graphics_state['loop']
@@ -264,41 +245,34 @@ class ExecutionContext(object):
         if len(self.program_stack)<loopValue:
             raise Exception("truetype: hinting: stack underflow")
         self.program_stack_pop(loopValue)
-        self.variables_stack_pop(loopValue)
 
     def exec_AND(self):
         self.binary_operation('AND')
 
     def exec_CEILING(self):
-        op1 = self.program_stack[-1]
+        op1 = self.program_stack[-1].data
+        self.program_stack_pop()
         res = self.unary_operation(op1, 'ceil')
-        self.program_stack[-1] = res
-        v_op = self.getVariable()
-        self.putVariable(res, False)
-        resVar = self.topVar()
-        self.current_instruction_intermediate.append(IR.CEILINGMethodCall([v_op],resVar))
+        var = self.program_stack_push(res, False)
+        self.current_instruction_intermediate.append(IR.CEILINGMethodCall([res],var))
 
     def exec_CINDEX(self):#CopyXToTopStack
-        index = self.program_stack[-1]
-        self.program_stack.pop()
-        self.variables_stack_pop()
+        index = self.program_stack[-1].data
+        self.program_stack_pop()
         #the index start from 1
-        top = self.program_stack[-index]
-        self.program_stack.append(top)
-        self.putVariable(top)
+        top = self.program_stack[-index].data
+        self.program_stack_push(top)
 
     def exec_CLEAR(self):#ClearStack
         self.program_stack = []
 
     def exec_DEBUG(self):#DebugCall
         self.program_stack_pop()
-        self.variables_stack_pop()
 
     def exec_DELTA(self):
-        number = self.program_stack[-1]
+        number = self.program_stack[-1].data
         loopValue = 1 + (2*number)
         self.program_stack_pop(loopValue)
-        self.variables_stack_pop(loopValue)
 
     def exec_DELTAC1(self):#DeltaExceptionC1
         self.exec_DELTA()
@@ -320,16 +294,14 @@ class ExecutionContext(object):
 
     def exec_DEPTH(self):#GetDepthStack
         depth = len(self.program_stack)
-        self.program_stack.append(depth)
-        self.putVariable(depth)
+        self.program_stack_push(depth)
     
     def exec_DIV(self):#Divide
         self.binary_operation('DIV')
 
     def exec_DUP(self):#DuplicateTopStack
-        top = self.program_stack[-1]
-        self.program_stack.append(top)
-        self.putVariable(top)
+        top = self.program_stack[-1].data
+        self.program_stack_push(top)
 
     def exec_FLIPOFF(self):
         self.graphics_state['autoFlip'] = False
@@ -345,33 +317,25 @@ class ExecutionContext(object):
         if len(self.program_stack)<loopValue:
             raise Exception("truetype: hinting: stack underflow")
         self.program_stack_pop(loopValue)
-        self.variables_stack_pop(loopValue)
 
     def exec_FLIPRGOFF(self):
         self.program_stack_pop(2)
-        self.variables_stack_pop(2)
 
     def exec_FLIPRGON(self):
         self.program_stack_pop(2)
-        self.variables_stack_pop(2)
 
     def exec_FLOOR(self):
-        op1 = self.program_stack[-1]
+        op1 = self.program_stack[-1].data
+        self.program_stack_pop()
         res = self.unary_operation(op1, 'floor')
-        self.program_stack[-1] = res
-        v_op = self.getVariable()
-        self.putVariable(res, False)
-        resVar = self.topVar()
-        self.current_instruction_intermediate.append(IR.FLOORMethodCall([v_op],resVar))
+        var = self.program_stack_push(res, False)
+        self.current_instruction_intermediate.append(IR.FLOORMethodCall([res],var))
 
     def exec_GC(self):
-        top = self.program_stack[-1]
+        op1 = self.program_stack[-1]
         self.program_stack_pop()
-        v_op = self.getVariable()
-        self.program_stack.append(dataType.AbstractValue())
-        self.putVariable(dataType.AbstractValue(), False)
-        resVar = self.getVariable()
-        self.current_instruction_intermediate.append(IR.GCMethodCall([v_op],resVar))
+        var = self.program_stack_push(dataType.AbstractValue(), False)
+        self.current_instruction_intermediate.append(IR.GCMethodCall([op1],var))
     
     def exec_GETINFO(self):
         '''
@@ -388,25 +352,22 @@ class ExecutionContext(object):
         #We set no other bits, as we do not support rotated or stretched glyphs.
         h.stack[-1] = res
         '''
+        var = self.program_stack[-1]
         self.program_stack_pop()
-        v_op = self.getVariable()
-        self.putVariable(dataType.EngineInfo(), False)
-        resVar = self.topVar()
-        self.program_stack.append(dataType.EngineInfo())
-        self.current_instruction_intermediate.append(IR.GETINFOMethodCall([v_op],resVar))
+        new_var = self.program_stack_push(dataType.EngineInfo(),False)
+        self.current_instruction_intermediate.append(IR.GETINFOMethodCall([var],new_var))
 
     def exec_GPV(self):
         op1 = self.program_stack[-2]
         op2 = self.program_stack[-1]
-        self.graphics_state['pv'] = (op1,op2)
+        self.graphics_state['pv'] = (op1.data,op2.data)
         self.program_stack_pop(2)
-        self.variables_stack_pop(2)
 
     def exec_GFV(self):
         op1 = self.graphics_state['fv'][0]
         op2 = self.graphics_state['fv'][1]
-        self.program_stack.append(op1)
-        self.program_stack.append(op2)
+        self.program_stack_push(op1)
+        self.program_stack_push(op2)
 
     def exec_GT(self):
         self.binary_operation('GT')
@@ -421,7 +382,6 @@ class ExecutionContext(object):
     def exec_INSTCTRL(self):
         #raise NotImplementedError
         self.program_stack_pop(2)
-        self.variables_stack_pop(2)
         #XX
     
     def exec_IP(self):
@@ -430,11 +390,9 @@ class ExecutionContext(object):
         if len(self.program_stack)<loopValue:
             raise Exception("truetype: hinting: stack underflow")
         self.program_stack_pop(loopValue)
-        self.variables_stack_pop(loopValue)
 
     def exec_ISECT(self):
         self.program_stack_pop(5)
-        self.variables_stack_pop(5)
 
     def exec_IUP(self):#drawing-only 
         pass
@@ -455,83 +413,75 @@ class ExecutionContext(object):
         op1 = self.program_stack[-2]
         op2 = self.program_stack[-1]
         self.program_stack_pop(2)
-        self.variables_stack_pop(2)
         #assert isinstance(op1, dataType.PointValue) and (op1, dataType.PointValue)
         res = dataType.Distance()
-        self.program_stack.append(res)
-        putVariable(res)
+        self.program_stack_push(res)
 
     def exec_MDAP(self):
-        op = self.program_stack[-1]
+        op = self.program_stack[-1].data
         #assert isinstance(op, dataType.PointValue)
         self.program_stack_pop(1)
-        self.variables_stack_pop(1)
 
     def exec_MDRP(self):
-        op = self.program_stack[-1]
+        op = self.program_stack[-1].data
         #assert isinstance(op, dataType.PointValue)
         self.program_stack_pop(1)
-        self.variables_stack_pop(1)
 
     def exec_MIAP(self):
         op1 = self.program_stack[-2]
         op2 = self.program_stack[-1]
         self.program_stack_pop(2)
-        self.variables_stack_pop(2)
 
     def exec_MIN(self):
         self.binary_operation('MIN')
 
     def exec_MINDEX(self):
-        index = self.program_stack[-1]
-        self.program_stack.pop()
-        self.variables_stack_pop()
+        index = self.program_stack[-1].data
+        self.program_stack_pop()
         #the index start from 1
-        top = self.program_stack[-index]
+        top = self.program_stack[-index].data
         del self.program_stack[-index]
-        self.program_stack.append(top)
+        self.program_stack_push(top)
 
     def exec_MIRP(self):
         self.program_stack_pop(2)
-        self.variables_stack_pop(2)
 
     def exec_MPPEM(self):
         if self.graphics_state['pv'] == (0, 1):
-            self.program_stack.append(dataType.PPEM_Y())
-            self.putVariable(dataType.PPEM_Y())
+            self.program_stack_push(dataType.PPEM_Y())
         else:
-            self.program_stack.append(dataType.PPEM_X())
-            self.putVariable(dataType.PPEM_X())
+            self.program_stack_push(dataType.PPEM_X())
     
     def exec_MPS(self):
-        self.program_stack.append(dataType.PointSize())
-        self.putVariable(dataType.PointSize())
+        self.program_stack_push(dataType.PointSize())
 
     def exec_MSIRP(self):
         self.program_stack_pop(2)
-        self.variables_stack_pop(2)
 
     def exec_MUL(self):
         self.binary_operation('MUL')
 
     def exec_NEG(self):
-        op = self.program_stack[-1]
+        op = self.program_stack[-1].data
         if isinstance(op, dataType.AbstractValue):
             pass
         else:
-            self.program_stack[-1] = -op
+            self.program_stack_pop()
+            self.program_stack_push(-op)
 
     def exec_NEQ(self):
         self.binary_operation('NEQ')
 
     def exec_NOT(self):
-        op = self.program_stack[-1]
+        op = self.program_stack[-1].data
         if isinstance(op, dataType.AbstractValue):
             pass
         if (op == 0):
-            self.program_stack[-1] = 1
+            self.program_stack_pop()
+            self.program_stack_push(1)
         else:
-            self.program_stack[-1] = 0
+            self.program_stack_pop()
+            self.program_stack_push(0)
 
     def exec_NROUND(self):
         pass
@@ -544,15 +494,12 @@ class ExecutionContext(object):
 
     def exec_POP(self):
         self.program_stack_pop()
-        self.variables_stack_pop()
 
     def exec_RCVT(self):
-        op = self.program_stack[-1]
+        op = self.program_stack[-1].data
         self.program_stack_pop()
-        self.variables_stack_pop()
         res = self.cvt[op]
-        self.program_stack.append(res)
-        self.putVariable(res)
+        self.program_stack_push(res)
 
     def exec_RDTG(self):
         pass
@@ -568,18 +515,14 @@ class ExecutionContext(object):
 
     def exec_ROUND(self):
         self.program_stack_pop()
-        self.variables_stack_pop()
-        self.program_stack.append(dataType.F26Dot6())
-        self.putVariable(dataType.F26Dot6())
+        self.program_stack_push(dataType.F26Dot6())
 
     def exec_RS(self):
-        op = self.program_stack[-1]
+        op = self.program_stack[-1].data
         self.program_stack_pop()
-        self.variables_stack_pop()
         try:
             res = self.storage_area[op]
-            self.program_stack.append(res)
-            self.putVariable(res)
+            self.program_stack_push(res)
         except KeyError:
             raise KeyError
         
@@ -594,43 +537,33 @@ class ExecutionContext(object):
 
     def exec_S45ROUND(self):
         self.program_stack_pop()
-        self.variables_stack_pop()
 
     def exec_SANGW(self):
         self.program_stack_pop()
-        self.variables_stack_pop()
 
     def exec_SCANCTRL(self):
         self.program_stack_pop()
-        self.variables_stack_pop()   
  
     def exec_SCANTYPE(self):
         self.program_stack_pop()
-        self.variables_stack_pop()    
 
     def exec_SCFS(self):
         self.program_stack_pop(2)
-        self.variables_stack_pop(2)    
 
     def exec_SCVTCI(self):
         self.program_stack_pop()
-        self.variables_stack_pop()    
 
     def exec_SDB(self):
         self.program_stack_pop()
-        self.variables_stack_pop()    
 
     def exec_SDPVTL(self):
         self.program_stack_pop(2)
-        self.variables_stack_pop(2)    
 
     def exec_SDS(self):
         self.program_stack_pop()
-        self.variables_stack_pop()    
 
     def exec_SFVFS(self):
         self.program_stack_pop(2)
-        self.variables_stack_pop(2)    
 
     def exec_SFVTCA(self):#Set Freedom Vector To Coordinate Axis
         data = self.current_instruction.data[0]
@@ -642,14 +575,12 @@ class ExecutionContext(object):
            
     def exec_SFVTL(self):#Set Freedom Vector To Line
         self.program_stack_pop(2)
-        self.variables_stack_pop(2)    
 
     def exec_SFVTPV(self):#Set Freedom Vector To Projection Vector
         self.graphics_state['fv'] = self.graphics_state['gv']
 
     def exec_SHC(self):
         self.program_stack_pop(1)
-        self.variables_stack_pop(1)   
  
     def exec_SHP(self):
         loopValue = self.graphics_state['loop']
@@ -657,34 +588,27 @@ class ExecutionContext(object):
         if len(self.program_stack)<loopValue:
             raise Exception("truetype: hinting: stack underflow")
         self.program_stack_pop(loopValue)
-        self.variables_stack_pop(loopValue)
 
     def exec_SHPIX(self):
         self.program_stack_pop()
-        self.variables_stack_pop()
         loopValue = self.graphics_state['loop']
         self.graphics_state['loop'] = 1
         if len(self.program_stack)<loopValue:
             raise Exception("truetype: hinting: stack underflow")
         self.program_stack_pop(loopValue)
-        self.variables_stack_pop(loopValue)
 
     def exec_SHZ(self):
         self.program_stack_pop(1)
-        self.variables_stack_pop(1) 
   
     def exec_SLOOP(self):
-        self.graphics_state['loop'] = self.program_stack[-1]
+        self.graphics_state['loop'] = self.program_stack[-1].data
         self.program_stack_pop()
-        self.variables_stack_pop() 
 
     def exec_SMD(self):
         self.program_stack_pop()
-        self.variables_stack_pop() 
 
     def exec_SPVFS(self):
         self.program_stack_pop(2)
-        self.variables_stack_pop(2) 
 
     def exec_SPVTCA(self):
         data = self.current_instruction.data[0]
@@ -698,19 +622,15 @@ class ExecutionContext(object):
 
     def exec_SPVTL(self):
         self.program_stack_pop(2)
-        self.variables_stack_pop(2) 
 
     def exec_SROUND(self):
         self.program_stack_pop()
-        self.variables_stack_pop() 
 
     def exec_SSW(self):
         self.program_stack_pop()
-        self.variables_stack_pop() 
 
     def exec_SSWCI(self):
         self.program_stack_pop()
-        self.variables_stack_pop() 
 
     def exec_SUB(self):
         self.binary_operation('SUB')
@@ -735,23 +655,18 @@ class ExecutionContext(object):
 
     def exec_SZP0(self):
         self.program_stack_pop()
-        self.variables_stack_pop() 
 
     def exec_SZP1(self):
         self.program_stack_pop()
-        self.variables_stack_pop() 
 
     def exec_SZP2(self):
         self.program_stack_pop()
-        self.variables_stack_pop() 
 
     def exec_SZPS(self):
         self.program_stack_pop()
-        self.variables_stack_pop() 
 
     def exec_UTP(self):
         self.program_stack_pop()
-        self.variables_stack_pop() 
 
     def exec_WCVTF(self):
         self.exec_WCVTP()
@@ -767,9 +682,7 @@ class ExecutionContext(object):
         op2 = self.program_stack[-1]
         self.program_stack_pop(2)
 
-        v2 = self.getVariable()
-        v1 = self.getVariable()
-        return [op1,op2,v1,v2]
+        return [op1.data,op2.data,op1,op2]
 
     def exec_WS(self):
         res = self.getOpandVar()
@@ -797,7 +710,6 @@ class ExecutionContext(object):
     def exec_SRP(self,index):#SetRefPoint
         #self.graphics_state['rp'][index] = self.program_stack[-1]
         self.program_stack_pop()
-        self.variables_stack_pop()    
 
     def exec_SRP0(self):
         self.exec_SRP(0)
@@ -810,29 +722,23 @@ class ExecutionContext(object):
 
     def exec_S45ROUND(self):
         self.program_stack_pop()
-        self.variables_stack_pop()    
 
     def exec_SANGW(self):
         self.program_stack_pop()
-        self.variables_stack_pop()    
     
     def exec_SCFS(self):
         self.program_stack_pop(2)
-        self.variables_stack_pop(2)    
 
     def exec_SCVTCI(self):
-        self.graphics_state['controlValueCutIn'] = self.program_stack[-1]
+        self.graphics_state['controlValueCutIn'] = self.program_stack[-1].data
         self.program_stack_pop()
-        self.variables_stack_pop()
     
     def exec_SDB(self):
         self.program_stack_pop()
-        self.variables_stack_pop()    
 
     def exec_CALL(self):
-        data = self.program_stack[-1]
+        var = self.program_stack[-1]
         self.program_stack_pop()
-        var = self.getVariable()
         self.current_instruction_intermediate.append(IR.CallStatement(var))
         
 
@@ -891,7 +797,7 @@ class Executor(object):
         for item in self.program_state:
             if item.startswith('fpgm'):
                 self.program_state[item] = []
-        top = self.environment.program_stack[-1]
+        top = self.environment.program_stack[-1].data
         #if top not in self.program.call_function_set:
         self.program.call_function_set.append(top)
         if top not in global_fucntion_table:
@@ -939,9 +845,8 @@ class Executor(object):
                 self.maximum_stack_depth = len(self.environment.program_stack)
             
             if self.program_ptr.mnemonic == 'IF':
-                newBlock = IR.IfElseBlock(self.environment.variables[-1])
+                newBlock = IR.IfElseBlock(self.environment.program_stack[-1])
                 self.environment.program_stack.pop()
-                self.environment.variables.pop()
                 newBlock.setParent(self.conditionBlock)
                 self.conditionBlock = newBlock
                 self.conditionBlock.mode = 'IF'

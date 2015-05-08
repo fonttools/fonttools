@@ -203,7 +203,6 @@ class BinaryExpression(Expression):
     def __repr__(self):
 	return "%s %s %s" % (self.left, str(self.operator), self.right)
 
-
 class MethodCallStatement(object):
     def __init__(self, parameters = [], returnVal=None):
     	self.parameters = parameters
