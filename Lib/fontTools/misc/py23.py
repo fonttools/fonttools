@@ -23,7 +23,6 @@ try:
 
 		def unichr(i):
 			"""
-			
 			Return the unicode character whose Unicode code is the integer 'i'.
 			The valid range is 0 to 0x10FFFF inclusive.
 
@@ -55,7 +54,6 @@ try:
 
 		def byteord(c):
 			"""
-			Workaround for Python 2 "narrow" builds (UCS2 Unicode).
 			Given a 8-bit or unicode character, return an integer representing the
 			Unicode code point of the character. If a unicode argument is given, the
 			character's code point must be in the range 0 to 0x10FFFF inclusive.
