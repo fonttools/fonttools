@@ -125,6 +125,9 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 	def compile(self, ttFont):
 		self.updateFirstAndLastCharIndex(ttFont)
 		panose = self.panose
+		if self.version < 4 and self.fsSelection & 0b1110000000:
+			log.warning("fsSelection bits 7, 8 and 9 are only defined in "
+				"OS/2 table version 4 and up: version %s", self.version)
 		self.panose = sstruct.pack(panoseFormat, self.panose)
 		if self.version == 0:
 			data = sstruct.pack(OS2_format_0, self)
