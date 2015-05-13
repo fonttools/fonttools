@@ -151,6 +151,10 @@ class SUBOperator(Operator):
     def __repr__(self):
         return "-"
 
+class MULOperator(Operator):
+    def __repr__(self):
+        return "*"
+
 class DIVOperator(Operator):
     def __repr__(self):
         return "/"
@@ -198,7 +202,6 @@ class BinaryExpression(Expression):
 	self.operator = op
     def __repr__(self):
 	return "%s %s %s" % (self.left, str(self.operator), self.right)
-
 
 class MethodCallStatement(object):
     def __init__(self, parameters = [], returnVal=None):
