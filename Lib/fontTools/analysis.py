@@ -126,7 +126,7 @@ class Program(object):
     def print_program(self):
         self.body.pretty_print()
 
-class BytecodeFont(object):
+class BytecodeContainer(object):
     """ Represents the original bytecode-related global data for a TrueType font. """
     def __init__(self, tt):
         # tag id -> Program
@@ -286,7 +286,7 @@ def process(jobs, options):
     for input in jobs:
         tt = TTFont()
         tt.importXML(input, quiet=True)
-        ttFont = BytecodeFont(tt)
+        ttFont = BytecodeContainer(tt)
 
         if (options.allGlyphs):
             glyphs = filter(lambda x: x != 'fpgm' and x != 'prep', ttFont.programs.keys())
