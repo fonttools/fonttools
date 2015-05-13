@@ -137,6 +137,8 @@ class BytecodeContainer(object):
         self.constructCVTTable(tt)
         #extract instructions from font file
         self.extractProgram(tt)
+        #original TTFont object to be replaced
+        self.ttFont = tt
 
     def setup(self, programs):
         self.programs = programs
@@ -229,7 +231,22 @@ class BytecodeContainer(object):
         for key, value in self.function_table.items():
             value.constructBody()
 
-        
+    def updateTTFont(self):
+        self.replaceCVTTable()
+        self.replaceProgram()   
+ 
+    def replaceCVTTable(self):
+        #Reset old cvt table with a new table filled with 0s
+        self.ttFont['cvt '].values = array.array('i',(0,)*len(self.cvt_table))
+        try:
+            for i in range(len(self.cvt_table)):
+                self.ttFont['cvt '].values[i] = self.cvt_table[i]
+        except:
+            pass
+
+    def replaceProgram(self):
+        pass
+
 def analysis(tt, glyphs=[]):
     #one ttFont object for one ttx file       
     absExecutor = abstractExecute.Executor(tt)
