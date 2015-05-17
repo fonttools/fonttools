@@ -31,7 +31,11 @@ class SFNTReader(object):
 		self.sfntVersion = self.file.read(4)
 		self.file.seek(0)
 		if self.sfntVersion == b"ttcf":
-			sstruct.unpack(ttcHeaderFormat, self.file.read(ttcHeaderSize), self)
+			data = self.file.read(ttcHeaderSize)
+			if len(data) != ttcHeaderSize:
+				from fontTools import ttLib
+				raise ttLib.TTLibError("Not a Font Collection (not enough data)")
+			sstruct.unpack(ttcHeaderFormat, data, self)
 			assert self.Version == 0x00010000 or self.Version == 0x00020000, "unrecognized TTC version 0x%08x" % self.Version
 			if not 0 <= fontNumber < self.numFonts:
 				from fontTools import ttLib
@@ -40,13 +44,25 @@ class SFNTReader(object):
 			if self.Version == 0x00020000:
 				pass # ignoring version 2.0 signatures
 			self.file.seek(offsetTable[fontNumber])
-			sstruct.unpack(sfntDirectoryFormat, self.file.read(sfntDirectorySize), self)
+			data = self.file.read(sfntDirectorySize)
+			if len(data) != sfntDirectorySize:
+				from fontTools import ttLib
+				raise ttLib.TTLibError("Not a Font Collection (not enough data)")
+			sstruct.unpack(sfntDirectoryFormat, data, self)
 		elif self.sfntVersion == b"wOFF":
 			self.flavor = "woff"
 			self.DirectoryEntry = WOFFDirectoryEntry
-			sstruct.unpack(woffDirectoryFormat, self.file.read(woffDirectorySize), self)
+			data = self.file.read(woffDirectorySize)
+			if len(data) != woffDirectorySize:
+				from fontTools import ttLib
+				raise ttLib.TTLibError("Not a WOFF font (not enough data)")
+			sstruct.unpack(woffDirectoryFormat, data, self)
 		else:
-			sstruct.unpack(sfntDirectoryFormat, self.file.read(sfntDirectorySize), self)
+			data = self.file.read(sfntDirectorySize)
+			if len(data) != sfntDirectorySize:
+				from fontTools import ttLib
+				raise ttLib.TTLibError("Not a TrueType or OpenType font (not enough data)")
+			sstruct.unpack(sfntDirectoryFormat, data, self)
 		self.sfntVersion = Tag(self.sfntVersion)
 
 		if self.sfntVersion not in ("\x00\x01\x00\x00", "OTTO", "true"):
