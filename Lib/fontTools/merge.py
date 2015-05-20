@@ -920,7 +920,10 @@ __all__ = [
   'main'
 ]
 
-def main(args):
+def main(args=None):
+
+	if args is None:
+		args = sys.argv[1:]
 
 	log = Logger()
 	args = log.parse_opts(args)
@@ -942,4 +945,4 @@ def main(args):
 	log.lapse("make one with everything(TOTAL TIME)")
 
 if __name__ == "__main__":
-	main(sys.argv[1:])
+	main()
