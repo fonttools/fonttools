@@ -418,7 +418,7 @@ class ExecutionContext(object):
         self.program_stack_push(res)
 
     def exec_MDAP(self):
-        op = self.program_stack[-1].data
+        op = int(self.program_stack[-1].data)
         #assert isinstance(op, dataType.PointValue)
         self.program_stack_pop(1)
 
@@ -566,7 +566,7 @@ class ExecutionContext(object):
         self.program_stack_pop(2)
 
     def exec_SFVTCA(self):#Set Freedom Vector To Coordinate Axis
-        data = self.current_instruction.data[0]
+        data = int(self.current_instruction.data[0])
         assert (data is 1 or data is 0)
         if data == 0:
             self.graphics_state['fv'] = (0, 1)
@@ -611,7 +611,7 @@ class ExecutionContext(object):
         self.program_stack_pop(2)
 
     def exec_SPVTCA(self):
-        data = self.current_instruction.data[0]
+        data = int(self.current_instruction.data[0])
         assert (data is 1 or data is 0)
         if data == 0:
             self.graphics_state['pv'] = (0, 1)
@@ -636,7 +636,7 @@ class ExecutionContext(object):
         self.binary_operation('SUB')
 
     def exec_SVTCA(self):
-        data = self.current_instruction.data[0]
+        data = int(self.current_instruction.data[0])
         assert (data is 1 or data is 0)
         if data == 0:
             self.graphics_state['pv'] = (0, 1)
