@@ -60,7 +60,6 @@ setup(
 		long_description = long_description,
 		
 		packages = [
-			"",
 			"fontTools",
 			"fontTools.encodings",
 			"fontTools.misc",
@@ -68,6 +67,7 @@ setup(
 			"fontTools.ttLib",
 			"fontTools.ttLib.tables",
 		],
+		py_modules = ['sstruct', 'xmlWriter'],
 		package_dir = {'': 'Lib'},
 		extra_path = 'FontTools',
 		data_files = [('share/man/man1', ["Doc/ttx.1"])],
