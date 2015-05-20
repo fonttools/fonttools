@@ -2,33 +2,22 @@
 
 from __future__ import print_function
 import os, sys
-from distutils.core import setup, Extension
-from distutils.command.build_ext import build_ext
 
+# if setuptools is not installed, fall back to distutils
 try:
-	# load py2exe distutils extension, if available
-	import py2exe
+	from setuptools import setup
 except ImportError:
-	pass
+	from distutils.core import setup
+	distutils_scripts = [
+		"Tools/ttx", "Tools/pyftsubset", "Tools/pyftinspect", "Tools/pyftmerge"]
+else:
+	distutils_scripts = []
 
 try:
 	import xml.parsers.expat
 except ImportError:
 	print("*** Warning: FontTools needs PyXML, see:")
 	print("        http://sourceforge.net/projects/pyxml/")
-
-
-class build_ext_optional(build_ext):
-	"""build_ext command which doesn't abort when it fails."""
-	def build_extension(self, ext):
-		# Skip extensions which cannot be built
-		try:
-			build_ext.build_extension(self, ext)
-		except:
-			self.announce(
-				'*** WARNING: Building of extension "%s" '
-				'failed: %s' %
-				(ext.name, sys.exc_info()[1]))
 
 
 if sys.version_info > (2, 3, 0, 'alpha', 1):
@@ -71,6 +60,7 @@ setup(
 		long_description = long_description,
 		
 		packages = [
+			"",
 			"fontTools",
 			"fontTools.encodings",
 			"fontTools.misc",
@@ -80,8 +70,15 @@ setup(
 		],
 		package_dir = {'': 'Lib'},
 		extra_path = 'FontTools',
-		scripts = ["Tools/ttx", "Tools/pyftsubset", "Tools/pyftinspect", "Tools/pyftmerge"],
-		cmdclass = {"build_ext": build_ext_optional},
 		data_files = [('share/man/man1', ["Doc/ttx.1"])],
+		scripts = distutils_scripts,
+		entry_points = {
+				'console_scripts': [
+					"ttx = fontTools.ttx:main",
+					"pyftsubset = fontTools.subset:main",
+					"pyftmerge = fontTools.merge:main",
+					"pyftinspect = fontTools.inspect:main"
+				]
+			},
 		**classifiers
 	)
