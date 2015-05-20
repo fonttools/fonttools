@@ -292,11 +292,6 @@ class BytecodeContainer(object):
                 assembly.append('ENDF[ ]')
 
         ttFont['fpgm'].program.fromAssembly(assembly)
-        #assembly = ttFont['fpgm'].program.getAssembly()         
-
-        #print("TRANSLATED FPGM: ")
-        #for instr in assembly:
-        #    print (instr)
 
 
     def removeFunctions(self, uncalled_functions=[]):
