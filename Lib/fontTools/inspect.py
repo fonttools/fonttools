@@ -251,7 +251,9 @@ class Inspect(object):
 		self.scrolled_window.add(self.treeview)
 		self.window.show_all()
 
-def main(args):
+def main(args=None):
+	if args is None:
+		args = sys.argv[1:]
 	if len(args) < 1:
 		print("usage: pyftinspect font...", file=sys.stderr)
 		sys.exit(1)
@@ -260,4 +262,4 @@ def main(args):
 	gtk.main()
 
 if __name__ == "__main__":
-	main(sys.argv[1:])
+	main()

@@ -2644,7 +2644,10 @@ def parse_gids(s):
 def parse_glyphs(s):
     return s.replace(',', ' ').split()
 
-def main(args):
+def main(args=None):
+
+    if args is None:
+        args = sys.argv[1:]
 
     if '--help' in args:
         print(__doc__)
@@ -2768,4 +2771,4 @@ __all__ = [
 ]
 
 if __name__ == '__main__':
-    main(sys.argv[1:])
+    main()

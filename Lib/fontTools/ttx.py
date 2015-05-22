@@ -309,7 +309,9 @@ def waitForKeyPress():
 		pass
 
 
-def main(args):
+def main(args=None):
+	if args is None:
+		args = sys.argv[1:]
 	jobs, options = parseOptions(args)
 	try:
 		process(jobs, options)
@@ -332,4 +334,4 @@ def main(args):
 
 
 if __name__ == "__main__":
-	main(sys.argv[1:])
+	main()
