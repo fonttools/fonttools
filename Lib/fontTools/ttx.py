@@ -58,6 +58,8 @@ usage: ttx [options] inputfile1 [... inputfileN]
        and abort.
     -y <number> Select font number for TrueType Collection,
        starting from 0.
+    --unicodedata <UnicodeData.txt> Use custom database file to write
+       character names in the comments of the cmap TTX output.
 
     Compile options:
     -m Merge with TrueType-input-file: specify a TrueType or OpenType
@@ -72,6 +74,7 @@ from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont, TTLibError
 from fontTools.misc.macCreatorType import getMacCreatorAndType
+from fontTools.unicode import setUnicodeData
 import os
 import sys
 import getopt
@@ -116,6 +119,7 @@ class Options(object):
 	allowVID = False
 	ignoreDecompileErrors = True
 	bitmapGlyphDataFormat = 'raw'
+	unicodedata = None
 
 	def __init__(self, rawOptions, numFiles):
 		self.onlyTables = []
@@ -168,6 +172,8 @@ class Options(object):
 				self.allowVID = True
 			elif option == "-e":
 				self.ignoreDecompileErrors = False
+			elif option == "--unicodedata":
+				self.unicodedata = value
 		if self.onlyTables and self.skipTables:
 			print("-t and -x options are mutually exclusive")
 			sys.exit(2)
@@ -198,6 +204,8 @@ def ttList(input, output, options):
 def ttDump(input, output, options):
 	if not options.quiet:
 		print('Dumping "%s" to "%s"...' % (input, output))
+	if options.unicodedata:
+		setUnicodeData(options.unicodedata)
 	ttf = TTFont(input, 0, verbose=options.verbose, allowVID=options.allowVID,
 			quiet=options.quiet,
 			ignoreDecompileErrors=options.ignoreDecompileErrors,
@@ -259,7 +267,8 @@ def guessFileType(fileName):
 
 def parseOptions(args):
 	try:
-		rawOptions, files = getopt.getopt(args, "ld:o:fvqht:x:sim:z:baey:")
+		rawOptions, files = getopt.getopt(args, "ld:o:fvqht:x:sim:z:baey:",
+			['unicodedata='])
 	except getopt.GetoptError:
 		usage()
 
