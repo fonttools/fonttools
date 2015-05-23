@@ -73,6 +73,7 @@ class table__m_a_x_p(DefaultTable.DefaultTable):
 		maxCompositeContours = 0
 		maxComponentElements = 0
 		maxComponentDepth = 0
+		maxSizeOfInstructions = 0
 		allXMaxIsLsb = 1
 		for glyphName in ttFont.getGlyphOrder():
 			g = glyfTable[glyphName]
@@ -93,6 +94,11 @@ class table__m_a_x_p(DefaultTable.DefaultTable):
 					maxCompositeContours = max(maxCompositeContours, nContours)
 					maxComponentElements = max(maxComponentElements, len(g.components))
 					maxComponentDepth = max(maxComponentDepth, componentDepth)
+				if hasattr(g, 'program'):
+					instructions = g.program.getBytecode()
+					numInstructions = len(instructions)
+					maxSizeOfInstructions = max(maxSizeOfInstructions, numInstructions)
+		self.maxSizeOfInstructions = maxSizeOfInstructions
 		if xMin == +INFINITY:
 			headTable.xMin = 0
 			headTable.yMin = 0
