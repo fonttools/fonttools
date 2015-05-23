@@ -291,6 +291,8 @@ def parseOptions(args):
 			output = options.outputFile
 		else:
 			output = makeOutputFileName(input, options.outputDir, extension, options.overWrite)
+			# 'touch' output file to avoid race condition in choosing file names
+			open(output, 'a').close()
 		jobs.append((action, input, output))
 	return jobs, options
 
