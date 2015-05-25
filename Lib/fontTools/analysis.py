@@ -240,10 +240,10 @@ class BytecodeContainer(object):
         for key, value in self.function_table.items():
             value.constructBody()
 
+    #update the TTFont object passed with contets of current BytecodeContainer
     def updateTTFont(self, ttFont):
         self.replaceCVTTable(ttFont)
         self.replaceFpgm(ttFont)
-        self.replaceProgram()   
  
     def replaceCVTTable(self, ttFont):
         try:
@@ -252,9 +252,6 @@ class BytecodeContainer(object):
         except:
             pass
 
-    def replaceProgram(self):
-        pass
-    
     def replaceFpgm(self, ttFont):
         assembly = []
         skip = False
@@ -293,14 +290,15 @@ class BytecodeContainer(object):
 
         ttFont['fpgm'].program.fromAssembly(assembly)
 
-
-    def removeFunctions(self, uncalled_functions=[]):
-            if(len(uncalled_functions) > 0):
-                for label in uncalled_functions:
+    #remove functions passed from the function table
+    def removeFunctions(self, functions=[]):
+            if(len(functions) > 0):
+                for label in functions:
                     try:
                         del self.function_table[label]
                     except:
                         pass
+
 
 def analysis(tt, glyphs=[]):
     #one ttFont object for one ttx file       
@@ -387,7 +385,7 @@ def process(jobs, options):
 
             # get labels of functions that were never called (function_set - called_functions)
             unused_functions = [item for item in function_set if item not in called_functions]
-             
+          
             ttFont.removeFunctions(unused_functions)    
             ttFont.updateTTFont(tt)
             output = makeOutputFileName(input, ".ttf")
