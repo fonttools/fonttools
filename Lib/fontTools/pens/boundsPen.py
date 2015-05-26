@@ -76,20 +76,3 @@ class BoundsPen(ControlBoundsPen):
 			bounds = unionRect(bounds, calcQuadraticBounds(
 					self._getCurrentPoint(), bcp, pt))
 		self.bounds = bounds
-
-
-if __name__ == "__main__":
-	def draw(pen):
-		pen.moveTo((0, 0))
-		pen.lineTo((0, 100))
-		pen.qCurveTo((50, 75), (60, 50), (50, 25), (0, 0))
-		pen.curveTo((-50, 25), (-60, 50), (-50, 75), (0, 100))
-		pen.closePath()
-
-	pen = ControlBoundsPen(None)
-	draw(pen)
-	print(pen.bounds)
-
-	pen = BoundsPen(None)
-	draw(pen)
-	print(pen.bounds)
