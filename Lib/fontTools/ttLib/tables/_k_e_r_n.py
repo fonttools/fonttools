@@ -102,16 +102,10 @@ class KernTable_format_0(object):
 		nPairs, searchRange, entrySelector, rangeShift = struct.unpack(">HHHH", data[:8])
 		data = data[8:]
 
-		for k in range(nPairs):
-			if len(data) < 6:
-				# buggy kern table
-				data = b""
-				break
-			left, right, value = struct.unpack(">HHh", data[:6])
-			data = data[6:]
-			left, right = int(left), int(right)
+		for k in range(min(nPairs, len(data) // 6)):
+			left, right, value = struct.unpack(">HHh", data[6*k:6*k+6])
 			kernTable[(ttFont.getGlyphName(left), ttFont.getGlyphName(right))] = value
-		if len(data):
+		if len(data) > 6 * nPairs:
 			warnings.warn("excess data in 'kern' subtable: %d bytes" % len(data))
 
 	def compile(self, ttFont):
