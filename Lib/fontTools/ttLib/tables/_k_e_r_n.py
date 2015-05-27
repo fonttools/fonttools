@@ -5,6 +5,7 @@ from fontTools.misc.textTools import safeEval, readHex
 from fontTools.misc.fixedTools import fixedToFloat as fi2fl, floatToFixed as fl2fi
 from . import DefaultTable
 import struct
+import array
 import warnings
 
 
@@ -102,9 +103,16 @@ class KernTable_format_0(object):
 		nPairs, searchRange, entrySelector, rangeShift = struct.unpack(">HHHH", data[:8])
 		data = data[8:]
 
-		for k in range(min(nPairs, len(data) // 6)):
-			left, right, value = struct.unpack(">HHh", data[6*k:6*k+6])
-			kernTable[(ttFont.getGlyphName(left), ttFont.getGlyphName(right))] = value
+		nPairs = min(nPairs, len(data) // 6)
+		datas = array.array("H", data[:6 * nPairs])
+		if sys.byteorder != "big":
+			datas.byteswap()
+		it = iter(datas)
+		glyphOrder = ttFont.getGlyphOrder()
+		for k in range(nPairs):
+			left, right, value = next(it), next(it), next(it)
+			if value >= 32768: value -= 65536
+			kernTable[(glyphOrder[left], glyphOrder[right])] = value
 		if len(data) > 6 * nPairs:
 			warnings.warn("excess data in 'kern' subtable: %d bytes" % len(data))
 
