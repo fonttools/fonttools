@@ -2392,7 +2392,7 @@ class Subsetter(object):
                 table = font[tag]
                 self.log.lapse("load '%s'" % tag)
                 retain = table.prune_pre_subset(self.options)
-                self.log.lapse("prune    '%s'" % tag)
+                self.log.lapse("prune '%s'" % tag)
                 if not retain:
                     self.log(tag, "pruned to empty; dropped")
                     del font[tag]
