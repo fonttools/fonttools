@@ -123,7 +123,8 @@ class KernTable_format_0(object):
 
 		# yeehee! (I mean, turn names into indices)
 		getGlyphID = ttFont.getGlyphID
-		kernTable = sorted((getGlyphID(left), getGlyphID(right), value) for ((left,right),value) in self.kernTable.items())
+		reverseOrder = ttFont.getReverseGlyphMap()
+		kernTable = sorted((reverseOrder[left], reverseOrder[right], value) for ((left,right),value) in self.kernTable.items())
 		for left, right, value in kernTable:
 			data = data + struct.pack(">HHh", left, right, value)
 		return struct.pack(">HHH", self.version, len(data) + 6, self.coverage) + data
