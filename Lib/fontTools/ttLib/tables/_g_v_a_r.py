@@ -56,7 +56,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		axisTags = [axis.AxisTag for axis in ttFont["fvar"].table.VariationAxis]
 
 		sharedCoords = self.compileSharedCoords_(ttFont, axisTags)
-		sharedCoordIndices = dict([(sharedCoords[i], i) for i in range(len(sharedCoords))])
+		sharedCoordIndices = dict([(coord, i) for i, coord in enumerate(sharedCoords)])
 		sharedCoordSize = sum([len(c) for c in sharedCoords])
 
 		compiledGlyphs = self.compileGlyphs_(ttFont, axisTags, sharedCoordIndices)
@@ -365,9 +365,9 @@ class GlyphVariation(object):
 
 	def getUsedPoints(self):
 		result = set()
-		for p in range(len(self.coordinates)):
-			if self.coordinates[p] != (0, 0):
-				result.add(p)
+		for i, point in enumerate(self.coordinates):
+			if point != (0, 0):
+				result.add(i)
 		return result
 
 	def hasImpact(self):
@@ -396,8 +396,7 @@ class GlyphVariation(object):
 					writer.simpletag("coord", axis=axis, value=value, min=minValue, max=maxValue)
 				writer.newline()
 		wrote_any_points = False
-		for i in range(len(self.coordinates)):
-			x, y = self.coordinates[i]
+		for i, (x, y) in enumerate(self.coordinates):
 			if x != 0 or y != 0:
 				writer.simpletag("delta", pt=i, x=x, y=y)
 				writer.newline()
