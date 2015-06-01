@@ -86,11 +86,10 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 
 	def compileSharedCoords_(self, ttFont, axisTags):
 		coordCount = {}
-		for glyph in ttFont.getGlyphOrder():
-			if glyph in self.variations:
-				for gvar in self.variations[glyph]:
-					coord = gvar.compileCoord(axisTags)
-					coordCount[coord] = coordCount.get(coord, 0) + 1
+		for glyph, variations in self.variations.items():
+			for gvar in variations:
+				coord = gvar.compileCoord(axisTags)
+				coordCount[coord] = coordCount.get(coord, 0) + 1
 		sharedCoords = [(count, coord) for (coord, count) in coordCount.items() if count > 1]
 		sharedCoords.sort(reverse=True)
 		MAX_NUM_SHARED_COORDS = TUPLE_INDEX_MASK + 1
