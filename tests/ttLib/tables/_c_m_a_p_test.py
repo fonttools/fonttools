@@ -2,7 +2,7 @@ from __future__ import print_function, division, absolute_import, unicode_litera
 from fontTools.misc.py23 import *
 from fontTools import ttLib
 import unittest
-from ._c_m_a_p import CmapSubtable
+from fontTools.ttLib.tables._c_m_a_p import CmapSubtable
 
 class CmapSubtableTest(unittest.TestCase):
 

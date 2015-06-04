@@ -2,7 +2,7 @@ from __future__ import print_function, division, absolute_import, unicode_litera
 from fontTools.misc.py23 import *
 from fontTools.misc.xmlWriter import XMLWriter
 import unittest
-from ._n_a_m_e import NameRecord
+from fontTools.ttLib.tables._n_a_m_e import NameRecord
 
 class NameRecordTest(unittest.TestCase):
 
