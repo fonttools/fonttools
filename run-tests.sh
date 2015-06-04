@@ -11,9 +11,10 @@ fi
 test "x$PYTHON" = x && PYTHON=python
 
 # Setup environment
-DIR=`dirname "$0"`
-cd "$DIR/Lib"
-PYTHONPATH=".:$PYTHONPATH"
+DIR=`echo $(cd $(dirname "$0"); pwd)`
+LIBDIR="$DIR/Lib"
+TESTDIR="$DIR/tests"
+PYTHONPATH="$LIBDIR:$PYTHONPATH"
 export PYTHONPATH
 
 # Find tests
@@ -22,14 +23,15 @@ for arg in "$@"; do
 	test "x$FILTER" != x && FILTER="$FILTER|"
 	FILTER="$FILTER$arg"
 done
-
 test "x$FILTER" = "x" && FILTER=.
-TESTS=`grep -r --include='*.py' -l -e doctest -e unittest * | grep -E "$FILTER"`
+
+cd "$LIBDIR"
+DOCTESTS=`grep -r --include='*.py' -l -e doctest * | grep -E "$FILTER"`
 
 ret=0
 FAILS=
-for test in $TESTS; do
-	echo "Running tests in $test"
+for test in $DOCTESTS; do
+	echo "Running doctests in $test"
 	test=`echo "$test" | sed 's@[/\\]@.@g;s@[.]py$@@'`
 	if ! $PYTHON -m $test -v; then
 		ret=$((ret+1))
@@ -37,8 +39,21 @@ for test in $TESTS; do
 $test"
 	fi
 done
-	echo
-	echo "SUMMARY:"
+
+cd "$TESTDIR"
+UNITTESTS=`grep -r --include='*.py' -l -e unittest * | grep -E "$FILTER"`
+
+for test in $UNITTESTS; do
+	echo "Running unittests in $test"
+	if ! $PYTHON $test -v; then
+		ret=$((ret+1))
+		FAILS="$FAILS
+$test"
+	fi
+done
+
+echo
+echo "SUMMARY:"
 if test $ret = 0; then
 	echo "All tests passed."
 else
