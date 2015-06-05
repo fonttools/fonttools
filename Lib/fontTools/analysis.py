@@ -36,6 +36,18 @@ def makeOutputFileName(input, extension):
         n = n + 1
     return output
 
+def ttDump(input):
+    output = makeOutputFileName(input, ".ttx")
+    ttf = TTFont(input, 0, verbose=False, allowVID=False,
+            quiet=False, ignoreDecompileErrors=True,
+            fontNumber=-1)
+    ttf.saveXML(output, quiet=True, tables= [],
+            skipTables= [], splitTables=False,
+            disassembleInstructions=True,
+            bitmapGlyphDataFormat='raw')
+    ttf.close()
+    return output
+
 class Body(object):
     '''
     Encapsulates a list of statements.
@@ -406,9 +418,9 @@ def parseOptions(args):
     for input in files:
         fileformat = input.split('.')[-1]
         if fileformat == 'ttf':
-            #TODO: transform ttf file to ttx and feed it to the analysis
-            raise NotImplementedError
-        if fileformat == 'ttx':
+            output = ttDump(input)
+            jobs.append(output)
+        elif fileformat == 'ttx':
             jobs.append(input)
         else:
             raise NotImplementedError
