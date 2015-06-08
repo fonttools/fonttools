@@ -25,7 +25,7 @@ def fixedToFloat(value, precisionBits):
 	# If the range of valid choices spans an integer, return the integer.
 	if int(lo) != int(hi):
 		return round(value)
-	fmt = "%%.%df" % ((precisionBits + 2) // 3)
+	fmt = "%.8f"
 	lo = fmt % lo
 	hi = fmt % hi
 	i = 0
@@ -35,8 +35,9 @@ def fixedToFloat(value, precisionBits):
 	out = lo[:i]
 	assert -1 != out.find('.') # Both ends should be the same past decimal point
 	if i < length:
-		# Append mid-point digit of half-open range (l,h].
-		out = out + str((int(lo[i]) + int(hi[i]) + 1) // 2)
+		fmt = "%%.%df" % (i - out.find('.'))
+		value = fmt % value
+		out += value[-1]
 	return float(out)
 
 def floatToFixed(value, precisionBits):
