@@ -352,6 +352,14 @@ class GlyphVariationTest(unittest.TestCase):
 		data = deHexStr("DE AD C0 00 20 00 DE AD")
 		self.assertEqual(({"wght": -1.0, "wdth": 0.5}, 6), decompileCoord(["wght", "wdth"], data, 2))
 
+	def test_decompileCoord_roundTrip(self):
+		# Make sure we are not affected by https://github.com/behdad/fonttools/issues/286
+		data = deHexStr("7F B9 80 35")
+		values, _ = GlyphVariation.decompileCoord_(["wght", "wdth"], data, 0)
+		axisValues = dict([(axis, (val, val, val)) for axis, val in  values.items()])
+		gvar = GlyphVariation(axisValues, GlyphCoordinates.zeros(4))
+		self.assertEqual("7F B9 80 35", hexencode(gvar.compileCoord(["wght", "wdth"])))
+
 	def test_decompileCoords(self):
 		decompileCoords = GlyphVariation.decompileCoords_
 		axes = ["wght", "wdth", "opsz"]
