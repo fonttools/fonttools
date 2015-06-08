@@ -14,31 +14,7 @@ def fixedToFloat(value, precisionBits):
 	that has the shortest decimal reprentation.  Eg. to convert a
 	fixed number in a 2.14 format, use precisionBits=14.  This is
 	pretty slow compared to a simple division.  Use sporadically.
-
-	>>> "%g" % fixedToFloat(13107, 14)
-	'0.8'
-	>>> "%g" % fixedToFloat(0, 14)
-	'0'
-	>>> "%g" % fixedToFloat(0x4000, 14)
-	'1'
-	>>> "%g" % fixedToFloat(-16384, 14)
-	'-1'
-	>>> "%g" % fixedToFloat(-16383, 14)
-	'-0.99994'
-	>>> "%g" % fixedToFloat(16384, 14)
-	'1'
-	>>> "%g" % fixedToFloat(16383, 14)
-	'0.99994'
-	>>> "%g" % fixedToFloat(-639, 6)
-	'-9.99'
-	>>> "%g" % fixedToFloat(-640, 6)
-	'-10'
-	>>> "%g" % fixedToFloat(639, 6)
-	'9.99'
-	>>> "%g" % fixedToFloat(640, 6)
-	'10'
 	"""
-
 	if not value: return 0.0
 
 	scale = 1 << precisionBits
@@ -66,25 +42,5 @@ def fixedToFloat(value, precisionBits):
 def floatToFixed(value, precisionBits):
 	"""Converts a float to a fixed-point number given the number of
 	precisionBits.  Ie. int(round(value * (1<<precisionBits))).
-
-	>>> floatToFixed(0.8, 14)
-	13107
-	>>> floatToFixed(1.0, 14)
-	16384
-	>>> floatToFixed(1, 14)
-	16384
-	>>> floatToFixed(-1.0, 14)
-	-16384
-	>>> floatToFixed(-1, 14)
-	-16384
-	>>> floatToFixed(0, 14)
-	0
 	"""
-
 	return int(round(value * (1<<precisionBits)))
-
-
-if __name__ == "__main__":
-	import sys
-	import doctest
-	sys.exit(doctest.testmod().failed)
