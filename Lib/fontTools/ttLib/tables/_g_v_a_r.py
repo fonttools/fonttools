@@ -2,7 +2,7 @@ from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools import ttLib
 from fontTools.misc import sstruct
-from fontTools.misc.fixedTools import floatToFixed
+from fontTools.misc.fixedTools import fixedToFloat, floatToFixed
 from fontTools.misc.textTools import safeEval
 from fontTools.ttLib import TTLibError
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
@@ -478,10 +478,7 @@ class GlyphVariation(object):
 		coord = {}
 		pos = offset
 		for axis in axisTags:
-			# Work around https://github.com/behdad/fonttools/issues/286
-			# coord[axis] = fixedToFloat(struct.unpack(">h", data[pos:pos+2])[0], 14)
-			fixedValue = struct.unpack(">h", data[pos:pos+2])[0]
-			coord[axis] = float(fixedValue) / (1 << 14)
+			coord[axis] = fixedToFloat(struct.unpack(">h", data[pos:pos+2])[0], 14)
 			pos += 2
 		return coord, pos
 
