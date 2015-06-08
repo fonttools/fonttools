@@ -5,9 +5,14 @@ import unittest
 
 
 class FixedToolsTest(unittest.TestCase):
-    #def test_roundtrip(self):
-    #    for value in range(-32768, 32768):
-    #        self.assertEqual(value, floatToFixed(fixedToFloat(value, 14), 14))
+
+    def test_roundtrip_14(self):
+        for value in range(-32768, 32768):
+            self.assertEqual(value, floatToFixed(fixedToFloat(value, 14), 14))
+
+    def test_roundtrip_6(self):
+        for value in range(-64, 64):
+            self.assertEqual(value, floatToFixed(fixedToFloat(value, 6), 6))
 
     def test_fixedToFloat_precision14(self):
         self.assertEqual(0.8, fixedToFloat(13107, 14))
@@ -18,9 +23,9 @@ class FixedToolsTest(unittest.TestCase):
         self.assertEqual(-0.99994, fixedToFloat(-16383, 14))
 
     def test_fixedToFloat_precision6(self):
-        self.assertAlmostEqual(-9.99, fixedToFloat(-639, 6))
+        self.assertAlmostEqual(-9.98, fixedToFloat(-639, 6))
         self.assertAlmostEqual(-10.0, fixedToFloat(-640, 6))
-        self.assertAlmostEqual(9.99, fixedToFloat(639, 6))
+        self.assertAlmostEqual(9.98, fixedToFloat(639, 6))
         self.assertAlmostEqual(10.0, fixedToFloat(640, 6))
 
     def test_floatToFixed_precision14(self):
