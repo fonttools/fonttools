@@ -361,7 +361,7 @@ class GlyphVariation(object):
 	def getUsedPoints(self):
 		result = set()
 		for i, point in enumerate(self.coordinates):
-			if point != None:
+			if point is not None:
 				result.add(i)
 		return result
 
@@ -372,7 +372,7 @@ class GlyphVariation(object):
 		without making any visible difference.
 		"""
 		for c in self.coordinates:
-			if c != None:
+			if c is not None:
 				return True
 		return False
 
@@ -392,7 +392,7 @@ class GlyphVariation(object):
 				writer.newline()
 		wrote_any_points = False
 		for i, point in enumerate(self.coordinates):
-			if point != None:
+			if point is not None:
 				writer.simpletag("delta", pt=i, x=point[0], y=point[1])
 				writer.newline()
 				wrote_any_points = True
