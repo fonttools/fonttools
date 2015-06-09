@@ -14,6 +14,8 @@ def fixedToFloat(value, precisionBits):
 	that has the shortest decimal reprentation.  Eg. to convert a
 	fixed number in a 2.14 format, use precisionBits=14.  This is
 	pretty slow compared to a simple division.  Use sporadically.
+
+	precisionBits is only supported up to 16.
 	"""
 	if not value: return 0.0
 
@@ -28,17 +30,15 @@ def fixedToFloat(value, precisionBits):
 	fmt = "%.8f"
 	lo = fmt % lo
 	hi = fmt % hi
-	i = 0
-	length = min(len(lo), len(hi))
-	while i < length and lo[i] == hi[i]:
-		i += 1
-	out = lo[:i]
-	assert -1 != out.find('.') # Both ends should be the same past decimal point
-	if i < length:
-		fmt = "%%.%df" % (i - out.find('.'))
-		value = fmt % value
-		out += value[-1]
-	return float(out)
+	assert len(lo) == len(hi) and lo != hi
+	for i in range(len(lo)):
+		if lo[i] != hi[i]:
+			break
+	period = lo.find('.')
+	assert period < i
+	fmt = "%%.%df" % (i - period)
+	value = fmt % value
+	return float(value)
 
 def floatToFixed(value, precisionBits):
 	"""Converts a float to a fixed-point number given the number of

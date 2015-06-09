@@ -6,13 +6,10 @@ import unittest
 
 class FixedToolsTest(unittest.TestCase):
 
-    def test_roundtrip_14(self):
-        for value in range(-32768, 32768):
-            self.assertEqual(value, floatToFixed(fixedToFloat(value, 14), 14))
-
-    def test_roundtrip_6(self):
-        for value in range(-64, 64):
-            self.assertEqual(value, floatToFixed(fixedToFloat(value, 6), 6))
+    def test_roundtrip(self):
+        for bits in range(0, 15):
+            for value in range(-(2**(bits+1)), 2**(bits+1)):
+                self.assertEqual(value, floatToFixed(fixedToFloat(value, bits), bits))
 
     def test_fixedToFloat_precision14(self):
         self.assertEqual(0.8, fixedToFloat(13107, 14))
