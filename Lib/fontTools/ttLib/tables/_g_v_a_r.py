@@ -85,7 +85,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 
 	def compileSharedCoords_(self, axisTags):
 		coordCount = {}
-		for glyph, variations in self.variations.items():
+		for variations in self.variations.values():
 			for gvar in variations:
 				coord = gvar.compileCoord(axisTags)
 				coordCount[coord] = coordCount.get(coord, 0) + 1
