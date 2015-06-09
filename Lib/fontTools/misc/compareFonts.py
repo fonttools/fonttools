@@ -8,6 +8,14 @@ usage: comparefonts [options] fontA fontB
     -v Verbose: be more verbose
     -f INDEX First: first glyph index of the range to be compared
     -l INDEX Last: last glyph index of the range to be compared
+    -x HRES Hres: Horizontal resolution dpi
+    -y VRES Vres: Vertical resolution dpi
+
+    If no glyph index range is provided, all glyphs from FontA
+    will be tested.
+    If no horizonta/vertical dpi resolution is provided, glyphs
+    will be rendered on the following resolutions: 72x72,
+    300x300, 600x600, 1200x1200 and 2400x2400.
 """
 
 from __future__ import print_function
@@ -35,9 +43,7 @@ def compareFontGlyphs(fontA, fontB, resoList, firstGlyphIndex, lastGlyphIndex):
                   against glyphs of fontA
 
     :param resoList: list of tuples for horizontal and vertical
-                     resolution in dpi. If None, 72x72, 300x300,
-                     600x600, 1200x1200 and 2400x2400 dpi  will 
-                     be used by default
+                     resolution in dpi.
     
     :param glyphList: a list of glyph indexes to be compared. If
                       None, all glyphs from fontA will be tested.
@@ -131,6 +137,10 @@ class Options(object):
 
  
     def __init__(self, rawOptions, files):
+        
+        hres = 0
+        vres = 0
+
         for option, value in rawOptions:
             if option == "-h":
                 usage()
@@ -143,15 +153,27 @@ class Options(object):
             elif option == "-l":
                 if(value > self.firstGlyph):
                     self.lastGlyph = int(value)
+            elif option == "-x":
+                hres = int(value)
+            elif option == "-y":
+                vres = int(value)
 
         if(self.verbose):
              logging.basicConfig(level = logging.INFO)
         else:
             logging.basicConfig(level = logging.ERROR)
+        
+        if(hres != 0 and vres == 0):
+            vres = hres
+        elif(vres != 0 and hres == 0):
+            hres = vres
+        if(hres != 0 and vres != 0):
+            del self.resolutionList[:]
+            self.resolutionList.append((hres, vres))
 
 def parseOptions(args):
     try:
-        rawOptions, files = getopt.getopt(args, "hvr:f:l:")
+        rawOptions, files = getopt.getopt(args, "hvr:f:l:x:y:")
     except getopt.GetoptError:
         usage()
 
