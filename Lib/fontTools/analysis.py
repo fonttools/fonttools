@@ -400,7 +400,8 @@ def process(jobs, options):
           
             ttFont.removeFunctions(unused_functions)    
             ttFont.updateTTFont(tt)
-            output = makeOutputFileName(input, ".ttf")
+            output = "Reduced"+input
+            output = makeOutputFileName(output, ".ttf")
             tt.save(output)
 
 def parseOptions(args):
