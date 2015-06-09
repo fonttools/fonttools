@@ -92,10 +92,6 @@ class GlyphVariationTableTest(unittest.TestCase):
 		self.assertEqual([gvar1, gvar2], table.decompileGlyph_(numPoints, {}, axisTags, data))
 
 	def test_compileSharedCoords(self):
-		class FakeFont:
-			def getGlyphOrder(self):
-				return ["A", "B", "C"]
-		font = FakeFont()
 		table = table__g_v_a_r()
 		table.variations = {}
 		deltas = [None] * 4
@@ -113,7 +109,7 @@ class GlyphVariationTableTest(unittest.TestCase):
 		]
 		# {"wght":1.0, "wdth":0.7} is shared 3 times; {"wght":1.0, "wdth":0.8} is shared twice.
 		# Min and max values are not part of the shared coordinate pool and should get ignored.
-		result = table.compileSharedCoords_(font, ["wght", "wdth"])
+		result = table.compileSharedCoords_(["wght", "wdth"])
 		self.assertEqual(["40 00 2C CD", "40 00 33 33"], [hexencode(c) for c in result])
 
 	def test_decompileSharedCoords_Skia(self):
