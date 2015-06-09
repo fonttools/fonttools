@@ -5,18 +5,22 @@ usage: comparefonts [options] fontA fontB
 
     General options:
     -h Help: print this message
-    -G AllGlyphs: execute prep plus hints for all glyphs in font
     -v Verbose: be more verbose
+    -f INDEX First: first glyph index of the range to be compared
+    -l INDEX Last: last glyph index of the range to be compared
 """
 
 from __future__ import print_function
 import numpy
 import sys
 import getopt
+import logging
 from freetype import *
 import matplotlib.pyplot as plt
 from matplotlib.path import Path
 import matplotlib.patches as patches
+
+logger = logging.getLogger(" ")
 
 def compareFontGlyphs(fontA, fontB, resoList, firstGlyphIndex, lastGlyphIndex):
     '''
@@ -51,8 +55,8 @@ def compareFontGlyphs(fontA, fontB, resoList, firstGlyphIndex, lastGlyphIndex):
     except:
         raise ValueError('Failed to load font ', fontB)
 
-        if(lastGlyphIndex > faceA.num_glyphs):
-            lastGlyphIndex = faceA.num_glyphs
+    if(lastGlyphIndex == -1 or firstGlyphIndex > lastGlyphIndex):
+        lastGlyphIndex = faceA.num_glyphs
 
     print("Range to be tested: %d-%d" % (firstGlyphIndex, lastGlyphIndex))
 
@@ -80,8 +84,12 @@ def compareFontGlyphs(fontA, fontB, resoList, firstGlyphIndex, lastGlyphIndex):
                     faceB.load_glyph(agindex)
                     equal = compareGlyph(faceA.glyph, faceB.glyph)
                     if(not equal):
+                        logger.info("Differing on glyph index %d", agindex)
                         differCount += 1
+                except KeyboardInterrupt:
+                    raise KeyboardInterrupt
                 except:
+                    logger.warn("Failed to load glyph index %d", agindex)
                     failCount += 1
                 char, agindex = faceA.get_next_char(char, agindex)
            
@@ -89,7 +97,8 @@ def compareFontGlyphs(fontA, fontB, resoList, firstGlyphIndex, lastGlyphIndex):
         if(failCount > 0):
             print("Failed to load %d glyphs" % failCount)
 
-    print("\nTotal number of glyphs inspected: %d" % glyphCount)
+    print("\nTotal of %d glyphs inspected over %d different dpi resolutions"
+            % ((lastGlyphIndex-firstGlyphIndex+1), len(resoList)) )
 
 def compareGlyph(glyphA, glyphB):
     bitmapA = glyphA.bitmap
@@ -116,7 +125,7 @@ def usage():
 class Options(object):
     verbose = False
     firstGlyph = 1 
-    lastGlyph = 255 
+    lastGlyph = -1 
     resolutionList = [(72,72), (300, 300), (600, 600),
                       (1200, 1200), (2400, 2400)]
 
@@ -129,15 +138,20 @@ class Options(object):
                 self.verbose = True
             elif option == "-r":
                 self.resolutionList = [(value, value)]
-            elif option == "-b":
-                self.firstGlyph = value
-            elif option == "-e":
+            elif option == "-f":
+                self.firstGlyph = int(value)
+            elif option == "-l":
                 if(value > self.firstGlyph):
-                    self.lastGlyph = value
+                    self.lastGlyph = int(value)
+
+        if(self.verbose):
+             logging.basicConfig(level = logging.INFO)
+        else:
+            logging.basicConfig(level = logging.ERROR)
 
 def parseOptions(args):
     try:
-        rawOptions, files = getopt.getopt(args, "hvr:b:e:")
+        rawOptions, files = getopt.getopt(args, "hvr:f:l:")
     except getopt.GetoptError:
         usage()
 
@@ -154,10 +168,19 @@ def parseOptions(args):
 
 def main(args):
     
-    options, fontA, fontB = parseOptions(args)
-    compareFontGlyphs(fontA, fontB, options.resolutionList,
-                      options.firstGlyph, options.lastGlyph)
-
+    try:
+        options, fontA, fontB = parseOptions(args)
+        compareFontGlyphs(fontA, fontB, options.resolutionList,
+                          int(options.firstGlyph), int(options.lastGlyph))
+    
+    except ValueError as err:
+        print(err)
+    except KeyboardInterrupt:
+        print ("\nInterrupted")
+        try:
+            sys.exit(0)
+        except SystemExit:
+            os._exit(0)
+    
 if __name__ == "__main__":
     main(sys.argv[1:])
-
