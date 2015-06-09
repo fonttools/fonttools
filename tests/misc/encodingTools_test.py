@@ -1,7 +1,7 @@
 from __future__ import print_function, division, absolute_import, unicode_literals
 from fontTools.misc.py23 import *
 import unittest
-from .encodingTools import getEncoding
+from fontTools.misc.encodingTools import getEncoding
 
 class EncodingTest(unittest.TestCase):
 

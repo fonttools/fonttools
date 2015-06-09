@@ -1,7 +1,7 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 import unittest
-from .xmlWriter import XMLWriter
+from fontTools.misc.xmlWriter import XMLWriter
 
 HEADER = b'<?xml version="1.0" encoding="UTF-8"?>\n'
 
