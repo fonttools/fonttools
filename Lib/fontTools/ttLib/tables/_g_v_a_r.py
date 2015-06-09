@@ -5,7 +5,6 @@ from fontTools.misc import sstruct
 from fontTools.misc.fixedTools import fixedToFloat, floatToFixed
 from fontTools.misc.textTools import safeEval
 from fontTools.ttLib import TTLibError
-from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
 from . import DefaultTable
 import array
 import io
@@ -106,10 +105,6 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 
 	def compileGlyph_(self, glyphName, numPointsInGlyph, axisTags, sharedCoordIndices):
 		variations = self.variations.get(glyphName, [])
-		# Omit variations that have no user-visible impact because their deltas
-		# are all (0, 0).  In the Apple Skia font, about 5% of all glyph variation
-		# tuples can be omitted.  On the other hand, in the JamRegular and
-		# BuffaloGalRegular fonts, all tuples have at least one non-zero delta.
 		variations = [v for v in variations if v.hasImpact()]
 		if len(variations) == 0:
 			return b""
@@ -286,7 +281,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 			points = sharedPoints
 		deltas_x, pos = GlyphVariation.decompileDeltas_(len(points), tupleData, pos)
 		deltas_y, pos = GlyphVariation.decompileDeltas_(len(points), tupleData, pos)
-		deltas = GlyphCoordinates.zeros(numPoints)
+		deltas = [None] * numPoints
 		for p, x, y in zip(points, deltas_x, deltas_y):
 				deltas[p] = (x, y)
 		return GlyphVariation(axes, deltas)
@@ -333,7 +328,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 				if isinstance(element, tuple):
 					name, attrs, content = element
 					if name == "tuple":
-						gvar = GlyphVariation({}, GlyphCoordinates.zeros(numPoints))
+						gvar = GlyphVariation({}, [None] * numPoints)
 						glyphVariations.append(gvar)
 						for tupleElement in content:
 							if isinstance(tupleElement, tuple):
@@ -366,7 +361,7 @@ class GlyphVariation(object):
 	def getUsedPoints(self):
 		result = set()
 		for i, point in enumerate(self.coordinates):
-			if point != (0, 0):
+			if point != None:
 				result.add(i)
 		return result
 
@@ -377,7 +372,7 @@ class GlyphVariation(object):
 		without making any visible difference.
 		"""
 		for c in self.coordinates:
-			if c != (0, 0):
+			if c != None:
 				return True
 		return False
 
@@ -396,13 +391,13 @@ class GlyphVariation(object):
 					writer.simpletag("coord", axis=axis, value=value, min=minValue, max=maxValue)
 				writer.newline()
 		wrote_any_points = False
-		for i, (x, y) in enumerate(self.coordinates):
-			if x != 0 or y != 0:
-				writer.simpletag("delta", pt=i, x=x, y=y)
+		for i, point in enumerate(self.coordinates):
+			if point != None:
+				writer.simpletag("delta", pt=i, x=point[0], y=point[1])
 				writer.newline()
 				wrote_any_points = True
 		if not wrote_any_points:
-			writer.comment("all deltas are (0,0)")
+			writer.comment("no deltas")
 			writer.newline()
 		writer.endtag("tuple")
 		writer.newline()
@@ -572,9 +567,13 @@ class GlyphVariation(object):
 		return (result, pos)
 
 	def compileDeltas(self, points):
-		points = sorted(list(points))
-		deltaX = [self.coordinates[p][0] for p in points]
-		deltaY = [self.coordinates[p][1] for p in points]
+		deltaX = []
+		deltaY = []
+		for p in sorted(list(points)):
+			c = self.coordinates[p]
+			if c is not None:
+				deltaX.append(c[0])
+				deltaY.append(c[1])
 		return self.compileDeltaValues_(deltaX) + self.compileDeltaValues_(deltaY)
 
 	@staticmethod
