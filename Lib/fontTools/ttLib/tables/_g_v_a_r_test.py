@@ -271,8 +271,8 @@ class GlyphVariationTest(unittest.TestCase):
 		tuple, data = gvar.compile(axisTags, sharedCoordIndices, sharedPoints=None)
 		# len(data)=13; flags=PRIVATE_POINT_NUMBERS; tupleIndex=0x77
 		# embeddedCoord=[]; intermediateCoord=[]
-		self.assertEqual("00 0D 20 77", hexencode(tuple))
-		self.assertEqual("03 02 00 01 01 "  # 3 points: [0, 1, 2]
+		self.assertEqual("00 09 20 77", hexencode(tuple))
+		self.assertEqual("00 "              # all points in glyph
 				 "02 07 08 09 "     # deltaX: [7, 8, 9]
 				 "02 04 05 06",     # deltaY: [4, 5, 6]
 				 hexencode(data))
@@ -285,8 +285,8 @@ class GlyphVariationTest(unittest.TestCase):
 		tuple, data = gvar.compile(axisTags, sharedCoordIndices, sharedPoints=None)
 		# len(data)=13; flags=PRIVATE_POINT_NUMBERS; tupleIndex=0x77
 		# embeddedCoord=[]; intermediateCoord=[(0.0, 0.0), (1.0, 1.0)]
-		self.assertEqual("00 0D 60 77 00 00 00 00 40 00 40 00", hexencode(tuple))
-		self.assertEqual("03 02 00 01 01 "  # 3 points: [0, 1, 2]
+		self.assertEqual("00 09 60 77 00 00 00 00 40 00 40 00", hexencode(tuple))
+		self.assertEqual("00 "              # all points in glyph
 				 "02 07 08 09 "     # deltaX: [7, 8, 9]
 				 "02 04 05 06",     # deltaY: [4, 5, 6]
 				 hexencode(data))
@@ -322,8 +322,8 @@ class GlyphVariationTest(unittest.TestCase):
 		tuple, data = gvar.compile(axisTags, sharedCoordIndices={}, sharedPoints=None)
 		# len(data)=13; flags=PRIVATE_POINT_NUMBERS|EMBEDDED_TUPLE_COORD
 		# embeddedCoord=[(0.5, 0.8)]; intermediateCoord=[]
-		self.assertEqual("00 0D A0 00 20 00 33 33", hexencode(tuple))
-		self.assertEqual("03 02 00 01 01 "  # 3 points: [0, 1, 2]
+		self.assertEqual("00 09 A0 00 20 00 33 33", hexencode(tuple))
+		self.assertEqual("00 "              # all points in glyph
 				 "02 07 08 09 "     # deltaX: [7, 8, 9]
 				 "02 04 05 06",     # deltaY: [4, 5, 6]
 				 hexencode(data))
@@ -335,8 +335,8 @@ class GlyphVariationTest(unittest.TestCase):
 		tuple, data = gvar.compile(axisTags, sharedCoordIndices={}, sharedPoints=None)
 		# len(data)=13; flags=PRIVATE_POINT_NUMBERS|INTERMEDIATE_TUPLE|EMBEDDED_TUPLE_COORD
 		# embeddedCoord=(0.5, 0.8); intermediateCoord=[(0.4, 0.7), (0.6, 0.9)]
-		self.assertEqual("00 0D E0 00 20 00 33 33 19 9A 2C CD 26 66 39 9A", hexencode(tuple))
-		self.assertEqual("03 02 00 01 01 "  # 3 points: [0, 1, 2]
+		self.assertEqual("00 09 E0 00 20 00 33 33 19 9A 2C CD 26 66 39 9A", hexencode(tuple))
+		self.assertEqual("00 "              # all points in glyph
 				 "02 07 08 09 "     # deltaX: [7, 8, 9]
 				 "02 04 05 06",     # deltaY: [4, 5, 6]
 				 hexencode(data))
@@ -380,6 +380,7 @@ class GlyphVariationTest(unittest.TestCase):
 
 	def test_compilePoints(self):
 		compilePoints = lambda p: GlyphVariation.compilePoints(set(p), numPointsInGlyph=999)
+		self.assertEqual("00", hexencode(compilePoints(range(999))))  # all points in glyph
 		self.assertEqual("01 00 07", hexencode(compilePoints([7])))
 		self.assertEqual("01 80 FF FF", hexencode(compilePoints([65535])))
 		self.assertEqual("02 01 09 06", hexencode(compilePoints([9, 15])))
