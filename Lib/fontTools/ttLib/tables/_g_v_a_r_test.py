@@ -83,13 +83,13 @@ class GlyphVariationTableTest(unittest.TestCase):
 	def test_compileGlyph_roundTrip(self):
 		table = table__g_v_a_r()
 		axisTags = ["wght", "wdth"]
-		numPoints = 4
+		numPointsInGlyph = 4
 		glyphCoords = [(1,1), (2,2), (3,3), (4,4)]
 		gvar1 = GlyphVariation({"wght": (0.5, 1.0, 1.0), "wdth": (1.0, 1.0, 1.0)}, glyphCoords)
 		gvar2 = GlyphVariation({"wght": (1.0, 1.0, 1.0), "wdth": (1.0, 1.0, 1.0)}, glyphCoords)
 		table.variations = {"oslash": [gvar1, gvar2]}
-		data = table.compileGlyph_("oslash", numPoints, axisTags, {})
-		self.assertEqual([gvar1, gvar2], table.decompileGlyph_(numPoints, {}, axisTags, data))
+		data = table.compileGlyph_("oslash", numPointsInGlyph, axisTags, {})
+		self.assertEqual([gvar1, gvar2], table.decompileGlyph_(numPointsInGlyph, {}, axisTags, data))
 
 	def test_compileSharedCoords(self):
 		table = table__g_v_a_r()
@@ -150,7 +150,7 @@ class GlyphVariationTableTest(unittest.TestCase):
 
 	def test_decompileGlyph_empty(self):
 		table = table__g_v_a_r()
-		self.assertEqual([], table.decompileGlyph_(numPoints=5, sharedCoords=[], axisTags=[], data=b""))
+		self.assertEqual([], table.decompileGlyph_(numPointsInGlyph=5, sharedCoords=[], axisTags=[], data=b""))
 
 	def test_computeMinMaxCord(self):
 		coord = {"wght": -0.3, "wdth": 0.7}
@@ -379,30 +379,30 @@ class GlyphVariationTest(unittest.TestCase):
 		self.assertEqual((coords, 20), decompileCoords(axes, numCoords=3, data=data, offset=2))
 
 	def test_compilePoints(self):
-		compilePoints = GlyphVariation.compilePoints
-		self.assertEqual("01 00 07", hexencode(compilePoints(set([7]))))
-		self.assertEqual("01 80 FF FF", hexencode(compilePoints(set([65535]))))
-		self.assertEqual("02 01 09 06", hexencode(compilePoints(set([9, 15]))))
-		self.assertEqual("06 05 07 01 F7 02 01 F2", hexencode(compilePoints(set([7, 8, 255, 257, 258, 500]))))
-		self.assertEqual("03 01 07 01 80 01 F4", hexencode(compilePoints(set([7, 8, 500]))))
-		self.assertEqual("04 01 07 01 81 BE EF 0C 0F", hexencode(compilePoints(set([7, 8, 0xBEEF, 0xCAFE]))))
+		compilePoints = lambda p: GlyphVariation.compilePoints(set(p), numPointsInGlyph=999)
+		self.assertEqual("01 00 07", hexencode(compilePoints([7])))
+		self.assertEqual("01 80 FF FF", hexencode(compilePoints([65535])))
+		self.assertEqual("02 01 09 06", hexencode(compilePoints([9, 15])))
+		self.assertEqual("06 05 07 01 F7 02 01 F2", hexencode(compilePoints([7, 8, 255, 257, 258, 500])))
+		self.assertEqual("03 01 07 01 80 01 F4", hexencode(compilePoints([7, 8, 500])))
+		self.assertEqual("04 01 07 01 81 BE EF 0C 0F", hexencode(compilePoints([7, 8, 0xBEEF, 0xCAFE])))
 		self.assertEqual("81 2C" +  # 300 points (0x12c) in total
 				 " 7F 00" + (127 * " 01") +  # first run, contains 128 points: [0 .. 127]
 				 " 7F 80" + (127 * " 01") +  # second run, contains 128 points: [128 .. 255]
 				 " AB 01 00" + (43 * " 00 01"),  # third run, contains 44 points: [256 .. 299]
-				 hexencode(compilePoints(set(range(300)))))
+				 hexencode(compilePoints(range(300))))
 		self.assertEqual("81 8F" +  # 399 points (0x18f) in total
 				 " 7F 00" + (127 * " 01") +  # first run, contains 128 points: [0 .. 127]
 				 " 7F 80" + (127 * " 01") +  # second run, contains 128 points: [128 .. 255]
 				 " FF 01 00" + (127 * " 00 01") +  # third run, contains 128 points: [256 .. 383]
 				 " 8E 01 80" + (14 * " 00 01"),  # fourth run, contains 15 points: [384 .. 398]
-				 hexencode(compilePoints(set(range(399)))))
+				 hexencode(compilePoints(range(399))))
 
 	def test_decompilePoints(self):
-		numPoints = 65536
-		allPoints = list(range(numPoints))
+		numPointsInGlyph = 65536
+		allPoints = list(range(numPointsInGlyph))
 		def decompilePoints(data, offset):
-			points, offset = GlyphVariation.decompilePoints_(numPoints, deHexStr(data), offset)
+			points, offset = GlyphVariation.decompilePoints_(numPointsInGlyph, deHexStr(data), offset)
 			# Conversion to list only needed for Python 3.2.
 			return (list(points), offset)
 		# all points in glyph
@@ -441,12 +441,12 @@ class GlyphVariationTest(unittest.TestCase):
 	def test_decompilePoints_shouldGuardAgainstBadPointNumbers(self):
 		decompilePoints = GlyphVariation.decompilePoints_
 		# 2 points; first run: [3, 9].
-		numPoints = 8
-		self.assertRaises(TTLibError, decompilePoints, numPoints, deHexStr("02 01 03 06"), 0)
+		numPointsInGlyph = 8
+		self.assertRaises(TTLibError, decompilePoints, numPointsInGlyph, deHexStr("02 01 03 06"), 0)
 
 	def test_decompilePoints_roundTrip(self):
 		numPointsInGlyph = 500  # greater than 255, so we also exercise code path for 16-bit encoding
-		compile = GlyphVariation.compilePoints
+		compile = lambda points: GlyphVariation.compilePoints(points, numPointsInGlyph)
 		decompile = lambda data: set(GlyphVariation.decompilePoints_(numPointsInGlyph, data, 0)[0])
 		for i in range(50):
 			points = set(random.sample(range(numPointsInGlyph), 30))
