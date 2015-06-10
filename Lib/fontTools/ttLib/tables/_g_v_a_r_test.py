@@ -159,6 +159,11 @@ class GlyphVariationTableTest(unittest.TestCase):
 		self.assertEqual({"wght": 0.0, "wdth": 0.7}, maxCoord)
 
 class GlyphVariationTest(unittest.TestCase):
+	def __init__(self, methodName):
+		unittest.TestCase.__init__(self, methodName)
+		if not hasattr(self, "assertSetEqual"):  # only in Python 2.7 and later
+			self.assertSetEqual = self.assertEqual
+
 	def test_equal(self):
 		gvar1 = GlyphVariation({"wght":(0.0, 1.0, 1.0)}, [(0,0), (9,8), (7,6)])
 		gvar2 = GlyphVariation({"wght":(0.0, 1.0, 1.0)}, [(0,0), (9,8), (7,6)])
@@ -443,16 +448,12 @@ class GlyphVariationTest(unittest.TestCase):
 		numPointsInGlyph = 500  # greater than 255, so we also exercise code path for 16-bit encoding
 		compile = GlyphVariation.compilePoints
 		decompile = lambda data: set(GlyphVariation.decompilePoints_(numPointsInGlyph, data, 0)[0])
-		if hasattr(self, "assertSetEqual"):  # only in Python 2.7 and later
-			assertSetEqual = self.assertSetEqual
-		else:
-			assertSetEqual = self.assertEqual
 		for i in range(50):
 			points = set(random.sample(range(numPointsInGlyph), 30))
-			assertSetEqual(points, decompile(compile(points)),
-				       "failed round-trip decompile/compilePoints; points=%s" % points)
+			self.assertSetEqual(points, decompile(compile(points)),
+					    "failed round-trip decompile/compilePoints; points=%s" % points)
 		allPoints = set(range(numPointsInGlyph))
-		assertSetEqual(allPoints, decompile(compile(allPoints)))
+		self.assertSetEqual(allPoints, decompile(compile(allPoints)))
 
 	def test_compileDeltas(self):
 		gvar = GlyphVariation({}, [(0,0), (1, 0), (2, 0), (3, 3)])
