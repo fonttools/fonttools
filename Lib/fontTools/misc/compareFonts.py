@@ -70,8 +70,8 @@ def compareFontGlyphs(fontA, fontB, resoList, firstGlyphIndex, lastGlyphIndex):
 
     for hres, vres in resoList:
         print("\nTesting at "+str(hres)+"x"+str(vres)+"dpi...")
-        faceA.set_char_size( 32*64, 32*64, int(hres), int(vres))
-        faceB.set_char_size( 32*64, 32*64, int(hres), int(vres))
+        faceA.set_char_size( 32*32, 32*32, int(hres), int(vres))
+        faceB.set_char_size( 32*32, 32*32, int(hres), int(vres))
       
         differCount = 0
         failCount = 0
@@ -149,7 +149,10 @@ class Options(object):
             elif option == "-r":
                 self.resolutionList = [(value, value)]
             elif option == "-f":
-                self.firstGlyph = int(value)
+                if(int(value) > 0):
+                    self.firstGlyph = int(value)
+                else:
+                    self.firstGlyph = 1
             elif option == "-l":
                 if(value > self.firstGlyph):
                     self.lastGlyph = int(value)
