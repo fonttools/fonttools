@@ -1,9 +1,11 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
+import os
 import unittest
 from .xmlWriter import XMLWriter
 
-HEADER = b'<?xml version="1.0" encoding="UTF-8"?>\n'
+linesep = tobytes(os.linesep)
+HEADER = b'<?xml version="1.0" encoding="UTF-8"?>' + linesep
 
 class TestXMLWriter(unittest.TestCase):
 
@@ -15,29 +17,30 @@ class TestXMLWriter(unittest.TestCase):
 	def test_comment_multiline(self):
 		writer = XMLWriter(StringIO())
 		writer.comment("Hello world\nHow are you?")
-		self.assertEqual(HEADER + b"<!-- Hello world\n     How are you? -->", writer.file.getvalue())
+		self.assertEqual(HEADER + b"<!-- Hello world" + linesep + b"     How are you? -->",
+				 writer.file.getvalue())
 
 	def test_encoding_default(self):
 		writer = XMLWriter(StringIO())
-		self.assertEqual(b'<?xml version="1.0" encoding="UTF-8"?>\n',
+		self.assertEqual(b'<?xml version="1.0" encoding="UTF-8"?>' + linesep,
 				 writer.file.getvalue())
 
 	def test_encoding_utf8(self):
 		# https://github.com/behdad/fonttools/issues/246
 		writer = XMLWriter(StringIO(), encoding="utf8")
-		self.assertEqual(b'<?xml version="1.0" encoding="UTF-8"?>\n',
+		self.assertEqual(b'<?xml version="1.0" encoding="UTF-8"?>' + linesep,
 				 writer.file.getvalue())
 
 	def test_encoding_UTF_8(self):
 		# https://github.com/behdad/fonttools/issues/246
 		writer = XMLWriter(StringIO(), encoding="UTF-8")
-		self.assertEqual(b'<?xml version="1.0" encoding="UTF-8"?>\n',
+		self.assertEqual(b'<?xml version="1.0" encoding="UTF-8"?>' + linesep,
 				 writer.file.getvalue())
 
 	def test_encoding_UTF8(self):
 		# https://github.com/behdad/fonttools/issues/246
 		writer = XMLWriter(StringIO(), encoding="UTF8")
-		self.assertEqual(b'<?xml version="1.0" encoding="UTF-8"?>\n',
+		self.assertEqual(b'<?xml version="1.0" encoding="UTF-8"?>' + linesep,
 				 writer.file.getvalue())
 
 	def test_encoding_other(self):
@@ -58,7 +61,8 @@ class TestXMLWriter(unittest.TestCase):
 		writer.newline()
 		writer.dedent()
 		writer.write("baz")
-		self.assertEqual(HEADER + b"foo\n  bar\nbaz", writer.file.getvalue())
+		self.assertEqual(HEADER + bytesjoin(["foo", "  bar", "baz"], linesep),
+				 writer.file.getvalue())
 
 	def test_writecdata(self):
 		writer = XMLWriter(StringIO())
@@ -85,8 +89,7 @@ class TestXMLWriter(unittest.TestCase):
 		    "66756c20 67726f75 70206f66 206c6574",
 		    "74657273 2c206e6f 74206120 67726f75",
 		    "70206f66 20626561 75746966 756c206c",
-		    "65747465 72732e  \n"], joiner=b'\n'), writer.file.getvalue())
-
+		    "65747465 72732e  ", ""], joiner=linesep), writer.file.getvalue())
 
 if __name__ == '__main__':
     unittest.main()

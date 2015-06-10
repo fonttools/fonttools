@@ -1,6 +1,7 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.misc.xmlWriter import XMLWriter
+import os
 import struct
 import unittest
 from ._l_t_a_g import table__l_t_a_g
@@ -33,14 +34,14 @@ class Test_l_t_a_g(unittest.TestCase):
 		table = table__l_t_a_g()
 		table.decompile(self.DATA_, ttFont=None)
 		table.toXML(writer, ttFont=None)
-		expected = "\n".join([
+		expected = os.linesep.join([
 			'<?xml version="1.0" encoding="UTF-8"?>',
 			'<version value="1"/>',
 			'<flags value="0"/>',
 			'<LanguageTag tag="en"/>',
 			'<LanguageTag tag="zh-Hant"/>',
 			'<LanguageTag tag="zh"/>'
-		]) + "\n"
+		]) + os.linesep
 		self.assertEquals(expected.encode("utf_8"), writer.file.getvalue())
 
 
