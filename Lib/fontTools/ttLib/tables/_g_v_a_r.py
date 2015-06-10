@@ -179,9 +179,10 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		for i in range(self.glyphCount):
 			glyphName = glyphs[i]
 			glyph = ttFont["glyf"][glyphName]
-			numPoints = self.getNumPoints_(glyph)
+			numPointsInGlyph = self.getNumPoints_(glyph)
 			gvarData = data[self.offsetToData + offsets[i] : self.offsetToData + offsets[i + 1]]
-			self.variations[glyphName] = self.decompileGlyph_(numPoints, sharedCoords, axisTags, gvarData)
+			self.variations[glyphName] = \
+			    self.decompileGlyph_(numPointsInGlyph, sharedCoords, axisTags, gvarData)
 
 	def decompileSharedCoords_(self, axisTags, data):
 		result, _pos = GlyphVariation.decompileCoords_(axisTags, self.sharedCoordCount, data, self.offsetToCoord)
@@ -233,7 +234,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 			packed.byteswap()
 		return (packed.tostring(), tableFormat)
 
-	def decompileGlyph_(self, numPoints, sharedCoords, axisTags, data):
+	def decompileGlyph_(self, numPointsInGlyph, sharedCoords, axisTags, data):
 		if len(data) < 4:
 			return []
 		numAxes = len(axisTags)
@@ -242,7 +243,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		pos = 4
 		dataPos = offsetToData
 		if (flags & TUPLES_SHARE_POINT_NUMBERS) != 0:
-			sharedPoints, dataPos = GlyphVariation.decompilePoints_(numPoints, data, dataPos)
+			sharedPoints, dataPos = GlyphVariation.decompilePoints_(numPointsInGlyph, data, dataPos)
 		else:
 			sharedPoints = []
 		for _ in range(flags & TUPLE_COUNT_MASK):
@@ -250,13 +251,13 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 			tupleSize = GlyphVariation.getTupleSize_(flags, numAxes)
 			tupleData = data[pos : pos + tupleSize]
 			pointDeltaData = data[dataPos : dataPos + dataSize]
-			tuples.append(self.decompileTuple_(numPoints, sharedCoords, sharedPoints, axisTags, tupleData, pointDeltaData))
+			tuples.append(self.decompileTuple_(numPointsInGlyph, sharedCoords, sharedPoints, axisTags, tupleData, pointDeltaData))
 			pos += tupleSize
 			dataPos += dataSize
 		return tuples
 
 	@staticmethod
-	def decompileTuple_(numPoints, sharedCoords, sharedPoints, axisTags, data, tupleData):
+	def decompileTuple_(numPointsInGlyph, sharedCoords, sharedPoints, axisTags, data, tupleData):
 		flags = struct.unpack(">H", data[2:4])[0]
 
 		pos = 4
@@ -276,12 +277,12 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 				axes[axis] = coords
 		pos = 0
 		if (flags & PRIVATE_POINT_NUMBERS) != 0:
-			points, pos = GlyphVariation.decompilePoints_(numPoints, tupleData, pos)
+			points, pos = GlyphVariation.decompilePoints_(numPointsInGlyph, tupleData, pos)
 		else:
 			points = sharedPoints
 		deltas_x, pos = GlyphVariation.decompileDeltas_(len(points), tupleData, pos)
 		deltas_y, pos = GlyphVariation.decompileDeltas_(len(points), tupleData, pos)
-		deltas = [None] * numPoints
+		deltas = [None] * numPointsInGlyph
 		for p, x, y in zip(points, deltas_x, deltas_y):
 				deltas[p] = (x, y)
 		return GlyphVariation(axes, deltas)
@@ -322,13 +323,13 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 				self.variations = {}
 			glyphName = attrs["glyph"]
 			glyph = ttFont["glyf"][glyphName]
-			numPoints = self.getNumPoints_(glyph)
+			numPointsInGlyph = self.getNumPoints_(glyph)
 			glyphVariations = []
 			for element in content:
 				if isinstance(element, tuple):
 					name, attrs, content = element
 					if name == "tuple":
-						gvar = GlyphVariation({}, [None] * numPoints)
+						gvar = GlyphVariation({}, [None] * numPointsInGlyph)
 						glyphVariations.append(gvar)
 						for tupleElement in content:
 							if isinstance(tupleElement, tuple):
@@ -437,7 +438,8 @@ class GlyphVariation(object):
 		else:
 			flags |= PRIVATE_POINT_NUMBERS
 			points = self.getUsedPoints()
-			auxData = self.compilePoints(points) + self.compileDeltas(points)
+			numPointsInGlyph = len(self.coordinates)
+			auxData = self.compilePoints(points, numPointsInGlyph) + self.compileDeltas(points)
 
 		tupleData = struct.pack('>HH', len(auxData), flags) + bytesjoin(tupleData)
 		return (tupleData, auxData)
@@ -487,7 +489,7 @@ class GlyphVariation(object):
 		return result, pos
 
 	@staticmethod
-	def compilePoints(points):
+	def compilePoints(points, numPointsInGlyph):
 		# In the 'gvar' table, the packing of point numbers is a little surprising.
 		# It consists of multiple runs, each being a delta-encoded list of integers.
 		# For example, the point set {17, 18, 19, 20, 21, 22, 23} gets encoded as
@@ -536,8 +538,8 @@ class GlyphVariation(object):
 		return bytesjoin(result)
 
 	@staticmethod
-	def decompilePoints_(numPoints, data, offset):
-		"""(numPoints, data, offset) --> ([point1, point2, ...], newOffset)"""
+	def decompilePoints_(numPointsInGlyph, data, offset):
+		"""(numPointsInGlyph, data, offset) --> ([point1, point2, ...], newOffset)"""
 		pos = offset
 		numPointsInData = byteord(data[pos])
 		pos += 1
@@ -545,7 +547,7 @@ class GlyphVariation(object):
 			numPointsInData = (numPointsInData & POINT_RUN_COUNT_MASK) << 8 | byteord(data[pos])
 			pos += 1
 		if numPointsInData == 0:
-			return (range(numPoints), pos)
+			return (range(numPointsInGlyph), pos)
 		result = []
 		while len(result) < numPointsInData:
 			runHeader = byteord(data[pos])
@@ -562,7 +564,7 @@ class GlyphVariation(object):
 					point += struct.unpack(">H", data[pos:pos+2])[0]
 					pos += 2
 					result.append(point)
-		if max(result) >= numPoints:
+		if max(result) >= numPointsInGlyph:
 			raise TTLibError("malformed 'gvar' table")
 		return (result, pos)
 
