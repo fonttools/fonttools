@@ -503,7 +503,7 @@ class GlyphVariation(object):
 		if numPoints < 0x80:
 			result = [bytechr(numPoints)]
 		else:
-			result = [bytechr((numPoints >> 8) | 0x80) + bytechr(numPoints & 0x7f)]
+			result = [bytechr((numPoints >> 8) | 0x80) + bytechr(numPoints & 0xff)]
 
 		MAX_RUN_LENGTH = 127
 		pos = 0
