@@ -490,6 +490,11 @@ class GlyphVariation(object):
 
 	@staticmethod
 	def compilePoints(points, numPointsInGlyph):
+		# If the set consists of all points in the glyph, it gets encoded with
+		# a special encoding: a single zero byte.
+		if len(points) == numPointsInGlyph:
+			return b"\0"
+
 		# In the 'gvar' table, the packing of point numbers is a little surprising.
 		# It consists of multiple runs, each being a delta-encoded list of integers.
 		# For example, the point set {17, 18, 19, 20, 21, 22, 23} gets encoded as
