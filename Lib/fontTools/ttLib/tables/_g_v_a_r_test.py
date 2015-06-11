@@ -242,7 +242,7 @@ class GlyphVariationTest(unittest.TestCase):
 				      [(7,4), (8,5), (9,6)])
 		axisTags = ["wght", "wdth"]
 		sharedCoordIndices = { gvar.compileCoord(axisTags): 0x77 }
-		tuple, data = gvar.compile(axisTags, sharedCoordIndices, sharedPoints=set([0,1,2]))
+		tuple, data = gvar.compile(axisTags, sharedCoordIndices, sharedPoints={0,1,2})
 		# len(data)=8; flags=None; tupleIndex=0x77
 		# embeddedCoord=[]; intermediateCoord=[]
 		self.assertEqual("00 08 00 77", hexencode(tuple))
@@ -255,7 +255,7 @@ class GlyphVariationTest(unittest.TestCase):
 				      [(7,4), (8,5), (9,6)])
 		axisTags = ["wght", "wdth"]
 		sharedCoordIndices = { gvar.compileCoord(axisTags): 0x77 }
-		tuple, data = gvar.compile(axisTags, sharedCoordIndices, sharedPoints=set([0,1,2]))
+		tuple, data = gvar.compile(axisTags, sharedCoordIndices, sharedPoints={0,1,2})
 		# len(data)=8; flags=INTERMEDIATE_TUPLE; tupleIndex=0x77
 		# embeddedCoord=[]; intermediateCoord=[(0.3, 0.1), (0.7, 0.9)]
 		self.assertEqual("00 08 40 77 13 33 06 66 2C CD 39 9A", hexencode(tuple))
@@ -295,7 +295,7 @@ class GlyphVariationTest(unittest.TestCase):
 		gvar = GlyphVariation({"wght": (0.0, 0.5, 0.5), "wdth": (0.0, 0.8, 0.8)},
 				      [(7,4), (8,5), (9,6)])
 		axisTags = ["wght", "wdth"]
-		tuple, data = gvar.compile(axisTags, sharedCoordIndices={}, sharedPoints=set([0,1,2]))
+		tuple, data = gvar.compile(axisTags, sharedCoordIndices={}, sharedPoints={0,1,2})
 		# len(data)=8; flags=EMBEDDED_TUPLE_COORD
 		# embeddedCoord=[(0.5, 0.8)]; intermediateCoord=[]
 		self.assertEqual("00 08 80 00 20 00 33 33", hexencode(tuple))
@@ -307,7 +307,7 @@ class GlyphVariationTest(unittest.TestCase):
 		gvar = GlyphVariation({"wght": (0.0, 0.5, 1.0), "wdth": (0.0, 0.8, 0.8)},
 				      [(7,4), (8,5), (9,6)])
 		axisTags = ["wght", "wdth"]
-		tuple, data = gvar.compile(axisTags, sharedCoordIndices={}, sharedPoints=set([0,1,2]))
+		tuple, data = gvar.compile(axisTags, sharedCoordIndices={}, sharedPoints={0,1,2})
 		# len(data)=8; flags=EMBEDDED_TUPLE_COORD
 		# embeddedCoord=[(0.5, 0.8)]; intermediateCoord=[(0.0, 0.0), (1.0, 0.8)]
 		self.assertEqual("00 08 C0 00 20 00 33 33 00 00 00 00 40 00 33 33", hexencode(tuple))
@@ -458,7 +458,7 @@ class GlyphVariationTest(unittest.TestCase):
 
 	def test_compileDeltas(self):
 		gvar = GlyphVariation({}, [(0,0), (1, 0), (2, 0), (3, 3)])
-		points = set([1, 2])
+		points = {1, 2}
 		# deltaX for points: [1, 2]; deltaY for points: [0, 0]
 		self.assertEqual("01 01 02 81", hexencode(gvar.compileDeltas(points)))
 
