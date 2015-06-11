@@ -11,7 +11,7 @@ Quoting from [TTX/FontTools Sourceforge Project](http://sourceforge.net/projects
 
 ```python setup.py install```
 
-From your command line type the above command to get fontools installed on your system.
+From your command line type the above command to get fontools installed on your system.  FontTools requires Python 2.7, or Python 3.3 or later.
 
 ### Installation
 
