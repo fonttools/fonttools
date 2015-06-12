@@ -363,7 +363,7 @@ class GlyphVariationTest(unittest.TestCase):
 		# Make sure we are not affected by https://github.com/behdad/fonttools/issues/286
 		data = deHexStr("7F B9 80 35")
 		values, _ = GlyphVariation.decompileCoord_(["wght", "wdth"], data, 0)
-		axisValues = dict([(axis, (val, val, val)) for axis, val in  values.items()])
+		axisValues = {axis:(val, val, val) for axis, val in  values.items()}
 		gvar = GlyphVariation(axisValues, [None] * 4)
 		self.assertEqual("7F B9 80 35", hexencode(gvar.compileCoord(["wght", "wdth"])))
 
