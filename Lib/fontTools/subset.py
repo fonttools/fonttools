@@ -1303,7 +1303,7 @@ def closure_glyphs(self, s):
         lookup_indices = []
     if self.table.LookupList:
         while True:
-            orig_glyphs = s.glyphs.copy()
+            orig_glyphs = frozenset(s.glyphs)
             s._activeLookups = []
             s._doneLookups = set()
             for i in lookup_indices:
@@ -2423,7 +2423,7 @@ class Subsetter(object):
         if 'cmap' in font:
             font['cmap'].closure_glyphs(self)
             self.glyphs.intersection_update(realGlyphs)
-        self.glyphs_cmaped = self.glyphs
+        self.glyphs_cmaped = frozenset(self.glyphs)
         if self.unicodes_missing:
             missing = ["U+%04X" % u for u in self.unicodes_missing]
             self.log("Missing glyphs for requested Unicodes: %s" % missing)
@@ -2454,7 +2454,7 @@ class Subsetter(object):
                      len(self.glyphs))
             self.log.glyphs(self.glyphs, font=font)
             self.log.lapse("close glyph list over 'GSUB'")
-        self.glyphs_gsubed = self.glyphs.copy()
+        self.glyphs_gsubed = frozenset(self.glyphs)
 
         if 'glyf' in font:
             self.log("Closing glyph list over 'glyf': %d glyphs before" %
@@ -2466,9 +2466,9 @@ class Subsetter(object):
                      len(self.glyphs))
             self.log.glyphs(self.glyphs, font=font)
             self.log.lapse("close glyph list over 'glyf'")
-        self.glyphs_glyfed = self.glyphs.copy()
+        self.glyphs_glyfed = frozenset(self.glyphs)
 
-        self.glyphs_all = self.glyphs.copy()
+        self.glyphs_all = frozenset(self.glyphs)
 
         self.log("Retaining %d glyphs: " % len(self.glyphs_all))
 
