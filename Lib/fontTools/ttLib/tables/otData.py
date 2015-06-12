@@ -450,7 +450,7 @@ otData = [
 	('SingleSubstFormat1', [
 		('uint16', 'SubstFormat', None, None, 'Format identifier-format = 1'),
 		('Offset', 'Coverage', None, None, 'Offset to Coverage table-from beginning of Substitution table'),
-		('int16', 'DeltaGlyphID', None, None, 'Add to original GlyphID to get substitute GlyphID'),
+		('uint16', 'DeltaGlyphID', None, None, 'Add to original GlyphID modulo 65536 to get substitute GlyphID'),
 	]),
 
 	('SingleSubstFormat2', [
