@@ -167,6 +167,7 @@ class SingleSubst(FormatSwitchingBaseTable):
 
 		# figure out format
 		format = 2
+		delta = None
 		for inID, outID in gidItems:
 			if delta is None:
 				delta = (outID - inID) % 65536
