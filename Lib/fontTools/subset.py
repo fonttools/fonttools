@@ -369,7 +369,7 @@ def intersect_class(self, glyphs, klass):
 @_add_method(otTables.ClassDef)
 def subset(self, glyphs, remap=False):
     """Returns ascending list of remaining classes."""
-    self.classDefs = dict((g,v) for g,v in self.classDefs.items() if g in glyphs)
+    self.classDefs = {g:v for g,v in self.classDefs.items() if g in glyphs}
     # Note: while class 0 has the special meaning of "not matched",
     # if no glyph will ever /not match/, we can optimize class 0 out too.
     indices = _uniq_sort(
@@ -382,8 +382,7 @@ def subset(self, glyphs, remap=False):
 @_add_method(otTables.ClassDef)
 def remap(self, class_map):
     """Remaps classes."""
-    self.classDefs = dict((g,class_map.index(v))
-                          for g,v in self.classDefs.items())
+    self.classDefs = {g:class_map.index(v) for g,v in self.classDefs.items()}
 
 @_add_method(otTables.SingleSubst)
 def closure_glyphs(self, s, cur_glyphs):
@@ -391,8 +390,8 @@ def closure_glyphs(self, s, cur_glyphs):
 
 @_add_method(otTables.SingleSubst)
 def subset_glyphs(self, s):
-    self.mapping = dict((g,v) for g,v in self.mapping.items()
-                        if g in s.glyphs and v in s.glyphs)
+    self.mapping = {g:v for g,v in self.mapping.items()
+                    if g in s.glyphs and v in s.glyphs}
     return bool(self.mapping)
 
 @_add_method(otTables.MultipleSubst)
@@ -419,10 +418,10 @@ def closure_glyphs(self, s, cur_glyphs):
 
 @_add_method(otTables.AlternateSubst)
 def subset_glyphs(self, s):
-    self.alternates = dict((g,vlist)
-                           for g,vlist in self.alternates.items()
-                           if g in s.glyphs and
-                           all(v in s.glyphs for v in vlist))
+    self.alternates = {g:vlist
+                       for g,vlist in self.alternates.items()
+                       if g in s.glyphs and
+                       all(v in s.glyphs for v in vlist)}
     return bool(self.alternates)
 
 @_add_method(otTables.LigatureSubst)
@@ -434,13 +433,13 @@ def closure_glyphs(self, s, cur_glyphs):
 
 @_add_method(otTables.LigatureSubst)
 def subset_glyphs(self, s):
-    self.ligatures = dict((g,v) for g,v in self.ligatures.items()
-                          if g in s.glyphs)
-    self.ligatures = dict((g,[seq for seq in seqs
-                              if seq.LigGlyph in s.glyphs and
-                              all(c in s.glyphs for c in seq.Component)])
-                          for g,seqs in self.ligatures.items())
-    self.ligatures = dict((g,v) for g,v in self.ligatures.items() if v)
+    self.ligatures = {g:v for g,v in self.ligatures.items()
+                      if g in s.glyphs}
+    self.ligatures = {g:[seq for seq in seqs
+                             if seq.LigGlyph in s.glyphs and
+                                all(c in s.glyphs for c in seq.Component)]
+                      for g,seqs in self.ligatures.items()}
+    self.ligatures = {g:v for g,v in self.ligatures.items() if v}
     return bool(self.ligatures)
 
 @_add_method(otTables.ReverseChainSingleSubst)
@@ -1482,12 +1481,12 @@ def subset_glyphs(self, s):
         table.LigCaretList.LigGlyphCount = len(table.LigCaretList.LigGlyph)
     if table.MarkAttachClassDef:
         table.MarkAttachClassDef.classDefs = \
-            dict((g,v) for g,v in table.MarkAttachClassDef.classDefs.items()
-                 if g in glyphs)
+            {g:v for g,v in table.MarkAttachClassDef.classDefs.items()
+             if g in glyphs}
     if table.GlyphClassDef:
         table.GlyphClassDef.classDefs = \
-            dict((g,v) for g,v in table.GlyphClassDef.classDefs.items()
-                 if g in glyphs)
+            {g:v for g,v in table.GlyphClassDef.classDefs.items()
+             if g in glyphs}
     if table.AttachList:
         indices = table.AttachList.Coverage.subset(glyphs)
         GlyphCount = table.AttachList.GlyphCount
@@ -1538,31 +1537,31 @@ def prune_pre_subset(self, options):
 def subset_glyphs(self, s):
     glyphs = s.glyphs_gsubed
     for t in self.kernTables:
-        t.kernTable = dict(((a,b),v) for (a,b),v in t.kernTable.items()
-                                             if a in glyphs and b in glyphs)
+        t.kernTable = {(a,b):v for (a,b),v in t.kernTable.items()
+                                           if a in glyphs and b in glyphs}
     self.kernTables = [t for t in self.kernTables if t.kernTable]
     return bool(self.kernTables)
 
 @_add_method(ttLib.getTableClass('vmtx'))
 def subset_glyphs(self, s):
-    self.metrics = dict((g,v) for g,v in self.metrics.items() if g in s.glyphs)
+    self.metrics = {g:v for g,v in self.metrics.items() if g in s.glyphs}
     return bool(self.metrics)
 
 @_add_method(ttLib.getTableClass('hmtx'))
 def subset_glyphs(self, s):
-    self.metrics = dict((g,v) for g,v in self.metrics.items() if g in s.glyphs)
+    self.metrics = {g:v for g,v in self.metrics.items() if g in s.glyphs}
     return True # Required table
 
 @_add_method(ttLib.getTableClass('hdmx'))
 def subset_glyphs(self, s):
-    self.hdmx = dict((sz,dict((g,v) for g,v in l.items() if g in s.glyphs))
-                     for sz,l in self.hdmx.items())
+    self.hdmx = {sz:{g:v for g,v in l.items() if g in s.glyphs}
+                 for sz,l in self.hdmx.items()}
     return bool(self.hdmx)
 
 @_add_method(ttLib.getTableClass('VORG'))
 def subset_glyphs(self, s):
-    self.VOriginRecords = dict((g,v) for g,v in self.VOriginRecords.items()
-                               if g in s.glyphs)
+    self.VOriginRecords = {g:v for g,v in self.VOriginRecords.items()
+                               if g in s.glyphs}
     self.numVertOriginYMetrics = len(self.VOriginRecords)
     return True    # Never drop; has default metrics
 
@@ -1632,7 +1631,7 @@ def prune_pre_subset(self, options):
 
 @_add_method(ttLib.getTableClass('glyf'))
 def subset_glyphs(self, s):
-    self.glyphs = dict((g,v) for g,v in self.glyphs.items() if g in s.glyphs)
+    self.glyphs = {g:v for g,v in self.glyphs.items() if g in s.glyphs}
     indices = [i for i,g in enumerate(self.glyphOrder) if g in s.glyphs]
     for v in self.glyphs.values():
         if hasattr(v, "data"):
@@ -1695,13 +1694,13 @@ def subset_glyphs(self, s):
                 #sel.format = None
                 sel.format = 3
                 sel.gidArray = [sel.gidArray[i] for i in indices]
-            cs.charStrings = dict((g,indices.index(v))
-                                  for g,v in cs.charStrings.items()
-                                  if g in s.glyphs)
+            cs.charStrings = {g:indices.index(v)
+                              for g,v in cs.charStrings.items()
+                              if g in s.glyphs}
         else:
-            cs.charStrings = dict((g,v)
-                                  for g,v in cs.charStrings.items()
-                                  if g in s.glyphs)
+            cs.charStrings = {g:v
+                              for g,v in cs.charStrings.items()
+                              if g in s.glyphs}
         font.charset = [g for g in font.charset if g in s.glyphs]
         font.numGlyphs = len(font.charset)
 
@@ -2129,16 +2128,16 @@ def subset_glyphs(self, s):
         if t.format == 14:
             # TODO(behdad) We drop all the default-UVS mappings
             # for glyphs_requested. I don't think we care about that...
-            t.uvsDict = dict((v,[(u,g) for u,g in l
-                                 if g in s.glyphs or u in s.unicodes_requested])
-                             for v,l in t.uvsDict.items())
-            t.uvsDict = dict((v,l) for v,l in t.uvsDict.items() if l)
+            t.uvsDict = {v:[(u,g) for u,g in l
+                                  if g in s.glyphs or u in s.unicodes_requested]
+                         for v,l in t.uvsDict.items()}
+            t.uvsDict = {v:l for v,l in t.uvsDict.items() if l}
         elif t.isUnicode():
-            t.cmap = dict((u,g) for u,g in t.cmap.items()
-                          if g in s.glyphs_requested or u in s.unicodes_requested)
+            t.cmap = {u:g for u,g in t.cmap.items()
+                          if g in s.glyphs_requested or u in s.unicodes_requested}
         else:
-            t.cmap = dict((u,g) for u,g in t.cmap.items()
-                          if g in s.glyphs_requested)
+            t.cmap = {u:g for u,g in t.cmap.items()
+                          if g in s.glyphs_requested}
     self.tables = [t for t in self.tables
                    if (t.cmap if t.format != 14 else t.uvsDict)]
     self.numSubTables = len(self.tables)

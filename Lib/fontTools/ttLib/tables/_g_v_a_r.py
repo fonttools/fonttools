@@ -55,7 +55,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		axisTags = [axis.AxisTag for axis in ttFont["fvar"].table.VariationAxis]
 
 		sharedCoords = self.compileSharedCoords_(axisTags)
-		sharedCoordIndices = dict([(coord, i) for i, coord in enumerate(sharedCoords)])
+		sharedCoordIndices = {coord:i for i, coord in enumerate(sharedCoords)}
 		sharedCoordSize = sum([len(c) for c in sharedCoords])
 
 		compiledGlyphs = self.compileGlyphs_(ttFont, axisTags, sharedCoordIndices)
