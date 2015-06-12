@@ -1,115 +1,108 @@
 """
-usage: comparefonts [options] fontA fontB  
+usage: comparefonts [options] fontA fontB inputFile 
 
     compareFonts %s -- TrueType Glyph Compare Tool
 
     General options:
     -h Help: print this message
     -v Verbose: be more verbose
-    -f INDEX First: first glyph index of the range to be compared
-    -l INDEX Last: last glyph index of the range to be compared
     -x HRES Hres: Horizontal resolution dpi
     -y VRES Vres: Vertical resolution dpi
 
-    If no glyph index range is provided, all glyphs from FontA
-    will be tested.
     If no horizonta/vertical dpi resolution is provided, glyphs
     will be rendered on the following resolutions: 72x72,
     300x300, 600x600, 1200x1200 and 2400x2400.
 """
 
-from __future__ import print_function
-import numpy
 import sys
 import getopt
 import logging
+import codecs
 from freetype import *
-import matplotlib.pyplot as plt
-from matplotlib.path import Path
-import matplotlib.patches as patches
 
 logger = logging.getLogger(" ")
 
-def compareFontGlyphs(fontA, fontB, resoList, firstGlyphIndex, lastGlyphIndex):
+def compareFontGlyphs(fontA, fontB, charList, resolutionList):
     '''
-    Test if glyphs of two TrueType font glyphs are identical. 
-    Any glyph in fontA differing from fontB or glyphs will be
-    reported.
-    Any glyph indexes that fail to be loaded will also be reported.
+    Test if a set of glyphs present in the input file are
+    identifical for the two given TrueType fonts.
 
-    :param fontA: name of the base font file
+    :param fontA: name of the first font file
 
-    :param fontB: name of the font file that will be compared
-                  against glyphs of fontA
+    :param fontB: name of the second font file
 
-    :param resoList: list of tuples for horizontal and vertical
+    :param charList: list of chars to be compared
+
+    :param resolutionList: list of tuples for horizontal and vertical
                      resolution in dpi.
-    
-    :param glyphList: a list of glyph indexes to be compared. If
-                      None, all glyphs from fontA will be tested.
     '''
 
     try:
-        print("Loading font A:"+fontA+"...")
+        print("Loading font :"+fontA+"...")
         faceA = Face(fontA)
     except:
         raise ValueError('Failed to load font ', fontA)
 
     try:
-        print("Loading font B: "+fontB+"...")
+        print("Loading font : "+fontB+"...")
         faceB = Face(fontB)
     except:
         raise ValueError('Failed to load font ', fontB)
 
-    if(lastGlyphIndex == -1 or firstGlyphIndex > lastGlyphIndex):
-        lastGlyphIndex = faceA.num_glyphs
+    for hres, vres in resolutionList:
 
-    print("Range to be tested: %d-%d" % (firstGlyphIndex, lastGlyphIndex))
+        differList = []
+        identicalList = []
+        aNotFoundList = []
+        bNotFoundList = []
+        notFoundCount = 0
 
-    glyphCount = 0
-
-    for hres, vres in resoList:
         print("\nTesting at "+str(hres)+"x"+str(vres)+"dpi...")
         faceA.set_char_size( 32*32, 32*32, int(hres), int(vres))
         faceB.set_char_size( 32*32, 32*32, int(hres), int(vres))
-      
-        differCount = 0
-        failCount = 0
+     
+        try:
+            for charmap in faceA.charmaps:
+                faceA.set_charmap(charmap)
+               
+                for char in charList:
+     
+                    aGlyphIndex = faceA.get_char_index(char)
+                    bGlyphIndex = faceB.get_char_index(char)
 
-        for charmap in faceA.charmaps:
-            faceA.set_charmap(charmap)
-            char, agindex = faceA.get_first_char()
+                    if(aGlyphIndex == 0 or bGlyphIndex == 0):
+                        notFoundCount += 1
+                        if(aGlyphIndex == 0):
+                            aNotFoundList.append(char)
+                        if(bGlyphIndex == 0):             
+                            bNotFoundList.append(char)
+                    else:
+                        faceA.load_glyph(aGlyphIndex)
+                        faceB.load_glyph(bGlyphIndex)
+                        equal = compareGlyph(faceA.glyph, faceB.glyph)
+                        if(equal):
+                            identicalList.append(char)
+                        else:
+                            differList.append(char)
+                
+        except KeyboardInterrupt:
+            raise KeyboardInterrupt
 
-            while( agindex != firstGlyphIndex and agindex < faceA.num_glyphs ):
-                    char, agindex = faceA.get_next_char(char, agindex)
-
-            while ( agindex and agindex <= lastGlyphIndex):
-                glyphCount += 1
-                try:
-                    faceA.load_glyph(agindex)
-                    faceB.load_glyph(agindex)
-                    equal = compareGlyph(faceA.glyph, faceB.glyph)
-                    if(not equal):
-                        logger.info("Differing on glyph index %d", agindex)
-                        differCount += 1
-                except KeyboardInterrupt:
-                    raise KeyboardInterrupt
-                except:
-                    logger.warn("Failed to load glyph index %d", agindex)
-                    failCount += 1
-                char, agindex = faceA.get_next_char(char, agindex)
-           
-        print("Number of glyphs differing: %d" % differCount)
-        if(failCount > 0):
-            print("Failed to load %d glyphs" % failCount)
-
+        print("Number of identical glyphs: %d" % len(identicalList))
+        logger.info("Identical glyphs: "+listToStr(identicalList))
+        print("Number of glyphs differing: %d" % len(differList))
+        logger.info("Differing glyphs: "+listToStr(differList))
+        print("Number of not found glyphs: %d" % notFoundCount)
+        logger.info("Glyphs not found in "+fontA+": "+listToStr(aNotFoundList))
+        logger.info("Glyphs not found in "+fontB+": "+listToStr(bNotFoundList))
+ 
     print("\nTotal of %d glyphs inspected over %d different dpi resolutions"
-            % ((lastGlyphIndex-firstGlyphIndex+1), len(resoList)) )
+            % (len(charList), len(resolutionList)) )
 
 def compareGlyph(glyphA, glyphB):
     bitmapA = glyphA.bitmap
     bitmapB = glyphB.bitmap
-    if( bitmapA.buffer != bitmapB.buffer or
+    if(bitmapA.buffer != bitmapB.buffer or
         bitmapA.num_grays != bitmapB.num_grays or
         bitmapA.palette != bitmapB.palette or
         bitmapA.palette_mode != bitmapB.palette_mode or
@@ -121,8 +114,18 @@ def compareGlyph(glyphA, glyphB):
 
     return True 
 
-def warning(*objs):
-    print("WARNING: ", *objs, file=sys.stderr)
+def listToStr(charList):
+    string = ''
+    for char in charList:
+        string += char+' '
+    return string
+
+def readFile(input):
+    with codecs.open(input) as file:
+        data=file.read()
+    data = data.decode('utf-8')
+    charList = list(set(data))
+    return charList
 
 def usage():
     print(__doc__)
@@ -130,8 +133,6 @@ def usage():
 
 class Options(object):
     verbose = False
-    firstGlyph = 1 
-    lastGlyph = -1 
     resolutionList = [(72,72), (300, 300), (600, 600),
                       (1200, 1200), (2400, 2400)]
 
@@ -146,16 +147,6 @@ class Options(object):
                 usage()
             elif option == "-v":
                 self.verbose = True
-            elif option == "-r":
-                self.resolutionList = [(value, value)]
-            elif option == "-f":
-                if(int(value) > 0):
-                    self.firstGlyph = int(value)
-                else:
-                    self.firstGlyph = 1
-            elif option == "-l":
-                if(value > self.firstGlyph):
-                    self.lastGlyph = int(value)
             elif option == "-x":
                 hres = int(value)
             elif option == "-y":
@@ -176,36 +167,40 @@ class Options(object):
 
 def parseOptions(args):
     try:
-        rawOptions, files = getopt.getopt(args, "hvr:f:l:x:y:")
+        rawOptions, files = getopt.getopt(args, "hvx:y:")
     except getopt.GetoptError:
         usage()
 
-    if not files or len(files) != 2:
+    if not files or len(files) != 3:
         usage()
  
-    for input in files:
+    for input in files[:2]:
         fileformat = input.split('.')[-1]
         if fileformat != 'ttf':
             usage()
 
+    try:
+        charList = readFile(files[2])
+    except:
+        usage()
+
     options = Options(rawOptions, files)
-    return options, files[0], files[1]    
+    return options, files[0], files[1], charList    
 
 def main(args):
     
     try:
-        options, fontA, fontB = parseOptions(args)
-        compareFontGlyphs(fontA, fontB, options.resolutionList,
-                          int(options.firstGlyph), int(options.lastGlyph))
+        options, fontA, fontB, charList = parseOptions(args)
+        compareFontGlyphs(fontA, fontB, charList, options.resolutionList)
     
     except ValueError as err:
-        print(err)
+        logger.warn(err)
     except KeyboardInterrupt:
-        print ("\nInterrupted")
+        logger.warn("\nInterrupted")
         try:
             sys.exit(0)
         except SystemExit:
             os._exit(0)
-    
+
 if __name__ == "__main__":
     main(sys.argv[1:])
