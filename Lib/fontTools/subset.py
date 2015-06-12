@@ -2081,21 +2081,24 @@ def prune_post_subset(self, options):
 @_add_method(ttLib.getTableClass('cmap'))
 def closure_glyphs(self, s):
     tables = [t for t in self.tables if t.isUnicode()]
-    for u in s.unicodes_requested:
-        found = False
-        for table in tables:
-            if table.format == 14:
-                for l in table.uvsDict.values():
-                    # TODO(behdad) Speed this up!
-                    gids = [g for uc,g in l if u == uc and g is not None]
-                    s.glyphs.update(gids)
-                    # Intentionally not setting found=True here.
-            else:
-                if u in table.cmap:
-                    s.glyphs.add(table.cmap[u])
-                    found = True
-        if not found:
-            s.unicodes_missing.add(u)
+
+    # Close glyphs
+    for table in tables:
+        if table.format == 14:
+            for cmap in table.uvsDict.values():
+                glyphs = {g for u,g in cmap if u in s.unicodes_requested}
+                if None in glyphs:
+                    glyphs.remove(None)
+                s.glyphs.update(glyphs)
+        else:
+            cmap = table.cmap
+            intersection = s.unicodes_requested.intersection(cmap.keys())
+            s.glyphs.update(cmap[u] for u in intersection)
+
+    # Calculate unicodes_missing
+    s.unicodes_missing = s.unicodes_requested.copy()
+    for table in tables:
+        s.unicodes_missing.difference_update(table.cmap)
 
 @_add_method(ttLib.getTableClass('cmap'))
 def prune_pre_subset(self, options):
