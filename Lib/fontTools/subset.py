@@ -901,7 +901,6 @@ def closure_glyphs(self, s, cur_glyphs):
                         chaos.update(range(seqi, len(getattr(r, c.Input))+2))
                     lookup.closure_glyphs(s, cur_glyphs=pos_glyphs)
     elif self.Format == 3:
-        cur_glyphs = frozenset(cur_glyphs)
         if not all(x.intersect(s.glyphs) for x in c.RuleData(self)):
             return []
         r = self
@@ -914,7 +913,7 @@ def closure_glyphs(self, s, cur_glyphs):
                 pos_glyphs = None
             else:
                 if seqi == 0:
-                    pos_glyphs = cur_glyphs
+                    pos_glyphs = frozenset(cur_glyphs)
                 else:
                     pos_glyphs = frozenset(r.InputCoverage[seqi].intersect_glyphs(s.glyphs))
             lookup = s.table.LookupList.Lookup[ll.LookupListIndex]
