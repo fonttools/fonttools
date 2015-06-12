@@ -2115,7 +2115,7 @@ def prune_pre_subset(self, options):
 
 @_add_method(ttLib.getTableClass('cmap'))
 def subset_glyphs(self, s):
-    s.glyphs = s.glyphs_cmaped
+    s.glyphs = None # We use s.glyphs_requested and s.unicodes_requested only
     for t in self.tables:
         # For reasons I don't understand I need this here
         # to force decompilation of the cmap format 14.
@@ -2125,9 +2125,10 @@ def subset_glyphs(self, s):
             pass
         if t.format == 14:
             # TODO(behdad) We drop all the default-UVS mappings
-            # for glyphs_requested. I don't think we care about that...
+            # for glyphs_requested.  So it's the caller's responsibility to make
+            # sure those are included.
             t.uvsDict = {v:[(u,g) for u,g in l
-                                  if g in s.glyphs or u in s.unicodes_requested]
+                                  if g in s.glyphs_requested or u in s.unicodes_requested]
                          for v,l in t.uvsDict.items()}
             t.uvsDict = {v:l for v,l in t.uvsDict.items() if l}
         elif t.isUnicode():
