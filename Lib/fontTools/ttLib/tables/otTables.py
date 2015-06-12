@@ -134,11 +134,6 @@ class Coverage(FormatSwitchingBaseTable):
 		glyphs.append(attrs["value"])
 
 
-def doModulo(value):
-	if value < 0:
-		return value + 65536
-	return value
-
 class SingleSubst(FormatSwitchingBaseTable):
 
 	def postRead(self, rawTable, font):
@@ -148,8 +143,7 @@ class SingleSubst(FormatSwitchingBaseTable):
 		if self.Format == 1:
 			delta = rawTable["DeltaGlyphID"]
 			inputGIDS =  [ font.getGlyphID(name) for name in input ]
-			outGIDS = [ glyphID + delta for glyphID in inputGIDS ]
-			outGIDS = map(doModulo, outGIDS)
+			outGIDS = [ (glyphID + delta) % 65536 for glyphID in inputGIDS ]
 			outNames = [ font.getGlyphName(glyphID) for glyphID in outGIDS ]
 			list(map(operator.setitem, [mapping]*lenMapping, input, outNames))
 		elif self.Format == 2:
@@ -173,16 +167,11 @@ class SingleSubst(FormatSwitchingBaseTable):
 
 		# figure out format
 		format = 2
-		delta = None
 		for inID, outID in gidItems:
 			if delta is None:
-				delta = outID - inID
-				if delta < -32768:
-					delta += 65536
-				elif delta > 32767:
-					delta -= 65536
-			else:
-				if delta != outID - inID:
+				delta = (outID - inID) % 65536
+
+			if (inID + delta) % 65536 != outID:
 					break
 		else:
 			format = 1
