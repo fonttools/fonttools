@@ -7,6 +7,7 @@
 
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
+from fontTools.misc.timeTools import  timestampNow
 from fontTools import ttLib, cffLib
 from fontTools.ttLib.tables import otTables, _h_e_a_d
 from fontTools.ttLib.tables.DefaultTable import DefaultTable
@@ -45,7 +46,7 @@ def recalculate(lst):
 	return NotImplemented
 
 def current_time(lst):
-	return int(time.time() - _h_e_a_d.mac_epoch_diff)
+	return timestampNow()
 
 def bitwise_and(lst):
 	return reduce(operator.and_, lst)
