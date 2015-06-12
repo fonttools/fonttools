@@ -842,8 +842,6 @@ def closure_glyphs(self, s, cur_glyphs):
         return []
     cur_glyphs = c.Coverage(self).intersect_glyphs(cur_glyphs)
 
-    recursions = {}
-
     if self.Format == 1:
         ContextData = c.ContextData(self)
         rss = getattr(self, c.RuleSet)
@@ -871,7 +869,7 @@ def closure_glyphs(self, s, cur_glyphs):
                     chaos.add(seqi)
                     if lookup.may_have_non_1to1():
                         chaos.update(range(seqi, len(r.Input)+2))
-                    recursions[(id(lookup), pos_glyphs)] = lookup
+                    lookup.closure_glyphs(s, cur_glyphs=pos_glyphs)
     elif self.Format == 2:
         ClassDef = getattr(self, c.ClassDef)
         indices = ClassDef.intersect(cur_glyphs)
@@ -901,7 +899,7 @@ def closure_glyphs(self, s, cur_glyphs):
                     chaos.add(seqi)
                     if lookup.may_have_non_1to1():
                         chaos.update(range(seqi, len(getattr(r, c.Input))+2))
-                    recursions[(id(lookup), pos_glyphs)] = lookup
+                    lookup.closure_glyphs(s, cur_glyphs=pos_glyphs)
     elif self.Format == 3:
         cur_glyphs = frozenset(cur_glyphs)
         if not all(x.intersect(s.glyphs) for x in c.RuleData(self)):
@@ -923,12 +921,9 @@ def closure_glyphs(self, s, cur_glyphs):
             chaos.add(seqi)
             if lookup.may_have_non_1to1():
                 chaos.update(range(seqi, len(r.InputCoverage)+1))
-            recursions[(id(lookup), pos_glyphs)] = lookup
+            lookup.closure_glyphs(s, cur_glyphs=pos_glyphs)
     else:
         assert 0, "unknown format: %s" % self.Format
-
-    for (_,cur_glyphs),lookup in recursions.items():
-        lookup.closure_glyphs(s, cur_glyphs=cur_glyphs)
 
 @_add_method(otTables.ContextSubst,
              otTables.ContextPos,
@@ -1108,10 +1103,13 @@ def collect_lookups(self):
 @_add_method(otTables.Lookup)
 def closure_glyphs(self, s, cur_glyphs=None):
     if cur_glyphs is None:
-        if id(self) in s._doneLookups:
-            return
-        s._doneLookups.add(id(self))
-        cur_glyphs = s.glyphs
+        cur_glyphs = frozenset(s.glyphs)
+
+    # Memoize
+    if (id(self), cur_glyphs) in s._doneLookups:
+        return
+    s._doneLookups.add((id(self), cur_glyphs))
+
     if self in s._activeLookups:
         raise Exception("Circular loop in lookup recursion")
     s._activeLookups.append(self)
