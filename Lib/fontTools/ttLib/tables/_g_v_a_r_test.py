@@ -159,11 +159,6 @@ class GlyphVariationTableTest(unittest.TestCase):
 		self.assertEqual({"wght": 0.0, "wdth": 0.7}, maxCoord)
 
 class GlyphVariationTest(unittest.TestCase):
-	def __init__(self, methodName):
-		unittest.TestCase.__init__(self, methodName)
-		if not hasattr(self, "assertSetEqual"):  # only in Python 2.7 and later
-			self.assertSetEqual = self.assertEqual
-
 	def test_equal(self):
 		gvar1 = GlyphVariation({"wght":(0.0, 1.0, 1.0)}, [(0,0), (9,8), (7,6)])
 		gvar2 = GlyphVariation({"wght":(0.0, 1.0, 1.0)}, [(0,0), (9,8), (7,6)])
@@ -404,7 +399,7 @@ class GlyphVariationTest(unittest.TestCase):
 		allPoints = list(range(numPointsInGlyph))
 		def decompilePoints(data, offset):
 			points, offset = GlyphVariation.decompilePoints_(numPointsInGlyph, deHexStr(data), offset)
-			# Conversion to list only needed for Python 3.2.
+			# Conversion to list needed for Python 3.
 			return (list(points), offset)
 		# all points in glyph
 		self.assertEqual((allPoints, 1), decompilePoints("00", 0))
@@ -524,14 +519,7 @@ class GlyphVariationTest(unittest.TestCase):
 			deltas.extend(random.sample(range(-32768, 32767), 10))
 			deltas.extend([0] * 10)
 			random.shuffle(deltas)
-			if hasattr(self, "assertListEqual"):
-				# Python 2.7 and later
-				self.assertListEqual(deltas, decompile(compile(deltas)),
-						     "failed round-trip decompile/compileDeltas; deltas=%s" % deltas)
-			else:
-				# Python 2.6
-				self.assertEqual(deltas, decompile(compile(deltas)),
-						 "failed round-trip decompile/compileDeltas; deltas=%s" % deltas)
+			self.assertListEqual(deltas, decompile(compile(deltas)))
 
 	def test_getTupleSize(self):
 		getTupleSize = GlyphVariation.getTupleSize_
