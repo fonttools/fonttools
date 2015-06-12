@@ -833,7 +833,7 @@ def __subset_classify_context(self):
     return self.__class__.__ContextHelpers[self.Format]
 
 @_add_method(otTables.ContextSubst,
-                         otTables.ChainContextSubst)
+             otTables.ChainContextSubst)
 def closure_glyphs(self, s, cur_glyphs):
     c = self.__subset_classify_context()
 
