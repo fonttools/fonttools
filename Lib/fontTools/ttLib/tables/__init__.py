@@ -1,3 +1,4 @@
+
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 
@@ -50,6 +51,7 @@ def _moduleFinderHint():
 	from . import _f_v_a_r
 	from . import _g_a_s_p
 	from . import _g_l_y_f
+	from . import _g_v_a_r
 	from . import _h_d_m_x
 	from . import _h_e_a_d
 	from . import _h_h_e_a
@@ -66,6 +68,5 @@ def _moduleFinderHint():
 	from . import _v_m_t_x
 
 if __name__ == "__main__":
-	import sys
-	import doctest
+	import doctest, sys
 	sys.exit(doctest.testmod().failed)
