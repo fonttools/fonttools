@@ -2424,6 +2424,7 @@ class Subsetter(object):
         if 'cmap' in font:
             font['cmap'].closure_glyphs(self)
             self.glyphs.intersection_update(realGlyphs)
+            self.log.lapse("close glyph list over 'cmap'")
         self.glyphs_cmaped = frozenset(self.glyphs)
         if self.unicodes_missing:
             missing = ["U+%04X" % u for u in self.unicodes_missing]
