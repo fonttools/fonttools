@@ -2117,12 +2117,6 @@ def prune_pre_subset(self, options):
 def subset_glyphs(self, s):
     s.glyphs = None # We use s.glyphs_requested and s.unicodes_requested only
     for t in self.tables:
-        # For reasons I don't understand I need this here
-        # to force decompilation of the cmap format 14.
-        try:
-            getattr(t, "asdf")
-        except AttributeError:
-            pass
         if t.format == 14:
             # TODO(behdad) We drop all the default-UVS mappings
             # for glyphs_requested.  So it's the caller's responsibility to make
