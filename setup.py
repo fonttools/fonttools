@@ -20,6 +20,17 @@ except ImportError:
 	print("        http://sourceforge.net/projects/pyxml/")
 
 
+# Force distutils to use py_compile.compile() function with 'doraise' argument
+# set to True, in order to raise an exception on compilation errors
+import py_compile
+orig_py_compile = py_compile.compile
+
+def doraise_py_compile(file, cfile=None, dfile=None, doraise=False):
+    orig_py_compile(file, cfile=cfile, dfile=dfile, doraise=True)
+
+py_compile.compile = doraise_py_compile
+
+
 if sys.version_info > (2, 3, 0, 'alpha', 1):
 	# Trove classifiers for PyPI
 	classifiers = {"classifiers": [
