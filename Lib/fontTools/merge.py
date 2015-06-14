@@ -528,42 +528,42 @@ def mapLookups(self, lookupMap):
 	     otTables.ChainContextPos)
 def __merge_classify_context(self):
 
-  class ContextHelper(object):
-    def __init__(self, klass, Format):
-      if klass.__name__.endswith('Subst'):
-	Typ = 'Sub'
-	Type = 'Subst'
-      else:
-	Typ = 'Pos'
-	Type = 'Pos'
-      if klass.__name__.startswith('Chain'):
-	Chain = 'Chain'
-      else:
-	Chain = ''
-      ChainTyp = Chain+Typ
+	class ContextHelper(object):
+		def __init__(self, klass, Format):
+			if klass.__name__.endswith('Subst'):
+				Typ = 'Sub'
+				Type = 'Subst'
+			else:
+				Typ = 'Pos'
+				Type = 'Pos'
+			if klass.__name__.startswith('Chain'):
+				Chain = 'Chain'
+			else:
+				Chain = ''
+			ChainTyp = Chain+Typ
 
-      self.Typ = Typ
-      self.Type = Type
-      self.Chain = Chain
-      self.ChainTyp = ChainTyp
+			self.Typ = Typ
+			self.Type = Type
+			self.Chain = Chain
+			self.ChainTyp = ChainTyp
 
-      self.LookupRecord = Type+'LookupRecord'
+			self.LookupRecord = Type+'LookupRecord'
 
-      if Format == 1:
-	self.Rule = ChainTyp+'Rule'
-	self.RuleSet = ChainTyp+'RuleSet'
-      elif Format == 2:
-	self.Rule = ChainTyp+'ClassRule'
-	self.RuleSet = ChainTyp+'ClassSet'
+			if Format == 1:
+				self.Rule = ChainTyp+'Rule'
+				self.RuleSet = ChainTyp+'RuleSet'
+			elif Format == 2:
+				self.Rule = ChainTyp+'ClassRule'
+				self.RuleSet = ChainTyp+'ClassSet'
 
-  if self.Format not in [1, 2, 3]:
-    return None  # Don't shoot the messenger; let it go
-  if not hasattr(self.__class__, "__ContextHelpers"):
-    self.__class__.__ContextHelpers = {}
-  if self.Format not in self.__class__.__ContextHelpers:
-    helper = ContextHelper(self.__class__, self.Format)
-    self.__class__.__ContextHelpers[self.Format] = helper
-  return self.__class__.__ContextHelpers[self.Format]
+	if self.Format not in [1, 2, 3]:
+		return None  # Don't shoot the messenger; let it go
+	if not hasattr(self.__class__, "__ContextHelpers"):
+		self.__class__.__ContextHelpers = {}
+	if self.Format not in self.__class__.__ContextHelpers:
+		helper = ContextHelper(self.__class__, self.Format)
+		self.__class__.__ContextHelpers[self.Format] = helper
+	return self.__class__.__ContextHelpers[self.Format]
 
 
 @_add_method(otTables.ContextSubst,
@@ -571,22 +571,22 @@ def __merge_classify_context(self):
 	     otTables.ContextPos,
 	     otTables.ChainContextPos)
 def mapLookups(self, lookupMap):
-  c = self.__merge_classify_context()
+	c = self.__merge_classify_context()
 
-  if self.Format in [1, 2]:
-    for rs in getattr(self, c.RuleSet):
-      if not rs: continue
-      for r in getattr(rs, c.Rule):
-	if not r: continue
-	for ll in getattr(r, c.LookupRecord):
-	  if not ll: continue
-	  ll.LookupListIndex = lookupMap[ll.LookupListIndex]
-  elif self.Format == 3:
-    for ll in getattr(self, c.LookupRecord):
-      if not ll: continue
-      ll.LookupListIndex = lookupMap[ll.LookupListIndex]
-  else:
-    assert 0, "unknown format: %s" % self.Format
+	if self.Format in [1, 2]:
+		for rs in getattr(self, c.RuleSet):
+			if not rs: continue
+			for r in getattr(rs, c.Rule):
+				if not r: continue
+				for ll in getattr(r, c.LookupRecord):
+					if not ll: continue
+					ll.LookupListIndex = lookupMap[ll.LookupListIndex]
+	elif self.Format == 3:
+		for ll in getattr(self, c.LookupRecord):
+			if not ll: continue
+			ll.LookupListIndex = lookupMap[ll.LookupListIndex]
+	else:
+		assert 0, "unknown format: %s" % self.Format
 
 @_add_method(otTables.ExtensionSubst,
 	     otTables.ExtensionPos)
@@ -642,78 +642,78 @@ def mapFeatures(self, featureMap):
 
 class Options(object):
 
-  class UnknownOptionError(Exception):
-    pass
+	class UnknownOptionError(Exception):
+		pass
 
-  def __init__(self, **kwargs):
+	def __init__(self, **kwargs):
 
-    self.set(**kwargs)
+		self.set(**kwargs)
 
-  def set(self, **kwargs):
-    for k,v in kwargs.items():
-      if not hasattr(self, k):
-	raise self.UnknownOptionError("Unknown option '%s'" % k)
-      setattr(self, k, v)
+	def set(self, **kwargs):
+		for k,v in kwargs.items():
+			if not hasattr(self, k):
+				raise self.UnknownOptionError("Unknown option '%s'" % k)
+			setattr(self, k, v)
 
-  def parse_opts(self, argv, ignore_unknown=False):
-    ret = []
-    opts = {}
-    for a in argv:
-      orig_a = a
-      if not a.startswith('--'):
-	ret.append(a)
-	continue
-      a = a[2:]
-      i = a.find('=')
-      op = '='
-      if i == -1:
-	if a.startswith("no-"):
-	  k = a[3:]
-	  v = False
-	else:
-	  k = a
-	  v = True
-      else:
-	k = a[:i]
-	if k[-1] in "-+":
-	  op = k[-1]+'='  # Ops is '-=' or '+=' now.
-	  k = k[:-1]
-	v = a[i+1:]
-      k = k.replace('-', '_')
-      if not hasattr(self, k):
-	if ignore_unknown is True or k in ignore_unknown:
-	  ret.append(orig_a)
-	  continue
-	else:
-	  raise self.UnknownOptionError("Unknown option '%s'" % a)
+	def parse_opts(self, argv, ignore_unknown=False):
+		ret = []
+		opts = {}
+		for a in argv:
+			orig_a = a
+			if not a.startswith('--'):
+				ret.append(a)
+				continue
+			a = a[2:]
+			i = a.find('=')
+			op = '='
+			if i == -1:
+				if a.startswith("no-"):
+					k = a[3:]
+					v = False
+				else:
+					k = a
+					v = True
+			else:
+				k = a[:i]
+				if k[-1] in "-+":
+					op = k[-1]+'='  # Ops is '-=' or '+=' now.
+					k = k[:-1]
+				v = a[i+1:]
+			k = k.replace('-', '_')
+			if not hasattr(self, k):
+				if ignore_unknown is True or k in ignore_unknown:
+					ret.append(orig_a)
+					continue
+				else:
+					raise self.UnknownOptionError("Unknown option '%s'" % a)
 
-      ov = getattr(self, k)
-      if isinstance(ov, bool):
-	v = bool(v)
-      elif isinstance(ov, int):
-	v = int(v)
-      elif isinstance(ov, list):
-	vv = v.split(',')
-	if vv == ['']:
-	  vv = []
-	vv = [int(x, 0) if len(x) and x[0] in "0123456789" else x for x in vv]
-	if op == '=':
-	  v = vv
-	elif op == '+=':
-	  v = ov
-	  v.extend(vv)
-	elif op == '-=':
-	  v = ov
-	  for x in vv:
-	    if x in v:
-	      v.remove(x)
-	else:
-	  assert 0
+			ov = getattr(self, k)
+			if isinstance(ov, bool):
+				v = bool(v)
+			elif isinstance(ov, int):
+				v = int(v)
+			elif isinstance(ov, list):
+				vv = v.split(',')
+				if vv == ['']:
+					vv = []
+				vv = [int(x, 0) if len(x) and x[0] in "0123456789" else x for x in vv]
+				if op == '=':
+					v = vv
+				elif op == '+=':
+					v = ov
+					v.extend(vv)
+				elif op == '-=':
+					v = ov
+					for x in vv:
+						if x in v:
+							v.remove(x)
+				else:
+					assert 0
 
-      opts[k] = v
-    self.set(**opts)
+			opts[k] = v
+		self.set(**opts)
 
-    return ret
+		return ret
 
 
 class Merger(object):
@@ -873,45 +873,45 @@ class Merger(object):
 
 class Logger(object):
 
-  def __init__(self, verbose=False, xml=False, timing=False):
-    self.verbose = verbose
-    self.xml = xml
-    self.timing = timing
-    self.last_time = self.start_time = time.time()
+	def __init__(self, verbose=False, xml=False, timing=False):
+		self.verbose = verbose
+		self.xml = xml
+		self.timing = timing
+		self.last_time = self.start_time = time.time()
 
-  def parse_opts(self, argv):
-    argv = argv[:]
-    for v in ['verbose', 'xml', 'timing']:
-      if "--"+v in argv:
-	setattr(self, v, True)
-	argv.remove("--"+v)
-    return argv
+	def parse_opts(self, argv):
+		argv = argv[:]
+		for v in ['verbose', 'xml', 'timing']:
+			if "--"+v in argv:
+				setattr(self, v, True)
+				argv.remove("--"+v)
+		return argv
 
-  def __call__(self, *things):
-    if not self.verbose:
-      return
-    print(' '.join(str(x) for x in things))
+	def __call__(self, *things):
+		if not self.verbose:
+			return
+		print(' '.join(str(x) for x in things))
 
-  def lapse(self, *things):
-    if not self.timing:
-      return
-    new_time = time.time()
-    print("Took %0.3fs to %s" %(new_time - self.last_time,
+	def lapse(self, *things):
+		if not self.timing:
+			return
+		new_time = time.time()
+		print("Took %0.3fs to %s" %(new_time - self.last_time,
 				 ' '.join(str(x) for x in things)))
-    self.last_time = new_time
+		self.last_time = new_time
 
-  def font(self, font, file=sys.stdout):
-    if not self.xml:
-      return
-    from fontTools.misc import xmlWriter
-    writer = xmlWriter.XMLWriter(file)
-    font.disassembleInstructions = False  # Work around ttLib bug
-    for tag in font.keys():
-      writer.begintag(tag)
-      writer.newline()
-      font[tag].toXML(writer, font)
-      writer.endtag(tag)
-      writer.newline()
+	def font(self, font, file=sys.stdout):
+		if not self.xml:
+			return
+		from fontTools.misc import xmlWriter
+		writer = xmlWriter.XMLWriter(file)
+		font.disassembleInstructions = False	# Work around ttLib bug
+		for tag in font.keys():
+			writer.begintag(tag)
+			writer.newline()
+			font[tag].toXML(writer, font)
+			writer.endtag(tag)
+			writer.newline()
 
 
 __all__ = [
