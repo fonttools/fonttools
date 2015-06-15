@@ -1,17 +1,21 @@
 """
-usage: comparefonts [options] fontA fontB inputFile 
+usage: pyftcompare [options] fontA fontB inputFile 
 
-    compareFonts %s -- TrueType Glyph Compare Tool
+    pyftcompare -- TrueType Glyph Compare Tool
 
     General options:
     -h Help: print this message
     -v Verbose: be more verbose
+    -e CODE Encoding: encoding used to read the input file
     -x HRES Hres: Horizontal resolution dpi
     -y VRES Vres: Vertical resolution dpi
 
+    Default encoding for file is UTF-8.
+    A list of supported encodings and their codes can be found at:
+    https://docs.python.org/2/library/codecs.html
     If no horizonta/vertical dpi resolution is provided, glyphs
     will be rendered on the following resolutions: 72x72,
-    300x300, 600x600, 1200x1200 and 2400x2400.
+    300x300, 600x600, 1200x1200 and 2400x2400dpi.
 """
 
 import sys
@@ -38,16 +42,16 @@ def compareFontGlyphs(fontA, fontB, charList, resolutionList):
     '''
 
     try:
-        print("Loading font :"+fontA+"...")
+        print("Loading font: "+fontA+"...")
         faceA = Face(fontA)
     except:
-        raise ValueError('Failed to load font ', fontA)
+        raise ValueError('Failed to load font '+fontA)
 
     try:
-        print("Loading font : "+fontB+"...")
+        print("Loading font: "+fontB+"...")
         faceB = Face(fontB)
     except:
-        raise ValueError('Failed to load font ', fontB)
+        raise ValueError('Failed to load font '+fontB)
 
     for hres, vres in resolutionList:
 
@@ -120,10 +124,17 @@ def listToStr(charList):
         string += char+' '
     return string
 
-def readFile(input):
-    with codecs.open(input) as file:
-        data=file.read()
-    data = data.decode('utf-8')
+def readFile(input, encoding):
+    try:
+        with codecs.open(input) as file:
+            data=file.read()
+    except:
+        raise ValueError("Couldn't open file "+input)
+
+    try:
+        data = data.decode(encoding)
+    except:
+        raise ValueError("Different encoding or wrong code provided: "+encoding)
     charList = list(set(data))
     return charList
 
@@ -132,10 +143,10 @@ def usage():
     sys.exit(2)
 
 class Options(object):
+    encoding = 'utf-8'
     verbose = False
     resolutionList = [(72,72), (300, 300), (600, 600),
                       (1200, 1200), (2400, 2400)]
-
  
     def __init__(self, rawOptions, files):
         
@@ -145,6 +156,8 @@ class Options(object):
         for option, value in rawOptions:
             if option == "-h":
                 usage()
+            elif option == "-e":
+                self.encoding = value
             elif option == "-v":
                 self.verbose = True
             elif option == "-x":
@@ -167,24 +180,16 @@ class Options(object):
 
 def parseOptions(args):
     try:
-        rawOptions, files = getopt.getopt(args, "hvx:y:")
+        rawOptions, files = getopt.getopt(args, "hve:x:y:")
     except getopt.GetoptError:
         usage()
 
     if not files or len(files) != 3:
         usage()
  
-    for input in files[:2]:
-        fileformat = input.split('.')[-1]
-        if fileformat != 'ttf':
-            usage()
-
-    try:
-        charList = readFile(files[2])
-    except:
-        usage()
-
     options = Options(rawOptions, files)
+    charList = readFile(files[2], options.encoding)
+    
     return options, files[0], files[1], charList    
 
 def main(args):
@@ -194,13 +199,9 @@ def main(args):
         compareFontGlyphs(fontA, fontB, charList, options.resolutionList)
     
     except ValueError as err:
-        logger.warn(err)
+        print("ERROR: "+str(err))
     except KeyboardInterrupt:
-        logger.warn("\nInterrupted")
-        try:
-            sys.exit(0)
-        except SystemExit:
-            os._exit(0)
+        print("\nInterrupted")
 
 if __name__ == "__main__":
     main(sys.argv[1:])
