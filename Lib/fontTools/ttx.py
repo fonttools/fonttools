@@ -67,6 +67,8 @@ usage: ttx [options] inputfile1 [... inputfileN]
        valid when at most one TTX file is specified.
     -b Don't recalc glyph bounding boxes: use the values in the TTX
        file as-is.
+    --recalc-timestamp Set font 'modified' timestamp to current time.
+       By default, the modification time of the TTX file will be used.
 """
 
 
@@ -75,6 +77,7 @@ from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont, TTLibError
 from fontTools.misc.macCreatorType import getMacCreatorAndType
 from fontTools.unicode import setUnicodeData
+from fontTools.misc.timeTools import timestampSinceEpoch
 import os
 import sys
 import getopt
@@ -120,6 +123,7 @@ class Options(object):
 	ignoreDecompileErrors = True
 	bitmapGlyphDataFormat = 'raw'
 	unicodedata = None
+	recalcTimestamp = False
 
 	def __init__(self, rawOptions, numFiles):
 		self.onlyTables = []
@@ -174,6 +178,8 @@ class Options(object):
 				self.ignoreDecompileErrors = False
 			elif option == "--unicodedata":
 				self.unicodedata = value
+			elif option == "--recalc-timestamp":
+				self.recalcTimestamp = True
 		if self.onlyTables and self.skipTables:
 			print("-t and -x options are mutually exclusive")
 			sys.exit(2)
@@ -225,8 +231,15 @@ def ttCompile(input, output, options):
 		print('Compiling "%s" to "%s"...' % (input, output))
 	ttf = TTFont(options.mergeFile,
 			recalcBBoxes=options.recalcBBoxes,
+			recalcTimestamp=options.recalcTimestamp,
 			verbose=options.verbose, allowVID=options.allowVID)
 	ttf.importXML(input, quiet=options.quiet)
+
+	if not options.recalcTimestamp:
+		# use TTX file modification time for head "modified" timestamp
+		mtime = os.path.getmtime(input)
+		ttf['head'].modified = timestampSinceEpoch(mtime)
+
 	ttf.save(output)
 
 	if options.verbose:
@@ -268,7 +281,7 @@ def guessFileType(fileName):
 def parseOptions(args):
 	try:
 		rawOptions, files = getopt.getopt(args, "ld:o:fvqht:x:sim:z:baey:",
-			['unicodedata='])
+			['unicodedata=', "recalc-timestamp"])
 	except getopt.GetoptError:
 		usage()
 

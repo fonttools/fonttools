@@ -1,4 +1,4 @@
-"""fontTools.misc.timeTools.py -- tools for working with OpenType encodings.
+"""fontTools.misc.encodingTools.py -- tools for working with OpenType encodings.
 """
 
 from __future__ import print_function, division, absolute_import
