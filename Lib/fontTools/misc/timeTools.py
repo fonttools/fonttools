@@ -17,3 +17,6 @@ def timestampFromString(value):
 
 def timestampNow():
 	return int(time.time() - epoch_diff)
+
+def timestampSinceEpoch(value):
+	return int(value - epoch_diff)
