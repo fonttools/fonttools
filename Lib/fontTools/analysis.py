@@ -19,11 +19,34 @@ from fontTools.ttLib import TTFont
 from fontTools.ttLib.instructions import statements, instructionConstructor, abstractExecute
 from fontTools.ttLib.data import dataType
 import sys
+import os
 import getopt
 import math
 import pdb
 import logging
 import copy
+
+def makeOutputFileName(input, extension):
+    dirName, fileName = os.path.split(input)
+    fileName, ext = os.path.splitext(fileName)
+    output = os.path.join(dirName, fileName + extension)
+    n = 1
+    while os.path.exists(output):
+        output = os.path.join(dirName, fileName + "#" + repr(n) + extension)
+        n = n + 1
+    return output
+
+def ttDump(input):
+    output = makeOutputFileName(input, ".ttx")
+    ttf = TTFont(input, 0, verbose=False, allowVID=False,
+            quiet=False, ignoreDecompileErrors=True,
+            fontNumber=-1)
+    ttf.saveXML(output, quiet=True, tables= [],
+            skipTables= [], splitTables=False,
+            disassembleInstructions=True,
+            bitmapGlyphDataFormat='raw')
+    ttf.close()
+    return output
 
 class Body(object):
     '''
@@ -126,7 +149,7 @@ class Program(object):
     def print_program(self):
         self.body.pretty_print()
 
-class BytecodeFont(object):
+class BytecodeContainer(object):
     """ Represents the original bytecode-related global data for a TrueType font. """
     def __init__(self, tt):
         # tag id -> Program
@@ -229,7 +252,66 @@ class BytecodeFont(object):
         for key, value in self.function_table.items():
             value.constructBody()
 
-        
+    #update the TTFont object passed with contets of current BytecodeContainer
+    def updateTTFont(self, ttFont):
+        self.replaceCVTTable(ttFont)
+        self.replaceFpgm(ttFont)
+ 
+    def replaceCVTTable(self, ttFont):
+        try:
+            for i in range(len(self.cvt_table)):
+                ttFont['cvt '].values[i] = self.cvt_table[i]
+        except:
+            pass
+
+    def replaceFpgm(self, ttFont):
+        assembly = []
+        skip = False
+
+        if len(self.function_table) > 0:
+            assembly.append("PUSH[ ]")
+            if(len(self.function_table) > 1):
+                assembly[-1] += "  /* %s values pushed */" % len(self.function_table)
+
+            for label in reversed(self.function_table.keys()):
+                assembly.append(str(label))
+
+
+            for function in self.function_table.values():
+                assembly.append('FDEF[ ]')
+                for instr in function.instructions:
+
+                    if(instr.mnemonic == 'PUSH'):
+                        assembly.append('PUSH[ ]')
+                        if(len(instr.data) > 1):
+                            assembly[-1] += "  /* %s values pushed */" % len(instr.data)
+
+                        for data in instr.data:
+                            assembly.append(str(data))
+                    else:
+                        if(len(instr.data) > 0):
+                            instr_append = instr.mnemonic+'['
+                            for data in instr.data:
+                                instr_append += str(data)
+                            instr_append += ']'
+                            assembly.append(instr_append)
+                        else:
+                            assembly.append(instr.mnemonic+'[ ]')
+
+                assembly.append('ENDF[ ]')
+
+        ttFont['fpgm'].program.fromAssembly(assembly)
+
+    #remove functions passed from the function table
+    def removeFunctions(self, functions=[]):
+            if(len(functions) > 0):
+                for label in functions:
+                    try:
+                        del self.function_table[label]
+                    except:
+                        pass
+
+
 def analysis(tt, glyphs=[]):
     #one ttFont object for one ttx file       
     absExecutor = abstractExecute.Executor(tt)
@@ -249,6 +331,7 @@ class Options(object):
     outputMaxStackDepth = False
     glyphs = []
     allGlyphs = False
+    parseFunctions = False
 
     def __init__(self, rawOptions, numFiles):
         for option, value in rawOptions:
@@ -271,6 +354,8 @@ class Options(object):
                 self.allGlyphs = True
             elif option == "-v":
                 self.verbose = True
+            elif option == "-p":
+                self.parseFunctions = True
 
         if (self.verbose):
             logging.basicConfig(level = logging.INFO)
@@ -286,7 +371,7 @@ def process(jobs, options):
     for input in jobs:
         tt = TTFont()
         tt.importXML(input, quiet=True)
-        ttFont = BytecodeFont(tt)
+        ttFont = BytecodeContainer(tt)
 
         if (options.allGlyphs):
             glyphs = filter(lambda x: x != 'fpgm' and x != 'prep', ttFont.programs.keys())
@@ -306,10 +391,22 @@ def process(jobs, options):
             print("CVT = ", ae.environment.cvt)
         if (options.outputMaxStackDepth):
             print("Max Stack Depth =", ae.maximum_stack_depth)
+        if (options.parseFunctions):
+            function_set = ae.environment.function_table.keys()
+            called_functions = list(set(ae.program.call_function_set))
+
+            # get labels of functions that were never called (function_set - called_functions)
+            unused_functions = [item for item in function_set if item not in called_functions]
+          
+            ttFont.removeFunctions(unused_functions)    
+            ttFont.updateTTFont(tt)
+            output = "Reduced"+input
+            output = makeOutputFileName(output, ".ttf")
+            tt.save(output)
 
 def parseOptions(args):
     try:
-        rawOptions, files = getopt.getopt(args, "hscfGmg:v")
+        rawOptions, files = getopt.getopt(args, "hscfGmg:vp")
     except getopt.GetoptError:
         usage()
 
@@ -322,9 +419,9 @@ def parseOptions(args):
     for input in files:
         fileformat = input.split('.')[-1]
         if fileformat == 'ttf':
-            #TODO: transform ttf file to ttx and feed it to the analysis
-            raise NotImplementedError
-        if fileformat == 'ttx':
+            output = ttDump(input)
+            jobs.append(output)
+        elif fileformat == 'ttx':
             jobs.append(input)
         else:
             raise NotImplementedError
