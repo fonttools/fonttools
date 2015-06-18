@@ -60,8 +60,8 @@ OS2_format_0 = """
 	ulUnicodeRange4:        L       # character range
 	achVendID:              4s      # font vendor identification
 	fsSelection:            H       # font selection flags
-	fsFirstCharIndex:       H       # first unicode character index
-	fsLastCharIndex:        H       # last unicode character index
+	usFirstCharIndex:       H       # first unicode character index
+	usLastCharIndex:        H       # last unicode character index
 	sTypoAscender:          h       # typographic ascender
 	sTypoDescender:         h       # typographic descender
 	sTypoLineGap:           h       # typographic line gap
@@ -79,7 +79,7 @@ OS2_format_2_addition =  OS2_format_1_addition + """
 	sCapHeight:         h
 	usDefaultChar:      H
 	usBreakChar:        H
-	usMaxContex:        H
+	usMaxContext:       H
 """
 
 OS2_format_5_addition =  OS2_format_2_addition + """
@@ -143,7 +143,7 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 
 	def toXML(self, writer, ttFont):
 		writer.comment(
-			"The fields 'fsFirstCharIndex' and 'fsLastCharIndex'\n"
+			"The fields 'usFirstCharIndex' and 'usLastCharIndex'\n"
 			"will be recalculated by the compiler")
 		writer.newline()
 		if self.version == 1:
@@ -200,5 +200,31 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 			minCode = min(codes)
 			maxCode = max(codes)
 			# USHORT cannot hold codepoints greater than 0xFFFF
-			self.fsFirstCharIndex = 0xFFFF if minCode > 0xFFFF else minCode
-			self.fsLastCharIndex = 0xFFFF if maxCode > 0xFFFF else maxCode
+			self.usFirstCharIndex = 0xFFFF if minCode > 0xFFFF else minCode
+			self.usLastCharIndex = 0xFFFF if maxCode > 0xFFFF else maxCode
+
+	# misspelled attributes kept for legacy reasons
+
+	@property
+	def usMaxContex(self):
+		return self.usMaxContext
+
+	@usMaxContex.setter
+	def usMaxContex(self, value):
+		self.usMaxContext = value
+
+	@property
+	def fsFirstCharIndex(self):
+		return self.usFirstCharIndex
+
+	@fsFirstCharIndex.setter
+	def fsFirstCharIndex(self, value):
+		self.usFirstCharIndex = value
+
+	@property
+	def fsLastCharIndex(self):
+		return self.usLastCharIndex
+
+	@fsLastCharIndex.setter
+	def fsLastCharIndex(self, value):
+		self.usLastCharIndex = value
