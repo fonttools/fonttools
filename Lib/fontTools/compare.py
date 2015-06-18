@@ -1,5 +1,5 @@
 """
-usage: pyftcompare [options] fontA fontB inputFile 
+usage: pyftcompare [options] fontA fontB inputFileOrURL 
 
     pyftcompare -- TrueType Glyph Compare Tool
 
@@ -22,7 +22,10 @@ import sys
 import getopt
 import logging
 import codecs
+import urllib2 
 from freetype import *
+from urllib2 import urlopen
+from bs4 import BeautifulSoup
 
 logger = logging.getLogger(" ")
 
@@ -129,14 +132,37 @@ def readFile(input, encoding):
         with codecs.open(input) as file:
             data=file.read()
     except:
-        raise ValueError("Couldn't open file "+input)
+        raise IOError("Couldn't open file "+input)
 
+    return data
+
+def readPage(input):
+    #some sites block common non-browser user agent strings, better use a regular one
+    hdr = {'User-Agent':'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.7) Gecko/2009021910 Firefox/3.0.7'}
+    request = urllib2.Request(input, headers = hdr) 
     try:
-        data = data.decode(encoding)
+        page = urllib2.urlopen(request)
     except:
-        raise ValueError("Different encoding or wrong code provided: "+encoding)
-    charList = list(set(data))
+        raise ValueError("Couldn't load file or URL "+input)
+    return page    
+
+def readInput(input, encoding):
+    try:
+        data = readFile(input, encoding)
+    except IOError:
+        data = readPage(input)
+
+    soup = BeautifulSoup(data)
+    texts = soup.findAll(text=True)
+    [s.extract() for s in soup(['style', 'script', '[document]', 'head', 'title'])]
+    string = soup.getText()
+    
+    charList = list(set(string))
+
+    escapeList = ['\n', '\t', '\v', '\r', '\f', '\b', '\a']
+    charList = [x for x in charList if x not in escapeList]
     return charList
+
 
 def usage():
     print(__doc__)
@@ -188,12 +214,11 @@ def parseOptions(args):
         usage()
  
     options = Options(rawOptions, files)
-    charList = readFile(files[2], options.encoding)
+    charList = readInput(files[2], options.encoding)
     
     return options, files[0], files[1], charList    
 
 def main(args):
-    
     try:
         options, fontA, fontB, charList = parseOptions(args)
         compareFontGlyphs(fontA, fontB, charList, options.resolutionList)
