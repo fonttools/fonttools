@@ -44,6 +44,7 @@ def _moduleFinderHint():
 	from . import T_S_I__5
 	from . import V_D_M_X_
 	from . import V_O_R_G_
+	from . import _a_v_a_r
 	from . import _c_m_a_p
 	from . import _c_v_t
 	from . import _f_e_a_t
