@@ -315,13 +315,17 @@ class BytecodeContainer(object):
 def analysis(tt, glyphs=[]):
     #one ttFont object for one ttx file       
     absExecutor = abstractExecute.Executor(tt)
+    called_functions = set() 
     absExecutor.execute('prep')
     environment_after_prep = copy.deepcopy(absExecutor.environment)
+    called_functions.update( list(set(absExecutor.program.call_function_set)) )
+    
     for glyph in glyphs:
         print(glyph)
         absExecutor.environment = copy.deepcopy(environment_after_prep)
         absExecutor.execute(glyph)
-    return absExecutor
+        called_functions.update( list(set(absExecutor.program.call_function_set)) )
+    return absExecutor, called_functions
 
 class Options(object):
     verbose = False
@@ -378,7 +382,7 @@ def process(jobs, options):
         else:
             glyphs = map(lambda x: 'glyf.'+x, options.glyphs)
 
-        ae = analysis(ttFont, glyphs)
+        ae, called_functions = analysis(ttFont, glyphs)
         if (options.outputFunctions):
             ttFont.programs['prep'].body.pretty_print()
             for key, value in ttFont.function_table.items():
@@ -393,9 +397,6 @@ def process(jobs, options):
             print("Max Stack Depth =", ae.maximum_stack_depth)
         if (options.parseFunctions):
             function_set = ae.environment.function_table.keys()
-            called_functions = list(set(ae.program.call_function_set))
-
-            # get labels of functions that were never called (function_set - called_functions)
             unused_functions = [item for item in function_set if item not in called_functions]
           
             ttFont.removeFunctions(unused_functions)    
