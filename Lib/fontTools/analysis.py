@@ -311,6 +311,15 @@ class BytecodeContainer(object):
                     except:
                         pass
 
+def executeGlyphs(absExecutor, glyphs):
+    environment = copy.deepcopy(absExecutor.environment)
+    called_functions = set() 
+    for glyph in glyphs:
+        print(glyph)
+        absExecutor.execute(glyph)
+        called_functions.update(list(set(absExecutor.program.call_function_set)))
+        absExecutor.environment = copy.deepcopy(environment)
+    return called_functions
 
 def analysis(tt, glyphs=[]):
     #one ttFont object for one ttx file       
@@ -318,13 +327,9 @@ def analysis(tt, glyphs=[]):
     called_functions = set() 
     absExecutor.execute('prep')
     environment_after_prep = copy.deepcopy(absExecutor.environment)
-    called_functions.update( list(set(absExecutor.program.call_function_set)) )
+    called_functions.update(list(set(absExecutor.program.call_function_set)))
     
-    for glyph in glyphs:
-        print(glyph)
-        absExecutor.environment = copy.deepcopy(environment_after_prep)
-        absExecutor.execute(glyph)
-        called_functions.update( list(set(absExecutor.program.call_function_set)) )
+    called_functions.update(executeGlyphs(absExecutor, glyphs))
     return absExecutor, called_functions
 
 class Options(object):
@@ -396,6 +401,10 @@ def process(jobs, options):
         if (options.outputMaxStackDepth):
             print("Max Stack Depth =", ae.maximum_stack_depth)
         if (options.parseFunctions):
+            if not options.allGlyphs:
+                glyphs = filter(lambda x: x != 'fpgm' and x != 'prep', ttFont.programs.keys())
+                called_functions.update(executeGlyphs(ae, glyphs)) 
+            
             function_set = ae.environment.function_table.keys()
             unused_functions = [item for item in function_set if item not in called_functions]
           
