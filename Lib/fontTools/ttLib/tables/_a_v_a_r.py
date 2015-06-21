@@ -7,8 +7,6 @@ from fontTools.misc.textTools import safeEval
 from fontTools.ttLib import TTLibError
 from . import DefaultTable
 import array
-import io
-import sys
 import struct
 import warnings
 
@@ -80,7 +78,7 @@ class table__a_v_a_r(DefaultTable.DefaultTable):
             segment = self.segments[axis] = {}
             for element in content:
                 if isinstance(element, tuple):
-                    elementName, elementAttrs, elementContent = element
+                    elementName, elementAttrs, _ = element
                     if elementName == "mapping":
                         fromValue = safeEval(elementAttrs["from"])
                         toValue = safeEval(elementAttrs["to"])
