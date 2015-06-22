@@ -577,7 +577,7 @@ class ExecutionContext(object):
         self.program_stack_pop(2)
 
     def exec_SFVTPV(self):#Set Freedom Vector To Projection Vector
-        self.graphics_state['fv'] = self.graphics_state['gv']
+        self.graphics_state['fv'] = self.graphics_state['pv']
 
     def exec_SHC(self):
         self.program_stack_pop(1)
