@@ -46,6 +46,7 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
 			# subtable is referenced.
 			table.decompileHeader(data[offset:offset+int(length)], ttFont)
 			if offset in seenOffsets:
+				table.data = None # Mark as decompiled
 				table.cmap = tables[seenOffsets[offset]].cmap
 			else:
 				seenOffsets[offset] = i
@@ -120,8 +121,8 @@ class CmapSubtable(object):
 			raise AttributeError(attr)
 		self.decompile(None, None) # use saved data.
 		self.data = None # Once this table has been decompiled, make sure we don't
-						# just return the original data. Also avoids recursion when
-						# called with an attribute that the cmap subtable doesn't have.
+				 # just return the original data. Also avoids recursion when
+				 # called with an attribute that the cmap subtable doesn't have.
 		return getattr(self, attr)
 
 	def decompileHeader(self, data, ttFont):
