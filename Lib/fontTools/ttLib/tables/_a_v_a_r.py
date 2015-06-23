@@ -29,8 +29,7 @@ class table__a_v_a_r(DefaultTable.DefaultTable):
         self.segments = {}
 
     def compile(self, ttFont):
-        fvarAxes = ttFont["fvar"].table.VariationAxis
-        axisTags = [axis.AxisTag for axis in fvarAxes]
+        axisTags = [axis.axisTag for axis in ttFont["fvar"].axes]
         header = {"version": 0x00010000, "axisCount": len(axisTags)}
         result = [sstruct.pack(AVAR_HEADER_FORMAT, header)]
         for axis in axisTags:
@@ -43,8 +42,7 @@ class table__a_v_a_r(DefaultTable.DefaultTable):
         return bytesjoin(result)
 
     def decompile(self, data, ttFont):
-        fvarAxes = ttFont["fvar"].table.VariationAxis
-        axisTags = [axis.AxisTag for axis in fvarAxes]
+        axisTags = [axis.axisTag for axis in ttFont["fvar"].axes]
         header = {}
         headerSize = sstruct.calcsize(AVAR_HEADER_FORMAT)
         header = sstruct.unpack(AVAR_HEADER_FORMAT, data[0:headerSize])
@@ -62,7 +60,7 @@ class table__a_v_a_r(DefaultTable.DefaultTable):
         self.fixupSegments_(warn=warnings.warn)
 
     def toXML(self, writer, ttFont, progress=None):
-        axisTags = [axis.AxisTag for axis in ttFont["fvar"].table.VariationAxis]
+        axisTags = [axis.axisTag for axis in ttFont["fvar"].axes]
         for axis in axisTags:
             writer.begintag("segment", axis=axis)
             writer.newline()

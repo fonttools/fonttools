@@ -52,7 +52,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 	dependencies = ["fvar", "glyf"]
 
 	def compile(self, ttFont):
-		axisTags = [axis.AxisTag for axis in ttFont["fvar"].table.VariationAxis]
+		axisTags = [axis.axisTag for axis in ttFont["fvar"].axes]
 
 		sharedCoords = self.compileSharedCoords_(axisTags)
 		sharedCoordIndices = {coord:i for i, coord in enumerate(sharedCoords)}
@@ -168,7 +168,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		return result
 
 	def decompile(self, data, ttFont):
-		axisTags = [axis.AxisTag for axis in ttFont["fvar"].table.VariationAxis]
+		axisTags = [axis.axisTag for axis in ttFont["fvar"].axes]
 		glyphs = ttFont.getGlyphOrder()
 		sstruct.unpack(GVAR_HEADER_FORMAT, data[0:GVAR_HEADER_SIZE], self)
 		assert len(glyphs) == self.glyphCount
@@ -301,7 +301,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		writer.newline()
 		writer.simpletag("reserved", value=self.reserved)
 		writer.newline()
-		axisTags = [axis.AxisTag for axis in ttFont["fvar"].table.VariationAxis]
+		axisTags = [axis.axisTag for axis in ttFont["fvar"].axes]
 		for glyphName in ttFont.getGlyphOrder():
 			variations = self.variations.get(glyphName)
 			if not variations:
