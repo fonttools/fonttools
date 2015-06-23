@@ -4,6 +4,7 @@ from fontTools.misc.textTools import deHexStr
 from fontTools.misc.xmlWriter import XMLWriter
 from fontTools.ttLib import TTLibError
 from fontTools.ttLib.tables._a_v_a_r import table__a_v_a_r
+from fontTools.ttLib.tables._f_v_a_r import table__f_v_a_r, Axis
 import collections
 import unittest
 
@@ -73,9 +74,11 @@ class AxisVariationTableTest(unittest.TestCase):
     @staticmethod
     def makeFont(axisTags):
         """['opsz', 'wdth'] --> ttFont"""
-        axes = [collections.namedtuple("A", "AxisTag")(axis) for axis in axisTags]
-        varaxis = collections.namedtuple("B", "VariationAxis")(axes)
-        fvar = collections.namedtuple("C", "table")(varaxis)
+        fvar = table__f_v_a_r()
+        for tag in axisTags:
+            axis = Axis()
+            axis.axisTag = tag
+            fvar.axes.append(axis)
         return {"fvar": fvar}
 
     @staticmethod
