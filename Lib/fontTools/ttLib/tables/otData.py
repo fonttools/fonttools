@@ -1020,39 +1020,4 @@ otData = [
 		('uint16', 'SettingNameID', None, None, 'The name table index for the setting name.'),
 	]),
 
-	##
-	## Apple TrueType GX tables
-	##
-
-	#
-	# fvar
-	#
-
-	('fvar', [
-		('Version', 'Version', None, None, 'Version of the fvar table-initially set to 0x00010000.'),
-		('uint16', 'OffsetToData', None, None, 'Set to 16.'),
-		('uint16', 'CountSizePairs', None, None, 'Set to 2.'),
-		('uint16', 'AxisCount', None, None, 'Number of style axes in this font.'),
-		('uint16', 'AxisSize', None, None, 'Set to 20.'),
-		('uint16', 'InstanceCount', None, None, 'Number of named instances in this font.'),
-		('uint16', 'InstanceSize', None, None, 'Number of bytes in each instance.'),
-		('VariationAxis', 'VariationAxis', 'AxisCount', 0, 'The variation axes array.'),
-		('NamedInstance', 'NamedInstance', 'InstanceCount', 0, 'The named instances array.'),
-	]),
-
-	('VariationAxis', [
-		('Tag', 'AxisTag', None, None, '4-byte AxisTag identifier'),
-		('Fixed', 'MinValue', None, None, 'The minimum style coordinate for the axis.'),
-		('Fixed', 'DefaultValue', None, None, 'The default style coordinate for the axis.'),
-		('Fixed', 'MaxValue', None, None, 'The maximum style coordinate for the axis.'),
-		('uint16', 'Flags', None, None, 'Set to zero.'),
-		('uint16', 'NameID', None, None, 'The name table index for the setting name.'),
-	]),
-
-	('NamedInstance', [
-		('uint16', 'NameID', None, None, 'The name table index for the instance name.'),
-		('uint16', 'Flags', None, None, 'Set to zero.'),
-		('Fixed', 'Coords', 'AxisCount', 0, 'The maximum style coordinate for the axis.'),
-	]),
-
 ]
