@@ -3,6 +3,7 @@ from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from fontTools.misc.fixedTools import fixedToFloat, floatToFixed
 from fontTools.misc.textTools import safeEval, num2binary, binary2num
+from fontTools.ttLib import TTLibError
 from . import DefaultTable
 import struct
 
@@ -84,9 +85,9 @@ class table__f_v_a_r(DefaultTable.DefaultTable):
 
     def toXML(self, writer, ttFont, progress=None):
         for axis in self.axes:
-            axis.toXML(writer, ttFont, progress)
+            axis.toXML(writer, ttFont)
         for instance in self.instances:
-            instance.toXML(writer, ttFont, progress)
+            instance.toXML(writer, ttFont)
 
     def fromXML(self, name, attrs, content, ttFont):
         if name == "Axis":
@@ -113,7 +114,7 @@ class Axis(object):
     def decompile(self, data):
         sstruct.unpack2(FVAR_AXIS_FORMAT, data, self)
 
-    def toXML(self, writer, ttFont, progress=None):
+    def toXML(self, writer, ttFont):
         name = ttFont["name"].getDebugName(self.nameID)
         if name is not None:
             writer.newline()
@@ -121,13 +122,12 @@ class Axis(object):
             writer.newline()
         writer.begintag("Axis")
         writer.newline()
-        for tag, value in [
-            ("AxisTag", self.axisTag),
-            ("MinValue", str(self.minValue)),
-            ("DefaultValue", str(self.defaultValue)),
-            ("MaxValue", str(self.maxValue)),
-            ("Flags", num2binary(self.flags, 16)),
-            ("NameID", str(self.nameID))]:
+        for tag, value in [("AxisTag", self.axisTag),
+                           ("MinValue", str(self.minValue)),
+                           ("DefaultValue", str(self.defaultValue)),
+                           ("MaxValue", str(self.maxValue)),
+                           ("Flags", num2binary(self.flags, 16)),
+                           ("NameID", str(self.nameID))]:
             writer.begintag(tag)
             writer.write(value)
             writer.endtag(tag)
@@ -135,7 +135,7 @@ class Axis(object):
         writer.endtag("Axis")
         writer.newline()
 
-    def fromXML(self, name, attrs, content, ttFont):
+    def fromXML(self, name, _attrs, content, ttFont):
         assert(name == "Axis")
         for tag, _, value in filter(lambda t: type(t) is tuple, content):
             value = ''.join(value)
@@ -167,7 +167,7 @@ class NamedInstance(object):
             self.coordinates[axis] = fixedToFloat(value, 16)
             pos += 4
 
-    def toXML(self, writer, ttFont, progress=None):
+    def toXML(self, writer, ttFont):
         name = ttFont["name"].getDebugName(self.nameID)
         if name is not None:
             writer.newline()
