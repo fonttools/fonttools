@@ -955,10 +955,11 @@ def maxPowerOfTwo(x):
 	return max(exponent - 1, 0)
 
 
-def getSearchRange(n, itemSize):
+def getSearchRange(n, itemSize=16):
 	"""Calculate searchRange, entrySelector, rangeShift.
 	"""
-	# This stuff needs to be stored in the file, because?
+	# itemSize defaults to 16, for backward compatibility
+	# with upstream fonttools.
 	exponent = maxPowerOfTwo(n)
 	searchRange = (2 ** exponent) * itemSize
 	entrySelector = exponent
