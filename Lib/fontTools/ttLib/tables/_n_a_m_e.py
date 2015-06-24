@@ -93,14 +93,17 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 	def getDebugName(self, nameID):
 		englishName = someName = None
 		for name in self.names:
+			if name.nameID != nameID:
+				continue
 			try:
 				unistr = name.toUnicode()
 			except UnicodeDecodeError:
-				unistr = None
-			if name.nameID == nameID and unistr:
-				someName = unistr
-				if (name.platformID, name.langID) in ((1, 0), (3, 0x409)):
-					englishName = unistr
+				continue
+
+			someName = unistr
+			if (name.platformID, name.langID) in ((1, 0), (3, 0x409)):
+				englishName = unistr
+				break
 		if englishName:
 			return englishName
 		elif someName:
