@@ -449,6 +449,29 @@ class Program(object):
 		self.assembly = assembly
 
 	def __bool__(self):
+		"""
+		>>> p = Program()
+		>>> bool(p)
+		False
+		>>> bc = array.array("B", [0])
+		>>> p.fromBytecode(bc)
+		>>> bool(p)
+		True
+		>>> p.bytecode.pop()
+		0
+		>>> bool(p)
+		False
+
+		>>> p = Program()
+		>>> asm = ['SVTCA[0]']
+		>>> p.fromAssembly(asm)
+		>>> bool(p)
+		True
+		>>> p.assembly.pop()
+		'SVTCA[0]'
+		>>> bool(p)
+		False
+		"""
 		return ((hasattr(self, 'assembly') and len(self.assembly) > 0) or
 			    (hasattr(self, 'bytecode') and len(self.bytecode) > 0))
 
