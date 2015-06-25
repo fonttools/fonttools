@@ -448,6 +448,12 @@ class Program(object):
 				i = i + 1
 		self.assembly = assembly
 
+	def __bool__(self):
+		return ((hasattr(self, 'assembly') and len(self.assembly) > 0) or
+			    (hasattr(self, 'bytecode') and len(self.bytecode) > 0))
+
+	__nonzero__ = __bool__
+
 
 def _test():
 	"""
