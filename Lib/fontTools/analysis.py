@@ -229,28 +229,29 @@ class BytecodeContainer(object):
         
     #preprocess the function definition instructions between <fpgm></fpgm>
     def extractFunctions(self, programs):
-        instructions = programs['fpgm']
-        functionsLabels = []
-        skip = False
-        function_ptr = None
-        for instruction in instructions:
-            if not skip:
-                if isinstance(instruction, statements.all.PUSH_Statement):
-                    functionsLabels.extend(instruction.data)
-                if isinstance(instruction, statements.all.FDEF_Statement):
-                    skip = True
-                    function_ptr = Function()
-            else:
-                if isinstance(instruction, statements.all.ENDF_Statement):
-                    skip = False
-                    function_label = functionsLabels[-1]
-                    functionsLabels.pop()
-                    self.function_table[function_label] = function_ptr
+        if('fpgm' in programs.keys()):
+            instructions = programs['fpgm']
+            functionsLabels = []
+            skip = False
+            function_ptr = None
+            for instruction in instructions:
+                if not skip:
+                    if isinstance(instruction, statements.all.PUSH_Statement):
+                        functionsLabels.extend(instruction.data)
+                    if isinstance(instruction, statements.all.FDEF_Statement):
+                        skip = True
+                        function_ptr = Function()
                 else:
-                    function_ptr.instructions.append(instruction)
-        
-        for key, value in self.function_table.items():
-            value.constructBody()
+                    if isinstance(instruction, statements.all.ENDF_Statement):
+                        skip = False
+                        function_label = functionsLabels[-1]
+                        functionsLabels.pop()
+                        self.function_table[function_label] = function_ptr
+                    else:
+                        function_ptr.instructions.append(instruction)
+            
+            for key, value in self.function_table.items():
+                value.constructBody()
 
     #update the TTFont object passed with contets of current BytecodeContainer
     def updateTTFont(self, ttFont):
@@ -324,11 +325,13 @@ def executeGlyphs(absExecutor, glyphs):
 def analysis(tt, glyphs=[]):
     #one ttFont object for one ttx file       
     absExecutor = abstractExecute.Executor(tt)
-    called_functions = set() 
-    absExecutor.execute('prep')
-    environment_after_prep = copy.deepcopy(absExecutor.environment)
-    called_functions.update(list(set(absExecutor.program.call_function_set)))
-    
+    called_functions = set()
+    try: 
+        absExecutor.execute('prep')
+        environment_after_prep = copy.deepcopy(absExecutor.environment)
+        called_functions.update(list(set(absExecutor.program.call_function_set)))
+    except:   
+        pass
     called_functions.update(executeGlyphs(absExecutor, glyphs))
     return absExecutor, called_functions
 
