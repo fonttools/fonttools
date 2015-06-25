@@ -112,7 +112,11 @@ class KernTable_format_0(object):
 		for k in range(nPairs):
 			left, right, value = next(it), next(it), next(it)
 			if value >= 32768: value -= 65536
-			kernTable[(glyphOrder[left], glyphOrder[right])] = value
+			try:
+				kernTable[(glyphOrder[left], glyphOrder[right])] = value
+			except IndexError:
+				# Slower, but will not throw an IndexError on an invalid glyph id.
+				kernTable[(ttFont.getGlyphName(left), ttFont.getGlyphName(right))] = value
 		if len(data) > 6 * nPairs:
 			warnings.warn("excess data in 'kern' subtable: %d bytes" % len(data))
 
@@ -122,9 +126,14 @@ class KernTable_format_0(object):
 		data = struct.pack(">HHHH", nPairs, searchRange, entrySelector, rangeShift)
 
 		# yeehee! (I mean, turn names into indices)
-		getGlyphID = ttFont.getGlyphID
-		reverseOrder = ttFont.getReverseGlyphMap()
-		kernTable = sorted((reverseOrder[left], reverseOrder[right], value) for ((left,right),value) in self.kernTable.items())
+		try:
+			reverseOrder = ttFont.getReverseGlyphMap()
+			kernTable = sorted((reverseOrder[left], reverseOrder[right], value) for ((left,right),value) in self.kernTable.items())
+		except KeyError:
+			# Slower, but will not throw KeyError on invalid glyph id.
+			getGlyphID = ttFont.getGlyphID
+			kernTable = sorted((getGlyphID(left), getGlyphID(right), value) for ((left,right),value) in self.kernTable.items())
+
 		for left, right, value in kernTable:
 			data = data + struct.pack(">HHh", left, right, value)
 		return struct.pack(">HHH", self.version, len(data) + 6, self.coverage) + data
