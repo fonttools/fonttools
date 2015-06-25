@@ -22,5 +22,7 @@ class table__f_p_g_m(DefaultTable.DefaultTable):
 		program.fromXML(name, attrs, content, ttFont)
 		self.program = program
 
-	def __len__(self):
-		return len(self.program)
+	def __bool__(self):
+		return hasattr(self, 'program') and bool(self.program)
+
+	__nonzero__ = __bool__
