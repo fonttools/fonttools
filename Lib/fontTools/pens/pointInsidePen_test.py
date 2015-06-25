@@ -11,7 +11,7 @@ class PointInsidePenTest(unittest.TestCase):
             pen.moveTo((9,1)); pen.lineTo((4,1)); pen.lineTo((9,4))
             pen.closePath()
 
-        self.assertEquals(
+        self.assertEqual(
             " *********"
             "   **    *"
             "     **  *"
@@ -19,7 +19,7 @@ class PointInsidePenTest(unittest.TestCase):
             "         *",
             self.render(draw_triangles, even_odd=True))
 
-        self.assertEquals(
+        self.assertEqual(
             " *********"
             "   *******"
             "     *****"
@@ -33,7 +33,7 @@ class PointInsidePenTest(unittest.TestCase):
             pen.moveTo((10,5)); pen.curveTo((1,4), (1,1), (10,0))
             pen.closePath()
 
-        self.assertEquals(
+        self.assertEqual(
             "***    ***"
             "****  ****"
             "***    ***"
@@ -41,7 +41,7 @@ class PointInsidePenTest(unittest.TestCase):
             "***    ***",
             self.render(draw_curves, even_odd=True))
 
-        self.assertEquals(
+        self.assertEqual(
             "***    ***"
             "**********"
             "**********"
@@ -55,7 +55,7 @@ class PointInsidePenTest(unittest.TestCase):
             pen.moveTo((10,5)); pen.qCurveTo((-5,3), (10,0))
             pen.closePath()
 
-        self.assertEquals(
+        self.assertEqual(
             "***     **"
             "****   ***"
             "***    ***"
@@ -63,7 +63,7 @@ class PointInsidePenTest(unittest.TestCase):
             "**     ***",
             self.render(draw_qCurves, even_odd=True))
 
-        self.assertEquals(
+        self.assertEqual(
             "***     **"
             "**********"
             "**********"

@@ -14,10 +14,10 @@ class Test_l_t_a_g(unittest.TestCase):
 	def test_decompile_compile(self):
 		table = table__l_t_a_g()
 		table.decompile(self.DATA_, ttFont=None)
-		self.assertEquals(1, table.version)
-		self.assertEquals(0, table.flags)
-		self.assertEquals(self.TAGS_, table.tags)
-		self.assertEquals(self.DATA_, table.compile(ttFont=None))
+		self.assertEqual(1, table.version)
+		self.assertEqual(0, table.flags)
+		self.assertEqual(self.TAGS_, table.tags)
+		self.assertEqual(self.DATA_, table.compile(ttFont=None))
 
 	def test_fromXML(self):
 		table = table__l_t_a_g()
@@ -25,9 +25,9 @@ class Test_l_t_a_g(unittest.TestCase):
 		table.fromXML("flags", {"value": "777"}, content=None, ttFont=None)
 		table.fromXML("LanguageTag", {"tag": "sr-Latn"}, content=None, ttFont=None)
 		table.fromXML("LanguageTag", {"tag": "fa"}, content=None, ttFont=None)
-		self.assertEquals(1, table.version)
-		self.assertEquals(777, table.flags)
-		self.assertEquals(["sr-Latn", "fa"], table.tags)
+		self.assertEqual(1, table.version)
+		self.assertEqual(777, table.flags)
+		self.assertEqual(["sr-Latn", "fa"], table.tags)
 
 	def test_toXML(self):
 		writer = XMLWriter(StringIO())
@@ -42,7 +42,7 @@ class Test_l_t_a_g(unittest.TestCase):
 			'<LanguageTag tag="zh-Hant"/>',
 			'<LanguageTag tag="zh"/>'
 		]) + os.linesep
-		self.assertEquals(expected.encode("utf_8"), writer.file.getvalue())
+		self.assertEqual(expected.encode("utf_8"), writer.file.getvalue())
 
 
 if __name__ == '__main__':
