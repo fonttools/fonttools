@@ -85,8 +85,18 @@ class ExecutionContext(object):
         for gs_key in self.graphics_state:
             if self.graphics_state[gs_key] != executionContext2.graphics_state[gs_key]:
                 logger.info("graphics_state%s become uncertain", gs_key)
-                self.graphics_state[gs_key] = dataType.UncertainValue([self.graphics_state[gs_key],
-                                        executionContext2.graphics_state[gs_key]])
+                new_graphics_state = set()
+                if(type(self.graphics_state[gs_key]) is dataType.UncertainValue):
+                    for values in self.graphics_state[gs_key].possibleValues:
+                        new_graphics_state.add(values)
+                else:
+                    new_graphics_state.add(self.graphics_state[gs_key])
+                if(type(executionContext2.graphics_state[gs_key]) is dataType.UncertainValue):
+                    for values in executionContext2.graphics_state[gs_key].possibleValues:
+                        new_graphics_state.add(values)
+                else:
+                    new_graphics_state.add(executionContext2.graphics_state[gs_key])
+                self.graphics_state[gs_key] = dataType.UncertainValue(list(new_graphics_state))
                 logger.info("possible values are %s", str(self.graphics_state[gs_key].possibleValues))
 
     def pretty_print(self):
