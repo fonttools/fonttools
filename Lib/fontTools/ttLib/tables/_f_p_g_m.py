@@ -24,3 +24,8 @@ class table__f_p_g_m(DefaultTable.DefaultTable):
 
 	def __len__(self):
 		return len(self.program)
+
+	def __bool__(self):
+		return hasattr(self, 'program') and bool(self.program)
+
+	__nonzero__ = __bool__
