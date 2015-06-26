@@ -165,7 +165,13 @@ class TTFont(object):
 				file = open(file, "rb")
 		else:
 			pass # assume "file" is a readable file object
-		self.reader = sfnt.SFNTReader(file, checkChecksums, fontNumber=fontNumber)
+		# read input file in memory and wrap a stream around it to allow overwriting
+		tmp = StringIO(file.read())
+		if hasattr(file, 'name'):
+			# save reference to input file name
+			tmp.name = file.name
+		file.close()
+		self.reader = sfnt.SFNTReader(tmp, checkChecksums, fontNumber=fontNumber)
 		self.sfntVersion = self.reader.sfntVersion
 		self.flavor = self.reader.flavor
 		self.flavorData = self.reader.flavorData
