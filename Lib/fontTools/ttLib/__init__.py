@@ -149,6 +149,7 @@ class TTFont(object):
 			self.flavorData = None
 			return
 		if not hasattr(file, "read"):
+			closeStream = True
 			# assume file is a string
 			if haveMacSupport and res_name_or_index is not None:
 				# on the mac, we deal with sfnt resources as well as flat files
@@ -163,14 +164,17 @@ class TTFont(object):
 					file = macUtils.SFNTResourceReader(file, res_name_or_index)
 			else:
 				file = open(file, "rb")
+
 		else:
-			pass # assume "file" is a readable file object
+			# assume "file" is a readable file object
+			closeStream = False
 		# read input file in memory and wrap a stream around it to allow overwriting
 		tmp = StringIO(file.read())
 		if hasattr(file, 'name'):
 			# save reference to input file name
 			tmp.name = file.name
-		file.close()
+		if closeStream:
+			file.close()
 		self.reader = sfnt.SFNTReader(tmp, checkChecksums, fontNumber=fontNumber)
 		self.sfntVersion = self.reader.sfntVersion
 		self.flavor = self.reader.flavor
