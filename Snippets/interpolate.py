@@ -37,15 +37,16 @@ def AddFontVariations(font):
     weight = Axis()
     weight.axisTag = "wght"
     weight.nameID = AddName(font, "Weight").nameID
-    weight.minValue, weight.defaultValue, weight.maxValue = (0.48, 1.0, 3.2)
+    weight.minValue, weight.defaultValue, weight.maxValue = (100, 400, 900)
     fvar.axes.append(weight)
 
+    # https://www.microsoft.com/typography/otspec/os2.htm#wtc
     for name, wght in (
-            ("Thin", 0.48),
-            ("Light", 0.8),
-            ("Regular", 1.0),
-            ("Bold", 1.95),
-            ("Black", 3.2)):
+            ("Thin", 100),
+            ("Light", 300),
+            ("Regular", 400),
+            ("Bold", 700),
+            ("Black", 900)):
         inst = NamedInstance()
         inst.nameID = AddName(font, name).nameID
         inst.coordinates = {"wght": wght}
