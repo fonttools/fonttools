@@ -14,12 +14,7 @@
 # is *not* the case for the normal Roboto fonts that can be downloaded
 # from Google. This demo script prints a warning for any problematic
 # glyphs; in the resulting font, these glyphs will not be interpolated
-# at all (so they appear always in the "Regular" weight).
-#
-# TODO: Currently, the resulting font is structurally valid, and it
-# looks fine for "Thin", "Regular", "Bold" and "Black". However, the
-# "Light" instance appears identical to "Thin". Still need to figure out
-# the reason for this.
+# and get rendered in the "Regular" weight.
 #
 # Usage:
 # $ mkdir /tmp/Roboto && cp Roboto-*.ttf /tmp/Roboto
@@ -42,15 +37,15 @@ def AddFontVariations(font):
     weight = Axis()
     weight.axisTag = "wght"
     weight.nameID = AddName(font, "Weight").nameID
-    weight.minValue, weight.defaultValue, weight.maxValue = (-0.3, 1.0, 1.7)
+    weight.minValue, weight.defaultValue, weight.maxValue = (0.48, 1.0, 3.2)
     fvar.axes.append(weight)
 
     for name, wght in (
-            ("Thin", -0.3),
-            ("Light", -0.7),
+            ("Thin", 0.48),
+            ("Light", 0.8),
             ("Regular", 1.0),
-            ("Bold", 1.3),
-            ("Black", 1.7)):
+            ("Bold", 1.95),
+            ("Black", 3.2)):
         inst = NamedInstance()
         inst.nameID = AddName(font, name).nameID
         inst.coordinates = {"wght": wght}
