@@ -8,12 +8,13 @@ from fontTools.ttLib.tables._n_a_m_e import table__n_a_m_e, NameRecord
 import unittest
 
 
+
 FVAR_DATA = deHexStr(
     "00 01 00 00 00 10 00 02 00 02 00 14 00 02 00 0C "
-    "77 67 68 74 FF FF 00 00 00 00 00 00 00 01 00 00 00 00 01 01 "
-    "77 64 74 68 FF FF 00 00 00 00 00 00 00 01 00 00 00 00 01 02 "
-    "01 03 00 00 00 00 4C CD 00 01 00 00 "
-    "01 04 00 00 00 00 4C CD 00 00 33 33")
+    "77 67 68 74 00 64 00 00 01 90 00 00 03 84 00 00 00 00 01 01 "
+    "77 64 74 68 00 32 00 00 00 64 00 00 00 c8 00 00 00 00 01 02 "
+    "01 03 00 00 01 2c 00 00 00 64 00 00 "
+    "01 04 00 00 01 2c 00 00 00 4b 00 00")
 
 FVAR_AXIS_DATA = deHexStr(
     "6F 70 73 7a ff ff 80 00 00 01 4c cd 00 01 80 00 98 76 01 59")
@@ -40,13 +41,15 @@ def AddName(font, name):
 
 
 def MakeFont():
-    axes = [("wght", "Weight"), ("wdth", "Width")]
-    instances = [("Light", 0.3, 1.0), ("Light Condensed", 0.3, 0.2)]
+    axes = [("wght", "Weight", 100, 400, 900), ("wdth", "Width", 50, 100, 200)]
+    instances = [("Light", 300, 100), ("Light Condensed", 300, 75)]
     fvarTable = table__f_v_a_r()
     font = {"fvar": fvarTable}
-    for tag, name in axes:
+    for tag, name, minValue, defaultValue, maxValue in axes:
         axis = Axis()
         axis.axisTag = tag
+        axis.defaultValue = defaultValue
+        axis.minValue, axis.maxValue = minValue, maxValue
         axis.nameID = AddName(font, name).nameID
         fvarTable.axes.append(axis)
     for name, weight, width in instances:
@@ -132,17 +135,17 @@ class AxisTest(unittest.TestCase):
     def test_fromXML(self):
         axis = Axis()
         axis.fromXML("Axis", {}, [
-            ("AxisTag", {}, ["opsz"]),
-            ("MinValue", {}, ["-0.5"]),
-            ("DefaultValue", {}, ["1.3"]),
-            ("MaxValue", {}, ["1.5"]),
+            ("AxisTag", {}, ["wght"]),
+            ("MinValue", {}, ["100"]),
+            ("DefaultValue", {}, ["400"]),
+            ("MaxValue", {}, ["900"]),
             ("Flags", {}, ["10011000 01110110"]),
             ("NameID", {}, ["256"])
         ], ttFont=None)
-        self.assertEqual("opsz", axis.axisTag)
-        self.assertEqual(-0.5, axis.minValue)
-        self.assertEqual(1.3, axis.defaultValue)
-        self.assertEqual(1.5, axis.maxValue)
+        self.assertEqual("wght", axis.axisTag)
+        self.assertEqual(100, axis.minValue)
+        self.assertEqual(400, axis.defaultValue)
+        self.assertEqual(900, axis.maxValue)
         self.assertEqual(0x9876, axis.flags)
         self.assertEqual(256, axis.nameID)
 
