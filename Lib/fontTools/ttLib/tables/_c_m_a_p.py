@@ -860,7 +860,7 @@ class cmap_format_6(CmapSubtable):
 		if self.data:
 			return struct.pack(">HHH", self.format, self.length, self.language) + self.data
 		cmap = self.cmap
-		codes = list(cmap.keys())
+		codes = sorted(cmap.keys())
 		if codes: # yes, there are empty cmap tables.
 			codes = list(range(codes[0], codes[-1] + 1))
 			firstCode = codes[0]
