@@ -110,15 +110,21 @@ def GetCoordinates(font, glyphName):
         coord = [c.getComponentInfo()[1][-2:] for c in glyph.components]
     else:
         coord = [c for c in glyph.getCoordinates(glyphTable)[0]]
-    # Add phantom points for (left, right, top, bottom) side bearing.
+    # Add phantom points for (left, right, top, bottom) positions.
     horizontalAdvanceWidth, leftSideBearing = font["hmtx"].metrics[glyphName]
-    rightSideBearing = (
-        horizontalAdvanceWidth - leftSideBearing - (glyph.xMax - glyph.xMin))
-    # TODO: Not sure if top and bottom side bearing are correct.
-    topSideBearing = glyph.yMax
-    bottomSideBearing = -glyph.yMin
-    coord.extend([(leftSideBearing, 0), (rightSideBearing, 0),
-                  (0, topSideBearing), (0, bottomSideBearing)])
+
+
+    leftSideX = glyph.xMin - leftSideBearing
+    rightSideX = leftSideX + horizontalAdvanceWidth
+
+    # XXX these are incorrect.  Load vmtx and fix.
+    topSideY = glyph.yMax
+    bottomSideY = -glyph.yMin
+
+    coord.extend([(leftSideX, 0),
+                  (rightSideX, 0),
+                  (0, topSideY),
+                  (0, bottomSideY)])
     return coord
 
 
