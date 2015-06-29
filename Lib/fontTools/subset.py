@@ -10,14 +10,17 @@ Later grown into full OpenType subsetter, supporting all standard tables.
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools import ttLib
+from fontTools.ttLib.bytecodeContainer import BytecodeContainer
+from fontTools.ttLib.instructions import abstractExecute
 from fontTools.ttLib.tables import otTables
 from fontTools.misc import psCharStrings
 from fontTools.pens import basePen
+import logging
 import sys
 import struct
 import time
 import array
-
+import copy
 
 def _add_method(*clazzes):
   """Returns a decorator function that adds a new method to one or
@@ -1937,7 +1940,7 @@ class Subsetter(object):
       log = Logger()
     if not options:
       options = Options()
-
+    
     self.options = options
     self.log = log
     self.unicodes_requested = set()
@@ -2097,6 +2100,7 @@ class Logger(object):
       if "--"+v in argv:
         setattr(self, v, True)
         argv.remove("--"+v)
+    logging.basicConfig(level = logging.ERROR) 
     return argv
 
   def __call__(self, *things):
@@ -2200,6 +2204,7 @@ def main(args):
   names = font.getGlyphNames()
   log.lapse("loading glyph names")
 
+  reduceFpgm = False
   glyphs = []
   unicodes = []
   text = ""
@@ -2231,6 +2236,9 @@ def main(args):
       except ValueError:
         raise Exception("Invalid glyph identifier: %s" % g)
       continue
+    if g == '-f':
+        reduceFpgm = True
+        continue 
     raise Exception("Invalid glyph identifier: %s" % g)
   log.lapse("compile glyph list")
   log("Unicodes:", unicodes)
@@ -2238,6 +2246,30 @@ def main(args):
 
   subsetter.populate(glyphs=glyphs, unicodes=unicodes, text=text)
   subsetter.subset(font)
+
+  if reduceFpgm is True:
+    bytecodeContainer = BytecodeContainer(font)
+    absExecutor = abstractExecute.Executor(bytecodeContainer)
+    called_functions = set()
+    try:
+        absExecutor.execute('prep')
+        called_functions.update(list(set(absExecutor.program.call_function_set)))
+    except:
+        pass
+    environment = copy.deepcopy(absExecutor.environment)
+    glyphs_to_execute = map(lambda x: 'glyf.'+x, set(text))
+    glyphs_to_execute.extend(map(lambda x: 'glyf.'+x, glyphs))
+    for glyph in glyphs_to_execute:
+        absExecutor.execute(glyph)
+        called_functions.update(list(set(absExecutor.program.call_function_set)))
+        absExecutor.environment = copy.deepcopy(environment)
+
+    function_set = absExecutor.environment.function_table.keys() 
+    unused_functions = [item for item in function_set if item not in called_functions]
+
+    bytecodeContainer.removeFunctions(unused_functions)
+    bytecodeContainer.updateTTFont(font)
+
 
   outfile = fontfile + '.subset'
 
