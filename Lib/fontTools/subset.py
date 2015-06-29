@@ -15,6 +15,9 @@ from fontTools.ttLib.instructions import abstractExecute
 from fontTools.ttLib.tables import otTables
 from fontTools.misc import psCharStrings
 from fontTools.pens import basePen
+from urllib2 import urlopen
+from bs4 import BeautifulSoup
+import urllib2
 import logging
 import sys
 import struct
@@ -1931,6 +1934,19 @@ class Options(object):
 
     return ret
 
+def readPage(input):
+    #some sites block common non-browser user agent strings, better use a regular one
+    hdr = {'User-Agent':'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.7) Gecko/2009021910 Firefox/3.0.7'}
+    request = urllib2.Request(input, headers = hdr) 
+    try:
+        page = urllib2.urlopen(request)
+    except:
+        raise ValueError("Couldn't load file or URL "+input)
+    soup = BeautifulSoup(page)
+    texts = soup.findAll(text=True)
+    [s.extract() for s in soup(['style', 'script', '[document]', 'head', 'title'])]
+    string = soup.getText()
+    return string 
 
 class Subsetter(object):
 
@@ -1947,12 +1963,16 @@ class Subsetter(object):
     self.glyphs_requested = set()
     self.glyphs = set()
 
-  def populate(self, glyphs=[], unicodes=[], text=""):
+  def populate(self, glyphs=[], unicodes=[], text="", url=None):
     self.unicodes_requested.update(unicodes)
     if isinstance(text, bytes):
       text = text.decode("utf8")
     for u in text:
       self.unicodes_requested.add(ord(u))
+    if isinstance(url, bytes):
+      page = readPage(url)
+      for u in page:
+        self.unicodes_requested.add(ord(u))
     self.glyphs_requested.update(glyphs)
     self.glyphs.update(glyphs)
 
@@ -2183,10 +2203,10 @@ def main(args):
   args = log.parse_opts(args)
 
   options = Options()
-  args = options.parse_opts(args, ignore_unknown=['text'])
+  args = options.parse_opts(args, ignore_unknown=['text', 'url'])
 
   if len(args) < 2:
-    print("usage: pyftsubset font-file glyph... [--text=ABC]... [--option=value]...", file=sys.stderr)
+    print("usage: pyftsubset font-file glyph... [--text=ABC]... [--url=URL]... [--option=value]...", file=sys.stderr)
     sys.exit(1)
 
   fontfile = args[0]
@@ -2208,6 +2228,7 @@ def main(args):
   glyphs = []
   unicodes = []
   text = ""
+  url = None 
   for g in args:
     if g == '*':
       glyphs.extend(font.getGlyphOrder())
@@ -2217,6 +2238,9 @@ def main(args):
       continue
     if g.startswith('--text='):
       text += g[7:]
+      continue
+    if g.startswith('--url='):
+      url = g[6:]
       continue
     if g.startswith('uni') or g.startswith('U+'):
       if g.startswith('uni') and len(g) > 3:
@@ -2244,7 +2268,7 @@ def main(args):
   log("Unicodes:", unicodes)
   log("Glyphs:", glyphs)
 
-  subsetter.populate(glyphs=glyphs, unicodes=unicodes, text=text)
+  subsetter.populate(glyphs=glyphs, unicodes=unicodes, text=text, url=url)
   subsetter.subset(font)
 
   if reduceFpgm is True:
