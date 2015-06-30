@@ -99,7 +99,7 @@ def compareFontGlyphs(fontA, fontB, charList, resolutionList):
         logger.info("Identical glyphs: "+listToStr(identicalList))
         print("Number of glyphs differing: %d" % len(differList))
         logger.info("Differing glyphs: "+listToStr(differList))
-        print("Number of not found glyphs: %d" % notFoundCount)
+        print("Number of not found glyphs: %d-%d" % (len(aNotFoundList), len(bNotFoundList)))
         logger.info("Glyphs not found in "+fontA+": "+listToStr(aNotFoundList))
         logger.info("Glyphs not found in "+fontB+": "+listToStr(bNotFoundList))
  
