@@ -147,7 +147,6 @@ class NamedInstance(object):
     def __init__(self):
         self.nameID = 0
         self.flags = 0  # not exposed in XML because spec defines no values
-        self.flags = 0
         self.coordinates = {}
 
     def compile(self, axisTags):
