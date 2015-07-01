@@ -17,9 +17,9 @@ FVAR_DATA = deHexStr(
     "01 04 00 00 01 2c 00 00 00 4b 00 00")
 
 FVAR_AXIS_DATA = deHexStr(
-    "6F 70 73 7a ff ff 80 00 00 01 4c cd 00 01 80 00 98 76 01 59")
+    "6F 70 73 7a ff ff 80 00 00 01 4c cd 00 01 80 00 00 00 01 59")
 
-FVAR_INSTANCE_DATA = deHexStr("01 59 12 34 00 00 b3 33 00 00 80 00")
+FVAR_INSTANCE_DATA = deHexStr("01 59 00 00 00 00 b3 33 00 00 80 00")
 
 
 def xml_lines(writer):
@@ -97,7 +97,7 @@ class FontVariationTableTest(unittest.TestCase):
 class AxisTest(unittest.TestCase):
     def test_compile(self):
         axis = Axis()
-        axis.axisTag, axis.nameID, axis.flags = ('opsz', 345, 0x9876)
+        axis.axisTag, axis.nameID = ('opsz', 345)
         axis.minValue, axis.defaultValue, axis.maxValue = (-0.5, 1.3, 1.5)
         self.assertEqual(FVAR_AXIS_DATA, axis.compile())
 
@@ -106,7 +106,6 @@ class AxisTest(unittest.TestCase):
         axis.decompile(FVAR_AXIS_DATA)
         self.assertEqual("opsz", axis.axisTag)
         self.assertEqual(345, axis.nameID)
-        self.assertEqual(0x9876, axis.flags)
         self.assertEqual(-0.5, axis.minValue)
         self.assertEqual(1.3, axis.defaultValue)
         self.assertEqual(1.5, axis.maxValue)
@@ -127,7 +126,6 @@ class AxisTest(unittest.TestCase):
                 '<MinValue>-0.5</MinValue>',
                 '<DefaultValue>1.3</DefaultValue>',
                 '<MaxValue>1.5</MaxValue>',
-                '<Flags>10011000 01110110</Flags>',
                 '<NameID>256</NameID>',
             '</Axis>'
         ], xml_lines(writer))
@@ -139,14 +137,12 @@ class AxisTest(unittest.TestCase):
             ("MinValue", {}, ["100"]),
             ("DefaultValue", {}, ["400"]),
             ("MaxValue", {}, ["900"]),
-            ("Flags", {}, ["10011000 01110110"]),
             ("NameID", {}, ["256"])
         ], ttFont=None)
         self.assertEqual("wght", axis.axisTag)
         self.assertEqual(100, axis.minValue)
         self.assertEqual(400, axis.defaultValue)
         self.assertEqual(900, axis.maxValue)
-        self.assertEqual(0x9876, axis.flags)
         self.assertEqual(256, axis.nameID)
 
 
@@ -154,7 +150,6 @@ class NamedInstanceTest(unittest.TestCase):
     def test_compile(self):
         inst = NamedInstance()
         inst.nameID = 345
-        inst.flags = 0x1234
         inst.coordinates = {"wght": 0.7, "wdth": 0.5}
         self.assertEqual(FVAR_INSTANCE_DATA, inst.compile(["wght", "wdth"]))
 
@@ -162,21 +157,19 @@ class NamedInstanceTest(unittest.TestCase):
         inst = NamedInstance()
         inst.decompile(FVAR_INSTANCE_DATA, ["wght", "wdth"])
         self.assertEqual(345, inst.nameID)
-        self.assertEqual(0x1234, inst.flags)
         self.assertEqual({"wght": 0.7, "wdth": 0.5}, inst.coordinates)
 
     def test_toXML(self):
         font = MakeFont()
         inst = NamedInstance()
         inst.nameID = AddName(font, "Light Condensed").nameID
-        inst.flags = 0x1234
         inst.coordinates = {"wght": 0.7, "wdth": 0.5}
         writer = XMLWriter(StringIO())
         inst.toXML(writer, font)
         self.assertEqual([
             '',
             '<!-- Light Condensed -->',
-            '<NamedInstance flags="00010010 00110100" nameID="%s">' % inst.nameID,
+            '<NamedInstance nameID="%s">' % inst.nameID,
               '<coord axis="wght" value="0.7"/>',
               '<coord axis="wdth" value="0.5"/>',
             '</NamedInstance>'
@@ -184,12 +177,11 @@ class NamedInstanceTest(unittest.TestCase):
 
     def test_fromXML(self):
         inst = NamedInstance()
-        attrs = {"flags": "00010010 00110100", "nameID": "345"}
+        attrs = {"nameID": "345"}
         inst.fromXML("NamedInstance", attrs, [
                 ("coord", {"axis": "wght", "value": "0.7"}, []),
                 ("coord", {"axis": "wdth", "value": "0.5"}, []),
                 ], ttFont=MakeFont())
-        self.assertEqual(0x1234, inst.flags)
         self.assertEqual(345, inst.nameID)
         self.assertEqual({"wght": 0.7, "wdth": 0.5}, inst.coordinates)
 

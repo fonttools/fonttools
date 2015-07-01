@@ -103,7 +103,7 @@ class Axis(object):
     def __init__(self):
         self.axisTag = None
         self.nameID = 0
-        self.flags = 0
+        self.flags = 0  # not exposed in XML because spec defines no values
         self.minValue = -1.0
         self.defaultValue = 0.0
         self.maxValue = 1.0
@@ -126,7 +126,6 @@ class Axis(object):
                            ("MinValue", str(self.minValue)),
                            ("DefaultValue", str(self.defaultValue)),
                            ("MaxValue", str(self.maxValue)),
-                           ("Flags", num2binary(self.flags, 16)),
                            ("NameID", str(self.nameID))]:
             writer.begintag(tag)
             writer.write(value)
@@ -141,14 +140,13 @@ class Axis(object):
             value = ''.join(value)
             if tag == "AxisTag":
                 self.axisTag = value
-            elif tag == "Flags":
-                self.flags = binary2num(value)
             elif tag in ["MinValue", "DefaultValue", "MaxValue", "NameID"]:
                 setattr(self, tag[0].lower() + tag[1:], safeEval(value))
 
 class NamedInstance(object):
     def __init__(self):
         self.nameID = 0
+        self.flags = 0  # not exposed in XML because spec defines no values
         self.flags = 0
         self.coordinates = {}
 
@@ -173,8 +171,7 @@ class NamedInstance(object):
             writer.newline()
             writer.comment(name)
             writer.newline()
-        writer.begintag("NamedInstance", nameID=self.nameID,
-                        flags=num2binary(self.flags, 16))
+        writer.begintag("NamedInstance", nameID=self.nameID)
         writer.newline()
         for axis in ttFont["fvar"].axes:
             writer.simpletag("coord", axis=axis.axisTag,
@@ -185,7 +182,6 @@ class NamedInstance(object):
 
     def fromXML(self, name, attrs, content, ttFont):
         assert(name == "NamedInstance")
-        self.flags = binary2num(attrs.get("flags", "0"))
         self.nameID = safeEval(attrs["nameID"])
         for tag, elementAttrs, _ in filter(lambda t: type(t) is tuple, content):
             if tag == "coord":
