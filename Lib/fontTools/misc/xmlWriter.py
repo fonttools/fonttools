@@ -142,7 +142,9 @@ class XMLWriter(object):
 			return ""
 		data = ""
 		for attr, value in attributes:
-			data = data + ' %s="%s"' % (attr, escapeattr(str(value)))
+			if not isinstance(value, (bytes, unicode)):
+				value = str(value)
+			data = data + ' %s="%s"' % (attr, escapeattr(value))
 		return data
 
 
