@@ -239,6 +239,9 @@ class Struct(BaseConverter):
 				pass
 		return table
 
+	def __repr__(self):
+		return "Struct of " + repr(self.tableClass)
+
 
 class Table(Struct):
 
