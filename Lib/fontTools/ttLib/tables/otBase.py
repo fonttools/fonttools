@@ -516,6 +516,8 @@ def packULong(value):
 
 class BaseTable(object):
 
+	"""Generic base class for all OpenType (sub)tables."""
+
 	def __getattr__(self, attr):
 		reader = self.__dict__.get("reader")
 		if reader:
@@ -527,7 +529,13 @@ class BaseTable(object):
 
 		raise AttributeError(attr)
 
-	"""Generic base class for all OpenType (sub)tables."""
+	def ensureDecompiled(self):
+		reader = self.__dict__.get("reader")
+		if reader:
+			del self.reader
+			font = self.font
+			del self.font
+			self.decompile(reader, font)
 
 	def getConverters(self):
 		return self.converters
@@ -550,14 +558,17 @@ class BaseTable(object):
 			if conv.name == "FeatureParams":
 				conv = conv.getConverter(reader["FeatureTag"])
 			if conv.repeat:
-				l = []
 				if conv.repeat in table:
 					countValue = table[conv.repeat]
 				else:
 					# conv.repeat is a propagated count
 					countValue = reader[conv.repeat]
-				for i in range(countValue + conv.aux):
+				countValue += conv.aux
+
+				l = []
+				for i in range(countValue):
 					l.append(conv.read(reader, font, table))
+
 				table[conv.name] = l
 			else:
 				if conv.aux and not eval(conv.aux, None, table):
@@ -569,14 +580,6 @@ class BaseTable(object):
 		self.postRead(table, font)
 
 		del self.__rawTable  # succeeded, get rid of debugging info
-
-	def ensureDecompiled(self):
-		reader = self.__dict__.get("reader")
-		if reader:
-			del self.reader
-			font = self.font
-			del self.font
-			self.decompile(reader, font)
 
 	def compile(self, writer, font):
 		self.ensureDecompiled()
