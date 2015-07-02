@@ -2505,7 +2505,7 @@ class Subsetter(object):
             if hasattr(clazz, 'prune_post_subset'):
                 table = font[tag]
                 retain = table.prune_post_subset(self.options)
-                self.log.lapse("prune    '%s'" % tag)
+                self.log.lapse("prune '%s'" % tag)
                 if not retain:
                     self.log(tag, "pruned to empty; dropped")
                     del font[tag]
