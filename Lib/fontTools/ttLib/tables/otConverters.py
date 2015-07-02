@@ -64,9 +64,20 @@ class BaseConverter(object):
 		self.isLookupType = name.endswith("LookupType")
 		self.isPropagated = name in ["ClassCount", "Class2Count", "FeatureTag", "SettingsCount", "AxisCount"]
 
+	def readArray(self, reader, font, tableDict, count):
+		"""Read an array of values from the reader."""
+		l = []
+		for i in range(count):
+			l.append(self.read(reader, font, tableDict))
+		return l
+
 	def read(self, reader, font, tableDict):
 		"""Read a value from the reader."""
 		raise NotImplementedError(self)
+
+	def writeArray(self, writer, font, tableDict, values):
+		for i in range(len(values)):
+			self.write(writer, font, tableDict, values[i], i)
 
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		"""Write a value to the writer."""

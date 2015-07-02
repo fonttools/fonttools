@@ -564,12 +564,7 @@ class BaseTable(object):
 					# conv.repeat is a propagated count
 					countValue = reader[conv.repeat]
 				countValue += conv.aux
-
-				l = []
-				for i in range(countValue):
-					l.append(conv.read(reader, font, table))
-
-				table[conv.name] = l
+				table[conv.name] = conv.readArray(reader, font, table, countValue)
 			else:
 				if conv.aux and not eval(conv.aux, None, table):
 					continue
@@ -603,8 +598,7 @@ class BaseTable(object):
 				else:
 					# conv.repeat is a propagated count
 					writer[conv.repeat].setValue(countValue)
-				for i in range(len(value)):
-					conv.write(writer, font, table, value[i], i)
+				conv.writeArray(writer, font, table, value)
 			elif conv.isCount:
 				# Special-case Count values.
 				# Assumption: a Count field will *always* precede
