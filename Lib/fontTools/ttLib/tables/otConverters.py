@@ -196,13 +196,9 @@ class Tag(SimpleValue):
 class GlyphID(SimpleValue):
 	staticSize = 2
 	def read(self, reader, font, tableDict):
-		value = reader.readUShort()
-		value =  font.getGlyphName(value)
-		return value
-
+		return font.getGlyphName(reader.readUShort())
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
-		value =  font.getGlyphID(value)
-		writer.writeUShort(value)
+		writer.writeUShort(font.getGlyphID(value))
 
 class FloatValue(SimpleValue):
 	def xmlRead(self, attrs, content, font):
@@ -211,8 +207,7 @@ class FloatValue(SimpleValue):
 class DeciPoints(FloatValue):
 	staticSize = 2
 	def read(self, reader, font, tableDict):
-		value = reader.readUShort()
-		return value / 10
+		return reader.readUShort() / 10
 
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		writer.writeUShort(int(round(value * 10)))
@@ -220,11 +215,9 @@ class DeciPoints(FloatValue):
 class Fixed(FloatValue):
 	staticSize = 4
 	def read(self, reader, font, tableDict):
-		value = reader.readLong()
-		return  fi2fl(value, 16)
+		return  fi2fl(reader.readLong(), 16)
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
-		value = fl2fi(value, 16)
-		writer.writeLong(value)
+		writer.writeLong(fl2fi(value, 16))
 
 class Version(BaseConverter):
 	staticSize = 4
