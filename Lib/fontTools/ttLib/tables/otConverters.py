@@ -398,12 +398,6 @@ class ValueRecord(ValueFormat):
 
 class DeltaValue(BaseConverter):
 
-	def getRecordSize(self, reader):
-		# We can implement this but would need to wire up tableDict.
-		# This object is never used in arrays, so there's no point
-		# in implementing this.
-		return NotImplemented
-
 	def read(self, reader, font, tableDict):
 		StartSize = tableDict["StartSize"]
 		EndSize = tableDict["EndSize"]
