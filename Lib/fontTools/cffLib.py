@@ -673,7 +673,7 @@ class ASCIIConverter(SimpleConverter):
 	def write(self, parent, value):
 		return tobytes(value, encoding='ascii')
 	def xmlWrite(self, xmlWriter, name, value, progress):
-		xmlWriter.simpletag(name, value=tostr(value, encoding="ascii"))
+		xmlWriter.simpletag(name, value=tounicode(value, encoding="ascii"))
 		xmlWriter.newline()
 	def xmlRead(self, name, attrs, content, parent):
 		return tobytes(attrs["value"], encoding=("ascii"))
@@ -684,7 +684,7 @@ class Latin1Converter(SimpleConverter):
 	def write(self, parent, value):
 		return tobytes(value, encoding='latin1')
 	def xmlWrite(self, xmlWriter, name, value, progress):
-		xmlWriter.simpletag(name, value=tostr(value, encoding="latin1"))
+		xmlWriter.simpletag(name, value=tounicode(value, encoding="latin1"))
 		xmlWriter.newline()
 	def xmlRead(self, name, attrs, content, parent):
 		return tobytes(attrs["value"], encoding=("latin1"))
