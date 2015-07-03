@@ -188,6 +188,13 @@ class OTTableReader(object):
 		self.pos = newpos
 		return value
 
+	def readData(self, count):
+		pos = self.pos
+		newpos = pos + count
+		value = self.data[pos:newpos]
+		self.pos = newpos
+		return value
+
 	def __setitem__(self, name, value):
 		state = self.localState.copy() if self.localState else dict()
 		state[name] = value
