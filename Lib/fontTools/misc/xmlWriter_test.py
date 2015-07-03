@@ -91,5 +91,14 @@ class TestXMLWriter(unittest.TestCase):
 		    "70206f66 20626561 75746966 756c206c",
 		    "65747465 72732e  ", ""], joiner=linesep), writer.file.getvalue())
 
+	def test_stringifyattrs(self):
+		writer = XMLWriter(StringIO())
+		expected = ' attr="0"'
+		self.assertEqual(expected, writer.stringifyattrs(attr=0))
+		self.assertEqual(expected, writer.stringifyattrs(attr=b'0'))
+		self.assertEqual(expected, writer.stringifyattrs(attr='0'))
+		self.assertEqual(expected, writer.stringifyattrs(attr=u'0'))
+
+
 if __name__ == '__main__':
-    unittest.main()
+	unittest.main()
