@@ -50,6 +50,32 @@ def buildConverters(tableSpec, tableNamespace):
 	return converters, convertersByName
 
 
+class _MissingItem(tuple):
+	__slots__ = ()
+
+try:
+	from collections import UserList
+except:
+	from UserList import UserList
+
+class _LazyList(UserList):
+
+	def __init__(self, other=None):
+		UserList.__init__(self, other)
+
+	def __getslice__(self, i, j):
+		return self.__getitem__(slice(i, j))
+	def __getitem__(self, k):
+		if isinstance(k, slice):
+			indices = range(*k.indices(len(self)))
+			return [self[i] for i in indices]
+		item = self.data[k]
+		if isinstance(item, _MissingItem):
+			self.reader.seek(self.pos + item[0] * self.recordSize)
+			item = self.conv.read(self.reader, self.font, {})
+			self.data[k] = item
+		return item
+
 class BaseConverter(object):
 
 	"""Base class for converter objects. Apart from the constructor, this
@@ -78,41 +104,14 @@ class BaseConverter(object):
 			return l
 		else:
 			del tableDict
-			try:
-				from collections import UserList
-			except:
-				from UserList import UserList
-
-
-			class MissingItem(tuple):
-				__slots__ = ()
-
-			class LazyList(UserList):
-
-				def __init__(self, other=None):
-					UserList.__init__(self, other)
-
-				def __getslice__(self, i, j):
-					return self.__getitem__(slice(i, j))
-				def __getitem__(self, k):
-					if isinstance(k, slice):
-						indices = range(*k.indices(len(self)))
-						return [self[i] for i in indices]
-					item = self.data[k]
-					if isinstance(item, MissingItem):
-						self.reader.seek(self.pos + item[0] * self.recordSize)
-						item = self.conv.read(self.reader, self.font, {})
-						self.data[k] = item
-					return item
-
-			l = LazyList()
+			l = _LazyList()
 			l.reader = reader.copy()
 			reader.advance(count * recordSize)
 			l.pos = l.reader.pos
 			l.font = font
 			l.conv = self
 			l.recordSize = recordSize
-			l.extend(MissingItem([i]) for i in range(count))
+			l.extend(_MissingItem([i]) for i in range(count))
 			return l
 
 	def getRecordSize(self, reader):
