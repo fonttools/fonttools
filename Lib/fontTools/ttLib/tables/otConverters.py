@@ -100,15 +100,14 @@ class BaseConverter(object):
 				l.append(self.read(reader, font, tableDict))
 			return l
 		else:
-			del tableDict
 			l = _LazyList()
 			l.reader = reader.copy()
-			reader.advance(count * recordSize)
 			l.pos = l.reader.pos
 			l.font = font
 			l.conv = self
 			l.recordSize = recordSize
 			l.extend(_MissingItem([i]) for i in range(count))
+			reader.advance(count * recordSize)
 			return l
 
 	def getRecordSize(self, reader):
