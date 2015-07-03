@@ -60,9 +60,6 @@ except:
 
 class _LazyList(UserList):
 
-	def __init__(self, other=None):
-		UserList.__init__(self, other)
-
 	def __getslice__(self, i, j):
 		return self.__getitem__(slice(i, j))
 	def __getitem__(self, k):
