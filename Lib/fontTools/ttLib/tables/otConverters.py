@@ -66,10 +66,58 @@ class BaseConverter(object):
 
 	def readArray(self, reader, font, tableDict, count):
 		"""Read an array of values from the reader."""
-		l = []
-		for i in range(count):
-			l.append(self.read(reader, font, tableDict))
-		return l
+		lazy = font.lazy and count > 8
+		if lazy:
+			recordSize = self.getRecordSize(reader)
+			if recordSize is NotImplemented:
+				lazy = False
+		if not lazy:
+			l = []
+			for i in range(count):
+				l.append(self.read(reader, font, tableDict))
+			return l
+		else:
+			del tableDict
+			try:
+				from collections import UserList
+			except:
+				from UserList import UserList
+
+
+			class MissingItem(tuple):
+				__slots__ = ()
+
+			class LazyList(UserList):
+
+				def __init__(self, other=None):
+					UserList.__init__(self, other)
+
+				def __getslice__(self, i, j):
+					return self.__getitem__(slice(i, j))
+				def __getitem__(self, k):
+					if isinstance(k, slice):
+						indices = range(*k.indices(len(self)))
+						return [self[i] for i in indices]
+					item = self.data[k]
+					if isinstance(item, MissingItem):
+						self.reader.seek(self.pos + item[0] * self.recordSize)
+						item = self.conv.read(self.reader, self.font, {})
+						self.data[k] = item
+					return item
+
+			l = LazyList()
+			l.reader = reader.copy()
+			reader.advance(count * recordSize)
+			l.pos = l.reader.pos
+			l.font = font
+			l.conv = self
+			l.recordSize = recordSize
+			l.extend(MissingItem([i]) for i in range(count))
+			return l
+
+	def getRecordSize(self, reader):
+		if hasattr(self, 'staticSize'): return self.staticSize
+		return NotImplemented
 
 	def read(self, reader, font, tableDict):
 		"""Read a value from the reader."""
@@ -104,30 +152,35 @@ class IntValue(SimpleValue):
 		return int(attrs["value"], 0)
 
 class Long(IntValue):
+	staticSize = 4
 	def read(self, reader, font, tableDict):
 		return reader.readLong()
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		writer.writeLong(value)
 
 class ULong(IntValue):
+	staticSize = 4
 	def read(self, reader, font, tableDict):
 		return reader.readULong()
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		writer.writeULong(value)
 
 class Short(IntValue):
+	staticSize = 2
 	def read(self, reader, font, tableDict):
 		return reader.readShort()
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		writer.writeShort(value)
 
 class UShort(IntValue):
+	staticSize = 2
 	def read(self, reader, font, tableDict):
 		return reader.readUShort()
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		writer.writeUShort(value)
 
 class UInt24(IntValue):
+	staticSize = 3
 	def read(self, reader, font, tableDict):
 		return reader.readUInt24()
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
@@ -139,12 +192,14 @@ class ComputedUShort(UShort):
 		xmlWriter.newline()
 
 class Tag(SimpleValue):
+	staticSize = 4
 	def read(self, reader, font, tableDict):
 		return reader.readTag()
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		writer.writeTag(value)
 
 class GlyphID(SimpleValue):
+	staticSize = 2
 	def read(self, reader, font, tableDict):
 		value = reader.readUShort()
 		value =  font.getGlyphName(value)
@@ -159,6 +214,7 @@ class FloatValue(SimpleValue):
 		return float(attrs["value"])
 
 class DeciPoints(FloatValue):
+	staticSize = 2
 	def read(self, reader, font, tableDict):
 		value = reader.readUShort()
 		return value / 10
@@ -167,6 +223,7 @@ class DeciPoints(FloatValue):
 		writer.writeUShort(int(round(value * 10)))
 
 class Fixed(FloatValue):
+	staticSize = 4
 	def read(self, reader, font, tableDict):
 		value = reader.readLong()
 		return  fi2fl(value, 16)
@@ -175,6 +232,7 @@ class Fixed(FloatValue):
 		writer.writeLong(value)
 
 class Version(BaseConverter):
+	staticSize = 4
 	def read(self, reader, font, tableDict):
 		value = reader.readLong()
 		assert (value >> 16) == 1, "Unsupported version 0x%08x" % value
@@ -202,6 +260,9 @@ class Version(BaseConverter):
 
 
 class Struct(BaseConverter):
+
+	def getRecordSize(self, reader):
+		return self.tableClass and self.tableClass.getRecordSize(reader)
 
 	def read(self, reader, font, tableDict):
 		table = self.tableClass()
@@ -246,6 +307,7 @@ class Struct(BaseConverter):
 class Table(Struct):
 
 	longOffset = False
+	staticSize = 2
 
 	def readOffset(self, reader):
 		return reader.readUShort()
@@ -289,6 +351,7 @@ class Table(Struct):
 class LTable(Table):
 
 	longOffset = True
+	staticSize = 4
 
 	def readOffset(self, reader):
 		return reader.readULong()
@@ -313,6 +376,7 @@ class FeatureParams(Table):
 
 
 class ValueFormat(IntValue):
+	staticSize = 2
 	def __init__(self, name, repeat, aux, tableClass):
 		BaseConverter.__init__(self, name, repeat, aux, tableClass)
 		self.which = "ValueFormat" + ("2" if name[-1] == "2" else "1")
@@ -326,6 +390,8 @@ class ValueFormat(IntValue):
 
 
 class ValueRecord(ValueFormat):
+	def getRecordSize(self, reader):
+		return 2 * len(reader[self.which])
 	def read(self, reader, font, tableDict):
 		return reader[self.which].readValueRecord(reader, font)
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
@@ -343,6 +409,12 @@ class ValueRecord(ValueFormat):
 
 
 class DeltaValue(BaseConverter):
+
+	def getRecordSize(self, reader):
+		# We can implement this but would need to wire up tableDict.
+		# This object is never used in arrays, so there's no point
+		# in implementing this.
+		return NotImplemented
 
 	def read(self, reader, font, tableDict):
 		StartSize = tableDict["StartSize"]

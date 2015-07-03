@@ -128,6 +128,16 @@ class OTTableReader(object):
 		self.globalState = globalState
 		self.localState = localState
 
+	def advance(self, count):
+		self.pos += count
+	def seek(self, pos):
+		self.pos = pos
+
+	def copy(self):
+		other = self.__class__(self.data, self.globalState, self.localState, self.offset)
+		other.pos = self.pos
+		return other
+
 	def getSubReader(self, offset):
 		offset = self.offset + offset
 		cachingStats = self.globalState.cachingStats
@@ -184,7 +194,10 @@ class OTTableReader(object):
 		self.localState = state
 
 	def __getitem__(self, name):
-		return self.localState[name]
+		return self.localState and self.localState[name]
+
+	def __contains__(self, name):
+		return self.localState and name in self.localState
 
 
 class OTTableWriter(object):
@@ -537,6 +550,21 @@ class BaseTable(object):
 			del self.font
 			self.decompile(reader, font)
 
+	@classmethod
+	def getRecordSize(cls, reader):
+		totalSize = 0
+		for conv in cls.converters:
+			size = conv.getRecordSize(reader)
+			if size is NotImplemented: return NotImplemented
+			countValue = 1
+			if conv.repeat:
+				if conv.repeat in reader:
+					countValue = reader[conv.repeat]
+				else:
+					return NotImplemented
+			totalSize += size * countValue
+		return totalSize
+
 	def getConverters(self):
 		return self.converters
 
@@ -695,6 +723,10 @@ class FormatSwitchingBaseTable(BaseTable):
 	"""Minor specialization of BaseTable, for tables that have multiple
 	formats, eg. CoverageFormat1 vs. CoverageFormat2."""
 
+	@classmethod
+	def getRecordSize(cls, reader):
+		return NotImplemented
+
 	def getConverters(self):
 		return self.converters[self.Format]
 
@@ -760,6 +792,9 @@ class ValueRecordFactory(object):
 			if valueFormat & mask:
 				format.append((name, isDevice, signed))
 		self.format = format
+
+	def __len__(self):
+		return len(self.format)
 
 	def readValueRecord(self, reader, font):
 		format = self.format
