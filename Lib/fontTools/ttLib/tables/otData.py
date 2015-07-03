@@ -7,6 +7,8 @@ otData = [
 	# common
 	#
 
+	('LookupOrder', []),
+
 	('ScriptList', [
 		('uint16', 'ScriptCount', None, None, 'Number of ScriptRecords'),
 		('struct', 'ScriptRecord', 'ScriptCount', 0, 'Array of ScriptRecords -listed alphabetically by ScriptTag'),

@@ -11,9 +11,6 @@ import operator
 import warnings
 
 
-class LookupOrder(BaseTable):
-	"""Dummy class; this table isn't defined, but is used, and is always NULL."""
-
 class FeatureParams(BaseTable):
 
 	def compile(self, writer, font):
@@ -759,9 +756,11 @@ def _buildClasses():
 			converters, convertersByName = buildConverters(table[1:], namespace)
 			cls.converters[format] = converters
 			cls.convertersByName[format] = convertersByName
+			# XXX Add staticSize?
 		else:
 			cls = namespace[name]
 			cls.converters, cls.convertersByName = buildConverters(table, namespace)
+			# XXX Add staticSize?
 
 
 _buildClasses()
