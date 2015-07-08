@@ -103,32 +103,6 @@ def makeArgs(*params):
         args.append(param)
     return args
  
-def usage():
-    print("usage: pyftpageSubset [options] fontFile inputFile")
-    sys.exit(2)
-
-def parseOptions(args):
-    try:
-        rawOptions, files = getopt.getopt(args, "e:s")
-    except getopt.GetoptError:
-        usage()
-
-    encoding = 'utf-8'
-    showStats = False
-    if not files or len(files) != 2:
-        usage()
-    else:
-        fontFile = files[0]
-        inputFile = files[1]
-
-    for option, value in rawOptions:
-        if option == "-e":
-            encoding = value
-        if option == "-s":
-            showStats = True
-
-    return fontFile, inputFile, encoding, showStats
-
 def parseOutput(output):
     lines = output.split('\n')
     for n, line in enumerate(lines):
@@ -260,7 +234,7 @@ def main(args):
                     font, glyphs = line.split()
                     testSuite.add((font, glyphs, 'utf-8'))
                except:
-                    font, glyphs, encoding, stats = line.split()
+                    font, glyphs, encoding = line.split()
                     testSuite.add((font, glyphs, encoding))
 
     for fontFile, inputFile, encoding in testSuite:
