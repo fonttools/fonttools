@@ -240,6 +240,9 @@ def ttCompile(input, output, options):
 		mtime = os.path.getmtime(input)
 		ttf['head'].modified = timestampSinceEpoch(mtime)
 
+	if output == "-":
+		output = sys.stdout
+
 	ttf.save(output)
 
 	if options.verbose:
@@ -311,6 +314,9 @@ def parseOptions(args):
 
 		if options.outputFile:
 			output = options.outputFile
+			if output == "-":
+				options.quiet = True
+				options.verbose = False
 		else:
 			output = makeOutputFileName(input, options.outputDir, extension, options.overWrite)
 			# 'touch' output file to avoid race condition in choosing file names
