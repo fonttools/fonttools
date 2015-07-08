@@ -95,10 +95,6 @@ The library
      fontTools.agl -- Interface to the Adobe Glyph List: maps unicode values
 	 to glyph names and back.
 
-  Mac-specific
-     fontTools.fondLib -- A reader/writer class for Mac FOND resources.
-     fontTools.nfntLib -- Reads Mac NFNT bitmap font resources.
-
 
 Thank-you's
 
