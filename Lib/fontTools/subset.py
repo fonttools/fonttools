@@ -2274,27 +2274,28 @@ def main(args):
   if reduceFpgm is True:
     bytecodeContainer = BytecodeContainer(font)
     absExecutor = abstractExecute.Executor(bytecodeContainer)
+
     called_functions = set()
-    try:
+    try: 
         absExecutor.execute('prep')
         called_functions.update(list(set(absExecutor.program.call_function_set)))
     except:
-        pass
+        pass 
     environment = copy.deepcopy(absExecutor.environment)
-    glyphs_to_execute = map(lambda x: 'glyf.'+x, set(text))
-    glyphs_to_execute.extend(map(lambda x: 'glyf.'+x, glyphs))
+    glyphs_to_execute = [x for x in bytecodeContainer.programs.keys() if x.startswith("glyf") ] 
     for glyph in glyphs_to_execute:
-        absExecutor.execute(glyph)
-        called_functions.update(list(set(absExecutor.program.call_function_set)))
-        absExecutor.environment = copy.deepcopy(environment)
-
+        try: 
+            absExecutor.execute(glyph)
+            called_functions.update(list(set(absExecutor.program.call_function_set)))
+            absExecutor.environment = copy.deepcopy(environment)
+        except:
+            absExecutor.environment = copy.deepcopy(environment)
     function_set = absExecutor.environment.function_table.keys() 
     unused_functions = [item for item in function_set if item not in called_functions]
 
     bytecodeContainer.removeFunctions(unused_functions)
     bytecodeContainer.updateTTFont(font)
-
-
+  
   outfile = fontfile + '.subset'
 
   save_font (font, outfile, options)
