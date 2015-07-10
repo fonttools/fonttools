@@ -69,8 +69,9 @@ def compareFontGlyphs(fontA, fontB, charList, resolutionList):
         faceB.set_char_size( 32*32, 32*32, int(hres), int(vres))
      
         try:
-            for charmap in faceA.charmaps:
-                faceA.set_charmap(charmap)
+            for charmapA, charmapB in zip(faceA.charmaps, faceB.charmaps):
+                faceA.set_charmap(charmapA)
+                faceB.set_charmap(charmapB)
                
                 for char in charList:
      
