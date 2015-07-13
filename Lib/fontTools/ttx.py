@@ -241,7 +241,25 @@ def ttCompile(input, output, options):
 		ttf['head'].modified = timestampSinceEpoch(mtime)
 
 	if output == "-":
-		output = sys.stdout
+		# reopen stdout in binary mode for output
+		if sys.version_info[0] < 3:
+			output = sys.stdout
+			if sys.platform == "win32":
+				# set binary flag on python2.x (Windows)
+				runtime = platform.python_implementation()
+				if runtime == "PyPy":
+					# the msvcrt trick doesn't work in pypy, so I use fdopen
+					output = os.fdopen(output.fileno(), "wb", 0)
+				else:
+					# this works with CPython -- untested on other implementations
+					import msvcrt
+					msvcrt.setmode(output.fileno(), os.O_BINARY)
+		else:
+			# get 'buffer' attribute to write binary data on python3.x
+			if hasattr(sys.stdout, "buffer"):
+				output = sys.stdout.buffer
+			else:
+				output = sys.__stdout__.buffer
 
 	ttf.save(output)
 
