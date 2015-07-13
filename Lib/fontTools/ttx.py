@@ -246,6 +246,7 @@ def ttCompile(input, output, options):
 			output = sys.stdout
 			if sys.platform == "win32":
 				# set binary flag on python2.x (Windows)
+				import platform
 				runtime = platform.python_implementation()
 				if runtime == "PyPy":
 					# the msvcrt trick doesn't work in pypy, so I use fdopen
