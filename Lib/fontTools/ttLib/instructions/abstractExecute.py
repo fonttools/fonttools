@@ -68,6 +68,10 @@ class ExecutionContext(object):
             ', graphics_state = ' + str(self.graphics_state) 
             + ', stack = ' + stackRep + ', length = ' + str(len(self.program_stack)))
 
+    def makecopy(self, new_env):
+        for key, value in self.__dict__.iteritems():
+            setattr(new_env, key, copy.copy(value)) 
+    
     def merge(self,executionContext2):
         '''
         merge the executionContext of the if-else
@@ -862,7 +866,9 @@ class Executor(object):
                 self.conditionBlock.mode = 'IF'
                 top_if = self.program_ptr
                 successors_index.append(0)
-                back_ptr.append((self.program_ptr, copy.deepcopy(self.environment)))
+                environment_copy = ExecutionContext(self.font)
+                self.environment.makecopy(environment_copy)
+                back_ptr.append((self.program_ptr, environment_copy))
             
             if self.program_ptr.mnemonic == 'ELSE':
                 self.conditionBlock.mode = 'else'
