@@ -802,6 +802,7 @@ class Executor(object):
         self.maximum_stack_depth = 0
         self.intermediateCodes = []
         self.conditionBlock = None
+        self.function_label_map = []
         
     def execute_all(self):
         for key in self.font.local_programs.keys():
@@ -814,6 +815,7 @@ class Executor(object):
         top = self.environment.program_stack[-1].data
         #if top not in self.program.call_function_set:
         self.program.call_function_set.append(top)
+        self.function_label_map.append((top, len(self.environment.program_stack)))
         if top not in global_fucntion_table:
             global_fucntion_table[top] = 1
         else:
@@ -835,6 +837,7 @@ class Executor(object):
         successors_index = []
         top_if = None
         self.program_state = {}
+        self.function_label_map = []
         self.intermediateCodes = setGSDefaults()
 
         while self.program_ptr is not None:

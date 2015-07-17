@@ -104,10 +104,45 @@ class BytecodeContainer(object):
             for key, value in self.function_table.items():
                 value.constructBody()
 
+    #remove functions passed from the function table
+    def removeFunctions(self, functions=[]):
+            if(len(functions) > 0):
+                for label in functions:
+                    try:
+                        del self.function_table[label]
+                    except:
+                        pass
+
+    # param label_mapping is a dict for each table with a list of 
+    # tuples (label, pos)  where label is the old function label 
+    # and pos is the position of this label on the data array (of the root PUSH instruction)
+    def relabelFunctions(self, label_mapping):
+        relabelled_function_table = {}
+        self.label_mapping = {}
+        new_label = 0
+        for old_label in self.function_table.keys():
+            relabelled_function_table[new_label] = self.function_table[old_label]
+            self.label_mapping[old_label] = new_label
+            new_label += 1
+
+        self.function_table = relabelled_function_table
+        self.relabelTables(label_mapping)
+
+    def relabelTables(self, function_calls):
+        
+        for table in function_calls.keys():
+            #First instruction, contains the first PUSH with
+            #the function labels called during execution
+            root = self.programs[table].body.statement_root
+
+            for old_label, line in function_calls[table]:
+                root.data[line-1] = self.label_mapping[old_label]
+
     #update the TTFont object passed with contets of current BytecodeContainer
     def updateTTFont(self, ttFont):
         self.replaceCVTTable(ttFont)
         self.replaceFpgm(ttFont)
+        self.replaceOtherTables(ttFont)
  
     def replaceCVTTable(self, ttFont):
         try:
@@ -127,7 +162,6 @@ class BytecodeContainer(object):
 
             for label in reversed(self.function_table.keys()):
                 assembly.append(str(label))
-
 
             for function in self.function_table.values():
                 assembly.append('FDEF[ ]')
@@ -152,13 +186,50 @@ class BytecodeContainer(object):
 
                 assembly.append('ENDF[ ]')
             ttFont['fpgm'].program.fromAssembly(assembly)
-    
-    #remove functions passed from the function table
-    def removeFunctions(self, functions=[]):
-            if(len(functions) > 0):
-                for label in functions:
+
+    def replaceOtherTables(self, ttFont):
+
+        for table in self.programs.keys():
+            assembly = []
+            if table != 'fpgm':
+
+                root = self.programs[table].body.statement_root
+                stack = []
+                stack.append(root)
+
+                while len(stack) > 0:
+                    top_instr = stack[-1]
+
+                    if(top_instr.mnemonic == 'PUSH'):
+                        assembly.append('PUSH[ ]')
+                        if(len(top_instr.data) > 1):
+                            assembly[-1] += "  /* %s values pushed */" % len(top_instr.data)
+
+                        for data in top_instr.data:
+                            assembly.append(str(data))
+                    else:
+                        if(len(top_instr.data) > 0):
+                            instr_append = top_instr.mnemonic+'['
+                            for data in top_instr.data:
+                                instr_append += str(data)
+                            instr_append += ']'
+                            assembly.append(instr_append)
+                        else:
+                            assembly.append(top_instr.mnemonic+'[ ]')
+
+                    stack.pop()
+
+                    if len(top_instr.successors) > 1:
+                        reverse_successor = top_instr.successors[::-1]
+                        stack.extend(reverse_successor)
+                    else:
+                        stack.extend(top_instr.successors)
+
+                try:
+                    ttFont[table].program.fromAssembly(assembly)
+                except:
                     try:
-                        del self.function_table[label]
+                        ttFont['glyf'].glyphs[table[5:]].program.fromAssembly(assembly)
                     except:
                         pass
 
