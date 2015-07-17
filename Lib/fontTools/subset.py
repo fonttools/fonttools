@@ -2225,6 +2225,7 @@ def main(args):
   log.lapse("loading glyph names")
 
   reduceFpgm = False
+  relabelFpgm = False
   glyphs = []
   unicodes = []
   text = ""
@@ -2281,21 +2282,21 @@ def main(args):
     called_functions = set()
     label_mapping = {}
     try: 
-        absExecutor.execute('prep')
-        called_functions.update(list(set(absExecutor.program.call_function_set)))
-        label_mapping['prep'] = absExecutor.function_label_map
+      absExecutor.execute('prep')
+      called_functions.update(list(set(absExecutor.program.call_function_set)))
+      label_mapping['prep'] = absExecutor.function_label_map
     except:
         pass 
     environment = copy.deepcopy(absExecutor.environment)
     tables_to_execute = bytecodeContainer.programs.keys()  
     for table in tables_to_execute:
-        try: 
-            absExecutor.execute(table)
-            called_functions.update(list(set(absExecutor.program.call_function_set)))
-            label_mapping[table] = copy.deepcopy(absExecutor.function_label_map)
-            absExecutor.environment = copy.deepcopy(environment)
-        except:
-            absExecutor.environment = copy.deepcopy(environment)
+      try: 
+        absExecutor.execute(table)
+        called_functions.update(list(set(absExecutor.program.call_function_set)))
+        label_mapping[table] = copy.deepcopy(absExecutor.function_label_map)
+        absExecutor.environment = copy.deepcopy(environment)
+      except:
+        absExecutor.environment = copy.deepcopy(environment)
     function_set = absExecutor.environment.function_table.keys() 
     unused_functions = [item for item in function_set if item not in called_functions]
 
