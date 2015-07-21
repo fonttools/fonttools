@@ -10,6 +10,7 @@ import logging
 import os
 import subset
 import compare
+import unicodedata
 from misc.captureOutput import captureOutput
 from fontTools.ttLib import TTFont
 from bs4 import BeautifulSoup
@@ -72,24 +73,26 @@ def readPage(input):
         page = urllib2.urlopen(request)
     except:
         raise ValueError("Couldn't load file or URL "+input)
-    soup = BeautifulSoup(page)
-    texts = soup.findAll(text=True)
-    [s.extract() for s in soup(['style', 'script', '[document]', 'head', 'title'])]
-    visible_text = soup.getText()
-    return visible_text
+    return page
 
 def readInput(input, encoding):
     try:
-        string = readFile(input, encoding)
+        data = readFile(input, encoding)
     except IOError:
-        string = readPage(input)
+        data = readPage(input)
+
+    soup = BeautifulSoup(data)
+    texts = soup.findAll(text=True)
+    [s.extract() for s in soup(['style', 'script', '[document]', 'head', 'title'])]
+    string = soup.getText()
 
     charList = list(set(string))
 
-    escapeList = ['\n', '\t', '\v', '\r', '\f', '\b', '\a']
-    charList = [x for x in charList if x not in escapeList]
-    return charList
+    #reference to unicode categories http://www.sql-und-xml.de/unicode-database/#kategorien
+    non_printable = ['Zs', 'Zl', 'Zp', 'Cc']
+    charList = [x for x in charList if unicodedata.category(x) not in non_printable]
 
+    return charList
 
 def listToStr(charList):
     string = ''

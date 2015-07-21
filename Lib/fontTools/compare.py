@@ -23,6 +23,7 @@ import getopt
 import logging
 import codecs
 import urllib2 
+import unicodedata
 from freetype import *
 from urllib2 import urlopen
 from bs4 import BeautifulSoup
@@ -160,8 +161,10 @@ def readInput(input, encoding):
     
     charList = list(set(string))
 
-    escapeList = ['\n', '\t', '\v', '\r', '\f', '\b', '\a']
-    charList = [x for x in charList if x not in escapeList]
+    # reference to unicode categories http://www.sql-und-xml.de/unicode-database/#kategorien
+    non_printable = ['Zs', 'Zl', 'Zp', 'Cc']
+    charList = [x for x in charList if unicodedata.category(x) not in non_printable]
+
     return charList
 
 
