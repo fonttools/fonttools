@@ -151,6 +151,26 @@ class BytecodeContainer(object):
         except:
             pass
 
+    def instrToAssembly(self, instr):
+        assembly = []
+        if(instr.mnemonic == 'PUSH'):
+            assembly.append('PUSH[ ]')
+            if(len(instr.data) > 1):
+                assembly[-1] += "  /* %s values pushed */" % len(instr.data)
+
+            for data in instr.data:
+                assembly.append(str(data))
+        else:
+            if(len(instr.data) > 0):
+                instr_append = instr.mnemonic+'['
+                for data in instr.data:
+                    instr_append += str(data)
+                instr_append += ']'
+                assembly.append(instr_append)
+            else:
+                assembly.append(instr.mnemonic+'[ ]')
+        return assembly
+
     def replaceFpgm(self, ttFont):
         assembly = []
         skip = False
@@ -166,23 +186,7 @@ class BytecodeContainer(object):
             for function in self.function_table.values():
                 assembly.append('FDEF[ ]')
                 for instr in function.instructions:
-
-                    if(instr.mnemonic == 'PUSH'):
-                        assembly.append('PUSH[ ]')
-                        if(len(instr.data) > 1):
-                            assembly[-1] += "  /* %s values pushed */" % len(instr.data)
-
-                        for data in instr.data:
-                            assembly.append(str(data))
-                    else:
-                        if(len(instr.data) > 0):
-                            instr_append = instr.mnemonic+'['
-                            for data in instr.data:
-                                instr_append += str(data)
-                            instr_append += ']'
-                            assembly.append(instr_append)
-                        else:
-                            assembly.append(instr.mnemonic+'[ ]')
+                    assembly.extend(self.instrToAssembly(instr))
 
                 assembly.append('ENDF[ ]')
             ttFont['fpgm'].program.fromAssembly(assembly)
@@ -199,24 +203,7 @@ class BytecodeContainer(object):
 
                 while len(stack) > 0:
                     top_instr = stack[-1]
-
-                    if(top_instr.mnemonic == 'PUSH'):
-                        assembly.append('PUSH[ ]')
-                        if(len(top_instr.data) > 1):
-                            assembly[-1] += "  /* %s values pushed */" % len(top_instr.data)
-
-                        for data in top_instr.data:
-                            assembly.append(str(data))
-                    else:
-                        if(len(top_instr.data) > 0):
-                            instr_append = top_instr.mnemonic+'['
-                            for data in top_instr.data:
-                                instr_append += str(data)
-                            instr_append += ']'
-                            assembly.append(instr_append)
-                        else:
-                            assembly.append(top_instr.mnemonic+'[ ]')
-
+                    assembly.extend(self.instrToAssembly(top_instr))
                     stack.pop()
 
                     if len(top_instr.successors) > 1:
