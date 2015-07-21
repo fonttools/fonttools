@@ -280,7 +280,6 @@ def performAnalysis(fontFile, subsetFontFile):
     origTables = sorted(origTables, reverse=True, key=lambda tup:tup[2])
     subsTables = sorted(subsTables, reverse=True, key=lambda tup:tup[2])
 
- 
     print("\n")
     print(fontFile.ljust(35)+"=>".ljust(5)+subsetFontFile)
     print("Table".ljust(15)+"Total%".ljust(10)+"Size".ljust(10)+"=>".ljust(5)+"Table".ljust(15)+"Total%".ljust(10)+"Size")
@@ -294,15 +293,22 @@ def performAnalysis(fontFile, subsetFontFile):
             if substable[0] == table[0]:
                 subpercent = "%.2f" % (substable[1])
                 subsize = "%d" % (substable[2])
+                reduction = 0
                 print(tablename.ljust(15) + subpercent.ljust(10) + subsize.ljust(10)),
-                reduction = ((table[2]-substable[2])*100)/table[2]
+                try:
+                    reduction = ((table[2]-substable[2])*100)/table[2]
+                except ZeroDivisionError:
+                    pass
                 if (reduction >= 1):
                     print(" (reduction of %0.f%%)" % reduction)
                 else:
                     print("")
                 break
-    print("\n")               
-
+        else:
+            print("---".ljust(15)+"---".ljust(10)+"---".ljust(10))
+    print("\n")
+    os.remove("original.ttx")
+    os.remove("subsetted.ttx")
 
 def main(args):
     
