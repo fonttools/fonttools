@@ -68,7 +68,7 @@ def analysis(tt, glyphs=[]):
         absExecutor.execute('prep')
         environment_after_prep = copy.deepcopy(absExecutor.environment)
         called_functions.update(list(set(absExecutor.program.call_function_set)))
-    except:   
+    except KeyError:
         pass
     called_functions.update(executeGlyphs(absExecutor, glyphs))
     return absExecutor, called_functions
