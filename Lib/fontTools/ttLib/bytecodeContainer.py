@@ -198,27 +198,26 @@ class BytecodeContainer(object):
             if table != 'fpgm':
 
                 root = self.programs[table].body.statement_root
-                stack = []
-                stack.append(root)
+                if root is not None:
+                    
+                    stack = []
+                    stack.append(root)
 
-                while len(stack) > 0:
-                    top_instr = stack[-1]
-                    assembly.extend(self.instrToAssembly(top_instr))
-                    stack.pop()
+                    while len(stack) > 0:
+                        top_instr = stack[-1]
+                        assembly.extend(self.instrToAssembly(top_instr))
+                        stack.pop()
 
-                    if len(top_instr.successors) > 1:
-                        reverse_successor = top_instr.successors[::-1]
-                        stack.extend(reverse_successor)
-                    else:
-                        stack.extend(top_instr.successors)
+                        if len(top_instr.successors) > 1:
+                            reverse_successor = top_instr.successors[::-1]
+                            stack.extend(reverse_successor)
+                        else:
+                            stack.extend(top_instr.successors)
 
                 try:
                     ttFont[table].program.fromAssembly(assembly)
                 except:
-                    try:
-                        ttFont['glyf'].glyphs[table[5:]].program.fromAssembly(assembly)
-                    except:
-                        pass
+                    ttFont['glyf'].glyphs[table[5:]].program.fromAssembly(assembly)
 
 #per glyph instructions
 class Program(object):
