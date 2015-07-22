@@ -135,8 +135,9 @@ def performAnalysis(fontFile, subsetFontFile):
     ttxSubsSize = os.path.getsize(currentDir+"/subsetted.ttx")
 
     print("New size: " )
-    print("ttf: %d => %d" % (origSize, subsSize) +"\tttx: %d => %d" % (ttxOrigSize, ttxSubsSize))
-    print("Reduction of %.2f%%" % ( (((origSize - subsSize)*100)/origSize)) +"\t\tReduction of %.2f%%" % (  ((ttxOrigSize - ttxSubsSize)*100)/ttxOrigSize) )
+    template = "{0:25}  {1:20}"
+    print template.format("ttf: %d => %d" % (origSize, subsSize), "(Reduction of %.2f%%)" % ( (((origSize - subsSize)*100)/origSize)) )
+    print template.format("ttx: %d => %d" % (ttxOrigSize, ttxSubsSize), "(Reduction of %.2f%%)" % ( ((ttxOrigSize - ttxSubsSize)*100)/ttxOrigSize) )
 
     origTotalSize = 0
     subsTotalSize = 0
@@ -216,7 +217,8 @@ def performAnalysis(fontFile, subsetFontFile):
                             bytePercent = (size*100)/origTotalSize
                             origTables.append([tag, bytePercent, size])
                             bytePercent = (bytecodeSize*100)/origTotalSize
-                            origTables.append([tag+'(assemb)', bytePercent, bytecodeSize]) 
+                            if(bytecodeSize > 0):
+                                origTables.append([tag+'(assemb)', bytePercent, bytecodeSize]) 
                         elif '<' in line and '/' not in line and '>' in line:
                             searchTag = line[line.find("<")+1:line.find(">")]
                             if not searchTag.startswith("TTGlyph"):
@@ -257,7 +259,8 @@ def performAnalysis(fontFile, subsetFontFile):
                             bytePercent = (size*100)/subsTotalSize
                             subsTables.append([tag, bytePercent, size])
                             bytePercent = (bytecodeSize*100)/subsTotalSize
-                            subsTables.append([tag+'(assemb)', bytePercent, bytecodeSize]) 
+                            if(bytecodeSize > 0):
+                                subsTables.append([tag+'(assemb)', bytePercent, bytecodeSize]) 
                         elif '<' in line and '/' not in line and '>' in line:
                             searchTag = line[line.find("<")+1:line.find(">")]
                             if not searchTag.startswith("TTGlyph"):
@@ -283,33 +286,28 @@ def performAnalysis(fontFile, subsetFontFile):
     origTables = sorted(origTables, reverse=True, key=lambda tup:tup[2])
     subsTables = sorted(subsTables, reverse=True, key=lambda tup:tup[2])
 
-    print("\n")
-    print(fontFile.ljust(35)+"=>".ljust(5)+subsetFontFile)
-    print("Table".ljust(15)+"Total%".ljust(10)+"Size".ljust(10)+"=>".ljust(5)+"Table".ljust(15)+"Total%".ljust(10)+"Size")
-    print("Total".ljust(15)+"100%".ljust(10)+"%s" % (str(origTotalSize).ljust(15)) +"Total".ljust(15)+"100%".ljust(10)+"%s" % (str(subsTotalSize)))
+    print("")
+    template = "{0:15} {1:12} {2:12} {3:12} {4:12} {5:12}"
+    print template.format("Table", "Size", "Total%", "New Size", "Total%", "")
+    
     for table in origTables:
-        tablename = "%s" % (table[0])
-        percent = "%.2f" % (table[1])
-        size = "%d" % (table[2])
-        print(tablename.ljust(15) + percent.ljust(10) + size.ljust(14)),
+        row = [table[0], "{:,}".format(table[2]), "{:.2f}".format(table[1])]
+        
         for substable in subsTables:
             if substable[0] == table[0]:
-                subpercent = "%.2f" % (substable[1])
-                subsize = "%d" % (substable[2])
-                reduction = 0
-                print(tablename.ljust(15) + subpercent.ljust(10) + subsize.ljust(10)),
-                try:
-                    reduction = ((table[2]-substable[2])*100)/table[2]
-                except ZeroDivisionError:
-                    pass
-                if (reduction >= 1):
-                    print(" (reduction of %0.f%%)" % reduction)
+                row.extend(["{:,}".format(substable[2]), "{:.2f}".format(substable[1])])
+                
+                reduction = ((table[2]-substable[2])*100)/table[2]
+                if(reduction > 0):
+                    row.append("(reduction of {:.2f}%)".format(reduction))
                 else:
-                    print("")
-                break
+                    row.append("")
         else:
-            print("---".ljust(15)+"---".ljust(10)+"---".ljust(10))
+            row.extend(["---", "---", ""])
+        print template.format(*row) 
     print("\n")
+
+
     os.remove("original.ttx")
     os.remove("subsetted.ttx")
 
