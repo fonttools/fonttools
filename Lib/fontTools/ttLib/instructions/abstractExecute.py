@@ -91,13 +91,11 @@ class ExecutionContext(object):
                 logger.info("graphics_state%s become uncertain", gs_key)
                 new_graphics_state = set()
                 if(type(self.graphics_state[gs_key]) is dataType.UncertainValue):
-                    for values in self.graphics_state[gs_key].possibleValues:
-                        new_graphics_state.add(values)
+                    new_graphics_state.update(self.graphics_state[gs_key].possibleValues)
                 else:
                     new_graphics_state.add(self.graphics_state[gs_key])
                 if(type(executionContext2.graphics_state[gs_key]) is dataType.UncertainValue):
-                    for values in executionContext2.graphics_state[gs_key].possibleValues:
-                        new_graphics_state.add(values)
+                    new_graphics_state.update(executionContext2.graphics_state[gs_key].possibleValues)
                 else:
                     new_graphics_state.add(executionContext2.graphics_state[gs_key])
                 self.graphics_state[gs_key] = dataType.UncertainValue(list(new_graphics_state))
