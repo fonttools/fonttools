@@ -120,7 +120,61 @@ def parseOutput(output):
                     print("Glyphs missing in original/subsetted font: %s/%s" % (aNotFound, bNotFound)) 
             else:
                 print(" PASSED")
-            
+    
+def readTtxTables(file):
+    tag = None
+    subtag = None
+    totalSize = 0
+    tagSize = 0
+    subtagSize = 0
+    tables = []
+
+    with open(file) as infp:
+        for line in infp:
+            if not line.strip():
+                continue
+
+            if(tag == None):
+                if any(word in line for word in opentags):
+                    tag = line[line.find("<")+1:line.find(">")]
+                    tagSize = 0
+
+            elif(tag == "glyf"):
+                if(subtag == None):
+                    if any(word in line for word in closetags):
+                        tables.append((tag, tagSize)) 
+                        totalSize += tagSize
+                        if(subtagSize > 0):
+                            tables.append((tag+'(assemb)', subtagSize))
+                            totalSize += subtagSize
+                            subtagSize = 0
+                        tag = None
+
+                    elif '<' in line and '/' not in line and '>' in line:
+                        searchTag = line[line.find("<")+1:line.find(">")]
+                        if not searchTag.startswith("TTGlyph"):
+                            subtag = searchTag
+                elif(subtag == "instructions" or subtag == "assembly"):
+                    if "</"+subtag+">" in line:
+                        subtag = None
+                    else:
+                        subtagSize += len(line.encode('utf-8'))
+                else:
+                    if "</"+subtag+">" in line:
+                        subtag = None
+                    else:
+                        tagSize += len(line.encode('utf-8'))
+
+            else:
+                if not any(word in line for word in closetags):
+                    tagSize += len(line.encode('utf-8'))
+                else:
+                    tables.append((tag, tagSize))
+                    totalSize += tagSize
+                    tag = None
+
+    return totalSize, tables        
+
 def performAnalysis(fontFile, subsetFontFile):
 
     print("\n"+fontFile+" Analysis")
@@ -139,165 +193,24 @@ def performAnalysis(fontFile, subsetFontFile):
     print template.format("ttf: %d => %d" % (origSize, subsSize), "(Reduction of %.2f%%)" % ( (((origSize - subsSize)*100)/origSize)) )
     print template.format("ttx: %d => %d" % (ttxOrigSize, ttxSubsSize), "(Reduction of %.2f%%)" % ( ((ttxOrigSize - ttxSubsSize)*100)/ttxOrigSize) )
 
-    origTotalSize = 0
-    subsTotalSize = 0
-    counting = None
-    subtag = None
-    countingBytecode = False 
-    origTables = []    
-    subsTables = []
-
-    with open("original.ttx") as infp:
-        for line in infp:
-            if not line.strip():
-                continue
-            if(counting == None):
-                if any(word in line for word in opentags):
-                    counting = line[line.find("<")+1:line.find(">")]
-            elif(counting == "glyf"):
-                if(subtag == None):
-                    if any(word in line for word in closetags):
-                        counting = None
-                    elif '<' in line and '/' not in line and '>' in line:
-                        searchTag = line[line.find("<")+1:line.find(">")]
-                        if not searchTag.startswith("TTGlyph"):
-                            subtag = searchTag
-                else:
-                    if "</"+subtag+">" in line:
-                        subtag = None
-                    else:
-                        origTotalSize += len(line.encode('utf-8'))
-                
-            else:
-                if not any(word in line for word in closetags):
-                    origTotalSize += len(line.encode('utf-8'))
-                else:
-                    counting = None
- 
-    with open("subsetted.ttx") as infp:
-        for line in infp:
-            if not line.strip():
-                continue
-            if(counting == None):
-                if any(word in line for word in opentags):
-                    counting = line[line.find("<")+1:line.find(">")]
-            elif(counting == "glyf"):
-                if(subtag == None):
-                    if any(word in line for word in closetags):
-                        counting = None
-                    elif '<' in line and '/' not in line and '>' in line:
-                        searchTag = line[line.find("<")+1:line.find(">")]
-                        if not searchTag.startswith("TTGlyph"):
-                            subtag = searchTag
-                else:
-                    if "</"+subtag+">" in line:
-                        subtag = None
-                    else:
-                        subsTotalSize += len(line.encode('utf-8'))
-            else:
-                if not any(word in line for word in closetags):
-                    subsTotalSize += len(line.encode('utf-8'))
-                else:
-                    counting = None
-    subtag = None
-    with open("original.ttx") as infp:
-            for line in infp:
-                if not line.strip():
-                    continue
-                if(counting == None):
-                    if any(word in line for word in opentags):
-                        size = 0
-                        bytecodeSize = 0
-                        tag = line[line.find("<")+1:line.find(">")]
-                        counting = tag
-                elif(counting == "glyf"):
-                    if(subtag == None):
-                        if any(word in line for word in closetags):
-                            counting = None
-                            bytePercent = (size*100)/origTotalSize
-                            origTables.append([tag, bytePercent, size])
-                            bytePercent = (bytecodeSize*100)/origTotalSize
-                            if(bytecodeSize > 0):
-                                origTables.append([tag+'(assemb)', bytePercent, bytecodeSize]) 
-                        elif '<' in line and '/' not in line and '>' in line:
-                            searchTag = line[line.find("<")+1:line.find(">")]
-                            if not searchTag.startswith("TTGlyph"):
-                                subtag = searchTag
-                    elif(subtag == "instructions" or subtag == "assembly"):
-                        if "</"+subtag+">" in line:
-                            subtag = None
-                        else:
-                            bytecodeSize += len(line.encode('utf-8'))
-                    else: 
-                        if "</"+subtag+">" in line:
-                            subtag = None
-                        else:
-                            size += len(line.encode('utf-8'))
-                else:
-                    if not any(word in line for word in closetags):
-                        size += len(line.encode('utf-8'))
-                    else:
-                        counting = None
-                        bytePercent = (size*100)/origTotalSize
-                        origTables.append([tag, bytePercent, size])
-
-    subtag = None
-    with open("subsetted.ttx") as infp:
-            for line in infp:
-                if not line.strip():
-                    continue
-                if(counting == None):
-                    if any(word in line for word in opentags):
-                        size = 0
-                        bytecodeSize = 0
-                        tag = line[line.find("<")+1:line.find(">")]
-                        counting = tag 
-                elif(counting == "glyf"):
-                    if(subtag == None):
-                        if any(word in line for word in closetags):
-                            counting = None
-                            bytePercent = (size*100)/subsTotalSize
-                            subsTables.append([tag, bytePercent, size])
-                            bytePercent = (bytecodeSize*100)/subsTotalSize
-                            if(bytecodeSize > 0):
-                                subsTables.append([tag+'(assemb)', bytePercent, bytecodeSize]) 
-                        elif '<' in line and '/' not in line and '>' in line:
-                            searchTag = line[line.find("<")+1:line.find(">")]
-                            if not searchTag.startswith("TTGlyph"):
-                                subtag = searchTag
-                    elif(subtag == "instructions" or subtag == "assembly"):
-                        if "</"+subtag+">" in line:
-                            subtag = None
-                        else:
-                            bytecodeSize += len(line.encode('utf-8'))
-                    else: 
-                        if "</"+subtag+">" in line:
-                            subtag = None
-                        else:
-                            size += len(line.encode('utf-8'))
-                else:
-                    if not any(word in line for word in closetags):
-                        size += len(line.encode('utf-8'))
-                    else:
-                        counting = None
-                        bytePercent = (size*100)/subsTotalSize
-                        subsTables.append([tag, bytePercent, size])
+    origTotalSize, origTables = readTtxTables("original.ttx")
+    subsTotalSize, subsTables = readTtxTables("subsetted.ttx")   
    
-    origTables = sorted(origTables, reverse=True, key=lambda tup:tup[2])
-    subsTables = sorted(subsTables, reverse=True, key=lambda tup:tup[2])
+    origTables = sorted(origTables, reverse=True, key=lambda tup:tup[1])
+    subsTables = sorted(subsTables, reverse=True, key=lambda tup:tup[1])
 
     print("")
     template = "{0:15} {1:12} {2:12} {3:12} {4:12} {5:12}"
     print template.format("Table", "Size", "Total%", "New Size", "Total%", "")
     
-    for table in origTables:
-        row = [table[0], "{:,}".format(table[2]), "{:.2f}".format(table[1])]
+    for table, size in origTables:
+        row = [table, "{:,}".format(size), "{:.2f}".format((size*100)/origTotalSize)]
         
-        for substable in subsTables:
-            if substable[0] == table[0]:
-                row.extend(["{:,}".format(substable[2]), "{:.2f}".format(substable[1])])
+        for newTable, newSize in subsTables:
+            if table == newTable:
+                row.extend(["{:,}".format(newSize), "{:.2f}".format((newSize*100)/subsTotalSize)])
                 
-                reduction = ((table[2]-substable[2])*100)/table[2]
+                reduction = ((size-newSize)*100)/size
                 if(reduction > 0):
                     row.append("(reduction of {:.2f}%)".format(reduction))
                 else:
@@ -306,7 +219,6 @@ def performAnalysis(fontFile, subsetFontFile):
             row.extend(["---", "---", ""])
         print template.format(*row) 
     print("\n")
-
 
     os.remove("original.ttx")
     os.remove("subsetted.ttx")
@@ -354,6 +266,7 @@ def main(args):
         parseOutput(output)
         performAnalysis(fontFile, subsetFontFile)
 
+        os.remove(subsetFontFile)
 
 if __name__ == '__main__':
   main(sys.argv[1:])
