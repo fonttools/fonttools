@@ -68,6 +68,10 @@ class ExecutionContext(object):
             ', graphics_state = ' + str(self.graphics_state) 
             + ', stack = ' + stackRep + ', length = ' + str(len(self.program_stack)))
 
+    def makecopy(self, new_env):
+        for key, value in self.__dict__.iteritems():
+            setattr(new_env, key, copy.copy(value)) 
+    
     def merge(self,executionContext2):
         '''
         merge the executionContext of the if-else
@@ -85,8 +89,16 @@ class ExecutionContext(object):
         for gs_key in self.graphics_state:
             if self.graphics_state[gs_key] != executionContext2.graphics_state[gs_key]:
                 logger.info("graphics_state%s become uncertain", gs_key)
-                self.graphics_state[gs_key] = dataType.UncertainValue([self.graphics_state[gs_key],
-                                        executionContext2.graphics_state[gs_key]])
+                new_graphics_state = set()
+                if(type(self.graphics_state[gs_key]) is dataType.UncertainValue):
+                    new_graphics_state.update(self.graphics_state[gs_key].possibleValues)
+                else:
+                    new_graphics_state.add(self.graphics_state[gs_key])
+                if(type(executionContext2.graphics_state[gs_key]) is dataType.UncertainValue):
+                    new_graphics_state.update(executionContext2.graphics_state[gs_key].possibleValues)
+                else:
+                    new_graphics_state.add(executionContext2.graphics_state[gs_key])
+                self.graphics_state[gs_key] = dataType.UncertainValue(list(new_graphics_state))
                 logger.info("possible values are %s", str(self.graphics_state[gs_key].possibleValues))
 
     def pretty_print(self):
@@ -577,7 +589,7 @@ class ExecutionContext(object):
         self.program_stack_pop(2)
 
     def exec_SFVTPV(self):#Set Freedom Vector To Projection Vector
-        self.graphics_state['fv'] = self.graphics_state['gv']
+        self.graphics_state['fv'] = self.graphics_state['pv']
 
     def exec_SHC(self):
         self.program_stack_pop(1)
@@ -788,6 +800,7 @@ class Executor(object):
         self.maximum_stack_depth = 0
         self.intermediateCodes = []
         self.conditionBlock = None
+        self.function_label_map = []
         
     def execute_all(self):
         for key in self.font.local_programs.keys():
@@ -800,6 +813,7 @@ class Executor(object):
         top = self.environment.program_stack[-1].data
         #if top not in self.program.call_function_set:
         self.program.call_function_set.append(top)
+        self.function_label_map.append((top, len(self.environment.program_stack)))
         if top not in global_fucntion_table:
             global_fucntion_table[top] = 1
         else:
@@ -821,6 +835,7 @@ class Executor(object):
         successors_index = []
         top_if = None
         self.program_state = {}
+        self.function_label_map = []
         self.intermediateCodes = setGSDefaults()
 
         while self.program_ptr is not None:
@@ -852,7 +867,9 @@ class Executor(object):
                 self.conditionBlock.mode = 'IF'
                 top_if = self.program_ptr
                 successors_index.append(0)
-                back_ptr.append((self.program_ptr, copy.deepcopy(self.environment)))
+                environment_copy = ExecutionContext(self.font)
+                self.environment.makecopy(environment_copy)
+                back_ptr.append((self.program_ptr, environment_copy))
             
             if self.program_ptr.mnemonic == 'ELSE':
                 self.conditionBlock.mode = 'else'

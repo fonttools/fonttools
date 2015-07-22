@@ -1,5 +1,5 @@
 """
-usage: pyftcompare [options] fontA fontB inputFile 
+usage: pyftcompare [options] fontA fontB inputFileOrURL 
 
     pyftcompare -- TrueType Glyph Compare Tool
 
@@ -22,7 +22,11 @@ import sys
 import getopt
 import logging
 import codecs
+import urllib2 
+import unicodedata
 from freetype import *
+from urllib2 import urlopen
+from bs4 import BeautifulSoup
 
 logger = logging.getLogger(" ")
 
@@ -66,8 +70,9 @@ def compareFontGlyphs(fontA, fontB, charList, resolutionList):
         faceB.set_char_size( 32*32, 32*32, int(hres), int(vres))
      
         try:
-            for charmap in faceA.charmaps:
-                faceA.set_charmap(charmap)
+            for charmapA, charmapB in zip(faceA.charmaps, faceB.charmaps):
+                faceA.set_charmap(charmapA)
+                faceB.set_charmap(charmapB)
                
                 for char in charList:
      
@@ -96,7 +101,7 @@ def compareFontGlyphs(fontA, fontB, charList, resolutionList):
         logger.info("Identical glyphs: "+listToStr(identicalList))
         print("Number of glyphs differing: %d" % len(differList))
         logger.info("Differing glyphs: "+listToStr(differList))
-        print("Number of not found glyphs: %d" % notFoundCount)
+        print("Number of not found glyphs: %d-%d" % (len(aNotFoundList), len(bNotFoundList)))
         logger.info("Glyphs not found in "+fontA+": "+listToStr(aNotFoundList))
         logger.info("Glyphs not found in "+fontB+": "+listToStr(bNotFoundList))
  
@@ -129,14 +134,39 @@ def readFile(input, encoding):
         with codecs.open(input) as file:
             data=file.read()
     except:
-        raise ValueError("Couldn't open file "+input)
+        raise IOError("Couldn't open file "+input)
 
+    return data
+
+def readPage(input):
+    #some sites block common non-browser user agent strings, better use a regular one
+    hdr = {'User-Agent':'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.7) Gecko/2009021910 Firefox/3.0.7'}
+    request = urllib2.Request(input, headers = hdr) 
     try:
-        data = data.decode(encoding)
+        page = urllib2.urlopen(request)
     except:
-        raise ValueError("Different encoding or wrong code provided: "+encoding)
-    charList = list(set(data))
+        raise ValueError("Couldn't load file or URL "+input)
+    return page    
+
+def readInput(input, encoding):
+    try:
+        data = readFile(input, encoding)
+    except IOError:
+        data = readPage(input)
+
+    soup = BeautifulSoup(data)
+    texts = soup.findAll(text=True)
+    [s.extract() for s in soup(['style', 'script', '[document]', 'head', 'title'])]
+    string = soup.getText()
+    
+    charList = list(set(string))
+
+    # reference to unicode categories http://www.sql-und-xml.de/unicode-database/#kategorien
+    non_printable = ['Zs', 'Zl', 'Zp', 'Cc']
+    charList = [x for x in charList if unicodedata.category(x) not in non_printable]
+
     return charList
+
 
 def usage():
     print(__doc__)
@@ -188,12 +218,11 @@ def parseOptions(args):
         usage()
  
     options = Options(rawOptions, files)
-    charList = readFile(files[2], options.encoding)
+    charList = readInput(files[2], options.encoding)
     
     return options, files[0], files[1], charList    
 
 def main(args):
-    
     try:
         options, fontA, fontB, charList = parseOptions(args)
         compareFontGlyphs(fontA, fontB, charList, options.resolutionList)
