@@ -33,6 +33,10 @@ class FixedToolsTest(unittest.TestCase):
         self.assertEqual(-16384, floatToFixed(-1, 14))
         self.assertEqual(0, floatToFixed(0, 14))
 
+    def test_fixedToFloat_return_float(self):
+        value = fixedToFloat(16384, 14)
+        self.assertIsInstance(value, float)
+
 
 if __name__ == "__main__":
     unittest.main()

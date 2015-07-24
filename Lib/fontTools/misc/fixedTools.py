@@ -26,7 +26,7 @@ def fixedToFloat(value, precisionBits):
 	hi = value + eps
 	# If the range of valid choices spans an integer, return the integer.
 	if int(lo) != int(hi):
-		return round(value)
+		return float(round(value))
 	fmt = "%.8f"
 	lo = fmt % lo
 	hi = fmt % hi
