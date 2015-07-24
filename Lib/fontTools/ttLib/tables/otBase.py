@@ -216,6 +216,7 @@ class OTTableWriter(object):
 		self.pos = None
 		self.globalState = globalState
 		self.localState = localState
+		self.longOffset = False
 		self.parent = None
 
 	def __setitem__(self, name, value):
