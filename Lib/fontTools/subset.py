@@ -10,14 +10,20 @@ Later grown into full OpenType subsetter, supporting all standard tables.
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools import ttLib
+from fontTools.ttLib.bytecodeContainer import BytecodeContainer
+from fontTools.ttLib.instructions import abstractExecute
 from fontTools.ttLib.tables import otTables
 from fontTools.misc import psCharStrings
 from fontTools.pens import basePen
+from urllib2 import urlopen
+from bs4 import BeautifulSoup
+import urllib2
+import logging
 import sys
 import struct
 import time
 import array
-
+import copy
 
 def _add_method(*clazzes):
   """Returns a decorator function that adds a new method to one or
@@ -1928,6 +1934,19 @@ class Options(object):
 
     return ret
 
+def readPage(input):
+    #some sites block common non-browser user agent strings, better use a regular one
+    hdr = {'User-Agent':'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.7) Gecko/2009021910 Firefox/3.0.7'}
+    request = urllib2.Request(input, headers = hdr) 
+    try:
+        page = urllib2.urlopen(request)
+    except:
+        raise ValueError("Couldn't load file or URL "+input)
+    soup = BeautifulSoup(page)
+    texts = soup.findAll(text=True)
+    [s.extract() for s in soup(['style', 'script', '[document]', 'head', 'title'])]
+    string = soup.getText()
+    return string 
 
 class Subsetter(object):
 
@@ -1937,19 +1956,23 @@ class Subsetter(object):
       log = Logger()
     if not options:
       options = Options()
-
+    
     self.options = options
     self.log = log
     self.unicodes_requested = set()
     self.glyphs_requested = set()
     self.glyphs = set()
 
-  def populate(self, glyphs=[], unicodes=[], text=""):
+  def populate(self, glyphs=[], unicodes=[], text="", url=None):
     self.unicodes_requested.update(unicodes)
     if isinstance(text, bytes):
       text = text.decode("utf8")
     for u in text:
       self.unicodes_requested.add(ord(u))
+    if isinstance(url, bytes):
+      page = readPage(url)
+      for u in page:
+        self.unicodes_requested.add(ord(u))
     self.glyphs_requested.update(glyphs)
     self.glyphs.update(glyphs)
 
@@ -2097,6 +2120,7 @@ class Logger(object):
       if "--"+v in argv:
         setattr(self, v, True)
         argv.remove("--"+v)
+    logging.basicConfig(level = logging.ERROR) 
     return argv
 
   def __call__(self, *things):
@@ -2179,10 +2203,10 @@ def main(args):
   args = log.parse_opts(args)
 
   options = Options()
-  args = options.parse_opts(args, ignore_unknown=['text'])
+  args = options.parse_opts(args, ignore_unknown=['text', 'url'])
 
   if len(args) < 2:
-    print("usage: pyftsubset font-file glyph... [--text=ABC]... [--option=value]...", file=sys.stderr)
+    print("usage: pyftsubset font-file glyph... [--text=ABC]... [--url=URL]... [--option=value]...", file=sys.stderr)
     sys.exit(1)
 
   fontfile = args[0]
@@ -2200,9 +2224,12 @@ def main(args):
   names = font.getGlyphNames()
   log.lapse("loading glyph names")
 
+  reduceFpgm = False
+  relabelFpgm = False
   glyphs = []
   unicodes = []
   text = ""
+  url = None 
   for g in args:
     if g == '*':
       glyphs.extend(font.getGlyphOrder())
@@ -2212,6 +2239,9 @@ def main(args):
       continue
     if g.startswith('--text='):
       text += g[7:]
+      continue
+    if g.startswith('--url='):
+      url = g[6:]
       continue
     if g.startswith('uni') or g.startswith('U+'):
       if g.startswith('uni') and len(g) > 3:
@@ -2231,14 +2261,51 @@ def main(args):
       except ValueError:
         raise Exception("Invalid glyph identifier: %s" % g)
       continue
+    if g == '-f':
+        reduceFpgm = True
+        continue 
+    if g == '-r':
+        relabelFpgm = True
+        continue
     raise Exception("Invalid glyph identifier: %s" % g)
   log.lapse("compile glyph list")
   log("Unicodes:", unicodes)
   log("Glyphs:", glyphs)
 
-  subsetter.populate(glyphs=glyphs, unicodes=unicodes, text=text)
+  subsetter.populate(glyphs=glyphs, unicodes=unicodes, text=text, url=url)
   subsetter.subset(font)
 
+  if reduceFpgm is True or relabelFpgm is True:
+    bytecodeContainer = BytecodeContainer(font)
+    absExecutor = abstractExecute.Executor(bytecodeContainer)
+
+    called_functions = set()
+    label_mapping = {}
+    try: 
+      absExecutor.execute('prep')
+      called_functions.update(list(set(absExecutor.program.call_function_set)))
+      label_mapping['prep'] = absExecutor.function_label_map
+    except:
+        pass 
+    environment = copy.deepcopy(absExecutor.environment)
+    tables_to_execute = bytecodeContainer.programs.keys()  
+    for table in tables_to_execute:
+      try: 
+        absExecutor.execute(table)
+        called_functions.update(list(set(absExecutor.program.call_function_set)))
+        label_mapping[table] = copy.deepcopy(absExecutor.function_label_map)
+        absExecutor.environment = copy.deepcopy(environment)
+      except:
+        absExecutor.environment = copy.deepcopy(environment)
+    function_set = absExecutor.environment.function_table.keys() 
+    unused_functions = [item for item in function_set if item not in called_functions]
+
+    if reduceFpgm is True:
+      bytecodeContainer.removeFunctions(unused_functions)
+    if relabelFpgm is True:
+      bytecodeContainer.relabelFunctions(label_mapping)
+    bytecodeContainer.updateTTFont(font)
+  
   outfile = fontfile + '.subset'
 
   save_font (font, outfile, options)

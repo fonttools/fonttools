@@ -988,3 +988,4 @@ def getSearchRange(n, itemSize):
 	entrySelector = exponent
 	rangeShift = max(0, n * itemSize - searchRange)
 	return searchRange, entrySelector, rangeShift
+

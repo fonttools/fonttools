@@ -1,0 +1,161 @@
+\documentclass[12pt]{article}
+
+\usepackage[letterpaper, hmargin=0.75in, vmargin=0.75in]{geometry}
+\usepackage{float}
+\usepackage{listings}
+
+\setlength{\parskip}{8pt}
+\pagestyle{empty}
+
+\title{TrueType Font Program Table Tree Shaking}
+
+\author{
+  Eduardo Hauck dos Santos\\
+  \texttt{eduardohauck@gmail.com}
+  \and
+  Patrick Lam\\
+  \texttt{p.lam@ece.uwaterloo.ca}
+}
+\date{}
+
+\lstset{frame=single}
+
+\begin{document}
+
+\maketitle
+
+\section{Description}
+
+This tool is used to reduce the font program table of a
+TrueType font by using a tree shaking approach. It can be combined with
+subsetting techniques to achieve a better relative reduction from the
+original size. Any functions present in the font program table that are
+not being called from any other tables in the font during execution will
+be eliminated and a new reduced font will be generated as output.
+
+The executable script treeshaking.py can be called passing a
+font as a parameter to perform the reduction on the font program table.
+Since it has to obtain information about the execution of the font, more
+specifically, about the function calls made during execution, we need
+to obtain information about its execution. To achieve that, we make use
+of the Abstract Interpreter. During abstract execution, values are
+abstract data (not actual data) but we can get information about
+programs' control flow, including every possible function call made.
+
+\section{How to use}
+
+The executable script treeshaking.py can be called, passing a
+font as a parameter, to perform the reduction on the font program table.
+
+\begin{lstlisting}
+usage: pyfttreeshake.py fontFile
+\end{lstlisting}
+
+\section{Background Information}
+
+%a brief introduction
+To be able to perform the tree shaking on the font program table,
+we make use of related works focused on TrueType fonts, specifically,
+the TTFont class present in the fonttools project \cite{fonttools} 
+(an open source project) and the bytecodeContainer and Symbolic Executor
+engine, created as part of a thesis project\cite{bytecode} by Wenzhu Man.
+
+%talk about TTFont here
+The TTFont class gives us easy access in the TrueType font format,
+allowing us to extract data from the font tables, perform analysis on
+it, or even manipulating this data and saving it back to the font. 
+
+%talk about Symbolic executor here
+The Symbolic Executor engine allows us to to abstractly
+interpretate the program without calculating actual values Although
+values are abstract,  we can get information about program's control
+flow, including which kind of instructions and functions were called.
+The abstract execution is not run using the TTFont object itself, but
+instead in the bytecodeContainer class, an intermediate class.
+
+%talk about bytecodeContainer here
+The bytecodeContainer class, as mentioned, is an intermediate of
+the TTFont class. It extracts some of the contents of the a font to make
+it more easily manipulable and offers the possibility of translating the
+new table values back to a TTFont object. The Symbolic Executor uses a
+bytecodeContainer, containing information about TTFont object to execute
+tables of a font.
+
+\section{Flow}
+
+The program starts by loading the font file as a TTFont object.
+We then create a bytecodeContainer object that encapsulates the main
+tables of a Truetype font file: prep, fpgm, cvt and glyf. This object 
+is necessary to run the abstract executor.We also create an empty set, 
+in which we will insert the labels of functions that were called at some 
+point during the execution. This set will be used later on to decide 
+which functions we want to keep on the font file.
+
+Whenever a font is loaded, prep is always the first table to run to 
+set the environment for glyphs to be loaded. It's important to note that, 
+whenever we run a table through the abstract executor, it stores the
+resulting context and information about its execution. We are interested 
+here specifically on function calls made during the execution.
+
+The first step then is running the prep table through the abstract 
+executor. We make a copy of the post-prep environment (we want to be
+able to restore this initial state) and update our function label
+set with the functions called by prep. We now have everything ready to
+execute the remaining tables.
+
+The second step running every glyph through the abstract executor.
+This is made on a loop. For each glyph we: 1 - restore the execution
+context post-prep, 2 - execute glyph, 3 - update function function call
+set with calls made during execution. At the end of it, we have all
+functions that can possibly be called by that font.
+
+The third and last step is obtaining the labels of the functions
+to be removed (by subtracting the functions called from the list of
+functions available on the fpgm table of the font). With them, we can
+call the removeFunctions from the bytecodeContainer object - which will
+update its function table, removing the ones passed - and finally call
+updateTTFont, passing the original TTFont object. It will translate the
+contents of bytecodeContainer back to the TTFont object. With that done,
+we only need to call the function save from TTFont class to save the
+reduced, tree shaken font.
+
+\section{Testing}
+
+To check if the tree shaking technique did not interfere with the
+renderization of any glyphs, we developed a script to compare glyphs
+from two fonts and check if they are identical. It is interesting to
+notice that we are using this script to check if nothing wrong happened
+during the tree shaking, but its use can be extended to any sort of
+modification applied to the glyphs of a TrueType Font.
+
+The script will compare the two fonts for a given set of glyphs at
+five main dpi resolutions: 72x72, 300x300, 600x600, 1200x1200 and
+2400x2400dpi. Depending on the number of glyphs to be fetched, and from
+where they have to be fetched from (file or URL), the test may take a
+while. The default enconding (UTF-8) can be changed via parameter, as
+well as the resolution (if a specific one must be tested)
+
+\begin{lstlisting}
+usage: pyftcompare.py [options] fontA fontB inputFileOrURL
+
+pyftcompare -- TrueType Glyph Compare Tool
+
+    General options:
+    -h Help: print this message
+    -v Verbose: be more verbose
+    -e CODE Encoding: encoding used to read the input file
+    -x HRES Hres: Horizontal resolution dpi
+    -y VRES Vres: Vertical resolution dpi
+\end{lstlisting}
+
+\clearpage
+\begin{thebibliography}{1}
+
+\bibitem{fonttools} The fonttools project. {\em https://github.com/behdad/fonttools } 
+
+\bibitem{bytecode} COI: A First Step towards TrueType Bytecode Analysis.
+{\em https://uwspace.uwaterloo.ca/handle/10012/9116 } 
+
+\end{thebibliography}
+
+\end{document}
