@@ -27,20 +27,20 @@ class XMLReader(object):
 		if self.progress:
 			import stat
 			self.progress.set(0, os.stat(self.fileName)[stat.ST_SIZE] // 100 or 1)
-		file = open(self.fileName, encoding='utf-8')
+		file = open(self.fileName, encoding='utf_8')
 		self._parseFile(file)
 		file.close()
 
 	def _parseFile(self, file):
 		from xml.parsers.expat import ParserCreate
-		parser = ParserCreate('utf-8')
+		parser = ParserCreate()
 		parser.StartElementHandler = self._startElementHandler
 		parser.EndElementHandler = self._endElementHandler
 		parser.CharacterDataHandler = self._characterDataHandler
 
 		pos = 0
 		while True:
-			chunk = file.read(BUFSIZE).encode('utf-8')
+			chunk = file.read(BUFSIZE)
 			if not chunk:
 				parser.Parse(chunk, 1)
 				break
