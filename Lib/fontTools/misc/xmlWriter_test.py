@@ -99,6 +99,13 @@ class TestXMLWriter(unittest.TestCase):
 		self.assertEqual(expected, writer.stringifyattrs(attr='0'))
 		self.assertEqual(expected, writer.stringifyattrs(attr=u'0'))
 
+	def test_carriage_return_escaped(self):
+		writer = XMLWriter(StringIO())
+		writer.write("two lines\r\nseparated by Windows line endings")
+		self.assertEqual(
+			HEADER + b'two lines&#13;\nseparated by Windows line endings',
+			writer.file.getvalue())
+
 
 if __name__ == '__main__':
 	unittest.main()
