@@ -153,6 +153,7 @@ def escape(data):
 	data = data.replace("&", "&amp;")
 	data = data.replace("<", "&lt;")
 	data = data.replace(">", "&gt;")
+	data = data.replace("\r", "&#13;")
 	return data
 
 def escapeattr(data):
