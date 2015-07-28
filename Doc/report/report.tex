@@ -3,6 +3,8 @@
 \usepackage[letterpaper, hmargin=0.75in, vmargin=0.75in]{geometry}
 \usepackage{float}
 \usepackage{listings}
+\usepackage{verbatim}
+\usepackage[toc,page]{appendix}
 
 \setlength{\parskip}{8pt}
 \pagestyle{empty}
@@ -67,11 +69,11 @@ it, or even manipulating this data and saving it back to the font.
 
 %talk about Symbolic executor here
 The Symbolic Executor engine allows us to to abstractly
-interpretate the program without calculating actual values Although
+interpretate the program without calculating actual values. Although
 values are abstract,  we can get information about program's control
 flow, including which kind of instructions and functions were called.
 The abstract execution is not run using the TTFont object itself, but
-instead in the bytecodeContainer class, an intermediate class.
+instead the bytecodeContainer class, an intermediate class.
 
 %talk about bytecodeContainer here
 The bytecodeContainer class, as mentioned, is an intermediate of
@@ -86,7 +88,7 @@ tables of a font.
 The program starts by loading the font file as a TTFont object.
 We then create a bytecodeContainer object that encapsulates the main
 tables of a Truetype font file: prep, fpgm, cvt and glyf. This object 
-is necessary to run the abstract executor.We also create an empty set, 
+is necessary to run the abstract executor. We also create an empty set, 
 in which we will insert the labels of functions that were called at some 
 point during the execution. This set will be used later on to decide 
 which functions we want to keep on the font file.
@@ -148,7 +150,7 @@ pyftcompare -- TrueType Glyph Compare Tool
     -y VRES Vres: Vertical resolution dpi
 \end{lstlisting}
 
-\section{Testing}
+\section{Results}
 
 To measure the results of our work, we performed the tree shaking
 technique on the Google Noto Sans fonts\cite{notosans}. To obtain a
@@ -157,7 +159,37 @@ size of the font, we also applied the tree shaking on  subsetted fonts
 (fetching glyphs from the initial Wikipedia page from the corresponding
 languages), to check against the reduction we obtained from the original
 fonts.
-  
+
+\verbatiminput{averageStats}
+
+As we can see from the statistics, there was a slight variation between
+the reduction we obtained with the tree shaking technique for whole
+fonts and for subsetted fonts, In average, we are getting double the
+relative reduction when working with subsets. 
+
+We can also see that both results are not very expressive. For
+some fonts, like NotoSansSinhala-Regular.ttf, the difference in relative
+reduction was less than 1 percent, and for fonts like
+NotoSansGeorgian-Regular.ttf, this difference jumped to more than 10
+percent. For detailed information about every font, check Appendix A.
+
+These results give us some insight on how much the function program
+table impacts on the total size of the font and more important, how
+other tables contributes to this final size. We could observe that the
+reduction from the subsetting greatly varied, presenting reductions between
+8 and 99 percent. Obviously, the tree shaking yield a better relative
+reduction in fonts that had their sizes very compacted after the
+subsetting. It is still interesting to notice that even for fonts which
+yield small reductions, the glyf and other glyph-related tables still
+contributes for most of the final size of the font.
+
+\clearpage
+\begin{appendices}
+\section{Reduction Statistics}
+
+\verbatiminput{generalStats}
+
+\end{appendices}
 
 \clearpage
 \begin{thebibliography}{1}
@@ -166,6 +198,9 @@ fonts.
 
 \bibitem{bytecode} COI: A First Step towards TrueType Bytecode Analysis.
 {\em https://uwspace.uwaterloo.ca/handle/10012/9116 } 
+
+\bibitem{notosans} Google Noto Sans. 
+{\em https://www.google.com/fonts/specimen/Noto+Sans } 
 
 \end{thebibliography}
 
