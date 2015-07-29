@@ -2,21 +2,16 @@
 
 from __future__ import division
 import sys
-import getopt
 import codecs
 import re 
-import urllib2
 import logging
 import os
 import subset
 import compare
-import unicodedata
 from misc.captureOutput import captureOutput
+from fontTools.misc.inputParsing import getCharListFromInput
 from fontTools.ttLib import TTFont
-from bs4 import BeautifulSoup
 from os import rename, listdir
-from urllib2 import urlopen
-from cStringIO import StringIO
 
 testSuite = { ('NotoSans-Regular.ttf', 'http://www.gutenberg.org/files/2554/2554-h/2554-h.htm', 'utf-8'),
               ('NotoSans-Regular.ttf', 'http://az.lib.ru/d/dostoewskij_f_m/text_0060.shtml', 'utf-8'),  
@@ -51,54 +46,6 @@ def makeOutputFileName(input, extension):
         output = os.path.join(dirName, fileName + "#" + repr(n) + extension)
         n = n + 1
     return output
-
-def readFile(input, encoding):
-    try:
-        with codecs.open(input) as file:
-            data=file.read()
-    except:
-        raise IOError("Couldn't open file "+input)
-
-    try:
-        data = data.decode(encoding)
-    except:
-        raise ValueError("Different encoding or wrong code provided: "+encoding)
-    return data 
-
-def readPage(input):
-    #some sites block common non-browser user agent strings, better use a regular one
-    hdr = {'User-Agent':'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.7) Gecko/2009021910 Firefox/3.0.7'}
-    request = urllib2.Request(input, headers = hdr)
-    try:
-        page = urllib2.urlopen(request)
-    except:
-        raise ValueError("Couldn't load file or URL "+input)
-    return page
-
-def readInput(input, encoding):
-    try:
-        data = readFile(input, encoding)
-    except IOError:
-        data = readPage(input)
-
-    soup = BeautifulSoup(data)
-    texts = soup.findAll(text=True)
-    [s.extract() for s in soup(['style', 'script', '[document]', 'head', 'title'])]
-    string = soup.getText()
-
-    charList = list(set(string))
-
-    #reference to unicode categories http://www.sql-und-xml.de/unicode-database/#kategorien
-    non_printable = ['Zs', 'Zl', 'Zp', 'Cc']
-    charList = [x for x in charList if unicodedata.category(x) not in non_printable]
-
-    return charList
-
-def listToStr(charList):
-    string = ''
-    for char in charList:
-        string += char
-    return string
 
 def makeArgs(*params):
     args = []
@@ -239,11 +186,11 @@ def main(args):
     for fontFile, inputFile, encoding in testSuite:
     
         print("Testing "+fontFile+" over "+inputFile)        
-        charList = readInput(inputFile, encoding)
-        glyphs = "--text="+listToStr(charList)
+        charList = getCharListFromInput(inputFile, encoding)
+        glyphs = "--text="+''.join(charList)
  
         filesBefore = listdir(".")   
-        args = makeArgs(fontFile, glyphs, '-f')
+        args = makeArgs(fontFile, glyphs)
         with captureOutput():
             subset.main(args)
         filesAfter = listdir(".") 
