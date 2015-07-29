@@ -6,9 +6,9 @@ import codecs
 import re 
 import logging
 import os
-import subset
-import compare
-from misc.captureOutput import captureOutput
+from fontTools import subset
+from fontTools import compare
+from fontTools.misc.captureOutput import captureOutput
 from fontTools.misc.inputParsing import getCharListFromInput
 from fontTools.ttLib import TTFont
 from os import rename, listdir
@@ -217,5 +217,4 @@ def main(args):
 
 if __name__ == '__main__':
   main(sys.argv[1:])
-
 
