@@ -198,7 +198,13 @@ def ttList(input, output, options):
 	print(format % ("----", "----------", "-------", "-------"))
 	for tag in tags:
 		entry = reader.tables[tag]
-		checkSum = int(entry.checkSum)
+		if ttf.flavor == "woff2":
+			# WOFF2 doesn't store table checksums, so they must be calculated
+			from fontTools.ttLib.sfnt import calcChecksum
+			data = entry.loadData(reader.transformBuffer)
+			checkSum = calcChecksum(data)
+		else:
+			checkSum = int(entry.checkSum)
 		if checkSum < 0:
 			checkSum = checkSum + 0x100000000
 		checksum = "0x%08X" % checkSum
@@ -268,6 +274,8 @@ def guessFileType(fileName):
 		return "TTF"
 	elif head == "wOFF":
 		return "WOFF"
+	elif head == "wOF2":
+		return "WOFF2"
 	elif head.lower() == "<?xm":
 		# Use 'latin1' because that can't fail.
 		header = tostr(header, 'latin1')
@@ -293,7 +301,7 @@ def parseOptions(args):
 
 	for input in files:
 		tp = guessFileType(input)
-		if tp in ("OTF", "TTF", "TTC", "WOFF"):
+		if tp in ("OTF", "TTF", "TTC", "WOFF", "WOFF2"):
 			extension = ".ttx"
 			if options.listTables:
 				action = ttList
