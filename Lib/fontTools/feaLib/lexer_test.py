@@ -1,6 +1,7 @@
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
-from fontTools.feaLib.lexer import Lexer, LexerError
+from fontTools.feaLib.lexer import IncludingLexer, Lexer, LexerError
+import os
 import unittest
 
 
@@ -92,6 +93,41 @@ class LexerTest(unittest.TestCase):
         self.assertEqual(lexer.pos_, 3)
         lexer.scan_until_("'")
         self.assertEqual(lexer.pos_, 3)
+
+
+class IncludingLexerTest(unittest.TestCase):
+    @staticmethod
+    def getpath(filename):
+        path, _ = os.path.split(__file__)
+        return os.path.join(path, "testdata", filename)
+
+    def test_include(self):
+        lexer = IncludingLexer(self.getpath("include4.fea"))
+        result = ['%s %s:%d' % (token, os.path.split(loc[0])[1], loc[1])
+                  for _, token, loc in lexer]
+        self.assertEqual(result, [
+            "I4a include4.fea:1",
+            "I3a include3.fea:1",
+            "I2a include2.fea:1",
+            "I1a include1.fea:1",
+            "I0 include0.fea:1",
+            "I1b include1.fea:3",
+            "I2b include2.fea:3",
+            "I3b include3.fea:3",
+            "I4b include4.fea:3"
+        ])
+
+    def test_include_limit(self):
+        lexer = IncludingLexer(self.getpath("include6.fea"))
+        self.assertRaises(LexerError, lambda: list(lexer))
+
+    def test_include_self(self):
+        lexer = IncludingLexer(self.getpath("includeself.fea"))
+        self.assertRaises(LexerError, lambda: list(lexer))
+
+    def test_include_missing_file(self):
+        lexer = IncludingLexer(self.getpath("includemissingfile.fea"))
+        self.assertRaises(LexerError, lambda: list(lexer))
 
 
 if __name__ == "__main__":
