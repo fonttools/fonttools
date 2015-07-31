@@ -106,7 +106,9 @@ Output options:
       The output font file. If not specified, the subsetted font
       will be saved in as font-file.subset.
   --flavor=<type>
-      Specify flavor of output font file. May be 'woff'.
+      Specify flavor of output font file. May be 'woff' or 'woff2'.
+      Note that WOFF2 requires the Brotli Python extension, available
+      at https://github.com/google/brotli
 
 Glyph set expansion:
   These options control how additional glyphs are added to the subset.
@@ -2256,7 +2258,7 @@ class Options(object):
     recalc_bounds = False # Recalculate font bounding boxes
     recalc_timestamp = False # Recalculate font modified timestamp
     canonical_order = False # Order tables as recommended
-    flavor = None # May be 'woff'
+    flavor = None  # May be 'woff' or 'woff2'
     desubroutinize = False # Desubroutinize CFF CharStrings
 
     def __init__(self, **kwargs):
