@@ -5,7 +5,7 @@ import unittest
 
 
 def lex(s):
-    return [(typ, tok) for (typ, tok, _) in Lexer(s)]
+    return [(typ, tok) for (typ, tok, _) in Lexer(s, "test.fea")]
 
 
 class LexerTest(unittest.TestCase):
@@ -45,18 +45,22 @@ class LexerTest(unittest.TestCase):
         self.assertRaises(LexerError, lambda: lex("123 \u0001"))
 
     def test_newline(self):
-        lines = lambda s: [loc[0] for (_, _, loc) in Lexer(s)]
+        lines = lambda s: [loc[1] for (_, _, loc) in Lexer(s, "test.fea")]
         self.assertEqual(lines("FOO\n\nBAR\nBAZ"), [1, 3, 4])  # Unix
         self.assertEqual(lines("FOO\r\rBAR\rBAZ"), [1, 3, 4])  # Macintosh
         self.assertEqual(lines("FOO\r\n\r\n BAR\r\nBAZ"), [1, 3, 4])  # Windows
         self.assertEqual(lines("FOO\n\rBAR\r\nBAZ"), [1, 3, 4])  # mixed
 
     def test_location(self):
-        locs = lambda s: " ".join(["%d.%d" % loc for (_, _, loc) in Lexer(s)])
-        self.assertEqual(locs("a b # Comment\n12 @x"), "1.1 1.3 2.1 2.4 2.5")
+        locs = lambda s: ["%s:%d:%d" % loc
+                          for (_, _, loc) in Lexer(s, "test.fea")]
+        self.assertEqual(locs("a b # Comment\n12 @x"), [
+            "test.fea:1:1", "test.fea:1:3", "test.fea:2:1",
+            "test.fea:2:4", "test.fea:2:5"
+        ])
 
     def test_scan_over_(self):
-        lexer = Lexer("abbacabba12")
+        lexer = Lexer("abbacabba12", "test.fea")
         self.assertEqual(lexer.pos_, 0)
         lexer.scan_over_("xyz")
         self.assertEqual(lexer.pos_, 0)
@@ -68,7 +72,7 @@ class LexerTest(unittest.TestCase):
         self.assertEqual(lexer.pos_, 11)
 
     def test_scan_until_(self):
-        lexer = Lexer("foo'bar")
+        lexer = Lexer("foo'bar", "test.fea")
         self.assertEqual(lexer.pos_, 0)
         lexer.scan_until_("'")
         self.assertEqual(lexer.pos_, 3)

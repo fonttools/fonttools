@@ -25,7 +25,8 @@ class Lexer:
     CHAR_NAME_START_ = CHAR_LETTER_ + "_.\\"
     CHAR_NAME_CONTINUATION_ = CHAR_LETTER_ + CHAR_DIGIT_ + "_."
 
-    def __init__(self, text):
+    def __init__(self, text, filename):
+        self.filename_ = filename
         self.line_ = 1
         self.pos_ = 0
         self.line_start_ = 0
@@ -47,7 +48,7 @@ class Lexer:
     def next_(self):
         self.scan_over_(Lexer.CHAR_WHITESPACE_)
         column = self.pos_ - self.line_start_ + 1
-        location = (self.line_, column)
+        location = (self.filename_, self.line_, column)
         start = self.pos_
         text = self.text_
         limit = len(text)
