@@ -12,6 +12,7 @@ class Lexer:
     NUMBER = "NUMBER"
     STRING = "STRING"
     NAME = "NAME"
+    FILENAME = "FILENAME"
     CID = "CID"
     SYMBOL = "SYMBOL"
     COMMENT = "COMMENT"
@@ -25,6 +26,9 @@ class Lexer:
     CHAR_NAME_START_ = CHAR_LETTER_ + "_.\\"
     CHAR_NAME_CONTINUATION_ = CHAR_LETTER_ + CHAR_DIGIT_ + "_."
 
+    MODE_NORMAL_ = "NORMAL"
+    MODE_FILENAME_ = "FILENAME"
+
     def __init__(self, text, filename):
         self.filename_ = filename
         self.line_ = 1
@@ -32,6 +36,7 @@ class Lexer:
         self.line_start_ = 0
         self.text_ = text
         self.text_length_ = len(text)
+        self.mode_ = Lexer.MODE_NORMAL_
 
     def __iter__(self):
         return self
@@ -56,14 +61,7 @@ class Lexer:
             raise StopIteration()
         cur_char = text[start]
         next_char = text[start + 1] if start + 1 < limit else None
-        if cur_char == "\\" and next_char in Lexer.CHAR_DIGIT_:
-            self.pos_ += 1
-            self.scan_over_(Lexer.CHAR_DIGIT_)
-            return (Lexer.CID, int(text[start + 1:self.pos_], 10), location)
-        if cur_char in Lexer.CHAR_NAME_START_:
-            self.pos_ += 1
-            self.scan_over_(Lexer.CHAR_NAME_CONTINUATION_)
-            return (Lexer.NAME, text[start:self.pos_], location)
+
         if cur_char == "\n":
             self.pos_ += 1
             self.line_ += 1
@@ -74,6 +72,32 @@ class Lexer:
             self.line_ += 1
             self.line_start_ = self.pos_
             return (Lexer.NEWLINE, None, location)
+        if cur_char == "#":
+            self.scan_until_(Lexer.CHAR_NEWLINE_)
+            return (Lexer.COMMENT, text[start:self.pos_], location)
+
+        if self.mode_ is Lexer.MODE_FILENAME_:
+            if cur_char != "(":
+                raise LexerError("Expected '(' before file name", location)
+            self.scan_until_(")")
+            cur_char = text[self.pos_] if self.pos_ < limit else None
+            if cur_char != ")":
+                raise LexerError("Expected ')' after file name", location)
+            self.pos_ += 1
+            self.mode_ = Lexer.MODE_NORMAL_
+            return (Lexer.FILENAME, text[start + 1:self.pos_ - 1], location)
+
+        if cur_char == "\\" and next_char in Lexer.CHAR_DIGIT_:
+            self.pos_ += 1
+            self.scan_over_(Lexer.CHAR_DIGIT_)
+            return (Lexer.CID, int(text[start + 1:self.pos_], 10), location)
+        if cur_char in Lexer.CHAR_NAME_START_:
+            self.pos_ += 1
+            self.scan_over_(Lexer.CHAR_NAME_CONTINUATION_)
+            token = text[start:self.pos_]
+            if token == "include":
+                self.mode_ = Lexer.MODE_FILENAME_
+            return (Lexer.NAME, token, location)
         if cur_char in Lexer.CHAR_DIGIT_:
             self.scan_over_(Lexer.CHAR_DIGIT_)
             return (Lexer.NUMBER, int(text[start:self.pos_], 10), location)
@@ -84,9 +108,6 @@ class Lexer:
         if cur_char in Lexer.CHAR_SYMBOL_:
             self.pos_ += 1
             return (Lexer.SYMBOL, cur_char, location)
-        if cur_char == "#":
-            self.scan_until_(Lexer.CHAR_NEWLINE_)
-            return (Lexer.COMMENT, text[start:self.pos_], location)
         if cur_char == '"':
             self.pos_ += 1
             self.scan_until_('"\r\n')

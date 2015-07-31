@@ -23,6 +23,20 @@ class LexerTest(unittest.TestCase):
     def test_cid(self):
         self.assertEqual(lex("\\0 \\987"), [(Lexer.CID, 0), (Lexer.CID, 987)])
 
+    def test_include(self):
+        self.assertEqual(lex("include (~/foo/bar baz.fea);"), [
+            (Lexer.NAME, "include"),
+            (Lexer.FILENAME, "~/foo/bar baz.fea"),
+            (Lexer.SYMBOL, ";")
+        ])
+        self.assertEqual(lex("include # Comment\n    (foo) \n;"), [
+            (Lexer.NAME, "include"),
+            (Lexer.FILENAME, "foo"),
+            (Lexer.SYMBOL, ";")
+        ])
+        self.assertRaises(LexerError, lex, "include blah")
+        self.assertRaises(LexerError, lex, "include (blah")
+
     def test_number(self):
         self.assertEqual(lex("123 -456"),
                          [(Lexer.NUMBER, 123), (Lexer.NUMBER, -456)])
