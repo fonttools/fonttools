@@ -1,5 +1,7 @@
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
+import codecs
+import os
 
 
 class LexerError(Exception):
@@ -8,7 +10,7 @@ class LexerError(Exception):
         self.location = location
 
 
-class Lexer:
+class Lexer(object):
     NUMBER = "NUMBER"
     STRING = "STRING"
     NAME = "NAME"
@@ -129,3 +131,48 @@ class Lexer:
         while p < self.text_length_ and self.text_[p] not in stop_at:
             p += 1
         self.pos_ = p
+
+
+class IncludingLexer(object):
+    def __init__(self, filename):
+        self.lexers_ = [self.make_lexer_(filename, (filename, 0, 0))]
+
+    def __iter__(self):
+        return self
+
+    def next(self):  # Python 2
+        return self.__next__()
+
+    def __next__(self):  # Python 3
+        while self.lexers_:
+            lexer = self.lexers_[-1]
+            try:
+                token_type, token, location = lexer.next()
+            except StopIteration:
+                self.lexers_.pop()
+                continue
+            if token_type is Lexer.NAME and token == "include":
+                fname_type, fname_token, fname_location = lexer.next()
+                if fname_type is not Lexer.FILENAME:
+                    raise LexerError("Expected file name", fname_location)
+                semi_type, semi_token, semi_location = lexer.next()
+                if semi_type is not Lexer.SYMBOL or semi_token != ";":
+                    raise LexerError("Expected ';'", semi_location)
+                curpath, _ = os.path.split(lexer.filename_)
+                path = os.path.join(curpath, fname_token)
+                if len(self.lexers_) >= 5:
+                    raise LexerError("Too many recursive includes",
+                                     fname_location)
+                self.lexers_.append(self.make_lexer_(path, fname_location))
+                continue
+            else:
+                return (token_type, token, location)
+        raise StopIteration()
+
+    @staticmethod
+    def make_lexer_(filename, location):
+        try:
+            with codecs.open(filename, "rb", "utf-8") as f:
+                return Lexer(f.read(), filename)
+        except IOError as err:
+            raise LexerError(str(err), location)
