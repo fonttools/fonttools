@@ -15,6 +15,20 @@ class FeatureFile(object):
             s.write(out, linesep)
 
 
+class FeatureBlock(object):
+    def __init__(self, location, tag):
+        self.location = location
+        self.tag = tag
+        self.statements = []
+
+    def write(self, out, linesep):
+        tag = self.tag.strip()
+        write(out, "feature %s {%s" % (tag, linesep))
+        for s in self.statements:
+            s.write(out, linesep)
+        write(out, "} %s;%s" % (tag, linesep))
+
+
 class GlyphClassDefinition(object):
     def __init__(self, location, name, glyphs):
         self.location = location

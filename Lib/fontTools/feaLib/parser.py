@@ -34,11 +34,12 @@ class Parser(object):
         while self.next_token_type_ is not None:
             self.advance_lexer_()
             if self.cur_token_type_ is Lexer.GLYPHCLASS:
-                self.parse_glyphclass_definition_()
+                glyphclass = self.parse_glyphclass_definition_()
+                self.doc_.statements.append(glyphclass)
             elif self.is_cur_keyword_("languagesystem"):
                 self.parse_languagesystem_()
             elif self.is_cur_keyword_("feature"):
-                break  # TODO: Implement
+                self.parse_feature_block_()
             else:
                 raise ParserError("Expected languagesystem, feature, or "
                                   "glyph class definition",
@@ -62,7 +63,7 @@ class Parser(object):
                               location)
         glyphclass = ast.GlyphClassDefinition(location, name, glyphs)
         self.glyphclasses_[-1][name] = glyphclass
-        self.doc_.statements.append(glyphclass)
+        return glyphclass
 
     def parse_glyphclass_reference_(self):
         result = set()
@@ -103,11 +104,37 @@ class Parser(object):
         return result
 
     def parse_languagesystem_(self):
+        assert self.cur_token_ == "languagesystem"
         location = self.cur_token_location_
         script, language = self.expect_tag_(), self.expect_tag_()
         self.expect_symbol_(";")
         langsys = ast.LanguageSystemStatement(location, script, language)
         self.doc_.statements.append(langsys)
+
+    def parse_feature_block_(self):
+        assert self.cur_token_ == "feature"
+        location = self.cur_token_location_
+        tag = self.expect_tag_()
+        self.expect_symbol_("{")
+        self.glyphclasses_.append({})
+        block = ast.FeatureBlock(location, tag)
+        self.doc_.statements.append(block)
+
+        while self.next_token_ != "}":
+            self.advance_lexer_()
+            if self.cur_token_type_ is Lexer.GLYPHCLASS:
+                block.statements.append(self.parse_glyphclass_definition_())
+            else:
+                raise ParserError("Expected glyph class definition",
+                                  self.cur_token_location_)
+
+        self.expect_symbol_("}")
+        self.glyphclasses_.pop()
+        endtag = self.expect_tag_()
+        if tag != endtag:
+            raise ParserError("Expected \"%s\"" % tag.strip(),
+                              self.cur_token_location_)
+        self.expect_symbol_(";")
 
     def is_cur_keyword_(self, k):
         return (self.cur_token_type_ is Lexer.NAME) and (self.cur_token_ == k)
