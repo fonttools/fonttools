@@ -89,7 +89,7 @@ class ParserTest(unittest.TestCase):
 
     def test_glyphclass_reference(self):
         [vowels_lc, vowels_uc, vowels] = self.parse(
-            "@Vowels.lc = [a e i o u]; @Vowels.uc = [A E I O U]; " +
+            "@Vowels.lc = [a e i o u]; @Vowels.uc = [A E I O U];"
             "@Vowels = [@Vowels.lc @Vowels.uc y Y];").statements
         self.assertEqual(vowels_lc.glyphs, set(list("aeiou")))
         self.assertEqual(vowels_uc.glyphs, set(list("AEIOU")))
@@ -97,6 +97,16 @@ class ParserTest(unittest.TestCase):
         self.assertRaisesRegex(
             ParserError, "Unknown glyph class @unknown",
             self.parse, "@bad = [@unknown];")
+
+    def test_glyphclass_scoping(self):
+        [foo, liga, smcp] = self.parse(
+            "@foo = [a b];"
+            "feature liga { @bar = [@foo l]; } liga;"
+            "feature smcp { @bar = [@foo s]; } smcp;"
+        ).statements
+        self.assertEqual(foo.glyphs, {"a", "b"})
+        self.assertEqual(liga.statements[0].glyphs, {"a", "b", "l"})
+        self.assertEqual(smcp.statements[0].glyphs, {"a", "b", "s"})
 
     def test_languagesystem(self):
         [langsys] = self.parse("languagesystem latn DEU;").statements
@@ -112,6 +122,12 @@ class ParserTest(unittest.TestCase):
             ParserError, "longer than 4 characters",
             self.parse, "languagesystem latn FOOBAR")
 
+    def test_feature_block(self):
+        [liga] = self.parse("feature liga {} liga;").statements
+        self.assertEqual(liga.tag, "liga")
+
+    # TODO: Implement the needed bits in the parser.
+    @unittest.expectedFailure
     def test_roundtrip(self):
         self.roundtrip("mini.fea")
 
