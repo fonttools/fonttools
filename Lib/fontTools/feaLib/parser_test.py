@@ -12,16 +12,23 @@ import unittest
 
 
 class ParserTest(unittest.TestCase):
+    def __init__(self, methodName):
+        unittest.TestCase.__init__(self, methodName)
+        # Python 3 renamed assertRaisesRegexp to assertRaisesRegex,
+        # and fires deprecation warnings if a program uses the old name.
+        if not hasattr(self, "assertRaisesRegex"):
+            self.assertRaisesRegex = self.assertRaisesRegexp
+
     def test_languagesystem(self):
         langsys = self.parse("languagesystem latn DEU;").language_system
         self.assertEqual(langsys, {"latn": {"DEU "}})
-        self.assertRaisesRegexp(
+        self.assertRaisesRegex(
             ParserError, "Expected ';'",
             self.parse, "languagesystem latn DEU")
-        self.assertRaisesRegexp(
+        self.assertRaisesRegex(
             ParserError, "longer than 4 characters",
             self.parse, "languagesystem foobar DEU")
-        self.assertRaisesRegexp(
+        self.assertRaisesRegex(
             ParserError, "longer than 4 characters",
             self.parse, "languagesystem latn FOOBAR")
 
