@@ -24,6 +24,11 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(gc.name, "dash")
         self.assertEqual(gc.glyphs, {"endash", "emdash", "figuredash"})
 
+    def test_glyphclass_duplicate(self):
+        self.assertRaisesRegex(
+            ParserError, "Glyph class @dup already defined",
+            self.parse, "@dup = [a b]; @dup = [x];")
+
     def test_glyphclass_range_uppercase(self):
         [gc] = self.parse("@swashes = [X.swash-Z.swash];").statements
         self.assertEqual(gc.name, "swashes")

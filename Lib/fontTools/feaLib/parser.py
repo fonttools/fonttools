@@ -23,6 +23,7 @@ class ParserError(Exception):
 class Parser(object):
     def __init__(self, path):
         self.doc_ = ast.FeatureFile()
+        self.glyphclasses_ = [{}]
 
         self.next_token_type_, self.next_token_ = (None, None)
         self.next_token_location_ = None
@@ -44,12 +45,23 @@ class Parser(object):
                                   self.cur_token_location_)
         return self.doc_
 
+    def resolve_glyphclass_(self, name):
+        for symtab in reversed(self.glyphclasses_):
+            gc = symtab.get(name)
+            if gc:
+                return gc
+        return None
+
     def parse_glyphclass_definition_(self):
         location, name = self.cur_token_location_, self.cur_token_
         self.expect_symbol_("=")
         glyphs = self.parse_glyphclass_reference_()
         self.expect_symbol_(";")
+        if self.resolve_glyphclass_(name) is not None:
+            raise ParserError("Glyph class @%s already defined" % name,
+                              location)
         glyphclass = ast.GlyphClassDefinition(location, name, glyphs)
+        self.glyphclasses_[-1][name] = glyphclass
         self.doc_.statements.append(glyphclass)
 
     def parse_glyphclass_reference_(self):
