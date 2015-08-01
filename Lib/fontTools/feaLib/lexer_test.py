@@ -9,6 +9,16 @@ def lex(s):
     return [(typ, tok) for (typ, tok, _) in Lexer(s, "test.fea")]
 
 
+class LexerErrorTest(unittest.TestCase):
+    def test_str(self):
+        err = LexerError("Squeak!", ("foo.fea", 23, 42))
+        self.assertEqual(str(err), "foo.fea:23:42: Squeak!")
+
+    def test_str_nolocation(self):
+        err = LexerError("Squeak!", None)
+        self.assertEqual(str(err), "Squeak!")
+
+
 class LexerTest(unittest.TestCase):
     def test_empty(self):
         self.assertEqual(lex(""), [])
