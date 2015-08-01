@@ -45,6 +45,8 @@ class LexerTest(unittest.TestCase):
         self.assertEqual(lex("@Vowel.sc"), [(Lexer.GLYPHCLASS, "Vowel.sc")])
         self.assertRaisesRegex(LexerError, "Expected glyph class", lex, "@(a)")
         self.assertRaisesRegex(LexerError, "Expected glyph class", lex, "@ A")
+        self.assertRaisesRegex(LexerError, "not be longer than 30 characters",
+                               lex, "@a123456789.a123456789.a123456789.x")
 
     def test_include(self):
         self.assertEqual(lex("include (~/foo/bar baz.fea);"), [
