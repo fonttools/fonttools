@@ -108,6 +108,10 @@ class Lexer(object):
             glyphclass = text[start + 1:self.pos_]
             if len(glyphclass) < 1:
                 raise LexerError("Expected glyph class name", location)
+            if len(glyphclass) > 30:
+                raise LexerError(
+                    "Glyph class names must not be longer than 30 characters",
+                    location)
             return (Lexer.GLYPHCLASS, glyphclass, location)
         if cur_char in Lexer.CHAR_NAME_START_:
             self.pos_ += 1
