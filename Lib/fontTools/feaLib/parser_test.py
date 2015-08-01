@@ -24,10 +24,25 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(gc.name, "dash")
         self.assertEqual(gc.glyphs, {"endash", "emdash", "figuredash"})
 
+    def test_glyphclass_bad(self):
+        self.assertRaisesRegex(
+            ParserError, "Expected glyph name, range, or reference",
+            self.parse, "@bad = [a 123];")
+
     def test_glyphclass_duplicate(self):
         self.assertRaisesRegex(
             ParserError, "Glyph class @dup already defined",
             self.parse, "@dup = [a b]; @dup = [x];")
+
+    def test_glyphclass_empty(self):
+        [gc] = self.parse("@empty_set = [];").statements
+        self.assertEqual(gc.name, "empty_set")
+        self.assertEqual(gc.glyphs, set())
+
+    def test_glyphclass_equality(self):
+        [foo, bar] = self.parse("@foo = [a b]; @bar = @foo;").statements
+        self.assertEqual(foo.glyphs, {"a", "b"})
+        self.assertEqual(bar.glyphs, {"a", "b"})
 
     def test_glyphclass_range_uppercase(self):
         [gc] = self.parse("@swashes = [X.swash-Z.swash];").statements
@@ -72,13 +87,16 @@ class ParserTest(unittest.TestCase):
             "a", "foo.09", "foo.10", "foo.11", "X.sc", "Y.sc", "Z.sc"
         })
 
-    # TODO: self.parse("@foo = [a b]; @bar = [@foo];")
-    # TODO: self.parse("@foo = [a b]; @bar = @foo;")
-
-    def test_glyphclass_empty(self):
-        [gc] = self.parse("@empty_set = [];").statements
-        self.assertEqual(gc.name, "empty_set")
-        self.assertEqual(gc.glyphs, set())
+    def test_glyphclass_reference(self):
+        [vowels_lc, vowels_uc, vowels] = self.parse(
+            "@Vowels.lc = [a e i o u]; @Vowels.uc = [A E I O U]; " +
+            "@Vowels = [@Vowels.lc @Vowels.uc y Y];").statements
+        self.assertEqual(vowels_lc.glyphs, set(list("aeiou")))
+        self.assertEqual(vowels_uc.glyphs, set(list("AEIOU")))
+        self.assertEqual(vowels.glyphs, set(list("aeiouyAEIOUY")))
+        self.assertRaisesRegex(
+            ParserError, "Unknown glyph class @unknown",
+            self.parse, "@bad = [@unknown];")
 
     def test_languagesystem(self):
         [langsys] = self.parse("languagesystem latn DEU;").statements
