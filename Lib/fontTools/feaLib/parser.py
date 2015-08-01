@@ -66,10 +66,19 @@ class Parser(object):
 
     def parse_glyphclass_reference_(self):
         result = set()
+        if self.next_token_type_ is Lexer.GLYPHCLASS:
+            self.advance_lexer_()
+            gc = self.resolve_glyphclass_(self.cur_token_)
+            if gc is None:
+                raise ParserError("Unknown glyph class @%s" % self.cur_token_,
+                                  self.cur_token_location_)
+            result.update(gc.glyphs)
+            return result
+
         self.expect_symbol_("[")
         while self.next_token_ != "]":
-            if self.next_token_type_ is Lexer.NAME:
-                self.advance_lexer_()
+            self.advance_lexer_()
+            if self.cur_token_type_ is Lexer.NAME:
                 if self.next_token_ == "-":
                     range_location_ = self.cur_token_location_
                     range_start = self.cur_token_
@@ -80,6 +89,16 @@ class Parser(object):
                                                          range_end))
                 else:
                     result.add(self.cur_token_)
+            elif self.cur_token_type_ is Lexer.GLYPHCLASS:
+                gc = self.resolve_glyphclass_(self.cur_token_)
+                if gc is None:
+                    raise ParserError(
+                        "Unknown glyph class @%s" % self.cur_token_,
+                        self.cur_token_location_)
+                result.update(gc.glyphs)
+            else:
+                raise ParserError("Expected glyph name, range, or reference",
+                                  self.cur_token_location_)
         self.expect_symbol_("]")
         return result
 
