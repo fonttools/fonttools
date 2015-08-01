@@ -20,6 +20,13 @@ class LexerErrorTest(unittest.TestCase):
 
 
 class LexerTest(unittest.TestCase):
+    def __init__(self, methodName):
+        unittest.TestCase.__init__(self, methodName)
+        # Python 3 renamed assertRaisesRegexp to assertRaisesRegex,
+        # and fires deprecation warnings if a program uses the old name.
+        if not hasattr(self, "assertRaisesRegex"):
+            self.assertRaisesRegex = self.assertRaisesRegexp
+
     def test_empty(self):
         self.assertEqual(lex(""), [])
         self.assertEqual(lex(" \t "), [])
@@ -33,6 +40,11 @@ class LexerTest(unittest.TestCase):
 
     def test_cid(self):
         self.assertEqual(lex("\\0 \\987"), [(Lexer.CID, 0), (Lexer.CID, 987)])
+
+    def test_glyphclass(self):
+        self.assertEqual(lex("@Vowel.sc"), [(Lexer.GLYPHCLASS, "Vowel.sc")])
+        self.assertRaisesRegex(LexerError, "Expected glyph class", lex, "@(a)")
+        self.assertRaisesRegex(LexerError, "Expected glyph class", lex, "@ A")
 
     def test_include(self):
         self.assertEqual(lex("include (~/foo/bar baz.fea);"), [
@@ -81,7 +93,7 @@ class LexerTest(unittest.TestCase):
                           for (_, _, loc) in Lexer(s, "test.fea")]
         self.assertEqual(locs("a b # Comment\n12 @x"), [
             "test.fea:1:1", "test.fea:1:3", "test.fea:2:1",
-            "test.fea:2:4", "test.fea:2:5"
+            "test.fea:2:4"
         ])
 
     def test_scan_over_(self):

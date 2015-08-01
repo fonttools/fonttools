@@ -1,8 +1,9 @@
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
 from fontTools.feaLib.lexer import Lexer, IncludingLexer
-
 import fontTools.feaLib.ast as ast
+import os
+import re
 
 
 class ParserError(Exception):
@@ -30,12 +31,45 @@ class Parser(object):
 
     def parse(self):
         while self.next_token_type_ is not None:
-            keyword = self.expect_keyword_({"feature", "languagesystem"})
-            if keyword == "languagesystem":
+            self.advance_lexer_()
+            if self.cur_token_type_ is Lexer.GLYPHCLASS:
+                self.parse_glyphclass_definition_()
+            elif self.is_cur_keyword_("languagesystem"):
                 self.parse_languagesystem_()
-            elif keyword == "feature":
+            elif self.is_cur_keyword_("feature"):
                 break  # TODO: Implement
+            else:
+                raise ParserError("Expected languagesystem, feature, or "
+                                  "glyph class definition",
+                                  self.cur_token_location_)
         return self.doc_
+
+    def parse_glyphclass_definition_(self):
+        location, name = self.cur_token_location_, self.cur_token_
+        self.expect_symbol_("=")
+        glyphs = self.parse_glyphclass_reference_()
+        self.expect_symbol_(";")
+        glyphclass = ast.GlyphClassDefinition(location, name, glyphs)
+        self.doc_.statements.append(glyphclass)
+
+    def parse_glyphclass_reference_(self):
+        result = set()
+        self.expect_symbol_("[")
+        while self.next_token_ != "]":
+            if self.next_token_type_ is Lexer.NAME:
+                self.advance_lexer_()
+                if self.next_token_ == "-":
+                    range_location_ = self.cur_token_location_
+                    range_start = self.cur_token_
+                    self.expect_symbol_("-")
+                    range_end = self.expect_name_()
+                    result.update(self.make_glyph_range_(range_location_,
+                                                         range_start,
+                                                         range_end))
+                else:
+                    result.add(self.cur_token_)
+        self.expect_symbol_("]")
+        return result
 
     def parse_languagesystem_(self):
         location = self.cur_token_location_
@@ -44,13 +78,8 @@ class Parser(object):
         langsys = ast.LanguageSystemStatement(location, script, language)
         self.doc_.statements.append(langsys)
 
-    def expect_keyword_(self, keywords):
-        self.advance_lexer_()
-        if self.cur_token_type_ is Lexer.NAME and self.cur_token_ in keywords:
-            return self.cur_token_
-        s = ", ".join(sorted(list(keywords)))
-        raise ParserError("Expected one of %s" % s,
-                          self.cur_token_location_)
+    def is_cur_keyword_(self, k):
+        return (self.cur_token_type_ is Lexer.NAME) and (self.cur_token_ == k)
 
     def expect_tag_(self):
         self.advance_lexer_()
@@ -67,6 +96,12 @@ class Parser(object):
             return symbol
         raise ParserError("Expected '%s'" % symbol, self.cur_token_location_)
 
+    def expect_name_(self):
+        self.advance_lexer_()
+        if self.cur_token_type_ is Lexer.NAME:
+            return self.cur_token_
+        raise ParserError("Expected a name", self.cur_token_location_)
+
     def advance_lexer_(self):
         self.cur_token_type_, self.cur_token_, self.cur_token_location_ = (
             self.next_token_type_, self.next_token_, self.next_token_location_)
@@ -75,3 +110,45 @@ class Parser(object):
              self.next_token_location_) = self.lexer_.next()
         except StopIteration:
             self.next_token_type_, self.next_token_ = (None, None)
+
+    def make_glyph_range_(self, location, start, limit):
+        """("a.sc", "d.sc") --> {"a.sc", "b.sc", "c.sc", "d.sc"}"""
+        result = set()
+        if len(start) != len(limit):
+            raise ParserError(
+                "Bad range: \"%s\" and \"%s\" should have the same length" %
+                (start, limit), location)
+        rev = lambda s: ''.join(reversed(list(s)))  # string reversal
+        prefix = os.path.commonprefix([start, limit])
+        suffix = rev(os.path.commonprefix([rev(start), rev(limit)]))
+        if len(suffix) > 0:
+            start_range = start[len(prefix):-len(suffix)]
+            limit_range = limit[len(prefix):-len(suffix)]
+        else:
+            start_range = start[len(prefix):]
+            limit_range = limit[len(prefix):]
+
+        if start_range >= limit_range:
+            raise ParserError("Start of range must be smaller than its end",
+                              location)
+
+        uppercase = re.compile(r'^[A-Z]$')
+        if uppercase.match(start_range) and uppercase.match(limit_range):
+            for c in range(ord(start_range), ord(limit_range) + 1):
+                result.add("%s%c%s" % (prefix, c, suffix))
+            return result
+
+        lowercase = re.compile(r'^[a-z]$')
+        if lowercase.match(start_range) and lowercase.match(limit_range):
+            for c in range(ord(start_range), ord(limit_range) + 1):
+                result.add("%s%c%s" % (prefix, c, suffix))
+            return result
+
+        digits = re.compile(r'^[0-9]{1,3}$')
+        if digits.match(start_range) and digits.match(limit_range):
+            for i in range(int(start_range, 10), int(limit_range, 10) + 1):
+                number = ("000" + str(i))[-len(start_range):]
+                result.add("%s%s%s" % (prefix, number, suffix))
+            return result
+
+        raise ParserError("Bad range: \"%s-%s\"" % (start, limit), location)
