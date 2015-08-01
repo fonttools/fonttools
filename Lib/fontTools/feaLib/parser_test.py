@@ -20,8 +20,9 @@ class ParserTest(unittest.TestCase):
             self.assertRaisesRegex = self.assertRaisesRegexp
 
     def test_languagesystem(self):
-        langsys = self.parse("languagesystem latn DEU;").language_system
-        self.assertEqual(langsys, {"latn": {"DEU "}})
+        [langsys] = self.parse("languagesystem latn DEU;").statements
+        self.assertEqual(langsys.script, "latn")
+        self.assertEqual(langsys.language, "DEU ")
         self.assertRaisesRegex(
             ParserError, "Expected ';'",
             self.parse, "languagesystem latn DEU")
@@ -54,9 +55,9 @@ class ParserTest(unittest.TestCase):
 
     def roundtrip(self, testfile):
         buffer1, buffer2 = StringIO(), StringIO()
-        Parser(ParserTest.getpath(testfile)).parse().write(buffer1)
+        Parser(ParserTest.getpath(testfile)).parse().write(buffer1, os.linesep)
         text1 = buffer1.getvalue().decode("utf-8")
-        self.parse(text1).write(buffer2)
+        self.parse(text1).write(buffer2, os.linesep)
         text2 = buffer2.getvalue().decode("utf-8")
         self.assertEqual(text1, text2)
 

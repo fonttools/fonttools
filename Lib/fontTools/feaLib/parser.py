@@ -1,7 +1,8 @@
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
-from fontTools.feaLib.features import Features
 from fontTools.feaLib.lexer import Lexer, IncludingLexer
+
+import fontTools.feaLib.ast as ast
 
 
 class ParserError(Exception):
@@ -20,7 +21,7 @@ class ParserError(Exception):
 
 class Parser(object):
     def __init__(self, path):
-        self.doc_ = Features()
+        self.doc_ = ast.FeatureFile()
 
         self.next_token_type_, self.next_token_ = (None, None)
         self.next_token_location_ = None
@@ -37,10 +38,11 @@ class Parser(object):
         return self.doc_
 
     def parse_languagesystem_(self):
+        location = self.cur_token_location_
         script, language = self.expect_tag_(), self.expect_tag_()
         self.expect_symbol_(";")
-        langsys = self.doc_.language_system.setdefault(script, set())
-        langsys.add(language)
+        langsys = ast.LanguageSystemStatement(location, script, language)
+        self.doc_.statements.append(langsys)
 
     def expect_keyword_(self, keywords):
         self.advance_lexer_()
