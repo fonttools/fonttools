@@ -19,6 +19,62 @@ class ParserTest(unittest.TestCase):
         if not hasattr(self, "assertRaisesRegex"):
             self.assertRaisesRegex = self.assertRaisesRegexp
 
+    def test_glyphclass(self):
+        [gc] = self.parse("@dash = [endash emdash figuredash];").statements
+        self.assertEqual(gc.name, "dash")
+        self.assertEqual(gc.glyphs, {"endash", "emdash", "figuredash"})
+
+    def test_glyphclass_range_uppercase(self):
+        [gc] = self.parse("@swashes = [X.swash-Z.swash];").statements
+        self.assertEqual(gc.name, "swashes")
+        self.assertEqual(gc.glyphs, {"X.swash", "Y.swash", "Z.swash"})
+
+    def test_glyphclass_range_lowercase(self):
+        [gc] = self.parse("@defg.sc = [d.sc-g.sc];").statements
+        self.assertEqual(gc.name, "defg.sc")
+        self.assertEqual(gc.glyphs, {"d.sc", "e.sc", "f.sc", "g.sc"})
+
+    def test_glyphclass_range_digit1(self):
+        [gc] = self.parse("@range = [foo.2-foo.5];").statements
+        self.assertEqual(gc.glyphs, {"foo.2", "foo.3", "foo.4", "foo.5"})
+
+    def test_glyphclass_range_digit2(self):
+        [gc] = self.parse("@range = [foo.09-foo.11];").statements
+        self.assertEqual(gc.glyphs, {"foo.09", "foo.10", "foo.11"})
+
+    def test_glyphclass_range_digit3(self):
+        [gc] = self.parse("@range = [foo.123-foo.125];").statements
+        self.assertEqual(gc.glyphs, {"foo.123", "foo.124", "foo.125"})
+
+    def test_glyphclass_range_bad(self):
+        self.assertRaisesRegex(
+            ParserError,
+            "Bad range: \"a\" and \"foobar\" should have the same length",
+            self.parse, "@bad = [a-foobar];")
+        self.assertRaisesRegex(
+            ParserError, "Bad range: \"A.swash-z.swash\"",
+            self.parse, "@bad = [A.swash-z.swash];")
+        self.assertRaisesRegex(
+            ParserError, "Start of range must be smaller than its end",
+            self.parse, "@bad = [B.swash-A.swash];")
+        self.assertRaisesRegex(
+            ParserError, "Bad range: \"foo.1234-foo.9876\"",
+            self.parse, "@bad = [foo.1234-foo.9876];")
+
+    def test_glyphclass_range_mixed(self):
+        [gc] = self.parse("@range = [a foo.09-foo.11 X.sc-Z.sc];").statements
+        self.assertEqual(gc.glyphs, {
+            "a", "foo.09", "foo.10", "foo.11", "X.sc", "Y.sc", "Z.sc"
+        })
+
+    # TODO: self.parse("@foo = [a b]; @bar = [@foo];")
+    # TODO: self.parse("@foo = [a b]; @bar = @foo;")
+
+    def test_glyphclass_empty(self):
+        [gc] = self.parse("@empty_set = [];").statements
+        self.assertEqual(gc.name, "empty_set")
+        self.assertEqual(gc.glyphs, set())
+
     def test_languagesystem(self):
         [langsys] = self.parse("languagesystem latn DEU;").statements
         self.assertEqual(langsys.script, "latn")

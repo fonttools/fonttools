@@ -23,6 +23,7 @@ class Lexer(object):
     STRING = "STRING"
     NAME = "NAME"
     FILENAME = "FILENAME"
+    GLYPHCLASS = "GLYPHCLASS"
     CID = "CID"
     SYMBOL = "SYMBOL"
     COMMENT = "COMMENT"
@@ -30,7 +31,7 @@ class Lexer(object):
 
     CHAR_WHITESPACE_ = " \t"
     CHAR_NEWLINE_ = "\r\n"
-    CHAR_SYMBOL_ = ";:@-+'{}[]<>()"
+    CHAR_SYMBOL_ = ";:-+'{}[]<>()="
     CHAR_DIGIT_ = "0123456789"
     CHAR_LETTER_ = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
     CHAR_NAME_START_ = CHAR_LETTER_ + "_.\\"
@@ -101,6 +102,13 @@ class Lexer(object):
             self.pos_ += 1
             self.scan_over_(Lexer.CHAR_DIGIT_)
             return (Lexer.CID, int(text[start + 1:self.pos_], 10), location)
+        if cur_char == "@":
+            self.pos_ += 1
+            self.scan_over_(Lexer.CHAR_NAME_CONTINUATION_)
+            glyphclass = text[start + 1:self.pos_]
+            if len(glyphclass) < 1:
+                raise LexerError("Expected glyph class name", location)
+            return (Lexer.GLYPHCLASS, glyphclass, location)
         if cur_char in Lexer.CHAR_NAME_START_:
             self.pos_ += 1
             self.scan_over_(Lexer.CHAR_NAME_CONTINUATION_)

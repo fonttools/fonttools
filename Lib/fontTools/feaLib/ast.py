@@ -6,7 +6,7 @@ def write(buffer, text):
     buffer.write(text.encode("utf-8"))
 
 
-class FeatureFile:
+class FeatureFile(object):
     def __init__(self):
         self.statements = []
 
@@ -15,7 +15,18 @@ class FeatureFile:
             s.write(out, linesep)
 
 
-class LanguageSystemStatement:
+class GlyphClassDefinition(object):
+    def __init__(self, location, name, glyphs):
+        self.location = location
+        self.name = name
+        self.glyphs = glyphs
+
+    def write(self, out, linesep):
+        glyphs = " ".join(sorted(self.glyphs))
+        write(out, "@%s = [%s];%s" % (self.name, glyphs, linesep))
+
+
+class LanguageSystemStatement(object):
     def __init__(self, location, script, language):
         self.location = location
         self.script, self.language = (script, language)
