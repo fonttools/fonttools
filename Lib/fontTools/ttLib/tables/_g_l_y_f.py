@@ -4,7 +4,7 @@ from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from fontTools import ttLib
-from fontTools.misc.textTools import safeEval
+from fontTools.misc.textTools import safeEval, pad
 from fontTools.misc.arrayTools import calcBounds, calcIntBounds, pointInRect
 from fontTools.misc.bezierTools import calcQuadraticBounds
 from fontTools.misc.fixedTools import fixedToFloat as fi2fl, floatToFixed as fl2fi
@@ -61,6 +61,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 	def compile(self, ttFont):
 		if not hasattr(self, "glyphOrder"):
 			self.glyphOrder = ttFont.getGlyphOrder()
+		padding = self.padding if hasattr(self, 'padding') else None
 		locations = []
 		currentLocation = 0
 		dataList = []
@@ -68,12 +69,14 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 		for glyphName in self.glyphOrder:
 			glyph = self.glyphs[glyphName]
 			glyphData = glyph.compile(self, recalcBBoxes)
+			if padding:
+				glyphData = pad(glyphData, size=padding)
 			locations.append(currentLocation)
 			currentLocation = currentLocation + len(glyphData)
 			dataList.append(glyphData)
 		locations.append(currentLocation)
 
-		if currentLocation < 0x20000:
+		if padding is None and currentLocation < 0x20000:
 			# See if we can pad any odd-lengthed glyphs to allow loca
 			# table to use the short offsets.
 			indices = [i for i,glyphData in enumerate(dataList) if len(glyphData) % 2 == 1]
@@ -90,7 +93,8 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 		data = bytesjoin(dataList)
 		if 'loca' in ttFont:
 			ttFont['loca'].set(locations)
-		ttFont['maxp'].numGlyphs = len(self.glyphs)
+		if 'maxp' in ttFont:
+			ttFont['maxp'].numGlyphs = len(self.glyphs)
 		return data
 
 	def toXML(self, writer, ttFont, progress=None):
