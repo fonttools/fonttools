@@ -501,7 +501,10 @@ class TTFont(object):
 		# to work with (so we don't get called recursively).
 		self.glyphOrder = glyphOrder
 		# Get a (new) temporary cmap (based on the just invented names)
-		tempcmap = self['cmap'].getcmap(3, 1)
+		try:
+			tempcmap = self['cmap'].getcmap(3, 1)
+		except KeyError:
+			tempcmap = None
 		if tempcmap is not None:
 			# we have a unicode cmap
 			from fontTools import agl
