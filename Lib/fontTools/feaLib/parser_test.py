@@ -1,7 +1,7 @@
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
 from fontTools.feaLib.lexer import LexerError
-from fontTools.feaLib.parser import Parser, ParserError
+from fontTools.feaLib.parser import Parser, ParserError, SymbolTable
 from fontTools.misc.py23 import *
 import codecs
 import os
@@ -160,6 +160,22 @@ class ParserTest(unittest.TestCase):
     def getpath(testfile):
         path, _ = os.path.split(__file__)
         return os.path.join(path, "testdata", testfile)
+
+
+class SymbolTableTest(unittest.TestCase):
+    def test_scopes(self):
+        symtab = SymbolTable()
+        symtab.define("foo", 23)
+        self.assertEqual(symtab.resolve("foo"), 23)
+        symtab.enter_scope()
+        self.assertEqual(symtab.resolve("foo"), 23)
+        symtab.define("foo", 42)
+        self.assertEqual(symtab.resolve("foo"), 42)
+        symtab.exit_scope()
+        self.assertEqual(symtab.resolve("foo"), 23)
+
+    def test_resolve_undefined(self):
+        self.assertEqual(SymbolTable().resolve("abc"), None)
 
 
 if __name__ == "__main__":
