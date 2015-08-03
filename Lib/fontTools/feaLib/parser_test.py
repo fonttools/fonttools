@@ -26,7 +26,8 @@ class ParserTest(unittest.TestCase):
 
     def test_glyphclass_bad(self):
         self.assertRaisesRegex(
-            ParserError, "Expected glyph name, range, or reference",
+            ParserError,
+            "Expected glyph name, glyph range, or glyph class reference",
             self.parse, "@bad = [a 123];")
 
     def test_glyphclass_duplicate(self):
