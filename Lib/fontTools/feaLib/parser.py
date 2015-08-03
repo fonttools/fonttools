@@ -92,8 +92,10 @@ class Parser(object):
                         self.cur_token_location_)
                 result.update(gc.glyphs)
             else:
-                raise ParserError("Expected glyph name, range, or reference",
-                                  self.cur_token_location_)
+                raise ParserError(
+                    "Expected glyph name, glyph range, "
+                    "or glyph class reference",
+                    self.cur_token_location_)
         self.expect_symbol_("]")
         return result
 
