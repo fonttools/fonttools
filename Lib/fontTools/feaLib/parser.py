@@ -23,8 +23,9 @@ class ParserError(Exception):
 class Parser(object):
     def __init__(self, path):
         self.doc_ = ast.FeatureFile()
-        self.glyphclasses_ = [{}]
-
+        self.glyphclasses_ = SymbolTable()
+        self.valuerecords_ = SymbolTable()
+        self.symbol_tables_ = [self.glyphclasses_, self.valuerecords_]
         self.next_token_type_, self.next_token_ = (None, None)
         self.next_token_location_ = None
         self.lexer_ = IncludingLexer(path)
@@ -46,30 +47,23 @@ class Parser(object):
                                   self.cur_token_location_)
         return self.doc_
 
-    def resolve_glyphclass_(self, name):
-        for symtab in reversed(self.glyphclasses_):
-            gc = symtab.get(name)
-            if gc:
-                return gc
-        return None
-
     def parse_glyphclass_definition_(self):
         location, name = self.cur_token_location_, self.cur_token_
         self.expect_symbol_("=")
         glyphs = self.parse_glyphclass_reference_()
         self.expect_symbol_(";")
-        if self.resolve_glyphclass_(name) is not None:
+        if self.glyphclasses_.resolve(name) is not None:
             raise ParserError("Glyph class @%s already defined" % name,
                               location)
         glyphclass = ast.GlyphClassDefinition(location, name, glyphs)
-        self.glyphclasses_[-1][name] = glyphclass
+        self.glyphclasses_.define(name, glyphclass)
         return glyphclass
 
     def parse_glyphclass_reference_(self):
         result = set()
         if self.next_token_type_ is Lexer.GLYPHCLASS:
             self.advance_lexer_()
-            gc = self.resolve_glyphclass_(self.cur_token_)
+            gc = self.glyphclasses_.resolve(self.cur_token_)
             if gc is None:
                 raise ParserError("Unknown glyph class @%s" % self.cur_token_,
                                   self.cur_token_location_)
@@ -91,7 +85,7 @@ class Parser(object):
                 else:
                     result.add(self.cur_token_)
             elif self.cur_token_type_ is Lexer.GLYPHCLASS:
-                gc = self.resolve_glyphclass_(self.cur_token_)
+                gc = self.glyphclasses_.resolve(self.cur_token_)
                 if gc is None:
                     raise ParserError(
                         "Unknown glyph class @%s" % self.cur_token_,
@@ -115,8 +109,11 @@ class Parser(object):
         assert self.cur_token_ == "feature"
         location = self.cur_token_location_
         tag = self.expect_tag_()
+
         self.expect_symbol_("{")
-        self.glyphclasses_.append({})
+        for symtab in self.symbol_tables_:
+            symtab.enter_scope()
+
         block = ast.FeatureBlock(location, tag)
         self.doc_.statements.append(block)
 
@@ -129,7 +126,9 @@ class Parser(object):
                                   self.cur_token_location_)
 
         self.expect_symbol_("}")
-        self.glyphclasses_.pop()
+        for symtab in self.symbol_tables_:
+            symtab.exit_scope()
+
         endtag = self.expect_tag_()
         if tag != endtag:
             raise ParserError("Expected \"%s\"" % tag.strip(),
@@ -210,3 +209,24 @@ class Parser(object):
             return result
 
         raise ParserError("Bad range: \"%s-%s\"" % (start, limit), location)
+
+
+class SymbolTable(object):
+    def __init__(self):
+        self.scopes_ = [{}]
+
+    def enter_scope(self):
+        self.scopes_.append({})
+
+    def exit_scope(self):
+        self.scopes_.pop()
+
+    def define(self, name, item):
+        self.scopes_[-1][name] = item
+
+    def resolve(self, name):
+        for scope in reversed(self.scopes_):
+            item = scope.get(name)
+            if item:
+                return item
+        return None
