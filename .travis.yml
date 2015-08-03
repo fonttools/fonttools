@@ -6,6 +6,7 @@ python:
   - "pypy"
   - "pypy3"
 install:
+  - pip install -vr requirements.txt
   - make install
 script:
   - make check
