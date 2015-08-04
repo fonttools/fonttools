@@ -48,3 +48,17 @@ class LanguageSystemStatement(object):
     def write(self, out, linesep):
         write(out, "languagesystem %s %s;%s" %
               (self.script.strip(), self.language.strip(), linesep))
+
+
+class ValueRecord(object):
+    def __init__(self, location, xPlacement, yPlacement, xAdvance, yAdvance):
+        self.location = location
+        self.xPlacement, self.yPlacement = (xPlacement, yPlacement)
+        self.xAdvance, self.yAdvance = (xAdvance, yAdvance)
+
+
+class ValueRecordDefinition(object):
+    def __init__(self, location, name, value):
+        self.location = location
+        self.name = name
+        self.value = value
