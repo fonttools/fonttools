@@ -109,6 +109,36 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(liga.statements[0].glyphs, {"a", "b", "l"})
         self.assertEqual(smcp.statements[0].glyphs, {"a", "b", "s"})
 
+    def test_substitute_single_format_a(self):  # GSUB LookupType 1
+        doc = self.parse("feature smcp {substitute a by a.sc;} smcp;")
+        sub = doc.statements[0].statements[0]
+        self.assertEqual(sub.old, [{"a"}])
+        self.assertEqual(sub.new, [{"a.sc"}])
+
+    def test_substitute_single_format_b(self):  # GSUB LookupType 1
+        doc = self.parse(
+            "feature smcp {"
+            "    substitute [one.fitted one.oldstyle] by one;"
+            "} smcp;")
+        sub = doc.statements[0].statements[0]
+        self.assertEqual(sub.old, [{"one.fitted", "one.oldstyle"}])
+        self.assertEqual(sub.new, [{"one"}])
+
+    def test_substitute_single_format_c(self):  # GSUB LookupType 1
+        doc = self.parse(
+            "feature smcp {"
+            "    substitute [a-d] by [A.sc-D.sc];"
+            "} smcp;")
+        sub = doc.statements[0].statements[0]
+        self.assertEqual(sub.old, [{"a", "b", "c", "d"}])
+        self.assertEqual(sub.new, [{"A.sc", "B.sc", "C.sc", "D.sc"}])
+
+    def test_substitute_ligature(self):  # GSUB LookupType 4
+        doc = self.parse("feature liga {substitute f f i by f_f_i;} liga;")
+        sub = doc.statements[0].statements[0]
+        self.assertEqual(sub.old, [{"f"}, {"f"}, {"i"}])
+        self.assertEqual(sub.new, [{"f_f_i"}])
+
     def test_valuerecord_format_a_horizontal(self):
         doc = self.parse("feature liga {valueRecordDef 123 foo;} liga;")
         value = doc.statements[0].statements[0].value

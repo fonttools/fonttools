@@ -53,7 +53,7 @@ class Parser(object):
     def parse_glyphclass_definition_(self):
         location, name = self.cur_token_location_, self.cur_token_
         self.expect_symbol_("=")
-        glyphs = self.parse_glyphclass_reference_()
+        glyphs = self.parse_glyphclass_(accept_glyphname=False)
         self.expect_symbol_(";")
         if self.glyphclasses_.resolve(name) is not None:
             raise ParserError("Glyph class @%s already defined" % name,
@@ -62,8 +62,11 @@ class Parser(object):
         self.glyphclasses_.define(name, glyphclass)
         return glyphclass
 
-    def parse_glyphclass_reference_(self):
+    def parse_glyphclass_(self, accept_glyphname):
         result = set()
+        if accept_glyphname and self.next_token_type_ is Lexer.NAME:
+            result.add(self.expect_name_())
+            return result
         if self.next_token_type_ is Lexer.GLYPHCLASS:
             self.advance_lexer_()
             gc = self.glyphclasses_.resolve(self.cur_token_)
@@ -101,6 +104,31 @@ class Parser(object):
                     self.cur_token_location_)
         self.expect_symbol_("]")
         return result
+
+    def parse_substitute_(self):
+        assert self.is_cur_keyword_("substitute") or self.is_cur_keyword("sub")
+        location = self.cur_token_location_
+        old_prefix, old, old_suffix = ([], [], [])
+        while self.next_token_ != "by":
+            gc = self.parse_glyphclass_(accept_glyphname=True)
+            marked = False
+            if self.next_token_ == "'":
+                self.expect_symbol_("'")
+            if marked:
+                old.append(gc)
+            elif old:
+                old_suffix.append(gc)
+            else:
+                old_prefix.append(gc)
+        if not old and not old_suffix:  # eg., "sub f f i by"
+            old = old_prefix
+            old_prefix = []
+        assert self.expect_name_() == "by"
+        new = self.parse_glyphclass_(accept_glyphname=True)
+        self.expect_symbol_(";")
+        rule = ast.SubstitutionRule(location, old, [new])
+        rule.old_prefix, rule.old_suffix = old_prefix, old_suffix
+        return rule
 
     def parse_valuerecord_(self, vertical):
         if self.next_token_type_ is Lexer.NUMBER:
@@ -165,6 +193,9 @@ class Parser(object):
             self.advance_lexer_()
             if self.cur_token_type_ is Lexer.GLYPHCLASS:
                 statements.append(self.parse_glyphclass_definition_())
+            elif (self.is_cur_keyword_("substitute") or
+                  self.is_cur_keyword_("sub")):
+                statements.append(self.parse_substitute_())
             elif self.is_cur_keyword_("valueRecordDef"):
                 statements.append(self.parse_valuerecord_definition_(vertical))
             else:
