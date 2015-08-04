@@ -50,6 +50,14 @@ class LanguageSystemStatement(object):
               (self.script.strip(), self.language.strip(), linesep))
 
 
+class SubstitutionRule(object):
+    def __init__(self, location, old, new):
+        self.location, self.old, self.new = (location, old, new)
+        self.ignored = False
+        self.old_prefix = []
+        self.old_suffix = []
+
+
 class ValueRecord(object):
     def __init__(self, location, xPlacement, yPlacement, xAdvance, yAdvance):
         self.location = location
