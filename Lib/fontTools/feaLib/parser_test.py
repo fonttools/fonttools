@@ -109,6 +109,44 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(liga.statements[0].glyphs, {"a", "b", "l"})
         self.assertEqual(smcp.statements[0].glyphs, {"a", "b", "s"})
 
+    def test_valuerecord_format_a_horizontal(self):
+        doc = self.parse("feature liga {valueRecordDef 123 foo;} liga;")
+        value = doc.statements[0].statements[0].value
+        self.assertEqual(value.xPlacement, 0)
+        self.assertEqual(value.yPlacement, 0)
+        self.assertEqual(value.xAdvance, 123)
+        self.assertEqual(value.yAdvance, 0)
+
+    def test_valuerecord_format_a_vertical(self):
+        doc = self.parse("feature vkrn {valueRecordDef 123 foo;} vkrn;")
+        value = doc.statements[0].statements[0].value
+        self.assertEqual(value.xPlacement, 0)
+        self.assertEqual(value.yPlacement, 0)
+        self.assertEqual(value.xAdvance, 0)
+        self.assertEqual(value.yAdvance, 123)
+
+    def test_valuerecord_format_b(self):
+        doc = self.parse("feature liga {valueRecordDef <1 2 3 4> foo;} liga;")
+        value = doc.statements[0].statements[0].value
+        self.assertEqual(value.xPlacement, 1)
+        self.assertEqual(value.yPlacement, 2)
+        self.assertEqual(value.xAdvance, 3)
+        self.assertEqual(value.yAdvance, 4)
+
+    def test_valuerecord_named(self):
+        doc = self.parse("valueRecordDef <1 2 3 4> foo;"
+                         "feature liga {valueRecordDef <foo> bar;} liga;")
+        value = doc.statements[1].statements[0].value
+        self.assertEqual(value.xPlacement, 1)
+        self.assertEqual(value.yPlacement, 2)
+        self.assertEqual(value.xAdvance, 3)
+        self.assertEqual(value.yAdvance, 4)
+
+    def test_valuerecord_named_unknown(self):
+        self.assertRaisesRegex(
+            ParserError, "Unknown valueRecordDef \"unknown\"",
+            self.parse, "valueRecordDef <unknown> foo;")
+
     def test_languagesystem(self):
         [langsys] = self.parse("languagesystem latn DEU;").statements
         self.assertEqual(langsys.script, "latn")

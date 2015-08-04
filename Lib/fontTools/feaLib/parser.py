@@ -32,11 +32,14 @@ class Parser(object):
         self.advance_lexer_()
 
     def parse(self):
+        statements = self.doc_.statements
         while self.next_token_type_ is not None:
             self.advance_lexer_()
             if self.cur_token_type_ is Lexer.GLYPHCLASS:
-                glyphclass = self.parse_glyphclass_definition_()
-                self.doc_.statements.append(glyphclass)
+                statements.append(self.parse_glyphclass_definition_())
+            elif self.is_cur_keyword_("valueRecordDef"):
+                statements.append(
+                    self.parse_valuerecord_definition_(vertical=False))
             elif self.is_cur_keyword_("languagesystem"):
                 self.parse_languagesystem_()
             elif self.is_cur_keyword_("feature"):
@@ -99,6 +102,43 @@ class Parser(object):
         self.expect_symbol_("]")
         return result
 
+    def parse_valuerecord_(self, vertical):
+        if self.next_token_type_ is Lexer.NUMBER:
+            number, location = self.expect_number_(), self.cur_token_location_
+            if vertical:
+                val = ast.ValueRecord(location, 0, 0, 0, number)
+            else:
+                val = ast.ValueRecord(location, 0, 0, number, 0)
+            return val
+        self.expect_symbol_("<")
+        location = self.cur_token_location_
+        if self.next_token_type_ is Lexer.NAME:
+            name = self.expect_name_()
+            vrd = self.valuerecords_.resolve(name)
+            if vrd is None:
+                raise ParserError("Unknown valueRecordDef \"%s\"" % name,
+                                  self.cur_token_location_)
+            value = vrd.value
+            xPlacement, yPlacement = (value.xPlacement, value.yPlacement)
+            xAdvance, yAdvance = (value.xAdvance, value.yAdvance)
+        else:
+            xPlacement, yPlacement, xAdvance, yAdvance = (
+                self.expect_number_(), self.expect_number_(),
+                self.expect_number_(), self.expect_number_())
+        self.expect_symbol_(">")
+        return ast.ValueRecord(
+            location, xPlacement, yPlacement, xAdvance, yAdvance)
+
+    def parse_valuerecord_definition_(self, vertical):
+        assert self.is_cur_keyword_("valueRecordDef")
+        location = self.cur_token_location_
+        value = self.parse_valuerecord_(vertical)
+        name = self.expect_name_()
+        self.expect_symbol_(";")
+        vrd = ast.ValueRecordDefinition(location, name, value)
+        self.valuerecords_.define(name, vrd)
+        return vrd
+
     def parse_languagesystem_(self):
         assert self.cur_token_ == "languagesystem"
         location = self.cur_token_location_
@@ -111,6 +151,7 @@ class Parser(object):
         assert self.cur_token_ == "feature"
         location = self.cur_token_location_
         tag = self.expect_tag_()
+        vertical = (tag == "vkrn")
 
         self.expect_symbol_("{")
         for symtab in self.symbol_tables_:
@@ -118,11 +159,14 @@ class Parser(object):
 
         block = ast.FeatureBlock(location, tag)
         self.doc_.statements.append(block)
+        statements = block.statements
 
         while self.next_token_ != "}":
             self.advance_lexer_()
             if self.cur_token_type_ is Lexer.GLYPHCLASS:
-                block.statements.append(self.parse_glyphclass_definition_())
+                statements.append(self.parse_glyphclass_definition_())
+            elif self.is_cur_keyword_("valueRecordDef"):
+                statements.append(self.parse_valuerecord_definition_(vertical))
             else:
                 raise ParserError("Expected glyph class definition",
                                   self.cur_token_location_)
@@ -160,6 +204,12 @@ class Parser(object):
         if self.cur_token_type_ is Lexer.NAME:
             return self.cur_token_
         raise ParserError("Expected a name", self.cur_token_location_)
+
+    def expect_number_(self):
+        self.advance_lexer_()
+        if self.cur_token_type_ is Lexer.NUMBER:
+            return self.cur_token_
+        raise ParserError("Expected a number", self.cur_token_location_)
 
     def advance_lexer_(self):
         self.cur_token_type_, self.cur_token_, self.cur_token_location_ = (
