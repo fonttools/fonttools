@@ -168,8 +168,9 @@ class Parser(object):
             elif self.is_cur_keyword_("valueRecordDef"):
                 statements.append(self.parse_valuerecord_definition_(vertical))
             else:
-                raise ParserError("Expected glyph class definition",
-                                  self.cur_token_location_)
+                raise ParserError(
+                    "Expected glyph class definition or valueRecordDef",
+                    self.cur_token_location_)
 
         self.expect_symbol_("}")
         for symtab in self.symbol_tables_:
