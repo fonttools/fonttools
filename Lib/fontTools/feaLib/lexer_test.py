@@ -65,6 +65,8 @@ class LexerTest(unittest.TestCase):
     def test_number(self):
         self.assertEqual(lex("123 -456"),
                          [(Lexer.NUMBER, 123), (Lexer.NUMBER, -456)])
+        self.assertEqual(lex("0xCAFED00D"), [(Lexer.NUMBER, 0xCAFED00D)])
+        self.assertEqual(lex("0xcafed00d"), [(Lexer.NUMBER, 0xCAFED00D)])
 
     def test_symbol(self):
         self.assertEqual(lex("a'"), [(Lexer.NAME, "a"), (Lexer.SYMBOL, "'")])
