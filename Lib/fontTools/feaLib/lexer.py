@@ -33,6 +33,7 @@ class Lexer(object):
     CHAR_NEWLINE_ = "\r\n"
     CHAR_SYMBOL_ = ";:-+'{}[]<>()="
     CHAR_DIGIT_ = "0123456789"
+    CHAR_HEXDIGIT_ = "0123456789ABCDEFabcdef"
     CHAR_LETTER_ = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
     CHAR_NAME_START_ = CHAR_LETTER_ + "_.\\"
     CHAR_NAME_CONTINUATION_ = CHAR_LETTER_ + CHAR_DIGIT_ + "_."
@@ -120,6 +121,10 @@ class Lexer(object):
             if token == "include":
                 self.mode_ = Lexer.MODE_FILENAME_
             return (Lexer.NAME, token, location)
+        if cur_char == "0" and next_char in "xX":
+            self.pos_ += 2
+            self.scan_over_(Lexer.CHAR_HEXDIGIT_)
+            return (Lexer.NUMBER, int(text[start:self.pos_], 16), location)
         if cur_char in Lexer.CHAR_DIGIT_:
             self.scan_over_(Lexer.CHAR_DIGIT_)
             return (Lexer.NUMBER, int(text[start:self.pos_], 10), location)
