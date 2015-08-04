@@ -147,6 +147,16 @@ class ParserTest(unittest.TestCase):
             ParserError, "Unknown valueRecordDef \"unknown\"",
             self.parse, "valueRecordDef <unknown> foo;")
 
+    def test_valuerecord_scoping(self):
+        [foo, liga, smcp] = self.parse(
+            "valueRecordDef 789 foo;"
+            "feature liga {valueRecordDef <foo> bar;} liga;"
+            "feature smcp {valueRecordDef <foo> bar;} smcp;"
+        ).statements
+        self.assertEqual(foo.value.xAdvance, 789)
+        self.assertEqual(liga.statements[0].value.xAdvance, 789)
+        self.assertEqual(smcp.statements[0].value.xAdvance, 789)
+
     def test_languagesystem(self):
         [langsys] = self.parse("languagesystem latn DEU;").statements
         self.assertEqual(langsys.script, "latn")
