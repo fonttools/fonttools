@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 from fontTools.feaLib.lexer import LexerError
 from fontTools.feaLib.parser import Parser, ParserError, SymbolTable
 from fontTools.misc.py23 import *
+import fontTools.feaLib.ast as ast
 import codecs
 import os
 import shutil
@@ -109,6 +110,25 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(liga.statements[0].glyphs, {"a", "b", "l"})
         self.assertEqual(smcp.statements[0].glyphs, {"a", "b", "s"})
 
+    def test_ignore_sub(self):
+        doc = self.parse("feature test {ignore sub e t' c;} test;")
+        s = doc.statements[0].statements[0]
+        self.assertEqual(type(s), ast.IgnoreSubstitutionRule)
+        self.assertEqual(s.prefix, [{"e"}])
+        self.assertEqual(s.glyphs, [{"t"}])
+        self.assertEqual(s.suffix, [{"c"}])
+
+    def test_ignore_substitute(self):
+        doc = self.parse(
+            "feature test {"
+            "    ignore substitute f [a e] d' [a u]' [e y];"
+            "} test;")
+        s = doc.statements[0].statements[0]
+        self.assertEqual(type(s), ast.IgnoreSubstitutionRule)
+        self.assertEqual(s.prefix, [{"f"}, {"a", "e"}])
+        self.assertEqual(s.glyphs, [{"d"}, {"a", "u"}])
+        self.assertEqual(s.suffix, [{"e", "y"}])
+
     def test_substitute_single_format_a(self):  # GSUB LookupType 1
         doc = self.parse("feature smcp {substitute a by a.sc;} smcp;")
         sub = doc.statements[0].statements[0]
@@ -146,6 +166,11 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(sub.old, [{"f"}, {"f"}, {"i"}])
         self.assertEqual(sub.old_suffix, [])
         self.assertEqual(sub.new, [{"f_f_i"}])
+
+    def test_substitute_missing_by(self):
+        self.assertRaisesRegex(
+            ParserError, "Expected \"by\"",
+            self.parse, "feature liga {substitute f f i;} liga;")
 
     def test_valuerecord_format_a_horizontal(self):
         doc = self.parse("feature liga {valueRecordDef 123 foo;} liga;")

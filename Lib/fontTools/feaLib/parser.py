@@ -105,25 +105,40 @@ class Parser(object):
         self.expect_symbol_("]")
         return result
 
-    def parse_substitute_(self):
-        assert self.is_cur_keyword_("substitute") or self.is_cur_keyword("sub")
-        location = self.cur_token_location_
-        old_prefix, old, old_suffix = ([], [], [])
-        while self.next_token_ != "by":
+    def parse_glyph_pattern_(self):
+        prefix, glyphs, suffix = ([], [], [])
+        while self.next_token_ not in {"by", ";"}:
             gc = self.parse_glyphclass_(accept_glyphname=True)
             marked = False
             if self.next_token_ == "'":
                 self.expect_symbol_("'")
+                marked = True
             if marked:
-                old.append(gc)
-            elif old:
-                old_suffix.append(gc)
+                glyphs.append(gc)
+            elif glyphs:
+                suffix.append(gc)
             else:
-                old_prefix.append(gc)
-        if not old and not old_suffix:  # eg., "sub f f i by"
-            old = old_prefix
-            old_prefix = []
-        assert self.expect_name_() == "by"
+                prefix.append(gc)
+        if not glyphs and not suffix:  # eg., "sub f f i by"
+            return ([], prefix, [])
+        else:
+            return (prefix, glyphs, suffix)
+
+    def parse_ignore_(self):
+        assert self.is_cur_keyword_("ignore")
+        location = self.cur_token_location_
+        self.advance_lexer_()
+        if self.cur_token_ in ["substitute", "sub"]:
+            prefix, glyphs, suffix = self.parse_glyph_pattern_()
+            self.expect_symbol_(";")
+            return ast.IgnoreSubstitutionRule(location, prefix, glyphs, suffix)
+        raise ParserError("Expected \"substitute\"", self.next_token_location_)
+
+    def parse_substitute_(self):
+        assert self.cur_token_ in {"substitute", "sub"}
+        location = self.cur_token_location_
+        old_prefix, old, old_suffix = self.parse_glyph_pattern_()
+        self.expect_keyword_("by")
         new = self.parse_glyphclass_(accept_glyphname=True)
         self.expect_symbol_(";")
         rule = ast.SubstitutionRule(location, old, [new])
@@ -193,6 +208,8 @@ class Parser(object):
             self.advance_lexer_()
             if self.cur_token_type_ is Lexer.GLYPHCLASS:
                 statements.append(self.parse_glyphclass_definition_())
+            elif self.is_cur_keyword_("ignore"):
+                statements.append(self.parse_ignore_())
             elif (self.is_cur_keyword_("substitute") or
                   self.is_cur_keyword_("sub")):
                 statements.append(self.parse_substitute_())
@@ -200,7 +217,8 @@ class Parser(object):
                 statements.append(self.parse_valuerecord_definition_(vertical))
             else:
                 raise ParserError(
-                    "Expected glyph class definition or valueRecordDef",
+                    "Expected glyph class definition, substitute, "
+                    "or valueRecordDef",
                     self.cur_token_location_)
 
         self.expect_symbol_("}")
@@ -230,6 +248,13 @@ class Parser(object):
         if self.cur_token_type_ is Lexer.SYMBOL and self.cur_token_ == symbol:
             return symbol
         raise ParserError("Expected '%s'" % symbol, self.cur_token_location_)
+
+    def expect_keyword_(self, keyword):
+        self.advance_lexer_()
+        if self.cur_token_type_ is Lexer.NAME and self.cur_token_ == keyword:
+            return self.cur_token_
+        raise ParserError("Expected \"%s\"" % keyword,
+                          self.cur_token_location_)
 
     def expect_name_(self):
         self.advance_lexer_()

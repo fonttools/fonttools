@@ -50,10 +50,15 @@ class LanguageSystemStatement(object):
               (self.script.strip(), self.language.strip(), linesep))
 
 
+class IgnoreSubstitutionRule(object):
+    def __init__(self, location, prefix, glyphs, suffix):
+        self.location = location
+        self.prefix, self.glyphs, self.suffix = (prefix, glyphs, suffix)
+
+
 class SubstitutionRule(object):
     def __init__(self, location, old, new):
         self.location, self.old, self.new = (location, old, new)
-        self.ignored = False
         self.old_prefix = []
         self.old_suffix = []
 
