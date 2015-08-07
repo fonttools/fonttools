@@ -64,7 +64,7 @@ class SFNTResourceReader(object):
 			res = Res.Get1NamedResource('sfnt', res_name_or_index)
 		else:
 			res = Res.Get1IndResource('sfnt', res_name_or_index)
-		self.file = StringIO(res.data)
+		self.file = BytesIO(res.data)
 		Res.CloseResFile(resref)
 		self.name = path
 

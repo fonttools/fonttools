@@ -52,7 +52,7 @@ class NameRecordTest(unittest.TestCase):
 		self.assertRaises(UnicodeDecodeError, name.toUnicode)
 
 	def toXML(self, name):
-		writer = XMLWriter(StringIO())
+		writer = XMLWriter(BytesIO())
 		name.toXML(writer, ttFont=None)
 		xml = writer.file.getvalue().decode("utf_8").strip()
 		return xml.split(writer.newlinestr.decode("utf_8"))[1:]
