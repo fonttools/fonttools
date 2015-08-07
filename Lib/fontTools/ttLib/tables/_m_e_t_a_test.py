@@ -35,7 +35,7 @@ class MetaTableTest(unittest.TestCase):
     def test_toXML(self):
         table = table__m_e_t_a()
         table.data["TEST"] = b"\xCA\xFE\xBE\xEF"
-        writer = XMLWriter(StringIO())
+        writer = XMLWriter(BytesIO())
         table.toXML(writer, {"meta": table})
         xml = writer.file.getvalue().decode("utf-8")
         self.assertEqual([

@@ -30,7 +30,7 @@ class Test_l_t_a_g(unittest.TestCase):
 		self.assertEqual(["sr-Latn", "fa"], table.tags)
 
 	def test_toXML(self):
-		writer = XMLWriter(StringIO())
+		writer = XMLWriter(BytesIO())
 		table = table__l_t_a_g()
 		table.decompile(self.DATA_, ttFont=None)
 		table.toXML(writer, ttFont=None)

@@ -165,11 +165,11 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 				doc = data[start:end]
 				if doc.startswith(b"\x1f\x8b"):
 					import gzip
-					stringIO = StringIO(doc)
-					with gzip.GzipFile(None, "r", fileobj=stringIO) as gunzipper:
+					bytesIO = BytesIO(doc)
+					with gzip.GzipFile(None, "r", fileobj=bytesIO) as gunzipper:
 						doc = gunzipper.read()
 					self.compressed = True
-					del stringIO
+					del bytesIO
 				doc = tostr(doc, "utf_8")
 				self.docList.append( [doc, entry.startGlyphID, entry.endGlyphID] )
 
@@ -195,13 +195,13 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 			docBytes = tobytes(doc, encoding="utf_8")
 			if getattr(self, "compressed", False) and not docBytes.startswith(b"\x1f\x8b"):
 				import gzip
-				stringIO = StringIO()
-				with gzip.GzipFile(None, "w", fileobj=stringIO) as gzipper:
+				bytesIO = BytesIO()
+				with gzip.GzipFile(None, "w", fileobj=bytesIO) as gzipper:
 					gzipper.write(docBytes)
-				gzipped = stringIO.getvalue()
+				gzipped = bytesIO.getvalue()
 				if len(gzipped) < len(docBytes):
 					docBytes = gzipped
-				del gzipped, stringIO
+				del gzipped, bytesIO
 			docLength = len(docBytes)
 			curOffset += docLength
 			entry = struct.pack(">HHLL", startGlyphID, endGlyphID, docOffset, docLength)

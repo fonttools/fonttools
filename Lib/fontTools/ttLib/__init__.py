@@ -169,7 +169,7 @@ class TTFont(object):
 			# assume "file" is a readable file object
 			closeStream = False
 		# read input file in memory and wrap a stream around it to allow overwriting
-		tmp = StringIO(file.read())
+		tmp = BytesIO(file.read())
 		if hasattr(file, 'name'):
 			# save reference to input file name
 			tmp.name = file.name

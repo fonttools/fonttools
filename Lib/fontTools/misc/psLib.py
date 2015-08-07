@@ -38,7 +38,7 @@ class PSTokenError(Exception): pass
 class PSError(Exception): pass
 
 
-class PSTokenizer(StringIO):
+class PSTokenizer(BytesIO):
 
 	def getnexttoken(self,
 			# localize some stuff, for performance
