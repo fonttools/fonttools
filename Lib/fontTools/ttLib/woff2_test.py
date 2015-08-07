@@ -26,8 +26,8 @@ TTX = os.path.join(data_dir, 'TestTTF-Regular.ttx')
 OTX = os.path.join(data_dir, 'TestOTF-Regular.otx')
 METADATA = os.path.join(data_dir, 'test_woff2_metadata.xml')
 
-TT_WOFF2 = StringIO()
-CFF_WOFF2 = StringIO()
+TT_WOFF2 = BytesIO()
+CFF_WOFF2 = BytesIO()
 
 
 def setUpModule():
@@ -51,7 +51,7 @@ class WOFF2ReaderTest(unittest.TestCase):
 
 	@classmethod
 	def setUpClass(cls):
-		cls.file = StringIO(CFF_WOFF2.getvalue())
+		cls.file = BytesIO(CFF_WOFF2.getvalue())
 		cls.font = ttLib.TTFont(recalcBBoxes=False, recalcTimestamp=False)
 		cls.font.importXML(OTX, quiet=True)
 
@@ -60,12 +60,12 @@ class WOFF2ReaderTest(unittest.TestCase):
 
 	def test_bad_signature(self):
 		with self.assertRaisesRegexp(ttLib.TTLibError, 'bad signature'):
-			WOFF2Reader(StringIO(b"wOFF"))
+			WOFF2Reader(BytesIO(b"wOFF"))
 
 	def test_not_enough_data_header(self):
 		incomplete_header = self.file.read(woff2DirectorySize - 1)
 		with self.assertRaisesRegexp(ttLib.TTLibError, 'not enough data'):
-			WOFF2Reader(StringIO(incomplete_header))
+			WOFF2Reader(BytesIO(incomplete_header))
 
 	def test_incorrect_compressed_size(self):
 		data = self.file.read(woff2DirectorySize)
@@ -73,7 +73,7 @@ class WOFF2ReaderTest(unittest.TestCase):
 		header['totalCompressedSize'] = 0
 		data = sstruct.pack(woff2DirectoryFormat, header)
 		with self.assertRaises(brotli.error):
-			WOFF2Reader(StringIO(data + self.file.read()))
+			WOFF2Reader(BytesIO(data + self.file.read()))
 
 	def test_incorrect_uncompressed_size(self):
 		decompress_backup = brotli.decompress
@@ -89,7 +89,7 @@ class WOFF2ReaderTest(unittest.TestCase):
 		data = sstruct.pack(woff2DirectoryFormat, header)
 		with self.assertRaisesRegexp(
 				ttLib.TTLibError, "doesn't match the actual file size"):
-			WOFF2Reader(StringIO(data + self.file.read()))
+			WOFF2Reader(BytesIO(data + self.file.read()))
 
 	def test_num_tables(self):
 		tags = [t for t in self.font.keys() if t not in ('GlyphOrder', 'DSIG')]
@@ -121,7 +121,7 @@ class WOFF2ReaderTTFTest(WOFF2ReaderTest):
 
 	@classmethod
 	def setUpClass(cls):
-		cls.file = StringIO(TT_WOFF2.getvalue())
+		cls.file = BytesIO(TT_WOFF2.getvalue())
 		cls.font = ttLib.TTFont(recalcBBoxes=False, recalcTimestamp=False)
 		cls.font.importXML(TTX, quiet=True)
 
@@ -195,11 +195,11 @@ def normalise_font(font, padding=4):
 	font.recalcTimestamp = False
 	font.lazy = True
 	# save font to temporary stream
-	infile = StringIO()
+	infile = BytesIO()
 	font.save(infile)
 	infile.seek(0)
 	# reorder tables alphabetically
-	outfile = StringIO()
+	outfile = BytesIO()
 	reader = ttLib.sfnt.SFNTReader(infile)
 	writer = ttLib.sfnt.SFNTWriter(
 		outfile, len(reader.tables), reader.sfntVersion, reader.flavor, reader.flavorData)
@@ -250,7 +250,7 @@ class WOFF2DirectoryEntryTest(unittest.TestCase):
 		data += unknownTag.tobytes()
 		data += packBase128(random.randint(1, 100))
 		expectedPos = len(data)
-		f = StringIO(data + b'\0'*100)
+		f = BytesIO(data + b'\0'*100)
 		self.entry.fromFile(f)
 		self.assertEqual(f.tell(), expectedPos)
 
@@ -304,7 +304,7 @@ class WOFF2FlavorDataTest(unittest.TestCase):
 		cls.privData = bytes(bytearray(random.sample(range(0, 256), 20)))
 
 	def setUp(self):
-		self.file = StringIO(self.fontdata)
+		self.file = BytesIO(self.fontdata)
 		self.file.seek(0, 2)
 
 	def test_get_metaData_no_privData(self):
@@ -352,7 +352,7 @@ class WOFF2WriterTest(unittest.TestCase):
 		cls.font.importXML(OTX, quiet=True)
 		cls.tags = [t for t in cls.font.keys() if t != 'GlyphOrder']
 		cls.numTables = len(cls.tags)
-		cls.file = StringIO(CFF_WOFF2.getvalue())
+		cls.file = BytesIO(CFF_WOFF2.getvalue())
 		cls.file.seek(0, 2)
 		cls.length = (cls.file.tell() + 3) & ~3
 		cls.setUpFlavorData()
@@ -367,7 +367,7 @@ class WOFF2WriterTest(unittest.TestCase):
 
 	def setUp(self):
 		self.file.seek(0)
-		self.writer = WOFF2Writer(StringIO(), self.numTables, self.font.sfntVersion)
+		self.writer = WOFF2Writer(BytesIO(), self.numTables, self.font.sfntVersion)
 
 	def test_DSIG_dropped(self):
 		self.writer['DSIG'] = b"\0"
@@ -387,7 +387,7 @@ class WOFF2WriterTest(unittest.TestCase):
 	def test_required_tables(self):
 		font = ttLib.TTFont(flavor="woff2")
 		with self.assertRaisesRegexp(ttLib.TTLibError, "missing required table"):
-			font.save(StringIO())
+			font.save(BytesIO())
 
 	def test_head_transform_flag(self):
 		headData = self.font.getTableData('head')
@@ -405,7 +405,7 @@ class WOFF2WriterTest(unittest.TestCase):
 		self.assertEqual(expected, woff2font.reader.tableOrder)
 
 	def test_checksums(self):
-		normFile = StringIO(normalise_font(self.font, padding=4))
+		normFile = BytesIO(normalise_font(self.font, padding=4))
 		normFile.seek(0)
 		normFont = ttLib.TTFont(normFile, checkChecksums=2)
 		w2font = ttLib.TTFont(self.file)
@@ -424,7 +424,7 @@ class WOFF2WriterTest(unittest.TestCase):
 		self.assertEqual(normCheckSumAdjustment, w2font['head'].checkSumAdjustment)
 
 	def test_calcSFNTChecksumsLengthsAndOffsets(self):
-		normFont = ttLib.TTFont(StringIO(normalise_font(self.font, padding=4)))
+		normFont = ttLib.TTFont(BytesIO(normalise_font(self.font, padding=4)))
 		for tag in self.tags:
 			self.writer[tag] = self.font.getTableData(tag)
 		self.writer._normaliseGlyfAndLoca(padding=4)
@@ -445,7 +445,7 @@ class WOFF2WriterTest(unittest.TestCase):
 
 	def test_calcTotalSize_no_flavorData(self):
 		expected = self.length
-		self.writer.file = StringIO()
+		self.writer.file = BytesIO()
 		for tag in self.tags:
 			self.writer[tag] = self.font.getTableData(tag)
 		self.writer.close()
@@ -456,7 +456,7 @@ class WOFF2WriterTest(unittest.TestCase):
 		expected = self.length + len(self.compressed_metadata)
 		flavorData = self.writer.flavorData = WOFF2FlavorData()
 		flavorData.metaData = self.xml_metadata
-		self.writer.file = StringIO()
+		self.writer.file = BytesIO()
 		for tag in self.tags:
 			self.writer[tag] = self.font.getTableData(tag)
 		self.writer.close()
@@ -467,7 +467,7 @@ class WOFF2WriterTest(unittest.TestCase):
 		expected = self.length + len(self.privData)
 		flavorData = self.writer.flavorData = WOFF2FlavorData()
 		flavorData.privData = self.privData
-		self.writer.file = StringIO()
+		self.writer.file = BytesIO()
 		for tag in self.tags:
 			self.writer[tag] = self.font.getTableData(tag)
 		self.writer.close()
@@ -480,7 +480,7 @@ class WOFF2WriterTest(unittest.TestCase):
 		flavorData = self.writer.flavorData = WOFF2FlavorData()
 		flavorData.metaData = self.xml_metadata
 		flavorData.privData = self.privData
-		self.writer.file = StringIO()
+		self.writer.file = BytesIO()
 		for tag in self.tags:
 			self.writer[tag] = self.font.getTableData(tag)
 		self.writer.close()
@@ -510,7 +510,7 @@ class WOFF2WriterTTFTest(WOFF2WriterTest):
 		cls.font.importXML(TTX, quiet=True)
 		cls.tags = [t for t in cls.font.keys() if t != 'GlyphOrder']
 		cls.numTables = len(cls.tags)
-		cls.file = StringIO(TT_WOFF2.getvalue())
+		cls.file = BytesIO(TT_WOFF2.getvalue())
 		cls.file.seek(0, 2)
 		cls.length = (cls.file.tell() + 3) & ~3
 		cls.setUpFlavorData()
@@ -599,7 +599,7 @@ class WOFF2GlyfTableTest(unittest.TestCase):
 		cls.transformedTags = ('maxp', 'head', 'loca', 'glyf')
 		for tag in reversed(cls.transformedTags):  # compile in inverse order
 			cls.tables[tag] = font.getTableData(tag)
-		infile = StringIO(TT_WOFF2.getvalue())
+		infile = BytesIO(TT_WOFF2.getvalue())
 		reader = WOFF2Reader(infile)
 		cls.transformedGlyfData = reader.tables['glyf'].loadData(
 			reader.transformBuffer)
