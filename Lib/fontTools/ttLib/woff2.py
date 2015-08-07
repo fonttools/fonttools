@@ -63,7 +63,7 @@ class WOFF2Reader(SFNTReader):
 			raise TTLibError(
 				'unexpected size for decompressed font data: expected %d, found %d'
 				% (totalUncompressedSize, len(decompressedData)))
-		self.transformBuffer = StringIO(decompressedData)
+		self.transformBuffer = BytesIO(decompressedData)
 
 		self.file.seek(0, 2)
 		if self.length != self.file.tell():
@@ -149,7 +149,7 @@ class WOFF2Writer(SFNTWriter):
 		self.signature = Tag("wOF2")
 
 		self.nextTableOffset = 0
-		self.transformBuffer = StringIO()
+		self.transformBuffer = BytesIO()
 
 		self.tables = {}
 		self.tableOrder = []
