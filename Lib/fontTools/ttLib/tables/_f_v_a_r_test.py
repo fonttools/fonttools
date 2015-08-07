@@ -74,7 +74,7 @@ class FontVariationTableTest(unittest.TestCase):
 
     def test_toXML(self):
         font = MakeFont()
-        writer = XMLWriter(StringIO())
+        writer = XMLWriter(BytesIO())
         font["fvar"].toXML(writer, font)
         xml = writer.file.getvalue().decode("utf-8")
         self.assertEqual(2, xml.count("<Axis>"))
@@ -116,7 +116,7 @@ class AxisTest(unittest.TestCase):
         axis.decompile(FVAR_AXIS_DATA)
         AddName(font, "Optical Size").nameID = 256
         axis.nameID = 256
-        writer = XMLWriter(StringIO())
+        writer = XMLWriter(BytesIO())
         axis.toXML(writer, font)
         self.assertEqual([
             '',
@@ -164,7 +164,7 @@ class NamedInstanceTest(unittest.TestCase):
         inst = NamedInstance()
         inst.nameID = AddName(font, "Light Condensed").nameID
         inst.coordinates = {"wght": 0.7, "wdth": 0.5}
-        writer = XMLWriter(StringIO())
+        writer = XMLWriter(BytesIO())
         inst.toXML(writer, font)
         self.assertEqual([
             '',

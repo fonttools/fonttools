@@ -38,7 +38,7 @@ class AxisVariationTableTest(unittest.TestCase):
     def test_toXML(self):
         avar = table__a_v_a_r()
         avar.segments["opsz"] = {-1.0: -1.0, 0.0: 0.0, 0.3: 0.8, 1.0: 1.0}
-        writer = XMLWriter(StringIO())
+        writer = XMLWriter(BytesIO())
         avar.toXML(writer, self.makeFont(["opsz"]))
         self.assertEqual([
             '<segment axis="opsz">',

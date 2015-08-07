@@ -190,7 +190,7 @@ class GlyphVariationTest(unittest.TestCase):
 		self.assertFalse(gvar.hasImpact())
 
 	def test_toXML(self):
-		writer = XMLWriter(StringIO())
+		writer = XMLWriter(BytesIO())
 		axes = {"wdth":(0.3, 0.4, 0.5), "wght":(0.0, 1.0, 1.0), "opsz":(-0.7, -0.7, 0.0)}
 		g = GlyphVariation(axes, [(9,8), None, (7,6), (0,0), (-1,-2), None])
 		g.toXML(writer, ["wdth", "wght", "opsz"])
@@ -207,7 +207,7 @@ class GlyphVariationTest(unittest.TestCase):
 		], GlyphVariationTest.xml_lines(writer))
 
 	def test_toXML_allDeltasNone(self):
-		writer = XMLWriter(StringIO())
+		writer = XMLWriter(BytesIO())
 		axes = {"wght":(0.0, 1.0, 1.0)}
 		g = GlyphVariation(axes, [None] * 5)
 		g.toXML(writer, ["wght", "wdth"])
