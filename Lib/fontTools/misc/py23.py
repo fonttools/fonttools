@@ -90,10 +90,18 @@ except NameError:
 	def byteord(c):
 		return c if isinstance(c, int) else ord(c)
 
+
+# the 'io' module provides the same I/O interface on both 2 and 3.
+# here we define an alias of io.StringIO to disambiguate it eternally...
+from io import BytesIO
+from io import StringIO as UnicodeIO
 try:
+	# in python 2, by 'StringIO' we still mean a stream of *byte* strings
 	from StringIO import StringIO
 except ImportError:
-	from io import BytesIO as StringIO
+	# in Python 3, we mean instead a stream of *unicode* strings
+	StringIO = UnicodeIO
+
 
 def strjoin(iterable, joiner=''):
 	return tostr(joiner).join(iterable)
