@@ -126,4 +126,4 @@ class table_G_P_K_G_(DefaultTable.DefaultTable):
 				if itemName == "hexdata":
 					self.glyphlets.append(readHex(itemContent))
 		else:
-			setattr(self, name, safeEval(value))
+			setattr(self, name, safeEval(attrs["value"]))
