@@ -114,7 +114,7 @@ class SFNTReader(object):
 class SFNTWriter(object):
 
 	def __init__(self, file, numTables, sfntVersion="\000\001\000\000",
-		     flavor=None, flavorData=None):
+			flavor=None, flavorData=None):
 		self.file = file
 		self.numTables = numTables
 		self.sfntVersion = Tag(sfntVersion)

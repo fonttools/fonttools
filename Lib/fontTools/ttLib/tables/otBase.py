@@ -37,7 +37,7 @@ class BaseTTXConverter(DefaultTable):
 				self.tableType = tableType
 				self.cachingStats = cachingStats
 		globalState = GlobalState(tableType=self.tableTag,
-					  cachingStats=cachingStats)
+					cachingStats=cachingStats)
 		reader = OTTableReader(data, globalState)
 		tableClass = getattr(otTables, self.tableTag)
 		self.table = tableClass()
