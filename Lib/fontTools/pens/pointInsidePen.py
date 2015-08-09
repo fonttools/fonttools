@@ -181,7 +181,7 @@ class PointInsidePen(BasePen):
 		solutions = [t for t in solutions if ZERO_MINUS_EPSILON <= t <= ONE_PLUS_EPSILON]
 		if not solutions:
 			return
-		XXX
+		# XXX
 
 	def _closePath(self):
 		if self._getCurrentPoint() != self.firstPoint:
