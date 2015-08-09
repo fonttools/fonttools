@@ -174,7 +174,7 @@ class table_V_D_M_X_(DefaultTable.DefaultTable):
 			writer.begintag("group", index=groupIndex)
 			writer.newline()
 			writer.comment("recs=%d, startsz=%d, endsz=%d" %
-						   (recs, startsz, endsz))
+							(recs, startsz, endsz))
 			writer.newline()
 			for yPelHeight in group.keys():
 				yMax, yMin = group[yPelHeight]

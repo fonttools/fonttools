@@ -120,9 +120,9 @@ class CmapSubtable(object):
 		if self.data is None:
 			raise AttributeError(attr)
 		self.decompile(None, None) # use saved data.
-		self.data = None # Once this table has been decompiled, make sure we don't
-				 # just return the original data. Also avoids recursion when
-				 # called with an attribute that the cmap subtable doesn't have.
+		self.data = None	# Once this table has been decompiled, make sure we don't
+							# just return the original data. Also avoids recursion when
+							# called with an attribute that the cmap subtable doesn't have.
 		return getattr(self, attr)
 
 	def decompileHeader(self, data, ttFont):

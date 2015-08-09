@@ -5,8 +5,8 @@ from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 
 __all__ = [
-    "fixedToFloat",
-    "floatToFixed",
+	"fixedToFloat",
+	"floatToFixed",
 ]
 
 def fixedToFloat(value, precisionBits):

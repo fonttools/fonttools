@@ -7,16 +7,16 @@ import struct
 
 sbixStrikeHeaderFormat = """
 	>
-	ppem:            H    # The PPEM for which this strike was designed (e.g., 9,
-	                      # 12, 24)
-	resolution:      H    # The screen resolution (in dpi) for which this strike
-	                      # was designed (e.g., 72)
+	ppem:          H	# The PPEM for which this strike was designed (e.g., 9,
+						# 12, 24)
+	resolution:    H	# The screen resolution (in dpi) for which this strike
+						# was designed (e.g., 72)
 """
 
 sbixGlyphDataOffsetFormat = """
 	>
-	glyphDataOffset: L    # Offset from the beginning of the strike data record
-                        # to data for the individual glyph
+	glyphDataOffset:   L	# Offset from the beginning of the strike data record
+							# to data for the individual glyph
 """
 
 sbixStrikeHeaderFormatSize = sstruct.calcsize(sbixStrikeHeaderFormat)

@@ -3,9 +3,9 @@ from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from . import DefaultTable
 try:
-    import xml.etree.cElementTree as ET
+	import xml.etree.cElementTree as ET
 except ImportError:
-    import xml.etree.ElementTree as ET
+	import xml.etree.ElementTree as ET
 import struct
 import re
 
@@ -19,31 +19,31 @@ only if you add the secret element "<version1/>" to the SVG element in the TTF f
 Version 0 is the joint Adobe-Mozilla proposal, which supports color palettes.
 
 The XML format is:
-  <SVG>
-    <svgDoc endGlyphID="1" startGlyphID="1">
-      <![CDATA[ <complete SVG doc> ]]
-    </svgDoc>
+<SVG>
+	<svgDoc endGlyphID="1" startGlyphID="1">
+		<![CDATA[ <complete SVG doc> ]]
+	</svgDoc>
 ...
 	<svgDoc endGlyphID="n" startGlyphID="m">
-      <![CDATA[ <complete SVG doc> ]]
-    </svgDoc>
+		<![CDATA[ <complete SVG doc> ]]
+	</svgDoc>
 
-    <colorPalettes>
-    	<colorParamUINameID>n</colorParamUINameID>
-    	...
-    	<colorParamUINameID>m</colorParamUINameID>
-    	<colorPalette uiNameID="n">
-    		<colorRecord red="<int>" green="<int>" blue="<int>" alpha="<int>" />
-    		...
-    		<colorRecord red="<int>" green="<int>" blue="<int>" alpha="<int>" />
-    	</colorPalette>
-    	...
-    	<colorPalette uiNameID="m">
-    		<colorRecord red="<int> green="<int>" blue="<int>" alpha="<int>" />
-    		...
-    		<colorRecord red=<int>" green="<int>" blue="<int>" alpha="<int>" />
-    	</colorPalette>
-    </colorPalettes>
+	<colorPalettes>
+		<colorParamUINameID>n</colorParamUINameID>
+		...
+		<colorParamUINameID>m</colorParamUINameID>
+		<colorPalette uiNameID="n">
+			<colorRecord red="<int>" green="<int>" blue="<int>" alpha="<int>" />
+			...
+			<colorRecord red="<int>" green="<int>" blue="<int>" alpha="<int>" />
+		</colorPalette>
+		...
+		<colorPalette uiNameID="m">
+			<colorRecord red="<int> green="<int>" blue="<int>" alpha="<int>" />
+			...
+			<colorRecord red=<int>" green="<int>" blue="<int>" alpha="<int>" />
+		</colorPalette>
+	</colorPalettes>
 </SVG>
 
 Color values must be less than 256.
@@ -308,7 +308,7 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 			startGID = int(attrs["startGlyphID"])
 			endGID = int(attrs["endGlyphID"])
 			self.docList.append( [doc, startGID, endGID] )
-		elif  name == "colorPalettes":
+		elif name == "colorPalettes":
 			self.colorPalettes = ColorPalettes()
 			self.colorPalettes.fromXML(name, attrs, content, ttFont)
 			if self.colorPalettes.numColorParams == 0:
