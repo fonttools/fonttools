@@ -182,7 +182,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 			numPointsInGlyph = self.getNumPoints_(glyph)
 			gvarData = data[self.offsetToData + offsets[i] : self.offsetToData + offsets[i + 1]]
 			self.variations[glyphName] = \
-			    self.decompileGlyph_(numPointsInGlyph, sharedCoords, axisTags, gvarData)
+				self.decompileGlyph_(numPointsInGlyph, sharedCoords, axisTags, gvarData)
 
 	def decompileSharedCoords_(self, axisTags, data):
 		result, _pos = GlyphVariation.decompileCoords_(axisTags, self.sharedCoordCount, data, self.offsetToCoord)

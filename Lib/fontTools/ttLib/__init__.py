@@ -914,11 +914,11 @@ def debugmsg(msg):
 
 # Table order as recommended in the OpenType specification 1.4
 TTFTableOrder = ["head", "hhea", "maxp", "OS/2", "hmtx", "LTSH", "VDMX",
-                  "hdmx", "cmap", "fpgm", "prep", "cvt ", "loca", "glyf",
-                  "kern", "name", "post", "gasp", "PCLT"]
+				"hdmx", "cmap", "fpgm", "prep", "cvt ", "loca", "glyf",
+				"kern", "name", "post", "gasp", "PCLT"]
 
 OTFTableOrder = ["head", "hhea", "maxp", "OS/2", "name", "cmap", "post",
-                  "CFF "]
+				"CFF "]
 
 def sortedTagList(tagList, tableOrder=None):
 	"""Return a sorted copy of tagList, sorted according to the OpenType

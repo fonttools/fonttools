@@ -7,7 +7,7 @@
 
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
-from fontTools.misc.timeTools import  timestampNow
+from fontTools.misc.timeTools import timestampNow
 from fontTools import ttLib, cffLib
 from fontTools.ttLib.tables import otTables, _h_e_a_d
 from fontTools.ttLib.tables.DefaultTable import DefaultTable
@@ -508,24 +508,24 @@ def merge(self, m, tables):
 	return self
 
 @_add_method(otTables.SingleSubst,
-	     otTables.MultipleSubst,
-	     otTables.AlternateSubst,
-	     otTables.LigatureSubst,
-	     otTables.ReverseChainSingleSubst,
-	     otTables.SinglePos,
-	     otTables.PairPos,
-	     otTables.CursivePos,
-	     otTables.MarkBasePos,
-	     otTables.MarkLigPos,
-	     otTables.MarkMarkPos)
+		otTables.MultipleSubst,
+		otTables.AlternateSubst,
+		otTables.LigatureSubst,
+		otTables.ReverseChainSingleSubst,
+		otTables.SinglePos,
+		otTables.PairPos,
+		otTables.CursivePos,
+		otTables.MarkBasePos,
+		otTables.MarkLigPos,
+		otTables.MarkMarkPos)
 def mapLookups(self, lookupMap):
-  pass
+	pass
 
 # Copied and trimmed down from subset.py
 @_add_method(otTables.ContextSubst,
-	     otTables.ChainContextSubst,
-	     otTables.ContextPos,
-	     otTables.ChainContextPos)
+		otTables.ChainContextSubst,
+		otTables.ContextPos,
+		otTables.ChainContextPos)
 def __merge_classify_context(self):
 
 	class ContextHelper(object):
@@ -567,9 +567,9 @@ def __merge_classify_context(self):
 
 
 @_add_method(otTables.ContextSubst,
-	     otTables.ChainContextSubst,
-	     otTables.ContextPos,
-	     otTables.ChainContextPos)
+		otTables.ChainContextSubst,
+		otTables.ContextPos,
+		otTables.ChainContextPos)
 def mapLookups(self, lookupMap):
 	c = self.__merge_classify_context()
 
@@ -589,12 +589,12 @@ def mapLookups(self, lookupMap):
 		assert 0, "unknown format: %s" % self.Format
 
 @_add_method(otTables.ExtensionSubst,
-	     otTables.ExtensionPos)
+		otTables.ExtensionPos)
 def mapLookups(self, lookupMap):
-  if self.Format == 1:
-    self.ExtSubTable.mapLookups(lookupMap)
-  else:
-    assert 0, "unknown format: %s" % self.Format
+	if self.Format == 1:
+		self.ExtSubTable.mapLookups(lookupMap)
+	else:
+		assert 0, "unknown format: %s" % self.Format
 
 @_add_method(otTables.Lookup)
 def mapLookups(self, lookupMap):
@@ -619,7 +619,7 @@ def mapLookups(self, lookupMap):
 		f.Feature.mapLookups(lookupMap)
 
 @_add_method(otTables.DefaultLangSys,
-	     otTables.LangSys)
+		otTables.LangSys)
 def mapFeatures(self, featureMap):
 	self.FeatureIndex = [featureMap[i] for i in self.FeatureIndex]
 	if self.ReqFeatureIndex != 65535:
@@ -915,10 +915,10 @@ class Logger(object):
 
 
 __all__ = [
-  'Options',
-  'Merger',
-  'Logger',
-  'main'
+	'Options',
+	'Merger',
+	'Logger',
+	'main'
 ]
 
 def main(args=None):

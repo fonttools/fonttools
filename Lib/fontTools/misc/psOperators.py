@@ -323,8 +323,8 @@ class PSOperators(object):
 			obj = self.pop()
 
 	def ps_readstring(self,
-			  ps_boolean=ps_boolean,
-			  len=len):
+			ps_boolean=ps_boolean,
+			len=len):
 		s = self.pop('stringtype')
 		oldstr = s.value
 		f = self.pop('filetype')

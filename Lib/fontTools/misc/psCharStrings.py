@@ -132,8 +132,8 @@ t2Operators = [
 	(29,		'callgsubr'),
 	(30,		'vhcurveto'),
 	(31,		'hvcurveto'),
-	((12, 0),	'ignore'), # dotsection. Yes, there a few very early OTF/CFF
-				   # fonts with this deprecated operator. Just ignore it.
+	((12, 0),	'ignore'),	# dotsection. Yes, there a few very early OTF/CFF
+							# fonts with this deprecated operator. Just ignore it.
 	((12, 3),	'and'),
 	((12, 4),	'or'),
 	((12, 5),	'not'),
@@ -331,8 +331,8 @@ class T2CharString(ByteCodeBase):
 		self.program = None
 
 	def getToken(self, index,
-		     len=len, byteord=byteord, basestring=basestring,
-		     isinstance=isinstance):
+			len=len, byteord=byteord, basestring=basestring,
+			isinstance=isinstance):
 		if self.bytecode is not None:
 			if index >= len(self.bytecode):
 				return None, 0, 0

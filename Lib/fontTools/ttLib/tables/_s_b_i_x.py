@@ -8,24 +8,24 @@ from .sbixStrike import *
 
 
 sbixHeaderFormat = """
-  >
-  version:         H    # Version number (set to 1)
-  flags:           H    # The only two bits used in the flags field are bits 0
-                        # and 1. For historical reasons, bit 0 must always be 1.
-                        # Bit 1 is a sbixDrawOutlines flag and is interpreted as
-                        # follows:
-                        #     0: Draw only 'sbix' bitmaps
-                        #     1: Draw both 'sbix' bitmaps and outlines, in that
-                        #        order
-  numStrikes:      L    # Number of bitmap strikes to follow
+	>
+	version:       H	# Version number (set to 1)
+	flags:         H	# The only two bits used in the flags field are bits 0
+						# and 1. For historical reasons, bit 0 must always be 1.
+						# Bit 1 is a sbixDrawOutlines flag and is interpreted as
+						# follows:
+						#     0: Draw only 'sbix' bitmaps
+						#     1: Draw both 'sbix' bitmaps and outlines, in that
+						#        order
+	numStrikes:    L	# Number of bitmap strikes to follow
 """
 sbixHeaderFormatSize = sstruct.calcsize(sbixHeaderFormat)
 
 
 sbixStrikeOffsetFormat = """
-  >
-  strikeOffset:    L    # Offset from begining of table to data for the
-                        # individual strike
+	>
+	strikeOffset:  L	# Offset from begining of table to data for the
+						# individual strike
 """
 sbixStrikeOffsetFormatSize = sstruct.calcsize(sbixStrikeOffsetFormat)
 

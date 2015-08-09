@@ -99,10 +99,10 @@ class table__m_a_x_p(DefaultTable.DefaultTable):
 			headTable.xMax = 0
 			headTable.yMax = 0
 		else:
-		    headTable.xMin = xMin
-		    headTable.yMin = yMin
-		    headTable.xMax = xMax
-		    headTable.yMax = yMax
+			headTable.xMin = xMin
+			headTable.yMin = yMin
+			headTable.xMax = xMax
+			headTable.yMax = yMax
 		self.maxPoints = maxPoints
 		self.maxContours = maxContours
 		self.maxCompositePoints = maxCompositePoints

@@ -637,7 +637,7 @@ class Glyph(object):
 			flag, coordBytes = flagBest(x, y, flag)
 			bestCost += 1 + coordBytes
 			newCandidates = [(bestCost, bestTuple, flag, coordBytes),
-					 (bestCost+1, bestTuple, (flag|flagRepeat), coordBytes)]
+							(bestCost+1, bestTuple, (flag|flagRepeat), coordBytes)]
 			for lastCost,lastTuple,lastFlag,coordBytes in candidates:
 				if lastCost + coordBytes <= bestCost + 1 and (lastFlag & flagRepeat) and (lastFlag < 0xff00) and flagSupports(lastFlag, flag):
 					if (lastFlag & 0xFF) == (flag|flagRepeat) and lastCost == bestCost + 1:
@@ -696,7 +696,7 @@ class Glyph(object):
 
 				# Collect on-curve points
 				onCurveCoords = [coords[j] for j in range(len(coords))
-						 if flags[j] & flagOnCurve]
+								if flags[j] & flagOnCurve]
 				# Add implicit on-curve points
 				start = 0
 				for end in endPts:
@@ -829,9 +829,9 @@ class Glyph(object):
 		return components
 
 	def trim(self, remove_hinting=False):
-		"""Remove padding and, if requested, hinting, from a glyph.
-		   This works on both expanded and compacted glyphs, without
-		   expanding it."""
+		""" Remove padding and, if requested, hinting, from a glyph.
+			This works on both expanded and compacted glyphs, without
+			expanding it."""
 		if not hasattr(self, "data"):
 			if remove_hinting:
 				self.program = ttProgram.Program()
@@ -1019,7 +1019,7 @@ class GlyphComponent(object):
 			(xscale, scale01,
 					scale10, yscale) = struct.unpack(">hhhh", data[:8])
 			self.transform = [[fi2fl(xscale,14), fi2fl(scale01,14)],
-					  [fi2fl(scale10,14), fi2fl(yscale,14)]] # fixed 2.14
+							[fi2fl(scale10,14), fi2fl(yscale,14)]] # fixed 2.14
 			data = data[8:]
 		more = self.flags & MORE_COMPONENTS
 		haveInstructions = self.flags & WE_HAVE_INSTRUCTIONS

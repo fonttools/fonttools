@@ -473,7 +473,7 @@ class Program(object):
 		False
 		"""
 		return ((hasattr(self, 'assembly') and len(self.assembly) > 0) or
-			    (hasattr(self, 'bytecode') and len(self.bytecode) > 0))
+				(hasattr(self, 'bytecode') and len(self.bytecode) > 0))
 
 	__nonzero__ = __bool__
 
