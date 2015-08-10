@@ -238,11 +238,6 @@ class ParserTest(unittest.TestCase):
         [liga] = self.parse("feature liga {} liga;").statements
         self.assertEqual(liga.tag, "liga")
 
-    # TODO: Implement the needed bits in the parser.
-    @unittest.expectedFailure
-    def test_roundtrip(self):
-        self.roundtrip("mini.fea")
-
     def setUp(self):
         self.tempdir = None
         self.num_tempfiles = 0
@@ -259,14 +254,6 @@ class ParserTest(unittest.TestCase):
         with codecs.open(path, "wb", "utf-8") as outfile:
             outfile.write(text)
         return Parser(path).parse()
-
-    def roundtrip(self, testfile):
-        buffer1, buffer2 = StringIO(), StringIO()
-        Parser(ParserTest.getpath(testfile)).parse().write(buffer1, os.linesep)
-        text1 = buffer1.getvalue().decode("utf-8")
-        self.parse(text1).write(buffer2, os.linesep)
-        text2 = buffer2.getvalue().decode("utf-8")
-        self.assertEqual(text1, text2)
 
     @staticmethod
     def getpath(testfile):
