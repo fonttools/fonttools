@@ -21,10 +21,12 @@ class GlyphClassDefinition(object):
         self.glyphs = glyphs
 
 
-class ScriptStatement(object):
-    def __init__(self, location, script):
+class LanguageStatement(object):
+    def __init__(self, location, language, include_default, required):
         self.location = location
-        self.script = script
+        self.language = language
+        self.include_default = include_default
+        self.required = required
 
 
 class LanguageSystemStatement(object):
@@ -37,6 +39,12 @@ class IgnoreSubstitutionRule(object):
     def __init__(self, location, prefix, glyphs, suffix):
         self.location = location
         self.prefix, self.glyphs, self.suffix = (prefix, glyphs, suffix)
+
+
+class ScriptStatement(object):
+    def __init__(self, location, script):
+        self.location = location
+        self.script = script
 
 
 class SubstitutionRule(object):
