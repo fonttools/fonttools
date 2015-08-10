@@ -134,6 +134,12 @@ class Parser(object):
             return ast.IgnoreSubstitutionRule(location, prefix, glyphs, suffix)
         raise ParserError("Expected \"substitute\"", self.next_token_location_)
 
+    def parse_script_(self):
+        assert self.is_cur_keyword_("script")
+        location, script = self.cur_token_location_, self.expect_tag_()
+        self.expect_symbol_(";")
+        return ast.ScriptStatement(location, script)
+
     def parse_substitute_(self):
         assert self.cur_token_ in {"substitute", "sub"}
         location = self.cur_token_location_
@@ -213,6 +219,8 @@ class Parser(object):
             elif (self.is_cur_keyword_("substitute") or
                   self.is_cur_keyword_("sub")):
                 statements.append(self.parse_substitute_())
+            elif self.is_cur_keyword_("script"):
+                statements.append(self.parse_script_())
             elif self.is_cur_keyword_("valueRecordDef"):
                 statements.append(self.parse_valuerecord_definition_(vertical))
             else:
