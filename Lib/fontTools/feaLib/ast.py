@@ -21,6 +21,12 @@ class GlyphClassDefinition(object):
         self.glyphs = glyphs
 
 
+class ScriptStatement(object):
+    def __init__(self, location, script):
+        self.location = location
+        self.script = script
+
+
 class LanguageSystemStatement(object):
     def __init__(self, location, script, language):
         self.location = location

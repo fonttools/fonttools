@@ -129,6 +129,12 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(s.glyphs, [{"d"}, {"a", "u"}])
         self.assertEqual(s.suffix, [{"e", "y"}])
 
+    def test_script(self):
+        doc = self.parse("feature test {script cyrl;} test;")
+        s = doc.statements[0].statements[0]
+        self.assertEqual(type(s), ast.ScriptStatement)
+        self.assertEqual(s.script, "cyrl")
+
     def test_substitute_single_format_a(self):  # GSUB LookupType 1
         doc = self.parse("feature smcp {substitute a by a.sc;} smcp;")
         sub = doc.statements[0].statements[0]
