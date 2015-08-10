@@ -134,6 +134,19 @@ class Parser(object):
             return ast.IgnoreSubstitutionRule(location, prefix, glyphs, suffix)
         raise ParserError("Expected \"substitute\"", self.next_token_location_)
 
+    def parse_language_(self):
+        assert self.is_cur_keyword_("language")
+        location, language = self.cur_token_location_, self.expect_tag_()
+        include_default, required = (True, False)
+        if self.next_token_ in {"exclude_dflt", "include_dflt"}:
+            include_default = (self.expect_name_() == "include_dflt")
+        if self.next_token_ == "required":
+            self.expect_keyword_("required")
+            required = True
+        self.expect_symbol_(";")
+        return ast.LanguageStatement(location, language.strip(),
+                                     include_default, required)
+
     def parse_script_(self):
         assert self.is_cur_keyword_("script")
         location, script = self.cur_token_location_, self.expect_tag_()
@@ -216,11 +229,13 @@ class Parser(object):
                 statements.append(self.parse_glyphclass_definition_())
             elif self.is_cur_keyword_("ignore"):
                 statements.append(self.parse_ignore_())
+            elif self.is_cur_keyword_("language"):
+                statements.append(self.parse_language_())
+            elif self.is_cur_keyword_("script"):
+                statements.append(self.parse_script_())
             elif (self.is_cur_keyword_("substitute") or
                   self.is_cur_keyword_("sub")):
                 statements.append(self.parse_substitute_())
-            elif self.is_cur_keyword_("script"):
-                statements.append(self.parse_script_())
             elif self.is_cur_keyword_("valueRecordDef"):
                 statements.append(self.parse_valuerecord_definition_(vertical))
             else:

@@ -129,6 +129,50 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(s.glyphs, [{"d"}, {"a", "u"}])
         self.assertEqual(s.suffix, [{"e", "y"}])
 
+    def test_language(self):
+        doc = self.parse("feature test {language DEU;} test;")
+        s = doc.statements[0].statements[0]
+        self.assertEqual(type(s), ast.LanguageStatement)
+        self.assertEqual(s.language, "DEU")
+        self.assertTrue(s.include_default)
+        self.assertFalse(s.required)
+
+    def test_language_exclude_dflt(self):
+        doc = self.parse("feature test {language DEU exclude_dflt;} test;")
+        s = doc.statements[0].statements[0]
+        self.assertEqual(type(s), ast.LanguageStatement)
+        self.assertEqual(s.language, "DEU")
+        self.assertFalse(s.include_default)
+        self.assertFalse(s.required)
+
+    def test_language_exclude_dflt_required(self):
+        doc = self.parse("feature test {"
+                         "  language DEU exclude_dflt required;"
+                         "} test;")
+        s = doc.statements[0].statements[0]
+        self.assertEqual(type(s), ast.LanguageStatement)
+        self.assertEqual(s.language, "DEU")
+        self.assertFalse(s.include_default)
+        self.assertTrue(s.required)
+
+    def test_language_include_dflt(self):
+        doc = self.parse("feature test {language DEU include_dflt;} test;")
+        s = doc.statements[0].statements[0]
+        self.assertEqual(type(s), ast.LanguageStatement)
+        self.assertEqual(s.language, "DEU")
+        self.assertTrue(s.include_default)
+        self.assertFalse(s.required)
+
+    def test_language_include_dflt_required(self):
+        doc = self.parse("feature test {"
+                         "  language DEU include_dflt required;"
+                         "} test;")
+        s = doc.statements[0].statements[0]
+        self.assertEqual(type(s), ast.LanguageStatement)
+        self.assertEqual(s.language, "DEU")
+        self.assertTrue(s.include_default)
+        self.assertTrue(s.required)
+
     def test_script(self):
         doc = self.parse("feature test {script cyrl;} test;")
         s = doc.statements[0].statements[0]
