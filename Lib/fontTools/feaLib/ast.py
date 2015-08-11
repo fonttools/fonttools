@@ -65,6 +65,11 @@ class ScriptStatement(object):
         self.script = script
 
 
+class SubtableStatement(object):
+    def __init__(self, location):
+        self.location = location
+
+
 class SubstitutionRule(object):
     def __init__(self, location, old, new):
         self.location, self.old, self.new = (location, old, new)

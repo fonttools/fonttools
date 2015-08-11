@@ -232,6 +232,12 @@ class Parser(object):
         rule.lookups = lookups
         return rule
 
+    def parse_subtable_(self):
+        assert self.is_cur_keyword_("subtable")
+        location = self.cur_token_location_
+        self.expect_symbol_(";")
+        return ast.SubtableStatement(location)
+
     def parse_valuerecord_(self, vertical):
         if self.next_token_type_ is Lexer.NUMBER:
             number, location = self.expect_number_(), self.cur_token_location_
@@ -308,6 +314,8 @@ class Parser(object):
             elif (self.is_cur_keyword_("substitute") or
                   self.is_cur_keyword_("sub")):
                 statements.append(self.parse_substitute_())
+            elif self.is_cur_keyword_("subtable"):
+                statements.append(self.parse_subtable_())
             elif self.is_cur_keyword_("valueRecordDef"):
                 statements.append(self.parse_valuerecord_definition_(vertical))
             else:

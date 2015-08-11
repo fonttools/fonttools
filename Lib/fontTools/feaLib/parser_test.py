@@ -299,6 +299,11 @@ class ParserTest(unittest.TestCase):
             ParserError, 'Expected "by" or explicit lookup references',
             self.parse, "feature liga {substitute f f i;} liga;")
 
+    def test_subtable(self):
+        doc = self.parse("feature test {subtable;} test;")
+        s = doc.statements[0].statements[0]
+        self.assertEqual(type(s), ast.SubtableStatement)
+
     def test_valuerecord_format_a_horizontal(self):
         doc = self.parse("feature liga {valueRecordDef 123 foo;} liga;")
         value = doc.statements[0].statements[0].value
