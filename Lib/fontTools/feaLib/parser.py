@@ -219,15 +219,16 @@ class Parser(object):
         location = self.cur_token_location_
         old_prefix, old, lookups, old_suffix = self.parse_glyph_pattern_()
 
+        new = []
         if self.next_token_ == "by":
             keyword = self.expect_keyword_("by")
-            new = [self.parse_glyphclass_(accept_glyphname=True)]
+            while self.next_token_ != ";":
+                new.append(self.parse_glyphclass_(accept_glyphname=True))
         elif self.next_token_ == "from":
             keyword = self.expect_keyword_("from")
             new = [self.parse_glyphclass_(accept_glyphname=False)]
         else:
             keyword = None
-            new = []
         self.expect_symbol_(";")
         if len(new) is 0 and not any(lookups):
             raise ParserError(
