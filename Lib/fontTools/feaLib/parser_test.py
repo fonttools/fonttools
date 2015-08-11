@@ -173,6 +173,57 @@ class ParserTest(unittest.TestCase):
         self.assertTrue(s.include_default)
         self.assertTrue(s.required)
 
+    def test_lookup_block(self):
+        [lookup] = self.parse("lookup Ligatures {} Ligatures;").statements
+        self.assertEqual(lookup.name, "Ligatures")
+        self.assertFalse(lookup.use_extension)
+
+    def test_lookup_block_useExtension(self):
+        [lookup] = self.parse("lookup Foo useExtension {} Foo;").statements
+        self.assertEqual(lookup.name, "Foo")
+        self.assertTrue(lookup.use_extension)
+
+    def test_lookup_block_name_mismatch(self):
+        self.assertRaisesRegex(
+            ParserError, 'Expected "Foo"',
+            self.parse, "lookup Foo {} Bar;")
+
+    def test_lookup_block_with_horizontal_valueRecordDef(self):
+        doc = self.parse("feature liga {"
+                         "  lookup look {"
+                         "    valueRecordDef 123 foo;"
+                         "  } look;"
+                         "} liga;")
+        [liga] = doc.statements
+        [look] = liga.statements
+        [foo] = look.statements
+        self.assertEqual(foo.value.xAdvance, 123)
+        self.assertEqual(foo.value.yAdvance, 0)
+
+    def test_lookup_block_with_vertical_valueRecordDef(self):
+        doc = self.parse("feature vkrn {"
+                         "  lookup look {"
+                         "    valueRecordDef 123 foo;"
+                         "  } look;"
+                         "} vkrn;")
+        [vkrn] = doc.statements
+        [look] = vkrn.statements
+        [foo] = look.statements
+        self.assertEqual(foo.value.xAdvance, 0)
+        self.assertEqual(foo.value.yAdvance, 123)
+
+    def test_lookup_reference(self):
+        [foo, bar] = self.parse("lookup Foo {} Foo;"
+                                "feature Bar {lookup Foo;} Bar;").statements
+        [ref] = bar.statements
+        self.assertEqual(type(ref), ast.LookupReferenceStatement)
+        self.assertEqual(ref.lookup, foo)
+
+    def test_lookup_reference_unknown(self):
+        self.assertRaisesRegex(
+            ParserError, 'Unknown lookup "Huh"',
+            self.parse, "feature liga {lookup Huh;} liga;")
+
     def test_script(self):
         doc = self.parse("feature test {script cyrl;} test;")
         s = doc.statements[0].statements[0]
