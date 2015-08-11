@@ -111,7 +111,7 @@ class Parser(object):
         return result
 
     def parse_glyph_pattern_(self):
-        prefix, glyphs, suffix = ([], [], [])
+        prefix, glyphs, lookups, suffix = ([], [], [], [])
         while self.next_token_ not in {"by", ";"}:
             gc = self.parse_glyphclass_(accept_glyphname=True)
             marked = False
@@ -124,17 +124,33 @@ class Parser(object):
                 suffix.append(gc)
             else:
                 prefix.append(gc)
+
+            lookup = None
+            if self.next_token_ == "lookup":
+                self.expect_keyword_("lookup")
+                if not marked:
+                    raise ParserError("Lookups can only follow marked glyphs",
+                                      self.cur_token_location_)
+                lookup_name = self.expect_name_()
+                lookup = self.lookups_.resolve(lookup_name)
+                if lookup is None:
+                    raise ParserError('Unknown lookup "%s"' % lookup_name,
+                                      self.cur_token_location_)
+            if marked:
+                lookups.append(lookup)
+
         if not glyphs and not suffix:  # eg., "sub f f i by"
-            return ([], prefix, [])
+            assert lookups == []
+            return ([], prefix, [None] * len(prefix), [])
         else:
-            return (prefix, glyphs, suffix)
+            return (prefix, glyphs, lookups, suffix)
 
     def parse_ignore_(self):
         assert self.is_cur_keyword_("ignore")
         location = self.cur_token_location_
         self.advance_lexer_()
         if self.cur_token_ in ["substitute", "sub"]:
-            prefix, glyphs, suffix = self.parse_glyph_pattern_()
+            prefix, glyphs, lookups, suffix = self.parse_glyph_pattern_()
             self.expect_symbol_(";")
             return ast.IgnoreSubstitutionRule(location, prefix, glyphs, suffix)
         raise ParserError("Expected \"substitute\"", self.next_token_location_)
@@ -183,12 +199,19 @@ class Parser(object):
     def parse_substitute_(self):
         assert self.cur_token_ in {"substitute", "sub"}
         location = self.cur_token_location_
-        old_prefix, old, old_suffix = self.parse_glyph_pattern_()
-        self.expect_keyword_("by")
-        new = self.parse_glyphclass_(accept_glyphname=True)
+        old_prefix, old, lookups, old_suffix = self.parse_glyph_pattern_()
+        if self.next_token_ == "by":
+            self.expect_keyword_("by")
+            new = [self.parse_glyphclass_(accept_glyphname=True)]
+        else:
+            new = []
         self.expect_symbol_(";")
-        rule = ast.SubstitutionRule(location, old, [new])
+        if len(new) is 0 and not any(lookups):
+            raise ParserError('Expected "by" or explicit lookup references',
+                              self.cur_token_location_)
+        rule = ast.SubstitutionRule(location, old, new)
         rule.old_prefix, rule.old_suffix = old_prefix, old_suffix
+        rule.lookups = lookups
         return rule
 
     def parse_valuerecord_(self, vertical):

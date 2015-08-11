@@ -64,6 +64,7 @@ class SubstitutionRule(object):
         self.location, self.old, self.new = (location, old, new)
         self.old_prefix = []
         self.old_suffix = []
+        self.lookups = [None] * len(old)
 
 
 class ValueRecord(object):
