@@ -28,6 +28,12 @@ class GlyphClassDefinition(object):
         self.glyphs = glyphs
 
 
+class AlternateSubstitution(object):
+    def __init__(self, location, glyph, from_class):
+        self.location = location
+        self.glyph, self.from_class = (glyph, from_class)
+
+
 class AnchorDefinition(object):
     def __init__(self, location, name, x, y, contourpoint):
         self.location = location
