@@ -130,7 +130,7 @@ class Parser(object):
 
     def parse_glyph_pattern_(self):
         prefix, glyphs, lookups, suffix = ([], [], [], [])
-        while self.next_token_ not in {"by", ";"}:
+        while self.next_token_ not in {"by", "from", ";"}:
             gc = self.parse_glyphclass_(accept_glyphname=True)
             marked = False
             if self.next_token_ == "'":
@@ -218,15 +218,31 @@ class Parser(object):
         assert self.cur_token_ in {"substitute", "sub"}
         location = self.cur_token_location_
         old_prefix, old, lookups, old_suffix = self.parse_glyph_pattern_()
+
         if self.next_token_ == "by":
-            self.expect_keyword_("by")
+            keyword = self.expect_keyword_("by")
             new = [self.parse_glyphclass_(accept_glyphname=True)]
+        elif self.next_token_ == "from":
+            keyword = self.expect_keyword_("from")
+            new = [self.parse_glyphclass_(accept_glyphname=False)]
         else:
+            keyword = None
             new = []
         self.expect_symbol_(";")
         if len(new) is 0 and not any(lookups):
-            raise ParserError('Expected "by" or explicit lookup references',
-                              self.cur_token_location_)
+            raise ParserError(
+                'Expected "by", "from" or explicit lookup references',
+                self.cur_token_location_)
+
+        if keyword == "from":
+            if len(old) != 1 or len(old[0]) != 1:
+                raise ParserError('Expected a single glyph before "from"',
+                                  location)
+            if len(new) != 1:
+                raise ParserError('Expected a single glyphclass after "from"',
+                                  location)
+            return ast.AlternateSubstitution(location, list(old[0])[0], new[0])
+
         rule = ast.SubstitutionRule(location, old, new)
         rule.old_prefix, rule.old_suffix = old_prefix, old_suffix
         rule.lookups = lookups
