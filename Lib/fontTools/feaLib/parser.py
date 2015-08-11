@@ -287,7 +287,13 @@ class Parser(object):
         location = self.cur_token_location_
         tag = self.expect_tag_()
         vertical = (tag == "vkrn")
-        block = ast.FeatureBlock(location, tag)
+
+        use_extension = False
+        if self.next_token_ == "useExtension":
+            self.expect_keyword_("useExtension")
+            use_extension = True
+
+        block = ast.FeatureBlock(location, tag, use_extension)
         self.parse_block_(block, vertical)
         return block
 
