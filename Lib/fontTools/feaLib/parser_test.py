@@ -286,7 +286,7 @@ class ParserTest(unittest.TestCase):
 
     def test_feature_block(self):
         [liga] = self.parse("feature liga {} liga;").statements
-        self.assertEqual(liga.tag, "liga")
+        self.assertEqual(liga.name, "liga")
 
     def setUp(self):
         self.tempdir = None

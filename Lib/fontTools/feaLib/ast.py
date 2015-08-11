@@ -8,9 +8,9 @@ class FeatureFile(object):
 
 
 class FeatureBlock(object):
-    def __init__(self, location, tag):
+    def __init__(self, location, name):
         self.location = location
-        self.tag = tag
+        self.name = name
         self.statements = []
 
 
