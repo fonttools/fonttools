@@ -45,7 +45,7 @@ class Parser(object):
             elif self.is_cur_keyword_("anchorDef"):
                 statements.append(self.parse_anchordef_())
             elif self.is_cur_keyword_("languagesystem"):
-                self.parse_languagesystem_()
+                statements.append(self.parse_languagesystem_())
             elif self.is_cur_keyword_("lookup"):
                 statements.append(self.parse_lookup_(vertical=False))
             elif self.is_cur_keyword_("feature"):
@@ -274,8 +274,7 @@ class Parser(object):
         location = self.cur_token_location_
         script, language = self.expect_tag_(), self.expect_tag_()
         self.expect_symbol_(";")
-        langsys = ast.LanguageSystemStatement(location, script, language)
-        self.doc_.statements.append(langsys)
+        return ast.LanguageSystemStatement(location, script, language)
 
     def parse_feature_block_(self):
         assert self.cur_token_ == "feature"
