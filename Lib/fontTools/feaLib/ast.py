@@ -28,6 +28,12 @@ class GlyphClassDefinition(object):
         self.glyphs = glyphs
 
 
+class AnchorDefinition(object):
+    def __init__(self, location, name, x, y, contourpoint):
+        self.location = location
+        self.name, self.x, self.y, self.contourpoint = name, x, y, contourpoint
+
+
 class LanguageStatement(object):
     def __init__(self, location, language, include_default, required):
         self.location = location
