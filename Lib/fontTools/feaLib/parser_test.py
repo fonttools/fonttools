@@ -36,6 +36,16 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(foo.y, 456)
         self.assertEqual(foo.contourpoint, 5)
 
+    def test_feature_block(self):
+        [liga] = self.parse("feature liga {} liga;").statements
+        self.assertEqual(liga.name, "liga")
+        self.assertFalse(liga.use_extension)
+
+    def test_feature_block_useExtension(self):
+        [liga] = self.parse("feature liga useExtension {} liga;").statements
+        self.assertEqual(liga.name, "liga")
+        self.assertTrue(liga.use_extension)
+
     def test_glyphclass(self):
         [gc] = self.parse("@dash = [endash emdash figuredash];").statements
         self.assertEqual(gc.name, "dash")
@@ -365,10 +375,6 @@ class ParserTest(unittest.TestCase):
         self.assertRaisesRegex(
             ParserError, "longer than 4 characters",
             self.parse, "languagesystem latn FOOBAR")
-
-    def test_feature_block(self):
-        [liga] = self.parse("feature liga {} liga;").statements
-        self.assertEqual(liga.name, "liga")
 
     def setUp(self):
         self.tempdir = None
