@@ -14,6 +14,13 @@ class FeatureBlock(object):
         self.statements = []
 
 
+class LookupBlock(object):
+    def __init__(self, location, name, use_extension):
+        self.location = location
+        self.name, self.use_extension = name, use_extension
+        self.statements = []
+
+
 class GlyphClassDefinition(object):
     def __init__(self, location, name, glyphs):
         self.location = location
@@ -39,6 +46,11 @@ class IgnoreSubstitutionRule(object):
     def __init__(self, location, prefix, glyphs, suffix):
         self.location = location
         self.prefix, self.glyphs, self.suffix = (prefix, glyphs, suffix)
+
+
+class LookupReferenceStatement(object):
+    def __init__(self, location, lookup):
+        self.location, self.lookup = (location, lookup)
 
 
 class ScriptStatement(object):

@@ -24,8 +24,11 @@ class Parser(object):
     def __init__(self, path):
         self.doc_ = ast.FeatureFile()
         self.glyphclasses_ = SymbolTable()
+        self.lookups_ = SymbolTable()
         self.valuerecords_ = SymbolTable()
-        self.symbol_tables_ = [self.glyphclasses_, self.valuerecords_]
+        self.symbol_tables_ = {
+            self.glyphclasses_, self.lookups_, self.valuerecords_
+        }
         self.next_token_type_, self.next_token_ = (None, None)
         self.next_token_location_ = None
         self.lexer_ = IncludingLexer(path)
@@ -42,11 +45,13 @@ class Parser(object):
                     self.parse_valuerecord_definition_(vertical=False))
             elif self.is_cur_keyword_("languagesystem"):
                 self.parse_languagesystem_()
+            elif self.is_cur_keyword_("lookup"):
+                statements.append(self.parse_lookup_(vertical=False))
             elif self.is_cur_keyword_("feature"):
                 statements.append(self.parse_feature_block_())
             else:
-                raise ParserError("Expected languagesystem, feature, or "
-                                  "glyph class definition",
+                raise ParserError("Expected feature, languagesystem, "
+                                  "lookup, or glyph class definition",
                                   self.cur_token_location_)
         return self.doc_
 
@@ -147,6 +152,28 @@ class Parser(object):
         return ast.LanguageStatement(location, language.strip(),
                                      include_default, required)
 
+    def parse_lookup_(self, vertical):
+        assert self.is_cur_keyword_("lookup")
+        location, name = self.cur_token_location_, self.expect_name_()
+
+        if self.next_token_ == ";":
+            lookup = self.lookups_.resolve(name)
+            if lookup is None:
+                raise ParserError("Unknown lookup \"%s\"" % name,
+                                  self.cur_token_location_)
+            self.expect_symbol_(";")
+            return ast.LookupReferenceStatement(location, lookup)
+
+        use_extension = False
+        if self.next_token_ == "useExtension":
+            self.expect_keyword_("useExtension")
+            use_extension = True
+
+        block = ast.LookupBlock(location, name, use_extension)
+        self.parse_block_(block, vertical)
+        self.lookups_.define(name, block)
+        return block
+
     def parse_script_(self):
         assert self.is_cur_keyword_("script")
         location, script = self.cur_token_location_, self.expect_tag_()
@@ -232,6 +259,8 @@ class Parser(object):
                 statements.append(self.parse_ignore_())
             elif self.is_cur_keyword_("language"):
                 statements.append(self.parse_language_())
+            elif self.is_cur_keyword_("lookup"):
+                statements.append(self.parse_lookup_(vertical))
             elif self.is_cur_keyword_("script"):
                 statements.append(self.parse_script_())
             elif (self.is_cur_keyword_("substitute") or
