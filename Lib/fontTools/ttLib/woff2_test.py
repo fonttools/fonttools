@@ -21,7 +21,7 @@ except ImportError:
 
 
 current_dir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
-data_dir = os.path.join(current_dir, 'test_data')
+data_dir = os.path.join(current_dir, 'testdata')
 TTX = os.path.join(data_dir, 'TestTTF-Regular.ttx')
 OTX = os.path.join(data_dir, 'TestOTF-Regular.otx')
 METADATA = os.path.join(data_dir, 'test_woff2_metadata.xml')
