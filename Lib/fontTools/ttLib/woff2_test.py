@@ -20,6 +20,12 @@ except ImportError:
 	pass
 
 
+# Python 3 renamed 'assertRaisesRegexp' to 'assertRaisesRegex', and fires
+# deprecation warnings if a program uses the old name.
+if not hasattr(unittest.TestCase, 'assertRaisesRegex'):
+	unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
+
+
 current_dir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 data_dir = os.path.join(current_dir, 'testdata')
 TTX = os.path.join(data_dir, 'TestTTF-Regular.ttx')
@@ -59,12 +65,12 @@ class WOFF2ReaderTest(unittest.TestCase):
 		self.file.seek(0)
 
 	def test_bad_signature(self):
-		with self.assertRaisesRegexp(ttLib.TTLibError, 'bad signature'):
+		with self.assertRaisesRegex(ttLib.TTLibError, 'bad signature'):
 			WOFF2Reader(BytesIO(b"wOFF"))
 
 	def test_not_enough_data_header(self):
 		incomplete_header = self.file.read(woff2DirectorySize - 1)
-		with self.assertRaisesRegexp(ttLib.TTLibError, 'not enough data'):
+		with self.assertRaisesRegex(ttLib.TTLibError, 'not enough data'):
 			WOFF2Reader(BytesIO(incomplete_header))
 
 	def test_incorrect_compressed_size(self):
@@ -78,7 +84,7 @@ class WOFF2ReaderTest(unittest.TestCase):
 	def test_incorrect_uncompressed_size(self):
 		decompress_backup = brotli.decompress
 		brotli.decompress = lambda data: b""  # return empty byte string
-		with self.assertRaisesRegexp(ttLib.TTLibError, 'unexpected size for decompressed'):
+		with self.assertRaisesRegex(ttLib.TTLibError, 'unexpected size for decompressed'):
 			WOFF2Reader(self.file)
 		brotli.decompress = decompress_backup
 
@@ -87,7 +93,7 @@ class WOFF2ReaderTest(unittest.TestCase):
 		header = sstruct.unpack(woff2DirectoryFormat, data)
 		header['length'] -= 1
 		data = sstruct.pack(woff2DirectoryFormat, header)
-		with self.assertRaisesRegexp(
+		with self.assertRaisesRegex(
 				ttLib.TTLibError, "doesn't match the actual file size"):
 			WOFF2Reader(BytesIO(data + self.file.read()))
 
@@ -112,7 +118,7 @@ class WOFF2ReaderTest(unittest.TestCase):
 
 	def test_reconstruct_unknown(self):
 		reader = WOFF2Reader(self.file)
-		with self.assertRaisesRegexp(ttLib.TTLibError, 'transform for table .* unknown'):
+		with self.assertRaisesRegex(ttLib.TTLibError, 'transform for table .* unknown'):
 			reader.reconstructTable('ZZZZ')
 
 
@@ -141,7 +147,7 @@ class WOFF2ReaderTTFTest(WOFF2ReaderTest):
 	def test_reconstruct_loca_not_match_orig_size(self):
 		reader = WOFF2Reader(self.file)
 		reader.tables['loca'].origLength -= 1
-		with self.assertRaisesRegexp(
+		with self.assertRaisesRegex(
 				ttLib.TTLibError, "'loca' table doesn't match original size"):
 			reader.reconstructTable('loca')
 
@@ -224,23 +230,23 @@ class WOFF2DirectoryEntryTest(unittest.TestCase):
 		self.entry = WOFF2DirectoryEntry()
 
 	def test_not_enough_data_table_flags(self):
-		with self.assertRaisesRegexp(ttLib.TTLibError, "can't read table 'flags'"):
+		with self.assertRaisesRegex(ttLib.TTLibError, "can't read table 'flags'"):
 			self.entry.fromString(b"")
 
 	def test_not_enough_data_table_tag(self):
 		incompleteData = bytearray([0x3F, 0, 0, 0])
-		with self.assertRaisesRegexp(ttLib.TTLibError, "can't read table 'tag'"):
+		with self.assertRaisesRegex(ttLib.TTLibError, "can't read table 'tag'"):
 			self.entry.fromString(bytes(incompleteData))
 
 	def test_table_reserved_flags(self):
-		with self.assertRaisesRegexp(ttLib.TTLibError, "bits 6-7 are reserved"):
+		with self.assertRaisesRegex(ttLib.TTLibError, "bits 6-7 are reserved"):
 			self.entry.fromString(bytechr(0xC0))
 
 	def test_loca_zero_transformLength(self):
 		data = bytechr(getKnownTagIndex('loca'))  # flags
 		data += packBase128(random.randint(1, 100))  # origLength
 		data += packBase128(1)  # non-zero transformLength
-		with self.assertRaisesRegexp(
+		with self.assertRaisesRegex(
 				ttLib.TTLibError, "transformLength of the 'loca' table must be 0"):
 			self.entry.fromString(data)
 
@@ -376,17 +382,17 @@ class WOFF2WriterTest(unittest.TestCase):
 
 	def test_no_rewrite_table(self):
 		self.writer['ZZZZ'] = b"\0"
-		with self.assertRaisesRegexp(ttLib.TTLibError, "cannot rewrite"):
+		with self.assertRaisesRegex(ttLib.TTLibError, "cannot rewrite"):
 			self.writer['ZZZZ'] = b"\0"
 
 	def test_num_tables(self):
 		self.writer['ABCD'] = b"\0"
-		with self.assertRaisesRegexp(ttLib.TTLibError, "wrong number of tables"):
+		with self.assertRaisesRegex(ttLib.TTLibError, "wrong number of tables"):
 			self.writer.close()
 
 	def test_required_tables(self):
 		font = ttLib.TTFont(flavor="woff2")
-		with self.assertRaisesRegexp(ttLib.TTLibError, "missing required table"):
+		with self.assertRaisesRegex(ttLib.TTLibError, "missing required table"):
 			font.save(BytesIO())
 
 	def test_head_transform_flag(self):
@@ -440,7 +446,7 @@ class WOFF2WriterTest(unittest.TestCase):
 		for i in range(self.numTables):
 			self.writer[bytechr(65 + i)*4] = b"\0"
 		self.writer.sfntVersion = 'ZZZZ'
-		with self.assertRaisesRegexp(ttLib.TTLibError, "bad sfntVersion"):
+		with self.assertRaisesRegex(ttLib.TTLibError, "bad sfntVersion"):
 			self.writer.close()
 
 	def test_calcTotalSize_no_flavorData(self):
@@ -549,7 +555,7 @@ class WOFF2LocaTableTest(unittest.TestCase):
 		locaTable = self.font['loca']
 		locaTable.set(list(range(0x20000 + 1)))
 		self.font['glyf'].indexFormat = 0
-		with self.assertRaisesRegexp(
+		with self.assertRaisesRegex(
 				ttLib.TTLibError, "indexFormat is 0 but local offsets > 0x20000"):
 			locaTable.compile(self.font)
 
@@ -557,7 +563,7 @@ class WOFF2LocaTableTest(unittest.TestCase):
 		locaTable = self.font['loca']
 		locaTable.set([1, 3, 5, 7])
 		self.font['glyf'].indexFormat = 0
-		with self.assertRaisesRegexp(ttLib.TTLibError, "offsets not multiples of 2"):
+		with self.assertRaisesRegex(ttLib.TTLibError, "offsets not multiples of 2"):
 			locaTable.compile(self.font)
 
 	def test_compile_long_loca(self):
@@ -639,7 +645,7 @@ class WOFF2GlyfTableTest(unittest.TestCase):
 		glyfTable = WOFF2GlyfTable()
 		badGlyphOrder = self.font.getGlyphOrder()[:-1]
 		self.font.setGlyphOrder(badGlyphOrder)
-		with self.assertRaisesRegexp(ttLib.TTLibError, "incorrect glyphOrder"):
+		with self.assertRaisesRegex(ttLib.TTLibError, "incorrect glyphOrder"):
 			glyfTable.reconstruct(self.transformedGlyfData, self.font)
 
 	def test_reconstruct_glyf_missing_glyphOrder(self):
@@ -681,14 +687,14 @@ class WOFF2GlyfTableTest(unittest.TestCase):
 		self.assertEqual(self.tables['loca'], data)
 
 	def test_reconstruct_glyf_header_not_enough_data(self):
-		with self.assertRaisesRegexp(ttLib.TTLibError, "not enough 'glyf' data"):
+		with self.assertRaisesRegex(ttLib.TTLibError, "not enough 'glyf' data"):
 			WOFF2GlyfTable().reconstruct(b"", self.font)
 
 	def test_reconstruct_glyf_table_incorrect_size(self):
 		msg = "incorrect size of transformed 'glyf'"
-		with self.assertRaisesRegexp(ttLib.TTLibError, msg):
+		with self.assertRaisesRegex(ttLib.TTLibError, msg):
 			WOFF2GlyfTable().reconstruct(self.transformedGlyfData + b"\x00", self.font)
-		with self.assertRaisesRegexp(ttLib.TTLibError, msg):
+		with self.assertRaisesRegex(ttLib.TTLibError, msg):
 			WOFF2GlyfTable().reconstruct(self.transformedGlyfData[:-1], self.font)
 
 	def test_transform_glyf(self):
@@ -701,10 +707,10 @@ class WOFF2GlyfTableTest(unittest.TestCase):
 		badGlyphOrder = self.font.getGlyphOrder()[:-1]
 		del glyfTable.glyphOrder
 		self.font.setGlyphOrder(badGlyphOrder)
-		with self.assertRaisesRegexp(ttLib.TTLibError, "incorrect glyphOrder"):
+		with self.assertRaisesRegex(ttLib.TTLibError, "incorrect glyphOrder"):
 			glyfTable.transform(self.font)
 		glyfTable.glyphOrder = badGlyphOrder
-		with self.assertRaisesRegexp(ttLib.TTLibError, "incorrect glyphOrder"):
+		with self.assertRaisesRegex(ttLib.TTLibError, "incorrect glyphOrder"):
 			glyfTable.transform(self.font)
 
 	def test_transform_glyf_missing_glyphOrder(self):
