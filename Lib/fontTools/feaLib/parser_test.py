@@ -237,6 +237,7 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(sub.old, [{"a"}])
         self.assertEqual(sub.old_suffix, [])
         self.assertEqual(sub.new, [{"a.sc"}])
+        self.assertEqual(sub.lookups, [None])
 
     def test_substitute_single_format_b(self):  # GSUB LookupType 1
         doc = self.parse(
@@ -248,6 +249,7 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(sub.old, [{"one.fitted", "one.oldstyle"}])
         self.assertEqual(sub.old_suffix, [])
         self.assertEqual(sub.new, [{"one"}])
+        self.assertEqual(sub.lookups, [None])
 
     def test_substitute_single_format_c(self):  # GSUB LookupType 1
         doc = self.parse(
@@ -259,6 +261,7 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(sub.old, [{"a", "b", "c", "d"}])
         self.assertEqual(sub.old_suffix, [])
         self.assertEqual(sub.new, [{"A.sc", "B.sc", "C.sc", "D.sc"}])
+        self.assertEqual(sub.lookups, [None])
 
     def test_substitute_ligature(self):  # GSUB LookupType 4
         doc = self.parse("feature liga {substitute f f i by f_f_i;} liga;")
@@ -267,10 +270,17 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(sub.old, [{"f"}, {"f"}, {"i"}])
         self.assertEqual(sub.old_suffix, [])
         self.assertEqual(sub.new, [{"f_f_i"}])
+        self.assertEqual(sub.lookups, [None, None, None])
+
+    def test_substitute_lookups(self):
+        doc = Parser(self.getpath("spec5fi.fea")).parse()
+        [ligs, sub, feature] = doc.statements
+        self.assertEqual(feature.statements[0].lookups, [ligs, None, sub])
+        self.assertEqual(feature.statements[1].lookups, [ligs, None, sub])
 
     def test_substitute_missing_by(self):
         self.assertRaisesRegex(
-            ParserError, "Expected \"by\"",
+            ParserError, 'Expected "by" or explicit lookup references',
             self.parse, "feature liga {substitute f f i;} liga;")
 
     def test_valuerecord_format_a_horizontal(self):
