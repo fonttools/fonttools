@@ -43,7 +43,7 @@ class Parser(object):
             elif self.is_cur_keyword_("languagesystem"):
                 self.parse_languagesystem_()
             elif self.is_cur_keyword_("feature"):
-                self.parse_feature_block_()
+                statements.append(self.parse_feature_block_())
             else:
                 raise ParserError("Expected languagesystem, feature, or "
                                   "glyph class definition",
@@ -214,15 +214,16 @@ class Parser(object):
         location = self.cur_token_location_
         tag = self.expect_tag_()
         vertical = (tag == "vkrn")
+        block = ast.FeatureBlock(location, tag)
+        self.parse_block_(block, vertical)
+        return block
 
+    def parse_block_(self, block, vertical):
         self.expect_symbol_("{")
         for symtab in self.symbol_tables_:
             symtab.enter_scope()
 
-        block = ast.FeatureBlock(location, tag)
-        self.doc_.statements.append(block)
         statements = block.statements
-
         while self.next_token_ != "}":
             self.advance_lexer_()
             if self.cur_token_type_ is Lexer.GLYPHCLASS:
@@ -248,9 +249,9 @@ class Parser(object):
         for symtab in self.symbol_tables_:
             symtab.exit_scope()
 
-        endtag = self.expect_tag_()
-        if tag != endtag:
-            raise ParserError("Expected \"%s\"" % tag.strip(),
+        name = self.expect_name_()
+        if name != block.name.strip():
+            raise ParserError("Expected \"%s\"" % block.name.strip(),
                               self.cur_token_location_)
         self.expect_symbol_(";")
 
