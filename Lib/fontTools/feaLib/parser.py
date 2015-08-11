@@ -23,11 +23,13 @@ class ParserError(Exception):
 class Parser(object):
     def __init__(self, path):
         self.doc_ = ast.FeatureFile()
+        self.anchors_ = SymbolTable()
         self.glyphclasses_ = SymbolTable()
         self.lookups_ = SymbolTable()
         self.valuerecords_ = SymbolTable()
         self.symbol_tables_ = {
-            self.glyphclasses_, self.lookups_, self.valuerecords_
+            self.anchors_, self.glyphclasses_,
+            self.lookups_, self.valuerecords_
         }
         self.next_token_type_, self.next_token_ = (None, None)
         self.next_token_location_ = None
@@ -40,20 +42,36 @@ class Parser(object):
             self.advance_lexer_()
             if self.cur_token_type_ is Lexer.GLYPHCLASS:
                 statements.append(self.parse_glyphclass_definition_())
-            elif self.is_cur_keyword_("valueRecordDef"):
-                statements.append(
-                    self.parse_valuerecord_definition_(vertical=False))
+            elif self.is_cur_keyword_("anchorDef"):
+                statements.append(self.parse_anchordef_())
             elif self.is_cur_keyword_("languagesystem"):
                 self.parse_languagesystem_()
             elif self.is_cur_keyword_("lookup"):
                 statements.append(self.parse_lookup_(vertical=False))
             elif self.is_cur_keyword_("feature"):
                 statements.append(self.parse_feature_block_())
+            elif self.is_cur_keyword_("valueRecordDef"):
+                statements.append(
+                    self.parse_valuerecord_definition_(vertical=False))
             else:
                 raise ParserError("Expected feature, languagesystem, "
                                   "lookup, or glyph class definition",
                                   self.cur_token_location_)
         return self.doc_
+
+    def parse_anchordef_(self):
+        assert self.is_cur_keyword_("anchorDef")
+        location = self.cur_token_location_
+        x, y = self.expect_number_(), self.expect_number_()
+        contourpoint = None
+        if self.next_token_ == "contourpoint":
+            self.expect_keyword_("contourpoint")
+            contourpoint = self.expect_number_()
+        name = self.expect_name_()
+        self.expect_symbol_(";")
+        anchordef = ast.AnchorDefinition(location, name, x, y, contourpoint)
+        self.anchors_.define(name, anchordef)
+        return anchordef
 
     def parse_glyphclass_definition_(self):
         location, name = self.cur_token_location_, self.cur_token_
@@ -278,6 +296,8 @@ class Parser(object):
             self.advance_lexer_()
             if self.cur_token_type_ is Lexer.GLYPHCLASS:
                 statements.append(self.parse_glyphclass_definition_())
+            elif self.is_cur_keyword_("anchorDef"):
+                statements.append(self.parse_anchordef_())
             elif self.is_cur_keyword_("ignore"):
                 statements.append(self.parse_ignore_())
             elif self.is_cur_keyword_("language"):
@@ -293,8 +313,7 @@ class Parser(object):
                 statements.append(self.parse_valuerecord_definition_(vertical))
             else:
                 raise ParserError(
-                    "Expected glyph class definition, substitute, "
-                    "or valueRecordDef",
+                    "Expected glyph class definition or statement",
                     self.cur_token_location_)
 
         self.expect_symbol_("}")

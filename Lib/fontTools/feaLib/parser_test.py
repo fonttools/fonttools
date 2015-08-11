@@ -20,6 +20,22 @@ class ParserTest(unittest.TestCase):
         if not hasattr(self, "assertRaisesRegex"):
             self.assertRaisesRegex = self.assertRaisesRegexp
 
+    def test_anchordef(self):
+        [foo] = self.parse("anchorDef 123 456 foo;").statements
+        self.assertEqual(type(foo), ast.AnchorDefinition)
+        self.assertEqual(foo.name, "foo")
+        self.assertEqual(foo.x, 123)
+        self.assertEqual(foo.y, 456)
+        self.assertEqual(foo.contourpoint, None)
+
+    def test_anchordef_contourpoint(self):
+        [foo] = self.parse("anchorDef 123 456 contourpoint 5 foo;").statements
+        self.assertEqual(type(foo), ast.AnchorDefinition)
+        self.assertEqual(foo.name, "foo")
+        self.assertEqual(foo.x, 123)
+        self.assertEqual(foo.y, 456)
+        self.assertEqual(foo.contourpoint, 5)
+
     def test_glyphclass(self):
         [gc] = self.parse("@dash = [endash emdash figuredash];").statements
         self.assertEqual(gc.name, "dash")
