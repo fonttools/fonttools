@@ -41,17 +41,18 @@ def generateStats(stats):
 
     for info in stats:
 
-        target.write(info[0]+" Analysis:\n")
-        target.write("\n")
-        target.write(template.format("Original font file size:", "{:,}".format(info[1]), "")+"\n")
-        reduction = ((info[1] - info[2])*100)/info[1]
+        target.write(info[0]+" Analysis over\n")
+        target.write(info[1])
+        target.write("\n\n")
+        target.write(template.format("Original font file size:", "{:,}".format(info[2]), "")+"\n")
+        reduction = ((info[2] - info[3])*100)/info[2]
         origReduction.append(reduction)
-        target.write(template.format("Size after tree-shaking:", "{:,}".format(info[2]), "(Reduction of %.2f%%)" % reduction )+"\n")
+        target.write(template.format("Size after tree-shaking:", "{:,}".format(info[3]), "(Reduction of %.2f%%)" % reduction )+"\n")
         target.write("\n")
-        target.write(template.format("Subsetted font file size:", "{:,}".format(info[3]), "")+"\n")
-        reduction = ((info[3] - info[4])*100)/info[3]
+        target.write(template.format("Subsetted font file size:", "{:,}".format(info[4]), "")+"\n")
+        reduction = ((info[4] - info[5])*100)/info[4]
         tsReduction.append(reduction)
-        target.write(template.format("Size after tree-shaking:", "{:,}".format(info[4]), "(Reduction of %.2f%%)" % reduction )+"\n")
+        target.write(template.format("Size after tree-shaking:", "{:,}".format(info[5]), "(Reduction of %.2f%%)" % reduction )+"\n")
         target.write("\n\n")
 
     target.close()
@@ -72,17 +73,18 @@ def generateStats(stats):
     target.write("============================================================\n")
     target.write("                        SAMPLE RESULT                       \n")
     target.write("============================================================\n")
-    target.write(stats[0][0]+" Analysis:\n")
-    target.write("\n")
-    target.write(template.format("Original font file size:", "{:,}".format(stats[0][1]), "")+"\n")
-    reduction = ((stats[0][1] - stats[0][2])*100)/stats[0][1]
+    target.write(stats[0][0]+" Analysis over\n")
+    target.write(stats[0][1])
+    target.write("\n\n")
+    target.write(template.format("Original font file size:", "{:,}".format(stats[0][2]), "")+"\n")
+    reduction = ((stats[0][2] - stats[0][3])*100)/stats[0][2]
     origReduction.append(reduction)
-    target.write(template.format("Size after tree-shaking:", "{:,}".format(stats[0][2]), "(Reduction of %.2f%%)" % reduction )+"\n")
+    target.write(template.format("Size after tree-shaking:", "{:,}".format(stats[0][3]), "(Reduction of %.2f%%)" % reduction )+"\n")
     target.write("\n")
-    target.write(template.format("Subsetted font file size:", "{:,}".format(stats[0][3]), "")+"\n")
-    reduction = ((stats[0][3] - stats[0][4])*100)/stats[0][3]
+    target.write(template.format("Subsetted font file size:", "{:,}".format(stats[0][4]), "")+"\n")
+    reduction = ((stats[0][4] - stats[0][5])*100)/stats[0][4]
     tsReduction.append(reduction)
-    target.write(template.format("Size after tree-shaking:", "{:,}".format(stats[0][4]), "(Reduction of %.2f%%)" % reduction )+"\n")
+    target.write(template.format("Size after tree-shaking:", "{:,}".format(stats[0][5]), "(Reduction of %.2f%%)" % reduction )+"\n")
     target.write("\n\n")
 
     target.close()
@@ -132,7 +134,7 @@ def main(args):
         subsSize = os.path.getsize(currentDir+"/"+subsetFontFile)
         subsTsSize = os.path.getsize(currentDir+"/"+tsSubsetFile)
 
-        results.append([fontFile, origSize, origTsSize, subsSize, subsTsSize])
+        results.append([fontFile, inputFile, origSize, origTsSize, subsSize, subsTsSize])
 
         os.remove(tsFontFile)
         os.remove(subsetFontFile)

@@ -147,7 +147,7 @@ def performAnalysis(fontFile, subsetFontFile):
     subsTables = sorted(subsTables, reverse=True, key=lambda tup:tup[1])
 
     print("")
-    template = "{0:15} {1:12} {2:12} {3:12} {4:12} {5:12}"
+    template = "{0:15} {1:12} {2:8} {3:12} {4:8} {5:12}"
     print template.format("Table", "Size", "Total%", "New Size", "Total%", "")
     
     for table, size in origTables:
