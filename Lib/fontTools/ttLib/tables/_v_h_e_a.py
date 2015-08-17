@@ -35,7 +35,8 @@ class table__v_h_e_a(DefaultTable.DefaultTable):
 		sstruct.unpack(vheaFormat, data, self)
 
 	def compile(self, ttFont):
-		self.recalc(ttFont)
+		if ttFont.isLoaded('glyf') and ttFont.recalcBBoxes:
+			self.recalc(ttFont)
 		return sstruct.pack(vheaFormat, self)
 
 	def recalc(self, ttFont):
