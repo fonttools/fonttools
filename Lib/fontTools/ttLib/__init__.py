@@ -212,11 +212,8 @@ class TTFont(object):
 		if "GlyphOrder" in tags:
 			tags.remove("GlyphOrder")
 		numTables = len(tags)
-		if reorderTables:
-			import tempfile
-			tmp = tempfile.TemporaryFile(prefix="ttx-fonttools")
-		else:
-			tmp = file
+		# write to a temporary stream to allow saving to unseekable streams
+		tmp = BytesIO()
 		writer = sfnt.SFNTWriter(tmp, numTables, self.sfntVersion, self.flavor, self.flavorData)
 
 		done = []
@@ -225,11 +222,25 @@ class TTFont(object):
 
 		writer.close()
 
-		if reorderTables:
+		if (reorderTables is None or
+				(reorderTables is False and not hasattr(self, 'reader'))):
+			# don't reorder tables and save as is
+			file.write(tmp.getvalue())
+			tmp.close()
+		else:
+			if reorderTables is False:
+				# sort tables using the original font's order
+				tableOrder = self.reader.keys()
+			else:
+				# use the recommended order from the OpenType specification
+				tableOrder = None
 			tmp.flush()
 			tmp.seek(0)
-			reorderFontTables(tmp, file)
+			tmp2 = BytesIO()
+			reorderFontTables(tmp, tmp2, tableOrder)
+			file.write(tmp2.getvalue())
 			tmp.close()
+			tmp2.close()
 
 		if closeStream:
 			file.close()
