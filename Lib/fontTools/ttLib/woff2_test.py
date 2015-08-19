@@ -46,12 +46,12 @@ def setUpModule():
 	ttf = ttLib.TTFont(recalcBBoxes=False, recalcTimestamp=False)
 	ttf.importXML(TTX, quiet=True)
 	ttf.flavor = "woff2"
-	ttf.save(TT_WOFF2, reorderTables=False)
+	ttf.save(TT_WOFF2, reorderTables=None)
 	# import CFF-flavoured test font and save it as WOFF2
 	otf = ttLib.TTFont(recalcBBoxes=False, recalcTimestamp=False)
 	otf.importXML(OTX, quiet=True)
 	otf.flavor = "woff2"
-	otf.save(CFF_WOFF2, reorderTables=False)
+	otf.save(CFF_WOFF2, reorderTables=None)
 
 
 class WOFF2ReaderTest(unittest.TestCase):
