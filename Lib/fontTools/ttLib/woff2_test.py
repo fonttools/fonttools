@@ -11,6 +11,7 @@ import sstruct
 import os
 import random
 import copy
+from collections import OrderedDict
 
 haveBrotli = False
 try:
@@ -408,7 +409,7 @@ class WOFF2WriterTest(unittest.TestCase):
 	def test_tables_sorted_alphabetically(self):
 		expected = sorted([t for t in self.tags if t != 'DSIG'])
 		woff2font = ttLib.TTFont(self.file)
-		self.assertEqual(expected, woff2font.reader.tableOrder)
+		self.assertEqual(expected, woff2font.reader.keys())
 
 	def test_checksums(self):
 		normFile = BytesIO(normalise_font(self.font, padding=4))
@@ -435,7 +436,7 @@ class WOFF2WriterTest(unittest.TestCase):
 			self.writer[tag] = self.font.getTableData(tag)
 		self.writer._normaliseGlyfAndLoca(padding=4)
 		self.writer._setHeadTransformFlag()
-		self.writer.tableOrder.sort()
+		self.writer.tables = OrderedDict(sorted(self.writer.tables.items()))
 		self.writer._calcSFNTChecksumsLengthsAndOffsets()
 		for tag, entry in normFont.reader.tables.items():
 			self.assertEqual(entry.offset, self.writer.tables[tag].origOffset)
