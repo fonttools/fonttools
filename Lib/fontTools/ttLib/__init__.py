@@ -223,7 +223,7 @@ class TTFont(object):
 		writer.close()
 
 		if (reorderTables is None or
-				(reorderTables is False and not hasattr(self, 'reader'))):
+				(reorderTables is False and self.reader is None)):
 			# don't reorder tables and save as is
 			file.write(tmp.getvalue())
 			tmp.close()
