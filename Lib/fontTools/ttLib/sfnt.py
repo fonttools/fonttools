@@ -313,6 +313,9 @@ class SFNTWriter(object):
 		self.file.seek(self.tables['head'].offset + 8)
 		self.file.write(struct.pack(">L", checksumadjustment))
 
+	def reordersTables(self):
+		return False
+
 
 # -- sfnt directory helpers and cruft
 
