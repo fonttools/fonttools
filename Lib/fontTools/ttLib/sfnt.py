@@ -17,6 +17,7 @@ from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from fontTools.ttLib import getSearchRange
 import struct
+from collections import OrderedDict
 
 
 class SFNTReader(object):
@@ -68,11 +69,12 @@ class SFNTReader(object):
 		if self.sfntVersion not in ("\x00\x01\x00\x00", "OTTO", "true"):
 			from fontTools import ttLib
 			raise ttLib.TTLibError("Not a TrueType or OpenType font (bad sfntVersion)")
-		self.tables = {}
+		self.tables = OrderedDict()
 		for i in range(self.numTables):
 			entry = self.DirectoryEntry()
 			entry.fromFile(self.file)
-			self.tables[Tag(entry.tag)] = entry
+			tag = Tag(entry.tag)
+			self.tables[tag] = entry
 
 		# Load flavor data if any
 		if self.flavor == "woff":
@@ -143,7 +145,7 @@ class SFNTWriter(object):
 		self.file.seek(self.nextTableOffset)
 		# make sure we're actually where we want to be. (old cStringIO bug)
 		self.file.write(b'\0' * (self.nextTableOffset - self.file.tell()))
-		self.tables = {}
+		self.tables = OrderedDict()
 
 	def __setitem__(self, tag, data):
 		"""Write raw table data to disk."""
