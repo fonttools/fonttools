@@ -74,3 +74,28 @@ def caselessSort(alist):
 		return sorted(alist, key=lambda a: (a.lower(), a))
 	except TypeError:
 		return sorted(alist)
+
+
+def pad(data, size):
+	r""" Pad byte string 'data' with null bytes until its length is a
+	multiple of 'size'.
+
+	>>> len(pad(b'abcd', 4))
+	4
+	>>> len(pad(b'abcde', 2))
+	6
+	>>> len(pad(b'abcde', 4))
+	8
+	>>> pad(b'abcdef', 4) == b'abcdef\x00\x00'
+	True
+	"""
+	data = tobytes(data)
+	if size > 1:
+		while len(data) % size != 0:
+			data += b"\0"
+	return data
+
+
+if __name__ == "__main__":
+	import doctest
+	sys.exit(doctest.testmod().failed)
