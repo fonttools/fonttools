@@ -114,7 +114,7 @@ class WOFF2Reader(SFNTReader):
 		""" Return reconstructed loca table data. """
 		if 'loca' not in self.ttFont:
 			# make sure glyf is reconstructed first
-			self.reconstructTable('glyf')
+			self.tables['glyf'].data = self.reconstructTable('glyf')
 		locaTable = self.ttFont['loca']
 		data = locaTable.compile(self.ttFont)
 		if len(data) != self.tables['loca'].origLength:
