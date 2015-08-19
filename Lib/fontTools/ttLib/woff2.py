@@ -3,6 +3,7 @@ from fontTools.misc.py23 import *
 import sys
 import array
 import struct
+from collections import OrderedDict
 from fontTools.misc import sstruct
 from fontTools.misc.arrayTools import calcIntBounds
 from fontTools.misc.textTools import pad
@@ -44,15 +45,13 @@ class WOFF2Reader(SFNTReader):
 			raise TTLibError('Not a WOFF2 font (not enough data)')
 		sstruct.unpack(woff2DirectoryFormat, data, self)
 
-		self.tables = {}
-		self.tableOrder = []
+		self.tables = OrderedDict()
 		offset = 0
 		for i in range(self.numTables):
 			entry = self.DirectoryEntry()
 			entry.fromFile(self.file)
 			tag = Tag(entry.tag)
 			self.tables[tag] = entry
-			self.tableOrder.append(tag)
 			entry.offset = offset
 			offset += entry.length
 
@@ -151,8 +150,7 @@ class WOFF2Writer(SFNTWriter):
 		self.nextTableOffset = 0
 		self.transformBuffer = BytesIO()
 
-		self.tables = {}
-		self.tableOrder = []
+		self.tables = OrderedDict()
 
 		# make empty TTFont to store data while normalising and transforming tables
 		self.ttFont = TTFont(recalcBBoxes=False, recalcTimestamp=False)
@@ -174,7 +172,6 @@ class WOFF2Writer(SFNTWriter):
 		entry.data = data
 
 		self.tables[tag] = entry
-		self.tableOrder.append(tag)
 
 	def close(self):
 		""" All tags must have been specified. Now write the table data and directory.
@@ -205,7 +202,7 @@ class WOFF2Writer(SFNTWriter):
 		# https://github.com/google/woff2/pull/3
 		# https://lists.w3.org/Archives/Public/public-webfonts-wg/2015Mar/0000.html
 		# TODO(user): remove to match spec once browsers are on newer OTS
-		self.tableOrder.sort()
+		self.tables = OrderedDict(sorted(self.tables.items()))
 
 		self.totalSfntSize = self._calcSFNTChecksumsLengthsAndOffsets()
 
@@ -269,8 +266,7 @@ class WOFF2Writer(SFNTWriter):
 		adjustment calculation. Return the total size of the uncompressed font.
 		"""
 		offset = sfntDirectorySize + sfntDirectoryEntrySize * len(self.tables)
-		for tag in self.tableOrder:
-			entry = self.tables[tag]
+		for tag, entry in self.tables.items():
 			data = entry.data
 			entry.origOffset = offset
 			entry.origLength = len(data)
@@ -283,8 +279,7 @@ class WOFF2Writer(SFNTWriter):
 
 	def _transformTables(self):
 		"""Return transformed font data."""
-		for tag in self.tableOrder:
-			entry = self.tables[tag]
+		for tag, entry in self.tables.items():
 			if tag in woff2TransformedTableTags:
 				data = self.transformTable(tag)
 			else:
@@ -394,8 +389,8 @@ class WOFF2Writer(SFNTWriter):
 	def _packTableDirectory(self):
 		"""Return WOFF2 table directory data."""
 		directory = sstruct.pack(self.directoryFormat, self)
-		for tag in self.tableOrder:
-			directory = directory + self.tables[tag].toString()
+		for entry in self.tables.values():
+			directory = directory + entry.toString()
 		return directory
 
 	def _writeFlavorData(self):
