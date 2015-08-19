@@ -409,7 +409,7 @@ class WOFF2WriterTest(unittest.TestCase):
 	def test_tables_sorted_alphabetically(self):
 		expected = sorted([t for t in self.tags if t != 'DSIG'])
 		woff2font = ttLib.TTFont(self.file)
-		self.assertEqual(expected, woff2font.reader.keys())
+		self.assertEqual(expected, list(woff2font.reader.keys()))
 
 	def test_checksums(self):
 		normFile = BytesIO(normalise_font(self.font, padding=4))
