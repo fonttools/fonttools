@@ -408,6 +408,9 @@ class WOFF2Writer(SFNTWriter):
 			assert self.file.tell() == self.privOffset
 			self.file.write(privData)
 
+	def reordersTables(self):
+		return True
+
 
 # -- woff2 directory helpers and cruft
 
