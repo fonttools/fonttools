@@ -230,7 +230,7 @@ class TTFont(object):
 		else:
 			if reorderTables is False:
 				# sort tables using the original font's order
-				tableOrder = self.reader.keys()
+				tableOrder = list(self.reader.keys())
 			else:
 				# use the recommended order from the OpenType specification
 				tableOrder = None
