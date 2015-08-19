@@ -144,6 +144,7 @@ class WOFF2ReaderTTFTest(WOFF2ReaderTest):
 		woff2Reader = WOFF2Reader(self.file)
 		reconstructedData = woff2Reader['loca']
 		self.assertEqual(self.font.getTableData('loca'), reconstructedData)
+		self.assertTrue(hasattr(woff2Reader.tables['glyf'], 'data'))
 
 	def test_reconstruct_loca_not_match_orig_size(self):
 		reader = WOFF2Reader(self.file)
