@@ -1,9 +1,12 @@
+#! /usr/bin/env python
 
-import sys
+from __future__ import print_function, division, absolute_import
+from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont
+import sys
 
 if len(sys.argv) < 2:
-	print "usage: subset-fpgm.py fontfile.ttf func-number..."
+	print("usage: subset-fpgm.py fontfile.ttf func-number...")
 	sys.exit(1)
 fontfile = sys.argv[1]
 func_nums = [int(x) for x in sys.argv[2:]]

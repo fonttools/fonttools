@@ -1,9 +1,11 @@
 #!/usr/bin/env python
-from __future__ import print_function
-import sys
-import os
+
+from __future__ import print_function, division, absolute_import
+from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont
 from fontTools.ttx import makeOutputFileName
+import sys
+import os
 
 
 def make_output_name(filename):
