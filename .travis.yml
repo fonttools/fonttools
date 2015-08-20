@@ -16,7 +16,13 @@ before_install:
   - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90
   - g++ --version
 install:
-  - pip install -vr requirements.txt
+  # To compile Brotli for pypy3 we also need to link libstdc++.
+  # See: https://github.com/behdad/fonttools/issues/339
+  - if [[ $TRAVIS_PYTHON_VERSION == pypy3 ]]; then
+      pip install --global-option build_ext --global-option --libraries=stdc++ -vr requirements.txt;
+    else
+      pip install -vr requirements.txt;
+    fi
   - make install
 script:
   - make check
