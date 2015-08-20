@@ -17,7 +17,6 @@ before_install:
   - g++ --version
 install:
   - pip install -vr requirements.txt
-  - python -v -c "import brotli"
   - make install
 script:
   - make check
