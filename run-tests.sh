@@ -9,6 +9,9 @@ elif test "x$1" = x-2; then
 	shift
 fi
 test "x$PYTHON" = x && PYTHON=python
+echo "$(which $PYTHON) --version"
+$PYTHON --version 2>&1
+echo
 
 # Setup environment
 DIR=`dirname "$0"`
