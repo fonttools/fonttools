@@ -397,14 +397,18 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(langsys.script, "latn")
         self.assertEqual(langsys.language, "DEU ")
         self.assertRaisesRegex(
+            FeatureLibError,
+            'For script "DFLT", the language must be "dflt"',
+            self.parse, "languagesystem DFLT DEU;")
+        self.assertRaisesRegex(
             FeatureLibError, "Expected ';'",
             self.parse, "languagesystem latn DEU")
         self.assertRaisesRegex(
             FeatureLibError, "longer than 4 characters",
-            self.parse, "languagesystem foobar DEU")
+            self.parse, "languagesystem foobar DEU;")
         self.assertRaisesRegex(
             FeatureLibError, "longer than 4 characters",
-            self.parse, "languagesystem latn FOOBAR")
+            self.parse, "languagesystem latn FOOBAR;")
 
     def setUp(self):
         self.tempdir = None
