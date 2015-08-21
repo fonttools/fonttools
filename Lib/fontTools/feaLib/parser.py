@@ -290,6 +290,10 @@ class Parser(object):
         location = self.cur_token_location_
         script, language = self.expect_tag_(), self.expect_tag_()
         self.expect_symbol_(";")
+        if script == "DFLT" and language != "dflt":
+            raise FeatureLibError(
+                'For script "DFLT", the language must be "dflt"',
+                self.cur_token_location_)
         return ast.LanguageSystemStatement(location, script, language)
 
     def parse_feature_block_(self):
