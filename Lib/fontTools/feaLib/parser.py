@@ -1,23 +1,10 @@
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
+from fontTools.feaLib.error import FeatureLibError
 from fontTools.feaLib.lexer import Lexer, IncludingLexer
 import fontTools.feaLib.ast as ast
 import os
 import re
-
-
-class ParserError(Exception):
-    def __init__(self, message, location):
-        Exception.__init__(self, message)
-        self.location = location
-
-    def __str__(self):
-        message = Exception.__str__(self)
-        if self.location:
-            path, line, column = self.location
-            return "%s:%d:%d: %s" % (path, line, column, message)
-        else:
-            return message
 
 
 class Parser(object):
@@ -54,9 +41,9 @@ class Parser(object):
                 statements.append(
                     self.parse_valuerecord_definition_(vertical=False))
             else:
-                raise ParserError("Expected feature, languagesystem, "
-                                  "lookup, or glyph class definition",
-                                  self.cur_token_location_)
+                raise FeatureLibError("Expected feature, languagesystem, "
+                                      "lookup, or glyph class definition",
+                                      self.cur_token_location_)
         return self.doc_
 
     def parse_anchordef_(self):
@@ -79,8 +66,8 @@ class Parser(object):
         glyphs = self.parse_glyphclass_(accept_glyphname=False)
         self.expect_symbol_(";")
         if self.glyphclasses_.resolve(name) is not None:
-            raise ParserError("Glyph class @%s already defined" % name,
-                              location)
+            raise FeatureLibError("Glyph class @%s already defined" % name,
+                                  location)
         glyphclass = ast.GlyphClassDefinition(location, name, glyphs)
         self.glyphclasses_.define(name, glyphclass)
         return glyphclass
@@ -94,8 +81,9 @@ class Parser(object):
             self.advance_lexer_()
             gc = self.glyphclasses_.resolve(self.cur_token_)
             if gc is None:
-                raise ParserError("Unknown glyph class @%s" % self.cur_token_,
-                                  self.cur_token_location_)
+                raise FeatureLibError(
+                    "Unknown glyph class @%s" % self.cur_token_,
+                    self.cur_token_location_)
             result.update(gc.glyphs)
             return result
 
@@ -116,12 +104,12 @@ class Parser(object):
             elif self.cur_token_type_ is Lexer.GLYPHCLASS:
                 gc = self.glyphclasses_.resolve(self.cur_token_)
                 if gc is None:
-                    raise ParserError(
+                    raise FeatureLibError(
                         "Unknown glyph class @%s" % self.cur_token_,
                         self.cur_token_location_)
                 result.update(gc.glyphs)
             else:
-                raise ParserError(
+                raise FeatureLibError(
                     "Expected glyph name, glyph range, "
                     "or glyph class reference",
                     self.cur_token_location_)
@@ -147,13 +135,15 @@ class Parser(object):
             if self.next_token_ == "lookup":
                 self.expect_keyword_("lookup")
                 if not marked:
-                    raise ParserError("Lookups can only follow marked glyphs",
-                                      self.cur_token_location_)
+                    raise FeatureLibError(
+                        "Lookups can only follow marked glyphs",
+                        self.cur_token_location_)
                 lookup_name = self.expect_name_()
                 lookup = self.lookups_.resolve(lookup_name)
                 if lookup is None:
-                    raise ParserError('Unknown lookup "%s"' % lookup_name,
-                                      self.cur_token_location_)
+                    raise FeatureLibError(
+                        'Unknown lookup "%s"' % lookup_name,
+                        self.cur_token_location_)
             if marked:
                 lookups.append(lookup)
 
@@ -171,7 +161,8 @@ class Parser(object):
             prefix, glyphs, lookups, suffix = self.parse_glyph_pattern_()
             self.expect_symbol_(";")
             return ast.IgnoreSubstitutionRule(location, prefix, glyphs, suffix)
-        raise ParserError("Expected \"substitute\"", self.next_token_location_)
+        raise FeatureLibError(
+            "Expected \"substitute\"", self.next_token_location_)
 
     def parse_language_(self):
         assert self.is_cur_keyword_("language")
@@ -193,8 +184,8 @@ class Parser(object):
         if self.next_token_ == ";":
             lookup = self.lookups_.resolve(name)
             if lookup is None:
-                raise ParserError("Unknown lookup \"%s\"" % name,
-                                  self.cur_token_location_)
+                raise FeatureLibError("Unknown lookup \"%s\"" % name,
+                                      self.cur_token_location_)
             self.expect_symbol_(";")
             return ast.LookupReferenceStatement(location, lookup)
 
@@ -231,17 +222,19 @@ class Parser(object):
             keyword = None
         self.expect_symbol_(";")
         if len(new) is 0 and not any(lookups):
-            raise ParserError(
+            raise FeatureLibError(
                 'Expected "by", "from" or explicit lookup references',
                 self.cur_token_location_)
 
         if keyword == "from":
             if len(old) != 1 or len(old[0]) != 1:
-                raise ParserError('Expected a single glyph before "from"',
-                                  location)
+                raise FeatureLibError(
+                    'Expected a single glyph before "from"',
+                    location)
             if len(new) != 1:
-                raise ParserError('Expected a single glyphclass after "from"',
-                                  location)
+                raise FeatureLibError(
+                    'Expected a single glyphclass after "from"',
+                    location)
             return ast.AlternateSubstitution(location, list(old[0])[0], new[0])
 
         rule = ast.SubstitutionRule(location, old, new)
@@ -269,8 +262,8 @@ class Parser(object):
             name = self.expect_name_()
             vrd = self.valuerecords_.resolve(name)
             if vrd is None:
-                raise ParserError("Unknown valueRecordDef \"%s\"" % name,
-                                  self.cur_token_location_)
+                raise FeatureLibError("Unknown valueRecordDef \"%s\"" % name,
+                                      self.cur_token_location_)
             value = vrd.value
             xPlacement, yPlacement = (value.xPlacement, value.yPlacement)
             xAdvance, yAdvance = (value.xAdvance, value.yAdvance)
@@ -342,7 +335,7 @@ class Parser(object):
             elif self.is_cur_keyword_("valueRecordDef"):
                 statements.append(self.parse_valuerecord_definition_(vertical))
             else:
-                raise ParserError(
+                raise FeatureLibError(
                     "Expected glyph class definition or statement",
                     self.cur_token_location_)
 
@@ -352,8 +345,8 @@ class Parser(object):
 
         name = self.expect_name_()
         if name != block.name.strip():
-            raise ParserError("Expected \"%s\"" % block.name.strip(),
-                              self.cur_token_location_)
+            raise FeatureLibError("Expected \"%s\"" % block.name.strip(),
+                                  self.cur_token_location_)
         self.expect_symbol_(";")
 
     def is_cur_keyword_(self, k):
@@ -362,36 +355,37 @@ class Parser(object):
     def expect_tag_(self):
         self.advance_lexer_()
         if self.cur_token_type_ is not Lexer.NAME:
-            raise ParserError("Expected a tag", self.cur_token_location_)
+            raise FeatureLibError("Expected a tag", self.cur_token_location_)
         if len(self.cur_token_) > 4:
-            raise ParserError("Tags can not be longer than 4 characters",
-                              self.cur_token_location_)
+            raise FeatureLibError("Tags can not be longer than 4 characters",
+                                  self.cur_token_location_)
         return (self.cur_token_ + "    ")[:4]
 
     def expect_symbol_(self, symbol):
         self.advance_lexer_()
         if self.cur_token_type_ is Lexer.SYMBOL and self.cur_token_ == symbol:
             return symbol
-        raise ParserError("Expected '%s'" % symbol, self.cur_token_location_)
+        raise FeatureLibError("Expected '%s'" % symbol,
+                              self.cur_token_location_)
 
     def expect_keyword_(self, keyword):
         self.advance_lexer_()
         if self.cur_token_type_ is Lexer.NAME and self.cur_token_ == keyword:
             return self.cur_token_
-        raise ParserError("Expected \"%s\"" % keyword,
-                          self.cur_token_location_)
+        raise FeatureLibError("Expected \"%s\"" % keyword,
+                              self.cur_token_location_)
 
     def expect_name_(self):
         self.advance_lexer_()
         if self.cur_token_type_ is Lexer.NAME:
             return self.cur_token_
-        raise ParserError("Expected a name", self.cur_token_location_)
+        raise FeatureLibError("Expected a name", self.cur_token_location_)
 
     def expect_number_(self):
         self.advance_lexer_()
         if self.cur_token_type_ is Lexer.NUMBER:
             return self.cur_token_
-        raise ParserError("Expected a number", self.cur_token_location_)
+        raise FeatureLibError("Expected a number", self.cur_token_location_)
 
     def advance_lexer_(self):
         self.cur_token_type_, self.cur_token_, self.cur_token_location_ = (
@@ -406,7 +400,7 @@ class Parser(object):
         """("a.sc", "d.sc") --> {"a.sc", "b.sc", "c.sc", "d.sc"}"""
         result = set()
         if len(start) != len(limit):
-            raise ParserError(
+            raise FeatureLibError(
                 "Bad range: \"%s\" and \"%s\" should have the same length" %
                 (start, limit), location)
         rev = lambda s: ''.join(reversed(list(s)))  # string reversal
@@ -420,8 +414,9 @@ class Parser(object):
             limit_range = limit[len(prefix):]
 
         if start_range >= limit_range:
-            raise ParserError("Start of range must be smaller than its end",
-                              location)
+            raise FeatureLibError(
+                "Start of range must be smaller than its end",
+                location)
 
         uppercase = re.compile(r'^[A-Z]$')
         if uppercase.match(start_range) and uppercase.match(limit_range):
@@ -442,7 +437,8 @@ class Parser(object):
                 result.add("%s%s%s" % (prefix, number, suffix))
             return result
 
-        raise ParserError("Bad range: \"%s-%s\"" % (start, limit), location)
+        raise FeatureLibError("Bad range: \"%s-%s\"" % (start, limit),
+                              location)
 
 
 class SymbolTable(object):
