@@ -330,6 +330,9 @@ def _set_update(s, *others):
     for other in others:
         s.update(other)
 
+def _dict_subset(d, glyphs):
+	return {g:d[g] for g in glyphs}
+
 
 @_add_method(otTables.Coverage)
 def intersect(self, glyphs):
@@ -1541,18 +1544,17 @@ def subset_glyphs(self, s):
 
 @_add_method(ttLib.getTableClass('vmtx'))
 def subset_glyphs(self, s):
-    self.metrics = {g:v for g,v in self.metrics.items() if g in s.glyphs}
+    self.metrics = _dict_subset(self.metrics, s.glyphs)
     return bool(self.metrics)
 
 @_add_method(ttLib.getTableClass('hmtx'))
 def subset_glyphs(self, s):
-    self.metrics = {g:v for g,v in self.metrics.items() if g in s.glyphs}
+    self.metrics = _dict_subset(self.metrics, s.glyphs)
     return True # Required table
 
 @_add_method(ttLib.getTableClass('hdmx'))
 def subset_glyphs(self, s):
-    self.hdmx = {sz:{g:v for g,v in l.items() if g in s.glyphs}
-                 for sz,l in self.hdmx.items()}
+    self.hdmx = {sz:_dict_subset(l, s.glyphs) for sz,l in self.hdmx.items()}
     return bool(self.hdmx)
 
 @_add_method(ttLib.getTableClass('VORG'))
@@ -1628,7 +1630,7 @@ def prune_pre_subset(self, options):
 
 @_add_method(ttLib.getTableClass('glyf'))
 def subset_glyphs(self, s):
-    self.glyphs = {g:v for g,v in self.glyphs.items() if g in s.glyphs}
+    self.glyphs = _dict_subset(self.glyphs, s.glyphs)
     indices = [i for i,g in enumerate(self.glyphOrder) if g in s.glyphs]
     for v in self.glyphs.values():
         if hasattr(v, "data"):
