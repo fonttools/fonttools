@@ -1148,6 +1148,12 @@ def subset_lookups(self, lookup_indices):
         l.subset_lookups(lookup_indices)
 
 @_add_method(otTables.LookupList)
+def neuter_lookups(self, lookup_indices):
+    """Sets lookups not in lookup_indices to None."""
+    self.ensureDecompiled()
+    self.Lookup = [l if i in lookup_indices else None for i,l in enumerate(self.Lookup)]
+
+@_add_method(otTables.LookupList)
 def closure_lookups(self, lookup_indices):
     lookup_indices = _uniq_sort(lookup_indices)
     recurse = lookup_indices
@@ -1306,8 +1312,15 @@ def subset_lookups(self, lookup_indices):
 
 @_add_method(ttLib.getTableClass('GSUB'),
              ttLib.getTableClass('GPOS'))
-def prune_lookups(self):
-    """Remove unreferenced lookups"""
+def neuter_lookups(self, lookup_indices):
+    """Sets lookups not in lookup_indices to None."""
+    if self.table.LookupList:
+        self.table.LookupList.neuter_lookups(lookup_indices)
+
+@_add_method(ttLib.getTableClass('GSUB'),
+             ttLib.getTableClass('GPOS'))
+def prune_lookups(self, remap=True):
+    """Remove (default) or neuter unreferenced lookups"""
     if self.table.ScriptList:
         feature_indices = self.table.ScriptList.collect_features()
     else:
@@ -1320,7 +1333,10 @@ def prune_lookups(self):
         lookup_indices = self.table.LookupList.closure_lookups(lookup_indices)
     else:
         lookup_indices = []
-    self.subset_lookups(lookup_indices)
+    if remap:
+        self.subset_lookups(lookup_indices)
+    else:
+        self.neuter_lookups(lookup_indices)
 
 @_add_method(ttLib.getTableClass('GSUB'),
                          ttLib.getTableClass('GPOS'))
@@ -1354,8 +1370,8 @@ def prune_pre_subset(self, options):
     # Drop undesired features
     if '*' not in options.layout_features:
         self.subset_feature_tags(options.layout_features)
-    # Drop unreferenced lookups
-    self.prune_lookups()
+    # Neuter unreferenced lookups
+    self.prune_lookups(remap=False)
     return True
 
 @_add_method(ttLib.getTableClass('GSUB'),
