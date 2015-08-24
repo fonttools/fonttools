@@ -1293,7 +1293,6 @@ def subset_glyphs(self, s):
     else:
         lookup_indices = []
     self.subset_lookups(lookup_indices)
-    self.prune_lookups()
     return True
 
 @_add_method(ttLib.getTableClass('GSUB'),
@@ -1411,7 +1410,8 @@ def remove_redundant_langsys(self):
 def prune_post_subset(self, options):
     table = self.table
 
-    # LookupList looks good. Just prune lookups themselves.
+    self.prune_lookups() # XXX Is this actually needed?!
+
     if table.LookupList:
         table.LookupList.prune_post_subset(options)
         # XXX Next two lines disabled because OTS is stupid and
