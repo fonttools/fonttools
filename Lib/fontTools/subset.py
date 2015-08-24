@@ -699,24 +699,6 @@ def collect_lookups(self):
              otTables.MultipleSubst,
              otTables.AlternateSubst,
              otTables.LigatureSubst,
-             otTables.ContextSubst,
-             otTables.ChainContextSubst,
-             otTables.ReverseChainSingleSubst,
-             otTables.SinglePos,
-             otTables.PairPos,
-             otTables.CursivePos,
-             otTables.MarkBasePos,
-             otTables.MarkLigPos,
-             otTables.MarkMarkPos,
-             otTables.ContextPos,
-             otTables.ChainContextPos)
-def prune_pre_subset(self, options):
-    return True
-
-@_add_method(otTables.SingleSubst,
-             otTables.MultipleSubst,
-             otTables.AlternateSubst,
-             otTables.LigatureSubst,
              otTables.ReverseChainSingleSubst,
              otTables.ContextSubst,
              otTables.ChainContextSubst,
@@ -1066,14 +1048,6 @@ def may_have_non_1to1(self):
 
 @_add_method(otTables.ExtensionSubst,
              otTables.ExtensionPos)
-def prune_pre_subset(self, options):
-    if self.Format == 1:
-        return self.ExtSubTable.prune_pre_subset(options)
-    else:
-        assert 0, "unknown format: %s" % self.Format
-
-@_add_method(otTables.ExtensionSubst,
-             otTables.ExtensionPos)
 def subset_glyphs(self, s):
     if self.Format == 1:
         return self.ExtSubTable.subset_glyphs(s)
@@ -1124,14 +1098,6 @@ def closure_glyphs(self, s, cur_glyphs=None):
     del s._activeLookups[-1]
 
 @_add_method(otTables.Lookup)
-def prune_pre_subset(self, options):
-    ret = False
-    for st in self.SubTable:
-        if not st: continue
-        if st.prune_pre_subset(options): ret = True
-    return ret
-
-@_add_method(otTables.Lookup)
 def subset_glyphs(self, s):
     self.SubTable = [st for st in self.SubTable if st and st.subset_glyphs(s)]
     self.SubTableCount = len(self.SubTable)
@@ -1158,14 +1124,6 @@ def collect_lookups(self):
 @_add_method(otTables.Lookup)
 def may_have_non_1to1(self):
     return any(st.may_have_non_1to1() for st in self.SubTable if st)
-
-@_add_method(otTables.LookupList)
-def prune_pre_subset(self, options):
-    ret = False
-    for l in self.Lookup:
-        if not l: continue
-        if l.prune_pre_subset(options): ret = True
-    return ret
 
 @_add_method(otTables.LookupList)
 def subset_glyphs(self, s):
@@ -1398,9 +1356,6 @@ def prune_pre_subset(self, options):
         self.subset_feature_tags(options.layout_features)
     # Drop unreferenced lookups
     self.prune_lookups()
-    # Prune lookups themselves
-    if self.table.LookupList:
-        self.table.LookupList.prune_pre_subset(options)
     return True
 
 @_add_method(ttLib.getTableClass('GSUB'),
