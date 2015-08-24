@@ -4,7 +4,7 @@ python:
   - "3.3"
   - "3.4"
   - "pypy"
-  - "pypy3"
+#  - "pypy3" # Disable pypy3 until Travis updates it to >= 3.3
 before_install:
 # install GCC v4.8 with better C++11 support, required to build Brotli extension
 # See: https://github.com/travis-ci/travis-ci/issues/1379  
