@@ -19,6 +19,7 @@ from fontTools.ttLib import TTFont
 from fontTools.ttLib.bytecodeContainer import BytecodeContainer
 from fontTools.ttLib.instructions import statements, abstractExecute
 from fontTools.ttLib.data import dataType
+from fontTools.misc.util import makeOutputFileName
 import sys
 import os
 import getopt
@@ -26,16 +27,6 @@ import math
 import pdb
 import logging
 import copy
-
-def makeOutputFileName(input, extension):
-    dirName, fileName = os.path.split(input)
-    fileName, ext = os.path.splitext(fileName)
-    output = os.path.join(dirName, fileName + extension)
-    n = 1
-    while os.path.exists(output):
-        output = os.path.join(dirName, fileName + "#" + repr(n) + extension)
-        n = n + 1
-    return output
 
 def ttDump(input):
     output = makeOutputFileName(input, ".ttx")
@@ -48,7 +39,6 @@ def ttDump(input):
             bitmapGlyphDataFormat='raw')
     ttf.close()
     return output
-
 
 def executeGlyphs(absExecutor, glyphs):
     environment = copy.deepcopy(absExecutor.environment)

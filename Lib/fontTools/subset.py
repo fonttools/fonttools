@@ -2224,8 +2224,6 @@ def main(args):
   names = font.getGlyphNames()
   log.lapse("loading glyph names")
 
-  reduceFpgm = False
-  relabelFpgm = False
   glyphs = []
   unicodes = []
   text = ""
@@ -2261,12 +2259,6 @@ def main(args):
       except ValueError:
         raise Exception("Invalid glyph identifier: %s" % g)
       continue
-    if g == '-f':
-        reduceFpgm = True
-        continue 
-    if g == '-r':
-        relabelFpgm = True
-        continue
     raise Exception("Invalid glyph identifier: %s" % g)
   log.lapse("compile glyph list")
   log("Unicodes:", unicodes)
@@ -2275,37 +2267,6 @@ def main(args):
   subsetter.populate(glyphs=glyphs, unicodes=unicodes, text=text, url=url)
   subsetter.subset(font)
 
-  if reduceFpgm is True or relabelFpgm is True:
-    bytecodeContainer = BytecodeContainer(font)
-    absExecutor = abstractExecute.Executor(bytecodeContainer)
-
-    called_functions = set()
-    label_mapping = {}
-    try: 
-      absExecutor.execute('prep')
-      called_functions.update(list(set(absExecutor.program.call_function_set)))
-      label_mapping['prep'] = absExecutor.function_label_map
-    except:
-        pass 
-    environment = copy.deepcopy(absExecutor.environment)
-    tables_to_execute = bytecodeContainer.programs.keys()  
-    for table in tables_to_execute:
-      try: 
-        absExecutor.execute(table)
-        called_functions.update(list(set(absExecutor.program.call_function_set)))
-        label_mapping[table] = copy.deepcopy(absExecutor.function_label_map)
-        absExecutor.environment = copy.deepcopy(environment)
-      except:
-        absExecutor.environment = copy.deepcopy(environment)
-    function_set = absExecutor.environment.function_table.keys() 
-    unused_functions = [item for item in function_set if item not in called_functions]
-
-    if reduceFpgm is True:
-      bytecodeContainer.removeFunctions(unused_functions)
-    if relabelFpgm is True:
-      bytecodeContainer.relabelFunctions(label_mapping)
-    bytecodeContainer.updateTTFont(font)
-  
   outfile = fontfile + '.subset'
 
   save_font (font, outfile, options)
