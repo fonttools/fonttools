@@ -56,7 +56,7 @@ TrueType/OpenType fonts to and from an XML-based format.
 
 setup(
 		name = "fonttools",
-		version = "2.5",
+		version = "3.0",
 		description = "Tools to manipulate font files",
 		author = "Just van Rossum",
 		author_email = "just@letterror.com",
