@@ -30,6 +30,11 @@ class FeatureBlock(Block):
         Block.__init__(self, location)
         self.name, self.use_extension = name, use_extension
 
+    def build(self, builder):
+        # TODO(sascha): Handle use_extension.
+        builder.start_feature(self.location, self.name)
+        Block.build(self, builder)
+
 
 class LookupBlock(Block):
     def __init__(self, location, name, use_extension):
@@ -63,6 +68,11 @@ class LanguageStatement(Statement):
         self.include_default = include_default
         self.required = required
 
+    def build(self, builder):
+        # TODO(sascha): Handle required.
+        builder.set_language(location=self.location, language=self.language,
+                             include_default=self.include_default)
+
 
 class LanguageSystemStatement(Statement):
     def __init__(self, location, script, language):
@@ -89,6 +99,9 @@ class ScriptStatement(Statement):
     def __init__(self, location, script):
         Statement.__init__(self, location)
         self.script = script
+
+    def build(self, builder):
+        builder.set_script(self.location, self.script)
 
 
 class SubtableStatement(Statement):
