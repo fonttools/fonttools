@@ -80,15 +80,16 @@ class LexerTest(unittest.TestCase):
         self.assertRaises(FeatureLibError, lambda: lex("123 \u0001"))
 
     def test_newline(self):
-        lines = lambda s: [loc[1] for (_, _, loc) in Lexer(s, "test.fea")]
+        def lines(s):
+            return [loc[1] for (_, _, loc) in Lexer(s, "test.fea")]
         self.assertEqual(lines("FOO\n\nBAR\nBAZ"), [1, 3, 4])  # Unix
         self.assertEqual(lines("FOO\r\rBAR\rBAZ"), [1, 3, 4])  # Macintosh
         self.assertEqual(lines("FOO\r\n\r\n BAR\r\nBAZ"), [1, 3, 4])  # Windows
         self.assertEqual(lines("FOO\n\rBAR\r\nBAZ"), [1, 3, 4])  # mixed
 
     def test_location(self):
-        locs = lambda s: ["%s:%d:%d" % loc
-                          for (_, _, loc) in Lexer(s, "test.fea")]
+        def locs(s):
+            return ["%s:%d:%d" % loc for (_, _, loc) in Lexer(s, "test.fea")]
         self.assertEqual(locs("a b # Comment\n12 @x"), [
             "test.fea:1:1", "test.fea:1:3", "test.fea:2:1",
             "test.fea:2:4"

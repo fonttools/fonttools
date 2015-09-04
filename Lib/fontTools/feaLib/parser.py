@@ -400,6 +400,11 @@ class Parser(object):
         except StopIteration:
             self.next_token_type_, self.next_token_ = (None, None)
 
+    @staticmethod
+    def reverse_string_(s):
+        """'abc' --> 'bca'"""
+        return ''.join(reversed(list(s)))
+
     def make_glyph_range_(self, location, start, limit):
         """("a.sc", "d.sc") --> {"a.sc", "b.sc", "c.sc", "d.sc"}"""
         result = set()
@@ -407,7 +412,8 @@ class Parser(object):
             raise FeatureLibError(
                 "Bad range: \"%s\" and \"%s\" should have the same length" %
                 (start, limit), location)
-        rev = lambda s: ''.join(reversed(list(s)))  # string reversal
+
+        rev = self.reverse_string_
         prefix = os.path.commonprefix([start, limit])
         suffix = rev(os.path.commonprefix([rev(start), rev(limit)]))
         if len(suffix) > 0:
