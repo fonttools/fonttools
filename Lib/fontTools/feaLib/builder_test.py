@@ -1,6 +1,6 @@
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
-from fontTools.feaLib.builder import addOpenTypeFeatures
+from fontTools.feaLib.builder import Builder, addOpenTypeFeatures
 from fontTools.feaLib.error import FeatureLibError
 from fontTools.ttLib import TTFont
 import codecs
@@ -77,12 +77,45 @@ class BuilderTest(unittest.TestCase):
         addOpenTypeFeatures(self.getpath("spec4h1.fea"), font)
         self.expect_ttx(font, self.getpath("spec4h1_expected.ttx"))
 
+    def test_languagesystem(self):
+        builder = Builder(None, TTFont())
+        builder.add_language_system(None, 'latn', 'FRA')
+        builder.add_language_system(None, 'cyrl', 'RUS')
+        builder.start_feature(location=None, name='test')
+        self.assertEqual(builder.language_systems,
+                         {('latn', 'FRA'), ('cyrl', 'RUS')})
+
+    def test_languagesystem_none_specified(self):
+        builder = Builder(None, TTFont())
+        builder.start_feature(location=None, name='test')
+        self.assertEqual(builder.language_systems, {('DFLT', 'dflt')})
+
     def test_languagesystem_DFLT_dflt_not_first(self):
         self.assertRaisesRegex(
             FeatureLibError,
             "If \"languagesystem DFLT dflt\" is present, "
             "it must be the first of the languagesystem statements",
             self.build, "languagesystem latn TRK; languagesystem DFLT dflt;")
+
+    def test_script(self):
+        builder = Builder(None, TTFont())
+        builder.start_feature(location=None, name='test')
+        builder.set_script(location=None, script='cyrl')
+        self.assertEqual(builder.language_systems,
+                         {('DFLT', 'dflt'), ('cyrl', 'dflt')})
+
+    def test_language(self):
+        builder = Builder(None, TTFont())
+        builder.add_language_system(None, 'latn', 'FRA')
+        builder.start_feature(location=None, name='test')
+        builder.set_script(location=None, script='cyrl')
+        builder.set_language(location=None, language='RUS',
+                             include_default=False)
+        self.assertEqual(builder.language_systems, {('cyrl', 'RUS')})
+        builder.set_language(location=None, language='BGR',
+                             include_default=True)
+        self.assertEqual(builder.language_systems,
+                         {('latn', 'FRA'), ('cyrl', 'BGR')})
 
 
 if __name__ == "__main__":
