@@ -1,6 +1,7 @@
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
 from fontTools.feaLib.builder import addOpenTypeFeatures
+from fontTools.feaLib.error import FeatureLibError
 from fontTools.ttLib import TTFont
 import codecs
 import difflib
@@ -62,11 +63,26 @@ class BuilderTest(unittest.TestCase):
                 sys.stdout.write(line)
             self.fail("TTX output is different from expected")
 
+    def build(self, featureFile):
+        path = self.temp_path(suffix=".fea")
+        with codecs.open(path, "wb", "utf-8") as outfile:
+            outfile.write(featureFile)
+        font = TTFont()
+        addOpenTypeFeatures(path, font)
+        return font
+
     def test_spec4h1(self):
         # OpenType Feature File specification, section 4.h, example 1.
         font = TTFont()
         addOpenTypeFeatures(self.getpath("spec4h1.fea"), font)
         self.expect_ttx(font, self.getpath("spec4h1_expected.ttx"))
+
+    def test_languagesystem_DFLT_dflt_not_first(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "If \"languagesystem DFLT dflt\" is present, "
+            "it must be the first of the languagesystem statements",
+            self.build, "languagesystem latn TRK; languagesystem DFLT dflt;")
 
 
 if __name__ == "__main__":
