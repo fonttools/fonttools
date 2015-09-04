@@ -6,6 +6,9 @@ class FeatureFile(object):
     def __init__(self):
         self.statements = []
 
+    def build(self, builder):
+        pass
+
 
 class FeatureBlock(object):
     def __init__(self, location, name, use_extension):
