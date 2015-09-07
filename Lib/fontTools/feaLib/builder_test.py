@@ -92,7 +92,7 @@ class BuilderTest(unittest.TestCase):
         # OpenType Feature File specification, section 4.h, example 1.
         font = TTFont()
         addOpenTypeFeatures(self.getpath("spec4h1.fea"), font)
-        self.expect_ttx(font, self.getpath("spec4h1_expected.ttx"))
+        self.expect_ttx(font, self.getpath("spec4h1.ttx"))
 
     def test_spec5d1(self):
         # OpenType Feature File specification, section 5.d, example 1.
@@ -101,7 +101,7 @@ class BuilderTest(unittest.TestCase):
         self.expect_ttx(font, self.getpath("spec5d1.ttx"))
 
     def test_spec5d2(self):
-        # OpenType Feature File specification, section 5.d, example 1.
+        # OpenType Feature File specification, section 5.d, example 2.
         font = TTFont()
         addOpenTypeFeatures(self.getpath("spec5d2.fea"), font)
         self.expect_ttx(font, self.getpath("spec5d2.ttx"))
