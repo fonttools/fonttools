@@ -16,14 +16,23 @@ class Builder(object):
         self.font = font
         self.default_language_systems_ = set()
         self.script_ = None
-        self.lookupflag_ = 0
+        self.lookup_flag_ = 0
         self.language_systems = set()
+        self.cur_lookup_ = None
+        self.lookups_ = []
 
     def build(self):
-        self.gpos = self.font['GPOS'] = self.makeTable('GPOS')
-        self.gsub = self.font['GSUB'] = self.makeTable('GSUB')
         parsetree = Parser(self.featurefile_path).parse()
         parsetree.build(self)
+        self.gpos = self.font['GPOS'] = self.makeTable('GPOS')
+        self.gsub = self.font['GSUB'] = self.makeTable('GSUB')
+
+    def get_lookup_(self, location, builder_class):
+        if self.cur_lookup_ and type(self.cur_lookup_) == builder_class:
+            return self.cur_lookup_
+        self.cur_lookup_ = builder_class(location, self.lookup_flag_)
+        self.lookups_.append(self.cur_lookup_)
+        return self.cur_lookup_
 
     def makeTable(self, tag):
         table = getattr(otTables, tag, None)()
@@ -34,9 +43,27 @@ class Builder(object):
         table.FeatureList = otTables.FeatureList()
         table.FeatureList.FeatureCount = 0
         table.FeatureList.FeatureRecord = []
+
         table.LookupList = otTables.LookupList()
-        table.LookupList.LookupCount = 0
         table.LookupList.Lookup = []
+        for i, lookup_builder in enumerate(self.lookups_):
+            if lookup_builder.table != tag:
+                continue
+            # If multiple lookup builders would build equivalent lookups,
+            # emit them only once. This is quadratic in the number of lookups,
+            # but the checks are cheap. If performance ever becomes an issue,
+            # we could hash the lookup content and only compare those with
+            # the same hash value.
+            equivalent_builder = None
+            for other_builder in self.lookups_[:i]:
+                if lookup_builder.equals(other_builder):
+                    equivalent_builder = other_builder
+            if equivalent_builder is not None:
+                lookup_builder.lookup_index = equivalent_builder.lookup_index
+                continue
+            lookup_builder.lookup_index = len(table.LookupList.Lookup)
+            table.LookupList.Lookup.append(lookup_builder.build())
+        table.LookupList.LookupCount = len(table.LookupList.Lookup)
         return table
 
     def add_language_system(self, location, script, language):
@@ -62,7 +89,12 @@ class Builder(object):
     def start_feature(self, location, name):
         self.language_systems = self.get_default_language_systems_()
 
+    def end_feature(self):
+        self.language_systems = None
+        self.cur_lookup_ = None
+
     def set_language(self, location, language, include_default):
+        self.cur_lookup_ = None
         if include_default:
             langsys = set(self.get_default_language_systems_())
         else:
@@ -71,6 +103,44 @@ class Builder(object):
         self.language_systems = frozenset(langsys)
 
     def set_script(self, location, script):
+        self.cur_lookup_ = None
         self.script_ = script
-        self.lookupflag_ = 0
+        self.lookup_flag_ = 0
         self.set_language(location, 'dflt', include_default=True)
+
+    def add_alternate_substitution(self, location, glyph, from_class):
+        lookup = self.get_lookup_(location, AlternateSubstBuilder)
+        if glyph in lookup.alternates:
+            raise FeatureLibError(
+                'Already defined alternates for glyph "%s"' % glyph,
+                location)
+        lookup.alternates[glyph] = from_class
+
+
+class LookupBuilder(object):
+    def __init__(self, location, table, lookup_type, lookup_flag):
+        self.location = location
+        self.table, self.lookup_type = table, lookup_type
+        self.lookup_flag = lookup_flag
+        assert table in ('GPOS', 'GSUB')
+
+    def equals(self, other):
+        return (isinstance(other, self.__class__) and
+                self.table == other.table and
+                self.lookup_flag == other.lookup_flag)
+
+
+class AlternateSubstBuilder(LookupBuilder):
+    def __init__(self, location, lookup_flag):
+        LookupBuilder.__init__(self, location, 'GSUB', 3, lookup_flag)
+        self.alternates = {}
+
+    def equals(self, other):
+        return (LookupBuilder.equals(self, other) and
+                self.alternates == other.alternates)
+
+    def build(self):
+        lookup = otTables.AlternateSubst()
+        lookup.Format = 1
+        lookup.alternates = self.alternates
+        return lookup

@@ -34,6 +34,7 @@ class FeatureBlock(Block):
         # TODO(sascha): Handle use_extension.
         builder.start_feature(self.location, self.name)
         Block.build(self, builder)
+        builder.end_feature()
 
 
 class LookupBlock(Block):
@@ -53,6 +54,10 @@ class AlternateSubstitution(Statement):
     def __init__(self, location, glyph, from_class):
         Statement.__init__(self, location)
         self.glyph, self.from_class = (glyph, from_class)
+
+    def build(self, builder):
+        builder.add_alternate_substitution(self.location, self.glyph,
+                                           self.from_class)
 
 
 class AnchorDefinition(Statement):
