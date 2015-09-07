@@ -159,7 +159,7 @@ class ParserTest(unittest.TestCase):
         doc = self.parse("feature test {language DEU;} test;")
         s = doc.statements[0].statements[0]
         self.assertEqual(type(s), ast.LanguageStatement)
-        self.assertEqual(s.language, "DEU")
+        self.assertEqual(s.language, "DEU ")
         self.assertTrue(s.include_default)
         self.assertFalse(s.required)
 
@@ -167,7 +167,7 @@ class ParserTest(unittest.TestCase):
         doc = self.parse("feature test {language DEU exclude_dflt;} test;")
         s = doc.statements[0].statements[0]
         self.assertEqual(type(s), ast.LanguageStatement)
-        self.assertEqual(s.language, "DEU")
+        self.assertEqual(s.language, "DEU ")
         self.assertFalse(s.include_default)
         self.assertFalse(s.required)
 
@@ -177,7 +177,7 @@ class ParserTest(unittest.TestCase):
                          "} test;")
         s = doc.statements[0].statements[0]
         self.assertEqual(type(s), ast.LanguageStatement)
-        self.assertEqual(s.language, "DEU")
+        self.assertEqual(s.language, "DEU ")
         self.assertFalse(s.include_default)
         self.assertTrue(s.required)
 
@@ -185,7 +185,7 @@ class ParserTest(unittest.TestCase):
         doc = self.parse("feature test {language DEU include_dflt;} test;")
         s = doc.statements[0].statements[0]
         self.assertEqual(type(s), ast.LanguageStatement)
-        self.assertEqual(s.language, "DEU")
+        self.assertEqual(s.language, "DEU ")
         self.assertTrue(s.include_default)
         self.assertFalse(s.required)
 
@@ -195,7 +195,7 @@ class ParserTest(unittest.TestCase):
                          "} test;")
         s = doc.statements[0].statements[0]
         self.assertEqual(type(s), ast.LanguageStatement)
-        self.assertEqual(s.language, "DEU")
+        self.assertEqual(s.language, "DEU ")
         self.assertTrue(s.include_default)
         self.assertTrue(s.required)
 
