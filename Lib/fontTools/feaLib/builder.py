@@ -21,7 +21,9 @@ class Builder(object):
         self.named_lookups_ = {}
         self.cur_lookup_ = None
         self.cur_lookup_name_ = None
+        self.cur_feature_name_ = None
         self.lookups_ = []
+        self.features_ = {}  # ('latn', 'DEU', 'smcp') --> [LookupBuilder*]
 
     def build(self):
         parsetree = Parser(self.featurefile_path).parse()
@@ -41,21 +43,27 @@ class Builder(object):
         self.cur_lookup_ = builder_class(location, self.lookup_flag_)
         self.lookups_.append(self.cur_lookup_)
         if self.cur_lookup_name_:
+            # We are starting a lookup rule inside a named lookup block.
             self.named_lookups_[self.cur_lookup_name_] = self.cur_lookup_
+        else:
+            # We are starting a lookup rule inside a feature.
+            for script, lang in self.language_systems:
+                key = (script, lang, self.cur_feature_name_)
+                self.features_.setdefault(key, []).append(self.cur_lookup_)
         return self.cur_lookup_
 
     def makeTable(self, tag):
         table = getattr(otTables, tag, None)()
         table.Version = 1.0
         table.ScriptList = otTables.ScriptList()
-        table.ScriptList.ScriptCount = 0
         table.ScriptList.ScriptRecord = []
         table.FeatureList = otTables.FeatureList()
-        table.FeatureList.FeatureCount = 0
         table.FeatureList.FeatureRecord = []
 
         table.LookupList = otTables.LookupList()
         table.LookupList.Lookup = []
+        for lookup in self.lookups_:
+            lookup.lookup_index = None
         for i, lookup_builder in enumerate(self.lookups_):
             if lookup_builder.table != tag:
                 continue
@@ -73,6 +81,35 @@ class Builder(object):
                 continue
             lookup_builder.lookup_index = len(table.LookupList.Lookup)
             table.LookupList.Lookup.append(lookup_builder.build())
+
+        # Build a table for mapping (tag, lookup_indices) to feature_index.
+        # For example, ('liga', (2,3,7)) --> 23.
+        feature_indices = {}
+        for key, lookups in sorted(self.features_.items()):
+            script, lang, feature_tag = key
+            # l.lookup_index will be None when a lookup is not needed
+            # for the table under construction. For example, substitution
+            # rules will have no lookup_index while building GPOS tables.
+            lookup_indices = tuple([l.lookup_index for l in lookups
+                                    if l.lookup_index is not None])
+            if len(lookup_indices) == 0:
+                continue
+            feature_key = (feature_tag, lookup_indices)
+            feature_index = feature_indices.get(feature_key)
+            if feature_index is None:
+                feature_index = len(table.FeatureList.FeatureRecord)
+                frec = otTables.FeatureRecord()
+                frec.FeatureTag = feature_tag
+                frec.Feature = otTables.Feature()
+                frec.Feature.FeatureParams = None
+                frec.Feature.LookupListIndex = lookup_indices
+                frec.Feature.LookupCount = len(lookup_indices)
+                table.FeatureList.FeatureRecord.append(frec)
+                feature_indices[feature_key] = feature_index
+
+        # TODO(sascha): Build table.ScriptList.
+        table.ScriptList.ScriptCount = len(table.ScriptList.ScriptRecord)
+        table.FeatureList.FeatureCount = len(table.FeatureList.FeatureRecord)
         table.LookupList.LookupCount = len(table.LookupList.Lookup)
         return table
 
@@ -99,8 +136,11 @@ class Builder(object):
     def start_feature(self, location, name):
         self.language_systems = self.get_default_language_systems_()
         self.cur_lookup_ = None
+        self.cur_feature_name_ = name
 
     def end_feature(self):
+        assert self.cur_feature_name_ is not None
+        self.cur_feature_name_ = None
         self.language_systems = None
         self.cur_lookup_ = None
 
@@ -158,6 +198,7 @@ class LookupBuilder(object):
         self.location = location
         self.table, self.lookup_type = table, lookup_type
         self.lookup_flag = lookup_flag
+        self.lookup_index = None  # assigned when making final tables
         assert table in ('GPOS', 'GSUB')
 
     def equals(self, other):
