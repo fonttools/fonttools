@@ -166,6 +166,23 @@ class BuilderTest(unittest.TestCase):
             "Lookup \"foo\" has already been defined",
             self.build, "lookup foo {} foo; lookup foo {} foo;")
 
+    def test_lookup_multiple_flags(self):
+        # TODO(sascha): As soon as we have a working implementation
+        # of the "lookupflag" statement, test whether the compiler
+        # rejects rules of the same lookup type but different flags.
+        pass
+
+    def test_lookup_multiple_types(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Within a named lookup block, all rules must be "
+            "of the same lookup type and flag",
+            self.build,
+            "lookup foo {"
+            "    sub f f i by f_f_i;"
+            "    sub A from [A.alt1 A.alt2];"
+            "} foo;")
+
 
 class LigatureSubstBuilderTest(unittest.TestCase):
     def test_make_key(self):

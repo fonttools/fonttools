@@ -34,6 +34,10 @@ class Builder(object):
                 type(self.cur_lookup_) == builder_class and
                 self.cur_lookup_.lookup_flag == self.lookup_flag_):
             return self.cur_lookup_
+        if self.cur_lookup_name_ and self.cur_lookup_:
+            raise FeatureLibError(
+                "Within a named lookup block, all rules must be of "
+                "the same lookup type and flag", location)
         self.cur_lookup_ = builder_class(location, self.lookup_flag_)
         self.lookups_.append(self.cur_lookup_)
         if self.cur_lookup_name_:
