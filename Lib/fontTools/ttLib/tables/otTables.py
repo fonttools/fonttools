@@ -365,7 +365,7 @@ class AlternateSubst(FormatSwitchingBaseTable):
 		for glyphName, alternates in items:
 			xmlWriter.begintag("AlternateSet", glyph=glyphName)
 			xmlWriter.newline()
-			for alt in alternates:
+			for alt in sorted(alternates):
 				xmlWriter.simpletag("Alternate", glyph=alt)
 				xmlWriter.newline()
 			xmlWriter.endtag("AlternateSet")
