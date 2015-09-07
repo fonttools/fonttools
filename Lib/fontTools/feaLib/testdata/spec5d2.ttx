@@ -11,24 +11,15 @@
         <!-- FeatureCount=0 -->
       </FeatureList>
       <LookupList>
-        <!-- LookupCount=3 -->
+        <!-- LookupCount=1 -->
         <LigatureSubst index="0" Format="1">
           <LigatureSet glyph="f">
+            <Ligature components="f,f,i" glyph="f_f_i"/>
             <Ligature components="f,f" glyph="f_f"/>
             <Ligature components="f,i" glyph="f_i"/>
-            <Ligature components="f,l" glyph="f_l"/>
           </LigatureSet>
-        </LigatureSubst>
-        <LigatureSubst index="1" Format="1">
-          <LigatureSet glyph="c">
-            <Ligature components="c,s" glyph="c_s"/>
-            <Ligature components="c,t" glyph="c_t"/>
-          </LigatureSet>
-        </LigatureSubst>
-        <LigatureSubst index="2" Format="1">
-          <LigatureSet glyph="c">
-            <Ligature components="c,h" glyph="c_h"/>
-            <Ligature components="c,k" glyph="c_k"/>
+          <LigatureSet glyph="o">
+            <Ligature components="o,f,f,i" glyph="o_f_f_i"/>
           </LigatureSet>
         </LigatureSubst>
       </LookupList>

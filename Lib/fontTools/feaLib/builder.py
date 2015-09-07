@@ -144,6 +144,10 @@ class Builder(object):
                 location)
         lookup.alternates[glyph] = from_class
 
+    def add_ligature_substitution(self, location, glyphs, replacement):
+        lookup = self.get_lookup_(location, LigatureSubstBuilder)
+        lookup.ligatures[glyphs] = replacement
+
 
 class LookupBuilder(object):
     def __init__(self, location, table, lookup_type, lookup_flag):
@@ -171,4 +175,39 @@ class AlternateSubstBuilder(LookupBuilder):
         lookup = otTables.AlternateSubst()
         lookup.Format = 1
         lookup.alternates = self.alternates
+        return lookup
+
+
+class LigatureSubstBuilder(LookupBuilder):
+    def __init__(self, location, lookup_flag):
+        LookupBuilder.__init__(self, location, 'GSUB', 4, lookup_flag)
+        self.ligatures = {}  # {('f','f','i'): 'f_f_i'}
+
+    def equals(self, other):
+        return (LookupBuilder.equals(self, other) and
+                self.ligatures == other.ligatures)
+
+    @staticmethod
+    def make_key(components):
+        """Computes a key for ordering ligatures in a GSUB Type-4 lookup.
+
+        When building the OpenType lookup, we need to make sure that
+        the longest sequence of components is listed first, so we
+        use the negative length as the primary key for sorting.
+        To make the tables easier to read, we use the component
+        sequence as the secondary key.
+
+        For example, this will sort (f,f,f) < (f,f,i) < (f,f) < (f,i) < (f,l).
+        """
+        return (-len(components), components)
+
+    def build(self):
+        lookup = otTables.LigatureSubst()
+        lookup.Format = 1
+        lookup.ligatures = {}
+        for components in sorted(self.ligatures.keys(), key=self.make_key):
+            lig = otTables.Ligature()
+            lig.Component = components
+            lig.LigGlyph = self.ligatures[components]
+            lookup.ligatures.setdefault(components[0], []).append(lig)
         return lookup

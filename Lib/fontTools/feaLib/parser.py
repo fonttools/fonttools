@@ -237,6 +237,12 @@ class Parser(object):
                     location)
             return ast.AlternateSubstitution(location, list(old[0])[0], new[0])
 
+        num_lookups = len([l for l in lookups if l is not None])
+        if (len(old_prefix) == 0 and len(old_suffix) == 0 and
+                len(old) > 1 and len(new) == 1 and len(new[0]) == 1 and
+                num_lookups == 0):
+            return ast.LigatureSubstitution(location, old, list(new[0])[0])
+
         rule = ast.SubstitutionRule(location, old, new)
         rule.old_prefix, rule.old_suffix = old_prefix, old_suffix
         rule.lookups = lookups

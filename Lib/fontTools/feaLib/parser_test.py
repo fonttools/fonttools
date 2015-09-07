@@ -321,11 +321,9 @@ class ParserTest(unittest.TestCase):
     def test_substitute_ligature(self):  # GSUB LookupType 4
         doc = self.parse("feature liga {substitute f f i by f_f_i;} liga;")
         sub = doc.statements[0].statements[0]
-        self.assertEqual(sub.old_prefix, [])
-        self.assertEqual(sub.old, [{"f"}, {"f"}, {"i"}])
-        self.assertEqual(sub.old_suffix, [])
-        self.assertEqual(sub.new, [{"f_f_i"}])
-        self.assertEqual(sub.lookups, [None, None, None])
+        self.assertEqual(type(sub), ast.LigatureSubstitution)
+        self.assertEqual(sub.glyphs, [{"f"}, {"f"}, {"i"}])
+        self.assertEqual(sub.replacement, "f_f_i")
 
     def test_substitute_lookups(self):
         doc = Parser(self.getpath("spec5fi.fea")).parse()
