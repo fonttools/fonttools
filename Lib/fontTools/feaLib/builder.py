@@ -18,7 +18,9 @@ class Builder(object):
         self.script_ = None
         self.lookup_flag_ = 0
         self.language_systems = set()
+        self.named_lookups_ = {}
         self.cur_lookup_ = None
+        self.cur_lookup_name_ = None
         self.lookups_ = []
 
     def build(self):
@@ -28,10 +30,14 @@ class Builder(object):
         self.gsub = self.font['GSUB'] = self.makeTable('GSUB')
 
     def get_lookup_(self, location, builder_class):
-        if self.cur_lookup_ and type(self.cur_lookup_) == builder_class:
+        if (self.cur_lookup_ and
+                type(self.cur_lookup_) == builder_class and
+                self.cur_lookup_.lookup_flag == self.lookup_flag_):
             return self.cur_lookup_
         self.cur_lookup_ = builder_class(location, self.lookup_flag_)
         self.lookups_.append(self.cur_lookup_)
+        if self.cur_lookup_name_:
+            self.named_lookups_[self.cur_lookup_name_] = self.cur_lookup_
         return self.cur_lookup_
 
     def makeTable(self, tag):
@@ -88,12 +94,30 @@ class Builder(object):
 
     def start_feature(self, location, name):
         self.language_systems = self.get_default_language_systems_()
+        self.cur_lookup_ = None
 
     def end_feature(self):
         self.language_systems = None
         self.cur_lookup_ = None
 
+    def start_lookup_block(self, location, name):
+        if name in self.named_lookups_:
+            raise FeatureLibError(
+                'Lookup "%s" has already been defined' % name, location)
+        self.cur_lookup_name_ = name
+        self.named_lookups_[name] = None
+        self.cur_lookup_ = None
+
+    def end_lookup_block(self):
+        assert self.cur_lookup_name_ is not None
+        self.cur_lookup_name_ = None
+        self.cur_lookup_ = None
+
     def set_language(self, location, language, include_default):
+        if self.cur_lookup_name_:
+            raise FeatureLibError(
+                "Within a named lookup block, it is not allowed "
+                "to change the language", location)
         self.cur_lookup_ = None
         if include_default:
             langsys = set(self.get_default_language_systems_())
@@ -103,6 +127,10 @@ class Builder(object):
         self.language_systems = frozenset(langsys)
 
     def set_script(self, location, script):
+        if self.cur_lookup_name_:
+            raise FeatureLibError(
+                "Within a named lookup block, it is not allowed "
+                "to change the script", location)
         self.cur_lookup_ = None
         self.script_ = script
         self.lookup_flag_ = 0
