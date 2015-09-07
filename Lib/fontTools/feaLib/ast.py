@@ -1,5 +1,6 @@
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
+import itertools
 
 
 class Statement(object):
@@ -98,6 +99,22 @@ class IgnoreSubstitutionRule(Statement):
     def __init__(self, location, prefix, glyphs, suffix):
         Statement.__init__(self, location)
         self.prefix, self.glyphs, self.suffix = (prefix, glyphs, suffix)
+
+
+class LigatureSubstitution(Statement):
+    def __init__(self, location, glyphs, replacement):
+        Statement.__init__(self, location)
+        self.glyphs, self.replacement = (glyphs, replacement)
+
+    def build(self, builder):
+        # OpenType feature file syntax, section 5.d, "Ligature substitution":
+        # "Since the OpenType specification does not allow ligature
+        # substitutions to be specified on target sequences that contain
+        # glyph classes, the implementation software will enumerate
+        # all specific glyph sequences if glyph classes are detected"
+        for glyphs in sorted(itertools.product(*self.glyphs)):
+            builder.add_ligature_substitution(
+                self.location, glyphs, self.replacement)
 
 
 class LookupReferenceStatement(Statement):

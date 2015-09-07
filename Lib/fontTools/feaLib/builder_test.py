@@ -1,6 +1,7 @@
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
 from fontTools.feaLib.builder import Builder, addOpenTypeFeatures
+from fontTools.feaLib.builder import LigatureSubstBuilder
 from fontTools.feaLib.error import FeatureLibError
 from fontTools.ttLib import TTFont
 import codecs
@@ -93,6 +94,18 @@ class BuilderTest(unittest.TestCase):
         addOpenTypeFeatures(self.getpath("spec4h1.fea"), font)
         self.expect_ttx(font, self.getpath("spec4h1_expected.ttx"))
 
+    def test_spec5d1(self):
+        # OpenType Feature File specification, section 5.d, example 1.
+        font = TTFont()
+        addOpenTypeFeatures(self.getpath("spec5d1.fea"), font)
+        self.expect_ttx(font, self.getpath("spec5d1.ttx"))
+
+    def test_spec5d2(self):
+        # OpenType Feature File specification, section 5.d, example 1.
+        font = TTFont()
+        addOpenTypeFeatures(self.getpath("spec5d2.fea"), font)
+        self.expect_ttx(font, self.getpath("spec5d2.ttx"))
+
     def test_languagesystem(self):
         builder = Builder(None, TTFont())
         builder.add_language_system(None, 'latn', 'FRA')
@@ -152,6 +165,12 @@ class BuilderTest(unittest.TestCase):
             FeatureLibError,
             "Lookup \"foo\" has already been defined",
             self.build, "lookup foo {} foo; lookup foo {} foo;")
+
+
+class LigatureSubstBuilderTest(unittest.TestCase):
+    def test_make_key(self):
+        self.assertEqual(LigatureSubstBuilder.make_key(('f', 'f', 'i')),
+                         (-3, ('f', 'f', 'i')))
 
 
 if __name__ == "__main__":
