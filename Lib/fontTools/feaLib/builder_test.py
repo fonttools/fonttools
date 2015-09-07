@@ -120,6 +120,13 @@ class BuilderTest(unittest.TestCase):
         self.assertEqual(builder.language_systems,
                          {('DFLT', 'dflt'), ('cyrl', 'dflt')})
 
+    def test_script_in_lookup_block(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Within a named lookup block, it is not allowed "
+            "to change the script",
+            self.build, "lookup Foo { script latn; } Foo;")
+
     def test_language(self):
         builder = Builder(None, TTFont())
         builder.add_language_system(None, 'latn', 'FRA')
@@ -132,6 +139,19 @@ class BuilderTest(unittest.TestCase):
                              include_default=True)
         self.assertEqual(builder.language_systems,
                          {('latn', 'FRA'), ('cyrl', 'BGR')})
+
+    def test_language_in_lookup_block(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Within a named lookup block, it is not allowed "
+            "to change the language",
+            self.build, "lookup Foo { language RUS; } Foo;")
+
+    def test_lookup_already_defined(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Lookup \"foo\" has already been defined",
+            self.build, "lookup foo {} foo; lookup foo {} foo;")
 
 
 if __name__ == "__main__":

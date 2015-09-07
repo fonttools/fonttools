@@ -42,6 +42,12 @@ class LookupBlock(Block):
         Block.__init__(self, location)
         self.name, self.use_extension = name, use_extension
 
+    def build(self, builder):
+        # TODO(sascha): Handle use_extension.
+        builder.start_lookup_block(self.location, self.name)
+        Block.build(self, builder)
+        builder.end_lookup_block()
+
 
 class GlyphClassDefinition(Statement):
     def __init__(self, location, name, glyphs):
