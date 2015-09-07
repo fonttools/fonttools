@@ -85,6 +85,7 @@ class Builder(object):
         # Build a table for mapping (tag, lookup_indices) to feature_index.
         # For example, ('liga', (2,3,7)) --> 23.
         feature_indices = {}
+        scripts = {}  # 'cyrl' --> {'DEU': [23, 24]} for feature #23,24
         for key, lookups in sorted(self.features_.items()):
             script, lang, feature_tag = key
             # l.lookup_index will be None when a lookup is not needed
@@ -94,6 +95,7 @@ class Builder(object):
                                     if l.lookup_index is not None])
             if len(lookup_indices) == 0:
                 continue
+
             feature_key = (feature_tag, lookup_indices)
             feature_index = feature_indices.get(feature_key)
             if feature_index is None:
@@ -106,8 +108,29 @@ class Builder(object):
                 frec.Feature.LookupCount = len(lookup_indices)
                 table.FeatureList.FeatureRecord.append(frec)
                 feature_indices[feature_key] = feature_index
+            scripts.setdefault(script, {}).setdefault(lang, []).append(
+                feature_index)
 
-        # TODO(sascha): Build table.ScriptList.
+        # Build ScriptList.
+        for script, lang_features in sorted(scripts.items()):
+            srec = otTables.ScriptRecord()
+            srec.ScriptTag = script
+            srec.Script = otTables.Script()
+            srec.Script.DefaultLangSys = None
+            srec.Script.LangSysRecord = []
+            for lang, feature_indices in sorted(lang_features.items()):
+                langsys = otTables.LangSys()
+                langsys.LookupOrder = None
+                langsys.ReqFeatureIndex = 0xFFFF
+                langsys.FeatureCount = len(feature_indices)
+                langsys.FeatureIndex = feature_indices
+                if lang == "dflt":
+                    srec.Script.DefaultLangSys = langsys
+                else:
+                    srec.Script.LangSysRecord.append(langsys)
+            srec.Script.LangSysCount = len(srec.Script.LangSysRecord)
+            table.ScriptList.ScriptRecord.append(srec)
+
         table.ScriptList.ScriptCount = len(table.ScriptList.ScriptRecord)
         table.FeatureList.FeatureCount = len(table.FeatureList.FeatureRecord)
         table.LookupList.LookupCount = len(table.LookupList.Lookup)
@@ -158,6 +181,7 @@ class Builder(object):
         self.cur_lookup_ = None
 
     def set_language(self, location, language, include_default):
+        assert(len(language) == 4)
         if self.cur_lookup_name_:
             raise FeatureLibError(
                 "Within a named lookup block, it is not allowed "

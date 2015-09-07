@@ -5,10 +5,53 @@
     <GSUB>
       <Version value="1.0"/>
       <ScriptList>
-        <!-- ScriptCount=0 -->
+        <!-- ScriptCount=3 -->
+        <ScriptRecord index="0">
+          <ScriptTag value="DFLT"/>
+          <Script>
+            <DefaultLangSys>
+              <ReqFeatureIndex value="65535"/>
+              <!-- FeatureCount=1 -->
+              <FeatureIndex index="0" value="0"/>
+            </DefaultLangSys>
+            <!-- LangSysCount=0 -->
+          </Script>
+        </ScriptRecord>
+        <ScriptRecord index="1">
+          <ScriptTag value="cyrl"/>
+          <Script>
+            <DefaultLangSys>
+              <ReqFeatureIndex value="65535"/>
+              <!-- FeatureCount=1 -->
+              <FeatureIndex index="0" value="0"/>
+            </DefaultLangSys>
+            <!-- LangSysCount=0 -->
+          </Script>
+        </ScriptRecord>
+        <ScriptRecord index="2">
+          <ScriptTag value="latn"/>
+          <Script>
+            <DefaultLangSys>
+              <ReqFeatureIndex value="65535"/>
+              <!-- FeatureCount=1 -->
+              <FeatureIndex index="0" value="0"/>
+            </DefaultLangSys>
+            <!-- LangSysCount=2 -->
+            <LangSysRecord index="0">
+              <ReqFeatureIndex value="65535"/>
+              <!-- FeatureCount=1 -->
+              <FeatureIndex index="0" value="0"/>
+            </LangSysRecord>
+            <LangSysRecord index="1">
+              <ReqFeatureIndex value="65535"/>
+              <!-- FeatureCount=1 -->
+              <FeatureIndex index="0" value="0"/>
+            </LangSysRecord>
+          </Script>
+        </ScriptRecord>
       </ScriptList>
       <FeatureList>
-        <!-- FeatureCount=2 -->
+        <!-- FeatureCount=1 -->
         <FeatureRecord index="0">
           <FeatureTag value="liga"/>
           <Feature>
@@ -16,13 +59,6 @@
             <LookupListIndex index="0" value="0"/>
             <LookupListIndex index="1" value="1"/>
             <LookupListIndex index="2" value="2"/>
-          </Feature>
-        </FeatureRecord>
-        <FeatureRecord index="1">
-          <FeatureTag value="liga"/>
-          <Feature>
-            <!-- LookupCount=1 -->
-            <LookupListIndex index="0" value="2"/>
           </Feature>
         </FeatureRecord>
       </FeatureList>

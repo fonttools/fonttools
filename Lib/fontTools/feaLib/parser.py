@@ -174,7 +174,7 @@ class Parser(object):
             self.expect_keyword_("required")
             required = True
         self.expect_symbol_(";")
-        return ast.LanguageStatement(location, language.strip(),
+        return ast.LanguageStatement(location, language,
                                      include_default, required)
 
     def parse_lookup_(self, vertical):
