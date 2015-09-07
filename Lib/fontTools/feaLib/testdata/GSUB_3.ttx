@@ -5,7 +5,19 @@
     <GSUB>
       <Version value="1.0"/>
       <ScriptList>
-        <!-- ScriptCount=0 -->
+        <!-- ScriptCount=1 -->
+        <ScriptRecord index="0">
+          <ScriptTag value="DFLT"/>
+          <Script>
+            <DefaultLangSys>
+              <ReqFeatureIndex value="65535"/>
+              <!-- FeatureCount=2 -->
+              <FeatureIndex index="0" value="0"/>
+              <FeatureIndex index="1" value="1"/>
+            </DefaultLangSys>
+            <!-- LangSysCount=0 -->
+          </Script>
+        </ScriptRecord>
       </ScriptList>
       <FeatureList>
         <!-- FeatureCount=2 -->

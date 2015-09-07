@@ -76,6 +76,7 @@ class AnchorDefinition(Statement):
 class LanguageStatement(Statement):
     def __init__(self, location, language, include_default, required):
         Statement.__init__(self, location)
+        assert(len(language) == 4)
         self.language = language
         self.include_default = include_default
         self.required = required

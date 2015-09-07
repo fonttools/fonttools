@@ -142,16 +142,16 @@ class BuilderTest(unittest.TestCase):
 
     def test_language(self):
         builder = Builder(None, TTFont())
-        builder.add_language_system(None, 'latn', 'FRA')
+        builder.add_language_system(None, 'latn', 'FRA ')
         builder.start_feature(location=None, name='test')
         builder.set_script(location=None, script='cyrl')
-        builder.set_language(location=None, language='RUS',
+        builder.set_language(location=None, language='RUS ',
                              include_default=False)
-        self.assertEqual(builder.language_systems, {('cyrl', 'RUS')})
-        builder.set_language(location=None, language='BGR',
+        self.assertEqual(builder.language_systems, {('cyrl', 'RUS ')})
+        builder.set_language(location=None, language='BGR ',
                              include_default=True)
         self.assertEqual(builder.language_systems,
-                         {('latn', 'FRA'), ('cyrl', 'BGR')})
+                         {('latn', 'FRA '), ('cyrl', 'BGR ')})
 
     def test_language_in_lookup_block(self):
         self.assertRaisesRegex(
