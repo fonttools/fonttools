@@ -119,15 +119,17 @@ class Builder(object):
             srec.Script.DefaultLangSys = None
             srec.Script.LangSysRecord = []
             for lang, feature_indices in sorted(lang_features.items()):
-                langsys = otTables.LangSys()
-                langsys.LookupOrder = None
-                langsys.ReqFeatureIndex = 0xFFFF
-                langsys.FeatureCount = len(feature_indices)
-                langsys.FeatureIndex = feature_indices
+                langrec = otTables.LangSysRecord()
+                langrec.LangSys = otTables.LangSys()
+                langrec.LangSys.LookupOrder = None
+                langrec.LangSys.ReqFeatureIndex = 0xFFFF
+                langrec.LangSys.FeatureCount = len(feature_indices)
+                langrec.LangSys.FeatureIndex = feature_indices
                 if lang == "dflt":
-                    srec.Script.DefaultLangSys = langsys
+                    srec.Script.DefaultLangSys = langrec.LangSys
                 else:
-                    srec.Script.LangSysRecord.append(langsys)
+                    langrec.LangSysTag = lang
+                    srec.Script.LangSysRecord.append(langrec)
             srec.Script.LangSysCount = len(srec.Script.LangSysRecord)
             table.ScriptList.ScriptRecord.append(srec)
 
