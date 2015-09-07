@@ -8,7 +8,21 @@
         <!-- ScriptCount=0 -->
       </ScriptList>
       <FeatureList>
-        <!-- FeatureCount=0 -->
+        <!-- FeatureCount=2 -->
+        <FeatureRecord index="0">
+          <FeatureTag value="F1  "/>
+          <Feature>
+            <!-- LookupCount=1 -->
+            <LookupListIndex index="0" value="0"/>
+          </Feature>
+        </FeatureRecord>
+        <FeatureRecord index="1">
+          <FeatureTag value="F2  "/>
+          <Feature>
+            <!-- LookupCount=1 -->
+            <LookupListIndex index="0" value="0"/>
+          </Feature>
+        </FeatureRecord>
       </FeatureList>
       <LookupList>
         <!-- LookupCount=1 -->
