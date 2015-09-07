@@ -71,6 +71,22 @@ class BuilderTest(unittest.TestCase):
         addOpenTypeFeatures(path, font)
         return font
 
+    def test_alternateSubst(self):
+        font = TTFont()
+        addOpenTypeFeatures(self.getpath("GSUB_3.fea"), font)
+        self.expect_ttx(font, self.getpath("GSUB_3.ttx"))
+
+    def test_alternateSubst_multipleSubstitutionsForSameGlyph(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Already defined alternates for glyph \"A\"",
+            self.build,
+            "feature test {"
+            "  sub A from [A.alt1 A.alt2];"
+            "  sub B from [B.alt1 B.alt2 B.alt3];"
+            "  sub A from [A.alt1 A.alt2];"
+            "} test;")
+
     def test_spec4h1(self):
         # OpenType Feature File specification, section 4.h, example 1.
         font = TTFont()
