@@ -218,6 +218,16 @@ class Builder(object):
         lookup = self.get_lookup_(location, LigatureSubstBuilder)
         lookup.ligatures[glyphs] = replacement
 
+    def add_single_substitution(self, location, mapping):
+        lookup = self.get_lookup_(location, SingleSubstBuilder)
+        for (from_glyph, to_glyph) in mapping.items():
+            if from_glyph in lookup.mapping:
+                raise FeatureLibError(
+                    'Already defined rule for replacing glyph "%s" by "%s"' %
+                    (from_glyph, lookup.mapping[from_glyph]),
+                    location)
+            lookup.mapping[from_glyph] = to_glyph
+
 
 class LookupBuilder(object):
     def __init__(self, location, table, lookup_type, lookup_flag):
@@ -281,4 +291,19 @@ class LigatureSubstBuilder(LookupBuilder):
             lig.Component = components
             lig.LigGlyph = self.ligatures[components]
             lookup.ligatures.setdefault(components[0], []).append(lig)
+        return lookup
+
+
+class SingleSubstBuilder(LookupBuilder):
+    def __init__(self, location, lookup_flag):
+        LookupBuilder.__init__(self, location, 'GSUB', 1, lookup_flag)
+        self.mapping = {}
+
+    def equals(self, other):
+        return (LookupBuilder.equals(self, other) and
+                self.mapping == other.mapping)
+
+    def build(self):
+        lookup = otTables.SingleSubst()
+        lookup.mapping = self.mapping
         return lookup

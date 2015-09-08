@@ -271,11 +271,8 @@ class ParserTest(unittest.TestCase):
     def test_substitute_single_format_a(self):  # GSUB LookupType 1
         doc = self.parse("feature smcp {substitute a by a.sc;} smcp;")
         sub = doc.statements[0].statements[0]
-        self.assertEqual(sub.old_prefix, [])
-        self.assertEqual(sub.old, [{"a"}])
-        self.assertEqual(sub.old_suffix, [])
-        self.assertEqual(sub.new, [{"a.sc"}])
-        self.assertEqual(sub.lookups, [None])
+        self.assertEqual(type(sub), ast.SingleSubstitution)
+        self.assertEqual(sub.mapping, {"a": "a.sc"})
 
     def test_substitute_single_format_b(self):  # GSUB LookupType 1
         doc = self.parse(
@@ -283,11 +280,11 @@ class ParserTest(unittest.TestCase):
             "    substitute [one.fitted one.oldstyle] by one;"
             "} smcp;")
         sub = doc.statements[0].statements[0]
-        self.assertEqual(sub.old_prefix, [])
-        self.assertEqual(sub.old, [{"one.fitted", "one.oldstyle"}])
-        self.assertEqual(sub.old_suffix, [])
-        self.assertEqual(sub.new, [{"one"}])
-        self.assertEqual(sub.lookups, [None])
+        self.assertEqual(type(sub), ast.SingleSubstitution)
+        self.assertEqual(sub.mapping, {
+            "one.fitted": "one",
+            "one.oldstyle": "one"
+        })
 
     def test_substitute_single_format_c(self):  # GSUB LookupType 1
         doc = self.parse(
@@ -295,11 +292,20 @@ class ParserTest(unittest.TestCase):
             "    substitute [a-d] by [A.sc-D.sc];"
             "} smcp;")
         sub = doc.statements[0].statements[0]
-        self.assertEqual(sub.old_prefix, [])
-        self.assertEqual(sub.old, [{"a", "b", "c", "d"}])
-        self.assertEqual(sub.old_suffix, [])
-        self.assertEqual(sub.new, [{"A.sc", "B.sc", "C.sc", "D.sc"}])
-        self.assertEqual(sub.lookups, [None])
+        self.assertEqual(type(sub), ast.SingleSubstitution)
+        self.assertEqual(sub.mapping, {
+            "a": "A.sc",
+            "b": "B.sc",
+            "c": "C.sc",
+            "d": "D.sc"
+        })
+
+    def test_substitute_single_format_c_different_num_elements(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            'Expected a glyph class with 4 elements after "by", '
+            'but found a glyph class with 26 elements',
+            self.parse, "feature smcp {sub [a-d] by [A.sc-Z.sc];} smcp;")
 
     def test_substitute_multiple(self):  # GSUB LookupType 2
         doc = self.parse("lookup Look {substitute f_f_i by f f i;} Look;")

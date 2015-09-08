@@ -83,9 +83,19 @@ class BuilderTest(unittest.TestCase):
             "Already defined alternates for glyph \"A\"",
             self.build,
             "feature test {"
-            "  sub A from [A.alt1 A.alt2];"
-            "  sub B from [B.alt1 B.alt2 B.alt3];"
-            "  sub A from [A.alt1 A.alt2];"
+            "    sub A from [A.alt1 A.alt2];"
+            "    sub B from [B.alt1 B.alt2 B.alt3];"
+            "    sub A from [A.alt1 A.alt2];"
+            "} test;")
+
+    def test_singleSubst_multipleSubstitutionsForSameGlyph(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            'Already defined rule for replacing glyph "e" by "E.sc"',
+            self.build,
+            "feature test {"
+            "    sub [a-z] by [A.sc-Z.sc];"
+            "    sub e by e.fina;"
             "} test;")
 
     def test_spec4h1(self):
