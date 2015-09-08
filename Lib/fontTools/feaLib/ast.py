@@ -124,6 +124,15 @@ class LookupReferenceStatement(Statement):
         self.location, self.lookup = (location, lookup)
 
 
+class SingleSubstitution(Statement):
+    def __init__(self, location, mapping):
+        Statement.__init__(self, location)
+        self.mapping = mapping
+
+    def build(self, builder):
+        builder.add_single_substitution(self.location, self.mapping)
+
+
 class ScriptStatement(Statement):
     def __init__(self, location, script):
         Statement.__init__(self, location)

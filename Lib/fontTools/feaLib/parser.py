@@ -227,6 +227,8 @@ class Parser(object):
                 'Expected "by", "from" or explicit lookup references',
                 self.cur_token_location_)
 
+        # GSUB lookup type 3: Alternate substitution.
+        # Format: "substitute a from [a.1 a.2 a.3];"
         if keyword == "from":
             if len(old) != 1 or len(old[0]) != 1:
                 raise FeatureLibError(
@@ -239,6 +241,26 @@ class Parser(object):
             return ast.AlternateSubstitution(location, list(old[0])[0], new[0])
 
         num_lookups = len([l for l in lookups if l is not None])
+
+        # GSUB lookup type 1: Single substitution.
+        # Format A: "substitute a by a.sc;"
+        # Format B: "substitute [one.fitted one.oldstyle] by one;"
+        # Format C: "substitute [a-d] by [A.sc-D.sc];"
+        if (len(old_prefix) == 0 and len(old_suffix) == 0 and
+                len(old) == 1 and len(new) == 1 and num_lookups == 0):
+            glyphs, replacements = sorted(list(old[0])), sorted(list(new[0]))
+            if len(replacements) == 1:
+                replacements = replacements * len(glyphs)
+            if len(glyphs) != len(replacements):
+                raise FeatureLibError(
+                    'Expected a glyph class with %d elements after "by", '
+                    'but found a glyph class with %d elements' %
+                    (len(glyphs), len(replacements)), location)
+            return ast.SingleSubstitution(location,
+                                          dict(zip(glyphs, replacements)))
+
+        # GSUB lookup type 4: Ligature substitution.
+        # Format: "substitute f f i by f_f_i;"
         if (len(old_prefix) == 0 and len(old_suffix) == 0 and
                 len(old) > 1 and len(new) == 1 and len(new[0]) == 1 and
                 num_lookups == 0):
