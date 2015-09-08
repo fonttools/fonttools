@@ -166,7 +166,8 @@ class Parser(object):
 
     def parse_language_(self):
         assert self.is_cur_keyword_("language")
-        location, language = self.cur_token_location_, self.expect_tag_()
+        location = self.cur_token_location_
+        language = self.expect_language_tag_()
         include_default, required = (True, False)
         if self.next_token_ in {"exclude_dflt", "include_dflt"}:
             include_default = (self.expect_name_() == "include_dflt")
@@ -201,7 +202,7 @@ class Parser(object):
 
     def parse_script_(self):
         assert self.is_cur_keyword_("script")
-        location, script = self.cur_token_location_, self.expect_tag_()
+        location, script = self.cur_token_location_, self.expect_script_tag_()
         self.expect_symbol_(";")
         return ast.ScriptStatement(location, script)
 
@@ -294,7 +295,8 @@ class Parser(object):
     def parse_languagesystem_(self):
         assert self.cur_token_ == "languagesystem"
         location = self.cur_token_location_
-        script, language = self.expect_tag_(), self.expect_tag_()
+        script = self.expect_script_tag_()
+        language = self.expect_language_tag_()
         self.expect_symbol_(";")
         if script == "DFLT" and language != "dflt":
             raise FeatureLibError(
@@ -370,6 +372,22 @@ class Parser(object):
             raise FeatureLibError("Tags can not be longer than 4 characters",
                                   self.cur_token_location_)
         return (self.cur_token_ + "    ")[:4]
+
+    def expect_script_tag_(self):
+        tag = self.expect_tag_()
+        if tag == "dflt":
+            raise FeatureLibError(
+                '"dflt" is not a valid script tag; use "DFLT" instead',
+                self.cur_token_location_)
+        return tag
+
+    def expect_language_tag_(self):
+        tag = self.expect_tag_()
+        if tag == "DFLT":
+            raise FeatureLibError(
+                '"DFLT" is not a valid language tag; use "dflt" instead',
+                self.cur_token_location_)
+        return tag
 
     def expect_symbol_(self, symbol):
         self.advance_lexer_()

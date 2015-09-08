@@ -199,6 +199,12 @@ class ParserTest(unittest.TestCase):
         self.assertTrue(s.include_default)
         self.assertTrue(s.required)
 
+    def test_language_DFLT(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            '"DFLT" is not a valid language tag; use "dflt" instead',
+            self.parse, "feature test { language DFLT; } test;")
+
     def test_lookup_block(self):
         [lookup] = self.parse("lookup Ligatures {} Ligatures;").statements
         self.assertEqual(lookup.name, "Ligatures")
@@ -255,6 +261,12 @@ class ParserTest(unittest.TestCase):
         s = doc.statements[0].statements[0]
         self.assertEqual(type(s), ast.ScriptStatement)
         self.assertEqual(s.script, "cyrl")
+
+    def test_script_dflt(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            '"dflt" is not a valid script tag; use "DFLT" instead',
+            self.parse, "feature test {script dflt;} test;")
 
     def test_substitute_single_format_a(self):  # GSUB LookupType 1
         doc = self.parse("feature smcp {substitute a by a.sc;} smcp;")
@@ -398,6 +410,14 @@ class ParserTest(unittest.TestCase):
             FeatureLibError,
             'For script "DFLT", the language must be "dflt"',
             self.parse, "languagesystem DFLT DEU;")
+        self.assertRaisesRegex(
+            FeatureLibError,
+            '"dflt" is not a valid script tag; use "DFLT" instead',
+            self.parse, "languagesystem dflt dflt;")
+        self.assertRaisesRegex(
+            FeatureLibError,
+            '"DFLT" is not a valid language tag; use "dflt" instead',
+            self.parse, "languagesystem latn DFLT;")
         self.assertRaisesRegex(
             FeatureLibError, "Expected ';'",
             self.parse, "languagesystem latn DEU")
