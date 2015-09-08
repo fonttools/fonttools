@@ -149,12 +149,24 @@ class BuilderTest(unittest.TestCase):
         self.assertEqual(builder.language_systems,
                          {('DFLT', 'dflt'), ('cyrl', 'dflt')})
 
+    def test_script_in_aalt_feature(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Script statements are not allowed within \"feature aalt\"",
+            self.build, "feature aalt { script latn; } aalt;")
+
     def test_script_in_lookup_block(self):
         self.assertRaisesRegex(
             FeatureLibError,
             "Within a named lookup block, it is not allowed "
             "to change the script",
             self.build, "lookup Foo { script latn; } Foo;")
+
+    def test_script_in_size_feature(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Script statements are not allowed within \"feature size\"",
+            self.build, "feature size { script latn; } size;")
 
     def test_language(self):
         builder = Builder(None, TTFont())
@@ -169,12 +181,24 @@ class BuilderTest(unittest.TestCase):
         self.assertEqual(builder.language_systems,
                          {('latn', 'FRA '), ('cyrl', 'BGR ')})
 
+    def test_language_in_aalt_feature(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Language statements are not allowed within \"feature aalt\"",
+            self.build, "feature aalt { language FRA; } aalt;")
+
     def test_language_in_lookup_block(self):
         self.assertRaisesRegex(
             FeatureLibError,
             "Within a named lookup block, it is not allowed "
             "to change the language",
             self.build, "lookup Foo { language RUS; } Foo;")
+
+    def test_language_in_size_feature(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Language statements are not allowed within \"feature size\"",
+            self.build, "feature size { language FRA; } size;")
 
     def test_lookup_already_defined(self):
         self.assertRaisesRegex(
