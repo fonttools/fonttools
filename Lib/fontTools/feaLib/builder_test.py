@@ -174,10 +174,10 @@ class BuilderTest(unittest.TestCase):
         builder.start_feature(location=None, name='test')
         builder.set_script(location=None, script='cyrl')
         builder.set_language(location=None, language='RUS ',
-                             include_default=False)
+                             include_default=False, required=False)
         self.assertEqual(builder.language_systems, {('cyrl', 'RUS ')})
         builder.set_language(location=None, language='BGR ',
-                             include_default=True)
+                             include_default=True, required=False)
         self.assertEqual(builder.language_systems,
                          {('latn', 'FRA '), ('cyrl', 'BGR ')})
 
@@ -199,6 +199,28 @@ class BuilderTest(unittest.TestCase):
             FeatureLibError,
             "Language statements are not allowed within \"feature size\"",
             self.build, "feature size { language FRA; } size;")
+
+    def test_language_required(self):
+        font = TTFont()
+        addOpenTypeFeatures(self.getpath("language_required.fea"), font)
+        self.expect_ttx(font, self.getpath("language_required.ttx"))
+
+    def test_language_required_duplicate(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            r"Language FRA \(script latn\) has already specified "
+            "feature scmp as its required feature",
+            self.build,
+            "feature scmp {"
+            "    script latn;"
+            "    language FRA required;"
+            "    language DEU required;"
+            "    substitute [a-z] by [A.sc-Z.sc];"
+            "} scmp;"
+            "feature test {"
+            "    language FRA required;"
+            "    substitute [a-z] by [A.sc-Z.sc];"
+            "} test;")
 
     def test_lookup_already_defined(self):
         self.assertRaisesRegex(

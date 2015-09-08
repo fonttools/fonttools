@@ -24,7 +24,8 @@ class Builder(object):
         self.cur_lookup_name_ = None
         self.cur_feature_name_ = None
         self.lookups_ = []
-        self.features_ = {}  # ('latn', 'DEU', 'smcp') --> [LookupBuilder*]
+        self.features_ = {}  # ('latn', 'DEU ', 'smcp') --> [LookupBuilder*]
+        self.required_features_ = {}  # ('latn', 'DEU ') --> 'scmp'
 
     def build(self):
         parsetree = Parser(self.featurefile_path).parse()
@@ -86,7 +87,8 @@ class Builder(object):
         # Build a table for mapping (tag, lookup_indices) to feature_index.
         # For example, ('liga', (2,3,7)) --> 23.
         feature_indices = {}
-        scripts = {}  # 'cyrl' --> {'DEU': [23, 24]} for feature #23,24
+        required_feature_indices = {}  # ('latn', 'DEU') --> 23
+        scripts = {}  # 'latn' --> {'DEU': [23, 24]} for feature #23,24
         for key, lookups in sorted(self.features_.items()):
             script, lang, feature_tag = key
             # l.lookup_index will be None when a lookup is not needed
@@ -111,6 +113,8 @@ class Builder(object):
                 feature_indices[feature_key] = feature_index
             scripts.setdefault(script, {}).setdefault(lang, []).append(
                 feature_index)
+            if self.required_features_.get((script, lang)) == feature_tag:
+                required_feature_indices[(script, lang)] = feature_index
 
         # Build ScriptList.
         for script, lang_features in sorted(scripts.items()):
@@ -123,9 +127,19 @@ class Builder(object):
                 langrec = otTables.LangSysRecord()
                 langrec.LangSys = otTables.LangSys()
                 langrec.LangSys.LookupOrder = None
-                langrec.LangSys.ReqFeatureIndex = 0xFFFF
-                langrec.LangSys.FeatureCount = len(feature_indices)
-                langrec.LangSys.FeatureIndex = feature_indices
+
+                req_feature_index = \
+                    required_feature_indices.get((script, lang))
+                if req_feature_index is None:
+                    langrec.LangSys.ReqFeatureIndex = 0xFFFF
+                else:
+                    langrec.LangSys.ReqFeatureIndex = req_feature_index
+
+                langrec.LangSys.FeatureIndex = [i for i in feature_indices
+                                                if i != req_feature_index]
+                langrec.LangSys.FeatureCount = \
+                    len(langrec.LangSys.FeatureIndex)
+
                 if lang == "dflt":
                     srec.Script.DefaultLangSys = langrec.LangSys
                 else:
@@ -187,7 +201,7 @@ class Builder(object):
         self.cur_lookup_name_ = None
         self.cur_lookup_ = None
 
-    def set_language(self, location, language, include_default):
+    def set_language(self, location, language, include_default, required):
         assert(len(language) == 4)
         if self.cur_lookup_name_:
             raise FeatureLibError(
@@ -204,6 +218,16 @@ class Builder(object):
             langsys = set()
         langsys.add((self.script_, language))
         self.language_systems = frozenset(langsys)
+        if required:
+            key = (self.script_, language)
+            if key in self.required_features_:
+                raise FeatureLibError(
+                    "Language %s (script %s) has already "
+                    "specified feature %s as its required feature" % (
+                        language.strip(), self.script_.strip(),
+                        self.required_features_[key].strip()),
+                    location)
+            self.required_features_[key] = self.cur_feature_name_
 
     def set_script(self, location, script):
         if self.cur_lookup_name_:
@@ -217,7 +241,8 @@ class Builder(object):
         self.cur_lookup_ = None
         self.script_ = script
         self.lookup_flag_ = 0
-        self.set_language(location, 'dflt', include_default=True)
+        self.set_language(location, "dflt",
+                          include_default=True, required=False)
 
     def add_alternate_substitution(self, location, glyph, from_class):
         lookup = self.get_lookup_(location, AlternateSubstBuilder)

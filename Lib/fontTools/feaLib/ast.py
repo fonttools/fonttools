@@ -82,9 +82,9 @@ class LanguageStatement(Statement):
         self.required = required
 
     def build(self, builder):
-        # TODO(sascha): Handle required.
         builder.set_language(location=self.location, language=self.language,
-                             include_default=self.include_default)
+                             include_default=self.include_default,
+                             required=self.required)
 
 
 class LanguageSystemStatement(Statement):
