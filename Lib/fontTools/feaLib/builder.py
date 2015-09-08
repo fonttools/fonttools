@@ -193,6 +193,10 @@ class Builder(object):
             raise FeatureLibError(
                 "Within a named lookup block, it is not allowed "
                 "to change the language", location)
+        if self.cur_feature_name_ in ('aalt', 'size'):
+            raise FeatureLibError(
+                "Language statements are not allowed "
+                "within \"feature %s\"" % self.cur_feature_name_, location)
         self.cur_lookup_ = None
         if include_default:
             langsys = set(self.get_default_language_systems_())
@@ -206,6 +210,10 @@ class Builder(object):
             raise FeatureLibError(
                 "Within a named lookup block, it is not allowed "
                 "to change the script", location)
+        if self.cur_feature_name_ in ('aalt', 'size'):
+            raise FeatureLibError(
+                "Script statements are not allowed "
+                "within \"feature %s\"" % self.cur_feature_name_, location)
         self.cur_lookup_ = None
         self.script_ = script
         self.lookup_flag_ = 0
