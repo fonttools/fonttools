@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 from fontTools.feaLib.error import FeatureLibError
 from fontTools.feaLib.parser import Parser
 from fontTools.ttLib.tables import otTables
+import warnings
 
 
 def addOpenTypeFeatures(featurefile_path, font):
@@ -221,6 +222,12 @@ class Builder(object):
     def add_ligature_substitution(self, location, glyphs, replacement):
         lookup = self.get_lookup_(location, LigatureSubstBuilder)
         lookup.ligatures[glyphs] = replacement
+
+    def add_multiple_substitution(self, location, glyph, replacements):
+        # TODO(sascha): Implement this, possibly via a new class
+        # otTables.MultipleSubst modeled after otTables.SingleSubst.
+        warnings.warn('Multiple substitution (GPOS LookupType 2) '
+                      'is not yet implemented')
 
     def add_single_substitution(self, location, mapping):
         lookup = self.get_lookup_(location, SingleSubstBuilder)

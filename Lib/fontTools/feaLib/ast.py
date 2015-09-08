@@ -124,6 +124,15 @@ class LookupReferenceStatement(Statement):
         self.location, self.lookup = (location, lookup)
 
 
+class MultipleSubstitution(Statement):
+    def __init__(self, location, glyph, replacement):
+        Statement.__init__(self, location)
+        self.glyph, self.replacement = glyph, replacement
+
+    def build(self, builder):
+        builder.add_multiple_substitution(self.location, glyph, replacement)
+
+
 class SingleSubstitution(Statement):
     def __init__(self, location, mapping):
         Statement.__init__(self, location)

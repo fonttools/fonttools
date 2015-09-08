@@ -310,12 +310,9 @@ class ParserTest(unittest.TestCase):
     def test_substitute_multiple(self):  # GSUB LookupType 2
         doc = self.parse("lookup Look {substitute f_f_i by f f i;} Look;")
         sub = doc.statements[0].statements[0]
-        self.assertEqual(type(sub), ast.SubstitutionRule)
-        self.assertEqual(sub.old_prefix, [])
-        self.assertEqual(sub.old, [{"f_f_i"}])
-        self.assertEqual(sub.old_suffix, [])
-        self.assertEqual(sub.new, [{"f"}, {"f"}, {"i"}])
-        self.assertEqual(sub.lookups, [None])
+        self.assertEqual(type(sub), ast.MultipleSubstitution)
+        self.assertEqual(sub.glyph, "f_f_i")
+        self.assertEqual(sub.replacement, ("f", "f", "i"))
 
     def test_substitute_from(self):  # GSUB LookupType 3
         doc = self.parse("feature test {"
