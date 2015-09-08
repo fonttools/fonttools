@@ -226,7 +226,14 @@ class WOFF2Writer(SFNTWriter):
 		"""
 		if self.sfntVersion == "OTTO":
 			return
-		for tag in ('maxp', 'head', 'loca', 'glyf'):
+
+		# make up glyph names required to decompile glyf table
+		self._decompileTable('maxp')
+		numGlyphs = self.ttFont['maxp'].numGlyphs
+		glyphOrder = ['.notdef'] + ["glyph%.5d" % i for i in range(1, numGlyphs)]
+		self.ttFont.setGlyphOrder(glyphOrder)
+
+		for tag in ('head', 'loca', 'glyf'):
 			self._decompileTable(tag)
 		self.ttFont['glyf'].padding = padding
 		for tag in ('glyf', 'loca'):
