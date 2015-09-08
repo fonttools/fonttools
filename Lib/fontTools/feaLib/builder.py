@@ -145,6 +145,10 @@ class Builder(object):
             raise FeatureLibError(
                 'If "languagesystem DFLT dflt" is present, it must be '
                 'the first of the languagesystem statements', location)
+        if (script, language) in self.default_language_systems_:
+            raise FeatureLibError(
+                '"languagesystem %s %s" has already been specified' %
+                (script.strip(), language.strip()), location)
         self.default_language_systems_.add((script, language))
 
     def get_default_language_systems_(self):

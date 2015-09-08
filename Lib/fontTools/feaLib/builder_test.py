@@ -124,6 +124,12 @@ class BuilderTest(unittest.TestCase):
         self.assertEqual(builder.language_systems,
                          {('latn', 'FRA'), ('cyrl', 'RUS')})
 
+    def test_languagesystem_duplicate(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            '"languagesystem cyrl RUS" has already been specified',
+            self.build, "languagesystem cyrl RUS; languagesystem cyrl RUS;")
+
     def test_languagesystem_none_specified(self):
         builder = Builder(None, TTFont())
         builder.start_feature(location=None, name='test')
