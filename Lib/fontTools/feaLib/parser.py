@@ -259,6 +259,15 @@ class Parser(object):
             return ast.SingleSubstitution(location,
                                           dict(zip(glyphs, replacements)))
 
+        # GSUB lookup type 2: Multiple substitution.
+        # Format: "substitute f_f_i by f f i;"
+        if (len(old_prefix) == 0 and len(old_suffix) == 0 and
+                len(old) == 1 and len(old[0]) == 1 and
+                len(new) > 1 and max([len(n) for n in new]) == 1 and
+                num_lookups == 0):
+            return ast.MultipleSubstitution(location, tuple(old[0])[0],
+                                            tuple([list(n)[0] for n in new]))
+
         # GSUB lookup type 4: Ligature substitution.
         # Format: "substitute f f i by f_f_i;"
         if (len(old_prefix) == 0 and len(old_suffix) == 0 and
