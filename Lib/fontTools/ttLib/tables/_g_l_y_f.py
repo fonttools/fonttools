@@ -30,6 +30,12 @@ SCALE_COMPONENT_OFFSET_DEFAULT = 0   # 0 == MS, 1 == Apple
 
 class table__g_l_y_f(DefaultTable.DefaultTable):
 
+	# this attribute controls the amount of padding applied to glyph data upon compile.
+	# Glyph lenghts are aligned to multiples of the specified value. 
+	# Allowed values are (0, 1, 2, 4). '0' means no padding; '1' (default) also means
+	# no padding, except for when padding would allow to use short loca offsets.
+	padding = 1
+
 	def decompile(self, data, ttFont):
 		loca = ttFont['loca']
 		last = int(loca[0])
@@ -61,7 +67,8 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 	def compile(self, ttFont):
 		if not hasattr(self, "glyphOrder"):
 			self.glyphOrder = ttFont.getGlyphOrder()
-		padding = self.padding if hasattr(self, 'padding') else None
+		padding = self.padding
+		assert padding in (0, 1, 2, 4)
 		locations = []
 		currentLocation = 0
 		dataList = []
@@ -69,14 +76,14 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 		for glyphName in self.glyphOrder:
 			glyph = self.glyphs[glyphName]
 			glyphData = glyph.compile(self, recalcBBoxes)
-			if padding:
+			if padding > 1:
 				glyphData = pad(glyphData, size=padding)
 			locations.append(currentLocation)
 			currentLocation = currentLocation + len(glyphData)
 			dataList.append(glyphData)
 		locations.append(currentLocation)
 
-		if padding is None and currentLocation < 0x20000:
+		if padding == 1 and currentLocation < 0x20000:
 			# See if we can pad any odd-lengthed glyphs to allow loca
 			# table to use the short offsets.
 			indices = [i for i,glyphData in enumerate(dataList) if len(glyphData) % 2 == 1]
