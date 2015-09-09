@@ -28,7 +28,7 @@ class table__l_t_a_g(DefaultTable.DefaultTable):
 				stringPool = stringPool + tag
 			offset = offset + 12 + len(self.tags) * 4
 			dataList.append(struct.pack(">HH", offset, len(tag)))
-		dataList.append(stringPool)
+		dataList.append(stringPool.encode("ascii"))
 		return bytesjoin(dataList)
 
 	def toXML(self, writer, ttFont):
