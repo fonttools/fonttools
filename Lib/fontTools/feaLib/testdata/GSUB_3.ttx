@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont>
+
+  <GSUB>
+    <GSUB>
+      <Version value="1.0"/>
+      <ScriptList>
+        <!-- ScriptCount=1 -->
+        <ScriptRecord index="0">
+          <ScriptTag value="DFLT"/>
+          <Script>
+            <DefaultLangSys>
+              <ReqFeatureIndex value="65535"/>
+              <!-- FeatureCount=2 -->
+              <FeatureIndex index="0" value="0"/>
+              <FeatureIndex index="1" value="1"/>
+            </DefaultLangSys>
+            <!-- LangSysCount=0 -->
+          </Script>
+        </ScriptRecord>
+      </ScriptList>
+      <FeatureList>
+        <!-- FeatureCount=2 -->
+        <FeatureRecord index="0">
+          <FeatureTag value="f1  "/>
+          <Feature>
+            <!-- LookupCount=1 -->
+            <LookupListIndex index="0" value="0"/>
+          </Feature>
+        </FeatureRecord>
+        <FeatureRecord index="1">
+          <FeatureTag value="f2  "/>
+          <Feature>
+            <!-- LookupCount=1 -->
+            <LookupListIndex index="0" value="0"/>
+          </Feature>
+        </FeatureRecord>
+      </FeatureList>
+      <LookupList>
+        <!-- LookupCount=1 -->
+        <AlternateSubst index="0" Format="1">
+          <AlternateSet glyph="A">
+            <Alternate glyph="A.alt1"/>
+            <Alternate glyph="A.alt2"/>
+          </AlternateSet>
+          <AlternateSet glyph="B">
+            <Alternate glyph="B.alt1"/>
+            <Alternate glyph="B.alt2"/>
+            <Alternate glyph="B.alt3"/>
+          </AlternateSet>
+          <AlternateSet glyph="C">
+            <Alternate glyph="C.alt1"/>
+          </AlternateSet>
+        </AlternateSubst>
+      </LookupList>
+    </GSUB>
+  </GSUB>
+
+  <GPOS>
+    <GPOS>
+      <Version value="1.0"/>
+      <ScriptList>
+        <!-- ScriptCount=0 -->
+      </ScriptList>
+      <FeatureList>
+        <!-- FeatureCount=0 -->
+      </FeatureList>
+      <LookupList>
+        <!-- LookupCount=0 -->
+      </LookupList>
+    </GPOS>
+  </GPOS>
+
+</ttFont>

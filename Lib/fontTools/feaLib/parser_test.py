@@ -1,7 +1,7 @@
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
-from fontTools.feaLib.lexer import LexerError
-from fontTools.feaLib.parser import Parser, ParserError, SymbolTable
+from fontTools.feaLib.error import FeatureLibError
+from fontTools.feaLib.parser import Parser, SymbolTable
 from fontTools.misc.py23 import *
 import fontTools.feaLib.ast as ast
 import codecs
@@ -53,13 +53,13 @@ class ParserTest(unittest.TestCase):
 
     def test_glyphclass_bad(self):
         self.assertRaisesRegex(
-            ParserError,
+            FeatureLibError,
             "Expected glyph name, glyph range, or glyph class reference",
             self.parse, "@bad = [a 123];")
 
     def test_glyphclass_duplicate(self):
         self.assertRaisesRegex(
-            ParserError, "Glyph class @dup already defined",
+            FeatureLibError, "Glyph class @dup already defined",
             self.parse, "@dup = [a b]; @dup = [x];")
 
     def test_glyphclass_empty(self):
@@ -96,17 +96,17 @@ class ParserTest(unittest.TestCase):
 
     def test_glyphclass_range_bad(self):
         self.assertRaisesRegex(
-            ParserError,
+            FeatureLibError,
             "Bad range: \"a\" and \"foobar\" should have the same length",
             self.parse, "@bad = [a-foobar];")
         self.assertRaisesRegex(
-            ParserError, "Bad range: \"A.swash-z.swash\"",
+            FeatureLibError, "Bad range: \"A.swash-z.swash\"",
             self.parse, "@bad = [A.swash-z.swash];")
         self.assertRaisesRegex(
-            ParserError, "Start of range must be smaller than its end",
+            FeatureLibError, "Start of range must be smaller than its end",
             self.parse, "@bad = [B.swash-A.swash];")
         self.assertRaisesRegex(
-            ParserError, "Bad range: \"foo.1234-foo.9876\"",
+            FeatureLibError, "Bad range: \"foo.1234-foo.9876\"",
             self.parse, "@bad = [foo.1234-foo.9876];")
 
     def test_glyphclass_range_mixed(self):
@@ -123,7 +123,7 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(vowels_uc.glyphs, set(list("AEIOU")))
         self.assertEqual(vowels.glyphs, set(list("aeiouyAEIOUY")))
         self.assertRaisesRegex(
-            ParserError, "Unknown glyph class @unknown",
+            FeatureLibError, "Unknown glyph class @unknown",
             self.parse, "@bad = [@unknown];")
 
     def test_glyphclass_scoping(self):
@@ -159,7 +159,7 @@ class ParserTest(unittest.TestCase):
         doc = self.parse("feature test {language DEU;} test;")
         s = doc.statements[0].statements[0]
         self.assertEqual(type(s), ast.LanguageStatement)
-        self.assertEqual(s.language, "DEU")
+        self.assertEqual(s.language, "DEU ")
         self.assertTrue(s.include_default)
         self.assertFalse(s.required)
 
@@ -167,7 +167,7 @@ class ParserTest(unittest.TestCase):
         doc = self.parse("feature test {language DEU exclude_dflt;} test;")
         s = doc.statements[0].statements[0]
         self.assertEqual(type(s), ast.LanguageStatement)
-        self.assertEqual(s.language, "DEU")
+        self.assertEqual(s.language, "DEU ")
         self.assertFalse(s.include_default)
         self.assertFalse(s.required)
 
@@ -177,7 +177,7 @@ class ParserTest(unittest.TestCase):
                          "} test;")
         s = doc.statements[0].statements[0]
         self.assertEqual(type(s), ast.LanguageStatement)
-        self.assertEqual(s.language, "DEU")
+        self.assertEqual(s.language, "DEU ")
         self.assertFalse(s.include_default)
         self.assertTrue(s.required)
 
@@ -185,7 +185,7 @@ class ParserTest(unittest.TestCase):
         doc = self.parse("feature test {language DEU include_dflt;} test;")
         s = doc.statements[0].statements[0]
         self.assertEqual(type(s), ast.LanguageStatement)
-        self.assertEqual(s.language, "DEU")
+        self.assertEqual(s.language, "DEU ")
         self.assertTrue(s.include_default)
         self.assertFalse(s.required)
 
@@ -195,9 +195,15 @@ class ParserTest(unittest.TestCase):
                          "} test;")
         s = doc.statements[0].statements[0]
         self.assertEqual(type(s), ast.LanguageStatement)
-        self.assertEqual(s.language, "DEU")
+        self.assertEqual(s.language, "DEU ")
         self.assertTrue(s.include_default)
         self.assertTrue(s.required)
+
+    def test_language_DFLT(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            '"DFLT" is not a valid language tag; use "dflt" instead',
+            self.parse, "feature test { language DFLT; } test;")
 
     def test_lookup_block(self):
         [lookup] = self.parse("lookup Ligatures {} Ligatures;").statements
@@ -211,7 +217,7 @@ class ParserTest(unittest.TestCase):
 
     def test_lookup_block_name_mismatch(self):
         self.assertRaisesRegex(
-            ParserError, 'Expected "Foo"',
+            FeatureLibError, 'Expected "Foo"',
             self.parse, "lookup Foo {} Bar;")
 
     def test_lookup_block_with_horizontal_valueRecordDef(self):
@@ -247,7 +253,7 @@ class ParserTest(unittest.TestCase):
 
     def test_lookup_reference_unknown(self):
         self.assertRaisesRegex(
-            ParserError, 'Unknown lookup "Huh"',
+            FeatureLibError, 'Unknown lookup "Huh"',
             self.parse, "feature liga {lookup Huh;} liga;")
 
     def test_script(self):
@@ -256,14 +262,17 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(type(s), ast.ScriptStatement)
         self.assertEqual(s.script, "cyrl")
 
+    def test_script_dflt(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            '"dflt" is not a valid script tag; use "DFLT" instead',
+            self.parse, "feature test {script dflt;} test;")
+
     def test_substitute_single_format_a(self):  # GSUB LookupType 1
         doc = self.parse("feature smcp {substitute a by a.sc;} smcp;")
         sub = doc.statements[0].statements[0]
-        self.assertEqual(sub.old_prefix, [])
-        self.assertEqual(sub.old, [{"a"}])
-        self.assertEqual(sub.old_suffix, [])
-        self.assertEqual(sub.new, [{"a.sc"}])
-        self.assertEqual(sub.lookups, [None])
+        self.assertEqual(type(sub), ast.SingleSubstitution)
+        self.assertEqual(sub.mapping, {"a": "a.sc"})
 
     def test_substitute_single_format_b(self):  # GSUB LookupType 1
         doc = self.parse(
@@ -271,11 +280,11 @@ class ParserTest(unittest.TestCase):
             "    substitute [one.fitted one.oldstyle] by one;"
             "} smcp;")
         sub = doc.statements[0].statements[0]
-        self.assertEqual(sub.old_prefix, [])
-        self.assertEqual(sub.old, [{"one.fitted", "one.oldstyle"}])
-        self.assertEqual(sub.old_suffix, [])
-        self.assertEqual(sub.new, [{"one"}])
-        self.assertEqual(sub.lookups, [None])
+        self.assertEqual(type(sub), ast.SingleSubstitution)
+        self.assertEqual(sub.mapping, {
+            "one.fitted": "one",
+            "one.oldstyle": "one"
+        })
 
     def test_substitute_single_format_c(self):  # GSUB LookupType 1
         doc = self.parse(
@@ -283,21 +292,27 @@ class ParserTest(unittest.TestCase):
             "    substitute [a-d] by [A.sc-D.sc];"
             "} smcp;")
         sub = doc.statements[0].statements[0]
-        self.assertEqual(sub.old_prefix, [])
-        self.assertEqual(sub.old, [{"a", "b", "c", "d"}])
-        self.assertEqual(sub.old_suffix, [])
-        self.assertEqual(sub.new, [{"A.sc", "B.sc", "C.sc", "D.sc"}])
-        self.assertEqual(sub.lookups, [None])
+        self.assertEqual(type(sub), ast.SingleSubstitution)
+        self.assertEqual(sub.mapping, {
+            "a": "A.sc",
+            "b": "B.sc",
+            "c": "C.sc",
+            "d": "D.sc"
+        })
+
+    def test_substitute_single_format_c_different_num_elements(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            'Expected a glyph class with 4 elements after "by", '
+            'but found a glyph class with 26 elements',
+            self.parse, "feature smcp {sub [a-d] by [A.sc-Z.sc];} smcp;")
 
     def test_substitute_multiple(self):  # GSUB LookupType 2
         doc = self.parse("lookup Look {substitute f_f_i by f f i;} Look;")
         sub = doc.statements[0].statements[0]
-        self.assertEqual(type(sub), ast.SubstitutionRule)
-        self.assertEqual(sub.old_prefix, [])
-        self.assertEqual(sub.old, [{"f_f_i"}])
-        self.assertEqual(sub.old_suffix, [])
-        self.assertEqual(sub.new, [{"f"}, {"f"}, {"i"}])
-        self.assertEqual(sub.lookups, [None])
+        self.assertEqual(type(sub), ast.MultipleSubstitution)
+        self.assertEqual(sub.glyph, "f_f_i")
+        self.assertEqual(sub.replacement, ("f", "f", "i"))
 
     def test_substitute_from(self):  # GSUB LookupType 3
         doc = self.parse("feature test {"
@@ -321,11 +336,9 @@ class ParserTest(unittest.TestCase):
     def test_substitute_ligature(self):  # GSUB LookupType 4
         doc = self.parse("feature liga {substitute f f i by f_f_i;} liga;")
         sub = doc.statements[0].statements[0]
-        self.assertEqual(sub.old_prefix, [])
-        self.assertEqual(sub.old, [{"f"}, {"f"}, {"i"}])
-        self.assertEqual(sub.old_suffix, [])
-        self.assertEqual(sub.new, [{"f_f_i"}])
-        self.assertEqual(sub.lookups, [None, None, None])
+        self.assertEqual(type(sub), ast.LigatureSubstitution)
+        self.assertEqual(sub.glyphs, [{"f"}, {"f"}, {"i"}])
+        self.assertEqual(sub.replacement, "f_f_i")
 
     def test_substitute_lookups(self):
         doc = Parser(self.getpath("spec5fi.fea")).parse()
@@ -335,7 +348,8 @@ class ParserTest(unittest.TestCase):
 
     def test_substitute_missing_by(self):
         self.assertRaisesRegex(
-            ParserError, 'Expected "by", "from" or explicit lookup references',
+            FeatureLibError,
+            'Expected "by", "from" or explicit lookup references',
             self.parse, "feature liga {substitute f f i;} liga;")
 
     def test_subtable(self):
@@ -378,7 +392,7 @@ class ParserTest(unittest.TestCase):
 
     def test_valuerecord_named_unknown(self):
         self.assertRaisesRegex(
-            ParserError, "Unknown valueRecordDef \"unknown\"",
+            FeatureLibError, "Unknown valueRecordDef \"unknown\"",
             self.parse, "valueRecordDef <unknown> foo;")
 
     def test_valuerecord_scoping(self):
@@ -396,14 +410,26 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(langsys.script, "latn")
         self.assertEqual(langsys.language, "DEU ")
         self.assertRaisesRegex(
-            ParserError, "Expected ';'",
+            FeatureLibError,
+            'For script "DFLT", the language must be "dflt"',
+            self.parse, "languagesystem DFLT DEU;")
+        self.assertRaisesRegex(
+            FeatureLibError,
+            '"dflt" is not a valid script tag; use "DFLT" instead',
+            self.parse, "languagesystem dflt dflt;")
+        self.assertRaisesRegex(
+            FeatureLibError,
+            '"DFLT" is not a valid language tag; use "dflt" instead',
+            self.parse, "languagesystem latn DFLT;")
+        self.assertRaisesRegex(
+            FeatureLibError, "Expected ';'",
             self.parse, "languagesystem latn DEU")
         self.assertRaisesRegex(
-            ParserError, "longer than 4 characters",
-            self.parse, "languagesystem foobar DEU")
+            FeatureLibError, "longer than 4 characters",
+            self.parse, "languagesystem foobar DEU;")
         self.assertRaisesRegex(
-            ParserError, "longer than 4 characters",
-            self.parse, "languagesystem latn FOOBAR")
+            FeatureLibError, "longer than 4 characters",
+            self.parse, "languagesystem latn FOOBAR;")
 
     def setUp(self):
         self.tempdir = None
