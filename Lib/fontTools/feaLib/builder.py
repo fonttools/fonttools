@@ -2,6 +2,7 @@ from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
 from fontTools.feaLib.error import FeatureLibError
 from fontTools.feaLib.parser import Parser
+from fontTools.ttLib import getTableClass
 from fontTools.ttLib.tables import otTables
 import warnings
 
@@ -30,8 +31,9 @@ class Builder(object):
     def build(self):
         parsetree = Parser(self.featurefile_path).parse()
         parsetree.build(self)
-        self.gpos = self.font['GPOS'] = self.makeTable('GPOS')
-        self.gsub = self.font['GSUB'] = self.makeTable('GSUB')
+        for tag in ('GPOS', 'GSUB'):
+            fontTable = self.font[tag] = getTableClass(tag)()
+            fontTable.table = self.makeTable(tag)
 
     def get_lookup_(self, location, builder_class):
         if (self.cur_lookup_ and
