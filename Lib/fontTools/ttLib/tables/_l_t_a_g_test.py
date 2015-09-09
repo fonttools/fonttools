@@ -17,7 +17,9 @@ class Test_l_t_a_g(unittest.TestCase):
 		self.assertEqual(1, table.version)
 		self.assertEqual(0, table.flags)
 		self.assertEqual(self.TAGS_, table.tags)
-		self.assertEqual(self.DATA_, table.compile(ttFont=None))
+		compiled = table.compile(ttFont=None)
+		self.assertEqual(self.DATA_, compiled)
+		self.assertIsInstance(compiled, bytes)
 
 	def test_fromXML(self):
 		table = table__l_t_a_g()
