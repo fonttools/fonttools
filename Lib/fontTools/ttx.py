@@ -141,8 +141,7 @@ class Options(object):
 				sys.exit(0)
 			elif option == "-d":
 				if not os.path.isdir(value):
-					print("The -d option value must be an existing directory")
-					sys.exit(2)
+					raise getopt.GetoptError("The -d option value must be an existing directory")
 				self.outputDir = value
 			elif option == "-o":
 				self.outputFile = value
@@ -166,8 +165,8 @@ class Options(object):
 			elif option == "-z":
 				validOptions = ('raw', 'row', 'bitwise', 'extfile')
 				if value not in validOptions:
-					print("-z does not allow %s as a format. Use %s" % (option, validOptions))
-					sys.exit(2)
+					raise getopt.GetoptError(
+						"-z does not allow %s as a format. Use %s" % (option, validOptions))
 				self.bitmapGlyphDataFormat = value
 			elif option == "-y":
 				self.fontNumber = int(value)
@@ -190,11 +189,9 @@ class Options(object):
 			print("-m and --flavor options are mutually exclusive")
 			sys.exit(2)
 		if self.onlyTables and self.skipTables:
-			print("-t and -x options are mutually exclusive")
-			sys.exit(2)
+			raise getopt.GetoptError("-t and -x options are mutually exclusive")
 		if self.mergeFile and numFiles > 1:
-			print("Must specify exactly one TTX source file when using -m")
-			sys.exit(2)
+			raise getopt.GetoptError("Must specify exactly one TTX source file when using -m")
 
 
 def ttList(input, output, options):
@@ -296,14 +293,11 @@ def guessFileType(fileName):
 
 
 def parseOptions(args):
-	try:
-		rawOptions, files = getopt.getopt(args, "ld:o:fvqht:x:sim:z:baey:",
+	rawOptions, files = getopt.getopt(args, "ld:o:fvqht:x:sim:z:baey:",
 			['unicodedata=', "recalc-timestamp", 'flavor='])
-	except getopt.GetoptError:
-		usage()
 
 	if not files:
-		usage()
+		raise getopt.GetoptError('Must specify at least one input file')
 
 	options = Options(rawOptions, len(files))
 	jobs = []
@@ -354,7 +348,11 @@ def waitForKeyPress():
 def main(args=None):
 	if args is None:
 		args = sys.argv[1:]
-	jobs, options = parseOptions(args)
+	try:
+		jobs, options = parseOptions(args)
+	except getopt.GetoptError as e:
+		print('error:', e, file=sys.stderr)
+		usage()
 	try:
 		process(jobs, options)
 	except KeyboardInterrupt:
