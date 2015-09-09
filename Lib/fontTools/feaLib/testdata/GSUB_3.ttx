@@ -37,20 +37,25 @@
     </FeatureList>
     <LookupList>
       <!-- LookupCount=1 -->
-      <AlternateSubst index="0" Format="1">
-        <AlternateSet glyph="A">
-          <Alternate glyph="A.alt1"/>
-          <Alternate glyph="A.alt2"/>
-        </AlternateSet>
-        <AlternateSet glyph="B">
-          <Alternate glyph="B.alt1"/>
-          <Alternate glyph="B.alt2"/>
-          <Alternate glyph="B.alt3"/>
-        </AlternateSet>
-        <AlternateSet glyph="C">
-          <Alternate glyph="C.alt1"/>
-        </AlternateSet>
-      </AlternateSubst>
+      <Lookup index="0">
+        <!-- LookupType=3 -->
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <AlternateSubst index="0" Format="1">
+          <AlternateSet glyph="A">
+            <Alternate glyph="A.alt1"/>
+            <Alternate glyph="A.alt2"/>
+          </AlternateSet>
+          <AlternateSet glyph="B">
+            <Alternate glyph="B.alt1"/>
+            <Alternate glyph="B.alt2"/>
+            <Alternate glyph="B.alt3"/>
+          </AlternateSet>
+          <AlternateSet glyph="C">
+            <Alternate glyph="C.alt1"/>
+          </AlternateSet>
+        </AlternateSubst>
+      </Lookup>
     </LookupList>
   </GSUB>
 
