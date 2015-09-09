@@ -106,7 +106,8 @@ class WOFF2Reader(SFNTReader):
 		self.ttFont['loca'] = WOFF2LocaTable()
 		glyfTable = self.ttFont['glyf'] = WOFF2GlyfTable()
 		glyfTable.reconstruct(data, self.ttFont)
-		glyfTable.padding = padding
+		if padding:
+			glyfTable.padding = padding
 		data = glyfTable.compile(self.ttFont)
 		return data
 
