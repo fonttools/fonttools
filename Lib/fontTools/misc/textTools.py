@@ -91,8 +91,9 @@ def pad(data, size):
 	"""
 	data = tobytes(data)
 	if size > 1:
-		while len(data) % size != 0:
-			data += b"\0"
+		remainder = len(data) % size
+		if remainder:
+			data += b"\0" * (size - remainder)
 	return data
 
 
