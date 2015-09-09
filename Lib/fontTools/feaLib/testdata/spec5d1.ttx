@@ -37,20 +37,25 @@
     </FeatureList>
     <LookupList>
       <!-- LookupCount=1 -->
-      <LigatureSubst index="0" Format="1">
-        <LigatureSet glyph="one">
-          <Ligature components="one,fraction,two" glyph="onehalf"/>
-          <Ligature components="one,fraction,two.oldstyle" glyph="onehalf"/>
-          <Ligature components="one,slash,two" glyph="onehalf"/>
-          <Ligature components="one,slash,two.oldstyle" glyph="onehalf"/>
-        </LigatureSet>
-        <LigatureSet glyph="one.oldstyle">
-          <Ligature components="one.oldstyle,fraction,two" glyph="onehalf"/>
-          <Ligature components="one.oldstyle,fraction,two.oldstyle" glyph="onehalf"/>
-          <Ligature components="one.oldstyle,slash,two" glyph="onehalf"/>
-          <Ligature components="one.oldstyle,slash,two.oldstyle" glyph="onehalf"/>
-        </LigatureSet>
-      </LigatureSubst>
+      <Lookup index="0">
+        <!-- LookupType=4 -->
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <LigatureSubst index="0" Format="1">
+          <LigatureSet glyph="one">
+            <Ligature components="one,fraction,two" glyph="onehalf"/>
+            <Ligature components="one,fraction,two.oldstyle" glyph="onehalf"/>
+            <Ligature components="one,slash,two" glyph="onehalf"/>
+            <Ligature components="one,slash,two.oldstyle" glyph="onehalf"/>
+          </LigatureSet>
+          <LigatureSet glyph="one.oldstyle">
+            <Ligature components="one.oldstyle,fraction,two" glyph="onehalf"/>
+            <Ligature components="one.oldstyle,fraction,two.oldstyle" glyph="onehalf"/>
+            <Ligature components="one.oldstyle,slash,two" glyph="onehalf"/>
+            <Ligature components="one.oldstyle,slash,two.oldstyle" glyph="onehalf"/>
+          </LigatureSet>
+        </LigatureSubst>
+      </Lookup>
     </LookupList>
   </GSUB>
 

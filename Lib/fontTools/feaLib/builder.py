@@ -299,9 +299,15 @@ class AlternateSubstBuilder(LookupBuilder):
                 self.alternates == other.alternates)
 
     def build(self):
-        lookup = otTables.AlternateSubst()
-        lookup.Format = 1
-        lookup.alternates = self.alternates
+        lookup = otTables.Lookup()
+        lookup.SubTable = []
+        st = otTables.AlternateSubst()
+        st.Format = 1
+        st.alternates = self.alternates
+        lookup.SubTable.append(st)
+        lookup.LookupFlag = self.lookup_flag
+        lookup.LookupType = self.lookup_type
+        lookup.SubTableCount = len(lookup.SubTable)
         return lookup
 
 
@@ -329,14 +335,20 @@ class LigatureSubstBuilder(LookupBuilder):
         return (-len(components), components)
 
     def build(self):
-        lookup = otTables.LigatureSubst()
-        lookup.Format = 1
-        lookup.ligatures = {}
+        lookup = otTables.Lookup()
+        lookup.SubTable = []
+        st = otTables.LigatureSubst()
+        st.Format = 1
+        st.ligatures = {}
         for components in sorted(self.ligatures.keys(), key=self.make_key):
             lig = otTables.Ligature()
             lig.Component = components
             lig.LigGlyph = self.ligatures[components]
-            lookup.ligatures.setdefault(components[0], []).append(lig)
+            st.ligatures.setdefault(components[0], []).append(lig)
+        lookup.SubTable.append(st)
+        lookup.LookupFlag = self.lookup_flag
+        lookup.LookupType = self.lookup_type
+        lookup.SubTableCount = len(lookup.SubTable)
         return lookup
 
 
@@ -350,6 +362,12 @@ class SingleSubstBuilder(LookupBuilder):
                 self.mapping == other.mapping)
 
     def build(self):
-        lookup = otTables.SingleSubst()
-        lookup.mapping = self.mapping
+        lookup = otTables.Lookup()
+        lookup.SubTable = []
+        st = otTables.SingleSubst()
+        st.mapping = self.mapping
+        lookup.SubTable.append(st)
+        lookup.LookupFlag = self.lookup_flag
+        lookup.LookupType = self.lookup_type
+        lookup.SubTableCount = len(lookup.SubTable)
         return lookup

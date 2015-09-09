@@ -37,16 +37,21 @@
     </FeatureList>
     <LookupList>
       <!-- LookupCount=1 -->
-      <LigatureSubst index="0" Format="1">
-        <LigatureSet glyph="f">
-          <Ligature components="f,f,i" glyph="f_f_i"/>
-          <Ligature components="f,f" glyph="f_f"/>
-          <Ligature components="f,i" glyph="f_i"/>
-        </LigatureSet>
-        <LigatureSet glyph="o">
-          <Ligature components="o,f,f,i" glyph="o_f_f_i"/>
-        </LigatureSet>
-      </LigatureSubst>
+      <Lookup index="0">
+        <!-- LookupType=4 -->
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <LigatureSubst index="0" Format="1">
+          <LigatureSet glyph="f">
+            <Ligature components="f,f,i" glyph="f_f_i"/>
+            <Ligature components="f,f" glyph="f_f"/>
+            <Ligature components="f,i" glyph="f_i"/>
+          </LigatureSet>
+          <LigatureSet glyph="o">
+            <Ligature components="o,f,f,i" glyph="o_f_f_i"/>
+          </LigatureSet>
+        </LigatureSubst>
+      </Lookup>
     </LookupList>
   </GSUB>
 
