@@ -511,46 +511,43 @@ class TTFont(object):
 		# Set the glyph order, so the cmap parser has something
 		# to work with (so we don't get called recursively).
 		self.glyphOrder = glyphOrder
-		# Get a (new) temporary cmap (based on the just invented names)
-		try:
-			tempcmap = self['cmap'].getcmap(3, 1)
-		except KeyError:
-			tempcmap = None
-		if tempcmap is not None:
-			# we have a unicode cmap
-			from fontTools import agl
-			cmap = tempcmap.cmap
-			# create a reverse cmap dict
-			reversecmap = {}
-			for unicode, name in list(cmap.items()):
-				reversecmap[name] = unicode
-			allNames = {}
-			for i in range(numGlyphs):
-				tempName = glyphOrder[i]
-				if tempName in reversecmap:
-					unicode = reversecmap[tempName]
-					if unicode in agl.UV2AGL:
-						# get name from the Adobe Glyph List
-						glyphName = agl.UV2AGL[unicode]
-					else:
-						# create uni<CODE> name
-						glyphName = "uni%04X" % unicode
-					tempName = glyphName
-					n = allNames.get(tempName, 0)
-					if n:
-						tempName = glyphName + "#" + str(n)
-					glyphOrder[i] = tempName
-					allNames[tempName] = n + 1
-			# Delete the temporary cmap table from the cache, so it can
-			# be parsed again with the right names.
-			del self.tables['cmap']
-		else:
-			pass # no unicode cmap available, stick with the invented names
+
+		# Make up glyph names based on the reversed cmap table. Because some
+		# glyphs (eg. ligatures or alternates) may not be reachable via cmap,
+		# this naming table will usually not cover all glyphs in the font.
+		# If the font has no Unicode cmap table, reversecmap will be empty.
+		reversecmap = self['cmap'].buildReversed()
+		useCount = {}
+		for i in range(numGlyphs):
+			tempName = glyphOrder[i]
+			if tempName in reversecmap:
+				# If a font maps both U+0041 LATIN CAPITAL LETTER A and
+				# U+0391 GREEK CAPITAL LETTER ALPHA to the same glyph,
+				# we prefer naming the glyph as "A".
+				glyphName = self._makeGlyphName(min(reversecmap[tempName]))
+				numUses = useCount[glyphName] = useCount.get(glyphName, 0) + 1
+				if numUses > 1:
+					glyphName = "%s.alt%d" % (glyphName, numUses - 1)
+				glyphOrder[i] = glyphName
+
+		# Delete the temporary cmap table from the cache, so it can
+		# be parsed again with the right names.
+		del self.tables['cmap']
 		self.glyphOrder = glyphOrder
 		if cmapLoading:
 			# restore partially loaded cmap, so it can continue loading
 			# using the proper names.
 			self.tables['cmap'] = cmapLoading
+
+	@staticmethod
+	def _makeGlyphName(codepoint):
+		from fontTools import agl  # Adobe Glyph List
+		if codepoint in agl.UV2AGL:
+			return agl.UV2AGL[codepoint]
+		elif codepoint <= 0xFFFF:
+			return "uni%04X" % codepoint
+		else:
+			return "u%X" % codepoint
 
 	def getGlyphNames(self):
 		"""Get a list of glyph names, sorted alphabetically."""

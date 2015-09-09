@@ -20,6 +20,21 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
 				return subtable
 		return None # not found
 
+	def buildReversed(self):
+		"""Returns a reverse cmap such as {'one':{0x31}, 'A':{0x41,0x391}}.
+
+		The values are sets of Unicode codepoints because
+		some fonts map different codepoints to the same glyph.
+		For example, U+0041 LATIN CAPITAL LETTER A and U+0391
+		GREEK CAPITAL LETTER ALPHA are sometimes the same glyph.
+		"""
+		result = {}
+		for subtable in self.tables:
+			if subtable.isUnicode():
+				for codepoint, name in subtable.cmap.items():
+					result.setdefault(name, set()).add(codepoint)
+		return result
+
 	def decompile(self, data, ttFont):
 		tableVersion, numSubTables = struct.unpack(">HH", data[:4])
 		self.tableVersion = int(tableVersion)
