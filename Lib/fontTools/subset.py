@@ -401,20 +401,15 @@ def subset_glyphs(self, s):
 
 @_add_method(otTables.MultipleSubst)
 def closure_glyphs(self, s, cur_glyphs):
-    indices = self.Coverage.intersect(cur_glyphs)
-    _set_update(s.glyphs, *(self.Sequence[i].Substitute for i in indices))
+    for glyph, subst in self.mapping.items():
+        if glyph in cur_glyphs:
+            _set_update(s.glyphs, subst)
 
 @_add_method(otTables.MultipleSubst)
 def subset_glyphs(self, s):
-    indices = self.Coverage.subset(s.glyphs)
-    self.Sequence = [self.Sequence[i] for i in indices]
-    # Now drop rules generating glyphs we don't want
-    indices = [i for i,seq in enumerate(self.Sequence)
-               if all(sub in s.glyphs for sub in seq.Substitute)]
-    self.Sequence = [self.Sequence[i] for i in indices]
-    self.Coverage.remap(indices)
-    self.SequenceCount = len(self.Sequence)
-    return bool(self.SequenceCount)
+    self.mapping = {g:v for g,v in self.mapping.items()
+                    if g in s.glyphs and all(sub in s.glyphs for sub in v)}
+    return bool(self.mapping)
 
 @_add_method(otTables.AlternateSubst)
 def closure_glyphs(self, s, cur_glyphs):

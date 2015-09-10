@@ -89,6 +89,60 @@ class SingleSubstTest(unittest.TestCase):
         self.assertEqual(table.mapping, {"A": "a", "B": "b", "C": "c"})
 
 
+class MultipleSubstTest(unittest.TestCase):
+    def setUp(self):
+        self.glyphs = ".notdef c f i t c_t f_f_i".split()
+        self.font = FakeFont(self.glyphs)
+
+    def test_postRead_format1(self):
+        makeSequence = otTables.MultipleSubst.makeSequence_
+        table = otTables.MultipleSubst()
+        table.Format = 1
+        rawTable = {
+            "Coverage": makeCoverage(["c_t", "f_f_i"]),
+            "Sequence": [
+                makeSequence(["c", "t"]),
+                makeSequence(["f", "f", "i"])
+            ]
+        }
+        table.postRead(rawTable, self.font)
+        self.assertEqual(table.mapping, {
+            "c_t": ["c", "t"],
+            "f_f_i": ["f", "f", "i"]
+        })
+
+    def test_postRead_formatUnknown(self):
+        table = otTables.MultipleSubst()
+        table.Format = 987
+        self.assertRaises(AssertionError, table.postRead, {}, self.font)
+
+    def test_preWrite_format1(self):
+        table = otTables.MultipleSubst()
+        table.mapping = {"c_t": ["c", "t"], "f_f_i": ["f", "f", "i"]}
+        rawTable = table.preWrite(self.font)
+        self.assertEqual(table.Format, 1)
+        self.assertEqual(rawTable["Coverage"].glyphs, ["c_t", "f_f_i"])
+
+    def test_toXML2(self):
+        writer = XMLWriter(StringIO())
+        table = otTables.MultipleSubst()
+        table.mapping = {"c_t": ["c", "t"], "f_f_i": ["f", "f", "i"]}
+        table.toXML2(writer, self.font)
+        self.assertEqual(writer.file.getvalue().splitlines()[1:], [
+            '<Substitution in="c_t" out="c,t"/>',
+            '<Substitution in="f_f_i" out="f,f,i"/>',
+        ])
+
+    def test_fromXML(self):
+        table = otTables.MultipleSubst()
+        table.fromXML("Substitution",
+                      {"in": "c_t", "out": "c,t"}, [], self.font)
+        table.fromXML("Substitution",
+                      {"in": "f_f_i", "out": "f,f,i"}, [], self.font)
+        self.assertEqual(table.mapping,
+                         {'c_t': ['c', 't'], 'f_f_i': ['f', 'f', 'i']})
+
+
 class LigatureSubstTest(unittest.TestCase):
     def setUp(self):
         self.glyphs = ".notdef c f i t c_t f_f f_i f_f_i".split()
