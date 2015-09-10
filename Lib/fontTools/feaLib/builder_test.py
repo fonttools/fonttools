@@ -88,6 +88,22 @@ class BuilderTest(unittest.TestCase):
             "    sub A from [A.alt1 A.alt2];"
             "} test;")
 
+    def test_alternateSubst(self):
+        font = TTFont()
+        addOpenTypeFeatures(self.getpath("GSUB_2.fea"), font)
+        self.expect_ttx(font, self.getpath("GSUB_2.ttx"))
+
+    def test_multipleSubst_multipleSubstitutionsForSameGlyph(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Already defined substitution for glyph \"f_f_i\"",
+            self.build,
+            "feature test {"
+            "    sub f_f_i by f f i;"
+            "    sub c_t by c t;"
+            "    sub f_f_i by f f i;"
+            "} test;")
+
     def test_singleSubst_multipleSubstitutionsForSameGlyph(self):
         self.assertRaisesRegex(
             FeatureLibError,

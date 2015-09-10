@@ -259,10 +259,12 @@ class Builder(object):
         lookup.ligatures[glyphs] = replacement
 
     def add_multiple_substitution(self, location, glyph, replacements):
-        # TODO(sascha): Implement this, possibly via a new class
-        # otTables.MultipleSubst modeled after otTables.SingleSubst.
-        warnings.warn('Multiple substitution (GPOS LookupType 2) '
-                      'is not yet implemented')
+        lookup = self.get_lookup_(location, MultipleSubstBuilder)
+        if glyph in lookup.mapping:
+            raise FeatureLibError(
+                'Already defined substitution for glyph "%s"' % glyph,
+                location)
+        lookup.mapping[glyph] = replacements
 
     def add_single_substitution(self, location, mapping):
         lookup = self.get_lookup_(location, SingleSubstBuilder)
@@ -345,6 +347,27 @@ class LigatureSubstBuilder(LookupBuilder):
             lig.Component = components
             lig.LigGlyph = self.ligatures[components]
             st.ligatures.setdefault(components[0], []).append(lig)
+        lookup.SubTable.append(st)
+        lookup.LookupFlag = self.lookup_flag
+        lookup.LookupType = self.lookup_type
+        lookup.SubTableCount = len(lookup.SubTable)
+        return lookup
+
+
+class MultipleSubstBuilder(LookupBuilder):
+    def __init__(self, location, lookup_flag):
+        LookupBuilder.__init__(self, location, 'GSUB', 2, lookup_flag)
+        self.mapping = {}
+
+    def equals(self, other):
+        return (LookupBuilder.equals(self, other) and
+                self.mapping == other.mapping)
+
+    def build(self):
+        lookup = otTables.Lookup()
+        lookup.SubTable = []
+        st = otTables.MultipleSubst()
+        st.mapping = self.mapping
         lookup.SubTable.append(st)
         lookup.LookupFlag = self.lookup_flag
         lookup.LookupType = self.lookup_type
