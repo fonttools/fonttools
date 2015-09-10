@@ -48,7 +48,7 @@ These additional options include:
 * specifying the folder where the output files are created
 * specifying which tables to dump or which tables to exclude
 * merging partial `.ttx` files with existing `.ttf` or `.otf` files
-* listing brief table info isntead of dumping to `.ttx`
+* listing brief table info instead of dumping to `.ttx`
 * splitting tables to separate `.ttx` files
 * disabling TrueType instruction disassembly
 
