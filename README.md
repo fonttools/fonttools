@@ -2,7 +2,7 @@
 [![Health](https://landscape.io/github/behdad/fonttools/master/landscape.svg?style=flat)](https://landscape.io/github/behdad/fonttools/master)
 [![Coverage Status](https://img.shields.io/coveralls/behdad/fonttools.svg)](https://coveralls.io/r/behdad/fonttools)
 
-### What it this?
+### What is this?
 
 fontTools is a library for manipulating fonts, written in Python. 
 The project includes the TTX tool, that can convert TrueType and OpenType fonts to and from an XML text format, which is also called TTX.
