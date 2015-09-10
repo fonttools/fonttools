@@ -457,7 +457,7 @@ class Parser(object):
 
     @staticmethod
     def reverse_string_(s):
-        """'abc' --> 'bca'"""
+        """'abc' --> 'cba'"""
         return ''.join(reversed(list(s)))
 
     def make_glyph_range_(self, location, start, limit):
