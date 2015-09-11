@@ -1,5 +1,6 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
+from fontTools.misc.testTools import parseXML
 from fontTools.misc.xmlWriter import XMLWriter
 import fontTools.ttLib.tables.otTables as otTables
 import unittest
@@ -83,9 +84,11 @@ class SingleSubstTest(unittest.TestCase):
 
     def test_fromXML(self):
         table = otTables.SingleSubst()
-        table.fromXML("Substitution", {"in": "A", "out": "a"}, [], self.font)
-        table.fromXML("Substitution", {"in": "B", "out": "b"}, [], self.font)
-        table.fromXML("Substitution", {"in": "C", "out": "c"}, [], self.font)
+        for name, attrs, content in parseXML(
+                '<Substitution in="A" out="a"/>'
+                '<Substitution in="B" out="b"/>'
+                '<Substitution in="C" out="c"/>'):
+            table.fromXML(name, attrs, content, self.font)
         self.assertEqual(table.mapping, {"A": "a", "B": "b", "C": "c"})
 
 
@@ -135,28 +138,30 @@ class MultipleSubstTest(unittest.TestCase):
 
     def test_fromXML(self):
         table = otTables.MultipleSubst()
-        table.fromXML("Substitution",
-                      {"in": "c_t", "out": "c,t"}, [], self.font)
-        table.fromXML("Substitution",
-                      {"in": "f_f_i", "out": "f,f,i"}, [], self.font)
+        for name, attrs, content in parseXML(
+                '<Substitution in="c_t" out="c,t"/>'
+                '<Substitution in="f_f_i" out="f,f,i"/>'):
+            table.fromXML(name, attrs, content, self.font)
         self.assertEqual(table.mapping,
                          {'c_t': ['c', 't'], 'f_f_i': ['f', 'f', 'i']})
 
     def test_fromXML_oldFormat(self):
         table = otTables.MultipleSubst()
-        table.fromXML("Coverage", {}, [
-            ("Glyph", {"value": "c_t"}, []),
-            ("Glyph", {"value": "f_f_i"}, [])
-        ], self.font)
-        table.fromXML("Sequence", {"index": "0"}, [
-            ("Substitute", {"index": "0", "value": "c"}, []),
-            ("Substitute", {"index": "1", "value": "t"}, [])
-        ], self.font)
-        table.fromXML("Sequence", {"index": "1"}, [
-            ("Substitute", {"index": "0", "value": "f"}, []),
-            ("Substitute", {"index": "1", "value": "f"}, []),
-            ("Substitute", {"index": "2", "value": "i"}, [])
-        ], self.font)
+        for name, attrs, content in parseXML(
+                '<Coverage>'
+                '  <Glyph value="c_t"/>'
+                '  <Glyph value="f_f_i"/>'
+                '</Coverage>'
+                '<Sequence index="0">'
+                '  <Substitute index="0" value="c"/>'
+                '  <Substitute index="1" value="t"/>'
+                '</Sequence>'
+                '<Sequence index="1">'
+                '  <Substitute index="0" value="f"/>'
+                '  <Substitute index="1" value="f"/>'
+                '  <Substitute index="2" value="i"/>'
+                '</Sequence>'):
+            table.fromXML(name, attrs, content, self.font)
         self.assertEqual(table.mapping,
                          {'c_t': ['c', 't'], 'f_f_i': ['f', 'f', 'i']})
 
@@ -255,10 +260,12 @@ class LigatureSubstTest(unittest.TestCase):
 
     def test_fromXML(self):
         table = otTables.LigatureSubst()
-        table.fromXML("LigatureSet", {"glyph": "f"}, [
-            ("Ligature", {"components": "f,f,i", "glyph": "f_f_i"}, []),
-            ("Ligature", {"components": "f,f", "glyph": "f_f"}, []),
-        ], self.font)
+        for name, attrs, content in parseXML(
+                '<LigatureSet glyph="f">'
+                '  <Ligature components="f,f,i" glyph="f_f_i"/>'
+                '  <Ligature components="f,f" glyph="f_f"/>'
+                '</LigatureSet>'):
+            table.fromXML(name, attrs, content, self.font)
         self.assertEqual(set(table.ligatures.keys()), {"f"})
         [ffi, ff] = table.ligatures["f"]
         self.assertEqual(ffi.LigGlyph, "f_f_i")
@@ -327,13 +334,15 @@ class AlternateSubstTest(unittest.TestCase):
 
     def test_fromXML(self):
         table = otTables.AlternateSubst()
-        table.fromXML("AlternateSet", {"glyph": "G"}, [
-            ("Alternate", {"glyph": "G.alt1"}, []),
-            ("Alternate", {"glyph": "G.alt2"}, [])
-        ], self.font)
-        table.fromXML("AlternateSet", {"glyph": "Z"}, [
-            ("Alternate", {"glyph": "Z.fina"}, [])
-        ], self.font)
+        for name, attrs, content in parseXML(
+                '<AlternateSet glyph="G">'
+                '  <Alternate glyph="G.alt1"/>'
+                '  <Alternate glyph="G.alt2"/>'
+                '</AlternateSet>'
+                '<AlternateSet glyph="Z">'
+                '  <Alternate glyph="Z.fina"/>'
+                '</AlternateSet>'):
+            table.fromXML(name, attrs, content, self.font)
         self.assertEqual(table.alternates, {
             "G": ["G.alt1", "G.alt2"],
             "Z": ["Z.fina"]
