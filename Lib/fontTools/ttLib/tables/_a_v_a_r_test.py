@@ -1,5 +1,6 @@
 from __future__ import print_function, division, absolute_import, unicode_literals
 from fontTools.misc.py23 import *
+from fontTools.misc.testTools import parseXML
 from fontTools.misc.textTools import deHexStr
 from fontTools.misc.xmlWriter import XMLWriter
 from fontTools.ttLib import TTLibError
@@ -51,13 +52,16 @@ class AxisVariationTableTest(unittest.TestCase):
 
     def test_fromXML(self):
         avar = table__a_v_a_r()
-        avar.fromXML("segment", {"axis":"wdth"}, [
-                ("mapping", {"from": "-1.0", "to": "-1.0"}, []),
-                ("mapping", {"from": "0.0", "to": "0.0"}, []),
-                ("mapping", {"from": "0.7", "to": "0.2"}, []),
-                ("mapping", {"from": "1.0", "to": "1.0"}, [])
-                ], ttFont=None)
-        self.assertEqual({"wdth": {-1: -1, 0: 0, 0.7: 0.2, 1.0: 1.0}}, avar.segments)
+        for name, attrs, content in parseXML(
+                '<segment axis="wdth">'
+                '    <mapping from="-1.0" to="-1.0"/>'
+                '    <mapping from="0.0" to="0.0"/>'
+                '    <mapping from="0.7" to="0.2"/>'
+                '    <mapping from="1.0" to="1.0"/>'
+                '</segment>'):
+            avar.fromXML(name, attrs, content, ttFont=None)
+        self.assertEqual({"wdth": {-1: -1, 0: 0, 0.7: 0.2, 1.0: 1.0}},
+                         avar.segments)
 
     def test_fixupSegments(self):
         avar = table__a_v_a_r()
