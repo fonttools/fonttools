@@ -1,5 +1,6 @@
 from __future__ import print_function, division, absolute_import, unicode_literals
 from fontTools.misc.py23 import *
+from fontTools.misc.testTools import parseXML
 from fontTools.misc.textTools import deHexStr, hexStr
 from fontTools.misc.xmlWriter import XMLWriter
 from fontTools.ttLib import TTLibError
@@ -220,11 +221,13 @@ class GlyphVariationTest(unittest.TestCase):
 
 	def test_fromXML(self):
 		g = GlyphVariation({}, [None] * 4)
-		g.fromXML("coord", {"axis":"wdth", "min":"0.3", "value":"0.4", "max":"0.5"}, [])
-		g.fromXML("coord", {"axis":"wght", "value":"1.0"}, [])
-		g.fromXML("coord", {"axis":"opsz", "value":"-0.5"}, [])
-		g.fromXML("delta", {"pt":"1", "x":"33", "y":"44"}, [])
-		g.fromXML("delta", {"pt":"2", "x":"-2", "y":"170"}, [])
+		for name, attrs, content in parseXML(
+				'<coord axis="wdth" min="0.3" value="0.4" max="0.5"/>'
+				'<coord axis="wght" value="1.0"/>'
+				'<coord axis="opsz" value="-0.5"/>'
+				'<delta pt="1" x="33" y="44"/>'
+				'<delta pt="2" x="-2" y="170"/>'):
+			g.fromXML(name, attrs, content)
 		self.assertEqual({
 			"wdth":( 0.3,  0.4, 0.5),
 			"wght":( 0.0,  1.0, 1.0),
