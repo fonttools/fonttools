@@ -242,6 +242,23 @@ class MultipleSubst(FormatSwitchingBaseTable):
 		if mapping is None:
 			mapping = {}
 			self.mapping = mapping
+
+		# TTX v3.0 and earlier.
+		if name == "Coverage":
+			self.old_coverage_ = [
+				element_attrs["value"]
+				for element_name, element_attrs, _ in content
+				if element_name == "Glyph"]
+			return
+		if name == "Sequence":
+			glyph = self.old_coverage_[int(attrs["index"])]
+			mapping[glyph] = [
+				element_attrs["value"]
+				for element_name, element_attrs, _ in content
+				if element_name == "Substitute"]
+			return
+
+                # TTX v3.1 and later.
 		outGlyphs = attrs["out"].split(",")
 		mapping[attrs["in"]] = [g.strip() for g in outGlyphs]
 

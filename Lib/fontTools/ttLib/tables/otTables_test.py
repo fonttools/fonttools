@@ -142,6 +142,24 @@ class MultipleSubstTest(unittest.TestCase):
         self.assertEqual(table.mapping,
                          {'c_t': ['c', 't'], 'f_f_i': ['f', 'f', 'i']})
 
+    def test_fromXML_oldFormat(self):
+        table = otTables.MultipleSubst()
+        table.fromXML("Coverage", {}, [
+            ("Glyph", {"value": "c_t"}, []),
+            ("Glyph", {"value": "f_f_i"}, [])
+        ], self.font)
+        table.fromXML("Sequence", {"index": "0"}, [
+            ("Substitute", {"index": "0", "value": "c"}, []),
+            ("Substitute", {"index": "1", "value": "t"}, [])
+        ], self.font)
+        table.fromXML("Sequence", {"index": "1"}, [
+            ("Substitute", {"index": "0", "value": "f"}, []),
+            ("Substitute", {"index": "1", "value": "f"}, []),
+            ("Substitute", {"index": "2", "value": "i"}, [])
+        ], self.font)
+        self.assertEqual(table.mapping,
+                         {'c_t': ['c', 't'], 'f_f_i': ['f', 'f', 'i']})
+
 
 class LigatureSubstTest(unittest.TestCase):
     def setUp(self):
