@@ -1,5 +1,6 @@
 from __future__ import print_function, division, absolute_import, unicode_literals
 from fontTools.misc.py23 import *
+from fontTools.misc.testTools import parseXML
 from fontTools.misc.textTools import deHexStr
 from fontTools.misc.xmlWriter import XMLWriter
 from fontTools.ttLib import TTLibError
@@ -86,10 +87,16 @@ class FontVariationTableTest(unittest.TestCase):
 
     def test_fromXML(self):
         fvar = table__f_v_a_r()
-        fvar.fromXML("Axis", {}, [("AxisTag", {}, ["opsz"])], ttFont=None)
-        fvar.fromXML("Axis", {}, [("AxisTag", {}, ["slnt"])], ttFont=None)
-        fvar.fromXML("NamedInstance", {"nameID": "765"}, [], ttFont=None)
-        fvar.fromXML("NamedInstance", {"nameID": "234"}, [], ttFont=None)
+        for name, attrs, content in parseXML(
+                '<Axis>'
+                '    <AxisTag>opsz</AxisTag>'
+                '</Axis>'
+                '<Axis>'
+                '    <AxisTag>slnt</AxisTag>'
+                '</Axis>'
+                '<NamedInstance nameID="765"/>'
+                '<NamedInstance nameID="234"/>'):
+            fvar.fromXML(name, attrs, content, ttFont=None)
         self.assertEqual(["opsz", "slnt"], [a.axisTag for a in fvar.axes])
         self.assertEqual([765, 234], [i.nameID for i in fvar.instances])
 
@@ -132,13 +139,15 @@ class AxisTest(unittest.TestCase):
 
     def test_fromXML(self):
         axis = Axis()
-        axis.fromXML("Axis", {}, [
-            ("AxisTag", {}, ["wght"]),
-            ("MinValue", {}, ["100"]),
-            ("DefaultValue", {}, ["400"]),
-            ("MaxValue", {}, ["900"]),
-            ("NameID", {}, ["256"])
-        ], ttFont=None)
+        for name, attrs, content in parseXML(
+                '<Axis>'
+                '    <AxisTag>wght</AxisTag>'
+                '    <MinValue>100</MinValue>'
+                '    <DefaultValue>400</DefaultValue>'
+                '    <MaxValue>900</MaxValue>'
+                '    <NameID>256</NameID>'
+                '</Axis>'):
+            axis.fromXML(name, attrs, content, ttFont=None)
         self.assertEqual("wght", axis.axisTag)
         self.assertEqual(100, axis.minValue)
         self.assertEqual(400, axis.defaultValue)
@@ -177,11 +186,12 @@ class NamedInstanceTest(unittest.TestCase):
 
     def test_fromXML(self):
         inst = NamedInstance()
-        attrs = {"nameID": "345"}
-        inst.fromXML("NamedInstance", attrs, [
-                ("coord", {"axis": "wght", "value": "0.7"}, []),
-                ("coord", {"axis": "wdth", "value": "0.5"}, []),
-                ], ttFont=MakeFont())
+        for name, attrs, content in parseXML(
+                '<NamedInstance nameID="345">'
+                '    <coord axis="wght" value="0.7"/>'
+                '    <coord axis="wdth" value="0.5"/>'
+                '</NamedInstance>'):
+            inst.fromXML(name, attrs, content, ttFont=MakeFont())
         self.assertEqual(345, inst.nameID)
         self.assertEqual({"wght": 0.7, "wdth": 0.5}, inst.coordinates)
 

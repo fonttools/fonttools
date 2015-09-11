@@ -1,5 +1,6 @@
 from __future__ import print_function, division, absolute_import, unicode_literals
 from fontTools.misc.py23 import *
+from fontTools.misc.testTools import parseXML
 from fontTools.misc.textTools import deHexStr
 from fontTools.misc.xmlWriter import XMLWriter
 from fontTools.ttLib import TTLibError
@@ -46,7 +47,11 @@ class MetaTableTest(unittest.TestCase):
 
     def test_fromXML(self):
         table = table__m_e_t_a()
-        table.fromXML("hexdata", {"tag": "TEST"}, ['cafebeef'], ttFont=None)
+        for name, attrs, content in parseXML(
+                '<hexdata tag="TEST">'
+                '    cafebeef'
+                '</hexdata>'):
+            table.fromXML(name, attrs, content, ttFont=None)
         self.assertEqual({"TEST": b"\xCA\xFE\xBE\xEF"}, table.data)
 
 
