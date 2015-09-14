@@ -2,6 +2,7 @@ from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
 from fontTools.feaLib.error import FeatureLibError
 import codecs
+import re
 import os
 
 
@@ -22,8 +23,10 @@ class Lexer(object):
     CHAR_DIGIT_ = "0123456789"
     CHAR_HEXDIGIT_ = "0123456789ABCDEFabcdef"
     CHAR_LETTER_ = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
-    CHAR_NAME_START_ = CHAR_LETTER_ + "_.\\"
-    CHAR_NAME_CONTINUATION_ = CHAR_LETTER_ + CHAR_DIGIT_ + "_."
+    CHAR_NAME_START_ = CHAR_LETTER_ + "_+*:.^~!\\"
+    CHAR_NAME_CONTINUATION_ = CHAR_LETTER_ + CHAR_DIGIT_ + "_.+*:^~!"
+
+    RE_GLYPHCLASS = re.compile(r"^[A-Za-z_0-9.]+$")
 
     MODE_NORMAL_ = "NORMAL"
     MODE_FILENAME_ = "FILENAME"
@@ -102,6 +105,10 @@ class Lexer(object):
                 raise FeatureLibError(
                     "Glyph class names must not be longer than 30 characters",
                     location)
+            if not Lexer.RE_GLYPHCLASS.match(glyphclass):
+                raise FeatureLibError(
+                    "Glyph class names must consist of letters, digits, "
+                    "underscore, or period", location)
             return (Lexer.GLYPHCLASS, glyphclass, location)
         if cur_char in Lexer.CHAR_NAME_START_:
             self.pos_ += 1

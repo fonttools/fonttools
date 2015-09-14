@@ -65,7 +65,7 @@ These additional options include:
 * specifying the folder where the output files are created
 * specifying which tables to dump or which tables to exclude
 * merging partial `.ttx` files with existing `.ttf` or `.otf` files
-* listing brief table info isntead of dumping to `.ttx`
+* listing brief table info instead of dumping to `.ttx`
 * splitting tables to separate `.ttx` files
 * disabling TrueType instruction disassembly
 
@@ -128,6 +128,12 @@ Feature requests and bug reports are always welcome at <https://github.com/behda
 
 The best place for discussions about TTX from an end-user perspective as well as TTX/FontTools development is the <https://groups.google.com/d/forum/fonttools> mailing list.
 You can also email Behdad privately at <behdad@behdad.org>
+
+### History
+
+The fontTools project was started by Just van Rossum in 1999, and was maintained as an open source project at <http://sourceforge.net/projects/fonttools/>.
+In 2008, Paul Wise (pabs3) began helping Just with stability maintenance.
+In 2013 Behdad Esfahbod began a friendly fork, thoroughly reviewing the codebase and making changes at <https://github.com/behdad/fonttools> to add new features and support for new font formats.
 
 ### Credits
 

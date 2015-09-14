@@ -130,7 +130,8 @@ class MultipleSubstitution(Statement):
         self.glyph, self.replacement = glyph, replacement
 
     def build(self, builder):
-        builder.add_multiple_substitution(self.location, glyph, replacement)
+        builder.add_multiple_substitution(self.location,
+                                          self.glyph, self.replacement)
 
 
 class SingleSubstitution(Statement):
