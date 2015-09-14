@@ -3,6 +3,7 @@ python:
   - "2.7"
   - "3.3"
   - "3.4"
+  - "3.5"
   - "pypy"
 #  - "pypy3" # Disable pypy3 until Travis updates it to >= 3.3
 before_install:
