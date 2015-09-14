@@ -28,6 +28,7 @@ class LexerTest(unittest.TestCase):
         self.assertEqual(lex("two.oldstyle"), [(Lexer.NAME, "two.oldstyle")])
         self.assertEqual(lex("_"), [(Lexer.NAME, "_")])
         self.assertEqual(lex("\\table"), [(Lexer.NAME, "\\table")])
+        self.assertEqual(lex("a+*:^~!"), [(Lexer.NAME, "a+*:^~!")])
 
     def test_cid(self):
         self.assertEqual(lex("\\0 \\987"), [(Lexer.CID, 0), (Lexer.CID, 987)])
@@ -41,6 +42,9 @@ class LexerTest(unittest.TestCase):
         self.assertRaisesRegex(FeatureLibError,
                                "not be longer than 30 characters",
                                lex, "@a123456789.a123456789.a123456789.x")
+        self.assertRaisesRegex(FeatureLibError,
+                               "Glyph class names must consist of",
+                               lex, "@Ab:c")
 
     def test_include(self):
         self.assertEqual(lex("include (~/foo/bar baz.fea);"), [
