@@ -1,4 +1,104 @@
-TTX/FontTools Version 2.4
+## TTX/FontTools Version 3.0
+
+2015-09-01 <https://github.com/behdad/fonttools/commit/58f86f318af8b2f8b553e8cceef678d6ce0017c5>
+
+- [Snippets] Add script for cmap subtable format conversion
+- [Snippets] Add `layout-features.py` that prints GSUB/GPOS features
+- [feaLib] Add lexer for OpenType feature files
+- [ttx] add support for dumping WOFF2 fonts to TTX
+- Implement Apple’s `meta` table
+- [GX] Support `avar` table
+- [GX] Compile `gvar` tables
+- [GX] Handle `gvar` table with glyph variations
+- Upgrade Mac East Asian encodings to native implementation if available
+- Add Roman Croatian and Romanian encodings
+- [ttx] Add `-f` option to overwrite output file(s)
+- Add comments with names of TrueType instruction to assembly
+- Add codecs for mac-extended East Asian encodings
+- Add unit tests
+- Hook up ttProgram tests to doctest
+- [TravisCI] Test on pypy and pypy3 as well
+- [glyf] Implement optimal glyph outline packing; disabled by default
+- Accept MS Symbol cmap tables as Unicode-compatible
+- [GX] Add 'fvar' table support
+- [SVG] Support gzip-compressed SVG tables
+- Adjust 'feat' table format
+- Add snippet to subset fpgm functions
+- [AAT] Add support for 'feat' table
+
+## TTX/FontTools Version 2.5
+
+2014-09-24 <https://github.com/behdad/fonttools/commit/8388a2e37ce349dac6555bb824c82723e3b65fbf>
+
+- added `--legacy-kern` option to drop TrueType kern if GPOS is available
+- added `--obfuscate-names` to make webfont unusable as a system font
+- pens: add a Qt pen
+- Rename import in `sbixStrike.py`
+- Rename imports in `_s_b_i_x.py`
+- Rename sbixBitmap to sbixGlyphData
+- Rename sbixBitmapSet to sbixStrike
+- [ttx] Always add raw=True attribute when dumping DefaultTable to XML
+- Fix reading XML for CBLC with external image files
+- Improve Subset
+- pens: qtPen tuple unpacking (py3/PEP3113)
+- Bump fontTools.version to 2.5
+- Bump version to 2.5, update maintainer and URL
+- a VDMX table converter
+- Add support for dumping XMLs to the standard output.
+- Choose most compact representation when writing PUSH instructions
+- When disassembling, merge multiple PUSH ops
+- Allow converting 'glyphXXX' to glyphID
+- Use pure-Python StringIO, not cStringIO
+- Support ./ttx'ing woff files
+- Add font.lazy
+- Move fontTools.ttLib.importXML to fontTools.misc.xmlReader
+- Load all OpenType sub-structures lazily
+- Remove unreachable code
+- Store CFF names in UTF-8
+- Add support for cmap format 13.
+- Improved support for minimal fonts (with no visible glyphs).
+- Add pyftmerge tool to merge fonts
+- Update to Unicode 6.3.0d3
+- Add pyftinspect
+- `-q` for quiet mode
+- Add pyftsubset
+- Add pyftfontview
+- Add `SVG ` table implementation from Read Roberts (Adobe)
+- Fix XML encoding
+- Add support for Google CBLC/CBDT color bitmaps
+- Add support for standard EBLC/EBDT embedded bitmaps
+- Decompile T2CharStrings
+- Port from numpy to array/lists modules, remove numpy (support Jython)
+- Add support for saving WOFF file format
+- Add support for loading WOFF file format
+- Add save_file()
+- Add -z flag to ttx to choose a bitmap dump format
+- Turn "too much glyph data" into a warning
+- Allow toXML() to be called on individual tables
+- Change duplicate-name resolution from n^2 to linear time
+- Warn about excess data in kern table instead of aborting
+- Add support for Microsoft COLR/CPAL layered color glyphs
+- Implement Glyph.dropInstructionsFast()
+- Don't recalculate font-wide bounding box
+- Implement Glyph.getComponentsFast() that works without loading glyph
+- Support PyPy
+- Implement CFF subsetting
+- Added Subsetter object
+- Hack for cmap format 14 to get it work
+- Implement vmtx, hdmx, VDMX
+- Implement 'kern' table
+- Implement mark positioning class matrix pruning
+- Implement PairPos pruning
+- Add `--xml` / `--verbose`
+- Add `--verbose`
+- Implement LookupList, FeatureList, ScriptList backwards pruning
+- Implement pruning
+- Implement remaining GSUB/GPOS [Chain]Context formats
+- Implement GDEF
+- Cleanup; GSUB/GPOS mostly done
+
+## TTX/FontTools Version 2.4
+
 - Option to write to arbitrary files
 - Better dump format for DSIG
 - Better detection of OTF XML
@@ -9,14 +109,14 @@ TTX/FontTools Version 2.4
 - Fix some modern MacOS issues
 - Fix minor issues and typos
 
-TTX/FontTools Version 2.3
+## TTX/FontTools Version 2.3
 
 - TrueType Collection (TTC) support
 - Python 2.6 support
 - Update Unicode data to 5.2.0
 - Couple of bug fixes
 
-TTX/FontTools Version 2.2
+## TTX/FontTools Version 2.2
 
 - ClearType support
 - cmap format 1 support
@@ -26,11 +126,11 @@ TTX/FontTools Version 2.2
 - Update AGLFN data to 1.6
 - Many bug fixes
 
-TTX/FontTools Version 2.1
+## TTX/FontTools Version 2.1
 
 - Many years worth of fixes and features
 
-TTX/FontTools Version 2.0 beta 2 (released ??? 2002)
+## TTX/FontTools Version 2.0 beta 2 (released ??? 2002)
 
 - Be "forgiving" when interpreting the maxp table version field:
   interpret any value as 1.0 if it's not 0.5. Fixes dumping of these
@@ -41,7 +141,7 @@ TTX/FontTools Version 2.0 beta 2 (released ??? 2002)
 - Fixed bug in ClassDef format 1 subtable (Andreas Seidel bumped into
   this one).
 
-TTX/FontTools Version 2.0 beta 1 (released September 10 2002)
+## TTX/FontTools Version 2.0 beta 1 (released September 10 2002)
 
 - Fixed embarrassing bug: the master checksum in the head table is now
   calculated correctly even on little-endian platforms (such as Intel).
@@ -93,7 +193,9 @@ TTX/FontTools Version 2.0 beta 1 (released September 10 2002)
 - Couple of fixes to the 'post' table.
 - Updated OS/2 table to latest spec.
 
-TTX/FontTools Version 1.0 beta 1 (released August 10 2001)
+## TTX/FontTools Version 1.0 beta 1 
+
+2001-08-10
 
 - Reorganized the command line interface for ttDump.py and ttCompile.py,
   they now behave more like "normal" command line tool, in that they accept
@@ -110,7 +212,9 @@ TTX/FontTools Version 1.0 beta 1 (released August 10 2001)
   Windows registry.
 - Moved the project to SourceForge.
 
-TTX/FontTools Version 1.0 alpha 6 (released March 15 2000)
+## TTX/FontTools Version 1.0 alpha 6
+
+2000-03-15
 
 - Big reorganization: made ttLib a subpackage of the new fontTools package,
   changed several module names. Called the entire suite "FontTools"
@@ -125,17 +229,24 @@ TTX/FontTools Version 1.0 alpha 6 (released March 15 2000)
 - TTX is now the name of the XML-based *format* for TT fonts, and not just
   an application.
 
-Version 1.0 alpha 5 (never released)
+## Version 1.0 alpha 5
+
+Never released
 
 - More tables supported: hdmx, vhea, vmtx
 
-Version 1.0 alpha 3 & 4 (never released)
+## Version 1.0 alpha 3 & 4
+
+Never released
 
 - fixed most portability issues
 - retracted the "Euro_or_currency" change from 1.0a2: it was nonsense!
 
-Version 1.0 alpha 2 (released as binary for MacOS, 2 May 1999)
+## Version 1.0 alpha 2 
 
+1999-05-02
+
+- binary release for MacOS
 - genenates full FOND resources: including width table, PS
   font name info and kern table if applicable. 
 - added cmap format 4 support. Extra: dumps Unicode char names as XML comments! 
@@ -155,7 +266,9 @@ Fixed bugs:
 - 'hhea' table is now recalculated correctly 
 - fixed wrong assumption about sfnt resource names
 
-Version 1.0 alpha 1 (27 Apr 1999)
+## Version 1.0 alpha 1
+
+1999-04-27
 
 - initial binary release for MacOS
 
