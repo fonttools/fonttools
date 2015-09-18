@@ -1,4 +1,36 @@
-TTX/FontTools Version 2.4
+## TTX/FontTools Version 3.0
+
+2015-09-01 <https://github.com/behdad/fonttools/commit/58f86f318af8b2f8b553e8cceef678d6ce0017c5>
+
+- Add Snippet scripts for cmap subtable format conversion, printing GSUB/GPOS features
+- Add feaLib, a lexer for OpenType feature files
+- TTX WOFF2 support and a `-f` option to overwrite output file(s)
+- Support GX `avar`, `gvar`, `fvar` tables, Apple's `meta`, `feat` tables, and gzip-compressed SVG tables
+- Upgrade Mac East Asian encodings to native implementation if available
+- Add Roman Croatian and Romanian encodings, codecs for mac-extended East Asian encodings
+- Implement optimal GLYF glyph outline packing; disabled by default
+
+## TTX/FontTools Version 2.5
+
+2014-09-24 <https://github.com/behdad/fonttools/commit/8388a2e37ce349dac6555bb824c82723e3b65fbf>
+
+- Add a Qt pen
+- Add VDMX table converter
+- Load all OpenType sub-structures lazily
+- Add support for cmap format 13.
+- Add pyftmerge tool
+- Update to Unicode 6.3.0d3
+- Add pyftinspect tool
+- Add support for Google CBLC/CBDT color bitmaps, standard EBLC/EBDT embedded bitmaps, snd `SVG ` table (thanks to Read Roberts at Adobe)
+- Add support for loading, saving and ttx'ing WOFF file format
+- Add support for Microsoft COLR/CPAL layered color glyphs
+- Support PyPy
+- Support Jython, by replacing numpy with array/lists modules and removed it, pure-Python StringIO, not cStringIO
+- Add pyftsubset and Subsetter object, supporting CFF and TTF
+- Add to ttx args for -q for quiet mode, -z to choose a bitmap dump format
+
+## TTX/FontTools Version 2.4
+
 - Option to write to arbitrary files
 - Better dump format for DSIG
 - Better detection of OTF XML
@@ -9,14 +41,14 @@ TTX/FontTools Version 2.4
 - Fix some modern MacOS issues
 - Fix minor issues and typos
 
-TTX/FontTools Version 2.3
+## TTX/FontTools Version 2.3
 
 - TrueType Collection (TTC) support
 - Python 2.6 support
 - Update Unicode data to 5.2.0
 - Couple of bug fixes
 
-TTX/FontTools Version 2.2
+## TTX/FontTools Version 2.2
 
 - ClearType support
 - cmap format 1 support
@@ -26,11 +58,11 @@ TTX/FontTools Version 2.2
 - Update AGLFN data to 1.6
 - Many bug fixes
 
-TTX/FontTools Version 2.1
+## TTX/FontTools Version 2.1
 
 - Many years worth of fixes and features
 
-TTX/FontTools Version 2.0 beta 2 (released ??? 2002)
+## TTX/FontTools Version 2.0 beta 2 (released ??? 2002)
 
 - Be "forgiving" when interpreting the maxp table version field:
   interpret any value as 1.0 if it's not 0.5. Fixes dumping of these
@@ -41,7 +73,7 @@ TTX/FontTools Version 2.0 beta 2 (released ??? 2002)
 - Fixed bug in ClassDef format 1 subtable (Andreas Seidel bumped into
   this one).
 
-TTX/FontTools Version 2.0 beta 1 (released September 10 2002)
+## TTX/FontTools Version 2.0 beta 1 (released September 10 2002)
 
 - Fixed embarrassing bug: the master checksum in the head table is now
   calculated correctly even on little-endian platforms (such as Intel).
@@ -93,7 +125,9 @@ TTX/FontTools Version 2.0 beta 1 (released September 10 2002)
 - Couple of fixes to the 'post' table.
 - Updated OS/2 table to latest spec.
 
-TTX/FontTools Version 1.0 beta 1 (released August 10 2001)
+## TTX/FontTools Version 1.0 beta 1 
+
+2001-08-10
 
 - Reorganized the command line interface for ttDump.py and ttCompile.py,
   they now behave more like "normal" command line tool, in that they accept
@@ -110,7 +144,9 @@ TTX/FontTools Version 1.0 beta 1 (released August 10 2001)
   Windows registry.
 - Moved the project to SourceForge.
 
-TTX/FontTools Version 1.0 alpha 6 (released March 15 2000)
+## TTX/FontTools Version 1.0 alpha 6
+
+2000-03-15
 
 - Big reorganization: made ttLib a subpackage of the new fontTools package,
   changed several module names. Called the entire suite "FontTools"
@@ -125,17 +161,24 @@ TTX/FontTools Version 1.0 alpha 6 (released March 15 2000)
 - TTX is now the name of the XML-based *format* for TT fonts, and not just
   an application.
 
-Version 1.0 alpha 5 (never released)
+## Version 1.0 alpha 5
+
+Never released
 
 - More tables supported: hdmx, vhea, vmtx
 
-Version 1.0 alpha 3 & 4 (never released)
+## Version 1.0 alpha 3 & 4
+
+Never released
 
 - fixed most portability issues
 - retracted the "Euro_or_currency" change from 1.0a2: it was nonsense!
 
-Version 1.0 alpha 2 (released as binary for MacOS, 2 May 1999)
+## Version 1.0 alpha 2 
 
+1999-05-02
+
+- binary release for MacOS
 - genenates full FOND resources: including width table, PS
   font name info and kern table if applicable. 
 - added cmap format 4 support. Extra: dumps Unicode char names as XML comments! 
@@ -155,7 +198,9 @@ Fixed bugs:
 - 'hhea' table is now recalculated correctly 
 - fixed wrong assumption about sfnt resource names
 
-Version 1.0 alpha 1 (27 Apr 1999)
+## Version 1.0 alpha 1
+
+1999-04-27
 
 - initial binary release for MacOS
 
