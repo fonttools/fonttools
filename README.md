@@ -12,8 +12,21 @@ Among other things this means you can use it free of charge.
 
 ### Installation
 
-To download and install fontools on your system, run the following commands:
 FontTools requires Python 2.7, or Python 3.3 or later.
+The fresh versions as well as older versions can be downloaded from <http://www.python.org/download/>
+  
+- Windows: grab the Windows installer, run the full install.
+- Un\*x: follow the build instructions.
+- MacOS: grab the installer, run "Easy Install"
+
+A package is available in pypi from <https://pypi.python.org/pypi/FontTools>
+
+```
+easy\_install pip ;
+pip install fonttools ;
+```
+
+For people who want to download and install fontools on your system from source code, run the following commands:
 
 ```sh
 git clone https://github.com/behdad/fonttools.git ;
@@ -21,7 +34,11 @@ cd fonttools ;
 python setup.py install ;
 ```
 
-Full build and installation instructions are in [Doc/install.txt](https://github.com/behdad/fonttools/blob/master/Doc/install.txt) 
+This will install all the modules in the right places. 
+On Unix it also installs the command line tools. 
+
+For instructions how to build a standalone Windows installer, see [Windows/README.TXT](Windows/README.TXT) 
+Thanks a lot to Adam Twardoch for this essential contribution.
 
 ### TTX – From OpenType and TrueType to XML and Back
 
@@ -52,7 +69,7 @@ These additional options include:
 * splitting tables to separate `.ttx` files
 * disabling TrueType instruction disassembly
 
-### The TTX file format
+#### The TTX file format
 
 The following tables are currently supported:
 <!-- begin table list -->
@@ -79,9 +96,33 @@ The original names are being kept, so this has no influence on a "round tripped"
 
 Because the order in which glyphs are stored inside the binary font is important, we maintain an ordered list of glyph names in the font.
 
-### Development and feedback
+### Other Tools
 
-TTX/FontTools development is ongoing, with an active community of developers including professional developers employed at major software corporations and type foundries as well as hobbyists. 
+Commands for inspecting, merging and subsetting fonts are also available:
+
+```sh
+pyftinspect ;
+pyftmerge ;
+pyftsubset ;
+```
+
+### fontTools Python Module
+
+The fontTools python module provides a convenient way to programmatically edit font files.
+
+```py
+>>> from fontTools.ttLib import TTFont
+>>> font = TTFont('/path/to/font.ttf')
+>>> font
+<fontTools.ttLib.TTFont object at 0x10c34ed50>
+>>>
+```
+
+A selection of sample python programs is in the [Snippets](https://github.com/behdad/fonttools/blob/master/Snippets/) directory. 
+
+### Development Community
+
+TTX/FontTools development is ongoing in an active community of developers, that includes professional developers employed at major software corporations and type foundries as well as hobbyists. 
 
 Feature requests and bug reports are always welcome at <https://github.com/behdad/fonttools/issues/>
 
