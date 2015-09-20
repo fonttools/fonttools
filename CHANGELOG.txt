@@ -2,10 +2,10 @@
 
 2015-09-01 <https://github.com/behdad/fonttools/commit/58f86f318af8b2f8b553e8cceef678d6ce0017c5>
 
-- Add Snippet scripts for cmap subtable format conversion, printing GSUB/GPOS features
-- Add feaLib, a lexer for OpenType feature files
+- Add Snippet scripts for cmap subtable format conversion, printing GSUB/GPOS features, building a GX font from two masters
 - TTX WOFF2 support and a `-f` option to overwrite output file(s)
-- Support GX `avar`, `gvar`, `fvar` tables, Apple's `meta`, `feat` tables, and gzip-compressed SVG tables
+- Support GX tables: `avar`, `gvar`, `fvar`, `meta`
+- Support `feat` and gzip-compressed SVG tables
 - Upgrade Mac East Asian encodings to native implementation if available
 - Add Roman Croatian and Romanian encodings, codecs for mac-extended East Asian encodings
 - Implement optimal GLYF glyph outline packing; disabled by default
@@ -21,7 +21,7 @@
 - Add pyftmerge tool
 - Update to Unicode 6.3.0d3
 - Add pyftinspect tool
-- Add support for Google CBLC/CBDT color bitmaps, standard EBLC/EBDT embedded bitmaps, snd `SVG ` table (thanks to Read Roberts at Adobe)
+- Add support for Google CBLC/CBDT color bitmaps, standard EBLC/EBDT embedded bitmaps, and `SVG ` table (thanks to Read Roberts at Adobe)
 - Add support for loading, saving and ttx'ing WOFF file format
 - Add support for Microsoft COLR/CPAL layered color glyphs
 - Support PyPy
