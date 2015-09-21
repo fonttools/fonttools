@@ -80,14 +80,24 @@ class table__m_e_t_a(DefaultTable.DefaultTable):
 
     def toXML(self, writer, ttFont, progress=None):
         for tag in sorted(self.data.keys()):
-            writer.begintag("hexdata", tag=tag)
-            writer.newline()
-            writer.dumphex(self.data[tag])
-            writer.endtag("hexdata")
-            writer.newline()
+            if tag in ["dlng", "slng"]:
+                writer.begintag("text", tag=tag)
+                writer.newline()
+                writer.write(self.data[tag])
+                writer.newline()
+                writer.endtag("text")
+                writer.newline()
+            else:
+                writer.begintag("hexdata", tag=tag)
+                writer.newline()
+                writer.dumphex(self.data[tag])
+                writer.endtag("hexdata")
+                writer.newline()
 
     def fromXML(self, name, attrs, content, ttFont):
         if name == "hexdata":
             self.data[attrs["tag"]] = readHex(content)
+        elif name == "text" and attrs["tag"] in ["dlng", "slng"]:
+            self.data[attrs["tag"]] = strjoin(content).strip()
         else:
             raise TTLibError("can't handle '%s' element" % name)
