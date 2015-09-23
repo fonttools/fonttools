@@ -2176,14 +2176,15 @@ class Options(object):
     class OptionError(Exception): pass
     class UnknownOptionError(OptionError): pass
 
+    # spaces in tag names (e.g. "SVG ", "cvt ") are stripped by the argument parser
     _drop_tables_default = ['BASE', 'JSTF', 'DSIG', 'EBDT', 'EBLC',
-                            'EBSC', 'SVG ', 'PCLT', 'LTSH']
+                            'EBSC', 'SVG', 'PCLT', 'LTSH']
     _drop_tables_default += ['Feat', 'Glat', 'Gloc', 'Silf', 'Sill']  # Graphite
     _drop_tables_default += ['CBLC', 'CBDT', 'sbix', 'COLR', 'CPAL']  # Color
     _no_subset_tables_default = ['gasp', 'head', 'hhea', 'maxp',
-                                 'vhea', 'OS/2', 'loca', 'name', 'cvt ',
+                                 'vhea', 'OS/2', 'loca', 'name', 'cvt',
                                  'fpgm', 'prep', 'VDMX', 'DSIG']
-    _hinting_tables_default = ['cvt ', 'fpgm', 'prep', 'hdmx', 'VDMX']
+    _hinting_tables_default = ['cvt', 'fpgm', 'prep', 'hdmx', 'VDMX']
 
     # Based on HarfBuzz shapers
     _layout_features_groups = {
@@ -2341,8 +2342,8 @@ class Subsetter(object):
         for tag in font.keys():
             if tag == 'GlyphOrder': continue
 
-            if(tag in self.options.drop_tables or
-                 (tag in self.options.hinting_tables and not self.options.hinting) or
+            if(tag.strip() in self.options.drop_tables or
+                 (tag.strip() in self.options.hinting_tables and not self.options.hinting) or
                  (tag == 'kern' and (not self.options.legacy_kern and 'GPOS' in font))):
                 self.log(tag, "dropped")
                 del font[tag]
@@ -2445,7 +2446,7 @@ class Subsetter(object):
             if tag == 'GlyphOrder': continue
             clazz = ttLib.getTableClass(tag)
 
-            if tag in self.options.no_subset_tables:
+            if tag.strip() in self.options.no_subset_tables:
                 self.log(tag, "subsetting not needed")
             elif hasattr(clazz, 'subset_glyphs'):
                 table = font[tag]
