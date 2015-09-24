@@ -21,13 +21,15 @@ META_DATA = deHexStr(
     "00 00 00 01 00 00 00 00 00 00 00 1C 00 00 00 01 "
     "54 45 53 54 00 00 00 1C 00 00 00 04 CA FE BE EF")
 
-# The 'dlng' tag with text data containing BCP 47 comma-separated
-# or comma and space-separated tags). The 'slng' tag would also expect text
-# data instead of binary data.
+# The 'dlng' and 'slng' tag with text data containing "augmented" BCP 47
+# comma-separated or comma-space-separated tags. These should be UTF-8 encoded
+# text.
 META_DATA_TEXT = deHexStr(
-    "00 00 00 01 00 00 00 00 00 00 00 1C 00 00 00 01 "
-    "64 6C 6E 67 00 00 00 1C 00 00 00 0E 4C 61 74 6E "
-    "2C 47 72 65 6B 2C 43 79 72 6C")
+    "00 00 00 01 00 00 00 00 00 00 00 28 00 00 00 02 "
+    "64 6C 6E 67 00 00 00 28 00 00 00 0E 73 6C 6E 67 "
+    "00 00 00 36 00 00 00 0E 4C 61 74 6E 2C 47 72 65 "
+    "6B 2C 43 79 72 6C 4C 61 74 6E 2C 47 72 65 6B 2C "
+    "43 79 72 6C")
 
 class MetaTableTest(unittest.TestCase):
     def test_decompile(self):
@@ -43,11 +45,13 @@ class MetaTableTest(unittest.TestCase):
     def test_decompile_text(self):
         table = table__m_e_t_a()
         table.decompile(META_DATA_TEXT, ttFont={"meta": table})
-        self.assertEqual({"dlng": u"Latn,Grek,Cyrl"}, table.data)
+        self.assertEqual({"dlng": u"Latn,Grek,Cyrl",
+                          "slng": u"Latn,Grek,Cyrl"}, table.data)
 
     def test_compile_text(self):
         table = table__m_e_t_a()
         table.data["dlng"] = u"Latn,Grek,Cyrl"
+        table.data["slng"] = u"Latn,Grek,Cyrl"
         self.assertEqual(META_DATA_TEXT, table.compile(ttFont={"meta": table}))
 
     def test_toXML(self):
