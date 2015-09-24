@@ -43,11 +43,11 @@ class MetaTableTest(unittest.TestCase):
     def test_decompile_text(self):
         table = table__m_e_t_a()
         table.decompile(META_DATA_TEXT, ttFont={"meta": table})
-        self.assertEqual({"dlng": b"Latn,Grek,Cyrl"}, table.data)
+        self.assertEqual({"dlng": u"Latn,Grek,Cyrl"}, table.data)
 
     def test_compile_text(self):
         table = table__m_e_t_a()
-        table.data["dlng"] = b"Latn,Grek,Cyrl"
+        table.data["dlng"] = u"Latn,Grek,Cyrl"
         self.assertEqual(META_DATA_TEXT, table.compile(ttFont={"meta": table}))
 
     def test_toXML(self):
@@ -73,7 +73,7 @@ class MetaTableTest(unittest.TestCase):
 
     def test_toXML_text(self):
         table = table__m_e_t_a()
-        table.data["dlng"] = b"Latn,Grek,Cyrl"
+        table.data["dlng"] = u"Latn,Grek,Cyrl"
         writer = XMLWriter(BytesIO())
         table.toXML(writer, {"meta": table})
         xml = writer.file.getvalue().decode("utf-8")
@@ -90,7 +90,7 @@ class MetaTableTest(unittest.TestCase):
                 '    Latn,Grek,Cyrl'
                 '</text>'):
             table.fromXML(name, attrs, content, ttFont=None)
-        self.assertEqual({"dlng": "Latn,Grek,Cyrl"}, table.data)
+        self.assertEqual({"dlng": u"Latn,Grek,Cyrl"}, table.data)
 
 
 if __name__ == "__main__":
