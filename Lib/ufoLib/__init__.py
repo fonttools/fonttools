@@ -593,7 +593,7 @@ class UFOWriter(object):
 			raise UFOLibError("The UFO located at this path is a higher version (%d) than the version (%d) that is trying to be written. This is not supported." % (previousFormatVersion, formatVersion))
 		# handle the layer contents
 		self.layerContents = {}
-		if previousFormatVersion >= 3:
+		if previousFormatVersion is not None and previousFormatVersion >= 3:
 			# already exists
 			self._readLayerContents()
 		else:
