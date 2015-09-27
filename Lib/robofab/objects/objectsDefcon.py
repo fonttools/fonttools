@@ -824,7 +824,7 @@ class RGlyph(BaseGlyph):
 	# Metrics
 
 	def _get_box(self):
-		bounds = self._obejct.bounds
+		bounds = self._object.bounds
 		if bounds is None:
 			bounds = (0, 0, 0, 0)
 		return bounds
