@@ -49,8 +49,9 @@ class Builder(object):
         if self.cur_lookup_name_:
             # We are starting a lookup rule inside a named lookup block.
             self.named_lookups_[self.cur_lookup_name_] = self.cur_lookup_
-        else:
-            # We are starting a lookup rule inside a feature.
+        if self.cur_feature_name_:
+            # We are starting a lookup rule inside a feature. This includes
+            # lookup rules inside named lookups inside features.
             for script, lang in self.language_systems:
                 key = (script, lang, self.cur_feature_name_)
                 self.features_.setdefault(key, []).append(self.cur_lookup_)
