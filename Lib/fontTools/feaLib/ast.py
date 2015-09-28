@@ -123,6 +123,10 @@ class LookupReferenceStatement(Statement):
         Statement.__init__(self, location)
         self.location, self.lookup = (location, lookup)
 
+    def build(self, builder):
+        for s in self.lookup.statements:
+            s.build(builder)
+
 
 class MultipleSubstitution(Statement):
     def __init__(self, location, glyph, replacement):

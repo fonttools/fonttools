@@ -238,6 +238,11 @@ class BuilderTest(unittest.TestCase):
             "    substitute [a-z] by [A.sc-Z.sc];"
             "} test;")
 
+    def test_lookup(self):
+        font = TTFont()
+        addOpenTypeFeatures(self.getpath("lookup.fea"), font)
+        self.expect_ttx(font, self.getpath("lookup.ttx"))
+
     def test_lookup_already_defined(self):
         self.assertRaisesRegex(
             FeatureLibError,
