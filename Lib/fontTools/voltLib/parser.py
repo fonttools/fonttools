@@ -93,7 +93,7 @@ class Parser(object):
     def parse_enum_(self):
         assert self.is_cur_keyword_("ENUM")
         location = self.cur_token_location_
-        enum = {'glyphs': [], 'groups': []}
+        enum = {'glyphs': [], 'groups': [], 'ranges': []}
         while self.next_token_ != "END_ENUM":
             if self.next_token_ == "GLYPH":
                 self.expect_keyword_("GLYPH")
@@ -103,6 +103,10 @@ class Parser(object):
                 self.expect_keyword_("GROUP")
                 name = self.expect_string_()
                 enum['groups'].append(name)
+            elif self.next_token_ == "RANGE":
+                self.expect_keyword_("RANGE")
+                start, end = self.expect_string_(), self.expect_string_()
+                enum['ranges'].append((start, end))
         self.expect_keyword_("END_ENUM")
         return enum
 
