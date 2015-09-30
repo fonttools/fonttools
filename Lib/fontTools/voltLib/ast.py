@@ -17,7 +17,9 @@ class GlyphDefinition(ast.Statement):
         self.components = components
 
 class GroupDefinition(ast.Statement):
-    def __init__(self, location, name, enum):
+    def __init__(self, location, name, glyphs, groups, ranges):
         ast.Statement.__init__(self,location)
         self.name = name
-        self.enum = enum
+        self.enum = {"glyphs": glyphs,
+                     "groups": groups,
+                     "ranges": ranges}

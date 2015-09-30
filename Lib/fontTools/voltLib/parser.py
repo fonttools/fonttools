@@ -81,9 +81,36 @@ class Parser(object):
         if self.groups_.resolve(name) is not None:
             raise VoltLibError('Glyph group "%s" already defined' % name,
                                location)
-        def_group = ast.GroupDefinition(location, name, enum)
+        def_group = ast.GroupDefinition(location, name, **enum)
         self.groups_.define(name, def_group)
         return def_group
+
+    def parse_def_script_(self):
+        assert self.is_cur_keyword_("DEF_SCRIPT")
+        location = self.cur_token_location_
+        self.expect_keyword_("NAME")
+        name = self.expect_string_()
+        self.expect_keyword_("TAG")
+        tag = self.expect_string_()
+        langs = []
+        while self.next_token_ != "END_SCRIPT":
+            self.advance_lexer_()
+            lang = self.parse_langsys_()
+            self.expect_keyword_("END_LANGSYS")
+            langs.append(lang)
+        self.expect_keyword_("END_SCRIPT")
+        def_script = ast.ScriptDefinition(location, name, tag, langs)
+        return def_script
+
+    def parse_langsys_(self):
+        assert self.is_cur_keyword_("DEF_LANGSYS")
+        location = self.cur_token_location_
+        self.expect_keyword_("NAME")
+        name = self.expect_string_()
+        self.expect_keyword_("TAG")
+        tag = self.expect_string_()
+        def_langsys = ast.LangSysDefinition(location, name, tag)
+        return def_langsys
 
     def parse_unicode_values_(self):
         location = self.cur_token_location_

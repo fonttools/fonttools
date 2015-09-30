@@ -99,6 +99,21 @@ class ParserTest(unittest.TestCase):
                         'END_GROUP\n'
         )
 
+    def test_langsys(self):
+        [def_script] = self.parse(
+            'DEF_SCRIPT NAME "Latin" TAG "latn"\n'
+            'DEF_LANGSYS NAME "Romanian" TAG "ROM "\n'
+            'END_LANGSYS\n'
+            'END_SCRIPT'
+        ).statements
+        self.assertEqual((def_script.name, def_script.tag),
+                         ("Latin",
+                          "latn"))
+        def_lang = def_script.langs[0]
+        self.assertEqual((def_lang.name, def_lang.tag),
+                         ("Romanian",
+                          "ROM "))
+
     def setUp(self):
         self.tempdir = None
         self.num_tempfiles = 0
