@@ -114,6 +114,38 @@ class ParserTest(unittest.TestCase):
                          ("Romanian",
                           "ROM "))
 
+    def test_feature(self):
+        [def_script] = self.parse(
+            'DEF_SCRIPT NAME "Latin" TAG "latn"\n'
+            'DEF_LANGSYS NAME "Romanian" TAG "ROM "\n'
+            'DEF_FEATURE NAME "Fractions" TAG "frac"\n'
+            'LOOKUP "fraclookup"\n'
+            'END_FEATURE\n'
+            'END_LANGSYS\n'
+            'END_SCRIPT'
+        ).statements
+        def_feature = def_script.langs[0].features[0]
+        self.assertEqual((def_feature.name, def_feature.tag,
+                          def_feature.lookups),
+                         ("Fractions",
+                          "frac",
+                          ["fraclookup"]))
+        [def_script] = self.parse(
+            'DEF_SCRIPT NAME "Latin" TAG "latn"\n'
+            'DEF_LANGSYS NAME "Romanian" TAG "ROM "\n'
+            'DEF_FEATURE NAME "Kerning" TAG "kern"\n'
+            'LOOKUP "kern1" LOOKUP "kern2"\n'
+            'END_FEATURE\n'
+            'END_LANGSYS\n'
+            'END_SCRIPT'
+        ).statements
+        def_feature = def_script.langs[0].features[0]
+        self.assertEqual((def_feature.name, def_feature.tag,
+                          def_feature.lookups),
+                         ("Kerning",
+                          "kern",
+                          ["kern1", "kern2"]))
+
     def setUp(self):
         self.tempdir = None
         self.num_tempfiles = 0

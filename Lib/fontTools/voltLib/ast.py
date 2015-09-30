@@ -32,7 +32,15 @@ class ScriptDefinition(ast.Statement):
         self.langs = langs
 
 class LangSysDefinition(ast.Statement):
-    def __init__(self, location, name, tag):
+    def __init__(self, location, name, tag, features):
         ast.Statement.__init__(self,location)
         self.name = name
         self.tag = tag
+        self.features = features
+
+class FeatureDefinition(ast.Statement):
+    def __init__(self, location, name, tag, lookups):
+        ast.Statement.__init__(self,location)
+        self.name = name
+        self.tag = tag
+        self.lookups = lookups

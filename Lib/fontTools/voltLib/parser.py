@@ -111,8 +111,30 @@ class Parser(object):
         name = self.expect_string_()
         self.expect_keyword_("TAG")
         tag = self.expect_string_()
-        def_langsys = ast.LangSysDefinition(location, name, tag)
+        features = []
+        while self.next_token_ != "END_LANGSYS":
+            self.advance_lexer_()
+            feature = self.parse_feature_()
+            self.expect_keyword_("END_FEATURE")
+            features.append(feature)
+        def_langsys = ast.LangSysDefinition(location, name, tag, features)
         return def_langsys
+
+    def parse_feature_(self):
+        assert self.is_cur_keyword_("DEF_FEATURE")
+        location = self.cur_token_location_
+        self.expect_keyword_("NAME")
+        name = self.expect_string_()
+        self.expect_keyword_("TAG")
+        tag = self.expect_string_()
+        lookups = []
+        while self.next_token_ != "END_FEATURE":
+            # self.advance_lexer_()
+            self.expect_keyword_("LOOKUP")
+            lookup = self.expect_string_()
+            lookups.append(lookup)
+        feature = ast.FeatureDefinition(location, name, tag, lookups)
+        return feature
 
     def parse_unicode_values_(self):
         location = self.cur_token_location_
