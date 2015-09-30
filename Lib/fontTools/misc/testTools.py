@@ -2,6 +2,7 @@
 
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
+from fontTools.misc.xmlWriter import XMLWriter
 
 
 def parseXML(xmlSnippet):
@@ -40,3 +41,18 @@ class TestXMLReader_(object):
 
     def addCharacterData_(self, data):
         self.stack[-1][2].append(data)
+
+
+def getXML(obj, ttFont):
+    """Call the object's toXML() method and return the writer's content as string.
+    Result is stripped of XML declaration and OS-specific newline characters.
+    """
+    writer = XMLWriter(BytesIO())
+    # don't write OS-specific new lines
+    writer.newlinestr = writer.totype('')
+    # erase XML declaration
+    writer.file.seek(0)
+    writer.file.truncate()
+    obj.toXML(writer, ttFont)
+    xml = writer.file.getvalue().decode("utf-8")
+    return xml
