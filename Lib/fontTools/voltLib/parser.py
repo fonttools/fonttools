@@ -1,5 +1,6 @@
 from __future__ import print_function, division, absolute_import
 import fontTools.voltLib.ast as ast
+import fontTools.feaLib.parser as parser
 from fontTools.voltLib.lexer import Lexer
 from fontTools.voltLib.error import VoltLibError
 import codecs
@@ -7,6 +8,7 @@ import codecs
 class Parser(object):
     def __init__(self, path):
         self.doc_ = ast.VoltFile()
+        self.groups_ = SymbolTable()
         self.next_token_type_, self.next_token_ = (None, None)
         self.next_token_location_ = None
         try:
@@ -22,13 +24,15 @@ class Parser(object):
             self.advance_lexer_()
             if self.is_cur_keyword_("DEF_GLYPH"):
                 statements.append(self.parse_def_glyph_())
+            elif self.is_cur_keyword_("DEF_GROUP"):
+                statements.append(self.parse_def_group_())
             elif self.is_cur_keyword_("END"):
                 if self.next_token_type_ is not None:
                     raise VoltLibError("Expected the end of the file",
                                        self.cur_token_location_)
                 return self.doc_
             else:
-                raise VoltLibError("Expected DEF_GLYPH",
+                raise VoltLibError("Expected DEF_GLYPH, DEF_GROUP",
                                    self.cur_token_location_)
         return self.doc_
 
@@ -49,7 +53,7 @@ class Parser(object):
                                    self.cur_token_location_)
         elif self.next_token_ == "UNICODEVALUES":
             self.expect_keyword_("UNICODEVALUES")
-            gunicode = self.parse_unicode_values()
+            gunicode = self.parse_unicode_values_()
         # Apparently TYPE is optional
         gtype = None
         if self.next_token_ == "TYPE":
@@ -65,10 +69,42 @@ class Parser(object):
                                         gunicode, gtype, components)
         return def_glyph
 
-    def parse_unicode_values(self):
+    def parse_def_group_(self):
+        assert self.is_cur_keyword_("DEF_GROUP")
+        location = self.cur_token_location_
+        name = self.expect_string_()
+        enum = None
+        if self.next_token_ == "ENUM":
+            self.expect_keyword_("ENUM")
+            enum = self.parse_enum_()
+        self.expect_keyword_("END_GROUP")
+        if self.groups_.resolve(name) is not None:
+            raise VoltLibError('Glyph group "%s" already defined' % name,
+                               location)
+        def_group = ast.GroupDefinition(location, name, enum)
+        self.groups_.define(name, def_group)
+        return def_group
+
+    def parse_unicode_values_(self):
         location = self.cur_token_location_
         unicode_values = self.expect_string_().split(',')
         return [int(uni[2:], 16) for uni in unicode_values]
+
+    def parse_enum_(self):
+        assert self.is_cur_keyword_("ENUM")
+        location = self.cur_token_location_
+        enum = {'glyphs': [], 'groups': []}
+        while self.next_token_ != "END_ENUM":
+            if self.next_token_ == "GLYPH":
+                self.expect_keyword_("GLYPH")
+                name = self.expect_string_()
+                enum['glyphs'].append(name)
+            elif self.next_token_ == "GROUP":
+                self.expect_keyword_("GROUP")
+                name = self.expect_string_()
+                enum['groups'].append(name)
+        self.expect_keyword_("END_ENUM")
+        return enum
 
     def is_cur_keyword_(self, k):
         return (self.cur_token_type_ is Lexer.NAME) and (self.cur_token_ == k)
@@ -106,3 +142,7 @@ class Parser(object):
              self.next_token_location_) = self.lexer_.next()
         except StopIteration:
             self.next_token_type_, self.next_token_ = (None, None)
+
+class SymbolTable(parser.SymbolTable):
+    def __init__(self):
+        parser.SymbolTable.__init__(self)

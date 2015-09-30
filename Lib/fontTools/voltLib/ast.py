@@ -15,3 +15,9 @@ class GlyphDefinition(ast.Statement):
         self.unicode = gunicode
         self.type = gtype
         self.components = components
+
+class GroupDefinition(ast.Statement):
+    def __init__(self, location, name, enum):
+        ast.Statement.__init__(self,location)
+        self.name = name
+        self.enum = enum
