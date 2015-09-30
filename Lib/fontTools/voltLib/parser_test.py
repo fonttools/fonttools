@@ -1,6 +1,6 @@
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
-# from fontTools.voltLib.error import VoltLibError
+from fontTools.voltLib.error import VoltLibError
 from fontTools.voltLib.parser import Parser
 import codecs
 import os
@@ -49,6 +49,41 @@ class ParserTest(unittest.TestCase):
         self.assertEqual((def_glyph.name, def_glyph.id, def_glyph.unicode,
                           def_glyph.type, def_glyph.components),
                          ("glyph20", 20, None, None, None))
+
+    def test_def_group(self):
+        [def_group] = self.parse(
+            'DEF_GROUP "KERN_lc_a_2ND"\n'
+            'ENUM GLYPH "a" GLYPH "aacute" GLYPH "abreve" GLYPH "acircumflex" '
+            'GLYPH "adieresis" GLYPH "ae" GLYPH "agrave" GLYPH "amacron" '
+            'GLYPH "aogonek" GLYPH "aring" GLYPH "atilde" END_ENUM\n'
+            'END_GROUP'
+        ).statements
+        self.assertEqual((def_group.name, def_group.enum),
+                         ("KERN_lc_a_2ND",
+                          {"glyphs": ["a", "aacute", "abreve", "acircumflex",
+                                      "adieresis", "ae", "agrave", "amacron",
+                                      "aogonek", "aring", "atilde"],
+                           "groups": []}))
+        [def_group] = self.parse(
+            'DEF_GROUP "KERN_lc_a_2ND"\n'
+            'ENUM GLYPH "a" GROUP "aaccented" END_ENUM\n'
+            'END_GROUP'
+        ).statements
+        self.assertEqual((def_group.name, def_group.enum),
+                         ("KERN_lc_a_2ND",
+                          {"glyphs": ["a"],
+                           "groups": ["aaccented"]}))
+
+    def test_group_duplicate(self):
+        self.assertRaisesRegex(
+            VoltLibError, 'Glyph group "dup" already defined',
+            self.parse, 'DEF_GROUP "dup"\n'
+                        'ENUM GLYPH "a" GLYPH "b" END_ENUM\n'
+                        'END_GROUP\n'
+                        'DEF_GROUP "dup"\n'
+                        'ENUM GLYPH "x" END_ENUM\n'
+                        'END_GROUP\n'
+        )
 
     def setUp(self):
         self.tempdir = None
