@@ -197,16 +197,12 @@ class TrackData(MutableMapping):
 	def toXML(self, writer, ttFont, progress=None):
 		nTracks = len(self)
 		nSizes = len(self.sizes())
-		if not any([nTracks, nSizes]):
-			writer.comment("nTracks=0, nSizes=0")
-			writer.newline()
-		else:
-			writer.comment("nTracks=%d, nSizes=%d" % (nTracks, nSizes))
-			writer.newline()
-			for track, entry in sorted(self.items()):
-				assert entry.nameIndex is not None
-				entry.track = track
-				entry.toXML(writer, ttFont)
+		writer.comment("nTracks=%d, nSizes=%d" % (nTracks, nSizes))
+		writer.newline()
+		for track, entry in sorted(self.items()):
+			assert entry.nameIndex is not None
+			entry.track = track
+			entry.toXML(writer, ttFont)
 
 	def fromXML(self, name, attrs, content, ttFont):
 		if name != 'trackEntry':
