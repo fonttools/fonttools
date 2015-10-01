@@ -111,6 +111,23 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 		else:
 			return None
 
+	def setName(self, string, nameID, platformID, platEncID, langID):
+		if not hasattr(self, 'names'):
+			self.names = []
+		namerecord = self.getName(nameID, platformID, platEncID, langID)
+		exists = False if namerecord is None else True
+		if not exists:
+			namerecord = NameRecord()
+			namerecord.nameID = nameID
+			namerecord.platformID = platformID
+			namerecord.platEncID = platEncID
+			namerecord.langID = langID
+		encoding = namerecord.getEncoding()
+		namerecord.string = string.encode(encoding)
+		if not exists:
+			self.names.append(namerecord)
+
+
 class NameRecord(object):
 
 	def getEncoding(self, default='ascii'):
