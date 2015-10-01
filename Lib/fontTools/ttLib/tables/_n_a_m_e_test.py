@@ -33,12 +33,12 @@ class NameTableTest(unittest.TestCase):
 		table.setName("Regular", 2, 1, 0, 0)
 		table.setName("Version 1.000", 5, 3, 1, 0x409)
 		table.setName("寬鬆", 276, 1, 2, 0x13)
-		self.assertEqual("Regular", str(table.getName(2, 1, 0, 0)))
-		self.assertEqual("Version 1.000", str(table.getName(5, 3, 1, 0x409)))
-		self.assertEqual("寬鬆", str(table.getName(276, 1, 2, 0x13)))
+		self.assertEqual("Regular", table.getName(2, 1, 0, 0).toUnicode())
+		self.assertEqual("Version 1.000", table.getName(5, 3, 1, 0x409).toUnicode())
+		self.assertEqual("寬鬆", table.getName(276, 1, 2, 0x13).toUnicode())
 		self.assertTrue(len(table.names) == 3)
 		table.setName("緊縮", 276, 1, 2, 0x13)
-		self.assertEqual("緊縮", str(table.getName(276, 1, 2, 0x13)))
+		self.assertEqual("緊縮", table.getName(276, 1, 2, 0x13).toUnicode())
 		self.assertTrue(len(table.names) == 3)
 
 
