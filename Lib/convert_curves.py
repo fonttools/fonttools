@@ -43,6 +43,14 @@ def replaceSegments(contour, segments):
         contour.appendSegment(s.type, [(p.x, p.y) for p in s.points], s.smooth)
 
 
+def as_quadratic(segment, points):
+    try:
+        return segment.as_quadratic(points)
+    except AttributeError:
+        return RSegment(
+            'qcurve', [[int(i) for i in p] for p in points], segment.smooth)
+
+
 _zip = zip
 def zip(*args):
     """Ensure each argument to zip has the same length."""
@@ -208,16 +216,14 @@ def cubicSegmentToQuadratic(c, sid, max_n, max_err, report):
 
     if isinstance(points[0][0], float):  # just one spline
         n = str(len(points))
+        points = points[1:]
+
     else:  # collection of splines
         n = str(len(points[0]))
-    report[n] = report.get(n, 0) + 1
+        points = [p[1:] for p in points]
 
-    try:
-        return segment.asQuadratic([p[1:] for p in points])
-    except AttributeError:
-        pass
-    return RSegment(
-        'qcurve', [[int(i) for i in p] for p in points[1:]], segment.smooth)
+    report[n] = report.get(n, 0) + 1
+    return as_quadratic(segment, points)
 
 
 def glyphCurvesToQuadratic(g, max_n, max_err, report):
@@ -308,8 +314,7 @@ class SegmentCollection(FontCollection):
         self.points = self.children
         self.type = segments[0].type
 
-    def asQuadratic(self, newPoints=None):
-        points = newPoints or self.children
+    def as_quadratic(self, new_points=None):
+        points = new_points or self.children
         return SegmentCollection([
-            RSegment("qcurve", [[int(i) for i in p] for p in pts], s.smooth)
-            for s, pts in zip(self.instances, points)])
+            as_quadratic(s, pts) for s, pts in zip(self.instances, points)])
