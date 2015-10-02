@@ -32,11 +32,13 @@ from fontTools.misc import bezierTools
 from robofab.objects.objectsRF import RSegment, RPoint
 
 
-def replaceSegments(contour, segments):
+def replace_segments(contour, segments):
     try:
-        return contour.replaceSegments(segments)
+        contour.replace_segments(segments)
+        return
     except AttributeError:
         pass
+
     while len(contour):
         contour.removeSegment(0)
     for s in segments:
@@ -55,8 +57,8 @@ _zip = zip
 def zip(*args):
     """Ensure each argument to zip has the same length."""
     if len(set(len(a) for a in args)) != 1:
-        msg = "Args to zip in convertCurves.py should have equal lengths: "
-        raise ValueError(msg + " ".join(str(a) for a in args))
+        msg = 'Args to zip in convert_curves.py should have equal lengths: '
+        raise ValueError(msg + ' '.join(str(a) for a in args))
     return _zip(*args)
 
 
@@ -94,7 +96,7 @@ def lerp(p1, p2, t):
     return p1 * (1 - t) + p2 * t
 
 
-def quadraticBezierAt(p, t):
+def quadratic_bezier_at(p, t):
     """Return the point on a quadratic bezier curve at time t."""
 
     return Point([
@@ -102,7 +104,7 @@ def quadraticBezierAt(p, t):
         lerp(lerp(p[0][1], p[1][1], t), lerp(p[1][1], p[2][1], t), t)])
 
 
-def cubicBezierAt(p, t):
+def cubic_bezier_at(p, t):
     """Return the point on a cubic bezier curve at time t."""
 
     return Point([
@@ -112,7 +114,7 @@ def cubicBezierAt(p, t):
              lerp(lerp(p[1][1], p[2][1], t), lerp(p[2][1], p[3][1], t), t), t)])
 
 
-def cubicApprox(p, t):
+def cubic_approx(p, t):
     """Approximate a cubic bezier curve with a quadratic one."""
 
     p1 = lerp(p[0], p[1], 1.5)
@@ -120,7 +122,7 @@ def cubicApprox(p, t):
     return [p[0], lerp(p1, p2, t), p[3]]
 
 
-def calcIntersect(p):
+def calc_intersect(p):
     """Calculate the intersection of ab and cd, given [a, b, c, d]."""
 
     a, b, c, d = p
@@ -130,11 +132,11 @@ def calcIntersect(p):
     try:
         h = p.dot(a - c) / p.dot(cd)
     except ZeroDivisionError:
-        raise ValueError("Parallel vectors given to calcIntersect.")
+        raise ValueError('Parallel vectors given to calc_intersect.')
     return c + cd * h
 
 
-def cubicApproxSpline(p, n):
+def cubic_approx_spline(p, n):
     """Approximate a cubic bezier curve with a spline of n quadratics.
 
     Returns None if n is 1 and the cubic's control vectors are parallel, since
@@ -142,7 +144,7 @@ def cubicApproxSpline(p, n):
 
     if n == 1:
         try:
-            p1 = calcIntersect(p)
+            p1 = calc_intersect(p)
         except ValueError:
             return None
         return p[0], p1, p[3]
@@ -153,13 +155,13 @@ def cubicApproxSpline(p, n):
         map(Point, segment)
         for segment in bezierTools.splitCubicAtT(p[0], p[1], p[2], p[3], *ts)]
     for i in range(len(segments)):
-        segment = cubicApprox(segments[i], float(i) / (n - 1))
+        segment = cubic_approx(segments[i], float(i) / (n - 1))
         spline.append(segment[1])
     spline.append(p[3])
     return spline
 
 
-def curveSplineDist(bezier, spline):
+def curve_spline_dist(bezier, spline):
     """Max distance between a bezier and quadratic spline at sampled ts."""
 
     TOTAL_STEPS = 20
@@ -172,47 +174,52 @@ def curveSplineDist(bezier, spline):
             spline[i],
             spline[i + 1] if i == n else lerp(spline[i], spline[i + 1], 0.5)]
         for j in range(steps):
-            p1 = cubicBezierAt(bezier, (float(j) / steps + i - 1) / n)
-            p2 = quadraticBezierAt(segment, float(j) / steps)
+            p1 = cubic_bezier_at(bezier, (float(j) / steps + i - 1) / n)
+            p2 = quadratic_bezier_at(segment, float(j) / steps)
             error = max(error, p1.dist(p2))
     return error
 
 
-def convertToQuadratic(p0,p1,p2,p3, max_n, max_err):
+def convert_to_quadratic(p0, p1, p2, p3, max_n, max_err):
+    """Return a quadratic spline approximating this cubic bezier."""
+
     if not isinstance(p0, RPoint):
-        return convertCollectionToQuadratic(p0, p1, p2, p3, max_n, max_err)
+        return convert_collection_to_quadratic(p0, p1, p2, p3, max_n, max_err)
 
     p = [Point([i.x, i.y]) for i in [p0, p1, p2, p3]]
     for n in range(1, max_n + 1):
-        spline = cubicApproxSpline(p, n)
-        if spline and curveSplineDist(p, spline) <= max_err:
+        spline = cubic_approx_spline(p, n)
+        if spline and curve_spline_dist(p, spline) <= max_err:
             break
     return spline
 
 
-def convertCollectionToQuadratic(p0, p1, p2, p3, max_n, max_err):
+def convert_collection_to_quadratic(p0, p1, p2, p3, max_n, max_err):
+    """Return quadratic splines approximating these cubic beziers."""
+
     curves = [[Point([i.x, i.y]) for i in p] for p in zip(p0, p1, p2, p3)]
     for n in range(1, max_n + 1):
-        splines = [cubicApproxSpline(c, n) for c in curves]
-        if not all(splines):
-            continue
-        if max(curveSplineDist(*a) for a in zip(curves, splines)) <= max_err:
+        splines = [cubic_approx_spline(c, n) for c in curves]
+        if (all(splines) and
+            max(curve_spline_dist(c, s)
+                for c, s in zip(curves, splines)) <= max_err):
             break
     return splines
 
 
-def cubicSegmentToQuadratic(c, sid, max_n, max_err, report):
+def cubic_segment_to_quadratic(c, sid, max_n, max_err, report):
+    """Return a quadratic approximation of a cubic segment."""
 
     segment = c[sid]
-    if (segment.type != "curve"):
-        print "Segment type not curve"
-        return
-    
-    #pSegment,junk = getPrevAnchor(c,sid)
-    pSegment = c[sid-1] #assumes that a curve type will always be proceeded by another point on the same contour
-    points = convertToQuadratic(pSegment.points[-1],segment.points[0],
-                                segment.points[1],segment.points[2],
-                                max_n, max_err)
+    if segment.type != 'curve':
+        raise TypeError('Segment type not curve')
+
+    # assumes that a curve type will always be proceeded by another point on the
+    # same contour
+    prev_segment = c[sid - 1]
+    points = convert_to_quadratic(prev_segment.points[-1], segment.points[0],
+                                  segment.points[1], segment.points[2],
+                                  max_n, max_err)
 
     if isinstance(points[0][0], float):  # just one spline
         n = str(len(points))
@@ -226,22 +233,19 @@ def cubicSegmentToQuadratic(c, sid, max_n, max_err, report):
     return as_quadratic(segment, points)
 
 
-def glyphCurvesToQuadratic(g, max_n, max_err, report):
+def glyph_curves_to_quadratic(g, max_n, max_err, report):
+    """Convert a glyph's curves to quadratic, in place."""
 
     for c in g:
         segments = []
         for i in range(len(c)):
             s = c[i]
-            if s.type == "curve":
-                try:
-                    segments.append(cubicSegmentToQuadratic(
-                        c, i, max_n, max_err, report))
-                except Exception:
-                    print g.name, i
-                    raise
+            if s.type == 'curve':
+                segments.append(cubic_segment_to_quadratic(
+                    c, i, max_n, max_err, report))
             else:
                 segments.append(s)
-        replaceSegments(c, segments)
+        replace_segments(c, segments)
 
 
 def fonts_to_quadratic(fonts, compatible=False, max_n=10, max_err=5):
@@ -257,12 +261,12 @@ def fonts_to_quadratic(fonts, compatible=False, max_n=10, max_err=5):
         fonts = [FontCollection(fonts)]
     for font in fonts:
         for glyph in font:
-            glyphCurvesToQuadratic(glyph, max_n, max_err, report)
+            glyph_curves_to_quadratic(glyph, max_n, max_err, report)
 
     spline_lengths = report.keys()
     spline_lengths.sort()
     return (
-        '>>> New spline lengths:\n' +
+        'New spline lengths:\n' +
         '\n'.join('%s: %d' % (l, report[l]) for l in spline_lengths))
 
 
@@ -286,10 +290,10 @@ class FontCollection:
     def __str__(self):
         return str(self.instances)
 
-    def init(self, instances, childCollectionType, getChildren=None):
+    def init(self, instances, child_collection_type, get_children=None):
         self.instances = instances
-        childrenByInstance = map(getChildren, self.instances)
-        self.children = map(childCollectionType, zip(*childrenByInstance))
+        children_by_instance = map(get_children, self.instances)
+        self.children = map(child_collection_type, zip(*children_by_instance))
 
 
 class GlyphCollection(FontCollection):
@@ -302,10 +306,10 @@ class ContourCollection(FontCollection):
     def __init__(self, contours):
         self.init(contours, SegmentCollection)
 
-    def replaceSegments(self, segmentCollections):
-        segmentsByContour = zip(*[s.instances for s in segmentCollections])
-        for contour, segments in zip(self.instances, segmentsByContour):
-            replaceSegments(contour, segments)
+    def replace_segments(self, segment_collections):
+        segments_by_contour = zip(*[s.instances for s in segment_collections])
+        for contour, segments in zip(self.instances, segments_by_contour):
+            replace_segments(contour, segments)
 
 
 class SegmentCollection(FontCollection):
