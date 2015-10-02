@@ -193,8 +193,8 @@ def convertCollectionToQuadratic(p0, p1, p2, p3, max_n, max_err):
     return splines
 
 
-def cubicSegmentToQuadratic(c,sid, max_n, max_err):
-    
+def cubicSegmentToQuadratic(c, sid, max_n, max_err, report):
+
     segment = c[sid]
     if (segment.type != "curve"):
         print "Segment type not curve"
@@ -206,6 +206,12 @@ def cubicSegmentToQuadratic(c,sid, max_n, max_err):
                                 segment.points[1],segment.points[2],
                                 max_n, max_err)
 
+    if isinstance(points[0][0], float):  # just one spline
+        n = str(len(points))
+    else:  # collection of splines
+        n = str(len(points[0]))
+    report[n] = report.get(n, 0) + 1
+
     try:
         return segment.asQuadratic([p[1:] for p in points])
     except AttributeError:
@@ -213,7 +219,8 @@ def cubicSegmentToQuadratic(c,sid, max_n, max_err):
     return RSegment(
         'qcurve', [[int(i) for i in p] for p in points[1:]], segment.smooth)
 
-def glyphCurvesToQuadratic(g, max_n, max_err):
+
+def glyphCurvesToQuadratic(g, max_n, max_err, report):
 
     for c in g:
         segments = []
@@ -239,11 +246,18 @@ def fonts_to_quadratic(fonts, compatible=False, max_n=10, max_err=5):
     which should be slightly more optimized.
     """
 
+    report = {}
     if compatible:
         fonts = [FontCollection(fonts)]
     for font in fonts:
         for glyph in font:
-            glyphCurvesToQuadratic(glyph, max_n, max_err)
+            glyphCurvesToQuadratic(glyph, max_n, max_err, report)
+
+    spline_lengths = report.keys()
+    spline_lengths.sort()
+    return (
+        '>>> New spline lengths:\n' +
+        '\n'.join('%s: %d' % (l, report[l]) for l in spline_lengths))
 
 
 class FontCollection:
