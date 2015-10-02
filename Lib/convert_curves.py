@@ -170,32 +170,30 @@ def curveSplineDist(bezier, spline):
     return error
 
 
-def convertToQuadratic(p0,p1,p2,p3):
-    MAX_N = 10
-    MAX_ERROR = 8
+def convertToQuadratic(p0,p1,p2,p3, max_n, max_err):
     if not isinstance(p0, RPoint):
-        return convertCollectionToQuadratic(p0, p1, p2, p3, MAX_N, MAX_ERROR)
+        return convertCollectionToQuadratic(p0, p1, p2, p3, max_n, max_err)
 
     p = [Point([i.x, i.y]) for i in [p0, p1, p2, p3]]
-    for n in range(1, MAX_N + 1):
+    for n in range(1, max_n + 1):
         spline = cubicApproxSpline(p, n)
-        if spline and curveSplineDist(p, spline) <= MAX_ERROR:
+        if spline and curveSplineDist(p, spline) <= max_err:
             break
     return spline
 
 
-def convertCollectionToQuadratic(p0, p1, p2, p3, maxN, maxErr):
+def convertCollectionToQuadratic(p0, p1, p2, p3, max_n, max_err):
     curves = [[Point([i.x, i.y]) for i in p] for p in zip(p0, p1, p2, p3)]
-    for n in range(1, maxN + 1):
+    for n in range(1, max_n + 1):
         splines = [cubicApproxSpline(c, n) for c in curves]
         if not all(splines):
             continue
-        if max(curveSplineDist(*a) for a in zip(curves, splines)) <= maxErr:
+        if max(curveSplineDist(*a) for a in zip(curves, splines)) <= max_err:
             break
     return splines
 
 
-def cubicSegmentToQuadratic(c,sid):
+def cubicSegmentToQuadratic(c,sid, max_n, max_err):
     
     segment = c[sid]
     if (segment.type != "curve"):
@@ -205,7 +203,8 @@ def cubicSegmentToQuadratic(c,sid):
     #pSegment,junk = getPrevAnchor(c,sid)
     pSegment = c[sid-1] #assumes that a curve type will always be proceeded by another point on the same contour
     points = convertToQuadratic(pSegment.points[-1],segment.points[0],
-                                segment.points[1],segment.points[2])
+                                segment.points[1],segment.points[2],
+                                max_n, max_err)
 
     try:
         return segment.asQuadratic([p[1:] for p in points])
@@ -214,7 +213,7 @@ def cubicSegmentToQuadratic(c,sid):
     return RSegment(
         'qcurve', [[int(i) for i in p] for p in points[1:]], segment.smooth)
 
-def glyphCurvesToQuadratic(g):
+def glyphCurvesToQuadratic(g, max_n, max_err):
 
     for c in g:
         segments = []
@@ -222,7 +221,8 @@ def glyphCurvesToQuadratic(g):
             s = c[i]
             if s.type == "curve":
                 try:
-                    segments.append(cubicSegmentToQuadratic(c, i))
+                    segments.append(cubicSegmentToQuadratic(
+                        c, i, max_n, max_err, report))
                 except Exception:
                     print g.name, i
                     raise
@@ -231,7 +231,7 @@ def glyphCurvesToQuadratic(g):
         replaceSegments(c, segments)
 
 
-def fonts_to_quadratic(fonts, compatible=False):
+def fonts_to_quadratic(fonts, compatible=False, max_n=10, max_err=5):
     """Convert the curves of a collection of fonts to quadratic.
 
     If compatibility is required, all curves will be converted to quadratic
@@ -243,7 +243,7 @@ def fonts_to_quadratic(fonts, compatible=False):
         fonts = [FontCollection(fonts)]
     for font in fonts:
         for glyph in font:
-            glyphCurvesToQuadratic(glyph)
+            glyphCurvesToQuadratic(glyph, max_n, max_err)
 
 
 class FontCollection:
