@@ -145,7 +145,7 @@ class Parser(object):
         assert self.is_cur_keyword_("ENUM")
         location = self.cur_token_location_
         enum = {'glyphs': [], 'groups': [], 'ranges': []}
-        while self.next_token_ != "END_ENUM":
+        while self.next_token_ in ("GLYPH", "GROUP", "RANGE"):
             if self.next_token_ == "GLYPH":
                 self.expect_keyword_("GLYPH")
                 name = self.expect_string_()
