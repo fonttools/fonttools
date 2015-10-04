@@ -26,6 +26,8 @@ class Parser(object):
                 statements.append(self.parse_def_glyph_())
             elif self.is_cur_keyword_("DEF_GROUP"):
                 statements.append(self.parse_def_group_())
+            elif self.is_cur_keyword_("DEF_SCRIPT"):
+                statements.append(self.parse_def_script_())
             elif self.is_cur_keyword_("END"):
                 if self.next_token_type_ is not None:
                     raise VoltLibError("Expected the end of the file",

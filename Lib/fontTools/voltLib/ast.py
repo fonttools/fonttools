@@ -23,3 +23,16 @@ class GroupDefinition(ast.Statement):
         self.enum = {"glyphs": glyphs,
                      "groups": groups,
                      "ranges": ranges}
+
+class ScriptDefinition(ast.Statement):
+    def __init__(self, location, name, tag, langs):
+        ast.Statement.__init__(self,location)
+        self.name = name
+        self.tag = tag
+        self.langs = langs
+
+class LangSysDefinition(ast.Statement):
+    def __init__(self, location, name, tag):
+        ast.Statement.__init__(self,location)
+        self.name = name
+        self.tag = tag
