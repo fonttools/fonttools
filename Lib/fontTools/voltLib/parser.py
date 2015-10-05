@@ -144,22 +144,26 @@ class Parser(object):
     def parse_enum_(self):
         assert self.is_cur_keyword_("ENUM")
         location = self.cur_token_location_
-        enum = {'glyphs': [], 'groups': [], 'ranges': []}
+        enum = self.parse_coverage_()
+        self.expect_keyword_("END_ENUM")
+        return enum
+
+    def parse_coverage_(self):
+        coverage = {'glyphs': [], 'groups': [], 'ranges': []}
         while self.next_token_ in ("GLYPH", "GROUP", "RANGE"):
             if self.next_token_ == "GLYPH":
                 self.expect_keyword_("GLYPH")
                 name = self.expect_string_()
-                enum['glyphs'].append(name)
+                coverage['glyphs'].append(name)
             elif self.next_token_ == "GROUP":
                 self.expect_keyword_("GROUP")
                 name = self.expect_string_()
-                enum['groups'].append(name)
+                coverage['groups'].append(name)
             elif self.next_token_ == "RANGE":
                 self.expect_keyword_("RANGE")
                 start, end = self.expect_string_(), self.expect_string_()
-                enum['ranges'].append((start, end))
-        self.expect_keyword_("END_ENUM")
-        return enum
+                coverage['ranges'].append((start, end))
+        return coverage
 
     def is_cur_keyword_(self, k):
         return (self.cur_token_type_ is Lexer.NAME) and (self.cur_token_ == k)
