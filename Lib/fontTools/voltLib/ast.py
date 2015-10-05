@@ -42,3 +42,22 @@ class FeatureDefinition(ast.Statement):
         self.name = name
         self.tag = tag
         self.lookups = lookups
+
+class LookupDefinition(ast.Statement):
+    def __init__(self, location, name, base, marks, all_flag, direction,
+                 comments, context, sub, pos):
+        ast.Statement.__init__(self, location)
+        self.name = name
+        self.base = base
+        self.marks = marks
+        self.all = all_flag
+        self.direction = direction
+        self.comments = comments
+        self.context = context
+        self.sub = sub
+        self.pos = pos
+
+class SubstitutionDefinition(ast.Statement):
+    def __init__(self, location, src, dest):
+        ast.Statement.__init__(self, location)
+        self.mapping = zip(src, dest)

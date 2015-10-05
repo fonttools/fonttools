@@ -146,6 +146,24 @@ class ParserTest(unittest.TestCase):
                           "kern",
                           ["kern1", "kern2"]))
 
+    def test_substitution_single(self):
+        [lookup] = self.parse(
+            'DEF_LOOKUP "smcp" PROCESS_BASE PROCESS_MARKS ALL '
+            'DIRECTION LTR\n'
+            'IN_CONTEXT\n'
+            'END_CONTEXT\n'
+            'AS_SUBSTITUTION\n'
+            'SUB GLYPH "a"\n'
+            'WITH GLYPH "a.sc"\n'
+            'END_SUB\n'
+            'SUB GLYPH "b"\n'
+            'WITH GLYPH "b.sc"\n'
+            'END_SUB\n'
+            'END_SUBSTITUTION'
+        ).statements
+        self.assertEqual((lookup.name, lookup.sub.mapping),
+                         ("smcp", [("a", "a.sc"), ("b", "b.sc")]))
+
     def setUp(self):
         self.tempdir = None
         self.num_tempfiles = 0

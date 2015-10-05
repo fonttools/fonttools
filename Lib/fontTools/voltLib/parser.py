@@ -28,6 +28,8 @@ class Parser(object):
                 statements.append(self.parse_def_group_())
             elif self.is_cur_keyword_("DEF_SCRIPT"):
                 statements.append(self.parse_def_script_())
+            elif self.is_cur_keyword_("DEF_LOOKUP"):
+                statements.append(self.parse_def_lookup_())
             elif self.is_cur_keyword_("END"):
                 if self.next_token_type_ is not None:
                     raise VoltLibError("Expected the end of the file",
@@ -135,6 +137,73 @@ class Parser(object):
             lookups.append(lookup)
         feature = ast.FeatureDefinition(location, name, tag, lookups)
         return feature
+
+    def parse_def_lookup_(self):
+        assert self.is_cur_keyword_("DEF_LOOKUP")
+        location = self.cur_token_location_
+        name = self.expect_string_()
+        base = self.expect_name_()
+        assert base in ("PROCESS_BASE", "SKIP_BASE")
+        marks = self.expect_name_()
+        assert marks in ("PROCESS_MARKS", "SKIP_MARKS")
+        if marks == "PROCESS_MARKS":
+            pass
+        all_flag = False
+        if self.next_token_ == "ALL":
+            self.expect_keyword_("ALL")
+            all_flag = True
+        direction = None
+        if self.next_token_ == "DIRECTION":
+            self.expect_keyword_("DIRECTION")
+            direction = self.expect_name_()
+            assert direction in ("LTR", "RTL")
+        comments = None
+        if self.next_token_ == "COMMENTS":
+            self.expect_keyword_("COMMENTS")
+            comments = self.expect_string_()
+        context = None
+        if self.next_token_ in ("EXCEPT_CONTEXT", "IN_CONTEXT"):
+            context = self.parse_context_()
+        as_pos_or_sub = self.expect_name_()
+        sub = None
+        pos = None
+        if as_pos_or_sub == "AS_SUBSTITUTION":
+            sub = self.parse_substitution_()
+        elif as_pos_or_sub == "AS_POSITION":
+            pos = self.parse_positioning_()
+        def_lookup = ast.LookupDefinition(location, name, base, marks,
+                                          all_flag, direction, comments,
+                                          context, sub, pos)
+        return def_lookup
+
+    def parse_context_(self):
+        except_or_in = self.expect_name_()
+        assert except_or_in in ("EXCEPT_CONTEXT", "IN_CONTEXT")
+        left_or_right = None
+        if self.next_token_ in ("LEFT", "RIGHT"):
+            left_or_right = self.expect_name_()
+        self.expect_keyword_("END_CONTEXT")
+        return (except_or_in, left_or_right)
+
+    def parse_substitution_(self):
+        assert self.is_cur_keyword_("AS_SUBSTITUTION")
+        location = self.cur_token_location_
+        src = []
+        dest = []
+        while self.next_token_ == "SUB":
+            self.expect_keyword_("SUB")
+            src.extend(self.parse_coverage_())
+            self.expect_keyword_("WITH")
+            dest.extend(self.parse_coverage_())
+            self.expect_keyword_("END_SUB")
+        self.expect_keyword_("END_SUBSTITUTION")
+        sub = ast.SubstitutionDefinition(location, src, dest)
+        return sub
+
+    def parse_position_(self):
+        assert self.is_cur_keyword_("AS_POSITION")
+        location = self.cur_token_location_
+        raise VoltLibError("AS_POSITION not yet implemented.", location)
 
     def parse_unicode_values_(self):
         location = self.cur_token_location_
