@@ -17,12 +17,10 @@ class GlyphDefinition(ast.Statement):
         self.components = components
 
 class GroupDefinition(ast.Statement):
-    def __init__(self, location, name, glyphs, groups, ranges):
+    def __init__(self, location, name, enum):
         ast.Statement.__init__(self,location)
         self.name = name
-        self.enum = {"glyphs": glyphs,
-                     "groups": groups,
-                     "ranges": ranges}
+        self.enum = enum
 
 class ScriptDefinition(ast.Statement):
     def __init__(self, location, name, tag, langs):

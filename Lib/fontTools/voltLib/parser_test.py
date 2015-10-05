@@ -60,21 +60,24 @@ class ParserTest(unittest.TestCase):
         ).statements
         self.assertEqual((def_group.name, def_group.enum),
                          ("KERN_lc_a_2ND",
-                          {"glyphs": ["a", "aacute", "abreve", "acircumflex",
-                                      "adieresis", "ae", "agrave", "amacron",
-                                      "aogonek", "aring", "atilde"],
-                           "groups": [],
-                           "ranges": []}))
-        [def_group] = self.parse(
+                          ["a", "aacute", "abreve", "acircumflex", "adieresis",
+                           "ae", "agrave", "amacron", "aogonek", "aring",
+                           "atilde"]))
+        [def_group1, def_group2] = self.parse(
+            'DEF_GROUP "aaccented"\n'
+            'ENUM GLYPH "aacute" GLYPH "abreve" GLYPH "acircumflex" '
+            'GLYPH "adieresis" GLYPH "ae" GLYPH "agrave" GLYPH "amacron" '
+            'GLYPH "aogonek" GLYPH "aring" GLYPH "atilde" END_ENUM\n'
+            'END_GROUP\n'
             'DEF_GROUP "KERN_lc_a_2ND"\n'
             'ENUM GLYPH "a" GROUP "aaccented" END_ENUM\n'
             'END_GROUP'
         ).statements
-        self.assertEqual((def_group.name, def_group.enum),
+        self.assertEqual((def_group2.name, def_group2.enum),
                          ("KERN_lc_a_2ND",
-                          {"glyphs": ["a"],
-                           "groups": ["aaccented"],
-                           "ranges": []}))
+                          ["a", "aacute", "abreve", "acircumflex", "adieresis",
+                           "ae", "agrave", "amacron", "aogonek", "aring",
+                           "atilde"]))
         [def_group] = self.parse(
             'DEF_GROUP "KERN_lc_a_2ND"\n'
             'ENUM RANGE "a" "atilde" GLYPH "b" RANGE "c" "cdotaccent" '
@@ -83,10 +86,7 @@ class ParserTest(unittest.TestCase):
         ).statements
         self.assertEqual((def_group.name, def_group.enum),
                          ("KERN_lc_a_2ND",
-                          {"glyphs": ["b"],
-                           "groups": [],
-                           "ranges": [("a", "atilde"),
-                                      ("c", "cdotaccent")]}))
+                          [("a", "atilde"), "b", ("c", "cdotaccent")]))
 
     def test_group_duplicate(self):
         self.assertRaisesRegex(

@@ -83,7 +83,7 @@ class Parser(object):
         if self.groups_.resolve(name) is not None:
             raise VoltLibError('Glyph group "%s" already defined' % name,
                                location)
-        def_group = ast.GroupDefinition(location, name, **enum)
+        def_group = ast.GroupDefinition(location, name, enum)
         self.groups_.define(name, def_group)
         return def_group
 
@@ -149,20 +149,24 @@ class Parser(object):
         return enum
 
     def parse_coverage_(self):
-        coverage = {'glyphs': [], 'groups': [], 'ranges': []}
+        coverage = []
         while self.next_token_ in ("GLYPH", "GROUP", "RANGE"):
             if self.next_token_ == "GLYPH":
                 self.expect_keyword_("GLYPH")
                 name = self.expect_string_()
-                coverage['glyphs'].append(name)
+                coverage.append(name)
             elif self.next_token_ == "GROUP":
                 self.expect_keyword_("GROUP")
                 name = self.expect_string_()
-                coverage['groups'].append(name)
+                group = self.groups_.resolve(name)
+                if group is None:
+                    raise VoltLibError('Glyph group "%s" is not defined' % name,
+                                       location)
+                coverage.extend(group.enum)
             elif self.next_token_ == "RANGE":
                 self.expect_keyword_("RANGE")
                 start, end = self.expect_string_(), self.expect_string_()
-                coverage['ranges'].append((start, end))
+                coverage.append((start, end))
         return coverage
 
     def is_cur_keyword_(self, k):
