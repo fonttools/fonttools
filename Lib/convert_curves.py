@@ -31,6 +31,8 @@ from robofab.objects.objectsRF import RSegment, RPoint
 
 
 def replace_segments(contour, segments):
+    """Replace the segments of a given contour."""
+
     try:
         contour.replace_segments(segments)
         return
@@ -44,6 +46,8 @@ def replace_segments(contour, segments):
 
 
 def as_quadratic(segment, points):
+    """Return a new segment with given points and type qcurve."""
+
     try:
         return segment.as_quadratic(points)
     except AttributeError:
@@ -54,6 +58,7 @@ def as_quadratic(segment, points):
 _zip = zip
 def zip(*args):
     """Ensure each argument to zip has the same length."""
+
     if len(set(len(a) for a in args)) != 1:
         msg = 'Args to zip in convert_curves.py should have equal lengths: '
         raise ValueError(msg + ' '.join(str(a) for a in args))
@@ -138,7 +143,8 @@ def cubic_approx_spline(p, n):
     """Approximate a cubic bezier curve with a spline of n quadratics.
 
     Returns None if n is 1 and the cubic's control vectors are parallel, since
-    no quadratic exists with this cubic's tangents."""
+    no quadratic exists with this cubic's tangents.
+    """
 
     if n == 1:
         try:
