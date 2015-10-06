@@ -50,19 +50,21 @@ class ParserTest(unittest.TestCase):
                           def_glyph.type, def_glyph.components),
                          ("glyph20", 20, None, None, None))
 
-    def test_def_group(self):
+    def test_def_group_glyphs(self):
         [def_group] = self.parse(
-            'DEF_GROUP "KERN_lc_a_2ND"\n'
-            'ENUM GLYPH "a" GLYPH "aacute" GLYPH "abreve" GLYPH "acircumflex" '
+            'DEF_GROUP "aaccented"\n'
+            'ENUM GLYPH "aacute" GLYPH "abreve" GLYPH "acircumflex" '
             'GLYPH "adieresis" GLYPH "ae" GLYPH "agrave" GLYPH "amacron" '
             'GLYPH "aogonek" GLYPH "aring" GLYPH "atilde" END_ENUM\n'
-            'END_GROUP'
+            'END_GROUP\n'
         ).statements
         self.assertEqual((def_group.name, def_group.enum),
-                         ("KERN_lc_a_2ND",
-                          ["a", "aacute", "abreve", "acircumflex", "adieresis",
+                         ("aaccented",
+                          ["aacute", "abreve", "acircumflex", "adieresis",
                            "ae", "agrave", "amacron", "aogonek", "aring",
                            "atilde"]))
+
+    def test_def_group_glyphs_and_group(self):
         [def_group1, def_group2] = self.parse(
             'DEF_GROUP "aaccented"\n'
             'ENUM GLYPH "aacute" GLYPH "abreve" GLYPH "acircumflex" '
@@ -78,6 +80,8 @@ class ParserTest(unittest.TestCase):
                           ["a", "aacute", "abreve", "acircumflex", "adieresis",
                            "ae", "agrave", "amacron", "aogonek", "aring",
                            "atilde"]))
+
+    def test_def_group_range(self):
         [def_group] = self.parse(
             'DEF_GROUP "KERN_lc_a_2ND"\n'
             'ENUM RANGE "a" "atilde" GLYPH "b" RANGE "c" "cdotaccent" '
