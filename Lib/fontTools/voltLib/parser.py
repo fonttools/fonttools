@@ -219,6 +219,7 @@ class Parser(object):
 
     def parse_coverage_(self):
         coverage = []
+        location = self.cur_token_location_
         while self.next_token_ in ("GLYPH", "GROUP", "RANGE"):
             if self.next_token_ == "GLYPH":
                 self.expect_keyword_("GLYPH")
