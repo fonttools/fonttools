@@ -61,3 +61,10 @@ class SubstitutionDefinition(ast.Statement):
     def __init__(self, location, src, dest):
         ast.Statement.__init__(self, location)
         self.mapping = zip(src, dest)
+
+class ContextDefinition(ast.Statement):
+    def __init__(self, location, ex_or_in, left=[], right=[]):
+        ast.Statement.__init__(self, location)
+        self.ex_or_in = ex_or_in
+        self.left = left
+        self.right = right

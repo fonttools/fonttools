@@ -162,8 +162,8 @@ class Parser(object):
         if self.next_token_ == "COMMENTS":
             self.expect_keyword_("COMMENTS")
             comments = self.expect_string_()
-        context = None
-        if self.next_token_ in ("EXCEPT_CONTEXT", "IN_CONTEXT"):
+        context = []
+        while self.next_token_ in ("EXCEPT_CONTEXT", "IN_CONTEXT"):
             context = self.parse_context_()
         as_pos_or_sub = self.expect_name_()
         sub = None
@@ -178,16 +178,30 @@ class Parser(object):
         return def_lookup
 
     def parse_context_(self):
-        except_or_in = self.expect_name_()
-        assert except_or_in in ("EXCEPT_CONTEXT", "IN_CONTEXT")
-        side = None
-        coverage = None
-        if self.next_token_ != "END_CONTEXT" :
-            side = self.expect_name_()
-            assert side in ("LEFT", "RIGHT")
-            coverage = self.parse_coverage_()
-        self.expect_keyword_("END_CONTEXT")
-        return (except_or_in, side)
+        location = self.cur_token_location_
+        contexts = []
+        while self.next_token_ in ("EXCEPT_CONTEXT", "IN_CONTEXT"):
+            side = None
+            coverage = None
+            ex_or_in = self.expect_name_()
+            side_contexts = []
+            if self.next_token_ != "END_CONTEXT":
+                left = []
+                right = []
+                while self.next_token_ in ("LEFT", "RIGHT"):
+                    side = self.expect_name_()
+                    coverage = self.parse_coverage_()
+                    if side == "LEFT":
+                        left.append(coverage)
+                    else:
+                        right.append(coverage)
+                    self.expect_keyword_("END_CONTEXT")
+                context = ast.ContextDefinition(location, ex_or_in, left,
+                                                right)
+                contexts.append(context)
+            else:
+                self.expect_keyword_("END_CONTEXT")
+        return contexts
 
     def parse_substitution_(self):
         assert self.is_cur_keyword_("AS_SUBSTITUTION")
