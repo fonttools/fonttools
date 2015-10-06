@@ -36,7 +36,8 @@ class Parser(object):
                                        self.cur_token_location_)
                 return self.doc_
             else:
-                raise VoltLibError("Expected DEF_GLYPH, DEF_GROUP, DEF_SCRIPT",
+                raise VoltLibError("Expected DEF_GLYPH, DEF_GROUP, "
+                                   "DEF_SCRIPT, DEF_LOOKUP",
                                    self.cur_token_location_)
         return self.doc_
 
