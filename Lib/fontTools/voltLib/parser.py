@@ -253,7 +253,7 @@ class Parser(object):
         if self.cur_token_type_ is Lexer.NAME and self.cur_token_ == keyword:
             return self.cur_token_
         raise VoltLibError("Expected \"%s\"" % keyword,
-                              self.cur_token_location_)
+                           self.cur_token_location_)
 
     def expect_name_(self):
         self.advance_lexer_()
