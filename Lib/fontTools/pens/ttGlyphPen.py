@@ -29,12 +29,15 @@ class TTGlyphPen(AbstractPen):
         self._addPoint(pt, 1)
 
     def moveTo(self, pt):
-        assert (not self.points) or (self.endPts[-1] == len(self.points) - 1)
+        assert (not self.points) or (self.endPts[-1] == len(self.points) - 1), (
+            '"move"-type point must begin a new contour.')
         self.lineTo(pt)
 
     def qCurveTo(self, *points):
         for pt in points[:-1]:
             self._addPoint(pt, 0)
+
+        # last point is None if there are no on-curve points
         if points[-1]:
             self._addPoint(points[-1], 1)
 
@@ -69,8 +72,9 @@ class TTGlyphPen(AbstractPen):
         glyph.flags = array("B", self.types)
         glyph.components = self.components
 
-        # TrueType glyphs can't have both contours and components
         if glyph.components:
+            assert not glyph.endPtsOfContours, (
+                "TrueType glyph can't have both contours and components.")
             glyph.numberOfContours = -1
         else:
             glyph.numberOfContours = len(glyph.endPtsOfContours)
