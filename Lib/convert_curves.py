@@ -211,16 +211,16 @@ def convert_collection_to_quadratic(p0, p1, p2, p3, max_n, max_err):
     return splines
 
 
-def cubic_segment_to_quadratic(c, sid, max_n, max_err, report):
+def cubic_segment_to_quadratic(contour, segment_id, max_n, max_err, report):
     """Return a quadratic approximation of a cubic segment."""
 
-    segment = c[sid]
+    segment = contour[segment_id]
     if segment.type != 'curve':
         raise TypeError('Segment type not curve')
 
     # assumes that a curve type will always be proceeded by another point on the
     # same contour
-    prev_segment = c[sid - 1]
+    prev_segment = contour[segment_id - 1]
     points = convert_to_quadratic(prev_segment.points[-1], segment.points[0],
                                   segment.points[1], segment.points[2],
                                   max_n, max_err)
@@ -237,19 +237,19 @@ def cubic_segment_to_quadratic(c, sid, max_n, max_err, report):
     return as_quadratic(segment, points)
 
 
-def glyph_curves_to_quadratic(g, max_n, max_err, report):
+def glyph_curves_to_quadratic(glyph, max_n, max_err, report):
     """Convert a glyph's curves to quadratic, in place."""
 
-    for c in g:
+    for contour in glyph:
         segments = []
-        for i in range(len(c)):
-            s = c[i]
-            if s.type == 'curve':
+        for i in range(len(contour)):
+            segment = contour[i]
+            if segment.type == 'curve':
                 segments.append(cubic_segment_to_quadratic(
-                    c, i, max_n, max_err, report))
+                    contour, i, max_n, max_err, report))
             else:
-                segments.append(s)
-        replace_segments(c, segments)
+                segments.append(segment)
+        replace_segments(contour, segments)
 
 
 def fonts_to_quadratic(fonts, compatible=False, max_n=10, max_err=5):
