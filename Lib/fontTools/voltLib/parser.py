@@ -179,11 +179,14 @@ class Parser(object):
     def parse_context_(self):
         except_or_in = self.expect_name_()
         assert except_or_in in ("EXCEPT_CONTEXT", "IN_CONTEXT")
-        left_or_right = None
-        if self.next_token_ in ("LEFT", "RIGHT"):
-            left_or_right = self.expect_name_()
+        side = None
+        coverage = None
+        if self.next_token_ != "END_CONTEXT" :
+            side = self.expect_name_()
+            assert side in ("LEFT", "RIGHT")
+            coverage = self.parse_coverage_()
         self.expect_keyword_("END_CONTEXT")
-        return (except_or_in, left_or_right)
+        return (except_or_in, side)
 
     def parse_substitution_(self):
         assert self.is_cur_keyword_("AS_SUBSTITUTION")
@@ -220,6 +223,9 @@ class Parser(object):
     def parse_coverage_(self):
         coverage = []
         location = self.cur_token_location_
+        if self.next_token_ == "ENUM":
+            self.advance_lexer_()
+            return self.parse_enum_()
         while self.next_token_ in ("GLYPH", "GROUP", "RANGE"):
             if self.next_token_ == "GLYPH":
                 self.expect_keyword_("GLYPH")
