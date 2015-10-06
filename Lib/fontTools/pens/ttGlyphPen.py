@@ -35,7 +35,8 @@ class TTGlyphPen(AbstractPen):
     def qCurveTo(self, *points):
         for pt in points[:-1]:
             self._addPoint(pt, 0)
-        self._addPoint(points[-1], 1)
+        if points[-1]:
+            self._addPoint(points[-1], 1)
 
     def closePath(self):
         endPt = len(self.points) - 1
