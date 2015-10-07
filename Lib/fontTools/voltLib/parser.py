@@ -223,10 +223,10 @@ class Parser(object):
     def parse_position_(self):
         assert self.is_cur_keyword_("AS_POSITION")
         location = self.cur_token_location_
-        position = self.expect_name_()
-        assert position in ("ATTACH", "ATTACH_CURSIVE", "ADJUST_PAIR",
+        pos_type = self.expect_name_()
+        assert pos_type in ("ATTACH", "ATTACH_CURSIVE", "ADJUST_PAIR",
                             "ADJUST_SINGLE")
-        if position == "ATTACH":
+        if pos_type == "ATTACH":
             coverage = self.parse_coverage_()
             self.expect_keyword_("TO")
             coverage_to = self.parse_coverage_()
@@ -234,19 +234,38 @@ class Parser(object):
             self.expect_keyword_("ANCHOR")
             anchor_name = self.expect_string_()
             self.expect_keyword_("END_ATTACH")
-            pos = ast.PositionAttachDefinition(location, coverage, coverage_to,
+            position = ast.PositionAttachDefinition(location, coverage, coverage_to,
                                                anchor_name)
-        elif position == "ATTACH_CURSIVE":
+        elif pos_type == "ATTACH_CURSIVE":
             raise VoltLibError("ATTACH_CURSIVE not yet implemented.",
                                location)
-        elif position == "ADJUST_PAIR":
-            raise VoltLibError("ATTACH_CURSIVE not yet implemented.",
-                               location)
-        elif position == "ADJUST_SINGLE":
+        elif pos_type == "ADJUST_PAIR":
+            coverages_1 = []
+            coverages_2 = []
+            adjust = {}
+            while self.next_token_ == "FIRST":
+                self.advance_lexer_()
+                coverage_1 = self.parse_coverage_()
+                coverages_1.append(coverage_1)
+            while self.next_token_ == "SECOND":
+                self.advance_lexer_()
+                coverage_2 = self.parse_coverage_()
+                coverages_2.append(coverage_2)
+            while self.next_token_ != "END_ADJUST":
+                id_1 = self.expect_number_()
+                id_2 = self.expect_number_()
+                self.expect_keyword_("BY")
+                pos_1 = self.parse_pos_()
+                pos_2 = self.parse_pos_()
+                adjust[(id_1, id_2)] = (pos_1, pos_2)
+            self.expect_keyword_("END_ADJUST")
+            position = ast.PositionAdjustPairDefinition(location, coverages_1,
+                                                        coverages_2, adjust)
+        elif pos_type == "ADJUST_SINGLE":
             raise VoltLibError("ADJUST_SINGLE not yet implemented.",
                                location)
         self.expect_keyword_("END_POSITION")
-        return pos
+        return position
 
     def parse_def_anchor_(self):
         assert self.is_cur_keyword_("DEF_ANCHOR")

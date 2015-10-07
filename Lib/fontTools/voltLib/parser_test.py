@@ -261,6 +261,31 @@ class ParserTest(unittest.TestCase):
             ("top", 31, "a", 1, False, (None, 210, 450, {}, {}, {}))
         )
 
+    def test_adjust_pair(self):
+        [lookup] = self.parse(
+            'DEF_LOOKUP "kern1" PROCESS_BASE PROCESS_MARKS ALL '
+            'DIRECTION RTL\n'
+            'IN_CONTEXT\n'
+            'END_CONTEXT\n'
+            'AS_POSITION\n'
+            'ADJUST_PAIR\n'
+            ' FIRST GLYPH "A"\n'
+            ' SECOND GLYPH "V"\n'
+            ' 1 2 BY POS ADV -30 END_POS POS END_POS\n'
+            ' 2 1 BY POS ADV -30 END_POS POS END_POS\n'
+            'END_ADJUST\n'
+            'END_POSITION\n'
+        ).statements
+        self.assertEqual(
+            (lookup.name, lookup.pos.coverages_1, lookup.pos.coverages_2,
+             lookup.pos.adjust),
+            ("kern1", [["A"]], [["V"]],
+             {(1, 2): ((-30, None, None, {}, {}, {}),
+                       (None, None, None, {}, {}, {})),
+              (2, 1): ((-30, None, None, {}, {}, {}),
+                       (None, None, None, {}, {}, {}))})
+        )
+
     def test_def_anchor(self):
         [anchor] = self.parse(
             'DEF_ANCHOR "MARK_top" ON 120 GLYPH acutecomb COMPONENT 1 AT POS DX 0 DY 450 END_POS END_ANCHOR'

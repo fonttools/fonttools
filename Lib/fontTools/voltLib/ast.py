@@ -69,6 +69,13 @@ class PositionAttachDefinition(ast.Statement):
         self.coverage_to = coverage_to
         self.anchor = anchor
 
+class PositionAdjustPairDefinition(ast.Statement):
+    def __init__(self, location, coverages_1, coverages_2, adjust):
+        ast.Statement.__init__(self, location)
+        self.coverages_1 = coverages_1
+        self.coverages_2 = coverages_2
+        self.adjust = adjust
+
 class ContextDefinition(ast.Statement):
     def __init__(self, location, ex_or_in, left=[], right=[]):
         ast.Statement.__init__(self, location)
