@@ -21,6 +21,10 @@ class LexerTest(unittest.TestCase):
                          [(Lexer.STRING, "foo"), (Lexer.STRING, "bar")])
         self.assertRaises(VoltLibError, lambda: lex('"foo\n bar"'))
 
+    def test_name(self):
+        self.assertEqual(lex('DEF_FOO bar.alt1'),
+                         [(Lexer.NAME, "DEF_FOO"), (Lexer.NAME, "bar.alt1")])
+
     def test_number(self):
         self.assertEqual(lex("123 -456"),
                          [(Lexer.NUMBER, 123), (Lexer.NUMBER, -456)])
