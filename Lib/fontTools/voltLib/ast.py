@@ -63,11 +63,10 @@ class SubstitutionDefinition(ast.Statement):
         self.mapping = zip(src, dest)
 
 class PositionAttachDefinition(ast.Statement):
-    def __init__(self, location, coverage, coverage_to, anchor):
+    def __init__(self, location, coverage, coverage_to):
         ast.Statement.__init__(self, location)
         self.coverage = coverage
         self.coverage_to = coverage_to
-        self.anchor = anchor
 
 class PositionAdjustPairDefinition(ast.Statement):
     def __init__(self, location, coverages_1, coverages_2, adjust):

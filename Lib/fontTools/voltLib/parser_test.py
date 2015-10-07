@@ -229,25 +229,30 @@ class ParserTest(unittest.TestCase):
                           []))
 
     def test_def_attach(self):
-        [lookup, anchor1, anchor2] = self.parse(
+        [lookup, anchor1, anchor2, anchor3, anchor4] = self.parse(
             'DEF_LOOKUP "anchor_top" PROCESS_BASE PROCESS_MARKS ALL '
             'DIRECTION RTL\n'
             'IN_CONTEXT\n'
             'END_CONTEXT\n'
             'AS_POSITION\n'
-            'ATTACH GLYPH "a"\n'
-            'TO GLYPH "acutecomb" AT ANCHOR "top"\n'
+            'ATTACH GLYPH "a" GLYPH "e"\n'
+            'TO GLYPH "acutecomb" AT ANCHOR "top" '
+            'GLYPH "gravecomb" AT ANCHOR "top"\n'
             'END_ATTACH\n'
             'END_POSITION\n'
             'DEF_ANCHOR "MARK_top" ON 120 GLYPH acutecomb COMPONENT 1 '
             'AT POS DX 0 DY 450 END_POS END_ANCHOR\n'
+            'DEF_ANCHOR "MARK_top" ON 121 GLYPH gravecomb COMPONENT 1 '
+            'AT POS DX 0 DY 450 END_POS END_ANCHOR\n'
             'DEF_ANCHOR "top" ON 31 GLYPH a COMPONENT 1 '
             'AT POS DX 210 DY 450 END_POS END_ANCHOR\n'
+            'DEF_ANCHOR "top" ON 35 GLYPH e COMPONENT 1 '
+            'AT POS DX 215 DY 450 END_POS END_ANCHOR\n'
         ).statements
         self.assertEqual(
-            (lookup.name, lookup.pos.coverage, lookup.pos.coverage_to,
-             lookup.pos.anchor),
-            ("anchor_top", ['a'], ['acutecomb'], 'top')
+            (lookup.name, lookup.pos.coverage, lookup.pos.coverage_to),
+            ("anchor_top", ["a", "e"], [(["acutecomb"], "top"),
+                                        (["gravecomb"], "top")])
         )
         self.assertEqual(
             (anchor1.name, anchor1.gid, anchor1.glyph_name, anchor1.component,
@@ -258,7 +263,18 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(
             (anchor2.name, anchor2.gid, anchor2.glyph_name, anchor2.component,
              anchor2.locked, anchor2.pos),
+            ("MARK_top", 121, "gravecomb", 1, False, (None, 0, 450, {}, {},
+             {}))
+        )
+        self.assertEqual(
+            (anchor3.name, anchor3.gid, anchor3.glyph_name, anchor3.component,
+             anchor3.locked, anchor3.pos),
             ("top", 31, "a", 1, False, (None, 210, 450, {}, {}, {}))
+        )
+        self.assertEqual(
+            (anchor4.name, anchor4.gid, anchor4.glyph_name, anchor4.component,
+             anchor4.locked, anchor4.pos),
+            ("top", 35, "e", 1, False, (None, 215, 450, {}, {}, {}))
         )
 
     def test_adjust_pair(self):

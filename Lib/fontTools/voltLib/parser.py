@@ -228,14 +228,17 @@ class Parser(object):
                             "ADJUST_SINGLE")
         if pos_type == "ATTACH":
             coverage = self.parse_coverage_()
+            coverage_to = []
             self.expect_keyword_("TO")
-            coverage_to = self.parse_coverage_()
-            self.expect_keyword_("AT")
-            self.expect_keyword_("ANCHOR")
-            anchor_name = self.expect_string_()
+            while self.next_token_ != "END_ATTACH":
+                cov = self.parse_coverage_()
+                self.expect_keyword_("AT")
+                self.expect_keyword_("ANCHOR")
+                anchor_name = self.expect_string_()
+                coverage_to.append((cov, anchor_name))
             self.expect_keyword_("END_ATTACH")
-            position = ast.PositionAttachDefinition(location, coverage, coverage_to,
-                                               anchor_name)
+            position = ast.PositionAttachDefinition(location, coverage,
+                                                    coverage_to)
         elif pos_type == "ATTACH_CURSIVE":
             raise VoltLibError("ATTACH_CURSIVE not yet implemented.",
                                location)
