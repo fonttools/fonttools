@@ -62,9 +62,26 @@ class SubstitutionDefinition(ast.Statement):
         ast.Statement.__init__(self, location)
         self.mapping = zip(src, dest)
 
+class PositionAttachDefinition(ast.Statement):
+    def __init__(self, location, coverage, coverage_to, anchor):
+        ast.Statement.__init__(self, location)
+        self.coverage = coverage
+        self.coverage_to = coverage_to
+        self.anchor = anchor
+
 class ContextDefinition(ast.Statement):
     def __init__(self, location, ex_or_in, left=[], right=[]):
         ast.Statement.__init__(self, location)
         self.ex_or_in = ex_or_in
         self.left = left
         self.right = right
+
+class AnchorDefinition(ast.Statement):
+    def __init__(self, location, name, gid, glyph_name, component, locked, pos):
+        ast.Statement.__init__(self, location)
+        self.name = name
+        self.gid = gid
+        self.glyph_name = glyph_name
+        self.component = component
+        self.locked = locked
+        self.pos = pos

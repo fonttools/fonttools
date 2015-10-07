@@ -30,6 +30,8 @@ class Parser(object):
                 statements.append(self.parse_def_script_())
             elif self.is_cur_keyword_("DEF_LOOKUP"):
                 statements.append(self.parse_def_lookup_())
+            elif self.is_cur_keyword_("DEF_ANCHOR"):
+                statements.append(self.parse_def_anchor_())
             elif self.is_cur_keyword_("END"):
                 if self.next_token_type_ is not None:
                     raise VoltLibError("Expected the end of the file",
@@ -37,7 +39,7 @@ class Parser(object):
                 return self.doc_
             else:
                 raise VoltLibError("Expected DEF_GLYPH, DEF_GROUP, "
-                                   "DEF_SCRIPT, DEF_LOOKUP",
+                                   "DEF_SCRIPT, DEF_LOOKUP, DEF_ANCHOR",
                                    self.cur_token_location_)
         return self.doc_
 
@@ -221,7 +223,86 @@ class Parser(object):
     def parse_position_(self):
         assert self.is_cur_keyword_("AS_POSITION")
         location = self.cur_token_location_
-        raise VoltLibError("AS_POSITION not yet implemented.", location)
+        position = self.expect_name_()
+        assert position in ("ATTACH", "ATTACH_CURSIVE", "ADJUST_PAIR",
+                            "ADJUST_SINGLE")
+        if position == "ATTACH":
+            coverage = self.parse_coverage_()
+            self.expect_keyword_("TO")
+            coverage_to = self.parse_coverage_()
+            self.expect_keyword_("AT")
+            self.expect_keyword_("ANCHOR")
+            anchor_name = self.expect_string_()
+            self.expect_keyword_("END_ATTACH")
+            pos = ast.PositionAttachDefinition(location, coverage, coverage_to,
+                                               anchor_name)
+        elif position == "ATTACH_CURSIVE":
+            raise VoltLibError("ATTACH_CURSIVE not yet implemented.",
+                               location)
+        elif position == "ADJUST_PAIR":
+            raise VoltLibError("ATTACH_CURSIVE not yet implemented.",
+                               location)
+        elif position == "ADJUST_SINGLE":
+            raise VoltLibError("ADJUST_SINGLE not yet implemented.",
+                               location)
+        self.expect_keyword_("END_POSITION")
+        return pos
+
+    def parse_def_anchor_(self):
+        assert self.is_cur_keyword_("DEF_ANCHOR")
+        location = self.cur_token_location_
+        name = self.expect_string_()
+        self.expect_keyword_("ON")
+        gid = self.expect_number_()
+        self.expect_keyword_("GLYPH")
+        glyph_name = self.expect_name_()
+        self.expect_keyword_("COMPONENT")
+        component = self.expect_number_()
+        if self.next_token_ == "LOCKED":
+            locked = True
+            self.advance_lexer_()
+        else:
+            locked = False
+        self.expect_keyword_("AT")
+        pos = self.parse_pos_()
+        self.expect_keyword_("END_ANCHOR")
+        anchor = ast.AnchorDefinition(location, name, gid, glyph_name,
+                                      component, locked, pos)
+        return anchor
+
+    def parse_pos_(self):
+        self.advance_lexer_()
+        assert self.is_cur_keyword_("POS")
+        location = self.cur_token_location_
+        adv = None
+        dx = None
+        dy = None
+        adv_adjust_by = {}
+        dx_adjust_by = {}
+        dy_adjust_by = {}
+        if self.next_token_ == "ADV":
+            self.advance_lexer_()
+            adv = self.expect_number_()
+            while self.next_token_ == "ADJUST_BY":
+                adjustment = self.expect_number_()
+                size = self.expect_number_()
+                adv_adjust_by[size] = adjustment
+        if self.next_token_ == "DX":
+            self.advance_lexer_()
+            dx = self.expect_number_()
+            while self.next_token_ == "ADJUST_BY":
+                adjustment = self.expect_number_()
+                size = self.expect_number_()
+                dx_adjust_by[size] = adjustment
+        if self.next_token_ == "DY":
+            self.advance_lexer_()
+            dy = self.expect_number_()
+            while self.next_token_ == "ADJUST_BY":
+                adjustment = self.expect_number_()
+                size = self.expect_number_()
+                dy_adjust_by[size] = adjustment
+        self.expect_keyword_("END_POS")
+        return (adv, dx, dy)
 
     def parse_unicode_values_(self):
         location = self.cur_token_location_
