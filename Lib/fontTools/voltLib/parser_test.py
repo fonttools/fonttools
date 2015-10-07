@@ -165,7 +165,7 @@ class ParserTest(unittest.TestCase):
             'END_SUB\n'
             'END_SUBSTITUTION'
         ).statements
-        self.assertEqual((lookup.name, lookup.sub.mapping),
+        self.assertEqual((lookup.name, list(lookup.sub.mapping)),
                          ("smcp", [("a", "a.sc"), ("b", "b.sc")]))
 
     def test_substitution_single_in_context(self):
@@ -187,7 +187,7 @@ class ParserTest(unittest.TestCase):
             'END_SUBSTITUTION'
         ).statements
         context = lookup.context[0]
-        self.assertEqual((lookup.name, lookup.sub.mapping, context.ex_or_in,
+        self.assertEqual((lookup.name, list(lookup.sub.mapping), context.ex_or_in,
                           context.left, context.right),
                          ("fracdnom",
                           [("one", "one.dnom"), ("two", "two.dnom")],
