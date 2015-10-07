@@ -195,7 +195,7 @@ class Parser(object):
                         left.append(coverage)
                     else:
                         right.append(coverage)
-                    self.expect_keyword_("END_CONTEXT")
+                self.expect_keyword_("END_CONTEXT")
                 context = ast.ContextDefinition(location, ex_or_in, left,
                                                 right)
                 contexts.append(context)

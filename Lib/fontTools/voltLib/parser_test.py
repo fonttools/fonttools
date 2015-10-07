@@ -168,6 +168,66 @@ class ParserTest(unittest.TestCase):
         self.assertEqual((lookup.name, lookup.sub.mapping),
                          ("smcp", [("a", "a.sc"), ("b", "b.sc")]))
 
+    def test_substitution_single_in_context(self):
+        [group, lookup] = self.parse(
+            'DEF_GROUP "Denominators" ENUM GLYPH "one.dnom" GLYPH "two.dnom" '
+            'END_ENUM END_GROUP\n'
+            'DEF_LOOKUP "fracdnom" PROCESS_BASE PROCESS_MARKS ALL '
+            'DIRECTION LTR\n'
+            'IN_CONTEXT LEFT ENUM GROUP "Denominators" GLYPH "fraction" '
+            'END_ENUM\n'
+            'END_CONTEXT\n'
+            'AS_SUBSTITUTION\n'
+            'SUB GLYPH "one"\n'
+            'WITH GLYPH "one.dnom"\n'
+            'END_SUB\n'
+            'SUB GLYPH "two"\n'
+            'WITH GLYPH "two.dnom"\n'
+            'END_SUB\n'
+            'END_SUBSTITUTION'
+        ).statements
+        context = lookup.context[0]
+        self.assertEqual((lookup.name, lookup.sub.mapping, context.ex_or_in,
+                          context.left, context.right),
+                         ("fracdnom",
+                          [("one", "one.dnom"), ("two", "two.dnom")],
+                          "IN_CONTEXT",
+                          [["one.dnom", "two.dnom", "fraction"]],
+                          []))
+
+    def test_substitution_single_in_contexts(self):
+        [group, lookup] = self.parse(
+            'DEF_GROUP "Hebrew" ENUM GLYPH "uni05D0" GLYPH "uni05D1" '
+            'END_ENUM END_GROUP\n'
+            'DEF_LOOKUP "HebrewCurrency" PROCESS_BASE PROCESS_MARKS ALL '
+            'DIRECTION LTR\n'
+            'IN_CONTEXT\n'
+            'RIGHT GROUP "Hebrew"\n'
+            'RIGHT GLYPH "one.Hebr"\n'
+            'END_CONTEXT\n'
+            'IN_CONTEXT\n'
+            'LEFT GROUP "Hebrew"\n'
+            'LEFT GLYPH "one.Hebr"\n'
+            'END_CONTEXT\n'
+            'AS_SUBSTITUTION\n'
+            'SUB GLYPH "dollar"\n'
+            'WITH GLYPH "dollar.Hebr"\n'
+            'END_SUB\n'
+            'END_SUBSTITUTION'
+        ).statements
+        context1 = lookup.context[0]
+        context2 = lookup.context[1]
+        self.assertEqual((lookup.name, context1.ex_or_in, context1.left,
+                          context1.right, context2.ex_or_in, context2.left,
+                          context2.right),
+                         ("HebrewCurrency",
+                          "IN_CONTEXT",
+                          [],
+                          [["uni05D0", "uni05D1"], ["one.Hebr"]],
+                          "IN_CONTEXT",
+                          [["uni05D0", "uni05D1"], ["one.Hebr"]],
+                          []))
+
     def setUp(self):
         self.tempdir = None
         self.num_tempfiles = 0
