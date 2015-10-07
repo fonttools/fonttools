@@ -171,7 +171,7 @@ class Parser(object):
         if as_pos_or_sub == "AS_SUBSTITUTION":
             sub = self.parse_substitution_()
         elif as_pos_or_sub == "AS_POSITION":
-            pos = self.parse_positioning_()
+            pos = self.parse_position_()
         def_lookup = ast.LookupDefinition(location, name, base, marks,
                                           all_flag, direction, comments,
                                           context, sub, pos)
