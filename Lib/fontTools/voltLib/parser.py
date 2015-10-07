@@ -272,8 +272,8 @@ class Parser(object):
 
     def parse_pos_(self):
         self.advance_lexer_()
-        assert self.is_cur_keyword_("POS")
         location = self.cur_token_location_
+        assert self.is_cur_keyword_("POS"), location
         adv = None
         dx = None
         dy = None
@@ -302,7 +302,7 @@ class Parser(object):
                 size = self.expect_number_()
                 dy_adjust_by[size] = adjustment
         self.expect_keyword_("END_POS")
-        return (adv, dx, dy)
+        return (adv, dx, dy, adv_adjust_by, dx_adjust_by, dy_adjust_by)
 
     def parse_unicode_values_(self):
         location = self.cur_token_location_

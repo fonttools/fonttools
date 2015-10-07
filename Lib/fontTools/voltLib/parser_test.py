@@ -252,12 +252,13 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(
             (anchor1.name, anchor1.gid, anchor1.glyph_name, anchor1.component,
              anchor1.locked, anchor1.pos),
-            ("MARK_top", 120, "acutecomb", 1, False, (None, 0, 450))
+            ("MARK_top", 120, "acutecomb", 1, False, (None, 0, 450, {}, {},
+             {}))
         )
         self.assertEqual(
             (anchor2.name, anchor2.gid, anchor2.glyph_name, anchor2.component,
              anchor2.locked, anchor2.pos),
-            ("top", 31, "a", 1, False, (None, 210, 450))
+            ("top", 31, "a", 1, False, (None, 210, 450, {}, {}, {}))
         )
 
     def test_def_anchor(self):
@@ -267,7 +268,8 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(
             (anchor.name, anchor.gid, anchor.glyph_name, anchor.component,
              anchor.locked, anchor.pos),
-            ("MARK_top", 120, "acutecomb", 1, False, (None, 0, 450))
+            ("MARK_top", 120, "acutecomb", 1, False, (None, 0, 450, {}, {},
+                                                      {}))
         )
 
     def setUp(self):
