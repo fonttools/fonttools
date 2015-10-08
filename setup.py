@@ -12,14 +12,14 @@ except ImportError:
 try:
 	import numpy
 except ImportError:
-	print "*** Warning: FontTools needs the numpy library for some operations, see:"
-	print "        http://numpy.scipy.org/"
+	print("*** Warning: FontTools needs the numpy library for some operations, see:")
+	print("        http://numpy.scipy.org/")
 
 try:
 	import fontTools
 except ImportError:
-	print "*** Warning: RoboFab needs FontTools for some operations, see:"
-	print "        http://sourceforge.net/projects/fonttools/"
+	print("*** Warning: RoboFab needs FontTools for some operations, see:")
+	print("        http://sourceforge.net/projects/fonttools/")
 
 
 if sys.version_info > (2, 3, 0, 'alpha', 1):
