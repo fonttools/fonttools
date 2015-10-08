@@ -32,6 +32,14 @@ class Parser(object):
                 statements.append(self.parse_def_lookup_())
             elif self.is_cur_keyword_("DEF_ANCHOR"):
                 statements.append(self.parse_def_anchor_())
+            elif self.cur_token_ in ("GRID_PPEM", "PRESENTATION_PPEM",
+                                     "PPOSITIONING_PPEM"):
+                statements.append(self.parse_ppem_())
+            elif self.cur_token_ in ("COMPILER_USEEXTENSIONLOOKUPS",
+                                     "COMPILER_USEPAIRPOSFORMAT2"):
+                statements.append(self.parse_compiler_flag_())
+            elif self.is_cur_keyword_("CMAP_FORMAT"):
+                statements.append(self.parse_cmap_format())
             elif self.is_cur_keyword_("END"):
                 if self.next_token_type_ is not None:
                     raise VoltLibError("Expected the end of the file",
@@ -39,7 +47,11 @@ class Parser(object):
                 return self.doc_
             else:
                 raise VoltLibError("Expected DEF_GLYPH, DEF_GROUP, "
-                                   "DEF_SCRIPT, DEF_LOOKUP, DEF_ANCHOR",
+                                   "DEF_SCRIPT, DEF_LOOKUP, DEF_ANCHOR, "
+                                   "GRID_PPEM, PRESENTATION_PPEM, "
+                                   "PPOSITIONING_PPEM, "
+                                   "COMPILER_USEEXTENSIONLOOKUPS, "
+                                   "COMPILER_USEPAIRPOSFORMAT2, CMAP_FORMAT",
                                    self.cur_token_location_)
         return self.doc_
 
@@ -362,6 +374,28 @@ class Parser(object):
                 start, end = self.expect_string_(), self.expect_string_()
                 coverage.append((start, end))
         return coverage
+
+    def parse_ppem_(self):
+        location = self.cur_token_location_
+        ppem_name = self.cur_token_
+        value = self.expect_number_()
+        setting = ast.SettingDefinition(location, ppem_name, value)
+        return setting
+
+    def parse_compiler_flag_(self):
+        location = self.cur_token_location_
+        flag_name = self.cur_token_
+        value = True
+        setting = ast.SettingDefinition(location, flag_name, value)
+        return setting
+
+    def parse_cmap_format(self):
+        location = self.cur_token_location_
+        name = self.cur_token_
+        value = (self.expect_number_(), self.expect_number_(),
+                 self.expect_number_())
+        setting = ast.SettingDefinition(location, name, value)
+        return setting
 
     def is_cur_keyword_(self, k):
         return (self.cur_token_type_ is Lexer.NAME) and (self.cur_token_ == k)

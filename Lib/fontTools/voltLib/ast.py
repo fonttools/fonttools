@@ -91,3 +91,9 @@ class AnchorDefinition(ast.Statement):
         self.component = component
         self.locked = locked
         self.pos = pos
+
+class SettingDefinition(ast.Statement):
+    def __init__(self, location, name, value):
+        ast.Statement.__init__(self, location)
+        self.name = name
+        self.value = value

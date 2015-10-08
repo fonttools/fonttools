@@ -313,6 +313,47 @@ class ParserTest(unittest.TestCase):
                                                       {}))
         )
 
+    def test_ppem(self):
+        [grid_ppem, pres_ppem, ppos_ppem] = self.parse(
+            'GRID_PPEM 20\n'
+            'PRESENTATION_PPEM 72\n'
+            'PPOSITIONING_PPEM 144\n'
+        ).statements
+        self.assertEqual(
+            ((grid_ppem.name, grid_ppem.value),
+             (pres_ppem.name, pres_ppem.value),
+             (ppos_ppem.name, ppos_ppem.value)),
+            (("GRID_PPEM", 20), ("PRESENTATION_PPEM", 72),
+             ("PPOSITIONING_PPEM", 144))
+        )
+
+    def test_compiler_flags(self):
+        [setting1, setting2] = self.parse(
+            'COMPILER_USEEXTENSIONLOOKUPS\n'
+            'COMPILER_USEPAIRPOSFORMAT2\n'
+        ).statements
+        self.assertEqual(
+            ((setting1.name, setting1.value),
+             (setting2.name, setting2.value)),
+            (("COMPILER_USEEXTENSIONLOOKUPS", True),
+             ("COMPILER_USEPAIRPOSFORMAT2", True))
+        )
+
+    def test_cmap(self):
+        [cmap_format1, cmap_format2, cmap_format3] = self.parse(
+            'CMAP_FORMAT 0 3 4\n'
+            'CMAP_FORMAT 1 0 6\n'
+            'CMAP_FORMAT 3 1 4\n'
+        ).statements
+        self.assertEqual(
+            ((cmap_format1.name, cmap_format1.value),
+             (cmap_format2.name, cmap_format2.value),
+             (cmap_format3.name, cmap_format3.value)),
+            (("CMAP_FORMAT", (0, 3, 4)),
+             ("CMAP_FORMAT", (1, 0, 6)),
+             ("CMAP_FORMAT", (3, 1, 4)))
+        )
+
     def setUp(self):
         self.tempdir = None
         self.num_tempfiles = 0
