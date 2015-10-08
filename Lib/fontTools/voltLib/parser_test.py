@@ -192,7 +192,7 @@ class ParserTest(unittest.TestCase):
                          ("fracdnom",
                           [("one", "one.dnom"), ("two", "two.dnom")],
                           "IN_CONTEXT",
-                          [["one.dnom", "two.dnom", "fraction"]],
+                          [[["one.dnom", "two.dnom", "fraction"]]],
                           []))
 
     def test_substitution_single_in_contexts(self):

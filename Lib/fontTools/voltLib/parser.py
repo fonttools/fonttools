@@ -353,11 +353,13 @@ class Parser(object):
     def parse_coverage_(self):
         coverage = []
         location = self.cur_token_location_
-        if self.next_token_ == "ENUM":
-            self.advance_lexer_()
-            return self.parse_enum_()
-        while self.next_token_ in ("GLYPH", "GROUP", "RANGE"):
-            if self.next_token_ == "GLYPH":
+        while self.next_token_ in ("GLYPH", "GROUP", "RANGE", "ENUM"):
+            if self.next_token_ == "ENUM":
+                self.advance_lexer_()
+                enum = self.parse_enum_()
+                # print(enum)
+                coverage.append(enum)
+            elif self.next_token_ == "GLYPH":
                 self.expect_keyword_("GLYPH")
                 name = self.expect_string_()
                 coverage.append(name)
