@@ -1367,7 +1367,6 @@ class _BaseParser(object):
 	def parse(self, text):
 		from xml.parsers.expat import ParserCreate
 		parser = ParserCreate()
-		parser.returns_unicode = 0  # XXX, Don't remember why. It sucks, though.
 		parser.StartElementHandler = self.startElementHandler
 		parser.EndElementHandler = self.endElementHandler
 		parser.Parse(text)
