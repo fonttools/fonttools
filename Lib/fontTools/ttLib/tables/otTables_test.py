@@ -165,6 +165,27 @@ class MultipleSubstTest(unittest.TestCase):
         self.assertEqual(table.mapping,
                          {'c_t': ['c', 't'], 'f_f_i': ['f', 'f', 'i']})
 
+    def test_fromXML_oldFormat_bug385(self):
+        # https://github.com/behdad/fonttools/issues/385
+        table = otTables.MultipleSubst()
+        table.Format = 1
+        for name, attrs, content in parseXML(
+                '<Coverage Format="1">'
+                '  <Glyph value="o"/>'
+                '  <Glyph value="l"/>'
+                '</Coverage>'
+                '<Sequence>'
+                '  <Substitute value="o"/>'
+                '  <Substitute value="l"/>'
+                '  <Substitute value="o"/>'
+                '</Sequence>'
+                '<Sequence>'
+                '  <Substitute value="o"/>'
+                '</Sequence>'):
+            table.fromXML(name, attrs, content, self.font)
+        self.assertEqual(table.mapping,
+                         {'o': ['o', 'l', 'o'], 'l': ['o']})
+
 
 class LigatureSubstTest(unittest.TestCase):
     def setUp(self):

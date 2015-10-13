@@ -254,7 +254,8 @@ class MultipleSubst(FormatSwitchingBaseTable):
 					self.old_coverage_.append(element_attrs["value"])
 			return
 		if name == "Sequence":
-			glyph = self.old_coverage_[int(attrs["index"])]
+			index = int(attrs.get("index", len(mapping)))
+			glyph = self.old_coverage_[index]
 			glyph_mapping = mapping[glyph] = []
 			for element in content:
 				if not isinstance(element, tuple):
