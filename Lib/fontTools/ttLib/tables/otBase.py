@@ -130,6 +130,7 @@ class OTTableReader(object):
 
 	def advance(self, count):
 		self.pos += count
+
 	def seek(self, pos):
 		self.pos = pos
 
