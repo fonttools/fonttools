@@ -192,7 +192,7 @@ class OTTableReader(object):
 		pos = self.pos
 		newpos = pos + 4
 		value = Tag(self.data[pos:newpos])
-		assert len(value) == 4
+		assert len(value) == 4, value
 		self.pos = newpos
 		return value
 
@@ -447,7 +447,7 @@ class OTTableWriter(object):
 		return subwriter
 
 	def writeUShort(self, value):
-		assert 0 <= value < 0x10000
+		assert 0 <= value < 0x10000, value
 		self.items.append(struct.pack(">H", value))
 
 	def writeShort(self, value):
@@ -458,7 +458,7 @@ class OTTableWriter(object):
 		self.items.append(struct.pack(">B", value))
 
 	def writeUInt24(self, value):
-		assert 0 <= value < 0x1000000
+		assert 0 <= value < 0x1000000, value
 		b = struct.pack(">L", value)
 		self.items.append(b[1:])
 
@@ -470,7 +470,7 @@ class OTTableWriter(object):
 
 	def writeTag(self, tag):
 		tag = Tag(tag).tobytes()
-		assert len(tag) == 4
+		assert len(tag) == 4, tag
 		self.items.append(tag)
 
 	def writeSubTable(self, subWriter):
