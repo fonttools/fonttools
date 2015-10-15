@@ -16,6 +16,11 @@ class OTTableReaderTest(unittest.TestCase):
         self.assertEqual(reader.readLong(), -889274641)
         self.assertEqual(reader.pos, 4)
 
+    def test_readUInt8(self):
+        reader = OTTableReader(deHexStr("C3"))
+        self.assertEqual(reader.readUInt8(), 0xC3)
+        self.assertEqual(reader.pos, 1)
+
     def test_readUShort(self):
         reader = OTTableReader(deHexStr("CA FE"))
         self.assertEqual(reader.readUShort(), 0xCAFE)
@@ -52,6 +57,11 @@ class OTTableWriterTest(unittest.TestCase):
         writer = OTTableWriter(globalState={})
         writer.writeLong(-12345678)
         self.assertEqual(writer.getData(), deHexStr("FF 43 9E B2"))
+
+    def test_writeUInt8(self):
+        writer = OTTableWriter(globalState={})
+        writer.writeUInt8(0xBE)
+        self.assertEqual(writer.getData(), deHexStr("BE"))
 
     def test_writeUShort(self):
         writer = OTTableWriter(globalState={})
