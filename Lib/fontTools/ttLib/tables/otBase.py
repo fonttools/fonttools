@@ -167,6 +167,13 @@ class OTTableReader(object):
 		self.pos = newpos
 		return value
 
+	def readUInt8(self):
+		pos = self.pos
+		newpos = pos + 1
+		value, = struct.unpack(">B", self.data[pos:newpos])
+		self.pos = newpos
+		return value
+
 	def readUInt24(self):
 		pos = self.pos
 		newpos = pos + 3
@@ -445,6 +452,10 @@ class OTTableWriter(object):
 
 	def writeShort(self, value):
 		self.items.append(struct.pack(">h", value))
+
+	def writeUInt8(self, value):
+		assert 0 <= value < 256
+		self.items.append(struct.pack(">B", value))
 
 	def writeUInt24(self, value):
 		assert 0 <= value < 0x1000000
