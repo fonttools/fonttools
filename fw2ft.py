@@ -218,7 +218,7 @@ def parseGDEF(lines):
 	return None
 
 def compile(s):
-	lines = (line.split('\t') for line in re.split('\r?\n?', s))
+	lines = ([s.strip() for s in line.split('\t')] for line in re.split('\r?\n?', s))
 	line = next(lines)
 	assert line[0][:9] == 'FontDame ', line
 	assert line[0][13:] == ' table', line
