@@ -142,9 +142,6 @@ class OTTableReader(object):
 
 	def getSubReader(self, offset):
 		offset = self.offset + offset
-		cachingStats = self.globalState.cachingStats
-		if cachingStats is not None:
-			cachingStats[offset] = cachingStats.get(offset, 0) + 1
 		return self.__class__(self.data, self.globalState, self.localState, offset)
 
 	def readUShort(self):
