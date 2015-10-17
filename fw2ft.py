@@ -88,33 +88,52 @@ def appendSingleSubst(self, line):
 	mapping[line[0]] = line[1]
 
 def appendMultiple(self, line):
+	debug(line)
 	raise NotImplementedError
 
 def appendAlternate(self, line):
+	debug(line)
 	raise NotImplementedError
 
 def appendLigature(self, line):
-	raise NotImplementedError
+	ligatures = getattr(self, "ligatures", None)
+	if ligatures is None:
+		self.ligatures = ligatures = {}
+	ligGlyph, firstGlyph = line[:2]
+	otherComponents = line[2:]
+	if firstGlyph not in ligatures:
+		ligatures[firstGlyph] = []
+	ligature = ot.Ligature()
+	ligature.Component = otherComponents
+	ligature.CompCount = len(ligature.Component) + 1
+	ligature.LigGlyph = ligGlyph
+	ligatures[firstGlyph].append(ligature)
 
 def appendSinglePos(self, line):
+	debug(line)
 	raise NotImplementedError
 
 def appendPair(self, line):
 	raise NotImplementedError
 
 def appendCursive(self, line):
+	debug(line)
 	raise NotImplementedError
 
 def appendMarkToSomething(self, line):
+	debug(line)
 	raise NotImplementedError
 
 def appendMarkToLigature(self, line):
+	debug(line)
 	raise NotImplementedError
 
 def appendContext(self, line):
+	debug(line)
 	raise NotImplementedError
 
 def appendChained(self, line):
+	debug(line)
 	raise NotImplementedError
 
 def parseLookupList(lines, tableTag):
@@ -163,6 +182,9 @@ def parseLookupList(lines, tableTag):
 				assert line[1] in ['yes', 'no'], line[1]
 				if line[1] == 'yes':
 					lookup.LookupFlags |= flag
+				continue
+			if line[0] == 'MarkAttachmentType':
+				lookup.LookupFlags |= int(line[1]) << 8
 				continue
 
 			if len(line) > 1 or line[0] != '':
