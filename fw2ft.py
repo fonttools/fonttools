@@ -67,7 +67,7 @@ def parseFeatureList(lines):
 	self.FeatureRecord = []
 	for line in readUntil(lines, 'feature table end'):
 		idx, featureTag, lookups = line
-		assert int(idx) == len (self.FeatureRecord)
+		assert int(idx) == len(self.FeatureRecord), "%d %d" % (idx, len(self.FeatureRecord))
 		featureRec = ot.FeatureRecord()
 		featureRec.FeatureTag = featureTag
 		featureRec.Feature = ot.Feature()
@@ -81,15 +81,55 @@ def parseFeatureList(lines):
 	self.FeatureCount = len(self.FeatureRecord)
 	return self
 
-def parseLookupList(lines):
-	return None
+def parseLookupList(lines, tableTag):
+	self = ot.LookupList()
+	self.Lookup = []
+	while True:
+		line = skipUntil(lines, 'lookup')
+		if line is None: break
+		_, idx, typ = line
+		assert int(idx) == len(self.Lookup), "%d %d" % (idx, len(self.Lookup))
+
+		lookup = ot.Lookup()
+		self.Lookup.append(lookup)
+		lookup.LookupFlags = 0
+		lookup.LookupType = {
+			'GSUB': {
+				'single': 1,
+				'multiple': 2,
+				'alternate': 3,
+				'ligature': 4,
+				'context': 5,
+				'chained': 6,
+			},
+			'GPOS': {
+				'single': 1,
+				'pair': 2,
+				'kernset': 2,
+				'cursive': 3,
+				'mark to base': 4,
+				'mark to ligature': 5,
+				'mark to mark': 6,
+				'context': 7,
+				'chained': 8,
+			},
+		}[tableTag][typ]
+		subtable = ot.lookupTypes[tableTag][lookup.LookupType]()
+		for line in readUntil(lines, 'lookup end'):
+			pass
+
+		lookup.SubTable = [subtable]
+		lookup.SubTableCount = len(lookup.SubTable)
+
+	self.LookupCount = len(self.Lookup)
+	return self
 
 def parseGSUB(lines):
 	debug("Parsing GSUB")
 	self = ot.GSUB()
 	self.ScriptList = parseScriptList(lines)
 	self.FeatureList = parseFeatureList(lines)
-	self.LookupList = parseLookupList(lines)
+	self.LookupList = parseLookupList(lines, 'GSUB')
 	return self
 
 def parseGPOS(lines):
@@ -97,7 +137,7 @@ def parseGPOS(lines):
 	self = ot.GPOS()
 	self.ScriptList = parseScriptList(lines)
 	self.FeatureList = parseFeatureList(lines)
-	self.LookupList = parseLookupList(lines)
+	self.LookupList = parseLookupList(lines, 'GPOS')
 	return self
 
 def parseGDEF(lines):
@@ -107,8 +147,8 @@ def parseGDEF(lines):
 def compile(s):
 	lines = (line.split('\t') for line in re.split('\r?\n?', s))
 	line = next(lines)
-	assert line[0][:9] == 'FontDame '
-	assert line[0][13:] == ' table'
+	assert line[0][:9] == 'FontDame ', line
+	assert line[0][13:] == ' table', line
 	tableTag = line[0][9:13]
 	container = ttLib.getTableClass(tableTag)()
 	table = {'GSUB': parseGSUB,
