@@ -52,6 +52,12 @@ class OTTableReaderTest(unittest.TestCase):
         self.assertEqual(reader.readData(5), b"Hello")
         self.assertEqual(reader.pos, 5)
 
+    def test_getSubReader(self):
+        reader = OTTableReader(deHexStr("CAFE F00D"))
+        sub = reader.getSubReader(2)
+        self.assertEqual(sub.readUShort(), 0xF00D)
+        self.assertEqual(reader.readUShort(), 0xCAFE)
+
 
 class OTTableWriterTest(unittest.TestCase):
     def test_writeShort(self):
