@@ -1,6 +1,7 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from .DefaultTable import DefaultTable
+import array
 import struct
 
 class OverflowErrorRecord(object):
@@ -150,6 +151,15 @@ class OTTableReader(object):
 		pos = self.pos
 		newpos = pos + 2
 		value, = struct.unpack(">H", self.data[pos:newpos])
+		self.pos = newpos
+		return value
+
+	def readUShortArray(self, count):
+		pos = self.pos
+		newpos = pos + count * 2
+		value = array.array("H", self.data[pos:newpos])
+		if sys.byteorder != "big":
+			value.byteswap()
 		self.pos = newpos
 		return value
 

@@ -18,6 +18,23 @@ def parseXML(xmlSnippet):
     return reader.root[2]
 
 
+class FakeFont:
+    def __init__(self, glyphs):
+        self.glyphOrder_ = glyphs
+
+    def getGlyphID(self, name):
+        return self.glyphOrder_.index(name)
+
+    def getGlyphName(self, glyphID):
+        if glyphID < len(self.glyphOrder_):
+            return self.glyphOrder_[glyphID]
+        else:
+            return "glyph%.5d" % glyphID
+
+    def getGlyphOrder(self):
+        return self.glyphOrder_
+
+
 class TestXMLReader_(object):
     def __init__(self):
         from xml.parsers.expat import ParserCreate
