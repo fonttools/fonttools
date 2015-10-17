@@ -116,7 +116,19 @@ def parseLookupList(lines, tableTag):
 		}[tableTag][typ]
 		subtable = ot.lookupTypes[tableTag][lookup.LookupType]()
 		for line in readUntil(lines, 'lookup end'):
-			pass
+			flag = {
+				'RightToLeft':		0x0001,
+				'IgnoreBaseGlyphs':	0x0002,
+				'IgnoreLigatures':	0x0004,
+				'IgnoreMarks':		0x0008,
+				}.get(line[0])
+			if flag:
+				assert line[1] in ['yes', 'no'], line[1]
+				if line[1] == 'yes':
+					lookup.LookupFlags |= flag
+				continue
+
+			pass # TODO the real thing
 
 		lookup.SubTable = [subtable]
 		lookup.SubTableCount = len(lookup.SubTable)
