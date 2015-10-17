@@ -1,20 +1,9 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
-from fontTools.misc.testTools import parseXML
+from fontTools.misc.testTools import parseXML, FakeFont
 from fontTools.misc.xmlWriter import XMLWriter
 import fontTools.ttLib.tables.otTables as otTables
 import unittest
-
-
-class FakeFont:
-    def __init__(self, glyphs):
-        self.glyphOrder_ = glyphs
-
-    def getGlyphID(self, name):
-        return self.glyphOrder_.index(name)
-
-    def getGlyphName(self, glyphID):
-        return self.glyphOrder_[glyphID]
 
 
 def makeCoverage(glyphs):

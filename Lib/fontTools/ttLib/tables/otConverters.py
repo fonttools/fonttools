@@ -3,7 +3,6 @@ from fontTools.misc.py23 import *
 from fontTools.misc.textTools import safeEval
 from fontTools.misc.fixedTools import fixedToFloat as fi2fl, floatToFixed as fl2fi
 from .otBase import ValueRecordFactory
-import array
 
 
 def buildConverters(tableSpec, tableNamespace):
@@ -205,9 +204,7 @@ class GlyphID(SimpleValue):
 	staticSize = 2
 	def readArray(self, reader, font, tableDict, count):
 		glyphOrder = font.getGlyphOrder()
-		gids = array.array("H", reader.readData(2 * count))
-		if sys.byteorder != "big":
-			gids.byteswap()
+		gids = reader.readUShortArray(count)
 		try:
 			l = [glyphOrder[gid] for gid in gids]
 		except IndexError:
