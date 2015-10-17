@@ -81,6 +81,42 @@ def parseFeatureList(lines):
 	self.FeatureCount = len(self.FeatureRecord)
 	return self
 
+def appendSingleSubst(self, line):
+	mapping = getattr(self, "mapping", None)
+	if mapping is None:
+		self.mapping = mapping = {}
+	mapping[line[0]] = line[1]
+
+def appendMultiple(self, line):
+	raise NotImplementedError
+
+def appendAlternate(self, line):
+	raise NotImplementedError
+
+def appendLigature(self, line):
+	raise NotImplementedError
+
+def appendSinglePos(self, line):
+	raise NotImplementedError
+
+def appendPair(self, line):
+	raise NotImplementedError
+
+def appendCursive(self, line):
+	raise NotImplementedError
+
+def appendMarkToSomething(self, line):
+	raise NotImplementedError
+
+def appendMarkToLigature(self, line):
+	raise NotImplementedError
+
+def appendContext(self, line):
+	raise NotImplementedError
+
+def appendChained(self, line):
+	raise NotImplementedError
+
 def parseLookupList(lines, tableTag):
 	self = ot.LookupList()
 	self.Lookup = []
@@ -93,28 +129,29 @@ def parseLookupList(lines, tableTag):
 		lookup = ot.Lookup()
 		self.Lookup.append(lookup)
 		lookup.LookupFlags = 0
-		lookup.LookupType = {
+		lookup.LookupType, append = {
 			'GSUB': {
-				'single': 1,
-				'multiple': 2,
-				'alternate': 3,
-				'ligature': 4,
-				'context': 5,
-				'chained': 6,
+				'single':	(1, appendSingleSubst),
+				'multiple':	(2, appendMultiple),
+				'alternate':	(3, appendAlternate),
+				'ligature':	(4, appendLigature),
+				'context':	(5, appendContext),
+				'chained':	(6, appendChained),
 			},
 			'GPOS': {
-				'single': 1,
-				'pair': 2,
-				'kernset': 2,
-				'cursive': 3,
-				'mark to base': 4,
-				'mark to ligature': 5,
-				'mark to mark': 6,
-				'context': 7,
-				'chained': 8,
+				'single':	(1, appendSinglePos),
+				'pair':		(2, appendPair),
+				'kernset':	(2, appendPair),
+				'cursive':	(3, appendCursive),
+				'mark to base':	(4, appendMarkToSomething),
+				'mark to ligature':(5, appendMarkToLigature),
+				'mark to mark':	(6, appendMarkToSomething),
+				'context':	(7, appendContext),
+				'chained':	(8, appendChained),
 			},
 		}[tableTag][typ]
 		subtable = ot.lookupTypes[tableTag][lookup.LookupType]()
+		subtable.LookupType = lookup.LookupType
 		for line in readUntil(lines, 'lookup end'):
 			flag = {
 				'RightToLeft':		0x0001,
@@ -128,7 +165,8 @@ def parseLookupList(lines, tableTag):
 					lookup.LookupFlags |= flag
 				continue
 
-			pass # TODO the real thing
+			if len(line) > 1 or line[0] != '':
+				append(subtable, line)
 
 		lookup.SubTable = [subtable]
 		lookup.SubTableCount = len(lookup.SubTable)
@@ -147,6 +185,7 @@ def parseGSUB(lines):
 def parseGPOS(lines):
 	debug("Parsing GPOS")
 	self = ot.GPOS()
+	# TODO parse EM?
 	self.ScriptList = parseScriptList(lines)
 	self.FeatureList = parseFeatureList(lines)
 	self.LookupList = parseLookupList(lines, 'GPOS')
