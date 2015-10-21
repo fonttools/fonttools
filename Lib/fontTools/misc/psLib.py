@@ -7,15 +7,15 @@ import collections
 from string import whitespace
 
 
-ps_special = '()<>[]{}%'	# / is one too, but we take care of that one differently
+ps_special = b'()<>[]{}%'	# / is one too, but we take care of that one differently
 
-skipwhiteRE = re.compile("[%s]*" % whitespace)
-endofthingPat = "[^][(){}<>/%%%s]*" % whitespace
+skipwhiteRE = re.compile(bytesjoin([b"[", whitespace, b"]*"]))
+endofthingPat = bytesjoin([b"[^][(){}<>/%", whitespace, b"]*"])
 endofthingRE = re.compile(endofthingPat)
-commentRE = re.compile("%[^\n\r]*")
+commentRE = re.compile(b"%[^\n\r]*")
 
 # XXX This not entirely correct as it doesn't allow *nested* embedded parens:
-stringPat = r"""
+stringPat = br"""
 	\(
 		(
 			(
@@ -29,22 +29,44 @@ stringPat = r"""
 		[^()]*
 	\)
 """
-stringPat = "".join(stringPat.split())
+stringPat = b"".join(stringPat.split())
 stringRE = re.compile(stringPat)
 
-hexstringRE = re.compile("<[%s0-9A-Fa-f]*>" % whitespace)
+hexstringRE = re.compile(bytesjoin([b"<[", whitespace, b"0-9A-Fa-f]*>"]))
 
 class PSTokenError(Exception): pass
 class PSError(Exception): pass
 
 
-# StringIO.StringIO is only available in Python 2. The PSTokenizer class
-# attemps to access private attributes from the latter which are not available
-# in other file(-like) objects. Therefore, io.BytesIO (or io.StringIO) can't
-# be used as ready replacements. For now we must drop Python3 support in psLib,
-# and consequently in t1Lib, until we rewrite them for py23.
-# See: https://github.com/behdad/fonttools/issues/391
-class PSTokenizer(StringIO):
+class PSTokenizer(object):
+
+	def __init__(self, buf=b''):
+		# Force self.buf to be a byte string
+		buf = tobytes(buf)
+		self.buf = buf
+		self.len = len(buf)
+		self.pos = 0
+		self.closed = False
+
+	def read(self, n=-1):
+		"""Read at most 'n' bytes from the buffer, or less if the read
+		hits EOF before obtaining 'n' bytes.
+		If 'n' is negative or omitted, read all data until EOF is reached.
+		"""
+		if self.closed:
+			raise ValueError("I/O operation on closed file")
+		if n is None or n < 0:
+			newpos = self.len
+		else:
+			newpos = min(self.pos+n, self.len)
+		r = self.buf[self.pos:newpos]
+		self.pos = newpos
+		return r
+
+	def close(self):
+		if not self.closed:
+			self.closed = True
+			del self.buf, self.pos
 
 	def getnexttoken(self,
 			# localize some stuff, for performance
@@ -53,32 +75,30 @@ class PSTokenizer(StringIO):
 			stringmatch=stringRE.match,
 			hexstringmatch=hexstringRE.match,
 			commentmatch=commentRE.match,
-			endmatch=endofthingRE.match,
-			whitematch=skipwhiteRE.match):
+			endmatch=endofthingRE.match):
 
-		_, nextpos = whitematch(self.buf, self.pos).span()
-		self.pos = nextpos
+		self.skipwhite()
 		if self.pos >= self.len:
 			return None, None
 		pos = self.pos
 		buf = self.buf
-		char = buf[pos]
+		char = bytechr(byteord(buf[pos]))
 		if char in ps_special:
-			if char in '{}[]':
+			if char in b'{}[]':
 				tokentype = 'do_special'
 				token = char
-			elif char == '%':
+			elif char == b'%':
 				tokentype = 'do_comment'
 				_, nextpos = commentmatch(buf, pos).span()
 				token = buf[pos:nextpos]
-			elif char == '(':
+			elif char == b'(':
 				tokentype = 'do_string'
 				m = stringmatch(buf, pos)
 				if m is None:
 					raise PSTokenError('bad string at character %d' % pos)
 				_, nextpos = m.span()
 				token = buf[pos:nextpos]
-			elif char == '<':
+			elif char == b'<':
 				tokentype = 'do_hexstring'
 				m = hexstringmatch(buf, pos)
 				if m is None:
@@ -88,7 +108,7 @@ class PSTokenizer(StringIO):
 			else:
 				raise PSTokenError('bad token at character %d' % pos)
 		else:
-			if char == '/':
+			if char == b'/':
 				tokentype = 'do_literal'
 				m = endmatch(buf, pos+1)
 			else:
@@ -99,6 +119,7 @@ class PSTokenizer(StringIO):
 			_, nextpos = m.span()
 			token = buf[pos:nextpos]
 		self.pos = pos + len(token)
+		token = tostr(token, encoding='ascii')
 		return tokentype, token
 
 	def skipwhite(self, whitematch=skipwhiteRE.match):
@@ -107,7 +128,6 @@ class PSTokenizer(StringIO):
 
 	def starteexec(self):
 		self.pos = self.pos + 1
-		#self.skipwhite()
 		self.dirtybuf = self.buf[self.pos:]
 		self.buf, R = eexec.decrypt(self.dirtybuf, 55665)
 		self.len = len(self.buf)
@@ -118,11 +138,6 @@ class PSTokenizer(StringIO):
 			return
 		self.buf = self.dirtybuf
 		del self.dirtybuf
-
-	def flush(self):
-		if self.buflist:
-			self.buf = self.buf + "".join(self.buflist)
-			self.buflist = []
 
 
 class PSInterpreter(PSOperators):
@@ -163,7 +178,6 @@ class PSInterpreter(PSOperators):
 		try:
 			while 1:
 				tokentype, token = getnexttoken()
-				#print token
 				if not token:
 					break
 				if tokentype:
@@ -345,12 +359,3 @@ def suckfont(data):
 		rawfont = fontdir[fontNames[0]]
 	interpreter.close()
 	return unpack_item(rawfont)
-
-
-if __name__ == "__main__":
-	import EasyDialogs
-	path = EasyDialogs.AskFileForOpen()
-	if path:
-		from fontTools import t1Lib
-		data, kind = t1Lib.read(path)
-		font = suckfont(data)
