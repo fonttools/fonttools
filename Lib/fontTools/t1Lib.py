@@ -1,4 +1,4 @@
-"""fontTools.t1Lib.py -- Tools for PostScript Type 1 fonts
+"""fontTools.t1Lib.py -- Tools for PostScript Type 1 fonts (Python2 only)
 
 Functions for reading and writing raw Type 1 data:
 
