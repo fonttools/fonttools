@@ -36,7 +36,6 @@ except ImportError:
 	haveMacSupport = 0
 else:
 	haveMacSupport = 1
-	import MacOS
 
 
 class T1Error(Exception): pass
@@ -276,13 +275,13 @@ def writeOther(path, data, dohex=False):
 
 # decryption tools
 
-EEXECBEGIN = "currentfile eexec"
-EEXECEND = '0' * 64
-EEXECINTERNALEND = "currentfile closefile"
-EEXECBEGINMARKER = "%-- eexec start\r"
-EEXECENDMARKER = "%-- eexec end\r"
+EEXECBEGIN = b"currentfile eexec"
+EEXECEND = b'0' * 64
+EEXECINTERNALEND = b"currentfile closefile"
+EEXECBEGINMARKER = b"%-- eexec start\r"
+EEXECENDMARKER = b"%-- eexec end\r"
 
-_ishexRE = re.compile('[0-9A-Fa-f]*$')
+_ishexRE = re.compile(b'[0-9A-Fa-f]*$')
 
 def isHex(text):
 	return _ishexRE.match(text) is not None
@@ -300,7 +299,7 @@ def decryptType1(data):
 			if decrypted[-len(EEXECINTERNALEND)-1:-1] != EEXECINTERNALEND \
 					and decrypted[-len(EEXECINTERNALEND)-2:-2] != EEXECINTERNALEND:
 				raise T1Error("invalid end of eexec part")
-			decrypted = decrypted[:-len(EEXECINTERNALEND)-2] + '\r'
+			decrypted = decrypted[:-len(EEXECINTERNALEND)-2] + b'\r'
 			data.append(EEXECBEGINMARKER + decrypted + EEXECENDMARKER)
 		else:
 			if chunk[-len(EEXECBEGIN)-1:-1] == EEXECBEGIN:
@@ -333,7 +332,7 @@ def findEncryptedChunks(data):
 	return chunks
 
 def deHexString(hexstring):
-	return eexec.deHexString(strjoin(hexstring.split()))
+	return eexec.deHexString(bytesjoin(hexstring.split()))
 
 
 # Type 1 assertion
