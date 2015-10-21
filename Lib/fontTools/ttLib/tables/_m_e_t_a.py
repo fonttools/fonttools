@@ -54,6 +54,8 @@ class table__m_e_t_a(DefaultTable.DefaultTable):
             tag = dataMap["tag"]
             offset = dataMap["dataOffset"]
             self.data[tag] = data[offset : offset + dataMap["dataLength"]]
+            if tag in ["dlng", "slng"]:
+                self.data[tag] = self.data[tag].decode("utf-8")
 
     def compile(self, ttFont):
         keys = sorted(self.data.keys())
@@ -68,7 +70,10 @@ class table__m_e_t_a(DefaultTable.DefaultTable):
         dataMaps = []
         dataBlocks = []
         for tag in keys:
-            data = self.data[tag]
+            if tag in ["dlng", "slng"]:
+                data = self.data[tag].encode("utf-8")
+            else:
+                data = self.data[tag]
             dataMaps.append(sstruct.pack(DATA_MAP_FORMAT, {
                 "tag": tag,
                 "dataOffset": dataOffset,
@@ -80,14 +85,24 @@ class table__m_e_t_a(DefaultTable.DefaultTable):
 
     def toXML(self, writer, ttFont, progress=None):
         for tag in sorted(self.data.keys()):
-            writer.begintag("hexdata", tag=tag)
-            writer.newline()
-            writer.dumphex(self.data[tag])
-            writer.endtag("hexdata")
-            writer.newline()
+            if tag in ["dlng", "slng"]:
+                writer.begintag("text", tag=tag)
+                writer.newline()
+                writer.write(self.data[tag])
+                writer.newline()
+                writer.endtag("text")
+                writer.newline()
+            else:
+                writer.begintag("hexdata", tag=tag)
+                writer.newline()
+                writer.dumphex(self.data[tag])
+                writer.endtag("hexdata")
+                writer.newline()
 
     def fromXML(self, name, attrs, content, ttFont):
         if name == "hexdata":
             self.data[attrs["tag"]] = readHex(content)
+        elif name == "text" and attrs["tag"] in ["dlng", "slng"]:
+            self.data[attrs["tag"]] = strjoin(content).strip()
         else:
             raise TTLibError("can't handle '%s' element" % name)

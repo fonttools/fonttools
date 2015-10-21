@@ -611,9 +611,11 @@ class WOFF2GlyfTableTest(unittest.TestCase):
 		reader = WOFF2Reader(infile)
 		cls.transformedGlyfData = reader.tables['glyf'].loadData(
 			reader.transformBuffer)
+		cls.glyphOrder = ['.notdef'] + ["glyph%.5d" % i for i in range(1, font['maxp'].numGlyphs)]
 
 	def setUp(self):
 		self.font = font = ttLib.TTFont(recalcBBoxes=False, recalcTimestamp=False)
+		font.setGlyphOrder(self.glyphOrder)
 		font['head'] = ttLib.getTableClass('head')()
 		font['maxp'] = ttLib.getTableClass('maxp')()
 		font['loca'] = WOFF2LocaTable()

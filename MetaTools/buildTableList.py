@@ -4,13 +4,14 @@ import sys
 import os
 import glob
 from fontTools.ttLib import identifierToTag
+import textwrap
 
 
 fontToolsDir = os.path.dirname(os.path.dirname(os.path.join(os.getcwd(), sys.argv[0])))
 fontToolsDir= os.path.normpath(fontToolsDir)
 tablesDir = os.path.join(fontToolsDir,
 		"Lib", "fontTools", "ttLib", "tables")
-docFile = os.path.join(fontToolsDir, "Doc", "documentation.html")
+docFile = os.path.join(fontToolsDir, "README.md")
 
 names = glob.glob1(tablesDir, "*.py")
 
@@ -64,6 +65,9 @@ assert beginPos > 0
 beginPos = beginPos + len(begin) + 1
 endPos = doc.find(end)
 
-doc = doc[:beginPos] + ", ".join(tables[:-1]) + " and " + tables[-1] + "\n" + doc[endPos:]
+lines = textwrap.wrap(", ".join(tables[:-1]) + " and " + tables[-1], 66)
+blockquote = "\n".join(" "*4 + line for line in lines) + "\n"
+
+doc = doc[:beginPos] + blockquote + doc[endPos:]
 
 open(docFile, "w").write(doc)

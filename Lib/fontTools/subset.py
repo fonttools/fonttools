@@ -401,20 +401,15 @@ def subset_glyphs(self, s):
 
 @_add_method(otTables.MultipleSubst)
 def closure_glyphs(self, s, cur_glyphs):
-    indices = self.Coverage.intersect(cur_glyphs)
-    _set_update(s.glyphs, *(self.Sequence[i].Substitute for i in indices))
+    for glyph, subst in self.mapping.items():
+        if glyph in cur_glyphs:
+            _set_update(s.glyphs, subst)
 
 @_add_method(otTables.MultipleSubst)
 def subset_glyphs(self, s):
-    indices = self.Coverage.subset(s.glyphs)
-    self.Sequence = [self.Sequence[i] for i in indices]
-    # Now drop rules generating glyphs we don't want
-    indices = [i for i,seq in enumerate(self.Sequence)
-               if all(sub in s.glyphs for sub in seq.Substitute)]
-    self.Sequence = [self.Sequence[i] for i in indices]
-    self.Coverage.remap(indices)
-    self.SequenceCount = len(self.Sequence)
-    return bool(self.SequenceCount)
+    self.mapping = {g:v for g,v in self.mapping.items()
+                    if g in s.glyphs and all(sub in s.glyphs for sub in v)}
+    return bool(self.mapping)
 
 @_add_method(otTables.AlternateSubst)
 def closure_glyphs(self, s, cur_glyphs):
@@ -2181,14 +2176,15 @@ class Options(object):
     class OptionError(Exception): pass
     class UnknownOptionError(OptionError): pass
 
+    # spaces in tag names (e.g. "SVG ", "cvt ") are stripped by the argument parser
     _drop_tables_default = ['BASE', 'JSTF', 'DSIG', 'EBDT', 'EBLC',
-                            'EBSC', 'SVG ', 'PCLT', 'LTSH']
+                            'EBSC', 'SVG', 'PCLT', 'LTSH']
     _drop_tables_default += ['Feat', 'Glat', 'Gloc', 'Silf', 'Sill']  # Graphite
     _drop_tables_default += ['CBLC', 'CBDT', 'sbix', 'COLR', 'CPAL']  # Color
     _no_subset_tables_default = ['gasp', 'head', 'hhea', 'maxp',
-                                 'vhea', 'OS/2', 'loca', 'name', 'cvt ',
+                                 'vhea', 'OS/2', 'loca', 'name', 'cvt',
                                  'fpgm', 'prep', 'VDMX', 'DSIG']
-    _hinting_tables_default = ['cvt ', 'fpgm', 'prep', 'hdmx', 'VDMX']
+    _hinting_tables_default = ['cvt', 'fpgm', 'prep', 'hdmx', 'VDMX']
 
     # Based on HarfBuzz shapers
     _layout_features_groups = {
@@ -2346,8 +2342,8 @@ class Subsetter(object):
         for tag in font.keys():
             if tag == 'GlyphOrder': continue
 
-            if(tag in self.options.drop_tables or
-                 (tag in self.options.hinting_tables and not self.options.hinting) or
+            if(tag.strip() in self.options.drop_tables or
+                 (tag.strip() in self.options.hinting_tables and not self.options.hinting) or
                  (tag == 'kern' and (not self.options.legacy_kern and 'GPOS' in font))):
                 self.log(tag, "dropped")
                 del font[tag]
@@ -2450,7 +2446,7 @@ class Subsetter(object):
             if tag == 'GlyphOrder': continue
             clazz = ttLib.getTableClass(tag)
 
-            if tag in self.options.no_subset_tables:
+            if tag.strip() in self.options.no_subset_tables:
                 self.log(tag, "subsetting not needed")
             elif hasattr(clazz, 'subset_glyphs'):
                 table = font[tag]

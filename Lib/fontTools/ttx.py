@@ -69,6 +69,9 @@ usage: ttx [options] inputfile1 [... inputfileN]
        file as-is.
     --recalc-timestamp Set font 'modified' timestamp to current time.
        By default, the modification time of the TTX file will be used.
+    --flavor <type> Specify flavor of output font file. May be 'woff'
+      or 'woff2'. Note that WOFF2 requires the Brotli Python extension,
+      available at https://github.com/google/brotli
 """
 
 
@@ -124,6 +127,7 @@ class Options(object):
 	bitmapGlyphDataFormat = 'raw'
 	unicodedata = None
 	recalcTimestamp = False
+	flavor = None
 
 	def __init__(self, rawOptions, numFiles):
 		self.onlyTables = []
@@ -137,8 +141,7 @@ class Options(object):
 				sys.exit(0)
 			elif option == "-d":
 				if not os.path.isdir(value):
-					print("The -d option value must be an existing directory")
-					sys.exit(2)
+					raise getopt.GetoptError("The -d option value must be an existing directory")
 				self.outputDir = value
 			elif option == "-o":
 				self.outputFile = value
@@ -162,8 +165,8 @@ class Options(object):
 			elif option == "-z":
 				validOptions = ('raw', 'row', 'bitwise', 'extfile')
 				if value not in validOptions:
-					print("-z does not allow %s as a format. Use %s" % (option, validOptions))
-					sys.exit(2)
+					raise getopt.GetoptError(
+						"-z does not allow %s as a format. Use %s" % (option, validOptions))
 				self.bitmapGlyphDataFormat = value
 			elif option == "-y":
 				self.fontNumber = int(value)
@@ -180,12 +183,15 @@ class Options(object):
 				self.unicodedata = value
 			elif option == "--recalc-timestamp":
 				self.recalcTimestamp = True
+			elif option == "--flavor":
+				self.flavor = value
+		if self.mergeFile and self.flavor:
+			print("-m and --flavor options are mutually exclusive")
+			sys.exit(2)
 		if self.onlyTables and self.skipTables:
-			print("-t and -x options are mutually exclusive")
-			sys.exit(2)
+			raise getopt.GetoptError("-t and -x options are mutually exclusive")
 		if self.mergeFile and numFiles > 1:
-			print("Must specify exactly one TTX source file when using -m")
-			sys.exit(2)
+			raise getopt.GetoptError("Must specify exactly one TTX source file when using -m")
 
 
 def ttList(input, output, options):
@@ -235,7 +241,7 @@ def ttDump(input, output, options):
 def ttCompile(input, output, options):
 	if not options.quiet:
 		print('Compiling "%s" to "%s"...' % (input, output))
-	ttf = TTFont(options.mergeFile,
+	ttf = TTFont(options.mergeFile, flavor=options.flavor,
 			recalcBBoxes=options.recalcBBoxes,
 			recalcTimestamp=options.recalcTimestamp,
 			verbose=options.verbose, allowVID=options.allowVID)
@@ -287,14 +293,11 @@ def guessFileType(fileName):
 
 
 def parseOptions(args):
-	try:
-		rawOptions, files = getopt.getopt(args, "ld:o:fvqht:x:sim:z:baey:",
-			['unicodedata=', "recalc-timestamp"])
-	except getopt.GetoptError:
-		usage()
+	rawOptions, files = getopt.getopt(args, "ld:o:fvqht:x:sim:z:baey:",
+			['unicodedata=', "recalc-timestamp", 'flavor='])
 
 	if not files:
-		usage()
+		raise getopt.GetoptError('Must specify at least one input file')
 
 	options = Options(rawOptions, len(files))
 	jobs = []
@@ -308,10 +311,10 @@ def parseOptions(args):
 			else:
 				action = ttDump
 		elif tp == "TTX":
-			extension = ".ttf"
+			extension = "."+options.flavor if options.flavor else ".ttf"
 			action = ttCompile
 		elif tp == "OTX":
-			extension = ".otf"
+			extension = "."+options.flavor if options.flavor else ".otf"
 			action = ttCompile
 		else:
 			print('Unknown file type: "%s"' % input)
@@ -345,7 +348,11 @@ def waitForKeyPress():
 def main(args=None):
 	if args is None:
 		args = sys.argv[1:]
-	jobs, options = parseOptions(args)
+	try:
+		jobs, options = parseOptions(args)
+	except getopt.GetoptError as e:
+		print('error:', e, file=sys.stderr)
+		usage()
 	try:
 		process(jobs, options)
 	except KeyboardInterrupt:

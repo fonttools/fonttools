@@ -31,23 +31,20 @@ def doraise_py_compile(file, cfile=None, dfile=None, doraise=False):
 py_compile.compile = doraise_py_compile
 
 
-if sys.version_info > (2, 3, 0, 'alpha', 1):
-	# Trove classifiers for PyPI
-	classifiers = {"classifiers": [
-		"Development Status :: 4 - Beta",
-		"Environment :: Console",
-		"Environment :: Other Environment",
-		"Intended Audience :: Developers",
-		"Intended Audience :: End Users/Desktop",
-		"License :: OSI Approved :: BSD License",
-		"Natural Language :: English",
-		"Operating System :: OS Independent",
-		"Programming Language :: Python",
-		"Topic :: Multimedia :: Graphics",
-		"Topic :: Multimedia :: Graphics :: Graphics Conversion",
-	]}
-else:
-	classifiers = {}
+# Trove classifiers for PyPI
+classifiers = {"classifiers": [
+	"Development Status :: 4 - Beta",
+	"Environment :: Console",
+	"Environment :: Other Environment",
+	"Intended Audience :: Developers",
+	"Intended Audience :: End Users/Desktop",
+	"License :: OSI Approved :: BSD License",
+	"Natural Language :: English",
+	"Operating System :: OS Independent",
+	"Programming Language :: Python",
+	"Topic :: Multimedia :: Graphics",
+	"Topic :: Multimedia :: Graphics :: Graphics Conversion",
+]}
 
 long_description = """\
 FontTools/TTX is a library to manipulate font files from Python.
@@ -59,7 +56,7 @@ TrueType/OpenType fonts to and from an XML-based format.
 
 setup(
 		name = "fonttools",
-		version = "2.5",
+		version = "3.0",
 		description = "Tools to manipulate font files",
 		author = "Just van Rossum",
 		author_email = "just@letterror.com",

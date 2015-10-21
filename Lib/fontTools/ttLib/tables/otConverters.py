@@ -3,7 +3,6 @@ from fontTools.misc.py23 import *
 from fontTools.misc.textTools import safeEval
 from fontTools.misc.fixedTools import fixedToFloat as fi2fl, floatToFixed as fl2fi
 from .otBase import ValueRecordFactory
-import array
 
 
 def buildConverters(tableSpec, tableNamespace):
@@ -120,8 +119,8 @@ class BaseConverter(object):
 		raise NotImplementedError(self)
 
 	def writeArray(self, writer, font, tableDict, values):
-		for i in range(len(values)):
-			self.write(writer, font, tableDict, values[i], i)
+		for i, value in enumerate(values):
+			self.write(writer, font, tableDict, value, i)
 
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		"""Write a value to the writer."""
@@ -175,6 +174,13 @@ class UShort(IntValue):
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		writer.writeUShort(value)
 
+class UInt8(IntValue):
+	staticSize = 1
+	def read(self, reader, font, tableDict):
+		return reader.readUInt8()
+	def write(self, writer, font, tableDict, value, repeatIndex=None):
+		writer.writeUInt8(value)
+
 class UInt24(IntValue):
 	staticSize = 3
 	def read(self, reader, font, tableDict):
@@ -198,9 +204,7 @@ class GlyphID(SimpleValue):
 	staticSize = 2
 	def readArray(self, reader, font, tableDict, count):
 		glyphOrder = font.getGlyphOrder()
-		gids = array.array("H", reader.readData(2 * count))
-		if sys.byteorder != "big":
-			gids.byteswap()
+		gids = reader.readUShortArray(count)
 		try:
 			l = [glyphOrder[gid] for gid in gids]
 		except IndexError:
@@ -464,7 +468,8 @@ class DeltaValue(BaseConverter):
 
 converterMapping = {
 	# type		class
-	"int16":		Short,
+	"int16":	Short,
+	"uint8":	UInt8,
 	"uint16":	UShort,
 	"uint24":	UInt24,
 	"uint32":	ULong,

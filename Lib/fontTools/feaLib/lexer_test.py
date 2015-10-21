@@ -1,22 +1,13 @@
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
-from fontTools.feaLib.lexer import IncludingLexer, Lexer, LexerError
+from fontTools.feaLib.error import FeatureLibError
+from fontTools.feaLib.lexer import IncludingLexer, Lexer
 import os
 import unittest
 
 
 def lex(s):
     return [(typ, tok) for (typ, tok, _) in Lexer(s, "test.fea")]
-
-
-class LexerErrorTest(unittest.TestCase):
-    def test_str(self):
-        err = LexerError("Squeak!", ("foo.fea", 23, 42))
-        self.assertEqual(str(err), "foo.fea:23:42: Squeak!")
-
-    def test_str_nolocation(self):
-        err = LexerError("Squeak!", None)
-        self.assertEqual(str(err), "Squeak!")
 
 
 class LexerTest(unittest.TestCase):
@@ -37,16 +28,23 @@ class LexerTest(unittest.TestCase):
         self.assertEqual(lex("two.oldstyle"), [(Lexer.NAME, "two.oldstyle")])
         self.assertEqual(lex("_"), [(Lexer.NAME, "_")])
         self.assertEqual(lex("\\table"), [(Lexer.NAME, "\\table")])
+        self.assertEqual(lex("a+*:^~!"), [(Lexer.NAME, "a+*:^~!")])
 
     def test_cid(self):
         self.assertEqual(lex("\\0 \\987"), [(Lexer.CID, 0), (Lexer.CID, 987)])
 
     def test_glyphclass(self):
         self.assertEqual(lex("@Vowel.sc"), [(Lexer.GLYPHCLASS, "Vowel.sc")])
-        self.assertRaisesRegex(LexerError, "Expected glyph class", lex, "@(a)")
-        self.assertRaisesRegex(LexerError, "Expected glyph class", lex, "@ A")
-        self.assertRaisesRegex(LexerError, "not be longer than 30 characters",
+        self.assertRaisesRegex(FeatureLibError,
+                               "Expected glyph class", lex, "@(a)")
+        self.assertRaisesRegex(FeatureLibError,
+                               "Expected glyph class", lex, "@ A")
+        self.assertRaisesRegex(FeatureLibError,
+                               "not be longer than 30 characters",
                                lex, "@a123456789.a123456789.a123456789.x")
+        self.assertRaisesRegex(FeatureLibError,
+                               "Glyph class names must consist of",
+                               lex, "@Ab:c")
 
     def test_include(self):
         self.assertEqual(lex("include (~/foo/bar baz.fea);"), [
@@ -59,8 +57,8 @@ class LexerTest(unittest.TestCase):
             (Lexer.FILENAME, "foo"),
             (Lexer.SYMBOL, ";")
         ])
-        self.assertRaises(LexerError, lex, "include blah")
-        self.assertRaises(LexerError, lex, "include (blah")
+        self.assertRaises(FeatureLibError, lex, "include blah")
+        self.assertRaises(FeatureLibError, lex, "include (blah")
 
     def test_number(self):
         self.assertEqual(lex("123 -456"),
@@ -80,21 +78,22 @@ class LexerTest(unittest.TestCase):
     def test_string(self):
         self.assertEqual(lex('"foo" "bar"'),
                          [(Lexer.STRING, "foo"), (Lexer.STRING, "bar")])
-        self.assertRaises(LexerError, lambda: lex('"foo\n bar"'))
+        self.assertRaises(FeatureLibError, lambda: lex('"foo\n bar"'))
 
     def test_bad_character(self):
-        self.assertRaises(LexerError, lambda: lex("123 \u0001"))
+        self.assertRaises(FeatureLibError, lambda: lex("123 \u0001"))
 
     def test_newline(self):
-        lines = lambda s: [loc[1] for (_, _, loc) in Lexer(s, "test.fea")]
+        def lines(s):
+            return [loc[1] for (_, _, loc) in Lexer(s, "test.fea")]
         self.assertEqual(lines("FOO\n\nBAR\nBAZ"), [1, 3, 4])  # Unix
         self.assertEqual(lines("FOO\r\rBAR\rBAZ"), [1, 3, 4])  # Macintosh
         self.assertEqual(lines("FOO\r\n\r\n BAR\r\nBAZ"), [1, 3, 4])  # Windows
         self.assertEqual(lines("FOO\n\rBAR\r\nBAZ"), [1, 3, 4])  # mixed
 
     def test_location(self):
-        locs = lambda s: ["%s:%d:%d" % loc
-                          for (_, _, loc) in Lexer(s, "test.fea")]
+        def locs(s):
+            return ["%s:%d:%d" % loc for (_, _, loc) in Lexer(s, "test.fea")]
         self.assertEqual(locs("a b # Comment\n12 @x"), [
             "test.fea:1:1", "test.fea:1:3", "test.fea:2:1",
             "test.fea:2:4"
@@ -145,15 +144,15 @@ class IncludingLexerTest(unittest.TestCase):
 
     def test_include_limit(self):
         lexer = IncludingLexer(self.getpath("include6.fea"))
-        self.assertRaises(LexerError, lambda: list(lexer))
+        self.assertRaises(FeatureLibError, lambda: list(lexer))
 
     def test_include_self(self):
         lexer = IncludingLexer(self.getpath("includeself.fea"))
-        self.assertRaises(LexerError, lambda: list(lexer))
+        self.assertRaises(FeatureLibError, lambda: list(lexer))
 
     def test_include_missing_file(self):
         lexer = IncludingLexer(self.getpath("includemissingfile.fea"))
-        self.assertRaises(LexerError, lambda: list(lexer))
+        self.assertRaises(FeatureLibError, lambda: list(lexer))
 
 
 if __name__ == "__main__":

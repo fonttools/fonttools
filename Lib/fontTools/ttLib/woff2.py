@@ -106,7 +106,8 @@ class WOFF2Reader(SFNTReader):
 		self.ttFont['loca'] = WOFF2LocaTable()
 		glyfTable = self.ttFont['glyf'] = WOFF2GlyfTable()
 		glyfTable.reconstruct(data, self.ttFont)
-		glyfTable.padding = padding
+		if padding:
+			glyfTable.padding = padding
 		data = glyfTable.compile(self.ttFont)
 		return data
 
@@ -226,7 +227,14 @@ class WOFF2Writer(SFNTWriter):
 		"""
 		if self.sfntVersion == "OTTO":
 			return
-		for tag in ('maxp', 'head', 'loca', 'glyf'):
+
+		# make up glyph names required to decompile glyf table
+		self._decompileTable('maxp')
+		numGlyphs = self.ttFont['maxp'].numGlyphs
+		glyphOrder = ['.notdef'] + ["glyph%.5d" % i for i in range(1, numGlyphs)]
+		self.ttFont.setGlyphOrder(glyphOrder)
+
+		for tag in ('head', 'loca', 'glyf'):
 			self._decompileTable(tag)
 		self.ttFont['glyf'].padding = padding
 		for tag in ('glyf', 'loca'):
