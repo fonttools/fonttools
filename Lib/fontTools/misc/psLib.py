@@ -38,7 +38,13 @@ class PSTokenError(Exception): pass
 class PSError(Exception): pass
 
 
-class PSTokenizer(BytesIO):
+# StringIO.StringIO is only available in Python 2. The PSTokenizer class
+# attemps to access private attributes from the latter which are not available
+# in other file(-like) objects. Therefore, io.BytesIO (or io.StringIO) can't
+# be used as ready replacements. For now we must drop Python3 support in psLib,
+# and consequently in t1Lib, until we rewrite them for py23.
+# See: https://github.com/behdad/fonttools/issues/391
+class PSTokenizer(StringIO):
 
 	def getnexttoken(self,
 			# localize some stuff, for performance
