@@ -356,7 +356,7 @@ def assertType1(data):
 # pfb helpers
 
 def longToString(long):
-	s = ""
+	s = b""
 	for i in range(4):
 		s += bytechr((long & (0xff << (i * 8))) >> i * 8)
 	return s
