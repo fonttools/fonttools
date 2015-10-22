@@ -265,7 +265,7 @@ def writeOther(path, data, dohex=False):
 			if code == 2 and dohex:
 				while chunk:
 					f.write(eexec.hexString(chunk[:hexlinelen]))
-					f.write('\r')
+					f.write(b'\r')
 					chunk = chunk[hexlinelen:]
 			else:
 				f.write(chunk)
