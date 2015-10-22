@@ -13,7 +13,7 @@ write(path, data, kind='OTHER', dohex=False)
 	'kind' can be one of 'LWFN', 'PFB' or 'OTHER'; it defaults to 'OTHER'.
 	'dohex' is a flag which determines whether the eexec encrypted
 	part should be written as hexadecimal or binary, but only if kind
-	is 'LWFN' or 'PFB'.
+	is 'OTHER'.
 """
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
@@ -55,8 +55,8 @@ class T1Font(object):
 		else:
 			pass # XXX
 
-	def saveAs(self, path, type):
-		write(path, self.getData(), type)
+	def saveAs(self, path, type, dohex=False):
+		write(path, self.getData(), type, dohex)
 
 	def getData(self):
 		# XXX Todo: if the data has been converted to Python object,
