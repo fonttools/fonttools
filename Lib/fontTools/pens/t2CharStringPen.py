@@ -3,8 +3,8 @@
 
 
 from __future__ import print_function, division, absolute_import
-from array import array
 
+from fontTools.misc.py23 import *
 from fontTools.misc.psCharStrings import T2CharString
 from fontTools.pens.basePen import BasePen
 
