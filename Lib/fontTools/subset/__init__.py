@@ -1285,6 +1285,23 @@ def collect_features(self):
     return _uniq_sort(sum((s.Script.collect_features()
                            for s in self.ScriptRecord), []))
 
+# CBLC will inherit it
+@_add_method(ttLib.getTableClass('EBLC'))
+def subset_glyphs(self, s):
+  for strike in self.strikes:
+    for indexSubTable in strike.indexSubTables:
+      indexSubTable.names = [n for n in indexSubTable.names if n not in s.glyphs]
+    strike.indexSubTables = [i for i in strike.indexSubTables if i.names]
+  self.strikes = [s for s in self.strikes if s.indexSubTables]
+
+  return True
+
+# CBDC will inherit it
+@_add_method(ttLib.getTableClass('EBDT'))
+def subset_glyphs(self, s):
+  self.strikeData = [_dict_subset(strike, s.glyphs) for strike in self.strikeData]
+  return True
+
 @_add_method(ttLib.getTableClass('GSUB'))
 def closure_glyphs(self, s):
     s.table = self.table
@@ -2247,7 +2264,7 @@ class Options(object):
     _drop_tables_default = ['BASE', 'JSTF', 'DSIG', 'EBDT', 'EBLC',
                             'EBSC', 'SVG', 'PCLT', 'LTSH']
     _drop_tables_default += ['Feat', 'Glat', 'Gloc', 'Silf', 'Sill']  # Graphite
-    _drop_tables_default += ['CBLC', 'CBDT', 'sbix']  # Color
+    _drop_tables_default += ['sbix']  # Color
     _no_subset_tables_default = ['gasp', 'head', 'hhea', 'maxp',
                                  'vhea', 'OS/2', 'loca', 'name', 'cvt',
                                  'fpgm', 'prep', 'VDMX', 'DSIG', 'CPAL']
