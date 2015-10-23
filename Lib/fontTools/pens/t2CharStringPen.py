@@ -13,7 +13,8 @@ def roundInt(v):
     return int(round(v))
 
 
-def roundIntPoint((x, y)):
+def roundIntPoint(point):
+    x, y = point
     return roundInt(x), roundInt(y)
 
 
