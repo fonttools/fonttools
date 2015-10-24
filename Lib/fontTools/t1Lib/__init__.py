@@ -13,7 +13,7 @@ write(path, data, kind='OTHER', dohex=False)
 	'kind' can be one of 'LWFN', 'PFB' or 'OTHER'; it defaults to 'OTHER'.
 	'dohex' is a flag which determines whether the eexec encrypted
 	part should be written as hexadecimal or binary, but only if kind
-	is 'LWFN' or 'PFB'.
+	is 'OTHER'.
 """
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
@@ -36,7 +36,6 @@ except ImportError:
 	haveMacSupport = 0
 else:
 	haveMacSupport = 1
-	import MacOS
 
 
 class T1Error(Exception): pass
@@ -56,8 +55,8 @@ class T1Font(object):
 		else:
 			pass # XXX
 
-	def saveAs(self, path, type):
-		write(path, self.getData(), type)
+	def saveAs(self, path, type, dohex=False):
+		write(path, self.getData(), type, dohex)
 
 	def getData(self):
 		# XXX Todo: if the data has been converted to Python object,
@@ -266,7 +265,7 @@ def writeOther(path, data, dohex=False):
 			if code == 2 and dohex:
 				while chunk:
 					f.write(eexec.hexString(chunk[:hexlinelen]))
-					f.write('\r')
+					f.write(b'\r')
 					chunk = chunk[hexlinelen:]
 			else:
 				f.write(chunk)
@@ -276,13 +275,13 @@ def writeOther(path, data, dohex=False):
 
 # decryption tools
 
-EEXECBEGIN = "currentfile eexec"
-EEXECEND = '0' * 64
-EEXECINTERNALEND = "currentfile closefile"
-EEXECBEGINMARKER = "%-- eexec start\r"
-EEXECENDMARKER = "%-- eexec end\r"
+EEXECBEGIN = b"currentfile eexec"
+EEXECEND = b'0' * 64
+EEXECINTERNALEND = b"currentfile closefile"
+EEXECBEGINMARKER = b"%-- eexec start\r"
+EEXECENDMARKER = b"%-- eexec end\r"
 
-_ishexRE = re.compile('[0-9A-Fa-f]*$')
+_ishexRE = re.compile(b'[0-9A-Fa-f]*$')
 
 def isHex(text):
 	return _ishexRE.match(text) is not None
@@ -300,7 +299,7 @@ def decryptType1(data):
 			if decrypted[-len(EEXECINTERNALEND)-1:-1] != EEXECINTERNALEND \
 					and decrypted[-len(EEXECINTERNALEND)-2:-2] != EEXECINTERNALEND:
 				raise T1Error("invalid end of eexec part")
-			decrypted = decrypted[:-len(EEXECINTERNALEND)-2] + '\r'
+			decrypted = decrypted[:-len(EEXECINTERNALEND)-2] + b'\r'
 			data.append(EEXECBEGINMARKER + decrypted + EEXECENDMARKER)
 		else:
 			if chunk[-len(EEXECBEGIN)-1:-1] == EEXECBEGIN:
@@ -333,7 +332,7 @@ def findEncryptedChunks(data):
 	return chunks
 
 def deHexString(hexstring):
-	return eexec.deHexString(strjoin(hexstring.split()))
+	return eexec.deHexString(bytesjoin(hexstring.split()))
 
 
 # Type 1 assertion
@@ -357,7 +356,7 @@ def assertType1(data):
 # pfb helpers
 
 def longToString(long):
-	s = ""
+	s = b""
 	for i in range(4):
 		s += bytechr((long & (0xff << (i * 8))) >> i * 8)
 	return s
