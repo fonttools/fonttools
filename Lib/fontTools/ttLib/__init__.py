@@ -46,10 +46,6 @@ from fontTools.misc.py23 import *
 import os
 import sys
 
-haveMacSupport = 0
-if sys.platform == "darwin":
-	haveMacSupport = 1
-
 
 class TTLibError(Exception): pass
 
@@ -146,8 +142,8 @@ class TTFont(object):
 		if not hasattr(file, "read"):
 			closeStream = True
 			# assume file is a string
-			if haveMacSupport and res_name_or_index is not None:
-				# on the mac, we deal with sfnt resources as well as flat files
+			if res_name_or_index is not None:
+				# see if it contains 'sfnt' resources in the resource or data fork
 				from . import macUtils
 				if res_name_or_index == 0:
 					if macUtils.getSFNTResIndices(file):
