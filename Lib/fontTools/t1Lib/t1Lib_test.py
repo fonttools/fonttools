@@ -9,6 +9,8 @@ import random
 
 CWD = os.path.abspath(os.path.dirname(__file__))
 DATADIR = os.path.join(CWD, 'testdata')
+# I used `tx` to convert PFA to LWFN (stored in the data fork)
+LWFN = os.path.join(DATADIR, 'TestT1-Regular.lwfn')
 PFA = os.path.join(DATADIR, 'TestT1-Regular.pfa')
 PFB = os.path.join(DATADIR, 'TestT1-Regular.pfb')
 
@@ -63,6 +65,14 @@ class ReadWriteTest(unittest.TestCase):
 
 class T1FontTest(unittest.TestCase):
 
+	def test_parse_lwfn(self):
+		# the extended attrs are lost on git so we can't auto-detect 'LWFN'
+		font = t1Lib.T1Font()
+		font.data = t1Lib.readLWFN(LWFN)
+		font.parse()
+		self.assertEqual(font['FontName'], 'TestT1-Regular')
+		self.assertTrue('Subrs' in font['Private'])
+
 	def test_parse_pfa(self):
 		font = t1Lib.T1Font(PFA)
 		font.parse()
@@ -84,3 +94,7 @@ class T1FontTest(unittest.TestCase):
 		self.assertFalse(hasattr(aglyph, 'width'))
 		aglyph.draw(NullPen())
 		self.assertTrue(hasattr(aglyph, 'width'))
+
+
+if __name__ == '__main__':
+	unittest.main()

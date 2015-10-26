@@ -46,15 +46,6 @@ from fontTools.misc.py23 import *
 import os
 import sys
 
-haveMacSupport = 0
-if sys.platform == "mac":
-	haveMacSupport = 1
-elif sys.platform == "darwin":
-	if sys.version_info[:3] != (2, 2, 0) and sys.version_info[:1] < (3,):
-		# Python 2.2's Mac support is broken, so don't enable it there.
-		# Python 3 does not have Res used by macUtils
-		haveMacSupport = 1
-
 
 class TTLibError(Exception): pass
 
@@ -151,8 +142,8 @@ class TTFont(object):
 		if not hasattr(file, "read"):
 			closeStream = True
 			# assume file is a string
-			if haveMacSupport and res_name_or_index is not None:
-				# on the mac, we deal with sfnt resources as well as flat files
+			if res_name_or_index is not None:
+				# see if it contains 'sfnt' resources in the resource or data fork
 				from . import macUtils
 				if res_name_or_index == 0:
 					if macUtils.getSFNTResIndices(file):
@@ -185,25 +176,15 @@ class TTFont(object):
 		if self.reader is not None:
 			self.reader.close()
 
-	def save(self, file, makeSuitcase=False, reorderTables=True):
+	def save(self, file, reorderTables=True):
 		"""Save the font to disk. Similarly to the constructor,
 		the 'file' argument can be either a pathname or a writable
 		file object.
-
-		On the Mac, if makeSuitcase is true, a suitcase (resource fork)
-		file will we made instead of a flat .ttf file.
 		"""
 		from fontTools.ttLib import sfnt
 		if not hasattr(file, "write"):
 			closeStream = 1
-			if os.name == "mac" and makeSuitcase:
-				from . import macUtils
-				file = macUtils.SFNTResourceWriter(file, self)
-			else:
-				file = open(file, "wb")
-				if os.name == "mac":
-					from fontTools.misc.macCreator import setMacCreatorAndType
-					setMacCreatorAndType(file.name, 'mdos', 'BINA')
+			file = open(file, "wb")
 		else:
 			# assume "file" is a writable file object
 			closeStream = 0

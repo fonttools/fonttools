@@ -142,13 +142,11 @@ HEXLINELENGTH = 80
 
 def readLWFN(path, onlyHeader=False):
 	"""reads an LWFN font file, returns raw data"""
-	resRef = Res.FSOpenResFile(path, 1)  # read-only
+	from fontTools.misc.macRes import ResourceReader
+	reader = ResourceReader(path)
 	try:
-		Res.UseResFile(resRef)
-		n = Res.Count1Resources('POST')
 		data = []
-		for i in range(501, 501 + n):
-			res = Res.Get1Resource('POST', i)
+		for res in reader.get('POST', []):
 			code = byteord(res.data[0])
 			if byteord(res.data[1]) != 0:
 				raise T1Error('corrupt LWFN file')
@@ -167,7 +165,7 @@ def readLWFN(path, onlyHeader=False):
 			else:
 				raise T1Error('bad chunk code: ' + repr(code))
 	finally:
-		Res.CloseResFile(resRef)
+		reader.close()
 	data = bytesjoin(data)
 	assertType1(data)
 	return data
@@ -215,6 +213,7 @@ def readOther(path):
 # file writing tools
 
 def writeLWFN(path, data):
+	# Res.FSpCreateResFile was deprecated in OS X 10.5
 	Res.FSpCreateResFile(path, "just", "LWFN", 0)
 	resRef = Res.FSOpenResFile(path, 2)  # write-only
 	try:
