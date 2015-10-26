@@ -94,3 +94,7 @@ class T1FontTest(unittest.TestCase):
 		self.assertFalse(hasattr(aglyph, 'width'))
 		aglyph.draw(NullPen())
 		self.assertTrue(hasattr(aglyph, 'width'))
+
+
+if __name__ == '__main__':
+	unittest.main()
