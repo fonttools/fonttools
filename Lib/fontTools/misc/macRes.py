@@ -81,7 +81,7 @@ class ResourceReader(MutableMapping):
 			resTypeItemOffset = absTypeListOffset2 + ResourceTypeItemSize * i
 			resTypeItemData = self._read(ResourceTypeItemSize, resTypeItemOffset)
 			item = sstruct.unpack(ResourceTypeItem, resTypeItemData)
-			resType = Tag(item['type'])
+			resType = tostr(item['type'], encoding='mac-roman')
 			refListOffset = absTypeListOffset + item['refListOffset']
 			numRes = item['numRes'] + 1
 			resources = self._readReferenceList(resType, refListOffset, numRes)
@@ -151,7 +151,7 @@ class ResourceReader(MutableMapping):
 
 	def getNamedResource(self, resType, name):
 		"""Return the named resource of given type, else return None."""
-		name = Tag(name)
+		name = tostr(name, encoding='mac-roman')
 		for res in self.get(resType, []):
 			if res.name == name:
 				return res
@@ -184,8 +184,7 @@ class Resource(object):
 		absNameOffset = reader.absNameListOffset + self.nameOffset
 		nameLength, = struct.unpack('B', reader._read(1, absNameOffset))
 		name, = struct.unpack('>%ss' % nameLength, reader._read(nameLength))
-		# XXX I'm not sure what the encoding should be here...
-		self.name = Tag(name)
+		self.name = tostr(name, encoding='mac-roman')
 
 
 ResourceForkHeader = """
