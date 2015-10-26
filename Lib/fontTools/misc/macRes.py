@@ -135,7 +135,7 @@ class ResourceReader(MutableMapping):
 
 	def getNames(self, resType):
 		"""Return list of names of all resources of a given type."""
-		return [res.name for res in self.get(resType) if res.name is not None]
+		return [res.name for res in self.get(resType, []) if res.name is not None]
 
 	def getIndResource(self, resType, index):
 		"""Return resource of given type located at an index ranging from 1
@@ -152,7 +152,7 @@ class ResourceReader(MutableMapping):
 	def getNamedResource(self, resType, name):
 		"""Return the named resource of given type, else return None."""
 		name = Tag(name)
-		for i, res in enumerate(self.get(resType)):
+		for res in self.get(resType, []):
 			if res.name == name:
 				return res
 		return None
