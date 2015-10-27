@@ -398,10 +398,9 @@ class AlternateSubst(FormatSwitchingBaseTable):
 		if self.Format == 1:
 			input = _getGlyphsFromCoverageTable(rawTable["Coverage"])
 			alts = rawTable["AlternateSet"]
-			if len(input) != len(alts):
-				assert len(input) == len(alts)
-			for i in range(len(input)):
-				alternates[input[i]] = alts[i].Alternate
+			assert len(input) == len(alts)
+			for inp,alt in zip(input,alts):
+				alternates[inp] = alt.Alternate
 		else:
 			assert 0, "unknown format: %s" % self.Format
 		self.alternates = alternates
