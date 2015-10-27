@@ -111,13 +111,15 @@ def parseLigature(self, lines):
 	self.ligatures = {}
 	for line in lines:
 		assert len(line) >= 2, line
-		ligGlyph, firstGlyph = line[:2]
-		otherComponents = line[2:]
-		ligature = ot.Ligature()
-		ligature.Component = otherComponents
-		ligature.CompCount = len(ligature.Component) + 1
-		ligature.LigGlyph = ligGlyph
-		self.ligatures.setdefault(firstGlyph, []).append(ligature)
+		self.ligatures[tuple(line[1:])] = line[0]
+		# The following generates table using old, tedious, API
+		#ligGlyph, firstGlyph = line[:2]
+		#otherComponents = line[2:]
+		#ligature = ot.Ligature()
+		#ligature.Component = otherComponents
+		#ligature.CompCount = len(ligature.Component) + 1
+		#ligature.LigGlyph = ligGlyph
+		#self.ligatures.setdefault(firstGlyph, []).append(ligature)
 
 def parseSinglePos(self, lines):
 	raise NotImplementedError
