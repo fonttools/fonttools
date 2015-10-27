@@ -109,7 +109,6 @@ def parseAlternate(self, lines):
 
 def parseLigature(self, lines):
 	self.ligatures = {}
-
 	for line in lines:
 		assert len(line) >= 2, line
 		ligGlyph, firstGlyph = line[:2]
@@ -118,9 +117,7 @@ def parseLigature(self, lines):
 		ligature.Component = otherComponents
 		ligature.CompCount = len(ligature.Component) + 1
 		ligature.LigGlyph = ligGlyph
-		if firstGlyph not in self.ligatures:
-			self.ligatures[firstGlyph] = []
-		self.ligatures[firstGlyph].append(ligature)
+		self.ligatures.setdefault(firstGlyph, []).append(ligature)
 
 def parseSinglePos(self, lines):
 	raise NotImplementedError
@@ -140,8 +137,10 @@ def parseMarkToLigature(self, lines):
 def parseContext(self, lines):
 	typ = lines.peek()[0]
 	if typ == 'glyph':
+		self.Format = 1
 		return
 	elif typ == 'class definition begin':
+		self.Format = 2
 		return
 	print(typ)
 	raise NotImplementedError
@@ -149,8 +148,10 @@ def parseContext(self, lines):
 def parseChained(self, lines):
 	typ = lines.peek()[0]
 	if typ == 'glyph':
+		self.Format = 1
 		return
 	elif typ == 'backtrackclass definition begin':
+		self.Format = 2
 		return
 	print(typ)
 	raise NotImplementedError
@@ -167,7 +168,7 @@ def parseLookupList(lines, tableTag):
 
 		lookup = ot.Lookup()
 		self.Lookup.append(lookup)
-		lookup.LookupFlags = parseLookupFlags(lookupLines)
+		lookup.LookupFlag = parseLookupFlags(lookupLines)
 		lookup.LookupType, parseLookupSubTable = {
 			'GSUB': {
 				'single':	(1,	parseSingleSubst),
@@ -203,6 +204,7 @@ def parseLookupList(lines, tableTag):
 def parseGSUB(lines):
 	debug("Parsing GSUB")
 	self = ot.GSUB()
+	self.Version = 1.0
 	self.ScriptList = parseScriptList(lines)
 	self.FeatureList = parseFeatureList(lines)
 	self.LookupList = parseLookupList(lines, 'GSUB')
@@ -211,6 +213,7 @@ def parseGSUB(lines):
 def parseGPOS(lines):
 	debug("Parsing GPOS")
 	self = ot.GPOS()
+	self.Version = 1.0
 	# TODO parse EM?
 	self.ScriptList = parseScriptList(lines)
 	self.FeatureList = parseFeatureList(lines)
@@ -304,9 +307,29 @@ def compile(f):
 	container.table = table
 	return container
 
+
+class MockFont(object):
+
+	def __init__(self):
+		self._glyphOrder = ['.notdef']
+		self._reverseGlyphOrder = {'.notdef': 0}
+
+	def getGlyphID(self, glyph):
+		gid = self._reverseGlyphOrder.get(glyph, None)
+		if gid is None:
+			gid = len(self._glyphOrder)
+			self._glyphOrder.append(glyph)
+			self._reverseGlyphOrder[glyph] = gid
+		return gid
+
+	def getGlyphName(self, gid):
+		return self._glyphOrder[gid]
+
 if __name__ == '__main__':
 	import sys
+	font = MockFont()
 	for f in sys.argv[1:]:
 		debug("Processing", f)
-		compile(open(f, 'rt'))
+		table = compile(open(f, 'rt'))
+		blob = table.compile(font)
 
