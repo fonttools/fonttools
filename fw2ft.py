@@ -9,22 +9,11 @@ import re
 
 debug = print
 
-def skipUntil(lines, what):
-	for line in lines:
-		if line[0] == what:
-			return line
-
-def readUntil(lines, what):
-	for line in lines:
-		if line[0] == what:
-			raise StopIteration
-		yield line
-
 def parseScriptList(lines):
-	skipUntil(lines, 'script table begin')
+	lines.skipUntil('script table begin')
 	self = ot.ScriptList()
 	self.ScriptRecord = []
-	for line in readUntil(lines, 'script table end'):
+	for line in lines.readUntil('script table end'):
 		scriptTag, langSysTag, defaultFeature, features = line
 		debug("Adding script", scriptTag, "language-system", langSysTag)
 
@@ -62,10 +51,10 @@ def parseScriptList(lines):
 	return self
 
 def parseFeatureList(lines):
-	skipUntil(lines, 'feature table begin')
+	lines.skipUntil('feature table begin')
 	self = ot.FeatureList()
 	self.FeatureRecord = []
-	for line in readUntil(lines, 'feature table end'):
+	for line in lines.readUntil('feature table end'):
 		idx, featureTag, lookups = line
 		assert int(idx) == len(self.FeatureRecord), "%d %d" % (idx, len(self.FeatureRecord))
 		featureRec = ot.FeatureRecord()
@@ -81,58 +70,65 @@ def parseFeatureList(lines):
 	self.FeatureCount = len(self.FeatureRecord)
 	return self
 
-def appendSingleSubst(self, line):
-	mapping = getattr(self, "mapping", None)
-	if mapping is None:
-		self.mapping = mapping = {}
-	mapping[line[0]] = line[1]
 
-def appendMultiple(self, line):
+def parseSingleSubst(self, lines):
+	self.mapping = {}
+	for line in lines:
+		assert len(line) == 2, line
+		self.mapping[line[0]] = line[1]
+
+def parseMultiple(self, lines):
 	debug(line)
 	raise NotImplementedError
 
-def appendAlternate(self, line):
+def parseAlternate(self, lines):
 	debug(line)
 	raise NotImplementedError
 
-def appendLigature(self, line):
-	ligatures = getattr(self, "ligatures", None)
-	if ligatures is None:
-		self.ligatures = ligatures = {}
-	ligGlyph, firstGlyph = line[:2]
-	otherComponents = line[2:]
-	if firstGlyph not in ligatures:
-		ligatures[firstGlyph] = []
-	ligature = ot.Ligature()
-	ligature.Component = otherComponents
-	ligature.CompCount = len(ligature.Component) + 1
-	ligature.LigGlyph = ligGlyph
-	ligatures[firstGlyph].append(ligature)
+def parseLigature(self, lines):
+	self.ligatures = {}
 
-def appendSinglePos(self, line):
+	for line in lines:
+		assert len(line) >= 2, line
+		ligGlyph, firstGlyph = line[:2]
+		otherComponents = line[2:]
+		ligature = ot.Ligature()
+		ligature.Component = otherComponents
+		ligature.CompCount = len(ligature.Component) + 1
+		ligature.LigGlyph = ligGlyph
+		if firstGlyph not in self.ligatures:
+			self.ligatures[firstGlyph] = []
+		self.ligatures[firstGlyph].append(ligature)
+
+def parseSinglePos(self, lines):
 	debug(line)
 	raise NotImplementedError
 
-def appendPair(self, line):
-	raise NotImplementedError
-
-def appendCursive(self, line):
+def parsePair(self, lines):
 	debug(line)
 	raise NotImplementedError
 
-def appendMarkToSomething(self, line):
+def parseCursive(self, lines):
 	debug(line)
 	raise NotImplementedError
 
-def appendMarkToLigature(self, line):
+def parseMarkToSomething(self, lines):
 	debug(line)
 	raise NotImplementedError
 
-def appendContext(self, line):
+def parseMarkToLigature(self, lines):
 	debug(line)
 	raise NotImplementedError
 
-def appendChained(self, line):
+def parseContext(self, lines):
+	raise NotImplementedError
+	typ = line[0]
+	print(line)
+	if typ == 'glyph':
+		return
+	raise NotImplementedError
+
+def parseChained(self, lines):
 	debug(line)
 	raise NotImplementedError
 
@@ -140,7 +136,7 @@ def parseLookupList(lines, tableTag):
 	self = ot.LookupList()
 	self.Lookup = []
 	while True:
-		line = skipUntil(lines, 'lookup')
+		line = lines.skipUntil('lookup')
 		if line is None: break
 		_, idx, typ = line
 		assert int(idx) == len(self.Lookup), "%d %d" % (idx, len(self.Lookup))
@@ -148,30 +144,32 @@ def parseLookupList(lines, tableTag):
 		lookup = ot.Lookup()
 		self.Lookup.append(lookup)
 		lookup.LookupFlags = 0
-		lookup.LookupType, append = {
+		lookup.LookupType, parseLookup = {
 			'GSUB': {
-				'single':	(1, appendSingleSubst),
-				'multiple':	(2, appendMultiple),
-				'alternate':	(3, appendAlternate),
-				'ligature':	(4, appendLigature),
-				'context':	(5, appendContext),
-				'chained':	(6, appendChained),
+				'single':	(1,	parseSingleSubst),
+				'multiple':	(2,	parseMultiple),
+				'alternate':	(3,	parseAlternate),
+				'ligature':	(4,	parseLigature),
+				'context':	(5,	parseContext),
+				'chained':	(6,	parseChained),
 			},
 			'GPOS': {
-				'single':	(1, appendSinglePos),
-				'pair':		(2, appendPair),
-				'kernset':	(2, appendPair),
-				'cursive':	(3, appendCursive),
-				'mark to base':	(4, appendMarkToSomething),
-				'mark to ligature':(5, appendMarkToLigature),
-				'mark to mark':	(6, appendMarkToSomething),
-				'context':	(7, appendContext),
-				'chained':	(8, appendChained),
+				'single':	(1,	parseSinglePos),
+				'pair':		(2,	parsePair),
+				'kernset':	(2,	parsePair),
+				'cursive':	(3,	parseCursive),
+				'mark to base':	(4,	parseMarkToSomething),
+				'mark to ligature':(5,	parseMarkToLigature),
+				'mark to mark':	(6,	parseMarkToSomething),
+				'context':	(7,	parseContext),
+				'chained':	(8,	parseChained),
 			},
 		}[tableTag][typ]
 		subtable = ot.lookupTypes[tableTag][lookup.LookupType]()
 		subtable.LookupType = lookup.LookupType
-		for line in readUntil(lines, 'lookup end'):
+
+		lookupLines = lines.readUntil('lookup end')
+		for line in lookupLines:
 			flag = {
 				'RightToLeft':		0x0001,
 				'IgnoreBaseGlyphs':	0x0002,
@@ -186,9 +184,8 @@ def parseLookupList(lines, tableTag):
 			if line[0] == 'MarkAttachmentType':
 				lookup.LookupFlags |= int(line[1]) << 8
 				continue
-
-			if len(line) > 1 or line[0] != '':
-				append(subtable, line)
+			break
+		parseLookup(subtable, lookupLines)
 
 		lookup.SubTable = [subtable]
 		lookup.SubTableCount = len(lookup.SubTable)
@@ -217,8 +214,48 @@ def parseGDEF(lines):
 	debug("Parsing GDEF TODO")
 	return None
 
-def compile(s):
-	lines = ([s.strip() for s in line.split('\t')] for line in re.split('\r?\n?', s))
+class Tokenizer(object):
+
+	def __init__(self, f):
+		# TODO BytesIO / StringIO as needed?  also, figure out whether we work on bytes or unicode
+
+		lines = iter(f)
+		lines = ([s.strip() for s in line.split('\t')] for line in lines)
+		try:
+			self.filename = f.name
+		except:
+			self.filename = None
+		self._lines = lines
+		self._lineno = 0
+
+	def __iter__(self):
+		return self
+
+	def _next(self):
+		self._lineno += 1
+		return next(self._lines)
+
+	def next(self):
+		while True:
+			line = self._next()
+			# Skip comments and empty lines
+			if line[0] not in ['', '%']:
+				return line
+
+	def skipUntil(self, what):
+		for line in self:
+			if line[0] == what:
+				return line
+
+	def readUntil(self, what):
+		for line in self:
+			if line[0] == what:
+				raise StopIteration
+			yield line
+
+
+def compile(f):
+	lines = Tokenizer(f)
 	line = next(lines)
 	assert line[0][:9] == 'FontDame ', line
 	assert line[0][13:] == ' table', line
@@ -235,5 +272,5 @@ if __name__ == '__main__':
 	import sys
 	for f in sys.argv[1:]:
 		debug("Processing", f)
-		compile(open(f).read())
+		compile(open(f, 'rt'))
 
