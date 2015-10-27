@@ -341,7 +341,7 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(sub.replacement, "f_f_i")
 
     def test_substitute_lookups(self):
-        doc = Parser(self.getpath("spec5fi.fea")).parse()
+        doc = Parser(self.getpath("spec5fi1.fea")).parse()
         [ligs, sub, feature] = doc.statements
         self.assertEqual(feature.statements[0].lookups, [ligs, None, sub])
         self.assertEqual(feature.statements[1].lookups, [ligs, None, sub])
