@@ -345,7 +345,7 @@ class LigatureSubstBuilder(LookupBuilder):
         st.ligatures = {}
         for components in sorted(self.ligatures.keys(), key=self.make_key):
             lig = otTables.Ligature()
-            lig.Component = components
+            lig.Component = components[1:]
             lig.LigGlyph = self.ligatures[components]
             st.ligatures.setdefault(components[0], []).append(lig)
         lookup.SubTable.append(st)
