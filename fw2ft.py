@@ -70,6 +70,26 @@ def parseFeatureList(lines):
 	self.FeatureCount = len(self.FeatureRecord)
 	return self
 
+def parseLookupFlags(lines):
+	flags = 0
+	for line in lines:
+		flag = {
+			'RightToLeft':		0x0001,
+			'IgnoreBaseGlyphs':	0x0002,
+			'IgnoreLigatures':	0x0004,
+			'IgnoreMarks':		0x0008,
+			}.get(line[0])
+		if flag:
+			assert line[1] in ['yes', 'no'], line[1]
+			if line[1] == 'yes':
+				flags |= flag
+			continue
+		if line[0] == 'MarkAttachmentType':
+			flags |= int(line[1]) << 8
+			continue
+		lines.pack(line)
+		break
+	return flags
 
 def parseSingleSubst(self, lines):
 	self.mapping = {}
@@ -78,12 +98,14 @@ def parseSingleSubst(self, lines):
 		self.mapping[line[0]] = line[1]
 
 def parseMultiple(self, lines):
-	debug(line)
-	raise NotImplementedError
+	self.mapping = {}
+	for line in lines:
+		self.mapping[line[0]] = line[1:]
 
 def parseAlternate(self, lines):
-	debug(line)
-	raise NotImplementedError
+	self.alternates = {}
+	for line in lines:
+		self.alternates[line[0]] = line[1:]
 
 def parseLigature(self, lines):
 	self.ligatures = {}
@@ -101,35 +123,36 @@ def parseLigature(self, lines):
 		self.ligatures[firstGlyph].append(ligature)
 
 def parseSinglePos(self, lines):
-	debug(line)
 	raise NotImplementedError
 
 def parsePair(self, lines):
-	debug(line)
 	raise NotImplementedError
 
 def parseCursive(self, lines):
-	debug(line)
 	raise NotImplementedError
 
 def parseMarkToSomething(self, lines):
-	debug(line)
 	raise NotImplementedError
 
 def parseMarkToLigature(self, lines):
-	debug(line)
 	raise NotImplementedError
 
 def parseContext(self, lines):
-	raise NotImplementedError
-	typ = line[0]
-	print(line)
+	typ = lines.peek()[0]
 	if typ == 'glyph':
 		return
+	elif typ == 'class definition begin':
+		return
+	print(typ)
 	raise NotImplementedError
 
 def parseChained(self, lines):
-	debug(line)
+	typ = lines.peek()[0]
+	if typ == 'glyph':
+		return
+	elif typ == 'backtrackclass definition begin':
+		return
+	print(typ)
 	raise NotImplementedError
 
 def parseLookupList(lines, tableTag):
@@ -138,13 +161,14 @@ def parseLookupList(lines, tableTag):
 	while True:
 		line = lines.skipUntil('lookup')
 		if line is None: break
+		lookupLines = lines.readUntil('lookup end')
 		_, idx, typ = line
 		assert int(idx) == len(self.Lookup), "%d %d" % (idx, len(self.Lookup))
 
 		lookup = ot.Lookup()
 		self.Lookup.append(lookup)
-		lookup.LookupFlags = 0
-		lookup.LookupType, parseLookup = {
+		lookup.LookupFlags = parseLookupFlags(lookupLines)
+		lookup.LookupType, parseLookupSubTable = {
 			'GSUB': {
 				'single':	(1,	parseSingleSubst),
 				'multiple':	(2,	parseMultiple),
@@ -168,24 +192,7 @@ def parseLookupList(lines, tableTag):
 		subtable = ot.lookupTypes[tableTag][lookup.LookupType]()
 		subtable.LookupType = lookup.LookupType
 
-		lookupLines = lines.readUntil('lookup end')
-		for line in lookupLines:
-			flag = {
-				'RightToLeft':		0x0001,
-				'IgnoreBaseGlyphs':	0x0002,
-				'IgnoreLigatures':	0x0004,
-				'IgnoreMarks':		0x0008,
-				}.get(line[0])
-			if flag:
-				assert line[1] in ['yes', 'no'], line[1]
-				if line[1] == 'yes':
-					lookup.LookupFlags |= flag
-				continue
-			if line[0] == 'MarkAttachmentType':
-				lookup.LookupFlags |= int(line[1]) << 8
-				continue
-			break
-		parseLookup(subtable, lookupLines)
+		parseLookupSubTable(subtable, lookupLines)
 
 		lookup.SubTable = [subtable]
 		lookup.SubTableCount = len(lookup.SubTable)
@@ -213,6 +220,34 @@ def parseGPOS(lines):
 def parseGDEF(lines):
 	debug("Parsing GDEF TODO")
 	return None
+
+class BufferedIter(object):
+
+	def __init__(self, it):
+		self.iter = it
+		self.buffer = []
+
+	def __iter__(self):
+		return self
+
+	def next(self):
+		if self.buffer:
+			return self.buffer.pop(0)
+		else:
+			return self.iter.next()
+
+	def peek(self, n=0):
+		"""Return an item n entries ahead in the iteration."""
+		while n >= len(self.buffer):
+			try:
+				self.buffer.append(self.iter.next())
+			except StopIteration:
+				return None
+		return self.buffer[n]
+
+	def pack(self, item):
+		"""Push back item into the iterator."""
+		self.buffer.insert(0, item)
 
 class Tokenizer(object):
 
@@ -247,12 +282,13 @@ class Tokenizer(object):
 			if line[0] == what:
 				return line
 
-	def readUntil(self, what):
+	def _readUntil(self, what):
 		for line in self:
 			if line[0] == what:
 				raise StopIteration
 			yield line
-
+	def readUntil(self, what):
+		return BufferedIter(self._readUntil(what))
 
 def compile(f):
 	lines = Tokenizer(f)
