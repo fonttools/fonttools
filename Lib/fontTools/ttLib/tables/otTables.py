@@ -478,6 +478,21 @@ class LigatureSubst(FormatSwitchingBaseTable):
 		ligatures = getattr(self, "ligatures", None)
 		if ligatures is None:
 			ligatures = self.ligatures = {}
+
+		if ligatures and isinstance(next(iter(ligatures)), tuple):
+			# New high-level API in v3.1 and later.  Note that we just support compiling this
+			# for now.  We don't load to this API, and don't do XML with it.
+
+			# ligatures is map from components-sequence to lig-glyph
+			newLigatures = dict()
+			for comps,lig in sorted(ligautures.items(), key=lambda comps,lig: (-len(comps), comps)):
+				ligature = ot.Ligature()
+				ligature.Component = comps[1:]
+				ligature.CompCount = len(comps)
+				ligature.LigGlyph = lig
+				newLigatures.setdefault(comps[0], []).append(ligature)
+			ligatures = newLigatures
+
 		items = list(ligatures.items())
 		for i in range(len(items)):
 			glyphName, set = items[i]
