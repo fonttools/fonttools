@@ -747,7 +747,7 @@ def pngValidator(path=None, data=None, fileObj=None):
 		pos = fileObj.tell()
 		signature = fileObj.read(8)
 		fileObj.seek(pos)
-	if signature != "\x89PNG\r\n\x1a\n":
+	if signature != b"\x89PNG\r\n\x1a\n":
 		return False, "Image does not begin with the PNG signature."
 	return True, None
 
