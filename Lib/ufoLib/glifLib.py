@@ -26,6 +26,11 @@ try:
 except NameError:
 	from sets import Set as set
 
+try:
+	basestring
+except NameError:
+	basestring = str
+
 __all__ = [
 	"GlyphSet",
 	"GlifLibError",
@@ -145,9 +150,9 @@ class GlyphSet(object):
 			invalidFormat = True
 		else:
 			for name, fileName in list(contents.items()):
-				if not isinstance(name, str):
+				if not isinstance(name, basestring):
 					invalidFormat = True
-				if not isinstance(fileName, str):
+				if not isinstance(fileName, basestring):
 					invalidFormat = True
 				elif not os.path.exists(os.path.join(self.dirName, fileName)):
 					raise GlifLibError("contents.plist references a file that does not exist: %s" % fileName)
@@ -465,8 +470,11 @@ def glyphNameToFileName(glyphName, glyphSet):
 	"""
 	Wrapper around the userNameToFileName function in filenames.py
 	"""
-	existing = [name.lower() for name in list(glyphSet.contents.values())]
-	if not isinstance(glyphName, str):
+	if glyphSet:
+		existing = [name.lower() for name in list(glyphSet.contents.values())]
+	else:
+		existing = []
+	if not isinstance(glyphName, basestring):
 		try:
 			new = str(glyphName)
 			glyphName = new
@@ -552,7 +560,7 @@ def writeGlyphToString(glyphName, glyphObject=None, drawPointsFunc=None, writer=
 		aFile = None
 	identifiers = set()
 	# start
-	if not isinstance(glyphName, str):
+	if not isinstance(glyphName, basestring):
 		raise GlifLibError("The glyph name is not properly formatted.")
 	if len(glyphName) == 0:
 		raise GlifLibError("The glyph name is empty.")
@@ -640,7 +648,7 @@ def _writeUnicodes(glyphObject, writer):
 
 def _writeNote(glyphObject, writer):
 	note = getattr(glyphObject, "note", None)
-	if not isinstance(note, str):
+	if not isinstance(note, basestring):
 		raise GlifLibError("note attribute must be str or unicode")
 	note = note.encode("utf-8")
 	writer.begintag("note")
