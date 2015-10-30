@@ -245,7 +245,7 @@ class UFOReader(object):
 		# provide external callers with a single exception to catch.
 		data = self._getPlist(METAINFO_FILENAME)
 		if not isinstance(data, dict):
-			raise UFOLibError("maetainfo.plist is not properly formatted.")
+			raise UFOLibError("metainfo.plist is not properly formatted.")
 		formatVersion = data["formatVersion"]
 		if formatVersion not in supportedUFOFormatVersions:
 			raise UFOLibError("Unsupported UFO format (%d) in %s." % (formatVersion, self._path))
