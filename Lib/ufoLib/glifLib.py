@@ -49,9 +49,13 @@ class GlifLibError(Exception): pass
 if os.name == "mac":
 	WRITE_MODE = "wb"  # use unix line endings, even with Classic MacPython
 	READ_MODE = "rb"
+	WRITE_BYTES_MODE = WRITE_MODE
+	READ_BYTES_MODE = READ_MODE
 else:
 	WRITE_MODE = "w"
 	READ_MODE = "r"
+	WRITE_BYTES_MODE = "wb"
+	READ_BYTES_MODE = "rb"
 
 # ---------
 # Constants
