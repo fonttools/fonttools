@@ -1,5 +1,5 @@
 # Copyright (c) 2009 Type Supply LLC
-# Author: Tal Lemming
+# Author: Tal Leming
 
 
 from __future__ import print_function, division, absolute_import
