@@ -4,6 +4,14 @@ import os
 import calendar
 
 # -------
+# Python 2 or 3
+# -------
+try:
+    basestring
+except NameError:
+    basestring = str
+
+# -------
 # Generic
 # -------
 
@@ -583,7 +591,8 @@ def anchorValidator(value):
 	"""
 	dictPrototype = dict(
 		x=((int, float), False), y=((int, float), False),
-		name=(str, False), color=(str, False), identifier=(str, False)
+		name=(basestring, False), color=(basestring, False),
+		identifier=(basestring, False)
 	)
 	if not genericDictValidator(value, dictPrototype):
 		return False
@@ -848,7 +857,7 @@ def groupsValidator(value):
 	firstSideMapping = {}
 	secondSideMapping = {}
 	for groupName, glyphList in list(value.items()):
-		if not isinstance(groupName, str):
+		if not isinstance(groupName, (basestring)):
 			return False, bogusFormatMessage
 		if not isinstance(glyphList, (list, tuple)):
 			return False, bogusFormatMessage
