@@ -877,7 +877,7 @@ def groupsValidator(value):
 # kerning.plist
 # -------------
 
-def kerningValidator(kerning, groups):
+def kerningValidatorReportPairs(kerning, groups):
 	"""
 	This validates a passed kerning dictionary
 	using the provided groups. The validation
@@ -893,7 +893,7 @@ def kerningValidator(kerning, groups):
 	...     ("public.kern1.O", "F") : -200,
 	...     ("D", "F") : -300,
 	... }
-	>>> kerningValidator(kerning, groups)[0]
+	>>> kerningValidatorReportPairs(kerning, groups)[0]
 	True
 	>>> kerning = {
 	...     ("public.kern1.O", "public.kern2.E") : -100,
@@ -901,7 +901,7 @@ def kerningValidator(kerning, groups):
 	...     ("Q", "public.kern2.E") : -250,
 	...     ("D", "F") : -300,
 	... }
-	>>> kerningValidator(kerning, groups)[0]
+	>>> kerningValidatorReportPairs(kerning, groups)[0]
 	False
 	"""
 	# flatten the groups
@@ -918,6 +918,7 @@ def kerningValidator(kerning, groups):
 			d[glyphName] = groupName
 	# search for conflicts
 	errors = []
+	pairs = []
 	for first, second in kerning.keys():
 		firstIsGroup = first.startswith("public.kern1.")
 		secondIsGroup = second.startswith("public.kern2.")
@@ -950,6 +951,8 @@ def kerningValidator(kerning, groups):
 			for glyph in firstOptions:
 				if (glyph, secondGroup) in kerning:
 					errors.append("%s, %s (%d) conflicts with %s, %s (%d)" % (glyph, secondGroup, kerning[glyph, secondGroup], first, second, kerning[first, second]))
+					pairs.append([glyph, secondGroup])
+					pairs.append([first, second])
 		# validate glyph + group
 		if secondIsGroup:
 			secondOptions = groups[second]
@@ -957,10 +960,17 @@ def kerningValidator(kerning, groups):
 			for glyph in secondOptions:
 				if (firstGroup, glyph) in kerning:
 					errors.append("%s, %s (%d) conflicts with %s, %s (%d)" % (firstGroup, glyph, kerning[firstGroup, glyph], first, second, kerning[first, second]))
+					pairs.append([firstGroup, glyph])
+					pairs.append([first, second])
 	if errors:
-		return False, errors
+		return False, errors, pairs
 	# fallback
-	return True, errors
+	return True, errors, pairs
+
+def kerningValidator(kerning, groups):
+	valid, errors, pairs = kerningValidatorReportPairs(kerning, groups)
+	return valid, errors
+
 
 # -------------
 # lib.plist/lib
