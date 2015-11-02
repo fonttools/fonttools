@@ -102,10 +102,10 @@ class FileNameTests(unittest.TestCase):
 	def testDefaultFileNameScheme(self):
 		self.assertEqual(glyphNameToFileName("a", None), "a.glif")
 		self.assertEqual(glyphNameToFileName("A", None), "A_.glif")
-		self.assertEqual(glyphNameToFileName("Aring", None), "Aring_.glif")
+		self.assertEqual(glyphNameToFileName("Aring", None), "A_ring.glif")
 		self.assertEqual(glyphNameToFileName("F_A_B", None), "F__A__B_.glif")
 		self.assertEqual(glyphNameToFileName("A.alt", None), "A_.alt.glif")
-		self.assertEqual(glyphNameToFileName("A.Alt", None), "A_.Alt_.glif")
+		self.assertEqual(glyphNameToFileName("A.Alt", None), "A_.A_lt.glif")
 		self.assertEqual(glyphNameToFileName(".notdef", None), "_notdef.glif")
 		self.assertEqual(glyphNameToFileName("T_H", None), "T__H_.glif")
 		self.assertEqual(glyphNameToFileName("T_h", None), "T__h.glif")
