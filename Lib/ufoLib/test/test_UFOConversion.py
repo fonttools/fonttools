@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+from __future__ import absolute_import
 import os
 import shutil
 import unittest
@@ -7,7 +7,7 @@ import tempfile
 import codecs
 from plistlib import writePlist, readPlist
 from ufoLib import convertUFOFormatVersion1ToFormatVersion2, UFOReader, UFOWriter
-from .testSupport import expectedFontInfo1To2Conversion, expectedFontInfo2To1Conversion
+from ufoLib.test.testSupport import expectedFontInfo1To2Conversion, expectedFontInfo2To1Conversion
 
 
 # the format version 1 lib.plist contains some data
