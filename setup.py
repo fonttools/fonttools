@@ -1,7 +1,9 @@
 #! /usr/bin/env python
 
 import os, sys
-from distutils.core import setup, Extension
+from distutils.core import Extension
+from setuptools import setup
+
 
 try:
 	# load py2exe distutils extension, if available
@@ -71,6 +73,7 @@ setup(
                         "ufoLib",
 		],
 		package_dir = {'': 'Lib'},
+		test_suite="ufoLib.test",
 		#extra_path = 'FontTools',
 		**classifiers
 	)
