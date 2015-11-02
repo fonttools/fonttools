@@ -2,6 +2,7 @@
 
 import os
 import calendar
+from io import open
 
 # -------
 # Python 2 or 3
@@ -140,7 +141,7 @@ def fontInfoOpenTypeHeadCreatedValidator(value):
 	Version 2+.
 	"""
 	# format: 0000/00/00 00:00:00
-	if not isinstance(value, str):
+	if not isinstance(value, basestring):
 		return False
 	# basic formatting
 	if not len(value) == 19:
@@ -200,7 +201,7 @@ def fontInfoOpenTypeNameRecordsValidator(value):
 	"""
 	if not isinstance(value, list):
 		return False
-	dictPrototype = dict(nameID=(int, True), platformID=(int, True), encodingID=(int, True), languageID=(int, True), string=(str, True))
+	dictPrototype = dict(nameID=(int, True), platformID=(int, True), encodingID=(int, True), languageID=(int, True), string=(basestring, True))
 	for nameRecord in value:
 		if not genericDictValidator(nameRecord, dictPrototype):
 			return False
@@ -332,7 +333,7 @@ def fontInfoWOFFMetadataUniqueIDValidator(value):
 	"""
 	Version 3+.
 	"""
-	dictPrototype = dict(id=(str, True))
+	dictPrototype = dict(id=(basestring, True))
 	if not genericDictValidator(value, dictPrototype):
 		return False
 	return True
@@ -341,7 +342,7 @@ def fontInfoWOFFMetadataVendorValidator(value):
 	"""
 	Version 3+.
 	"""
-	dictPrototype = {"name" : (str, True), "url" : (str, False), "dir" : (str, False), "class" : (str, False)}
+	dictPrototype = {"name" : (basestring, True), "url" : (basestring, False), "dir" : (basestring, False), "class" : (basestring, False)}
 	if not genericDictValidator(value, dictPrototype):
 		return False
 	if "dir" in value and value.get("dir") not in ("ltr", "rtl"):
@@ -357,7 +358,7 @@ def fontInfoWOFFMetadataCreditsValidator(value):
 		return False
 	if not len(value["credits"]):
 		return False
-	dictPrototype = {"name" : (str, True), "url" : (str, False), "role" : (str, False), "dir" : (str, False), "class" : (str, False)}
+	dictPrototype = {"name" : (basestring, True), "url" : (basestring, False), "role" : (basestring, False), "dir" : (basestring, False), "class" : (basestring, False)}
 	for credit in value["credits"]:
 		if not genericDictValidator(credit, dictPrototype):
 			return False
@@ -369,7 +370,7 @@ def fontInfoWOFFMetadataDescriptionValidator(value):
 	"""
 	Version 3+.
 	"""
-	dictPrototype = dict(url=(str, False), text=(list, True))
+	dictPrototype = dict(url=(basestring, False), text=(list, True))
 	if not genericDictValidator(value, dictPrototype):
 		return False
 	for text in value["text"]:
@@ -381,7 +382,7 @@ def fontInfoWOFFMetadataLicenseValidator(value):
 	"""
 	Version 3+.
 	"""
-	dictPrototype = dict(url=(str, False), text=(list, False), id=(str, False))
+	dictPrototype = dict(url=(basestring, False), text=(list, False), id=(basestring, False))
 	if not genericDictValidator(value, dictPrototype):
 		return False
 	if "text" in value:
@@ -418,7 +419,7 @@ def fontInfoWOFFMetadataLicenseeValidator(value):
 	"""
 	Version 3+.
 	"""
-	dictPrototype = {"name" : (str, True), "dir" : (str, False), "class" : (str, False)}
+	dictPrototype = {"name" : (basestring, True), "dir" : (basestring, False), "class" : (basestring, False)}
 	if not genericDictValidator(value, dictPrototype):
 		return False
 	if "dir" in value and value.get("dir") not in ("ltr", "rtl"):
@@ -429,7 +430,7 @@ def fontInfoWOFFMetadataTextValue(value):
 	"""
 	Version 3+.
 	"""
-	dictPrototype = {"text" : (str, True), "language" : (str, False), "dir" : (str, False), "class" : (str, False)}
+	dictPrototype = {"text" : (basestring, True), "language" : (basestring, False), "dir" : (basestring, False), "class" : (basestring, False)}
 	if not genericDictValidator(value, dictPrototype):
 		return False
 	if "dir" in value and value.get("dir") not in ("ltr", "rtl"):
@@ -453,7 +454,7 @@ def fontInfoWOFFMetadataExtensionValidator(value):
 	"""
 	Version 3+.
 	"""
-	dictPrototype = dict(names=(list, False), items=(list, True), id=(str, False))
+	dictPrototype = dict(names=(list, False), items=(list, True), id=(basestring, False))
 	if not genericDictValidator(value, dictPrototype):
 		return False
 	if "names" in value:
@@ -469,7 +470,7 @@ def fontInfoWOFFMetadataExtensionItemValidator(value):
 	"""
 	Version 3+.
 	"""
-	dictPrototype = dict(id=(str, False), names=(list, True), values=(list, True))
+	dictPrototype = dict(id=(basestring, False), names=(list, True), values=(list, True))
 	if not genericDictValidator(value, dictPrototype):
 		return False
 	for name in value["names"]:
@@ -484,7 +485,7 @@ def fontInfoWOFFMetadataExtensionNameValidator(value):
 	"""
 	Version 3+.
 	"""
-	dictPrototype = {"text" : (str, True), "language" : (str, False), "dir" : (str, False), "class" : (str, False)}
+	dictPrototype = {"text" : (basestring, True), "language" : (basestring, False), "dir" : (basestring, False), "class" : (basestring, False)}
 	if not genericDictValidator(value, dictPrototype):
 		return False
 	if "dir" in value and value.get("dir") not in ("ltr", "rtl"):
@@ -495,7 +496,7 @@ def fontInfoWOFFMetadataExtensionValueValidator(value):
 	"""
 	Version 3+.
 	"""
-	dictPrototype = {"text" : (str, True), "language" : (str, False), "dir" : (str, False), "class" : (str, False)}
+	dictPrototype = {"text" : (basestring, True), "language" : (basestring, False), "dir" : (basestring, False), "class" : (basestring, False)}
 	if not genericDictValidator(value, dictPrototype):
 		return False
 	if "dir" in value and value.get("dir") not in ("ltr", "rtl"):
@@ -530,7 +531,7 @@ def guidelineValidator(value):
 	"""
 	dictPrototype = dict(
 		x=((int, float), False), y=((int, float), False), angle=((int, float), False),
-		name=(str, False), color=(str, False), identifier=(str, False)
+		name=(basestring, False), color=(basestring, False), identifier=(basestring, False)
 	)
 	if not genericDictValidator(value, dictPrototype):
 		return False
@@ -628,7 +629,7 @@ def identifierValidator(value):
 	"""
 	validCharactersMin = 0x20
 	validCharactersMax = 0x7E
-	if not isinstance(value, str):
+	if not isinstance(value, basestring):
 		return False
 	if not value:
 		return False
@@ -687,7 +688,7 @@ def colorValidator(value):
 	>>> colorValidator("1, 1, 1, 1")
 	True
 	"""
-	if not isinstance(value, str):
+	if not isinstance(value, basestring):
 		return False
 	parts = value.split(",")
 	if len(parts) != 4:
@@ -723,10 +724,11 @@ def imageValidator(value):
 	Version 3+.
 	"""
 	dictPrototype = dict(
-		fileName=(str, True),
-		xScale=((int, float), False), xyScale=((int, float), False), yxScale=((int, float), False), yScale=((int, float), False),
+		fileName=(basestring, True),
+		xScale=((int, float), False), xyScale=((int, float), False),
+		yxScale=((int, float), False), yScale=((int, float), False),
 		xOffset=((int, float), False), yOffset=((int, float), False),
-		color=(str, False)
+		color=(basestring, False)
 	)
 	if not genericDictValidator(value, dictPrototype):
 		return False
@@ -747,9 +749,8 @@ def pngValidator(path=None, data=None, fileObj=None):
 	"""
 	assert path is not None or data is not None or fileObj is not None
 	if path is not None:
-		f = open(path, "rb")
-		signature = f.read(8)
-		f.close()
+		with open(path, "rb") as f:
+			signature = f.read(8)
 	elif data is not None:
 		signature = data[:8]
 	elif fileObj is not None:
@@ -784,7 +785,7 @@ def layerContentsValidator(value, ufoPath):
 		if not len(entry) == 2:
 			return False, bogusFileMessage
 		for i in entry:
-			if not isinstance(i, str):
+			if not isinstance(i, basestring):
 				return False, bogusFileMessage
 		layerName, directoryName = entry
 		# check directory naming
@@ -875,7 +876,7 @@ def groupsValidator(value):
 			else:
 				d = secondSideMapping
 			for glyphName in glyphList:
-				if not isinstance(glyphName, str):
+				if not isinstance(glyphName, basestring):
 					return False, "The group data %s contains an invalid member." % groupName
 				if glyphName in d:
 					return False, "The glyph \"%s\" occurs in too many kerning groups." % glyphName
@@ -1014,7 +1015,7 @@ def fontLibValidator(value):
 	if not isDictEnough(value):
 		return False, bogusFormatMessage
 	for key, value in list(value.items()):
-		if not isinstance(key, str):
+		if not isinstance(key, basestring):
 			return False, bogusFormatMessage
 		# public.glyphOrder
 		if key == "public.glyphOrder":
@@ -1022,7 +1023,7 @@ def fontLibValidator(value):
 			if not isinstance(value, (list, tuple)):
 				return False, bogusGlyphOrderMessage
 			for glyphName in value:
-				if not isinstance(glyphName, str):
+				if not isinstance(glyphName, basestring):
 					return False, bogusGlyphOrderMessage
 	return True, None
 
@@ -1055,7 +1056,7 @@ def glyphLibValidator(value):
 	if not isDictEnough(value):
 		return False, bogusFormatMessage
 	for key, value in list(value.items()):
-		if not isinstance(key, str):
+		if not isinstance(key, basestring):
 			return False, bogusFormatMessage
 		# public.markColor
 		if key == "public.markColor":
