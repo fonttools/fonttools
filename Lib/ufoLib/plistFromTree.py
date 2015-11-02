@@ -1,13 +1,11 @@
+from __future__ import absolute_import
 """Small helper module to parse Plist-formatted data from trees as created
 by xmlTreeBuilder.
 """
 
-
 __all__ = "readPlistFromTree"
 
-
-from .plistlib import PlistParser
-
+from ufoLib.plistlib import PlistParser
 
 def readPlistFromTree(tree):
 	"""Given a (sub)tree created by xmlTreeBuilder, interpret it
@@ -38,6 +36,6 @@ class PlistTreeParser(PlistParser):
 
 
 if __name__ == "__main__":
-	from .xmlTreeBuilder import buildTree
+	from ufoLib.xmlTreeBuilder import buildTree
 	tree = buildTree("xxx.plist", stripData=0)
 	print(readPlistFromTree(tree))
