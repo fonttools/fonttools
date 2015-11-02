@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
 """
 glifLib.py -- Generic module for reading and writing the .glif format.
 
@@ -12,13 +13,13 @@ glyph data. See the class doc string for details.
 """
 
 import os
-from io import BytesIO, StringIO
+from io import BytesIO, StringIO, open
 from warnings import warn
-from .xmlTreeBuilder import buildTree, stripCharacterData
+from fontTools.misc.py23 import tobytes
+from ufoLib.xmlTreeBuilder import buildTree, stripCharacterData
 from ufoLib.pointPen import AbstractPointPen
-from .plistlib import readPlist, writePlistToString
-from .filenames import userNameToFileName
-from .validators import isDictEnough, genericTypeValidator, colorValidator,\
+from ufoLib.filenames import userNameToFileName
+from ufoLib.validators import isDictEnough, genericTypeValidator, colorValidator,\
 	guidelinesValidator, anchorsValidator, identifierValidator, imageValidator, glyphLibValidator
 
 try:
@@ -30,6 +31,11 @@ try:
 	basestring
 except NameError:
 	basestring = str
+
+try:
+	from plistlib import load, dumps
+except ImportError:
+	from plistlib import readPlist as load, writePlistToString as dumps
 
 __all__ = [
 	"GlyphSet",
@@ -189,10 +195,9 @@ class GlyphSet(object):
 		contentsPath = os.path.join(self.dirName, "contents.plist")
 		# We need to force Unix line endings, even in OS9 MacPython in FL,
 		# so we do the writing to file ourselves.
-		plist = writePlistToString(self.contents)
-		f = open(contentsPath, WRITE_MODE)
-		f.write(plist)
-		f.close()
+		plist = dumps(self.contents)
+		with open(contentsPath, WRITE_MODE) as f:
+			f.write(plist)
 
 	# layer info
 
@@ -229,10 +234,9 @@ class GlyphSet(object):
 		infoData = validateLayerInfoVersion3Data(infoData)
 		# write file
 		path = os.path.join(self.dirName, LAYERINFO_FILENAME)
-		plist = writePlistToString(infoData)
-		f = open(path, WRITE_MODE)
-		f.write(plist)
-		f.close()
+		plist = dumps(infoData)
+		with open(path, WRITE_BYTES_MODE) as f:
+			f.write(plist)
 
 	# read caching
 
@@ -265,9 +269,8 @@ class GlyphSet(object):
 			fileName = self.contents[glyphName]
 			if not os.path.exists(path):
 				raise KeyError(glyphName)
-			f = open(path, "rb")
-			text = f.read()
-			f.close()
+			with open(path, "rb") as f:
+				text = f.read()
 			self._glifCache[glyphName] = (text, os.path.getmtime(path))
 		return self._glifCache[glyphName][0]
 
@@ -371,14 +374,12 @@ class GlyphSet(object):
 				self._reverseContents[fileName.lower()] = glyphName
 		path = os.path.join(self.dirName, fileName)
 		if os.path.exists(path):
-			f = open(path, READ_MODE)
-			oldData = f.read()
-			f.close()
+			with open(path, READ_MODE) as f:
+				oldData = f.read()
 			if data == oldData:
 				return
-		f = open(path, WRITE_MODE)
-		f.write(data)
-		f.close()
+		with open(path, WRITE_MODE) as f:
+			f.write(data)
 
 	def deleteGlyph(self, glyphName):
 		"""Permanently delete the glyph from the glyph set on disk. Will
@@ -460,7 +461,8 @@ class GlyphSet(object):
 
 	def _readPlist(self, path):
 		try:
-			data = readPlist(path)
+			with open(path, "rb") as f:
+				data = load(f)
 			return data
 		except:
 			raise GlifLibError("The file %s could not be read." % path)
@@ -522,7 +524,7 @@ def readGlyphFromString(aString, glyphObject=None, pointPen=None, formatVersions
 	The formatVersions argument defined the GLIF format versions
 	that are allowed to be read.
 	"""
-	tree = _glifTreeFromFile(StringIO(aString))
+	tree = _glifTreeFromFile(BytesIO(tobytes(aString)))
 	_readGlyphFromTree(tree, glyphObject, pointPen)
 
 
@@ -753,12 +755,13 @@ def _writeAnchors(glyphObject, writer, identifiers):
 
 def _writeLib(glyphObject, writer):
 	from ufoLib.plistlib import PlistWriter
+
 	lib = getattr(glyphObject, "lib", None)
 	valid, message = glyphLibValidator(lib)
 	if not valid:
-	    raise GlifLibError(message)
+		raise GlifLibError(message)
 	if not isinstance(lib, dict):
-	    lib = dict(lib)
+		lib = dict(lib)
 	writer.begintag("lib")
 	writer.newline()
 	plistWriter = PlistWriter(writer.file, indentLevel=writer.indentlevel,
