@@ -1,0 +1,14 @@
+language: python
+sudo: required
+python:
+  - "2.6"
+  - "2.7"
+  - "3.4"
+  - "3.5"
+before_install:
+  - git clone --depth=1 https://github.com/behdad/fonttools.git
+install:
+  - cd fonttools; python setup.py install; cd ..
+  - python setup.py install
+script:
+  - python setup.py test
