@@ -1,4 +1,5 @@
 import os
+from io import open
 try:
 	from xml.parsers.expat import ParserCreate
 except ImportError:
@@ -6,6 +7,11 @@ except ImportError:
 	from xml.parsers.xmlproc.xmlproc import XMLProcessor
 else:
 	_haveExpat = 1
+
+try:
+	basestring
+except NameError:
+	basestring = str
 
 
 class XMLParser:
@@ -39,15 +45,12 @@ class XMLParser:
 		parser.StartElementHandler = self.startElementHandler
 		parser.EndElementHandler = self.endElementHandler
 		parser.CharacterDataHandler = self.characterDataHandler
-		if isinstance(pathOrFile, (bytes, str)):
-			f = open(pathOrFile)
-			didOpen = 1
+		if isinstance(pathOrFile, (bytes, basestring)):
+			with open(pathOrFile) as f:
+				parser.ParseFile(f)
 		else:
-			didOpen = 0
-			f = pathOrFile
-		parser.ParseFile(f)
-		if didOpen:
-			f.close()
+			parser.ParseFile(pathOrFile)
+
 		return self.getRoot()
 
 	def _xmlprocDataHandler(self, data, begin, end):
@@ -58,19 +61,20 @@ class XMLParser:
 		proc.app.handle_start_tag = self.startElementHandler
 		proc.app.handle_end_tag = self.endElementHandler
 		proc.app.handle_data = self._xmlprocDataHandler
-		if isinstance(pathOrFile, (bytes, str)):
-			f = open(pathOrFile)
-			didOpen = 1
+		if isinstance(pathOrFile, (bytes, basestring)):
+			with open(pathOrFile) as f:
+				proc.parseStart()
+				proc.read_from(f)
+				proc.flush()
+				proc.parseEnd()
+				proc.deref()
 		else:
-			didOpen = 0
 			f = pathOrFile
-		proc.parseStart()
-		proc.read_from(f)
-		proc.flush()
-		proc.parseEnd()
-		proc.deref()
-		if didOpen:
-			f.close()
+			proc.parseStart()
+			proc.read_from(f)
+			proc.flush()
+			proc.parseEnd()
+			proc.deref()
 		return self.getRoot()
 
 	if _haveExpat:
