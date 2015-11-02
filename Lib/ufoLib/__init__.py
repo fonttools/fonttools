@@ -1,3 +1,13 @@
+from __future__ import absolute_import
+import os
+import shutil
+from io import StringIO, BytesIO, open
+import codecs
+from copy import deepcopy
+from ufoLib.glifLib import GlyphSet, READ_MODE, WRITE_MODE, WRITE_BYTES_MODE, READ_BYTES_MODE
+from ufoLib.validators import *
+from ufoLib.filenames import userNameToFileName
+from ufoLib.converters import convertUFO1OrUFO2KerningToUFO3Kerning
 """
 A library for importing .ufo files and their descendants.
 Refer to http://unifiedfontobject.com for the UFO specification.
@@ -28,22 +38,15 @@ fontinfo.plist values between the possible format versions.
 	convertFontInfoValueForAttributeFromVersion3ToVersion2
 """
 
-
-import os
-import shutil
-from io import StringIO
-import codecs
-from copy import deepcopy
-from .plistlib import readPlist, writePlist
-from .glifLib import GlyphSet, READ_MODE, WRITE_MODE
-from .validators import *
-from .filenames import userNameToFileName
-from .converters import convertUFO1OrUFO2KerningToUFO3Kerning
-
 try:
 	set
 except NameError:
 	from sets import Set as set
+
+try:
+	from plistlib import load, dump
+except ImportError:
+	from plistlib import readPlist as load, writePlist as dump
 
 __all__ = [
 	"makeUFOPath"
@@ -75,7 +78,7 @@ DATA_DIRNAME = "data"
 IMAGES_DIRNAME = "images"
 METAINFO_FILENAME = "metainfo.plist"
 FONTINFO_FILENAME = "fontinfo.plist"
-LIB_FILENAME = "lib.plist"	
+LIB_FILENAME = "lib.plist"
 GROUPS_FILENAME = "groups.plist"
 KERNING_FILENAME = "kerning.plist"
 FEATURES_FILENAME = "features.fea"
@@ -111,7 +114,8 @@ def _getPlist(self, fileName, default=None):
 		else:
 			raise UFOLibError("%s is missing in %s. This file is required" % (fileName, self._path))
 	try:
-		return readPlist(path)
+		with open(path, "rb") as f:
+			return load(f)
 	except:
 		raise UFOLibError("The file %s could not be read." % fileName)
 
@@ -201,7 +205,10 @@ class UFOReader(object):
 			return None
 		if os.path.isdir(fullPath):
 			raise UFOLibError("%s is a directory." % path)
-		f = codecs.open(fullPath, READ_MODE, encoding=encoding)
+		if encoding:
+			f = open(fullPath, encoding=encoding)
+		else:
+			f = open(fullPath, READ_BYTES_MODE, encoding=encoding)
 		data = f.read()
 		f.close()
 		return data
@@ -220,7 +227,10 @@ class UFOReader(object):
 			return None
 		if os.path.isdir(fullPath):
 			raise UFOLibError("%s is a directory." % path)
-		f = codecs.open(fullPath, READ_MODE, encoding=encoding)
+		if encoding:
+			f = open(fullPath, encoding=encoding)
+		else:
+			f = open(fullPath, READ_BYTES_MODE, encoding=encoding)
 		return f
 
 	def getFileModificationTime(self, path):
@@ -411,9 +421,8 @@ class UFOReader(object):
 		path = os.path.join(self._path, FEATURES_FILENAME)
 		if not self._checkForFile(path):
 			return ""
-		f = open(path, READ_MODE)
-		text = f.read()
-		f.close()
+		with open(path, READ_MODE) as f:
+			text = f.read()
 		return text
 
 	# glyph sets & layers
@@ -698,7 +707,7 @@ class UFOWriter(object):
 
 	# file system interaction
 
-	def writeBytesToPath(self, path, bytes, encoding=None):
+	def writeBytesToPath(self, path, data, encoding=None):
 		"""
 		Write bytes to path. If needed, the directory tree
 		for the given path will be built. The path must be
@@ -708,7 +717,9 @@ class UFOWriter(object):
 		if os.path.exists(fullPath) and os.path.isdir(fullPath):
 			raise UFOLibError("A directory exists at %s." % path)
 		self._buildDirectoryTree(path)
-		writeFileAtomically(bytes, fullPath, encoding=encoding)
+		if encoding:
+			data = StringIO(data).encode(encoding)
+		writeDataFileAtomically(data, fullPath)
 
 	def getFileObjectForPath(self, path, encoding=None):
 		"""
@@ -723,7 +734,7 @@ class UFOWriter(object):
 		if os.path.exists(fullPath) and os.path.isdir(fullPath):
 			raise UFOLibError("A directory exists at %s." % path)
 		self._buildDirectoryTree(path)
-		return codecs.open(fullPath, WRITE_MODE, encoding=encoding)
+		return open(fullPath, WRITE_MODE, encoding=encoding)
 
 	def removeFileForPath(self, path):
 		"""
@@ -1209,10 +1220,10 @@ def writePlistAtomically(obj, path):
 	If so, the file is not rewritten so that the modification date
 	is preserved.
 	"""
-	f = StringIO()
-	writePlist(obj, f)
+	f = BytesIO()
+	dump(obj, f)
 	data = f.getvalue()
-	writeFileAtomically(data, path)
+	writeDataFileAtomically(data, path)
 
 def writeFileAtomically(text, path, encoding="utf-8"):
 	"""
@@ -1223,17 +1234,38 @@ def writeFileAtomically(text, path, encoding="utf-8"):
 	is preserved. An encoding may be passed if needed.
 	"""
 	if os.path.exists(path):
-		f = codecs.open(path, READ_MODE, encoding=encoding)
-		oldText = f.read()
-		f.close()
+		with open(path, READ_MODE, encoding=encoding) as f:
+			oldText = f.read()
 		if text == oldText:
 			return
 		# if the text is empty, remove the existing file
 		if not text:
 			os.remove(path)
 	if text:
-		f = codecs.open(path, WRITE_MODE, encoding=encoding)
-		f.write(text)
+		with open(path, WRITE_MODE, encoding=encoding) as f:
+			f.write(text)
+
+def writeDataFileAtomically(data, path):
+	"""
+	Write data into a file at path. Do this sort of atomically
+	making it harder to cause corrupt files. This also checks to see
+	if data matches the data that is already in the file at path.
+	If so, the file is not rewritten so that the modification date
+	is preserved.
+	"""
+	assert isinstance(data, bytes)
+	if os.path.exists(path):
+		f = open(path, READ_BYTES_MODE)
+		oldData = f.read()
+		f.close()
+		if data == oldData:
+			return
+			# if the data is empty, remove the existing file
+			if not data:
+				os.remove(path)
+	if data:
+		f = open(path, WRITE_BYTES_MODE)
+		f.write(data)
 		f.close()
 
 # ---------------------------
@@ -1268,7 +1300,8 @@ def convertUFOFormatVersion1ToFormatVersion2(inPath, outPath=None):
 	if not os.path.exists(infoPath):
 		infoData = {}
 	else:
-		infoData = readPlist(infoPath)
+		with open(infoPath, READ_BYTES_MODE) as f:
+			infoData = load(f)
 	infoData = _convertFontInfoDataVersion1ToVersion2(infoData)
 	# if the paths are the same, only need to change the
 	# fontinfo and meta info files.
