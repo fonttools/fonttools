@@ -1,7 +1,12 @@
+from __future__ import unicode_literals
 import unittest
 from ufoLib.glifLib import GlifLibError, readGlyphFromString, writeGlyphToString
 from ufoLib.test.testSupport import Glyph, stripText
 
+try:
+	basestring
+except NameError:
+	basestring = str
 # ----------
 # Test Cases
 # ----------
@@ -9,9 +14,9 @@ from ufoLib.test.testSupport import Glyph, stripText
 class TestGLIF2(unittest.TestCase):
 
 	def assertEqual(self, first, second, msg=None):
-		if isinstance(first, str):
+		if isinstance(first, basestring):
 			first = stripText(first)
-		if isinstance(second, str):
+		if isinstance(second, basestring):
 			second = stripText(second)
 		return super(TestGLIF2, self).assertEqual(first, second, msg=msg)
 

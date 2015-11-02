@@ -6,6 +6,10 @@ import os
 import types
 import unittest
 
+try:
+	basestring
+except NameError:
+	basestring = str
 
 def getDemoFontPath():
 	"""Return the path to Data/DemoFont.ufo/."""
@@ -130,7 +134,7 @@ def _dictToString(d):
 			value = _tupleToString(value)
 		elif isinstance(value, (int, float)):
 			value = str(value)
-		elif isinstance(value, str):
+		elif isinstance(value, basestring):
 			value = "\"%s\"" % value
 		text.append("%s : %s" % (key, value))
 	if not text:
@@ -148,7 +152,7 @@ def _listToString(l):
 			value = _tupleToString(value)
 		elif isinstance(value, (int, float)):
 			value = str(value)
-		elif isinstance(value, str):
+		elif isinstance(value, basestring):
 			value = "\"%s\"" % value
 		text.append(value)
 	if not text:
@@ -166,7 +170,7 @@ def _tupleToString(t):
 			value = _tupleToString(value)
 		elif isinstance(value, (int, float)):
 			value = str(value)
-		elif isinstance(value, str):
+		elif isinstance(value, basestring):
 			value = "\"%s\"" % value
 		text.append(value)
 	if not text:
