@@ -2,8 +2,8 @@ import os
 import tempfile
 import shutil
 import unittest
-
-from robofab.test.testSupport import getDemoFontGlyphSetPath
+from io import open
+from ufoLib.test.testSupport import getDemoFontGlyphSetPath
 from ufoLib.glifLib import GlyphSet, glyphNameToFileName, READ_MODE
 from robofab.tools.glyphNameSchemes import glyphNameToShortFileName
 
@@ -30,11 +30,13 @@ class GlyphSetTests(unittest.TestCase):
 			g.drawPoints(None)  # load attrs
 			dst.writeGlyph(glyphName, g, g.drawPoints)
 		# compare raw file data:
-		for glyphName in list(src.keys()):
+		for glyphName in sorted(src.keys()):
 			fileName = src.contents[glyphName]
-			org = file(os.path.join(srcDir, fileName), READ_MODE).read()
-			new = file(os.path.join(dstDir, fileName), READ_MODE).read()
-			self.assertEqual(org, new, "%r .glif file differs after round tripping" % glyphName)
+			with open(os.path.join(srcDir, fileName), READ_MODE) as f:
+				org = f.read()
+			with open(os.path.join(dstDir, fileName), READ_MODE) as f:
+				new = f.read()
+			self.assertEqual(org, new, "%s.glif file differs after round tripping" % glyphName)
 
 	def testRebuildContents(self):
 		gset = GlyphSet(GLYPHSETDIR)
@@ -110,7 +112,7 @@ class FileNameTests(unittest.TestCase):
 		self.assertEqual(glyphNameToFileName("t_h", None), "t_h.glif")
 		self.assertEqual(glyphNameToFileName('F_F_I', None), "F__F__I_.glif")
 		self.assertEqual(glyphNameToFileName('f_f_i', None), "f_f_i.glif")
-		
+
 
 	def testShortFileNameScheme(self):
 		self.assertEqual(glyphNameToShortFileName("a", None), "a.glif")
