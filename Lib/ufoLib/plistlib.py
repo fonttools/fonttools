@@ -70,6 +70,11 @@ except ImportError:
         def __init__(self, *args, **kwargs):
             raise ValueError("datetime is not supported")
 
+try:
+    basestring
+except NameError:
+    basestring = str
+
 
 def readPlist(pathOrFile):
     """Read a .plist file. 'pathOrFile' may either be a file name or a
@@ -77,7 +82,7 @@ def readPlist(pathOrFile):
     usually is a dictionary).
     """
     didOpen = 0
-    if isinstance(pathOrFile, (bytes, str)):
+    if isinstance(pathOrFile, basestring):
         pathOrFile = open(pathOrFile, "rb")
         didOpen = 1
     p = PlistParser()
@@ -238,7 +243,7 @@ class PlistWriter(DumbXMLWriter):
         DumbXMLWriter.__init__(self, file, indentLevel, indent)
 
     def writeValue(self, value):
-        if isinstance(value, (bytes, str)):
+        if isinstance(value, basestring):
             self.simpleElement("string", value)
         elif isinstance(value, bool):
             # must switch for bool before int, as bool is a
@@ -277,7 +282,7 @@ class PlistWriter(DumbXMLWriter):
         self.beginElement("dict")
         items = d.items()
         for key, value in sorted(items):
-            if not isinstance(key, (bytes, str)):
+            if not isinstance(key, basestring):
                 raise TypeError("keys must be strings")
             self.simpleElement("key", key)
             self.writeValue(value)
