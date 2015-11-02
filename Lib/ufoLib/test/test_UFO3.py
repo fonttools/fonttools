@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
-
+from __future__ import absolute_import, unicode_literals
 import os
 import shutil
 import unittest
 import tempfile
+import io
 import codecs
 from plistlib import writePlist, readPlist
 from ufoLib import UFOReader, UFOWriter, UFOLibError
 from ufoLib.glifLib import GlifLibError
-from .testSupport import fontInfoVersion3
+from ufoLib.test.testSupport import fontInfoVersion3
 
 
 class TestInfoObject(object): pass
@@ -1703,7 +1704,8 @@ class WriteFontInfoVersion3TestCase(unittest.TestCase):
 		shutil.rmtree(self.tempDir)
 
 	def tearDownUFO(self):
-		shutil.rmtree(self.dstDir)
+		if os.path.exists(self.dstDir):
+			shutil.rmtree(self.dstDir)
 
 	def makeInfoObject(self):
 		infoObject = TestInfoObject()
@@ -3395,9 +3397,8 @@ class UFO3ReadLayersTestCase(unittest.TestCase):
 			path = os.path.join(glyphsPath, "contents.plist")
 			writePlist(contents, path)
 			path = os.path.join(glyphsPath, "a.glif")
-			f = open(path, "w")
-			f.write(" ")
-			f.close()
+			with io.open(path, "w") as f:
+				f.write(" ")
 
 	def clearUFO(self):
 		if os.path.exists(self.ufoPath):
@@ -3441,9 +3442,8 @@ class UFO3ReadLayersTestCase(unittest.TestCase):
 		self.makeUFO()
 		path = os.path.join(self.ufoPath, "layercontents.plist")
 		os.remove(path)
-		f = open(path, "w")
-		f.write("test")
-		f.close()
+		with io.open(path, "w") as f:
+			f.write("test")
 		reader = UFOReader(self.ufoPath)
 		self.assertRaises(UFOLibError, reader.getGlyphSet)
 		# dict
@@ -3691,9 +3691,8 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 			path = os.path.join(glyphsPath, "contents.plist")
 			writePlist(contents, path)
 			path = os.path.join(glyphsPath, "a.glif")
-			f = open(path, "w")
-			f.write(" ")
-			f.close()
+			with io.open(path, "w") as f:
+				f.write(" ")
 
 	def clearUFO(self):
 		if os.path.exists(self.ufoPath):
@@ -3714,9 +3713,8 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 		self.makeUFO()
 		path = os.path.join(self.ufoPath, "layercontents.plist")
 		os.remove(path)
-		f = open(path, "w")
-		f.write("test")
-		f.close()
+		with io.open(path, "w") as f:
+			f.write("test")
 		self.assertRaises(UFOLibError, UFOWriter, self.ufoPath)
 		# dict
 		self.makeUFO()
@@ -4121,10 +4119,10 @@ class UFO3ReadDataTestCase(unittest.TestCase):
 	def testUFOReaderBytesFromPath(self):
 		reader = UFOReader(self.getFontPath())
 		found = reader.readBytesFromPath("data/org.unifiedfontobject.file.txt")
-		expected = "file.txt"
+		expected = b"file.txt"
 		self.assertEqual(found, expected)
 		found = reader.readBytesFromPath("data/org.unifiedfontobject.directory/bar/lol.txt")
-		expected = "lol.txt"
+		expected = b"lol.txt"
 		self.assertEqual(found, expected)
 		found = reader.readBytesFromPath("data/org.unifiedfontobject.doesNotExist")
 		expected = None
@@ -4152,44 +4150,42 @@ class UFO3WriteDataTestCase(unittest.TestCase):
 		shutil.rmtree(self.tempDir)
 
 	def tearDownUFO(self):
-		shutil.rmtree(self.dstDir)
+		if os.path.exists(self.dstDir):
+			shutil.rmtree(self.dstDir)
 
 	def testUFOWriterWriteBytesToPath(self):
 		# basic file
 		path = "data/org.unifiedfontobject.writebytesbasicfile.txt"
-		bytes = "test"
+		testBytes = b"test"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
-		writer.writeBytesToPath(path, bytes)
+		writer.writeBytesToPath(path, testBytes)
 		path = os.path.join(self.dstDir, path)
 		self.assertEqual(os.path.exists(path), True)
-		f = open(path, "rb")
-		written = f.read()
-		f.close()
-		self.assertEqual(bytes, written)
+		with io.open(path, "rb") as f:
+			written = f.read()
+		self.assertEqual(testBytes, written)
 		self.tearDownUFO()
 		# basic file with unicode text
 		path = "data/org.unifiedfontobject.writebytesbasicunicodefile.txt"
-		bytes = "tëßt"
+		text = b"t\xeb\xdft"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
-		writer.writeBytesToPath(path, bytes, encoding="utf8")
+		writer.writeBytesToPath(path, text)
 		path = os.path.join(self.dstDir, path)
 		self.assertEqual(os.path.exists(path), True)
-		f = codecs.open(path, "rb")
-		written = f.read().decode("utf8")
-		f.close()
-		self.assertEqual(bytes, written)
+		with io.open(path, "rb") as f:
+			written = f.read()
+		self.assertEqual(text, written)
 		self.tearDownUFO()
 		# basic directory
 		path = "data/org.unifiedfontobject.writebytesdirectory/level1/level2/file.txt"
-		bytes = "test"
+		testBytes = b"test"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
-		writer.writeBytesToPath(path, bytes)
+		writer.writeBytesToPath(path, testBytes)
 		path = os.path.join(self.dstDir, path)
 		self.assertEqual(os.path.exists(path), True)
-		f = open(path, "rb")
-		written = f.read()
-		f.close()
-		self.assertEqual(bytes, written)
+		with io.open(path, "rb") as f:
+			written = f.read()
+		self.assertEqual(testBytes, written)
 		self.tearDownUFO()
 
 	def testUFOWriterWriteFileToPath(self):
@@ -4208,9 +4204,9 @@ class UFO3WriteDataTestCase(unittest.TestCase):
 		path2 = "data/org.unifiedfontobject.removefile/level1/level2/file2.txt"
 		path3 = "data/org.unifiedfontobject.removefile/level1/file3.txt"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
-		writer.writeBytesToPath(path1, "test")
-		writer.writeBytesToPath(path2, "test")
-		writer.writeBytesToPath(path3, "test")
+		writer.writeBytesToPath(path1, b"test")
+		writer.writeBytesToPath(path2, b"test")
+		writer.writeBytesToPath(path3, b"test")
 		self.assertEqual(os.path.exists(os.path.join(self.dstDir, path1)), True)
 		self.assertEqual(os.path.exists(os.path.join(self.dstDir, path2)), True)
 		self.assertEqual(os.path.exists(os.path.join(self.dstDir, path3)), True)
@@ -4235,7 +4231,7 @@ class UFO3WriteDataTestCase(unittest.TestCase):
 		sourceDir = self.dstDir.replace(".ufo", "") + "-copy source" + ".ufo"
 		dataPath = "data/org.unifiedfontobject.copy/level1/level2/file1.txt"
 		writer = UFOWriter(sourceDir, formatVersion=3)
-		writer.writeBytesToPath(dataPath, "test")
+		writer.writeBytesToPath(dataPath, b"test")
 		# copy a file
 		reader = UFOReader(sourceDir)
 		writer = UFOWriter(self.dstDir, formatVersion=3)
@@ -4290,9 +4286,8 @@ class UFO3ReadLayerInfoTestCase(unittest.TestCase):
 		path = os.path.join(glyphsPath, "contents.plist")
 		writePlist(contents, path)
 		path = os.path.join(glyphsPath, "a.glif")
-		f = open(path, "w")
-		f.write(" ")
-		f.close()
+		with io.open(path, "w") as f:
+			f.write(" ")
 		# layerinfo.plist
 		if layerInfo is None:
 			layerInfo = dict(
@@ -4334,9 +4329,8 @@ class UFO3ReadLayerInfoTestCase(unittest.TestCase):
 		self.makeUFO()
 		path = os.path.join(self.ufoPath, "glyphs", "layerinfo.plist")
 		os.remove(path)
-		f = open(path, "wb")
-		f.write("test")
-		f.close()
+		with io.open(path, "w") as f:
+			f.write("test")
 		# read
 		reader = UFOReader(self.ufoPath)
 		glyphSet = reader.getGlyphSet()

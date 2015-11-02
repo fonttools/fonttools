@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+from __future__ import absolute_import
 import os
 import shutil
 import unittest
@@ -7,7 +7,7 @@ import tempfile
 import codecs
 from plistlib import writePlist, readPlist
 from ufoLib import UFOReader, UFOWriter, UFOLibError
-from .testSupport import fontInfoVersion1, fontInfoVersion2
+from ufoLib.test.testSupport import fontInfoVersion1, fontInfoVersion2
 
 
 class TestInfoObject(object): pass
