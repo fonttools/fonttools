@@ -28,9 +28,6 @@ class PlistTreeParser(PlistParser):
 			if isinstance(child, tuple):
 				self.parseElement(child[0], child[1], child[2])
 			else:
-				if not isinstance(child, str):
-					# ugh, xmlTreeBuilder returns utf-8 :-(
-					child = str(child, "utf-8")
 				self.handleData(child)
 		self.handleEndElement(element)
 
