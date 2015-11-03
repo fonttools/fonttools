@@ -1101,8 +1101,8 @@ def _buildAnchorFormat1(point):
 	anchor = dict(x=x, y=y, name=name)
 	return anchor
 
-def _buildOutlineContourFormat1(pen, xxx_todo_changeme):
-	(attrs, children) = xxx_todo_changeme
+def _buildOutlineContourFormat1(pen, attrs_children):
+	(attrs, children) = attrs_children
 	if set(attrs.keys()):
 		raise GlifLibError("Unknown attributes in contour element.")
 	pen.beginPath()
@@ -1120,8 +1120,8 @@ def _buildOutlinePointsFormat1(pen, children):
 		name = attrs["name"]
 		pen.addPoint((x, y), segmentType=segmentType, smooth=smooth, name=name)
 
-def _buildOutlineComponentFormat1(pen, xxx_todo_changeme1):
-	(attrs, children) = xxx_todo_changeme1
+def _buildOutlineComponentFormat1(pen, attrs_children):
+	(attrs, children) = attrs_children
 	if len(children):
 		raise GlifLibError("Unknown child elements of component element." % subElement)
 	if set(attrs.keys()) - componentAttributesFormat1:
@@ -1154,8 +1154,8 @@ def buildOutlineFormat2(glyphObject, pen, xmlNodes, identifiers):
 		else:
 			raise GlifLibError("Unknown element in outline element: %s" % element)
 
-def _buildOutlineContourFormat2(pen, xxx_todo_changeme2, identifiers):
-	(attrs, children) = xxx_todo_changeme2
+def _buildOutlineContourFormat2(pen, attrs_children, identifiers):
+	(attrs, children) = attrs_children
 	if set(attrs.keys()) - contourAttributesFormat2:
 		raise GlifLibError("Unknown attributes in contour element.")
 	identifier = attrs.get("identifier")
@@ -1195,8 +1195,8 @@ def _buildOutlinePointsFormat2(pen, children, identifiers):
 			pen.addPoint((x, y), segmentType=segmentType, smooth=smooth, name=name)
 			raise warn("The addPoint method needs an identifier kwarg. The point's identifier value has been discarded.", DeprecationWarning)
 
-def _buildOutlineComponentFormat2(pen, xxx_todo_changeme3, identifiers):
-	(attrs, children) = xxx_todo_changeme3
+def _buildOutlineComponentFormat2(pen, attrs_children, identifiers):
+	(attrs, children) = attrs_children
 	if len(children):
 		raise GlifLibError("Unknown child elements of component element." % subElement)
 	if set(attrs.keys()) - componentAttributesFormat2:
