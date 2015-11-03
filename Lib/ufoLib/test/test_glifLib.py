@@ -21,10 +21,11 @@ class GlyphSetTests(unittest.TestCase):
 		shutil.rmtree(self.dstDir)
 
 	def testRoundTrip(self):
+		import difflib
 		srcDir = GLYPHSETDIR
 		dstDir = self.dstDir
-		src = GlyphSet(srcDir)
-		dst = GlyphSet(dstDir)
+		src = GlyphSet(srcDir, ufoFormatVersion=2)
+		dst = GlyphSet(dstDir, ufoFormatVersion=2)
 		for glyphName in list(src.keys()):
 			g = src[glyphName]
 			g.drawPoints(None)  # load attrs
@@ -36,7 +37,17 @@ class GlyphSetTests(unittest.TestCase):
 				org = f.read()
 			with open(os.path.join(dstDir, fileName), READ_MODE) as f:
 				new = f.read()
-			self.assertEqual(org, new, "%s.glif file differs after round tripping" % glyphName)
+			added = []
+			removed = []
+			for line in difflib.unified_diff(
+					org.split("\n"), new.split("\n")):
+				if line.startswith("+ "):
+					added.append(line[1:])
+				elif line.startswith("- "):
+					removed.append(line[1:])
+			self.assertEqual(
+				added, removed,
+				"%s.glif file differs after round tripping" % glyphName)
 
 	def testRebuildContents(self):
 		gset = GlyphSet(GLYPHSETDIR)
