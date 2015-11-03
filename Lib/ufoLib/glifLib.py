@@ -888,8 +888,7 @@ def _readGlyphFromTreeFormat1(tree, glyphObject=None, pointPen=None):
 			if attrs:
 				raise GlifLibError("The outline element contains unknown attributes.")
 			haveSeenOutline = True
-			if pointPen is not None:
-				buildOutlineFormat1(glyphObject, pointPen, children)
+			buildOutlineFormat1(glyphObject, pointPen, children)
 		elif glyphObject is None:
 			continue
 		elif element == "advance":
@@ -1076,9 +1075,11 @@ def buildOutlineFormat1(glyphObject, pen, xmlNodes):
 					if anchor is not None:
 						anchors.append(anchor)
 						continue
-			_buildOutlineContourFormat1(pen, (attrs, children))
+			if pen is not None:
+				_buildOutlineContourFormat1(pen, (attrs, children))
 		elif element == "component":
-			_buildOutlineComponentFormat1(pen, (attrs, children))
+			if pen is not None:
+				_buildOutlineComponentFormat1(pen, (attrs, children))
 		else:
 			raise GlifLibError("Unknown element in outline element: %s" % element)
 	if glyphObject is not None and anchors:
