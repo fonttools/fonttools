@@ -301,6 +301,7 @@ class GlyphSet(object):
 			"lib"        a dictionary containing custom data
 			"image"      a dictionary containing image data
 			"guidelines" a list of guideline data dictionaries
+			"anchors"    a list of anchor data dictionaries
 
 		All attributes are optional, in two ways:
 			1) An attribute *won't* be set if the .glif file doesn't
@@ -340,6 +341,7 @@ class GlyphSet(object):
 			"lib"        a dictionary containing custom data
 			"image"      a dictionary containing image data
 			"guidelines" a list of guideline data dictionaries
+			"anchors"    a list of anchor data dictionaries
 
 		All attributes are optional: if 'glyphObject' doesn't
 		have the attribute, it will simply be skipped.
