@@ -58,7 +58,7 @@ setup(
 		license = "OpenSource, BSD-style",
 		platforms = ["Any"],
 		long_description = long_description,
-		
+
 		packages = [
 			"",
 			"robofab",
@@ -70,7 +70,7 @@ setup(
 			"robofab.objects",
 			"robofab.pens",
 			"robofab.tools",
-                        "ufoLib",
+			"ufoLib",
 		],
 		package_dir = {'': 'Lib'},
 		test_suite="ufoLib.test",
