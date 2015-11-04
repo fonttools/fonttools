@@ -4,10 +4,14 @@ import os
 import shutil
 import unittest
 import tempfile
-import codecs
-from plistlib import writePlist, readPlist
+from io import open
 from ufoLib import UFOReader, UFOWriter, UFOLibError
 from ufoLib.test.testSupport import fontInfoVersion1, fontInfoVersion2
+
+try:
+	from plistlib import dump, load
+except ImportError:
+	from plistlib import writePlist as dump, readPlist as load
 
 
 class TestInfoObject(object): pass
@@ -23,14 +27,16 @@ class ReadFontInfoVersion1TestCase(unittest.TestCase):
 			"formatVersion": 1
 		}
 		path = os.path.join(self.dstDir, "metainfo.plist")
-		writePlist(metaInfo, path)
+		with open(path, "wb") as f:
+			dump(metaInfo, f)
 
 	def tearDown(self):
 		shutil.rmtree(self.dstDir)
 
 	def _writeInfoToPlist(self, info):
 		path = os.path.join(self.dstDir, "fontinfo.plist")
-		writePlist(info, path)
+		with open(path, "wb") as f:
+			dump(info, f)
 
 	def testRead(self):
 		originalData = dict(fontInfoVersion1)
@@ -101,7 +107,9 @@ class WriteFontInfoVersion1TestCase(unittest.TestCase):
 
 	def readPlist(self):
 		path = os.path.join(self.dstDir, "fontinfo.plist")
-		return readPlist(path)
+		with open(path, "rb") as f:
+			plist = load(f)
+		return plist
 
 	def testWrite(self):
 		infoObject = self.makeInfoObject()

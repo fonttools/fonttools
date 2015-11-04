@@ -4,10 +4,14 @@ import os
 import shutil
 import unittest
 import tempfile
-import codecs
-from plistlib import writePlist, readPlist
+from io import open
 from ufoLib import convertUFOFormatVersion1ToFormatVersion2, UFOReader, UFOWriter
 from ufoLib.test.testSupport import expectedFontInfo1To2Conversion, expectedFontInfo2To1Conversion
+
+try:
+	from plistlib import dump, load
+except ImportError:
+	from plistlib import writePlist as dump, readPlist as load
 
 
 # the format version 1 lib.plist contains some data
@@ -74,19 +78,28 @@ class ConversionFunctionsTestCase(unittest.TestCase):
 		if testFeatures:
 			self.assertEqual(os.path.exists(featuresPath1), True)
 		# look for aggrement
-		data1 = readPlist(metainfoPath1)
-		data2 = readPlist(metainfoPath2)
+		with open(metainfoPath1, "rb") as f:
+			data1 = load(f)
+		with open(metainfoPath2, "rb") as f:
+			data2 = load(f)
 		self.assertEqual(data1, data2)
-		data1 = readPlist(fontinfoPath1)
+		with open(fontinfoPath1, "rb") as f:
+			data1 = load(f)
 		self.assertEqual(sorted(data1.items()), sorted(expectedInfoData.items()))
-		data1 = readPlist(kerningPath1)
-		data2 = readPlist(kerningPath2)
+		with open(kerningPath1, "rb") as f:
+			data1 = load(f)
+		with open(kerningPath2, "rb") as f:
+			data2 = load(f)
 		self.assertEqual(data1, data2)
-		data1 = readPlist(groupsPath1)
-		data2 = readPlist(groupsPath2)
+		with open(groupsPath1, "rb") as f:
+			data1 = load(f)
+		with open(groupsPath2, "rb") as f:
+			data2 = load(f)
 		self.assertEqual(data1, data2)
-		data1 = readPlist(libPath1)
-		data2 = readPlist(libPath2)
+		with open(libPath1, "rb") as f:
+			data1 = load(f)
+		with open(libPath2, "rb") as f:
+			data2 = load(f)
 		if "UFO1" in libPath1:
 			for key in removeFromFormatVersion1Lib:
 				if key in data1:
@@ -96,14 +109,20 @@ class ConversionFunctionsTestCase(unittest.TestCase):
 				if key in data2:
 					del data2[key]
 		self.assertEqual(data1, data2)
-		data1 = readPlist(glyphsPath1_contents)
-		data2 = readPlist(glyphsPath2_contents)
+		with open(glyphsPath1_contents, "rb") as f:
+			data1 = load(f)
+		with open(glyphsPath2_contents, "rb") as f:
+			data2 = load(f)
 		self.assertEqual(data1, data2)
-		data1 = readPlist(glyphsPath1_A)
-		data2 = readPlist(glyphsPath2_A)
+		with open(glyphsPath1_A, "rb") as f:
+			data1 = load(f)
+		with open(glyphsPath2_A, "rb") as f:
+			data2 = load(f)
 		self.assertEqual(data1, data2)
-		data1 = readPlist(glyphsPath1_B)
-		data2 = readPlist(glyphsPath2_B)
+		with open(glyphsPath1_B, "rb") as f:
+			data1 = load(f)
+		with open(glyphsPath2_B, "rb") as f:
+			data2 = load(f)
 		self.assertEqual(data1, data2)
 
 	def test1To2(self):
@@ -164,7 +183,8 @@ class KerningUpConversionTestCase(unittest.TestCase):
 		# metainfo.plist
 		metaInfo = dict(creator="test", formatVersion=formatVersion)
 		path = os.path.join(self.ufoPath, "metainfo.plist")
-		writePlist(metaInfo, path)
+		with open(path, "wb") as f:
+			dump(metaInfo, f)
 		# kerning
 		kerning = {
 			"A" : {
@@ -187,7 +207,8 @@ class KerningUpConversionTestCase(unittest.TestCase):
 			}
 		}
 		path = os.path.join(self.ufoPath, "kerning.plist")
-		writePlist(kerning, path)
+		with open(path, "wb") as f:
+			dump(kerning, f)
 		# groups
 		groups = {
 			"BGroup" : ["B"],
@@ -196,13 +217,15 @@ class KerningUpConversionTestCase(unittest.TestCase):
 			"Not A Kerning Group" : ["A"]
 		}
 		path = os.path.join(self.ufoPath, "groups.plist")
-		writePlist(groups, path)
+		with open(path, "wb") as f:
+			dump(groups, f)
 		# font info
 		fontInfo = {
 			"familyName" : "Test"
 		}
 		path = os.path.join(self.ufoPath, "fontinfo.plist")
-		writePlist(fontInfo, path)
+		with open(path, "wb") as f:
+			dump(fontInfo, f)
 
 	def clearUFO(self):
 		if os.path.exists(self.ufoPath):
@@ -328,11 +351,13 @@ class KerningDownConversionTestCase(unittest.TestCase):
 		writer.writeGroups(self.groups)
 		# test groups
 		path = os.path.join(self.dstDir, "groups.plist")
-		writtenGroups = readPlist(path)
+		with open(path, "rb") as f:
+			writtenGroups = load(f)
 		self.assertEqual(writtenGroups, self.expectedWrittenGroups)
 		# test kerning
 		path = os.path.join(self.dstDir, "kerning.plist")
-		writtenKerning = readPlist(path)
+		with open(path, "rb") as f:
+			writtenKerning = load(f)
 		self.assertEqual(writtenKerning, self.expectedWrittenKerning)
 		self.tearDownUFO()
 

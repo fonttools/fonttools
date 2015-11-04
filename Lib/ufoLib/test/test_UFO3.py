@@ -4,12 +4,15 @@ import os
 import shutil
 import unittest
 import tempfile
-import io
-import codecs
-from plistlib import writePlist, readPlist
+from io import open
 from ufoLib import UFOReader, UFOWriter, UFOLibError
 from ufoLib.glifLib import GlifLibError
 from ufoLib.test.testSupport import fontInfoVersion3
+
+try:
+	from plistlib import dump, load
+except ImportError:
+	from plistlib import writePlist as dump, readPlist as load
 
 
 class TestInfoObject(object): pass
@@ -29,14 +32,16 @@ class ReadFontInfoVersion3TestCase(unittest.TestCase):
 			"formatVersion": 3
 		}
 		path = os.path.join(self.dstDir, "metainfo.plist")
-		writePlist(metaInfo, path)
+		with open(path, "wb") as f:
+			dump(metaInfo, f)
 
 	def tearDown(self):
 		shutil.rmtree(self.dstDir)
 
 	def _writeInfoToPlist(self, info):
 		path = os.path.join(self.dstDir, "fontinfo.plist")
-		writePlist(info, path)
+		with open(path, "wb") as f:
+			dump(info, f)
 
 	def testRead(self):
 		originalData = dict(fontInfoVersion3)
@@ -1715,7 +1720,9 @@ class WriteFontInfoVersion3TestCase(unittest.TestCase):
 
 	def readPlist(self):
 		path = os.path.join(self.dstDir, "fontinfo.plist")
-		return readPlist(path)
+		with open(path, "rb") as f:
+			plist = load(f)
+		return plist
 
 	def testWrite(self):
 		infoObject = self.makeInfoObject()
@@ -3377,7 +3384,8 @@ class UFO3ReadLayersTestCase(unittest.TestCase):
 		if metaInfo is None:
 			metaInfo = dict(creator="test", formatVersion=3)
 		path = os.path.join(self.ufoPath, "metainfo.plist")
-		writePlist(metaInfo, path)
+		with open(path, "wb") as f:
+			dump(metaInfo, f)
 		# layers
 		if layerContents is None:
 			layerContents = [
@@ -3387,7 +3395,8 @@ class UFO3ReadLayersTestCase(unittest.TestCase):
 			]
 		if layerContents:
 			path = os.path.join(self.ufoPath, "layercontents.plist")
-			writePlist(layerContents, path)
+			with open(path, "wb") as f:
+				dump(layerContents, f)
 		else:
 			layerContents = [("", "glyphs")]
 		for name, directory in layerContents:
@@ -3395,9 +3404,10 @@ class UFO3ReadLayersTestCase(unittest.TestCase):
 			os.mkdir(glyphsPath)
 			contents = dict(a="a.glif")
 			path = os.path.join(glyphsPath, "contents.plist")
-			writePlist(contents, path)
+			with open(path, "wb") as f:
+				dump(contents, f)
 			path = os.path.join(glyphsPath, "a.glif")
-			with io.open(path, "w") as f:
+			with open(path, "w") as f:
 				f.write(" ")
 
 	def clearUFO(self):
@@ -3442,7 +3452,7 @@ class UFO3ReadLayersTestCase(unittest.TestCase):
 		self.makeUFO()
 		path = os.path.join(self.ufoPath, "layercontents.plist")
 		os.remove(path)
-		with io.open(path, "w") as f:
+		with open(path, "w") as f:
 			f.write("test")
 		reader = UFOReader(self.ufoPath)
 		self.assertRaises(UFOLibError, reader.getGlyphSet)
@@ -3455,7 +3465,8 @@ class UFO3ReadLayersTestCase(unittest.TestCase):
 			"layer 1" : "glyphs.layer 1",
 			"layer 2" : "glyphs.layer 2",
 		}
-		writePlist(layerContents, path)
+		with open(path, "wb") as f:
+			dump(layerContents, f)
 		reader = UFOReader(self.ufoPath)
 		self.assertRaises(UFOLibError, reader.getGlyphSet)
 
@@ -3470,7 +3481,8 @@ class UFO3ReadLayersTestCase(unittest.TestCase):
 			("layer 1", "glyphs.layer 1"),
 			("layer 2", "glyphs.layer 2")
 		]
-		writePlist(layerContents, path)
+		with open(path, "wb") as f:
+			dump(layerContents, f)
 		reader = UFOReader(self.ufoPath)
 		self.assertRaises(UFOLibError, reader.getGlyphSet)
 
@@ -3485,7 +3497,8 @@ class UFO3ReadLayersTestCase(unittest.TestCase):
 			("layer 1", 1),
 			("layer 2", "glyphs.layer 2")
 		]
-		writePlist(layerContents, path)
+		with open(path, "wb") as f:
+			dump(layerContents, f)
 		reader = UFOReader(self.ufoPath)
 		self.assertRaises(UFOLibError, reader.getGlyphSet)
 
@@ -3500,7 +3513,8 @@ class UFO3ReadLayersTestCase(unittest.TestCase):
 			("layer 1", "glyphs.doesnotexist"),
 			("layer 2", "glyphs.layer 2")
 		]
-		writePlist(layerContents, path)
+		with open(path, "wb") as f:
+			dump(layerContents, f)
 		reader = UFOReader(self.ufoPath)
 		self.assertRaises(UFOLibError, reader.getGlyphSet)
 
@@ -3515,9 +3529,11 @@ class UFO3ReadLayersTestCase(unittest.TestCase):
 	# 		("public.foregound", "glyphs"),
 	# 		("layer 1", "glyphs.layer 2")
 	# 	]
-	# 	writePlist(layerContents, path)
+	# 	with open(path, "wb") as f:
+	# 		dump(layerContents, f)
 	# 	reader = UFOReader(self.ufoPath)
-	# 	self.assertRaises(UFOLibError, reader.getGlyphSet)
+	# 	with self.assertRaises(UFOLibError):
+	# 		reader.getGlyphSet()
 
 	# no default layer on disk
 
@@ -3529,7 +3545,8 @@ class UFO3ReadLayersTestCase(unittest.TestCase):
 			("layer 1", "glyphs.layer 1"),
 			("layer 2", "glyphs.layer 2")
 		]
-		writePlist(layerContents, path)
+		with open(path, "wb") as f:
+			dump(layerContents, f)
 		reader = UFOReader(self.ufoPath)
 		self.assertRaises(UFOLibError, reader.getGlyphSet)
 
@@ -3544,7 +3561,8 @@ class UFO3ReadLayersTestCase(unittest.TestCase):
 			("layer 1", "glyphs.layer 1"),
 			("layer 1", "glyphs.layer 2")
 		]
-		writePlist(layerContents, path)
+		with open(path, "wb") as f:
+			dump(layerContents, f)
 		reader = UFOReader(self.ufoPath)
 		self.assertRaises(UFOLibError, reader.getGlyphSet)
 
@@ -3559,7 +3577,8 @@ class UFO3ReadLayersTestCase(unittest.TestCase):
 			("layer 1", "glyphs.layer 1"),
 			("layer 2", "glyphs.layer 1")
 		]
-		writePlist(layerContents, path)
+		with open(path, "wb") as f:
+			dump(layerContents, f)
 		reader = UFOReader(self.ufoPath)
 		self.assertRaises(UFOLibError, reader.getGlyphSet)
 
@@ -3575,7 +3594,8 @@ class UFO3ReadLayersTestCase(unittest.TestCase):
 			("layer 1", "glyphs.layer 1"),
 			("layer 2", "glyphs.layer 2")
 		]
-		writePlist(layerContents, path)
+		with open(path, "wb") as f:
+			dump(layerContents, f)
 		reader = UFOReader(self.ufoPath)
 		reader.getGlyphSet()
 
@@ -3592,7 +3612,8 @@ class UFO3ReadLayersTestCase(unittest.TestCase):
 			("layer 2", "glyphs.layer 2")
 		]
 		expected = layerContents[0][0]
-		writePlist(layerContents, path)
+		with open(path, "wb") as f:
+			dump(layerContents, f)
 		reader = UFOReader(self.ufoPath)
 		result = reader.getDefaultLayerName()
 		self.assertEqual(expected, result)
@@ -3605,7 +3626,8 @@ class UFO3ReadLayersTestCase(unittest.TestCase):
 			("layer 1", "glyphs.layer 1"),
 			("layer 2", "glyphs.layer 2")
 		]
-		writePlist(layerContents, path)
+		with open(path, "wb") as f:
+			dump(layerContents, f)
 		reader = UFOReader(self.ufoPath)
 		reader.getGlyphSet(expected)
 
@@ -3621,7 +3643,8 @@ class UFO3ReadLayersTestCase(unittest.TestCase):
 			("layer 2", "glyphs.layer 2")
 		]
 		expected = [name for (name, directory) in layerContents]
-		writePlist(layerContents, path)
+		with open(path, "wb") as f:
+			dump(layerContents, f)
 		reader = UFOReader(self.ufoPath)
 		result = reader.getLayerNames()
 		self.assertEqual(expected, result)
@@ -3634,7 +3657,8 @@ class UFO3ReadLayersTestCase(unittest.TestCase):
 			("layer 2", "glyphs.layer 2")
 		]
 		expected = [name for (name, directory) in layerContents]
-		writePlist(layerContents, path)
+		with open(path, "wb") as f:
+			dump(layerContents, f)
 		reader = UFOReader(self.ufoPath)
 		result = reader.getLayerNames()
 		self.assertEqual(expected, result)
@@ -3647,7 +3671,8 @@ class UFO3ReadLayersTestCase(unittest.TestCase):
 			("public.foregound", "glyphs")
 		]
 		expected = [name for (name, directory) in layerContents]
-		writePlist(layerContents, path)
+		with open(path, "wb") as f:
+			dump(layerContents, f)
 		reader = UFOReader(self.ufoPath)
 		result = reader.getLayerNames()
 		self.assertEqual(expected, result)
@@ -3671,7 +3696,8 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 		if metaInfo is None:
 			metaInfo = dict(creator="test", formatVersion=3)
 		path = os.path.join(self.ufoPath, "metainfo.plist")
-		writePlist(metaInfo, path)
+		with open(path, "wb") as f:
+			dump(metaInfo, f)
 		# layers
 		if layerContents is None:
 			layerContents = [
@@ -3681,7 +3707,8 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 			]
 		if layerContents:
 			path = os.path.join(self.ufoPath, "layercontents.plist")
-			writePlist(layerContents, path)
+			with open(path, "wb") as f:
+				dump(layerContents, f)
 		else:
 			layerContents = [("", "glyphs")]
 		for name, directory in layerContents:
@@ -3689,9 +3716,10 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 			os.mkdir(glyphsPath)
 			contents = dict(a="a.glif")
 			path = os.path.join(glyphsPath, "contents.plist")
-			writePlist(contents, path)
+			with open(path, "wb") as f:
+				dump(contents, f)
 			path = os.path.join(glyphsPath, "a.glif")
-			with io.open(path, "w") as f:
+			with open(path, "w") as f:
 				f.write(" ")
 
 	def clearUFO(self):
@@ -3713,7 +3741,7 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 		self.makeUFO()
 		path = os.path.join(self.ufoPath, "layercontents.plist")
 		os.remove(path)
-		with io.open(path, "w") as f:
+		with open(path, "w") as f:
 			f.write("test")
 		self.assertRaises(UFOLibError, UFOWriter, self.ufoPath)
 		# dict
@@ -3725,7 +3753,8 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 			"layer 1" : "glyphs.layer 1",
 			"layer 2" : "glyphs.layer 2",
 		}
-		writePlist(layerContents, path)
+		with open(path, "wb") as f:
+			dump(layerContents, f)
 		self.assertRaises(UFOLibError, UFOWriter, self.ufoPath)
 
 	# __init__: layer contents invalid name format
@@ -3739,7 +3768,8 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 			("layer 1", "glyphs.layer 1"),
 			("layer 2", "glyphs.layer 2")
 		]
-		writePlist(layerContents, path)
+		with open(path, "wb") as f:
+			dump(layerContents, f)
 		self.assertRaises(UFOLibError, UFOWriter, self.ufoPath)
 
 	# __init__: layer contents invalid directory format
@@ -3753,7 +3783,8 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 			("layer 1", 1),
 			("layer 2", "glyphs.layer 2")
 		]
-		writePlist(layerContents, path)
+		with open(path, "wb") as f:
+			dump(layerContents, f)
 		self.assertRaises(UFOLibError, UFOWriter, self.ufoPath)
 
 	# __init__: directory listed in contents not on disk
@@ -3767,7 +3798,8 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 			("layer 1", "glyphs.doesnotexist"),
 			("layer 2", "glyphs.layer 2")
 		]
-		writePlist(layerContents, path)
+		with open(path, "wb") as f:
+			dump(layerContents, f)
 		self.assertRaises(UFOLibError, UFOWriter, self.ufoPath)
 
 	# __init__: no default layer on disk
@@ -3780,7 +3812,8 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 			("layer 1", "glyphs.layer 1"),
 			("layer 2", "glyphs.layer 2")
 		]
-		writePlist(layerContents, path)
+		with open(path, "wb") as f:
+			dump(layerContents, f)
 		self.assertRaises(UFOLibError, UFOWriter, self.ufoPath)
 
 	# __init__: duplicate layer name
@@ -3794,7 +3827,8 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 			("layer 1", "glyphs.layer 1"),
 			("layer 1", "glyphs.layer 2")
 		]
-		writePlist(layerContents, path)
+		with open(path, "wb") as f:
+			dump(layerContents, f)
 		self.assertRaises(UFOLibError, UFOWriter, self.ufoPath)
 
 	# __init__: directory referenced by two layer names
@@ -3808,7 +3842,8 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 			("layer 1", "glyphs.layer 1"),
 			("layer 2", "glyphs.layer 1")
 		]
-		writePlist(layerContents, path)
+		with open(path, "wb") as f:
+			dump(layerContents, f)
 		self.assertRaises(UFOLibError, UFOWriter, self.ufoPath)
 
 	# __init__: default without a name
@@ -3823,7 +3858,8 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 			("layer 1", "glyphs.layer 1"),
 			("layer 2", "glyphs.layer 2")
 		]
-		writePlist(layerContents, path)
+		with open(path, "wb") as f:
+			dump(layerContents, f)
 		writer = UFOWriter(self.ufoPath)
 
 	# __init__: default with a name
@@ -3837,7 +3873,8 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 			("layer 1", "glyphs.layer 1"),
 			("layer 2", "glyphs.layer 2")
 		]
-		writePlist(layerContents, path)
+		with open(path, "wb") as f:
+			dump(layerContents, f)
 		writer = UFOWriter(self.ufoPath)
 
 	# __init__: up convert 1 > 3
@@ -3850,8 +3887,9 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 		writer = UFOWriter(self.ufoPath)
 		writer.writeLayerContents(["public.default"])
 		path = os.path.join(self.ufoPath, "layercontents.plist")
+		with open(path, "rb") as f:
+			result = load(f)
 		expected = [["public.default", "glyphs"]]
-		result = readPlist(path)
 		self.assertEqual(expected, result)
 
 	# __init__: up convert 2 > 3
@@ -3864,8 +3902,9 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 		writer = UFOWriter(self.ufoPath)
 		writer.writeLayerContents(["public.default"])
 		path = os.path.join(self.ufoPath, "layercontents.plist")
+		with open(path, "rb") as f:
+			result = load(f)
 		expected = [["public.default", "glyphs"]]
-		result = readPlist(path)
 		self.assertEqual(expected, result)
 
 	# __init__: down convert 3 > 1
@@ -3886,9 +3925,11 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 		self.makeUFO()
 		# hack contents.plist
 		path = os.path.join(self.ufoPath, "glyphs.layer 1", "contents.plist")
-		writePlist(dict(b="a.glif"), path)
+		with open(path, "wb") as f:
+			dump(dict(b="a.glif"), f)
 		path = os.path.join(self.ufoPath, "glyphs.layer 2", "contents.plist")
-		writePlist(dict(c="a.glif"), path)
+		with open(path, "wb") as f:
+			dump(dict(c="a.glif"), f)
 		# now test
 		writer = UFOWriter(self.ufoPath)
 		# default
@@ -3917,8 +3958,9 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 		self.assertEqual(True, exists)
 		# layer contents
 		path = os.path.join(self.ufoPath, "layercontents.plist")
+		with open(path, "rb") as f:
+			result = load(f)
 		expected = [["public.default", "glyphs"]]
-		result = readPlist(path)
 		self.assertEqual(expected, result)
 
 	def testNewFontThreeLayers(self):
@@ -3940,8 +3982,9 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 		self.assertEqual(True, exists)
 		# layer contents
 		path = os.path.join(self.ufoPath, "layercontents.plist")
+		with open(path, "rb") as f:
+			result = load(f)
 		expected = [["layer 1", "glyphs.layer 1"], ["public.default", "glyphs"], ["layer 2", "glyphs.layer 2"]]
-		result = readPlist(path)
 		self.assertEqual(expected, result)
 
 	# add a layer to an existing font
@@ -3966,8 +4009,9 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 		self.assertEqual(True, exists)
 		# layer contents
 		path = os.path.join(self.ufoPath, "layercontents.plist")
+		with open(path, "rb") as f:
+			result = load(f)
 		expected = [['public.default', 'glyphs'], ['layer 1', 'glyphs.layer 1'], ['layer 2', 'glyphs.layer 2'], ["layer 3", "glyphs.layer 3"]]
-		result = readPlist(path)
 		self.assertEqual(expected, result)
 
 	# rename valid name
@@ -3992,8 +4036,9 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 		self.assertEqual(True, exists)
 		# layer contents
 		path = os.path.join(self.ufoPath, "layercontents.plist")
+		with open(path, "rb") as f:
+			result = load(f)
 		expected = [['public.default', 'glyphs'], ['layer 3', 'glyphs.layer 3'], ['layer 2', 'glyphs.layer 2']]
-		result = readPlist(path)
 		self.assertEqual(expected, result)
 
 	def testRenameLayerDefault(self):
@@ -4016,8 +4061,9 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 		self.assertEqual(True, exists)
 		# layer contents
 		path = os.path.join(self.ufoPath, "layercontents.plist")
+		with open(path, "rb") as f:
+			result = load(f)
 		expected = [['layer xxx', 'glyphs.layer xxx'], ['layer 1', 'glyphs'], ['layer 2', 'glyphs.layer 2']]
-		result = readPlist(path)
 		self.assertEqual(expected, result)
 
 	# rename duplicate name
@@ -4053,8 +4099,9 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 		self.assertEqual(True, exists)
 		# layer contents
 		path = os.path.join(self.ufoPath, "layercontents.plist")
+		with open(path, "rb") as f:
+			result = load(f)
 		expected = [["public.default", "glyphs"], ["layer 2", "glyphs.layer 2"]]
-		result = readPlist(path)
 		self.assertEqual(expected, result)
 
 	# remove default layer
@@ -4075,8 +4122,9 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 		self.assertEqual(True, exists)
 		# layer contents
 		path = os.path.join(self.ufoPath, "layercontents.plist")
+		with open(path, "rb") as f:
+			result = load(f)
 		expected = [["layer 1", "glyphs.layer 1"], ["layer 2", "glyphs.layer 2"]]
-		result = readPlist(path)
 		self.assertEqual(expected, result)
 
 	# remove unknown layer
@@ -4161,7 +4209,7 @@ class UFO3WriteDataTestCase(unittest.TestCase):
 		writer.writeBytesToPath(path, testBytes)
 		path = os.path.join(self.dstDir, path)
 		self.assertEqual(os.path.exists(path), True)
-		with io.open(path, "rb") as f:
+		with open(path, "rb") as f:
 			written = f.read()
 		self.assertEqual(testBytes, written)
 		self.tearDownUFO()
@@ -4172,7 +4220,7 @@ class UFO3WriteDataTestCase(unittest.TestCase):
 		writer.writeBytesToPath(path, text)
 		path = os.path.join(self.dstDir, path)
 		self.assertEqual(os.path.exists(path), True)
-		with io.open(path, "rb") as f:
+		with open(path, "rb") as f:
 			written = f.read()
 		self.assertEqual(text, written)
 		self.tearDownUFO()
@@ -4183,7 +4231,7 @@ class UFO3WriteDataTestCase(unittest.TestCase):
 		writer.writeBytesToPath(path, testBytes)
 		path = os.path.join(self.dstDir, path)
 		self.assertEqual(os.path.exists(path), True)
-		with io.open(path, "rb") as f:
+		with open(path, "rb") as f:
 			written = f.read()
 		self.assertEqual(testBytes, written)
 		self.tearDownUFO()
@@ -4274,19 +4322,22 @@ class UFO3ReadLayerInfoTestCase(unittest.TestCase):
 		# metainfo.plist
 		metaInfo = dict(creator="test", formatVersion=formatVersion)
 		path = os.path.join(self.ufoPath, "metainfo.plist")
-		writePlist(metaInfo, path)
+		with open(path, "wb") as f:
+			dump(metaInfo, f)
 		# layercontents.plist
 		layerContents = [("public.default", "glyphs")]
 		path = os.path.join(self.ufoPath, "layercontents.plist")
-		writePlist(layerContents, path)
+		with open(path, "wb") as f:
+			dump(layerContents, f)
 		# glyphs
 		glyphsPath = os.path.join(self.ufoPath, "glyphs")
 		os.mkdir(glyphsPath)
 		contents = dict(a="a.glif")
 		path = os.path.join(glyphsPath, "contents.plist")
-		writePlist(contents, path)
+		with open(path, "wb") as f:
+			dump(contents, f)
 		path = os.path.join(glyphsPath, "a.glif")
-		with io.open(path, "w") as f:
+		with open(path, "w") as f:
 			f.write(" ")
 		# layerinfo.plist
 		if layerInfo is None:
@@ -4295,7 +4346,8 @@ class UFO3ReadLayerInfoTestCase(unittest.TestCase):
 				lib={"foo" : "bar"}
 			)
 		path = os.path.join(glyphsPath, "layerinfo.plist")
-		writePlist(layerInfo, path)
+		with open(path, "wb") as f:
+			dump(layerInfo, f)
 
 	def clearUFO(self):
 		if os.path.exists(self.ufoPath):
@@ -4329,7 +4381,7 @@ class UFO3ReadLayerInfoTestCase(unittest.TestCase):
 		self.makeUFO()
 		path = os.path.join(self.ufoPath, "glyphs", "layerinfo.plist")
 		os.remove(path)
-		with io.open(path, "w") as f:
+		with open(path, "w") as f:
 			f.write("test")
 		# read
 		reader = UFOReader(self.ufoPath)
@@ -4341,7 +4393,8 @@ class UFO3ReadLayerInfoTestCase(unittest.TestCase):
 		self.makeUFO()
 		path = os.path.join(self.ufoPath, "glyphs", "layerinfo.plist")
 		info = [("color", "0,0,0,0")]
-		writePlist(info, path)
+		with open(path, "wb") as f:
+			dump(info, f)
 		# read
 		reader = UFOReader(self.ufoPath)
 		glyphSet = reader.getGlyphSet()
@@ -4520,7 +4573,8 @@ class UFO3WriteLayerInfoTestCase(unittest.TestCase):
 		glyphSet = self.makeGlyphSet()
 		glyphSet.writeLayerInfo(info)
 		path = os.path.join(self.ufoPath, "glyphs", "layerinfo.plist")
-		result = readPlist(path)
+		with open(path, "rb") as f:
+			result = load(f)
 		self.assertEqual(expected, result)
 
 	def testColor(self):
