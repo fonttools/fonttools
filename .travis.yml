@@ -1,7 +1,6 @@
 language: python
 sudo: required
 python:
-  - "2.6"
   - "2.7"
   - "3.4"
   - "3.5"
@@ -11,4 +10,5 @@ install:
   - cd fonttools; python setup.py install; cd ..
   - python setup.py install
 script:
+  - python -c "import fontTools"
   - python setup.py test
