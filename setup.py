@@ -12,12 +12,6 @@ except ImportError:
 	pass
 
 try:
-	import numpy
-except ImportError:
-	print("*** Warning: FontTools needs the numpy library for some operations, see:")
-	print("        http://numpy.scipy.org/")
-
-try:
 	import fontTools
 except ImportError:
 	print("*** Warning: RoboFab needs FontTools for some operations, see:")
@@ -60,7 +54,6 @@ setup(
 		long_description = long_description,
 
 		packages = [
-			"",
 			"robofab",
 			"robofab.interface",
 			"robofab.interface.mac",
