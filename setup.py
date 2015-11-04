@@ -1,7 +1,15 @@
 #! /usr/bin/env python
 
 import os, sys
-from setuptools import setup
+
+try:
+	from setuptools import setup
+	extra_kwargs = {
+		"test_suite": "ufoLib.test"
+	}
+except ImportError:
+	from distutils.core import setup
+	extra_kwargs = {}
 
 try:
 	import fontTools
@@ -40,7 +48,6 @@ setup(
 			"ufoLib",
 		],
 		package_dir = {'': 'Lib'},
-		test_suite = "ufoLib.test",
 		classifiers = [
 			"Development Status :: 4 - Beta",
 			"Environment :: Console",
@@ -53,5 +60,6 @@ setup(
 			"Programming Language :: Python",
 			"Topic :: Multimedia :: Graphics",
 			"Topic :: Multimedia :: Graphics :: Graphics Conversion",
-		]
+		],
+		**extra_kwargs
 	)
