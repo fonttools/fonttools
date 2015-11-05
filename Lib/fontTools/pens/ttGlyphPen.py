@@ -57,12 +57,8 @@ class TTGlyphPen(AbstractPen):
     def closePath(self):
         endPt = len(self.points) - 1
 
-        # ignore anchors
-        if endPt == 0 or (self.endPts and endPt == self.endPts[-1] + 1):
-            self._popPoint()
-            return
-
-        # if the drawer added the first point again, remove it
+        # if first and last point on this path are the same, remove last
+        # also removes one-point paths, which usually represent anchors
         startPt = 0
         if self.endPts:
             startPt = self.endPts[-1] + 1
