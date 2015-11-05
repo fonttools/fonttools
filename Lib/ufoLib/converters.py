@@ -8,11 +8,11 @@ def convertUFO1OrUFO2KerningToUFO3Kerning(kerning, groups):
     # gather known kerning groups based on the prefixes
     firstReferencedGroups, secondReferencedGroups = findKnownKerningGroups(groups)
     # Make lists of groups referenced in kerning pairs.
-    for first, seconds in kerning.items():
+    for first, seconds in list(kerning.items()):
         if first in groups:
             if not first.startswith("public.kern1."):
                 firstReferencedGroups.add(first)
-        for second in seconds.keys():
+        for second in list(seconds.keys()):
             if second in groups:
                 if not second.startswith("public.kern2."):
                     secondReferencedGroups.add(second)
@@ -20,7 +20,7 @@ def convertUFO1OrUFO2KerningToUFO3Kerning(kerning, groups):
     firstRenamedGroups = {}
     for first in firstReferencedGroups:
         # Make a list of existing group names.
-        existingGroupNames = groups.keys() + firstRenamedGroups.keys()
+        existingGroupNames = list(groups.keys()) + list(firstRenamedGroups.keys())
         # Add the prefix to the name.
         newName = "public.kern1." + first
         # Make a unique group name.
@@ -30,7 +30,7 @@ def convertUFO1OrUFO2KerningToUFO3Kerning(kerning, groups):
     secondRenamedGroups = {}
     for second in secondReferencedGroups:
         # Make a list of existing group names.
-        existingGroupNames = groups.keys() + secondRenamedGroups.keys()
+        existingGroupNames = list(groups.keys()) + list(secondRenamedGroups.keys())
         # Add the prefix to the name.
         newName = "public.kern2." + second
         # Make a unique group name.
@@ -39,17 +39,17 @@ def convertUFO1OrUFO2KerningToUFO3Kerning(kerning, groups):
         secondRenamedGroups[second] = newName
     # Populate the new group names into the kerning dictionary as needed.
     newKerning = {}
-    for first, seconds in kerning.items():
+    for first, seconds in list(kerning.items()):
         first = firstRenamedGroups.get(first, first)
         newSeconds = {}
-        for second, value in seconds.items():
+        for second, value in list(seconds.items()):
             second = secondRenamedGroups.get(second, second)
             newSeconds[second] = value
         newKerning[first] = newSeconds
     # Make copies of the referenced groups and store them
     # under the new names in the overall groups dictionary.
-    allRenamedGroups = firstRenamedGroups.items()
-    allRenamedGroups += secondRenamedGroups.items()
+    allRenamedGroups = list(firstRenamedGroups.items())
+    allRenamedGroups += list(secondRenamedGroups.items())
     for oldName, newName in allRenamedGroups:
         group = list(groups[oldName])
         groups[newName] = group
@@ -95,7 +95,7 @@ def findKnownKerningGroups(groups):
     ]
     firstGroups = set()
     secondGroups = set()
-    for groupName in groups.keys():
+    for groupName in list(groups.keys()):
         for firstPrefix in knownFirstGroupPrefixes:
             if groupName.startswith(firstPrefix):
                 firstGroups.add(groupName)

@@ -7,7 +7,7 @@ import tempfile
 import codecs
 from plistlib import writePlist, readPlist
 from ufoLib import UFOReader, UFOWriter, UFOLibError
-from testSupport import fontInfoVersion2
+from .testSupport import fontInfoVersion2
 
 
 class TestInfoObject(object): pass
@@ -39,7 +39,7 @@ class ReadFontInfoVersion2TestCase(unittest.TestCase):
 		reader = UFOReader(self.dstDir)
 		reader.readInfo(infoObject)
 		readData = {}
-		for attr in fontInfoVersion2.keys():
+		for attr in list(fontInfoVersion2.keys()):
 			readData[attr] = getattr(infoObject, attr)
 		self.assertEqual(originalData, readData)
 
@@ -782,7 +782,7 @@ class WriteFontInfoVersion2TestCase(unittest.TestCase):
 
 	def makeInfoObject(self):
 		infoObject = TestInfoObject()
-		for attr, value in fontInfoVersion2.items():
+		for attr, value in list(fontInfoVersion2.items()):
 			setattr(infoObject, attr, value)
 		return infoObject
 
@@ -795,7 +795,7 @@ class WriteFontInfoVersion2TestCase(unittest.TestCase):
 		writer = UFOWriter(self.dstDir, formatVersion=2)
 		writer.writeInfo(infoObject)
 		writtenData = self.readPlist()
-		for attr, originalValue in fontInfoVersion2.items():
+		for attr, originalValue in list(fontInfoVersion2.items()):
 			newValue = writtenData[attr]
 			self.assertEqual(newValue, originalValue)
 

@@ -31,14 +31,14 @@ fontinfo.plist values between the possible format versions.
 
 import os
 import shutil
-from cStringIO import StringIO
+from io import StringIO
 import codecs
 from copy import deepcopy
-from plistlib import readPlist, writePlist
-from glifLib import GlyphSet, READ_MODE, WRITE_MODE
-from validators import *
-from filenames import userNameToFileName
-from converters import convertUFO1OrUFO2KerningToUFO3Kerning
+from .plistlib import readPlist, writePlist
+from .glifLib import GlyphSet, READ_MODE, WRITE_MODE
+from .validators import *
+from .filenames import userNameToFileName
+from .converters import convertUFO1OrUFO2KerningToUFO3Kerning
 
 try:
 	set
@@ -159,13 +159,13 @@ class UFOReader(object):
 			invalidFormatMessage = "groups.plist is not properly formatted."
 			if not isinstance(groups, dict):
 				raise UFOLibError(invalidFormatMessage)
-			for groupName, glyphList in groups.items():
-				if not isinstance(groupName, basestring):
+			for groupName, glyphList in list(groups.items()):
+				if not isinstance(groupName, str):
 					raise UFOLibError(invalidFormatMessage)
 				elif not isinstance(glyphList, list):
 					raise UFOLibError(invalidFormatMessage)
 				for glyphName in glyphList:
-					if not isinstance(glyphName, basestring):
+					if not isinstance(glyphName, str):
 						raise UFOLibError(invalidFormatMessage)
 			self._upConvertedKerningData = dict(
 				kerning={},
@@ -320,7 +320,7 @@ class UFOReader(object):
 			infoDataToSet = _convertFontInfoDataVersion2ToVersion3(infoDataToSet)
 		# version 2
 		elif self._formatVersion == 2:
-			for attr, dataValidationDict in fontInfoAttributesVersion2ValueData.items():
+			for attr, dataValidationDict in list(fontInfoAttributesVersion2ValueData.items()):
 				value = infoDict.get(attr)
 				if value is None:
 					continue
@@ -328,7 +328,7 @@ class UFOReader(object):
 			infoDataToSet = _convertFontInfoDataVersion2ToVersion3(infoDataToSet)
 		# version 3
 		elif self._formatVersion == 3:
-			for attr, dataValidationDict in fontInfoAttributesVersion3ValueData.items():
+			for attr, dataValidationDict in list(fontInfoAttributesVersion3ValueData.items()):
 				value = infoDict.get(attr)
 				if value is None:
 					continue
@@ -339,7 +339,7 @@ class UFOReader(object):
 		# validate data
 		infoDataToSet = validateInfoVersion3Data(infoDataToSet)
 		# populate the object
-		for attr, value in infoDataToSet.items():
+		for attr, value in list(infoDataToSet.items()):
 			try:
 				setattr(info, attr, value)
 			except AttributeError:
@@ -352,13 +352,13 @@ class UFOReader(object):
 		invalidFormatMessage = "kerning.plist is not properly formatted."
 		if not isinstance(data, dict):
 			raise UFOLibError(invalidFormatMessage)
-		for first, secondDict in data.items():
-			if not isinstance(first, basestring):
+		for first, secondDict in list(data.items()):
+			if not isinstance(first, str):
 				raise UFOLibError(invalidFormatMessage)
 			elif not isinstance(secondDict, dict):
 				raise UFOLibError(invalidFormatMessage)
-			for second, value in secondDict.items():
-				if not isinstance(second, basestring):
+			for second, value in list(secondDict.items()):
+				if not isinstance(second, str):
 					raise UFOLibError(invalidFormatMessage)
 				elif not isinstance(value, (int, float)):
 					raise UFOLibError(invalidFormatMessage)
@@ -480,7 +480,7 @@ class UFOReader(object):
 		glyphSet = self.getGlyphSet(layerName)
 		allUnicodes = glyphSet.getUnicodes()
 		cmap = {}
-		for glyphName, unicodes in allUnicodes.iteritems():
+		for glyphName, unicodes in allUnicodes.items():
 			for code in unicodes:
 				if code in cmap:
 					cmap[code].append(glyphName)
@@ -806,7 +806,7 @@ class UFOWriter(object):
 		# flip the dictionaries
 		remap = {}
 		for side in ("side1", "side2"):
-			for writeName, dataName in maps[side].items():
+			for writeName, dataName in list(maps[side].items()):
 				remap[dataName] = writeName
 		self._downConversionKerningData = dict(groupRenameMap=remap)
 
@@ -835,11 +835,11 @@ class UFOWriter(object):
 			#    to the same group name there is no check to
 			#    ensure that the contents are identical. that
 			#    is left up to the caller.
-			for name, contents in groups.items():
+			for name, contents in list(groups.items()):
 				if name in remap:
 					continue
 				remappedGroups[name] = contents
-			for name, contents in groups.items():
+			for name, contents in list(groups.items()):
 				if name not in remap:
 					continue
 				name = remap[name]
@@ -847,7 +847,7 @@ class UFOWriter(object):
 			groups = remappedGroups
 		# pack and write
 		groupsNew = {}
-		for key, value in groups.items():
+		for key, value in list(groups.items()):
 			groupsNew[key] = list(value)
 		if groupsNew:
 			self._writePlist(GROUPS_FILENAME, groupsNew)
@@ -866,7 +866,7 @@ class UFOWriter(object):
 		"""
 		# gather version 3 data
 		infoData = {}
-		for attr in fontInfoAttributesVersion3ValueData.keys():
+		for attr in list(fontInfoAttributesVersion3ValueData.keys()):
 			if hasattr(info, attr):
 				try:
 					value = getattr(info, attr)
@@ -904,14 +904,14 @@ class UFOWriter(object):
 		invalidFormatMessage = "The kerning is not properly formatted."
 		if not isDictEnough(kerning):
 			raise UFOLibError(invalidFormatMessage)
-		for pair, value in kerning.items():
+		for pair, value in list(kerning.items()):
 			if not isinstance(pair, (list, tuple)):
 				raise UFOLibError(invalidFormatMessage)
 			if not len(pair) == 2:
 				raise UFOLibError(invalidFormatMessage)
-			if not isinstance(pair[0], basestring):
+			if not isinstance(pair[0], str):
 				raise UFOLibError(invalidFormatMessage)
-			if not isinstance(pair[1], basestring):
+			if not isinstance(pair[1], str):
 				raise UFOLibError(invalidFormatMessage)
 			if not isinstance(value, (int, float)):
 				raise UFOLibError(invalidFormatMessage)
@@ -919,14 +919,14 @@ class UFOWriter(object):
 		if self._formatVersion < 3 and self._downConversionKerningData is not None:
 			remap = self._downConversionKerningData["groupRenameMap"]
 			remappedKerning = {}
-			for (side1, side2), value in kerning.items():
+			for (side1, side2), value in list(kerning.items()):
 				side1 = remap.get(side1, side1)
 				side2 = remap.get(side2, side2)
 				remappedKerning[side1, side2] = value
 			kerning = remappedKerning
 		# pack and write
 		kerningDict = {}
-		for left, right in kerning.keys():
+		for left, right in list(kerning.keys()):
 			value = kerning[left, right]
 			if not left in kerningDict:
 				kerningDict[left] = {}
@@ -960,7 +960,7 @@ class UFOWriter(object):
 		"""
 		if self._formatVersion == 1:
 			raise UFOLibError("features.fea is not allowed in UFO Format Version 1.")
-		if not isinstance(features, basestring):
+		if not isinstance(features, str):
 			raise UFOLibError("The features are not text.")
 		self._makeDirectory()
 		path = os.path.join(self._path, FEATURES_FILENAME)
@@ -999,7 +999,7 @@ class UFOWriter(object):
 				newOrder.append(layerName)
 			layerOrder = newOrder
 		else:
-			layerOrder = self.layerContents.keys()
+			layerOrder = list(self.layerContents.keys())
 		if set(layerOrder) != set(self.layerContents.keys()):
 			raise UFOLibError("The layer order contents does not match the glyph sets that have been created.")
 		layerContents = [(layerName, self.layerContents[layerName]) for layerName in layerOrder]
@@ -1007,7 +1007,7 @@ class UFOWriter(object):
 
 	def _findDirectoryForLayerName(self, layerName):
 		foundDirectory = None
-		for existingLayerName, directoryName in self.layerContents.items():
+		for existingLayerName, directoryName in list(self.layerContents.items()):
 			if layerName is None and directoryName == DEFAULT_GLYPHS_DIRNAME:
 				foundDirectory = directoryName
 				break
@@ -1032,7 +1032,7 @@ class UFOWriter(object):
 			raise UFOLibError("Only the default layer can be writen in UFO %d." % self.formatVersion)
 		# locate a layer name when None has been given
 		if layerName is None and defaultLayer:
-			for existingLayerName, directory in self.layerContents.items():
+			for existingLayerName, directory in list(self.layerContents.items()):
 				if directory == DEFAULT_GLYPHS_DIRNAME:
 					layerName = existingLayerName
 			if layerName is None:
@@ -1060,7 +1060,7 @@ class UFOWriter(object):
 		# matches the default being written. also make sure that this layer
 		# name is not already linked to a non-default layer.
 		if defaultLayer:
-			for existingLayerName, directory in self.layerContents.items():
+			for existingLayerName, directory in list(self.layerContents.items()):
 				if directory == DEFAULT_GLYPHS_DIRNAME:
 					if existingLayerName != layerName:
 						raise UFOLibError("Another layer is already mapped to the default directory.")
@@ -1076,10 +1076,10 @@ class UFOWriter(object):
 			else:
 				# not caching this could be slightly expensive,
 				# but caching it will be cumbersome
-				existing = [d.lower() for d in self.layerContents.values()]
-				if not isinstance(layerName, unicode):
+				existing = [d.lower() for d in list(self.layerContents.values())]
+				if not isinstance(layerName, str):
 					try:
-						layerName = unicode(layerName)
+						layerName = str(layerName)
 					except UnicodeDecodeError:
 						raise UFOLibError("The specified layer name is not a Unicode string.")
 				directory = userNameToFileName(layerName, existing=existing, prefix="glyphs.")
@@ -1118,14 +1118,14 @@ class UFOWriter(object):
 			if newLayerName in self.layerContents:
 				raise UFOLibError("A layer named %s already exists." % newLayerName)
 			# make sure the default layer doesn't already exist
-			if defaultLayer and DEFAULT_GLYPHS_DIRNAME in self.layerContents.values():
+			if defaultLayer and DEFAULT_GLYPHS_DIRNAME in list(self.layerContents.values()):
 				raise UFOLibError("A default layer already exists.")
 		# get the paths
 		oldDirectory = self._findDirectoryForLayerName(layerName)
 		if defaultLayer:
 			newDirectory = DEFAULT_GLYPHS_DIRNAME
 		else:
-			existing = [name.lower() for name in self.layerContents.values()]
+			existing = [name.lower() for name in list(self.layerContents.values())]
 			newDirectory = userNameToFileName(newLayerName, existing=existing, prefix="glyphs.")
 		# update the internal mapping
 		del self.layerContents[layerName]
@@ -1341,7 +1341,7 @@ def validateInfoVersion2Data(infoData):
 	value is in the accepted range.
 	"""
 	validInfoData = {}
-	for attr, value in infoData.items():
+	for attr, value in list(infoData.items()):
 		isValidValue = validateFontInfoVersion2ValueForAttribute(attr, value)
 		if not isValidValue:
 			raise UFOLibError("Invalid value for attribute %s (%s)." % (attr, repr(value)))
@@ -1385,7 +1385,7 @@ def validateInfoVersion3Data(infoData):
 	value is in the accepted range.
 	"""
 	validInfoData = {}
-	for attr, value in infoData.items():
+	for attr, value in list(infoData.items()):
 		isValidValue = validateFontInfoVersion3ValueForAttribute(attr, value)
 		if not isValidValue:
 			raise UFOLibError("Invalid value for attribute %s (%s)." % (attr, repr(value)))
@@ -1395,10 +1395,10 @@ def validateInfoVersion3Data(infoData):
 
 # Value Options
 
-fontInfoOpenTypeHeadFlagsOptions = range(0, 15)
+fontInfoOpenTypeHeadFlagsOptions = list(range(0, 15))
 fontInfoOpenTypeOS2SelectionOptions = [1, 2, 3, 4, 7, 8, 9]
-fontInfoOpenTypeOS2UnicodeRangesOptions = range(0, 128)
-fontInfoOpenTypeOS2CodePageRangesOptions = range(0, 64)
+fontInfoOpenTypeOS2UnicodeRangesOptions = list(range(0, 128))
+fontInfoOpenTypeOS2CodePageRangesOptions = list(range(0, 64))
 fontInfoOpenTypeOS2TypeOptions = [0, 1, 2, 3, 8, 9]
 
 # Version Attribute Definitions
@@ -1450,23 +1450,23 @@ fontInfoAttributesVersion1 = set([
 ])
 
 fontInfoAttributesVersion2ValueData = {
-	"familyName"							: dict(type=basestring),
-	"styleName"								: dict(type=basestring),
-	"styleMapFamilyName"					: dict(type=basestring),
-	"styleMapStyleName"						: dict(type=basestring, valueValidator=fontInfoStyleMapStyleNameValidator),
+	"familyName"							: dict(type=str),
+	"styleName"								: dict(type=str),
+	"styleMapFamilyName"					: dict(type=str),
+	"styleMapStyleName"						: dict(type=str, valueValidator=fontInfoStyleMapStyleNameValidator),
 	"versionMajor"							: dict(type=int),
 	"versionMinor"							: dict(type=int),
 	"year"									: dict(type=int),
-	"copyright"								: dict(type=basestring),
-	"trademark"								: dict(type=basestring),
+	"copyright"								: dict(type=str),
+	"trademark"								: dict(type=str),
 	"unitsPerEm"							: dict(type=(int, float)),
 	"descender"								: dict(type=(int, float)),
 	"xHeight"								: dict(type=(int, float)),
 	"capHeight"								: dict(type=(int, float)),
 	"ascender"								: dict(type=(int, float)),
 	"italicAngle"							: dict(type=(float, int)),
-	"note"									: dict(type=basestring),
-	"openTypeHeadCreated"					: dict(type=basestring, valueValidator=fontInfoOpenTypeHeadCreatedValidator),
+	"note"									: dict(type=str),
+	"openTypeHeadCreated"					: dict(type=str, valueValidator=fontInfoOpenTypeHeadCreatedValidator),
 	"openTypeHeadLowestRecPPEM"				: dict(type=(int, float)),
 	"openTypeHeadFlags"						: dict(type="integerList", valueValidator=genericIntListValidator, valueOptions=fontInfoOpenTypeHeadFlagsOptions),
 	"openTypeHheaAscender"					: dict(type=(int, float)),
@@ -1475,25 +1475,25 @@ fontInfoAttributesVersion2ValueData = {
 	"openTypeHheaCaretSlopeRise"			: dict(type=int),
 	"openTypeHheaCaretSlopeRun"				: dict(type=int),
 	"openTypeHheaCaretOffset"				: dict(type=(int, float)),
-	"openTypeNameDesigner"					: dict(type=basestring),
-	"openTypeNameDesignerURL"				: dict(type=basestring),
-	"openTypeNameManufacturer"				: dict(type=basestring),
-	"openTypeNameManufacturerURL"			: dict(type=basestring),
-	"openTypeNameLicense"					: dict(type=basestring),
-	"openTypeNameLicenseURL"				: dict(type=basestring),
-	"openTypeNameVersion"					: dict(type=basestring),
-	"openTypeNameUniqueID"					: dict(type=basestring),
-	"openTypeNameDescription"				: dict(type=basestring),
-	"openTypeNamePreferredFamilyName"		: dict(type=basestring),
-	"openTypeNamePreferredSubfamilyName"	: dict(type=basestring),
-	"openTypeNameCompatibleFullName"		: dict(type=basestring),
-	"openTypeNameSampleText"				: dict(type=basestring),
-	"openTypeNameWWSFamilyName"				: dict(type=basestring),
-	"openTypeNameWWSSubfamilyName"			: dict(type=basestring),
+	"openTypeNameDesigner"					: dict(type=str),
+	"openTypeNameDesignerURL"				: dict(type=str),
+	"openTypeNameManufacturer"				: dict(type=str),
+	"openTypeNameManufacturerURL"			: dict(type=str),
+	"openTypeNameLicense"					: dict(type=str),
+	"openTypeNameLicenseURL"				: dict(type=str),
+	"openTypeNameVersion"					: dict(type=str),
+	"openTypeNameUniqueID"					: dict(type=str),
+	"openTypeNameDescription"				: dict(type=str),
+	"openTypeNamePreferredFamilyName"		: dict(type=str),
+	"openTypeNamePreferredSubfamilyName"	: dict(type=str),
+	"openTypeNameCompatibleFullName"		: dict(type=str),
+	"openTypeNameSampleText"				: dict(type=str),
+	"openTypeNameWWSFamilyName"				: dict(type=str),
+	"openTypeNameWWSSubfamilyName"			: dict(type=str),
 	"openTypeOS2WidthClass"					: dict(type=int, valueValidator=fontInfoOpenTypeOS2WidthClassValidator),
 	"openTypeOS2WeightClass"				: dict(type=int, valueValidator=fontInfoOpenTypeOS2WeightClassValidator),
 	"openTypeOS2Selection"					: dict(type="integerList", valueValidator=genericIntListValidator, valueOptions=fontInfoOpenTypeOS2SelectionOptions),
-	"openTypeOS2VendorID"					: dict(type=basestring),
+	"openTypeOS2VendorID"					: dict(type=str),
 	"openTypeOS2Panose"						: dict(type="integerList", valueValidator=fontInfoVersion2OpenTypeOS2PanoseValidator),
 	"openTypeOS2FamilyClass"				: dict(type="integerList", valueValidator=fontInfoOpenTypeOS2FamilyClassValidator),
 	"openTypeOS2UnicodeRanges"				: dict(type="integerList", valueValidator=genericIntListValidator, valueOptions=fontInfoOpenTypeOS2UnicodeRangesOptions),
@@ -1520,8 +1520,8 @@ fontInfoAttributesVersion2ValueData = {
 	"openTypeVheaCaretSlopeRise"			: dict(type=int),
 	"openTypeVheaCaretSlopeRun"				: dict(type=int),
 	"openTypeVheaCaretOffset"				: dict(type=(int, float)),
-	"postscriptFontName"					: dict(type=basestring),
-	"postscriptFullName"					: dict(type=basestring),
+	"postscriptFontName"					: dict(type=str),
+	"postscriptFullName"					: dict(type=str),
 	"postscriptSlantAngle"					: dict(type=(float, int)),
 	"postscriptUniqueID"					: dict(type=int),
 	"postscriptUnderlineThickness"			: dict(type=(int, float)),
@@ -1539,11 +1539,11 @@ fontInfoAttributesVersion2ValueData = {
 	"postscriptForceBold"					: dict(type=bool),
 	"postscriptDefaultWidthX"				: dict(type=(int, float)),
 	"postscriptNominalWidthX"				: dict(type=(int, float)),
-	"postscriptWeightName"					: dict(type=basestring),
-	"postscriptDefaultCharacter"			: dict(type=basestring),
+	"postscriptWeightName"					: dict(type=str),
+	"postscriptDefaultCharacter"			: dict(type=str),
 	"postscriptWindowsCharacterSet"			: dict(type=int, valueValidator=fontInfoPostscriptWindowsCharacterSetValidator),
 	"macintoshFONDFamilyID"					: dict(type=int),
-	"macintoshFONDName"						: dict(type=basestring),
+	"macintoshFONDName"						: dict(type=str),
 }
 fontInfoAttributesVersion2 = set(fontInfoAttributesVersion2ValueData.keys())
 
@@ -1595,11 +1595,11 @@ fontInfoAttributesVersion3 = set(fontInfoAttributesVersion3ValueData.keys())
 
 # insert the type validator for all attrs that
 # have no defined validator.
-for attr, dataDict in fontInfoAttributesVersion2ValueData.items():
+for attr, dataDict in list(fontInfoAttributesVersion2ValueData.items()):
 	if "valueValidator" not in dataDict:
 		dataDict["valueValidator"] = genericTypeValidator
 
-for attr, dataDict in fontInfoAttributesVersion3ValueData.items():
+for attr, dataDict in list(fontInfoAttributesVersion3ValueData.items()):
 	if "valueValidator" not in dataDict:
 		dataDict["valueValidator"] = genericTypeValidator
 
@@ -1609,7 +1609,7 @@ for attr, dataDict in fontInfoAttributesVersion3ValueData.items():
 
 def _flipDict(d):
 	flipped = {}
-	for key, value in d.items():
+	for key, value in list(d.items()):
 		flipped[value] = key
 	return flipped
 
@@ -1751,7 +1751,7 @@ def convertFontInfoValueForAttributeFromVersion2ToVersion1(attr, value):
 
 def _convertFontInfoDataVersion1ToVersion2(data):
 	converted = {}
-	for attr, value in data.items():
+	for attr, value in list(data.items()):
 		# FontLab gives -1 for the weightValue
 		# for fonts wil no defined value. Many
 		# format version 1 UFOs will have this.
@@ -1770,7 +1770,7 @@ def _convertFontInfoDataVersion1ToVersion2(data):
 
 def _convertFontInfoDataVersion2ToVersion1(data):
 	converted = {}
-	for attr, value in data.items():
+	for attr, value in list(data.items()):
 		newAttr, newValue = convertFontInfoValueForAttributeFromVersion2ToVersion1(attr, value)
 		# only take attributes that are registered for version 1
 		if newAttr not in fontInfoAttributesVersion1:
@@ -1861,7 +1861,7 @@ def convertFontInfoValueForAttributeFromVersion3ToVersion2(attr, value):
 
 def _convertFontInfoDataVersion3ToVersion2(data):
 	converted = {}
-	for attr, value in data.items():
+	for attr, value in list(data.items()):
 		newAttr, newValue = convertFontInfoValueForAttributeFromVersion3ToVersion2(attr, value)
 		if newAttr not in fontInfoAttributesVersion2:
 			continue
@@ -1870,7 +1870,7 @@ def _convertFontInfoDataVersion3ToVersion2(data):
 
 def _convertFontInfoDataVersion2ToVersion3(data):
 	converted = {}
-	for attr, value in data.items():
+	for attr, value in list(data.items()):
 		attr, value = convertFontInfoValueForAttributeFromVersion2ToVersion3(attr, value)
 		converted[attr] = value
 	return converted

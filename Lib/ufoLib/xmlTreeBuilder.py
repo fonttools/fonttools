@@ -40,7 +40,7 @@ class XMLParser:
 		parser.StartElementHandler = self.startElementHandler
 		parser.EndElementHandler = self.endElementHandler
 		parser.CharacterDataHandler = self.characterDataHandler
-		if isinstance(pathOrFile, (str, unicode)):
+		if isinstance(pathOrFile, str):
 			f = open(pathOrFile)
 			didOpen = 1
 		else:
@@ -59,7 +59,7 @@ class XMLParser:
 		proc.app.handle_start_tag = self.startElementHandler
 		proc.app.handle_end_tag = self.endElementHandler
 		proc.app.handle_data = self._xmlprocDataHandler
-		if isinstance(pathOrFile, (str, unicode)):
+		if isinstance(pathOrFile, str):
 			f = open(pathOrFile)
 			didOpen = 1
 		else:

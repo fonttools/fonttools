@@ -6,7 +6,7 @@ by xmlTreeBuilder.
 __all__ = "readPlistFromTree"
 
 
-from plistlib import PlistParser
+from .plistlib import PlistParser
 
 
 def readPlistFromTree(tree):
@@ -30,14 +30,14 @@ class PlistTreeParser(PlistParser):
 			if isinstance(child, tuple):
 				self.parseElement(child[0], child[1], child[2])
 			else:
-				if not isinstance(child, unicode):
+				if not isinstance(child, str):
 					# ugh, xmlTreeBuilder returns utf-8 :-(
-					child = unicode(child, "utf-8")
+					child = str(child, "utf-8")
 				self.handleData(child)
 		self.handleEndElement(element)
 
 
 if __name__ == "__main__":
-	from xmlTreeBuilder import buildTree
+	from .xmlTreeBuilder import buildTree
 	tree = buildTree("xxx.plist", stripData=0)
-	print readPlistFromTree(tree)
+	print(readPlistFromTree(tree))

@@ -25,12 +25,12 @@ class GlyphSetTests(unittest.TestCase):
 		dstDir = self.dstDir
 		src = GlyphSet(srcDir)
 		dst = GlyphSet(dstDir)
-		for glyphName in src.keys():
+		for glyphName in list(src.keys()):
 			g = src[glyphName]
 			g.drawPoints(None)  # load attrs
 			dst.writeGlyph(glyphName, g, g.drawPoints)
 		# compare raw file data:
-		for glyphName in src.keys():
+		for glyphName in list(src.keys()):
 			fileName = src.contents[glyphName]
 			org = file(os.path.join(srcDir, fileName), READ_MODE).read()
 			new = file(os.path.join(dstDir, fileName), READ_MODE).read()
@@ -45,10 +45,10 @@ class GlyphSetTests(unittest.TestCase):
 	def testReverseContents(self):
 		gset = GlyphSet(GLYPHSETDIR)
 		d = {}
-		for k, v in gset.getReverseContents().items():
+		for k, v in list(gset.getReverseContents().items()):
 			d[v] = k
 		org = {}
-		for k, v in gset.contents.items():
+		for k, v in list(gset.contents.items()):
 			org[k] = v.lower()
 		self.assertEqual(d, org)
 
@@ -57,7 +57,7 @@ class GlyphSetTests(unittest.TestCase):
 		dst = GlyphSet(self.dstDir)
 		dstMap = dst.getReverseContents()
 		self.assertEqual(dstMap, {})
-		for glyphName in src.keys():
+		for glyphName in list(src.keys()):
 			g = src[glyphName]
 			g.drawPoints(None)  # load attrs
 			dst.writeGlyph(glyphName, g, g.drawPoints)
@@ -73,20 +73,20 @@ class GlyphSetTests(unittest.TestCase):
 			return "prefix" + glyphNameToFileName(glyphName, glyphSet)
 		src = GlyphSet(GLYPHSETDIR)
 		dst = GlyphSet(self.dstDir, myGlyphNameToFileName)
-		for glyphName in src.keys():
+		for glyphName in list(src.keys()):
 			g = src[glyphName]
 			g.drawPoints(None)  # load attrs
 			dst.writeGlyph(glyphName, g, g.drawPoints)
 		d = {}
-		for k, v in src.contents.items():
-			print k, v
+		for k, v in list(src.contents.items()):
+			print(k, v)
 			d[k] = "prefix" + v
 		self.assertEqual(d, dst.contents)
 
 	def testGetUnicodes(self):
 		src = GlyphSet(GLYPHSETDIR)
 		unicodes = src.getUnicodes()
-		for glyphName in src.keys():
+		for glyphName in list(src.keys()):
 			g = src[glyphName]
 			g.drawPoints(None)  # load attrs
 			if not hasattr(g, "unicodes"):

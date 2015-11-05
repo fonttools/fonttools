@@ -9,16 +9,16 @@ from ufoLib.test.testSupport import Glyph, stripText
 class TestGLIF1(unittest.TestCase):
 
 	def assertEqual(self, first, second, msg=None):
-		if isinstance(first, basestring):
+		if isinstance(first, str):
 			first = stripText(first)
-		if isinstance(second, basestring):
+		if isinstance(second, str):
 			second = stripText(second)
 		return super(TestGLIF1, self).assertEqual(first, second, msg=msg)
 
 	def pyToGLIF(self, py):
 		py = stripText(py)
 		glyph = Glyph()
-		exec py in {"glyph" : glyph, "pointPen" : glyph}
+		exec(py, {"glyph" : glyph, "pointPen" : glyph})
 		glif = writeGlyphToString(glyph.name, glyphObject=glyph, drawPointsFunc=glyph.drawPoints, formatVersion=1)
 		glif = "\n".join(glif.splitlines()[1:])
 		return glif

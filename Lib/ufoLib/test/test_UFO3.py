@@ -8,7 +8,7 @@ import codecs
 from plistlib import writePlist, readPlist
 from ufoLib import UFOReader, UFOWriter, UFOLibError
 from ufoLib.glifLib import GlifLibError
-from testSupport import fontInfoVersion3
+from .testSupport import fontInfoVersion3
 
 
 class TestInfoObject(object): pass
@@ -44,7 +44,7 @@ class ReadFontInfoVersion3TestCase(unittest.TestCase):
 		reader = UFOReader(self.dstDir)
 		reader.readInfo(infoObject)
 		readData = {}
-		for attr in fontInfoVersion3.keys():
+		for attr in list(fontInfoVersion3.keys()):
 			readData[attr] = getattr(infoObject, attr)
 		self.assertEqual(originalData, readData)
 
@@ -1707,7 +1707,7 @@ class WriteFontInfoVersion3TestCase(unittest.TestCase):
 
 	def makeInfoObject(self):
 		infoObject = TestInfoObject()
-		for attr, value in fontInfoVersion3.items():
+		for attr, value in list(fontInfoVersion3.items()):
 			setattr(infoObject, attr, value)
 		return infoObject
 
@@ -1720,7 +1720,7 @@ class WriteFontInfoVersion3TestCase(unittest.TestCase):
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		writer.writeInfo(infoObject)
 		writtenData = self.readPlist()
-		for attr, originalValue in fontInfoVersion3.items():
+		for attr, originalValue in list(fontInfoVersion3.items()):
 			newValue = writtenData[attr]
 			self.assertEqual(newValue, originalValue)
 		self.tearDownUFO()
@@ -3341,13 +3341,13 @@ class WriteFontInfoVersion3TestCase(unittest.TestCase):
 		self.tearDownUFO()
 		## below min
 		infoObject = self.makeInfoObject()
-		infoObject.guidelines = [dict(x=0, identifier=u"\0x1F")]
+		infoObject.guidelines = [dict(x=0, identifier="\0x1F")]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		self.tearDownUFO()
 		## above max
 		infoObject = self.makeInfoObject()
-		infoObject.guidelines = [dict(x=0, identifier=u"\0x7F")]
+		infoObject.guidelines = [dict(x=0, identifier="\0x7F")]
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
 		self.tearDownUFO()
@@ -3977,7 +3977,7 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 	def testRenameLayer(self):
 		self.makeUFO()
 		writer = UFOWriter(self.ufoPath)
-		writer.renameGlyphSet("layer 1", u"layer 3")
+		writer.renameGlyphSet("layer 1", "layer 3")
 		writer.writeLayerContents(["public.default", "layer 3", "layer 2"])
 		# directories
 		path = os.path.join(self.ufoPath, "glyphs")
@@ -4001,8 +4001,8 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 	def testRenameLayerDefault(self):
 		self.makeUFO()
 		writer = UFOWriter(self.ufoPath)
-		writer.renameGlyphSet("public.default", u"layer xxx")
-		writer.renameGlyphSet("layer 1", u"layer 1", defaultLayer=True)
+		writer.renameGlyphSet("public.default", "layer xxx")
+		writer.renameGlyphSet("layer 1", "layer 1", defaultLayer=True)
 		writer.writeLayerContents(["layer xxx", "layer 1", "layer 2"])
 		path = os.path.join(self.ufoPath, "glyphs")
 		exists = os.path.exists(path)
@@ -4027,14 +4027,14 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 	def testRenameLayerDuplicateName(self):
 		self.makeUFO()
 		writer = UFOWriter(self.ufoPath)
-		self.assertRaises(UFOLibError, writer.renameGlyphSet, "layer 1", u"layer 2")
+		self.assertRaises(UFOLibError, writer.renameGlyphSet, "layer 1", "layer 2")
 
 	# rename unknown layer
 
 	def testRenameLayerDuplicateName(self):
 		self.makeUFO()
 		writer = UFOWriter(self.ufoPath)
-		self.assertRaises(UFOLibError, writer.renameGlyphSet, "does not exist", u"layer 2")
+		self.assertRaises(UFOLibError, writer.renameGlyphSet, "does not exist", "layer 2")
 
 	# remove valid layer
 
@@ -4169,7 +4169,7 @@ class UFO3WriteDataTestCase(unittest.TestCase):
 		self.tearDownUFO()
 		# basic file with unicode text
 		path = "data/org.unifiedfontobject.writebytesbasicunicodefile.txt"
-		bytes = u"tëßt"
+		bytes = "tëßt"
 		writer = UFOWriter(self.dstDir, formatVersion=3)
 		writer.writeBytesToPath(path, bytes, encoding="utf8")
 		path = os.path.join(self.dstDir, path)

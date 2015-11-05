@@ -12,13 +12,13 @@ glyph data. See the class doc string for details.
 """
 
 import os
-from cStringIO import StringIO
+from io import StringIO
 from warnings import warn
-from xmlTreeBuilder import buildTree, stripCharacterData
+from .xmlTreeBuilder import buildTree, stripCharacterData
 from ufoLib.pointPen import AbstractPointPen
-from plistlib import readPlist, writePlistToString
-from filenames import userNameToFileName
-from validators import isDictEnough, genericTypeValidator, colorValidator,\
+from .plistlib import readPlist, writePlistToString
+from .filenames import userNameToFileName
+from .validators import isDictEnough, genericTypeValidator, colorValidator,\
 	guidelinesValidator, anchorsValidator, identifierValidator, imageValidator, glyphLibValidator
 
 try:
@@ -144,10 +144,10 @@ class GlyphSet(object):
 		if not isinstance(contents, dict):
 			invalidFormat = True
 		else:
-			for name, fileName in contents.items():
-				if not isinstance(name, basestring):
+			for name, fileName in list(contents.items()):
+				if not isinstance(name, str):
 					invalidFormat = True
-				if not isinstance(fileName, basestring):
+				if not isinstance(fileName, str):
 					invalidFormat = True
 				elif not os.path.exists(os.path.join(self.dirName, fileName)):
 					raise GlifLibError("contents.plist references a file that does not exist: %s" % fileName)
@@ -167,7 +167,7 @@ class GlyphSet(object):
 		"""
 		if self._reverseContents is None:
 			d = {}
-			for k, v in self.contents.iteritems():
+			for k, v in self.contents.items():
 				d[v.lower()] = k
 			self._reverseContents = d
 		return self._reverseContents
@@ -196,7 +196,7 @@ class GlyphSet(object):
 			raise GlifLibError("layerinfo.plist is not properly formatted.")
 		infoDict = validateLayerInfoVersion3Data(infoDict)
 		# populate the object
-		for attr, value in infoDict.items():
+		for attr, value in list(infoDict.items()):
 			try:
 				setattr(info, attr, value)
 			except AttributeError:
@@ -207,7 +207,7 @@ class GlyphSet(object):
 			raise GlifLibError("layerinfo.plist is not allowed in UFO %d." % self.ufoFormatVersion)
 		# gather data
 		infoData = {}
-		for attr in layerInfoVersion3ValueData.keys():
+		for attr in list(layerInfoVersion3ValueData.keys()):
 			if hasattr(info, attr):
 				try:
 					value = getattr(info, attr)
@@ -255,7 +255,7 @@ class GlyphSet(object):
 		if needRead:
 			fileName = self.contents[glyphName]
 			if not os.path.exists(path):
-				raise KeyError, glyphName
+				raise KeyError(glyphName)
 			f = open(path, "rb")
 			text = f.read()
 			f.close()
@@ -385,7 +385,7 @@ class GlyphSet(object):
 	# dict-like support
 
 	def keys(self):
-		return self.contents.keys()
+		return list(self.contents.keys())
 
 	def has_key(self, glyphName):
 		return glyphName in self.contents
@@ -397,7 +397,7 @@ class GlyphSet(object):
 
 	def __getitem__(self, glyphName):
 		if glyphName not in self.contents:
-			raise KeyError, glyphName
+			raise KeyError(glyphName)
 		return self.glyphClass(glyphName, self)
 
 	# quickly fetch unicode values
@@ -411,7 +411,7 @@ class GlyphSet(object):
 		"""
 		unicodes = {}
 		if glyphNames is None:
-			glyphNames = self.contents.keys()
+			glyphNames = list(self.contents.keys())
 		for glyphName in glyphNames:
 			text = self.getGLIF(glyphName)
 			unicodes[glyphName] = _fetchUnicodes(text)
@@ -426,7 +426,7 @@ class GlyphSet(object):
 		"""
 		components = {}
 		if glyphNames is None:
-			glyphNames = self.contents.keys()
+			glyphNames = list(self.contents.keys())
 		for glyphName in glyphNames:
 			text = self.getGLIF(glyphName)
 			components[glyphName] = _fetchComponentBases(text)
@@ -441,7 +441,7 @@ class GlyphSet(object):
 		"""
 		images = {}
 		if glyphNames is None:
-			glyphNames = self.contents.keys()
+			glyphNames = list(self.contents.keys())
 		for glyphName in glyphNames:
 			text = self.getGLIF(glyphName)
 			images[glyphName] = _fetchImageFileName(text)
@@ -465,10 +465,10 @@ def glyphNameToFileName(glyphName, glyphSet):
 	"""
 	Wrapper around the userNameToFileName function in filenames.py
 	"""
-	existing = [name.lower() for name in glyphSet.contents.values()]
-	if not isinstance(glyphName, unicode):
+	existing = [name.lower() for name in list(glyphSet.contents.values())]
+	if not isinstance(glyphName, str):
 		try:
-			new = unicode(glyphName)
+			new = str(glyphName)
 			glyphName = new
 		except UnicodeDecodeError:
 			pass
@@ -552,7 +552,7 @@ def writeGlyphToString(glyphName, glyphObject=None, drawPointsFunc=None, writer=
 		aFile = None
 	identifiers = set()
 	# start
-	if not isinstance(glyphName, basestring):
+	if not isinstance(glyphName, str):
 		raise GlifLibError("The glyph name is not properly formatted.")
 	if len(glyphName) == 0:
 		raise GlifLibError("The glyph name is empty.")
@@ -566,7 +566,7 @@ def writeGlyphToString(glyphName, glyphObject=None, drawPointsFunc=None, writer=
 		n = glyphName.encode("utf8")
 		utf8GlyphName = n
 	except UnicodeEncodeError:
-		raise GlifLibError(u"encountered a glyph name (%s) that can't be converted to UTF-8." % glyphName)
+		raise GlifLibError("encountered a glyph name (%s) that can't be converted to UTF-8." % glyphName)
 	writer.begintag("glyph", [("name", utf8GlyphName), ("format", formatVersion)])
 	writer.newline()
 	# advance
@@ -651,7 +651,7 @@ def _writeUnicodes(glyphObject, writer):
 
 def _writeNote(glyphObject, writer):
 	note = getattr(glyphObject, "note", None)
-	if not isinstance(note, (str, unicode)):
+	if not isinstance(note, str):
 		raise GlifLibError("note attribute must be str or unicode")
 	note = note.encode("utf-8")
 	writer.begintag("note")
@@ -771,7 +771,7 @@ def _writeLib(glyphObject, writer):
 # -----------------------
 
 layerInfoVersion3ValueData = {
-	"color"			: dict(type=basestring, valueValidator=colorValidator),
+	"color"			: dict(type=str, valueValidator=colorValidator),
 	"lib"			: dict(type=dict, valueValidator=genericTypeValidator)
 }
 
@@ -813,7 +813,7 @@ def validateLayerInfoVersion3Data(infoData):
 	value is in the accepted range.
 	"""
 	validInfoData = {}
-	for attr, value in infoData.items():
+	for attr, value in list(infoData.items()):
 		if attr not in layerInfoVersion3ValueData:
 			raise GlifLibError("Unknown attribute %s." % attr)
 		isValidValue = validateLayerInfoVersion3ValueForAttribute(attr, value)
@@ -1018,7 +1018,7 @@ def _readNote(glyphObject, children):
 	_relaxedSetattr(glyphObject, "note", note)
 
 def _readLib(glyphObject, children):
-	from plistFromTree import readPlistFromTree
+	from .plistFromTree import readPlistFromTree
 	assert len(children) == 1
 	lib = readPlistFromTree(children[0])
 	valid, message = glyphLibValidator(lib)
@@ -1097,7 +1097,8 @@ def _buildAnchorFormat1(point):
 	anchor = dict(x=x, y=y, name=name)
 	return anchor
 
-def _buildOutlineContourFormat1(pen, (attrs, children)):
+def _buildOutlineContourFormat1(pen, xxx_todo_changeme):
+	(attrs, children) = xxx_todo_changeme
 	if set(attrs.keys()):
 		raise GlifLibError("Unknown attributes in contour element.")
 	pen.beginPath()
@@ -1115,7 +1116,8 @@ def _buildOutlinePointsFormat1(pen, children):
 		name = attrs["name"]
 		pen.addPoint((x, y), segmentType=segmentType, smooth=smooth, name=name)
 
-def _buildOutlineComponentFormat1(pen, (attrs, children)):
+def _buildOutlineComponentFormat1(pen, xxx_todo_changeme1):
+	(attrs, children) = xxx_todo_changeme1
 	if len(children):
 		raise GlifLibError("Unknown child elements of component element." % subElement)
 	if set(attrs.keys()) - componentAttributesFormat1:
@@ -1148,7 +1150,8 @@ def buildOutlineFormat2(glyphObject, pen, xmlNodes, identifiers):
 		else:
 			raise GlifLibError("Unknown element in outline element: %s" % element)
 
-def _buildOutlineContourFormat2(pen, (attrs, children), identifiers):
+def _buildOutlineContourFormat2(pen, xxx_todo_changeme2, identifiers):
+	(attrs, children) = xxx_todo_changeme2
 	if set(attrs.keys()) - contourAttributesFormat2:
 		raise GlifLibError("Unknown attributes in contour element.")
 	identifier = attrs.get("identifier")
@@ -1188,7 +1191,8 @@ def _buildOutlinePointsFormat2(pen, children, identifiers):
 			pen.addPoint((x, y), segmentType=segmentType, smooth=smooth, name=name)
 			raise warn("The addPoint method needs an identifier kwarg. The point's identifier value has been discarded.", DeprecationWarning)
 
-def _buildOutlineComponentFormat2(pen, (attrs, children), identifiers):
+def _buildOutlineComponentFormat2(pen, xxx_todo_changeme3, identifiers):
+	(attrs, children) = xxx_todo_changeme3
 	if len(children):
 		raise GlifLibError("Unknown child elements of component element." % subElement)
 	if set(attrs.keys()) - componentAttributesFormat2:
@@ -1232,7 +1236,7 @@ def _validateAndMassagePointStructures(children, pointAttributes, openContourOff
 		if subElement != "point":
 			raise GlifLibError("Unknown child element (%s) of contour element." % subElement)
 		# unknown attributes
-		unknownAttributes = [attr for attr in attrs.keys() if attr not in pointAttributes]
+		unknownAttributes = [attr for attr in list(attrs.keys()) if attr not in pointAttributes]
 		if unknownAttributes:
 			raise GlifLibError("Unknown attributes in point element.")
 		# search for unknown children

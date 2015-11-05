@@ -28,7 +28,7 @@ def _gatherTestCasesFromCallerByMagic():
 
 def _gatherTestCasesFromDict(d):
 	testCases = []
-	for ob in d.values():
+	for ob in list(d.values()):
 		if isinstance(ob, type) and issubclass(ob, unittest.TestCase):
 			testCases.append(ob)
 	return testCases
@@ -90,7 +90,7 @@ class Glyph(object):
 	def drawPoints(self, pointPen):
 		if self.outline:
 			py = "\n".join(self.outline)
-			exec py in {"pointPen" : pointPen}
+			exec(py, {"pointPen" : pointPen})
 
 	def py(self):
 		text = []
@@ -130,7 +130,7 @@ def _dictToString(d):
 			value = _tupleToString(value)
 		elif isinstance(value, (int, float)):
 			value = str(value)
-		elif isinstance(value, basestring):
+		elif isinstance(value, str):
 			value = "\"%s\"" % value
 		text.append("%s : %s" % (key, value))
 	if not text:
@@ -148,7 +148,7 @@ def _listToString(l):
 			value = _tupleToString(value)
 		elif isinstance(value, (int, float)):
 			value = str(value)
-		elif isinstance(value, basestring):
+		elif isinstance(value, str):
 			value = "\"%s\"" % value
 		text.append(value)
 	if not text:
@@ -166,7 +166,7 @@ def _tupleToString(t):
 			value = _tupleToString(value)
 		elif isinstance(value, (int, float)):
 			value = str(value)
-		elif isinstance(value, basestring):
+		elif isinstance(value, str):
 			value = "\"%s\"" % value
 		text.append(value)
 	if not text:
@@ -586,8 +586,8 @@ fontInfoVersion3 = {
 											# identifier
 											dict(x=100, y=200, angle=45, identifier="guide1"),
 											dict(x=100, y=200, angle=45, identifier="guide2"),
-											dict(x=100, y=200, angle=45, identifier=u"\x20"),
-											dict(x=100, y=200, angle=45, identifier=u"\x7E"),
+											dict(x=100, y=200, angle=45, identifier="\x20"),
+											dict(x=100, y=200, angle=45, identifier="\x7E"),
 											# colors
 											dict(x=100, y=200, angle=45, color="0,0,0,0"),
 											dict(x=100, y=200, angle=45, color="1,0,0,0"),

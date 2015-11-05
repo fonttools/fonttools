@@ -66,7 +66,7 @@ def userNameToFileName(userName, existing=[], prefix="", suffix=""):
 	u'alt._con'
 	"""
 	# the incoming name must be a unicode string
-	assert isinstance(userName, unicode), "The value for userName must be a unicode string."
+	assert isinstance(userName, str), "The value for userName must be a unicode string."
 	# establish the prefix and suffix lengths
 	prefixLength = len(prefix)
 	suffixLength = len(suffix)
