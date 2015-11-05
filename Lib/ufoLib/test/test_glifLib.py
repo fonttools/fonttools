@@ -4,7 +4,7 @@ import shutil
 import unittest
 from io import open
 from ufoLib.test.testSupport import getDemoFontGlyphSetPath
-from ufoLib.glifLib import GlyphSet, glyphNameToFileName, READ_MODE
+from ufoLib.glifLib import GlyphSet, glyphNameToFileName
 from robofab.tools.glyphNameSchemes import glyphNameToShortFileName
 
 
@@ -33,9 +33,9 @@ class GlyphSetTests(unittest.TestCase):
 		# compare raw file data:
 		for glyphName in sorted(src.keys()):
 			fileName = src.contents[glyphName]
-			with open(os.path.join(srcDir, fileName), READ_MODE) as f:
+			with open(os.path.join(srcDir, fileName), "r") as f:
 				org = f.read()
-			with open(os.path.join(dstDir, fileName), READ_MODE) as f:
+			with open(os.path.join(dstDir, fileName), "r") as f:
 				new = f.read()
 			added = []
 			removed = []

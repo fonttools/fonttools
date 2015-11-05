@@ -4,7 +4,7 @@ import shutil
 from io import StringIO, BytesIO, open
 import codecs
 from copy import deepcopy
-from ufoLib.glifLib import GlyphSet, READ_MODE, WRITE_MODE, WRITE_BYTES_MODE, READ_BYTES_MODE
+from ufoLib.glifLib import GlyphSet
 from ufoLib.validators import *
 from ufoLib.filenames import userNameToFileName
 from ufoLib.converters import convertUFO1OrUFO2KerningToUFO3Kerning
@@ -213,7 +213,7 @@ class UFOReader(object):
 		if encoding:
 			f = open(fullPath, encoding=encoding)
 		else:
-			f = open(fullPath, READ_BYTES_MODE, encoding=encoding)
+			f = open(fullPath, "rb", encoding=encoding)
 		data = f.read()
 		f.close()
 		return data
@@ -233,9 +233,9 @@ class UFOReader(object):
 		if os.path.isdir(fullPath):
 			raise UFOLibError("%s is a directory." % path)
 		if encoding:
-			f = open(fullPath, encoding=encoding)
+			f = open(fullPath, "rb", encoding=encoding)
 		else:
-			f = open(fullPath, READ_BYTES_MODE, encoding=encoding)
+			f = open(fullPath, "r")
 		return f
 
 	def getFileModificationTime(self, path):
@@ -426,7 +426,7 @@ class UFOReader(object):
 		path = os.path.join(self._path, FEATURES_FILENAME)
 		if not self._checkForFile(path):
 			return ""
-		with open(path, READ_MODE) as f:
+		with open(path, "r") as f:
 			text = f.read()
 		return text
 
@@ -739,7 +739,7 @@ class UFOWriter(object):
 		if os.path.exists(fullPath) and os.path.isdir(fullPath):
 			raise UFOLibError("A directory exists at %s." % path)
 		self._buildDirectoryTree(path)
-		return open(fullPath, WRITE_MODE, encoding=encoding)
+		return open(fullPath, "w", encoding=encoding)
 
 	def removeFileForPath(self, path):
 		"""
@@ -1239,7 +1239,7 @@ def writeFileAtomically(text, path, encoding="utf-8"):
 	is preserved. An encoding may be passed if needed.
 	"""
 	if os.path.exists(path):
-		with open(path, READ_MODE, encoding=encoding) as f:
+		with open(path, "r", encoding=encoding) as f:
 			oldText = f.read()
 		if text == oldText:
 			return
@@ -1247,7 +1247,7 @@ def writeFileAtomically(text, path, encoding="utf-8"):
 		if not text:
 			os.remove(path)
 	if text:
-		with open(path, WRITE_MODE, encoding=encoding) as f:
+		with open(path, "w", encoding=encoding) as f:
 			f.write(text)
 
 def writeDataFileAtomically(data, path):
@@ -1260,7 +1260,7 @@ def writeDataFileAtomically(data, path):
 	"""
 	assert isinstance(data, bytes)
 	if os.path.exists(path):
-		f = open(path, READ_BYTES_MODE)
+		f = open(path, "rb")
 		oldData = f.read()
 		f.close()
 		if data == oldData:
@@ -1269,7 +1269,7 @@ def writeDataFileAtomically(data, path):
 			if not data:
 				os.remove(path)
 	if data:
-		f = open(path, WRITE_BYTES_MODE)
+		f = open(path, "wb")
 		f.write(data)
 		f.close()
 
@@ -1305,7 +1305,7 @@ def convertUFOFormatVersion1ToFormatVersion2(inPath, outPath=None):
 	if not os.path.exists(infoPath):
 		infoData = {}
 	else:
-		with open(infoPath, READ_BYTES_MODE) as f:
+		with open(infoPath, "rb") as f:
 			infoData = load(f)
 	infoData = _convertFontInfoDataVersion1ToVersion2(infoData)
 	# if the paths are the same, only need to change the

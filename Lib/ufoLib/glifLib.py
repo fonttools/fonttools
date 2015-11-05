@@ -47,22 +47,6 @@ __all__ = [
 
 class GlifLibError(Exception): pass
 
-
-# -------------------------
-# Reading and Writing Modes
-# -------------------------
-
-if os.name == "mac":
-	WRITE_MODE = "wb"  # use unix line endings, even with Classic MacPython
-	READ_MODE = "rb"
-	WRITE_BYTES_MODE = WRITE_MODE
-	READ_BYTES_MODE = READ_MODE
-else:
-	WRITE_MODE = "w"
-	READ_MODE = "r"
-	WRITE_BYTES_MODE = "wb"
-	READ_BYTES_MODE = "rb"
-
 # ---------
 # Constants
 # ---------
@@ -196,7 +180,7 @@ class GlyphSet(object):
 		# We need to force Unix line endings, even in OS9 MacPython in FL,
 		# so we do the writing to file ourselves.
 		plist = dumps(self.contents)
-		with open(contentsPath, WRITE_MODE) as f:
+		with open(contentsPath, "wb") as f:
 			f.write(plist)
 
 	# layer info
@@ -235,7 +219,7 @@ class GlyphSet(object):
 		# write file
 		path = os.path.join(self.dirName, LAYERINFO_FILENAME)
 		plist = dumps(infoData)
-		with open(path, WRITE_BYTES_MODE) as f:
+		with open(path, "wb") as f:
 			f.write(plist)
 
 	# read caching
@@ -376,11 +360,11 @@ class GlyphSet(object):
 				self._reverseContents[fileName.lower()] = glyphName
 		path = os.path.join(self.dirName, fileName)
 		if os.path.exists(path):
-			with open(path, READ_MODE) as f:
+			with open(path, "r") as f:
 				oldData = f.read()
 			if data == oldData:
 				return
-		with open(path, WRITE_MODE) as f:
+		with open(path, "w") as f:
 			f.write(data)
 
 	def deleteGlyph(self, glyphName):
