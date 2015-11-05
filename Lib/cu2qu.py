@@ -252,7 +252,7 @@ def glyph_curves_to_quadratic(glyph, max_n, max_err, report):
         replace_segments(contour, segments)
 
 
-def fonts_to_quadratic(fonts, compatible=False, max_n=10, max_err=5):
+def fonts_to_quadratic(*fonts, **kwargs):
     """Convert the curves of a collection of fonts to quadratic.
 
     If compatibility is required, all curves will be converted to quadratic
@@ -260,12 +260,12 @@ def fonts_to_quadratic(fonts, compatible=False, max_n=10, max_err=5):
     which should be slightly more optimized.
     """
 
+    max_n = kwargs.get('max_n', 10)
+    max_err = kwargs.get('max_err', 5)
+
     report = {}
-    if compatible:
-        fonts = [FontCollection(fonts)]
-    for font in fonts:
-        for glyph in font:
-            glyph_curves_to_quadratic(glyph, max_n, max_err, report)
+    for glyph in FontCollection(fonts):
+        glyph_curves_to_quadratic(glyph, max_n, max_err, report)
 
     spline_lengths = report.keys()
     spline_lengths.sort()
