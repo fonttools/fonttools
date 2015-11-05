@@ -27,7 +27,6 @@ class TTGlyphPenTest(unittest.TestCase):
             oldGlyph = oldGlyph._glyph
             newGlyph = pen.glyph()
 
-            newGlyph.recalcBounds(glyfTable)
             if hasattr(oldGlyph, 'program'):
                 newGlyph.program = oldGlyph.program
 
