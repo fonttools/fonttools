@@ -37,7 +37,7 @@ class TTGlyphPen(BasePen):
     def _moveTo(self, pt):
         assert (not self.points) or (self.endPts[-1] == len(self.points) - 1), (
             '"move"-type point must begin a new contour.')
-        self.lineTo(pt)
+        self._addPoint(pt, 1)
 
     def _qCurveToOne(self, pt1, pt2):
         self._addPoint(pt1, 0)
