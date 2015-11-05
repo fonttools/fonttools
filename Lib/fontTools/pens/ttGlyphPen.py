@@ -76,7 +76,6 @@ class TTGlyphPen(AbstractPen):
         self.components.append((glyphName, transformation))
 
     def glyph(self):
-        glyph = Glyph()
         assert self._isClosed(), "Didn't close last contour."
 
         components = []
@@ -95,10 +94,10 @@ class TTGlyphPen(AbstractPen):
             component.flags = 4
             components.append(component)
 
+        glyph = Glyph()
         glyph.coordinates = GlyphCoordinates(self.points)
         glyph.endPtsOfContours = self.endPts
         glyph.flags = array("B", self.types)
-
         self.init()
 
         if components:
