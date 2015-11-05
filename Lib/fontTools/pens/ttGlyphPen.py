@@ -83,9 +83,10 @@ class TTGlyphPen(BasePen):
 
             component = GlyphComponent()
             component.glyphName = glyphName
-            component.transform = (transformation[:2], transformation[2:4])
+            if transformation[:4] != (1, 0, 0, 1):
+                component.transform = (transformation[:2], transformation[2:4])
             component.x, component.y = [int(n) for n in transformation[4:]]
-            component.flags = 0
+            component.flags = 4
             components.append(component)
 
         glyph.coordinates = GlyphCoordinates(self.points)
