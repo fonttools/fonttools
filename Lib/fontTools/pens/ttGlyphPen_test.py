@@ -50,6 +50,8 @@ class TTGlyphPenTest(unittest.TestCase):
         pen.moveTo((0, 0))
         pen.closePath()
         self.assertFalse(pen.points)
+        self.assertFalse(pen.types)
+        self.assertFalse(pen.endPts)
 
     def test_endPath_sameAsClosePath(self):
         pen = TTGlyphPen(None)
