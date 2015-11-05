@@ -9,29 +9,36 @@ from fontTools.pens.ttGlyphPen import TTGlyphPen
 
 
 class TTGlyphPenTest(unittest.TestCase):
-    def setUp(self):
-        #self.font = ttLib.TTFont(recalcBBoxes=False, recalcTimestamp=False)
-        self.font = ttLib.TTFont()
+
+    def runEndToEnd(self, filename):
+        font = ttLib.TTFont()
         ttx_path = os.path.join(
             os.path.abspath(os.path.dirname(os.path.realpath(__file__))),
-            '..', 'ttLib', 'testdata', 'TestTTF-Regular.ttx')
-        self.font.importXML(ttx_path, quiet=True)
-        self.pen = TTGlyphPen(self.font.getGlyphSet())
+            '..', 'ttLib', 'testdata', filename)
+        font.importXML(ttx_path, quiet=True)
 
-    def test_drawGlyphsUnchanged(self):
-        glyphSet = self.font.getGlyphSet()
-        glyfTable = self.font['glyf']
+        glyphSet = font.getGlyphSet()
+        glyfTable = font['glyf']
+        pen = TTGlyphPen(font.getGlyphSet())
 
-        for name in self.font.getGlyphOrder():
+        for name in font.getGlyphOrder():
             oldGlyph = glyphSet[name]
-            oldGlyph.draw(self.pen)
+            oldGlyph.draw(pen)
             oldGlyph = oldGlyph._glyph
-            newGlyph = self.pen.glyph()
+            newGlyph = pen.glyph()
+
             newGlyph.recalcBounds(glyfTable)
             if hasattr(oldGlyph, 'program'):
                 newGlyph.program = oldGlyph.program
+
             self.assertEqual(
                 oldGlyph.compile(glyfTable), newGlyph.compile(glyfTable))
+
+    def test_e2e_linesAndSimpleComponents(self):
+        self.runEndToEnd('TestTTF-Regular.ttx')
+
+    def test_e2e_curvesAndComponentTransforms(self):
+        self.runEndToEnd('TestTTFComplex-Regular.ttx')
 
 
 if __name__ == '__main__':
