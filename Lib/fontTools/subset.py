@@ -2196,7 +2196,7 @@ class Options(object):
         'rtl': ['rtla', 'rtlm'],
         # Complex shapers
         'arabic': ['init', 'medi', 'fina', 'isol', 'med2', 'fin2', 'fin3',
-                   'cswh', 'mset'],
+                   'cswh', 'mset', 'stch'],
         'hangul': ['ljmo', 'vjmo', 'tjmo'],
         'tibetan': ['abvs', 'blws', 'abvm', 'blwm'],
         'indic': ['nukt', 'akhn', 'rphf', 'rkrf', 'pref', 'blwf', 'half',
