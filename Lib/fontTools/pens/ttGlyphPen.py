@@ -52,6 +52,15 @@ class TTGlyphPen(BasePen):
             self.types.pop()
             return
 
+        # if the drawer added the first point again, remove it
+        startPt = 0
+        if self.endPts:
+            startPt = self.endPts[-1] + 1
+        if self.points[startPt] == self.points[endPt]:
+            self.points = self.points[:-1]
+            self.types = self.types[:-1]
+            endPt -= 1
+
         self.endPts.append(endPt)
 
     def _endPath(self):
