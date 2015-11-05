@@ -17,6 +17,11 @@ class TTGlyphPen(BasePen):
     """Pen used for drawing to a TrueType glyph."""
 
     def __init__(self, glyphSet):
+        super(TTGlyphPen, self).__init__(glyphSet)
+        self.init()
+
+    def init(self):
+        assert self._getCurrentPoint() is None, "Didn't close last contour. %s %s %s %s"
         self.points = []
         self.endPts = []
         self.types = []
@@ -77,6 +82,8 @@ class TTGlyphPen(BasePen):
         glyph.coordinates = GlyphCoordinates(self.points)
         glyph.endPtsOfContours = self.endPts
         glyph.flags = array("B", self.types)
+
+        self.init()
 
         if components:
             glyph.components = components
