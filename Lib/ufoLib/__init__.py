@@ -1214,7 +1214,7 @@ def writePlistAtomically(obj, path):
 	data = f.getvalue()
 	writeFileAtomically(data, path)
 
-def writeFileAtomically(text, path, encoding=None):
+def writeFileAtomically(text, path, encoding="utf-8"):
 	"""
 	Write text into a file at path. Do this sort of atomically
 	making it harder to cause corrupt files. This also checks to see

@@ -36,11 +36,10 @@ class XMLParser:
 
 	def _expatParseFile(self, pathOrFile):
 		parser = ParserCreate()
-		parser.returns_unicode = 1  # XXX, Don't remember why. It sucks, though.
 		parser.StartElementHandler = self.startElementHandler
 		parser.EndElementHandler = self.endElementHandler
 		parser.CharacterDataHandler = self.characterDataHandler
-		if isinstance(pathOrFile, str):
+		if isinstance(pathOrFile, (bytes, str)):
 			f = open(pathOrFile)
 			didOpen = 1
 		else:
@@ -59,7 +58,7 @@ class XMLParser:
 		proc.app.handle_start_tag = self.startElementHandler
 		proc.app.handle_end_tag = self.endElementHandler
 		proc.app.handle_data = self._xmlprocDataHandler
-		if isinstance(pathOrFile, str):
+		if isinstance(pathOrFile, (bytes, str)):
 			f = open(pathOrFile)
 			didOpen = 1
 		else:

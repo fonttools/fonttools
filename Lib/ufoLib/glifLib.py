@@ -12,7 +12,7 @@ glyph data. See the class doc string for details.
 """
 
 import os
-from io import StringIO
+from io import BytesIO, StringIO
 from warnings import warn
 from .xmlTreeBuilder import buildTree, stripCharacterData
 from ufoLib.pointPen import AbstractPointPen
@@ -308,7 +308,7 @@ class GlyphSet(object):
 		"""
 		text = self.getGLIF(glyphName)
 		self._purgeCachedGLIF(glyphName)
-		tree = _glifTreeFromFile(StringIO(text))
+		tree = _glifTreeFromFile(BytesIO(text))
 		if self.ufoFormatVersion < 3:
 			formatVersions = (1,)
 		else:
@@ -556,18 +556,7 @@ def writeGlyphToString(glyphName, glyphObject=None, drawPointsFunc=None, writer=
 		raise GlifLibError("The glyph name is not properly formatted.")
 	if len(glyphName) == 0:
 		raise GlifLibError("The glyph name is empty.")
-	utf8GlyphName = None
-	try:
-		n = str(glyphName)
-		utf8GlyphName = glyphName
-	except UnicodeEncodeError:
-		pass
-	try:
-		n = glyphName.encode("utf8")
-		utf8GlyphName = n
-	except UnicodeEncodeError:
-		raise GlifLibError("encountered a glyph name (%s) that can't be converted to UTF-8." % glyphName)
-	writer.begintag("glyph", [("name", utf8GlyphName), ("format", formatVersion)])
+	writer.begintag("glyph", [("name", glyphName), ("format", formatVersion)])
 	writer.newline()
 	# advance
 	_writeAdvance(glyphObject, writer)

@@ -59,7 +59,7 @@ __all__ = [
 # Note: the Plist and Dict classes have been deprecated.
 
 import binascii
-from cStringIO import StringIO
+from io import StringIO
 import re
 try:
     from datetime import datetime
@@ -77,8 +77,8 @@ def readPlist(pathOrFile):
     usually is a dictionary).
     """
     didOpen = 0
-    if isinstance(pathOrFile, (str, unicode)):
-        pathOrFile = open(pathOrFile)
+    if isinstance(pathOrFile, (bytes, str)):
+        pathOrFile = open(pathOrFile, "rb")
         didOpen = 1
     p = PlistParser()
     rootObject = p.parse(pathOrFile)
@@ -92,8 +92,8 @@ def writePlist(rootObject, pathOrFile):
     file name or a (writable) file object.
     """
     didOpen = 0
-    if isinstance(pathOrFile, (str, unicode)):
-        pathOrFile = open(pathOrFile, "w")
+    if isinstance(pathOrFile, (bytes, str)):
+        pathOrFile = open(pathOrFile, "wb")
         didOpen = 1
     writer = PlistWriter(pathOrFile)
     writer.writeln("<plist version=\"1.0\">")
@@ -222,7 +222,7 @@ def _escapeAndEncode(text):
     text = text.replace("&", "&amp;")       # escape '&'
     text = text.replace("<", "&lt;")        # escape '<'
     text = text.replace(">", "&gt;")        # escape '>'
-    return text.encode("utf-8")             # encode as UTF-8
+    return text
 
 
 PLISTHEADER = """\
@@ -238,7 +238,7 @@ class PlistWriter(DumbXMLWriter):
         DumbXMLWriter.__init__(self, file, indentLevel, indent)
 
     def writeValue(self, value):
-        if isinstance(value, (str, unicode)):
+        if isinstance(value, (bytes, str)):
             self.simpleElement("string", value)
         elif isinstance(value, bool):
             # must switch for bool before int, as bool is a
@@ -276,9 +276,8 @@ class PlistWriter(DumbXMLWriter):
     def writeDict(self, d):
         self.beginElement("dict")
         items = d.items()
-        items.sort()
-        for key, value in items:
-            if not isinstance(key, (str, unicode)):
+        for key, value in sorted(items):
+            if not isinstance(key, (bytes, str)):
                 raise TypeError("keys must be strings")
             self.simpleElement("key", key)
             self.writeValue(value)
@@ -301,7 +300,7 @@ class _InternalDict(dict):
         try:
             value = self[attr]
         except KeyError:
-            raise AttributeError, attr
+            raise AttributeError(attr)
         from warnings import warn
         warn("Attribute access from plist dicts is deprecated, use d[key] "
              "notation instead", PendingDeprecationWarning)
@@ -317,7 +316,7 @@ class _InternalDict(dict):
         try:
             del self[attr]
         except KeyError:
-            raise AttributeError, attr
+            raise AttributeError(attr)
         from warnings import warn
         warn("Attribute access from plist dicts is deprecated, use d[key] "
              "notation instead", PendingDeprecationWarning)
@@ -435,10 +434,6 @@ class PlistParser:
 
     def getData(self):
         data = "".join(self.data)
-        try:
-            data = data.encode("ascii")
-        except UnicodeError:
-            pass
         self.data = []
         return data
 
