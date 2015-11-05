@@ -1,4 +1,4 @@
-# ConvertCurves
+# cu2qu
 
 This library provides functions which take in RoboFab objects (RFonts or their
 children) and converts any cubic curves to quadratic. The most useful function
@@ -6,7 +6,7 @@ is probably `fonts_to_quadratic`:
 
 ```python
 from robofab.world import OpenFont
-from convert_curves import fonts_to_quadratic
+from cu2qu import fonts_to_quadratic
 font = OpenFont('MyFont.ufo')
 fonts_to_quadratic([font])
 ```
