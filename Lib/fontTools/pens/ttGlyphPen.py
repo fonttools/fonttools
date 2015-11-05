@@ -2,7 +2,7 @@ from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 
 from array import array
-from fontTools.pens.basePen import BasePen
+from fontTools.pens.basePen import AbstractPen
 from fontTools.pens.transformPen import TransformPen
 from fontTools.ttLib.tables import ttProgram
 from fontTools.ttLib.tables._g_l_y_f import Glyph
@@ -13,11 +13,11 @@ from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
 __all__ = ["TTGlyphPen"]
 
 
-class TTGlyphPen(BasePen):
+class TTGlyphPen(AbstractPen):
     """Pen used for drawing to a TrueType glyph."""
 
     def __init__(self, glyphSet):
-        super(TTGlyphPen, self).__init__(glyphSet)
+        self.glyphSet = glyphSet
         self.init()
 
     def init(self):
@@ -39,18 +39,22 @@ class TTGlyphPen(BasePen):
             (not self.points) or
             (self.endPts and self.endPts[-1] == len(self.points) - 1))
 
-    def _lineTo(self, pt):
+    def lineTo(self, pt):
         self._addPoint(pt, 1)
 
-    def _moveTo(self, pt):
+    def moveTo(self, pt):
         assert self._isClosed(), '"move"-type point must begin a new contour.'
         self._addPoint(pt, 1)
 
-    def _qCurveToOne(self, pt1, pt2):
-        self._addPoint(pt1, 0)
-        self._addPoint(pt2, 1)
+    def qCurveTo(self, *points):
+        for pt in points[:-1]:
+            self._addPoint(pt, 0)
 
-    def _closePath(self):
+        # last point is None if there are no on-curve points
+        if points[-1]:
+            self._addPoint(points[-1], 1)
+
+    def closePath(self):
         endPt = len(self.points) - 1
 
         # ignore anchors
@@ -68,7 +72,7 @@ class TTGlyphPen(BasePen):
 
         self.endPts.append(endPt)
 
-    def _endPath(self):
+    def endPath(self):
         # TrueType contours are always "closed"
         self.closePath()
 
