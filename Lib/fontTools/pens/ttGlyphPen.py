@@ -21,7 +21,6 @@ class TTGlyphPen(BasePen):
         self.init()
 
     def init(self):
-        assert self._getCurrentPoint() is None, "Didn't close last contour. %s %s %s %s"
         self.points = []
         self.endPts = []
         self.types = []
@@ -31,12 +30,16 @@ class TTGlyphPen(BasePen):
         self.points.append([int(coord) for coord in pt])
         self.types.append(onCurve)
 
+    def _isClosed(self):
+        return (
+            (not self.points) or
+            (self.endPts and self.endPts[-1] == len(self.points) - 1))
+
     def _lineTo(self, pt):
         self._addPoint(pt, 1)
 
     def _moveTo(self, pt):
-        assert (not self.points) or (self.endPts[-1] == len(self.points) - 1), (
-            '"move"-type point must begin a new contour.')
+        assert self._isClosed(), '"move"-type point must begin a new contour.'
         self._addPoint(pt, 1)
 
     def _qCurveToOne(self, pt1, pt2):
@@ -72,6 +75,7 @@ class TTGlyphPen(BasePen):
 
     def glyph(self):
         glyph = Glyph()
+        assert self._isClosed(), "Didn't close last contour."
 
         components = []
         for glyphName, transformation in self.components:
