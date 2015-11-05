@@ -30,6 +30,10 @@ class TTGlyphPen(BasePen):
         self.points.append([int(coord) for coord in pt])
         self.types.append(onCurve)
 
+    def _popPoint(self):
+        self.points.pop()
+        self.types.pop()
+
     def _isClosed(self):
         return (
             (not self.points) or
@@ -51,8 +55,7 @@ class TTGlyphPen(BasePen):
 
         # ignore anchors
         if endPt == 0 or (self.endPts and endPt == self.endPts[-1] + 1):
-            self.points.pop()
-            self.types.pop()
+            self._popPoint()
             return
 
         # if the drawer added the first point again, remove it
@@ -60,8 +63,7 @@ class TTGlyphPen(BasePen):
         if self.endPts:
             startPt = self.endPts[-1] + 1
         if self.points[startPt] == self.points[endPt]:
-            self.points = self.points[:-1]
-            self.types = self.types[:-1]
+            self._popPoint()
             endPt -= 1
 
         self.endPts.append(endPt)
