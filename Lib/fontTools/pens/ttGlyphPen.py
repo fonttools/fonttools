@@ -111,6 +111,6 @@ class TTGlyphPen(AbstractPen):
             glyph.numberOfContours = len(glyph.endPtsOfContours)
 
         glyph.program = ttProgram.Program()
-        glyph.program.fromBytecode("")
+        glyph.program.fromBytecode(b"")
 
         return glyph
