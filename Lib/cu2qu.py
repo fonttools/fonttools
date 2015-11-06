@@ -60,7 +60,7 @@ def zip(*args):
     """Ensure each argument to zip has the same length."""
 
     if len(set(len(a) for a in args)) != 1:
-        msg = 'Args to zip in convert_curves.py should have equal lengths: '
+        msg = 'Args to zip in cu2qu.py should have equal lengths: '
         raise ValueError(msg + ' '.join(str(a) for a in args))
     return _zip(*args)
 
@@ -184,11 +184,11 @@ def curve_spline_dist(bezier, spline):
     return error
 
 
-def convert_to_quadratic(p0, p1, p2, p3, max_n, max_err):
+def curve_to_quadratic(p0, p1, p2, p3, max_n, max_err):
     """Return a quadratic spline approximating this cubic bezier."""
 
     if not isinstance(p0, RPoint):
-        return convert_collection_to_quadratic(p0, p1, p2, p3, max_n, max_err)
+        return curve_collection_to_quadratic(p0, p1, p2, p3, max_n, max_err)
 
     p = [Point([i.x, i.y]) for i in [p0, p1, p2, p3]]
     for n in range(1, max_n + 1):
@@ -198,7 +198,7 @@ def convert_to_quadratic(p0, p1, p2, p3, max_n, max_err):
     return spline
 
 
-def convert_collection_to_quadratic(p0, p1, p2, p3, max_n, max_err):
+def curve_collection_to_quadratic(p0, p1, p2, p3, max_n, max_err):
     """Return quadratic splines approximating these cubic beziers."""
 
     curves = [[Point([i.x, i.y]) for i in p] for p in zip(p0, p1, p2, p3)]
@@ -211,7 +211,7 @@ def convert_collection_to_quadratic(p0, p1, p2, p3, max_n, max_err):
     return splines
 
 
-def cubic_segment_to_quadratic(contour, segment_id, max_n, max_err, report):
+def segment_to_quadratic(contour, segment_id, max_n, max_err, report):
     """Return a quadratic approximation of a cubic segment."""
 
     segment = contour[segment_id]
@@ -221,7 +221,7 @@ def cubic_segment_to_quadratic(contour, segment_id, max_n, max_err, report):
     # assumes that a curve type will always be proceeded by another point on the
     # same contour
     prev_segment = contour[segment_id - 1]
-    points = convert_to_quadratic(prev_segment.points[-1], segment.points[0],
+    points = curve_to_quadratic(prev_segment.points[-1], segment.points[0],
                                   segment.points[1], segment.points[2],
                                   max_n, max_err)
 
@@ -237,7 +237,7 @@ def cubic_segment_to_quadratic(contour, segment_id, max_n, max_err, report):
     return as_quadratic(segment, points)
 
 
-def glyph_curves_to_quadratic(glyph, max_n, max_err, report):
+def glyph_to_quadratic(glyph, max_n, max_err, report):
     """Convert a glyph's curves to quadratic, in place."""
 
     for contour in glyph:
@@ -245,7 +245,7 @@ def glyph_curves_to_quadratic(glyph, max_n, max_err, report):
         for i in range(len(contour)):
             segment = contour[i]
             if segment.type == 'curve':
-                segments.append(cubic_segment_to_quadratic(
+                segments.append(segment_to_quadratic(
                     contour, i, max_n, max_err, report))
             else:
                 segments.append(segment)
@@ -265,7 +265,7 @@ def fonts_to_quadratic(*fonts, **kwargs):
 
     report = {}
     for glyph in FontCollection(fonts):
-        glyph_curves_to_quadratic(glyph, max_n, max_err, report)
+        glyph_to_quadratic(glyph, max_n, max_err, report)
 
     spline_lengths = report.keys()
     spline_lengths.sort()
