@@ -5,7 +5,6 @@ import unittest
 from io import open
 from ufoLib.test.testSupport import getDemoFontGlyphSetPath
 from ufoLib.glifLib import GlyphSet, glyphNameToFileName
-from robofab.tools.glyphNameSchemes import glyphNameToShortFileName
 
 
 GLYPHSETDIR = getDemoFontGlyphSetPath()
@@ -121,26 +120,21 @@ class FileNameTests(unittest.TestCase):
 		self.assertEqual(glyphNameToFileName("T_H", None), "T__H_.glif")
 		self.assertEqual(glyphNameToFileName("T_h", None), "T__h.glif")
 		self.assertEqual(glyphNameToFileName("t_h", None), "t_h.glif")
-		self.assertEqual(glyphNameToFileName('F_F_I', None), "F__F__I_.glif")
-		self.assertEqual(glyphNameToFileName('f_f_i', None), "f_f_i.glif")
-
-
-	def testShortFileNameScheme(self):
-		self.assertEqual(glyphNameToShortFileName("a", None), "a.glif")
-		self.assertEqual(glyphNameToShortFileName("A", None), "A_.glif")
-		self.assertEqual(glyphNameToShortFileName("a.alt", None), "a_alt.glif")
-		self.assertEqual(glyphNameToShortFileName("A.alt", None), "A__alt.glif")
-		self.assertEqual(glyphNameToShortFileName("a.alt#swash", None), "a_alt_swash.glif")
-		self.assertEqual(glyphNameToShortFileName("A.alt", None), "A__alt.glif")
-		self.assertEqual(glyphNameToShortFileName(".notdef", None), "_notdef.glif")
-		self.assertEqual(glyphNameToShortFileName("f_f_i", None), "f_f_i.glif")
-		self.assertEqual(glyphNameToShortFileName("F_F_I", None), "F__F__I_.glif")
-		self.assertEqual(glyphNameToShortFileName("acircumflexdieresis.swash.alt1", None), "acircumflexdieresi0cfc8352.glif")
-		self.assertEqual(glyphNameToShortFileName("acircumflexdieresis.swash.alt2", None), "acircumflexdieresi95f5d2e8.glif")
-		self.assertEqual(glyphNameToShortFileName("Acircumflexdieresis.swash.alt1", None), "A_circumflexdieresed24fb56.glif")
-		self.assertEqual(glyphNameToShortFileName("F#weight0.800_width0.425", None), "F__weight0_800_width0_425.glif")
-		self.assertEqual(glyphNameToShortFileName("F#weight0.83245511_width0.425693567", None), "F__weight0_8324551c9a4143c.glif")
-		self.assertEqual(len(glyphNameToShortFileName("F#weight0.83245511_width0.425693567", None)), 31)
+		self.assertEqual(glyphNameToFileName("F_F_I", None), "F__F__I_.glif")
+		self.assertEqual(glyphNameToFileName("f_f_i", None), "f_f_i.glif")
+		self.assertEqual(glyphNameToFileName("AE", None), "A_E_.glif")
+		self.assertEqual(glyphNameToFileName("Ae", None), "A_e.glif")
+		self.assertEqual(glyphNameToFileName("ae", None), "ae.glif")
+		self.assertEqual(glyphNameToFileName("aE", None), "aE_.glif")
+		self.assertEqual(glyphNameToFileName("a.alt", None), "a.alt.glif")
+		self.assertEqual(glyphNameToFileName("A.aLt", None), "A_.aL_t.glif")
+		self.assertEqual(glyphNameToFileName("A.alT", None), "A_.alT_.glif")
+		self.assertEqual(glyphNameToFileName("Aacute_V.swash", None), "A_acute_V_.swash.glif")
+		self.assertEqual(glyphNameToFileName(".notdef", None), "_notdef.glif")
+		self.assertEqual(glyphNameToFileName("con", None), "_con.glif")
+		self.assertEqual(glyphNameToFileName("CON", None), "C_O_N_.glif")
+		self.assertEqual(glyphNameToFileName("con.alt", None), "_con.alt.glif")
+		self.assertEqual(glyphNameToFileName("alt.con", None), "alt._con.glif")
 
 
 if __name__ == "__main__":
