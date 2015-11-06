@@ -25,7 +25,7 @@ class GlyphSetTests(unittest.TestCase):
 		dstDir = self.dstDir
 		src = GlyphSet(srcDir, ufoFormatVersion=2)
 		dst = GlyphSet(dstDir, ufoFormatVersion=2)
-		for glyphName in list(src.keys()):
+		for glyphName in src.keys():
 			g = src[glyphName]
 			g.drawPoints(None)  # load attrs
 			dst.writeGlyph(glyphName, g, g.drawPoints)
@@ -57,10 +57,10 @@ class GlyphSetTests(unittest.TestCase):
 	def testReverseContents(self):
 		gset = GlyphSet(GLYPHSETDIR)
 		d = {}
-		for k, v in list(gset.getReverseContents().items()):
+		for k, v in gset.getReverseContents().items():
 			d[v] = k
 		org = {}
-		for k, v in list(gset.contents.items()):
+		for k, v in gset.contents.items():
 			org[k] = v.lower()
 		self.assertEqual(d, org)
 
@@ -69,7 +69,7 @@ class GlyphSetTests(unittest.TestCase):
 		dst = GlyphSet(self.dstDir)
 		dstMap = dst.getReverseContents()
 		self.assertEqual(dstMap, {})
-		for glyphName in list(src.keys()):
+		for glyphName in src.keys():
 			g = src[glyphName]
 			g.drawPoints(None)  # load attrs
 			dst.writeGlyph(glyphName, g, g.drawPoints)
@@ -85,20 +85,19 @@ class GlyphSetTests(unittest.TestCase):
 			return "prefix" + glyphNameToFileName(glyphName, glyphSet)
 		src = GlyphSet(GLYPHSETDIR)
 		dst = GlyphSet(self.dstDir, myGlyphNameToFileName)
-		for glyphName in list(src.keys()):
+		for glyphName in src.keys():
 			g = src[glyphName]
 			g.drawPoints(None)  # load attrs
 			dst.writeGlyph(glyphName, g, g.drawPoints)
 		d = {}
-		for k, v in list(src.contents.items()):
-			print(k, v)
+		for k, v in src.contents.items():
 			d[k] = "prefix" + v
 		self.assertEqual(d, dst.contents)
 
 	def testGetUnicodes(self):
 		src = GlyphSet(GLYPHSETDIR)
 		unicodes = src.getUnicodes()
-		for glyphName in list(src.keys()):
+		for glyphName in src.keys():
 			g = src[glyphName]
 			g.drawPoints(None)  # load attrs
 			if not hasattr(g, "unicodes"):
