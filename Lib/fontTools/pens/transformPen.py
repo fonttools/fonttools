@@ -51,6 +51,9 @@ class TransformPen(AbstractPen):
 	def closePath(self):
 		self._outPen.closePath()
 
+	def endPath(self):
+		self._outPen.endPath()
+
 	def addComponent(self, glyphName, transformation):
 		transformation = self._transformation.transform(transformation)
 		self._outPen.addComponent(glyphName, transformation)
