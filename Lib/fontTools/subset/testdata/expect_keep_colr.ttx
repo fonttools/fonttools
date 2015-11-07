@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="3.0">
+
+  <GlyphOrder>
+    <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
+    <GlyphID id="0" name=".notdef"/>
+    <GlyphID id="1" name="smileface"/>
+    <GlyphID id="2" name="glyph00002"/>
+    <GlyphID id="3" name="glyph00003"/>
+    <GlyphID id="4" name="glyph00004"/>
+  </GlyphOrder>
+
+  <hmtx>
+    <mtx name=".notdef" width="364" lsb="33"/>
+    <mtx name="glyph00002" width="1000" lsb="100"/>
+    <mtx name="glyph00003" width="1000" lsb="100"/>
+    <mtx name="glyph00004" width="1000" lsb="238"/>
+    <mtx name="smileface" width="1000" lsb="100"/>
+  </hmtx>
+
+  <glyf>
+
+    <!-- The xMin, yMin, xMax and yMax values
+         will be recalculated by the compiler. -->
+
+    <TTGlyph name=".notdef"/><!-- contains no outline data -->
+
+    <TTGlyph name="glyph00002" xMin="100" yMin="0" xMax="900" yMax="800">
+      <contour>
+        <pt x="100" y="234" on="0"/>
+        <pt x="100" y="566" on="0"/>
+        <pt x="334" y="800" on="0"/>
+        <pt x="666" y="800" on="0"/>
+        <pt x="900" y="566" on="0"/>
+        <pt x="900" y="234" on="0"/>
+        <pt x="666" y="0" on="0"/>
+        <pt x="334" y="0" on="0"/>
+      </contour>
+      <instructions><assembly>
+        </assembly></instructions>
+    </TTGlyph>
+
+    <TTGlyph name="glyph00003" xMin="100" yMin="0" xMax="900" yMax="800">
+      <contour>
+        <pt x="100" y="234" on="0"/>
+        <pt x="100" y="566" on="0"/>
+        <pt x="334" y="800" on="0"/>
+        <pt x="666" y="800" on="0"/>
+        <pt x="900" y="566" on="0"/>
+        <pt x="900" y="234" on="0"/>
+        <pt x="666" y="0" on="0"/>
+        <pt x="334" y="0" on="0"/>
+      </contour>
+      <contour>
+        <pt x="130" y="553" on="0"/>
+        <pt x="130" y="247" on="0"/>
+        <pt x="347" y="30" on="0"/>
+        <pt x="653" y="30" on="0"/>
+        <pt x="870" y="247" on="0"/>
+        <pt x="870" y="553" on="0"/>
+        <pt x="653" y="770" on="0"/>
+        <pt x="347" y="770" on="0"/>
+      </contour>
+      <instructions><assembly>
+        </assembly></instructions>
+    </TTGlyph>
+
+    <TTGlyph name="glyph00004" xMin="238" yMin="181" xMax="761" yMax="606">
+      <contour>
+        <pt x="733" y="348" on="0"/>
+        <pt x="761" y="336" on="0"/>
+        <pt x="755" y="322" on="1"/>
+        <pt x="724" y="256" on="0"/>
+        <pt x="582" y="183" on="0"/>
+        <pt x="500" y="182" on="1"/>
+        <pt x="417" y="181" on="0"/>
+        <pt x="279" y="251" on="0"/>
+        <pt x="245" y="321" on="1"/>
+        <pt x="238" y="333" on="0"/>
+        <pt x="251" y="341" on="1"/>
+        <pt x="263" y="348" on="0"/>
+        <pt x="271" y="335" on="1"/>
+        <pt x="301" y="275" on="0"/>
+        <pt x="425" y="211" on="0"/>
+        <pt x="575" y="213" on="0"/>
+        <pt x="701" y="277" on="0"/>
+        <pt x="727" y="334" on="1"/>
+      </contour>
+      <contour>
+        <pt x="623" y="481" on="0"/>
+        <pt x="623" y="555" on="0"/>
+        <pt x="646" y="606" on="0"/>
+        <pt x="680" y="606" on="0"/>
+        <pt x="703" y="555" on="0"/>
+        <pt x="703" y="481" on="0"/>
+        <pt x="680" y="430" on="0"/>
+        <pt x="646" y="430" on="0"/>
+      </contour>
+      <contour>
+        <pt x="297" y="481" on="0"/>
+        <pt x="297" y="555" on="0"/>
+        <pt x="320" y="606" on="0"/>
+        <pt x="354" y="606" on="0"/>
+        <pt x="377" y="555" on="0"/>
+        <pt x="377" y="481" on="0"/>
+        <pt x="354" y="430" on="0"/>
+        <pt x="320" y="430" on="0"/>
+      </contour>
+      <instructions><assembly>
+        </assembly></instructions>
+    </TTGlyph>
+
+    <TTGlyph name="smileface" xMin="100" yMin="0" xMax="900" yMax="800">
+      <contour>
+        <pt x="733" y="348" on="0"/>
+        <pt x="761" y="336" on="0"/>
+        <pt x="755" y="322" on="1"/>
+        <pt x="724" y="256" on="0"/>
+        <pt x="582" y="183" on="0"/>
+        <pt x="500" y="182" on="1"/>
+        <pt x="417" y="181" on="0"/>
+        <pt x="279" y="251" on="0"/>
+        <pt x="245" y="321" on="1"/>
+        <pt x="238" y="333" on="0"/>
+        <pt x="251" y="341" on="1"/>
+        <pt x="263" y="348" on="0"/>
+        <pt x="271" y="335" on="1"/>
+        <pt x="301" y="275" on="0"/>
+        <pt x="425" y="211" on="0"/>
+        <pt x="575" y="213" on="0"/>
+        <pt x="701" y="277" on="0"/>
+        <pt x="727" y="334" on="1"/>
+      </contour>
+      <contour>
+        <pt x="100" y="234" on="0"/>
+        <pt x="100" y="566" on="0"/>
+        <pt x="334" y="800" on="0"/>
+        <pt x="666" y="800" on="0"/>
+        <pt x="900" y="566" on="0"/>
+        <pt x="900" y="234" on="0"/>
+        <pt x="666" y="0" on="0"/>
+        <pt x="334" y="0" on="0"/>
+      </contour>
+      <contour>
+        <pt x="130" y="553" on="0"/>
+        <pt x="130" y="247" on="0"/>
+        <pt x="347" y="30" on="0"/>
+        <pt x="653" y="30" on="0"/>
+        <pt x="870" y="247" on="0"/>
+        <pt x="870" y="553" on="0"/>
+        <pt x="653" y="770" on="0"/>
+        <pt x="347" y="770" on="0"/>
+      </contour>
+      <contour>
+        <pt x="623" y="482" on="0"/>
+        <pt x="623" y="554" on="0"/>
+        <pt x="646" y="606" on="0"/>
+        <pt x="680" y="606" on="0"/>
+        <pt x="703" y="554" on="0"/>
+        <pt x="703" y="482" on="0"/>
+        <pt x="680" y="430" on="0"/>
+        <pt x="646" y="430" on="0"/>
+      </contour>
+      <contour>
+        <pt x="297" y="482" on="0"/>
+        <pt x="297" y="554" on="0"/>
+        <pt x="320" y="606" on="0"/>
+        <pt x="354" y="606" on="0"/>
+        <pt x="377" y="554" on="0"/>
+        <pt x="377" y="482" on="0"/>
+        <pt x="354" y="430" on="0"/>
+        <pt x="320" y="430" on="0"/>
+      </contour>
+      <instructions><assembly>
+        </assembly></instructions>
+    </TTGlyph>
+
+  </glyf>
+
+  <COLR>
+    <version value="0"/>
+    <ColorGlyph name="smileface">
+      <layer colorID="0" name="glyph00002"/>
+      <layer colorID="1" name="glyph00003"/>
+      <layer colorID="2" name="glyph00004"/>
+    </ColorGlyph>
+  </COLR>
+
+  <CPAL>
+    <version value="0"/>
+    <numPaletteEntries value="3"/>
+    <palette index="0">
+      <color index="0" value="#FFE08AFF"/>
+      <color index="1" value="#E59B25FF"/>
+      <color index="2" value="#84380DFF"/>
+    </palette>
+  </CPAL>
+
+</ttFont>

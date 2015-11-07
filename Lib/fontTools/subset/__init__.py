@@ -192,7 +192,7 @@ Font table options:
       By default, the following tables are dropped:
       'BASE', 'JSTF', 'DSIG', 'EBDT', 'EBLC', 'EBSC', 'SVG ', 'PCLT', 'LTSH'
       and Graphite tables: 'Feat', 'Glat', 'Gloc', 'Silf', 'Sill'
-      and color tables: 'CBLC', 'CBDT', 'sbix', 'COLR', 'CPAL'.
+      and color tables: 'CBLC', 'CBDT', 'sbix'.
       The tool will attempt to subset the remaining tables.
       Examples:
         --drop-tables-='SVG '
@@ -208,9 +208,9 @@ Font table options:
       By default, the following tables are included in this list, as
       they do not need subsetting (ignore the fact that 'loca' is listed
       here): 'gasp', 'head', 'hhea', 'maxp', 'vhea', 'OS/2', 'loca',
-      'name', 'cvt ', 'fpgm', 'prep', 'VMDX', and 'DSIG'. Tables that the tool
-      does not know how to subset and are not specified here will be dropped
-      from the font.
+      'name', 'cvt ', 'fpgm', 'prep', 'VMDX', 'DSIG' and 'CPAL'.
+      Tables that the tool does not know how to subset and are not specified
+      here will be dropped from the font.
       Example:
          --no-subset-tables+=FFTM
             * Keep 'FFTM' table in the font by preventing subsetting.
@@ -1542,6 +1542,33 @@ def subset_glyphs(self, s):
     self.extraNames = []    # This seems to do it
     return True # Required table
 
+@_add_method(ttLib.getTableClass('COLR'))
+def closure_glyphs(self, s):
+    decompose = s.glyphs
+    while True:
+        layers = set()
+        for g in decompose:
+            if g not in self.ColorLayers:
+                continue
+            for l in self.ColorLayers[g]:
+                if l.name not in s.glyphs:
+                    layers.add(l.name)
+        layers = set(l for l in layers if l not in s.glyphs)
+        if not layers:
+            break
+        decompose = layers
+        s.glyphs.update(layers)
+
+@_add_method(ttLib.getTableClass('COLR'))
+def subset_glyphs(self, s):
+    self.ColorLayers = {g: self.ColorLayers[g] for g in s.glyphs if g in self.ColorLayers}
+    return bool(self.ColorLayers)
+
+# TODO: prune unused palettes
+@_add_method(ttLib.getTableClass('CPAL'))
+def prune_post_subset(self, options):
+    return True
+
 @_add_method(ttLib.getTableModule('glyf').Glyph)
 def remapComponentsFast(self, indices):
     if not self.data or struct.unpack(">h", self.data[:2])[0] >= 0:
@@ -2190,10 +2217,10 @@ class Options(object):
     _drop_tables_default = ['BASE', 'JSTF', 'DSIG', 'EBDT', 'EBLC',
                             'EBSC', 'SVG', 'PCLT', 'LTSH']
     _drop_tables_default += ['Feat', 'Glat', 'Gloc', 'Silf', 'Sill']  # Graphite
-    _drop_tables_default += ['CBLC', 'CBDT', 'sbix', 'COLR', 'CPAL']  # Color
+    _drop_tables_default += ['CBLC', 'CBDT', 'sbix']  # Color
     _no_subset_tables_default = ['gasp', 'head', 'hhea', 'maxp',
                                  'vhea', 'OS/2', 'loca', 'name', 'cvt',
-                                 'fpgm', 'prep', 'VDMX', 'DSIG']
+                                 'fpgm', 'prep', 'VDMX', 'DSIG', 'CPAL']
     _hinting_tables_default = ['cvt', 'fpgm', 'prep', 'hdmx', 'VDMX']
 
     # Based on HarfBuzz shapers
@@ -2432,6 +2459,18 @@ class Subsetter(object):
             self.log.glyphs(self.glyphs, font=font)
             self.log.lapse("close glyph list over 'GSUB'")
         self.glyphs_gsubed = frozenset(self.glyphs)
+
+        if 'COLR' in font:
+            self.log("Closing glyph list over 'COLR': %d glyphs before" %
+                     len(self.glyphs))
+            self.log.glyphs(self.glyphs, font=font)
+            font['COLR'].closure_glyphs(self)
+            self.glyphs.intersection_update(realGlyphs)
+            self.log("Closed glyph list over 'COLR': %d glyphs after" %
+                     len(self.glyphs))
+            self.log.glyphs(self.glyphs, font=font)
+            self.log.lapse("close glyph list over 'COLR'")
+        self.glyphs_colred = frozenset(self.glyphs)
 
         if 'glyf' in font:
             self.log("Closing glyph list over 'glyf': %d glyphs before" %
