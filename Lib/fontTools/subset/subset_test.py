@@ -94,6 +94,13 @@ class SubsetTest(unittest.TestCase):
         subsetfont = TTFont(subsetpath)
         self.expect_ttx(subsetfont, self.getpath("expect_no_notdef_outline_ttf.ttx"), ["glyf", "hmtx"])
 
+    def test_subset_clr(self):
+        _, fontpath = self.compile_font(self.getpath("TestCLR-Regular.ttx"), ".ttf")
+        subsetpath = self.temp_path(".ttf")
+        subset.main([fontpath, "--glyphs=smileface", "--output-file=%s" % subsetpath])
+        subsetfont = TTFont(subsetpath)
+        self.expect_ttx(subsetfont, self.getpath("expect_keep_colr.ttx"), ["GlyphOrder", "hmtx", "glyf", "COLR", "CPAL"])
+
 
 if __name__ == "__main__":
     unittest.main()
