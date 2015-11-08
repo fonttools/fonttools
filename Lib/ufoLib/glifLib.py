@@ -64,7 +64,7 @@ class Glyph(object):
 
 	"""
 	Minimal glyph object. It has no glyph attributes until either
-	the draw() or the drawPoint() method has been called.
+	the draw() or the drawPoints() method has been called.
 	"""
 
 	def __init__(self, glyphName, glyphSet):

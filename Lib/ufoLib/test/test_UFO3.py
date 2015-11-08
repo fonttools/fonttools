@@ -4153,16 +4153,12 @@ class UFO3ReadDataTestCase(unittest.TestCase):
 	def testUFOReaderDataDirectoryListing(self):
 		reader = UFOReader(self.getFontPath())
 		found = reader.getDataDirectoryListing()
-		# filter out the .svn
-		found = [path for path in found if ".svn" not in path]
-		found = list(sorted(found))
 		expected = [
-			'org.unifiedfontobject.directory/bar/lol.txt',
-			'org.unifiedfontobject.directory/foo.txt',
+			'org.unifiedfontobject.directory%(s)sbar%(s)slol.txt' % {'s': os.sep},
+			'org.unifiedfontobject.directory%(s)sfoo.txt' % {'s': os.sep},
 			'org.unifiedfontobject.file.txt'
 		]
-		expected = list(sorted(expected))
-		self.assertEqual(found, expected)
+		self.assertEqual(set(found), set(expected))
 
 	def testUFOReaderBytesFromPath(self):
 		reader = UFOReader(self.getFontPath())
