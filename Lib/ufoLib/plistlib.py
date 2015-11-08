@@ -1,6 +1,7 @@
-"""plistlib.py -- a tool to generate and parse MacOSX .plist files.
+"""
+plistlib.py -- a tool to generate and parse MacOSX .plist files.
 
-The PropertList (.plist) file format is a simple XML pickle supporting
+The PropertyList (.plist) file format is a simple XML pickle supporting
 basic object types, like dictionaries, lists, numbers and strings.
 Usually the top level object is a dictionary.
 
@@ -49,7 +50,6 @@ Parse Plist example:
     pl = readPlist(pathOrFile)
     print pl["aKey"]
 """
-
 
 __all__ = [
     "readPlist", "writePlist", "readPlistFromString", "writePlistToString",

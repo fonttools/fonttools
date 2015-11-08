@@ -40,7 +40,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'RoboFab'
+project = u'ufoLib'
 copyright = u'2011, Tal Leming, Erik van Blokland, Just van Rossum'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -164,7 +164,7 @@ html_static_path = ['_static']
 #html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'RoboFabdoc'
+htmlhelp_basename = 'ufoLib-doc'
 
 
 # -- Options for LaTeX output --------------------------------------------------
@@ -183,7 +183,7 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'RoboFab.tex', u'RoboFab Documentation',
+  ('index', 'ufoLib.tex', u'ufoLib Documentation',
    u'Tal Leming, Erik van Blokland, Just van Rossum', 'manual'),
 ]
 
@@ -213,7 +213,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'robofab', u'RoboFab Documentation',
+    ('index', 'ufoLib', u'ufoLib Documentation',
      [u'Tal Leming, Erik van Blokland, Just van Rossum'], 1)
 ]
 
@@ -227,8 +227,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'RoboFab', u'RoboFab Documentation', u'Tal Leming, Erik van Blokland, Just van Rossum',
-   'RoboFab', 'One line description of project.', 'Miscellaneous'),
+  ('index', 'ufoLib', u'ufoLib Documentation', u'Tal Leming, Erik van Blokland, Just van Rossum',
+   'ufoLib', 'One line description of project.', 'Miscellaneous'),
 ]
 
 # Documents to append as an appendix to all manuals.

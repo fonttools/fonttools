@@ -30,7 +30,7 @@ are available for external use. These are
 	validateFontInfoVersion2ValueForAttribute
 	validateFontInfoVersion3ValueForAttribute
 
-Value conversion functions are availble for converting
+Value conversion functions are available for converting
 fontinfo.plist values between the possible format versions.
 	convertFontInfoValueForAttributeFromVersion1ToVersion2
 	convertFontInfoValueForAttributeFromVersion2ToVersion1

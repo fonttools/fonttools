@@ -8,7 +8,7 @@ ufoLib
       - readGroups
         - maybe skim the kerning for referenced groups and rename on the fly.
           this creates a race condition of sorts in that he kerning could be modified
-          after the groups have been read. there isn't any way around this. maybe the 
+          after the groups have been read. there isn't any way around this. maybe the
           doc should say that for < version 3 kerning and groups should always be read
           at the same time.
       - readKerning
@@ -99,14 +99,3 @@ point pen protocol
 - add an identifier=None to the addComponent method
 - add an identifier=None to the addPoint method?
 - add **kwargs to beginPath and addComponent?
-
-
-RoboFab
--------
-- remove
-  - anything with a DeprecationWarning (except the font.info attribute mapping)
-- pens
-  - TransoformationPointPen needs to retain point data
-  - make point pens new style classes?
-  - reverse contour pen needs to retain kwargs
-

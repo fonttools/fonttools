@@ -14,37 +14,29 @@ except ImportError:
 try:
 	import fontTools
 except ImportError:
-	print("*** Warning: RoboFab needs FontTools for some operations, see:")
-	print("        http://sourceforge.net/projects/fonttools/")
+	print("*** Warning: ufoLib needs FontTools for some operations, see:")
+	print("        https://github.com/behdad/fonttools")
 
 
 long_description = """\
-RoboFab is a Python library with objects that deal with data usually associated with fonts and type design.
+ufoLib reads and writes Unified Font Object (UFO) files. UFO is a file format
+that stores fonts source files.
 """
 
 setup(
-		name = "robofab",
+		name = "ufoLib",
 		version = "1.2",
-		description = "Tools to manipulate font sources",
+		description = "A low-level UFO reader and writer.",
 		author = "Just van Rossum, Tal Leming, Erik van Blokland, others",
 		author_email = "info@robofab.com",
 		maintainer = "Just van Rossum, Tal Leming, Erik van Blokland",
 		maintainer_email = "info@robofab.com",
-		url = "http://robofab.com/",
+		url = "http://unifiedfontobject.org",
 		license = "OpenSource, BSD-style",
 		platforms = ["Any"],
 		long_description = long_description,
 
 		packages = [
-			"robofab",
-			"robofab.interface",
-			"robofab.interface.mac",
-			"robofab.interface.win",
-			"robofab.interface.all",
-			"robofab.misc",
-			"robofab.objects",
-			"robofab.pens",
-			"robofab.tools",
 			"ufoLib",
 		],
 		package_dir = {'': 'Lib'},
