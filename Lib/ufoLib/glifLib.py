@@ -360,12 +360,12 @@ class GlyphSet(object):
 				self._reverseContents[fileName.lower()] = glyphName
 		path = os.path.join(self.dirName, fileName)
 		if os.path.exists(path):
-			with open(path, "r") as f:
+			with open(path, "rb") as f:
 				oldData = f.read()
 			if data == oldData:
 				return
-		with open(path, "w") as f:
-			f.write(data)
+		with open(path, "wb") as f:
+			f.write(tobytes(data, encoding="utf-8"))
 
 	def deleteGlyph(self, glyphName):
 		"""Permanently delete the glyph from the glyph set on disk. Will
