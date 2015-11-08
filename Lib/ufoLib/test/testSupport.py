@@ -13,8 +13,8 @@ except NameError:
 
 def getDemoFontPath():
 	"""Return the path to Data/DemoFont.ufo/."""
-	import robofab
-	root = os.path.dirname(os.path.dirname(os.path.dirname(robofab.__file__)))
+	import ufoLib
+	root = os.path.dirname(os.path.dirname(os.path.dirname(ufoLib.__file__)))
 	return os.path.join(root, "Data", "DemoFont.ufo")
 
 
@@ -37,7 +37,7 @@ def _gatherTestCasesFromDict(d):
 			testCases.append(ob)
 	return testCases
 
-	
+
 def runTests(testCases=None, verbosity=1):
 	"""Run a series of tests."""
 	if testCases is None:

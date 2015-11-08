@@ -4143,8 +4143,8 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 class UFO3ReadDataTestCase(unittest.TestCase):
 
 	def getFontPath(self):
-		import robofab
-		path = os.path.dirname(robofab.__file__)
+		import ufoLib
+		path = os.path.dirname(ufoLib.__file__)
 		path = os.path.dirname(path)
 		path = os.path.dirname(path)
 		path = os.path.join(path, "TestData", "UFO3-Read Data.ufo")

@@ -35,8 +35,8 @@ class ConversionFunctionsTestCase(unittest.TestCase):
 			shutil.rmtree(path)
 
 	def getFontPath(self, fileName):
-		import robofab
-		path = os.path.dirname(robofab.__file__)
+		import ufoLib
+		path = os.path.dirname(ufoLib.__file__)
 		path = os.path.dirname(path)
 		path = os.path.dirname(path)
 		path = os.path.join(path, "TestData", fileName)
@@ -364,5 +364,5 @@ class KerningDownConversionTestCase(unittest.TestCase):
 
 
 if __name__ == "__main__":
-	from robofab.test.testSupport import runTests
+	from ufoLib.test.testSupport import runTests
 	runTests()

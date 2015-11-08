@@ -137,7 +137,7 @@ class FileNameTests(unittest.TestCase):
 
 
 if __name__ == "__main__":
-	from robofab.test.testSupport import runTests
+	from ufoLib.test.testSupport import runTests
 	import sys
 	if len(sys.argv) > 1 and os.path.isdir(sys.argv[-1]):
 		GLYPHSETDIR = sys.argv.pop()
