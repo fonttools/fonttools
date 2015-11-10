@@ -1290,7 +1290,7 @@ def collect_features(self):
 def subset_glyphs(self, s):
   for strike in self.strikes:
     for indexSubTable in strike.indexSubTables:
-      indexSubTable.names = [n for n in indexSubTable.names if n not in s.glyphs]
+      indexSubTable.names = [n for n in indexSubTable.names if n in s.glyphs]
     strike.indexSubTables = [i for i in strike.indexSubTables if i.names]
   self.strikes = [s for s in self.strikes if s.indexSubTables]
 
@@ -1299,7 +1299,8 @@ def subset_glyphs(self, s):
 # CBDC will inherit it
 @_add_method(ttLib.getTableClass('EBDT'))
 def subset_glyphs(self, s):
-  self.strikeData = [_dict_subset(strike, s.glyphs) for strike in self.strikeData]
+  self.strikeData = [{g: strike[g] for g in s.glyphs if g in strike}
+                     for strike in self.strikeData]
   return True
 
 @_add_method(ttLib.getTableClass('GSUB'))
