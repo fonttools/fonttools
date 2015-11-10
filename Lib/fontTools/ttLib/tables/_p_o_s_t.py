@@ -91,9 +91,7 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 		self.glyphOrder = glyphOrder = [""] * int(ttFont['maxp'].numGlyphs)
 		for glyphID in range(numGlyphs):
 			index = indices[glyphID]
-			if index > 32767: # reserved for future use; ignore
-				name = ""
-			elif index > 257:
+			if index > 257:
 				try:
 					name = extraNames[index-258]
 				except IndexError:
@@ -171,7 +169,6 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 				index = standardGlyphOrder.index(psName)
 			else:
 				index = 258 + len(extraNames)
-				assert index < 32768, "Too many glyph names for 'post' table format 2"
 				extraDict[psName] = len(extraNames)
 				extraNames.append(psName)
 			indices.append(index)
