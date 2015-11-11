@@ -1,37 +1,18 @@
 """ttLib.macUtils.py -- Various Mac-specific stuff."""
-
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
-import sys
-import os
-if sys.platform not in ("mac", "darwin"):
-	raise ImportError("This module is Mac-only!")
-try:
-	from Carbon import Res
-except ImportError:
-	import Res
-
-
-def MyOpenResFile(path):
-	mode = 1  # read only
-	try:
-		resref = Res.FSOpenResFile(path, mode)
-	except Res.Error:
-		# try data fork
-		resref = Res.FSOpenResourceFile(path, unicode(), mode)
-	return resref
+from fontTools.misc.macRes import ResourceReader, ResourceError
 
 
 def getSFNTResIndices(path):
-	"""Determine whether a file has a resource fork or not."""
+	"""Determine whether a file has a 'sfnt' resource fork or not."""
 	try:
-		resref = MyOpenResFile(path)
-	except Res.Error:
+		reader = ResourceReader(path)
+		indices = reader.getIndices('sfnt')
+		reader.close()
+		return indices
+	except ResourceError:
 		return []
-	Res.UseResFile(resref)
-	numSFNTs = Res.Count1Resources('sfnt')
-	Res.CloseResFile(resref)
-	return list(range(1, numSFNTs + 1))
 
 
 def openTTFonts(path):
@@ -53,21 +34,19 @@ def openTTFonts(path):
 	return fonts
 
 
-class SFNTResourceReader(object):
+class SFNTResourceReader(BytesIO):
 
-	"""Simple (Mac-only) read-only file wrapper for 'sfnt' resources."""
+	"""Simple read-only file wrapper for 'sfnt' resources."""
 
 	def __init__(self, path, res_name_or_index):
-		resref = MyOpenResFile(path)
-		Res.UseResFile(resref)
+		reader = ResourceReader(path)
 		if isinstance(res_name_or_index, basestring):
-			res = Res.Get1NamedResource('sfnt', res_name_or_index)
+			rsrc = reader.getNamedResource('sfnt', res_name_or_index)
 		else:
-			res = Res.Get1IndResource('sfnt', res_name_or_index)
-		self.file = BytesIO(res.data)
-		Res.CloseResFile(resref)
+			rsrc = reader.getIndResource('sfnt', res_name_or_index)
+		if rsrc is None:
+			raise TTLibError("sfnt resource not found: %s" % res_name_or_index)
+		reader.close()
+		self.rsrc = rsrc
+		super(SFNTResourceReader, self).__init__(rsrc.data)
 		self.name = path
-
-	def __getattr__(self, attr):
-		# cheap inheritance
-		return getattr(self.file, attr)
