@@ -45,3 +45,4 @@ def floatToFixed(value, precisionBits):
 	precisionBits.  Ie. int(round(value * (1<<precisionBits))).
 	"""
 	return int(round(value * (1<<precisionBits)))
+

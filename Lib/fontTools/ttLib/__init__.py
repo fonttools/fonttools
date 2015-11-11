@@ -462,7 +462,8 @@ class TTFont(object):
 		elif 'post' in self:
 			# TrueType font
 			glyphOrder = self['post'].getGlyphOrder()
-			if glyphOrder is None:
+			numGlyphs = int(self['maxp'].numGlyphs)
+			if glyphOrder is None or len(glyphOrder) < numGlyphs:
 				#
 				# No names found in the 'post' table.
 				# Try to create glyph names from the unicode cmap (if available)

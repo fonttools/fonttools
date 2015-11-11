@@ -38,7 +38,7 @@ class table__h_e_a_d(DefaultTable.DefaultTable):
 		if rest:
 			# this is quite illegal, but there seem to be fonts out there that do this
 			warnings.warn("extra bytes at the end of 'head' table")
-			assert rest == "\0\0"
+			#assert rest == "\0\0"
 
 		# For timestamp fields, ignore the top four bytes.  Some fonts have
 		# bogus values there.  Since till 2038 those bytes only can be zero,

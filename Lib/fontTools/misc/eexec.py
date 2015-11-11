@@ -49,6 +49,11 @@ def _test():
 	testStr = "\0\0asdadads asds\265"
 	print(decrypt, decrypt(testStr, 12321))
 	print(encrypt, encrypt(testStr, 12321))
+	x = hexString(testStr)
+	print(x)
+	print(`testStr`)
+	print ('ssssssssssssssss')
+	print(`deHexString(x)`)
 
 
 if __name__ == "__main__":
