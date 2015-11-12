@@ -736,6 +736,3 @@ def _builddicts():
 		UV2AGL[unicode] = glyphName
 
 _builddicts()
-
-print(AGL2UV)
-
