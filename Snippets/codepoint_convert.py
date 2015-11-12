@@ -1,4 +1,4 @@
-__author__ = 'bihiceng@gmail.com'
+__author__ = 'bihicheng@gmail.com'
 
 from gbk import from_uni, to_uni
 
