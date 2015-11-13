@@ -1419,5 +1419,5 @@ class WriteFontInfoVersion2TestCase(unittest.TestCase):
 
 
 if __name__ == "__main__":
-	from robofab.test.testSupport import runTests
+	from ufoLib.test.testSupport import runTests
 	runTests()

@@ -4671,5 +4671,5 @@ class UFO3WriteLayerInfoTestCase(unittest.TestCase):
 		self.assertRaises(GlifLibError, glyphSet.writeLayerInfo, info)
 
 if __name__ == "__main__":
-	from robofab.test.testSupport import runTests
+	from ufoLib.test.testSupport import runTests
 	runTests()
