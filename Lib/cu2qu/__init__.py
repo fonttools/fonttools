@@ -24,10 +24,8 @@ ensure that the resulting splines are interpolation-compatible.
 """
 
 
-from math import hypot
-
-from fontTools.misc import bezierTools
-from robofab.objects.objectsRF import RSegment, RPoint
+from robofab.objects.objectsRF import RSegment
+from cu2qu.geometry import Point, curve_to_quadratic, curves_to_quadratic
 
 
 def replace_segments(contour, segments):
@@ -65,150 +63,17 @@ def zip(*args):
     return _zip(*args)
 
 
-class Point:
-    """An arithmetic-compatible 2D vector.
-    We use this because arithmetic with RoboFab's RPoint is prohibitively slow.
+def points_to_quadratic(p0, p1, p2, p3, max_n, max_err):
+    """Return a quadratic spline approximating the cubic bezier defined by these
+    points (or collections of points).
     """
 
-    def __init__(self, p):
-        self.p = map(float, p)
-
-    def __getitem__(self, key):
-        return self.p[key]
-
-    def __add__(self, other):
-        return Point([a + b for a, b in zip(self.p, other.p)])
-
-    def __sub__(self, other):
-        return Point([a - b for a, b in zip(self.p, other.p)])
-
-    def __mul__(self, n):
-        return Point([a * n for a in self.p])
-
-    def dist(self, other):
-        """Calculate the distance between two points."""
-        return hypot(self[0] - other[0], self[1] - other[1])
-
-    def dot(self, other):
-        """Return the dot product of two points."""
-        return self[0] * other[0] + self[1] * other[1]
-
-
-def lerp(p1, p2, t):
-    """Linearly interpolate between p1 and p2 at time t."""
-    return p1 * (1 - t) + p2 * t
-
-
-def quadratic_bezier_at(p, t):
-    """Return the point on a quadratic bezier curve at time t."""
-
-    return Point([
-        lerp(lerp(p[0][0], p[1][0], t), lerp(p[1][0], p[2][0], t), t),
-        lerp(lerp(p[0][1], p[1][1], t), lerp(p[1][1], p[2][1], t), t)])
-
-
-def cubic_bezier_at(p, t):
-    """Return the point on a cubic bezier curve at time t."""
-
-    return Point([
-        lerp(lerp(lerp(p[0][0], p[1][0], t), lerp(p[1][0], p[2][0], t), t),
-             lerp(lerp(p[1][0], p[2][0], t), lerp(p[2][0], p[3][0], t), t), t),
-        lerp(lerp(lerp(p[0][1], p[1][1], t), lerp(p[1][1], p[2][1], t), t),
-             lerp(lerp(p[1][1], p[2][1], t), lerp(p[2][1], p[3][1], t), t), t)])
-
-
-def cubic_approx(p, t):
-    """Approximate a cubic bezier curve with a quadratic one."""
-
-    p1 = lerp(p[0], p[1], 1.5)
-    p2 = lerp(p[3], p[2], 1.5)
-    return [p[0], lerp(p1, p2, t), p[3]]
-
-
-def calc_intersect(p):
-    """Calculate the intersection of ab and cd, given [a, b, c, d]."""
-
-    a, b, c, d = p
-    ab = b - a
-    cd = d - c
-    p = Point([-ab[1], ab[0]])
-    try:
-        h = p.dot(a - c) / p.dot(cd)
-    except ZeroDivisionError:
-        raise ValueError('Parallel vectors given to calc_intersect.')
-    return c + cd * h
-
-
-def cubic_approx_spline(p, n):
-    """Approximate a cubic bezier curve with a spline of n quadratics.
-
-    Returns None if n is 1 and the cubic's control vectors are parallel, since
-    no quadratic exists with this cubic's tangents.
-    """
-
-    if n == 1:
-        try:
-            p1 = calc_intersect(p)
-        except ValueError:
-            return None
-        return p[0], p1, p[3]
-
-    spline = [p[0]]
-    ts = [(float(i) / n) for i in range(1, n)]
-    segments = [
-        map(Point, segment)
-        for segment in bezierTools.splitCubicAtT(p[0], p[1], p[2], p[3], *ts)]
-    for i in range(len(segments)):
-        segment = cubic_approx(segments[i], float(i) / (n - 1))
-        spline.append(segment[1])
-    spline.append(p[3])
-    return spline
-
-
-def curve_spline_dist(bezier, spline):
-    """Max distance between a bezier and quadratic spline at sampled ts."""
-
-    TOTAL_STEPS = 20
-    error = 0
-    n = len(spline) - 2
-    steps = TOTAL_STEPS / n
-    for i in range(1, n + 1):
-        segment = [
-            spline[0] if i == 1 else segment[2],
-            spline[i],
-            spline[i + 1] if i == n else lerp(spline[i], spline[i + 1], 0.5)]
-        for j in range(steps):
-            p1 = cubic_bezier_at(bezier, (float(j) / steps + i - 1) / n)
-            p2 = quadratic_bezier_at(segment, float(j) / steps)
-            error = max(error, p1.dist(p2))
-    return error
-
-
-def curve_to_quadratic(p0, p1, p2, p3, max_n, max_err):
-    """Return a quadratic spline approximating this cubic bezier."""
-
-    if not isinstance(p0, RPoint):
-        return curve_collection_to_quadratic(p0, p1, p2, p3, max_n, max_err)
-
-    p = [Point([i.x, i.y]) for i in [p0, p1, p2, p3]]
-    for n in range(1, max_n + 1):
-        spline = cubic_approx_spline(p, n)
-        if spline and curve_spline_dist(p, spline) <= max_err:
-            break
-    return spline
-
-
-def curve_collection_to_quadratic(p0, p1, p2, p3, max_n, max_err):
-    """Return quadratic splines approximating these cubic beziers."""
+    if hasattr(p0, 'x'):
+        curve = [Point([i.x, i.y]) for i in [p0, p1, p2, p3]]
+        return curve_to_quadratic(curve, max_n, max_err)
 
     curves = [[Point([i.x, i.y]) for i in p] for p in zip(p0, p1, p2, p3)]
-    for n in range(1, max_n + 1):
-        splines = [cubic_approx_spline(c, n) for c in curves]
-        if (all(splines) and
-            max(curve_spline_dist(c, s)
-                for c, s in zip(curves, splines)) <= max_err):
-            break
-    return splines
+    return curves_to_quadratic(curves, max_n, max_err)
 
 
 def segment_to_quadratic(contour, segment_id, max_n, max_err, report):
@@ -221,9 +86,9 @@ def segment_to_quadratic(contour, segment_id, max_n, max_err, report):
     # assumes that a curve type will always be proceeded by another point on the
     # same contour
     prev_segment = contour[segment_id - 1]
-    points = curve_to_quadratic(prev_segment.points[-1], segment.points[0],
-                                  segment.points[1], segment.points[2],
-                                  max_n, max_err)
+    points = points_to_quadratic(prev_segment.points[-1], segment.points[0],
+                                 segment.points[1], segment.points[2],
+                                 max_n, max_err)
 
     if isinstance(points[0][0], float):  # just one spline
         n = str(len(points))
