@@ -331,7 +331,7 @@ def _set_update(s, *others):
         s.update(other)
 
 def _dict_subset(d, glyphs):
-	return {g:d[g] for g in glyphs}
+    return {g:d[g] for g in glyphs}
 
 
 @_add_method(otTables.Coverage)
