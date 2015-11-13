@@ -19,6 +19,6 @@ from distutils.core import setup
 setup(
     name='cu2qu',
     version='1.0',
-    py_modules=['cu2qu'],
+    packages=['cu2qu'],
     package_dir={'': 'Lib'}
 )
