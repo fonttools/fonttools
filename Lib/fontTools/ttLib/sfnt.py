@@ -84,12 +84,13 @@ class SFNTReader(object):
 		if self.sfntVersion not in ("\x00\x01\x00\x00", "OTTO", "true"):
 			from fontTools import ttLib
 			raise ttLib.TTLibError("Not a TrueType or OpenType font (bad sfntVersion)")
-		self.tables = OrderedDict()
+		tables = {}
 		for i in range(self.numTables):
 			entry = self.DirectoryEntry()
 			entry.fromFile(self.file)
 			tag = Tag(entry.tag)
-			self.tables[tag] = entry
+			tables[tag] = entry
+		self.tables = OrderedDict(sorted(tables.items(), key=lambda i: i[1].offset))
 
 		# Load flavor data if any
 		if self.flavor == "woff":
