@@ -28,31 +28,6 @@ from robofab.objects.objectsRF import RSegment
 from cu2qu.geometry import Point, curve_to_quadratic, curves_to_quadratic
 
 
-def replace_segments(contour, segments):
-    """Replace the segments of a given contour."""
-
-    try:
-        contour.replace_segments(segments)
-        return
-    except AttributeError:
-        pass
-
-    while len(contour):
-        contour.removeSegment(0)
-    for s in segments:
-        contour.appendSegment(s.type, [(p.x, p.y) for p in s.points], s.smooth)
-
-
-def as_quadratic(segment, points):
-    """Return a new segment with given points and type qcurve."""
-
-    try:
-        return segment.as_quadratic(points)
-    except AttributeError:
-        return RSegment(
-            'qcurve', [[int(i) for i in p] for p in points], segment.smooth)
-
-
 _zip = zip
 def zip(*args):
     """Ensure each argument to zip has the same length."""
@@ -63,17 +38,41 @@ def zip(*args):
     return _zip(*args)
 
 
-def points_to_quadratic(p0, p1, p2, p3, max_n, max_err):
-    """Return a quadratic spline approximating the cubic bezier defined by these
-    points (or collections of points).
+def fonts_to_quadratic(*fonts, **kwargs):
+    """Convert the curves of a collection of fonts to quadratic.
+
+    If compatibility is required, all curves will be converted to quadratic
+    at once. Otherwise the glyphs will be converted one font at a time,
+    which should be slightly more optimized.
     """
 
-    if hasattr(p0, 'x'):
-        curve = [Point([i.x, i.y]) for i in [p0, p1, p2, p3]]
-        return curve_to_quadratic(curve, max_n, max_err)
+    max_n = kwargs.get('max_n', 10)
+    max_err = kwargs.get('max_err', 5)
 
-    curves = [[Point([i.x, i.y]) for i in p] for p in zip(p0, p1, p2, p3)]
-    return curves_to_quadratic(curves, max_n, max_err)
+    report = {}
+    for glyph in FontCollection(fonts):
+        glyph_to_quadratic(glyph, max_n, max_err, report)
+
+    spline_lengths = report.keys()
+    spline_lengths.sort()
+    return (
+        'New spline lengths:\n' +
+        '\n'.join('%s: %d' % (l, report[l]) for l in spline_lengths))
+
+
+def glyph_to_quadratic(glyph, max_n, max_err, report):
+    """Convert a glyph's curves to quadratic, in place."""
+
+    for contour in glyph:
+        segments = []
+        for i in range(len(contour)):
+            segment = contour[i]
+            if segment.type == 'curve':
+                segments.append(segment_to_quadratic(
+                    contour, i, max_n, max_err, report))
+            else:
+                segments.append(segment)
+        replace_segments(contour, segments)
 
 
 def segment_to_quadratic(contour, segment_id, max_n, max_err, report):
@@ -102,41 +101,42 @@ def segment_to_quadratic(contour, segment_id, max_n, max_err, report):
     return as_quadratic(segment, points)
 
 
-def glyph_to_quadratic(glyph, max_n, max_err, report):
-    """Convert a glyph's curves to quadratic, in place."""
-
-    for contour in glyph:
-        segments = []
-        for i in range(len(contour)):
-            segment = contour[i]
-            if segment.type == 'curve':
-                segments.append(segment_to_quadratic(
-                    contour, i, max_n, max_err, report))
-            else:
-                segments.append(segment)
-        replace_segments(contour, segments)
-
-
-def fonts_to_quadratic(*fonts, **kwargs):
-    """Convert the curves of a collection of fonts to quadratic.
-
-    If compatibility is required, all curves will be converted to quadratic
-    at once. Otherwise the glyphs will be converted one font at a time,
-    which should be slightly more optimized.
+def points_to_quadratic(p0, p1, p2, p3, max_n, max_err):
+    """Return a quadratic spline approximating the cubic bezier defined by these
+    points (or collections of points).
     """
 
-    max_n = kwargs.get('max_n', 10)
-    max_err = kwargs.get('max_err', 5)
+    if hasattr(p0, 'x'):
+        curve = [Point([i.x, i.y]) for i in [p0, p1, p2, p3]]
+        return curve_to_quadratic(curve, max_n, max_err)
 
-    report = {}
-    for glyph in FontCollection(fonts):
-        glyph_to_quadratic(glyph, max_n, max_err, report)
+    curves = [[Point([i.x, i.y]) for i in p] for p in zip(p0, p1, p2, p3)]
+    return curves_to_quadratic(curves, max_n, max_err)
 
-    spline_lengths = report.keys()
-    spline_lengths.sort()
-    return (
-        'New spline lengths:\n' +
-        '\n'.join('%s: %d' % (l, report[l]) for l in spline_lengths))
+
+def replace_segments(contour, segments):
+    """Replace the segments of a given contour."""
+
+    try:
+        contour.replace_segments(segments)
+        return
+    except AttributeError:
+        pass
+
+    while len(contour):
+        contour.removeSegment(0)
+    for s in segments:
+        contour.appendSegment(s.type, [(p.x, p.y) for p in s.points], s.smooth)
+
+
+def as_quadratic(segment, points):
+    """Return a new segment with given points and type qcurve."""
+
+    try:
+        return segment.as_quadratic(points)
+    except AttributeError:
+        return RSegment(
+            'qcurve', [[int(i) for i in p] for p in points], segment.smooth)
 
 
 class FontCollection:
