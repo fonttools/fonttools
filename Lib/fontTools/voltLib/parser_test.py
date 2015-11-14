@@ -2,7 +2,7 @@ from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
 from fontTools.voltLib.error import VoltLibError
 from fontTools.voltLib.parser import Parser
-import codecs
+from io import open
 import os
 import shutil
 import tempfile
@@ -64,6 +64,41 @@ class ParserTest(unittest.TestCase):
                            "ae", "agrave", "amacron", "aogonek", "aring",
                            "atilde"]))
 
+    def test_def_group_groups(self):
+        [group1, group2, test_group] = self.parse(
+            'DEF_GROUP "Group1"\n'
+            'ENUM GLYPH "a" GLYPH "b" GLYPH "c" GLYPH "d" END_ENUM\n'
+            'END_GROUP\n'
+            'DEF_GROUP "Group2"\n'
+            'ENUM GLYPH "e" GLYPH "f" GLYPH "g" GLYPH "h" END_ENUM\n'
+            'END_GROUP\n'
+            'DEF_GROUP "TestGroup"\n'
+            'ENUM GROUP "Group1" GROUP "Group2" END_ENUM\n'
+            'END_GROUP\n'
+        ).statements
+        self.assertEqual(
+            (test_group.name, test_group.enum),
+            ("TestGroup",
+             ["a", "b", "c", "d", "e", "f", "g", "h"]))
+
+    # TODO
+    # def test_def_group_groups_not_yet_defined(self):
+    #     [group1, group2, test_group] = self.parse(
+    #         'DEF_GROUP "Group1"\n'
+    #         'ENUM GLYPH "a" GLYPH "b" GLYPH "c" GLYPH "d" END_ENUM\n'
+    #         'END_GROUP\n'
+    #         'DEF_GROUP "TestGroup"\n'
+    #         'ENUM GROUP "Group1" GROUP "Group2" END_ENUM\n'
+    #         'END_GROUP\n'
+    #         'DEF_GROUP "Group2"\n'
+    #         'ENUM GLYPH "e" GLYPH "f" GLYPH "g" GLYPH "h" END_ENUM\n'
+    #         'END_GROUP\n'
+    #     ).statements
+    #     self.assertEqual(
+    #         (test_group.name, test_group.enum),
+    #         ("TestGroup",
+    #          ["a", "b", "c", "d", "e", "f", "g", "h"]))
+
     def test_def_group_glyphs_and_group(self):
         [def_group1, def_group2] = self.parse(
             'DEF_GROUP "aaccented"\n'
@@ -103,7 +138,15 @@ class ParserTest(unittest.TestCase):
                         'END_GROUP\n'
         )
 
-    def test_langsys(self):
+    def test_script_without_langsys(self):
+        [script] = self.parse(
+            'DEF_SCRIPT NAME "Latin" TAG "latn"\n'
+            'END_SCRIPT'
+        ).statements
+        self.assertEqual((script.name, script.tag, script.langs),
+                         ("Latin", "latn", []))
+
+    def test_langsys_normal(self):
         [def_script] = self.parse(
             'DEF_SCRIPT NAME "Latin" TAG "latn"\n'
             'DEF_LANGSYS NAME "Romanian" TAG "ROM "\n'
@@ -117,6 +160,58 @@ class ParserTest(unittest.TestCase):
         self.assertEqual((def_lang.name, def_lang.tag),
                          ("Romanian",
                           "ROM "))
+
+    def test_langsys_no_script_name(self):
+        [langsys] = self.parse(
+            'DEF_SCRIPT TAG "latn"\n'
+            'DEF_LANGSYS NAME "Default" TAG "dflt"\n'
+            'END_LANGSYS\n'
+            'END_SCRIPT'
+        ).statements
+        self.assertEqual((langsys.name, langsys.tag),
+                         (None,
+                          "latn"))
+        lang = langsys.langs[0]
+        self.assertEqual((lang.name, lang.tag),
+                         ("Default",
+                          "dflt"))
+
+    def test_langsys_no_script_tag_fails(self):
+        with self.assertRaisesRegex(
+                VoltLibError,
+                r'.*Expected "TAG"'):
+            [langsys] = self.parse(
+                'DEF_SCRIPT NAME "Latin"\n'
+                'DEF_LANGSYS NAME "Default" TAG "dflt"\n'
+                'END_LANGSYS\n'
+                'END_SCRIPT'
+            ).statements
+
+    def test_langsys_no_lang_name(self):
+        [langsys] = self.parse(
+            'DEF_SCRIPT NAME "Latin" TAG "latn"\n'
+            'DEF_LANGSYS TAG "dflt"\n'
+            'END_LANGSYS\n'
+            'END_SCRIPT'
+        ).statements
+        self.assertEqual((langsys.name, langsys.tag),
+                         ("Latin",
+                          "latn"))
+        lang = langsys.langs[0]
+        self.assertEqual((lang.name, lang.tag),
+                         (None,
+                          "dflt"))
+
+    def test_langsys_no_langsys_tag_fails(self):
+        with self.assertRaisesRegex(
+                VoltLibError,
+                r'.*Expected "TAG"'):
+            [langsys] = self.parse(
+                'DEF_SCRIPT NAME "Latin" TAG "latn"\n'
+                'DEF_LANGSYS NAME "Default"\n'
+                'END_LANGSYS\n'
+                'END_SCRIPT'
+            ).statements
 
     def test_feature(self):
         [def_script] = self.parse(
@@ -187,13 +282,12 @@ class ParserTest(unittest.TestCase):
             'END_SUBSTITUTION'
         ).statements
         context = lookup.context[0]
-        self.assertEqual((lookup.name, list(lookup.sub.mapping), context.ex_or_in,
-                          context.left, context.right),
-                         ("fracdnom",
-                          [("one", "one.dnom"), ("two", "two.dnom")],
-                          "IN_CONTEXT",
-                          [[["one.dnom", "two.dnom", "fraction"]]],
-                          []))
+        self.assertEqual(
+            (lookup.name, list(lookup.sub.mapping),
+             context.ex_or_in, context.left, context.right),
+            ("fracdnom", [("one", "one.dnom"), ("two", "two.dnom")],
+             "IN_CONTEXT", [[["one.dnom", "two.dnom", "fraction"]]], [])
+        )
 
     def test_substitution_single_in_contexts(self):
         [group, lookup] = self.parse(
@@ -217,18 +311,59 @@ class ParserTest(unittest.TestCase):
         ).statements
         context1 = lookup.context[0]
         context2 = lookup.context[1]
-        self.assertEqual((lookup.name, context1.ex_or_in, context1.left,
-                          context1.right, context2.ex_or_in, context2.left,
-                          context2.right),
-                         ("HebrewCurrency",
-                          "IN_CONTEXT",
-                          [],
-                          [["uni05D0", "uni05D1"], ["one.Hebr"]],
-                          "IN_CONTEXT",
-                          [["uni05D0", "uni05D1"], ["one.Hebr"]],
-                          []))
+        self.assertEqual(
+            (lookup.name, context1.ex_or_in, context1.left,
+             context1.right, context2.ex_or_in,
+             context2.left, context2.right),
+            ("HebrewCurrency", "IN_CONTEXT", [],
+             [["uni05D0", "uni05D1"], ["one.Hebr"]], "IN_CONTEXT",
+             [["uni05D0", "uni05D1"], ["one.Hebr"]], []))
 
-    def test_def_attach(self):
+    def test_substitution_skip_marks(self):
+        [group, lookup] = self.parse(
+            'DEF_GROUP "SomeMarks" ENUM GLYPH "marka" GLYPH "markb" '
+            'END_ENUM END_GROUP\n'
+            'DEF_LOOKUP "SomeSub" PROCESS_BASE SKIP_MARKS '
+            'DIRECTION LTR\n'
+            'IN_CONTEXT\n'
+            'END_CONTEXT\n'
+            'AS_SUBSTITUTION\n'
+            'SUB GLYPH "A"\n'
+            'WITH GLYPH "A.c2sc"\n'
+            'END_SUB\n'
+            'END_SUBSTITUTION'
+        ).statements
+        process_marks = lookup.process_marks
+        all_marks = lookup.all
+        self.assertEqual(
+            (lookup.name, process_marks, all_marks),
+            ("SomeSub", None, False))
+
+    def test_substitution_process_marks(self):
+        [group, lookup] = self.parse(
+            'DEF_GROUP "SomeMarks" ENUM GLYPH "acutecmb" GLYPH "gravecmb" '
+            'END_ENUM END_GROUP\n'
+            'DEF_LOOKUP "SomeSub" PROCESS_BASE '
+            'PROCESS_MARKS "SomeMarks" \n'
+            'DIRECTION RTL\n'
+            'AS_SUBSTITUTION\n'
+            'SUB GLYPH "A"\n'
+            'WITH GLYPH "A.c2sc"\n'
+            'END_SUB\n'
+            'END_SUBSTITUTION'
+        ).statements
+        process_marks = lookup.process_marks
+        all_marks = lookup.all
+        self.assertEqual(
+            (lookup.name, process_marks, all_marks),
+            ("SomeSub", "SomeMarks", False))
+
+    # GPOS
+    #  ATTACH_CURSIVE
+    #  ATTACH
+    #  ADJUST_PAIR
+    #  ADJUST_SINGLE
+    def test_position_attach(self):
         [lookup, anchor1, anchor2, anchor3, anchor4] = self.parse(
             'DEF_LOOKUP "anchor_top" PROCESS_BASE PROCESS_MARKS ALL '
             'DIRECTION RTL\n'
@@ -277,7 +412,10 @@ class ParserTest(unittest.TestCase):
             ("top", 35, "e", 1, False, (None, 215, 450, {}, {}, {}))
         )
 
-    def test_adjust_pair(self):
+    def test_position_attach_cursive(self):
+        pass  # XXX
+
+    def test_position_adjust_pair(self):
         [lookup] = self.parse(
             'DEF_LOOKUP "kern1" PROCESS_BASE PROCESS_MARKS ALL '
             'DIRECTION RTL\n'
@@ -302,9 +440,13 @@ class ParserTest(unittest.TestCase):
                        (None, None, None, {}, {}, {}))})
         )
 
+    def test_position_adjust_single(self):
+        pass  # XXX
+
     def test_def_anchor(self):
         [anchor] = self.parse(
-            'DEF_ANCHOR "MARK_top" ON 120 GLYPH acutecomb COMPONENT 1 AT POS DX 0 DY 450 END_POS END_ANCHOR'
+            'DEF_ANCHOR "MARK_top" ON 120 GLYPH acutecomb '
+            'COMPONENT 1 AT POS DX 0 DY 450 END_POS END_ANCHOR'
         ).statements
         self.assertEqual(
             (anchor.name, anchor.gid, anchor.glyph_name, anchor.component,
@@ -367,7 +509,7 @@ class ParserTest(unittest.TestCase):
             self.tempdir = tempfile.mkdtemp()
         self.num_tempfiles += 1
         path = os.path.join(self.tempdir, "tmp%d.vtp" % self.num_tempfiles)
-        with codecs.open(path, "wb", "utf-8") as outfile:
+        with open(path, "w") as outfile:
             outfile.write(text)
         return Parser(path).parse()
 
