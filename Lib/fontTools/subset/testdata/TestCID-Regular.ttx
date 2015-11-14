@@ -1,0 +1,389 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="OTTO" ttLibVersion="2.5">
+
+  <GlyphOrder>
+    <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
+    <GlyphID id="0" name=".notdef"/>
+    <GlyphID id="1" name="cid00001"/>
+    <GlyphID id="2" name="cid00002"/>
+    <GlyphID id="3" name="cid00003"/>
+  </GlyphOrder>
+
+  <head>
+    <!-- Most of this table will be recalculated by the compiler -->
+    <tableVersion value="1.0"/>
+    <fontRevision value="1.000"/>
+    <checkSumAdjustment value="0xbad6461a"/>
+    <magicNumber value="0x5f0f3cf5"/>
+    <flags value="00000000 00000011"/>
+    <unitsPerEm value="1000"/>
+    <created value="Mon Jun 15 05:17:40 2015"/>
+    <modified value="Mon Jun 15 05:17:40 2015"/>
+    <xMin value="-1000"/>
+    <yMin value="-1048"/>
+    <xMax value="2928"/>
+    <yMax value="1808"/>
+    <macStyle value="00000000 00000000"/>
+    <lowestRecPPEM value="3"/>
+    <fontDirectionHint value="2"/>
+    <indexToLocFormat value="0"/>
+    <glyphDataFormat value="0"/>
+  </head>
+
+  <hhea>
+    <tableVersion value="1.0"/>
+    <ascent value="1000"/>
+    <descent value="-320"/>
+    <lineGap value="0"/>
+    <advanceWidthMax value="1000"/>
+    <minLeftSideBearing value="-1000"/>
+    <minRightSideBearing value="-181"/>
+    <xMaxExtent value="2928"/>
+    <caretSlopeRise value="1"/>
+    <caretSlopeRun value="0"/>
+    <caretOffset value="0"/>
+    <reserved0 value="0"/>
+    <reserved1 value="0"/>
+    <reserved2 value="0"/>
+    <reserved3 value="0"/>
+    <metricDataFormat value="0"/>
+    <numberOfHMetrics value="4"/>
+  </hhea>
+
+  <maxp>
+    <tableVersion value="0x5000"/>
+    <numGlyphs value="4"/>
+  </maxp>
+
+  <OS_2>
+    <version value="3"/>
+    <xAvgCharWidth value="979"/>
+    <usWeightClass value="350"/>
+    <usWidthClass value="5"/>
+    <fsType value="00000000 00000000"/>
+    <ySubscriptXSize value="650"/>
+    <ySubscriptYSize value="600"/>
+    <ySubscriptXOffset value="0"/>
+    <ySubscriptYOffset value="75"/>
+    <ySuperscriptXSize value="650"/>
+    <ySuperscriptYSize value="600"/>
+    <ySuperscriptXOffset value="0"/>
+    <ySuperscriptYOffset value="350"/>
+    <yStrikeoutSize value="50"/>
+    <yStrikeoutPosition value="325"/>
+    <sFamilyClass value="0"/>
+    <panose>
+      <bFamilyType value="2"/>
+      <bSerifStyle value="11"/>
+      <bWeight value="4"/>
+      <bProportion value="0"/>
+      <bContrast value="0"/>
+      <bStrokeVariation value="0"/>
+      <bArmStyle value="0"/>
+      <bLetterForm value="0"/>
+      <bMidline value="0"/>
+      <bXHeight value="0"/>
+    </panose>
+    <ulUnicodeRange1 value="00000000 00000000 00000000 00000000"/>
+    <ulUnicodeRange2 value="00000000 00000000 00000000 00000000"/>
+    <ulUnicodeRange3 value="00000000 00000000 00000000 00000000"/>
+    <ulUnicodeRange4 value="00000000 00000000 00000000 00000000"/>
+    <achVendID value="UKWN"/>
+    <fsSelection value="00000000 00000000"/>
+    <fsFirstCharIndex value="0"/>
+    <fsLastCharIndex value="65535"/>
+    <sTypoAscender value="880"/>
+    <sTypoDescender value="-120"/>
+    <sTypoLineGap value="0"/>
+    <usWinAscent value="1160"/>
+    <usWinDescent value="320"/>
+    <ulCodePageRange1 value="00000000 00000000 00000000 00000001"/>
+    <ulCodePageRange2 value="00000000 00000000 00000000 00000000"/>
+    <sxHeight value="543"/>
+    <sCapHeight value="733"/>
+    <usDefaultChar value="0"/>
+    <usBreakChar value="32"/>
+    <usMaxContex value="6"/>
+  </OS_2>
+
+  <name>
+    <namerecord nameID="1" platformID="3" platEncID="1" langID="0x409">
+      Test CID
+    </namerecord>
+    <namerecord nameID="2" platformID="3" platEncID="1" langID="0x409">
+      Regular
+    </namerecord>
+  </name>
+
+  <cmap>
+    <tableVersion version="0"/>
+    <cmap_format_4 platformID="0" platEncID="3" language="0">
+      <map code="0x20" name="cid00001"/><!-- SPACE -->
+      <map code="0x21" name="cid00002"/><!-- EXCLAMATION MARK -->
+      <map code="0x22" name="cid00003"/><!-- QUOTATION MARK -->
+      <map code="0xa0" name="cid00001"/><!-- NO-BREAK SPACE -->
+    </cmap_format_4>
+    <cmap_format_12 platformID="0" platEncID="4" format="12" reserved="0" length="424" language="0" nGroups="34">
+      <map code="0x20" name="cid00001"/><!-- SPACE -->
+      <map code="0x21" name="cid00002"/><!-- EXCLAMATION MARK -->
+      <map code="0x22" name="cid00003"/><!-- QUOTATION MARK -->
+      <map code="0xa0" name="cid00001"/><!-- NO-BREAK SPACE -->
+    </cmap_format_12>
+    <cmap_format_4 platformID="3" platEncID="1" language="0">
+      <map code="0x20" name="cid00001"/><!-- SPACE -->
+      <map code="0x21" name="cid00002"/><!-- EXCLAMATION MARK -->
+      <map code="0x22" name="cid00003"/><!-- QUOTATION MARK -->
+      <map code="0xa0" name="cid00001"/><!-- NO-BREAK SPACE -->
+    </cmap_format_4>
+    <cmap_format_12 platformID="3" platEncID="10" format="12" reserved="0" length="424" language="0" nGroups="34">
+      <map code="0x20" name="cid00001"/><!-- SPACE -->
+      <map code="0x21" name="cid00002"/><!-- EXCLAMATION MARK -->
+      <map code="0x22" name="cid00003"/><!-- QUOTATION MARK -->
+      <map code="0xa0" name="cid00001"/><!-- NO-BREAK SPACE -->
+    </cmap_format_12>
+  </cmap>
+
+  <post>
+    <formatType value="3.0"/>
+    <italicAngle value="0.0"/>
+    <underlinePosition value="-125"/>
+    <underlineThickness value="50"/>
+    <isFixedPitch value="0"/>
+    <minMemType42 value="0"/>
+    <maxMemType42 value="0"/>
+    <minMemType1 value="0"/>
+    <maxMemType1 value="0"/>
+  </post>
+
+  <CFF>
+    <CFFFont name="TestCID-Regular">
+      <ROS Registry="Adobe" Order="Identity" Supplement="0"/>
+      <FullName value="Test CID Regular"/>
+      <FamilyName value="Test CID"/>
+      <Weight value="Regular"/>
+      <isFixedPitch value="0"/>
+      <ItalicAngle value="0"/>
+      <UnderlinePosition value="-150"/>
+      <UnderlineThickness value="50"/>
+      <PaintType value="0"/>
+      <CharstringType value="2"/>
+      <FontMatrix value="0.001 0 0 0.001 0 0"/>
+      <FontBBox value="-1000 -1000 1000 1000"/>
+      <StrokeWidth value="0"/>
+      <CIDFontVersion value="1.000"/>
+      <CIDFontRevision value="0"/>
+      <CIDFontType value="0"/>
+      <CIDCount value="4"/>
+      <!-- charset is dumped separately as the 'GlyphOrder' element -->
+      <FDSelect format="3"/>
+      <FDArray>
+        <FontDict index="0">
+          <FontName value="TestCID-Regular-One"/>
+          <isFixedPitch value="0"/>
+          <ItalicAngle value="0"/>
+          <UnderlineThickness value="50"/>
+          <PaintType value="0"/>
+          <CharstringType value="2"/>
+          <FontMatrix value="0.001 0 0 0.001 0 0"/>
+          <FontBBox value="0 0 0 0"/>
+          <StrokeWidth value="0"/>
+          <Encoding name="StandardEncoding"/>
+          <Private>
+            <BlueValues value="-250 -250 1100 1100"/>
+            <BlueScale value="0.039625"/>
+            <BlueShift value="7"/>
+            <BlueFuzz value="1"/>
+            <StdHW value="40"/>
+            <StdVW value="40"/>
+            <StemSnapH value="40 120"/>
+            <StemSnapV value="40 120"/>
+            <ForceBold value="0"/>
+            <LanguageGroup value="1"/>
+            <ExpansionFactor value="0.06"/>
+            <initialRandomSeed value="0"/>
+            <defaultWidthX value="1000"/>
+            <nominalWidthX value="107"/>
+            <Subrs>
+              <!-- The 'index' attribute is only for humans; it is ignored when parsed. -->
+            </Subrs>
+          </Private>
+        </FontDict>
+        <FontDict index="1">
+          <FontName value="TestCID-Regular-Two"/>
+          <isFixedPitch value="0"/>
+          <ItalicAngle value="0"/>
+          <UnderlineThickness value="50"/>
+          <PaintType value="0"/>
+          <CharstringType value="2"/>
+          <FontMatrix value="0.001 0 0 0.001 0 0"/>
+          <FontBBox value="0 0 0 0"/>
+          <StrokeWidth value="0"/>
+          <Encoding name="StandardEncoding"/>
+          <Private>
+            <BlueValues value="-13 0 540 554 732 745"/>
+            <OtherBlues value="-251 -232 -227 -227"/>
+            <BlueScale value="0.039625"/>
+            <BlueShift value="7"/>
+            <BlueFuzz value="1"/>
+            <StdHW value="58"/>
+            <StdVW value="71"/>
+            <StemSnapH value="58 73 83"/>
+            <StemSnapV value="71 81 96"/>
+            <ForceBold value="0"/>
+            <LanguageGroup value="0"/>
+            <ExpansionFactor value="0.06"/>
+            <initialRandomSeed value="0"/>
+            <defaultWidthX value="602"/>
+            <nominalWidthX value="630"/>
+            <Subrs>
+              <!-- The 'index' attribute is only for humans; it is ignored when parsed. -->
+              <CharString index="0">
+                129 216 -105 callsubr
+                -82 hlineto
+                2 -98 rlineto
+                return
+              </CharString>
+              <CharString index="1">
+                -106 callgsubr
+                67 return
+              </CharString>
+              <CharString index="2">
+                rmoveto
+                56 hlineto
+                11 433 2 98 rlineto
+                return
+              </CharString>
+              <CharString index="3">
+                -33 -28 -26 -40 vhcurveto
+                hintmask 01100000
+                -38 28 -26 33 vhcurveto
+                endchar
+              </CharString>
+              <CharString index="4">
+                -13 130 -109 -21 return
+              </CharString>
+              <CharString index="5">
+                493 277 hstem
+                91 -105 callgsubr
+                return
+              </CharString>
+            </Subrs>
+          </Private>
+        </FontDict>
+      </FDArray>
+      <CharStrings>
+        <CharString name=".notdef" fdSelectIndex="0">
+          -120 50 900 50 hstem
+          100 50 700 50 vstem
+          100 -120 rmoveto
+          800 1000 -800 hlineto
+          400 -459 rmoveto
+          -318 409 rlineto
+          636 hlineto
+          -286 -450 rmoveto
+          318 409 rlineto
+          -818 vlineto
+          -668 -41 rmoveto
+          318 409 318 -409 rlineto
+          -668 859 rmoveto
+          318 -409 -318 -409 rlineto
+          endchar
+        </CharString>
+        <CharString name="cid00001" fdSelectIndex="1">
+          -407 endchar
+        </CharString>
+        <CharString name="cid00002" fdSelectIndex="1">
+          -316 -103 callsubr
+          -106 callsubr
+          hintmask 01010000
+          -107 callsubr
+          hintmask 01100000
+          39 -662 rmoveto
+          33 29 26 38 hvcurveto
+          hintmask 10100000
+          40 -29 26 -33 -104 callsubr
+        </CharString>
+        <CharString name="cid00003" fdSelectIndex="1">
+          -173 -102 callsubr
+          -104 callgsubr
+          86 vstem
+          108 493 rmoveto
+          52 hlineto
+          15 180 3 97 rlineto
+          -88 hlineto
+          2 -97 rlineto
+          203 -103 callgsubr
+          51 hlineto
+          17 180 2 97 rlineto
+          -88 hlineto
+          2 -97 rlineto
+          endchar
+        </CharString>
+      </CharStrings>
+    </CFFFont>
+
+    <GlobalSubrs>
+      <!-- The 'index' attribute is only for humans; it is ignored when parsed. -->
+      <CharString index="0">
+        123 -95.5 return
+      </CharString>
+      <CharString index="1">
+        hstemhm
+        96 -107 callgsubr
+        return
+      </CharString>
+      <CharString index="2">
+        85.5 return
+      </CharString>
+      <CharString index="3">
+        101.5 return
+      </CharString>
+      <CharString index="4">
+        -180 rmoveto
+        return
+      </CharString>
+    </GlobalSubrs>
+  </CFF>
+
+  <VORG>
+    <majorVersion value="1"/>
+    <minorVersion value="0"/>
+    <defaultVertOriginY value="880"/>
+    <numVertOriginYMetrics value="0"/>
+  </VORG>
+
+  <hmtx>
+    <mtx name=".notdef" width="1000" lsb="100"/>
+    <mtx name="cid00001" width="223" lsb="0"/>
+    <mtx name="cid00002" width="314" lsb="96"/>
+    <mtx name="cid00003" width="457" lsb="90"/>
+  </hmtx>
+
+  <vhea>
+    <tableVersion value="1.0625"/>
+    <ascent value="500"/>
+    <descent value="-500"/>
+    <lineGap value="0"/>
+    <advanceHeightMax value="3000"/>
+    <minTopSideBearing value="-1000"/>
+    <minBottomSideBearing value="-672"/>
+    <yMaxExtent value="2928"/>
+    <caretSlopeRise value="0"/>
+    <caretSlopeRun value="1"/>
+    <reserved0 value="0"/>
+    <reserved1 value="0"/>
+    <reserved2 value="0"/>
+    <reserved3 value="0"/>
+    <reserved4 value="0"/>
+    <metricDataFormat value="0"/>
+    <numberOfVMetrics value="1"/>
+  </vhea>
+
+  <vmtx>
+    <mtx name=".notdef" height="1000" tsb="0"/>
+    <mtx name="cid00001" height="1000" tsb="880"/>
+    <mtx name="cid00002" height="1000" tsb="133"/>
+    <mtx name="cid00003" height="1000" tsb="110"/>
+  </vmtx>
+
+</ttFont>
