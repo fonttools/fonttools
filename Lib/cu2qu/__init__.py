@@ -136,7 +136,7 @@ def as_quadratic(segment, points):
         return segment.as_quadratic(points)
     except AttributeError:
         return RSegment(
-            'qcurve', [[int(i) for i in p] for p in points], segment.smooth)
+            'qcurve', [[int(round(i)) for i in p] for p in points], segment.smooth)
 
 
 class FontCollection:
