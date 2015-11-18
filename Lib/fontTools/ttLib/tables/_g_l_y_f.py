@@ -316,12 +316,12 @@ class Glyph(object):
 			self.numberOfContours = 0
 			return
 		dummy, data = sstruct.unpack2(glyphHeaderFormat, self.data, self)
+		del self.data
 		# Some fonts (eg. Neirizi.ttf) have a 0 for numberOfContours in
 		# some glyphs; decompileCoordinates assumes that there's at least
 		# one, so short-circuit here.
 		if self.numberOfContours == 0:
 			return
-		del self.data
 		if self.isComposite():
 			self.decompileComponents(data, glyfTable)
 		else:
