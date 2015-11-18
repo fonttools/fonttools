@@ -169,12 +169,12 @@ class UFOReader(object):
 			if not isinstance(groups, dict):
 				raise UFOLibError(invalidFormatMessage)
 			for groupName, glyphList in list(groups.items()):
-				if not isinstance(groupName, str):
+				if not isinstance(groupName, basestring):
 					raise UFOLibError(invalidFormatMessage)
 				elif not isinstance(glyphList, list):
 					raise UFOLibError(invalidFormatMessage)
 				for glyphName in glyphList:
-					if not isinstance(glyphName, str):
+					if not isinstance(glyphName, basestring):
 						raise UFOLibError(invalidFormatMessage)
 			self._upConvertedKerningData = dict(
 				kerning={},
@@ -368,12 +368,12 @@ class UFOReader(object):
 		if not isinstance(data, dict):
 			raise UFOLibError(invalidFormatMessage)
 		for first, secondDict in list(data.items()):
-			if not isinstance(first, str):
+			if not isinstance(first, basestring):
 				raise UFOLibError(invalidFormatMessage)
 			elif not isinstance(secondDict, dict):
 				raise UFOLibError(invalidFormatMessage)
 			for second, value in list(secondDict.items()):
-				if not isinstance(second, str):
+				if not isinstance(second, basestring):
 					raise UFOLibError(invalidFormatMessage)
 				elif not isinstance(value, (int, float)):
 					raise UFOLibError(invalidFormatMessage)
@@ -925,9 +925,9 @@ class UFOWriter(object):
 				raise UFOLibError(invalidFormatMessage)
 			if not len(pair) == 2:
 				raise UFOLibError(invalidFormatMessage)
-			if not isinstance(pair[0], str):
+			if not isinstance(pair[0], basestring):
 				raise UFOLibError(invalidFormatMessage)
-			if not isinstance(pair[1], str):
+			if not isinstance(pair[1], basestring):
 				raise UFOLibError(invalidFormatMessage)
 			if not isinstance(value, (int, float)):
 				raise UFOLibError(invalidFormatMessage)
@@ -976,7 +976,7 @@ class UFOWriter(object):
 		"""
 		if self._formatVersion == 1:
 			raise UFOLibError("features.fea is not allowed in UFO Format Version 1.")
-		if not isinstance(features, str):
+		if not isinstance(features, basestring):
 			raise UFOLibError("The features are not text.")
 		self._makeDirectory()
 		path = os.path.join(self._path, FEATURES_FILENAME)
@@ -1093,7 +1093,7 @@ class UFOWriter(object):
 				# not caching this could be slightly expensive,
 				# but caching it will be cumbersome
 				existing = [d.lower() for d in list(self.layerContents.values())]
-				if not isinstance(layerName, str):
+				if not isinstance(layerName, basestring):
 					try:
 						layerName = str(layerName)
 					except UnicodeDecodeError:
