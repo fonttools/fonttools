@@ -6,7 +6,7 @@ is probably `fonts_to_quadratic`:
 
 ```python
 from robofab.world import OpenFont
-from cu2qu import fonts_to_quadratic
+from cu2qu.rf import fonts_to_quadratic
 thin_font = OpenFont('MyFont-Thin.ufo')
 bold_font = OpenFont('MyFont-Bold.ufo')
 fonts_to_quadratic(thin_font, bold_font)
@@ -32,8 +32,9 @@ for font in [thin_font, bold_font]:
     fonts_to_quadratic(font, max_err=2)
 ```
 
-`fonts_to_quadratic` returns a string reporting the number of curves of each
-length. For example `print fonts_to_quadratic(font)` may print something like:
+`fonts_to_quadratic` can print a string reporting the number of curves of each
+length. For example `fonts_to_quadratic(font, dump_report=True)` may print
+something like:
 
 ```
 3: 1000
@@ -43,7 +44,15 @@ length. For example `print fonts_to_quadratic(font)` may print something like:
 
 meaning that the font now contains 1000 curves with three points, 2000 with four
 points, and 100 with five. Given multiple fonts, the function will report the
-total counts across all fonts.
+total counts across all fonts. You can also accumulate statistics between calls
+by providing your own report dictionary:
+
+```python
+stats = {}
+for font in [thin_font, bold_font]:
+    fonts_to_quadratic(font, report=stats)
+# "stats" will report combined statistics for both fonts
+```
 
 See the source for functions which operate on glyphs, segments, or just several
 points. `FontCollection` classes are also exposed, which allow access into
