@@ -19,8 +19,8 @@ Conversion is performed such that the quadratic splines keep the same end-curve
 tangents as the original cubics. The approach is iterative, increasing the
 number of segments for a spline until the error gets below a bound.
 
-If necessary, respective curves from multiple fonts will be converted at once to
-ensure that the resulting splines are interpolation-compatible.
+Respective curves from multiple fonts will be converted at once to ensure that
+the resulting splines are interpolation-compatible.
 """
 
 
@@ -33,7 +33,7 @@ def zip(*args):
     """Ensure each argument to zip has the same length."""
 
     if len(set(len(a) for a in args)) != 1:
-        msg = 'Args to zip in cu2qu.py should have equal lengths: '
+        msg = 'Args to zip in cu2qu should have equal lengths: '
         raise ValueError(msg + ' '.join(str(a) for a in args))
     return _zip(*args)
 
@@ -41,9 +41,9 @@ def zip(*args):
 def fonts_to_quadratic(*fonts, **kwargs):
     """Convert the curves of a collection of fonts to quadratic.
 
-    If compatibility is required, all curves will be converted to quadratic
-    at once. Otherwise the glyphs will be converted one font at a time,
-    which should be slightly more optimized.
+    All curves will be converted to quadratic at once, ensuring interpolation
+    compatibility. If this is not required, calling fonts_to_quadratic with one
+    font at a time may yield slightly more optimized results.
     """
 
     max_n = kwargs.get('max_n', 10)
