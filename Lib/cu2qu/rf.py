@@ -52,7 +52,7 @@ def fonts_to_quadratic(*fonts, **kwargs):
 
     report = {}
     for glyph in FontCollection(fonts):
-        glyph_to_quadratic(glyph, max_n, max_errors, report)
+        glyph_to_quadratic(glyph, max_errors, max_n, report)
 
     spline_lengths = report.keys()
     spline_lengths.sort()
@@ -61,7 +61,7 @@ def fonts_to_quadratic(*fonts, **kwargs):
         '\n'.join('%s: %d' % (l, report[l]) for l in spline_lengths))
 
 
-def glyph_to_quadratic(glyph, max_n, max_err, report):
+def glyph_to_quadratic(glyph, max_err, max_n, report):
     """Convert a glyph's curves to quadratic, in place."""
 
     for contour in glyph:
@@ -70,13 +70,13 @@ def glyph_to_quadratic(glyph, max_n, max_err, report):
             segment = contour[i]
             if segment.type == 'curve':
                 segments.append(segment_to_quadratic(
-                    contour, i, max_n, max_err, report))
+                    contour, i, max_err, max_n, report))
             else:
                 segments.append(segment)
         replace_segments(contour, segments)
 
 
-def segment_to_quadratic(contour, segment_id, max_n, max_err, report):
+def segment_to_quadratic(contour, segment_id, max_err, max_n, report):
     """Return a quadratic approximation of a cubic segment."""
 
     segment = contour[segment_id]
@@ -88,7 +88,7 @@ def segment_to_quadratic(contour, segment_id, max_n, max_err, report):
     prev_segment = contour[segment_id - 1]
     points = points_to_quadratic(prev_segment.points[-1], segment.points[0],
                                  segment.points[1], segment.points[2],
-                                 max_n, max_err)
+                                 max_err, max_n)
 
     if isinstance(points[0][0], float):  # just one spline
         n = str(len(points))
@@ -102,17 +102,17 @@ def segment_to_quadratic(contour, segment_id, max_n, max_err, report):
     return as_quadratic(segment, points)
 
 
-def points_to_quadratic(p0, p1, p2, p3, max_n, max_err):
+def points_to_quadratic(p0, p1, p2, p3, max_err, max_n):
     """Return a quadratic spline approximating the cubic bezier defined by these
     points (or collections of points).
     """
 
     if hasattr(p0, 'x'):
         curve = [Point([i.x, i.y]) for i in [p0, p1, p2, p3]]
-        return curve_to_quadratic(curve, max_n, max_err)
+        return curve_to_quadratic(curve, max_err, max_n)
 
     curves = [[Point([i.x, i.y]) for i in p] for p in zip(p0, p1, p2, p3)]
-    return curves_to_quadratic(curves, max_n, max_err)
+    return curves_to_quadratic(curves, max_err, max_n)
 
 
 def replace_segments(contour, segments):
