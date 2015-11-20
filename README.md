@@ -20,16 +20,16 @@ for font in [thin_font, bold_font]:
     fonts_to_quadratic(font)
 ```
 
-Some fonts may need a different error threshold than the default (5 units). This
-can also be provided by the caller:
+Some fonts may need a different error threshold than the default (0.0025 em).
+This can also be provided by the caller:
 
 ```python
-fonts_to_quadratic(thin_font, bold_font, max_err=10)
+fonts_to_quadratic(thin_font, bold_font, max_err=0.005)
 ```
 
 ```python
 for font in [thin_font, bold_font]:
-    fonts_to_quadratic(font, max_err=2)
+    fonts_to_quadratic(font, max_err=0.001)
 ```
 
 `fonts_to_quadratic` can print a string reporting the number of curves of each

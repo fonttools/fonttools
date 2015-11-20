@@ -136,7 +136,7 @@ def curve_spline_dist(bezier, spline):
     return error
 
 
-def curve_to_quadratic(p, max_n, max_err):
+def curve_to_quadratic(p, max_err, max_n):
     """Return a quadratic spline approximating this cubic bezier."""
 
     for n in range(1, max_n + 1):
@@ -146,13 +146,13 @@ def curve_to_quadratic(p, max_n, max_err):
     return spline
 
 
-def curves_to_quadratic(curves, max_n, max_err):
+def curves_to_quadratic(curves, max_errors, max_n):
     """Return quadratic splines approximating these cubic beziers."""
 
     for n in range(1, max_n + 1):
         splines = [cubic_approx_spline(c, n) for c in curves]
         if (all(splines) and
-            max(curve_spline_dist(c, s)
-                for c, s in zip(curves, splines)) <= max_err):
+            all(curve_spline_dist(c, s) < max_err
+                for c, s, max_err in zip(curves, splines, max_errors))):
             break
     return splines
