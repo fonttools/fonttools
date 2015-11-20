@@ -49,16 +49,18 @@ def fonts_to_quadratic(*fonts, **kwargs):
     max_n = kwargs.get('max_n', 10)
     max_err = kwargs.get('max_err', 0.0025)
     max_errors = [f.info.unitsPerEm * max_err for f in fonts]
+    report = kwargs.get('report', {})
+    dump_report = kwargs.get('dump_report', False)
 
-    report = {}
     for glyph in FontCollection(fonts):
         glyph_to_quadratic(glyph, max_errors, max_n, report)
 
-    spline_lengths = report.keys()
-    spline_lengths.sort()
-    return (
-        'New spline lengths:\n' +
-        '\n'.join('%s: %d' % (l, report[l]) for l in spline_lengths))
+    if dump_report:
+        spline_lengths = report.keys()
+        spline_lengths.sort()
+        print 'New spline lengths:\n%s\n' % (
+            '\n'.join('%s: %d' % (l, report[l]) for l in spline_lengths))
+    return report
 
 
 def glyph_to_quadratic(glyph, max_err, max_n, report):
