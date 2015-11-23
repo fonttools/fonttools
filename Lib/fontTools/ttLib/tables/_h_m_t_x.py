@@ -51,7 +51,7 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 	def compile(self, ttFont):
 		metrics = []
 		for glyphName in ttFont.getGlyphOrder():
-			metrics.append(self.metrics[glyphName])
+			metrics.append(self.metrics.get(glyphName, [1000,1000]))
 		lastAdvance = metrics[-1][0]
 		lastIndex = len(metrics)
 		while metrics[lastIndex-2][0] == lastAdvance:
