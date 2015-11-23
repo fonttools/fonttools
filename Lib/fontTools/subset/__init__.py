@@ -7,6 +7,7 @@ from fontTools.misc.py23 import *
 from fontTools import ttLib
 from fontTools.ttLib.tables import otTables
 from fontTools.misc import psCharStrings
+from fontTools.pens.boundsPen import BoundsPen
 import sys
 import struct
 import time
@@ -331,7 +332,7 @@ def _set_update(s, *others):
         s.update(other)
 
 def _dict_subset(d, glyphs):
-  return {g:d.get(g,[1000, 1000]) for g in glyphs}
+    return {g:d.get(g,[1000, 1000]) for g in glyphs}
 
 @_add_method(otTables.Coverage)
 def intersect(self, glyphs):
@@ -1622,10 +1623,19 @@ def prune_pre_subset(self, options):
     if options.notdef_glyph and not options.notdef_outline:
         for fontname in cff.keys():
             font = cff[fontname]
-            c,_ = font.CharStrings.getItemAndSelector('.notdef')
-            # XXX we should preserve the glyph width
-            c.bytecode = '\x0e' # endchar
-            c.program = None
+            c,sel = font.CharStrings.getItemAndSelector('.notdef')
+            if hasattr(font, 'FDArray') and font.FDArray is not None:
+                private = font.FDArray[font.FDSelect[sel]].Private
+            else:
+                private = font.Private
+            dfltWdX = private.defaultWidthX
+            nmnlWdX = private.nominalWidthX
+            pen = BoundsPen(None)
+            c.draw(pen) # this will set the charstring's width
+            if c.width != dfltWdX:
+                c.program = [c.width - nmnlWdX, 'endchar']
+            else:
+                c.program = ['endchar']
 
     return True # bool(cff.fontNames)
 
