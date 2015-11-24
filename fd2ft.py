@@ -1,6 +1,10 @@
 #!/usr/bin/python
 
-# FontWorker-to-FontTools for OpenType Layout tables
+# FontDame-to-FontTools for OpenType Layout tables
+#
+# Source language spec is available at:
+# https://rawgit.com/Monotype/OpenType_Table_Source/master/otl_source.html
+# https://github.com/Monotype/OpenType_Table_Source/
 
 from __future__ import print_function, division, absolute_import
 from fontTools import ttLib
