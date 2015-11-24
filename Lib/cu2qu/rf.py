@@ -46,11 +46,16 @@ def fonts_to_quadratic(*fonts, **kwargs):
     font at a time may yield slightly more optimized results.
     """
 
-    max_n = kwargs.get('max_n', 10)
-    max_err = kwargs.get('max_err', 0.0025)
-    max_errors = [f.info.unitsPerEm * max_err for f in fonts]
     report = kwargs.get('report', {})
     dump_report = kwargs.get('dump_report', False)
+    max_n = kwargs.get('max_n', 10)
+
+    max_err_em = kwargs.get('max_err_em', 0.0025)
+    max_err = kwargs.get('max_err', None)
+    if max_err:
+        max_errors = [max_err] * len(fonts)
+    else:
+        max_errors = [f.info.unitsPerEm * max_err_em for f in fonts]
 
     for glyph in FontCollection(fonts):
         glyph_to_quadratic(glyph, max_errors, max_n, report)
