@@ -1,4 +1,4 @@
-#instructions classes are generated from instructionList
+ # WARNING: do not modify; generated code! See generateStatements.py and ../tables/ttProgram.py
 class root_statement(object):
     def __init__(self):
 	self.data = []
@@ -7,7 +7,8 @@ class root_statement(object):
         #one instruction has one predecessor
         self.predecessor = None
         self.top = None
-        self.id = (0,0)
+        self.id = (0, 0)
+
     def add_successor(self,successor):
         self.successors.append(successor)
     def set_predecessor(self, predecessor):

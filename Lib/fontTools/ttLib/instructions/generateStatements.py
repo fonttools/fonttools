@@ -1,5 +1,4 @@
 import os
-# next, the list of "normal" instructions
 '''
 five categories of instructions:
    Pushing data onto the interpreter stack
@@ -17,7 +16,7 @@ def emit(stream, line, level=0):
     stream.write(indent + line + "\n")
  
 def constructInstructionClasses(instructionList):
-    HEAD = """#instructions classes are generated from instructionList
+    HEAD = """ # WARNING: do not modify; generated code! See generateStatements.py and ../tables/ttProgram.py
 class root_statement(object):
     def __init__(self):
 	self.data = []
@@ -26,6 +25,8 @@ class root_statement(object):
         #one instruction has one predecessor
         self.predecessor = None
         self.top = None
+        self.id = (0, 0)
+
     def add_successor(self,successor):
         self.successors.append(successor)
     def set_predecessor(self, predecessor):
@@ -56,6 +57,7 @@ class all():
         emit(fp,"def __init__(self):",2)
         emit(fp,"root_statement.__init__(self)",3)
         emit(fp,"self.push_num = len(self.data)",3)
+        emit(fp,"self.mnemonic = 'PUSH'",3)
         emit(fp,"self.pop_num = 0",3)
         emit(fp,"def get_push_num(self):",2)
         emit(fp,"return len(self.data)",3)
