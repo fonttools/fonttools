@@ -129,7 +129,6 @@ class BytecodeContainer(object):
         self.relabelTables(label_mapping)
 
     def relabelTables(self, function_calls):
-        
         for table in function_calls.keys():
             #First instruction, contains the first PUSH with
             #the function labels called during execution
@@ -171,6 +170,8 @@ class BytecodeContainer(object):
                 assembly.append(instr.mnemonic+'[ ]')
         return assembly
 
+    # replaces the Fpgm in ttFont with contents of this;
+    # rebuilds the function number mass-PUSH and includes FDEFs
     def replaceFpgm(self, ttFont):
         assembly = []
         skip = False
@@ -192,7 +193,6 @@ class BytecodeContainer(object):
             ttFont['fpgm'].program.fromAssembly(assembly)
 
     def replaceOtherTables(self, ttFont):
-
         for table in self.programs.keys():
             assembly = []
             if table != 'fpgm':
@@ -219,11 +219,11 @@ class BytecodeContainer(object):
                 except:
                     ttFont['glyf'].glyphs[table[5:]].program.fromAssembly(assembly)
 
-#per glyph instructions
+#per-glyph instructions
 class Program(object):
     def __init__(self, input):
         self.body = Body(instructions = input)
-        self.call_function_set = []#a set of function being called in the tag program
+        self.call_function_set = [] # set of functions called in the tag program
 
     def start(self):
         return self.body.statement_root
@@ -233,7 +233,6 @@ class Program(object):
 
 class Function(object):
     def __init__(self, instructions=None):
-        #function contains a function body
         self.instructions = []
     def pretty_printer(self):
         self.body.pretty_printer()
@@ -257,7 +256,8 @@ class Body(object):
 
     def set_condition(self,expression):
         self.condition = expression #the eval(expression) should return true for choosing this 
-    
+
+    # CFG construction
     def constructSuccessorAndPredecessor(self,input_statements):
         def is_branch(instruction):
             if isinstance(instruction,statements.all.EIF_Statement):

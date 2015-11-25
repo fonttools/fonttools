@@ -406,7 +406,7 @@ class ExecutionContext(object):
     def exec_ISECT(self):
         self.program_stack_pop(5)
 
-    def exec_IUP(self):#drawing-only 
+    def exec_IUP(self): # drawing-only
         pass
 
     def exec_LOOPCALL(self):
@@ -858,7 +858,7 @@ class Executor(object):
 
             if (len(self.environment.program_stack) > self.maximum_stack_depth):
                 self.maximum_stack_depth = len(self.environment.program_stack)
-            
+
             if self.program_ptr.mnemonic == 'IF':
                 newBlock = IR.IfElseBlock(self.environment.program_stack[-1])
                 self.environment.program_stack.pop()

@@ -277,7 +277,6 @@ class OperationAssignmentStatement(AssignmentStatement):
         self.left = variable
         self.right = expression
 
-
 class CopyStatement(AssignmentStatement):
     def __init__(self, variable, data):
         super(CopyStatement,self).__init__()
@@ -286,7 +285,6 @@ class CopyStatement(AssignmentStatement):
             variable.data = data
         self.right = variable.data
         
-
 class CallStatement(MethodCallStatement):
     def __init__(self, variable):
         super(CallStatement, self).__init__([variable])
@@ -338,6 +336,7 @@ class LabelBlock(object):
         for statement in self.statements:
             resStr += str(statement)+'\n'
         return resStr
+
 class IfElseBlock(object):
     def __init__(self, condition = None):
         self.if_branch = []
@@ -373,6 +372,7 @@ class IfElseBlock(object):
                 res_str += '\n'
             res_str += '}\n'
         return res_str
+
 class ConditionalJumpBlock(object):
     def __init__(self, label, condition = None):
         self.label = label
