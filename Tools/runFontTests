@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+# note: you need freetype-py and python-bs4 to run these tests.
 
 import sys
 from fontTools import integrationTest
