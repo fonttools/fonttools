@@ -4,7 +4,7 @@ import copy
 import math
 import IntermediateCode as IR
 logger = logging.getLogger(" ")
-global_fucntion_table = {}
+global_function_table = {}
 class IdentifierGenerator(object):
     def __init__(self):
         self.countTable = {}
@@ -786,6 +786,8 @@ class Executor(object):
     Produces a new global state accounting for the effects of that
     instruction. Modifies the stack, CVT table, and storage area.
 
+    As a side effect, puts intermediate code in field "intermediateCodes".
+
     This class manages the program pointer like jump to function call
     """
     def __init__(self,font):
@@ -814,10 +816,10 @@ class Executor(object):
         #if top not in self.program.call_function_set:
         self.program.call_function_set.append(top)
         self.function_label_map.append((top, len(self.environment.program_stack)))
-        if top not in global_fucntion_table:
-            global_fucntion_table[top] = 1
+        if top not in global_function_table:
+            global_function_table[top] = 1
         else:
-            global_fucntion_table[top] += 1 
+            global_function_table[top] += 1
         logger.info('ADD CALL SET:%s', top)
         logger.info('ADD CALL SET:%s', self.program.call_function_set)
         self.environment.set_currentInstruction(self.program_ptr)
@@ -940,5 +942,5 @@ class Executor(object):
             except:
                 pass
         print self.program.call_function_set
-        for item in global_fucntion_table.items():
+        for item in global_function_table.items():
             print item
