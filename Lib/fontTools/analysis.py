@@ -50,14 +50,13 @@ def ttDump(input):
     return output
 
 
-def executeGlyphs(absExecutor, glyphs):
-    environment = copy.deepcopy(absExecutor.environment)
+def executeGlyphs(absExecutor, initialEnvironment, glyphs):
     called_functions = set() 
     for glyph in glyphs:
         print(glyph)
+        absExecutor.environment = copy.deepcopy(initialEnvironment)
         absExecutor.execute(glyph)
         called_functions.update(list(set(absExecutor.program.call_function_set)))
-        absExecutor.environment = copy.deepcopy(environment)
     return called_functions
 
 def analysis(tt, glyphs=[]):
@@ -70,7 +69,7 @@ def analysis(tt, glyphs=[]):
         called_functions.update(list(set(absExecutor.program.call_function_set)))
     except KeyError:
         pass
-    called_functions.update(executeGlyphs(absExecutor, glyphs))
+    called_functions.update(executeGlyphs(absExecutor, environment_after_prep, glyphs))
     return absExecutor, called_functions
 
 class Options(object):
