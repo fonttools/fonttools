@@ -45,7 +45,9 @@ def executeGlyphs(absExecutor, initialEnvironment, glyphs):
     for glyph in glyphs:
         print(glyph)
         absExecutor.environment = copy.deepcopy(initialEnvironment)
+        print ("begin glyph " % glyph % ":")
         absExecutor.execute(glyph)
+        print ("end glyph")
         called_functions.update(list(set(absExecutor.program.call_function_set)))
     return called_functions
 
@@ -53,8 +55,10 @@ def analysis(tt, glyphs=[]):
     #one ttFont object for one ttx file       
     absExecutor = abstractExecute.Executor(tt)
     called_functions = set()
-    try: 
+    try:
+        print ("begin PREP:")
         absExecutor.execute('prep')
+        print ("end PREP")
         environment_after_prep = copy.deepcopy(absExecutor.environment)
         called_functions.update(list(set(absExecutor.program.call_function_set)))
     except KeyError:

@@ -214,7 +214,7 @@ class MethodCallStatement(object):
     def __repr__(self):
         repS = ''
         if self.returnVal is not None:
-            repS = str(self.returnVal) + '='
+            repS = str(self.returnVal) + ' := '
     	repS += '{}('.format(self.methodName)
         repS += ','.join(map(lambda x: str(x.identifier), self.parameters))
         repS += ')'
@@ -269,7 +269,7 @@ class AssignmentStatement(object):
         self.operator = AssignOperator()
 
     def __repr__(self):
-    	return "%s%s%s" % (self.left, self.operator, str(self.right))
+        return "%s %s %s" % (self.left, self.operator, str(self.right))
 
 class OperationAssignmentStatement(AssignmentStatement):
     def __init__(self, variable, expression):
@@ -296,7 +296,7 @@ class IndexedAssignment(AssignmentStatement):
         self.var = var
         self.storage = None
     def __repr__(self):
-        return "%s[%s]=%s"%(self.storage, self.index, self.var)
+        return "%s[%s] := %s" % (self.storage, self.index, self.var)
 
 class WriteStorageStatement(IndexedAssignment):
     def __init__(self, index, var):
@@ -314,7 +314,7 @@ class ReadFromIndexedStorage(AssignmentStatement):
         self.var = var
         self.storage = None
     def __repr__(self):
-        return "%s=%s[%s]"%(self.var, self.storage, self.index)
+        return "%s := %s[%s]" % (self.var, self.storage, self.index)
 
 class EmptyStatement(object):
     def __repr__(self):
@@ -338,10 +338,11 @@ class LabelBlock(object):
         return resStr
 
 class IfElseBlock(object):
-    def __init__(self, condition = None):
-        self.if_branch = []
+    def __init__(self, condition = None, nesting_level = 1):
         self.condition = condition
+        self.if_branch = []
         self.else_branch = []
+        self.nesting_level = nesting_level
         self.parentBlock = None
         self.mode = 'IF'
     def setParent(self, parent):
@@ -351,26 +352,21 @@ class IfElseBlock(object):
             self.if_branch.append(statement)
         else:
             self.else_branch.append(statement)
-    def appendStatements(self,statements):
-        if self.mode =='IF':
+    def appendStatements(self, statements):
+        if self.mode == 'IF':
             self.if_branch += statements
         else:
             self.else_branch += statements
     def __repr__(self):
-        res_str = 'if'+str(self.condition)+'){'+'\n'
+        res_str = 'if ('+str(self.condition)+') {'+'\n'
         for line in self.if_branch:
-            try:
-                res_str += str(line)
-                res_str += '\n'
-            except:
-                pass
-        res_str += '}'+'\n'
-        if len(self.else_branch)>0:
-            res_str += 'else'+'{'+'\n'
-            for line2 in self.else_branch:
-                res_str += str(line2)
-                res_str += '\n'
-            res_str += '}\n'
+            res_str += (self.nesting_level * 4 * ' ') + str(line) + '\n'
+        res_str += (self.nesting_level-1) * 4 * ' ' + '}'
+        if len(self.else_branch) > 0:
+            res_str += ' else {\n'
+            for line in self.else_branch:
+                res_str += (self.nesting_level * 4 * ' ') + str(line) + '\n'
+            res_str += (self.nesting_level-1) * 4 * ' ' + '}'
         return res_str
 
 class ConditionalJumpBlock(object):

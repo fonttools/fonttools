@@ -823,8 +823,8 @@ class Executor(object):
         logger.info('ADD CALL SET:%s', top)
         logger.info('ADD CALL SET:%s', self.program.call_function_set)
         self.environment.set_currentInstruction(self.program_ptr)
-        intermediateCodes = self.environment.execute()
-        self.intermediateCodes = self.intermediateCodes+ intermediateCodes
+        self.environment.execute()
+        self.intermediateCodes = self.intermediateCodes + ['CALL ' + str(top)]
         self.program_ptr = self.font.function_table[top].start()
         
         logger.info("jump to call function "+self.program_ptr.mnemonic)
@@ -854,7 +854,7 @@ class Executor(object):
                 self.environment.set_currentInstruction(self.program_ptr)
                 intermediateCodes = self.environment.execute()
                 if self.conditionBlock is None:
-                    self.intermediateCodes = self.intermediateCodes+ intermediateCodes
+                    self.intermediateCodes = self.intermediateCodes + intermediateCodes
                 else:
                     self.conditionBlock.appendStatements(intermediateCodes)
 
@@ -862,7 +862,7 @@ class Executor(object):
                 self.maximum_stack_depth = len(self.environment.program_stack)
 
             if self.program_ptr.mnemonic == 'IF':
-                newBlock = IR.IfElseBlock(self.environment.program_stack[-1])
+                newBlock = IR.IfElseBlock(self.environment.program_stack[-1], len(back_ptr))
                 self.environment.program_stack.pop()
                 newBlock.setParent(self.conditionBlock)
                 self.conditionBlock = newBlock
@@ -889,7 +889,7 @@ class Executor(object):
                 for back in back_ptr:
                     s = s + str(back[0].id) +'->'+ str(back[0].mnemonic) + ' '
                 logger.info('back%s',s)
-        
+
             if len(self.program_ptr.successors) == 0 or self.program_ptr.mnemonic == 'EIF':
                 if top_if is not None:
                     if top_if.id not in self.program_state or len(self.program_state[top_if.id])==0:
@@ -937,10 +937,7 @@ class Executor(object):
                 self.program_ptr = None
 
         for intermediateCode in self.intermediateCodes:
-            try:
-                print intermediateCode
-            except:
-                pass
+            print intermediateCode
         print self.program.call_function_set
         for item in global_function_table.items():
             print item
