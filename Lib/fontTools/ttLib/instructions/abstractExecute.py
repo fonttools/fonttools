@@ -24,8 +24,8 @@ class DataFlowRegion(object):
         self.inRegion = None
 
 identifierGenerator = IdentifierGenerator()
-class ExecutionContext(object):
-    """Abstractly represents the global environment at a single point in time. 
+class Environment(object):
+    """Abstractly represents the global environment at a single point in time.
 
     The global environment consists of a Control Variable Table (CVT) and
     storage area, as well as a program stack.
@@ -72,32 +72,32 @@ class ExecutionContext(object):
         for key, value in self.__dict__.iteritems():
             setattr(new_env, key, copy.copy(value)) 
     
-    def merge(self,executionContext2):
+    def merge(self,environment2):
         '''
-        merge the executionContext of the if-else
+        merge this environment with another one; used at if-else merge.
         '''
-        if len(executionContext2.program_stack)!=len(self.program_stack):
-            executionContext2.pretty_print()
+        if len(environment2.program_stack)!=len(self.program_stack):
+            environment2.pretty_print()
             self.pretty_print()
-        assert len(executionContext2.program_stack)==len(self.program_stack)
-        for item in executionContext2.storage_area:
+        assert len(environment2.program_stack)==len(self.program_stack)
+        for item in environment2.storage_area:
             if item not in self.storage_area:
                 self.append(item)
         '''
         deal with Graphics state
         '''
         for gs_key in self.graphics_state:
-            if self.graphics_state[gs_key] != executionContext2.graphics_state[gs_key]:
+            if self.graphics_state[gs_key] != environment2.graphics_state[gs_key]:
                 logger.info("graphics_state %s became uncertain", gs_key)
                 new_graphics_state = set()
                 if(type(self.graphics_state[gs_key]) is dataType.UncertainValue):
                     new_graphics_state.update(self.graphics_state[gs_key].possibleValues)
                 else:
                     new_graphics_state.add(self.graphics_state[gs_key])
-                if(type(executionContext2.graphics_state[gs_key]) is dataType.UncertainValue):
-                    new_graphics_state.update(executionContext2.graphics_state[gs_key].possibleValues)
+                if(type(environment2.graphics_state[gs_key]) is dataType.UncertainValue):
+                    new_graphics_state.update(environment2.graphics_state[gs_key].possibleValues)
                 else:
-                    new_graphics_state.add(executionContext2.graphics_state[gs_key])
+                    new_graphics_state.add(environment2.graphics_state[gs_key])
                 self.graphics_state[gs_key] = dataType.UncertainValue(list(new_graphics_state))
                 logger.info("possible values are %s", str(self.graphics_state[gs_key].possibleValues))
 
@@ -792,9 +792,9 @@ class Executor(object):
     """
     def __init__(self,font):
         self.font = font
-        #maps instruction to ExecutionContext
+        #maps instruction to Environment
         self.instruction_state = {}
-        self.environment = ExecutionContext(font)
+        self.environment = Environment(font)
         self.program_ptr = None
         self.body = None
         self.program = None
@@ -869,7 +869,7 @@ class Executor(object):
                 self.conditionBlock.mode = 'IF'
                 top_if = self.program_ptr
                 successors_index.append(0)
-                environment_copy = ExecutionContext(self.font)
+                environment_copy = Environment(self.font)
                 self.environment.makecopy(environment_copy)
                 back_ptr.append((self.program_ptr, environment_copy))
             
