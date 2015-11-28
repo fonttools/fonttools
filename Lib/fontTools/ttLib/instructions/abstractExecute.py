@@ -3,7 +3,6 @@ import logging
 import copy
 import IntermediateCode as IR
 logger = logging.getLogger(" ")
-global_function_table = {}
 class IdentifierGenerator(object):
     def generateIdentifier(self, tag, number):
         return '$' + tag + str(number)
@@ -800,6 +799,7 @@ class Executor(object):
         self.if_else = None
         # generated as a side effect:
         self.intermediateCodes = []
+        self.global_function_table = {}
 
     class If_else_stack(object):
         def __init__(self, IR, env, state):
@@ -823,10 +823,10 @@ class Executor(object):
 
         # update call graph counts
         self.program.call_function_set.append(callee)
-        if callee not in global_function_table:
-            global_function_table[callee] = 1
+        if callee not in self.global_function_table:
+            self.global_function_table[callee] = 1
         else:
-            global_function_table[callee] += 1
+            self.global_function_table[callee] += 1
         logger.info('ADD CALL SET: %s | %s' % (callee, self.program.call_function_set))
 
         # execute the call instruction itself
@@ -971,9 +971,3 @@ class Executor(object):
 
         for intermediateCode in self.intermediateCodes:
             print intermediateCode
-
-        print 'Called function set: '
-        print self.program.call_function_set
-        print 'Call graph: '
-        for item in global_function_table.items():
-            print item

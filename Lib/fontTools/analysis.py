@@ -58,6 +58,13 @@ def analysis(tt, glyphs=[]):
     print ("begin PREP:")
     absExecutor.execute('prep')
     print ("end PREP")
+
+    print ("PREP's called function set:")
+    print (absExecutor.program.call_function_set)
+    print ("PREP's Call graph:")
+    for item in absExecutor.global_function_table.items():
+        print (item)
+
     environment_after_prep = copy.deepcopy(absExecutor.environment)
     called_functions.update(list(set(absExecutor.program.call_function_set)))
     called_functions.update(executeGlyphs(absExecutor, environment_after_prep, glyphs))
