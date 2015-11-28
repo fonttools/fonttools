@@ -55,14 +55,11 @@ def analysis(tt, glyphs=[]):
     #one ttFont object for one ttx file       
     absExecutor = abstractExecute.Executor(tt)
     called_functions = set()
-    try:
-        print ("begin PREP:")
-        absExecutor.execute('prep')
-        print ("end PREP")
-        environment_after_prep = copy.deepcopy(absExecutor.environment)
-        called_functions.update(list(set(absExecutor.program.call_function_set)))
-    except KeyError:
-        pass
+    print ("begin PREP:")
+    absExecutor.execute('prep')
+    print ("end PREP")
+    environment_after_prep = copy.deepcopy(absExecutor.environment)
+    called_functions.update(list(set(absExecutor.program.call_function_set)))
     called_functions.update(executeGlyphs(absExecutor, environment_after_prep, glyphs))
     return absExecutor, called_functions
 

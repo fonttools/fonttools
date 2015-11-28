@@ -6,15 +6,7 @@ import IntermediateCode as IR
 logger = logging.getLogger(" ")
 global_function_table = {}
 class IdentifierGenerator(object):
-    def __init__(self):
-        self.countTable = {}
-    def generateIdentifier(self, tag):
-        if tag in self.countTable:
-            number = self.countTable[tag]
-        else:
-            number = 0
-            self.countTable[tag] = 0
-        self.countTable[tag] = self.countTable[tag] + 1
+    def generateIdentifier(self, tag, number):
         return '$' + tag + str(number)
 
 class DataFlowRegion(object):
@@ -52,12 +44,12 @@ class Environment(object):
         self.storage_area = {}
         self.cvt = ttFont.cvt_table
         self.set_graphics_state_to_default()
+        # this is the TT VM stack, not the call stack
         self.program_stack = []
         self.current_instruction = None
         self.current_instruction_intermediate = []
 
     def __repr__(self):
-
         stackVars = []
         for i in self.program_stack[-3:]:
             stackVars.append(i.data)
@@ -66,20 +58,32 @@ class Environment(object):
             stackRep = '[..., ' + stackRep[1:]
         return str('storage = ' + str(self.storage_area) + 
             ', graphics_state = ' + str(self.graphics_state) 
-            + ', stack = ' + stackRep + ', length = ' + str(len(self.program_stack)))
+            + ', program_stack = ' + stackRep + ', program_stack_length = ' + str(len(self.program_stack)))
 
-    def makecopy(self, new_env):
+    def make_copy(self, font):
+        new_env = Environment(font)
         for key, value in self.__dict__.iteritems():
-            setattr(new_env, key, copy.copy(value)) 
+            setattr(new_env, key, copy.copy(value))
+        return new_env
     
     def merge(self,environment2):
         '''
-        merge this environment with another one; used at if-else merge.
+        merge environment2 into this one; used at if-else merge.
         '''
         if len(environment2.program_stack)!=len(self.program_stack):
+            print "impending assertion failure; here's the mismatched environments"
             environment2.pretty_print()
             self.pretty_print()
         assert len(environment2.program_stack)==len(self.program_stack)
+
+        new_stack = []
+        for (v1, v2) in zip(self.program_stack, environment2.program_stack):
+            if (v1 == v2):
+                new_stack.append(v1)
+            else:
+                new_stack.append(IR.Variable(dataType.UncertainValue([v1, v2])))
+        self.program_stack = new_stack
+
         for item in environment2.storage_area:
             if item not in self.storage_area:
                 self.append(item)
@@ -104,7 +108,7 @@ class Environment(object):
     def pretty_print(self):
         print self.__repr__()
 
-    def set_currentInstruction(self, instruction):
+    def set_current_instruction(self, instruction):
         self.current_instruction = instruction
         self.tag = (str(instruction.id)).split(".")[0]
 
@@ -133,30 +137,44 @@ class Environment(object):
     def read_storage_area(self, index):
         return self.storage_area[index]
 
-    def assignVariable(self, var, data):
+    def stack_top_name(self):
+        return identifierGenerator.generateIdentifier(self.tag, len(self.program_stack))
+
+    def generate_assign_variable(self, var, data):
         self.current_instruction_intermediate.append(IR.CopyStatement(var, data))
         
     def program_stack_push(self, data = None, assign = True):
-        tempVariableName = identifierGenerator.generateIdentifier(self.tag)
+        tempVariableName = self.stack_top_name()
         tempVariable = IR.Variable(tempVariableName, data)
         if data is not None and assign:
-            self.assignVariable(tempVariable, data)
+            self.generate_assign_variable(tempVariable, data)
         self.program_stack.append(tempVariable)
         return tempVariable
 
     def program_stack_pop(self, num=1):
+        last_val = None
         for i in range(num):
-            self.program_stack.pop()
+            last_val = self.program_stack.pop()
+        return last_val
 
-    def unary_operation(self, op, action):
-        if isinstance(op, dataType.AbstractValue):
-            res = dataType.UnaryExpression(op, action)
-        elif action is 'ceil':
+    def unary_operation(self, action):
+        op = self.program_stack_pop()
+        v = IR.Variable(self.stack_top_name(), op)
+
+        if action is 'ceil':
             res = math.ceil(op)
+            e = IR.CEILMethodCall([op])
         elif action is 'floor':
             res = math.floor(op)
+            e = IR.FLOORMethodCall([op])
         elif action is 'abs':
             res = math.fabs(op)
+            e = IR.ABSMethodCall([op])
+        elif action is 'not':
+            e = IR.NOTMethodCall([op])
+        res = e.eval()
+        self.program_stack_push(res, False)
+        self.current_instruction_intermediate.append(IR.OperationAssignmentStatement(v, res))
         return res
 
     def binary_operation(self, action):
@@ -170,7 +188,7 @@ class Environment(object):
             if action is not 'MAX' and action is not 'MIN':
                 expression = IR.BinaryExpression(op1, op2, getattr(IR,action+'Operator')())
             else:
-                 expression = getattr(IR, action+'MethodCall')([op1.data,op2.data])
+                expression = getattr(IR, action+'MethodCall')([op1.data,op2.data])
         elif action is 'ADD':
             res = op1.data + op2.data
             expression = IR.BinaryExpression(op1,op2,IR.ADDOperator())
@@ -236,11 +254,7 @@ class Environment(object):
         self.program_stack_pop()
 
     def exec_ABS(self):#Absolute
-        op1 = self.program_stack[-1]
-        self.program_stack_pop()
-        res = self.unary_operation(op1.data, 'abs')
-        var = self.program_stack_push(res, False)
-        self.current_instruction_intermediate.append(IR.ABSMethodCall([op1],var))
+        self.unary_operation('abs')
 
     def exec_ADD(self):
         self.binary_operation('ADD')
@@ -262,11 +276,7 @@ class Environment(object):
         self.binary_operation('AND')
 
     def exec_CEILING(self):
-        op1 = self.program_stack[-1].data
-        self.program_stack_pop()
-        res = self.unary_operation(op1, 'ceil')
-        var = self.program_stack_push(res, False)
-        self.current_instruction_intermediate.append(IR.CEILINGMethodCall([res],var))
+        self.unary_operation('ceil')
 
     def exec_CINDEX(self):#CopyXToTopStack
         index = self.program_stack[-1].data
@@ -311,8 +321,8 @@ class Environment(object):
     def exec_DIV(self):#Divide
         self.binary_operation('DIV')
 
-    def exec_DUP(self):#DuplicateTopStack
-        top = self.program_stack[-1].data
+    def exec_DUP(self):
+        top = self.program_stack[-1].eval()
         self.program_stack_push(top)
 
     def exec_FLIPOFF(self):
@@ -337,11 +347,7 @@ class Environment(object):
         self.program_stack_pop(2)
 
     def exec_FLOOR(self):
-        op1 = self.program_stack[-1].data
-        self.program_stack_pop()
-        res = self.unary_operation(op1, 'floor')
-        var = self.program_stack_push(res, False)
-        self.current_instruction_intermediate.append(IR.FLOORMethodCall([res],var))
+        self.unary_operation('floor')
 
     def exec_GC(self):
         op1 = self.program_stack[-1]
@@ -392,9 +398,10 @@ class Environment(object):
         raise NotImplementedError
 
     def exec_INSTCTRL(self):
-        #raise NotImplementedError
+        selector = self.program_stack[-1].data
+        value = self.program_stack[-2].data
         self.program_stack_pop(2)
-        #XX
+        self.current_instruction_intermediate.append(IR.CopyStatement(IR.InstructControl(selector), value))
     
     def exec_IP(self):
         loopValue = self.graphics_state['loop']
@@ -485,15 +492,7 @@ class Environment(object):
         self.binary_operation('NEQ')
 
     def exec_NOT(self):
-        op = self.program_stack[-1].data
-        if isinstance(op, dataType.AbstractValue):
-            pass
-        if (op == 0):
-            self.program_stack_pop()
-            self.program_stack_push(1)
-        else:
-            self.program_stack_pop()
-            self.program_stack_push(0)
+        self.unary_operation('not')
 
     def exec_NROUND(self):
         pass
@@ -508,9 +507,11 @@ class Environment(object):
         self.program_stack_pop()
 
     def exec_RCVT(self):
-        op = self.program_stack[-1].data
-        self.program_stack_pop()
-        res = self.cvt[op]
+        op = self.program_stack_pop().eval()
+        if isinstance(op, dataType.AbstractValue):
+            res = IR.ReadFromIndexedStorage("cvt_table", op)
+        else:
+            res = self.cvt[op]
         self.program_stack_push(res)
 
     def exec_RDTG(self):
@@ -526,25 +527,27 @@ class Environment(object):
         self.program_stack[-2] = op1
 
     def exec_ROUND(self):
-        self.program_stack_pop()
-        self.program_stack_push(dataType.F26Dot6())
+        var = self.program_stack_pop()
+        new_var = self.program_stack_push(dataType.F26Dot6(var), False)
+        self.current_instruction_intermediate.append(IR.ROUNDMethodCall([var],new_var))
 
     def exec_RS(self):
         op = self.program_stack[-1].data
         self.program_stack_pop()
-        try:
-            res = self.storage_area[op]
-            self.program_stack_push(res)
-        except KeyError:
-            raise KeyError
+        res = self.storage_area[op]
+        self.program_stack_push(res)
         
     def exec_RTDG(self):
+        self.current_instruction_intermediate.append(IR.CopyStatement(IR.RoundState(), dataType.RoundState_DG()))
         pass
     def exec_RTG(self):
+        self.current_instruction_intermediate.append(IR.CopyStatement(IR.RoundState(), dataType.RoundState_G()))
         pass
     def exec_RTHG(self):
+        self.current_instruction_intermediate.append(IR.CopyStatement(IR.RoundState(), dataType.RoundState_HG()))
         pass
     def exec_RUTG(self):
+        self.current_instruction_intermediate.append(IR.CopyStatement(IR.RoundState(), dataType.RoundState_UG()))
         pass
 
     def exec_S45ROUND(self):
@@ -554,10 +557,14 @@ class Environment(object):
         self.program_stack_pop()
 
     def exec_SCANCTRL(self):
+        value = self.program_stack[-1].data
         self.program_stack_pop()
+        self.current_instruction_intermediate.append(IR.CopyStatement(IR.ScanControl(), value))
  
     def exec_SCANTYPE(self):
+        value = self.program_stack[-1].data
         self.program_stack_pop()
+        self.current_instruction_intermediate.append(IR.CopyStatement(IR.ScanType(), value))
 
     def exec_SCFS(self):
         self.program_stack_pop(2)
@@ -707,18 +714,6 @@ class Environment(object):
     def exec_EQ(self):
         self.binary_operation('EQ')
        
-    def exec_RTDG(self):#RoundToDoubleGrid
-        pass
-        #self.graphics_state['roundPeriod']
-        
-    def exec_RTG(self):#RoundToGrid
-        pass
-        #self.graphics_state['roundPeriod']
-
-    def exec_RUTG(self):#RoundUpToGrid
-        pass
-        #self.graphics_state['roundPeriod']
-
     def exec_SRP(self,index):#SetRefPoint
         #self.graphics_state['rp'][index] = self.program_stack[-1]
         self.program_stack_pop()
@@ -742,8 +737,10 @@ class Environment(object):
         self.program_stack_pop(2)
 
     def exec_SCVTCI(self):
-        self.graphics_state['controlValueCutIn'] = self.program_stack[-1].data
+        data = self.program_stack[-1].data
         self.program_stack_pop()
+        self.graphics_state['controlValueCutIn'] = data
+        self.current_instruction_intermediate.append(IR.CopyStatement(IR.SingleWidthCutIn(), self.stack_top_name()))
     
     def exec_SDB(self):
         self.program_stack_pop()
@@ -752,9 +749,8 @@ class Environment(object):
         var = self.program_stack[-1]
         self.program_stack_pop()
         self.current_instruction_intermediate.append(IR.CallStatement(var))
-        
 
-    def execute(self):
+    def execute_current_instruction(self):
         self.current_instruction_intermediate = []
         getattr(self,"exec_"+self.current_instruction.mnemonic)()
         return self.current_instruction_intermediate
@@ -762,15 +758,17 @@ class Environment(object):
 def setGSDefaults():
     intermediateCodes = []
     intermediateCodes.append(IR.CopyStatement(IR.AutoFlip(),IR.Boolean('true')))
-    intermediateCodes.append(IR.CopyStatement(IR.ScanControl(),IR.Boolean('false')))
+    intermediateCodes.append(IR.CopyStatement(IR.ScanControl(),IR.Constant(0)))
+    intermediateCodes.append(IR.CopyStatement(IR.ScanType(),IR.Constant(0)))
     intermediateCodes.append(IR.CopyStatement(IR.SingleWidthCutIn(),IR.Constant(0)))
     intermediateCodes.append(IR.CopyStatement(IR.SingleWidthValue(),IR.Constant(0)))
     intermediateCodes.append(IR.CopyStatement(IR.FreedomVector(),IR.Constant(1)))
     intermediateCodes.append(IR.CopyStatement(IR.ProjectionVector(),IR.Constant(1)))
     intermediateCodes.append(IR.CopyStatement(IR.LoopValue(),IR.Constant(1)))
-    intermediateCodes.append(IR.CopyStatement(IR.InstructControl(),IR.Constant(0)))
+    intermediateCodes.append(IR.CopyStatement(IR.InstructControl(IR.Constant(0)),IR.Constant(0)))
+    intermediateCodes.append(IR.CopyStatement(IR.InstructControl(IR.Constant(1)),IR.Constant(0)))
     intermediateCodes.append(IR.CopyStatement(IR.MinimumDistance(),IR.Constant(1)))
-    intermediateCodes.append(IR.CopyStatement(IR.RoundState(),IR.Constant(1)))
+    intermediateCodes.append(IR.CopyStatement(IR.RoundState(),dataType.RoundState_G()))
     intermediateCodes.append(IR.CopyStatement(IR.ZP0(),IR.Constant(1)))
     intermediateCodes.append(IR.CopyStatement(IR.ZP1(),IR.Constant(1)))
     intermediateCodes.append(IR.CopyStatement(IR.ZP2(),IR.Constant(1)))
@@ -792,152 +790,167 @@ class Executor(object):
     """
     def __init__(self,font):
         self.font = font
-        #maps instruction to Environment
-        self.instruction_state = {}
         self.environment = Environment(font)
-        self.program_ptr = None
-        self.body = None
         self.program = None
-        self.program_state = {}
+        self.pc = None
         self.maximum_stack_depth = 0
-        self.intermediateCodes = []
         self.conditionBlock = None
-        self.function_label_map = []
-        
-    def execute_all(self):
-        for key in self.font.local_programs.keys():
-            self.execute(key)
+        self.call_stack = []
+        self.stored_environments = {}
+        # generated as a side effect:
+        self.intermediateCodes = []
+        self.if_else_IR_stack = []
+        self.if_else_environment_stack = []
+        self.if_else_stack_state = []
+
+    def appendIntermediateCode(self, ins):
+        if len(self.call_stack) == 0:
+            if len(self.if_else_IR_stack) > 0:
+                self.if_else_IR_stack[-1].appendStatements(ins)
+            else:
+                self.intermediateCodes.extend(ins)
 
     def execute_CALL(self):
-        for item in self.program_state:
-            if item.startswith('fpgm'):
-                self.program_state[item] = []
-        top = self.environment.program_stack[-1].data
-        #if top not in self.program.call_function_set:
-        self.program.call_function_set.append(top)
-        self.function_label_map.append((top, len(self.environment.program_stack)))
-        if top not in global_function_table:
-            global_function_table[top] = 1
+        callee = self.environment.program_stack[-1].eval()
+        assert not isinstance(callee, dataType.AbstractValue)
+
+        # update call graph counts
+        self.program.call_function_set.append(callee)
+        if callee not in global_function_table:
+            global_function_table[callee] = 1
         else:
-            global_function_table[top] += 1
-        logger.info('ADD CALL SET:%s', top)
-        logger.info('ADD CALL SET:%s', self.program.call_function_set)
-        self.environment.set_currentInstruction(self.program_ptr)
-        self.environment.execute()
-        self.intermediateCodes = self.intermediateCodes + ['CALL ' + str(top)]
-        self.program_ptr = self.font.function_table[top].start()
+            global_function_table[callee] += 1
+        logger.info('ADD CALL SET: %s | %s' % (callee, self.program.call_function_set))
+
+        # execute the call instruction itself
+        self.environment.set_current_instruction(self.pc)
+        self.environment.execute_current_instruction()
+        self.appendIntermediateCode(['CALL %s' % str(callee)])
+
+        # set call stack & jump
+        # yuck should regularize the CFG to avoid needing this hack
+        if (len(self.pc.successors) == 0):
+            self.call_stack.append((None, {}, [], [], []))
+        else:
+            self.call_stack.append((self.pc.successors[0], self.stored_environments,
+                                    self.if_else_IR_stack,
+                                    self.if_else_environment_stack, self.if_else_stack_state))
+            self.if_else_IR_stack = []
+            self.if_else_environment_stack = []
+            self.if_else_stack_state = []
+        self.pc = self.font.function_table[callee].start()
+        self.stored_environments = {}
         
-        logger.info("jump to call function "+self.program_ptr.mnemonic)
+        logger.info("jump to callee function, starting with "+self.pc.mnemonic)
 
     def execute(self,tag):
         self.program = self.font.programs[tag]
-        self.program_ptr = self.program.start()
-        is_back_ptr = False
-        back_ptr = []
-        successors_index = []
-        top_if = None
-        self.program_state = {}
-        self.function_label_map = []
+        self.pc = self.program.start()
+
+        self.if_else_IR_stack = []
+        self.if_else_environment_stack = []
+        self.if_else_stack_state = []
+
         self.intermediateCodes = setGSDefaults()
 
-        while self.program_ptr is not None:
-            if self.program_ptr.data is not None:
-                logger.info("%s->%s%s",self.program_ptr.id,self.program_ptr.mnemonic,self.program_ptr.data)
+        while self.pc is not None:
+            if self.pc.data is not None:
+                logger.info("[pc] %s->%s|%s",self.pc.id,self.pc.mnemonic,self.pc.data)
             else:
-                logger.info("%s->%s",self.program_ptr.id,self.program_ptr.mnemonic)
+                logger.info("[pc] %s->%s",self.pc.id,self.pc.mnemonic)
+            logger.info("succs are %s", self.pc.successors)
+            logger.info("if_else_environment_stack is %s", self.if_else_environment_stack)
+            logger.info("if_else_IR_stack len is %s", len(self.if_else_IR_stack))
+            if (len(self.if_else_IR_stack) > 0):
+                logger.info(" top cond is %s", self.if_else_IR_stack[-1].condition)
+            logger.info("call_stack is %s", self.call_stack)
 
-            if not is_back_ptr:
-                if self.program_ptr.mnemonic == 'CALL':
-                    back_ptr.append((self.program_ptr,None))
-                    self.execute_CALL()
-            
-                self.environment.set_currentInstruction(self.program_ptr)
-                intermediateCodes = self.environment.execute()
-                if self.conditionBlock is None:
-                    self.intermediateCodes = self.intermediateCodes + intermediateCodes
+            if self.pc.mnemonic == 'CALL':
+                self.execute_CALL()
+                continue
+
+            if self.pc.mnemonic == 'IF':
+                if len(self.if_else_environment_stack) > 0 and self.if_else_environment_stack[-1][0] == self.pc:
+                    # back at the if and ready to traverse next branch...
+                    top_if = self.if_else_environment_stack[-1][0]
+                    if top_if.id not in self.stored_environments:
+                        logger.warn("STORE %s program state ", top_if.id)
+                        self.stored_environments[top_if.id] = [self.environment]
+                    else:
+                        logger.warn("APPEND %s program state ", top_if.id)
+                        self.stored_environments[top_if.id].append(self.environment)
+                        self.stored_environments[top_if.id][0].merge(self.stored_environments[top_if.id][1])
+                        self.environment = self.stored_environments[top_if.id][0]
                 else:
-                    self.conditionBlock.appendStatements(intermediateCodes)
+                    # first time round at this if statement...
+                    cond = self.environment.program_stack.pop()
+                    newBlock = IR.IfElseBlock(cond,
+                                              IR.Variable(self.environment.stack_top_name()),
+                                              len(self.if_else_environment_stack) + 1)
 
-            if (len(self.environment.program_stack) > self.maximum_stack_depth):
+                    environment_copy = self.environment.make_copy(self.font)
+                    self.if_else_IR_stack.append(newBlock)
+                    self.if_else_environment_stack.append((self.pc, environment_copy))
+                    self.if_else_stack_state.append(0)
+
+            if self.pc.mnemonic == 'ELSE':
+                block = self.if_else_IR_stack[-1]
+                block.mode = 'ELSE'
+
+            if self.pc.mnemonic == 'EIF':
+                assert len(self.if_else_IR_stack) > 0
+                block = self.if_else_IR_stack.pop()
+                self.appendIntermediateCode([block])
+
+            self.environment.set_current_instruction(self.pc)
+            intermediateCodes = self.environment.execute_current_instruction()
+            if len(self.environment.program_stack) > self.maximum_stack_depth:
                 self.maximum_stack_depth = len(self.environment.program_stack)
 
-            if self.program_ptr.mnemonic == 'IF':
-                newBlock = IR.IfElseBlock(self.environment.program_stack[-1], len(back_ptr))
-                self.environment.program_stack.pop()
-                newBlock.setParent(self.conditionBlock)
-                self.conditionBlock = newBlock
-                self.conditionBlock.mode = 'IF'
-                top_if = self.program_ptr
-                successors_index.append(0)
-                environment_copy = Environment(self.font)
-                self.environment.makecopy(environment_copy)
-                back_ptr.append((self.program_ptr, environment_copy))
-            
-            if self.program_ptr.mnemonic == 'ELSE':
-                self.conditionBlock.mode = 'else'
+            self.appendIntermediateCode(intermediateCodes)
 
-            if self.program_ptr.mnemonic == 'EIF':
-                if self.conditionBlock.parentBlock == None:
-                    self.intermediateCodes.append(self.conditionBlock)
-                else:
-                    self.conditionBlock.parentBlock.appendStatement(self.conditionBlock)
-                self.conditionBlock = self.conditionBlock.parentBlock
-            
-            logger.info(self.environment)
-            if len(back_ptr) > 1:
-                s = ''
-                for back in back_ptr:
-                    s = s + str(back[0].id) +'->'+ str(back[0].mnemonic) + ' '
-                logger.info('back%s',s)
-
-            if len(self.program_ptr.successors) == 0 or self.program_ptr.mnemonic == 'EIF':
-                if top_if is not None:
-                    if top_if.id not in self.program_state or len(self.program_state[top_if.id])==0:
-                        logger.warn("STORE %s program state ", top_if.id)
-                        self.program_state[top_if.id] = [self.environment]
-                    elif not (self.program_ptr.mnemonic == 'EIF' and len(self.program_state[top_if.id])==2):
-                        logger.warn("APPEND %s program state ", top_if.id)
-                        self.program_state[top_if.id].append(self.environment)
-                        logger.warn("program environment will be merged")
-                        logger.info('len%s',len(self.program_state[top_if.id]))
-                        self.program_state[top_if.id][0].merge(self.program_state[top_if.id][1])
-                        self.environment = self.program_state[top_if.id][0]
-                        logger.info(self.environment)
-            if len(back_ptr)>0 and len(self.program_ptr.successors) == 0:
-                self.program_ptr = back_ptr[-1][0]
-                logger.info("program pointer back to %s %s", str(self.program_ptr),str(self.program_ptr.id))
-                if len(back_ptr)>0 and back_ptr[-1][0].mnemonic == 'IF':
-                    top_if = back_ptr[-1][0]
-                is_back_ptr = True
-                if back_ptr[-1][1] is None:
-                    back_ptr.pop()
-
-            if len(self.program_ptr.successors) > 1:
-                self.program_ptr = self.program_ptr.successors[successors_index[-1]]
-                if successors_index[-1]>0 and (self.program_ptr.mnemonic != 'EIF' or successors_index[-1] != 2):
+            # normal case: 1 succ
+            if len(self.pc.successors) == 1:
+                self.pc = self.pc.successors[0]
+            # multiple succs, store the alternate succ for later
+            elif len(self.pc.successors) > 1:
+                self.pc = self.pc.successors[self.if_else_stack_state[-1]]
+                if self.if_else_stack_state[-1]>0 and (self.pc.mnemonic != 'EIF' or self.if_else_stack_state[-1] != 2):
                     logger.warn("program environment recover to")
-                    self.environment = back_ptr[-1][1]
+                    self.environment = self.if_else_environment_stack[-1][1]
                     logger.info(self.environment)
-                logger.info("traverse another branch %s->%s", self.program_ptr.id, self.program_ptr.mnemonic)
-                is_back_ptr = False
-                if self.program_ptr.mnemonic == 'EIF':
-                    successors_index.pop()
-                    back_ptr.pop()
-                    top_if = None
+                logger.info("traverse another branch %s->%s", self.pc.id, self.pc.mnemonic)
+                if self.pc.mnemonic == 'EIF':
+                    logger.info("pop if_else_stack_state, len was %d", len(self.if_else_stack_state))
+                    self.if_else_environment_stack.pop()
+                    self.if_else_stack_state.pop()
+                    logger.info("pop len now %d", len(self.if_else_stack_state))
                 else:
-                    successors_index[-1] = successors_index[-1] + 1
-                    
-                continue
-            
-            if len(self.program_ptr.successors) == 1:
-                self.program_ptr = self.program_ptr.successors[0]
-                is_back_ptr = False
-                continue
-            if len(self.program_ptr.successors) == 0 and len(back_ptr)==0:
-                self.program_ptr = None
+                    self.if_else_stack_state[-1] = self.if_else_stack_state[-1] + 1
+            # ok, no succs
+            else:
+                assert len(self.pc.successors) == 0
+                # reached end of function, still have if/else succs to explore
+                if len(self.if_else_environment_stack) > 0:
+                    # return to the closest enclosing IF
+                    self.pc = self.if_else_environment_stack[-1][0]
+                    logger.info("program pointer back to %s %s", str(self.pc),str(self.pc.id))
+                # reached end of function, but we're still in a call
+                elif len(self.call_stack) > 0:
+                    logger.info("call stack is %s", self.call_stack)
+                    (self.pc, self.stored_environments, self.if_else_IR_stack,
+                     self.if_else_environment_stack, self.if_else_stack_state) = self.call_stack.pop()
+                    logger.info("pop call stack, next is %s", str(self.pc))
+                # ok, we really are all done here!
+                else:
+                    assert len(self.if_else_environment_stack)==0
+                    self.pc = None
 
         for intermediateCode in self.intermediateCodes:
             print intermediateCode
+
+        print 'Called function set: '
         print self.program.call_function_set
+        print 'Call graph: '
         for item in global_function_table.items():
             print item

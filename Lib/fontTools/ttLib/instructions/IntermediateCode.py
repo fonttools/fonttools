@@ -1,3 +1,5 @@
+from fontTools.ttLib.data import dataType
+
 class Boolean(object):
     def __init__(self, value):
         self.value = value
@@ -7,15 +9,27 @@ class Boolean(object):
 class Constant(object):
     def __init__(self, value):
         self.value = value
+    def eval(self):
+        return self.value
     def __repr__(self):
         return str(self.value)
 
-class Variable(object):
+class Variable(dataType.AbstractValue):
     def __init__(self, identifier, data = None):
         self.data = data
         self.identifier = identifier
+    def eval(self):
+        if self.data is None or isinstance(self.data, dataType.AbstractValue):
+            return self
+        else:
+            return self.data
     def __repr__(self):
         return self.identifier
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.__dict__ == other.__dict__
+        else:
+            return False
 
 class GraphicsStateVariable(Variable):
     def __repr__(self):
@@ -47,9 +61,10 @@ class DualProjectionVector(GraphicsStateVariable):
         self.identifier = 'GS[dual_projection_vector]'
 
 class InstructControl(GraphicsStateVariable):
-    def __init__(self):
+    def __init__(self, selector):
+        self.selector = selector
         self.data = None
-        self.identifier = 'GS[instruct_control]'
+        self.identifier = 'GS[instruction_control_%s]' % self.selector
 
 class LoopValue(GraphicsStateVariable):
     def __init__(self):
@@ -90,6 +105,11 @@ class ScanControl(GraphicsStateVariable):
     def __init__(self):
         self.data = None
         self.identifier = 'GS[scan_control]'
+
+class ScanType(GraphicsStateVariable):
+    def __init__(self):
+        self.data = None
+        self.identifier = 'GS[scan_type]'
 
 class SingleWidthCutIn(GraphicsStateVariable):
     def __init__(self):
@@ -142,52 +162,43 @@ class Operator(object):
 class AssignOperator(Operator):
     def __repr__(self):
         return ":="
-
 class ADDOperator(Operator):
     def __repr__(self):
         return "+"
-
 class SUBOperator(Operator):
     def __repr__(self):
         return "-"
-
 class MULOperator(Operator):
     def __repr__(self):
         return "*"
-
 class DIVOperator(Operator):
     def __repr__(self):
         return "/"
 
 class ANDOperator(Operator):
     def __repr__(self):
-        return "&&"
+        return "AND"
 class OROperator(Operator):
     def __repr__(self):
-        return "||"
+        return "OR"
 class GTOperator(Operator):
     def __repr__(self):
-        return ">"
-
+        return "GT"
 class GTEQOperator(Operator):
     def __repr__(self):
-        return ">="
-
+        return "GE"
 class LTOperator(Operator):
     def __repr__(self):
-        return "<"
-
+        return "LT"
 class LTEQOperator(Operator):
     def __repr__(self):
-        return "<="
-
+        return "LE"
 class EQOperator(Operator):
     def __repr__(self):
-        return "=="
-
+        return "EQ"
 class NEQOperator(Operator):
     def __repr__(self):
-        return "!="
+        return "NE"
 
 class Expression(object):
     pass
@@ -201,7 +212,7 @@ class BinaryExpression(Expression):
 	self.right = right
 	self.operator = op
     def __repr__(self):
-	return "%s %s %s" % (self.left, str(self.operator), self.right)
+	return "%s %s %s" % (self.left.eval(), str(self.operator), self.right.eval())
 
 class MethodCallStatement(object):
     def __init__(self, parameters = [], returnVal=None):
@@ -230,25 +241,38 @@ class MAXMethodCall(MethodCallStatement):
         super(MAXMethodCall, self).__init__(parameters, returnVal)
         self.methodName = 'MAX'
 
-class ABSMethodCall(MethodCallStatement):
-    def __init__(self, parameters = [], returnVal=None):
-        super(ABSMethodCall, self).__init__(parameters, returnVal)
-        self.methodName = 'ABS'
-
 class ALIGNPTSMethodCall(MethodCallStatement):
     def __init__(self, parameters = [], returnVal=None):
         super(ALIGNPTSMethodCall, self).__init__(parameters, returnVal)
         self.methodName = 'ALIGNPT'
 
-class CEILINGMethodCall(MethodCallStatement):
+class ABSMethodCall(MethodCallStatement):
+    def __init__(self, parameters = [], returnVal=None):
+        super(ABSMethodCall, self).__init__(parameters, returnVal)
+        self.methodName = 'ABS'
+
+class CEILMethodCall(MethodCallStatement):
     def __init__(self, parameters = [], returnVal=None):
         super(CEILINGMethodCall, self).__init__(parameters, returnVal)
-        self.methodName = 'CEILING'
+        self.methodName = 'CEIL'
 
 class FLOORMethodCall(MethodCallStatement):
     def __init__(self, parameters = [], returnVal=None):
         super(FLOORMethodCall, self).__init__(parameters, returnVal)
         self.methodName = 'FLOOR'
+
+class NOTMethodCall(MethodCallStatement):
+    def __init__(self, parameters = [], returnVal=None):
+        super(NOTMethodCall, self).__init__(parameters, returnVal)
+        self.methodName = 'NOT'
+    def eval(self):
+        p = self.parameters[0].eval()
+        if p == 0:
+            return 1
+        elif p == 1:
+            return 0
+        return self
+
 class MIRPMethodCall(MethodCallStatement):
     def __init__(self, parameters = [], returnVal=None):
         super(MIRPMethodCall, self).__init__(parameters, returnVal)
@@ -263,6 +287,11 @@ class GETINFOMethodCall(MethodCallStatement):
     def __init__(self, parameters = [], returnVal=None):
         super(GETINFOMethodCall, self).__init__(parameters, returnVal)
         self.methodName = 'GETINFO'
+
+class ROUNDMethodCall(MethodCallStatement):
+    def __init__(self, parameters = [], returnVal=None):
+        super(ROUNDMethodCall, self).__init__(parameters, returnVal)
+        self.methodName = 'ROUND'
 
 class AssignmentStatement(object):
     def __init__(self):
@@ -309,12 +338,11 @@ class CVTStorageStatement(IndexedAssignment):
         self.storage = "cvt_table"
 
 class ReadFromIndexedStorage(AssignmentStatement):
-    def __init__(self, index, var):
+    def __init__(self, storage, index):
+        self.storage = storage
         self.index = index
-        self.var = var
-        self.storage = None
     def __repr__(self):
-        return "%s := %s[%s]" % (self.var, self.storage, self.index)
+        return "%s[%s]" % (self.storage, self.index)
 
 class EmptyStatement(object):
     def __repr__(self):
@@ -338,27 +366,25 @@ class LabelBlock(object):
         return resStr
 
 class IfElseBlock(object):
-    def __init__(self, condition = None, nesting_level = 1):
+    def __init__(self, condition = None, condition_variable = None, nesting_level = 1):
+        # TODO use eval
         self.condition = condition
+        self.condition_variable = condition_variable
         self.if_branch = []
         self.else_branch = []
         self.nesting_level = nesting_level
-        self.parentBlock = None
         self.mode = 'IF'
-    def setParent(self, parent):
-        self.parentBlock = parent
-    def appendStatement(self, statement):
-        if self.mode =='IF':
-            self.if_branch.append(statement)
-        else:
-            self.else_branch.append(statement)
     def appendStatements(self, statements):
         if self.mode == 'IF':
             self.if_branch += statements
         else:
             self.else_branch += statements
-    def __repr__(self):
-        res_str = 'if ('+str(self.condition)+') {'+'\n'
+    def __str__(self):
+        if isinstance(self.condition.data, dataType.UncertainValue):
+            c = self.condition_variable
+        else:
+            c = str(self.condition.data)
+        res_str = 'if ('+c+') {\n'
         for line in self.if_branch:
             res_str += (self.nesting_level * 4 * ' ') + str(line) + '\n'
         res_str += (self.nesting_level-1) * 4 * ' ' + '}'

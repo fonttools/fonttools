@@ -19,14 +19,11 @@ class BytecodeContainer(object):
     
     def constructCVTTable(self, tt):
         self.cvt_table = {}
-        try:
-            values = tt['cvt '].values
-            key = 0
-            for value in values:
-                self.cvt_table[key] = value
-                key = key + 1
-        except:
-            pass
+        values = tt['cvt '].values
+        key = 0
+        for value in values:
+            self.cvt_table[key] = value
+            key = key + 1
     
     #tested#
     def extractProgram(self, tt):
@@ -144,11 +141,8 @@ class BytecodeContainer(object):
         self.replaceOtherTables(ttFont)
  
     def replaceCVTTable(self, ttFont):
-        try:
-            for i in range(len(self.cvt_table)):
-                ttFont['cvt '].values[i] = self.cvt_table[i]
-        except:
-            pass
+        for i in range(len(self.cvt_table)):
+            ttFont['cvt '].values[i] = self.cvt_table[i]
 
     def instrToAssembly(self, instr):
         assembly = []
@@ -196,7 +190,6 @@ class BytecodeContainer(object):
         for table in self.programs.keys():
             assembly = []
             if table != 'fpgm':
-
                 root = self.programs[table].body.statement_root
                 if root is not None:
                     
