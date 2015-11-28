@@ -70,9 +70,9 @@ class Expression(AbstractValue):
         def logicalOr(op1,op2):
             return (op1 or op2)
         operations = {'LT':less,
-                      'LTEQ':lessEqual,
+                      'LE':lessEqual,
                       'GT':greater,
-                      'GTEQ':greaterEqual,
+                      'GE':greaterEqual,
                       'EQ':equal,
                       'AND':logicalAnd,
                       'OR':logicalOr}
