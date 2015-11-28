@@ -45,22 +45,20 @@ def executeGlyphs(absExecutor, initialEnvironment, glyphs):
     for glyph in glyphs:
         print(glyph)
         absExecutor.environment = copy.deepcopy(initialEnvironment)
-        print ("begin glyph " % glyph % ":")
         absExecutor.execute(glyph)
-        print ("end glyph")
+        print ("called functions was ", str(called_functions))
         called_functions.update(list(set(absExecutor.program.call_function_set)))
+        print ("called functions now ", str(called_functions))
     return called_functions
 
 def analysis(tt, glyphs=[]):
     #one ttFont object for one ttx file       
     absExecutor = abstractExecute.Executor(tt)
     called_functions = set()
-    print ("begin PREP:")
     absExecutor.execute('prep')
-    print ("end PREP")
+    called_functions.update(list(set(absExecutor.program.call_function_set)))
 
     environment_after_prep = copy.deepcopy(absExecutor.environment)
-    called_functions.update(list(set(absExecutor.program.call_function_set)))
     called_functions.update(executeGlyphs(absExecutor, environment_after_prep, glyphs))
     return absExecutor, called_functions
 
@@ -68,6 +66,7 @@ class Options(object):
     verbose = False
     outputState = False
     outputCVT = False
+    outputPrep = False
     outputFunctions = False
     outputCallGraph = False
     outputMaxStackDepth = False
@@ -135,8 +134,8 @@ def process(jobs, options):
 
         if (options.outputCallGraph):
             print ("called function set:")
-            print (ae.program.call_function_set)
-            print ("call graph:")
+            print (called_functions)
+            print ("call graph (function, # calls to):")
             for item in ae.global_function_table.items():
                 print (item)
 

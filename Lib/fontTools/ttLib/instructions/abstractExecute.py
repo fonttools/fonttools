@@ -129,7 +129,7 @@ class Environment(object):
             'autoFlip':          True
             }
 
-    def set_storage_area(self, index, value):
+    def write_storage_area(self, index, value):
         self.storage_area[index] = value
 
     def read_storage_area(self, index):
@@ -178,58 +178,57 @@ class Environment(object):
         return res
 
     def binary_operation(self, action):
-        op1 = self.program_stack[-2]
-        op2 = self.program_stack[-1]
-        self.program_stack_pop(2)
+        op1 = self.program_stack_pop().eval()
+        op2 = self.program_stack_pop().eval()
 
         expression = None
-        if isinstance(op1.data,dataType.AbstractValue) or isinstance(op2.data,dataType.AbstractValue):
-            res = dataType.Expression(op1.data, op2.data, action)
+        if isinstance(op1,dataType.AbstractValue) or isinstance(op2,dataType.AbstractValue):
+            res = dataType.Expression(op1, op2, action)
             if action is not 'MAX' and action is not 'MIN':
                 expression = IR.BinaryExpression(op1, op2, getattr(IR,action+'Operator')())
             else:
-                expression = getattr(IR, action+'MethodCall')([op1.data,op2.data])
+                expression = getattr(IR, action+'MethodCall')([op1,op2])
         elif action is 'ADD':
-            res = op1.data + op2.data
+            res = op1 + op2
             expression = IR.BinaryExpression(op1,op2,IR.ADDOperator())
         elif action is 'GT':
-            res = op1.data > op2.data
+            res = op1 > op2
             expression = IR.BinaryExpression(op1,op2,IR.GTOperator())
         elif action is 'GTEQ':
-            res = op1.data >= op2.data
+            res = op1 >= op2
             expression = IR.BinaryExpression(op1,op2,IR.GTEQOperator())
         elif action is 'AND':
-            res = op1.data and op2.data
+            res = op1 and op2
             expression = IR.BinaryExpression(op1,op2,IR.ANDOperator())
         elif action is 'OR':
-            res = op1.data or op2.data
+            res = op1 or op2
             expression = IR.BinaryExpression(op1,op2,IR.OROperator())
         elif action is 'MUL':
-            res = op1.data * op2.data
+            res = op1 * op2
             expression = IR.BinaryExpression(op1,op2,IR.MULOperator())
         elif action is 'DIV':
-            res = op1.data / op2.data
+            res = op1 / op2
             expression = IR.BinaryExpression(op1,op2,IR.DIVOperator())
         elif action is 'EQ':
-            res = op1.data == op2.data
+            res = op1 == op2
             expression = IR.BinaryExpression(op1,op2,IR.EQOperator())
         elif action is 'NEQ':
-            res = op1.data != op2.data
+            res = op1 != op2
             expression = IR.BinaryExpression(op1,op2,IR.NEQOperator())
         elif action is 'LT':
-            res = op1.data < op2.data
+            res = op1 < op2
             expression = IR.BinaryExpression(op1,op2,IR.LTOperator())
         elif action is 'LTEQ':
-            res = op1.data <= op2.data
+            res = op1 <= op2
             expression = IR.BinaryExpression(op1,op2,IR.LTEQOperator())
         elif action is 'MAX':
-            res = max(op1.data,op2.data)
+            res = max(op1,op2)
             expression = getattr(IR, action+'MethodCall')([op1,op2])
         elif action is 'MIN':
-            res = min(op1.data,op2.data)
+            res = min(op1,op2)
             expression = getattr(IR, action+'MethodCall')([op1,op2])
         elif action is 'SUB':
-            res = op1.data - op2.data
+            res = op1 - op2
             expression = IR.BinaryExpression(op1,op2,IR.SUBOperator())
         else:
             raise NotImplementedError
@@ -534,9 +533,8 @@ class Environment(object):
         self.current_instruction_intermediate.append(IR.ROUNDMethodCall([var],new_var))
 
     def exec_RS(self):
-        op = self.program_stack[-1].data
-        self.program_stack_pop()
-        res = self.storage_area[op]
+        op = self.program_stack_pop().eval()
+        res = self.read_storage_area(op)
         self.program_stack_push(res)
         
     def exec_RTDG(self):
@@ -710,8 +708,7 @@ class Environment(object):
         self.current_instruction_intermediate.append(IR.WriteStorageStatement(res[2],res[3]))
 
         assert not isinstance(res[0], dataType.AbstractValue)
-
-        self.storage_area[res[0]] = res[1]
+        self.write_storage_area(res[0], res[1])
 
     def exec_EQ(self):
         self.binary_operation('EQ')
@@ -792,6 +789,7 @@ class Executor(object):
     """
     def __init__(self,bc):
         self.bytecodeContainer = bc
+        self.environment = Environment(bc, "")
         self.program = None
         self.pc = None
         self.maximum_stack_depth = 0
@@ -848,8 +846,9 @@ class Executor(object):
         self.pc = self.bytecodeContainer.function_table[callee].start()
         self.stored_environments = {}
 
-    def execute(self,tag):
-        self.environment = Environment(self.bytecodeContainer, tag)
+    def execute(self, tag):
+        logger.info("execute; tag is %s", tag)
+        self.environment.tag = tag
         self.program = self.bytecodeContainer.programs[tag]
         self.pc = self.program.start()
 
@@ -966,6 +965,5 @@ class Executor(object):
                 else:
                     assert len(self.if_else.env)==0
                     self.pc = None
-
-        for intermediateCode in self.intermediateCodes:
-            print intermediateCode
+        #for intermediateCode in self.intermediateCodes:
+        #    print intermediateCode

@@ -5,6 +5,7 @@ class BytecodeContainer(object):
     def __init__(self, tt):
         # tag id -> Program
         self.programs = {}
+        self.IRs = {}
         # function_table: function label -> Function
         self.function_table = {}
         #preprocess the static value to construct cvt table
@@ -25,7 +26,6 @@ class BytecodeContainer(object):
             self.cvt_table[key] = value
             key = key + 1
     
-    #tested#
     def extractProgram(self, tt):
         '''
         a dictionary maps tag->Program to extract all the bytecodes
@@ -101,14 +101,13 @@ class BytecodeContainer(object):
             for key, value in self.function_table.items():
                 value.constructBody()
 
-    #remove functions passed from the function table
-    def removeFunctions(self, functions=[]):
-            if(len(functions) > 0):
-                for label in functions:
-                    try:
-                        del self.function_table[label]
-                    except:
-                        pass
+    #remove functionsToRemove from the function table
+    def removeFunctions(self, functionsToRemove=[]):
+        for label in functionsToRemove:
+            try:
+                del self.function_table[label]
+            except:
+                pass
 
     # param label_mapping is a dict for each table with a list of 
     # tuples (label, pos)  where label is the old function label 
