@@ -36,12 +36,13 @@ class Environment(object):
     stack-based virtual machine.
 
     """
-    def __init__(self,ttFont):
+    def __init__(self, ttFont, tag):
         self.function_table = ttFont.function_table
-        # storage_area: location -> Value
-        self.storage_area = {}
         # cvt: location -> Value
         self.cvt = ttFont.cvt_table
+        self.tag = tag
+        # storage_area: location -> Value
+        self.storage_area = {}
         self.set_graphics_state_to_default()
         # this is the TT VM stack, not the call stack
         self.program_stack = []
@@ -61,7 +62,7 @@ class Environment(object):
             + ', program_stack = ' + stackRep + ', program_stack_length = ' + str(len(self.program_stack)))
 
     def make_copy(self, font):
-        new_env = Environment(font)
+        new_env = Environment(font, self.tag)
         for key, value in self.__dict__.iteritems():
             setattr(new_env, key, copy.copy(value))
         return new_env
@@ -110,7 +111,6 @@ class Environment(object):
 
     def set_current_instruction(self, instruction):
         self.current_instruction = instruction
-        self.tag = (str(instruction.id)).split(".")[0]
 
     def set_graphics_state_to_default(self):
         self.graphics_state = {
@@ -138,7 +138,7 @@ class Environment(object):
         return self.storage_area[index]
 
     def stack_top_name(self):
-        return identifierGenerator.generateIdentifier(self.tag, len(self.program_stack))
+        return identifierGenerator.generateIdentifier(self.tag, self.stack_depth())
 
     def generate_assign_variable(self, var, data):
         self.current_instruction_intermediate.append(IR.CopyStatement(var, data))
@@ -795,7 +795,6 @@ class Executor(object):
     """
     def __init__(self,font):
         self.font = font
-        self.environment = Environment(font)
         self.program = None
         self.pc = None
         self.maximum_stack_depth = 0
@@ -837,17 +836,16 @@ class Executor(object):
         # execute the call instruction itself
         self.environment.set_current_instruction(self.pc)
         self.environment.execute_current_instruction()
-        self.appendIntermediateCode(['CALL %s' % str(callee)])
 
         logger.info("stack depth into call is %s", self.stack_depth())
         self.environment.minimum_stack_depth = self.stack_depth()
         # set call stack & jump
         # yuck should regularize the CFG to avoid needing this hack
         if (len(self.pc.successors) == 0):
-            self.call_stack.append((None, self.stack_depth(),
+            self.call_stack.append((callee, None, self.stack_depth(),
                                     self.stored_environments, self.if_else))
         else:
-            self.call_stack.append((self.pc.successors[0], self.stack_depth(),
+            self.call_stack.append((callee, self.pc.successors[0], self.stack_depth(),
                                     self.stored_environments,
                                     self.if_else))
         self.if_else = self.If_else_stack([], [], [])
@@ -857,6 +855,7 @@ class Executor(object):
         logger.info("jump to callee function, starting with "+self.pc.mnemonic)
 
     def execute(self,tag):
+        self.environment = Environment(self.font, tag)
         self.program = self.font.programs[tag]
         self.pc = self.program.start()
 
@@ -943,10 +942,21 @@ class Executor(object):
                 # reached end of function, but we're still in a call
                 elif len(self.call_stack) > 0:
                     logger.info("call stack is %s", self.call_stack)
-                    (self.pc, stack_depth_upon_call,
+                    (callee, self.pc, stack_depth_upon_call,
                      self.stored_environments, self.if_else) = self.call_stack.pop()
+
                     stack_used = stack_depth_upon_call - self.environment.minimum_stack_depth
                     stack_additional = self.stack_depth() - stack_depth_upon_call
+
+                    call_args = '('
+                    for i in range(stack_used):
+                        if i > 0:
+                            call_args += ', '
+                        call_args += identifierGenerator.generateIdentifier(tag, stack_depth_upon_call - i - 1)
+                    call_args += ')'
+
+                    self.appendIntermediateCode(['CALL %s%s' % (str(callee), call_args)])
+
                     logger.info("pop call stack, next is %s", str(self.pc))
                     logger.info("stack used was %d", stack_used)
                     logger.info("new entries on stack are %d", stack_additional)
