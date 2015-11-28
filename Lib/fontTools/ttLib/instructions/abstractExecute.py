@@ -797,16 +797,20 @@ class Executor(object):
         self.conditionBlock = None
         self.call_stack = []
         self.stored_environments = {}
+        self.if_else = None
         # generated as a side effect:
         self.intermediateCodes = []
-        self.if_else_IR_stack = []
-        self.if_else_environment_stack = []
-        self.if_else_stack_state = []
 
+    class If_else_stack(object):
+        def __init__(self, IR, env, state):
+            self.IR = IR
+            self.env = env
+            self.state = state
+        
     def appendIntermediateCode(self, ins):
         if len(self.call_stack) == 0:
-            if len(self.if_else_IR_stack) > 0:
-                self.if_else_IR_stack[-1].appendStatements(ins)
+            if len(self.if_else.IR) > 0:
+                self.if_else.IR[-1].appendStatements(ins)
             else:
                 self.intermediateCodes.extend(ins)
 
@@ -830,14 +834,11 @@ class Executor(object):
         # set call stack & jump
         # yuck should regularize the CFG to avoid needing this hack
         if (len(self.pc.successors) == 0):
-            self.call_stack.append((None, {}, [], [], []))
+            self.call_stack.append((None, {}, self.If_else_stack([], [], [])))
         else:
             self.call_stack.append((self.pc.successors[0], self.stored_environments,
-                                    self.if_else_IR_stack,
-                                    self.if_else_environment_stack, self.if_else_stack_state))
-            self.if_else_IR_stack = []
-            self.if_else_environment_stack = []
-            self.if_else_stack_state = []
+                                    self.if_else))
+            self.if_else = self.If_else_stack([], [], [])
         self.pc = self.font.function_table[callee].start()
         self.stored_environments = {}
         
@@ -847,10 +848,7 @@ class Executor(object):
         self.program = self.font.programs[tag]
         self.pc = self.program.start()
 
-        self.if_else_IR_stack = []
-        self.if_else_environment_stack = []
-        self.if_else_stack_state = []
-
+        self.if_else = self.If_else_stack([], [], [])
         self.intermediateCodes = setGSDefaults()
 
         while self.pc is not None:
@@ -859,10 +857,6 @@ class Executor(object):
             else:
                 logger.info("[pc] %s->%s",self.pc.id,self.pc.mnemonic)
             logger.info("succs are %s", self.pc.successors)
-            logger.info("if_else_environment_stack is %s", self.if_else_environment_stack)
-            logger.info("if_else_IR_stack len is %s", len(self.if_else_IR_stack))
-            if (len(self.if_else_IR_stack) > 0):
-                logger.info(" top cond is %s", self.if_else_IR_stack[-1].condition)
             logger.info("call_stack is %s", self.call_stack)
 
             if self.pc.mnemonic == 'CALL':
@@ -870,9 +864,9 @@ class Executor(object):
                 continue
 
             if self.pc.mnemonic == 'IF':
-                if len(self.if_else_environment_stack) > 0 and self.if_else_environment_stack[-1][0] == self.pc:
+                if len(self.if_else.env) > 0 and self.if_else.env[-1][0] == self.pc:
                     # back at the if and ready to traverse next branch...
-                    top_if = self.if_else_environment_stack[-1][0]
+                    top_if = self.if_else.env[-1][0]
                     if top_if.id not in self.stored_environments:
                         logger.warn("STORE %s program state ", top_if.id)
                         self.stored_environments[top_if.id] = [self.environment]
@@ -886,20 +880,20 @@ class Executor(object):
                     cond = self.environment.program_stack.pop()
                     newBlock = IR.IfElseBlock(cond,
                                               IR.Variable(self.environment.stack_top_name()),
-                                              len(self.if_else_environment_stack) + 1)
+                                              len(self.if_else.env) + 1)
 
                     environment_copy = self.environment.make_copy(self.font)
-                    self.if_else_IR_stack.append(newBlock)
-                    self.if_else_environment_stack.append((self.pc, environment_copy))
-                    self.if_else_stack_state.append(0)
+                    self.if_else.IR.append(newBlock)
+                    self.if_else.env.append((self.pc, environment_copy))
+                    self.if_else.state.append(0)
 
             if self.pc.mnemonic == 'ELSE':
-                block = self.if_else_IR_stack[-1]
+                block = self.if_else.IR[-1]
                 block.mode = 'ELSE'
 
             if self.pc.mnemonic == 'EIF':
-                assert len(self.if_else_IR_stack) > 0
-                block = self.if_else_IR_stack.pop()
+                assert len(self.if_else.IR) > 0
+                block = self.if_else.IR.pop()
                 self.appendIntermediateCode([block])
 
             self.environment.set_current_instruction(self.pc)
@@ -914,36 +908,33 @@ class Executor(object):
                 self.pc = self.pc.successors[0]
             # multiple succs, store the alternate succ for later
             elif len(self.pc.successors) > 1:
-                self.pc = self.pc.successors[self.if_else_stack_state[-1]]
-                if self.if_else_stack_state[-1]>0 and (self.pc.mnemonic != 'EIF' or self.if_else_stack_state[-1] != 2):
+                self.pc = self.pc.successors[self.if_else.state[-1]]
+                if self.if_else.state[-1]>0 and (self.pc.mnemonic != 'EIF' or self.if_else.state[-1] != 2):
                     logger.warn("program environment recover to")
-                    self.environment = self.if_else_environment_stack[-1][1]
+                    self.environment = self.if_else.env[-1][1]
                     logger.info(self.environment)
                 logger.info("traverse another branch %s->%s", self.pc.id, self.pc.mnemonic)
                 if self.pc.mnemonic == 'EIF':
-                    logger.info("pop if_else_stack_state, len was %d", len(self.if_else_stack_state))
-                    self.if_else_environment_stack.pop()
-                    self.if_else_stack_state.pop()
-                    logger.info("pop len now %d", len(self.if_else_stack_state))
+                    self.if_else.env.pop()
+                    self.if_else.state.pop()
                 else:
-                    self.if_else_stack_state[-1] = self.if_else_stack_state[-1] + 1
+                    self.if_else.state[-1] = self.if_else.state[-1] + 1
             # ok, no succs
             else:
                 assert len(self.pc.successors) == 0
                 # reached end of function, still have if/else succs to explore
-                if len(self.if_else_environment_stack) > 0:
+                if len(self.if_else.env) > 0:
                     # return to the closest enclosing IF
-                    self.pc = self.if_else_environment_stack[-1][0]
+                    self.pc = self.if_else.env[-1][0]
                     logger.info("program pointer back to %s %s", str(self.pc),str(self.pc.id))
                 # reached end of function, but we're still in a call
                 elif len(self.call_stack) > 0:
                     logger.info("call stack is %s", self.call_stack)
-                    (self.pc, self.stored_environments, self.if_else_IR_stack,
-                     self.if_else_environment_stack, self.if_else_stack_state) = self.call_stack.pop()
+                    (self.pc, self.stored_environments, self.if_else) = self.call_stack.pop()
                     logger.info("pop call stack, next is %s", str(self.pc))
                 # ok, we really are all done here!
                 else:
-                    assert len(self.if_else_environment_stack)==0
+                    assert len(self.if_else.env)==0
                     self.pc = None
 
         for intermediateCode in self.intermediateCodes:
