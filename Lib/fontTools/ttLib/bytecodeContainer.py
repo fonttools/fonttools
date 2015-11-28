@@ -244,7 +244,8 @@ class Body(object):
             self.statement_root = kwargs.get('statement_root')
         if kwargs.get('instructions') is not None:
             input_instructions = kwargs.get('instructions')
-            self.statement_root = self.constructSuccessorAndPredecessor(input_instructions)
+            if len(input_instructions) > 0:
+                self.statement_root = self.constructSuccessorAndPredecessor(input_instructions)
         self.condition = None
 
     def set_condition(self,expression):
@@ -259,7 +260,7 @@ class Body(object):
                 return True
             else:
                 return False
-        if_waited = []
+        pending_if_stack = []
         for index in range(len(input_statements)):
             this_instruction = input_statements[index]
             # We don't think jump statements are actually ever used.
@@ -277,16 +278,16 @@ class Body(object):
             # An IF statement should have two successors:
             #  one already added (index+1); one at the ELSE/ENDIF.
             if isinstance(this_instruction,statements.all.IF_Statement):
-                if_waited.append(this_instruction)
+                pending_if_stack.append(this_instruction)
             elif isinstance(this_instruction,statements.all.ELSE_Statement):
-                this_if = if_waited[-1]
+                this_if = pending_if_stack[-1]
                 this_if.add_successor(this_instruction)
                 this_instruction.set_predecessor(this_if)
             elif isinstance(this_instruction,statements.all.EIF_Statement):
-                this_if = if_waited[-1]
+                this_if = pending_if_stack[-1]
                 this_if.add_successor(this_instruction)
                 this_instruction.set_predecessor(this_if)
-                if_waited.pop()
+                pending_if_stack.pop()
         return input_statements[0]
 
     def pretty_print(self):
