@@ -45,6 +45,7 @@ class Environment(object):
         self.set_graphics_state_to_default()
         # this is the TT VM stack, not the call stack
         self.program_stack = []
+        self.minimum_stack_depth = None
         self.current_instruction = None
         self.current_instruction_intermediate = []
 
@@ -141,6 +142,9 @@ class Environment(object):
 
     def generate_assign_variable(self, var, data):
         self.current_instruction_intermediate.append(IR.CopyStatement(var, data))
+
+    def stack_depth(self):
+        return len(self.program_stack)
         
     def program_stack_push(self, data = None, assign = True):
         tempVariableName = self.stack_top_name()
@@ -154,6 +158,8 @@ class Environment(object):
         last_val = None
         for i in range(num):
             last_val = self.program_stack.pop()
+        if self.stack_depth() < self.minimum_stack_depth:
+            self.minimum_stack_depth = self.stack_depth()
         return last_val
 
     def unary_operation(self, action):
@@ -793,7 +799,6 @@ class Executor(object):
         self.program = None
         self.pc = None
         self.maximum_stack_depth = 0
-        self.minimum_stack_depth = None
         self.conditionBlock = None
         self.call_stack = []
         self.stored_environments = {}
@@ -808,7 +813,7 @@ class Executor(object):
             self.state = state
 
     def stack_depth(self):
-        return len(self.environment.program_stack)
+        return self.environment.stack_depth()
 
     def appendIntermediateCode(self, ins):
         if len(self.call_stack) == 0:
@@ -835,16 +840,17 @@ class Executor(object):
         self.appendIntermediateCode(['CALL %s' % str(callee)])
 
         logger.info("stack depth into call is %s", self.stack_depth())
-        self.minimum_stack_depth = self.stack_depth()
+        self.environment.minimum_stack_depth = self.stack_depth()
         # set call stack & jump
         # yuck should regularize the CFG to avoid needing this hack
         if (len(self.pc.successors) == 0):
-            self.call_stack.append((None, 0, {}, self.If_else_stack([], [], [])))
+            self.call_stack.append((None, self.stack_depth(),
+                                    self.stored_environments, self.if_else))
         else:
             self.call_stack.append((self.pc.successors[0], self.stack_depth(),
                                     self.stored_environments,
                                     self.if_else))
-            self.if_else = self.If_else_stack([], [], [])
+        self.if_else = self.If_else_stack([], [], [])
         self.pc = self.font.function_table[callee].start()
         self.stored_environments = {}
         
@@ -856,7 +862,7 @@ class Executor(object):
 
         self.if_else = self.If_else_stack([], [], [])
         self.intermediateCodes = setGSDefaults()
-        self.minimum_stack_depth = 0
+        self.environment.minimum_stack_depth = 0
 
         while self.pc is not None:
             if self.pc.data is not None:
@@ -907,8 +913,6 @@ class Executor(object):
             intermediateCodes = self.environment.execute_current_instruction()
             if self.stack_depth() > self.maximum_stack_depth:
                 self.maximum_stack_depth = self.stack_depth()
-            if self.stack_depth() < self.minimum_stack_depth:
-                self.minimum_stack_depth = self.stack_depth()
 
             self.appendIntermediateCode(intermediateCodes)
 
@@ -941,9 +945,11 @@ class Executor(object):
                     logger.info("call stack is %s", self.call_stack)
                     (self.pc, stack_depth_upon_call,
                      self.stored_environments, self.if_else) = self.call_stack.pop()
-                    stack_used = stack_depth_upon_call - self.minimum_stack_depth
+                    stack_used = stack_depth_upon_call - self.environment.minimum_stack_depth
+                    stack_additional = self.stack_depth() - stack_depth_upon_call
                     logger.info("pop call stack, next is %s", str(self.pc))
                     logger.info("stack used was %d", stack_used)
+                    logger.info("new entries on stack are %d", stack_additional)
                 # ok, we really are all done here!
                 else:
                     assert len(self.if_else.env)==0
