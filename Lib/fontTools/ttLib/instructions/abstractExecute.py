@@ -38,10 +38,9 @@ class Environment(object):
     """
     def __init__(self,ttFont):
         self.function_table = ttFont.function_table
-        # cvt_table: location -> Value
-        self.cvt_table = ttFont.cvt_table
         # storage_area: location -> Value
         self.storage_area = {}
+        # cvt: location -> Value
         self.cvt = ttFont.cvt_table
         self.set_graphics_state_to_default()
         # this is the TT VM stack, not the call stack
@@ -794,6 +793,7 @@ class Executor(object):
         self.program = None
         self.pc = None
         self.maximum_stack_depth = 0
+        self.minimum_stack_depth = None
         self.conditionBlock = None
         self.call_stack = []
         self.stored_environments = {}
@@ -806,7 +806,10 @@ class Executor(object):
             self.IR = IR
             self.env = env
             self.state = state
-        
+
+    def stack_depth(self):
+        return len(self.environment.program_stack)
+
     def appendIntermediateCode(self, ins):
         if len(self.call_stack) == 0:
             if len(self.if_else.IR) > 0:
@@ -831,12 +834,15 @@ class Executor(object):
         self.environment.execute_current_instruction()
         self.appendIntermediateCode(['CALL %s' % str(callee)])
 
+        logger.info("stack depth into call is %s", self.stack_depth())
+        self.minimum_stack_depth = self.stack_depth()
         # set call stack & jump
         # yuck should regularize the CFG to avoid needing this hack
         if (len(self.pc.successors) == 0):
-            self.call_stack.append((None, {}, self.If_else_stack([], [], [])))
+            self.call_stack.append((None, 0, {}, self.If_else_stack([], [], [])))
         else:
-            self.call_stack.append((self.pc.successors[0], self.stored_environments,
+            self.call_stack.append((self.pc.successors[0], self.stack_depth(),
+                                    self.stored_environments,
                                     self.if_else))
             self.if_else = self.If_else_stack([], [], [])
         self.pc = self.font.function_table[callee].start()
@@ -850,6 +856,7 @@ class Executor(object):
 
         self.if_else = self.If_else_stack([], [], [])
         self.intermediateCodes = setGSDefaults()
+        self.minimum_stack_depth = 0
 
         while self.pc is not None:
             if self.pc.data is not None:
@@ -898,8 +905,10 @@ class Executor(object):
 
             self.environment.set_current_instruction(self.pc)
             intermediateCodes = self.environment.execute_current_instruction()
-            if len(self.environment.program_stack) > self.maximum_stack_depth:
-                self.maximum_stack_depth = len(self.environment.program_stack)
+            if self.stack_depth() > self.maximum_stack_depth:
+                self.maximum_stack_depth = self.stack_depth()
+            if self.stack_depth() < self.minimum_stack_depth:
+                self.minimum_stack_depth = self.stack_depth()
 
             self.appendIntermediateCode(intermediateCodes)
 
@@ -930,8 +939,11 @@ class Executor(object):
                 # reached end of function, but we're still in a call
                 elif len(self.call_stack) > 0:
                     logger.info("call stack is %s", self.call_stack)
-                    (self.pc, self.stored_environments, self.if_else) = self.call_stack.pop()
+                    (self.pc, stack_depth_upon_call,
+                     self.stored_environments, self.if_else) = self.call_stack.pop()
+                    stack_used = stack_depth_upon_call - self.minimum_stack_depth
                     logger.info("pop call stack, next is %s", str(self.pc))
+                    logger.info("stack used was %d", stack_used)
                 # ok, we really are all done here!
                 else:
                     assert len(self.if_else.env)==0
