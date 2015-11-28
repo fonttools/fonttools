@@ -78,7 +78,7 @@ class Options(object):
     outputMaxStackDepth = False
     glyphs = []
     allGlyphs = False
-    parseFunctions = False
+    reduceFunctions = False
 
     def __init__(self, rawOptions, numFiles):
         for option, value in rawOptions:
@@ -101,8 +101,8 @@ class Options(object):
                 self.allGlyphs = True
             elif option == "-v":
                 self.verbose = True
-            elif option == "-p":
-                self.parseFunctions = True
+            elif option == "-r":
+                self.reduceFunctions = True
 
         if (self.verbose):
             logging.basicConfig(level = logging.INFO)
@@ -138,7 +138,7 @@ def process(jobs, options):
             print("CVT = ", ae.environment.cvt)
         if (options.outputMaxStackDepth):
             print("Max Stack Depth =", ae.maximum_stack_depth)
-        if (options.parseFunctions):
+        if (options.reduceFunctions):
             if not options.allGlyphs:
                 glyphs = filter(lambda x: x != 'fpgm' and x != 'prep', ttFont.programs.keys())
                 called_functions.update(executeGlyphs(ae, glyphs)) 
@@ -154,7 +154,7 @@ def process(jobs, options):
 
 def parseOptions(args):
     try:
-        rawOptions, files = getopt.getopt(args, "hscfGmg:vp")
+        rawOptions, files = getopt.getopt(args, "hscfGmg:vr")
     except getopt.GetoptError:
         usage()
 
