@@ -128,7 +128,12 @@ def process(jobs, options):
         if (options.outputPrep):
             bc.programs['prep'].body.pretty_print()
         if (options.outputFunctions):
+            first = True
             for key, value in bc.function_table.items():
+                if not first:
+                    print ()
+                else:
+                    first = False
                 print("Function #%d" % (key))
                 value.body.pretty_print()
 

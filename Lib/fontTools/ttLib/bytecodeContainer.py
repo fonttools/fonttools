@@ -296,7 +296,7 @@ class Body(object):
         instruction_stack.append(instruction)
 
         def printHelper(instruction,level):
-            print(level*"   ", instruction)
+            print level*"   " + str(instruction)
 
         level = 0
         while len(instruction_stack)>0:
@@ -312,5 +312,3 @@ class Body(object):
                 instruction_stack.extend(reverse_successor)
             else:
                 instruction_stack.extend(top_instruction.successors)
-
-
