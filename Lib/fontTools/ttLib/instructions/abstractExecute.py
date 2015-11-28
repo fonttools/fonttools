@@ -82,7 +82,7 @@ class Environment(object):
             if (v1 == v2):
                 new_stack.append(v1)
             else:
-                new_stack.append(IR.Variable(dataType.UncertainValue([v1, v2])))
+                new_stack.append(dataType.UncertainValue([v1, v2]))
         self.program_stack = new_stack
 
         for item in environment2.storage_area:
@@ -176,7 +176,7 @@ class Environment(object):
             res = math.fabs(op)
             e = IR.ABSMethodCall([op])
         elif action is 'not':
-            e = IR.NOTMethodCall([op])
+            e = IR.NOTMethodCall([v])
         res = e.eval()
         self.program_stack_push(res, False)
         self.current_instruction_intermediate.append(IR.OperationAssignmentStatement(v, res))
@@ -890,8 +890,7 @@ class Executor(object):
                 else:
                     # first time round at this if statement...
                     cond = self.environment.program_stack.pop()
-                    newBlock = IR.IfElseBlock(cond,
-                                              IR.Variable(self.environment.stack_top_name()),
+                    newBlock = IR.IfElseBlock(IR.Variable(self.environment.stack_top_name(), cond),
                                               len(self.if_else.env) + 1)
 
                     environment_copy = self.environment.make_copy(self.font)
@@ -955,7 +954,16 @@ class Executor(object):
                         call_args += identifierGenerator.generateIdentifier(tag, stack_depth_upon_call - i - 1)
                     call_args += ')'
 
-                    self.appendIntermediateCode(['CALL %s%s' % (str(callee), call_args)])
+                    call_rv = ''
+                    if stack_additional > 0:
+                        call_rv += '('
+                        for i in range(stack_additional):
+                            if i > 0:
+                                call_rv += ', '
+                            call_rv += identifierGenerator.generateIdentifier(tag, stack_depth_upon_call + i)
+                        call_rv += ') := '
+
+                    self.appendIntermediateCode(['%sCALL %s%s' % (call_rv, str(callee), call_args)])
 
                     logger.info("pop call stack, next is %s", str(self.pc))
                     logger.info("stack used was %d", stack_used)

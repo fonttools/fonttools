@@ -11,6 +11,8 @@ class AbstractValue(Value):
         self.value = None
     def __repr__(self):
         return self.__class__.__name__
+    def eval(self):
+        return self
 
 class UncertainValue(AbstractValue):
     def __init__(self, inputValue = None):
@@ -53,17 +55,8 @@ class Expression(AbstractValue):
     	return str(self.op1) + ' '+ str(self.operation) + ' ' + str(self.op2)
 
     def eval(self):
-        operations = {'LT':less,
-                      'LTEQ':lessEqual,
-                      'GT':greater,
-                      'GTEQ':greaterEqual,
-                      'EQ':equal,
-                      'AND':logicalAnd,
-                      'OR':logicalOr}
-        if isinstance(op1, AbstractValue) or isinstance(op2, AbstractValue):
-            return 'uncertain'
-        return operations[self.operation](self.op1,self.op2)
-
+        def equal(op1,op2):
+            return op1 == op2
         def less(op1,op2):
             return op1 < op2
         def lessEqual(op1,op2):
@@ -76,6 +69,16 @@ class Expression(AbstractValue):
             return (op1 and op2)
         def logicalOr(op1,op2):
             return (op1 or op2)
+        operations = {'LT':less,
+                      'LTEQ':lessEqual,
+                      'GT':greater,
+                      'GTEQ':greaterEqual,
+                      'EQ':equal,
+                      'AND':logicalAnd,
+                      'OR':logicalOr}
+        if isinstance(self.op1, AbstractValue) or isinstance(self.op2, AbstractValue):
+            return self
+        return operations[self.operation](self.op1,self.op2)
 
 class UnaryExpression(Expression):
     def __init__(self, operand = None, operation = None):

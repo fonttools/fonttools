@@ -19,8 +19,10 @@ class Variable(dataType.AbstractValue):
         self.data = data
         self.identifier = identifier
     def eval(self):
-        if self.data is None or isinstance(self.data, dataType.AbstractValue):
+        if self.data is None:
             return self
+        if isinstance(self.data, dataType.AbstractValue):
+            return self.data.eval()
         else:
             return self.data
     def __repr__(self):
@@ -366,10 +368,9 @@ class LabelBlock(object):
         return resStr
 
 class IfElseBlock(object):
-    def __init__(self, condition = None, condition_variable = None, nesting_level = 1):
+    def __init__(self, condition = None, nesting_level = 1):
         # TODO use eval
         self.condition = condition
-        self.condition_variable = condition_variable
         self.if_branch = []
         self.else_branch = []
         self.nesting_level = nesting_level
@@ -380,11 +381,10 @@ class IfElseBlock(object):
         else:
             self.else_branch += statements
     def __str__(self):
-        if isinstance(self.condition.data, dataType.UncertainValue):
-            c = self.condition_variable
-        else:
-            c = str(self.condition.data)
-        res_str = 'if ('+c+') {\n'
+        c = self.condition.eval()
+        if isinstance(c, dataType.UncertainValue):
+            c = self.condition
+        res_str = 'if ('+str(c)+') {\n'
         for line in self.if_branch:
             res_str += (self.nesting_level * 4 * ' ') + str(line) + '\n'
         res_str += (self.nesting_level-1) * 4 * ' ' + '}'
