@@ -234,6 +234,11 @@ class MethodCallStatement(object):
         repS += ')'
 	return repS
 
+class DELTAMethodCall(MethodCallStatement):
+    def __init__(self, op, parameters = [], returnVal=None):
+        super(DELTAMethodCall, self).__init__(parameters, returnVal)
+        self.methodName = 'DELTA' + op
+
 class MINMethodCall(MethodCallStatement):
     def __init__(self, parameters = [], returnVal=None):
         super(MINMethodCall, self).__init__(parameters, returnVal)

@@ -152,10 +152,16 @@ class Environment(object):
         self.program_stack.append(tempVariable)
         return tempVariable
 
-    def program_stack_pop(self, num=1):
-        last_val = None
+    def program_stack_pop(self):
+        val = self.program_stack.pop()
+        if self.stack_depth() < self.minimum_stack_depth:
+            self.minimum_stack_depth = self.stack_depth()
+        return val
+
+    def program_stack_pop_many(self, num):
+        last_val = []
         for i in range(num):
-            last_val = self.program_stack.pop()
+            last_val.append(self.program_stack_pop())
         if self.stack_depth() < self.minimum_stack_depth:
             self.minimum_stack_depth = self.stack_depth()
         return last_val
@@ -262,14 +268,14 @@ class Environment(object):
         '''
         move to points, has no further effect on the stack
         '''
-        self.program_stack_pop(2)
+        self.program_stack_pop_many(2)
 
     def exec_ALIGNRP(self):
         loopValue = self.graphics_state['loop']
         self.graphics_state['loop'] = 1
         if len(self.program_stack)<loopValue:
             raise Exception("truetype: hinting: stack underflow")
-        self.program_stack_pop(loopValue)
+        self.program_stack_pop_many(loopValue)
 
     def exec_AND(self):
         self.binary_operation('AND')
@@ -290,28 +296,29 @@ class Environment(object):
     def exec_DEBUG(self):#DebugCall
         self.program_stack_pop()
 
-    def exec_DELTA(self):
-        number = self.program_stack[-1].data
-        loopValue = 1 + (2*number)
-        self.program_stack_pop(loopValue)
+    def exec_DELTA(self, op):
+        number = self.program_stack_pop().eval()
+        loopValue = (2*number)
+        args = self.program_stack_pop_many(loopValue)
+        self.current_instruction_intermediate.append(IR.DELTAMethodCall(op, args))
 
     def exec_DELTAC1(self):#DeltaExceptionC1
-        self.exec_DELTA()
+        self.exec_DELTA("C1")
 
     def exec_DELTAC2(self):#DeltaExceptionC2
-        self.exec_DELTA()
+        self.exec_DELTA("C2")
 
     def exec_DELTAC3(self):#DeltaExceptionC3
-        self.exec_DELTA()
+        self.exec_DELTA("C3")
 
     def exec_DELTAP1(self):#DeltaExceptionC1
-        self.exec_DELTA()
+        self.exec_DELTA("P1")
 
     def exec_DELTAP2(self):#DeltaExceptionC2
-        self.exec_DELTA()
+        self.exec_DELTA("P2")
 
     def exec_DELTAP3(self):#DeltaExceptionC3
-        self.exec_DELTA()
+        self.exec_DELTA("P3")
 
     def exec_DEPTH(self):#GetDepthStack
         depth = len(self.program_stack)
@@ -337,13 +344,13 @@ class Environment(object):
         self.graphics_state['loop'] = 1
         if len(self.program_stack)<loopValue:
             raise Exception("truetype: hinting: stack underflow")
-        self.program_stack_pop(loopValue)
+        self.program_stack_pop_many(loopValue)
 
     def exec_FLIPRGOFF(self):
-        self.program_stack_pop(2)
+        self.program_stack_pop_many(2)
 
     def exec_FLIPRGON(self):
-        self.program_stack_pop(2)
+        self.program_stack_pop_many(2)
 
     def exec_FLOOR(self):
         self.unary_operation('floor')
@@ -380,7 +387,7 @@ class Environment(object):
         op1 = self.program_stack[-2]
         op2 = self.program_stack[-1]
         self.graphics_state['pv'] = (op1.data,op2.data)
-        self.program_stack_pop(2)
+        self.program_stack_pop_many(2)
 
     def exec_GFV(self):
         op1 = self.graphics_state['fv'][0]
@@ -401,7 +408,7 @@ class Environment(object):
     def exec_INSTCTRL(self):
         selector = self.program_stack[-1].data
         value = self.program_stack[-2].data
-        self.program_stack_pop(2)
+        self.program_stack_pop_many(2)
         self.current_instruction_intermediate.append(IR.CopyStatement(IR.InstructControl(selector), value))
     
     def exec_IP(self):
@@ -409,10 +416,10 @@ class Environment(object):
         self.graphics_state['loop'] = 1
         if len(self.program_stack)<loopValue:
             raise Exception("truetype: hinting: stack underflow")
-        self.program_stack_pop(loopValue)
+        self.program_stack_pop_many(loopValue)
 
     def exec_ISECT(self):
-        self.program_stack_pop(5)
+        self.program_stack_pop_many(5)
 
     def exec_IUP(self): # drawing-only
         pass
@@ -432,7 +439,7 @@ class Environment(object):
     def exec_MD(self):
         op1 = self.program_stack[-2]
         op2 = self.program_stack[-1]
-        self.program_stack_pop(2)
+        self.program_stack_pop_many(2)
         #assert isinstance(op1, dataType.PointValue) and (op1, dataType.PointValue)
         res = dataType.Distance()
         self.program_stack_push(res)
@@ -440,31 +447,30 @@ class Environment(object):
     def exec_MDAP(self):
         op = int(self.program_stack[-1].data)
         #assert isinstance(op, dataType.PointValue)
-        self.program_stack_pop(1)
+        self.program_stack_pop()
 
     def exec_MDRP(self):
         op = self.program_stack[-1].data
         #assert isinstance(op, dataType.PointValue)
-        self.program_stack_pop(1)
+        self.program_stack_pop()
 
     def exec_MIAP(self):
         op1 = self.program_stack[-2]
         op2 = self.program_stack[-1]
-        self.program_stack_pop(2)
+        self.program_stack_pop_many(2)
 
     def exec_MIN(self):
         self.binary_operation('MIN')
 
     def exec_MINDEX(self):
-        index = self.program_stack[-1].data
-        self.program_stack_pop()
+        index = self.program_stack_pop()
         #the index start from 1
         top = self.program_stack[-index].data
         del self.program_stack[-index]
         self.program_stack_push(top)
 
     def exec_MIRP(self):
-        self.program_stack_pop(2)
+        self.program_stack_pop_many(2)
 
     def exec_MPPEM(self):
         if self.graphics_state['pv'] == (0, 1):
@@ -476,7 +482,7 @@ class Environment(object):
         self.program_stack_push(dataType.PointSize())
 
     def exec_MSIRP(self):
-        self.program_stack_pop(2)
+        self.program_stack_pop_many(2)
 
     def exec_MUL(self):
         self.binary_operation('MUL')
@@ -567,7 +573,7 @@ class Environment(object):
         self.current_instruction_intermediate.append(IR.CopyStatement(IR.ScanType(), value))
 
     def exec_SCFS(self):
-        self.program_stack_pop(2)
+        self.program_stack_pop_many(2)
 
     def exec_SCVTCI(self):
         self.program_stack_pop()
@@ -576,13 +582,13 @@ class Environment(object):
         self.program_stack_pop()
 
     def exec_SDPVTL(self):
-        self.program_stack_pop(2)
+        self.program_stack_pop_many(2)
 
     def exec_SDS(self):
         self.program_stack_pop()
 
     def exec_SFVFS(self):
-        self.program_stack_pop(2)
+        self.program_stack_pop_many(2)
 
     def exec_SFVTCA(self):#Set Freedom Vector To Coordinate Axis
         data = int(self.current_instruction.data[0])
@@ -593,20 +599,20 @@ class Environment(object):
             self.graphics_state['fv'] = (1, 0)
            
     def exec_SFVTL(self):#Set Freedom Vector To Line
-        self.program_stack_pop(2)
+        self.program_stack_pop_many(2)
 
     def exec_SFVTPV(self):#Set Freedom Vector To Projection Vector
         self.graphics_state['fv'] = self.graphics_state['pv']
 
     def exec_SHC(self):
-        self.program_stack_pop(1)
+        self.program_stack_pop()
  
     def exec_SHP(self):
         loopValue = self.graphics_state['loop']
         self.graphics_state['loop'] = 1
         if len(self.program_stack)<loopValue:
             raise Exception("truetype: hinting: stack underflow")
-        self.program_stack_pop(loopValue)
+        self.program_stack_pop_many(loopValue)
 
     def exec_SHPIX(self):
         self.program_stack_pop()
@@ -614,10 +620,10 @@ class Environment(object):
         self.graphics_state['loop'] = 1
         if len(self.program_stack)<loopValue:
             raise Exception("truetype: hinting: stack underflow")
-        self.program_stack_pop(loopValue)
+        self.program_stack_pop_many(loopValue)
 
     def exec_SHZ(self):
-        self.program_stack_pop(1)
+        self.program_stack_pop()
   
     def exec_SLOOP(self):
         self.graphics_state['loop'] = self.program_stack[-1].data
@@ -627,7 +633,7 @@ class Environment(object):
         self.program_stack_pop()
 
     def exec_SPVFS(self):
-        self.program_stack_pop(2)
+        self.program_stack_pop_many(2)
 
     def exec_SPVTCA(self):
         data = int(self.current_instruction.data[0])
@@ -640,7 +646,7 @@ class Environment(object):
             self.graphics_state['dv'] = (1, 0)
 
     def exec_SPVTL(self):
-        self.program_stack_pop(2)
+        self.program_stack_pop_many()
 
     def exec_SROUND(self):
         self.program_stack_pop()
@@ -699,7 +705,7 @@ class Environment(object):
     def getOpandVar(self):
         op1 = self.program_stack[-2]
         op2 = self.program_stack[-1]
-        self.program_stack_pop(2)
+        self.program_stack_pop_many(2)
 
         return [op1.data,op2.data,op1,op2]
 
@@ -733,7 +739,7 @@ class Environment(object):
         self.program_stack_pop()
     
     def exec_SCFS(self):
-        self.program_stack_pop(2)
+        self.program_stack_pop_many()
 
     def exec_SCVTCI(self):
         data = self.program_stack[-1].data

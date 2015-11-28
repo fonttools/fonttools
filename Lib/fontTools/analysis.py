@@ -46,9 +46,7 @@ def executeGlyphs(absExecutor, initialEnvironment, glyphs):
         print(glyph)
         absExecutor.environment = copy.deepcopy(initialEnvironment)
         absExecutor.execute(glyph)
-        print ("called functions was ", str(called_functions))
         called_functions.update(list(set(absExecutor.program.call_function_set)))
-        print ("called functions now ", str(called_functions))
     return called_functions
 
 def analysis(tt, glyphs=[]):
