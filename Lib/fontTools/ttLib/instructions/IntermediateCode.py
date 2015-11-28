@@ -1,4 +1,5 @@
 from fontTools.ttLib.data import dataType
+import math
 
 class Boolean(object):
     def __init__(self, value):

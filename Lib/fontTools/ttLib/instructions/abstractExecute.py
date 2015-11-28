@@ -1,7 +1,6 @@
 from fontTools.ttLib.data import dataType
 import logging
 import copy
-import math
 import IntermediateCode as IR
 logger = logging.getLogger(" ")
 global_function_table = {}
