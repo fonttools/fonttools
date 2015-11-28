@@ -135,17 +135,26 @@ def process(jobs, options):
 
         if (options.outputPrep):
             print ("PREP:")
-            bc.programs['prep'].body.pretty_print(options.outputIR)
+            if (options.outputIR):
+                bc.print_IR(bc.IRs['prep'])
+            else:
+                bc.programs['prep'].body.pretty_print()
             print ()
         if (options.outputFunctions):
             for key, value in bc.function_table.items():
                 print ("Function #%d:" % (key))
-                value.body.pretty_print(options.outputIR)
+                if (options.outputIR):
+                    bc.print_IR(bc.IRs["fpgm_%s" % key])
+                else:
+                    value.body.pretty_print()
                 print ()
         if (options.outputGlyfPrograms):
             for glyph in glyphs:
                 print ("%s:" % glyph)
-                bc.programs[glyph].body.pretty_print(options.outputIR)
+                if (options.outputIR):
+                    bc.print_IR(bc.IRs[glyph])
+                else:
+                    bc.programs[glyph].body.pretty_print()
                 print ()
 
         if (options.outputCallGraph):

@@ -211,7 +211,11 @@ class BytecodeContainer(object):
                 except:
                     ttFont['glyf'].glyphs[table[5:]].program.fromAssembly(assembly)
 
-#per-glyph instructions
+    def print_IR(self, IR):
+        for line in IR:
+            print line
+
+# per-glyph instructions
 class Program(object):
     def __init__(self, input):
         self.body = Body(instructions = input)
@@ -220,14 +224,14 @@ class Program(object):
     def start(self):
         return self.body.statement_root
 
-    def print_program(self, outputIR = False):
-        self.body.pretty_print(outputIR)
+    def print_program(self):
+        self.body.pretty_print()
 
 class Function(object):
     def __init__(self, instructions=None):
         self.instructions = []
-    def pretty_print(self, outputIR = False):
-        self.body.pretty_print(outputIR)
+    def pretty_print(self):
+        self.body.pretty_print()
     def constructBody(self):
         #convert the list to tree structure
         self.body = Body(instructions = self.instructions)
@@ -289,7 +293,7 @@ class Body(object):
                 pending_if_stack.pop()
         return input_statements[0]
 
-    def pretty_print(self, outputIR = False):
+    def pretty_print(self):
         level = 1
         instruction = self.statement_root
         instruction_stack = []

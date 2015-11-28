@@ -971,5 +971,4 @@ class Executor(object):
                 else:
                     assert len(self.if_else.env)==0
                     self.pc = None
-        #for intermediateCode in self.intermediateCodes:
-        #    print intermediateCode
+        self.bytecodeContainer.IRs[tag] = self.intermediateCodes
