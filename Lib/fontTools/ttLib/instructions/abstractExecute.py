@@ -790,8 +790,8 @@ class Executor(object):
 
     This class manages the program pointer like jump to function call
     """
-    def __init__(self,font):
-        self.font = font
+    def __init__(self,bc):
+        self.bytecodeContainer = bc
         self.program = None
         self.pc = None
         self.maximum_stack_depth = 0
@@ -835,26 +835,22 @@ class Executor(object):
         self.environment.set_current_instruction(self.pc)
         self.environment.execute_current_instruction()
 
-        logger.info("stack depth into call is %s", self.stack_depth())
         self.environment.minimum_stack_depth = self.stack_depth()
         # set call stack & jump
         # yuck should regularize the CFG to avoid needing this hack
         if (len(self.pc.successors) == 0):
-            self.call_stack.append((callee, None, self.stack_depth(),
-                                    self.stored_environments, self.if_else))
+            succ = None
         else:
-            self.call_stack.append((callee, self.pc.successors[0], self.stack_depth(),
-                                    self.stored_environments,
-                                    self.if_else))
+            succ = self.pc.successors[0]
+        self.call_stack.append((callee, succ, self.stack_depth(),
+                                self.stored_environments, self.if_else))
         self.if_else = self.If_else_stack([], [], [])
-        self.pc = self.font.function_table[callee].start()
+        self.pc = self.bytecodeContainer.function_table[callee].start()
         self.stored_environments = {}
-        
-        logger.info("jump to callee function, starting with "+self.pc.mnemonic)
 
     def execute(self,tag):
-        self.environment = Environment(self.font, tag)
-        self.program = self.font.programs[tag]
+        self.environment = Environment(self.bytecodeContainer, tag)
+        self.program = self.bytecodeContainer.programs[tag]
         self.pc = self.program.start()
 
         self.if_else = self.If_else_stack([], [], [])
@@ -891,7 +887,7 @@ class Executor(object):
                     newBlock = IR.IfElseBlock(IR.Variable(self.environment.stack_top_name(), cond),
                                               len(self.if_else.env) + 1)
 
-                    environment_copy = self.environment.make_copy(self.font)
+                    environment_copy = self.environment.make_copy(self.bytecodeContainer)
                     self.if_else.IR.append(newBlock)
                     self.if_else.env.append((self.pc, environment_copy))
                     self.if_else.state.append(0)

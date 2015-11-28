@@ -59,12 +59,6 @@ def analysis(tt, glyphs=[]):
     absExecutor.execute('prep')
     print ("end PREP")
 
-    print ("PREP's called function set:")
-    print (absExecutor.program.call_function_set)
-    print ("PREP's Call graph:")
-    for item in absExecutor.global_function_table.items():
-        print (item)
-
     environment_after_prep = copy.deepcopy(absExecutor.environment)
     called_functions.update(list(set(absExecutor.program.call_function_set)))
     called_functions.update(executeGlyphs(absExecutor, environment_after_prep, glyphs))
@@ -75,6 +69,7 @@ class Options(object):
     outputState = False
     outputCVT = False
     outputFunctions = False
+    outputCallGraph = False
     outputMaxStackDepth = False
     glyphs = []
     allGlyphs = False
@@ -89,10 +84,14 @@ class Options(object):
                 sys.exit(0)
             elif option == "-s":
                 self.outputState = True
-            elif option == "-c":
+            elif option == "--cvt":
                 self.outputCVT = True
+            elif option == "-c":
+                self.outputCallGraph = True
             elif option == "-m":
                 self.outputMaxStackDepth = True
+            elif option == "-p":
+                self.outputPrep = True
             elif option == "-f":
                 self.outputFunctions = True
             elif option == "-g":
@@ -118,19 +117,28 @@ def process(jobs, options):
     for input in jobs:
         tt = TTFont()
         tt.importXML(input, quiet=True)
-        ttFont = BytecodeContainer(tt)
+        bc = BytecodeContainer(tt)
 
         if (options.allGlyphs):
-            glyphs = filter(lambda x: x != 'fpgm' and x != 'prep', ttFont.programs.keys())
+            glyphs = filter(lambda x: x != 'fpgm' and x != 'prep', bc.programs.keys())
         else:
             glyphs = map(lambda x: 'glyf.'+x, options.glyphs)
 
-        ae, called_functions = analysis(ttFont, glyphs)
+        ae, called_functions = analysis(bc, glyphs)
+
+        if (options.outputPrep):
+            bc.programs['prep'].body.pretty_print()
         if (options.outputFunctions):
-            ttFont.programs['prep'].body.pretty_print()
-            for key, value in ttFont.function_table.items():
+            for key, value in bc.function_table.items():
                 print("Function #%d" % (key))
                 value.body.pretty_print()
+
+        if (options.outputCallGraph):
+            print ("called function set:")
+            print (ae.program.call_function_set)
+            print ("call graph:")
+            for item in ae.global_function_table.items():
+                print (item)
 
         if (options.outputState):
             ae.environment.pretty_print()
@@ -140,21 +148,21 @@ def process(jobs, options):
             print("Max Stack Depth =", ae.maximum_stack_depth)
         if (options.reduceFunctions):
             if not options.allGlyphs:
-                glyphs = filter(lambda x: x != 'fpgm' and x != 'prep', ttFont.programs.keys())
+                glyphs = filter(lambda x: x != 'fpgm' and x != 'prep', bc.programs.keys())
                 called_functions.update(executeGlyphs(ae, glyphs)) 
             
             function_set = ae.environment.function_table.keys()
             unused_functions = [item for item in function_set if item not in called_functions]
           
-            ttFont.removeFunctions(unused_functions)    
-            ttFont.updateTTFont(tt)
+            bc.removeFunctions(unused_functions)
+            bc.updateTTFont(tt)
             output = "Reduced"+input
             output = makeOutputFileName(output, ".ttf")
             tt.save(output)
 
 def parseOptions(args):
     try:
-        rawOptions, files = getopt.getopt(args, "hscfGmg:vr")
+        rawOptions, files = getopt.getopt(args, "hscpfGmg:vr", ['cvt'])
     except getopt.GetoptError:
         usage()
 
