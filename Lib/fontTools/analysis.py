@@ -5,12 +5,17 @@ usage: pyftanalysis [options] inputfile
 
     General options:
     -h Help: print this message
-    -m MaxStackDepth: print out the maximum stack depth for the executed code
+    -i IR: print out IR rather than bytecode
     -s State: print the graphics state after executing prep
-    -c CVT: print the CVT after executing prep
-    -f Functions: print out function and prep bytecodes
+    -c CallGraph: print out the call graph
+    -m MaxStackDepth: print out the maximum stack depth for the executed code
+    -p Prep: print out prep bytecodes/IR
+    -f Functions: print out function bytecodes/IR
+    -z Glyphs: print out selected glyph bytecode/IR
     -g NAME Glyph: execute prep plus hints for glyph NAME
     -G AllGlyphs: execute prep plus hints for all glyphs in font
+    -r Reduce: remove uncalled functions
+    --cvt CVT: print the CVT after executing prep
     -v Verbose: be more verbose
 """
 
@@ -43,13 +48,12 @@ def ttDump(input):
 def executeGlyphs(absExecutor, initialEnvironment, glyphs):
     called_functions = set() 
     for glyph in glyphs:
-        print(glyph)
         absExecutor.environment = copy.deepcopy(initialEnvironment)
         absExecutor.execute(glyph)
         called_functions.update(list(set(absExecutor.program.call_function_set)))
     return called_functions
 
-def analysis(tt, glyphs=[]):
+def analysis(tt, glyphs):
     #one ttFont object for one ttx file       
     absExecutor = abstractExecute.Executor(tt)
     called_functions = set()
@@ -64,8 +68,10 @@ class Options(object):
     verbose = False
     outputState = False
     outputCVT = False
+    outputIR = False
     outputPrep = False
     outputFunctions = False
+    outputGlyfPrograms = False
     outputCallGraph = False
     outputMaxStackDepth = False
     glyphs = []
@@ -79,6 +85,8 @@ class Options(object):
                 from fontTools import version
                 print(__doc__ % version)
                 sys.exit(0)
+            elif option == "-i":
+                self.outputIR = True
             elif option == "-s":
                 self.outputState = True
             elif option == "--cvt":
@@ -91,6 +99,8 @@ class Options(object):
                 self.outputPrep = True
             elif option == "-f":
                 self.outputFunctions = True
+            elif option == "-z":
+                self.outputGlyfPrograms = True
             elif option == "-g":
                 self.glyphs.append(value)
             elif option == "-G":
@@ -124,16 +134,19 @@ def process(jobs, options):
         ae, called_functions = analysis(bc, glyphs)
 
         if (options.outputPrep):
-            bc.programs['prep'].body.pretty_print()
+            print ("PREP:")
+            bc.programs['prep'].body.pretty_print(options.outputIR)
+            print ()
         if (options.outputFunctions):
-            first = True
             for key, value in bc.function_table.items():
-                if not first:
-                    print ()
-                else:
-                    first = False
-                print("Function #%d" % (key))
-                value.body.pretty_print()
+                print ("Function #%d:" % (key))
+                value.body.pretty_print(options.outputIR)
+                print ()
+        if (options.outputGlyfPrograms):
+            for glyph in glyphs:
+                print ("%s:" % glyph)
+                bc.programs[glyph].body.pretty_print(options.outputIR)
+                print ()
 
         if (options.outputCallGraph):
             print ("called function set:")
@@ -164,7 +177,7 @@ def process(jobs, options):
 
 def parseOptions(args):
     try:
-        rawOptions, files = getopt.getopt(args, "hscpfGmg:vr", ['cvt'])
+        rawOptions, files = getopt.getopt(args, "hiscpfzGmg:vr", ['cvt'])
     except getopt.GetoptError:
         usage()
 

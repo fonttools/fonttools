@@ -220,14 +220,14 @@ class Program(object):
     def start(self):
         return self.body.statement_root
 
-    def print_program(self):
-        self.body.pretty_print()
+    def print_program(self, outputIR = False):
+        self.body.pretty_print(outputIR)
 
 class Function(object):
     def __init__(self, instructions=None):
         self.instructions = []
-    def pretty_printer(self):
-        self.body.pretty_printer()
+    def pretty_print(self, outputIR = False):
+        self.body.pretty_print(outputIR)
     def constructBody(self):
         #convert the list to tree structure
         self.body = Body(instructions = self.instructions)
@@ -289,7 +289,7 @@ class Body(object):
                 pending_if_stack.pop()
         return input_statements[0]
 
-    def pretty_print(self):
+    def pretty_print(self, outputIR = False):
         level = 1
         instruction = self.statement_root
         instruction_stack = []
