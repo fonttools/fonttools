@@ -252,16 +252,31 @@ class ABSMethodCall(MethodCallStatement):
     def __init__(self, parameters = [], returnVal=None):
         super(ABSMethodCall, self).__init__(parameters, returnVal)
         self.methodName = 'ABS'
+    def eval(self):
+        p = self.parameters[0].eval()
+        if isinstance(p, dataType.AbstractValue):
+            return self
+        return math.fabs(p)
 
 class CEILMethodCall(MethodCallStatement):
     def __init__(self, parameters = [], returnVal=None):
         super(CEILINGMethodCall, self).__init__(parameters, returnVal)
         self.methodName = 'CEIL'
+    def eval(self):
+        p = self.parameters[0].eval()
+        if isinstance(p, dataType.AbstractValue):
+            return self
+        return math.ceil(p)
 
 class FLOORMethodCall(MethodCallStatement):
     def __init__(self, parameters = [], returnVal=None):
         super(FLOORMethodCall, self).__init__(parameters, returnVal)
         self.methodName = 'FLOOR'
+    def eval(self):
+        p = self.parameters[0].eval()
+        if isinstance(p, dataType.AbstractValue):
+            return self
+        return math.floor(p)
 
 class NOTMethodCall(MethodCallStatement):
     def __init__(self, parameters = [], returnVal=None):

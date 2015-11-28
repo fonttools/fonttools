@@ -167,14 +167,11 @@ class Environment(object):
         v = IR.Variable(self.stack_top_name(), op)
 
         if action is 'ceil':
-            res = math.ceil(op)
-            e = IR.CEILMethodCall([op])
+            e = IR.CEILMethodCall([v])
         elif action is 'floor':
-            res = math.floor(op)
-            e = IR.FLOORMethodCall([op])
+            e = IR.FLOORMethodCall([v])
         elif action is 'abs':
-            res = math.fabs(op)
-            e = IR.ABSMethodCall([op])
+            e = IR.ABSMethodCall([v])
         elif action is 'not':
             e = IR.NOTMethodCall([v])
         res = e.eval()
