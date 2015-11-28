@@ -305,7 +305,9 @@ class GETINFOMethodCall(MethodCallStatement):
     def __init__(self, parameters = [], returnVal=None):
         super(GETINFOMethodCall, self).__init__(parameters, returnVal)
         self.methodName = 'GETINFO'
-
+    def eval(self):
+        return self
+        
 class ROUNDMethodCall(MethodCallStatement):
     def __init__(self, parameters = [], returnVal=None):
         super(ROUNDMethodCall, self).__init__(parameters, returnVal)

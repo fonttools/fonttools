@@ -370,10 +370,12 @@ class Environment(object):
         #We set no other bits, as we do not support rotated or stretched glyphs.
         h.stack[-1] = res
         '''
-        var = self.program_stack[-1]
-        self.program_stack_pop()
-        new_var = self.program_stack_push(dataType.EngineInfo(),False)
-        self.current_instruction_intermediate.append(IR.GETINFOMethodCall([var],new_var))
+        op = self.program_stack_pop()
+        v = IR.Variable(self.stack_top_name())
+        e = IR.GETINFOMethodCall([v])
+        res = e.eval()
+        self.program_stack_push(v, False)
+        self.current_instruction_intermediate.append(IR.OperationAssignmentStatement(v, res))
 
     def exec_GPV(self):
         op1 = self.program_stack[-2]
