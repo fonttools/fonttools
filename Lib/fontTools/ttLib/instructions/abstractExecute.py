@@ -141,10 +141,13 @@ class Environment(object):
 
     def stack_depth(self):
         return len(self.program_stack)
-        
-    def program_stack_push(self, data = None, assign = True):
-        tempVariableName = self.stack_top_name(1)
-        tempVariable = IR.Variable(tempVariableName, data)
+
+    def program_stack_push(self, data = None, assign = True, customVar = None):
+        if customVar is not None:
+            tempVariable = customVar
+        else:
+            tempVariableName = self.stack_top_name(1)
+            tempVariable = IR.Variable(tempVariableName, data)
         if data is not None and assign:
             self.generate_assign_variable(tempVariable, data)
         self.program_stack.append(tempVariable)
@@ -164,19 +167,22 @@ class Environment(object):
             self.minimum_stack_depth = self.stack_depth()
         return last_val
 
+    def replace_locals_with_formals(self):
+        pass
+
     def unary_operation(self, action):
         v_name = self.stack_top_name()
-        op = self.program_stack_pop()
-        v = IR.Variable(v_name, op)
+        arg = self.program_stack_pop()
+        v = IR.Variable(v_name, arg)
 
         if action is 'ceil':
-            e = IR.CEILMethodCall([v])
+            e = IR.CEILMethodCall([arg])
         elif action is 'floor':
-            e = IR.FLOORMethodCall([v])
+            e = IR.FLOORMethodCall([arg])
         elif action is 'abs':
-            e = IR.ABSMethodCall([v])
+            e = IR.ABSMethodCall([arg])
         elif action is 'not':
-            e = IR.NOTMethodCall([v])
+            e = IR.NOTMethodCall([arg])
         res = e.eval(self.keep_abstract)
         self.program_stack_push(res, False)
         self.current_instruction_intermediate.append(IR.OperationAssignmentStatement(v, res))
@@ -472,9 +478,9 @@ class Environment(object):
         self.binary_operation('MIN')
 
     def exec_MINDEX(self):
-        index = self.program_stack_pop()
-        #the index start from 1
-        top = self.program_stack[-index].data
+        index = self.program_stack_pop().eval(False)
+        assert not isinstance(index, dataType.AbstractValue)
+        top = self.program_stack[-index].eval(self.keep_abstract)
         del self.program_stack[-index]
         self.program_stack_push(top)
 
@@ -746,7 +752,6 @@ class Environment(object):
     def exec_WCVTP(self):
         res = self.getOpandVar()
         self.cvt[res[0]] = res[1]
-        assert not isinstance(res[0], dataType.AbstractValue)
         self.current_instruction_intermediate.append(IR.CVTStorageStatement(res[2],res[3]))
        
     def getOpandVar(self):
@@ -754,13 +759,12 @@ class Environment(object):
         op2 = self.program_stack[-1]
         self.program_stack_pop_many(2)
 
-        return [op1.data,op2.data,op1,op2]
+        return [op1.eval(self.keep_abstract),op2.eval(self.keep_abstract),op1,op2]
 
     def exec_WS(self):
         res = self.getOpandVar()
         self.current_instruction_intermediate.append(IR.WriteStorageStatement(res[2],res[3]))
 
-        assert not isinstance(res[0], dataType.AbstractValue)
         self.write_storage_area(res[0], res[1])
 
     def exec_EQ(self):
@@ -895,12 +899,13 @@ class Executor(object):
         else:
             succ = self.pc.successors[0]
         self.call_stack.append((callee, succ, self.intermediateCodes,
-                                self.environment.tag, self.stack_depth(),
+                                self.environment.tag, copy.copy(self.environment.program_stack),
                                 self.stored_environments, self.if_else))
         self.if_else = self.If_else_stack([], [], [])
         self.pc = self.bytecodeContainer.function_table[callee].start()
         self.intermediateCodes = []
         self.environment.tag = "fpgm_%s_" % callee
+        self.environment.replace_locals_with_formals()
         self.stored_environments = {}
 
     def execute(self, tag):
@@ -940,7 +945,8 @@ class Executor(object):
                 else:
                     # first time round at this if statement...
                     cond = self.environment.program_stack.pop()
-                    newBlock = IR.IfElseBlock(IR.Variable(self.environment.stack_top_name(1), cond),
+                    logger.info("entering if block for %s, stack height is %d" % (str(cond), self.stack_depth()))
+                    newBlock = IR.IfElseBlock(cond,
                                               len(self.if_else.env) + 1)
 
                     environment_copy = self.environment.make_copy(self.bytecodeContainer)
@@ -996,11 +1002,21 @@ class Executor(object):
                         self.bytecodeContainer.IRs[self.environment.tag] = self.intermediateCodes
                     self.visited_functions.add(self.environment.tag)
                     (callee, self.pc, self.intermediateCodes, self.environment.tag,
-                     stack_depth_upon_call, self.stored_environments,
+                     caller_program_stack, self.stored_environments,
                      self.if_else) = self.call_stack.pop()
 
+                    stack_depth_upon_call = len(caller_program_stack)
                     stack_used = stack_depth_upon_call - self.environment.minimum_stack_depth
                     stack_additional = self.stack_depth() - stack_depth_upon_call
+                    self.environment.program_stack = caller_program_stack
+                    if stack_additional > 0:
+                        for i in range(stack_additional):
+                            rv_val = dataType.AbstractValue()
+                            rv = IR.Variable("$rv%d" % i, rv_val)
+                            self.environment.program_stack_push(rv_val, False, rv)
+                    if stack_additional < 0:
+                        for i in range(-stack_additional):
+                            self.environment.program_stack.pop()
 
                     call_args = '('
                     for i in range(stack_used):
@@ -1015,14 +1031,14 @@ class Executor(object):
                         for i in range(stack_additional):
                             if i > 0:
                                 call_rv += ', '
-                            call_rv += identifierGenerator.generateIdentifier(tag, stack_depth_upon_call + i)
+                            call_rv += self.environment.program_stack[-(i+1)].identifier
                         call_rv += ') := '
 
                     self.appendIntermediateCode(['%sCALL %s%s' % (call_rv, str(callee), call_args)])
 
                     logger.info("pop call stack, next is %s", str(self.pc))
                     logger.info("stack used was %d", stack_used)
-                    logger.info("new entries on stack are %d", stack_additional)
+                    logger.info("stack additional was %d", stack_additional)
                 # ok, we really are all done here!
                 else:
                     assert len(self.if_else.env)==0

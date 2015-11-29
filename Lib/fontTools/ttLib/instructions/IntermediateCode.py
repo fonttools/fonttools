@@ -334,7 +334,7 @@ class ROUNDMethodCall(MethodCallStatement):
         super(ROUNDMethodCall, self).__init__(parameters, returnVal)
         self.methodName = 'ROUND_'+data
 
-class AssignmentStatement(object):
+class AssignmentStatement(dataType.AbstractValue):
     def __init__(self):
         self.operator = AssignOperator()
     def __repr__(self):
