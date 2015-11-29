@@ -168,7 +168,15 @@ class Environment(object):
         return last_val
 
     def replace_locals_with_formals(self):
-        pass
+        new_stack = []
+        stack_depth = len(self.program_stack)
+        for i in range(0, len(self.program_stack)):
+            s = self.program_stack[i]
+            if isinstance(s, IR.Variable):
+                new_stack.append(IR.Variable("arg$%d" % (stack_depth - i - 1), s.data))
+            else:
+                new_stack.append(s)
+        self.program_stack = new_stack
 
     def unary_operation(self, action):
         v_name = self.stack_top_name()
