@@ -806,6 +806,7 @@ class Executor(object):
         # generated as a side effect:
         self.intermediateCodes = []
         self.global_function_table = {}
+        self.visited_functions = set()
 
     class If_else_stack(object):
         def __init__(self, IR, env, state):
@@ -817,11 +818,10 @@ class Executor(object):
         return self.environment.stack_depth()
 
     def appendIntermediateCode(self, ins):
-        if len(self.call_stack) == 0:
-            if len(self.if_else.IR) > 0:
-                self.if_else.IR[-1].appendStatements(ins)
-            else:
-                self.intermediateCodes.extend(ins)
+        if len(self.if_else.IR) > 0:
+            self.if_else.IR[-1].appendStatements(ins)
+        else:
+            self.intermediateCodes.extend(ins)
 
     def execute_CALL(self):
         callee = self.environment.program_stack[-1].eval()
@@ -833,7 +833,6 @@ class Executor(object):
             self.global_function_table[callee] = 1
         else:
             self.global_function_table[callee] += 1
-        logger.info('ADD CALL SET: %s | %s' % (callee, self.program.call_function_set))
 
         # execute the call instruction itself
         self.environment.set_current_instruction(self.pc)
@@ -846,10 +845,13 @@ class Executor(object):
             succ = None
         else:
             succ = self.pc.successors[0]
-        self.call_stack.append((callee, succ, self.stack_depth(),
+        self.call_stack.append((callee, succ, self.intermediateCodes,
+                                self.environment.tag, self.stack_depth(),
                                 self.stored_environments, self.if_else))
         self.if_else = self.If_else_stack([], [], [])
         self.pc = self.bytecodeContainer.function_table[callee].start()
+        self.intermediateCodes = []
+        self.environment.tag = "fpgm_%s" % callee
         self.stored_environments = {}
 
     def execute(self, tag):
@@ -939,9 +941,15 @@ class Executor(object):
                     logger.info("program pointer back to %s %s", str(self.pc),str(self.pc.id))
                 # reached end of function, but we're still in a call
                 elif len(self.call_stack) > 0:
-                    logger.info("call stack is %s", self.call_stack)
-                    (callee, self.pc, stack_depth_upon_call,
-                     self.stored_environments, self.if_else) = self.call_stack.pop()
+                    if self.environment.tag in self.visited_functions:
+                        # assert that self.intermediateCodes == bytecodeContainer.IRs[tag]
+                        pass
+                    else:
+                        self.bytecodeContainer.IRs[self.environment.tag] = self.intermediateCodes
+                    self.visited_functions.add(self.environment.tag)
+                    (callee, self.pc, self.intermediateCodes, self.environment.tag,
+                     stack_depth_upon_call, self.stored_environments,
+                     self.if_else) = self.call_stack.pop()
 
                     stack_used = stack_depth_upon_call - self.environment.minimum_stack_depth
                     stack_additional = self.stack_depth() - stack_depth_upon_call
