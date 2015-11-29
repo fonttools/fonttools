@@ -17,8 +17,8 @@ class Constant(object):
 
 class Variable(dataType.AbstractValue):
     def __init__(self, identifier, data = None):
-        self.data = data
         self.identifier = identifier
+        self.data = data
     def eval(self, keep_abstract):
         if keep_abstract or self.data is None:
             return self
