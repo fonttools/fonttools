@@ -177,6 +177,12 @@ class MULOperator(Operator):
 class DIVOperator(Operator):
     def __repr__(self):
         return "/"
+class MAXOperator(Operator):
+    def __repr__(self):
+        return "max"
+class MINOperator(Operator):
+    def __repr__(self):
+        return "min"
 
 class ANDOperator(Operator):
     def __repr__(self):
@@ -214,8 +220,18 @@ class BinaryExpression(Expression):
 	self.left = left
 	self.right = right
 	self.operator = op
+
+class InfixBinaryExpression(BinaryExpression):
+    def __init__(self, left, right, op):
+        super(InfixBinaryExpression, self).__init__(left, right, op)
     def __repr__(self):
 	return "%s %s %s" % (self.left, str(self.operator), self.right)
+
+class PrefixBinaryExpression(BinaryExpression):
+    def __init__(self, left, right, op):
+        super(PrefixBinaryExpression, self).__init__(left, right, op)
+    def __repr__(self):
+	return "%s(%s, %s)" % (str(self.operator), self.left, self.right)
 
 class MethodCallStatement(object):
     def __init__(self, parameters = [], returnVal=None):

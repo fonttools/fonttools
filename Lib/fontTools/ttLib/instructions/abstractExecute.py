@@ -181,58 +181,61 @@ class Environment(object):
         return res
 
     def binary_operation(self, action):
-        op1 = self.program_stack_pop().eval()
-        op2 = self.program_stack_pop().eval()
+        op1_var = self.program_stack_pop()
+        op2_var = self.program_stack_pop()
+        op1 = op1_var.eval()
+        op2 = op2_var.eval()
 
         expression = None
         if isinstance(op1,dataType.AbstractValue) or isinstance(op2,dataType.AbstractValue):
             res = dataType.Expression(op1, op2, action)
-            if action is not 'MAX' and action is not 'MIN':
-                expression = IR.BinaryExpression(op1, op2, getattr(IR,action+'Operator')())
+            if action is 'MAX' or action is 'MIN':
+                e = IR.PrefixBinaryExpression
             else:
-                expression = getattr(IR, action+'MethodCall')([op1,op2])
+                e = IR.InfixBinaryExpression
+            expression = e(op1_var, op2_var, getattr(IR, action+'Operator')())
         elif action is 'ADD':
             res = op1 + op2
-            expression = IR.BinaryExpression(op1,op2,IR.ADDOperator())
-        elif action is 'GT':
-            res = op1 > op2
-            expression = IR.BinaryExpression(op1,op2,IR.GTOperator())
-        elif action is 'GTEQ':
-            res = op1 >= op2
-            expression = IR.BinaryExpression(op1,op2,IR.GTEQOperator())
-        elif action is 'AND':
-            res = op1 and op2
-            expression = IR.BinaryExpression(op1,op2,IR.ANDOperator())
-        elif action is 'OR':
-            res = op1 or op2
-            expression = IR.BinaryExpression(op1,op2,IR.OROperator())
-        elif action is 'MUL':
-            res = op1 * op2
-            expression = IR.BinaryExpression(op1,op2,IR.MULOperator())
-        elif action is 'DIV':
-            res = op1 / op2
-            expression = IR.BinaryExpression(op1,op2,IR.DIVOperator())
-        elif action is 'EQ':
-            res = op1 == op2
-            expression = IR.BinaryExpression(op1,op2,IR.EQOperator())
-        elif action is 'NEQ':
-            res = op1 != op2
-            expression = IR.BinaryExpression(op1,op2,IR.NEQOperator())
-        elif action is 'LT':
-            res = op1 < op2
-            expression = IR.BinaryExpression(op1,op2,IR.LTOperator())
-        elif action is 'LTEQ':
-            res = op1 <= op2
-            expression = IR.BinaryExpression(op1,op2,IR.LTEQOperator())
-        elif action is 'MAX':
-            res = max(op1,op2)
-            expression = getattr(IR, action+'MethodCall')([op1,op2])
-        elif action is 'MIN':
-            res = min(op1,op2)
-            expression = getattr(IR, action+'MethodCall')([op1,op2])
+            expression = IR.InfixBinaryExpression(op1,op2,IR.ADDOperator())
         elif action is 'SUB':
             res = op1 - op2
-            expression = IR.BinaryExpression(op1,op2,IR.SUBOperator())
+            expression = IR.InfixBinaryExpression(op1,op2,IR.SUBOperator())
+        elif action is 'GT':
+            res = op1 > op2
+            expression = IR.InfixBinaryExpression(op1,op2,IR.GTOperator())
+        elif action is 'GTEQ':
+            res = op1 >= op2
+            expression = IR.InfixBinaryExpression(op1,op2,IR.GTEQOperator())
+        elif action is 'AND':
+            res = op1 and op2
+            expression = IR.InfixBinaryExpression(op1,op2,IR.ANDOperator())
+        elif action is 'OR':
+            res = op1 or op2
+            expression = IR.InfixBinaryExpression(op1,op2,IR.OROperator())
+        elif action is 'MUL':
+            res = op1 * op2
+            expression = IR.InfixBinaryExpression(op1,op2,IR.MULOperator())
+        elif action is 'DIV':
+            res = op1 / op2
+            expression = IR.InfixBinaryExpression(op1,op2,IR.DIVOperator())
+        elif action is 'EQ':
+            res = op1 == op2
+            expression = IR.InfixBinaryExpression(op1,op2,IR.EQOperator())
+        elif action is 'NEQ':
+            res = op1 != op2
+            expression = IR.InfixBinaryExpression(op1,op2,IR.NEQOperator())
+        elif action is 'LT':
+            res = op1 < op2
+            expression = IR.InfixBinaryExpression(op1,op2,IR.LTOperator())
+        elif action is 'LTEQ':
+            res = op1 <= op2
+            expression = IR.InfixBinaryExpression(op1,op2,IR.LTEQOperator())
+        elif action is 'MAX':
+            res = max(op1,op2)
+            expression = IR.PrefixBinaryExpression(op1,op2,IR.MAXOperator())
+        elif action is 'MIN':
+            res = min(op1,op2)
+            expression = IR.PrefixBinaryExpression(op1,op2,IR.MINOperator())
         else:
             raise NotImplementedError
         
