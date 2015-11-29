@@ -385,8 +385,8 @@ class Environment(object):
         #We set no other bits, as we do not support rotated or stretched glyphs.
         h.stack[-1] = res
         '''
-        op = self.program_stack_pop()
         v = IR.Variable(self.stack_top_name())
+        op = self.program_stack_pop()
         e = IR.GETINFOMethodCall([v])
         res = e.eval(self.keep_abstract)
         self.program_stack_push(v, False)
@@ -789,10 +789,11 @@ class Environment(object):
         self.program_stack_pop_many()
 
     def exec_SCVTCI(self):
+        op = self.stack_top_name()
         data = self.program_stack[-1].data
         self.program_stack_pop()
         self.graphics_state['controlValueCutIn'] = data
-        self.current_instruction_intermediate.append(IR.CopyStatement(IR.SingleWidthCutIn(), self.stack_top_name()))
+        self.current_instruction_intermediate.append(IR.CopyStatement(IR.SingleWidthCutIn(), op))
     
     def exec_SDB(self):
         self.program_stack_pop()
