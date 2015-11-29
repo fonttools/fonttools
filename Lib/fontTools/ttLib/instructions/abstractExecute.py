@@ -107,9 +107,6 @@ class Environment(object):
     def pretty_print(self):
         print self.__repr__()
 
-    def set_current_instruction(self, instruction):
-        self.current_instruction = instruction
-
     def set_graphics_state_to_default(self):
         self.graphics_state = {
             'pv':                (1, 0), # Unit vector along the X axis.
@@ -528,15 +525,31 @@ class Environment(object):
         pass
 
     def exec_ROLL(self):
-        op1 = self.program_stack[-1]
+        tmp = self.program_stack[-1]
         self.program_stack[-1] = self.program_stack[-3]
         self.program_stack[-3] = self.program_stack[-2]
-        self.program_stack[-2] = op1
+        self.program_stack[-2] = tmp
+
+        tmp_name = identifierGenerator.generateIdentifier(self.tag, self.stack_depth() + 1)
+        arg1_name = identifierGenerator.generateIdentifier(self.tag, self.stack_depth())
+        arg2_name = identifierGenerator.generateIdentifier(self.tag, self.stack_depth() - 1)
+        arg3_name = identifierGenerator.generateIdentifier(self.tag, self.stack_depth() - 2)
+
+        self.current_instruction_intermediate.append(IR.CopyStatement(IR.Variable(tmp_name),
+                                                                      IR.Variable(arg1_name)))
+        self.current_instruction_intermediate.append(IR.CopyStatement(IR.Variable(arg1_name),
+                                                                      IR.Variable(arg3_name)))
+        self.current_instruction_intermediate.append(IR.CopyStatement(IR.Variable(arg3_name),
+                                                                      IR.Variable(arg2_name)))
+        self.current_instruction_intermediate.append(IR.CopyStatement(IR.Variable(arg2_name),
+                                                                      IR.Variable(tmp_name)))
 
     def exec_ROUND(self):
         var = self.program_stack_pop()
-        new_var = self.program_stack_push(dataType.F26Dot6(var), False)
-        self.current_instruction_intermediate.append(IR.ROUNDMethodCall([var],new_var))
+        res = self.program_stack_push(dataType.F26Dot6(var), False)
+        self.current_instruction_intermediate.append(IR.ROUNDMethodCall
+                                                     (self.current_instruction.data[0],
+                                                      [var], res))
 
     def exec_RS(self):
         op = self.program_stack_pop().eval()
@@ -678,6 +691,17 @@ class Environment(object):
         self.program_stack[-1] = self.program_stack[-2]
         self.program_stack[-2] = tmp
 
+        tmp_name = identifierGenerator.generateIdentifier(self.tag, self.stack_depth() + 1)
+        arg1_name = identifierGenerator.generateIdentifier(self.tag, self.stack_depth())
+        arg2_name = identifierGenerator.generateIdentifier(self.tag, self.stack_depth()-1)
+
+        self.current_instruction_intermediate.append(IR.CopyStatement(IR.Variable(tmp_name),
+                                                                      IR.Variable(arg1_name)))
+        self.current_instruction_intermediate.append(IR.CopyStatement(IR.Variable(arg1_name),
+                                                                      IR.Variable(arg2_name)))
+        self.current_instruction_intermediate.append(IR.CopyStatement(IR.Variable(arg2_name),
+                                                                      IR.Variable(tmp_name)))
+
     def exec_SZP0(self):
         self.program_stack_pop()
 
@@ -755,8 +779,9 @@ class Environment(object):
         self.program_stack_pop()
         self.current_instruction_intermediate.append(IR.CallStatement(var))
 
-    def execute_current_instruction(self):
+    def execute_current_instruction(self, ins):
         self.current_instruction_intermediate = []
+        self.current_instruction = ins
         getattr(self,"exec_"+self.current_instruction.mnemonic)()
         return self.current_instruction_intermediate
 
@@ -835,8 +860,7 @@ class Executor(object):
             self.global_function_table[callee] += 1
 
         # execute the call instruction itself
-        self.environment.set_current_instruction(self.pc)
-        self.environment.execute_current_instruction()
+        self.environment.execute_current_instruction(self.pc)
 
         self.environment.minimum_stack_depth = self.stack_depth()
         # set call stack & jump
@@ -908,8 +932,7 @@ class Executor(object):
                 block = self.if_else.IR.pop()
                 self.appendIntermediateCode([block])
 
-            self.environment.set_current_instruction(self.pc)
-            intermediateCodes = self.environment.execute_current_instruction()
+            intermediateCodes = self.environment.execute_current_instruction(self.pc)
             if self.stack_depth() > self.maximum_stack_depth:
                 self.maximum_stack_depth = self.stack_depth()
 

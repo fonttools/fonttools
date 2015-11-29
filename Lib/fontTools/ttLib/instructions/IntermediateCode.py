@@ -314,9 +314,9 @@ class GETINFOMethodCall(MethodCallStatement):
         return self
         
 class ROUNDMethodCall(MethodCallStatement):
-    def __init__(self, parameters = [], returnVal=None):
+    def __init__(self, data, parameters = [], returnVal=None):
         super(ROUNDMethodCall, self).__init__(parameters, returnVal)
-        self.methodName = 'ROUND'
+        self.methodName = 'ROUND_'+data
 
 class AssignmentStatement(object):
     def __init__(self):
