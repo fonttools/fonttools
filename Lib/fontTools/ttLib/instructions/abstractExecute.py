@@ -47,6 +47,7 @@ class Environment(object):
         self.minimum_stack_depth = None
         self.current_instruction = None
         self.current_instruction_intermediate = []
+        self.keep_abstract = True
 
     def __repr__(self):
         stackVars = []
@@ -132,8 +133,8 @@ class Environment(object):
     def read_storage_area(self, index):
         return self.storage_area[index]
 
-    def stack_top_name(self):
-        return identifierGenerator.generateIdentifier(self.tag, self.stack_depth())
+    def stack_top_name(self, offset = 0):
+        return identifierGenerator.generateIdentifier(self.tag, self.stack_depth() + offset)
 
     def generate_assign_variable(self, var, data):
         self.current_instruction_intermediate.append(IR.CopyStatement(var, data))
@@ -142,7 +143,7 @@ class Environment(object):
         return len(self.program_stack)
         
     def program_stack_push(self, data = None, assign = True):
-        tempVariableName = self.stack_top_name()
+        tempVariableName = self.stack_top_name(1)
         tempVariable = IR.Variable(tempVariableName, data)
         if data is not None and assign:
             self.generate_assign_variable(tempVariable, data)
@@ -164,8 +165,9 @@ class Environment(object):
         return last_val
 
     def unary_operation(self, action):
+        v_name = self.stack_top_name()
         op = self.program_stack_pop()
-        v = IR.Variable(self.stack_top_name(), op)
+        v = IR.Variable(v_name, op)
 
         if action is 'ceil':
             e = IR.CEILMethodCall([v])
@@ -175,67 +177,69 @@ class Environment(object):
             e = IR.ABSMethodCall([v])
         elif action is 'not':
             e = IR.NOTMethodCall([v])
-        res = e.eval()
+        res = e.eval(self.keep_abstract)
         self.program_stack_push(res, False)
         self.current_instruction_intermediate.append(IR.OperationAssignmentStatement(v, res))
         return res
 
     def binary_operation(self, action):
-        op1_var = self.program_stack_pop()
-        op2_var = self.program_stack_pop()
-        op1 = op1_var.eval()
-        op2 = op2_var.eval()
+        op1_var = self.stack_top_name()
+        op1_val = self.program_stack_pop()
+        op2_var = self.stack_top_name()
+        op2_val = self.program_stack_pop()
+        op1 = op1_val.eval(self.keep_abstract)
+        op2 = op2_val.eval(self.keep_abstract)
 
         expression = None
+        if action is 'MAX' or action is 'MIN':
+            e = IR.PrefixBinaryExpression
+        else:
+            e = IR.InfixBinaryExpression
         if isinstance(op1,dataType.AbstractValue) or isinstance(op2,dataType.AbstractValue):
             res = dataType.Expression(op1, op2, action)
-            if action is 'MAX' or action is 'MIN':
-                e = IR.PrefixBinaryExpression
-            else:
-                e = IR.InfixBinaryExpression
             expression = e(op1_var, op2_var, getattr(IR, action+'Operator')())
         elif action is 'ADD':
             res = op1 + op2
-            expression = IR.InfixBinaryExpression(op1,op2,IR.ADDOperator())
+            expression = e(op1,op2,IR.ADDOperator())
         elif action is 'SUB':
             res = op1 - op2
-            expression = IR.InfixBinaryExpression(op1,op2,IR.SUBOperator())
+            expression = e(op1,op2,IR.SUBOperator())
         elif action is 'GT':
             res = op1 > op2
-            expression = IR.InfixBinaryExpression(op1,op2,IR.GTOperator())
+            expression = e(op1,op2,IR.GTOperator())
         elif action is 'GTEQ':
             res = op1 >= op2
-            expression = IR.InfixBinaryExpression(op1,op2,IR.GTEQOperator())
+            expression = e(op1,op2,IR.GTEQOperator())
         elif action is 'AND':
             res = op1 and op2
-            expression = IR.InfixBinaryExpression(op1,op2,IR.ANDOperator())
+            expression = e(op1,op2,IR.ANDOperator())
         elif action is 'OR':
             res = op1 or op2
-            expression = IR.InfixBinaryExpression(op1,op2,IR.OROperator())
+            expression = e(op1,op2,IR.OROperator())
         elif action is 'MUL':
             res = op1 * op2
-            expression = IR.InfixBinaryExpression(op1,op2,IR.MULOperator())
+            expression = e(op1,op2,IR.MULOperator())
         elif action is 'DIV':
             res = op1 / op2
-            expression = IR.InfixBinaryExpression(op1,op2,IR.DIVOperator())
+            expression = e(op1,op2,IR.DIVOperator())
         elif action is 'EQ':
             res = op1 == op2
-            expression = IR.InfixBinaryExpression(op1,op2,IR.EQOperator())
+            expression = e(op1,op2,IR.EQOperator())
         elif action is 'NEQ':
             res = op1 != op2
-            expression = IR.InfixBinaryExpression(op1,op2,IR.NEQOperator())
+            expression = e(op1,op2,IR.NEQOperator())
         elif action is 'LT':
             res = op1 < op2
-            expression = IR.InfixBinaryExpression(op1,op2,IR.LTOperator())
+            expression = e(op1,op2,IR.LTOperator())
         elif action is 'LTEQ':
             res = op1 <= op2
-            expression = IR.InfixBinaryExpression(op1,op2,IR.LTEQOperator())
+            expression = e(op1,op2,IR.LTEQOperator())
         elif action is 'MAX':
             res = max(op1,op2)
-            expression = IR.PrefixBinaryExpression(op1,op2,IR.MAXOperator())
+            expression = e(op1,op2,IR.MAXOperator())
         elif action is 'MIN':
             res = min(op1,op2)
-            expression = IR.PrefixBinaryExpression(op1,op2,IR.MINOperator())
+            expression = e(op1,op2,IR.MINOperator())
         else:
             raise NotImplementedError
         
@@ -297,7 +301,9 @@ class Environment(object):
         self.program_stack_pop()
 
     def exec_DELTA(self, op):
-        number = self.program_stack_pop().eval()
+        # we need this number concretely to proceed
+        number = self.program_stack_pop().eval(False)
+        assert not isinstance(number, dataType.AbstractValue)
         loopValue = (2*number)
         args = self.program_stack_pop_many(loopValue)
         self.current_instruction_intermediate.append(IR.DELTAMethodCall(op, args))
@@ -328,8 +334,11 @@ class Environment(object):
         self.binary_operation('DIV')
 
     def exec_DUP(self):
-        top = self.program_stack[-1].eval()
-        self.program_stack_push(top)
+        v = IR.Variable(self.stack_top_name())
+        top = self.program_stack[-1].eval(self.keep_abstract)
+        self.program_stack_push(top, False)
+        vnew = IR.Variable(self.stack_top_name())
+        self.current_instruction_intermediate.append(IR.CopyStatement(vnew, v))
 
     def exec_FLIPOFF(self):
         self.graphics_state['autoFlip'] = False
@@ -379,7 +388,7 @@ class Environment(object):
         op = self.program_stack_pop()
         v = IR.Variable(self.stack_top_name())
         e = IR.GETINFOMethodCall([v])
-        res = e.eval()
+        res = e.eval(self.keep_abstract)
         self.program_stack_push(v, False)
         self.current_instruction_intermediate.append(IR.OperationAssignmentStatement(v, res))
 
@@ -514,12 +523,18 @@ class Environment(object):
         self.program_stack_pop()
 
     def exec_RCVT(self):
-        op = self.program_stack_pop().eval()
-        if isinstance(op, dataType.AbstractValue):
+        op = self.program_stack_pop().eval(self.keep_abstract)
+        # XXX should be done from dataType & eval
+        # or, we could accept that we basically never really know the CVT table.
+        res_var = IR.ReadFromIndexedStorage("cvt_table", op)
+        if self.keep_abstract or isinstance(op, dataType.AbstractValue):
             res = IR.ReadFromIndexedStorage("cvt_table", op)
         else:
             res = self.cvt[op]
-        self.program_stack_push(res)
+        self.program_stack_push(res, False)
+        self.current_instruction_intermediate.append(IR.CopyStatement
+                                                     (IR.Variable(self.stack_top_name()),
+                                                      res_var))
 
     def exec_RDTG(self):
         pass
@@ -555,9 +570,14 @@ class Environment(object):
                                                       [var], res))
 
     def exec_RS(self):
-        op = self.program_stack_pop().eval()
-        res = self.read_storage_area(op)
-        self.program_stack_push(res)
+        op = self.program_stack_pop().eval(self.keep_abstract)
+        if self.keep_abstract:
+            self.program_stack_push(dataType.AbstractValue(), False)
+            self.current_instruction_intermediate.append(
+                IR.ReadFromIndexedStorage("storage_area", op))
+        else:
+            res = self.read_storage_area(op)
+            self.program_stack_push(res)
         
     def exec_RTDG(self):
         self.current_instruction_intermediate.append(IR.CopyStatement(IR.RoundState(), dataType.RoundState_DG()))
@@ -852,7 +872,8 @@ class Executor(object):
             self.intermediateCodes.extend(ins)
 
     def execute_CALL(self):
-        callee = self.environment.program_stack[-1].eval()
+        # actually we *always* want to get the concrete callee
+        callee = self.environment.program_stack[-1].eval(False)
         assert not isinstance(callee, dataType.AbstractValue)
 
         # update call graph counts
@@ -878,7 +899,7 @@ class Executor(object):
         self.if_else = self.If_else_stack([], [], [])
         self.pc = self.bytecodeContainer.function_table[callee].start()
         self.intermediateCodes = []
-        self.environment.tag = "fpgm_%s" % callee
+        self.environment.tag = "fpgm_%s_" % callee
         self.stored_environments = {}
 
     def execute(self, tag):
@@ -918,7 +939,7 @@ class Executor(object):
                 else:
                     # first time round at this if statement...
                     cond = self.environment.program_stack.pop()
-                    newBlock = IR.IfElseBlock(IR.Variable(self.environment.stack_top_name(), cond),
+                    newBlock = IR.IfElseBlock(IR.Variable(self.environment.stack_top_name(1), cond),
                                               len(self.if_else.env) + 1)
 
                     environment_copy = self.environment.make_copy(self.bytecodeContainer)

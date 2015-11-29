@@ -10,7 +10,7 @@ class Boolean(object):
 class Constant(object):
     def __init__(self, value):
         self.value = value
-    def eval(self):
+    def eval(self, keep_abstract):
         return self.value
     def __repr__(self):
         return str(self.value)
@@ -19,11 +19,11 @@ class Variable(dataType.AbstractValue):
     def __init__(self, identifier, data = None):
         self.data = data
         self.identifier = identifier
-    def eval(self):
-        if self.data is None:
+    def eval(self, keep_abstract):
+        if keep_abstract or self.data is None:
             return self
         if isinstance(self.data, dataType.AbstractValue):
-            return self.data.eval()
+            return self.data.eval(keep_abstract)
         else:
             return self.data
     def __repr__(self):
@@ -274,8 +274,8 @@ class ABSMethodCall(MethodCallStatement):
     def __init__(self, parameters = [], returnVal=None):
         super(ABSMethodCall, self).__init__(parameters, returnVal)
         self.methodName = 'ABS'
-    def eval(self):
-        p = self.parameters[0].eval()
+    def eval(self, keep_abstract):
+        p = self.parameters[0].eval(keep_abstract)
         if isinstance(p, dataType.AbstractValue):
             return self
         return math.fabs(p)
@@ -284,8 +284,8 @@ class CEILMethodCall(MethodCallStatement):
     def __init__(self, parameters = [], returnVal=None):
         super(CEILINGMethodCall, self).__init__(parameters, returnVal)
         self.methodName = 'CEIL'
-    def eval(self):
-        p = self.parameters[0].eval()
+    def eval(self, keep_abstract):
+        p = self.parameters[0].eval(keep_abstract)
         if isinstance(p, dataType.AbstractValue):
             return self
         return math.ceil(p)
@@ -294,8 +294,8 @@ class FLOORMethodCall(MethodCallStatement):
     def __init__(self, parameters = [], returnVal=None):
         super(FLOORMethodCall, self).__init__(parameters, returnVal)
         self.methodName = 'FLOOR'
-    def eval(self):
-        p = self.parameters[0].eval()
+    def eval(self, keep_abstract):
+        p = self.parameters[0].eval(keep_abstract)
         if isinstance(p, dataType.AbstractValue):
             return self
         return math.floor(p)
@@ -304,8 +304,8 @@ class NOTMethodCall(MethodCallStatement):
     def __init__(self, parameters = [], returnVal=None):
         super(NOTMethodCall, self).__init__(parameters, returnVal)
         self.methodName = 'NOT'
-    def eval(self):
-        p = self.parameters[0].eval()
+    def eval(self, keep_abstract):
+        p = self.parameters[0].eval(keep_abstract)
         if p == 0:
             return 1
         elif p == 1:
@@ -326,7 +326,7 @@ class GETINFOMethodCall(MethodCallStatement):
     def __init__(self, parameters = [], returnVal=None):
         super(GETINFOMethodCall, self).__init__(parameters, returnVal)
         self.methodName = 'GETINFO'
-    def eval(self):
+    def eval(self, keep_abstract):
         return self
         
 class ROUNDMethodCall(MethodCallStatement):
@@ -337,7 +337,6 @@ class ROUNDMethodCall(MethodCallStatement):
 class AssignmentStatement(object):
     def __init__(self):
         self.operator = AssignOperator()
-
     def __repr__(self):
         return "%s %s %s" % (self.left, self.operator, str(self.right))
 
@@ -408,7 +407,6 @@ class LabelBlock(object):
 
 class IfElseBlock(object):
     def __init__(self, condition = None, nesting_level = 1):
-        # TODO use eval
         self.condition = condition
         self.if_branch = []
         self.else_branch = []
@@ -420,7 +418,7 @@ class IfElseBlock(object):
         else:
             self.else_branch += statements
     def __str__(self):
-        c = self.condition.eval()
+        c = self.condition.eval(True)
         if isinstance(c, dataType.UncertainValue):
             c = self.condition
         res_str = 'if ('+str(c)+') {\n'

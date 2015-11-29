@@ -11,7 +11,7 @@ class AbstractValue(Value):
         self.value = None
     def __repr__(self):
         return self.__class__.__name__
-    def eval(self):
+    def eval(self, keep_abstract):
         return self
 
 class UncertainValue(AbstractValue):
@@ -54,7 +54,7 @@ class Expression(AbstractValue):
     def __repr__(self):
     	return str(self.op1) + ' '+ str(self.operation) + ' ' + str(self.op2)
 
-    def eval(self):
+    def eval(self, keep_abstract):
         def equal(op1,op2):
             return op1 == op2
         def less(op1,op2):
@@ -76,7 +76,7 @@ class Expression(AbstractValue):
                       'EQ':equal,
                       'AND':logicalAnd,
                       'OR':logicalOr}
-        if isinstance(self.op1, AbstractValue) or isinstance(self.op2, AbstractValue):
+        if keep_abstract or isinstance(self.op1, AbstractValue) or isinstance(self.op2, AbstractValue):
             return self
         return operations[self.operation](self.op1,self.op2)
 
