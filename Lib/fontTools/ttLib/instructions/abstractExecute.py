@@ -576,11 +576,12 @@ class Environment(object):
                                                       [var], res))
 
     def exec_RS(self):
-        op = self.program_stack_pop().eval(self.keep_abstract)
+        arg = self.program_stack_pop().eval(self.keep_abstract)
         if self.keep_abstract:
             self.program_stack_push(dataType.AbstractValue(), False)
             self.current_instruction_intermediate.append(
-                IR.ReadFromIndexedStorage("storage_area", op))
+                IR.CopyStatement(IR.Variable(self.stack_top_name()),
+                                 IR.ReadFromIndexedStorage("storage_area", arg)))
         else:
             res = self.read_storage_area(op)
             self.program_stack_push(res)
