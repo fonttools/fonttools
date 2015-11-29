@@ -204,6 +204,7 @@
       EIF[ ]
       POP[ ]
       ENDF[ ]
+      <!-- function 3 -->
       PUSH[ ]
       3
       FDEF[ ]
@@ -219,6 +220,7 @@
       64
       EIF[ ]
       ENDF[ ]
+      <!-- end function 3 -->
       PUSH[ ]
       4
       FDEF[ ]
@@ -273,6 +275,7 @@
       ENDF[ ]
       PUSH[ ]
       6
+      <!-- function 6 -->
       FDEF[ ]
       PUSH[ ]  /* 2 values pushed */
       34 1
@@ -289,6 +292,7 @@
       0
       EIF[ ]
       ENDF[ ]
+      <!-- end function 6 -->
       PUSH[ ]
       7
       FDEF[ ]
