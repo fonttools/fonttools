@@ -250,6 +250,11 @@ class MethodCallStatement(object):
         repS += ')'
 	return repS
 
+class SDBMethodCall(MethodCallStatement):
+    def __init__(self, parameters = [], returnVal=None):
+        super(SDBMethodCall, self).__init__(parameters, returnVal)
+        self.methodName = 'SDB'
+
 class DELTAMethodCall(MethodCallStatement):
     def __init__(self, op, parameters = [], returnVal=None):
         super(DELTAMethodCall, self).__init__(parameters, returnVal)
@@ -328,7 +333,7 @@ class GETINFOMethodCall(MethodCallStatement):
         self.methodName = 'GETINFO'
     def eval(self, keep_abstract):
         return self
-        
+
 class ROUNDMethodCall(MethodCallStatement):
     def __init__(self, data, parameters = [], returnVal=None):
         super(ROUNDMethodCall, self).__init__(parameters, returnVal)
@@ -363,6 +368,41 @@ class MDRPMethodCall(MethodCallStatement):
     def __init__(self, data, parameters = [], returnVal=None):
         super(MDAPMethodCall, self).__init__(parameters, returnVal)
         self.methodName = 'MDRP_'+data
+
+class MIAPMethodCall(MethodCallStatement):
+    def __init__(self, data, parameters = [], returnVal=None):
+        super(MIAPMethodCall, self).__init__(parameters, returnVal)
+        self.methodName = 'MIAP_'+data
+
+class MIRPMethodCall(MethodCallStatement):
+    def __init__(self, data, parameters = [], returnVal=None):
+        super(MIRPMethodCall, self).__init__(parameters, returnVal)
+        self.methodName = 'MIRP_'+data
+
+class MSIRPMethodCall(MethodCallStatement):
+    def __init__(self, data, parameters = [], returnVal=None):
+        super(MSIRPMethodCall, self).__init__(parameters, returnVal)
+        self.methodName = 'MSIRP_'+data
+
+class SDSMethodCall(MethodCallStatement):
+    def __init__(self, parameters = [], returnVal=None):
+        super(SDSMethodCall, self).__init__(parameters, returnVal)
+        self.methodName = 'SDS'
+
+class SHCMethodCall(MethodCallStatement):
+    def __init__(self, data, parameters = [], returnVal=None):
+        super(SHCMethodCall, self).__init__(parameters, returnVal)
+        self.methodName = 'SHC_'+data
+
+class SLOOPMethodCall(MethodCallStatement):
+    def __init__(self, parameters = [], returnVal=None):
+        super(SLOOPMethodCall, self).__init__(parameters, returnVal)
+        self.methodName = 'SLOOP'
+
+class SMDMethodCall(MethodCallStatement):
+    def __init__(self, parameters = [], returnVal=None):
+        super(SMDMethodCall, self).__init__(parameters, returnVal)
+        self.methodName = 'SMD'
 
 class SRP0MethodCall(MethodCallStatement):
     def __init__(self, parameters = [], returnVal=None):

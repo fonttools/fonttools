@@ -37,13 +37,15 @@ class EngineInfo(AbstractValue):
 class Distance(AbstractValue):
     pass
 
-class RoundState_DG(AbstractValue):
+class RoundState_DTG(AbstractValue): # RDTG
     pass
-class RoundState_G(AbstractValue):
+class RoundState_DG(AbstractValue): # RTDG
     pass
-class RoundState_HG(AbstractValue):
+class RoundState_G(AbstractValue): # RTG
     pass
-class RoundState_UG(AbstractValue):
+class RoundState_HG(AbstractValue): # RTHG
+    pass
+class RoundState_UG(AbstractValue): # RUTG
     pass
 
 class Expression(AbstractValue):

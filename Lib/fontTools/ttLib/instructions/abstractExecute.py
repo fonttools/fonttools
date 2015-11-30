@@ -283,6 +283,7 @@ class Environment(object):
 
     def exec_AA(self):#AdjustAngle
         self.program_stack_pop()
+        raise NotImplementedError
 
     def exec_ABS(self):#Absolute
         self.unary_operation('abs')
@@ -295,13 +296,14 @@ class Environment(object):
         move to points, has no further effect on the stack
         '''
         self.program_stack_pop_many(2)
+        raise NotImplementedError
 
     def exec_ALIGNRP(self):
         loopValue = self.graphics_state['loop']
         self.graphics_state['loop'] = 1
-        if len(self.program_stack)<loopValue:
-            raise Exception("truetype: hinting: stack underflow")
+        assert len(self.program_stack) >= loopValue, "IP: stack underflow"
         self.program_stack_pop_many(loopValue)
+        raise NotImplementedError
 
     def exec_AND(self):
         self.binary_operation('AND')
@@ -310,17 +312,17 @@ class Environment(object):
         self.unary_operation('ceil')
 
     def exec_CINDEX(self):#CopyXToTopStack
-        index = self.program_stack[-1].data
-        self.program_stack_pop()
-        #the index start from 1
-        top = self.program_stack[-index].data
-        self.program_stack_push(top)
+        # index starts from 1
+        index = self.program_stack_pop().eval(False)
+        new_top = self.program_stack[-index].eval(self.keep_abstract)
+        self.program_stack_push(new_top)
 
     def exec_CLEAR(self):#ClearStack
         self.program_stack = []
 
     def exec_DEBUG(self):#DebugCall
         self.program_stack_pop()
+        raise NotImplementedError
 
     def exec_DELTA(self, op):
         # we need this number concretely to proceed
@@ -349,8 +351,10 @@ class Environment(object):
         self.exec_DELTA("P3")
 
     def exec_DEPTH(self):#GetDepthStack
+        # is incorrect in the presence of method calls
         depth = len(self.program_stack)
         self.program_stack_push(depth)
+        raise NotImplementedError
     
     def exec_DIV(self):#Divide
         self.binary_operation('DIV')
@@ -373,24 +377,25 @@ class Environment(object):
     def exec_FLIPPT(self):
         loopValue = self.graphics_state['loop']
         self.graphics_state['loop'] = 1
-        if len(self.program_stack)<loopValue:
-            raise Exception("truetype: hinting: stack underflow")
+        assert len(self.program_stack) >= loopValue, "IP: stack underflow"
         self.program_stack_pop_many(loopValue)
+        raise NotImplementedError
 
     def exec_FLIPRGOFF(self):
         self.program_stack_pop_many(2)
+        raise NotImplementedError
 
     def exec_FLIPRGON(self):
         self.program_stack_pop_many(2)
+        raise NotImplementedError
 
     def exec_FLOOR(self):
         self.unary_operation('floor')
 
     def exec_GC(self):
-        op1 = self.program_stack[-1]
-        self.program_stack_pop()
+        arg = self.program_stack_pop()
         var = self.program_stack_push(dataType.AbstractValue(), False)
-        self.current_instruction_intermediate.append(IR.GCMethodCall([op1],var))
+        self.current_instruction_intermediate.append(IR.GCMethodCall([arg],var))
     
     def exec_GETINFO(self):
         '''
@@ -419,12 +424,14 @@ class Environment(object):
         op2 = self.program_stack[-1]
         self.graphics_state['pv'] = (op1.data,op2.data)
         self.program_stack_pop_many(2)
+        raise NotImplementedError
 
     def exec_GFV(self):
         op1 = self.graphics_state['fv'][0]
         op2 = self.graphics_state['fv'][1]
         self.program_stack_push(op1)
         self.program_stack_push(op2)
+        raise NotImplementedError
 
     def exec_GT(self):
         self.binary_operation('GT')
@@ -451,6 +458,7 @@ class Environment(object):
 
     def exec_ISECT(self):
         self.program_stack_pop_many(5)
+        raise NotImplementedError
 
     def exec_IUP(self): # drawing-only
         self.current_instruction_intermediate.append(IR.IUPMethodCall(self.current_instruction.data[0]))
@@ -517,6 +525,7 @@ class Environment(object):
         #assert isinstance(op1, dataType.PointValue) and (op1, dataType.PointValue)
         res = dataType.Distance()
         self.program_stack_push(res)
+        raise NotImplementedError
 
     def exec_MDAP(self):
         arg = self.program_stack_pop().eval(self.keep_abstract)
@@ -527,9 +536,8 @@ class Environment(object):
         self.current_instruction_intermediate.append(IR.MDAPMethodCall(self.current_instruction.data[0], [arg]))
 
     def exec_MIAP(self):
-        op1 = self.program_stack[-2]
-        op2 = self.program_stack[-1]
-        self.program_stack_pop_many(2)
+        args = self.program_stack_pop_many(2)
+        self.current_instruction_intermediate.append(IR.MIAPMethodCall(self.current_instruction.data[0], args))
 
     def exec_MIN(self):
         self.binary_operation('MIN')
@@ -540,9 +548,11 @@ class Environment(object):
         top = self.program_stack[-index].eval(self.keep_abstract)
         del self.program_stack[-index]
         self.program_stack_push(top)
+        raise NotImplementedError
 
     def exec_MIRP(self):
-        self.program_stack_pop_many(2)
+        args = self.program_stack_pop_many(2)
+        self.current_instruction_intermediate.append(IR.MIRPMethodCall(self.current_instruction.data[0], args))
 
     def exec_MPPEM(self):
         if self.graphics_state['pv'] == (0, 1):
@@ -554,7 +564,8 @@ class Environment(object):
         self.program_stack_push(dataType.PointSize())
 
     def exec_MSIRP(self):
-        self.program_stack_pop_many(2)
+        args = self.program_stack_pop_many(2)
+        self.current_instruction_intermediate.append(IR.MSIRPMethodCall(self.current_instruction.data[0], args))
 
     def exec_MUL(self):
         self.binary_operation('MUL')
@@ -562,7 +573,8 @@ class Environment(object):
     def exec_NEG(self):
         op = self.program_stack[-1].data
         if isinstance(op, dataType.AbstractValue):
-            pass
+            # xxx can do better here
+            raise NotImplementedError
         else:
             self.program_stack_pop()
             self.program_stack_push(-op)
@@ -574,7 +586,7 @@ class Environment(object):
         self.unary_operation('not')
 
     def exec_NROUND(self):
-        pass
+        raise NotImplementedError
 
     def exec_ODD(self):
         raise NotImplementedError
@@ -600,10 +612,10 @@ class Environment(object):
                                                       res_var))
 
     def exec_RDTG(self):
-        pass
+        self.current_instruction_intermediate.append(IR.CopyStatement(IR.RoundState(), dataType.RoundState_DTG()))
 
     def exec_ROFF(self):
-        pass
+        raise NotImplementedError
 
     def exec_ROLL(self):
         tmp = self.program_stack[-1]
@@ -645,22 +657,20 @@ class Environment(object):
         
     def exec_RTDG(self):
         self.current_instruction_intermediate.append(IR.CopyStatement(IR.RoundState(), dataType.RoundState_DG()))
-        pass
     def exec_RTG(self):
         self.current_instruction_intermediate.append(IR.CopyStatement(IR.RoundState(), dataType.RoundState_G()))
-        pass
     def exec_RTHG(self):
         self.current_instruction_intermediate.append(IR.CopyStatement(IR.RoundState(), dataType.RoundState_HG()))
-        pass
     def exec_RUTG(self):
         self.current_instruction_intermediate.append(IR.CopyStatement(IR.RoundState(), dataType.RoundState_UG()))
-        pass
 
     def exec_S45ROUND(self):
         self.program_stack_pop()
+        raise NotImplementedError
 
     def exec_SANGW(self):
         self.program_stack_pop()
+        raise NotImplementedError
 
     def exec_SCANCTRL(self):
         value = self.program_stack[-1].data
@@ -674,21 +684,27 @@ class Environment(object):
 
     def exec_SCFS(self):
         self.program_stack_pop_many(2)
+        raise NotImplementedError
 
     def exec_SCVTCI(self):
         self.program_stack_pop()
+        raise NotImplementedError
 
     def exec_SDB(self):
-        self.program_stack_pop()
+        arg = self.program_stack_pop()
+        self.current_instruction_intermediate.append(IR.SDBMethodCall([arg]))
 
     def exec_SDPVTL(self):
         self.program_stack_pop_many(2)
+        raise NotImplementedError
 
     def exec_SDS(self):
-        self.program_stack_pop()
+        arg = self.program_stack_pop()
+        self.current_instruction_intermediate.append(IR.SDSMethodCall([arg]))
 
     def exec_SFVFS(self):
         self.program_stack_pop_many(2)
+        raise NotImplementedError
 
     def exec_SFVTCA(self):#Set Freedom Vector To Coordinate Axis
         data = int(self.current_instruction.data[0])
@@ -697,15 +713,19 @@ class Environment(object):
             self.graphics_state['fv'] = (0, 1)
         if data == 1:
             self.graphics_state['fv'] = (1, 0)
+        raise NotImplementedError
            
     def exec_SFVTL(self):#Set Freedom Vector To Line
         self.program_stack_pop_many(2)
+        raise NotImplementedError
 
     def exec_SFVTPV(self):#Set Freedom Vector To Projection Vector
         self.graphics_state['fv'] = self.graphics_state['pv']
+        raise NotImplementedError
 
     def exec_SHC(self):
-        self.program_stack_pop()
+        arg = self.program_stack_pop()
+        self.current_instruction_intermediate.append(IR.SHCMethodCall(self.current_instruction.data[0], [arg]))
  
     def exec_SHP(self):
         loopValue = self.graphics_state['loop']
@@ -724,16 +744,20 @@ class Environment(object):
 
     def exec_SHZ(self):
         self.program_stack_pop()
+        raise NotImplementedError
   
     def exec_SLOOP(self):
         self.graphics_state['loop'] = self.program_stack[-1].data
-        self.program_stack_pop()
+        arg = self.program_stack_pop()
+        self.current_instruction_intermediate.append(IR.SLOOPMethodCall([arg]))
 
     def exec_SMD(self):
-        self.program_stack_pop()
+        arg = self.program_stack_pop()
+        self.current_instruction_intermediate.append(IR.SMDMethodCall([arg]))
 
     def exec_SPVFS(self):
         self.program_stack_pop_many(2)
+        raise NotImplementedError
 
     def exec_SPVTCA(self):
         data = int(self.current_instruction.data[0])
@@ -744,18 +768,23 @@ class Environment(object):
         if data == 1:
             self.graphics_state['pv'] = (1, 0)
             self.graphics_state['dv'] = (1, 0)
+        raise NotImplementedError
 
     def exec_SPVTL(self):
         self.program_stack_pop_many()
+        raise NotImplementedError
 
     def exec_SROUND(self):
         self.program_stack_pop()
+        raise NotImplementedError
 
     def exec_SSW(self):
         self.program_stack_pop()
+        raise NotImplementedError
 
     def exec_SSWCI(self):
         self.program_stack_pop()
+        raise NotImplementedError
 
     def exec_SUB(self):
         self.binary_operation('SUB')
@@ -791,18 +820,23 @@ class Environment(object):
 
     def exec_SZP0(self):
         self.program_stack_pop()
+        raise NotImplementedError
 
     def exec_SZP1(self):
         self.program_stack_pop()
+        raise NotImplementedError
 
     def exec_SZP2(self):
         self.program_stack_pop()
+        raise NotImplementedError
 
     def exec_SZPS(self):
         self.program_stack_pop()
+        raise NotImplementedError
 
     def exec_UTP(self):
         self.program_stack_pop()
+        raise NotImplementedError
 
     def exec_WCVTF(self):
         self.exec_WCVTP()
@@ -822,7 +856,6 @@ class Environment(object):
     def exec_WS(self):
         res = self.getOpandVar()
         self.current_instruction_intermediate.append(IR.WriteStorageStatement(res[2],res[3]))
-
         self.write_storage_area(res[0], res[1])
 
     def exec_EQ(self):
@@ -846,23 +879,23 @@ class Environment(object):
 
     def exec_S45ROUND(self):
         self.program_stack_pop()
+        raise NotImplementedError
 
     def exec_SANGW(self):
         self.program_stack_pop()
+        raise NotImplementedError
     
     def exec_SCFS(self):
         self.program_stack_pop_many(2)
+        raise NotImplementedError
 
     def exec_SCVTCI(self):
-        op = self.stack_top_name()
+        arg_name = self.stack_top_name()
         data = self.program_stack[-1].data
         self.program_stack_pop()
         self.graphics_state['controlValueCutIn'] = data
-        self.current_instruction_intermediate.append(IR.CopyStatement(IR.SingleWidthCutIn(), op))
+        self.current_instruction_intermediate.append(IR.CopyStatement(IR.SingleWidthCutIn(), arg_name))
     
-    def exec_SDB(self):
-        self.program_stack_pop()
-
     def exec_CALL(self):
         var = self.program_stack[-1]
         self.program_stack_pop()
