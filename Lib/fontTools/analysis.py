@@ -56,8 +56,9 @@ def executeGlyphs(abstractExecutor, initialEnvironment, glyphs):
 def analysis(bytecodeContainer, glyphs):
     abstractExecutor = abstractExecute.Executor(bytecodeContainer)
     called_functions = set()
-    abstractExecutor.execute('prep')
-    called_functions.update(list(set(abstractExecutor.program.call_function_set)))
+    if 'prep' in bytecodeContainer.tag_to_programs:
+        abstractExecutor.execute('prep')
+        called_functions.update(list(set(abstractExecutor.program.call_function_set)))
 
     environment_after_prep = copy.deepcopy(abstractExecutor.environment)
     called_functions.update(executeGlyphs(abstractExecutor, environment_after_prep, glyphs))

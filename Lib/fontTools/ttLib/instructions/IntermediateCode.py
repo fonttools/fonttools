@@ -334,15 +334,20 @@ class GETINFOMethodCall(MethodCallStatement):
     def eval(self, keep_abstract):
         return self
 
-class ROUNDMethodCall(MethodCallStatement):
-    def __init__(self, data, parameters = [], returnVal=None):
-        super(ROUNDMethodCall, self).__init__(parameters, returnVal)
-        self.methodName = 'ROUND_'+data
+class ALIGNRPMethodCall(MethodCallStatement):
+    def __init__(self, parameters = [], returnVal=None):
+        super(ALIGNRPMethodCall, self).__init__(parameters, returnVal)
+        self.methodName = 'ALIGNRP'
 
 class IPMethodCall(MethodCallStatement):
     def __init__(self, parameters = [], returnVal=None):
         super(IPMethodCall, self).__init__(parameters, returnVal)
         self.methodName = 'IP'
+
+class ROUNDMethodCall(MethodCallStatement):
+    def __init__(self, data, parameters = [], returnVal=None):
+        super(ROUNDMethodCall, self).__init__(parameters, returnVal)
+        self.methodName = 'ROUND_'+data
 
 class SHPMethodCall(MethodCallStatement):
     def __init__(self, parameters = [], returnVal=None):

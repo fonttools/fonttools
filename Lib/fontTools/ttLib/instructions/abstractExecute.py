@@ -302,8 +302,8 @@ class Environment(object):
         loopValue = self.graphics_state['loop']
         self.graphics_state['loop'] = 1
         assert len(self.program_stack) >= loopValue, "IP: stack underflow"
-        self.program_stack_pop_many(loopValue)
-        raise NotImplementedError
+        pts = self.program_stack_pop_many(loopValue)
+        self.current_instruction_intermediate.append(IR.ALIGNRPMethodCall(pts))
 
     def exec_AND(self):
         self.binary_operation('AND')
@@ -493,6 +493,7 @@ class Environment(object):
         arg = self.program_stack_pop().eval(False)
         assert not isinstance(arg, dataType.AbstractValue)
         self.adjust_succ_for_relative_jump(arg, True)
+        # todo also emit JMPR etc
     def exec_JROF(self):
         e = self.program_stack_pop().eval(self.keep_abstract)
         arg = self.program_stack_pop().eval(False)
