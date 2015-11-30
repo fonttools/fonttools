@@ -2,11 +2,13 @@
 # "Specifying a Chain Sub rule and marking sub-runs"
 # http://www.adobe.com/devnet/opentype/afdko/topic_feature_file_syntax.html
 
+languagesystem latn dflt;
+
 lookup CNTXT_LIGS {
     substitute f i by f_i;
     substitute c t by c_t;
 } CNTXT_LIGS;
- 
+
 lookup CNTXT_SUB {
     substitute n by n.end;
     substitute s by s.end;

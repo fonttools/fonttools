@@ -169,6 +169,12 @@ class SubstitutionRule(Statement):
         self.old_suffix = []
         self.lookups = [None] * len(old)
 
+    def build(self, builder):
+        builder.add_substitution(
+            self.location,
+            self.old_prefix, self.old, self.old_suffix,
+            self.new, self.lookups)
+
 
 class ValueRecord(Statement):
     def __init__(self, location, xPlacement, yPlacement, xAdvance, yAdvance):

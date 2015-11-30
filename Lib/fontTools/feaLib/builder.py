@@ -247,6 +247,19 @@ class Builder(object):
         self.set_language(location, "dflt",
                           include_default=True, required=False)
 
+    def add_substitution(self, location, old_prefix, old, old_suffix, new,
+                         lookups):
+        assert len(new) == 0, new
+        lookup_builders = []
+        for lookup in lookups:
+            if lookup is not None:
+                lookup_builders.append(self.named_lookups_.get(lookup.name))
+            else:
+                lookup_builders.append(None)
+        lookup = self.get_lookup_(location, ChainContextSubstBuilder)
+        lookup.substitutions.append((old_prefix, old, old_suffix,
+                                     lookup_builders))
+
     def add_alternate_substitution(self, location, glyph, from_class):
         lookup = self.get_lookup_(location, AlternateSubstBuilder)
         if glyph in lookup.alternates:
@@ -308,6 +321,59 @@ class AlternateSubstBuilder(LookupBuilder):
         st.Format = 1
         st.alternates = self.alternates
         lookup.SubTable.append(st)
+        lookup.LookupFlag = self.lookup_flag
+        lookup.LookupType = self.lookup_type
+        lookup.SubTableCount = len(lookup.SubTable)
+        return lookup
+
+
+class ChainContextSubstBuilder(LookupBuilder):
+    def __init__(self, location, lookup_flag):
+        LookupBuilder.__init__(self, location, 'GSUB', 6, lookup_flag)
+        self.substitutions = []  # (prefix, input, suffix, lookups)
+
+    def equals(self, other):
+        return (LookupBuilder.equals(self, other) and
+                self.substitutions == other.substitutions)
+
+    def build(self):
+        lookup = otTables.Lookup()
+        lookup.SubTable = []
+        for (prefix, input, suffix, lookups) in self.substitutions:
+            st = otTables.ChainContextSubst()
+            lookup.SubTable.append(st)
+            st.Format = 3
+
+            st.BacktrackGlyphCount = len(prefix)
+            st.BacktrackCoverage = []
+            for p in reversed(prefix):
+                coverage = otTables.BacktrackCoverage()
+                coverage.glyphs = sorted(list(p))
+                st.BacktrackCoverage.append(coverage)
+
+            st.InputGlyphCount = len(input)
+            st.InputCoverage = []
+            for i in input:
+                coverage = otTables.InputCoverage()
+                coverage.glyphs = sorted(list(i))
+                st.InputCoverage.append(coverage)
+
+            st.LookAheadGlyphCount = len(suffix)
+            st.LookAheadCoverage = []
+            for s in suffix:
+                coverage = otTables.LookAheadCoverage()
+                coverage.glyphs = sorted(list(s))
+                st.LookAheadCoverage.append(coverage)
+
+            st.SubstCount = len([l for l in lookups if l is not None])
+            st.SubstLookupRecord = []
+            for sequenceIndex, l in enumerate(lookups):
+                if l is not None:
+                    rec = otTables.SubstLookupRecord()
+                    rec.SequenceIndex = sequenceIndex
+                    rec.LookupListIndex = l.lookup_index
+                    st.SubstLookupRecord.append(rec)
+
         lookup.LookupFlag = self.lookup_flag
         lookup.LookupType = self.lookup_type
         lookup.SubTableCount = len(lookup.SubTable)
