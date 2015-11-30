@@ -209,11 +209,17 @@ class NEQOperator(Operator):
     def __repr__(self):
         return "NE"
 
+class NEGOperator(Operator):
+    def __repr__(self):
+        return "NEG"
+
 class Expression(object):
     pass
 
 class UnaryExpression(Expression):
-    pass
+    def __init__(self, arg, op):
+	self.arg = arg
+	self.operator = op
 
 class BinaryExpression(Expression):
     def __init__(self, left, right, op):
@@ -398,6 +404,11 @@ class SHCMethodCall(MethodCallStatement):
     def __init__(self, data, parameters = [], returnVal=None):
         super(SHCMethodCall, self).__init__(parameters, returnVal)
         self.methodName = 'SHC_'+data
+
+class SHZMethodCall(MethodCallStatement):
+    def __init__(self, data, parameters = [], returnVal=None):
+        super(SHZMethodCall, self).__init__(parameters, returnVal)
+        self.methodName = 'SHZ_'+data
 
 class SLOOPMethodCall(MethodCallStatement):
     def __init__(self, parameters = [], returnVal=None):

@@ -567,10 +567,11 @@ class Environment(object):
         self.binary_operation('MUL')
 
     def exec_NEG(self):
-        op = self.program_stack[-1].data
-        if isinstance(op, dataType.AbstractValue):
-            # xxx can do better here
-            raise NotImplementedError
+        arg = self.program_stack[-1].data
+        if isinstance(arg, dataType.AbstractValue):
+            self.program_stack_pop()
+            self.program_stack_push(IR.UnaryExpression(arg, IR.NEGOperator()))
+            # can do better here by supporting eval
         else:
             self.program_stack_pop()
             self.program_stack_push(-op)
@@ -739,8 +740,8 @@ class Environment(object):
         self.current_instruction_intermediate.append(IR.SHPIXMethodCall(pts))
 
     def exec_SHZ(self):
-        self.program_stack_pop()
-        raise NotImplementedError
+        arg = self.program_stack_pop()
+        self.current_instruction_intermediate.append(IR.SHZMethodCall(self.current_instruction.data[0], [arg]))
   
     def exec_SLOOP(self):
         self.graphics_state['loop'] = self.program_stack[-1].data
