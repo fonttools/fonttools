@@ -770,9 +770,13 @@ class Environment(object):
         self.program_stack_pop_many()
         raise NotImplementedError
 
+    def exec_S45ROUND(self):
+        arg = dataType.RoundState_Super45(self.program_stack_pop().eval(self.keep_abstract))
+        self.current_instruction_intermediate.append(IR.CopyStatement(IR.RoundState(), arg))
+
     def exec_SROUND(self):
-        self.program_stack_pop()
-        raise NotImplementedError
+        arg = dataType.RoundState_Super(self.program_stack_pop().eval(self.keep_abstract))
+        self.current_instruction_intermediate.append(IR.CopyStatement(IR.RoundState(), arg))
 
     def exec_SSW(self):
         self.program_stack_pop()
@@ -872,10 +876,6 @@ class Environment(object):
     def exec_SRP2(self):
         arg = self.exec_SRP(2)
         self.current_instruction_intermediate.append(IR.SRP2MethodCall([arg]))
-
-    def exec_S45ROUND(self):
-        self.program_stack_pop()
-        raise NotImplementedError
 
     def exec_SANGW(self):
         self.program_stack_pop()

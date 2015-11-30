@@ -47,6 +47,16 @@ class RoundState_HG(AbstractValue): # RTHG
     pass
 class RoundState_UG(AbstractValue): # RUTG
     pass
+class RoundState_Super(AbstractValue): # RUTG
+    def __init__(self, data):
+        self.data = data
+    def __repr__(self):
+        return "Super(%s)"%str(self.data)
+class RoundState_Super45(AbstractValue): # RUTG
+    def __init__(self, data):
+        self.data = data
+    def __repr__(self):
+        return "Super45(%s)"%str(self.data)
 
 class Expression(AbstractValue):
     def __init__(self,op1 = None,op2 = None,operation = None):
