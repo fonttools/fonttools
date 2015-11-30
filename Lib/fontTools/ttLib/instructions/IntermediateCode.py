@@ -334,6 +334,51 @@ class ROUNDMethodCall(MethodCallStatement):
         super(ROUNDMethodCall, self).__init__(parameters, returnVal)
         self.methodName = 'ROUND_'+data
 
+class IPMethodCall(MethodCallStatement):
+    def __init__(self, parameters = [], returnVal=None):
+        super(IPMethodCall, self).__init__(parameters, returnVal)
+        self.methodName = 'IP'
+
+class SHPMethodCall(MethodCallStatement):
+    def __init__(self, parameters = [], returnVal=None):
+        super(SHPMethodCall, self).__init__(parameters, returnVal)
+        self.methodName = 'SHP'
+
+class SHPIXMethodCall(MethodCallStatement):
+    def __init__(self, parameters = [], returnVal=None):
+        super(SHPIXMethodCall, self).__init__(parameters, returnVal)
+        self.methodName = 'SHPIX'
+
+class IUPMethodCall(MethodCallStatement):
+    def __init__(self, data, parameters = [], returnVal=None):
+        super(IUPMethodCall, self).__init__(parameters, returnVal)
+        self.methodName = 'IUP_'+data
+
+class MDAPMethodCall(MethodCallStatement):
+    def __init__(self, data, parameters = [], returnVal=None):
+        super(MDAPMethodCall, self).__init__(parameters, returnVal)
+        self.methodName = 'MDAP_'+data
+
+class MDRPMethodCall(MethodCallStatement):
+    def __init__(self, data, parameters = [], returnVal=None):
+        super(MDAPMethodCall, self).__init__(parameters, returnVal)
+        self.methodName = 'MDRP_'+data
+
+class SRP0MethodCall(MethodCallStatement):
+    def __init__(self, parameters = [], returnVal=None):
+        super(SRP0MethodCall, self).__init__(parameters, returnVal)
+        self.methodName = 'SRP0'
+
+class SRP1MethodCall(MethodCallStatement):
+    def __init__(self, parameters = [], returnVal=None):
+        super(SRP1MethodCall, self).__init__(parameters, returnVal)
+        self.methodName = 'SRP1'
+
+class SRP2MethodCall(MethodCallStatement):
+    def __init__(self, parameters = [], returnVal=None):
+        super(SRP2MethodCall, self).__init__(parameters, returnVal)
+        self.methodName = 'SRP2'
+
 class AssignmentStatement(dataType.AbstractValue):
     def __init__(self):
         self.operator = AssignOperator()

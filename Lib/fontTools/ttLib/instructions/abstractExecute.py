@@ -5,7 +5,7 @@ import IntermediateCode as IR
 logger = logging.getLogger(" ")
 class IdentifierGenerator(object):
     def generateIdentifier(self, tag, number):
-        return '$' + tag + str(number)
+        return '$' + tag + '_' + str(number)
 
 class DataFlowRegion(object):
     def __init__(self):
@@ -445,15 +445,15 @@ class Environment(object):
     def exec_IP(self):
         loopValue = self.graphics_state['loop']
         self.graphics_state['loop'] = 1
-        if len(self.program_stack)<loopValue:
-            raise Exception("truetype: hinting: stack underflow")
-        self.program_stack_pop_many(loopValue)
+        assert len(self.program_stack) >= loopValue, "IP: stack underflow"
+        pts = self.program_stack_pop_many(loopValue)
+        self.current_instruction_intermediate.append(IR.IPMethodCall(pts))
 
     def exec_ISECT(self):
         self.program_stack_pop_many(5)
 
     def exec_IUP(self): # drawing-only
-        pass
+        self.current_instruction_intermediate.append(IR.IUPMethodCall(self.current_instruction.data[0]))
 
     def fetch_body_for_tag(self, tag):
         fpgm_prefix = "fpgm_"
@@ -519,14 +519,12 @@ class Environment(object):
         self.program_stack_push(res)
 
     def exec_MDAP(self):
-        op = int(self.program_stack[-1].data)
-        #assert isinstance(op, dataType.PointValue)
-        self.program_stack_pop()
+        arg = self.program_stack_pop().eval(self.keep_abstract)
+        self.current_instruction_intermediate.append(IR.MDAPMethodCall(self.current_instruction.data[0], [arg]))
 
     def exec_MDRP(self):
-        op = self.program_stack[-1].data
-        #assert isinstance(op, dataType.PointValue)
-        self.program_stack_pop()
+        arg = self.program_stack_pop().eval(self.keep_abstract)
+        self.current_instruction_intermediate.append(IR.MDAPMethodCall(self.current_instruction.data[0], [arg]))
 
     def exec_MIAP(self):
         op1 = self.program_stack[-2]
@@ -712,17 +710,17 @@ class Environment(object):
     def exec_SHP(self):
         loopValue = self.graphics_state['loop']
         self.graphics_state['loop'] = 1
-        if len(self.program_stack)<loopValue:
-            raise Exception("truetype: hinting: stack underflow")
-        self.program_stack_pop_many(loopValue)
+        assert len(self.program_stack) >= loopValue, "IP: stack underflow"
+        pts = self.program_stack_pop_many(loopValue)
+        self.current_instruction_intermediate.append(IR.SHPMethodCall(pts))
 
     def exec_SHPIX(self):
         self.program_stack_pop()
         loopValue = self.graphics_state['loop']
         self.graphics_state['loop'] = 1
-        if len(self.program_stack)<loopValue:
-            raise Exception("truetype: hinting: stack underflow")
-        self.program_stack_pop_many(loopValue)
+        assert len(self.program_stack) >= loopValue, "IP: stack underflow"
+        pts = self.program_stack_pop_many(loopValue)
+        self.current_instruction_intermediate.append(IR.SHPIXMethodCall(pts))
 
     def exec_SHZ(self):
         self.program_stack_pop()
@@ -832,16 +830,19 @@ class Environment(object):
        
     def exec_SRP(self,index):#SetRefPoint
         #self.graphics_state['rp'][index] = self.program_stack[-1]
-        self.program_stack_pop()
+        return self.program_stack_pop()
 
     def exec_SRP0(self):
-        self.exec_SRP(0)
+        arg = self.exec_SRP(0)
+        self.current_instruction_intermediate.append(IR.SRP0MethodCall([arg]))
     
     def exec_SRP1(self):
-        self.exec_SRP(1)
+        arg = self.exec_SRP(1)
+        self.current_instruction_intermediate.append(IR.SRP1MethodCall([arg]))
 
     def exec_SRP2(self):
-        self.exec_SRP(2)
+        arg = self.exec_SRP(2)
+        self.current_instruction_intermediate.append(IR.SRP2MethodCall([arg]))
 
     def exec_S45ROUND(self):
         self.program_stack_pop()
@@ -968,7 +969,7 @@ class Executor(object):
         logger.info("calling function %d" % callee)
         self.pc = self.bytecodeContainer.function_table[callee].start()
         self.intermediateCodes = []
-        self.environment.tag = "fpgm_%s_" % callee
+        self.environment.tag = "fpgm_%s" % callee
         self.environment.replace_locals_with_formals()
         self.stored_environments = {}
 

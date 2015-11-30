@@ -144,7 +144,7 @@ def process(jobs, options):
             for key, value in bc.function_table.items():
                 print ("Function #%d:" % (key))
                 if (options.outputIR):
-                    tag = "fpgm_%s_" % key
+                    tag = "fpgm_%s" % key
                     if tag in bc.IRs:
                         bc.print_IR(bc.IRs[tag])
                     else:
