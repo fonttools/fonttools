@@ -32,16 +32,19 @@ import math
 import pdb
 import logging
 import copy
+import tempfile
 
 def ttDump(input):
-    output = makeOutputFileName(input, ".ttx")
+    (output_fd, output_fn) = tempfile.mkstemp(".ttx")
+    output = os.fdopen(output_fd, 'rw+')
     ttf = TTFont(input, 0, verbose=False, allowVID=False,
             quiet=False, ignoreDecompileErrors=True,
             fontNumber=-1)
     ttf.saveXML(output, quiet=True, tables= [],
-            skipTables= [], splitTables=False,
-            disassembleInstructions=True,
-            bitmapGlyphDataFormat='raw')
+                skipTables= [], splitTables=False,
+                disassembleInstructions=True,
+                bitmapGlyphDataFormat='raw',
+                leaveOpen=True)
     ttf.close()
     return output
 
@@ -209,6 +212,7 @@ def parseOptions(args):
         fileformat = input.split('.')[-1]
         if fileformat == 'ttf':
             output = ttDump(input)
+            output.seek(0)
             jobs.append(output)
         elif fileformat == 'ttx':
             jobs.append(input)

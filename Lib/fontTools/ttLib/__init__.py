@@ -224,7 +224,7 @@ class TTFont(object):
 	
 	def saveXML(self, fileOrPath, progress=None, quiet=False,
 			tables=None, skipTables=None, splitTables=False, disassembleInstructions=True,
-			bitmapGlyphDataFormat='raw'):
+			bitmapGlyphDataFormat='raw', leaveOpen=False):
 		"""Export the font as TTX (an XML-based text file), or as a series of text
 		files when splitTables is true. In the latter case, the 'fileOrPath'
 		argument should be a path to a directory.
@@ -287,7 +287,8 @@ class TTFont(object):
 			progress.set((i + 1))
 		writer.endtag("ttFont")
 		writer.newline()
-		writer.close()
+		if (not leaveOpen):
+			writer.close()
 		if self.verbose:
 			debugmsg("Done dumping TTX")
 	
