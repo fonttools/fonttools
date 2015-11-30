@@ -4,10 +4,28 @@
   <GSUB>
     <Version value="1.0"/>
     <ScriptList>
-      <!-- ScriptCount=0 -->
+      <!-- ScriptCount=1 -->
+      <ScriptRecord index="0">
+        <ScriptTag value="latn"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=1 -->
+            <FeatureIndex index="0" value="0"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
     </ScriptList>
     <FeatureList>
-      <!-- FeatureCount=0 -->
+      <!-- FeatureCount=1 -->
+      <FeatureRecord index="0">
+        <FeatureTag value="test"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="2"/>
+        </Feature>
+      </FeatureRecord>
     </FeatureList>
     <LookupList>
       <!-- LookupCount=3 -->

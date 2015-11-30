@@ -136,8 +136,7 @@ class BuilderTest(unittest.TestCase):
         # OpenType Feature File specification, section 5.f.i, example 1.
         font = TTFont()
         addOpenTypeFeatures(self.getpath("spec5fi1.fea"), font)
-        # TODO: Fix the implementation until the test case passes.
-        # self.expect_ttx(font, self.getpath("spec5fi1.ttx"))
+        self.expect_ttx(font, self.getpath("spec5fi1.ttx"))
 
     def test_languagesystem(self):
         builder = Builder(None, TTFont())

@@ -342,7 +342,7 @@ class ParserTest(unittest.TestCase):
 
     def test_substitute_lookups(self):
         doc = Parser(self.getpath("spec5fi1.fea")).parse()
-        [ligs, sub, feature] = doc.statements
+        [langsys, ligs, sub, feature] = doc.statements
         self.assertEqual(feature.statements[0].lookups, [ligs, None, sub])
         self.assertEqual(feature.statements[1].lookups, [ligs, None, sub])
 
