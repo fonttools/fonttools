@@ -505,11 +505,6 @@ class Environment(object):
         assert not isinstance(arg, dataType.AbstractValue)
         self.adjust_succ_for_relative_jump(arg, False)
 
-    def exec_LOOPCALL(self):
-        fn = self.program_stack_pop().eval(False)
-        count = self.program_stack_pop().eval(False)
-        self.current_instruction_intermediate.append(IR.LoopCallStatement(fn, count))
-
     def exec_LT(self):
         self.binary_operation('LT')
 
@@ -897,6 +892,11 @@ class Environment(object):
         self.graphics_state['controlValueCutIn'] = data
         self.current_instruction_intermediate.append(IR.CopyStatement(IR.SingleWidthCutIn(), arg_name))
     
+    def exec_LOOPCALL(self):
+        fn = self.program_stack_pop().eval(False)
+        count = self.program_stack_pop().eval(False)
+        self.current_instruction_intermediate.append(IR.LoopCallStatement(fn, count))
+
     def exec_CALL(self):
         var = self.program_stack[-1]
         self.program_stack_pop()
@@ -970,8 +970,13 @@ class Executor(object):
 
     def execute_LOOPCALL(self):
         count = self.environment.program_stack[-2].eval(False)
-        for i in range(count):
+        if isinstance(count, dataType.AbstractValue):
+            # oops. execute once, hope it doesn't modify the stack.
+            # we could also record the effects & replay them if it did.
             self.execute_CALL()
+        else:
+            for i in range(count):
+                self.execute_CALL()
 
     def execute_CALL(self):
         # actually we *always* want to get the concrete callee
