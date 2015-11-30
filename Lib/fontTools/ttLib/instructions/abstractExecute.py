@@ -475,9 +475,6 @@ class Environment(object):
             pc += 1
         assert pc < len(ins)
 
-        print "currently in "+str(self.tag)
-        print "pc is "+str(pc)
-        print "arg is "+str(arg)
         target = ins[pc+arg]
         if only_succ:
             self.current_instruction.successors = []
