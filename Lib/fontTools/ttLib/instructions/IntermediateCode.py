@@ -359,6 +359,14 @@ class CallStatement(MethodCallStatement):
         super(CallStatement, self).__init__([variable])
         self.methodName = "CALL"
 
+class LoopCallStatement(MethodCallStatement):
+    def __init__(self, variable, count):
+        super(LoopCallStatement, self).__init__([variable])
+        self.count = count
+        self.methodName = "LOOPCALL_"
+    def __repr__(self):
+        return "%s_%s" % (self.methodName, self.count)
+
 class IndexedAssignment(AssignmentStatement):
     def __init__(self, index, var):
         self.index = index

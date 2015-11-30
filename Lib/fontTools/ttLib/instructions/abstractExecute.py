@@ -447,8 +447,31 @@ class Environment(object):
     def exec_IUP(self): # drawing-only
         pass
 
-    def exec_LOOPCALL(self):
+    def exec_JMPR(self):
+        arg = self.program_stack_pop().eval(False)
+
+        # now we need to find the instructions and set the PC
+        assert not isinstance(arg, dataType.AbstractValue)
         raise NotImplementedError
+    def exec_JROF(self):
+        e = self.program_stack_pop().eval(self.keep_abstract)
+        arg = self.program_stack_pop().eval(False)
+
+        # now we need to find the instructions and set the PC
+        assert not isinstance(arg, dataType.AbstractValue)
+        raise NotImplementedError
+    def exec_JROT(self):
+        e = self.program_stack_pop().eval(self.keep_abstract)
+        arg = self.program_stack_pop().eval(False)
+
+        # now we need to find the instructions and set the PC
+        assert not isinstance(arg, dataType.AbstractValue)
+        raise NotImplementedError
+
+    def exec_LOOPCALL(self):
+        fn = self.program_stack_pop().eval(False)
+        count = self.program_stack_pop().eval(False)
+        self.current_instruction_intermediate.append(IR.LoopCallStatement(fn, count))
 
     def exec_LT(self):
         self.binary_operation('LT')
@@ -799,7 +822,7 @@ class Environment(object):
         self.program_stack_pop()
     
     def exec_SCFS(self):
-        self.program_stack_pop_many()
+        self.program_stack_pop_many(2)
 
     def exec_SCVTCI(self):
         op = self.stack_top_name()
@@ -852,8 +875,6 @@ class Executor(object):
     instruction. Modifies the stack, CVT table, and storage area.
 
     As a side effect, puts intermediate code in field "intermediateCodes".
-
-    This class manages the program pointer like jump to function call
     """
     def __init__(self,bc):
         self.bytecodeContainer = bc
@@ -885,6 +906,11 @@ class Executor(object):
         else:
             self.intermediateCodes.extend(ins)
 
+    def execute_LOOPCALL(self):
+        count = self.environment.program_stack[-2].eval(False)
+        for i in range(count):
+            self.execute_CALL()
+
     def execute_CALL(self):
         # actually we *always* want to get the concrete callee
         callee = self.environment.program_stack[-1].eval(False)
@@ -911,6 +937,7 @@ class Executor(object):
                                 self.environment.tag, copy.copy(self.environment.program_stack),
                                 self.stored_environments, self.if_else))
         self.if_else = self.If_else_stack([], [], [])
+        logger.info("calling function %d" % callee)
         self.pc = self.bytecodeContainer.function_table[callee].start()
         self.intermediateCodes = []
         self.environment.tag = "fpgm_%s_" % callee
@@ -920,7 +947,7 @@ class Executor(object):
     def execute(self, tag):
         logger.info("execute; tag is %s", tag)
         self.environment.tag = tag
-        self.program = self.bytecodeContainer.programs[tag]
+        self.program = self.bytecodeContainer.tag_to_programs[tag]
         self.pc = self.program.start()
 
         self.if_else = self.If_else_stack([], [], [])
@@ -937,6 +964,9 @@ class Executor(object):
 
             if self.pc.mnemonic == 'CALL':
                 self.execute_CALL()
+                continue
+            elif self.pc.mnemonic == 'LOOPCALL':
+                self.execute_LOOPCALL()
                 continue
 
             if self.pc.mnemonic == 'IF':

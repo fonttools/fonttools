@@ -45,24 +45,23 @@ def ttDump(input):
     ttf.close()
     return output
 
-def executeGlyphs(absExecutor, initialEnvironment, glyphs):
-    called_functions = set() 
+def executeGlyphs(abstractExecutor, initialEnvironment, glyphs):
+    called_functions = set()
     for glyph in glyphs:
-        absExecutor.environment = copy.deepcopy(initialEnvironment)
-        absExecutor.execute(glyph)
-        called_functions.update(list(set(absExecutor.program.call_function_set)))
+        abstractExecutor.environment = copy.deepcopy(initialEnvironment)
+        abstractExecutor.execute(glyph)
+        called_functions.update(list(set(abstractExecutor.program.call_function_set)))
     return called_functions
 
-def analysis(tt, glyphs):
-    #one ttFont object for one ttx file       
-    absExecutor = abstractExecute.Executor(tt)
+def analysis(bytecodeContainer, glyphs):
+    abstractExecutor = abstractExecute.Executor(bytecodeContainer)
     called_functions = set()
-    absExecutor.execute('prep')
-    called_functions.update(list(set(absExecutor.program.call_function_set)))
+    abstractExecutor.execute('prep')
+    called_functions.update(list(set(abstractExecutor.program.call_function_set)))
 
-    environment_after_prep = copy.deepcopy(absExecutor.environment)
-    called_functions.update(executeGlyphs(absExecutor, environment_after_prep, glyphs))
-    return absExecutor, called_functions
+    environment_after_prep = copy.deepcopy(abstractExecutor.environment)
+    called_functions.update(executeGlyphs(abstractExecutor, environment_after_prep, glyphs))
+    return abstractExecutor, called_functions
 
 class Options(object):
     verbose = False
@@ -127,18 +126,19 @@ def process(jobs, options):
         bc = BytecodeContainer(tt)
 
         if (options.allGlyphs):
-            glyphs = filter(lambda x: x != 'fpgm' and x != 'prep', bc.programs.keys())
+            glyphs = filter(lambda x: x != 'fpgm' and x != 'prep', bc.tag_to_programs.keys())
         else:
             glyphs = map(lambda x: 'glyf.'+x, options.glyphs)
 
-        ae, called_functions = analysis(bc, glyphs)
+        if options.outputIR:
+            ae, called_functions = analysis(bc, glyphs)
 
         if (options.outputPrep):
             print ("PREP:")
             if (options.outputIR):
                 bc.print_IR(bc.IRs['prep'])
             else:
-                bc.programs['prep'].body.pretty_print()
+                bc.tag_to_programs['prep'].body.pretty_print()
             print ()
         if (options.outputFunctions):
             for key, value in bc.function_table.items():
@@ -158,7 +158,7 @@ def process(jobs, options):
                 if (options.outputIR):
                     bc.print_IR(bc.IRs[glyph])
                 else:
-                    bc.programs[glyph].body.pretty_print()
+                    bc.tag_to_programs[glyph].body.pretty_print()
                 print ()
 
         if (options.outputCallGraph):
@@ -176,7 +176,7 @@ def process(jobs, options):
             print("Max Stack Depth =", ae.maximum_stack_depth)
         if (options.reduceFunctions):
             if not options.allGlyphs:
-                glyphs = filter(lambda x: x != 'fpgm' and x != 'prep', bc.programs.keys())
+                glyphs = filter(lambda x: x != 'fpgm' and x != 'prep', bc.tag_to_programs.keys())
                 called_functions.update(executeGlyphs(ae, glyphs)) 
             
             function_set = ae.environment.function_table.keys()

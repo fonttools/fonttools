@@ -23,7 +23,7 @@ def main(args):
     except:
         pass
     environment = copy.deepcopy(absExecutor.environment)
-    tables_to_execute = bytecodeContainer.programs.keys()
+    tables_to_execute = bytecodeContainer.tag_to_programs.keys()
     for table in tables_to_execute:
         try:
             absExecutor.execute(table)
