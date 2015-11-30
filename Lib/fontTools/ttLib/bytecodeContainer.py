@@ -1,7 +1,7 @@
 from instructions import statements, instructionConstructor, abstractExecute
 
 class BytecodeContainer(object):
-    """ Represents the original bytecode-related global data for a TrueType font. """
+    """ Represents bytecode-related global data for a TrueType font. """
     def __init__(self, tt):
         # tag id -> Program
         self.tag_to_programs = {}
@@ -209,17 +209,16 @@ class BytecodeContainer(object):
         for line in IR:
             print line
 
+# Function and Program are suspiciously similar; should probably be refactored.
 # per-glyph instructions
 class Program(object):
     def __init__(self, input):
         self.body = Body(instructions = input)
         self.call_function_set = [] # set of functions called in the tag program
-
+    def pretty_print(self):
+        self.body.pretty_print()
     def start(self):
         return self.body.statement_root
-
-    def print_program(self):
-        self.body.pretty_print()
 
 class Function(object):
     def __init__(self, instructions=None):
@@ -240,12 +239,12 @@ class Body(object):
         if kwargs.get('statement_root') is not None:
             self.statement_root = kwargs.get('statement_root')
         if kwargs.get('instructions') is not None:
-            input_instructions = kwargs.get('instructions')
-            if len(input_instructions) > 0:
-                self.statement_root = self.constructSuccessorAndPredecessor(input_instructions)
+            self.instructions = kwargs.get('instructions')
+            if len(self.instructions) > 0:
+                self.statement_root = self.constructSuccessorAndPredecessor()
 
     # CFG construction
-    def constructSuccessorAndPredecessor(self,input_statements):
+    def constructSuccessorAndPredecessor(self):
         def is_branch(instruction):
             if isinstance(instruction,statements.all.EIF_Statement):
                 return True
@@ -254,8 +253,8 @@ class Body(object):
             else:
                 return False
         pending_if_stack = []
-        for index in range(len(input_statements)):
-            this_instruction = input_statements[index]
+        for index in range(len(self.instructions)):
+            this_instruction = self.instructions[index]
 
             # Jump instructions are sporadically used.
             # We'll just treat them like normal statements now and fix up the
@@ -270,9 +269,9 @@ class Body(object):
 
             #other statements should have at least 
             #the next instruction in stream as a successor
-            if index < len(input_statements)-1 and not is_branch(input_statements[index+1]):
-                this_instruction.add_successor(input_statements[index+1])
-                input_statements[index+1].set_predecessor(this_instruction)
+            if index < len(self.instructions)-1 and not is_branch(self.instructions[index+1]):
+                this_instruction.add_successor(self.instructions[index+1])
+                self.instructions[index+1].set_predecessor(this_instruction)
             # An IF statement should have two successors:
             #  one already added (index+1); one at the ELSE/ENDIF.
             if isinstance(this_instruction,statements.all.IF_Statement):
@@ -286,7 +285,7 @@ class Body(object):
                 this_if.add_successor(this_instruction)
                 this_instruction.set_predecessor(this_if)
                 pending_if_stack.pop()
-        return input_statements[0]
+        return self.instructions[0]
 
     def pretty_print(self):
         if self.statement_root is None:

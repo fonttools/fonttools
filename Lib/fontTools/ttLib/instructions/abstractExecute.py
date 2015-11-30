@@ -20,13 +20,10 @@ class Environment(object):
     The global environment consists of a Control Variable Table (CVT) and
     storage area, as well as a program stack.
 
-    The cvt_table consists of a dict mapping locations to 16-bit signed
+    The cvt consists of a dict mapping locations to 16-bit signed
     integers.
 
-    The function_table consists of a dict mapping function labels to lists
-    of instructions.
-
-    The storage_area consists of a dict mapping locations to 32-bit numbersself
+    The storage_area consists of a dict mapping locations to 32-bit numbers
     [again, same comment as for cvt_table].
 
     The program stack abstractly represents the program stack. This is the
@@ -34,10 +31,10 @@ class Environment(object):
     stack-based virtual machine.
 
     """
-    def __init__(self, ttFont, tag):
-        self.function_table = ttFont.function_table
+    def __init__(self, bytecodeContainer, tag):
+        self.bytecodeContainer = bytecodeContainer
         # cvt: location -> Value
-        self.cvt = ttFont.cvt_table
+        self.cvt = copy.copy(bytecodeContainer.cvt_table)
         self.tag = tag
         # storage_area: location -> Value
         self.storage_area = {}
@@ -59,6 +56,17 @@ class Environment(object):
         return str('storage = ' + str(self.storage_area) + 
             ', graphics_state = ' + str(self.graphics_state) 
             + ', program_stack = ' + stackRep + ', program_stack_length = ' + str(len(self.program_stack)))
+
+    def __deepcopy__(self, memo):
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        for k, v in self.__dict__.items():
+            if k == 'bytecodeContainer':
+                setattr(result, k, copy.copy(v))
+            else:
+                setattr(result, k, copy.deepcopy(v, memo))
+        return result
 
     def make_copy(self, font):
         new_env = Environment(font, self.tag)
@@ -447,26 +455,49 @@ class Environment(object):
     def exec_IUP(self): # drawing-only
         pass
 
-    def exec_JMPR(self):
-        arg = self.program_stack_pop().eval(False)
+    def fetch_body_for_tag(self, tag):
+        fpgm_prefix = "fpgm_"
+        if tag.startswith(fpgm_prefix):
+            fn = int(tag[len(fpgm_prefix):len(tag)-1])
+            return self.bytecodeContainer.function_table[fn].body
+        else:
+            return self.bytecodeContainer.tag_to_programs[self.tag].body
 
+    def adjust_succ_for_relative_jump(self, arg, only_succ):
         # now we need to find the instructions and set the PC
         assert not isinstance(arg, dataType.AbstractValue)
-        raise NotImplementedError
+        ins = self.fetch_body_for_tag(self.tag).instructions
+        pc = 0
+        # note use of 'is' rather than normal equality
+        for i in range(len(ins)):
+            if self.current_instruction is ins[i]:
+                break
+            pc += 1
+        assert pc < len(ins)
+
+        print "currently in "+str(self.tag)
+        print "pc is "+str(pc)
+        print "arg is "+str(arg)
+        target = ins[pc+arg]
+        if only_succ:
+            self.current_instruction.successors = []
+        if not target in self.current_instruction.successors:
+            self.current_instruction.successors.append(target)
+
+    def exec_JMPR(self):
+        arg = self.program_stack_pop().eval(False)
+        assert not isinstance(arg, dataType.AbstractValue)
+        self.adjust_succ_for_relative_jump(arg, True)
     def exec_JROF(self):
         e = self.program_stack_pop().eval(self.keep_abstract)
         arg = self.program_stack_pop().eval(False)
-
-        # now we need to find the instructions and set the PC
         assert not isinstance(arg, dataType.AbstractValue)
-        raise NotImplementedError
+        self.adjust_succ_for_relative_jump(arg, False)
     def exec_JROT(self):
         e = self.program_stack_pop().eval(self.keep_abstract)
         arg = self.program_stack_pop().eval(False)
-
-        # now we need to find the instructions and set the PC
         assert not isinstance(arg, dataType.AbstractValue)
-        raise NotImplementedError
+        self.adjust_succ_for_relative_jump(arg, False)
 
     def exec_LOOPCALL(self):
         fn = self.program_stack_pop().eval(False)
