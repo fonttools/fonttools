@@ -908,28 +908,6 @@ class Environment(object):
         getattr(self,"exec_"+self.current_instruction.mnemonic)()
         return self.current_instruction_intermediate
 
-def setGSDefaults():
-    intermediateCodes = []
-    intermediateCodes.append(IR.CopyStatement(IR.AutoFlip(),IR.Boolean('true')))
-    intermediateCodes.append(IR.CopyStatement(IR.ScanControl(),IR.Constant(0)))
-    intermediateCodes.append(IR.CopyStatement(IR.ScanType(),IR.Constant(0)))
-    intermediateCodes.append(IR.CopyStatement(IR.SingleWidthCutIn(),IR.Constant(0)))
-    intermediateCodes.append(IR.CopyStatement(IR.SingleWidthValue(),IR.Constant(0)))
-    intermediateCodes.append(IR.CopyStatement(IR.FreedomVector(),IR.Constant(1)))
-    intermediateCodes.append(IR.CopyStatement(IR.ProjectionVector(),IR.Constant(1)))
-    intermediateCodes.append(IR.CopyStatement(IR.LoopValue(),IR.Constant(1)))
-    intermediateCodes.append(IR.CopyStatement(IR.InstructControl(IR.Constant(0)),IR.Constant(0)))
-    intermediateCodes.append(IR.CopyStatement(IR.InstructControl(IR.Constant(1)),IR.Constant(0)))
-    intermediateCodes.append(IR.CopyStatement(IR.MinimumDistance(),IR.Constant(1)))
-    intermediateCodes.append(IR.CopyStatement(IR.RoundState(),dataType.RoundState_G()))
-    intermediateCodes.append(IR.CopyStatement(IR.ZP0(),IR.Constant(1)))
-    intermediateCodes.append(IR.CopyStatement(IR.ZP1(),IR.Constant(1)))
-    intermediateCodes.append(IR.CopyStatement(IR.ZP2(),IR.Constant(1)))
-    intermediateCodes.append(IR.CopyStatement(IR.RP0(),IR.Constant(0)))
-    intermediateCodes.append(IR.CopyStatement(IR.RP1(),IR.Constant(0)))
-    intermediateCodes.append(IR.CopyStatement(IR.RP2(),IR.Constant(0)))
-    return intermediateCodes
-
 class Executor(object):
     """
     Given a TrueType instruction, abstractly transform the global state.
@@ -953,6 +931,27 @@ class Executor(object):
         self.intermediateCodes = []
         self.global_function_table = {}
         self.visited_functions = set()
+
+    def initialize_graphics_state(self):
+        self.intermediateCodes = []
+        self.intermediateCodes.append(IR.CopyStatement(IR.AutoFlip(),IR.Boolean('true')))
+        self.intermediateCodes.append(IR.CopyStatement(IR.ScanControl(),IR.Constant(0)))
+        self.intermediateCodes.append(IR.CopyStatement(IR.ScanType(),IR.Constant(0)))
+        self.intermediateCodes.append(IR.CopyStatement(IR.SingleWidthCutIn(),IR.Constant(0)))
+        self.intermediateCodes.append(IR.CopyStatement(IR.SingleWidthValue(),IR.Constant(0)))
+        self.intermediateCodes.append(IR.CopyStatement(IR.FreedomVector(),IR.Constant(1)))
+        self.intermediateCodes.append(IR.CopyStatement(IR.ProjectionVector(),IR.Constant(1)))
+        self.intermediateCodes.append(IR.CopyStatement(IR.LoopValue(),IR.Constant(1)))
+        self.intermediateCodes.append(IR.CopyStatement(IR.InstructControl(IR.Constant(0)),IR.Constant(0)))
+        self.intermediateCodes.append(IR.CopyStatement(IR.InstructControl(IR.Constant(1)),IR.Constant(0)))
+        self.intermediateCodes.append(IR.CopyStatement(IR.MinimumDistance(),IR.Constant(1)))
+        self.intermediateCodes.append(IR.CopyStatement(IR.RoundState(),dataType.RoundState_G()))
+        self.intermediateCodes.append(IR.CopyStatement(IR.ZP0(),IR.Constant(1)))
+        self.intermediateCodes.append(IR.CopyStatement(IR.ZP1(),IR.Constant(1)))
+        self.intermediateCodes.append(IR.CopyStatement(IR.ZP2(),IR.Constant(1)))
+        self.intermediateCodes.append(IR.CopyStatement(IR.RP0(),IR.Constant(0)))
+        self.intermediateCodes.append(IR.CopyStatement(IR.RP1(),IR.Constant(0)))
+        self.intermediateCodes.append(IR.CopyStatement(IR.RP2(),IR.Constant(0)))
 
     class If_else_stack(object):
         def __init__(self, IR, env, state):
@@ -1014,8 +1013,11 @@ class Executor(object):
         self.pc = self.program.start()
 
         self.if_else = self.If_else_stack([], [], [])
-        self.intermediateCodes = setGSDefaults()
+        self.intermediateCodes = []
         self.environment.minimum_stack_depth = 0
+
+        if tag == 'prep':
+            self.initialize_graphics_state()
 
         while self.pc is not None:
             if self.pc.data is not None:

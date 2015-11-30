@@ -59,8 +59,9 @@ def analysis(bytecodeContainer, glyphs):
     if 'prep' in bytecodeContainer.tag_to_programs:
         abstractExecutor.execute('prep')
         called_functions.update(list(set(abstractExecutor.program.call_function_set)))
+    # NB: if there's no prep we don't explicitly output the initial graphics state
 
-    environment_after_prep = copy.deepcopy(abstractExecutor.environment)
+    environment_after_prep = abstractExecutor.environment
     called_functions.update(executeGlyphs(abstractExecutor, environment_after_prep, glyphs))
     return abstractExecutor, called_functions
 
@@ -137,7 +138,10 @@ def process(jobs, options):
         if (options.outputPrep):
             print ("PREP:")
             if (options.outputIR):
-                bc.print_IR(bc.IRs['prep'])
+                if 'prep' in bc.tag_to_programs:
+                    bc.print_IR(bc.IRs['prep'])
+                else:
+                    print ("  <no prep>")
             else:
                 bc.tag_to_programs['prep'].body.pretty_print()
             print ()
