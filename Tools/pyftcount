@@ -1,0 +1,6 @@
+#! /usr/bin/env python
+
+import sys
+from fontTools import countbytecode
+
+countbytecode.main(sys.argv[1:])
