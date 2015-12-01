@@ -543,8 +543,23 @@ class Environment(object):
         assert not isinstance(index, dataType.AbstractValue)
         top = self.program_stack[-index].eval(self.keep_abstract)
         del self.program_stack[-index]
-        self.program_stack_push(top)
-        raise NotImplementedError
+        self.program_stack_push(top, False)
+        tmp_name = identifierGenerator.generateIdentifier(self.tag, self.stack_depth() + 1)
+        arg1_name = identifierGenerator.generateIdentifier(self.tag, self.stack_depth())
+        argN_name = identifierGenerator.generateIdentifier(self.tag, self.stack_depth() - (index - 1))
+        self.current_instruction_intermediate.append(IR.CopyStatement(IR.Variable(tmp_name),
+                                                                      IR.Variable(arg1_name)))
+        self.current_instruction_intermediate.append(IR.CopyStatement(IR.Variable(arg1_name),
+                                                                      IR.Variable(argN_name)))
+        for i in range(index-1, 1, -1):
+            arg_name = identifierGenerator.generateIdentifier(self.tag, self.stack_depth() - i + 1)
+            argi_name = identifierGenerator.generateIdentifier(self.tag, self.stack_depth() - i + 2)
+            self.current_instruction_intermediate.append(IR.CopyStatement(IR.Variable(arg_name),
+                                                                          IR.Variable(argi_name)))
+
+        arg_name = identifierGenerator.generateIdentifier(self.tag, self.stack_depth() - index + 1)
+        self.current_instruction_intermediate.append(IR.CopyStatement(IR.Variable(arg_name),
+                                                                      IR.Variable(tmp_name)))
 
     def exec_MIRP(self):
         args = self.program_stack_pop_many(2)
@@ -973,13 +988,12 @@ class Executor(object):
         count = self.environment.program_stack[-2].eval(False)
         if isinstance(count, dataType.AbstractValue):
             # oops. execute once, hope it doesn't modify the stack.
-            # we could also record the effects & replay them if it did.
+            # we could also record the effects & replay them if it did (but how many times?)
             self.execute_CALL()
         else:
-            for i in range(count):
-                self.execute_CALL()
+            self.execute_CALL(count)
 
-    def execute_CALL(self):
+    def execute_CALL(self, repeats=1):
         # actually we *always* want to get the concrete callee
         callee = self.environment.program_stack[-1].eval(False)
         assert not isinstance(callee, dataType.AbstractValue)
@@ -1003,14 +1017,68 @@ class Executor(object):
             succ = self.pc.successors[0]
         self.call_stack.append((callee, succ, self.intermediateCodes,
                                 self.environment.tag, copy.copy(self.environment.program_stack),
-                                self.stored_environments, self.if_else))
+                                self.stored_environments, self.if_else, repeats))
         self.if_else = self.If_else_stack([], [], [])
-        logger.info("calling function %d" % callee)
+        logger.info("in %s, calling function %d" % (self.environment.tag, callee))
         self.pc = self.bytecodeContainer.function_table[callee].start()
         self.intermediateCodes = []
         self.environment.tag = "fpgm_%s" % callee
         self.environment.replace_locals_with_formals()
         self.stored_environments = {}
+
+    def execute_RETURN(self, tag):
+        logger.info("returning from %s", self.environment.tag)
+        if self.environment.tag in self.visited_functions:
+            # calling a function for a second time
+            # assert that self.intermediateCodes == bytecodeContainer.IRs[tag]
+            pass
+        else:
+            self.bytecodeContainer.IRs[self.environment.tag] = self.intermediateCodes
+        self.visited_functions.add(self.environment.tag)
+        (callee, self.pc, self.intermediateCodes, self.environment.tag,
+         caller_program_stack, self.stored_environments,
+         self.if_else, repeats) = self.call_stack.pop()
+
+        stack_depth_upon_call = len(caller_program_stack)
+        stack_used = stack_depth_upon_call - self.environment.minimum_stack_depth
+        stack_additional = self.stack_depth() - stack_depth_upon_call
+        self.environment.program_stack = caller_program_stack
+        for iter in range(repeats):
+            if stack_additional > 0:
+                for i in range(stack_additional):
+                    rv_val = dataType.AbstractValue()
+                    rv = IR.Variable("$rv%d" % i, rv_val)
+                    self.environment.program_stack_push(rv_val, False, rv)
+                    if stack_additional < 0:
+                        for i in range(-stack_additional):
+                            self.environment.program_stack.pop()
+
+        call_args = '('
+        for i in range(stack_used):
+            if i > 0:
+                call_args += ', '
+            call_args += identifierGenerator.generateIdentifier(tag, stack_depth_upon_call - i - 1)
+        call_args += ')'
+
+        call_rv = ''
+        if stack_additional > 0:
+            call_rv += '('
+            for i in range(stack_additional):
+                if i > 0:
+                    call_rv += ', '
+                call_rv += self.environment.program_stack[-(i+1)].identifier
+            call_rv += ') := '
+
+        if repeats > 1:
+            call_rv += 'LOOP'
+            repeats_str = '_%s' % str(repeats)
+        else:
+            repeats_str = ''
+
+        self.appendIntermediateCode(['%sCALL%s %s%s' % (call_rv, repeats_str, str(callee), call_args)])
+
+        logger.info("pop call stack, next is %s", str(self.pc))
+        logger.info("stack used %d/stack additional %d" % (stack_used, stack_additional))
 
     def execute(self, tag):
         logger.info("execute; tag is %s", tag)
@@ -1031,7 +1099,7 @@ class Executor(object):
             else:
                 logger.info("[pc] %s->%s",self.pc.id,self.pc.mnemonic)
             logger.info("succs are %s", self.pc.successors)
-            logger.info("call_stack is %s", self.call_stack)
+            logger.info("call_stack len is %s", len(self.call_stack))
 
             if self.pc.mnemonic == 'CALL':
                 self.execute_CALL()
@@ -1104,51 +1172,12 @@ class Executor(object):
                     self.pc = self.if_else.env[-1][0]
                     logger.info("program pointer back to %s %s", str(self.pc),str(self.pc.id))
                 # reached end of function, but we're still in a call
+                # ie handle RETURN
                 elif len(self.call_stack) > 0:
-                    if self.environment.tag in self.visited_functions:
-                        # assert that self.intermediateCodes == bytecodeContainer.IRs[tag]
-                        pass
-                    else:
-                        self.bytecodeContainer.IRs[self.environment.tag] = self.intermediateCodes
-                    self.visited_functions.add(self.environment.tag)
-                    (callee, self.pc, self.intermediateCodes, self.environment.tag,
-                     caller_program_stack, self.stored_environments,
-                     self.if_else) = self.call_stack.pop()
-
-                    stack_depth_upon_call = len(caller_program_stack)
-                    stack_used = stack_depth_upon_call - self.environment.minimum_stack_depth
-                    stack_additional = self.stack_depth() - stack_depth_upon_call
-                    self.environment.program_stack = caller_program_stack
-                    if stack_additional > 0:
-                        for i in range(stack_additional):
-                            rv_val = dataType.AbstractValue()
-                            rv = IR.Variable("$rv%d" % i, rv_val)
-                            self.environment.program_stack_push(rv_val, False, rv)
-                    if stack_additional < 0:
-                        for i in range(-stack_additional):
-                            self.environment.program_stack.pop()
-
-                    call_args = '('
-                    for i in range(stack_used):
-                        if i > 0:
-                            call_args += ', '
-                        call_args += identifierGenerator.generateIdentifier(tag, stack_depth_upon_call - i - 1)
-                    call_args += ')'
-
-                    call_rv = ''
-                    if stack_additional > 0:
-                        call_rv += '('
-                        for i in range(stack_additional):
-                            if i > 0:
-                                call_rv += ', '
-                            call_rv += self.environment.program_stack[-(i+1)].identifier
-                        call_rv += ') := '
-
-                    self.appendIntermediateCode(['%sCALL %s%s' % (call_rv, str(callee), call_args)])
-
-                    logger.info("pop call stack, next is %s", str(self.pc))
-                    logger.info("stack used was %d", stack_used)
-                    logger.info("stack additional was %d", stack_additional)
+                    while True:
+                        self.execute_RETURN(tag)
+                        if len(self.call_stack) == 0 or self.pc is not None:
+                            break
                 # ok, we really are all done here!
                 else:
                     assert len(self.if_else.env)==0
