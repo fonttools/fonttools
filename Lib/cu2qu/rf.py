@@ -25,7 +25,7 @@ the resulting splines are interpolation-compatible.
 
 
 from robofab.objects.objectsRF import RSegment
-from cu2qu.geometry import Point, curve_to_quadratic, curves_to_quadratic
+from cu2qu import Point, curve_to_quadratic, curves_to_quadratic
 
 
 _zip = zip
