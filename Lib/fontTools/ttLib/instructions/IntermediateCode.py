@@ -220,6 +220,11 @@ class UnaryExpression(Expression):
     def __init__(self, arg, op):
 	self.arg = arg
 	self.operator = op
+    def eval(self, keep_abstract):
+        # TODO should eval e.g. NEG
+        return self
+    def __repr__(self):
+	return "%s %s" % (str(self.operator), self.arg)
 
 class BinaryExpression(Expression):
     def __init__(self, left, right, op):
@@ -369,6 +374,11 @@ class IUPMethodCall(MethodCallStatement):
     def __init__(self, data, parameters = [], returnVal=None):
         super(IUPMethodCall, self).__init__(parameters, returnVal)
         self.methodName = 'IUP_'+data
+
+class MDMethodCall(MethodCallStatement):
+    def __init__(self, data, parameters = [], returnVal=None):
+        super(MDMethodCall, self).__init__(parameters, returnVal)
+        self.methodName = 'MD_'+data
 
 class MDAPMethodCall(MethodCallStatement):
     def __init__(self, data, parameters = [], returnVal=None):

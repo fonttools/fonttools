@@ -88,6 +88,8 @@ class Environment(object):
         for (v1, v2) in zip(self.program_stack, environment2.program_stack):
             if (v1 == v2):
                 new_stack.append(v1)
+            elif isinstance(v1, IR.Variable) and isinstance(v2, IR.Variable) and v1.identifier == v2.identifier:
+                new_stack.append(v1)
             else:
                 new_stack.append(dataType.UncertainValue([v1, v2]))
         self.program_stack = new_stack
@@ -515,13 +517,11 @@ class Environment(object):
         self.binary_operation('MAX')
 
     def exec_MD(self):
-        op1 = self.program_stack[-2]
-        op2 = self.program_stack[-1]
-        self.program_stack_pop_many(2)
+        args = self.program_stack_pop_many(2)
         #assert isinstance(op1, dataType.PointValue) and (op1, dataType.PointValue)
         res = dataType.Distance()
         self.program_stack_push(res)
-        raise NotImplementedError
+        self.current_instruction_intermediate.append(IR.MDMethodCall(self.current_instruction.data[0], args))
 
     def exec_MDAP(self):
         arg = self.program_stack_pop().eval(self.keep_abstract)
@@ -582,14 +582,9 @@ class Environment(object):
         self.binary_operation('MUL')
 
     def exec_NEG(self):
-        arg = self.program_stack[-1].data
-        if isinstance(arg, dataType.AbstractValue):
-            self.program_stack_pop()
-            self.program_stack_push(IR.UnaryExpression(arg, IR.NEGOperator()))
-            # can do better here by supporting eval
-        else:
-            self.program_stack_pop()
-            self.program_stack_push(-op)
+        arg = self.program_stack_pop()
+        narg = IR.UnaryExpression(arg, IR.NEGOperator()).eval(self.keep_abstract)
+        self.program_stack_push(narg)
 
     def exec_NEQ(self):
         self.binary_operation('NEQ')
