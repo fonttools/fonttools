@@ -17,78 +17,82 @@ from math import hypot
 from fontTools.misc import bezierTools
 
 
-class Point:
-    """An arithmetic-compatible 2D vector.
-    We use this because arithmetic with RoboFab's RPoint is prohibitively slow.
-    """
-
-    def __init__(self, p):
-        self.p = map(float, p)
-
-    def __getitem__(self, key):
-        return self.p[key]
-
-    def __add__(self, other):
-        return Point([a + b for a, b in zip(self.p, other.p)])
-
-    def __sub__(self, other):
-        return Point([a - b for a, b in zip(self.p, other.p)])
-
-    def __mul__(self, n):
-        return Point([a * n for a in self.p])
-
-    def dist(self, other):
-        """Calculate the distance between two points."""
-        return hypot(self[0] - other[0], self[1] - other[1])
-
-    def dot(self, other):
-        """Return the dot product of two points."""
-        return sum(a * b for a, b in zip(self.p, other.p))
+def vector(p1, p2):
+    """Return the vector from p1 to p2."""
+    return p2[0] - p1[0], p2[1] - p1[1]
 
 
-def lerp(p1, p2, t):
-    """Linearly interpolate between p1 and p2 at time t."""
-    return p1 * (1 - t) + p2 * t
+def translate(p, v):
+    """Translate a point by a vector."""
+    return p[0] + v[0], p[1] + v[1]
+
+
+def scale(v, n):
+    """Scale a vector."""
+    return v[0] * n, v[1] * n
+
+
+def dist(p1, p2):
+    """Calculate the distance between two points."""
+    return hypot(p1[0] - p2[0], p1[1] - p2[1])
+
+
+def dot(v1, v2):
+    """Return the dot product of two vectors."""
+    return v1[0] * v2[0] + v1[1] * v2[1]
+
+
+def lerp(a, b, t):
+    """Linearly interpolate between scalars a and b at time t."""
+    return a * (1 - t) + b * t
+
+
+def lerp_pt(p1, p2, t):
+    """Linearly interpolate between points p1 and p2 at time t."""
+    (x1, y1), (x2, y2) = p1, p2
+    return lerp(x1, x2, t), lerp(y1, y2, t)
 
 
 def quadratic_bezier_at(p, t):
     """Return the point on a quadratic bezier curve at time t."""
 
-    return Point([
-        lerp(lerp(p[0][0], p[1][0], t), lerp(p[1][0], p[2][0], t), t),
-        lerp(lerp(p[0][1], p[1][1], t), lerp(p[1][1], p[2][1], t), t)])
+    (x1, y1), (x2, y2), (x3, y3) = p
+    return (
+        lerp(lerp(x1, x2, t), lerp(x2, x3, t), t),
+        lerp(lerp(y1, y2, t), lerp(y2, y3, t), t))
 
 
 def cubic_bezier_at(p, t):
     """Return the point on a cubic bezier curve at time t."""
 
-    return Point([
-        lerp(lerp(lerp(p[0][0], p[1][0], t), lerp(p[1][0], p[2][0], t), t),
-             lerp(lerp(p[1][0], p[2][0], t), lerp(p[2][0], p[3][0], t), t), t),
-        lerp(lerp(lerp(p[0][1], p[1][1], t), lerp(p[1][1], p[2][1], t), t),
-             lerp(lerp(p[1][1], p[2][1], t), lerp(p[2][1], p[3][1], t), t), t)])
+    (x1, y1), (x2, y2), (x3, y3), (x4, y4) = p
+    return (
+        lerp(lerp(lerp(x1, x2, t), lerp(x2, x3, t), t),
+             lerp(lerp(x2, x3, t), lerp(x3, x4, t), t), t),
+        lerp(lerp(lerp(y1, y2, t), lerp(y2, y3, t), t),
+             lerp(lerp(y2, y3, t), lerp(y3, y4, t), t), t))
 
 
 def cubic_approx(p, t):
     """Approximate a cubic bezier curve with a quadratic one."""
 
-    p1 = lerp(p[0], p[1], 1.5)
-    p2 = lerp(p[3], p[2], 1.5)
-    return [p[0], lerp(p1, p2, t), p[3]]
+    p1 = lerp_pt(p[0], p[1], 1.5)
+    p2 = lerp_pt(p[3], p[2], 1.5)
+    return p[0], lerp_pt(p1, p2, t), p[3]
 
 
 def calc_intersect(p):
     """Calculate the intersection of ab and cd, given [a, b, c, d]."""
 
     a, b, c, d = p
-    ab = b - a
-    cd = d - c
-    p = Point([-ab[1], ab[0]])
+    ab = vector(a, b)
+    cd = vector(c, d)
+    p = -ab[1], ab[0]
     try:
-        h = p.dot(a - c) / p.dot(cd)
+        h = dot(p, vector(c, a)) / dot(p, cd)
     except ZeroDivisionError:
         raise ValueError('Parallel vectors given to calc_intersect.')
-    return c + cd * h
+    return translate(c, scale(cd, h))
 
 
 def cubic_approx_spline(p, n):
@@ -107,9 +111,7 @@ def cubic_approx_spline(p, n):
 
     spline = [p[0]]
     ts = [(float(i) / n) for i in range(1, n)]
-    segments = [
-        map(Point, segment)
-        for segment in bezierTools.splitCubicAtT(p[0], p[1], p[2], p[3], *ts)]
+    segments = bezierTools.splitCubicAtT(p[0], p[1], p[2], p[3], *ts)
     for i in range(len(segments)):
         segment = cubic_approx(segments[i], float(i) / (n - 1))
         spline.append(segment[1])
@@ -128,11 +130,11 @@ def curve_spline_dist(bezier, spline):
         segment = [
             spline[0] if i == 1 else segment[2],
             spline[i],
-            spline[i + 1] if i == n else lerp(spline[i], spline[i + 1], 0.5)]
+            spline[i + 1] if i == n else lerp_pt(spline[i], spline[i + 1], 0.5)]
         for j in range(steps):
             p1 = cubic_bezier_at(bezier, (float(j) / steps + i - 1) / n)
             p2 = quadratic_bezier_at(segment, float(j) / steps)
-            error = max(error, p1.dist(p2))
+            error = max(error, dist(p1, p2))
     return error
 
 
