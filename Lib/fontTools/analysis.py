@@ -35,8 +35,7 @@ import copy
 import tempfile
 
 def ttDump(input):
-    (output_fd, output_fn) = tempfile.mkstemp(".ttx")
-    output = os.fdopen(output_fd, 'rw+')
+    output = tempfile.TemporaryFile(suffix=".ttx")
     ttf = TTFont(input, 0, verbose=False, allowVID=False,
             quiet=False, ignoreDecompileErrors=True,
             fontNumber=-1)
@@ -195,6 +194,7 @@ def process(jobs, options):
             output = "Reduced"+input
             output = makeOutputFileName(output, ".ttf")
             tt.save(output)
+        input.close()
 
 def parseOptions(args):
     try:
