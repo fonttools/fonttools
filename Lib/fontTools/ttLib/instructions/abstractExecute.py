@@ -893,8 +893,8 @@ class Environment(object):
         raise NotImplementedError
     
     def exec_SCFS(self):
-        self.program_stack_pop_many(2)
-        raise NotImplementedError
+        args = self.program_stack_pop_many(2)
+        self.current_instruction_intermediate.append(IR.SCFSMethodCall(args))
 
     def exec_SCVTCI(self):
         arg_name = self.stack_top_name()
@@ -1095,6 +1095,7 @@ class Executor(object):
                 logger.info("[pc] %s->%s",self.pc.id,self.pc.mnemonic)
             logger.info("succs are %s", self.pc.successors)
             logger.info("call_stack len is %s", len(self.call_stack))
+            logger.info("program_stack is %s", str(map(lambda s:s.eval(False), self.environment.program_stack)))
 
             if self.pc.mnemonic == 'CALL':
                 self.execute_CALL()

@@ -405,6 +405,11 @@ class MSIRPMethodCall(MethodCallStatement):
         super(MSIRPMethodCall, self).__init__(parameters, returnVal)
         self.methodName = 'MSIRP_'+data
 
+class SCFSMethodCall(MethodCallStatement):
+    def __init__(self, parameters = [], returnVal=None):
+        super(SCFSMethodCall, self).__init__(parameters, returnVal)
+        self.methodName = 'SCFS'
+
 class SDSMethodCall(MethodCallStatement):
     def __init__(self, parameters = [], returnVal=None):
         super(SDSMethodCall, self).__init__(parameters, returnVal)
