@@ -115,10 +115,10 @@ def points_to_quadratic(p0, p1, p2, p3, max_err, max_n):
     """
 
     if hasattr(p0, 'x'):
-        curve = [[float(i.x), float(i.y)] for i in [p0, p1, p2, p3]]
+        curve = [(float(i.x), float(i.y)) for i in [p0, p1, p2, p3]]
         return curve_to_quadratic(curve, max_err, max_n)
 
-    curves = [[[float(i.x), float(i.y)] for i in p] for p in zip(p0, p1, p2, p3)]
+    curves = [[(float(i.x), float(i.y)) for i in p] for p in zip(p0, p1, p2, p3)]
     return curves_to_quadratic(curves, max_err, max_n)
 
 
