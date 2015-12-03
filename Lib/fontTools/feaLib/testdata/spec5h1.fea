@@ -1,0 +1,8 @@
+# OpenType Feature File specification, section 5.h, example 1.
+# http://www.adobe.com/devnet/opentype/afdko/topic_feature_file_syntax.html
+
+languagesystem DFLT dflt;
+
+feature test {
+    reversesub [a e n] d' by d.alt;
+} test;

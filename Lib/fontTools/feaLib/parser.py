@@ -207,8 +207,9 @@ class Parser(object):
         return ast.ScriptStatement(location, script)
 
     def parse_substitute_(self):
-        assert self.cur_token_ in {"substitute", "sub"}
+        assert self.cur_token_ in {"substitute", "sub", "reversesub", "rsub"}
         location = self.cur_token_location_
+        reverse = self.cur_token_ in {"reversesub", "rsub"}
         old_prefix, old, lookups, old_suffix = self.parse_glyph_pattern_()
 
         new = []
@@ -230,6 +231,10 @@ class Parser(object):
         # GSUB lookup type 3: Alternate substitution.
         # Format: "substitute a from [a.1 a.2 a.3];"
         if keyword == "from":
+            if reverse:
+                raise FeatureLibError(
+                    'Reverse chaining substitutions do not support "from"',
+                    location)
             if len(old) != 1 or len(old[0]) != 1:
                 raise FeatureLibError(
                     'Expected a single glyph before "from"',
@@ -246,7 +251,7 @@ class Parser(object):
         # Format A: "substitute a by a.sc;"
         # Format B: "substitute [one.fitted one.oldstyle] by one;"
         # Format C: "substitute [a-d] by [A.sc-D.sc];"
-        if (len(old_prefix) == 0 and len(old_suffix) == 0 and
+        if (not reverse and len(old_prefix) == 0 and len(old_suffix) == 0 and
                 len(old) == 1 and len(new) == 1 and num_lookups == 0):
             glyphs, replacements = sorted(list(old[0])), sorted(list(new[0]))
             if len(replacements) == 1:
@@ -261,7 +266,7 @@ class Parser(object):
 
         # GSUB lookup type 2: Multiple substitution.
         # Format: "substitute f_f_i by f f i;"
-        if (len(old_prefix) == 0 and len(old_suffix) == 0 and
+        if (not reverse and len(old_prefix) == 0 and len(old_suffix) == 0 and
                 len(old) == 1 and len(old[0]) == 1 and
                 len(new) > 1 and max([len(n) for n in new]) == 1 and
                 num_lookups == 0):
@@ -270,14 +275,43 @@ class Parser(object):
 
         # GSUB lookup type 4: Ligature substitution.
         # Format: "substitute f f i by f_f_i;"
-        if (len(old_prefix) == 0 and len(old_suffix) == 0 and
+        if (not reverse and len(old_prefix) == 0 and len(old_suffix) == 0 and
                 len(old) > 1 and len(new) == 1 and len(new[0]) == 1 and
                 num_lookups == 0):
             return ast.LigatureSubstitution(location, old, list(new[0])[0])
 
+        # GSUB lookup type 8: Reverse chaining substitution.
+        if reverse:
+            if len(old) != 1:
+                raise FeatureLibError(
+                    "In reverse chaining single substitutions, "
+                    "only a single glyph or glyph class can be replaced",
+                    location)
+            if len(new) != 1:
+                raise FeatureLibError(
+                    'In reverse chaining single substitutions, '
+                    'the replacement (after "by") must be a single glyph '
+                    'or glyph class', location)
+            if num_lookups != 0:
+                raise FeatureLibError(
+                    "Reverse chaining substitutions cannot call named lookups",
+                    location)
+            glyphs, replacements = sorted(list(old[0])), sorted(list(new[0]))
+            if len(replacements) == 1:
+                replacements = replacements * len(glyphs)
+            if len(glyphs) != len(replacements):
+                raise FeatureLibError(
+                    'Expected a glyph class with %d elements after "by", '
+                    'but found a glyph class with %d elements' %
+                    (len(glyphs), len(replacements)), location)
+            return ast.ReverseChainingSingleSubstitution(
+                location, old_prefix, old_suffix,
+                dict(zip(glyphs, replacements)))
+
         rule = ast.SubstitutionRule(location, old, new)
         rule.old_prefix, rule.old_suffix = old_prefix, old_suffix
         rule.lookups = lookups
+        rule.reverse = reverse
         return rule
 
     def parse_subtable_(self):
@@ -370,8 +404,8 @@ class Parser(object):
                 statements.append(self.parse_lookup_(vertical))
             elif self.is_cur_keyword_("script"):
                 statements.append(self.parse_script_())
-            elif (self.is_cur_keyword_("substitute") or
-                  self.is_cur_keyword_("sub")):
+            elif (self.is_cur_keyword_({"sub", "substitute",
+                                        "rsub", "reversesub"})):
                 statements.append(self.parse_substitute_())
             elif self.is_cur_keyword_("subtable"):
                 statements.append(self.parse_subtable_())
@@ -393,7 +427,12 @@ class Parser(object):
         self.expect_symbol_(";")
 
     def is_cur_keyword_(self, k):
-        return (self.cur_token_type_ is Lexer.NAME) and (self.cur_token_ == k)
+        if self.cur_token_type_ is Lexer.NAME:
+            if isinstance(k, type("")):  # basestring is gone in Python3
+                return self.cur_token_ == k
+            else:
+                return self.cur_token_ in k
+        return False
 
     def expect_tag_(self):
         self.advance_lexer_()

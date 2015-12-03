@@ -104,6 +104,11 @@ class BuilderTest(unittest.TestCase):
             "    sub f_f_i by f f i;"
             "} test;")
 
+    def test_reverseChainingSingleSubst(self):
+        font = TTFont()
+        addOpenTypeFeatures(self.getpath("GSUB_8.fea"), font)
+        self.expect_ttx(font, self.getpath("GSUB_8.ttx"))
+
     def test_singleSubst_multipleSubstitutionsForSameGlyph(self):
         self.assertRaisesRegex(
             FeatureLibError,
@@ -137,6 +142,12 @@ class BuilderTest(unittest.TestCase):
         font = TTFont()
         addOpenTypeFeatures(self.getpath("spec5fi1.fea"), font)
         self.expect_ttx(font, self.getpath("spec5fi1.ttx"))
+
+    def test_spec5h1(self):
+        # OpenType Feature File specification, section 5.h, example 1.
+        font = TTFont()
+        addOpenTypeFeatures(self.getpath("spec5h1.fea"), font)
+        self.expect_ttx(font, self.getpath("spec5h1.ttx"))
 
     def test_languagesystem(self):
         builder = Builder(None, TTFont())

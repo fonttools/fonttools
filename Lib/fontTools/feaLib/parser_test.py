@@ -256,6 +256,64 @@ class ParserTest(unittest.TestCase):
             FeatureLibError, 'Unknown lookup "Huh"',
             self.parse, "feature liga {lookup Huh;} liga;")
 
+    def test_rsub_format_a(self):
+        doc = self.parse("feature test {rsub a [b B] c' d [e E] by C;} test;")
+        rsub = doc.statements[0].statements[0]
+        self.assertEqual(type(rsub), ast.ReverseChainingSingleSubstitution)
+        self.assertEqual(rsub.old_prefix, [{"a"}, {"b", "B"}])
+        self.assertEqual(rsub.mapping, {"c": "C"})
+        self.assertEqual(rsub.old_suffix, [{"d"}, {"e", "E"}])
+
+    def test_rsub_format_b(self):
+        doc = self.parse(
+            "feature smcp {"
+            "    reversesub A B [one.fitted one.oldstyle]' C [d D] by one;"
+            "} smcp;")
+        rsub = doc.statements[0].statements[0]
+        self.assertEqual(type(rsub), ast.ReverseChainingSingleSubstitution)
+        self.assertEqual(rsub.old_prefix, [{"A"}, {"B"}])
+        self.assertEqual(rsub.old_suffix, [{"C"}, {"d", "D"}])
+        self.assertEqual(rsub.mapping, {
+            "one.fitted": "one",
+            "one.oldstyle": "one"
+        })
+
+    def test_rsub_format_c(self):
+        doc = self.parse(
+            "feature test {"
+            "    reversesub BACK TRACK [a-d]' LOOK AHEAD by [A.sc-D.sc];"
+            "} test;")
+        rsub = doc.statements[0].statements[0]
+        self.assertEqual(type(rsub), ast.ReverseChainingSingleSubstitution)
+        self.assertEqual(rsub.old_prefix, [{"BACK"}, {"TRACK"}])
+        self.assertEqual(rsub.old_suffix, [{"LOOK"}, {"AHEAD"}])
+        self.assertEqual(rsub.mapping, {
+            "a": "A.sc",
+            "b": "B.sc",
+            "c": "C.sc",
+            "d": "D.sc"
+        })
+
+    def test_rsub_from(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            'Reverse chaining substitutions do not support "from"',
+            self.parse, "feature test {rsub a from [a.1 a.2 a.3];} test;")
+
+    def test_rsub_nonsingle(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "In reverse chaining single substitutions, only a single glyph "
+            "or glyph class can be replaced",
+            self.parse, "feature test {rsub c d by c_d;} test;")
+
+    def test_rsub_multiple_replacement_glyphs(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            'In reverse chaining single substitutions, the replacement '
+            '\(after "by"\) must be a single glyph or glyph class',
+            self.parse, "feature test {rsub f_i by f i;} test;")
+
     def test_script(self):
         doc = self.parse("feature test {script cyrl;} test;")
         s = doc.statements[0].statements[0]

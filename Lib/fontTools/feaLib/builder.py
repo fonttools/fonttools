@@ -247,18 +247,26 @@ class Builder(object):
         self.set_language(location, "dflt",
                           include_default=True, required=False)
 
-    def add_substitution(self, location, old_prefix, old, old_suffix, new,
-                         lookups):
-        assert len(new) == 0, new
+    def find_lookup_builders_(self, lookups):
+        """Helper for building chain contextual substitutions
+
+        Given a list of lookup names, finds the LookupBuilder for each name.
+        If an input name is None, it gets mapped to a None LookupBuilder.
+        """
         lookup_builders = []
         for lookup in lookups:
             if lookup is not None:
                 lookup_builders.append(self.named_lookups_.get(lookup.name))
             else:
                 lookup_builders.append(None)
+        return lookup_builders
+
+    def add_substitution(self, location, old_prefix, old, old_suffix, new,
+                         lookups):
+        assert len(new) == 0, new
         lookup = self.get_lookup_(location, ChainContextSubstBuilder)
         lookup.substitutions.append((old_prefix, old, old_suffix,
-                                     lookup_builders))
+                                     self.find_lookup_builders_(lookups)))
 
     def add_alternate_substitution(self, location, glyph, from_class):
         lookup = self.get_lookup_(location, AlternateSubstBuilder)
@@ -279,6 +287,11 @@ class Builder(object):
                 'Already defined substitution for glyph "%s"' % glyph,
                 location)
         lookup.mapping[glyph] = replacements
+
+    def add_reverse_chaining_single_substitution(self, location, old_prefix,
+                                                 old_suffix, mapping):
+        lookup = self.get_lookup_(location, ReverseChainSingleSubstBuilder)
+        lookup.substitutions.append((old_prefix, old_suffix, mapping))
 
     def add_single_substitution(self, location, mapping):
         lookup = self.get_lookup_(location, SingleSubstBuilder)
@@ -303,6 +316,33 @@ class LookupBuilder(object):
         return (isinstance(other, self.__class__) and
                 self.table == other.table and
                 self.lookup_flag == other.lookup_flag)
+
+    @staticmethod
+    def setBacktrackCoverage_(prefix, subtable):
+        subtable.BacktrackGlyphCount = len(prefix)
+        subtable.BacktrackCoverage = []
+        for p in reversed(prefix):
+            coverage = otTables.BacktrackCoverage()
+            coverage.glyphs = sorted(list(p))
+            subtable.BacktrackCoverage.append(coverage)
+
+    @staticmethod
+    def setLookAheadCoverage_(suffix, subtable):
+        subtable.LookAheadGlyphCount = len(suffix)
+        subtable.LookAheadCoverage = []
+        for s in suffix:
+            coverage = otTables.LookAheadCoverage()
+            coverage.glyphs = sorted(list(s))
+            subtable.LookAheadCoverage.append(coverage)
+
+    @staticmethod
+    def setInputCoverage_(glyphs, subtable):
+        subtable.InputGlyphCount = len(glyphs)
+        subtable.InputCoverage = []
+        for g in glyphs:
+            coverage = otTables.InputCoverage()
+            coverage.glyphs = sorted(list(g))
+            subtable.InputCoverage.append(coverage)
 
 
 class AlternateSubstBuilder(LookupBuilder):
@@ -343,27 +383,9 @@ class ChainContextSubstBuilder(LookupBuilder):
             st = otTables.ChainContextSubst()
             lookup.SubTable.append(st)
             st.Format = 3
-
-            st.BacktrackGlyphCount = len(prefix)
-            st.BacktrackCoverage = []
-            for p in reversed(prefix):
-                coverage = otTables.BacktrackCoverage()
-                coverage.glyphs = sorted(list(p))
-                st.BacktrackCoverage.append(coverage)
-
-            st.InputGlyphCount = len(input)
-            st.InputCoverage = []
-            for i in input:
-                coverage = otTables.InputCoverage()
-                coverage.glyphs = sorted(list(i))
-                st.InputCoverage.append(coverage)
-
-            st.LookAheadGlyphCount = len(suffix)
-            st.LookAheadCoverage = []
-            for s in suffix:
-                coverage = otTables.LookAheadCoverage()
-                coverage.glyphs = sorted(list(s))
-                st.LookAheadCoverage.append(coverage)
+            self.setBacktrackCoverage_(prefix, st)
+            self.setLookAheadCoverage_(suffix, st)
+            self.setInputCoverage_(input, st)
 
             st.SubstCount = len([l for l in lookups if l is not None])
             st.SubstLookupRecord = []
@@ -436,6 +458,36 @@ class MultipleSubstBuilder(LookupBuilder):
         st = otTables.MultipleSubst()
         st.mapping = self.mapping
         lookup.SubTable.append(st)
+        lookup.LookupFlag = self.lookup_flag
+        lookup.LookupType = self.lookup_type
+        lookup.SubTableCount = len(lookup.SubTable)
+        return lookup
+
+
+class ReverseChainSingleSubstBuilder(LookupBuilder):
+    def __init__(self, location, lookup_flag):
+        LookupBuilder.__init__(self, location, 'GSUB', 8, lookup_flag)
+        self.substitutions = []  # (prefix, suffix, mapping)
+
+    def equals(self, other):
+        return (LookupBuilder.equals(self, other) and
+                self.substitutions == other.substitutions)
+
+    def build(self):
+        lookup = otTables.Lookup()
+        lookup.SubTable = []
+        for prefix, suffix, mapping in self.substitutions:
+            st = otTables.ReverseChainSingleSubst()
+            st.Format = 1
+            lookup.SubTable.append(st)
+            self.setBacktrackCoverage_(prefix, st)
+            self.setLookAheadCoverage_(suffix, st)
+            coverage = sorted(list(mapping.keys()))
+            st.Coverage = otTables.Coverage()
+            st.Coverage.glyphs = coverage
+            st.GlyphCount = len(coverage)
+            st.Substitute = [mapping[g] for g in coverage]
+
         lookup.LookupFlag = self.lookup_flag
         lookup.LookupType = self.lookup_type
         lookup.SubTableCount = len(lookup.SubTable)
