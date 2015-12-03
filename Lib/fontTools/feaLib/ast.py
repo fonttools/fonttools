@@ -138,6 +138,17 @@ class MultipleSubstitution(Statement):
                                           self.glyph, self.replacement)
 
 
+class ReverseChainingSingleSubstitution(Statement):
+    def __init__(self, location, old_prefix, old_suffix, mapping):
+        Statement.__init__(self, location)
+        self.old_prefix, self.old_suffix = old_prefix, old_suffix
+        self.mapping = mapping
+
+    def build(self, builder):
+        builder.add_reverse_chaining_single_substitution(
+            self.location, self.old_prefix, self.old_suffix, self.mapping)
+
+
 class SingleSubstitution(Statement):
     def __init__(self, location, mapping):
         Statement.__init__(self, location)
@@ -171,8 +182,7 @@ class SubstitutionRule(Statement):
 
     def build(self, builder):
         builder.add_substitution(
-            self.location,
-            self.old_prefix, self.old, self.old_suffix,
+            self.location, self.old_prefix, self.old, self.old_suffix,
             self.new, self.lookups)
 
 
