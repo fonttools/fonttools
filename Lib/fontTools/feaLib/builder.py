@@ -44,7 +44,8 @@ class Builder(object):
             raise FeatureLibError(
                 "Within a named lookup block, all rules must be of "
                 "the same lookup type and flag", location)
-        self.cur_lookup_ = builder_class(location, self.lookup_flag_)
+        self.cur_lookup_ = builder_class(
+            self.font, location, self.lookup_flag_)
         self.lookups_.append(self.cur_lookup_)
         if self.cur_lookup_name_:
             # We are starting a lookup rule inside a named lookup block.
@@ -305,7 +306,8 @@ class Builder(object):
 
 
 class LookupBuilder(object):
-    def __init__(self, location, table, lookup_type, lookup_flag):
+    def __init__(self, font, location, table, lookup_type, lookup_flag):
+        self.font = font
         self.location = location
         self.table, self.lookup_type = table, lookup_type
         self.lookup_flag = lookup_flag
@@ -317,37 +319,34 @@ class LookupBuilder(object):
                 self.table == other.table and
                 self.lookup_flag == other.lookup_flag)
 
-    @staticmethod
-    def setBacktrackCoverage_(prefix, subtable):
+    def setBacktrackCoverage_(self, prefix, subtable):
         subtable.BacktrackGlyphCount = len(prefix)
         subtable.BacktrackCoverage = []
         for p in reversed(prefix):
             coverage = otTables.BacktrackCoverage()
-            coverage.glyphs = sorted(list(p))
+            coverage.glyphs = sorted(list(p), key=self.font.getGlyphID)
             subtable.BacktrackCoverage.append(coverage)
 
-    @staticmethod
-    def setLookAheadCoverage_(suffix, subtable):
+    def setLookAheadCoverage_(self, suffix, subtable):
         subtable.LookAheadGlyphCount = len(suffix)
         subtable.LookAheadCoverage = []
         for s in suffix:
             coverage = otTables.LookAheadCoverage()
-            coverage.glyphs = sorted(list(s))
+            coverage.glyphs = sorted(list(s), key=self.font.getGlyphID)
             subtable.LookAheadCoverage.append(coverage)
 
-    @staticmethod
-    def setInputCoverage_(glyphs, subtable):
+    def setInputCoverage_(self, glyphs, subtable):
         subtable.InputGlyphCount = len(glyphs)
         subtable.InputCoverage = []
         for g in glyphs:
             coverage = otTables.InputCoverage()
-            coverage.glyphs = sorted(list(g))
+            coverage.glyphs = sorted(list(g), key=self.font.getGlyphID)
             subtable.InputCoverage.append(coverage)
 
 
 class AlternateSubstBuilder(LookupBuilder):
-    def __init__(self, location, lookup_flag):
-        LookupBuilder.__init__(self, location, 'GSUB', 3, lookup_flag)
+    def __init__(self, font, location, lookup_flag):
+        LookupBuilder.__init__(self, font, location, 'GSUB', 3, lookup_flag)
         self.alternates = {}
 
     def equals(self, other):
@@ -368,8 +367,8 @@ class AlternateSubstBuilder(LookupBuilder):
 
 
 class ChainContextSubstBuilder(LookupBuilder):
-    def __init__(self, location, lookup_flag):
-        LookupBuilder.__init__(self, location, 'GSUB', 6, lookup_flag)
+    def __init__(self, font, location, lookup_flag):
+        LookupBuilder.__init__(self, font, location, 'GSUB', 6, lookup_flag)
         self.substitutions = []  # (prefix, input, suffix, lookups)
 
     def equals(self, other):
@@ -403,8 +402,8 @@ class ChainContextSubstBuilder(LookupBuilder):
 
 
 class LigatureSubstBuilder(LookupBuilder):
-    def __init__(self, location, lookup_flag):
-        LookupBuilder.__init__(self, location, 'GSUB', 4, lookup_flag)
+    def __init__(self, font, location, lookup_flag):
+        LookupBuilder.__init__(self, font, location, 'GSUB', 4, lookup_flag)
         self.ligatures = {}  # {('f','f','i'): 'f_f_i'}
 
     def equals(self, other):
@@ -444,8 +443,8 @@ class LigatureSubstBuilder(LookupBuilder):
 
 
 class MultipleSubstBuilder(LookupBuilder):
-    def __init__(self, location, lookup_flag):
-        LookupBuilder.__init__(self, location, 'GSUB', 2, lookup_flag)
+    def __init__(self, font, location, lookup_flag):
+        LookupBuilder.__init__(self, font, location, 'GSUB', 2, lookup_flag)
         self.mapping = {}
 
     def equals(self, other):
@@ -465,8 +464,8 @@ class MultipleSubstBuilder(LookupBuilder):
 
 
 class ReverseChainSingleSubstBuilder(LookupBuilder):
-    def __init__(self, location, lookup_flag):
-        LookupBuilder.__init__(self, location, 'GSUB', 8, lookup_flag)
+    def __init__(self, font, location, lookup_flag):
+        LookupBuilder.__init__(self, font, location, 'GSUB', 8, lookup_flag)
         self.substitutions = []  # (prefix, suffix, mapping)
 
     def equals(self, other):
@@ -482,7 +481,7 @@ class ReverseChainSingleSubstBuilder(LookupBuilder):
             lookup.SubTable.append(st)
             self.setBacktrackCoverage_(prefix, st)
             self.setLookAheadCoverage_(suffix, st)
-            coverage = sorted(list(mapping.keys()))
+            coverage = sorted(mapping.keys(), key=self.font.getGlyphID)
             st.Coverage = otTables.Coverage()
             st.Coverage.glyphs = coverage
             st.GlyphCount = len(coverage)
@@ -495,8 +494,8 @@ class ReverseChainSingleSubstBuilder(LookupBuilder):
 
 
 class SingleSubstBuilder(LookupBuilder):
-    def __init__(self, location, lookup_flag):
-        LookupBuilder.__init__(self, location, 'GSUB', 1, lookup_flag)
+    def __init__(self, font, location, lookup_flag):
+        LookupBuilder.__init__(self, font, location, 'GSUB', 1, lookup_flag)
         self.mapping = {}
 
     def equals(self, other):
