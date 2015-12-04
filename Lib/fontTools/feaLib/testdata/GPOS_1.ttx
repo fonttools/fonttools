@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont>
+
+  <GSUB>
+    <Version value="1.0"/>
+    <ScriptList>
+      <!-- ScriptCount=0 -->
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=0 -->
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=0 -->
+    </LookupList>
+  </GSUB>
+
+  <GPOS>
+    <Version value="1.0"/>
+    <ScriptList>
+      <!-- ScriptCount=1 -->
+      <ScriptRecord index="0">
+        <ScriptTag value="DFLT"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=2 -->
+            <FeatureIndex index="0" value="0"/>
+            <FeatureIndex index="1" value="1"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=2 -->
+      <FeatureRecord index="0">
+        <FeatureTag value="kern"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="0"/>
+        </Feature>
+      </FeatureRecord>
+      <FeatureRecord index="1">
+        <FeatureTag value="vkrn"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="1"/>
+        </Feature>
+      </FeatureRecord>
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=2 -->
+      <Lookup index="0">
+        <!-- LookupType=1 -->
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=5 -->
+        <SinglePos index="0" Format="1">
+          <Coverage>
+            <Glyph value="one"/>
+            <Glyph value="two"/>
+            <Glyph value="three"/>
+            <Glyph value="five"/>
+          </Coverage>
+          <ValueFormat value="5"/>
+          <Value XPlacement="-80" XAdvance="-160"/>
+        </SinglePos>
+        <SinglePos index="1" Format="1">
+          <Coverage>
+            <Glyph value="four"/>
+          </Coverage>
+          <ValueFormat value="4"/>
+          <Value XAdvance="400"/>
+        </SinglePos>
+        <SinglePos index="2" Format="1">
+          <Coverage>
+            <Glyph value="six"/>
+          </Coverage>
+          <ValueFormat value="4"/>
+          <Value XAdvance="-200"/>
+        </SinglePos>
+        <SinglePos index="3" Format="1">
+          <Coverage>
+            <Glyph value="seven"/>
+            <Glyph value="eight"/>
+            <Glyph value="nine"/>
+          </Coverage>
+          <ValueFormat value="4"/>
+          <Value XAdvance="-100"/>
+        </SinglePos>
+        <SinglePos index="4" Format="1">
+          <Coverage>
+            <Glyph value="A"/>
+            <Glyph value="B"/>
+          </Coverage>
+          <ValueFormat value="15"/>
+          <Value XPlacement="1" YPlacement="2" XAdvance="3" YAdvance="4"/>
+        </SinglePos>
+      </Lookup>
+      <Lookup index="1">
+        <!-- LookupType=1 -->
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <SinglePos index="0" Format="1">
+          <Coverage>
+            <Glyph value="A"/>
+          </Coverage>
+          <ValueFormat value="8"/>
+          <Value YAdvance="-100"/>
+        </SinglePos>
+      </Lookup>
+    </LookupList>
+  </GPOS>
+
+</ttFont>

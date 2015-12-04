@@ -167,6 +167,16 @@ class ScriptStatement(Statement):
         builder.set_script(self.location, self.script)
 
 
+class SingleAdjustmentPositioning(Statement):
+    def __init__(self, location, glyphclass, valuerecord):
+        Statement.__init__(self, location)
+        self.glyphclass, self.valuerecord = glyphclass, valuerecord
+
+    def build(self, builder):
+        for glyph in self.glyphclass:
+            builder.add_single_pos(self.location, glyph, self.valuerecord)
+
+
 class SubtableStatement(Statement):
     def __init__(self, location):
         Statement.__init__(self, location)
@@ -191,6 +201,48 @@ class ValueRecord(Statement):
         Statement.__init__(self, location)
         self.xPlacement, self.yPlacement = (xPlacement, yPlacement)
         self.xAdvance, self.yAdvance = (xAdvance, yAdvance)
+        self.xPlaDevice, self.yPlaDevice = (0, 0)
+        self.xAdvDevice, self.yAdvDevice = (0, 0)
+
+    def __eq__(self, other):
+        return (self.xPlacement == other.xPlacement and
+                self.yPlacement == other.yPlacement and
+                self.xAdvance == other.xAdvance and
+                self.yAdvance == other.yAdvance and
+                self.xPlaDevice == other.xPlaDevice and
+                self.xAdvDevice == other.xAdvDevice)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __hash__(self):
+        return (hash(self.xPlacement) ^ hash(self.yPlacement) ^
+                hash(self.xAdvance) ^ hash(self.yAdvance) ^
+                hash(self.xPlaDevice) ^ hash(self.yPlaDevice) ^
+                hash(self.xAdvDevice) ^ hash(self.yAdvDevice))
+
+    def makeString(self, vertical):
+        x, y = self.xPlacement, self.yPlacement
+        xAdvance, yAdvance = self.xAdvance, self.yAdvance
+        xPlaDevice, yPlaDevice = self.xPlaDevice, self.yPlaDevice
+        xAdvDevice, yAdvDevice = self.xAdvDevice, self.yAdvDevice
+
+        # Try format A, if possible.
+        if x == 0 and y == 0:
+            if xAdvance == 0 and vertical:
+                return str(yAdvance)
+            elif yAdvance == 0 and not vertical:
+                return str(xAdvance)
+
+        # Try format B, if possible.
+        if (xPlaDevice == 0 and yPlaDevice == 0 and
+                xAdvDevice == 0 and yAdvDevice == 0):
+            return "<%s %s %s %s>" % (x, y, xAdvance, yAdvance)
+
+        # Last resort is format C.
+        return "<%s %s %s %s %s %s %s %s %s %s>" % (
+            x, y, xAdvance, yAdvance,
+            xPlaDevice, yPlaDevice, xAdvDevice, yAdvDevice)
 
 
 class ValueRecordDefinition(Statement):
