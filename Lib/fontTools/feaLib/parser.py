@@ -332,9 +332,9 @@ class Parser(object):
         if self.next_token_type_ is Lexer.NUMBER:
             number, location = self.expect_number_(), self.cur_token_location_
             if vertical:
-                val = ast.ValueRecord(location, 0, 0, 0, number)
+                val = ast.ValueRecord(location, 0, 0, 0, number, 0, 0, 0, 0)
             else:
-                val = ast.ValueRecord(location, 0, 0, number, 0)
+                val = ast.ValueRecord(location, 0, 0, number, 0, 0, 0, 0, 0)
             return val
         self.expect_symbol_("<")
         location = self.cur_token_location_
@@ -351,9 +351,16 @@ class Parser(object):
             xPlacement, yPlacement, xAdvance, yAdvance = (
                 self.expect_number_(), self.expect_number_(),
                 self.expect_number_(), self.expect_number_())
+        if self.next_token_type_ is Lexer.NUMBER:
+            xPlaDevice, yPlaDevice, xAdvDevice, yAdvDevice = (
+                self.expect_number_(), self.expect_number_(),
+                self.expect_number_(), self.expect_number_())
+        else:
+            xPlaDevice, yPlaDevice, xAdvDevice, yAdvDevice = (0, 0, 0, 0)
         self.expect_symbol_(">")
         return ast.ValueRecord(
-            location, xPlacement, yPlacement, xAdvance, yAdvance)
+            location, xPlacement, yPlacement, xAdvance, yAdvance,
+            xPlaDevice, yPlaDevice, xAdvDevice, yAdvDevice)
 
     def parse_valuerecord_definition_(self, vertical):
         assert self.is_cur_keyword_("valueRecordDef")

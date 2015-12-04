@@ -197,12 +197,13 @@ class SubstitutionRule(Statement):
 
 
 class ValueRecord(Statement):
-    def __init__(self, location, xPlacement, yPlacement, xAdvance, yAdvance):
+    def __init__(self, location, xPlacement, yPlacement, xAdvance, yAdvance,
+                 xPlaDevice, yPlaDevice, xAdvDevice, yAdvDevice):
         Statement.__init__(self, location)
         self.xPlacement, self.yPlacement = (xPlacement, yPlacement)
         self.xAdvance, self.yAdvance = (xAdvance, yAdvance)
-        self.xPlaDevice, self.yPlaDevice = (0, 0)
-        self.xAdvDevice, self.yAdvDevice = (0, 0)
+        self.xPlaDevice, self.yPlaDevice = (xPlaDevice, yPlaDevice)
+        self.xAdvDevice, self.yAdvDevice = (xAdvDevice, yAdvDevice)
 
     def __eq__(self, other):
         return (self.xPlacement == other.xPlacement and

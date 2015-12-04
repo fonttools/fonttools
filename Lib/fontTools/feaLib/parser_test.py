@@ -444,6 +444,10 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(value.yPlacement, 0)
         self.assertEqual(value.xAdvance, 123)
         self.assertEqual(value.yAdvance, 0)
+        self.assertEqual(value.xPlaDevice, 0)
+        self.assertEqual(value.yPlaDevice, 0)
+        self.assertEqual(value.xAdvDevice, 0)
+        self.assertEqual(value.yAdvDevice, 0)
 
     def test_valuerecord_format_a_vertical(self):
         doc = self.parse("feature vkrn {valueRecordDef 123 foo;} vkrn;")
@@ -452,6 +456,10 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(value.yPlacement, 0)
         self.assertEqual(value.xAdvance, 0)
         self.assertEqual(value.yAdvance, 123)
+        self.assertEqual(value.xPlaDevice, 0)
+        self.assertEqual(value.yPlaDevice, 0)
+        self.assertEqual(value.xAdvDevice, 0)
+        self.assertEqual(value.yAdvDevice, 0)
 
     def test_valuerecord_format_b(self):
         doc = self.parse("feature liga {valueRecordDef <1 2 3 4> foo;} liga;")
@@ -460,6 +468,23 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(value.yPlacement, 2)
         self.assertEqual(value.xAdvance, 3)
         self.assertEqual(value.yAdvance, 4)
+        self.assertEqual(value.xPlaDevice, 0)
+        self.assertEqual(value.yPlaDevice, 0)
+        self.assertEqual(value.xAdvDevice, 0)
+        self.assertEqual(value.yAdvDevice, 0)
+
+    def test_valuerecord_format_c(self):
+        doc = self.parse(
+            "feature liga {valueRecordDef <1 2 3 4 5 6 7 8> foo;} liga;")
+        value = doc.statements[0].statements[0].value
+        self.assertEqual(value.xPlacement, 1)
+        self.assertEqual(value.yPlacement, 2)
+        self.assertEqual(value.xAdvance, 3)
+        self.assertEqual(value.yAdvance, 4)
+        self.assertEqual(value.xPlaDevice, 5)
+        self.assertEqual(value.yPlaDevice, 6)
+        self.assertEqual(value.xAdvDevice, 7)
+        self.assertEqual(value.yAdvDevice, 8)
 
     def test_valuerecord_named(self):
         doc = self.parse("valueRecordDef <1 2 3 4> foo;"
