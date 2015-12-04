@@ -24,6 +24,8 @@ the resulting splines are interpolation-compatible.
 """
 
 
+from __future__ import print_function, division, absolute_import
+
 from robofab.objects.objectsRF import RSegment
 from cu2qu import curve_to_quadratic, curves_to_quadratic
 
@@ -63,8 +65,8 @@ def fonts_to_quadratic(*fonts, **kwargs):
     if dump_report:
         spline_lengths = report.keys()
         spline_lengths.sort()
-        print 'New spline lengths:\n%s\n' % (
-            '\n'.join('%s: %d' % (l, report[l]) for l in spline_lengths))
+        print('New spline lengths:\n%s\n' % (
+            '\n'.join('%s: %d' % (l, report[l]) for l in spline_lengths)))
     return report
 
 
