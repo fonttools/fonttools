@@ -108,7 +108,7 @@ class BuilderTest(unittest.TestCase):
             "    sub A from [A.alt1 A.alt2];"
             "} test;")
 
-    def test_alternateSubst(self):
+    def test_multipleSubst(self):
         font = makeTTFont()
         addOpenTypeFeatures(self.getpath("GSUB_2.fea"), font)
         self.expect_ttx(font, self.getpath("GSUB_2.ttx"))
