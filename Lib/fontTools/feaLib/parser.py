@@ -328,13 +328,30 @@ class Parser(object):
         self.expect_symbol_(";")
         return ast.SubtableStatement(location)
 
+    def parse_device_(self):
+        result = None
+        self.expect_symbol_("<")
+        self.expect_keyword_("device")
+        if self.next_token_ == "NULL":
+            self.expect_keyword_("NULL")
+        else:
+            result = [(self.expect_number_(), self.expect_number_())]
+            while self.next_token_ == ",":
+                self.expect_symbol_(",")
+                result.append((self.expect_number_(), self.expect_number_()))
+            result = tuple(result)  # make it hashable
+        self.expect_symbol_(">")
+        return result
+
     def parse_valuerecord_(self, vertical):
         if self.next_token_type_ is Lexer.NUMBER:
             number, location = self.expect_number_(), self.cur_token_location_
             if vertical:
-                val = ast.ValueRecord(location, 0, 0, 0, number, 0, 0, 0, 0)
+                val = ast.ValueRecord(location, 0, 0, 0, number,
+                                      None, None, None, None)
             else:
-                val = ast.ValueRecord(location, 0, 0, number, 0, 0, 0, 0, 0)
+                val = ast.ValueRecord(location, 0, 0, number, 0,
+                                      None, None, None, None)
             return val
         self.expect_symbol_("<")
         location = self.cur_token_location_
@@ -351,12 +368,15 @@ class Parser(object):
             xPlacement, yPlacement, xAdvance, yAdvance = (
                 self.expect_number_(), self.expect_number_(),
                 self.expect_number_(), self.expect_number_())
-        if self.next_token_type_ is Lexer.NUMBER:
+
+        if self.next_token_ == "<":
             xPlaDevice, yPlaDevice, xAdvDevice, yAdvDevice = (
-                self.expect_number_(), self.expect_number_(),
-                self.expect_number_(), self.expect_number_())
+                self.parse_device_(), self.parse_device_(),
+                self.parse_device_(), self.parse_device_())
         else:
-            xPlaDevice, yPlaDevice, xAdvDevice, yAdvDevice = (0, 0, 0, 0)
+            xPlaDevice, yPlaDevice, xAdvDevice, yAdvDevice = (
+                None, None, None, None)
+
         self.expect_symbol_(">")
         return ast.ValueRecord(
             location, xPlacement, yPlacement, xAdvance, yAdvance,

@@ -19,7 +19,7 @@ class Lexer(object):
 
     CHAR_WHITESPACE_ = " \t"
     CHAR_NEWLINE_ = "\r\n"
-    CHAR_SYMBOL_ = ";:-+'{}[]<>()="
+    CHAR_SYMBOL_ = ",;:-+'{}[]<>()="
     CHAR_DIGIT_ = "0123456789"
     CHAR_HEXDIGIT_ = "0123456789ABCDEFabcdef"
     CHAR_LETTER_ = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
