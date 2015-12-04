@@ -13,6 +13,26 @@ import tempfile
 import unittest
 
 
+def makeTTFont():
+    glyphs = (
+        ".notdef space slash fraction "
+        "zero one two three four five six seven eight nine "
+        "zero.oldstyle one.oldstyle two.oldstyle three.oldstyle "
+        "four.oldstyle five.oldstyle six.oldstyle seven.oldstyle "
+        "eight.oldstyle nine.oldstyle onehalf "
+        "A B C D E F G H I J K L M N O P Q R S T U V W X Y Z "
+        "a b c d e f g h i j k l m n o p q r s t u v w x y z "
+        "A.sc B.sc C.sc D.sc E.sc F.sc G.sc H.sc I.sc J.sc K.sc L.sc M.sc "
+        "N.sc O.sc P.sc Q.sc R.sc S.sc T.sc U.sc V.sc W.sc X.sc Y.sc Z.sc "
+        "A.alt1 A.alt2 A.alt3 B.alt1 B.alt2 B.alt3 C.alt1 C.alt2 C.alt3 "
+        "d.alt n.end s.end "
+        "c_h c_k c_s c_t f_f f_f_i f_i f_l o_f_f_i "
+    ).split()
+    font = TTFont()
+    font.setGlyphOrder(glyphs)
+    return font
+
+
 class BuilderTest(unittest.TestCase):
     def __init__(self, methodName):
         unittest.TestCase.__init__(self, methodName)
@@ -68,12 +88,12 @@ class BuilderTest(unittest.TestCase):
         path = self.temp_path(suffix=".fea")
         with codecs.open(path, "wb", "utf-8") as outfile:
             outfile.write(featureFile)
-        font = TTFont()
+        font = makeTTFont()
         addOpenTypeFeatures(path, font)
         return font
 
     def test_alternateSubst(self):
-        font = TTFont()
+        font = makeTTFont()
         addOpenTypeFeatures(self.getpath("GSUB_3.fea"), font)
         self.expect_ttx(font, self.getpath("GSUB_3.ttx"))
 
@@ -89,7 +109,7 @@ class BuilderTest(unittest.TestCase):
             "} test;")
 
     def test_alternateSubst(self):
-        font = TTFont()
+        font = makeTTFont()
         addOpenTypeFeatures(self.getpath("GSUB_2.fea"), font)
         self.expect_ttx(font, self.getpath("GSUB_2.ttx"))
 
@@ -105,7 +125,7 @@ class BuilderTest(unittest.TestCase):
             "} test;")
 
     def test_reverseChainingSingleSubst(self):
-        font = TTFont()
+        font = makeTTFont()
         addOpenTypeFeatures(self.getpath("GSUB_8.fea"), font)
         self.expect_ttx(font, self.getpath("GSUB_8.ttx"))
 
@@ -121,36 +141,36 @@ class BuilderTest(unittest.TestCase):
 
     def test_spec4h1(self):
         # OpenType Feature File specification, section 4.h, example 1.
-        font = TTFont()
+        font = makeTTFont()
         addOpenTypeFeatures(self.getpath("spec4h1.fea"), font)
         self.expect_ttx(font, self.getpath("spec4h1.ttx"))
 
     def test_spec5d1(self):
         # OpenType Feature File specification, section 5.d, example 1.
-        font = TTFont()
+        font = makeTTFont()
         addOpenTypeFeatures(self.getpath("spec5d1.fea"), font)
         self.expect_ttx(font, self.getpath("spec5d1.ttx"))
 
     def test_spec5d2(self):
         # OpenType Feature File specification, section 5.d, example 2.
-        font = TTFont()
+        font = makeTTFont()
         addOpenTypeFeatures(self.getpath("spec5d2.fea"), font)
         self.expect_ttx(font, self.getpath("spec5d2.ttx"))
 
     def test_spec5fi1(self):
         # OpenType Feature File specification, section 5.f.i, example 1.
-        font = TTFont()
+        font = makeTTFont()
         addOpenTypeFeatures(self.getpath("spec5fi1.fea"), font)
         self.expect_ttx(font, self.getpath("spec5fi1.ttx"))
 
     def test_spec5h1(self):
         # OpenType Feature File specification, section 5.h, example 1.
-        font = TTFont()
+        font = makeTTFont()
         addOpenTypeFeatures(self.getpath("spec5h1.fea"), font)
         self.expect_ttx(font, self.getpath("spec5h1.ttx"))
 
     def test_languagesystem(self):
-        builder = Builder(None, TTFont())
+        builder = Builder(None, makeTTFont())
         builder.add_language_system(None, 'latn', 'FRA')
         builder.add_language_system(None, 'cyrl', 'RUS')
         builder.start_feature(location=None, name='test')
@@ -164,7 +184,7 @@ class BuilderTest(unittest.TestCase):
             self.build, "languagesystem cyrl RUS; languagesystem cyrl RUS;")
 
     def test_languagesystem_none_specified(self):
-        builder = Builder(None, TTFont())
+        builder = Builder(None, makeTTFont())
         builder.start_feature(location=None, name='test')
         self.assertEqual(builder.language_systems, {('DFLT', 'dflt')})
 
@@ -176,7 +196,7 @@ class BuilderTest(unittest.TestCase):
             self.build, "languagesystem latn TRK; languagesystem DFLT dflt;")
 
     def test_script(self):
-        builder = Builder(None, TTFont())
+        builder = Builder(None, makeTTFont())
         builder.start_feature(location=None, name='test')
         builder.set_script(location=None, script='cyrl')
         self.assertEqual(builder.language_systems,
@@ -202,7 +222,7 @@ class BuilderTest(unittest.TestCase):
             self.build, "feature size { script latn; } size;")
 
     def test_language(self):
-        builder = Builder(None, TTFont())
+        builder = Builder(None, makeTTFont())
         builder.add_language_system(None, 'latn', 'FRA ')
         builder.start_feature(location=None, name='test')
         builder.set_script(location=None, script='cyrl')
@@ -234,7 +254,7 @@ class BuilderTest(unittest.TestCase):
             self.build, "feature size { language FRA; } size;")
 
     def test_language_required(self):
-        font = TTFont()
+        font = makeTTFont()
         addOpenTypeFeatures(self.getpath("language_required.fea"), font)
         self.expect_ttx(font, self.getpath("language_required.ttx"))
 
@@ -256,7 +276,7 @@ class BuilderTest(unittest.TestCase):
             "} test;")
 
     def test_lookup(self):
-        font = TTFont()
+        font = makeTTFont()
         addOpenTypeFeatures(self.getpath("lookup.fea"), font)
         self.expect_ttx(font, self.getpath("lookup.ttx"))
 
