@@ -4,8 +4,16 @@ languagesystem DFLT dflt;
 
 feature kern {
     position [one two three] <-80 0 -160 0>;
-    position A <1 2 3 4 5 6 7 8>;
-    position B <1 2 3 4 5 6 7 8>;
+    position A <
+        1 2 3 4
+        <device 11 111, 12 222> <device 13 333, 14 444>
+        <device 16 666>	<device NULL>
+    >;
+    position B <
+        1 2 3 4
+        <device 11 111, 12 222> <device 13 333, 14 444>
+        <device 16 666>	<device NULL>
+    >;
     position four 400;
     position five <-80 0 -160 0>;
     position six -200;

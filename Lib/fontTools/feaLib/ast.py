@@ -3,6 +3,13 @@ from __future__ import unicode_literals
 import itertools
 
 
+def deviceToString(device):
+    if device is None:
+        return "<device NULL>"
+    else:
+        return "<device %s>" % ", ".join(["%d %d" % t for t in device])
+
+
 class Statement(object):
     def __init__(self, location):
         self.location = location
@@ -236,14 +243,15 @@ class ValueRecord(Statement):
                 return str(xAdvance)
 
         # Try format B, if possible.
-        if (xPlaDevice == 0 and yPlaDevice == 0 and
-                xAdvDevice == 0 and yAdvDevice == 0):
+        if (xPlaDevice is None and yPlaDevice is None and
+                xAdvDevice is None and yAdvDevice is None):
             return "<%s %s %s %s>" % (x, y, xAdvance, yAdvance)
 
         # Last resort is format C.
         return "<%s %s %s %s %s %s %s %s %s %s>" % (
             x, y, xAdvance, yAdvance,
-            xPlaDevice, yPlaDevice, xAdvDevice, yAdvDevice)
+            deviceToString(xPlaDevice), deviceToString(yPlaDevice),
+            deviceToString(xAdvDevice), deviceToString(yAdvDevice))
 
 
 class ValueRecordDefinition(Statement):
