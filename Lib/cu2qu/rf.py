@@ -25,7 +25,7 @@ the resulting splines are interpolation-compatible.
 
 
 from robofab.objects.objectsRF import RSegment
-from cu2qu import Point, curve_to_quadratic, curves_to_quadratic
+from cu2qu import curve_to_quadratic, curves_to_quadratic
 
 
 _zip = zip
@@ -115,10 +115,10 @@ def points_to_quadratic(p0, p1, p2, p3, max_err, max_n):
     """
 
     if hasattr(p0, 'x'):
-        curve = [Point([i.x, i.y]) for i in [p0, p1, p2, p3]]
+        curve = [(float(i.x), float(i.y)) for i in [p0, p1, p2, p3]]
         return curve_to_quadratic(curve, max_err, max_n)
 
-    curves = [[Point([i.x, i.y]) for i in p] for p in zip(p0, p1, p2, p3)]
+    curves = [[(float(i.x), float(i.y)) for i in p] for p in zip(p0, p1, p2, p3)]
     return curves_to_quadratic(curves, max_err, max_n)
 
 
