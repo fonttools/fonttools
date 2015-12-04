@@ -200,6 +200,14 @@ class Parser(object):
         self.lookups_.define(name, block)
         return block
 
+    def parse_position_(self, vertical):
+        assert self.cur_token_ in {"position", "pos"}
+        location = self.cur_token_location_
+        glyphclass = self.parse_glyphclass_(accept_glyphname=True)
+        valuerec = self.parse_valuerecord_(vertical)
+        self.expect_symbol_(";")
+        return ast.SingleAdjustmentPositioning(location, glyphclass, valuerec)
+
     def parse_script_(self):
         assert self.is_cur_keyword_("script")
         location, script = self.cur_token_location_, self.expect_script_tag_()
@@ -402,6 +410,8 @@ class Parser(object):
                 statements.append(self.parse_language_())
             elif self.is_cur_keyword_("lookup"):
                 statements.append(self.parse_lookup_(vertical))
+            elif self.is_cur_keyword_({"pos", "position"}):
+                statements.append(self.parse_position_(vertical))
             elif self.is_cur_keyword_("script"):
                 statements.append(self.parse_script_())
             elif (self.is_cur_keyword_({"sub", "substitute",

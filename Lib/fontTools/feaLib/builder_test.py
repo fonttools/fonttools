@@ -139,6 +139,17 @@ class BuilderTest(unittest.TestCase):
             "    sub e by e.fina;"
             "} test;")
 
+    def test_singlePos_redefinition(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Already defined different position for glyph \"A\"",
+            self.build, "feature test { pos A 123; pos A 456; } test;")
+
+    def test_GPOS_type1(self):
+        font = makeTTFont()
+        addOpenTypeFeatures(self.getpath("GPOS_1.fea"), font)
+        self.expect_ttx(font, self.getpath("GPOS_1.ttx"))
+
     def test_spec4h1(self):
         # OpenType Feature File specification, section 4.h, example 1.
         font = makeTTFont()

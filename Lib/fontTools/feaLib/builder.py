@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 from fontTools.feaLib.error import FeatureLibError
 from fontTools.feaLib.parser import Parser
 from fontTools.ttLib import getTableClass
-from fontTools.ttLib.tables import otTables
+from fontTools.ttLib.tables import otBase, otTables
 import warnings
 
 
@@ -304,6 +304,43 @@ class Builder(object):
                     location)
             lookup.mapping[from_glyph] = to_glyph
 
+    def add_single_pos(self, location, glyph, valuerecord):
+        lookup = self.get_lookup_(location, SinglePosBuilder)
+        curValue = lookup.mapping.get(glyph)
+        if curValue is not None and curValue != valuerecord:
+            otherLoc = valuerecord.location
+            raise FeatureLibError(
+                'Already defined different position for glyph "%s" at %s:%d:%d'
+                % (glyph, otherLoc[0], otherLoc[1], otherLoc[2]),
+                location)
+        lookup.mapping[glyph] = valuerecord
+
+
+def makeOpenTypeValueRecord(v):
+    """ast.ValueRecord --> (otBase.ValueRecord, int ValueFormat)"""
+    vr = otBase.ValueRecord()
+    if v.xPlacement:
+        vr.XPlacement = v.xPlacement
+    if v.yPlacement:
+        vr.YPlacement = v.yPlacement
+    if v.xAdvance:
+        vr.XAdvance = v.xAdvance
+    if v.yAdvance:
+        vr.YAdvance = v.yAdvance
+    if v.xPlaDevice:
+        vr.XPlaDevice = v.xPlaDevice
+    if v.yPlaDevice:
+        vr.YPlaDevice = v.yPlaDevice
+    if v.xAdvDevice:
+        vr.XAdvDevice = v.xAdvDevice
+    if v.yAdvDevice:
+        vr.YAdvDevice = v.yAdvDevice
+    vrMask = 0
+    for mask, name, _, _ in otBase.valueRecordFormat:
+        if getattr(vr, name, 0) != 0:
+            vrMask |= mask
+    return vr, vrMask
+
 
 class LookupBuilder(object):
     def __init__(self, font, location, table, lookup_type, lookup_flag):
@@ -508,6 +545,53 @@ class SingleSubstBuilder(LookupBuilder):
         st = otTables.SingleSubst()
         st.mapping = self.mapping
         lookup.SubTable.append(st)
+        lookup.LookupFlag = self.lookup_flag
+        lookup.LookupType = self.lookup_type
+        lookup.SubTableCount = len(lookup.SubTable)
+        return lookup
+
+
+class SinglePosBuilder(LookupBuilder):
+    def __init__(self, font, location, lookup_flag):
+        LookupBuilder.__init__(self, font, location, 'GPOS', 1, lookup_flag)
+        self.mapping = {}  # glyph -> ast.ValueRecord
+
+    def equals(self, other):
+        return (LookupBuilder.equals(self, other) and
+                self.mapping == other.mapping)
+
+    def build(self):
+        subtables = []
+
+        # If multiple glyphs have the same ValueRecord, they can go into
+        # the same subtable which saves space. Therefore, we first build
+        # a reverse mapping from ValueRecord to glyph coverage.
+        values = {}
+        for glyph, valuerecord in self.mapping.items():
+            values.setdefault(valuerecord, []).append(glyph)
+
+        # For compliance with the OpenType specification,
+        # we sort the glyph coverage by glyph ID.
+        for glyphs in values.values():
+            glyphs.sort(key=self.font.getGlyphID)
+
+        # To make the ordering of our subtables deterministic,
+        # we sort subtables by the first glyph ID in their coverage.
+        # Not doing this would be OK for OpenType, but testing the
+        # compiler would be harder with non-deterministic output.
+        values = list(values.items())
+        values.sort(key=lambda x: self.font.getGlyphID(x[1][0]))
+
+        for valrec, glyphs in values:
+            st = otTables.SinglePos()
+            subtables.append(st)
+            st.Format = 1
+            st.Coverage = otTables.Coverage()
+            st.Coverage.glyphs = glyphs
+            st.Value, st.ValueFormat = makeOpenTypeValueRecord(valrec)
+
+        lookup = otTables.Lookup()
+        lookup.SubTable = subtables
         lookup.LookupFlag = self.lookup_flag
         lookup.LookupType = self.lookup_type
         lookup.SubTableCount = len(lookup.SubTable)

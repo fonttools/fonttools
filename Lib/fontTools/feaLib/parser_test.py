@@ -256,6 +256,28 @@ class ParserTest(unittest.TestCase):
             FeatureLibError, 'Unknown lookup "Huh"',
             self.parse, "feature liga {lookup Huh;} liga;")
 
+    def test_gpos_type1_glyph(self):
+        doc = self.parse("feature kern {pos one <1 2 3 4>;} kern;")
+        pos = doc.statements[0].statements[0]
+        self.assertEqual(type(pos), ast.SingleAdjustmentPositioning)
+        self.assertEqual(pos.glyphclass, {"one"})
+        self.assertEqual(pos.valuerecord.makeString(vertical=False),
+                         "<1 2 3 4>")
+
+    def test_gpos_type1_glyphclass_horizontal(self):
+        doc = self.parse("feature kern {pos [one two] -300;} kern;")
+        pos = doc.statements[0].statements[0]
+        self.assertEqual(type(pos), ast.SingleAdjustmentPositioning)
+        self.assertEqual(pos.glyphclass, {"one", "two"})
+        self.assertEqual(pos.valuerecord.makeString(vertical=False), "-300")
+
+    def test_gpos_type1_glyphclass_vertical(self):
+        doc = self.parse("feature vkrn {pos [one two] -300;} vkrn;")
+        pos = doc.statements[0].statements[0]
+        self.assertEqual(type(pos), ast.SingleAdjustmentPositioning)
+        self.assertEqual(pos.glyphclass, {"one", "two"})
+        self.assertEqual(pos.valuerecord.makeString(vertical=True), "-300")
+
     def test_rsub_format_a(self):
         doc = self.parse("feature test {rsub a [b B] c' d [e E] by C;} test;")
         rsub = doc.statements[0].statements[0]
