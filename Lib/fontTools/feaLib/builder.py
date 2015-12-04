@@ -327,14 +327,20 @@ def makeOpenTypeValueRecord(v):
         vr.XAdvance = v.xAdvance
     if v.yAdvance:
         vr.YAdvance = v.yAdvance
-    if v.xPlaDevice:
-        vr.XPlaDevice = v.xPlaDevice
-    if v.yPlaDevice:
-        vr.YPlaDevice = v.yPlaDevice
-    if v.xAdvDevice:
-        vr.XAdvDevice = v.xAdvDevice
-    if v.yAdvDevice:
-        vr.YAdvDevice = v.yAdvDevice
+
+    # TODO: Implement the following. Not sure how, though.
+    # The commented-out lines did not work; the problem is that we need to
+    # construct a Device table with an array of delta values.
+    # if v.xPlaDevice:
+    #    vr.XPlaDevice = otTables.XPlaDevice()
+    #    vr.XPlaDevice.value = v.xPlaDevice
+    # if v.yPlaDevice:
+    #     vr.YPlaDevice = v.yPlaDevice
+    # if v.xAdvDevice:
+    #     vr.XAdvDevice = v.xAdvDevice
+    # if v.yAdvDevice:
+    #    vr.YAdvDevice = v.yAdvDevice
+
     vrMask = 0
     for mask, name, _, _ in otBase.valueRecordFormat:
         if getattr(vr, name, 0) != 0:
