@@ -51,8 +51,8 @@ def run_test(name):
         '%s(*args)' % name,
         setup=(SETUP_CODE % (name, name, name)),
         repeat=1000, number=1)
-    print('min: %s s' % min(results))
-    print('avg: %s s' % (sum(results) / len(results)))
+    print('min: %dus' % (min(results) * 1000000.))
+    print('avg: %dus' % (sum(results) / len(results) * 1000000.))
     print()
 
 
