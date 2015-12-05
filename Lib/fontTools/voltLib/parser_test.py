@@ -113,7 +113,7 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(
             (test_group.name, test_group.enum),
             ("TestGroup",
-             ["a", "b", "c", "d", "e", "f", "g", "h"]))
+             [("Group1",), ("Group2",)]))
 
     def test_def_group_groups_not_yet_defined(self):
         [group1, test_group1, test_group2, test_group3, group2] = self.parse(
@@ -136,15 +136,15 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(
             (test_group1.name, test_group1.enum),
             ("TestGroup1",
-             ["a", "b", "c", "d", "e", "f", "g", "h"]))
+             [("Group1", ), ("Group2", )]))
         self.assertEqual(
             (test_group2.name, test_group2.enum),
             ("TestGroup2",
-             ["e", "f", "g", "h"]))
+             [("Group2", )]))
         self.assertEqual(
             (test_group3.name, test_group3.enum),
             ("TestGroup3",
-             ["e", "f", "g", "h", "a", "b", "c", "d"]))
+             [("Group2", ), ("Group1", )]))
 
     def test_def_group_groups_undefined(self):
         with self.assertRaisesRegex(
@@ -187,9 +187,7 @@ class ParserTest(unittest.TestCase):
         ).statements
         self.assertEqual((def_group2.name, def_group2.enum),
                          ("KERN_lc_a_2ND",
-                          ["a", "aacute", "abreve", "acircumflex", "adieresis",
-                           "ae", "agrave", "amacron", "aogonek", "aring",
-                           "atilde"]))
+                          ["a", ("aaccented", )]))
 
     def test_def_group_range(self):
         [def_group] = self.parse(
@@ -361,7 +359,7 @@ class ParserTest(unittest.TestCase):
             (lookup.name, list(lookup.sub.mapping),
              context.ex_or_in, context.left, context.right),
             ("fracdnom", [("one", "one.dnom"), ("two", "two.dnom")],
-             "IN_CONTEXT", [[["one.dnom", "two.dnom", "fraction"]]], [])
+             "IN_CONTEXT", [[[("Denominators", ), "fraction"]]], [])
         )
 
     def test_substitution_single_in_contexts(self):
@@ -391,8 +389,8 @@ class ParserTest(unittest.TestCase):
              context1.right, context2.ex_or_in,
              context2.left, context2.right),
             ("HebrewCurrency", "IN_CONTEXT", [],
-             [["uni05D0", "uni05D1"], ["one.Hebr"]], "IN_CONTEXT",
-             [["uni05D0", "uni05D1"], ["one.Hebr"]], []))
+             [[("Hebrew", )], ["one.Hebr"]], "IN_CONTEXT",
+             [[("Hebrew", )], ["one.Hebr"]], []))
 
     def test_substitution_skip_marks(self):
         [group, lookup] = self.parse(
