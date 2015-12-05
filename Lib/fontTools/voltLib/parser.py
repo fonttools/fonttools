@@ -13,11 +13,8 @@ class Parser(object):
         self.groups_ = SymbolTable()
         self.next_token_type_, self.next_token_ = (None, None)
         self.next_token_location_ = None
-        try:
-            with open(path, "r") as f:
-                self.lexer_ = Lexer(f.read(), path)
-        except IOError as err:
-            raise VoltLibError(str(err), location)
+        with open(path, "r") as f:
+            self.lexer_ = Lexer(f.read(), path)
         self.advance_lexer_()
 
     def parse(self):
@@ -56,6 +53,7 @@ class Parser(object):
                                    "COMPILER_USEPAIRPOSFORMAT2, CMAP_FORMAT",
                                    self.cur_token_location_)
         return self.doc_
+
 
     def parse_def_glyph_(self):
         assert self.is_cur_keyword_("DEF_GLYPH")
