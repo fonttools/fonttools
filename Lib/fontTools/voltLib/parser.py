@@ -192,9 +192,9 @@ class Parser(object):
             sub = self.parse_substitution_()
         elif as_pos_or_sub == "AS_POSITION":
             pos = self.parse_position_()
-        def_lookup = ast.LookupDefinition(location, name, base, marks,
-                                          all_flag, direction, comments,
-                                          context, sub, pos)
+        def_lookup = ast.LookupDefinition(
+            location, name, base, marks, process_marks, all_flag, direction,
+            comments, context, sub, pos)
         return def_lookup
 
     def parse_context_(self):
@@ -374,8 +374,9 @@ class Parser(object):
                 name = self.expect_string_()
                 group = self.groups_.resolve(name)
                 if group is None:
-                    raise VoltLibError('Glyph group "%s" is not defined' % name,
-                                       location)
+                    raise VoltLibError(
+                        'Glyph group "%s" is not defined' % name,
+                        location)
                 coverage.extend(group.enum)
             elif self.next_token_ == "RANGE":
                 self.expect_keyword_("RANGE")
@@ -441,6 +442,7 @@ class Parser(object):
              self.next_token_location_) = self.lexer_.next()
         except StopIteration:
             self.next_token_type_, self.next_token_ = (None, None)
+
 
 class SymbolTable(parser.SymbolTable):
     def __init__(self):
