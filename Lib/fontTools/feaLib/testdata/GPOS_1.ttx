@@ -53,7 +53,7 @@
       <Lookup index="0">
         <!-- LookupType=1 -->
         <LookupFlag value="0"/>
-        <!-- SubTableCount=5 -->
+        <!-- SubTableCount=6 -->
         <SinglePos index="0" Format="1">
           <Coverage>
             <Glyph value="one"/>
@@ -93,7 +93,58 @@
             <Glyph value="B"/>
           </Coverage>
           <ValueFormat value="15"/>
-          <Value XPlacement="1" YPlacement="2" XAdvance="3" YAdvance="4"/>
+          <Value XPlacement="1" YPlacement="2" XAdvance="3" YAdvance="4">
+            <XPlaDevice>
+              <StartSize value="11"/>
+              <EndSize value="12"/>
+              <DeltaFormat value="3"/>
+              <DeltaValue value="[111, 112]"/>
+            </XPlaDevice>
+            <YPlaDevice>
+              <StartSize value="13"/>
+              <EndSize value="14"/>
+              <DeltaFormat value="3"/>
+              <DeltaValue value="[113, 114]"/>
+            </YPlaDevice>
+            <XAdvDevice>
+              <StartSize value="16"/>
+              <EndSize value="16"/>
+              <DeltaFormat value="3"/>
+              <DeltaValue value="[116]"/>
+            </XAdvDevice>
+          </Value>
+        </SinglePos>
+        <SinglePos index="5" Format="1">
+          <Coverage>
+            <Glyph value="C"/>
+          </Coverage>
+          <ValueFormat value="15"/>
+          <Value XPlacement="1" YPlacement="2" XAdvance="3" YAdvance="4">
+            <XPlaDevice>
+              <StartSize value="11"/>
+              <EndSize value="14"/>
+              <DeltaFormat value="1"/>
+              <DeltaValue value="[-2, 0, 0, 1]"/>
+            </XPlaDevice>
+            <YPlaDevice>
+              <StartSize value="13"/>
+              <EndSize value="15"/>
+              <DeltaFormat value="2"/>
+              <DeltaValue value="[-3, 0, 1]"/>
+            </YPlaDevice>
+            <XAdvDevice>
+              <StartSize value="11"/>
+              <EndSize value="14"/>
+              <DeltaFormat value="2"/>
+              <DeltaValue value="[-8, 0, 0, 7]"/>
+            </XAdvDevice>
+            <YAdvDevice>
+              <StartSize value="13"/>
+              <EndSize value="15"/>
+              <DeltaFormat value="3"/>
+              <DeltaValue value="[8, 0, 1]"/>
+            </YAdvDevice>
+          </Value>
         </SinglePos>
       </Lookup>
       <Lookup index="1">
