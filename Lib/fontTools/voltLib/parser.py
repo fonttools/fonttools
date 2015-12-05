@@ -421,16 +421,18 @@ class Parser(object):
             elif self.next_token_ == "GROUP":
                 self.expect_keyword_("GROUP")
                 name = self.expect_string_()
-                resolved_group = self.groups_.resolve(name)
-                if resolved_group is not None:
-                    coverage.extend(resolved_group.enum)
-                # TODO: check that group exists after all groups are defined
-                else:
-                    group = (name,)
-                    coverage.append(group)
-                    # raise VoltLibError(
-                    #     'Glyph group "%s" is not defined' % name,
-                    #     location)
+                # resolved_group = self.groups_.resolve(name)
+                group = (name,)
+                coverage.append(group)
+                # if resolved_group is not None:
+                #     coverage.extend(resolved_group.enum)
+                # # TODO: check that group exists after all groups are defined
+                # else:
+                #     group = (name,)
+                #     coverage.append(group)
+                #     # raise VoltLibError(
+                #     #     'Glyph group "%s" is not defined' % name,
+                #     #     location)
             elif self.next_token_ == "RANGE":
                 self.expect_keyword_("RANGE")
                 start, end = self.expect_string_(), self.expect_string_()
@@ -501,12 +503,14 @@ class SymbolTable(parser.SymbolTable):
     def __init__(self):
         parser.SymbolTable.__init__(self)
 
-    # TODO also expand ranges
+    # TODO
+    # add expanding ranges
     def expand(self):
         for scope in self.scopes_:
             for v in scope.values():
                 removed = 0
                 for i, element in enumerate(list(v.enum)):
+                    # if element is a group (name, )
                     if isinstance(element, tuple) and len(element) == 1:
                         name = element[0]
                         resolved_group = self.resolve(name)
