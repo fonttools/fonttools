@@ -50,6 +50,7 @@ class LookupDefinition(ast.Statement):
         self.name = name
         self.base = base
         self.marks = marks
+        self.process_marks = process_marks
         self.all = all_flag
         self.direction = direction
         self.comments = comments
