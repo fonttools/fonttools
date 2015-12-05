@@ -51,7 +51,6 @@ class Parser(object):
         self.groups_.expand()
         return self.doc_
 
-
     def parse_def_glyph_(self):
         assert self.is_cur_keyword_("DEF_GLYPH")
         location = self.cur_token_location_
@@ -242,64 +241,92 @@ class Parser(object):
         assert self.is_cur_keyword_("AS_POSITION")
         location = self.cur_token_location_
         pos_type = self.expect_name_()
-        assert pos_type in ("ATTACH", "ATTACH_CURSIVE", "ADJUST_PAIR",
-                            "ADJUST_SINGLE")
+        if pos_type not in (
+                "ATTACH", "ATTACH_CURSIVE", "ADJUST_PAIR", "ADJUST_SINGLE"):
+            raise VoltLibError(
+                "Expected ATTACH, ATTACH_CURSIVE, ADJUST_PAIR, ADJUST_SINGLE",
+                location)
         if pos_type == "ATTACH":
-            coverage = self.parse_coverage_()
-            coverage_to = []
-            self.expect_keyword_("TO")
-            while self.next_token_ != "END_ATTACH":
-                cov = self.parse_coverage_()
-                self.expect_keyword_("AT")
-                self.expect_keyword_("ANCHOR")
-                anchor_name = self.expect_string_()
-                coverage_to.append((cov, anchor_name))
-            self.expect_keyword_("END_ATTACH")
-            position = ast.PositionAttachDefinition(location, coverage,
-                                                    coverage_to)
+            position = self.parse_attach_()
         elif pos_type == "ATTACH_CURSIVE":
-            coverages_exit = []
-            coverages_enter = []
-            while self.next_token_ != "ENTER":
-                self.expect_keyword_("EXIT")
-                coverages_exit.append(self.parse_coverage_())
-            while self.next_token_ != "END_ATTACH":
-                self.expect_keyword_("ENTER")
-                coverages_enter.append(self.parse_coverage_())
-            self.expect_keyword_("END_ATTACH")
-            position = ast.PositionAttachCursiveDefinition(
-                location, coverages_exit, coverages_enter)
+            position = self.parse_attach_cursive_()
         elif pos_type == "ADJUST_PAIR":
-            coverages_1 = []
-            coverages_2 = []
-            adjust = {}
-            while self.next_token_ == "FIRST":
-                self.advance_lexer_()
-                coverage_1 = self.parse_coverage_()
-                coverages_1.append(coverage_1)
-            while self.next_token_ == "SECOND":
-                self.advance_lexer_()
-                coverage_2 = self.parse_coverage_()
-                coverages_2.append(coverage_2)
-            while self.next_token_ != "END_ADJUST":
-                id_1 = self.expect_number_()
-                id_2 = self.expect_number_()
-                self.expect_keyword_("BY")
-                pos_1 = self.parse_pos_()
-                pos_2 = self.parse_pos_()
-                adjust[(id_1, id_2)] = (pos_1, pos_2)
-            self.expect_keyword_("END_ADJUST")
-            position = ast.PositionAdjustPairDefinition(location, coverages_1,
-                                                        coverages_2, adjust)
+            position = self.parse_adjust_pair_()
         elif pos_type == "ADJUST_SINGLE":
-            coverages = self.parse_coverage_()
-            self.expect_keyword_("BY")
-            pos = self.parse_pos_()
-            position = ast.PositionAdjustSingleDefinition(location, coverages,
-                                                          pos)
-            self.expect_keyword_("END_ADJUST")
+            position = self.parse_adjust_single_()
         self.expect_keyword_("END_POSITION")
         return position
+
+    def parse_attach_(self):
+        assert self.is_cur_keyword_("ATTACH")
+        location = self.cur_token_location_
+        coverage = self.parse_coverage_()
+        coverage_to = []
+        self.expect_keyword_("TO")
+        while self.next_token_ != "END_ATTACH":
+            cov = self.parse_coverage_()
+            self.expect_keyword_("AT")
+            self.expect_keyword_("ANCHOR")
+            anchor_name = self.expect_string_()
+            coverage_to.append((cov, anchor_name))
+        self.expect_keyword_("END_ATTACH")
+        position = ast.PositionAttachDefinition(
+            location, coverage, coverage_to)
+        return position
+
+    def parse_attach_cursive_(self):
+        assert self.is_cur_keyword_("ATTACH_CURSIVE")
+        location = self.cur_token_location_
+        coverages_exit = []
+        coverages_enter = []
+        while self.next_token_ != "ENTER":
+            self.expect_keyword_("EXIT")
+            coverages_exit.append(self.parse_coverage_())
+        while self.next_token_ != "END_ATTACH":
+            self.expect_keyword_("ENTER")
+            coverages_enter.append(self.parse_coverage_())
+        self.expect_keyword_("END_ATTACH")
+        position = ast.PositionAttachCursiveDefinition(
+            location, coverages_exit, coverages_enter)
+        return position
+
+    def parse_adjust_pair_(self):
+        assert self.is_cur_keyword_("ADJUST_PAIR")
+        location = self.cur_token_location_
+        coverages_1 = []
+        coverages_2 = []
+        adjust = {}
+        while self.next_token_ == "FIRST":
+            self.advance_lexer_()
+            coverage_1 = self.parse_coverage_()
+            coverages_1.append(coverage_1)
+        while self.next_token_ == "SECOND":
+            self.advance_lexer_()
+            coverage_2 = self.parse_coverage_()
+            coverages_2.append(coverage_2)
+        while self.next_token_ != "END_ADJUST":
+            id_1 = self.expect_number_()
+            id_2 = self.expect_number_()
+            self.expect_keyword_("BY")
+            pos_1 = self.parse_pos_()
+            pos_2 = self.parse_pos_()
+            adjust[(id_1, id_2)] = (pos_1, pos_2)
+        self.expect_keyword_("END_ADJUST")
+        position = ast.PositionAdjustPairDefinition(
+            location, coverages_1, coverages_2, adjust)
+        return position
+
+    def parse_adjust_single_(self):
+        assert self.is_cur_keyword_("ADJUST_SINGLE")
+        location = self.cur_token_location_
+        coverages = self.parse_coverage_()
+        self.expect_keyword_("BY")
+        pos = self.parse_pos_()
+        self.expect_keyword_("END_ADJUST")
+        position = ast.PositionAdjustSingleDefinition(
+            location, coverages, pos)
+        return position
+
 
     def parse_def_anchor_(self):
         assert self.is_cur_keyword_("DEF_ANCHOR")
