@@ -204,7 +204,7 @@ class Parser(object):
             side = None
             coverage = None
             ex_or_in = self.expect_name_()
-            side_contexts = []
+            # side_contexts = [] # XXX
             if self.next_token_ != "END_CONTEXT":
                 left = []
                 right = []
@@ -371,13 +371,15 @@ class Parser(object):
 
     def parse_enum_(self):
         assert self.is_cur_keyword_("ENUM")
-        location = self.cur_token_location_
+        # location = self.cur_token_location_
+        # TODO use location
         enum = self.parse_coverage_()
         self.expect_keyword_("END_ENUM")
         return enum
 
     def parse_coverage_(self):
         coverage = []
+        # XXX use location
         location = self.cur_token_location_
         while self.next_token_ in ("GLYPH", "GROUP", "RANGE", "ENUM"):
             if self.next_token_ == "ENUM":
