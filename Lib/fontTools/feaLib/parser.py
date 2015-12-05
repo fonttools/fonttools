@@ -373,6 +373,17 @@ class Parser(object):
             xPlaDevice, yPlaDevice, xAdvDevice, yAdvDevice = (
                 self.parse_device_(), self.parse_device_(),
                 self.parse_device_(), self.parse_device_())
+            allDeltas = sorted([
+                delta
+                for size, delta
+                in (xPlaDevice if xPlaDevice else ()) +
+                (yPlaDevice if yPlaDevice else ()) +
+                (xAdvDevice if xAdvDevice else ()) +
+                (yAdvDevice if yAdvDevice else ())])
+            if allDeltas[0] < -128 or allDeltas[-1] > 127:
+                raise FeatureLibError(
+                    "Device value out of valid range (-128..127)",
+                    self.cur_token_location_)
         else:
             xPlaDevice, yPlaDevice, xAdvDevice, yAdvDevice = (
                 None, None, None, None)
