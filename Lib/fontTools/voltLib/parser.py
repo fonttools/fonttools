@@ -168,8 +168,14 @@ class Parser(object):
         marks = self.expect_name_()
         assert marks in ("PROCESS_MARKS", "SKIP_MARKS")
         if marks == "PROCESS_MARKS":
-            pass
+            if self.next_token_type_ == Lexer.STRING:
+                process_marks = self.expect_string_()
+            else:
+                process_marks = self.expect_name_()
+        else:
+            process_marks = None
         all_flag = False
+        # ALL or id
         if self.next_token_ == "ALL":
             self.expect_keyword_("ALL")
             all_flag = True
