@@ -48,6 +48,7 @@ class Parser(object):
                 raise VoltLibError(
                     "Expected " + ", ".join(sorted(PARSE_FUNCS.keys())),
                     self.cur_token_location_)
+        self.groups_.expand()
         return self.doc_
 
 
@@ -447,3 +448,21 @@ class Parser(object):
 class SymbolTable(parser.SymbolTable):
     def __init__(self):
         parser.SymbolTable.__init__(self)
+
+    # TODO also expand ranges
+    def expand(self):
+        for scope in self.scopes_:
+            for v in scope.values():
+                removed = 0
+                for i, element in enumerate(list(v.enum)):
+                    if isinstance(element, tuple) and len(element) == 1:
+                        name = element[0]
+                        resolved_group = self.resolve(name)
+                        if resolved_group is None:
+                            raise VoltLibError(
+                                'Group "%s" is used but undefined.' % (name),
+                                None)
+                        v.enum.remove(element)
+                        i -= removed
+                        v.enum = v.enum[:i] + resolved_group.enum + v.enum[i:]
+                        removed += len(resolved_group.enum)
