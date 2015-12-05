@@ -7,45 +7,51 @@ class VoltFile(ast.Block):
     def __init__(self):
         ast.Block.__init__(self, location=None)
 
+
 class GlyphDefinition(ast.Statement):
     def __init__(self, location, name, gid, gunicode, gtype, components):
-        ast.Statement.__init__(self,location)
+        ast.Statement.__init__(self, location)
         self.name = name
         self.id = gid
         self.unicode = gunicode
         self.type = gtype
         self.components = components
 
+
 class GroupDefinition(ast.Statement):
     def __init__(self, location, name, enum):
-        ast.Statement.__init__(self,location)
+        ast.Statement.__init__(self, location)
         self.name = name
         self.enum = enum
 
+
 class ScriptDefinition(ast.Statement):
     def __init__(self, location, name, tag, langs):
-        ast.Statement.__init__(self,location)
+        ast.Statement.__init__(self, location)
         self.name = name
         self.tag = tag
         self.langs = langs
 
+
 class LangSysDefinition(ast.Statement):
     def __init__(self, location, name, tag, features):
-        ast.Statement.__init__(self,location)
+        ast.Statement.__init__(self, location)
         self.name = name
         self.tag = tag
         self.features = features
 
+
 class FeatureDefinition(ast.Statement):
     def __init__(self, location, name, tag, lookups):
-        ast.Statement.__init__(self,location)
+        ast.Statement.__init__(self, location)
         self.name = name
         self.tag = tag
         self.lookups = lookups
 
+
 class LookupDefinition(ast.Statement):
-    def __init__(self, location, name, base, marks, all_flag, direction,
-                 comments, context, sub, pos):
+    def __init__(self, location, name, base, marks, process_marks, all_flag,
+                 direction, comments, context, sub, pos):
         ast.Statement.__init__(self, location)
         self.name = name
         self.base = base
@@ -58,16 +64,19 @@ class LookupDefinition(ast.Statement):
         self.sub = sub
         self.pos = pos
 
+
 class SubstitutionDefinition(ast.Statement):
     def __init__(self, location, src, dest):
         ast.Statement.__init__(self, location)
         self.mapping = zip(src, dest)
+
 
 class PositionAttachDefinition(ast.Statement):
     def __init__(self, location, coverage, coverage_to):
         ast.Statement.__init__(self, location)
         self.coverage = coverage
         self.coverage_to = coverage_to
+
 
 class PositionAdjustPairDefinition(ast.Statement):
     def __init__(self, location, coverages_1, coverages_2, adjust):
@@ -76,6 +85,7 @@ class PositionAdjustPairDefinition(ast.Statement):
         self.coverages_2 = coverages_2
         self.adjust = adjust
 
+
 class ContextDefinition(ast.Statement):
     def __init__(self, location, ex_or_in, left=[], right=[]):
         ast.Statement.__init__(self, location)
@@ -83,8 +93,10 @@ class ContextDefinition(ast.Statement):
         self.left = left
         self.right = right
 
+
 class AnchorDefinition(ast.Statement):
-    def __init__(self, location, name, gid, glyph_name, component, locked, pos):
+    def __init__(self, location, name, gid, glyph_name, component, locked,
+                 pos):
         ast.Statement.__init__(self, location)
         self.name = name
         self.gid = gid
@@ -92,6 +104,7 @@ class AnchorDefinition(ast.Statement):
         self.component = component
         self.locked = locked
         self.pos = pos
+
 
 class SettingDefinition(ast.Statement):
     def __init__(self, location, name, value):
