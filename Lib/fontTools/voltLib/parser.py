@@ -508,7 +508,7 @@ class SymbolTable(parser.SymbolTable):
     def expand(self):
         for scope in self.scopes_:
             for v in scope.values():
-                removed = 0
+                # removed = 0
                 for i, element in enumerate(list(v.enum)):
                     # if element is a group (name, )
                     if isinstance(element, tuple) and len(element) == 1:
@@ -518,7 +518,7 @@ class SymbolTable(parser.SymbolTable):
                             raise VoltLibError(
                                 'Group "%s" is used but undefined.' % (name),
                                 None)
-                        v.enum.remove(element)
-                        i -= removed
-                        v.enum = v.enum[:i] + resolved_group.enum + v.enum[i:]
-                        removed += len(resolved_group.enum)
+                        # v.enum.remove(element)
+                        # i -= removed
+                        # v.enum = v.enum[:i] + resolved_group.enum + v.enum[i:]
+                        # removed += len(resolved_group.enum)
