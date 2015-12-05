@@ -109,8 +109,10 @@ class Parser(object):
     def parse_def_script_(self):
         assert self.is_cur_keyword_("DEF_SCRIPT")
         location = self.cur_token_location_
-        self.expect_keyword_("NAME")
-        name = self.expect_string_()
+        name = None
+        if self.next_token_ == "NAME":
+            self.expect_keyword_("NAME")
+            name = self.expect_string_()
         self.expect_keyword_("TAG")
         tag = self.expect_string_()
         langs = []
@@ -126,8 +128,10 @@ class Parser(object):
     def parse_langsys_(self):
         assert self.is_cur_keyword_("DEF_LANGSYS")
         location = self.cur_token_location_
-        self.expect_keyword_("NAME")
-        name = self.expect_string_()
+        name = None
+        if self.next_token_ == "NAME":
+            self.expect_keyword_("NAME")
+            name = self.expect_string_()
         self.expect_keyword_("TAG")
         tag = self.expect_string_()
         features = []
