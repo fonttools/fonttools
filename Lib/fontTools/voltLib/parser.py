@@ -6,6 +6,20 @@ from fontTools.voltLib.lexer import Lexer
 from fontTools.voltLib.error import VoltLibError
 from io import open
 
+PARSE_FUNCS = {
+    "DEF_GLYPH":         "parse_def_glyph_",
+    "DEF_GROUP":         "parse_def_group_",
+    "DEF_SCRIPT":        "parse_def_script_",
+    "DEF_LOOKUP":        "parse_def_lookup_",
+    "DEF_ANCHOR":        "parse_def_anchor_",
+    "GRID_PPEM":         "parse_ppem_",
+    "PRESENTATION_PPEM": "parse_ppem_",
+    "PPOSITIONING_PPEM": "parse_ppem_",
+    "COMPILER_USEEXTENSIONLOOKUPS": "parse_compiler_flag_",
+    "COMPILER_USEPAIRPOSFORMAT2":   "parse_compiler_flag_",
+    "CMAP_FORMAT":       "parse_cmap_format",
+}
+
 
 class Parser(object):
     def __init__(self, path):
@@ -22,37 +36,18 @@ class Parser(object):
         statements = self.doc_.statements
         while self.next_token_type_ is not None:
             self.advance_lexer_()
-            if self.is_cur_keyword_("DEF_GLYPH"):
-                statements.append(self.parse_def_glyph_())
-            elif self.is_cur_keyword_("DEF_GROUP"):
-                statements.append(self.parse_def_group_())
-            elif self.is_cur_keyword_("DEF_SCRIPT"):
-                statements.append(self.parse_def_script_())
-            elif self.is_cur_keyword_("DEF_LOOKUP"):
-                statements.append(self.parse_def_lookup_())
-            elif self.is_cur_keyword_("DEF_ANCHOR"):
-                statements.append(self.parse_def_anchor_())
-            elif self.cur_token_ in ("GRID_PPEM", "PRESENTATION_PPEM",
-                                     "PPOSITIONING_PPEM"):
-                statements.append(self.parse_ppem_())
-            elif self.cur_token_ in ("COMPILER_USEEXTENSIONLOOKUPS",
-                                     "COMPILER_USEPAIRPOSFORMAT2"):
-                statements.append(self.parse_compiler_flag_())
-            elif self.is_cur_keyword_("CMAP_FORMAT"):
-                statements.append(self.parse_cmap_format())
+            if self.cur_token_ in PARSE_FUNCS.keys():
+                func = getattr(self, PARSE_FUNCS[self.cur_token_])
+                statements.append(func())
             elif self.is_cur_keyword_("END"):
                 if self.next_token_type_ is not None:
                     raise VoltLibError("Expected the end of the file",
                                        self.cur_token_location_)
                 return self.doc_
             else:
-                raise VoltLibError("Expected DEF_GLYPH, DEF_GROUP, "
-                                   "DEF_SCRIPT, DEF_LOOKUP, DEF_ANCHOR, "
-                                   "GRID_PPEM, PRESENTATION_PPEM, "
-                                   "PPOSITIONING_PPEM, "
-                                   "COMPILER_USEEXTENSIONLOOKUPS, "
-                                   "COMPILER_USEPAIRPOSFORMAT2, CMAP_FORMAT",
-                                   self.cur_token_location_)
+                raise VoltLibError(
+                    "Expected " + ", ".join(sorted(PARSE_FUNCS.keys())),
+                    self.cur_token_location_)
         return self.doc_
 
 
