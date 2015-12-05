@@ -6,13 +6,18 @@ feature kern {
     position [one two three] <-80 0 -160 0>;
     position A <
         1 2 3 4
-        <device 11 111, 12 222> <device 13 333, 14 444>
-        <device 16 666>	<device NULL>
+        <device 11 111, 12 112> <device 13 113, 14 114>
+        <device 16 116>	<device NULL>
     >;
     position B <
         1 2 3 4
-        <device 11 111, 12 222> <device 13 333, 14 444>
-        <device 16 666>	<device NULL>
+        <device 11 111, 12 112> <device 13 113, 14 114>
+        <device 16 116>	<device NULL>
+    >;
+    position C <
+        1 2 3 4
+        <device 11 -2, 14 1> <device 13 -3, 15 1>
+        <device 11 -8, 14 7> <device 13 8, 15 1>
     >;
     position four 400;
     position five <-80 0 -160 0>;

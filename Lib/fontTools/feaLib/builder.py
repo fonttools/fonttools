@@ -316,6 +316,25 @@ class Builder(object):
         lookup.mapping[glyph] = valuerecord
 
 
+def _makeOpenTypeDeviceTable(deviceTable, device):
+    device = tuple(sorted(device))
+    deviceTable.StartSize = startSize = device[0][0]
+    deviceTable.EndSize = endSize = device[-1][0]
+    deviceDict = dict(device)
+    deviceTable.DeltaValue = deltaValues = [
+        deviceDict.get(size, 0)
+        for size in range(startSize, endSize + 1)]
+    maxDelta = max(deltaValues)
+    minDelta = min(deltaValues)
+    assert minDelta > -129 and maxDelta < 128
+    if minDelta > -3 and maxDelta < 2:
+        deviceTable.DeltaFormat = 1
+    elif minDelta > -9 and maxDelta < 8:
+        deviceTable.DeltaFormat = 2
+    else:
+        deviceTable.DeltaFormat = 3
+
+
 def makeOpenTypeValueRecord(v):
     """ast.ValueRecord --> (otBase.ValueRecord, int ValueFormat)"""
     vr = otBase.ValueRecord()
@@ -328,18 +347,18 @@ def makeOpenTypeValueRecord(v):
     if v.yAdvance:
         vr.YAdvance = v.yAdvance
 
-    # TODO: Implement the following. Not sure how, though.
-    # The commented-out lines did not work; the problem is that we need to
-    # construct a Device table with an array of delta values.
-    # if v.xPlaDevice:
-    #    vr.XPlaDevice = otTables.XPlaDevice()
-    #    vr.XPlaDevice.value = v.xPlaDevice
-    # if v.yPlaDevice:
-    #     vr.YPlaDevice = v.yPlaDevice
-    # if v.xAdvDevice:
-    #     vr.XAdvDevice = v.xAdvDevice
-    # if v.yAdvDevice:
-    #    vr.YAdvDevice = v.yAdvDevice
+    if v.xPlaDevice:
+        vr.XPlaDevice = otTables.XPlaDevice()
+        _makeOpenTypeDeviceTable(vr.XPlaDevice, v.xPlaDevice)
+    if v.yPlaDevice:
+        vr.YPlaDevice = otTables.YPlaDevice()
+        _makeOpenTypeDeviceTable(vr.YPlaDevice, v.yPlaDevice)
+    if v.xAdvDevice:
+        vr.XAdvDevice = otTables.XAdvDevice()
+        _makeOpenTypeDeviceTable(vr.XAdvDevice, v.xAdvDevice)
+    if v.yAdvDevice:
+        vr.YAdvDevice = otTables.YAdvDevice()
+        _makeOpenTypeDeviceTable(vr.YAdvDevice, v.yAdvDevice)
 
     vrMask = 0
     for mask, name, _, _ in otBase.valueRecordFormat:

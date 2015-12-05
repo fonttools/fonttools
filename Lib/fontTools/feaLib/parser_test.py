@@ -479,9 +479,9 @@ class ParserTest(unittest.TestCase):
             "    valueRecordDef <"
             "        1 2 3 4"
             "        <device 8 88>"
-            "        <device 11 111, 12 222>"
+            "        <device 11 111, 12 112>"
             "        <device NULL>"
-            "        <device 33 -333, 44 -444, 55 555>"
+            "        <device 33 -113, 44 -114, 55 115>"
             "    > foo;"
             "} liga;")
         value = doc.statements[0].statements[0].value
@@ -490,9 +490,9 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(value.xAdvance, 3)
         self.assertEqual(value.yAdvance, 4)
         self.assertEqual(value.xPlaDevice, ((8, 88),))
-        self.assertEqual(value.yPlaDevice, ((11, 111), (12, 222)))
+        self.assertEqual(value.yPlaDevice, ((11, 111), (12, 112)))
         self.assertIsNone(value.xAdvDevice)
-        self.assertEqual(value.yAdvDevice, ((33, -333), (44, -444), (55, 555)))
+        self.assertEqual(value.yAdvDevice, ((33, -113), (44, -114), (55, 115)))
 
     def test_valuerecord_named(self):
         doc = self.parse("valueRecordDef <1 2 3 4> foo;"
@@ -517,6 +517,13 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(foo.value.xAdvance, 789)
         self.assertEqual(liga.statements[0].value.xAdvance, 789)
         self.assertEqual(smcp.statements[0].value.xAdvance, 789)
+
+    def test_valuerecord_device_value_out_of_range(self):
+        self.assertRaisesRegex(
+            FeatureLibError, r"Device value out of valid range \(-128..127\)",
+            self.parse,
+            "valueRecordDef <1 2 3 4 <device NULL> <device NULL> "
+            "<device NULL> <device 11 128>> foo;")
 
     def test_languagesystem(self):
         [langsys] = self.parse("languagesystem latn DEU;").statements
