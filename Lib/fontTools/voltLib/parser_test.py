@@ -17,19 +17,32 @@ class ParserTest(unittest.TestCase):
         if not hasattr(self, "assertRaisesRegex"):
             self.assertRaisesRegex = self.assertRaisesRegexp
 
-    def test_def_glyph(self):
+    def test_def_glyph_base(self):
         [def_glyph] = self.parse(
             'DEF_GLYPH ".notdef" ID 0 TYPE BASE END_GLYPH'
         ).statements
         self.assertEqual((def_glyph.name, def_glyph.id, def_glyph.unicode,
                           def_glyph.type, def_glyph.components),
                          (".notdef", 0, None, "BASE", None))
+
+    def test_def_glyph_base_with_unicode(self):
         [def_glyph] = self.parse(
             'DEF_GLYPH "space" ID 3 UNICODE 32 TYPE BASE END_GLYPH'
         ).statements
         self.assertEqual((def_glyph.name, def_glyph.id, def_glyph.unicode,
                           def_glyph.type, def_glyph.components),
                          ("space", 3, [0x0020], "BASE", None))
+
+    def test_def_glyph_base_with_unicodevalues(self):
+        [def_glyph] = self.parse(
+            'DEF_GLYPH "CR" ID 2 UNICODEVALUES "U+0009" '
+            'TYPE BASE END_GLYPH'
+        ).statements
+        self.assertEqual((def_glyph.name, def_glyph.id, def_glyph.unicode,
+                          def_glyph.type, def_glyph.components),
+                         ("CR", 2, [0x0009], "BASE", None))
+
+    def test_def_glyph_base_with_mult_unicodevalues(self):
         [def_glyph] = self.parse(
             'DEF_GLYPH "CR" ID 2 UNICODEVALUES "U+0009,U+000D" '
             'TYPE BASE END_GLYPH'
@@ -37,12 +50,33 @@ class ParserTest(unittest.TestCase):
         self.assertEqual((def_glyph.name, def_glyph.id, def_glyph.unicode,
                           def_glyph.type, def_glyph.components),
                          ("CR", 2, [0x0009, 0x000D], "BASE", None))
+
+    def test_def_glyph_base_with_empty_unicodevalues(self):
+        [def_glyph] = self.parse(
+            'DEF_GLYPH "i.locl" ID 269 UNICODEVALUES "" '
+            'TYPE BASE END_GLYPH'
+        ).statements
+        self.assertEqual((def_glyph.name, def_glyph.id, def_glyph.unicode,
+                          def_glyph.type, def_glyph.components),
+                         ("i.locl", 269, None, "BASE", None))
+
+    def test_def_glyph_base_2_components(self):
+        [def_glyph] = self.parse(
+            'DEF_GLYPH "glyphBase" ID 320 TYPE BASE COMPONENTS 2 END_GLYPH'
+        ).statements
+        self.assertEqual((def_glyph.name, def_glyph.id, def_glyph.unicode,
+                          def_glyph.type, def_glyph.components),
+                         ("glyphBase", 320, None, "BASE", 2))
+
+    def test_def_glyph_ligature_2_components(self):
         [def_glyph] = self.parse(
             'DEF_GLYPH "f_f" ID 320 TYPE LIGATURE COMPONENTS 2 END_GLYPH'
         ).statements
         self.assertEqual((def_glyph.name, def_glyph.id, def_glyph.unicode,
                           def_glyph.type, def_glyph.components),
                          ("f_f", 320, None, "LIGATURE", 2))
+
+    def test_def_glyph_no_type(self):
         [def_glyph] = self.parse(
             'DEF_GLYPH "glyph20" ID 20 END_GLYPH'
         ).statements
