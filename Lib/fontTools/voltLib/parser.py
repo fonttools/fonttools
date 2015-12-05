@@ -359,8 +359,15 @@ class Parser(object):
 
     def parse_unicode_values_(self):
         location = self.cur_token_location_
-        unicode_values = self.expect_string_().split(',')
-        return [int(uni[2:], 16) for uni in unicode_values]
+        # TODO use location
+        try:
+            unicode_values = self.expect_string_().split(",")
+            unicode_values = [
+                int(uni[2:], 16)
+                for uni in unicode_values if uni != ""]
+        except ValueError as err:
+            raise VoltLibError(str(err), location)
+        return unicode_values if unicode_values != [] else None
 
     def parse_enum_(self):
         assert self.is_cur_keyword_("ENUM")
