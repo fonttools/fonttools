@@ -13,6 +13,8 @@
 # limitations under the License.
 
 
+from __future__ import print_function, division, absolute_import
+
 from math import hypot
 from fontTools.misc import bezierTools
 
@@ -110,10 +112,10 @@ def cubic_approx_spline(p, n):
         return p[0], p1, p[3]
 
     spline = [p[0]]
-    ts = [(float(i) / n) for i in range(1, n)]
+    ts = [i / n for i in range(1, n)]
     segments = bezierTools.splitCubicAtT(p[0], p[1], p[2], p[3], *ts)
     for i in range(len(segments)):
-        segment = cubic_approx(segments[i], float(i) / (n - 1))
+        segment = cubic_approx(segments[i], i / (n - 1))
         spline.append(segment[1])
     spline.append(p[3])
     return spline
@@ -125,15 +127,15 @@ def curve_spline_dist(bezier, spline):
     TOTAL_STEPS = 20
     error = 0
     n = len(spline) - 2
-    steps = TOTAL_STEPS / n
+    steps = TOTAL_STEPS // n
     for i in range(1, n + 1):
         segment = [
             spline[0] if i == 1 else segment[2],
             spline[i],
             spline[i + 1] if i == n else lerp_pt(spline[i], spline[i + 1], 0.5)]
         for j in range(steps):
-            p1 = cubic_bezier_at(bezier, (float(j) / steps + i - 1) / n)
-            p2 = quadratic_bezier_at(segment, float(j) / steps)
+            p1 = cubic_bezier_at(bezier, (j / steps + i - 1) / n)
+            p2 = quadratic_bezier_at(segment, j / steps)
             error = max(error, dist(p1, p2))
     return error
 
