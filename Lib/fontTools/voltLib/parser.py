@@ -70,14 +70,13 @@ class Parser(object):
         elif self.next_token_ == "UNICODEVALUES":
             self.expect_keyword_("UNICODEVALUES")
             gunicode = self.parse_unicode_values_()
-        # Apparently TYPE is optional
         gtype = None
         if self.next_token_ == "TYPE":
             self.expect_keyword_("TYPE")
             gtype = self.expect_name_()
             assert gtype in ("BASE", "LIGATURE", "MARK")
         components = None
-        if gtype == "LIGATURE":
+        if self.next_token_ == "COMPONENTS":
             self.expect_keyword_("COMPONENTS")
             components = self.expect_number_()
         self.expect_keyword_("END_GLYPH")
