@@ -160,19 +160,17 @@ class ParserTest(unittest.TestCase):
             ).statements
 
     def test_def_group_groups_cyclic(self):
-        # with self.assertRaisesRegex(
-        #         VoltLibError,
-        #         r'Group "Group2" is used but undefined.'):
-        [group1, group2] = self.parse(
-            'DEF_GROUP "Group1"\n'
-            'ENUM GROUP "Group2" END_ENUM\n'
-            'END_GROUP\n'
-            'DEF_GROUP "Group2"\n'
-            'ENUM GROUP "Group1" END_ENUM\n'
-            'END_GROUP\n'
-        ).statements
-        print("group1.enum", group1.enum)
-        print("group2.enum", group2.enum)
+        with self.assertRaisesRegex(
+                VoltLibError,
+                r'Group "Group2" is used but undefined.'):
+            [group1, group2] = self.parse(
+                'DEF_GROUP "Group1"\n'
+                'ENUM GROUP "Group2" END_ENUM\n'
+                'END_GROUP\n'
+                'DEF_GROUP "Group2"\n'
+                'ENUM GROUP "Group1" END_ENUM\n'
+                'END_GROUP\n'
+            ).statements
 
     def test_def_group_glyphs_and_group(self):
         [def_group1, def_group2] = self.parse(
