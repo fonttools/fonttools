@@ -1,4 +1,5 @@
-from __future__ import print_function, division, absolute_import
+from __future__ import (
+    print_function, division, absolute_import, unicode_literals)
 import fontTools.voltLib.ast as ast
 import fontTools.feaLib.parser as parser
 from fontTools.voltLib.lexer import Lexer
