@@ -4,7 +4,8 @@ import fontTools.voltLib.ast as ast
 import fontTools.feaLib.parser as parser
 from fontTools.voltLib.lexer import Lexer
 from fontTools.voltLib.error import VoltLibError
-import codecs
+from io import open
+
 
 class Parser(object):
     def __init__(self, path):
@@ -13,7 +14,7 @@ class Parser(object):
         self.next_token_type_, self.next_token_ = (None, None)
         self.next_token_location_ = None
         try:
-            with codecs.open(path, "rb", "utf-8") as f:
+            with open(path, "r") as f:
                 self.lexer_ = Lexer(f.read(), path)
         except IOError as err:
             raise VoltLibError(str(err), location)
