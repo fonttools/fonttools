@@ -258,8 +258,17 @@ class Parser(object):
             position = ast.PositionAttachDefinition(location, coverage,
                                                     coverage_to)
         elif pos_type == "ATTACH_CURSIVE":
-            raise VoltLibError("ATTACH_CURSIVE not yet implemented.",
-                               location)
+            coverages_exit = []
+            coverages_enter = []
+            while self.next_token_ != "ENTER":
+                self.expect_keyword_("EXIT")
+                coverages_exit.append(self.parse_coverage_())
+            while self.next_token_ != "END_ATTACH":
+                self.expect_keyword_("ENTER")
+                coverages_enter.append(self.parse_coverage_())
+            self.expect_keyword_("END_ATTACH")
+            position = ast.PositionAttachCursiveDefinition(
+                location, coverages_exit, coverages_enter)
         elif pos_type == "ADJUST_PAIR":
             coverages_1 = []
             coverages_2 = []
@@ -283,8 +292,12 @@ class Parser(object):
             position = ast.PositionAdjustPairDefinition(location, coverages_1,
                                                         coverages_2, adjust)
         elif pos_type == "ADJUST_SINGLE":
-            raise VoltLibError("ADJUST_SINGLE not yet implemented.",
-                               location)
+            coverages = self.parse_coverage_()
+            self.expect_keyword_("BY")
+            pos = self.parse_pos_()
+            position = ast.PositionAdjustSingleDefinition(location, coverages,
+                                                          pos)
+            self.expect_keyword_("END_ADJUST")
         self.expect_keyword_("END_POSITION")
         return position
 
