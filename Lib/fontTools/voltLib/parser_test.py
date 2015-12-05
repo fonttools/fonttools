@@ -115,23 +115,64 @@ class ParserTest(unittest.TestCase):
             ("TestGroup",
              ["a", "b", "c", "d", "e", "f", "g", "h"]))
 
-    # TODO
-    # def test_def_group_groups_not_yet_defined(self):
-    #     [group1, group2, test_group] = self.parse(
-    #         'DEF_GROUP "Group1"\n'
-    #         'ENUM GLYPH "a" GLYPH "b" GLYPH "c" GLYPH "d" END_ENUM\n'
-    #         'END_GROUP\n'
-    #         'DEF_GROUP "TestGroup"\n'
-    #         'ENUM GROUP "Group1" GROUP "Group2" END_ENUM\n'
-    #         'END_GROUP\n'
-    #         'DEF_GROUP "Group2"\n'
-    #         'ENUM GLYPH "e" GLYPH "f" GLYPH "g" GLYPH "h" END_ENUM\n'
-    #         'END_GROUP\n'
-    #     ).statements
-    #     self.assertEqual(
-    #         (test_group.name, test_group.enum),
-    #         ("TestGroup",
-    #          ["a", "b", "c", "d", "e", "f", "g", "h"]))
+    def test_def_group_groups_not_yet_defined(self):
+        [group1, test_group1, test_group2, test_group3, group2] = self.parse(
+            'DEF_GROUP "Group1"\n'
+            'ENUM GLYPH "a" GLYPH "b" GLYPH "c" GLYPH "d" END_ENUM\n'
+            'END_GROUP\n'
+            'DEF_GROUP "TestGroup1"\n'
+            'ENUM GROUP "Group1" GROUP "Group2" END_ENUM\n'
+            'END_GROUP\n'
+            'DEF_GROUP "TestGroup2"\n'
+            'ENUM GROUP "Group2" END_ENUM\n'
+            'END_GROUP\n'
+            'DEF_GROUP "TestGroup3"\n'
+            'ENUM GROUP "Group2" GROUP "Group1" END_ENUM\n'
+            'END_GROUP\n'
+            'DEF_GROUP "Group2"\n'
+            'ENUM GLYPH "e" GLYPH "f" GLYPH "g" GLYPH "h" END_ENUM\n'
+            'END_GROUP\n'
+        ).statements
+        self.assertEqual(
+            (test_group1.name, test_group1.enum),
+            ("TestGroup1",
+             ["a", "b", "c", "d", "e", "f", "g", "h"]))
+        self.assertEqual(
+            (test_group2.name, test_group2.enum),
+            ("TestGroup2",
+             ["e", "f", "g", "h"]))
+        self.assertEqual(
+            (test_group3.name, test_group3.enum),
+            ("TestGroup3",
+             ["e", "f", "g", "h", "a", "b", "c", "d"]))
+
+    def test_def_group_groups_undefined(self):
+        with self.assertRaisesRegex(
+                VoltLibError,
+                r'Group "Group2" is used but undefined.'):
+            [group1, test_group, group2] = self.parse(
+                'DEF_GROUP "Group1"\n'
+                'ENUM GLYPH "a" GLYPH "b" GLYPH "c" GLYPH "d" END_ENUM\n'
+                'END_GROUP\n'
+                'DEF_GROUP "TestGroup"\n'
+                'ENUM GROUP "Group1" GROUP "Group2" END_ENUM\n'
+                'END_GROUP\n'
+            ).statements
+
+    def test_def_group_groups_cyclic(self):
+        # with self.assertRaisesRegex(
+        #         VoltLibError,
+        #         r'Group "Group2" is used but undefined.'):
+        [group1, group2] = self.parse(
+            'DEF_GROUP "Group1"\n'
+            'ENUM GROUP "Group2" END_ENUM\n'
+            'END_GROUP\n'
+            'DEF_GROUP "Group2"\n'
+            'ENUM GROUP "Group1" END_ENUM\n'
+            'END_GROUP\n'
+        ).statements
+        print("group1.enum", group1.enum)
+        print("group2.enum", group2.enum)
 
     def test_def_group_glyphs_and_group(self):
         [def_group1, def_group2] = self.parse(
@@ -447,7 +488,22 @@ class ParserTest(unittest.TestCase):
         )
 
     def test_position_attach_cursive(self):
-        pass  # XXX
+        [lookup] = self.parse(
+            'DEF_LOOKUP "SomeLookup" PROCESS_BASE PROCESS_MARKS ALL '
+            'DIRECTION RTL\n'
+            'IN_CONTEXT\n'
+            'END_CONTEXT\n'
+            'AS_POSITION\n'
+            'ATTACH_CURSIVE EXIT GLYPH "a" GLYPH "b" ENTER GLYPH "c"\n'
+            'END_ATTACH\n'
+            'END_POSITION\n'
+        ).statements
+        self.assertEqual(
+            (lookup.name,
+             lookup.pos.coverages_exit, lookup.pos.coverages_enter),
+            ("SomeLookup",
+             [["a", "b"]], [["c"]])
+        )
 
     def test_position_adjust_pair(self):
         [lookup] = self.parse(
@@ -475,7 +531,22 @@ class ParserTest(unittest.TestCase):
         )
 
     def test_position_adjust_single(self):
-        pass  # XXX
+        [lookup] = self.parse(
+            'DEF_LOOKUP "TestLookup" PROCESS_BASE PROCESS_MARKS ALL '
+            'DIRECTION LTR\n'
+            'IN_CONTEXT\n'
+            # 'LEFT GLYPH "leftGlyph"\n'
+            # 'RIGHT GLYPH "rightGlyph"\n'
+            'END_CONTEXT\n'
+            'AS_POSITION\n'
+            'ADJUST_SINGLE GLYPH "testGlyph" BY POS ADV 0 DX 150 END_POS\n'
+            'END_ADJUST\n'
+            'END_POSITION\n'
+        ).statements
+        self.assertEqual(
+            (lookup.name, lookup.pos.coverages, lookup.pos.adjust),
+            ("TestLookup", ["testGlyph"], (0, 150, None, {}, {}, {}))
+        )
 
     def test_def_anchor(self):
         [anchor] = self.parse(
@@ -485,8 +556,8 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(
             (anchor.name, anchor.gid, anchor.glyph_name, anchor.component,
              anchor.locked, anchor.pos),
-            ("MARK_top", 120, "acutecomb", 1, False, (None, 0, 450, {}, {},
-                                                      {}))
+            ("MARK_top", 120, "acutecomb", 1,
+             False, (None, 0, 450, {}, {}, {}))
         )
 
     def test_ppem(self):
