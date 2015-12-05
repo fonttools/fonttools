@@ -11,6 +11,7 @@ class Parser(object):
     def __init__(self, path):
         self.doc_ = ast.VoltFile()
         self.groups_ = SymbolTable()
+        self.anchors_ = SymbolTable()
         self.next_token_type_, self.next_token_ = (None, None)
         self.next_token_location_ = None
         with open(path, "r") as f:
