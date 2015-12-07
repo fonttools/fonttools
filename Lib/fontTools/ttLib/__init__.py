@@ -327,7 +327,7 @@ class TTFont(object):
 		writer.newline()
 		writer.newline()
 
-	def importXML(self, file, progress=None, quiet=False):
+	def importXML(self, fileOrPath, progress=None, quiet=False):
 		"""Import a TTX file (an XML-based text format), so as to recreate
 		a font object.
 		"""
@@ -340,7 +340,7 @@ class TTFont(object):
 
 		from fontTools.misc import xmlReader
 
-		reader = xmlReader.XMLReader(file, self, progress, quiet)
+		reader = xmlReader.XMLReader(fileOrPath, self, progress, quiet)
 		reader.read()
 
 	def isLoaded(self, tag):
