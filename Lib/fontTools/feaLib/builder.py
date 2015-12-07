@@ -32,8 +32,14 @@ class Builder(object):
         parsetree = Parser(self.featurefile_path).parse()
         parsetree.build(self)
         for tag in ('GPOS', 'GSUB'):
-            fontTable = self.font[tag] = getTableClass(tag)()
-            fontTable.table = self.makeTable(tag)
+            table = self.makeTable(tag)
+            if (table.ScriptList.ScriptCount > 0 or
+                    table.FeatureList.FeatureCount > 0 or
+                    table.LookupList.LookupCount > 0):
+                fontTable = self.font[tag] = getTableClass(tag)()
+                fontTable.table = table
+            elif self.font.has_key(tag):
+                del self.font[tag]
 
     def get_lookup_(self, location, builder_class):
         if (self.cur_lookup_ and
