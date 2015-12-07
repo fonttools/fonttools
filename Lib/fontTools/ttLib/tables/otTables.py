@@ -485,8 +485,8 @@ class LigatureSubst(FormatSwitchingBaseTable):
 
 			# ligatures is map from components-sequence to lig-glyph
 			newLigatures = dict()
-			for comps,lig in sorted(ligautures.items(), key=lambda comps,lig: (-len(comps), comps)):
-				ligature = ot.Ligature()
+			for comps,lig in sorted(ligatures.items(), key=lambda item: (-len(item[0]), item[0])):
+				ligature = Ligature()
 				ligature.Component = comps[1:]
 				ligature.CompCount = len(comps)
 				ligature.LigGlyph = lig
