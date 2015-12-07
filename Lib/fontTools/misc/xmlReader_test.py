@@ -5,7 +5,7 @@ from fontTools.misc.py23 import *
 import os
 import unittest
 from fontTools.ttLib import TTFont
-from .xmlReader import XMLReader
+from .xmlReader import XMLReader, ProgressPrinter, BUFSIZE
 import tempfile
 
 
@@ -15,9 +15,9 @@ class TestXMLReader(unittest.TestCase):
 
 		class DebugXMLReader(XMLReader):
 
-			def __init__(self, fileName, ttFont, progress=None, quiet=False):
+			def __init__(self, fileOrPath, ttFont, progress=None, quiet=False):
 				super(DebugXMLReader, self).__init__(
-					fileName, ttFont, progress, quiet)
+					fileOrPath, ttFont, progress, quiet)
 				self.contents = []
 
 			def _endElementHandler(self, name):
@@ -38,21 +38,19 @@ class TestXMLReader(unittest.TestCase):
 </ttFont>
 ''' % expected
 
-		with tempfile.NamedTemporaryFile(delete=False) as tmp:
-			tmp.write(data.encode('utf-8'))
-		reader = DebugXMLReader(tmp.name, TTFont(), quiet=True)
-		reader.read()
-		os.remove(tmp.name)
-		content = strjoin(reader.contents[0]).strip() 
+		with BytesIO(data.encode('utf-8')) as tmp:
+			reader = DebugXMLReader(tmp, TTFont(), quiet=True)
+			reader.read()
+		content = strjoin(reader.contents[0]).strip()
 		self.assertEqual(expected, content)
 
 	def test_normalise_newlines(self):
 
 		class DebugXMLReader(XMLReader):
 
-			def __init__(self, fileName, ttFont, progress=None, quiet=False):
+			def __init__(self, fileOrPath, ttFont, progress=None, quiet=False):
 				super(DebugXMLReader, self).__init__(
-					fileName, ttFont, progress, quiet)
+					fileOrPath, ttFont, progress, quiet)
 				self.newlines = []
 
 			def _characterDataHandler(self, data):
@@ -68,13 +66,82 @@ class TestXMLReader(unittest.TestCase):
 			'    escaped CR and windows newline &#13;\r\n'  # &#13;\r\n -> \r\n
 			'  </test>\n'                                   #              \n
 			'</ttFont>')
-		with tempfile.NamedTemporaryFile(delete=False) as tmp:
-			tmp.write(data.encode('utf-8'))
-		reader = DebugXMLReader(tmp.name, TTFont(), quiet=True)
-		reader.read()
-		os.remove(tmp.name)
+
+		with BytesIO(data.encode('utf-8')) as tmp:
+			reader = DebugXMLReader(tmp, TTFont(), quiet=True)
+			reader.read()
 		expected = ['\n'] * 3 + ['\r', '\n'] * 3 + ['\n']
 		self.assertEqual(expected, reader.newlines)
+
+	def test_progress(self):
+
+		class DummyProgressPrinter(ProgressPrinter):
+
+			def __init__(self, title, maxval=100):
+				self.label = title
+				self.maxval = maxval
+				self.pos = 0
+
+			def set(self, val, maxval=None):
+				if maxval is not None:
+					self.maxval = maxval
+				self.pos = val
+
+			def increment(self, val=1):
+				self.pos += val
+
+			def setLabel(self, text):
+				self.label = text
+
+		data = (
+			'<ttFont>\n'
+			'  <test>\n'
+			'    %s\n'
+			'  </test>\n'
+			'</ttFont>\n'
+			% ("z" * 2 * BUFSIZE)
+			).encode('utf-8')
+
+		dataSize = len(data)
+		progressBar = DummyProgressPrinter('test')
+		with BytesIO(data) as tmp:
+			reader = XMLReader(tmp, TTFont(), progress=progressBar)
+			self.assertEqual(progressBar.pos, 0)
+			reader.read()
+		self.assertEqual(progressBar.pos, dataSize // 100)
+		self.assertEqual(progressBar.maxval, dataSize // 100)
+		self.assertTrue('test' in progressBar.label)
+		with BytesIO(b"<ttFont></ttFont>") as tmp:
+			reader = XMLReader(tmp, TTFont(), progress=progressBar)
+			reader.read()
+		# when data size is less than 100 bytes, 'maxval' is 1
+		self.assertEqual(progressBar.maxval, 1)
+
+	def test_close_file_path(self):
+		with tempfile.NamedTemporaryFile(delete=False) as tmp:
+			tmp.write(b'<ttFont></ttFont>')
+		reader = XMLReader(tmp.name, TTFont())
+		reader.read()
+		# when reading from path, the file is closed automatically at the end
+		self.assertTrue(reader.file.closed)
+		# this does nothing
+		reader.close()
+		self.assertTrue(reader.file.closed)
+		os.remove(tmp.name)
+
+	def test_close_file_obj(self):
+		with tempfile.NamedTemporaryFile(delete=False) as tmp:
+			tmp.write(b'<ttFont>"hello"</ttFont>')
+		with open(tmp.name, "rb") as f:
+			reader = XMLReader(f, TTFont())
+			reader.read()
+			# when reading from a file or file-like object, the latter is kept open
+			self.assertFalse(reader.file.closed)
+		# ... until the user explicitly closes it
+		reader.close()
+		self.assertTrue(reader.file.closed)
+		os.remove(tmp.name)
+
 
 
 if __name__ == '__main__':
