@@ -46,6 +46,45 @@ class Parser(object):
                                       self.cur_token_location_)
         return self.doc_
 
+    def parse_anchor_(self):
+        self.expect_symbol_("<")
+        self.expect_keyword_("anchor")
+        location = self.cur_token_location_
+
+        if self.next_token_ == "NULL":
+            self.expect_keyword_("NULL")
+            self.expect_symbol_(">")
+            return None
+
+        if self.next_token_type_ == Lexer.NAME:
+            name = self.expect_name_()
+            anchordef = self.anchors_.resolve(name)
+            if anchordef is None:
+                raise FeatureLibError(
+                    'Unknown anchor "%s"' % name,
+                    self.cur_token_location_)
+            self.expect_symbol_(">")
+            return ast.Anchor(location, anchordef.x, anchordef.y,
+                              anchordef.contourpoint,
+                              xDeviceTable=None, yDeviceTable=None)
+
+        x, y = self.expect_number_(), self.expect_number_()
+
+        contourpoint = None
+        if self.next_token_ == "contourpoint":
+            self.expect_keyword_("contourpoint")
+            contourpoint = self.expect_number_()
+
+        if self.next_token_ == "<":
+            xDeviceTable = self.parse_device_()
+            yDeviceTable = self.parse_device_()
+        else:
+            xDeviceTable, yDeviceTable = None, None
+
+        self.expect_symbol_(">")
+        return ast.Anchor(location, x, y, contourpoint,
+                          xDeviceTable, yDeviceTable)
+
     def parse_anchordef_(self):
         assert self.is_cur_keyword_("anchorDef")
         location = self.cur_token_location_
@@ -212,6 +251,20 @@ class Parser(object):
     def parse_position_(self, enumerated, vertical):
         assert self.cur_token_ in {"position", "pos"}
         location = self.cur_token_location_
+        if self.next_token_ == "cursive":
+            self.expect_keyword_("cursive")
+            if enumerated:
+                raise FeatureLibError(
+                    '"enumerate" is not allowed with '
+                    'cursive attachment positioning',
+                    location)
+            glyphclass = self.parse_glyphclass_(accept_glyphname=True)
+            entryAnchor = self.parse_anchor_()
+            exitAnchor = self.parse_anchor_()
+            self.expect_symbol_(";")
+            return ast.CursiveAttachmentPositioning(
+                location, glyphclass, entryAnchor, exitAnchor)
+
         gc2, value2 = None, None
         gc1 = self.parse_glyphclass_(accept_glyphname=True)
         if self.is_next_glyphclass_():
