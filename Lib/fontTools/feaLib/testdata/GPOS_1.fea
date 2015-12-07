@@ -3,6 +3,8 @@ languagesystem DFLT dflt;
 @sevenEightNine = [seven eight nine];
 
 feature kern {
+    position zero 0;
+
     position [one two three] <-80 0 -160 0>;
     position A <
         1 2 3 4

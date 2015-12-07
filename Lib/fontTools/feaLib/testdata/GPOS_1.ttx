@@ -53,7 +53,7 @@
       <Lookup index="0">
         <!-- LookupType=1 -->
         <LookupFlag value="0"/>
-        <!-- SubTableCount=7 -->
+        <!-- SubTableCount=8 -->
         <SinglePos index="0" Format="2">
           <Coverage>
             <Glyph value="four"/>
@@ -92,6 +92,12 @@
         </SinglePos>
         <SinglePos index="3" Format="1">
           <Coverage>
+            <Glyph value="zero"/>
+          </Coverage>
+          <ValueFormat value="0"/>
+        </SinglePos>
+        <SinglePos index="4" Format="1">
+          <Coverage>
             <Glyph value="one"/>
             <Glyph value="two"/>
             <Glyph value="three"/>
@@ -100,7 +106,7 @@
           <ValueFormat value="5"/>
           <Value XPlacement="-80" XAdvance="-160"/>
         </SinglePos>
-        <SinglePos index="4" Format="1">
+        <SinglePos index="5" Format="1">
           <Coverage>
             <Glyph value="seven"/>
             <Glyph value="eight"/>
@@ -109,7 +115,7 @@
           <ValueFormat value="4"/>
           <Value XAdvance="-100"/>
         </SinglePos>
-        <SinglePos index="5" Format="1">
+        <SinglePos index="6" Format="1">
           <Coverage>
             <Glyph value="A"/>
             <Glyph value="B"/>
@@ -136,7 +142,7 @@
             </XAdvDevice>
           </Value>
         </SinglePos>
-        <SinglePos index="6" Format="1">
+        <SinglePos index="7" Format="1">
           <Coverage>
             <Glyph value="C"/>
           </Coverage>
