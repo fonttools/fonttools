@@ -101,6 +101,15 @@ class SubsetTest(unittest.TestCase):
         subsetfont = TTFont(subsetpath)
         self.expect_ttx(subsetfont, self.getpath("expect_keep_colr.ttx"), ["GlyphOrder", "hmtx", "glyf", "COLR", "CPAL"])
 
+    def test_options(self):
+        # https://github.com/behdad/fonttools/issues/413
+        opt1 = subset.Options()
+        self.assertTrue('Xyz-' not in opt1.layout_features)
+        opt2 = subset.Options()
+        opt2.layout_features.append('Xyz-')
+        self.assertTrue('Xyz-' in opt2.layout_features)
+        self.assertTrue('Xyz-' not in opt1.layout_features)
+
 
 if __name__ == "__main__":
     unittest.main()
