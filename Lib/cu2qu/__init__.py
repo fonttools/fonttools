@@ -19,6 +19,22 @@ from math import hypot
 from fontTools.misc import bezierTools
 
 
+class Cu2QuError(Exception):
+    pass
+
+
+class ApproxNotFoundError(Cu2QuError):
+    def __init__(self, curve, error=None):
+        if error is None:
+            message = "no approximation found: %s" % curve
+        else:
+            message = ("approximation error exceeds max tolerance: %s, "
+                       "error=%g" % (curve, error))
+        super(Cu2QuError, self).__init__(message)
+        self.curve = curve
+        self.error = error
+
+
 def vector(p1, p2):
     """Return the vector from p1 to p2."""
     return p2[0] - p1[0], p2[1] - p1[1]
@@ -109,7 +125,7 @@ def cubic_approx_spline(p, n):
             p1 = calc_intersect(p)
         except ValueError:
             return None
-        return p[0], p1, p[3]
+        return [p[0], p1, p[3]]
 
     spline = [p[0]]
     ts = [i / n for i in range(1, n)]
@@ -141,22 +157,45 @@ def curve_spline_dist(bezier, spline):
 
 
 def curve_to_quadratic(p, max_err, max_n):
-    """Return a quadratic spline approximating this cubic bezier."""
+    """Return a quadratic spline approximating this cubic bezier, and
+    the error of approximation.
+    Raise 'ApproxNotFoundError' if no suitable approximation can be found
+    with the given parameters.
+    """
 
+    spline, error = None, None
     for n in range(1, max_n + 1):
         spline = cubic_approx_spline(p, n)
-        if spline and curve_spline_dist(p, spline) <= max_err:
+        if spline is None:
+            continue
+        error = curve_spline_dist(p, spline)
+        if error <= max_err:
             break
-    return spline
+    else:
+        # no break: approximation not found or error exceeds tolerance
+        raise ApproxNotFoundError(p, error)
+    return spline, error
 
 
 def curves_to_quadratic(curves, max_errors, max_n):
-    """Return quadratic splines approximating these cubic beziers."""
+    """Return quadratic splines approximating these cubic beziers, and
+    the respective errors of approximation.
+    Raise 'ApproxNotFoundError' if no suitable approximation can be found
+    for all curves with the given parameters.
+    """
 
+    splines = [None] * len(curves)
+    errors = [None] * len(max_errors)
     for n in range(1, max_n + 1):
         splines = [cubic_approx_spline(c, n) for c in curves]
-        if (all(splines) and
-            all(curve_spline_dist(c, s) < max_err
-                for c, s, max_err in zip(curves, splines, max_errors))):
+        if not all(splines):
+            continue
+        errors = [curve_spline_dist(c, s) for c, s in zip(curves, splines)]
+        if all(err <= max_err for err, max_err in zip(errors, max_errors)):
             break
-    return splines
+    else:
+        # no break: raise if any spline is None or error exceeds tolerance
+        for c, s, error, max_err in zip(curves, splines, errors, max_errors):
+            if s is None or error > max_err:
+                raise ApproxNotFoundError(c, error)
+    return splines, errors
