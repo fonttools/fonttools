@@ -256,7 +256,7 @@ class ParserTest(unittest.TestCase):
             FeatureLibError, 'Unknown lookup "Huh"',
             self.parse, "feature liga {lookup Huh;} liga;")
 
-    def test_gpos_type1_glyph(self):
+    def test_gpos_type_1_glyph(self):
         doc = self.parse("feature kern {pos one <1 2 3 4>;} kern;")
         pos = doc.statements[0].statements[0]
         self.assertEqual(type(pos), ast.SingleAdjustmentPositioning)
@@ -264,19 +264,94 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(pos.valuerecord.makeString(vertical=False),
                          "<1 2 3 4>")
 
-    def test_gpos_type1_glyphclass_horizontal(self):
+    def test_gpos_type_1_glyphclass_horizontal(self):
         doc = self.parse("feature kern {pos [one two] -300;} kern;")
         pos = doc.statements[0].statements[0]
         self.assertEqual(type(pos), ast.SingleAdjustmentPositioning)
         self.assertEqual(pos.glyphclass, {"one", "two"})
         self.assertEqual(pos.valuerecord.makeString(vertical=False), "-300")
 
-    def test_gpos_type1_glyphclass_vertical(self):
+    def test_gpos_type_1_glyphclass_vertical(self):
         doc = self.parse("feature vkrn {pos [one two] -300;} vkrn;")
         pos = doc.statements[0].statements[0]
         self.assertEqual(type(pos), ast.SingleAdjustmentPositioning)
         self.assertEqual(pos.glyphclass, {"one", "two"})
         self.assertEqual(pos.valuerecord.makeString(vertical=True), "-300")
+
+    def test_gpos_type_1_enumerated(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            '"enumerate" is only allowed with pair positionings',
+            self.parse, "feature test {enum pos T 100;} test;")
+        self.assertRaisesRegex(
+            FeatureLibError,
+            '"enumerate" is only allowed with pair positionings',
+            self.parse, "feature test {enumerate pos T 100;} test;")
+
+    def test_gpos_type_2_format_a(self):
+        doc = self.parse("feature kern {"
+                         "    pos [T V] -60 [a b c] <1 2 3 4>;"
+                         "} kern;")
+        pos = doc.statements[0].statements[0]
+        self.assertEqual(type(pos), ast.PairAdjustmentPositioning)
+        self.assertFalse(pos.enumerated)
+        self.assertEqual(pos.glyphclass1, {"T", "V"})
+        self.assertEqual(pos.valuerecord1.makeString(vertical=False), "-60")
+        self.assertEqual(pos.glyphclass2, {"a", "b", "c"})
+        self.assertEqual(pos.valuerecord2.makeString(vertical=False),
+                         "<1 2 3 4>")
+
+    def test_gpos_type_2_format_a_enumerated(self):
+        doc = self.parse("feature kern {"
+                         "    enum pos [T V] -60 [a b c] <1 2 3 4>;"
+                         "} kern;")
+        pos = doc.statements[0].statements[0]
+        self.assertEqual(type(pos), ast.PairAdjustmentPositioning)
+        self.assertTrue(pos.enumerated)
+        self.assertEqual(pos.glyphclass1, {"T", "V"})
+        self.assertEqual(pos.valuerecord1.makeString(vertical=False), "-60")
+        self.assertEqual(pos.glyphclass2, {"a", "b", "c"})
+        self.assertEqual(pos.valuerecord2.makeString(vertical=False),
+                         "<1 2 3 4>")
+
+    def test_gpos_type_2_format_a_with_null(self):
+        doc = self.parse("feature kern {"
+                         "    pos [T V] <1 2 3 4> [a b c] <NULL>;"
+                         "} kern;")
+        pos = doc.statements[0].statements[0]
+        self.assertEqual(type(pos), ast.PairAdjustmentPositioning)
+        self.assertFalse(pos.enumerated)
+        self.assertEqual(pos.glyphclass1, {"T", "V"})
+        self.assertEqual(pos.valuerecord1.makeString(vertical=False),
+                         "<1 2 3 4>")
+        self.assertEqual(pos.glyphclass2, {"a", "b", "c"})
+        self.assertIsNone(pos.valuerecord2)
+
+    def test_gpos_type_2_format_b(self):
+        doc = self.parse("feature kern {"
+                         "    pos [T V] [a b c] <1 2 3 4>;"
+                         "} kern;")
+        pos = doc.statements[0].statements[0]
+        self.assertEqual(type(pos), ast.PairAdjustmentPositioning)
+        self.assertFalse(pos.enumerated)
+        self.assertEqual(pos.glyphclass1, {"T", "V"})
+        self.assertEqual(pos.valuerecord1.makeString(vertical=False),
+                         "<1 2 3 4>")
+        self.assertEqual(pos.glyphclass2, {"a", "b", "c"})
+        self.assertIsNone(pos.valuerecord2)
+
+    def test_gpos_type_2_format_b_enumerated(self):
+        doc = self.parse("feature kern {"
+                         "    enumerate position [T V] [a b c] <1 2 3 4>;"
+                         "} kern;")
+        pos = doc.statements[0].statements[0]
+        self.assertEqual(type(pos), ast.PairAdjustmentPositioning)
+        self.assertTrue(pos.enumerated)
+        self.assertEqual(pos.glyphclass1, {"T", "V"})
+        self.assertEqual(pos.valuerecord1.makeString(vertical=False),
+                         "<1 2 3 4>")
+        self.assertEqual(pos.glyphclass2, {"a", "b", "c"})
+        self.assertIsNone(pos.valuerecord2)
 
     def test_rsub_format_a(self):
         doc = self.parse("feature test {rsub a [b B] c' d [e E] by C;} test;")
@@ -493,6 +568,11 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(value.yPlaDevice, ((11, 111), (12, 112)))
         self.assertIsNone(value.xAdvDevice)
         self.assertEqual(value.yAdvDevice, ((33, -113), (44, -114), (55, 115)))
+
+    def test_valuerecord_format_d(self):
+        doc = self.parse("feature test {valueRecordDef <NULL> foo;} test;")
+        value = doc.statements[0].statements[0].value
+        self.assertIsNone(value)
 
     def test_valuerecord_named(self):
         doc = self.parse("valueRecordDef <1 2 3 4> foo;"

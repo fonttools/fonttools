@@ -145,6 +145,20 @@ class MultipleSubstitution(Statement):
                                           self.glyph, self.replacement)
 
 
+class PairAdjustmentPositioning(Statement):
+    def __init__(self, location, enumerated,
+                 glyphclass1, valuerecord1, glyphclass2, valuerecord2):
+        Statement.__init__(self, location)
+        self.enumerated = enumerated
+        self.glyphclass1, self.valuerecord1 = glyphclass1, valuerecord1
+        self.glyphclass2, self.valuerecord2 = glyphclass2, valuerecord2
+
+    def build(self, builder):
+        builder.add_pair_pos(self.location, self.enumerated,
+                             self.glyphclass1, self.valuerecord1,
+                             self.glyphclass2, self.valuerecord2)
+
+
 class ReverseChainingSingleSubstitution(Statement):
     def __init__(self, location, old_prefix, old_suffix, mapping):
         Statement.__init__(self, location)
