@@ -102,6 +102,10 @@ class CursiveAttachmentPositioning(Statement):
         self.glyphclass = glyphclass
         self.entryAnchor, self.exitAnchor = entryAnchor, exitAnchor
 
+    def build(self, builder):
+        builder.add_cursive_attachment_pos(
+            self.location, self.glyphclass, self.entryAnchor, self.exitAnchor)
+
 
 class LanguageStatement(Statement):
     def __init__(self, location, language, include_default, required):

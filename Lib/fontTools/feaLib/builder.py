@@ -310,6 +310,14 @@ class Builder(object):
                     location)
             lookup.mapping[from_glyph] = to_glyph
 
+    def add_cursive_attachment_pos(self, location, glyphclass,
+                                   entryAnchor, exitAnchor):
+        lookup = self.get_lookup_(location, CursiveAttachmentPosBuilder)
+        lookup.add_attachment(
+            location, glyphclass,
+            makeOpenTypeAnchor(entryAnchor, otTables.EntryAnchor),
+            makeOpenTypeAnchor(exitAnchor, otTables.ExitAnchor))
+
     def add_pair_pos(self, location, enumerated,
                      glyphclass1, value1, glyphclass2, value2):
         lookup = self.get_lookup_(location, PairPosBuilder)
@@ -348,6 +356,27 @@ def _makeOpenTypeDeviceTable(deviceTable, device):
         deviceTable.DeltaFormat = 2
     else:
         deviceTable.DeltaFormat = 3
+
+
+def makeOpenTypeAnchor(anchor, anchorClass):
+    """ast.Anchor --> otTables.Anchor"""
+    if anchor is None:
+        return None
+    anch = anchorClass()
+    anch.Format = 1
+    anch.XCoordinate, anch.YCoordinate = anchor.x, anchor.y
+    if anchor.contourpoint is not None:
+        anch.AnchorPoint = anchor.contourpoint
+        anch.Format = 2
+    if anchor.xDeviceTable is not None:
+        anch.XDeviceTable = otTables.XDeviceTable()
+        _makeOpenTypeDeviceTable(anch.XDeviceTable, anchor.xDeviceTable)
+        anch.Format = 3
+    if anchor.yDeviceTable is not None:
+        anch.YDeviceTable = otTables.YDeviceTable()
+        _makeOpenTypeDeviceTable(anch.YDeviceTable, anchor.yDeviceTable)
+        anch.Format = 3
+    return anch
 
 
 def makeOpenTypeValueRecord(v):
@@ -603,6 +632,42 @@ class PairPosBuilder(LookupBuilder):
                 ps.PairValueCount = len(ps.PairValueRecord)
             st.PairSetCount = len(st.PairSet)
 
+        lookup = otTables.Lookup()
+        lookup.SubTable = subtables
+        lookup.LookupFlag = self.lookup_flag
+        lookup.LookupType = self.lookup_type
+        lookup.SubTableCount = len(lookup.SubTable)
+        return lookup
+
+
+class CursiveAttachmentPosBuilder(LookupBuilder):
+    def __init__(self, font, location, lookup_flag):
+        LookupBuilder.__init__(self, font, location, 'GPOS', 3, lookup_flag)
+        self.attachments = {}
+
+    def equals(self, other):
+        return (LookupBuilder.equals(self, other) and
+                self.attachments == other.attachments)
+
+    def add_attachment(self, location, glyphs, entryAnchor, exitAnchor):
+        for glyph in glyphs:
+            self.attachments[glyph] = (location, entryAnchor, exitAnchor)
+
+    def build(self):
+        st = otTables.CursivePos()
+        st.Format = 1
+        st.Coverage = otTables.Coverage()
+        st.Coverage.glyphs = \
+            sorted(self.attachments.keys(), key=self.font.getGlyphID)
+        st.EntryExitCount = len(self.attachments)
+        st.EntryExitRecord = []
+        for glyph in st.Coverage.glyphs:
+            location, entryAnchor, exitAnchor = self.attachments[glyph]
+            rec = otTables.EntryExitRecord()
+            st.EntryExitRecord.append(rec)
+            rec.EntryAnchor = entryAnchor
+            rec.ExitAnchor = exitAnchor
+        subtables = [st]
         lookup = otTables.Lookup()
         lookup.SubTable = subtables
         lookup.LookupFlag = self.lookup_flag
