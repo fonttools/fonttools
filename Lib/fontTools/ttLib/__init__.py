@@ -82,7 +82,7 @@ class TTFont(object):
 		The TTFont constructor can also be called without a 'file'
 		argument: this is the way to create a new empty font.
 		In this case you can optionally supply the 'sfntVersion' argument,
-		and a 'flavor' which can be None, or 'woff'.
+		and a 'flavor' which can be None, 'woff', or 'woff2'.
 
 		If the recalcBBoxes argument is false, a number of things will *not*
 		be recalculated upon save/compile:
