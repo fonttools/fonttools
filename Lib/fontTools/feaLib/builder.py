@@ -38,7 +38,7 @@ class Builder(object):
                     table.LookupList.LookupCount > 0):
                 fontTable = self.font[tag] = getTableClass(tag)()
                 fontTable.table = table
-            elif self.font.has_key(tag):
+            elif tag in self.font:
                 del self.font[tag]
 
     def get_lookup_(self, location, builder_class):
