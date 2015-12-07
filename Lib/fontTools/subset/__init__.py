@@ -2243,31 +2243,32 @@ class Options(object):
     _layout_features_default = _uniq_sort(sum(
             iter(_layout_features_groups.values()), []))
 
-    drop_tables = _drop_tables_default
-    no_subset_tables = _no_subset_tables_default
-    hinting_tables = _hinting_tables_default
-    legacy_kern = False    # drop 'kern' table if GPOS available
-    layout_features = _layout_features_default
-    ignore_missing_glyphs = False
-    ignore_missing_unicodes = True
-    hinting = True
-    glyph_names = False
-    legacy_cmap = False
-    symbol_cmap = False
-    name_IDs = [1, 2]    # Family and Style
-    name_legacy = False
-    name_languages = [0x0409]    # English
-    obfuscate_names = False    # to make webfont unusable as a system font
-    notdef_glyph = True # gid0 for TrueType / .notdef for CFF
-    notdef_outline = False # No need for notdef to have an outline really
-    recommended_glyphs = False    # gid1, gid2, gid3 for TrueType
-    recalc_bounds = False # Recalculate font bounding boxes
-    recalc_timestamp = False # Recalculate font modified timestamp
-    canonical_order = False # Order tables as recommended
-    flavor = None  # May be 'woff' or 'woff2'
-    desubroutinize = False # Desubroutinize CFF CharStrings
-
     def __init__(self, **kwargs):
+
+        self.drop_tables = self._drop_tables_default[:]
+        self.no_subset_tables = self._no_subset_tables_default[:]
+        self.hinting_tables = self._hinting_tables_default[:]
+        self.legacy_kern = False    # drop 'kern' table if GPOS available
+        self.layout_features = self._layout_features_default[:]
+        self.ignore_missing_glyphs = False
+        self.ignore_missing_unicodes = True
+        self.hinting = True
+        self.glyph_names = False
+        self.legacy_cmap = False
+        self.symbol_cmap = False
+        self.name_IDs = [1, 2]    # Family and Style
+        self.name_legacy = False
+        self.name_languages = [0x0409]    # English
+        self.obfuscate_names = False    # to make webfont unusable as a system font
+        self.notdef_glyph = True # gid0 for TrueType / .notdef for CFF
+        self.notdef_outline = False # No need for notdef to have an outline really
+        self.recommended_glyphs = False    # gid1, gid2, gid3 for TrueType
+        self.recalc_bounds = False # Recalculate font bounding boxes
+        self.recalc_timestamp = False # Recalculate font modified timestamp
+        self.canonical_order = False # Order tables as recommended
+        self.flavor = None  # May be 'woff' or 'woff2'
+        self.desubroutinize = False # Desubroutinize CFF CharStrings
+
         self.set(**kwargs)
 
     def set(self, **kwargs):
