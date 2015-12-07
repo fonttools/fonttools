@@ -176,10 +176,10 @@ class table_V_D_M_X_(DefaultTable.DefaultTable):
 			writer.comment("recs=%d, startsz=%d, endsz=%d" %
 							(recs, startsz, endsz))
 			writer.newline()
-			for yPelHeight in group.keys():
-				yMax, yMin = group[yPelHeight]
+			for yPelHeight, (yMax, yMin) in sorted(group.items()):
 				writer.simpletag(
-					"record", yPelHeight=yPelHeight, yMax=yMax, yMin=yMin)
+					"record",
+					[('yPelHeight', yPelHeight), ('yMax', yMax), ('yMin', yMin)])
 				writer.newline()
 			writer.endtag("group")
 			writer.newline()
