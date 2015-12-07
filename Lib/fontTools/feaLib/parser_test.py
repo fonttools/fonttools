@@ -433,6 +433,15 @@ class ParserTest(unittest.TestCase):
         self.assertEqual((pos.entryAnchor.x, pos.entryAnchor.y), (12, -2))
         self.assertEqual((pos.exitAnchor.x, pos.exitAnchor.y), (2, 3))
 
+    def test_gpos_type_3_enumerated(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            '"enumerate" is not allowed with cursive attachment positioning',
+            self.parse,
+            "feature kern {"
+            "    enumerate position cursive A <anchor 12 -2> <anchor 2 3>;"
+            "} kern;")
+
     def test_rsub_format_a(self):
         doc = self.parse("feature test {rsub a [b B] c' d [e E] by C;} test;")
         rsub = doc.statements[0].statements[0]
