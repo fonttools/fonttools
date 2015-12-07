@@ -319,8 +319,9 @@ class MockFont(object):
 	def __init__(self):
 		self._glyphOrder = ['.notdef']
 		self._reverseGlyphOrder = {'.notdef': 0}
+		self.lazy = False
 
-	def getGlyphID(self, glyph):
+	def getGlyphID(self, glyph, requireReal=None):
 		gid = self._reverseGlyphOrder.get(glyph, None)
 		if gid is None:
 			gid = len(self._glyphOrder)
@@ -331,6 +332,9 @@ class MockFont(object):
 	def getGlyphName(self, gid):
 		return self._glyphOrder[gid]
 
+	def getGlyphOrder(self):
+		return self._glyphOrder
+
 if __name__ == '__main__':
 	import sys
 	font = MockFont()
@@ -338,4 +342,15 @@ if __name__ == '__main__':
 		debug("Processing", f)
 		table = compile(open(f, 'rt'))
 		blob = table.compile(font)
+		decompiled = table.__class__()
+		decompiled.decompile(blob, font)
+
+		from fontTools.misc import xmlWriter
+		tag = table.tableTag
+		writer = xmlWriter.XMLWriter(sys.stdout)
+		writer.begintag(tag)
+		writer.newline()
+		decompiled.toXML(writer, font)
+		writer.endtag(tag)
+		writer.newline()
 
