@@ -124,6 +124,17 @@ class BuilderTest(unittest.TestCase):
             "    sub f_f_i by f f i;"
             "} test;")
 
+    def test_pairPos_redefinition(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            r"Already defined position for "
+            "pair \[A B\] \[zero one two\] at .*:2:[0-9]+",  # :2: = line 2
+            self.build,
+            "feature test {\n"
+            "    pos [A B] [zero one two] 123;\n"  # line 2
+            "    pos [A B] [zero one two] 456;\n"
+            "} test;\n")
+
     def test_reverseChainingSingleSubst(self):
         font = makeTTFont()
         addOpenTypeFeatures(self.getpath("GSUB_8.fea"), font)
@@ -149,6 +160,11 @@ class BuilderTest(unittest.TestCase):
         font = makeTTFont()
         addOpenTypeFeatures(self.getpath("GPOS_1.fea"), font)
         self.expect_ttx(font, self.getpath("GPOS_1.ttx"))
+
+    def test_GPOS_type2(self):
+        font = makeTTFont()
+        addOpenTypeFeatures(self.getpath("GPOS_2.fea"), font)
+        self.expect_ttx(font, self.getpath("GPOS_2.ttx"))
 
     def test_spec4h1(self):
         # OpenType Feature File specification, section 4.h, example 1.
