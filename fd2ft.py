@@ -25,7 +25,7 @@ def parseScriptList(lines):
 		langSys.LookupOrder = None
 		# TODO The following two lines should use lazy feature name-to-index mapping
 		langSys.ReqFeatureIndex = int(defaultFeature) if defaultFeature else 0xFFFF
-		langSys.FeatureIndex = [int(f) for f in features.split(',')]
+		langSys.FeatureIndex = intSplitComma(features)
 		langSys.FeatureCount = len(langSys.FeatureIndex)
 
 		script = [s for s in self.ScriptRecord if s.ScriptTag == scriptTag]
@@ -68,7 +68,7 @@ def parseFeatureList(lines):
 		feature = featureRec.Feature
 		feature.FeatureParams = None
 		# TODO The following line should use lazy lookup name-to-index mapping
-		feature.LookupListIndex = [int(l) for l in lookups.split(',')]
+		feature.LookupListIndex = intSplitComma(lookups)
 		feature.LookupCount = len(feature.LookupListIndex)
 
 	self.FeatureCount = len(self.FeatureRecord)
@@ -95,66 +95,243 @@ def parseLookupFlags(lines):
 		break
 	return flags
 
-def parseSingleSubst(self, lines):
+def parseClassDef(lines, klass=ot.ClassDef):
+	line = next(lines)
+	assert line[0].endswith('class definition begin'), line
+	self = klass()
+	classDefs = self.classDefs = {}
+	for line in lines.readUntil('class definition end'):
+		classDefs[line[0]] = int(line[1])
+	return self
+
+def parseSingleSubst(self, lines, font):
 	self.mapping = {}
 	for line in lines:
 		assert len(line) == 2, line
 		self.mapping[line[0]] = line[1]
 
-def parseMultiple(self, lines):
+def parseMultiple(self, lines, font):
 	self.mapping = {}
 	for line in lines:
 		self.mapping[line[0]] = line[1:]
 
-def parseAlternate(self, lines):
+def parseAlternate(self, lines, font):
 	self.alternates = {}
 	for line in lines:
 		self.alternates[line[0]] = line[1:]
 
-def parseLigature(self, lines):
+def parseLigature(self, lines, font):
 	self.ligatures = {}
 	for line in lines:
 		assert len(line) >= 2, line
-		self.ligatures[tuple(line[1:])] = line[0]
-		# The following generates table using old, tedious, API
-		#ligGlyph, firstGlyph = line[:2]
-		#otherComponents = line[2:]
-		#ligature = ot.Ligature()
-		#ligature.Component = otherComponents
-		#ligature.CompCount = len(ligature.Component) + 1
-		#ligature.LigGlyph = ligGlyph
-		#self.ligatures.setdefault(firstGlyph, []).append(ligature)
+		# The following single line can replace the rest of this function with fontTools >= 3.1
+		#self.ligatures[tuple(line[1:])] = line[0]
+		ligGlyph, firstGlyph = line[:2]
+		otherComponents = line[2:]
+		ligature = ot.Ligature()
+		ligature.Component = otherComponents
+		ligature.CompCount = len(ligature.Component) + 1
+		ligature.LigGlyph = ligGlyph
+		self.ligatures.setdefault(firstGlyph, []).append(ligature)
 
-def parseSinglePos(self, lines):
+def parseSinglePos(self, lines, font):
 	raise NotImplementedError
 
-def parsePair(self, lines):
+def parsePair(self, lines, font):
 	raise NotImplementedError
 
-def parseCursive(self, lines):
+def parseCursive(self, lines, font):
 	raise NotImplementedError
 
-def parseMarkToSomething(self, lines):
+def parseMarkToSomething(self, lines, font):
 	raise NotImplementedError
 
-def parseMarkToLigature(self, lines):
+def parseMarkToLigature(self, lines, font):
 	raise NotImplementedError
 
-def parseContext(self, lines):
+def stripSplitComma(line):
+	return [s.strip() for s in line.split(',')]
+
+def intSplitComma(line):
+	return [int(i) for i in line.split(',')]
+
+# Copied from fontTools.subset
+class ContextHelper(object):
+	def __init__(self, klassName, Format):
+		if klassName.endswith('Subst'):
+			Typ = 'Sub'
+			Type = 'Subst'
+		else:
+			Typ = 'Pos'
+			Type = 'Pos'
+		if klassName.startswith('Chain'):
+			Chain = 'Chain'
+		else:
+			Chain = ''
+		ChainTyp = Chain+Typ
+
+		self.Typ = Typ
+		self.Type = Type
+		self.Chain = Chain
+		self.ChainTyp = ChainTyp
+
+		self.LookupRecord = Type+'LookupRecord'
+
+		if Format == 1:
+			Coverage = lambda r: r.Coverage
+			ChainCoverage = lambda r: r.Coverage
+			ContextData = lambda r:(None,)
+			ChainContextData = lambda r:(None, None, None)
+			RuleData = lambda r:(r.Input,)
+			ChainRuleData = lambda r:(r.Backtrack, r.Input, r.LookAhead)
+			SetRuleData = None
+			ChainSetRuleData = None
+		elif Format == 2:
+			Coverage = lambda r: r.Coverage
+			ChainCoverage = lambda r: r.Coverage
+			ContextData = lambda r:(r.ClassDef,)
+			ChainContextData = lambda r:(r.BacktrackClassDef,
+						     r.InputClassDef,
+						     r.LookAheadClassDef)
+			RuleData = lambda r:(r.Class,)
+			ChainRuleData = lambda r:(r.Backtrack, r.Input, r.LookAhead)
+			def SetRuleData(r, d):(r.Class,) = d
+			def ChainSetRuleData(r, d):(r.Backtrack, r.Input, r.LookAhead) = d
+		elif Format == 3:
+			Coverage = lambda r: r.Coverage[0]
+			ChainCoverage = lambda r: r.InputCoverage[0]
+			ContextData = None
+			ChainContextData = None
+			RuleData = lambda r: r.Coverage
+			ChainRuleData = lambda r:(r.BacktrackCoverage +
+						  r.InputCoverage +
+						  r.LookAheadCoverage)
+			SetRuleData = None
+			ChainSetRuleData = None
+		else:
+			assert 0, "unknown format: %s" % Format
+
+		if Chain:
+			self.Coverage = ChainCoverage
+			self.ContextData = ChainContextData
+			self.RuleData = ChainRuleData
+			self.SetRuleData = ChainSetRuleData
+		else:
+			self.Coverage = Coverage
+			self.ContextData = ContextData
+			self.RuleData = RuleData
+			self.SetRuleData = SetRuleData
+
+		if Format == 1:
+			self.Rule = ChainTyp+'Rule'
+			self.RuleCount = ChainTyp+'RuleCount'
+			self.RuleSet = ChainTyp+'RuleSet'
+			self.RuleSetCount = ChainTyp+'RuleSetCount'
+			self.Intersect = lambda glyphs, c, r: [r] if r in glyphs else []
+		elif Format == 2:
+			self.Rule = ChainTyp+'ClassRule'
+			self.RuleCount = ChainTyp+'ClassRuleCount'
+			self.RuleSet = ChainTyp+'ClassSet'
+			self.RuleSetCount = ChainTyp+'ClassSetCount'
+			self.Intersect = lambda glyphs, c, r: (c.intersect_class(glyphs, r) if c
+							       else (set(glyphs) if r == 0 else set()))
+
+			self.ClassDef = 'InputClassDef' if Chain else 'ClassDef'
+			self.ClassDefIndex = 1 if Chain else 0
+			self.Input = 'Input' if Chain else 'Class'
+
+def parseLookupRecords(items, klassName):
+	klass = getattr(ot, klassName)
+	lst = []
+	for item in items:
+		rec = klass()
+		item = intSplitComma(item)
+		assert len(item) == 2, item
+		assert item[0] > 0, item[0]
+		rec.SequenceIndex = item[0] - 1
+		rec.LookupListIndex = item[1]
+		lst.append(rec)
+	return lst
+
+def makeCoverage(glyphs, fonts):
+	coverage = ot.Coverage()
+	coverage.glyphs = sorted(set(glyphs), key=font.getGlyphID)
+	return coverage
+
+def bucketizeRules(self, c, rules, bucketKeys):
+	buckets = {}
+	for seq,recs in rules:
+		buckets.setdefault(seq[0], []).append((seq[1:], recs))
+
+	rulesets = []
+	for firstGlyph in bucketKeys:
+		if firstGlyph not in buckets:
+			rulesets.append(None)
+			continue
+		thisRules = []
+		for seq,recs in buckets[firstGlyph]:
+			rule = getattr(ot, c.Rule)()
+			rule.GlyphCount = 1 + len(seq)
+			rule.Input = seq
+			setattr(rule, c.Type+'Count', len(recs))
+			setattr(rule, c.LookupRecord, recs)
+			thisRules.append(rule)
+
+		ruleset = getattr(ot, c.RuleSet)()
+		setattr(ruleset, c.Rule, thisRules)
+		setattr(ruleset, c.RuleCount, len(thisRules))
+		rulesets.append(ruleset)
+
+	setattr(self, c.RuleSet, rulesets)
+	setattr(self, c.RuleSetCount, len(rulesets))
+
+def parseContext(self, lines, font, Type):
 	typ = lines.peek()[0]
 	if typ == 'glyph':
 		self.Format = 1
+		c = ContextHelper('Context'+Type, self.Format)
+		rules = []
+		for line in lines:
+			recs = parseLookupRecords(line[2:], c.LookupRecord)
+			seq = stripSplitComma(line[1])
+			rules.append((seq, recs))
+
+		self.Coverage = makeCoverage((seq[0] for seq,recs in rules), font)
+
+		bucketizeRules(self, c, rules, self.Coverage.glyphs)
 		return
+
 	elif typ == 'class definition begin':
 		self.Format = 2
+		c = ContextHelper('Context'+Type, self.Format)
+		self.ClassDef = parseClassDef(lines)
+		rules = []
+		for line in lines:
+			recs = parseLookupRecords(line[2:], c.LookupRecord)
+			seq = intSplitComma(line[1])
+			rules.append((seq, recs))
+
+		self.Coverage = makeCoverage(self.ClassDef.classDefs.keys(), font)
+
+		maxClass = max(seq[0] for seq,recs in rules)
+
+		bucketizeRules(self, c, rules, range(maxClass + 1))
+
 		return
 	print(typ)
 	raise NotImplementedError
 
-def parseChained(self, lines):
+def parseContextSubst(self, lines, font):
+	return parseContext(self, lines, font, "Subst")
+def parseContextPos(self, lines, font):
+	return parseContext(self, lines, font, "Pos")
+
+def parseChained(self, lines, font, Type):
 	typ = lines.peek()[0]
 	if typ == 'glyph':
 		self.Format = 1
+		for line in lines:
+			print (line)
 		return
 	elif typ == 'backtrackclass definition begin':
 		self.Format = 2
@@ -162,7 +339,12 @@ def parseChained(self, lines):
 	print(typ)
 	raise NotImplementedError
 
-def parseLookupList(lines, tableTag):
+def parseChainedSubst(self, lines, font):
+	return parseChained(self, lines, font, "Subst")
+def parseChainedPos(self, lines):
+	return parseChained(self, lines, font, "Pos")
+
+def parseLookupList(lines, tableTag, font):
 	self = ot.LookupList()
 	self.Lookup = []
 	while True:
@@ -181,8 +363,8 @@ def parseLookupList(lines, tableTag):
 				'multiple':	(2,	parseMultiple),
 				'alternate':	(3,	parseAlternate),
 				'ligature':	(4,	parseLigature),
-				'context':	(5,	parseContext),
-				'chained':	(6,	parseChained),
+				'context':	(5,	parseContextSubst),
+				'chained':	(6,	parseChainedSubst),
 			},
 			'GPOS': {
 				'single':	(1,	parseSinglePos),
@@ -192,14 +374,14 @@ def parseLookupList(lines, tableTag):
 				'mark to base':	(4,	parseMarkToSomething),
 				'mark to ligature':(5,	parseMarkToLigature),
 				'mark to mark':	(6,	parseMarkToSomething),
-				'context':	(7,	parseContext),
-				'chained':	(8,	parseChained),
+				'context':	(7,	parseContextPos),
+				'chained':	(8,	parseChainedPos),
 			},
 		}[tableTag][typ]
 		subtable = ot.lookupTypes[tableTag][lookup.LookupType]()
 		subtable.LookupType = lookup.LookupType
 
-		parseLookupSubTable(subtable, lookupLines)
+		parseLookupSubTable(subtable, lookupLines, font)
 
 		lookup.SubTable = [subtable]
 		lookup.SubTableCount = len(lookup.SubTable)
@@ -207,30 +389,41 @@ def parseLookupList(lines, tableTag):
 	self.LookupCount = len(self.Lookup)
 	return self
 
-def parseGSUB(lines):
+def parseGSUB(lines, font):
 	debug("Parsing GSUB")
 	self = ot.GSUB()
 	self.Version = 1.0
 	self.ScriptList = parseScriptList(lines)
 	self.FeatureList = parseFeatureList(lines)
-	self.LookupList = parseLookupList(lines, 'GSUB')
+	self.LookupList = parseLookupList(lines, 'GSUB', font)
 	return self
 
-def parseGPOS(lines):
+def parseGPOS(lines, font):
 	debug("Parsing GPOS")
 	self = ot.GPOS()
 	self.Version = 1.0
 	# TODO parse EM?
 	self.ScriptList = parseScriptList(lines)
 	self.FeatureList = parseFeatureList(lines)
-	self.LookupList = parseLookupList(lines, 'GPOS')
+	self.LookupList = parseLookupList(lines, 'GPOS', font)
 	return self
 
-def parseGDEF(lines):
+def parseGDEF(lines, font):
 	debug("Parsing GDEF TODO")
 	return None
 
-class BufferedIter(object):
+
+class ReadUntilMixin(object):
+
+	def _readUntil(self, what):
+		for line in self:
+			if line[0] == what:
+				raise StopIteration
+			yield line
+	def readUntil(self, what):
+		return BufferedIter(self._readUntil(what))
+
+class BufferedIter(ReadUntilMixin):
 
 	def __init__(self, it):
 		self.iter = it
@@ -258,7 +451,7 @@ class BufferedIter(object):
 		"""Push back item into the iterator."""
 		self.buffer.insert(0, item)
 
-class Tokenizer(object):
+class Tokenizer(ReadUntilMixin):
 
 	def __init__(self, f):
 		# TODO BytesIO / StringIO as needed?  also, figure out whether we work on bytes or unicode
@@ -291,15 +484,7 @@ class Tokenizer(object):
 			if line[0] == what:
 				return line
 
-	def _readUntil(self, what):
-		for line in self:
-			if line[0] == what:
-				raise StopIteration
-			yield line
-	def readUntil(self, what):
-		return BufferedIter(self._readUntil(what))
-
-def compile(f):
+def build(f, font):
 	lines = Tokenizer(f)
 	line = next(lines)
 	assert line[0][:9] == 'FontDame ', line
@@ -309,7 +494,7 @@ def compile(f):
 	table = {'GSUB': parseGSUB,
 		 'GPOS': parseGPOS,
 		 'GDEF': parseGDEF,
-		}[tableTag](lines)
+		}[tableTag](lines, font)
 	container.table = table
 	return container
 
@@ -340,16 +525,18 @@ if __name__ == '__main__':
 	font = MockFont()
 	for f in sys.argv[1:]:
 		debug("Processing", f)
-		table = compile(open(f, 'rt'))
+		table = build(open(f, 'rt'), font)
 		blob = table.compile(font)
 		decompiled = table.__class__()
 		decompiled.decompile(blob, font)
 
+		#continue
 		from fontTools.misc import xmlWriter
 		tag = table.tableTag
 		writer = xmlWriter.XMLWriter(sys.stdout)
 		writer.begintag(tag)
 		writer.newline()
+		#table.toXML(writer, font)
 		decompiled.toXML(writer, font)
 		writer.endtag(tag)
 		writer.newline()
