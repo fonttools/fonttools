@@ -73,6 +73,7 @@ setup(
 			"fontTools.misc",
 			"fontTools.pens",
 			"fontTools.ttLib",
+			"fontTools.t1Lib",
 			"fontTools.subset",
 			"fontTools.ttLib.tables",
 		],
