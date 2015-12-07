@@ -156,15 +156,11 @@ class BuilderTest(unittest.TestCase):
             "Already defined different position for glyph \"A\"",
             self.build, "feature test { pos A 123; pos A 456; } test;")
 
-    def test_GPOS_type1(self):
-        font = makeTTFont()
-        addOpenTypeFeatures(self.getpath("GPOS_1.fea"), font)
-        self.expect_ttx(font, self.getpath("GPOS_1.ttx"))
-
-    def test_GPOS_type2(self):
-        font = makeTTFont()
-        addOpenTypeFeatures(self.getpath("GPOS_2.fea"), font)
-        self.expect_ttx(font, self.getpath("GPOS_2.ttx"))
+    def test_GPOS(self):
+        for name in "1 2 3".split():
+            font = makeTTFont()
+            addOpenTypeFeatures(self.getpath("GPOS_%s.fea" % name), font)
+            self.expect_ttx(font, self.getpath("GPOS_%s.ttx" % name))
 
     def test_spec4h1(self):
         # OpenType Feature File specification, section 4.h, example 1.
