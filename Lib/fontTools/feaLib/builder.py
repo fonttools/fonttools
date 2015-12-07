@@ -364,7 +364,11 @@ def makeOpenTypeValueRecord(v):
     for mask, name, _, _ in otBase.valueRecordFormat:
         if getattr(vr, name, 0) != 0:
             vrMask |= mask
-    return vr, vrMask
+
+    if vrMask == 0:
+        return None, 0
+    else:
+        return vr, vrMask
 
 
 class LookupBuilder(object):
