@@ -50,17 +50,4 @@
     </LookupList>
   </GSUB>
 
-  <GPOS>
-    <Version value="1.0"/>
-    <ScriptList>
-      <!-- ScriptCount=0 -->
-    </ScriptList>
-    <FeatureList>
-      <!-- FeatureCount=0 -->
-    </FeatureList>
-    <LookupList>
-      <!-- LookupCount=0 -->
-    </LookupList>
-  </GPOS>
-
 </ttFont>
