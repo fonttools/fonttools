@@ -20,6 +20,76 @@ class ParserTest(unittest.TestCase):
         if not hasattr(self, "assertRaisesRegex"):
             self.assertRaisesRegex = self.assertRaisesRegexp
 
+    def test_anchor_format_a(self):
+        doc = self.parse(
+            "feature test {"
+            "    pos cursive A <anchor 120 -20> <anchor NULL>;"
+            "} test;")
+        anchor = doc.statements[0].statements[0].entryAnchor
+        self.assertEqual(type(anchor), ast.Anchor)
+        self.assertEqual(anchor.x, 120)
+        self.assertEqual(anchor.y, -20)
+        self.assertIsNone(anchor.contourpoint)
+        self.assertIsNone(anchor.xDeviceTable)
+        self.assertIsNone(anchor.yDeviceTable)
+
+    def test_anchor_format_b(self):
+        doc = self.parse(
+            "feature test {"
+            "    pos cursive A <anchor 120 -20 contourpoint 5> <anchor NULL>;"
+            "} test;")
+        anchor = doc.statements[0].statements[0].entryAnchor
+        self.assertEqual(type(anchor), ast.Anchor)
+        self.assertEqual(anchor.x, 120)
+        self.assertEqual(anchor.y, -20)
+        self.assertEqual(anchor.contourpoint, 5)
+        self.assertIsNone(anchor.xDeviceTable)
+        self.assertIsNone(anchor.yDeviceTable)
+
+    def test_anchor_format_c(self):
+        doc = self.parse(
+            "feature test {"
+            "    pos cursive A "
+            "        <anchor 120 -20 <device 11 111, 12 112> <device NULL>>"
+            "        <anchor NULL>;"
+            "} test;")
+        anchor = doc.statements[0].statements[0].entryAnchor
+        self.assertEqual(type(anchor), ast.Anchor)
+        self.assertEqual(anchor.x, 120)
+        self.assertEqual(anchor.y, -20)
+        self.assertIsNone(anchor.contourpoint)
+        self.assertEqual(anchor.xDeviceTable, ((11, 111), (12, 112)))
+        self.assertIsNone(anchor.yDeviceTable)
+
+    def test_anchor_format_d(self):
+        doc = self.parse(
+            "feature test {"
+            "    pos cursive A <anchor 120 -20> <anchor NULL>;"
+            "} test;")
+        anchor = doc.statements[0].statements[0].exitAnchor
+        self.assertIsNone(anchor)
+
+    def test_anchor_format_e(self):
+        doc = self.parse(
+            "feature test {"
+            "    anchorDef 120 -20 contourpoint 7 Foo;"
+            "    pos cursive A <anchor Foo> <anchor NULL>;"
+            "} test;")
+        anchor = doc.statements[0].statements[1].entryAnchor
+        self.assertEqual(type(anchor), ast.Anchor)
+        self.assertEqual(anchor.x, 120)
+        self.assertEqual(anchor.y, -20)
+        self.assertEqual(anchor.contourpoint, 7)
+        self.assertIsNone(anchor.xDeviceTable)
+        self.assertIsNone(anchor.yDeviceTable)
+
+    def test_anchor_format_e_undefined(self):
+        self.assertRaisesRegex(
+            FeatureLibError, 'Unknown anchor "UnknownName"', self.parse,
+            "feature test {"
+            "    position cursive A <anchor UnknownName> <anchor NULL>;"
+            "} test;")
+
     def test_anchordef(self):
         [foo] = self.parse("anchorDef 123 456 foo;").statements
         self.assertEqual(type(foo), ast.AnchorDefinition)
@@ -352,6 +422,16 @@ class ParserTest(unittest.TestCase):
                          "<1 2 3 4>")
         self.assertEqual(pos.glyphclass2, {"a", "b", "c"})
         self.assertIsNone(pos.valuerecord2)
+
+    def test_gpos_type_3(self):
+        doc = self.parse("feature kern {"
+                         "    position cursive A <anchor 12 -2> <anchor 2 3>;"
+                         "} kern;")
+        pos = doc.statements[0].statements[0]
+        self.assertEqual(type(pos), ast.CursiveAttachmentPositioning)
+        self.assertEqual(pos.glyphclass, {"A"})
+        self.assertEqual((pos.entryAnchor.x, pos.entryAnchor.y), (12, -2))
+        self.assertEqual((pos.exitAnchor.x, pos.exitAnchor.y), (2, 3))
 
     def test_rsub_format_a(self):
         doc = self.parse("feature test {rsub a [b B] c' d [e E] by C;} test;")

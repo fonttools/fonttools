@@ -18,6 +18,14 @@ class Statement(object):
         pass
 
 
+class Expression(object):
+    def __init__(self, location):
+        self.location = location
+
+    def build(self, builder):
+        pass
+
+
 class Block(Statement):
     def __init__(self, location):
         Statement.__init__(self, location)
@@ -74,10 +82,25 @@ class AlternateSubstitution(Statement):
                                            self.from_class)
 
 
+class Anchor(Expression):
+    def __init__(self, location, x, y, contourpoint,
+                 xDeviceTable, yDeviceTable):
+        Expression.__init__(self, location)
+        self.x, self.y, self.contourpoint = x, y, contourpoint
+        self.xDeviceTable, self.yDeviceTable = xDeviceTable, yDeviceTable
+
+
 class AnchorDefinition(Statement):
     def __init__(self, location, name, x, y, contourpoint):
         Statement.__init__(self, location)
         self.name, self.x, self.y, self.contourpoint = name, x, y, contourpoint
+
+
+class CursiveAttachmentPositioning(Statement):
+    def __init__(self, location, glyphclass, entryAnchor, exitAnchor):
+        Statement.__init__(self, location)
+        self.glyphclass = glyphclass
+        self.entryAnchor, self.exitAnchor = entryAnchor, exitAnchor
 
 
 class LanguageStatement(Statement):
