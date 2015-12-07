@@ -305,8 +305,13 @@ class Builder(object):
             lookup.mapping[from_glyph] = to_glyph
 
     def add_pair_pos(self, location, enumerated,
-                     glyph1, value1, glyph2, value2):
-        pass  # TODO: Implement.
+                     glyphclass1, value1, glyphclass2, value2):
+        lookup = self.get_lookup_(location, PairPosBuilder)
+        if enumerated:
+            for glyph in glyphclass1:
+                lookup.add_pair(location, {glyph}, value1, glyphclass2, value2)
+        else:
+            lookup.add_pair(location, glyphclass1, value1, glyphclass2, value2)
 
     def add_single_pos(self, location, glyph, valuerecord):
         lookup = self.get_lookup_(location, SinglePosBuilder)
@@ -341,6 +346,8 @@ def _makeOpenTypeDeviceTable(deviceTable, device):
 
 def makeOpenTypeValueRecord(v):
     """ast.ValueRecord --> (otBase.ValueRecord, int ValueFormat)"""
+    if v is None:
+        return None, 0
     vr = otBase.ValueRecord()
     if v.xPlacement:
         vr.XPlacement = v.xPlacement
@@ -527,6 +534,71 @@ class MultipleSubstBuilder(LookupBuilder):
         st = otTables.MultipleSubst()
         st.mapping = self.mapping
         lookup.SubTable.append(st)
+        lookup.LookupFlag = self.lookup_flag
+        lookup.LookupType = self.lookup_type
+        lookup.SubTableCount = len(lookup.SubTable)
+        return lookup
+
+
+class PairPosBuilder(LookupBuilder):
+    def __init__(self, font, location, lookup_flag):
+        LookupBuilder.__init__(self, font, location, 'GPOS', 2, lookup_flag)
+        self.pairs = {}  # (gc1, gc2) -> (location, value1, value2)
+
+    def add_pair(self, location, glyphclass1, value1, glyphclass2, value2):
+        gc1 = tuple(sorted(glyphclass1, key=self.font.getGlyphID))
+        gc2 = tuple(sorted(glyphclass2, key=self.font.getGlyphID))
+        oldValue = self.pairs.get((gc1, gc2), None)
+        if oldValue is not None:
+            otherLoc, _, _ = oldValue
+            raise FeatureLibError(
+                'Already defined position for pair [%s] [%s] at %s:%d:%d'
+                % (' '.join(gc1), ' '.join(gc2),
+                   otherLoc[0], otherLoc[1], otherLoc[2]),
+                location)
+        self.pairs[(gc1, gc2)] = (location, value1, value2)
+
+    def equals(self, other):
+        return (LookupBuilder.equals(self, other) and
+                self.pairs == other.pairs)
+
+    def build(self):
+        subtables = []
+
+        # (valueFormat1, valueFormat2) --> [(glyph1, glyph2, value1, value2)*]
+        format1 = {}
+        for (gc1, gc2), (location, value1, value2) in self.pairs.items():
+            if len(gc1) == 1 and len(gc2) == 1:
+                val1, valFormat1 = makeOpenTypeValueRecord(value1)
+                val2, valFormat2 = makeOpenTypeValueRecord(value2)
+                format1.setdefault(((valFormat1, valFormat2)), []).append(
+                    (gc1[0], gc2[0], val1, val2))
+        for (vf1, vf2), pairs in sorted(format1.items()):
+            p = {}
+            for glyph1, glyph2, val1, val2 in pairs:
+                p.setdefault(glyph1, []).append((glyph2, val1, val2))
+            st = otTables.PairPos()
+            subtables.append(st)
+            st.Format = 1
+            st.ValueFormat1, st.ValueFormat2 = vf1, vf2
+            st.Coverage = otTables.Coverage()
+            st.Coverage.glyphs = sorted(p.keys(), key=self.font.getGlyphID)
+            st.PairSet = []
+            for glyph in st.Coverage.glyphs:
+                ps = otTables.PairSet()
+                ps.PairValueRecord = []
+                st.PairSet.append(ps)
+                for glyph2, val1, val2 in sorted(
+                        p[glyph], key=lambda x: self.font.getGlyphID(x[0])):
+                    pvr = otTables.PairValueRecord()
+                    pvr.SecondGlyph = glyph2
+                    pvr.Value1, pvr.Value2 = val1, val2
+                    ps.PairValueRecord.append(pvr)
+                ps.PairValueCount = len(ps.PairValueRecord)
+            st.PairSetCount = len(st.PairSet)
+
+        lookup = otTables.Lookup()
+        lookup.SubTable = subtables
         lookup.LookupFlag = self.lookup_flag
         lookup.LookupType = self.lookup_type
         lookup.SubTableCount = len(lookup.SubTable)
