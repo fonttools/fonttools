@@ -60,6 +60,11 @@ class Parser(object):
         self.anchors_.define(name, anchordef)
         return anchordef
 
+    def parse_enumerate_(self, vertical):
+        assert self.cur_token_ in {"enumerate", "enum"}
+        self.advance_lexer_()
+        return self.parse_position_(enumerated=True, vertical=vertical)
+
     def parse_glyphclass_definition_(self):
         location, name = self.cur_token_location_, self.cur_token_
         self.expect_symbol_("=")
@@ -200,13 +205,33 @@ class Parser(object):
         self.lookups_.define(name, block)
         return block
 
-    def parse_position_(self, vertical):
+    def is_next_glyphclass_(self):
+        return (self.next_token_ == "[" or
+                self.next_token_type_ in (Lexer.GLYPHCLASS, Lexer.NAME))
+
+    def parse_position_(self, enumerated, vertical):
         assert self.cur_token_ in {"position", "pos"}
         location = self.cur_token_location_
-        glyphclass = self.parse_glyphclass_(accept_glyphname=True)
-        valuerec = self.parse_valuerecord_(vertical)
+        gc2, value2 = None, None
+        gc1 = self.parse_glyphclass_(accept_glyphname=True)
+        if self.is_next_glyphclass_():
+            # Pair positioning, format B: 'pos' gc1 gc2 value1
+            gc2 = self.parse_glyphclass_(accept_glyphname=True)
+        value1 = self.parse_valuerecord_(vertical)
+        if self.next_token_ != ";" and gc2 is None:
+            # Pair positioning, format A: 'pos' gc1 value1 gc2 value2
+            gc2 = self.parse_glyphclass_(accept_glyphname=True)
+            value2 = self.parse_valuerecord_(vertical)
         self.expect_symbol_(";")
-        return ast.SingleAdjustmentPositioning(location, glyphclass, valuerec)
+        if gc2 is None:
+            if enumerated:
+                raise FeatureLibError(
+                    '"enumerate" is only allowed with pair positionings',
+                    self.cur_token_location_)
+            return ast.SingleAdjustmentPositioning(location, gc1, value1)
+        else:
+            return ast.PairAdjustmentPositioning(location, enumerated,
+                                                 gc1, value1, gc2, value2)
 
     def parse_script_(self):
         assert self.is_cur_keyword_("script")
@@ -357,6 +382,9 @@ class Parser(object):
         location = self.cur_token_location_
         if self.next_token_type_ is Lexer.NAME:
             name = self.expect_name_()
+            if name == "NULL":
+                self.expect_symbol_(">")
+                return None
             vrd = self.valuerecords_.resolve(name)
             if vrd is None:
                 raise FeatureLibError("Unknown valueRecordDef \"%s\"" % name,
@@ -442,6 +470,8 @@ class Parser(object):
                 statements.append(self.parse_glyphclass_definition_())
             elif self.is_cur_keyword_("anchorDef"):
                 statements.append(self.parse_anchordef_())
+            elif self.is_cur_keyword_({"enum", "enumerate"}):
+                statements.append(self.parse_enumerate_(vertical=vertical))
             elif self.is_cur_keyword_("ignore"):
                 statements.append(self.parse_ignore_())
             elif self.is_cur_keyword_("language"):
@@ -449,7 +479,8 @@ class Parser(object):
             elif self.is_cur_keyword_("lookup"):
                 statements.append(self.parse_lookup_(vertical))
             elif self.is_cur_keyword_({"pos", "position"}):
-                statements.append(self.parse_position_(vertical))
+                statements.append(
+                    self.parse_position_(enumerated=False, vertical=vertical))
             elif self.is_cur_keyword_("script"):
                 statements.append(self.parse_script_())
             elif (self.is_cur_keyword_({"sub", "substitute",

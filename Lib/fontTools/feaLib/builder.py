@@ -304,6 +304,10 @@ class Builder(object):
                     location)
             lookup.mapping[from_glyph] = to_glyph
 
+    def add_pair_pos(self, location, enumerated,
+                     glyph1, value1, glyph2, value2):
+        pass  # TODO: Implement.
+
     def add_single_pos(self, location, glyph, valuerecord):
         lookup = self.get_lookup_(location, SinglePosBuilder)
         curValue = lookup.mapping.get(glyph)
