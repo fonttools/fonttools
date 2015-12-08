@@ -1,3 +1,4 @@
+sudo: false
 language: python
 python:
   - "2.7"
@@ -6,16 +7,6 @@ python:
   - "3.5"
   - "pypy"
 #  - "pypy3" # Disable pypy3 until Travis updates it to >= 3.3
-before_install:
-# install GCC v4.8 with better C++11 support, required to build Brotli extension
-# See: https://github.com/travis-ci/travis-ci/issues/1379  
-  - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-  - sudo apt-get -qq update
-  - sudo apt-get install -qq gcc-4.8
-  - sudo apt-get install -qq g++-4.8
-  - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 90
-  - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90
-  - g++ --version
 install:
   - pip install -vr requirements.txt
   - make install
