@@ -345,48 +345,52 @@ def parseChainedSubst(self, lines, font):
 def parseChainedPos(self, lines):
 	return parseChained(self, lines, font, "Pos")
 
+def parseLookup(lines, tableTag, font):
+	line = lines.skipUntil('lookup')
+	if line is None: return None, None
+	lookupLines = lines.readUntil('lookup end')
+	_, name, typ = line
+
+	lookup = ot.Lookup()
+	lookup.LookupFlag = parseLookupFlags(lookupLines)
+	lookup.LookupType, parseLookupSubTable = {
+		'GSUB': {
+			'single':	(1,	parseSingleSubst),
+			'multiple':	(2,	parseMultiple),
+			'alternate':	(3,	parseAlternate),
+			'ligature':	(4,	parseLigature),
+			'context':	(5,	parseContextSubst),
+			'chained':	(6,	parseChainedSubst),
+		},
+		'GPOS': {
+			'single':	(1,	parseSinglePos),
+			'pair':		(2,	parsePair),
+			'kernset':	(2,	parsePair),
+			'cursive':	(3,	parseCursive),
+			'mark to base':	(4,	parseMarkToSomething),
+			'mark to ligature':(5,	parseMarkToLigature),
+			'mark to mark':	(6,	parseMarkToSomething),
+			'context':	(7,	parseContextPos),
+			'chained':	(8,	parseChainedPos),
+		},
+	}[tableTag][typ]
+	subtable = ot.lookupTypes[tableTag][lookup.LookupType]()
+	subtable.LookupType = lookup.LookupType
+
+	parseLookupSubTable(subtable, lookupLines, font)
+
+	lookup.SubTable = [subtable]
+	lookup.SubTableCount = len(lookup.SubTable)
+	return lookup, name
+
 def parseLookupList(lines, tableTag, font):
 	self = ot.LookupList()
 	self.Lookup = []
 	while True:
-		line = lines.skipUntil('lookup')
-		if line is None: break
-		lookupLines = lines.readUntil('lookup end')
-		_, idx, typ = line
-		assert int(idx) == len(self.Lookup), "%d %d" % (idx, len(self.Lookup))
-
-		lookup = ot.Lookup()
+		lookup, name = parseLookup(lines, tableTag, font)
+		if lookup is None: break
+		assert int(name) == len(self.Lookup), "%d %d" % (name, len(self.Lookup))
 		self.Lookup.append(lookup)
-		lookup.LookupFlag = parseLookupFlags(lookupLines)
-		lookup.LookupType, parseLookupSubTable = {
-			'GSUB': {
-				'single':	(1,	parseSingleSubst),
-				'multiple':	(2,	parseMultiple),
-				'alternate':	(3,	parseAlternate),
-				'ligature':	(4,	parseLigature),
-				'context':	(5,	parseContextSubst),
-				'chained':	(6,	parseChainedSubst),
-			},
-			'GPOS': {
-				'single':	(1,	parseSinglePos),
-				'pair':		(2,	parsePair),
-				'kernset':	(2,	parsePair),
-				'cursive':	(3,	parseCursive),
-				'mark to base':	(4,	parseMarkToSomething),
-				'mark to ligature':(5,	parseMarkToLigature),
-				'mark to mark':	(6,	parseMarkToSomething),
-				'context':	(7,	parseContextPos),
-				'chained':	(8,	parseChainedPos),
-			},
-		}[tableTag][typ]
-		subtable = ot.lookupTypes[tableTag][lookup.LookupType]()
-		subtable.LookupType = lookup.LookupType
-
-		parseLookupSubTable(subtable, lookupLines, font)
-
-		lookup.SubTable = [subtable]
-		lookup.SubTableCount = len(lookup.SubTable)
-
 	self.LookupCount = len(self.Lookup)
 	return self
 
@@ -531,7 +535,7 @@ if __name__ == '__main__':
 		decompiled = table.__class__()
 		decompiled.decompile(blob, font)
 
-		#continue
+		continue
 		from fontTools.misc import xmlWriter
 		tag = table.tableTag
 		writer = xmlWriter.XMLWriter(sys.stdout)
