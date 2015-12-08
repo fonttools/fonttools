@@ -732,14 +732,20 @@ def __subset_classify_context(self):
                 Type = 'Pos'
             if klass.__name__.startswith('Chain'):
                 Chain = 'Chain'
+                InputIdx = 1
+                DataLen = 3
             else:
                 Chain = ''
+                InputIdx = 0
+                DataLen = 1
             ChainTyp = Chain+Typ
 
             self.Typ = Typ
             self.Type = Type
             self.Chain = Chain
             self.ChainTyp = ChainTyp
+            self.InputIdx = InputIdx
+            self.DataLen = DataLen
 
             self.LookupRecord = Type+'LookupRecord'
 
@@ -748,10 +754,16 @@ def __subset_classify_context(self):
                 ChainCoverage = lambda r: r.Coverage
                 ContextData = lambda r:(None,)
                 ChainContextData = lambda r:(None, None, None)
+                SetContextData = None
+                SetChainContextData = None
                 RuleData = lambda r:(r.Input,)
                 ChainRuleData = lambda r:(r.Backtrack, r.Input, r.LookAhead)
-                SetRuleData = None
-                ChainSetRuleData = None
+                def SetRuleData(r, d):
+                    (r.Input,) = d
+                    (r.GlyphCount,) = (len(x)+1 for x in d)
+                def ChainSetRuleData(r, d):
+                    (r.Backtrack, r.Input, r.LookAhead) = d
+                    (r.BacktrackGlyphCount,r.InputGlyphCount,r.LookAheadGlyphCount,) = (len(d[0]),len(d[1])+1,len(d[2]))
             elif Format == 2:
                 Coverage = lambda r: r.Coverage
                 ChainCoverage = lambda r: r.Coverage
@@ -759,32 +771,50 @@ def __subset_classify_context(self):
                 ChainContextData = lambda r:(r.BacktrackClassDef,
                                              r.InputClassDef,
                                              r.LookAheadClassDef)
+                def SetContextData(r, d):
+                    (r.ClassDef,) = d
+                def SetChainContextData(r, d):
+                    (r.BacktrackClassDef,
+                     r.InputClassDef,
+                     r.LookAheadClassDef) = d
                 RuleData = lambda r:(r.Class,)
                 ChainRuleData = lambda r:(r.Backtrack, r.Input, r.LookAhead)
-                def SetRuleData(r, d):(r.Class,) = d
-                def ChainSetRuleData(r, d):(r.Backtrack, r.Input, r.LookAhead) = d
+                def SetRuleData(r, d):
+                    (r.Class,) = d
+                    (r.GlyphCount,) = (len(x)+1 for x in d)
+                def ChainSetRuleData(r, d):
+                    (r.Backtrack, r.Input, r.LookAhead) = d
+                    (r.BacktrackGlyphCount,r.InputGlyphCount,r.LookAheadGlyphCount,) = (len(d[0]),len(d[1])+1,len(d[2]))
             elif Format == 3:
                 Coverage = lambda r: r.Coverage[0]
                 ChainCoverage = lambda r: r.InputCoverage[0]
                 ContextData = None
                 ChainContextData = None
+                SetContextData = None
+                SetChainContextData = None
                 RuleData = lambda r: r.Coverage
                 ChainRuleData = lambda r:(r.BacktrackCoverage +
                                           r.InputCoverage +
                                           r.LookAheadCoverage)
-                SetRuleData = None
-                ChainSetRuleData = None
+                def SetRuleData(r, d):
+                    (r.Coverage,) = d
+                    (r.GlyphCount,) = (len(x) for x in d)
+                def ChainSetRuleData(r, d):
+                    (r.BacktrackCoverage, r.InputCoverage, r.LookAheadCoverage) = d
+                    (r.BacktrackGlyphCount,r.InputGlyphCount,r.LookAheadGlyphCount,) = (len(x) for x in d)
             else:
                 assert 0, "unknown format: %s" % Format
 
             if Chain:
                 self.Coverage = ChainCoverage
                 self.ContextData = ChainContextData
+                self.SetContextData = SetChainContextData
                 self.RuleData = ChainRuleData
                 self.SetRuleData = ChainSetRuleData
             else:
                 self.Coverage = Coverage
                 self.ContextData = ContextData
+                self.SetContextData = SetContextData
                 self.RuleData = RuleData
                 self.SetRuleData = SetRuleData
 
