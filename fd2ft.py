@@ -425,6 +425,29 @@ def parseChainedSubst(self, lines, font):
 def parseChainedPos(self, lines):
 	return parseContext(self, lines, font, "ChainContextPos")
 
+def parseReverseChainedSubst(self, lines, font):
+	self.Format = 1
+	coverages = ([], [])
+	while lines.peek()[0].endswith("coverage definition begin"):
+		typ = lines.peek()[0][:-len("coverage definition begin")].lower()
+		idx,klass = {
+			'backtrack':	(0,ot.BacktrackCoverage),
+			'lookahead':	(1,ot.LookAheadCoverage),
+		}[typ]
+		coverages[idx].append(parseCoverage(lines, font, klass=klass))
+	self.BacktrackCoverage = coverages[0]
+	self.BacktrackGlyphCount = len(self.BacktrackCoverage)
+	self.LookAheadCoverage = coverages[1]
+	self.LookAheadGlyphCount = len(self.LookAheadCoverage)
+	mapping = {}
+	for line in lines:
+		assert len(line) == 2, line
+		line = parseGlyphs(line)
+		mapping[line[0]] = line[1]
+	self.Coverage = makeCoverage(mapping.keys(), font)
+	self.Substitute = [mapping[k] for k in self.Coverage.glyphs]
+	self.GlyphCount = len(self.Substitute)
+
 def parseLookup(lines, tableTag, font):
 	line = lines.skipUntil('lookup')
 	if line is None: return None, None
@@ -444,6 +467,7 @@ def parseLookup(lines, tableTag, font):
 			'ligature':	(4,	parseLigature),
 			'context':	(5,	parseContextSubst),
 			'chained':	(6,	parseChainedSubst),
+			'reversechained':(8,	parseReverseChainedSubst),
 		},
 		'GPOS': {
 			'single':	(1,	parseSinglePos),
