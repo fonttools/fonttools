@@ -22,7 +22,7 @@ The fresh versions as well as older versions can be downloaded from <http://www.
 A package is available in pypi from <https://pypi.python.org/pypi/FontTools>
 
 ```
-easy\_install pip ;
+easy_install pip ;
 pip install fonttools ;
 ```
 
