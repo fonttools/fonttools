@@ -1,0 +1,18 @@
+languagesystem DFLT dflt;
+
+markClass [acute grave] <anchor 111 -11> @TOP_MARKS;
+markClass macron <anchor 112 -12> @TOP_MARKS;
+markClass [cedilla] <anchor 222 22> @BOTTOM_MARKS;
+markClass [ogonek] <anchor 333 33> @SIDE_MARKS;
+
+feature test {
+    position base a
+        <anchor 11 1> mark @TOP_MARKS
+        <anchor 12 -1> mark @BOTTOM_MARKS;
+
+    position base [b c]
+        <anchor 22 -2> mark @BOTTOM_MARKS;
+
+    position base d
+        <anchor 33 3> mark @SIDE_MARKS;
+} test;

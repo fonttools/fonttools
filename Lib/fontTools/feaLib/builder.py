@@ -74,9 +74,12 @@ class Builder(object):
         gdef = otTables.GDEF()
         gdef.Version = 1.0
         gdef.GlyphClassDef = otTables.GlyphClassDef()
-        gdef.GlyphClassDef.classDefs = {}
 
-        glyphMarkClass = {}  # glyph --> markClass
+        inferredGlyphClass = {}
+        for lookup in self.lookups_:
+            inferredGlyphClass.update(lookup.inferGlyphClasses())
+
+        glyphMarkClass = {}  # glyph --> markClassName
         for markClass in self.parseTree.markClasses.values():
             for glyph in markClass.anchors.keys():
                 if glyph in glyphMarkClass:
@@ -86,7 +89,9 @@ class Builder(object):
                         'glyph %s cannot be both in markClass @%s and @%s' %
                         (glyph, name1, name2), markClass.location)
                 glyphMarkClass[glyph] = markClass
-                gdef.GlyphClassDef.classDefs[glyph] = 3
+                inferredGlyphClass[glyph] = 3
+
+        gdef.GlyphClassDef.classDefs = inferredGlyphClass
         gdef.AttachList = None
         gdef.LigCaretList = None
         gdef.MarkAttachClassDef = None
@@ -350,9 +355,18 @@ class Builder(object):
             makeOpenTypeAnchor(entryAnchor, otTables.EntryAnchor),
             makeOpenTypeAnchor(exitAnchor, otTables.ExitAnchor))
 
-    def add_mark_to_base_attachment_pos(self, location, base, marks):
-        lookup = self.get_lookup_(location, MarkToBaseAttachmentPosBuilder)
-        # TODO: Implement.
+    def add_mark_to_base_attachment_pos(self, location, bases, marks):
+        builder = self.get_lookup_(location, MarkToBaseAttachmentPosBuilder)
+        for baseAnchor, markClass in marks:
+            otBaseAnchor = makeOpenTypeAnchor(baseAnchor, otTables.BaseAnchor)
+            for mark, markAnchor in markClass.anchors.items():
+                if mark not in builder.marks:
+                    otMarkAnchor = makeOpenTypeAnchor(markAnchor,
+                                                      otTables.MarkAnchor)
+                    builder.marks[mark] = (markClass.name, otMarkAnchor)
+                for base in bases:
+                    builder.bases.setdefault(base, {})[markClass.name] = (
+                        otBaseAnchor)
 
     def add_pair_pos(self, location, enumerated,
                      glyphclass1, value1, glyphclass2, value2):
@@ -466,6 +480,10 @@ class LookupBuilder(object):
         return (isinstance(other, self.__class__) and
                 self.table == other.table and
                 self.lookup_flag == other.lookup_flag)
+
+    def inferGlyphClasses(self):
+        """Infers glyph glasses for the GDEF table, such as {"cedilla":3}."""
+        return {}
 
     def setBacktrackCoverage_(self, prefix, subtable):
         subtable.BacktrackGlyphCount = len(prefix)
@@ -715,9 +733,81 @@ class CursiveAttachmentPosBuilder(LookupBuilder):
 class MarkToBaseAttachmentPosBuilder(LookupBuilder):
     def __init__(self, font, location, lookup_flag):
         LookupBuilder.__init__(self, font, location, 'GPOS', 4, lookup_flag)
+        self.marks = {}  # glyphName -> (markClassName, anchor)
+        self.bases = {}  # glyphName -> {markClassName: anchor}
+
+    def equals(self, other):
+        return (LookupBuilder.equals(self, other) and
+                self.marks == other.marks and
+                self.bases == other.bases)
+
+    def inferGlyphClasses(self):
+        result = {glyph: 1 for glyph in self.bases.keys()}
+        result.update({glyph: 3 for glyph in self.marks.keys()})
+        return result
 
     def build(self):
-        return None  # TODO: Implement.
+        # TODO: Consider emitting multiple subtables to save space.
+        # Partition the marks and bases into disjoint subsets, so that
+        # MarkBasePos rules would only access glyphs from a single
+        # subset. This would likely lead to smaller mark/base
+        # matrices, so we might be able to omit many of the empty
+        # anchor tables that we currently produce. Of course, this
+        # would only work if the MarkBasePos rules of real-world fonts
+        # allow partitioning into multiple subsets. We should find out
+        # whether this is the case; if so, implement the optimization.
+
+        marks = sorted(self.marks.keys(), key=self.font.getGlyphID)
+        bases = sorted(self.bases.keys(), key=self.font.getGlyphID)
+        markClassIDs = self.buildMarkClassIDs_(marks)
+        markClasses = sorted(markClassIDs.keys(), key=markClassIDs.get)
+
+        st = otTables.MarkBasePos()
+        st.Format = 1
+        st.ClassCount = len(markClassIDs)
+
+        st.MarkCoverage = otTables.MarkCoverage()
+        st.MarkCoverage.glyphs = marks
+        st.MarkArray = otTables.MarkArray()
+        st.MarkArray.MarkCount = len(marks)
+        st.MarkArray.MarkRecord = []
+        for mark in marks:
+            markClassName, markAnchor = self.marks[mark]
+            markrec = otTables.MarkRecord()
+            st.MarkArray.MarkRecord.append(markrec)
+            markrec.Class = markClassIDs[markClassName]
+            markrec.MarkAnchor = markAnchor
+
+        st.BaseCoverage = otTables.BaseCoverage()
+        st.BaseCoverage.glyphs = bases
+        st.BaseArray = otTables.BaseArray()
+        st.BaseArray.BaseCount = len(bases)
+        st.BaseArray.BaseRecord = []
+        for base in bases:
+            baserec = otTables.BaseRecord()
+            st.BaseArray.BaseRecord.append(baserec)
+            baserec.BaseAnchor = []
+            for markClass in markClasses:
+                baserec.BaseAnchor.append(self.bases[base].get(markClass))
+
+        subtables = [st]
+        lookup = otTables.Lookup()
+        lookup.SubTable = subtables
+        lookup.LookupFlag = self.lookup_flag
+        lookup.LookupType = self.lookup_type
+        lookup.SubTableCount = len(lookup.SubTable)
+        return lookup
+
+    def buildMarkClassIDs_(self, marks):
+        """Computes a map from markClassID -> int, given sorted mark coverage.
+        This seems to give the same numeric identifiers as the makeotf tool.
+        """
+        ids = {}
+        for mark in marks:
+            markClassName, _markAnchor = self.marks[mark]
+            if markClassName not in ids:
+                ids[markClassName] = len(ids)
+        return ids
 
 
 class ReverseChainSingleSubstBuilder(LookupBuilder):
