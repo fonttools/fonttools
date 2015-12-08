@@ -388,6 +388,7 @@ def parseLookup(lines, tableTag, font):
 	if line is None: return None, None
 	lookupLines = lines.readUntil('lookup end')
 	_, name, typ = line
+	debug("Parsing lookup type %s %s" % (typ, name))
 
 	lookup = ot.Lookup()
 	lookup.LookupFlag = parseLookupFlags(lookupLines)
@@ -422,6 +423,7 @@ def parseLookup(lines, tableTag, font):
 	return lookup, name
 
 def parseLookupList(lines, tableTag, font):
+	debug("Parsing lookup list")
 	self = ot.LookupList()
 	self.Lookup = []
 	while True:
