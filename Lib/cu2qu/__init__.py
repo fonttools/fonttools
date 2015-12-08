@@ -20,6 +20,8 @@ from fontTools.misc import bezierTools
 
 __all__ = ['curve_to_quadratic', 'curves_to_quadratic']
 
+MAX_N = 100
+
 
 class Cu2QuError(Exception):
     pass
@@ -158,7 +160,7 @@ def curve_spline_dist(bezier, spline):
     return error
 
 
-def curve_to_quadratic(p, max_err, max_n):
+def curve_to_quadratic(p, max_err):
     """Return a quadratic spline approximating this cubic bezier, and
     the error of approximation.
     Raise 'ApproxNotFoundError' if no suitable approximation can be found
@@ -166,7 +168,7 @@ def curve_to_quadratic(p, max_err, max_n):
     """
 
     spline, error = None, None
-    for n in range(1, max_n + 1):
+    for n in range(1, MAX_N + 1):
         spline = cubic_approx_spline(p, n)
         if spline is None:
             continue
@@ -179,7 +181,7 @@ def curve_to_quadratic(p, max_err, max_n):
     return spline, error
 
 
-def curves_to_quadratic(curves, max_errors, max_n):
+def curves_to_quadratic(curves, max_errors):
     """Return quadratic splines approximating these cubic beziers, and
     the respective errors of approximation.
     Raise 'ApproxNotFoundError' if no suitable approximation can be found
@@ -188,7 +190,7 @@ def curves_to_quadratic(curves, max_errors, max_n):
 
     splines = [None] * len(curves)
     errors = [None] * len(max_errors)
-    for n in range(1, max_n + 1):
+    for n in range(1, MAX_N + 1):
         splines = [cubic_approx_spline(c, n) for c in curves]
         if not all(splines):
             continue
