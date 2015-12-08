@@ -254,10 +254,18 @@ def parseLookupRecords(items, klassName):
 		lst.append(rec)
 	return lst
 
-def makeCoverage(glyphs, fonts):
-	coverage = ot.Coverage()
+def makeCoverage(glyphs, fonts, klass=ot.Coverage):
+	coverage = klass()
 	coverage.glyphs = sorted(set(glyphs), key=font.getGlyphID)
 	return coverage
+
+def parseCoverage(lines, font, klass=ot.Coverage):
+	line = next(lines)
+	assert line[0].endswith('coverage definition begin'), line
+	glyphs = []
+	for line in lines.readUntil('coverage definition end'):
+		glyphs.append(line[0])
+	return makeCoverage(glyphs, font, klass)
 
 def bucketizeRules(self, c, rules, bucketKeys):
 	buckets = {}
@@ -287,7 +295,7 @@ def bucketizeRules(self, c, rules, bucketKeys):
 	setattr(self, c.RuleSetCount, len(rulesets))
 
 def parseContext(self, lines, font, Type):
-	typ = lines.peek()[0]
+	typ = lines.peek()[0].split()[0]
 	if typ == 'glyph':
 		self.Format = 1
 		c = ContextHelper('Context'+Type, self.Format)
@@ -300,9 +308,7 @@ def parseContext(self, lines, font, Type):
 		self.Coverage = makeCoverage((seq[0] for seq,recs in rules), font)
 
 		bucketizeRules(self, c, rules, self.Coverage.glyphs)
-		return
-
-	elif typ == 'class definition begin':
+	elif typ == 'class':
 		self.Format = 2
 		c = ContextHelper('Context'+Type, self.Format)
 		self.ClassDef = parseClassDef(lines)
@@ -317,10 +323,23 @@ def parseContext(self, lines, font, Type):
 		maxClass = max(seq[0] for seq,recs in rules)
 
 		bucketizeRules(self, c, rules, range(maxClass + 1))
+	elif typ == 'coverage':
+		self.Format = 3
+		c = ContextHelper('Context'+Type, self.Format)
+		self.Coverage = []
+		while lines.peek()[0].endswith("coverage definition begin"):
+			self.Coverage.append(parseCoverage(lines, font))
+		self.GlyphCount = len(self.Coverage)
 
-		return
-	print(typ)
-	raise NotImplementedError
+		lines = list(lines)
+		assert len(lines) == 1
+		line = lines[0]
+		assert line[0] == 'coverage'
+		recs = parseLookupRecords(line[1:], c.LookupRecord)
+		setattr(self, c.Type+'Count', len(recs))
+		setattr(self, c.LookupRecord, recs)
+	else:
+		assert 0
 
 def parseContextSubst(self, lines, font):
 	return parseContext(self, lines, font, "Subst")
