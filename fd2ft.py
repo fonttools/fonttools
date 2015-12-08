@@ -9,6 +9,7 @@
 from __future__ import print_function, division, absolute_import
 from fontTools import ttLib
 from fontTools.ttLib.tables import otTables as ot
+from fontTools.ttLib.tables.otBase import ValueRecord
 import re
 
 debug = print
@@ -144,18 +145,55 @@ def parseLigature(self, lines, font):
 		self.ligatures.setdefault(firstGlyph, []).append(ligature)
 
 def parseSinglePos(self, lines, font):
-	raise NotImplementedError
+	values = {}
+	for line in lines:
+		assert len(line) == 3, line
+		w = line[0].title().replace(' ', '')
+		g = parseGlyph(line[1])
+		v = int(line[2])
+		if g not in values:
+			values[g] = ValueRecord()
+		assert not hasattr(values[g], w), (g, w)
+		setattr(values[g], w, v)
+	self.Coverage = makeCoverage(values.keys(), font)
+	values = [values[k] for k in self.Coverage.glyphs]
+	self.ValueFormat = reduce(int.__or__, [v.getFormat() for v in values])
+	if all(v == values[0] for v in values):
+		self.Format = 1
+		self.Value = values[0]
+	else:
+		self.Format = 2
+		self.Value = values
+		self.ValueCount = len(self.Value)
 
 def parsePair(self, lines, font):
+	self.Format = 1
+	self.ValueFormat1 = 0
+	self.ValueFormat2 = 0
+	self.PairSet = []
 	raise NotImplementedError
 
 def parseCursive(self, lines, font):
+	self.Format = 1
+	self.EntryExitRecord = []
 	raise NotImplementedError
 
-def parseMarkToSomething(self, lines, font):
+def parseMarkToBase(self, lines, font):
+	self.Format = 1
+	self.MarkArray = None
+	self.BaseArray = None
+	raise NotImplementedError
+
+def parseMarkToMark(self, lines, font):
+	self.Format = 1
+	self.Mark1Array = None
+	self.Mark2Array = None
 	raise NotImplementedError
 
 def parseMarkToLigature(self, lines, font):
+	self.Format = 1
+	self.MarkArray = []
+	self.LigatureArray = []
 	raise NotImplementedError
 
 def stripSplitComma(line):
@@ -474,9 +512,9 @@ def parseLookup(lines, tableTag, font):
 			'pair':		(2,	parsePair),
 			'kernset':	(2,	parsePair),
 			'cursive':	(3,	parseCursive),
-			'mark to base':	(4,	parseMarkToSomething),
+			'mark to base':	(4,	parseMarkToBase),
 			'mark to ligature':(5,	parseMarkToLigature),
-			'mark to mark':	(6,	parseMarkToSomething),
+			'mark to mark':	(6,	parseMarkToMark),
 			'context':	(7,	parseContextPos),
 			'chained':	(8,	parseChainedPos),
 		},
@@ -490,11 +528,18 @@ def parseLookup(lines, tableTag, font):
 			break
 		subtable = ot.lookupTypes[tableTag][lookup.LookupType]()
 		subtable.LookupType = lookup.LookupType
-		parseLookupSubTable(subtable, subLookupLines, font)
+		try:
+			parseLookupSubTable(subtable, subLookupLines, font)
+		except NotImplementedError:
+			list(subLookupLines) # Exhaust subLookupLines
+			continue
+		assert subLookupLines.peek() is None
 		subtables.append(subtable)
 
 	lookup.SubTable = subtables
 	lookup.SubTableCount = len(lookup.SubTable)
+	if lookup.SubTableCount is 0:
+		return None, name
 	return lookup, name
 
 def parseLookupList(lines, tableTag, font):
@@ -503,7 +548,7 @@ def parseLookupList(lines, tableTag, font):
 	self.Lookup = []
 	while True:
 		lookup, name = parseLookup(lines, tableTag, font)
-		if lookup is None: break
+		if name is None: break
 		assert int(name) == len(self.Lookup), "%d %d" % (name, len(self.Lookup))
 		self.Lookup.append(lookup)
 	self.LookupCount = len(self.Lookup)
