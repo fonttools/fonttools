@@ -34,11 +34,7 @@ cd fonttools ;
 python setup.py install ;
 ```
 
-This will install all the modules in the right places. 
-On Unix it also installs the command line tools. 
-
-For instructions how to build a standalone Windows installer, see [Windows/README.TXT](Windows/README.TXT) 
-Thanks a lot to Adam Twardoch for this essential contribution.
+This will install all the modules and command line tools in the right places.
 
 ### TTX – From OpenType and TrueType to XML and Back
 
