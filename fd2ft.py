@@ -14,6 +14,10 @@ import re
 debug = print
 
 def parseGlyph(s):
+	if s[:2] == 'U ':
+		return ttLib.TTFont._makeGlyphName(int(s[2:], 16))
+	elif s[:2] == '# ':
+		return "glyph%.5d" % int(s[2:])
 	return s
 
 def parseGlyphs(l):
