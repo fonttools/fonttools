@@ -168,11 +168,52 @@ def parseSinglePos(self, lines, font):
 		self.ValueCount = len(self.Value)
 
 def parsePair(self, lines, font):
-	self.Format = 1
-	self.ValueFormat1 = 0
-	self.ValueFormat2 = 0
-	self.PairSet = []
-	raise NotImplementedError
+	self.ValueFormat1 = self.ValueFormat2 = 0
+	typ = lines.peek()[0].split()[0].lower()
+	if typ in ('left', 'right'):
+		self.Format = 1
+		self.PairSet = []
+		for line in lines:
+			print(line)
+	elif typ.endswith('class'):
+		self.Format = 2
+		classDefs = [None, None]
+		while lines.peek()[0].endswith("class definition begin"):
+			typ = lines.peek()[0][:-len("class definition begin")].lower()
+			idx,klass = {
+				'first':	(0,ot.ClassDef1),
+				'second':	(1,ot.ClassDef2),
+			}[typ]
+			assert classDefs[idx] is None
+			classDefs[idx] = parseClassDef(lines, klass=klass)
+		self.ClassDef1, self.ClassDef2 = classDefs
+		self.Class1Count, self.Class2Count = (1+max(c.classDefs.values()) for c in classDefs)
+		self.Class1Record = [ot.Class1Record() for i in range(self.Class1Count)]
+		for rec1 in self.Class1Record:
+			rec1.Class2Record = [ot.Class2Record() for j in range(self.Class2Count)]
+			for rec2 in rec1.Class2Record:
+				rec2.Value1 = ValueRecord()
+				rec2.Value2 = ValueRecord()
+		for line in lines:
+			assert len(line) == 4, line
+			what = line[0].title().replace(' ', '')
+			side = line[0].split()[0]
+			assert side in ('left', 'right'), side
+			what = what[len(side):]
+			mask = valueRecordFormatDict[what][0]
+			class1, class2, value = (int(x) for x in line[1:4])
+			rec2 = self.Class1Record[class1].Class2Record[class2]
+			if side == 'left':
+				self.ValueFormat1 |= mask
+				vr = rec2.Value1
+			else:
+				self.ValueFormat2 |= mask
+				vr = rec2.Value2
+			assert not hasattr(vr, what), (vr, what)
+			setattr(vr, what, value)
+		self.Coverage = makeCoverage(self.ClassDef1.classDefs.keys(), font)
+	else:
+		assert 0
 
 def parseCursive(self, lines, font):
 	self.Format = 1
