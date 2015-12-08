@@ -1,1 +1,1 @@
-git+https://github.com/google/brotli@v0.2.0#egg=Brotli
+git+https://github.com/google/brotli@66db08156eba94f1fb0f77b6af519e4adedea8bf#egg=Brotli
