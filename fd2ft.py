@@ -246,6 +246,9 @@ def parsePair(self, lines, font):
 	else:
 		assert 0
 
+def parseKernset(self, lines, font):
+	raise NotImplementedError
+
 def parseCursive(self, lines, font):
 	self.Format = 1
 	self.EntryExitRecord = []
@@ -603,7 +606,7 @@ def parseLookup(lines, tableTag, font):
 		'GPOS': {
 			'single':	(1,	parseSinglePos),
 			'pair':		(2,	parsePair),
-			'kernset':	(2,	parsePair),
+			'kernset':	(2,	parseKernset),
 			'cursive':	(3,	parseCursive),
 			'mark to base':	(4,	parseMarkToBase),
 			'mark to ligature':(5,	parseMarkToLigature),
@@ -794,7 +797,7 @@ if __name__ == '__main__':
 		decompiled = table.__class__()
 		decompiled.decompile(blob, font)
 
-		#continue
+		continue
 		from fontTools.misc import xmlWriter
 		tag = table.tableTag
 		writer = xmlWriter.XMLWriter(sys.stdout)
