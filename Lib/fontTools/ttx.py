@@ -155,6 +155,8 @@ class Options(object):
 			elif option == "-l":
 				self.listTables = True
 			elif option == "-t":
+				# pad with space if table tag length is less than 4
+				value = value.ljust(4)
 				self.onlyTables.append(value)
 			elif option == "-x":
 				self.skipTables.append(value)

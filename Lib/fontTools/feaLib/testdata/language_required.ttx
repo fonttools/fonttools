@@ -76,7 +76,7 @@
         <!-- SubTableCount=1 -->
         <LigatureSubst index="0" Format="1">
           <LigatureSet glyph="D">
-            <Ligature components="D,E,U" glyph="D_E_U"/>
+            <Ligature components="E,U" glyph="D_E_U"/>
           </LigatureSet>
         </LigatureSubst>
       </Lookup>
@@ -86,7 +86,7 @@
         <!-- SubTableCount=1 -->
         <LigatureSubst index="0" Format="1">
           <LigatureSet glyph="F">
-            <Ligature components="F,R,A" glyph="D_E_U"/>
+            <Ligature components="R,A" glyph="F_R_A"/>
           </LigatureSet>
         </LigatureSubst>
       </Lookup>
@@ -96,7 +96,7 @@
         <!-- SubTableCount=1 -->
         <LigatureSubst index="0" Format="1">
           <LigatureSet glyph="I">
-            <Ligature components="I,T,A" glyph="I_T_A"/>
+            <Ligature components="T,A" glyph="I_T_A"/>
           </LigatureSet>
         </LigatureSubst>
       </Lookup>
@@ -135,18 +135,5 @@
       </Lookup>
     </LookupList>
   </GSUB>
-
-  <GPOS>
-    <Version value="1.0"/>
-    <ScriptList>
-      <!-- ScriptCount=0 -->
-    </ScriptList>
-    <FeatureList>
-      <!-- FeatureCount=0 -->
-    </FeatureList>
-    <LookupList>
-      <!-- LookupCount=0 -->
-    </LookupList>
-  </GPOS>
 
 </ttFont>

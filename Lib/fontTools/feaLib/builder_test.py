@@ -13,6 +13,26 @@ import tempfile
 import unittest
 
 
+def makeTTFont():
+    glyphs = (
+        ".notdef space slash fraction "
+        "zero one two three four five six seven eight nine "
+        "zero.oldstyle one.oldstyle two.oldstyle three.oldstyle "
+        "four.oldstyle five.oldstyle six.oldstyle seven.oldstyle "
+        "eight.oldstyle nine.oldstyle onehalf "
+        "A B C D E F G H I J K L M N O P Q R S T U V W X Y Z "
+        "a b c d e f g h i j k l m n o p q r s t u v w x y z "
+        "A.sc B.sc C.sc D.sc E.sc F.sc G.sc H.sc I.sc J.sc K.sc L.sc M.sc "
+        "N.sc O.sc P.sc Q.sc R.sc S.sc T.sc U.sc V.sc W.sc X.sc Y.sc Z.sc "
+        "A.alt1 A.alt2 A.alt3 B.alt1 B.alt2 B.alt3 C.alt1 C.alt2 C.alt3 "
+        "d.alt n.end s.end "
+        "c_h c_k c_s c_t f_f f_f_i f_i f_l o_f_f_i "
+    ).split()
+    font = TTFont()
+    font.setGlyphOrder(glyphs)
+    return font
+
+
 class BuilderTest(unittest.TestCase):
     def __init__(self, methodName):
         unittest.TestCase.__init__(self, methodName)
@@ -55,7 +75,7 @@ class BuilderTest(unittest.TestCase):
 
     def expect_ttx(self, font, expected_ttx):
         path = self.temp_path(suffix=".ttx")
-        font.saveXML(path, quiet=True, tables=['GSUB', 'GPOS'])
+        font.saveXML(path, quiet=True, tables=['GDEF', 'GSUB', 'GPOS'])
         actual = self.read_ttx(path)
         expected = self.read_ttx(expected_ttx)
         if actual != expected:
@@ -68,12 +88,12 @@ class BuilderTest(unittest.TestCase):
         path = self.temp_path(suffix=".fea")
         with codecs.open(path, "wb", "utf-8") as outfile:
             outfile.write(featureFile)
-        font = TTFont()
+        font = makeTTFont()
         addOpenTypeFeatures(path, font)
         return font
 
     def test_alternateSubst(self):
-        font = TTFont()
+        font = makeTTFont()
         addOpenTypeFeatures(self.getpath("GSUB_3.fea"), font)
         self.expect_ttx(font, self.getpath("GSUB_3.ttx"))
 
@@ -88,8 +108,8 @@ class BuilderTest(unittest.TestCase):
             "    sub A from [A.alt1 A.alt2];"
             "} test;")
 
-    def test_alternateSubst(self):
-        font = TTFont()
+    def test_multipleSubst(self):
+        font = makeTTFont()
         addOpenTypeFeatures(self.getpath("GSUB_2.fea"), font)
         self.expect_ttx(font, self.getpath("GSUB_2.ttx"))
 
@@ -104,6 +124,22 @@ class BuilderTest(unittest.TestCase):
             "    sub f_f_i by f f i;"
             "} test;")
 
+    def test_pairPos_redefinition(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            r"Already defined position for "
+            "pair \[A B\] \[zero one two\] at .*:2:[0-9]+",  # :2: = line 2
+            self.build,
+            "feature test {\n"
+            "    pos [A B] [zero one two] 123;\n"  # line 2
+            "    pos [A B] [zero one two] 456;\n"
+            "} test;\n")
+
+    def test_reverseChainingSingleSubst(self):
+        font = makeTTFont()
+        addOpenTypeFeatures(self.getpath("GSUB_8.fea"), font)
+        self.expect_ttx(font, self.getpath("GSUB_8.ttx"))
+
     def test_singleSubst_multipleSubstitutionsForSameGlyph(self):
         self.assertRaisesRegex(
             FeatureLibError,
@@ -114,26 +150,26 @@ class BuilderTest(unittest.TestCase):
             "    sub e by e.fina;"
             "} test;")
 
-    def test_spec4h1(self):
-        # OpenType Feature File specification, section 4.h, example 1.
-        font = TTFont()
-        addOpenTypeFeatures(self.getpath("spec4h1.fea"), font)
-        self.expect_ttx(font, self.getpath("spec4h1.ttx"))
+    def test_singlePos_redefinition(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Already defined different position for glyph \"A\"",
+            self.build, "feature test { pos A 123; pos A 456; } test;")
 
-    def test_spec5d1(self):
-        # OpenType Feature File specification, section 5.d, example 1.
-        font = TTFont()
-        addOpenTypeFeatures(self.getpath("spec5d1.fea"), font)
-        self.expect_ttx(font, self.getpath("spec5d1.ttx"))
+    def test_GPOS(self):
+        for name in "1 2 3".split():
+            font = makeTTFont()
+            addOpenTypeFeatures(self.getpath("GPOS_%s.fea" % name), font)
+            self.expect_ttx(font, self.getpath("GPOS_%s.ttx" % name))
 
-    def test_spec5d2(self):
-        # OpenType Feature File specification, section 5.d, example 2.
-        font = TTFont()
-        addOpenTypeFeatures(self.getpath("spec5d2.fea"), font)
-        self.expect_ttx(font, self.getpath("spec5d2.ttx"))
+    def test_spec(self):
+        for name in "4h1 5d1 5d2 5fi1 5h1".split():
+            font = makeTTFont()
+            addOpenTypeFeatures(self.getpath("spec%s.fea" % name), font)
+            self.expect_ttx(font, self.getpath("spec%s.ttx" % name))
 
     def test_languagesystem(self):
-        builder = Builder(None, TTFont())
+        builder = Builder(None, makeTTFont())
         builder.add_language_system(None, 'latn', 'FRA')
         builder.add_language_system(None, 'cyrl', 'RUS')
         builder.start_feature(location=None, name='test')
@@ -147,7 +183,7 @@ class BuilderTest(unittest.TestCase):
             self.build, "languagesystem cyrl RUS; languagesystem cyrl RUS;")
 
     def test_languagesystem_none_specified(self):
-        builder = Builder(None, TTFont())
+        builder = Builder(None, makeTTFont())
         builder.start_feature(location=None, name='test')
         self.assertEqual(builder.language_systems, {('DFLT', 'dflt')})
 
@@ -158,8 +194,21 @@ class BuilderTest(unittest.TestCase):
             "it must be the first of the languagesystem statements",
             self.build, "languagesystem latn TRK; languagesystem DFLT dflt;")
 
+    def test_markClass(self):
+        font = makeTTFont()
+        addOpenTypeFeatures(self.getpath("markClass.fea"), font)
+        self.expect_ttx(font, self.getpath("markClass.ttx"))
+
+    def test_markClass_redefine(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "glyph C cannot be both in markClass @MARK1 and @MARK2",
+            self.build,
+            "markClass [A B C] <anchor 100 50> @MARK1;"
+            "markClass [C D E] <anchor 200 80> @MARK2;")
+
     def test_script(self):
-        builder = Builder(None, TTFont())
+        builder = Builder(None, makeTTFont())
         builder.start_feature(location=None, name='test')
         builder.set_script(location=None, script='cyrl')
         self.assertEqual(builder.language_systems,
@@ -185,7 +234,7 @@ class BuilderTest(unittest.TestCase):
             self.build, "feature size { script latn; } size;")
 
     def test_language(self):
-        builder = Builder(None, TTFont())
+        builder = Builder(None, makeTTFont())
         builder.add_language_system(None, 'latn', 'FRA ')
         builder.start_feature(location=None, name='test')
         builder.set_script(location=None, script='cyrl')
@@ -217,7 +266,7 @@ class BuilderTest(unittest.TestCase):
             self.build, "feature size { language FRA; } size;")
 
     def test_language_required(self):
-        font = TTFont()
+        font = makeTTFont()
         addOpenTypeFeatures(self.getpath("language_required.fea"), font)
         self.expect_ttx(font, self.getpath("language_required.ttx"))
 
@@ -237,6 +286,11 @@ class BuilderTest(unittest.TestCase):
             "    language FRA required;"
             "    substitute [a-z] by [A.sc-Z.sc];"
             "} test;")
+
+    def test_lookup(self):
+        font = makeTTFont()
+        addOpenTypeFeatures(self.getpath("lookup.fea"), font)
+        self.expect_ttx(font, self.getpath("lookup.ttx"))
 
     def test_lookup_already_defined(self):
         self.assertRaisesRegex(

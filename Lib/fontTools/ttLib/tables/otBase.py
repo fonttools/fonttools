@@ -1,6 +1,7 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from .DefaultTable import DefaultTable
+import array
 import struct
 
 class OverflowErrorRecord(object):
@@ -130,6 +131,7 @@ class OTTableReader(object):
 
 	def advance(self, count):
 		self.pos += count
+
 	def seek(self, pos):
 		self.pos = pos
 
@@ -140,15 +142,21 @@ class OTTableReader(object):
 
 	def getSubReader(self, offset):
 		offset = self.offset + offset
-		cachingStats = self.globalState.cachingStats
-		if cachingStats is not None:
-			cachingStats[offset] = cachingStats.get(offset, 0) + 1
 		return self.__class__(self.data, self.globalState, self.localState, offset)
 
 	def readUShort(self):
 		pos = self.pos
 		newpos = pos + 2
 		value, = struct.unpack(">H", self.data[pos:newpos])
+		self.pos = newpos
+		return value
+
+	def readUShortArray(self, count):
+		pos = self.pos
+		newpos = pos + count * 2
+		value = array.array("H", self.data[pos:newpos])
+		if sys.byteorder != "big":
+			value.byteswap()
 		self.pos = newpos
 		return value
 
@@ -163,6 +171,13 @@ class OTTableReader(object):
 		pos = self.pos
 		newpos = pos + 4
 		value, = struct.unpack(">l", self.data[pos:newpos])
+		self.pos = newpos
+		return value
+
+	def readUInt8(self):
+		pos = self.pos
+		newpos = pos + 1
+		value, = struct.unpack(">B", self.data[pos:newpos])
 		self.pos = newpos
 		return value
 
@@ -184,7 +199,7 @@ class OTTableReader(object):
 		pos = self.pos
 		newpos = pos + 4
 		value = Tag(self.data[pos:newpos])
-		assert len(value) == 4
+		assert len(value) == 4, value
 		self.pos = newpos
 		return value
 
@@ -439,14 +454,18 @@ class OTTableWriter(object):
 		return subwriter
 
 	def writeUShort(self, value):
-		assert 0 <= value < 0x10000
+		assert 0 <= value < 0x10000, value
 		self.items.append(struct.pack(">H", value))
 
 	def writeShort(self, value):
 		self.items.append(struct.pack(">h", value))
 
+	def writeUInt8(self, value):
+		assert 0 <= value < 256
+		self.items.append(struct.pack(">B", value))
+
 	def writeUInt24(self, value):
-		assert 0 <= value < 0x1000000
+		assert 0 <= value < 0x1000000, value
 		b = struct.pack(">L", value)
 		self.items.append(b[1:])
 
@@ -458,7 +477,7 @@ class OTTableWriter(object):
 
 	def writeTag(self, tag):
 		tag = Tag(tag).tobytes()
-		assert len(tag) == 4
+		assert len(tag) == 4, tag
 		self.items.append(tag)
 
 	def writeSubTable(self, subWriter):

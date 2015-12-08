@@ -254,7 +254,8 @@ class MultipleSubst(FormatSwitchingBaseTable):
 					self.old_coverage_.append(element_attrs["value"])
 			return
 		if name == "Sequence":
-			glyph = self.old_coverage_[int(attrs["index"])]
+			index = int(attrs.get("index", len(mapping)))
+			glyph = self.old_coverage_[index]
 			glyph_mapping = mapping[glyph] = []
 			for element in content:
 				if not isinstance(element, tuple):
@@ -397,10 +398,9 @@ class AlternateSubst(FormatSwitchingBaseTable):
 		if self.Format == 1:
 			input = _getGlyphsFromCoverageTable(rawTable["Coverage"])
 			alts = rawTable["AlternateSet"]
-			if len(input) != len(alts):
-				assert len(input) == len(alts)
-			for i in range(len(input)):
-				alternates[input[i]] = alts[i].Alternate
+			assert len(input) == len(alts)
+			for inp,alt in zip(input,alts):
+				alternates[inp] = alt.Alternate
 		else:
 			assert 0, "unknown format: %s" % self.Format
 		self.alternates = alternates
@@ -478,6 +478,21 @@ class LigatureSubst(FormatSwitchingBaseTable):
 		ligatures = getattr(self, "ligatures", None)
 		if ligatures is None:
 			ligatures = self.ligatures = {}
+
+		if ligatures and isinstance(next(iter(ligatures)), tuple):
+			# New high-level API in v3.1 and later.  Note that we just support compiling this
+			# for now.  We don't load to this API, and don't do XML with it.
+
+			# ligatures is map from components-sequence to lig-glyph
+			newLigatures = dict()
+			for comps,lig in sorted(ligatures.items(), key=lambda item: (-len(item[0]), item[0])):
+				ligature = Ligature()
+				ligature.Component = comps[1:]
+				ligature.CompCount = len(comps)
+				ligature.LigGlyph = lig
+				newLigatures.setdefault(comps[0], []).append(ligature)
+			ligatures = newLigatures
+
 		items = list(ligatures.items())
 		for i in range(len(items)):
 			glyphName, set = items[i]

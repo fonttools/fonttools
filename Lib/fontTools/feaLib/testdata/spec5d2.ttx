@@ -43,29 +43,16 @@
         <!-- SubTableCount=1 -->
         <LigatureSubst index="0" Format="1">
           <LigatureSet glyph="f">
-            <Ligature components="f,f,i" glyph="f_f_i"/>
-            <Ligature components="f,f" glyph="f_f"/>
-            <Ligature components="f,i" glyph="f_i"/>
+            <Ligature components="f,i" glyph="f_f_i"/>
+            <Ligature components="f" glyph="f_f"/>
+            <Ligature components="i" glyph="f_i"/>
           </LigatureSet>
           <LigatureSet glyph="o">
-            <Ligature components="o,f,f,i" glyph="o_f_f_i"/>
+            <Ligature components="f,f,i" glyph="o_f_f_i"/>
           </LigatureSet>
         </LigatureSubst>
       </Lookup>
     </LookupList>
   </GSUB>
-
-  <GPOS>
-    <Version value="1.0"/>
-    <ScriptList>
-      <!-- ScriptCount=0 -->
-    </ScriptList>
-    <FeatureList>
-      <!-- FeatureCount=0 -->
-    </FeatureList>
-    <LookupList>
-      <!-- LookupCount=0 -->
-    </LookupList>
-  </GPOS>
 
 </ttFont>

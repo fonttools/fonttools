@@ -20,6 +20,76 @@ class ParserTest(unittest.TestCase):
         if not hasattr(self, "assertRaisesRegex"):
             self.assertRaisesRegex = self.assertRaisesRegexp
 
+    def test_anchor_format_a(self):
+        doc = self.parse(
+            "feature test {"
+            "    pos cursive A <anchor 120 -20> <anchor NULL>;"
+            "} test;")
+        anchor = doc.statements[0].statements[0].entryAnchor
+        self.assertEqual(type(anchor), ast.Anchor)
+        self.assertEqual(anchor.x, 120)
+        self.assertEqual(anchor.y, -20)
+        self.assertIsNone(anchor.contourpoint)
+        self.assertIsNone(anchor.xDeviceTable)
+        self.assertIsNone(anchor.yDeviceTable)
+
+    def test_anchor_format_b(self):
+        doc = self.parse(
+            "feature test {"
+            "    pos cursive A <anchor 120 -20 contourpoint 5> <anchor NULL>;"
+            "} test;")
+        anchor = doc.statements[0].statements[0].entryAnchor
+        self.assertEqual(type(anchor), ast.Anchor)
+        self.assertEqual(anchor.x, 120)
+        self.assertEqual(anchor.y, -20)
+        self.assertEqual(anchor.contourpoint, 5)
+        self.assertIsNone(anchor.xDeviceTable)
+        self.assertIsNone(anchor.yDeviceTable)
+
+    def test_anchor_format_c(self):
+        doc = self.parse(
+            "feature test {"
+            "    pos cursive A "
+            "        <anchor 120 -20 <device 11 111, 12 112> <device NULL>>"
+            "        <anchor NULL>;"
+            "} test;")
+        anchor = doc.statements[0].statements[0].entryAnchor
+        self.assertEqual(type(anchor), ast.Anchor)
+        self.assertEqual(anchor.x, 120)
+        self.assertEqual(anchor.y, -20)
+        self.assertIsNone(anchor.contourpoint)
+        self.assertEqual(anchor.xDeviceTable, ((11, 111), (12, 112)))
+        self.assertIsNone(anchor.yDeviceTable)
+
+    def test_anchor_format_d(self):
+        doc = self.parse(
+            "feature test {"
+            "    pos cursive A <anchor 120 -20> <anchor NULL>;"
+            "} test;")
+        anchor = doc.statements[0].statements[0].exitAnchor
+        self.assertIsNone(anchor)
+
+    def test_anchor_format_e(self):
+        doc = self.parse(
+            "feature test {"
+            "    anchorDef 120 -20 contourpoint 7 Foo;"
+            "    pos cursive A <anchor Foo> <anchor NULL>;"
+            "} test;")
+        anchor = doc.statements[0].statements[1].entryAnchor
+        self.assertEqual(type(anchor), ast.Anchor)
+        self.assertEqual(anchor.x, 120)
+        self.assertEqual(anchor.y, -20)
+        self.assertEqual(anchor.contourpoint, 7)
+        self.assertIsNone(anchor.xDeviceTable)
+        self.assertIsNone(anchor.yDeviceTable)
+
+    def test_anchor_format_e_undefined(self):
+        self.assertRaisesRegex(
+            FeatureLibError, 'Unknown anchor "UnknownName"', self.parse,
+            "feature test {"
+            "    position cursive A <anchor UnknownName> <anchor NULL>;"
+            "} test;")
+
     def test_anchordef(self):
         [foo] = self.parse("anchorDef 123 456 foo;").statements
         self.assertEqual(type(foo), ast.AnchorDefinition)
@@ -256,6 +326,195 @@ class ParserTest(unittest.TestCase):
             FeatureLibError, 'Unknown lookup "Huh"',
             self.parse, "feature liga {lookup Huh;} liga;")
 
+    def test_gpos_type_1_glyph(self):
+        doc = self.parse("feature kern {pos one <1 2 3 4>;} kern;")
+        pos = doc.statements[0].statements[0]
+        self.assertEqual(type(pos), ast.SingleAdjustmentPositioning)
+        self.assertEqual(pos.glyphclass, {"one"})
+        self.assertEqual(pos.valuerecord.makeString(vertical=False),
+                         "<1 2 3 4>")
+
+    def test_gpos_type_1_glyphclass_horizontal(self):
+        doc = self.parse("feature kern {pos [one two] -300;} kern;")
+        pos = doc.statements[0].statements[0]
+        self.assertEqual(type(pos), ast.SingleAdjustmentPositioning)
+        self.assertEqual(pos.glyphclass, {"one", "two"})
+        self.assertEqual(pos.valuerecord.makeString(vertical=False), "-300")
+
+    def test_gpos_type_1_glyphclass_vertical(self):
+        doc = self.parse("feature vkrn {pos [one two] -300;} vkrn;")
+        pos = doc.statements[0].statements[0]
+        self.assertEqual(type(pos), ast.SingleAdjustmentPositioning)
+        self.assertEqual(pos.glyphclass, {"one", "two"})
+        self.assertEqual(pos.valuerecord.makeString(vertical=True), "-300")
+
+    def test_gpos_type_1_enumerated(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            '"enumerate" is only allowed with pair positionings',
+            self.parse, "feature test {enum pos T 100;} test;")
+        self.assertRaisesRegex(
+            FeatureLibError,
+            '"enumerate" is only allowed with pair positionings',
+            self.parse, "feature test {enumerate pos T 100;} test;")
+
+    def test_gpos_type_2_format_a(self):
+        doc = self.parse("feature kern {"
+                         "    pos [T V] -60 [a b c] <1 2 3 4>;"
+                         "} kern;")
+        pos = doc.statements[0].statements[0]
+        self.assertEqual(type(pos), ast.PairAdjustmentPositioning)
+        self.assertFalse(pos.enumerated)
+        self.assertEqual(pos.glyphclass1, {"T", "V"})
+        self.assertEqual(pos.valuerecord1.makeString(vertical=False), "-60")
+        self.assertEqual(pos.glyphclass2, {"a", "b", "c"})
+        self.assertEqual(pos.valuerecord2.makeString(vertical=False),
+                         "<1 2 3 4>")
+
+    def test_gpos_type_2_format_a_enumerated(self):
+        doc = self.parse("feature kern {"
+                         "    enum pos [T V] -60 [a b c] <1 2 3 4>;"
+                         "} kern;")
+        pos = doc.statements[0].statements[0]
+        self.assertEqual(type(pos), ast.PairAdjustmentPositioning)
+        self.assertTrue(pos.enumerated)
+        self.assertEqual(pos.glyphclass1, {"T", "V"})
+        self.assertEqual(pos.valuerecord1.makeString(vertical=False), "-60")
+        self.assertEqual(pos.glyphclass2, {"a", "b", "c"})
+        self.assertEqual(pos.valuerecord2.makeString(vertical=False),
+                         "<1 2 3 4>")
+
+    def test_gpos_type_2_format_a_with_null(self):
+        doc = self.parse("feature kern {"
+                         "    pos [T V] <1 2 3 4> [a b c] <NULL>;"
+                         "} kern;")
+        pos = doc.statements[0].statements[0]
+        self.assertEqual(type(pos), ast.PairAdjustmentPositioning)
+        self.assertFalse(pos.enumerated)
+        self.assertEqual(pos.glyphclass1, {"T", "V"})
+        self.assertEqual(pos.valuerecord1.makeString(vertical=False),
+                         "<1 2 3 4>")
+        self.assertEqual(pos.glyphclass2, {"a", "b", "c"})
+        self.assertIsNone(pos.valuerecord2)
+
+    def test_gpos_type_2_format_b(self):
+        doc = self.parse("feature kern {"
+                         "    pos [T V] [a b c] <1 2 3 4>;"
+                         "} kern;")
+        pos = doc.statements[0].statements[0]
+        self.assertEqual(type(pos), ast.PairAdjustmentPositioning)
+        self.assertFalse(pos.enumerated)
+        self.assertEqual(pos.glyphclass1, {"T", "V"})
+        self.assertEqual(pos.valuerecord1.makeString(vertical=False),
+                         "<1 2 3 4>")
+        self.assertEqual(pos.glyphclass2, {"a", "b", "c"})
+        self.assertIsNone(pos.valuerecord2)
+
+    def test_gpos_type_2_format_b_enumerated(self):
+        doc = self.parse("feature kern {"
+                         "    enumerate position [T V] [a b c] <1 2 3 4>;"
+                         "} kern;")
+        pos = doc.statements[0].statements[0]
+        self.assertEqual(type(pos), ast.PairAdjustmentPositioning)
+        self.assertTrue(pos.enumerated)
+        self.assertEqual(pos.glyphclass1, {"T", "V"})
+        self.assertEqual(pos.valuerecord1.makeString(vertical=False),
+                         "<1 2 3 4>")
+        self.assertEqual(pos.glyphclass2, {"a", "b", "c"})
+        self.assertIsNone(pos.valuerecord2)
+
+    def test_gpos_type_3(self):
+        doc = self.parse("feature kern {"
+                         "    position cursive A <anchor 12 -2> <anchor 2 3>;"
+                         "} kern;")
+        pos = doc.statements[0].statements[0]
+        self.assertEqual(type(pos), ast.CursiveAttachmentPositioning)
+        self.assertEqual(pos.glyphclass, {"A"})
+        self.assertEqual((pos.entryAnchor.x, pos.entryAnchor.y), (12, -2))
+        self.assertEqual((pos.exitAnchor.x, pos.exitAnchor.y), (2, 3))
+
+    def test_gpos_type_3_enumerated(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            '"enumerate" is not allowed with cursive attachment positioning',
+            self.parse,
+            "feature kern {"
+            "    enumerate position cursive A <anchor 12 -2> <anchor 2 3>;"
+            "} kern;")
+
+    def test_markClass(self):
+        doc = self.parse("markClass [acute grave] <anchor 350 3> @MARKS;"
+                         "feature test {"
+                         "    markClass cedilla <anchor 400 -4> @MARKS;"
+                         "} test;")
+        markClass = doc.markClasses["MARKS"]
+        self.assertEqual(set(markClass.anchors.keys()),
+                         {"acute", "cedilla", "grave"})
+        acuteAnchor = markClass.anchors["acute"]
+        cedillaAnchor = markClass.anchors["cedilla"]
+        graveAnchor = markClass.anchors["grave"]
+        self.assertEqual((acuteAnchor.x, acuteAnchor.y), (350, 3))
+        self.assertEqual((cedillaAnchor.x, cedillaAnchor.y), (400, -4))
+        self.assertEqual((graveAnchor.x, graveAnchor.y), (350, 3))
+
+    def test_rsub_format_a(self):
+        doc = self.parse("feature test {rsub a [b B] c' d [e E] by C;} test;")
+        rsub = doc.statements[0].statements[0]
+        self.assertEqual(type(rsub), ast.ReverseChainingSingleSubstitution)
+        self.assertEqual(rsub.old_prefix, [{"a"}, {"b", "B"}])
+        self.assertEqual(rsub.mapping, {"c": "C"})
+        self.assertEqual(rsub.old_suffix, [{"d"}, {"e", "E"}])
+
+    def test_rsub_format_b(self):
+        doc = self.parse(
+            "feature smcp {"
+            "    reversesub A B [one.fitted one.oldstyle]' C [d D] by one;"
+            "} smcp;")
+        rsub = doc.statements[0].statements[0]
+        self.assertEqual(type(rsub), ast.ReverseChainingSingleSubstitution)
+        self.assertEqual(rsub.old_prefix, [{"A"}, {"B"}])
+        self.assertEqual(rsub.old_suffix, [{"C"}, {"d", "D"}])
+        self.assertEqual(rsub.mapping, {
+            "one.fitted": "one",
+            "one.oldstyle": "one"
+        })
+
+    def test_rsub_format_c(self):
+        doc = self.parse(
+            "feature test {"
+            "    reversesub BACK TRACK [a-d]' LOOK AHEAD by [A.sc-D.sc];"
+            "} test;")
+        rsub = doc.statements[0].statements[0]
+        self.assertEqual(type(rsub), ast.ReverseChainingSingleSubstitution)
+        self.assertEqual(rsub.old_prefix, [{"BACK"}, {"TRACK"}])
+        self.assertEqual(rsub.old_suffix, [{"LOOK"}, {"AHEAD"}])
+        self.assertEqual(rsub.mapping, {
+            "a": "A.sc",
+            "b": "B.sc",
+            "c": "C.sc",
+            "d": "D.sc"
+        })
+
+    def test_rsub_from(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            'Reverse chaining substitutions do not support "from"',
+            self.parse, "feature test {rsub a from [a.1 a.2 a.3];} test;")
+
+    def test_rsub_nonsingle(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "In reverse chaining single substitutions, only a single glyph "
+            "or glyph class can be replaced",
+            self.parse, "feature test {rsub c d by c_d;} test;")
+
+    def test_rsub_multiple_replacement_glyphs(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            'In reverse chaining single substitutions, the replacement '
+            '\(after "by"\) must be a single glyph or glyph class',
+            self.parse, "feature test {rsub f_i by f i;} test;")
+
     def test_script(self):
         doc = self.parse("feature test {script cyrl;} test;")
         s = doc.statements[0].statements[0]
@@ -341,8 +600,8 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(sub.replacement, "f_f_i")
 
     def test_substitute_lookups(self):
-        doc = Parser(self.getpath("spec5fi.fea")).parse()
-        [ligs, sub, feature] = doc.statements
+        doc = Parser(self.getpath("spec5fi1.fea")).parse()
+        [langsys, ligs, sub, feature] = doc.statements
         self.assertEqual(feature.statements[0].lookups, [ligs, None, sub])
         self.assertEqual(feature.statements[1].lookups, [ligs, None, sub])
 
@@ -364,6 +623,10 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(value.yPlacement, 0)
         self.assertEqual(value.xAdvance, 123)
         self.assertEqual(value.yAdvance, 0)
+        self.assertIsNone(value.xPlaDevice)
+        self.assertIsNone(value.yPlaDevice)
+        self.assertIsNone(value.xAdvDevice)
+        self.assertIsNone(value.yAdvDevice)
 
     def test_valuerecord_format_a_vertical(self):
         doc = self.parse("feature vkrn {valueRecordDef 123 foo;} vkrn;")
@@ -372,6 +635,10 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(value.yPlacement, 0)
         self.assertEqual(value.xAdvance, 0)
         self.assertEqual(value.yAdvance, 123)
+        self.assertIsNone(value.xPlaDevice)
+        self.assertIsNone(value.yPlaDevice)
+        self.assertIsNone(value.xAdvDevice)
+        self.assertIsNone(value.yAdvDevice)
 
     def test_valuerecord_format_b(self):
         doc = self.parse("feature liga {valueRecordDef <1 2 3 4> foo;} liga;")
@@ -380,6 +647,36 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(value.yPlacement, 2)
         self.assertEqual(value.xAdvance, 3)
         self.assertEqual(value.yAdvance, 4)
+        self.assertIsNone(value.xPlaDevice)
+        self.assertIsNone(value.yPlaDevice)
+        self.assertIsNone(value.xAdvDevice)
+        self.assertIsNone(value.yAdvDevice)
+
+    def test_valuerecord_format_c(self):
+        doc = self.parse(
+            "feature liga {"
+            "    valueRecordDef <"
+            "        1 2 3 4"
+            "        <device 8 88>"
+            "        <device 11 111, 12 112>"
+            "        <device NULL>"
+            "        <device 33 -113, 44 -114, 55 115>"
+            "    > foo;"
+            "} liga;")
+        value = doc.statements[0].statements[0].value
+        self.assertEqual(value.xPlacement, 1)
+        self.assertEqual(value.yPlacement, 2)
+        self.assertEqual(value.xAdvance, 3)
+        self.assertEqual(value.yAdvance, 4)
+        self.assertEqual(value.xPlaDevice, ((8, 88),))
+        self.assertEqual(value.yPlaDevice, ((11, 111), (12, 112)))
+        self.assertIsNone(value.xAdvDevice)
+        self.assertEqual(value.yAdvDevice, ((33, -113), (44, -114), (55, 115)))
+
+    def test_valuerecord_format_d(self):
+        doc = self.parse("feature test {valueRecordDef <NULL> foo;} test;")
+        value = doc.statements[0].statements[0].value
+        self.assertIsNone(value)
 
     def test_valuerecord_named(self):
         doc = self.parse("valueRecordDef <1 2 3 4> foo;"
@@ -404,6 +701,13 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(foo.value.xAdvance, 789)
         self.assertEqual(liga.statements[0].value.xAdvance, 789)
         self.assertEqual(smcp.statements[0].value.xAdvance, 789)
+
+    def test_valuerecord_device_value_out_of_range(self):
+        self.assertRaisesRegex(
+            FeatureLibError, r"Device value out of valid range \(-128..127\)",
+            self.parse,
+            "valueRecordDef <1 2 3 4 <device NULL> <device NULL> "
+            "<device NULL> <device 11 128>> foo;")
 
     def test_languagesystem(self):
         [langsys] = self.parse("languagesystem latn DEU;").statements

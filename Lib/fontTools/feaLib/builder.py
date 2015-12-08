@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 from fontTools.feaLib.error import FeatureLibError
 from fontTools.feaLib.parser import Parser
 from fontTools.ttLib import getTableClass
-from fontTools.ttLib.tables import otTables
+from fontTools.ttLib.tables import otBase, otTables
 import warnings
 
 
@@ -26,14 +26,26 @@ class Builder(object):
         self.cur_feature_name_ = None
         self.lookups_ = []
         self.features_ = {}  # ('latn', 'DEU ', 'smcp') --> [LookupBuilder*]
+        self.parseTree = None
         self.required_features_ = {}  # ('latn', 'DEU ') --> 'scmp'
 
     def build(self):
-        parsetree = Parser(self.featurefile_path).parse()
-        parsetree.build(self)
+        self.parseTree = Parser(self.featurefile_path).parse()
+        self.parseTree.build(self)
         for tag in ('GPOS', 'GSUB'):
-            fontTable = self.font[tag] = getTableClass(tag)()
-            fontTable.table = self.makeTable(tag)
+            table = self.makeTable(tag)
+            if (table.ScriptList.ScriptCount > 0 or
+                    table.FeatureList.FeatureCount > 0 or
+                    table.LookupList.LookupCount > 0):
+                fontTable = self.font[tag] = getTableClass(tag)()
+                fontTable.table = table
+            elif tag in self.font:
+                del self.font[tag]
+        gdef = self.makeGDEF()
+        if gdef:
+            self.font["GDEF"] = gdef
+        elif "GDEF" in self.font:
+            del self.font["GDEF"]
 
     def get_lookup_(self, location, builder_class):
         if (self.cur_lookup_ and
@@ -44,17 +56,45 @@ class Builder(object):
             raise FeatureLibError(
                 "Within a named lookup block, all rules must be of "
                 "the same lookup type and flag", location)
-        self.cur_lookup_ = builder_class(location, self.lookup_flag_)
+        self.cur_lookup_ = builder_class(
+            self.font, location, self.lookup_flag_)
         self.lookups_.append(self.cur_lookup_)
         if self.cur_lookup_name_:
             # We are starting a lookup rule inside a named lookup block.
             self.named_lookups_[self.cur_lookup_name_] = self.cur_lookup_
-        else:
-            # We are starting a lookup rule inside a feature.
+        if self.cur_feature_name_:
+            # We are starting a lookup rule inside a feature. This includes
+            # lookup rules inside named lookups inside features.
             for script, lang in self.language_systems:
                 key = (script, lang, self.cur_feature_name_)
                 self.features_.setdefault(key, []).append(self.cur_lookup_)
         return self.cur_lookup_
+
+    def makeGDEF(self):
+        gdef = otTables.GDEF()
+        gdef.Version = 1.0
+        gdef.GlyphClassDef = otTables.GlyphClassDef()
+        gdef.GlyphClassDef.classDefs = {}
+
+        glyphMarkClass = {}  # glyph --> markClass
+        for markClass in self.parseTree.markClasses.values():
+            for glyph in markClass.anchors.keys():
+                if glyph in glyphMarkClass:
+                    other = glyphMarkClass[glyph]
+                    name1, name2 = sorted([markClass.name, other.name])
+                    raise FeatureLibError(
+                        'glyph %s cannot be both in markClass @%s and @%s' %
+                        (glyph, name1, name2), markClass.location)
+                glyphMarkClass[glyph] = markClass
+                gdef.GlyphClassDef.classDefs[glyph] = 3
+        gdef.AttachList = None
+        gdef.LigCaretList = None
+        gdef.MarkAttachClassDef = None
+        if len(gdef.GlyphClassDef.classDefs) == 0:
+            return None
+        result = getTableClass("GDEF")()
+        result.table = gdef
+        return result
 
     def makeTable(self, tag):
         table = getattr(otTables, tag, None)()
@@ -246,6 +286,27 @@ class Builder(object):
         self.set_language(location, "dflt",
                           include_default=True, required=False)
 
+    def find_lookup_builders_(self, lookups):
+        """Helper for building chain contextual substitutions
+
+        Given a list of lookup names, finds the LookupBuilder for each name.
+        If an input name is None, it gets mapped to a None LookupBuilder.
+        """
+        lookup_builders = []
+        for lookup in lookups:
+            if lookup is not None:
+                lookup_builders.append(self.named_lookups_.get(lookup.name))
+            else:
+                lookup_builders.append(None)
+        return lookup_builders
+
+    def add_substitution(self, location, old_prefix, old, old_suffix, new,
+                         lookups):
+        assert len(new) == 0, new
+        lookup = self.get_lookup_(location, ChainContextSubstBuilder)
+        lookup.substitutions.append((old_prefix, old, old_suffix,
+                                     self.find_lookup_builders_(lookups)))
+
     def add_alternate_substitution(self, location, glyph, from_class):
         lookup = self.get_lookup_(location, AlternateSubstBuilder)
         if glyph in lookup.alternates:
@@ -266,6 +327,11 @@ class Builder(object):
                 location)
         lookup.mapping[glyph] = replacements
 
+    def add_reverse_chaining_single_substitution(self, location, old_prefix,
+                                                 old_suffix, mapping):
+        lookup = self.get_lookup_(location, ReverseChainSingleSubstBuilder)
+        lookup.substitutions.append((old_prefix, old_suffix, mapping))
+
     def add_single_substitution(self, location, mapping):
         lookup = self.get_lookup_(location, SingleSubstBuilder)
         for (from_glyph, to_glyph) in mapping.items():
@@ -276,9 +342,116 @@ class Builder(object):
                     location)
             lookup.mapping[from_glyph] = to_glyph
 
+    def add_cursive_attachment_pos(self, location, glyphclass,
+                                   entryAnchor, exitAnchor):
+        lookup = self.get_lookup_(location, CursiveAttachmentPosBuilder)
+        lookup.add_attachment(
+            location, glyphclass,
+            makeOpenTypeAnchor(entryAnchor, otTables.EntryAnchor),
+            makeOpenTypeAnchor(exitAnchor, otTables.ExitAnchor))
+
+    def add_pair_pos(self, location, enumerated,
+                     glyphclass1, value1, glyphclass2, value2):
+        lookup = self.get_lookup_(location, PairPosBuilder)
+        if enumerated:
+            for glyph in glyphclass1:
+                lookup.add_pair(location, {glyph}, value1, glyphclass2, value2)
+        else:
+            lookup.add_pair(location, glyphclass1, value1, glyphclass2, value2)
+
+    def add_single_pos(self, location, glyph, valuerecord):
+        lookup = self.get_lookup_(location, SinglePosBuilder)
+        curValue = lookup.mapping.get(glyph)
+        if curValue is not None and curValue != valuerecord:
+            otherLoc = valuerecord.location
+            raise FeatureLibError(
+                'Already defined different position for glyph "%s" at %s:%d:%d'
+                % (glyph, otherLoc[0], otherLoc[1], otherLoc[2]),
+                location)
+        lookup.mapping[glyph] = valuerecord
+
+
+def _makeOpenTypeDeviceTable(deviceTable, device):
+    device = tuple(sorted(device))
+    deviceTable.StartSize = startSize = device[0][0]
+    deviceTable.EndSize = endSize = device[-1][0]
+    deviceDict = dict(device)
+    deviceTable.DeltaValue = deltaValues = [
+        deviceDict.get(size, 0)
+        for size in range(startSize, endSize + 1)]
+    maxDelta = max(deltaValues)
+    minDelta = min(deltaValues)
+    assert minDelta > -129 and maxDelta < 128
+    if minDelta > -3 and maxDelta < 2:
+        deviceTable.DeltaFormat = 1
+    elif minDelta > -9 and maxDelta < 8:
+        deviceTable.DeltaFormat = 2
+    else:
+        deviceTable.DeltaFormat = 3
+
+
+def makeOpenTypeAnchor(anchor, anchorClass):
+    """ast.Anchor --> otTables.Anchor"""
+    if anchor is None:
+        return None
+    anch = anchorClass()
+    anch.Format = 1
+    anch.XCoordinate, anch.YCoordinate = anchor.x, anchor.y
+    if anchor.contourpoint is not None:
+        anch.AnchorPoint = anchor.contourpoint
+        anch.Format = 2
+    if anchor.xDeviceTable is not None:
+        anch.XDeviceTable = otTables.XDeviceTable()
+        _makeOpenTypeDeviceTable(anch.XDeviceTable, anchor.xDeviceTable)
+        anch.Format = 3
+    if anchor.yDeviceTable is not None:
+        anch.YDeviceTable = otTables.YDeviceTable()
+        _makeOpenTypeDeviceTable(anch.YDeviceTable, anchor.yDeviceTable)
+        anch.Format = 3
+    return anch
+
+
+def makeOpenTypeValueRecord(v):
+    """ast.ValueRecord --> (otBase.ValueRecord, int ValueFormat)"""
+    if v is None:
+        return None, 0
+    vr = otBase.ValueRecord()
+    if v.xPlacement:
+        vr.XPlacement = v.xPlacement
+    if v.yPlacement:
+        vr.YPlacement = v.yPlacement
+    if v.xAdvance:
+        vr.XAdvance = v.xAdvance
+    if v.yAdvance:
+        vr.YAdvance = v.yAdvance
+
+    if v.xPlaDevice:
+        vr.XPlaDevice = otTables.XPlaDevice()
+        _makeOpenTypeDeviceTable(vr.XPlaDevice, v.xPlaDevice)
+    if v.yPlaDevice:
+        vr.YPlaDevice = otTables.YPlaDevice()
+        _makeOpenTypeDeviceTable(vr.YPlaDevice, v.yPlaDevice)
+    if v.xAdvDevice:
+        vr.XAdvDevice = otTables.XAdvDevice()
+        _makeOpenTypeDeviceTable(vr.XAdvDevice, v.xAdvDevice)
+    if v.yAdvDevice:
+        vr.YAdvDevice = otTables.YAdvDevice()
+        _makeOpenTypeDeviceTable(vr.YAdvDevice, v.yAdvDevice)
+
+    vrMask = 0
+    for mask, name, _, _ in otBase.valueRecordFormat:
+        if getattr(vr, name, 0) != 0:
+            vrMask |= mask
+
+    if vrMask == 0:
+        return None, 0
+    else:
+        return vr, vrMask
+
 
 class LookupBuilder(object):
-    def __init__(self, location, table, lookup_type, lookup_flag):
+    def __init__(self, font, location, table, lookup_type, lookup_flag):
+        self.font = font
         self.location = location
         self.table, self.lookup_type = table, lookup_type
         self.lookup_flag = lookup_flag
@@ -290,10 +463,34 @@ class LookupBuilder(object):
                 self.table == other.table and
                 self.lookup_flag == other.lookup_flag)
 
+    def setBacktrackCoverage_(self, prefix, subtable):
+        subtable.BacktrackGlyphCount = len(prefix)
+        subtable.BacktrackCoverage = []
+        for p in reversed(prefix):
+            coverage = otTables.BacktrackCoverage()
+            coverage.glyphs = sorted(list(p), key=self.font.getGlyphID)
+            subtable.BacktrackCoverage.append(coverage)
+
+    def setLookAheadCoverage_(self, suffix, subtable):
+        subtable.LookAheadGlyphCount = len(suffix)
+        subtable.LookAheadCoverage = []
+        for s in suffix:
+            coverage = otTables.LookAheadCoverage()
+            coverage.glyphs = sorted(list(s), key=self.font.getGlyphID)
+            subtable.LookAheadCoverage.append(coverage)
+
+    def setInputCoverage_(self, glyphs, subtable):
+        subtable.InputGlyphCount = len(glyphs)
+        subtable.InputCoverage = []
+        for g in glyphs:
+            coverage = otTables.InputCoverage()
+            coverage.glyphs = sorted(list(g), key=self.font.getGlyphID)
+            subtable.InputCoverage.append(coverage)
+
 
 class AlternateSubstBuilder(LookupBuilder):
-    def __init__(self, location, lookup_flag):
-        LookupBuilder.__init__(self, location, 'GSUB', 3, lookup_flag)
+    def __init__(self, font, location, lookup_flag):
+        LookupBuilder.__init__(self, font, location, 'GSUB', 3, lookup_flag)
         self.alternates = {}
 
     def equals(self, other):
@@ -313,9 +510,44 @@ class AlternateSubstBuilder(LookupBuilder):
         return lookup
 
 
+class ChainContextSubstBuilder(LookupBuilder):
+    def __init__(self, font, location, lookup_flag):
+        LookupBuilder.__init__(self, font, location, 'GSUB', 6, lookup_flag)
+        self.substitutions = []  # (prefix, input, suffix, lookups)
+
+    def equals(self, other):
+        return (LookupBuilder.equals(self, other) and
+                self.substitutions == other.substitutions)
+
+    def build(self):
+        lookup = otTables.Lookup()
+        lookup.SubTable = []
+        for (prefix, input, suffix, lookups) in self.substitutions:
+            st = otTables.ChainContextSubst()
+            lookup.SubTable.append(st)
+            st.Format = 3
+            self.setBacktrackCoverage_(prefix, st)
+            self.setLookAheadCoverage_(suffix, st)
+            self.setInputCoverage_(input, st)
+
+            st.SubstCount = len([l for l in lookups if l is not None])
+            st.SubstLookupRecord = []
+            for sequenceIndex, l in enumerate(lookups):
+                if l is not None:
+                    rec = otTables.SubstLookupRecord()
+                    rec.SequenceIndex = sequenceIndex
+                    rec.LookupListIndex = l.lookup_index
+                    st.SubstLookupRecord.append(rec)
+
+        lookup.LookupFlag = self.lookup_flag
+        lookup.LookupType = self.lookup_type
+        lookup.SubTableCount = len(lookup.SubTable)
+        return lookup
+
+
 class LigatureSubstBuilder(LookupBuilder):
-    def __init__(self, location, lookup_flag):
-        LookupBuilder.__init__(self, location, 'GSUB', 4, lookup_flag)
+    def __init__(self, font, location, lookup_flag):
+        LookupBuilder.__init__(self, font, location, 'GSUB', 4, lookup_flag)
         self.ligatures = {}  # {('f','f','i'): 'f_f_i'}
 
     def equals(self, other):
@@ -344,7 +576,7 @@ class LigatureSubstBuilder(LookupBuilder):
         st.ligatures = {}
         for components in sorted(self.ligatures.keys(), key=self.make_key):
             lig = otTables.Ligature()
-            lig.Component = components
+            lig.Component = components[1:]
             lig.LigGlyph = self.ligatures[components]
             st.ligatures.setdefault(components[0], []).append(lig)
         lookup.SubTable.append(st)
@@ -355,8 +587,8 @@ class LigatureSubstBuilder(LookupBuilder):
 
 
 class MultipleSubstBuilder(LookupBuilder):
-    def __init__(self, location, lookup_flag):
-        LookupBuilder.__init__(self, location, 'GSUB', 2, lookup_flag)
+    def __init__(self, font, location, lookup_flag):
+        LookupBuilder.__init__(self, font, location, 'GSUB', 2, lookup_flag)
         self.mapping = {}
 
     def equals(self, other):
@@ -375,9 +607,140 @@ class MultipleSubstBuilder(LookupBuilder):
         return lookup
 
 
+class PairPosBuilder(LookupBuilder):
+    def __init__(self, font, location, lookup_flag):
+        LookupBuilder.__init__(self, font, location, 'GPOS', 2, lookup_flag)
+        self.pairs = {}  # (gc1, gc2) -> (location, value1, value2)
+
+    def add_pair(self, location, glyphclass1, value1, glyphclass2, value2):
+        gc1 = tuple(sorted(glyphclass1, key=self.font.getGlyphID))
+        gc2 = tuple(sorted(glyphclass2, key=self.font.getGlyphID))
+        oldValue = self.pairs.get((gc1, gc2), None)
+        if oldValue is not None:
+            otherLoc, _, _ = oldValue
+            raise FeatureLibError(
+                'Already defined position for pair [%s] [%s] at %s:%d:%d'
+                % (' '.join(gc1), ' '.join(gc2),
+                   otherLoc[0], otherLoc[1], otherLoc[2]),
+                location)
+        self.pairs[(gc1, gc2)] = (location, value1, value2)
+
+    def equals(self, other):
+        return (LookupBuilder.equals(self, other) and
+                self.pairs == other.pairs)
+
+    def build(self):
+        subtables = []
+
+        # (valueFormat1, valueFormat2) --> [(glyph1, glyph2, value1, value2)*]
+        format1 = {}
+        for (gc1, gc2), (location, value1, value2) in self.pairs.items():
+            if len(gc1) == 1 and len(gc2) == 1:
+                val1, valFormat1 = makeOpenTypeValueRecord(value1)
+                val2, valFormat2 = makeOpenTypeValueRecord(value2)
+                format1.setdefault(((valFormat1, valFormat2)), []).append(
+                    (gc1[0], gc2[0], val1, val2))
+        for (vf1, vf2), pairs in sorted(format1.items()):
+            p = {}
+            for glyph1, glyph2, val1, val2 in pairs:
+                p.setdefault(glyph1, []).append((glyph2, val1, val2))
+            st = otTables.PairPos()
+            subtables.append(st)
+            st.Format = 1
+            st.ValueFormat1, st.ValueFormat2 = vf1, vf2
+            st.Coverage = otTables.Coverage()
+            st.Coverage.glyphs = sorted(p.keys(), key=self.font.getGlyphID)
+            st.PairSet = []
+            for glyph in st.Coverage.glyphs:
+                ps = otTables.PairSet()
+                ps.PairValueRecord = []
+                st.PairSet.append(ps)
+                for glyph2, val1, val2 in sorted(
+                        p[glyph], key=lambda x: self.font.getGlyphID(x[0])):
+                    pvr = otTables.PairValueRecord()
+                    pvr.SecondGlyph = glyph2
+                    pvr.Value1, pvr.Value2 = val1, val2
+                    ps.PairValueRecord.append(pvr)
+                ps.PairValueCount = len(ps.PairValueRecord)
+            st.PairSetCount = len(st.PairSet)
+
+        lookup = otTables.Lookup()
+        lookup.SubTable = subtables
+        lookup.LookupFlag = self.lookup_flag
+        lookup.LookupType = self.lookup_type
+        lookup.SubTableCount = len(lookup.SubTable)
+        return lookup
+
+
+class CursiveAttachmentPosBuilder(LookupBuilder):
+    def __init__(self, font, location, lookup_flag):
+        LookupBuilder.__init__(self, font, location, 'GPOS', 3, lookup_flag)
+        self.attachments = {}
+
+    def equals(self, other):
+        return (LookupBuilder.equals(self, other) and
+                self.attachments == other.attachments)
+
+    def add_attachment(self, location, glyphs, entryAnchor, exitAnchor):
+        for glyph in glyphs:
+            self.attachments[glyph] = (location, entryAnchor, exitAnchor)
+
+    def build(self):
+        st = otTables.CursivePos()
+        st.Format = 1
+        st.Coverage = otTables.Coverage()
+        st.Coverage.glyphs = \
+            sorted(self.attachments.keys(), key=self.font.getGlyphID)
+        st.EntryExitCount = len(self.attachments)
+        st.EntryExitRecord = []
+        for glyph in st.Coverage.glyphs:
+            location, entryAnchor, exitAnchor = self.attachments[glyph]
+            rec = otTables.EntryExitRecord()
+            st.EntryExitRecord.append(rec)
+            rec.EntryAnchor = entryAnchor
+            rec.ExitAnchor = exitAnchor
+        subtables = [st]
+        lookup = otTables.Lookup()
+        lookup.SubTable = subtables
+        lookup.LookupFlag = self.lookup_flag
+        lookup.LookupType = self.lookup_type
+        lookup.SubTableCount = len(lookup.SubTable)
+        return lookup
+
+
+class ReverseChainSingleSubstBuilder(LookupBuilder):
+    def __init__(self, font, location, lookup_flag):
+        LookupBuilder.__init__(self, font, location, 'GSUB', 8, lookup_flag)
+        self.substitutions = []  # (prefix, suffix, mapping)
+
+    def equals(self, other):
+        return (LookupBuilder.equals(self, other) and
+                self.substitutions == other.substitutions)
+
+    def build(self):
+        lookup = otTables.Lookup()
+        lookup.SubTable = []
+        for prefix, suffix, mapping in self.substitutions:
+            st = otTables.ReverseChainSingleSubst()
+            st.Format = 1
+            lookup.SubTable.append(st)
+            self.setBacktrackCoverage_(prefix, st)
+            self.setLookAheadCoverage_(suffix, st)
+            coverage = sorted(mapping.keys(), key=self.font.getGlyphID)
+            st.Coverage = otTables.Coverage()
+            st.Coverage.glyphs = coverage
+            st.GlyphCount = len(coverage)
+            st.Substitute = [mapping[g] for g in coverage]
+
+        lookup.LookupFlag = self.lookup_flag
+        lookup.LookupType = self.lookup_type
+        lookup.SubTableCount = len(lookup.SubTable)
+        return lookup
+
+
 class SingleSubstBuilder(LookupBuilder):
-    def __init__(self, location, lookup_flag):
-        LookupBuilder.__init__(self, location, 'GSUB', 1, lookup_flag)
+    def __init__(self, font, location, lookup_flag):
+        LookupBuilder.__init__(self, font, location, 'GSUB', 1, lookup_flag)
         self.mapping = {}
 
     def equals(self, other):
@@ -390,6 +753,89 @@ class SingleSubstBuilder(LookupBuilder):
         st = otTables.SingleSubst()
         st.mapping = self.mapping
         lookup.SubTable.append(st)
+        lookup.LookupFlag = self.lookup_flag
+        lookup.LookupType = self.lookup_type
+        lookup.SubTableCount = len(lookup.SubTable)
+        return lookup
+
+
+class SinglePosBuilder(LookupBuilder):
+    def __init__(self, font, location, lookup_flag):
+        LookupBuilder.__init__(self, font, location, 'GPOS', 1, lookup_flag)
+        self.mapping = {}  # glyph -> ast.ValueRecord
+
+    def equals(self, other):
+        return (LookupBuilder.equals(self, other) and
+                self.mapping == other.mapping)
+
+    def build(self):
+        subtables = []
+
+        # If multiple glyphs have the same ValueRecord, they can go into
+        # the same subtable which saves space. Therefore, we first build
+        # a reverse mapping from ValueRecord to glyph coverage.
+        values = {}
+        for glyph, valuerecord in self.mapping.items():
+            values.setdefault(valuerecord, []).append(glyph)
+
+        # For compliance with the OpenType specification,
+        # we sort the glyph coverage by glyph ID.
+        for glyphs in values.values():
+            glyphs.sort(key=self.font.getGlyphID)
+
+        # Make a list of (glyphs, (otBase.ValueRecord, int valueFormat)).
+        # Glyphs with the same otBase.ValueRecord are grouped into one item.
+        values = [(glyphs, makeOpenTypeValueRecord(valrec))
+                  for valrec, glyphs in values.items()]
+
+        # Find out which glyphs should be encoded as SinglePos format 2.
+        # Format 2 is more compact than format 1 when multiple glyphs
+        # have different values but share the same integer valueFormat.
+        format2 = {}  # valueFormat --> [(glyph, value), (glyph, value), ...]
+        for glyphs, (value, valueFormat) in values:
+            if len(glyphs) == 1:
+                glyph = glyphs[0]
+                format2.setdefault(valueFormat, []).append((glyph, value))
+
+        # Only use format 2 if multiple glyphs share the same valueFormat.
+        # Otherwise, format 1 is more compact.
+        format2 = [(valueFormat, valueList)
+                   for valueFormat, valueList in format2.items()
+                   if len(valueList) > 1]
+        format2.sort()
+        format2Glyphs = set()  # {"A", "B", "C"}
+        for _, valueList in format2:
+            for (glyph, _) in valueList:
+                format2Glyphs.add(glyph)
+        for valueFormat, valueList in format2:
+            valueList.sort(key=lambda x: self.font.getGlyphID(x[0]))
+            st = otTables.SinglePos()
+            subtables.append(st)
+            st.Format = 2
+            st.ValueFormat = valueFormat
+            st.Coverage = otTables.Coverage()
+            st.Coverage.glyphs = [glyph for glyph, _value in valueList]
+            st.ValueCount = len(valueList)
+            st.Value = [value for _glyph, value in valueList]
+
+        # To make the ordering of our subtables deterministic,
+        # we sort subtables by the first glyph ID in their coverage.
+        # Not doing this would be OK for OpenType, but testing the
+        # compiler would be harder with non-deterministic output.
+        values.sort(key=lambda x: self.font.getGlyphID(x[0][0]))
+
+        for glyphs, (value, valueFormat) in values:
+            if len(glyphs) == 1 and glyphs[0] in format2Glyphs:
+                continue  # already emitted as part of a format 2 subtable
+            st = otTables.SinglePos()
+            subtables.append(st)
+            st.Format = 1
+            st.Coverage = otTables.Coverage()
+            st.Coverage.glyphs = glyphs
+            st.Value, st.ValueFormat = value, valueFormat
+
+        lookup = otTables.Lookup()
+        lookup.SubTable = subtables
         lookup.LookupFlag = self.lookup_flag
         lookup.LookupType = self.lookup_type
         lookup.SubTableCount = len(lookup.SubTable)

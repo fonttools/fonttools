@@ -2,6 +2,7 @@
 
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
+from fontTools.misc.xmlWriter import XMLWriter
 
 
 def parseXML(xmlSnippet):
@@ -15,6 +16,23 @@ def parseXML(xmlSnippet):
     reader = TestXMLReader_()
     reader.parser.Parse("<root>%s</root>" % xmlSnippet, 0)
     return reader.root[2]
+
+
+class FakeFont:
+    def __init__(self, glyphs):
+        self.glyphOrder_ = glyphs
+
+    def getGlyphID(self, name):
+        return self.glyphOrder_.index(name)
+
+    def getGlyphName(self, glyphID):
+        if glyphID < len(self.glyphOrder_):
+            return self.glyphOrder_[glyphID]
+        else:
+            return "glyph%.5d" % glyphID
+
+    def getGlyphOrder(self):
+        return self.glyphOrder_
 
 
 class TestXMLReader_(object):
@@ -40,3 +58,18 @@ class TestXMLReader_(object):
 
     def addCharacterData_(self, data):
         self.stack[-1][2].append(data)
+
+
+def getXML(obj, ttFont):
+    """Call the object's toXML() method and return the writer's content as string.
+    Result is stripped of XML declaration and OS-specific newline characters.
+    """
+    writer = XMLWriter(BytesIO())
+    # don't write OS-specific new lines
+    writer.newlinestr = writer.totype('')
+    # erase XML declaration
+    writer.file.seek(0)
+    writer.file.truncate()
+    obj.toXML(writer, ttFont)
+    xml = writer.file.getvalue().decode("utf-8")
+    return xml

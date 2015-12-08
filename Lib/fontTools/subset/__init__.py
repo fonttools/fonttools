@@ -7,6 +7,7 @@ from fontTools.misc.py23 import *
 from fontTools import ttLib
 from fontTools.ttLib.tables import otTables
 from fontTools.misc import psCharStrings
+from fontTools.pens.boundsPen import BoundsPen
 import sys
 import struct
 import time
@@ -191,7 +192,7 @@ Font table options:
       By default, the following tables are dropped:
       'BASE', 'JSTF', 'DSIG', 'EBDT', 'EBLC', 'EBSC', 'SVG ', 'PCLT', 'LTSH'
       and Graphite tables: 'Feat', 'Glat', 'Gloc', 'Silf', 'Sill'
-      and color tables: 'CBLC', 'CBDT', 'sbix', 'COLR', 'CPAL'.
+      and color tables: 'CBLC', 'CBDT', 'sbix'.
       The tool will attempt to subset the remaining tables.
       Examples:
         --drop-tables-='SVG '
@@ -207,9 +208,9 @@ Font table options:
       By default, the following tables are included in this list, as
       they do not need subsetting (ignore the fact that 'loca' is listed
       here): 'gasp', 'head', 'hhea', 'maxp', 'vhea', 'OS/2', 'loca',
-      'name', 'cvt ', 'fpgm', 'prep', 'VMDX', and 'DSIG'. Tables that the tool
-      does not know how to subset and are not specified here will be dropped
-      from the font.
+      'name', 'cvt ', 'fpgm', 'prep', 'VMDX', 'DSIG' and 'CPAL'.
+      Tables that the tool does not know how to subset and are not specified
+      here will be dropped from the font.
       Example:
          --no-subset-tables+=FFTM
             * Keep 'FFTM' table in the font by preventing subsetting.
@@ -331,7 +332,7 @@ def _set_update(s, *others):
         s.update(other)
 
 def _dict_subset(d, glyphs):
-	return {g:d[g] for g in glyphs}
+    return {g:d[g] for g in glyphs}
 
 
 @_add_method(otTables.Coverage)
@@ -1541,6 +1542,33 @@ def subset_glyphs(self, s):
     self.extraNames = []    # This seems to do it
     return True # Required table
 
+@_add_method(ttLib.getTableClass('COLR'))
+def closure_glyphs(self, s):
+    decompose = s.glyphs
+    while True:
+        layers = set()
+        for g in decompose:
+            if g not in self.ColorLayers:
+                continue
+            for l in self.ColorLayers[g]:
+                if l.name not in s.glyphs:
+                    layers.add(l.name)
+        layers = set(l for l in layers if l not in s.glyphs)
+        if not layers:
+            break
+        decompose = layers
+        s.glyphs.update(layers)
+
+@_add_method(ttLib.getTableClass('COLR'))
+def subset_glyphs(self, s):
+    self.ColorLayers = {g: self.ColorLayers[g] for g in s.glyphs if g in self.ColorLayers}
+    return bool(self.ColorLayers)
+
+# TODO: prune unused palettes
+@_add_method(ttLib.getTableClass('CPAL'))
+def prune_post_subset(self, options):
+    return True
+
 @_add_method(ttLib.getTableModule('glyf').Glyph)
 def remapComponentsFast(self, indices):
     if not self.data or struct.unpack(">h", self.data[:2])[0] >= 0:
@@ -1623,10 +1651,19 @@ def prune_pre_subset(self, options):
     if options.notdef_glyph and not options.notdef_outline:
         for fontname in cff.keys():
             font = cff[fontname]
-            c,_ = font.CharStrings.getItemAndSelector('.notdef')
-            # XXX we should preserve the glyph width
-            c.bytecode = '\x0e' # endchar
-            c.program = None
+            c,sel = font.CharStrings.getItemAndSelector('.notdef')
+            if hasattr(font, 'FDArray') and font.FDArray is not None:
+                private = font.FDArray[font.FDSelect[sel]].Private
+            else:
+                private = font.Private
+            dfltWdX = private.defaultWidthX
+            nmnlWdX = private.nominalWidthX
+            pen = BoundsPen(None)
+            c.draw(pen) # this will set the charstring's width
+            if c.width != dfltWdX:
+                c.program = [c.width - nmnlWdX, 'endchar']
+            else:
+                c.program = ['endchar']
 
     return True # bool(cff.fontNames)
 
@@ -2176,14 +2213,15 @@ class Options(object):
     class OptionError(Exception): pass
     class UnknownOptionError(OptionError): pass
 
+    # spaces in tag names (e.g. "SVG ", "cvt ") are stripped by the argument parser
     _drop_tables_default = ['BASE', 'JSTF', 'DSIG', 'EBDT', 'EBLC',
-                            'EBSC', 'SVG ', 'PCLT', 'LTSH']
+                            'EBSC', 'SVG', 'PCLT', 'LTSH']
     _drop_tables_default += ['Feat', 'Glat', 'Gloc', 'Silf', 'Sill']  # Graphite
-    _drop_tables_default += ['CBLC', 'CBDT', 'sbix', 'COLR', 'CPAL']  # Color
+    _drop_tables_default += ['CBLC', 'CBDT', 'sbix']  # Color
     _no_subset_tables_default = ['gasp', 'head', 'hhea', 'maxp',
-                                 'vhea', 'OS/2', 'loca', 'name', 'cvt ',
-                                 'fpgm', 'prep', 'VDMX', 'DSIG']
-    _hinting_tables_default = ['cvt ', 'fpgm', 'prep', 'hdmx', 'VDMX']
+                                 'vhea', 'OS/2', 'loca', 'name', 'cvt',
+                                 'fpgm', 'prep', 'VDMX', 'DSIG', 'CPAL']
+    _hinting_tables_default = ['cvt', 'fpgm', 'prep', 'hdmx', 'VDMX']
 
     # Based on HarfBuzz shapers
     _layout_features_groups = {
@@ -2195,7 +2233,7 @@ class Options(object):
         'rtl': ['rtla', 'rtlm'],
         # Complex shapers
         'arabic': ['init', 'medi', 'fina', 'isol', 'med2', 'fin2', 'fin3',
-                   'cswh', 'mset'],
+                   'cswh', 'mset', 'stch'],
         'hangul': ['ljmo', 'vjmo', 'tjmo'],
         'tibetan': ['abvs', 'blws', 'abvm', 'blwm'],
         'indic': ['nukt', 'akhn', 'rphf', 'rkrf', 'pref', 'blwf', 'half',
@@ -2205,31 +2243,32 @@ class Options(object):
     _layout_features_default = _uniq_sort(sum(
             iter(_layout_features_groups.values()), []))
 
-    drop_tables = _drop_tables_default
-    no_subset_tables = _no_subset_tables_default
-    hinting_tables = _hinting_tables_default
-    legacy_kern = False    # drop 'kern' table if GPOS available
-    layout_features = _layout_features_default
-    ignore_missing_glyphs = False
-    ignore_missing_unicodes = True
-    hinting = True
-    glyph_names = False
-    legacy_cmap = False
-    symbol_cmap = False
-    name_IDs = [1, 2]    # Family and Style
-    name_legacy = False
-    name_languages = [0x0409]    # English
-    obfuscate_names = False    # to make webfont unusable as a system font
-    notdef_glyph = True # gid0 for TrueType / .notdef for CFF
-    notdef_outline = False # No need for notdef to have an outline really
-    recommended_glyphs = False    # gid1, gid2, gid3 for TrueType
-    recalc_bounds = False # Recalculate font bounding boxes
-    recalc_timestamp = False # Recalculate font modified timestamp
-    canonical_order = False # Order tables as recommended
-    flavor = None  # May be 'woff' or 'woff2'
-    desubroutinize = False # Desubroutinize CFF CharStrings
-
     def __init__(self, **kwargs):
+
+        self.drop_tables = self._drop_tables_default[:]
+        self.no_subset_tables = self._no_subset_tables_default[:]
+        self.hinting_tables = self._hinting_tables_default[:]
+        self.legacy_kern = False    # drop 'kern' table if GPOS available
+        self.layout_features = self._layout_features_default[:]
+        self.ignore_missing_glyphs = False
+        self.ignore_missing_unicodes = True
+        self.hinting = True
+        self.glyph_names = False
+        self.legacy_cmap = False
+        self.symbol_cmap = False
+        self.name_IDs = [1, 2]    # Family and Style
+        self.name_legacy = False
+        self.name_languages = [0x0409]    # English
+        self.obfuscate_names = False    # to make webfont unusable as a system font
+        self.notdef_glyph = True # gid0 for TrueType / .notdef for CFF
+        self.notdef_outline = False # No need for notdef to have an outline really
+        self.recommended_glyphs = False    # gid1, gid2, gid3 for TrueType
+        self.recalc_bounds = False # Recalculate font bounding boxes
+        self.recalc_timestamp = False # Recalculate font modified timestamp
+        self.canonical_order = False # Order tables as recommended
+        self.flavor = None  # May be 'woff' or 'woff2'
+        self.desubroutinize = False # Desubroutinize CFF CharStrings
+
         self.set(**kwargs)
 
     def set(self, **kwargs):
@@ -2341,8 +2380,8 @@ class Subsetter(object):
         for tag in font.keys():
             if tag == 'GlyphOrder': continue
 
-            if(tag in self.options.drop_tables or
-                 (tag in self.options.hinting_tables and not self.options.hinting) or
+            if(tag.strip() in self.options.drop_tables or
+                 (tag.strip() in self.options.hinting_tables and not self.options.hinting) or
                  (tag == 'kern' and (not self.options.legacy_kern and 'GPOS' in font))):
                 self.log(tag, "dropped")
                 del font[tag]
@@ -2422,6 +2461,18 @@ class Subsetter(object):
             self.log.lapse("close glyph list over 'GSUB'")
         self.glyphs_gsubed = frozenset(self.glyphs)
 
+        if 'COLR' in font:
+            self.log("Closing glyph list over 'COLR': %d glyphs before" %
+                     len(self.glyphs))
+            self.log.glyphs(self.glyphs, font=font)
+            font['COLR'].closure_glyphs(self)
+            self.glyphs.intersection_update(realGlyphs)
+            self.log("Closed glyph list over 'COLR': %d glyphs after" %
+                     len(self.glyphs))
+            self.log.glyphs(self.glyphs, font=font)
+            self.log.lapse("close glyph list over 'COLR'")
+        self.glyphs_colred = frozenset(self.glyphs)
+
         if 'glyf' in font:
             self.log("Closing glyph list over 'glyf': %d glyphs before" %
                      len(self.glyphs))
@@ -2445,7 +2496,7 @@ class Subsetter(object):
             if tag == 'GlyphOrder': continue
             clazz = ttLib.getTableClass(tag)
 
-            if tag in self.options.no_subset_tables:
+            if tag.strip() in self.options.no_subset_tables:
                 self.log(tag, "subsetting not needed")
             elif hasattr(clazz, 'subset_glyphs'):
                 table = font[tag]

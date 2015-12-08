@@ -225,31 +225,46 @@ class Program(object):
 
 	def toXML(self, writer, ttFont):
 		if not hasattr (ttFont, "disassembleInstructions") or ttFont.disassembleInstructions:
-			assembly = self.getAssembly()
-			writer.begintag("assembly")
-			writer.newline()
-			i = 0
-			nInstr = len(assembly)
-			while i < nInstr:
-				instr = assembly[i]
-				writer.write(instr)
+			try:
+				assembly = self.getAssembly()
+			except:
+				import traceback
+				tmp = StringIO()
+				traceback.print_exc(file=tmp)
+				msg = "An exception occurred during the decompilation of glyph program:\n\n"
+				msg += tmp.getvalue()
+				print(msg, file=sys.stderr)
+				writer.begintag("bytecode")
 				writer.newline()
-				m = _pushCountPat.match(instr)
-				i = i + 1
-				if m:
-					nValues = int(m.group(1))
-					line = []
-					j = 0
-					for j in range(nValues):
-						if j and not (j % 25):
-							writer.write(' '.join(line))
-							writer.newline()
-							line = []
-						line.append(assembly[i+j])
-					writer.write(' '.join(line))
+				writer.comment(msg.strip())
+				writer.newline()
+				writer.dumphex(self.getBytecode())
+				writer.endtag("bytecode")
+			else:
+				writer.begintag("assembly")
+				writer.newline()
+				i = 0
+				nInstr = len(assembly)
+				while i < nInstr:
+					instr = assembly[i]
+					writer.write(instr)
 					writer.newline()
-					i = i + j + 1
-			writer.endtag("assembly")
+					m = _pushCountPat.match(instr)
+					i = i + 1
+					if m:
+						nValues = int(m.group(1))
+						line = []
+						j = 0
+						for j in range(nValues):
+							if j and not (j % 25):
+								writer.write(' '.join(line))
+								writer.newline()
+								line = []
+							line.append(assembly[i+j])
+						writer.write(' '.join(line))
+						writer.newline()
+						i = i + j + 1
+				writer.endtag("assembly")
 		else:
 			writer.begintag("bytecode")
 			writer.newline()

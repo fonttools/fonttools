@@ -4,17 +4,17 @@ from __future__ import print_function, division, absolute_import
 import sys
 
 try:
-	basestring
+	basestring = basestring
 except NameError:
 	basestring = str
 
 try:
-	unicode
+	unicode = unicode
 except NameError:
 	unicode = str
 
 try:
-	unichr
+	unichr = unichr
 
 	if sys.maxunicode < 0x10FFFF:
 		# workarounds for Python 2 "narrow" builds with UCS2-only support.

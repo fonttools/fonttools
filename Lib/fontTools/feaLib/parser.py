@@ -35,16 +35,58 @@ class Parser(object):
                 statements.append(self.parse_languagesystem_())
             elif self.is_cur_keyword_("lookup"):
                 statements.append(self.parse_lookup_(vertical=False))
+            elif self.is_cur_keyword_("markClass"):
+                self.parse_markClass_()
             elif self.is_cur_keyword_("feature"):
                 statements.append(self.parse_feature_block_())
             elif self.is_cur_keyword_("valueRecordDef"):
                 statements.append(
                     self.parse_valuerecord_definition_(vertical=False))
             else:
-                raise FeatureLibError("Expected feature, languagesystem, "
-                                      "lookup, or glyph class definition",
-                                      self.cur_token_location_)
+                raise FeatureLibError(
+                    "Expected feature, languagesystem, lookup, markClass, "
+                    "or glyph class definition",
+                    self.cur_token_location_)
         return self.doc_
+
+    def parse_anchor_(self):
+        self.expect_symbol_("<")
+        self.expect_keyword_("anchor")
+        location = self.cur_token_location_
+
+        if self.next_token_ == "NULL":
+            self.expect_keyword_("NULL")
+            self.expect_symbol_(">")
+            return None
+
+        if self.next_token_type_ == Lexer.NAME:
+            name = self.expect_name_()
+            anchordef = self.anchors_.resolve(name)
+            if anchordef is None:
+                raise FeatureLibError(
+                    'Unknown anchor "%s"' % name,
+                    self.cur_token_location_)
+            self.expect_symbol_(">")
+            return ast.Anchor(location, anchordef.x, anchordef.y,
+                              anchordef.contourpoint,
+                              xDeviceTable=None, yDeviceTable=None)
+
+        x, y = self.expect_number_(), self.expect_number_()
+
+        contourpoint = None
+        if self.next_token_ == "contourpoint":
+            self.expect_keyword_("contourpoint")
+            contourpoint = self.expect_number_()
+
+        if self.next_token_ == "<":
+            xDeviceTable = self.parse_device_()
+            yDeviceTable = self.parse_device_()
+        else:
+            xDeviceTable, yDeviceTable = None, None
+
+        self.expect_symbol_(">")
+        return ast.Anchor(location, x, y, contourpoint,
+                          xDeviceTable, yDeviceTable)
 
     def parse_anchordef_(self):
         assert self.is_cur_keyword_("anchorDef")
@@ -59,6 +101,11 @@ class Parser(object):
         anchordef = ast.AnchorDefinition(location, name, x, y, contourpoint)
         self.anchors_.define(name, anchordef)
         return anchordef
+
+    def parse_enumerate_(self, vertical):
+        assert self.cur_token_ in {"enumerate", "enum"}
+        self.advance_lexer_()
+        return self.parse_position_(enumerated=True, vertical=vertical)
 
     def parse_glyphclass_definition_(self):
         location, name = self.cur_token_location_, self.cur_token_
@@ -200,6 +247,63 @@ class Parser(object):
         self.lookups_.define(name, block)
         return block
 
+    def parse_markClass_(self):
+        assert self.is_cur_keyword_("markClass")
+        location = self.cur_token_location_
+        glyphs = self.parse_glyphclass_(accept_glyphname=True)
+        anchor = self.parse_anchor_()
+        name = self.expect_glyphclass_()
+        self.expect_symbol_(";")
+        markClass = self.doc_.markClasses.get(name)
+        if markClass is None:
+            markClass = ast.MarkClassDefinition(location, name)
+            self.doc_.markClasses[name] = markClass
+        for glyph in glyphs:
+            markClass.anchors[glyph] = anchor
+            markClass.glyphLocations[glyph] = location
+
+    def is_next_glyphclass_(self):
+        return (self.next_token_ == "[" or
+                self.next_token_type_ in (Lexer.GLYPHCLASS, Lexer.NAME))
+
+    def parse_position_(self, enumerated, vertical):
+        assert self.cur_token_ in {"position", "pos"}
+        location = self.cur_token_location_
+        if self.next_token_ == "cursive":
+            self.expect_keyword_("cursive")
+            if enumerated:
+                raise FeatureLibError(
+                    '"enumerate" is not allowed with '
+                    'cursive attachment positioning',
+                    location)
+            glyphclass = self.parse_glyphclass_(accept_glyphname=True)
+            entryAnchor = self.parse_anchor_()
+            exitAnchor = self.parse_anchor_()
+            self.expect_symbol_(";")
+            return ast.CursiveAttachmentPositioning(
+                location, glyphclass, entryAnchor, exitAnchor)
+
+        gc2, value2 = None, None
+        gc1 = self.parse_glyphclass_(accept_glyphname=True)
+        if self.is_next_glyphclass_():
+            # Pair positioning, format B: 'pos' gc1 gc2 value1
+            gc2 = self.parse_glyphclass_(accept_glyphname=True)
+        value1 = self.parse_valuerecord_(vertical)
+        if self.next_token_ != ";" and gc2 is None:
+            # Pair positioning, format A: 'pos' gc1 value1 gc2 value2
+            gc2 = self.parse_glyphclass_(accept_glyphname=True)
+            value2 = self.parse_valuerecord_(vertical)
+        self.expect_symbol_(";")
+        if gc2 is None:
+            if enumerated:
+                raise FeatureLibError(
+                    '"enumerate" is only allowed with pair positionings',
+                    self.cur_token_location_)
+            return ast.SingleAdjustmentPositioning(location, gc1, value1)
+        else:
+            return ast.PairAdjustmentPositioning(location, enumerated,
+                                                 gc1, value1, gc2, value2)
+
     def parse_script_(self):
         assert self.is_cur_keyword_("script")
         location, script = self.cur_token_location_, self.expect_script_tag_()
@@ -207,8 +311,9 @@ class Parser(object):
         return ast.ScriptStatement(location, script)
 
     def parse_substitute_(self):
-        assert self.cur_token_ in {"substitute", "sub"}
+        assert self.cur_token_ in {"substitute", "sub", "reversesub", "rsub"}
         location = self.cur_token_location_
+        reverse = self.cur_token_ in {"reversesub", "rsub"}
         old_prefix, old, lookups, old_suffix = self.parse_glyph_pattern_()
 
         new = []
@@ -230,6 +335,10 @@ class Parser(object):
         # GSUB lookup type 3: Alternate substitution.
         # Format: "substitute a from [a.1 a.2 a.3];"
         if keyword == "from":
+            if reverse:
+                raise FeatureLibError(
+                    'Reverse chaining substitutions do not support "from"',
+                    location)
             if len(old) != 1 or len(old[0]) != 1:
                 raise FeatureLibError(
                     'Expected a single glyph before "from"',
@@ -246,7 +355,7 @@ class Parser(object):
         # Format A: "substitute a by a.sc;"
         # Format B: "substitute [one.fitted one.oldstyle] by one;"
         # Format C: "substitute [a-d] by [A.sc-D.sc];"
-        if (len(old_prefix) == 0 and len(old_suffix) == 0 and
+        if (not reverse and len(old_prefix) == 0 and len(old_suffix) == 0 and
                 len(old) == 1 and len(new) == 1 and num_lookups == 0):
             glyphs, replacements = sorted(list(old[0])), sorted(list(new[0]))
             if len(replacements) == 1:
@@ -261,7 +370,7 @@ class Parser(object):
 
         # GSUB lookup type 2: Multiple substitution.
         # Format: "substitute f_f_i by f f i;"
-        if (len(old_prefix) == 0 and len(old_suffix) == 0 and
+        if (not reverse and len(old_prefix) == 0 and len(old_suffix) == 0 and
                 len(old) == 1 and len(old[0]) == 1 and
                 len(new) > 1 and max([len(n) for n in new]) == 1 and
                 num_lookups == 0):
@@ -270,14 +379,43 @@ class Parser(object):
 
         # GSUB lookup type 4: Ligature substitution.
         # Format: "substitute f f i by f_f_i;"
-        if (len(old_prefix) == 0 and len(old_suffix) == 0 and
+        if (not reverse and len(old_prefix) == 0 and len(old_suffix) == 0 and
                 len(old) > 1 and len(new) == 1 and len(new[0]) == 1 and
                 num_lookups == 0):
             return ast.LigatureSubstitution(location, old, list(new[0])[0])
 
+        # GSUB lookup type 8: Reverse chaining substitution.
+        if reverse:
+            if len(old) != 1:
+                raise FeatureLibError(
+                    "In reverse chaining single substitutions, "
+                    "only a single glyph or glyph class can be replaced",
+                    location)
+            if len(new) != 1:
+                raise FeatureLibError(
+                    'In reverse chaining single substitutions, '
+                    'the replacement (after "by") must be a single glyph '
+                    'or glyph class', location)
+            if num_lookups != 0:
+                raise FeatureLibError(
+                    "Reverse chaining substitutions cannot call named lookups",
+                    location)
+            glyphs, replacements = sorted(list(old[0])), sorted(list(new[0]))
+            if len(replacements) == 1:
+                replacements = replacements * len(glyphs)
+            if len(glyphs) != len(replacements):
+                raise FeatureLibError(
+                    'Expected a glyph class with %d elements after "by", '
+                    'but found a glyph class with %d elements' %
+                    (len(glyphs), len(replacements)), location)
+            return ast.ReverseChainingSingleSubstitution(
+                location, old_prefix, old_suffix,
+                dict(zip(glyphs, replacements)))
+
         rule = ast.SubstitutionRule(location, old, new)
         rule.old_prefix, rule.old_suffix = old_prefix, old_suffix
         rule.lookups = lookups
+        rule.reverse = reverse
         return rule
 
     def parse_subtable_(self):
@@ -286,18 +424,38 @@ class Parser(object):
         self.expect_symbol_(";")
         return ast.SubtableStatement(location)
 
+    def parse_device_(self):
+        result = None
+        self.expect_symbol_("<")
+        self.expect_keyword_("device")
+        if self.next_token_ == "NULL":
+            self.expect_keyword_("NULL")
+        else:
+            result = [(self.expect_number_(), self.expect_number_())]
+            while self.next_token_ == ",":
+                self.expect_symbol_(",")
+                result.append((self.expect_number_(), self.expect_number_()))
+            result = tuple(result)  # make it hashable
+        self.expect_symbol_(">")
+        return result
+
     def parse_valuerecord_(self, vertical):
         if self.next_token_type_ is Lexer.NUMBER:
             number, location = self.expect_number_(), self.cur_token_location_
             if vertical:
-                val = ast.ValueRecord(location, 0, 0, 0, number)
+                val = ast.ValueRecord(location, 0, 0, 0, number,
+                                      None, None, None, None)
             else:
-                val = ast.ValueRecord(location, 0, 0, number, 0)
+                val = ast.ValueRecord(location, 0, 0, number, 0,
+                                      None, None, None, None)
             return val
         self.expect_symbol_("<")
         location = self.cur_token_location_
         if self.next_token_type_ is Lexer.NAME:
             name = self.expect_name_()
+            if name == "NULL":
+                self.expect_symbol_(">")
+                return None
             vrd = self.valuerecords_.resolve(name)
             if vrd is None:
                 raise FeatureLibError("Unknown valueRecordDef \"%s\"" % name,
@@ -309,9 +467,30 @@ class Parser(object):
             xPlacement, yPlacement, xAdvance, yAdvance = (
                 self.expect_number_(), self.expect_number_(),
                 self.expect_number_(), self.expect_number_())
+
+        if self.next_token_ == "<":
+            xPlaDevice, yPlaDevice, xAdvDevice, yAdvDevice = (
+                self.parse_device_(), self.parse_device_(),
+                self.parse_device_(), self.parse_device_())
+            allDeltas = sorted([
+                delta
+                for size, delta
+                in (xPlaDevice if xPlaDevice else ()) +
+                (yPlaDevice if yPlaDevice else ()) +
+                (xAdvDevice if xAdvDevice else ()) +
+                (yAdvDevice if yAdvDevice else ())])
+            if allDeltas[0] < -128 or allDeltas[-1] > 127:
+                raise FeatureLibError(
+                    "Device value out of valid range (-128..127)",
+                    self.cur_token_location_)
+        else:
+            xPlaDevice, yPlaDevice, xAdvDevice, yAdvDevice = (
+                None, None, None, None)
+
         self.expect_symbol_(">")
         return ast.ValueRecord(
-            location, xPlacement, yPlacement, xAdvance, yAdvance)
+            location, xPlacement, yPlacement, xAdvance, yAdvance,
+            xPlaDevice, yPlaDevice, xAdvDevice, yAdvDevice)
 
     def parse_valuerecord_definition_(self, vertical):
         assert self.is_cur_keyword_("valueRecordDef")
@@ -362,16 +541,23 @@ class Parser(object):
                 statements.append(self.parse_glyphclass_definition_())
             elif self.is_cur_keyword_("anchorDef"):
                 statements.append(self.parse_anchordef_())
+            elif self.is_cur_keyword_({"enum", "enumerate"}):
+                statements.append(self.parse_enumerate_(vertical=vertical))
             elif self.is_cur_keyword_("ignore"):
                 statements.append(self.parse_ignore_())
             elif self.is_cur_keyword_("language"):
                 statements.append(self.parse_language_())
             elif self.is_cur_keyword_("lookup"):
                 statements.append(self.parse_lookup_(vertical))
+            elif self.is_cur_keyword_("markClass"):
+                self.parse_markClass_()
+            elif self.is_cur_keyword_({"pos", "position"}):
+                statements.append(
+                    self.parse_position_(enumerated=False, vertical=vertical))
             elif self.is_cur_keyword_("script"):
                 statements.append(self.parse_script_())
-            elif (self.is_cur_keyword_("substitute") or
-                  self.is_cur_keyword_("sub")):
+            elif (self.is_cur_keyword_({"sub", "substitute",
+                                        "rsub", "reversesub"})):
                 statements.append(self.parse_substitute_())
             elif self.is_cur_keyword_("subtable"):
                 statements.append(self.parse_subtable_())
@@ -393,7 +579,18 @@ class Parser(object):
         self.expect_symbol_(";")
 
     def is_cur_keyword_(self, k):
-        return (self.cur_token_type_ is Lexer.NAME) and (self.cur_token_ == k)
+        if self.cur_token_type_ is Lexer.NAME:
+            if isinstance(k, type("")):  # basestring is gone in Python3
+                return self.cur_token_ == k
+            else:
+                return self.cur_token_ in k
+        return False
+
+    def expect_glyphclass_(self):
+        self.advance_lexer_()
+        if self.cur_token_type_ is not Lexer.GLYPHCLASS:
+            raise FeatureLibError("Expected @NAME", self.cur_token_location_)
+        return self.cur_token_
 
     def expect_tag_(self):
         self.advance_lexer_()

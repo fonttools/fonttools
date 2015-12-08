@@ -3,7 +3,22 @@ from __future__ import unicode_literals
 import itertools
 
 
+def deviceToString(device):
+    if device is None:
+        return "<device NULL>"
+    else:
+        return "<device %s>" % ", ".join(["%d %d" % t for t in device])
+
+
 class Statement(object):
+    def __init__(self, location):
+        self.location = location
+
+    def build(self, builder):
+        pass
+
+
+class Expression(object):
     def __init__(self, location):
         self.location = location
 
@@ -24,6 +39,7 @@ class Block(Statement):
 class FeatureFile(Block):
     def __init__(self):
         Block.__init__(self, location=None)
+        self.markClasses = {}  # name --> ast.MarkClassDefinition
 
 
 class FeatureBlock(Block):
@@ -57,6 +73,13 @@ class GlyphClassDefinition(Statement):
         self.glyphs = glyphs
 
 
+class MarkClassDefinition(object):
+    def __init__(self, location, name):
+        self.location, self.name = location, name
+        self.anchors = {}  # glyph --> ast.Anchor
+        self.glyphLocations = {}  # glyph --> (filepath, line, column)
+
+
 class AlternateSubstitution(Statement):
     def __init__(self, location, glyph, from_class):
         Statement.__init__(self, location)
@@ -67,10 +90,29 @@ class AlternateSubstitution(Statement):
                                            self.from_class)
 
 
+class Anchor(Expression):
+    def __init__(self, location, x, y, contourpoint,
+                 xDeviceTable, yDeviceTable):
+        Expression.__init__(self, location)
+        self.x, self.y, self.contourpoint = x, y, contourpoint
+        self.xDeviceTable, self.yDeviceTable = xDeviceTable, yDeviceTable
+
+
 class AnchorDefinition(Statement):
     def __init__(self, location, name, x, y, contourpoint):
         Statement.__init__(self, location)
         self.name, self.x, self.y, self.contourpoint = name, x, y, contourpoint
+
+
+class CursiveAttachmentPositioning(Statement):
+    def __init__(self, location, glyphclass, entryAnchor, exitAnchor):
+        Statement.__init__(self, location)
+        self.glyphclass = glyphclass
+        self.entryAnchor, self.exitAnchor = entryAnchor, exitAnchor
+
+    def build(self, builder):
+        builder.add_cursive_attachment_pos(
+            self.location, self.glyphclass, self.entryAnchor, self.exitAnchor)
 
 
 class LanguageStatement(Statement):
@@ -123,6 +165,10 @@ class LookupReferenceStatement(Statement):
         Statement.__init__(self, location)
         self.location, self.lookup = (location, lookup)
 
+    def build(self, builder):
+        for s in self.lookup.statements:
+            s.build(builder)
+
 
 class MultipleSubstitution(Statement):
     def __init__(self, location, glyph, replacement):
@@ -132,6 +178,31 @@ class MultipleSubstitution(Statement):
     def build(self, builder):
         builder.add_multiple_substitution(self.location,
                                           self.glyph, self.replacement)
+
+
+class PairAdjustmentPositioning(Statement):
+    def __init__(self, location, enumerated,
+                 glyphclass1, valuerecord1, glyphclass2, valuerecord2):
+        Statement.__init__(self, location)
+        self.enumerated = enumerated
+        self.glyphclass1, self.valuerecord1 = glyphclass1, valuerecord1
+        self.glyphclass2, self.valuerecord2 = glyphclass2, valuerecord2
+
+    def build(self, builder):
+        builder.add_pair_pos(self.location, self.enumerated,
+                             self.glyphclass1, self.valuerecord1,
+                             self.glyphclass2, self.valuerecord2)
+
+
+class ReverseChainingSingleSubstitution(Statement):
+    def __init__(self, location, old_prefix, old_suffix, mapping):
+        Statement.__init__(self, location)
+        self.old_prefix, self.old_suffix = old_prefix, old_suffix
+        self.mapping = mapping
+
+    def build(self, builder):
+        builder.add_reverse_chaining_single_substitution(
+            self.location, self.old_prefix, self.old_suffix, self.mapping)
 
 
 class SingleSubstitution(Statement):
@@ -152,6 +223,16 @@ class ScriptStatement(Statement):
         builder.set_script(self.location, self.script)
 
 
+class SingleAdjustmentPositioning(Statement):
+    def __init__(self, location, glyphclass, valuerecord):
+        Statement.__init__(self, location)
+        self.glyphclass, self.valuerecord = glyphclass, valuerecord
+
+    def build(self, builder):
+        for glyph in self.glyphclass:
+            builder.add_single_pos(self.location, glyph, self.valuerecord)
+
+
 class SubtableStatement(Statement):
     def __init__(self, location):
         Statement.__init__(self, location)
@@ -165,12 +246,61 @@ class SubstitutionRule(Statement):
         self.old_suffix = []
         self.lookups = [None] * len(old)
 
+    def build(self, builder):
+        builder.add_substitution(
+            self.location, self.old_prefix, self.old, self.old_suffix,
+            self.new, self.lookups)
+
 
 class ValueRecord(Statement):
-    def __init__(self, location, xPlacement, yPlacement, xAdvance, yAdvance):
+    def __init__(self, location, xPlacement, yPlacement, xAdvance, yAdvance,
+                 xPlaDevice, yPlaDevice, xAdvDevice, yAdvDevice):
         Statement.__init__(self, location)
         self.xPlacement, self.yPlacement = (xPlacement, yPlacement)
         self.xAdvance, self.yAdvance = (xAdvance, yAdvance)
+        self.xPlaDevice, self.yPlaDevice = (xPlaDevice, yPlaDevice)
+        self.xAdvDevice, self.yAdvDevice = (xAdvDevice, yAdvDevice)
+
+    def __eq__(self, other):
+        return (self.xPlacement == other.xPlacement and
+                self.yPlacement == other.yPlacement and
+                self.xAdvance == other.xAdvance and
+                self.yAdvance == other.yAdvance and
+                self.xPlaDevice == other.xPlaDevice and
+                self.xAdvDevice == other.xAdvDevice)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __hash__(self):
+        return (hash(self.xPlacement) ^ hash(self.yPlacement) ^
+                hash(self.xAdvance) ^ hash(self.yAdvance) ^
+                hash(self.xPlaDevice) ^ hash(self.yPlaDevice) ^
+                hash(self.xAdvDevice) ^ hash(self.yAdvDevice))
+
+    def makeString(self, vertical):
+        x, y = self.xPlacement, self.yPlacement
+        xAdvance, yAdvance = self.xAdvance, self.yAdvance
+        xPlaDevice, yPlaDevice = self.xPlaDevice, self.yPlaDevice
+        xAdvDevice, yAdvDevice = self.xAdvDevice, self.yAdvDevice
+
+        # Try format A, if possible.
+        if x == 0 and y == 0:
+            if xAdvance == 0 and vertical:
+                return str(yAdvance)
+            elif yAdvance == 0 and not vertical:
+                return str(xAdvance)
+
+        # Try format B, if possible.
+        if (xPlaDevice is None and yPlaDevice is None and
+                xAdvDevice is None and yAdvDevice is None):
+            return "<%s %s %s %s>" % (x, y, xAdvance, yAdvance)
+
+        # Last resort is format C.
+        return "<%s %s %s %s %s %s %s %s %s %s>" % (
+            x, y, xAdvance, yAdvance,
+            deviceToString(xPlaDevice), deviceToString(yPlaDevice),
+            deviceToString(xAdvDevice), deviceToString(yAdvDevice))
 
 
 class ValueRecordDefinition(Statement):
