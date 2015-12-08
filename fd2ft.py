@@ -249,6 +249,7 @@ def parseLookupRecords(items, klassName):
 		assert len(item) == 2, item
 		assert item[0] > 0, item[0]
 		rec.SequenceIndex = item[0] - 1
+		# TODO The following line should use lazy lookup name-to-index mapping
 		rec.LookupListIndex = item[1]
 		lst.append(rec)
 	return lst
