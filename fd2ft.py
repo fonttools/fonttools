@@ -254,6 +254,7 @@ def parseCursive(self, lines, font):
 	self.EntryExitRecord = []
 	records = {}
 	for line in lines:
+		assert len(line) in [3,4], line
 		idx,klass = {
 			'entry':	(0,ot.EntryAnchor),
 			'exit':		(1,ot.ExitAnchor),
@@ -266,6 +267,9 @@ def parseCursive(self, lines, font):
 		anchor = records[glyph][idx] = klass()
 		anchor.Format = 1
 		anchor.XCoordinate,anchor.YCoordinate = x,y
+		if len(line) == 4 and line[4] != '':
+			anchor.Format = 2
+			anchor.AnchorPoint = int(line[4])
 	self.Coverage = makeCoverage(records.keys(), font)
 	recs = self.EntryExitRecord = []
 	for glyph in self.Coverage.glyphs:
