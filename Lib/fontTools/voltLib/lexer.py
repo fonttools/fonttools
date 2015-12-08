@@ -30,10 +30,10 @@ class Lexer(object):
     def __iter__(self):
         return self
 
-    def next(self): # Python 2
+    def next(self):  # Python 2
         return self.__next__()
 
-    def __next__(self): # Python 3
+    def __next__(self):  # Python 3
         while True:
             token_type, token, location = self.next_()
             if token_type not in {Lexer.NEWLINE}:
@@ -66,7 +66,7 @@ class Lexer(object):
             self.scan_until_('"\r\n')
             if self.pos_ < self.text_length_ and self.text_[self.pos_] == '"':
                 self.pos_ += 1
-                return (Lexer.STRING, text[start + 1:self.pos_ -1], location)
+                return (Lexer.STRING, text[start + 1:self.pos_ - 1], location)
             else:
                 raise VoltLibError("Expected '\"' to terminate string",
                                    location)
