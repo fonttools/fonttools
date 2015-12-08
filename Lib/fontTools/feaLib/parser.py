@@ -88,6 +88,16 @@ class Parser(object):
         return ast.Anchor(location, x, y, contourpoint,
                           xDeviceTable, yDeviceTable)
 
+    def parse_anchor_marks_(self):
+        """Parses a sequence of [<anchor> mark @MARKCLASS]*."""
+        anchorMarks = []  # [(ast.Anchor, markClassName)*]
+        while self.next_token_ == "<":
+            anchor = self.parse_anchor_()
+            self.expect_keyword_("mark")
+            markClass = self.expect_markClass_reference_()
+            anchorMarks.append((anchor, markClass))
+        return anchorMarks
+
     def parse_anchordef_(self):
         assert self.is_cur_keyword_("anchorDef")
         location = self.cur_token_location_
@@ -268,39 +278,12 @@ class Parser(object):
 
     def parse_position_(self, enumerated, vertical):
         assert self.cur_token_ in {"position", "pos"}
-        location = self.cur_token_location_
-
         if self.next_token_ == "cursive":  # GPOS type 3
-            self.expect_keyword_("cursive")
-            if enumerated:
-                raise FeatureLibError(
-                    '"enumerate" is not allowed with '
-                    'cursive attachment positioning',
-                    location)
-            glyphclass = self.parse_glyphclass_(accept_glyphname=True)
-            entryAnchor = self.parse_anchor_()
-            exitAnchor = self.parse_anchor_()
-            self.expect_symbol_(";")
-            return ast.CursiveAttachmentPositioning(
-                location, glyphclass, entryAnchor, exitAnchor)
+            return self.parse_position_cursive_(enumerated, vertical)
+        elif self.next_token_ == "base":   # GPOS type 4
+            return self.parse_position_base_(enumerated, vertical)
 
-        if self.next_token_ == "base":  # GPOS type 4
-            self.expect_keyword_("base")
-            if enumerated:
-                raise FeatureLibError(
-                    '"enumerate" is not allowed with '
-                    'mark-to-base attachment positioning',
-                    location)
-            base = self.parse_glyphclass_(accept_glyphname=True)
-            marks = []
-            while self.next_token_ != ";":
-                anchor = self.parse_anchor_()
-                self.expect_keyword_("mark")
-                markClass = self.expect_markClass_reference_()
-                marks.append((anchor, markClass))
-            self.expect_symbol_(";")
-            return ast.MarkToBaseAttachmentPositioning(location, base, marks)
-
+        location = self.cur_token_location_
         gc2, value2 = None, None
         gc1 = self.parse_glyphclass_(accept_glyphname=True)
         if self.is_next_glyphclass_():
@@ -321,6 +304,34 @@ class Parser(object):
         else:
             return ast.PairAdjustmentPositioning(location, enumerated,
                                                  gc1, value1, gc2, value2)
+
+    def parse_position_cursive_(self, enumerated, vertical):
+        location = self.cur_token_location_
+        self.expect_keyword_("cursive")
+        if enumerated:
+            raise FeatureLibError(
+                '"enumerate" is not allowed with '
+                'cursive attachment positioning',
+                location)
+        glyphclass = self.parse_glyphclass_(accept_glyphname=True)
+        entryAnchor = self.parse_anchor_()
+        exitAnchor = self.parse_anchor_()
+        self.expect_symbol_(";")
+        return ast.CursiveAttachmentPositioning(
+            location, glyphclass, entryAnchor, exitAnchor)
+
+    def parse_position_base_(self, enumerated, vertical):
+        location = self.cur_token_location_
+        self.expect_keyword_("base")
+        if enumerated:
+            raise FeatureLibError(
+                '"enumerate" is not allowed with '
+                'mark-to-base attachment positioning',
+                location)
+        base = self.parse_glyphclass_(accept_glyphname=True)
+        marks = self.parse_anchor_marks_()
+        self.expect_symbol_(";")
+        return ast.MarkToBaseAttachmentPositioning(location, base, marks)
 
     def parse_script_(self):
         assert self.is_cur_keyword_("script")
