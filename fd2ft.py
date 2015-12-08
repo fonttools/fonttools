@@ -249,6 +249,16 @@ def parsePair(self, lines, font):
 def parseKernset(self, lines, font):
 	raise NotImplementedError
 
+def makeAnchor(data, klass=ot.Anchor):
+	assert len(data) <= 2
+	anchor = klass()
+	anchor.Format = 1
+	anchor.XCoordinate,anchor.YCoordinate = intSplitComma(data[0])
+	if len(data) > 1 and data[1] != '':
+		anchor.Format = 2
+		anchor.AnchorPoint = int(data[1])
+	return anchor
+
 def parseCursive(self, lines, font):
 	self.Format = 1
 	self.EntryExitRecord = []
@@ -260,16 +270,10 @@ def parseCursive(self, lines, font):
 			'exit':		(1,ot.ExitAnchor),
 		}[line[0]]
 		glyph = parseGlyph(line[1])
-		x,y = intSplitComma(line[2])
 		if glyph not in records:
 			records[glyph] = [None,None]
 		assert records[glyph][idx] is None, (glyph, idx)
-		anchor = records[glyph][idx] = klass()
-		anchor.Format = 1
-		anchor.XCoordinate,anchor.YCoordinate = x,y
-		if len(line) == 4 and line[4] != '':
-			anchor.Format = 2
-			anchor.AnchorPoint = int(line[4])
+		records[glyph][idx] = makeAnchor(line[2:], klass)
 	self.Coverage = makeCoverage(records.keys(), font)
 	recs = self.EntryExitRecord = []
 	for glyph in self.Coverage.glyphs:
