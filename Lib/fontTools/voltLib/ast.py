@@ -8,6 +8,17 @@ class VoltFile(ast.Block):
         ast.Block.__init__(self, location=None)
 
 
+class LookupBlock(ast.Block):
+    def __init__(self, location, name):
+        ast.Block.__init__(self, location)
+        self.name = name
+
+    def build(self, builder):
+        builder.start_lookup_block(self.location, self.name)
+        ast.Block.build(self, builder)
+        builder.end_lookup_block()
+
+
 class GlyphDefinition(ast.Statement):
     def __init__(self, location, name, gid, gunicode, gtype, components):
         ast.Statement.__init__(self, location)
