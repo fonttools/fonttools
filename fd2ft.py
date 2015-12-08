@@ -481,12 +481,19 @@ def parseLookup(lines, tableTag, font):
 			'chained':	(8,	parseChainedPos),
 		},
 	}[tableTag][typ]
-	subtable = ot.lookupTypes[tableTag][lookup.LookupType]()
-	subtable.LookupType = lookup.LookupType
 
-	parseLookupSubTable(subtable, lookupLines, font)
+	subtables = []
 
-	lookup.SubTable = [subtable]
+	while True:
+		subLookupLines = lookupLines.readUntil(('% subtable', 'subtable end'))
+		if subLookupLines.peek() is None:
+			break
+		subtable = ot.lookupTypes[tableTag][lookup.LookupType]()
+		subtable.LookupType = lookup.LookupType
+		parseLookupSubTable(subtable, subLookupLines, font)
+		subtables.append(subtable)
+
+	lookup.SubTable = subtables
 	lookup.SubTableCount = len(lookup.SubTable)
 	return lookup, name
 
@@ -529,8 +536,10 @@ def parseGDEF(lines, font):
 class ReadUntilMixin(object):
 
 	def _readUntil(self, what):
+		if type(what) is not tuple:
+			what = (what,)
 		for line in self:
-			if line[0].lower() == what:
+			if line[0].lower() in what:
 				raise StopIteration
 			yield line
 	def readUntil(self, what):
@@ -589,7 +598,7 @@ class Tokenizer(ReadUntilMixin):
 		while True:
 			line = self._next()
 			# Skip comments and empty lines
-			if line[0] and line[0][0] != '%':
+			if line[0] and (line[0][0] != '%' or line[0] == '% subtable'):
 				return line
 
 	def skipUntil(self, what):
