@@ -202,6 +202,8 @@ class ContextHelper(object):
 			ChainCoverage = lambda r: r.Coverage
 			ContextData = lambda r:(None,)
 			ChainContextData = lambda r:(None, None, None)
+			SetContextData = None
+			SetChainContextData = None
 			RuleData = lambda r:(r.Input,)
 			ChainRuleData = lambda r:(r.Backtrack, r.Input, r.LookAhead)
 			def SetRuleData(r, d):
@@ -217,6 +219,12 @@ class ContextHelper(object):
 			ChainContextData = lambda r:(r.BacktrackClassDef,
 						     r.InputClassDef,
 						     r.LookAheadClassDef)
+			def SetContextData(r, d):
+				(r.ClassDef,) = d
+			def SetChainContextData(r, d):
+				(r.BacktrackClassDef,
+				 r.InputClassDef,
+				 r.LookAheadClassDef) = d
 			RuleData = lambda r:(r.Class,)
 			ChainRuleData = lambda r:(r.Backtrack, r.Input, r.LookAhead)
 			def SetRuleData(r, d):
@@ -230,6 +238,8 @@ class ContextHelper(object):
 			ChainCoverage = lambda r: r.InputCoverage[0]
 			ContextData = None
 			ChainContextData = None
+			SetContextData = None
+			SetChainContextData = None
 			RuleData = lambda r: r.Coverage
 			ChainRuleData = lambda r:(r.BacktrackCoverage +
 						  r.InputCoverage +
@@ -246,11 +256,13 @@ class ContextHelper(object):
 		if Chain:
 			self.Coverage = ChainCoverage
 			self.ContextData = ChainContextData
+			self.SetContextData = SetChainContextData
 			self.RuleData = ChainRuleData
 			self.SetRuleData = ChainSetRuleData
 		else:
 			self.Coverage = Coverage
 			self.ContextData = ContextData
+			self.SetContextData = SetContextData
 			self.RuleData = RuleData
 			self.SetRuleData = SetRuleData
 
@@ -329,6 +341,7 @@ def parseContext(self, lines, font, Type):
 	typ = lines.peek()[0].split()[0]
 	if typ == 'glyph':
 		self.Format = 1
+		debug("Parsing %s format %s" % (Type, self.Format))
 		c = ContextHelper(Type, self.Format)
 		rules = []
 		for line in lines:
@@ -342,9 +355,24 @@ def parseContext(self, lines, font, Type):
 		bucketizeRules(self, c, rules, self.Coverage.glyphs)
 	elif typ.endswith('class'):
 		self.Format = 2
+		debug("Parsing %s format %s" % (Type, self.Format))
 		c = ContextHelper(Type, self.Format)
+		classDefs = [None] * c.DataLen
 		while lines.peek()[0].endswith("class definition begin"):
-			self.ClassDef = parseClassDef(lines) # TODOOOOOOOOOO
+			typ = lines.peek()[0][:-22]
+			idx,klass = {
+			1: {
+				'':		(0,ot.ClassDef),
+			},
+			3: {
+				'backtrack':	(0,ot.BacktrackClassDef),
+				'':		(1,ot.InputClassDef),
+				'lookahead':	(2,ot.LookAheadClassDef),
+			},
+			}[c.DataLen][typ]
+			assert classDefs[idx] is None, idx
+			classDefs[idx] = parseClassDef(lines, klass=klass)
+		c.SetContextData(self, classDefs)
 		rules = []
 		for line in lines:
 			assert line[0].startswith('class'), line[0]
@@ -352,11 +380,12 @@ def parseContext(self, lines, font, Type):
 			recs = parseLookupRecords(line[1+c.DataLen:], c.LookupRecord)
 			rules.append((seq, recs))
 		firstClasses = set(seq[c.InputIdx][0] for seq,recs in rules)
-		firstGlyphs = set(g for g,c in self.ClassDef.classDefs.items() if c in firstClasses)
+		firstGlyphs = set(g for g,c in classDefs[c.InputIdx].classDefs.items() if c in firstClasses)
 		self.Coverage = makeCoverage(firstGlyphs, font)
 		bucketizeRules(self, c, rules, range(max(firstClasses) + 1))
 	elif typ.endswith('coverage'):
 		self.Format = 3
+		debug("Parsing %s format %s" % (Type, self.Format))
 		c = ContextHelper(Type, self.Format)
 		self.Coverage = []
 		while lines.peek()[0].endswith("coverage definition begin"):
