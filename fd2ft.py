@@ -164,10 +164,10 @@ def parseMarkToLigature(self, lines, font):
 	raise NotImplementedError
 
 def stripSplitComma(line):
-	return [s.strip() for s in line.split(',')]
+	return [s.strip() for s in line.split(',')] if line else []
 
 def intSplitComma(line):
-	return [int(i) for i in line.split(',')]
+	return [int(i) for i in line.split(',')] if line else []
 
 # Copied from fontTools.subset
 class ContextHelper(object):
@@ -180,14 +180,20 @@ class ContextHelper(object):
 			Type = 'Pos'
 		if klassName.startswith('Chain'):
 			Chain = 'Chain'
+			InputIdx = 1
+			DataLen = 3
 		else:
 			Chain = ''
+			InputIdx = 0
+			DataLen = 1
 		ChainTyp = Chain+Typ
 
 		self.Typ = Typ
 		self.Type = Type
 		self.Chain = Chain
 		self.ChainTyp = ChainTyp
+		self.InputIdx = InputIdx
+		self.DataLen = DataLen
 
 		self.LookupRecord = Type+'LookupRecord'
 
@@ -198,8 +204,12 @@ class ContextHelper(object):
 			ChainContextData = lambda r:(None, None, None)
 			RuleData = lambda r:(r.Input,)
 			ChainRuleData = lambda r:(r.Backtrack, r.Input, r.LookAhead)
-			SetRuleData = None
-			ChainSetRuleData = None
+			def SetRuleData(r, d):
+				(r.Input,) = d
+				(r.GlyphCount,) = (len(x) for x in d)
+			def ChainSetRuleData(r, d):
+				(r.Backtrack, r.Input, r.LookAhead) = d
+				(r.BacktrackGlyphCount,r.InputGlyphCount,r.LookAheadGlyphCount,) = (len(x) for x in d)
 		elif Format == 2:
 			Coverage = lambda r: r.Coverage
 			ChainCoverage = lambda r: r.Coverage
@@ -209,8 +219,12 @@ class ContextHelper(object):
 						     r.LookAheadClassDef)
 			RuleData = lambda r:(r.Class,)
 			ChainRuleData = lambda r:(r.Backtrack, r.Input, r.LookAhead)
-			def SetRuleData(r, d):(r.Class,) = d
-			def ChainSetRuleData(r, d):(r.Backtrack, r.Input, r.LookAhead) = d
+			def SetRuleData(r, d):
+				(r.Class,) = d
+				(r.GlyphCount,) = (len(x) for x in d)
+			def ChainSetRuleData(r, d):
+				(r.Backtrack, r.Input, r.LookAhead) = d
+				(r.BacktrackGlyphCount,r.InputGlyphCount,r.LookAheadGlyphCount,) = (len(x) for x in d)
 		elif Format == 3:
 			Coverage = lambda r: r.Coverage[0]
 			ChainCoverage = lambda r: r.InputCoverage[0]
@@ -220,8 +234,12 @@ class ContextHelper(object):
 			ChainRuleData = lambda r:(r.BacktrackCoverage +
 						  r.InputCoverage +
 						  r.LookAheadCoverage)
-			SetRuleData = None
-			ChainSetRuleData = None
+			def SetRuleData(r, d):
+				(r.Coverage,) = d
+				(r.GlyphCount,) = (len(x) for x in d)
+			def ChainSetRuleData(r, d):
+				(r.BacktrackCoverage, r.InputCoverage, r.LookAheadCoverage) = d
+				(r.BacktrackGlyphCount,r.InputGlyphCount,r.LookAheadGlyphCount,) = (len(x) for x in d)
 		else:
 			assert 0, "unknown format: %s" % Format
 
@@ -284,7 +302,7 @@ def parseCoverage(lines, font, klass=ot.Coverage):
 def bucketizeRules(self, c, rules, bucketKeys):
 	buckets = {}
 	for seq,recs in rules:
-		buckets.setdefault(seq[0], []).append((seq[1:], recs))
+		buckets.setdefault(seq[c.InputIdx][0], []).append((tuple(s[1 if i==c.InputIdx else 0:] for i,s in enumerate(seq)), recs))
 
 	rulesets = []
 	for firstGlyph in bucketKeys:
@@ -294,8 +312,7 @@ def bucketizeRules(self, c, rules, bucketKeys):
 		thisRules = []
 		for seq,recs in buckets[firstGlyph]:
 			rule = getattr(ot, c.Rule)()
-			rule.GlyphCount = 1 + len(seq)
-			rule.Input = seq
+			c.SetRuleData(rule, seq)
 			setattr(rule, c.Type+'Count', len(recs))
 			setattr(rule, c.LookupRecord, recs)
 			thisRules.append(rule)
@@ -312,71 +329,59 @@ def parseContext(self, lines, font, Type):
 	typ = lines.peek()[0].split()[0]
 	if typ == 'glyph':
 		self.Format = 1
-		c = ContextHelper('Context'+Type, self.Format)
+		c = ContextHelper(Type, self.Format)
 		rules = []
 		for line in lines:
-			recs = parseLookupRecords(line[2:], c.LookupRecord)
-			seq = parseGlyphs(stripSplitComma(line[1]))
+			assert line[0] == 'glyph', line[0]
+			seq = tuple(parseGlyphs(stripSplitComma(i)) for i in line[1:1+c.DataLen])
+			recs = parseLookupRecords(line[1+c.DataLen:], c.LookupRecord)
 			rules.append((seq, recs))
 
-		self.Coverage = makeCoverage((seq[0] for seq,recs in rules), font)
-
+		firstGlyphs = set(seq[c.InputIdx][0] for seq,recs in rules)
+		self.Coverage = makeCoverage(firstGlyphs, font)
 		bucketizeRules(self, c, rules, self.Coverage.glyphs)
-	elif typ == 'class':
+	elif typ.endswith('class'):
 		self.Format = 2
-		c = ContextHelper('Context'+Type, self.Format)
-		self.ClassDef = parseClassDef(lines)
+		c = ContextHelper(Type, self.Format)
+		while lines.peek()[0].endswith("class definition begin"):
+			self.ClassDef = parseClassDef(lines) # TODOOOOOOOOOO
 		rules = []
 		for line in lines:
-			recs = parseLookupRecords(line[2:], c.LookupRecord)
-			seq = intSplitComma(line[1])
+			assert line[0].startswith('class'), line[0]
+			seq = tuple(intSplitComma(i) for i in line[1:1+c.DataLen])
+			recs = parseLookupRecords(line[1+c.DataLen:], c.LookupRecord)
 			rules.append((seq, recs))
-
-		self.Coverage = makeCoverage(self.ClassDef.classDefs.keys(), font)
-
-		maxClass = max(seq[0] for seq,recs in rules)
-
-		bucketizeRules(self, c, rules, range(maxClass + 1))
-	elif typ == 'coverage':
+		firstClasses = set(seq[c.InputIdx][0] for seq,recs in rules)
+		firstGlyphs = set(g for g,c in self.ClassDef.classDefs.items() if c in firstClasses)
+		self.Coverage = makeCoverage(firstGlyphs, font)
+		bucketizeRules(self, c, rules, range(max(firstClasses) + 1))
+	elif typ.endswith('coverage'):
 		self.Format = 3
-		c = ContextHelper('Context'+Type, self.Format)
+		c = ContextHelper(Type, self.Format)
 		self.Coverage = []
 		while lines.peek()[0].endswith("coverage definition begin"):
 			self.Coverage.append(parseCoverage(lines, font))
+		# TODOOOOOOOOOO
 		self.GlyphCount = len(self.Coverage)
 
 		lines = list(lines)
 		assert len(lines) == 1
 		line = lines[0]
-		assert line[0] == 'coverage'
+		assert line[0] == 'coverage', line[0]
 		recs = parseLookupRecords(line[1:], c.LookupRecord)
 		setattr(self, c.Type+'Count', len(recs))
 		setattr(self, c.LookupRecord, recs)
 	else:
-		assert 0
+		assert 0, typ
 
 def parseContextSubst(self, lines, font):
-	return parseContext(self, lines, font, "Subst")
+	return parseContext(self, lines, font, "ContextSubst")
 def parseContextPos(self, lines, font):
-	return parseContext(self, lines, font, "Pos")
-
-def parseChained(self, lines, font, Type):
-	typ = lines.peek()[0]
-	if typ == 'glyph':
-		self.Format = 1
-		for line in lines:
-			print (line)
-		return
-	elif typ == 'backtrackclass definition begin':
-		self.Format = 2
-		return
-	print(typ)
-	raise NotImplementedError
-
+	return parseContext(self, lines, font, "ContextPos")
 def parseChainedSubst(self, lines, font):
-	return parseChained(self, lines, font, "Subst")
+	return parseContext(self, lines, font, "ChainContextSubst")
 def parseChainedPos(self, lines):
-	return parseChained(self, lines, font, "Pos")
+	return parseContext(self, lines, font, "ChainContextPos")
 
 def parseLookup(lines, tableTag, font):
 	line = lines.skipUntil('lookup')
