@@ -489,8 +489,8 @@ class Tokenizer(ReadUntilMixin):
 			if line[0] == what:
 				return line
 
-def build(f, font):
-	lines = Tokenizer(f)
+def parseTable(lines, font):
+	debug("Parsing table")
 	line = next(lines)
 	assert line[0][:9] == 'FontDame ', line
 	assert line[0][13:] == ' table', line
@@ -502,6 +502,10 @@ def build(f, font):
 		}[tableTag](lines, font)
 	container.table = table
 	return container
+
+def build(f, font):
+	lines = Tokenizer(f)
+	return parseTable(lines, font)
 
 
 class MockFont(object):
