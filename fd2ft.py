@@ -172,9 +172,41 @@ def parsePair(self, lines, font):
 	typ = lines.peek()[0].split()[0].lower()
 	if typ in ('left', 'right'):
 		self.Format = 1
-		self.PairSet = []
+		values = {}
 		for line in lines:
-			print(line)
+			assert len(line) == 4, line
+			side = line[0].split()[0].lower()
+			assert side in ('left', 'right'), side
+			what = line[0][len(side):].title().replace(' ', '')
+			mask = valueRecordFormatDict[what][0]
+			glyph1, glyph2 = parseGlyphs(line[1:3])
+			value = int(line[3])
+			if not glyph1 in values: values[glyph1] = {}
+			if not glyph2 in values[glyph1]: values[glyph1][glyph2] = (ValueRecord(),ValueRecord())
+			rec2 = values[glyph1][glyph2]
+			if side == 'left':
+				self.ValueFormat1 |= mask
+				vr = rec2[0]
+			else:
+				self.ValueFormat2 |= mask
+				vr = rec2[1]
+			assert not hasattr(vr, what), (vr, what)
+			setattr(vr, what, value)
+		self.Coverage = makeCoverage(values.keys(), font)
+		self.PairSet = []
+		for glyph1 in self.Coverage.glyphs:
+			values1 = values[glyph1]
+			pairset = ot.PairSet()
+			records = pairset.PairValueRecord = []
+			for glyph2 in sorted(values1.keys(), key=font.getGlyphID):
+				values2 = values1[glyph2]
+				pair = ot.PairValueRecord()
+				pair.SecondGlyph = glyph2
+				pair.Value1,pair.Value2 = values2
+				records.append(pair)
+			pairset.PairValueCount = len(pairset.PairValueRecord)
+			self.PairSet.append(pairset)
+		self.PairSetCount = len(self.PairSet)
 	elif typ.endswith('class'):
 		self.Format = 2
 		classDefs = [None, None]
@@ -196,10 +228,9 @@ def parsePair(self, lines, font):
 				rec2.Value2 = ValueRecord()
 		for line in lines:
 			assert len(line) == 4, line
-			what = line[0].title().replace(' ', '')
-			side = line[0].split()[0]
+			side = line[0].split()[0].lower()
 			assert side in ('left', 'right'), side
-			what = what[len(side):]
+			what = line[0][len(side):].title().replace(' ', '')
 			mask = valueRecordFormatDict[what][0]
 			class1, class2, value = (int(x) for x in line[1:4])
 			rec2 = self.Class1Record[class1].Class2Record[class2]
