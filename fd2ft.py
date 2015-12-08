@@ -422,7 +422,7 @@ def parseContextPos(self, lines, font):
 	return parseContext(self, lines, font, "ContextPos")
 def parseChainedSubst(self, lines, font):
 	return parseContext(self, lines, font, "ChainContextSubst")
-def parseChainedPos(self, lines):
+def parseChainedPos(self, lines, font):
 	return parseContext(self, lines, font, "ChainContextPos")
 
 def parseReverseChainedSubst(self, lines, font):
