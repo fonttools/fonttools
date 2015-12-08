@@ -249,7 +249,27 @@ def parsePair(self, lines, font):
 def parseCursive(self, lines, font):
 	self.Format = 1
 	self.EntryExitRecord = []
-	raise NotImplementedError
+	records = {}
+	for line in lines:
+		idx,klass = {
+			'entry':	(0,ot.EntryAnchor),
+			'exit':		(1,ot.ExitAnchor),
+		}[line[0]]
+		glyph = parseGlyph(line[1])
+		x,y = intSplitComma(line[2])
+		if glyph not in records:
+			records[glyph] = [None,None]
+		assert records[glyph][idx] is None, (glyph, idx)
+		anchor = records[glyph][idx] = klass()
+		anchor.Format = 1
+		anchor.XCoordinate,anchor.YCoordinate = x,y
+	self.Coverage = makeCoverage(records.keys(), font)
+	recs = self.EntryExitRecord = []
+	for glyph in self.Coverage.glyphs:
+		rec = ot.EntryExitRecord()
+		rec.EntryAnchor,rec.ExitAnchor = records[glyph]
+		recs.append(rec)
+	self.EntryExitCount = len(self.EntryExitRecord)
 
 def parseMarkToBase(self, lines, font):
 	self.Format = 1
