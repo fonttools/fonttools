@@ -313,6 +313,7 @@ class Glyph(object):
 			return
 		if not self.data:
 			# empty char
+			del self.data
 			self.numberOfContours = 0
 			return
 		dummy, data = sstruct.unpack2(glyphHeaderFormat, self.data, self)
@@ -329,7 +330,11 @@ class Glyph(object):
 
 	def compile(self, glyfTable, recalcBBoxes=True):
 		if hasattr(self, "data"):
-			return self.data
+			if recalcBBoxes:
+				# must unpack glyph in order to recalculate bounding box
+				self.expand(glyfTable)
+			else:
+				return self.data
 		if self.numberOfContours == 0:
 			return ""
 		if recalcBBoxes:
