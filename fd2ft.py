@@ -9,7 +9,7 @@
 from __future__ import print_function, division, absolute_import
 from fontTools import ttLib
 from fontTools.ttLib.tables import otTables as ot
-from fontTools.ttLib.tables.otBase import ValueRecord
+from fontTools.ttLib.tables.otBase import ValueRecord, valueRecordFormatDict
 import re
 
 debug = print
@@ -149,6 +149,7 @@ def parseSinglePos(self, lines, font):
 	for line in lines:
 		assert len(line) == 3, line
 		w = line[0].title().replace(' ', '')
+		assert w in valueRecordFormatDict
 		g = parseGlyph(line[1])
 		v = int(line[2])
 		if g not in values:
