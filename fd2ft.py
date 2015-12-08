@@ -86,33 +86,28 @@ def parseFeatureList(lines):
 
 def parseLookupFlags(lines):
 	flags = 0
+	filterset = None
 	for line in lines:
 		flag = {
-			'RightToLeft':		0x0001,
-			'IgnoreBaseGlyphs':	0x0002,
-			'IgnoreLigatures':	0x0004,
-			'IgnoreMarks':		0x0008,
-			}.get(line[0])
+			'righttoleft':		0x0001,
+			'ignorebaseglyphs':	0x0002,
+			'ignoreligatures':	0x0004,
+			'ignoremarks':		0x0008,
+			}.get(line[0].lower())
 		if flag:
-			assert line[1] in ['yes', 'no'], line[1]
-			if line[1] == 'yes':
+			assert line[1].lower() in ['yes', 'no'], line[1]
+			if line[1].lower() == 'yes':
 				flags |= flag
 			continue
-		if line[0] == 'MarkAttachmentType':
+		if line[0].lower() == 'markattachmenttype':
 			flags |= int(line[1]) << 8
 			continue
+		if line[0].lower() == 'markfiltertype':
+			flags |= 0x10
+			filterset = int(line[1])
 		lines.pack(line)
 		break
-	return flags
-
-def parseClassDef(lines, klass=ot.ClassDef):
-	line = next(lines)
-	assert line[0].endswith('class definition begin'), line
-	self = klass()
-	classDefs = self.classDefs = {}
-	for line in lines.readUntil('class definition end'):
-		classDefs[parseGlyph(line[0])] = int(line[1])
-	return self
+	return flags, filterset
 
 def parseSingleSubst(self, lines, font):
 	self.mapping = {}
@@ -298,6 +293,15 @@ def parseLookupRecords(items, klassName):
 		lst.append(rec)
 	return lst
 
+def parseClassDef(lines, klass=ot.ClassDef):
+	line = next(lines)
+	assert line[0].lower().endswith('class definition begin'), line
+	self = klass()
+	classDefs = self.classDefs = {}
+	for line in lines.readUntil('class definition end'):
+		classDefs[parseGlyph(line[0])] = int(line[1])
+	return self
+
 def makeCoverage(glyphs, fonts, klass=ot.Coverage):
 	coverage = klass()
 	coverage.glyphs = sorted(set(glyphs), key=font.getGlyphID)
@@ -305,7 +309,7 @@ def makeCoverage(glyphs, fonts, klass=ot.Coverage):
 
 def parseCoverage(lines, font, klass=ot.Coverage):
 	line = next(lines)
-	assert line[0].endswith('coverage definition begin'), line
+	assert line[0].lower().endswith('coverage definition begin'), line
 	glyphs = []
 	for line in lines.readUntil('coverage definition end'):
 		glyphs.append(parseGlyph(line[0]))
@@ -338,14 +342,14 @@ def bucketizeRules(self, c, rules, bucketKeys):
 	setattr(self, c.RuleSetCount, len(rulesets))
 
 def parseContext(self, lines, font, Type):
-	typ = lines.peek()[0].split()[0]
+	typ = lines.peek()[0].split()[0].lower()
 	if typ == 'glyph':
 		self.Format = 1
 		debug("Parsing %s format %s" % (Type, self.Format))
 		c = ContextHelper(Type, self.Format)
 		rules = []
 		for line in lines:
-			assert line[0] == 'glyph', line[0]
+			assert line[0].lower() == 'glyph', line[0]
 			seq = tuple(parseGlyphs(stripSplitComma(i)) for i in line[1:1+c.DataLen])
 			recs = parseLookupRecords(line[1+c.DataLen:], c.LookupRecord)
 			rules.append((seq, recs))
@@ -359,7 +363,7 @@ def parseContext(self, lines, font, Type):
 		c = ContextHelper(Type, self.Format)
 		classDefs = [None] * c.DataLen
 		while lines.peek()[0].endswith("class definition begin"):
-			typ = lines.peek()[0][:-22]
+			typ = lines.peek()[0][:-len("class definition begin")].lower()
 			idx,klass = {
 			1: {
 				'':		(0,ot.ClassDef),
@@ -375,7 +379,7 @@ def parseContext(self, lines, font, Type):
 		c.SetContextData(self, classDefs)
 		rules = []
 		for line in lines:
-			assert line[0].startswith('class'), line[0]
+			assert line[0].lower().startswith('class'), line[0]
 			seq = tuple(intSplitComma(i) for i in line[1:1+c.DataLen])
 			recs = parseLookupRecords(line[1+c.DataLen:], c.LookupRecord)
 			rules.append((seq, recs))
@@ -387,16 +391,25 @@ def parseContext(self, lines, font, Type):
 		self.Format = 3
 		debug("Parsing %s format %s" % (Type, self.Format))
 		c = ContextHelper(Type, self.Format)
-		self.Coverage = []
+		coverages = tuple([] for i in range(c.DataLen))
 		while lines.peek()[0].endswith("coverage definition begin"):
-			self.Coverage.append(parseCoverage(lines, font))
-		# TODOOOOOOOOOO
-		self.GlyphCount = len(self.Coverage)
-
+			typ = lines.peek()[0][:-len("coverage definition begin")].lower()
+			idx,klass = {
+			1: {
+				'':		(0,ot.Coverage),
+			},
+			3: {
+				'backtrack':	(0,ot.BacktrackCoverage),
+				'input':	(1,ot.InputCoverage),
+				'lookahead':	(2,ot.LookAheadCoverage),
+			},
+			}[c.DataLen][typ]
+			coverages[idx].append(parseCoverage(lines, font, klass=klass))
+		c.SetRuleData(self, coverages)
 		lines = list(lines)
 		assert len(lines) == 1
 		line = lines[0]
-		assert line[0] == 'coverage', line[0]
+		assert line[0].lower() == 'coverage', line[0]
 		recs = parseLookupRecords(line[1:], c.LookupRecord)
 		setattr(self, c.Type+'Count', len(recs))
 		setattr(self, c.LookupRecord, recs)
@@ -420,7 +433,9 @@ def parseLookup(lines, tableTag, font):
 	debug("Parsing lookup type %s %s" % (typ, name))
 
 	lookup = ot.Lookup()
-	lookup.LookupFlag = parseLookupFlags(lookupLines)
+	lookup.LookupFlag,filterset = parseLookupFlags(lookupLines)
+	if filterset is not None:
+		lookup.MarkFilteringSet = filterset
 	lookup.LookupType, parseLookupSubTable = {
 		'GSUB': {
 			'single':	(1,	parseSingleSubst),
@@ -491,7 +506,7 @@ class ReadUntilMixin(object):
 
 	def _readUntil(self, what):
 		for line in self:
-			if line[0] == what:
+			if line[0].lower() == what:
 				raise StopIteration
 			yield line
 	def readUntil(self, what):
@@ -555,7 +570,7 @@ class Tokenizer(ReadUntilMixin):
 
 	def skipUntil(self, what):
 		for line in self:
-			if line[0] == what:
+			if line[0].lower() == what:
 				return line
 
 def parseTable(lines, font):
@@ -608,7 +623,7 @@ if __name__ == '__main__':
 		decompiled = table.__class__()
 		decompiled.decompile(blob, font)
 
-		continue
+		#continue
 		from fontTools.misc import xmlWriter
 		tag = table.tableTag
 		writer = xmlWriter.XMLWriter(sys.stdout)
