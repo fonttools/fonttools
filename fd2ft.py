@@ -13,6 +13,12 @@ import re
 
 debug = print
 
+def parseGlyph(s):
+	return s
+
+def parseGlyphs(l):
+	return [parseGlyph(g) for g in l]
+
 def parseScriptList(lines):
 	lines.skipUntil('script table begin')
 	self = ot.ScriptList()
@@ -101,29 +107,33 @@ def parseClassDef(lines, klass=ot.ClassDef):
 	self = klass()
 	classDefs = self.classDefs = {}
 	for line in lines.readUntil('class definition end'):
-		classDefs[line[0]] = int(line[1])
+		classDefs[parseGlyph(line[0])] = int(line[1])
 	return self
 
 def parseSingleSubst(self, lines, font):
 	self.mapping = {}
 	for line in lines:
 		assert len(line) == 2, line
+		line = parseGlyphs(line)
 		self.mapping[line[0]] = line[1]
 
 def parseMultiple(self, lines, font):
 	self.mapping = {}
 	for line in lines:
+		line = parseGlyphs(line)
 		self.mapping[line[0]] = line[1:]
 
 def parseAlternate(self, lines, font):
 	self.alternates = {}
 	for line in lines:
+		line = parseGlyphs(line)
 		self.alternates[line[0]] = line[1:]
 
 def parseLigature(self, lines, font):
 	self.ligatures = {}
 	for line in lines:
 		assert len(line) >= 2, line
+		line = parseGlyphs(line)
 		# The following single line can replace the rest of this function with fontTools >= 3.1
 		#self.ligatures[tuple(line[1:])] = line[0]
 		ligGlyph, firstGlyph = line[:2]
@@ -264,7 +274,7 @@ def parseCoverage(lines, font, klass=ot.Coverage):
 	assert line[0].endswith('coverage definition begin'), line
 	glyphs = []
 	for line in lines.readUntil('coverage definition end'):
-		glyphs.append(line[0])
+		glyphs.append(parseGlyph(line[0]))
 	return makeCoverage(glyphs, font, klass)
 
 def bucketizeRules(self, c, rules, bucketKeys):
@@ -302,7 +312,7 @@ def parseContext(self, lines, font, Type):
 		rules = []
 		for line in lines:
 			recs = parseLookupRecords(line[2:], c.LookupRecord)
-			seq = stripSplitComma(line[1])
+			seq = parseGlyphs(stripSplitComma(line[1]))
 			rules.append((seq, recs))
 
 		self.Coverage = makeCoverage((seq[0] for seq,recs in rules), font)
