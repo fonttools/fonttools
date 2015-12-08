@@ -45,7 +45,7 @@ def zip(*args):
 
 
 def fonts_to_quadratic(fonts, max_err_em=None, max_err=None,
-        report=None, dump_report=False):
+        stats=None, dump_stats=False):
     """Convert the curves of a collection of fonts to quadratic.
 
     All curves will be converted to quadratic at once, ensuring interpolation
@@ -53,8 +53,8 @@ def fonts_to_quadratic(fonts, max_err_em=None, max_err=None,
     font at a time may yield slightly more optimized results.
     """
 
-    if report is None:
-        report = {}
+    if stats is None:
+        stats = {}
 
     if max_err_em and max_err:
         raise TypeError('Only one of max_err and max_err_em can be specified.')
@@ -71,17 +71,17 @@ def fonts_to_quadratic(fonts, max_err_em=None, max_err=None,
     else:
         font = FontCollection(fonts)
     for glyph in font:
-        glyph_to_quadratic(glyph, max_errors, report)
+        glyph_to_quadratic(glyph, max_errors, stats)
 
-    if dump_report:
-        spline_lengths = report.keys()
+    if dump_stats:
+        spline_lengths = stats.keys()
         spline_lengths.sort()
         print('New spline lengths:\n%s\n' % (
-            '\n'.join('%s: %d' % (l, report[l]) for l in spline_lengths)))
-    return report
+            '\n'.join('%s: %d' % (l, stats[l]) for l in spline_lengths)))
+    return stats
 
 
-def glyph_to_quadratic(glyph, max_err, report):
+def glyph_to_quadratic(glyph, max_err, stats=None):
     """Convert a glyph's curves to quadratic, in place."""
 
     for contour in glyph:
@@ -90,13 +90,13 @@ def glyph_to_quadratic(glyph, max_err, report):
             segment = contour[i]
             if segment.type == 'curve':
                 segments.append(segment_to_quadratic(
-                    contour, i, max_err, report))
+                    contour, i, max_err, stats))
             else:
                 segments.append(segment)
         replace_segments(contour, segments)
 
 
-def segment_to_quadratic(contour, segment_id, max_err, report):
+def segment_to_quadratic(contour, segment_id, max_err, stats=None):
     """Return a quadratic approximation of a cubic segment."""
 
     segment = contour[segment_id]
@@ -117,7 +117,8 @@ def segment_to_quadratic(contour, segment_id, max_err, report):
         n = str(len(points[0]))
         points = [p[1:] for p in points]
 
-    report[n] = report.get(n, 0) + 1
+    if stats is not None:
+        stats[n] = stats.get(n, 0) + 1
     return as_quadratic(segment, points)
 
 

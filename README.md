@@ -33,7 +33,7 @@ for font in [thin_font, bold_font]:
 ```
 
 `fonts_to_quadratic` can print a string reporting the number of curves of each
-length. For example `fonts_to_quadratic([font], dump_report=True)` may print
+length. For example `fonts_to_quadratic([font], dump_stats=True)` may print
 something like:
 
 ```
@@ -50,7 +50,7 @@ by providing your own report dictionary:
 ```python
 stats = {}
 for font in [thin_font, bold_font]:
-    fonts_to_quadratic([font], report=stats)
+    fonts_to_quadratic([font], stats=stats)
 # "stats" will report combined statistics for both fonts
 ```
 
