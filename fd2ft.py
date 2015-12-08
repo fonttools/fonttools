@@ -208,10 +208,10 @@ class ContextHelper(object):
 			ChainRuleData = lambda r:(r.Backtrack, r.Input, r.LookAhead)
 			def SetRuleData(r, d):
 				(r.Input,) = d
-				(r.GlyphCount,) = (len(x) for x in d)
+				(r.GlyphCount,) = (len(x)+1 for x in d)
 			def ChainSetRuleData(r, d):
 				(r.Backtrack, r.Input, r.LookAhead) = d
-				(r.BacktrackGlyphCount,r.InputGlyphCount,r.LookAheadGlyphCount,) = (len(x) for x in d)
+				(r.BacktrackGlyphCount,r.InputGlyphCount,r.LookAheadGlyphCount,) = (len(d[0]),len(d[1])+1,len(d[2]))
 		elif Format == 2:
 			Coverage = lambda r: r.Coverage
 			ChainCoverage = lambda r: r.Coverage
@@ -229,10 +229,10 @@ class ContextHelper(object):
 			ChainRuleData = lambda r:(r.Backtrack, r.Input, r.LookAhead)
 			def SetRuleData(r, d):
 				(r.Class,) = d
-				(r.GlyphCount,) = (len(x) for x in d)
+				(r.GlyphCount,) = (len(x)+1 for x in d)
 			def ChainSetRuleData(r, d):
 				(r.Backtrack, r.Input, r.LookAhead) = d
-				(r.BacktrackGlyphCount,r.InputGlyphCount,r.LookAheadGlyphCount,) = (len(x) for x in d)
+				(r.BacktrackGlyphCount,r.InputGlyphCount,r.LookAheadGlyphCount,) = (len(d[0]),len(d[1])+1,len(d[2]))
 		elif Format == 3:
 			Coverage = lambda r: r.Coverage[0]
 			ChainCoverage = lambda r: r.InputCoverage[0]
