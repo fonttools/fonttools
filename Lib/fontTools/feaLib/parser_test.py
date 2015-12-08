@@ -442,6 +442,36 @@ class ParserTest(unittest.TestCase):
             "    enumerate position cursive A <anchor 12 -2> <anchor 2 3>;"
             "} kern;")
 
+    def test_gpos_type_4(self):
+        doc = self.parse(
+            "markClass [acute grave] <anchor 150 -10> @TOP_MARKS;"
+            "markClass [dieresis umlaut] <anchor 300 -10> @TOP_MARKS;"
+            "markClass [cedilla] <anchor 300 600> @BOTTOM_MARKS;"
+            "feature test {"
+            "    position base [a e o u] "
+            "        <anchor 250 450> mark @TOP_MARKS "
+            "        <anchor 210 -10> mark @BOTTOM_MARKS;"
+            "} test;")
+        pos = doc.statements[-1].statements[0]
+        self.assertEqual(type(pos), ast.MarkToBaseAttachmentPositioning)
+        self.assertEqual(pos.base, {"a", "e", "o", "u"})
+        (a1, m1), (a2, m2) = pos.marks
+        self.assertEqual((a1.x, a1.y), (250, 450))
+        self.assertEqual(m1.name, "TOP_MARKS")
+        self.assertEqual((a2.x, a2.y), (210, -10))
+        self.assertEqual(m2.name, "BOTTOM_MARKS")
+
+    def test_gpos_type_4_enumerated(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            '"enumerate" is not allowed with '
+            'mark-to-base attachment positioning',
+            self.parse,
+            "feature kern {"
+            "    markClass cedilla <anchor 300 600> @BOTTOM_MARKS;"
+            "    enumerate position base A <anchor 12 -2> mark @BOTTOM_MARKS;"
+            "} kern;")
+
     def test_markClass(self):
         doc = self.parse("markClass [acute grave] <anchor 350 3> @MARKS;"
                          "feature test {"

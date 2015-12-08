@@ -27,6 +27,7 @@ def makeTTFont():
         "A.alt1 A.alt2 A.alt3 B.alt1 B.alt2 B.alt3 C.alt1 C.alt2 C.alt3 "
         "d.alt n.end s.end "
         "c_h c_k c_s c_t f_f f_f_i f_i f_l o_f_f_i "
+        "grave acute dieresis cedilla umlaut "
     ).split()
     font = TTFont()
     font.setGlyphOrder(glyphs)

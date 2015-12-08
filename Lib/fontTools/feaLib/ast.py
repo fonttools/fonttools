@@ -170,6 +170,16 @@ class LookupReferenceStatement(Statement):
             s.build(builder)
 
 
+class MarkToBaseAttachmentPositioning(Statement):
+    def __init__(self, location, base, marks):
+        Statement.__init__(self, location)
+        self.base, self.marks = base, marks
+
+    def build(self, builder):
+        builder.add_mark_to_base_attachment_pos(
+            self.location, self.base, self.marks)
+
+
 class MultipleSubstitution(Statement):
     def __init__(self, location, glyph, replacement):
         Statement.__init__(self, location)

@@ -350,6 +350,10 @@ class Builder(object):
             makeOpenTypeAnchor(entryAnchor, otTables.EntryAnchor),
             makeOpenTypeAnchor(exitAnchor, otTables.ExitAnchor))
 
+    def add_mark_to_base_attachment_pos(self, location, base, marks):
+        lookup = self.get_lookup_(location, MarkToBaseAttachmentPosBuilder)
+        # TODO: Implement.
+
     def add_pair_pos(self, location, enumerated,
                      glyphclass1, value1, glyphclass2, value2):
         lookup = self.get_lookup_(location, PairPosBuilder)
@@ -706,6 +710,14 @@ class CursiveAttachmentPosBuilder(LookupBuilder):
         lookup.LookupType = self.lookup_type
         lookup.SubTableCount = len(lookup.SubTable)
         return lookup
+
+
+class MarkToBaseAttachmentPosBuilder(LookupBuilder):
+    def __init__(self, font, location, lookup_flag):
+        LookupBuilder.__init__(self, font, location, 'GPOS', 4, lookup_flag)
+
+    def build(self):
+        return None  # TODO: Implement.
 
 
 class ReverseChainSingleSubstBuilder(LookupBuilder):

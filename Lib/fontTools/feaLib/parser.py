@@ -252,7 +252,7 @@ class Parser(object):
         location = self.cur_token_location_
         glyphs = self.parse_glyphclass_(accept_glyphname=True)
         anchor = self.parse_anchor_()
-        name = self.expect_glyphclass_()
+        name = self.expect_class_name_()
         self.expect_symbol_(";")
         markClass = self.doc_.markClasses.get(name)
         if markClass is None:
@@ -269,7 +269,8 @@ class Parser(object):
     def parse_position_(self, enumerated, vertical):
         assert self.cur_token_ in {"position", "pos"}
         location = self.cur_token_location_
-        if self.next_token_ == "cursive":
+
+        if self.next_token_ == "cursive":  # GPOS type 3
             self.expect_keyword_("cursive")
             if enumerated:
                 raise FeatureLibError(
@@ -282,6 +283,23 @@ class Parser(object):
             self.expect_symbol_(";")
             return ast.CursiveAttachmentPositioning(
                 location, glyphclass, entryAnchor, exitAnchor)
+
+        if self.next_token_ == "base":  # GPOS type 4
+            self.expect_keyword_("base")
+            if enumerated:
+                raise FeatureLibError(
+                    '"enumerate" is not allowed with '
+                    'mark-to-base attachment positioning',
+                    location)
+            base = self.parse_glyphclass_(accept_glyphname=True)
+            marks = []
+            while self.next_token_ != ";":
+                anchor = self.parse_anchor_()
+                self.expect_keyword_("mark")
+                markClass = self.expect_markClass_reference_()
+                marks.append((anchor, markClass))
+            self.expect_symbol_(";")
+            return ast.MarkToBaseAttachmentPositioning(location, base, marks)
 
         gc2, value2 = None, None
         gc1 = self.parse_glyphclass_(accept_glyphname=True)
@@ -586,11 +604,19 @@ class Parser(object):
                 return self.cur_token_ in k
         return False
 
-    def expect_glyphclass_(self):
+    def expect_class_name_(self):
         self.advance_lexer_()
         if self.cur_token_type_ is not Lexer.GLYPHCLASS:
             raise FeatureLibError("Expected @NAME", self.cur_token_location_)
         return self.cur_token_
+
+    def expect_markClass_reference_(self):
+        name = self.expect_class_name_()
+        markClass = self.doc_.markClasses.get(name)
+        if markClass is None:
+            raise FeatureLibError("Unknown markClass @%s" % name,
+                                  self.cur_token_location_)
+        return markClass
 
     def expect_tag_(self):
         self.advance_lexer_()
