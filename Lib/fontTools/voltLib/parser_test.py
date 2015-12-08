@@ -162,7 +162,7 @@ class ParserTest(unittest.TestCase):
     def test_def_group_groups_cyclic(self):
         with self.assertRaisesRegex(
                 VoltLibError,
-                r'Group "Group2" is used but undefined.'):
+                r'Group "Group1" includes itself.'):
             [group1, group2] = self.parse(
                 'DEF_GROUP "Group1"\n'
                 'ENUM GROUP "Group2" END_ENUM\n'
