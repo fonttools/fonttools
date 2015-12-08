@@ -9,7 +9,7 @@ from robofab.world import OpenFont
 from cu2qu.rf import fonts_to_quadratic
 thin_font = OpenFont('MyFont-Thin.ufo')
 bold_font = OpenFont('MyFont-Bold.ufo')
-fonts_to_quadratic(thin_font, bold_font)
+fonts_to_quadratic([thin_font, bold_font])
 ```
 
 Interpolation compatibility is guaranteed during conversion. If it's not
@@ -17,23 +17,23 @@ needed, converting one font at a time may yield more optimized results:
 
 ```python
 for font in [thin_font, bold_font]:
-    fonts_to_quadratic(font)
+    fonts_to_quadratic([font])
 ```
 
 Some fonts may need a different error threshold than the default (0.0025 em).
 This can also be provided by the caller:
 
 ```python
-fonts_to_quadratic(thin_font, bold_font, max_err_em=0.005)
+fonts_to_quadratic([thin_font, bold_font], max_err_em=0.005)
 ```
 
 ```python
 for font in [thin_font, bold_font]:
-    fonts_to_quadratic(font, max_err_em=0.001)
+    fonts_to_quadratic([font], max_err_em=0.001)
 ```
 
 `fonts_to_quadratic` can print a string reporting the number of curves of each
-length. For example `fonts_to_quadratic(font, dump_report=True)` may print
+length. For example `fonts_to_quadratic([font], dump_report=True)` may print
 something like:
 
 ```
@@ -50,7 +50,7 @@ by providing your own report dictionary:
 ```python
 stats = {}
 for font in [thin_font, bold_font]:
-    fonts_to_quadratic(font, report=stats)
+    fonts_to_quadratic([font], report=stats)
 # "stats" will report combined statistics for both fonts
 ```
 

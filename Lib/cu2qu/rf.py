@@ -31,6 +31,8 @@ from cu2qu import curve_to_quadratic, curves_to_quadratic
 
 __all__ = ['fonts_to_quadratic', 'glyph_to_quadratic', 'segment_to_quadratic']
 
+DEFAULT_MAX_ERR = 0.0025
+
 
 _zip = zip
 def zip(*args):
@@ -42,7 +44,8 @@ def zip(*args):
     return _zip(*args)
 
 
-def fonts_to_quadratic(*fonts, **kwargs):
+def fonts_to_quadratic(fonts, max_err_em=None, max_err=None,
+        report=None, dump_report=False):
     """Convert the curves of a collection of fonts to quadratic.
 
     All curves will be converted to quadratic at once, ensuring interpolation
@@ -50,17 +53,24 @@ def fonts_to_quadratic(*fonts, **kwargs):
     font at a time may yield slightly more optimized results.
     """
 
-    report = kwargs.get('report', {})
-    dump_report = kwargs.get('dump_report', False)
+    if report is None:
+        report = {}
 
-    max_err_em = kwargs.get('max_err_em', 0.0025)
-    max_err = kwargs.get('max_err', None)
+    if max_err_em and max_err:
+        raise TypeError('Only one of max_err and max_err_em can be specified.')
+    if not (max_err_em or max_err):
+        max_err_em = DEFAULT_MAX_ERR
     if max_err:
         max_errors = [max_err] * len(fonts)
     else:
         max_errors = [f.info.unitsPerEm * max_err_em for f in fonts]
 
-    for glyph in FontCollection(fonts):
+    if len(fonts) == 1:
+        font = fonts[0]
+        max_errors = max_errors[0]
+    else:
+        font = FontCollection(fonts)
+    for glyph in font:
         glyph_to_quadratic(glyph, max_errors, report)
 
     if dump_report:
