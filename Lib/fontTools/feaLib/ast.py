@@ -39,6 +39,7 @@ class Block(Statement):
 class FeatureFile(Block):
     def __init__(self):
         Block.__init__(self, location=None)
+        self.markClasses = {}  # name --> ast.MarkClassDefinition
 
 
 class FeatureBlock(Block):
@@ -70,6 +71,13 @@ class GlyphClassDefinition(Statement):
         Statement.__init__(self, location)
         self.name = name
         self.glyphs = glyphs
+
+
+class MarkClassDefinition(object):
+    def __init__(self, location, name):
+        self.location, self.name = location, name
+        self.anchors = {}  # glyph --> ast.Anchor
+        self.glyphLocations = {}  # glyph --> (filepath, line, column)
 
 
 class AlternateSubstitution(Statement):

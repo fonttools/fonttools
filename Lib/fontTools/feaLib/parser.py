@@ -35,15 +35,18 @@ class Parser(object):
                 statements.append(self.parse_languagesystem_())
             elif self.is_cur_keyword_("lookup"):
                 statements.append(self.parse_lookup_(vertical=False))
+            elif self.is_cur_keyword_("markClass"):
+                self.parse_markClass_()
             elif self.is_cur_keyword_("feature"):
                 statements.append(self.parse_feature_block_())
             elif self.is_cur_keyword_("valueRecordDef"):
                 statements.append(
                     self.parse_valuerecord_definition_(vertical=False))
             else:
-                raise FeatureLibError("Expected feature, languagesystem, "
-                                      "lookup, or glyph class definition",
-                                      self.cur_token_location_)
+                raise FeatureLibError(
+                    "Expected feature, languagesystem, lookup, markClass, "
+                    "or glyph class definition",
+                    self.cur_token_location_)
         return self.doc_
 
     def parse_anchor_(self):
@@ -243,6 +246,21 @@ class Parser(object):
         self.parse_block_(block, vertical)
         self.lookups_.define(name, block)
         return block
+
+    def parse_markClass_(self):
+        assert self.is_cur_keyword_("markClass")
+        location = self.cur_token_location_
+        glyphs = self.parse_glyphclass_(accept_glyphname=True)
+        anchor = self.parse_anchor_()
+        name = self.expect_glyphclass_()
+        self.expect_symbol_(";")
+        markClass = self.doc_.markClasses.get(name)
+        if markClass is None:
+            markClass = ast.MarkClassDefinition(location, name)
+            self.doc_.markClasses[name] = markClass
+        for glyph in glyphs:
+            markClass.anchors[glyph] = anchor
+            markClass.glyphLocations[glyph] = location
 
     def is_next_glyphclass_(self):
         return (self.next_token_ == "[" or
@@ -531,6 +549,8 @@ class Parser(object):
                 statements.append(self.parse_language_())
             elif self.is_cur_keyword_("lookup"):
                 statements.append(self.parse_lookup_(vertical))
+            elif self.is_cur_keyword_("markClass"):
+                self.parse_markClass_()
             elif self.is_cur_keyword_({"pos", "position"}):
                 statements.append(
                     self.parse_position_(enumerated=False, vertical=vertical))
@@ -565,6 +585,12 @@ class Parser(object):
             else:
                 return self.cur_token_ in k
         return False
+
+    def expect_glyphclass_(self):
+        self.advance_lexer_()
+        if self.cur_token_type_ is not Lexer.GLYPHCLASS:
+            raise FeatureLibError("Expected @NAME", self.cur_token_location_)
+        return self.cur_token_
 
     def expect_tag_(self):
         self.advance_lexer_()

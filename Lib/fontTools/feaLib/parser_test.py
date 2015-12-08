@@ -442,6 +442,21 @@ class ParserTest(unittest.TestCase):
             "    enumerate position cursive A <anchor 12 -2> <anchor 2 3>;"
             "} kern;")
 
+    def test_markClass(self):
+        doc = self.parse("markClass [acute grave] <anchor 350 3> @MARKS;"
+                         "feature test {"
+                         "    markClass cedilla <anchor 400 -4> @MARKS;"
+                         "} test;")
+        markClass = doc.markClasses["MARKS"]
+        self.assertEqual(set(markClass.anchors.keys()),
+                         {"acute", "cedilla", "grave"})
+        acuteAnchor = markClass.anchors["acute"]
+        cedillaAnchor = markClass.anchors["cedilla"]
+        graveAnchor = markClass.anchors["grave"]
+        self.assertEqual((acuteAnchor.x, acuteAnchor.y), (350, 3))
+        self.assertEqual((cedillaAnchor.x, cedillaAnchor.y), (400, -4))
+        self.assertEqual((graveAnchor.x, graveAnchor.y), (350, 3))
+
     def test_rsub_format_a(self):
         doc = self.parse("feature test {rsub a [b B] c' d [e E] by C;} test;")
         rsub = doc.statements[0].statements[0]
