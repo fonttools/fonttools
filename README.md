@@ -54,6 +54,4 @@ for font in [thin_font, bold_font]:
 # "stats" will report combined statistics for both fonts
 ```
 
-See the source for functions which operate on glyphs, segments, or just several
-points. `FontCollection` classes are also exposed, which allow access into
-multiple fonts simultaneously and may be generally useful.
+See the source for functions which operate on glyphs and segments.

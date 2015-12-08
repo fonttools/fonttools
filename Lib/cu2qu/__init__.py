@@ -18,6 +18,8 @@ from __future__ import print_function, division, absolute_import
 from math import hypot
 from fontTools.misc import bezierTools
 
+__all__ = ['curve_to_quadratic', 'curves_to_quadratic']
+
 
 class Cu2QuError(Exception):
     pass
