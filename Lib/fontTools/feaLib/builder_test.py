@@ -162,35 +162,11 @@ class BuilderTest(unittest.TestCase):
             addOpenTypeFeatures(self.getpath("GPOS_%s.fea" % name), font)
             self.expect_ttx(font, self.getpath("GPOS_%s.ttx" % name))
 
-    def test_spec4h1(self):
-        # OpenType Feature File specification, section 4.h, example 1.
-        font = makeTTFont()
-        addOpenTypeFeatures(self.getpath("spec4h1.fea"), font)
-        self.expect_ttx(font, self.getpath("spec4h1.ttx"))
-
-    def test_spec5d1(self):
-        # OpenType Feature File specification, section 5.d, example 1.
-        font = makeTTFont()
-        addOpenTypeFeatures(self.getpath("spec5d1.fea"), font)
-        self.expect_ttx(font, self.getpath("spec5d1.ttx"))
-
-    def test_spec5d2(self):
-        # OpenType Feature File specification, section 5.d, example 2.
-        font = makeTTFont()
-        addOpenTypeFeatures(self.getpath("spec5d2.fea"), font)
-        self.expect_ttx(font, self.getpath("spec5d2.ttx"))
-
-    def test_spec5fi1(self):
-        # OpenType Feature File specification, section 5.f.i, example 1.
-        font = makeTTFont()
-        addOpenTypeFeatures(self.getpath("spec5fi1.fea"), font)
-        self.expect_ttx(font, self.getpath("spec5fi1.ttx"))
-
-    def test_spec5h1(self):
-        # OpenType Feature File specification, section 5.h, example 1.
-        font = makeTTFont()
-        addOpenTypeFeatures(self.getpath("spec5h1.fea"), font)
-        self.expect_ttx(font, self.getpath("spec5h1.ttx"))
+    def test_spec(self):
+        for name in "4h1 5d1 5d2 5fi1 5h1".split():
+            font = makeTTFont()
+            addOpenTypeFeatures(self.getpath("spec%s.fea" % name), font)
+            self.expect_ttx(font, self.getpath("spec%s.ttx" % name))
 
     def test_languagesystem(self):
         builder = Builder(None, makeTTFont())
