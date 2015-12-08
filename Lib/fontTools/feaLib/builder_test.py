@@ -75,7 +75,7 @@ class BuilderTest(unittest.TestCase):
 
     def expect_ttx(self, font, expected_ttx):
         path = self.temp_path(suffix=".ttx")
-        font.saveXML(path, quiet=True, tables=['GSUB', 'GPOS'])
+        font.saveXML(path, quiet=True, tables=['GDEF', 'GSUB', 'GPOS'])
         actual = self.read_ttx(path)
         expected = self.read_ttx(expected_ttx)
         if actual != expected:
@@ -217,6 +217,19 @@ class BuilderTest(unittest.TestCase):
             "If \"languagesystem DFLT dflt\" is present, "
             "it must be the first of the languagesystem statements",
             self.build, "languagesystem latn TRK; languagesystem DFLT dflt;")
+
+    def test_markClass(self):
+        font = makeTTFont()
+        addOpenTypeFeatures(self.getpath("markClass.fea"), font)
+        self.expect_ttx(font, self.getpath("markClass.ttx"))
+
+    def test_markClass_redefine(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "glyph C cannot be both in markClass @MARK1 and @MARK2",
+            self.build,
+            "markClass [A B C] <anchor 100 50> @MARK1;"
+            "markClass [C D E] <anchor 200 80> @MARK2;")
 
     def test_script(self):
         builder = Builder(None, makeTTFont())

@@ -26,11 +26,12 @@ class Builder(object):
         self.cur_feature_name_ = None
         self.lookups_ = []
         self.features_ = {}  # ('latn', 'DEU ', 'smcp') --> [LookupBuilder*]
+        self.parseTree = None
         self.required_features_ = {}  # ('latn', 'DEU ') --> 'scmp'
 
     def build(self):
-        parsetree = Parser(self.featurefile_path).parse()
-        parsetree.build(self)
+        self.parseTree = Parser(self.featurefile_path).parse()
+        self.parseTree.build(self)
         for tag in ('GPOS', 'GSUB'):
             table = self.makeTable(tag)
             if (table.ScriptList.ScriptCount > 0 or
@@ -40,6 +41,11 @@ class Builder(object):
                 fontTable.table = table
             elif tag in self.font:
                 del self.font[tag]
+        gdef = self.makeGDEF()
+        if gdef:
+            self.font["GDEF"] = gdef
+        elif "GDEF" in self.font:
+            del self.font["GDEF"]
 
     def get_lookup_(self, location, builder_class):
         if (self.cur_lookup_ and
@@ -63,6 +69,32 @@ class Builder(object):
                 key = (script, lang, self.cur_feature_name_)
                 self.features_.setdefault(key, []).append(self.cur_lookup_)
         return self.cur_lookup_
+
+    def makeGDEF(self):
+        gdef = otTables.GDEF()
+        gdef.Version = 1.0
+        gdef.GlyphClassDef = otTables.GlyphClassDef()
+        gdef.GlyphClassDef.classDefs = {}
+
+        glyphMarkClass = {}  # glyph --> markClass
+        for markClass in self.parseTree.markClasses.values():
+            for glyph in markClass.anchors.keys():
+                if glyph in glyphMarkClass:
+                    other = glyphMarkClass[glyph]
+                    name1, name2 = sorted([markClass.name, other.name])
+                    raise FeatureLibError(
+                        'glyph %s cannot be both in markClass @%s and @%s' %
+                        (glyph, name1, name2), markClass.location)
+                glyphMarkClass[glyph] = markClass
+                gdef.GlyphClassDef.classDefs[glyph] = 3
+        gdef.AttachList = None
+        gdef.LigCaretList = None
+        gdef.MarkAttachClassDef = None
+        if len(gdef.GlyphClassDef.classDefs) == 0:
+            return None
+        result = getTableClass("GDEF")()
+        result.table = gdef
+        return result
 
     def makeTable(self, tag):
         table = getattr(otTables, tag, None)()
