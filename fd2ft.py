@@ -510,7 +510,7 @@ class Tokenizer(ReadUntilMixin):
 		while True:
 			line = self._next()
 			# Skip comments and empty lines
-			if line[0] not in ['', '%']:
+			if line[0] and line[0][0] != '%':
 				return line
 
 	def skipUntil(self, what):
