@@ -90,7 +90,16 @@ def parseFeatureList(lines):
 def parseLookupFlags(lines):
 	flags = 0
 	filterset = None
-	for line in lines:
+	allFlags = [
+		'righttoleft',
+		'ignorebaseglyphs',
+		'ignoreligatures',
+		'ignoremarks',
+		'markattachmenttype',
+		'markfiltertype',
+	]
+	while lines.peek()[0].lower() in allFlags:
+		line = next(lines)
 		flag = {
 			'righttoleft':		0x0001,
 			'ignorebaseglyphs':	0x0002,
@@ -108,8 +117,6 @@ def parseLookupFlags(lines):
 		if line[0].lower() == 'markfiltertype':
 			flags |= 0x10
 			filterset = int(line[1])
-		lines.pack(line)
-		break
 	return flags, filterset
 
 def parseSingleSubst(self, lines, font):
@@ -246,7 +253,7 @@ def parsePair(self, lines, font):
 			setattr(vr, what, value)
 		self.Coverage = makeCoverage(self.ClassDef1.classDefs.keys(), font)
 	else:
-		assert 0
+		assert 0, typ
 
 def parseKernset(self, lines, font):
 	typ = lines.peek()[0].split()[0].lower()
@@ -963,7 +970,6 @@ class Tokenizer(ReadUntilMixin):
 
 	def __init__(self, f):
 		# TODO BytesIO / StringIO as needed?  also, figure out whether we work on bytes or unicode
-
 		lines = iter(f)
 		lines = ([s.strip() for s in line.split('\t')] for line in lines)
 		try:
