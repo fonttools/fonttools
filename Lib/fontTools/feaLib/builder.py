@@ -490,6 +490,14 @@ class LookupBuilder(object):
         coverage.glyphs = sorted(glyphs, key=self.font.getGlyphID)
         return coverage
 
+    def buildLookup_(self, subtables):
+        lookup = otTables.Lookup()
+        lookup.LookupFlag = self.lookup_flag
+        lookup.LookupType = self.lookup_type
+        lookup.SubTable = subtables
+        lookup.SubTableCount = len(subtables)
+        return lookup
+
     def setBacktrackCoverage_(self, prefix, subtable):
         subtable.BacktrackGlyphCount = len(prefix)
         subtable.BacktrackCoverage = []
@@ -522,16 +530,10 @@ class AlternateSubstBuilder(LookupBuilder):
                 self.alternates == other.alternates)
 
     def build(self):
-        lookup = otTables.Lookup()
-        lookup.SubTable = []
-        st = otTables.AlternateSubst()
-        st.Format = 1
-        st.alternates = self.alternates
-        lookup.SubTable.append(st)
-        lookup.LookupFlag = self.lookup_flag
-        lookup.LookupType = self.lookup_type
-        lookup.SubTableCount = len(lookup.SubTable)
-        return lookup
+        subtable = otTables.AlternateSubst()
+        subtable.Format = 1
+        subtable.alternates = self.alternates
+        return self.buildLookup_([subtable])
 
 
 class ChainContextSubstBuilder(LookupBuilder):
@@ -544,11 +546,10 @@ class ChainContextSubstBuilder(LookupBuilder):
                 self.substitutions == other.substitutions)
 
     def build(self):
-        lookup = otTables.Lookup()
-        lookup.SubTable = []
+        subtables = []
         for (prefix, input, suffix, lookups) in self.substitutions:
             st = otTables.ChainContextSubst()
-            lookup.SubTable.append(st)
+            subtables.append(st)
             st.Format = 3
             self.setBacktrackCoverage_(prefix, st)
             self.setLookAheadCoverage_(suffix, st)
@@ -562,11 +563,7 @@ class ChainContextSubstBuilder(LookupBuilder):
                     rec.SequenceIndex = sequenceIndex
                     rec.LookupListIndex = l.lookup_index
                     st.SubstLookupRecord.append(rec)
-
-        lookup.LookupFlag = self.lookup_flag
-        lookup.LookupType = self.lookup_type
-        lookup.SubTableCount = len(lookup.SubTable)
-        return lookup
+        return self.buildLookup_(subtables)
 
 
 class LigatureSubstBuilder(LookupBuilder):
@@ -593,21 +590,15 @@ class LigatureSubstBuilder(LookupBuilder):
         return (-len(components), components)
 
     def build(self):
-        lookup = otTables.Lookup()
-        lookup.SubTable = []
-        st = otTables.LigatureSubst()
-        st.Format = 1
-        st.ligatures = {}
+        subtable = otTables.LigatureSubst()
+        subtable.Format = 1
+        subtable.ligatures = {}
         for components in sorted(self.ligatures.keys(), key=self.make_key):
             lig = otTables.Ligature()
             lig.Component = components[1:]
             lig.LigGlyph = self.ligatures[components]
-            st.ligatures.setdefault(components[0], []).append(lig)
-        lookup.SubTable.append(st)
-        lookup.LookupFlag = self.lookup_flag
-        lookup.LookupType = self.lookup_type
-        lookup.SubTableCount = len(lookup.SubTable)
-        return lookup
+            subtable.ligatures.setdefault(components[0], []).append(lig)
+        return self.buildLookup_([subtable])
 
 
 class MultipleSubstBuilder(LookupBuilder):
@@ -620,15 +611,9 @@ class MultipleSubstBuilder(LookupBuilder):
                 self.mapping == other.mapping)
 
     def build(self):
-        lookup = otTables.Lookup()
-        lookup.SubTable = []
-        st = otTables.MultipleSubst()
-        st.mapping = self.mapping
-        lookup.SubTable.append(st)
-        lookup.LookupFlag = self.lookup_flag
-        lookup.LookupType = self.lookup_type
-        lookup.SubTableCount = len(lookup.SubTable)
-        return lookup
+        subtable = otTables.MultipleSubst()
+        subtable.mapping = self.mapping
+        return self.buildLookup_([subtable])
 
 
 class PairPosBuilder(LookupBuilder):
@@ -686,13 +671,7 @@ class PairPosBuilder(LookupBuilder):
                     ps.PairValueRecord.append(pvr)
                 ps.PairValueCount = len(ps.PairValueRecord)
             st.PairSetCount = len(st.PairSet)
-
-        lookup = otTables.Lookup()
-        lookup.SubTable = subtables
-        lookup.LookupFlag = self.lookup_flag
-        lookup.LookupType = self.lookup_type
-        lookup.SubTableCount = len(lookup.SubTable)
-        return lookup
+        return self.buildLookup_(subtables)
 
 
 class CursiveAttachmentPosBuilder(LookupBuilder):
@@ -720,13 +699,7 @@ class CursiveAttachmentPosBuilder(LookupBuilder):
             st.EntryExitRecord.append(rec)
             rec.EntryAnchor = entryAnchor
             rec.ExitAnchor = exitAnchor
-        subtables = [st]
-        lookup = otTables.Lookup()
-        lookup.SubTable = subtables
-        lookup.LookupFlag = self.lookup_flag
-        lookup.LookupType = self.lookup_type
-        lookup.SubTableCount = len(lookup.SubTable)
-        return lookup
+        return self.buildLookup_([st])
 
 
 class MarkToBaseAttachmentPosBuilder(LookupBuilder):
@@ -787,13 +760,7 @@ class MarkToBaseAttachmentPosBuilder(LookupBuilder):
             for markClass in markClasses:
                 baserec.BaseAnchor.append(self.bases[base].get(markClass))
 
-        subtables = [st]
-        lookup = otTables.Lookup()
-        lookup.SubTable = subtables
-        lookup.LookupFlag = self.lookup_flag
-        lookup.LookupType = self.lookup_type
-        lookup.SubTableCount = len(lookup.SubTable)
-        return lookup
+        return self.buildLookup_([st])
 
     def buildMarkClassIDs_(self, marks):
         """Computes a map from markClassID -> int, given sorted mark coverage.
@@ -817,22 +784,17 @@ class ReverseChainSingleSubstBuilder(LookupBuilder):
                 self.substitutions == other.substitutions)
 
     def build(self):
-        lookup = otTables.Lookup()
-        lookup.SubTable = []
+        subtables = []
         for prefix, suffix, mapping in self.substitutions:
             st = otTables.ReverseChainSingleSubst()
             st.Format = 1
-            lookup.SubTable.append(st)
             self.setBacktrackCoverage_(prefix, st)
             self.setLookAheadCoverage_(suffix, st)
             st.Coverage = self.buildCoverage_(mapping.keys())
             st.GlyphCount = len(mapping)
             st.Substitute = [mapping[g] for g in st.Coverage.glyphs]
-
-        lookup.LookupFlag = self.lookup_flag
-        lookup.LookupType = self.lookup_type
-        lookup.SubTableCount = len(lookup.SubTable)
-        return lookup
+            subtables.append(st)
+        return self.buildLookup_(subtables)
 
 
 class SingleSubstBuilder(LookupBuilder):
@@ -845,15 +807,9 @@ class SingleSubstBuilder(LookupBuilder):
                 self.mapping == other.mapping)
 
     def build(self):
-        lookup = otTables.Lookup()
-        lookup.SubTable = []
-        st = otTables.SingleSubst()
-        st.mapping = self.mapping
-        lookup.SubTable.append(st)
-        lookup.LookupFlag = self.lookup_flag
-        lookup.LookupType = self.lookup_type
-        lookup.SubTableCount = len(lookup.SubTable)
-        return lookup
+        subtable = otTables.SingleSubst()
+        subtable.mapping = self.mapping
+        return self.buildLookup_([subtable])
 
 
 class SinglePosBuilder(LookupBuilder):
@@ -930,9 +886,4 @@ class SinglePosBuilder(LookupBuilder):
             st.Coverage = self.buildCoverage_(glyphs)
             st.Value, st.ValueFormat = value, valueFormat
 
-        lookup = otTables.Lookup()
-        lookup.SubTable = subtables
-        lookup.LookupFlag = self.lookup_flag
-        lookup.LookupType = self.lookup_type
-        lookup.SubTableCount = len(lookup.SubTable)
-        return lookup
+        return self.buildLookup_(subtables)
