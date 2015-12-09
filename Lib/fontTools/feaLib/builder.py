@@ -485,28 +485,30 @@ class LookupBuilder(object):
         """Infers glyph glasses for the GDEF table, such as {"cedilla":3}."""
         return {}
 
+    def buildCoverage_(self, glyphs, tableClass=otTables.Coverage):
+        coverage = tableClass()
+        coverage.glyphs = sorted(glyphs, key=self.font.getGlyphID)
+        return coverage
+
     def setBacktrackCoverage_(self, prefix, subtable):
         subtable.BacktrackGlyphCount = len(prefix)
         subtable.BacktrackCoverage = []
         for p in reversed(prefix):
-            coverage = otTables.BacktrackCoverage()
-            coverage.glyphs = sorted(list(p), key=self.font.getGlyphID)
+            coverage = self.buildCoverage_(p, otTables.BacktrackCoverage)
             subtable.BacktrackCoverage.append(coverage)
 
     def setLookAheadCoverage_(self, suffix, subtable):
         subtable.LookAheadGlyphCount = len(suffix)
         subtable.LookAheadCoverage = []
         for s in suffix:
-            coverage = otTables.LookAheadCoverage()
-            coverage.glyphs = sorted(list(s), key=self.font.getGlyphID)
+            coverage = self.buildCoverage_(s, otTables.LookAheadCoverage)
             subtable.LookAheadCoverage.append(coverage)
 
     def setInputCoverage_(self, glyphs, subtable):
         subtable.InputGlyphCount = len(glyphs)
         subtable.InputCoverage = []
         for g in glyphs:
-            coverage = otTables.InputCoverage()
-            coverage.glyphs = sorted(list(g), key=self.font.getGlyphID)
+            coverage = self.buildCoverage_(g, otTables.InputCoverage)
             subtable.InputCoverage.append(coverage)
 
 
@@ -670,8 +672,7 @@ class PairPosBuilder(LookupBuilder):
             subtables.append(st)
             st.Format = 1
             st.ValueFormat1, st.ValueFormat2 = vf1, vf2
-            st.Coverage = otTables.Coverage()
-            st.Coverage.glyphs = sorted(p.keys(), key=self.font.getGlyphID)
+            st.Coverage = self.buildCoverage_(p)
             st.PairSet = []
             for glyph in st.Coverage.glyphs:
                 ps = otTables.PairSet()
@@ -710,9 +711,7 @@ class CursiveAttachmentPosBuilder(LookupBuilder):
     def build(self):
         st = otTables.CursivePos()
         st.Format = 1
-        st.Coverage = otTables.Coverage()
-        st.Coverage.glyphs = \
-            sorted(self.attachments.keys(), key=self.font.getGlyphID)
+        st.Coverage = self.buildCoverage_(self.attachments.keys())
         st.EntryExitCount = len(self.attachments)
         st.EntryExitRecord = []
         for glyph in st.Coverage.glyphs:
@@ -758,7 +757,6 @@ class MarkToBaseAttachmentPosBuilder(LookupBuilder):
         # whether this is the case; if so, implement the optimization.
 
         marks = sorted(self.marks.keys(), key=self.font.getGlyphID)
-        bases = sorted(self.bases.keys(), key=self.font.getGlyphID)
         markClassIDs = self.buildMarkClassIDs_(marks)
         markClasses = sorted(markClassIDs.keys(), key=markClassIDs.get)
 
@@ -766,8 +764,7 @@ class MarkToBaseAttachmentPosBuilder(LookupBuilder):
         st.Format = 1
         st.ClassCount = len(markClassIDs)
 
-        st.MarkCoverage = otTables.MarkCoverage()
-        st.MarkCoverage.glyphs = marks
+        st.MarkCoverage = self.buildCoverage_(marks, otTables.MarkCoverage)
         st.MarkArray = otTables.MarkArray()
         st.MarkArray.MarkCount = len(marks)
         st.MarkArray.MarkRecord = []
@@ -778,12 +775,12 @@ class MarkToBaseAttachmentPosBuilder(LookupBuilder):
             markrec.Class = markClassIDs[markClassName]
             markrec.MarkAnchor = markAnchor
 
-        st.BaseCoverage = otTables.BaseCoverage()
-        st.BaseCoverage.glyphs = bases
+        st.BaseCoverage = self.buildCoverage_(
+            self.bases.keys(), otTables.BaseCoverage)
         st.BaseArray = otTables.BaseArray()
-        st.BaseArray.BaseCount = len(bases)
+        st.BaseArray.BaseCount = len(st.BaseCoverage.glyphs)
         st.BaseArray.BaseRecord = []
-        for base in bases:
+        for base in st.BaseCoverage.glyphs:
             baserec = otTables.BaseRecord()
             st.BaseArray.BaseRecord.append(baserec)
             baserec.BaseAnchor = []
@@ -828,11 +825,9 @@ class ReverseChainSingleSubstBuilder(LookupBuilder):
             lookup.SubTable.append(st)
             self.setBacktrackCoverage_(prefix, st)
             self.setLookAheadCoverage_(suffix, st)
-            coverage = sorted(mapping.keys(), key=self.font.getGlyphID)
-            st.Coverage = otTables.Coverage()
-            st.Coverage.glyphs = coverage
-            st.GlyphCount = len(coverage)
-            st.Substitute = [mapping[g] for g in coverage]
+            st.Coverage = self.buildCoverage_(mapping.keys())
+            st.GlyphCount = len(mapping)
+            st.Substitute = [mapping[g] for g in st.Coverage.glyphs]
 
         lookup.LookupFlag = self.lookup_flag
         lookup.LookupType = self.lookup_type
@@ -932,8 +927,7 @@ class SinglePosBuilder(LookupBuilder):
             st = otTables.SinglePos()
             subtables.append(st)
             st.Format = 1
-            st.Coverage = otTables.Coverage()
-            st.Coverage.glyphs = glyphs
+            st.Coverage = self.buildCoverage_(glyphs)
             st.Value, st.ValueFormat = value, valueFormat
 
         lookup = otTables.Lookup()
