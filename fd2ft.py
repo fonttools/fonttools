@@ -247,7 +247,10 @@ def parsePair(self, lines, font):
 		assert 0
 
 def parseKernset(self, lines, font):
-	raise NotImplementedError
+	typ = lines.peek()[0].split()[0].lower()
+	if typ in ('left', 'right'):
+		lines = lines.readUntil(("firstclass definition begin", "secondclass definition begin"), packBack=True)
+	return parsePair(self, lines, font)
 
 def makeAnchor(data, klass=ot.Anchor):
 	assert len(data) <= 2
@@ -739,17 +742,13 @@ def parseLookup(lines, tableTag, font):
 
 	while True:
 		subLookupLines = lookupLines.readUntil(('% subtable', 'subtable end'))
+		while subLookupLines.peek() is not None:
+			subtable = ot.lookupTypes[tableTag][lookup.LookupType]()
+			subtable.LookupType = lookup.LookupType
+			parseLookupSubTable(subtable, subLookupLines, font)
+			subtables.append(subtable)
 		if subLookupLines.peek() is None:
 			break
-		subtable = ot.lookupTypes[tableTag][lookup.LookupType]()
-		subtable.LookupType = lookup.LookupType
-		try:
-			parseLookupSubTable(subtable, subLookupLines, font)
-		except NotImplementedError:
-			list(subLookupLines) # Exhaust subLookupLines
-			continue
-		assert subLookupLines.peek() is None, subLookupLines.peek()
-		subtables.append(subtable)
 
 	lookup.SubTable = subtables
 	lookup.SubTableCount = len(lookup.SubTable)
@@ -795,15 +794,17 @@ def parseGDEF(lines, font):
 
 class ReadUntilMixin(object):
 
-	def _readUntil(self, what):
+	def _readUntil(self, what, packBack=False):
 		if type(what) is not tuple:
 			what = (what,)
 		for line in self:
 			if line[0].lower() in what:
+				if packBack:
+					self.pack(line)
 				raise StopIteration
 			yield line
-	def readUntil(self, what):
-		return BufferedIter(self._readUntil(what))
+	def readUntil(self, what, packBack=False):
+		return BufferedIter(self._readUntil(what, packBack=packBack))
 
 class BufferedIter(ReadUntilMixin):
 
@@ -915,7 +916,7 @@ def main(args):
 		decompiled = table.__class__()
 		decompiled.decompile(blob, font)
 
-		#continue
+		continue
 		from fontTools.misc import xmlWriter
 		tag = table.tableTag
 		writer = xmlWriter.XMLWriter(sys.stdout)
