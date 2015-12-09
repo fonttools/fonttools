@@ -165,7 +165,9 @@ def parseSinglePos(self, lines, font):
 		setattr(values[g], w, v)
 	self.Coverage = makeCoverage(values.keys(), font)
 	values = [values[k] for k in self.Coverage.glyphs]
-	self.ValueFormat = reduce(int.__or__, [v.getFormat() for v in values])
+	self.ValueFormat = 0
+	for v in values:
+		self.ValueFormat |= v.getFormat()
 	if all(v == values[0] for v in values):
 		self.Format = 1
 		self.Value = values[0]
