@@ -195,7 +195,7 @@ class MarkLigPosStatement(Statement):
         self.ligatures, self.marks = ligatures, marks
 
     def build(self, builder):
-        pass  # TODO: Implement this.
+        builder.add_mark_lig_pos(self.location, self.ligatures, self.marks)
 
 
 class MultipleSubstStatement(Statement):

@@ -353,18 +353,36 @@ class Builder(object):
             makeOpenTypeAnchor(entryAnchor, otTables.EntryAnchor),
             makeOpenTypeAnchor(exitAnchor, otTables.ExitAnchor))
 
-    def add_mark_base_pos(self, location, bases, marks):
-        builder = self.get_lookup_(location, MarkBasePosBuilder)
-        for baseAnchor, markClass in marks:
-            otBaseAnchor = makeOpenTypeAnchor(baseAnchor, otTables.BaseAnchor)
+    def add_marks_(self, location, lookupBuilder, marks):
+        """Helper for add_mark_{base,liga,mark}_pos."""
+        for _, markClass in marks:
             for mark, markAnchor in markClass.anchors.items():
-                if mark not in builder.marks:
+                if mark not in lookupBuilder.marks:
                     otMarkAnchor = makeOpenTypeAnchor(markAnchor,
                                                       otTables.MarkAnchor)
-                    builder.marks[mark] = (markClass.name, otMarkAnchor)
-                for base in bases:
-                    builder.bases.setdefault(base, {})[markClass.name] = (
-                        otBaseAnchor)
+                    lookupBuilder.marks[mark] = (markClass.name, otMarkAnchor)
+
+    def add_mark_base_pos(self, location, bases, marks):
+        builder = self.get_lookup_(location, MarkBasePosBuilder)
+        self.add_marks_(location, builder, marks)
+        for baseAnchor, markClass in marks:
+            otBaseAnchor = makeOpenTypeAnchor(baseAnchor, otTables.BaseAnchor)
+            for base in bases:
+                builder.bases.setdefault(base, {})[markClass.name] = (
+                    otBaseAnchor)
+
+    def add_mark_lig_pos(self, location, ligatures, components):
+        builder = self.get_lookup_(location, MarkLigPosBuilder)
+        componentAnchors = []
+        for marks in components:
+            anchors = {}
+            self.add_marks_(location, builder, marks)
+            for ligAnchor, markClass in marks:
+                anchors[markClass.name] = (
+                    makeOpenTypeAnchor(ligAnchor, otTables.LigatureAnchor))
+            componentAnchors.append(anchors)
+        for glyph in ligatures:
+            builder.ligatures[glyph] = componentAnchors
 
     def add_pair_pos(self, location, enumerated,
                      glyphclass1, value1, glyphclass2, value2):
@@ -495,6 +513,20 @@ class LookupBuilder(object):
         lookup.SubTable = subtables
         lookup.SubTableCount = len(subtables)
         return lookup
+
+    def buildMarkClasses_(self, marks):
+        """{"cedilla": ("BOTTOM", ast.Anchor), ...} --> {"BOTTOM":0, "TOP":1}
+
+        Helper for MarkBasePostBuilder, MarkLigPosBuilder, and
+        MarkMarkPosBuilder. Seems to return the same numeric IDs
+        for mark classes as the AFDKO makeotf tool.
+        """
+        ids = {}
+        for mark in sorted(marks.keys(), key=self.font.getGlyphID):
+            markClassName, _markAnchor = marks[mark]
+            if markClassName not in ids:
+                ids[markClassName] = len(ids)
+        return ids
 
     def setBacktrackCoverage_(self, prefix, subtable):
         subtable.BacktrackGlyphCount = len(prefix)
@@ -724,8 +756,8 @@ class MarkBasePosBuilder(LookupBuilder):
                 self.bases == other.bases)
 
     def inferGlyphClasses(self):
-        result = {glyph: 1 for glyph in self.bases.keys()}
-        result.update({glyph: 3 for glyph in self.marks.keys()})
+        result = {glyph: 1 for glyph in self.bases}
+        result.update({glyph: 3 for glyph in self.marks})
         return result
 
     def build(self):
@@ -743,7 +775,7 @@ class MarkBasePosBuilder(LookupBuilder):
         st.Format = 1
         st.MarkCoverage = \
             self.buildCoverage_(self.marks, otTables.MarkCoverage)
-        markClasses = self.buildMarkClasses_(st.MarkCoverage.glyphs)
+        markClasses = self.buildMarkClasses_(self.marks)
         st.ClassCount = len(markClasses)
         self.setMarkArray_(self.marks, markClasses, st)
 
@@ -761,16 +793,52 @@ class MarkBasePosBuilder(LookupBuilder):
 
         return self.buildLookup_([st])
 
-    def buildMarkClasses_(self, marks):
-        """Computes a map from markClassID -> int, given sorted mark coverage.
-        This seems to give the same numeric identifiers as the makeotf tool.
-        """
-        ids = {}
-        for mark in marks:
-            markClassName, _markAnchor = self.marks[mark]
-            if markClassName not in ids:
-                ids[markClassName] = len(ids)
-        return ids
+
+class MarkLigPosBuilder(LookupBuilder):
+    def __init__(self, font, location, lookup_flag):
+        LookupBuilder.__init__(self, font, location, 'GPOS', 5, lookup_flag)
+        self.marks = {}  # glyphName -> (markClassName, anchor)
+        self.ligatures = {}  # glyphName -> [{markClassName: anchor}, ...]
+
+    def equals(self, other):
+        return (LookupBuilder.equals(self, other) and
+                self.marks == other.marks and
+                self.ligatures == other.ligatures)
+
+    def inferGlyphClasses(self):
+        result = {glyph: 2 for glyph in self.ligatures}
+        result.update({glyph: 3 for glyph in self.marks})
+        return result
+
+    def build(self):
+        st = otTables.MarkLigPos()
+        st.Format = 1
+        st.MarkCoverage = \
+            self.buildCoverage_(self.marks, otTables.MarkCoverage)
+        markClasses = self.buildMarkClasses_(self.marks)
+        st.ClassCount = len(markClasses)
+        self.setMarkArray_(self.marks, markClasses, st)
+
+        st.LigatureCoverage = \
+            self.buildCoverage_(self.ligatures, otTables.LigatureCoverage)
+        st.LigatureArray = otTables.LigatureArray()
+        st.LigatureArray.LigatureCount = len(self.ligatures)
+        st.LigatureArray.LigatureAttach = []
+        for lig in st.LigatureCoverage.glyphs:
+            components = self.ligatures[lig]
+            attach = otTables.LigatureAttach()
+            attach.ComponentCount = len(components)
+            attach.ComponentRecord = []
+            for component in components:
+                crec = otTables.ComponentRecord()
+                attach.ComponentRecord.append(crec)
+                crec.LigatureAnchor = []
+                for markClass in sorted(markClasses.keys(),
+                                        key=markClasses.get):
+                    crec.LigatureAnchor.append(component.get(markClass))
+            st.LigatureArray.LigatureAttach.append(attach)
+
+        return self.buildLookup_([st])
 
 
 class ReverseChainSingleSubstBuilder(LookupBuilder):

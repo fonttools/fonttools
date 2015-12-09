@@ -1,0 +1,36 @@
+markClass [acute grave] <anchor 500 700> @TOP_MARKS;
+markClass macron <anchor 500 750> @TOP_MARKS;
+markClass [cedilla] <anchor 500 -10> @BOTTOM_MARKS;
+markClass [ogonek] <anchor 800 -10> @OGONEK;
+
+feature test {
+
+    position
+        ligature [c_t s_t]
+            <anchor 500 800> mark @TOP_MARKS
+            <anchor 500 -200> mark @BOTTOM_MARKS
+        ligComponent
+            <anchor 1500 800> mark @TOP_MARKS
+            <anchor 1500 -200> mark @BOTTOM_MARKS
+            <anchor 1550 0> mark @OGONEK;
+
+    position
+        ligature f_l
+            <anchor 300 800> mark @TOP_MARKS
+            <anchor 300 -200> mark @BOTTOM_MARKS
+        ligComponent
+            <anchor 600 800> mark @TOP_MARKS
+            <anchor 600 -200> mark @BOTTOM_MARKS;
+
+    position
+        ligature [f_f_l]
+            <anchor 300 800> mark @TOP_MARKS
+            <anchor 300 -200> mark @BOTTOM_MARKS
+        ligComponent
+            <anchor 600 800> mark @TOP_MARKS
+            <anchor 600 -200> mark @BOTTOM_MARKS
+        ligComponent
+            <anchor 900 800> mark @TOP_MARKS
+            <anchor 900 -200> mark @BOTTOM_MARKS;
+
+} test;

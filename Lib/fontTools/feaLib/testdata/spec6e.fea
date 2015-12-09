@@ -1,0 +1,13 @@
+languagesystem DFLT dflt;
+
+markClass sukun    <anchor 261 488> @TOP_MARKS;
+markClass kasratan <anchor 346 -98> @BOTTOM_MARKS;
+
+feature test {
+    position ligature lam_meem_jeem
+        <anchor 625 1800> mark @TOP_MARKS    # mark above lam
+        ligComponent     # start specifying marks for meem
+        <anchor 376 -368> mark @BOTTOM_MARKS    # mark below meem
+        ligComponent     # start specifying marks for jeem
+        <anchor NULL>;   # jeem has no marks
+} test;
