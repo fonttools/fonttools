@@ -103,6 +103,17 @@ class AnchorDefinition(Statement):
         self.name, self.x, self.y, self.contourpoint = name, x, y, contourpoint
 
 
+class ChainContextPosStatement(Statement):
+    def __init__(self, location, prefix, glyphs, suffix, lookups):
+        Statement.__init__(self, location)
+        self.prefix, self.glyphs, self.suffix = prefix, glyphs, suffix
+        self.lookups = lookups
+
+    def build(self, builder):
+        builder.add_chain_context_pos(
+            self.location, self.prefix, self.glyphs, self.suffix, self.lookups)
+
+
 class ChainContextSubstStatement(Statement):
     def __init__(self, location, old_prefix, old, old_suffix, lookups):
         Statement.__init__(self, location)

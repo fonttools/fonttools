@@ -305,10 +305,13 @@ class Builder(object):
                 lookup_builders.append(None)
         return lookup_builders
 
+    def add_chain_context_pos(self, location, prefix, glyphs, suffix, lookups):
+        pass  # TODO: Implement.
+
     def add_chain_context_subst(self, location,
-                                old_prefix, old, old_suffix, lookups):
+                                prefix, glyphs, suffix, lookups):
         lookup = self.get_lookup_(location, ChainContextSubstBuilder)
-        lookup.substitutions.append((old_prefix, old, old_suffix,
+        lookup.substitutions.append((prefix, glyphs, suffix,
                                      self.find_lookup_builders_(lookups)))
 
     def add_alternate_subst(self, location, glyph, from_class):

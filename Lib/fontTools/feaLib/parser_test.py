@@ -540,6 +540,20 @@ class ParserTest(unittest.TestCase):
             "    enum pos mark hamza <anchor 221 301> mark @MARK_CLASS_1;"
             "} test;")
 
+    def test_gpos_type_8(self):
+        doc = self.parse(
+            "lookup L1 {pos one 100;} L1; lookup L2 {pos two 200;} L2;"
+            "feature test {"
+            "    pos [A a] [B b] I' lookup L1 [N n]' lookup L2 P' [Y y] [Z z];"
+            "} test;")
+        lookup1, lookup2 = doc.statements[0:2]
+        pos = doc.statements[-1].statements[0]
+        self.assertEqual(type(pos), ast.ChainContextPosStatement)
+        self.assertEqual(pos.prefix, [{"A", "a"}, {"B", "b"}])
+        self.assertEqual(pos.glyphs, [{"I"}, {"N", "n"}, {"P"}])
+        self.assertEqual(pos.suffix, [{"Y", "y"}, {"Z", "z"}])
+        self.assertEqual(pos.lookups, [lookup1, lookup2, None])
+
     def test_markClass(self):
         doc = self.parse("markClass [acute grave] <anchor 350 3> @MARKS;"
                          "feature test {"

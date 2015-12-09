@@ -177,7 +177,8 @@ class Parser(object):
 
     def parse_glyph_pattern_(self):
         prefix, glyphs, lookups, suffix = ([], [], [], [])
-        while self.next_token_ not in {"by", "from", ";"}:
+        while (self.next_token_ not in {"by", "from", ";", "<"} and
+               self.next_token_type_ != Lexer.NUMBER):
             gc = self.parse_glyphclass_(accept_glyphname=True)
             marked = False
             if self.next_token_ == "'":
@@ -293,26 +294,35 @@ class Parser(object):
             return self.parse_position_mark_(enumerated, vertical)
 
         location = self.cur_token_location_
+        prefix, glyphs, lookups, suffix = self.parse_glyph_pattern_()
         gc2, value2 = None, None
-        gc1 = self.parse_glyphclass_(accept_glyphname=True)
-        if self.is_next_glyphclass_():
-            # Pair positioning, format B: 'pos' gc1 gc2 value1
-            gc2 = self.parse_glyphclass_(accept_glyphname=True)
+        if not prefix and len(glyphs) == 2 and not suffix and not any(lookups):
+            # Pair positioning, format B: 'pos' glyphs gc2 value1
+            gc2 = glyphs[1]
+            glyphs = [glyphs[0]]
+
+        if prefix or len(glyphs) > 1 or suffix or any(lookups):
+            # GPOS type 8: Chaining contextual positioning
+            self.expect_symbol_(";")
+            return ast.ChainContextPosStatement(
+                location, prefix, glyphs, suffix, lookups)
+
         value1 = self.parse_valuerecord_(vertical)
         if self.next_token_ != ";" and gc2 is None:
             # Pair positioning, format A: 'pos' gc1 value1 gc2 value2
             gc2 = self.parse_glyphclass_(accept_glyphname=True)
             value2 = self.parse_valuerecord_(vertical)
         self.expect_symbol_(";")
+
         if gc2 is None:
             if enumerated:
                 raise FeatureLibError(
                     '"enumerate" is only allowed with pair positionings',
                     self.cur_token_location_)
-            return ast.SinglePosStatement(location, gc1, value1)
+            return ast.SinglePosStatement(location, glyphs[0], value1)
         else:
             return ast.PairPosStatement(location, enumerated,
-                                        gc1, value1, gc2, value2)
+                                        glyphs[0], value1, gc2, value2)
 
     def parse_position_cursive_(self, enumerated, vertical):
         location = self.cur_token_location_
