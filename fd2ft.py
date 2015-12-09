@@ -14,15 +14,15 @@ import re
 
 debug = print
 
-def parseGlyph(s):
+def makeGlyph(s):
 	if s[:2] == 'U ':
 		return ttLib.TTFont._makeGlyphName(int(s[2:], 16))
 	elif s[:2] == '# ':
 		return "glyph%.5d" % int(s[2:])
 	return s
 
-def parseGlyphs(l):
-	return [parseGlyph(g) for g in l]
+def makeGlyphs(l):
+	return [makeGlyph(g) for g in l]
 
 def parseScriptList(lines):
 	line = next(lines)
@@ -116,26 +116,26 @@ def parseSingleSubst(self, lines, font):
 	self.mapping = {}
 	for line in lines:
 		assert len(line) == 2, line
-		line = parseGlyphs(line)
+		line = makeGlyphs(line)
 		self.mapping[line[0]] = line[1]
 
 def parseMultiple(self, lines, font):
 	self.mapping = {}
 	for line in lines:
-		line = parseGlyphs(line)
+		line = makeGlyphs(line)
 		self.mapping[line[0]] = line[1:]
 
 def parseAlternate(self, lines, font):
 	self.alternates = {}
 	for line in lines:
-		line = parseGlyphs(line)
+		line = makeGlyphs(line)
 		self.alternates[line[0]] = line[1:]
 
 def parseLigature(self, lines, font):
 	self.ligatures = {}
 	for line in lines:
 		assert len(line) >= 2, line
-		line = parseGlyphs(line)
+		line = makeGlyphs(line)
 		# The following single line can replace the rest of this function with fontTools >= 3.1
 		#self.ligatures[tuple(line[1:])] = line[0]
 		ligGlyph, firstGlyph = line[:2]
@@ -152,7 +152,7 @@ def parseSinglePos(self, lines, font):
 		assert len(line) == 3, line
 		w = line[0].title().replace(' ', '')
 		assert w in valueRecordFormatDict
-		g = parseGlyph(line[1])
+		g = makeGlyph(line[1])
 		v = int(line[2])
 		if g not in values:
 			values[g] = ValueRecord()
@@ -181,7 +181,7 @@ def parsePair(self, lines, font):
 			assert side in ('left', 'right'), side
 			what = line[0][len(side):].title().replace(' ', '')
 			mask = valueRecordFormatDict[what][0]
-			glyph1, glyph2 = parseGlyphs(line[1:3])
+			glyph1, glyph2 = makeGlyphs(line[1:3])
 			value = int(line[3])
 			if not glyph1 in values: values[glyph1] = {}
 			if not glyph2 in values[glyph1]: values[glyph1][glyph2] = (ValueRecord(),ValueRecord())
@@ -274,7 +274,7 @@ def parseCursive(self, lines, font):
 			'entry':	(0,ot.EntryAnchor),
 			'exit':		(1,ot.ExitAnchor),
 		}[line[0]]
-		glyph = parseGlyph(line[1])
+		glyph = makeGlyph(line[1])
 		if glyph not in records:
 			records[glyph] = [None,None]
 		assert records[glyph][idx] is None, (glyph, idx)
@@ -344,7 +344,7 @@ def parseMarkToSomething(self, lines, font, c):
 	for line in lines:
 		typ = line[0]
 		assert typ in ('mark', 'base', 'ligature')
-		glyph = parseGlyph(line[1])
+		glyph = makeGlyph(line[1])
 		data, anchorClass = Data[typ]
 		extraItems = 2 if typ == 'ligature' else 0
 		extras = tuple(int(i) for i in line[2:2+extraItems])
@@ -558,7 +558,7 @@ def parseClassDef(lines, klass=ot.ClassDef):
 	assert line[0].lower().endswith('class definition begin'), line
 	classDefs = {}
 	for line in lines.readUntil('class definition end'):
-		glyph = parseGlyph(line[0])
+		glyph = makeGlyph(line[0])
 		assert glyph not in classDefs, glyph
 		classDefs[glyph] = int(line[1])
 	return makeClassDef(classDefs, klass)
@@ -574,7 +574,7 @@ def parseCoverage(lines, font, klass=ot.Coverage):
 	assert line[0].lower().endswith('coverage definition begin'), line
 	glyphs = []
 	for line in lines.readUntil('coverage definition end'):
-		glyphs.append(parseGlyph(line[0]))
+		glyphs.append(makeGlyph(line[0]))
 	return makeCoverage(glyphs, font, klass)
 
 def bucketizeRules(self, c, rules, bucketKeys):
@@ -612,7 +612,7 @@ def parseContext(self, lines, font, Type):
 		rules = []
 		for line in lines:
 			assert line[0].lower() == 'glyph', line[0]
-			seq = tuple(parseGlyphs(stripSplitComma(i)) for i in line[1:1+c.DataLen])
+			seq = tuple(makeGlyphs(stripSplitComma(i)) for i in line[1:1+c.DataLen])
 			recs = parseLookupRecords(line[1+c.DataLen:], c.LookupRecord)
 			rules.append((seq, recs))
 
@@ -704,7 +704,7 @@ def parseReverseChainedSubst(self, lines, font):
 	mapping = {}
 	for line in lines:
 		assert len(line) == 2, line
-		line = parseGlyphs(line)
+		line = makeGlyphs(line)
 		mapping[line[0]] = line[1]
 	self.Coverage = makeCoverage(mapping.keys(), font)
 	self.Substitute = [mapping[k] for k in self.Coverage.glyphs]
@@ -826,7 +826,7 @@ def parseAttachList(lines, font):
 	assert line[0].lower().endswith('attachment list begin'), line
 	points = {}
 	for line in lines.readUntil('attachment list end'):
-		glyph = parseGlyph(line[0])
+		glyph = makeGlyph(line[0])
 		assert glyph not in points, glyph
 		points[glyph] = [int(i) for i in line[1:]]
 	return makeAttachList(points, font)
@@ -854,7 +854,7 @@ def parseCaretList(lines, font):
 	assert line[0].lower().endswith('carets begin'), line
 	carets = {}
 	for line in lines.readUntil('carets end'):
-		glyph = parseGlyph(line[0])
+		glyph = makeGlyph(line[0])
 		assert glyph not in carets, glyph
 		num = int(line[1])
 		thisCarets = [int(i) for i in line[2:]]
@@ -877,7 +877,7 @@ def parseMarkFilteringSets(lines, font):
 	sets = {}
 	for line in lines.readUntil('set definition end'):
 		assert len(line) == 2, line
-		glyph = parseGlyph(line[0])
+		glyph = makeGlyph(line[0])
 		# TODO accept set names
 		st = int(line[1])
 		if st not in sets:
