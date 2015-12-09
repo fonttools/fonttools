@@ -110,6 +110,23 @@ class SubsetTest(unittest.TestCase):
         self.assertTrue('Xyz-' in opt2.layout_features)
         self.assertTrue('Xyz-' not in opt1.layout_features)
 
+    def test_google_color(self):
+        _, fontpath = self.compile_font(self.getpath("google_color.ttx"), ".ttf")
+        subsetpath = self.temp_path(".ttf")
+        subset.main([fontpath, "--gids=0,1", "--output-file=%s" % subsetpath])
+        subsetfont = TTFont(subsetpath)
+        self.assertTrue("CBDT" in subsetfont)
+        self.assertTrue("CBLC" in subsetfont)
+        self.assertTrue("x" in subsetfont['CBDT'].strikeData[0])
+        self.assertFalse("y" in subsetfont['CBDT'].strikeData[0])
+
+    def test_google_color_all(self):
+        _, fontpath = self.compile_font(self.getpath("google_color.ttx"), ".ttf")
+        subsetpath = self.temp_path(".ttf")
+        subset.main([fontpath, "--unicodes=*", "--output-file=%s" % subsetpath])
+        subsetfont = TTFont(subsetpath)
+        self.assertTrue("x" in subsetfont['CBDT'].strikeData[0])
+        self.assertTrue("y" in subsetfont['CBDT'].strikeData[0])
 
 if __name__ == "__main__":
     unittest.main()
