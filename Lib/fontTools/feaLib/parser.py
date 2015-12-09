@@ -93,6 +93,8 @@ class Parser(object):
         anchorMarks = []  # [(ast.Anchor, markClassName)*]
         while self.next_token_ == "<":
             anchor = self.parse_anchor_()
+            if anchor is None and self.next_token_ != "mark":
+                continue  # <anchor NULL> without mark, eg. in GPOS type 5
             self.expect_keyword_("mark")
             markClass = self.expect_markClass_reference_()
             anchorMarks.append((anchor, markClass))
@@ -282,6 +284,8 @@ class Parser(object):
             return self.parse_position_cursive_(enumerated, vertical)
         elif self.next_token_ == "base":   # GPOS type 4
             return self.parse_position_base_(enumerated, vertical)
+        elif self.next_token_ == "ligature":   # GPOS type 5
+            return self.parse_position_ligature_(enumerated, vertical)
 
         location = self.cur_token_location_
         gc2, value2 = None, None
@@ -332,6 +336,23 @@ class Parser(object):
         marks = self.parse_anchor_marks_()
         self.expect_symbol_(";")
         return ast.MarkToBaseAttachmentPositioning(location, base, marks)
+
+    def parse_position_ligature_(self, enumerated, vertical):
+        location = self.cur_token_location_
+        self.expect_keyword_("ligature")
+        if enumerated:
+            raise FeatureLibError(
+                '"enumerate" is not allowed with '
+                'mark-to-ligature attachment positioning',
+                location)
+        ligatures = self.parse_glyphclass_(accept_glyphname=True)
+        marks = [self.parse_anchor_marks_()]
+        while self.next_token_ == "ligComponent":
+            self.expect_keyword_("ligComponent")
+            marks.append(self.parse_anchor_marks_())
+        self.expect_symbol_(";")
+        return ast.MarkToLigatureAttachmentPositioning(
+            location, ligatures, marks)
 
     def parse_script_(self):
         assert self.is_cur_keyword_("script")

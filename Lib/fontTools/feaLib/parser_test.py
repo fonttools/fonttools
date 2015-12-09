@@ -472,6 +472,44 @@ class ParserTest(unittest.TestCase):
             "    enumerate position base A <anchor 12 -2> mark @BOTTOM_MARKS;"
             "} kern;")
 
+    def test_gpos_type_5(self):
+        doc = self.parse(
+            "markClass [grave acute] <anchor 150 500> @TOP_MARKS;"
+            "markClass [cedilla] <anchor 300 -100> @BOTTOM_MARKS;"
+            "feature test {"
+            "    position "
+            "        ligature [a_f_f_i o_f_f_i] "
+            "            <anchor 50 600> mark @TOP_MARKS "
+            "            <anchor 50 -10> mark @BOTTOM_MARKS "
+            "        ligComponent "
+            "            <anchor 30 800> mark @TOP_MARKS "
+            "        ligComponent "
+            "            <anchor NULL> "
+            "        ligComponent "
+            "            <anchor 30 -10> mark @BOTTOM_MARKS;"
+            "} test;")
+        pos = doc.statements[-1].statements[0]
+        self.assertEqual(type(pos), ast.MarkToLigatureAttachmentPositioning)
+        self.assertEqual(pos.ligatures, {"a_f_f_i", "o_f_f_i"})
+        [(a11, m11), (a12, m12)], [(a2, m2)], [], [(a4, m4)] = pos.marks
+        self.assertEqual((a11.x, a11.y, m11.name), (50, 600, "TOP_MARKS"))
+        self.assertEqual((a12.x, a12.y, m12.name), (50, -10, "BOTTOM_MARKS"))
+        self.assertEqual((a2.x, a2.y, m2.name), (30, 800, "TOP_MARKS"))
+        self.assertEqual((a4.x, a4.y, m4.name), (30, -10, "BOTTOM_MARKS"))
+
+    def test_gpos_type_5_enumerated(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            '"enumerate" is not allowed with '
+            'mark-to-ligature attachment positioning',
+            self.parse,
+            "feature test {"
+            "    markClass cedilla <anchor 300 600> @MARKS;"
+            "    enumerate position "
+            "        ligature f_i <anchor 100 0> mark @MARKS"
+            "        ligComponent <anchor NULL>;"
+            "} test;")
+
     def test_markClass(self):
         doc = self.parse("markClass [acute grave] <anchor 350 3> @MARKS;"
                          "feature test {"

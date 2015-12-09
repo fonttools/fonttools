@@ -180,6 +180,15 @@ class MarkToBaseAttachmentPositioning(Statement):
             self.location, self.base, self.marks)
 
 
+class MarkToLigatureAttachmentPositioning(Statement):
+    def __init__(self, location, ligatures, marks):
+        Statement.__init__(self, location)
+        self.ligatures, self.marks = ligatures, marks
+
+    def build(self, builder):
+        pass  # TODO: Implement this.
+
+
 class MultipleSubstitution(Statement):
     def __init__(self, location, glyph, replacement):
         Statement.__init__(self, location)
