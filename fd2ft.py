@@ -10,7 +10,7 @@ from __future__ import print_function, division, absolute_import
 from fontTools import ttLib
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.tables.otBase import ValueRecord, valueRecordFormatDict
-import re
+from contextlib import contextmanager
 
 debug = print
 
@@ -25,64 +25,62 @@ def makeGlyphs(l):
 	return [makeGlyph(g) for g in l]
 
 def parseScriptList(lines):
-	line = next(lines)
-	assert line[0].lower().endswith('script table begin'), line
 	self = ot.ScriptList()
 	self.ScriptRecord = []
-	for line in lines.readUntil('script table end'):
-		scriptTag, langSysTag, defaultFeature, features = line
-		debug("Adding script", scriptTag, "language-system", langSysTag)
+	with lines.between('script table'):
+		for line in lines:
+			scriptTag, langSysTag, defaultFeature, features = line
+			debug("Adding script", scriptTag, "language-system", langSysTag)
 
-		langSys = ot.LangSys()
-		langSys.LookupOrder = None
-		# TODO The following two lines should use lazy feature name-to-index mapping
-		langSys.ReqFeatureIndex = int(defaultFeature) if defaultFeature else 0xFFFF
-		langSys.FeatureIndex = intSplitComma(features)
-		langSys.FeatureCount = len(langSys.FeatureIndex)
+			langSys = ot.LangSys()
+			langSys.LookupOrder = None
+			# TODO The following two lines should use lazy feature name-to-index mapping
+			langSys.ReqFeatureIndex = int(defaultFeature) if defaultFeature else 0xFFFF
+			langSys.FeatureIndex = intSplitComma(features)
+			langSys.FeatureCount = len(langSys.FeatureIndex)
 
-		script = [s for s in self.ScriptRecord if s.ScriptTag == scriptTag]
-		if script:
-			script = script[0].Script
-		else:
-			scriptRec = ot.ScriptRecord()
-			scriptRec.ScriptTag = scriptTag
-			scriptRec.Script = ot.Script()
-			self.ScriptRecord.append(scriptRec)
-			script = scriptRec.Script
-			script.DefaultLangSys = None
-			script.LangSysRecord = []
-			script.LangSysCount = 0
+			script = [s for s in self.ScriptRecord if s.ScriptTag == scriptTag]
+			if script:
+				script = script[0].Script
+			else:
+				scriptRec = ot.ScriptRecord()
+				scriptRec.ScriptTag = scriptTag
+				scriptRec.Script = ot.Script()
+				self.ScriptRecord.append(scriptRec)
+				script = scriptRec.Script
+				script.DefaultLangSys = None
+				script.LangSysRecord = []
+				script.LangSysCount = 0
 
-		if langSysTag == 'default':
-			script.DefaultLangSys = langSys
-		else:
-			langSysRec = ot.LangSysRecord()
-			langSysRec.LangSysTag = langSysTag + ' '*(4 - len(langSysTag))
-			langSysRec.LangSys = langSys
-			script.LangSysRecord.append(langSysRec)
-			script.LangSysCount = len(script.LangSysRecord)
+			if langSysTag == 'default':
+				script.DefaultLangSys = langSys
+			else:
+				langSysRec = ot.LangSysRecord()
+				langSysRec.LangSysTag = langSysTag + ' '*(4 - len(langSysTag))
+				langSysRec.LangSys = langSys
+				script.LangSysRecord.append(langSysRec)
+				script.LangSysCount = len(script.LangSysRecord)
 
 	self.ScriptCount = len(self.ScriptRecord)
 	# TODO sort scripts and langSys's?
 	return self
 
 def parseFeatureList(lines):
-	line = next(lines)
-	assert line[0].lower().endswith('feature table begin'), line
 	self = ot.FeatureList()
 	self.FeatureRecord = []
-	for line in lines.readUntil('feature table end'):
-		idx, featureTag, lookups = line
-		assert int(idx) == len(self.FeatureRecord), "%d %d" % (idx, len(self.FeatureRecord))
-		featureRec = ot.FeatureRecord()
-		featureRec.FeatureTag = featureTag
-		featureRec.Feature = ot.Feature()
-		self.FeatureRecord.append(featureRec)
-		feature = featureRec.Feature
-		feature.FeatureParams = None
-		# TODO The following line should use lazy lookup name-to-index mapping
-		feature.LookupListIndex = intSplitComma(lookups)
-		feature.LookupCount = len(feature.LookupListIndex)
+	with lines.between('feature table'):
+		for line in lines:
+			idx, featureTag, lookups = line
+			assert int(idx) == len(self.FeatureRecord), "%d %d" % (idx, len(self.FeatureRecord))
+			featureRec = ot.FeatureRecord()
+			featureRec.FeatureTag = featureTag
+			featureRec.Feature = ot.Feature()
+			self.FeatureRecord.append(featureRec)
+			feature = featureRec.Feature
+			feature.FeatureParams = None
+			# TODO The following line should use lazy lookup name-to-index mapping
+			feature.LookupListIndex = intSplitComma(lookups)
+			feature.LookupCount = len(feature.LookupListIndex)
 
 	self.FeatureCount = len(self.FeatureRecord)
 	return self
@@ -258,7 +256,8 @@ def parsePair(self, lines, font):
 def parseKernset(self, lines, font):
 	typ = lines.peek()[0].split()[0].lower()
 	if typ in ('left', 'right'):
-		lines = lines.readUntil(("firstclass definition begin", "secondclass definition begin"), packBack=True)
+		with lines.until(("firstclass definition begin", "secondclass definition begin")):
+			return parsePair(self, lines, font)
 	return parsePair(self, lines, font)
 
 def makeAnchor(data, klass=ot.Anchor):
@@ -561,13 +560,12 @@ def makeClassDef(classDefs, klass=ot.Coverage):
 	return self
 
 def parseClassDef(lines, klass=ot.ClassDef):
-	line = next(lines)
-	assert line[0].lower().endswith('class definition begin'), line
 	classDefs = {}
-	for line in lines.readUntil('class definition end'):
-		glyph = makeGlyph(line[0])
-		assert glyph not in classDefs, glyph
-		classDefs[glyph] = int(line[1])
+	with lines.between('class definition'):
+		for line in lines:
+			glyph = makeGlyph(line[0])
+			assert glyph not in classDefs, glyph
+			classDefs[glyph] = int(line[1])
 	return makeClassDef(classDefs, klass)
 
 def makeCoverage(glyphs, font, klass=ot.Coverage):
@@ -577,11 +575,10 @@ def makeCoverage(glyphs, font, klass=ot.Coverage):
 	return coverage
 
 def parseCoverage(lines, font, klass=ot.Coverage):
-	line = next(lines)
-	assert line[0].lower().endswith('coverage definition begin'), line
 	glyphs = []
-	for line in lines.readUntil('coverage definition end'):
-		glyphs.append(makeGlyph(line[0]))
+	with lines.between('coverage definition'):
+		for line in lines:
+			glyphs.append(makeGlyph(line[0]))
 	return makeCoverage(glyphs, font, klass)
 
 def bucketizeRules(self, c, rules, bucketKeys):
@@ -718,51 +715,50 @@ def parseReverseChainedSubst(self, lines, font):
 	self.GlyphCount = len(self.Substitute)
 
 def parseLookup(lines, tableTag, font):
-	line = next(lines)
-	assert line[0].lower().endswith('lookup'), line
-	if line is None: return None, None
-	lookupLines = lines.readUntil('lookup end')
+	line = lines.expect('lookup')
 	_, name, typ = line
 	debug("Parsing lookup type %s %s" % (typ, name))
-
 	lookup = ot.Lookup()
-	lookup.LookupFlag,filterset = parseLookupFlags(lookupLines)
-	if filterset is not None:
-		lookup.MarkFilteringSet = filterset
-	lookup.LookupType, parseLookupSubTable = {
-		'GSUB': {
-			'single':	(1,	parseSingleSubst),
-			'multiple':	(2,	parseMultiple),
-			'alternate':	(3,	parseAlternate),
-			'ligature':	(4,	parseLigature),
-			'context':	(5,	parseContextSubst),
-			'chained':	(6,	parseChainedSubst),
-			'reversechained':(8,	parseReverseChainedSubst),
-		},
-		'GPOS': {
-			'single':	(1,	parseSinglePos),
-			'pair':		(2,	parsePair),
-			'kernset':	(2,	parseKernset),
-			'cursive':	(3,	parseCursive),
-			'mark to base':	(4,	parseMarkToBase),
-			'mark to ligature':(5,	parseMarkToLigature),
-			'mark to mark':	(6,	parseMarkToMark),
-			'context':	(7,	parseContextPos),
-			'chained':	(8,	parseChainedPos),
-		},
-	}[tableTag][typ]
+	with lines.until('lookup end'):
 
-	subtables = []
+		lookup.LookupFlag,filterset = parseLookupFlags(lines)
+		if filterset is not None:
+			lookup.MarkFilteringSet = filterset
+		lookup.LookupType, parseLookupSubTable = {
+			'GSUB': {
+				'single':	(1,	parseSingleSubst),
+				'multiple':	(2,	parseMultiple),
+				'alternate':	(3,	parseAlternate),
+				'ligature':	(4,	parseLigature),
+				'context':	(5,	parseContextSubst),
+				'chained':	(6,	parseChainedSubst),
+				'reversechained':(8,	parseReverseChainedSubst),
+			},
+			'GPOS': {
+				'single':	(1,	parseSinglePos),
+				'pair':		(2,	parsePair),
+				'kernset':	(2,	parseKernset),
+				'cursive':	(3,	parseCursive),
+				'mark to base':	(4,	parseMarkToBase),
+				'mark to ligature':(5,	parseMarkToLigature),
+				'mark to mark':	(6,	parseMarkToMark),
+				'context':	(7,	parseContextPos),
+				'chained':	(8,	parseChainedPos),
+			},
+		}[tableTag][typ]
 
-	while True:
-		subLookupLines = lookupLines.readUntil(('% subtable', 'subtable end'))
-		while subLookupLines.peek() is not None:
-			subtable = ot.lookupTypes[tableTag][lookup.LookupType]()
-			subtable.LookupType = lookup.LookupType
-			parseLookupSubTable(subtable, subLookupLines, font)
-			subtables.append(subtable)
-		if subLookupLines.peek() is None:
-			break
+		subtables = []
+
+		while lines.peek():
+			with lines.until(('% subtable', 'subtable end')):
+				while lines.peek():
+					subtable = ot.lookupTypes[tableTag][lookup.LookupType]()
+					subtable.LookupType = lookup.LookupType
+					parseLookupSubTable(subtable, lines, font)
+					subtables.append(subtable)
+			if lines.peek() and lines.peek()[0] in ('% subtable', 'subtable end'):
+				next(lines)
+	lines.expect('lookup end')
 
 	lookup.SubTable = subtables
 	lookup.SubTableCount = len(lookup.SubTable)
@@ -829,13 +825,12 @@ def makeAttachList(points, font):
 	return self
 
 def parseAttachList(lines, font):
-	line = next(lines)
-	assert line[0].lower().endswith('attachment list begin'), line
 	points = {}
-	for line in lines.readUntil('attachment list end'):
-		glyph = makeGlyph(line[0])
-		assert glyph not in points, glyph
-		points[glyph] = [int(i) for i in line[1:]]
+	with lines.between('attachment list'):
+		for line in lines:
+			glyph = makeGlyph(line[0])
+			assert glyph not in points, glyph
+			points[glyph] = [int(i) for i in line[1:]]
 	return makeAttachList(points, font)
 
 def makeCaretList(carets, font):
@@ -857,16 +852,15 @@ def makeCaretList(carets, font):
 	return self
 
 def parseCaretList(lines, font):
-	line = next(lines)
-	assert line[0].lower().endswith('carets begin'), line
 	carets = {}
-	for line in lines.readUntil('carets end'):
-		glyph = makeGlyph(line[0])
-		assert glyph not in carets, glyph
-		num = int(line[1])
-		thisCarets = [int(i) for i in line[2:]]
-		assert num == len(thisCarets), line
-		carets[glyph] = thisCarets
+	with lines.between('carets'):
+		for line in lines:
+			glyph = makeGlyph(line[0])
+			assert glyph not in carets, glyph
+			num = int(line[1])
+			thisCarets = [int(i) for i in line[2:]]
+			assert num == len(thisCarets), line
+			carets[glyph] = thisCarets
 	return makeCaretList(carets, font)
 
 def makeMarkFilteringSets(sets, font):
@@ -879,17 +873,16 @@ def makeMarkFilteringSets(sets, font):
 	return self
 
 def parseMarkFilteringSets(lines, font):
-	line = next(lines)
-	assert line[0].lower().endswith('markfilter set definition begin'), line
 	sets = {}
-	for line in lines.readUntil('set definition end'):
-		assert len(line) == 2, line
-		glyph = makeGlyph(line[0])
-		# TODO accept set names
-		st = int(line[1])
-		if st not in sets:
-			sets[st] = []
-		sets[st].append(glyph)
+	with lines.between('set definition'):
+		for line in lines:
+			assert len(line) == 2, line
+			glyph = makeGlyph(line[0])
+			# TODO accept set names
+			st = int(line[1])
+			if st not in sets:
+				sets[st] = []
+			sets[st].append(glyph)
 	return makeMarkFilteringSets(sets, font)
 
 def parseGDEF(lines, font):
@@ -923,50 +916,7 @@ def parseGDEF(lines, font):
 	self.Version = 1.0 if self.MarkGlyphSetsDef is None else 0x00010002
 	return self
 
-
-class ReadUntilMixin(object):
-
-	def _readUntil(self, what, packBack=False):
-		if type(what) is not tuple:
-			what = (what,)
-		for line in self:
-			if line[0].lower() in what:
-				if packBack:
-					self.pack(line)
-				raise StopIteration
-			yield line
-	def readUntil(self, what, packBack=False):
-		return BufferedIter(self._readUntil(what, packBack=packBack))
-
-class BufferedIter(ReadUntilMixin):
-
-	def __init__(self, it):
-		self.iter = it
-		self.buffer = []
-
-	def __iter__(self):
-		return self
-
-	def next(self):
-		if self.buffer:
-			return self.buffer.pop(0)
-		else:
-			return self.iter.next()
-
-	def peek(self, n=0):
-		"""Return an item n entries ahead in the iteration."""
-		while n >= len(self.buffer):
-			try:
-				self.buffer.append(self.iter.next())
-			except StopIteration:
-				return None
-		return self.buffer[n]
-
-	def pack(self, item):
-		"""Push back item into the iterator."""
-		self.buffer.insert(0, item)
-
-class Tokenizer(ReadUntilMixin):
+class Tokenizer(object):
 
 	def __init__(self, f):
 		# TODO BytesIO / StringIO as needed?  also, figure out whether we work on bytes or unicode
@@ -978,20 +928,80 @@ class Tokenizer(ReadUntilMixin):
 			self.filename = None
 		self._lines = lines
 		self._lineno = 0
+		self.stoppers = []
+		self.buffer = None
 
 	def __iter__(self):
 		return self
 
-	def _next(self):
+	def _next_line(self):
 		self._lineno += 1
 		return next(self._lines)
 
-	def next(self):
+	def _next_nonempty(self):
 		while True:
-			line = self._next()
+			line = self._next_line()
 			# Skip comments and empty lines
 			if line[0] and (line[0][0] != '%' or line[0] == '% subtable'):
 				return line
+
+	def _next_buffered(self):
+		if self.buffer:
+			ret = self.buffer
+			self.buffer = None
+			return ret
+		else:
+			return self._next_nonempty()
+
+	def __next__(self):
+		line = self._next_buffered()
+		if line[0].lower() in self.stoppers:
+			self.buffer = line
+			raise StopIteration
+		return line
+
+	def next(self):
+		return self.__next__()
+
+	def peek(self):
+		if not self.buffer:
+			try:
+				self.buffer = self._next_nonempty()
+			except StopIteration:
+				return None
+		if self.buffer[0].lower() in self.stoppers:
+			return None
+		return self.buffer
+
+	@contextmanager
+	def between(self, tag):
+		start = tag + ' begin'
+		end = tag + ' end'
+		self.expectendswith(start)
+		self.stoppers.append(end)
+		yield
+		del self.stoppers[-1]
+		self.expect(tag + ' end')
+
+	@contextmanager
+	def until(self, tags):
+		if type(tags) is not tuple:
+			tags = (tags,)
+		self.stoppers.extend(tags)
+		yield
+		del self.stoppers[-len(tags):]
+
+	def expect(self, s):
+		line = next(self)
+		tag = line[0].lower()
+		assert tag == s, "Expected '%s', got '%s'" % (s, tag)
+		return line
+
+	def expectendswith(self, s):
+		line = next(self)
+		tag = line[0].lower()
+		assert tag.endswith(s), "Expected '*%s', got '%s'" % (s, tag)
+		return line
 
 def parseTable(lines, font, tableTag=None):
 	debug("Parsing table")
@@ -1015,7 +1025,7 @@ def parseTable(lines, font, tableTag=None):
 	return container
 
 def build(f, font, tableTag=None):
-	lines = BufferedIter(Tokenizer(f))
+	lines = Tokenizer(f)
 	return parseTable(lines, font, tableTag=tableTag)
 
 
