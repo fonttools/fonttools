@@ -282,9 +282,7 @@ def parseCursive(self, lines, font):
 		recs.append(rec)
 	self.EntryExitCount = len(self.EntryExitRecord)
 
-def makeMarkArrayAndCoverage(data, font, c):
-	coverage = makeCoverage(data.keys(), font, c.MarkCoverageClass)
-	markArray = c.MarkArrayClass()
+def makeMarkRecords(data, coverage, c):
 	records = []
 	for glyph in coverage.glyphs:
 		klass, anchor = data[glyph]
@@ -292,13 +290,9 @@ def makeMarkArrayAndCoverage(data, font, c):
 		record.Class = klass
 		setattr(record, c.MarkAnchor, anchor)
 		records.append(record)
-	setattr(markArray, c.MarkRecord, records)
-	setattr(markArray, c.MarkCount, len(records))
-	return markArray, coverage
+	return records
 
-def makeBaseArrayAndCoverage(data, classCount, font, c):
-	coverage = makeCoverage([g for g,k in data.keys()], font, c.BaseCoverageClass)
-	baseArray = c.BaseArrayClass()
+def makeBaseRecords(data, coverage, c, classCount):
 	records = []
 	idx = {}
 	for glyph in coverage.glyphs:
@@ -312,39 +306,73 @@ def makeBaseArrayAndCoverage(data, classCount, font, c):
 		anchors = getattr(record, c.BaseAnchor)
 		assert anchors[klass] is None, (glyph, klass)
 		anchors[klass] = anchor
-	setattr(baseArray, c.BaseRecord, records)
-	setattr(baseArray, c.BaseCount, len(records))
-	return baseArray, coverage
+	return records
+
+def makeLigatureRecords(data, coverage, c, classCount):
+	records = [None] * len(coverage.glyphs)
+	idx = {g:i for i,g in enumerate(coverage.glyphs)}
+
+	for (glyph,klass,compIdx,compCount),anchor in data.items():
+		record = records[idx[glyph]]
+		if record is None:
+			record = records[idx[glyph]] = ot.LigatureAttach()
+			record.ComponentCount = compCount
+			record.ComponentRecord = [ot.ComponentRecord() for i in range(compCount)]
+			for compRec in record.ComponentRecord:
+				compRec.LigatureAnchor = [None] * classCount
+		assert record.ComponentCount == compCount, (glyph, record.ComponentCount, compCount)
+
+		anchors = record.ComponentRecord[compIdx - 1].LigatureAnchor
+		assert anchors[klass] is None, (glyph, compIdx, klass)
+		anchors[klass] = anchor
+	return records
 
 def parseMarkToSomething(self, lines, font, c):
 	self.Format = 1
 	markData = {}
 	baseData = {}
 	Data = {
-		'mark':	(markData, c.MarkAnchorClass),
-		'base':	(baseData, c.BaseAnchorClass),
+		'mark':		(markData, c.MarkAnchorClass),
+		'base':		(baseData, c.BaseAnchorClass),
+		'ligature':	(baseData, c.BaseAnchorClass),
 	}
 	for line in lines:
 		typ = line[0]
-		assert typ in ('mark', 'base')
+		assert typ in ('mark', 'base', 'ligature')
 		glyph = parseGlyph(line[1])
 		data, anchorClass = Data[typ]
-		assert glyph not in data
-		klass = int(line[2])
-		anchor = makeAnchor(line[3:], anchorClass)
+		extraItems = 2 if typ == 'ligature' else 0
+		extras = tuple(int(i) for i in line[2:2+extraItems])
+		klass = int(line[2+extraItems])
+		anchor = makeAnchor(line[3+extraItems:], anchorClass)
 		if typ == 'mark':
-			data[glyph] = (klass, anchor)
+			key,value = glyph,(klass,anchor)
 		else:
-			data[(glyph, klass)] = anchor
+			key,value = ((glyph,klass)+extras),anchor
+		assert key not in data, key
+		data[key] = value
 
-	markArray, markCoverage = makeMarkArrayAndCoverage(markData, font, c)
+	# Mark
+	markCoverage = makeCoverage(markData.keys(), font, c.MarkCoverageClass)
+	markArray = c.MarkArrayClass()
+	markRecords = makeMarkRecords(markData, markCoverage, c)
+	setattr(markArray, c.MarkRecord, markRecords)
+	setattr(markArray, c.MarkCount, len(markRecords))
 	setattr(self, c.MarkCoverage, markCoverage)
 	setattr(self, c.MarkArray, markArray)
+
+	# Base
 	self.classCount = 0 if not baseData else 1+max(k[1] for k,v in baseData.items())
-	baseArray, baseCoverage = makeBaseArrayAndCoverage(baseData, self.classCount, font, c)
+	baseCoverage = makeCoverage([k[0] for k in baseData.keys()], font, c.BaseCoverageClass)
+	baseArray = c.BaseArrayClass()
+	if c.Base == 'Ligature':
+		baseRecords = makeLigatureRecords(baseData, baseCoverage, c, self.classCount)
+	else:
+		baseRecords = makeBaseRecords(baseData, baseCoverage, c, self.classCount)
+	setattr(baseArray, c.BaseRecord, baseRecords)
+	setattr(baseArray, c.BaseCount, len(baseRecords))
 	setattr(self, c.BaseCoverage, baseCoverage)
 	setattr(self, c.BaseArray, baseArray)
-
 
 class MarkHelper(object):
 	def __init__(self):
@@ -355,6 +383,8 @@ class MarkHelper(object):
 					value = key
 				else:
 					value = getattr(self, Which) + What
+				if value == 'LigatureRecord':
+					value = 'LigatureAttach'
 				setattr(self, key, value)
 				if What != 'Count':
 					klass = getattr(ot, value)
@@ -366,17 +396,16 @@ class MarkToBaseHelper(MarkHelper):
 class MarkToMarkHelper(MarkHelper):
 	Mark = 'Mark1'
 	Base = 'Mark2'
+class MarkToLigatureHelper(MarkHelper):
+	Mark = 'Mark'
+	Base = 'Ligature'
 
 def parseMarkToBase(self, lines, font):
 	return parseMarkToSomething(self, lines, font, MarkToBaseHelper())
 def parseMarkToMark(self, lines, font):
 	return parseMarkToSomething(self, lines, font, MarkToMarkHelper())
-
 def parseMarkToLigature(self, lines, font):
-	self.Format = 1
-	self.MarkArray = []
-	self.LigatureArray = []
-	raise NotImplementedError
+	return parseMarkToSomething(self, lines, font, MarkToLigatureHelper())
 
 def stripSplitComma(line):
 	return [s.strip() for s in line.split(',')] if line else []
@@ -719,7 +748,7 @@ def parseLookup(lines, tableTag, font):
 		except NotImplementedError:
 			list(subLookupLines) # Exhaust subLookupLines
 			continue
-		assert subLookupLines.peek() is None
+		assert subLookupLines.peek() is None, subLookupLines.peek()
 		subtables.append(subtable)
 
 	lookup.SubTable = subtables
@@ -886,7 +915,7 @@ def main(args):
 		decompiled = table.__class__()
 		decompiled.decompile(blob, font)
 
-		continue
+		#continue
 		from fontTools.misc import xmlWriter
 		tag = table.tableTag
 		writer = xmlWriter.XMLWriter(sys.stdout)
