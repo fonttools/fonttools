@@ -305,14 +305,13 @@ class Builder(object):
                 lookup_builders.append(None)
         return lookup_builders
 
-    def add_substitution(self, location, old_prefix, old, old_suffix, new,
-                         lookups):
-        assert len(new) == 0, new
+    def add_chain_context_subst(self, location,
+                                old_prefix, old, old_suffix, lookups):
         lookup = self.get_lookup_(location, ChainContextSubstBuilder)
         lookup.substitutions.append((old_prefix, old, old_suffix,
                                      self.find_lookup_builders_(lookups)))
 
-    def add_alternate_substitution(self, location, glyph, from_class):
+    def add_alternate_subst(self, location, glyph, from_class):
         lookup = self.get_lookup_(location, AlternateSubstBuilder)
         if glyph in lookup.alternates:
             raise FeatureLibError(
@@ -320,11 +319,11 @@ class Builder(object):
                 location)
         lookup.alternates[glyph] = from_class
 
-    def add_ligature_substitution(self, location, glyphs, replacement):
+    def add_ligature_subst(self, location, glyphs, replacement):
         lookup = self.get_lookup_(location, LigatureSubstBuilder)
         lookup.ligatures[glyphs] = replacement
 
-    def add_multiple_substitution(self, location, glyph, replacements):
+    def add_multiple_subst(self, location, glyph, replacements):
         lookup = self.get_lookup_(location, MultipleSubstBuilder)
         if glyph in lookup.mapping:
             raise FeatureLibError(
@@ -332,12 +331,12 @@ class Builder(object):
                 location)
         lookup.mapping[glyph] = replacements
 
-    def add_reverse_chaining_single_substitution(self, location, old_prefix,
-                                                 old_suffix, mapping):
+    def add_reverse_chain_single_subst(self, location, old_prefix,
+                                       old_suffix, mapping):
         lookup = self.get_lookup_(location, ReverseChainSingleSubstBuilder)
         lookup.substitutions.append((old_prefix, old_suffix, mapping))
 
-    def add_single_substitution(self, location, mapping):
+    def add_single_subst(self, location, mapping):
         lookup = self.get_lookup_(location, SingleSubstBuilder)
         for (from_glyph, to_glyph) in mapping.items():
             if from_glyph in lookup.mapping:

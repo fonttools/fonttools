@@ -329,7 +329,7 @@ class ParserTest(unittest.TestCase):
     def test_gpos_type_1_glyph(self):
         doc = self.parse("feature kern {pos one <1 2 3 4>;} kern;")
         pos = doc.statements[0].statements[0]
-        self.assertEqual(type(pos), ast.SingleAdjustmentPositioning)
+        self.assertEqual(type(pos), ast.SinglePosStatement)
         self.assertEqual(pos.glyphclass, {"one"})
         self.assertEqual(pos.valuerecord.makeString(vertical=False),
                          "<1 2 3 4>")
@@ -337,14 +337,14 @@ class ParserTest(unittest.TestCase):
     def test_gpos_type_1_glyphclass_horizontal(self):
         doc = self.parse("feature kern {pos [one two] -300;} kern;")
         pos = doc.statements[0].statements[0]
-        self.assertEqual(type(pos), ast.SingleAdjustmentPositioning)
+        self.assertEqual(type(pos), ast.SinglePosStatement)
         self.assertEqual(pos.glyphclass, {"one", "two"})
         self.assertEqual(pos.valuerecord.makeString(vertical=False), "-300")
 
     def test_gpos_type_1_glyphclass_vertical(self):
         doc = self.parse("feature vkrn {pos [one two] -300;} vkrn;")
         pos = doc.statements[0].statements[0]
-        self.assertEqual(type(pos), ast.SingleAdjustmentPositioning)
+        self.assertEqual(type(pos), ast.SinglePosStatement)
         self.assertEqual(pos.glyphclass, {"one", "two"})
         self.assertEqual(pos.valuerecord.makeString(vertical=True), "-300")
 
@@ -363,7 +363,7 @@ class ParserTest(unittest.TestCase):
                          "    pos [T V] -60 [a b c] <1 2 3 4>;"
                          "} kern;")
         pos = doc.statements[0].statements[0]
-        self.assertEqual(type(pos), ast.PairAdjustmentPositioning)
+        self.assertEqual(type(pos), ast.PairPosStatement)
         self.assertFalse(pos.enumerated)
         self.assertEqual(pos.glyphclass1, {"T", "V"})
         self.assertEqual(pos.valuerecord1.makeString(vertical=False), "-60")
@@ -376,7 +376,7 @@ class ParserTest(unittest.TestCase):
                          "    enum pos [T V] -60 [a b c] <1 2 3 4>;"
                          "} kern;")
         pos = doc.statements[0].statements[0]
-        self.assertEqual(type(pos), ast.PairAdjustmentPositioning)
+        self.assertEqual(type(pos), ast.PairPosStatement)
         self.assertTrue(pos.enumerated)
         self.assertEqual(pos.glyphclass1, {"T", "V"})
         self.assertEqual(pos.valuerecord1.makeString(vertical=False), "-60")
@@ -389,7 +389,7 @@ class ParserTest(unittest.TestCase):
                          "    pos [T V] <1 2 3 4> [a b c] <NULL>;"
                          "} kern;")
         pos = doc.statements[0].statements[0]
-        self.assertEqual(type(pos), ast.PairAdjustmentPositioning)
+        self.assertEqual(type(pos), ast.PairPosStatement)
         self.assertFalse(pos.enumerated)
         self.assertEqual(pos.glyphclass1, {"T", "V"})
         self.assertEqual(pos.valuerecord1.makeString(vertical=False),
@@ -402,7 +402,7 @@ class ParserTest(unittest.TestCase):
                          "    pos [T V] [a b c] <1 2 3 4>;"
                          "} kern;")
         pos = doc.statements[0].statements[0]
-        self.assertEqual(type(pos), ast.PairAdjustmentPositioning)
+        self.assertEqual(type(pos), ast.PairPosStatement)
         self.assertFalse(pos.enumerated)
         self.assertEqual(pos.glyphclass1, {"T", "V"})
         self.assertEqual(pos.valuerecord1.makeString(vertical=False),
@@ -415,7 +415,7 @@ class ParserTest(unittest.TestCase):
                          "    enumerate position [T V] [a b c] <1 2 3 4>;"
                          "} kern;")
         pos = doc.statements[0].statements[0]
-        self.assertEqual(type(pos), ast.PairAdjustmentPositioning)
+        self.assertEqual(type(pos), ast.PairPosStatement)
         self.assertTrue(pos.enumerated)
         self.assertEqual(pos.glyphclass1, {"T", "V"})
         self.assertEqual(pos.valuerecord1.makeString(vertical=False),
@@ -428,7 +428,7 @@ class ParserTest(unittest.TestCase):
                          "    position cursive A <anchor 12 -2> <anchor 2 3>;"
                          "} kern;")
         pos = doc.statements[0].statements[0]
-        self.assertEqual(type(pos), ast.CursiveAttachmentPositioning)
+        self.assertEqual(type(pos), ast.CursivePosStatement)
         self.assertEqual(pos.glyphclass, {"A"})
         self.assertEqual((pos.entryAnchor.x, pos.entryAnchor.y), (12, -2))
         self.assertEqual((pos.exitAnchor.x, pos.exitAnchor.y), (2, 3))
@@ -453,7 +453,7 @@ class ParserTest(unittest.TestCase):
             "        <anchor 210 -10> mark @BOTTOM_MARKS;"
             "} test;")
         pos = doc.statements[-1].statements[0]
-        self.assertEqual(type(pos), ast.MarkToBaseAttachmentPositioning)
+        self.assertEqual(type(pos), ast.MarkBasePosStatement)
         self.assertEqual(pos.base, {"a", "e", "o", "u"})
         (a1, m1), (a2, m2) = pos.marks
         self.assertEqual((a1.x, a1.y), (250, 450))
@@ -489,7 +489,7 @@ class ParserTest(unittest.TestCase):
             "            <anchor 30 -10> mark @BOTTOM_MARKS;"
             "} test;")
         pos = doc.statements[-1].statements[0]
-        self.assertEqual(type(pos), ast.MarkToLigatureAttachmentPositioning)
+        self.assertEqual(type(pos), ast.MarkLigPosStatement)
         self.assertEqual(pos.ligatures, {"a_f_f_i", "o_f_f_i"})
         [(a11, m11), (a12, m12)], [(a2, m2)], [], [(a4, m4)] = pos.marks
         self.assertEqual((a11.x, a11.y, m11.name), (50, 600, "TOP_MARKS"))
@@ -528,7 +528,7 @@ class ParserTest(unittest.TestCase):
     def test_rsub_format_a(self):
         doc = self.parse("feature test {rsub a [b B] c' d [e E] by C;} test;")
         rsub = doc.statements[0].statements[0]
-        self.assertEqual(type(rsub), ast.ReverseChainingSingleSubstitution)
+        self.assertEqual(type(rsub), ast.ReverseChainSingleSubstStatement)
         self.assertEqual(rsub.old_prefix, [{"a"}, {"b", "B"}])
         self.assertEqual(rsub.mapping, {"c": "C"})
         self.assertEqual(rsub.old_suffix, [{"d"}, {"e", "E"}])
@@ -539,7 +539,7 @@ class ParserTest(unittest.TestCase):
             "    reversesub A B [one.fitted one.oldstyle]' C [d D] by one;"
             "} smcp;")
         rsub = doc.statements[0].statements[0]
-        self.assertEqual(type(rsub), ast.ReverseChainingSingleSubstitution)
+        self.assertEqual(type(rsub), ast.ReverseChainSingleSubstStatement)
         self.assertEqual(rsub.old_prefix, [{"A"}, {"B"}])
         self.assertEqual(rsub.old_suffix, [{"C"}, {"d", "D"}])
         self.assertEqual(rsub.mapping, {
@@ -553,7 +553,7 @@ class ParserTest(unittest.TestCase):
             "    reversesub BACK TRACK [a-d]' LOOK AHEAD by [A.sc-D.sc];"
             "} test;")
         rsub = doc.statements[0].statements[0]
-        self.assertEqual(type(rsub), ast.ReverseChainingSingleSubstitution)
+        self.assertEqual(type(rsub), ast.ReverseChainSingleSubstStatement)
         self.assertEqual(rsub.old_prefix, [{"BACK"}, {"TRACK"}])
         self.assertEqual(rsub.old_suffix, [{"LOOK"}, {"AHEAD"}])
         self.assertEqual(rsub.mapping, {
@@ -598,7 +598,7 @@ class ParserTest(unittest.TestCase):
     def test_substitute_single_format_a(self):  # GSUB LookupType 1
         doc = self.parse("feature smcp {substitute a by a.sc;} smcp;")
         sub = doc.statements[0].statements[0]
-        self.assertEqual(type(sub), ast.SingleSubstitution)
+        self.assertEqual(type(sub), ast.SingleSubstStatement)
         self.assertEqual(sub.mapping, {"a": "a.sc"})
 
     def test_substitute_single_format_b(self):  # GSUB LookupType 1
@@ -607,7 +607,7 @@ class ParserTest(unittest.TestCase):
             "    substitute [one.fitted one.oldstyle] by one;"
             "} smcp;")
         sub = doc.statements[0].statements[0]
-        self.assertEqual(type(sub), ast.SingleSubstitution)
+        self.assertEqual(type(sub), ast.SingleSubstStatement)
         self.assertEqual(sub.mapping, {
             "one.fitted": "one",
             "one.oldstyle": "one"
@@ -619,7 +619,7 @@ class ParserTest(unittest.TestCase):
             "    substitute [a-d] by [A.sc-D.sc];"
             "} smcp;")
         sub = doc.statements[0].statements[0]
-        self.assertEqual(type(sub), ast.SingleSubstitution)
+        self.assertEqual(type(sub), ast.SingleSubstStatement)
         self.assertEqual(sub.mapping, {
             "a": "A.sc",
             "b": "B.sc",
@@ -637,7 +637,7 @@ class ParserTest(unittest.TestCase):
     def test_substitute_multiple(self):  # GSUB LookupType 2
         doc = self.parse("lookup Look {substitute f_f_i by f f i;} Look;")
         sub = doc.statements[0].statements[0]
-        self.assertEqual(type(sub), ast.MultipleSubstitution)
+        self.assertEqual(type(sub), ast.MultipleSubstStatement)
         self.assertEqual(sub.glyph, "f_f_i")
         self.assertEqual(sub.replacement, ("f", "f", "i"))
 
@@ -646,7 +646,7 @@ class ParserTest(unittest.TestCase):
                          "  substitute a from [a.1 a.2 a.3];"
                          "} test;")
         sub = doc.statements[0].statements[0]
-        self.assertEqual(type(sub), ast.AlternateSubstitution)
+        self.assertEqual(type(sub), ast.AlternateSubstStatement)
         self.assertEqual(sub.glyph, "a")
         self.assertEqual(sub.from_class, {"a.1", "a.2", "a.3"})
 
@@ -656,14 +656,14 @@ class ParserTest(unittest.TestCase):
                          "  substitute ampersand from @Ampersands;"
                          "} test;")
         [glyphclass, sub] = doc.statements[0].statements
-        self.assertEqual(type(sub), ast.AlternateSubstitution)
+        self.assertEqual(type(sub), ast.AlternateSubstStatement)
         self.assertEqual(sub.glyph, "ampersand")
         self.assertEqual(sub.from_class, {"ampersand.1", "ampersand.2"})
 
     def test_substitute_ligature(self):  # GSUB LookupType 4
         doc = self.parse("feature liga {substitute f f i by f_f_i;} liga;")
         sub = doc.statements[0].statements[0]
-        self.assertEqual(type(sub), ast.LigatureSubstitution)
+        self.assertEqual(type(sub), ast.LigatureSubstStatement)
         self.assertEqual(sub.glyphs, [{"f"}, {"f"}, {"i"}])
         self.assertEqual(sub.replacement, "f_f_i")
 

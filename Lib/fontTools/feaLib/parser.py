@@ -304,10 +304,10 @@ class Parser(object):
                 raise FeatureLibError(
                     '"enumerate" is only allowed with pair positionings',
                     self.cur_token_location_)
-            return ast.SingleAdjustmentPositioning(location, gc1, value1)
+            return ast.SinglePosStatement(location, gc1, value1)
         else:
-            return ast.PairAdjustmentPositioning(location, enumerated,
-                                                 gc1, value1, gc2, value2)
+            return ast.PairPosStatement(location, enumerated,
+                                        gc1, value1, gc2, value2)
 
     def parse_position_cursive_(self, enumerated, vertical):
         location = self.cur_token_location_
@@ -321,7 +321,7 @@ class Parser(object):
         entryAnchor = self.parse_anchor_()
         exitAnchor = self.parse_anchor_()
         self.expect_symbol_(";")
-        return ast.CursiveAttachmentPositioning(
+        return ast.CursivePosStatement(
             location, glyphclass, entryAnchor, exitAnchor)
 
     def parse_position_base_(self, enumerated, vertical):
@@ -335,7 +335,7 @@ class Parser(object):
         base = self.parse_glyphclass_(accept_glyphname=True)
         marks = self.parse_anchor_marks_()
         self.expect_symbol_(";")
-        return ast.MarkToBaseAttachmentPositioning(location, base, marks)
+        return ast.MarkBasePosStatement(location, base, marks)
 
     def parse_position_ligature_(self, enumerated, vertical):
         location = self.cur_token_location_
@@ -351,8 +351,7 @@ class Parser(object):
             self.expect_keyword_("ligComponent")
             marks.append(self.parse_anchor_marks_())
         self.expect_symbol_(";")
-        return ast.MarkToLigatureAttachmentPositioning(
-            location, ligatures, marks)
+        return ast.MarkLigPosStatement(location, ligatures, marks)
 
     def parse_script_(self):
         assert self.is_cur_keyword_("script")
@@ -397,7 +396,8 @@ class Parser(object):
                 raise FeatureLibError(
                     'Expected a single glyphclass after "from"',
                     location)
-            return ast.AlternateSubstitution(location, list(old[0])[0], new[0])
+            return ast.AlternateSubstStatement(location,
+                                               list(old[0])[0], new[0])
 
         num_lookups = len([l for l in lookups if l is not None])
 
@@ -415,8 +415,8 @@ class Parser(object):
                     'Expected a glyph class with %d elements after "by", '
                     'but found a glyph class with %d elements' %
                     (len(glyphs), len(replacements)), location)
-            return ast.SingleSubstitution(location,
-                                          dict(zip(glyphs, replacements)))
+            return ast.SingleSubstStatement(location,
+                                            dict(zip(glyphs, replacements)))
 
         # GSUB lookup type 2: Multiple substitution.
         # Format: "substitute f_f_i by f f i;"
@@ -424,15 +424,15 @@ class Parser(object):
                 len(old) == 1 and len(old[0]) == 1 and
                 len(new) > 1 and max([len(n) for n in new]) == 1 and
                 num_lookups == 0):
-            return ast.MultipleSubstitution(location, tuple(old[0])[0],
-                                            tuple([list(n)[0] for n in new]))
+            return ast.MultipleSubstStatement(location, tuple(old[0])[0],
+                                              tuple([list(n)[0] for n in new]))
 
         # GSUB lookup type 4: Ligature substitution.
         # Format: "substitute f f i by f_f_i;"
         if (not reverse and len(old_prefix) == 0 and len(old_suffix) == 0 and
                 len(old) > 1 and len(new) == 1 and len(new[0]) == 1 and
                 num_lookups == 0):
-            return ast.LigatureSubstitution(location, old, list(new[0])[0])
+            return ast.LigatureSubstStatement(location, old, list(new[0])[0])
 
         # GSUB lookup type 8: Reverse chaining substitution.
         if reverse:
@@ -458,14 +458,14 @@ class Parser(object):
                     'Expected a glyph class with %d elements after "by", '
                     'but found a glyph class with %d elements' %
                     (len(glyphs), len(replacements)), location)
-            return ast.ReverseChainingSingleSubstitution(
+            return ast.ReverseChainSingleSubstStatement(
                 location, old_prefix, old_suffix,
                 dict(zip(glyphs, replacements)))
 
-        rule = ast.SubstitutionRule(location, old, new)
-        rule.old_prefix, rule.old_suffix = old_prefix, old_suffix
-        rule.lookups = lookups
-        rule.reverse = reverse
+        # GSUB lookup type 6: Chaining contextual substitution.
+        assert len(new) == 0, new
+        rule = ast.ChainContextSubstStatement(
+            location, old_prefix, old, old_suffix, lookups)
         return rule
 
     def parse_subtable_(self):

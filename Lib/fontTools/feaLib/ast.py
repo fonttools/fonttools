@@ -80,14 +80,13 @@ class MarkClassDefinition(object):
         self.glyphLocations = {}  # glyph --> (filepath, line, column)
 
 
-class AlternateSubstitution(Statement):
+class AlternateSubstStatement(Statement):
     def __init__(self, location, glyph, from_class):
         Statement.__init__(self, location)
         self.glyph, self.from_class = (glyph, from_class)
 
     def build(self, builder):
-        builder.add_alternate_substitution(self.location, self.glyph,
-                                           self.from_class)
+        builder.add_alternate_subst(self.location, self.glyph, self.from_class)
 
 
 class Anchor(Expression):
@@ -104,7 +103,19 @@ class AnchorDefinition(Statement):
         self.name, self.x, self.y, self.contourpoint = name, x, y, contourpoint
 
 
-class CursiveAttachmentPositioning(Statement):
+class ChainContextSubstStatement(Statement):
+    def __init__(self, location, old_prefix, old, old_suffix, lookups):
+        Statement.__init__(self, location)
+        self.old, self.lookups = old, lookups
+        self.old_prefix, self.old_suffix = old_prefix, old_suffix
+
+    def build(self, builder):
+        builder.add_chain_context_subst(
+            self.location, self.old_prefix, self.old, self.old_suffix,
+            self.lookups)
+
+
+class CursivePosStatement(Statement):
     def __init__(self, location, glyphclass, entryAnchor, exitAnchor):
         Statement.__init__(self, location)
         self.glyphclass = glyphclass
@@ -144,7 +155,7 @@ class IgnoreSubstitutionRule(Statement):
         self.prefix, self.glyphs, self.suffix = (prefix, glyphs, suffix)
 
 
-class LigatureSubstitution(Statement):
+class LigatureSubstStatement(Statement):
     def __init__(self, location, glyphs, replacement):
         Statement.__init__(self, location)
         self.glyphs, self.replacement = (glyphs, replacement)
@@ -156,8 +167,7 @@ class LigatureSubstitution(Statement):
         # glyph classes, the implementation software will enumerate
         # all specific glyph sequences if glyph classes are detected"
         for glyphs in sorted(itertools.product(*self.glyphs)):
-            builder.add_ligature_substitution(
-                self.location, glyphs, self.replacement)
+            builder.add_ligature_subst(self.location, glyphs, self.replacement)
 
 
 class LookupReferenceStatement(Statement):
@@ -170,7 +180,7 @@ class LookupReferenceStatement(Statement):
             s.build(builder)
 
 
-class MarkToBaseAttachmentPositioning(Statement):
+class MarkBasePosStatement(Statement):
     def __init__(self, location, base, marks):
         Statement.__init__(self, location)
         self.base, self.marks = base, marks
@@ -179,7 +189,7 @@ class MarkToBaseAttachmentPositioning(Statement):
         builder.add_mark_base_pos(self.location, self.base, self.marks)
 
 
-class MarkToLigatureAttachmentPositioning(Statement):
+class MarkLigPosStatement(Statement):
     def __init__(self, location, ligatures, marks):
         Statement.__init__(self, location)
         self.ligatures, self.marks = ligatures, marks
@@ -188,17 +198,16 @@ class MarkToLigatureAttachmentPositioning(Statement):
         pass  # TODO: Implement this.
 
 
-class MultipleSubstitution(Statement):
+class MultipleSubstStatement(Statement):
     def __init__(self, location, glyph, replacement):
         Statement.__init__(self, location)
         self.glyph, self.replacement = glyph, replacement
 
     def build(self, builder):
-        builder.add_multiple_substitution(self.location,
-                                          self.glyph, self.replacement)
+        builder.add_multiple_subst(self.location, self.glyph, self.replacement)
 
 
-class PairAdjustmentPositioning(Statement):
+class PairPosStatement(Statement):
     def __init__(self, location, enumerated,
                  glyphclass1, valuerecord1, glyphclass2, valuerecord2):
         Statement.__init__(self, location)
@@ -212,24 +221,24 @@ class PairAdjustmentPositioning(Statement):
                              self.glyphclass2, self.valuerecord2)
 
 
-class ReverseChainingSingleSubstitution(Statement):
+class ReverseChainSingleSubstStatement(Statement):
     def __init__(self, location, old_prefix, old_suffix, mapping):
         Statement.__init__(self, location)
         self.old_prefix, self.old_suffix = old_prefix, old_suffix
         self.mapping = mapping
 
     def build(self, builder):
-        builder.add_reverse_chaining_single_substitution(
+        builder.add_reverse_chain_single_subst(
             self.location, self.old_prefix, self.old_suffix, self.mapping)
 
 
-class SingleSubstitution(Statement):
+class SingleSubstStatement(Statement):
     def __init__(self, location, mapping):
         Statement.__init__(self, location)
         self.mapping = mapping
 
     def build(self, builder):
-        builder.add_single_substitution(self.location, self.mapping)
+        builder.add_single_subst(self.location, self.mapping)
 
 
 class ScriptStatement(Statement):
@@ -241,7 +250,7 @@ class ScriptStatement(Statement):
         builder.set_script(self.location, self.script)
 
 
-class SingleAdjustmentPositioning(Statement):
+class SinglePosStatement(Statement):
     def __init__(self, location, glyphclass, valuerecord):
         Statement.__init__(self, location)
         self.glyphclass, self.valuerecord = glyphclass, valuerecord
@@ -254,20 +263,6 @@ class SingleAdjustmentPositioning(Statement):
 class SubtableStatement(Statement):
     def __init__(self, location):
         Statement.__init__(self, location)
-
-
-class SubstitutionRule(Statement):
-    def __init__(self, location, old, new):
-        Statement.__init__(self, location)
-        self.old, self.new = (old, new)
-        self.old_prefix = []
-        self.old_suffix = []
-        self.lookups = [None] * len(old)
-
-    def build(self, builder):
-        builder.add_substitution(
-            self.location, self.old_prefix, self.old, self.old_suffix,
-            self.new, self.lookups)
 
 
 class ValueRecord(Statement):
