@@ -159,13 +159,13 @@ class BuilderTest(unittest.TestCase):
             self.build, "feature test { pos A 123; pos A 456; } test;")
 
     def test_GPOS(self):
-        for name in "1 2 3 4 5 6".split():
+        for name in "1 2 3 4 5 6 8".split():
             font = makeTTFont()
             addOpenTypeFeatures(self.getpath("GPOS_%s.fea" % name), font)
             self.expect_ttx(font, self.getpath("GPOS_%s.ttx" % name))
 
     def test_spec(self):
-        for name in "4h1 5d1 5d2 5fi1 5h1 6d2 6e 6f".split():
+        for name in "4h1 5d1 5d2 5fi1 5h1 6d2 6e 6f 6h_ii".split():
             font = makeTTFont()
             addOpenTypeFeatures(self.getpath("spec%s.fea" % name), font)
             self.expect_ttx(font, self.getpath("spec%s.ttx" % name))

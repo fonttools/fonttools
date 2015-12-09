@@ -306,7 +306,9 @@ class Builder(object):
         return lookup_builders
 
     def add_chain_context_pos(self, location, prefix, glyphs, suffix, lookups):
-        pass  # TODO: Implement.
+        lookup = self.get_lookup_(location, ChainContextPosBuilder)
+        lookup.rules.append((prefix, glyphs, suffix,
+                            self.find_lookup_builders_(lookups)))
 
     def add_chain_context_subst(self, location,
                                 prefix, glyphs, suffix, lookups):
@@ -600,6 +602,36 @@ class AlternateSubstBuilder(LookupBuilder):
         subtable.Format = 1
         subtable.alternates = self.alternates
         return self.buildLookup_([subtable])
+
+
+class ChainContextPosBuilder(LookupBuilder):
+    def __init__(self, font, location, lookup_flag):
+        LookupBuilder.__init__(self, font, location, 'GPOS', 8, lookup_flag)
+        self.rules = []  # (prefix, input, suffix, lookups)
+
+    def equals(self, other):
+        return (LookupBuilder.equals(self, other) and
+                self.rules == other.rules)
+
+    def build(self):
+        subtables = []
+        for (prefix, glyphs, suffix, lookups) in self.rules:
+            st = otTables.ChainContextPos()
+            subtables.append(st)
+            st.Format = 3
+            self.setBacktrackCoverage_(prefix, st)
+            self.setLookAheadCoverage_(suffix, st)
+            self.setInputCoverage_(glyphs, st)
+
+            st.PosCount = len([l for l in lookups if l is not None])
+            st.PosLookupRecord = []
+            for sequenceIndex, l in enumerate(lookups):
+                if l is not None:
+                    rec = otTables.PosLookupRecord()
+                    rec.SequenceIndex = sequenceIndex
+                    rec.LookupListIndex = l.lookup_index
+                    st.PosLookupRecord.append(rec)
+        return self.buildLookup_(subtables)
 
 
 class ChainContextSubstBuilder(LookupBuilder):

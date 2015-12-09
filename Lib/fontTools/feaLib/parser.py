@@ -274,6 +274,7 @@ class Parser(object):
         for glyph in glyphs:
             markClass.anchors[glyph] = anchor
             markClass.glyphLocations[glyph] = location
+        glyphs = markClass.anchors.keys()  # redefinition expands glyphs
         glyphclass = ast.GlyphClassDefinition(location, name, glyphs)
         self.glyphclasses_.define(name, glyphclass)
         return glyphclass

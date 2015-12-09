@@ -1,0 +1,6 @@
+languagesystem DFLT dflt;
+lookup L1 {pos one 100;} L1;
+lookup L2 {pos two 200;} L2;
+feature test {
+    pos [A a] [B b] I' lookup L1 N' lookup L2 P' [Y y] [Z z];
+} test;
