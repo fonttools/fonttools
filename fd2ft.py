@@ -444,7 +444,7 @@ def parseClassDef(lines, klass=ot.ClassDef):
 		classDefs[parseGlyph(line[0])] = int(line[1])
 	return self
 
-def makeCoverage(glyphs, fonts, klass=ot.Coverage):
+def makeCoverage(glyphs, font, klass=ot.Coverage):
 	coverage = klass()
 	coverage.glyphs = sorted(set(glyphs), key=font.getGlyphID)
 	return coverage
@@ -795,10 +795,9 @@ class MockFont(object):
 	def getGlyphOrder(self):
 		return self._glyphOrder
 
-if __name__ == '__main__':
-	import sys
+def main(args):
 	font = MockFont()
-	for f in sys.argv[1:]:
+	for f in args:
 		debug("Processing", f)
 		table = build(open(f, 'rt'), font)
 		blob = table.compile(font)
@@ -816,3 +815,6 @@ if __name__ == '__main__':
 		writer.endtag(tag)
 		writer.newline()
 
+if __name__ == '__main__':
+	import sys
+	main (sys.argv[1:])
