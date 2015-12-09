@@ -435,14 +435,18 @@ def parseLookupRecords(items, klassName):
 		lst.append(rec)
 	return lst
 
+def makeClassDef(classDefs, klass=ot.Coverage):
+	self = klass()
+	self.classDefs = dict(classDefs)
+	return self
+
 def parseClassDef(lines, klass=ot.ClassDef):
 	line = next(lines)
 	assert line[0].lower().endswith('class definition begin'), line
-	self = klass()
-	classDefs = self.classDefs = {}
+	classDefs = {}
 	for line in lines.readUntil('class definition end'):
 		classDefs[parseGlyph(line[0])] = int(line[1])
-	return self
+	return makeClassDef(classDefs, klass)
 
 def makeCoverage(glyphs, font, klass=ot.Coverage):
 	coverage = klass()
