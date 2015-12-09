@@ -282,17 +282,95 @@ def parseCursive(self, lines, font):
 		recs.append(rec)
 	self.EntryExitCount = len(self.EntryExitRecord)
 
-def parseMarkToBase(self, lines, font):
-	self.Format = 1
-	self.MarkArray = None
-	self.BaseArray = None
-	raise NotImplementedError
+def makeMarkArrayAndCoverage(data, font, c):
+	coverage = makeCoverage(data.keys(), font, c.MarkCoverageClass)
+	markArray = c.MarkArrayClass()
+	records = []
+	for glyph in coverage.glyphs:
+		klass, anchor = data[glyph]
+		record = c.MarkRecordClass()
+		record.Class = klass
+		setattr(record, c.MarkAnchor, anchor)
+		records.append(record)
+	setattr(markArray, c.MarkRecord, records)
+	setattr(markArray, c.MarkCount, len(records))
+	return markArray, coverage
 
-def parseMarkToMark(self, lines, font):
+def makeBaseArrayAndCoverage(data, classCount, font, c):
+	coverage = makeCoverage([g for g,k in data.keys()], font, c.BaseCoverageClass)
+	baseArray = c.BaseArrayClass()
+	records = []
+	idx = {}
+	for glyph in coverage.glyphs:
+		idx[glyph] = len(records)
+		record = c.BaseRecordClass()
+		anchors = [None] * classCount
+		setattr(record, c.BaseAnchor, anchors)
+		records.append(record)
+	for (glyph,klass),anchor in data.items():
+		record = records[idx[glyph]]
+		anchors = getattr(record, c.BaseAnchor)
+		assert anchors[klass] is None, (glyph, klass)
+		anchors[klass] = anchor
+	setattr(baseArray, c.BaseRecord, records)
+	setattr(baseArray, c.BaseCount, len(records))
+	return baseArray, coverage
+
+def parseMarkToSomething(self, lines, font, c):
 	self.Format = 1
-	self.Mark1Array = None
-	self.Mark2Array = None
-	raise NotImplementedError
+	markData = {}
+	baseData = {}
+	Data = {
+		'mark':	(markData, c.MarkAnchorClass),
+		'base':	(baseData, c.BaseAnchorClass),
+	}
+	for line in lines:
+		typ = line[0]
+		assert typ in ('mark', 'base')
+		glyph = parseGlyph(line[1])
+		data, anchorClass = Data[typ]
+		assert glyph not in data
+		klass = int(line[2])
+		anchor = makeAnchor(line[3:], anchorClass)
+		if typ == 'mark':
+			data[glyph] = (klass, anchor)
+		else:
+			data[(glyph, klass)] = anchor
+
+	markArray, markCoverage = makeMarkArrayAndCoverage(markData, font, c)
+	setattr(self, c.MarkCoverage, markCoverage)
+	setattr(self, c.MarkArray, markArray)
+	self.classCount = 0 if not baseData else 1+max(k[1] for k,v in baseData.items())
+	baseArray, baseCoverage = makeBaseArrayAndCoverage(baseData, self.classCount, font, c)
+	setattr(self, c.BaseCoverage, baseCoverage)
+	setattr(self, c.BaseArray, baseArray)
+
+
+class MarkHelper(object):
+	def __init__(self):
+		for Which in ('Mark', 'Base'):
+			for What in ('Coverage', 'Array', 'Count', 'Record', 'Anchor'):
+				key = Which + What
+				if Which == 'Mark' and What in ('Count', 'Record', 'Anchor'):
+					value = key
+				else:
+					value = getattr(self, Which) + What
+				setattr(self, key, value)
+				if What != 'Count':
+					klass = getattr(ot, value)
+					setattr(self, key+'Class', klass)
+
+class MarkToBaseHelper(MarkHelper):
+	Mark = 'Mark'
+	Base = 'Base'
+class MarkToMarkHelper(MarkHelper):
+	Mark = 'Mark1'
+	Base = 'Mark2'
+
+def parseMarkToBase(self, lines, font):
+	return parseMarkToSomething(self, lines, font, MarkToBaseHelper())
+def parseMarkToMark(self, lines, font):
+	return parseMarkToSomething(self, lines, font, MarkToMarkHelper())
 
 def parseMarkToLigature(self, lines, font):
 	self.Format = 1
