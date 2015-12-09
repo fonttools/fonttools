@@ -142,6 +142,15 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(foo.glyphs, {"a", "b"})
         self.assertEqual(bar.glyphs, {"a", "b"})
 
+    def test_glyphclass_from_markClass(self):
+        doc = self.parse(
+            "markClass [acute grave] <anchor 500 800> @TOP_MARKS;"
+            "markClass cedilla <anchor 500 -100> @BOTTOM_MARKS;"
+            "@MARKS = [@TOP_MARKS @BOTTOM_MARKS ogonek];"
+            "@ALL = @MARKS;")
+        self.assertEqual(doc.statements[-1].glyphs,
+                         {"acute", "cedilla", "grave", "ogonek"})
+
     def test_glyphclass_range_uppercase(self):
         [gc] = self.parse("@swashes = [X.swash-Z.swash];").statements
         self.assertEqual(gc.name, "swashes")

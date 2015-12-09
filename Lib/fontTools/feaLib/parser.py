@@ -273,6 +273,9 @@ class Parser(object):
         for glyph in glyphs:
             markClass.anchors[glyph] = anchor
             markClass.glyphLocations[glyph] = location
+        glyphclass = ast.GlyphClassDefinition(location, name, glyphs)
+        self.glyphclasses_.define(name, glyphclass)
+        return glyphclass
 
     def is_next_glyphclass_(self):
         return (self.next_token_ == "[" or
