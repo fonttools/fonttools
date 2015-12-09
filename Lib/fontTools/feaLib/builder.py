@@ -518,6 +518,18 @@ class LookupBuilder(object):
             coverage = self.buildCoverage_(g, otTables.InputCoverage)
             subtable.InputCoverage.append(coverage)
 
+    def setMarkArray_(self, marks, markClassIDs, subtable):
+        """Helper for MarkBasePosBuilder and MarkLigPosBuilder."""
+        subtable.MarkArray = otTables.MarkArray()
+        subtable.MarkArray.MarkCount = len(marks)
+        subtable.MarkArray.MarkRecord = []
+        for mark in subtable.MarkCoverage.glyphs:
+            markClassName, markAnchor = self.marks[mark]
+            markrec = otTables.MarkRecord()
+            markrec.Class = markClassIDs[markClassName]
+            markrec.MarkAnchor = markAnchor
+            subtable.MarkArray.MarkRecord.append(markrec)
+
 
 class AlternateSubstBuilder(LookupBuilder):
     def __init__(self, font, location, lookup_flag):
@@ -728,27 +740,16 @@ class MarkBasePosBuilder(LookupBuilder):
         # allow partitioning into multiple subsets. We should find out
         # whether this is the case; if so, implement the optimization.
 
-        marks = sorted(self.marks.keys(), key=self.font.getGlyphID)
-        markClassIDs = self.buildMarkClassIDs_(marks)
-        markClasses = sorted(markClassIDs.keys(), key=markClassIDs.get)
-
         st = otTables.MarkBasePos()
         st.Format = 1
-        st.ClassCount = len(markClassIDs)
+        st.MarkCoverage = \
+            self.buildCoverage_(self.marks, otTables.MarkCoverage)
+        markClasses = self.buildMarkClasses_(st.MarkCoverage.glyphs)
+        st.ClassCount = len(markClasses)
+        self.setMarkArray_(self.marks, markClasses, st)
 
-        st.MarkCoverage = self.buildCoverage_(marks, otTables.MarkCoverage)
-        st.MarkArray = otTables.MarkArray()
-        st.MarkArray.MarkCount = len(marks)
-        st.MarkArray.MarkRecord = []
-        for mark in marks:
-            markClassName, markAnchor = self.marks[mark]
-            markrec = otTables.MarkRecord()
-            st.MarkArray.MarkRecord.append(markrec)
-            markrec.Class = markClassIDs[markClassName]
-            markrec.MarkAnchor = markAnchor
-
-        st.BaseCoverage = self.buildCoverage_(
-            self.bases.keys(), otTables.BaseCoverage)
+        st.BaseCoverage = \
+            self.buildCoverage_(self.bases, otTables.BaseCoverage)
         st.BaseArray = otTables.BaseArray()
         st.BaseArray.BaseCount = len(st.BaseCoverage.glyphs)
         st.BaseArray.BaseRecord = []
@@ -756,12 +757,12 @@ class MarkBasePosBuilder(LookupBuilder):
             baserec = otTables.BaseRecord()
             st.BaseArray.BaseRecord.append(baserec)
             baserec.BaseAnchor = []
-            for markClass in markClasses:
+            for markClass in sorted(markClasses.keys(), key=markClasses.get):
                 baserec.BaseAnchor.append(self.bases[base].get(markClass))
 
         return self.buildLookup_([st])
 
-    def buildMarkClassIDs_(self, marks):
+    def buildMarkClasses_(self, marks):
         """Computes a map from markClassID -> int, given sorted mark coverage.
         This seems to give the same numeric identifiers as the makeotf tool.
         """
