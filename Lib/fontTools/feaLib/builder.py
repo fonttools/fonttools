@@ -384,6 +384,15 @@ class Builder(object):
         for glyph in ligatures:
             builder.ligatures[glyph] = componentAnchors
 
+    def add_mark_mark_pos(self, location, baseMarks, marks):
+        builder = self.get_lookup_(location, MarkMarkPosBuilder)
+        self.add_marks_(location, builder, marks)
+        for baseAnchor, markClass in marks:
+            otBaseAnchor = makeOpenTypeAnchor(baseAnchor, otTables.Mark2Anchor)
+            for baseMark in baseMarks:
+                builder.baseMarks.setdefault(baseMark, {})[markClass.name] = (
+                    otBaseAnchor)
+
     def add_pair_pos(self, location, enumerated,
                      glyphclass1, value1, glyphclass2, value2):
         lookup = self.get_lookup_(location, PairPosBuilder)
@@ -560,6 +569,18 @@ class LookupBuilder(object):
             markrec.Class = markClassIDs[markClassName]
             markrec.MarkAnchor = markAnchor
             subtable.MarkArray.MarkRecord.append(markrec)
+
+    def setMark1Array_(self, marks, markClassIDs, subtable):
+        """Helper for MarkMarkPosBuilder."""
+        subtable.Mark1Array = otTables.Mark1Array()
+        subtable.Mark1Array.MarkCount = len(marks)
+        subtable.Mark1Array.MarkRecord = []
+        for mark in subtable.Mark1Coverage.glyphs:
+            markClassName, markAnchor = self.marks[mark]
+            markrec = otTables.MarkRecord()
+            markrec.Class = markClassIDs[markClassName]
+            markrec.MarkAnchor = markAnchor
+            subtable.Mark1Array.MarkRecord.append(markrec)
 
 
 class AlternateSubstBuilder(LookupBuilder):
@@ -837,6 +858,46 @@ class MarkLigPosBuilder(LookupBuilder):
                                         key=markClasses.get):
                     crec.LigatureAnchor.append(component.get(markClass))
             st.LigatureArray.LigatureAttach.append(attach)
+
+        return self.buildLookup_([st])
+
+
+class MarkMarkPosBuilder(LookupBuilder):
+    def __init__(self, font, location, lookup_flag):
+        LookupBuilder.__init__(self, font, location, 'GPOS', 6, lookup_flag)
+        self.marks = {}      # glyphName -> (markClassName, anchor)
+        self.baseMarks = {}  # glyphName -> {markClassName: anchor}
+
+    def equals(self, other):
+        return (LookupBuilder.equals(self, other) and
+                self.marks == other.marks and
+                self.baseMarks == other.baseMarks)
+
+    def inferGlyphClasses(self):
+        result = {glyph: 3 for glyph in self.baseMarks}
+        result.update({glyph: 3 for glyph in self.marks})
+        return result
+
+    def build(self):
+        st = otTables.MarkMarkPos()
+        st.Format = 1
+        st.Mark1Coverage = \
+            self.buildCoverage_(self.marks, otTables.Mark1Coverage)
+        markClasses = self.buildMarkClasses_(self.marks)
+        st.ClassCount = len(markClasses)
+        self.setMark1Array_(self.marks, markClasses, st)
+
+        st.Mark2Coverage = \
+            self.buildCoverage_(self.baseMarks, otTables.Mark2Coverage)
+        st.Mark2Array = otTables.Mark2Array()
+        st.Mark2Array.Mark2Count = len(st.Mark2Coverage.glyphs)
+        st.Mark2Array.Mark2Record = []
+        for base in st.Mark2Coverage.glyphs:
+            baserec = otTables.Mark2Record()
+            st.Mark2Array.Mark2Record.append(baserec)
+            baserec.Mark2Anchor = []
+            for markClass in sorted(markClasses.keys(), key=markClasses.get):
+                baserec.Mark2Anchor.append(self.baseMarks[base].get(markClass))
 
         return self.buildLookup_([st])
 

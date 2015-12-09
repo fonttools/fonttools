@@ -204,8 +204,7 @@ class MarkMarkPosStatement(Statement):
         self.baseMarks, self.marks = baseMarks, marks
 
     def build(self, builder):
-        # TODO: Implement this.
-        # builder.add_mark_mark_pos(self.location, self.baseMarks, self.marks)
+        builder.add_mark_mark_pos(self.location, self.baseMarks, self.marks)
         pass
 
 
