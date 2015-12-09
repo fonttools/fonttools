@@ -25,7 +25,8 @@ def parseGlyphs(l):
 	return [parseGlyph(g) for g in l]
 
 def parseScriptList(lines):
-	lines.skipUntil('script table begin')
+	line = next(lines)
+	assert line[0].lower().endswith('script table begin'), line
 	self = ot.ScriptList()
 	self.ScriptRecord = []
 	for line in lines.readUntil('script table end'):
@@ -66,7 +67,8 @@ def parseScriptList(lines):
 	return self
 
 def parseFeatureList(lines):
-	lines.skipUntil('feature table begin')
+	line = next(lines)
+	assert line[0].lower().endswith('feature table begin'), line
 	self = ot.FeatureList()
 	self.FeatureRecord = []
 	for line in lines.readUntil('feature table end'):
@@ -709,7 +711,8 @@ def parseReverseChainedSubst(self, lines, font):
 	self.GlyphCount = len(self.Substitute)
 
 def parseLookup(lines, tableTag, font):
-	line = lines.skipUntil('lookup')
+	line = next(lines)
+	assert line[0].lower().endswith('lookup'), line
 	if line is None: return None, None
 	lookupLines = lines.readUntil('lookup end')
 	_, name, typ = line
@@ -764,7 +767,11 @@ def parseLookupList(lines, tableTag, font):
 	debug("Parsing lookup list")
 	self = ot.LookupList()
 	self.Lookup = []
-	while True:
+	while lines.peek() is not None:
+		if lines.peek()[0].lower() != 'lookup':
+			debug ('Skipping', lines.peek())
+			next(lines)
+			continue
 		lookup, name = parseLookup(lines, tableTag, font)
 		if name is None: break
 		assert int(name) == len(self.Lookup), "%d %d" % (name, len(self.Lookup))
@@ -772,24 +779,34 @@ def parseLookupList(lines, tableTag, font):
 	self.LookupCount = len(self.Lookup)
 	return self
 
-def parseGSUB(lines, font):
-	debug("Parsing GSUB")
-	self = ot.GSUB()
+def parseGSUBGPOS(lines, font, tableTag):
+	assert tableTag in ('GSUB', 'GPOS')
+	debug("Parsing", tableTag)
+	self = getattr(ot, tableTag)()
 	self.Version = 1.0
-	self.ScriptList = parseScriptList(lines)
-	self.FeatureList = parseFeatureList(lines)
-	self.LookupList = parseLookupList(lines, 'GSUB', font)
+	self.ScriptList = self.FeatureList = self.LookupList = None
+	fields = {
+		'script table begin':	('ScriptList',		parseScriptList),
+		'feature table begin':	('FeaturetList',	parseFeatureList),
+		'lookup':		('LookupList',	lambda lines: parseLookupList(lines, tableTag, font)),
+	}
+	for attr,parser in fields.values():
+		setattr(self, attr, None)
+	while lines.peek() is not None:
+		typ = lines.peek()[0].lower()
+		if typ not in fields:
+			debug ('Skipping', lines.peek())
+			next(lines)
+			continue
+		attr,parser = fields[typ]
+		assert getattr(self, attr) is None, attr
+		setattr(self, attr, parser(lines))
 	return self
 
+def parseGSUB(lines, font):
+	return parseGSUBGPOS(lines, font, 'GSUB')
 def parseGPOS(lines, font):
-	debug("Parsing GPOS")
-	self = ot.GPOS()
-	self.Version = 1.0
-	# TODO parse EM?
-	self.ScriptList = parseScriptList(lines)
-	self.FeatureList = parseFeatureList(lines)
-	self.LookupList = parseLookupList(lines, 'GPOS', font)
-	return self
+	return parseGSUBGPOS(lines, font, 'GPOS')
 
 def makeAttachList(points, font):
 	self = ot.AttachList()
@@ -913,11 +930,6 @@ class ReadUntilMixin(object):
 			yield line
 	def readUntil(self, what, packBack=False):
 		return BufferedIter(self._readUntil(what, packBack=packBack))
-
-	def skipUntil(self, what):
-		for line in self:
-			if line[0].lower() == what:
-				return line
 
 class BufferedIter(ReadUntilMixin):
 
