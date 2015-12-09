@@ -546,6 +546,7 @@ def parseLookupRecords(items, klassName):
 	return lst
 
 def makeClassDef(classDefs, klass=ot.Coverage):
+	if not classDefs: return None
 	self = klass()
 	self.classDefs = dict(classDefs)
 	return self
@@ -555,10 +556,13 @@ def parseClassDef(lines, klass=ot.ClassDef):
 	assert line[0].lower().endswith('class definition begin'), line
 	classDefs = {}
 	for line in lines.readUntil('class definition end'):
-		classDefs[parseGlyph(line[0])] = int(line[1])
+		glyph = parseGlyph(line[0])
+		assert glyph not in classDefs, glyph
+		classDefs[glyph] = int(line[1])
 	return makeClassDef(classDefs, klass)
 
 def makeCoverage(glyphs, font, klass=ot.Coverage):
+	if not glyphs: return None
 	coverage = klass()
 	coverage.glyphs = sorted(set(glyphs), key=font.getGlyphID)
 	return coverage
@@ -787,9 +791,113 @@ def parseGPOS(lines, font):
 	self.LookupList = parseLookupList(lines, 'GPOS', font)
 	return self
 
+def makeAttachList(points, font):
+	self = ot.AttachList()
+	self.Coverage = makeCoverage(points.keys(), font)
+	records = []
+	for glyph in self.Coverage.glyphs:
+		record = ot.AttachPoint()
+		record.PointIndex = sorted(set(points[glyph]))
+		record.PointCount = len(record.PointIndex)
+		records.append(record)
+	self.AttachPoint = records
+	self.GlyphCount = len(records)
+	return self
+
+def parseAttachList(lines, font):
+	line = next(lines)
+	assert line[0].lower().endswith('attachment list begin'), line
+	points = {}
+	for line in lines.readUntil('attachment list end'):
+		glyph = parseGlyph(line[0])
+		assert glyph not in points, glyph
+		points[glyph] = [int(i) for i in line[1:]]
+	return makeAttachList(points, font)
+
+def makeCaretList(carets, font):
+	self = ot.LigCaretList()
+	self.Coverage = makeCoverage(carets.keys(), font)
+	records = []
+	for glyph in self.Coverage.glyphs:
+		record = ot.LigGlyph()
+		cvs = record.CaretValue = []
+		for v in carets[glyph]:
+			cv = ot.CaretValue()
+			cv.Format = 1
+			cv.Coordinate = v
+			cvs.append(cv)
+		record.CaretCount = len(record.CaretValue)
+		records.append(record)
+	self.LigGlyph = records
+	self.LigGlyphCount = len(records)
+	return self
+
+def parseCaretList(lines, font):
+	line = next(lines)
+	assert line[0].lower().endswith('carets begin'), line
+	carets = {}
+	for line in lines.readUntil('carets end'):
+		glyph = parseGlyph(line[0])
+		assert glyph not in carets, glyph
+		num = int(line[1])
+		thisCarets = [int(i) for i in line[2:]]
+		assert num == len(thisCarets), line
+		carets[glyph] = thisCarets
+	return makeCaretList(carets, font)
+
+def makeMarkFilteringSets(sets, font):
+	self = ot.MarkGlyphSetsDef()
+	self.MarkSetTableFormat = 1
+	self.MarkSetCount = 1 + max(sets.keys())
+	self.Coverage = [None] * self.MarkSetCount
+	for k,v in sets.items():
+		self.Coverage[k] = makeCoverage(v, font)
+	return self
+
+def parseMarkFilteringSets(lines, font):
+	line = next(lines)
+	assert line[0].lower().endswith('markfilter set definition begin'), line
+	sets = {}
+	for line in lines.readUntil('set definition end'):
+		assert len(line) == 2, line
+		glyph = parseGlyph(line[0])
+		# TODO accept set names
+		st = int(line[1])
+		if st not in sets:
+			sets[st] = []
+		sets[st].append(glyph)
+	return makeMarkFilteringSets(sets, font)
+
 def parseGDEF(lines, font):
-	debug("Parsing GDEF TODO")
-	return None
+	debug("Parsing GDEF")
+	self = ot.GDEF()
+	fields = {
+		'class definition begin':
+			('GlyphClassDef',
+			 lambda lines, font: parseClassDef(lines, klass=ot.GlyphClassDef)),
+		'attachment list begin':
+			('AttachList', parseAttachList),
+		'carets begin':
+			('LigCaretList', parseCaretList),
+		'mark attachment class definition begin':
+			('MarkAttachClassDef',
+			 lambda lines, font: parseClassDef(lines, klass=ot.MarkAttachClassDef)),
+		'markfilter set definition begin':
+			('MarkGlyphSetsDef', parseMarkFilteringSets),
+	}
+	for attr,parser in fields.values():
+		setattr(self, attr, None)
+	while lines.peek() is not None:
+		typ = lines.peek()[0].lower()
+		if typ not in fields:
+			debug ('Skipping', line)
+			next(lines)
+			continue
+		attr,parser = fields[typ]
+		assert getattr(self, attr) is None, attr
+		setattr(self, attr, parser(lines, font))
+	self.Version = 1.0 if self.MarkGlyphSetsDef is None else 0x00010002
+	return self
 
 
 class ReadUntilMixin(object):
@@ -805,6 +913,11 @@ class ReadUntilMixin(object):
 			yield line
 	def readUntil(self, what, packBack=False):
 		return BufferedIter(self._readUntil(what, packBack=packBack))
+
+	def skipUntil(self, what):
+		for line in self:
+			if line[0].lower() == what:
+				return line
 
 class BufferedIter(ReadUntilMixin):
 
@@ -862,17 +975,19 @@ class Tokenizer(ReadUntilMixin):
 			if line[0] and (line[0][0] != '%' or line[0] == '% subtable'):
 				return line
 
-	def skipUntil(self, what):
-		for line in self:
-			if line[0].lower() == what:
-				return line
-
-def parseTable(lines, font):
+def parseTable(lines, font, tableTag=None):
 	debug("Parsing table")
-	line = next(lines)
-	assert line[0][:9] == 'FontDame ', line
-	assert line[0][13:] == ' table', line
-	tableTag = line[0][9:13]
+	line = lines.peek()
+	if line[0].split()[0] == 'FontDame':
+		next(lines)
+		tag = line[0].split()[1].ljust(4)
+		if tableTag is None:
+			tableTag = tag
+		else:
+			assert tableTag == tag, (tableTag, tag)
+
+	assert tableTag is not None, "Don't know what table to parse and data doesn't specify"
+
 	container = ttLib.getTableClass(tableTag)()
 	table = {'GSUB': parseGSUB,
 		 'GPOS': parseGPOS,
@@ -881,9 +996,9 @@ def parseTable(lines, font):
 	container.table = table
 	return container
 
-def build(f, font):
-	lines = Tokenizer(f)
-	return parseTable(lines, font)
+def build(f, font, tableTag=None):
+	lines = BufferedIter(Tokenizer(f))
+	return parseTable(lines, font, tableTag=tableTag)
 
 
 class MockFont(object):
@@ -909,14 +1024,18 @@ class MockFont(object):
 
 def main(args):
 	font = MockFont()
+	tableTag = None
+	if args[0].startswith('-t'):
+		tableTag = args[0][2:]
+		del args[0]
 	for f in args:
 		debug("Processing", f)
-		table = build(open(f, 'rt'), font)
+		table = build(open(f, 'rt'), font, tableTag=tableTag)
 		blob = table.compile(font)
 		decompiled = table.__class__()
 		decompiled.decompile(blob, font)
 
-		continue
+		#continue
 		from fontTools.misc import xmlWriter
 		tag = table.tableTag
 		writer = xmlWriter.XMLWriter(sys.stdout)
