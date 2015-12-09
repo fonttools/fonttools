@@ -111,7 +111,7 @@ class CursiveAttachmentPositioning(Statement):
         self.entryAnchor, self.exitAnchor = entryAnchor, exitAnchor
 
     def build(self, builder):
-        builder.add_cursive_attachment_pos(
+        builder.add_cursive_pos(
             self.location, self.glyphclass, self.entryAnchor, self.exitAnchor)
 
 
@@ -176,8 +176,7 @@ class MarkToBaseAttachmentPositioning(Statement):
         self.base, self.marks = base, marks
 
     def build(self, builder):
-        builder.add_mark_to_base_attachment_pos(
-            self.location, self.base, self.marks)
+        builder.add_mark_base_pos(self.location, self.base, self.marks)
 
 
 class MarkToLigatureAttachmentPositioning(Statement):

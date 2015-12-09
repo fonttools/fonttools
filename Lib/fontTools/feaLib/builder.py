@@ -347,16 +347,15 @@ class Builder(object):
                     location)
             lookup.mapping[from_glyph] = to_glyph
 
-    def add_cursive_attachment_pos(self, location, glyphclass,
-                                   entryAnchor, exitAnchor):
-        lookup = self.get_lookup_(location, CursiveAttachmentPosBuilder)
+    def add_cursive_pos(self, location, glyphclass, entryAnchor, exitAnchor):
+        lookup = self.get_lookup_(location, CursivePosBuilder)
         lookup.add_attachment(
             location, glyphclass,
             makeOpenTypeAnchor(entryAnchor, otTables.EntryAnchor),
             makeOpenTypeAnchor(exitAnchor, otTables.ExitAnchor))
 
-    def add_mark_to_base_attachment_pos(self, location, bases, marks):
-        builder = self.get_lookup_(location, MarkToBaseAttachmentPosBuilder)
+    def add_mark_base_pos(self, location, bases, marks):
+        builder = self.get_lookup_(location, MarkBasePosBuilder)
         for baseAnchor, markClass in marks:
             otBaseAnchor = makeOpenTypeAnchor(baseAnchor, otTables.BaseAnchor)
             for mark, markAnchor in markClass.anchors.items():
@@ -674,7 +673,7 @@ class PairPosBuilder(LookupBuilder):
         return self.buildLookup_(subtables)
 
 
-class CursiveAttachmentPosBuilder(LookupBuilder):
+class CursivePosBuilder(LookupBuilder):
     def __init__(self, font, location, lookup_flag):
         LookupBuilder.__init__(self, font, location, 'GPOS', 3, lookup_flag)
         self.attachments = {}
@@ -702,7 +701,7 @@ class CursiveAttachmentPosBuilder(LookupBuilder):
         return self.buildLookup_([st])
 
 
-class MarkToBaseAttachmentPosBuilder(LookupBuilder):
+class MarkBasePosBuilder(LookupBuilder):
     def __init__(self, font, location, lookup_flag):
         LookupBuilder.__init__(self, font, location, 'GPOS', 4, lookup_flag)
         self.marks = {}  # glyphName -> (markClassName, anchor)
