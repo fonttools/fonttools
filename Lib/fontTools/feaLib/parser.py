@@ -286,6 +286,8 @@ class Parser(object):
             return self.parse_position_base_(enumerated, vertical)
         elif self.next_token_ == "ligature":   # GPOS type 5
             return self.parse_position_ligature_(enumerated, vertical)
+        elif self.next_token_ == "mark":   # GPOS type 6
+            return self.parse_position_mark_(enumerated, vertical)
 
         location = self.cur_token_location_
         gc2, value2 = None, None
@@ -352,6 +354,19 @@ class Parser(object):
             marks.append(self.parse_anchor_marks_())
         self.expect_symbol_(";")
         return ast.MarkLigPosStatement(location, ligatures, marks)
+
+    def parse_position_mark_(self, enumerated, vertical):
+        location = self.cur_token_location_
+        self.expect_keyword_("mark")
+        if enumerated:
+            raise FeatureLibError(
+                '"enumerate" is not allowed with '
+                'mark-to-mark attachment positioning',
+                location)
+        baseMarks = self.parse_glyphclass_(accept_glyphname=True)
+        marks = self.parse_anchor_marks_()
+        self.expect_symbol_(";")
+        return ast.MarkMarkPosStatement(location, baseMarks, marks)
 
     def parse_script_(self):
         assert self.is_cur_keyword_("script")

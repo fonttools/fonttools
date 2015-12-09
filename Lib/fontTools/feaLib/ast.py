@@ -198,6 +198,17 @@ class MarkLigPosStatement(Statement):
         builder.add_mark_lig_pos(self.location, self.ligatures, self.marks)
 
 
+class MarkMarkPosStatement(Statement):
+    def __init__(self, location, baseMarks, marks):
+        Statement.__init__(self, location)
+        self.baseMarks, self.marks = baseMarks, marks
+
+    def build(self, builder):
+        # TODO: Implement this.
+        # builder.add_mark_mark_pos(self.location, self.baseMarks, self.marks)
+        pass
+
+
 class MultipleSubstStatement(Statement):
     def __init__(self, location, glyph, replacement):
         Statement.__init__(self, location)

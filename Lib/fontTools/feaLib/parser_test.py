@@ -456,10 +456,8 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(type(pos), ast.MarkBasePosStatement)
         self.assertEqual(pos.base, {"a", "e", "o", "u"})
         (a1, m1), (a2, m2) = pos.marks
-        self.assertEqual((a1.x, a1.y), (250, 450))
-        self.assertEqual(m1.name, "TOP_MARKS")
-        self.assertEqual((a2.x, a2.y), (210, -10))
-        self.assertEqual(m2.name, "BOTTOM_MARKS")
+        self.assertEqual((a1.x, a1.y, m1.name), (250, 450, "TOP_MARKS"))
+        self.assertEqual((a2.x, a2.y, m2.name), (210, -10, "BOTTOM_MARKS"))
 
     def test_gpos_type_4_enumerated(self):
         self.assertRaisesRegex(
@@ -508,6 +506,29 @@ class ParserTest(unittest.TestCase):
             "    enumerate position "
             "        ligature f_i <anchor 100 0> mark @MARKS"
             "        ligComponent <anchor NULL>;"
+            "} test;")
+
+    def test_gpos_type_6(self):
+        doc = self.parse(
+            "markClass damma <anchor 189 -103> @MARK_CLASS_1;"
+            "feature test {"
+            "    position mark hamza <anchor 221 301> mark @MARK_CLASS_1;"
+            "} test;")
+        pos = doc.statements[-1].statements[0]
+        self.assertEqual(type(pos), ast.MarkMarkPosStatement)
+        self.assertEqual(pos.baseMarks, {"hamza"})
+        [(a1, m1)] = pos.marks
+        self.assertEqual((a1.x, a1.y, m1.name), (221, 301, "MARK_CLASS_1"))
+
+    def test_gpos_type_6_enumerated(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            '"enumerate" is not allowed with '
+            'mark-to-mark attachment positioning',
+            self.parse,
+            "markClass damma <anchor 189 -103> @MARK_CLASS_1;"
+            "feature test {"
+            "    enum pos mark hamza <anchor 221 301> mark @MARK_CLASS_1;"
             "} test;")
 
     def test_markClass(self):
