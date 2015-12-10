@@ -19,6 +19,7 @@ def makeGlyph(s):
 		return ttLib.TTFont._makeGlyphName(int(s[2:], 16))
 	elif s[:2] == '# ':
 		return "glyph%.5d" % int(s[2:])
+	assert s.find(' ') < 0, "Space found in glyph name: %s" % s
 	return s
 
 def makeGlyphs(l):
