@@ -348,7 +348,7 @@ class ParserTest(unittest.TestCase):
     def test_lookupflag_format_A_MarkAttachmentType(self):
         flag = self.parse_lookupflag_(
             "@TOP_MARKS = [acute grave macron];"
-            "lookupflag MarkAttachmentType @TOP_MARKS RightToLeft;")
+            "lookupflag RightToLeft MarkAttachmentType @TOP_MARKS;")
         self.assertIsInstance(flag, ast.LookupFlagStatement)
         self.assertEqual(flag.value, 1)
         self.assertIsInstance(flag.markAttachment, ast.GlyphClassName)

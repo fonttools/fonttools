@@ -295,7 +295,7 @@ class Parser(object):
             if self.next_token_ == "MarkAttachmentType":
                 self.expect_keyword_("MarkAttachmentType")
                 markAttachment = self.parse_glyphclass_name_()
-            if self.next_token_ == "UseMarkFilteringSet":
+            elif self.next_token_ == "UseMarkFilteringSet":
                 self.expect_keyword_("UseMarkFilteringSet")
                 markFilteringSet = self.parse_glyphclass_name_()
             elif self.next_token_ in flags:
