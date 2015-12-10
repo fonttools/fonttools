@@ -188,8 +188,11 @@ def curves_to_quadratic(curves, max_errors):
     for all curves with the given parameters.
     """
 
-    splines = [None] * len(curves)
-    errors = [None] * len(max_errors)
+    num_curves = len(curves)
+    assert len(max_errors) == num_curves
+
+    splines = [None] * num_curves
+    errors = [None] * num_curves
     for n in range(1, MAX_N + 1):
         splines = [cubic_approx_spline(c, n) for c in curves]
         if not all(splines):

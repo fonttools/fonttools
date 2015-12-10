@@ -72,7 +72,10 @@ def fonts_to_quadratic(fonts, max_err_em=None, max_err=None,
     else:
         max_errors = [f.info.unitsPerEm * max_err_em for f in fonts]
 
-    if len(fonts) == 1:
+    num_fonts = len(fonts)
+    assert len(max_errors) == num_fonts
+
+    if num_fonts == 1:
         font = fonts[0]
         max_errors = max_errors[0]
     else:
