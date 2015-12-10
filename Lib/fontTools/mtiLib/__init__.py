@@ -25,9 +25,12 @@ def makeGlyph(s):
 def makeGlyphs(l):
 	return [makeGlyph(g) for g in l]
 
-def parseScriptList(lines):
+def mapSymbol(sym, mapping):
+	return mapping[sym] if mapping else int(sym)
+
+def parseScriptList(lines, featureMap=None):
 	self = ot.ScriptList()
-	self.ScriptRecord = []
+	records = []
 	with lines.between('script table'):
 		for line in lines:
 			scriptTag, langSysTag, defaultFeature, features = line
@@ -35,19 +38,18 @@ def parseScriptList(lines):
 
 			langSys = ot.LangSys()
 			langSys.LookupOrder = None
-			# TODO The following two lines should use lazy feature name-to-index mapping
-			langSys.ReqFeatureIndex = int(defaultFeature) if defaultFeature else 0xFFFF
-			langSys.FeatureIndex = intSplitComma(features)
+			langSys.ReqFeatureIndex = mapSymbol(defaultFeature, featureMap) if defaultFeature else 0xFFFF
+			langSys.FeatureIndex = [mapSymbol(sym, featureMap) for sym in stripSplitComma(features)]
 			langSys.FeatureCount = len(langSys.FeatureIndex)
 
-			script = [s for s in self.ScriptRecord if s.ScriptTag == scriptTag]
+			script = [s for s in records if s.ScriptTag == scriptTag]
 			if script:
 				script = script[0].Script
 			else:
 				scriptRec = ot.ScriptRecord()
 				scriptRec.ScriptTag = scriptTag
 				scriptRec.Script = ot.Script()
-				self.ScriptRecord.append(scriptRec)
+				records.append(scriptRec)
 				script = scriptRec.Script
 				script.DefaultLangSys = None
 				script.LangSysRecord = []
@@ -62,25 +64,30 @@ def parseScriptList(lines):
 				script.LangSysRecord.append(langSysRec)
 				script.LangSysCount = len(script.LangSysRecord)
 
+	for script in records:
+		script.Script.LangSysRecord = sorted(script.Script.LangSysRecord, key=lambda rec: rec.LangSysTag)
+	self.ScriptRecord = sorted(records, key=lambda rec: rec.ScriptTag)
 	self.ScriptCount = len(self.ScriptRecord)
-	# TODO sort scripts and langSys's?
 	return self
 
-def parseFeatureList(lines):
+def parseFeatureList(lines, lookupMap=None, featureMap=None):
 	self = ot.FeatureList()
 	self.FeatureRecord = []
 	with lines.between('feature table'):
 		for line in lines:
-			idx, featureTag, lookups = line
-			assert int(idx) == len(self.FeatureRecord), "%d %d" % (idx, len(self.FeatureRecord))
+			name, featureTag, lookups = line
+			if featureMap:
+				assert name not in featureMap, "Duplicate feature name: %s" % name
+				featureMap[name] = len(self.FeatureRecord)
+			else:
+				assert int(name) == len(self.FeatureRecord), "%d %d" % (name, len(self.FeatureRecord))
 			featureRec = ot.FeatureRecord()
 			featureRec.FeatureTag = featureTag
 			featureRec.Feature = ot.Feature()
 			self.FeatureRecord.append(featureRec)
 			feature = featureRec.Feature
 			feature.FeatureParams = None
-			# TODO The following line should use lazy lookup name-to-index mapping
-			feature.LookupListIndex = intSplitComma(lookups)
+			feature.LookupListIndex = [mapSymbol(sym, lookupMap) for sym in stripSplitComma(lookups)]
 			feature.LookupCount = len(feature.LookupListIndex)
 
 	self.FeatureCount = len(self.FeatureRecord)
@@ -118,26 +125,26 @@ def parseLookupFlags(lines):
 			filterset = int(line[1])
 	return flags, filterset
 
-def parseSingleSubst(self, lines, font):
+def parseSingleSubst(self, lines, font, _lookupMap=None):
 	self.mapping = {}
 	for line in lines:
 		assert len(line) == 2, line
 		line = makeGlyphs(line)
 		self.mapping[line[0]] = line[1]
 
-def parseMultiple(self, lines, font):
+def parseMultiple(self, lines, font, _lookupMap=None):
 	self.mapping = {}
 	for line in lines:
 		line = makeGlyphs(line)
 		self.mapping[line[0]] = line[1:]
 
-def parseAlternate(self, lines, font):
+def parseAlternate(self, lines, font, _lookupMap=None):
 	self.alternates = {}
 	for line in lines:
 		line = makeGlyphs(line)
 		self.alternates[line[0]] = line[1:]
 
-def parseLigature(self, lines, font):
+def parseLigature(self, lines, font, _lookupMap=None):
 	self.ligatures = {}
 	for line in lines:
 		assert len(line) >= 2, line
@@ -152,7 +159,7 @@ def parseLigature(self, lines, font):
 		ligature.LigGlyph = ligGlyph
 		self.ligatures.setdefault(firstGlyph, []).append(ligature)
 
-def parseSinglePos(self, lines, font):
+def parseSinglePos(self, lines, font, _lookupMap=None):
 	values = {}
 	for line in lines:
 		assert len(line) == 3, line
@@ -177,7 +184,7 @@ def parseSinglePos(self, lines, font):
 		self.Value = values
 		self.ValueCount = len(self.Value)
 
-def parsePair(self, lines, font):
+def parsePair(self, lines, font, _lookupMap=None):
 	self.ValueFormat1 = self.ValueFormat2 = 0
 	typ = lines.peek()[0].split()[0].lower()
 	if typ in ('left', 'right'):
@@ -256,7 +263,7 @@ def parsePair(self, lines, font):
 	else:
 		assert 0, typ
 
-def parseKernset(self, lines, font):
+def parseKernset(self, lines, font, _lookupMap=None):
 	typ = lines.peek()[0].split()[0].lower()
 	if typ in ('left', 'right'):
 		with lines.until(("firstclass definition begin", "secondclass definition begin")):
@@ -273,7 +280,7 @@ def makeAnchor(data, klass=ot.Anchor):
 		anchor.AnchorPoint = int(data[1])
 	return anchor
 
-def parseCursive(self, lines, font):
+def parseCursive(self, lines, font, _lookupMap=None):
 	self.Format = 1
 	self.EntryExitRecord = []
 	records = {}
@@ -414,11 +421,11 @@ class MarkToLigatureHelper(MarkHelper):
 	Mark = 'Mark'
 	Base = 'Ligature'
 
-def parseMarkToBase(self, lines, font):
+def parseMarkToBase(self, lines, font, _lookupMap=None):
 	return parseMarkToSomething(self, lines, font, MarkToBaseHelper())
-def parseMarkToMark(self, lines, font):
+def parseMarkToMark(self, lines, font, _lookupMap=None):
 	return parseMarkToSomething(self, lines, font, MarkToMarkHelper())
-def parseMarkToLigature(self, lines, font):
+def parseMarkToLigature(self, lines, font, _lookupMap=None):
 	return parseMarkToSomething(self, lines, font, MarkToLigatureHelper())
 
 def stripSplitComma(line):
@@ -542,7 +549,7 @@ class ContextHelper(object):
 			self.ClassDefIndex = 1 if Chain else 0
 			self.Input = 'Input' if Chain else 'Class'
 
-def parseLookupRecords(items, klassName):
+def parseLookupRecords(items, klassName, lookupMap=None):
 	klass = getattr(ot, klassName)
 	lst = []
 	for item in items:
@@ -551,8 +558,7 @@ def parseLookupRecords(items, klassName):
 		assert len(item) == 2, item
 		assert item[0] > 0, item[0]
 		rec.SequenceIndex = item[0] - 1
-		# TODO The following line should use lazy lookup name-to-index mapping
-		rec.LookupListIndex = item[1]
+		rec.LookupListIndex = mapSymbol(item[1], lookupMap)
 		lst.append(rec)
 	return lst
 
@@ -610,7 +616,7 @@ def bucketizeRules(self, c, rules, bucketKeys):
 	setattr(self, c.RuleSet, rulesets)
 	setattr(self, c.RuleSetCount, len(rulesets))
 
-def parseContext(self, lines, font, Type):
+def parseContext(self, lines, font, Type, lookupMap=None):
 	typ = lines.peek()[0].split()[0].lower()
 	if typ == 'glyph':
 		self.Format = 1
@@ -620,7 +626,7 @@ def parseContext(self, lines, font, Type):
 		for line in lines:
 			assert line[0].lower() == 'glyph', line[0]
 			seq = tuple(makeGlyphs(stripSplitComma(i)) for i in line[1:1+c.DataLen])
-			recs = parseLookupRecords(line[1+c.DataLen:], c.LookupRecord)
+			recs = parseLookupRecords(line[1+c.DataLen:], c.LookupRecord, lookupMap)
 			rules.append((seq, recs))
 
 		firstGlyphs = set(seq[c.InputIdx][0] for seq,recs in rules)
@@ -650,7 +656,7 @@ def parseContext(self, lines, font, Type):
 		for line in lines:
 			assert line[0].lower().startswith('class'), line[0]
 			seq = tuple(intSplitComma(i) for i in line[1:1+c.DataLen])
-			recs = parseLookupRecords(line[1+c.DataLen:], c.LookupRecord)
+			recs = parseLookupRecords(line[1+c.DataLen:], c.LookupRecord, lookupMap)
 			rules.append((seq, recs))
 		firstClasses = set(seq[c.InputIdx][0] for seq,recs in rules)
 		firstGlyphs = set(g for g,c in classDefs[c.InputIdx].classDefs.items() if c in firstClasses)
@@ -679,22 +685,22 @@ def parseContext(self, lines, font, Type):
 		assert len(lines) == 1
 		line = lines[0]
 		assert line[0].lower() == 'coverage', line[0]
-		recs = parseLookupRecords(line[1:], c.LookupRecord)
+		recs = parseLookupRecords(line[1:], c.LookupRecord, lookupMap)
 		setattr(self, c.Type+'Count', len(recs))
 		setattr(self, c.LookupRecord, recs)
 	else:
 		assert 0, typ
 
-def parseContextSubst(self, lines, font):
-	return parseContext(self, lines, font, "ContextSubst")
-def parseContextPos(self, lines, font):
-	return parseContext(self, lines, font, "ContextPos")
-def parseChainedSubst(self, lines, font):
-	return parseContext(self, lines, font, "ChainContextSubst")
-def parseChainedPos(self, lines, font):
-	return parseContext(self, lines, font, "ChainContextPos")
+def parseContextSubst(self, lines, font, lookupMap=None):
+	return parseContext(self, lines, font, "ContextSubst", lookupMap=None)
+def parseContextPos(self, lines, font, lookupMap=None):
+	return parseContext(self, lines, font, "ContextPos", lookupMap=None)
+def parseChainedSubst(self, lines, font, lookupMap=None):
+	return parseContext(self, lines, font, "ChainContextSubst", lookupMap=None)
+def parseChainedPos(self, lines, font, lookupMap=None):
+	return parseContext(self, lines, font, "ChainContextPos", lookupMap=None)
 
-def parseReverseChainedSubst(self, lines, font):
+def parseReverseChainedSubst(self, lines, font, _lookupMap=None):
 	self.Format = 1
 	coverages = ([], [])
 	while lines.peek()[0].endswith("coverage definition begin"):
@@ -717,7 +723,7 @@ def parseReverseChainedSubst(self, lines, font):
 	self.Substitute = [mapping[k] for k in self.Coverage.glyphs]
 	self.GlyphCount = len(self.Substitute)
 
-def parseLookup(lines, tableTag, font):
+def parseLookup(lines, tableTag, font, lookupMap=None):
 	line = lines.expect('lookup')
 	_, name, typ = line
 	debug("Parsing lookup type %s %s" % (typ, name))
@@ -757,7 +763,7 @@ def parseLookup(lines, tableTag, font):
 				while lines.peek():
 					subtable = ot.lookupTypes[tableTag][lookup.LookupType]()
 					subtable.LookupType = lookup.LookupType
-					parseLookupSubTable(subtable, lines, font)
+					parseLookupSubTable(subtable, lines, font, lookupMap)
 					subtables.append(subtable)
 			if lines.peek() and lines.peek()[0] in ('% subtable', 'subtable end'):
 				next(lines)
@@ -766,10 +772,10 @@ def parseLookup(lines, tableTag, font):
 	lookup.SubTable = subtables
 	lookup.SubTableCount = len(lookup.SubTable)
 	if lookup.SubTableCount is 0:
-		return None, name
-	return lookup, name
+		return None
+	return lookup
 
-def parseLookupList(lines, tableTag, font):
+def parseLookupList(lines, tableTag, font, lookupMap=None):
 	debug("Parsing lookup list")
 	self = ot.LookupList()
 	self.Lookup = []
@@ -778,9 +784,13 @@ def parseLookupList(lines, tableTag, font):
 			debug ('Skipping', lines.peek())
 			next(lines)
 			continue
-		lookup, name = parseLookup(lines, tableTag, font)
-		if name is None: break
-		assert int(name) == len(self.Lookup), "%d %d" % (name, len(self.Lookup))
+		_, name, _ = lines.peek()
+		lookup = parseLookup(lines, tableTag, font, lookupMap)
+		if lookupMap:
+			assert name not in lookupMap, "Duplicate lookup name: %s" % name
+			lookupMap[name] = len(self.Lookup)
+		else:
+			assert int(name) == len(self.Lookup), "%d %d" % (name, len(self.Lookup))
 		self.Lookup.append(lookup)
 	self.LookupCount = len(self.Lookup)
 	return self
