@@ -18,7 +18,8 @@ class Builder(object):
         self.font = font
         self.default_language_systems_ = set()
         self.script_ = None
-        self.lookup_flag_ = 0
+        self.lookupflag_ = 0
+        self.lookupflag_markFilterSet_ = None
         self.language_systems = set()
         self.named_lookups_ = {}
         self.cur_lookup_ = None
@@ -28,6 +29,9 @@ class Builder(object):
         self.features_ = {}  # ('latn', 'DEU ', 'smcp') --> [LookupBuilder*]
         self.parseTree = None
         self.required_features_ = {}  # ('latn', 'DEU ') --> 'scmp'
+        self.markAttach_ = {}  # "acute" --> (4, (file, line, column))
+        self.markAttachClassID_ = {}  # frozenset({"acute", "grave"}) --> 4
+        self.markFilterSets_ = {}  # frozenset({"acute", "grave"}) --> 4
 
     def build(self):
         self.parseTree = Parser(self.featurefile_path).parse()
@@ -49,15 +53,18 @@ class Builder(object):
 
     def get_lookup_(self, location, builder_class):
         if (self.cur_lookup_ and
-                type(self.cur_lookup_) == builder_class and
-                self.cur_lookup_.lookup_flag == self.lookup_flag_):
+            type(self.cur_lookup_) == builder_class and
+            self.cur_lookup_.lookupflag == self.lookupflag_ and
+            self.cur_lookup_.markFilterSet ==
+                self.lookupflag_markFilterSet_):
             return self.cur_lookup_
         if self.cur_lookup_name_ and self.cur_lookup_:
             raise FeatureLibError(
                 "Within a named lookup block, all rules must be of "
                 "the same lookup type and flag", location)
-        self.cur_lookup_ = builder_class(
-            self.font, location, self.lookup_flag_)
+        self.cur_lookup_ = builder_class(self.font, location)
+        self.cur_lookup_.lookupflag = self.lookupflag_
+        self.cur_lookup_.markFilterSet = self.lookupflag_markFilterSet_
         self.lookups_.append(self.cur_lookup_)
         if self.cur_lookup_name_:
             # We are starting a lookup rule inside a named lookup block.
@@ -94,8 +101,29 @@ class Builder(object):
         gdef.GlyphClassDef.classDefs = inferredGlyphClass
         gdef.AttachList = None
         gdef.LigCaretList = None
-        gdef.MarkAttachClassDef = None
-        if len(gdef.GlyphClassDef.classDefs) == 0:
+
+        markAttachClass = {g: c for g, (c, _) in self.markAttach_.items()}
+        if markAttachClass:
+            gdef.MarkAttachClassDef = otTables.MarkAttachClassDef()
+            gdef.MarkAttachClassDef.classDefs = markAttachClass
+        else:
+            gdef.MarkAttachClassDef = None
+
+        if self.markFilterSets_:
+            gdef.Version = 0x00010002
+            m = gdef.MarkGlyphSetsDef = otTables.MarkGlyphSetsDef()
+            m.MarkSetTableFormat = 1
+            m.MarkSetCount = len(self.markFilterSets_)
+            m.Coverage = []
+            filterSets = [(id, glyphs)
+                          for (glyphs, id) in self.markFilterSets_.items()]
+            for i, glyphs in sorted(filterSets):
+                coverage = otTables.Coverage()
+                coverage.glyphs = sorted(glyphs, key=self.font.getGlyphID)
+                m.Coverage.append(coverage)
+
+        if (len(gdef.GlyphClassDef.classDefs) == 0 and
+                gdef.MarkAttachClassDef is None):
             return None
         result = getTableClass("GDEF")()
         result.table = gdef
@@ -276,6 +304,44 @@ class Builder(object):
                     location)
             self.required_features_[key] = self.cur_feature_name_
 
+    def getMarkAttachClass_(self, location, glyphs):
+        id = self.markAttachClassID_.get(glyphs)
+        if id is not None:
+            return id
+        id = len(self.markAttachClassID_) + 1
+        self.markAttachClassID_[glyphs] = id
+        for glyph in glyphs:
+            if glyph in self.markAttach_:
+                _, loc = self.markAttach_[glyph]
+                raise FeatureLibError(
+                    "Glyph %s already has been assigned "
+                    "a MarkAttachmentType at %s:%d:%d" % (
+                        glyph, loc[0], loc[1], loc[2]),
+                    location)
+            self.markAttach_[glyph] = (id, location)
+        return id
+
+    def getMarkFilterSet_(self, location, glyphs):
+        id = self.markFilterSets_.get(glyphs)
+        if id is not None:
+            return id
+        id = len(self.markFilterSets_)
+        self.markFilterSets_[glyphs] = id
+        return id
+
+    def set_lookup_flag(self, location, value, markAttach, markFilter):
+        value = value & 0xFF
+        if markAttach:
+            markAttachClass = self.getMarkAttachClass_(location, markAttach)
+            value = value | (markAttachClass << 8)
+        if markFilter:
+            markFilterSet = self.getMarkFilterSet_(location, markFilter)
+            value = value | 0x10
+            self.lookupflag_markFilterSet_ = markFilterSet
+        else:
+            self.lookupflag_markFilterSet_ = None
+        self.lookupflag_ = value
+
     def set_script(self, location, script):
         if self.cur_lookup_name_:
             raise FeatureLibError(
@@ -287,7 +353,8 @@ class Builder(object):
                 "within \"feature %s\"" % self.cur_feature_name_, location)
         self.cur_lookup_ = None
         self.script_ = script
-        self.lookup_flag_ = 0
+        self.lookupflag_ = 0
+        self.lookupflag_markFilterSet_ = None
         self.set_language(location, "dflt",
                           include_default=True, required=False)
 
@@ -498,18 +565,20 @@ def makeOpenTypeValueRecord(v):
 
 
 class LookupBuilder(object):
-    def __init__(self, font, location, table, lookup_type, lookup_flag):
+    def __init__(self, font, location, table, lookup_type):
         self.font = font
         self.location = location
         self.table, self.lookup_type = table, lookup_type
-        self.lookup_flag = lookup_flag
+        self.lookupflag = 0
+        self.markFilterSet = None
         self.lookup_index = None  # assigned when making final tables
         assert table in ('GPOS', 'GSUB')
 
     def equals(self, other):
         return (isinstance(other, self.__class__) and
                 self.table == other.table and
-                self.lookup_flag == other.lookup_flag)
+                self.lookupflag == other.lookupflag and
+                self.markFilterSet == other.markFilterSet)
 
     def inferGlyphClasses(self):
         """Infers glyph glasses for the GDEF table, such as {"cedilla":3}."""
@@ -522,10 +591,12 @@ class LookupBuilder(object):
 
     def buildLookup_(self, subtables):
         lookup = otTables.Lookup()
-        lookup.LookupFlag = self.lookup_flag
+        lookup.LookupFlag = self.lookupflag
         lookup.LookupType = self.lookup_type
         lookup.SubTable = subtables
         lookup.SubTableCount = len(subtables)
+        if self.markFilterSet is not None:
+            lookup.MarkFilteringSet = self.markFilterSet
         return lookup
 
     def buildMarkClasses_(self, marks):
@@ -589,8 +660,8 @@ class LookupBuilder(object):
 
 
 class AlternateSubstBuilder(LookupBuilder):
-    def __init__(self, font, location, lookup_flag):
-        LookupBuilder.__init__(self, font, location, 'GSUB', 3, lookup_flag)
+    def __init__(self, font, location):
+        LookupBuilder.__init__(self, font, location, 'GSUB', 3)
         self.alternates = {}
 
     def equals(self, other):
@@ -605,8 +676,8 @@ class AlternateSubstBuilder(LookupBuilder):
 
 
 class ChainContextPosBuilder(LookupBuilder):
-    def __init__(self, font, location, lookup_flag):
-        LookupBuilder.__init__(self, font, location, 'GPOS', 8, lookup_flag)
+    def __init__(self, font, location):
+        LookupBuilder.__init__(self, font, location, 'GPOS', 8)
         self.rules = []  # (prefix, input, suffix, lookups)
 
     def equals(self, other):
@@ -635,8 +706,8 @@ class ChainContextPosBuilder(LookupBuilder):
 
 
 class ChainContextSubstBuilder(LookupBuilder):
-    def __init__(self, font, location, lookup_flag):
-        LookupBuilder.__init__(self, font, location, 'GSUB', 6, lookup_flag)
+    def __init__(self, font, location):
+        LookupBuilder.__init__(self, font, location, 'GSUB', 6)
         self.substitutions = []  # (prefix, input, suffix, lookups)
 
     def equals(self, other):
@@ -665,8 +736,8 @@ class ChainContextSubstBuilder(LookupBuilder):
 
 
 class LigatureSubstBuilder(LookupBuilder):
-    def __init__(self, font, location, lookup_flag):
-        LookupBuilder.__init__(self, font, location, 'GSUB', 4, lookup_flag)
+    def __init__(self, font, location):
+        LookupBuilder.__init__(self, font, location, 'GSUB', 4)
         self.ligatures = {}  # {('f','f','i'): 'f_f_i'}
 
     def equals(self, other):
@@ -700,8 +771,8 @@ class LigatureSubstBuilder(LookupBuilder):
 
 
 class MultipleSubstBuilder(LookupBuilder):
-    def __init__(self, font, location, lookup_flag):
-        LookupBuilder.__init__(self, font, location, 'GSUB', 2, lookup_flag)
+    def __init__(self, font, location):
+        LookupBuilder.__init__(self, font, location, 'GSUB', 2)
         self.mapping = {}
 
     def equals(self, other):
@@ -715,8 +786,8 @@ class MultipleSubstBuilder(LookupBuilder):
 
 
 class PairPosBuilder(LookupBuilder):
-    def __init__(self, font, location, lookup_flag):
-        LookupBuilder.__init__(self, font, location, 'GPOS', 2, lookup_flag)
+    def __init__(self, font, location):
+        LookupBuilder.__init__(self, font, location, 'GPOS', 2)
         self.pairs = {}  # (gc1, gc2) -> (location, value1, value2)
 
     def add_pair(self, location, glyphclass1, value1, glyphclass2, value2):
@@ -773,8 +844,8 @@ class PairPosBuilder(LookupBuilder):
 
 
 class CursivePosBuilder(LookupBuilder):
-    def __init__(self, font, location, lookup_flag):
-        LookupBuilder.__init__(self, font, location, 'GPOS', 3, lookup_flag)
+    def __init__(self, font, location):
+        LookupBuilder.__init__(self, font, location, 'GPOS', 3)
         self.attachments = {}
 
     def equals(self, other):
@@ -801,8 +872,8 @@ class CursivePosBuilder(LookupBuilder):
 
 
 class MarkBasePosBuilder(LookupBuilder):
-    def __init__(self, font, location, lookup_flag):
-        LookupBuilder.__init__(self, font, location, 'GPOS', 4, lookup_flag)
+    def __init__(self, font, location):
+        LookupBuilder.__init__(self, font, location, 'GPOS', 4)
         self.marks = {}  # glyphName -> (markClassName, anchor)
         self.bases = {}  # glyphName -> {markClassName: anchor}
 
@@ -851,8 +922,8 @@ class MarkBasePosBuilder(LookupBuilder):
 
 
 class MarkLigPosBuilder(LookupBuilder):
-    def __init__(self, font, location, lookup_flag):
-        LookupBuilder.__init__(self, font, location, 'GPOS', 5, lookup_flag)
+    def __init__(self, font, location):
+        LookupBuilder.__init__(self, font, location, 'GPOS', 5)
         self.marks = {}  # glyphName -> (markClassName, anchor)
         self.ligatures = {}  # glyphName -> [{markClassName: anchor}, ...]
 
@@ -898,8 +969,8 @@ class MarkLigPosBuilder(LookupBuilder):
 
 
 class MarkMarkPosBuilder(LookupBuilder):
-    def __init__(self, font, location, lookup_flag):
-        LookupBuilder.__init__(self, font, location, 'GPOS', 6, lookup_flag)
+    def __init__(self, font, location):
+        LookupBuilder.__init__(self, font, location, 'GPOS', 6)
         self.marks = {}      # glyphName -> (markClassName, anchor)
         self.baseMarks = {}  # glyphName -> {markClassName: anchor}
 
@@ -938,8 +1009,8 @@ class MarkMarkPosBuilder(LookupBuilder):
 
 
 class ReverseChainSingleSubstBuilder(LookupBuilder):
-    def __init__(self, font, location, lookup_flag):
-        LookupBuilder.__init__(self, font, location, 'GSUB', 8, lookup_flag)
+    def __init__(self, font, location):
+        LookupBuilder.__init__(self, font, location, 'GSUB', 8)
         self.substitutions = []  # (prefix, suffix, mapping)
 
     def equals(self, other):
@@ -961,8 +1032,8 @@ class ReverseChainSingleSubstBuilder(LookupBuilder):
 
 
 class SingleSubstBuilder(LookupBuilder):
-    def __init__(self, font, location, lookup_flag):
-        LookupBuilder.__init__(self, font, location, 'GSUB', 1, lookup_flag)
+    def __init__(self, font, location):
+        LookupBuilder.__init__(self, font, location, 'GSUB', 1)
         self.mapping = {}
 
     def equals(self, other):
@@ -976,8 +1047,8 @@ class SingleSubstBuilder(LookupBuilder):
 
 
 class SinglePosBuilder(LookupBuilder):
-    def __init__(self, font, location, lookup_flag):
-        LookupBuilder.__init__(self, font, location, 'GPOS', 1, lookup_flag)
+    def __init__(self, font, location):
+        LookupBuilder.__init__(self, font, location, 'GPOS', 1)
         self.mapping = {}  # glyph -> ast.ValueRecord
 
     def equals(self, other):

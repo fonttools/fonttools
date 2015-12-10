@@ -27,7 +27,7 @@ def makeTTFont():
         "A.alt1 A.alt2 A.alt3 B.alt1 B.alt2 B.alt3 C.alt1 C.alt2 C.alt3 "
         "d.alt n.end s.end "
         "f_l c_h c_k c_s c_t f_f f_f_i f_f_l f_i o_f_f_i s_t "
-        "grave acute dieresis macron cedilla umlaut ogonek caron "
+        "grave acute dieresis macron circumflex cedilla umlaut ogonek caron "
         "damma hamza sukun kasratan lam_meem_jeem  "
     ).split()
     font = TTFont()
@@ -316,6 +316,11 @@ class BuilderTest(unittest.TestCase):
             "    sub f f i by f_f_i;"
             "    sub A from [A.alt1 A.alt2];"
             "} foo;")
+
+    def test_lookupflag(self):
+        font = makeTTFont()
+        addOpenTypeFeatures(self.getpath("lookupflag.fea"), font)
+        self.expect_ttx(font, self.getpath("lookupflag.ttx"))
 
 
 class LigatureSubstBuilderTest(unittest.TestCase):

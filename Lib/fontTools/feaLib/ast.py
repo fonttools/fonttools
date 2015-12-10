@@ -196,7 +196,14 @@ class LookupFlagStatement(Statement):
         self.markFilteringSet = markFilteringSet
 
     def build(self, builder):
-        pass  # TODO: Implement.
+        markAttach = None
+        if self.markAttachment is not None:
+            markAttach = frozenset(self.markAttachment.glyphclass.glyphs)
+        markFilter = None
+        if self.markFilteringSet is not None:
+            markFilter = frozenset(self.markFilteringSet.glyphclass.glyphs)
+        builder.set_lookup_flag(self.location, self.value,
+                                markAttach, markFilter)
 
 
 class LookupReferenceStatement(Statement):
