@@ -26,6 +26,13 @@ class Expression(object):
         pass
 
 
+class GlyphClassName(Expression):
+    def __init__(self, location, glyphclass):
+        Expression.__init__(self, location)
+        assert isinstance(glyphclass, GlyphClassDefinition)
+        self.glyphclass = glyphclass
+
+
 class Block(Statement):
     def __init__(self, location):
         Statement.__init__(self, location)
@@ -179,6 +186,17 @@ class LigatureSubstStatement(Statement):
         # all specific glyph sequences if glyph classes are detected"
         for glyphs in sorted(itertools.product(*self.glyphs)):
             builder.add_ligature_subst(self.location, glyphs, self.replacement)
+
+
+class LookupFlagStatement(Statement):
+    def __init__(self, location, value, markAttachment, markFilteringSet):
+        Statement.__init__(self, location)
+        self.value = value
+        self.markAttachment = markAttachment
+        self.markFilteringSet = markFilteringSet
+
+    def build(self, builder):
+        pass  # TODO: Implement.
 
 
 class LookupReferenceStatement(Statement):

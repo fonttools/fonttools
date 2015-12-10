@@ -335,6 +335,58 @@ class ParserTest(unittest.TestCase):
             FeatureLibError, 'Unknown lookup "Huh"',
             self.parse, "feature liga {lookup Huh;} liga;")
 
+    def parse_lookupflag_(self, s):
+        return self.parse("lookup L {%s} L;" % s).statements[0].statements[-1]
+
+    def test_lookupflag_format_A(self):
+        flag = self.parse_lookupflag_("lookupflag RightToLeft IgnoreMarks;")
+        self.assertIsInstance(flag, ast.LookupFlagStatement)
+        self.assertEqual(flag.value, 9)
+        self.assertIsNone(flag.markAttachment)
+        self.assertIsNone(flag.markFilteringSet)
+
+    def test_lookupflag_format_A_MarkAttachmentType(self):
+        flag = self.parse_lookupflag_(
+            "@TOP_MARKS = [acute grave macron];"
+            "lookupflag MarkAttachmentType @TOP_MARKS RightToLeft;")
+        self.assertIsInstance(flag, ast.LookupFlagStatement)
+        self.assertEqual(flag.value, 1)
+        self.assertIsInstance(flag.markAttachment, ast.GlyphClassName)
+        self.assertEqual(flag.markAttachment.glyphclass.glyphs,
+                         {"acute", "grave", "macron"})
+        self.assertIsNone(flag.markFilteringSet)
+
+    def test_lookupflag_format_A_UseMarkFilteringSet(self):
+        flag = self.parse_lookupflag_(
+            "@BOTTOM_MARKS = [cedilla ogonek];"
+            "lookupflag UseMarkFilteringSet @BOTTOM_MARKS IgnoreLigatures;")
+        self.assertIsInstance(flag, ast.LookupFlagStatement)
+        self.assertEqual(flag.value, 4)
+        self.assertIsNone(flag.markAttachment)
+        self.assertIsInstance(flag.markFilteringSet, ast.GlyphClassName)
+        self.assertEqual(flag.markFilteringSet.glyphclass.glyphs,
+                         {"cedilla", "ogonek"})
+
+    def test_lookupflag_format_B(self):
+        flag = self.parse_lookupflag_("lookupflag 7;")
+        self.assertIsInstance(flag, ast.LookupFlagStatement)
+        self.assertEqual(flag.value, 7)
+        self.assertIsNone(flag.markAttachment)
+        self.assertIsNone(flag.markFilteringSet)
+
+    def test_lookupflag_repeated(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            'RightToLeft can be specified only once',
+            self.parse,
+            "feature test {lookupflag RightToLeft RightToLeft;} test;")
+
+    def test_lookupflag_unrecognized(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            '"IgnoreCookies" is not a recognized lookupflag',
+            self.parse, "feature test {lookupflag IgnoreCookies;} test;")
+
     def test_gpos_type_1_glyph(self):
         doc = self.parse("feature kern {pos one <1 2 3 4>;} kern;")
         pos = doc.statements[0].statements[0]

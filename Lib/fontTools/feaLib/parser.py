@@ -175,6 +175,15 @@ class Parser(object):
         self.expect_symbol_("]")
         return result
 
+    def parse_glyphclass_name_(self):
+        name = self.expect_class_name_()
+        gc = self.glyphclasses_.resolve(name)
+        if gc is None:
+            raise FeatureLibError(
+                "Unknown glyph class @%s" % name,
+                self.cur_token_location_)
+        return ast.GlyphClassName(self.cur_token_location_, gc)
+
     def parse_glyph_pattern_(self):
         prefix, glyphs, lookups, suffix = ([], [], [], [])
         while (self.next_token_ not in {"by", "from", ";", "<"} and
@@ -259,6 +268,45 @@ class Parser(object):
         self.parse_block_(block, vertical)
         self.lookups_.define(name, block)
         return block
+
+    def parse_lookupflag_(self):
+        assert self.is_cur_keyword_("lookupflag")
+        location = self.cur_token_location_
+
+        # format B: "lookupflag 6;"
+        if self.next_token_type_ == Lexer.NUMBER:
+            value = self.expect_number_()
+            self.expect_symbol_(";")
+            return ast.LookupFlagStatement(location, value, None, None)
+
+        # format A: "lookupflag RightToLeft MarkAttachmentType @M;"
+        value, markAttachment, markFilteringSet = 0, None, None
+        flags = {
+            "RightToLeft": 1, "IgnoreBaseGlyphs": 2,
+            "IgnoreLigatures": 4, "IgnoreMarks": 8
+        }
+        seen = set()
+        while self.next_token_ != ";":
+            if self.next_token_ in seen:
+                raise FeatureLibError(
+                    "%s can be specified only once" % self.next_token_,
+                    self.next_token_location_)
+            seen.add(self.next_token_)
+            if self.next_token_ == "MarkAttachmentType":
+                self.expect_keyword_("MarkAttachmentType")
+                markAttachment = self.parse_glyphclass_name_()
+            if self.next_token_ == "UseMarkFilteringSet":
+                self.expect_keyword_("UseMarkFilteringSet")
+                markFilteringSet = self.parse_glyphclass_name_()
+            elif self.next_token_ in flags:
+                value = value | flags[self.expect_name_()]
+            else:
+                raise FeatureLibError(
+                    '"%s" is not a recognized lookupflag' % self.next_token_,
+                    self.next_token_location_)
+        self.expect_symbol_(";")
+        return ast.LookupFlagStatement(location, value,
+                                       markAttachment, markFilteringSet)
 
     def parse_markClass_(self):
         assert self.is_cur_keyword_("markClass")
@@ -628,6 +676,8 @@ class Parser(object):
                 statements.append(self.parse_language_())
             elif self.is_cur_keyword_("lookup"):
                 statements.append(self.parse_lookup_(vertical))
+            elif self.is_cur_keyword_("lookupflag"):
+                statements.append(self.parse_lookupflag_())
             elif self.is_cur_keyword_("markClass"):
                 self.parse_markClass_()
             elif self.is_cur_keyword_({"pos", "position"}):
