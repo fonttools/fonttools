@@ -29,7 +29,9 @@ from __future__ import print_function, division, absolute_import
 from robofab.objects.objectsRF import RSegment
 from cu2qu import curve_to_quadratic, curves_to_quadratic
 
-__all__ = ['fonts_to_quadratic', 'glyph_to_quadratic', 'segment_to_quadratic']
+__all__ = [
+    'fonts_to_quadratic', 'font_to_quadratic', 'glyph_to_quadratic',
+    'segment_to_quadratic']
 
 DEFAULT_MAX_ERR = 0.0025
 
@@ -84,6 +86,12 @@ def fonts_to_quadratic(fonts, max_err_em=None, max_err=None,
         print('New spline lengths:\n%s\n' % (
             '\n'.join('%s: %d' % (l, stats[l]) for l in spline_lengths)))
     return stats
+
+
+def font_to_quadratic(font, **kwargs):
+    """Convenience wrapper around fonts_to_quadratic, for just one font."""
+
+    fonts_to_quadratic([font], **kwargs)
 
 
 def glyph_to_quadratic(glyph, max_err, stats=None):
