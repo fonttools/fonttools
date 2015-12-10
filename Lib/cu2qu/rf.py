@@ -60,7 +60,12 @@ def fonts_to_quadratic(fonts, max_err_em=None, max_err=None,
         raise TypeError('Only one of max_err and max_err_em can be specified.')
     if not (max_err_em or max_err):
         max_err_em = DEFAULT_MAX_ERR
-    if max_err:
+
+    if isinstance(max_err, (list, tuple)):
+        max_errors = max_err
+    elif isinstance(max_err_em, (list, tuple)):
+        max_errors = max_err_em
+    elif max_err:
         max_errors = [max_err] * len(fonts)
     else:
         max_errors = [f.info.unitsPerEm * max_err_em for f in fonts]
