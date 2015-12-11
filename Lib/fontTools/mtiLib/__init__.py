@@ -789,26 +789,6 @@ def parseLookup(lines, tableTag, font, lookupMap=None):
 		return None
 	return lookup
 
-def parseLookupList(lines, tableTag, font, lookupMap=None):
-	debug("Parsing lookup list")
-	self = ot.LookupList()
-	self.Lookup = []
-	while lines.peek() is not None:
-		if lines.peek()[0].lower() != 'lookup':
-			debug ('Skipping', lines.peek())
-			next(lines)
-			continue
-		_, name, _ = lines.peek()
-		lookup = parseLookup(lines, tableTag, font, lookupMap)
-		if lookupMap:
-			assert name not in lookupMap, "Duplicate lookup name: %s" % name
-			lookupMap[name] = len(self.Lookup)
-		else:
-			assert int(name) == len(self.Lookup), "%d %d" % (name, len(self.Lookup))
-		self.Lookup.append(lookup)
-	self.LookupCount = len(self.Lookup)
-	return self
-
 def parseGSUBGPOS(lines, font, tableTag):
 	lookupMap = {}
 	assert tableTag in ('GSUB', 'GPOS')
@@ -818,7 +798,7 @@ def parseGSUBGPOS(lines, font, tableTag):
 	fields = {
 		'script table begin':	('ScriptList',		parseScriptList),
 		'feature table begin':	('FeaturetList',	parseFeatureList),
-		'lookup':		('LookupList',	lambda lines: parseLookupList(lines, tableTag, font)),
+		'lookup':		('LookupList',		None),
 	}
 	for attr,parser in fields.values():
 		setattr(self, attr, None)
