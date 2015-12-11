@@ -59,6 +59,8 @@ install:
   # target Python version and architecture
   - "%CMD_IN_ENV% pip install -vr requirements.txt"
 
+build: false
+
 test_script:
   - "SET PATH=C:\\msys64\\usr\\bin;%PATH%"
   # 'run-test.sh' interprets $PYTHON as the executable name
