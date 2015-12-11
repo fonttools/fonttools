@@ -311,10 +311,10 @@ class SubtableStatement(Statement):
         Statement.__init__(self, location)
 
 
-class ValueRecord(Statement):
+class ValueRecord(Expression):
     def __init__(self, location, xPlacement, yPlacement, xAdvance, yAdvance,
                  xPlaDevice, yPlaDevice, xAdvDevice, yAdvDevice):
-        Statement.__init__(self, location)
+        Expression.__init__(self, location)
         self.xPlacement, self.yPlacement = (xPlacement, yPlacement)
         self.xAdvance, self.yAdvance = (xAdvance, yAdvance)
         self.xPlaDevice, self.yPlaDevice = (xPlaDevice, yPlaDevice)
