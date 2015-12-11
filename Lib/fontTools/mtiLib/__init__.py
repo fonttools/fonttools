@@ -12,6 +12,10 @@ from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.tables.otBase import ValueRecord, valueRecordFormatDict
 from contextlib import contextmanager
 
+class MtiLibError(Exception): pass
+class FeatureNotFoundError(MtiLibError): pass
+class LookupNotFoundError(MtiLibError): pass
+
 debug = print
 
 def makeGlyph(s):
@@ -28,7 +32,14 @@ def makeGlyphs(l):
 def mapLookup(sym, mapping):
 	# Lookups are addressed by name.  So resolved them using a map if available.
 	# Fallback to parsing as lookup index if a map isn't provided.
-	return mapping[sym] if mapping else int(sym)
+	if mapping is not None:
+		try:
+			idx = mapping[sym]
+		except KeyError:
+			raise LookupNotFoundError(sym)
+	else:
+		idx = int(sym)
+	return idx
 
 def mapFeature(sym, mapping):
 	# Features are referenced by index according the spec.  So, if symbol is an
@@ -36,7 +47,10 @@ def mapFeature(sym, mapping):
 	try:
 		idx = int(sym)
 	except ValueError:
-		return mapping[sym]
+		try:
+			idx = mapping[sym]
+		except KeyError:
+			raise FeatureNotFoundError(sym)
 	return idx
 
 def parseScriptList(lines, featureMap=None):
@@ -87,7 +101,7 @@ def parseFeatureList(lines, lookupMap=None, featureMap=None):
 	with lines.between('feature table'):
 		for line in lines:
 			name, featureTag, lookups = line
-			if featureMap:
+			if featureMap is not None:
 				assert name not in featureMap, "Duplicate feature name: %s" % name
 				featureMap[name] = len(self.FeatureRecord)
 			# If feature name is integer, make sure it matches its index.
@@ -568,10 +582,11 @@ def parseLookupRecords(items, klassName, lookupMap=None):
 	lst = []
 	for item in items:
 		rec = klass()
-		item = intSplitComma(item)
+		item = stripSplitComma(item)
 		assert len(item) == 2, item
-		assert item[0] > 0, item[0]
-		rec.SequenceIndex = item[0] - 1
+		idx = int(item[0])
+		assert idx > 0, idx
+		rec.SequenceIndex = idx - 1
 		rec.LookupListIndex = mapLookup(item[1], lookupMap)
 		lst.append(rec)
 	return lst
@@ -706,13 +721,13 @@ def parseContext(self, lines, font, Type, lookupMap=None):
 		assert 0, typ
 
 def parseContextSubst(self, lines, font, lookupMap=None):
-	return parseContext(self, lines, font, "ContextSubst", lookupMap=None)
+	return parseContext(self, lines, font, "ContextSubst", lookupMap=lookupMap)
 def parseContextPos(self, lines, font, lookupMap=None):
-	return parseContext(self, lines, font, "ContextPos", lookupMap=None)
+	return parseContext(self, lines, font, "ContextPos", lookupMap=lookupMap)
 def parseChainedSubst(self, lines, font, lookupMap=None):
-	return parseContext(self, lines, font, "ChainContextSubst", lookupMap=None)
+	return parseContext(self, lines, font, "ChainContextSubst", lookupMap=lookupMap)
 def parseChainedPos(self, lines, font, lookupMap=None):
-	return parseContext(self, lines, font, "ChainContextPos", lookupMap=None)
+	return parseContext(self, lines, font, "ChainContextPos", lookupMap=lookupMap)
 
 def parseReverseChainedSubst(self, lines, font, _lookupMap=None):
 	self.Format = 1
@@ -791,14 +806,21 @@ def parseLookup(lines, tableTag, font, lookupMap=None):
 
 def parseGSUBGPOS(lines, font, tableTag):
 	lookupMap = {}
+	featureMap = {}
 	assert tableTag in ('GSUB', 'GPOS')
 	debug("Parsing", tableTag)
 	self = getattr(ot, tableTag)()
 	self.Version = 1.0
 	fields = {
-		'script table begin':	('ScriptList',		parseScriptList),
-		'feature table begin':	('FeaturetList',	parseFeatureList),
-		'lookup':		('LookupList',		None),
+		'script table begin':
+		('ScriptList',
+		 lambda lines: parseScriptList (lines, featureMap)),
+		'feature table begin':
+		('FeaturetList',
+		 lambda lines: parseFeatureList (lines, lookupMap, featureMap)),
+		'lookup':
+		('LookupList',
+		 None),
 	}
 	for attr,parser in fields.values():
 		setattr(self, attr, None)
