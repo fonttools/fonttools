@@ -26,11 +26,35 @@ class Expression(object):
         pass
 
 
+class GlyphName(Expression):
+    """A single glyph name, such as cedilla."""
+    def __init__(self, location, glyph):
+        Expression.__init__(self, location)
+        self.glyph = glyph
+
+    def glyphSet(self):
+        return frozenset((self.glyph,))
+
+
+class GlyphClass(Expression):
+    """A glyph class, such as [acute cedilla grave]."""
+    def __init__(self, location, glyphs):
+        Expression.__init__(self, location)
+        self.glyphs = glyphs
+
+    def glyphSet(self):
+        return frozenset(self.glyphs)
+
+
 class GlyphClassName(Expression):
+    """A glyph class name, such as @FRENCH_MARKS."""
     def __init__(self, location, glyphclass):
         Expression.__init__(self, location)
         assert isinstance(glyphclass, GlyphClassDefinition)
         self.glyphclass = glyphclass
+
+    def glyphSet(self):
+        return frozenset(self.glyphclass.glyphs)
 
 
 class Block(Statement):

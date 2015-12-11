@@ -122,7 +122,7 @@ class Parser(object):
     def parse_glyphclass_definition_(self):
         location, name = self.cur_token_location_, self.cur_token_
         self.expect_symbol_("=")
-        glyphs = self.parse_glyphclass_(accept_glyphname=False)
+        glyphs = self.parse_glyphclass_(accept_glyphname=False).glyphSet()
         self.expect_symbol_(";")
         if self.glyphclasses_.resolve(name) is not None:
             raise FeatureLibError("Glyph class @%s already defined" % name,
@@ -132,10 +132,8 @@ class Parser(object):
         return glyphclass
 
     def parse_glyphclass_(self, accept_glyphname):
-        result = set()
         if accept_glyphname and self.next_token_type_ is Lexer.NAME:
-            result.add(self.expect_name_())
-            return result
+            return ast.GlyphName(self.cur_token_location_, self.expect_name_())
         if self.next_token_type_ is Lexer.GLYPHCLASS:
             self.advance_lexer_()
             gc = self.glyphclasses_.resolve(self.cur_token_)
@@ -143,10 +141,11 @@ class Parser(object):
                 raise FeatureLibError(
                     "Unknown glyph class @%s" % self.cur_token_,
                     self.cur_token_location_)
-            result.update(gc.glyphs)
-            return result
+            return ast.GlyphClassName(self.cur_token_location_, gc)
 
         self.expect_symbol_("[")
+        glyphs = set()
+        location = self.cur_token_location_
         while self.next_token_ != "]":
             self.advance_lexer_()
             if self.cur_token_type_ is Lexer.NAME:
@@ -155,25 +154,25 @@ class Parser(object):
                     range_start = self.cur_token_
                     self.expect_symbol_("-")
                     range_end = self.expect_name_()
-                    result.update(self.make_glyph_range_(range_location_,
+                    glyphs.update(self.make_glyph_range_(range_location_,
                                                          range_start,
                                                          range_end))
                 else:
-                    result.add(self.cur_token_)
+                    glyphs.add(self.cur_token_)
             elif self.cur_token_type_ is Lexer.GLYPHCLASS:
                 gc = self.glyphclasses_.resolve(self.cur_token_)
                 if gc is None:
                     raise FeatureLibError(
                         "Unknown glyph class @%s" % self.cur_token_,
                         self.cur_token_location_)
-                result.update(gc.glyphs)
+                glyphs.update(gc.glyphs)
             else:
                 raise FeatureLibError(
                     "Expected glyph name, glyph range, "
                     "or glyph class reference",
                     self.cur_token_location_)
         self.expect_symbol_("]")
-        return result
+        return ast.GlyphClass(location, glyphs)
 
     def parse_glyphclass_name_(self):
         name = self.expect_class_name_()
@@ -188,7 +187,7 @@ class Parser(object):
         prefix, glyphs, lookups, suffix = ([], [], [], [])
         while (self.next_token_ not in {"by", "from", ";", "<"} and
                self.next_token_type_ != Lexer.NUMBER):
-            gc = self.parse_glyphclass_(accept_glyphname=True)
+            gc = self.parse_glyphclass_(accept_glyphname=True).glyphSet()
             marked = False
             if self.next_token_ == "'":
                 self.expect_symbol_("'")
@@ -311,7 +310,7 @@ class Parser(object):
     def parse_markClass_(self):
         assert self.is_cur_keyword_("markClass")
         location = self.cur_token_location_
-        glyphs = self.parse_glyphclass_(accept_glyphname=True)
+        glyphs = self.parse_glyphclass_(accept_glyphname=True).glyphSet()
         anchor = self.parse_anchor_()
         name = self.expect_class_name_()
         self.expect_symbol_(";")
@@ -359,7 +358,7 @@ class Parser(object):
         value1 = self.parse_valuerecord_(vertical)
         if self.next_token_ != ";" and gc2 is None:
             # Pair positioning, format A: 'pos' gc1 value1 gc2 value2
-            gc2 = self.parse_glyphclass_(accept_glyphname=True)
+            gc2 = self.parse_glyphclass_(accept_glyphname=True).glyphSet()
             value2 = self.parse_valuerecord_(vertical)
         self.expect_symbol_(";")
 
@@ -381,7 +380,7 @@ class Parser(object):
                 '"enumerate" is not allowed with '
                 'cursive attachment positioning',
                 location)
-        glyphclass = self.parse_glyphclass_(accept_glyphname=True)
+        glyphclass = self.parse_glyphclass_(accept_glyphname=True).glyphSet()
         entryAnchor = self.parse_anchor_()
         exitAnchor = self.parse_anchor_()
         self.expect_symbol_(";")
@@ -396,7 +395,7 @@ class Parser(object):
                 '"enumerate" is not allowed with '
                 'mark-to-base attachment positioning',
                 location)
-        base = self.parse_glyphclass_(accept_glyphname=True)
+        base = self.parse_glyphclass_(accept_glyphname=True).glyphSet()
         marks = self.parse_anchor_marks_()
         self.expect_symbol_(";")
         return ast.MarkBasePosStatement(location, base, marks)
@@ -409,7 +408,7 @@ class Parser(object):
                 '"enumerate" is not allowed with '
                 'mark-to-ligature attachment positioning',
                 location)
-        ligatures = self.parse_glyphclass_(accept_glyphname=True)
+        ligatures = self.parse_glyphclass_(accept_glyphname=True).glyphSet()
         marks = [self.parse_anchor_marks_()]
         while self.next_token_ == "ligComponent":
             self.expect_keyword_("ligComponent")
@@ -425,7 +424,7 @@ class Parser(object):
                 '"enumerate" is not allowed with '
                 'mark-to-mark attachment positioning',
                 location)
-        baseMarks = self.parse_glyphclass_(accept_glyphname=True)
+        baseMarks = self.parse_glyphclass_(accept_glyphname=True).glyphSet()
         marks = self.parse_anchor_marks_()
         self.expect_symbol_(";")
         return ast.MarkMarkPosStatement(location, baseMarks, marks)
@@ -446,10 +445,11 @@ class Parser(object):
         if self.next_token_ == "by":
             keyword = self.expect_keyword_("by")
             while self.next_token_ != ";":
-                new.append(self.parse_glyphclass_(accept_glyphname=True))
+                gc = self.parse_glyphclass_(accept_glyphname=True)
+                new.append(gc.glyphSet())
         elif self.next_token_ == "from":
             keyword = self.expect_keyword_("from")
-            new = [self.parse_glyphclass_(accept_glyphname=False)]
+            new = [self.parse_glyphclass_(accept_glyphname=False).glyphSet()]
         else:
             keyword = None
         self.expect_symbol_(";")

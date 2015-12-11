@@ -352,7 +352,7 @@ class ParserTest(unittest.TestCase):
         self.assertIsInstance(flag, ast.LookupFlagStatement)
         self.assertEqual(flag.value, 1)
         self.assertIsInstance(flag.markAttachment, ast.GlyphClassName)
-        self.assertEqual(flag.markAttachment.glyphclass.glyphs,
+        self.assertEqual(flag.markAttachment.glyphSet(),
                          {"acute", "grave", "macron"})
         self.assertIsNone(flag.markFilteringSet)
 
@@ -364,7 +364,7 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(flag.value, 4)
         self.assertIsNone(flag.markAttachment)
         self.assertIsInstance(flag.markFilteringSet, ast.GlyphClassName)
-        self.assertEqual(flag.markFilteringSet.glyphclass.glyphs,
+        self.assertEqual(flag.markFilteringSet.glyphSet(),
                          {"cedilla", "ogonek"})
 
     def test_lookupflag_format_B(self):
