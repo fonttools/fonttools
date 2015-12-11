@@ -156,6 +156,85 @@ else:
 		return tobytes(joiner).join(tobytes(item) for item in iterable)
 
 
+import os
+import io as _io
+
+try:
+	from msvcrt import setmode as _setmode
+except ImportError:
+	_setmode = None  # only available on the Windows platform
+
+
+def open(file, mode='r', buffering=-1, encoding=None, errors=None,
+		 newline=None, closefd=True, opener=None):
+	""" Wrapper around `io.open` that bridges the differences between Python 2
+	and Python 3's built-in `open` functions. In Python 2, `io.open` is a
+	backport of Python 3's `open`, whereas in Python 3, it is an alias of the
+	built-in `open` function.
+
+	One difference is that the 'opener' keyword argument is only supported in
+	Python 3. Here we pass the value of 'opener' only when it is not None.
+	This causes Python 2 to raise TypeError, complaining about the number of 
+	expected arguments, so it must be avoided if py2 or py2-3 contexts.
+
+	Another difference between 2 and 3, this time on Windows, has to do with
+	opening files by name or by file descriptor.
+
+	On the Windows C runtime, the 'O_BINARY' flag is defined which disables
+	the newlines translation ('\r\n' <=> '\n') when reading/writing files.
+	On both Python 2 and 3 this flag is always set when opening files by name.
+	This way, the newlines translation at the MSVCRT level doesn't interfere
+	with the Python io module's own newlines translation.
+
+	However, when opening files via fd, on Python 2 the fd is simply copied,
+	regardless of whether it has the 'O_BINARY' flag set or not.
+	This becomes a problem in the case of stdout, stdin, and stderr, because on
+	Windows these are opened in text mode by default (ie. don't have the
+	O_BINARY flag set).
+
+	On Python 3, this issue has been fixed, and all fds are now opened in
+	binary mode on Windows, including standard streams. Similarly here, I use
+	the `_setmode` function to ensure that integer file descriptors are
+	O_BINARY'ed before I pass them on to io.open.
+
+	For more info, see: https://bugs.python.org/issue10841
+	"""
+	if isinstance(file, int):
+		# the 'file' argument is an integer file descriptor
+		fd = file
+		if fd < 0:
+			raise ValueError('negative file descriptor')
+		if _setmode:
+			# `_setmode` function sets the line-end translation and returns the
+			# value of the previous mode. AFAIK there's no `_getmode`, so to
+			# check if the previous mode already had the bit set, I fist need
+			# to duplicate the file descriptor, set the binary flag on the copy
+			# and check the returned value.
+			fdcopy = os.dup(fd)
+			current_mode = _setmode(fdcopy, os.O_BINARY)
+			if not (current_mode & os.O_BINARY):
+				# the binary mode was not set: use the file descriptor's copy
+				file = fdcopy
+				if closefd:
+					# close the original file descriptor
+					os.close(fd)
+				else:
+					# ensure the copy is closed when the file object is closed
+					closefd = True
+			else:
+				# original file descriptor already had binary flag, close copy
+				os.close(fdcopy)
+
+	if opener is not None:
+		# "opener" is not supported on Python 2, use it at your own risk!
+		return _io.open(
+			file, mode, buffering, encoding, errors, newline, closefd,
+			opener=opener)
+	else:
+		return _io.open(
+			file, mode, buffering, encoding, errors, newline, closefd)
+
+
 if __name__ == "__main__":
 	import doctest, sys
 	sys.exit(doctest.testmod().failed)
