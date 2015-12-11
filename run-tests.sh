@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# exit if any subcommand return non-zero status
+set -e
+
 # Choose python version
 if test "x$1" = x-3; then
 	PYTHON=python3
