@@ -25,8 +25,19 @@ def makeGlyph(s):
 def makeGlyphs(l):
 	return [makeGlyph(g) for g in l]
 
-def mapSymbol(sym, mapping):
+def mapLookup(sym, mapping):
+	# Lookups are addressed by name.  So resolved them using a map if available.
+	# Fallback to parsing as lookup index if a map isn't provided.
 	return mapping[sym] if mapping else int(sym)
+
+def mapFeature(sym, mapping):
+	# Features are referenced by index according the spec.  So, if symbol is an
+	# integer, use it directly.  Otherwise look up in the map if provided.
+	try:
+		idx = int(sym)
+	except ValueError:
+		return mapping[sym]
+	return idx
 
 def parseScriptList(lines, featureMap=None):
 	self = ot.ScriptList()
@@ -38,8 +49,8 @@ def parseScriptList(lines, featureMap=None):
 
 			langSys = ot.LangSys()
 			langSys.LookupOrder = None
-			langSys.ReqFeatureIndex = mapSymbol(defaultFeature, featureMap) if defaultFeature else 0xFFFF
-			langSys.FeatureIndex = [mapSymbol(sym, featureMap) for sym in stripSplitComma(features)]
+			langSys.ReqFeatureIndex = mapFeature(defaultFeature, featureMap) if defaultFeature else 0xFFFF
+			langSys.FeatureIndex = [mapFeature(sym, featureMap) for sym in stripSplitComma(features)]
 			langSys.FeatureCount = len(langSys.FeatureIndex)
 
 			script = [s for s in records if s.ScriptTag == scriptTag]
@@ -79,15 +90,18 @@ def parseFeatureList(lines, lookupMap=None, featureMap=None):
 			if featureMap:
 				assert name not in featureMap, "Duplicate feature name: %s" % name
 				featureMap[name] = len(self.FeatureRecord)
-			else:
+			# If feature name is integer, make sure it matches its index.
+			try:
 				assert int(name) == len(self.FeatureRecord), "%d %d" % (name, len(self.FeatureRecord))
+			except ValueError:
+				pass
 			featureRec = ot.FeatureRecord()
 			featureRec.FeatureTag = featureTag
 			featureRec.Feature = ot.Feature()
 			self.FeatureRecord.append(featureRec)
 			feature = featureRec.Feature
 			feature.FeatureParams = None
-			feature.LookupListIndex = [mapSymbol(sym, lookupMap) for sym in stripSplitComma(lookups)]
+			feature.LookupListIndex = [mapLookup(sym, lookupMap) for sym in stripSplitComma(lookups)]
 			feature.LookupCount = len(feature.LookupListIndex)
 
 	self.FeatureCount = len(self.FeatureRecord)
@@ -558,7 +572,7 @@ def parseLookupRecords(items, klassName, lookupMap=None):
 		assert len(item) == 2, item
 		assert item[0] > 0, item[0]
 		rec.SequenceIndex = item[0] - 1
-		rec.LookupListIndex = mapSymbol(item[1], lookupMap)
+		rec.LookupListIndex = mapLookup(item[1], lookupMap)
 		lst.append(rec)
 	return lst
 
@@ -796,11 +810,11 @@ def parseLookupList(lines, tableTag, font, lookupMap=None):
 	return self
 
 def parseGSUBGPOS(lines, font, tableTag):
+	lookupMap = {}
 	assert tableTag in ('GSUB', 'GPOS')
 	debug("Parsing", tableTag)
 	self = getattr(ot, tableTag)()
 	self.Version = 1.0
-	self.ScriptList = self.FeatureList = self.LookupList = None
 	fields = {
 		'script table begin':	('ScriptList',		parseScriptList),
 		'feature table begin':	('FeaturetList',	parseFeatureList),
@@ -815,8 +829,20 @@ def parseGSUBGPOS(lines, font, tableTag):
 			next(lines)
 			continue
 		attr,parser = fields[typ]
-		assert getattr(self, attr) is None, attr
-		setattr(self, attr, parser(lines))
+		if typ == 'lookup':
+			if self.LookupList is None:
+				self.LookupList = ot.LookupList()
+				self.LookupList.Lookup = []
+			_, name, _ = lines.peek()
+			lookup = parseLookup(lines, tableTag, font, lookupMap)
+			assert name not in lookupMap, "Duplicate lookup name: %s" % name
+			lookupMap[name] = len(self.LookupList.Lookup)
+			self.LookupList.Lookup.append(lookup)
+		else:
+			assert getattr(self, attr) is None, attr
+			setattr(self, attr, parser(lines))
+	if self.LookupList:
+		self.LookupList.LookupCount = len(self.LookupList.Lookup)
 	return self
 
 def parseGSUB(lines, font):
