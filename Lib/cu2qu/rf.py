@@ -29,6 +29,12 @@ from __future__ import print_function, division, absolute_import
 from robofab.objects.objectsRF import RSegment
 from cu2qu import curve_to_quadratic, curves_to_quadratic
 
+__all__ = [
+    'fonts_to_quadratic', 'font_to_quadratic', 'glyph_to_quadratic',
+    'segment_to_quadratic']
+
+DEFAULT_MAX_ERR = 0.0025
+
 
 _zip = zip
 def zip(*args):
@@ -40,7 +46,8 @@ def zip(*args):
     return _zip(*args)
 
 
-def fonts_to_quadratic(*fonts, **kwargs):
+def fonts_to_quadratic(fonts, max_err_em=None, max_err=None,
+        stats=None, dump_stats=False):
     """Convert the curves of a collection of fonts to quadratic.
 
     All curves will be converted to quadratic at once, ensuring interpolation
@@ -48,29 +55,49 @@ def fonts_to_quadratic(*fonts, **kwargs):
     font at a time may yield slightly more optimized results.
     """
 
-    report = kwargs.get('report', {})
-    dump_report = kwargs.get('dump_report', False)
-    max_n = kwargs.get('max_n', 10)
+    if stats is None:
+        stats = {}
 
-    max_err_em = kwargs.get('max_err_em', 0.0025)
-    max_err = kwargs.get('max_err', None)
-    if max_err:
+    if max_err_em and max_err:
+        raise TypeError('Only one of max_err and max_err_em can be specified.')
+    if not (max_err_em or max_err):
+        max_err_em = DEFAULT_MAX_ERR
+
+    if isinstance(max_err, (list, tuple)):
+        max_errors = max_err
+    elif isinstance(max_err_em, (list, tuple)):
+        max_errors = max_err_em
+    elif max_err:
         max_errors = [max_err] * len(fonts)
     else:
         max_errors = [f.info.unitsPerEm * max_err_em for f in fonts]
 
-    for glyph in FontCollection(fonts):
-        glyph_to_quadratic(glyph, max_errors, max_n, report)
+    num_fonts = len(fonts)
+    assert len(max_errors) == num_fonts
 
-    if dump_report:
-        spline_lengths = report.keys()
+    if num_fonts == 1:
+        font = fonts[0]
+        max_errors = max_errors[0]
+    else:
+        font = FontCollection(fonts)
+    for glyph in font:
+        glyph_to_quadratic(glyph, max_errors, stats)
+
+    if dump_stats:
+        spline_lengths = stats.keys()
         spline_lengths.sort()
         print('New spline lengths:\n%s\n' % (
-            '\n'.join('%s: %d' % (l, report[l]) for l in spline_lengths)))
-    return report
+            '\n'.join('%s: %d' % (l, stats[l]) for l in spline_lengths)))
+    return stats
 
 
-def glyph_to_quadratic(glyph, max_err, max_n, report):
+def font_to_quadratic(font, **kwargs):
+    """Convenience wrapper around fonts_to_quadratic, for just one font."""
+
+    fonts_to_quadratic([font], **kwargs)
+
+
+def glyph_to_quadratic(glyph, max_err, stats=None):
     """Convert a glyph's curves to quadratic, in place."""
 
     for contour in glyph:
@@ -79,13 +106,13 @@ def glyph_to_quadratic(glyph, max_err, max_n, report):
             segment = contour[i]
             if segment.type == 'curve':
                 segments.append(segment_to_quadratic(
-                    contour, i, max_err, max_n, report))
+                    contour, i, max_err, stats))
             else:
                 segments.append(segment)
         replace_segments(contour, segments)
 
 
-def segment_to_quadratic(contour, segment_id, max_err, max_n, report):
+def segment_to_quadratic(contour, segment_id, max_err, stats=None):
     """Return a quadratic approximation of a cubic segment."""
 
     segment = contour[segment_id]
@@ -96,8 +123,7 @@ def segment_to_quadratic(contour, segment_id, max_err, max_n, report):
     # same contour
     prev_segment = contour[segment_id - 1]
     points = points_to_quadratic(prev_segment.points[-1], segment.points[0],
-                                 segment.points[1], segment.points[2],
-                                 max_err, max_n)
+                                 segment.points[1], segment.points[2], max_err)
 
     if isinstance(points[0][0], float):  # just one spline
         n = str(len(points))
@@ -107,21 +133,22 @@ def segment_to_quadratic(contour, segment_id, max_err, max_n, report):
         n = str(len(points[0]))
         points = [p[1:] for p in points]
 
-    report[n] = report.get(n, 0) + 1
+    if stats is not None:
+        stats[n] = stats.get(n, 0) + 1
     return as_quadratic(segment, points)
 
 
-def points_to_quadratic(p0, p1, p2, p3, max_err, max_n):
+def points_to_quadratic(p0, p1, p2, p3, max_err):
     """Return a quadratic spline approximating the cubic bezier defined by these
     points (or collections of points).
     """
 
     if hasattr(p0, 'x'):
         curve = [(float(i.x), float(i.y)) for i in [p0, p1, p2, p3]]
-        return curve_to_quadratic(curve, max_err, max_n)[0]
+        return curve_to_quadratic(curve, max_err)[0]
 
     curves = [[(float(i.x), float(i.y)) for i in p] for p in zip(p0, p1, p2, p3)]
-    return curves_to_quadratic(curves, max_err, max_n)[0]
+    return curves_to_quadratic(curves, max_err)[0]
 
 
 def replace_segments(contour, segments):
