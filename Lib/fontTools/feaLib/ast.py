@@ -57,6 +57,17 @@ class GlyphClassName(Expression):
         return frozenset(self.glyphclass.glyphs)
 
 
+class MarkClassName(Expression):
+    """A mark class name, such as @FRENCH_MARKS defined with markClass."""
+    def __init__(self, location, markClassDef):
+        Expression.__init__(self, location)
+        assert isinstance(markClassDef, MarkClassDefinition)
+        self.markClassDef = markClassDef
+
+    def glyphSet(self):
+        return self.markClassDef.glyphSet()
+
+
 class Block(Statement):
     def __init__(self, location):
         Statement.__init__(self, location)
@@ -103,12 +114,18 @@ class GlyphClassDefinition(Statement):
         self.name = name
         self.glyphs = glyphs
 
+    def glyphSet(self):
+        return frozenset(self.glyphs)
+
 
 class MarkClassDefinition(object):
     def __init__(self, location, name):
         self.location, self.name = location, name
         self.anchors = {}  # glyph --> ast.Anchor
         self.glyphLocations = {}  # glyph --> (filepath, line, column)
+
+    def glyphSet(self):
+        return frozenset(self.anchors.keys())
 
 
 class AlternateSubstStatement(Statement):
@@ -222,10 +239,10 @@ class LookupFlagStatement(Statement):
     def build(self, builder):
         markAttach = None
         if self.markAttachment is not None:
-            markAttach = frozenset(self.markAttachment.glyphclass.glyphs)
+            markAttach = self.markAttachment.glyphSet()
         markFilter = None
         if self.markFilteringSet is not None:
-            markFilter = frozenset(self.markFilteringSet.glyphclass.glyphs)
+            markFilter = self.markFilteringSet.glyphSet()
         builder.set_lookup_flag(self.location, self.value,
                                 markAttach, markFilter)
 

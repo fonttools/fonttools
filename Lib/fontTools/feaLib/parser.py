@@ -165,7 +165,7 @@ class Parser(object):
                     raise FeatureLibError(
                         "Unknown glyph class @%s" % self.cur_token_,
                         self.cur_token_location_)
-                glyphs.update(gc.glyphs)
+                glyphs.update(gc.glyphSet())
             else:
                 raise FeatureLibError(
                     "Expected glyph name, glyph range, "
@@ -174,14 +174,17 @@ class Parser(object):
         self.expect_symbol_("]")
         return ast.GlyphClass(location, glyphs)
 
-    def parse_glyphclass_name_(self):
+    def parse_class_name_(self):
         name = self.expect_class_name_()
         gc = self.glyphclasses_.resolve(name)
         if gc is None:
             raise FeatureLibError(
                 "Unknown glyph class @%s" % name,
                 self.cur_token_location_)
-        return ast.GlyphClassName(self.cur_token_location_, gc)
+        if isinstance(gc, ast.MarkClassDefinition):
+            return ast.MarkClassName(self.cur_token_location_, gc)
+        else:
+            return ast.GlyphClassName(self.cur_token_location_, gc)
 
     def parse_glyph_pattern_(self):
         prefix, glyphs, lookups, suffix = ([], [], [], [])
@@ -293,10 +296,10 @@ class Parser(object):
             seen.add(self.next_token_)
             if self.next_token_ == "MarkAttachmentType":
                 self.expect_keyword_("MarkAttachmentType")
-                markAttachment = self.parse_glyphclass_name_()
+                markAttachment = self.parse_class_name_()
             elif self.next_token_ == "UseMarkFilteringSet":
                 self.expect_keyword_("UseMarkFilteringSet")
-                markFilteringSet = self.parse_glyphclass_name_()
+                markFilteringSet = self.parse_class_name_()
             elif self.next_token_ in flags:
                 value = value | flags[self.expect_name_()]
             else:
@@ -321,10 +324,8 @@ class Parser(object):
         for glyph in glyphs:
             markClass.anchors[glyph] = anchor
             markClass.glyphLocations[glyph] = location
-        glyphs = markClass.anchors.keys()  # redefinition expands glyphs
-        glyphclass = ast.GlyphClassDefinition(location, name, glyphs)
-        self.glyphclasses_.define(name, glyphclass)
-        return glyphclass
+        self.glyphclasses_.define(name, markClass)
+        return markClass
 
     def is_next_glyphclass_(self):
         return (self.next_token_ == "[" or
