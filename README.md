@@ -1,4 +1,5 @@
-[![Build Status](https://travis-ci.org/behdad/fonttools.svg)](https://travis-ci.org/behdad/fonttools)
+[![Travis Build Status](https://travis-ci.org/behdad/fonttools.svg)](https://travis-ci.org/behdad/fonttools)
+[![Appveyor Build Status](https://ci.appveyor.com/api/projects/status/jsn1y6am00a5axl2/branch/master?svg=true)](https://ci.appveyor.com/project/anthrotype/fonttools-qis1l/branch/master)
 [![Health](https://landscape.io/github/behdad/fonttools/master/landscape.svg?style=flat)](https://landscape.io/github/behdad/fonttools/master)
 [![Coverage Status](https://img.shields.io/coveralls/behdad/fonttools.svg)](https://coveralls.io/r/behdad/fonttools)
 
