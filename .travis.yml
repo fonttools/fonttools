@@ -34,7 +34,7 @@ install:
   - ./.travis/install.sh
 
 script:
-  - tox
+  - ./.travis/run.sh
 
 notifications:
   irc: "irc.freenode.org##fonts"
