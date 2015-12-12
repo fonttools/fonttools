@@ -74,3 +74,11 @@ after_test:
 artifacts:
   # archive the generated packages in the ci.appveyor.com build report
   - path: dist\*
+
+notifications:
+  - provider: Email
+    to:
+      - fonttools@googlegroups.com
+    on_build_success: false
+    on_build_failure: true
+    on_build_status_changed: true
