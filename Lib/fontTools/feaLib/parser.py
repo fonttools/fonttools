@@ -36,7 +36,7 @@ class Parser(object):
             elif self.is_cur_keyword_("lookup"):
                 statements.append(self.parse_lookup_(vertical=False))
             elif self.is_cur_keyword_("markClass"):
-                self.parse_markClass_()
+                statements.append(self.parse_markClass_())
             elif self.is_cur_keyword_("feature"):
                 statements.append(self.parse_feature_block_())
             elif self.is_cur_keyword_("valueRecordDef"):
@@ -181,7 +181,7 @@ class Parser(object):
             raise FeatureLibError(
                 "Unknown glyph class @%s" % name,
                 self.cur_token_location_)
-        if isinstance(gc, ast.MarkClassDefinition):
+        if isinstance(gc, ast.MarkClass):
             return ast.MarkClassName(self.cur_token_location_, gc)
         else:
             return ast.GlyphClassName(self.cur_token_location_, gc)
@@ -313,19 +313,18 @@ class Parser(object):
     def parse_markClass_(self):
         assert self.is_cur_keyword_("markClass")
         location = self.cur_token_location_
-        glyphs = self.parse_glyphclass_(accept_glyphname=True).glyphSet()
+        glyphs = self.parse_glyphclass_(accept_glyphname=True)
         anchor = self.parse_anchor_()
         name = self.expect_class_name_()
         self.expect_symbol_(";")
         markClass = self.doc_.markClasses.get(name)
         if markClass is None:
-            markClass = ast.MarkClassDefinition(location, name)
+            markClass = ast.MarkClass(name)
             self.doc_.markClasses[name] = markClass
-        for glyph in glyphs:
-            markClass.anchors[glyph] = anchor
-            markClass.glyphLocations[glyph] = location
-        self.glyphclasses_.define(name, markClass)
-        return markClass
+            self.glyphclasses_.define(name, markClass)
+        mcdef = ast.MarkClassDefinition(location, markClass, anchor, glyphs)
+        markClass.addDefinition(mcdef)
+        return mcdef
 
     def is_next_glyphclass_(self):
         return (self.next_token_ == "[" or
@@ -680,7 +679,7 @@ class Parser(object):
             elif self.is_cur_keyword_("lookupflag"):
                 statements.append(self.parse_lookupflag_())
             elif self.is_cur_keyword_("markClass"):
-                self.parse_markClass_()
+                statements.append(self.parse_markClass_())
             elif self.is_cur_keyword_({"pos", "position"}):
                 statements.append(
                     self.parse_position_(enumerated=False, vertical=vertical))
@@ -724,11 +723,14 @@ class Parser(object):
 
     def expect_markClass_reference_(self):
         name = self.expect_class_name_()
-        markClass = self.doc_.markClasses.get(name)
-        if markClass is None:
+        mc = self.glyphclasses_.resolve(name)
+        if mc is None:
             raise FeatureLibError("Unknown markClass @%s" % name,
                                   self.cur_token_location_)
-        return markClass
+        if not isinstance(mc, ast.MarkClass):
+            raise FeatureLibError("@%s is not a markClass" % name,
+                                  self.cur_token_location_)
+        return mc
 
     def expect_tag_(self):
         self.advance_lexer_()

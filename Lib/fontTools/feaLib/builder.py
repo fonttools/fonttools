@@ -86,17 +86,19 @@ class Builder(object):
         for lookup in self.lookups_:
             inferredGlyphClass.update(lookup.inferGlyphClasses())
 
-        glyphMarkClass = {}  # glyph --> markClassName
+        marks = {}  # glyph --> markClass
         for markClass in self.parseTree.markClasses.values():
-            for glyph in markClass.anchors.keys():
-                if glyph in glyphMarkClass:
-                    other = glyphMarkClass[glyph]
-                    name1, name2 = sorted([markClass.name, other.name])
-                    raise FeatureLibError(
-                        'glyph %s cannot be both in markClass @%s and @%s' %
-                        (glyph, name1, name2), markClass.location)
-                glyphMarkClass[glyph] = markClass
-                inferredGlyphClass[glyph] = 3
+            for markClassDef in markClass.definitions:
+                for glyph in markClassDef.glyphSet():
+                    other = marks.get(glyph)
+                    if other not in (None, markClass):
+                        name1, name2 = sorted([markClass.name, other.name])
+                        raise FeatureLibError(
+                            'Glyph %s cannot be both in '
+                            'markClass @%s and @%s' %
+                            (glyph, name1, name2), markClassDef.location)
+                    marks[glyph] = markClass
+                    inferredGlyphClass[glyph] = 3
 
         gdef.GlyphClassDef.classDefs = inferredGlyphClass
         gdef.AttachList = None
@@ -428,11 +430,13 @@ class Builder(object):
     def add_marks_(self, location, lookupBuilder, marks):
         """Helper for add_mark_{base,liga,mark}_pos."""
         for _, markClass in marks:
-            for mark, markAnchor in markClass.anchors.items():
-                if mark not in lookupBuilder.marks:
-                    otMarkAnchor = makeOpenTypeAnchor(markAnchor,
-                                                      otTables.MarkAnchor)
-                    lookupBuilder.marks[mark] = (markClass.name, otMarkAnchor)
+            for markClassDef in markClass.definitions:
+                for mark in markClassDef.glyphs.glyphSet():
+                    if mark not in lookupBuilder.marks:
+                        otMarkAnchor = makeOpenTypeAnchor(markClassDef.anchor,
+                                                          otTables.MarkAnchor)
+                        lookupBuilder.marks[mark] = (
+                            markClass.name, otMarkAnchor)
 
     def add_mark_base_pos(self, location, bases, marks):
         builder = self.get_lookup_(location, MarkBasePosBuilder)

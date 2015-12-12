@@ -204,7 +204,7 @@ class BuilderTest(unittest.TestCase):
     def test_markClass_redefine(self):
         self.assertRaisesRegex(
             FeatureLibError,
-            "glyph C cannot be both in markClass @MARK1 and @MARK2",
+            "Glyph C cannot be both in markClass @MARK1 and @MARK2",
             self.build,
             "markClass [A B C] <anchor 100 50> @MARK1;"
             "markClass [C D E] <anchor 200 80> @MARK2;")

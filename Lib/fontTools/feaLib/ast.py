@@ -1,5 +1,6 @@
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
+from fontTools.feaLib.error import FeatureLibError
 import itertools
 
 
@@ -59,13 +60,13 @@ class GlyphClassName(Expression):
 
 class MarkClassName(Expression):
     """A mark class name, such as @FRENCH_MARKS defined with markClass."""
-    def __init__(self, location, markClassDef):
+    def __init__(self, location, markClass):
         Expression.__init__(self, location)
-        assert isinstance(markClassDef, MarkClassDefinition)
-        self.markClassDef = markClassDef
+        assert isinstance(markClass, MarkClass)
+        self.markClass = markClass
 
     def glyphSet(self):
-        return self.markClassDef.glyphSet()
+        return self.markClass.glyphSet()
 
 
 class Block(Statement):
@@ -81,7 +82,7 @@ class Block(Statement):
 class FeatureFile(Block):
     def __init__(self):
         Block.__init__(self, location=None)
-        self.markClasses = {}  # name --> ast.MarkClassDefinition
+        self.markClasses = {}  # name --> ast.MarkClass
 
 
 class FeatureBlock(Block):
@@ -118,14 +119,43 @@ class GlyphClassDefinition(Statement):
         return frozenset(self.glyphs)
 
 
-class MarkClassDefinition(object):
-    def __init__(self, location, name):
-        self.location, self.name = location, name
-        self.anchors = {}  # glyph --> ast.Anchor
-        self.glyphLocations = {}  # glyph --> (filepath, line, column)
+# While glyph classes can be defined only once, the feature file format
+# allows expanding mark classes with multiple definitions, each using
+# different glyphs and anchors. The following are two MarkClassDefinitions
+# for the same MarkClass:
+#     markClass [acute grave] <anchor 350 800> @FRENCH_ACCENTS;
+#     markClass [cedilla] <anchor 350 -200> @FRENCH_ACCENTS;
+class MarkClass(object):
+    def __init__(self, name):
+        self.name = name
+        self.definitions = []
+        self.glyphs = {}  # glyph --> ast.MarkClassDefinitions
+
+    def addDefinition(self, definition):
+        assert isinstance(definition, MarkClassDefinition)
+        self.definitions.append(definition)
+        for glyph in definition.glyphSet():
+            if glyph in self.definitions:
+                otherLoc = self.definitions[glyph].location
+                assert FeatureLibError(
+                    "Glyph %s already defined at %s:%d:%d" % (
+                        glyph, otherLoc[0], otherLoc[1], otherLoc[2]),
+                    definition.location)
+            self.glyphs[glyph] = definition
 
     def glyphSet(self):
-        return frozenset(self.anchors.keys())
+        return frozenset(self.glyphs.keys())
+
+
+class MarkClassDefinition(Statement):
+    def __init__(self, location, markClass, anchor, glyphs):
+        Statement.__init__(self, location)
+        assert isinstance(markClass, MarkClass)
+        assert isinstance(anchor, Anchor) and isinstance(glyphs, Expression)
+        self.markClass, self.anchor, self.glyphs = markClass, anchor, glyphs
+
+    def glyphSet(self):
+        return self.glyphs.glyphSet()
 
 
 class AlternateSubstStatement(Statement):

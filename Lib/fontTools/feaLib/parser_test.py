@@ -148,7 +148,7 @@ class ParserTest(unittest.TestCase):
             "markClass cedilla <anchor 500 -100> @BOTTOM_MARKS;"
             "@MARKS = [@TOP_MARKS @BOTTOM_MARKS ogonek];"
             "@ALL = @MARKS;")
-        self.assertEqual(doc.statements[-1].glyphs,
+        self.assertEqual(doc.statements[-1].glyphSet(),
                          {"acute", "cedilla", "grave", "ogonek"})
 
     def test_glyphclass_range_uppercase(self):
@@ -531,6 +531,14 @@ class ParserTest(unittest.TestCase):
             "    enumerate position base A <anchor 12 -2> mark @BOTTOM_MARKS;"
             "} kern;")
 
+    def test_gpos_type_4_not_markClass(self):
+        self.assertRaisesRegex(
+            FeatureLibError, "@MARKS is not a markClass", self.parse,
+            "@MARKS = [acute grave];"
+            "feature test {"
+            "    position base [a e o u] <anchor 250 450> mark @MARKS;"
+            "} test;")
+
     def test_gpos_type_5(self):
         doc = self.parse(
             "markClass [grave acute] <anchor 150 500> @TOP_MARKS;"
@@ -569,6 +577,14 @@ class ParserTest(unittest.TestCase):
             "        ligComponent <anchor NULL>;"
             "} test;")
 
+    def test_gpos_type_5_not_markClass(self):
+        self.assertRaisesRegex(
+            FeatureLibError, "@MARKS is not a markClass", self.parse,
+            "@MARKS = [acute grave];"
+            "feature test {"
+            "    position ligature f_i <anchor 250 450> mark @MARKS;"
+            "} test;")
+
     def test_gpos_type_6(self):
         doc = self.parse(
             "markClass damma <anchor 189 -103> @MARK_CLASS_1;"
@@ -592,6 +608,14 @@ class ParserTest(unittest.TestCase):
             "    enum pos mark hamza <anchor 221 301> mark @MARK_CLASS_1;"
             "} test;")
 
+    def test_gpos_type_6_not_markClass(self):
+        self.assertRaisesRegex(
+            FeatureLibError, "@MARKS is not a markClass", self.parse,
+            "@MARKS = [acute grave];"
+            "feature test {"
+            "    position mark cedilla <anchor 250 450> mark @MARKS;"
+            "} test;")
+
     def test_gpos_type_8(self):
         doc = self.parse(
             "lookup L1 {pos one 100;} L1; lookup L2 {pos two 200;} L2;"
@@ -607,19 +631,12 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(pos.lookups, [lookup1, lookup2, None])
 
     def test_markClass(self):
-        doc = self.parse("markClass [acute grave] <anchor 350 3> @MARKS;"
-                         "feature test {"
-                         "    markClass cedilla <anchor 400 -4> @MARKS;"
-                         "} test;")
-        markClass = doc.markClasses["MARKS"]
-        self.assertEqual(set(markClass.anchors.keys()),
-                         {"acute", "cedilla", "grave"})
-        acuteAnchor = markClass.anchors["acute"]
-        cedillaAnchor = markClass.anchors["cedilla"]
-        graveAnchor = markClass.anchors["grave"]
-        self.assertEqual((acuteAnchor.x, acuteAnchor.y), (350, 3))
-        self.assertEqual((cedillaAnchor.x, cedillaAnchor.y), (400, -4))
-        self.assertEqual((graveAnchor.x, graveAnchor.y), (350, 3))
+        doc = self.parse("markClass [acute grave] <anchor 350 3> @MARKS;")
+        mc = doc.statements[0]
+        self.assertIsInstance(mc, ast.MarkClassDefinition)
+        self.assertEqual(mc.markClass.name, "MARKS")
+        self.assertEqual(mc.glyphSet(), {"acute", "grave"})
+        self.assertEqual((mc.anchor.x, mc.anchor.y), (350, 3))
 
     def test_rsub_format_a(self):
         doc = self.parse("feature test {rsub a [b B] c' d [e E] by C;} test;")
