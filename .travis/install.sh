@@ -5,7 +5,7 @@ set -x
 
 if [[ "$(uname -s)" == 'Darwin' ]]; then
     brew update || brew update
-    brew install pyenv
+    (brew list | grep -q 'pyenv') || brew install pyenv
     brew outdated pyenv || brew upgrade pyenv
 
     if which -s pyenv; then
