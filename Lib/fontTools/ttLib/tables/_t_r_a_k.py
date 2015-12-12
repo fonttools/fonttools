@@ -1,4 +1,4 @@
-from __future__ import print_function, division, absolute_import, unicode_literals
+from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from fontTools.misc.fixedTools import fixedToFloat as fi2fl, floatToFixed as fl2fi
