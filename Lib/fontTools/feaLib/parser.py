@@ -190,7 +190,7 @@ class Parser(object):
         prefix, glyphs, lookups, suffix = ([], [], [], [])
         while (self.next_token_ not in {"by", "from", ";", "<"} and
                self.next_token_type_ != Lexer.NUMBER):
-            gc = self.parse_glyphclass_(accept_glyphname=True).glyphSet()
+            gc = self.parse_glyphclass_(accept_glyphname=True)
             marked = False
             if self.next_token_ == "'":
                 self.expect_symbol_("'")
@@ -358,7 +358,7 @@ class Parser(object):
         value1 = self.parse_valuerecord_(vertical)
         if self.next_token_ != ";" and gc2 is None:
             # Pair positioning, format A: 'pos' gc1 value1 gc2 value2
-            gc2 = self.parse_glyphclass_(accept_glyphname=True).glyphSet()
+            gc2 = self.parse_glyphclass_(accept_glyphname=True)
             value2 = self.parse_valuerecord_(vertical)
         self.expect_symbol_(";")
 
@@ -465,7 +465,7 @@ class Parser(object):
                 raise FeatureLibError(
                     'Reverse chaining substitutions do not support "from"',
                     location)
-            if len(old) != 1 or len(old[0]) != 1:
+            if len(old) != 1 or len(old[0].glyphSet()) != 1:
                 raise FeatureLibError(
                     'Expected a single glyph before "from"',
                     location)
@@ -474,7 +474,8 @@ class Parser(object):
                     'Expected a single glyphclass after "from"',
                     location)
             return ast.AlternateSubstStatement(location,
-                                               list(old[0])[0], new[0])
+                                               list(old[0].glyphSet())[0],
+                                               new[0])
 
         num_lookups = len([l for l in lookups if l is not None])
 
@@ -484,7 +485,8 @@ class Parser(object):
         # Format C: "substitute [a-d] by [A.sc-D.sc];"
         if (not reverse and len(old_prefix) == 0 and len(old_suffix) == 0 and
                 len(old) == 1 and len(new) == 1 and num_lookups == 0):
-            glyphs, replacements = sorted(list(old[0])), sorted(list(new[0]))
+            glyphs = sorted(list(old[0].glyphSet()))
+            replacements = sorted(list(new[0]))
             if len(replacements) == 1:
                 replacements = replacements * len(glyphs)
             if len(glyphs) != len(replacements):
@@ -498,10 +500,11 @@ class Parser(object):
         # GSUB lookup type 2: Multiple substitution.
         # Format: "substitute f_f_i by f f i;"
         if (not reverse and len(old_prefix) == 0 and len(old_suffix) == 0 and
-                len(old) == 1 and len(old[0]) == 1 and
+                len(old) == 1 and len(old[0].glyphSet()) == 1 and
                 len(new) > 1 and max([len(n) for n in new]) == 1 and
                 num_lookups == 0):
-            return ast.MultipleSubstStatement(location, tuple(old[0])[0],
+            return ast.MultipleSubstStatement(location,
+                                              tuple(old[0].glyphSet())[0],
                                               tuple([list(n)[0] for n in new]))
 
         # GSUB lookup type 4: Ligature substitution.
@@ -527,7 +530,8 @@ class Parser(object):
                 raise FeatureLibError(
                     "Reverse chaining substitutions cannot call named lookups",
                     location)
-            glyphs, replacements = sorted(list(old[0])), sorted(list(new[0]))
+            glyphs = sorted(list(old[0].glyphSet()))
+            replacements = sorted(list(new[0]))
             if len(replacements) == 1:
                 replacements = replacements * len(glyphs)
             if len(glyphs) != len(replacements):

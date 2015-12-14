@@ -188,20 +188,25 @@ class ChainContextPosStatement(Statement):
         self.lookups = lookups
 
     def build(self, builder):
+        prefix = [p.glyphSet() for p in self.prefix]
+        glyphs = [g.glyphSet() for g in self.glyphs]
+        suffix = [s.glyphSet() for s in self.suffix]
         builder.add_chain_context_pos(
-            self.location, self.prefix, self.glyphs, self.suffix, self.lookups)
+            self.location, prefix, glyphs, suffix, self.lookups)
 
 
 class ChainContextSubstStatement(Statement):
-    def __init__(self, location, old_prefix, old, old_suffix, lookups):
+    def __init__(self, location, prefix, glyphs, suffix, lookups):
         Statement.__init__(self, location)
-        self.old, self.lookups = old, lookups
-        self.old_prefix, self.old_suffix = old_prefix, old_suffix
+        self.glyphs, self.lookups = glyphs, lookups
+        self.prefix, self.suffix = prefix, suffix
 
     def build(self, builder):
+        prefix = [p.glyphSet() for p in self.prefix]
+        glyphs = [g.glyphSet() for g in self.glyphs]
+        suffix = [s.glyphSet() for s in self.suffix]
         builder.add_chain_context_subst(
-            self.location, self.old_prefix, self.old, self.old_suffix,
-            self.lookups)
+            self.location, prefix, glyphs, suffix, self.lookups)
 
 
 class CursivePosStatement(Statement):
@@ -255,7 +260,8 @@ class LigatureSubstStatement(Statement):
         # substitutions to be specified on target sequences that contain
         # glyph classes, the implementation software will enumerate
         # all specific glyph sequences if glyph classes are detected"
-        for glyphs in sorted(itertools.product(*self.glyphs)):
+        g = [g.glyphSet() for g in self.glyphs]
+        for glyphs in sorted(itertools.product(*g)):
             builder.add_ligature_subst(self.location, glyphs, self.replacement)
 
 
@@ -326,16 +332,16 @@ class MultipleSubstStatement(Statement):
 
 class PairPosStatement(Statement):
     def __init__(self, location, enumerated,
-                 glyphclass1, valuerecord1, glyphclass2, valuerecord2):
+                 glyphs1, valuerecord1, glyphs2, valuerecord2):
         Statement.__init__(self, location)
         self.enumerated = enumerated
-        self.glyphclass1, self.valuerecord1 = glyphclass1, valuerecord1
-        self.glyphclass2, self.valuerecord2 = glyphclass2, valuerecord2
+        self.glyphs1, self.valuerecord1 = glyphs1, valuerecord1
+        self.glyphs2, self.valuerecord2 = glyphs2, valuerecord2
 
     def build(self, builder):
         builder.add_pair_pos(self.location, self.enumerated,
-                             self.glyphclass1, self.valuerecord1,
-                             self.glyphclass2, self.valuerecord2)
+                             self.glyphs1.glyphSet(), self.valuerecord1,
+                             self.glyphs2.glyphSet(), self.valuerecord2)
 
 
 class ReverseChainSingleSubstStatement(Statement):
@@ -345,8 +351,10 @@ class ReverseChainSingleSubstStatement(Statement):
         self.mapping = mapping
 
     def build(self, builder):
+        prefix = [p.glyphSet() for p in self.old_prefix]
+        suffix = [s.glyphSet() for s in self.old_suffix]
         builder.add_reverse_chain_single_subst(
-            self.location, self.old_prefix, self.old_suffix, self.mapping)
+            self.location, prefix, suffix, self.mapping)
 
 
 class SingleSubstStatement(Statement):
@@ -368,12 +376,12 @@ class ScriptStatement(Statement):
 
 
 class SinglePosStatement(Statement):
-    def __init__(self, location, glyphclass, valuerecord):
+    def __init__(self, location, glyphs, valuerecord):
         Statement.__init__(self, location)
-        self.glyphclass, self.valuerecord = glyphclass, valuerecord
+        self.glyphs, self.valuerecord = glyphs, valuerecord
 
     def build(self, builder):
-        for glyph in self.glyphclass:
+        for glyph in self.glyphs.glyphSet():
             builder.add_single_pos(self.location, glyph, self.valuerecord)
 
 

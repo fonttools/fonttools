@@ -12,6 +12,15 @@ import tempfile
 import unittest
 
 
+def glyphstr(glyphs):
+    def f(x):
+        if len(x) == 1:
+            return list(x)[0]
+        else:
+            return '[%s]' % ' '.join(sorted(list(x)))
+    return ' '.join([f(g.glyphSet()) for g in glyphs])
+
+
 class ParserTest(unittest.TestCase):
     def __init__(self, methodName):
         unittest.TestCase.__init__(self, methodName)
@@ -219,9 +228,9 @@ class ParserTest(unittest.TestCase):
         doc = self.parse("feature test {ignore sub e t' c;} test;")
         s = doc.statements[0].statements[0]
         self.assertEqual(type(s), ast.IgnoreSubstitutionRule)
-        self.assertEqual(s.prefix, [{"e"}])
-        self.assertEqual(s.glyphs, [{"t"}])
-        self.assertEqual(s.suffix, [{"c"}])
+        self.assertEqual(glyphstr(s.prefix), "e")
+        self.assertEqual(glyphstr(s.glyphs), "t")
+        self.assertEqual(glyphstr(s.suffix), "c")
 
     def test_ignore_substitute(self):
         doc = self.parse(
@@ -230,9 +239,9 @@ class ParserTest(unittest.TestCase):
             "} test;")
         s = doc.statements[0].statements[0]
         self.assertEqual(type(s), ast.IgnoreSubstitutionRule)
-        self.assertEqual(s.prefix, [{"f"}, {"a", "e"}])
-        self.assertEqual(s.glyphs, [{"d"}, {"a", "u"}])
-        self.assertEqual(s.suffix, [{"e", "y"}])
+        self.assertEqual(glyphstr(s.prefix), "f [a e]")
+        self.assertEqual(glyphstr(s.glyphs), "d [a u]")
+        self.assertEqual(glyphstr(s.suffix), "[e y]")
 
     def test_language(self):
         doc = self.parse("feature test {language DEU;} test;")
@@ -390,23 +399,23 @@ class ParserTest(unittest.TestCase):
     def test_gpos_type_1_glyph(self):
         doc = self.parse("feature kern {pos one <1 2 3 4>;} kern;")
         pos = doc.statements[0].statements[0]
-        self.assertEqual(type(pos), ast.SinglePosStatement)
-        self.assertEqual(pos.glyphclass, {"one"})
+        self.assertIsInstance(pos, ast.SinglePosStatement)
+        self.assertEqual(glyphstr([pos.glyphs]), "one")
         self.assertEqual(pos.valuerecord.makeString(vertical=False),
                          "<1 2 3 4>")
 
     def test_gpos_type_1_glyphclass_horizontal(self):
         doc = self.parse("feature kern {pos [one two] -300;} kern;")
         pos = doc.statements[0].statements[0]
-        self.assertEqual(type(pos), ast.SinglePosStatement)
-        self.assertEqual(pos.glyphclass, {"one", "two"})
+        self.assertIsInstance(pos, ast.SinglePosStatement)
+        self.assertEqual(glyphstr([pos.glyphs]), "[one two]")
         self.assertEqual(pos.valuerecord.makeString(vertical=False), "-300")
 
     def test_gpos_type_1_glyphclass_vertical(self):
         doc = self.parse("feature vkrn {pos [one two] -300;} vkrn;")
         pos = doc.statements[0].statements[0]
-        self.assertEqual(type(pos), ast.SinglePosStatement)
-        self.assertEqual(pos.glyphclass, {"one", "two"})
+        self.assertIsInstance(pos, ast.SinglePosStatement)
+        self.assertEqual(glyphstr([pos.glyphs]), "[one two]")
         self.assertEqual(pos.valuerecord.makeString(vertical=True), "-300")
 
     def test_gpos_type_1_enumerated(self):
@@ -426,9 +435,9 @@ class ParserTest(unittest.TestCase):
         pos = doc.statements[0].statements[0]
         self.assertEqual(type(pos), ast.PairPosStatement)
         self.assertFalse(pos.enumerated)
-        self.assertEqual(pos.glyphclass1, {"T", "V"})
+        self.assertEqual(glyphstr([pos.glyphs1]), "[T V]")
         self.assertEqual(pos.valuerecord1.makeString(vertical=False), "-60")
-        self.assertEqual(pos.glyphclass2, {"a", "b", "c"})
+        self.assertEqual(glyphstr([pos.glyphs2]), "[a b c]")
         self.assertEqual(pos.valuerecord2.makeString(vertical=False),
                          "<1 2 3 4>")
 
@@ -439,9 +448,9 @@ class ParserTest(unittest.TestCase):
         pos = doc.statements[0].statements[0]
         self.assertEqual(type(pos), ast.PairPosStatement)
         self.assertTrue(pos.enumerated)
-        self.assertEqual(pos.glyphclass1, {"T", "V"})
+        self.assertEqual(glyphstr([pos.glyphs1]), "[T V]")
         self.assertEqual(pos.valuerecord1.makeString(vertical=False), "-60")
-        self.assertEqual(pos.glyphclass2, {"a", "b", "c"})
+        self.assertEqual(glyphstr([pos.glyphs2]), "[a b c]")
         self.assertEqual(pos.valuerecord2.makeString(vertical=False),
                          "<1 2 3 4>")
 
@@ -452,10 +461,10 @@ class ParserTest(unittest.TestCase):
         pos = doc.statements[0].statements[0]
         self.assertEqual(type(pos), ast.PairPosStatement)
         self.assertFalse(pos.enumerated)
-        self.assertEqual(pos.glyphclass1, {"T", "V"})
+        self.assertEqual(glyphstr([pos.glyphs1]), "[T V]")
         self.assertEqual(pos.valuerecord1.makeString(vertical=False),
                          "<1 2 3 4>")
-        self.assertEqual(pos.glyphclass2, {"a", "b", "c"})
+        self.assertEqual(glyphstr([pos.glyphs2]), "[a b c]")
         self.assertIsNone(pos.valuerecord2)
 
     def test_gpos_type_2_format_b(self):
@@ -465,10 +474,10 @@ class ParserTest(unittest.TestCase):
         pos = doc.statements[0].statements[0]
         self.assertEqual(type(pos), ast.PairPosStatement)
         self.assertFalse(pos.enumerated)
-        self.assertEqual(pos.glyphclass1, {"T", "V"})
+        self.assertEqual(glyphstr([pos.glyphs1]), "[T V]")
         self.assertEqual(pos.valuerecord1.makeString(vertical=False),
                          "<1 2 3 4>")
-        self.assertEqual(pos.glyphclass2, {"a", "b", "c"})
+        self.assertEqual(glyphstr([pos.glyphs2]), "[a b c]")
         self.assertIsNone(pos.valuerecord2)
 
     def test_gpos_type_2_format_b_enumerated(self):
@@ -478,10 +487,10 @@ class ParserTest(unittest.TestCase):
         pos = doc.statements[0].statements[0]
         self.assertEqual(type(pos), ast.PairPosStatement)
         self.assertTrue(pos.enumerated)
-        self.assertEqual(pos.glyphclass1, {"T", "V"})
+        self.assertEqual(glyphstr([pos.glyphs1]), "[T V]")
         self.assertEqual(pos.valuerecord1.makeString(vertical=False),
                          "<1 2 3 4>")
-        self.assertEqual(pos.glyphclass2, {"a", "b", "c"})
+        self.assertEqual(glyphstr([pos.glyphs2]), "[a b c]")
         self.assertIsNone(pos.valuerecord2)
 
     def test_gpos_type_3(self):
@@ -625,9 +634,9 @@ class ParserTest(unittest.TestCase):
         lookup1, lookup2 = doc.statements[0:2]
         pos = doc.statements[-1].statements[0]
         self.assertEqual(type(pos), ast.ChainContextPosStatement)
-        self.assertEqual(pos.prefix, [{"A", "a"}, {"B", "b"}])
-        self.assertEqual(pos.glyphs, [{"I"}, {"N", "n"}, {"P"}])
-        self.assertEqual(pos.suffix, [{"Y", "y"}, {"Z", "z"}])
+        self.assertEqual(glyphstr(pos.prefix), "[A a] [B b]")
+        self.assertEqual(glyphstr(pos.glyphs), "I [N n] P")
+        self.assertEqual(glyphstr(pos.suffix), "[Y y] [Z z]")
         self.assertEqual(pos.lookups, [lookup1, lookup2, None])
 
     def test_markClass(self):
@@ -642,9 +651,9 @@ class ParserTest(unittest.TestCase):
         doc = self.parse("feature test {rsub a [b B] c' d [e E] by C;} test;")
         rsub = doc.statements[0].statements[0]
         self.assertEqual(type(rsub), ast.ReverseChainSingleSubstStatement)
-        self.assertEqual(rsub.old_prefix, [{"a"}, {"b", "B"}])
+        self.assertEqual(glyphstr(rsub.old_prefix), "a [B b]")
         self.assertEqual(rsub.mapping, {"c": "C"})
-        self.assertEqual(rsub.old_suffix, [{"d"}, {"e", "E"}])
+        self.assertEqual(glyphstr(rsub.old_suffix), "d [E e]")
 
     def test_rsub_format_b(self):
         doc = self.parse(
@@ -653,8 +662,8 @@ class ParserTest(unittest.TestCase):
             "} smcp;")
         rsub = doc.statements[0].statements[0]
         self.assertEqual(type(rsub), ast.ReverseChainSingleSubstStatement)
-        self.assertEqual(rsub.old_prefix, [{"A"}, {"B"}])
-        self.assertEqual(rsub.old_suffix, [{"C"}, {"d", "D"}])
+        self.assertEqual(glyphstr(rsub.old_prefix), "A B")
+        self.assertEqual(glyphstr(rsub.old_suffix), "C [D d]")
         self.assertEqual(rsub.mapping, {
             "one.fitted": "one",
             "one.oldstyle": "one"
@@ -667,8 +676,8 @@ class ParserTest(unittest.TestCase):
             "} test;")
         rsub = doc.statements[0].statements[0]
         self.assertEqual(type(rsub), ast.ReverseChainSingleSubstStatement)
-        self.assertEqual(rsub.old_prefix, [{"BACK"}, {"TRACK"}])
-        self.assertEqual(rsub.old_suffix, [{"LOOK"}, {"AHEAD"}])
+        self.assertEqual(glyphstr(rsub.old_prefix), "BACK TRACK")
+        self.assertEqual(glyphstr(rsub.old_suffix), "LOOK AHEAD")
         self.assertEqual(rsub.mapping, {
             "a": "A.sc",
             "b": "B.sc",
@@ -777,7 +786,7 @@ class ParserTest(unittest.TestCase):
         doc = self.parse("feature liga {substitute f f i by f_f_i;} liga;")
         sub = doc.statements[0].statements[0]
         self.assertEqual(type(sub), ast.LigatureSubstStatement)
-        self.assertEqual(sub.glyphs, [{"f"}, {"f"}, {"i"}])
+        self.assertEqual(glyphstr(sub.glyphs), "f f i")
         self.assertEqual(sub.replacement, "f_f_i")
 
     def test_substitute_lookups(self):
