@@ -970,8 +970,8 @@ class Tokenizer(object):
 			self.filename = f.name
 		except:
 			self.filename = None
-		self._lines = lines
-		self._lineno = 0
+		self.lines = lines
+		self.lineno = 0
 		self.stoppers = []
 		self.buffer = None
 
@@ -979,8 +979,8 @@ class Tokenizer(object):
 		return self
 
 	def _next_line(self):
-		self._lineno += 1
-		return next(self._lines)
+		self.lineno += 1
+		return next(self.lines)
 
 	def _next_nonempty(self):
 		while True:
