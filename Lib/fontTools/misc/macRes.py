@@ -53,10 +53,16 @@ class ResourceReader(MutableMapping):
 
 	def _read(self, numBytes, offset=None):
 		if offset is not None:
-			self.file.seek(offset)
+			try:
+				self.file.seek(offset)
+			except OverflowError:
+				raise ResourceError("Failed to seek offset ('offset' is too large)")
 			if self.file.tell() != offset:
 				raise ResourceError('Failed to seek offset (reached EOF)')
-		data = self.file.read(numBytes)
+		try:
+			data = self.file.read(numBytes)
+		except OverflowError:
+			raise ResourceError("Cannot read resource ('numBytes' is too large)")
 		if len(data) != numBytes:
 			raise ResourceError('Cannot read resource (not enough data)')
 		return data
