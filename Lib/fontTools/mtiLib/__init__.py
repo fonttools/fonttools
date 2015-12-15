@@ -805,7 +805,7 @@ def parseLookup(lines, tableTag, font, lookupMap=None):
 	return lookup
 
 def parseGSUBGPOS(lines, font, tableTag):
-	lookupMap = {}
+	lookupMap = None#{} Until we support forward references...
 	featureMap = {}
 	assert tableTag in ('GSUB', 'GPOS')
 	debug("Parsing", tableTag)
@@ -837,8 +837,11 @@ def parseGSUBGPOS(lines, font, tableTag):
 				self.LookupList.Lookup = []
 			_, name, _ = lines.peek()
 			lookup = parseLookup(lines, tableTag, font, lookupMap)
-			assert name not in lookupMap, "Duplicate lookup name: %s" % name
-			lookupMap[name] = len(self.LookupList.Lookup)
+			if lookupMap:
+				assert name not in lookupMap, "Duplicate lookup name: %s" % name
+				lookupMap[name] = len(self.LookupList.Lookup)
+			else:
+				assert int(name) == len(self.LookupList.Lookup), "%d %d" % (name, len(self.Lookup))
 			self.LookupList.Lookup.append(lookup)
 		else:
 			assert getattr(self, attr) is None, attr
