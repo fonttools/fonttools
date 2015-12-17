@@ -1,0 +1,21 @@
+# Three features. In the output, they should all point to the same lookup.
+
+lookup SomeLookup {
+    sub f f i by f_f_i;
+    sub f i by f_i;
+} SomeLookup;
+
+feature tst1 {
+    lookup SomeLookup;
+} tst1;
+
+feature tst2 {
+    lookup SomeLookup;
+} tst2;
+
+feature tst3 {
+    lookup EmbeddedLookup {
+        sub f f i by f_f_i;
+        sub f i by f_i;
+    } EmbeddedLookup;
+} tst3;

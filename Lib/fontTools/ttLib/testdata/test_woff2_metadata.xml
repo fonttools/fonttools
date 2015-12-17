@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata version="1.0">
+	<uniqueid id="org.w3.webfonts.wofftest" />
+	<vendor name="Test Vendor" url="http://w3c.org/Fonts" />
+	<credits>
+		<credit name="Credit 1" role="Role 1" url="http://w3c.org/Fonts" />
+		<credit name="Credit 2" role="Role 2" url="http://w3c.org/Fonts" />
+	</credits>
+	<description url="http://w3c.org/Fonts">
+		<text>
+			Description without language.
+		</text>
+		<text lang="en">
+			Description with "en" language.
+		</text>
+		<text lang="fr">
+			Description with "fr" language.
+		</text>
+	</description>
+	<license url="http://w3c.org/Fonts" id="License ID">
+		<text>
+			License without language.
+		</text>
+		<text lang="en">
+			License with "en" language.
+		</text>
+		<text lang="fr">
+			License with "fr" language.
+		</text>
+	</license>
+	<copyright>
+		<text>
+			Copyright without language.
+		</text>
+		<text lang="en">
+			Copyright with "en" language.
+		</text>
+		<text lang="fr">
+			Copyright with "fr" language.
+		</text>
+	</copyright>
+	<trademark>
+		<text>
+			Trademark without language.
+		</text>
+		<text lang="en">
+			Trademark with "en" language.
+		</text>
+		<text lang="fr">
+			Trademark with "fr" language.
+		</text>
+	</trademark>
+	<licensee name="Licensee Name" />
+	<extension id="Extension 1">
+		<name>Extension 1 - Name Without Language</name>
+		<name lang="en">Extension 1 - Name With "en" Language</name>
+		<name lang="fr">Extension 1 - Name With "fr" Language</name>
+		<item id="Extension 1 - Item 1 ID">
+			<name>Extension 1 - Item 1 - Name Without Language</name>
+			<name lang="en">Extension 1 - Item 1 - Name With "en" Language</name>
+			<name lang="fr">Extension 1 - Item 1 - Name With "fr" Language</name>
+			<value>Extension 1 - Item 1 - Value Without Language</value>
+			<value lang="en">Extension 1 - Item 1 - Value With "en" Language</value>
+			<value lang="fr">Extension 1 - Item 1 - Value With "fr" Language</value>
+		</item>
+		<item id="Extension 1 - Item 2 ID">
+			<name>Extension 1 - Item 2 - Name Without Language</name>
+			<name lang="en">Extension 1 - Item 2 - Name With "en" Language</name>
+			<name lang="fr">Extension 1 - Item 2 - Name With "fr" Language</name>
+			<value>Extension 1 - Item 2 - Value Without Language</value>
+			<value lang="en">Extension 1 - Item 2 - Value With "en" Language</value>
+			<value lang="fr">Extension 1 - Item 2 - Value With "fr" Language</value>
+		</item>
+	</extension>
+	<extension id="Extension 2">
+		<name>Extension 2 - Name Without Language</name>
+		<name lang="en">Extension 2 - Name With "en" Language</name>
+		<name lang="fr">Extension 2 - Name With "fr" Language</name>
+		<item id="Extension 2 - Item 1 ID">
+			<name>Extension 2 - Item 1 - Name Without Language</name>
+			<name lang="en">Extension 2 - Item 1 - Name With "en" Language</name>
+			<name lang="fr">Extension 2 - Item 1 - Name With "fr" Language</name>
+			<value>Extension 2 - Item 1 - Value Without Language</value>
+			<value lang="en">Extension 2 - Item 1 - Value With "en" Language</value>
+			<value lang="fr">Extension 2 - Item 1 - Value With "fr" Language</value>
+		</item>
+		<item id="Extension 2 - Item 2 ID">
+			<name>Extension 2 - Item 2 - Name Without Language</name>
+			<name lang="en">Extension 2 - Item 2 - Name With "en" Language</name>
+			<name lang="fr">Extension 2 - Item 2 - Name With "fr" Language</name>
+			<value>Extension 2 - Item 2 - Value Without Language</value>
+			<value lang="en">Extension 2 - Item 2 - Value With "en" Language</value>
+			<value lang="fr">Extension 2 - Item 2 - Value With "fr" Language</value>
+		</item>
+		<item id="Extension 2 - Item 3 ID">
+			<name>Extension 2 - Item 3 - Name Without Language</name>
+			<name lang="en">Extension 2 - Item 3 - Name With "en" Language</name>
+			<name lang="fr">Extension 2 - Item 3 - Name With "fr" Language</name>
+			<value>Extension 2 - Item 3 - Value Without Language</value>
+			<value lang="en">Extension 2 - Item 3 - Value With "en" Language</value>
+		</item>
+	</extension>
+</metadata>

@@ -1,13 +1,11 @@
-"""fontTools.misc.timeTools.py -- miscellaneous routines."""
-
+"""fontTools.misc.timeTools.py -- tools for working with OpenType timestamps.
+"""
 
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 import time
 import calendar
 
-
-# OpenType timestamp handling
 
 epoch_diff = calendar.timegm((1904, 1, 1, 0, 0, 0, 0, 0, 0))
 
@@ -19,3 +17,6 @@ def timestampFromString(value):
 
 def timestampNow():
 	return int(time.time() - epoch_diff)
+
+def timestampSinceEpoch(value):
+	return int(value - epoch_diff)

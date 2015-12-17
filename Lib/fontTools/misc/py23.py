@@ -1,44 +1,119 @@
 """Python 2/3 compat layer."""
 
 from __future__ import print_function, division, absolute_import
+import sys
 
 try:
-	basestring
+	basestring = basestring
 except NameError:
 	basestring = str
 
 try:
-	unicode
+	unicode = unicode
 except NameError:
 	unicode = str
 
 try:
-	unichr
+	unichr = unichr
+
+	if sys.maxunicode < 0x10FFFF:
+		# workarounds for Python 2 "narrow" builds with UCS2-only support.
+
+		_narrow_unichr = unichr
+
+		def unichr(i):
+			"""
+			Return the unicode character whose Unicode code is the integer 'i'.
+			The valid range is 0 to 0x10FFFF inclusive.
+
+			>>> _narrow_unichr(0xFFFF + 1)
+			Traceback (most recent call last):
+			  File "<stdin>", line 1, in ?
+			ValueError: unichr() arg not in range(0x10000) (narrow Python build)
+			>>> unichr(0xFFFF + 1) == u'\U00010000'
+			True
+			>>> unichr(1114111) == u'\U0010FFFF'
+			True
+			>>> unichr(0x10FFFF + 1)
+			Traceback (most recent call last):
+			  File "<stdin>", line 1, in ?
+			ValueError: unichr() arg not in range(0x110000)
+			"""
+			try:
+				return _narrow_unichr(i)
+			except ValueError:
+				try:
+					padded_hex_str = hex(i)[2:].zfill(8)
+					escape_str = "\\U" + padded_hex_str
+					return escape_str.decode("unicode-escape")
+				except UnicodeDecodeError:
+					raise ValueError('unichr() arg not in range(0x110000)')
+
+		import re
+		_unicode_escape_RE = re.compile(r'\\U[A-Fa-f0-9]{8}')
+
+		def byteord(c):
+			"""
+			Given a 8-bit or unicode character, return an integer representing the
+			Unicode code point of the character. If a unicode argument is given, the
+			character's code point must be in the range 0 to 0x10FFFF inclusive.
+
+			>>> ord(u'\U00010000')
+			Traceback (most recent call last):
+			  File "<stdin>", line 1, in ?
+			TypeError: ord() expected a character, but string of length 2 found
+			>>> byteord(u'\U00010000') == 0xFFFF + 1
+			True
+			>>> byteord(u'\U0010FFFF') == 1114111
+			True
+			"""
+			try:
+				return ord(c)
+			except TypeError as e:
+				try:
+					escape_str = c.encode('unicode-escape')
+					if not _unicode_escape_RE.match(escape_str):
+						raise
+					hex_str = escape_str[3:]
+					return int(hex_str, 16)
+				except:
+					raise TypeError(e)
+
+	else:
+		byteord = ord
 	bytechr = chr
-	byteord = ord
-except:
+
+except NameError:
 	unichr = chr
 	def bytechr(n):
 		return bytes([n])
 	def byteord(c):
 		return c if isinstance(c, int) else ord(c)
 
+
+# the 'io' module provides the same I/O interface on both 2 and 3.
+# here we define an alias of io.StringIO to disambiguate it eternally...
+from io import BytesIO
+from io import StringIO as UnicodeIO
 try:
+	# in python 2, by 'StringIO' we still mean a stream of *byte* strings
 	from StringIO import StringIO
 except ImportError:
-	from io import BytesIO as StringIO
+	# in Python 3, we mean instead a stream of *unicode* strings
+	StringIO = UnicodeIO
+
 
 def strjoin(iterable, joiner=''):
 	return tostr(joiner).join(iterable)
 
-def tobytes(s, encoding='ascii'):
+def tobytes(s, encoding='ascii', errors='strict'):
 	if not isinstance(s, bytes):
-		return s.encode(encoding)
+		return s.encode(encoding, errors)
 	else:
 		return s
-def tounicode(s, encoding='ascii'):
+def tounicode(s, encoding='ascii', errors='strict'):
 	if not isinstance(s, unicode):
-		return s.decode(encoding)
+		return s.decode(encoding, errors)
 	else:
 		return s
 
@@ -79,3 +154,8 @@ else:
 
 	def bytesjoin(iterable, joiner=b''):
 		return tobytes(joiner).join(tobytes(item) for item in iterable)
+
+
+if __name__ == "__main__":
+	import doctest, sys
+	sys.exit(doctest.testmod().failed)

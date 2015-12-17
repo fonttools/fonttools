@@ -1,0 +1,11 @@
+languagesystem DFLT dflt;
+
+feature test {
+    reversesub [a A] [b B] [c C]  q'    [d D] [e E] [f F] by Q;
+    reversesub [a A] [b B] [c C] [s-z]' [d D] [e E] [f F] by [S-Z];
+
+    # Having no context for a reverse chaining substitution rule
+    # is a little degenerate (we define a chain without linking it
+    # to anything else), but makeotf accepts this.
+    reversesub p by P;
+} test;

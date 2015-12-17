@@ -6,16 +6,16 @@ import struct
 
 
 sbixGlyphHeaderFormat = """
-  >
-  originOffsetX:   h    # The x-value of the point in the glyph relative to its
-                        # lower-left corner which corresponds to the origin of
-                        # the glyph on the screen, that is the point on the
-                        # baseline at the left edge of the glyph.
-  originOffsetY:   h    # The y-value of the point in the glyph relative to its
-                        # lower-left corner which corresponds to the origin of
-                        # the glyph on the screen, that is the point on the
-                        # baseline at the left edge of the glyph.
-  graphicType:     4s   # e.g. "png "
+	>
+	originOffsetX: h	# The x-value of the point in the glyph relative to its
+						# lower-left corner which corresponds to the origin of
+						# the glyph on the screen, that is the point on the
+						# baseline at the left edge of the glyph.
+	originOffsetY: h	# The y-value of the point in the glyph relative to its
+						# lower-left corner which corresponds to the origin of
+						# the glyph on the screen, that is the point on the
+						# baseline at the left edge of the glyph.
+	graphicType:  4s	# e.g. "png "
 """
 
 sbixGlyphHeaderFormatSize = sstruct.calcsize(sbixGlyphHeaderFormat)
@@ -31,7 +31,7 @@ class Glyph(object):
 		self.rawdata = rawdata
 		self.graphicType = graphicType
 		self.imageData = imageData
-		
+
 		# fix self.graphicType if it is null terminated or too short
 		if self.graphicType is not None:
 			if self.graphicType[-1] == "\0":

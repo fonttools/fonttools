@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont>
+
+  <GDEF>
+    <Version value="1.0"/>
+    <GlyphClassDef>
+      <ClassDef glyph="acute" class="3"/>
+      <ClassDef glyph="c_t" class="2"/>
+      <ClassDef glyph="cedilla" class="3"/>
+      <ClassDef glyph="f_f_l" class="2"/>
+      <ClassDef glyph="f_l" class="2"/>
+      <ClassDef glyph="grave" class="3"/>
+      <ClassDef glyph="macron" class="3"/>
+      <ClassDef glyph="ogonek" class="3"/>
+      <ClassDef glyph="s_t" class="2"/>
+    </GlyphClassDef>
+  </GDEF>
+
+  <GPOS>
+    <Version value="1.0"/>
+    <ScriptList>
+      <!-- ScriptCount=1 -->
+      <ScriptRecord index="0">
+        <ScriptTag value="DFLT"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=1 -->
+            <FeatureIndex index="0" value="0"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=1 -->
+      <FeatureRecord index="0">
+        <FeatureTag value="test"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="0"/>
+        </Feature>
+      </FeatureRecord>
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=1 -->
+      <Lookup index="0">
+        <!-- LookupType=5 -->
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <MarkLigPos index="0" Format="1">
+          <MarkCoverage>
+            <Glyph value="grave"/>
+            <Glyph value="acute"/>
+            <Glyph value="macron"/>
+            <Glyph value="cedilla"/>
+            <Glyph value="ogonek"/>
+          </MarkCoverage>
+          <LigatureCoverage>
+            <Glyph value="f_l"/>
+            <Glyph value="c_t"/>
+            <Glyph value="f_f_l"/>
+            <Glyph value="s_t"/>
+          </LigatureCoverage>
+          <!-- ClassCount=3 -->
+          <MarkArray>
+            <!-- MarkCount=5 -->
+            <MarkRecord index="0">
+              <Class value="0"/>
+              <MarkAnchor Format="1">
+                <XCoordinate value="500"/>
+                <YCoordinate value="700"/>
+              </MarkAnchor>
+            </MarkRecord>
+            <MarkRecord index="1">
+              <Class value="0"/>
+              <MarkAnchor Format="1">
+                <XCoordinate value="500"/>
+                <YCoordinate value="700"/>
+              </MarkAnchor>
+            </MarkRecord>
+            <MarkRecord index="2">
+              <Class value="0"/>
+              <MarkAnchor Format="1">
+                <XCoordinate value="500"/>
+                <YCoordinate value="750"/>
+              </MarkAnchor>
+            </MarkRecord>
+            <MarkRecord index="3">
+              <Class value="1"/>
+              <MarkAnchor Format="1">
+                <XCoordinate value="500"/>
+                <YCoordinate value="-10"/>
+              </MarkAnchor>
+            </MarkRecord>
+            <MarkRecord index="4">
+              <Class value="2"/>
+              <MarkAnchor Format="1">
+                <XCoordinate value="800"/>
+                <YCoordinate value="-10"/>
+              </MarkAnchor>
+            </MarkRecord>
+          </MarkArray>
+          <LigatureArray>
+            <!-- LigatureCount=4 -->
+            <LigatureAttach index="0">
+              <!-- ComponentCount=2 -->
+              <ComponentRecord index="0">
+                <LigatureAnchor index="0" Format="1">
+                  <XCoordinate value="300"/>
+                  <YCoordinate value="800"/>
+                </LigatureAnchor>
+                <LigatureAnchor index="1" Format="1">
+                  <XCoordinate value="300"/>
+                  <YCoordinate value="-200"/>
+                </LigatureAnchor>
+                <LigatureAnchor index="2" empty="1"/>
+              </ComponentRecord>
+              <ComponentRecord index="1">
+                <LigatureAnchor index="0" Format="1">
+                  <XCoordinate value="600"/>
+                  <YCoordinate value="800"/>
+                </LigatureAnchor>
+                <LigatureAnchor index="1" Format="1">
+                  <XCoordinate value="600"/>
+                  <YCoordinate value="-200"/>
+                </LigatureAnchor>
+                <LigatureAnchor index="2" empty="1"/>
+              </ComponentRecord>
+            </LigatureAttach>
+            <LigatureAttach index="1">
+              <!-- ComponentCount=2 -->
+              <ComponentRecord index="0">
+                <LigatureAnchor index="0" Format="1">
+                  <XCoordinate value="500"/>
+                  <YCoordinate value="800"/>
+                </LigatureAnchor>
+                <LigatureAnchor index="1" Format="1">
+                  <XCoordinate value="500"/>
+                  <YCoordinate value="-200"/>
+                </LigatureAnchor>
+                <LigatureAnchor index="2" empty="1"/>
+              </ComponentRecord>
+              <ComponentRecord index="1">
+                <LigatureAnchor index="0" Format="1">
+                  <XCoordinate value="1500"/>
+                  <YCoordinate value="800"/>
+                </LigatureAnchor>
+                <LigatureAnchor index="1" Format="1">
+                  <XCoordinate value="1500"/>
+                  <YCoordinate value="-200"/>
+                </LigatureAnchor>
+                <LigatureAnchor index="2" Format="1">
+                  <XCoordinate value="1550"/>
+                  <YCoordinate value="0"/>
+                </LigatureAnchor>
+              </ComponentRecord>
+            </LigatureAttach>
+            <LigatureAttach index="2">
+              <!-- ComponentCount=3 -->
+              <ComponentRecord index="0">
+                <LigatureAnchor index="0" Format="1">
+                  <XCoordinate value="300"/>
+                  <YCoordinate value="800"/>
+                </LigatureAnchor>
+                <LigatureAnchor index="1" Format="1">
+                  <XCoordinate value="300"/>
+                  <YCoordinate value="-200"/>
+                </LigatureAnchor>
+                <LigatureAnchor index="2" empty="1"/>
+              </ComponentRecord>
+              <ComponentRecord index="1">
+                <LigatureAnchor index="0" Format="1">
+                  <XCoordinate value="600"/>
+                  <YCoordinate value="800"/>
+                </LigatureAnchor>
+                <LigatureAnchor index="1" Format="1">
+                  <XCoordinate value="600"/>
+                  <YCoordinate value="-200"/>
+                </LigatureAnchor>
+                <LigatureAnchor index="2" empty="1"/>
+              </ComponentRecord>
+              <ComponentRecord index="2">
+                <LigatureAnchor index="0" Format="1">
+                  <XCoordinate value="900"/>
+                  <YCoordinate value="800"/>
+                </LigatureAnchor>
+                <LigatureAnchor index="1" Format="1">
+                  <XCoordinate value="900"/>
+                  <YCoordinate value="-200"/>
+                </LigatureAnchor>
+                <LigatureAnchor index="2" empty="1"/>
+              </ComponentRecord>
+            </LigatureAttach>
+            <LigatureAttach index="3">
+              <!-- ComponentCount=2 -->
+              <ComponentRecord index="0">
+                <LigatureAnchor index="0" Format="1">
+                  <XCoordinate value="500"/>
+                  <YCoordinate value="800"/>
+                </LigatureAnchor>
+                <LigatureAnchor index="1" Format="1">
+                  <XCoordinate value="500"/>
+                  <YCoordinate value="-200"/>
+                </LigatureAnchor>
+                <LigatureAnchor index="2" empty="1"/>
+              </ComponentRecord>
+              <ComponentRecord index="1">
+                <LigatureAnchor index="0" Format="1">
+                  <XCoordinate value="1500"/>
+                  <YCoordinate value="800"/>
+                </LigatureAnchor>
+                <LigatureAnchor index="1" Format="1">
+                  <XCoordinate value="1500"/>
+                  <YCoordinate value="-200"/>
+                </LigatureAnchor>
+                <LigatureAnchor index="2" Format="1">
+                  <XCoordinate value="1550"/>
+                  <YCoordinate value="0"/>
+                </LigatureAnchor>
+              </ComponentRecord>
+            </LigatureAttach>
+          </LigatureArray>
+        </MarkLigPos>
+      </Lookup>
+    </LookupList>
+  </GPOS>
+
+</ttFont>

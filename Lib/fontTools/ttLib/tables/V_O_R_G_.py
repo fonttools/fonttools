@@ -37,12 +37,11 @@ class table_V_O_R_G_(DefaultTable.DefaultTable):
 
 		list(map(operator.setitem, [vOrig]*self.numVertOriginYMetrics, names, vids))
 
-
 	def compile(self, ttFont):
 		vorgs = list(self.VOriginRecords.values())
 		names = list(self.VOriginRecords.keys())
 		nameMap = ttFont.getReverseGlyphMap()
-		lenRecords = len(vorgs) 
+		lenRecords = len(vorgs)
 		try:
 			gids = map(operator.getitem, [nameMap]*lenRecords, names)
 		except KeyError:
@@ -94,7 +93,6 @@ class table_V_O_R_G_(DefaultTable.DefaultTable):
 		elif "value" in attrs:
 			setattr(self, name, safeEval(attrs["value"]))
 
-
 	def __getitem__(self, glyphSelector):
 		if isinstance(glyphSelector, int):
 			# its a gid, convert to glyph name
@@ -102,7 +100,7 @@ class table_V_O_R_G_(DefaultTable.DefaultTable):
 
 		if glyphSelector not in self.VOriginRecords:
 			return self.defaultVertOriginY
-			
+
 		return self.VOriginRecords[glyphSelector]
 
 	def __setitem__(self, glyphSelector, value):
@@ -120,7 +118,7 @@ class table_V_O_R_G_(DefaultTable.DefaultTable):
 
 class VOriginRecord(object):
 
-	def __init__(self, name = None, vOrigin = None):
+	def __init__(self, name=None, vOrigin=None):
 		self.glyphName = name
 		self.vOrigin = vOrigin
 

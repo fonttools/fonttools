@@ -4,7 +4,7 @@ from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from fontTools import ttLib
-from fontTools.misc.textTools import safeEval
+from fontTools.misc.textTools import safeEval, pad
 from fontTools.misc.arrayTools import calcBounds, calcIntBounds, pointInRect
 from fontTools.misc.bezierTools import calcQuadraticBounds
 from fontTools.misc.fixedTools import fixedToFloat as fi2fl, floatToFixed as fl2fi
@@ -16,20 +16,26 @@ import array
 import warnings
 
 #
-# The Apple and MS rasterizers behave differently for 
+# The Apple and MS rasterizers behave differently for
 # scaled composite components: one does scale first and then translate
 # and the other does it vice versa. MS defined some flags to indicate
 # the difference, but it seems nobody actually _sets_ those flags.
 #
 # Funny thing: Apple seems to _only_ do their thing in the
-# WE_HAVE_A_SCALE (eg. Chicago) case, and not when it's WE_HAVE_AN_X_AND_Y_SCALE 
+# WE_HAVE_A_SCALE (eg. Chicago) case, and not when it's WE_HAVE_AN_X_AND_Y_SCALE
 # (eg. Charcoal)...
 #
 SCALE_COMPONENT_OFFSET_DEFAULT = 0   # 0 == MS, 1 == Apple
 
 
 class table__g_l_y_f(DefaultTable.DefaultTable):
-	
+
+	# this attribute controls the amount of padding applied to glyph data upon compile.
+	# Glyph lenghts are aligned to multiples of the specified value. 
+	# Allowed values are (0, 1, 2, 4). '0' means no padding; '1' (default) also means
+	# no padding, except for when padding would allow to use short loca offsets.
+	padding = 1
+
 	def decompile(self, data, ttFont):
 		loca = ttFont['loca']
 		last = int(loca[0])
@@ -53,14 +59,16 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 			warnings.warn("too much 'glyf' table data: expected %d, received %d bytes" %
 					(next, len(data)))
 		if noname:
-			warnings.warn('%s glyphs have no name' % i)
+			warnings.warn('%s glyphs have no name' % noname)
 		if ttFont.lazy is False: # Be lazy for None and True
 			for glyph in self.glyphs.values():
 				glyph.expand(self)
-	
+
 	def compile(self, ttFont):
 		if not hasattr(self, "glyphOrder"):
 			self.glyphOrder = ttFont.getGlyphOrder()
+		padding = self.padding
+		assert padding in (0, 1, 2, 4)
 		locations = []
 		currentLocation = 0
 		dataList = []
@@ -68,12 +76,14 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 		for glyphName in self.glyphOrder:
 			glyph = self.glyphs[glyphName]
 			glyphData = glyph.compile(self, recalcBBoxes)
+			if padding > 1:
+				glyphData = pad(glyphData, size=padding)
 			locations.append(currentLocation)
 			currentLocation = currentLocation + len(glyphData)
 			dataList.append(glyphData)
 		locations.append(currentLocation)
 
-		if currentLocation < 0x20000:
+		if padding == 1 and currentLocation < 0x20000:
 			# See if we can pad any odd-lengthed glyphs to allow loca
 			# table to use the short offsets.
 			indices = [i for i,glyphData in enumerate(dataList) if len(glyphData) % 2 == 1]
@@ -81,7 +91,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 				# It fits.  Do it.
 				for i in indices:
 					dataList[i] += b'\0'
-				currentLocation = 0;
+				currentLocation = 0
 				for i,glyphData in enumerate(dataList):
 					locations[i] = currentLocation
 					currentLocation += len(glyphData)
@@ -90,9 +100,10 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 		data = bytesjoin(dataList)
 		if 'loca' in ttFont:
 			ttFont['loca'].set(locations)
-		ttFont['maxp'].numGlyphs = len(self.glyphs)
+		if 'maxp' in ttFont:
+			ttFont['maxp'].numGlyphs = len(self.glyphs)
 		return data
-	
+
 	def toXML(self, writer, ttFont, progress=None):
 		writer.newline()
 		glyphNames = ttFont.getGlyphNames()
@@ -125,7 +136,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 				writer.comment("contains no outline data")
 				writer.newline()
 			writer.newline()
-	
+
 	def fromXML(self, name, attrs, content, ttFont):
 		if name != "TTGlyph":
 			return
@@ -147,39 +158,39 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 			glyph.fromXML(name, attrs, content, ttFont)
 		if not ttFont.recalcBBoxes:
 			glyph.compact(self, 0)
-	
+
 	def setGlyphOrder(self, glyphOrder):
 		self.glyphOrder = glyphOrder
-	
+
 	def getGlyphName(self, glyphID):
 		return self.glyphOrder[glyphID]
-	
+
 	def getGlyphID(self, glyphName):
 		# XXX optimize with reverse dict!!!
 		return self.glyphOrder.index(glyphName)
-	
+
 	def keys(self):
 		return self.glyphs.keys()
-	
+
 	def has_key(self, glyphName):
 		return glyphName in self.glyphs
-	
+
 	__contains__ = has_key
-	
+
 	def __getitem__(self, glyphName):
 		glyph = self.glyphs[glyphName]
 		glyph.expand(self)
 		return glyph
-	
+
 	def __setitem__(self, glyphName, glyph):
 		self.glyphs[glyphName] = glyph
 		if glyphName not in self.glyphOrder:
 			self.glyphOrder.append(glyphName)
-	
+
 	def __delitem__(self, glyphName):
 		del self.glyphs[glyphName]
 		self.glyphOrder.remove(glyphName)
-	
+
 	def __len__(self):
 		assert len(self.glyphOrder) == len(self.glyphs)
 		return len(self.glyphs)
@@ -267,53 +278,63 @@ def flagEncodeCoords(flag, x, y, xBytes, yBytes):
 	flagEncodeCoord(flag, flagYsame|flagYShort, y, yBytes)
 
 
-ARG_1_AND_2_ARE_WORDS      = 0x0001  # if set args are words otherwise they are bytes 
-ARGS_ARE_XY_VALUES         = 0x0002  # if set args are xy values, otherwise they are points 
-ROUND_XY_TO_GRID           = 0x0004  # for the xy values if above is true 
-WE_HAVE_A_SCALE            = 0x0008  # Sx = Sy, otherwise scale == 1.0 
-NON_OVERLAPPING            = 0x0010  # set to same value for all components (obsolete!)
-MORE_COMPONENTS            = 0x0020  # indicates at least one more glyph after this one 
-WE_HAVE_AN_X_AND_Y_SCALE   = 0x0040  # Sx, Sy 
-WE_HAVE_A_TWO_BY_TWO       = 0x0080  # t00, t01, t10, t11 
-WE_HAVE_INSTRUCTIONS       = 0x0100  # instructions follow 
-USE_MY_METRICS             = 0x0200  # apply these metrics to parent glyph 
-OVERLAP_COMPOUND           = 0x0400  # used by Apple in GX fonts 
-SCALED_COMPONENT_OFFSET    = 0x0800  # composite designed to have the component offset scaled (designed for Apple) 
-UNSCALED_COMPONENT_OFFSET  = 0x1000  # composite designed not to have the component offset scaled (designed for MS) 
+ARG_1_AND_2_ARE_WORDS		= 0x0001  # if set args are words otherwise they are bytes
+ARGS_ARE_XY_VALUES		= 0x0002  # if set args are xy values, otherwise they are points
+ROUND_XY_TO_GRID		= 0x0004  # for the xy values if above is true
+WE_HAVE_A_SCALE			= 0x0008  # Sx = Sy, otherwise scale == 1.0
+NON_OVERLAPPING			= 0x0010  # set to same value for all components (obsolete!)
+MORE_COMPONENTS			= 0x0020  # indicates at least one more glyph after this one
+WE_HAVE_AN_X_AND_Y_SCALE	= 0x0040  # Sx, Sy
+WE_HAVE_A_TWO_BY_TWO		= 0x0080  # t00, t01, t10, t11
+WE_HAVE_INSTRUCTIONS		= 0x0100  # instructions follow
+USE_MY_METRICS			= 0x0200  # apply these metrics to parent glyph
+OVERLAP_COMPOUND		= 0x0400  # used by Apple in GX fonts
+SCALED_COMPONENT_OFFSET		= 0x0800  # composite designed to have the component offset scaled (designed for Apple)
+UNSCALED_COMPONENT_OFFSET	= 0x1000  # composite designed not to have the component offset scaled (designed for MS)
 
 
 class Glyph(object):
-	
+
 	def __init__(self, data=""):
 		if not data:
 			# empty char
 			self.numberOfContours = 0
 			return
 		self.data = data
-	
+
 	def compact(self, glyfTable, recalcBBoxes=True):
 		data = self.compile(glyfTable, recalcBBoxes)
 		self.__dict__.clear()
 		self.data = data
-	
+
 	def expand(self, glyfTable):
 		if not hasattr(self, "data"):
 			# already unpacked
 			return
 		if not self.data:
 			# empty char
+			del self.data
 			self.numberOfContours = 0
 			return
 		dummy, data = sstruct.unpack2(glyphHeaderFormat, self.data, self)
 		del self.data
+		# Some fonts (eg. Neirizi.ttf) have a 0 for numberOfContours in
+		# some glyphs; decompileCoordinates assumes that there's at least
+		# one, so short-circuit here.
+		if self.numberOfContours == 0:
+			return
 		if self.isComposite():
 			self.decompileComponents(data, glyfTable)
 		else:
 			self.decompileCoordinates(data)
-	
+
 	def compile(self, glyfTable, recalcBBoxes=True):
 		if hasattr(self, "data"):
-			return self.data
+			if recalcBBoxes:
+				# must unpack glyph in order to recalculate bounding box
+				self.expand(glyfTable)
+			else:
+				return self.data
 		if self.numberOfContours == 0:
 			return ""
 		if recalcBBoxes:
@@ -324,7 +345,7 @@ class Glyph(object):
 		else:
 			data = data + self.compileCoordinates()
 		return data
-	
+
 	def toXML(self, writer, ttFont):
 		if self.isComposite():
 			for compo in self.components:
@@ -341,7 +362,7 @@ class Glyph(object):
 				writer.newline()
 				for j in range(last, self.endPtsOfContours[i] + 1):
 					writer.simpletag("pt", [
-							("x", self.coordinates[j][0]), 
+							("x", self.coordinates[j][0]),
 							("y", self.coordinates[j][1]),
 							("on", self.flags[j] & flagOnCurve)])
 					writer.newline()
@@ -353,7 +374,7 @@ class Glyph(object):
 				self.program.toXML(writer, ttFont)
 				writer.endtag("instructions")
 				writer.newline()
-	
+
 	def fromXML(self, name, attrs, content, ttFont):
 		if name == "contour":
 			if self.numberOfContours < 0:
@@ -394,7 +415,7 @@ class Glyph(object):
 					continue
 				name, attrs, content = element
 				self.program.fromXML(name, attrs, content, ttFont)
-	
+
 	def getCompositeMaxpValues(self, glyfTable, maxComponentDepth=1):
 		assert self.isComposite()
 		nContours = 0
@@ -411,11 +432,11 @@ class Glyph(object):
 			nPoints = nPoints + nP
 			nContours = nContours + nC
 		return nPoints, nContours, maxComponentDepth
-	
+
 	def getMaxpValues(self):
 		assert self.numberOfContours > 0
 		return len(self.coordinates), len(self.endPtsOfContours)
-	
+
 	def decompileComponents(self, data, glyfTable):
 		self.components = []
 		more = 1
@@ -433,16 +454,16 @@ class Glyph(object):
 			data = data[numInstructions:]
 			if len(data) >= 4:
 				warnings.warn("too much glyph data at the end of composite glyph: %d excess bytes" % len(data))
-	
+
 	def decompileCoordinates(self, data):
 		endPtsOfContours = array.array("h")
 		endPtsOfContours.fromstring(data[:2*self.numberOfContours])
 		if sys.byteorder != "big":
 			endPtsOfContours.byteswap()
 		self.endPtsOfContours = endPtsOfContours.tolist()
-		
+
 		data = data[2*self.numberOfContours:]
-		
+
 		instructionLength, = struct.unpack(">h", data[:2])
 		data = data[2:]
 		self.program = ttProgram.Program()
@@ -451,7 +472,7 @@ class Glyph(object):
 		nCoordinates = self.endPtsOfContours[-1] + 1
 		flags, xCoordinates, yCoordinates = \
 				self.decompileCoordinatesRaw(nCoordinates, data)
-		
+
 		# fill in repetitions and apply signs
 		self.coordinates = coordinates = GlyphCoordinates.zeros(nCoordinates)
 		xIndex = 0
@@ -528,7 +549,7 @@ class Glyph(object):
 		xCoordinates = struct.unpack(xFormat, data[:xDataLen])
 		yCoordinates = struct.unpack(yFormat, data[xDataLen:xDataLen+yDataLen])
 		return flags, xCoordinates, yCoordinates
-	
+
 	def compileComponents(self, glyfTable):
 		data = b""
 		lastcomponent = len(self.components) - 1
@@ -544,8 +565,7 @@ class Glyph(object):
 			instructions = self.program.getBytecode()
 			data = data + struct.pack(">h", len(instructions)) + instructions
 		return data
-			
-	
+
 	def compileCoordinates(self):
 		assert len(self.coordinates) == len(self.flags)
 		data = []
@@ -634,7 +654,7 @@ class Glyph(object):
 			flag, coordBytes = flagBest(x, y, flag)
 			bestCost += 1 + coordBytes
 			newCandidates = [(bestCost, bestTuple, flag, coordBytes),
-					 (bestCost+1, bestTuple, (flag|flagRepeat), coordBytes)]
+							(bestCost+1, bestTuple, (flag|flagRepeat), coordBytes)]
 			for lastCost,lastTuple,lastFlag,coordBytes in candidates:
 				if lastCost + coordBytes <= bestCost + 1 and (lastFlag & flagRepeat) and (lastFlag < 0xff00) and flagSupports(lastFlag, flag):
 					if (lastFlag & 0xFF) == (flag|flagRepeat) and lastCost == bestCost + 1:
@@ -677,7 +697,7 @@ class Glyph(object):
 		compressedYs = compressedYs.tostring()
 
 		return (compressedFlags, compressedXs, compressedYs)
-	
+
 	def recalcBounds(self, glyfTable):
 		coords, endPts, flags = self.getCoordinates(glyfTable)
 		if len(coords) > 0:
@@ -693,7 +713,7 @@ class Glyph(object):
 
 				# Collect on-curve points
 				onCurveCoords = [coords[j] for j in range(len(coords))
-						 if flags[j] & flagOnCurve]
+								if flags[j] & flagOnCurve]
 				# Add implicit on-curve points
 				start = 0
 				for end in endPts:
@@ -735,19 +755,19 @@ class Glyph(object):
 				self.xMin, self.yMin, self.xMax, self.yMax = calcIntBounds(coords)
 		else:
 			self.xMin, self.yMin, self.xMax, self.yMax = (0, 0, 0, 0)
-	
+
 	def isComposite(self):
 		"""Can be called on compact or expanded glyph."""
 		if hasattr(self, "data") and self.data:
 			return struct.unpack(">h", self.data[:2])[0] == -1
 		else:
 			return self.numberOfContours == -1
-	
+
 	def __getitem__(self, componentIndex):
 		if not self.isComposite():
 			raise ttLib.TTLibError("can't use glyph as sequence")
 		return self.components[componentIndex]
-	
+
 	def getCoordinates(self, glyfTable):
 		if self.numberOfContours > 0:
 			return self.coordinates, self.endPtsOfContours, self.flags
@@ -766,7 +786,7 @@ class Glyph(object):
 					move = x1-x2, y1-y2
 				else:
 					move = compo.x, compo.y
-				
+
 				coordinates = GlyphCoordinates(coordinates)
 				if not hasattr(compo, "transform"):
 					coordinates.translate(move)
@@ -826,9 +846,9 @@ class Glyph(object):
 		return components
 
 	def trim(self, remove_hinting=False):
-		"""Remove padding and, if requested, hinting, from a glyph.
-		   This works on both expanded and compacted glyphs, without
-		   expanding it."""
+		""" Remove padding and, if requested, hinting, from a glyph.
+			This works on both expanded and compacted glyphs, without
+			expanding it."""
 		if not hasattr(self, "data"):
 			if remove_hinting:
 				self.program = ttProgram.Program()
@@ -963,14 +983,14 @@ class Glyph(object):
 
 
 class GlyphComponent(object):
-	
+
 	def __init__(self):
 		pass
-	
+
 	def getComponentInfo(self):
 		"""Return the base glyph name and a transform."""
 		# XXX Ignoring self.firstPt & self.lastpt for now: I need to implement
-		# something equivalent in fontTools.objects.glyph (I'd rather not 
+		# something equivalent in fontTools.objects.glyph (I'd rather not
 		# convert it to an absolute offset, since it is valuable information).
 		# This method will now raise "AttributeError: x" on glyphs that use
 		# this TT feature.
@@ -980,7 +1000,7 @@ class GlyphComponent(object):
 		else:
 			trans = (1, 0, 0, 1, self.x, self.y)
 		return self.glyphName, trans
-	
+
 	def decompile(self, data, glyfTable):
 		flags, glyphID = struct.unpack(">HH", data[:4])
 		self.flags = int(flags)
@@ -988,7 +1008,7 @@ class GlyphComponent(object):
 		self.glyphName = glyfTable.getGlyphName(int(glyphID))
 		#print ">>", reprflag(self.flags)
 		data = data[4:]
-		
+
 		if self.flags & ARG_1_AND_2_ARE_WORDS:
 			if self.flags & ARGS_ARE_XY_VALUES:
 				self.x, self.y = struct.unpack(">hh", data[:4])
@@ -1003,7 +1023,7 @@ class GlyphComponent(object):
 				x, y = struct.unpack(">BB", data[:2])
 				self.firstPt, self.secondPt = int(x), int(y)
 			data = data[2:]
-		
+
 		if self.flags & WE_HAVE_A_SCALE:
 			scale, = struct.unpack(">h", data[:2])
 			self.transform = [[fi2fl(scale,14), 0], [0, fi2fl(scale,14)]]  # fixed 2.14
@@ -1013,30 +1033,30 @@ class GlyphComponent(object):
 			self.transform = [[fi2fl(xscale,14), 0], [0, fi2fl(yscale,14)]]  # fixed 2.14
 			data = data[4:]
 		elif self.flags & WE_HAVE_A_TWO_BY_TWO:
-			(xscale, scale01, 
+			(xscale, scale01,
 					scale10, yscale) = struct.unpack(">hhhh", data[:8])
 			self.transform = [[fi2fl(xscale,14), fi2fl(scale01,14)],
-					  [fi2fl(scale10,14), fi2fl(yscale,14)]] # fixed 2.14
+							[fi2fl(scale10,14), fi2fl(yscale,14)]] # fixed 2.14
 			data = data[8:]
 		more = self.flags & MORE_COMPONENTS
 		haveInstructions = self.flags & WE_HAVE_INSTRUCTIONS
-		self.flags = self.flags & (ROUND_XY_TO_GRID | USE_MY_METRICS | 
+		self.flags = self.flags & (ROUND_XY_TO_GRID | USE_MY_METRICS |
 				SCALED_COMPONENT_OFFSET | UNSCALED_COMPONENT_OFFSET |
 				NON_OVERLAPPING)
 		return more, haveInstructions, data
-	
+
 	def compile(self, more, haveInstructions, glyfTable):
 		data = b""
-		
+
 		# reset all flags we will calculate ourselves
-		flags = self.flags & (ROUND_XY_TO_GRID | USE_MY_METRICS | 
+		flags = self.flags & (ROUND_XY_TO_GRID | USE_MY_METRICS |
 				SCALED_COMPONENT_OFFSET | UNSCALED_COMPONENT_OFFSET |
 				NON_OVERLAPPING)
 		if more:
 			flags = flags | MORE_COMPONENTS
 		if haveInstructions:
 			flags = flags | WE_HAVE_INSTRUCTIONS
-		
+
 		if hasattr(self, "firstPt"):
 			if (0 <= self.firstPt <= 255) and (0 <= self.secondPt <= 255):
 				data = data + struct.pack(">BB", self.firstPt, self.secondPt)
@@ -1050,33 +1070,33 @@ class GlyphComponent(object):
 			else:
 				data = data + struct.pack(">hh", self.x, self.y)
 				flags = flags | ARG_1_AND_2_ARE_WORDS
-		
+
 		if hasattr(self, "transform"):
 			transform = [[fl2fi(x,14) for x in row] for row in self.transform]
 			if transform[0][1] or transform[1][0]:
 				flags = flags | WE_HAVE_A_TWO_BY_TWO
-				data = data + struct.pack(">hhhh", 
+				data = data + struct.pack(">hhhh",
 						transform[0][0], transform[0][1],
 						transform[1][0], transform[1][1])
 			elif transform[0][0] != transform[1][1]:
 				flags = flags | WE_HAVE_AN_X_AND_Y_SCALE
-				data = data + struct.pack(">hh", 
+				data = data + struct.pack(">hh",
 						transform[0][0], transform[1][1])
 			else:
 				flags = flags | WE_HAVE_A_SCALE
-				data = data + struct.pack(">h", 
+				data = data + struct.pack(">h",
 						transform[0][0])
-		
+
 		glyphID = glyfTable.getGlyphID(self.glyphName)
 		return struct.pack(">HH", flags, glyphID) + data
-	
+
 	def toXML(self, writer, ttFont):
 		attrs = [("glyphName", self.glyphName)]
 		if not hasattr(self, "firstPt"):
 			attrs = attrs + [("x", self.x), ("y", self.y)]
 		else:
 			attrs = attrs + [("firstPt", self.firstPt), ("secondPt", self.secondPt)]
-		
+
 		if hasattr(self, "transform"):
 			transform = self.transform
 			if transform[0][1] or transform[1][0]:
@@ -1093,7 +1113,7 @@ class GlyphComponent(object):
 		attrs = attrs + [("flags", hex(self.flags))]
 		writer.simpletag("component", attrs)
 		writer.newline()
-	
+
 	def fromXML(self, name, attrs, content, ttFont):
 		self.glyphName = attrs["glyphName"]
 		if "firstPt" in attrs:
@@ -1116,7 +1136,7 @@ class GlyphComponent(object):
 			scale = safeEval(attrs["scale"])
 			self.transform = [[scale, 0], [0, scale]]
 		self.flags = safeEval(attrs["flags"])
-	
+
 	def __ne__(self, other):
 		return not self.__eq__(other)
 	def __eq__(self, other):
@@ -1241,4 +1261,3 @@ def reprflag(flag):
 		flag = flag >> 1
 	bin = (14 - len(bin)) * "0" + bin
 	return bin
-

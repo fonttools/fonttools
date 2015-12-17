@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# exit if any subcommand return non-zero status
+set -e
+
 # Choose python version
 if test "x$1" = x-3; then
 	PYTHON=python3
@@ -9,26 +12,42 @@ elif test "x$1" = x-2; then
 	shift
 fi
 test "x$PYTHON" = x && PYTHON=python
+echo "$(which $PYTHON) --version"
+$PYTHON --version 2>&1
+echo
 
 # Setup environment
-cd Lib
+DIR=`dirname "$0"`
+cd "$DIR/Lib"
 PYTHONPATH=".:$PYTHONPATH"
 export PYTHONPATH
 
 # Find tests
-FILTER=$1
-test "x$FILTER" = x && FILTER=.
-TESTS=`grep -r --include='*.py' -l -e doctest -e unittest * | grep "$FILTER"`
+FILTER=
+for arg in "$@"; do
+	test "x$FILTER" != x && FILTER="$FILTER|"
+	FILTER="$FILTER$arg"
+done
+
+test "x$FILTER" = "x" && FILTER=.
+TESTS=`grep -r --include='*.py' -l -e doctest -e unittest * | grep -E "$FILTER"`
 
 ret=0
+FAILS=
 for test in $TESTS; do
 	echo "Running tests in $test"
 	test=`echo "$test" | sed 's@[/\\]@.@g;s@[.]py$@@'`
 	if ! $PYTHON -m $test -v; then
 		ret=$((ret+1))
+		FAILS="$FAILS
+$test"
 	fi
 done
-if test $ret != 0; then
-	echo "$ret source file(s) had tests failing" >&2
+	echo
+	echo "SUMMARY:"
+if test $ret = 0; then
+	echo "All tests passed."
+else
+	echo "$ret source file(s) had tests failing:$FAILS" >&2
 fi
 exit $ret

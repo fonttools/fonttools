@@ -1,0 +1,54 @@
+languagesystem DFLT dflt;
+
+@sevenEightNine = [seven eight nine];
+
+feature kern {
+    position zero 0;
+
+    position [one two three] <-80 0 -160 0>;
+    position A <
+        1 2 3 4
+        <device 11 111, 12 112> <device 13 113, 14 114>
+        <device 16 116>	<device NULL>
+    >;
+    position B <
+        1 2 3 4
+        <device 11 111, 12 112> <device 13 113, 14 114>
+        <device 16 116>	<device NULL>
+    >;
+    position C <
+        1 2 3 4
+        <device 11 -2, 14 1> <device 13 -3, 15 1>
+        <device 11 -8, 14 7> <device 13 8, 15 1>
+    >;
+    position four 400;
+    position four.oldstyle 401;
+    position five <-80 0 -160 0>;
+    position six -200;
+    position @sevenEightNine -100;
+
+    pos P <1 0 800 0>;
+    pos Q <1 0 801 0>;
+    pos R <1 0 802 0>;
+    pos S <1 1 803 0>;
+    pos T <1 1 804 0>;
+    pos U <1 1 805 0>;
+
+    # The AFDKO makeotf tool accepts re-definitions of previously defined
+    # single adjustment positionings, provided the re-definition is using
+    # the same value.  We replicate this behavior.
+    position four 400;
+    position four <0 0 400 0>;
+    position nine -100;
+} kern;
+
+# According to the OpenType Feature File specification section 2.e.iv,
+# the following should be interpreted as vertical advance adjustment
+# because -100 (a value record format A) appears within a ‘vkrn’ feature.
+# However, the AFDKO makeotf tool v2.0.90 (built on Nov 19, 2015) still
+# makes it a horizontal advance adjustment.  In our implementation,
+# we follow the specification, so we produce different output than makeotf.
+# https://github.com/adobe-type-tools/afdko/issues/85
+feature vkrn {
+    position A -100;
+} vkrn;

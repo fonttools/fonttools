@@ -158,7 +158,7 @@ class table_E_B_D_T_(DefaultTable.DefaultTable):
 					continue
 				name, attrs, content = element
 				if name[4:].startswith(_bitmapGlyphSubclassPrefix[4:]):
-					imageFormat =	safeEval(name[len(_bitmapGlyphSubclassPrefix):])
+					imageFormat = safeEval(name[len(_bitmapGlyphSubclassPrefix):])
 					glyphName = attrs['name']
 					imageFormatClass = self.getImageFormatClass(imageFormat)
 					curGlyph = imageFormatClass(None, None)
@@ -338,15 +338,20 @@ def _readBitwiseImageData(bitmapObject, name, attrs, content, ttFont):
 	bitmapObject.setRows(dataRows, bitDepth=bitDepth, metrics=metrics, reverseBytes=True)
 
 def _writeExtFileImageData(strikeIndex, glyphName, bitmapObject, writer, ttFont):
-	folder = 'bitmaps/'
+	try:
+		folder = os.path.dirname(writer.file.name)
+	except AttributeError:
+		# fall back to current directory if output file's directory isn't found
+		folder = '.'
+	folder = os.path.join(folder, 'bitmaps')
 	filename = glyphName + bitmapObject.fileExtension
 	if not os.path.isdir(folder):
 		os.makedirs(folder)
-	folder += 'strike%d/' % strikeIndex
+	folder = os.path.join(folder, 'strike%d' % strikeIndex)
 	if not os.path.isdir(folder):
 		os.makedirs(folder)
 
-	fullPath = folder + filename
+	fullPath = os.path.join(folder, filename)
 	writer.simpletag('extfileimagedata', value=fullPath)
 	writer.newline()
 
@@ -373,10 +378,10 @@ class BitmapGlyph(object):
 
 	# Keep track of reading and writing of various forms.
 	xmlDataFunctions = {
-		'raw':       (_writeRawImageData, _readRawImageData),
-		'row':       (_writeRowImageData, _readRowImageData),
-		'bitwise':   (_writeBitwiseImageData, _readBitwiseImageData),
-		'extfile':   (_writeExtFileImageData, _readExtFileImageData),
+		'raw':		(_writeRawImageData, _readRawImageData),
+		'row':		(_writeRowImageData, _readRowImageData),
+		'bitwise':	(_writeBitwiseImageData, _readBitwiseImageData),
+		'extfile':	(_writeExtFileImageData, _readExtFileImageData),
 		}
 
 	def __init__(self, data, ttFont):

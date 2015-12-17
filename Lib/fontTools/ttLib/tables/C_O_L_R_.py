@@ -51,7 +51,6 @@ class table_C_O_L_R_(DefaultTable.DefaultTable):
 
 		list(map(operator.setitem, [colorLayerLists]*numBaseGlyphRecords, names, layerLists))
 
-
 	def compile(self, ttFont):
 		ordered = []
 		ttFont.getReverseGlyphMap(rebuild=True)
@@ -117,7 +116,6 @@ class table_C_O_L_R_(DefaultTable.DefaultTable):
 		elif "value" in attrs:
 			setattr(self, name, safeEval(attrs["value"]))
 
-
 	def __getitem__(self, glyphSelector):
 		if isinstance(glyphSelector, int):
 			# its a gid, convert to glyph name
@@ -125,7 +123,7 @@ class table_C_O_L_R_(DefaultTable.DefaultTable):
 
 		if glyphSelector not in self.ColorLayers:
 			return None
-			
+
 		return self.ColorLayers[glyphSelector]
 
 	def __setitem__(self, glyphSelector, value):
@@ -143,7 +141,7 @@ class table_C_O_L_R_(DefaultTable.DefaultTable):
 
 class LayerRecord(object):
 
-	def __init__(self, name = None, colorID = None):
+	def __init__(self, name=None, colorID=None):
 		self.name = name
 		self.colorID = colorID
 

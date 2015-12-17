@@ -1,4 +1,4 @@
-"""fontTools.misc.eexec.py -- Module implementing the eexec and 
+"""fontTools.misc.eexec.py -- Module implementing the eexec and
 charstring encryption algorithm as used by PostScript Type 1 fonts.
 """
 
@@ -19,19 +19,35 @@ def _encryptChar(plain, R):
 
 
 def decrypt(cipherstring, R):
+	r"""
+	>>> testStr = b"\0\0asdadads asds\265"
+	>>> decryptedStr, R = decrypt(testStr, 12321)
+	>>> decryptedStr == b'0d\nh\x15\xe8\xc4\xb2\x15\x1d\x108\x1a<6\xa1'
+	True
+	>>> R == 36142
+	True
+	"""
 	plainList = []
 	for cipher in cipherstring:
 		plain, R = _decryptChar(cipher, R)
 		plainList.append(plain)
-	plainstring = strjoin(plainList)
+	plainstring = bytesjoin(plainList)
 	return plainstring, int(R)
 
 def encrypt(plainstring, R):
+	r"""
+	>>> testStr = b'0d\nh\x15\xe8\xc4\xb2\x15\x1d\x108\x1a<6\xa1'
+	>>> encryptedStr, R = encrypt(testStr, 12321)
+	>>> encryptedStr == b"\0\0asdadads asds\265"
+	True
+	>>> R == 36142
+	True
+	"""
 	cipherList = []
 	for plain in plainstring:
 		cipher, R = _encryptChar(plain, R)
 		cipherList.append(cipher)
-	cipherstring = strjoin(cipherList)
+	cipherstring = bytesjoin(cipherList)
 	return cipherstring, int(R)
 
 
@@ -41,15 +57,11 @@ def hexString(s):
 
 def deHexString(h):
 	import binascii
-	h = strjoin(h.split())
+	h = bytesjoin(h.split())
 	return binascii.unhexlify(h)
 
 
-def _test():
-	testStr = "\0\0asdadads asds\265"
-	print(decrypt, decrypt(testStr, 12321))
-	print(encrypt, encrypt(testStr, 12321))
-
-
 if __name__ == "__main__":
-	_test()
+	import sys
+	import doctest
+	sys.exit(doctest.testmod().failed)

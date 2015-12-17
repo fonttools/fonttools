@@ -53,6 +53,6 @@ class BitmapGlyphMetrics(object):
 
 class BigGlyphMetrics(BitmapGlyphMetrics):
 	binaryFormat = bigGlyphMetricsFormat
-	
+
 class SmallGlyphMetrics(BitmapGlyphMetrics):
 	binaryFormat = smallGlyphMetricsFormat

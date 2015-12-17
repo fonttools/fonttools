@@ -8,12 +8,12 @@ import warnings
 
 
 class table__h_m_t_x(DefaultTable.DefaultTable):
-	
+
 	headerTag = 'hhea'
 	advanceName = 'width'
 	sideBearingName = 'lsb'
 	numberOfMetricsName = 'numberOfHMetrics'
-	
+
 	def decompile(self, data, ttFont):
 		numGlyphs = ttFont['maxp'].numGlyphs
 		numberOfMetrics = int(getattr(ttFont[self.headerTag], self.numberOfMetricsName))
@@ -41,7 +41,7 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 		for i in range(numberOfSideBearings):
 			glyphName = glyphOrder[i + numberOfMetrics]
 			self.metrics[glyphName] = [lastAdvance, sideBearings[i]]
-	
+
 	def compile(self, ttFont):
 		metrics = []
 		for glyphName in ttFont.getGlyphOrder():
@@ -58,7 +58,7 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 		additionalMetrics = [sb for advance, sb in additionalMetrics]
 		metrics = metrics[:lastIndex]
 		setattr(ttFont[self.headerTag], self.numberOfMetricsName, len(metrics))
-		
+
 		allMetrics = []
 		for item in metrics:
 			allMetrics.extend(item)
@@ -66,37 +66,36 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 		if sys.byteorder != "big":
 			allMetrics.byteswap()
 		data = allMetrics.tostring()
-		
+
 		additionalMetrics = array.array("h", additionalMetrics)
 		if sys.byteorder != "big":
 			additionalMetrics.byteswap()
 		data = data + additionalMetrics.tostring()
 		return data
-	
+
 	def toXML(self, writer, ttFont):
 		names = sorted(self.metrics.keys())
 		for glyphName in names:
 			advance, sb = self.metrics[glyphName]
 			writer.simpletag("mtx", [
-					("name", glyphName), 
-					(self.advanceName, advance), 
+					("name", glyphName),
+					(self.advanceName, advance),
 					(self.sideBearingName, sb),
 					])
 			writer.newline()
-	
+
 	def fromXML(self, name, attrs, content, ttFont):
 		if not hasattr(self, "metrics"):
 			self.metrics = {}
 		if name == "mtx":
-			self.metrics[attrs["name"]] = [safeEval(attrs[self.advanceName]), 
+			self.metrics[attrs["name"]] = [safeEval(attrs[self.advanceName]),
 					safeEval(attrs[self.sideBearingName])]
 
 	def __delitem__(self, glyphName):
 		del self.metrics[glyphName]
-	
+
 	def __getitem__(self, glyphName):
 		return self.metrics[glyphName]
-	
+
 	def __setitem__(self, glyphName, advance_sb_pair):
 		self.metrics[glyphName] = tuple(advance_sb_pair)
-

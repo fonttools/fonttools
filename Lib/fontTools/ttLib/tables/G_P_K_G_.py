@@ -13,12 +13,12 @@ GPKGFormat = """
 		numGMAPs:		H
 		numGlyplets:		H
 """
-# psFontName is a byte string which follows the record above. This is zero padded 
+# psFontName is a byte string which follows the record above. This is zero padded
 # to the beginning of the records array. The recordsOffsst is 32 bit aligned.
 
 
 class table_G_P_K_G_(DefaultTable.DefaultTable):
-	
+
 	def decompile(self, data, ttFont):
 		dummy, newData = sstruct.unpack2(GPKGFormat, data, self)
 
@@ -43,7 +43,6 @@ class table_G_P_K_G_(DefaultTable.DefaultTable):
 			start = glyphletOffsets[i]
 			end = glyphletOffsets[i+1]
 			self.glyphlets.append(data[start:end])
-
 
 	def compile(self, ttFont):
 		self.numGMAPs = len(self.GMAPs)
@@ -75,7 +74,7 @@ class table_G_P_K_G_(DefaultTable.DefaultTable):
 		dataList += self.glyphlets
 		data = bytesjoin(dataList)
 		return data
-	
+
 	def toXML(self, writer, ttFont):
 		writer.comment("Most of this table will be recalculated by the compiler")
 		writer.newline()
@@ -126,5 +125,5 @@ class table_G_P_K_G_(DefaultTable.DefaultTable):
 				itemName, itemAttrs, itemContent = element
 				if itemName == "hexdata":
 					self.glyphlets.append(readHex(itemContent))
-		else:	
-			setattr(self, name, safeEval(value))
+		else:
+			setattr(self, name, safeEval(attrs["value"]))

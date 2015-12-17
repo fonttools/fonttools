@@ -1,0 +1,6 @@
+languagesystem DFLT dflt;
+
+feature test {
+    markClass damma <anchor 189 -103> @MARK_CLASS_1;
+    position mark hamza <anchor 221 301> mark @MARK_CLASS_1;
+} test;

@@ -3,8 +3,8 @@ but missing from Python.  See https://github.com/behdad/fonttools/issues/236 for
 
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
-
 import codecs
+import encodings
 
 class ExtendCodec(codecs.Codec):
 
@@ -12,8 +12,9 @@ class ExtendCodec(codecs.Codec):
 		self.name = name
 		self.base_encoding = base_encoding
 		self.mapping = mapping
-		self.reverse = dict((v,k) for k,v in mapping.items())
+		self.reverse = {v:k for k,v in mapping.items()}
 		self.max_len = max(len(v) for v in mapping.values())
+		self.info = codecs.CodecInfo(name=self.name, encode=self.encode, decode=self.decode)
 		codecs.register_error(name, self.error)
 
 	def encode(self, input, errors='strict'):
@@ -30,6 +31,10 @@ class ExtendCodec(codecs.Codec):
 		#
 		# So we implement what codecs.encode() should have been doing: which is expect
 		# error handler to return bytes() to be added to the output.
+		#
+		# This seems to have been fixed in Python 3.3.  We should try using that and
+		# use fallback only if that failed.
+		# https://docs.python.org/3.3/library/codecs.html#codecs.register_error
 
 		length = len(input)
 		out = b''
@@ -52,7 +57,7 @@ class ExtendCodec(codecs.Codec):
 
 	def error(self, e):
 		if isinstance(e, UnicodeDecodeError):
-			for end in range(e.start + 1, e.end):
+			for end in range(e.start + 1, e.end + 1):
 				s = e.object[e.start:end]
 				if s in self.mapping:
 					return self.mapping[s], end
@@ -64,52 +69,66 @@ class ExtendCodec(codecs.Codec):
 		e.encoding = self.name
 		raise e
 
-	def info(self):
-		return codecs.CodecInfo(name=self.name, encode=self.encode, decode=self.decode)
 
 _extended_encodings = {
-	"x-mac-japanese-ttx": ("shift_jis", {
-					b"\xFC":	unichr(0x007C),
-					b"\x7E":	unichr(0x007E),
-					b"\x80":	unichr(0x005C),
-					b"\xA0":	unichr(0x00A0),
-					b"\xFD":	unichr(0x00A9),
-					b"\xFE":	unichr(0x2122),
-					b"\xFF":	unichr(0x2026),
+	"x_mac_japanese_ttx": ("shift_jis", {
+					b"\xFC": unichr(0x007C),
+					b"\x7E": unichr(0x007E),
+					b"\x80": unichr(0x005C),
+					b"\xA0": unichr(0x00A0),
+					b"\xFD": unichr(0x00A9),
+					b"\xFE": unichr(0x2122),
+					b"\xFF": unichr(0x2026),
 				}),
-	"x-mac-chinesetrad-ttx": ("big5", {
-					b"\x80 ":	unichr(0x005C),
-					b"\xA0 ":	unichr(0x00A0),
-					b"\xFD ":	unichr(0x00A9),
-					b"\xFE ":	unichr(0x2122),
-					b"\xFF ":	unichr(0x2026),
+	"x_mac_trad_chinese_ttx": ("big5", {
+					b"\x80": unichr(0x005C),
+					b"\xA0": unichr(0x00A0),
+					b"\xFD": unichr(0x00A9),
+					b"\xFE": unichr(0x2122),
+					b"\xFF": unichr(0x2026),
 				}),
-	"x-mac-korean-ttx": ("euc_kr", {
-					b"\x80 ":	unichr(0x00A0),
-					b"\x81 ":	unichr(0x20A9),
-					b"\x82 ":	unichr(0x2014),
-					b"\x83 ":	unichr(0x00A9),
-					b"\xFE ":	unichr(0x2122),
-					b"\xFF ":	unichr(0x2026),
+	"x_mac_korean_ttx": ("euc_kr", {
+					b"\x80": unichr(0x00A0),
+					b"\x81": unichr(0x20A9),
+					b"\x82": unichr(0x2014),
+					b"\x83": unichr(0x00A9),
+					b"\xFE": unichr(0x2122),
+					b"\xFF": unichr(0x2026),
 				}),
-	"x-mac-chinesesimp-ttx": ("gb2312", {
-					b"\x80 ":	unichr(0x00FC),
-					b"\xA0 ":	unichr(0x00A0),
-					b"\xFD ":	unichr(0x00A9),
-					b"\xFE ":	unichr(0x2122),
-					b"\xFF ":	unichr(0x2026),
+	"x_mac_simp_chinese_ttx": ("gb2312", {
+					b"\x80": unichr(0x00FC),
+					b"\xA0": unichr(0x00A0),
+					b"\xFD": unichr(0x00A9),
+					b"\xFE": unichr(0x2122),
+					b"\xFF": unichr(0x2026),
 				}),
 }
 
-_codecs = {}
+_cache = {}
 
 def search_function(name):
+	name = encodings.normalize_encoding(name) # Rather undocumented...
 	if name in _extended_encodings:
-		global _codecs
-		if name not in _codecs:
+		if name not in _cache:
 			base_encoding, mapping = _extended_encodings[name]
-			_codecs[name] = ExtendCodec(name, base_encoding, mapping)
-		return _codecs[name].info()
+			assert(name[-4:] == "_ttx")
+			# Python 2 didn't have any of the encodings that we are implementing
+			# in this file.  Python 3 added aliases for the East Asian ones, mapping
+			# them "temporarily" to the same base encoding as us, with a comment
+			# suggesting that full implementation will appear some time later.
+			# As such, try the Python version of the x_mac_... first, if that is found,
+			# use *that* as our base encoding.  This would make our encoding upgrade
+			# to the full encoding when and if Python finally implements that.
+			# http://bugs.python.org/issue24041
+			base_encodings = [name[:-4], base_encoding]
+			for base_encoding in base_encodings:
+				try:
+					codecs.lookup(base_encoding)
+				except LookupError:
+					continue
+				_cache[name] = ExtendCodec(name, base_encoding, mapping)
+				break
+		return _cache[name].info
 
 	return None
 

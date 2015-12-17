@@ -43,7 +43,7 @@ def pointInRect(p, rect):
     return (xMin <= x <= xMax) and (yMin <= y <= yMax)
 
 def pointsInRect(array, rect):
-    """Find out which points or array are inside rect. 
+    """Find out which points or array are inside rect.
     Returns an array with a boolean for each point.
     """
     if len(array) < 1:
@@ -59,7 +59,7 @@ def vectorLength(vector):
 def asInt16(array):
     """Round and cast to 16 bit integer."""
     return [int(math.floor(i+0.5)) for i in array]
-    
+
 
 def normRect(rect):
     """Normalize the rectangle so that the following holds:
@@ -180,5 +180,6 @@ def _test():
     """
 
 if __name__ == "__main__":
-    import doctest, sys
+    import sys
+    import doctest
     sys.exit(doctest.testmod().failed)

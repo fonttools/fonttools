@@ -6,17 +6,17 @@ from .sbixGlyph import *
 import struct
 
 sbixStrikeHeaderFormat = """
-  >
-  ppem:            H    # The PPEM for which this strike was designed (e.g., 9,
-                        # 12, 24)
-  resolution:      H    # The screen resolution (in dpi) for which this strike
-                        # was designed (e.g., 72)
+	>
+	ppem:          H	# The PPEM for which this strike was designed (e.g., 9,
+						# 12, 24)
+	resolution:    H	# The screen resolution (in dpi) for which this strike
+						# was designed (e.g., 72)
 """
 
 sbixGlyphDataOffsetFormat = """
-  >
-  glyphDataOffset: L    # Offset from the beginning of the strike data record
-                        # to data for the individual glyph
+	>
+	glyphDataOffset:   L	# Offset from the beginning of the strike data record
+							# to data for the individual glyph
 """
 
 sbixStrikeHeaderFormatSize = sstruct.calcsize(sbixStrikeHeaderFormat)
@@ -44,7 +44,7 @@ class Strike(object):
 
 		# calculate number of glyphs
 		firstGlyphDataOffset, = struct.unpack(">L", \
-			self.data[sbixStrikeHeaderFormatSize : sbixStrikeHeaderFormatSize + sbixGlyphDataOffsetFormatSize])
+			self.data[sbixStrikeHeaderFormatSize:sbixStrikeHeaderFormatSize + sbixGlyphDataOffsetFormatSize])
 		self.numGlyphs = (firstGlyphDataOffset - sbixStrikeHeaderFormatSize) // sbixGlyphDataOffsetFormatSize - 1
 		# ^ -1 because there's one more offset than glyphs
 
@@ -52,12 +52,12 @@ class Strike(object):
 		self.glyphDataOffsets = []
 		for i in range(self.numGlyphs + 1): # + 1 because there's one more offset than glyphs
 			start = i * sbixGlyphDataOffsetFormatSize + sbixStrikeHeaderFormatSize
-			current_offset, = struct.unpack(">L", self.data[start : start + sbixGlyphDataOffsetFormatSize])
+			current_offset, = struct.unpack(">L", self.data[start:start + sbixGlyphDataOffsetFormatSize])
 			self.glyphDataOffsets.append(current_offset)
 
 		# iterate through offset list and slice raw data into glyph data records
 		for i in range(self.numGlyphs):
-			current_glyph = Glyph(rawdata=self.data[self.glyphDataOffsets[i] : self.glyphDataOffsets[i+1]], gid=i)
+			current_glyph = Glyph(rawdata=self.data[self.glyphDataOffsets[i]:self.glyphDataOffsets[i+1]], gid=i)
 			current_glyph.decompile(ttFont)
 			self.glyphs[current_glyph.glyphName] = current_glyph
 		del self.glyphDataOffsets

@@ -1,0 +1,32 @@
+# OpenType Feature File specification, section 6.h.ii:
+# Specifying Contextual Positioning with explicit lookup references
+# http://www.adobe.com/devnet/opentype/afdko/topic_feature_file_syntax.html
+
+# As of December 2015, the Feature File spec gives a malformed example.
+# TODO: Once https://github.com/adobe-type-tools/afdko/issues/88 is fixed,
+# we should use the example from the spec. For now, we made up our own.
+
+languagesystem DFLT dflt;
+
+markClass [acute grave] <anchor 500 800> @TOP_MARKS;
+markClass macron <anchor 500 820> @TOP_MARKS;
+markClass [cedilla] <anchor 500 -5> @BOTTOM_MARKS;
+@ALL_MARKS = [@TOP_MARKS @BOTTOM_MARKS];
+
+lookup CNTXT_PAIR_POS {
+    position T o -10;
+    position T c -12;
+} CNTXT_PAIR_POS;
+ 
+lookup CNTXT_MARK_TO_BASE {
+    position base [o c]
+        <anchor 500 10> mark @TOP_MARKS
+        <anchor 500 -10> mark @BOTTOM_MARKS;
+} CNTXT_MARK_TO_BASE;
+
+feature test {
+    position
+        T' lookup CNTXT_PAIR_POS
+        [o c]'
+        @ALL_MARKS' lookup CNTXT_MARK_TO_BASE;
+} test;

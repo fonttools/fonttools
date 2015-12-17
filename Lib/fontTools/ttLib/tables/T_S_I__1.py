@@ -3,11 +3,11 @@ from fontTools.misc.py23 import *
 from . import DefaultTable
 
 class table_T_S_I__1(DefaultTable.DefaultTable):
-	
+
 	extras = {0xfffa: "ppgm", 0xfffb: "cvt", 0xfffc: "reserved", 0xfffd: "fpgm"}
-	
+
 	indextable = "TSI0"
-	
+
 	def decompile(self, data, ttFont):
 		indextable = ttFont[self.indextable]
 		self.glyphPrograms = {}
@@ -22,7 +22,7 @@ class table_T_S_I__1(DefaultTable.DefaultTable):
 			assert len(text) == textLength
 			if text:
 				self.glyphPrograms[ttFont.getGlyphName(glyphID)] = text
-		
+
 		self.extraPrograms = {}
 		for i in range(len(indextable.extra_indices)):
 			extraCode, textLength, textOffset = indextable.extra_indices[i]
@@ -35,7 +35,7 @@ class table_T_S_I__1(DefaultTable.DefaultTable):
 			assert len(text) == textLength
 			if text:
 				self.extraPrograms[self.extras[extraCode]] = text
-	
+
 	def compile(self, ttFont):
 		if not hasattr(self, "glyphPrograms"):
 			self.glyphPrograms = {}
@@ -43,7 +43,7 @@ class table_T_S_I__1(DefaultTable.DefaultTable):
 		data = b''
 		indextable = ttFont[self.indextable]
 		glyphNames = ttFont.getGlyphOrder()
-		
+
 		indices = []
 		for i in range(len(glyphNames)):
 			if len(data) % 2:
@@ -58,7 +58,7 @@ class table_T_S_I__1(DefaultTable.DefaultTable):
 				textLength = 0x8000  # XXX ???
 			indices.append((i, textLength, len(data)))
 			data = data + text
-		
+
 		extra_indices = []
 		codes = sorted(self.extras.items())
 		for i in range(len(codes)):
@@ -76,7 +76,7 @@ class table_T_S_I__1(DefaultTable.DefaultTable):
 			data = data + text
 		indextable.set(indices, extra_indices)
 		return data
-	
+
 	def toXML(self, writer, ttFont):
 		names = sorted(self.glyphPrograms.keys())
 		writer.newline()
@@ -103,7 +103,7 @@ class table_T_S_I__1(DefaultTable.DefaultTable):
 			writer.endtag("extraProgram")
 			writer.newline()
 			writer.newline()
-	
+
 	def fromXML(self, name, attrs, content, ttFont):
 		if not hasattr(self, "glyphPrograms"):
 			self.glyphPrograms = {}
@@ -114,4 +114,3 @@ class table_T_S_I__1(DefaultTable.DefaultTable):
 			self.glyphPrograms[attrs["name"]] = text
 		elif name == "extraProgram":
 			self.extraPrograms[attrs["name"]] = text
-

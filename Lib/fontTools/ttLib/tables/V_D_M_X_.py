@@ -20,7 +20,7 @@ VDMX_RatRangeFmt = """
 	yStartRatio: B    # Starting y-Ratio value
 	yEndRatio:   B    # Ending y-Ratio value
 """
-# followed by an array of offset[numRatios] from start of VDMX table to the 
+# followed by an array of offset[numRatios] from start of VDMX table to the
 # VDMX Group for this ratio range (offsets will be re-calculated on compile);
 # followed by an array of Group[numRecs] records;
 VDMX_GroupFmt = """
@@ -174,12 +174,12 @@ class table_V_D_M_X_(DefaultTable.DefaultTable):
 			writer.begintag("group", index=groupIndex)
 			writer.newline()
 			writer.comment("recs=%d, startsz=%d, endsz=%d" %
-						   (recs, startsz, endsz))
+							(recs, startsz, endsz))
 			writer.newline()
-			for yPelHeight in group.keys():
-				yMax, yMin = group[yPelHeight]
+			for yPelHeight, (yMax, yMin) in sorted(group.items()):
 				writer.simpletag(
-					"record", yPelHeight=yPelHeight, yMax=yMax, yMin=yMin)
+					"record",
+					[('yPelHeight', yPelHeight), ('yMax', yMax), ('yMin', yMin)])
 				writer.newline()
 			writer.endtag("group")
 			writer.newline()

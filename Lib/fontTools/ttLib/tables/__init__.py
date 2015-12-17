@@ -1,3 +1,4 @@
+
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 
@@ -43,6 +44,7 @@ def _moduleFinderHint():
 	from . import T_S_I__5
 	from . import V_D_M_X_
 	from . import V_O_R_G_
+	from . import _a_v_a_r
 	from . import _c_m_a_p
 	from . import _c_v_t
 	from . import _f_e_a_t
@@ -50,6 +52,7 @@ def _moduleFinderHint():
 	from . import _f_v_a_r
 	from . import _g_a_s_p
 	from . import _g_l_y_f
+	from . import _g_v_a_r
 	from . import _h_d_m_x
 	from . import _h_e_a_d
 	from . import _h_h_e_a
@@ -58,10 +61,12 @@ def _moduleFinderHint():
 	from . import _l_o_c_a
 	from . import _l_t_a_g
 	from . import _m_a_x_p
+	from . import _m_e_t_a
 	from . import _n_a_m_e
 	from . import _p_o_s_t
 	from . import _p_r_e_p
 	from . import _s_b_i_x
+	from . import _t_r_a_k
 	from . import _v_h_e_a
 	from . import _v_m_t_x
 

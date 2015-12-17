@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont>
+
+  <GDEF>
+    <Version value="1.0"/>
+    <GlyphClassDef>
+      <ClassDef glyph="acute" class="3"/>
+      <ClassDef glyph="caron" class="3"/>
+      <ClassDef glyph="cedilla" class="3"/>
+      <ClassDef glyph="dieresis" class="3"/>
+      <ClassDef glyph="grave" class="3"/>
+      <ClassDef glyph="macron" class="3"/>
+      <ClassDef glyph="ogonek" class="3"/>
+    </GlyphClassDef>
+  </GDEF>
+
+  <GPOS>
+    <Version value="1.0"/>
+    <ScriptList>
+      <!-- ScriptCount=1 -->
+      <ScriptRecord index="0">
+        <ScriptTag value="DFLT"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=1 -->
+            <FeatureIndex index="0" value="0"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=1 -->
+      <FeatureRecord index="0">
+        <FeatureTag value="test"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="0"/>
+        </Feature>
+      </FeatureRecord>
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=1 -->
+      <Lookup index="0">
+        <!-- LookupType=6 -->
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <MarkMarkPos index="0" Format="1">
+          <Mark1Coverage>
+            <Glyph value="grave"/>
+            <Glyph value="acute"/>
+            <Glyph value="macron"/>
+            <Glyph value="cedilla"/>
+          </Mark1Coverage>
+          <Mark2Coverage>
+            <Glyph value="grave"/>
+            <Glyph value="acute"/>
+            <Glyph value="dieresis"/>
+            <Glyph value="macron"/>
+            <Glyph value="ogonek"/>
+            <Glyph value="caron"/>
+          </Mark2Coverage>
+          <!-- ClassCount=2 -->
+          <Mark1Array>
+            <!-- MarkCount=4 -->
+            <MarkRecord index="0">
+              <Class value="0"/>
+              <MarkAnchor Format="2">
+                <XCoordinate value="1"/>
+                <YCoordinate value="1"/>
+                <AnchorPoint value="11"/>
+              </MarkAnchor>
+            </MarkRecord>
+            <MarkRecord index="1">
+              <Class value="0"/>
+              <MarkAnchor Format="2">
+                <XCoordinate value="1"/>
+                <YCoordinate value="1"/>
+                <AnchorPoint value="11"/>
+              </MarkAnchor>
+            </MarkRecord>
+            <MarkRecord index="2">
+              <Class value="0"/>
+              <MarkAnchor Format="2">
+                <XCoordinate value="2"/>
+                <YCoordinate value="2"/>
+                <AnchorPoint value="22"/>
+              </MarkAnchor>
+            </MarkRecord>
+            <MarkRecord index="3">
+              <Class value="1"/>
+              <MarkAnchor Format="2">
+                <XCoordinate value="3"/>
+                <YCoordinate value="3"/>
+                <AnchorPoint value="33"/>
+              </MarkAnchor>
+            </MarkRecord>
+          </Mark1Array>
+          <Mark2Array>
+            <!-- Mark2Count=6 -->
+            <Mark2Record index="0">
+              <Mark2Anchor index="0" Format="1">
+                <XCoordinate value="500"/>
+                <YCoordinate value="200"/>
+              </Mark2Anchor>
+              <Mark2Anchor index="1" Format="1">
+                <XCoordinate value="500"/>
+                <YCoordinate value="-80"/>
+              </Mark2Anchor>
+            </Mark2Record>
+            <Mark2Record index="1">
+              <Mark2Anchor index="0" Format="1">
+                <XCoordinate value="500"/>
+                <YCoordinate value="200"/>
+              </Mark2Anchor>
+              <Mark2Anchor index="1" Format="1">
+                <XCoordinate value="500"/>
+                <YCoordinate value="-80"/>
+              </Mark2Anchor>
+            </Mark2Record>
+            <Mark2Record index="2">
+              <Mark2Anchor index="0" Format="1">
+                <XCoordinate value="500"/>
+                <YCoordinate value="200"/>
+              </Mark2Anchor>
+              <Mark2Anchor index="1" empty="1"/>
+            </Mark2Record>
+            <Mark2Record index="3">
+              <Mark2Anchor index="0" Format="1">
+                <XCoordinate value="500"/>
+                <YCoordinate value="200"/>
+              </Mark2Anchor>
+              <Mark2Anchor index="1" Format="1">
+                <XCoordinate value="500"/>
+                <YCoordinate value="-80"/>
+              </Mark2Anchor>
+            </Mark2Record>
+            <Mark2Record index="4">
+              <Mark2Anchor index="0" Format="1">
+                <XCoordinate value="500"/>
+                <YCoordinate value="200"/>
+              </Mark2Anchor>
+              <Mark2Anchor index="1" Format="1">
+                <XCoordinate value="500"/>
+                <YCoordinate value="-80"/>
+              </Mark2Anchor>
+            </Mark2Record>
+            <Mark2Record index="5">
+              <Mark2Anchor index="0" Format="1">
+                <XCoordinate value="500"/>
+                <YCoordinate value="200"/>
+              </Mark2Anchor>
+              <Mark2Anchor index="1" empty="1"/>
+            </Mark2Record>
+          </Mark2Array>
+        </MarkMarkPos>
+      </Lookup>
+    </LookupList>
+  </GPOS>
+
+</ttFont>

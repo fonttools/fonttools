@@ -1,32 +1,31 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
-from fontTools.misc.textTools import readHex, safeEval, num2binary, binary2num
+from fontTools.misc.textTools import safeEval, num2binary, binary2num
 from . import DefaultTable
 from .sbixGlyph import *
 from .sbixStrike import *
-import struct
 
 
 sbixHeaderFormat = """
-  >
-  version:         H    # Version number (set to 1)
-  flags:           H    # The only two bits used in the flags field are bits 0
-                        # and 1. For historical reasons, bit 0 must always be 1.
-                        # Bit 1 is a sbixDrawOutlines flag and is interpreted as
-                        # follows:
-                        #     0: Draw only 'sbix' bitmaps
-                        #     1: Draw both 'sbix' bitmaps and outlines, in that
-                        #        order
-  numStrikes:      L    # Number of bitmap strikes to follow
+	>
+	version:       H	# Version number (set to 1)
+	flags:         H	# The only two bits used in the flags field are bits 0
+						# and 1. For historical reasons, bit 0 must always be 1.
+						# Bit 1 is a sbixDrawOutlines flag and is interpreted as
+						# follows:
+						#     0: Draw only 'sbix' bitmaps
+						#     1: Draw both 'sbix' bitmaps and outlines, in that
+						#        order
+	numStrikes:    L	# Number of bitmap strikes to follow
 """
 sbixHeaderFormatSize = sstruct.calcsize(sbixHeaderFormat)
 
 
 sbixStrikeOffsetFormat = """
-  >
-  strikeOffset:    L    # Offset from begining of table to data for the
-                        # individual strike
+	>
+	strikeOffset:  L	# Offset from begining of table to data for the
+						# individual strike
 """
 sbixStrikeOffsetFormatSize = sstruct.calcsize(sbixStrikeOffsetFormat)
 
@@ -48,7 +47,7 @@ class table__s_b_i_x(DefaultTable.DefaultTable):
 			current_offset = sbixHeaderFormatSize + i * sbixStrikeOffsetFormatSize
 			offset_entry = sbixStrikeOffset()
 			sstruct.unpack(sbixStrikeOffsetFormat, \
-				data[current_offset : current_offset+sbixStrikeOffsetFormatSize], \
+				data[current_offset:current_offset+sbixStrikeOffsetFormatSize], \
 				offset_entry)
 			self.strikeOffsets.append(offset_entry.strikeOffset)
 

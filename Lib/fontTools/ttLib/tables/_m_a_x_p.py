@@ -29,16 +29,16 @@ maxpFormat_1_0_add = """
 
 
 class table__m_a_x_p(DefaultTable.DefaultTable):
-	
+
 	dependencies = ['glyf']
-	
+
 	def decompile(self, data, ttFont):
 		dummy, data = sstruct.unpack2(maxpFormat_0_5, data, self)
 		self.numGlyphs = int(self.numGlyphs)
 		if self.tableVersion != 0x00005000:
 			dummy, data = sstruct.unpack2(maxpFormat_1_0_add, data, self)
 		assert len(data) == 0
-	
+
 	def compile(self, ttFont):
 		if 'glyf' in ttFont:
 			if ttFont.isLoaded('glyf') and ttFont.recalcBBoxes:
@@ -52,7 +52,7 @@ class table__m_a_x_p(DefaultTable.DefaultTable):
 		if self.tableVersion == 0x00010000:
 			data = data + sstruct.pack(maxpFormat_1_0_add, self)
 		return data
-	
+
 	def recalc(self, ttFont):
 		"""Recalculate the font bounding box, and most other maxp values except
 		for the TT instructions values. Also recalculate the value of bit 1
@@ -99,10 +99,10 @@ class table__m_a_x_p(DefaultTable.DefaultTable):
 			headTable.xMax = 0
 			headTable.yMax = 0
 		else:
-		    headTable.xMin = xMin
-		    headTable.yMin = yMin
-		    headTable.xMax = xMax
-		    headTable.yMax = yMax
+			headTable.xMin = xMin
+			headTable.yMin = yMin
+			headTable.xMax = xMax
+			headTable.yMax = yMax
 		self.maxPoints = maxPoints
 		self.maxContours = maxContours
 		self.maxCompositePoints = maxCompositePoints
@@ -112,14 +112,14 @@ class table__m_a_x_p(DefaultTable.DefaultTable):
 			headTable.flags = headTable.flags | 0x2
 		else:
 			headTable.flags = headTable.flags & ~0x2
-	
+
 	def testrepr(self):
 		items = sorted(self.__dict__.items())
 		print(". . . . . . . . .")
 		for combo in items:
 			print("  %s: %s" % combo)
 		print(". . . . . . . . .")
-	
+
 	def toXML(self, writer, ttFont):
 		if self.tableVersion != 0x00005000:
 			writer.comment("Most of this table will be recalculated by the compiler")
@@ -134,8 +134,6 @@ class table__m_a_x_p(DefaultTable.DefaultTable):
 				value = hex(value)
 			writer.simpletag(name, value=value)
 			writer.newline()
-	
+
 	def fromXML(self, name, attrs, content, ttFont):
 		setattr(self, name, safeEval(attrs["value"]))
-		
-

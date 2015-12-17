@@ -4,10 +4,10 @@ Defines two public classes:
 	SFNTReader
 	SFNTWriter
 
-(Normally you don't have to use these classes explicitly; they are 
+(Normally you don't have to use these classes explicitly; they are
 used automatically by ttLib.TTFont.)
 
-The reading and writing of sfnt files is separated in two distinct 
+The reading and writing of sfnt files is separated in two distinct
 classes, since whenever to number of tables changes or whenever
 a table's length chages you need to rewrite the whole file anyway.
 """
@@ -17,10 +17,26 @@ from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from fontTools.ttLib import getSearchRange
 import struct
+from collections import OrderedDict
 
 
 class SFNTReader(object):
-	
+
+	def __new__(cls, *args, **kwargs):
+		""" Return an instance of the SFNTReader sub-class which is compatible
+		with the input file type.
+		"""
+		if args and cls is SFNTReader:
+			infile = args[0]
+			sfntVersion = Tag(infile.read(4))
+			infile.seek(0)
+			if sfntVersion == "wOF2":
+				# return new WOFF2Reader object
+				from fontTools.ttLib.woff2 import WOFF2Reader
+				return object.__new__(WOFF2Reader)
+		# return default object
+		return object.__new__(cls)
+
 	def __init__(self, file, checkChecksums=1, fontNumber=-1):
 		self.file = file
 		self.checkChecksums = checkChecksums
@@ -31,7 +47,11 @@ class SFNTReader(object):
 		self.sfntVersion = self.file.read(4)
 		self.file.seek(0)
 		if self.sfntVersion == b"ttcf":
-			sstruct.unpack(ttcHeaderFormat, self.file.read(ttcHeaderSize), self)
+			data = self.file.read(ttcHeaderSize)
+			if len(data) != ttcHeaderSize:
+				from fontTools import ttLib
+				raise ttLib.TTLibError("Not a Font Collection (not enough data)")
+			sstruct.unpack(ttcHeaderFormat, data, self)
 			assert self.Version == 0x00010000 or self.Version == 0x00020000, "unrecognized TTC version 0x%08x" % self.Version
 			if not 0 <= fontNumber < self.numFonts:
 				from fontTools import ttLib
@@ -40,23 +60,37 @@ class SFNTReader(object):
 			if self.Version == 0x00020000:
 				pass # ignoring version 2.0 signatures
 			self.file.seek(offsetTable[fontNumber])
-			sstruct.unpack(sfntDirectoryFormat, self.file.read(sfntDirectorySize), self)
+			data = self.file.read(sfntDirectorySize)
+			if len(data) != sfntDirectorySize:
+				from fontTools import ttLib
+				raise ttLib.TTLibError("Not a Font Collection (not enough data)")
+			sstruct.unpack(sfntDirectoryFormat, data, self)
 		elif self.sfntVersion == b"wOFF":
 			self.flavor = "woff"
 			self.DirectoryEntry = WOFFDirectoryEntry
-			sstruct.unpack(woffDirectoryFormat, self.file.read(woffDirectorySize), self)
+			data = self.file.read(woffDirectorySize)
+			if len(data) != woffDirectorySize:
+				from fontTools import ttLib
+				raise ttLib.TTLibError("Not a WOFF font (not enough data)")
+			sstruct.unpack(woffDirectoryFormat, data, self)
 		else:
-			sstruct.unpack(sfntDirectoryFormat, self.file.read(sfntDirectorySize), self)
+			data = self.file.read(sfntDirectorySize)
+			if len(data) != sfntDirectorySize:
+				from fontTools import ttLib
+				raise ttLib.TTLibError("Not a TrueType or OpenType font (not enough data)")
+			sstruct.unpack(sfntDirectoryFormat, data, self)
 		self.sfntVersion = Tag(self.sfntVersion)
 
 		if self.sfntVersion not in ("\x00\x01\x00\x00", "OTTO", "true"):
 			from fontTools import ttLib
 			raise ttLib.TTLibError("Not a TrueType or OpenType font (bad sfntVersion)")
-		self.tables = {}
+		tables = {}
 		for i in range(self.numTables):
 			entry = self.DirectoryEntry()
 			entry.fromFile(self.file)
-			self.tables[Tag(entry.tag)] = entry
+			tag = Tag(entry.tag)
+			tables[tag] = entry
+		self.tables = OrderedDict(sorted(tables.items(), key=lambda i: i[1].offset))
 
 		# Load flavor data if any
 		if self.flavor == "woff":
@@ -66,10 +100,10 @@ class SFNTReader(object):
 		return tag in self.tables
 
 	__contains__ = has_key
-	
+
 	def keys(self):
 		return self.tables.keys()
-	
+
 	def __getitem__(self, tag):
 		"""Fetch the raw table data."""
 		entry = self.tables[Tag(tag)]
@@ -82,23 +116,40 @@ class SFNTReader(object):
 				checksum = calcChecksum(data)
 			if self.checkChecksums > 1:
 				# Be obnoxious, and barf when it's wrong
-				assert checksum == entry.checksum, "bad checksum for '%s' table" % tag
+				assert checksum == entry.checkSum, "bad checksum for '%s' table" % tag
 			elif checksum != entry.checkSum:
 				# Be friendly, and just print a warning.
 				print("bad checksum for '%s' table" % tag)
 		return data
-	
+
 	def __delitem__(self, tag):
 		del self.tables[Tag(tag)]
-	
+
 	def close(self):
 		self.file.close()
 
 
 class SFNTWriter(object):
-	
+
+	def __new__(cls, *args, **kwargs):
+		""" Return an instance of the SFNTWriter sub-class which is compatible
+		with the specified 'flavor'.
+		"""
+		flavor = None
+		if kwargs and 'flavor' in kwargs:
+			flavor = kwargs['flavor']
+		elif args and len(args) > 3:
+			flavor = args[3]
+		if cls is SFNTWriter:
+			if flavor == "woff2":
+				# return new WOFF2Writer object
+				from fontTools.ttLib.woff2 import WOFF2Writer
+				return object.__new__(WOFF2Writer)
+		# return default object
+		return object.__new__(cls)
+
 	def __init__(self, file, numTables, sfntVersion="\000\001\000\000",
-		     flavor=None, flavorData=None):
+			flavor=None, flavorData=None):
 		self.file = file
 		self.numTables = numTables
 		self.sfntVersion = Tag(sfntVersion)
@@ -113,9 +164,9 @@ class SFNTWriter(object):
 			self.signature = "wOFF"
 
 			# to calculate WOFF checksum adjustment, we also need the original SFNT offsets
-			self.origNextTableOffset = sfntDirectorySize + numTables * sfntDirectoryEntrySize 
+			self.origNextTableOffset = sfntDirectorySize + numTables * sfntDirectoryEntrySize
 		else:
-			assert not self.flavor,  "Unknown flavor '%s'" % self.flavor
+			assert not self.flavor, "Unknown flavor '%s'" % self.flavor
 			self.directoryFormat = sfntDirectoryFormat
 			self.directorySize = sfntDirectorySize
 			self.DirectoryEntry = SFNTDirectoryEntry
@@ -127,8 +178,8 @@ class SFNTWriter(object):
 		self.file.seek(self.nextTableOffset)
 		# make sure we're actually where we want to be. (old cStringIO bug)
 		self.file.write(b'\0' * (self.nextTableOffset - self.file.tell()))
-		self.tables = {}
-	
+		self.tables = OrderedDict()
+
 	def __setitem__(self, tag, data):
 		"""Write raw table data to disk."""
 		if tag in self.tables:
@@ -157,9 +208,9 @@ class SFNTWriter(object):
 		# in the font.
 		self.file.write(b'\0' * (self.nextTableOffset - self.file.tell()))
 		assert self.nextTableOffset == self.file.tell()
-		
+
 		self.tables[tag] = entry
-	
+
 	def close(self):
 		"""All tables must have been written to disk. Now write the
 		directory.
@@ -212,11 +263,11 @@ class SFNTWriter(object):
 			self.length = self.file.tell()
 
 		else:
-			assert not self.flavor,  "Unknown flavor '%s'" % self.flavor
+			assert not self.flavor, "Unknown flavor '%s'" % self.flavor
 			pass
-		
+
 		directory = sstruct.pack(self.directoryFormat, self)
-		
+
 		self.file.seek(self.directorySize)
 		seenHead = 0
 		for tag, entry in tables:
@@ -262,6 +313,9 @@ class SFNTWriter(object):
 		# write the checksum to the file
 		self.file.seek(self.tables['head'].offset + 8)
 		self.file.write(struct.pack(">L", checksumadjustment))
+
+	def reordersTables(self):
+		return False
 
 
 # -- sfnt directory helpers and cruft
@@ -332,19 +386,19 @@ woffDirectoryEntrySize = sstruct.calcsize(woffDirectoryEntryFormat)
 
 
 class DirectoryEntry(object):
-	
+
 	def __init__(self):
 		self.uncompressed = False # if True, always embed entry raw
 
 	def fromFile(self, file):
 		sstruct.unpack(self.format, file.read(self.formatSize), self)
-	
+
 	def fromString(self, str):
 		sstruct.unpack(self.format, str, self)
-	
+
 	def toString(self):
 		return sstruct.pack(self.format, self)
-	
+
 	def __repr__(self):
 		if hasattr(self, "tag"):
 			return "<%s '%s' at %x>" % (self.__class__.__name__, self.tag, id(self))
@@ -439,9 +493,9 @@ def calcChecksum(data):
 	Optionally takes a 'start' argument, which allows you to
 	calculate a checksum in chunks by feeding it a previous
 	result.
-	
+
 	If the data length is not a multiple of four, it assumes
-	it is to be padded with null byte. 
+	it is to be padded with null byte.
 
 		>>> print(calcChecksum(b"abcd"))
 		1633837924
@@ -462,5 +516,6 @@ def calcChecksum(data):
 
 
 if __name__ == "__main__":
-	import doctest, sys
+	import sys
+	import doctest
 	sys.exit(doctest.testmod().failed)

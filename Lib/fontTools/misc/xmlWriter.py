@@ -10,11 +10,9 @@ INDENT = "  "
 
 
 class XMLWriter(object):
-	
-	def __init__(self, fileOrPath, indentwhite=INDENT, idlefunc=None, encoding=None):
-		if encoding is None:
-			encoding = 'utf-8'
-		if encoding.lower().replace('-','') != 'utf8':
+
+	def __init__(self, fileOrPath, indentwhite=INDENT, idlefunc=None, encoding="utf_8"):
+		if encoding.lower().replace('-','').replace('_','') != 'utf8':
 			raise Exception('Only UTF-8 encoding is supported.')
 		if fileOrPath == '-':
 			fileOrPath = sys.stdout
@@ -41,12 +39,12 @@ class XMLWriter(object):
 		self.needindent = 1
 		self.idlefunc = idlefunc
 		self.idlecounter = 0
-		self._writeraw(b'<?xml version="1.0" encoding="utf-8"?>')
+		self._writeraw('<?xml version="1.0" encoding="UTF-8"?>')
 		self.newline()
-	
+
 	def close(self):
 		self.file.close()
-	
+
 	def write(self, string, indent=True):
 		"""Writes text."""
 		self._writeraw(escape(string), indent=indent)
@@ -65,17 +63,17 @@ class XMLWriter(object):
 	def write_noindent(self, string):
 		"""Writes text without indentation."""
 		self._writeraw(escape(string), indent=False)
-	
+
 	def _writeraw(self, data, indent=True, strip=False):
 		"""Writes bytes, possibly indented."""
 		if indent and self.needindent:
 			self.file.write(self.indentlevel * self.indentwhite)
 			self.needindent = 0
-		s = self.totype(data, encoding="utf-8")
+		s = self.totype(data, encoding="utf_8")
 		if (strip):
 			s = s.strip()
 		self.file.write(s)
-	
+
 	def newline(self):
 		self.file.write(self.newlinestr)
 		self.needindent = 1
@@ -83,7 +81,7 @@ class XMLWriter(object):
 		if not idlecounter % 100 and self.idlefunc is not None:
 			self.idlefunc()
 		self.idlecounter = idlecounter + 1
-	
+
 	def comment(self, data):
 		data = escape(data)
 		lines = data.split("\n")
@@ -92,26 +90,26 @@ class XMLWriter(object):
 			self.newline()
 			self._writeraw("     " + line)
 		self._writeraw(" -->")
-	
+
 	def simpletag(self, _TAG_, *args, **kwargs):
 		attrdata = self.stringifyattrs(*args, **kwargs)
 		data = "<%s%s/>" % (_TAG_, attrdata)
 		self._writeraw(data)
-	
+
 	def begintag(self, _TAG_, *args, **kwargs):
 		attrdata = self.stringifyattrs(*args, **kwargs)
 		data = "<%s%s>" % (_TAG_, attrdata)
 		self._writeraw(data)
 		self.stack.append(_TAG_)
 		self.indent()
-	
+
 	def endtag(self, _TAG_):
 		assert self.stack and self.stack[-1] == _TAG_, "nonmatching endtag"
 		del self.stack[-1]
 		self.dedent()
 		data = "</%s>" % _TAG_
 		self._writeraw(data)
-	
+
 	def dumphex(self, data):
 		linelength = 16
 		hexlinelength = linelength * 2
@@ -125,14 +123,14 @@ class XMLWriter(object):
 				white = " "
 			self._writeraw(line)
 			self.newline()
-	
+
 	def indent(self):
 		self.indentlevel = self.indentlevel + 1
-	
+
 	def dedent(self):
 		assert self.indentlevel > 0
 		self.indentlevel = self.indentlevel - 1
-	
+
 	def stringifyattrs(self, *args, **kwargs):
 		if kwargs:
 			assert not args
@@ -144,15 +142,18 @@ class XMLWriter(object):
 			return ""
 		data = ""
 		for attr, value in attributes:
-			data = data + ' %s="%s"' % (attr, escapeattr(str(value)))
+			if not isinstance(value, (bytes, unicode)):
+				value = str(value)
+			data = data + ' %s="%s"' % (attr, escapeattr(value))
 		return data
-	
+
 
 def escape(data):
-	data = tostr(data, 'utf-8')
+	data = tostr(data, 'utf_8')
 	data = data.replace("&", "&amp;")
 	data = data.replace("<", "&lt;")
 	data = data.replace(">", "&gt;")
+	data = data.replace("\r", "&#13;")
 	return data
 
 def escapeattr(data):

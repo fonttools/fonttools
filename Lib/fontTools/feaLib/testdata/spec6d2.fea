@@ -1,0 +1,18 @@
+# OpenType Feature File specification, section 6.d, example 1:
+# [GPOS LookupType 4] Mark-to-Base attachment positioning
+# http://www.adobe.com/devnet/opentype/afdko/topic_feature_file_syntax.html
+
+languagesystem DFLT dflt;
+
+markClass [acute grave] <anchor 150 -10> @TOP_MARKS;
+markClass [dieresis umlaut] <anchor 300 -10> @TOP_MARKS;
+markClass [cedilla] <anchor 300 600> @BOTTOM_MARKS;
+
+feature test {
+    position base [e o]
+        <anchor 250 450> mark @TOP_MARKS
+        <anchor 250 -12> mark @BOTTOM_MARKS;
+    position base [a u]
+        <anchor 265 450> mark @TOP_MARKS
+        <anchor 250-10> mark @BOTTOM_MARKS;
+} test;

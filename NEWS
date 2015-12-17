@@ -1,0 +1,206 @@
+## TTX/FontTools Version 3.0
+
+2015-09-01 <https://github.com/behdad/fonttools/commit/58f86f318af8b2f8b553e8cceef678d6ce0017c5>
+
+- Add Snippet scripts for cmap subtable format conversion, printing GSUB/GPOS features, building a GX font from two masters
+- TTX WOFF2 support and a `-f` option to overwrite output file(s)
+- Support GX tables: `avar`, `gvar`, `fvar`, `meta`
+- Support `feat` and gzip-compressed SVG tables
+- Upgrade Mac East Asian encodings to native implementation if available
+- Add Roman Croatian and Romanian encodings, codecs for mac-extended East Asian encodings
+- Implement optimal GLYF glyph outline packing; disabled by default
+
+## TTX/FontTools Version 2.5
+
+2014-09-24 <https://github.com/behdad/fonttools/commit/8388a2e37ce349dac6555bb824c82723e3b65fbf>
+
+- Add a Qt pen
+- Add VDMX table converter
+- Load all OpenType sub-structures lazily
+- Add support for cmap format 13.
+- Add pyftmerge tool
+- Update to Unicode 6.3.0d3
+- Add pyftinspect tool
+- Add support for Google CBLC/CBDT color bitmaps, standard EBLC/EBDT embedded bitmaps, and `SVG ` table (thanks to Read Roberts at Adobe)
+- Add support for loading, saving and ttx'ing WOFF file format
+- Add support for Microsoft COLR/CPAL layered color glyphs
+- Support PyPy
+- Support Jython, by replacing numpy with array/lists modules and removed it, pure-Python StringIO, not cStringIO
+- Add pyftsubset and Subsetter object, supporting CFF and TTF
+- Add to ttx args for -q for quiet mode, -z to choose a bitmap dump format
+
+## TTX/FontTools Version 2.4
+
+- Option to write to arbitrary files
+- Better dump format for DSIG
+- Better detection of OTF XML
+- Fix issue with Apple's kern table format
+- Fix mangling of TT glyph programs
+- Fix issues related to mona.ttf
+- Fix Windows Installer instructions
+- Fix some modern MacOS issues
+- Fix minor issues and typos
+
+## TTX/FontTools Version 2.3
+
+- TrueType Collection (TTC) support
+- Python 2.6 support
+- Update Unicode data to 5.2.0
+- Couple of bug fixes
+
+## TTX/FontTools Version 2.2
+
+- ClearType support
+- cmap format 1 support
+- PFA font support
+- Switched from Numeric to numpy
+- Update Unicode data to 5.1.0
+- Update AGLFN data to 1.6
+- Many bug fixes
+
+## TTX/FontTools Version 2.1
+
+- Many years worth of fixes and features
+
+## TTX/FontTools Version 2.0 beta 2 (released ??? 2002)
+
+- Be "forgiving" when interpreting the maxp table version field:
+  interpret any value as 1.0 if it's not 0.5. Fixes dumping of these
+  GPL fonts: http://www.freebsd.org/cgi/pds.cgi?ports/chinese/wangttf
+- Fixed ttx -l: it turned out this part of the code didn't work with
+  Python 2.2.1 and earlier. My bad to do most of my testing with a
+  different version than I shipped TTX with :-(
+- Fixed bug in ClassDef format 1 subtable (Andreas Seidel bumped into
+  this one).
+
+## TTX/FontTools Version 2.0 beta 1 (released September 10 2002)
+
+- Fixed embarrassing bug: the master checksum in the head table is now
+  calculated correctly even on little-endian platforms (such as Intel).
+- Made the cmap format 4 compiler smarter: the binary data it creates is
+  now more or less as compact as possible. TTX now makes more compact
+  data than in any shipping font I've tested it with.
+- Dump glyph names as a separate "GlyphOrder" pseudo table as opposed to
+  as part of the glyf table (obviously needed for CFF-OTF's).
+- Added proper support for the CFF table.
+- Don't barf on empty tables (questionable, but "there are font out there...")
+- When writing TT glyf data, align glyphs on 4-byte boundaries. This seems
+  to be the current recommendation by MS. Also: don't barf on fonts which
+  are already 4-byte aligned.
+- Windows installer contributed bu Adam Twardoch! Yay!
+- Changed the command line interface again, now by creating one new tool
+  replacing the old ones: ttx
+  It dumps and compiles, depending on input file types. The options have
+  changed somewhat. 
+  - The -d option is back (output dir)
+  - ttcompile's -i options is now called -m (as in "merge"), to avoid clash
+    with dump's -i.
+  - The -s option ("split tables") no longer creates a directory,
+    but instead outputs a small .ttx file containing references to the
+    individual table files. This is not a true link, it's a simple file
+    name, and the referenced file should be in the same directory so
+    ttcompile can find them.
+  - compile no longer accepts a directory as input argument. Instead it
+    can parse the new "mini-ttx" format as output by "ttx -s".
+  - all arguments are input files
+- Renamed the command line programs and moved them to the Tools
+  subdirectory. They are now installed by the setup.py install script.
+- Added OpenType support. BASE, GDEF, GPOS, GSUB and JSTF are (almost)
+  fully supported. The XML output is not yet final, as I'm still
+  considering to output certain subtables in a more human-friendly
+  manner.
+- Fixed 'kern' table to correctly accept subtables it doesn't know about,
+  as well as interpreting Apple's definition of the 'kern' table headers
+  correctly.
+- Fixed bug where glyphnames were not calculated from 'cmap' if it was
+  (one of the) first tables to be decompiled. More specifically: it cmap
+  was the first to ask for a glyphID -> glyphName mapping.
+- Switched XML parsers: use expat instead of xmlproc. Should be faster.
+- Removed my UnicodeString object: I now require Python 2.0 or up, which
+  has unicode support built in.
+- Removed assert in glyf table: redundant data at the end of the table
+  is now ignored instead of raising an error. Should become a warning.
+- Fixed bug in hmtx/vmtx code that only occured if all advances were equal.
+- Fixed subtle bug in TT instruction disassembler.
+- Couple of fixes to the 'post' table.
+- Updated OS/2 table to latest spec.
+
+## TTX/FontTools Version 1.0 beta 1 
+
+2001-08-10
+
+- Reorganized the command line interface for ttDump.py and ttCompile.py,
+  they now behave more like "normal" command line tool, in that they accept
+  multiple input files for batch processing. 
+- ttDump.py and ttCompile.py don't silently override files anymore, but ask
+  before doing so. Can be overridden by -f.
+- Added -d <destination-directory> option to both ttDump.py and ttCompile.py.
+- Installation is now done with distutils. (Needs work for environments without
+  compilers.)
+- Updated installation instructions.
+- Added some workarounds so as to handle certain buggy fonts more gracefully.
+- Updated Unicode table to Unicode 3.0 (Thanks Antoine!)
+- Included a Python script by Adam Twardoch that adds some useful stuff to the
+  Windows registry.
+- Moved the project to SourceForge.
+
+## TTX/FontTools Version 1.0 alpha 6
+
+2000-03-15
+
+- Big reorganization: made ttLib a subpackage of the new fontTools package,
+  changed several module names. Called the entire suite "FontTools"
+- Added several submodules to fontTools, some new, some older.
+- Added experimental CFF/GPOS/GSUB support to ttLib, read-only (but XML dumping
+  of GPOS/GSUB is for now disabled)
+- Fixed hdmx endian bug
+- Added -b option to ttCompile.py, it disables recalculation of bounding boxes,
+  as requested by Werner Lemberg.
+- Renamed tt2xml.pt to ttDump.py and xml2tt.py to ttCompile.py
+- Use ".ttx" as file extension instead of ".xml".
+- TTX is now the name of the XML-based *format* for TT fonts, and not just
+  an application.
+
+## Version 1.0 alpha 5
+
+Never released
+
+- More tables supported: hdmx, vhea, vmtx
+
+## Version 1.0 alpha 3 & 4
+
+Never released
+
+- fixed most portability issues
+- retracted the "Euro_or_currency" change from 1.0a2: it was nonsense!
+
+## Version 1.0 alpha 2 
+
+1999-05-02
+
+- binary release for MacOS
+- genenates full FOND resources: including width table, PS
+  font name info and kern table if applicable. 
+- added cmap format 4 support. Extra: dumps Unicode char names as XML comments! 
+- added cmap format 6 support 
+- now accepts true type files starting with "true"
+  (instead of just 0x00010000 and "OTTO") 
+- 'glyf' table support is now complete: I added support for composite scale, 
+  xy-scale and two-by-two for the 'glyf' table. For now, component offset scale 
+  behaviour defaults to Apple-style. This only affects the (re)calculation of 
+  the glyph bounding box. 
+- changed "Euro" to "Euro_or_currency" in the Standard Apple Glyph order list, 
+  since we cannot tell from the 'post' table which is meant. I should probably 
+  doublecheck with a Unicode encoding if available. (This does not affect the 
+  output!)
+
+Fixed bugs: 
+- 'hhea' table is now recalculated correctly 
+- fixed wrong assumption about sfnt resource names
+
+## Version 1.0 alpha 1
+
+1999-04-27
+
+- initial binary release for MacOS
+

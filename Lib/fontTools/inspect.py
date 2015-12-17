@@ -14,7 +14,6 @@ import gtk
 import sys
 
 
-
 class Row(object):
 	def __init__(self, parent, index, key, value, font):
 		self._parent = parent
@@ -110,8 +109,7 @@ class Row(object):
 		if len(value) and len(value) <= 32:
 			self._value_str = str(value)
 		else:
-			self._value_str = '%s of %d items' % (value.__class__.__name__,
-							      len(value))
+			self._value_str = '%s of %d items' % (value.__class__.__name__, len(value))
 		self._items = list(enumerate(value))
 
 	def __len__(self):
@@ -253,7 +251,9 @@ class Inspect(object):
 		self.scrolled_window.add(self.treeview)
 		self.window.show_all()
 
-def main(args):
+def main(args=None):
+	if args is None:
+		args = sys.argv[1:]
 	if len(args) < 1:
 		print("usage: pyftinspect font...", file=sys.stderr)
 		sys.exit(1)
@@ -262,4 +262,4 @@ def main(args):
 	gtk.main()
 
 if __name__ == "__main__":
-	main(sys.argv[1:])
+	main()

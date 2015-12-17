@@ -31,15 +31,15 @@ class table__h_h_e_a(DefaultTable.DefaultTable):
 	# Note: Keep in sync with table__v_h_e_a
 
 	dependencies = ['hmtx', 'glyf']
-	
+
 	def decompile(self, data, ttFont):
 		sstruct.unpack(hheaFormat, data, self)
-	
+
 	def compile(self, ttFont):
 		if ttFont.isLoaded('glyf') and ttFont.recalcBBoxes:
 			self.recalc(ttFont)
 		return sstruct.pack(hheaFormat, self)
-	
+
 	def recalc(self, ttFont):
 		hmtxTable = ttFont['hmtx']
 		if 'glyf' in ttFont:
@@ -79,14 +79,13 @@ class table__h_h_e_a(DefaultTable.DefaultTable):
 		else:
 			# XXX CFF recalc...
 			pass
-	
+
 	def toXML(self, writer, ttFont):
 		formatstring, names, fixes = sstruct.getformat(hheaFormat)
 		for name in names:
 			value = getattr(self, name)
 			writer.simpletag(name, value=value)
 			writer.newline()
-	
+
 	def fromXML(self, name, attrs, content, ttFont):
 		setattr(self, name, safeEval(attrs["value"]))
-

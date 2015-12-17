@@ -5,17 +5,18 @@ from fontTools.misc.textTools import safeEval, readHex
 from fontTools.misc.fixedTools import fixedToFloat as fi2fl, floatToFixed as fl2fi
 from . import DefaultTable
 import struct
+import array
 import warnings
 
 
 class table__k_e_r_n(DefaultTable.DefaultTable):
-	
+
 	def getkern(self, format):
 		for subtable in self.kernTables:
 			if subtable.version == format:
 				return subtable
 		return None  # not found
-	
+
 	def decompile(self, data, ttFont):
 		version, nTables = struct.unpack(">HH", data[:4])
 		apple = False
@@ -46,7 +47,7 @@ class table__k_e_r_n(DefaultTable.DefaultTable):
 			subtable.decompile(data[:length], ttFont)
 			self.kernTables.append(subtable)
 			data = data[length:]
-	
+
 	def compile(self, ttFont):
 		if hasattr(self, "kernTables"):
 			nTables = len(self.kernTables)
@@ -61,13 +62,13 @@ class table__k_e_r_n(DefaultTable.DefaultTable):
 			for subtable in self.kernTables:
 				data = data + subtable.compile(ttFont)
 		return data
-	
+
 	def toXML(self, writer, ttFont):
 		writer.simpletag("version", value=self.version)
 		writer.newline()
 		for subtable in self.kernTables:
 			subtable.toXML(writer, ttFont)
-	
+
 	def fromXML(self, name, attrs, content, ttFont):
 		if name == "version":
 			self.version = safeEval(attrs["value"])
@@ -86,7 +87,7 @@ class table__k_e_r_n(DefaultTable.DefaultTable):
 
 
 class KernTable_format_0(object):
-	
+
 	def decompile(self, data, ttFont):
 		version, length, coverage = (0,0,0)
 		if not self.apple:
@@ -96,36 +97,47 @@ class KernTable_format_0(object):
 			version, length, coverage = struct.unpack(">LHH", data[:8])
 			data = data[8:]
 		self.version, self.coverage = int(version), int(coverage)
-		
+
 		self.kernTable = kernTable = {}
-		
+
 		nPairs, searchRange, entrySelector, rangeShift = struct.unpack(">HHHH", data[:8])
 		data = data[8:]
-		
+
+		nPairs = min(nPairs, len(data) // 6)
+		datas = array.array("H", data[:6 * nPairs])
+		if sys.byteorder != "big":
+			datas.byteswap()
+		it = iter(datas)
+		glyphOrder = ttFont.getGlyphOrder()
 		for k in range(nPairs):
-			if len(data) < 6:
-				# buggy kern table
-				data = b""
-				break
-			left, right, value = struct.unpack(">HHh", data[:6])
-			data = data[6:]
-			left, right = int(left), int(right)
-			kernTable[(ttFont.getGlyphName(left), ttFont.getGlyphName(right))] = value
-		if len(data):
+			left, right, value = next(it), next(it), next(it)
+			if value >= 32768: value -= 65536
+			try:
+				kernTable[(glyphOrder[left], glyphOrder[right])] = value
+			except IndexError:
+				# Slower, but will not throw an IndexError on an invalid glyph id.
+				kernTable[(ttFont.getGlyphName(left), ttFont.getGlyphName(right))] = value
+		if len(data) > 6 * nPairs:
 			warnings.warn("excess data in 'kern' subtable: %d bytes" % len(data))
-	
+
 	def compile(self, ttFont):
 		nPairs = len(self.kernTable)
 		searchRange, entrySelector, rangeShift = getSearchRange(nPairs, 6)
 		data = struct.pack(">HHHH", nPairs, searchRange, entrySelector, rangeShift)
-		
+
 		# yeehee! (I mean, turn names into indices)
-		getGlyphID = ttFont.getGlyphID
-		kernTable = sorted((getGlyphID(left), getGlyphID(right), value) for ((left,right),value) in self.kernTable.items())
+		try:
+			reverseOrder = ttFont.getReverseGlyphMap()
+			kernTable = sorted((reverseOrder[left], reverseOrder[right], value) for ((left,right),value) in self.kernTable.items())
+		except KeyError:
+			# Slower, but will not throw KeyError on invalid glyph id.
+			getGlyphID = ttFont.getGlyphID
+			kernTable = sorted((getGlyphID(left), getGlyphID(right), value) for ((left,right),value) in self.kernTable.items())
+
 		for left, right, value in kernTable:
 			data = data + struct.pack(">HHh", left, right, value)
 		return struct.pack(">HHH", self.version, len(data) + 6, self.coverage) + data
-	
+
 	def toXML(self, writer, ttFont):
 		writer.begintag("kernsubtable", coverage=self.coverage, format=0)
 		writer.newline()
@@ -139,7 +151,7 @@ class KernTable_format_0(object):
 			writer.newline()
 		writer.endtag("kernsubtable")
 		writer.newline()
-	
+
 	def fromXML(self, name, attrs, content, ttFont):
 		self.coverage = safeEval(attrs["coverage"])
 		self.version = safeEval(attrs["format"])
@@ -150,28 +162,28 @@ class KernTable_format_0(object):
 				continue
 			name, attrs, content = element
 			self.kernTable[(attrs["l"], attrs["r"])] = safeEval(attrs["v"])
-	
+
 	def __getitem__(self, pair):
 		return self.kernTable[pair]
-	
+
 	def __setitem__(self, pair, value):
 		self.kernTable[pair] = value
-	
+
 	def __delitem__(self, pair):
 		del self.kernTable[pair]
 
 
 class KernTable_format_unkown(object):
-	
+
 	def __init__(self, format):
 		self.format = format
-	
+
 	def decompile(self, data, ttFont):
 		self.data = data
-	
+
 	def compile(self, ttFont):
 		return self.data
-	
+
 	def toXML(self, writer, ttFont):
 		writer.begintag("kernsubtable", format=self.format)
 		writer.newline()
@@ -180,10 +192,9 @@ class KernTable_format_unkown(object):
 		writer.dumphex(self.data)
 		writer.endtag("kernsubtable")
 		writer.newline()
-	
+
 	def fromXML(self, name, attrs, content, ttFont):
 		self.decompile(readHex(content), ttFont)
-
 
 
 kern_classes = {0: KernTable_format_0}

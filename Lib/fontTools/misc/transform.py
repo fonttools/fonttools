@@ -322,7 +322,7 @@ class Transform(object):
 
 	def __repr__(self):
 		return "<%s [%g %g %g %g %g %g]>" % ((self.__class__.__name__,) \
-				 + self.__affine)
+				+ self.__affine)
 
 
 Identity = Transform()
@@ -352,5 +352,6 @@ def Scale(x, y=None):
 
 
 if __name__ == "__main__":
-	import doctest, sys
+	import sys
+	import doctest
 	sys.exit(doctest.testmod().failed)

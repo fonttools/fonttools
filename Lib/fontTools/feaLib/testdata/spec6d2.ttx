@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont>
+
+  <GDEF>
+    <Version value="1.0"/>
+    <GlyphClassDef>
+      <ClassDef glyph="a" class="1"/>
+      <ClassDef glyph="acute" class="3"/>
+      <ClassDef glyph="cedilla" class="3"/>
+      <ClassDef glyph="dieresis" class="3"/>
+      <ClassDef glyph="e" class="1"/>
+      <ClassDef glyph="grave" class="3"/>
+      <ClassDef glyph="o" class="1"/>
+      <ClassDef glyph="u" class="1"/>
+      <ClassDef glyph="umlaut" class="3"/>
+    </GlyphClassDef>
+  </GDEF>
+
+  <GPOS>
+    <Version value="1.0"/>
+    <ScriptList>
+      <!-- ScriptCount=1 -->
+      <ScriptRecord index="0">
+        <ScriptTag value="DFLT"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=1 -->
+            <FeatureIndex index="0" value="0"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=1 -->
+      <FeatureRecord index="0">
+        <FeatureTag value="test"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="0"/>
+        </Feature>
+      </FeatureRecord>
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=1 -->
+      <Lookup index="0">
+        <!-- LookupType=4 -->
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <MarkBasePos index="0" Format="1">
+          <MarkCoverage>
+            <Glyph value="grave"/>
+            <Glyph value="acute"/>
+            <Glyph value="dieresis"/>
+            <Glyph value="cedilla"/>
+            <Glyph value="umlaut"/>
+          </MarkCoverage>
+          <BaseCoverage>
+            <Glyph value="a"/>
+            <Glyph value="e"/>
+            <Glyph value="o"/>
+            <Glyph value="u"/>
+          </BaseCoverage>
+          <!-- ClassCount=2 -->
+          <MarkArray>
+            <!-- MarkCount=5 -->
+            <MarkRecord index="0">
+              <Class value="0"/>
+              <MarkAnchor Format="1">
+                <XCoordinate value="150"/>
+                <YCoordinate value="-10"/>
+              </MarkAnchor>
+            </MarkRecord>
+            <MarkRecord index="1">
+              <Class value="0"/>
+              <MarkAnchor Format="1">
+                <XCoordinate value="150"/>
+                <YCoordinate value="-10"/>
+              </MarkAnchor>
+            </MarkRecord>
+            <MarkRecord index="2">
+              <Class value="0"/>
+              <MarkAnchor Format="1">
+                <XCoordinate value="300"/>
+                <YCoordinate value="-10"/>
+              </MarkAnchor>
+            </MarkRecord>
+            <MarkRecord index="3">
+              <Class value="1"/>
+              <MarkAnchor Format="1">
+                <XCoordinate value="300"/>
+                <YCoordinate value="600"/>
+              </MarkAnchor>
+            </MarkRecord>
+            <MarkRecord index="4">
+              <Class value="0"/>
+              <MarkAnchor Format="1">
+                <XCoordinate value="300"/>
+                <YCoordinate value="-10"/>
+              </MarkAnchor>
+            </MarkRecord>
+          </MarkArray>
+          <BaseArray>
+            <!-- BaseCount=4 -->
+            <BaseRecord index="0">
+              <BaseAnchor index="0" Format="1">
+                <XCoordinate value="265"/>
+                <YCoordinate value="450"/>
+              </BaseAnchor>
+              <BaseAnchor index="1" Format="1">
+                <XCoordinate value="250"/>
+                <YCoordinate value="-10"/>
+              </BaseAnchor>
+            </BaseRecord>
+            <BaseRecord index="1">
+              <BaseAnchor index="0" Format="1">
+                <XCoordinate value="250"/>
+                <YCoordinate value="450"/>
+              </BaseAnchor>
+              <BaseAnchor index="1" Format="1">
+                <XCoordinate value="250"/>
+                <YCoordinate value="-12"/>
+              </BaseAnchor>
+            </BaseRecord>
+            <BaseRecord index="2">
+              <BaseAnchor index="0" Format="1">
+                <XCoordinate value="250"/>
+                <YCoordinate value="450"/>
+              </BaseAnchor>
+              <BaseAnchor index="1" Format="1">
+                <XCoordinate value="250"/>
+                <YCoordinate value="-12"/>
+              </BaseAnchor>
+            </BaseRecord>
+            <BaseRecord index="3">
+              <BaseAnchor index="0" Format="1">
+                <XCoordinate value="265"/>
+                <YCoordinate value="450"/>
+              </BaseAnchor>
+              <BaseAnchor index="1" Format="1">
+                <XCoordinate value="250"/>
+                <YCoordinate value="-10"/>
+              </BaseAnchor>
+            </BaseRecord>
+          </BaseArray>
+        </MarkBasePos>
+      </Lookup>
+    </LookupList>
+  </GPOS>
+
+</ttFont>

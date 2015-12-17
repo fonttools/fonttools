@@ -1,0 +1,21 @@
+languagesystem latn DEU;
+languagesystem latn FRA;
+languagesystem latn ITA;
+
+feature hlig {
+  script latn;
+  language DEU exclude_dflt required;
+  sub D E U by D_E_U;
+
+  language FRA exclude_dflt;
+  sub F R A by F_R_A;
+} hlig;
+
+feature liga {
+  language ITA exclude_dflt required;
+  sub I T A by I_T_A;
+} liga;
+
+feature scmp {
+  sub [a-z] by [A.sc-Z.sc];
+} scmp;

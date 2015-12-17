@@ -2,6 +2,7 @@ from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from . import DefaultTable
+import array
 
 hdmxHeaderFormat = """
 	>   # big endian!
@@ -10,8 +11,31 @@ hdmxHeaderFormat = """
 	recordSize:	l
 """
 
+try:
+	from collections.abc import Mapping
+except:
+	from UserDict import DictMixin as Mapping
+
+class _GlyphnamedList(Mapping):
+
+	def __init__(self, reverseGlyphOrder, data):
+		self._array = data
+		self._map = dict(reverseGlyphOrder)
+
+	def __getitem__(self, k):
+		return self._array[self._map[k]]
+
+	def __len__(self):
+		return len(self._map)
+
+	def __iter__(self):
+		return iter(self._map)
+
+	def keys(self):
+		return self._map.keys()
+
 class table__h_d_m_x(DefaultTable.DefaultTable):
-	
+
 	def decompile(self, data, ttFont):
 		numGlyphs = ttFont['maxp'].numGlyphs
 		glyphOrder = ttFont.getGlyphOrder()
@@ -20,13 +44,11 @@ class table__h_d_m_x(DefaultTable.DefaultTable):
 		for i in range(self.numRecords):
 			ppem = byteord(data[0])
 			maxSize = byteord(data[1])
-			widths = {}
-			for glyphID in range(numGlyphs):
-				widths[glyphOrder[glyphID]] = byteord(data[glyphID+2])
+			widths = _GlyphnamedList(ttFont.getReverseGlyphMap(), array.array("B", data[2:2+numGlyphs]))
 			self.hdmx[ppem] = widths
 			data = data[self.recordSize:]
 		assert len(data) == 0, "too much hdmx data"
-	
+
 	def compile(self, ttFont):
 		self.version = 0
 		numGlyphs = ttFont['maxp'].numGlyphs
@@ -43,7 +65,7 @@ class table__h_d_m_x(DefaultTable.DefaultTable):
 				data = data + bytechr(width)
 			data = data + pad
 		return data
-	
+
 	def toXML(self, writer, ttFont):
 		writer.begintag("hdmxData")
 		writer.newline()
@@ -72,7 +94,7 @@ class table__h_d_m_x(DefaultTable.DefaultTable):
 			writer.newline()
 		writer.endtag("hdmxData")
 		writer.newline()
-	
+
 	def fromXML(self, name, attrs, content, ttFont):
 		if name != "hdmxData":
 			return
@@ -97,4 +119,3 @@ class table__h_d_m_x(DefaultTable.DefaultTable):
 			assert len(line) == len(ppems), "illegal hdmx format"
 			for i in range(len(ppems)):
 				hdmx[ppems[i]][glyphName] = line[i]
-
