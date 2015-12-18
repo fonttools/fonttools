@@ -17,7 +17,7 @@ from io import BytesIO, StringIO, open
 from warnings import warn
 from fontTools.misc.py23 import tobytes
 from ufoLib.xmlTreeBuilder import buildTree, stripCharacterData
-from ufoLib.pointPen import AbstractPointPen
+from ufoLib.pointPen import AbstractPointPen, PointToSegmentPen
 from ufoLib.filenames import userNameToFileName
 from ufoLib.validators import isDictEnough, genericTypeValidator, colorValidator,\
 	guidelinesValidator, anchorsValidator, identifierValidator, imageValidator, glyphLibValidator
@@ -75,7 +75,6 @@ class Glyph(object):
 		"""
 		Draw this glyph onto a *FontTools* Pen.
 		"""
-		from robofab.pens.adapterPens import PointToSegmentPen
 		pointPen = PointToSegmentPen(pen)
 		self.drawPoints(pointPen)
 
