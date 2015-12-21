@@ -130,12 +130,12 @@ class BuilderTest(unittest.TestCase):
     def test_pairPos_redefinition(self):
         self.assertRaisesRegex(
             FeatureLibError,
-            r"Already defined position for "
-            "pair \[A B\] \[zero one two\] at .*:2:[0-9]+",  # :2: = line 2
+            r"Already defined position for pair A B "
+            "at .*:2:[0-9]+",  # :2: = line 2
             self.build,
             "feature test {\n"
-            "    pos [A B] [zero one two] 123;\n"  # line 2
-            "    pos [A B] [zero one two] 456;\n"
+            "    pos A B 123;\n"  # line 2
+            "    pos A B 456;\n"
             "} test;\n")
 
     def test_reverseChainingSingleSubst(self):

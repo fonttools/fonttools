@@ -469,9 +469,14 @@ class Builder(object):
                 builder.baseMarks.setdefault(baseMark, {})[markClass.name] = (
                     otBaseAnchor)
 
-    def add_pair_pos(self, location, glyphclass1, value1, glyphclass2, value2):
-        lookup = self.get_lookup_(location, PairPosBuilder)
-        lookup.add_pair(location, glyphclass1, value1, glyphclass2, value2)
+    def add_class_pair_pos(self, location, glyphclass1, value1,
+                           glyphclass2, value2):
+        raise FeatureLibError("Class-based kerning is not yet implemented",
+                              location)
+
+    def add_specific_pair_pos(self, location, glyph1, value1, glyph2, value2):
+        lookup = self.get_lookup_(location, SpecificPairPosBuilder)
+        lookup.add_pair(location, glyph1, value1, glyph2, value2)
 
     def add_single_pos(self, location, glyph, valuerecord):
         lookup = self.get_lookup_(location, SinglePosBuilder)
@@ -784,23 +789,20 @@ class MultipleSubstBuilder(LookupBuilder):
         return self.buildLookup_([subtable])
 
 
-class PairPosBuilder(LookupBuilder):
+class SpecificPairPosBuilder(LookupBuilder):
     def __init__(self, font, location):
         LookupBuilder.__init__(self, font, location, 'GPOS', 2)
         self.pairs = {}  # (gc1, gc2) -> (location, value1, value2)
 
-    def add_pair(self, location, glyphclass1, value1, glyphclass2, value2):
-        gc1 = tuple(sorted(glyphclass1, key=self.font.getGlyphID))
-        gc2 = tuple(sorted(glyphclass2, key=self.font.getGlyphID))
-        oldValue = self.pairs.get((gc1, gc2), None)
+    def add_pair(self, location, glyph1, value1, glyph2, value2):
+        oldValue = self.pairs.get((glyph1, glyph2), None)
         if oldValue is not None:
             otherLoc, _, _ = oldValue
             raise FeatureLibError(
-                'Already defined position for pair [%s] [%s] at %s:%d:%d'
-                % (' '.join(gc1), ' '.join(gc2),
-                   otherLoc[0], otherLoc[1], otherLoc[2]),
+                'Already defined position for pair %s %s at %s:%d:%d'
+                % (glyph1, glyph2, otherLoc[0], otherLoc[1], otherLoc[2]),
                 location)
-        self.pairs[(gc1, gc2)] = (location, value1, value2)
+        self.pairs[(glyph1, glyph2)] = (location, value1, value2)
 
     def equals(self, other):
         return (LookupBuilder.equals(self, other) and
@@ -811,12 +813,11 @@ class PairPosBuilder(LookupBuilder):
 
         # (valueFormat1, valueFormat2) --> [(glyph1, glyph2, value1, value2)*]
         format1 = {}
-        for (gc1, gc2), (location, value1, value2) in self.pairs.items():
-            if len(gc1) == 1 and len(gc2) == 1:
-                val1, valFormat1 = makeOpenTypeValueRecord(value1)
-                val2, valFormat2 = makeOpenTypeValueRecord(value2)
-                format1.setdefault(((valFormat1, valFormat2)), []).append(
-                    (gc1[0], gc2[0], val1, val2))
+        for (glyph1, glyph2), (location, value1, value2) in self.pairs.items():
+            val1, valFormat1 = makeOpenTypeValueRecord(value1)
+            val2, valFormat2 = makeOpenTypeValueRecord(value2)
+            format1.setdefault(((valFormat1, valFormat2)), []).append(
+                (glyph1, glyph2, val1, val2))
         for (vf1, vf2), pairs in sorted(format1.items()):
             p = {}
             for glyph1, glyph2, val1, val2 in pairs:

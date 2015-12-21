@@ -137,7 +137,7 @@ class MarkClass(object):
         for glyph in definition.glyphSet():
             if glyph in self.definitions:
                 otherLoc = self.definitions[glyph].location
-                assert FeatureLibError(
+                raise FeatureLibError(
                     "Glyph %s already defined at %s:%d:%d" % (
                         glyph, otherLoc[0], otherLoc[1], otherLoc[2]),
                     definition.location)
@@ -342,13 +342,21 @@ class PairPosStatement(Statement):
         if self.enumerated:
             g = [self.glyphs1.glyphSet(), self.glyphs2.glyphSet()]
             for glyph1, glyph2 in itertools.product(*g):
-                builder.add_pair_pos(
-                    self.location, {glyph1}, self.valuerecord1,
-                    {glyph2}, self.valuerecord2)
+                builder.add_specific_pair_pos(
+                    self.location, glyph1, self.valuerecord1,
+                    glyph2, self.valuerecord2)
+            return
+
+        is_specific = (isinstance(self.glyphs1, GlyphName) and
+                       isinstance(self.glyphs2, GlyphName))
+        if is_specific:
+            builder.add_specific_pair_pos(
+                self.location, self.glyphs1.glyph, self.valuerecord1,
+                self.glyphs2.glyph, self.valuerecord2)
         else:
-            builder.add_pair_pos(self.location,
-                                 self.glyphs1.glyphSet(), self.valuerecord1,
-                                 self.glyphs2.glyphSet(), self.valuerecord2)
+            builder.add_class_pair_pos(
+                self.location, self.glyphs1.glyphSet(), self.valuerecord1,
+                self.glyphs2.glyphSet(), self.valuerecord2)
 
 
 class ReverseChainSingleSubstStatement(Statement):
