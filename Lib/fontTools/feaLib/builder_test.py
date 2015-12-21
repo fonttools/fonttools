@@ -15,7 +15,7 @@ import unittest
 
 def makeTTFont():
     glyphs = (
-        ".notdef space slash fraction "
+        ".notdef space slash fraction semicolon period comma "
         "zero one two three four five six seven eight nine "
         "zero.oldstyle one.oldstyle two.oldstyle three.oldstyle "
         "four.oldstyle five.oldstyle six.oldstyle seven.oldstyle "
@@ -27,8 +27,9 @@ def makeTTFont():
         "A.alt1 A.alt2 A.alt3 B.alt1 B.alt2 B.alt3 C.alt1 C.alt2 C.alt3 "
         "d.alt n.end s.end "
         "f_l c_h c_k c_s c_t f_f f_f_i f_f_l f_i o_f_f_i s_t "
+        "ydieresis yacute "
         "grave acute dieresis macron circumflex cedilla umlaut ogonek caron "
-        "damma hamza sukun kasratan lam_meem_jeem  "
+        "damma hamza sukun kasratan lam_meem_jeem "
     ).split()
     font = TTFont()
     font.setGlyphOrder(glyphs)
@@ -158,6 +159,13 @@ class BuilderTest(unittest.TestCase):
             "Already defined different position for glyph \"A\"",
             self.build, "feature test { pos A 123; pos A 456; } test;")
 
+    def test_constructs(self):
+        for name in ("enum markClass language_required "
+                     "lookup lookupflag").split():
+            font = makeTTFont()
+            addOpenTypeFeatures(self.getpath("%s.fea" % name), font)
+            self.expect_ttx(font, self.getpath("%s.ttx" % name))
+
     def test_GPOS(self):
         for name in "1 2 3 4 5 6 8".split():
             font = makeTTFont()
@@ -195,11 +203,6 @@ class BuilderTest(unittest.TestCase):
             "If \"languagesystem DFLT dflt\" is present, "
             "it must be the first of the languagesystem statements",
             self.build, "languagesystem latn TRK; languagesystem DFLT dflt;")
-
-    def test_markClass(self):
-        font = makeTTFont()
-        addOpenTypeFeatures(self.getpath("markClass.fea"), font)
-        self.expect_ttx(font, self.getpath("markClass.ttx"))
 
     def test_markClass_redefine(self):
         self.assertRaisesRegex(
@@ -267,11 +270,6 @@ class BuilderTest(unittest.TestCase):
             "Language statements are not allowed within \"feature size\"",
             self.build, "feature size { language FRA; } size;")
 
-    def test_language_required(self):
-        font = makeTTFont()
-        addOpenTypeFeatures(self.getpath("language_required.fea"), font)
-        self.expect_ttx(font, self.getpath("language_required.ttx"))
-
     def test_language_required_duplicate(self):
         self.assertRaisesRegex(
             FeatureLibError,
@@ -288,11 +286,6 @@ class BuilderTest(unittest.TestCase):
             "    language FRA required;"
             "    substitute [a-z] by [A.sc-Z.sc];"
             "} test;")
-
-    def test_lookup(self):
-        font = makeTTFont()
-        addOpenTypeFeatures(self.getpath("lookup.fea"), font)
-        self.expect_ttx(font, self.getpath("lookup.ttx"))
 
     def test_lookup_already_defined(self):
         self.assertRaisesRegex(
@@ -316,11 +309,6 @@ class BuilderTest(unittest.TestCase):
             "    sub f f i by f_f_i;"
             "    sub A from [A.alt1 A.alt2];"
             "} foo;")
-
-    def test_lookupflag(self):
-        font = makeTTFont()
-        addOpenTypeFeatures(self.getpath("lookupflag.fea"), font)
-        self.expect_ttx(font, self.getpath("lookupflag.ttx"))
 
 
 class LigatureSubstBuilderTest(unittest.TestCase):

@@ -469,14 +469,9 @@ class Builder(object):
                 builder.baseMarks.setdefault(baseMark, {})[markClass.name] = (
                     otBaseAnchor)
 
-    def add_pair_pos(self, location, enumerated,
-                     glyphclass1, value1, glyphclass2, value2):
+    def add_pair_pos(self, location, glyphclass1, value1, glyphclass2, value2):
         lookup = self.get_lookup_(location, PairPosBuilder)
-        if enumerated:
-            for glyph in glyphclass1:
-                lookup.add_pair(location, {glyph}, value1, glyphclass2, value2)
-        else:
-            lookup.add_pair(location, glyphclass1, value1, glyphclass2, value2)
+        lookup.add_pair(location, glyphclass1, value1, glyphclass2, value2)
 
     def add_single_pos(self, location, glyph, valuerecord):
         lookup = self.get_lookup_(location, SinglePosBuilder)

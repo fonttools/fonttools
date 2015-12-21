@@ -339,9 +339,16 @@ class PairPosStatement(Statement):
         self.glyphs2, self.valuerecord2 = glyphs2, valuerecord2
 
     def build(self, builder):
-        builder.add_pair_pos(self.location, self.enumerated,
-                             self.glyphs1.glyphSet(), self.valuerecord1,
-                             self.glyphs2.glyphSet(), self.valuerecord2)
+        if self.enumerated:
+            g = [self.glyphs1.glyphSet(), self.glyphs2.glyphSet()]
+            for glyph1, glyph2 in itertools.product(*g):
+                builder.add_pair_pos(
+                    self.location, {glyph1}, self.valuerecord1,
+                    {glyph2}, self.valuerecord2)
+        else:
+            builder.add_pair_pos(self.location,
+                                 self.glyphs1.glyphSet(), self.valuerecord1,
+                                 self.glyphs2.glyphSet(), self.valuerecord2)
 
 
 class ReverseChainSingleSubstStatement(Statement):
