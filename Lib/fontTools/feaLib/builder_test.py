@@ -1,9 +1,10 @@
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
 from fontTools.feaLib.builder import Builder, addOpenTypeFeatures
-from fontTools.feaLib.builder import LigatureSubstBuilder
+from fontTools.feaLib.builder import ClassDefBuilder, LigatureSubstBuilder
 from fontTools.feaLib.error import FeatureLibError
 from fontTools.ttLib import TTFont
+from fontTools.ttLib.tables import otTables
 import codecs
 import difflib
 import os
@@ -311,10 +312,39 @@ class BuilderTest(unittest.TestCase):
             "} foo;")
 
 
+class ClassDefBuilderTest(unittest.TestCase):
+    def test_build(self):
+        builder = ClassDefBuilder(otTables.ClassDef2)
+        builder.add({"a", "b"})
+        builder.add({"c"})
+        builder.add({"e", "f", "g", "h"})
+        cdef = builder.build()
+        self.assertIsInstance(cdef, otTables.ClassDef2)
+        # The largest class {"e", "f", "g", "h"} should become class ID #0.
+        # Zero is the default class ID, so it does not get encoded at all.
+        self.assertEqual(cdef.classDefs, {
+            "a": 1,
+            "b": 1,
+            "c": 2
+        })
+
+    def test_canAdd(self):
+        b = ClassDefBuilder(otTables.ClassDef1)
+        b.add({"a", "b", "c", "d"})
+        b.add({"e", "f"})
+        self.assertTrue(b.canAdd({"a", "b", "c", "d"}))
+        self.assertTrue(b.canAdd({"e", "f"}))
+        self.assertTrue(b.canAdd({"g", "h", "i"}))
+        self.assertFalse(b.canAdd({"b", "c", "d"}))
+        self.assertFalse(b.canAdd({"a", "b", "c", "d", "e", "f"}))
+        self.assertFalse(b.canAdd({"d", "e", "f"}))
+        self.assertFalse(b.canAdd({"f"}))
+
+
 class LigatureSubstBuilderTest(unittest.TestCase):
     def test_make_key(self):
-        self.assertEqual(LigatureSubstBuilder.make_key(('f', 'f', 'i')),
-                         (-3, ('f', 'f', 'i')))
+        self.assertEqual(LigatureSubstBuilder.make_key(("f", "f", "i")),
+                         (-3, ("f", "f", "i")))
 
 
 if __name__ == "__main__":

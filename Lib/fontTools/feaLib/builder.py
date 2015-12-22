@@ -1121,3 +1121,43 @@ class SinglePosBuilder(LookupBuilder):
             st.Value, st.ValueFormat = value, valueFormat
 
         return self.buildLookup_(subtables)
+
+
+class ClassDefBuilder(object):
+    """Helper for building ClassDef tables."""
+    def __init__(self, otClass):
+        self.classes = set()
+        self.glyphs = {}
+        self.otClass = otClass
+
+    def canAdd(self, glyphs):
+        glyphs = frozenset(glyphs)
+        if glyphs in self.classes:
+            return True
+        for glyph in glyphs:
+            if glyph in self.glyphs:
+                return False
+        return True
+
+    def add(self, glyphs):
+        glyphs = frozenset(glyphs)
+        if glyphs in self.classes:
+            return
+        self.classes.add(glyphs)
+        for glyph in glyphs:
+            assert glyph not in self.glyphs
+            self.glyphs[glyph] = glyphs
+
+    def build(self):
+        glyphClasses = {}
+        # Class id #0 does not need to be encoded because zero is the default
+        # when no class is specified. Therefore, we use id #0 for the glyph
+        # class that has the largest number of members.
+        classes = sorted(self.classes, key=len, reverse=True)
+        for classID, glyphs in enumerate(classes):
+            if classID != 0:
+                for glyph in glyphs:
+                    glyphClasses[glyph] = classID
+        classDef = self.otClass()
+        classDef.classDefs = glyphClasses
+        return classDef
