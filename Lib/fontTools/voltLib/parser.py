@@ -510,7 +510,7 @@ class SymbolTable(parser.SymbolTable):
             for v in scope.values():
                 # removed = 0
                 for i, element in enumerate(list(v.enum)):
-                    # if element is a group (name, )
+                    # if element is a group, currently as a tuple (name, )
                     if isinstance(element, tuple) and len(element) == 1:
                         name = element[0]
                         resolved_group = self.resolve(name)
