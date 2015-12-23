@@ -168,7 +168,7 @@ class BuilderTest(unittest.TestCase):
             self.expect_ttx(font, self.getpath("%s.ttx" % name))
 
     def test_GPOS(self):
-        for name in "1 2 3 4 5 6 8".split():
+        for name in "1 2 2b 3 4 5 6 8".split():
             font = makeTTFont()
             addOpenTypeFeatures(self.getpath("GPOS_%s.fea" % name), font)
             self.expect_ttx(font, self.getpath("GPOS_%s.ttx" % name))
@@ -318,14 +318,25 @@ class ClassDefBuilderTest(unittest.TestCase):
         builder.add({"a", "b"})
         builder.add({"c"})
         builder.add({"e", "f", "g", "h"})
-        cdef = builder.build()
+
+        cdef = builder.build(omit_class_zero=True)
         self.assertIsInstance(cdef, otTables.ClassDef2)
-        # The largest class {"e", "f", "g", "h"} should become class ID #0.
-        # Zero is the default class ID, so it does not get encoded at all.
         self.assertEqual(cdef.classDefs, {
             "a": 1,
             "b": 1,
             "c": 2
+        })
+
+        cdef = builder.build(omit_class_zero=False)
+        self.assertIsInstance(cdef, otTables.ClassDef2)
+        self.assertEqual(cdef.classDefs, {
+            "a": 1,
+            "b": 1,
+            "c": 2,
+            "e": 0,
+            "f": 0,
+            "g": 0,
+            "h": 0,
         })
 
     def test_canAdd(self):

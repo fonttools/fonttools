@@ -471,8 +471,8 @@ class Builder(object):
 
     def add_class_pair_pos(self, location, glyphclass1, value1,
                            glyphclass2, value2):
-        raise FeatureLibError("Class-based kerning is not yet implemented",
-                              location)
+        lookup = self.get_lookup_(location, ClassPairPosBuilder)
+        lookup.add_pair(location, glyphclass1, value1, glyphclass2, value2)
 
     def add_specific_pair_pos(self, location, glyph1, value1, glyph2, value2):
         lookup = self.get_lookup_(location, SpecificPairPosBuilder)
@@ -1046,6 +1046,107 @@ class SingleSubstBuilder(LookupBuilder):
         return self.buildLookup_([subtable])
 
 
+class ClassPairPosSubtableBuilder(object):
+    def __init__(self, builder, valueFormat1, valueFormat2):
+        self.builder_ = builder
+        self.classDef1_, self.classDef2_ = None, None
+        self.coverage_ = set()
+        self.values_ = {}  # (glyphclass1, glyphclass2) --> (value1, value2)
+        self.valueFormat1_, self.valueFormat2_ = valueFormat1, valueFormat2
+        self.forceSubtableBreak_ = False
+        self.subtables_ = []
+
+    def addPair(self, gc1, value1, gc2, value2):
+        mergeable = (not self.forceSubtableBreak_ and
+                     self.classDef1_ is not None and
+                     self.classDef1_.canAdd(gc1) and
+                     self.classDef2_ is not None and
+                     self.classDef2_.canAdd(gc2))
+        if not mergeable:
+            self.flush_()
+            self.classDef1_ = ClassDefBuilder(otTables.ClassDef1)
+            self.classDef2_ = ClassDefBuilder(otTables.ClassDef2)
+            self.coverage_ = set()
+            self.values_ = {}
+        self.classDef1_.add(gc1)
+        self.classDef2_.add(gc2)
+        self.coverage_.update(gc1)
+        self.values_[(gc1, gc2)] = (value1, value2)
+
+    def addSubtableBreak(self):
+        self.forceSubtableBreak_ = True
+
+    def subtables(self):
+        self.flush_()
+        return self.subtables_
+
+    def flush_(self):
+        if self.classDef1_ is None or self.classDef2_ is None:
+            return
+        st = otTables.PairPos()
+        st.Format = 2
+        st.Coverage = self.builder_.buildCoverage_(self.coverage_)
+        st.ValueFormat1 = self.valueFormat1_
+        st.ValueFormat2 = self.valueFormat2_
+        st.ClassDef1 = self.classDef1_.build(omit_class_zero=True)
+        st.ClassDef2 = self.classDef2_.build(omit_class_zero=False)
+        classes1 = self.classDef1_.classes()
+        classes2 = self.classDef2_.classes()
+        st.Class1Count, st.Class2Count = len(classes1), len(classes2)
+        st.Class1Record = []
+        for c1 in classes1:
+            rec1 = otTables.Class1Record()
+            rec1.Class2Record = []
+            st.Class1Record.append(rec1)
+            for c2 in classes2:
+                rec2 = otTables.Class2Record()
+                val1, val2 = self.values_.get((c1, c2), (None, None))
+                rec2.Value1, rec2.Value2 = val1, val2
+                rec1.Class2Record.append(rec2)
+        self.subtables_.append(st)
+
+
+class ClassPairPosBuilder(LookupBuilder):
+    SUBTABLE_BREAK_ = "SUBTABLE_BREAK"
+
+    def __init__(self, font, location):
+        LookupBuilder.__init__(self, font, location, 'GPOS', 2)
+        self.pairs = []  # [(location, gc1, value1, gc2, value2)*]
+
+    def add_pair(self, location, glyphclass1, value1, glyphclass2, value2):
+        self.pairs.append((location, glyphclass1, value1, glyphclass2, value2))
+
+    def add_subtable_break(self, location):
+        self.pairs.append((location,
+                           self.SUBTABLE_BREAK_, self.SUBTABLE_BREAK_,
+                           self.SUBTABLE_BREAK_, self.SUBTABLE_BREAK_))
+
+    def equals(self, other):
+        return (LookupBuilder.equals(self, other) and
+                self.pairs == other.pairs)
+
+    def build(self):
+        builders = {}
+        builder = None
+        for location, glyphclass1, value1, glyphclass2, value2 in self.pairs:
+            if glyphclass1 is self.SUBTABLE_BREAK_:
+                if builder is not None:
+                    builder.addSubtableBreak()
+                continue
+            val1, valFormat1 = makeOpenTypeValueRecord(value1)
+            val2, valFormat2 = makeOpenTypeValueRecord(value2)
+            builder = builders.get((valFormat1, valFormat2))
+            if builder is None:
+                builder = ClassPairPosSubtableBuilder(
+                    self, valFormat1, valFormat2)
+                builders[(valFormat1, valFormat2)] = builder
+            builder.addPair(glyphclass1, val1, glyphclass2, val2)
+        subtables = []
+        for key in sorted(builders.keys()):
+            subtables.extend(builders[key].subtables())
+        return self.buildLookup_(subtables)
+
+
 class SinglePosBuilder(LookupBuilder):
     def __init__(self, font, location):
         LookupBuilder.__init__(self, font, location, 'GPOS', 1)
@@ -1126,38 +1227,47 @@ class SinglePosBuilder(LookupBuilder):
 class ClassDefBuilder(object):
     """Helper for building ClassDef tables."""
     def __init__(self, otClass):
-        self.classes = set()
-        self.glyphs = {}
-        self.otClass = otClass
+        self.classes_ = set()
+        self.glyphs_ = {}
+        self.otClass_ = otClass
 
     def canAdd(self, glyphs):
         glyphs = frozenset(glyphs)
-        if glyphs in self.classes:
+        if glyphs in self.classes_:
             return True
         for glyph in glyphs:
-            if glyph in self.glyphs:
+            if glyph in self.glyphs_:
                 return False
         return True
 
     def add(self, glyphs):
         glyphs = frozenset(glyphs)
-        if glyphs in self.classes:
+        if glyphs in self.classes_:
             return
-        self.classes.add(glyphs)
+        self.classes_.add(glyphs)
         for glyph in glyphs:
-            assert glyph not in self.glyphs
-            self.glyphs[glyph] = glyphs
+            assert glyph not in self.glyphs_
+            self.glyphs_[glyph] = glyphs
 
-    def build(self):
+    def classes(self):
+        # In ClassDef1 tables, class id #0 does not need to be encoded
+        # because zero is the default. Therefore, we use id #0 for the
+        # glyph class that has the largest number of members.
+        #
+        # TODO: Instead of counting the number of glyphs in each class,
+        # we should determine the encoded size. If the glyphs in a large
+        # class form a contiguous range, the encoding is actually quite
+        # compact, whereas a non-contiguous set might need a lot of
+        # bytes in the output file.
+        return sorted(self.classes_, key=len, reverse=True)
+
+    def build(self, omit_class_zero):
         glyphClasses = {}
-        # Class id #0 does not need to be encoded because zero is the default
-        # when no class is specified. Therefore, we use id #0 for the glyph
-        # class that has the largest number of members.
-        classes = sorted(self.classes, key=len, reverse=True)
-        for classID, glyphs in enumerate(classes):
-            if classID != 0:
-                for glyph in glyphs:
-                    glyphClasses[glyph] = classID
-        classDef = self.otClass()
+        for classID, glyphs in enumerate(self.classes()):
+            if classID == 0 and omit_class_zero:
+                continue
+            for glyph in glyphs:
+                glyphClasses[glyph] = classID
+        classDef = self.otClass_()
         classDef.classDefs = glyphClasses
         return classDef
