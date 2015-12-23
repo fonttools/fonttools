@@ -313,30 +313,34 @@ class BuilderTest(unittest.TestCase):
 
 
 class ClassDefBuilderTest(unittest.TestCase):
-    def test_build(self):
-        builder = ClassDefBuilder(otTables.ClassDef2)
+    def test_build_ClassDef1(self):
+        builder = ClassDefBuilder(otTables.ClassDef1)
         builder.add({"a", "b"})
         builder.add({"c"})
         builder.add({"e", "f", "g", "h"})
-
-        cdef = builder.build(omit_class_zero=True)
-        self.assertIsInstance(cdef, otTables.ClassDef2)
+        cdef = builder.build()
+        self.assertIsInstance(cdef, otTables.ClassDef1)
         self.assertEqual(cdef.classDefs, {
             "a": 1,
             "b": 1,
             "c": 2
         })
 
-        cdef = builder.build(omit_class_zero=False)
+    def test_build_ClassDef2(self):
+        builder = ClassDefBuilder(otTables.ClassDef2)
+        builder.add({"a", "b"})
+        builder.add({"c"})
+        builder.add({"e", "f", "g", "h"})
+        cdef = builder.build()
         self.assertIsInstance(cdef, otTables.ClassDef2)
         self.assertEqual(cdef.classDefs, {
-            "a": 1,
-            "b": 1,
-            "c": 2,
-            "e": 0,
-            "f": 0,
-            "g": 0,
-            "h": 0,
+            "a": 2,
+            "b": 2,
+            "c": 3,
+            "e": 1,
+            "f": 1,
+            "g": 1,
+            "h": 1
         })
 
     def test_canAdd(self):

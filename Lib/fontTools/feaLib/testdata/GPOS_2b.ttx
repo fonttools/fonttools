@@ -42,14 +42,16 @@
           <ClassDef1>
           </ClassDef1>
           <ClassDef2>
-            <ClassDef glyph="comma" class="0"/>
-            <ClassDef glyph="period" class="0"/>
-            <ClassDef glyph="semicolon" class="0"/>
+            <ClassDef glyph="comma" class="1"/>
+            <ClassDef glyph="period" class="1"/>
+            <ClassDef glyph="semicolon" class="1"/>
           </ClassDef2>
           <!-- Class1Count=1 -->
-          <!-- Class2Count=1 -->
+          <!-- Class2Count=2 -->
           <Class1Record index="0">
             <Class2Record index="0">
+            </Class2Record>
+            <Class2Record index="1">
               <Value1 XAdvance="1"/>
             </Class2Record>
           </Class1Record>
@@ -69,17 +71,19 @@
             <ClassDef glyph="C" class="1"/>
           </ClassDef1>
           <ClassDef2>
-            <ClassDef glyph="comma" class="1"/>
-            <ClassDef glyph="period" class="0"/>
-            <ClassDef glyph="semicolon" class="0"/>
+            <ClassDef glyph="comma" class="2"/>
+            <ClassDef glyph="period" class="1"/>
+            <ClassDef glyph="semicolon" class="1"/>
           </ClassDef2>
           <!-- Class1Count=2 -->
-          <!-- Class2Count=2 -->
+          <!-- Class2Count=3 -->
           <Class1Record index="0">
             <Class2Record index="0">
-              <Value1 XAdvance="4"/>
             </Class2Record>
             <Class2Record index="1">
+              <Value1 XAdvance="4"/>
+            </Class2Record>
+            <Class2Record index="2">
               <Value1 XAdvance="3"/>
             </Class2Record>
           </Class1Record>
@@ -87,6 +91,8 @@
             <Class2Record index="0">
             </Class2Record>
             <Class2Record index="1">
+            </Class2Record>
+            <Class2Record index="2">
               <Value1 XAdvance="2"/>
             </Class2Record>
           </Class1Record>
@@ -100,14 +106,16 @@
           <ClassDef1>
           </ClassDef1>
           <ClassDef2>
-            <ClassDef glyph="comma" class="0"/>
-            <ClassDef glyph="period" class="0"/>
-            <ClassDef glyph="semicolon" class="0"/>
+            <ClassDef glyph="comma" class="1"/>
+            <ClassDef glyph="period" class="1"/>
+            <ClassDef glyph="semicolon" class="1"/>
           </ClassDef2>
           <!-- Class1Count=1 -->
-          <!-- Class2Count=1 -->
+          <!-- Class2Count=2 -->
           <Class1Record index="0">
             <Class2Record index="0">
+            </Class2Record>
+            <Class2Record index="1">
               <Value1 XPlacement="5" YPlacement="5" XAdvance="5" YAdvance="5"/>
             </Class2Record>
           </Class1Record>

@@ -1088,8 +1088,8 @@ class ClassPairPosSubtableBuilder(object):
         st.Coverage = self.builder_.buildCoverage_(self.coverage_)
         st.ValueFormat1 = self.valueFormat1_
         st.ValueFormat2 = self.valueFormat2_
-        st.ClassDef1 = self.classDef1_.build(omit_class_zero=True)
-        st.ClassDef2 = self.classDef2_.build(omit_class_zero=False)
+        st.ClassDef1 = self.classDef1_.build()
+        st.ClassDef2 = self.classDef2_.build()
         classes1 = self.classDef1_.classes()
         classes2 = self.classDef2_.classes()
         st.Class1Count, st.Class2Count = len(classes1), len(classes2)
@@ -1252,19 +1252,25 @@ class ClassDefBuilder(object):
     def classes(self):
         # In ClassDef1 tables, class id #0 does not need to be encoded
         # because zero is the default. Therefore, we use id #0 for the
-        # glyph class that has the largest number of members.
+        # glyph class that has the largest number of members. However,
+        # in other tables than ClassDef1, 0 means "every other glyph"
+        # so we should not use that ID for any real glyph classes;
+        # we implement this by inserting an empty set at position 0.
         #
         # TODO: Instead of counting the number of glyphs in each class,
         # we should determine the encoded size. If the glyphs in a large
         # class form a contiguous range, the encoding is actually quite
-        # compact, whereas a non-contiguous set might need a lot of
-        # bytes in the output file.
-        return sorted(self.classes_, key=len, reverse=True)
+        # compact, whereas a non-contiguous set might need a lot of bytes
+        # in the output file. We don't get this right with key=len below.
+        result = sorted(self.classes_, key=len, reverse=True)
+        if self.otClass_ is not otTables.ClassDef1:
+            result.insert(0, frozenset())
+        return result
 
-    def build(self, omit_class_zero):
+    def build(self):
         glyphClasses = {}
         for classID, glyphs in enumerate(self.classes()):
-            if classID == 0 and omit_class_zero:
+            if classID == 0:
                 continue
             for glyph in glyphs:
                 glyphClasses[glyph] = classID
