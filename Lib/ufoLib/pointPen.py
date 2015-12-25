@@ -152,7 +152,7 @@ class PointToSegmentPen(BasePointToSegmentPen):
 			# It's an open path.
 			closed = False
 			points = segments[0][1]
-			assert len(points) == 1
+			assert len(points) == 1, "illegal move segment point count: %d" % len(points)
 			movePt, smooth, name, kwargs = points[0]
 			del segments[0]
 		else:
@@ -174,7 +174,7 @@ class PointToSegmentPen(BasePointToSegmentPen):
 			segmentType, points = segments[i]
 			points = [pt for pt, smooth, name, kwargs in points]
 			if segmentType == "line":
-				assert len(points) == 1
+				assert len(points) == 1, "illegal line segment point count: %d" % len(points)
 				pt = points[0]
 				if i + 1 != nSegments or outputImpliedClosingLine or not closed:
 					pen.lineTo(pt)
