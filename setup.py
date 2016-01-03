@@ -66,11 +66,13 @@ setup(
 		license = "OpenSource, BSD-style",
 		platforms = ["Any"],
 		long_description = long_description,
-		
+
 		packages = [
 			"fontTools",
 			"fontTools.encodings",
+			"fontTools.feaLib",
 			"fontTools.misc",
+			"fontTools.mtiLib",
 			"fontTools.pens",
 			"fontTools.ttLib",
 			"fontTools.t1Lib",
