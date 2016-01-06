@@ -404,7 +404,14 @@ class Builder(object):
         lookup = self.get_lookup_(location, LigatureSubstBuilder)
         lookup.ligatures[glyphs] = replacement
 
-    def add_multiple_subst(self, location, glyph, replacements):
+    def add_multiple_subst(self, location,
+                           prefix, glyph, suffix, replacements):
+        if prefix or suffix:
+            sub = self.get_chained_lookup_(location, MultipleSubstBuilder)
+            sub.mapping[glyph] = replacements
+            lookup = self.get_lookup_(location, ChainContextSubstBuilder)
+            lookup.substitutions.append((prefix, [{glyph}], suffix, [sub]))
+            return
         lookup = self.get_lookup_(location, MultipleSubstBuilder)
         if glyph in lookup.mapping:
             raise FeatureLibError(

@@ -500,13 +500,12 @@ class Parser(object):
 
         # GSUB lookup type 2: Multiple substitution.
         # Format: "substitute f_f_i by f f i;"
-        if (not reverse and len(old_prefix) == 0 and len(old_suffix) == 0 and
+        if (not reverse and
                 len(old) == 1 and len(old[0].glyphSet()) == 1 and
                 len(new) > 1 and max([len(n.glyphSet()) for n in new]) == 1 and
                 num_lookups == 0):
             return ast.MultipleSubstStatement(
-                location,
-                tuple(old[0].glyphSet())[0],
+                location, old_prefix, tuple(old[0].glyphSet())[0], old_suffix,
                 tuple([list(n.glyphSet())[0] for n in new]))
 
         # GSUB lookup type 4: Ligature substitution.

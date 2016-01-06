@@ -1,0 +1,7 @@
+lookup ChainedMultipleSubst {
+    substitute [A-C a-c] [D d] E c_t' V [W w] [X-Z x-z] by c t;
+} ChainedMultipleSubst;
+
+feature test {
+    lookup ChainedMultipleSubst;
+} test;

@@ -803,7 +803,14 @@ class ParserTest(unittest.TestCase):
     def test_substitute_multiple(self):  # GSUB LookupType 2
         doc = self.parse("lookup Look {substitute f_f_i by f f i;} Look;")
         sub = doc.statements[0].statements[0]
-        self.assertEqual(type(sub), ast.MultipleSubstStatement)
+        self.assertIsInstance(sub, ast.MultipleSubstStatement)
+        self.assertEqual(sub.glyph, "f_f_i")
+        self.assertEqual(sub.replacement, ("f", "f", "i"))
+
+    def test_substitute_multiple_chained(self):  # GSUB LookupType 2
+        doc = self.parse("lookup L {sub [A-C] f_f_i' [X-Z] by f f i;} L;")
+        sub = doc.statements[0].statements[0]
+        self.assertIsInstance(sub, ast.MultipleSubstStatement)
         self.assertEqual(sub.glyph, "f_f_i")
         self.assertEqual(sub.replacement, ("f", "f", "i"))
 

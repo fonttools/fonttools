@@ -318,16 +318,19 @@ class MarkMarkPosStatement(Statement):
 
     def build(self, builder):
         builder.add_mark_mark_pos(self.location, self.baseMarks, self.marks)
-        pass
 
 
 class MultipleSubstStatement(Statement):
-    def __init__(self, location, glyph, replacement):
+    def __init__(self, location, prefix, glyph, suffix, replacement):
         Statement.__init__(self, location)
-        self.glyph, self.replacement = glyph, replacement
+        self.prefix, self.glyph, self.suffix = prefix, glyph, suffix
+        self.replacement = replacement
 
     def build(self, builder):
-        builder.add_multiple_subst(self.location, self.glyph, self.replacement)
+        prefix = [p.glyphSet() for p in self.prefix]
+        suffix = [s.glyphSet() for s in self.suffix]
+        builder.add_multiple_subst(
+            self.location, prefix, self.glyph, suffix, self.replacement)
 
 
 class PairPosStatement(Statement):

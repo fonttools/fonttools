@@ -96,11 +96,6 @@ class BuilderTest(unittest.TestCase):
         addOpenTypeFeatures(path, font)
         return font
 
-    def test_alternateSubst(self):
-        font = makeTTFont()
-        addOpenTypeFeatures(self.getpath("GSUB_3.fea"), font)
-        self.expect_ttx(font, self.getpath("GSUB_3.ttx"))
-
     def test_alternateSubst_multipleSubstitutionsForSameGlyph(self):
         self.assertRaisesRegex(
             FeatureLibError,
@@ -111,11 +106,6 @@ class BuilderTest(unittest.TestCase):
             "    sub B from [B.alt1 B.alt2 B.alt3];"
             "    sub A from [A.alt1 A.alt2];"
             "} test;")
-
-    def test_multipleSubst(self):
-        font = makeTTFont()
-        addOpenTypeFeatures(self.getpath("GSUB_2.fea"), font)
-        self.expect_ttx(font, self.getpath("GSUB_2.ttx"))
 
     def test_multipleSubst_multipleSubstitutionsForSameGlyph(self):
         self.assertRaisesRegex(
@@ -138,11 +128,6 @@ class BuilderTest(unittest.TestCase):
             "    pos A B 123;\n"  # line 2
             "    pos A B 456;\n"
             "} test;\n")
-
-    def test_reverseChainingSingleSubst(self):
-        font = makeTTFont()
-        addOpenTypeFeatures(self.getpath("GSUB_8.fea"), font)
-        self.expect_ttx(font, self.getpath("GSUB_8.ttx"))
 
     def test_singleSubst_multipleSubstitutionsForSameGlyph(self):
         self.assertRaisesRegex(
@@ -172,6 +157,12 @@ class BuilderTest(unittest.TestCase):
             font = makeTTFont()
             addOpenTypeFeatures(self.getpath("GPOS_%s.fea" % name), font)
             self.expect_ttx(font, self.getpath("GPOS_%s.ttx" % name))
+
+    def test_GSUB(self):
+        for name in "2 3 6 8".split():
+            font = makeTTFont()
+            addOpenTypeFeatures(self.getpath("GSUB_%s.fea" % name), font)
+            self.expect_ttx(font, self.getpath("GSUB_%s.ttx" % name))
 
     def test_spec(self):
         for name in "4h1 5d1 5d2 5fi1 5fi2 5h1 6d2 6e 6f 6h_ii".split():
