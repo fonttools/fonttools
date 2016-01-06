@@ -286,10 +286,17 @@ class BuilderTest(unittest.TestCase):
             self.build, "lookup foo {} foo; lookup foo {} foo;")
 
     def test_lookup_multiple_flags(self):
-        # TODO(sascha): As soon as we have a working implementation
-        # of the "lookupflag" statement, test whether the compiler
-        # rejects rules of the same lookup type but different flags.
-        pass
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Within a named lookup block, all rules must be "
+            "of the same lookup type and flag",
+            self.build,
+            "lookup foo {"
+            "    lookupflag 1;"
+            "    sub f i by f_i;"
+            "    lookupflag 2;"
+            "    sub f f i by f_f_i;"
+            "} foo;")
 
     def test_lookup_multiple_types(self):
         self.assertRaisesRegex(
