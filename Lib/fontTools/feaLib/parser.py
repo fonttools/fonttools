@@ -446,10 +446,10 @@ class Parser(object):
             keyword = self.expect_keyword_("by")
             while self.next_token_ != ";":
                 gc = self.parse_glyphclass_(accept_glyphname=True)
-                new.append(gc.glyphSet())
+                new.append(gc)
         elif self.next_token_ == "from":
             keyword = self.expect_keyword_("from")
-            new = [self.parse_glyphclass_(accept_glyphname=False).glyphSet()]
+            new = [self.parse_glyphclass_(accept_glyphname=False)]
         else:
             keyword = None
         self.expect_symbol_(";")
@@ -475,7 +475,7 @@ class Parser(object):
                     location)
             return ast.AlternateSubstStatement(location,
                                                list(old[0].glyphSet())[0],
-                                               new[0])
+                                               new[0].glyphSet())
 
         num_lookups = len([l for l in lookups if l is not None])
 
@@ -483,10 +483,10 @@ class Parser(object):
         # Format A: "substitute a by a.sc;"
         # Format B: "substitute [one.fitted one.oldstyle] by one;"
         # Format C: "substitute [a-d] by [A.sc-D.sc];"
-        if (not reverse and len(old_prefix) == 0 and len(old_suffix) == 0 and
-                len(old) == 1 and len(new) == 1 and num_lookups == 0):
+        if (not reverse and len(old) == 1 and len(new) == 1 and
+                num_lookups == 0):
             glyphs = sorted(list(old[0].glyphSet()))
-            replacements = sorted(list(new[0]))
+            replacements = sorted(list(new[0].glyphSet()))
             if len(replacements) == 1:
                 replacements = replacements * len(glyphs)
             if len(glyphs) != len(replacements):
@@ -495,24 +495,28 @@ class Parser(object):
                     'but found a glyph class with %d elements' %
                     (len(glyphs), len(replacements)), location)
             return ast.SingleSubstStatement(location,
-                                            dict(zip(glyphs, replacements)))
+                                            dict(zip(glyphs, replacements)),
+                                            old_prefix, old_suffix)
 
         # GSUB lookup type 2: Multiple substitution.
         # Format: "substitute f_f_i by f f i;"
         if (not reverse and len(old_prefix) == 0 and len(old_suffix) == 0 and
                 len(old) == 1 and len(old[0].glyphSet()) == 1 and
-                len(new) > 1 and max([len(n) for n in new]) == 1 and
+                len(new) > 1 and max([len(n.glyphSet()) for n in new]) == 1 and
                 num_lookups == 0):
-            return ast.MultipleSubstStatement(location,
-                                              tuple(old[0].glyphSet())[0],
-                                              tuple([list(n)[0] for n in new]))
+            return ast.MultipleSubstStatement(
+                location,
+                tuple(old[0].glyphSet())[0],
+                tuple([list(n.glyphSet())[0] for n in new]))
 
         # GSUB lookup type 4: Ligature substitution.
         # Format: "substitute f f i by f_f_i;"
         if (not reverse and len(old_prefix) == 0 and len(old_suffix) == 0 and
-                len(old) > 1 and len(new) == 1 and len(new[0]) == 1 and
+                len(old) > 1 and len(new) == 1 and
+                len(new[0].glyphSet()) == 1 and
                 num_lookups == 0):
-            return ast.LigatureSubstStatement(location, old, list(new[0])[0])
+            return ast.LigatureSubstStatement(
+                location, old, list(new[0].glyphSet())[0])
 
         # GSUB lookup type 8: Reverse chaining substitution.
         if reverse:
@@ -531,7 +535,7 @@ class Parser(object):
                     "Reverse chaining substitutions cannot call named lookups",
                     location)
             glyphs = sorted(list(old[0].glyphSet()))
-            replacements = sorted(list(new[0]))
+            replacements = sorted(list(new[0].glyphSet()))
             if len(replacements) == 1:
                 replacements = replacements * len(glyphs)
             if len(glyphs) != len(replacements):

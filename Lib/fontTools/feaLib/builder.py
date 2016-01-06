@@ -51,6 +51,13 @@ class Builder(object):
         elif "GDEF" in self.font:
             del self.font["GDEF"]
 
+    def get_chained_lookup_(self, location, builder_class):
+        result = builder_class(self.font, location)
+        result.lookupflag = self.lookupflag_
+        result.markFilterSet = self.lookupflag_markFilterSet_
+        self.lookups_.append(result)
+        return result
+
     def get_lookup_(self, location, builder_class):
         if (self.cur_lookup_ and
             type(self.cur_lookup_) == builder_class and
@@ -410,7 +417,14 @@ class Builder(object):
         lookup = self.get_lookup_(location, ReverseChainSingleSubstBuilder)
         lookup.substitutions.append((old_prefix, old_suffix, mapping))
 
-    def add_single_subst(self, location, mapping):
+    def add_single_subst(self, location, prefix, suffix, mapping):
+        if prefix or suffix:
+            sub = self.get_chained_lookup_(location, SingleSubstBuilder)
+            sub.mapping.update(mapping)
+            lookup = self.get_lookup_(location, ChainContextSubstBuilder)
+            lookup.substitutions.append(
+                (prefix, [mapping.keys()], suffix, [sub]))
+            return
         lookup = self.get_lookup_(location, SingleSubstBuilder)
         for (from_glyph, to_glyph) in mapping.items():
             if from_glyph in lookup.mapping:

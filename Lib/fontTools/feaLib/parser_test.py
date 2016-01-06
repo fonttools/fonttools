@@ -717,39 +717,83 @@ class ParserTest(unittest.TestCase):
             '"dflt" is not a valid script tag; use "DFLT" instead',
             self.parse, "feature test {script dflt;} test;")
 
-    def test_substitute_single_format_a(self):  # GSUB LookupType 1
+    def test_sub_single_format_a(self):  # GSUB LookupType 1
         doc = self.parse("feature smcp {substitute a by a.sc;} smcp;")
         sub = doc.statements[0].statements[0]
         self.assertEqual(type(sub), ast.SingleSubstStatement)
+        self.assertEqual(glyphstr(sub.prefix), "")
         self.assertEqual(sub.mapping, {"a": "a.sc"})
+        self.assertEqual(glyphstr(sub.suffix), "")
 
-    def test_substitute_single_format_b(self):  # GSUB LookupType 1
+    def test_sub_single_format_a_chained(self):  # chain to GSUB LookupType 1
+        doc = self.parse("feature test {sub [A a] d' [C] by d.alt;} test;")
+        sub = doc.statements[0].statements[0]
+        self.assertIsInstance(sub, ast.SingleSubstStatement)
+        self.assertEqual(sub.mapping, {"d": "d.alt"})
+        self.assertEqual(glyphstr(sub.prefix), "[A a]")
+        self.assertEqual(glyphstr(sub.suffix), "C")
+
+    def test_sub_single_format_b(self):  # GSUB LookupType 1
         doc = self.parse(
             "feature smcp {"
             "    substitute [one.fitted one.oldstyle] by one;"
             "} smcp;")
         sub = doc.statements[0].statements[0]
-        self.assertEqual(type(sub), ast.SingleSubstStatement)
+        self.assertIsInstance(sub, ast.SingleSubstStatement)
         self.assertEqual(sub.mapping, {
             "one.fitted": "one",
             "one.oldstyle": "one"
         })
+        self.assertEqual(glyphstr(sub.prefix), "")
+        self.assertEqual(glyphstr(sub.suffix), "")
 
-    def test_substitute_single_format_c(self):  # GSUB LookupType 1
+    def test_sub_single_format_b_chained(self):  # chain to GSUB LookupType 1
+        doc = self.parse(
+            "feature smcp {"
+            "    substitute PRE FIX [one.fitted one.oldstyle]' SUF FIX by one;"
+            "} smcp;")
+        sub = doc.statements[0].statements[0]
+        self.assertIsInstance(sub, ast.SingleSubstStatement)
+        self.assertEqual(sub.mapping, {
+            "one.fitted": "one",
+            "one.oldstyle": "one"
+        })
+        self.assertEqual(glyphstr(sub.prefix), "PRE FIX")
+        self.assertEqual(glyphstr(sub.suffix), "SUF FIX")
+
+    def test_sub_single_format_c(self):  # GSUB LookupType 1
         doc = self.parse(
             "feature smcp {"
             "    substitute [a-d] by [A.sc-D.sc];"
             "} smcp;")
         sub = doc.statements[0].statements[0]
-        self.assertEqual(type(sub), ast.SingleSubstStatement)
+        self.assertIsInstance(sub, ast.SingleSubstStatement)
         self.assertEqual(sub.mapping, {
             "a": "A.sc",
             "b": "B.sc",
             "c": "C.sc",
             "d": "D.sc"
         })
+        self.assertEqual(glyphstr(sub.prefix), "")
+        self.assertEqual(glyphstr(sub.suffix), "")
 
-    def test_substitute_single_format_c_different_num_elements(self):
+    def test_sub_single_format_c_chained(self):  # chain to GSUB LookupType 1
+        doc = self.parse(
+            "feature smcp {"
+            "    substitute [a-d]' X Y [Z z] by [A.sc-D.sc];"
+            "} smcp;")
+        sub = doc.statements[0].statements[0]
+        self.assertIsInstance(sub, ast.SingleSubstStatement)
+        self.assertEqual(sub.mapping, {
+            "a": "A.sc",
+            "b": "B.sc",
+            "c": "C.sc",
+            "d": "D.sc"
+        })
+        self.assertEqual(glyphstr(sub.prefix), "")
+        self.assertEqual(glyphstr(sub.suffix), "X Y [Z z]")
+
+    def test_sub_single_format_c_different_num_elements(self):
         self.assertRaisesRegex(
             FeatureLibError,
             'Expected a glyph class with 4 elements after "by", '
@@ -789,7 +833,7 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(glyphstr(sub.glyphs), "f f i")
         self.assertEqual(sub.replacement, "f_f_i")
 
-    def test_substitute_lookups(self):
+    def test_substitute_lookups(self):  # GSUB LookupType 6
         doc = Parser(self.getpath("spec5fi1.fea")).parse()
         [langsys, ligs, sub, feature] = doc.statements
         self.assertEqual(feature.statements[0].lookups, [ligs, None, sub])

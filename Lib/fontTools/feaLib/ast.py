@@ -198,8 +198,8 @@ class ChainContextPosStatement(Statement):
 class ChainContextSubstStatement(Statement):
     def __init__(self, location, prefix, glyphs, suffix, lookups):
         Statement.__init__(self, location)
-        self.glyphs, self.lookups = glyphs, lookups
-        self.prefix, self.suffix = prefix, suffix
+        self.prefix, self.glyphs, self.suffix = prefix, glyphs, suffix
+        self.lookups = lookups
 
     def build(self, builder):
         prefix = [p.glyphSet() for p in self.prefix]
@@ -373,12 +373,14 @@ class ReverseChainSingleSubstStatement(Statement):
 
 
 class SingleSubstStatement(Statement):
-    def __init__(self, location, mapping):
+    def __init__(self, location, mapping, prefix, suffix):
         Statement.__init__(self, location)
-        self.mapping = mapping
+        self.mapping, self.prefix, self.suffix = mapping, prefix, suffix
 
     def build(self, builder):
-        builder.add_single_subst(self.location, self.mapping)
+        prefix = [p.glyphSet() for p in self.prefix]
+        suffix = [s.glyphSet() for s in self.suffix]
+        builder.add_single_subst(self.location, prefix, suffix, self.mapping)
 
 
 class ScriptStatement(Statement):
