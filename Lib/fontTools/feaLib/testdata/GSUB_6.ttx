@@ -22,14 +22,80 @@
       <FeatureRecord index="0">
         <FeatureTag value="test"/>
         <Feature>
-          <!-- LookupCount=1 -->
+          <!-- LookupCount=2 -->
           <LookupListIndex index="0" value="1"/>
+          <LookupListIndex index="1" value="4"/>
         </Feature>
       </FeatureRecord>
     </FeatureList>
     <LookupList>
-      <!-- LookupCount=2 -->
+      <!-- LookupCount=5 -->
       <Lookup index="0">
+        <!-- LookupType=1 -->
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <SingleSubst index="0">
+          <Substitution in="A" out="A.sc"/>
+        </SingleSubst>
+      </Lookup>
+      <Lookup index="1">
+        <!-- LookupType=6 -->
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=2 -->
+        <ChainContextSubst index="0" Format="3">
+          <!-- BacktrackGlyphCount=2 -->
+          <BacktrackCoverage index="0">
+            <Glyph value="three"/>
+          </BacktrackCoverage>
+          <BacktrackCoverage index="1">
+            <Glyph value="one"/>
+            <Glyph value="two"/>
+          </BacktrackCoverage>
+          <!-- InputGlyphCount=1 -->
+          <InputCoverage index="0">
+            <Glyph value="A"/>
+          </InputCoverage>
+          <!-- LookAheadGlyphCount=0 -->
+          <!-- SubstCount=1 -->
+          <SubstLookupRecord index="0">
+            <SequenceIndex value="0"/>
+            <LookupListIndex value="0"/>
+          </SubstLookupRecord>
+        </ChainContextSubst>
+        <ChainContextSubst index="1" Format="3">
+          <!-- BacktrackGlyphCount=0 -->
+          <!-- InputGlyphCount=1 -->
+          <InputCoverage index="0">
+            <Glyph value="B"/>
+            <Glyph value="C"/>
+            <Glyph value="D"/>
+          </InputCoverage>
+          <!-- LookAheadGlyphCount=2 -->
+          <LookAheadCoverage index="0">
+            <Glyph value="seven"/>
+          </LookAheadCoverage>
+          <LookAheadCoverage index="1">
+            <Glyph value="eight"/>
+            <Glyph value="nine"/>
+          </LookAheadCoverage>
+          <!-- SubstCount=1 -->
+          <SubstLookupRecord index="0">
+            <SequenceIndex value="0"/>
+            <LookupListIndex value="None"/>
+          </SubstLookupRecord>
+        </ChainContextSubst>
+      </Lookup>
+      <Lookup index="2">
+        <!-- LookupType=1 -->
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <SingleSubst index="0">
+          <Substitution in="B" out="B.sc"/>
+          <Substitution in="C" out="C.sc"/>
+          <Substitution in="D" out="D.sc"/>
+        </SingleSubst>
+      </Lookup>
+      <Lookup index="3">
         <!-- LookupType=2 -->
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
@@ -37,7 +103,7 @@
           <Substitution in="c_t" out="c,t"/>
         </MultipleSubst>
       </Lookup>
-      <Lookup index="1">
+      <Lookup index="4">
         <!-- LookupType=6 -->
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
@@ -81,7 +147,7 @@
           <!-- SubstCount=1 -->
           <SubstLookupRecord index="0">
             <SequenceIndex value="0"/>
-            <LookupListIndex value="0"/>
+            <LookupListIndex value="3"/>
           </SubstLookupRecord>
         </ChainContextSubst>
       </Lookup>

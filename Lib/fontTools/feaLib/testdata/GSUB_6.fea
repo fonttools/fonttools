@@ -1,7 +1,13 @@
+lookup ChainedSingleSubst {
+    substitute [one two] three A' by A.sc;
+    substitute [B-D]' seven [eight nine] by [B.sc-D.sc];
+} ChainedSingleSubst;
+
 lookup ChainedMultipleSubst {
     substitute [A-C a-c] [D d] E c_t' V [W w] [X-Z x-z] by c t;
 } ChainedMultipleSubst;
 
 feature test {
+    lookup ChainedSingleSubst;
     lookup ChainedMultipleSubst;
 } test;
