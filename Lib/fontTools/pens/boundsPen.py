@@ -9,8 +9,8 @@ __all__ = ["BoundsPen", "ControlBoundsPen"]
 
 
 class ControlBoundsPen(BasePen):
-
-	"""Pen to calculate the "control bounds" of a shape. This is the
+	"""
+	Pen to calculate the "control bounds" of a shape. This is the
 	bounding box of all control points, so may be larger than the
 	actual bounding box if there are curves that don't have points
 	on their extremes.
@@ -23,19 +23,28 @@ class ControlBoundsPen(BasePen):
 	def __init__(self, glyphSet):
 		BasePen.__init__(self, glyphSet)
 		self.bounds = None
+		self._start = None
 
 	def _moveTo(self, pt):
+		self._start = pt
+
+	def _addMoveTo(self):
+		if self._start is None:
+			return
 		bounds = self.bounds
 		if bounds:
-			self.bounds = updateBounds(bounds, pt)
+			self.bounds = updateBounds(bounds, self._start)
 		else:
-			x, y = pt
+			x, y = self._start
 			self.bounds = (x, y, x, y)
+		self._start = None
 
 	def _lineTo(self, pt):
+		self._addMoveTo()
 		self.bounds = updateBounds(self.bounds, pt)
 
 	def _curveToOne(self, bcp1, bcp2, pt):
+		self._addMoveTo()
 		bounds = self.bounds
 		bounds = updateBounds(bounds, bcp1)
 		bounds = updateBounds(bounds, bcp2)
@@ -43,6 +52,7 @@ class ControlBoundsPen(BasePen):
 		self.bounds = bounds
 
 	def _qCurveToOne(self, bcp, pt):
+		self._addMoveTo()
 		bounds = self.bounds
 		bounds = updateBounds(bounds, bcp)
 		bounds = updateBounds(bounds, pt)
@@ -50,8 +60,8 @@ class ControlBoundsPen(BasePen):
 
 
 class BoundsPen(ControlBoundsPen):
-
-	"""Pen to calculate the bounds of a shape. It calculates the
+	"""
+	Pen to calculate the bounds of a shape. It calculates the
 	correct bounds even when the shape contains curves that don't
 	have points on their extremes. This is somewhat slower to compute
 	than the "control bounds".
@@ -62,6 +72,7 @@ class BoundsPen(ControlBoundsPen):
 	"""
 
 	def _curveToOne(self, bcp1, bcp2, pt):
+		self._addMoveTo()
 		bounds = self.bounds
 		bounds = updateBounds(bounds, pt)
 		if not pointInRect(bcp1, bounds) or not pointInRect(bcp2, bounds):
@@ -70,6 +81,7 @@ class BoundsPen(ControlBoundsPen):
 		self.bounds = bounds
 
 	def _qCurveToOne(self, bcp, pt):
+		self._addMoveTo()
 		bounds = self.bounds
 		bounds = updateBounds(bounds, pt)
 		if not pointInRect(bcp, bounds):
