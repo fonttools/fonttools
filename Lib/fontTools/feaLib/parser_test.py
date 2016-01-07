@@ -293,6 +293,20 @@ class ParserTest(unittest.TestCase):
             '"DFLT" is not a valid language tag; use "dflt" instead',
             self.parse, "feature test { language DFLT; } test;")
 
+    def test_ligatureCaretByIndex_glyphClass(self):
+        doc = self.parse("table GDEF{LigatureCaretByIndex [c_t f_i] 2;}GDEF;")
+        s = doc.statements[0].statements[0]
+        self.assertIsInstance(s, ast.LigatureCaretByIndexStatement)
+        self.assertEqual(glyphstr([s.glyphs]), "[c_t f_i]")
+        self.assertEqual(s.carets, {2})
+
+    def test_ligatureCaretByIndex_singleGlyph(self):
+        doc = self.parse("table GDEF{LigatureCaretByIndex f_f_i 3 7;}GDEF;")
+        s = doc.statements[0].statements[0]
+        self.assertIsInstance(s, ast.LigatureCaretByIndexStatement)
+        self.assertEqual(glyphstr([s.glyphs]), "f_f_i")
+        self.assertEqual(s.carets, {3, 7})
+
     def test_ligatureCaretByPos_glyphClass(self):
         doc = self.parse("table GDEF {LigatureCaretByPos [c_t f_i] 7;} GDEF;")
         s = doc.statements[0].statements[0]

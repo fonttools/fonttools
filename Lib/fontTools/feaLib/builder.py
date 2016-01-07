@@ -28,6 +28,7 @@ class Builder(object):
         self.cur_feature_name_ = None
         self.lookups_ = []
         self.features_ = {}  # ('latn', 'DEU ', 'smcp') --> [LookupBuilder*]
+        self.ligatureCaretByIndex_ = {}  # "f_f_i" --> {3, 7}
         self.ligatureCaretByPos_ = {}  # "f_f_i" --> {300, 600}
         self.parseTree = None
         self.required_features_ = {}  # ('latn', 'DEU ') --> 'scmp'
@@ -148,22 +149,29 @@ class Builder(object):
         return result
 
     def makeLigCaretList_(self):
-        if not self.ligatureCaretByPos_:
+        glyphs = set(self.ligatureCaretByPos_.keys())
+        glyphs.update(self.ligatureCaretByIndex_.keys())
+        glyphs = sorted(glyphs, key=self.font.getGlyphID)
+        if not glyphs:
             return None
         result = otTables.LigCaretList()
         result.Coverage = otTables.Coverage()
-        result.Coverage.glyphs = sorted(self.ligatureCaretByPos_.keys(),
-                                        key=self.font.getGlyphID)
-        result.LigGlyphCount = len(result.Coverage.glyphs)
+        result.Coverage.glyphs = glyphs
+        result.LigGlyphCount = len(glyphs)
         result.LigGlyph = []
-        for glyph in result.Coverage.glyphs:
+        for glyph in glyphs:
             ligGlyph = otTables.LigGlyph()
             result.LigGlyph.append(ligGlyph)
             ligGlyph.CaretValue = []
-            for caretPos in sorted(self.ligatureCaretByPos_[glyph]):
+            for caretPos in sorted(self.ligatureCaretByPos_.get(glyph, [])):
                 val = otTables.CaretValue()
                 val.Format = 1
                 val.Coordinate = caretPos
+                ligGlyph.CaretValue.append(val)
+            for point in sorted(self.ligatureCaretByIndex_.get(glyph, [])):
+                val = otTables.CaretValue()
+                val.Format = 2
+                val.CaretValuePoint = point
                 ligGlyph.CaretValue.append(val)
             ligGlyph.CaretCount = len(ligGlyph.CaretValue)
         return result
@@ -564,6 +572,10 @@ class Builder(object):
                 % (glyph, otherLoc[0], otherLoc[1], otherLoc[2]),
                 location)
         lookup.mapping[glyph] = valuerecord
+
+    def add_ligatureCaretByIndex_(self, location, glyphs, carets):
+        for glyph in glyphs:
+            self.ligatureCaretByIndex_[glyph] = carets
 
     def add_ligatureCaretByPos_(self, location, glyphs, carets):
         for glyph in glyphs:

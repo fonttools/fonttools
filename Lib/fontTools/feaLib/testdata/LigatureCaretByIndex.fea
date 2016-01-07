@@ -1,0 +1,4 @@
+table GDEF {
+    LigatureCaretByIndex [c_t s_t] 11;
+    LigatureCaretByIndex f_f_i 66 33;
+} GDEF;

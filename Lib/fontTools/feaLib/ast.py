@@ -263,6 +263,16 @@ class IgnoreSubstitutionRule(Statement):
         self.prefix, self.glyphs, self.suffix = (prefix, glyphs, suffix)
 
 
+class LigatureCaretByIndexStatement(Statement):
+    def __init__(self, location, glyphs, carets):
+        Statement.__init__(self, location)
+        self.glyphs, self.carets = (glyphs, carets)
+
+    def build(self, builder):
+        glyphs = self.glyphs.glyphSet()
+        builder.add_ligatureCaretByIndex_(self.location, glyphs, self.carets)
+
+
 class LigatureCaretByPosStatement(Statement):
     def __init__(self, location, glyphs, carets):
         Statement.__init__(self, location)
