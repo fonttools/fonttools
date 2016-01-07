@@ -289,8 +289,7 @@ class LookupReferenceStatement(Statement):
         self.location, self.lookup = (location, lookup)
 
     def build(self, builder):
-        for s in self.lookup.statements:
-            s.build(builder)
+        builder.add_lookup_call(self.lookup.name)
 
 
 class MarkBasePosStatement(Statement):

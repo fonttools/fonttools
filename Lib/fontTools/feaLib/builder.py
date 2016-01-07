@@ -58,6 +58,11 @@ class Builder(object):
         self.lookups_.append(result)
         return result
 
+    def add_lookup_to_feature_(self, lookup, feature_name):
+        for script, lang in self.language_systems:
+            key = (script, lang, feature_name)
+            self.features_.setdefault(key, []).append(lookup)
+
     def get_lookup_(self, location, builder_class):
         if (self.cur_lookup_ and
             type(self.cur_lookup_) == builder_class and
@@ -79,9 +84,8 @@ class Builder(object):
         if self.cur_feature_name_:
             # We are starting a lookup rule inside a feature. This includes
             # lookup rules inside named lookups inside features.
-            for script, lang in self.language_systems:
-                key = (script, lang, self.cur_feature_name_)
-                self.features_.setdefault(key, []).append(self.cur_lookup_)
+            self.add_lookup_to_feature_(self.cur_lookup_,
+                                        self.cur_feature_name_)
         return self.cur_lookup_
 
     def makeGDEF(self):
@@ -284,6 +288,12 @@ class Builder(object):
         assert self.cur_lookup_name_ is not None
         self.cur_lookup_name_ = None
         self.cur_lookup_ = None
+
+    def add_lookup_call(self, lookup_name):
+        assert lookup_name in self.named_lookups_, lookup_name
+        self.cur_lookup_ = None
+        lookup = self.named_lookups_[lookup_name]
+        self.add_lookup_to_feature_(lookup, self.cur_feature_name_)
 
     def set_language(self, location, language, include_default, required):
         assert(len(language) == 4)
