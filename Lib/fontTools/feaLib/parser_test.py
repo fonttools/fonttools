@@ -293,6 +293,20 @@ class ParserTest(unittest.TestCase):
             '"DFLT" is not a valid language tag; use "dflt" instead',
             self.parse, "feature test { language DFLT; } test;")
 
+    def test_ligatureCaretByPos_glyphClass(self):
+        doc = self.parse("table GDEF {LigatureCaretByPos [c_t f_i] 7;} GDEF;")
+        s = doc.statements[0].statements[0]
+        self.assertIsInstance(s, ast.LigatureCaretByPosStatement)
+        self.assertEqual(glyphstr([s.glyphs]), "[c_t f_i]")
+        self.assertEqual(s.carets, {7})
+
+    def test_ligatureCaretByPos_singleGlyph(self):
+        doc = self.parse("table GDEF {LigatureCaretByPos f_i 400 380;} GDEF;")
+        s = doc.statements[0].statements[0]
+        self.assertIsInstance(s, ast.LigatureCaretByPosStatement)
+        self.assertEqual(glyphstr([s.glyphs]), "f_i")
+        self.assertEqual(s.carets, {380, 400})
+
     def test_lookup_block(self):
         [lookup] = self.parse("lookup Ligatures {} Ligatures;").statements
         self.assertEqual(lookup.name, "Ligatures")
@@ -883,6 +897,16 @@ class ParserTest(unittest.TestCase):
         doc = self.parse("feature test {subtable;} test;")
         s = doc.statements[0].statements[0]
         self.assertEqual(type(s), ast.SubtableStatement)
+
+    def test_table_badEnd(self):
+        self.assertRaisesRegex(
+            FeatureLibError, 'Expected "GDEF"', self.parse,
+            "table GDEF {LigatureCaretByPos f_i 400;} ABCD;")
+
+    def test_table_unsupported(self):
+        self.assertRaisesRegex(
+            FeatureLibError, '"table Foo" is not supported', self.parse,
+            "table Foo {LigatureCaretByPos f_i 400;} Foo;")
 
     def test_valuerecord_format_a_horizontal(self):
         doc = self.parse("feature liga {valueRecordDef 123 foo;} liga;")

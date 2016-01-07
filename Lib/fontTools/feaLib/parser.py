@@ -39,13 +39,15 @@ class Parser(object):
                 statements.append(self.parse_markClass_())
             elif self.is_cur_keyword_("feature"):
                 statements.append(self.parse_feature_block_())
+            elif self.is_cur_keyword_("table"):
+                statements.append(self.parse_table_())
             elif self.is_cur_keyword_("valueRecordDef"):
                 statements.append(
                     self.parse_valuerecord_definition_(vertical=False))
             else:
                 raise FeatureLibError(
                     "Expected feature, languagesystem, lookup, markClass, "
-                    "or glyph class definition",
+                    "table, or glyph class definition",
                     self.cur_token_location_)
         return self.doc_
 
@@ -251,6 +253,16 @@ class Parser(object):
         self.expect_symbol_(";")
         return ast.LanguageStatement(location, language,
                                      include_default, required)
+
+    def parse_ligatureCaretByPos_(self):
+        assert self.is_cur_keyword_("LigatureCaretByPos")
+        location = self.cur_token_location_
+        glyphs = self.parse_glyphclass_(accept_glyphname=True)
+        carets = {self.expect_number_()}
+        while self.next_token_ != ";":
+            carets.add(self.expect_number_())
+        self.expect_symbol_(";")
+        return ast.LigatureCaretByPosStatement(location, glyphs, carets)
 
     def parse_lookup_(self, vertical):
         assert self.is_cur_keyword_("lookup")
@@ -560,6 +572,38 @@ class Parser(object):
         location = self.cur_token_location_
         self.expect_symbol_(";")
         return ast.SubtableStatement(location)
+
+    def parse_table_(self):
+        assert self.is_cur_keyword_("table")
+        location, name = self.cur_token_location_, self.expect_tag_()
+        table = ast.TableBlock(location, name)
+        self.expect_symbol_("{")
+        handler = {
+            "GDEF": self.parse_table_GDEF_,
+        }.get(name)
+        if handler:
+            handler(table)
+        else:
+            raise FeatureLibError('"table %s" is not supported' % name.strip(),
+                                  location)
+        self.expect_symbol_("}")
+        end_tag = self.expect_tag_()
+        if end_tag != name:
+            raise FeatureLibError('Expected "%s"' % name.strip(),
+                                  self.cur_token_location_)
+        self.expect_symbol_(";")
+        return table
+
+    def parse_table_GDEF_(self, table):
+        statements = table.statements
+        while self.next_token_ != "}":
+            self.advance_lexer_()
+            if self.is_cur_keyword_("LigatureCaretByPos"):
+                statements.append(self.parse_ligatureCaretByPos_())
+            else:
+                raise FeatureLibError(
+                    "Expected LigatureCaretByPos",
+                    self.cur_token_location_)
 
     def parse_device_(self):
         result = None

@@ -28,6 +28,7 @@ class Builder(object):
         self.cur_feature_name_ = None
         self.lookups_ = []
         self.features_ = {}  # ('latn', 'DEU ', 'smcp') --> [LookupBuilder*]
+        self.ligatureCaretByPos_ = {}  # "f_f_i" --> {300, 600}
         self.parseTree = None
         self.required_features_ = {}  # ('latn', 'DEU ') --> 'scmp'
         self.markAttach_ = {}  # "acute" --> (4, (file, line, column))
@@ -92,7 +93,9 @@ class Builder(object):
     def makeGDEF(self):
         gdef = otTables.GDEF()
         gdef.Version = 1.0
-        gdef.GlyphClassDef = otTables.GlyphClassDef()
+        gdef.GlyphClassDef = None
+        gdef.AttachList = None
+        gdef.LigCaretList = self.makeLigCaretList_()
 
         inferredGlyphClass = {}
         for lookup in self.lookups_:
@@ -112,9 +115,9 @@ class Builder(object):
                     marks[glyph] = markClass
                     inferredGlyphClass[glyph] = 3
 
-        gdef.GlyphClassDef.classDefs = inferredGlyphClass
-        gdef.AttachList = None
-        gdef.LigCaretList = None
+        if inferredGlyphClass:
+            gdef.GlyphClassDef = otTables.GlyphClassDef()
+            gdef.GlyphClassDef.classDefs = inferredGlyphClass
 
         markAttachClass = {g: c for g, (c, _) in self.markAttach_.items()}
         if markAttachClass:
@@ -136,11 +139,33 @@ class Builder(object):
                 coverage.glyphs = sorted(glyphs, key=self.font.getGlyphID)
                 m.Coverage.append(coverage)
 
-        if (len(gdef.GlyphClassDef.classDefs) == 0 and
+        if (gdef.GlyphClassDef is None and
+                gdef.LigCaretList is None and
                 gdef.MarkAttachClassDef is None):
             return None
         result = getTableClass("GDEF")()
         result.table = gdef
+        return result
+
+    def makeLigCaretList_(self):
+        if not self.ligatureCaretByPos_:
+            return None
+        result = otTables.LigCaretList()
+        result.Coverage = otTables.Coverage()
+        result.Coverage.glyphs = sorted(self.ligatureCaretByPos_.keys(),
+                                        key=self.font.getGlyphID)
+        result.LigGlyphCount = len(result.Coverage.glyphs)
+        result.LigGlyph = []
+        for glyph in result.Coverage.glyphs:
+            ligGlyph = otTables.LigGlyph()
+            result.LigGlyph.append(ligGlyph)
+            ligGlyph.CaretValue = []
+            for caretPos in sorted(self.ligatureCaretByPos_[glyph]):
+                val = otTables.CaretValue()
+                val.Format = 1
+                val.Coordinate = caretPos
+                ligGlyph.CaretValue.append(val)
+            ligGlyph.CaretCount = len(ligGlyph.CaretValue)
         return result
 
     def makeTable(self, tag):
@@ -539,6 +564,10 @@ class Builder(object):
                 % (glyph, otherLoc[0], otherLoc[1], otherLoc[2]),
                 location)
         lookup.mapping[glyph] = valuerecord
+
+    def add_ligatureCaretByPos_(self, location, glyphs, carets):
+        for glyph in glyphs:
+            self.ligatureCaretByPos_[glyph] = carets
 
 
 def _makeOpenTypeDeviceTable(deviceTable, device):

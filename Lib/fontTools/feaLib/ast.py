@@ -109,6 +109,12 @@ class LookupBlock(Block):
         builder.end_lookup_block()
 
 
+class TableBlock(Block):
+    def __init__(self, location, name):
+        Block.__init__(self, location)
+        self.name = name
+
+
 class GlyphClassDefinition(Statement):
     def __init__(self, location, name, glyphs):
         Statement.__init__(self, location)
@@ -255,6 +261,16 @@ class IgnoreSubstitutionRule(Statement):
     def __init__(self, location, prefix, glyphs, suffix):
         Statement.__init__(self, location)
         self.prefix, self.glyphs, self.suffix = (prefix, glyphs, suffix)
+
+
+class LigatureCaretByPosStatement(Statement):
+    def __init__(self, location, glyphs, carets):
+        Statement.__init__(self, location)
+        self.glyphs, self.carets = (glyphs, carets)
+
+    def build(self, builder):
+        glyphs = self.glyphs.glyphSet()
+        builder.add_ligatureCaretByPos_(self.location, glyphs, self.carets)
 
 
 class LigatureSubstStatement(Statement):
