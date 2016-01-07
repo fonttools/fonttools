@@ -22,16 +22,17 @@
       <FeatureRecord index="0">
         <FeatureTag value="test"/>
         <Feature>
-          <!-- LookupCount=4 -->
+          <!-- LookupCount=5 -->
           <LookupListIndex index="0" value="1"/>
           <LookupListIndex index="1" value="4"/>
           <LookupListIndex index="2" value="6"/>
           <LookupListIndex index="3" value="8"/>
+          <LookupListIndex index="4" value="9"/>
         </Feature>
       </FeatureRecord>
     </FeatureList>
     <LookupList>
-      <!-- LookupCount=9 -->
+      <!-- LookupCount=10 -->
       <Lookup index="0">
         <!-- LookupType=1 -->
         <LookupFlag value="0"/>
@@ -228,6 +229,42 @@
           <SubstLookupRecord index="0">
             <SequenceIndex value="0"/>
             <LookupListIndex value="7"/>
+          </SubstLookupRecord>
+        </ChainContextSubst>
+      </Lookup>
+      <Lookup index="9">
+        <!-- LookupType=6 -->
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <ChainContextSubst index="0" Format="3">
+          <!-- BacktrackGlyphCount=3 -->
+          <BacktrackCoverage index="0">
+            <Glyph value="E"/>
+          </BacktrackCoverage>
+          <BacktrackCoverage index="1">
+            <Glyph value="D"/>
+          </BacktrackCoverage>
+          <BacktrackCoverage index="2">
+            <Glyph value="A"/>
+          </BacktrackCoverage>
+          <!-- InputGlyphCount=1 -->
+          <InputCoverage index="0">
+            <Glyph value="c_t"/>
+          </InputCoverage>
+          <!-- LookAheadGlyphCount=3 -->
+          <LookAheadCoverage index="0">
+            <Glyph value="V"/>
+          </LookAheadCoverage>
+          <LookAheadCoverage index="1">
+            <Glyph value="W"/>
+          </LookAheadCoverage>
+          <LookAheadCoverage index="2">
+            <Glyph value="X"/>
+          </LookAheadCoverage>
+          <!-- SubstCount=1 -->
+          <SubstLookupRecord index="0">
+            <SequenceIndex value="0"/>
+            <LookupListIndex value="4"/>
           </SubstLookupRecord>
         </ChainContextSubst>
       </Lookup>

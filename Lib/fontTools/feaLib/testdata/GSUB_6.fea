@@ -15,9 +15,14 @@ lookup ChainedLigatureSubst {
     substitute A [C c]' [T t]' Z by c_t;
 } ChainedLigatureSubst;
 
+lookup ChainedContextualSubst {
+    substitute A D E c_t' lookup ChainedMultipleSubst V W X;
+} ChainedContextualSubst;
+
 feature test {
     lookup ChainedSingleSubst;
     lookup ChainedMultipleSubst;
     lookup ChainedAlternateSubst;
     lookup ChainedLigatureSubst;
+    lookup ChainedContextualSubst;
 } test;
