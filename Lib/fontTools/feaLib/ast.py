@@ -159,12 +159,20 @@ class MarkClassDefinition(Statement):
 
 
 class AlternateSubstStatement(Statement):
-    def __init__(self, location, glyph, from_class):
+    def __init__(self, location, prefix, glyph, suffix, replacement):
         Statement.__init__(self, location)
-        self.glyph, self.from_class = (glyph, from_class)
+        self.prefix, self.glyph, self.suffix = (prefix, glyph, suffix)
+        self.replacement = replacement
 
     def build(self, builder):
-        builder.add_alternate_subst(self.location, self.glyph, self.from_class)
+        glyph = self.glyph.glyphSet()
+        assert len(glyph) == 1, glyph
+        glyph = list(glyph)[0]
+        prefix = [p.glyphSet() for p in self.prefix]
+        suffix = [s.glyphSet() for s in self.suffix]
+        replacement = self.replacement.glyphSet()
+        builder.add_alternate_subst(self.location, prefix, glyph, suffix,
+                                    replacement)
 
 
 class Anchor(Expression):

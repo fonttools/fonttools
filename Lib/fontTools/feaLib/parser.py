@@ -473,9 +473,8 @@ class Parser(object):
                 raise FeatureLibError(
                     'Expected a single glyphclass after "from"',
                     location)
-            return ast.AlternateSubstStatement(location,
-                                               list(old[0].glyphSet())[0],
-                                               new[0].glyphSet())
+            return ast.AlternateSubstStatement(
+                location, old_prefix, old[0], old_suffix, new[0])
 
         num_lookups = len([l for l in lookups if l is not None])
 

@@ -819,9 +819,22 @@ class ParserTest(unittest.TestCase):
                          "  substitute a from [a.1 a.2 a.3];"
                          "} test;")
         sub = doc.statements[0].statements[0]
-        self.assertEqual(type(sub), ast.AlternateSubstStatement)
-        self.assertEqual(sub.glyph, "a")
-        self.assertEqual(sub.from_class, {"a.1", "a.2", "a.3"})
+        self.assertIsInstance(sub, ast.AlternateSubstStatement)
+        self.assertEqual(glyphstr(sub.prefix), "")
+        self.assertEqual(glyphstr([sub.glyph]), "a")
+        self.assertEqual(glyphstr(sub.suffix), "")
+        self.assertEqual(glyphstr([sub.replacement]), "[a.1 a.2 a.3]")
+
+    def test_substitute_from_chained(self):  # chain to GSUB LookupType 3
+        doc = self.parse("feature test {"
+                         "  substitute A B a' [Y y] Z from [a.1 a.2 a.3];"
+                         "} test;")
+        sub = doc.statements[0].statements[0]
+        self.assertIsInstance(sub, ast.AlternateSubstStatement)
+        self.assertEqual(glyphstr(sub.prefix), "A B")
+        self.assertEqual(glyphstr([sub.glyph]), "a")
+        self.assertEqual(glyphstr(sub.suffix), "[Y y] Z")
+        self.assertEqual(glyphstr([sub.replacement]), "[a.1 a.2 a.3]")
 
     def test_substitute_from_glyphclass(self):  # GSUB LookupType 3
         doc = self.parse("feature test {"
@@ -829,9 +842,12 @@ class ParserTest(unittest.TestCase):
                          "  substitute ampersand from @Ampersands;"
                          "} test;")
         [glyphclass, sub] = doc.statements[0].statements
-        self.assertEqual(type(sub), ast.AlternateSubstStatement)
-        self.assertEqual(sub.glyph, "ampersand")
-        self.assertEqual(sub.from_class, {"ampersand.1", "ampersand.2"})
+        self.assertIsInstance(sub, ast.AlternateSubstStatement)
+        self.assertEqual(glyphstr(sub.prefix), "")
+        self.assertEqual(glyphstr([sub.glyph]), "ampersand")
+        self.assertEqual(glyphstr(sub.suffix), "")
+        self.assertEqual(glyphstr([sub.replacement]),
+                         "[ampersand.1 ampersand.2]")
 
     def test_substitute_ligature(self):  # GSUB LookupType 4
         doc = self.parse("feature liga {substitute f f i by f_f_i;} liga;")

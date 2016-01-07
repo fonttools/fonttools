@@ -403,13 +403,19 @@ class Builder(object):
         lookup.substitutions.append((prefix, glyphs, suffix,
                                      self.find_lookup_builders_(lookups)))
 
-    def add_alternate_subst(self, location, glyph, from_class):
-        lookup = self.get_lookup_(location, AlternateSubstBuilder)
+    def add_alternate_subst(self, location,
+                            prefix, glyph, suffix, replacement):
+        if prefix or suffix:
+            lookup = self.get_chained_lookup_(location, AlternateSubstBuilder)
+            chain = self.get_lookup_(location, ChainContextSubstBuilder)
+            chain.substitutions.append((prefix, [glyph], suffix, [lookup]))
+        else:
+            lookup = self.get_lookup_(location, AlternateSubstBuilder)
         if glyph in lookup.alternates:
             raise FeatureLibError(
                 'Already defined alternates for glyph "%s"' % glyph,
                 location)
-        lookup.alternates[glyph] = from_class
+        lookup.alternates[glyph] = replacement
 
     def add_ligature_subst(self, location,
                            prefix, glyphs, suffix, replacement):

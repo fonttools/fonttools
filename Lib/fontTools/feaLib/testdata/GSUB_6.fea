@@ -7,6 +7,10 @@ lookup ChainedMultipleSubst {
     substitute [A-C a-c] [D d] E c_t' V [W w] [X-Z x-z] by c t;
 } ChainedMultipleSubst;
 
+lookup ChainedAlternateSubst {
+    substitute [space comma semicolon] e' from [e e.begin];
+} ChainedAlternateSubst;
+
 lookup ChainedLigatureSubst {
     substitute A [C c]' [T t]' Z by c_t;
 } ChainedLigatureSubst;
@@ -14,5 +18,6 @@ lookup ChainedLigatureSubst {
 feature test {
     lookup ChainedSingleSubst;
     lookup ChainedMultipleSubst;
+    lookup ChainedAlternateSubst;
     lookup ChainedLigatureSubst;
 } test;
