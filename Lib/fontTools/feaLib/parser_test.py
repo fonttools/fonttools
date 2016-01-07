@@ -908,6 +908,15 @@ class ParserTest(unittest.TestCase):
         self.assertIsNone(value.xAdvDevice)
         self.assertIsNone(value.yAdvDevice)
 
+    def test_valuerecord_format_a_vertical_contexts_(self):
+        for tag in "vkrn vpal vhal valt".split():
+            doc = self.parse(
+                "feature %s {valueRecordDef 77 foo;} %s;" % (tag, tag))
+            value = doc.statements[0].statements[0].value
+            if value.yAdvance != 77:
+                self.fail(msg="feature %s should be a vertical context "
+                          "for ValueRecord format A" % tag)
+
     def test_valuerecord_format_b(self):
         doc = self.parse("feature liga {valueRecordDef <1 2 3 4> foo;} liga;")
         value = doc.statements[0].statements[0].value

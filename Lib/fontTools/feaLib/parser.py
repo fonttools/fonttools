@@ -652,7 +652,7 @@ class Parser(object):
         assert self.cur_token_ == "feature"
         location = self.cur_token_location_
         tag = self.expect_tag_()
-        vertical = (tag == "vkrn")
+        vertical = (tag in {"vkrn", "vpal", "vhal", "valt"})
 
         use_extension = False
         if self.next_token_ == "useExtension":
