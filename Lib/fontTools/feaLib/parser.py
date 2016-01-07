@@ -510,12 +510,13 @@ class Parser(object):
 
         # GSUB lookup type 4: Ligature substitution.
         # Format: "substitute f f i by f_f_i;"
-        if (not reverse and len(old_prefix) == 0 and len(old_suffix) == 0 and
+        if (not reverse and
                 len(old) > 1 and len(new) == 1 and
                 len(new[0].glyphSet()) == 1 and
                 num_lookups == 0):
             return ast.LigatureSubstStatement(
-                location, old, list(new[0].glyphSet())[0])
+                location, old_prefix, old, old_suffix,
+                list(new[0].glyphSet())[0])
 
         # GSUB lookup type 8: Reverse chaining substitution.
         if reverse:

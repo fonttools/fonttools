@@ -807,7 +807,7 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(sub.glyph, "f_f_i")
         self.assertEqual(sub.replacement, ("f", "f", "i"))
 
-    def test_substitute_multiple_chained(self):  # GSUB LookupType 2
+    def test_substitute_multiple_chained(self):  # chain to GSUB LookupType 2
         doc = self.parse("lookup L {sub [A-C] f_f_i' [X-Z] by f f i;} L;")
         sub = doc.statements[0].statements[0]
         self.assertIsInstance(sub, ast.MultipleSubstStatement)
@@ -836,9 +836,20 @@ class ParserTest(unittest.TestCase):
     def test_substitute_ligature(self):  # GSUB LookupType 4
         doc = self.parse("feature liga {substitute f f i by f_f_i;} liga;")
         sub = doc.statements[0].statements[0]
-        self.assertEqual(type(sub), ast.LigatureSubstStatement)
+        self.assertIsInstance(sub, ast.LigatureSubstStatement)
         self.assertEqual(glyphstr(sub.glyphs), "f f i")
         self.assertEqual(sub.replacement, "f_f_i")
+        self.assertEqual(glyphstr(sub.prefix), "")
+        self.assertEqual(glyphstr(sub.suffix), "")
+
+    def test_substitute_ligature_chained(self):  # chain to GSUB LookupType 4
+        doc = self.parse("feature F {substitute A B f' i' Z by f_i;} F;")
+        sub = doc.statements[0].statements[0]
+        self.assertIsInstance(sub, ast.LigatureSubstStatement)
+        self.assertEqual(glyphstr(sub.glyphs), "f i")
+        self.assertEqual(sub.replacement, "f_i")
+        self.assertEqual(glyphstr(sub.prefix), "A B")
+        self.assertEqual(glyphstr(sub.suffix), "Z")
 
     def test_substitute_lookups(self):  # GSUB LookupType 6
         doc = Parser(self.getpath("spec5fi1.fea")).parse()

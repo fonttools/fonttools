@@ -16,7 +16,7 @@ import unittest
 
 def makeTTFont():
     glyphs = (
-        ".notdef space slash fraction semicolon period comma "
+        ".notdef space slash fraction semicolon period comma ampersand "
         "zero one two three four five six seven eight nine "
         "zero.oldstyle one.oldstyle two.oldstyle three.oldstyle "
         "four.oldstyle five.oldstyle six.oldstyle seven.oldstyle "
@@ -26,7 +26,7 @@ def makeTTFont():
         "A.sc B.sc C.sc D.sc E.sc F.sc G.sc H.sc I.sc J.sc K.sc L.sc M.sc "
         "N.sc O.sc P.sc Q.sc R.sc S.sc T.sc U.sc V.sc W.sc X.sc Y.sc Z.sc "
         "A.alt1 A.alt2 A.alt3 B.alt1 B.alt2 B.alt3 C.alt1 C.alt2 C.alt3 "
-        "d.alt n.end s.end "
+        "d.alt e.begin n.end s.end "
         "f_l c_h c_k c_s c_t f_f f_f_i f_f_l f_i o_f_f_i s_t "
         "ydieresis yacute "
         "grave acute dieresis macron circumflex cedilla umlaut ogonek caron "
@@ -165,7 +165,7 @@ class BuilderTest(unittest.TestCase):
             self.expect_ttx(font, self.getpath("GSUB_%s.ttx" % name))
 
     def test_spec(self):
-        for name in "4h1 5d1 5d2 5fi1 5fi2 5h1 6d2 6e 6f 6h_ii".split():
+        for name in "4h1 5d1 5d2 5fi1 5fi2 5fi4 5h1 6d2 6e 6f 6h_ii".split():
             font = makeTTFont()
             addOpenTypeFeatures(self.getpath("spec%s.fea" % name), font)
             self.expect_ttx(font, self.getpath("spec%s.ttx" % name))

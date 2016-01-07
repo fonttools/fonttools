@@ -250,19 +250,17 @@ class IgnoreSubstitutionRule(Statement):
 
 
 class LigatureSubstStatement(Statement):
-    def __init__(self, location, glyphs, replacement):
+    def __init__(self, location, prefix, glyphs, suffix, replacement):
         Statement.__init__(self, location)
-        self.glyphs, self.replacement = (glyphs, replacement)
+        self.prefix, self.glyphs, self.suffix = (prefix, glyphs, suffix)
+        self.replacement = replacement
 
     def build(self, builder):
-        # OpenType feature file syntax, section 5.d, "Ligature substitution":
-        # "Since the OpenType specification does not allow ligature
-        # substitutions to be specified on target sequences that contain
-        # glyph classes, the implementation software will enumerate
-        # all specific glyph sequences if glyph classes are detected"
-        g = [g.glyphSet() for g in self.glyphs]
-        for glyphs in sorted(itertools.product(*g)):
-            builder.add_ligature_subst(self.location, glyphs, self.replacement)
+        prefix = [p.glyphSet() for p in self.prefix]
+        glyphs = [g.glyphSet() for g in self.glyphs]
+        suffix = [s.glyphSet() for s in self.suffix]
+        builder.add_ligature_subst(
+            self.location, prefix, glyphs, suffix, self.replacement)
 
 
 class LookupFlagStatement(Statement):

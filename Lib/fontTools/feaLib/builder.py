@@ -4,6 +4,7 @@ from fontTools.feaLib.error import FeatureLibError
 from fontTools.feaLib.parser import Parser
 from fontTools.ttLib import getTableClass
 from fontTools.ttLib.tables import otBase, otTables
+import itertools
 import warnings
 
 
@@ -410,9 +411,22 @@ class Builder(object):
                 location)
         lookup.alternates[glyph] = from_class
 
-    def add_ligature_subst(self, location, glyphs, replacement):
-        lookup = self.get_lookup_(location, LigatureSubstBuilder)
-        lookup.ligatures[glyphs] = replacement
+    def add_ligature_subst(self, location,
+                           prefix, glyphs, suffix, replacement):
+        if prefix or suffix:
+            lookup = self.get_chained_lookup_(location, LigatureSubstBuilder)
+            chain = self.get_lookup_(location, ChainContextSubstBuilder)
+            chain.substitutions.append((prefix, glyphs, suffix, [lookup]))
+        else:
+            lookup = self.get_lookup_(location, LigatureSubstBuilder)
+
+        # OpenType feature file syntax, section 5.d, "Ligature substitution":
+        # "Since the OpenType specification does not allow ligature
+        # substitutions to be specified on target sequences that contain
+        # glyph classes, the implementation software will enumerate
+        # all specific glyph sequences if glyph classes are detected"
+        for g in sorted(itertools.product(*glyphs)):
+            lookup.ligatures[g] = replacement
 
     def add_multiple_subst(self, location,
                            prefix, glyph, suffix, replacements):

@@ -7,7 +7,12 @@ lookup ChainedMultipleSubst {
     substitute [A-C a-c] [D d] E c_t' V [W w] [X-Z x-z] by c t;
 } ChainedMultipleSubst;
 
+lookup ChainedLigatureSubst {
+    substitute A [C c]' [T t]' Z by c_t;
+} ChainedLigatureSubst;
+
 feature test {
     lookup ChainedSingleSubst;
     lookup ChainedMultipleSubst;
+    lookup ChainedLigatureSubst;
 } test;
