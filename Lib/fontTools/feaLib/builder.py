@@ -49,7 +49,7 @@ class Builder(object):
                 fontTable.table = table
             elif tag in self.font:
                 del self.font[tag]
-        gdef = self.makeGDEF()
+        gdef = self.buildGDEF()
         if gdef:
             self.font["GDEF"] = gdef
         elif "GDEF" in self.font:
@@ -92,64 +92,23 @@ class Builder(object):
                                         self.cur_feature_name_)
         return self.cur_lookup_
 
-    def makeGDEF(self):
+    def buildGDEF(self):
         gdef = otTables.GDEF()
-        gdef.Version = 1.0
-        gdef.GlyphClassDef = None
-        gdef.AttachList = self.makeGDEFAttachList_()
-        gdef.LigCaretList = self.makeGDEFLigCaretList_()
-
-        inferredGlyphClass = {}
-        for lookup in self.lookups_:
-            inferredGlyphClass.update(lookup.inferGlyphClasses())
-
-        marks = {}  # glyph --> markClass
-        for markClass in self.parseTree.markClasses.values():
-            for markClassDef in markClass.definitions:
-                for glyph in markClassDef.glyphSet():
-                    other = marks.get(glyph)
-                    if other not in (None, markClass):
-                        name1, name2 = sorted([markClass.name, other.name])
-                        raise FeatureLibError(
-                            'Glyph %s cannot be both in '
-                            'markClass @%s and @%s' %
-                            (glyph, name1, name2), markClassDef.location)
-                    marks[glyph] = markClass
-                    inferredGlyphClass[glyph] = 3
-
-        if inferredGlyphClass:
-            gdef.GlyphClassDef = otTables.GlyphClassDef()
-            gdef.GlyphClassDef.classDefs = inferredGlyphClass
-
-        markAttachClass = {g: c for g, (c, _) in self.markAttach_.items()}
-        if markAttachClass:
-            gdef.MarkAttachClassDef = otTables.MarkAttachClassDef()
-            gdef.MarkAttachClassDef.classDefs = markAttachClass
-        else:
-            gdef.MarkAttachClassDef = None
-
-        if self.markFilterSets_:
-            gdef.Version = 0x00010002
-            m = gdef.MarkGlyphSetsDef = otTables.MarkGlyphSetsDef()
-            m.MarkSetTableFormat = 1
-            m.MarkSetCount = len(self.markFilterSets_)
-            m.Coverage = []
-            filterSets = [(id, glyphs)
-                          for (glyphs, id) in self.markFilterSets_.items()]
-            for i, glyphs in sorted(filterSets):
-                coverage = otTables.Coverage()
-                coverage.glyphs = sorted(glyphs, key=self.font.getGlyphID)
-                m.Coverage.append(coverage)
-
-        if any((gdef.GlyphClassDef, gdef.AttachList,
-                gdef.LigCaretList, gdef.MarkAttachClassDef)):
+        gdef.GlyphClassDef = self.buildGDEFGlyphClassDef_()
+        gdef.AttachList = self.buildGDEFAttachList_()
+        gdef.LigCaretList = self.buildGDEFLigCaretList_()
+        gdef.MarkAttachClassDef = self.buildGDEFMarkAttachClassDef_()
+        gdef.MarkGlyphSetsDef = self.buildGDEFMarkGlyphSetsDef_()
+        gdef.Version = 0x00010002 if gdef.MarkGlyphSetsDef else 1.0
+        if any((gdef.GlyphClassDef, gdef.AttachList, gdef.LigCaretList,
+                gdef.MarkAttachClassDef, gdef.MarkGlyphSetsDef)):
             result = getTableClass("GDEF")()
             result.table = gdef
             return result
         else:
             return None
 
-    def makeGDEFAttachList_(self):
+    def buildGDEFAttachList_(self):
         glyphs = sorted(self.attachPoints_.keys(), key=self.font.getGlyphID)
         if not glyphs:
             return None
@@ -165,7 +124,31 @@ class Builder(object):
             result.AttachPoint.append(pt)
         return result
 
-    def makeGDEFLigCaretList_(self):
+    def buildGDEFGlyphClassDef_(self):
+        inferredGlyphClass = {}
+        for lookup in self.lookups_:
+            inferredGlyphClass.update(lookup.inferGlyphClasses())
+        marks = {}  # glyph --> markClass
+        for markClass in self.parseTree.markClasses.values():
+            for markClassDef in markClass.definitions:
+                for glyph in markClassDef.glyphSet():
+                    other = marks.get(glyph)
+                    if other not in (None, markClass):
+                        name1, name2 = sorted([markClass.name, other.name])
+                        raise FeatureLibError(
+                            'Glyph %s cannot be both in '
+                            'markClass @%s and @%s' %
+                            (glyph, name1, name2), markClassDef.location)
+                    marks[glyph] = markClass
+                    inferredGlyphClass[glyph] = 3
+        if inferredGlyphClass:
+            result = otTables.GlyphClassDef()
+            result.classDefs = inferredGlyphClass
+            return result
+        else:
+            return None
+
+    def buildGDEFLigCaretList_(self):
         glyphs = set(self.ligatureCaretByPos_.keys())
         glyphs.update(self.ligatureCaretByIndex_.keys())
         glyphs = sorted(glyphs, key=self.font.getGlyphID)
@@ -192,6 +175,29 @@ class Builder(object):
                 ligGlyph.CaretValue.append(val)
             ligGlyph.CaretCount = len(ligGlyph.CaretValue)
         return result
+
+    def buildGDEFMarkAttachClassDef_(self):
+        classDefs = {g: c for g, (c, _) in self.markAttach_.items()}
+        if not classDefs:
+            return None
+        result = otTables.MarkAttachClassDef()
+        result.classDefs = classDefs
+        return result
+
+    def buildGDEFMarkGlyphSetsDef_(self):
+        if not self.markFilterSets_:
+            return None
+        m = otTables.MarkGlyphSetsDef()
+        m.MarkSetTableFormat = 1
+        m.MarkSetCount = len(self.markFilterSets_)
+        m.Coverage = []
+        filterSets = [(id, glyphs)
+                      for (glyphs, id) in self.markFilterSets_.items()]
+        for i, glyphs in sorted(filterSets):
+            coverage = otTables.Coverage()
+            coverage.glyphs = sorted(glyphs, key=self.font.getGlyphID)
+            m.Coverage.append(coverage)
+        return m
 
     def makeTable(self, tag):
         table = getattr(otTables, tag, None)()
