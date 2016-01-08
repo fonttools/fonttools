@@ -146,7 +146,7 @@ class BuilderTest(unittest.TestCase):
             self.build, "feature test { pos A 123; pos A 456; } test;")
 
     def test_constructs(self):
-        for name in ("enum markClass language_required "
+        for name in ("Attach enum markClass language_required "
                      "LigatureCaretByIndex LigatureCaretByPos "
                      "lookup lookupflag").split():
             font = makeTTFont()

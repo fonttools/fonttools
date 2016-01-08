@@ -195,6 +195,16 @@ class AnchorDefinition(Statement):
         self.name, self.x, self.y, self.contourpoint = name, x, y, contourpoint
 
 
+class AttachStatement(Statement):
+    def __init__(self, location, glyphs, contourPoints):
+        Statement.__init__(self, location)
+        self.glyphs, self.contourPoints = (glyphs, contourPoints)
+
+    def build(self, builder):
+        glyphs = self.glyphs.glyphSet()
+        builder.add_attach_points(self.location, glyphs, self.contourPoints)
+
+
 class ChainContextPosStatement(Statement):
     def __init__(self, location, prefix, glyphs, suffix, lookups):
         Statement.__init__(self, location)

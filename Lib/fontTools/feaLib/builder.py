@@ -28,6 +28,7 @@ class Builder(object):
         self.cur_feature_name_ = None
         self.lookups_ = []
         self.features_ = {}  # ('latn', 'DEU ', 'smcp') --> [LookupBuilder*]
+        self.attachPoints_ = {}  # "a" --> {3, 7}
         self.ligatureCaretByIndex_ = {}  # "f_f_i" --> {3, 7}
         self.ligatureCaretByPos_ = {}  # "f_f_i" --> {300, 600}
         self.parseTree = None
@@ -95,8 +96,8 @@ class Builder(object):
         gdef = otTables.GDEF()
         gdef.Version = 1.0
         gdef.GlyphClassDef = None
-        gdef.AttachList = None
-        gdef.LigCaretList = self.makeLigCaretList_()
+        gdef.AttachList = self.makeGDEFAttachList_()
+        gdef.LigCaretList = self.makeGDEFLigCaretList_()
 
         inferredGlyphClass = {}
         for lookup in self.lookups_:
@@ -140,15 +141,31 @@ class Builder(object):
                 coverage.glyphs = sorted(glyphs, key=self.font.getGlyphID)
                 m.Coverage.append(coverage)
 
-        if (gdef.GlyphClassDef is None and
-                gdef.LigCaretList is None and
-                gdef.MarkAttachClassDef is None):
+        if any((gdef.GlyphClassDef, gdef.AttachList,
+                gdef.LigCaretList, gdef.MarkAttachClassDef)):
+            result = getTableClass("GDEF")()
+            result.table = gdef
+            return result
+        else:
             return None
-        result = getTableClass("GDEF")()
-        result.table = gdef
+
+    def makeGDEFAttachList_(self):
+        glyphs = sorted(self.attachPoints_.keys(), key=self.font.getGlyphID)
+        if not glyphs:
+            return None
+        result = otTables.AttachList()
+        result.Coverage = otTables.Coverage()
+        result.Coverage.glyphs = glyphs
+        result.GlyphCount = len(glyphs)
+        result.AttachPoint = []
+        for glyph in glyphs:
+            pt = otTables.AttachPoint()
+            pt.PointIndex = sorted(self.attachPoints_[glyph])
+            pt.PointCount = len(pt.PointIndex)
+            result.AttachPoint.append(pt)
         return result
 
-    def makeLigCaretList_(self):
+    def makeGDEFLigCaretList_(self):
         glyphs = set(self.ligatureCaretByPos_.keys())
         glyphs.update(self.ligatureCaretByIndex_.keys())
         glyphs = sorted(glyphs, key=self.font.getGlyphID)
@@ -424,6 +441,10 @@ class Builder(object):
             else:
                 lookup_builders.append(None)
         return lookup_builders
+
+    def add_attach_points(self, location, glyphs, contourPoints):
+        for glyph in glyphs:
+            self.attachPoints_.setdefault(glyph, set()).update(contourPoints)
 
     def add_chain_context_pos(self, location, prefix, glyphs, suffix, lookups):
         lookup = self.get_lookup_(location, ChainContextPosBuilder)

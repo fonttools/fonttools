@@ -116,6 +116,16 @@ class Parser(object):
         self.anchors_.define(name, anchordef)
         return anchordef
 
+    def parse_attach_(self):
+        assert self.is_cur_keyword_("Attach")
+        location = self.cur_token_location_
+        glyphs = self.parse_glyphclass_(accept_glyphname=True)
+        contourPoints = {self.expect_number_()}
+        while self.next_token_ != ";":
+            contourPoints.add(self.expect_number_())
+        self.expect_symbol_(";")
+        return ast.AttachStatement(location, glyphs, contourPoints)
+
     def parse_enumerate_(self, vertical):
         assert self.cur_token_ in {"enumerate", "enum"}
         self.advance_lexer_()
@@ -608,13 +618,16 @@ class Parser(object):
         statements = table.statements
         while self.next_token_ != "}":
             self.advance_lexer_()
-            if self.is_cur_keyword_("LigatureCaretByIndex"):
+            if self.is_cur_keyword_("Attach"):
+                statements.append(self.parse_attach_())
+            elif self.is_cur_keyword_("LigatureCaretByIndex"):
                 statements.append(self.parse_ligatureCaretByIndex_())
             elif self.is_cur_keyword_("LigatureCaretByPos"):
                 statements.append(self.parse_ligatureCaretByPos_())
             else:
                 raise FeatureLibError(
-                    "Expected LigatureCaretByIndex or LigatureCaretByPos",
+                    "Expected Attach, LigatureCaretByIndex, "
+                    "or LigatureCaretByPos",
                     self.cur_token_location_)
 
     def parse_device_(self):

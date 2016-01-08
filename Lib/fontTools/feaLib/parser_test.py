@@ -115,6 +115,13 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(foo.y, 456)
         self.assertEqual(foo.contourpoint, 5)
 
+    def test_attach(self):
+        doc = self.parse("table GDEF {Attach [a e] 2;} GDEF;")
+        s = doc.statements[0].statements[0]
+        self.assertIsInstance(s, ast.AttachStatement)
+        self.assertEqual(glyphstr([s.glyphs]), "[a e]")
+        self.assertEqual(s.contourPoints, {2})
+
     def test_feature_block(self):
         [liga] = self.parse("feature liga {} liga;").statements
         self.assertEqual(liga.name, "liga")

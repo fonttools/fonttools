@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont>
+
+  <GDEF>
+    <Version value="1.0"/>
+    <AttachList>
+      <Coverage>
+        <Glyph value="a"/>
+        <Glyph value="e"/>
+      </Coverage>
+      <!-- GlyphCount=2 -->
+      <AttachPoint index="0">
+        <!-- PointCount=2 -->
+        <PointIndex index="0" value="7"/>
+        <PointIndex index="1" value="23"/>
+      </AttachPoint>
+      <AttachPoint index="1">
+        <!-- PointCount=1 -->
+        <PointIndex index="0" value="7"/>
+      </AttachPoint>
+    </AttachList>
+  </GDEF>
+
+</ttFont>
