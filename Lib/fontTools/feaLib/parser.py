@@ -132,7 +132,7 @@ class Parser(object):
         return self.parse_position_(enumerated=True, vertical=vertical)
 
     def parse_GlyphClassDef_(self):
-        """Parses 'GlyphClassDef @BASE, @MARKS, @LIGATURES, @COMPONENTS;'"""
+        """Parses 'GlyphClassDef @BASE, @LIGATURES, @MARKS, @COMPONENTS;'"""
         assert self.is_cur_keyword_("GlyphClassDef")
         location = self.cur_token_location_
         if self.next_token_ != ",":
@@ -141,14 +141,14 @@ class Parser(object):
             baseGlyphs = None
         self.expect_symbol_(",")
         if self.next_token_ != ",":
-            markGlyphs = self.parse_glyphclass_(accept_glyphname=False)
-        else:
-            markGlyphs = None
-        self.expect_symbol_(",")
-        if self.next_token_ != ",":
             ligatureGlyphs = self.parse_glyphclass_(accept_glyphname=False)
         else:
             ligatureGlyphs = None
+        self.expect_symbol_(",")
+        if self.next_token_ != ",":
+            markGlyphs = self.parse_glyphclass_(accept_glyphname=False)
+        else:
+            markGlyphs = None
         self.expect_symbol_(",")
         if self.next_token_ != ";":
             componentGlyphs = self.parse_glyphclass_(accept_glyphname=False)

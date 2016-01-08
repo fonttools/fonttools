@@ -136,12 +136,12 @@ class GlyphClassDefStatement(Statement):
         self.componentGlyphs = componentGlyphs
 
     def build(self, builder):
-        base = self.baseGlyphs.glyphSet() if self.baseGlyphs else None
-        mark = self.markGlyphs.glyphSet() if self.markGlyphs else None
-        liga = self.ligatureGlyphs.glyphSet() if self.ligatureGlyphs else None
+        base = self.baseGlyphs.glyphSet() if self.baseGlyphs else set()
+        liga = self.ligatureGlyphs.glyphSet() if self.ligatureGlyphs else set()
+        mark = self.markGlyphs.glyphSet() if self.markGlyphs else set()
         comp = (self.componentGlyphs.glyphSet()
-                if self.componentGlyphs else None)
-        builder.add_glyphClassDef(self.location, base, mark, liga, comp)
+                if self.componentGlyphs else set())
+        builder.add_glyphClassDef(self.location, base, liga, mark, comp)
 
 
 # While glyph classes can be defined only once, the feature file format

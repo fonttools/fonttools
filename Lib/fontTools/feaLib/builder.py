@@ -33,6 +33,7 @@ class Builder(object):
         self.ligatureCaretByPos_ = {}  # "f_f_i" --> {300, 600}
         self.parseTree = None
         self.required_features_ = {}  # ('latn', 'DEU ') --> 'scmp'
+        self.glyphClassDefs_ = {}  # "fi" --> (2, (file, line, column))
         self.markAttach_ = {}  # "acute" --> (4, (file, line, column))
         self.markAttachClassID_ = {}  # frozenset({"acute", "grave"}) --> 4
         self.markFilterSets_ = {}  # frozenset({"acute", "grave"}) --> 4
@@ -141,9 +142,13 @@ class Builder(object):
                             (glyph, name1, name2), markClassDef.location)
                     marks[glyph] = markClass
                     inferredGlyphClass[glyph] = 3
-        if inferredGlyphClass:
+        if self.glyphClassDefs_:
+            classes = {g: c for (g, (c, _)) in self.glyphClassDefs_.items()}
+        else:
+            classes = inferredGlyphClass
+        if classes:
             result = otTables.GlyphClassDef()
-            result.classDefs = inferredGlyphClass
+            result.classDefs = classes
             return result
         else:
             return None
@@ -600,10 +605,25 @@ class Builder(object):
                 location)
         lookup.mapping[glyph] = valuerecord
 
-    def add_glyphClassDef(self, location, baseGlyphs, markGlyphs,
-                          ligatureGlyphs, componentGlyphs):
-        # TODO: Not yet implemented.
-        pass
+    def setGlyphClass_(self, location, glyph, glyphClass):
+        oldClass, oldLocation = self.glyphClassDefs_.get(glyph, (None, None))
+        if oldClass and oldClass != glyphClass:
+            raise FeatureLibError(
+                "Glyph %s was assigned to a different class at %s:%s:%s" %
+                (glyph, oldLocation[0], oldLocation[1], oldLocation[2]),
+                location)
+        self.glyphClassDefs_[glyph] = (glyphClass, location)
+
+    def add_glyphClassDef(self, location, baseGlyphs, ligatureGlyphs,
+                          markGlyphs, componentGlyphs):
+        for glyph in baseGlyphs:
+            self.setGlyphClass_(location, glyph, 1)
+        for glyph in ligatureGlyphs:
+            self.setGlyphClass_(location, glyph, 2)
+        for glyph in markGlyphs:
+            self.setGlyphClass_(location, glyph, 3)
+        for glyph in componentGlyphs:
+            self.setGlyphClass_(location, glyph, 4)
 
     def add_ligatureCaretByIndex_(self, location, glyphs, carets):
         for glyph in glyphs:

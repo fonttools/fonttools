@@ -147,7 +147,7 @@ class BuilderTest(unittest.TestCase):
 
     def test_constructs(self):
         for name in ("Attach enum markClass language_required "
-                     "LigatureCaretByIndex LigatureCaretByPos "
+                     "GlyphClassDef LigatureCaretByIndex LigatureCaretByPos "
                      "lookup lookupflag").split():
             font = makeTTFont()
             addOpenTypeFeatures(self.getpath("%s.fea" % name), font)
@@ -171,6 +171,15 @@ class BuilderTest(unittest.TestCase):
             font = makeTTFont()
             addOpenTypeFeatures(self.getpath("spec%s.fea" % name), font)
             self.expect_ttx(font, self.getpath("spec%s.ttx" % name))
+
+    def test_GlyphClassDef_conflictingClasses(self):
+        self.assertRaisesRegex(
+            FeatureLibError, "Glyph X was assigned to a different class",
+            self.build,
+            "table GDEF {"
+            "    GlyphClassDef [a b], [X], , ;"
+            "    GlyphClassDef [a b X], , , ;"
+            "} GDEF;")
 
     def test_languagesystem(self):
         builder = Builder(None, makeTTFont())
