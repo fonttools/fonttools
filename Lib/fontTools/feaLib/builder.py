@@ -596,11 +596,11 @@ class Builder(object):
 
     def add_ligatureCaretByIndex_(self, location, glyphs, carets):
         for glyph in glyphs:
-            self.ligatureCaretByIndex_[glyph] = carets
+            self.ligatureCaretByIndex_.setdefault(glyph, set()).update(carets)
 
     def add_ligatureCaretByPos_(self, location, glyphs, carets):
         for glyph in glyphs:
-            self.ligatureCaretByPos_[glyph] = carets
+            self.ligatureCaretByPos_.setdefault(glyph, set()).update(carets)
 
 
 def _makeOpenTypeDeviceTable(deviceTable, device):

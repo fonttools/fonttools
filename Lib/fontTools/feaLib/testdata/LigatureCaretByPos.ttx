@@ -7,7 +7,7 @@
       <Coverage>
         <Glyph value="c_h"/>
         <Glyph value="c_k"/>
-        <Glyph value="f_f_i"/>
+        <Glyph value="o_f_f_i"/>
       </Coverage>
       <!-- LigGlyphCount=3 -->
       <LigGlyph index="0">
@@ -23,12 +23,15 @@
         </CaretValue>
       </LigGlyph>
       <LigGlyph index="2">
-        <!-- CaretCount=2 -->
+        <!-- CaretCount=3 -->
         <CaretValue index="0" Format="1">
           <Coordinate value="300"/>
         </CaretValue>
         <CaretValue index="1" Format="1">
-          <Coordinate value="600"/>
+          <Coordinate value="700"/>
+        </CaretValue>
+        <CaretValue index="2" Format="1">
+          <Coordinate value="900"/>
         </CaretValue>
       </LigGlyph>
     </LigCaretList>
