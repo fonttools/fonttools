@@ -116,6 +116,7 @@ class TableBlock(Block):
 
 
 class GlyphClassDefinition(Statement):
+    """Example: @UPPERCASE = [A-Z];"""
     def __init__(self, location, name, glyphs):
         Statement.__init__(self, location)
         self.name = name
@@ -123,6 +124,24 @@ class GlyphClassDefinition(Statement):
 
     def glyphSet(self):
         return frozenset(self.glyphs)
+
+
+class GlyphClassDefStatement(Statement):
+    """Example: GlyphClassDef @UPPERCASE, [B], [C], [D];"""
+    def __init__(self, location, baseGlyphs, markGlyphs,
+                 ligatureGlyphs, componentGlyphs):
+        Statement.__init__(self, location)
+        self.baseGlyphs, self.markGlyphs = (baseGlyphs, markGlyphs)
+        self.ligatureGlyphs = ligatureGlyphs
+        self.componentGlyphs = componentGlyphs
+
+    def build(self, builder):
+        base = self.baseGlyphs.glyphSet() if self.baseGlyphs else None
+        mark = self.markGlyphs.glyphSet() if self.markGlyphs else None
+        liga = self.ligatureGlyphs.glyphSet() if self.ligatureGlyphs else None
+        comp = (self.componentGlyphs.glyphSet()
+                if self.componentGlyphs else None)
+        builder.add_glyphClassDef(self.location, base, mark, liga, comp)
 
 
 # While glyph classes can be defined only once, the feature file format

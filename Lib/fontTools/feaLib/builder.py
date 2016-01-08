@@ -594,6 +594,11 @@ class Builder(object):
                 location)
         lookup.mapping[glyph] = valuerecord
 
+    def add_glyphClassDef(self, location, baseGlyphs, markGlyphs,
+                          ligatureGlyphs, componentGlyphs):
+        # TODO: Not yet implemented.
+        pass
+
     def add_ligatureCaretByIndex_(self, location, glyphs, carets):
         for glyph in glyphs:
             self.ligatureCaretByIndex_.setdefault(glyph, set()).update(carets)

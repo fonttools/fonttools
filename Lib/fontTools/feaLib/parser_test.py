@@ -231,6 +231,23 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(liga.statements[0].glyphs, {"a", "b", "l"})
         self.assertEqual(smcp.statements[0].glyphs, {"a", "b", "s"})
 
+    def test_GlyphClassDef(self):
+        doc = self.parse("table GDEF {GlyphClassDef [b],[m],[l],[C c];} GDEF;")
+        s = doc.statements[0].statements[0]
+        self.assertIsInstance(s, ast.GlyphClassDefStatement)
+        self.assertEqual(glyphstr([s.baseGlyphs]), "b")
+        self.assertEqual(glyphstr([s.markGlyphs]), "m")
+        self.assertEqual(glyphstr([s.ligatureGlyphs]), "l")
+        self.assertEqual(glyphstr([s.componentGlyphs]), "[C c]")
+
+    def test_GlyphClassDef_noCLassesSpecified(self):
+        doc = self.parse("table GDEF {GlyphClassDef ,,,;} GDEF;")
+        s = doc.statements[0].statements[0]
+        self.assertIsNone(s.baseGlyphs)
+        self.assertIsNone(s.markGlyphs)
+        self.assertIsNone(s.ligatureGlyphs)
+        self.assertIsNone(s.componentGlyphs)
+
     def test_ignore_sub(self):
         doc = self.parse("feature test {ignore sub e t' c;} test;")
         s = doc.statements[0].statements[0]

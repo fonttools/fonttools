@@ -131,7 +131,35 @@ class Parser(object):
         self.advance_lexer_()
         return self.parse_position_(enumerated=True, vertical=vertical)
 
+    def parse_GlyphClassDef_(self):
+        """Parses 'GlyphClassDef @BASE, @MARKS, @LIGATURES, @COMPONENTS;'"""
+        assert self.is_cur_keyword_("GlyphClassDef")
+        location = self.cur_token_location_
+        if self.next_token_ != ",":
+            baseGlyphs = self.parse_glyphclass_(accept_glyphname=False)
+        else:
+            baseGlyphs = None
+        self.expect_symbol_(",")
+        if self.next_token_ != ",":
+            markGlyphs = self.parse_glyphclass_(accept_glyphname=False)
+        else:
+            markGlyphs = None
+        self.expect_symbol_(",")
+        if self.next_token_ != ",":
+            ligatureGlyphs = self.parse_glyphclass_(accept_glyphname=False)
+        else:
+            ligatureGlyphs = None
+        self.expect_symbol_(",")
+        if self.next_token_ != ";":
+            componentGlyphs = self.parse_glyphclass_(accept_glyphname=False)
+        else:
+            componentGlyphs = None
+        self.expect_symbol_(";")
+        return ast.GlyphClassDefStatement(location, baseGlyphs, markGlyphs,
+                                          ligatureGlyphs, componentGlyphs)
+
     def parse_glyphclass_definition_(self):
+        """Parses glyph class definitions such as '@UPPERCASE = [A-Z];'"""
         location, name = self.cur_token_location_, self.cur_token_
         self.expect_symbol_("=")
         glyphs = self.parse_glyphclass_(accept_glyphname=False).glyphSet()
@@ -620,6 +648,8 @@ class Parser(object):
             self.advance_lexer_()
             if self.is_cur_keyword_("Attach"):
                 statements.append(self.parse_attach_())
+            elif self.is_cur_keyword_("GlyphClassDef"):
+                statements.append(self.parse_GlyphClassDef_())
             elif self.is_cur_keyword_("LigatureCaretByIndex"):
                 statements.append(self.parse_ligatureCaretByIndex_())
             elif self.is_cur_keyword_("LigatureCaretByPos"):
