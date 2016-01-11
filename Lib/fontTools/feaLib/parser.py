@@ -628,6 +628,7 @@ class Parser(object):
         self.expect_symbol_("{")
         handler = {
             "GDEF": self.parse_table_GDEF_,
+            "head": self.parse_table_head_,
         }.get(name)
         if handler:
             handler(table)
@@ -659,6 +660,16 @@ class Parser(object):
                     "Expected Attach, LigatureCaretByIndex, "
                     "or LigatureCaretByPos",
                     self.cur_token_location_)
+
+    def parse_table_head_(self, table):
+        statements = table.statements
+        while self.next_token_ != "}":
+            self.advance_lexer_()
+            if self.is_cur_keyword_("FontRevision"):
+                statements.append(self.parse_FontRevision_())
+            else:
+                raise FeatureLibError("Expected FontRevision",
+                                      self.cur_token_location_)
 
     def parse_device_(self):
         result = None
@@ -771,6 +782,15 @@ class Parser(object):
         featureName = self.expect_tag_()
         self.expect_symbol_(";")
         return ast.FeatureReferenceStatement(location, featureName)
+
+    def parse_FontRevision_(self):
+        assert self.cur_token_ == "FontRevision", self.cur_token_
+        location, version = self.cur_token_location_, self.expect_float_()
+        self.expect_symbol_(";")
+        if version <= 0:
+            raise FeatureLibError("Font revision numbers must be positive",
+                                  location)
+        return ast.FontRevisionStatement(location, version)
 
     def parse_block_(self, block, vertical):
         self.expect_symbol_("{")
@@ -900,6 +920,13 @@ class Parser(object):
         if self.cur_token_type_ is Lexer.NUMBER:
             return self.cur_token_
         raise FeatureLibError("Expected a number", self.cur_token_location_)
+
+    def expect_float_(self):
+        self.advance_lexer_()
+        if self.cur_token_type_ is Lexer.FLOAT:
+            return self.cur_token_
+        raise FeatureLibError("Expected a floating-point number",
+                              self.cur_token_location_)
 
     def advance_lexer_(self):
         self.cur_token_type_, self.cur_token_, self.cur_token_location_ = (

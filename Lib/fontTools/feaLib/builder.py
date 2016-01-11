@@ -33,6 +33,8 @@ class Builder(object):
         # for feature 'aalt'
         self.aalt_features_ = []  # [(location, featureName)*], for 'aalt'
         self.aalt_location_ = None
+        # for table 'head'
+        self.fontRevision_ = None  # 2.71
         # for table 'GDEF'
         self.attachPoints_ = {}  # "a" --> {3, 7}
         self.ligatureCaretByIndex_ = {}  # "f_f_i" --> {3, 7}
@@ -46,6 +48,7 @@ class Builder(object):
         self.parseTree = Parser(self.featurefile_path).parse()
         self.parseTree.build(self)
         self.build_feature_aalt_()
+        self.build_head()
         for tag in ('GPOS', 'GSUB'):
             table = self.makeTable(tag)
             if (table.ScriptList.ScriptCount > 0 or
@@ -141,6 +144,16 @@ class Builder(object):
                 replacements=repl)
         self.end_feature()
         self.lookups_.extend(old_lookups)
+
+    def build_head(self):
+        if not self.fontRevision_:
+            return
+        table = self.font.get("head")
+        if not table:  # this only happens for unit tests
+            table = self.font["head"] = getTableClass("head")()
+            table.decompile(b"\0" * 54, self.font)
+            table.tableVersion = 1.0
+        table.fontRevision = self.fontRevision_
 
     def buildGDEF(self):
         gdef = otTables.GDEF()
@@ -407,6 +420,9 @@ class Builder(object):
         self.cur_lookup_ = None
         lookup = self.named_lookups_[lookup_name]
         self.add_lookup_to_feature_(lookup, self.cur_feature_name_)
+
+    def set_font_revision(self, location, revision):
+        self.fontRevision_ = revision
 
     def set_language(self, location, language, include_default, required):
         assert(len(language) == 4)

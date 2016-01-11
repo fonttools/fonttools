@@ -8,6 +8,7 @@ import os
 
 class Lexer(object):
     NUMBER = "NUMBER"
+    FLOAT = "FLOAT"
     STRING = "STRING"
     NAME = "NAME"
     FILENAME = "FILENAME"
@@ -123,11 +124,19 @@ class Lexer(object):
             return (Lexer.NUMBER, int(text[start:self.pos_], 16), location)
         if cur_char in Lexer.CHAR_DIGIT_:
             self.scan_over_(Lexer.CHAR_DIGIT_)
-            return (Lexer.NUMBER, int(text[start:self.pos_], 10), location)
+            if next_char != ".":
+                return (Lexer.NUMBER, int(text[start:self.pos_], 10), location)
+            self.scan_over_(".")
+            self.scan_over_(Lexer.CHAR_DIGIT_)
+            return (Lexer.FLOAT, float(text[start:self.pos_]), location)
         if cur_char == "-" and next_char in Lexer.CHAR_DIGIT_:
             self.pos_ += 1
             self.scan_over_(Lexer.CHAR_DIGIT_)
-            return (Lexer.NUMBER, int(text[start:self.pos_], 10), location)
+            if self.pos_ >= limit or text[self.pos_] != ".":
+                return (Lexer.NUMBER, int(text[start:self.pos_], 10), location)
+            self.scan_over_(".")
+            self.scan_over_(Lexer.CHAR_DIGIT_)
+            return (Lexer.FLOAT, float(text[start:self.pos_]), location)
         if cur_char in Lexer.CHAR_SYMBOL_:
             self.pos_ += 1
             return (Lexer.SYMBOL, cur_char, location)

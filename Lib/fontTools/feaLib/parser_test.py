@@ -138,6 +138,17 @@ class ParserTest(unittest.TestCase):
         self.assertIsInstance(ref, ast.FeatureReferenceStatement)
         self.assertEqual(ref.featureName, "salt")
 
+    def test_FontRevision(self):
+        doc = self.parse("table head {FontRevision 2.5;} head;")
+        s = doc.statements[0].statements[0]
+        self.assertIsInstance(s, ast.FontRevisionStatement)
+        self.assertEqual(s.revision, 2.5)
+
+    def test_FontRevision_negative(self):
+        self.assertRaisesRegex(
+            FeatureLibError, "Font revision numbers must be positive",
+            self.parse, "table head {FontRevision -17.2;} head;")
+
     def test_glyphclass(self):
         [gc] = self.parse("@dash = [endash emdash figuredash];").statements
         self.assertEqual(gc.name, "dash")

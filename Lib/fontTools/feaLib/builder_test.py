@@ -80,7 +80,7 @@ class BuilderTest(unittest.TestCase):
 
     def expect_ttx(self, font, expected_ttx):
         path = self.temp_path(suffix=".ttx")
-        font.saveXML(path, quiet=True, tables=['GDEF', 'GSUB', 'GPOS'])
+        font.saveXML(path, quiet=True, tables=['head', 'GDEF', 'GSUB', 'GPOS'])
         actual = self.read_ttx(path)
         expected = self.read_ttx(expected_ttx)
         if actual != expected:
@@ -168,7 +168,7 @@ class BuilderTest(unittest.TestCase):
 
     def test_spec(self):
         for name in ("4h1 5d1 5d2 5fi1 5fi2 5fi3 5fi4 5h1 "
-                     "6d2 6e 6f 6h_ii 8a 9b").split():
+                     "6d2 6e 6f 6h_ii 8a 9b 9c1 9c2 9c3").split():
             font = makeTTFont()
             addOpenTypeFeatures(self.getpath("spec%s.fea" % name), font)
             self.expect_ttx(font, self.getpath("spec%s.ttx" % name))

@@ -302,6 +302,15 @@ class IgnoreSubstitutionRule(Statement):
         self.prefix, self.glyphs, self.suffix = (prefix, glyphs, suffix)
 
 
+class FontRevisionStatement(Statement):
+    def __init__(self, location, revision):
+        Statement.__init__(self, location)
+        self.revision = revision
+
+    def build(self, builder):
+        builder.set_font_revision(self.location, self.revision)
+
+
 class LigatureCaretByIndexStatement(Statement):
     def __init__(self, location, glyphs, carets):
         Statement.__init__(self, location)
