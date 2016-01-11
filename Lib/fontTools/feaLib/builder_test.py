@@ -30,7 +30,7 @@ def makeTTFont():
         "f_l c_h c_k c_s c_t f_f f_f_i f_f_l f_i o_f_f_i s_t "
         "ydieresis yacute "
         "grave acute dieresis macron circumflex cedilla umlaut ogonek caron "
-        "damma hamza sukun kasratan lam_meem_jeem "
+        "damma hamza sukun kasratan lam_meem_jeem noon.final noon.initial "
     ).split()
     font = TTFont()
     font.setGlyphOrder(glyphs)
@@ -167,7 +167,7 @@ class BuilderTest(unittest.TestCase):
 
     def test_spec(self):
         for name in ("4h1 5d1 5d2 5fi1 5fi2 5fi3 5fi4 5h1 "
-                     "6d2 6e 6f 6h_ii").split():
+                     "6d2 6e 6f 6h_ii 9b").split():
             font = makeTTFont()
             addOpenTypeFeatures(self.getpath("spec%s.fea" % name), font)
             self.expect_ttx(font, self.getpath("spec%s.ttx" % name))
