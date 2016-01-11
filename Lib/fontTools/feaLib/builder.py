@@ -154,6 +154,7 @@ class Builder(object):
             table = self.font["head"] = getTableClass("head")()
             table.decompile(b"\0" * 54, self.font)
             table.tableVersion = 1.0
+            table.created = table.modified = 3406620153  # 2011-12-13 11:22:33
         table.fontRevision = self.fontRevision_
 
     def buildGDEF(self):
