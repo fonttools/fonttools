@@ -327,7 +327,6 @@ class Parser(object):
             location, coverages, pos)
         return position
 
-
     def parse_def_anchor_(self):
         assert self.is_cur_keyword_("DEF_ANCHOR")
         location = self.cur_token_location_
@@ -435,7 +434,9 @@ class Parser(object):
                 #     #     location)
             elif self.next_token_ == "RANGE":
                 self.expect_keyword_("RANGE")
-                start, end = self.expect_string_(), self.expect_string_()
+                start = self.expect_string_()
+                self.expect_keyword_("TO")
+                end = self.expect_string_()
                 coverage.append((start, end))
         return coverage
 

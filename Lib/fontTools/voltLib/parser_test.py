@@ -190,7 +190,7 @@ class ParserTest(unittest.TestCase):
     def test_def_group_range(self):
         [def_group] = self.parse(
             'DEF_GROUP "KERN_lc_a_2ND"\n'
-            'ENUM RANGE "a" "atilde" GLYPH "b" RANGE "c" "cdotaccent" '
+            'ENUM RANGE "a" TO "atilde" GLYPH "b" RANGE "c" TO "cdotaccent" '
             'END_ENUM\n'
             'END_GROUP'
         ).statements
