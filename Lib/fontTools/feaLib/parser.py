@@ -765,6 +765,13 @@ class Parser(object):
         self.parse_block_(block, vertical)
         return block
 
+    def parse_feature_reference_(self):
+        assert self.cur_token_ == "feature", self.cur_token_
+        location = self.cur_token_location_
+        featureName = self.expect_tag_()
+        self.expect_symbol_(";")
+        return ast.FeatureReferenceStatement(location, featureName)
+
     def parse_block_(self, block, vertical):
         self.expect_symbol_("{")
         for symtab in self.symbol_tables_:
@@ -779,6 +786,8 @@ class Parser(object):
                 statements.append(self.parse_anchordef_())
             elif self.is_cur_keyword_({"enum", "enumerate"}):
                 statements.append(self.parse_enumerate_(vertical=vertical))
+            elif self.is_cur_keyword_("feature"):
+                statements.append(self.parse_feature_reference_())
             elif self.is_cur_keyword_("ignore"):
                 statements.append(self.parse_ignore_())
             elif self.is_cur_keyword_("language"):

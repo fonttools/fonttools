@@ -28,11 +28,15 @@ class Builder(object):
         self.cur_feature_name_ = None
         self.lookups_ = []
         self.features_ = {}  # ('latn', 'DEU ', 'smcp') --> [LookupBuilder*]
+        self.parseTree = None
+        self.required_features_ = {}  # ('latn', 'DEU ') --> 'scmp'
+        # for feature 'aalt'
+        self.aalt_features_ = []  # [(location, featureName)*], for 'aalt'
+        self.aalt_location_ = None
+        # for table 'GDEF'
         self.attachPoints_ = {}  # "a" --> {3, 7}
         self.ligatureCaretByIndex_ = {}  # "f_f_i" --> {3, 7}
         self.ligatureCaretByPos_ = {}  # "f_f_i" --> {300, 600}
-        self.parseTree = None
-        self.required_features_ = {}  # ('latn', 'DEU ') --> 'scmp'
         self.glyphClassDefs_ = {}  # "fi" --> (2, (file, line, column))
         self.markAttach_ = {}  # "acute" --> (4, (file, line, column))
         self.markAttachClassID_ = {}  # frozenset({"acute", "grave"}) --> 4
@@ -41,6 +45,7 @@ class Builder(object):
     def build(self):
         self.parseTree = Parser(self.featurefile_path).parse()
         self.parseTree.build(self)
+        self.build_feature_aalt_()
         for tag in ('GPOS', 'GSUB'):
             table = self.makeTable(tag)
             if (table.ScriptList.ScriptCount > 0 or
@@ -92,6 +97,50 @@ class Builder(object):
             self.add_lookup_to_feature_(self.cur_lookup_,
                                         self.cur_feature_name_)
         return self.cur_lookup_
+
+    def build_feature_aalt_(self):
+        if not self.aalt_features_:
+            return
+        alternates = {}  # glyph --> {glyph.alt1, glyph.alt2, ...}
+        for location, name in self.aalt_features_ + [(None, "aalt")]:
+            feature = [(script, lang, feature, lookups)
+                       for (script, lang, feature), lookups
+                       in self.features_.items()
+                       if feature == name]
+            if not feature:
+                raise FeatureLibError("Feature %s has not been defined" % name,
+                                      location)
+            for script, lang, feature, lookups in feature:
+                for lookup in lookups:
+                    for glyph, alts in lookup.getAlternateGlyphs().items():
+                        alternates.setdefault(glyph, set()).update(alts)
+        single = {glyph: list(repl)[0] for glyph, repl in alternates.items()
+                  if len(repl) == 1}
+        multi = {glyph: sorted(repl, key=self.font.getGlyphID)
+                 for glyph, repl in alternates.items()
+                 if len(repl) > 1}
+        if not single and not multi:
+            return
+        aalt_lookups = []
+        for (script, lang, feature), lookups in self.features_.items():
+            if feature == "aalt":
+                aalt_lookups.extend(lookups)
+        self.features_ = {(script, lang, feature): lookups
+                          for (script, lang, feature), lookups
+                          in self.features_.items()
+                          if feature != "aalt"}
+        old_lookups = self.lookups_
+        self.lookups_ = []
+        self.start_feature(self.aalt_location_, "aalt")
+        if single:
+            self.add_single_subst(
+                self.aalt_location_, prefix=None, suffix=None, mapping=single)
+        for glyph, repl in multi.items():
+            self.add_multiple_subst(
+                self.aalt_location_, prefix=None, glyph=glyph, suffix=None,
+                replacements=repl)
+        self.end_feature()
+        self.lookups_.extend(old_lookups)
 
     def buildGDEF(self):
         gdef = otTables.GDEF()
@@ -331,6 +380,8 @@ class Builder(object):
         self.language_systems = self.get_default_language_systems_()
         self.cur_lookup_ = None
         self.cur_feature_name_ = name
+        if name == "aalt":
+            self.aalt_location_ = location
 
     def end_feature(self):
         assert self.cur_feature_name_ is not None
@@ -481,6 +532,13 @@ class Builder(object):
                 'Already defined alternates for glyph "%s"' % glyph,
                 location)
         lookup.alternates[glyph] = replacement
+
+    def add_feature_reference(self, location, featureName):
+        if self.cur_feature_name_ != "aalt":
+            raise FeatureLibError(
+                'Feature references are only allowed inside "feature aalt"',
+                location)
+        self.aalt_features_.append((location, featureName))
 
     def add_ligature_subst(self, location,
                            prefix, glyphs, suffix, replacement):
@@ -732,6 +790,10 @@ class LookupBuilder(object):
         """Infers glyph glasses for the GDEF table, such as {"cedilla":3}."""
         return {}
 
+    def getAlternateGlyphs(self):
+        """Helper for building 'aalt' features."""
+        return {}
+
     def buildCoverage_(self, glyphs, tableClass=otTables.Coverage):
         coverage = tableClass()
         coverage.glyphs = sorted(glyphs, key=self.font.getGlyphID)
@@ -822,6 +884,9 @@ class AlternateSubstBuilder(LookupBuilder):
         subtable.alternates = self.alternates
         return self.buildLookup_([subtable])
 
+    def getAlternateGlyphs(self):
+        return self.alternates
+
 
 class ChainContextPosBuilder(LookupBuilder):
     def __init__(self, font, location):
@@ -881,6 +946,15 @@ class ChainContextSubstBuilder(LookupBuilder):
                     rec.LookupListIndex = l.lookup_index
                     st.SubstLookupRecord.append(rec)
         return self.buildLookup_(subtables)
+
+    def getAlternateGlyphs(self):
+        result = {}
+        for (_prefix, _input, _suffix, lookups) in self.substitutions:
+            for lookup in lookups:
+                alts = lookup.getAlternateGlyphs()
+                for glyph, replacements in alts.items():
+                    result.setdefault(glyph, set()).update(replacements)
+        return result
 
 
 class LigatureSubstBuilder(LookupBuilder):
@@ -1188,6 +1262,9 @@ class SingleSubstBuilder(LookupBuilder):
         subtable = otTables.SingleSubst()
         subtable.mapping = self.mapping
         return self.buildLookup_([subtable])
+
+    def getAlternateGlyphs(self):
+        return {glyph: set([repl]) for glyph, repl in self.mapping.items()}
 
 
 class ClassPairPosSubtableBuilder(object):

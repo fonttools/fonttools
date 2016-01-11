@@ -132,6 +132,12 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(liga.name, "liga")
         self.assertTrue(liga.use_extension)
 
+    def test_feature_reference(self):
+        doc = self.parse("feature aalt { feature salt; } aalt;")
+        ref = doc.statements[0].statements[0]
+        self.assertIsInstance(ref, ast.FeatureReferenceStatement)
+        self.assertEqual(ref.featureName, "salt")
+
     def test_glyphclass(self):
         [gc] = self.parse("@dash = [endash emdash figuredash];").statements
         self.assertEqual(gc.name, "dash")

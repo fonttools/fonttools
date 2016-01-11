@@ -263,6 +263,16 @@ class CursivePosStatement(Statement):
             self.location, self.glyphclass, self.entryAnchor, self.exitAnchor)
 
 
+class FeatureReferenceStatement(Statement):
+    """Example: feature salt;"""
+    def __init__(self, location, featureName):
+        Statement.__init__(self, location)
+        self.location, self.featureName = (location, featureName)
+
+    def build(self, builder):
+        builder.add_feature_reference(self.location, self.featureName)
+
+
 class LanguageStatement(Statement):
     def __init__(self, location, language, include_default, required):
         Statement.__init__(self, location)
