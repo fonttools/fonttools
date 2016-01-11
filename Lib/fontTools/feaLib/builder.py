@@ -110,7 +110,8 @@ class Builder(object):
                        for (script, lang, feature), lookups
                        in self.features_.items()
                        if feature == name]
-            if not feature:
+            # "aalt" does not have to specify its own lookups, but it might.
+            if not feature and name != "aalt":
                 raise FeatureLibError("Feature %s has not been defined" % name,
                                       location)
             for script, lang, feature, lookups in feature:

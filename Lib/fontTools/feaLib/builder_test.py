@@ -149,7 +149,7 @@ class BuilderTest(unittest.TestCase):
     def test_constructs(self):
         for name in ("Attach enum markClass language_required "
                      "GlyphClassDef LigatureCaretByIndex LigatureCaretByPos "
-                     "lookup lookupflag").split():
+                     "lookup lookupflag feature_aalt").split():
             font = makeTTFont()
             addOpenTypeFeatures(self.getpath("%s.fea" % name), font)
             self.expect_ttx(font, self.getpath("%s.ttx" % name))
