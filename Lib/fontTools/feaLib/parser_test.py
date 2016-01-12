@@ -184,6 +184,17 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(doc.statements[-1].glyphSet(),
                          {"acute", "cedilla", "grave", "ogonek"})
 
+    def test_glyphclass_range_cid(self):
+        [gc] = self.parse(r"@GlyphClass = [\999-\1001];").statements
+        self.assertEqual(gc.name, "GlyphClass")
+        self.assertEqual(gc.glyphs, {"cid00999", "cid01000", "cid01001"})
+
+    def test_glyphclass_range_cid_bad(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Bad range: start should be less than limit",
+            self.parse, r"@bad = [\998-\995];")
+
     def test_glyphclass_range_uppercase(self):
         [gc] = self.parse("@swashes = [X.swash-Z.swash];").statements
         self.assertEqual(gc.name, "swashes")
@@ -724,6 +735,15 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(rsub.mapping, {"c": "C"})
         self.assertEqual(glyphstr(rsub.old_suffix), "d [E e]")
 
+    def test_rsub_format_a_cid(self):
+        doc = self.parse(r"feature test {rsub \1 [\2 \3] \4' \5 by \6;} test;")
+        rsub = doc.statements[0].statements[0]
+        self.assertEqual(type(rsub), ast.ReverseChainSingleSubstStatement)
+        self.assertEqual(glyphstr(rsub.old_prefix),
+                         "cid00001 [cid00002 cid00003]")
+        self.assertEqual(rsub.mapping, {"cid00004": "cid00006"})
+        self.assertEqual(glyphstr(rsub.old_suffix), "cid00005")
+
     def test_rsub_format_b(self):
         doc = self.parse(
             "feature smcp {"
@@ -789,7 +809,7 @@ class ParserTest(unittest.TestCase):
     def test_sub_single_format_a(self):  # GSUB LookupType 1
         doc = self.parse("feature smcp {substitute a by a.sc;} smcp;")
         sub = doc.statements[0].statements[0]
-        self.assertEqual(type(sub), ast.SingleSubstStatement)
+        self.assertIsInstance(sub, ast.SingleSubstStatement)
         self.assertEqual(glyphstr(sub.prefix), "")
         self.assertEqual(sub.mapping, {"a": "a.sc"})
         self.assertEqual(glyphstr(sub.suffix), "")
@@ -801,6 +821,14 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(sub.mapping, {"d": "d.alt"})
         self.assertEqual(glyphstr(sub.prefix), "[A a]")
         self.assertEqual(glyphstr(sub.suffix), "C")
+
+    def test_sub_single_format_a_cid(self):  # GSUB LookupType 1
+        doc = self.parse(r"feature smcp {substitute \12345 by \78987;} smcp;")
+        sub = doc.statements[0].statements[0]
+        self.assertIsInstance(sub, ast.SingleSubstStatement)
+        self.assertEqual(glyphstr(sub.prefix), "")
+        self.assertEqual(sub.mapping, {"cid12345": "cid78987"})
+        self.assertEqual(glyphstr(sub.suffix), "")
 
     def test_sub_single_format_b(self):  # GSUB LookupType 1
         doc = self.parse(
@@ -904,6 +932,17 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(glyphstr([sub.glyph]), "a")
         self.assertEqual(glyphstr(sub.suffix), "[Y y] Z")
         self.assertEqual(glyphstr([sub.replacement]), "[a.1 a.2 a.3]")
+
+    def test_substitute_from_cid(self):  # GSUB LookupType 3
+        doc = self.parse(r"feature test {"
+                         r"  substitute \7 from [\111 \222];"
+                         r"} test;")
+        sub = doc.statements[0].statements[0]
+        self.assertIsInstance(sub, ast.AlternateSubstStatement)
+        self.assertEqual(glyphstr(sub.prefix), "")
+        self.assertEqual(glyphstr([sub.glyph]), "cid00007")
+        self.assertEqual(glyphstr(sub.suffix), "")
+        self.assertEqual(glyphstr([sub.replacement]), "[cid00111 cid00222]")
 
     def test_substitute_from_glyphclass(self):  # GSUB LookupType 3
         doc = self.parse("feature test {"

@@ -172,8 +172,10 @@ class Parser(object):
         return glyphclass
 
     def parse_glyphclass_(self, accept_glyphname):
-        if accept_glyphname and self.next_token_type_ is Lexer.NAME:
-            return ast.GlyphName(self.cur_token_location_, self.expect_name_())
+        if (accept_glyphname and
+                self.next_token_type_ in (Lexer.NAME, Lexer.CID)):
+            glyph = self.expect_glyph_()
+            return ast.GlyphName(self.cur_token_location_, glyph)
         if self.next_token_type_ is Lexer.GLYPHCLASS:
             self.advance_lexer_()
             gc = self.glyphclasses_.resolve(self.cur_token_)
@@ -193,15 +195,25 @@ class Parser(object):
             self.advance_lexer_()
             if self.cur_token_type_ is Lexer.NAME:
                 if self.next_token_ == "-":
-                    range_location_ = self.cur_token_location_
+                    range_location = self.cur_token_location_
                     range_start = self.cur_token_
                     self.expect_symbol_("-")
                     range_end = self.expect_name_()
-                    glyphs.update(self.make_glyph_range_(range_location_,
+                    glyphs.update(self.make_glyph_range_(range_location,
                                                          range_start,
                                                          range_end))
                 else:
                     glyphs.add(self.cur_token_)
+            elif self.cur_token_type_ is Lexer.CID:
+                if self.next_token_ == "-":
+                    range_location = self.cur_token_location_
+                    range_start = self.cur_token_
+                    self.expect_symbol_("-")
+                    range_end = self.expect_cid_()
+                    glyphs.update(self.make_cid_range_(range_location,
+                                                       range_start, range_end))
+                else:
+                    glyphs.add("cid%05d" % self.cur_token_)
             elif self.cur_token_type_ is Lexer.GLYPHCLASS:
                 gc = self.glyphclasses_.resolve(self.cur_token_)
                 if gc is None:
@@ -388,10 +400,6 @@ class Parser(object):
         mcdef = ast.MarkClassDefinition(location, markClass, anchor, glyphs)
         markClass.addDefinition(mcdef)
         return mcdef
-
-    def is_next_glyphclass_(self):
-        return (self.next_token_ == "[" or
-                self.next_token_type_ in (Lexer.GLYPHCLASS, Lexer.NAME))
 
     def parse_position_(self, enumerated, vertical):
         assert self.cur_token_ in {"position", "pos"}
@@ -859,6 +867,21 @@ class Parser(object):
             raise FeatureLibError("Expected @NAME", self.cur_token_location_)
         return self.cur_token_
 
+    def expect_cid_(self):
+        self.advance_lexer_()
+        if self.cur_token_type_ is Lexer.CID:
+            return self.cur_token_
+        raise FeatureLibError("Expected a CID", self.cur_token_location_)
+
+    def expect_glyph_(self):
+        self.advance_lexer_()
+        if self.cur_token_type_ is Lexer.NAME:
+            return self.cur_token_
+        elif self.cur_token_type_ is Lexer.CID:
+            return "cid%05d" % self.cur_token_
+        raise FeatureLibError("Expected a glyph name or CID",
+                              self.cur_token_location_)
+
     def expect_markClass_reference_(self):
         name = self.expect_class_name_()
         mc = self.glyphclasses_.resolve(name)
@@ -942,8 +965,18 @@ class Parser(object):
         """'abc' --> 'cba'"""
         return ''.join(reversed(list(s)))
 
+    def make_cid_range_(self, location, start, limit):
+        """(location, 999, 1001) --> {"cid00999", "cid01000", "cid01001"}"""
+        result = set()
+        if start > limit:
+            raise FeatureLibError(
+                "Bad range: start should be less than limit", location)
+        for cid in range(start, limit + 1):
+            result.add("cid%05d" % cid)
+        return result
+
     def make_glyph_range_(self, location, start, limit):
-        """("a.sc", "d.sc") --> {"a.sc", "b.sc", "c.sc", "d.sc"}"""
+        """(location, "a.sc", "d.sc") --> {"a.sc", "b.sc", "c.sc", "d.sc"}"""
         result = set()
         if len(start) != len(limit):
             raise FeatureLibError(
