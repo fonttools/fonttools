@@ -312,7 +312,10 @@ def _add_method(*clazzes):
     """Returns a decorator function that adds a new method to one or
     more classes."""
     def wrapper(method):
+        done = []
         for clazz in clazzes:
+            if clazz in done: continue # Support multiple names of a clazz
+            done.append(clazz)
             assert clazz.__name__ != 'DefaultTable', \
                     'Oops, table class not found.'
             assert not hasattr(clazz, method.__name__), \
