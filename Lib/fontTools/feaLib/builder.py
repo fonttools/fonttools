@@ -1303,7 +1303,7 @@ class ClassPairPosSubtableBuilder(object):
                      self.classDef2_.canAdd(gc2))
         if not mergeable:
             self.flush_()
-            self.classDef1_ = ClassDefBuilder(otTables.ClassDef1)
+            self.classDef1_ = ClassDefBuilder(otTables.ClassDef1, useClass0=True)
             self.classDef2_ = ClassDefBuilder(otTables.ClassDef2)
             self.coverage_ = set()
             self.values_ = {}
@@ -1465,10 +1465,11 @@ class SinglePosBuilder(LookupBuilder):
 
 class ClassDefBuilder(object):
     """Helper for building ClassDef tables."""
-    def __init__(self, otClass):
+    def __init__(self, otClass, useClass0=False):
         self.classes_ = set()
         self.glyphs_ = {}
         self.otClass_ = otClass
+        self.useClass0_ = useClass0
 
     def canAdd(self, glyphs):
         glyphs = frozenset(glyphs)
@@ -1502,7 +1503,7 @@ class ClassDefBuilder(object):
         # compact, whereas a non-contiguous set might need a lot of bytes
         # in the output file. We don't get this right with key=len below.
         result = sorted(self.classes_, key=len, reverse=True)
-        if self.otClass_ is not otTables.ClassDef1:
+        if not self.useClass0_:
             result.insert(0, frozenset())
         return result
 

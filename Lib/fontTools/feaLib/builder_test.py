@@ -335,7 +335,7 @@ class BuilderTest(unittest.TestCase):
 
 class ClassDefBuilderTest(unittest.TestCase):
     def test_build_ClassDef1(self):
-        builder = ClassDefBuilder(otTables.ClassDef1)
+        builder = ClassDefBuilder(otTables.ClassDef1, useClass0=True)
         builder.add({"a", "b"})
         builder.add({"c"})
         builder.add({"e", "f", "g", "h"})
@@ -365,7 +365,7 @@ class ClassDefBuilderTest(unittest.TestCase):
         })
 
     def test_canAdd(self):
-        b = ClassDefBuilder(otTables.ClassDef1)
+        b = ClassDefBuilder(otTables.ClassDef1, useClass0=True)
         b.add({"a", "b", "c", "d"})
         b.add({"e", "f"})
         self.assertTrue(b.canAdd({"a", "b", "c", "d"}))
