@@ -22,7 +22,10 @@ def _add_method(*clazzes, **kwargs):
 	more classes."""
 	allowDefault = kwargs.get('allowDefaultTable', False)
 	def wrapper(method):
+		done = []
 		for clazz in clazzes:
+			if clazz in done: continue # Support multiple names of a clazz
+			done.append(clazz)
 			assert allowDefault or clazz != DefaultTable, 'Oops, table class not found.'
 			assert method.__name__ not in clazz.__dict__, \
 				"Oops, class '%s' has method '%s'." % (clazz.__name__, method.__name__)
