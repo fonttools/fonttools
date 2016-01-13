@@ -770,7 +770,7 @@ class FormatSwitchingBaseTable(BaseTable):
 		writer.writeUShort(self.Format)
 
 	def toXML(self, xmlWriter, font, attrs=None, name=None):
-		BaseTable.toXML(self, xmlWriter, font, attrs, name=self.__class__.__name__)
+		BaseTable.toXML(self, xmlWriter, font, attrs, name)
 
 
 #

@@ -366,6 +366,9 @@ class SubTable(Table):
 		tableClass = self.lookupTypes[tableType][lookupType]
 		return self.__class__(self.name, self.repeat, self.aux, tableClass)
 
+	def xmlWrite(self, xmlWriter, font, value, name, attrs):
+		Table.xmlWrite(self, xmlWriter, font, value, None, attrs)
+
 
 class ExtSubTable(LTable, SubTable):
 

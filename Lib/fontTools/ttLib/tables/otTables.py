@@ -788,7 +788,7 @@ def _buildClasses():
 	for base, alts in _equivalents.items():
 		base = namespace[base]
 		for alt in alts:
-			namespace[alt] = type(alt, (base,), {})
+			namespace[alt] = base
 
 	global lookupTypes
 	lookupTypes = {
