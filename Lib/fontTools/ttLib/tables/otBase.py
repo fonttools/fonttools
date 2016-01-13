@@ -891,7 +891,7 @@ class ValueRecord(object):
 			xmlWriter.newline()
 			for name, deviceRecord in deviceItems:
 				if deviceRecord is not None:
-					deviceRecord.toXML(xmlWriter, font)
+					deviceRecord.toXML(xmlWriter, font, name=name)
 			xmlWriter.endtag(valueName)
 			xmlWriter.newline()
 		else:
