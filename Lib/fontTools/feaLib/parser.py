@@ -192,19 +192,20 @@ class Parser(object):
         glyphs = set()
         location = self.cur_token_location_
         while self.next_token_ != "]":
-            self.advance_lexer_()
-            if self.cur_token_type_ is Lexer.NAME:
+            if self.next_token_type_ is Lexer.NAME:
+                glyph = self.expect_glyph_()
                 if self.next_token_ == "-":
                     range_location = self.cur_token_location_
-                    range_start = self.cur_token_
+                    range_start = glyph
                     self.expect_symbol_("-")
-                    range_end = self.expect_name_()
+                    range_end = self.expect_glyph_()
                     glyphs.update(self.make_glyph_range_(range_location,
                                                          range_start,
                                                          range_end))
                 else:
-                    glyphs.add(self.cur_token_)
-            elif self.cur_token_type_ is Lexer.CID:
+                    glyphs.add(glyph)
+            elif self.next_token_type_ is Lexer.CID:
+                glyph = self.expect_glyph_()
                 if self.next_token_ == "-":
                     range_location = self.cur_token_location_
                     range_start = self.cur_token_
@@ -214,7 +215,8 @@ class Parser(object):
                                                        range_start, range_end))
                 else:
                     glyphs.add("cid%05d" % self.cur_token_)
-            elif self.cur_token_type_ is Lexer.GLYPHCLASS:
+            elif self.next_token_type_ is Lexer.GLYPHCLASS:
+                self.advance_lexer_()
                 gc = self.glyphclasses_.resolve(self.cur_token_)
                 if gc is None:
                     raise FeatureLibError(
@@ -225,7 +227,7 @@ class Parser(object):
                 raise FeatureLibError(
                     "Expected glyph name, glyph range, "
                     "or glyph class reference",
-                    self.cur_token_location_)
+                    self.next_token_location_)
         self.expect_symbol_("]")
         return ast.GlyphClass(location, glyphs)
 
@@ -876,6 +878,10 @@ class Parser(object):
     def expect_glyph_(self):
         self.advance_lexer_()
         if self.cur_token_type_ is Lexer.NAME:
+            if len(self.cur_token_) > 63:
+                raise FeatureLibError(
+                    "Glyph names must not be longer than 63 characters",
+                    self.cur_token_location_)
             return self.cur_token_
         elif self.cur_token_type_ is Lexer.CID:
             return "cid%05d" % self.cur_token_

@@ -154,6 +154,11 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(gc.name, "dash")
         self.assertEqual(gc.glyphs, {"endash", "emdash", "figuredash"})
 
+    def test_glyphclass_glyphNameTooLong(self):
+        self.assertRaisesRegex(
+            FeatureLibError, "must not be longer than 63 characters",
+            self.parse, "@GlyphClass = [%s];" % ("G" * 64))
+
     def test_glyphclass_bad(self):
         self.assertRaisesRegex(
             FeatureLibError,
