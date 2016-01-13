@@ -10,6 +10,7 @@ from __future__ import print_function, division, absolute_import
 from fontTools import ttLib
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.tables.otBase import ValueRecord, valueRecordFormatDict
+from fontTools.otlLib import builder
 from contextlib import contextmanager
 
 class MtiLibError(Exception): pass
@@ -153,39 +154,35 @@ def parseLookupFlags(lines):
 			filterset = int(line[1])
 	return flags, filterset
 
-def parseSingleSubst(self, lines, font, _lookupMap=None):
-	self.mapping = {}
+def parseSingleSubst(lines, font, _lookupMap=None):
+	mapping = {}
 	for line in lines:
 		assert len(line) == 2, line
 		line = makeGlyphs(line)
-		self.mapping[line[0]] = line[1]
+		mapping[line[0]] = line[1]
+	return builder.buildSingleSubst(mapping)
 
-def parseMultiple(self, lines, font, _lookupMap=None):
-	self.mapping = {}
+def parseMultiple(lines, font, _lookupMap=None):
+	mapping = {}
 	for line in lines:
 		line = makeGlyphs(line)
-		self.mapping[line[0]] = line[1:]
+		mapping[line[0]] = line[1:]
+	return builder.buildMultipleSubst(mapping)
 
-def parseAlternate(self, lines, font, _lookupMap=None):
-	self.alternates = {}
+def parseAlternate(lines, font, _lookupMap=None):
+	mapping = {}
 	for line in lines:
 		line = makeGlyphs(line)
-		self.alternates[line[0]] = line[1:]
+		mapping[line[0]] = line[1:]
+	return builder.buildAlternateSubst(mapping)
 
-def parseLigature(self, lines, font, _lookupMap=None):
-	self.ligatures = {}
+def parseLigature(lines, font, _lookupMap=None):
+	mapping = {}
 	for line in lines:
 		assert len(line) >= 2, line
 		line = makeGlyphs(line)
-		# The following single line can replace the rest of this function with fontTools >= 3.1
-		#self.ligatures[tuple(line[1:])] = line[0]
-		ligGlyph, firstGlyph = line[:2]
-		otherComponents = line[2:]
-		ligature = ot.Ligature()
-		ligature.Component = otherComponents
-		ligature.CompCount = len(ligature.Component) + 1
-		ligature.LigGlyph = ligGlyph
-		self.ligatures.setdefault(firstGlyph, []).append(ligature)
+		mapping[tuple(line[1:])] = line[0]
+	return builder.buildLigatureSubst(mapping)
 
 def parseSinglePos(self, lines, font, _lookupMap=None):
 	values = {}
@@ -764,10 +761,10 @@ def parseLookup(lines, tableTag, font, lookupMap=None):
 			lookup.MarkFilteringSet = filterset
 		lookup.LookupType, parseLookupSubTable = {
 			'GSUB': {
-				'single':	(1,	parseSingleSubst),
-				'multiple':	(2,	parseMultiple),
-				'alternate':	(3,	parseAlternate),
-				'ligature':	(4,	parseLigature),
+				'single':	(0,	parseSingleSubst),
+				'multiple':	(0,	parseMultiple),
+				'alternate':	(0,	parseAlternate),
+				'ligature':	(0,	parseLigature),
 				'context':	(5,	parseContextSubst),
 				'chained':	(6,	parseChainedSubst),
 				'reversechained':(8,	parseReverseChainedSubst),
@@ -790,8 +787,11 @@ def parseLookup(lines, tableTag, font, lookupMap=None):
 		while lines.peek():
 			with lines.until(('% subtable', 'subtable end')):
 				while lines.peek():
-					subtable = ot.lookupTypes[tableTag][lookup.LookupType]()
-					parseLookupSubTable(subtable, lines, font, lookupMap)
+					if lookup.LookupType is 0:
+						subtable = parseLookupSubTable(lines, font, lookupMap)
+					else:
+						subtable = ot.lookupTypes[tableTag][lookup.LookupType]()
+						parseLookupSubTable(subtable, lines, font, lookupMap)
 					subtables.append(subtable)
 			if lines.peek() and lines.peek()[0] in ('% subtable', 'subtable end'):
 				next(lines)
