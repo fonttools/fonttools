@@ -791,7 +791,6 @@ def parseLookup(lines, tableTag, font, lookupMap=None):
 			with lines.until(('% subtable', 'subtable end')):
 				while lines.peek():
 					subtable = ot.lookupTypes[tableTag][lookup.LookupType]()
-					subtable.LookupType = lookup.LookupType
 					parseLookupSubTable(subtable, lines, font, lookupMap)
 					subtables.append(subtable)
 			if lines.peek() and lines.peek()[0] in ('% subtable', 'subtable end'):
