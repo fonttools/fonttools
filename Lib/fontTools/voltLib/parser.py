@@ -177,6 +177,10 @@ class Parser(object):
             self.expect_keyword_("DIRECTION")
             direction = self.expect_name_()
             assert direction in ("LTR", "RTL")
+        reversal = None
+        if self.next_token_ == "REVERSAL":
+            self.expect_keyword_("REVERSAL")
+            reversal = True
         comments = None
         if self.next_token_ == "COMMENTS":
             self.expect_keyword_("COMMENTS")
@@ -193,7 +197,7 @@ class Parser(object):
             pos = self.parse_position_()
         def_lookup = ast.LookupDefinition(
             location, name, base, marks, process_marks, all_flag, direction,
-            comments, context, sub, pos)
+            reversal, comments, context, sub, pos)
         return def_lookup
 
     def parse_context_(self):

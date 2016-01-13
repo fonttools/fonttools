@@ -429,6 +429,42 @@ class ParserTest(unittest.TestCase):
             (lookup.name, process_marks, all_marks),
             ("SomeSub", "SomeMarks", False))
 
+    def test_substitution_no_reversal(self):
+        [lookup] = self.parse(
+            'DEF_LOOKUP "Lookup" PROCESS_BASE PROCESS_MARKS ALL '
+            'DIRECTION LTR\n'
+            'IN_CONTEXT\n'
+            'RIGHT ENUM GLYPH "a" GLYPH "b" END_ENUM\n'
+            'END_CONTEXT\n'
+            'AS_SUBSTITUTION\n'
+            'SUB GLYPH "a"\n'
+            'WITH GLYPH "a.alt"\n'
+            'END_SUB\n'
+            'END_SUBSTITUTION'
+        ).statements
+        self.assertEqual(
+            (lookup.name, lookup.reversal),
+            ("Lookup", None)
+        )
+
+    def test_substitution_reversal(self):
+        [lookup] = self.parse(
+            'DEF_LOOKUP "RevLookup" PROCESS_BASE PROCESS_MARKS ALL '
+            'DIRECTION LTR REVERSAL\n'
+            'IN_CONTEXT\n'
+            'RIGHT ENUM GLYPH "a" GLYPH "b" END_ENUM\n'
+            'END_CONTEXT\n'
+            'AS_SUBSTITUTION\n'
+            'SUB GROUP "DFLT_Num_standardFigures"\n'
+            'WITH GROUP "DFLT_Num_numerators"\n'
+            'END_SUB\n'
+            'END_SUBSTITUTION'
+        ).statements
+        self.assertEqual(
+            (lookup.name, lookup.reversal),
+            ("RevLookup", True)
+        )
+
     # GPOS
     #  ATTACH_CURSIVE
     #  ATTACH

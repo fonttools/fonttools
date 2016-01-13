@@ -62,7 +62,7 @@ class FeatureDefinition(ast.Statement):
 
 class LookupDefinition(ast.Statement):
     def __init__(self, location, name, base, marks, process_marks, all_flag,
-                 direction, comments, context, sub, pos):
+                 direction, reversal, comments, context, sub, pos):
         ast.Statement.__init__(self, location)
         self.name = name
         self.base = base
@@ -70,6 +70,7 @@ class LookupDefinition(ast.Statement):
         self.process_marks = process_marks
         self.all = all_flag
         self.direction = direction
+        self.reversal = reversal
         self.comments = comments
         self.context = context
         self.sub = sub
