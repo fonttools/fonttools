@@ -645,7 +645,7 @@ class BaseTable(object):
 
 		self.writeFormat(writer)
 		for conv in self.getConverters():
-			value = table.get(conv.name)
+			value = table.get(conv.name) # TODO Handle defaults instead of defaulting to None!
 			if conv.repeat:
 				if value is None:
 					value = []
@@ -709,7 +709,7 @@ class BaseTable(object):
 		# do it ourselves. I think I'm getting schizophrenic...
 		for conv in self.getConverters():
 			if conv.repeat:
-				value = getattr(self, conv.name)
+				value = getattr(self, conv.name, [])
 				for i in range(len(value)):
 					item = value[i]
 					conv.xmlWrite(xmlWriter, font, item, conv.name,
@@ -717,7 +717,7 @@ class BaseTable(object):
 			else:
 				if conv.aux and not eval(conv.aux, None, vars(self)):
 					continue
-				value = getattr(self, conv.name)
+				value = getattr(self, conv.name, None) # TODO Handle defaults instead of defaulting to None!
 				conv.xmlWrite(xmlWriter, font, value, conv.name, [])
 
 	def fromXML(self, name, attrs, content, font):

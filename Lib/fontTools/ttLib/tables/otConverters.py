@@ -302,6 +302,7 @@ class Struct(BaseConverter):
 				table.fromXML(name, attrs, content, font)
 			else:
 				pass
+		# TODO Fill in items that are not set by XML.
 		return table
 
 	def __repr__(self):
