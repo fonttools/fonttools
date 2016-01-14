@@ -323,6 +323,14 @@ class BuilderTest(unittest.TestCase):
             "} foo;")
 
 
+def generate_feature_file_test(name):
+    return lambda self: self.check_feature_file(name)
+
+for name in BuilderTest.TEST_FEATURE_FILES:
+    setattr(BuilderTest, "test_FeatureFile_%s" % name,
+            generate_feature_file_test(name))
+
+
 class ClassDefBuilderTest(unittest.TestCase):
     def test_build_ClassDef1(self):
         builder = ClassDefBuilder(otTables.ClassDef1, useClass0=True)
@@ -367,12 +375,5 @@ class ClassDefBuilderTest(unittest.TestCase):
         self.assertFalse(b.canAdd({"f"}))
 
 
-def generate_feature_file_test(name):
-    return lambda self: self.check_feature_file(name)
-
-
 if __name__ == "__main__":
-    for name in BuilderTest.TEST_FEATURE_FILES:
-        setattr(BuilderTest, "test_FeatureFile_%s" % name,
-                generate_feature_file_test(name))
     unittest.main()
