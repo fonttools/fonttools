@@ -1102,9 +1102,9 @@ def main(args):
 	for f in args:
 		debug("Processing", f)
 		table = build(open(f, 'rt'), font, tableTag=tableTag)
-		blob = table.compile(font)
+		blob = table.compile(font) # Make sure it compiles
 		decompiled = table.__class__()
-		decompiled.decompile(blob, font)
+		decompiled.decompile(blob, font) # Make sure it decompiles!
 
 		#continue
 		from fontTools.misc import xmlWriter
@@ -1112,8 +1112,8 @@ def main(args):
 		writer = xmlWriter.XMLWriter(sys.stdout)
 		writer.begintag(tag)
 		writer.newline()
-		#table.toXML(writer, font)
-		decompiled.toXML(writer, font)
+		table.toXML(writer, font)
+		#decompiled.toXML(writer, font)
 		writer.endtag(tag)
 		writer.newline()
 
