@@ -2,7 +2,7 @@ from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
 from fontTools.feaLib.error import FeatureLibError
 from fontTools.feaLib.parser import Parser
-from fontTools.otlLib import builder as otlBuilder
+from fontTools.otlLib import builder as otl
 from fontTools.ttLib import getTableClass
 from fontTools.ttLib.tables import otBase, otTables
 import itertools
@@ -716,11 +716,11 @@ def makeOpenTypeAnchor(anchor):
         return None
     deviceX, deviceY = None, None
     if anchor.xDeviceTable is not None:
-        deviceX = otlBuilder.buildDevice(anchor.xDeviceTable)
+        deviceX = otl.buildDevice(anchor.xDeviceTable)
     if anchor.yDeviceTable is not None:
-        deviceY = otlBuilder.buildDevice(anchor.yDeviceTable)
-    return otlBuilder.buildAnchor(anchor.x, anchor.y, anchor.contourpoint,
-                                  deviceX, deviceY)
+        deviceY = otl.buildDevice(anchor.yDeviceTable)
+    return otl.buildAnchor(anchor.x, anchor.y, anchor.contourpoint,
+                           deviceX, deviceY)
 
 
 def getValueRecordFormat(vr):
@@ -748,10 +748,10 @@ def makeOpenTypeValueRecord(v):
     for astName, (otName, isDevice) in _VALUEREC_ATTRS.items():
         val = getattr(v, astName, None)
         if val:
-            vr[otName] = otlBuilder.buildDevice(val) if isDevice else val
+            vr[otName] = otl.buildDevice(val) if isDevice else val
 
     if vr:
-        valRec = otlBuilder.buildValue(vr)
+        valRec = otl.buildValue(vr)
         return valRec, getValueRecordFormat(valRec)
     else:
         return None, 0
@@ -810,21 +810,21 @@ class LookupBuilder(object):
         subtable.BacktrackGlyphCount = len(prefix)
         subtable.BacktrackCoverage = []
         for p in reversed(prefix):
-            coverage = otlBuilder.buildCoverage(p, self.glyphMap)
+            coverage = otl.buildCoverage(p, self.glyphMap)
             subtable.BacktrackCoverage.append(coverage)
 
     def setLookAheadCoverage_(self, suffix, subtable):
         subtable.LookAheadGlyphCount = len(suffix)
         subtable.LookAheadCoverage = []
         for s in suffix:
-            coverage = otlBuilder.buildCoverage(s, self.glyphMap)
+            coverage = otl.buildCoverage(s, self.glyphMap)
             subtable.LookAheadCoverage.append(coverage)
 
     def setInputCoverage_(self, glyphs, subtable):
         subtable.InputGlyphCount = len(glyphs)
         subtable.InputCoverage = []
         for g in glyphs:
-            coverage = otlBuilder.buildCoverage(g, self.glyphMap)
+            coverage = otl.buildCoverage(g, self.glyphMap)
             subtable.InputCoverage.append(coverage)
 
     def setMarkArray_(self, marks, markClassIDs, subtable):
@@ -862,7 +862,7 @@ class AlternateSubstBuilder(LookupBuilder):
                 self.alternates == other.alternates)
 
     def build(self):
-        subtable = otlBuilder.buildAlternateSubst(self.alternates)
+        subtable = otl.buildAlternateSubst(self.alternates)
         return self.buildLookup_([subtable])
 
     def getAlternateGlyphs(self):
@@ -948,7 +948,7 @@ class LigatureSubstBuilder(LookupBuilder):
                 self.ligatures == other.ligatures)
 
     def build(self):
-        subtable = otlBuilder.buildLigatureSubst(self.ligatures)
+        subtable = otl.buildLigatureSubst(self.ligatures)
         return self.buildLookup_([subtable])
 
 
@@ -962,7 +962,7 @@ class MultipleSubstBuilder(LookupBuilder):
                 self.mapping == other.mapping)
 
     def build(self):
-        subtable = otlBuilder.buildMultipleSubst(self.mapping)
+        subtable = otl.buildMultipleSubst(self.mapping)
         return self.buildLookup_([subtable])
 
 
@@ -1003,7 +1003,7 @@ class SpecificPairPosBuilder(LookupBuilder):
             subtables.append(st)
             st.Format = 1
             st.ValueFormat1, st.ValueFormat2 = vf1, vf2
-            st.Coverage = otlBuilder.buildCoverage(p, self.glyphMap)
+            st.Coverage = otl.buildCoverage(p, self.glyphMap)
             st.PairSet = []
             for glyph in st.Coverage.glyphs:
                 ps = otTables.PairSet()
@@ -1036,8 +1036,7 @@ class CursivePosBuilder(LookupBuilder):
     def build(self):
         st = otTables.CursivePos()
         st.Format = 1
-        st.Coverage = otlBuilder.buildCoverage(
-            self.attachments.keys(), self.glyphMap)
+        st.Coverage = otl.buildCoverage(self.attachments.keys(), self.glyphMap)
         st.EntryExitCount = len(self.attachments)
         st.EntryExitRecord = []
         for glyph in st.Coverage.glyphs:
@@ -1078,12 +1077,12 @@ class MarkBasePosBuilder(LookupBuilder):
 
         st = otTables.MarkBasePos()
         st.Format = 1
-        st.MarkCoverage = otlBuilder.buildCoverage(self.marks, self.glyphMap)
+        st.MarkCoverage = otl.buildCoverage(self.marks, self.glyphMap)
         markClasses = self.buildMarkClasses_(self.marks)
         st.ClassCount = len(markClasses)
         self.setMarkArray_(self.marks, markClasses, st)
 
-        st.BaseCoverage = otlBuilder.buildCoverage(self.bases, self.glyphMap)
+        st.BaseCoverage = otl.buildCoverage(self.bases, self.glyphMap)
         st.BaseArray = otTables.BaseArray()
         st.BaseArray.BaseCount = len(st.BaseCoverage.glyphs)
         st.BaseArray.BaseRecord = []
@@ -1116,13 +1115,12 @@ class MarkLigPosBuilder(LookupBuilder):
     def build(self):
         st = otTables.MarkLigPos()
         st.Format = 1
-        st.MarkCoverage = otlBuilder.buildCoverage(self.marks, self.glyphMap)
+        st.MarkCoverage = otl.buildCoverage(self.marks, self.glyphMap)
         markClasses = self.buildMarkClasses_(self.marks)
         st.ClassCount = len(markClasses)
         self.setMarkArray_(self.marks, markClasses, st)
 
-        st.LigatureCoverage = otlBuilder.buildCoverage(self.ligatures,
-                                                       self.glyphMap)
+        st.LigatureCoverage = otl.buildCoverage(self.ligatures, self.glyphMap)
         st.LigatureArray = otTables.LigatureArray()
         st.LigatureArray.LigatureCount = len(self.ligatures)
         st.LigatureArray.LigatureAttach = []
@@ -1162,13 +1160,12 @@ class MarkMarkPosBuilder(LookupBuilder):
     def build(self):
         st = otTables.MarkMarkPos()
         st.Format = 1
-        st.Mark1Coverage = otlBuilder.buildCoverage(self.marks, self.glyphMap)
+        st.Mark1Coverage = otl.buildCoverage(self.marks, self.glyphMap)
         markClasses = self.buildMarkClasses_(self.marks)
         st.ClassCount = len(markClasses)
         self.setMark1Array_(self.marks, markClasses, st)
 
-        st.Mark2Coverage = otlBuilder.buildCoverage(self.baseMarks,
-                                                    self.glyphMap)
+        st.Mark2Coverage = otl.buildCoverage(self.baseMarks, self.glyphMap)
         st.Mark2Array = otTables.Mark2Array()
         st.Mark2Array.Mark2Count = len(st.Mark2Coverage.glyphs)
         st.Mark2Array.Mark2Record = []
@@ -1198,8 +1195,7 @@ class ReverseChainSingleSubstBuilder(LookupBuilder):
             st.Format = 1
             self.setBacktrackCoverage_(prefix, st)
             self.setLookAheadCoverage_(suffix, st)
-            st.Coverage = otlBuilder.buildCoverage(mapping.keys(),
-                                                   self.glyphMap)
+            st.Coverage = otl.buildCoverage(mapping.keys(), self.glyphMap)
             st.GlyphCount = len(mapping)
             st.Substitute = [mapping[g] for g in st.Coverage.glyphs]
             subtables.append(st)
@@ -1216,7 +1212,7 @@ class SingleSubstBuilder(LookupBuilder):
                 self.mapping == other.mapping)
 
     def build(self):
-        subtable = otlBuilder.buildSingleSubst(self.mapping)
+        subtable = otl.buildSingleSubst(self.mapping)
         return self.buildLookup_([subtable])
 
     def getAlternateGlyphs(self):
@@ -1262,8 +1258,7 @@ class ClassPairPosSubtableBuilder(object):
             return
         st = otTables.PairPos()
         st.Format = 2
-        st.Coverage = otlBuilder.buildCoverage(self.coverage_,
-                                               self.builder_.glyphMap)
+        st.Coverage = otl.buildCoverage(self.coverage_, self.builder_.glyphMap)
         st.ValueFormat1 = self.valueFormat1_
         st.ValueFormat2 = self.valueFormat2_
         st.ClassDef1 = self.classDef1_.build()
@@ -1396,7 +1391,7 @@ class SinglePosBuilder(LookupBuilder):
             st = otTables.SinglePos()
             subtables.append(st)
             st.Format = 1
-            st.Coverage = otlBuilder.buildCoverage(glyphs, self.glyphMap)
+            st.Coverage = otl.buildCoverage(glyphs, self.glyphMap)
             st.Value, st.ValueFormat = value, valueFormat
 
         return self.buildLookup_(subtables)
