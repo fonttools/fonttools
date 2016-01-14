@@ -37,7 +37,6 @@ def _getLigatureKey(components):
     """
     return (-len(components), components)
 
-
 def buildLigatureSubst(mapping):
     self = ot.LigatureSubst()
     # The following single line can replace the rest of this function
@@ -52,6 +51,9 @@ def buildLigatureSubst(mapping):
         firstGlyph = components[0]
         self.ligatures.setdefault(firstGlyph, []).append(ligature)
     return self
+
+
+# GPOS
 
 
 def buildAnchor(x, y, point=None, deviceX=None, deviceY=None):
