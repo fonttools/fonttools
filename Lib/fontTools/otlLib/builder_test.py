@@ -46,6 +46,14 @@ class BuilderTest(unittest.TestCase):
                          '  </YDeviceTable>'
                          '</Anchor>')
 
+    def test_buildCoverage(self):
+        cov = builder.buildCoverage({"two", "four"}, {"two": 2, "four": 4})
+        self.assertEqual(getXML(cov.toXML),
+                         '<Coverage>'
+                         '  <Glyph value="two"/>'
+                         '  <Glyph value="four"/>'
+                         '</Coverage>')
+
     def test_buildDevice_format1(self):
         device = builder.buildDevice([(1, 1), (0, 0)])
         self.assertEqual(getXML(device.toXML),
