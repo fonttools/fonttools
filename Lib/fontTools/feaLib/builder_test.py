@@ -332,26 +332,26 @@ for name in BuilderTest.TEST_FEATURE_FILES:
 
 
 class ClassDefBuilderTest(unittest.TestCase):
-    def test_build_ClassDef1(self):
-        builder = ClassDefBuilder(otTables.ClassDef1, useClass0=True)
+    def test_build_usingClass0(self):
+        builder = ClassDefBuilder(useClass0=True)
         builder.add({"a", "b"})
         builder.add({"c"})
         builder.add({"e", "f", "g", "h"})
         cdef = builder.build()
-        self.assertIsInstance(cdef, otTables.ClassDef1)
+        self.assertIsInstance(cdef, otTables.ClassDef)
         self.assertEqual(cdef.classDefs, {
             "a": 1,
             "b": 1,
             "c": 2
         })
 
-    def test_build_ClassDef2(self):
-        builder = ClassDefBuilder(otTables.ClassDef2)
+    def test_build_notUsingClass0(self):
+        builder = ClassDefBuilder(useClass0=False)
         builder.add({"a", "b"})
         builder.add({"c"})
         builder.add({"e", "f", "g", "h"})
         cdef = builder.build()
-        self.assertIsInstance(cdef, otTables.ClassDef2)
+        self.assertIsInstance(cdef, otTables.ClassDef)
         self.assertEqual(cdef.classDefs, {
             "a": 2,
             "b": 2,
@@ -363,7 +363,7 @@ class ClassDefBuilderTest(unittest.TestCase):
         })
 
     def test_canAdd(self):
-        b = ClassDefBuilder(otTables.ClassDef1, useClass0=True)
+        b = ClassDefBuilder(useClass0=True)
         b.add({"a", "b", "c", "d"})
         b.add({"e", "f"})
         self.assertTrue(b.canAdd({"a", "b", "c", "d"}))

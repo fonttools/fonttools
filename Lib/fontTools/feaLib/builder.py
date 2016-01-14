@@ -1248,8 +1248,8 @@ class ClassPairPosSubtableBuilder(object):
                      self.classDef2_.canAdd(gc2))
         if not mergeable:
             self.flush_()
-            self.classDef1_ = ClassDefBuilder(otTables.ClassDef1, useClass0=True)
-            self.classDef2_ = ClassDefBuilder(otTables.ClassDef2)
+            self.classDef1_ = ClassDefBuilder(useClass0=True)
+            self.classDef2_ = ClassDefBuilder(useClass0=False)
             self.coverage_ = set()
             self.values_ = {}
         self.classDef1_.add(gc1)
@@ -1410,10 +1410,9 @@ class SinglePosBuilder(LookupBuilder):
 
 class ClassDefBuilder(object):
     """Helper for building ClassDef tables."""
-    def __init__(self, otClass, useClass0=False):
+    def __init__(self, useClass0):
         self.classes_ = set()
         self.glyphs_ = {}
-        self.otClass_ = otClass
         self.useClass0_ = useClass0
 
     def canAdd(self, glyphs):
@@ -1459,6 +1458,6 @@ class ClassDefBuilder(object):
                 continue
             for glyph in glyphs:
                 glyphClasses[glyph] = classID
-        classDef = self.otClass_()
+        classDef = otTables.ClassDef()
         classDef.classDefs = glyphClasses
         return classDef
