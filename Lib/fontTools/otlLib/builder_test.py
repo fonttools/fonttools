@@ -8,7 +8,7 @@ import unittest
 class BuilderTest(unittest.TestCase):
     def test_buildAnchor_format1(self):
         anchor = builder.buildAnchor(23, 42)
-        self.assertEqual(getXML(anchor, ttFont=None),
+        self.assertEqual(getXML(anchor.toXML),
                          '<Anchor Format="1">'
                          '  <XCoordinate value="23"/>'
                          '  <YCoordinate value="42"/>'
@@ -16,7 +16,7 @@ class BuilderTest(unittest.TestCase):
 
     def test_buildAnchor_format2(self):
         anchor = builder.buildAnchor(23, 42, point=17)
-        self.assertEqual(getXML(anchor, ttFont=None),
+        self.assertEqual(getXML(anchor.toXML),
                          '<Anchor Format="2">'
                          '  <XCoordinate value="23"/>'
                          '  <YCoordinate value="42"/>'
@@ -28,7 +28,7 @@ class BuilderTest(unittest.TestCase):
             23, 42,
             deviceX=builder.buildDevice([(1, 1), (0, 0)]),
             deviceY=builder.buildDevice([(7, 7)]))
-        self.assertEqual(getXML(anchor, ttFont=None),
+        self.assertEqual(getXML(anchor.toXML),
                          '<Anchor Format="3">'
                          '  <XCoordinate value="23"/>'
                          '  <YCoordinate value="42"/>'
@@ -48,7 +48,7 @@ class BuilderTest(unittest.TestCase):
 
     def test_buildDevice_format1(self):
         device = builder.buildDevice([(1, 1), (0, 0)])
-        self.assertEqual(getXML(device, ttFont=None),
+        self.assertEqual(getXML(device.toXML),
                          '<Device>'
                          '  <StartSize value="0"/>'
                          '  <EndSize value="1"/>'
@@ -58,7 +58,7 @@ class BuilderTest(unittest.TestCase):
 
     def test_buildDevice_format2(self):
         device = builder.buildDevice([(1, 2), (-1, 1), (0, 0)])
-        self.assertEqual(getXML(device, ttFont=None),
+        self.assertEqual(getXML(device.toXML),
                          '<Device>'
                          '  <StartSize value="-1"/>'
                          '  <EndSize value="1"/>'
@@ -68,13 +68,19 @@ class BuilderTest(unittest.TestCase):
 
     def test_buildDevice_format3(self):
         device = builder.buildDevice([(5, 3), (1, 77)])
-        self.assertEqual(getXML(device, ttFont=None),
+        self.assertEqual(getXML(device.toXML),
                          '<Device>'
                          '  <StartSize value="1"/>'
                          '  <EndSize value="5"/>'
                          '  <DeltaFormat value="3"/>'
                          '  <DeltaValue value="[77, 0, 0, 0, 3]"/>'
                          '</Device>')
+
+    def test_buildValue(self):
+        value = builder.buildValue({"XPlacement": 7, "YPlacement": 23})
+        func = lambda writer, font: value.toXML(writer, font, valueName="Val")
+        self.assertEqual(getXML(func),
+                         '<Val XPlacement="7" YPlacement="23"/>')
 
     def test_getLigatureKey(self):
         components = lambda s: [tuple(word) for word in s.split()]

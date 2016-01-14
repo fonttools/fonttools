@@ -722,38 +722,38 @@ def makeOpenTypeAnchor(anchor):
                                   deviceX, deviceY)
 
 
+def getValueRecordFormat(vr):
+    vrMask = 0
+    if vr is not None:
+        for mask, name, _, _ in otBase.valueRecordFormat:
+            if getattr(vr, name, 0) != 0:
+                vrMask |= mask
+    return vrMask
+
+
+_VALUEREC_ATTRS = {
+    name[0].lower() + name[1:]: (name, isDevice)
+    for _, name, isDevice, _ in otBase.valueRecordFormat
+    if not name.startswith("Reserved")
+}
+
+
 def makeOpenTypeValueRecord(v):
     """ast.ValueRecord --> (otBase.ValueRecord, int ValueFormat)"""
     if v is None:
         return None, 0
-    vr = otBase.ValueRecord()
-    if v.xPlacement:
-        vr.XPlacement = v.xPlacement
-    if v.yPlacement:
-        vr.YPlacement = v.yPlacement
-    if v.xAdvance:
-        vr.XAdvance = v.xAdvance
-    if v.yAdvance:
-        vr.YAdvance = v.yAdvance
 
-    if v.xPlaDevice:
-        vr.XPlaDevice = otlBuilder.buildDevice(v.xPlaDevice)
-    if v.yPlaDevice:
-        vr.YPlaDevice = otlBuilder.buildDevice(v.yPlaDevice)
-    if v.xAdvDevice:
-        vr.XAdvDevice = otlBuilder.buildDevice(v.xAdvDevice)
-    if v.yAdvDevice:
-        vr.YAdvDevice = otlBuilder.buildDevice(v.yAdvDevice)
+    vr = {}
+    for astName, (otName, isDevice) in _VALUEREC_ATTRS.items():
+        val = getattr(v, astName, None)
+        if val:
+            vr[otName] = otlBuilder.buildDevice(val) if isDevice else val
 
-    vrMask = 0
-    for mask, name, _, _ in otBase.valueRecordFormat:
-        if getattr(vr, name, 0) != 0:
-            vrMask |= mask
-
-    if vrMask == 0:
-        return None, 0
+    if vr:
+        valRec = otlBuilder.buildValue(vr)
+        return valRec, getValueRecordFormat(valRec)
     else:
-        return vr, vrMask
+        return None, 0
 
 
 class LookupBuilder(object):

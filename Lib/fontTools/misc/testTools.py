@@ -60,8 +60,8 @@ class TestXMLReader_(object):
         self.stack[-1][2].append(data)
 
 
-def getXML(obj, ttFont):
-    """Call the object's toXML() method and return the writer's content as string.
+def getXML(func, ttFont=None):
+    """Call the passed toXML function and return the written content as string.
     Result is stripped of XML declaration and OS-specific newline characters.
     """
     writer = XMLWriter(BytesIO())
@@ -70,6 +70,6 @@ def getXML(obj, ttFont):
     # erase XML declaration
     writer.file.seek(0)
     writer.file.truncate()
-    obj.toXML(writer, ttFont)
+    func(writer, ttFont)
     xml = writer.file.getvalue().decode("utf-8")
     return xml

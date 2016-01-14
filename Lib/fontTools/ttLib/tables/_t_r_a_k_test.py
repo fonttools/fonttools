@@ -273,7 +273,8 @@ class TrackingTableTest(unittest.TestCase):
 		add_name(self.font, 'Tight', nameID=275)
 		add_name(self.font, 'Normal', nameID=303)
 		add_name(self.font, 'Loose', nameID=276)
-		self.assertEqual(SKIA_TRAK_TABLE_XML, getXML(table, self.font))
+		self.assertEqual(SKIA_TRAK_TABLE_XML,
+			         getXML(table.toXML, self.font))
 
 	def test_toXML_horiz_and_vert(self):
 		table = self.font['trak']
@@ -285,7 +286,8 @@ class TrackingTableTest(unittest.TestCase):
 		add_name(self.font, 'Tight', nameID=265)
 		add_name(self.font, 'Normal', nameID=266)
 		add_name(self.font, 'Loose', nameID=267)
-		self.assertEqual(OSAKA_TRAK_TABLE_XML, getXML(table, self.font))
+		self.assertEqual(OSAKA_TRAK_TABLE_XML,
+				 getXML(table.toXML, self.font))
 
 	def test_toXML_vert(self):
 		table = self.font['trak']
@@ -293,7 +295,8 @@ class TrackingTableTest(unittest.TestCase):
 		add_name(self.font, 'Tight', nameID=265)
 		add_name(self.font, 'Normal', nameID=266)
 		add_name(self.font, 'Loose', nameID=267)
-		self.assertEqual(OSAKA_VERT_ONLY_TRAK_TABLE_XML, getXML(table, self.font))
+		self.assertEqual(OSAKA_VERT_ONLY_TRAK_TABLE_XML,
+                                 getXML(table.toXML, self.font))
 
 	def test_roundtrip_fromXML_toXML(self):
 		font = {}
@@ -314,7 +317,7 @@ class TrackingTableTest(unittest.TestCase):
 			font['trak'] = table
 			for name, attrs, content in parseXML(input_xml):
 				table.fromXML(name, attrs, content, font)
-			output_xml = getXML(table, font)
+			output_xml = getXML(table.toXML, font)
 			self.assertEqual(input_xml, output_xml)
 
 

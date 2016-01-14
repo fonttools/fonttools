@@ -37,6 +37,7 @@ def _getLigatureKey(components):
     """
     return (-len(components), components)
 
+
 def buildLigatureSubst(mapping):
     self = ot.LigatureSubst()
     # The following single line can replace the rest of this function
@@ -90,4 +91,11 @@ def buildDevice(device):
         self.DeltaFormat = 2
     else:
         self.DeltaFormat = 3
+    return self
+
+
+def buildValue(value):
+    self = ValueRecord()
+    for k, v in value.items():
+        setattr(self, k, v)
     return self
