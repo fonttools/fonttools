@@ -617,8 +617,8 @@ class Builder(object):
         lookup = self.get_lookup_(location, CursivePosBuilder)
         lookup.add_attachment(
             location, glyphclass,
-            makeOpenTypeAnchor(entryAnchor, otTables.EntryAnchor),
-            makeOpenTypeAnchor(exitAnchor, otTables.ExitAnchor))
+            makeOpenTypeAnchor(entryAnchor),
+            makeOpenTypeAnchor(exitAnchor))
 
     def add_marks_(self, location, lookupBuilder, marks):
         """Helper for add_mark_{base,liga,mark}_pos."""
@@ -626,8 +626,7 @@ class Builder(object):
             for markClassDef in markClass.definitions:
                 for mark in markClassDef.glyphs.glyphSet():
                     if mark not in lookupBuilder.marks:
-                        otMarkAnchor = makeOpenTypeAnchor(markClassDef.anchor,
-                                                          otTables.MarkAnchor)
+                        otMarkAnchor = makeOpenTypeAnchor(markClassDef.anchor)
                         lookupBuilder.marks[mark] = (
                             markClass.name, otMarkAnchor)
 
@@ -635,7 +634,7 @@ class Builder(object):
         builder = self.get_lookup_(location, MarkBasePosBuilder)
         self.add_marks_(location, builder, marks)
         for baseAnchor, markClass in marks:
-            otBaseAnchor = makeOpenTypeAnchor(baseAnchor, otTables.BaseAnchor)
+            otBaseAnchor = makeOpenTypeAnchor(baseAnchor)
             for base in bases:
                 builder.bases.setdefault(base, {})[markClass.name] = (
                     otBaseAnchor)
@@ -647,8 +646,7 @@ class Builder(object):
             anchors = {}
             self.add_marks_(location, builder, marks)
             for ligAnchor, markClass in marks:
-                anchors[markClass.name] = (
-                    makeOpenTypeAnchor(ligAnchor, otTables.LigatureAnchor))
+                anchors[markClass.name] = makeOpenTypeAnchor(ligAnchor)
             componentAnchors.append(anchors)
         for glyph in ligatures:
             builder.ligatures[glyph] = componentAnchors
@@ -657,7 +655,7 @@ class Builder(object):
         builder = self.get_lookup_(location, MarkMarkPosBuilder)
         self.add_marks_(location, builder, marks)
         for baseAnchor, markClass in marks:
-            otBaseAnchor = makeOpenTypeAnchor(baseAnchor, otTables.Mark2Anchor)
+            otBaseAnchor = makeOpenTypeAnchor(baseAnchor)
             for baseMark in baseMarks:
                 builder.baseMarks.setdefault(baseMark, {})[markClass.name] = (
                     otBaseAnchor)
@@ -711,23 +709,17 @@ class Builder(object):
             self.ligatureCaretByPos_.setdefault(glyph, set()).update(carets)
 
 
-def makeOpenTypeAnchor(anchor, anchorClass):
+def makeOpenTypeAnchor(anchor):
     """ast.Anchor --> otTables.Anchor"""
     if anchor is None:
         return None
-    anch = anchorClass()
-    anch.Format = 1
-    anch.XCoordinate, anch.YCoordinate = anchor.x, anchor.y
-    if anchor.contourpoint is not None:
-        anch.AnchorPoint = anchor.contourpoint
-        anch.Format = 2
+    deviceX, deviceY = None, None
     if anchor.xDeviceTable is not None:
-        anch.XDeviceTable = otlBuilder.buildDevice(anchor.xDeviceTable)
-        anch.Format = 3
+        deviceX = otlBuilder.buildDevice(anchor.xDeviceTable)
     if anchor.yDeviceTable is not None:
-        anch.YDeviceTable = otlBuilder.buildDevice(anchor.yDeviceTable)
-        anch.Format = 3
-    return anch
+        deviceY = otlBuilder.buildDevice(anchor.yDeviceTable)
+    return otlBuilder.buildAnchor(anchor.x, anchor.y, anchor.contourpoint,
+                                  deviceX, deviceY)
 
 
 def makeOpenTypeValueRecord(v):

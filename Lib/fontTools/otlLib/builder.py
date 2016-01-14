@@ -54,6 +54,22 @@ def buildLigatureSubst(mapping):
     return self
 
 
+def buildAnchor(x, y, point=None, deviceX=None, deviceY=None):
+    self = ot.Anchor()
+    self.XCoordinate, self.YCoordinate = x, y
+    self.Format = 1
+    if point is not None:
+        self.AnchorPoint = point
+        self.Format = 2
+    if deviceX is not None:
+        self.XDeviceTable = deviceX
+        self.Format = 3
+    if deviceY is not None:
+        self.YDeviceTable = deviceY
+        self.Format = 3
+    return self
+
+
 def buildDevice(device):
     """[(11, 22), (7, -7), ...] --> otTables.Device"""
     self = ot.Device()

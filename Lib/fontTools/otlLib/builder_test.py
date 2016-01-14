@@ -6,6 +6,46 @@ import unittest
 
 
 class BuilderTest(unittest.TestCase):
+    def test_buildAnchor_format1(self):
+        anchor = builder.buildAnchor(23, 42)
+        self.assertEqual(getXML(anchor, ttFont=None),
+                         '<Anchor Format="1">'
+                         '  <XCoordinate value="23"/>'
+                         '  <YCoordinate value="42"/>'
+                         '</Anchor>')
+
+    def test_buildAnchor_format2(self):
+        anchor = builder.buildAnchor(23, 42, point=17)
+        self.assertEqual(getXML(anchor, ttFont=None),
+                         '<Anchor Format="2">'
+                         '  <XCoordinate value="23"/>'
+                         '  <YCoordinate value="42"/>'
+                         '  <AnchorPoint value="17"/>'
+                         '</Anchor>')
+
+    def test_buildAnchor_format3(self):
+        anchor = builder.buildAnchor(
+            23, 42,
+            deviceX=builder.buildDevice([(1, 1), (0, 0)]),
+            deviceY=builder.buildDevice([(7, 7)]))
+        self.assertEqual(getXML(anchor, ttFont=None),
+                         '<Anchor Format="3">'
+                         '  <XCoordinate value="23"/>'
+                         '  <YCoordinate value="42"/>'
+                         '  <XDeviceTable>'
+                         '    <StartSize value="0"/>'
+                         '    <EndSize value="1"/>'
+                         '    <DeltaFormat value="1"/>'
+                         '    <DeltaValue value="[0, 1]"/>'
+                         '  </XDeviceTable>'
+                         '  <YDeviceTable>'
+                         '    <StartSize value="7"/>'
+                         '    <EndSize value="7"/>'
+                         '    <DeltaFormat value="2"/>'
+                         '    <DeltaValue value="[7]"/>'
+                         '  </YDeviceTable>'
+                         '</Anchor>')
+
     def test_buildDevice_format1(self):
         device = builder.buildDevice([(1, 1), (0, 0)])
         self.assertEqual(getXML(device, ttFont=None),
