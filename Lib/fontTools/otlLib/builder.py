@@ -79,6 +79,22 @@ def buildAnchor(x, y, point=None, deviceX=None, deviceY=None):
     return self
 
 
+def buildCursivePos(attach, glyphMap):
+    """{"alef": (entry, exit)} --> otTables.CursivePos"""
+    self = ot.CursivePos()
+    self.Format = 1
+    self.Coverage = buildCoverage(attach.keys(), glyphMap)
+    self.EntryExitCount = len(attach)
+    self.EntryExitRecord = []
+    for glyph in self.Coverage.glyphs:
+        entryAnchor, exitAnchor = attach[glyph]
+        rec = ot.EntryExitRecord()
+        rec.EntryAnchor = entryAnchor
+        rec.ExitAnchor = exitAnchor
+        self.EntryExitRecord.append(rec)
+    return self
+
+
 def buildDevice(device):
     """[(11, 22), (7, -7), ...] --> otTables.Device"""
     self = ot.Device()

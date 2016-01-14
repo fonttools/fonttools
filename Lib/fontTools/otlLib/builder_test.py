@@ -6,6 +6,12 @@ import unittest
 
 
 class BuilderTest(unittest.TestCase):
+    GLYPHMAP = {"one": 1, "two": 2, "three": 3, "four": 4}
+
+    ANCHOR1 = builder.buildAnchor(11, -11)
+    ANCHOR2 = builder.buildAnchor(22, -22)
+    ANCHOR3 = builder.buildAnchor(33, -33)
+
     def test_buildAnchor_format1(self):
         anchor = builder.buildAnchor(23, 42)
         self.assertEqual(getXML(anchor.toXML),
@@ -53,6 +59,40 @@ class BuilderTest(unittest.TestCase):
                          '  <Glyph value="two"/>'
                          '  <Glyph value="four"/>'
                          '</Coverage>')
+
+    def test_buildCursivePos(self):
+        pos = builder.buildCursivePos({
+            "two": (self.ANCHOR1, self.ANCHOR2),
+            "four": (self.ANCHOR3, self.ANCHOR1)
+        }, self.GLYPHMAP)
+        self.assertEqual(getXML(pos.toXML),
+                         '<CursivePos Format="1">'
+                         '  <Coverage>'
+                         '    <Glyph value="two"/>'
+                         '    <Glyph value="four"/>'
+                         '  </Coverage>'
+                         '  <!-- EntryExitCount=2 -->'
+                         '  <EntryExitRecord index="0">'
+                         '    <EntryAnchor Format="1">'
+                         '      <XCoordinate value="11"/>'
+                         '      <YCoordinate value="-11"/>'
+                         '    </EntryAnchor>'
+                         '    <ExitAnchor Format="1">'
+                         '      <XCoordinate value="22"/>'
+                         '      <YCoordinate value="-22"/>'
+                         '    </ExitAnchor>'
+                         '  </EntryExitRecord>'
+                         '  <EntryExitRecord index="1">'
+                         '    <EntryAnchor Format="1">'
+                         '      <XCoordinate value="33"/>'
+                         '      <YCoordinate value="-33"/>'
+                         '    </EntryAnchor>'
+                         '    <ExitAnchor Format="1">'
+                         '      <XCoordinate value="11"/>'
+                         '      <YCoordinate value="-11"/>'
+                         '    </ExitAnchor>'
+                         '  </EntryExitRecord>'
+                         '</CursivePos>')
 
     def test_buildDevice_format1(self):
         device = builder.buildDevice([(1, 1), (0, 0)])

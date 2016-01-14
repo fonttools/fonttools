@@ -1031,20 +1031,10 @@ class CursivePosBuilder(LookupBuilder):
 
     def add_attachment(self, location, glyphs, entryAnchor, exitAnchor):
         for glyph in glyphs:
-            self.attachments[glyph] = (location, entryAnchor, exitAnchor)
+            self.attachments[glyph] = (entryAnchor, exitAnchor)
 
     def build(self):
-        st = otTables.CursivePos()
-        st.Format = 1
-        st.Coverage = otl.buildCoverage(self.attachments.keys(), self.glyphMap)
-        st.EntryExitCount = len(self.attachments)
-        st.EntryExitRecord = []
-        for glyph in st.Coverage.glyphs:
-            location, entryAnchor, exitAnchor = self.attachments[glyph]
-            rec = otTables.EntryExitRecord()
-            st.EntryExitRecord.append(rec)
-            rec.EntryAnchor = entryAnchor
-            rec.ExitAnchor = exitAnchor
+        st = otl.buildCursivePos(self.attachments, self.glyphMap)
         return self.buildLookup_([st])
 
 
