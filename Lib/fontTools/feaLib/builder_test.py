@@ -39,6 +39,18 @@ def makeTTFont():
 
 
 class BuilderTest(unittest.TestCase):
+    # Feature files in testdata/*.fea; output gets compared to testdata/*.ttx.
+    TEST_FEATURE_FILES = """
+        Attach enum markClass language_required
+        GlyphClassDef LigatureCaretByIndex LigatureCaretByPos
+        lookup lookupflag feature_aalt
+        GPOS_1 GPOS_2 GPOS_2b GPOS_3 GPOS_4 GPOS_5 GPOS_6 GPOS_8
+        GSUB_2 GSUB_3 GSUB_6 GSUB_8
+        spec4h1 spec5d1 spec5d2 spec5fi1 spec5fi2 spec5fi3 spec5fi4
+        spec5h1 spec6d2 spec6e spec6f spec6h_ii spec8a
+        spec9b spec9c1 spec9c2 spec9c3
+    """.split()
+
     def __init__(self, methodName):
         unittest.TestCase.__init__(self, methodName)
         # Python 3 renamed assertRaisesRegexp to assertRaisesRegex,
@@ -97,6 +109,11 @@ class BuilderTest(unittest.TestCase):
         addOpenTypeFeatures(path, font)
         return font
 
+    def check_feature_file(self, name):
+        font = makeTTFont()
+        addOpenTypeFeatures(self.getpath("%s.fea" % name), font)
+        self.expect_ttx(font, self.getpath("%s.ttx" % name))
+
     def test_alternateSubst_multipleSubstitutionsForSameGlyph(self):
         self.assertRaisesRegex(
             FeatureLibError,
@@ -145,33 +162,6 @@ class BuilderTest(unittest.TestCase):
             FeatureLibError,
             "Already defined different position for glyph \"A\"",
             self.build, "feature test { pos A 123; pos A 456; } test;")
-
-    def test_constructs(self):
-        for name in ("Attach enum markClass language_required "
-                     "GlyphClassDef LigatureCaretByIndex LigatureCaretByPos "
-                     "lookup lookupflag feature_aalt").split():
-            font = makeTTFont()
-            addOpenTypeFeatures(self.getpath("%s.fea" % name), font)
-            self.expect_ttx(font, self.getpath("%s.ttx" % name))
-
-    def test_GPOS(self):
-        for name in "1 2 2b 3 4 5 6 8".split():
-            font = makeTTFont()
-            addOpenTypeFeatures(self.getpath("GPOS_%s.fea" % name), font)
-            self.expect_ttx(font, self.getpath("GPOS_%s.ttx" % name))
-
-    def test_GSUB(self):
-        for name in "2 3 6 8".split():
-            font = makeTTFont()
-            addOpenTypeFeatures(self.getpath("GSUB_%s.fea" % name), font)
-            self.expect_ttx(font, self.getpath("GSUB_%s.ttx" % name))
-
-    def test_spec(self):
-        for name in ("4h1 5d1 5d2 5fi1 5fi2 5fi3 5fi4 5h1 "
-                     "6d2 6e 6f 6h_ii 8a 9b 9c1 9c2 9c3").split():
-            font = makeTTFont()
-            addOpenTypeFeatures(self.getpath("spec%s.fea" % name), font)
-            self.expect_ttx(font, self.getpath("spec%s.ttx" % name))
 
     def test_feature_outside_aalt(self):
         self.assertRaisesRegex(
@@ -384,4 +374,7 @@ class LigatureSubstBuilderTest(unittest.TestCase):
 
 
 if __name__ == "__main__":
+    for name in BuilderTest.TEST_FEATURE_FILES:
+        f = lambda self: self.check_feature_file(name)
+        setattr(BuilderTest, "test_FeatureFile_%s" % name, f)
     unittest.main()
