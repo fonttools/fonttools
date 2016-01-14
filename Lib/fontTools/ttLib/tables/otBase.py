@@ -603,7 +603,6 @@ class BaseTable(object):
 	def decompile(self, reader, font):
 		self.readFormat(reader)
 		table = {}
-		counts = {}
 		self.__rawTable = table  # for debugging
 		converters = self.getConverters()
 		for conv in converters:
@@ -616,8 +615,8 @@ class BaseTable(object):
 			if conv.name == "FeatureParams":
 				conv = conv.getConverter(reader["FeatureTag"])
 			if conv.repeat:
-				if conv.repeat in counts:
-					countValue = counts[conv.repeat]
+				if conv.repeat in table:
+					countValue = table[conv.repeat]
 				else:
 					# conv.repeat is a propagated count
 					countValue = reader[conv.repeat]
@@ -626,14 +625,9 @@ class BaseTable(object):
 			else:
 				if conv.aux and not eval(conv.aux, None, table):
 					continue
-				value = conv.read(reader, font, table)
+				table[conv.name] = conv.read(reader, font, table)
 				if conv.isPropagated:
-					reader[conv.name] = value
-				if conv.isCount:
-					if not conv.isPropagated:
-						counts[conv.name] = value
-				else:
-					table[conv.name] = value
+					reader[conv.name] = table[conv.name]
 
 		self.postRead(table, font)
 

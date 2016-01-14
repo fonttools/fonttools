@@ -144,7 +144,7 @@ class SingleSubst(FormatSwitchingBaseTable):
 			outNames = [ font.getGlyphName(glyphID) for glyphID in outGIDS ]
 			list(map(operator.setitem, [mapping]*lenMapping, input, outNames))
 		elif self.Format == 2:
-			assert len(input) == len(rawTable["Substitute"]), \
+			assert len(input) == rawTable["GlyphCount"], \
 					"invalid SingleSubstFormat2 table"
 			subst = rawTable["Substitute"]
 			list(map(operator.setitem, [mapping]*lenMapping, input, subst))
@@ -848,29 +848,6 @@ def _buildClasses():
 			cls = namespace[name]
 			cls.converters, cls.convertersByName = buildConverters(table, namespace)
 			# XXX Add staticSize?
-			for conv in cls.converters:
-				if conv.repeat is not None and any(conv.repeat == c.name for c in cls.converters):
-
-					def buildCounter(objectName, countName, countOffset, arrayName):
-						deprecatedStr = "%s.%s" % (objectName, countName)
-						replacementStr = "len(%s.%s)%s" % (objectName, arrayName, '' if countOffset is 0 else '%+d' % countOffset)
-						def getter(self):
-							if countName in self.__dict__:
-								return self.__dict__[countName]
-							warnings.warn("Don't use %s; use %s instead" % (deprecatedStr, replacementStr), stacklevel=2)
-							return  len(getattr(self, arrayName, [])) + countOffset
-						def setter(self, value):
-							warnings.warn("Don't set %s; use %s instead" % (deprecatedStr, replacementStr), stacklevel=2)
-							self.__dict__[countName] = value
-						def deleter(self):
-							del self.__dict__[countName]
-						return property(getter, setter, deleter)
-
-					objectName = cls.__name__
-					arrayName = conv.name
-					countName = conv.repeat
-					countOffset = conv.aux
-					setattr(cls, countName, buildCounter(objectName, countName, countOffset, arrayName))
 
 
 _buildClasses()
