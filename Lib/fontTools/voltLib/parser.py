@@ -195,6 +195,9 @@ class Parser(object):
             sub = self.parse_substitution_()
         elif as_pos_or_sub == "AS_POSITION":
             pos = self.parse_position_()
+        else:
+            raise VoltLibError("Expected AS_SUBSTITUTION, AS_POSITION",
+                               location)
         def_lookup = ast.LookupDefinition(
             location, name, base, marks, process_marks, all_flag, direction,
             reversal, comments, context, sub, pos)
@@ -231,6 +234,8 @@ class Parser(object):
         location = self.cur_token_location_
         src = []
         dest = []
+        if self.next_token_ != "SUB":
+            raise VoltLibError("Expected SUB", location)
         while self.next_token_ == "SUB":
             self.expect_keyword_("SUB")
             src.extend(self.parse_coverage_())

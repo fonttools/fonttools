@@ -316,6 +316,19 @@ class ParserTest(unittest.TestCase):
                           "kern",
                           ["kern1", "kern2"]))
 
+    def test_substitution_empty(self):
+        with self.assertRaisesRegex(
+                VoltLibError,
+                r'Expected SUB'):
+            [lookup] = self.parse(
+                'DEF_LOOKUP "empty_substitution" PROCESS_BASE PROCESS_MARKS '
+                'ALL DIRECTION LTR\n'
+                'IN_CONTEXT\n'
+                'END_CONTEXT\n'
+                'AS_SUBSTITUTION\n'
+                'END_SUBSTITUTION'
+            ).statements
+
     def test_substitution_single(self):
         [lookup] = self.parse(
             'DEF_LOOKUP "smcp" PROCESS_BASE PROCESS_MARKS ALL '
@@ -470,6 +483,20 @@ class ParserTest(unittest.TestCase):
     #  ATTACH
     #  ADJUST_PAIR
     #  ADJUST_SINGLE
+    def test_position_empty(self):
+        with self.assertRaisesRegex(
+                VoltLibError,
+                'Expected ATTACH, ATTACH_CURSIVE, ADJUST_PAIR, ADJUST_SINGLE'):
+            [lookup] = self.parse(
+                'DEF_LOOKUP "empty_position" PROCESS_BASE PROCESS_MARKS ALL '
+                'DIRECTION LTR\n'
+                'EXCEPT_CONTEXT\n'
+                'LEFT GLYPH "glyph"\n'
+                'END_CONTEXT\n'
+                'AS_POSITION\n'
+                'END_POSITION'
+            ).statements
+
     def test_position_attach(self):
         [lookup, anchor1, anchor2, anchor3, anchor4] = self.parse(
             'DEF_LOOKUP "anchor_top" PROCESS_BASE PROCESS_MARKS ALL '
