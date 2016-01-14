@@ -711,25 +711,6 @@ class Builder(object):
             self.ligatureCaretByPos_.setdefault(glyph, set()).update(carets)
 
 
-def _makeOpenTypeDeviceTable(deviceTable, device):
-    device = tuple(sorted(device))
-    deviceTable.StartSize = startSize = device[0][0]
-    deviceTable.EndSize = endSize = device[-1][0]
-    deviceDict = dict(device)
-    deviceTable.DeltaValue = deltaValues = [
-        deviceDict.get(size, 0)
-        for size in range(startSize, endSize + 1)]
-    maxDelta = max(deltaValues)
-    minDelta = min(deltaValues)
-    assert minDelta > -129 and maxDelta < 128
-    if minDelta > -3 and maxDelta < 2:
-        deviceTable.DeltaFormat = 1
-    elif minDelta > -9 and maxDelta < 8:
-        deviceTable.DeltaFormat = 2
-    else:
-        deviceTable.DeltaFormat = 3
-
-
 def makeOpenTypeAnchor(anchor, anchorClass):
     """ast.Anchor --> otTables.Anchor"""
     if anchor is None:
@@ -741,12 +722,10 @@ def makeOpenTypeAnchor(anchor, anchorClass):
         anch.AnchorPoint = anchor.contourpoint
         anch.Format = 2
     if anchor.xDeviceTable is not None:
-        anch.XDeviceTable = otTables.XDeviceTable()
-        _makeOpenTypeDeviceTable(anch.XDeviceTable, anchor.xDeviceTable)
+        anch.XDeviceTable = otlBuilder.buildDevice(anchor.xDeviceTable)
         anch.Format = 3
     if anchor.yDeviceTable is not None:
-        anch.YDeviceTable = otTables.YDeviceTable()
-        _makeOpenTypeDeviceTable(anch.YDeviceTable, anchor.yDeviceTable)
+        anch.YDeviceTable = otlBuilder.buildDevice(anchor.yDeviceTable)
         anch.Format = 3
     return anch
 
@@ -766,17 +745,13 @@ def makeOpenTypeValueRecord(v):
         vr.YAdvance = v.yAdvance
 
     if v.xPlaDevice:
-        vr.XPlaDevice = otTables.XPlaDevice()
-        _makeOpenTypeDeviceTable(vr.XPlaDevice, v.xPlaDevice)
+        vr.XPlaDevice = otlBuilder.buildDevice(v.xPlaDevice)
     if v.yPlaDevice:
-        vr.YPlaDevice = otTables.YPlaDevice()
-        _makeOpenTypeDeviceTable(vr.YPlaDevice, v.yPlaDevice)
+        vr.YPlaDevice = otlBuilder.buildDevice(v.yPlaDevice)
     if v.xAdvDevice:
-        vr.XAdvDevice = otTables.XAdvDevice()
-        _makeOpenTypeDeviceTable(vr.XAdvDevice, v.xAdvDevice)
+        vr.XAdvDevice = otlBuilder.buildDevice(v.xAdvDevice)
     if v.yAdvDevice:
-        vr.YAdvDevice = otTables.YAdvDevice()
-        _makeOpenTypeDeviceTable(vr.YAdvDevice, v.yAdvDevice)
+        vr.YAdvDevice = otlBuilder.buildDevice(v.yAdvDevice)
 
     vrMask = 0
     for mask, name, _, _ in otBase.valueRecordFormat:
