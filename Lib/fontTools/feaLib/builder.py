@@ -898,9 +898,7 @@ class AlternateSubstBuilder(LookupBuilder):
                 self.alternates == other.alternates)
 
     def build(self):
-        subtable = otTables.AlternateSubst()
-        subtable.Format = 1
-        subtable.alternates = self.alternates
+        subtable = otlBuilder.buildAlternateSubst(self.alternates)
         return self.buildLookup_([subtable])
 
     def getAlternateGlyphs(self):
