@@ -79,7 +79,7 @@ class BuilderTest(unittest.TestCase):
     def test_getLigatureKey(self):
         components = lambda s: [tuple(word) for word in s.split()]
         c = components("fi fl ff ffi fff")
-        c.sort(key=builder.getLigatureKey)
+        c.sort(key=builder._getLigatureKey)
         self.assertEqual(c, components("fff ffi ff fi fl"))
 
 
