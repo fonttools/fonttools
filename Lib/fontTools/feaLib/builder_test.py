@@ -367,12 +367,6 @@ class ClassDefBuilderTest(unittest.TestCase):
         self.assertFalse(b.canAdd({"f"}))
 
 
-class LigatureSubstBuilderTest(unittest.TestCase):
-    def test_make_key(self):
-        self.assertEqual(LigatureSubstBuilder.make_key(("f", "f", "i")),
-                         (-3, ("f", "f", "i")))
-
-
 def generate_feature_file_test(name):
     return lambda self: self.check_feature_file(name)
 

@@ -2,6 +2,7 @@ from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
 from fontTools.feaLib.error import FeatureLibError
 from fontTools.feaLib.parser import Parser
+from fontTools.otlLib import builder as otlBuilder
 from fontTools.ttLib import getTableClass
 from fontTools.ttLib.tables import otBase, otTables
 import itertools
@@ -984,29 +985,9 @@ class LigatureSubstBuilder(LookupBuilder):
         return (LookupBuilder.equals(self, other) and
                 self.ligatures == other.ligatures)
 
-    @staticmethod
-    def make_key(components):
-        """Computes a key for ordering ligatures in a GSUB Type-4 lookup.
-
-        When building the OpenType lookup, we need to make sure that
-        the longest sequence of components is listed first, so we
-        use the negative length as the primary key for sorting.
-        To make the tables easier to read, we use the component
-        sequence as the secondary key.
-
-        For example, this will sort (f,f,f) < (f,f,i) < (f,f) < (f,i) < (f,l).
-        """
-        return (-len(components), components)
-
     def build(self):
-        subtable = otTables.LigatureSubst()
+        subtable = otlBuilder.buildLigatureSubst(self.ligatures)
         subtable.Format = 1
-        subtable.ligatures = {}
-        for components in sorted(self.ligatures.keys(), key=self.make_key):
-            lig = otTables.Ligature()
-            lig.Component = components[1:]
-            lig.LigGlyph = self.ligatures[components]
-            subtable.ligatures.setdefault(components[0], []).append(lig)
         return self.buildLookup_([subtable])
 
 
@@ -1020,8 +1001,7 @@ class MultipleSubstBuilder(LookupBuilder):
                 self.mapping == other.mapping)
 
     def build(self):
-        subtable = otTables.MultipleSubst()
-        subtable.mapping = self.mapping
+        subtable = otlBuilder.buildMultipleSubst(self.mapping)
         return self.buildLookup_([subtable])
 
 
@@ -1277,8 +1257,7 @@ class SingleSubstBuilder(LookupBuilder):
                 self.mapping == other.mapping)
 
     def build(self):
-        subtable = otTables.SingleSubst()
-        subtable.mapping = self.mapping
+        subtable = otlBuilder.buildSingleSubst(self.mapping)
         return self.buildLookup_([subtable])
 
     def getAlternateGlyphs(self):
