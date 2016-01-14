@@ -118,7 +118,7 @@
         <!-- LookupType=4 -->
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
-        <LigatureSubst index="0" Format="1">
+        <LigatureSubst index="0">
           <LigatureSet glyph="f">
             <Ligature components="f" glyph="f_f"/>
             <Ligature components="i" glyph="f_i"/>
@@ -130,7 +130,7 @@
         <!-- LookupType=4 -->
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
-        <LigatureSubst index="0" Format="1">
+        <LigatureSubst index="0">
           <LigatureSet glyph="c">
             <Ligature components="s" glyph="c_s"/>
             <Ligature components="t" glyph="c_t"/>
@@ -141,7 +141,7 @@
         <!-- LookupType=4 -->
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
-        <LigatureSubst index="0" Format="1">
+        <LigatureSubst index="0">
           <LigatureSet glyph="c">
             <Ligature components="h" glyph="c_h"/>
             <Ligature components="k" glyph="c_k"/>

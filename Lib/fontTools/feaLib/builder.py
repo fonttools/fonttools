@@ -987,7 +987,6 @@ class LigatureSubstBuilder(LookupBuilder):
 
     def build(self):
         subtable = otlBuilder.buildLigatureSubst(self.ligatures)
-        subtable.Format = 1
         return self.buildLookup_([subtable])
 
 

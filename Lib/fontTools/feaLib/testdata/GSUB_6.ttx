@@ -192,7 +192,7 @@
         <!-- LookupType=4 -->
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
-        <LigatureSubst index="0" Format="1">
+        <LigatureSubst index="0">
           <LigatureSet glyph="C">
             <Ligature components="T" glyph="c_t"/>
             <Ligature components="t" glyph="c_t"/>

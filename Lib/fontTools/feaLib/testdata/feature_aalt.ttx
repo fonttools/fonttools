@@ -89,7 +89,7 @@
         <!-- LookupType=4 -->
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
-        <LigatureSubst index="0" Format="1">
+        <LigatureSubst index="0">
           <LigatureSet glyph="one">
             <Ligature components="slash,four" glyph="onequarter"/>
             <Ligature components="slash,two" glyph="onehalf"/>
@@ -178,7 +178,7 @@
         <!-- LookupType=4 -->
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
-        <LigatureSubst index="0" Format="1">
+        <LigatureSubst index="0">
           <LigatureSet glyph="f">
             <Ligature components="i" glyph="fi"/>
             <Ligature components="l" glyph="fl"/>
