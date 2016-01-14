@@ -373,8 +373,12 @@ class LigatureSubstBuilderTest(unittest.TestCase):
                          (-3, ("f", "f", "i")))
 
 
+def generate_feature_file_test(name):
+    return lambda self: self.check_feature_file(name)
+
+
 if __name__ == "__main__":
     for name in BuilderTest.TEST_FEATURE_FILES:
-        f = lambda self: self.check_feature_file(name)
-        setattr(BuilderTest, "test_FeatureFile_%s" % name, f)
+        setattr(BuilderTest, "test_FeatureFile_%s" % name,
+                generate_feature_file_test(name))
     unittest.main()
