@@ -64,7 +64,7 @@ def buildAnchor(x, y, point=None, deviceX=None, deviceY=None):
         self.AnchorPoint = point
         self.Format = 2
     if deviceX is not None or deviceY is not None:
-        assert self.Format == 2, "Either point, or both of deviceX/deviceY, must be None."
+        assert self.Format == 1, "Either point, or both of deviceX/deviceY, must be None."
         self.XDeviceTable = deviceX
         self.YDeviceTable = deviceY
         self.Format = 3
