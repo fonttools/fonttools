@@ -390,6 +390,44 @@ class ParserTest(unittest.TestCase):
              [[("Hebrew", )], ["one.Hebr"]], "IN_CONTEXT",
              [[("Hebrew", )], ["one.Hebr"]], []))
 
+    def test_substitution_skip_base(self):
+        [group, lookup] = self.parse(
+            'DEF_GROUP "SomeMarks" ENUM GLYPH "marka" GLYPH "markb" '
+            'END_ENUM END_GROUP\n'
+            'DEF_LOOKUP "SomeSub" SKIP_BASE PROCESS_MARKS ALL '
+            'DIRECTION LTR\n'
+            'IN_CONTEXT\n'
+            'END_CONTEXT\n'
+            'AS_SUBSTITUTION\n'
+            'SUB GLYPH "A"\n'
+            'WITH GLYPH "A.c2sc"\n'
+            'END_SUB\n'
+            'END_SUBSTITUTION'
+        ).statements
+        process_base = lookup.process_base
+        self.assertEqual(
+            (lookup.name, process_base),
+            ("SomeSub", False))
+
+    def test_substitution_process_base(self):
+        [group, lookup] = self.parse(
+            'DEF_GROUP "SomeMarks" ENUM GLYPH "marka" GLYPH "markb" '
+            'END_ENUM END_GROUP\n'
+            'DEF_LOOKUP "SomeSub" PROCESS_BASE PROCESS_MARKS ALL '
+            'DIRECTION LTR\n'
+            'IN_CONTEXT\n'
+            'END_CONTEXT\n'
+            'AS_SUBSTITUTION\n'
+            'SUB GLYPH "A"\n'
+            'WITH GLYPH "A.c2sc"\n'
+            'END_SUB\n'
+            'END_SUBSTITUTION'
+        ).statements
+        process_base = lookup.process_base
+        self.assertEqual(
+            (lookup.name, process_base),
+            ("SomeSub", True))
+
     def test_substitution_skip_marks(self):
         [group, lookup] = self.parse(
             'DEF_GROUP "SomeMarks" ENUM GLYPH "marka" GLYPH "markb" '
@@ -405,10 +443,9 @@ class ParserTest(unittest.TestCase):
             'END_SUBSTITUTION'
         ).statements
         process_marks = lookup.process_marks
-        all_marks = lookup.all
         self.assertEqual(
-            (lookup.name, process_marks, all_marks),
-            ("SomeSub", None, False))
+            (lookup.name, process_marks),
+            ("SomeSub", False))
 
     def test_substitution_process_marks(self):
         [group, lookup] = self.parse(
@@ -424,10 +461,27 @@ class ParserTest(unittest.TestCase):
             'END_SUBSTITUTION'
         ).statements
         process_marks = lookup.process_marks
-        all_marks = lookup.all
         self.assertEqual(
-            (lookup.name, process_marks, all_marks),
-            ("SomeSub", "SomeMarks", False))
+            (lookup.name, process_marks),
+            ("SomeSub", "SomeMarks"))
+
+    def test_substitution_process_all_marks(self):
+        [group, lookup] = self.parse(
+            'DEF_GROUP "SomeMarks" ENUM GLYPH "acutecmb" GLYPH "gravecmb" '
+            'END_ENUM END_GROUP\n'
+            'DEF_LOOKUP "SomeSub" PROCESS_BASE '
+            'PROCESS_MARKS ALL \n'
+            'DIRECTION RTL\n'
+            'AS_SUBSTITUTION\n'
+            'SUB GLYPH "A"\n'
+            'WITH GLYPH "A.c2sc"\n'
+            'END_SUB\n'
+            'END_SUBSTITUTION'
+        ).statements
+        process_marks = lookup.process_marks
+        self.assertEqual(
+            (lookup.name, process_marks),
+            ("SomeSub", True))
 
     def test_substitution_no_reversal(self):
         [lookup] = self.parse(

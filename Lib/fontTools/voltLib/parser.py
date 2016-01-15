@@ -156,22 +156,30 @@ class Parser(object):
         assert self.is_cur_keyword_("DEF_LOOKUP")
         location = self.cur_token_location_
         name = self.expect_string_()
-        base = self.expect_name_()
-        assert base in ("PROCESS_BASE", "SKIP_BASE")
-        marks = self.expect_name_()
-        assert marks in ("PROCESS_MARKS", "SKIP_MARKS")
-        if marks == "PROCESS_MARKS":
-            if self.next_token_type_ == Lexer.STRING:
+        process_base = True
+        if self.next_token_ == "PROCESS_BASE":
+            self.advance_lexer_()
+        elif self.next_token_ == "SKIP_BASE":
+            self.advance_lexer_()
+            process_base = False
+        process_marks = True
+        if self.next_token_ == "PROCESS_MARKS":
+            self.advance_lexer_()
+            if self.next_token_ == "MARK_GLYPH_SET":
+                self.advance_lexer_()
                 process_marks = self.expect_string_()
+            elif self.next_token_type_ == Lexer.STRING:
+                process_marks = self.expect_string_()
+            elif self.next_token_ == "ALL":
+                self.advance_lexer_()
             else:
-                process_marks = self.expect_name_()
-        else:
-            process_marks = None
-        all_flag = False
-        # ALL or id
-        if self.next_token_ == "ALL":
-            self.expect_keyword_("ALL")
-            all_flag = True
+                raise VoltLibError(
+                    "Expected ALL, MARK_GLYPH_SET or an ID. "
+                    "Got %s" % (self.next_token_type_),
+                    location)
+        elif self.next_token_ == "SKIP_MARKS":
+            self.advance_lexer_()
+            process_marks = False
         direction = None
         if self.next_token_ == "DIRECTION":
             self.expect_keyword_("DIRECTION")
@@ -196,11 +204,13 @@ class Parser(object):
         elif as_pos_or_sub == "AS_POSITION":
             pos = self.parse_position_()
         else:
-            raise VoltLibError("Expected AS_SUBSTITUTION, AS_POSITION",
-                               location)
+            raise VoltLibError(
+                "Expected AS_SUBSTITUTION or AS_POSITION. "
+                "Got %s" % (as_pos_or_sub),
+                location)
         def_lookup = ast.LookupDefinition(
-            location, name, base, marks, process_marks, all_flag, direction,
-            reversal, comments, context, sub, pos)
+            location, name, process_base, process_marks, direction, reversal,
+            comments, context, sub, pos)
         return def_lookup
 
     def parse_context_(self):
