@@ -338,12 +338,15 @@ class Parser(object):
     def parse_adjust_single_(self):
         assert self.is_cur_keyword_("ADJUST_SINGLE")
         location = self.cur_token_location_
-        coverages = self.parse_coverage_()
-        self.expect_keyword_("BY")
-        pos = self.parse_pos_()
+        adjust_single = []
+        while self.next_token_ != "END_ADJUST":
+            coverages = self.parse_coverage_()
+            self.expect_keyword_("BY")
+            pos = self.parse_pos_()
+            adjust_single.append((coverages, pos))
         self.expect_keyword_("END_ADJUST")
         position = ast.PositionAdjustSingleDefinition(
-            location, coverages, pos)
+            location, adjust_single)
         return position
 
     def parse_def_anchor_(self):

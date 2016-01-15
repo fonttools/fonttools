@@ -104,10 +104,9 @@ class PositionAdjustPairDefinition(ast.Statement):
 
 
 class PositionAdjustSingleDefinition(ast.Statement):
-    def __init__(self, location, coverages, adjust):
+    def __init__(self, location, adjust_single):
         ast.Statement.__init__(self, location)
-        self.coverages = coverages
-        self.adjust = adjust
+        self.adjust_single = adjust_single
 
 
 class ContextDefinition(ast.Statement):

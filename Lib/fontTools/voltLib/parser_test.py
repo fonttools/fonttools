@@ -639,13 +639,17 @@ class ParserTest(unittest.TestCase):
             # 'RIGHT GLYPH "rightGlyph"\n'
             'END_CONTEXT\n'
             'AS_POSITION\n'
-            'ADJUST_SINGLE GLYPH "testGlyph" BY POS ADV 0 DX 150 END_POS\n'
+            'ADJUST_SINGLE'
+            ' GLYPH "glyph1" BY POS ADV 0 DX 123 END_POS\n'
+            ' GLYPH "glyph2" BY POS ADV 0 DX 456 END_POS\n'
             'END_ADJUST\n'
             'END_POSITION\n'
         ).statements
         self.assertEqual(
-            (lookup.name, lookup.pos.coverages, lookup.pos.adjust),
-            ("TestLookup", ["testGlyph"], (0, 150, None, {}, {}, {}))
+            (lookup.name, lookup.pos.adjust_single),
+            ("TestLookup",
+             [(["glyph1"], (0, 123, None, {}, {}, {})),
+              (["glyph2"], (0, 456, None, {}, {}, {}))])
         )
 
     def test_def_anchor(self):
