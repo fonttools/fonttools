@@ -568,7 +568,7 @@ class ParserTest(unittest.TestCase):
         ).statements
         self.assertEqual(
             (lookup.name, lookup.pos.coverages_1, lookup.pos.coverages_2,
-             lookup.pos.adjust),
+             lookup.pos.adjust_pair),
             ("kern1", [["A"]], [["V"]],
              {(1, 2): ((-30, None, None, {}, {}, {}),
                        (None, None, None, {}, {}, {})),

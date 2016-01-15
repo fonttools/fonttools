@@ -304,7 +304,7 @@ class Parser(object):
         location = self.cur_token_location_
         coverages_1 = []
         coverages_2 = []
-        adjust = {}
+        adjust_pair = {}
         while self.next_token_ == "FIRST":
             self.advance_lexer_()
             coverage_1 = self.parse_coverage_()
@@ -319,10 +319,10 @@ class Parser(object):
             self.expect_keyword_("BY")
             pos_1 = self.parse_pos_()
             pos_2 = self.parse_pos_()
-            adjust[(id_1, id_2)] = (pos_1, pos_2)
+            adjust_pair[(id_1, id_2)] = (pos_1, pos_2)
         self.expect_keyword_("END_ADJUST")
         position = ast.PositionAdjustPairDefinition(
-            location, coverages_1, coverages_2, adjust)
+            location, coverages_1, coverages_2, adjust_pair)
         return position
 
     def parse_adjust_single_(self):

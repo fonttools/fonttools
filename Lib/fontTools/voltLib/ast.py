@@ -98,11 +98,11 @@ class PositionAttachCursiveDefinition(ast.Statement):
 
 
 class PositionAdjustPairDefinition(ast.Statement):
-    def __init__(self, location, coverages_1, coverages_2, adjust):
+    def __init__(self, location, coverages_1, coverages_2, adjust_pair):
         ast.Statement.__init__(self, location)
         self.coverages_1 = coverages_1
         self.coverages_2 = coverages_2
-        self.adjust = adjust
+        self.adjust_pair = adjust_pair
 
 
 class PositionAdjustSingleDefinition(ast.Statement):
