@@ -12,6 +12,7 @@ This allows the caller to provide more data for each point.
 For instance, whether or not a point is smooth, and its name.
 """
 from fontTools.pens.basePen import AbstractPen
+import math
 
 __all__ = ["AbstractPointPen", "BasePointToSegmentPen", "PointToSegmentPen",
 		   "SegmentToPointPen"]
@@ -253,3 +254,69 @@ class SegmentToPointPen(AbstractPen):
 	def addComponent(self, glyphName, transform):
 		assert self.contour is None
 		self.pen.addComponent(glyphName, transform)
+
+
+class GuessSmoothPointPen(AbstractPointPen):
+	"""
+	Filtering PointPen that tries to determine whether an on-curve point
+	should be "smooth", ie. that it's a "tangent" point or a "curve" point.
+	"""
+
+	def __init__(self, outPen):
+		self._outPen = outPen
+		self._points = None
+
+	def _flushContour(self):
+		points = self._points
+		nPoints = len(points)
+		if not nPoints:
+			return
+		if points[0][1] == "move":
+			# Open path.
+			indices = range(1, nPoints - 1)
+		elif nPoints > 1:
+			# Closed path. To avoid having to mod the contour index, we
+			# simply abuse Python's negative index feature, and start at -1
+			indices = range(-1, nPoints - 1)
+		else:
+			# closed path containing 1 point (!), ignore.
+			indices = []
+		for i in indices:
+			pt, segmentType, dummy, name, kwargs = points[i]
+			if segmentType is None:
+				continue
+			prev = i - 1
+			next = i + 1
+			if points[prev][1] is not None and points[next][1] is not None:
+				continue
+			# At least one of our neighbors is an off-curve point
+			pt = points[i][0]
+			prevPt = points[prev][0]
+			nextPt = points[next][0]
+			if pt != prevPt and pt != nextPt:
+				dx1, dy1 = pt[0] - prevPt[0], pt[1] - prevPt[1]
+				dx2, dy2 = nextPt[0] - pt[0], nextPt[1] - pt[1]
+				a1 = math.atan2(dx1, dy1)
+				a2 = math.atan2(dx2, dy2)
+				if abs(a1 - a2) < 0.05:
+					points[i] = pt, segmentType, True, name, kwargs
+
+		for pt, segmentType, smooth, name, kwargs in points:
+			self._outPen.addPoint(pt, segmentType, smooth, name, **kwargs)
+
+	def beginPath(self):
+		assert self._points is None
+		self._points = []
+		self._outPen.beginPath()
+
+	def endPath(self):
+		self._flushContour()
+		self._outPen.endPath()
+		self._points = None
+
+	def addPoint(self, pt, segmentType=None, smooth=False, name=None, **kwargs):
+		self._points.append((pt, segmentType, False, name, kwargs))
+
+	def addComponent(self, glyphName, transformation):
+		assert self._points is None
+		self._outPen.addComponent(glyphName, transformation)
