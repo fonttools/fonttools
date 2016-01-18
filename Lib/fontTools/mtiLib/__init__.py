@@ -305,9 +305,7 @@ def makeAnchor(data, klass=ot.Anchor):
 		anchor.AnchorPoint = int(data[1])
 	return anchor
 
-def parseCursive(self, lines, font, _lookupMap=None):
-	self.Format = 1
-	self.EntryExitRecord = []
+def parseCursive(lines, font, _lookupMap=None):
 	records = {}
 	for line in lines:
 		assert len(line) in [3,4], line
@@ -320,13 +318,7 @@ def parseCursive(self, lines, font, _lookupMap=None):
 			records[glyph] = [None,None]
 		assert records[glyph][idx] is None, (glyph, idx)
 		records[glyph][idx] = makeAnchor(line[2:], klass)
-	self.Coverage = makeCoverage(records.keys(), font)
-	recs = self.EntryExitRecord = []
-	for glyph in self.Coverage.glyphs:
-		rec = ot.EntryExitRecord()
-		rec.EntryAnchor,rec.ExitAnchor = records[glyph]
-		recs.append(rec)
-	self.EntryExitCount = len(self.EntryExitRecord)
+	return builder.buildCursivePos(records, font.getReverseGlyphMap())
 
 def makeMarkRecords(data, coverage, c):
 	records = []
@@ -773,7 +765,7 @@ def parseLookup(lines, tableTag, font, lookupMap=None):
 				'single':	(1,	parseSinglePos),
 				'pair':		(2,	parsePair),
 				'kernset':	(2,	parseKernset),
-				'cursive':	(3,	parseCursive),
+				'cursive':	(0,	parseCursive),
 				'mark to base':	(4,	parseMarkToBase),
 				'mark to ligature':(5,	parseMarkToLigature),
 				'mark to mark':	(6,	parseMarkToMark),
@@ -789,6 +781,7 @@ def parseLookup(lines, tableTag, font, lookupMap=None):
 				while lines.peek():
 					if lookup.LookupType is 0:
 						subtable = parseLookupSubTable(lines, font, lookupMap)
+						lookup.LookupType = subtable.LookupType
 					else:
 						subtable = ot.lookupTypes[tableTag][lookup.LookupType]()
 						parseLookupSubTable(subtable, lines, font, lookupMap)
@@ -1076,16 +1069,21 @@ class MockFont(object):
 
 	def __init__(self):
 		self._glyphOrder = ['.notdef']
-		self._reverseGlyphOrder = {'.notdef': 0}
+		class AllocatingDict(dict):
+			def __missing__(reverseDict, key):
+				self._glyphOrder.append(key)
+				gid = len(reverseDict)
+				reverseDict[key] = gid
+				return gid
+		self._reverseGlyphOrder = AllocatingDict({'.notdef': 0})
 		self.lazy = False
 
 	def getGlyphID(self, glyph, requireReal=None):
-		gid = self._reverseGlyphOrder.get(glyph, None)
-		if gid is None:
-			gid = len(self._glyphOrder)
-			self._glyphOrder.append(glyph)
-			self._reverseGlyphOrder[glyph] = gid
+		gid = self._reverseGlyphOrder[glyph]
 		return gid
+
+	def getReverseGlyphMap(self):
+		return self._reverseGlyphOrder
 
 	def getGlyphName(self, gid):
 		return self._glyphOrder[gid]
