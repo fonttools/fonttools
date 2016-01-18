@@ -84,7 +84,6 @@ def buildCursivePos(attach, glyphMap):
     self = ot.CursivePos()
     self.Format = 1
     self.Coverage = buildCoverage(attach.keys(), glyphMap)
-    self.EntryExitCount = len(attach)
     self.EntryExitRecord = []
     for glyph in self.Coverage.glyphs:
         entryAnchor, exitAnchor = attach[glyph]
@@ -92,6 +91,7 @@ def buildCursivePos(attach, glyphMap):
         rec.EntryAnchor = entryAnchor
         rec.ExitAnchor = exitAnchor
         self.EntryExitRecord.append(rec)
+    self.EntryExitCount = len(self.EntryExitRecord)
     return self
 
 
