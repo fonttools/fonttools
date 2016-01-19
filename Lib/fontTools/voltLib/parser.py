@@ -7,17 +7,17 @@ from fontTools.voltLib.error import VoltLibError
 from io import open
 
 PARSE_FUNCS = {
-    "DEF_GLYPH":         "parse_def_glyph_",
-    "DEF_GROUP":         "parse_def_group_",
-    "DEF_SCRIPT":        "parse_def_script_",
-    "DEF_LOOKUP":        "parse_def_lookup_",
-    "DEF_ANCHOR":        "parse_def_anchor_",
-    "GRID_PPEM":         "parse_ppem_",
+    "DEF_GLYPH": "parse_def_glyph_",
+    "DEF_GROUP": "parse_def_group_",
+    "DEF_SCRIPT": "parse_def_script_",
+    "DEF_LOOKUP": "parse_def_lookup_",
+    "DEF_ANCHOR": "parse_def_anchor_",
+    "GRID_PPEM": "parse_ppem_",
     "PRESENTATION_PPEM": "parse_ppem_",
     "PPOSITIONING_PPEM": "parse_ppem_",
     "COMPILER_USEEXTENSIONLOOKUPS": "parse_compiler_flag_",
-    "COMPILER_USEPAIRPOSFORMAT2":   "parse_compiler_flag_",
-    "CMAP_FORMAT":       "parse_cmap_format",
+    "COMPILER_USEPAIRPOSFORMAT2": "parse_compiler_flag_",
+    "CMAP_FORMAT": "parse_cmap_format",
 }
 
 
