@@ -12,12 +12,16 @@ from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.tables.otBase import ValueRecord, valueRecordFormatDict
 from fontTools.otlLib import builder
 from contextlib import contextmanager
+from operator import setitem
 
 class MtiLibError(Exception): pass
-class FeatureNotFoundError(MtiLibError): pass
-class LookupNotFoundError(MtiLibError): pass
+class ReferenceNotFoundError(MtiLibError): pass
+class FeatureNotFoundError(ReferenceNotFoundError): pass
+class LookupNotFoundError(ReferenceNotFoundError): pass
 
-debug = print
+def debug(*args):
+	#print(*args)
+	pass
 
 def makeGlyph(s):
 	if s[:2] == 'U ':
@@ -54,6 +58,40 @@ def mapFeature(sym, mapping):
 			raise FeatureNotFoundError(sym)
 	return idx
 
+def setReference(mapper, mapping, sym, setter, collection, key):
+	try:
+		mapped = mapper(sym, mapping)
+	except ReferenceNotFoundError as e:
+		try:
+			if mapping is not None:
+				mapping.addDeferredMapping(lambda ref: setter(collection, key, ref), sym, e)
+				return
+		except AttributeError:
+			pass
+		raise
+	setter(collection, key, mapped)
+
+class DeferredMapping(dict):
+
+	def __init__(self):
+		self._deferredMappings = []
+
+	def addDeferredMapping(self, setter, sym, e):
+		debug("Adding deferred mapping for symbol '%s'" % sym, type(e).__name__)
+		self._deferredMappings.append((setter,sym, e))
+
+	def applyDeferredMappings(self):
+		for setter,sym,e in self._deferredMappings:
+			debug("Applying deferred mapping for symbol '%s'" % sym, type(e).__name__)
+			try:
+				mapped = self[sym]
+			except KeyError:
+				raise e
+			setter(mapped)
+			debug("Set to %s" % mapped)
+		self._deferredMappings = []
+
+
 def parseScriptList(lines, featureMap=None):
 	self = ot.ScriptList()
 	records = []
@@ -64,8 +102,14 @@ def parseScriptList(lines, featureMap=None):
 
 			langSys = ot.LangSys()
 			langSys.LookupOrder = None
-			langSys.ReqFeatureIndex = mapFeature(defaultFeature, featureMap) if defaultFeature else 0xFFFF
-			langSys.FeatureIndex = [mapFeature(sym, featureMap) for sym in stripSplitComma(features)]
+			if defaultFeature:
+				setReference(mapFeature, featureMap, defaultFeature, setattr, langSys, 'ReqFeatureIndex')
+			else:
+				langSys.ReqFeatureIndex = 0xFFFF
+			syms = stripSplitComma(features)
+			langSys.FeatureIndex = theList = [3] * len(syms)
+			for i,sym in enumerate(syms):
+				setReference(mapFeature, featureMap, sym, setitem, theList, i)
 			langSys.FeatureCount = len(langSys.FeatureIndex)
 
 			script = [s for s in records if s.ScriptTag == scriptTag]
@@ -116,7 +160,10 @@ def parseFeatureList(lines, lookupMap=None, featureMap=None):
 			self.FeatureRecord.append(featureRec)
 			feature = featureRec.Feature
 			feature.FeatureParams = None
-			feature.LookupListIndex = [mapLookup(sym, lookupMap) for sym in stripSplitComma(lookups)]
+			syms = stripSplitComma(lookups)
+			feature.LookupListIndex = theList = [None] * len(syms)
+			for i,sym in enumerate(syms):
+				setReference(mapLookup, lookupMap, sym, setitem, theList, i)
 			feature.LookupCount = len(feature.LookupListIndex)
 
 	self.FeatureCount = len(self.FeatureRecord)
@@ -576,7 +623,7 @@ def parseLookupRecords(items, klassName, lookupMap=None):
 		idx = int(item[0])
 		assert idx > 0, idx
 		rec.SequenceIndex = idx - 1
-		rec.LookupListIndex = mapLookup(item[1], lookupMap)
+		setReference(mapLookup, lookupMap, item[1], setattr, rec, 'LookupListIndex')
 		lst.append(rec)
 	return lst
 
@@ -797,8 +844,8 @@ def parseLookup(lines, tableTag, font, lookupMap=None):
 	return lookup
 
 def parseGSUBGPOS(lines, font, tableTag):
-	lookupMap = None#{} Until we support forward references...
-	featureMap = {}
+	lookupMap = DeferredMapping()
+	featureMap = DeferredMapping()
 	assert tableTag in ('GSUB', 'GPOS')
 	debug("Parsing", tableTag)
 	self = getattr(ot, tableTag)()
@@ -829,7 +876,7 @@ def parseGSUBGPOS(lines, font, tableTag):
 				self.LookupList.Lookup = []
 			_, name, _ = lines.peek()
 			lookup = parseLookup(lines, tableTag, font, lookupMap)
-			if lookupMap:
+			if lookupMap is not None:
 				assert name not in lookupMap, "Duplicate lookup name: %s" % name
 				lookupMap[name] = len(self.LookupList.Lookup)
 			else:
@@ -840,6 +887,10 @@ def parseGSUBGPOS(lines, font, tableTag):
 			setattr(self, attr, parser(lines))
 	if self.LookupList:
 		self.LookupList.LookupCount = len(self.LookupList.Lookup)
+	if lookupMap is not None:
+		lookupMap.applyDeferredMappings()
+	if featureMap is not None:
+		featureMap.applyDeferredMappings()
 	return self
 
 def parseGSUB(lines, font):
