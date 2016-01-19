@@ -952,6 +952,27 @@ def parseGDEF(lines, font):
 	self.Version = 1.0 if self.MarkGlyphSetsDef is None else 0x00010002
 	return self
 
+def parseTable(lines, font, tableTag=None):
+	debug("Parsing table")
+	line = lines.peek()
+	if line[0].split()[0] == 'FontDame':
+		next(lines)
+		tag = line[0].split()[1].ljust(4)
+		if tableTag is None:
+			tableTag = tag
+		else:
+			assert tableTag == tag, (tableTag, tag)
+
+	assert tableTag is not None, "Don't know what table to parse and data doesn't specify"
+
+	container = ttLib.getTableClass(tableTag)()
+	table = {'GSUB': parseGSUB,
+		 'GPOS': parseGPOS,
+		 'GDEF': parseGDEF,
+		}[tableTag](lines, font)
+	container.table = table
+	return container
+
 class Tokenizer(object):
 
 	def __init__(self, f):
@@ -1038,27 +1059,6 @@ class Tokenizer(object):
 		tag = line[0].lower()
 		assert tag.endswith(s), "Expected '*%s', got '%s'" % (s, tag)
 		return line
-
-def parseTable(lines, font, tableTag=None):
-	debug("Parsing table")
-	line = lines.peek()
-	if line[0].split()[0] == 'FontDame':
-		next(lines)
-		tag = line[0].split()[1].ljust(4)
-		if tableTag is None:
-			tableTag = tag
-		else:
-			assert tableTag == tag, (tableTag, tag)
-
-	assert tableTag is not None, "Don't know what table to parse and data doesn't specify"
-
-	container = ttLib.getTableClass(tableTag)()
-	table = {'GSUB': parseGSUB,
-		 'GPOS': parseGPOS,
-		 'GDEF': parseGDEF,
-		}[tableTag](lines, font)
-	container.table = table
-	return container
 
 def build(f, font, tableTag=None):
 	lines = Tokenizer(f)
