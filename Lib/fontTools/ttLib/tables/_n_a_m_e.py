@@ -139,10 +139,7 @@ class NameRecord(object):
 		return self.getEncoding(None) in ['utf_16_be', 'ucs2be', 'ascii', 'latin1']
 
 	def __str__(self):
-		try:
-			return self.toUnicode()
-		except UnicodeDecodeError:
-			return str(self.string)
+		return self.toStr(errors='backslashreplace')
 
 	def isUnicode(self):
 		return (self.platformID == 0 or
