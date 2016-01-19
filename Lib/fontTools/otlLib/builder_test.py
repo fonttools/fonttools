@@ -6,7 +6,8 @@ import unittest
 
 
 class BuilderTest(unittest.TestCase):
-    GLYPHMAP = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6}
+    GLYPHS = ".notdef space zero one two three four five six".split()
+    GLYPHMAP = {id: name for name, id in enumerate(GLYPHS)}
 
     ANCHOR1 = builder.buildAnchor(11, -11)
     ANCHOR2 = builder.buildAnchor(22, -22)
@@ -159,6 +160,19 @@ class BuilderTest(unittest.TestCase):
                          '  </Coverage>'
                          '  <ValueFormat value="2"/>'
                          '  <Value YPlacement="-6"/>'
+                         '</SinglePos>')
+
+    def test_buildSinglePos_ValueFormat0(self):
+        subtables = builder.buildSinglePos({
+            "zero": builder.buildValue({})
+        }, self.GLYPHMAP)
+        self.assertEqual(''.join([getXML(t.toXML) for t in subtables]),
+                         '<SinglePos Format="1">'
+                         '  <Coverage>'
+                         '    <Glyph value="zero"/>'
+                         '  </Coverage>'
+                         '  <ValueFormat value="0"/>'
+                         '  <Value/>'
                          '</SinglePos>')
 
     def test_buildSinglePosSubtable_format1(self):
