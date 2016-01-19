@@ -40,8 +40,18 @@
       <Lookup index="0">
         <!-- LookupType=1 -->
         <LookupFlag value="0"/>
-        <!-- SubTableCount=8 -->
-        <SinglePos index="0" Format="2">
+        <!-- SubTableCount=7 -->
+        <SinglePos index="0" Format="1">
+          <Coverage>
+            <Glyph value="one"/>
+            <Glyph value="two"/>
+            <Glyph value="three"/>
+            <Glyph value="five"/>
+          </Coverage>
+          <ValueFormat value="5"/>
+          <Value XPlacement="-80" XAdvance="-160"/>
+        </SinglePos>
+        <SinglePos index="1" Format="2">
           <Coverage>
             <Glyph value="four"/>
             <Glyph value="six"/>
@@ -53,7 +63,16 @@
           <Value index="1" XAdvance="-200"/>
           <Value index="2" XAdvance="401"/>
         </SinglePos>
-        <SinglePos index="1" Format="2">
+        <SinglePos index="2" Format="1">
+          <Coverage>
+            <Glyph value="seven"/>
+            <Glyph value="eight"/>
+            <Glyph value="nine"/>
+          </Coverage>
+          <ValueFormat value="4"/>
+          <Value XAdvance="-100"/>
+        </SinglePos>
+        <SinglePos index="3" Format="2">
           <Coverage>
             <Glyph value="P"/>
             <Glyph value="Q"/>
@@ -65,7 +84,7 @@
           <Value index="1" XPlacement="1" XAdvance="801"/>
           <Value index="2" XPlacement="1" XAdvance="802"/>
         </SinglePos>
-        <SinglePos index="2" Format="2">
+        <SinglePos index="4" Format="2">
           <Coverage>
             <Glyph value="S"/>
             <Glyph value="T"/>
@@ -77,37 +96,12 @@
           <Value index="1" XPlacement="1" YPlacement="1" XAdvance="804"/>
           <Value index="2" XPlacement="1" YPlacement="1" XAdvance="805"/>
         </SinglePos>
-        <SinglePos index="3" Format="1">
-          <Coverage>
-            <Glyph value="zero"/>
-          </Coverage>
-          <ValueFormat value="0"/>
-        </SinglePos>
-        <SinglePos index="4" Format="1">
-          <Coverage>
-            <Glyph value="one"/>
-            <Glyph value="two"/>
-            <Glyph value="three"/>
-            <Glyph value="five"/>
-          </Coverage>
-          <ValueFormat value="5"/>
-          <Value XPlacement="-80" XAdvance="-160"/>
-        </SinglePos>
         <SinglePos index="5" Format="1">
-          <Coverage>
-            <Glyph value="seven"/>
-            <Glyph value="eight"/>
-            <Glyph value="nine"/>
-          </Coverage>
-          <ValueFormat value="4"/>
-          <Value XAdvance="-100"/>
-        </SinglePos>
-        <SinglePos index="6" Format="1">
           <Coverage>
             <Glyph value="A"/>
             <Glyph value="B"/>
           </Coverage>
-          <ValueFormat value="15"/>
+          <ValueFormat value="127"/>
           <Value XPlacement="1" YPlacement="2" XAdvance="3" YAdvance="4">
             <XPlaDevice>
               <StartSize value="11"/>
@@ -129,11 +123,11 @@
             </XAdvDevice>
           </Value>
         </SinglePos>
-        <SinglePos index="7" Format="1">
+        <SinglePos index="6" Format="1">
           <Coverage>
             <Glyph value="C"/>
           </Coverage>
-          <ValueFormat value="15"/>
+          <ValueFormat value="255"/>
           <Value XPlacement="1" YPlacement="2" XAdvance="3" YAdvance="4">
             <XPlaDevice>
               <StartSize value="11"/>

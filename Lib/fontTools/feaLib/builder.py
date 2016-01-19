@@ -672,14 +672,7 @@ class Builder(object):
 
     def add_single_pos(self, location, glyph, valuerecord):
         lookup = self.get_lookup_(location, SinglePosBuilder)
-        curValue = lookup.mapping.get(glyph)
-        if curValue is not None and curValue != valuerecord:
-            otherLoc = valuerecord.location
-            raise FeatureLibError(
-                'Already defined different position for glyph "%s" at %s:%d:%d'
-                % (glyph, otherLoc[0], otherLoc[1], otherLoc[2]),
-                location)
-        lookup.mapping[glyph] = valuerecord
+        lookup.add_pos(location, glyph, valuerecord)
 
     def setGlyphClass_(self, location, glyph, glyphClass):
         oldClass, oldLocation = self.glyphClassDefs_.get(glyph, (None, None))
@@ -1313,77 +1306,28 @@ class ClassPairPosBuilder(LookupBuilder):
 class SinglePosBuilder(LookupBuilder):
     def __init__(self, font, location):
         LookupBuilder.__init__(self, font, location, 'GPOS', 1)
-        self.mapping = {}  # glyph -> ast.ValueRecord
+        self.locations = {}  # glyph -> (filename, line, column)
+        self.mapping = {}  # glyph -> otTables.ValueRecord
+
+    def add_pos(self, location, glyph, valueRecord):
+        otValueRecord, _ = makeOpenTypeValueRecord(valueRecord)
+        curValue = self.mapping.get(glyph)
+        if curValue is not None and curValue != otValueRecord:
+            otherLoc = self.locations[glyph]
+            raise FeatureLibError(
+                'Already defined different position for glyph "%s" at %s:%d:%d'
+                % (glyph, otherLoc[0], otherLoc[1], otherLoc[2]),
+                location)
+        if otValueRecord:
+            self.mapping[glyph] = otValueRecord
+        self.locations[glyph] = location
 
     def equals(self, other):
         return (LookupBuilder.equals(self, other) and
                 self.mapping == other.mapping)
 
     def build(self):
-        subtables = []
-
-        # If multiple glyphs have the same ValueRecord, they can go into
-        # the same subtable which saves space. Therefore, we first build
-        # a reverse mapping from ValueRecord to glyph coverage.
-        values = {}
-        for glyph, valuerecord in self.mapping.items():
-            values.setdefault(valuerecord, []).append(glyph)
-
-        # For compliance with the OpenType specification,
-        # we sort the glyph coverage by glyph ID.
-        for glyphs in values.values():
-            glyphs.sort(key=self.font.getGlyphID)
-
-        # Make a list of (glyphs, (otBase.ValueRecord, int valueFormat)).
-        # Glyphs with the same otBase.ValueRecord are grouped into one item.
-        values = [(glyphs, makeOpenTypeValueRecord(valrec))
-                  for valrec, glyphs in values.items()]
-
-        # Find out which glyphs should be encoded as SinglePos format 2.
-        # Format 2 is more compact than format 1 when multiple glyphs
-        # have different values but share the same integer valueFormat.
-        format2 = {}  # valueFormat --> [(glyph, value), (glyph, value), ...]
-        for glyphs, (value, valueFormat) in values:
-            if len(glyphs) == 1:
-                glyph = glyphs[0]
-                format2.setdefault(valueFormat, []).append((glyph, value))
-
-        # Only use format 2 if multiple glyphs share the same valueFormat.
-        # Otherwise, format 1 is more compact.
-        format2 = [(valueFormat, valueList)
-                   for valueFormat, valueList in format2.items()
-                   if len(valueList) > 1]
-        format2.sort()
-        format2Glyphs = set()  # {"A", "B", "C"}
-        for _, valueList in format2:
-            for (glyph, _) in valueList:
-                format2Glyphs.add(glyph)
-        for valueFormat, valueList in format2:
-            valueList.sort(key=lambda x: self.font.getGlyphID(x[0]))
-            st = otTables.SinglePos()
-            subtables.append(st)
-            st.Format = 2
-            st.ValueFormat = valueFormat
-            st.Coverage = otTables.Coverage()
-            st.Coverage.glyphs = [glyph for glyph, _value in valueList]
-            st.ValueCount = len(valueList)
-            st.Value = [value for _glyph, value in valueList]
-
-        # To make the ordering of our subtables deterministic,
-        # we sort subtables by the first glyph ID in their coverage.
-        # Not doing this would be OK for OpenType, but testing the
-        # compiler would be harder with non-deterministic output.
-        values.sort(key=lambda x: self.font.getGlyphID(x[0][0]))
-
-        for glyphs, (value, valueFormat) in values:
-            if len(glyphs) == 1 and glyphs[0] in format2Glyphs:
-                continue  # already emitted as part of a format 2 subtable
-            st = otTables.SinglePos()
-            subtables.append(st)
-            st.Format = 1
-            st.Coverage = otl.buildCoverage(glyphs, self.glyphMap)
-            st.Value, st.ValueFormat = value, valueFormat
-
+        subtables = otl.buildSinglePos(self.mapping, self.glyphMap)
         return self.buildLookup_(subtables)
 
 
