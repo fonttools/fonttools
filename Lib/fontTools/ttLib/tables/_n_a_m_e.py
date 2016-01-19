@@ -212,6 +212,14 @@ class NameRecord(object):
 		"""
 		return tobytes(self.string, encoding=self.getEncoding(), errors=errors)
 
+	def toStr(self, errors='strict'):
+		if str == bytes:
+			# python 2
+			return self.toBytes(errors)
+		else:
+			# python 3
+			return self.toUnicode(errors)
+
 	def toXML(self, writer, ttFont):
 		try:
 			unistr = self.toUnicode()
