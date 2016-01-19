@@ -125,7 +125,6 @@ class BuilderTest(unittest.TestCase):
                          '</Device>')
 
     def test_buildSinglePos(self):
-        self.maxDiff = None
         subtables = builder.buildSinglePos({
             "one": builder.buildValue({"XPlacement": 500}),
             "two": builder.buildValue({"XPlacement": 500}),
@@ -134,7 +133,7 @@ class BuilderTest(unittest.TestCase):
             "five": builder.buildValue({"XPlacement": 500}),
             "six": builder.buildValue({"YPlacement": -6}),
         }, self.GLYPHMAP)
-        self.assertEqual(''.join([getXML(t.toXML) for t in subtables[:3]]),
+        self.assertEqual(''.join([getXML(t.toXML) for t in subtables]),
                          '<SinglePos Format="1">'
                          '  <Coverage>'
                          '    <Glyph value="one"/>'
@@ -160,6 +159,39 @@ class BuilderTest(unittest.TestCase):
                          '  </Coverage>'
                          '  <ValueFormat value="2"/>'
                          '  <Value YPlacement="-6"/>'
+                         '</SinglePos>')
+
+    def test_buildSinglePosSubtable_format1(self):
+        subtable = builder.buildSinglePosSubtable({
+            "one": builder.buildValue({"XPlacement": 777}),
+            "two": builder.buildValue({"XPlacement": 777}),
+        }, self.GLYPHMAP)
+        self.assertEqual(getXML(subtable.toXML),
+                         '<SinglePos Format="1">'
+                         '  <Coverage>'
+                         '    <Glyph value="one"/>'
+                         '    <Glyph value="two"/>'
+                         '  </Coverage>'
+                         '  <ValueFormat value="1"/>'
+                         '  <Value XPlacement="777"/>'
+                         '</SinglePos>')
+
+    def test_buildSinglePosSubtable_format2(self):
+        subtable = builder.buildSinglePosSubtable({
+            "one": builder.buildValue({"XPlacement": 777}),
+            "two": builder.buildValue({"YPlacement": -888}),
+        }, self.GLYPHMAP)
+        self.maxDiff = None
+        self.assertEqual(getXML(subtable.toXML),
+                         '<SinglePos Format="2">'
+                         '  <Coverage>'
+                         '    <Glyph value="one"/>'
+                         '    <Glyph value="two"/>'
+                         '  </Coverage>'
+                         '  <ValueFormat value="3"/>'
+                         '  <!-- ValueCount=2 -->'
+                         '  <Value index="0" XPlacement="777"/>'
+                         '  <Value index="1" YPlacement="-888"/>'
                          '</SinglePos>')
 
     def test_buildValue(self):

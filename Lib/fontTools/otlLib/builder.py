@@ -134,9 +134,8 @@ def buildSinglePos(mapping, glyphMap):
     # a SinglePos format 1 subtable; that is the most compact form.
     for key, glyphs in coverages.items():
         if len(glyphs) > 1:
-            valueFormat, value = key[0], values[key]
-            result.append(_buildSinglePosFormat1(
-                valueFormat, glyphs, value, glyphMap))
+            format1Mapping = {g: values[key] for g in glyphs}
+            result.append(buildSinglePosSubtable(format1Mapping, glyphMap))
             handled.add(key)
 
     # In the remaining ValueRecords, look for those whose valueFormat
@@ -146,8 +145,7 @@ def buildSinglePos(mapping, glyphMap):
         f2 = [k for k in keys if k not in handled]
         if len(f2) > 1:
             format2Mapping = {coverages[k][0]: values[k] for k in f2}
-            result.append(_buildSinglePosFormat2(
-                valueFormat, format2Mapping, glyphMap))
+            result.append(buildSinglePosSubtable(format2Mapping, glyphMap))
             handled.update(f2)
 
     # The remaining ValueRecords are singletons in the sense that
@@ -155,9 +153,9 @@ def buildSinglePos(mapping, glyphMap):
     # is unique as well. We encode these in format 1 again.
     for key, glyphs in coverages.items():
         if key not in handled:
-            valueFormat, value = key[0], values[key]
-            result.append(_buildSinglePosFormat1(
-                valueFormat, glyphs, value, glyphMap))
+            assert len(glyphs) == 1, glyphs
+            st = buildSinglePosSubtable({glyphs[0]: values[key]}, glyphMap)
+            result.append(st)
 
     # When the OpenType layout engine traverses the subtables, it will
     # stop after the first matching subtable.  Therefore, we sort the
@@ -171,20 +169,22 @@ def buildSinglePos(mapping, glyphMap):
     return result
 
 
-def _buildSinglePosFormat1(valueFormat, glyphs, value, glyphMap):
-    t = ot.SinglePos()
-    t.Format, t.ValueFormat, t.Value = 1, valueFormat, value
-    t.Coverage = buildCoverage(glyphs, glyphMap)
-    return t
-
-
-def _buildSinglePosFormat2(valueFormat, mapping, glyphMap):
-    t = ot.SinglePos()
-    t.Format, t.ValueFormat = 2, valueFormat
-    t.Coverage = buildCoverage(mapping.keys(), glyphMap)
-    t.Value = [mapping[g] for g in t.Coverage.glyphs]
-    t.ValueCount = len(t.Value)
-    return t
+def buildSinglePosSubtable(values, glyphMap):
+    """{glyphName: otBase.ValueRecord} --> otTables.SinglePos"""
+    self = ot.SinglePos()
+    self.Coverage = buildCoverage(values.keys(), glyphMap)
+    valueRecords = [values[g] for g in self.Coverage.glyphs]
+    self.ValueFormat = 0
+    for v in valueRecords:
+        self.ValueFormat |= v.getFormat()
+    if all(v == valueRecords[0] for v in valueRecords):
+        self.Format = 1
+        self.Value = valueRecords[0]
+    else:
+        self.Format = 2
+        self.Value = valueRecords
+        self.ValueCount = len(self.Value)
+    return self
 
 
 def _getSinglePosTableKey(subtable, glyphMap):
