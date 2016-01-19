@@ -40,7 +40,7 @@
       <Lookup index="0">
         <!-- LookupType=1 -->
         <LookupFlag value="0"/>
-        <!-- SubTableCount=7 -->
+        <!-- SubTableCount=8 -->
         <SinglePos index="0" Format="1">
           <Coverage>
             <Glyph value="one"/>
@@ -124,6 +124,13 @@
           </Value>
         </SinglePos>
         <SinglePos index="6" Format="1">
+          <Coverage>
+            <Glyph value="zero"/>
+          </Coverage>
+          <ValueFormat value="0"/>
+          <Value/>
+        </SinglePos>
+        <SinglePos index="7" Format="1">
           <Coverage>
             <Glyph value="C"/>
           </Coverage>

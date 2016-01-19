@@ -716,15 +716,6 @@ def makeOpenTypeAnchor(anchor):
                            deviceX, deviceY)
 
 
-def getValueRecordFormat(vr):
-    vrMask = 0
-    if vr is not None:
-        for mask, name, _, _ in otBase.valueRecordFormat:
-            if getattr(vr, name, 0) != 0:
-                vrMask |= mask
-    return vrMask
-
-
 _VALUEREC_ATTRS = {
     name[0].lower() + name[1:]: (name, isDevice)
     for _, name, isDevice, _ in otBase.valueRecordFormat
@@ -743,11 +734,8 @@ def makeOpenTypeValueRecord(v):
         if val:
             vr[otName] = otl.buildDevice(val) if isDevice else val
 
-    if vr:
-        valRec = otl.buildValue(vr)
-        return valRec, getValueRecordFormat(valRec)
-    else:
-        return None, 0
+    valRec = otl.buildValue(vr)
+    return valRec, valRec.getFormat()
 
 
 class LookupBuilder(object):

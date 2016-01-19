@@ -32,8 +32,15 @@
       <Lookup index="0">
         <!-- LookupType=1 -->
         <LookupFlag value="0"/>
-        <!-- SubTableCount=1 -->
+        <!-- SubTableCount=2 -->
         <SinglePos index="0" Format="1">
+          <Coverage>
+            <Glyph value="zero"/>
+          </Coverage>
+          <ValueFormat value="0"/>
+          <Value/>
+        </SinglePos>
+        <SinglePos index="1" Format="1">
           <Coverage>
             <Glyph value="four"/>
           </Coverage>
