@@ -172,7 +172,6 @@ class BuilderTest(unittest.TestCase):
                          '    <Glyph value="zero"/>'
                          '  </Coverage>'
                          '  <ValueFormat value="0"/>'
-                         '  <Value/>'
                          '</SinglePos>')
 
     def test_buildSinglePosSubtable_format1(self):

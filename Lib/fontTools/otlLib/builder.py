@@ -179,7 +179,8 @@ def buildSinglePosSubtable(values, glyphMap):
         self.ValueFormat |= v.getFormat()
     if all(v == valueRecords[0] for v in valueRecords):
         self.Format = 1
-        self.Value = valueRecords[0]
+        if self.ValueFormat != 0:
+            self.Value = valueRecords[0]
     else:
         self.Format = 2
         self.Value = valueRecords
