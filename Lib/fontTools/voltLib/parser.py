@@ -353,7 +353,16 @@ class Parser(object):
                                       component, locked, pos)
         return anchor
 
+    def parse_adjust_by_(self):
+        self.advance_lexer_()
+        assert self.is_cur_keyword_("ADJUST_BY")
+        adjustment = self.expect_number_()
+        self.expect_keyword_("AT")
+        size = self.expect_number_()
+        return adjustment, size
+
     def parse_pos_(self):
+        # VOLT syntax doesn't seem to take device Y advance
         self.advance_lexer_()
         location = self.cur_token_location_
         assert self.is_cur_keyword_("POS"), location
@@ -367,22 +376,19 @@ class Parser(object):
             self.advance_lexer_()
             adv = self.expect_number_()
             while self.next_token_ == "ADJUST_BY":
-                adjustment = self.expect_number_()
-                size = self.expect_number_()
+                adjustment, size = self.parse_adjust_by_()
                 adv_adjust_by[size] = adjustment
         if self.next_token_ == "DX":
             self.advance_lexer_()
             dx = self.expect_number_()
             while self.next_token_ == "ADJUST_BY":
-                adjustment = self.expect_number_()
-                size = self.expect_number_()
+                adjustment, size = self.parse_adjust_by_()
                 dx_adjust_by[size] = adjustment
         if self.next_token_ == "DY":
             self.advance_lexer_()
             dy = self.expect_number_()
             while self.next_token_ == "ADJUST_BY":
-                adjustment = self.expect_number_()
-                size = self.expect_number_()
+                adjustment, size = self.parse_adjust_by_()
                 dy_adjust_by[size] = adjustment
         self.expect_keyword_("END_POS")
         return (adv, dx, dy, adv_adjust_by, dx_adjust_by, dy_adjust_by)

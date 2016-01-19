@@ -592,6 +592,16 @@ class ParserTest(unittest.TestCase):
              False, (None, 0, 450, {}, {}, {}))
         )
 
+    def test_anchor_adjust_device(self):
+        [anchor] = self.parse(
+            'DEF_ANCHOR "MARK_top" ON 123 GLYPH diacglyph '
+            'COMPONENT 1 AT POS DX 0 DY 456 ADJUST_BY 12 AT 34 ADJUST_BY 56 AT 78 END_POS END_ANCHOR'
+        ).statements
+        self.assertEqual(
+            (anchor.name, anchor.pos),
+            ("MARK_top", (None, 0, 456, {}, {}, {34: 12, 78: 56}))
+        )
+
     def test_ppem(self):
         [grid_ppem, pres_ppem, ppos_ppem] = self.parse(
             'GRID_PPEM 20\n'
