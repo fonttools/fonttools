@@ -220,3 +220,23 @@ def buildValue(value):
     for k, v in value.items():
         setattr(self, k, v)
     return self
+
+
+# GDEF
+
+def buildAttachList(attachPoints, glyphMap):
+    """{"glyphName": [4, 23]} --> otTables.AttachList"""
+    self = ot.AttachList()
+    self.Coverage = buildCoverage(attachPoints.keys(), glyphMap)
+    self.AttachPoint = [_buildAttachPoint(attachPoints[g])
+                        for g in self.Coverage.glyphs]
+    self.GlyphCount = len(self.AttachPoint)
+    return self
+
+
+def _buildAttachPoint(points):
+    """[4, 23, 41] --> otTables.AttachPoint"""
+    self = ot.AttachPoint()
+    self.PointIndex = sorted(points)
+    self.PointCount = len(points)
+    return self

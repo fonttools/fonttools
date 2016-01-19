@@ -162,7 +162,9 @@ class Builder(object):
     def buildGDEF(self):
         gdef = otTables.GDEF()
         gdef.GlyphClassDef = self.buildGDEFGlyphClassDef_()
-        gdef.AttachList = self.buildGDEFAttachList_()
+        gdef.AttachList = (
+            otl.buildAttachList(self.attachPoints_, self.glyphMap)
+            if self.attachPoints_ else None)
         gdef.LigCaretList = self.buildGDEFLigCaretList_()
         gdef.MarkAttachClassDef = self.buildGDEFMarkAttachClassDef_()
         gdef.MarkGlyphSetsDef = self.buildGDEFMarkGlyphSetsDef_()
@@ -174,22 +176,6 @@ class Builder(object):
             return result
         else:
             return None
-
-    def buildGDEFAttachList_(self):
-        glyphs = sorted(self.attachPoints_.keys(), key=self.font.getGlyphID)
-        if not glyphs:
-            return None
-        result = otTables.AttachList()
-        result.Coverage = otTables.Coverage()
-        result.Coverage.glyphs = glyphs
-        result.GlyphCount = len(glyphs)
-        result.AttachPoint = []
-        for glyph in glyphs:
-            pt = otTables.AttachPoint()
-            pt.PointIndex = sorted(self.attachPoints_[glyph])
-            pt.PointCount = len(pt.PointIndex)
-            result.AttachPoint.append(pt)
-        return result
 
     def buildGDEFGlyphClassDef_(self):
         inferredGlyphClass = {}

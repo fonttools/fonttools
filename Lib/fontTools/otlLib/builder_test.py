@@ -53,6 +53,28 @@ class BuilderTest(unittest.TestCase):
                          '  </YDeviceTable>'
                          '</Anchor>')
 
+    def test_buildAttachList(self):
+        attachList = builder.buildAttachList({
+            "zero": [23, 7], "one": [1],
+        }, self.GLYPHMAP)
+        self.assertEqual(getXML(attachList.toXML),
+                         '<AttachList>'
+                         '  <Coverage>'
+                         '    <Glyph value="zero"/>'
+                         '    <Glyph value="one"/>'
+                         '  </Coverage>'
+                         '  <!-- GlyphCount=2 -->'
+                         '  <AttachPoint index="0">'
+                         '    <!-- PointCount=2 -->'
+                         '    <PointIndex index="0" value="7"/>'
+                         '    <PointIndex index="1" value="23"/>'
+                         '  </AttachPoint>'
+                         '  <AttachPoint index="1">'
+                         '    <!-- PointCount=1 -->'
+                         '    <PointIndex index="0" value="1"/>'
+                         '  </AttachPoint>'
+                         '</AttachList>')
+
     def test_buildCoverage(self):
         cov = builder.buildCoverage({"two", "four"}, {"two": 2, "four": 4})
         self.assertEqual(getXML(cov.toXML),
