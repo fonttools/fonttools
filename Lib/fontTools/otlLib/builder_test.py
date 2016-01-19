@@ -7,7 +7,7 @@ import unittest
 
 class BuilderTest(unittest.TestCase):
     GLYPHS = ".notdef space zero one two three four five six".split()
-    GLYPHMAP = {id: name for name, id in enumerate(GLYPHS)}
+    GLYPHMAP = {name: num for num, name in enumerate(GLYPHS)}
 
     ANCHOR1 = builder.buildAnchor(11, -11)
     ANCHOR2 = builder.buildAnchor(22, -22)
