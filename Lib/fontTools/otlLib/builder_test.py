@@ -75,6 +75,18 @@ class BuilderTest(unittest.TestCase):
                          '  </AttachPoint>'
                          '</AttachList>')
 
+    def test_buildAttachList_empty(self):
+        self.assertIsNone(builder.buildAttachList({}, self.GLYPHMAP))
+
+    def test_buildAttachPoint(self):
+        attachPoint = builder.buildAttachPoint([7, 3])
+        self.assertEqual(getXML(attachPoint.toXML),
+                         '<AttachPoint>'
+                         '  <!-- PointCount=2 -->'
+                         '  <PointIndex index="0" value="3"/>'
+                         '  <PointIndex index="1" value="7"/>'
+                         '</AttachPoint>')
+
     def test_buildCoverage(self):
         cov = builder.buildCoverage({"two", "four"}, {"two": 2, "four": 4})
         self.assertEqual(getXML(cov.toXML),

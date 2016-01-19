@@ -162,9 +162,8 @@ class Builder(object):
     def buildGDEF(self):
         gdef = otTables.GDEF()
         gdef.GlyphClassDef = self.buildGDEFGlyphClassDef_()
-        gdef.AttachList = (
+        gdef.AttachList = \
             otl.buildAttachList(self.attachPoints_, self.glyphMap)
-            if self.attachPoints_ else None)
         gdef.LigCaretList = self.buildGDEFLigCaretList_()
         gdef.MarkAttachClassDef = self.buildGDEFMarkAttachClassDef_()
         gdef.MarkGlyphSetsDef = self.buildGDEFMarkGlyphSetsDef_()
