@@ -139,10 +139,7 @@ class NameRecord(object):
 		return self.getEncoding(None) in ['utf_16_be', 'ucs2be', 'ascii', 'latin1']
 
 	def __str__(self):
-		try:
-			return self.toUnicode()
-		except UnicodeDecodeError:
-			return str(self.string)
+		return self.toStr(errors='backslashreplace')
 
 	def isUnicode(self):
 		return (self.platformID == 0 or
@@ -211,6 +208,14 @@ class NameRecord(object):
 		UnicodeEncodeError exception.
 		"""
 		return tobytes(self.string, encoding=self.getEncoding(), errors=errors)
+
+	def toStr(self, errors='strict'):
+		if str == bytes:
+			# python 2
+			return self.toBytes(errors)
+		else:
+			# python 3
+			return self.toUnicode(errors)
 
 	def toXML(self, writer, ttFont):
 		try:
