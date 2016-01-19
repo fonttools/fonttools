@@ -71,6 +71,7 @@ setup(
 			"fontTools.ttLib",
 			"fontTools.t1Lib",
 			"fontTools.subset",
+			"fontTools.otlLib",
 			"fontTools.ttLib.tables",
 		],
 		py_modules = ['sstruct', 'xmlWriter'],
