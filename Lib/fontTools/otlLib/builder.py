@@ -117,6 +117,103 @@ def buildDevice(device):
     return self
 
 
+def buildSinglePos(mapping, glyphMap):
+    """{"glyph": ValueRecord} --> [otTables.SinglePos*]"""
+    result, handled = [], set()
+    # In SinglePos format 1, the covered glyphs all share the same ValueRecord.
+    # In format 2, each glyph has its own ValueRecord, but these records
+    # all have the same properties (eg., all have an X but no Y placement).
+    coverages, masks, values = {}, {}, {}
+    for glyph, value in mapping.items():
+        key = _getSinglePosValueKey(value)
+        coverages.setdefault(key, []).append(glyph)
+        masks.setdefault(key[0], []).append(key)
+        values[key] = value
+
+    # If a ValueRecord is shared between multiple glyphs, we generate
+    # a SinglePos format 1 subtable; that is the most compact form.
+    for key, glyphs in coverages.items():
+        if len(glyphs) > 1:
+            valueFormat, value = key[0], values[key]
+            result.append(_buildSinglePosFormat1(
+                valueFormat, glyphs, value, glyphMap))
+            handled.add(key)
+
+    # In the remaining ValueRecords, look for those whose valueFormat
+    # (the set of used properties) is shared between multiple records.
+    # These will get encoded in format 2.
+    for valueFormat, keys in masks.items():
+        f2 = [k for k in keys if k not in handled]
+        if len(f2) > 1:
+            format2Mapping = {coverages[k][0]: values[k] for k in f2}
+            result.append(_buildSinglePosFormat2(
+                valueFormat, format2Mapping, glyphMap))
+            handled.update(f2)
+
+    # The remaining ValueRecords are singletons in the sense that
+    # they are only used by a single glyph, and their valueFormat
+    # is unique as well. We encode these in format 1 again.
+    for key, glyphs in coverages.items():
+        if key not in handled:
+            valueFormat, value = key[0], values[key]
+            result.append(_buildSinglePosFormat1(
+                valueFormat, glyphs, value, glyphMap))
+
+    # When the OpenType layout engine traverses the subtables, it will
+    # stop after the first matching subtable.  Therefore, we sort the
+    # resulting subtables by decreasing coverage size; this increases
+    # the chance that the layout engine can do an early exit. (Of course,
+    # this would only be true if all glyphs were equally frequent, which
+    # is not really the case; but we do not know their distribution).
+    # If two subtables cover the same number of glyphs, we sort them
+    # by glyph ID so that our output is deterministic.
+    result.sort(key=lambda t: _getSinglePosTableKey(t, glyphMap))
+    return result
+
+
+def _buildSinglePosFormat1(valueFormat, glyphs, value, glyphMap):
+    t = ot.SinglePos()
+    t.Format, t.ValueFormat, t.Value = 1, valueFormat, value
+    t.Coverage = buildCoverage(glyphs, glyphMap)
+    return t
+
+
+def _buildSinglePosFormat2(valueFormat, mapping, glyphMap):
+    t = ot.SinglePos()
+    t.Format, t.ValueFormat = 2, valueFormat
+    t.Coverage = buildCoverage(mapping.keys(), glyphMap)
+    t.Value = [mapping[g] for g in t.Coverage.glyphs]
+    t.ValueCount = len(t.Value)
+    return t
+
+
+def _getSinglePosTableKey(subtable, glyphMap):
+    assert isinstance(subtable, ot.SinglePos), subtable
+    glyphs = subtable.Coverage.glyphs
+    return (-len(glyphs), glyphMap[glyphs[0]])
+
+
+def _getSinglePosValueKey(valueRecord):
+    """otBase.ValueRecord --> (2, ("YPlacement": 12))"""
+    assert isinstance(valueRecord, ValueRecord), valueRecord
+    valueFormat, result = 0, []
+    for name, value in valueRecord.__dict__.items():
+        if isinstance(value, ot.Device):
+            result.append((name, _makeDeviceTuple(value)))
+        else:
+            result.append((name, value))
+        valueFormat |= valueRecordFormatDict[name][0]
+    result.sort()
+    result.insert(0, valueFormat)
+    return tuple(result)
+
+
+def _makeDeviceTuple(device):
+    """otTables.Device --> tuple, for making device tables unique"""
+    return (device.DeltaFormat, device.StartSize, device.EndSize,
+            tuple(device.DeltaValue))
+
+
 def buildValue(value):
     self = ValueRecord()
     for k, v in value.items():
