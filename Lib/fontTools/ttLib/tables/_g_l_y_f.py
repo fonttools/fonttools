@@ -580,8 +580,7 @@ class Glyph(object):
 		deltas = self.coordinates.copy()
 		if deltas.isFloat():
 			# Warn?
-			xPoints = [int(round(x)) for x in xPoints]
-			yPoints = [int(round(y)) for y in xPoints]
+			deltas.toInt()
 		deltas.absoluteToRelative()
 
 		# TODO(behdad): Add a configuration option for this?
@@ -1146,8 +1145,8 @@ class GlyphComponent(object):
 
 class GlyphCoordinates(object):
 
-	def __init__(self, iterable=[]):
-		self._a = array.array("h")
+	def __init__(self, iterable=[], typecode="h"):
+		self._a = array.array(typecode)
 		self.extend(iterable)
 
 	def isFloat(self):
@@ -1171,7 +1170,7 @@ class GlyphCoordinates(object):
 		return GlyphCoordinates([(0,0)] * count)
 
 	def copy(self):
-		c = GlyphCoordinates()
+		c = GlyphCoordinates(typecode=self._a.typecode)
 		c._a.extend(self._a)
 		return c
 
@@ -1206,6 +1205,14 @@ class GlyphCoordinates(object):
 		for p in iterable:
 			p = self._checkFloat(p)
 			self._a.extend(p)
+
+	def toInt(self):
+		if not self.isFloat():
+			return
+		a = array.array("h")
+		for n in self._a:
+			a.append(int(round(n)))
+		self._a = a			
 
 	def relativeToAbsolute(self):
 		a = self._a
