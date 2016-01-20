@@ -10,6 +10,37 @@ def buildCoverage(glyphs, glyphMap):
     return self
 
 
+LOOKUP_FLAG_RIGHT_TO_LEFT = 0x0001
+LOOKUP_FLAG_IGNORE_BASE_GLYPHS = 0x0002
+LOOKUP_FLAG_IGNORE_LIGATURES = 0x0004
+LOOKUP_FLAG_IGNORE_MARKS = 0x0008
+LOOKUP_FLAG_USE_MARK_FILTERING_SET = 0x0010
+
+
+def buildLookup(subtables, flags=0, markFilterSet=None):
+    if not subtables:
+        return None
+    assert all(t.LookupType == subtables[0].LookupType for t in subtables), \
+        ("all subtables must have the same LookupType; got %s" %
+         repr([t.LookupType for t in subtables]))
+    self = ot.Lookup()
+    self.LookupType = subtables[0].LookupType
+    self.LookupFlag = flags
+    self.SubTable = subtables
+    self.SubTableCount = len(subtables)
+    if markFilterSet is not None:
+        assert self.LookupFlag & LOOKUP_FLAG_USE_MARK_FILTERING_SET, \
+            ("if markFilterSet is not None, flags must set "
+             "LOOKUP_FLAG_USE_MARK_FILTERING_SET; flags=0x%04x" % flags)
+        assert isinstance(markFilterSet, int), markFilterSet
+        self.MarkFilteringSet = markFilterSet
+    else:
+        assert (self.LookupFlag & LOOKUP_FLAG_USE_MARK_FILTERING_SET) == 0, \
+            ("if markFilterSet is None, flags must not set "
+             "LOOKUP_FLAG_USE_MARK_FILTERING_SET; flags=0x%04x" % flags)
+    return self
+
+
 # GSUB
 
 

@@ -14,6 +14,13 @@ class BuilderTest(unittest.TestCase):
     ANCHOR2 = builder.buildAnchor(22, -22)
     ANCHOR3 = builder.buildAnchor(33, -33)
 
+    def __init__(self, methodName):
+        unittest.TestCase.__init__(self, methodName)
+        # Python 3 renamed assertRaisesRegexp to assertRaisesRegex,
+        # and fires deprecation warnings if a program uses the old name.
+        if not hasattr(self, "assertRaisesRegex"):
+            self.assertRaisesRegex = self.assertRaisesRegexp
+
     def test_buildAnchor_format1(self):
         anchor = builder.buildAnchor(23, 42)
         self.assertEqual(getXML(anchor.toXML),
@@ -255,6 +262,65 @@ class BuilderTest(unittest.TestCase):
                          '    <CaretValuePoint value="2"/>'
                          '  </CaretValue>'
                          '</LigGlyph>')
+
+    def test_buildLookup(self):
+        s1 = builder.buildSingleSubst({"one": "two"})
+        s2 = builder.buildSingleSubst({"three": "four"})
+        lookup = builder.buildLookup([s1, s2], flags=7)
+        self.assertEqual(getXML(lookup.toXML),
+                         '<Lookup>'
+                         '  <!-- LookupType=1 -->'
+                         '  <LookupFlag value="7"/>'
+                         '  <!-- SubTableCount=2 -->'
+                         '  <SingleSubst index="0">'
+                         '    <Substitution in="one" out="two"/>'
+                         '  </SingleSubst>'
+                         '  <SingleSubst index="1">'
+                         '    <Substitution in="three" out="four"/>'
+                         '  </SingleSubst>'
+                         '</Lookup>')
+
+    def test_buildLookup_badFlags(self):
+        s = builder.buildSingleSubst({"one": "two"})
+        self.assertRaisesRegex(
+            AssertionError, "if markFilterSet is None, "
+            "flags must not set LOOKUP_FLAG_USE_MARK_FILTERING_SET; "
+            "flags=0x0010",
+            builder.buildLookup, [s],
+            builder.LOOKUP_FLAG_USE_MARK_FILTERING_SET, None)
+        self.assertRaisesRegex(
+            AssertionError, "if markFilterSet is not None, "
+            "flags must set LOOKUP_FLAG_USE_MARK_FILTERING_SET; "
+            "flags=0x0004",
+            builder.buildLookup, [s],
+            builder.LOOKUP_FLAG_IGNORE_LIGATURES, 777)
+
+    def test_buildLookup_conflictingSubtableTypes(self):
+        s1 = builder.buildSingleSubst({"one": "two"})
+        s2 = builder.buildAlternateSubst({"one": ["two", "three"]})
+        self.assertRaisesRegex(
+            AssertionError, "all subtables must have the same LookupType",
+            builder.buildLookup, [s1, s2])
+
+    def test_buildLookup_noSubtables(self):
+        self.assertIsNone(builder.buildLookup([]))
+        self.assertIsNone(builder.buildLookup(None))
+
+    def test_buildLookup_markFilterSet(self):
+        s = builder.buildSingleSubst({"one": "two"})
+        flags = (builder.LOOKUP_FLAG_RIGHT_TO_LEFT |
+                 builder.LOOKUP_FLAG_USE_MARK_FILTERING_SET)
+        lookup = builder.buildLookup([s], flags, markFilterSet=999)
+        self.assertEqual(getXML(lookup.toXML),
+                         '<Lookup>'
+                         '  <!-- LookupType=1 -->'
+                         '  <LookupFlag value="17"/>'
+                         '  <!-- SubTableCount=1 -->'
+                         '  <SingleSubst index="0">'
+                         '    <Substitution in="one" out="two"/>'
+                         '  </SingleSubst>'
+                         '  <MarkFilteringSet value="999"/>'
+                         '</Lookup>')
 
     def test_buildMarkGlyphSetsDef(self):
         marksets = builder.buildMarkGlyphSetsDef(

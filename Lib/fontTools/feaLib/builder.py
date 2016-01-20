@@ -714,14 +714,7 @@ class LookupBuilder(object):
         return {}
 
     def buildLookup_(self, subtables):
-        lookup = otTables.Lookup()
-        lookup.LookupFlag = self.lookupflag
-        lookup.LookupType = self.lookup_type
-        lookup.SubTable = subtables
-        lookup.SubTableCount = len(subtables)
-        if self.markFilterSet is not None:
-            lookup.MarkFilteringSet = self.markFilterSet
-        return lookup
+        return otl.buildLookup(subtables, self.lookupflag, self.markFilterSet)
 
     def buildMarkClasses_(self, marks):
         """{"cedilla": ("BOTTOM", ast.Anchor), ...} --> {"BOTTOM":0, "TOP":1}
