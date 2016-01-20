@@ -301,7 +301,7 @@ def languageSystems(state, gpos):
 
 # GDEF
 
-def classeDefs(classDefs, classNames):
+def classeDefs(classDefs, classNames, foundClasses=None):
     lines = []
     classes = OrderedDict
     for name, i in classDefs.items():
@@ -310,6 +310,8 @@ def classeDefs(classDefs, classNames):
         className = classNames[i]
         if className not in classes:
             classes[className] = []
+            if foundClasses
+                foundClasses.append(i)
         classes[className].append(name)
     for className in classes:
         lines.append('@{0} = [ {1} ];'.format(className, ' '.join(classes[className])))
@@ -325,6 +327,70 @@ def attachList(AttachList):
                 lines.append('  Attach {0} {1};', glyph, point)
     return lines;
 
+def ligCaretList(ligCaretList):
+    lines = []
+    for idx, glyph in enumerate(ligCaretList.Coverage.glyphs):
+        ligGlyph = ligCaretList.LigGlyph[idx]
+        formats = list[{cv.Format for cv in ligGlyph.CaretValue}]
+        assert len(formats) = 1, 'Can\'t use different CaretValue formats in one LigatureCaret entry'
+        caretsFormat = formats[0]
+        if caretsFormat == 1:
+            # Format == 1: Design units only
+            # LigatureCaretByPos <glyph|glyphclass> <caret position value>+;
+            values = [cv.Coordinate for cv in ligGlyph.CaretValue]
+            formatString = '  LigatureCaretByPos {0} {1};'
+        elif caretsFormat == 2:
+            # Format == 2: Contour point
+            values = [cv.CaretValuePoint for cv in ligGlyph.CaretValue]
+            formatString = '  LigatureCaretByIndex {0} {1};'
+        elif caretsFormat == 3:
+            # Format == 3: Design units plus Device table
+            # LigatureCaretbyDev [* Currently not implemented. ]
+            # see http://www.adobe.com/devnet/opentype/afdko/topic_feature_file_syntax.html#9.b
+            # would probbaly look like this:
+            # LigatureCaretbyDev 23 <device 11 -1, 12 -1> 42 <device 11 -80, 12 -11>
+            # or so:
+            # LigatureCaretbyDev 23 42 <device 11 -1, 12 -1> <device 11 -80, 12 -11>
+            # There is also a Null device: <device NULL>
+            # A generic DeviceTable formatting function is indicated, because
+            # device tables are a reused type in fea:
+            # http://www.adobe.com/devnet/opentype/afdko/topic_feature_file_syntax.html#2.e.iii
+            # But: "[ Currently not implemented. ]"
+            # CaretValue.Coordinate, CaretValue.DeviceTable
+            values = ['[* Currently not implemented. ]']
+            formatString = '# LigatureCaretbyDev {0} {1};'
+        lines.append(formatString.format(glyph, None or ' '.join(values)))
+    return lines
+
+
+FIXME:
+    implement
+    def getUniqueName(self, is, baseName):
+
+FIXME: this is a stub-> needs a place to live
+def getStatus(registry, item, requiredState=None):
+    # If there are any, the "True" values trump the "False" values
+    # Thus, when requiredState is None and we check for both key types
+    # i.e. (item, True) and (item, False) it's more likeley that the
+    # item is going to be printed. If a diverse answer it needed for
+    # the different requiredStates then this function should be called
+    # with an explicit requiredState
+    noEntry = (None, None)
+    if requiredState is not None:
+        return registry.get((item, requiredState), noEntry)
+
+    result = list(noEntry)
+    for req in (True, False):
+        key = (item, req)
+        printIt, required = registry.get(key, noEntry)
+        result[0] = printIt or result[0]
+        result[1] = required or result[0]
+        if result[0] and result[1]:
+            # the result won't change anymore
+            break
+    return tuple(result)
+
+
 def printGDEF(table, getStatus, getUniqueName, print=print)
     printTable, tableRequired = getStatus(table, False)
     if not printTable:
@@ -332,80 +398,93 @@ def printGDEF(table, getStatus, getUniqueName, print=print)
 
     print('\n#### Table {0} ####\n'.format(table.tableTag))
 
-    markAttachClassDefs = table.table.MarkAttachClassDef.classDefs
-    markAttachClassIDs = set(markAttachClassDefs.values())
-    classNames = {}
-    for markAttachClassID in markAttachClassIDs:
-        if markAttachClassID == 0: continue
-        # ad-hoc type to make it selectable
-        markAttachClassTuple = (markAttachmentClassDef, markAttachClassID)
-        for required in (True, False)
-            printClass, _ = getStatus(markAttachClassTuple, required):
+
+    if table.table.MarkAttachClassDef is not None:
+        markAttachClassDefs = table.table.MarkAttachClassDef.classDefs
+        markAttachClassIDs = set(markAttachClassDefs.values())
+        classNames = {}
+        for markAttachClassID in markAttachClassIDs:
+            if markAttachClassID == 0: continue
+            # ad-hoc type to make it selectable
+            markAttachClassTuple = (markAttachmentClassDef, markAttachClassID)
+            printClass, _ = getStatus(markAttachClassTuple):
             if printClass:
                 classNames[markAttachClassID] = getUniqueName(markAttachClassID, 'MarkAttachClass')
-                break;
-    if len(classNames):
-        lines = classeDefs(markAttachClassDefs, classNames):
-        print('# GDEF Mark Attachment Classes:\n')
-        print('\n'.join(lines))
+        if len(classNames):
+            lines = classeDefs(markAttachClassDefs, classNames):
+            print('# GDEF Mark Attachment Classes:\n')
+            print('\n'.join(lines))
 
-    if hasattr(table.table, 'MarkGlyphSetsDef'):
+    if hasattr(table.table, 'MarkGlyphSetsDef') \
+                    and table.table.MarkGlyphSetsDef is not None:
         lines = []
         for idx, coverage in enumerate(table.table.MarkGlyphSetsDef.Coverage):
-            for required in (True, False):
-                printClass, _ = getStatus(coverage, required)
-                if printClass:
-                    name = getUniqueName(idx, 'UseMarkFilteringSet')
-                    lines.append(classFromCoverage(coverage, name))
-                    break
+            printClass, _ = getStatus(coverage)
+            if printClass:
+                name = getUniqueName(idx, 'MarkGlyphSet')
+                lines.append(classFromCoverage(coverage, name))
         if len(lines):
-            lines = classeDefs(markAttachClassDefs, classNames):
             print('# GDEF Mark Filtering Sets:\n')
             print('\n'.join(lines))
 
     gdefLines = []
+
+    if table.table.GlyphClassDef is not None:
+        printClass, _ = getStatus(table.table.GlyphClassDef):
+        if printClass:
+            classNames = {
+                1: 'GDEF_Base' # Base glyph (single character, spacing glyph)
+                2: 'GDEF_Ligature' # Ligature glyph (multiple character, spacing glyph)
+                3: 'GDEF_Mark' # Mark glyph (non-spacing combining glyph)
+                4: 'GDEF_Component' # Component glyph (part of single character, spacing glyph)
+            }
+            foundClasses = []
+            lines = classeDefs(table.table.GlyphClassDef, classNames, foundClasses=foundClasses)
+            if len(lines):
+                print('# GDEF Glyph Class Definitions:\n')
+                print('\n'.join(lines))
+                glyphClassDef = ['@{0}'.format(classNames[i])
+                        if i in foundClasses else '' for i in range(1,5)]
+                gdefLines.append('GlyphClassDef {0};'.format(','.join(glyphClassDef)))
+
     if table.table.AttachList is not None:
-        for required in (True, False):
-            printAttachList, _ = getStatus(table.table.AttachList, required)
-            if printAttachList:
-                lines = attachList(table.table.AttachList)
-                break
-        gdefLines.append('')
-        gdefLines += lines
+        printAttachList, _ = getStatus(table.table.AttachList)
+        if printAttachList:
+            gdefLines += attachList(table.table.AttachList)
 
-
-    MISSING:
-    self.validateLigCaretList
-    table.table.LigCaretList
-    see http://www.adobe.com/devnet/opentype/afdko/topic_feature_file_syntax.html#9.b
-
+    if table.table.LigCaretList is not None:
+        printLigCaretList, _ = getStatus(table.table.LigCaretList)
+        if printLigCaretList:
+            gdefLines += ligCaretList(table.table.LigCaretList)
 
     if len(gdefLines):
         print('table {0} {'.format(table.tableTag))
         print('\n'.join(gdefLines))
         print('} {0};\n'.format(table.tableTag))
 
+
+
+
+
 def printLookups(state, table, getStatus, getUniqueName, print=print)
     lookupNames = {}
     lookupTypes = {'GPOS': lookupTypesGPOS, 'GSUB': lookupTypesGSUB}[table.tableTag]
     for lookupIdx, lookup in enumerate(table.table.LookupList.Lookup)
-        for required in (False, True):
-            printLookup, _ = getStatus(lookup, required)
-            if not printLookup: continue
-                # FIXME: success can temporary be False until all lookup
-                # types have been implemented. Then remove it
-                # see also printFeatures
-                success, body = lookup(state, lookup, lookupTypes)
-                nameBase = lookupTypes[lookup.LookupType][1]
-                uniqueName = getUniqueName(nameBase, lookupIdx)
-                if !success:
-                    uniqueName = '# lookup type not implemented for {0}'.format(uniqueName);
-                    print(body)
-                else
-                    print('lookup {0} {{\n{1}\n}} {0};'.format(uniqueName, body))
-                lookupNames[lookupIdx] = uniqueName
-                print();
-            break # printing it once is enough
+        printLookup, _ = getStatus(lookup)
+        if not printLookup: continue
+            # FIXME: success can temporary be False until all lookup
+            # types have been implemented. Then remove it
+            # see also printFeatures
+            success, body = lookup(state, lookup, lookupTypes)
+            nameBase = lookupTypes[lookup.LookupType][1]
+            uniqueName = getUniqueName(nameBase, lookupIdx)
+            if !success:
+                uniqueName = '# lookup type not implemented for {0}'.format(uniqueName);
+                print(body)
+            else
+                print('lookup {0} {{\n{1}\n}} {0};'.format(uniqueName, body))
+            lookupNames[lookupIdx] = uniqueName
+            print();
         return lookupNames
 
 def printFeatures(features, lookupNames, indentation='  ', print=print):
