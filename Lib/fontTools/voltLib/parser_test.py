@@ -159,19 +159,6 @@ class ParserTest(unittest.TestCase):
                 'END_GROUP\n'
             ).statements
 
-    def test_def_group_groups_cyclic(self):
-        with self.assertRaisesRegex(
-                VoltLibError,
-                r'Group "Group1" includes itself.'):
-            [group1, group2] = self.parse(
-                'DEF_GROUP "Group1"\n'
-                'ENUM GROUP "Group2" END_ENUM\n'
-                'END_GROUP\n'
-                'DEF_GROUP "Group2"\n'
-                'ENUM GROUP "Group1" END_ENUM\n'
-                'END_GROUP\n'
-            ).statements
-
     def test_def_group_glyphs_and_group(self):
         [def_group1, def_group2] = self.parse(
             'DEF_GROUP "aaccented"\n'
