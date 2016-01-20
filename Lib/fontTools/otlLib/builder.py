@@ -258,3 +258,18 @@ def buildCaretValueForPoint(point):
     self.Format = 2
     self.CaretValuePoint = point
     return self
+
+
+def buildLigGlyph(coords, points):
+    """([500], [4]) --> otTables.LigGlyph; None for empty coords/points"""
+    carets = []
+    if coords:
+        carets.extend([buildCaretValueForCoord(c) for c in sorted(coords)])
+    if points:
+        carets.extend([buildCaretValueForPoint(p) for p in sorted(points)])
+    if not carets:
+        return None
+    self = ot.LigGlyph()
+    self.CaretCount = len(carets)
+    self.CaretValue = carets
+    return self

@@ -173,6 +173,35 @@ class BuilderTest(unittest.TestCase):
                          '  <DeltaValue value="[77, 0, 0, 0, 3]"/>'
                          '</Device>')
 
+    def test_buildLigGlyph_coords(self):
+        lig = builder.buildLigGlyph([500, 800], None)
+        self.assertEqual(getXML(lig.toXML),
+                         '<LigGlyph>'
+                         '  <!-- CaretCount=2 -->'
+                         '  <CaretValue index="0" Format="1">'
+                         '    <Coordinate value="500"/>'
+                         '  </CaretValue>'
+                         '  <CaretValue index="1" Format="1">'
+                         '    <Coordinate value="800"/>'
+                         '  </CaretValue>'
+                         '</LigGlyph>')
+
+    def test_buildLigGlyph_empty(self):
+        self.assertIsNone(builder.buildLigGlyph([], []))
+
+    def test_buildLigGlyph_None(self):
+        self.assertIsNone(builder.buildLigGlyph(None, None))
+
+    def test_buildLigGlyph_points(self):
+        lig = builder.buildLigGlyph(None, [2])
+        self.assertEqual(getXML(lig.toXML),
+                         '<LigGlyph>'
+                         '  <!-- CaretCount=1 -->'
+                         '  <CaretValue index="0" Format="2">'
+                         '    <CaretValuePoint value="2"/>'
+                         '  </CaretValue>'
+                         '</LigGlyph>')
+
     def test_buildSinglePos(self):
         subtables = builder.buildSinglePos({
             "one": builder.buildValue({"XPlacement": 500}),

@@ -216,16 +216,11 @@ class Builder(object):
         result.LigGlyphCount = len(glyphs)
         result.LigGlyph = []
         for glyph in glyphs:
-            ligGlyph = otTables.LigGlyph()
-            result.LigGlyph.append(ligGlyph)
-            ligGlyph.CaretValue = []
-            for caretPos in sorted(self.ligatureCaretByPos_.get(glyph, [])):
-                ligGlyph.CaretValue.append(
-                    otl.buildCaretValueForCoord(caretPos))
-            for point in sorted(self.ligatureCaretByIndex_.get(glyph, [])):
-                ligGlyph.CaretValue.append(
-                    otl.buildCaretValueForPoint(point))
-            ligGlyph.CaretCount = len(ligGlyph.CaretValue)
+            coords = self.ligatureCaretByPos_.get(glyph)
+            points = self.ligatureCaretByIndex_.get(glyph)
+            ligGlyph = otl.buildLigGlyph(coords, points)
+            if ligGlyph:
+                result.LigGlyph.append(ligGlyph)
         return result
 
     def buildGDEFMarkAttachClassDef_(self):
