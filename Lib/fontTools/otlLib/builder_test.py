@@ -6,7 +6,8 @@ import unittest
 
 
 class BuilderTest(unittest.TestCase):
-    GLYPHS = ".notdef space zero one two three four five six f_f_i c_t".split()
+    GLYPHS = (".notdef space zero one two three four five six f_f_i c_t "
+              "grave acute cedilla").split()
     GLYPHMAP = {name: num for num, name in enumerate(GLYPHS)}
 
     ANCHOR1 = builder.buildAnchor(11, -11)
@@ -254,6 +255,29 @@ class BuilderTest(unittest.TestCase):
                          '    <CaretValuePoint value="2"/>'
                          '  </CaretValue>'
                          '</LigGlyph>')
+
+    def test_buildMarkGlyphSetsDef(self):
+        marksets = builder.buildMarkGlyphSetsDef(
+            [{"acute", "grave"}, {"cedilla", "grave"}], self.GLYPHMAP)
+        self.assertEqual(getXML(marksets.toXML),
+                         '<MarkGlyphSetsDef>'
+                         '  <MarkSetTableFormat value="1"/>'
+                         '  <!-- MarkSetCount=2 -->'
+                         '  <Coverage index="0">'
+                         '    <Glyph value="grave"/>'
+                         '    <Glyph value="acute"/>'
+                         '  </Coverage>'
+                         '  <Coverage index="1">'
+                         '    <Glyph value="grave"/>'
+                         '    <Glyph value="cedilla"/>'
+                         '  </Coverage>'
+                         '</MarkGlyphSetsDef>')
+
+    def test_buildMarkGlyphSetsDef_empty(self):
+        self.assertIsNone(builder.buildMarkGlyphSetsDef([], self.GLYPHMAP))
+
+    def test_buildMarkGlyphSetsDef_None(self):
+        self.assertIsNone(builder.buildMarkGlyphSetsDef(None, self.GLYPHMAP))
 
     def test_buildSinglePos(self):
         subtables = builder.buildSinglePos({

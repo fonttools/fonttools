@@ -289,3 +289,14 @@ def buildLigGlyph(coords, points):
     self.CaretCount = len(carets)
     self.CaretValue = carets
     return self
+
+
+def buildMarkGlyphSetsDef(markSets, glyphMap):
+    """[{"acute","grave"}, {"caron","grave"}] --> otTables.MarkGlyphSetsDef"""
+    if not markSets:
+        return None
+    self = ot.MarkGlyphSetsDef()
+    self.MarkSetTableFormat = 1
+    self.Coverage = [buildCoverage(m, glyphMap) for m in markSets]
+    self.MarkSetCount = len(self.Coverage)
+    return self

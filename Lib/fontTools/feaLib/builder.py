@@ -215,19 +215,10 @@ class Builder(object):
         return result
 
     def buildGDEFMarkGlyphSetsDef_(self):
-        if not self.markFilterSets_:
-            return None
-        m = otTables.MarkGlyphSetsDef()
-        m.MarkSetTableFormat = 1
-        m.MarkSetCount = len(self.markFilterSets_)
-        m.Coverage = []
-        filterSets = [(id, glyphs)
-                      for (glyphs, id) in self.markFilterSets_.items()]
-        for i, glyphs in sorted(filterSets):
-            coverage = otTables.Coverage()
-            coverage.glyphs = sorted(glyphs, key=self.font.getGlyphID)
-            m.Coverage.append(coverage)
-        return m
+        sets = [None] * len(self.markFilterSets_)
+        for glyphs, id in self.markFilterSets_.items():
+            sets[id] = glyphs
+        return otl.buildMarkGlyphSetsDef(sets, self.glyphMap)
 
     def makeTable(self, tag):
         table = getattr(otTables, tag, None)()
