@@ -260,6 +260,22 @@ def buildCaretValueForPoint(point):
     return self
 
 
+def buildLigCaretList(coords, points, glyphMap):
+    """{"f_f_i":[300,600]}, {"c_t":[28]} --> otTables.LigCaretList, or None"""
+    glyphs = set(coords.keys()) if coords else set()
+    if points:
+        glyphs.update(points.keys())
+    carets = {g: buildLigGlyph(coords.get(g), points.get(g)) for g in glyphs}
+    carets = {g: c for g, c in carets.items() if c is not None}
+    if not carets:
+        return None
+    self = ot.LigCaretList()
+    self.Coverage = buildCoverage(carets.keys(), glyphMap)
+    self.LigGlyph = [carets[g] for g in self.Coverage.glyphs]
+    self.LigGlyphCount = len(self.LigGlyph)
+    return self
+
+
 def buildLigGlyph(coords, points):
     """([500], [4]) --> otTables.LigGlyph; None for empty coords/points"""
     carets = []

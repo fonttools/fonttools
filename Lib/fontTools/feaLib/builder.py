@@ -39,8 +39,8 @@ class Builder(object):
         self.fontRevision_ = None  # 2.71
         # for table 'GDEF'
         self.attachPoints_ = {}  # "a" --> {3, 7}
-        self.ligatureCaretByIndex_ = {}  # "f_f_i" --> {3, 7}
-        self.ligatureCaretByPos_ = {}  # "f_f_i" --> {300, 600}
+        self.ligCaretCoords_ = {}  # "f_f_i" --> {300, 600}
+        self.ligCaretPoints_ = {}  # "f_f_i" --> {3, 7}
         self.glyphClassDefs_ = {}  # "fi" --> (2, (file, line, column))
         self.markAttach_ = {}  # "acute" --> (4, (file, line, column))
         self.markAttachClassID_ = {}  # frozenset({"acute", "grave"}) --> 4
@@ -164,7 +164,9 @@ class Builder(object):
         gdef.GlyphClassDef = self.buildGDEFGlyphClassDef_()
         gdef.AttachList = \
             otl.buildAttachList(self.attachPoints_, self.glyphMap)
-        gdef.LigCaretList = self.buildGDEFLigCaretList_()
+        gdef.LigCaretList = \
+            otl.buildLigCaretList(self.ligCaretCoords_, self.ligCaretPoints_,
+                                  self.glyphMap)
         gdef.MarkAttachClassDef = self.buildGDEFMarkAttachClassDef_()
         gdef.MarkGlyphSetsDef = self.buildGDEFMarkGlyphSetsDef_()
         gdef.Version = 0x00010002 if gdef.MarkGlyphSetsDef else 1.0
@@ -203,25 +205,6 @@ class Builder(object):
             return result
         else:
             return None
-
-    def buildGDEFLigCaretList_(self):
-        glyphs = set(self.ligatureCaretByPos_.keys())
-        glyphs.update(self.ligatureCaretByIndex_.keys())
-        glyphs = sorted(glyphs, key=self.font.getGlyphID)
-        if not glyphs:
-            return None
-        result = otTables.LigCaretList()
-        result.Coverage = otTables.Coverage()
-        result.Coverage.glyphs = glyphs
-        result.LigGlyphCount = len(glyphs)
-        result.LigGlyph = []
-        for glyph in glyphs:
-            coords = self.ligatureCaretByPos_.get(glyph)
-            points = self.ligatureCaretByIndex_.get(glyph)
-            ligGlyph = otl.buildLigGlyph(coords, points)
-            if ligGlyph:
-                result.LigGlyph.append(ligGlyph)
-        return result
 
     def buildGDEFMarkAttachClassDef_(self):
         classDefs = {g: c for g, (c, _) in self.markAttach_.items()}
@@ -672,11 +655,11 @@ class Builder(object):
 
     def add_ligatureCaretByIndex_(self, location, glyphs, carets):
         for glyph in glyphs:
-            self.ligatureCaretByIndex_.setdefault(glyph, set()).update(carets)
+            self.ligCaretPoints_.setdefault(glyph, set()).update(carets)
 
     def add_ligatureCaretByPos_(self, location, glyphs, carets):
         for glyph in glyphs:
-            self.ligatureCaretByPos_.setdefault(glyph, set()).update(carets)
+            self.ligCaretCoords_.setdefault(glyph, set()).update(carets)
 
 
 def makeOpenTypeAnchor(anchor):

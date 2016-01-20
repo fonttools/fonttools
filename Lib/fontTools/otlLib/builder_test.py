@@ -6,7 +6,7 @@ import unittest
 
 
 class BuilderTest(unittest.TestCase):
-    GLYPHS = ".notdef space zero one two three four five six".split()
+    GLYPHS = ".notdef space zero one two three four five six f_f_i c_t".split()
     GLYPHMAP = {name: num for num, name in enumerate(GLYPHS)}
 
     ANCHOR1 = builder.buildAnchor(11, -11)
@@ -172,6 +172,59 @@ class BuilderTest(unittest.TestCase):
                          '  <DeltaFormat value="3"/>'
                          '  <DeltaValue value="[77, 0, 0, 0, 3]"/>'
                          '</Device>')
+
+    def test_buildLigCaretList(self):
+        carets = builder.buildLigCaretList(
+            {"f_f_i": [300, 600]}, {"c_t": [42]}, self.GLYPHMAP)
+        self.assertEqual(getXML(carets.toXML),
+                         '<LigCaretList>'
+                         '  <Coverage>'
+                         '    <Glyph value="f_f_i"/>'
+                         '    <Glyph value="c_t"/>'
+                         '  </Coverage>'
+                         '  <!-- LigGlyphCount=2 -->'
+                         '  <LigGlyph index="0">'
+                         '    <!-- CaretCount=2 -->'
+                         '    <CaretValue index="0" Format="1">'
+                         '      <Coordinate value="300"/>'
+                         '    </CaretValue>'
+                         '    <CaretValue index="1" Format="1">'
+                         '      <Coordinate value="600"/>'
+                         '    </CaretValue>'
+                         '  </LigGlyph>'
+                         '  <LigGlyph index="1">'
+                         '    <!-- CaretCount=1 -->'
+                         '    <CaretValue index="0" Format="2">'
+                         '      <CaretValuePoint value="42"/>'
+                         '    </CaretValue>'
+                         '  </LigGlyph>'
+                         '</LigCaretList>')
+
+    def test_buildLigCaretList_bothCoordsAndPointsForSameGlyph(self):
+        carets = builder.buildLigCaretList(
+            {"f_f_i": [300]}, {"f_f_i": [7]}, self.GLYPHMAP)
+        self.assertEqual(getXML(carets.toXML),
+                         '<LigCaretList>'
+                         '  <Coverage>'
+                         '    <Glyph value="f_f_i"/>'
+                         '  </Coverage>'
+                         '  <!-- LigGlyphCount=1 -->'
+                         '  <LigGlyph index="0">'
+                         '    <!-- CaretCount=2 -->'
+                         '    <CaretValue index="0" Format="1">'
+                         '      <Coordinate value="300"/>'
+                         '    </CaretValue>'
+                         '    <CaretValue index="1" Format="2">'
+                         '      <CaretValuePoint value="7"/>'
+                         '    </CaretValue>'
+                         '  </LigGlyph>'
+                         '</LigCaretList>')
+
+    def test_buildLigCaretList_empty(self):
+        self.assertIsNone(builder.buildLigCaretList({}, {}, self.GLYPHMAP))
+
+    def test_buildLigCaretList_None(self):
+        self.assertIsNone(builder.buildLigCaretList(None, None, self.GLYPHMAP))
 
     def test_buildLigGlyph_coords(self):
         lig = builder.buildLigGlyph([500, 800], None)
