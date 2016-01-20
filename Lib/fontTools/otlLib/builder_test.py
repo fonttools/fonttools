@@ -87,6 +87,20 @@ class BuilderTest(unittest.TestCase):
                          '  <PointIndex index="1" value="7"/>'
                          '</AttachPoint>')
 
+    def test_buildCaretValueForCoord(self):
+        caret = builder.buildCaretValueForCoord(500)
+        self.assertEqual(getXML(caret.toXML),
+                         '<CaretValue Format="1">'
+                         '  <Coordinate value="500"/>'
+                         '</CaretValue>')
+
+    def test_buildCaretValueForPoint(self):
+        caret = builder.buildCaretValueForPoint(23)
+        self.assertEqual(getXML(caret.toXML),
+                         '<CaretValue Format="2">'
+                         '  <CaretValuePoint value="23"/>'
+                         '</CaretValue>')
+
     def test_buildCoverage(self):
         cov = builder.buildCoverage({"two", "four"}, {"two": 2, "four": 4})
         self.assertEqual(getXML(cov.toXML),

@@ -220,15 +220,11 @@ class Builder(object):
             result.LigGlyph.append(ligGlyph)
             ligGlyph.CaretValue = []
             for caretPos in sorted(self.ligatureCaretByPos_.get(glyph, [])):
-                val = otTables.CaretValue()
-                val.Format = 1
-                val.Coordinate = caretPos
-                ligGlyph.CaretValue.append(val)
+                ligGlyph.CaretValue.append(
+                    otl.buildCaretValueForCoord(caretPos))
             for point in sorted(self.ligatureCaretByIndex_.get(glyph, [])):
-                val = otTables.CaretValue()
-                val.Format = 2
-                val.CaretValuePoint = point
-                ligGlyph.CaretValue.append(val)
+                ligGlyph.CaretValue.append(
+                    otl.buildCaretValueForPoint(point))
             ligGlyph.CaretCount = len(ligGlyph.CaretValue)
         return result
 

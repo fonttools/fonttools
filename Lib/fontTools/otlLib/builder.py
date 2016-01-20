@@ -242,3 +242,19 @@ def buildAttachPoint(points):
     self.PointIndex = sorted(points)
     self.PointCount = len(points)
     return self
+
+
+def buildCaretValueForCoord(coord):
+    """500 --> otTables.CaretValue, format 1"""
+    self = ot.CaretValue()
+    self.Format = 1
+    self.Coordinate = coord
+    return self
+
+
+def buildCaretValueForPoint(point):
+    """4 --> otTables.CaretValue, format 2"""
+    self = ot.CaretValue()
+    self.Format = 2
+    self.CaretValuePoint = point
+    return self
