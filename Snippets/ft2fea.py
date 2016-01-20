@@ -299,9 +299,8 @@ def languageSystems(state, gpos):
             langSysRecord.LangSysTag # URD DEU ARA
             langSysRecord.LangSys.FeatureIndex # [2,5]
 
-
-
 # GDEF
+
 def classeDefs(classDefs, classNames):
     lines = []
     classes = OrderedDict
@@ -316,42 +315,75 @@ def classeDefs(classDefs, classNames):
         lines.append('@{0} = [ {1} ];'.format(className, ' '.join(classes[className])))
     return lines
 
+def classFromCoverage(coverage, name):
+    return '@{0} = [ {1} ]'.format(name, ' '.join(coverage))
+
+def attachList(AttachList):
+        for idx, glyph in enumerate(AttachList.Coverage.glyphs):
+            attachmentPoints = AttachList.AttachPoint[idx]
+            for point in attachmentPoints.PointIndex:
+                lines.append('  Attach {0} {1};', glyph, point)
+    return lines;
+
 def printGDEF(table, getStatus, getUniqueName, print=print)
     printTable, tableRequired = getStatus(table, False)
     if not printTable:
         return
 
-        markAttachClassIDs = set(table.table.MarkAttachClassDef.classDefs.values())
+    print('\n#### Table {0} ####\n'.format(table.tableTag))
 
-        for markAttachClassID in markAttachClassIDs:
-            if markAttachClassID == 0: continue
+    markAttachClassDefs = table.table.MarkAttachClassDef.classDefs
+    markAttachClassIDs = set(markAttachClassDefs.values())
+    classNames = {}
+    for markAttachClassID in markAttachClassIDs:
+        if markAttachClassID == 0: continue
+        # ad-hoc type to make it selectable
+        markAttachClassTuple = (markAttachmentClassDef, markAttachClassID)
+        for required in (True, False)
+            printClass, _ = getStatus(markAttachClassTuple, required):
+            if printClass:
+                classNames[markAttachClassID] = getUniqueName(markAttachClassID, 'MarkAttachClass')
+                break;
+    if len(classNames):
+        lines = classeDefs(markAttachClassDefs, classNames):
+        print('# GDEF Mark Attachment Classes:\n')
+        print('\n'.join(lines))
+
+    if hasattr(table.table, 'MarkGlyphSetsDef'):
+        lines = []
+        for idx, coverage in enumerate(table.table.MarkGlyphSetsDef.Coverage):
+            for required in (True, False):
+                printClass, _ = getStatus(coverage, required)
+                if printClass:
+                    name = getUniqueName(idx, 'UseMarkFilteringSet')
+                    lines.append(classFromCoverage(coverage, name))
+                    break
+        if len(lines):
+            lines = classeDefs(markAttachClassDefs, classNames):
+            print('# GDEF Mark Filtering Sets:\n')
+            print('\n'.join(lines))
+
+    gdefLines = []
+    if table.table.AttachList is not None:
+        for required in (True, False):
+            printAttachList, _ = getStatus(table.table.AttachList, required)
+            if printAttachList:
+                lines = attachList(table.table.AttachList)
+                break
+        gdefLines.append('')
+        gdefLines += lines
 
 
-            # ad-hoc type to make it selectable
-            markAttachClassTuple = (markAttachmentClassDef, markAttachClassID)
-            success, _ = self.validateMarkAttachmentClass(markAttachClassTuple, required, gdef):
-
-    gdef.table.MarkAttachClassDef.classDefs
-
+    MISSING:
+    self.validateLigCaretList
+    table.table.LigCaretList
+    see http://www.adobe.com/devnet/opentype/afdko/topic_feature_file_syntax.html#9.b
 
 
-            children = [
-            self.validateMarkGlyphClassDef, table.table.GlyphClassDef
-            self.validateAttachList, table.table.AttachList
-            self.validateLigCaretList, table.table.LigCaretList
-            self.validateMarkAttachmentClassDef, table.table.MarkAttachClassDef
-        ]
-        if hasattr(table.table, 'MarkGlyphSetsDef'):
-            children.append((self.validateMarkGlyphSetsDef, table.table.MarkGlyphSetsDef))
-
-    classes = classesGDEF( gdef.table.MarkAttachClassDef.classDefs
-                             , state.usedMarkAttachClasses)
-        print( '# GDEF Mark Attachment Classes:\n')
-        print('\n\n'.join(classes))
-
-
-
-
+    if len(gdefLines):
+        print('table {0} {'.format(table.tableTag))
+        print('\n'.join(gdefLines))
+        print('} {0};\n'.format(table.tableTag))
 
 def printLookups(state, table, getStatus, getUniqueName, print=print)
     lookupNames = {}
@@ -440,6 +472,9 @@ def printCommonGTable(table, getStatus, getUniqueName, print=print):
     printTable, tableRequired = getStatus(table, False)
     if not printTable:
             return
+
+    print('\n#### Table {0} ####\n'.format(table.tableTag))
+
     print('# {0} Lookups\n\n'.format(table.tableTag))
     lookupNames = printLookups(state, table, getStatus, getUniqueName, print=print)
 
@@ -591,10 +626,10 @@ class SelectExports(object):
         if hasattr(table.table, 'MarkGlyphSetsDef'):
             children.append((self.validateMarkGlyphSetsDef, table.table.MarkGlyphSetsDef))
 
-        for func, item in children:
+        for validate, item in children:
             if item is None:
                 continue
-            success, _ = func(item, required, table)
+            success, _ = validate(item, required, table)
             if success:
                 childCount += 1
 
