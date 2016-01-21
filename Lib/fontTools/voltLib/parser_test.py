@@ -667,7 +667,8 @@ class ParserTest(unittest.TestCase):
     def test_anchor_adjust_device(self):
         [anchor] = self.parse(
             'DEF_ANCHOR "MARK_top" ON 123 GLYPH diacglyph '
-            'COMPONENT 1 AT POS DX 0 DY 456 ADJUST_BY 12 AT 34 ADJUST_BY 56 AT 78 END_POS END_ANCHOR'
+            'COMPONENT 1 AT POS DX 0 DY 456 ADJUST_BY 12 AT 34 '
+            'ADJUST_BY 56 AT 78 END_POS END_ANCHOR'
         ).statements
         self.assertEqual(
             (anchor.name, anchor.pos),
