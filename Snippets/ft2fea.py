@@ -377,11 +377,11 @@ def prepareFeatures(tableRequired, table, getStatus=getStatusAllTrue):
         if not printScript:
             continue
         scriptTag = scriptRecord.ScriptTag
-        _repFeaLangSysArgs = (table, features, scriptTag, scriptRequired, getStatus)
+        prepFeaLangSysArgs = (table, features, scriptTag, scriptRequired, getStatus)
         if scriptRecord.Script.DefaultLangSys is not None:
-            _prepareFeatureLangSys('dflt', scriptRecord.Script.DefaultLangSys, *_repFeaLangSysArgs)
+            _prepareFeatureLangSys('dflt', scriptRecord.Script.DefaultLangSys, *prepFeaLangSysArgs)
         for langSysRecord in scriptRecord.Script.LangSysRecord:
-            _prepareFeatureLangSys(langSysRecord.LangSysTag, langSysRecord.LangSys, *_repFeaLangSysArgs)
+            _prepareFeatureLangSys(langSysRecord.LangSysTag, langSysRecord.LangSys, *prepFeaLangSysArgs)
     return features
 
 def printLookups(table, makeName=makeName, getStatus=getStatusAllTrue, print=print):
@@ -499,7 +499,7 @@ def printGDEF(table, makeName=makeName, getStatus=getStatusAllTrue, print=print)
         if len(classNames):
             lines = formatClassDefs(classDefs, classNames)
             print('# GDEF Mark Attachment Classes:\n')
-            print('\n'.join(lines))
+            print('\n\n'.join(lines))
             print()
 
     if hasattr(table.table, 'MarkGlyphSetsDef') \
