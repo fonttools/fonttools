@@ -109,6 +109,22 @@ class BuilderTest(unittest.TestCase):
                          '  <CaretValuePoint value="23"/>'
                          '</CaretValue>')
 
+    def test_buildComponentRecord(self):
+        a = builder.buildAnchor
+        rec = builder.buildComponentRecord([a(500, -20), None, a(300, -15)])
+        self.assertEqual(getXML(rec.toXML),
+                         '<ComponentRecord>'
+                         '  <LigatureAnchor index="0" Format="1">'
+                         '    <XCoordinate value="500"/>'
+                         '    <YCoordinate value="-20"/>'
+                         '  </LigatureAnchor>'
+                         '  <LigatureAnchor index="1" empty="1"/>'
+                         '  <LigatureAnchor index="2" Format="1">'
+                         '    <XCoordinate value="300"/>'
+                         '    <YCoordinate value="-15"/>'
+                         '  </LigatureAnchor>'
+                         '</ComponentRecord>')
+
     def test_buildCoverage(self):
         cov = builder.buildCoverage({"two", "four"}, {"two": 2, "four": 4})
         self.assertEqual(getXML(cov.toXML),

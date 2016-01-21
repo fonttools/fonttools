@@ -110,6 +110,13 @@ def buildAnchor(x, y, point=None, deviceX=None, deviceY=None):
     return self
 
 
+def buildComponentRecord(anchors):
+    """[otTables.Anchor, otTables.Anchor, ...] --> otTables.ComponentRecord"""
+    self = ot.ComponentRecord()
+    self.LigatureAnchor = anchors
+    return self
+
+
 def buildCursivePos(attach, glyphMap):
     """{"alef": (entry, exit)} --> otTables.CursivePos"""
     self = ot.CursivePos()

@@ -1014,13 +1014,13 @@ class MarkLigPosBuilder(LookupBuilder):
         return result
 
     def build(self):
+        markClasses = self.buildMarkClasses_(self.marks)
+        markClassList = sorted(markClasses.keys(), key=markClasses.get)
         st = otTables.MarkLigPos()
         st.Format = 1
         st.MarkCoverage = otl.buildCoverage(self.marks, self.glyphMap)
-        markClasses = self.buildMarkClasses_(self.marks)
         st.ClassCount = len(markClasses)
         st.MarkArray = self.buildMarkArray_(self.marks, markClasses)
-
         st.LigatureCoverage = otl.buildCoverage(self.ligatures, self.glyphMap)
         st.LigatureArray = otTables.LigatureArray()
         st.LigatureArray.LigatureCount = len(self.ligatures)
@@ -1031,12 +1031,9 @@ class MarkLigPosBuilder(LookupBuilder):
             attach.ComponentCount = len(components)
             attach.ComponentRecord = []
             for component in components:
-                crec = otTables.ComponentRecord()
-                attach.ComponentRecord.append(crec)
-                crec.LigatureAnchor = []
-                for markClass in sorted(markClasses.keys(),
-                                        key=markClasses.get):
-                    crec.LigatureAnchor.append(component.get(markClass))
+                anchors = [component.get(mc) for mc in markClassList]
+                attach.ComponentRecord.append(
+                    otl.buildComponentRecord(anchors))
             st.LigatureArray.LigatureAttach.append(attach)
 
         return self.buildLookup_([st])
