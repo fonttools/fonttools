@@ -749,6 +749,18 @@ class ParserTest(unittest.TestCase):
             'COMPONENT 1 AT POS DX 250 DY 450 END_POS END_ANCHOR\n'
         )
 
+    def test_def_anchor_locked(self):
+        [anchor] = self.parse(
+            'DEF_ANCHOR "top" ON 120 GLYPH a '
+            'COMPONENT 1 LOCKED AT POS DX 250 DY 450 END_POS END_ANCHOR\n'
+        ).statements
+        self.assertEqual(
+            (anchor.name, anchor.gid, anchor.glyph_name, anchor.component,
+             anchor.locked, anchor.pos),
+            ("top", 120, "a", 1,
+             True, (None, 250, 450, {}, {}, {}))
+        )
+
     def test_anchor_adjust_device(self):
         [anchor] = self.parse(
             'DEF_ANCHOR "MARK_top" ON 123 GLYPH diacglyph '
