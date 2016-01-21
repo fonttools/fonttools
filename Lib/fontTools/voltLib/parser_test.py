@@ -187,11 +187,26 @@ class ParserTest(unittest.TestCase):
 
     def test_group_duplicate(self):
         self.assertRaisesRegex(
-            VoltLibError, 'Glyph group "dup" already defined',
-            self.parse, 'DEF_GROUP "dup"\n'
+            VoltLibError,
+            'Glyph group "dupe" already defined, '
+            'group names are case insensitive',
+            self.parse, 'DEF_GROUP "dupe"\n'
                         'ENUM GLYPH "a" GLYPH "b" END_ENUM\n'
                         'END_GROUP\n'
-                        'DEF_GROUP "dup"\n'
+                        'DEF_GROUP "dupe"\n'
+                        'ENUM GLYPH "x" END_ENUM\n'
+                        'END_GROUP\n'
+        )
+
+    def test_group_duplicate_case_insensitive(self):
+        self.assertRaisesRegex(
+            VoltLibError,
+            'Glyph group "Dupe" already defined, '
+            'group names are case insensitive',
+            self.parse, 'DEF_GROUP "dupe"\n'
+                        'ENUM GLYPH "a" GLYPH "b" END_ENUM\n'
+                        'END_GROUP\n'
+                        'DEF_GROUP "Dupe"\n'
                         'ENUM GLYPH "x" END_ENUM\n'
                         'END_GROUP\n'
         )
@@ -302,6 +317,48 @@ class ParserTest(unittest.TestCase):
                          ("Kerning",
                           "kern",
                           ["kern1", "kern2"]))
+
+    def test_lookup_duplicate(self):
+        with self.assertRaisesRegex(
+            VoltLibError,
+            'Lookup "dupe" already defined, '
+            'lookup names are case insensitive',
+        ):
+            [lookup1, lookup2] = self.parse(
+                'DEF_LOOKUP "dupe"\n'
+                'AS_SUBSTITUTION\n'
+                'SUB GLYPH "a"\n'
+                'WITH GLYPH "a.alt"\n'
+                'END_SUB\n'
+                'END_SUBSTITUTION\n'
+                'DEF_LOOKUP "dupe"\n'
+                'AS_SUBSTITUTION\n'
+                'SUB GLYPH "b"\n'
+                'WITH GLYPH "b.alt"\n'
+                'END_SUB\n'
+                'END_SUBSTITUTION\n'
+            ).statements
+
+    def test_lookup_duplicate_insensitive_case(self):
+        with self.assertRaisesRegex(
+            VoltLibError,
+            'Lookup "Dupe" already defined, '
+            'lookup names are case insensitive',
+        ):
+            [lookup1, lookup2] = self.parse(
+                'DEF_LOOKUP "dupe"\n'
+                'AS_SUBSTITUTION\n'
+                'SUB GLYPH "a"\n'
+                'WITH GLYPH "a.alt"\n'
+                'END_SUB\n'
+                'END_SUBSTITUTION\n'
+                'DEF_LOOKUP "Dupe"\n'
+                'AS_SUBSTITUTION\n'
+                'SUB GLYPH "b"\n'
+                'WITH GLYPH "b.alt"\n'
+                'END_SUB\n'
+                'END_SUBSTITUTION\n'
+            ).statements
 
     def test_substitution_empty(self):
         with self.assertRaisesRegex(
@@ -653,15 +710,43 @@ class ParserTest(unittest.TestCase):
         )
 
     def test_def_anchor(self):
-        [anchor] = self.parse(
+        [anchor1, anchor2, anchor3] = self.parse(
+            'DEF_ANCHOR "top" ON 120 GLYPH a '
+            'COMPONENT 1 AT POS DX 250 DY 450 END_POS END_ANCHOR\n'
             'DEF_ANCHOR "MARK_top" ON 120 GLYPH acutecomb '
-            'COMPONENT 1 AT POS DX 0 DY 450 END_POS END_ANCHOR'
+            'COMPONENT 1 AT POS DX 0 DY 450 END_POS END_ANCHOR\n'
+            'DEF_ANCHOR "bottom" ON 120 GLYPH a '
+            'COMPONENT 1 AT POS DX 250 DY 0 END_POS END_ANCHOR\n'
         ).statements
         self.assertEqual(
-            (anchor.name, anchor.gid, anchor.glyph_name, anchor.component,
-             anchor.locked, anchor.pos),
+            (anchor1.name, anchor1.gid, anchor1.glyph_name, anchor1.component,
+             anchor1.locked, anchor1.pos),
+            ("top", 120, "a", 1,
+             False, (None, 250, 450, {}, {}, {}))
+        )
+        self.assertEqual(
+            (anchor2.name, anchor2.gid, anchor2.glyph_name, anchor2.component,
+             anchor2.locked, anchor2.pos),
             ("MARK_top", 120, "acutecomb", 1,
              False, (None, 0, 450, {}, {}, {}))
+        )
+        self.assertEqual(
+            (anchor3.name, anchor3.gid, anchor3.glyph_name, anchor3.component,
+             anchor3.locked, anchor3.pos),
+            ("bottom", 120, "a", 1,
+             False, (None, 250, 0, {}, {}, {}))
+        )
+
+    def test_def_anchor_duplicate(self):
+        self.assertRaisesRegex(
+            VoltLibError,
+            'Anchor "dupe" already defined, '
+            'anchor names are case insensitive',
+            self.parse,
+            'DEF_ANCHOR "dupe" ON 120 GLYPH a '
+            'COMPONENT 1 AT POS DX 250 DY 450 END_POS END_ANCHOR\n'
+            'DEF_ANCHOR "dupe" ON 120 GLYPH a '
+            'COMPONENT 1 AT POS DX 250 DY 450 END_POS END_ANCHOR\n'
         )
 
     def test_anchor_adjust_device(self):

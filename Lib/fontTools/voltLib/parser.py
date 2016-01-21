@@ -25,7 +25,8 @@ class Parser(object):
     def __init__(self, path):
         self.doc_ = ast.VoltFile()
         self.groups_ = SymbolTable()
-        self.anchors_ = SymbolTable()
+        self.anchors_ = {}  # dictionary of SymbolTable() keyed by glyph
+        self.lookups_ = SymbolTable()
         self.next_token_type_, self.next_token_ = (None, None)
         self.next_token_location_ = None
         with open(path, "r") as f:
@@ -43,6 +44,7 @@ class Parser(object):
                 if self.next_token_type_ is not None:
                     raise VoltLibError("Expected the end of the file",
                                        self.cur_token_location_)
+                self.groups_.expand()
                 return self.doc_
             else:
                 raise VoltLibError(
@@ -93,8 +95,11 @@ class Parser(object):
             enum = self.parse_enum_()
         self.expect_keyword_("END_GROUP")
         if self.groups_.resolve(name) is not None:
-            raise VoltLibError('Glyph group "%s" already defined' % name,
-                               location)
+            raise VoltLibError(
+                'Glyph group "%s" already defined, '
+                'group names are case insensitive' % name,
+                location
+            )
         def_group = ast.GroupDefinition(location, name, enum)
         self.groups_.define(name, def_group)
         return def_group
@@ -156,6 +161,12 @@ class Parser(object):
         assert self.is_cur_keyword_("DEF_LOOKUP")
         location = self.cur_token_location_
         name = self.expect_string_()
+        if self.lookups_.resolve(name) is not None:
+            raise VoltLibError(
+                'Lookup "%s" already defined, '
+                'lookup names are case insensitive' % name,
+                location
+            )
         process_base = True
         if self.next_token_ == "PROCESS_BASE":
             self.advance_lexer_()
@@ -211,6 +222,7 @@ class Parser(object):
         def_lookup = ast.LookupDefinition(
             location, name, process_base, process_marks, direction, reversal,
             comments, context, sub, pos)
+        self.lookups_.define(name, def_lookup)
         return def_lookup
 
     def parse_context_(self):
@@ -357,6 +369,14 @@ class Parser(object):
         gid = self.expect_number_()
         self.expect_keyword_("GLYPH")
         glyph_name = self.expect_name_()
+        # check for duplicate anchor names on this glyph
+        if (glyph_name in self.anchors_
+                and self.anchors_[glyph_name].resolve(name) is not None):
+            raise VoltLibError(
+                'Anchor "%s" already defined, '
+                'anchor names are case insensitive' % name,
+                location
+            )
         self.expect_keyword_("COMPONENT")
         component = self.expect_number_()
         if self.next_token_ == "LOCKED":
@@ -369,6 +389,9 @@ class Parser(object):
         self.expect_keyword_("END_ANCHOR")
         anchor = ast.AnchorDefinition(location, name, gid, glyph_name,
                                       component, locked, pos)
+        if glyph_name not in self.anchors_:
+            self.anchors_[glyph_name] = SymbolTable()
+        self.anchors_[glyph_name].define(name, anchor)
         return anchor
 
     def parse_adjust_by_(self):
@@ -531,6 +554,17 @@ class Parser(object):
 class SymbolTable(parser.SymbolTable):
     def __init__(self):
         parser.SymbolTable.__init__(self)
+
+    def resolve(self, name, case_insensitive=True):
+        for scope in reversed(self.scopes_):
+            item = scope.get(name)
+            if item:
+                return item
+            if case_insensitive:
+                for key in scope:
+                    if key.lower() == name.lower():
+                        return scope[key]
+        return None
 
     # TODO
     # add expanding ranges
