@@ -751,29 +751,16 @@ class LookupBuilder(object):
             coverage = otl.buildCoverage(g, self.glyphMap)
             subtable.InputCoverage.append(coverage)
 
-    def setMarkArray_(self, marks, markClassIDs, subtable):
-        """Helper for MarkBasePosBuilder and MarkLigPosBuilder."""
-        subtable.MarkArray = otTables.MarkArray()
-        subtable.MarkArray.MarkCount = len(marks)
-        subtable.MarkArray.MarkRecord = []
-        for mark in subtable.MarkCoverage.glyphs:
-            markClassName, markAnchor = self.marks[mark]
-            markrec = otTables.MarkRecord()
-            markrec.Class = markClassIDs[markClassName]
-            markrec.MarkAnchor = markAnchor
-            subtable.MarkArray.MarkRecord.append(markrec)
-
-    def setMark1Array_(self, marks, markClassIDs, subtable):
-        """Helper for MarkMarkPosBuilder."""
-        subtable.Mark1Array = otTables.Mark1Array()
-        subtable.Mark1Array.MarkCount = len(marks)
-        subtable.Mark1Array.MarkRecord = []
-        for mark in subtable.Mark1Coverage.glyphs:
-            markClassName, markAnchor = self.marks[mark]
-            markrec = otTables.MarkRecord()
-            markrec.Class = markClassIDs[markClassName]
-            markrec.MarkAnchor = markAnchor
-            subtable.Mark1Array.MarkRecord.append(markrec)
+    def buildMarkArray_(self, marks, markClassIDs):
+        """Helper for Mark{Base,Lig,Mark}PosBuilder."""
+        array = otTables.MarkArray()
+        array.MarkCount = len(marks)
+        array.MarkRecord = []
+        for mark in sorted(marks.keys(), key=self.glyphMap.__getitem__):
+            className, anchor = marks[mark]
+            markrec = otl.buildMarkRecord(markClassIDs[className], anchor)
+            array.MarkRecord.append(markrec)
+        return array
 
 
 class AlternateSubstBuilder(LookupBuilder):
@@ -994,7 +981,7 @@ class MarkBasePosBuilder(LookupBuilder):
         st.MarkCoverage = otl.buildCoverage(self.marks, self.glyphMap)
         markClasses = self.buildMarkClasses_(self.marks)
         st.ClassCount = len(markClasses)
-        self.setMarkArray_(self.marks, markClasses, st)
+        st.MarkArray = self.buildMarkArray_(self.marks, markClasses)
 
         st.BaseCoverage = otl.buildCoverage(self.bases, self.glyphMap)
         st.BaseArray = otTables.BaseArray()
@@ -1032,7 +1019,7 @@ class MarkLigPosBuilder(LookupBuilder):
         st.MarkCoverage = otl.buildCoverage(self.marks, self.glyphMap)
         markClasses = self.buildMarkClasses_(self.marks)
         st.ClassCount = len(markClasses)
-        self.setMarkArray_(self.marks, markClasses, st)
+        st.MarkArray = self.buildMarkArray_(self.marks, markClasses)
 
         st.LigatureCoverage = otl.buildCoverage(self.ligatures, self.glyphMap)
         st.LigatureArray = otTables.LigatureArray()
@@ -1074,12 +1061,11 @@ class MarkMarkPosBuilder(LookupBuilder):
     def build(self):
         st = otTables.MarkMarkPos()
         st.Format = 1
-        st.Mark1Coverage = otl.buildCoverage(self.marks, self.glyphMap)
         markClasses = self.buildMarkClasses_(self.marks)
         st.ClassCount = len(markClasses)
-        self.setMark1Array_(self.marks, markClasses, st)
-
+        st.Mark1Coverage = otl.buildCoverage(self.marks, self.glyphMap)
         st.Mark2Coverage = otl.buildCoverage(self.baseMarks, self.glyphMap)
+        st.Mark1Array = self.buildMarkArray_(self.marks, markClasses)
         st.Mark2Array = otTables.Mark2Array()
         st.Mark2Array.Mark2Count = len(st.Mark2Coverage.glyphs)
         st.Mark2Array.Mark2Record = []
