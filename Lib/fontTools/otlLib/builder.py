@@ -148,6 +148,15 @@ def buildDevice(device):
     return self
 
 
+def buildMarkRecord(classID, anchor):
+    assert isinstance(classID, int)
+    assert isinstance(anchor, ot.Anchor)
+    self = ot.MarkRecord()
+    self.Class = classID
+    self.MarkAnchor = anchor
+    return self
+
+
 def buildSinglePos(mapping, glyphMap):
     """{"glyph": ValueRecord} --> [otTables.SinglePos*]"""
     result, handled = [], set()

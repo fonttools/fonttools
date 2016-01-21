@@ -345,6 +345,17 @@ class BuilderTest(unittest.TestCase):
     def test_buildMarkGlyphSetsDef_None(self):
         self.assertIsNone(builder.buildMarkGlyphSetsDef(None, self.GLYPHMAP))
 
+    def test_buildMarkRecord(self):
+        rec = builder.buildMarkRecord(17, builder.buildAnchor(500, -20))
+        self.assertEqual(getXML(rec.toXML),
+                         '<MarkRecord> '
+                         ' <Class value="17"/>'
+                         '  <MarkAnchor Format="1">'
+                         '    <XCoordinate value="500"/>'
+                         '    <YCoordinate value="-20"/>'
+                         '  </MarkAnchor>'
+                         '</MarkRecord>')
+
     def test_buildSinglePos(self):
         subtables = builder.buildSinglePos({
             "one": builder.buildValue({"XPlacement": 500}),
