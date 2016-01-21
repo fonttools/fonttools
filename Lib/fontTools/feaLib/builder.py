@@ -1069,13 +1069,10 @@ class MarkMarkPosBuilder(LookupBuilder):
         st.Mark2Array = otTables.Mark2Array()
         st.Mark2Array.Mark2Count = len(st.Mark2Coverage.glyphs)
         st.Mark2Array.Mark2Record = []
+        markClassList = sorted(markClasses.keys(), key=markClasses.get)
         for base in st.Mark2Coverage.glyphs:
-            baserec = otTables.Mark2Record()
-            st.Mark2Array.Mark2Record.append(baserec)
-            baserec.Mark2Anchor = []
-            for markClass in sorted(markClasses.keys(), key=markClasses.get):
-                baserec.Mark2Anchor.append(self.baseMarks[base].get(markClass))
-
+            anchors = [self.baseMarks[base].get(mc) for mc in markClassList]
+            st.Mark2Array.Mark2Record.append(otl.buildMark2Record(anchors))
         return self.buildLookup_([st])
 
 

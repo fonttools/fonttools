@@ -356,6 +356,22 @@ class BuilderTest(unittest.TestCase):
                          '  </MarkAnchor>'
                          '</MarkRecord>')
 
+    def test_buildMark2Record(self):
+        a = builder.buildAnchor
+        rec = builder.buildMark2Record([a(500, -20), None, a(300, -15)])
+        self.assertEqual(getXML(rec.toXML),
+                         '<Mark2Record>'
+                         '  <Mark2Anchor index="0" Format="1">'
+                         '    <XCoordinate value="500"/>'
+                         '    <YCoordinate value="-20"/>'
+                         '  </Mark2Anchor>'
+                         '  <Mark2Anchor index="1" empty="1"/>'
+                         '  <Mark2Anchor index="2" Format="1">'
+                         '    <XCoordinate value="300"/>'
+                         '    <YCoordinate value="-15"/>'
+                         '  </Mark2Anchor>'
+                         '</Mark2Record>')
+
     def test_buildSinglePos(self):
         subtables = builder.buildSinglePos({
             "one": builder.buildValue({"XPlacement": 500}),
