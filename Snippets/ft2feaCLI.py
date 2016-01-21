@@ -33,6 +33,7 @@ class ExportAggregator(object):
         # item is going to be printed. If a diverse answer it needed for
         # the different requiredStates then this function should be called
         # with an explicit requiredState
+
         noEntry = (None, None)
         if requiredState is not None:
             return self.registry.get((item, requiredState), noEntry)
@@ -41,8 +42,8 @@ class ExportAggregator(object):
         for req in (True, False):
             key = (item, req)
             printIt, required = self.registry.get(key, noEntry)
-            result[0] = printIt or result[0]
-            result[1] = required or result[0]
+            result[0] = result[0] or printIt
+            result[1] = result[1] or required
             if result[0] and result[1]:
                 # the result won't change anymore
                 break
@@ -52,7 +53,13 @@ class ExportAggregator(object):
     def register(func):
         @wraps(func)
         def wrapper(self, item, required, *args, **kwargs):
-            key = (item, required)
+            # requiredKeyOverride: is used to run a validator with a different
+            # required flag than the cache key will use. That way "validateLookup"
+            # can declare lookupflag dependencies in GDEF. GDEF validation
+            # needs to run after all potentially dependent validations though
+            key = (item, kwargs.get('requiredKeyOverride', required))
+            if 'requiredKeyOverride' in kwargs:
+                del kwargs['requiredKeyOverride']
             registered = self.registry.get(key, None)
             if registered is not None:
                 return registered
@@ -71,7 +78,7 @@ class ExportAggregator(object):
 
     def _commitTransaction(self):
         registry = self._transactions.pop()
-        self.registry.update(registry)
+        registry.update(self.registry)
         self.registry = registry
 
     def _rollbackTransaction(self):
@@ -79,7 +86,7 @@ class ExportAggregator(object):
 
     def _validateSimpleEntry(self, selector, parentRequired):
         requestStatus = self.getQueryStatus(*selector)
-        required = parentRequired or requestStatus
+        required = requestStatus or parentRequired
         result = requestStatus is not False and (requestStatus or required) is True
         return (result, required)
 
@@ -148,7 +155,7 @@ class ExportAggregator(object):
     @register
     def validateGDEF(self, table, parentRequired):
         requestStatus = self.getQueryStatus(table.tableTag)
-        required = parentRequired or requestStatus
+        required = requestStatus or parentRequired
         if requestStatus is False:
             return (False, required)
 
@@ -169,7 +176,6 @@ class ExportAggregator(object):
             success, _ = validate(item, required, table)
             if success:
                 childCount += 1
-
         return (childCount > 0, required)
 
     # GPOS and GSUB
@@ -178,10 +184,10 @@ class ExportAggregator(object):
         # it has not really a tag, so we make one up
         # gpos3 is GPOS LookupType 3
         # gsub2 is GSUB LookupType 2 etc
-        class Invalidate: pass
+        class Invalidation(Exception): pass
         tag = '{0}{1}'.format(table.tableTag.lower(), lookup.LookupType)
         requestStatus = self.getQueryStatus(table.tableTag, 'lookup', tag)
-        required = parentRequired or requestStatus
+        required = requestStatus or parentRequired
         if requestStatus is False or not required:
             return (False, required)
         # required is true, check dependencies:
@@ -193,21 +199,21 @@ class ExportAggregator(object):
             # check the lookupFlag
 
             # 0x10 UseMarkFilteringSet
-            if lookup.lookupFlag & 0x10:
+            if lookup.LookupFlag & 0x10:
                 gdef = self.font['GDEF']
                 coverage = gdef.table.MarkGlyphSetsDef.Coverage[lookup.MarkFilteringSet]
-                success, _ = self.validateMarkGlyphSet(self, coverage, True, gdef)
+                success, _ = self.validateMarkGlyphSet(coverage, True, gdef, requiredKeyOverride=False)
                 if not success:
                     raise Invalidation
 
             # MarkAttachmentType
-            markAttachClassID = lookup.lookupFlag >> 8
+            markAttachClassID = lookup.LookupFlag >> 8
             if markAttachClassID:
                 gdef = self.font['GDEF']
                 # An ad-hoc pseudo item, to enable outputting just the used
                 # mark attachment classes
                 markAttachClassTuple = (gdef.table.MarkAttachClassDef, markAttachClassID)
-                success, _ = self.validateMarkAttachmentClass(markAttachClassTuple, required, gdef)
+                success, _ = self.validateMarkAttachmentClass(markAttachClassTuple, True, gdef, requiredKeyOverride=False)
                 if not success:
                     raise Invalidation
 
@@ -225,7 +231,7 @@ class ExportAggregator(object):
             # PosLookupRecord which has a LookupListIndex into the GPOS LookupList
             #
             # lookupList = table.table.LookupList.Lookup
-        except Invalidation as e:
+        except Invalidation:
             invalid = True
         except Exception as e:
             invalid = True
@@ -233,14 +239,16 @@ class ExportAggregator(object):
         finally:
             if invalid:
                 self._rollbackTransaction()
-                return (False, True)
-            self._commitTransaction()
-            return (True, True)
+                result = (False, True)
+            else:
+                self._commitTransaction()
+                result = (True, True)
+        return result
 
     @register
     def validateFeatureRecord(self, featureRecord, parentRequired, table):
         requestStatus = self.getQueryStatus(table.tableTag, 'feature', featureRecord.FeatureTag)
-        required = parentRequired or requestStatus
+        required = requestStatus or parentRequired
         if requestStatus is False:
             return (False, required)
 
@@ -258,7 +266,7 @@ class ExportAggregator(object):
     def validateLanguage(self, langTuple, parentRequired, table):
         langTag, langSys = langTuple
         requestStatus = self.getQueryStatus(table.tableTag, 'language', langTag)
-        required = parentRequired or requestStatus
+        required = requestStatus or parentRequired
         if requestStatus is False:
             return (False, required)
 
@@ -274,10 +282,9 @@ class ExportAggregator(object):
     @register
     def validateScriptRecord(self, scriptRecord, parentRequired, table):
         requestStatus = self.getQueryStatus(table.tableTag, 'script', scriptRecord.ScriptTag)
-        required = parentRequired or requestStatus
+        required = requestStatus or parentRequired
         if requestStatus is False:
             return (False, required)
-
         # check all dependencies
         childCount = 0
         if scriptRecord.Script.DefaultLangSys is not None:
@@ -304,7 +311,7 @@ class ExportAggregator(object):
     def validateCommonGTable(self, table, parentRequired):
         assert table.tableTag in {'GPOS', 'GSUB'}, 'Wrong table type: {0}'.format(table.tableTag)
         requestStatus = self.getQueryStatus(table.tableTag)
-        required = parentRequired or requestStatus
+        required = requestStatus or parentRequired
         if requestStatus is False:
             return (False, required)
         # check all dependencies
@@ -334,8 +341,6 @@ class ExportAggregator(object):
         # string can be reproduced, identitywise, this works just fine.
         selector = (itemString, ) # one string in a tuple
         return self._validateSimpleEntry(selector, parentRequired)
-
-
 
     def validate(self, required=False):
         self.validateLanguagesystem('languagesystem', required)
@@ -605,10 +610,8 @@ def main():
     fontPath = sys.argv[1]
     font = TTFont(fontPath)
 
-
-
     query = ExportQuery(
-            request='GPOS', whitelist=None, blacklist=None, silence=None)
+            request='GDEF markAttachClasses; GSUB feature *', whitelist=None, blacklist=None, silence=None)
     aggregator = ExportAggregator(font, query.getQueryStatus)
     aggregator.validate()
 
