@@ -156,6 +156,18 @@ def buildDevice(device):
     return self
 
 
+def buildMarkArray(marks, glyphMap):
+    """{"acute": (markClass, otTables.Anchor)} --> otTables.MarkArray"""
+    self = ot.MarkArray()
+    self.MarkCount = len(marks)
+    self.MarkRecord = []
+    for mark in sorted(marks.keys(), key=glyphMap.__getitem__):
+        markClass, anchor = marks[mark]
+        markrec = buildMarkRecord(markClass, anchor)
+        self.MarkRecord.append(markrec)
+    return self
+
+
 def buildMarkRecord(classID, anchor):
     assert isinstance(classID, int)
     assert isinstance(anchor, ot.Anchor)

@@ -338,6 +338,31 @@ class BuilderTest(unittest.TestCase):
                          '  <MarkFilteringSet value="999"/>'
                          '</Lookup>')
 
+    def test_buildMarkArray(self):
+        markArray = builder.buildMarkArray({
+            "acute": (7, builder.buildAnchor(300, 800)),
+            "grave": (2, builder.buildAnchor(10, 80))
+        }, self.GLYPHMAP)
+        self.assertLess(self.GLYPHMAP["grave"], self.GLYPHMAP["acute"])
+        self.assertEqual(getXML(markArray.toXML),
+                         '<MarkArray>'
+                         '  <!-- MarkCount=2 -->'
+                         '  <MarkRecord index="0">'
+                         '    <Class value="2"/>'
+                         '    <MarkAnchor Format="1">'
+                         '      <XCoordinate value="10"/>'
+                         '      <YCoordinate value="80"/>'
+                         '    </MarkAnchor>'
+                         '  </MarkRecord>'
+                         '  <MarkRecord index="1">'
+                         '    <Class value="7"/>'
+                         '    <MarkAnchor Format="1">'
+                         '      <XCoordinate value="300"/>'
+                         '      <YCoordinate value="800"/>'
+                         '    </MarkAnchor>'
+                         '  </MarkRecord>'
+                         '</MarkArray>')
+
     def test_buildMarkGlyphSetsDef(self):
         marksets = builder.buildMarkGlyphSetsDef(
             [{"acute", "grave"}, {"cedilla", "grave"}], self.GLYPHMAP)
