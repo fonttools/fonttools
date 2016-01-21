@@ -111,6 +111,13 @@ def buildAnchor(x, y, point=None, deviceX=None, deviceY=None):
     return self
 
 
+def buildBaseRecord(anchors):
+    """[otTables.Anchor, otTables.Anchor, ...] --> otTables.BaseRecord"""
+    self = ot.BaseRecord()
+    self.BaseAnchor = anchors
+    return self
+
+
 def buildComponentRecord(anchors):
     """[otTables.Anchor, otTables.Anchor, ...] --> otTables.ComponentRecord"""
     self = ot.ComponentRecord()

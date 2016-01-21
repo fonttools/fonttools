@@ -95,6 +95,22 @@ class BuilderTest(unittest.TestCase):
                          '  <PointIndex index="1" value="7"/>'
                          '</AttachPoint>')
 
+    def test_buildBaseRecord(self):
+        a = builder.buildAnchor
+        rec = builder.buildBaseRecord([a(500, -20), None, a(300, -15)])
+        self.assertEqual(getXML(rec.toXML),
+                         '<BaseRecord>'
+                         '  <BaseAnchor index="0" Format="1">'
+                         '    <XCoordinate value="500"/>'
+                         '    <YCoordinate value="-20"/>'
+                         '  </BaseAnchor>'
+                         '  <BaseAnchor index="1" empty="1"/>'
+                         '  <BaseAnchor index="2" Format="1">'
+                         '    <XCoordinate value="300"/>'
+                         '    <YCoordinate value="-15"/>'
+                         '  </BaseAnchor>'
+                         '</BaseRecord>')
+
     def test_buildCaretValueForCoord(self):
         caret = builder.buildCaretValueForCoord(500)
         self.assertEqual(getXML(caret.toXML),

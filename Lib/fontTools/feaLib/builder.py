@@ -968,23 +968,24 @@ class MarkBasePosBuilder(LookupBuilder):
         markClasses = self.buildMarkClasses_(self.marks)
         marks = {mark: (markClasses[mc], anchor)
                  for mark, (mc, anchor) in self.marks.items()}
+        bases = {}
+        for glyph, anchors in self.bases.items():
+            bases[glyph] = {markClasses[mc]: anchor
+                            for (mc, anchor) in anchors.items()}
 
         st = otTables.MarkBasePos()
         st.Format = 1
         st.MarkCoverage = otl.buildCoverage(marks, self.glyphMap)
         st.MarkArray = otl.buildMarkArray(marks, self.glyphMap)
         st.ClassCount = len(markClasses)
-        st.BaseCoverage = otl.buildCoverage(self.bases, self.glyphMap)
-        st.BaseArray = otTables.BaseArray()
-        st.BaseArray.BaseCount = len(st.BaseCoverage.glyphs)
-        st.BaseArray.BaseRecord = []
-        for base in st.BaseCoverage.glyphs:
-            baserec = otTables.BaseRecord()
-            st.BaseArray.BaseRecord.append(baserec)
-            baserec.BaseAnchor = []
-            for markClass in sorted(markClasses.keys(), key=markClasses.get):
-                baserec.BaseAnchor.append(self.bases[base].get(markClass))
-
+        st.BaseCoverage = otl.buildCoverage(bases, self.glyphMap)
+        st.BaseArray = ba = otTables.BaseArray()
+        ba.BaseCount = len(bases)
+        ba.BaseRecord = []
+        for base in sorted(bases, key=self.glyphMap.__getitem__):
+            baseAnchors = bases[base]
+            anchors = [baseAnchors.get(mc) for mc in range(st.ClassCount)]
+            ba.BaseRecord.append(otl.buildBaseRecord(anchors))
         return self.buildLookup_([st])
 
 
