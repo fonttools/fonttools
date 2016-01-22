@@ -955,16 +955,6 @@ class MarkBasePosBuilder(LookupBuilder):
         return result
 
     def build(self):
-        # TODO: Consider emitting multiple subtables to save space.
-        # Partition the marks and bases into disjoint subsets, so that
-        # MarkBasePos rules would only access glyphs from a single
-        # subset. This would likely lead to smaller mark/base
-        # matrices, so we might be able to omit many of the empty
-        # anchor tables that we currently produce. Of course, this
-        # would only work if the MarkBasePos rules of real-world fonts
-        # allow partitioning into multiple subsets. We should find out
-        # whether this is the case; if so, implement the optimization.
-
         markClasses = self.buildMarkClasses_(self.marks)
         marks = {mark: (markClasses[mc], anchor)
                  for mark, (mc, anchor) in self.marks.items()}
@@ -972,15 +962,8 @@ class MarkBasePosBuilder(LookupBuilder):
         for glyph, anchors in self.bases.items():
             bases[glyph] = {markClasses[mc]: anchor
                             for (mc, anchor) in anchors.items()}
-
-        st = otTables.MarkBasePos()
-        st.Format = 1
-        st.MarkCoverage = otl.buildCoverage(marks, self.glyphMap)
-        st.MarkArray = otl.buildMarkArray(marks, self.glyphMap)
-        st.ClassCount = len(markClasses)
-        st.BaseCoverage = otl.buildCoverage(bases, self.glyphMap)
-        st.BaseArray = otl.buildBaseArray(bases, st.ClassCount, self.glyphMap)
-        return self.buildLookup_([st])
+        subtables = otl.buildMarkBasePos(marks, bases, self.glyphMap)
+        return self.buildLookup_(subtables)
 
 
 class MarkLigPosBuilder(LookupBuilder):

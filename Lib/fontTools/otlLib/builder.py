@@ -186,6 +186,44 @@ def buildMarkArray(marks, glyphMap):
     return self
 
 
+def buildMarkBasePos(marks, bases, glyphMap):
+    """Build a list of MarkBasePos subtables.
+
+    a1, a2, a3, a4 = buildAnchor(500, 100), ...
+    marks = {"acute": (0, a1), "grave": (0, a1), "cedilla": (1, a2)}
+    bases = {"a": {0: a3, 1: a5}, "b": {0: a4, 1: a5}}
+    """
+    # TODO: Consider emitting multiple subtables to save space.
+    # Partition the marks and bases into disjoint subsets, so that
+    # MarkBasePos rules would only access glyphs from a single
+    # subset. This would likely lead to smaller mark/base
+    # matrices, so we might be able to omit many of the empty
+    # anchor tables that we currently produce. Of course, this
+    # would only work if the MarkBasePos rules of real-world fonts
+    # allow partitioning into multiple subsets. We should find out
+    # whether this is the case; if so, implement the optimization.
+    # On the other hand, a very large number of subtables could
+    # slow down layout engines; so this would need profiling.
+    return [buildMarkBasePosSubtable(marks, bases, glyphMap)]
+
+
+def buildMarkBasePosSubtable(marks, bases, glyphMap):
+    """Build a single MarkBasePos subtable.
+
+    a1, a2, a3, a4 = buildAnchor(500, 100), ...
+    marks = {"acute": (0, a1), "grave": (0, a1), "cedilla": (1, a2)}
+    bases = {"a": {0: a3, 1: a5}, "b": {0: a4, 1: a5}}
+    """
+    self = ot.MarkBasePos()
+    self.Format = 1
+    self.MarkCoverage = buildCoverage(marks, glyphMap)
+    self.MarkArray = buildMarkArray(marks, glyphMap)
+    self.ClassCount = max([mc for mc, _ in marks.values()]) + 1
+    self.BaseCoverage = buildCoverage(bases, glyphMap)
+    self.BaseArray = buildBaseArray(bases, self.ClassCount, glyphMap)
+    return self
+
+
 def buildMarkRecord(classID, anchor):
     assert isinstance(classID, int)
     assert isinstance(anchor, ot.Anchor)

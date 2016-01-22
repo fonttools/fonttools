@@ -101,7 +101,6 @@ class BuilderTest(unittest.TestCase):
             "a": {2: anchor(300, 80)},
             "c": {1: anchor(300, 80), 2: anchor(300, -20)}
         }, numMarkClasses=4, glyphMap=self.GLYPHMAP)
-        self.maxDiff = None
         self.assertEqual(getXML(baseArray.toXML),
                          '<BaseArray>'
                          '  <!-- BaseCount=2 -->'
@@ -412,6 +411,106 @@ class BuilderTest(unittest.TestCase):
                          '  </MarkRecord>'
                          '</MarkArray>')
 
+    def test_buildMarkBasePosSubtable(self):
+        anchor = builder.buildAnchor
+        marks = {
+            "acute": (0, anchor(300, 700)),
+            "cedilla": (1, anchor(300, -100)),
+            "grave": (0, anchor(300, 700))
+        }
+        bases = {
+            # Make sure we can handle missing entries.
+            "A": {},  # no entry for any markClass
+            "B": {0: anchor(500, 900)},  # only markClass 0 specified
+            "C": {1: anchor(500, -10)},  # only markClass 1 specified
+
+            "a": {0: anchor(500, 400), 1: anchor(500, -20)},
+            "b": {0: anchor(500, 800), 1: anchor(500, -20)}
+        }
+        table = builder.buildMarkBasePosSubtable(marks, bases, self.GLYPHMAP)
+        self.maxDiff = None
+        self.assertEqual(getXML(table.toXML),
+                         '<MarkBasePos Format="1">'
+                         '  <MarkCoverage>'
+                         '    <Glyph value="grave"/>'
+                         '    <Glyph value="acute"/>'
+                         '    <Glyph value="cedilla"/>'
+                         '  </MarkCoverage>'
+                         '  <BaseCoverage>'
+                         '    <Glyph value="A"/>'
+                         '    <Glyph value="B"/>'
+                         '    <Glyph value="C"/>'
+                         '    <Glyph value="a"/>'
+                         '    <Glyph value="b"/>'
+                         '  </BaseCoverage>'
+                         '  <!-- ClassCount=2 -->'
+                         '  <MarkArray>'
+                         '    <!-- MarkCount=3 -->'
+                         '    <MarkRecord index="0">'  # grave
+                         '      <Class value="0"/>'
+                         '      <MarkAnchor Format="1">'
+                         '        <XCoordinate value="300"/>'
+                         '        <YCoordinate value="700"/>'
+                         '      </MarkAnchor>'
+                         '    </MarkRecord>'
+                         '    <MarkRecord index="1">'  # acute
+                         '      <Class value="0"/>'
+                         '      <MarkAnchor Format="1">'
+                         '        <XCoordinate value="300"/>'
+                         '        <YCoordinate value="700"/>'
+                         '      </MarkAnchor>'
+                         '    </MarkRecord>'
+                         '    <MarkRecord index="2">'  # cedilla
+                         '      <Class value="1"/>'
+                         '      <MarkAnchor Format="1">'
+                         '        <XCoordinate value="300"/>'
+                         '        <YCoordinate value="-100"/>'
+                         '      </MarkAnchor>'
+                         '    </MarkRecord>'
+                         '  </MarkArray>'
+                         '  <BaseArray>'
+                         '    <!-- BaseCount=5 -->'
+                         '    <BaseRecord index="0">'  # A
+                         '      <BaseAnchor index="0" empty="1"/>'
+                         '      <BaseAnchor index="1" empty="1"/>'
+                         '    </BaseRecord>'
+                         '    <BaseRecord index="1">'  # B
+                         '      <BaseAnchor index="0" Format="1">'
+                         '        <XCoordinate value="500"/>'
+                         '        <YCoordinate value="900"/>'
+                         '      </BaseAnchor>'
+                         '      <BaseAnchor index="1" empty="1"/>'
+                         '    </BaseRecord>'
+                         '    <BaseRecord index="2">'  # C
+                         '      <BaseAnchor index="0" empty="1"/>'
+                         '      <BaseAnchor index="1" Format="1">'
+                         '        <XCoordinate value="500"/>'
+                         '        <YCoordinate value="-10"/>'
+                         '      </BaseAnchor>'
+                         '    </BaseRecord>'
+                         '    <BaseRecord index="3">'  # a
+                         '      <BaseAnchor index="0" Format="1">'
+                         '        <XCoordinate value="500"/>'
+                         '        <YCoordinate value="400"/>'
+                         '      </BaseAnchor>'
+                         '      <BaseAnchor index="1" Format="1">'
+                         '        <XCoordinate value="500"/>'
+                         '        <YCoordinate value="-20"/>'
+                         '      </BaseAnchor>'
+                         '    </BaseRecord>'
+                         '    <BaseRecord index="4">'  # b
+                         '      <BaseAnchor index="0" Format="1">'
+                         '        <XCoordinate value="500"/>'
+                         '        <YCoordinate value="800"/>'
+                         '      </BaseAnchor>'
+                         '      <BaseAnchor index="1" Format="1">'
+                         '        <XCoordinate value="500"/>'
+                         '        <YCoordinate value="-20"/>'
+                         '      </BaseAnchor>'
+                         '    </BaseRecord>'
+                         '  </BaseArray>'
+                         '</MarkBasePos>')
+
     def test_buildMarkGlyphSetsDef(self):
         marksets = builder.buildMarkGlyphSetsDef(
             [{"acute", "grave"}, {"cedilla", "grave"}], self.GLYPHMAP)
@@ -531,7 +630,6 @@ class BuilderTest(unittest.TestCase):
             "one": builder.buildValue({"XPlacement": 777}),
             "two": builder.buildValue({"YPlacement": -888}),
         }, self.GLYPHMAP)
-        self.maxDiff = None
         self.assertEqual(getXML(subtable.toXML),
                          '<SinglePos Format="2">'
                          '  <Coverage>'
