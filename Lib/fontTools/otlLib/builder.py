@@ -177,6 +177,7 @@ def buildDevice(deltas):
     keys = deltas.keys()
     self.StartSize = startSize = min(keys)
     self.EndSize = endSize = max(keys)
+    assert 0 <= startSize <= endSize
     self.DeltaValue = deltaValues = [
         deltas.get(size, 0)
         for size in range(startSize, endSize + 1)]

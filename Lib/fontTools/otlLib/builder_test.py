@@ -232,11 +232,11 @@ class BuilderTest(unittest.TestCase):
                          '</Device>')
 
     def test_buildDevice_format2(self):
-        device = builder.buildDevice({1:2, -1:1, 0:0})
+        device = builder.buildDevice({2:2, 0:1, 1:0})
         self.assertEqual(getXML(device.toXML),
                          '<Device>'
-                         '  <StartSize value="-1"/>'
-                         '  <EndSize value="1"/>'
+                         '  <StartSize value="0"/>'
+                         '  <EndSize value="2"/>'
                          '  <DeltaFormat value="2"/>'
                          '  <DeltaValue value="[1, 0, 2]"/>'
                          '</Device>')
