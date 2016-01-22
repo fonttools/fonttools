@@ -176,6 +176,18 @@ def buildDevice(device):
     return self
 
 
+def buildLigatureArray(ligs, numMarkClasses, glyphMap):
+    self = ot.LigatureArray()
+    self.LigatureCount = len(ligs)
+    self.LigatureAttach = []
+    for lig in sorted(ligs, key=glyphMap.__getitem__):
+        anchors = []
+        for component in ligs[lig]:
+            anchors.append([component.get(mc) for mc in range(numMarkClasses)])
+        self.LigatureAttach.append(buildLigatureAttach(anchors))
+    return self
+
+
 def buildLigatureAttach(components):
     """[[Anchor, Anchor], [Anchor, Anchor, Anchor]] --> LigatureAttach"""
     self = ot.LigatureAttach()

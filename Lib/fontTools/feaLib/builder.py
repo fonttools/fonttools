@@ -999,17 +999,8 @@ class MarkLigPosBuilder(LookupBuilder):
         st.MarkArray = otl.buildMarkArray(marks, self.glyphMap)
         st.ClassCount = max([mc for mc, _ in marks.values()]) + 1
         st.LigatureCoverage = otl.buildCoverage(ligs, self.glyphMap)
-        la = st.LigatureArray = otTables.LigatureArray()
-        la.LigatureCount = len(ligs)
-        la.LigatureAttach = []
-        for lig in sorted(ligs, key=self.glyphMap.__getitem__):
-            components = ligs[lig]
-            anchors = []
-            for component in ligs[lig]:
-                anchors.append([component.get(mc)
-                                for mc in range(st.ClassCount)])
-            la.LigatureAttach.append(otl.buildLigatureAttach(anchors))
-
+        st.LigatureArray = \
+            otl.buildLigatureArray(ligs, st.ClassCount, self.glyphMap)
         return self.buildLookup_([st])
 
 

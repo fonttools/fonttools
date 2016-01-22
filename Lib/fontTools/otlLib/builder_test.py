@@ -6,8 +6,8 @@ import unittest
 
 
 class BuilderTest(unittest.TestCase):
-    GLYPHS = (".notdef space zero one two three four five six f_f_i c_t "
-              "A B C a b c grave acute cedilla c_t f_i").split()
+    GLYPHS = (".notdef space zero one two three four five six "
+              "A B C a b c grave acute cedilla f_f_i f_i c_t").split()
     GLYPHMAP = {name: num for num, name in enumerate(GLYPHS)}
 
     ANCHOR1 = builder.buildAnchor(11, -11)
@@ -250,6 +250,57 @@ class BuilderTest(unittest.TestCase):
                          '  <DeltaFormat value="3"/>'
                          '  <DeltaValue value="[77, 0, 0, 0, 3]"/>'
                          '</Device>')
+
+    def test_buildLigatureArray(self):
+        anchor = builder.buildAnchor
+        ligatureArray = builder.buildLigatureArray({
+            "f_i": [{2: anchor(300, -20)}, {}],
+            "c_t": [{}, {1: anchor(500, 350), 2: anchor(1300, -20)}]
+        }, numMarkClasses=4, glyphMap=self.GLYPHMAP)
+        self.maxDiff = None
+        self.assertEqual(getXML(ligatureArray.toXML),
+                         '<LigatureArray>'
+                         '  <!-- LigatureCount=2 -->'
+                         '  <LigatureAttach index="0">'  # f_i
+                         '    <!-- ComponentCount=2 -->'
+                         '    <ComponentRecord index="0">'
+                         '      <LigatureAnchor index="0" empty="1"/>'
+                         '      <LigatureAnchor index="1" empty="1"/>'
+                         '      <LigatureAnchor index="2" Format="1">'
+                         '        <XCoordinate value="300"/>'
+                         '        <YCoordinate value="-20"/>'
+                         '      </LigatureAnchor>'
+                         '      <LigatureAnchor index="3" empty="1"/>'
+                         '    </ComponentRecord>'
+                         '    <ComponentRecord index="1">'
+                         '      <LigatureAnchor index="0" empty="1"/>'
+                         '      <LigatureAnchor index="1" empty="1"/>'
+                         '      <LigatureAnchor index="2" empty="1"/>'
+                         '      <LigatureAnchor index="3" empty="1"/>'
+                         '    </ComponentRecord>'
+                         '  </LigatureAttach>'
+                         '  <LigatureAttach index="1">'
+                         '    <!-- ComponentCount=2 -->'
+                         '    <ComponentRecord index="0">'
+                         '      <LigatureAnchor index="0" empty="1"/>'
+                         '      <LigatureAnchor index="1" empty="1"/>'
+                         '      <LigatureAnchor index="2" empty="1"/>'
+                         '      <LigatureAnchor index="3" empty="1"/>'
+                         '    </ComponentRecord>'
+                         '    <ComponentRecord index="1">'
+                         '      <LigatureAnchor index="0" empty="1"/>'
+                         '      <LigatureAnchor index="1" Format="1">'
+                         '        <XCoordinate value="500"/>'
+                         '        <YCoordinate value="350"/>'
+                         '      </LigatureAnchor>'
+                         '      <LigatureAnchor index="2" Format="1">'
+                         '        <XCoordinate value="1300"/>'
+                         '        <YCoordinate value="-20"/>'
+                         '      </LigatureAnchor>'
+                         '      <LigatureAnchor index="3" empty="1"/>'
+                         '    </ComponentRecord>'
+                         '  </LigatureAttach>'
+                         '</LigatureArray>')
 
     def test_buildLigatureAttach(self):
         anchor = builder.buildAnchor
