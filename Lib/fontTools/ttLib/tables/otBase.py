@@ -695,7 +695,7 @@ class BaseTable(object):
 		tableName = name if name else self.__class__.__name__
 		if attrs is None:
 			attrs = []
-		if getattr(self, "Format", None) is not None:
+		if hasattr(self, "Format"):
 			attrs = attrs + [("Format", self.Format)]
 		xmlWriter.begintag(tableName, attrs)
 		xmlWriter.newline()
