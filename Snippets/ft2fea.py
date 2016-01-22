@@ -3,6 +3,8 @@ from fontTools.misc.py23 import *
 from collections import OrderedDict
 from functools import partial
 
+# TODO: implement missing lookup types
+
 def getStatusAllTrue(item, requiredState=None):
     """
         Print everything no filtering.
@@ -69,6 +71,15 @@ def makeName(*names, **kwargs):
         uniquenessDict[name] = uid
         name = name.format(uid=uid)
     return name
+
+def printDelayed(printFunc, *args, **delayedKwargs):
+    delayedArgs = list(args)
+    def print(*args, **kwargs):
+        if delayedArgs:
+            printFunc(*delayedArgs, **delayedKwargs)
+            del delayedArgs[:]
+        printFunc(*args, **kwargs)
+    return print
 
 # GPOS and GSUB
 
@@ -323,13 +334,17 @@ def formatLookupGSUB(lookup, lookupIdx, makeName=makeName):
     return formatLookup(lookup, lookupIdx, lookupTypesGSUB, makeName=makeName)
 
 def printFeatures(features, lookupNames, indentation='  ', print=print):
-    for featureTag, scripts in features.items():
+    for featureTag, (scripts, printFeature) in features.items():
+        if not printFeature: continue
         print('feature {0} {{'.format(featureTag))
-        for scriptTag, languages in scripts.items():
+        for scriptTag, (languages, printScript) in scripts.items():
+            if not printScript: continue
             print('{1}script {0};'.format(scriptTag, 1 * indentation))
-            for langTag, lookups in languages.items():
+            for langTag, (lookups, printLang) in languages.items():
+                if not printLang: continue
                 print('{1}language {0};'.format(langTag.strip(), 2 * indentation))
-                for lookupIdx in lookups:
+                for lookupIdx, printLookup in lookups:
+                    if not printLookup: continue
                     lookupName = lookupNames[lookupIdx]
                     if lookupName[0] == '#':
                         # FIXME: we skip some not yet implemented lookups
@@ -342,42 +357,41 @@ def printFeatures(features, lookupNames, indentation='  ', print=print):
         print('}} {0};'.format(featureTag))
         print()
 
-def _prepareFeatureLangSys(langTag, langSys, table, features, scriptTag, scriptRequired, getStatus):
+def _prepareFeatureLangSys(langTag, langSys, table, features, scriptTag, scriptStatus, getStatus):
     # This is a part of prepareFeatures
+    printScript, scriptRequired, = scriptStatus
     printLang, langRequired = getStatus((langTag, langSys), scriptRequired)
-    if not printLang: return
     for featureIdx in langSys.FeatureIndex:
         featureRecord = table.table.FeatureList.FeatureRecord[featureIdx]
         printFeature, featureRequired = getStatus(featureRecord, langRequired)
-        if not printFeature: continue
 
         featureTag = featureRecord.FeatureTag
-        scripts = features.get(featureTag, None)
+        scripts, _ = features.get(featureTag, (None, None))
         if scripts is None:
-            scripts = features[featureTag] = OrderedDict()
+            scripts = OrderedDict()
+            features[featureTag] = (scripts, printFeature)
 
-        languages = scripts.get(scriptTag, None)
+        languages, _ = scripts.get(scriptTag, (None, None))
         if languages is None:
-            languages = scripts[scriptTag] = OrderedDict()
+            languages = OrderedDict()
+            scripts[scriptTag] = (languages, printScript)
 
-        lookups = languages.get(langTag, None)
+        lookups, _ = languages.get(langTag, (None, None))
         if lookups is None:
-            lookups = languages[langTag] = []
+            lookups = []
+            languages[langTag] = (lookups, printLang)
 
         for lookupIdx in featureRecord.Feature.LookupListIndex:
             lookup = table.table.LookupList.Lookup[lookupIdx]
             printLookup, _ = getStatus(lookup, featureRequired)
-            if printLookup:
-                lookups.append(lookupIdx)
+            lookups.append((lookupIdx, printLookup))
 
 def prepareFeatures(tableRequired, table, getStatus=getStatusAllTrue):
     features = OrderedDict()
     for scriptRecord in table.table.ScriptList.ScriptRecord:
-        printScript, scriptRequired = getStatus(scriptRecord, tableRequired)
-        if not printScript:
-            continue
+        scriptStatus = getStatus(scriptRecord, tableRequired)
         scriptTag = scriptRecord.ScriptTag
-        prepFeaLangSysArgs = (table, features, scriptTag, scriptRequired, getStatus)
+        prepFeaLangSysArgs = (table, features, scriptTag, scriptStatus, getStatus)
         if scriptRecord.Script.DefaultLangSys is not None:
             _prepareFeatureLangSys('dflt', scriptRecord.Script.DefaultLangSys, *prepFeaLangSysArgs)
         for langSysRecord in scriptRecord.Script.LangSysRecord:
@@ -402,14 +416,14 @@ def printCommonGTable(table, makeName=makeName, getStatus=getStatusAllTrue, prin
     if not printTable:
         return
 
-    print('\n#### Table {0} ####\n'.format(table.tableTag))
+    print_1 = printDelayed(print, '\n#### Table {0} ####\n'.format(table.tableTag))
 
-    print('# {0} Lookups:\n'.format(table.tableTag))
-    lookupNames = printLookups(table, makeName=makeName, getStatus=getStatus, print=print)
+    print_2 =  printDelayed(print_1, '# {0} Lookups:\n'.format(table.tableTag))
+    lookupNames = printLookups(table, makeName=makeName, getStatus=getStatus, print=print_2)
 
-    print('# {0} Features:\n'.format(table.tableTag))
+    print_2 = printDelayed(print_1, '# {0} Features:\n'.format(table.tableTag))
     features = prepareFeatures(tableRequired, table, getStatus=getStatus)
-    printFeatures(features, lookupNames, print=print)
+    printFeatures(features, lookupNames, print=print_2)
 
 # GDEF
 
@@ -482,7 +496,7 @@ def printGDEF(table, makeName=makeName, getStatus=getStatusAllTrue, print=print)
     if not printTable:
         return
 
-    print('\n#### Table {0} ####\n'.format(table.tableTag))
+    print_1 = printDelayed(print, '\n#### Table {0} ####\n'.format(table.tableTag))
 
     if table.table.MarkAttachClassDef is not None:
         markAttachClassDef = table.table.MarkAttachClassDef
@@ -498,7 +512,7 @@ def printGDEF(table, makeName=makeName, getStatus=getStatusAllTrue, print=print)
                 classNames[markAttachClassID] = makeName('MarkAttachClass', markAttachClassID)
         if len(classNames):
             lines = formatClassDefs(classDefs, classNames)
-            print('# GDEF Mark Attachment Classes:\n')
+            print_1('# GDEF Mark Attachment Classes:\n')
             print('\n\n'.join(lines))
             print()
 
@@ -511,7 +525,7 @@ def printGDEF(table, makeName=makeName, getStatus=getStatusAllTrue, print=print)
                 name = makeName('MarkGlyphSet', idx)
                 lines.append(formatClassFromCoverage(coverage.glyphs, name))
         if len(lines):
-            print('# GDEF Mark Filtering Sets:\n')
+            print_1('# GDEF Mark Filtering Sets:\n')
             print('\n'.join(lines))
             print()
 
@@ -573,8 +587,8 @@ def printLanguageSystem(tables, getStatus=getStatusAllTrue, print=print):
                 langTag = langTuple[0]
                 if langTag in languages:
                     continue
-                if not getStatus(langTuple)[0]:
-                    continue
+                # if not getStatus(langTuple)[0]:
+                #    continue
                 languages.append(langTag)
 
             if languages and not scriptTag in scripts:

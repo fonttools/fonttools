@@ -1,26 +1,54 @@
 #! /usr/bin/env python
 
-"""
-    A command line interface for the ft2fea library.
-"""
+"""Generate an OpenType Feature file (fea) from an otf/ttf font."""
 
+# TODO 1: add arguments to set up makeName: prefix, sufix
+
+# TODO 2: Export one fea-file from multiple font sources. Especially merging
+# GDEF clsses would be interesting. The other potential clashes can be solved
+# by modifying the makeName function for each font.
+
+# TODO 3: in ExportAggregator.validateLookup:
+# Possible dependencies to other lookups:
+#     GSUB type 5 Context (format 5.1 5.2 5.3)
+#     GSUB type 6 Chaining Context (format 6.1 6.2 6.3)
+#     GPOS type 7 Context positioning (format 7.1 7.2 7.3)
+#     GPOS type 8 Chained Context positioning (format 7.1 7.2 7.3)
+#
+# GSUB contextuals: each of these have somewhere: an array of
+# SubstLookupRecord which has a LookupListIndex into the GSUB LookupList
+#
+# GPOS contextuals: each of these have somewhere: an array of
+# PosLookupRecord which has a LookupListIndex into the GPOS LookupList
+
+# TODO 4: Better control over the languagesystem would be nice. Maybe just
+# like: -r "languagsysten arab|latn *"
+# Or, if not requested directly, activated like a dependency when the
+# script plus language is being printed. But maybe without the option
+# to block script/language output (like a "soft dependency"). Though, even
+# if it is like a hard dependency we can still use --mute on it, so it's
+# not a real problem to make it one
 from __future__ import print_function, absolute_import
+import sys
 from fontTools.misc.py23 import *
 from functools import wraps, partial
 import argparse
 
-warn = partial(print, 'Warning:', file=sys.stderr)
-
-# these operations should set the items state to
-# yes, no (or Maybe, which is not registered)
-# we will in another pass render the actual lookup tables if they are "yes"
-# or if they are "Maybe" and getQueryStatus(['GPOS', 'lookup', lookup.typeName])
-# returns true
-# So, now, with this done the rest should be easy!
-# above pseudo rendering code can ask at each stage if it should render the
-# item, by asking the registry!
-
 class ExportAggregator(object):
+    """
+    ExportAggregator provides a getStatus to use with the ft2fea print functions.
+
+    It traverses the font tables and acquires status information for the
+    relevant items. Once this traversal has been done, the getStatus method
+    can be injected into the ft2fea print functions, that use the "getStatus"
+    keyword argument.
+
+    The actual status of an item is provided by the "getQueryStatus" method
+    which is itself injetced into the constructor of this class.
+    See the ExportQuery class.
+    """
+
+
     def __init__(self, font, getQueryStatus):
         self.getQueryStatus = getQueryStatus
         self.font = font
@@ -28,27 +56,27 @@ class ExportAggregator(object):
         self._transactions = []
 
     def getStatus(self, item, requiredState=None):
-        # If there are any, the "True" values trump the "False" values
-        # Thus, when requiredState is None and we check for both key types
-        # i.e. (item, True) and (item, False) it's more likeley that the
-        # item is going to be printed. If a diverse answer it needed for
-        # the different requiredStates then this function should be called
-        # with an explicit requiredState
 
-        noEntry = (None, None)
+
+        noEntry = (None, None, False)
         if requiredState is not None:
-            return self.registry.get((item, requiredState), noEntry)
-
-        result = list(noEntry)
-        for req in (True, False):
-            key = (item, req)
-            printIt, required = self.registry.get(key, noEntry)
-            result[0] = result[0] or printIt
-            result[1] = result[1] or required
-            if result[0] and result[1]:
-                # the result won't change anymore
-                break
-        return tuple(result)
+            status= self.registry.get((item, requiredState), noEntry)
+        else:
+            # If there are any, the "True" values trump the "False" values
+            # When requiredState is None and we check for both key types
+            # i.e. (item, True) and (item, False)
+            status = list(noEntry)
+            for req in (True, False):
+                key = (item, req)
+                result, required, muted = self.registry.get(key, noEntry)
+                status[0] = status[0] or result
+                status[1] = status[1] or required
+                status[2] = status[2] or muted
+                if all(status):
+                    # the result won't change anymore
+                    break
+        result, required, muted = status
+        return (False if muted else result, required)
 
     # this is used as a decorator
     def register(func):
@@ -57,7 +85,7 @@ class ExportAggregator(object):
             # requiredKeyOverride: is used to run a validator with a different
             # required flag than the cache key will use. That way "validateLookup"
             # can declare lookupflag dependencies in GDEF. GDEF validation
-            # needs to run after all potentially dependent validations though
+            # needs to run after all potentially dependent validations.
             key = (item, kwargs.get('requiredKeyOverride', required))
             if 'requiredKeyOverride' in kwargs:
                 del kwargs['requiredKeyOverride']
@@ -86,10 +114,10 @@ class ExportAggregator(object):
         self.registry = self._transactions.pop()
 
     def _validateSimpleEntry(self, selector, parentRequired):
-        requestStatus = self.getQueryStatus(*selector)
+        requestStatus, muted = self.getQueryStatus(*selector)
         required = requestStatus or parentRequired
         result = requestStatus is not False and (requestStatus or required) is True
-        return (result, required)
+        return (result, required, muted)
 
     # GDEF
 
@@ -129,10 +157,10 @@ class ExportAggregator(object):
             if markAttachClassID == 0: continue
             # ad-hoc type to make it selectable
             markAttachClassTuple = (markAttachmentClassDef, markAttachClassID)
-            success, _ = self.validateMarkAttachmentClass(markAttachClassTuple, required, table)
+            success, _, _ = self.validateMarkAttachmentClass(markAttachClassTuple, required, table)
             if success:
                 childCount += 1
-        return (childCount > 0, required)
+        return (childCount > 0, required, False)
 
     @register
     def validateMarkGlyphSet(self, markGlyphSet_Coverage, parentRequired, table):
@@ -148,17 +176,17 @@ class ExportAggregator(object):
         required = parentRequired
         childCount = 0
         for coverage in markGlyphSetsDef.Coverage:
-            success, _ = self.validateMarkGlyphSet(coverage, required, table)
+            success, _, _ = self.validateMarkGlyphSet(coverage, required, table)
             if success:
                 childCount += 1
-        return (childCount > 0, required)
+        return (childCount > 0, required, False)
 
     @register
     def validateGDEF(self, table, parentRequired):
-        requestStatus = self.getQueryStatus(table.tableTag)
+        requestStatus, muted = self.getQueryStatus(table.tableTag)
         required = requestStatus or parentRequired
         if requestStatus is False:
-            return (False, required)
+            return (False, required, muted)
 
         # check all dependencies
         childCount = 0
@@ -174,10 +202,10 @@ class ExportAggregator(object):
         for validate, item in children:
             if item is None:
                 continue
-            success, _ = validate(item, required, table)
+            success, _, _ = validate(item, required, table)
             if success:
                 childCount += 1
-        return (childCount > 0, required)
+        return (childCount > 0, required, muted)
 
     # GPOS and GSUB
     @register
@@ -187,10 +215,10 @@ class ExportAggregator(object):
         # gpos3 is GPOS LookupType 3
         # gsub2 is GSUB LookupType 2 etc
         tag = '{0}{1}'.format(table.tableTag.lower(), lookup.LookupType)
-        requestStatus = self.getQueryStatus(table.tableTag, 'lookup', tag)
+        requestStatus, muted = self.getQueryStatus(table.tableTag, 'lookup', tag)
         required = requestStatus or parentRequired
         if requestStatus is False or not required:
-            return (False, required)
+            return (False, required, muted)
         # required is true, check dependencies:
         self._startTransaction()
         invalid = False
@@ -201,11 +229,11 @@ class ExportAggregator(object):
             # 0x10 UseMarkFilteringSet
             if lookup.LookupFlag & 0x10:
                 # don't validate if the table is blocked
-                if self.getQueryStatus('GDEF') is False:
+                if self.getQueryStatus('GDEF')[0] is False:
                     raise Invalidation
                 gdef = self.font['GDEF']
                 coverage = gdef.table.MarkGlyphSetsDef.Coverage[lookup.MarkFilteringSet]
-                success, _ = self.validateMarkGlyphSet(coverage, True, gdef, requiredKeyOverride=False)
+                success, _, _ = self.validateMarkGlyphSet(coverage, True, gdef, requiredKeyOverride=False)
                 if not success:
                     raise Invalidation
 
@@ -213,30 +241,16 @@ class ExportAggregator(object):
             markAttachClassID = lookup.LookupFlag >> 8
             if markAttachClassID:
                 # don't validate if the table is blocked
-                if self.getQueryStatus('GDEF') is False:
+                if self.getQueryStatus('GDEF')[0] is False:
                     raise Invalidation
                 gdef = self.font['GDEF']
                 # An ad-hoc pseudo item, to enable outputting just the used
                 # mark attachment classes
                 markAttachClassTuple = (gdef.table.MarkAttachClassDef, markAttachClassID)
-                success, _ = self.validateMarkAttachmentClass(markAttachClassTuple, True, gdef, requiredKeyOverride=False)
+                success, _, _ = self.validateMarkAttachmentClass(markAttachClassTuple, True, gdef, requiredKeyOverride=False)
                 if not success:
                     raise Invalidation
 
-            # TODO
-            # Possible dependencies to other lookups:
-            #     GSUB type 5 Context (format 5.1 5.2 5.3)
-            #     GSUB type 6 Chaining Context (format 6.1 6.2 6.3)
-            #     GPOS type 7 Context positioning (format 7.1 7.2 7.3)
-            #     GPOS type 8 Chained Context positioning (format 7.1 7.2 7.3)
-            #
-            # GSUB contextuals: each of these have somewhere: an array of
-            # SubstLookupRecord which has a LookupListIndex into the GSUB LookupList
-            #
-            # GPOS contextuals: each of these have somewhere: an array of
-            # PosLookupRecord which has a LookupListIndex into the GPOS LookupList
-            #
-            # lookupList = table.table.LookupList.Lookup
         except Invalidation:
             invalid = True
         except Exception as e:
@@ -245,57 +259,57 @@ class ExportAggregator(object):
         finally:
             if invalid:
                 self._rollbackTransaction()
-                result = (False, True)
+                result = (False, True, muted)
             else:
                 self._commitTransaction()
-                result = (True, True)
+                result = (True, True, muted)
         return result
 
     @register
     def validateFeatureRecord(self, featureRecord, parentRequired, table):
-        requestStatus = self.getQueryStatus(table.tableTag, 'feature', featureRecord.FeatureTag)
+        requestStatus, muted = self.getQueryStatus(table.tableTag, 'feature', featureRecord.FeatureTag)
         required = requestStatus or parentRequired
         if requestStatus is False:
-            return (False, required)
+            return (False, required, muted)
 
         # check all dependencies
         childCount = 0
         for lookupIdx in featureRecord.Feature.LookupListIndex:
             # get the lookup from the lookupList
             lookup = table.table.LookupList.Lookup[lookupIdx]
-            success, _ = self.validateLookup(lookup, required, table)
+            success, _, _ = self.validateLookup(lookup, required, table)
             if success:
                 childCount += 1
-        return (childCount > 0, required)
+        return (childCount > 0, required, muted)
 
     @register
     def validateLanguage(self, langTuple, parentRequired, table):
         langTag, langSys = langTuple
-        requestStatus = self.getQueryStatus(table.tableTag, 'language', langTag)
+        requestStatus, muted = self.getQueryStatus(table.tableTag, 'language', langTag)
         required = requestStatus or parentRequired
         if requestStatus is False:
-            return (False, required)
+            return (False, required, muted)
 
         # check all dependencies
         childCount = 0
         for featureIdx in langSys.FeatureIndex:
             featureRecord = table.table.FeatureList.FeatureRecord[featureIdx]
-            success, _ = self.validateFeatureRecord(featureRecord, required, table)
+            success, _, _ = self.validateFeatureRecord(featureRecord, required, table)
             if success:
                 childCount += 1
-        return (childCount > 0, required)
+        return (childCount > 0, required, muted)
 
     @register
     def validateScriptRecord(self, scriptRecord, parentRequired, table):
-        requestStatus = self.getQueryStatus(table.tableTag, 'script', scriptRecord.ScriptTag)
+        requestStatus, muted = self.getQueryStatus(table.tableTag, 'script', scriptRecord.ScriptTag)
         required = requestStatus or parentRequired
         if requestStatus is False:
-            return (False, required)
+            return (False, required, muted)
         # check all dependencies
         childCount = 0
         if scriptRecord.Script.DefaultLangSys is not None:
             lang = ('dflt', scriptRecord.Script.DefaultLangSys)
-            success, _ = self.validateLanguage(lang, required, table)
+            success, _, _ = self.validateLanguage(lang, required, table)
             if success:
                 childCount += 1
 
@@ -308,37 +322,34 @@ class ExportAggregator(object):
             # equivalent to LangSys) The rendering code will have to
             # recreate these tuples as well, to read the registry status.
             lang = (langSysRecord.LangSysTag, langSysRecord.LangSys)
-            success, _ = self.validateLanguage(lang, required, table)
+            success, _, _ = self.validateLanguage(lang, required, table)
             if success:
                 childCount += 1
-        return (childCount > 0, required)
+        return (childCount > 0, required, muted)
 
     @register
     def validateCommonGTable(self, table, parentRequired):
         assert table.tableTag in {'GPOS', 'GSUB'}, 'Wrong table type: {0}'.format(table.tableTag)
-        requestStatus = self.getQueryStatus(table.tableTag)
+        requestStatus, muted = self.getQueryStatus(table.tableTag)
         required = requestStatus or parentRequired
         if requestStatus is False:
-            return (False, required)
+            return (False, required, muted)
         # check all dependencies
         childCount = 0
         for scriptRecord in table.table.ScriptList.ScriptRecord:
-            sucess, _ = self.validateScriptRecord(scriptRecord, required, table)
+            sucess, _, _ = self.validateScriptRecord(scriptRecord, required, table)
             if sucess:
                 childCount += 1
-        # No need to do features etc, as they are fully dependent on the script
-        # records. Yet there's just no way to output them when there's no script
-        # where they are contained in. This may change if we decide to print
-        # features without script/language which is mandatory at the moment.
+        # No need to do features here, as they are fully dependent on the script
+        # records.
 
         # Lookups can be outputted without script/lang/feature and that can be
-        # requested so. We iterate over these now so that we don't invalidate
-        # this table if there's otherwise no child.
+        # requested so.
         for lookup in table.table.LookupList.Lookup:
-            success, _ = self.validateLookup(lookup, False, table)
+            success, _, _ = self.validateLookup(lookup, False, table)
             if success:
                 childCount += 1
-        return (childCount > 0, required)
+        return (childCount > 0, required, muted)
 
     @register
     def validateLanguagesystem(self, itemString, parentRequired):
@@ -356,156 +367,6 @@ class ExportAggregator(object):
                 self.validateCommonGTable(self.font[tableTag], required)
         if 'GDEF' in self.font:
             self.validateGDEF(self.font['GDEF'], required)
-
-
-
-    # top level items:
-    #   - ScriptList
-    #   - FeatureList
-    #   - LookupList
-    #
-    # The Scriptlist lists all features per script and language, so we want
-    # to consult it when writing our features.
-    #
-    # the FeatureList has FeatureRecords which map FeatureTags (mkmk, mark)
-    # to LookupListIndexes
-
-    # The reason to have this request/filtering/lazy-eval thing in place
-    # before starting a PR is that the tool can be useful for my purpose
-    # while adding other lookups to the export.
-    # Without having this the tool will export too much for my specific purpose.
-
-    # TODO 0: Make this a proposal for the PR. Before that, make your mind
-    # up about implementation details.
-    # TODO A: I want to be able to control which items are exported
-    # by making a specific request and by filtering via whitelist/blacklist.
-    # --request "features: mark"
-    #       -> will export the mark feature and all associated lookups
-    # --request "features: mark; lookups markToBase"
-    #       -> will export the mark feature and it's markToBase lookups,
-    #          but not markToLigature
-    # --request "features: mark" --blacklist "lookups: markToLigature"
-    #       -> similar like the above
-    # "language" and "script" would be further candidates for filtering.
-    # A wildcart "*" can be used like so --request * or --whitelist "features:* --"
-    #
-    # Neither on a request or white-/blacklist filtered means the item
-    # may be exported if it is used somewhere.
-    # On a request means the item will be exported even if it is unused.
-    # If it can't be exported that is because a "hard/blacklisted" dependency
-    # is blocking it or because it is "empty" i.e. all lookups of a feature
-    # have been filtered, so the feature is empty and won't be exported.
-    #
-    # * If there are no lookups in a feature, it shouldn't be exported then.
-    # * we need a way to export just the lookups, without features
-    # * All glyphs-classes needed will be created when used (we could make
-    #   them requestable/filterable)
-    # * We need two things: A) export just the used stuff and skip the not
-    #   reachable (like skip unused lookups/classes)
-    #   B) export everything, regardless
-    #
-    # The default should be --request "*" (the wildcard may rather be something
-    # that is not expanded by the shell)
-    # Then there would be an option to export just stuff that is actually being
-    # used (like in a lazy evaluation -> that could be the programming model!)
-    #
-    # TODO B: Export from multiple fonts into one file. By using ExportState
-    # name clashes should be handled. This is useful to merge the features of
-    # two fonts that should go together. Like adding a latin font to an arabic font.
-    # I wouldn't check for overlapping character names (e.g. in GDEF) the
-    # font's should be subsetted before doing this.
-    # Maybe we can generate warnings when problematic situations occur.
-
-    # for A:
-    # I can imagine doing 2 passes:
-    # first pass: evaluate which items are going to be exported
-    # seccond pass: export every item in font order (as they appear in the data)
-    #
-    # That has the advantage of not needing to "backtrack" if an item becomes
-    # relevant after it has been defined (which shoukd be the normal case)
-    # Another way would be to send the items into a structure where they can
-    # be sorted before they are printed, i.e.: lookups = [(index, item)]
-    # can be sorted by index.
-    #
-    # an item can have 3 export states: yes(true), no(false), maybe(null)
-    # The lazy mode puts all items on "maybe"
-    # a "request" set's items on "yes"
-    # whitelist and blacklist can set items on "no". if there is a whitelist,
-    # the item must be in it. If there is a blacklist, the item must not be
-    # in it. The default whitelist is "*" (or ALL?) the defaukt blacklist
-    # is empty.
-    #
-    # Dependencies and how an empty item won't be exported even if requested.
-    # A lookup can't be empty. if it has dependencies and they are blocking,
-    # the lookup wont be exported.
-    #
-    # A feature has a list of lookups, if this list is empty it wont be exported
-    # the structure with languages and features is however a bit twisted!
-    # in fea the languages are "inside" of the lookups, while in ttx the
-    # features are inside the languages
-    #
-    # Also, I may choose to not export the language tags that come at the
-    # beginning of the fea file, as I may have these positioned in other
-    # files in my workflow.
-    # So, maybe another, last system is to "silence" stuff that would
-    # otherwise be exported.
-    #
-    #
-    # all --request --whitelist --blacklist --silence options should talk
-    # the same selector language.
-    #
-    # These apply to GPOS and GSUB:
-    # I'd say that without
-    #     {GSUB|GPOS} script: DFLT latn arab;
-    #     {GSUB|GPOS} language: DEU dflt ARA URD;
-    #     {GSUB|GPOS} feature: mkm mark calt dlig liga init medi;
-    #     {GSUB|GPOS} lookup: gpos1 singlePos gsub2 // gpos1 singlePos are the same?
-    # obviously: GDEF
-    #     GDEF: glyphClassDef attachList ligCaretList markAttachClasses markGlyphSets
-    # other
-    #     languagesystem
-    #
-    # We should also have a way to select all of GPOS or all of GDEF
-    # I'd really like to say --request "GPOS *" OR --blacklist "GSUB *"
-    # but in a way adding this GPOS/GSUB tags makes it a bit harder for the
-    # filtering selector language.
-    #
-    # HIERARCHIES:
-    #   languagesystem
-    #   GDEF
-    #       glyphClassDef
-    #       attachList
-    #       ligCaretList
-    #       markAttachClasses
-    #       markGlyphSets
-    #   GSUB and GPOS
-    #       script
-    #           DFLT latn arab ...
-    #       language
-    #           DEU dflt ARA URD ...
-    #       feature
-    #           mkm mark calt dlig liga init medi ...
-    #       lookup
-    #           gpos1 singlePos gsub2 ... // gpos1 singlePos are the same?
-    #
-    #  each entity could have a fully qualified name like:
-    #       GSUB feature calt || GPOS lookup gpos1
-    #  but that would be hard to type. Instead I want to have some shortcuts
-    #
-    #   i.e.:  GSUB feature *; GSUB **; GSUB|GPOS language|feature|lookup dlig|liga|gsub2
-    #   * is matches all on the current level
-    #   ** matches all on the current and all subsequent levels (having any
-    #      name after this selector has no effect, as it is matched anyways)
-    #
-    # So, one thing when we lazily evaluate what to print and what not is
-    # that an item needs to request its dependencies, which we learn when
-    # evaluating the item.
-    # the other thing is that we need to identify an item as one of the
-    # things that we can filter for. I.e. the selector of an item should
-    # be quite clear.
-    #
-
-    # a rule is a list of sets
 
 class Selector(object):
     def __init__(self, string):
@@ -557,15 +418,16 @@ class Selector(object):
         return False
 
 class ExportQuery(object):
-    def __init__(self, request=None, whitelist=None, blacklist=None, silence=None, **kwargs):
+    def __init__(self, request=None, whitelist=None, blacklist=None, mute=None, **kwargs):
+
         self._request = Selector(request) \
-                            if request is not None else Selector('**')
+                            if request is not None else None
         self._whitelist = Selector(whitelist) \
                             if whitelist is not None else None
         self._blacklist = Selector(blacklist) \
                             if blacklist is not None else None
-        self._silence = Selector(silence) \
-                            if silence is not None else None
+        self._mute = Selector(mute) \
+                            if mute is not None else None
 
     def getQueryStatus(self, *item):
         """ Return the query state of the item; True, False or None:
@@ -573,63 +435,179 @@ class ExportQuery(object):
                 False: Item is blocked
                 None: Item may be exported, if a dependent item requires it
         """
-
+        muted = self._mute is not None and item in self._mute
         if (self._whitelist is not None and item not in self._whitelist) \
                 or (self._blacklist is not None and item in self._blacklist):
-            return False
-        if item in self._request:
-            return True
-        return None # Maybe
-
-
-    # As far as dependencies go: when we check anything, we should put it
-    # save it's yes/no state (don't forget to delete that thing after the run)
-    # can perfectly use a dict, btw.
-    # So, when it comes to rendering, everything that has a YES state should
-    # be rendered. Rendering will be as static as below. Just, render anything
-    # in font order, if it has a yes.
-    # so the main thing will be to visit all nodes first, or at least all
-    # that have dependencies (but I wouldn't make that the rule)
-    # Walk through all nodes first, if a node has dependencies there are
-    # two possibilities:
-    #           1.) the block is invalid if any of it's dependencies are invalid
-    #                   like a lookup if it's markAttachment filter is invalid
-    #           2.) the block is invalid if all of it's dependencies are invalid
-    #                   a list like block, that could work with a subset of children
-    #                   like an empty feature block is invalid
-    #                   or like the GPOS table is invalid if all of its children are
-    #
-    # In the end, don't print maybe, print only items marked explicitly with yes
-
-    # next up export languagesets and features
-    # Probably a script/language is dependent on whether a appropriate language set
-    # is exported! (TODO: check docs/makeotf if declaring script/language
-    # is illegal without a fitting languageset. Also, special attention for the defaults!)
-    # that may become a bit dirty.
-
-
-parser = argparse.ArgumentParser(description='Generate an OpenType Feature file (fea) from an otf/ttf font.')
-
-# Metavar for the source-font-file" argument, for the future this could alse be many sources
-#parser.add_argument('integers', metavar='N', type=int, nargs='+',
-#                   help='an integer for the accumulator')
-
-parser.add_argument('-r, --request', dest='request', metavar="REQUIRED", nargs='?'\
-                 , help='The fea contents to export.')
-
-parser.add_argument('-w, --whitelist', dest='whitelist', metavar="WHITELIST", nargs='?'\
-                 , help='Whitelist of fea contents.')
-
-parser.add_argument('-b, --blacklist', dest='blacklist', metavar="BLACKLIST", nargs='?'\
-                 , help='Blacklist of fea contents.')
-
-
-
-parser.add_argument('font', help='A ttf or otf OpenType font file.'\
-                   , metavar="FONT-PATH")
+            return (False, muted)
+        # if request is None, the default is to select everything
+        if self._request is None or item in self._request:
+            return (True, muted)
+        return (None, muted) # Maybe
 
 def main():
-    import sys
+    """
+The --request, --whitelist, --blacklist and --mute options; all take
+as argument the same type of selector definition, which specifies the
+the members of each set. See "The Selector Specification" below.
+
+-r, --request
+      Define the items that should be exported. If no request is
+      defined (default) all items are requested (like: -r "**").
+      If an empty request is defined (like: -r "") no item is requested.
+      Items that are not directly requested are marked as "Maybe"
+      which means that they are exported if they are a dependency
+      of other items.
+      E.g.: Lookups are dependencies of features. In order to export
+      a feature, the lookups of the feature will be exported as well.
+      If all of its lookups are are filtered (by --whitelist
+      or --blacklist) the feature will not be exported even if it
+      was requested.
+      Similarly, LookupFlags of lookups can make a lookup dependent
+      on the GDEF items "markAttachClasses" (Flag: MarkAttachmentType)
+      and/or "markGlyphSets" (Flag: UseMarkFilteringSet) and some
+      Lookup Types can themselves be dependent on other Lookups in
+      the same table (GDEF or GPOS).
+      NOTE: These Lookup Types are not yet implemented.
+
+-w, --whitelist
+      If a whitelist is present only items that are selected
+      by the whitelist are allowed for output. This also means that
+      this can block other not directly blocked items from output,
+      if their dependencies are blocked.
+      (default is like: -w "**")
+
+-b, --blacklist
+      If a blacklist is present only items that are *NOT* selected
+      by the blacklist are allowed for output. his also means that
+      this can block other not directly blocked items from output,
+      if their dependencies are blocked.
+
+-m, --mute
+      While --whitelist and --blacklist try to keep the fea output
+      valid when blocking other items (by taking care of dependencies)
+      mute is not that careful. Mute allows to select items to not
+      being printed, while dependent items will still be outputted.
+      This is useful e.g. in a build process if all lookups of a
+      feature should be used, but the features itself and thus the
+      application of it are predefined somewhere else.
+      E.g.: -r "GPOS feature mkmk" -m "GPOS feature mkmk" will output
+      only the lookups used by the mkmk feature and if needed some
+      class definitions of the GDEF table for Lookup-Flags. But
+      the feature definition "feature mkmk { ... } mkmk;" will be
+      omitted.
+      Another scenario may be the inspection of the dependencies of an item
+      while shutting of other noise.
+
+The Selector Specification
+==========================
+
+A "selector" is made up of one or more single selectors, separated by
+semicolons: "single-selector;single-selector;single-selector;
+
+A "single-selector" is made up of one or more "selector-parts", separated
+by whitespace: "part1 part2 part3". These parts represent a parent-child
+like hierarchy: part3 is contained in part2 and part2 is contained in
+part1.
+
+A "selector-part" is made up of one ore more "selector-tags", separated
+by the pipe "|" symbol:  "tag1|tag2|tag3". Each part of a tag represents
+an alternative (logical OR) on the hierarchy level of the "selector-part"
+
+Selector-Tags
+-------------
+
+"*" and "**" are wildcard tags.
+
+"*" selects all items on the current hierarchy level. Thus it's not
+    needed to have further tags separated with "|" in the same selector-part
+"**" selects all items on the current hierarchy level and on all hierarchy
+     levels below. Thus after a "**" it's not needed to add any further
+     parts to select deeper levels. A single-selector ends after the
+     first "**"
+
+### Available tags and their hierarchy level (by indentation)
+
+  languagesystem
+  GDEF
+      glyphClassDef
+      attachList
+      ligCaretList
+      markAttachClasses
+      markGlyphSets
+  GSUB and GPOS
+      script
+          DFLT latn arab ... [script tags]
+      language
+          DEU dflt ARA URD ... [language tags]
+      feature
+          mkm mark calt dlig liga init medi ... [feature tags]
+      lookup
+          gpos1 gsub2 ... [see 'Lookup Type Selector Tags' below]// gpos1
+
+ ### Lookup Type Selector Tags:
+ from: https://www.microsoft.com/typography/otspec/gpos.htm
+
+     gpos1: Single adjustment (GPOS Lookup-Type 1)
+     gpos2: Pair adjustment
+     gpos3: Cursive attachment
+     gpos4: MarkToBase attachment
+     gpos5: MarkToLigature attachment
+     gpos6: MarkToMark attachment
+     gpos7: Context positioning
+     gpos8: Chained Context positioning
+     gpos9: Extension positioning
+     gsub1: Single
+     gsub2: Multiple
+     gsub3: Alternate
+     gsub4: Ligature
+     gsub5: Context
+     gsub6: Chaining Context
+     gsub7: Extension Substitution
+     gsub8: Reverse chaining context single
+
+EXAMPLES
+========
+
+$ fea2ft path/to/font.otf > features.fea
+    Export all features of font.otf and save them to the file features.fea
+
+$ fea2ft -r "GPOS" path/to/font.otf
+    export just the GPOS table and GDEF dependencies if there.
+
+$ ft2fea -r "GPOS feature mkmk|mark" path/to/font.otf
+    export the mkmk and mark feature of the GPOS table (if available)
+
+$ ft2fea -r "* script DFLT" path/to/font.otf
+    export everything registered under the DFLT script
+
+$ ft2fea -r "languagesystem" path/to/font.otf
+    Print all languagesystem definitions for the font.
+    NOTE: control over "languagesystem" is very limited at the moment.
+    It is is not used as a dependency of script and language, thus all
+    languagesystem definitions are either printed or not.
+
+$ ft2fea -r "GSUB feature medi" -m "GDEF; GSUB feature *" path/to/font.otf
+    export the lookups used by the medi feature of GSUB
+
+$ ft2fea -r "GPOS lookup gpos4|gpos5|gpos6" path/to/font.otf
+    export only the lookups of type MarkToBase (gpos4) or
+    MarkToLigature (gpos5) or MarkToMark(gpos6)
+
+$ ft2fea -r "* * gpos4|gpos5|gpos6" path/to/font.otf
+    export only the lookups of type MarkToBase (gpos4) or
+    MarkToLigature (gpos5) or MarkToMark(gpos6). Note, nothing but
+    "GPOS ligature" as children named like "gpos4", thus the wildcards
+    do just fine.
+
+$ ft2fea -request "GPOS|GSUB feature *" \\
+            -whitelist "GPOS|GSUB; GPOS|GSUB **" \\
+            -mute "* feature *"  \\
+            path/to/font.otf
+    Select features of GPOS or GSUB but filter dependencies that are not
+    in GPOS or GSUB, i.e. lookups depending on class definitions in GDEF.
+    Mute the feature blocks, so that only the lookups are exported.
+
+"""
     from fontTools.ttLib import TTFont
     from ft2fea import makeName, printFont
     args = parser.parse_args()
@@ -641,6 +619,27 @@ def main():
     printFont(font,
               makeName=partial(makeName, uniquenessDict={}),
               getStatus=aggregator.getStatus)
+
+
+parser = argparse.ArgumentParser(description=sys.modules[__name__].__doc__
+                               , epilog=main.__doc__
+                               , formatter_class=argparse.RawDescriptionHelpFormatter
+                               )
+
+parser.add_argument('-r, --request', dest='request', metavar="REQUEST", nargs='?'\
+                 , help='Select the fea contents to export. Default: "**"')
+
+parser.add_argument('-w, --whitelist', dest='whitelist', metavar="WHITELIST", nargs='?'\
+                 , help='Whitelist fea contents.')
+
+parser.add_argument('-b, --blacklist', dest='blacklist', metavar="BLACKLIST", nargs='?'\
+                 , help='Blacklist fea contents.')
+
+parser.add_argument('-m, --mute', dest='mute', metavar="MUTE", nargs='?'\
+                 , help='Mute the printed output of fea contents.')
+
+parser.add_argument('font', help='A ttf or otf OpenType font file.'\
+                   , metavar="FONT-PATH")
 
 if __name__ == '__main__':
     main()
