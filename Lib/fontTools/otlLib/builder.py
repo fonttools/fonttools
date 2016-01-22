@@ -32,7 +32,7 @@ def buildLookup(subtables, flags=0, markFilterSet=None):
     self.LookupType = subtables[0].LookupType
     self.LookupFlag = flags
     self.SubTable = subtables
-    self.SubTableCount = len(subtables)
+    self.SubTableCount = len(self.SubTable)
     if markFilterSet is not None:
         assert self.LookupFlag & LOOKUP_FLAG_USE_MARK_FILTERING_SET, \
             ("if markFilterSet is not None, flags must set "
@@ -98,7 +98,7 @@ def buildLigatureSubstSubtable(mapping):
     for components in sorted(mapping.keys(), key=_getLigatureKey):
         ligature = ot.Ligature()
         ligature.Component = components[1:]
-        ligature.CompCount = len(components)
+        ligature.CompCount = len(ligature.Component) + 1
         ligature.LigGlyph = mapping[components]
         firstGlyph = components[0]
         self.ligatures.setdefault(firstGlyph, []).append(ligature)
@@ -126,12 +126,12 @@ def buildAnchor(x, y, point=None, deviceX=None, deviceY=None):
 
 def buildBaseArray(bases, numMarkClasses, glyphMap):
     self = ot.BaseArray()
-    self.BaseCount = len(bases)
     self.BaseRecord = []
     for base in sorted(bases, key=glyphMap.__getitem__):
         b = bases[base]
         anchors = [b.get(markClass) for markClass in range(numMarkClasses)]
         self.BaseRecord.append(buildBaseRecord(anchors))
+    self.BaseCount = len(self.BaseRecord)
     return self
 
 
@@ -195,33 +195,33 @@ def buildDevice(deltas):
 
 def buildLigatureArray(ligs, numMarkClasses, glyphMap):
     self = ot.LigatureArray()
-    self.LigatureCount = len(ligs)
     self.LigatureAttach = []
     for lig in sorted(ligs, key=glyphMap.__getitem__):
         anchors = []
         for component in ligs[lig]:
             anchors.append([component.get(mc) for mc in range(numMarkClasses)])
         self.LigatureAttach.append(buildLigatureAttach(anchors))
+    self.LigatureCount = len(self.LigatureAttach)
     return self
 
 
 def buildLigatureAttach(components):
     """[[Anchor, Anchor], [Anchor, Anchor, Anchor]] --> LigatureAttach"""
     self = ot.LigatureAttach()
-    self.ComponentCount = len(components)
     self.ComponentRecord = [buildComponentRecord(c) for c in components]
+    self.ComponentCount = len(self.ComponentRecord)
     return self
 
 
 def buildMarkArray(marks, glyphMap):
     """{"acute": (markClass, otTables.Anchor)} --> otTables.MarkArray"""
     self = ot.MarkArray()
-    self.MarkCount = len(marks)
     self.MarkRecord = []
     for mark in sorted(marks.keys(), key=glyphMap.__getitem__):
         markClass, anchor = marks[mark]
         markrec = buildMarkRecord(markClass, anchor)
         self.MarkRecord.append(markrec)
+    self.MarkCount = len(self.MarkRecord)
     return self
 
 
@@ -483,8 +483,8 @@ def buildLigGlyph(coords, points):
     if not carets:
         return None
     self = ot.LigGlyph()
-    self.CaretCount = len(carets)
     self.CaretValue = carets
+    self.CaretCount = len(self.CaretValue)
     return self
 
 
