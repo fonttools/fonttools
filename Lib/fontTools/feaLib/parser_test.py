@@ -1135,6 +1135,10 @@ class ParserTest(unittest.TestCase):
             FeatureLibError, "longer than 4 characters",
             self.parse, "languagesystem latn FOOBAR;")
 
+    def test_empty_statement_ignored(self):
+        doc = self.parse("feature test {;} test;")
+        self.assertFalse(doc.statements[0].statements)
+
     def setUp(self):
         self.tempdir = None
         self.num_tempfiles = 0

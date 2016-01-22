@@ -840,6 +840,8 @@ class Parser(object):
                 statements.append(self.parse_subtable_())
             elif self.is_cur_keyword_("valueRecordDef"):
                 statements.append(self.parse_valuerecord_definition_(vertical))
+            elif self.cur_token_ == ";":
+                continue
             else:
                 raise FeatureLibError(
                     "Expected glyph class definition or statement",
