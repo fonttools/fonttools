@@ -887,19 +887,6 @@ def parseGSUB(lines, font):
 def parseGPOS(lines, font):
 	return parseGSUBGPOS(lines, font, 'GPOS')
 
-def makeAttachList(points, font):
-	self = ot.AttachList()
-	self.Coverage = makeCoverage(points.keys(), font)
-	records = []
-	for glyph in self.Coverage.glyphs:
-		record = ot.AttachPoint()
-		record.PointIndex = sorted(set(points[glyph]))
-		record.PointCount = len(record.PointIndex)
-		records.append(record)
-	self.AttachPoint = records
-	self.GlyphCount = len(records)
-	return self
-
 def parseAttachList(lines, font):
 	points = {}
 	with lines.between('attachment list'):
@@ -907,7 +894,7 @@ def parseAttachList(lines, font):
 			glyph = makeGlyph(line[0])
 			assert glyph not in points, glyph
 			points[glyph] = [int(i) for i in line[1:]]
-	return makeAttachList(points, font)
+	return otl.buildAttachList(points, font.getReverseGlyphMap())
 
 def parseCaretList(lines, font):
 	carets = {}
