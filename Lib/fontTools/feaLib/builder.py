@@ -659,9 +659,9 @@ def makeOpenTypeAnchor(anchor):
         return None
     deviceX, deviceY = None, None
     if anchor.xDeviceTable is not None:
-        deviceX = otl.buildDevice(anchor.xDeviceTable)
+        deviceX = otl.buildDevice(dict(anchor.xDeviceTable))
     if anchor.yDeviceTable is not None:
-        deviceY = otl.buildDevice(anchor.yDeviceTable)
+        deviceY = otl.buildDevice(dict(anchor.yDeviceTable))
     return otl.buildAnchor(anchor.x, anchor.y, anchor.contourpoint,
                            deviceX, deviceY)
 
@@ -682,7 +682,7 @@ def makeOpenTypeValueRecord(v):
     for astName, (otName, isDevice) in _VALUEREC_ATTRS.items():
         val = getattr(v, astName, None)
         if val:
-            vr[otName] = otl.buildDevice(val) if isDevice else val
+            vr[otName] = otl.buildDevice(dict(val)) if isDevice else val
 
     valRec = otl.buildValue(vr)
     return valRec, valRec.getFormat()

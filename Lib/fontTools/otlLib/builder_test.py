@@ -41,8 +41,8 @@ class BuilderTest(unittest.TestCase):
     def test_buildAnchor_format3(self):
         anchor = builder.buildAnchor(
             23, 42,
-            deviceX=builder.buildDevice([(1, 1), (0, 0)]),
-            deviceY=builder.buildDevice([(7, 7)]))
+            deviceX=builder.buildDevice({1:1, 0:0}),
+            deviceY=builder.buildDevice({7:7}))
         self.assertEqual(getXML(anchor.toXML),
                          '<Anchor Format="3">'
                          '  <XCoordinate value="23"/>'
@@ -222,7 +222,7 @@ class BuilderTest(unittest.TestCase):
                          '</CursivePos>')
 
     def test_buildDevice_format1(self):
-        device = builder.buildDevice([(1, 1), (0, 0)])
+        device = builder.buildDevice({1:1, 0:0})
         self.assertEqual(getXML(device.toXML),
                          '<Device>'
                          '  <StartSize value="0"/>'
@@ -232,7 +232,7 @@ class BuilderTest(unittest.TestCase):
                          '</Device>')
 
     def test_buildDevice_format2(self):
-        device = builder.buildDevice([(1, 2), (-1, 1), (0, 0)])
+        device = builder.buildDevice({1:2, -1:1, 0:0})
         self.assertEqual(getXML(device.toXML),
                          '<Device>'
                          '  <StartSize value="-1"/>'
@@ -242,7 +242,7 @@ class BuilderTest(unittest.TestCase):
                          '</Device>')
 
     def test_buildDevice_format3(self):
-        device = builder.buildDevice([(5, 3), (1, 77)])
+        device = builder.buildDevice({5:3, 1:77})
         self.assertEqual(getXML(device.toXML),
                          '<Device>'
                          '  <StartSize value="1"/>'
@@ -849,7 +849,7 @@ class BuilderTest(unittest.TestCase):
         self.assertEqual(c, components("fff ffi ff fi fl"))
 
     def test_getSinglePosValueKey(self):
-        device = builder.buildDevice([(10, 1), (11, 3)])
+        device = builder.buildDevice({10:1, 11:3})
         a1 = builder.buildValue({"XPlacement": 500, "XPlaDevice": device})
         a2 = builder.buildValue({"XPlacement": 500, "XPlaDevice": device})
         b = builder.buildValue({"XPlacement": 500})

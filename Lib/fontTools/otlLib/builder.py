@@ -169,17 +169,16 @@ def buildCursivePosSubtable(attach, glyphMap):
     return self
 
 
-def buildDevice(device):
-    """[(11, 22), (7, -7), ...] --> otTables.Device"""
-    if not device:
+def buildDevice(deltas):
+    """{8:+1, 10:-3, ...} --> otTables.Device"""
+    if not deltas:
       return None
     self = ot.Device()
-    device = tuple(sorted(device))
-    self.StartSize = startSize = device[0][0]
-    self.EndSize = endSize = device[-1][0]
-    deviceDict = dict(device)
+    keys = deltas.keys()
+    self.StartSize = startSize = min(keys)
+    self.EndSize = endSize = max(keys)
     self.DeltaValue = deltaValues = [
-        deviceDict.get(size, 0)
+        deltas.get(size, 0)
         for size in range(startSize, endSize + 1)]
     maxDelta = max(deltaValues)
     minDelta = min(deltaValues)
