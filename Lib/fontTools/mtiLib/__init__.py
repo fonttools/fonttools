@@ -909,24 +909,6 @@ def parseAttachList(lines, font):
 			points[glyph] = [int(i) for i in line[1:]]
 	return makeAttachList(points, font)
 
-def makeCaretList(carets, font):
-	self = ot.LigCaretList()
-	self.Coverage = makeCoverage(carets.keys(), font)
-	records = []
-	for glyph in self.Coverage.glyphs:
-		record = ot.LigGlyph()
-		cvs = record.CaretValue = []
-		for v in carets[glyph]:
-			cv = ot.CaretValue()
-			cv.Format = 1
-			cv.Coordinate = v
-			cvs.append(cv)
-		record.CaretCount = len(record.CaretValue)
-		records.append(record)
-	self.LigGlyph = records
-	self.LigGlyphCount = len(records)
-	return self
-
 def parseCaretList(lines, font):
 	carets = {}
 	with lines.between('carets'):
@@ -937,7 +919,7 @@ def parseCaretList(lines, font):
 			thisCarets = [int(i) for i in line[2:]]
 			assert num == len(thisCarets), line
 			carets[glyph] = thisCarets
-	return makeCaretList(carets, font)
+	return builder.buildLigCaretList(carets, {}, font.getReverseGlyphMap())
 
 def makeMarkFilteringSets(sets, font):
 	self = ot.MarkGlyphSetsDef()
