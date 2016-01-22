@@ -211,7 +211,7 @@ def buildMarkArray(marks, glyphMap):
 def buildMarkBasePos(marks, bases, glyphMap):
     """Build a list of MarkBasePos subtables.
 
-    a1, a2, a3, a4 = buildAnchor(500, 100), ...
+    a1, a2, a3, a4, a5 = buildAnchor(500, 100), ...
     marks = {"acute": (0, a1), "grave": (0, a1), "cedilla": (1, a2)}
     bases = {"a": {0: a3, 1: a5}, "b": {0: a4, 1: a5}}
     """
@@ -232,7 +232,7 @@ def buildMarkBasePos(marks, bases, glyphMap):
 def buildMarkBasePosSubtable(marks, bases, glyphMap):
     """Build a single MarkBasePos subtable.
 
-    a1, a2, a3, a4 = buildAnchor(500, 100), ...
+    a1, a2, a3, a4, a5 = buildAnchor(500, 100), ...
     marks = {"acute": (0, a1), "grave": (0, a1), "cedilla": (1, a2)}
     bases = {"a": {0: a3, 1: a5}, "b": {0: a4, 1: a5}}
     """
@@ -243,6 +243,37 @@ def buildMarkBasePosSubtable(marks, bases, glyphMap):
     self.ClassCount = max([mc for mc, _ in marks.values()]) + 1
     self.BaseCoverage = buildCoverage(bases, glyphMap)
     self.BaseArray = buildBaseArray(bases, self.ClassCount, glyphMap)
+    return self
+
+
+def buildMarkLigPos(marks, ligs, glyphMap):
+    """Build a list of MarkLigPos subtables.
+
+    a1, a2, a3, a4, a5 = buildAnchor(500, 100), ...
+    marks = {"acute": (0, a1), "grave": (0, a1), "cedilla": (1, a2)}
+    ligs = {"f_i": [{0: a3, 1: a5},  {0: a4, 1: a5}], "c_t": [{...}, {...}]}
+    """
+    # TODO: Consider splitting into multiple subtables to save space,
+    # as with MarkBasePos, this would be a trade-off that would need
+    # profiling. And, depending on how typical fonts are structured,
+    # it might not be worth doing at all.
+    return [buildMarkLigPosSubtable(marks, ligs, glyphMap)]
+
+
+def buildMarkLigPosSubtable(marks, ligs, glyphMap):
+    """Build a single MarkLigPos subtable.
+
+    a1, a2, a3, a4, a5 = buildAnchor(500, 100), ...
+    marks = {"acute": (0, a1), "grave": (0, a1), "cedilla": (1, a2)}
+    ligs = {"f_i": [{0: a3, 1: a5},  {0: a4, 1: a5}], "c_t": [{...}, {...}]}
+    """
+    self = ot.MarkLigPos()
+    self.Format = 1
+    self.MarkCoverage = buildCoverage(marks, glyphMap)
+    self.MarkArray = buildMarkArray(marks, glyphMap)
+    self.ClassCount = max([mc for mc, _ in marks.values()]) + 1
+    self.LigatureCoverage = buildCoverage(ligs, glyphMap)
+    self.LigatureArray = buildLigatureArray(ligs, self.ClassCount, glyphMap)
     return self
 
 

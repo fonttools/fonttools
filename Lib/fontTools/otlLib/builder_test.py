@@ -632,6 +632,100 @@ class BuilderTest(unittest.TestCase):
     def test_buildMarkGlyphSetsDef_None(self):
         self.assertIsNone(builder.buildMarkGlyphSetsDef(None, self.GLYPHMAP))
 
+    def test_buildMarkLigPosSubtable(self):
+        anchor = builder.buildAnchor
+        marks = {
+            "acute": (0, anchor(300, 700)),
+            "cedilla": (1, anchor(300, -100)),
+            "grave": (0, anchor(300, 700))
+        }
+        bases = {
+            "f_i": [{}, {0: anchor(200, 400)}],  # nothing on f; only 1 on i
+            "c_t": [
+                {0: anchor(500, 600), 1: anchor(500, -20)},   # c
+                {0: anchor(1300, 800), 1: anchor(1300, -20)}  # t
+            ]
+        }
+        table = builder.buildMarkLigPosSubtable(marks, bases, self.GLYPHMAP)
+        self.maxDiff = None
+        self.assertEqual(getXML(table.toXML),
+                         '<MarkLigPos Format="1">'
+                         '  <MarkCoverage>'
+                         '    <Glyph value="grave"/>'
+                         '    <Glyph value="acute"/>'
+                         '    <Glyph value="cedilla"/>'
+                         '  </MarkCoverage>'
+                         '  <LigatureCoverage>'
+                         '    <Glyph value="f_i"/>'
+                         '    <Glyph value="c_t"/>'
+                         '  </LigatureCoverage>'
+                         '  <!-- ClassCount=2 -->'
+                         '  <MarkArray>'
+                         '    <!-- MarkCount=3 -->'
+                         '    <MarkRecord index="0">'
+                         '      <Class value="0"/>'
+                         '      <MarkAnchor Format="1">'
+                         '        <XCoordinate value="300"/>'
+                         '        <YCoordinate value="700"/>'
+                         '      </MarkAnchor>'
+                         '    </MarkRecord>'
+                         '    <MarkRecord index="1">'
+                         '      <Class value="0"/>'
+                         '      <MarkAnchor Format="1">'
+                         '        <XCoordinate value="300"/>'
+                         '        <YCoordinate value="700"/>'
+                         '      </MarkAnchor>'
+                         '    </MarkRecord>'
+                         '    <MarkRecord index="2">'
+                         '      <Class value="1"/>'
+                         '      <MarkAnchor Format="1">'
+                         '        <XCoordinate value="300"/>'
+                         '        <YCoordinate value="-100"/>'
+                         '      </MarkAnchor>'
+                         '    </MarkRecord>'
+                         '  </MarkArray>'
+                         '  <LigatureArray>'
+                         '    <!-- LigatureCount=2 -->'
+                         '    <LigatureAttach index="0">'
+                         '      <!-- ComponentCount=2 -->'
+                         '      <ComponentRecord index="0">'
+                         '        <LigatureAnchor index="0" empty="1"/>'
+                         '        <LigatureAnchor index="1" empty="1"/>'
+                         '      </ComponentRecord>'
+                         '      <ComponentRecord index="1">'
+                         '        <LigatureAnchor index="0" Format="1">'
+                         '          <XCoordinate value="200"/>'
+                         '          <YCoordinate value="400"/>'
+                         '        </LigatureAnchor>'
+                         '        <LigatureAnchor index="1" empty="1"/>'
+                         '      </ComponentRecord>'
+                         '    </LigatureAttach>'
+                         '    <LigatureAttach index="1">'
+                         '      <!-- ComponentCount=2 -->'
+                         '      <ComponentRecord index="0">'
+                         '        <LigatureAnchor index="0" Format="1">'
+                         '          <XCoordinate value="500"/>'
+                         '          <YCoordinate value="600"/>'
+                         '        </LigatureAnchor>'
+                         '        <LigatureAnchor index="1" Format="1">'
+                         '          <XCoordinate value="500"/>'
+                         '          <YCoordinate value="-20"/>'
+                         '        </LigatureAnchor>'
+                         '      </ComponentRecord>'
+                         '      <ComponentRecord index="1">'
+                         '        <LigatureAnchor index="0" Format="1">'
+                         '          <XCoordinate value="1300"/>'
+                         '          <YCoordinate value="800"/>'
+                         '        </LigatureAnchor>'
+                         '        <LigatureAnchor index="1" Format="1">'
+                         '          <XCoordinate value="1300"/>'
+                         '          <YCoordinate value="-20"/>'
+                         '        </LigatureAnchor>'
+                         '      </ComponentRecord>'
+                         '    </LigatureAttach>'
+                         '  </LigatureArray>'
+                         '</MarkLigPos>')
+
     def test_buildMarkRecord(self):
         rec = builder.buildMarkRecord(17, builder.buildAnchor(500, -20))
         self.assertEqual(getXML(rec.toXML),
