@@ -7,7 +7,7 @@ import unittest
 
 class BuilderTest(unittest.TestCase):
     GLYPHS = (".notdef space zero one two three four five six f_f_i c_t "
-              "grave acute cedilla").split()
+              "A B C a b c grave acute cedilla").split()
     GLYPHMAP = {name: num for num, name in enumerate(GLYPHS)}
 
     ANCHOR1 = builder.buildAnchor(11, -11)
@@ -94,6 +94,39 @@ class BuilderTest(unittest.TestCase):
                          '  <PointIndex index="0" value="3"/>'
                          '  <PointIndex index="1" value="7"/>'
                          '</AttachPoint>')
+
+    def test_buildBaseArray(self):
+        anchor = builder.buildAnchor
+        baseArray = builder.buildBaseArray({
+            "a": {2: anchor(300, 80)},
+            "c": {1: anchor(300, 80), 2: anchor(300, -20)}
+        }, numMarkClasses=4, glyphMap=self.GLYPHMAP)
+        self.maxDiff = None
+        self.assertEqual(getXML(baseArray.toXML),
+                         '<BaseArray>'
+                         '  <!-- BaseCount=2 -->'
+                         '  <BaseRecord index="0">'
+                         '    <BaseAnchor index="0" empty="1"/>'
+                         '    <BaseAnchor index="1" empty="1"/>'
+                         '    <BaseAnchor index="2" Format="1">'
+                         '      <XCoordinate value="300"/>'
+                         '      <YCoordinate value="80"/>'
+                         '    </BaseAnchor>'
+                         '    <BaseAnchor index="3" empty="1"/>'
+                         '  </BaseRecord>'
+                         '  <BaseRecord index="1">'
+                         '    <BaseAnchor index="0" empty="1"/>'
+                         '    <BaseAnchor index="1" Format="1">'
+                         '      <XCoordinate value="300"/>'
+                         '      <YCoordinate value="80"/>'
+                         '    </BaseAnchor>'
+                         '    <BaseAnchor index="2" Format="1">'
+                         '      <XCoordinate value="300"/>'
+                         '      <YCoordinate value="-20"/>'
+                         '    </BaseAnchor>'
+                         '    <BaseAnchor index="3" empty="1"/>'
+                         '  </BaseRecord>'
+                         '</BaseArray>')
 
     def test_buildBaseRecord(self):
         a = builder.buildAnchor

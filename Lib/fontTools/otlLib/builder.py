@@ -111,6 +111,17 @@ def buildAnchor(x, y, point=None, deviceX=None, deviceY=None):
     return self
 
 
+def buildBaseArray(bases, numMarkClasses, glyphMap):
+    self = ot.BaseArray()
+    self.BaseCount = len(bases)
+    self.BaseRecord = []
+    for base in sorted(bases, key=glyphMap.__getitem__):
+        b = bases[base]
+        anchors = [b.get(markClass) for markClass in range(numMarkClasses)]
+        self.BaseRecord.append(buildBaseRecord(anchors))
+    return self
+
+
 def buildBaseRecord(anchors):
     """[otTables.Anchor, otTables.Anchor, ...] --> otTables.BaseRecord"""
     self = ot.BaseRecord()

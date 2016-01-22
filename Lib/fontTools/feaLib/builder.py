@@ -979,13 +979,7 @@ class MarkBasePosBuilder(LookupBuilder):
         st.MarkArray = otl.buildMarkArray(marks, self.glyphMap)
         st.ClassCount = len(markClasses)
         st.BaseCoverage = otl.buildCoverage(bases, self.glyphMap)
-        st.BaseArray = ba = otTables.BaseArray()
-        ba.BaseCount = len(bases)
-        ba.BaseRecord = []
-        for base in sorted(bases, key=self.glyphMap.__getitem__):
-            baseAnchors = bases[base]
-            anchors = [baseAnchors.get(mc) for mc in range(st.ClassCount)]
-            ba.BaseRecord.append(otl.buildBaseRecord(anchors))
+        st.BaseArray = otl.buildBaseArray(bases, st.ClassCount, self.glyphMap)
         return self.buildLookup_([st])
 
 
