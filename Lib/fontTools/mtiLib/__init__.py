@@ -844,7 +844,7 @@ def parseGSUBGPOS(lines, font, tableTag):
 		('ScriptList',
 		 lambda lines: parseScriptList (lines, featureMap)),
 		'feature table begin':
-		('FeaturetList',
+		('FeatureList',
 		 lambda lines: parseFeatureList (lines, lookupMap, featureMap)),
 		'lookup':
 		('LookupList',
