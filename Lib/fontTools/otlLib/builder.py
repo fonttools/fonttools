@@ -46,19 +46,19 @@ def buildLookup(subtables, flags=0, markFilterSet=None):
 # GSUB
 
 
-def buildSingleSubst(mapping):
+def buildSingleSubstSubtable(mapping):
     self = ot.SingleSubst()
     self.mapping = dict(mapping)
     return self
 
 
-def buildMultipleSubst(mapping):
+def buildMultipleSubstSubtable(mapping):
     self = ot.MultipleSubst()
     self.mapping = dict(mapping)
     return self
 
 
-def buildAlternateSubst(mapping):
+def buildAlternateSubstSubtable(mapping):
     self = ot.AlternateSubst()
     self.alternates = dict(mapping)
     return self
@@ -70,7 +70,7 @@ def _getLigatureKey(components):
     When building the OpenType lookup, we need to make sure that
     the longest sequence of components is listed first, so we
     use the negative length as the primary key for sorting.
-    To make buildLigatureSubst() deterministic, we use the
+    To make buildLigatureSubstSubtable() deterministic, we use the
     component sequence as the secondary key.
 
     For example, this will sort (f,f,f) < (f,f,i) < (f,f) < (f,i) < (f,l).
@@ -78,7 +78,7 @@ def _getLigatureKey(components):
     return (-len(components), components)
 
 
-def buildLigatureSubst(mapping):
+def buildLigatureSubstSubtable(mapping):
     self = ot.LigatureSubst()
     # The following single line can replace the rest of this function
     # with fontTools >= 3.1:

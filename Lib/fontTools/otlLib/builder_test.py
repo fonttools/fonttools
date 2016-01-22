@@ -426,8 +426,8 @@ class BuilderTest(unittest.TestCase):
                          '</LigGlyph>')
 
     def test_buildLookup(self):
-        s1 = builder.buildSingleSubst({"one": "two"})
-        s2 = builder.buildSingleSubst({"three": "four"})
+        s1 = builder.buildSingleSubstSubtable({"one": "two"})
+        s2 = builder.buildSingleSubstSubtable({"three": "four"})
         lookup = builder.buildLookup([s1, s2], flags=7)
         self.assertEqual(getXML(lookup.toXML),
                          '<Lookup>'
@@ -443,7 +443,7 @@ class BuilderTest(unittest.TestCase):
                          '</Lookup>')
 
     def test_buildLookup_badFlags(self):
-        s = builder.buildSingleSubst({"one": "two"})
+        s = builder.buildSingleSubstSubtable({"one": "two"})
         self.assertRaisesRegex(
             AssertionError, "if markFilterSet is None, "
             "flags must not set LOOKUP_FLAG_USE_MARK_FILTERING_SET; "
@@ -458,8 +458,8 @@ class BuilderTest(unittest.TestCase):
             builder.LOOKUP_FLAG_IGNORE_LIGATURES, 777)
 
     def test_buildLookup_conflictingSubtableTypes(self):
-        s1 = builder.buildSingleSubst({"one": "two"})
-        s2 = builder.buildAlternateSubst({"one": ["two", "three"]})
+        s1 = builder.buildSingleSubstSubtable({"one": "two"})
+        s2 = builder.buildAlternateSubstSubtable({"one": ["two", "three"]})
         self.assertRaisesRegex(
             AssertionError, "all subtables must have the same LookupType",
             builder.buildLookup, [s1, s2])
@@ -469,7 +469,7 @@ class BuilderTest(unittest.TestCase):
         self.assertIsNone(builder.buildLookup(None))
 
     def test_buildLookup_markFilterSet(self):
-        s = builder.buildSingleSubst({"one": "two"})
+        s = builder.buildSingleSubstSubtable({"one": "two"})
         flags = (builder.LOOKUP_FLAG_RIGHT_TO_LEFT |
                  builder.LOOKUP_FLAG_USE_MARK_FILTERING_SET)
         lookup = builder.buildLookup([s], flags, markFilterSet=999)

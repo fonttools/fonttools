@@ -762,7 +762,7 @@ class AlternateSubstBuilder(LookupBuilder):
                 self.alternates == other.alternates)
 
     def build(self):
-        subtable = otl.buildAlternateSubst(self.alternates)
+        subtable = otl.buildAlternateSubstSubtable(self.alternates)
         return self.buildLookup_([subtable])
 
     def getAlternateGlyphs(self):
@@ -848,7 +848,7 @@ class LigatureSubstBuilder(LookupBuilder):
                 self.ligatures == other.ligatures)
 
     def build(self):
-        subtable = otl.buildLigatureSubst(self.ligatures)
+        subtable = otl.buildLigatureSubstSubtable(self.ligatures)
         return self.buildLookup_([subtable])
 
 
@@ -862,7 +862,7 @@ class MultipleSubstBuilder(LookupBuilder):
                 self.mapping == other.mapping)
 
     def build(self):
-        subtable = otl.buildMultipleSubst(self.mapping)
+        subtable = otl.buildMultipleSubstSubtable(self.mapping)
         return self.buildLookup_([subtable])
 
 
@@ -1065,7 +1065,7 @@ class SingleSubstBuilder(LookupBuilder):
                 self.mapping == other.mapping)
 
     def build(self):
-        subtable = otl.buildSingleSubst(self.mapping)
+        subtable = otl.buildSingleSubstSubtable(self.mapping)
         return self.buildLookup_([subtable])
 
     def getAlternateGlyphs(self):

@@ -207,21 +207,21 @@ def parseSingleSubst(lines, font, _lookupMap=None):
 		assert len(line) == 2, line
 		line = makeGlyphs(line)
 		mapping[line[0]] = line[1]
-	return otl.buildSingleSubst(mapping)
+	return otl.buildSingleSubstSubtable(mapping)
 
 def parseMultiple(lines, font, _lookupMap=None):
 	mapping = {}
 	for line in lines:
 		line = makeGlyphs(line)
 		mapping[line[0]] = line[1:]
-	return otl.buildMultipleSubst(mapping)
+	return otl.buildMultipleSubstSubtable(mapping)
 
 def parseAlternate(lines, font, _lookupMap=None):
 	mapping = {}
 	for line in lines:
 		line = makeGlyphs(line)
 		mapping[line[0]] = line[1:]
-	return otl.buildAlternateSubst(mapping)
+	return otl.buildAlternateSubstSubtable(mapping)
 
 def parseLigature(lines, font, _lookupMap=None):
 	mapping = {}
@@ -229,7 +229,7 @@ def parseLigature(lines, font, _lookupMap=None):
 		assert len(line) >= 2, line
 		line = makeGlyphs(line)
 		mapping[tuple(line[1:])] = line[0]
-	return otl.buildLigatureSubst(mapping)
+	return otl.buildLigatureSubstSubtable(mapping)
 
 def parseSinglePos(lines, font, _lookupMap=None):
 	values = {}
