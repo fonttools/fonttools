@@ -10,7 +10,7 @@ from __future__ import print_function, division, absolute_import
 from fontTools import ttLib
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.tables.otBase import ValueRecord, valueRecordFormatDict
-from fontTools.otlLib import builder
+from fontTools.otlLib import builder as otl
 from contextlib import contextmanager
 from operator import setitem
 
@@ -207,21 +207,21 @@ def parseSingleSubst(lines, font, _lookupMap=None):
 		assert len(line) == 2, line
 		line = makeGlyphs(line)
 		mapping[line[0]] = line[1]
-	return builder.buildSingleSubst(mapping)
+	return otl.buildSingleSubst(mapping)
 
 def parseMultiple(lines, font, _lookupMap=None):
 	mapping = {}
 	for line in lines:
 		line = makeGlyphs(line)
 		mapping[line[0]] = line[1:]
-	return builder.buildMultipleSubst(mapping)
+	return otl.buildMultipleSubst(mapping)
 
 def parseAlternate(lines, font, _lookupMap=None):
 	mapping = {}
 	for line in lines:
 		line = makeGlyphs(line)
 		mapping[line[0]] = line[1:]
-	return builder.buildAlternateSubst(mapping)
+	return otl.buildAlternateSubst(mapping)
 
 def parseLigature(lines, font, _lookupMap=None):
 	mapping = {}
@@ -229,7 +229,7 @@ def parseLigature(lines, font, _lookupMap=None):
 		assert len(line) >= 2, line
 		line = makeGlyphs(line)
 		mapping[tuple(line[1:])] = line[0]
-	return builder.buildLigatureSubst(mapping)
+	return otl.buildLigatureSubst(mapping)
 
 def parseSinglePos(lines, font, _lookupMap=None):
 	values = {}
@@ -243,7 +243,7 @@ def parseSinglePos(lines, font, _lookupMap=None):
 			values[g] = ValueRecord()
 		assert not hasattr(values[g], w), (g, w)
 		setattr(values[g], w, v)
-	return builder.buildSinglePosSubtable(values, font.getReverseGlyphMap())
+	return otl.buildSinglePosSubtable(values, font.getReverseGlyphMap())
 
 def parsePair(self, lines, font, _lookupMap=None):
 	self.ValueFormat1 = self.ValueFormat2 = 0
@@ -354,7 +354,7 @@ def parseCursive(lines, font, _lookupMap=None):
 			records[glyph] = [None,None]
 		assert records[glyph][idx] is None, (glyph, idx)
 		records[glyph][idx] = makeAnchor(line[2:], klass)
-	return builder.buildCursivePos(records, font.getReverseGlyphMap())
+	return otl.buildCursivePos(records, font.getReverseGlyphMap())
 
 def makeMarkRecords(data, coverage, c):
 	records = []
@@ -919,7 +919,7 @@ def parseCaretList(lines, font):
 			thisCarets = [int(i) for i in line[2:]]
 			assert num == len(thisCarets), line
 			carets[glyph] = thisCarets
-	return builder.buildLigCaretList(carets, {}, font.getReverseGlyphMap())
+	return otl.buildLigCaretList(carets, {}, font.getReverseGlyphMap())
 
 def makeMarkFilteringSets(sets, font):
 	self = ot.MarkGlyphSetsDef()
