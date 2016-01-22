@@ -231,7 +231,7 @@ def parseLigature(lines, font, _lookupMap=None):
 		mapping[tuple(line[1:])] = line[0]
 	return builder.buildLigatureSubst(mapping)
 
-def parseSinglePos(self, lines, font, _lookupMap=None):
+def parseSinglePos(lines, font, _lookupMap=None):
 	values = {}
 	for line in lines:
 		assert len(line) == 3, line
@@ -243,18 +243,7 @@ def parseSinglePos(self, lines, font, _lookupMap=None):
 			values[g] = ValueRecord()
 		assert not hasattr(values[g], w), (g, w)
 		setattr(values[g], w, v)
-	self.Coverage = makeCoverage(values.keys(), font)
-	values = [values[k] for k in self.Coverage.glyphs]
-	self.ValueFormat = 0
-	for v in values:
-		self.ValueFormat |= v.getFormat()
-	if all(v == values[0] for v in values):
-		self.Format = 1
-		self.Value = values[0]
-	else:
-		self.Format = 2
-		self.Value = values
-		self.ValueCount = len(self.Value)
+	return builder.buildSinglePosSubtable(values, font.getReverseGlyphMap())
 
 def parsePair(self, lines, font, _lookupMap=None):
 	self.ValueFormat1 = self.ValueFormat2 = 0
@@ -809,7 +798,7 @@ def parseLookup(lines, tableTag, font, lookupMap=None):
 				'reversechained':(8,	parseReverseChainedSubst),
 			},
 			'GPOS': {
-				'single':	(1,	parseSinglePos),
+				'single':	(0,	parseSinglePos),
 				'pair':		(2,	parsePair),
 				'kernset':	(2,	parseKernset),
 				'cursive':	(0,	parseCursive),
