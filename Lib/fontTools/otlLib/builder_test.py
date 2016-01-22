@@ -95,6 +95,19 @@ class BuilderTest(unittest.TestCase):
                          '  <PointIndex index="1" value="7"/>'
                          '</AttachPoint>')
 
+    def test_buildAttachPoint_empty(self):
+        self.assertIsNone(builder.buildAttachPoint([]))
+
+    def test_buildAttachPoint_duplicate(self):
+        attachPoint = builder.buildAttachPoint([7, 3, 7])
+        self.assertEqual(getXML(attachPoint.toXML),
+                         '<AttachPoint>'
+                         '  <!-- PointCount=2 -->'
+                         '  <PointIndex index="0" value="3"/>'
+                         '  <PointIndex index="1" value="7"/>'
+                         '</AttachPoint>')
+
+
     def test_buildBaseArray(self):
         anchor = builder.buildAnchor
         baseArray = builder.buildBaseArray({

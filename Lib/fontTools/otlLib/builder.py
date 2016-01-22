@@ -436,8 +436,8 @@ def buildAttachPoint(points):
     if not points:
         return None
     self = ot.AttachPoint()
-    self.PointIndex = sorted(points)
-    self.PointCount = len(points)
+    self.PointIndex = sorted(set(points))
+    self.PointCount = len(self.PointIndex)
     return self
 
 
