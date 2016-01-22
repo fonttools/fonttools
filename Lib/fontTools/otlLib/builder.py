@@ -314,6 +314,8 @@ def buildSinglePosSubtable(values, glyphMap):
         self.Format = 1
         if self.ValueFormat != 0:
             self.Value = valueRecords[0]
+        else:
+            self.Value = None
     else:
         self.Format = 2
         self.Value = valueRecords
