@@ -7,7 +7,7 @@ import unittest
 
 class BuilderTest(unittest.TestCase):
     GLYPHS = (".notdef space zero one two three four five six f_f_i c_t "
-              "A B C a b c grave acute cedilla").split()
+              "A B C a b c grave acute cedilla c_t f_i").split()
     GLYPHMAP = {name: num for num, name in enumerate(GLYPHS)}
 
     ANCHOR1 = builder.buildAnchor(11, -11)
@@ -173,6 +173,12 @@ class BuilderTest(unittest.TestCase):
                          '  </LigatureAnchor>'
                          '</ComponentRecord>')
 
+    def test_buildComponentRecord_empty(self):
+        self.assertIsNone(builder.buildComponentRecord([]))
+
+    def test_buildComponentRecord_None(self):
+        self.assertIsNone(builder.buildComponentRecord(None))
+
     def test_buildCoverage(self):
         cov = builder.buildCoverage({"two", "four"}, {"two": 2, "four": 4})
         self.assertEqual(getXML(cov.toXML),
@@ -244,6 +250,47 @@ class BuilderTest(unittest.TestCase):
                          '  <DeltaFormat value="3"/>'
                          '  <DeltaValue value="[77, 0, 0, 0, 3]"/>'
                          '</Device>')
+
+    def test_buildLigatureAttach(self):
+        anchor = builder.buildAnchor
+        attach = builder.buildLigatureAttach([
+            [anchor(500, -10), None],
+            [None, anchor(300, -20), None]])
+        self.assertEqual(getXML(attach.toXML),
+                         '<LigatureAttach>'
+                         '  <!-- ComponentCount=2 -->'
+                         '  <ComponentRecord index="0">'
+                         '    <LigatureAnchor index="0" Format="1">'
+                         '      <XCoordinate value="500"/>'
+                         '      <YCoordinate value="-10"/>'
+                         '    </LigatureAnchor>'
+                         '    <LigatureAnchor index="1" empty="1"/>'
+                         '  </ComponentRecord>'
+                         '  <ComponentRecord index="1">'
+                         '    <LigatureAnchor index="0" empty="1"/>'
+                         '    <LigatureAnchor index="1" Format="1">'
+                         '      <XCoordinate value="300"/>'
+                         '      <YCoordinate value="-20"/>'
+                         '    </LigatureAnchor>'
+                         '    <LigatureAnchor index="2" empty="1"/>'
+                         '  </ComponentRecord>'
+                         '</LigatureAttach>')
+
+    def test_buildLigatureAttach_emptyComponents(self):
+        attach = builder.buildLigatureAttach([[], None])
+        self.assertEqual(getXML(attach.toXML),
+                         '<LigatureAttach>'
+                         '  <!-- ComponentCount=2 -->'
+                         '  <ComponentRecord index="0" empty="1"/>'
+                         '  <ComponentRecord index="1" empty="1"/>'
+                         '</LigatureAttach>')
+
+    def test_buildLigatureAttach_noComponents(self):
+        attach = builder.buildLigatureAttach([])
+        self.assertEqual(getXML(attach.toXML),
+                         '<LigatureAttach>'
+                         '  <!-- ComponentCount=0 -->'
+                         '</LigatureAttach>')
 
     def test_buildLigCaretList(self):
         carets = builder.buildLigCaretList(

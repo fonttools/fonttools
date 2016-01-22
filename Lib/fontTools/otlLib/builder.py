@@ -131,6 +131,8 @@ def buildBaseRecord(anchors):
 
 def buildComponentRecord(anchors):
     """[otTables.Anchor, otTables.Anchor, ...] --> otTables.ComponentRecord"""
+    if not anchors:
+        return None
     self = ot.ComponentRecord()
     self.LigatureAnchor = anchors
     return self
@@ -171,6 +173,14 @@ def buildDevice(device):
         self.DeltaFormat = 2
     else:
         self.DeltaFormat = 3
+    return self
+
+
+def buildLigatureAttach(components):
+    """[[Anchor, Anchor], [Anchor, Anchor, Anchor]] --> LigatureAttach"""
+    self = ot.LigatureAttach()
+    self.ComponentCount = len(components)
+    self.ComponentRecord = [buildComponentRecord(c) for c in components]
     return self
 
 

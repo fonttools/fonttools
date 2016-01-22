@@ -987,26 +987,28 @@ class MarkLigPosBuilder(LookupBuilder):
         markClassList = sorted(markClasses.keys(), key=markClasses.get)
         marks = {mark: (markClasses[mc], anchor)
                  for mark, (mc, anchor) in self.marks.items()}
+        ligs = {}
+        for lig, components in self.ligatures.items():
+            ligs[lig] = []
+            for c in components:
+                ligs[lig].append({markClasses[mc]: a for mc, a in c.items()})
 
         st = otTables.MarkLigPos()
         st.Format = 1
         st.MarkCoverage = otl.buildCoverage(marks, self.glyphMap)
         st.MarkArray = otl.buildMarkArray(marks, self.glyphMap)
-        st.ClassCount = len(markClasses)
-        st.LigatureCoverage = otl.buildCoverage(self.ligatures, self.glyphMap)
-        st.LigatureArray = otTables.LigatureArray()
-        st.LigatureArray.LigatureCount = len(self.ligatures)
-        st.LigatureArray.LigatureAttach = []
-        for lig in st.LigatureCoverage.glyphs:
-            components = self.ligatures[lig]
-            attach = otTables.LigatureAttach()
-            attach.ComponentCount = len(components)
-            attach.ComponentRecord = []
-            for component in components:
-                anchors = [component.get(mc) for mc in markClassList]
-                attach.ComponentRecord.append(
-                    otl.buildComponentRecord(anchors))
-            st.LigatureArray.LigatureAttach.append(attach)
+        st.ClassCount = max([mc for mc, _ in marks.values()]) + 1
+        st.LigatureCoverage = otl.buildCoverage(ligs, self.glyphMap)
+        la = st.LigatureArray = otTables.LigatureArray()
+        la.LigatureCount = len(ligs)
+        la.LigatureAttach = []
+        for lig in sorted(ligs, key=self.glyphMap.__getitem__):
+            components = ligs[lig]
+            anchors = []
+            for component in ligs[lig]:
+                anchors.append([component.get(mc)
+                                for mc in range(st.ClassCount)])
+            la.LigatureAttach.append(otl.buildLigatureAttach(anchors))
 
         return self.buildLookup_([st])
 
