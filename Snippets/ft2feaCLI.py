@@ -7,6 +7,7 @@
 from __future__ import print_function, absolute_import
 from fontTools.misc.py23 import *
 from functools import wraps, partial
+import argparse
 
 warn = partial(print, 'Warning:', file=sys.stderr)
 
@@ -181,10 +182,10 @@ class ExportAggregator(object):
     # GPOS and GSUB
     @register
     def validateLookup(self, lookup, parentRequired, table):
+        class Invalidation(Exception): pass
         # it has not really a tag, so we make one up
         # gpos3 is GPOS LookupType 3
         # gsub2 is GSUB LookupType 2 etc
-        class Invalidation(Exception): pass
         tag = '{0}{1}'.format(table.tableTag.lower(), lookup.LookupType)
         requestStatus = self.getQueryStatus(table.tableTag, 'lookup', tag)
         required = requestStatus or parentRequired
@@ -197,9 +198,11 @@ class ExportAggregator(object):
         # via either commit or rollback
         try:
             # check the lookupFlag
-
             # 0x10 UseMarkFilteringSet
             if lookup.LookupFlag & 0x10:
+                # don't validate if the table is blocked
+                if self.getQueryStatus('GDEF') is False:
+                    raise Invalidation
                 gdef = self.font['GDEF']
                 coverage = gdef.table.MarkGlyphSetsDef.Coverage[lookup.MarkFilteringSet]
                 success, _ = self.validateMarkGlyphSet(coverage, True, gdef, requiredKeyOverride=False)
@@ -209,6 +212,9 @@ class ExportAggregator(object):
             # MarkAttachmentType
             markAttachClassID = lookup.LookupFlag >> 8
             if markAttachClassID:
+                # don't validate if the table is blocked
+                if self.getQueryStatus('GDEF') is False:
+                    raise Invalidation
                 gdef = self.font['GDEF']
                 # An ad-hoc pseudo item, to enable outputting just the used
                 # mark attachment classes
@@ -551,7 +557,7 @@ class Selector(object):
         return False
 
 class ExportQuery(object):
-    def __init__(self, request=None, whitelist=None, blacklist=None, silence=None):
+    def __init__(self, request=None, whitelist=None, blacklist=None, silence=None, **kwargs):
         self._request = Selector(request) \
                             if request is not None else Selector('**')
         self._whitelist = Selector(whitelist) \
@@ -567,6 +573,7 @@ class ExportQuery(object):
                 False: Item is blocked
                 None: Item may be exported, if a dependent item requires it
         """
+
         if (self._whitelist is not None and item not in self._whitelist) \
                 or (self._blacklist is not None and item in self._blacklist):
             return False
@@ -600,18 +607,34 @@ class ExportQuery(object):
     # is illegal without a fitting languageset. Also, special attention for the defaults!)
     # that may become a bit dirty.
 
+
+parser = argparse.ArgumentParser(description='Generate an OpenType Feature file (fea) from an otf/ttf font.')
+
+# Metavar for the source-font-file" argument, for the future this could alse be many sources
+#parser.add_argument('integers', metavar='N', type=int, nargs='+',
+#                   help='an integer for the accumulator')
+
+parser.add_argument('-r, --request', dest='request', metavar="REQUIRED", nargs='?'\
+                 , help='The fea contents to export.')
+
+parser.add_argument('-w, --whitelist', dest='whitelist', metavar="WHITELIST", nargs='?'\
+                 , help='Whitelist of fea contents.')
+
+parser.add_argument('-b, --blacklist', dest='blacklist', metavar="BLACKLIST", nargs='?'\
+                 , help='Blacklist of fea contents.')
+
+
+
+parser.add_argument('font', help='A ttf or otf OpenType font file.'\
+                   , metavar="FONT-PATH")
+
 def main():
     import sys
     from fontTools.ttLib import TTFont
     from ft2fea import makeName, printFont
-
-    if not len(sys.argv) > 1:
-        raise Exception('font-file argument missing')
-    fontPath = sys.argv[1]
-    font = TTFont(fontPath)
-
-    query = ExportQuery(
-            request='GDEF markAttachClasses; GSUB feature *', whitelist=None, blacklist=None, silence=None)
+    args = parser.parse_args()
+    font = TTFont(args.font)
+    query = ExportQuery(**vars(args))
     aggregator = ExportAggregator(font, query.getQueryStatus)
     aggregator.validate()
 
