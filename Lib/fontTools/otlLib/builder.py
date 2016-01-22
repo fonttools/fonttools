@@ -153,6 +153,8 @@ def buildComponentRecord(anchors):
 
 def buildCursivePosSubtable(attach, glyphMap):
     """{"alef": (entry, exit)} --> otTables.CursivePos"""
+    if not attach:
+        return None
     self = ot.CursivePos()
     self.Format = 1
     self.Coverage = buildCoverage(attach.keys(), glyphMap)
@@ -169,6 +171,8 @@ def buildCursivePosSubtable(attach, glyphMap):
 
 def buildDevice(device):
     """[(11, 22), (7, -7), ...] --> otTables.Device"""
+    if not device:
+      return None
     self = ot.Device()
     device = tuple(sorted(device))
     self.StartSize = startSize = device[0][0]
