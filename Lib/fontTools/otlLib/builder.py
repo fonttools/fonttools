@@ -5,6 +5,8 @@ from fontTools.ttLib.tables.otBase import ValueRecord, valueRecordFormatDict
 
 
 def buildCoverage(glyphs, glyphMap):
+    if not glyphs:
+        return None
     self = ot.Coverage()
     self.glyphs = sorted(glyphs, key=glyphMap.__getitem__)
     return self
