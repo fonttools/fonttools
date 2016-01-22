@@ -433,6 +433,8 @@ def buildAttachList(attachPoints, glyphMap):
 
 def buildAttachPoint(points):
     """[4, 23, 41] --> otTables.AttachPoint"""
+    if not points:
+        return None
     self = ot.AttachPoint()
     self.PointIndex = sorted(points)
     self.PointCount = len(points)
