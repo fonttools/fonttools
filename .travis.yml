@@ -18,14 +18,11 @@ matrix:
       os: osx
       # the default 'osx' on Travis is 10.9 Mavericks, with Python 2.7.5
       env: TOXENV=py27
-    # temporarily disabling this until they fix an issue with installing the
-    # latest pip 8.0.0 on OS X 10.11: https://github.com/pypa/pip/issues/3392
-    #
-    # - language: generic
-    #   os: osx
-    #   # this is to test on 10.11 El Capitan which comes with Python 2.7.10
-    #   osx_image: osx10.11
-    #   env: TOXENV=py27
+    - language: generic
+      os: osx
+      # this is to test on 10.11 El Capitan which comes with Python 2.7.10
+      osx_image: osx10.11
+      env: TOXENV=py27
     - language: generic
       os: osx
       env: TOXENV=py33
