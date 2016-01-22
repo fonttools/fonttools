@@ -188,7 +188,7 @@ class BuilderTest(unittest.TestCase):
                          '</Coverage>')
 
     def test_buildCursivePos(self):
-        pos = builder.buildCursivePos({
+        pos = builder.buildCursivePosSubtable({
             "two": (self.ANCHOR1, self.ANCHOR2),
             "four": (self.ANCHOR3, self.ANCHOR1)
         }, self.GLYPHMAP)
@@ -467,6 +467,8 @@ class BuilderTest(unittest.TestCase):
     def test_buildLookup_noSubtables(self):
         self.assertIsNone(builder.buildLookup([]))
         self.assertIsNone(builder.buildLookup(None))
+        self.assertIsNone(builder.buildLookup([None]))
+        self.assertIsNone(builder.buildLookup([None, None]))
 
     def test_buildLookup_markFilterSet(self):
         s = builder.buildSingleSubstSubtable({"one": "two"})

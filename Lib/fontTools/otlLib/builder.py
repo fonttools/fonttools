@@ -20,6 +20,9 @@ LOOKUP_FLAG_USE_MARK_FILTERING_SET = 0x0010
 
 
 def buildLookup(subtables, flags=0, markFilterSet=None):
+    if subtables is None:
+        return None
+    subtables = [st for st in subtables if st is not None]
     if not subtables:
         return None
     assert all(t.LookupType == subtables[0].LookupType for t in subtables), \
@@ -47,18 +50,24 @@ def buildLookup(subtables, flags=0, markFilterSet=None):
 
 
 def buildSingleSubstSubtable(mapping):
+    if not mapping:
+        return None
     self = ot.SingleSubst()
     self.mapping = dict(mapping)
     return self
 
 
 def buildMultipleSubstSubtable(mapping):
+    if not mapping:
+        return None
     self = ot.MultipleSubst()
     self.mapping = dict(mapping)
     return self
 
 
 def buildAlternateSubstSubtable(mapping):
+    if not mapping:
+        return None
     self = ot.AlternateSubst()
     self.alternates = dict(mapping)
     return self
@@ -79,6 +88,8 @@ def _getLigatureKey(components):
 
 
 def buildLigatureSubstSubtable(mapping):
+    if not mapping:
+        return None
     self = ot.LigatureSubst()
     # The following single line can replace the rest of this function
     # with fontTools >= 3.1:
@@ -140,7 +151,7 @@ def buildComponentRecord(anchors):
     return self
 
 
-def buildCursivePos(attach, glyphMap):
+def buildCursivePosSubtable(attach, glyphMap):
     """{"alef": (entry, exit)} --> otTables.CursivePos"""
     self = ot.CursivePos()
     self.Format = 1

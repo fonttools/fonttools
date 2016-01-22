@@ -934,7 +934,7 @@ class CursivePosBuilder(LookupBuilder):
             self.attachments[glyph] = (entryAnchor, exitAnchor)
 
     def build(self):
-        st = otl.buildCursivePos(self.attachments, self.glyphMap)
+        st = otl.buildCursivePosSubtable(self.attachments, self.glyphMap)
         return self.buildLookup_([st])
 
 

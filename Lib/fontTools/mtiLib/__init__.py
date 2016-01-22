@@ -354,7 +354,7 @@ def parseCursive(lines, font, _lookupMap=None):
 			records[glyph] = [None,None]
 		assert records[glyph][idx] is None, (glyph, idx)
 		records[glyph][idx] = makeAnchor(line[2:], klass)
-	return otl.buildCursivePos(records, font.getReverseGlyphMap())
+	return otl.buildCursivePosSubtable(records, font.getReverseGlyphMap())
 
 def makeMarkRecords(data, coverage, c):
 	records = []
