@@ -1620,6 +1620,87 @@ def subset_glyphs(self, s):
 def prune_post_subset(self, options):
     return True
 
+@_add_method(otTables.MathGlyphConstruction)
+def closure_glyphs(self, glyphs):
+    variants = set()
+    for v in self.MathGlyphVariantRecord:
+        variants.add(v.VariantGlyph)
+    if self.GlyphAssembly:
+        for p in self.GlyphAssembly.PartRecords:
+            variants.add(p.glyph)
+    return variants
+
+@_add_method(otTables.MathVariants)
+def closure_glyphs(self, s):
+    glyphs = frozenset(s.glyphs)
+    variants = set()
+
+    indices = self.VertGlyphCoverage.intersect(glyphs)
+    for i in indices:
+        variants.update(self.VertGlyphConstruction[i].closure_glyphs(glyphs))
+
+    indices = self.HorizGlyphCoverage.intersect(glyphs)
+    for i in indices:
+        variants.update(self.HorizGlyphConstruction[i].closure_glyphs(glyphs))
+
+    s.glyphs.update(variants)
+
+@_add_method(ttLib.getTableClass('MATH'))
+def closure_glyphs(self, s):
+    self.table.MathVariants.closure_glyphs(s)
+
+@_add_method(otTables.MathItalicsCorrectionInfo)
+def subset_glyphs(self, s):
+    indices = self.Coverage.subset(s.glyphs)
+    self.ItalicsCorrection = [self.ItalicsCorrection[i] for i in indices]
+    self.ItalicsCorrectionCount = len(self.ItalicsCorrection)
+    return bool(self.ItalicsCorrectionCount)
+
+@_add_method(otTables.MathTopAccentAttachment)
+def subset_glyphs(self, s):
+    indices = self.TopAccentCoverage.subset(s.glyphs)
+    self.TopAccentAttachment = [self.TopAccentAttachment[i] for i in indices]
+    self.TopAccentAttachmentCount = len(self.TopAccentAttachment)
+    return bool(self.TopAccentAttachmentCount)
+
+@_add_method(otTables.MathKernInfo)
+def subset_glyphs(self, s):
+    indices = self.MathKernCoverage.subset(s.glyphs)
+    self.MathKernInfoRecords = [self.MathKernInfoRecords[i] for i in indices]
+    self.MathKernCount = len(self.MathKernInfoRecords)
+    return bool(self.MathKernCount)
+
+@_add_method(otTables.MathGlyphInfo)
+def subset_glyphs(self, s):
+    if self.MathItalicsCorrectionInfo:
+        self.MathItalicsCorrectionInfo.subset_glyphs(s)
+    if self.MathTopAccentAttachment:
+        self.MathTopAccentAttachment.subset_glyphs(s)
+    if self.MathKernInfo:
+        self.MathKernInfo.subset_glyphs(s)
+    if self.ExtendedShapeCoverage:
+        self.ExtendedShapeCoverage.subset(s.glyphs)
+    return True
+
+@_add_method(otTables.MathVariants)
+def subset_glyphs(self, s):
+    indices = self.VertGlyphCoverage.subset(s.glyphs)
+    self.VertGlyphConstruction = [self.VertGlyphConstruction[i] for i in indices]
+    self.VertGlyphCount = len(self.VertGlyphConstruction)
+
+    indices = self.HorizGlyphCoverage.subset(s.glyphs)
+    self.HorizGlyphConstruction = [self.HorizGlyphConstruction[i] for i in indices]
+    self.HorizGlyphCount = len(self.HorizGlyphConstruction)
+
+    return True
+
+@_add_method(ttLib.getTableClass('MATH'))
+def subset_glyphs(self, s):
+    s.glyphs = s.glyphs_mathed
+    self.table.MathGlyphInfo.subset_glyphs(s)
+    self.table.MathVariants.subset_glyphs(s)
+    return True
+
 @_add_method(ttLib.getTableModule('glyf').Glyph)
 def remapComponentsFast(self, indices):
     if not self.data or struct.unpack(">h", self.data[:2])[0] >= 0:
@@ -2511,6 +2592,18 @@ class Subsetter(object):
             self.log.glyphs(self.glyphs, font=font)
             self.log.lapse("close glyph list over 'GSUB'")
         self.glyphs_gsubed = frozenset(self.glyphs)
+
+        if 'MATH' in font:
+            self.log("Closing glyph list over 'MATH': %d glyphs before" %
+                     len(self.glyphs))
+            self.log.glyphs(self.glyphs, font=font)
+            font['MATH'].closure_glyphs(self)
+            self.glyphs.intersection_update(realGlyphs)
+            self.log("Closed glyph list over 'MATH': %d glyphs after" %
+                     len(self.glyphs))
+            self.log.glyphs(self.glyphs, font=font)
+            self.log.lapse("close glyph list over 'MATH'")
+        self.glyphs_mathed = frozenset(self.glyphs)
 
         if 'COLR' in font:
             self.log("Closing glyph list over 'COLR': %d glyphs before" %
