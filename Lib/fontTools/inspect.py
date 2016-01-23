@@ -73,7 +73,7 @@ class Row(object):
 	def _add_object(self, key, value):
 		# Make sure item is decompiled
 		try:
-			value["asdf"]
+			value.asdf # Any better way?!
 		except (AttributeError, KeyError, TypeError, ttLib.TTLibError):
 			pass
 		if isinstance(value, ttLib.getTableModule('glyf').Glyph):
