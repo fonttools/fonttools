@@ -643,41 +643,49 @@ class BaseTable(object):
 		if hasattr(self.__class__, 'LookupType'):
 			writer['LookupType'].setValue(self.__class__.LookupType)
 
-		self.writeFormat(writer)
-		for conv in self.getConverters():
-			value = table.get(conv.name) # TODO Handle defaults instead of defaulting to None!
-			if conv.repeat:
-				if value is None:
-					value = []
-				countValue = len(value) - conv.aux
-				if conv.repeat in table:
-					CountReference(table, conv.repeat).setValue(countValue)
+		try:
+			self.writeFormat(writer)
+			for conv in self.getConverters():
+				value = table.get(conv.name) # TODO Handle defaults instead of defaulting to None!
+				if conv.repeat:
+					if value is None:
+						value = []
+					countValue = len(value) - conv.aux
+					if conv.repeat in table:
+						CountReference(table, conv.repeat).setValue(countValue)
+					else:
+						# conv.repeat is a propagated count
+						writer[conv.repeat].setValue(countValue)
+					values = value
+					for i, value in enumerate(values):
+						conv.write(writer, font, table, value, i)
+				elif conv.isCount:
+					# Special-case Count values.
+					# Assumption: a Count field will *always* precede
+					# the actual array(s).
+					# We need a default value, as it may be set later by a nested
+					# table. We will later store it here.
+					# We add a reference: by the time the data is assembled
+					# the Count value will be filled in.
+					ref = writer.writeCountReference(table, conv.name)
+					table[conv.name] = None
+					if conv.isPropagated:
+						writer[conv.name] = ref
+				elif conv.isLookupType:
+					ref = writer.writeCountReference(table, conv.name)
+					table[conv.name] = None
+					writer['LookupType'] = ref
 				else:
-					# conv.repeat is a propagated count
-					writer[conv.repeat].setValue(countValue)
-				conv.writeArray(writer, font, table, value)
-			elif conv.isCount:
-				# Special-case Count values.
-				# Assumption: a Count field will *always* precede
-				# the actual array(s).
-				# We need a default value, as it may be set later by a nested
-				# table. We will later store it here.
-				# We add a reference: by the time the data is assembled
-				# the Count value will be filled in.
-				ref = writer.writeCountReference(table, conv.name)
-				table[conv.name] = None
-				if conv.isPropagated:
-					writer[conv.name] = ref
-			elif conv.isLookupType:
-				ref = writer.writeCountReference(table, conv.name)
-				table[conv.name] = None
-				writer['LookupType'] = ref
-			else:
-				if conv.aux and not eval(conv.aux, None, table):
-					continue
-				conv.write(writer, font, table, value)
-				if conv.isPropagated:
-					writer[conv.name] = value
+					if conv.aux and not eval(conv.aux, None, table):
+						continue
+					conv.write(writer, font, table, value)
+					if conv.isPropagated:
+						writer[conv.name] = value
+		except Exception as e:
+			name = value.__class__.__name__ if value is not None else conv.name
+			info = (name,)
+			e.args = e.args + info
+			raise
 
 	def readFormat(self, reader):
 		pass
