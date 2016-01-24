@@ -27,7 +27,7 @@ from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables._n_a_m_e import NameRecord
 from fontTools.ttLib.tables._f_v_a_r import table__f_v_a_r, Axis, NamedInstance
 from fontTools.ttLib.tables._g_v_a_r import table__g_v_a_r, GlyphVariation
-import warnings
+import logging
 
 
 def AddFontVariations(font):
@@ -75,13 +75,13 @@ def AddGlyphVariations(font, thin, regular, black):
         thinCoord = GetCoordinates(thin, glyphName)
         blackCoord = GetCoordinates(black, glyphName)
         if not regularCoord or not blackCoord or not thinCoord:            
-            warnings.warn("glyph %s not present in all input fonts" %
-                          glyphName)
+            logging.warning("glyph %s not present in all input fonts",
+                            glyphName)
             continue
         if (len(regularCoord) != len(blackCoord) or
             len(regularCoord) != len(thinCoord)):
-            warnings.warn("glyph %s has not the same number of "
-                          "control points in all input fonts" % glyphName)
+            logging.warning("glyph %s has not the same number of "
+                            "control points in all input fonts", glyphName)
             continue
         thinDelta = []
         blackDelta = []
@@ -129,6 +129,7 @@ def GetCoordinates(font, glyphName):
 
 
 def main():
+    logging.basicConfig(format="%(levelname)s: %(message)s")
     thin = TTFont("/tmp/Roboto/Roboto-Thin.ttf")
     regular = TTFont("/tmp/Roboto/Roboto-Regular.ttf")
     black = TTFont("/tmp/Roboto/Roboto-Black.ttf")
