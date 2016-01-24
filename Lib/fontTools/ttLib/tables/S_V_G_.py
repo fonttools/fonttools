@@ -8,6 +8,11 @@ except ImportError:
 	import xml.etree.ElementTree as ET
 import struct
 import re
+import logging
+
+
+log = logging.getLogger(__name__)
+
 
 __doc__="""
 Compiles/decompiles version 0 and 1 SVG tables from/to XML.
@@ -104,7 +109,8 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 			self.decompile_format_1(data, ttFont)
 		else:
 			if self.version != 0:
-				print("Unknown SVG table version '%s'. Decompiling as version 0." % (self.version))
+				log.warning(
+					"Unknown SVG table version '%s'. Decompiling as version 0.", self.version)
 			self.decompile_format_0(data, ttFont)
 
 	def decompile_format_0(self, data, ttFont):
@@ -314,7 +320,7 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 			if self.colorPalettes.numColorParams == 0:
 				self.colorPalettes = None
 		else:
-			print("Unknown", name, content)
+			log.warning("Unknown %s %s", name, content)
 
 class DocumentIndexEntry(object):
 	def __init__(self):
