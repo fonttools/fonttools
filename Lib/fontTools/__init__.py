@@ -7,4 +7,9 @@ import logging
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
 
+# clients may call this to configure logging with a predefined handler and format
+from fontTools.misc.loggingTools import configLogger
+
 version = "3.0"
+
+__all__ = ["version", "log", "configLogger"]
