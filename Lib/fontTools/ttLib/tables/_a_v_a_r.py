@@ -8,8 +8,10 @@ from fontTools.ttLib import TTLibError
 from . import DefaultTable
 import array
 import struct
-import warnings
+import logging
 
+
+log = logging.getLogger(__name__)
 
 # Apple's documentation of 'avar':
 # https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6avar.html
@@ -22,6 +24,7 @@ AVAR_HEADER_FORMAT = """
 
 
 class table__a_v_a_r(DefaultTable.DefaultTable):
+
     dependencies = ["fvar"]
 
     def __init__(self, tag=None):
@@ -57,7 +60,7 @@ class table__a_v_a_r(DefaultTable.DefaultTable):
                 fromValue, toValue = struct.unpack(">hh", data[pos:pos+4])
                 segments[fixedToFloat(fromValue, 14)] = fixedToFloat(toValue, 14)
                 pos = pos + 4
-        self.fixupSegments_(warn=warnings.warn)
+        self.fixupSegments_()
 
     def toXML(self, writer, ttFont, progress=None):
         axisTags = [axis.axisTag for axis in ttFont["fvar"].axes]
@@ -81,14 +84,14 @@ class table__a_v_a_r(DefaultTable.DefaultTable):
                         fromValue = safeEval(elementAttrs["from"])
                         toValue = safeEval(elementAttrs["to"])
                         if fromValue in segment:
-                            warnings.warn("duplicate entry for %s in axis '%s'" %
-                                          (fromValue, axis))
+                            log.warning("duplicate entry for %s in axis '%s'",
+                                        fromValue, axis)
                         segment[fromValue] = toValue
-            self.fixupSegments_(warn=warnings.warn)
+            self.fixupSegments_()
 
-    def fixupSegments_(self, warn):
+    def fixupSegments_(self):
         for axis, mappings in self.segments.items():
             for k in [-1.0, 0.0, 1.0]:
                 if mappings.get(k) != k:
-                    warn("avar axis '%s' should map %s to %s" % (axis, k, k))
+                    log.warning("avar axis '%s' should map %s to %s", axis, k, k)
                     mappings[k] = k
