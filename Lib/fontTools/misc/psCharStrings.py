@@ -5,9 +5,10 @@ CFF dictionary data and Type1/Type2 CharStrings.
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 import struct
+import logging
 
 
-DEBUG = 0
+log = logging.getLogger(__name__)
 
 
 def read_operator(self, b0, data, index):
@@ -315,7 +316,7 @@ class T2CharString(ByteCodeBase):
 		try:
 			bytecode = bytesjoin(bytecode)
 		except TypeError:
-			print(bytecode)
+			log.error(bytecode)
 			raise
 		self.setBytecode(bytecode)
 
