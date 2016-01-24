@@ -13,7 +13,10 @@ from . import ttProgram
 import sys
 import struct
 import array
-import warnings
+import logging
+
+
+log = logging.getLogger(__name__)
 
 #
 # The Apple and MS rasterizers behave differently for
@@ -56,10 +59,11 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 			self.glyphs[glyphName] = glyph
 			last = next
 		if len(data) - next >= 4:
-			warnings.warn("too much 'glyf' table data: expected %d, received %d bytes" %
-					(next, len(data)))
+			log.warning(
+				"too much 'glyf' table data: expected %d, received %d bytes",
+				next, len(data))
 		if noname:
-			warnings.warn('%s glyphs have no name' % noname)
+			log.warning('%s glyphs have no name', noname)
 		if ttFont.lazy is False: # Be lazy for None and True
 			for glyph in self.glyphs.values():
 				glyph.expand(self)
@@ -145,8 +149,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 		if not hasattr(self, "glyphOrder"):
 			self.glyphOrder = ttFont.getGlyphOrder()
 		glyphName = attrs["name"]
-		if ttFont.verbose:
-			ttLib.debugmsg("unpacking glyph '%s'" % glyphName)
+		log.debug("unpacking glyph '%s'", glyphName)
 		glyph = Glyph()
 		for attr in ['xMin', 'yMin', 'xMax', 'yMax']:
 			setattr(glyph, attr, safeEval(attrs.get(attr, '0')))
@@ -453,7 +456,9 @@ class Glyph(object):
 			self.program.fromBytecode(data[:numInstructions])
 			data = data[numInstructions:]
 			if len(data) >= 4:
-				warnings.warn("too much glyph data at the end of composite glyph: %d excess bytes" % len(data))
+				log.warning(
+					"too much glyph data at the end of composite glyph: %d excess bytes",
+					len(data))
 
 	def decompileCoordinates(self, data):
 		endPtsOfContours = array.array("h")
@@ -545,7 +550,8 @@ class Glyph(object):
 		xDataLen = struct.calcsize(xFormat)
 		yDataLen = struct.calcsize(yFormat)
 		if len(data) - (xDataLen + yDataLen) >= 4:
-			warnings.warn("too much glyph data: %d excess bytes" % (len(data) - (xDataLen + yDataLen)))
+			log.warning(
+				"too much glyph data: %d excess bytes", len(data) - (xDataLen + yDataLen))
 		xCoordinates = struct.unpack(xFormat, data[:xDataLen])
 		yCoordinates = struct.unpack(yFormat, data[xDataLen:xDataLen+yDataLen])
 		return flags, xCoordinates, yCoordinates
@@ -734,7 +740,7 @@ class Glyph(object):
 							bbox = calcBounds([coords[last], coords[next]])
 							if not pointInRect(coords[j], bbox):
 								# Ouch!
-								warnings.warn("Outline has curve with implicit extrema.")
+								log.warning("Outline has curve with implicit extrema.")
 								# Ouch!  Find analytical curve bounds.
 								pthis = coords[j]
 								plast = coords[last]
@@ -1005,7 +1011,6 @@ class GlyphComponent(object):
 		self.flags = int(flags)
 		glyphID = int(glyphID)
 		self.glyphName = glyfTable.getGlyphName(int(glyphID))
-		#print ">>", reprflag(self.flags)
 		data = data[4:]
 
 		if self.flags & ARG_1_AND_2_ARE_WORDS:
