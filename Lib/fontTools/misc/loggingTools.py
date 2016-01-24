@@ -229,19 +229,19 @@ class Timer(object):
 	>>> timer = Timer()
 	>>> time.sleep(0.01)
 	>>> print("First lap:", timer.split())
-	First lap: 0.01...
+	First lap: 0.0...
 	>>> time.sleep(0.02)
 	>>> print("Second lap:", timer.split())
-	Second lap: 0.02...
+	Second lap: 0.0...
 	>>> print("Overall time:", timer.time())
-	Overall time: 0.03...
+	Overall time: 0.0...
 
 	Can be used as a context manager inside with-statements.
 
 	>>> with Timer() as t:
 	...     time.sleep(0.01)
 	>>> print("%0.3f seconds" % t.elapsed)
-	0.01... seconds
+	0.0... seconds
 
 	If initialised with a logger, it can log the elapsed time automatically
 	upon exiting the with-statement.
@@ -251,7 +251,7 @@ class Timer(object):
 	>>> configLogger(level="DEBUG", format="%(message)s", stream=sys.stdout)
 	>>> with Timer(log, 'do something'):
 	...     time.sleep(0.01)
-	Took 0.01... to do something
+	Took ... to do something
 
 	The same Timer instance, holding a reference to a logger, can be reused
 	in multiple with-statements, optionally with different messages or levels.
@@ -262,7 +262,7 @@ class Timer(object):
 	elapsed time: 0.01...s
 	>>> with timer('redo it', level=logging.INFO):
 	...     time.sleep(0.02)
-	Took 0.02... to redo it
+	Took ... to redo it
 
 	It can also be used as a function decorator to log the time elapsed to run
 	the decorated function.
@@ -276,7 +276,7 @@ class Timer(object):
 	>>> test1()
 	Took 0.01... to run 'test1'
 	>>> test2()
-	Took 0.02... to run test 2
+	Took ... to run test 2
 	"""
 
 	# timeit.default_timer choses the most accurate clock for each platform
