@@ -5,6 +5,10 @@ from fontTools.misc.py23 import *
 from fontTools.misc.textTools import num2binary, binary2num, readHex
 import array
 import re
+import logging
+
+
+log = logging.getLogger(__name__)
 
 # first, the list of instructions that eat bytes or words from the instruction stream
 
@@ -233,7 +237,7 @@ class Program(object):
 				traceback.print_exc(file=tmp)
 				msg = "An exception occurred during the decompilation of glyph program:\n\n"
 				msg += tmp.getvalue()
-				print(msg, file=sys.stderr)
+				log.error(msg)
 				writer.begintag("bytecode")
 				writer.newline()
 				writer.comment(msg.strip())
