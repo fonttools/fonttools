@@ -426,13 +426,13 @@ class ChannelsFilter(logging.Filter):
 		return False
 
 
-def deprecateArgument(name, msg, category=None):
+def deprecateArgument(name, msg, category=UserWarning):
 	""" Raise a warning about deprecated function argument 'name'. """
 	warnings.warn(
 		"%r is deprecated; %s" % (name, msg), category=category, stacklevel=3)
 
 
-def deprecateFunction(msg, category=None):
+def deprecateFunction(msg, category=UserWarning):
 	""" Decorator to raise a warning when a deprecated function is called. """
 	def decorator(func):
 		@wraps(func)
