@@ -475,13 +475,15 @@ class ScriptStatement(Statement):
 
 
 class SinglePosStatement(Statement):
-    def __init__(self, location, glyphs, valuerecord):
+    def __init__(self, location, pos, prefix, suffix):
         Statement.__init__(self, location)
-        self.glyphs, self.valuerecord = glyphs, valuerecord
+        self.pos, self.prefix, self.suffix = pos, prefix, suffix
 
     def build(self, builder):
-        for glyph in self.glyphs.glyphSet():
-            builder.add_single_pos(self.location, glyph, self.valuerecord)
+        pos = {}
+        for glyphs, value in self.pos:
+            pos.update({glyph: value for glyph in glyphs.glyphSet()})
+        builder.add_single_pos(self.location, self.prefix, self.suffix, pos)
 
 
 class SubtableStatement(Statement):

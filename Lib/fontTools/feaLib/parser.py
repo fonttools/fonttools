@@ -243,10 +243,9 @@ class Parser(object):
         else:
             return ast.GlyphClassName(self.cur_token_location_, gc)
 
-    def parse_glyph_pattern_(self):
-        prefix, glyphs, lookups, suffix = ([], [], [], [])
-        while (self.next_token_ not in {"by", "from", ";", "<"} and
-               self.next_token_type_ != Lexer.NUMBER):
+    def parse_glyph_pattern_(self, vertical):
+        prefix, glyphs, lookups, values, suffix = ([], [], [], [], [])
+        while self.next_token_ not in {"by", "from", ";"}:
             gc = self.parse_glyphclass_(accept_glyphname=True)
             marked = False
             if self.next_token_ == "'":
@@ -258,6 +257,11 @@ class Parser(object):
                 suffix.append(gc)
             else:
                 prefix.append(gc)
+
+            if self.is_next_value_():
+                values.append(self.parse_valuerecord_(vertical))
+            else:
+                values.append(None)
 
             lookup = None
             if self.next_token_ == "lookup":
@@ -277,17 +281,22 @@ class Parser(object):
 
         if not glyphs and not suffix:  # eg., "sub f f i by"
             assert lookups == []
-            return ([], prefix, [None] * len(prefix), [])
+            return ([], prefix, [None] * len(prefix), values, [])
         else:
-            return (prefix, glyphs, lookups, suffix)
+            return (prefix, glyphs, lookups, values, suffix)
 
     def parse_ignore_(self):
         assert self.is_cur_keyword_("ignore")
         location = self.cur_token_location_
         self.advance_lexer_()
         if self.cur_token_ in ["substitute", "sub"]:
-            prefix, glyphs, lookups, suffix = self.parse_glyph_pattern_()
+            prefix, glyphs, lookups, values, suffix = \
+                self.parse_glyph_pattern_(vertical=False)
             self.expect_symbol_(";")
+            if any(lookups):
+                raise FeatureLibError(
+                    "No lookups can be specified for \"ignore sub\"",
+                    location)
             return ast.IgnoreSubstitutionRule(location, prefix, glyphs, suffix)
         raise FeatureLibError(
             "Expected \"substitute\"", self.next_token_location_)
@@ -415,35 +424,33 @@ class Parser(object):
             return self.parse_position_mark_(enumerated, vertical)
 
         location = self.cur_token_location_
-        prefix, glyphs, lookups, suffix = self.parse_glyph_pattern_()
-        gc2, value2 = None, None
-        if not prefix and len(glyphs) == 2 and not suffix and not any(lookups):
-            # Pair positioning, format B: 'pos' glyphs gc2 value1
-            gc2 = glyphs[1]
-            glyphs = [glyphs[0]]
+        prefix, glyphs, lookups, values, suffix = \
+            self.parse_glyph_pattern_(vertical)
+        self.expect_symbol_(";")
 
-        if prefix or len(glyphs) > 1 or suffix or any(lookups):
-            # GPOS type 8: Chaining contextual positioning
-            self.expect_symbol_(";")
+        if any(lookups):
+            # GPOS type 8: Chaining contextual positioning; explicit lookups
+            if any(values):
+                raise FeatureLibError(
+                    "If \"lookup\" is present, no values must be specified",
+                    location)
             return ast.ChainContextPosStatement(
                 location, prefix, glyphs, suffix, lookups)
 
-        value1 = self.parse_valuerecord_(vertical)
-        if self.next_token_ != ";" and gc2 is None:
-            # Pair positioning, format A: 'pos' gc1 value1 gc2 value2
-            gc2 = self.parse_glyphclass_(accept_glyphname=True)
-            value2 = self.parse_valuerecord_(vertical)
-        self.expect_symbol_(";")
+        # Pair positioning, format A: "pos V 10 A -10;"
+        # Pair positioning, format B: "pos V A -20;"
+        if not prefix and not suffix and len(glyphs) == 2:
+            if values[0] is None:  # Format B: "pos V A -20;"
+                values.reverse()
+            return ast.PairPosStatement(
+                location, enumerated,
+                glyphs[0], values[0], glyphs[1], values[1])
 
-        if gc2 is None:
-            if enumerated:
-                raise FeatureLibError(
-                    '"enumerate" is only allowed with pair positionings',
-                    self.cur_token_location_)
-            return ast.SinglePosStatement(location, glyphs[0], value1)
-        else:
-            return ast.PairPosStatement(location, enumerated,
-                                        glyphs[0], value1, gc2, value2)
+        if enumerated:
+            raise FeatureLibError(
+                '"enumerate" is only allowed with pair positionings', location)
+        return ast.SinglePosStatement(location, zip(glyphs, values),
+                                      prefix, suffix)
 
     def parse_position_cursive_(self, enumerated, vertical):
         location = self.cur_token_location_
@@ -512,8 +519,11 @@ class Parser(object):
         assert self.cur_token_ in {"substitute", "sub", "reversesub", "rsub"}
         location = self.cur_token_location_
         reverse = self.cur_token_ in {"reversesub", "rsub"}
-        old_prefix, old, lookups, old_suffix = self.parse_glyph_pattern_()
-
+        old_prefix, old, lookups, values, old_suffix = \
+            self.parse_glyph_pattern_(vertical=False)
+        if any(values):
+            raise FeatureLibError(
+                "Substitution statements cannot contain values", location)
         new = []
         if self.next_token_ == "by":
             keyword = self.expect_keyword_("by")
@@ -695,6 +705,9 @@ class Parser(object):
             result = tuple(result)  # make it hashable
         self.expect_symbol_(">")
         return result
+
+    def is_next_value_(self):
+        return self.next_token_type_ is Lexer.NUMBER or self.next_token_ == "<"
 
     def parse_valuerecord_(self, vertical):
         if self.next_token_type_ is Lexer.NUMBER:

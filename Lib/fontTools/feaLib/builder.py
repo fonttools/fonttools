@@ -620,9 +620,14 @@ class Builder(object):
         lookup = self.get_lookup_(location, SpecificPairPosBuilder)
         lookup.add_pair(location, glyph1, value1, glyph2, value2)
 
-    def add_single_pos(self, location, glyph, valuerecord):
+    def add_single_pos(self, location, prefix, suffix, mapping):
+        if prefix or suffix:
+            # TODO: https://github.com/behdad/fonttools/issues/485
+            raise FeatureLibError("Contextual SinglePos not yet implemented",
+                                  self.location)
         lookup = self.get_lookup_(location, SinglePosBuilder)
-        lookup.add_pos(location, glyph, valuerecord)
+        for glyph, value in mapping.items():
+            lookup.add_pos(location, glyph, value)
 
     def setGlyphClass_(self, location, glyph, glyphClass):
         oldClass, oldLocation = self.glyphClassDefs_.get(glyph, (None, None))

@@ -485,23 +485,37 @@ class ParserTest(unittest.TestCase):
         doc = self.parse("feature kern {pos one <1 2 3 4>;} kern;")
         pos = doc.statements[0].statements[0]
         self.assertIsInstance(pos, ast.SinglePosStatement)
-        self.assertEqual(glyphstr([pos.glyphs]), "one")
-        self.assertEqual(pos.valuerecord.makeString(vertical=False),
-                         "<1 2 3 4>")
+        [(glyphs, value)] = pos.pos
+        self.assertEqual(glyphstr([glyphs]), "one")
+        self.assertEqual(value.makeString(vertical=False), "<1 2 3 4>")
 
     def test_gpos_type_1_glyphclass_horizontal(self):
         doc = self.parse("feature kern {pos [one two] -300;} kern;")
         pos = doc.statements[0].statements[0]
         self.assertIsInstance(pos, ast.SinglePosStatement)
-        self.assertEqual(glyphstr([pos.glyphs]), "[one two]")
-        self.assertEqual(pos.valuerecord.makeString(vertical=False), "-300")
+        [(glyphs, value)] = pos.pos
+        self.assertEqual(glyphstr([glyphs]), "[one two]")
+        self.assertEqual(value.makeString(vertical=False), "-300")
 
     def test_gpos_type_1_glyphclass_vertical(self):
         doc = self.parse("feature vkrn {pos [one two] -300;} vkrn;")
         pos = doc.statements[0].statements[0]
         self.assertIsInstance(pos, ast.SinglePosStatement)
-        self.assertEqual(glyphstr([pos.glyphs]), "[one two]")
-        self.assertEqual(pos.valuerecord.makeString(vertical=True), "-300")
+        [(glyphs, value)] = pos.pos
+        self.assertEqual(glyphstr([glyphs]), "[one two]")
+        self.assertEqual(value.makeString(vertical=True), "-300")
+
+    def test_gpos_type_1_multiple(self):
+        doc = self.parse("feature f {pos one'1 two'2 [five six]'56;} f;")
+        pos = doc.statements[0].statements[0]
+        self.assertIsInstance(pos, ast.SinglePosStatement)
+        [(glyphs1, val1), (glyphs2, val2), (glyphs3, val3)] = pos.pos
+        self.assertEqual(glyphstr([glyphs1]), "one")
+        self.assertEqual(val1.makeString(vertical=False), "1")
+        self.assertEqual(glyphstr([glyphs2]), "two")
+        self.assertEqual(val2.makeString(vertical=False), "2")
+        self.assertEqual(glyphstr([glyphs3]), "[five six]")
+        self.assertEqual(val3.makeString(vertical=False), "56")
 
     def test_gpos_type_1_enumerated(self):
         self.assertRaisesRegex(
@@ -724,6 +738,16 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(glyphstr(pos.suffix), "[Y y] [Z z]")
         self.assertEqual(pos.lookups, [lookup1, lookup2, None])
 
+    def test_gpos_type_8_lookup_with_values(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            'If "lookup" is present, no values must be specified',
+            self.parse,
+            "lookup L1 {pos one 100;} L1;"
+            "feature test {"
+            "    pos A' lookup L1 B' 20;"
+            "} test;")
+
     def test_markClass(self):
         doc = self.parse("markClass [acute grave] <anchor 350 3> @MARKS;")
         mc = doc.statements[0]
@@ -901,6 +925,12 @@ class ParserTest(unittest.TestCase):
             'Expected a glyph class with 4 elements after "by", '
             'but found a glyph class with 26 elements',
             self.parse, "feature smcp {sub [a-d] by [A.sc-Z.sc];} smcp;")
+
+    def test_sub_with_values(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Substitution statements cannot contain values",
+            self.parse, "feature smcp {sub A' 20 by A.sc;} smcp;")
 
     def test_substitute_multiple(self):  # GSUB LookupType 2
         doc = self.parse("lookup Look {substitute f_f_i by f f i;} Look;")
