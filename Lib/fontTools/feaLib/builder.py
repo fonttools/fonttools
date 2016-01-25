@@ -624,7 +624,7 @@ class Builder(object):
         if prefix or suffix:
             # TODO: https://github.com/behdad/fonttools/issues/485
             raise FeatureLibError("Contextual SinglePos not yet implemented",
-                                  self.location)
+                                  location)
         lookup = self.get_lookup_(location, SinglePosBuilder)
         for glyph, value in mapping.items():
             lookup.add_pos(location, glyph, value)
