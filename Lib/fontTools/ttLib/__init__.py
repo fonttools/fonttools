@@ -185,6 +185,9 @@ class TTFont(object):
 		"""
 		from fontTools.ttLib import sfnt
 		if not hasattr(file, "write"):
+			if self.lazy and self.reader.file.name == file:
+				raise TTLibError(
+					"Can't overwrite TTFont when 'lazy' attribute is True")
 			closeStream = 1
 			file = open(file, "wb")
 		else:
