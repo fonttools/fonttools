@@ -622,9 +622,13 @@ class Builder(object):
 
     def add_single_pos(self, location, prefix, suffix, mapping):
         if prefix or suffix:
-            # TODO: https://github.com/behdad/fonttools/issues/485
-            raise FeatureLibError("Contextual SinglePos not yet implemented",
-                                  location)
+            sub = self.get_chained_lookup_(location, SinglePosBuilder)
+            for glyph, value in mapping.items():
+                sub.add_pos(location, glyph, value)
+            chain = self.get_lookup_(location, ChainContextPosBuilder)
+            chain.rules.append(
+                (prefix, [mapping.keys()], suffix, [sub]))
+            return
         lookup = self.get_lookup_(location, SinglePosBuilder)
         for glyph, value in mapping.items():
             lookup.add_pos(location, glyph, value)

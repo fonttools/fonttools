@@ -283,6 +283,8 @@ class Parser(object):
             assert lookups == []
             return ([], prefix, [None] * len(prefix), values, [])
         else:
+            assert not any(values[:len(prefix)]), values
+            values = values[len(prefix):][:len(glyphs)]
             return (prefix, glyphs, lookups, values, suffix)
 
     def parse_ignore_(self):
@@ -449,7 +451,7 @@ class Parser(object):
         if enumerated:
             raise FeatureLibError(
                 '"enumerate" is only allowed with pair positionings', location)
-        return ast.SinglePosStatement(location, zip(glyphs, values),
+        return ast.SinglePosStatement(location, list(zip(glyphs, values)),
                                       prefix, suffix)
 
     def parse_position_cursive_(self, enumerated, vertical):

@@ -516,6 +516,8 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(val2.makeString(vertical=False), "2")
         self.assertEqual(glyphstr([glyphs3]), "[five six]")
         self.assertEqual(val3.makeString(vertical=False), "56")
+        self.assertEqual(pos.prefix, [])
+        self.assertEqual(pos.suffix, [])
 
     def test_gpos_type_1_enumerated(self):
         self.assertRaisesRegex(
@@ -526,6 +528,16 @@ class ParserTest(unittest.TestCase):
             FeatureLibError,
             '"enumerate" is only allowed with pair positionings',
             self.parse, "feature test {enumerate pos T 100;} test;")
+
+    def test_gpos_type_1_chained(self):
+        doc = self.parse("feature kern {pos [A B] [T Y]' 20 comma;} kern;")
+        pos = doc.statements[0].statements[0]
+        self.assertIsInstance(pos, ast.SinglePosStatement)
+        [(glyphs, value)] = pos.pos
+        self.assertEqual(glyphstr([glyphs]), "[T Y]")
+        self.assertEqual(value.makeString(vertical=False), "20")
+        self.assertEqual(glyphstr(pos.prefix), "[A B]")
+        self.assertEqual(glyphstr(pos.suffix), "comma")
 
     def test_gpos_type_2_format_a(self):
         doc = self.parse("feature kern {"
