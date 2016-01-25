@@ -6,7 +6,6 @@ from fontTools.otlLib import builder as otl
 from fontTools.ttLib import getTableClass
 from fontTools.ttLib.tables import otBase, otTables
 import itertools
-import warnings
 
 
 def addOpenTypeFeatures(featurefile_path, font):
