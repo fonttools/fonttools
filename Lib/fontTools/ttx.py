@@ -298,11 +298,11 @@ def parseOptions(args):
 	rawOptions, files = getopt.getopt(args, "ld:o:fvqht:x:sim:z:baey:",
 			['unicodedata=', "recalc-timestamp", 'flavor='])
 
-	if not files:
-		raise getopt.GetoptError('Must specify at least one input file')
-
 	options = Options(rawOptions, len(files))
 	jobs = []
+
+	if not files:
+		raise getopt.GetoptError('Must specify at least one input file')
 
 	for input in files:
 		tp = guessFileType(input)
