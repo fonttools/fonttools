@@ -56,7 +56,7 @@ usage: ttx [options] inputfile1 [... inputfileN]
        If no export format is specified 'raw' format is used.
     -e Don't ignore decompilation errors, but show a full traceback
        and abort.
-    -y <number> Select font number for TrueType Collection,
+    -y <number> Select font number for TrueType Collection (.ttc/.otc),
        starting from 0.
     --unicodedata <UnicodeData.txt> Use custom database file to write
        character names in the comments of the cmap TTX output.
