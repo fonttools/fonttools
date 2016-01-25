@@ -260,9 +260,9 @@ class Parser(object):
             raise VoltLibError("Expected SUB", location)
         while self.next_token_ == "SUB":
             self.expect_keyword_("SUB")
-            src.extend(self.parse_coverage_())
+            src.append(self.parse_coverage_())
             self.expect_keyword_("WITH")
-            dest.extend(self.parse_coverage_())
+            dest.append(self.parse_coverage_())
             self.expect_keyword_("END_SUB")
         self.expect_keyword_("END_SUBSTITUTION")
         sub = ast.SubstitutionDefinition(location, src, dest)

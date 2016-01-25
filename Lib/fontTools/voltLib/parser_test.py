@@ -389,7 +389,7 @@ class ParserTest(unittest.TestCase):
             'END_SUBSTITUTION'
         ).statements
         self.assertEqual((lookup.name, list(lookup.sub.mapping)),
-                         ("smcp", [("a", "a.sc"), ("b", "b.sc")]))
+                         ("smcp", [(["a"], ["a.sc"]), (["b"], ["b.sc"])]))
 
     def test_substitution_single_in_context(self):
         [group, lookup] = self.parse(
@@ -413,7 +413,7 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(
             (lookup.name, list(lookup.sub.mapping),
              context.ex_or_in, context.left, context.right),
-            ("fracdnom", [("one", "one.dnom"), ("two", "two.dnom")],
+            ("fracdnom", [(["one"], ["one.dnom"]), (["two"], ["two.dnom"])],
              "IN_CONTEXT", [[[("Denominators", ), "fraction"]]], [])
         )
 
@@ -575,6 +575,46 @@ class ParserTest(unittest.TestCase):
             (lookup.name, lookup.reversal),
             ("RevLookup", True)
         )
+
+    def test_substitution_single_to_multiple(self):
+        [lookup] = self.parse(
+            'DEF_LOOKUP "ccmp" PROCESS_BASE PROCESS_MARKS ALL '
+            'DIRECTION LTR\n'
+            'IN_CONTEXT\n'
+            'END_CONTEXT\n'
+            'AS_SUBSTITUTION\n'
+            'SUB GLYPH "aacute"\n'
+            'WITH GLYPH "a" GLYPH "acutecomb"\n'
+            'END_SUB\n'
+            'SUB GLYPH "agrave"\n'
+            'WITH GLYPH "a" GLYPH "gravecomb"\n'
+            'END_SUB\n'
+            'END_SUBSTITUTION'
+        ).statements
+        self.assertEqual((lookup.name, list(lookup.sub.mapping)),
+                         ("ccmp",
+                          [(["aacute"], ["a", "acutecomb"]),
+                           (["agrave"], ["a", "gravecomb"])]))
+
+    def test_substitution_multiple_to_single(self):
+        [lookup] = self.parse(
+            'DEF_LOOKUP "liga" PROCESS_BASE PROCESS_MARKS ALL '
+            'DIRECTION LTR\n'
+            'IN_CONTEXT\n'
+            'END_CONTEXT\n'
+            'AS_SUBSTITUTION\n'
+            'SUB GLYPH "f" GLYPH "i"\n'
+            'WITH GLYPH "f_i"\n'
+            'END_SUB\n'
+            'SUB GLYPH "f" GLYPH "t"\n'
+            'WITH GLYPH "f_t"\n'
+            'END_SUB\n'
+            'END_SUBSTITUTION'
+        ).statements
+        self.assertEqual((lookup.name, list(lookup.sub.mapping)),
+                         ("liga",
+                          [(["f", "i"], ["f_i"]),
+                           (["f", "t"], ["f_t"])]))
 
     # GPOS
     #  ATTACH_CURSIVE
