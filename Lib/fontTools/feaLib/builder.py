@@ -620,18 +620,24 @@ class Builder(object):
         lookup = self.get_lookup_(location, SpecificPairPosBuilder)
         lookup.add_pair(location, glyph1, value1, glyph2, value2)
 
-    def add_single_pos(self, location, prefix, suffix, mapping):
+    def add_single_pos(self, location, prefix, suffix, pos):
         if prefix or suffix:
+            subs = []
             sub = self.get_chained_lookup_(location, SinglePosBuilder)
-            for glyph, value in mapping.items():
-                sub.add_pos(location, glyph, value)
+            for glyphs, value in pos:
+                if not glyphs.isdisjoint(sub.mapping.keys()):
+                    sub = self.get_chained_lookup_(location, SinglePosBuilder)
+                for glyph in glyphs:
+                    sub.add_pos(location, glyph, value)
+                subs.append(sub)
             chain = self.get_lookup_(location, ChainContextPosBuilder)
             chain.rules.append(
-                (prefix, [mapping.keys()], suffix, [sub]))
+                (prefix, [g for g, v in pos], suffix, subs))
             return
         lookup = self.get_lookup_(location, SinglePosBuilder)
-        for glyph, value in mapping.items():
-            lookup.add_pos(location, glyph, value)
+        for glyphs, value in pos:
+            for glyph in glyphs:
+                lookup.add_pos(location, glyph, value)
 
     def setGlyphClass_(self, location, glyph, glyphClass):
         oldClass, oldLocation = self.glyphClassDefs_.get(glyph, (None, None))

@@ -482,10 +482,8 @@ class SinglePosStatement(Statement):
     def build(self, builder):
         prefix = [p.glyphSet() for p in self.prefix]
         suffix = [s.glyphSet() for s in self.suffix]
-        mapping = {}
-        for glyphs, value in self.pos:
-            mapping.update({glyph: value for glyph in glyphs.glyphSet()})
-        builder.add_single_pos(self.location, prefix, suffix, mapping)
+        pos = [(g.glyphSet(), value) for g, value in self.pos]
+        builder.add_single_pos(self.location, prefix, suffix, pos)
 
 
 class SubtableStatement(Statement):
