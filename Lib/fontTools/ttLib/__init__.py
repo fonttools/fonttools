@@ -159,14 +159,16 @@ class TTFont(object):
 		else:
 			# assume "file" is a readable file object
 			closeStream = False
-		# read input file in memory and wrap a stream around it to allow overwriting
-		tmp = BytesIO(file.read())
-		if hasattr(file, 'name'):
-			# save reference to input file name
-			tmp.name = file.name
-		if closeStream:
-			file.close()
-		self.reader = sfnt.SFNTReader(tmp, checkChecksums, fontNumber=fontNumber)
+		if not self.lazy:
+			# read input file in memory and wrap a stream around it to allow overwriting
+			tmp = BytesIO(file.read())
+			if hasattr(file, 'name'):
+				# save reference to input file name
+				tmp.name = file.name
+			if closeStream:
+				file.close()
+			file = tmp
+		self.reader = sfnt.SFNTReader(file, checkChecksums, fontNumber=fontNumber)
 		self.sfntVersion = self.reader.sfntVersion
 		self.flavor = self.reader.flavor
 		self.flavorData = self.reader.flavorData
@@ -183,6 +185,9 @@ class TTFont(object):
 		"""
 		from fontTools.ttLib import sfnt
 		if not hasattr(file, "write"):
+			if self.lazy and self.reader.file.name == file:
+				raise TTLibError(
+					"Can't overwrite TTFont when 'lazy' attribute is True")
 			closeStream = 1
 			file = open(file, "wb")
 		else:
