@@ -617,7 +617,7 @@ $ ft2fea -request "GPOS|GSUB feature *" \\
     aggregator.validate()
 
     printFont(font,
-              makeName=partial(makeName, uniquenessDict={}),
+              makeName=partial(makeName, uniquenessDict={}, suffix=(args.suffix or '')),
               getStatus=aggregator.getStatus)
 
 
@@ -637,6 +637,9 @@ parser.add_argument('-b, --blacklist', dest='blacklist', metavar="BLACKLIST", na
 
 parser.add_argument('-m, --mute', dest='mute', metavar="MUTE", nargs='?'\
                  , help='Mute the printed output of fea contents.')
+
+parser.add_argument('-s, --suffix', dest='suffix', metavar="NAME-SUFFIX", nargs='?'\
+                 , help='Suffix to be attached to each generated name.')
 
 parser.add_argument('font', help='A ttf or otf OpenType font file.'\
                    , metavar="FONT-PATH")
