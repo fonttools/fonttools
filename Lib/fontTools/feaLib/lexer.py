@@ -1,7 +1,7 @@
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
+from fontTools.misc.py23 import open
 from fontTools.feaLib.error import FeatureLibError
-import codecs
 import re
 import os
 
@@ -204,7 +204,7 @@ class IncludingLexer(object):
     @staticmethod
     def make_lexer_(filename, location):
         try:
-            with codecs.open(filename, "rb", "utf-8") as f:
+            with open(filename, "r", encoding="utf-8") as f:
                 return Lexer(f.read(), filename)
         except IOError as err:
             raise FeatureLibError(str(err), location)

@@ -7,6 +7,8 @@
 # https://github.com/Monotype/OpenType_Table_Source/
 
 from __future__ import print_function, division, absolute_import
+from __future__ import unicode_literals
+from fontTools.misc.py23 import open
 from fontTools import ttLib
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.tables.otBase import ValueRecord, valueRecordFormatDict
@@ -1108,7 +1110,7 @@ def main(args):
 		del args[0]
 	for f in args:
 		debug("Processing", f)
-		table = build(open(f, 'rt'), font, tableTag=tableTag)
+		table = build(open(f, 'rt', encoding="utf-8"), font, tableTag=tableTag)
 		blob = table.compile(font) # Make sure it compiles
 		decompiled = table.__class__()
 		decompiled.decompile(blob, font) # Make sure it decompiles!

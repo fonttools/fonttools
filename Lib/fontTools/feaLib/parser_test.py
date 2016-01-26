@@ -4,7 +4,6 @@ from fontTools.feaLib.error import FeatureLibError
 from fontTools.feaLib.parser import Parser, SymbolTable
 from fontTools.misc.py23 import *
 import fontTools.feaLib.ast as ast
-import codecs
 import os
 import shutil
 import sys
@@ -1194,7 +1193,7 @@ class ParserTest(unittest.TestCase):
             self.tempdir = tempfile.mkdtemp()
         self.num_tempfiles += 1
         path = os.path.join(self.tempdir, "tmp%d.fea" % self.num_tempfiles)
-        with codecs.open(path, "wb", "utf-8") as outfile:
+        with open(path, "w", encoding="utf-8") as outfile:
             outfile.write(text)
         return Parser(path).parse()
 
