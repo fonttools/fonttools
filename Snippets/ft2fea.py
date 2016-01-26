@@ -444,6 +444,21 @@ def formatClassDefs(classDefs, classNames, returnFoundClasses=False):
         lines.append('@{0} = [ {1} ];'.format(className, ' '.join(classes[className])))
     return (lines, foundClasses) if returnFoundClasses else lines
 
+def formatGlyphClassDef(classDefs):
+    classNames = {
+        1: 'GDEF_Base', # Base glyph (single character, spacing glyph)
+        2: 'GDEF_Ligature', # Ligature glyph (multiple character, spacing glyph)
+        3: 'GDEF_Mark', # Mark glyph (non-spacing combining glyph)
+        4: 'GDEF_Component' # Component glyph (part of single character, spacing glyph)
+    }
+    gdefLines = []
+    lines, foundClasses = formatClassDefs(classDefs, classNames, returnFoundClasses=True)
+    if len(lines):
+        glyphClassDef = ['@{0}'.format(classNames[i])
+                        if i in foundClasses else '' for i in range(1,5)]
+        gdefLines.append('  GlyphClassDef {0};'.format(', '.join(glyphClassDef)))
+    return (lines, gdefLines)
+
 def formatClassFromCoverage(coverage, name):
     return '@{0} = [ {1} ]'.format(name, ' '.join(coverage))
 
@@ -533,18 +548,10 @@ def printGDEF(table, makeName=makeName, getStatus=getStatusAllTrue, print=print)
     if table.table.GlyphClassDef is not None:
         printClass, _ = getStatus(table.table.GlyphClassDef)
         if printClass:
-            classNames = {
-                1: 'GDEF_Base', # Base glyph (single character, spacing glyph)
-                2: 'GDEF_Ligature', # Ligature glyph (multiple character, spacing glyph)
-                3: 'GDEF_Mark', # Mark glyph (non-spacing combining glyph)
-                4: 'GDEF_Component' # Component glyph (part of single character, spacing glyph)
-            }
-            lines, foundClasses = formatClassDefs(table.table.GlyphClassDef.classDefs, classNames, returnFoundClasses=True)
-            if len(lines):
-                glyphClassDef = ['@{0}'.format(classNames[i])
-                                if i in foundClasses else '' for i in range(1,5)]
-                gdefLines.append('  GlyphClassDef {0};'.format(', '.join(glyphClassDef)))
+            lines, gdefLines_ = formatGlyphClassDef(table.table.GlyphClassDef.classDefs)
 
+            if len(lines):
+                gdefLines += gdefLines_
                 print('# GDEF Glyph Class Definitions:\n')
                 print('\n\n'.join(lines))
                 print()
