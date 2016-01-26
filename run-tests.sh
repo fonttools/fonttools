@@ -19,7 +19,11 @@ echo
 # Setup environment
 DIR=`dirname "$0"`
 cd "$DIR/Lib"
-PYTHONPATH=".:$PYTHONPATH"
+if [ "x$PYTHONPATH" != "x" ]; then
+	PYTHONPATH=".:$PYTHONPATH"
+else
+	PYTHONPATH="."
+fi
 export PYTHONPATH
 
 # Find tests
