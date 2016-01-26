@@ -116,7 +116,7 @@ def formatLookupflag(lookup, makeName=makeName):
         markAttachClassName = makeName('MarkAttachClass', markAttachClassID)
         lookupflags.append('MarkAttachmentType @{0}'.format(markAttachClassName))
 
-    return 'lookupflag {0};'.format(' '.join(lookupflags))
+    return '' if not lookupflags else 'lookupflag {0};'.format(' '.join(lookupflags))
 
 def formatAnchor(anchorType, anchorClassPrefix, classId, anchor):
     anchorFormat = ({
@@ -224,7 +224,7 @@ def formatLookupMarkToBase(lookup, makeName=makeName):
                                         , subtable.LookupType
                                         , lookupTypesGPOS[subtable.LookupType][2])
     anchorClassPrefix = makeName('Anchor', unique=True)
-    lines = [ formatLookupflag(lookup, makeName=makeName) ] \
+    lines = filter(None, [ formatLookupflag(lookup, makeName=makeName) ]) \
             + formatMarkArray(subtable.MarkArray, subtable.MarkCoverage, anchorClassPrefix) \
             + formatBaseArray(subtable.BaseArray, subtable.BaseCoverage, anchorClassPrefix)
 
@@ -242,7 +242,7 @@ def formatLookupMarkToLigature(lookup, makeName=makeName):
                                         , subtable.LookupType
                                         , lookupTypesGPOS[subtable.LookupType][2])
     anchorClassPrefix = makeName('Anchor', unique=True)
-    lines = [ formatLookupflag(lookup, makeName=makeName) ] \
+    lines = filter(None, [ formatLookupflag(lookup, makeName=makeName) ]) \
             + formatMarkArray(subtable.MarkArray, subtable.MarkCoverage, anchorClassPrefix) \
             + formatLigatureArray(subtable.LigatureArray, subtable.LigatureCoverage, anchorClassPrefix)
 
@@ -260,7 +260,7 @@ def formatLookupMarkToMark(lookup, makeName=makeName):
                                         , subtable.LookupType
                                         , lookupTypesGPOS[subtable.LookupType][2])
     anchorClassPrefix = makeName('Anchor', unique=True)
-    lines = [ formatLookupflag(lookup, makeName=makeName) ] \
+    lines = filter(None, [ formatLookupflag(lookup, makeName=makeName) ]) \
             + formatMarkArray(subtable.Mark1Array, subtable.Mark1Coverage, anchorClassPrefix) \
             + formatMark2Array(subtable.Mark2Array, subtable.Mark2Coverage, anchorClassPrefix)
     return (True, lines)
