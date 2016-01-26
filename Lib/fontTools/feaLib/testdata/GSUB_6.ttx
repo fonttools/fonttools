@@ -84,7 +84,7 @@
           <!-- SubstCount=1 -->
           <SubstLookupRecord index="0">
             <SequenceIndex value="0"/>
-            <LookupListIndex value="None"/>
+            <LookupListIndex value="2"/>
           </SubstLookupRecord>
         </ChainContextSubst>
       </Lookup>

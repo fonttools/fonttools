@@ -219,6 +219,31 @@ class Builder(object):
             sets[id] = glyphs
         return otl.buildMarkGlyphSetsDef(sets, self.glyphMap)
 
+    def buildLookups_(self, tag):
+        assert tag in ('GPOS', 'GSUB'), tag
+        for lookup in self.lookups_:
+            lookup.lookup_index = None
+        lookups = []
+        for i, lookup in enumerate(self.lookups_):
+            if lookup.table != tag:
+                continue
+            # TODO: https://github.com/behdad/fonttools/issues/448
+            # If multiple lookup builders would build equivalent lookups,
+            # emit them only once. This is quadratic in the number of lookups,
+            # but the checks are cheap. If performance ever becomes an issue,
+            # we could hash the lookup content and only compare those with
+            # the same hash value.
+            equivalent = None
+            for other in self.lookups_[:i]:
+                if lookup.equals(other):
+                    equivalent = other
+            if equivalent is not None:
+                lookup.lookup_index = equivalent.lookup_index
+                continue
+            lookup.lookup_index = len(lookups)
+            lookups.append(lookup)
+        return [l.build() for l in lookups]
+
     def makeTable(self, tag):
         table = getattr(otTables, tag, None)()
         table.Version = 1.0
@@ -226,28 +251,8 @@ class Builder(object):
         table.ScriptList.ScriptRecord = []
         table.FeatureList = otTables.FeatureList()
         table.FeatureList.FeatureRecord = []
-
         table.LookupList = otTables.LookupList()
-        table.LookupList.Lookup = []
-        for lookup in self.lookups_:
-            lookup.lookup_index = None
-        for i, lookup_builder in enumerate(self.lookups_):
-            if lookup_builder.table != tag:
-                continue
-            # If multiple lookup builders would build equivalent lookups,
-            # emit them only once. This is quadratic in the number of lookups,
-            # but the checks are cheap. If performance ever becomes an issue,
-            # we could hash the lookup content and only compare those with
-            # the same hash value.
-            equivalent_builder = None
-            for other_builder in self.lookups_[:i]:
-                if lookup_builder.equals(other_builder):
-                    equivalent_builder = other_builder
-            if equivalent_builder is not None:
-                lookup_builder.lookup_index = equivalent_builder.lookup_index
-                continue
-            lookup_builder.lookup_index = len(table.LookupList.Lookup)
-            table.LookupList.Lookup.append(lookup_builder.build())
+        table.LookupList.Lookup = self.buildLookups_(tag)
 
         # Build a table for mapping (tag, lookup_indices) to feature_index.
         # For example, ('liga', (2,3,7)) --> 23.
