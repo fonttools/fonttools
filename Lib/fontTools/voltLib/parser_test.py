@@ -360,6 +360,20 @@ class ParserTest(unittest.TestCase):
                 'END_SUBSTITUTION\n'
             ).statements
 
+    def test_lookup_name_starts_with_letter(self):
+        with self.assertRaisesRegex(
+            VoltLibError,
+            'Lookup name "\\\lookupname" must start with a letter'
+        ):
+            [lookup] = self.parse(
+                'DEF_LOOKUP "\lookupname"\n'
+                'AS_SUBSTITUTION\n'
+                'SUB GLYPH "a"\n'
+                'WITH GLYPH "a.alt"\n'
+                'END_SUB\n'
+                'END_SUBSTITUTION\n'
+            ).statements
+
     def test_substitution_empty(self):
         with self.assertRaisesRegex(
                 VoltLibError,

@@ -161,6 +161,11 @@ class Parser(object):
         assert self.is_cur_keyword_("DEF_LOOKUP")
         location = self.cur_token_location_
         name = self.expect_string_()
+        if not name[0].isalpha():
+            raise VoltLibError(
+                'Lookup name "%s" must start with a letter' % name,
+                location
+            )
         if self.lookups_.resolve(name) is not None:
             raise VoltLibError(
                 'Lookup "%s" already defined, '
