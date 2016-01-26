@@ -21,7 +21,8 @@ def makeTTFont():
         "zero one two three four five six seven eight nine "
         "zero.oldstyle one.oldstyle two.oldstyle three.oldstyle "
         "four.oldstyle five.oldstyle six.oldstyle seven.oldstyle "
-        "eight.oldstyle nine.oldstyle onehalf "
+        "eight.oldstyle nine.oldstyle onequarter onehalf threequarters "
+        "onesuperior twosuperior threesuperior ordfeminine ordmasculine "
         "A B C D E F G H I J K L M N O P Q R S T U V W X Y Z "
         "a b c d e f g h i j k l m n o p q r s t u v w x y z "
         "A.sc B.sc C.sc D.sc E.sc F.sc G.sc H.sc I.sc J.sc K.sc L.sc M.sc "
@@ -30,7 +31,7 @@ def makeTTFont():
         "a.alt1 a.alt2 a.alt3 b.alt c.mid d.alt d.mid e.begin e.mid "
         "n.end s.end "
         "f_l c_h c_k c_s c_t f_f f_f_i f_f_l f_i o_f_f_i s_t "
-        "ydieresis yacute "
+        "ydieresis yacute breve "
         "grave acute dieresis macron circumflex cedilla umlaut ogonek caron "
         "damma hamza sukun kasratan lam_meem_jeem noon.final noon.initial "
     ).split()
@@ -114,6 +115,10 @@ class BuilderTest(unittest.TestCase):
         font = makeTTFont()
         addOpenTypeFeatures(self.getpath("%s.fea" % name), font)
         self.expect_ttx(font, self.getpath("%s.ttx" % name))
+        # Make sure we can produce binary OpenType tables, not just XML.
+        for tag in ('GDEF', 'GSUB', 'GPOS'):
+            if tag in font:
+                font[tag].compile(font)
 
     def test_alternateSubst_multipleSubstitutionsForSameGlyph(self):
         self.assertRaisesRegex(

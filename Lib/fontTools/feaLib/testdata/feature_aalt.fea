@@ -26,6 +26,6 @@ feature ordn {
 } ordn;
 
 feature liga {
-    sub f i by fi;
-    sub f l by fl;
+    sub f i by f_i;
+    sub f l by f_l;
 } liga;

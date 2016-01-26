@@ -180,8 +180,8 @@
         <!-- SubTableCount=1 -->
         <LigatureSubst index="0">
           <LigatureSet glyph="f">
-            <Ligature components="i" glyph="fi"/>
-            <Ligature components="l" glyph="fl"/>
+            <Ligature components="i" glyph="f_i"/>
+            <Ligature components="l" glyph="f_l"/>
           </LigatureSet>
         </LigatureSubst>
       </Lookup>
