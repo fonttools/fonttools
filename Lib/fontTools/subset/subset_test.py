@@ -2,7 +2,6 @@ from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools import subset
 from fontTools.ttLib import TTFont
-import codecs
 import difflib
 import os
 import shutil
@@ -41,7 +40,7 @@ class SubsetTest(unittest.TestCase):
 
     def read_ttx(self, path):
         lines = []
-        with codecs.open(path, "r", "utf-8") as ttx:
+        with open(path, "r", encoding="utf-8") as ttx:
             for line in ttx.readlines():
                 # Elide ttFont attributes because ttLibVersion may change,
                 # and use os-native line separators so we can run difflib.

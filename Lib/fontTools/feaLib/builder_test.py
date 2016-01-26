@@ -1,11 +1,11 @@
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
+from fontTools.misc.py23 import open
 from fontTools.feaLib.builder import Builder, addOpenTypeFeatures
 from fontTools.feaLib.builder import ClassDefBuilder, LigatureSubstBuilder
 from fontTools.feaLib.error import FeatureLibError
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables import otTables
-import codecs
 import difflib
 import os
 import shutil
@@ -83,7 +83,7 @@ class BuilderTest(unittest.TestCase):
 
     def read_ttx(self, path):
         lines = []
-        with codecs.open(path, "r", "utf-8") as ttx:
+        with open(path, "r", encoding="utf-8") as ttx:
             for line in ttx.readlines():
                 # Elide ttFont attributes because ttLibVersion may change,
                 # and use os-native line separators so we can run difflib.
@@ -106,7 +106,7 @@ class BuilderTest(unittest.TestCase):
 
     def build(self, featureFile):
         path = self.temp_path(suffix=".fea")
-        with codecs.open(path, "wb", "utf-8") as outfile:
+        with open(path, "w", encoding="utf-8") as outfile:
             outfile.write(featureFile)
         font = makeTTFont()
         addOpenTypeFeatures(path, font)
