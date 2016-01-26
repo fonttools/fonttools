@@ -118,10 +118,9 @@ def formatLookupflag(lookup, makeName=makeName):
 
     return 'lookupflag {0};'.format(' '.join(lookupflags))
 
-def formatAnchor(anchorClassPrefix, classId, anchor):
-    anchorType = type(anchor).__name__
+def formatAnchor(anchorType, anchorClassPrefix, classId, anchor):
     anchorFormat = ({
-        'Anchor': '<anchor {1} {2}> {0}'
+        'MarkAnchor': '<anchor {1} {2}> {0}'
       , 'BaseAnchor': '<anchor {1} {2}> mark {0}'
       , 'LigatureAnchor': '<anchor {1} {2}> mark {0}'
       , 'Mark2Anchor': '<anchor {1} {2}> mark {0}'
@@ -138,7 +137,7 @@ def formatMarkArray(markArray, markCoverage, anchorClassPrefix):
     id2Name = markCoverage.glyphs
     definitions = OrderedDict()
     for i, markRecord in enumerate(markArray.MarkRecord):
-        value = formatAnchor(anchorClassPrefix, markRecord.Class, markRecord.MarkAnchor)
+        value = formatAnchor('MarkAnchor', anchorClassPrefix, markRecord.Class, markRecord.MarkAnchor)
         if value not in definitions:
             definitions[value] = []
         definitions[value].append(id2Name[i])
@@ -155,7 +154,7 @@ def formatBaseArray(baseArray, baseCoverage, anchorClassPrefix):
     id2Name = baseCoverage.glyphs
     definitions = OrderedDict()
     for i, baseRecord in enumerate(baseArray.BaseRecord):
-        value = tuple([formatAnchor(anchorClassPrefix, classId, anchor)
+        value = tuple([formatAnchor('BaseAnchor', anchorClassPrefix, classId, anchor)
                 for classId, anchor in enumerate(baseRecord.BaseAnchor)])
         if value not in definitions:
             definitions[value] = []
@@ -180,7 +179,7 @@ def formatLigatureArray(ligatureArray, ligatureCoverage, anchorClassPrefix):
         for componentRecord in ligatureAttach.ComponentRecord:
             if len(value):
                 value.append('ligComponent') # separator
-            value += [formatAnchor(anchorClassPrefix, classId, anchor) for classId, anchor
+            value += [formatAnchor('LigatureAnchor', anchorClassPrefix, classId, anchor) for classId, anchor
                                 in enumerate(componentRecord.LigatureAnchor)]
         value = tuple(value)
         if value not in definitions:
@@ -198,7 +197,7 @@ def formatMark2Array(mark2Array, mark2Coverage, anchorClassPrefix):
     id2Name = mark2Coverage.glyphs
     definitions = OrderedDict()
     for i, mark2Record in enumerate(mark2Array.Mark2Record):
-        value = tuple([formatAnchor(anchorClassPrefix, classId, anchor)
+        value = tuple([formatAnchor('Mark2Anchor', anchorClassPrefix, classId, anchor)
                 for classId, anchor in enumerate(mark2Record.Mark2Anchor)])
         if value not in definitions:
             definitions[value] = []
