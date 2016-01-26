@@ -265,6 +265,18 @@ def formatLookupMarkToMark(lookup, makeName=makeName):
             + formatMark2Array(subtable.Mark2Array, subtable.Mark2Coverage, anchorClassPrefix)
     return (True, lines)
 
+def formatLookupSingleSubstitution(lookup, makeName=makeName):
+    """ GSUB LookupType 1 """
+    # substitute <glyph> by <glyph>;             # format A
+    # substitute <glyphclass> by <glyph>;        # format B
+    # substitute <glyphclass> by <glyphclass>;   # format C
+
+    lines = filter(None, [ formatLookupflag(lookup, makeName=makeName) ]) \
+            + ['sub {0} by {1};'.format(*kv) for sub in lookup.SubTable
+                                             for kv in sub.mapping.items()]
+    return (True, lines)
+
+
 def formatLookupNotImplementedGPOS(lookup, makeName=makeName):
     return formatLookupNotImplemented(lookup, lookupTypesGPOS, 'GPOS', makeName=makeName)
 
@@ -290,7 +302,7 @@ lookupTypesGPOS = {
 
 lookupTypesGSUB = {
     # enum from https://www.microsoft.com/typography/otspec/gsub.htm
-    1: (formatLookupNotImplementedGSUB, 'singleSub', 'Single', 'Replace one glyph with one glyph'),
+    1: (formatLookupSingleSubstitution, 'singleSub', 'Single', 'Replace one glyph with one glyph'),
     2: (formatLookupNotImplementedGSUB, 'multipleSub', 'Multiple', 'Replace one glyph with more than one glyph'),
     3: (formatLookupNotImplementedGSUB, 'alternateSub', 'Alternate', 'Replace one glyph with one of many glyphs'),
     4: (formatLookupNotImplementedGSUB, 'ligatureSub', 'Ligature', 'Replace multiple glyphs with one glyph'),
