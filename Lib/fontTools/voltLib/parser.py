@@ -26,6 +26,7 @@ class Parser(object):
         self.doc_ = ast.VoltFile()
         self.groups_ = SymbolTable()
         self.anchors_ = {}  # dictionary of SymbolTable() keyed by glyph
+        self.scripts_ = SymbolTable()
         self.lookups_ = SymbolTable()
         self.next_token_type_, self.next_token_ = (None, None)
         self.next_token_location_ = None
@@ -113,6 +114,12 @@ class Parser(object):
             name = self.expect_string_()
         self.expect_keyword_("TAG")
         tag = self.expect_string_()
+        if self.scripts_.resolve(tag) is not None:
+            raise VoltLibError(
+                'Script "%s" already defined, '
+                'script tags are case insensitive' % tag,
+                location
+            )
         langs = []
         while self.next_token_ != "END_SCRIPT":
             self.advance_lexer_()
@@ -121,6 +128,7 @@ class Parser(object):
             langs.append(lang)
         self.expect_keyword_("END_SCRIPT")
         def_script = ast.ScriptDefinition(location, name, tag, langs)
+        self.scripts_.define(tag, def_script)
         return def_script
 
     def parse_langsys_(self):
