@@ -1,3 +1,5 @@
+# coding=utf-8
+
 from __future__ import print_function, absolute_import
 from fontTools.misc.py23 import *
 from collections import OrderedDict
@@ -206,6 +208,96 @@ def formatMark2Array(mark2Array, mark2Coverage, anchorClassPrefix):
         lines.append('pos mark [ {1} ]\n    {0};'.format('\n    '.join(value), ' '.join(glyphs)))
     return lines
 
+def formatValueRecord(valueRecord, valueFormat):
+    # ValueFormat bit enumeration (indicates which fields are present)
+    # Note, these are ordered in the same order as the value records are defined
+    valueFormatFlags = (
+        ('XPlacement', 0x0001) # Includes horizontal adjustment for placement
+      , ('YPlacement', 0x0002) # Includes vertical adjustment for placement
+      , ('XAdvance', 0x0004)   # Includes horizontal adjustment for advance
+      , ('YAdvance', 0x0008)   # Includes vertical adjustment for advance
+      , ('XPlaDevice', 0x0010) # Includes horizontal Device table for placement
+      , ('YPlaDevice', 0x0020) # Includes vertical Device table for placement
+      , ('XAdvDevice', 0x0040) # Includes horizontal Device table for advance
+      , ('YAdvDevice', 0x0080) # Includes vertical Device table for advance
+    # , 'Reserved': 0xF000 For future use (set to zero)
+    )
+
+    # defaults to 0
+    # NOTE: this is likely not correct anymore when we start doing the
+    # <device> tables in Value record format C.
+    values = [getattr(valueRecord, name, 0) for name, _ in valueFormatFlags]
+
+    # Value record format D, the null value record: [ Currently not implemented. ]
+    #  <NULL>
+    # Value record not defined
+    vformat = '<NULL>' # D
+    if valueFormat == 0x0001:
+        # Value record format A:
+        # <metric> # Angle brackets around value are not allowed.
+        # -3
+        vformat = '{0}' # A
+    elif valueFormat < 0x0010:
+        # Value record format B:
+        # < <metric> <metric> <metric> <metric> >
+        #       <metric>s represent adjustments forXplacement, Y placement,Xadvance,
+        #       and Y advance, in that order.
+        # <-80 0 -160 0>       #Xplacement adjustment: -80;X advance adjustment: -160
+        vformat = '< {0} {1} {2} {3} >' # B
+    elif valueFormat < 0x0100:
+        # Value record format C: [ Currently not implemented (in afdko fea). ]
+        #  < <metric> <metric> <metric> <metric> <device> <device> <device> <device> >
+        #       <metric>s represent the same adjustments as in format B.
+        #       The <device>s represent device tables [§2.e.iii] forX placement,
+        #       Y placement,Xadvance, and Y advance, in that order
+        # Need to format the device tables before inserting!
+        # vformat = '< {0} {1} {2} {3} {4} {5} {6} {7}>' # C
+        vformat = '<Value Record Format C[Currently not implemented in fea]>'
+    return vformat.format(*values)
+
+def formatSingleAdjustment(lookup, makeName=makeName):
+    """ GPOS LookupType 1 """
+
+    lines = filter(None, [ formatLookupflag(lookup, makeName=makeName) ])
+
+    for subtable in lookup.SubTable:
+        assert subtable.Format in (1,2), 'Unknown subtable format {0} for lookup-type {1} {2}.' \
+                                 .format( subtable.Format
+                                        , subtable.LookupType
+                                        , lookupTypesGPOS[subtable.LookupType][2])
+        if subtable.Format == 1:
+            # A SinglePosFormat1 subtable applies the same positioning value or values
+            # to each glyph listed in its Coverage table. For instance, when a font
+            # uses old-style numerals, this format could be applied to uniformly
+            # lower the position of all math operator glyphs.
+            lines.append('pos [ {0} ] {1};'.format(
+                    ' '.join(subtable.Coverage.glyphs)
+                  , formatValueRecord(subtable.Value, subtable.ValueFormat)
+            ))
+        elif subtable.Format == 2:
+            # A SinglePosFormat2 subtable provides an array of ValueRecords
+            # that contains one positioning value for each glyph in the
+            # Coverage table. This format is more flexible than Format 1,
+            # but it requires more space in the font file.
+            #
+            # Note: This accumulates glyphs with the same value and outputs
+            # them as a <glyphclass>, which is not necessary. We could
+            # just output one line per glyph. This is done to make the output
+            # shorter.
+            values = OrderedDict()
+            for index, glyph in enumerate(subtable.Coverage.glyphs):
+                value = formatValueRecord(subtable.Value[index], subtable.ValueFormat)
+                if value not in values:
+                    values[value] = []
+                values[value].append(glyph)
+            for value, glyphs in values.items():
+                if len(glyphs) == 1:
+                    glyphEntry = glyphs[0]
+                else:
+                    glyphEntry = '[ {0} ]'.format(' '.join(glyphs))
+                lines.append('pos {0} {1};'.format(glyphEntry, value))
+    return (True, lines)
+
 def formatLookupMarkToBase(lookup, makeName=makeName):
     # I did not research if this happens ever in this context though
     # but since "All subtables in a lookup must be of the same LookupType
@@ -289,7 +381,7 @@ def formatLookupNotImplemented(lookup, lookupTypes, tableTag, makeName=makeName)
 
 lookupTypesGPOS = {
     # enum from https://www.microsoft.com/typography/otspec/gpos.htm
-    1: (formatLookupNotImplementedGPOS, 'singlePos', 'Single adjustment' ,'Adjust position of a single glyph'),
+    1: (formatSingleAdjustment, 'singlePos', 'Single adjustment' ,'Adjust position of a single glyph'),
     2: (formatLookupNotImplementedGPOS, 'pairPos', 'Pair adjustment' ,'Adjust position of a pair of glyphs'),
     3: (formatLookupNotImplementedGPOS, 'cursiveAttach', 'Cursive attachment' ,'Attach cursive glyphs'),
     4: (formatLookupMarkToBase, 'markToBase', 'MarkToBase attachment' ,'Attach a combining mark to a base glyph'),
