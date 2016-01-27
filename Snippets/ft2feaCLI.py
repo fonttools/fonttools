@@ -540,7 +540,7 @@ Selector-Tags
       language
           DEU dflt ARA URD ... [language tags]
       feature
-          mkm mark calt dlig liga init medi ... [feature tags]
+          mkmk mark calt dlig liga init medi ... [feature tags]
       lookup
           gpos1 gsub2 ... [see 'Lookup Type Selector Tags' below]// gpos1
 
