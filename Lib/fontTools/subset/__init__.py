@@ -288,6 +288,14 @@ Other font-specific options:
       required by the standard, nor by any known implementation.
   --no-canonical-order
       Keep original order of font tables. This is faster. [default]
+  --prune-unicode-ranges
+      Update the 'OS/2 ulUnicodeRange*' bits after subsetting. The Unicode
+      ranges defined in the OpenType specification v1.7 are intersected with
+      the Unicode codepoints specified in the font's Unicode 'cmap' subtables:
+      when no overlap is found, the bit will be switched off. However, it will
+      *not* be switched on if an intersection is found.  [default]
+  --no-prune-unicode-ranges
+      Don't change the 'OS/2 ulUnicodeRange*' bits.
 
 Application options:
   --verbose
@@ -2327,7 +2335,7 @@ def prune_pre_subset(self, options):
     return True    # Required table
 
 
-# TODO(behdad) OS/2 ulUnicodeRange / ulCodePageRange?
+# TODO(behdad) OS/2 ulCodePageRange?
 # TODO(behdad) Drop AAT tables.
 # TODO(behdad) Drop unneeded GSUB/GPOS Script/LangSys entries.
 # TODO(behdad) Drop empty GSUB/GPOS, and GDEF if no GSUB/GPOS left
@@ -2397,6 +2405,7 @@ class Options(object):
         self.recommended_glyphs = False    # gid1, gid2, gid3 for TrueType
         self.recalc_bounds = False # Recalculate font bounding boxes
         self.recalc_timestamp = False # Recalculate font modified timestamp
+        self.prune_unicode_ranges = True  # Clear unused 'ulUnicodeRange' bits
         self.canonical_order = False # Order tables as recommended
         self.flavor = None  # May be 'woff' or 'woff2'
         self.desubroutinize = False # Desubroutinize CFF CharStrings
@@ -2666,6 +2675,11 @@ class Subsetter(object):
     def _prune_post_subset(self, font):
         for tag in font.keys():
             if tag == 'GlyphOrder': continue
+            if tag == 'OS/2' and self.options.prune_unicode_ranges:
+                old_uniranges = font[tag].getUnicodeRanges()
+                new_uniranges = font[tag].recalcUnicodeRanges(font, pruneOnly=True)
+                if old_uniranges != new_uniranges:
+                    self.log(tag, "Unicode ranges pruned: %s" % sorted(new_uniranges))
             clazz = ttLib.getTableClass(tag)
             if hasattr(clazz, 'prune_post_subset'):
                 table = font[tag]
