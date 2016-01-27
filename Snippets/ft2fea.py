@@ -388,6 +388,18 @@ def formatLookupAlternateSubstitution(lookup, makeName=makeName):
                                                 for k, v in sub.alternates.items()]
     return (True, lines)
 
+def formatLookupLigatureSubstitution(lookup, makeName=makeName):
+    """ GSUB LookupType 4 """
+    # substitute <glyph sequence> by <glyph>;
+    # <glyph sequence> must contain two or more of <glyph|glyphclass>. For example:
+    # substitute [one one.oldstyle] [slash fraction] [two two.oldstyle] by onehalf;
+
+    lines = filter(None, [ formatLookupflag(lookup, makeName=makeName) ]) \
+        + ['sub {0} {1} by {2};'.format(first, ' '.join(lig.Component), lig.LigGlyph)
+                            for sub in lookup.SubTable
+                                for first, ligatures in sub.ligatures.items()
+                                    for lig in ligatures]
+    return (True, lines)
 
 def formatLookupNotImplementedGPOS(lookup, makeName=makeName):
     return formatLookupNotImplemented(lookup, lookupTypesGPOS, 'GPOS', makeName=makeName)
@@ -417,7 +429,7 @@ lookupTypesGSUB = {
     1: (formatLookupSingleSubstitution, 'singleSub', 'Single', 'Replace one glyph with one glyph'),
     2: (formatLookupMultipleSubstitution, 'multipleSub', 'Multiple', 'Replace one glyph with more than one glyph'),
     3: (formatLookupAlternateSubstitution, 'alternateSub', 'Alternate', 'Replace one glyph with one of many glyphs'),
-    4: (formatLookupNotImplementedGSUB, 'ligatureSub', 'Ligature', 'Replace multiple glyphs with one glyph'),
+    4: (formatLookupLigatureSubstitution, 'ligatureSub', 'Ligature', 'Replace multiple glyphs with one glyph'),
     5: (formatLookupNotImplementedGSUB, 'contextSub', 'Context', 'Replace one or more glyphs in context'),
     6: (formatLookupNotImplementedGSUB, 'chainingCtxSub', 'Chaining Context', 'Replace one or more glyphs in chained context'),
     7: (formatLookupNotImplementedGSUB, 'extensionSub', 'Extension Substitution', 'Extension mechanism for other substitutions (i.e. this excludes the Extension type substitution itself)'),
