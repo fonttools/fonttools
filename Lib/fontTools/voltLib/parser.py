@@ -27,6 +27,7 @@ class Parser(object):
         self.groups_ = SymbolTable()
         self.anchors_ = {}  # dictionary of SymbolTable() keyed by glyph
         self.scripts_ = SymbolTable()
+        self.langs_ = SymbolTable()
         self.lookups_ = SymbolTable()
         self.next_token_type_, self.next_token_ = (None, None)
         self.next_token_location_ = None
@@ -120,13 +121,22 @@ class Parser(object):
                 'script tags are case insensitive' % tag,
                 location
             )
+        self.langs_.enter_scope()
         langs = []
         while self.next_token_ != "END_SCRIPT":
             self.advance_lexer_()
             lang = self.parse_langsys_()
             self.expect_keyword_("END_LANGSYS")
+            if self.langs_.resolve(lang.tag) is not None:
+                raise VoltLibError(
+                    'Language "%s" already defined in script "%s", '
+                    'language tags are case insensitive' % (lang.tag, tag),
+                    location
+                )
+            self.langs_.define(lang.tag, lang)
             langs.append(lang)
         self.expect_keyword_("END_SCRIPT")
+        self.langs_.exit_scope()
         def_script = ast.ScriptDefinition(location, name, tag, langs)
         self.scripts_.define(tag, def_script)
         return def_script

@@ -266,7 +266,7 @@ class ParserTest(unittest.TestCase):
                 'END_SCRIPT'
             ).statements
 
-    def test_langsys_script_duplicate(self):
+    def test_langsys_duplicate_script(self):
         with self.assertRaisesRegex(
                 VoltLibError,
                 'Script "DFLT" already defined, '
@@ -281,6 +281,40 @@ class ParserTest(unittest.TestCase):
                 'END_LANGSYS\n'
                 'END_SCRIPT'
             ).statements
+
+    def test_langsys_duplicate_lang(self):
+        with self.assertRaisesRegex(
+                VoltLibError,
+                'Language "dflt" already defined in script "DFLT", '
+                'language tags are case insensitive'):
+            [langsys] = self.parse(
+                'DEF_SCRIPT NAME "Default" TAG "DFLT"\n'
+                'DEF_LANGSYS NAME "Default" TAG "dflt"\n'
+                'END_LANGSYS\n'
+                'DEF_LANGSYS NAME "Default" TAG "dflt"\n'
+                'END_LANGSYS\n'
+                'END_SCRIPT\n'
+            ).statements
+
+    def test_langsys_lang_in_separate_scripts(self):
+        [langsys1, langsys2] = self.parse(
+            'DEF_SCRIPT NAME "Default" TAG "DFLT"\n'
+            'DEF_LANGSYS NAME "Default" TAG "dflt"\n'
+            'END_LANGSYS\n'
+            'DEF_LANGSYS NAME "Default" TAG "ROM "\n'
+            'END_LANGSYS\n'
+            'END_SCRIPT\n'
+            'DEF_SCRIPT NAME "Latin" TAG "latn"\n'
+            'DEF_LANGSYS NAME "Default" TAG "dflt"\n'
+            'END_LANGSYS\n'
+            'DEF_LANGSYS NAME "Default" TAG "ROM "\n'
+            'END_LANGSYS\n'
+            'END_SCRIPT'
+        ).statements
+        self.assertEqual((langsys1.langs[0].tag, langsys1.langs[1].tag),
+                         ("dflt", "ROM "))
+        self.assertEqual((langsys2.langs[0].tag, langsys2.langs[1].tag),
+                         ("dflt", "ROM "))
 
     def test_langsys_no_lang_name(self):
         [langsys] = self.parse(
