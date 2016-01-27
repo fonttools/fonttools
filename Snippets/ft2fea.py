@@ -378,6 +378,16 @@ def formatLookupMultipleSubstitution(lookup, makeName=makeName):
                                                 for k, v in sub.mapping.items()]
     return (True, lines)
 
+def formatLookupAlternateSubstitution(lookup, makeName=makeName):
+    """ GSUB LookupType 3 """
+    # substitute <glyph> from <glyphclass>;
+
+    lines = filter(None, [ formatLookupflag(lookup, makeName=makeName) ]) \
+            + ['sub {0} from [ {1} ];'.format(k, ' '.join(v))
+                                                for sub in lookup.SubTable
+                                                for k, v in sub.alternates.items()]
+    return (True, lines)
+
 
 def formatLookupNotImplementedGPOS(lookup, makeName=makeName):
     return formatLookupNotImplemented(lookup, lookupTypesGPOS, 'GPOS', makeName=makeName)
@@ -406,7 +416,7 @@ lookupTypesGSUB = {
     # enum from https://www.microsoft.com/typography/otspec/gsub.htm
     1: (formatLookupSingleSubstitution, 'singleSub', 'Single', 'Replace one glyph with one glyph'),
     2: (formatLookupMultipleSubstitution, 'multipleSub', 'Multiple', 'Replace one glyph with more than one glyph'),
-    3: (formatLookupNotImplementedGSUB, 'alternateSub', 'Alternate', 'Replace one glyph with one of many glyphs'),
+    3: (formatLookupAlternateSubstitution, 'alternateSub', 'Alternate', 'Replace one glyph with one of many glyphs'),
     4: (formatLookupNotImplementedGSUB, 'ligatureSub', 'Ligature', 'Replace multiple glyphs with one glyph'),
     5: (formatLookupNotImplementedGSUB, 'contextSub', 'Context', 'Replace one or more glyphs in context'),
     6: (formatLookupNotImplementedGSUB, 'chainingCtxSub', 'Chaining Context', 'Replace one or more glyphs in chained context'),
