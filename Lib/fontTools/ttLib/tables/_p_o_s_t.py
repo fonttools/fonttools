@@ -262,7 +262,11 @@ def unpackPStrings(data):
 	dataLen = len(data)
 	while index < dataLen:
 		length = byteord(data[index])
-		strings.append(tostr(data[index+1:index+1+length], encoding="latin1"))
+		astr = tostr(data[index+1:index+1+length], encoding="latin1")
+		if astr.find(b'\0') != -1:
+		    strings.append('')
+		else:
+		    strings.append(astr)
 		index = index + 1 + length
 	return strings
 

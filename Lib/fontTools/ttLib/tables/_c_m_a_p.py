@@ -67,7 +67,7 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
 				seenOffsets[offset] = i
 			tables.append(table)
 
-	def compile(self, ttFont):
+	def compile(self, ttFont):	
 		self.tables.sort()    # sort according to the spec; see CmapSubtable.__lt__()
 		numSubTables = len(self.tables)
 		totalOffset = 4 + 8 * numSubTables
@@ -549,6 +549,8 @@ class cmap_format_2(CmapSubtable):
 			dataList.append(struct.pack(subHeaderFormat, subhead.firstCode, subhead.entryCount, subhead.idDelta, subhead.idRangeOffset))
 		for subhead in 	subHeaderList[:-1]:
 			for gi in subhead.glyphIndexArray:
+				if gi > 65535:
+					gi = 65535
 				dataList.append(struct.pack(">H", gi))
 		data = bytesjoin(dataList)
 		assert (len(data) == length), "Error: cmap format 2 is not same length as calculated! actual: " + str(len(data))+ " calc : " + str(length)

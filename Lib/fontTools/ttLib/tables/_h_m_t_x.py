@@ -35,17 +35,23 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 		self.metrics = {}
 		glyphOrder = ttFont.getGlyphOrder()
 		for i in range(numberOfMetrics):
-			glyphName = glyphOrder[i]
-			self.metrics[glyphName] = list(metrics[i*2:i*2+2])
+			try:
+				glyphName = glyphOrder[i]
+				self.metrics[glyphName] = list(metrics[i*2:i*2+2])
+			except (IndexError) as e:
+				continue
 		lastAdvance = metrics[-2]
 		for i in range(numberOfSideBearings):
-			glyphName = glyphOrder[i + numberOfMetrics]
-			self.metrics[glyphName] = [lastAdvance, sideBearings[i]]
+			try:
+				glyphName = glyphOrder[i + numberOfMetrics]
+				self.metrics[glyphName] = [lastAdvance, sideBearings[i]]
+			except (IndexError) as e:
+				continue
 
 	def compile(self, ttFont):
 		metrics = []
 		for glyphName in ttFont.getGlyphOrder():
-			metrics.append(self.metrics[glyphName])
+			metrics.append(self.metrics.get(glyphName, [1000,1000]))
 		lastAdvance = metrics[-1][0]
 		lastIndex = len(metrics)
 		while metrics[lastIndex-2][0] == lastAdvance:
