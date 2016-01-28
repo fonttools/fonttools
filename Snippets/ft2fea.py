@@ -410,9 +410,10 @@ def formatLookupChainingContextualSubstitution(lookup, lookupList, makeName=make
     # A Chain Substitution rule target sequence has three parts:
     # backtrack, input, and lookahead glyph sequences. A glyph sequence
     # comprises one or more glyphs or glyph classes
+    # substitute [ a e i o u] f' lookup CNTXT_LIGS i' n' lookup CNTXT_SUB;
     def formatGlyphs(glyphs):
         return ('[ {0} ]' if len(glyphs) > 1 else '{0}' ).format(' '.join(coverage.glyphs))
-
+    dependencies = []
     lines = filter(None, [ formatLookupflag(lookup, makeName=makeName) ])
     for sub in lookup.SubTable:
         if sub.Format in (1,2):
@@ -427,6 +428,7 @@ def formatLookupChainingContextualSubstitution(lookup, lookupList, makeName=make
                         for coverage in reversed(sub.BacktrackCoverage)])
         lookups = {}
         for sl in sub.SubstLookupRecord:
+            dependencies.append(sl.LookupListIndex)
             lType = lookupList.Lookup[sl.LookupListIndex].LookupType
             nameBase = lookupTypesGSUB[lType][1]
             name = makeName(nameBase, sl.LookupListIndex)
@@ -467,7 +469,7 @@ def formatLookupChainingContextualSubstitution(lookup, lookupList, makeName=make
         items = ' '.join(filter(None, [backtrack, ' '.join(input), lookAhead]))
         lines.append('sub {0};'.format(items))
 
-    return (True, lines)
+    return (True, lines, dependencies)
 
 def formatLookupNotImplementedGPOS(lookup, lookupList, makeName=makeName):
     return formatLookupNotImplemented(lookup, lookupTypesGPOS, 'GPOS', makeName=makeName)
@@ -510,14 +512,15 @@ lookupTypes = {
 }
 
 
-
 def formatLookup(lookup, lookupIdx, lookupList, lookupTypes, makeName=makeName):
     # lookup is fontTools.ttLib.tables.otTables.Lookup
     if lookup.LookupType not in lookupTypes:
         raise ValueError('Lookup type "{0}" is not defined'.format(lookup.LookupType))
     func, nameBase = lookupTypes[lookup.LookupType][:2]
     name = makeName(nameBase, lookupIdx)
-    success, body = func(lookup, lookupList, makeName=makeName)
+    result = func(lookup, lookupList, makeName=makeName)
+    success, body = result[:2]
+    dependencies = result[2] if len(result) > 2 else None
     # TODO: success can temporary be False until all lookup
     # types have been implemented. Then remove it
     # see also printFeatures
@@ -528,7 +531,7 @@ def formatLookup(lookup, lookupIdx, lookupList, lookupTypes, makeName=makeName):
     else:
         lines = body
         name = '# lookup {0}; Type {1} not implemented!'.format(name, lookup.LookupType)
-    return name, lines
+    return name, lines, dependencies
 
 def formatLookupGPOS(lookup, lookupIdx, makeName=makeName):
     return formatLookup(lookup, lookupIdx, lookupList, lookupTypesGPOS, makeName=makeName)
@@ -604,14 +607,33 @@ def prepareFeatures(tableRequired, table, getStatus=getStatusAllTrue):
 def printLookups(table, makeName=makeName, getStatus=getStatusAllTrue, print=print):
     lookupNames = {}
     types = lookupTypes[table.tableTag]
+    lookups = []
+
     for lookupIdx, lookup in enumerate(table.table.LookupList.Lookup):
         printLookup, _ = getStatus(lookup)
         if not printLookup:
-            continue
-        name, lines = formatLookup(lookup, lookupIdx, table.table.LookupList, types, makeName=makeName)
+             continue
+        name, lines, dependencies = formatLookup(lookup, lookupIdx, table.table.LookupList, types, makeName=makeName)
+        lookups.append( (lines, lookupIdx, set(dependencies or [])) )
         lookupNames[lookupIdx] = name
-        print('\n'.join(lines))
-        print()
+
+    printed = set()
+    while lookups:
+        pending = []
+        delta = 0
+        for item in lookups:
+            lines, idx, deps = item
+            if deps - printed: # still has deps
+                pending.append(item)
+            else:
+                print('\n'.join(lines))
+                print()
+                printed.add(idx)
+                delta += 1
+        if not delta:
+            # we had no change this round
+            raise ValueError('Cyclic dependencies or missing Lookups, indexes: {0}'.format(pending))
+        lookups = pending
     return lookupNames
 
 def printCommonGTable(table, makeName=makeName, getStatus=getStatusAllTrue, print=print):
