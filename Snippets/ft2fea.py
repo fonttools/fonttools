@@ -255,7 +255,7 @@ def formatValueRecord(valueRecord, valueFormat):
         vformat = '<Value Record Format C[Currently not implemented in fea]>'
     return vformat.format(*values)
 
-def formatSingleAdjustment(lookup, makeName=makeName):
+def formatSingleAdjustment(lookup, lookupList, makeName=makeName):
     """ GPOS LookupType 1 """
 
     lines = filter(None, [ formatLookupflag(lookup, makeName=makeName) ])
@@ -298,7 +298,7 @@ def formatSingleAdjustment(lookup, makeName=makeName):
                 lines.append('pos {0} {1};'.format(glyphEntry, value))
     return (True, lines)
 
-def formatLookupMarkToBase(lookup, makeName=makeName):
+def formatLookupMarkToBase(lookup, lookupList, makeName=makeName):
     # I did not research if this happens ever in this context though
     # but since "All subtables in a lookup must be of the same LookupType
     # This would be easy to implement. The question is: do we need to separate
@@ -322,7 +322,7 @@ def formatLookupMarkToBase(lookup, makeName=makeName):
 
     return (True, lines)
 
-def formatLookupMarkToLigature(lookup, makeName=makeName):
+def formatLookupMarkToLigature(lookup, lookupList, makeName=makeName):
     # See comment in def formatLookupMarkToBase
     assert lookup.SubTableCount == 1, 'More than one subtables per lookup '\
                                                     + 'is not supported.'
@@ -340,7 +340,7 @@ def formatLookupMarkToLigature(lookup, makeName=makeName):
 
     return (True, lines)
 
-def formatLookupMarkToMark(lookup, makeName=makeName):
+def formatLookupMarkToMark(lookup, lookupList, makeName=makeName):
     # See comment in def formatLookupMarkToBase
     assert lookup.SubTableCount == 1, 'More than one subtables per lookup '\
                                                     + 'is not supported.'
@@ -357,7 +357,7 @@ def formatLookupMarkToMark(lookup, makeName=makeName):
             + formatMark2Array(subtable.Mark2Array, subtable.Mark2Coverage, anchorClassPrefix)
     return (True, lines)
 
-def formatLookupSingleSubstitution(lookup, makeName=makeName):
+def formatLookupSingleSubstitution(lookup, lookupList, makeName=makeName):
     """ GSUB LookupType 1 """
     # substitute <glyph> by <glyph>;             # format A
     # substitute <glyphclass> by <glyph>;        # format B
@@ -368,7 +368,7 @@ def formatLookupSingleSubstitution(lookup, makeName=makeName):
                                              for kv in sub.mapping.items()]
     return (True, lines)
 
-def formatLookupMultipleSubstitution(lookup, makeName=makeName):
+def formatLookupMultipleSubstitution(lookup, lookupList, makeName=makeName):
     """ GSUB LookupType 2 """
     # substitute <glyph> by <glyph sequence>;
 
@@ -378,7 +378,7 @@ def formatLookupMultipleSubstitution(lookup, makeName=makeName):
                                                 for k, v in sub.mapping.items()]
     return (True, lines)
 
-def formatLookupAlternateSubstitution(lookup, makeName=makeName):
+def formatLookupAlternateSubstitution(lookup, lookupList, makeName=makeName):
     """ GSUB LookupType 3 """
     # substitute <glyph> from <glyphclass>;
 
@@ -388,7 +388,7 @@ def formatLookupAlternateSubstitution(lookup, makeName=makeName):
                                                 for k, v in sub.alternates.items()]
     return (True, lines)
 
-def formatLookupLigatureSubstitution(lookup, makeName=makeName):
+def formatLookupLigatureSubstitution(lookup, lookupList, makeName=makeName):
     """ GSUB LookupType 4 """
     # substitute <glyph sequence> by <glyph>;
     # <glyph sequence> must contain two or more of <glyph|glyphclass>. For example:
@@ -401,10 +401,78 @@ def formatLookupLigatureSubstitution(lookup, makeName=makeName):
                                     for lig in ligatures]
     return (True, lines)
 
-def formatLookupNotImplementedGPOS(lookup, makeName=makeName):
+def formatLookupChainingContextualSubstitution(lookup, lookupList, makeName=makeName):
+    """ GSUB LookupType 6 """
+    # FIXME: This is an incomplete imlpementation. It features only
+    # format 3 and that probably not for all cases. Need good test tables
+    # for this to make it better.
+
+    # A Chain Substitution rule target sequence has three parts:
+    # backtrack, input, and lookahead glyph sequences. A glyph sequence
+    # comprises one or more glyphs or glyph classes
+    def formatGlyphs(glyphs):
+        return ('[ {0} ]' if len(glyphs) > 1 else '{0}' ).format(' '.join(coverage.glyphs))
+
+    lines = filter(None, [ formatLookupflag(lookup, makeName=makeName) ])
+    for sub in lookup.SubTable:
+        if sub.Format in (1,2):
+            raise NotImplementedError('Format {0} for lookup-type {1} {2}. is not implemented.' \
+                            .format( subtable.Format
+                                , subtable.LookupType
+                                , lookupTypesGPOS[subtable.LookupType][2]))
+        # FDK syntax docs:
+        # "inside the lookup rule, the glyphs of the backtrack sequence
+        # are written in reverse order from the text to be matched."
+        backtrack = ' '.join([formatGlyphs(coverage.glyphs)
+                        for coverage in reversed(sub.BacktrackCoverage)])
+        lookups = {}
+        for sl in sub.SubstLookupRecord:
+            lType = lookupList.Lookup[sl.LookupListIndex].LookupType
+            nameBase = lookupTypesGSUB[lType][1]
+            name = makeName(nameBase, sl.LookupListIndex)
+            lookups[sl.SequenceIndex] = name
+        # FIXME: In the documentation of SubstLookupRecord at
+        # https://www.microsoft.com/typography/otspec/gsub.htm#CS
+        # it is explained that the SequenceIndex is relative to the
+        # shape of the input glyph sequence after all previous lookups
+        # in the subtable have been applied. I.e. a ligature substitiution
+        # of "f i -> f_i" would make the input glyph sequence shorter by
+        # one, hence the SequenceIndex would be one less relative to
+        # the original input sequence. I don't know how to find out how
+        # many glyphs a lookup "consumes" or even "produces". But, it seems
+        # that to simply use the index of the glyph in the InputCoverage is
+        # wrong when there are more than one lookups and when one of the
+        # previous lookups adds or removes glyphs from the input sequence.
+        # Need an example to handle this better!
+        # To rephrase the question: Do I have to take into account the
+        # change a lookup creates on the Input sequence to decide where
+        # to apply subsequent lookups? In the following I apply each lookup
+        # the at the SequenceIndex of the original input sequence, without
+        # taking change into account.
+        input = []
+        for i, coverage in enumerate(sub.InputCoverage):
+            # The input sequence is defined by appending the mark (')
+            # character to all the glyph names and class names within
+            # the input sequence.
+            glyhs = formatGlyphs(coverage.glyphs)
+            if i in lookups:
+                input.append("{0}' lookup {1}".format(glyhs, lookups[i]))
+            else:
+                input.append("{0}'".format(glyhs))
+
+
+        lookAhead = ' '.join([formatGlyphs(coverage.glyphs)
+                                for coverage in sub.LookAheadCoverage])
+
+        items = ' '.join(filter(None, [backtrack, ' '.join(input), lookAhead]))
+        lines.append('sub {0};'.format(items))
+
+    return (True, lines)
+
+def formatLookupNotImplementedGPOS(lookup, lookupList, makeName=makeName):
     return formatLookupNotImplemented(lookup, lookupTypesGPOS, 'GPOS', makeName=makeName)
 
-def formatLookupNotImplementedGSUB(lookup, makeName=makeName):
+def formatLookupNotImplementedGSUB(lookup, lookupList, makeName=makeName):
     return formatLookupNotImplemented(lookup, lookupTypesGSUB, 'GSUB', makeName=makeName)
 
 def formatLookupNotImplemented(lookup, lookupTypes, tableTag, makeName=makeName):
@@ -431,7 +499,7 @@ lookupTypesGSUB = {
     3: (formatLookupAlternateSubstitution, 'alternateSub', 'Alternate', 'Replace one glyph with one of many glyphs'),
     4: (formatLookupLigatureSubstitution, 'ligatureSub', 'Ligature', 'Replace multiple glyphs with one glyph'),
     5: (formatLookupNotImplementedGSUB, 'contextSub', 'Context', 'Replace one or more glyphs in context'),
-    6: (formatLookupNotImplementedGSUB, 'chainingCtxSub', 'Chaining Context', 'Replace one or more glyphs in chained context'),
+    6: (formatLookupChainingContextualSubstitution, 'chainingCtxSub', 'Chaining Context', 'Replace one or more glyphs in chained context'),
     7: (formatLookupNotImplementedGSUB, 'extensionSub', 'Extension Substitution', 'Extension mechanism for other substitutions (i.e. this excludes the Extension type substitution itself)'),
     8: (formatLookupNotImplementedGSUB, 'revChainingCtxSub', 'Reverse chaining context single', 'Applied in reverse order, replace single glyph in chaining context'),
 }
@@ -443,13 +511,13 @@ lookupTypes = {
 
 
 
-def formatLookup(lookup, lookupIdx, lookupTypes, makeName=makeName):
+def formatLookup(lookup, lookupIdx, lookupList, lookupTypes, makeName=makeName):
     # lookup is fontTools.ttLib.tables.otTables.Lookup
     if lookup.LookupType not in lookupTypes:
         raise ValueError('Lookup type "{0}" is not defined'.format(lookup.LookupType))
     func, nameBase = lookupTypes[lookup.LookupType][:2]
     name = makeName(nameBase, lookupIdx)
-    success, body = func(lookup, makeName=makeName)
+    success, body = func(lookup, lookupList, makeName=makeName)
     # TODO: success can temporary be False until all lookup
     # types have been implemented. Then remove it
     # see also printFeatures
@@ -463,10 +531,10 @@ def formatLookup(lookup, lookupIdx, lookupTypes, makeName=makeName):
     return name, lines
 
 def formatLookupGPOS(lookup, lookupIdx, makeName=makeName):
-    return formatLookup(lookup, lookupIdx, lookupTypesGPOS, makeName=makeName)
+    return formatLookup(lookup, lookupIdx, lookupList, lookupTypesGPOS, makeName=makeName)
 
 def formatLookupGSUB(lookup, lookupIdx, makeName=makeName):
-    return formatLookup(lookup, lookupIdx, lookupTypesGSUB, makeName=makeName)
+    return formatLookup(lookup, lookupIdx, lookupList, lookupTypesGSUB, makeName=makeName)
 
 def printFeatures(features, lookupNames, indentation='  ', print=print):
     for featureTag, (scripts, printFeature) in features.items():
@@ -540,7 +608,7 @@ def printLookups(table, makeName=makeName, getStatus=getStatusAllTrue, print=pri
         printLookup, _ = getStatus(lookup)
         if not printLookup:
             continue
-        name, lines = formatLookup(lookup, lookupIdx, types, makeName=makeName)
+        name, lines = formatLookup(lookup, lookupIdx, table.table.LookupList, types, makeName=makeName)
         lookupNames[lookupIdx] = name
         print('\n'.join(lines))
         print()

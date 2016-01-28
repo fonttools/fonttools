@@ -251,6 +251,27 @@ class ExportAggregator(object):
                 if not success:
                     raise Invalidation
 
+
+            # TODO 3: in ExportAggregator.validateLookup:
+            # Possible dependencies to other lookups:
+            #     GSUB type 5 Context (format 5.1 5.2 5.3)
+            #     GSUB type 6 Chaining Context (format 6.1 6.2 6.3)
+            #     GPOS type 7 Context positioning (format 7.1 7.2 7.3)
+            #     GPOS type 8 Chained Context positioning (format 7.1 7.2 7.3)
+
+            # FIXME: this is incomplete, only GSUB 6.3 is finished
+            if table.tableTag == 'GSUB' and lookup.LookupType in (5, 6):
+                for sub in lookup.SubTable:
+                    if lookup.LookupType == 6 and sub.Format == 3:
+                        # type6: sub === ChainContextSubst
+                        for slr in sub.SubstLookupRecord:
+                            lookupDependency = table.table.LookupList.Lookup[slr.LookupListIndex]
+                            success, _, _ = self.validateLookup(lookupDependency, True, table, requiredKeyOverride=False)
+                            if not success:
+                                raise Invalidation
+            # if table.tableTag == 'GPOS' and lookup.LookupType in (7, 8):
+
+
         except Invalidation:
             invalid = True
         except Exception as e:
