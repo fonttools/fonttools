@@ -167,7 +167,7 @@ def configLogger(**kwargs):
 			h.setFormatter(fmt)
 		if not h.filters:
 			for f in filters:
-				handler.addFilter(f)
+				h.addFilter(f)
 		logger.addHandler(h)
 	if logger.name != "root":
 		# stop searching up the hierarchy for handlers
