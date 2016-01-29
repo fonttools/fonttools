@@ -3,6 +3,9 @@ from fontTools.misc.py23 import *
 from .DefaultTable import DefaultTable
 import array
 import struct
+import logging
+
+log = logging.getLogger(__name__)
 
 class OverflowErrorRecord(object):
 	def __init__(self, overflowTuple):
@@ -46,12 +49,12 @@ class BaseTTXConverter(DefaultTable):
 		if cachingStats:
 			stats = sorted([(v, k) for k, v in cachingStats.items()])
 			stats.reverse()
-			print("cachingsstats for ", self.tableTag)
+			log.debug("cachingStats for %s", self.tableTag)
 			for v, k in stats:
 				if v < 2:
 					break
-				print(v, k)
-			print("---", len(stats))
+				log.debug("%s %s", v, k)
+			log.debug("--- %s", len(stats))
 
 	def compile(self, font):
 		""" Create a top-level OTFWriter for the GPOS/GSUB table.
@@ -92,7 +95,7 @@ class BaseTTXConverter(DefaultTable):
 					raise # Oh well...
 
 				overflowRecord = e.value
-				print("Attempting to fix OTLOffsetOverflowError", e)
+				log.warning("Attempting to fix OTLOffsetOverflowError %s", e)
 				lastItem = overflowRecord
 
 				ok = 0

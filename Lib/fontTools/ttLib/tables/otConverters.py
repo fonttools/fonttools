@@ -3,6 +3,10 @@ from fontTools.misc.py23 import *
 from fontTools.misc.textTools import safeEval
 from fontTools.misc.fixedTools import fixedToFloat as fi2fl, floatToFixed as fl2fi
 from .otBase import ValueRecordFactory
+import logging
+
+
+log = logging.getLogger(__name__)
 
 
 def buildConverters(tableSpec, tableNamespace):
@@ -329,8 +333,8 @@ class Table(Struct):
 			return None
 		if offset <= 3:
 			# XXX hack to work around buggy pala.ttf
-			print("*** Warning: offset is not 0, yet suspiciously low (%s). table: %s" \
-					% (offset, self.tableClass.__name__))
+			log.warning("offset is not 0, yet suspiciously low (%d). table: %s",
+					offset, self.tableClass.__name__)
 			return None
 		table = self.tableClass()
 		reader = reader.getSubReader(offset)

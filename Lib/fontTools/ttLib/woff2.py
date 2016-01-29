@@ -13,6 +13,10 @@ from fontTools.ttLib.sfnt import (SFNTReader, SFNTWriter, DirectoryEntry,
 	WOFFFlavorData, sfntDirectoryFormat, sfntDirectorySize, SFNTDirectoryEntry,
 	sfntDirectoryEntrySize, calcChecksum)
 from fontTools.ttLib.tables import ttProgram
+import logging
+
+
+log = logging.getLogger(__name__)
 
 haveBrotli = False
 try:
@@ -28,8 +32,9 @@ class WOFF2Reader(SFNTReader):
 
 	def __init__(self, file, checkChecksums=1, fontNumber=-1):
 		if not haveBrotli:
-			print('The WOFF2 decoder requires the Brotli Python extension, available at:\n'
-				  'https://github.com/google/brotli', file=sys.stderr)
+			log.error(
+				'The WOFF2 decoder requires the Brotli Python extension, available at: '
+				'https://github.com/google/brotli')
 			raise ImportError("No module named brotli")
 
 		self.file = file
@@ -133,8 +138,9 @@ class WOFF2Writer(SFNTWriter):
 	def __init__(self, file, numTables, sfntVersion="\000\001\000\000",
 		         flavor=None, flavorData=None):
 		if not haveBrotli:
-			print('The WOFF2 encoder requires the Brotli Python extension, available at:\n'
-				  'https://github.com/google/brotli', file=sys.stderr)
+			log.error(
+				'The WOFF2 encoder requires the Brotli Python extension, available at: '
+				'https://github.com/google/brotli')
 			raise ImportError("No module named brotli")
 
 		self.file = file

@@ -4,7 +4,10 @@ from fontTools.misc.textTools import safeEval
 from . import DefaultTable
 import sys
 import array
-import warnings
+import logging
+
+
+log = logging.getLogger(__name__)
 
 
 class table__h_m_t_x(DefaultTable.DefaultTable):
@@ -31,7 +34,7 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 		if sys.byteorder != "big":
 			sideBearings.byteswap()
 		if data:
-			warnings.warn("too much 'hmtx'/'vmtx' table data")
+			log.warning("too much 'hmtx'/'vmtx' table data")
 		self.metrics = {}
 		glyphOrder = ttFont.getGlyphOrder()
 		for i in range(numberOfMetrics):

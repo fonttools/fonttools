@@ -5,6 +5,10 @@ from fontTools.misc.textTools import safeEval
 from fontTools.misc.encodingTools import getEncoding
 from . import DefaultTable
 import struct
+import logging
+
+
+log = logging.getLogger(__name__)
 
 nameRecordFormat = """
 		>	# big endian
@@ -25,8 +29,9 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 		format, n, stringOffset = struct.unpack(">HHH", data[:6])
 		expectedStringOffset = 6 + n * nameRecordSize
 		if stringOffset != expectedStringOffset:
-			# XXX we need a warn function
-			print("Warning: 'name' table stringOffset incorrect. Expected: %s; Actual: %s" % (expectedStringOffset, stringOffset))
+			log.error(
+				"'name' table stringOffset incorrect. Expected: %s; Actual: %s",
+				expectedStringOffset, stringOffset)
 		stringData = data[stringOffset:]
 		data = data[6:]
 		self.names = []

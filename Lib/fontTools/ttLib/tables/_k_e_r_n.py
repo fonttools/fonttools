@@ -6,7 +6,10 @@ from fontTools.misc.fixedTools import fixedToFloat as fi2fl, floatToFixed as fl2
 from . import DefaultTable
 import struct
 import array
-import warnings
+import logging
+
+
+log = logging.getLogger(__name__)
 
 
 class table__k_e_r_n(DefaultTable.DefaultTable):
@@ -118,7 +121,7 @@ class KernTable_format_0(object):
 				# Slower, but will not throw an IndexError on an invalid glyph id.
 				kernTable[(ttFont.getGlyphName(left), ttFont.getGlyphName(right))] = value
 		if len(data) > 6 * nPairs:
-			warnings.warn("excess data in 'kern' subtable: %d bytes" % len(data))
+			log.warning("excess data in 'kern' subtable: %d bytes", len(data))
 
 	def compile(self, ttFont):
 		nPairs = len(self.kernTable)

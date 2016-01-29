@@ -81,15 +81,20 @@ from fontTools.ttLib import TTFont, TTLibError
 from fontTools.misc.macCreatorType import getMacCreatorAndType
 from fontTools.unicode import setUnicodeData
 from fontTools.misc.timeTools import timestampSinceEpoch
+from fontTools.misc.loggingTools import Timer
 import os
 import sys
 import getopt
 import re
+import logging
+
+
+log = logging.getLogger(__name__)
+
 
 def usage():
 	from fontTools import version
 	print(__doc__ % version)
-	sys.exit(2)
 
 
 numberAddedRE = re.compile("#\d+$")
@@ -136,8 +141,7 @@ class Options(object):
 		for option, value in rawOptions:
 			# general options
 			if option == "-h":
-				from fontTools import version
-				print(__doc__ % version)
+				usage()
 				sys.exit(0)
 			elif option == "-d":
 				if not os.path.isdir(value):
@@ -187,8 +191,16 @@ class Options(object):
 				self.recalcTimestamp = True
 			elif option == "--flavor":
 				self.flavor = value
+		if self.verbose and self.quiet:
+			raise getopt.GetoptError("-q and -v options are mutually exclusive")
+		if self.verbose:
+			self.logLevel = logging.DEBUG
+		elif self.quiet:
+			self.logLevel = logging.WARNING
+		else:
+			self.logLevel = logging.INFO
 		if self.mergeFile and self.flavor:
-			print("-m and --flavor options are mutually exclusive")
+			raise getopt.GetoptError("-m and --flavor options are mutually exclusive")
 			sys.exit(2)
 		if self.onlyTables and self.skipTables:
 			raise getopt.GetoptError("-t and -x options are mutually exclusive")
@@ -221,17 +233,15 @@ def ttList(input, output, options):
 	ttf.close()
 
 
+@Timer(log, 'Done dumping TTX in %(time).3f seconds')
 def ttDump(input, output, options):
-	if not options.quiet:
-		print('Dumping "%s" to "%s"...' % (input, output))
+	log.info('Dumping "%s" to "%s"...', input, output)
 	if options.unicodedata:
 		setUnicodeData(options.unicodedata)
-	ttf = TTFont(input, 0, verbose=options.verbose, allowVID=options.allowVID,
-			quiet=options.quiet,
+	ttf = TTFont(input, 0, allowVID=options.allowVID,
 			ignoreDecompileErrors=options.ignoreDecompileErrors,
 			fontNumber=options.fontNumber)
 	ttf.saveXML(output,
-			quiet=options.quiet,
 			tables=options.onlyTables,
 			skipTables=options.skipTables,
 			splitTables=options.splitTables,
@@ -240,14 +250,14 @@ def ttDump(input, output, options):
 	ttf.close()
 
 
+@Timer(log, 'Done compiling TTX in %(time).3f seconds')
 def ttCompile(input, output, options):
-	if not options.quiet:
-		print('Compiling "%s" to "%s"...' % (input, output))
+	log.info('Compiling "%s" to "%s"...' % (input, output))
 	ttf = TTFont(options.mergeFile, flavor=options.flavor,
 			recalcBBoxes=options.recalcBBoxes,
 			recalcTimestamp=options.recalcTimestamp,
-			verbose=options.verbose, allowVID=options.allowVID)
-	ttf.importXML(input, quiet=options.quiet)
+			allowVID=options.allowVID)
+	ttf.importXML(input)
 
 	if not options.recalcTimestamp:
 		# use TTX file modification time for head "modified" timestamp
@@ -255,10 +265,6 @@ def ttCompile(input, output, options):
 		ttf['head'].modified = timestampSinceEpoch(mtime)
 
 	ttf.save(output)
-
-	if options.verbose:
-		import time
-		print("finished at", time.strftime("%H:%M:%S", time.localtime(time.time())))
 
 
 def guessFileType(fileName):
@@ -305,6 +311,9 @@ def parseOptions(args):
 		raise getopt.GetoptError('Must specify at least one input file')
 
 	for input in files:
+		if not os.path.isfile(input):
+			raise getopt.GetoptError('File not found: "%s"' % input)
+			continue
 		tp = guessFileType(input)
 		if tp in ("OTF", "TTF", "TTC", "WOFF", "WOFF2"):
 			extension = ".ttx"
@@ -319,7 +328,7 @@ def parseOptions(args):
 			extension = "."+options.flavor if options.flavor else ".otf"
 			action = ttCompile
 		else:
-			print('Unknown file type: "%s"' % input)
+			raise getopt.GetoptError('Unknown file type: "%s"' % input)
 			continue
 
 		if options.outputFile:
@@ -342,37 +351,43 @@ def waitForKeyPress():
 	"""Force the DOS Prompt window to stay open so the user gets
 	a chance to see what's wrong."""
 	import msvcrt
-	print('(Hit any key to exit)')
+	print('(Hit any key to exit)', file=sys.stderr)
 	while not msvcrt.kbhit():
 		pass
 
 
 def main(args=None):
+	from fontTools import configLogger
+
 	if args is None:
 		args = sys.argv[1:]
 	try:
 		jobs, options = parseOptions(args)
 	except getopt.GetoptError as e:
-		print('error:', e, file=sys.stderr)
 		usage()
+		print("ERROR:", e, file=sys.stderr)
+		sys.exit(2)
+
+	configLogger(level=options.logLevel)
+
 	try:
 		process(jobs, options)
 	except KeyboardInterrupt:
-		print("(Cancelled.)")
+		log.error("(Cancelled.)")
+		sys.exit(1)
 	except SystemExit:
 		if sys.platform == "win32":
 			waitForKeyPress()
 		else:
 			raise
 	except TTLibError as e:
-		print("Error:",e)
+		log.error(e)
+		sys.exit(1)
 	except:
+		log.exception('Unhandled exception has occurred')
 		if sys.platform == "win32":
-			import traceback
-			traceback.print_exc()
 			waitForKeyPress()
-		else:
-			raise
+		sys.exit(1)
 
 
 if __name__ == "__main__":

@@ -7,6 +7,10 @@ from .BitmapGlyphMetrics import BigGlyphMetrics, bigGlyphMetricsFormat, SmallGly
 import struct
 import itertools
 from collections import deque
+import logging
+
+
+log = logging.getLogger(__name__)
 
 eblcHeaderFormat = """
 	> # big endian
@@ -293,7 +297,7 @@ class BitmapSizeTable(object):
 			elif name in dataNames:
 				vars(self)[name] = safeEval(attrs['value'])
 			else:
-				print("Warning: unknown name '%s' being ignored in BitmapSizeTable." % name)
+				log.warning("unknown name '%s' being ignored in BitmapSizeTable.", name)
 
 
 class SbitLineMetrics(object):
@@ -503,7 +507,7 @@ class FixedSizeIndexSubTableMixin(object):
 				self.metrics = BigGlyphMetrics()
 				self.metrics.fromXML(name, attrs, content, ttFont)
 			elif name == SmallGlyphMetrics.__name__:
-				print("Warning: SmallGlyphMetrics being ignored in format %d." % self.indexFormat)
+				log.warning("SmallGlyphMetrics being ignored in format %d.", self.indexFormat)
 
 	def padBitmapData(self, data):
 		# Make sure that the data isn't bigger than the fixed size.

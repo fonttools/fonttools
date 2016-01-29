@@ -3,7 +3,11 @@ from fontTools.misc.py23 import *
 from . import DefaultTable
 import sys
 import array
-import warnings
+import logging
+
+
+log = logging.getLogger(__name__)
+
 
 class table__l_o_c_a(DefaultTable.DefaultTable):
 
@@ -25,7 +29,8 @@ class table__l_o_c_a(DefaultTable.DefaultTable):
 				l.append(locations[i] * 2)
 			locations = l
 		if len(locations) < (ttFont['maxp'].numGlyphs + 1):
-			warnings.warn("corrupt 'loca' table, or wrong numGlyphs in 'maxp': %d %d" % (len(locations) - 1, ttFont['maxp'].numGlyphs))
+			log.warning("corrupt 'loca' table, or wrong numGlyphs in 'maxp': %d %d",
+				len(locations) - 1, ttFont['maxp'].numGlyphs)
 		self.locations = locations
 
 	def compile(self, ttFont):

@@ -15,15 +15,16 @@ from fontTools.ttLib.tables.otBase import ValueRecord, valueRecordFormatDict
 from fontTools.otlLib import builder as otl
 from contextlib import contextmanager
 from operator import setitem
+import logging
 
 class MtiLibError(Exception): pass
 class ReferenceNotFoundError(MtiLibError): pass
 class FeatureNotFoundError(ReferenceNotFoundError): pass
 class LookupNotFoundError(ReferenceNotFoundError): pass
 
-def debug(*args):
-	#print(*args)
-	pass
+
+log = logging.getLogger(__name__)
+
 
 def makeGlyph(s):
 	if s[:2] == 'U ':
@@ -79,18 +80,18 @@ class DeferredMapping(dict):
 		self._deferredMappings = []
 
 	def addDeferredMapping(self, setter, sym, e):
-		debug("Adding deferred mapping for symbol '%s'" % sym, type(e).__name__)
+		log.debug("Adding deferred mapping for symbol '%s' %s", sym, type(e).__name__)
 		self._deferredMappings.append((setter,sym, e))
 
 	def applyDeferredMappings(self):
 		for setter,sym,e in self._deferredMappings:
-			debug("Applying deferred mapping for symbol '%s'" % sym, type(e).__name__)
+			log.debug("Applying deferred mapping for symbol '%s' %s", sym, type(e).__name__)
 			try:
 				mapped = self[sym]
 			except KeyError:
 				raise e
 			setter(mapped)
-			debug("Set to %s" % mapped)
+			log.debug("Set to %s", mapped)
 		self._deferredMappings = []
 
 
@@ -100,7 +101,7 @@ def parseScriptList(lines, featureMap=None):
 	with lines.between('script table'):
 		for line in lines:
 			scriptTag, langSysTag, defaultFeature, features = line
-			debug("Adding script", scriptTag, "language-system", langSysTag)
+			log.debug("Adding script %s language-system %s", scriptTag, langSysTag)
 
 			langSys = ot.LangSys()
 			langSys.LookupOrder = None
@@ -676,7 +677,7 @@ def parseContext(self, lines, font, Type, lookupMap=None):
 	typ = lines.peek()[0].split()[0].lower()
 	if typ == 'glyph':
 		self.Format = 1
-		debug("Parsing %s format %s" % (Type, self.Format))
+		log.debug("Parsing %s format %s", Type, self.Format)
 		c = ContextHelper(Type, self.Format)
 		rules = []
 		for line in lines:
@@ -690,7 +691,7 @@ def parseContext(self, lines, font, Type, lookupMap=None):
 		bucketizeRules(self, c, rules, self.Coverage.glyphs)
 	elif typ.endswith('class'):
 		self.Format = 2
-		debug("Parsing %s format %s" % (Type, self.Format))
+		log.debug("Parsing %s format %s", Type, self.Format)
 		c = ContextHelper(Type, self.Format)
 		classDefs = [None] * c.DataLen
 		while lines.peek()[0].endswith("class definition begin"):
@@ -720,7 +721,7 @@ def parseContext(self, lines, font, Type, lookupMap=None):
 		bucketizeRules(self, c, rules, range(max(firstClasses) + 1))
 	elif typ.endswith('coverage'):
 		self.Format = 3
-		debug("Parsing %s format %s" % (Type, self.Format))
+		log.debug("Parsing %s format %s", Type, self.Format)
 		c = ContextHelper(Type, self.Format)
 		coverages = tuple([] for i in range(c.DataLen))
 		while lines.peek()[0].endswith("coverage definition begin"):
@@ -782,7 +783,7 @@ def parseReverseChainedSubst(self, lines, font, _lookupMap=None):
 def parseLookup(lines, tableTag, font, lookupMap=None):
 	line = lines.expect('lookup')
 	_, name, typ = line
-	debug("Parsing lookup type %s %s" % (typ, name))
+	log.debug("Parsing lookup type %s %s", typ, name)
 	lookup = ot.Lookup()
 	with lines.until('lookup end'):
 
@@ -838,7 +839,7 @@ def parseGSUBGPOS(lines, font, tableTag):
 	lookupMap = DeferredMapping()
 	featureMap = DeferredMapping()
 	assert tableTag in ('GSUB', 'GPOS')
-	debug("Parsing", tableTag)
+	log.debug("Parsing %s", tableTag)
 	self = getattr(ot, tableTag)()
 	self.Version = 1.0
 	fields = {
@@ -933,7 +934,7 @@ def parseMarkFilteringSets(lines, font):
 	return makeMarkFilteringSets(sets, font)
 
 def parseGDEF(lines, font):
-	debug("Parsing GDEF")
+	log.debug("Parsing GDEF")
 	self = ot.GDEF()
 	fields = {
 		'class definition begin':
@@ -954,7 +955,7 @@ def parseGDEF(lines, font):
 	while lines.peek() is not None:
 		typ = lines.peek()[0].lower()
 		if typ not in fields:
-			debug ('Skipping', line)
+			log.debug('Skipping %s', typ)
 			next(lines)
 			continue
 		attr,parser = fields[typ]
@@ -964,7 +965,7 @@ def parseGDEF(lines, font):
 	return self
 
 def parseTable(lines, font, tableTag=None):
-	debug("Parsing table")
+	log.debug("Parsing table")
 	line = lines.peek()
 	if line[0].split()[0] == 'FontDame':
 		next(lines)
@@ -1103,13 +1104,18 @@ class MockFont(object):
 		return self._glyphOrder
 
 def main(args):
+	from fontTools import configLogger
+	# configure the library logger (for >= WARNING)
+	configLogger()
+	# comment this out to enable debug messages from mtiLib's logger
+	# log.setLevel(logging.DEBUG)
 	font = MockFont()
 	tableTag = None
 	if args[0].startswith('-t'):
 		tableTag = args[0][2:]
 		del args[0]
 	for f in args:
-		debug("Processing", f)
+		log.debug("Processing %s", f)
 		table = build(open(f, 'rt', encoding="utf-8"), font, tableTag=tableTag)
 		blob = table.compile(font) # Make sure it compiles
 		decompiled = table.__class__()

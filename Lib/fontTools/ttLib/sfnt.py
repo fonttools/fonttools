@@ -18,6 +18,10 @@ from fontTools.misc import sstruct
 from fontTools.ttLib import getSearchRange
 import struct
 from collections import OrderedDict
+import logging
+
+
+log = logging.getLogger(__name__)
 
 
 class SFNTReader(object):
@@ -118,8 +122,8 @@ class SFNTReader(object):
 				# Be obnoxious, and barf when it's wrong
 				assert checksum == entry.checkSum, "bad checksum for '%s' table" % tag
 			elif checksum != entry.checkSum:
-				# Be friendly, and just print a warning.
-				print("bad checksum for '%s' table" % tag)
+				# Be friendly, and just log a warning.
+				log.warning("bad checksum for '%s' table", tag)
 		return data
 
 	def __delitem__(self, tag):
