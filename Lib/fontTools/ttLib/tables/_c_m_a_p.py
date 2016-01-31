@@ -1265,9 +1265,8 @@ class cmap_format_14(CmapSubtable):
 		data = bytesjoin(varSelectorRecords) + bytesjoin(data)
 		self.length = 10 + len(data)
 		headerdata = struct.pack(">HLL", self.format, self.length, self.numVarSelectorRecords)
-		self.data = headerdata + data
 
-		return self.data
+		return headerdata + data
 
 
 class cmap_format_unknown(CmapSubtable):
