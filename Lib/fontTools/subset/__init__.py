@@ -112,6 +112,11 @@ Output options:
       Specify flavor of output font file. May be 'woff' or 'woff2'.
       Note that WOFF2 requires the Brotli Python extension, available
       at https://github.com/google/brotli
+  --with-zopfli
+      Use the Google Zopfli algorithm to compress WOFF. The output is 3-8 %
+      smaller than pure zlib, but the compression speed is much slower.
+      The Zopfli Python bindings are available at:
+      https://github.com/anthrotype/py-zopfli
 
 Glyph set expansion:
   These options control how additional glyphs are added to the subset.
@@ -2424,8 +2429,9 @@ class Options(object):
         self.recalc_bounds = False # Recalculate font bounding boxes
         self.recalc_timestamp = False # Recalculate font modified timestamp
         self.prune_unicode_ranges = True  # Clear unused 'ulUnicodeRange' bits
-        self.canonical_order = False # Order tables as recommended
+        self.canonical_order = None # Order tables as recommended
         self.flavor = None  # May be 'woff' or 'woff2'
+        self.with_zopfli = False  # use zopfli instead of zlib for WOFF 1.0
         self.desubroutinize = False # Desubroutinize CFF CharStrings
         self.verbose = False
         self.timing = False
@@ -2452,7 +2458,12 @@ class Options(object):
             if i == -1:
                 if a.startswith("no-"):
                     k = a[3:]
-                    v = False
+                    if k == "canonical-order":
+                        # reorderTables=None is faster than False (the latter
+                        # still reorders to "keep" the original table order)
+                        v = None
+                    else:
+                        v = False
                 else:
                     k = a
                     v = True
@@ -2756,6 +2767,9 @@ def load_font(fontFile,
 def save_font(font, outfile, options):
     if options.flavor and not hasattr(font, 'flavor'):
         raise Exception("fonttools version does not support flavors.")
+    if options.with_zopfli and options.flavor == "woff":
+        from fontTools.ttLib import sfnt
+        sfnt.USE_ZOPFLI = True
     font.flavor = options.flavor
     font.save(outfile, reorderTables=options.canonical_order)
 
