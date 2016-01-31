@@ -72,6 +72,8 @@ usage: ttx [options] inputfile1 [... inputfileN]
     --flavor <type> Specify flavor of output font file. May be 'woff'
       or 'woff2'. Note that WOFF2 requires the Brotli Python extension,
       available at https://github.com/google/brotli
+    --with-zopfli Use Zopfli instead of Zlib to compress WOFF. The Python
+      extension is available at https://github.com/anthrotype/py-zopfli
 """
 
 
@@ -133,6 +135,7 @@ class Options(object):
 	unicodedata = None
 	recalcTimestamp = False
 	flavor = None
+	useZopfli = False
 
 	def __init__(self, rawOptions, numFiles):
 		self.onlyTables = []
@@ -191,6 +194,8 @@ class Options(object):
 				self.recalcTimestamp = True
 			elif option == "--flavor":
 				self.flavor = value
+			elif option == "--with-zopfli":
+				self.useZopfli = True
 		if self.verbose and self.quiet:
 			raise getopt.GetoptError("-q and -v options are mutually exclusive")
 		if self.verbose:
@@ -206,6 +211,8 @@ class Options(object):
 			raise getopt.GetoptError("-t and -x options are mutually exclusive")
 		if self.mergeFile and numFiles > 1:
 			raise getopt.GetoptError("Must specify exactly one TTX source file when using -m")
+		if self.flavor != 'woff' and self.useZopfli:
+			raise getopt.GetoptError("--with-zopfli option requires --flavor 'woff'")
 
 
 def ttList(input, output, options):
@@ -253,6 +260,9 @@ def ttDump(input, output, options):
 @Timer(log, 'Done compiling TTX in %(time).3f seconds')
 def ttCompile(input, output, options):
 	log.info('Compiling "%s" to "%s"...' % (input, output))
+	if options.useZopfli:
+		from fontTools.ttLib import sfnt
+		sfnt.USE_ZOPFLI = True
 	ttf = TTFont(options.mergeFile, flavor=options.flavor,
 			recalcBBoxes=options.recalcBBoxes,
 			recalcTimestamp=options.recalcTimestamp,
@@ -302,7 +312,8 @@ def guessFileType(fileName):
 
 def parseOptions(args):
 	rawOptions, files = getopt.getopt(args, "ld:o:fvqht:x:sim:z:baey:",
-			['unicodedata=', "recalc-timestamp", 'flavor='])
+			['unicodedata=', "recalc-timestamp", 'flavor=',
+			 'with-zopfli'])
 
 	options = Options(rawOptions, len(files))
 	jobs = []
