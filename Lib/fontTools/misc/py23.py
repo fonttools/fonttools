@@ -235,6 +235,65 @@ def open(file, mode='r', buffering=-1, encoding=None, errors=None,
 			file, mode, buffering, encoding, errors, newline, closefd)
 
 
+import logging
+
+
+class _Logger(logging.Logger):
+	""" Add support for 'lastResort' handler introduced in Python 3.2. """
+
+	def callHandlers(self, record):
+		# this is the same as Python 3.5's logging.Logger.callHandlers
+		c = self
+		found = 0
+		while c:
+			for hdlr in c.handlers:
+				found = found + 1
+				if record.levelno >= hdlr.level:
+					hdlr.handle(record)
+			if not c.propagate:
+				c = None  # break out
+			else:
+				c = c.parent
+		if (found == 0):
+			if logging.lastResort:
+				if record.levelno >= logging.lastResort.level:
+					logging.lastResort.handle(record)
+			elif logging.raiseExceptions and not self.manager.emittedNoHandlerWarning:
+				sys.stderr.write("No handlers could be found for logger"
+								 " \"%s\"\n" % self.name)
+				self.manager.emittedNoHandlerWarning = True
+
+
+class _StderrHandler(logging.StreamHandler):
+	""" This class is like a StreamHandler using sys.stderr, but always uses
+	whatever sys.stderr is currently set to rather than the value of
+	sys.stderr at handler construction time.
+	"""
+	def __init__(self, level=logging.NOTSET):
+		"""
+		Initialize the handler.
+		"""
+		logging.Handler.__init__(self, level)
+
+	@property
+	def stream(self):
+		return sys.stderr
+
+
+if not hasattr(logging, 'lastResort'):
+	# for Python pre-3.2, we need to define the "last resort" handler used when
+	# clients don't explicitly configure logging (in Python 3.2 and above this is
+	# already defined). The handler prints the bare message to sys.stderr, only
+	# for events of severity WARNING or greater.
+	# To obtain the pre-3.2 behaviour, you can set logging.lastResort to None.
+	# https://docs.python.org/3.5/howto/logging.html#what-happens-if-no-configuration-is-provided
+	logging.lastResort = _StderrHandler(logging.WARNING)
+	# Also, we need to set the Logger class to one which supports the last resort
+	# handler. All new loggers instantiated after this call will use the custom
+	# logger class (the already existing ones, like the 'root' logger, will not)
+	logging.setLoggerClass(_Logger)
+
+
 if __name__ == "__main__":
 	import doctest, sys
 	sys.exit(doctest.testmod().failed)
