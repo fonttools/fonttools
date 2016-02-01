@@ -95,7 +95,7 @@ class BuilderTest(unittest.TestCase):
 
     def expect_ttx(self, font, expected_ttx):
         path = self.temp_path(suffix=".ttx")
-        font.saveXML(path, quiet=True, tables=['head', 'GDEF', 'GSUB', 'GPOS'])
+        font.saveXML(path, tables=['head', 'GDEF', 'GSUB', 'GPOS'])
         actual = self.read_ttx(path)
         expected = self.read_ttx(expected_ttx)
         if actual != expected:

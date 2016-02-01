@@ -15,9 +15,9 @@ class TestXMLReader(unittest.TestCase):
 
 		class DebugXMLReader(XMLReader):
 
-			def __init__(self, fileOrPath, ttFont, progress=None, quiet=False):
+			def __init__(self, fileOrPath, ttFont, progress=None):
 				super(DebugXMLReader, self).__init__(
-					fileOrPath, ttFont, progress, quiet)
+					fileOrPath, ttFont, progress)
 				self.contents = []
 
 			def _endElementHandler(self, name):
@@ -39,7 +39,7 @@ class TestXMLReader(unittest.TestCase):
 ''' % expected
 
 		with BytesIO(data.encode('utf-8')) as tmp:
-			reader = DebugXMLReader(tmp, TTFont(), quiet=True)
+			reader = DebugXMLReader(tmp, TTFont())
 			reader.read()
 		content = strjoin(reader.contents[0]).strip()
 		self.assertEqual(expected, content)
@@ -48,9 +48,9 @@ class TestXMLReader(unittest.TestCase):
 
 		class DebugXMLReader(XMLReader):
 
-			def __init__(self, fileOrPath, ttFont, progress=None, quiet=False):
+			def __init__(self, fileOrPath, ttFont, progress=None):
 				super(DebugXMLReader, self).__init__(
-					fileOrPath, ttFont, progress, quiet)
+					fileOrPath, ttFont, progress)
 				self.newlines = []
 
 			def _characterDataHandler(self, data):
@@ -68,7 +68,7 @@ class TestXMLReader(unittest.TestCase):
 			'</ttFont>')
 
 		with BytesIO(data.encode('utf-8')) as tmp:
-			reader = DebugXMLReader(tmp, TTFont(), quiet=True)
+			reader = DebugXMLReader(tmp, TTFont())
 			reader.read()
 		expected = ['\n'] * 3 + ['\r', '\n'] * 3 + ['\n']
 		self.assertEqual(expected, reader.newlines)

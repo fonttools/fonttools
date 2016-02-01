@@ -52,7 +52,7 @@ class SubsetTest(unittest.TestCase):
 
     def expect_ttx(self, font, expected_ttx, tables):
         path = self.temp_path(suffix=".ttx")
-        font.saveXML(path, quiet=True, tables=tables)
+        font.saveXML(path, tables=tables)
         actual = self.read_ttx(path)
         expected = self.read_ttx(expected_ttx)
         if actual != expected:
@@ -64,7 +64,7 @@ class SubsetTest(unittest.TestCase):
     def compile_font(self, path, suffix):
         savepath = self.temp_path(suffix=suffix)
         font = TTFont(recalcBBoxes=False, recalcTimestamp=False)
-        font.importXML(path, quiet=True)
+        font.importXML(path)
         font.save(savepath, reorderTables=None)
         return font, savepath
 
