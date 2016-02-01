@@ -16,7 +16,7 @@ class Parser(object):
         self.valuerecords_ = SymbolTable()
         self.symbol_tables_ = {
             self.anchors_, self.glyphclasses_,
-            self.lookups_, self.valuerecords_
+            self.valuerecords_
         }
         self.next_token_type_, self.next_token_ = (None, None)
         self.next_token_location_ = None

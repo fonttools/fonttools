@@ -423,6 +423,14 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(type(ref), ast.LookupReferenceStatement)
         self.assertEqual(ref.lookup, foo)
 
+    def test_lookup_reference_to_lookup_inside_feature(self):
+        [qux, bar] = self.parse("feature Qux {lookup Foo {} Foo;} Qux;"
+                                "feature Bar {lookup Foo;} Bar;").statements
+        [foo] = qux.statements
+        [ref] = bar.statements
+        self.assertIsInstance(ref, ast.LookupReferenceStatement)
+        self.assertEqual(ref.lookup, foo)
+
     def test_lookup_reference_unknown(self):
         self.assertRaisesRegex(
             FeatureLibError, 'Unknown lookup "Huh"',
