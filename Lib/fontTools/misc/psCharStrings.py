@@ -4,6 +4,7 @@ CFF dictionary data and Type1/Type2 CharStrings.
 
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
+from fontTools.misc.fixedTools import fixedToFloat
 import struct
 import logging
 
@@ -42,7 +43,7 @@ def read_longInt(self, b0, data, index):
 
 def read_fixed1616(self, b0, data, index):
 	value, = struct.unpack(">l", data[index:index+4])
-	return value / 65536, index+4
+	return fixedToFloat(value, precisionBits=16), index+4
 
 def read_reserved(self, b0, data, index):
 	assert NotImplementedError
