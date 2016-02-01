@@ -165,9 +165,10 @@ class ParserTest(unittest.TestCase):
             self.parse, "@bad = [a 123];")
 
     def test_glyphclass_duplicate(self):
-        self.assertRaisesRegex(
-            FeatureLibError, "Glyph class @dup already defined",
-            self.parse, "@dup = [a b]; @dup = [x];")
+        # makeotf accepts this, so we should too
+        ab, xy = self.parse("@dup = [a b]; @dup = [x y];").statements
+        self.assertEqual(glyphstr([ab]), "[a b]")
+        self.assertEqual(glyphstr([xy]), "[x y]")
 
     def test_glyphclass_empty(self):
         [gc] = self.parse("@empty_set = [];").statements
@@ -262,6 +263,14 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(foo.glyphs, {"a", "b"})
         self.assertEqual(liga.statements[0].glyphs, {"a", "b", "l"})
         self.assertEqual(smcp.statements[0].glyphs, {"a", "b", "s"})
+
+    def test_glyphclass_scoping_bug496(self):
+        # https://github.com/behdad/fonttools/issues/496
+        f1, f2 = self.parse(
+            "feature F1 { lookup L { @GLYPHCLASS = [A B C];} L; } F1;"
+            "feature F2 { sub @GLYPHCLASS by D; } F2;"
+        ).statements
+        self.assertEqual(set(f2.statements[0].mapping.keys()), {"A", "B", "C"})
 
     def test_GlyphClassDef(self):
         doc = self.parse("table GDEF {GlyphClassDef [b],[l],[m],[C c];} GDEF;")

@@ -15,8 +15,7 @@ class Parser(object):
         self.lookups_ = SymbolTable()
         self.valuerecords_ = SymbolTable()
         self.symbol_tables_ = {
-            self.anchors_, self.glyphclasses_,
-            self.valuerecords_
+            self.anchors_, self.valuerecords_
         }
         self.next_token_type_, self.next_token_ = (None, None)
         self.next_token_location_ = None
@@ -164,9 +163,6 @@ class Parser(object):
         self.expect_symbol_("=")
         glyphs = self.parse_glyphclass_(accept_glyphname=False).glyphSet()
         self.expect_symbol_(";")
-        if self.glyphclasses_.resolve(name) is not None:
-            raise FeatureLibError("Glyph class @%s already defined" % name,
-                                  location)
         glyphclass = ast.GlyphClassDefinition(location, name, glyphs)
         self.glyphclasses_.define(name, glyphclass)
         return glyphclass
