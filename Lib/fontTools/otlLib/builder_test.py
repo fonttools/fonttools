@@ -768,6 +768,47 @@ class BuilderTest(unittest.TestCase):
                          '  </Mark2Anchor>'
                          '</Mark2Record>')
 
+    def test_buildPairPosGlyphs(self):
+        d50 = builder.buildValue({"XPlacement": -50})
+        d8020 = builder.buildValue({"XPlacement": -80, "YPlacement": -20})
+        subtables = builder.buildPairPosGlyphs({
+            ("A", "zero"): (None, d50),
+            ("A", "one"):  (d8020, d50),
+        }, self.GLYPHMAP)
+        self.maxDiff = None
+        self.assertEqual(''.join([getXML(t.toXML) for t in subtables]),
+                         '<PairPos Format="1">'
+                         '  <Coverage>'
+                         '    <Glyph value="A"/>'
+                         '  </Coverage>'
+                         '  <ValueFormat1 value="0"/>'
+                         '  <ValueFormat2 value="1"/>'
+                         '  <!-- PairSetCount=1 -->'
+                         '  <PairSet index="0">'
+                         '    <!-- PairValueCount=1 -->'
+                         '    <PairValueRecord index="0">'
+                         '      <SecondGlyph value="zero"/>'
+                         '      <Value2 XPlacement="-50"/>'
+                         '    </PairValueRecord>'
+                         '  </PairSet>'
+                         '</PairPos>'
+                         '<PairPos Format="1">'
+                         '  <Coverage>'
+                         '    <Glyph value="A"/>'
+                         '  </Coverage>'
+                         '  <ValueFormat1 value="3"/>'
+                         '  <ValueFormat2 value="1"/>'
+                         '  <!-- PairSetCount=1 -->'
+                         '  <PairSet index="0">'
+                         '    <!-- PairValueCount=1 -->'
+                         '    <PairValueRecord index="0">'
+                         '      <SecondGlyph value="one"/>'
+                         '      <Value1 XPlacement="-80" YPlacement="-20"/>'
+                         '      <Value2 XPlacement="-50"/>'
+                         '    </PairValueRecord>'
+                         '  </PairSet>'
+                         '</PairPos>')
+
     def test_buildPairPosGlyphsSubtable(self):
         d20 = builder.buildValue({"XPlacement": -20})
         d50 = builder.buildValue({"XPlacement": -50})

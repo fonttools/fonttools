@@ -888,34 +888,28 @@ class MultipleSubstBuilder(LookupBuilder):
 class SpecificPairPosBuilder(LookupBuilder):
     def __init__(self, font, location):
         LookupBuilder.__init__(self, font, location, 'GPOS', 2)
-        self.pairs = {}  # (gc1, gc2) -> (location, value1, value2)
+        self.pairs = {}  # (glyph1, glyph2) -> (value1, value2)
+        self.locations = {}  # (glyph1, glyph2) -> (filepath, line, column)
 
     def add_pair(self, location, glyph1, value1, glyph2, value2):
-        oldValue = self.pairs.get((glyph1, glyph2), None)
+        key = (glyph1, glyph2)
+        oldValue = self.pairs.get(key, None)
         if oldValue is not None:
-            otherLoc, _, _ = oldValue
+            otherLoc = self.locations[key]
             raise FeatureLibError(
                 'Already defined position for pair %s %s at %s:%d:%d'
                 % (glyph1, glyph2, otherLoc[0], otherLoc[1], otherLoc[2]),
                 location)
-        self.pairs[(glyph1, glyph2)] = (location, value1, value2)
+        val1, _ = makeOpenTypeValueRecord(value1)
+        val2, _ = makeOpenTypeValueRecord(value2)
+        self.pairs[key] = (val1, val2)
+        self.locations[key] = location
 
     def equals(self, other):
-        return (LookupBuilder.equals(self, other) and
-                self.pairs == other.pairs)
+        return (LookupBuilder.equals(self, other) and self.pairs == other.pairs)
 
     def build(self):
-        subtables = []
-        # (valueFormat1, valueFormat2) --> {(glyph1, glyph2): (val1, val2)}
-        format1 = {}
-        for (glyph1, glyph2), (location, value1, value2) in self.pairs.items():
-            val1, valFormat1 = makeOpenTypeValueRecord(value1)
-            val2, valFormat2 = makeOpenTypeValueRecord(value2)
-            p = format1.setdefault(((valFormat1, valFormat2)), {})
-            p[(glyph1, glyph2)] = (val1, val2)
-        for (vf1, vf2), pairs in sorted(format1.items()):
-            subtables.append(
-                otl.buildPairPosGlyphsSubtable(pairs, self.glyphMap, vf1, vf2))
+        subtables = otl.buildPairPosGlyphs(self.pairs, self.glyphMap)
         return self.buildLookup_(subtables)
 
 

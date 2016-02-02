@@ -310,6 +310,18 @@ def buildMark2Record(anchors):
     return self
 
 
+def buildPairPosGlyphs(pairs, glyphMap):
+    p = {}  # (formatA, formatB) --> {(glyphA, glyphB): (valA, valB)}
+    for (glyphA, glyphB), (valA, valB) in pairs.items():
+        formatA = valA.getFormat() if valA is not None else 0
+        formatB = valB.getFormat() if valB is not None else 0
+        pos = p.setdefault((formatA, formatB), {})
+        pos[(glyphA, glyphB)] = (valA, valB)
+    return [
+        buildPairPosGlyphsSubtable(pos, glyphMap, formatA, formatB)
+        for ((formatA, formatB), pos) in sorted(p.items())]
+
+
 def buildPairPosGlyphsSubtable(pairs, glyphMap,
                                valueFormat1=None, valueFormat2=None):
     self = ot.PairPos()
