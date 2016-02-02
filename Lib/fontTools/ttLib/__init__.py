@@ -308,7 +308,9 @@ class TTFont(object):
 			progress.set((i + 1))
 		writer.endtag("ttFont")
 		writer.newline()
-		writer.close()
+		# close if 'fileOrPath' is a path; leave it open if it's a file
+		if not hasattr(fileOrPath, "write"):
+			writer.close()
 
 	def _tableToXML(self, writer, tag, progress, quiet=None):
 		if quiet is not None:
