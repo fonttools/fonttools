@@ -2,6 +2,7 @@ from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
 from fontTools.misc.testTools import getXML
 from fontTools.otlLib import builder
+from fontTools.ttLib.tables import otTables
 import unittest
 
 
@@ -954,6 +955,50 @@ class BuilderTest(unittest.TestCase):
         self.assertEqual(hash(keyA1), hash(keyA2))
         self.assertNotEqual(keyA1, keyB)
         self.assertNotEqual(hash(keyA1), hash(keyB))
+
+
+class ClassDefBuilderTest(unittest.TestCase):
+    def test_build_usingClass0(self):
+        b = builder.ClassDefBuilder(useClass0=True)
+        b.add({"a", "b"})
+        b.add({"c"})
+        b.add({"e", "f", "g", "h"})
+        cdef = b.build()
+        self.assertIsInstance(cdef, otTables.ClassDef)
+        self.assertEqual(cdef.classDefs, {
+            "a": 1,
+            "b": 1,
+            "c": 2
+        })
+
+    def test_build_notUsingClass0(self):
+        b = builder.ClassDefBuilder(useClass0=False)
+        b.add({"a", "b"})
+        b.add({"c"})
+        b.add({"e", "f", "g", "h"})
+        cdef = b.build()
+        self.assertIsInstance(cdef, otTables.ClassDef)
+        self.assertEqual(cdef.classDefs, {
+            "a": 2,
+            "b": 2,
+            "c": 3,
+            "e": 1,
+            "f": 1,
+            "g": 1,
+            "h": 1
+        })
+
+    def test_canAdd(self):
+        b = builder.ClassDefBuilder(useClass0=True)
+        b.add({"a", "b", "c", "d"})
+        b.add({"e", "f"})
+        self.assertTrue(b.canAdd({"a", "b", "c", "d"}))
+        self.assertTrue(b.canAdd({"e", "f"}))
+        self.assertTrue(b.canAdd({"g", "h", "i"}))
+        self.assertFalse(b.canAdd({"b", "c", "d"}))
+        self.assertFalse(b.canAdd({"a", "b", "c", "d", "e", "f"}))
+        self.assertFalse(b.canAdd({"d", "e", "f"}))
+        self.assertFalse(b.canAdd({"f"}))
 
 
 if __name__ == "__main__":

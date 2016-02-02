@@ -2,7 +2,7 @@ from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
 from fontTools.misc.py23 import open
 from fontTools.feaLib.builder import Builder, addOpenTypeFeatures
-from fontTools.feaLib.builder import ClassDefBuilder, LigatureSubstBuilder
+from fontTools.feaLib.builder import LigatureSubstBuilder
 from fontTools.feaLib.error import FeatureLibError
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables import otTables
@@ -337,50 +337,6 @@ for name in BuilderTest.TEST_FEATURE_FILES:
     setattr(BuilderTest, "test_FeatureFile_%s" % name,
             generate_feature_file_test(name))
 
-
-class ClassDefBuilderTest(unittest.TestCase):
-    def test_build_usingClass0(self):
-        builder = ClassDefBuilder(useClass0=True)
-        builder.add({"a", "b"})
-        builder.add({"c"})
-        builder.add({"e", "f", "g", "h"})
-        cdef = builder.build()
-        self.assertIsInstance(cdef, otTables.ClassDef)
-        self.assertEqual(cdef.classDefs, {
-            "a": 1,
-            "b": 1,
-            "c": 2
-        })
-
-    def test_build_notUsingClass0(self):
-        builder = ClassDefBuilder(useClass0=False)
-        builder.add({"a", "b"})
-        builder.add({"c"})
-        builder.add({"e", "f", "g", "h"})
-        cdef = builder.build()
-        self.assertIsInstance(cdef, otTables.ClassDef)
-        self.assertEqual(cdef.classDefs, {
-            "a": 2,
-            "b": 2,
-            "c": 3,
-            "e": 1,
-            "f": 1,
-            "g": 1,
-            "h": 1
-        })
-
-    def test_canAdd(self):
-        b = ClassDefBuilder(useClass0=True)
-        b.add({"a", "b", "c", "d"})
-        b.add({"e", "f"})
-        self.assertTrue(b.canAdd({"a", "b", "c", "d"}))
-        self.assertTrue(b.canAdd({"e", "f"}))
-        self.assertTrue(b.canAdd({"g", "h", "i"}))
-        self.assertFalse(b.canAdd({"b", "c", "d"}))
-        self.assertFalse(b.canAdd({"a", "b", "c", "d", "e", "f"}))
-        self.assertFalse(b.canAdd({"d", "e", "f"}))
-        self.assertFalse(b.canAdd({"f"}))
-
-
 if __name__ == "__main__":
     unittest.main()
+
