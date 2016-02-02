@@ -194,21 +194,16 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 			setattr(self, name, safeEval(attrs["value"]))
 
 	def updateFirstAndLastCharIndex(self, ttFont):
-		if ttFont['cmap'].__class__ == DefaultTable.DefaultTable:
-			# skip if the cmap table class is DefaultTable -- e.g. because of decompile
-			# errors, or because it's written as hex data in the TTX file (with 'raw=1')
-			# https://github.com/behdad/fonttools/issues/497
-			return
 		codes = set()
-		for table in ttFont['cmap'].tables:
+		for table in getattr(ttFont['cmap'], 'tables', []):
 			if table.isUnicode():
 				codes.update(table.cmap.keys())
 		if codes:
 			minCode = min(codes)
 			maxCode = max(codes)
 			# USHORT cannot hold codepoints greater than 0xFFFF
-			self.usFirstCharIndex = 0xFFFF if minCode > 0xFFFF else minCode
-			self.usLastCharIndex = 0xFFFF if maxCode > 0xFFFF else maxCode
+			self.usFirstCharIndex = min(0xFFFF, minCode)
+			self.usLastCharIndex = min(0xFFFF, maxCode)
 
 	# misspelled attributes kept for legacy reasons
 
