@@ -95,7 +95,7 @@ class BaseTTXConverter(DefaultTable):
 					raise # Oh well...
 
 				overflowRecord = e.value
-				log.warning("Attempting to fix OTLOffsetOverflowError %s", e)
+				log.info("Attempting to fix OTLOffsetOverflowError %s", e)
 				lastItem = overflowRecord
 
 				ok = 0
