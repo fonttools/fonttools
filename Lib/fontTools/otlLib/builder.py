@@ -172,7 +172,7 @@ def buildCursivePosSubtable(attach, glyphMap):
 def buildDevice(deltas):
     """{8:+1, 10:-3, ...} --> otTables.Device"""
     if not deltas:
-      return None
+        return None
     self = ot.Device()
     keys = deltas.keys()
     self.StartSize = startSize = min(keys)
@@ -307,6 +307,38 @@ def buildMark2Record(anchors):
     """[otTables.Anchor, otTables.Anchor, ...] --> otTables.Mark2Record"""
     self = ot.Mark2Record()
     self.Mark2Anchor = anchors
+    return self
+
+
+def buildPairPosGlyphsSubtable(pairs, glyphMap,
+                               valueFormat1=None, valueFormat2=None):
+    self = ot.PairPos()
+    self.Format = 1
+    self.ValueFormat1, self.ValueFormat2 = 0, 0
+    p = {}
+    for (glyphA, glyphB), (valA, valB) in pairs.items():
+        p.setdefault(glyphA, []).append((glyphB, valA, valB))
+        self.ValueFormat1 |= valA.getFormat() if valA is not None else 0
+        self.ValueFormat2 |= valB.getFormat() if valB is not None else 0
+    if valueFormat1 is not None:
+        self.ValueFormat1 = valueFormat1
+    if valueFormat2 is not None:
+        self.ValueFormat2 = valueFormat2
+    self.Coverage = buildCoverage({g for g, _ in pairs.keys()}, glyphMap)
+    self.PairSet = []
+    for glyph in self.Coverage.glyphs:
+        ps = ot.PairSet()
+        ps.PairValueRecord = []
+        self.PairSet.append(ps)
+        for glyph2, val1, val2 in \
+                sorted(p[glyph], key=lambda x: glyphMap[x[0]]):
+            pvr = ot.PairValueRecord()
+            pvr.SecondGlyph = glyph2
+            pvr.Value1 = val1 if val1 and val1.getFormat() != 0 else None
+            pvr.Value2 = val2 if val2 and val2.getFormat() != 0 else None
+            ps.PairValueRecord.append(pvr)
+        ps.PairValueCount = len(ps.PairValueRecord)
+    self.PairSetCount = len(self.PairSet)
     return self
 
 

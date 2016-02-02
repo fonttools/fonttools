@@ -906,36 +906,16 @@ class SpecificPairPosBuilder(LookupBuilder):
 
     def build(self):
         subtables = []
-
-        # (valueFormat1, valueFormat2) --> [(glyph1, glyph2, value1, value2)*]
+        # (valueFormat1, valueFormat2) --> {(glyph1, glyph2): (val1, val2)}
         format1 = {}
         for (glyph1, glyph2), (location, value1, value2) in self.pairs.items():
             val1, valFormat1 = makeOpenTypeValueRecord(value1)
             val2, valFormat2 = makeOpenTypeValueRecord(value2)
-            format1.setdefault(((valFormat1, valFormat2)), []).append(
-                (glyph1, glyph2, val1, val2))
+            p = format1.setdefault(((valFormat1, valFormat2)), {})
+            p[(glyph1, glyph2)] = (val1, val2)
         for (vf1, vf2), pairs in sorted(format1.items()):
-            p = {}
-            for glyph1, glyph2, val1, val2 in pairs:
-                p.setdefault(glyph1, []).append((glyph2, val1, val2))
-            st = otTables.PairPos()
-            subtables.append(st)
-            st.Format = 1
-            st.ValueFormat1, st.ValueFormat2 = vf1, vf2
-            st.Coverage = otl.buildCoverage(p, self.glyphMap)
-            st.PairSet = []
-            for glyph in st.Coverage.glyphs:
-                ps = otTables.PairSet()
-                ps.PairValueRecord = []
-                st.PairSet.append(ps)
-                for glyph2, val1, val2 in sorted(
-                        p[glyph], key=lambda x: self.font.getGlyphID(x[0])):
-                    pvr = otTables.PairValueRecord()
-                    pvr.SecondGlyph = glyph2
-                    pvr.Value1, pvr.Value2 = val1, val2
-                    ps.PairValueRecord.append(pvr)
-                ps.PairValueCount = len(ps.PairValueRecord)
-            st.PairSetCount = len(st.PairSet)
+            subtables.append(
+                otl.buildPairPosGlyphsSubtable(pairs, self.glyphMap, vf1, vf2))
         return self.buildLookup_(subtables)
 
 
