@@ -310,6 +310,49 @@ def buildMark2Record(anchors):
     return self
 
 
+def _getValueFormat(f, values, i):
+    """Helper for buildPairPos{Glyphs|Classes}Subtable."""
+    if f is not None:
+        return f
+    mask = 0
+    for value in values:
+        if value is not None and value[i] is not None:
+            mask |= value[i].getFormat()
+    return mask
+
+
+def buildPairPosClassesSubtable(pairs, glyphMap,
+                                valueFormat1=None, valueFormat2=None):
+    coverage = set()
+    classDef1 = ClassDefBuilder(useClass0=True)
+    classDef2 = ClassDefBuilder(useClass0=False)
+    for gc1, gc2 in sorted(pairs):
+        coverage.update(gc1)
+        classDef1.add(gc1)
+        classDef2.add(gc2)
+    self = ot.PairPos()
+    self.Format = 2
+    self.ValueFormat1 = _getValueFormat(valueFormat1, pairs.values(), 0)
+    self.ValueFormat2 = _getValueFormat(valueFormat2, pairs.values(), 1)
+    self.Coverage = buildCoverage(coverage, glyphMap)
+    self.ClassDef1 = classDef1.build()
+    self.ClassDef2 = classDef2.build()
+    classes1 = classDef1.classes()
+    classes2 = classDef2.classes()
+    self.Class1Record = []
+    for c1 in classes1:
+        rec1 = ot.Class1Record()
+        rec1.Class2Record = []
+        self.Class1Record.append(rec1)
+        for c2 in classes2:
+            rec2 = ot.Class2Record()
+            rec2.Value1, rec2.Value2 = pairs.get((c1, c2), (None, None))
+            rec1.Class2Record.append(rec2)
+    self.Class1Count = len(self.Class1Record)
+    self.Class2Count = len(classes2)
+    return self
+
+
 def buildPairPosGlyphs(pairs, glyphMap):
     p = {}  # (formatA, formatB) --> {(glyphA, glyphB): (valA, valB)}
     for (glyphA, glyphB), (valA, valB) in pairs.items():
@@ -326,16 +369,11 @@ def buildPairPosGlyphsSubtable(pairs, glyphMap,
                                valueFormat1=None, valueFormat2=None):
     self = ot.PairPos()
     self.Format = 1
-    self.ValueFormat1, self.ValueFormat2 = 0, 0
+    self.ValueFormat1 = _getValueFormat(valueFormat1, pairs.values(), 0)
+    self.ValueFormat2 = _getValueFormat(valueFormat2, pairs.values(), 1)
     p = {}
     for (glyphA, glyphB), (valA, valB) in pairs.items():
         p.setdefault(glyphA, []).append((glyphB, valA, valB))
-        self.ValueFormat1 |= valA.getFormat() if valA is not None else 0
-        self.ValueFormat2 |= valB.getFormat() if valB is not None else 0
-    if valueFormat1 is not None:
-        self.ValueFormat1 = valueFormat1
-    if valueFormat2 is not None:
-        self.ValueFormat2 = valueFormat2
     self.Coverage = buildCoverage({g for g, _ in pairs.keys()}, glyphMap)
     self.PairSet = []
     for glyph in self.Coverage.glyphs:

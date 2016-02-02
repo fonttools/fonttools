@@ -1102,26 +1102,8 @@ class ClassPairPosSubtableBuilder(object):
     def flush_(self):
         if self.classDef1_ is None or self.classDef2_ is None:
             return
-        st = otTables.PairPos()
-        st.Format = 2
-        st.Coverage = otl.buildCoverage(self.coverage_, self.builder_.glyphMap)
-        st.ValueFormat1 = self.valueFormat1_
-        st.ValueFormat2 = self.valueFormat2_
-        st.ClassDef1 = self.classDef1_.build()
-        st.ClassDef2 = self.classDef2_.build()
-        classes1 = self.classDef1_.classes()
-        classes2 = self.classDef2_.classes()
-        st.Class1Count, st.Class2Count = len(classes1), len(classes2)
-        st.Class1Record = []
-        for c1 in classes1:
-            rec1 = otTables.Class1Record()
-            rec1.Class2Record = []
-            st.Class1Record.append(rec1)
-            for c2 in classes2:
-                rec2 = otTables.Class2Record()
-                val1, val2 = self.values_.get((c1, c2), (None, None))
-                rec2.Value1, rec2.Value2 = val1, val2
-                rec1.Class2Record.append(rec2)
+        st = otl.buildPairPosClassesSubtable(self.values_,
+                                             self.builder_.glyphMap)
         self.subtables_.append(st)
 
 
