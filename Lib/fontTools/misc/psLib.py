@@ -5,7 +5,10 @@ from .psOperators import *
 import re
 import collections
 from string import whitespace
+import logging
 
+
+log = logging.getLogger(__name__)
 
 ps_special = b'()<>[]{}%'	# / is one too, but we take care of that one differently
 
@@ -189,14 +192,18 @@ class PSInterpreter(PSOperators):
 					handle_object(object)
 			tokenizer.close()
 			self.tokenizer = None
-		finally:
+		except:
 			if self.tokenizer is not None:
-				if 0:
-					print('ps error:\n- - - - - - -')
-					print(self.tokenizer.buf[self.tokenizer.pos-50:self.tokenizer.pos])
-					print('>>>')
-					print(self.tokenizer.buf[self.tokenizer.pos:self.tokenizer.pos+50])
-					print('- - - - - - -')
+				log.debug(
+					'ps error:\n'
+					'- - - - - - -\n'
+					'%s\n'
+					'>>>\n'
+					'%s\n'
+					'- - - - - - -',
+					self.tokenizer.buf[self.tokenizer.pos-50:self.tokenizer.pos],
+					self.tokenizer.buf[self.tokenizer.pos:self.tokenizer.pos+50])
+			raise
 
 	def handle_object(self, object):
 		if not (self.proclevel or object.literal or object.type == 'proceduretype'):

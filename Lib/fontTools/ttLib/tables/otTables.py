@@ -8,7 +8,10 @@ from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from .otBase import BaseTable, FormatSwitchingBaseTable
 import operator
-import warnings
+import logging
+
+
+log = logging.getLogger(__name__)
 
 
 class FeatureParams(BaseTable):
@@ -46,7 +49,7 @@ class Coverage(FormatSwitchingBaseTable):
 			# this when writing font out.
 			sorted_ranges = sorted(ranges, key=lambda a: a.StartCoverageIndex)
 			if ranges != sorted_ranges:
-				warnings.warn("GSUB/GPOS Coverage is not sorted by glyph ids.")
+				log.warning("GSUB/GPOS Coverage is not sorted by glyph ids.")
 				ranges = sorted_ranges
 			del sorted_ranges
 			for r in ranges:
@@ -57,14 +60,14 @@ class Coverage(FormatSwitchingBaseTable):
 				try:
 					startID = font.getGlyphID(start, requireReal=True)
 				except KeyError:
-					warnings.warn("Coverage table has start glyph ID out of range: %s." % start)
+					log.warning("Coverage table has start glyph ID out of range: %s.", start)
 					continue
 				try:
 					endID = font.getGlyphID(end, requireReal=True) + 1
 				except KeyError:
 					# Apparently some tools use 65535 to "match all" the range
 					if end != 'glyph65535':
-						warnings.warn("Coverage table has end glyph ID out of range: %s." % end)
+						log.warning("Coverage table has end glyph ID out of range: %s.", end)
 					# NOTE: We clobber out-of-range things here.  There are legit uses for those,
 					# but none that we have seen in the wild.
 					endID = len(glyphOrder)
@@ -107,7 +110,7 @@ class Coverage(FormatSwitchingBaseTable):
 					ranges[i] = r
 					index = index + end - start + 1
 				if brokenOrder:
-					warnings.warn("GSUB/GPOS Coverage is not sorted by glyph ids.")
+					log.warning("GSUB/GPOS Coverage is not sorted by glyph ids.")
 					ranges.sort(key=lambda a: a.StartID)
 				for r in ranges:
 					del r.StartID
@@ -288,11 +291,12 @@ class ClassDef(FormatSwitchingBaseTable):
 			try:
 				startID = font.getGlyphID(start, requireReal=True)
 			except KeyError:
-				warnings.warn("ClassDef table has start glyph ID out of range: %s." % start)
+				log.warning("ClassDef table has start glyph ID out of range: %s.", start)
 				startID = len(glyphOrder)
 			endID = startID + len(classList)
 			if endID > len(glyphOrder):
-				warnings.warn("ClassDef table has entries for out of range glyph IDs: %s,%s." % (start, len(classList)))
+				log.warning("ClassDef table has entries for out of range glyph IDs: %s,%s.",
+					start, len(classList))
 				# NOTE: We clobber out-of-range things here.  There are legit uses for those,
 				# but none that we have seen in the wild.
 				endID = len(glyphOrder)
@@ -309,14 +313,14 @@ class ClassDef(FormatSwitchingBaseTable):
 				try:
 					startID = font.getGlyphID(start, requireReal=True)
 				except KeyError:
-					warnings.warn("ClassDef table has start glyph ID out of range: %s." % start)
+					log.warning("ClassDef table has start glyph ID out of range: %s.", start)
 					continue
 				try:
 					endID = font.getGlyphID(end, requireReal=True) + 1
 				except KeyError:
 					# Apparently some tools use 65535 to "match all" the range
 					if end != 'glyph65535':
-						warnings.warn("ClassDef table has end glyph ID out of range: %s." % end)
+						log.warning("ClassDef table has end glyph ID out of range: %s.", end)
 					# NOTE: We clobber out-of-range things here.  There are legit uses for those,
 					# but none that we have seen in the wild.
 					endID = len(glyphOrder)
@@ -788,7 +792,7 @@ def _buildClasses():
 	for base, alts in _equivalents.items():
 		base = namespace[base]
 		for alt in alts:
-			namespace[alt] = type(alt, (base,), {})
+			namespace[alt] = base
 
 	global lookupTypes
 	lookupTypes = {

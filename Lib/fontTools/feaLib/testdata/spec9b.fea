@@ -1,0 +1,13 @@
+@BASE = [f i];
+@LIGATURES = [c_s c_t f_i f_f_i s_t];
+@MARKS = [acute grave];
+@COMPONENT = [noon.final noon.initial];
+
+table GDEF {
+    GlyphClassDef @BASE, @LIGATURES, @MARKS, @COMPONENT;
+    Attach noon.final 5;
+    Attach noon.initial 4;
+    LigatureCaretByPos f_i 400 380;
+    LigatureCaretByPos [c_t s_t]  500;
+    LigatureCaretByIndex f_f_i 23 46;
+} GDEF;

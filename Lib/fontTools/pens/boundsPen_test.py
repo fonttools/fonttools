@@ -61,6 +61,16 @@ class ControlBoundsPenTest(unittest.TestCase):
         pen.qCurveTo((6, 6), (10, 0))
         self.assertEqual("0 0 10 6", bounds_(pen))
 
+    def test_singlePoint(self):
+        pen = ControlBoundsPen(None)
+        pen.moveTo((-5, 10))
+        self.assertEqual("-5 10 -5 10", bounds_(pen))
+
+    def test_ignoreSinglePoint(self):
+        pen = ControlBoundsPen(None, ignoreSinglePoints=True)
+        pen.moveTo((0, 10))
+        self.assertEqual(None, pen.bounds)
+
 
 if __name__ == '__main__':
     unittest.main()

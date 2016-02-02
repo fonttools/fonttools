@@ -43,9 +43,13 @@ Dumping 'prep' table...
 
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
+from fontTools.misc.loggingTools import deprecateArgument, deprecateFunction
 import os
 import sys
+import logging
 
+
+log = logging.getLogger(__name__)
 
 class TTLibError(Exception): pass
 
@@ -60,8 +64,8 @@ class TTFont(object):
 
 	def __init__(self, file=None, res_name_or_index=None,
 			sfntVersion="\000\001\000\000", flavor=None, checkChecksums=False,
-			verbose=False, recalcBBoxes=True, allowVID=False, ignoreDecompileErrors=False,
-			recalcTimestamp=True, fontNumber=-1, lazy=None, quiet=False):
+			verbose=None, recalcBBoxes=True, allowVID=False, ignoreDecompileErrors=False,
+			recalcTimestamp=True, fontNumber=-1, lazy=None, quiet=None):
 
 		"""The constructor can be called with a few different arguments.
 		When reading a font from disk, 'file' should be either a pathname
@@ -119,8 +123,13 @@ class TTFont(object):
 		"""
 
 		from fontTools.ttLib import sfnt
-		self.verbose = verbose
-		self.quiet = quiet
+
+		for name in ("verbose", "quiet"):
+			val = locals().get(name)
+			if val is not None:
+				deprecateArgument(name, "configure logging instead")
+			setattr(self, name, val)
+
 		self.lazy = lazy
 		self.recalcBBoxes = recalcBBoxes
 		self.recalcTimestamp = recalcTimestamp
@@ -159,14 +168,16 @@ class TTFont(object):
 		else:
 			# assume "file" is a readable file object
 			closeStream = False
-		# read input file in memory and wrap a stream around it to allow overwriting
-		tmp = BytesIO(file.read())
-		if hasattr(file, 'name'):
-			# save reference to input file name
-			tmp.name = file.name
-		if closeStream:
-			file.close()
-		self.reader = sfnt.SFNTReader(tmp, checkChecksums, fontNumber=fontNumber)
+		if not self.lazy:
+			# read input file in memory and wrap a stream around it to allow overwriting
+			tmp = BytesIO(file.read())
+			if hasattr(file, 'name'):
+				# save reference to input file name
+				tmp.name = file.name
+			if closeStream:
+				file.close()
+			file = tmp
+		self.reader = sfnt.SFNTReader(file, checkChecksums, fontNumber=fontNumber)
 		self.sfntVersion = self.reader.sfntVersion
 		self.flavor = self.reader.flavor
 		self.flavorData = self.reader.flavorData
@@ -183,6 +194,9 @@ class TTFont(object):
 		"""
 		from fontTools.ttLib import sfnt
 		if not hasattr(file, "write"):
+			if self.lazy and self.reader.file.name == file:
+				raise TTLibError(
+					"Can't overwrite TTFont when 'lazy' attribute is True")
 			closeStream = 1
 			file = open(file, "wb")
 		else:
@@ -226,7 +240,7 @@ class TTFont(object):
 		if closeStream:
 			file.close()
 
-	def saveXML(self, fileOrPath, progress=None, quiet=False,
+	def saveXML(self, fileOrPath, progress=None, quiet=None,
 			tables=None, skipTables=None, splitTables=False, disassembleInstructions=True,
 			bitmapGlyphDataFormat='raw'):
 		"""Export the font as TTX (an XML-based text file), or as a series of text
@@ -238,6 +252,9 @@ class TTFont(object):
 		"""
 		from fontTools import version
 		from fontTools.misc import xmlWriter
+
+		if quiet is not None:
+			deprecateArgument("quiet", "configure logging instead")
 
 		self.disassembleInstructions = disassembleInstructions
 		self.bitmapGlyphDataFormat = bitmapGlyphDataFormat
@@ -282,7 +299,7 @@ class TTFont(object):
 				writer.newline()
 			else:
 				tableWriter = writer
-			self._tableToXML(tableWriter, tag, progress, quiet)
+			self._tableToXML(tableWriter, tag, progress)
 			if splitTables:
 				tableWriter.endtag("ttFont")
 				tableWriter.newline()
@@ -292,10 +309,10 @@ class TTFont(object):
 		writer.endtag("ttFont")
 		writer.newline()
 		writer.close()
-		if self.verbose:
-			debugmsg("Done dumping TTX")
 
-	def _tableToXML(self, writer, tag, progress, quiet):
+	def _tableToXML(self, writer, tag, progress, quiet=None):
+		if quiet is not None:
+			deprecateArgument("quiet", "configure logging instead")
 		if tag in self:
 			table = self[tag]
 			report = "Dumping '%s' table..." % tag
@@ -303,11 +320,7 @@ class TTFont(object):
 			report = "No '%s' table found." % tag
 		if progress:
 			progress.setLabel(report)
-		elif self.verbose:
-			debugmsg(report)
-		else:
-			if not quiet:
-				print(report)
+		log.info(report)
 		if tag not in self:
 			return
 		xmlTag = tagToXML(tag)
@@ -327,10 +340,13 @@ class TTFont(object):
 		writer.newline()
 		writer.newline()
 
-	def importXML(self, fileOrPath, progress=None, quiet=False):
+	def importXML(self, fileOrPath, progress=None, quiet=None):
 		"""Import a TTX file (an XML-based text format), so as to recreate
 		a font object.
 		"""
+		if quiet is not None:
+			deprecateArgument("quiet", "configure logging instead")
+
 		if "maxp" in self and "post" in self:
 			# Make sure the glyph order is loaded, as it otherwise gets
 			# lost if the XML doesn't contain the glyph order, yet does
@@ -340,7 +356,7 @@ class TTFont(object):
 
 		from fontTools.misc import xmlReader
 
-		reader = xmlReader.XMLReader(fileOrPath, self, progress, quiet)
+		reader = xmlReader.XMLReader(fileOrPath, self, progress)
 		reader.read()
 
 	def isLoaded(self, tag):
@@ -386,21 +402,20 @@ class TTFont(object):
 				return table
 			if self.reader is not None:
 				import traceback
-				if self.verbose:
-					debugmsg("Reading '%s' table from disk" % tag)
+				log.debug("Reading '%s' table from disk", tag)
 				data = self.reader[tag]
 				tableClass = getTableClass(tag)
 				table = tableClass(tag)
 				self.tables[tag] = table
-				if self.verbose:
-					debugmsg("Decompiling '%s' table" % tag)
+				log.debug("Decompiling '%s' table", tag)
 				try:
 					table.decompile(data, self)
 				except:
 					if not self.ignoreDecompileErrors:
 						raise
 					# fall back to DefaultTable, retaining the binary table data
-					print("An exception occurred during the decompilation of the '%s' table" % tag)
+					log.exception(
+						"An exception occurred during the decompilation of the '%s' table", tag)
 					from .tables.DefaultTable import DefaultTable
 					file = StringIO()
 					traceback.print_exc(file=file)
@@ -629,8 +644,7 @@ class TTFont(object):
 				else:
 					done.append(masterTable)
 		tabledata = self.getTableData(tag)
-		if self.verbose:
-			debugmsg("writing '%s' table to disk" % tag)
+		log.debug("writing '%s' table to disk", tag)
 		writer[tag] = tabledata
 		done.append(tag)
 
@@ -639,12 +653,10 @@ class TTFont(object):
 		"""
 		tag = Tag(tag)
 		if self.isLoaded(tag):
-			if self.verbose:
-				debugmsg("compiling '%s' table" % tag)
+			log.debug("compiling '%s' table", tag)
 			return self.tables[tag].compile(self)
 		elif self.reader and tag in self.reader:
-			if self.verbose:
-				debugmsg("Reading '%s' table from disk" % tag)
+			log.debug("Reading '%s' table from disk", tag)
 			return self.reader[tag]
 		else:
 			raise KeyError(tag)
@@ -896,6 +908,7 @@ def xmlToTag(tag):
 		return Tag(tag + " " * (4 - len(tag)))
 
 
+@deprecateFunction("use logging instead", category=DeprecationWarning)
 def debugmsg(msg):
 	import time
 	print(msg + time.strftime("  (%H:%M:%S)", time.localtime(time.time())))

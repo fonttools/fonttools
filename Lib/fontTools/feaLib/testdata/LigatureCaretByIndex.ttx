@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont>
+
+  <GDEF>
+    <Version value="1.0"/>
+    <LigCaretList>
+      <Coverage>
+        <Glyph value="c_t"/>
+        <Glyph value="o_f_f_i"/>
+        <Glyph value="s_t"/>
+      </Coverage>
+      <!-- LigGlyphCount=3 -->
+      <LigGlyph index="0">
+        <!-- CaretCount=1 -->
+        <CaretValue index="0" Format="2">
+          <CaretValuePoint value="11"/>
+        </CaretValue>
+      </LigGlyph>
+      <LigGlyph index="1">
+        <!-- CaretCount=3 -->
+        <CaretValue index="0" Format="2">
+          <CaretValuePoint value="33"/>
+        </CaretValue>
+        <CaretValue index="1" Format="2">
+          <CaretValuePoint value="55"/>
+        </CaretValue>
+        <CaretValue index="2" Format="2">
+          <CaretValuePoint value="66"/>
+        </CaretValue>
+      </LigGlyph>
+      <LigGlyph index="2">
+        <!-- CaretCount=1 -->
+        <CaretValue index="0" Format="2">
+          <CaretValuePoint value="11"/>
+        </CaretValue>
+      </LigGlyph>
+    </LigCaretList>
+  </GDEF>
+
+</ttFont>

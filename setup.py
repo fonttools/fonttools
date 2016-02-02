@@ -13,12 +13,6 @@ except ImportError:
 else:
 	distutils_scripts = []
 
-try:
-	import xml.parsers.expat
-except ImportError:
-	print("*** Warning: FontTools needs PyXML, see:")
-	print("        http://sourceforge.net/projects/pyxml/")
-
 
 # Force distutils to use py_compile.compile() function with 'doraise' argument
 # set to True, in order to raise an exception on compilation errors
@@ -66,15 +60,18 @@ setup(
 		license = "OpenSource, BSD-style",
 		platforms = ["Any"],
 		long_description = long_description,
-		
+
 		packages = [
 			"fontTools",
 			"fontTools.encodings",
+			"fontTools.feaLib",
 			"fontTools.misc",
+			"fontTools.mtiLib",
 			"fontTools.pens",
 			"fontTools.ttLib",
 			"fontTools.t1Lib",
 			"fontTools.subset",
+			"fontTools.otlLib",
 			"fontTools.ttLib.tables",
 		],
 		py_modules = ['sstruct', 'xmlWriter'],

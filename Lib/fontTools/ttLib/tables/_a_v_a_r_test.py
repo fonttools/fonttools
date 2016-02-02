@@ -7,6 +7,7 @@ from fontTools.ttLib import TTLibError
 from fontTools.ttLib.tables._a_v_a_r import table__a_v_a_r
 from fontTools.ttLib.tables._f_v_a_r import table__f_v_a_r, Axis
 import collections
+import logging
 import unittest
 
 
@@ -65,15 +66,17 @@ class AxisVariationTableTest(unittest.TestCase):
 
     def test_fixupSegments(self):
         avar = table__a_v_a_r()
+        logger = logging.getLogger(table__a_v_a_r.__module__)
+        sio = StringIO()
+        logger.addHandler(logging.StreamHandler(stream=sio))
         avar.segments = {"wdth": {0.3: 0.8, 1.0: 0.7}}
-        warnings = []
-        avar.fixupSegments_(lambda w: warnings.append(w))
+        avar.fixupSegments_()
         self.assertEqual({"wdth": {-1.0: -1.0, 0.0: 0.0, 0.3: 0.8, 1.0: 1.0}}, avar.segments)
         self.assertEqual([
                 "avar axis 'wdth' should map -1.0 to -1.0",
                 "avar axis 'wdth' should map 0.0 to 0.0",
                 "avar axis 'wdth' should map 1.0 to 1.0"
-        ], warnings)
+        ], sio.getvalue().splitlines())
 
     @staticmethod
     def makeFont(axisTags):

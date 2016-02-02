@@ -1,0 +1,10 @@
+table GDEF {
+    LigatureCaretByIndex [c_t s_t] 11;
+
+    # The OpenType Feature File specification does not define what should
+    # happen when there are multiple LigatureCaretByIndex statements for
+    # the same glyph. Our behavior matches that of Adobe makeotf v2.0.90.
+    # https://github.com/adobe-type-tools/afdko/issues/95
+    LigatureCaretByIndex o_f_f_i 66 33;
+    LigatureCaretByIndex o_f_f_i 55;
+} GDEF;

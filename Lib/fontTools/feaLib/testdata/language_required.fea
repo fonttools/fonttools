@@ -5,15 +5,15 @@ languagesystem latn ITA;
 feature hlig {
   script latn;
   language DEU exclude_dflt required;
-  sub D E U by D_E_U;
+  sub D E U by D.sc;
 
   language FRA exclude_dflt;
-  sub F R A by F_R_A;
+  sub F R A by F.sc;
 } hlig;
 
 feature liga {
   language ITA exclude_dflt required;
-  sub I T A by I_T_A;
+  sub I T A by I.sc;
 } liga;
 
 feature scmp {

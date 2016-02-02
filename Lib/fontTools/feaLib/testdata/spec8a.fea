@@ -1,0 +1,21 @@
+languagesystem DFLT dflt;
+languagesystem latn dflt;
+languagesystem latn TRK;
+languagesystem cyrl dflt;
+
+feature aalt {
+    feature salt;
+    feature smcp;
+    substitute d by d.alt;
+} aalt;
+
+feature smcp {
+    sub [a-c] by [A.sc-C.sc];
+    sub f i by f_i;  # not considered for aalt
+} smcp;
+
+feature salt {
+    sub a from [a.alt1 a.alt2 a.alt3];
+    sub e [c d e]' f by [c.mid d.mid e.mid];
+    sub b by b.alt;
+} salt;

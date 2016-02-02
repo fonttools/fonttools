@@ -11,10 +11,16 @@ from fontTools.misc.timeTools import timestampNow
 from fontTools import ttLib, cffLib
 from fontTools.ttLib.tables import otTables, _h_e_a_d
 from fontTools.ttLib.tables.DefaultTable import DefaultTable
+from fontTools.misc.loggingTools import Timer
 from functools import reduce
 import sys
 import time
 import operator
+import logging
+
+
+log = logging.getLogger(__name__)
+timer = Timer(logger=logging.getLogger(__name__+".timer"), level=logging.INFO)
 
 
 def _add_method(*clazzes, **kwargs):
@@ -22,7 +28,10 @@ def _add_method(*clazzes, **kwargs):
 	more classes."""
 	allowDefault = kwargs.get('allowDefaultTable', False)
 	def wrapper(method):
+		done = []
 		for clazz in clazzes:
+			if clazz in done: continue # Support multiple names of a clazz
+			done.append(clazz)
 			assert allowDefault or clazz != DefaultTable, 'Oops, table class not found.'
 			assert method.__name__ not in clazz.__dict__, \
 				"Oops, class '%s' has method '%s'." % (clazz.__name__, method.__name__)
@@ -141,7 +150,7 @@ def mergeBits(bitmap):
 @_add_method(DefaultTable, allowDefaultTable=True)
 def merge(self, m, tables):
 	if not hasattr(self, 'mergeMap'):
-		m.log("Don't know how to merge '%s'." % self.tableTag)
+		log.info("Don't know how to merge '%s'.", self.tableTag)
 		return NotImplemented
 
 	logic = self.mergeMap
@@ -647,6 +656,9 @@ class Options(object):
 
 	def __init__(self, **kwargs):
 
+		self.verbose = False
+		self.timing = False
+
 		self.set(**kwargs)
 
 	def set(self, **kwargs):
@@ -718,15 +730,12 @@ class Options(object):
 
 class Merger(object):
 
-	def __init__(self, options=None, log=None):
+	def __init__(self, options=None):
 
-		if not log:
-			log = Logger()
 		if not options:
 			options = Options()
 
 		self.options = options
-		self.log = log
 
 	def merge(self, fontfiles):
 
@@ -763,19 +772,18 @@ class Merger(object):
 			allTags = ['cmap'] + list(allTags)
 
 		for tag in allTags:
+			with timer("merge '%s'" % tag):
+				tables = [font.get(tag, NotImplemented) for font in fonts]
 
-			tables = [font.get(tag, NotImplemented) for font in fonts]
+				clazz = ttLib.getTableClass(tag)
+				table = clazz(tag).merge(self, tables)
+				# XXX Clean this up and use:  table = mergeObjects(tables)
 
-			clazz = ttLib.getTableClass(tag)
-			table = clazz(tag).merge(self, tables)
-			# XXX Clean this up and use:  table = mergeObjects(tables)
-
-			if table is not NotImplemented and table is not False:
-				mega[tag] = table
-				self.log("Merged '%s'." % tag)
-			else:
-				self.log("Dropped '%s'." % tag)
-			self.log.lapse("merge '%s'" % tag)
+				if table is not NotImplemented and table is not False:
+					mega[tag] = table
+					log.info("Merged '%s'.", tag)
+				else:
+					log.info("Dropped '%s'.", tag)
 
 		del self.duplicateGlyphsPerFont
 
@@ -871,63 +879,18 @@ class Merger(object):
 		# TODO FeatureParams nameIDs
 
 
-class Logger(object):
-
-	def __init__(self, verbose=False, xml=False, timing=False):
-		self.verbose = verbose
-		self.xml = xml
-		self.timing = timing
-		self.last_time = self.start_time = time.time()
-
-	def parse_opts(self, argv):
-		argv = argv[:]
-		for v in ['verbose', 'xml', 'timing']:
-			if "--"+v in argv:
-				setattr(self, v, True)
-				argv.remove("--"+v)
-		return argv
-
-	def __call__(self, *things):
-		if not self.verbose:
-			return
-		print(' '.join(str(x) for x in things))
-
-	def lapse(self, *things):
-		if not self.timing:
-			return
-		new_time = time.time()
-		print("Took %0.3fs to %s" %(new_time - self.last_time,
-				 ' '.join(str(x) for x in things)))
-		self.last_time = new_time
-
-	def font(self, font, file=sys.stdout):
-		if not self.xml:
-			return
-		from fontTools.misc import xmlWriter
-		writer = xmlWriter.XMLWriter(file)
-		font.disassembleInstructions = False	# Work around ttLib bug
-		for tag in font.keys():
-			writer.begintag(tag)
-			writer.newline()
-			font[tag].toXML(writer, font)
-			writer.endtag(tag)
-			writer.newline()
-
-
 __all__ = [
 	'Options',
 	'Merger',
-	'Logger',
 	'main'
 ]
 
+@timer("make one with everything (TOTAL TIME)")
 def main(args=None):
+	from fontTools import configLogger
 
 	if args is None:
 		args = sys.argv[1:]
-
-	log = Logger()
-	args = log.parse_opts(args)
 
 	options = Options()
 	args = options.parse_opts(args)
@@ -936,14 +899,18 @@ def main(args=None):
 		print("usage: pyftmerge font...", file=sys.stderr)
 		sys.exit(1)
 
-	merger = Merger(options=options, log=log)
+	configLogger(level=logging.INFO if options.verbose else logging.WARNING)
+	if options.timing:
+		timer.logger.setLevel(logging.DEBUG)
+	else:
+		timer.logger.disabled = True
+
+	merger = Merger(options=options)
 	font = merger.merge(args)
 	outfile = 'merged.ttf'
-	font.save(outfile)
-	log.lapse("compile and save font")
+	with timer("compile and save font"):
+		font.save(outfile)
 
-	log.last_time = log.start_time
-	log.lapse("make one with everything(TOTAL TIME)")
 
 if __name__ == "__main__":
 	main()

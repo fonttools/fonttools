@@ -40,8 +40,8 @@ class LexerTest(unittest.TestCase):
         self.assertRaisesRegex(FeatureLibError,
                                "Expected glyph class", lex, "@ A")
         self.assertRaisesRegex(FeatureLibError,
-                               "not be longer than 30 characters",
-                               lex, "@a123456789.a123456789.a123456789.x")
+                               "not be longer than 63 characters",
+                               lex, "@" + ("A" * 64))
         self.assertRaisesRegex(FeatureLibError,
                                "Glyph class names must consist of",
                                lex, "@Ab:c")
@@ -65,6 +65,10 @@ class LexerTest(unittest.TestCase):
                          [(Lexer.NUMBER, 123), (Lexer.NUMBER, -456)])
         self.assertEqual(lex("0xCAFED00D"), [(Lexer.NUMBER, 0xCAFED00D)])
         self.assertEqual(lex("0xcafed00d"), [(Lexer.NUMBER, 0xCAFED00D)])
+
+    def test_float(self):
+        self.assertEqual(lex("1.23 -4.5"),
+                         [(Lexer.FLOAT, 1.23), (Lexer.FLOAT, -4.5)])
 
     def test_symbol(self):
         self.assertEqual(lex("a'"), [(Lexer.NAME, "a"), (Lexer.SYMBOL, "'")])

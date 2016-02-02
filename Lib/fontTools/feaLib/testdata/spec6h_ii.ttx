@@ -6,9 +6,7 @@
     <GlyphClassDef>
       <ClassDef glyph="acute" class="3"/>
       <ClassDef glyph="c" class="1"/>
-      <ClassDef glyph="cedilla" class="3"/>
       <ClassDef glyph="grave" class="3"/>
-      <ClassDef glyph="macron" class="3"/>
       <ClassDef glyph="o" class="1"/>
     </GlyphClassDef>
   </GDEF>
@@ -73,42 +71,26 @@
           <MarkCoverage>
             <Glyph value="grave"/>
             <Glyph value="acute"/>
-            <Glyph value="macron"/>
-            <Glyph value="cedilla"/>
           </MarkCoverage>
           <BaseCoverage>
             <Glyph value="c"/>
             <Glyph value="o"/>
           </BaseCoverage>
-          <!-- ClassCount=2 -->
+          <!-- ClassCount=1 -->
           <MarkArray>
-            <!-- MarkCount=4 -->
+            <!-- MarkCount=2 -->
             <MarkRecord index="0">
               <Class value="0"/>
               <MarkAnchor Format="1">
-                <XCoordinate value="500"/>
-                <YCoordinate value="800"/>
+                <XCoordinate value="150"/>
+                <YCoordinate value="-10"/>
               </MarkAnchor>
             </MarkRecord>
             <MarkRecord index="1">
               <Class value="0"/>
               <MarkAnchor Format="1">
-                <XCoordinate value="500"/>
-                <YCoordinate value="800"/>
-              </MarkAnchor>
-            </MarkRecord>
-            <MarkRecord index="2">
-              <Class value="0"/>
-              <MarkAnchor Format="1">
-                <XCoordinate value="500"/>
-                <YCoordinate value="820"/>
-              </MarkAnchor>
-            </MarkRecord>
-            <MarkRecord index="3">
-              <Class value="1"/>
-              <MarkAnchor Format="1">
-                <XCoordinate value="500"/>
-                <YCoordinate value="-5"/>
+                <XCoordinate value="150"/>
+                <YCoordinate value="-10"/>
               </MarkAnchor>
             </MarkRecord>
           </MarkArray>
@@ -116,22 +98,14 @@
             <!-- BaseCount=2 -->
             <BaseRecord index="0">
               <BaseAnchor index="0" Format="1">
-                <XCoordinate value="500"/>
-                <YCoordinate value="10"/>
-              </BaseAnchor>
-              <BaseAnchor index="1" Format="1">
-                <XCoordinate value="500"/>
-                <YCoordinate value="-10"/>
+                <XCoordinate value="250"/>
+                <YCoordinate value="450"/>
               </BaseAnchor>
             </BaseRecord>
             <BaseRecord index="1">
               <BaseAnchor index="0" Format="1">
-                <XCoordinate value="500"/>
-                <YCoordinate value="10"/>
-              </BaseAnchor>
-              <BaseAnchor index="1" Format="1">
-                <XCoordinate value="500"/>
-                <YCoordinate value="-10"/>
+                <XCoordinate value="250"/>
+                <YCoordinate value="450"/>
               </BaseAnchor>
             </BaseRecord>
           </BaseArray>
@@ -154,8 +128,6 @@
           <InputCoverage index="2">
             <Glyph value="grave"/>
             <Glyph value="acute"/>
-            <Glyph value="macron"/>
-            <Glyph value="cedilla"/>
           </InputCoverage>
           <!-- LookAheadGlyphCount=0 -->
           <!-- PosCount=2 -->

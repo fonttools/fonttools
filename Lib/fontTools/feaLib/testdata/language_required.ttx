@@ -74,9 +74,9 @@
         <!-- LookupType=4 -->
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
-        <LigatureSubst index="0" Format="1">
+        <LigatureSubst index="0">
           <LigatureSet glyph="D">
-            <Ligature components="E,U" glyph="D_E_U"/>
+            <Ligature components="E,U" glyph="D.sc"/>
           </LigatureSet>
         </LigatureSubst>
       </Lookup>
@@ -84,9 +84,9 @@
         <!-- LookupType=4 -->
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
-        <LigatureSubst index="0" Format="1">
+        <LigatureSubst index="0">
           <LigatureSet glyph="F">
-            <Ligature components="R,A" glyph="F_R_A"/>
+            <Ligature components="R,A" glyph="F.sc"/>
           </LigatureSet>
         </LigatureSubst>
       </Lookup>
@@ -94,9 +94,9 @@
         <!-- LookupType=4 -->
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
-        <LigatureSubst index="0" Format="1">
+        <LigatureSubst index="0">
           <LigatureSet glyph="I">
-            <Ligature components="T,A" glyph="I_T_A"/>
+            <Ligature components="T,A" glyph="I.sc"/>
           </LigatureSet>
         </LigatureSubst>
       </Lookup>

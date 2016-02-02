@@ -109,7 +109,14 @@ class LookupBlock(Block):
         builder.end_lookup_block()
 
 
+class TableBlock(Block):
+    def __init__(self, location, name):
+        Block.__init__(self, location)
+        self.name = name
+
+
 class GlyphClassDefinition(Statement):
+    """Example: @UPPERCASE = [A-Z];"""
     def __init__(self, location, name, glyphs):
         Statement.__init__(self, location)
         self.name = name
@@ -117,6 +124,24 @@ class GlyphClassDefinition(Statement):
 
     def glyphSet(self):
         return frozenset(self.glyphs)
+
+
+class GlyphClassDefStatement(Statement):
+    """Example: GlyphClassDef @UPPERCASE, [B], [C], [D];"""
+    def __init__(self, location, baseGlyphs, markGlyphs,
+                 ligatureGlyphs, componentGlyphs):
+        Statement.__init__(self, location)
+        self.baseGlyphs, self.markGlyphs = (baseGlyphs, markGlyphs)
+        self.ligatureGlyphs = ligatureGlyphs
+        self.componentGlyphs = componentGlyphs
+
+    def build(self, builder):
+        base = self.baseGlyphs.glyphSet() if self.baseGlyphs else set()
+        liga = self.ligatureGlyphs.glyphSet() if self.ligatureGlyphs else set()
+        mark = self.markGlyphs.glyphSet() if self.markGlyphs else set()
+        comp = (self.componentGlyphs.glyphSet()
+                if self.componentGlyphs else set())
+        builder.add_glyphClassDef(self.location, base, liga, mark, comp)
 
 
 # While glyph classes can be defined only once, the feature file format
@@ -137,7 +162,7 @@ class MarkClass(object):
         for glyph in definition.glyphSet():
             if glyph in self.definitions:
                 otherLoc = self.definitions[glyph].location
-                assert FeatureLibError(
+                raise FeatureLibError(
                     "Glyph %s already defined at %s:%d:%d" % (
                         glyph, otherLoc[0], otherLoc[1], otherLoc[2]),
                     definition.location)
@@ -159,12 +184,20 @@ class MarkClassDefinition(Statement):
 
 
 class AlternateSubstStatement(Statement):
-    def __init__(self, location, glyph, from_class):
+    def __init__(self, location, prefix, glyph, suffix, replacement):
         Statement.__init__(self, location)
-        self.glyph, self.from_class = (glyph, from_class)
+        self.prefix, self.glyph, self.suffix = (prefix, glyph, suffix)
+        self.replacement = replacement
 
     def build(self, builder):
-        builder.add_alternate_subst(self.location, self.glyph, self.from_class)
+        glyph = self.glyph.glyphSet()
+        assert len(glyph) == 1, glyph
+        glyph = list(glyph)[0]
+        prefix = [p.glyphSet() for p in self.prefix]
+        suffix = [s.glyphSet() for s in self.suffix]
+        replacement = self.replacement.glyphSet()
+        builder.add_alternate_subst(self.location, prefix, glyph, suffix,
+                                    replacement)
 
 
 class Anchor(Expression):
@@ -179,6 +212,16 @@ class AnchorDefinition(Statement):
     def __init__(self, location, name, x, y, contourpoint):
         Statement.__init__(self, location)
         self.name, self.x, self.y, self.contourpoint = name, x, y, contourpoint
+
+
+class AttachStatement(Statement):
+    def __init__(self, location, glyphs, contourPoints):
+        Statement.__init__(self, location)
+        self.glyphs, self.contourPoints = (glyphs, contourPoints)
+
+    def build(self, builder):
+        glyphs = self.glyphs.glyphSet()
+        builder.add_attach_points(self.location, glyphs, self.contourPoints)
 
 
 class ChainContextPosStatement(Statement):
@@ -198,8 +241,8 @@ class ChainContextPosStatement(Statement):
 class ChainContextSubstStatement(Statement):
     def __init__(self, location, prefix, glyphs, suffix, lookups):
         Statement.__init__(self, location)
-        self.glyphs, self.lookups = glyphs, lookups
-        self.prefix, self.suffix = prefix, suffix
+        self.prefix, self.glyphs, self.suffix = prefix, glyphs, suffix
+        self.lookups = lookups
 
     def build(self, builder):
         prefix = [p.glyphSet() for p in self.prefix]
@@ -218,6 +261,16 @@ class CursivePosStatement(Statement):
     def build(self, builder):
         builder.add_cursive_pos(
             self.location, self.glyphclass, self.entryAnchor, self.exitAnchor)
+
+
+class FeatureReferenceStatement(Statement):
+    """Example: feature salt;"""
+    def __init__(self, location, featureName):
+        Statement.__init__(self, location)
+        self.location, self.featureName = (location, featureName)
+
+    def build(self, builder):
+        builder.add_feature_reference(self.location, self.featureName)
 
 
 class LanguageStatement(Statement):
@@ -249,20 +302,47 @@ class IgnoreSubstitutionRule(Statement):
         self.prefix, self.glyphs, self.suffix = (prefix, glyphs, suffix)
 
 
-class LigatureSubstStatement(Statement):
-    def __init__(self, location, glyphs, replacement):
+class FontRevisionStatement(Statement):
+    def __init__(self, location, revision):
         Statement.__init__(self, location)
-        self.glyphs, self.replacement = (glyphs, replacement)
+        self.revision = revision
 
     def build(self, builder):
-        # OpenType feature file syntax, section 5.d, "Ligature substitution":
-        # "Since the OpenType specification does not allow ligature
-        # substitutions to be specified on target sequences that contain
-        # glyph classes, the implementation software will enumerate
-        # all specific glyph sequences if glyph classes are detected"
-        g = [g.glyphSet() for g in self.glyphs]
-        for glyphs in sorted(itertools.product(*g)):
-            builder.add_ligature_subst(self.location, glyphs, self.replacement)
+        builder.set_font_revision(self.location, self.revision)
+
+
+class LigatureCaretByIndexStatement(Statement):
+    def __init__(self, location, glyphs, carets):
+        Statement.__init__(self, location)
+        self.glyphs, self.carets = (glyphs, carets)
+
+    def build(self, builder):
+        glyphs = self.glyphs.glyphSet()
+        builder.add_ligatureCaretByIndex_(self.location, glyphs, self.carets)
+
+
+class LigatureCaretByPosStatement(Statement):
+    def __init__(self, location, glyphs, carets):
+        Statement.__init__(self, location)
+        self.glyphs, self.carets = (glyphs, carets)
+
+    def build(self, builder):
+        glyphs = self.glyphs.glyphSet()
+        builder.add_ligatureCaretByPos_(self.location, glyphs, self.carets)
+
+
+class LigatureSubstStatement(Statement):
+    def __init__(self, location, prefix, glyphs, suffix, replacement):
+        Statement.__init__(self, location)
+        self.prefix, self.glyphs, self.suffix = (prefix, glyphs, suffix)
+        self.replacement = replacement
+
+    def build(self, builder):
+        prefix = [p.glyphSet() for p in self.prefix]
+        glyphs = [g.glyphSet() for g in self.glyphs]
+        suffix = [s.glyphSet() for s in self.suffix]
+        builder.add_ligature_subst(
+            self.location, prefix, glyphs, suffix, self.replacement)
 
 
 class LookupFlagStatement(Statement):
@@ -289,8 +369,7 @@ class LookupReferenceStatement(Statement):
         self.location, self.lookup = (location, lookup)
 
     def build(self, builder):
-        for s in self.lookup.statements:
-            s.build(builder)
+        builder.add_lookup_call(self.lookup.name)
 
 
 class MarkBasePosStatement(Statement):
@@ -318,16 +397,19 @@ class MarkMarkPosStatement(Statement):
 
     def build(self, builder):
         builder.add_mark_mark_pos(self.location, self.baseMarks, self.marks)
-        pass
 
 
 class MultipleSubstStatement(Statement):
-    def __init__(self, location, glyph, replacement):
+    def __init__(self, location, prefix, glyph, suffix, replacement):
         Statement.__init__(self, location)
-        self.glyph, self.replacement = glyph, replacement
+        self.prefix, self.glyph, self.suffix = prefix, glyph, suffix
+        self.replacement = replacement
 
     def build(self, builder):
-        builder.add_multiple_subst(self.location, self.glyph, self.replacement)
+        prefix = [p.glyphSet() for p in self.prefix]
+        suffix = [s.glyphSet() for s in self.suffix]
+        builder.add_multiple_subst(
+            self.location, prefix, self.glyph, suffix, self.replacement)
 
 
 class PairPosStatement(Statement):
@@ -339,9 +421,24 @@ class PairPosStatement(Statement):
         self.glyphs2, self.valuerecord2 = glyphs2, valuerecord2
 
     def build(self, builder):
-        builder.add_pair_pos(self.location, self.enumerated,
-                             self.glyphs1.glyphSet(), self.valuerecord1,
-                             self.glyphs2.glyphSet(), self.valuerecord2)
+        if self.enumerated:
+            g = [self.glyphs1.glyphSet(), self.glyphs2.glyphSet()]
+            for glyph1, glyph2 in itertools.product(*g):
+                builder.add_specific_pair_pos(
+                    self.location, glyph1, self.valuerecord1,
+                    glyph2, self.valuerecord2)
+            return
+
+        is_specific = (isinstance(self.glyphs1, GlyphName) and
+                       isinstance(self.glyphs2, GlyphName))
+        if is_specific:
+            builder.add_specific_pair_pos(
+                self.location, self.glyphs1.glyph, self.valuerecord1,
+                self.glyphs2.glyph, self.valuerecord2)
+        else:
+            builder.add_class_pair_pos(
+                self.location, self.glyphs1.glyphSet(), self.valuerecord1,
+                self.glyphs2.glyphSet(), self.valuerecord2)
 
 
 class ReverseChainSingleSubstStatement(Statement):
@@ -358,12 +455,14 @@ class ReverseChainSingleSubstStatement(Statement):
 
 
 class SingleSubstStatement(Statement):
-    def __init__(self, location, mapping):
+    def __init__(self, location, mapping, prefix, suffix):
         Statement.__init__(self, location)
-        self.mapping = mapping
+        self.mapping, self.prefix, self.suffix = mapping, prefix, suffix
 
     def build(self, builder):
-        builder.add_single_subst(self.location, self.mapping)
+        prefix = [p.glyphSet() for p in self.prefix]
+        suffix = [s.glyphSet() for s in self.suffix]
+        builder.add_single_subst(self.location, prefix, suffix, self.mapping)
 
 
 class ScriptStatement(Statement):
@@ -376,13 +475,15 @@ class ScriptStatement(Statement):
 
 
 class SinglePosStatement(Statement):
-    def __init__(self, location, glyphs, valuerecord):
+    def __init__(self, location, pos, prefix, suffix):
         Statement.__init__(self, location)
-        self.glyphs, self.valuerecord = glyphs, valuerecord
+        self.pos, self.prefix, self.suffix = pos, prefix, suffix
 
     def build(self, builder):
-        for glyph in self.glyphs.glyphSet():
-            builder.add_single_pos(self.location, glyph, self.valuerecord)
+        prefix = [p.glyphSet() for p in self.prefix]
+        suffix = [s.glyphSet() for s in self.suffix]
+        pos = [(g.glyphSet(), value) for g, value in self.pos]
+        builder.add_single_pos(self.location, prefix, suffix, pos)
 
 
 class SubtableStatement(Statement):

@@ -15,7 +15,7 @@ class TTGlyphPenTest(unittest.TestCase):
         ttx_path = os.path.join(
             os.path.abspath(os.path.dirname(os.path.realpath(__file__))),
             '..', 'ttLib', 'testdata', filename)
-        font.importXML(ttx_path, quiet=True)
+        font.importXML(ttx_path)
 
         glyphSet = font.getGlyphSet()
         glyfTable = font['glyf']

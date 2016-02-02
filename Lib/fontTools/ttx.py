@@ -56,7 +56,7 @@ usage: ttx [options] inputfile1 [... inputfileN]
        If no export format is specified 'raw' format is used.
     -e Don't ignore decompilation errors, but show a full traceback
        and abort.
-    -y <number> Select font number for TrueType Collection,
+    -y <number> Select font number for TrueType Collection (.ttc/.otc),
        starting from 0.
     --unicodedata <UnicodeData.txt> Use custom database file to write
        character names in the comments of the cmap TTX output.
@@ -72,6 +72,8 @@ usage: ttx [options] inputfile1 [... inputfileN]
     --flavor <type> Specify flavor of output font file. May be 'woff'
       or 'woff2'. Note that WOFF2 requires the Brotli Python extension,
       available at https://github.com/google/brotli
+    --with-zopfli Use Zopfli instead of Zlib to compress WOFF. The Python
+      extension is available at https://github.com/anthrotype/py-zopfli
 """
 
 
@@ -81,15 +83,20 @@ from fontTools.ttLib import TTFont, TTLibError
 from fontTools.misc.macCreatorType import getMacCreatorAndType
 from fontTools.unicode import setUnicodeData
 from fontTools.misc.timeTools import timestampSinceEpoch
+from fontTools.misc.loggingTools import Timer
 import os
 import sys
 import getopt
 import re
+import logging
+
+
+log = logging.getLogger(__name__)
+
 
 def usage():
 	from fontTools import version
 	print(__doc__ % version)
-	sys.exit(2)
 
 
 numberAddedRE = re.compile("#\d+$")
@@ -128,6 +135,7 @@ class Options(object):
 	unicodedata = None
 	recalcTimestamp = False
 	flavor = None
+	useZopfli = False
 
 	def __init__(self, rawOptions, numFiles):
 		self.onlyTables = []
@@ -136,8 +144,7 @@ class Options(object):
 		for option, value in rawOptions:
 			# general options
 			if option == "-h":
-				from fontTools import version
-				print(__doc__ % version)
+				usage()
 				sys.exit(0)
 			elif option == "-d":
 				if not os.path.isdir(value):
@@ -187,13 +194,25 @@ class Options(object):
 				self.recalcTimestamp = True
 			elif option == "--flavor":
 				self.flavor = value
+			elif option == "--with-zopfli":
+				self.useZopfli = True
+		if self.verbose and self.quiet:
+			raise getopt.GetoptError("-q and -v options are mutually exclusive")
+		if self.verbose:
+			self.logLevel = logging.DEBUG
+		elif self.quiet:
+			self.logLevel = logging.WARNING
+		else:
+			self.logLevel = logging.INFO
 		if self.mergeFile and self.flavor:
-			print("-m and --flavor options are mutually exclusive")
+			raise getopt.GetoptError("-m and --flavor options are mutually exclusive")
 			sys.exit(2)
 		if self.onlyTables and self.skipTables:
 			raise getopt.GetoptError("-t and -x options are mutually exclusive")
 		if self.mergeFile and numFiles > 1:
 			raise getopt.GetoptError("Must specify exactly one TTX source file when using -m")
+		if self.flavor != 'woff' and self.useZopfli:
+			raise getopt.GetoptError("--with-zopfli option requires --flavor 'woff'")
 
 
 def ttList(input, output, options):
@@ -221,17 +240,15 @@ def ttList(input, output, options):
 	ttf.close()
 
 
+@Timer(log, 'Done dumping TTX in %(time).3f seconds')
 def ttDump(input, output, options):
-	if not options.quiet:
-		print('Dumping "%s" to "%s"...' % (input, output))
+	log.info('Dumping "%s" to "%s"...', input, output)
 	if options.unicodedata:
 		setUnicodeData(options.unicodedata)
-	ttf = TTFont(input, 0, verbose=options.verbose, allowVID=options.allowVID,
-			quiet=options.quiet,
+	ttf = TTFont(input, 0, allowVID=options.allowVID,
 			ignoreDecompileErrors=options.ignoreDecompileErrors,
 			fontNumber=options.fontNumber)
 	ttf.saveXML(output,
-			quiet=options.quiet,
 			tables=options.onlyTables,
 			skipTables=options.skipTables,
 			splitTables=options.splitTables,
@@ -240,14 +257,17 @@ def ttDump(input, output, options):
 	ttf.close()
 
 
+@Timer(log, 'Done compiling TTX in %(time).3f seconds')
 def ttCompile(input, output, options):
-	if not options.quiet:
-		print('Compiling "%s" to "%s"...' % (input, output))
+	log.info('Compiling "%s" to "%s"...' % (input, output))
+	if options.useZopfli:
+		from fontTools.ttLib import sfnt
+		sfnt.USE_ZOPFLI = True
 	ttf = TTFont(options.mergeFile, flavor=options.flavor,
 			recalcBBoxes=options.recalcBBoxes,
 			recalcTimestamp=options.recalcTimestamp,
-			verbose=options.verbose, allowVID=options.allowVID)
-	ttf.importXML(input, quiet=options.quiet)
+			allowVID=options.allowVID)
+	ttf.importXML(input)
 
 	if not options.recalcTimestamp:
 		# use TTX file modification time for head "modified" timestamp
@@ -255,10 +275,6 @@ def ttCompile(input, output, options):
 		ttf['head'].modified = timestampSinceEpoch(mtime)
 
 	ttf.save(output)
-
-	if options.verbose:
-		import time
-		print("finished at", time.strftime("%H:%M:%S", time.localtime(time.time())))
 
 
 def guessFileType(fileName):
@@ -296,15 +312,19 @@ def guessFileType(fileName):
 
 def parseOptions(args):
 	rawOptions, files = getopt.getopt(args, "ld:o:fvqht:x:sim:z:baey:",
-			['unicodedata=', "recalc-timestamp", 'flavor='])
-
-	if not files:
-		raise getopt.GetoptError('Must specify at least one input file')
+			['unicodedata=', "recalc-timestamp", 'flavor=',
+			 'with-zopfli'])
 
 	options = Options(rawOptions, len(files))
 	jobs = []
 
+	if not files:
+		raise getopt.GetoptError('Must specify at least one input file')
+
 	for input in files:
+		if not os.path.isfile(input):
+			raise getopt.GetoptError('File not found: "%s"' % input)
+			continue
 		tp = guessFileType(input)
 		if tp in ("OTF", "TTF", "TTC", "WOFF", "WOFF2"):
 			extension = ".ttx"
@@ -319,7 +339,7 @@ def parseOptions(args):
 			extension = "."+options.flavor if options.flavor else ".otf"
 			action = ttCompile
 		else:
-			print('Unknown file type: "%s"' % input)
+			raise getopt.GetoptError('Unknown file type: "%s"' % input)
 			continue
 
 		if options.outputFile:
@@ -342,37 +362,43 @@ def waitForKeyPress():
 	"""Force the DOS Prompt window to stay open so the user gets
 	a chance to see what's wrong."""
 	import msvcrt
-	print('(Hit any key to exit)')
+	print('(Hit any key to exit)', file=sys.stderr)
 	while not msvcrt.kbhit():
 		pass
 
 
 def main(args=None):
+	from fontTools import configLogger
+
 	if args is None:
 		args = sys.argv[1:]
 	try:
 		jobs, options = parseOptions(args)
 	except getopt.GetoptError as e:
-		print('error:', e, file=sys.stderr)
 		usage()
+		print("ERROR:", e, file=sys.stderr)
+		sys.exit(2)
+
+	configLogger(level=options.logLevel)
+
 	try:
 		process(jobs, options)
 	except KeyboardInterrupt:
-		print("(Cancelled.)")
+		log.error("(Cancelled.)")
+		sys.exit(1)
 	except SystemExit:
 		if sys.platform == "win32":
 			waitForKeyPress()
 		else:
 			raise
 	except TTLibError as e:
-		print("Error:",e)
+		log.error(e)
+		sys.exit(1)
 	except:
+		log.exception('Unhandled exception has occurred')
 		if sys.platform == "win32":
-			import traceback
-			traceback.print_exc()
 			waitForKeyPress()
-		else:
-			raise
+		sys.exit(1)
 
 
 if __name__ == "__main__":

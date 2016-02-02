@@ -9,6 +9,10 @@ import sys
 import struct
 import array
 import operator
+import logging
+
+
+log = logging.getLogger(__name__)
 
 
 class table__c_m_a_p(DefaultTable.DefaultTable):
@@ -51,7 +55,10 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
 				format, length = struct.unpack(">HL", data[offset:offset+6])
 
 			if not length:
-				print("Error: cmap subtable is reported as having zero length: platformID %s, platEncID %s,  format %s offset %s. Skipping table." % (platformID, platEncID,format, offset))
+				log.error(
+					"cmap subtable is reported as having zero length: platformID %s, "
+					"platEncID %s, format %s offset %s. Skipping table.",
+					platformID, platEncID, format, offset)
 				continue
 			table = CmapSubtable.newSubtable(format)
 			table.platformID = platformID
@@ -1258,9 +1265,8 @@ class cmap_format_14(CmapSubtable):
 		data = bytesjoin(varSelectorRecords) + bytesjoin(data)
 		self.length = 10 + len(data)
 		headerdata = struct.pack(">HLL", self.format, self.length, self.numVarSelectorRecords)
-		self.data = headerdata + data
 
-		return self.data
+		return headerdata + data
 
 
 class cmap_format_unknown(CmapSubtable):

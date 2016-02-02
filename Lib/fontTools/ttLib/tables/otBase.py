@@ -3,6 +3,9 @@ from fontTools.misc.py23 import *
 from .DefaultTable import DefaultTable
 import array
 import struct
+import logging
+
+log = logging.getLogger(__name__)
 
 class OverflowErrorRecord(object):
 	def __init__(self, overflowTuple):
@@ -46,12 +49,12 @@ class BaseTTXConverter(DefaultTable):
 		if cachingStats:
 			stats = sorted([(v, k) for k, v in cachingStats.items()])
 			stats.reverse()
-			print("cachingsstats for ", self.tableTag)
+			log.debug("cachingStats for %s", self.tableTag)
 			for v, k in stats:
 				if v < 2:
 					break
-				print(v, k)
-			print("---", len(stats))
+				log.debug("%s %s", v, k)
+			log.debug("--- %s", len(stats))
 
 	def compile(self, font):
 		""" Create a top-level OTFWriter for the GPOS/GSUB table.
@@ -92,7 +95,7 @@ class BaseTTXConverter(DefaultTable):
 					raise # Oh well...
 
 				overflowRecord = e.value
-				print("Attempting to fix OTLOffsetOverflowError", e)
+				log.warning("Attempting to fix OTLOffsetOverflowError %s", e)
 				lastItem = overflowRecord
 
 				ok = 0
@@ -645,7 +648,7 @@ class BaseTable(object):
 
 		self.writeFormat(writer)
 		for conv in self.getConverters():
-			value = table.get(conv.name)
+			value = table.get(conv.name) # TODO Handle defaults instead of defaulting to None!
 			if conv.repeat:
 				if value is None:
 					value = []
@@ -655,7 +658,14 @@ class BaseTable(object):
 				else:
 					# conv.repeat is a propagated count
 					writer[conv.repeat].setValue(countValue)
-				conv.writeArray(writer, font, table, value)
+				values = value
+				for i, value in enumerate(values):
+					try:
+						conv.write(writer, font, table, value, i)
+					except Exception as e:
+						name = value.__class__.__name__ if value is not None else conv.name
+						e.args = e.args + (name+'['+str(i)+']',)
+						raise
 			elif conv.isCount:
 				# Special-case Count values.
 				# Assumption: a Count field will *always* precede
@@ -675,7 +685,12 @@ class BaseTable(object):
 			else:
 				if conv.aux and not eval(conv.aux, None, table):
 					continue
-				conv.write(writer, font, table, value)
+				try:
+					conv.write(writer, font, table, value)
+				except Exception as e:
+					name = value.__class__.__name__ if value is not None else conv.name
+					e.args = e.args + (name,)
+					raise
 				if conv.isPropagated:
 					writer[conv.name] = value
 
@@ -709,7 +724,7 @@ class BaseTable(object):
 		# do it ourselves. I think I'm getting schizophrenic...
 		for conv in self.getConverters():
 			if conv.repeat:
-				value = getattr(self, conv.name)
+				value = getattr(self, conv.name, [])
 				for i in range(len(value)):
 					item = value[i]
 					conv.xmlWrite(xmlWriter, font, item, conv.name,
@@ -717,7 +732,7 @@ class BaseTable(object):
 			else:
 				if conv.aux and not eval(conv.aux, None, vars(self)):
 					continue
-				value = getattr(self, conv.name)
+				value = getattr(self, conv.name, None) # TODO Handle defaults instead of defaulting to None!
 				conv.xmlWrite(xmlWriter, font, value, conv.name, [])
 
 	def fromXML(self, name, attrs, content, font):
@@ -770,7 +785,7 @@ class FormatSwitchingBaseTable(BaseTable):
 		writer.writeUShort(self.Format)
 
 	def toXML(self, xmlWriter, font, attrs=None, name=None):
-		BaseTable.toXML(self, xmlWriter, font, attrs, name=self.__class__.__name__)
+		BaseTable.toXML(self, xmlWriter, font, attrs, name)
 
 
 #
@@ -891,7 +906,7 @@ class ValueRecord(object):
 			xmlWriter.newline()
 			for name, deviceRecord in deviceItems:
 				if deviceRecord is not None:
-					deviceRecord.toXML(xmlWriter, font)
+					deviceRecord.toXML(xmlWriter, font, name=name)
 			xmlWriter.endtag(valueName)
 			xmlWriter.newline()
 		else:

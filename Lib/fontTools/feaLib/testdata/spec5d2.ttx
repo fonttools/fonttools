@@ -41,7 +41,7 @@
         <!-- LookupType=4 -->
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
-        <LigatureSubst index="0" Format="1">
+        <LigatureSubst index="0">
           <LigatureSet glyph="f">
             <Ligature components="f,i" glyph="f_f_i"/>
             <Ligature components="f" glyph="f_f"/>

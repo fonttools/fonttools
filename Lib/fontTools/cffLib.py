@@ -6,8 +6,12 @@ from fontTools.misc import sstruct
 from fontTools.misc import psCharStrings
 from fontTools.misc.textTools import safeEval
 import struct
+import logging
 
-DEBUG = 0
+
+# mute cffLib debug messages when running ttx in verbose mode
+DEBUG = logging.DEBUG - 1
+log = logging.getLogger(__name__)
 
 
 cffHeaderFormat = """
@@ -132,8 +136,7 @@ class CFFWriter(object):
 		lastPosList = None
 		count = 1
 		while True:
-			if DEBUG:
-				print("CFFWriter.toFile() iteration:", count)
+			log.log(DEBUG, "CFFWriter.toFile() iteration: %d", count)
 			count = count + 1
 			pos = 0
 			posList = [pos]
@@ -149,8 +152,7 @@ class CFFWriter(object):
 			if posList == lastPosList:
 				break
 			lastPosList = posList
-		if DEBUG:
-			print("CFFWriter.toFile() writing to file.")
+		log.log(DEBUG, "CFFWriter.toFile() writing to file.")
 		begin = file.tell()
 		posList = [0]
 		for item in self.data:
@@ -308,16 +310,14 @@ class Index(object):
 		name = self.__class__.__name__
 		if file is None:
 			return
-		if DEBUG:
-			print("loading %s at %s" % (name, file.tell()))
+		log.log(DEBUG, "loading %s at %s", name, file.tell())
 		self.file = file
 		count = readCard16(file)
 		if count == 0:
 			return
 		self.items = [None] * count
 		offSize = readCard8(file)
-		if DEBUG:
-			print("    index count: %s offSize: %s" % (count, offSize))
+		log.log(DEBUG, "    index count: %s offSize: %s", count, offSize)
 		assert offSize <= 4, "offSize too large: %s" % offSize
 		self.offsets = offsets = []
 		pad = b'\0' * (4 - offSize)
@@ -328,8 +328,7 @@ class Index(object):
 			offsets.append(int(offset))
 		self.offsetBase = file.tell() - 1
 		file.seek(self.offsetBase + offsets[-1])  # pretend we've read the whole lot
-		if DEBUG:
-			print("    end of %s at %s" % (name, file.tell()))
+		log.log(DEBUG, "    end of %s at %s", name, file.tell())
 
 	def __len__(self):
 		return len(self.items)
@@ -784,8 +783,7 @@ class CharsetConverter(object):
 			numGlyphs = parent.numGlyphs
 			file = parent.file
 			file.seek(value)
-			if DEBUG:
-				print("loading charset at %s" % value)
+			log.log(DEBUG, "loading charset at %s", value)
 			format = readCard8(file)
 			if format == 0:
 				charset = parseCharset0(numGlyphs, file, parent.strings, isCID)
@@ -794,8 +792,7 @@ class CharsetConverter(object):
 			else:
 				raise NotImplementedError
 			assert len(charset) == numGlyphs
-			if DEBUG:
-				print("    charset end at %s" % file.tell())
+			log.log(DEBUG, "    charset end at %s", file.tell())
 		else: # offset == 0 -> no charset data.
 			if isCID or "CharStrings" not in parent.rawDict:
 				assert value == 0 # We get here only when processing fontDicts from the FDArray of CFF-CID fonts. Only the real topDict references the chrset.
@@ -964,8 +961,7 @@ class EncodingConverter(SimpleConverter):
 			assert value > 1
 			file = parent.file
 			file.seek(value)
-			if DEBUG:
-				print("loading Encoding at %s" % value)
+			log.log(DEBUG, "loading Encoding at %s", value)
 			fmt = readCard8(file)
 			haveSupplement = fmt & 0x80
 			if haveSupplement:
@@ -1335,9 +1331,7 @@ class DictCompiler(object):
 		return len(self.compile("getDataLength"))
 
 	def compile(self, reason):
-		if DEBUG:
-			print("-- compiling %s for %s" % (self.__class__.__name__, reason))
-			print("in baseDict: ", self)
+		log.log(DEBUG, "-- compiling %s for %s", self.__class__.__name__, reason)
 		rawDict = self.rawDict
 		data = []
 		for name in self.dictObj.order:
@@ -1468,16 +1462,15 @@ class BaseDict(object):
 
 	def __init__(self, strings=None, file=None, offset=None):
 		self.rawDict = {}
-		if DEBUG:
-			print("loading %s at %s" % (self.__class__.__name__, offset))
+		if offset is not None:
+			log.log(DEBUG, "loading %s at %s", self.__class__.__name__, offset)
 		self.file = file
 		self.offset = offset
 		self.strings = strings
 		self.skipNames = []
 
 	def decompile(self, data):
-		if DEBUG:
-			print("    length %s is %s" % (self.__class__.__name__, len(data)))
+		log.log(DEBUG, "    length %s is %d", self.__class__.__name__, len(data))
 		dec = self.decompilerClass(self.strings)
 		dec.decompile(data)
 		self.rawDict = dec.getDict()
@@ -1558,7 +1551,7 @@ class TopDict(BaseDict):
 			try:
 				charString.decompile()
 			except:
-				print("Error in charstring ", i)
+				log.error("Error in charstring %s", i)
 				import sys
 				typ, value = sys.exc_info()[0:2]
 				raise typ(value)

@@ -2,7 +2,6 @@ from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools import subset
 from fontTools.ttLib import TTFont
-import codecs
 import difflib
 import os
 import shutil
@@ -41,7 +40,7 @@ class SubsetTest(unittest.TestCase):
 
     def read_ttx(self, path):
         lines = []
-        with codecs.open(path, "r", "utf-8") as ttx:
+        with open(path, "r", encoding="utf-8") as ttx:
             for line in ttx.readlines():
                 # Elide ttFont attributes because ttLibVersion may change,
                 # and use os-native line separators so we can run difflib.
@@ -53,7 +52,7 @@ class SubsetTest(unittest.TestCase):
 
     def expect_ttx(self, font, expected_ttx, tables):
         path = self.temp_path(suffix=".ttx")
-        font.saveXML(path, quiet=True, tables=tables)
+        font.saveXML(path, tables=tables)
         actual = self.read_ttx(path)
         expected = self.read_ttx(expected_ttx)
         if actual != expected:
@@ -65,7 +64,7 @@ class SubsetTest(unittest.TestCase):
     def compile_font(self, path, suffix):
         savepath = self.temp_path(suffix=suffix)
         font = TTFont(recalcBBoxes=False, recalcTimestamp=False)
-        font.importXML(path, quiet=True)
+        font.importXML(path)
         font.save(savepath, reorderTables=None)
         return font, savepath
 
@@ -100,6 +99,13 @@ class SubsetTest(unittest.TestCase):
         subset.main([fontpath, "--glyphs=smileface", "--output-file=%s" % subsetpath])
         subsetfont = TTFont(subsetpath)
         self.expect_ttx(subsetfont, self.getpath("expect_keep_colr.ttx"), ["GlyphOrder", "hmtx", "glyf", "COLR", "CPAL"])
+
+    def test_subset_math(self):
+        _, fontpath = self.compile_font(self.getpath("TestMATH-Regular.ttx"), ".ttf")
+        subsetpath = self.temp_path(".ttf")
+        subset.main([fontpath, "--unicodes=U+0041,U+0028,U+0302,U+1D400,U+1D435", "--output-file=%s" % subsetpath])
+        subsetfont = TTFont(subsetpath)
+        self.expect_ttx(subsetfont, self.getpath("expect_keep_math.ttx"), ["GlyphOrder", "CFF ", "MATH", "hmtx"])
 
     def test_options(self):
         # https://github.com/behdad/fonttools/issues/413

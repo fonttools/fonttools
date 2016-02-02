@@ -4,7 +4,10 @@ from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval
+import logging
 
+
+log = logging.getLogger(__name__)
 
 bigGlyphMetricsFormat = """
   > # big endian
@@ -48,7 +51,7 @@ class BitmapGlyphMetrics(object):
 			if name in metricNames:
 				vars(self)[name] = safeEval(attrs['value'])
 			else:
-				print("Warning: unknown name '%s' being ignored in %s." % name, self.__class__.__name__)
+				log.warning("unknown name '%s' being ignored in %s.", name, self.__class__.__name__)
 
 
 class BigGlyphMetrics(BitmapGlyphMetrics):

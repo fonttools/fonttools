@@ -1,13 +1,14 @@
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
+from fontTools.misc.py23 import open
 from fontTools.feaLib.error import FeatureLibError
-import codecs
 import re
 import os
 
 
 class Lexer(object):
     NUMBER = "NUMBER"
+    FLOAT = "FLOAT"
     STRING = "STRING"
     NAME = "NAME"
     FILENAME = "FILENAME"
@@ -101,9 +102,9 @@ class Lexer(object):
             glyphclass = text[start + 1:self.pos_]
             if len(glyphclass) < 1:
                 raise FeatureLibError("Expected glyph class name", location)
-            if len(glyphclass) > 30:
+            if len(glyphclass) > 63:
                 raise FeatureLibError(
-                    "Glyph class names must not be longer than 30 characters",
+                    "Glyph class names must not be longer than 63 characters",
                     location)
             if not Lexer.RE_GLYPHCLASS.match(glyphclass):
                 raise FeatureLibError(
@@ -123,11 +124,19 @@ class Lexer(object):
             return (Lexer.NUMBER, int(text[start:self.pos_], 16), location)
         if cur_char in Lexer.CHAR_DIGIT_:
             self.scan_over_(Lexer.CHAR_DIGIT_)
-            return (Lexer.NUMBER, int(text[start:self.pos_], 10), location)
+            if next_char != ".":
+                return (Lexer.NUMBER, int(text[start:self.pos_], 10), location)
+            self.scan_over_(".")
+            self.scan_over_(Lexer.CHAR_DIGIT_)
+            return (Lexer.FLOAT, float(text[start:self.pos_]), location)
         if cur_char == "-" and next_char in Lexer.CHAR_DIGIT_:
             self.pos_ += 1
             self.scan_over_(Lexer.CHAR_DIGIT_)
-            return (Lexer.NUMBER, int(text[start:self.pos_], 10), location)
+            if self.pos_ >= limit or text[self.pos_] != ".":
+                return (Lexer.NUMBER, int(text[start:self.pos_], 10), location)
+            self.scan_over_(".")
+            self.scan_over_(Lexer.CHAR_DIGIT_)
+            return (Lexer.FLOAT, float(text[start:self.pos_]), location)
         if cur_char in Lexer.CHAR_SYMBOL_:
             self.pos_ += 1
             return (Lexer.SYMBOL, cur_char, location)
@@ -195,7 +204,7 @@ class IncludingLexer(object):
     @staticmethod
     def make_lexer_(filename, location):
         try:
-            with codecs.open(filename, "rb", "utf-8") as f:
+            with open(filename, "r", encoding="utf-8") as f:
                 return Lexer(f.read(), filename)
         except IOError as err:
             raise FeatureLibError(str(err), location)

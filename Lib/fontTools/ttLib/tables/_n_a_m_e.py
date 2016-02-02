@@ -5,6 +5,10 @@ from fontTools.misc.textTools import safeEval
 from fontTools.misc.encodingTools import getEncoding
 from . import DefaultTable
 import struct
+import logging
+
+
+log = logging.getLogger(__name__)
 
 nameRecordFormat = """
 		>	# big endian
@@ -25,8 +29,9 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 		format, n, stringOffset = struct.unpack(">HHH", data[:6])
 		expectedStringOffset = 6 + n * nameRecordSize
 		if stringOffset != expectedStringOffset:
-			# XXX we need a warn function
-			print("Warning: 'name' table stringOffset incorrect. Expected: %s; Actual: %s" % (expectedStringOffset, stringOffset))
+			log.error(
+				"'name' table stringOffset incorrect. Expected: %s; Actual: %s",
+				expectedStringOffset, stringOffset)
 		stringData = data[stringOffset:]
 		data = data[6:]
 		self.names = []
@@ -115,17 +120,14 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 		if not hasattr(self, 'names'):
 			self.names = []
 		namerecord = self.getName(nameID, platformID, platEncID, langID)
-		exists = False if namerecord is None else True
-		if not exists:
+		if namerecord is None:
 			namerecord = NameRecord()
 			namerecord.nameID = nameID
 			namerecord.platformID = platformID
 			namerecord.platEncID = platEncID
 			namerecord.langID = langID
-		encoding = namerecord.getEncoding()
-		namerecord.string = string.encode(encoding)
-		if not exists:
 			self.names.append(namerecord)
+		namerecord.string = string.encode(namerecord.getEncoding())
 
 
 class NameRecord(object):
@@ -142,10 +144,7 @@ class NameRecord(object):
 		return self.getEncoding(None) in ['utf_16_be', 'ucs2be', 'ascii', 'latin1']
 
 	def __str__(self):
-		try:
-			return self.toUnicode()
-		except UnicodeDecodeError:
-			return str(self.string)
+		return self.toStr(errors='backslashreplace')
 
 	def isUnicode(self):
 		return (self.platformID == 0 or
@@ -214,6 +213,14 @@ class NameRecord(object):
 		UnicodeEncodeError exception.
 		"""
 		return tobytes(self.string, encoding=self.getEncoding(), errors=errors)
+
+	def toStr(self, errors='strict'):
+		if str == bytes:
+			# python 2
+			return self.toBytes(errors)
+		else:
+			# python 3
+			return self.toUnicode(errors)
 
 	def toXML(self, writer, ttFont):
 		try:

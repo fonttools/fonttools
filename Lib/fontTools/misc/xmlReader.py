@@ -4,7 +4,10 @@ from fontTools import ttLib
 from fontTools.misc.textTools import safeEval
 from fontTools.ttLib.tables.DefaultTable import DefaultTable
 import os
+import logging
 
+
+log = logging.getLogger(__name__)
 
 class TTXParseError(Exception): pass
 
@@ -13,7 +16,7 @@ BUFSIZE = 0x4000
 
 class XMLReader(object):
 
-	def __init__(self, fileOrPath, ttFont, progress=None, quiet=False):
+	def __init__(self, fileOrPath, ttFont, progress=None, quiet=None):
 		if fileOrPath == '-':
 			fileOrPath = sys.stdin
 		if not hasattr(fileOrPath, "read"):
@@ -25,7 +28,10 @@ class XMLReader(object):
 			self._closeStream = False
 		self.ttFont = ttFont
 		self.progress = progress
-		self.quiet = quiet
+		if quiet is not None:
+			from fontTools.misc.loggingTools import deprecateArgument
+			deprecateArgument("quiet", "configure logging instead")
+			self.quiet = quiet
 		self.root = None
 		self.contentStack = []
 		self.stackSize = 0
@@ -83,7 +89,7 @@ class XMLReader(object):
 					# else fall back to using the current working directory
 					dirname = os.getcwd()
 				subFile = os.path.join(dirname, subFile)
-				subReader = XMLReader(subFile, self.ttFont, self.progress, self.quiet)
+				subReader = XMLReader(subFile, self.ttFont, self.progress)
 				subReader.read()
 				self.contentStack.append([])
 				return
@@ -91,11 +97,7 @@ class XMLReader(object):
 			msg = "Parsing '%s' table..." % tag
 			if self.progress:
 				self.progress.setLabel(msg)
-			elif self.ttFont.verbose:
-				ttLib.debugmsg(msg)
-			else:
-				if not self.quiet:
-					print(msg)
+			log.info(msg)
 			if tag == "GlyphOrder":
 				tableClass = ttLib.GlyphOrder
 			elif "ERROR" in attrs or ('raw' in attrs and safeEval(attrs['raw'])):

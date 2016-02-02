@@ -1,0 +1,105 @@
+
+from fontTools.otlLib import builder as builder
+
+GDEF::mark filtering sets
+name::
+
+lookup_flags = builder.LOOKUP_FLAG_IGNORE_MARKS | builder.LOOKUP_FLAG_RTL
+smcp_subtable = builder.buildSingleSubstitute({'a':'a.scmp'})
+smcp_lookup = builder.buildLookup([smcp_subtable], lookup_flags=lookup_flags, mark_filter_set=int)
+
+lookups = [smcp_lookup, ...]
+
+scmp_feature = builder.buildFeature('smcp', [scmp_lookup], lookup_list=lookups)
+scmp_feature = builder.buildFeature('smcp', [0])
+
+features = [smcp_feature]
+
+default_langsys = builder.buildLangSys(set([scmp_feature]), requiredFeature=None, featureOrder=features)
+default_langsys = builder.buildLangSys(set([0]), requiredFeature=None)
+
+script = 
+
+
+#GSUB:
+
+builder.buildSingleSubst({'a':'a.scmp'})
+builder.buildLigatureSubst({('f','i'):'fi'})
+builder.buildMultipleSubst({'a':('a0','a1')})
+builder.buildAlternateSubst({'a':('a.0','a.1')})
+
+
+class ChainSequence : namedtuple(['backtrack', 'input', 'lookahead')])
+	pass
+
+ChainSequence(backtrack=..., input=..., lookahead=...)
+
+klass0 = frozenset()
+
+builder.buildChainContextGlyphs(
+	[
+		( (None, ('f','f','i'), (,)), ( (1,lookup_fi), (1,lookup_2) ) ),
+	],
+	glyphMap
+)
+builder.buildChainContextClass(
+	[
+		( (None, (2,0,1), (,)), ( (1,lookup_fi), (1,lookup_2) ) ),
+	],
+	klasses = ( backtrackClass, ... ),
+	glyphMap
+)
+builder.buildChainContextCoverage(
+	( (None, (frozenset('f'),frozenset('f'),frozenset('i')), (,)), ( (1,lookup_fi), (1,lookup_2) ) ),
+	glyphMap
+)
+builder.buildExtension(...)
+
+#GPOS:
+device = builder.buildDevice()
+builder.buildAnchor(100, -200) or (100,-200)
+builder.buildAnchor(100, -200, device=device)
+builder.buildAnchor(100, -200, point=2)
+
+valueRecord = builder.buildValue({'XAdvance':-200, ...})
+
+builder.buildSinglePos({'a':valueRecord})
+builder.buildPairPosGlyphs(
+	{
+		('a','b'): (valueRecord1,valueRecord2),
+	},
+	glyphMap,
+	, valueFormat1=None, valueFormat2=None
+)
+builder.buildPairPosClasses(
+	{
+		(frozenset(['a']),frozenset(['b'])): (valueRecord1,valueRecord2),
+	},
+	glyphMap,
+	, valueFormat1=None, valueFormat2=None
+)
+
+builder.buildCursivePos(
+	{
+		'alef': (entry,exit),
+	}
+	glyphMap
+)
+builder.buildMarkBasePos(
+	marks = {
+		'mark1': (klass, anchor),
+	},
+	bases = {
+		'base0': [anchor0, anchor1, anchor2],
+	},
+	glyphMap
+)
+builder.buildMarkBasePos(
+	marks = {
+		'mark1': (name, anchor),
+	},
+	bases = {
+		'base0': {'top':anchor0, 'left':anchor1},
+	},
+	glyphMap
+)
