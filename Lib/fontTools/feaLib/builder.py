@@ -617,12 +617,12 @@ class Builder(object):
 
     def add_class_pair_pos(self, location, glyphclass1, value1,
                            glyphclass2, value2):
-        lookup = self.get_lookup_(location, ClassPairPosBuilder)
-        lookup.add_pair(location, glyphclass1, value1, glyphclass2, value2)
+        lookup = self.get_lookup_(location, PairPosBuilder)
+        lookup.addClassPair(location, glyphclass1, value1, glyphclass2, value2)
 
     def add_specific_pair_pos(self, location, glyph1, value1, glyph2, value2):
-        lookup = self.get_lookup_(location, SpecificPairPosBuilder)
-        lookup.add_pair(location, glyph1, value1, glyph2, value2)
+        lookup = self.get_lookup_(location, PairPosBuilder)
+        lookup.addGlyphPair(location, glyph1, value1, glyph2, value2)
 
     def add_single_pos(self, location, prefix, suffix, pos):
         if prefix or suffix:
@@ -885,34 +885,6 @@ class MultipleSubstBuilder(LookupBuilder):
         return self.buildLookup_([subtable])
 
 
-class SpecificPairPosBuilder(LookupBuilder):
-    def __init__(self, font, location):
-        LookupBuilder.__init__(self, font, location, 'GPOS', 2)
-        self.pairs = {}  # (glyph1, glyph2) -> (value1, value2)
-        self.locations = {}  # (glyph1, glyph2) -> (filepath, line, column)
-
-    def add_pair(self, location, glyph1, value1, glyph2, value2):
-        key = (glyph1, glyph2)
-        oldValue = self.pairs.get(key, None)
-        if oldValue is not None:
-            otherLoc = self.locations[key]
-            raise FeatureLibError(
-                'Already defined position for pair %s %s at %s:%d:%d'
-                % (glyph1, glyph2, otherLoc[0], otherLoc[1], otherLoc[2]),
-                location)
-        val1, _ = makeOpenTypeValueRecord(value1)
-        val2, _ = makeOpenTypeValueRecord(value2)
-        self.pairs[key] = (val1, val2)
-        self.locations[key] = location
-
-    def equals(self, other):
-        return (LookupBuilder.equals(self, other) and self.pairs == other.pairs)
-
-    def build(self):
-        subtables = otl.buildPairPosGlyphs(self.pairs, self.glyphMap)
-        return self.buildLookup_(subtables)
-
-
 class CursivePosBuilder(LookupBuilder):
     def __init__(self, font, location):
         LookupBuilder.__init__(self, font, location, 'GPOS', 3)
@@ -1107,29 +1079,45 @@ class ClassPairPosSubtableBuilder(object):
         self.subtables_.append(st)
 
 
-class ClassPairPosBuilder(LookupBuilder):
+class PairPosBuilder(LookupBuilder):
     SUBTABLE_BREAK_ = "SUBTABLE_BREAK"
 
     def __init__(self, font, location):
         LookupBuilder.__init__(self, font, location, 'GPOS', 2)
-        self.pairs = []  # [(location, gc1, value1, gc2, value2)*]
+        self.pairs = []  # [(gc1, value1, gc2, value2)*]
+        self.glyphPairs = {}  # (glyph1, glyph2) --> (value1, value2)
+        self.locations = {}  # (gc1, gc2) --> (filepath, line, column)
 
-    def add_pair(self, location, glyphclass1, value1, glyphclass2, value2):
-        self.pairs.append((location, glyphclass1, value1, glyphclass2, value2))
+    def addClassPair(self, location, glyphclass1, value1, glyphclass2, value2):
+        self.pairs.append((glyphclass1, value1, glyphclass2, value2))
+
+    def addGlyphPair(self, location, glyph1, value1, glyph2, value2):
+        key = (glyph1, glyph2)
+        oldValue = self.glyphPairs.get(key, None)
+        if oldValue is not None:
+            otherLoc = self.locations[key]
+            raise FeatureLibError(
+                'Already defined position for pair %s %s at %s:%d:%d'
+                % (glyph1, glyph2, otherLoc[0], otherLoc[1], otherLoc[2]),
+                location)
+        val1, _ = makeOpenTypeValueRecord(value1)
+        val2, _ = makeOpenTypeValueRecord(value2)
+        self.glyphPairs[key] = (val1, val2)
+        self.locations[key] = location
 
     def add_subtable_break(self, location):
-        self.pairs.append((location,
-                           self.SUBTABLE_BREAK_, self.SUBTABLE_BREAK_,
+        self.pairs.append((self.SUBTABLE_BREAK_, self.SUBTABLE_BREAK_,
                            self.SUBTABLE_BREAK_, self.SUBTABLE_BREAK_))
 
     def equals(self, other):
         return (LookupBuilder.equals(self, other) and
+                self.glyphPairs == other.glyphPairs and
                 self.pairs == other.pairs)
 
     def build(self):
         builders = {}
         builder = None
-        for location, glyphclass1, value1, glyphclass2, value2 in self.pairs:
+        for glyphclass1, value1, glyphclass2, value2 in self.pairs:
             if glyphclass1 is self.SUBTABLE_BREAK_:
                 if builder is not None:
                     builder.addSubtableBreak()
@@ -1143,6 +1131,9 @@ class ClassPairPosBuilder(LookupBuilder):
                 builders[(valFormat1, valFormat2)] = builder
             builder.addPair(glyphclass1, val1, glyphclass2, val2)
         subtables = []
+        if self.glyphPairs:
+            subtables.extend(
+                otl.buildPairPosGlyphs(self.glyphPairs, self.glyphMap))
         for key in sorted(builders.keys()):
             subtables.extend(builders[key].subtables())
         return self.buildLookup_(subtables)
