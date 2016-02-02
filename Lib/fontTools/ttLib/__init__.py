@@ -197,11 +197,11 @@ class TTFont(object):
 			if self.lazy and self.reader.file.name == file:
 				raise TTLibError(
 					"Can't overwrite TTFont when 'lazy' attribute is True")
-			closeStream = 1
+			closeStream = True
 			file = open(file, "wb")
 		else:
 			# assume "file" is a writable file object
-			closeStream = 0
+			closeStream = False
 
 		tags = list(self.keys())
 		if "GlyphOrder" in tags:
