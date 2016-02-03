@@ -141,9 +141,9 @@ class Builder(object):
             self.add_single_subst(
                 self.aalt_location_, prefix=None, suffix=None, mapping=single)
         for glyph, repl in multi.items():
-            self.add_multiple_subst(
+            self.add_alternate_subst(
                 self.aalt_location_, prefix=None, glyph=glyph, suffix=None,
-                replacements=repl)
+                replacement=repl)
         self.end_feature()
         self.lookups_.extend(old_lookups)
 

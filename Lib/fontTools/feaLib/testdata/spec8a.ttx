@@ -94,15 +94,29 @@
         </SingleSubst>
       </Lookup>
       <Lookup index="1">
-        <!-- LookupType=2 -->
+        <!-- LookupType=3 -->
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
-        <MultipleSubst index="0">
-          <Substitution in="a" out="A.sc,a.alt1,a.alt2,a.alt3"/>
-          <Substitution in="b" out="B.sc,b.alt"/>
-          <Substitution in="c" out="C.sc,c.mid"/>
-          <Substitution in="d" out="d.alt,d.mid"/>
-        </MultipleSubst>
+        <AlternateSubst index="0">
+          <AlternateSet glyph="a">
+            <Alternate glyph="A.sc"/>
+            <Alternate glyph="a.alt1"/>
+            <Alternate glyph="a.alt2"/>
+            <Alternate glyph="a.alt3"/>
+          </AlternateSet>
+          <AlternateSet glyph="b">
+            <Alternate glyph="B.sc"/>
+            <Alternate glyph="b.alt"/>
+          </AlternateSet>
+          <AlternateSet glyph="c">
+            <Alternate glyph="C.sc"/>
+            <Alternate glyph="c.mid"/>
+          </AlternateSet>
+          <AlternateSet glyph="d">
+            <Alternate glyph="d.alt"/>
+            <Alternate glyph="d.mid"/>
+          </AlternateSet>
+        </AlternateSubst>
       </Lookup>
       <Lookup index="2">
         <!-- LookupType=1 -->
