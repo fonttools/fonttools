@@ -34,6 +34,7 @@ class Builder(object):
         # for feature 'aalt'
         self.aalt_features_ = []  # [(location, featureName)*], for 'aalt'
         self.aalt_location_ = None
+        self.aalt_alternates_ = {}
         # for table 'head'
         self.fontRevision_ = None  # 2.71
         # for table 'GDEF'
@@ -103,9 +104,9 @@ class Builder(object):
         return self.cur_lookup_
 
     def build_feature_aalt_(self):
-        if not self.aalt_features_:
+        if not self.aalt_features_ and not self.aalt_alternates_:
             return
-        alternates = {}  # glyph --> {glyph.alt1, glyph.alt2, ...}
+        alternates = {g: set(a) for g, a in self.aalt_alternates_.items()}
         for location, name in self.aalt_features_ + [(None, "aalt")]:
             feature = [(script, lang, feature, lookups)
                        for (script, lang, feature), lookups
@@ -126,10 +127,6 @@ class Builder(object):
                  if len(repl) > 1}
         if not single and not multi:
             return
-        aalt_lookups = []
-        for (script, lang, feature), lookups in self.features_.items():
-            if feature == "aalt":
-                aalt_lookups.extend(lookups)
         self.features_ = {(script, lang, feature): lookups
                           for (script, lang, feature), lookups
                           in self.features_.items()
@@ -138,12 +135,11 @@ class Builder(object):
         self.lookups_ = []
         self.start_feature(self.aalt_location_, "aalt")
         if single:
-            self.add_single_subst(
-                self.aalt_location_, prefix=None, suffix=None, mapping=single)
-        for glyph, repl in multi.items():
-            self.add_alternate_subst(
-                self.aalt_location_, prefix=None, glyph=glyph, suffix=None,
-                replacement=repl)
+            single_lookup = self.get_lookup_(location, SingleSubstBuilder)
+            single_lookup.mapping = single
+        if multi:
+            multi_lookup = self.get_lookup_(location, AlternateSubstBuilder)
+            multi_lookup.alternates = multi
         self.end_feature()
         self.lookups_.extend(old_lookups)
 
@@ -500,6 +496,10 @@ class Builder(object):
 
     def add_alternate_subst(self, location,
                             prefix, glyph, suffix, replacement):
+        if self.cur_feature_name_ == "aalt":
+            alts = self.aalt_alternates_.setdefault(glyph, set())
+            alts.update(replacement)
+            return
         if prefix or suffix:
             lookup = self.get_chained_lookup_(location, AlternateSubstBuilder)
             chain = self.get_lookup_(location, ChainContextSubstBuilder)
@@ -557,6 +557,11 @@ class Builder(object):
         lookup.substitutions.append((old_prefix, old_suffix, mapping))
 
     def add_single_subst(self, location, prefix, suffix, mapping):
+        if self.cur_feature_name_ == "aalt":
+            for (from_glyph, to_glyph) in mapping.items():
+                alts = self.aalt_alternates_.setdefault(from_glyph, set())
+                alts.add(to_glyph)
+            return
         if prefix or suffix:
             sub = self.get_chained_lookup_(location, SingleSubstBuilder)
             sub.mapping.update(mapping)

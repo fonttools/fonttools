@@ -29,7 +29,7 @@ def makeTTFont():
         "N.sc O.sc P.sc Q.sc R.sc S.sc T.sc U.sc V.sc W.sc X.sc Y.sc Z.sc "
         "A.alt1 A.alt2 A.alt3 B.alt1 B.alt2 B.alt3 C.alt1 C.alt2 C.alt3 "
         "a.alt1 a.alt2 a.alt3 b.alt c.mid d.alt d.mid e.begin e.mid "
-        "n.end s.end "
+        "n.end s.end Eng Eng.alt1 Eng.alt2 Eng.alt3 "
         "f_l c_h c_k c_s c_t f_f f_f_i f_f_l f_i o_f_f_i s_t "
         "ydieresis yacute breve "
         "grave acute dieresis macron circumflex cedilla umlaut ogonek caron "
@@ -51,7 +51,7 @@ class BuilderTest(unittest.TestCase):
         spec4h1 spec5d1 spec5d2 spec5fi1 spec5fi2 spec5fi3 spec5fi4
         spec5h1 spec6d2 spec6e spec6f spec6h_ii spec6h_iii_1 spec8a
         spec9b spec9c1 spec9c2 spec9c3
-        bug463
+        bug463 bug502
     """.split()
 
     def __init__(self, methodName):
