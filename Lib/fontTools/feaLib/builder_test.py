@@ -329,6 +329,12 @@ class BuilderTest(unittest.TestCase):
             "    sub A from [A.alt1 A.alt2];"
             "} foo;")
 
+    def test_lookup_inside_feature_aalt(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Lookup blocks cannot be placed inside 'aalt' features",
+            self.build, "feature aalt {lookup L {} L;} aalt;")
+
 
 def generate_feature_file_test(name):
     return lambda self: self.check_feature_file(name)
@@ -339,4 +345,3 @@ for name in BuilderTest.TEST_FEATURE_FILES:
 
 if __name__ == "__main__":
     unittest.main()
-

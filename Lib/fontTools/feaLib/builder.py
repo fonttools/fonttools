@@ -364,6 +364,11 @@ class Builder(object):
         if name in self.named_lookups_:
             raise FeatureLibError(
                 'Lookup "%s" has already been defined' % name, location)
+        if self.cur_feature_name_ == "aalt":
+            raise FeatureLibError(
+                "Lookup blocks cannot be placed inside 'aalt' features; "
+                "move it out, and then refer to it with a lookup statement",
+                location)
         self.cur_lookup_name_ = name
         self.named_lookups_[name] = None
         self.cur_lookup_ = None
