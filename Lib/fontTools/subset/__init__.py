@@ -2800,6 +2800,10 @@ def parse_gids(s):
 def parse_glyphs(s):
     return s.replace(',', ' ').split()
 
+def usage():
+    print("usage:", __usage__, file=sys.stderr)
+    print("Try pyftsubset --help for more information.\n", file=sys.stderr)
+
 @timer("make one with everything (TOTAL TIME)")
 def main(args=None):
     from fontTools import configLogger
@@ -2812,16 +2816,20 @@ def main(args=None):
         sys.exit(0)
 
     options = Options()
-    args = options.parse_opts(args,
-        ignore_unknown=['gids', 'gids-file',
-                        'glyphs', 'glyphs-file',
-                        'text', 'text-file',
-                        'unicodes', 'unicodes-file',
-                        'output-file'])
+    try:
+        args = options.parse_opts(args,
+            ignore_unknown=['gids', 'gids-file',
+                            'glyphs', 'glyphs-file',
+                            'text', 'text-file',
+                            'unicodes', 'unicodes-file',
+                            'output-file'])
+    except options.OptionError as e:
+        usage()
+        print("ERROR:", e, file=sys.stderr)
+        sys.exit(2)
 
     if len(args) < 2:
-        print("usage:", __usage__, file=sys.stderr)
-        print("Try pyftsubset --help for more information.", file=sys.stderr)
+        usage()
         sys.exit(1)
 
     configLogger(level=logging.INFO if options.verbose else logging.WARNING)
