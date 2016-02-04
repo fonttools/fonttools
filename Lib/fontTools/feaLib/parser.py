@@ -295,7 +295,8 @@ class Parser(object):
                 raise FeatureLibError(
                     "No lookups can be specified for \"ignore sub\"",
                     location)
-            return ast.IgnoreSubstitutionRule(location, prefix, glyphs, suffix)
+            return ast.ChainContextSubstStatement(
+                location, prefix, glyphs, suffix, [])
         raise FeatureLibError(
             "Expected \"substitute\"", self.next_token_location_)
 

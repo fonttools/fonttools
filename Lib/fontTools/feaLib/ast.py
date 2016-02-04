@@ -296,12 +296,6 @@ class LanguageSystemStatement(Statement):
         builder.add_language_system(self.location, self.script, self.language)
 
 
-class IgnoreSubstitutionRule(Statement):
-    def __init__(self, location, prefix, glyphs, suffix):
-        Statement.__init__(self, location)
-        self.prefix, self.glyphs, self.suffix = (prefix, glyphs, suffix)
-
-
 class FontRevisionStatement(Statement):
     def __init__(self, location, revision):
         Statement.__init__(self, location)

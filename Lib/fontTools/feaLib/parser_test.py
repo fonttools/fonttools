@@ -291,22 +291,24 @@ class ParserTest(unittest.TestCase):
 
     def test_ignore_sub(self):
         doc = self.parse("feature test {ignore sub e t' c;} test;")
-        s = doc.statements[0].statements[0]
-        self.assertEqual(type(s), ast.IgnoreSubstitutionRule)
-        self.assertEqual(glyphstr(s.prefix), "e")
-        self.assertEqual(glyphstr(s.glyphs), "t")
-        self.assertEqual(glyphstr(s.suffix), "c")
+        sub = doc.statements[0].statements[0]
+        self.assertIsInstance(sub, ast.ChainContextSubstStatement)
+        self.assertEqual(glyphstr(sub.prefix), "e")
+        self.assertEqual(glyphstr(sub.glyphs), "t")
+        self.assertEqual(glyphstr(sub.suffix), "c")
+        self.assertEqual(sub.lookups, [])
 
     def test_ignore_substitute(self):
         doc = self.parse(
             "feature test {"
             "    ignore substitute f [a e] d' [a u]' [e y];"
             "} test;")
-        s = doc.statements[0].statements[0]
-        self.assertEqual(type(s), ast.IgnoreSubstitutionRule)
-        self.assertEqual(glyphstr(s.prefix), "f [a e]")
-        self.assertEqual(glyphstr(s.glyphs), "d [a u]")
-        self.assertEqual(glyphstr(s.suffix), "[e y]")
+        sub = doc.statements[0].statements[0]
+        self.assertIsInstance(sub, ast.ChainContextSubstStatement)
+        self.assertEqual(glyphstr(sub.prefix), "f [a e]")
+        self.assertEqual(glyphstr(sub.glyphs), "d [a u]")
+        self.assertEqual(glyphstr(sub.suffix), "[e y]")
+        self.assertEqual(sub.lookups, [])
 
     def test_language(self):
         doc = self.parse("feature test {language DEU;} test;")
