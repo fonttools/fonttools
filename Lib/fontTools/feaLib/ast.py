@@ -451,14 +451,16 @@ class ReverseChainSingleSubstStatement(Statement):
 
 
 class SingleSubstStatement(Statement):
-    def __init__(self, location, mapping, prefix, suffix):
+    def __init__(self, location, mapping, prefix, suffix, forceChain):
         Statement.__init__(self, location)
         self.mapping, self.prefix, self.suffix = mapping, prefix, suffix
+        self.forceChain = forceChain
 
     def build(self, builder):
         prefix = [p.glyphSet() for p in self.prefix]
         suffix = [s.glyphSet() for s in self.suffix]
-        builder.add_single_subst(self.location, prefix, suffix, self.mapping)
+        builder.add_single_subst(self.location, prefix, suffix, self.mapping,
+                                 self.forceChain)
 
 
 class ScriptStatement(Statement):

@@ -548,13 +548,13 @@ class Builder(object):
         lookup = self.get_lookup_(location, ReverseChainSingleSubstBuilder)
         lookup.substitutions.append((old_prefix, old_suffix, mapping))
 
-    def add_single_subst(self, location, prefix, suffix, mapping):
+    def add_single_subst(self, location, prefix, suffix, mapping, forceChain):
         if self.cur_feature_name_ == "aalt":
             for (from_glyph, to_glyph) in mapping.items():
                 alts = self.aalt_alternates_.setdefault(from_glyph, set())
                 alts.add(to_glyph)
             return
-        if prefix or suffix:
+        if prefix or suffix or forceChain:
             chain = self.get_lookup_(location, ChainContextSubstBuilder)
             sub = self.get_chained_lookup_(location, SingleSubstBuilder)
             sub.mapping.update(mapping)

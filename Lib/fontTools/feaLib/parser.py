@@ -578,7 +578,8 @@ class Parser(object):
                     (len(glyphs), len(replacements)), location)
             return ast.SingleSubstStatement(location,
                                             dict(zip(glyphs, replacements)),
-                                            old_prefix, old_suffix)
+                                            old_prefix, old_suffix,
+                                            forceChain=hasMarks)
 
         # GSUB lookup type 2: Multiple substitution.
         # Format: "substitute f_f_i by f f i;"
