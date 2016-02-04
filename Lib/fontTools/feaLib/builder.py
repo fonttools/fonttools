@@ -385,10 +385,6 @@ class Builder(object):
 
     def set_language(self, location, language, include_default, required):
         assert(len(language) == 4)
-        if self.cur_lookup_name_:
-            raise FeatureLibError(
-                "Within a named lookup block, it is not allowed "
-                "to change the language", location)
         if self.cur_feature_name_ in ('aalt', 'size'):
             raise FeatureLibError(
                 "Language statements are not allowed "
@@ -450,10 +446,6 @@ class Builder(object):
         self.lookupflag_ = value
 
     def set_script(self, location, script):
-        if self.cur_lookup_name_:
-            raise FeatureLibError(
-                "Within a named lookup block, it is not allowed "
-                "to change the script", location)
         if self.cur_feature_name_ in ('aalt', 'size'):
             raise FeatureLibError(
                 "Script statements are not allowed "

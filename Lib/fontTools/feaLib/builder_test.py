@@ -51,7 +51,7 @@ class BuilderTest(unittest.TestCase):
         spec4h1 spec5d1 spec5d2 spec5fi1 spec5fi2 spec5fi3 spec5fi4
         spec5h1 spec6b_ii spec6d2 spec6e spec6f spec6h_ii spec6h_iii_1 spec8a
         spec9b spec9c1 spec9c2 spec9c3
-        bug463 bug502
+        bug463 bug501 bug502
     """.split()
 
     def __init__(self, methodName):
@@ -237,13 +237,6 @@ class BuilderTest(unittest.TestCase):
             "Script statements are not allowed within \"feature aalt\"",
             self.build, "feature aalt { script latn; } aalt;")
 
-    def test_script_in_lookup_block(self):
-        self.assertRaisesRegex(
-            FeatureLibError,
-            "Within a named lookup block, it is not allowed "
-            "to change the script",
-            self.build, "lookup Foo { script latn; } Foo;")
-
     def test_script_in_size_feature(self):
         self.assertRaisesRegex(
             FeatureLibError,
@@ -268,13 +261,6 @@ class BuilderTest(unittest.TestCase):
             FeatureLibError,
             "Language statements are not allowed within \"feature aalt\"",
             self.build, "feature aalt { language FRA; } aalt;")
-
-    def test_language_in_lookup_block(self):
-        self.assertRaisesRegex(
-            FeatureLibError,
-            "Within a named lookup block, it is not allowed "
-            "to change the language",
-            self.build, "lookup Foo { language RUS; } Foo;")
 
     def test_language_in_size_feature(self):
         self.assertRaisesRegex(
