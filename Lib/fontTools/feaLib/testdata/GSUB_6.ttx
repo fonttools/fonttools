@@ -26,7 +26,7 @@
           <LookupListIndex index="0" value="1"/>
           <LookupListIndex index="1" value="4"/>
           <LookupListIndex index="2" value="6"/>
-          <LookupListIndex index="3" value="8"/>
+          <LookupListIndex index="3" value="7"/>
           <LookupListIndex index="4" value="9"/>
         </Feature>
       </FeatureRecord>
@@ -189,21 +189,6 @@
         </ChainContextSubst>
       </Lookup>
       <Lookup index="7">
-        <!-- LookupType=4 -->
-        <LookupFlag value="0"/>
-        <!-- SubTableCount=1 -->
-        <LigatureSubst index="0">
-          <LigatureSet glyph="C">
-            <Ligature components="T" glyph="c_t"/>
-            <Ligature components="t" glyph="c_t"/>
-          </LigatureSet>
-          <LigatureSet glyph="c">
-            <Ligature components="T" glyph="c_t"/>
-            <Ligature components="t" glyph="c_t"/>
-          </LigatureSet>
-        </LigatureSubst>
-      </Lookup>
-      <Lookup index="8">
         <!-- LookupType=6 -->
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
@@ -228,9 +213,24 @@
           <!-- SubstCount=1 -->
           <SubstLookupRecord index="0">
             <SequenceIndex value="0"/>
-            <LookupListIndex value="7"/>
+            <LookupListIndex value="8"/>
           </SubstLookupRecord>
         </ChainContextSubst>
+      </Lookup>
+      <Lookup index="8">
+        <!-- LookupType=4 -->
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <LigatureSubst index="0">
+          <LigatureSet glyph="C">
+            <Ligature components="T" glyph="c_t"/>
+            <Ligature components="t" glyph="c_t"/>
+          </LigatureSet>
+          <LigatureSet glyph="c">
+            <Ligature components="T" glyph="c_t"/>
+            <Ligature components="t" glyph="c_t"/>
+          </LigatureSet>
+        </LigatureSubst>
       </Lookup>
       <Lookup index="9">
         <!-- LookupType=6 -->

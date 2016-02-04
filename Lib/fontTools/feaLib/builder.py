@@ -514,8 +514,8 @@ class Builder(object):
     def add_ligature_subst(self, location,
                            prefix, glyphs, suffix, replacement):
         if prefix or suffix:
-            lookup = self.get_chained_lookup_(location, LigatureSubstBuilder)
             chain = self.get_lookup_(location, ChainContextSubstBuilder)
+            lookup = self.get_chained_lookup_(location, LigatureSubstBuilder)
             chain.substitutions.append((prefix, glyphs, suffix, [lookup]))
         else:
             lookup = self.get_lookup_(location, LigatureSubstBuilder)
