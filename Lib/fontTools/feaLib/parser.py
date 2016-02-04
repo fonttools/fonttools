@@ -241,12 +241,13 @@ class Parser(object):
 
     def parse_glyph_pattern_(self, vertical):
         prefix, glyphs, lookups, values, suffix = ([], [], [], [], [])
+        hasMarks = False
         while self.next_token_ not in {"by", "from", ";"}:
             gc = self.parse_glyphclass_(accept_glyphname=True)
             marked = False
             if self.next_token_ == "'":
                 self.expect_symbol_("'")
-                marked = True
+                hasMarks = marked = True
             if marked:
                 glyphs.append(gc)
             elif glyphs:
@@ -277,18 +278,18 @@ class Parser(object):
 
         if not glyphs and not suffix:  # eg., "sub f f i by"
             assert lookups == []
-            return ([], prefix, [None] * len(prefix), values, [])
+            return ([], prefix, [None] * len(prefix), values, [], hasMarks)
         else:
             assert not any(values[:len(prefix)]), values
             values = values[len(prefix):][:len(glyphs)]
-            return (prefix, glyphs, lookups, values, suffix)
+            return (prefix, glyphs, lookups, values, suffix, hasMarks)
 
     def parse_ignore_(self):
         assert self.is_cur_keyword_("ignore")
         location = self.cur_token_location_
         self.advance_lexer_()
         if self.cur_token_ in ["substitute", "sub"]:
-            prefix, glyphs, lookups, values, suffix = \
+            prefix, glyphs, lookups, values, suffix, hasMarks = \
                 self.parse_glyph_pattern_(vertical=False)
             self.expect_symbol_(";")
             if any(lookups):
@@ -423,7 +424,7 @@ class Parser(object):
             return self.parse_position_mark_(enumerated, vertical)
 
         location = self.cur_token_location_
-        prefix, glyphs, lookups, values, suffix = \
+        prefix, glyphs, lookups, values, suffix, hasMarks = \
             self.parse_glyph_pattern_(vertical)
         self.expect_symbol_(";")
 
@@ -518,7 +519,7 @@ class Parser(object):
         assert self.cur_token_ in {"substitute", "sub", "reversesub", "rsub"}
         location = self.cur_token_location_
         reverse = self.cur_token_ in {"reversesub", "rsub"}
-        old_prefix, old, lookups, values, old_suffix = \
+        old_prefix, old, lookups, values, old_suffix, hasMarks = \
             self.parse_glyph_pattern_(vertical=False)
         if any(values):
             raise FeatureLibError(
@@ -597,7 +598,7 @@ class Parser(object):
                 num_lookups == 0):
             return ast.LigatureSubstStatement(
                 location, old_prefix, old, old_suffix,
-                list(new[0].glyphSet())[0])
+                list(new[0].glyphSet())[0], forceChain=hasMarks)
 
         # GSUB lookup type 8: Reverse chaining substitution.
         if reverse:

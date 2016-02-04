@@ -326,17 +326,19 @@ class LigatureCaretByPosStatement(Statement):
 
 
 class LigatureSubstStatement(Statement):
-    def __init__(self, location, prefix, glyphs, suffix, replacement):
+    def __init__(self, location, prefix, glyphs, suffix, replacement,
+                 forceChain):
         Statement.__init__(self, location)
         self.prefix, self.glyphs, self.suffix = (prefix, glyphs, suffix)
-        self.replacement = replacement
+        self.replacement, self.forceChain = replacement, forceChain
 
     def build(self, builder):
         prefix = [p.glyphSet() for p in self.prefix]
         glyphs = [g.glyphSet() for g in self.glyphs]
         suffix = [s.glyphSet() for s in self.suffix]
         builder.add_ligature_subst(
-            self.location, prefix, glyphs, suffix, self.replacement)
+            self.location, prefix, glyphs, suffix, self.replacement,
+            self.forceChain)
 
 
 class LookupFlagStatement(Statement):

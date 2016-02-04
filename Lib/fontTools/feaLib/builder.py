@@ -512,8 +512,8 @@ class Builder(object):
         self.aalt_features_.append((location, featureName))
 
     def add_ligature_subst(self, location,
-                           prefix, glyphs, suffix, replacement):
-        if prefix or suffix:
+                           prefix, glyphs, suffix, replacement, forceChain):
+        if prefix or suffix or forceChain:
             chain = self.get_lookup_(location, ChainContextSubstBuilder)
             lookup = self.get_chained_lookup_(location, LigatureSubstBuilder)
             chain.substitutions.append((prefix, glyphs, suffix, [lookup]))
