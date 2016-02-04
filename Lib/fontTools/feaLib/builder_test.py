@@ -49,7 +49,7 @@ class BuilderTest(unittest.TestCase):
         GPOS_1 GPOS_1_zero GPOS_2 GPOS_2b GPOS_3 GPOS_4 GPOS_5 GPOS_6 GPOS_8
         GSUB_2 GSUB_3 GSUB_6 GSUB_8
         spec4h1 spec5d1 spec5d2 spec5fi1 spec5fi2 spec5fi3 spec5fi4
-        spec5h1 spec6d2 spec6e spec6f spec6h_ii spec6h_iii_1 spec8a
+        spec5h1 spec6b_ii spec6d2 spec6e spec6f spec6h_ii spec6h_iii_1 spec8a
         spec9b spec9c1 spec9c2 spec9c3
         bug463 bug502
     """.split()
