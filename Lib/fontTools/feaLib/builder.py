@@ -531,10 +531,10 @@ class Builder(object):
     def add_multiple_subst(self, location,
                            prefix, glyph, suffix, replacements):
         if prefix or suffix:
+            chain = self.get_lookup_(location, ChainContextSubstBuilder)
             sub = self.get_chained_lookup_(location, MultipleSubstBuilder)
             sub.mapping[glyph] = replacements
-            lookup = self.get_lookup_(location, ChainContextSubstBuilder)
-            lookup.substitutions.append((prefix, [{glyph}], suffix, [sub]))
+            chain.substitutions.append((prefix, [{glyph}], suffix, [sub]))
             return
         lookup = self.get_lookup_(location, MultipleSubstBuilder)
         if glyph in lookup.mapping:
