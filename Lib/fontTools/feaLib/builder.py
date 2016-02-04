@@ -455,7 +455,7 @@ class Builder(object):
         self.lookupflag_ = 0
         self.lookupflag_markFilterSet_ = None
         self.set_language(location, "dflt",
-                          include_default=True, required=False)
+                          include_default=False, required=False)
 
     def find_lookup_builders_(self, lookups):
         """Helper for building chain contextual substitutions

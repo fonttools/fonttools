@@ -51,7 +51,7 @@ class BuilderTest(unittest.TestCase):
         spec4h1 spec5d1 spec5d2 spec5fi1 spec5fi2 spec5fi3 spec5fi4
         spec5h1 spec6b_ii spec6d2 spec6e spec6f spec6h_ii spec6h_iii_1 spec8a
         spec9b spec9c1 spec9c2 spec9c3
-        bug463 bug501 bug502
+        bug463 bug501 bug502 bug505
     """.split()
 
     def __init__(self, methodName):
@@ -228,8 +228,7 @@ class BuilderTest(unittest.TestCase):
         builder = Builder(None, makeTTFont())
         builder.start_feature(location=None, name='test')
         builder.set_script(location=None, script='cyrl')
-        self.assertEqual(builder.language_systems,
-                         {('DFLT', 'dflt'), ('cyrl', 'dflt')})
+        self.assertEqual(builder.language_systems, {('cyrl', 'dflt')})
 
     def test_script_in_aalt_feature(self):
         self.assertRaisesRegex(

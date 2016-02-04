@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ttFont sfntVersion="true" ttLibVersion="3.0">
 
-  <GPOS>
+  <GSUB>
     <Version value="1.0"/>
     <ScriptList>
       <!-- ScriptCount=1 -->
       <ScriptRecord index="0">
-        <ScriptTag value="grek"/>
+        <ScriptTag value="vai "/>
         <Script>
           <DefaultLangSys>
             <ReqFeatureIndex value="65535"/>
@@ -33,15 +33,11 @@
         <!-- LookupType=1 -->
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
-        <SinglePos index="0" Format="1">
-          <Coverage>
-            <Glyph value="T"/>
-          </Coverage>
-          <ValueFormat value="4"/>
-          <Value XAdvance="100"/>
-        </SinglePos>
+        <SingleSubst index="0">
+          <Substitution in="T" out="t"/>
+        </SingleSubst>
       </Lookup>
     </LookupList>
-  </GPOS>
+  </GSUB>
 
 </ttFont>
