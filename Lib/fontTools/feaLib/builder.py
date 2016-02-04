@@ -493,8 +493,8 @@ class Builder(object):
             alts.update(replacement)
             return
         if prefix or suffix:
-            lookup = self.get_chained_lookup_(location, AlternateSubstBuilder)
             chain = self.get_lookup_(location, ChainContextSubstBuilder)
+            lookup = self.get_chained_lookup_(location, AlternateSubstBuilder)
             chain.substitutions.append((prefix, [glyph], suffix, [lookup]))
         else:
             lookup = self.get_lookup_(location, AlternateSubstBuilder)

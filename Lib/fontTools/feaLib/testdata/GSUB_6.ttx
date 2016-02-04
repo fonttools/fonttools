@@ -25,7 +25,7 @@
           <!-- LookupCount=5 -->
           <LookupListIndex index="0" value="1"/>
           <LookupListIndex index="1" value="4"/>
-          <LookupListIndex index="2" value="6"/>
+          <LookupListIndex index="2" value="5"/>
           <LookupListIndex index="3" value="7"/>
           <LookupListIndex index="4" value="9"/>
         </Feature>
@@ -155,17 +155,6 @@
         </ChainContextSubst>
       </Lookup>
       <Lookup index="5">
-        <!-- LookupType=3 -->
-        <LookupFlag value="0"/>
-        <!-- SubTableCount=1 -->
-        <AlternateSubst index="0">
-          <AlternateSet glyph="e">
-            <Alternate glyph="e"/>
-            <Alternate glyph="e.begin"/>
-          </AlternateSet>
-        </AlternateSubst>
-      </Lookup>
-      <Lookup index="6">
         <!-- LookupType=6 -->
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
@@ -184,9 +173,20 @@
           <!-- SubstCount=1 -->
           <SubstLookupRecord index="0">
             <SequenceIndex value="0"/>
-            <LookupListIndex value="5"/>
+            <LookupListIndex value="6"/>
           </SubstLookupRecord>
         </ChainContextSubst>
+      </Lookup>
+      <Lookup index="6">
+        <!-- LookupType=3 -->
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <AlternateSubst index="0">
+          <AlternateSet glyph="e">
+            <Alternate glyph="e"/>
+            <Alternate glyph="e.begin"/>
+          </AlternateSet>
+        </AlternateSubst>
       </Lookup>
       <Lookup index="7">
         <!-- LookupType=6 -->
