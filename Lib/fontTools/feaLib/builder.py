@@ -555,10 +555,10 @@ class Builder(object):
                 alts.add(to_glyph)
             return
         if prefix or suffix:
+            chain = self.get_lookup_(location, ChainContextSubstBuilder)
             sub = self.get_chained_lookup_(location, SingleSubstBuilder)
             sub.mapping.update(mapping)
-            lookup = self.get_lookup_(location, ChainContextSubstBuilder)
-            lookup.substitutions.append(
+            chain.substitutions.append(
                 (prefix, [mapping.keys()], suffix, [sub]))
             return
         lookup = self.get_lookup_(location, SingleSubstBuilder)
