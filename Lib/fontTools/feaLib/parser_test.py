@@ -290,13 +290,16 @@ class ParserTest(unittest.TestCase):
         self.assertIsNone(s.componentGlyphs)
 
     def test_ignore_sub(self):
-        doc = self.parse("feature test {ignore sub e t' c;} test;")
+        doc = self.parse("feature test {ignore sub e t' c, q u' u' x;} test;")
         sub = doc.statements[0].statements[0]
-        self.assertIsInstance(sub, ast.ChainContextSubstStatement)
-        self.assertEqual(glyphstr(sub.prefix), "e")
-        self.assertEqual(glyphstr(sub.glyphs), "t")
-        self.assertEqual(glyphstr(sub.suffix), "c")
-        self.assertEqual(sub.lookups, [])
+        self.assertIsInstance(sub, ast.IgnoreSubstStatement)
+        [(pref1, glyphs1, suff1), (pref2, glyphs2, suff2)] = sub.chainContexts
+        self.assertEqual(glyphstr(pref1), "e")
+        self.assertEqual(glyphstr(glyphs1), "t")
+        self.assertEqual(glyphstr(suff1), "c")
+        self.assertEqual(glyphstr(pref2), "q")
+        self.assertEqual(glyphstr(glyphs2), "u u")
+        self.assertEqual(glyphstr(suff2), "x")
 
     def test_ignore_substitute(self):
         doc = self.parse(
@@ -304,11 +307,19 @@ class ParserTest(unittest.TestCase):
             "    ignore substitute f [a e] d' [a u]' [e y];"
             "} test;")
         sub = doc.statements[0].statements[0]
-        self.assertIsInstance(sub, ast.ChainContextSubstStatement)
-        self.assertEqual(glyphstr(sub.prefix), "f [a e]")
-        self.assertEqual(glyphstr(sub.glyphs), "d [a u]")
-        self.assertEqual(glyphstr(sub.suffix), "[e y]")
-        self.assertEqual(sub.lookups, [])
+        self.assertIsInstance(sub, ast.IgnoreSubstStatement)
+        [(prefix, glyphs, suffix)] = sub.chainContexts
+        self.assertEqual(glyphstr(prefix), "f [a e]")
+        self.assertEqual(glyphstr(glyphs), "d [a u]")
+        self.assertEqual(glyphstr(suffix), "[e y]")
+
+    def test_ignore_substitute_with_lookup(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            'No lookups can be specified for "ignore sub"',
+            self.parse,
+            "lookup L { sub [A A.sc] by a; } L;"
+            "feature test { ignore sub f' i', A' lookup L; } test;")
 
     def test_language(self):
         doc = self.parse("feature test {language DEU;} test;")

@@ -242,7 +242,7 @@ class Parser(object):
     def parse_glyph_pattern_(self, vertical):
         prefix, glyphs, lookups, values, suffix = ([], [], [], [], [])
         hasMarks = False
-        while self.next_token_ not in {"by", "from", ";"}:
+        while self.next_token_ not in {"by", "from", ";", ","}:
             gc = self.parse_glyphclass_(accept_glyphname=True)
             marked = False
             if self.next_token_ == "'":
@@ -291,13 +291,20 @@ class Parser(object):
         if self.cur_token_ in ["substitute", "sub"]:
             prefix, glyphs, lookups, values, suffix, hasMarks = \
                 self.parse_glyph_pattern_(vertical=False)
+            chainContext = [(prefix, glyphs, suffix)]
+            hasLookups = any(lookups)
+            while self.next_token_ == ",":
+                self.expect_symbol_(",")
+                prefix, glyphs, lookups, values, suffix, hasMarks = \
+                    self.parse_glyph_pattern_(vertical=False)
+                chainContext.append((prefix, glyphs, suffix))
+                hasLookups = hasLookups or any(lookups)
             self.expect_symbol_(";")
-            if any(lookups):
+            if hasLookups:
                 raise FeatureLibError(
                     "No lookups can be specified for \"ignore sub\"",
                     location)
-            return ast.ChainContextSubstStatement(
-                location, prefix, glyphs, suffix, [])
+            return ast.IgnoreSubstStatement(location, chainContext)
         raise FeatureLibError(
             "Expected \"substitute\"", self.next_token_location_)
 

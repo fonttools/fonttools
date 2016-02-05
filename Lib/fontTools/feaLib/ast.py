@@ -273,6 +273,20 @@ class FeatureReferenceStatement(Statement):
         builder.add_feature_reference(self.location, self.featureName)
 
 
+class IgnoreSubstStatement(Statement):
+    def __init__(self, location, chainContexts):
+        Statement.__init__(self, location)
+        self.chainContexts = chainContexts
+
+    def build(self, builder):
+        for prefix, glyphs, suffix in self.chainContexts:
+            prefix = [p.glyphSet() for p in prefix]
+            glyphs = [g.glyphSet() for g in glyphs]
+            suffix = [s.glyphSet() for s in suffix]
+            builder.add_chain_context_subst(
+                self.location, prefix, glyphs, suffix, [])
+
+
 class LanguageStatement(Statement):
     def __init__(self, location, language, include_default, required):
         Statement.__init__(self, location)
