@@ -1,0 +1,6 @@
+feature test {
+    sub G' by G.swash;
+    sub H' by H.swash;
+    sub G' by g;
+    sub H' by H.swash;
+} test;

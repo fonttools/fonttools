@@ -555,11 +555,7 @@ class Builder(object):
                 alts.add(to_glyph)
             return
         if prefix or suffix or forceChain:
-            chain = self.get_lookup_(location, ChainContextSubstBuilder)
-            sub = self.get_chained_lookup_(location, SingleSubstBuilder)
-            sub.mapping.update(mapping)
-            chain.substitutions.append(
-                (prefix, [mapping.keys()], suffix, [sub]))
+            self.add_single_subst_chained_(location, prefix, suffix, mapping)
             return
         lookup = self.get_lookup_(location, SingleSubstBuilder)
         for (from_glyph, to_glyph) in mapping.items():
@@ -569,6 +565,24 @@ class Builder(object):
                     (from_glyph, lookup.mapping[from_glyph]),
                     location)
             lookup.mapping[from_glyph] = to_glyph
+
+    def find_chainable_SingleSubst_(self, chain, glyphs):
+        """Helper for add_single_subst_chained_()"""
+        for _, _, _, substitutions in chain.substitutions:
+            for sub in substitutions:
+                if (isinstance(sub, SingleSubstBuilder) and
+                        not any(g in glyphs for g in sub.mapping.keys())):
+                    return sub
+        return None
+
+    def add_single_subst_chained_(self, location, prefix, suffix, mapping):
+        # https://github.com/behdad/fonttools/issues/512
+        chain = self.get_lookup_(location, ChainContextSubstBuilder)
+        sub = self.find_chainable_SingleSubst_(chain, set(mapping.keys()))
+        if sub is None:
+            sub = self.get_chained_lookup_(location, SingleSubstBuilder)
+        sub.mapping.update(mapping)
+        chain.substitutions.append((prefix, [mapping.keys()], suffix, [sub]))
 
     def add_cursive_pos(self, location, glyphclass, entryAnchor, exitAnchor):
         lookup = self.get_lookup_(location, CursivePosBuilder)

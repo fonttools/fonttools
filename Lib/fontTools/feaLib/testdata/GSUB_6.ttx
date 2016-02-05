@@ -24,15 +24,15 @@
         <Feature>
           <!-- LookupCount=5 -->
           <LookupListIndex index="0" value="0"/>
-          <LookupListIndex index="1" value="3"/>
-          <LookupListIndex index="2" value="5"/>
-          <LookupListIndex index="3" value="7"/>
-          <LookupListIndex index="4" value="9"/>
+          <LookupListIndex index="1" value="2"/>
+          <LookupListIndex index="2" value="4"/>
+          <LookupListIndex index="3" value="6"/>
+          <LookupListIndex index="4" value="8"/>
         </Feature>
       </FeatureRecord>
     </FeatureList>
     <LookupList>
-      <!-- LookupCount=10 -->
+      <!-- LookupCount=9 -->
       <Lookup index="0">
         <!-- LookupType=6 -->
         <LookupFlag value="0"/>
@@ -76,7 +76,7 @@
           <!-- SubstCount=1 -->
           <SubstLookupRecord index="0">
             <SequenceIndex value="0"/>
-            <LookupListIndex value="2"/>
+            <LookupListIndex value="1"/>
           </SubstLookupRecord>
         </ChainContextSubst>
       </Lookup>
@@ -86,19 +86,12 @@
         <!-- SubTableCount=1 -->
         <SingleSubst index="0">
           <Substitution in="A" out="A.sc"/>
-        </SingleSubst>
-      </Lookup>
-      <Lookup index="2">
-        <!-- LookupType=1 -->
-        <LookupFlag value="0"/>
-        <!-- SubTableCount=1 -->
-        <SingleSubst index="0">
           <Substitution in="B" out="B.sc"/>
           <Substitution in="C" out="C.sc"/>
           <Substitution in="D" out="D.sc"/>
         </SingleSubst>
       </Lookup>
-      <Lookup index="3">
+      <Lookup index="2">
         <!-- LookupType=6 -->
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
@@ -142,11 +135,11 @@
           <!-- SubstCount=1 -->
           <SubstLookupRecord index="0">
             <SequenceIndex value="0"/>
-            <LookupListIndex value="4"/>
+            <LookupListIndex value="3"/>
           </SubstLookupRecord>
         </ChainContextSubst>
       </Lookup>
-      <Lookup index="4">
+      <Lookup index="3">
         <!-- LookupType=2 -->
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
@@ -154,7 +147,7 @@
           <Substitution in="c_t" out="c,t"/>
         </MultipleSubst>
       </Lookup>
-      <Lookup index="5">
+      <Lookup index="4">
         <!-- LookupType=6 -->
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
@@ -173,11 +166,11 @@
           <!-- SubstCount=1 -->
           <SubstLookupRecord index="0">
             <SequenceIndex value="0"/>
-            <LookupListIndex value="6"/>
+            <LookupListIndex value="5"/>
           </SubstLookupRecord>
         </ChainContextSubst>
       </Lookup>
-      <Lookup index="6">
+      <Lookup index="5">
         <!-- LookupType=3 -->
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
@@ -188,7 +181,7 @@
           </AlternateSet>
         </AlternateSubst>
       </Lookup>
-      <Lookup index="7">
+      <Lookup index="6">
         <!-- LookupType=6 -->
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
@@ -213,11 +206,11 @@
           <!-- SubstCount=1 -->
           <SubstLookupRecord index="0">
             <SequenceIndex value="0"/>
-            <LookupListIndex value="8"/>
+            <LookupListIndex value="7"/>
           </SubstLookupRecord>
         </ChainContextSubst>
       </Lookup>
-      <Lookup index="8">
+      <Lookup index="7">
         <!-- LookupType=4 -->
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
@@ -232,7 +225,7 @@
           </LigatureSet>
         </LigatureSubst>
       </Lookup>
-      <Lookup index="9">
+      <Lookup index="8">
         <!-- LookupType=6 -->
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
@@ -264,7 +257,7 @@
           <!-- SubstCount=1 -->
           <SubstLookupRecord index="0">
             <SequenceIndex value="0"/>
-            <LookupListIndex value="3"/>
+            <LookupListIndex value="2"/>
           </SubstLookupRecord>
         </ChainContextSubst>
       </Lookup>

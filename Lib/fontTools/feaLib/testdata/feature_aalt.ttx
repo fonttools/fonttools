@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ttFont>
+<ttFont sfntVersion="true" ttLibVersion="3.0">
 
   <GSUB>
     <Version value="1.0"/>
@@ -41,7 +41,7 @@
         <FeatureTag value="liga"/>
         <Feature>
           <!-- LookupCount=1 -->
-          <LookupListIndex index="0" value="6"/>
+          <LookupListIndex index="0" value="5"/>
         </Feature>
       </FeatureRecord>
       <FeatureRecord index="3">
@@ -60,7 +60,7 @@
       </FeatureRecord>
     </FeatureList>
     <LookupList>
-      <!-- LookupCount=7 -->
+      <!-- LookupCount=6 -->
       <Lookup index="0">
         <!-- LookupType=1 -->
         <LookupFlag value="0"/>
@@ -152,7 +152,7 @@
           <!-- SubstCount=1 -->
           <SubstLookupRecord index="0">
             <SequenceIndex value="0"/>
-            <LookupListIndex value="5"/>
+            <LookupListIndex value="4"/>
           </SubstLookupRecord>
         </ChainContextSubst>
       </Lookup>
@@ -162,19 +162,12 @@
         <!-- SubTableCount=1 -->
         <SingleSubst index="0">
           <Substitution in="A" out="ordfeminine"/>
-          <Substitution in="a" out="ordfeminine"/>
-        </SingleSubst>
-      </Lookup>
-      <Lookup index="5">
-        <!-- LookupType=1 -->
-        <LookupFlag value="0"/>
-        <!-- SubTableCount=1 -->
-        <SingleSubst index="0">
           <Substitution in="O" out="ordmasculine"/>
+          <Substitution in="a" out="ordfeminine"/>
           <Substitution in="o" out="ordmasculine"/>
         </SingleSubst>
       </Lookup>
-      <Lookup index="6">
+      <Lookup index="5">
         <!-- LookupType=4 -->
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
