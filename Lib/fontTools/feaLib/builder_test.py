@@ -50,7 +50,7 @@ class BuilderTest(unittest.TestCase):
     TEST_FEATURE_FILES = """
         Attach enum markClass language_required
         GlyphClassDef LigatureCaretByIndex LigatureCaretByPos
-        lookup lookupflag feature_aalt
+        lookup lookupflag feature_aalt ignore_pos
         GPOS_1 GPOS_1_zero GPOS_2 GPOS_2b GPOS_3 GPOS_4 GPOS_5 GPOS_6 GPOS_8
         GSUB_2 GSUB_3 GSUB_6 GSUB_8
         spec4h1 spec5d1 spec5d2 spec5fi1 spec5fi2 spec5fi3 spec5fi4
