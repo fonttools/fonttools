@@ -289,6 +289,38 @@ class ParserTest(unittest.TestCase):
         self.assertIsNone(s.markGlyphs)
         self.assertIsNone(s.componentGlyphs)
 
+    def test_ignore_pos(self):
+        doc = self.parse("feature test {ignore pos e t' c, q u' u' x;} test;")
+        sub = doc.statements[0].statements[0]
+        self.assertIsInstance(sub, ast.IgnorePosStatement)
+        [(pref1, glyphs1, suff1), (pref2, glyphs2, suff2)] = sub.chainContexts
+        self.assertEqual(glyphstr(pref1), "e")
+        self.assertEqual(glyphstr(glyphs1), "t")
+        self.assertEqual(glyphstr(suff1), "c")
+        self.assertEqual(glyphstr(pref2), "q")
+        self.assertEqual(glyphstr(glyphs2), "u u")
+        self.assertEqual(glyphstr(suff2), "x")
+
+    def test_ignore_position(self):
+        doc = self.parse(
+            "feature test {"
+            "    ignore position f [a e] d' [a u]' [e y];"
+            "} test;")
+        sub = doc.statements[0].statements[0]
+        self.assertIsInstance(sub, ast.IgnorePosStatement)
+        [(prefix, glyphs, suffix)] = sub.chainContexts
+        self.assertEqual(glyphstr(prefix), "f [a e]")
+        self.assertEqual(glyphstr(glyphs), "d [a u]")
+        self.assertEqual(glyphstr(suffix), "[e y]")
+
+    def test_ignore_position_with_lookup(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            'No lookups can be specified for "ignore pos"',
+            self.parse,
+            "lookup L { pos [A A.sc] -100; } L;"
+            "feature test { ignore pos f' i', A' lookup L; } test;")
+
     def test_ignore_sub(self):
         doc = self.parse("feature test {ignore sub e t' c, q u' u' x;} test;")
         sub = doc.statements[0].statements[0]

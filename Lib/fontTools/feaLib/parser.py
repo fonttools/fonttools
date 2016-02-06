@@ -284,29 +284,42 @@ class Parser(object):
             values = values[len(prefix):][:len(glyphs)]
             return (prefix, glyphs, lookups, values, suffix, hasMarks)
 
+    def parse_chain_context_(self):
+        location = self.cur_token_location_
+        prefix, glyphs, lookups, values, suffix, hasMarks = \
+            self.parse_glyph_pattern_(vertical=False)
+        chainContext = [(prefix, glyphs, suffix)]
+        hasLookups = any(lookups)
+        while self.next_token_ == ",":
+            self.expect_symbol_(",")
+            prefix, glyphs, lookups, values, suffix, hasMarks = \
+                self.parse_glyph_pattern_(vertical=False)
+            chainContext.append((prefix, glyphs, suffix))
+            hasLookups = hasLookups or any(lookups)
+        self.expect_symbol_(";")
+        return chainContext, hasLookups
+
     def parse_ignore_(self):
         assert self.is_cur_keyword_("ignore")
         location = self.cur_token_location_
         self.advance_lexer_()
         if self.cur_token_ in ["substitute", "sub"]:
-            prefix, glyphs, lookups, values, suffix, hasMarks = \
-                self.parse_glyph_pattern_(vertical=False)
-            chainContext = [(prefix, glyphs, suffix)]
-            hasLookups = any(lookups)
-            while self.next_token_ == ",":
-                self.expect_symbol_(",")
-                prefix, glyphs, lookups, values, suffix, hasMarks = \
-                    self.parse_glyph_pattern_(vertical=False)
-                chainContext.append((prefix, glyphs, suffix))
-                hasLookups = hasLookups or any(lookups)
-            self.expect_symbol_(";")
+            chainContext, hasLookups = self.parse_chain_context_()
             if hasLookups:
                 raise FeatureLibError(
                     "No lookups can be specified for \"ignore sub\"",
                     location)
             return ast.IgnoreSubstStatement(location, chainContext)
+        if self.cur_token_ in ["position", "pos"]:
+            chainContext, hasLookups = self.parse_chain_context_()
+            if hasLookups:
+                raise FeatureLibError(
+                    "No lookups can be specified for \"ignore pos\"",
+                    location)
+            return ast.IgnorePosStatement(location, chainContext)
         raise FeatureLibError(
-            "Expected \"substitute\"", self.next_token_location_)
+            "Expected \"substitute\" or \"position\"",
+            self.cur_token_location_)
 
     def parse_language_(self):
         assert self.is_cur_keyword_("language")
