@@ -38,7 +38,7 @@ class OpenFuncWrapperTest(unittest.TestCase):
 					tempfile.NamedTemporaryFile(delete=False) as outfile:
 				check_call(
 					[sys.executable, script], stdin=infile, stdout=outfile,
-					env={"PYTHONPATH": ":".join(sys.path)})
+					env={"PYTHONPATH": os.pathsep.join(sys.path)})
 			result = not filecmp.cmp(infile.name, outfile.name, shallow=False)
 		finally:
 			os.remove(script)
