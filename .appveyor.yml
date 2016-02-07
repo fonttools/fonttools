@@ -49,14 +49,6 @@ build: false
 test_script:
   - "tox"
 
-after_test:
-  # if tests are successful, create packages for the project
-  - python setup.py sdist --formats=zip"
-
-artifacts:
-  # archive the generated packages in the ci.appveyor.com build report
-  - path: dist\*
-
 notifications:
   - provider: Email
     to:
