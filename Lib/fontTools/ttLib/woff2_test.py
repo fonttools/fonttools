@@ -7,7 +7,7 @@ from .woff2 import (WOFF2Reader, woff2DirectorySize, woff2DirectoryFormat,
 	WOFF2FlavorData, woff2TransformedTableTags, WOFF2GlyfTable, WOFF2LocaTable,
 	WOFF2Writer)
 import unittest
-import sstruct
+from fontTools.misc import sstruct
 import os
 import random
 import copy
