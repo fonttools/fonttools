@@ -177,18 +177,9 @@ class Builder(object):
         inferredGlyphClass = {}
         for lookup in self.lookups_:
             inferredGlyphClass.update(lookup.inferGlyphClasses())
-        marks = {}  # glyph --> markClass
         for markClass in self.parseTree.markClasses.values():
             for markClassDef in markClass.definitions:
                 for glyph in markClassDef.glyphSet():
-                    other = marks.get(glyph)
-                    if other not in (None, markClass):
-                        name1, name2 = sorted([markClass.name, other.name])
-                        raise FeatureLibError(
-                            'Glyph %s cannot be both in '
-                            'markClass @%s and @%s' %
-                            (glyph, name1, name2), markClassDef.location)
-                    marks[glyph] = markClass
                     inferredGlyphClass[glyph] = 3
         if self.glyphClassDefs_:
             classes = {g: c for (g, (c, _)) in self.glyphClassDefs_.items()}

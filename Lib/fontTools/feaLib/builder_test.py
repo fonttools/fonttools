@@ -57,7 +57,7 @@ class BuilderTest(unittest.TestCase):
         spec5f_ii_1 spec5f_ii_2 spec5f_ii_3 spec5f_ii_4
         spec5h1 spec6b_ii spec6d2 spec6e spec6f spec6h_ii spec6h_iii_1 spec8a
         spec9b spec9c1 spec9c2 spec9c3
-        bug463 bug501 bug502 bug505 bug506 bug509 bug512
+        bug453 bug463 bug501 bug502 bug505 bug506 bug509 bug512
     """.split()
 
     def __init__(self, methodName):
@@ -221,14 +221,6 @@ class BuilderTest(unittest.TestCase):
             "If \"languagesystem DFLT dflt\" is present, "
             "it must be the first of the languagesystem statements",
             self.build, "languagesystem latn TRK; languagesystem DFLT dflt;")
-
-    def test_markClass_redefine(self):
-        self.assertRaisesRegex(
-            FeatureLibError,
-            "Glyph C cannot be both in markClass @MARK1 and @MARK2",
-            self.build,
-            "markClass [A B C] <anchor 100 50> @MARK1;"
-            "markClass [C D E] <anchor 200 80> @MARK2;")
 
     def test_script(self):
         builder = Builder(None, makeTTFont())
