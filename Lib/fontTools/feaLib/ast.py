@@ -501,15 +501,17 @@ class ScriptStatement(Statement):
 
 
 class SinglePosStatement(Statement):
-    def __init__(self, location, pos, prefix, suffix):
+    def __init__(self, location, pos, prefix, suffix, forceChain):
         Statement.__init__(self, location)
         self.pos, self.prefix, self.suffix = pos, prefix, suffix
+        self.forceChain = forceChain
 
     def build(self, builder):
         prefix = [p.glyphSet() for p in self.prefix]
         suffix = [s.glyphSet() for s in self.suffix]
         pos = [(g.glyphSet(), value) for g, value in self.pos]
-        builder.add_single_pos(self.location, prefix, suffix, pos)
+        builder.add_single_pos(self.location, prefix, suffix,
+                               pos, self.forceChain)
 
 
 class SubtableStatement(Statement):

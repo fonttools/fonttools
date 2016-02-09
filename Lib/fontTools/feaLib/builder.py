@@ -631,11 +631,13 @@ class Builder(object):
         lookup = self.get_lookup_(location, PairPosBuilder)
         lookup.addGlyphPair(location, glyph1, value1, glyph2, value2)
 
-    def add_single_pos(self, location, prefix, suffix, pos):
-        if prefix or suffix:
+    def add_single_pos(self, location, prefix, suffix, pos, forceChain):
+        if prefix or suffix or forceChain:
             subs = []
             sub = self.get_chained_lookup_(location, SinglePosBuilder)
             for glyphs, value in pos:
+                if value is None:
+                    continue
                 if not glyphs.isdisjoint(sub.mapping.keys()):
                     sub = self.get_chained_lookup_(location, SinglePosBuilder)
                 for glyph in glyphs:

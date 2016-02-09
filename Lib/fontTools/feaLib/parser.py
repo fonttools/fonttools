@@ -459,7 +459,7 @@ class Parser(object):
 
         # Pair positioning, format A: "pos V 10 A -10;"
         # Pair positioning, format B: "pos V A -20;"
-        if not prefix and not suffix and len(glyphs) == 2:
+        if not prefix and not suffix and len(glyphs) == 2 and not hasMarks:
             if values[0] is None:  # Format B: "pos V A -20;"
                 values.reverse()
             return ast.PairPosStatement(
@@ -470,7 +470,7 @@ class Parser(object):
             raise FeatureLibError(
                 '"enumerate" is only allowed with pair positionings', location)
         return ast.SinglePosStatement(location, list(zip(glyphs, values)),
-                                      prefix, suffix)
+                                      prefix, suffix, forceChain=hasMarks)
 
     def parse_position_cursive_(self, enumerated, vertical):
         location = self.cur_token_location_
