@@ -633,24 +633,29 @@ class Builder(object):
 
     def add_single_pos(self, location, prefix, suffix, pos, forceChain):
         if prefix or suffix or forceChain:
-            chain = self.get_lookup_(location, ChainContextPosBuilder)
-            subs = []
-            sub = self.get_chained_lookup_(location, SinglePosBuilder)
+            self.add_single_pos_chained_(location, prefix, suffix, pos)
+        else:
+            lookup = self.get_lookup_(location, SinglePosBuilder)
             for glyphs, value in pos:
-                if value is None:
-                    continue
-                if not glyphs.isdisjoint(sub.mapping.keys()):
-                    sub = self.get_chained_lookup_(location, SinglePosBuilder)
                 for glyph in glyphs:
-                    sub.add_pos(location, glyph, value)
-                subs.append(sub)
-            chain.rules.append(
-                (prefix, [g for g, v in pos], suffix, subs))
-            return
-        lookup = self.get_lookup_(location, SinglePosBuilder)
+                    lookup.add_pos(location, glyph, value)
+
+    def add_single_pos_chained_(self, location, prefix, suffix, pos):
+        chain = self.get_lookup_(location, ChainContextPosBuilder)
+        sub = self.get_chained_lookup_(location, SinglePosBuilder)
+        subs = []
         for glyphs, value in pos:
+            if value is None:
+                subs.append(None)
+                continue
+            if not glyphs.isdisjoint(sub.mapping.keys()):
+                sub = self.get_chained_lookup_(location, SinglePosBuilder)
             for glyph in glyphs:
-                lookup.add_pos(location, glyph, value)
+                sub.add_pos(location, glyph, value)
+            subs.append(sub)
+        assert len(pos) == len(subs), (pos, subs)
+        chain.rules.append(
+            (prefix, [g for g, v in pos], suffix, subs))
 
     def setGlyphClass_(self, location, glyph, glyphClass):
         oldClass, oldLocation = self.glyphClassDefs_.get(glyph, (None, None))

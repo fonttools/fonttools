@@ -45,7 +45,7 @@
           <!-- LookAheadGlyphCount=0 -->
           <!-- PosCount=1 -->
           <PosLookupRecord index="0">
-            <SequenceIndex value="0"/>
+            <SequenceIndex value="1"/>
             <LookupListIndex value="1"/>
           </PosLookupRecord>
         </ChainContextPos>
