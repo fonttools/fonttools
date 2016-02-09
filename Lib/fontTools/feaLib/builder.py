@@ -633,6 +633,7 @@ class Builder(object):
 
     def add_single_pos(self, location, prefix, suffix, pos, forceChain):
         if prefix or suffix or forceChain:
+            chain = self.get_lookup_(location, ChainContextPosBuilder)
             subs = []
             sub = self.get_chained_lookup_(location, SinglePosBuilder)
             for glyphs, value in pos:
@@ -643,7 +644,6 @@ class Builder(object):
                 for glyph in glyphs:
                     sub.add_pos(location, glyph, value)
                 subs.append(sub)
-            chain = self.get_lookup_(location, ChainContextPosBuilder)
             chain.rules.append(
                 (prefix, [g for g, v in pos], suffix, subs))
             return
