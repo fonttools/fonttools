@@ -362,13 +362,10 @@ class OTTableWriter(object):
 		if internedTables is None:
 			internedTables = {}
 		items = self.items
-		iRange = list(range(len(items)))
 
-		if hasattr(self, "Extension"):
-			newTree = 1
-		else:
-			newTree = 0
-		for i in iRange:
+		newTree = hasattr(self, "Extension")
+
+		for i in range(len(items)):
 			item = items[i]
 			if hasattr(item, "getCountData"):
 				items[i] = item.getCountData()
@@ -377,11 +374,7 @@ class OTTableWriter(object):
 					item._doneWriting()
 				else:
 					item._doneWriting(internedTables)
-					internedItem = internedTables.get(item)
-					if internedItem:
-						items[i] = item = internedItem
-					else:
-						internedTables[item] = item
+					items[i] = item = internedTables.setdefault(item, item)
 		self.items = tuple(items)
 
 	def _gatherTables(self, tables=None, extTables=None, done=None):
