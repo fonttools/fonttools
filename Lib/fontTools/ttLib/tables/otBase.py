@@ -364,6 +364,12 @@ class OTTableWriter(object):
 		# as offsets may exceed 64K even between Extension LookupTable subtables.
 		newTree = hasattr(self, "Extension")
 
+		# Certain versions of Uniscribe reject the font if the GSUB/GPOS top-level
+		# arrays (ScriptList, FeatureList, LookupList) point to the same, possibly
+		# empty, array.  So, we don't share those.
+		# See: https://github.com/behdad/fonttools/issues/518
+		dontShare = hasattr(self, 'DontShare')
+
 		items = self.items
 		for i in range(len(items)):
 			item = items[i]
@@ -374,7 +380,8 @@ class OTTableWriter(object):
 					item._doneWriting()
 				else:
 					item._doneWriting(internedTables)
-					items[i] = item = internedTables.setdefault(item, item)
+					if not dontShare:
+						items[i] = item = internedTables.setdefault(item, item)
 		self.items = tuple(items)
 
 	def _gatherTables(self, tables=None, extTables=None, done=None):
@@ -430,7 +437,7 @@ class OTTableWriter(object):
 				newDone = {}
 				item._gatherTables(extTables, None, newDone)
 
-			elif item not in done:
+			elif item not in done or hasattr(self, 'DontShare'):
 				item._gatherTables(tables, extTables, done)
 			else:
 				# We're a new parent of item
@@ -635,6 +642,9 @@ class BaseTable(object):
 
 		if hasattr(self, 'sortCoverageLast'):
 			writer.sortCoverageLast = 1
+
+		if hasattr(self, 'DontShare'):
+			writer.DontShare = True
 
 		if hasattr(self.__class__, 'LookupType'):
 			writer['LookupType'].setValue(self.__class__.LookupType)
