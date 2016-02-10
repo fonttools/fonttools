@@ -356,15 +356,15 @@ class OTTableWriter(object):
 		# collapse duplicate table references to a unique entry
 		# "tables" are OTTableWriter objects.
 
+		if internedTables is None:
+			internedTables = {}
+
 		# For Extension Lookup types, we can
 		# eliminate duplicates only within the tree under the Extension Lookup,
 		# as offsets may exceed 64K even between Extension LookupTable subtables.
-		if internedTables is None:
-			internedTables = {}
-		items = self.items
-
 		newTree = hasattr(self, "Extension")
 
+		items = self.items
 		for i in range(len(items)):
 			item = items[i]
 			if hasattr(item, "getCountData"):
