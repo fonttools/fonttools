@@ -81,6 +81,21 @@ class SubstitutionDefinition(ast.Statement):
         self.mapping = zip(src, dest)
 
 
+class SubstitutionSingleDefinition(SubstitutionDefinition):
+    def __init__(self, location, src, dest):
+        SubstitutionDefinition.__init__(self, location, src, dest)
+
+
+class SubstitutionMultipleDefinition(SubstitutionDefinition):
+    def __init__(self, location, src, dest):
+        SubstitutionDefinition.__init__(self, location, src, dest)
+
+
+class SubstitutionLigatureDefinition(SubstitutionDefinition):
+    def __init__(self, location, src, dest):
+        SubstitutionDefinition.__init__(self, location, src, dest)
+
+
 class PositionAttachDefinition(ast.Statement):
     def __init__(self, location, coverage, coverage_to):
         ast.Statement.__init__(self, location)

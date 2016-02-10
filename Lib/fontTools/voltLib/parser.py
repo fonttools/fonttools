@@ -288,7 +288,22 @@ class Parser(object):
             dest.append(self.parse_coverage_())
             self.expect_keyword_("END_SUB")
         self.expect_keyword_("END_SUBSTITUTION")
-        sub = ast.SubstitutionDefinition(location, src, dest)
+        max_src = max([len(cov) for cov in src])
+        max_dest = max([len(cov) for cov in dest])
+        # many to many or mixed is invalid
+        if (max_src > 1 and max_dest > 1):
+            raise VoltLibError(
+                "Invalid substitution type",
+                location)
+        elif (max_src == 1 and
+                max_dest == 1):
+            sub = ast.SubstitutionSingleDefinition(location, src, dest)
+        elif (max_src == 1 and
+                max_dest > 1):
+            sub = ast.SubstitutionMultipleDefinition(location, src, dest)
+        elif (max_src > 1 and
+                max_dest == 1):
+            sub = ast.SubstitutionLigatureDefinition(location, src, dest)
         return sub
 
     def parse_position_(self):

@@ -443,6 +443,41 @@ class ParserTest(unittest.TestCase):
                 'END_SUBSTITUTION'
             ).statements
 
+    def test_substitution_invalid_many_to_many(self):
+        with self.assertRaisesRegex(
+                VoltLibError,
+                r'Invalid substitution type'):
+            [lookup] = self.parse(
+                'DEF_LOOKUP "invalid_substitution" PROCESS_BASE PROCESS_MARKS '
+                'ALL DIRECTION LTR\n'
+                'IN_CONTEXT\n'
+                'END_CONTEXT\n'
+                'AS_SUBSTITUTION\n'
+                'SUB GLYPH "f" GLYPH "i"\n'
+                'WITH GLYPH "f.alt" GLYPH "i.alt"\n'
+                'END_SUB\n'
+                'END_SUBSTITUTION'
+            ).statements
+
+    def test_substitution_invalid_mixed(self):
+        with self.assertRaisesRegex(
+                VoltLibError,
+                r'Invalid substitution type'):
+            [lookup] = self.parse(
+                'DEF_LOOKUP "invalid_substitution" PROCESS_BASE PROCESS_MARKS '
+                'ALL DIRECTION LTR\n'
+                'IN_CONTEXT\n'
+                'END_CONTEXT\n'
+                'AS_SUBSTITUTION\n'
+                'SUB GLYPH "fi"\n'
+                'WITH GLYPH "f" GLYPH "i"\n'
+                'END_SUB\n'
+                'SUB GLYPH "f" GLYPH "l"\n'
+                'WITH GLYPH "f_l"\n'
+                'END_SUB\n'
+                'END_SUBSTITUTION'
+            ).statements
+
     def test_substitution_single(self):
         [lookup] = self.parse(
             'DEF_LOOKUP "smcp" PROCESS_BASE PROCESS_MARKS ALL '
