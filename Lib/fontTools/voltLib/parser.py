@@ -234,7 +234,7 @@ class Parser(object):
         sub = None
         pos = None
         if as_pos_or_sub == "AS_SUBSTITUTION":
-            sub = self.parse_substitution_()
+            sub = self.parse_substitution_(reversal)
         elif as_pos_or_sub == "AS_POSITION":
             pos = self.parse_position_()
         else:
@@ -274,7 +274,7 @@ class Parser(object):
                 self.expect_keyword_("END_CONTEXT")
         return contexts
 
-    def parse_substitution_(self):
+    def parse_substitution_(self, reversal):
         assert self.is_cur_keyword_("AS_SUBSTITUTION")
         location = self.cur_token_location_
         src = []
@@ -291,18 +291,20 @@ class Parser(object):
         max_src = max([len(cov) for cov in src])
         max_dest = max([len(cov) for cov in dest])
         # many to many or mixed is invalid
-        if (max_src > 1 and max_dest > 1):
+        if ((max_src > 1 and max_dest > 1) or
+                (reversal and (max_src > 1 or max_dest > 1))):
             raise VoltLibError(
                 "Invalid substitution type",
                 location)
-        elif (max_src == 1 and
-                max_dest == 1):
-            sub = ast.SubstitutionSingleDefinition(location, src, dest)
-        elif (max_src == 1 and
-                max_dest > 1):
+        elif max_src == 1 and max_dest == 1:
+            if reversal:
+                sub = ast.SubstitutionReverseChainingSingleDefinition(
+                    location, src, dest)
+            else:
+                sub = ast.SubstitutionSingleDefinition(location, src, dest)
+        elif max_src == 1 and max_dest > 1:
             sub = ast.SubstitutionMultipleDefinition(location, src, dest)
-        elif (max_src > 1 and
-                max_dest == 1):
+        elif max_src > 1 and max_dest == 1:
             sub = ast.SubstitutionLigatureDefinition(location, src, dest)
         return sub
 

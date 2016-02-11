@@ -459,6 +459,22 @@ class ParserTest(unittest.TestCase):
                 'END_SUBSTITUTION'
             ).statements
 
+    def test_substitution_invalid_reverse_chaining_single(self):
+        with self.assertRaisesRegex(
+                VoltLibError,
+                r'Invalid substitution type'):
+            [lookup] = self.parse(
+                'DEF_LOOKUP "invalid_substitution" PROCESS_BASE PROCESS_MARKS '
+                'ALL DIRECTION LTR REVERSAL\n'
+                'IN_CONTEXT\n'
+                'END_CONTEXT\n'
+                'AS_SUBSTITUTION\n'
+                'SUB GLYPH "f" GLYPH "i"\n'
+                'WITH GLYPH "f_i"\n'
+                'END_SUB\n'
+                'END_SUBSTITUTION'
+            ).statements
+
     def test_substitution_invalid_mixed(self):
         with self.assertRaisesRegex(
                 VoltLibError,
@@ -646,6 +662,7 @@ class ParserTest(unittest.TestCase):
             ("SomeSub", True))
 
     def test_substitution_no_reversal(self):
+        # TODO: check right context with no reversal
         [lookup] = self.parse(
             'DEF_LOOKUP "Lookup" PROCESS_BASE PROCESS_MARKS ALL '
             'DIRECTION LTR\n'
@@ -720,6 +737,28 @@ class ParserTest(unittest.TestCase):
                          ("liga",
                           [(["f", "i"], ["f_i"]),
                            (["f", "t"], ["f_t"])]))
+
+    def test_substitution_reverse_chaining_single(self):
+        [lookup] = self.parse(
+            'DEF_LOOKUP "numr" PROCESS_BASE PROCESS_MARKS ALL '
+            'DIRECTION LTR REVERSAL\n'
+            'IN_CONTEXT\n'
+            'RIGHT ENUM '
+            'GLYPH "fraction" '
+            'RANGE "zero.numr" TO "nine.numr" '
+            'END_ENUM\n'
+            'END_CONTEXT\n'
+            'AS_SUBSTITUTION\n'
+            'SUB RANGE "zero" TO "nine"\n'
+            'WITH RANGE "zero.numr" TO "nine.numr"\n'
+            'END_SUB\n'
+            'END_SUBSTITUTION'
+        ).statements
+        self.assertEqual(
+            (lookup.name, lookup.context[0].right,
+             list(lookup.sub.mapping)),
+            ("numr", [[["fraction", ("zero.numr", "nine.numr")]]],
+             [([("zero", "nine")], [("zero.numr", "nine.numr")])]))
 
     # GPOS
     #  ATTACH_CURSIVE

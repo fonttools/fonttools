@@ -96,6 +96,11 @@ class SubstitutionLigatureDefinition(SubstitutionDefinition):
         SubstitutionDefinition.__init__(self, location, src, dest)
 
 
+class SubstitutionReverseChainingSingleDefinition(SubstitutionDefinition):
+    def __init__(self, location, src, dest):
+        SubstitutionDefinition.__init__(self, location, src, dest)
+
+
 class PositionAttachDefinition(ast.Statement):
     def __init__(self, location, coverage, coverage_to):
         ast.Statement.__init__(self, location)
