@@ -1,5 +1,6 @@
 from __future__ import (
     print_function, division, absolute_import, unicode_literals)
+from collections import OrderedDict
 import fontTools.voltLib.ast as ast
 import fontTools.feaLib.parser as parser
 from fontTools.voltLib.lexer import Lexer
@@ -24,6 +25,7 @@ PARSE_FUNCS = {
 class Parser(object):
     def __init__(self, path):
         self.doc_ = ast.VoltFile()
+        self.glyphs_ = OrderedSymbolTable()
         self.groups_ = SymbolTable()
         self.anchors_ = {}  # dictionary of SymbolTable() keyed by glyph
         self.scripts_ = SymbolTable()
@@ -83,8 +85,14 @@ class Parser(object):
             self.expect_keyword_("COMPONENTS")
             components = self.expect_number_()
         self.expect_keyword_("END_GLYPH")
+        if self.glyphs_.resolve(name) is not None:
+            raise VoltLibError(
+                'Glyph "%s" (gid %i) already defined' % (name, gid),
+                location
+            )
         def_glyph = ast.GlyphDefinition(location, name, gid,
                                         gunicode, gtype, components)
+        self.glyphs_.define(name, def_glyph)
         return def_glyph
 
     def parse_def_group_(self):
@@ -625,3 +633,19 @@ class SymbolTable(parser.SymbolTable):
                         # i -= removed
                         # v.enum = v.enum[:i] + resolved_group.enum + v.enum[i:]
                         # removed += len(resolved_group.enum)
+
+
+class OrderedSymbolTable(SymbolTable):
+    def __init__(self):
+        self.scopes_ = [OrderedDict()]
+
+    def enter_scope(self):
+        self.scopes_.append(OrderedDict())
+
+    def range(self, start, end):
+        for scope in reversed(self.scopes_):
+            if start in scope and end in scope:
+                start_idx = list(scope.keys()).index(start)
+                end_idx = list(scope.keys()).index(end)
+                return list(scope.keys())[start_idx:end_idx + 1]
+        return None
