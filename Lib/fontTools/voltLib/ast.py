@@ -152,29 +152,29 @@ class LookupDefinition(ast.Statement):
 
 
 class SubstitutionDefinition(ast.Statement):
-    def __init__(self, location, src, dest):
+    def __init__(self, location, mapping):
         ast.Statement.__init__(self, location)
-        self.mapping = zip(src, dest)
+        self.mapping = mapping
 
 
 class SubstitutionSingleDefinition(SubstitutionDefinition):
-    def __init__(self, location, src, dest):
-        SubstitutionDefinition.__init__(self, location, src, dest)
+    def __init__(self, location, mapping):
+        SubstitutionDefinition.__init__(self, location, mapping)
 
 
 class SubstitutionMultipleDefinition(SubstitutionDefinition):
-    def __init__(self, location, src, dest):
-        SubstitutionDefinition.__init__(self, location, src, dest)
+    def __init__(self, location, mapping):
+        SubstitutionDefinition.__init__(self, location, mapping)
 
 
 class SubstitutionLigatureDefinition(SubstitutionDefinition):
-    def __init__(self, location, src, dest):
-        SubstitutionDefinition.__init__(self, location, src, dest)
+    def __init__(self, location, mapping):
+        SubstitutionDefinition.__init__(self, location, mapping)
 
 
 class SubstitutionReverseChainingSingleDefinition(SubstitutionDefinition):
-    def __init__(self, location, src, dest):
-        SubstitutionDefinition.__init__(self, location, src, dest)
+    def __init__(self, location, mapping):
+        SubstitutionDefinition.__init__(self, location, mapping)
 
 
 class PositionAttachDefinition(ast.Statement):

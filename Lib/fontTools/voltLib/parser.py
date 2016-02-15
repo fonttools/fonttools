@@ -302,16 +302,17 @@ class Parser(object):
             raise VoltLibError(
                 "Invalid substitution type",
                 location)
-        elif max_src == 1 and max_dest == 1:
+        mapping = dict(zip(tuple(src), tuple(dest)))
+        if max_src == 1 and max_dest == 1:
             if reversal:
                 sub = ast.SubstitutionReverseChainingSingleDefinition(
-                    location, src, dest)
+                    location, mapping)
             else:
-                sub = ast.SubstitutionSingleDefinition(location, src, dest)
+                sub = ast.SubstitutionSingleDefinition(location, mapping)
         elif max_src == 1 and max_dest > 1:
-            sub = ast.SubstitutionMultipleDefinition(location, src, dest)
+            sub = ast.SubstitutionMultipleDefinition(location, mapping)
         elif max_src > 1 and max_dest == 1:
-            sub = ast.SubstitutionLigatureDefinition(location, src, dest)
+            sub = ast.SubstitutionLigatureDefinition(location, mapping)
         return sub
 
     def parse_position_(self):
@@ -531,7 +532,7 @@ class Parser(object):
                 self.expect_keyword_("TO")
                 end = self.expect_string_()
                 coverage.append((start, end))
-        return coverage
+        return tuple(coverage)
 
     def resolve_group(self, group_name):
         return self.groups_.resolve(group_name)
