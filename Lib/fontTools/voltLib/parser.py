@@ -302,7 +302,7 @@ class Parser(object):
             raise VoltLibError(
                 "Invalid substitution type",
                 location)
-        mapping = dict(zip(tuple(src), tuple(dest)))
+        mapping = OrderedDict(zip(tuple(src), tuple(dest)))
         if max_src == 1 and max_dest == 1:
             if reversal:
                 sub = ast.SubstitutionReverseChainingSingleDefinition(
