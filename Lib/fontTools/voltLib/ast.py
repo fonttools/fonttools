@@ -35,6 +35,12 @@ class GroupDefinition(ast.Statement):
         ast.Statement.__init__(self, location)
         self.name = name
         self.enum = enum
+        self.glyphs_ = None
+
+    def glyphSet(self):
+        if self.glyphs_ is None:
+            self.glyphs_ = self.enum.glyphSet()
+        return self.glyphs_
 
 
 class GlyphName(ast.Expression):
@@ -69,12 +75,13 @@ class GroupName(ast.Expression):
     def __init__(self, location, group, parser):
         ast.Expression.__init__(self, location)
         self.group = group
-        self.parser = parser
+        self.parser_ = parser
 
     def glyphSet(self):
-        group = self.parser.resolve_group(self.group)
+        group = self.parser_.resolve_group(self.group)
         if group is not None:
-            return frozenset(group.enum.glyphSet())
+            self.glyphs_ = frozenset(group.glyphSet())
+            return self.glyphs_
         else:
             raise VoltLibError(
                 'Group "%s" is used but undefined.' % (self.group),
