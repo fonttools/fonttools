@@ -539,6 +539,13 @@ class Parser(object):
                 coverage.append((start, end))
         return coverage
 
+    def resolve_group(self, group_name):
+        return self.groups_.resolve(group_name)
+
+    def glyph_range(self, start, end):
+        rng = self.glyphs_.range(start, end)
+        return frozenset(rng)
+
     def parse_ppem_(self):
         location = self.cur_token_location_
         ppem_name = self.cur_token_

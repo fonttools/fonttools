@@ -1,6 +1,7 @@
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
 import fontTools.feaLib.ast as ast
+from fontTools.voltLib.error import VoltLibError
 
 
 class VoltFile(ast.Block):
@@ -34,6 +35,63 @@ class GroupDefinition(ast.Statement):
         ast.Statement.__init__(self, location)
         self.name = name
         self.enum = enum
+
+
+class GlyphName(ast.Expression):
+    """A single glyph name, such as cedilla."""
+    def __init__(self, location, glyph):
+        ast.Expression.__init__(self, location)
+        self.glyph = glyph
+
+    def glyphSet(self):
+        return frozenset((self.glyph,))
+
+
+class Enum(ast.Expression):
+    """An enum"""
+    def __init__(self, location, enum):
+        ast.Expression.__init__(self, location)
+        self.enum = enum
+
+    def __iter__(self):
+        for e in self.glyphSet():
+            yield e
+
+    def glyphSet(self):
+        glyphs = set()
+        for element in self.enum:
+            glyphs = glyphs.union(element.glyphSet())
+        return frozenset(glyphs)
+
+
+class GroupName(ast.Expression):
+    """A glyph group"""
+    def __init__(self, location, group, parser):
+        ast.Expression.__init__(self, location)
+        self.group = group
+        self.parser = parser
+
+    def glyphSet(self):
+        group = self.parser.resolve_group(self.group)
+        if group is not None:
+            return frozenset(group.enum.glyphSet())
+        else:
+            raise VoltLibError(
+                'Group "%s" is used but undefined.' % (self.group),
+                self.location)
+
+
+class Range(ast.Expression):
+    """A glyph range"""
+    def __init__(self, location, start, end, parser):
+        ast.Expression.__init__(self, location)
+        self.start = start
+        self.end = end
+        self.parser = parser
+
+    def glyphSet(self):
+        glyphs = self.parser.glyph_range(self.start, self.end)
+        return frozenset(glyphs)
 
 
 class ScriptDefinition(ast.Statement):
