@@ -37,9 +37,17 @@ class GroupDefinition(ast.Statement):
         self.enum = enum
         self.glyphs_ = None
 
-    def glyphSet(self):
+    def glyphSet(self, groups=None):
+        if groups is not None and self.name in groups:
+            raise VoltLibError(
+                'Group "%s" contains itself.' % (self.name),
+                self.location)
         if self.glyphs_ is None:
-            self.glyphs_ = self.enum.glyphSet()
+            if groups is None:
+                groups = set({self.name})
+            else:
+                groups.add(self.name)
+            self.glyphs_ = self.enum.glyphSet(groups)
         return self.glyphs_
 
 
@@ -63,10 +71,13 @@ class Enum(ast.Expression):
         for e in self.glyphSet():
             yield e
 
-    def glyphSet(self):
+    def glyphSet(self, groups=None):
         glyphs = set()
         for element in self.enum:
-            glyphs = glyphs.union(element.glyphSet())
+            if isinstance(element, (GroupName, Enum)):
+                glyphs = glyphs.union(element.glyphSet(groups))
+            else:
+                glyphs = glyphs.union(element.glyphSet())
         return frozenset(glyphs)
 
 
@@ -77,10 +88,10 @@ class GroupName(ast.Expression):
         self.group = group
         self.parser_ = parser
 
-    def glyphSet(self):
+    def glyphSet(self, groups=None):
         group = self.parser_.resolve_group(self.group)
         if group is not None:
-            self.glyphs_ = frozenset(group.glyphSet())
+            self.glyphs_ = group.glyphSet(groups)
             return self.glyphs_
         else:
             raise VoltLibError(
