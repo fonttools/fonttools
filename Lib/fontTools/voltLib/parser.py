@@ -48,13 +48,11 @@ class Parser(object):
                 if self.next_token_type_ is not None:
                     raise VoltLibError("Expected the end of the file",
                                        self.cur_token_location_)
-                self.groups_.expand()
                 return self.doc_
             else:
                 raise VoltLibError(
                     "Expected " + ", ".join(sorted(PARSE_FUNCS.keys())),
                     self.cur_token_location_)
-        self.groups_.expand()
         return self.doc_
 
     def parse_def_glyph_(self):
@@ -484,7 +482,6 @@ class Parser(object):
 
     def parse_unicode_values_(self):
         location = self.cur_token_location_
-        # TODO use location
         try:
             unicode_values = self.expect_string_().split(",")
             unicode_values = [
@@ -496,21 +493,18 @@ class Parser(object):
 
     def parse_enum_(self):
         assert self.is_cur_keyword_("ENUM")
-        # location = self.cur_token_location_
-        # TODO use location
+        location = self.cur_token_location_
         enum = self.parse_coverage_()
         self.expect_keyword_("END_ENUM")
         return enum
 
     def parse_coverage_(self):
         coverage = []
-        # XXX use location
         location = self.cur_token_location_
         while self.next_token_ in ("GLYPH", "GROUP", "RANGE", "ENUM"):
             if self.next_token_ == "ENUM":
                 self.advance_lexer_()
                 enum = self.parse_enum_()
-                # print(enum)
                 coverage.append(enum)
             elif self.next_token_ == "GLYPH":
                 self.expect_keyword_("GLYPH")
@@ -620,26 +614,6 @@ class SymbolTable(parser.SymbolTable):
                     if key.lower() == name.lower():
                         return scope[key]
         return None
-
-    # TODO
-    # add expanding ranges
-    def expand(self):
-        for scope in self.scopes_:
-            for v in scope.values():
-                # removed = 0
-                for i, element in enumerate(list(v.enum)):
-                    # if element is a group, currently as a tuple (name, )
-                    if isinstance(element, tuple) and len(element) == 1:
-                        name = element[0]
-                        resolved_group = self.resolve(name)
-                        if resolved_group is None:
-                            raise VoltLibError(
-                                'Group "%s" is used but undefined.' % (name),
-                                None)
-                        # v.enum.remove(element)
-                        # i -= removed
-                        # v.enum = v.enum[:i] + resolved_group.enum + v.enum[i:]
-                        # removed += len(resolved_group.enum)
 
 
 class OrderedSymbolTable(SymbolTable):
