@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function, division, absolute_import, unicode_literals
 from fontTools.misc.py23 import *
+from fontTools.misc import sstruct
 from fontTools.misc.xmlWriter import XMLWriter
+import struct
 import unittest
-from ._n_a_m_e import table__n_a_m_e, NameRecord
+from ._n_a_m_e import table__n_a_m_e, NameRecord, nameRecordFormat, nameRecordSize
 
 
 def makeName(text, nameID, platformID, platEncID, langID):
@@ -40,6 +42,23 @@ class NameTableTest(unittest.TestCase):
 		table.setName("緊縮", 276, 1, 2, 0x13)
 		self.assertEqual("緊縮", table.getName(276, 1, 2, 0x13).toUnicode())
 		self.assertTrue(len(table.names) == 3)
+
+	def test_decompile_badOffset(self):
+                # https://github.com/behdad/fonttools/issues/525
+		table = table__n_a_m_e()
+		badRecord = {
+			"platformID": 1,
+			"platEncID": 3,
+			"langID": 7,
+			"nameID": 1,
+			"length": 3,
+			"offset": 8765  # out of range
+		}
+		data = bytesjoin([
+                        struct.pack(">HHH", 1, 1, 6 + nameRecordSize),
+                        sstruct.pack(nameRecordFormat, badRecord)])
+		table.decompile(data, ttFont=None)
+		self.assertEqual(table.names, [])
 
 
 class NameRecordTest(unittest.TestCase):

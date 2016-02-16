@@ -37,10 +37,13 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 		self.names = []
 		for i in range(n):
 			if len(data) < 12:
-				# compensate for buggy font
-				break
+				log.error('skipping malformed name record #%d', i)
+				continue
 			name, data = sstruct.unpack2(nameRecordFormat, data, NameRecord())
 			name.string = stringData[name.offset:name.offset+name.length]
+			if name.offset + name.length > len(stringData):
+				log.error('skipping malformed name record #%d', i)
+				continue
 			assert len(name.string) == name.length
 			#if (name.platEncID, name.platformID) in ((0, 0), (1, 3)):
 			#	if len(name.string) % 2:
