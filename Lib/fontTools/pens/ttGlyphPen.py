@@ -27,7 +27,7 @@ class TTGlyphPen(AbstractPen):
         self.components = []
 
     def _addPoint(self, pt, onCurve):
-        self.points.append([int(coord) for coord in pt])
+        self.points.append(pt)
         self.types.append(onCurve)
 
     def _popPoint(self):
@@ -94,7 +94,7 @@ class TTGlyphPen(AbstractPen):
             component.glyphName = glyphName
             if transformation[:4] != (1, 0, 0, 1):
                 component.transform = (transformation[:2], transformation[2:4])
-            component.x, component.y = [int(n) for n in transformation[4:]]
+            component.x, component.y = transformation[4:]
             component.flags = 4
             components.append(component)
 
