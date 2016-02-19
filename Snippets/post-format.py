@@ -1,8 +1,9 @@
-#! /usr/bin/env python
+#! /usr/bin/env python2
 #
-# Sample script to print post table version, based on cmap-format.py
+# Sample script to print post table version
 #
 # TODO: Extend convert an outfile.{o,t}tf with version 1, 2, 3, 4
+# TODO: Extend to print all table versions
 #
 # To print the versions of all files under the present directory,
 # and count them:
@@ -12,22 +13,12 @@
 #   done;
 # $ cat post-version.txt | sort | cut -d\  -f1 | uniq -c ;
 
-from __future__ import print_function, division, absolute_import
-from fontTools.misc.py23 import *
-from fontTools.ttLib import TTFont
-from fontTools.ttLib.tables._p_o_s_t import DefaultTable
 import sys
+from fontTools.ttLib import TTFont
 
 usage = """usage: post-format.py fontfile.{ot,}tf
 output: [version] [fontfile.ttf]"""
 
-if len(sys.argv) != 2:
-	print(usage)
-	sys.exit(1)
 fontfile = sys.argv[1]
 font = TTFont(fontfile)
-
-post = font['post']
-
-if post.formatType in [1.0, 2.0, 3.0]:
-    print(str(post.formatType), fontfile) 
+print str(font['post'].formatType), fontfile
