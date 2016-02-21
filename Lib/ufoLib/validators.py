@@ -719,6 +719,8 @@ def colorValidator(value):
 # image
 # -----
 
+pngSignature = b"\x89PNG\r\n\x1a\n"
+
 def imageValidator(value):
 	"""
 	Version 3+.
@@ -757,7 +759,7 @@ def pngValidator(path=None, data=None, fileObj=None):
 		pos = fileObj.tell()
 		signature = fileObj.read(8)
 		fileObj.seek(pos)
-	if signature != b"\x89PNG\r\n\x1a\n":
+	if signature != pngSignature:
 		return False, "Image does not begin with the PNG signature."
 	return True, None
 
