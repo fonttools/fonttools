@@ -1164,6 +1164,8 @@ class GlyphCoordinates(object):
 		self._a = array.array("f", list(self._a))
 
 	def _checkFloat(self, p):
+		if self.isFloat():
+			return p
 		if any(isinstance(v, float) for v in p):
 			p = [int(v) if int(v) == v else v for v in p]
 			if any(isinstance(v, float) for v in p):
