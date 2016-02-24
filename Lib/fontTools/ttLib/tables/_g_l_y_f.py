@@ -1240,6 +1240,9 @@ class GlyphCoordinates(object):
 			a[2*i+1] = dy
 
 	def translate(self, p):
+		"""
+		>>> GlyphCoordinates([(1,2)]).translate((.5,0))
+		"""
 		(x,y) = p
 		a = self._a
 		for i in range(len(a) // 2):
@@ -1275,3 +1278,8 @@ def reprflag(flag):
 		flag = flag >> 1
 	bin = (14 - len(bin)) * "0" + bin
 	return bin
+
+
+if __name__ == "__main__":
+	import doctest, sys
+	sys.exit(doctest.testmod().failed)
