@@ -1243,7 +1243,7 @@ class GlyphCoordinates(object):
 		"""
 		>>> GlyphCoordinates([(1,2)]).translate((.5,0))
 		"""
-		(x,y) = p
+		(x,y) = self._checkFloat(p)
 		a = self._a
 		for i in range(len(a) // 2):
 			a[2*i  ] += x
