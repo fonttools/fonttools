@@ -1250,6 +1250,9 @@ class GlyphCoordinates(object):
 			a[2*i+1] += y
 
 	def transform(self, t):
+		"""
+		>>> GlyphCoordinates([(1,2)]).transform(((.5,0),(.2,.5)))
+		"""
 		a = self._a
 		for i in range(len(a) // 2):
 			x = a[2*i  ]
