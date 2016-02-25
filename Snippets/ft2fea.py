@@ -122,16 +122,20 @@ def formatLookupflag(lookup, makeName=makeName):
 
 def formatAnchor(anchorType, anchorClassPrefix, classId, anchor):
     anchorFormat = ({
-        'MarkAnchor': '<anchor {1} {2}> {0}'
-      , 'BaseAnchor': '<anchor {1} {2}> mark {0}'
-      , 'LigatureAnchor': '<anchor {1} {2}> mark {0}'
-      , 'Mark2Anchor': '<anchor {1} {2}> mark {0}'
+        'MarkAnchor': '<anchor {1}> {0}'
+      , 'BaseAnchor': '<anchor {1}> mark {0}'
+      , 'LigatureAnchor': '<anchor {1}> mark {0}'
+      , 'Mark2Anchor': '<anchor {1}> mark {0}'
     })[anchorType]
 
-    assert anchor.Format == 1, '{0} Format {1} is not supported yet' \
-                        .format(anchorType, anchor.Format)
+    if anchor is None:
+         anchorValue = 'NULL'
+    else:
+        assert anchor.Format == 1, '{0} Format {1} is not supported yet' \
+                                        .format(anchorType, anchor.Format)
+        anchorValue = '{0} {1}'.format(anchor.XCoordinate, anchor.YCoordinate)
     anchorClass = '@{0}_{1}'.format(anchorClassPrefix, classId)
-    return anchorFormat.format(anchorClass, anchor.XCoordinate, anchor.YCoordinate)
+    return anchorFormat.format(anchorClass,  anchorValue)
 
 def formatMarkArray(markArray, markCoverage, anchorClassPrefix):
     # markClass [uni064D ] <anchor 0 -163> @Anchor0;
