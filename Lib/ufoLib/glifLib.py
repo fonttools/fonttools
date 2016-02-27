@@ -13,9 +13,10 @@ glyph data. See the class doc string for details.
 """
 
 import os
+import sys
 from io import BytesIO, StringIO, open
 from warnings import warn
-from fontTools.misc.py23 import tobytes
+from fontTools.misc.py23 import tobytes, tostr
 from ufoLib.xmlTreeBuilder import buildTree, stripCharacterData
 from ufoLib.pointPen import AbstractPointPen, PointToSegmentPen
 from ufoLib.filenames import userNameToFileName
@@ -33,9 +34,25 @@ except NameError:
 	basestring = str
 
 try:
-	from plistlib import load, dumps
+	from plistlib import load, dump
+	from plistlib import _PlistWriter
+
+	if sys.version_info >= (3, 4):
+		class PlistWriter(_PlistWriter):
+
+			def __init__(self, *args, **kwargs):
+				if "indentLevel" in kwargs:
+					kwargs["indent_level"] = kwargs["indentLevel"]
+					del kwargs["indentLevel"]
+				super().__init__(*args, **kwargs)
+
+			def writeValue(self, *args, **kwargs):
+				super().write_value(*args, **kwargs)
+	else:
+		PlistWriter = _PlistWriter
 except ImportError:
-	from plistlib import readPlist as load, writePlistToString as dumps
+	from plistlib import readPlist as load, writePlist as dump
+	from plistlib import PlistWriter
 
 __all__ = [
 	"GlyphSet",
@@ -176,11 +193,8 @@ class GlyphSet(object):
 		you're done writing glyphs.
 		"""
 		contentsPath = os.path.join(self.dirName, "contents.plist")
-		# We need to force Unix line endings, even in OS9 MacPython in FL,
-		# so we do the writing to file ourselves.
-		plist = dumps(self.contents)
 		with open(contentsPath, "wb") as f:
-			f.write(plist)
+			dump(self.contents, f)
 
 	# layer info
 
@@ -217,9 +231,8 @@ class GlyphSet(object):
 		infoData = validateLayerInfoVersion3Data(infoData)
 		# write file
 		path = os.path.join(self.dirName, LAYERINFO_FILENAME)
-		plist = dumps(infoData)
 		with open(path, "wb") as f:
-			f.write(plist)
+			dump(infoData, f)
 
 	# read caching
 
@@ -545,7 +558,7 @@ def writeGlyphToString(glyphName, glyphObject=None, drawPointsFunc=None, writer=
 		except ImportError:
 			# try the other location
 			from fontTools.misc.xmlWriter import XMLWriter
-		aFile = StringIO()
+		aFile = BytesIO()
 		writer = XMLWriter(aFile, encoding="UTF-8")
 	else:
 		aFile = None
@@ -593,7 +606,7 @@ def writeGlyphToString(glyphName, glyphObject=None, drawPointsFunc=None, writer=
 	writer.newline()
 	# return the appropriate value
 	if aFile is not None:
-		return aFile.getvalue()
+		return tostr(aFile.getvalue())
 	else:
 		return None
 
@@ -739,8 +752,6 @@ def _writeAnchors(glyphObject, writer, identifiers):
 		writer.newline()
 
 def _writeLib(glyphObject, writer):
-	from ufoLib.plistlib import PlistWriter
-
 	lib = getattr(glyphObject, "lib", None)
 	valid, message = glyphLibValidator(lib)
 	if not valid:
