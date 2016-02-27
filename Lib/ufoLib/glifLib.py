@@ -13,6 +13,7 @@ glyph data. See the class doc string for details.
 """
 
 import os
+import sys
 from io import BytesIO, StringIO, open
 from warnings import warn
 from fontTools.misc.py23 import tobytes, tostr
@@ -36,16 +37,19 @@ try:
 	from plistlib import load, dump
 	from plistlib import _PlistWriter
 
-	class PlistWriter(_PlistWriter):
+	if sys.version_info >= (3, 4):
+		class PlistWriter(_PlistWriter):
 
-		def __init__(self, *args, **kwargs):
-			if "indentLevel" in kwargs:
-				kwargs["indent_level"] = kwargs["indentLevel"]
-				del kwargs["indentLevel"]
-			super().__init__(*args, **kwargs)
+			def __init__(self, *args, **kwargs):
+				if "indentLevel" in kwargs:
+					kwargs["indent_level"] = kwargs["indentLevel"]
+					del kwargs["indentLevel"]
+				super().__init__(*args, **kwargs)
 
-		def writeValue(self, *args, **kwargs):
-			super().write_value(*args, **kwargs)
+			def writeValue(self, *args, **kwargs):
+				super().write_value(*args, **kwargs)
+	else:
+		PlistWriter = _PlistWriter
 except ImportError:
 	from plistlib import readPlist as load, writePlist as dump
 	from plistlib import PlistWriter
