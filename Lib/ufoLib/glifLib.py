@@ -15,7 +15,7 @@ glyph data. See the class doc string for details.
 import os
 from io import BytesIO, StringIO, open
 from warnings import warn
-from fontTools.misc.py23 import tobytes
+from fontTools.misc.py23 import tobytes, tostr
 from ufoLib.xmlTreeBuilder import buildTree, stripCharacterData
 from ufoLib.pointPen import AbstractPointPen, PointToSegmentPen
 from ufoLib.filenames import userNameToFileName
@@ -34,8 +34,21 @@ except NameError:
 
 try:
 	from plistlib import load, dumps
+	from plistlib import _PlistWriter
+
+	class PlistWriter(_PlistWriter):
+
+		def __init__(self, *args, **kwargs):
+			if "indentLevel" in kwargs:
+				kwargs["indent_level"] = kwargs["indentLevel"]
+				del kwargs["indentLevel"]
+			super().__init__(*args, **kwargs)
+
+		def writeValue(self, *args, **kwargs):
+			super().write_value(*args, **kwargs)
 except ImportError:
 	from plistlib import readPlist as load, writePlistToString as dumps
+	from plistlib import PlistWriter
 
 __all__ = [
 	"GlyphSet",
@@ -545,7 +558,7 @@ def writeGlyphToString(glyphName, glyphObject=None, drawPointsFunc=None, writer=
 		except ImportError:
 			# try the other location
 			from fontTools.misc.xmlWriter import XMLWriter
-		aFile = StringIO()
+		aFile = BytesIO()
 		writer = XMLWriter(aFile, encoding="UTF-8")
 	else:
 		aFile = None
@@ -593,7 +606,7 @@ def writeGlyphToString(glyphName, glyphObject=None, drawPointsFunc=None, writer=
 	writer.newline()
 	# return the appropriate value
 	if aFile is not None:
-		return aFile.getvalue()
+		return tostr(aFile.getvalue())
 	else:
 		return None
 
@@ -739,8 +752,6 @@ def _writeAnchors(glyphObject, writer, identifiers):
 		writer.newline()
 
 def _writeLib(glyphObject, writer):
-	from ufoLib.plistlib import PlistWriter
-
 	lib = getattr(glyphObject, "lib", None)
 	valid, message = glyphLibValidator(lib)
 	if not valid:
