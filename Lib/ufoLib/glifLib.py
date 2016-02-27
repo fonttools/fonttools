@@ -33,7 +33,7 @@ except NameError:
 	basestring = str
 
 try:
-	from plistlib import load, dumps
+	from plistlib import load, dump
 	from plistlib import _PlistWriter
 
 	class PlistWriter(_PlistWriter):
@@ -47,7 +47,7 @@ try:
 		def writeValue(self, *args, **kwargs):
 			super().write_value(*args, **kwargs)
 except ImportError:
-	from plistlib import readPlist as load, writePlistToString as dumps
+	from plistlib import readPlist as load, writePlist as dump
 	from plistlib import PlistWriter
 
 __all__ = [
@@ -189,11 +189,8 @@ class GlyphSet(object):
 		you're done writing glyphs.
 		"""
 		contentsPath = os.path.join(self.dirName, "contents.plist")
-		# We need to force Unix line endings, even in OS9 MacPython in FL,
-		# so we do the writing to file ourselves.
-		plist = dumps(self.contents)
 		with open(contentsPath, "wb") as f:
-			f.write(plist)
+			dump(self.contents, f)
 
 	# layer info
 
@@ -230,9 +227,8 @@ class GlyphSet(object):
 		infoData = validateLayerInfoVersion3Data(infoData)
 		# write file
 		path = os.path.join(self.dirName, LAYERINFO_FILENAME)
-		plist = dumps(infoData)
 		with open(path, "wb") as f:
-			f.write(plist)
+			dump(infoData, f)
 
 	# read caching
 
