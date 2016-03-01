@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
 """
 glifLib.py -- Generic module for reading and writing the .glif format.
 
@@ -13,46 +12,20 @@ glyph data. See the class doc string for details.
 """
 
 import os
-import sys
 from io import BytesIO, StringIO, open
 from warnings import warn
 from fontTools.misc.py23 import tobytes, tostr
 from ufoLib.xmlTreeBuilder import buildTree, stripCharacterData
+from ufoLib.plistlib import PlistWriter, readPlist, writePlist
 from ufoLib.pointPen import AbstractPointPen, PointToSegmentPen
 from ufoLib.filenames import userNameToFileName
 from ufoLib.validators import isDictEnough, genericTypeValidator, colorValidator,\
 	guidelinesValidator, anchorsValidator, identifierValidator, imageValidator, glyphLibValidator
 
 try:
-	set
-except NameError:
-	from sets import Set as set
-
-try:
 	basestring
 except NameError:
 	basestring = str
-
-try:
-	from plistlib import load, dump
-	from plistlib import _PlistWriter
-
-	if sys.version_info >= (3, 4):
-		class PlistWriter(_PlistWriter):
-
-			def __init__(self, *args, **kwargs):
-				if "indentLevel" in kwargs:
-					kwargs["indent_level"] = kwargs["indentLevel"]
-					del kwargs["indentLevel"]
-				super().__init__(*args, **kwargs)
-
-			def writeValue(self, *args, **kwargs):
-				super().write_value(*args, **kwargs)
-	else:
-		PlistWriter = _PlistWriter
-except ImportError:
-	from plistlib import readPlist as load, writePlist as dump
-	from plistlib import PlistWriter
 
 __all__ = [
 	"GlyphSet",
@@ -194,7 +167,7 @@ class GlyphSet(object):
 		"""
 		contentsPath = os.path.join(self.dirName, "contents.plist")
 		with open(contentsPath, "wb") as f:
-			dump(self.contents, f)
+			writePlist(self.contents, f)
 
 	# layer info
 
@@ -232,7 +205,7 @@ class GlyphSet(object):
 		# write file
 		path = os.path.join(self.dirName, LAYERINFO_FILENAME)
 		with open(path, "wb") as f:
-			dump(infoData, f)
+			writePlist(infoData, f)
 
 	# read caching
 
@@ -460,7 +433,7 @@ class GlyphSet(object):
 	def _readPlist(self, path):
 		try:
 			with open(path, "rb") as f:
-				data = load(f)
+				data = readPlist(f)
 			return data
 		except:
 			raise GlifLibError("The file %s could not be read." % path)
