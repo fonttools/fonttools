@@ -1,17 +1,12 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
 import os
 import shutil
 import unittest
 import tempfile
 from io import open
 from ufoLib import convertUFOFormatVersion1ToFormatVersion2, UFOReader, UFOWriter
+from ufoLib.plistlib import readPlist, writePlist
 from ufoLib.test.testSupport import expectedFontInfo1To2Conversion, expectedFontInfo2To1Conversion
-
-try:
-	from plistlib import dump, load
-except ImportError:
-	from plistlib import writePlist as dump, readPlist as load
 
 
 # the format version 1 lib.plist contains some data
@@ -79,27 +74,27 @@ class ConversionFunctionsTestCase(unittest.TestCase):
 			self.assertEqual(os.path.exists(featuresPath1), True)
 		# look for aggrement
 		with open(metainfoPath1, "rb") as f:
-			data1 = load(f)
+			data1 = readPlist(f)
 		with open(metainfoPath2, "rb") as f:
-			data2 = load(f)
+			data2 = readPlist(f)
 		self.assertEqual(data1, data2)
 		with open(fontinfoPath1, "rb") as f:
-			data1 = load(f)
+			data1 = readPlist(f)
 		self.assertEqual(sorted(data1.items()), sorted(expectedInfoData.items()))
 		with open(kerningPath1, "rb") as f:
-			data1 = load(f)
+			data1 = readPlist(f)
 		with open(kerningPath2, "rb") as f:
-			data2 = load(f)
+			data2 = readPlist(f)
 		self.assertEqual(data1, data2)
 		with open(groupsPath1, "rb") as f:
-			data1 = load(f)
+			data1 = readPlist(f)
 		with open(groupsPath2, "rb") as f:
-			data2 = load(f)
+			data2 = readPlist(f)
 		self.assertEqual(data1, data2)
 		with open(libPath1, "rb") as f:
-			data1 = load(f)
+			data1 = readPlist(f)
 		with open(libPath2, "rb") as f:
-			data2 = load(f)
+			data2 = readPlist(f)
 		if "UFO1" in libPath1:
 			for key in removeFromFormatVersion1Lib:
 				if key in data1:
@@ -110,19 +105,19 @@ class ConversionFunctionsTestCase(unittest.TestCase):
 					del data2[key]
 		self.assertEqual(data1, data2)
 		with open(glyphsPath1_contents, "rb") as f:
-			data1 = load(f)
+			data1 = readPlist(f)
 		with open(glyphsPath2_contents, "rb") as f:
-			data2 = load(f)
+			data2 = readPlist(f)
 		self.assertEqual(data1, data2)
 		with open(glyphsPath1_A, "rb") as f:
-			data1 = load(f)
+			data1 = readPlist(f)
 		with open(glyphsPath2_A, "rb") as f:
-			data2 = load(f)
+			data2 = readPlist(f)
 		self.assertEqual(data1, data2)
 		with open(glyphsPath1_B, "rb") as f:
-			data1 = load(f)
+			data1 = readPlist(f)
 		with open(glyphsPath2_B, "rb") as f:
-			data2 = load(f)
+			data2 = readPlist(f)
 		self.assertEqual(data1, data2)
 
 	def test1To2(self):
@@ -184,7 +179,7 @@ class KerningUpConversionTestCase(unittest.TestCase):
 		metaInfo = dict(creator="test", formatVersion=formatVersion)
 		path = os.path.join(self.ufoPath, "metainfo.plist")
 		with open(path, "wb") as f:
-			dump(metaInfo, f)
+			writePlist(metaInfo, f)
 		# kerning
 		kerning = {
 			"A" : {
@@ -208,7 +203,7 @@ class KerningUpConversionTestCase(unittest.TestCase):
 		}
 		path = os.path.join(self.ufoPath, "kerning.plist")
 		with open(path, "wb") as f:
-			dump(kerning, f)
+			writePlist(kerning, f)
 		# groups
 		groups = {
 			"BGroup" : ["B"],
@@ -218,14 +213,14 @@ class KerningUpConversionTestCase(unittest.TestCase):
 		}
 		path = os.path.join(self.ufoPath, "groups.plist")
 		with open(path, "wb") as f:
-			dump(groups, f)
+			writePlist(groups, f)
 		# font info
 		fontInfo = {
 			"familyName" : "Test"
 		}
 		path = os.path.join(self.ufoPath, "fontinfo.plist")
 		with open(path, "wb") as f:
-			dump(fontInfo, f)
+			writePlist(fontInfo, f)
 
 	def clearUFO(self):
 		if os.path.exists(self.ufoPath):
@@ -352,12 +347,12 @@ class KerningDownConversionTestCase(unittest.TestCase):
 		# test groups
 		path = os.path.join(self.dstDir, "groups.plist")
 		with open(path, "rb") as f:
-			writtenGroups = load(f)
+			writtenGroups = readPlist(f)
 		self.assertEqual(writtenGroups, self.expectedWrittenGroups)
 		# test kerning
 		path = os.path.join(self.dstDir, "kerning.plist")
 		with open(path, "rb") as f:
-			writtenKerning = load(f)
+			writtenKerning = readPlist(f)
 		self.assertEqual(writtenKerning, self.expectedWrittenKerning)
 		self.tearDownUFO()
 

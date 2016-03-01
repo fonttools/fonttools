@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 import os
 import shutil
 from io import StringIO, BytesIO, open
@@ -8,6 +7,7 @@ from ufoLib.glifLib import GlyphSet
 from ufoLib.validators import *
 from ufoLib.filenames import userNameToFileName
 from ufoLib.converters import convertUFO1OrUFO2KerningToUFO3Kerning
+from ufoLib.plistlib import readPlist, writePlist
 """
 A library for importing .ufo files and their descendants.
 Refer to http://unifiedfontobject.com for the UFO specification.
@@ -39,19 +39,9 @@ fontinfo.plist values between the possible format versions.
 """
 
 try:
-	set
-except NameError:
-	from sets import Set as set
-
-try:
 	basestring
 except NameError:
 	basestring = str
-
-try:
-	from plistlib import load, dump
-except ImportError:
-	from plistlib import readPlist as load, writePlist as dump
 
 __all__ = [
 	"makeUFOPath"
@@ -120,7 +110,7 @@ def _getPlist(self, fileName, default=None):
 			raise UFOLibError("%s is missing in %s. This file is required" % (fileName, self._path))
 	try:
 		with open(path, "rb") as f:
-			return load(f)
+			return readPlist(f)
 	except:
 		raise UFOLibError("The file %s could not be read." % fileName)
 
@@ -1226,7 +1216,7 @@ def writePlistAtomically(obj, path):
 	is preserved.
 	"""
 	f = BytesIO()
-	dump(obj, f)
+	writePlist(obj, f)
 	data = f.getvalue()
 	writeDataFileAtomically(data, path)
 
@@ -1306,7 +1296,7 @@ def convertUFOFormatVersion1ToFormatVersion2(inPath, outPath=None):
 		infoData = {}
 	else:
 		with open(infoPath, "rb") as f:
-			infoData = load(f)
+			infoData = readPlist(f)
 	infoData = _convertFontInfoDataVersion1ToVersion2(infoData)
 	# if the paths are the same, only need to change the
 	# fontinfo and meta info files.
