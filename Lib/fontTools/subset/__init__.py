@@ -1308,9 +1308,9 @@ def collect_features(self):
     return _uniq_sort(sum(feature_indices, []))
 
 @_add_method(otTables.ScriptList)
-def subset_features(self, feature_indices):
+def subset_features(self, feature_indices, retain_empty):
     self.ScriptRecord = [s for s in self.ScriptRecord
-                         if s.Script.subset_features(feature_indices)]
+                         if s.Script.subset_features(feature_indices) or retain_empty]
     self.ScriptCount = len(self.ScriptRecord)
     return bool(self.ScriptCount)
 
@@ -1375,6 +1375,13 @@ def subset_glyphs(self, s):
 
 @_add_method(ttLib.getTableClass('GSUB'),
              ttLib.getTableClass('GPOS'))
+def retain_empty_scripts(self):
+    # https://github.com/behdad/fonttools/issues/518
+    # https://bugzilla.mozilla.org/show_bug.cgi?id=1080739#c15
+    return self.__class__ == ttLib.getTableClass('GSUB')
+
+@_add_method(ttLib.getTableClass('GSUB'),
+             ttLib.getTableClass('GPOS'))
 def subset_lookups(self, lookup_indices):
     """Retains specified lookups, then removes empty features, language
     systems, and scripts."""
@@ -1385,7 +1392,7 @@ def subset_lookups(self, lookup_indices):
     else:
         feature_indices = []
     if self.table.ScriptList:
-        self.table.ScriptList.subset_features(feature_indices)
+        self.table.ScriptList.subset_features(feature_indices, self.retain_empty_scripts())
 
 @_add_method(ttLib.getTableClass('GSUB'),
              ttLib.getTableClass('GPOS'))
@@ -1426,7 +1433,7 @@ def subset_feature_tags(self, feature_tags):
     else:
         feature_indices = []
     if self.table.ScriptList:
-        self.table.ScriptList.subset_features(feature_indices)
+        self.table.ScriptList.subset_features(feature_indices, self.retain_empty_scripts())
 
 @_add_method(ttLib.getTableClass('GSUB'),
              ttLib.getTableClass('GPOS'))
@@ -1439,7 +1446,7 @@ def prune_features(self):
     if self.table.FeatureList:
         self.table.FeatureList.subset_features(feature_indices)
     if self.table.ScriptList:
-        self.table.ScriptList.subset_features(feature_indices)
+        self.table.ScriptList.subset_features(feature_indices, self.retain_empty_scripts())
 
 @_add_method(ttLib.getTableClass('GSUB'),
              ttLib.getTableClass('GPOS'))
@@ -2800,6 +2807,10 @@ def parse_gids(s):
 def parse_glyphs(s):
     return s.replace(',', ' ').split()
 
+def usage():
+    print("usage:", __usage__, file=sys.stderr)
+    print("Try pyftsubset --help for more information.\n", file=sys.stderr)
+
 @timer("make one with everything (TOTAL TIME)")
 def main(args=None):
     from fontTools import configLogger
@@ -2812,16 +2823,20 @@ def main(args=None):
         sys.exit(0)
 
     options = Options()
-    args = options.parse_opts(args,
-        ignore_unknown=['gids', 'gids-file',
-                        'glyphs', 'glyphs-file',
-                        'text', 'text-file',
-                        'unicodes', 'unicodes-file',
-                        'output-file'])
+    try:
+        args = options.parse_opts(args,
+            ignore_unknown=['gids', 'gids-file',
+                            'glyphs', 'glyphs-file',
+                            'text', 'text-file',
+                            'unicodes', 'unicodes-file',
+                            'output-file'])
+    except options.OptionError as e:
+        usage()
+        print("ERROR:", e, file=sys.stderr)
+        sys.exit(2)
 
     if len(args) < 2:
-        print("usage:", __usage__, file=sys.stderr)
-        print("Try pyftsubset --help for more information.", file=sys.stderr)
+        usage()
         sys.exit(1)
 
     configLogger(level=logging.INFO if options.verbose else logging.WARNING)

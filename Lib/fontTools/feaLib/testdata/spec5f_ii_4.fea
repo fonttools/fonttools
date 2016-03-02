@@ -1,0 +1,23 @@
+# OpenType Feature File specification, section 5.f.ii, example 4
+# "Specifying exceptions to the Chain Sub rule"
+# http://www.adobe.com/devnet/opentype/afdko/topic_feature_file_syntax.html
+
+@LETTER = [A-Z a-z];
+
+feature cswh {
+
+    # --- Glyph classes used in this feature:
+    @BEGINNINGS = [A-N P-Z T_h m];
+    @BEGINNINGS_SWASH = [A.swash-N.swash P.swash-Z.swash T_h.swash m.begin];
+    @ENDINGS = [a e z];
+    @ENDINGS_SWASH = [a.end e.end z.end];
+
+    # --- Beginning-of-word swashes:
+    ignore substitute @LETTER @BEGINNINGS';
+    substitute @BEGINNINGS' by @BEGINNINGS_SWASH;
+ 
+    # --- End-of-word swashes:
+    ignore substitute @ENDINGS' @LETTER;
+    substitute @ENDINGS' by @ENDINGS_SWASH;
+
+} cswh;

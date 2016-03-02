@@ -769,6 +769,59 @@ class BuilderTest(unittest.TestCase):
                          '  </Mark2Anchor>'
                          '</Mark2Record>')
 
+    def test_buildPairPosClassesSubtable(self):
+        d20 = builder.buildValue({"XPlacement": -20})
+        d50 = builder.buildValue({"XPlacement": -50})
+        d0 = builder.buildValue({})
+        d8020 = builder.buildValue({"XPlacement": -80, "YPlacement": -20})
+        subtable = builder.buildPairPosClassesSubtable({
+            (frozenset("A"), frozenset(["zero"])): (d0, d50),
+            (frozenset("A"), frozenset(["one", "two"])):  (None, d20),
+            (frozenset(["B", "C"]), frozenset(["zero"])): (d8020, d50),
+        }, self.GLYPHMAP)
+        self.maxDiff = None
+        self.assertEqual(getXML(subtable.toXML),
+                         '<PairPos Format="2">'
+                         '  <Coverage>'
+                         '    <Glyph value="A"/>'
+                         '    <Glyph value="B"/>'
+                         '    <Glyph value="C"/>'
+                         '  </Coverage>'
+                         '  <ValueFormat1 value="3"/>'
+                         '  <ValueFormat2 value="1"/>'
+                         '  <ClassDef1>'
+                         '    <ClassDef glyph="A" class="1"/>'
+                         '  </ClassDef1>'
+                         '  <ClassDef2>'
+                         '    <ClassDef glyph="one" class="1"/>'
+                         '    <ClassDef glyph="two" class="1"/>'
+                         '    <ClassDef glyph="zero" class="2"/>'
+                         '  </ClassDef2>'
+                         '  <!-- Class1Count=2 -->'
+                         '  <!-- Class2Count=3 -->'
+                         '  <Class1Record index="0">'
+                         '    <Class2Record index="0">'
+                         '    </Class2Record>'
+                         '    <Class2Record index="1">'
+                         '    </Class2Record>'
+                         '    <Class2Record index="2">'
+                         '      <Value1 XPlacement="-80" YPlacement="-20"/>'
+                         '      <Value2 XPlacement="-50"/>'
+                         '    </Class2Record>'
+                         '  </Class1Record>'
+                         '  <Class1Record index="1">'
+                         '    <Class2Record index="0">'
+                         '    </Class2Record>'
+                         '    <Class2Record index="1">'
+                         '      <Value2 XPlacement="-20"/>'
+                         '    </Class2Record>'
+                         '    <Class2Record index="2">'
+                         '      <Value1/>'
+                         '      <Value2 XPlacement="-50"/>'
+                         '    </Class2Record>'
+                         '  </Class1Record>'
+                         '</PairPos>')
+
     def test_buildPairPosGlyphs(self):
         d50 = builder.buildValue({"XPlacement": -50})
         d8020 = builder.buildValue({"XPlacement": -80, "YPlacement": -20})

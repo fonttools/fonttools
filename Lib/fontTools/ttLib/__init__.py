@@ -197,11 +197,11 @@ class TTFont(object):
 			if self.lazy and self.reader.file.name == file:
 				raise TTLibError(
 					"Can't overwrite TTFont when 'lazy' attribute is True")
-			closeStream = 1
+			closeStream = True
 			file = open(file, "wb")
 		else:
 			# assume "file" is a writable file object
-			closeStream = 0
+			closeStream = False
 
 		tags = list(self.keys())
 		if "GlyphOrder" in tags:
@@ -308,7 +308,9 @@ class TTFont(object):
 			progress.set((i + 1))
 		writer.endtag("ttFont")
 		writer.newline()
-		writer.close()
+		# close if 'fileOrPath' is a path; leave it open if it's a file
+		if not hasattr(fileOrPath, "write"):
+			writer.close()
 
 	def _tableToXML(self, writer, tag, progress, quiet=None):
 		if quiet is not None:

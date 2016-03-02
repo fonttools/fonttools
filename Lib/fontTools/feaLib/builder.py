@@ -34,6 +34,7 @@ class Builder(object):
         # for feature 'aalt'
         self.aalt_features_ = []  # [(location, featureName)*], for 'aalt'
         self.aalt_location_ = None
+        self.aalt_alternates_ = {}
         # for table 'head'
         self.fontRevision_ = None  # 2.71
         # for table 'GDEF'
@@ -103,9 +104,9 @@ class Builder(object):
         return self.cur_lookup_
 
     def build_feature_aalt_(self):
-        if not self.aalt_features_:
+        if not self.aalt_features_ and not self.aalt_alternates_:
             return
-        alternates = {}  # glyph --> {glyph.alt1, glyph.alt2, ...}
+        alternates = {g: set(a) for g, a in self.aalt_alternates_.items()}
         for location, name in self.aalt_features_ + [(None, "aalt")]:
             feature = [(script, lang, feature, lookups)
                        for (script, lang, feature), lookups
@@ -126,10 +127,6 @@ class Builder(object):
                  if len(repl) > 1}
         if not single and not multi:
             return
-        aalt_lookups = []
-        for (script, lang, feature), lookups in self.features_.items():
-            if feature == "aalt":
-                aalt_lookups.extend(lookups)
         self.features_ = {(script, lang, feature): lookups
                           for (script, lang, feature), lookups
                           in self.features_.items()
@@ -138,12 +135,11 @@ class Builder(object):
         self.lookups_ = []
         self.start_feature(self.aalt_location_, "aalt")
         if single:
-            self.add_single_subst(
-                self.aalt_location_, prefix=None, suffix=None, mapping=single)
-        for glyph, repl in multi.items():
-            self.add_multiple_subst(
-                self.aalt_location_, prefix=None, glyph=glyph, suffix=None,
-                replacements=repl)
+            single_lookup = self.get_lookup_(location, SingleSubstBuilder)
+            single_lookup.mapping = single
+        if multi:
+            multi_lookup = self.get_lookup_(location, AlternateSubstBuilder)
+            multi_lookup.alternates = multi
         self.end_feature()
         self.lookups_.extend(old_lookups)
 
@@ -181,18 +177,9 @@ class Builder(object):
         inferredGlyphClass = {}
         for lookup in self.lookups_:
             inferredGlyphClass.update(lookup.inferGlyphClasses())
-        marks = {}  # glyph --> markClass
         for markClass in self.parseTree.markClasses.values():
             for markClassDef in markClass.definitions:
                 for glyph in markClassDef.glyphSet():
-                    other = marks.get(glyph)
-                    if other not in (None, markClass):
-                        name1, name2 = sorted([markClass.name, other.name])
-                        raise FeatureLibError(
-                            'Glyph %s cannot be both in '
-                            'markClass @%s and @%s' %
-                            (glyph, name1, name2), markClassDef.location)
-                    marks[glyph] = markClass
                     inferredGlyphClass[glyph] = 3
         if self.glyphClassDefs_:
             classes = {g: c for (g, (c, _)) in self.glyphClassDefs_.items()}
@@ -364,6 +351,11 @@ class Builder(object):
         if name in self.named_lookups_:
             raise FeatureLibError(
                 'Lookup "%s" has already been defined' % name, location)
+        if self.cur_feature_name_ == "aalt":
+            raise FeatureLibError(
+                "Lookup blocks cannot be placed inside 'aalt' features; "
+                "move it out, and then refer to it with a lookup statement",
+                location)
         self.cur_lookup_name_ = name
         self.named_lookups_[name] = None
         self.cur_lookup_ = None
@@ -384,10 +376,6 @@ class Builder(object):
 
     def set_language(self, location, language, include_default, required):
         assert(len(language) == 4)
-        if self.cur_lookup_name_:
-            raise FeatureLibError(
-                "Within a named lookup block, it is not allowed "
-                "to change the language", location)
         if self.cur_feature_name_ in ('aalt', 'size'):
             raise FeatureLibError(
                 "Language statements are not allowed "
@@ -449,10 +437,6 @@ class Builder(object):
         self.lookupflag_ = value
 
     def set_script(self, location, script):
-        if self.cur_lookup_name_:
-            raise FeatureLibError(
-                "Within a named lookup block, it is not allowed "
-                "to change the script", location)
         if self.cur_feature_name_ in ('aalt', 'size'):
             raise FeatureLibError(
                 "Script statements are not allowed "
@@ -462,7 +446,7 @@ class Builder(object):
         self.lookupflag_ = 0
         self.lookupflag_markFilterSet_ = None
         self.set_language(location, "dflt",
-                          include_default=True, required=False)
+                          include_default=False, required=False)
 
     def find_lookup_builders_(self, lookups):
         """Helper for building chain contextual substitutions
@@ -495,9 +479,13 @@ class Builder(object):
 
     def add_alternate_subst(self, location,
                             prefix, glyph, suffix, replacement):
+        if self.cur_feature_name_ == "aalt":
+            alts = self.aalt_alternates_.setdefault(glyph, set())
+            alts.update(replacement)
+            return
         if prefix or suffix:
-            lookup = self.get_chained_lookup_(location, AlternateSubstBuilder)
             chain = self.get_lookup_(location, ChainContextSubstBuilder)
+            lookup = self.get_chained_lookup_(location, AlternateSubstBuilder)
             chain.substitutions.append((prefix, [glyph], suffix, [lookup]))
         else:
             lookup = self.get_lookup_(location, AlternateSubstBuilder)
@@ -515,10 +503,10 @@ class Builder(object):
         self.aalt_features_.append((location, featureName))
 
     def add_ligature_subst(self, location,
-                           prefix, glyphs, suffix, replacement):
-        if prefix or suffix:
-            lookup = self.get_chained_lookup_(location, LigatureSubstBuilder)
+                           prefix, glyphs, suffix, replacement, forceChain):
+        if prefix or suffix or forceChain:
             chain = self.get_lookup_(location, ChainContextSubstBuilder)
+            lookup = self.get_chained_lookup_(location, LigatureSubstBuilder)
             chain.substitutions.append((prefix, glyphs, suffix, [lookup]))
         else:
             lookup = self.get_lookup_(location, LigatureSubstBuilder)
@@ -534,10 +522,10 @@ class Builder(object):
     def add_multiple_subst(self, location,
                            prefix, glyph, suffix, replacements):
         if prefix or suffix:
+            chain = self.get_lookup_(location, ChainContextSubstBuilder)
             sub = self.get_chained_lookup_(location, MultipleSubstBuilder)
             sub.mapping[glyph] = replacements
-            lookup = self.get_lookup_(location, ChainContextSubstBuilder)
-            lookup.substitutions.append((prefix, [{glyph}], suffix, [sub]))
+            chain.substitutions.append((prefix, [{glyph}], suffix, [sub]))
             return
         lookup = self.get_lookup_(location, MultipleSubstBuilder)
         if glyph in lookup.mapping:
@@ -551,13 +539,14 @@ class Builder(object):
         lookup = self.get_lookup_(location, ReverseChainSingleSubstBuilder)
         lookup.substitutions.append((old_prefix, old_suffix, mapping))
 
-    def add_single_subst(self, location, prefix, suffix, mapping):
-        if prefix or suffix:
-            sub = self.get_chained_lookup_(location, SingleSubstBuilder)
-            sub.mapping.update(mapping)
-            lookup = self.get_lookup_(location, ChainContextSubstBuilder)
-            lookup.substitutions.append(
-                (prefix, [mapping.keys()], suffix, [sub]))
+    def add_single_subst(self, location, prefix, suffix, mapping, forceChain):
+        if self.cur_feature_name_ == "aalt":
+            for (from_glyph, to_glyph) in mapping.items():
+                alts = self.aalt_alternates_.setdefault(from_glyph, set())
+                alts.add(to_glyph)
+            return
+        if prefix or suffix or forceChain:
+            self.add_single_subst_chained_(location, prefix, suffix, mapping)
             return
         lookup = self.get_lookup_(location, SingleSubstBuilder)
         for (from_glyph, to_glyph) in mapping.items():
@@ -567,6 +556,24 @@ class Builder(object):
                     (from_glyph, lookup.mapping[from_glyph]),
                     location)
             lookup.mapping[from_glyph] = to_glyph
+
+    def find_chainable_SingleSubst_(self, chain, glyphs):
+        """Helper for add_single_subst_chained_()"""
+        for _, _, _, substitutions in chain.substitutions:
+            for sub in substitutions:
+                if (isinstance(sub, SingleSubstBuilder) and
+                        not any(g in glyphs for g in sub.mapping.keys())):
+                    return sub
+        return None
+
+    def add_single_subst_chained_(self, location, prefix, suffix, mapping):
+        # https://github.com/behdad/fonttools/issues/512
+        chain = self.get_lookup_(location, ChainContextSubstBuilder)
+        sub = self.find_chainable_SingleSubst_(chain, set(mapping.keys()))
+        if sub is None:
+            sub = self.get_chained_lookup_(location, SingleSubstBuilder)
+        sub.mapping.update(mapping)
+        chain.substitutions.append((prefix, [mapping.keys()], suffix, [sub]))
 
     def add_cursive_pos(self, location, glyphclass, entryAnchor, exitAnchor):
         lookup = self.get_lookup_(location, CursivePosBuilder)
@@ -617,31 +624,38 @@ class Builder(object):
 
     def add_class_pair_pos(self, location, glyphclass1, value1,
                            glyphclass2, value2):
-        lookup = self.get_lookup_(location, ClassPairPosBuilder)
-        lookup.add_pair(location, glyphclass1, value1, glyphclass2, value2)
+        lookup = self.get_lookup_(location, PairPosBuilder)
+        lookup.addClassPair(location, glyphclass1, value1, glyphclass2, value2)
 
     def add_specific_pair_pos(self, location, glyph1, value1, glyph2, value2):
-        lookup = self.get_lookup_(location, SpecificPairPosBuilder)
-        lookup.add_pair(location, glyph1, value1, glyph2, value2)
+        lookup = self.get_lookup_(location, PairPosBuilder)
+        lookup.addGlyphPair(location, glyph1, value1, glyph2, value2)
 
-    def add_single_pos(self, location, prefix, suffix, pos):
-        if prefix or suffix:
-            subs = []
-            sub = self.get_chained_lookup_(location, SinglePosBuilder)
+    def add_single_pos(self, location, prefix, suffix, pos, forceChain):
+        if prefix or suffix or forceChain:
+            self.add_single_pos_chained_(location, prefix, suffix, pos)
+        else:
+            lookup = self.get_lookup_(location, SinglePosBuilder)
             for glyphs, value in pos:
-                if not glyphs.isdisjoint(sub.mapping.keys()):
-                    sub = self.get_chained_lookup_(location, SinglePosBuilder)
                 for glyph in glyphs:
-                    sub.add_pos(location, glyph, value)
-                subs.append(sub)
-            chain = self.get_lookup_(location, ChainContextPosBuilder)
-            chain.rules.append(
-                (prefix, [g for g, v in pos], suffix, subs))
-            return
-        lookup = self.get_lookup_(location, SinglePosBuilder)
+                    lookup.add_pos(location, glyph, value)
+
+    def add_single_pos_chained_(self, location, prefix, suffix, pos):
+        chain = self.get_lookup_(location, ChainContextPosBuilder)
+        sub = self.get_chained_lookup_(location, SinglePosBuilder)
+        subs = []
         for glyphs, value in pos:
+            if value is None:
+                subs.append(None)
+                continue
+            if not glyphs.isdisjoint(sub.mapping.keys()):
+                sub = self.get_chained_lookup_(location, SinglePosBuilder)
             for glyph in glyphs:
-                lookup.add_pos(location, glyph, value)
+                sub.add_pos(location, glyph, value)
+            subs.append(sub)
+        assert len(pos) == len(subs), (pos, subs)
+        chain.rules.append(
+            (prefix, [g for g, v in pos], suffix, subs))
 
     def setGlyphClass_(self, location, glyph, glyphClass):
         oldClass, oldLocation = self.glyphClassDefs_.get(glyph, (None, None))
@@ -885,34 +899,6 @@ class MultipleSubstBuilder(LookupBuilder):
         return self.buildLookup_([subtable])
 
 
-class SpecificPairPosBuilder(LookupBuilder):
-    def __init__(self, font, location):
-        LookupBuilder.__init__(self, font, location, 'GPOS', 2)
-        self.pairs = {}  # (glyph1, glyph2) -> (value1, value2)
-        self.locations = {}  # (glyph1, glyph2) -> (filepath, line, column)
-
-    def add_pair(self, location, glyph1, value1, glyph2, value2):
-        key = (glyph1, glyph2)
-        oldValue = self.pairs.get(key, None)
-        if oldValue is not None:
-            otherLoc = self.locations[key]
-            raise FeatureLibError(
-                'Already defined position for pair %s %s at %s:%d:%d'
-                % (glyph1, glyph2, otherLoc[0], otherLoc[1], otherLoc[2]),
-                location)
-        val1, _ = makeOpenTypeValueRecord(value1)
-        val2, _ = makeOpenTypeValueRecord(value2)
-        self.pairs[key] = (val1, val2)
-        self.locations[key] = location
-
-    def equals(self, other):
-        return (LookupBuilder.equals(self, other) and self.pairs == other.pairs)
-
-    def build(self):
-        subtables = otl.buildPairPosGlyphs(self.pairs, self.glyphMap)
-        return self.buildLookup_(subtables)
-
-
 class CursivePosBuilder(LookupBuilder):
     def __init__(self, font, location):
         LookupBuilder.__init__(self, font, location, 'GPOS', 3)
@@ -1102,52 +1088,50 @@ class ClassPairPosSubtableBuilder(object):
     def flush_(self):
         if self.classDef1_ is None or self.classDef2_ is None:
             return
-        st = otTables.PairPos()
-        st.Format = 2
-        st.Coverage = otl.buildCoverage(self.coverage_, self.builder_.glyphMap)
-        st.ValueFormat1 = self.valueFormat1_
-        st.ValueFormat2 = self.valueFormat2_
-        st.ClassDef1 = self.classDef1_.build()
-        st.ClassDef2 = self.classDef2_.build()
-        classes1 = self.classDef1_.classes()
-        classes2 = self.classDef2_.classes()
-        st.Class1Count, st.Class2Count = len(classes1), len(classes2)
-        st.Class1Record = []
-        for c1 in classes1:
-            rec1 = otTables.Class1Record()
-            rec1.Class2Record = []
-            st.Class1Record.append(rec1)
-            for c2 in classes2:
-                rec2 = otTables.Class2Record()
-                val1, val2 = self.values_.get((c1, c2), (None, None))
-                rec2.Value1, rec2.Value2 = val1, val2
-                rec1.Class2Record.append(rec2)
+        st = otl.buildPairPosClassesSubtable(self.values_,
+                                             self.builder_.glyphMap)
         self.subtables_.append(st)
 
 
-class ClassPairPosBuilder(LookupBuilder):
+class PairPosBuilder(LookupBuilder):
     SUBTABLE_BREAK_ = "SUBTABLE_BREAK"
 
     def __init__(self, font, location):
         LookupBuilder.__init__(self, font, location, 'GPOS', 2)
-        self.pairs = []  # [(location, gc1, value1, gc2, value2)*]
+        self.pairs = []  # [(gc1, value1, gc2, value2)*]
+        self.glyphPairs = {}  # (glyph1, glyph2) --> (value1, value2)
+        self.locations = {}  # (gc1, gc2) --> (filepath, line, column)
 
-    def add_pair(self, location, glyphclass1, value1, glyphclass2, value2):
-        self.pairs.append((location, glyphclass1, value1, glyphclass2, value2))
+    def addClassPair(self, location, glyphclass1, value1, glyphclass2, value2):
+        self.pairs.append((glyphclass1, value1, glyphclass2, value2))
+
+    def addGlyphPair(self, location, glyph1, value1, glyph2, value2):
+        key = (glyph1, glyph2)
+        oldValue = self.glyphPairs.get(key, None)
+        if oldValue is not None:
+            otherLoc = self.locations[key]
+            raise FeatureLibError(
+                'Already defined position for pair %s %s at %s:%d:%d'
+                % (glyph1, glyph2, otherLoc[0], otherLoc[1], otherLoc[2]),
+                location)
+        val1, _ = makeOpenTypeValueRecord(value1)
+        val2, _ = makeOpenTypeValueRecord(value2)
+        self.glyphPairs[key] = (val1, val2)
+        self.locations[key] = location
 
     def add_subtable_break(self, location):
-        self.pairs.append((location,
-                           self.SUBTABLE_BREAK_, self.SUBTABLE_BREAK_,
+        self.pairs.append((self.SUBTABLE_BREAK_, self.SUBTABLE_BREAK_,
                            self.SUBTABLE_BREAK_, self.SUBTABLE_BREAK_))
 
     def equals(self, other):
         return (LookupBuilder.equals(self, other) and
+                self.glyphPairs == other.glyphPairs and
                 self.pairs == other.pairs)
 
     def build(self):
         builders = {}
         builder = None
-        for location, glyphclass1, value1, glyphclass2, value2 in self.pairs:
+        for glyphclass1, value1, glyphclass2, value2 in self.pairs:
             if glyphclass1 is self.SUBTABLE_BREAK_:
                 if builder is not None:
                     builder.addSubtableBreak()
@@ -1161,6 +1145,9 @@ class ClassPairPosBuilder(LookupBuilder):
                 builders[(valFormat1, valFormat2)] = builder
             builder.addPair(glyphclass1, val1, glyphclass2, val2)
         subtables = []
+        if self.glyphPairs:
+            subtables.extend(
+                otl.buildPairPosGlyphs(self.glyphPairs, self.glyphMap))
         for key in sorted(builders.keys()):
             subtables.extend(builders[key].subtables())
         return self.buildLookup_(subtables)

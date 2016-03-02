@@ -15,26 +15,31 @@ import unittest
 
 
 def makeTTFont():
-    glyphs = (
-        ".notdef space slash fraction semicolon period comma ampersand "
-        "quotedblleft quotedblright quoteleft quoteright "
-        "zero one two three four five six seven eight nine "
-        "zero.oldstyle one.oldstyle two.oldstyle three.oldstyle "
-        "four.oldstyle five.oldstyle six.oldstyle seven.oldstyle "
-        "eight.oldstyle nine.oldstyle onequarter onehalf threequarters "
-        "onesuperior twosuperior threesuperior ordfeminine ordmasculine "
-        "A B C D E F G H I J K L M N O P Q R S T U V W X Y Z "
-        "a b c d e f g h i j k l m n o p q r s t u v w x y z "
-        "A.sc B.sc C.sc D.sc E.sc F.sc G.sc H.sc I.sc J.sc K.sc L.sc M.sc "
-        "N.sc O.sc P.sc Q.sc R.sc S.sc T.sc U.sc V.sc W.sc X.sc Y.sc Z.sc "
-        "A.alt1 A.alt2 A.alt3 B.alt1 B.alt2 B.alt3 C.alt1 C.alt2 C.alt3 "
-        "a.alt1 a.alt2 a.alt3 b.alt c.mid d.alt d.mid e.begin e.mid "
-        "n.end s.end "
-        "f_l c_h c_k c_s c_t f_f f_f_i f_f_l f_i o_f_f_i s_t "
-        "ydieresis yacute breve "
-        "grave acute dieresis macron circumflex cedilla umlaut ogonek caron "
-        "damma hamza sukun kasratan lam_meem_jeem noon.final noon.initial "
-    ).split()
+    glyphs = """
+        .notdef space slash fraction semicolon period comma ampersand
+        quotedblleft quotedblright quoteleft quoteright
+        zero one two three four five six seven eight nine
+        zero.oldstyle one.oldstyle two.oldstyle three.oldstyle
+        four.oldstyle five.oldstyle six.oldstyle seven.oldstyle
+        eight.oldstyle nine.oldstyle onequarter onehalf threequarters
+        onesuperior twosuperior threesuperior ordfeminine ordmasculine
+        A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
+        a b c d e f g h i j k l m n o p q r s t u v w x y z
+        A.sc B.sc C.sc D.sc E.sc F.sc G.sc H.sc I.sc J.sc K.sc L.sc M.sc
+        N.sc O.sc P.sc Q.sc R.sc S.sc T.sc U.sc V.sc W.sc X.sc Y.sc Z.sc
+        A.alt1 A.alt2 A.alt3 B.alt1 B.alt2 B.alt3 C.alt1 C.alt2 C.alt3
+        a.alt1 a.alt2 a.alt3 a.end b.alt c.mid d.alt d.mid
+        e.begin e.mid e.end m.begin n.end s.end z.end
+        Eng Eng.alt1 Eng.alt2 Eng.alt3
+        A.swash B.swash C.swash D.swash E.swash F.swash G.swash H.swash
+        I.swash J.swash K.swash L.swash M.swash N.swash O.swash P.swash
+        Q.swash R.swash S.swash T.swash U.swash V.swash W.swash X.swash
+        Y.swash Z.swash
+        f_l c_h c_k c_s c_t f_f f_f_i f_f_l f_i o_f_f_i s_t f_i.begin
+        a_n_d T_h T_h.swash ydieresis yacute breve
+        grave acute dieresis macron circumflex cedilla umlaut ogonek caron
+        damma hamza sukun kasratan lam_meem_jeem noon.final noon.initial
+    """.split()
     font = TTFont()
     font.setGlyphOrder(glyphs)
     return font
@@ -45,13 +50,15 @@ class BuilderTest(unittest.TestCase):
     TEST_FEATURE_FILES = """
         Attach enum markClass language_required
         GlyphClassDef LigatureCaretByIndex LigatureCaretByPos
-        lookup lookupflag feature_aalt
+        lookup lookupflag feature_aalt ignore_pos
         GPOS_1 GPOS_1_zero GPOS_2 GPOS_2b GPOS_3 GPOS_4 GPOS_5 GPOS_6 GPOS_8
         GSUB_2 GSUB_3 GSUB_6 GSUB_8
         spec4h1 spec5d1 spec5d2 spec5fi1 spec5fi2 spec5fi3 spec5fi4
-        spec5h1 spec6d2 spec6e spec6f spec6h_ii spec6h_iii_1 spec8a
+        spec5f_ii_1 spec5f_ii_2 spec5f_ii_3 spec5f_ii_4
+        spec5h1 spec6b_ii spec6d2 spec6e spec6f
+        spec6h_ii spec6h_iii_1 spec6h_iii_3d spec8a
         spec9b spec9c1 spec9c2 spec9c3
-        bug463
+        bug453 bug463 bug501 bug502 bug505 bug506 bug509 bug512
     """.split()
 
     def __init__(self, methodName):
@@ -216,33 +223,17 @@ class BuilderTest(unittest.TestCase):
             "it must be the first of the languagesystem statements",
             self.build, "languagesystem latn TRK; languagesystem DFLT dflt;")
 
-    def test_markClass_redefine(self):
-        self.assertRaisesRegex(
-            FeatureLibError,
-            "Glyph C cannot be both in markClass @MARK1 and @MARK2",
-            self.build,
-            "markClass [A B C] <anchor 100 50> @MARK1;"
-            "markClass [C D E] <anchor 200 80> @MARK2;")
-
     def test_script(self):
         builder = Builder(None, makeTTFont())
         builder.start_feature(location=None, name='test')
         builder.set_script(location=None, script='cyrl')
-        self.assertEqual(builder.language_systems,
-                         {('DFLT', 'dflt'), ('cyrl', 'dflt')})
+        self.assertEqual(builder.language_systems, {('cyrl', 'dflt')})
 
     def test_script_in_aalt_feature(self):
         self.assertRaisesRegex(
             FeatureLibError,
             "Script statements are not allowed within \"feature aalt\"",
             self.build, "feature aalt { script latn; } aalt;")
-
-    def test_script_in_lookup_block(self):
-        self.assertRaisesRegex(
-            FeatureLibError,
-            "Within a named lookup block, it is not allowed "
-            "to change the script",
-            self.build, "lookup Foo { script latn; } Foo;")
 
     def test_script_in_size_feature(self):
         self.assertRaisesRegex(
@@ -268,13 +259,6 @@ class BuilderTest(unittest.TestCase):
             FeatureLibError,
             "Language statements are not allowed within \"feature aalt\"",
             self.build, "feature aalt { language FRA; } aalt;")
-
-    def test_language_in_lookup_block(self):
-        self.assertRaisesRegex(
-            FeatureLibError,
-            "Within a named lookup block, it is not allowed "
-            "to change the language",
-            self.build, "lookup Foo { language RUS; } Foo;")
 
     def test_language_in_size_feature(self):
         self.assertRaisesRegex(
@@ -329,6 +313,12 @@ class BuilderTest(unittest.TestCase):
             "    sub A from [A.alt1 A.alt2];"
             "} foo;")
 
+    def test_lookup_inside_feature_aalt(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Lookup blocks cannot be placed inside 'aalt' features",
+            self.build, "feature aalt {lookup L {} L;} aalt;")
+
 
 def generate_feature_file_test(name):
     return lambda self: self.check_feature_file(name)
@@ -339,4 +329,3 @@ for name in BuilderTest.TEST_FEATURE_FILES:
 
 if __name__ == "__main__":
     unittest.main()
-

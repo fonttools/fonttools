@@ -95,7 +95,7 @@ class BaseTTXConverter(DefaultTable):
 					raise # Oh well...
 
 				overflowRecord = e.value
-				log.warning("Attempting to fix OTLOffsetOverflowError %s", e)
+				log.info("Attempting to fix OTLOffsetOverflowError %s", e)
 				lastItem = overflowRecord
 
 				ok = 0
@@ -356,19 +356,22 @@ class OTTableWriter(object):
 		# collapse duplicate table references to a unique entry
 		# "tables" are OTTableWriter objects.
 
+		if internedTables is None:
+			internedTables = {}
+
 		# For Extension Lookup types, we can
 		# eliminate duplicates only within the tree under the Extension Lookup,
 		# as offsets may exceed 64K even between Extension LookupTable subtables.
-		if internedTables is None:
-			internedTables = {}
-		items = self.items
-		iRange = list(range(len(items)))
+		newTree = hasattr(self, "Extension")
 
-		if hasattr(self, "Extension"):
-			newTree = 1
-		else:
-			newTree = 0
-		for i in iRange:
+		# Certain versions of Uniscribe reject the font if the GSUB/GPOS top-level
+		# arrays (ScriptList, FeatureList, LookupList) point to the same, possibly
+		# empty, array.  So, we don't share those.
+		# See: https://github.com/behdad/fonttools/issues/518
+		dontShare = hasattr(self, 'DontShare')
+
+		items = self.items
+		for i in range(len(items)):
 			item = items[i]
 			if hasattr(item, "getCountData"):
 				items[i] = item.getCountData()
@@ -377,11 +380,8 @@ class OTTableWriter(object):
 					item._doneWriting()
 				else:
 					item._doneWriting(internedTables)
-					internedItem = internedTables.get(item)
-					if internedItem:
-						items[i] = item = internedItem
-					else:
-						internedTables[item] = item
+					if not dontShare:
+						items[i] = item = internedTables.setdefault(item, item)
 		self.items = tuple(items)
 
 	def _gatherTables(self, tables=None, extTables=None, done=None):
@@ -437,7 +437,7 @@ class OTTableWriter(object):
 				newDone = {}
 				item._gatherTables(extTables, None, newDone)
 
-			elif item not in done:
+			elif item not in done or hasattr(self, 'DontShare'):
 				item._gatherTables(tables, extTables, done)
 			else:
 				# We're a new parent of item
@@ -642,6 +642,9 @@ class BaseTable(object):
 
 		if hasattr(self, 'sortCoverageLast'):
 			writer.sortCoverageLast = 1
+
+		if hasattr(self, 'DontShare'):
+			writer.DontShare = True
 
 		if hasattr(self.__class__, 'LookupType'):
 			writer['LookupType'].setValue(self.__class__.LookupType)

@@ -1,0 +1,4 @@
+# https://github.com/behdad/fonttools/issues/506
+feature test {
+    sub f' i' by f_i;
+} test;

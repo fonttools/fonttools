@@ -12,46 +12,17 @@ elif test "x$1" = x-2; then
 	shift
 fi
 test "x$PYTHON" = x && PYTHON=python
-echo "$(which $PYTHON) --version"
-$PYTHON --version 2>&1
-echo
-
-# Setup environment
-DIR=`dirname "$0"`
-cd "$DIR/Lib"
-if [ "x$PYTHONPATH" != "x" ]; then
-	PYTHONPATH=".:$PYTHONPATH"
-else
-	PYTHONPATH="."
-fi
-export PYTHONPATH
 
 # Find tests
-FILTER=
+FILTERS=
 for arg in "$@"; do
-	test "x$FILTER" != x && FILTER="$FILTER|"
-	FILTER="$FILTER$arg"
+	test "x$FILTERS" != x && FILTERS="$FILTERS or "
+	FILTERS="$FILTERS$arg"
 done
 
-test "x$FILTER" = "x" && FILTER=.
-TESTS=`grep -r --include='*.py' -l -e doctest -e unittest * | grep -E "$FILTER"`
-
-ret=0
-FAILS=
-for test in $TESTS; do
-	echo "Running tests in $test"
-	test=`echo "$test" | sed 's@[/\\]@.@g;s@[.]py$@@'`
-	if ! $PYTHON -m $test -v; then
-		ret=$((ret+1))
-		FAILS="$FAILS
-$test"
-	fi
-done
-	echo
-	echo "SUMMARY:"
-if test $ret = 0; then
-	echo "All tests passed."
+# Run tests
+if [ -z "$FILTERS" ]; then
+	$PYTHON -m pytest
 else
-	echo "$ret source file(s) had tests failing:$FAILS" >&2
+	$PYTHON -m pytest -k "$FILTERS"
 fi
-exit $ret

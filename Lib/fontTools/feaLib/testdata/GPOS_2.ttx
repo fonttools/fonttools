@@ -23,21 +23,67 @@
       <FeatureRecord index="0">
         <FeatureTag value="kern"/>
         <Feature>
-          <!-- LookupCount=1 -->
-          <LookupListIndex index="0" value="0"/>
+          <!-- LookupCount=2 -->
+          <LookupListIndex index="0" value="1"/>
+          <LookupListIndex index="1" value="0"/>
         </Feature>
       </FeatureRecord>
       <FeatureRecord index="1">
         <FeatureTag value="vkrn"/>
         <Feature>
           <!-- LookupCount=1 -->
-          <LookupListIndex index="0" value="1"/>
+          <LookupListIndex index="0" value="2"/>
         </Feature>
       </FeatureRecord>
     </FeatureList>
     <LookupList>
-      <!-- LookupCount=2 -->
+      <!-- LookupCount=3 -->
       <Lookup index="0">
+        <!-- LookupType=2 -->
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=2 -->
+        <PairPos index="0" Format="1">
+          <Coverage>
+            <Glyph value="v"/>
+          </Coverage>
+          <ValueFormat1 value="4"/>
+          <ValueFormat2 value="0"/>
+          <!-- PairSetCount=1 -->
+          <PairSet index="0">
+            <!-- PairValueCount=1 -->
+            <PairValueRecord index="0">
+              <SecondGlyph value="v"/>
+              <Value1 XAdvance="14"/>
+            </PairValueRecord>
+          </PairSet>
+        </PairPos>
+        <PairPos index="1" Format="2">
+          <Coverage>
+            <Glyph value="D"/>
+            <Glyph value="O"/>
+            <Glyph value="Q"/>
+          </Coverage>
+          <ValueFormat1 value="4"/>
+          <ValueFormat2 value="0"/>
+          <ClassDef1>
+          </ClassDef1>
+          <ClassDef2>
+            <ClassDef glyph="T" class="1"/>
+            <ClassDef glyph="V" class="1"/>
+            <ClassDef glyph="W" class="1"/>
+          </ClassDef2>
+          <!-- Class1Count=1 -->
+          <!-- Class2Count=2 -->
+          <Class1Record index="0">
+            <Class2Record index="0">
+            </Class2Record>
+            <Class2Record index="1">
+              <Value1 XAdvance="-26"/>
+            </Class2Record>
+          </Class1Record>
+        </PairPos>
+      </Lookup>
+      <Lookup index="1">
         <!-- LookupType=2 -->
         <LookupFlag value="0"/>
         <!-- SubTableCount=2 -->
@@ -112,7 +158,7 @@
           </PairSet>
         </PairPos>
       </Lookup>
-      <Lookup index="1">
+      <Lookup index="2">
         <!-- LookupType=2 -->
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->

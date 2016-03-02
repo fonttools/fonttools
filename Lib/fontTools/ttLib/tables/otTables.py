@@ -787,6 +787,8 @@ def _buildClasses():
 		if name not in namespace:
 			# the class doesn't exist yet, so the base implementation is used.
 			cls = type(name, (baseClass,), {})
+			if name in ('GSUB', 'GPOS'):
+				cls.DontShare = True
 			namespace[name] = cls
 
 	for base, alts in _equivalents.items():

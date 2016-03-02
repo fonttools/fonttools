@@ -51,4 +51,4 @@ fi
 
 python -m virtualenv ~/.venv
 source ~/.venv/bin/activate
-pip install tox
+pip install -r dev-requirements.txt

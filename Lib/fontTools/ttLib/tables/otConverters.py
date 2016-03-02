@@ -378,7 +378,7 @@ class SubTable(Table):
 class ExtSubTable(LTable, SubTable):
 
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
-		writer.Extension = 1 # actually, mere presence of the field flags it as an Ext Subtable writer.
+		writer.Extension = True # actually, mere presence of the field flags it as an Ext Subtable writer.
 		Table.write(self, writer, font, tableDict, value, repeatIndex)
 
 class FeatureParams(Table):

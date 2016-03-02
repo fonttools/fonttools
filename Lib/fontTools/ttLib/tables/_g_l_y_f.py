@@ -1164,6 +1164,8 @@ class GlyphCoordinates(object):
 		self._a = array.array("f", list(self._a))
 
 	def _checkFloat(self, p):
+		if self.isFloat():
+			return p
 		if any(isinstance(v, float) for v in p):
 			p = [int(v) if int(v) == v else v for v in p]
 			if any(isinstance(v, float) for v in p):
@@ -1238,13 +1240,19 @@ class GlyphCoordinates(object):
 			a[2*i+1] = dy
 
 	def translate(self, p):
-		(x,y) = p
+		"""
+		>>> GlyphCoordinates([(1,2)]).translate((.5,0))
+		"""
+		(x,y) = self._checkFloat(p)
 		a = self._a
 		for i in range(len(a) // 2):
 			a[2*i  ] += x
 			a[2*i+1] += y
 
 	def transform(self, t):
+		"""
+		>>> GlyphCoordinates([(1,2)]).transform(((.5,0),(.2,.5)))
+		"""
 		a = self._a
 		for i in range(len(a) // 2):
 			x = a[2*i  ]
@@ -1273,3 +1281,8 @@ def reprflag(flag):
 		flag = flag >> 1
 	bin = (14 - len(bin)) * "0" + bin
 	return bin
+
+
+if __name__ == "__main__":
+	import doctest, sys
+	sys.exit(doctest.testmod().failed)

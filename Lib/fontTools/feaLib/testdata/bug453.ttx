@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="true" ttLibVersion="3.0">
+
+  <GDEF>
+    <Version value="1.0"/>
+    <GlyphClassDef>
+      <ClassDef glyph="acute" class="3"/>
+      <ClassDef glyph="e" class="1"/>
+    </GlyphClassDef>
+  </GDEF>
+
+  <GPOS>
+    <Version value="1.0"/>
+    <ScriptList>
+      <!-- ScriptCount=1 -->
+      <ScriptRecord index="0">
+        <ScriptTag value="DFLT"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=1 -->
+            <FeatureIndex index="0" value="0"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=1 -->
+      <FeatureRecord index="0">
+        <FeatureTag value="mark"/>
+        <Feature>
+          <!-- LookupCount=2 -->
+          <LookupListIndex index="0" value="0"/>
+          <LookupListIndex index="1" value="1"/>
+        </Feature>
+      </FeatureRecord>
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=2 -->
+      <Lookup index="0">
+        <!-- LookupType=4 -->
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <MarkBasePos index="0" Format="1">
+          <MarkCoverage>
+            <Glyph value="acute"/>
+          </MarkCoverage>
+          <BaseCoverage>
+            <Glyph value="e"/>
+          </BaseCoverage>
+          <!-- ClassCount=1 -->
+          <MarkArray>
+            <!-- MarkCount=1 -->
+            <MarkRecord index="0">
+              <Class value="0"/>
+              <MarkAnchor Format="1">
+                <XCoordinate value="150"/>
+                <YCoordinate value="-10"/>
+              </MarkAnchor>
+            </MarkRecord>
+          </MarkArray>
+          <BaseArray>
+            <!-- BaseCount=1 -->
+            <BaseRecord index="0">
+              <BaseAnchor index="0" Format="1">
+                <XCoordinate value="250"/>
+                <YCoordinate value="450"/>
+              </BaseAnchor>
+            </BaseRecord>
+          </BaseArray>
+        </MarkBasePos>
+      </Lookup>
+      <Lookup index="1">
+        <!-- LookupType=4 -->
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <MarkBasePos index="0" Format="1">
+          <MarkCoverage>
+            <Glyph value="acute"/>
+          </MarkCoverage>
+          <BaseCoverage>
+            <Glyph value="e"/>
+          </BaseCoverage>
+          <!-- ClassCount=1 -->
+          <MarkArray>
+            <!-- MarkCount=1 -->
+            <MarkRecord index="0">
+              <Class value="0"/>
+              <MarkAnchor Format="1">
+                <XCoordinate value="150"/>
+                <YCoordinate value="-20"/>
+              </MarkAnchor>
+            </MarkRecord>
+          </MarkArray>
+          <BaseArray>
+            <!-- BaseCount=1 -->
+            <BaseRecord index="0">
+              <BaseAnchor index="0" Format="1">
+                <XCoordinate value="250"/>
+                <YCoordinate value="450"/>
+              </BaseAnchor>
+            </BaseRecord>
+          </BaseArray>
+        </MarkBasePos>
+      </Lookup>
+    </LookupList>
+  </GPOS>
+
+</ttFont>

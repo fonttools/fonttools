@@ -1,0 +1,5 @@
+@LETTER_A = [A A.sc A.alt1];
+feature test {
+    ignore sub A;
+    sub @LETTER_A' by a;
+} test;

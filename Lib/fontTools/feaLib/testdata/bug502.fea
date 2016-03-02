@@ -1,0 +1,7 @@
+# https://github.com/behdad/fonttools/issues/502
+feature aalt {
+    sub A by A.alt1;
+    sub Eng by Eng.alt1;
+    sub Eng by Eng.alt2;
+    sub Eng by Eng.alt3;
+} aalt;

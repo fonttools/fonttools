@@ -1,0 +1,8 @@
+# https://github.com/behdad/fonttools/issues/501
+languagesystem DFLT dflt;
+feature test {
+    lookup L {
+        script grek;
+        pos T 100;
+    } L;
+} test;
