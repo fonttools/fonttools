@@ -498,7 +498,7 @@ class OTTableWriter(object):
 	def writeData(self, data):
 		self.items.append(data)
 
-	def	getOverflowErrorRecord(self, item):
+	def getOverflowErrorRecord(self, item):
 		LookupListIndex = SubTableIndex = itemName = itemIndex = None
 		if self.name == 'LookupList':
 			LookupListIndex = item.repeatIndex
@@ -506,7 +506,7 @@ class OTTableWriter(object):
 			LookupListIndex = self.repeatIndex
 			SubTableIndex = item.repeatIndex
 		else:
-			itemName = item.name
+			itemName = getattr(item, 'name', '<none>')
 			if hasattr(item, 'repeatIndex'):
 				itemIndex = item.repeatIndex
 			if self.name == 'SubTable':
@@ -516,10 +516,10 @@ class OTTableWriter(object):
 				LookupListIndex = self.parent.parent.repeatIndex
 				SubTableIndex = self.parent.repeatIndex
 			else: # who knows how far below the SubTable level we are! Climb back up to the nearest subtable.
-				itemName = ".".join([self.name, item.name])
+				itemName = ".".join([self.name, itemName])
 				p1 = self.parent
 				while p1 and p1.name not in ['ExtSubTable', 'SubTable']:
-					itemName = ".".join([p1.name, item.name])
+					itemName = ".".join([p1.name, itemName])
 					p1 = p1.parent
 				if p1:
 					if p1.name == 'ExtSubTable':
