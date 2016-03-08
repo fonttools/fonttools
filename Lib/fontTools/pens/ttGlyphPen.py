@@ -79,7 +79,7 @@ class TTGlyphPen(AbstractPen):
     def addComponent(self, glyphName, transformation):
         self.components.append((glyphName, transformation))
 
-    def glyph(self):
+    def glyph(self, componentFlags=0x4):
         assert self._isClosed(), "Didn't close last contour."
 
         components = []
@@ -95,7 +95,7 @@ class TTGlyphPen(AbstractPen):
             if transformation[:4] != (1, 0, 0, 1):
                 component.transform = (transformation[:2], transformation[2:4])
             component.x, component.y = transformation[4:]
-            component.flags = 4
+            component.flags = componentFlags
             components.append(component)
 
         glyph = Glyph()
