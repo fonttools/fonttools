@@ -10,7 +10,7 @@ from fontTools.ttLib.tables._g_l_y_f import GlyphComponent
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
 
 
-__all__ = ["TTGlyphPen"]
+__all__ = ["TTGlyphPen", "C2QGlyphPen"]
 
 
 class TTGlyphPen(AbstractPen):
@@ -115,3 +115,27 @@ class TTGlyphPen(AbstractPen):
         glyph.program.fromBytecode(b"")
 
         return glyph
+
+class C2QGlyphPen(TTGlyphPen):
+
+    def __init__(self, glyphSet, maxError):
+        super(C2QGlyphPen, self).__init__(glyphSet)
+        self.maxError = maxError
+        self.last = None
+
+    def lineTo(self, pt):
+        super(C2QGlyphPen, self).lineTo(pt)
+        self.last = pt
+
+    def moveTo(self, pt):
+        super(C2QGlyphPen, self).moveTo(pt)
+        self.last = pt
+
+    def curveTo(self, *points):
+        from cu2qu import curve_to_quadratic, curves_to_quadratic
+        from fontTools.pens.basePen import decomposeSuperBezierSegment
+        for segment in decomposeSuperBezierSegment(points):
+            curve = (self.last, segment[0], segment[1], segment[2])
+            quadratic, err = curve_to_quadratic(curve, self.maxError)
+            self.last = segment[2]
+            self.qCurveTo(*quadratic)
