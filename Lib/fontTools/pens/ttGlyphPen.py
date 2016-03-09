@@ -47,11 +47,12 @@ class TTGlyphPen(AbstractPen):
         self._addPoint(pt, 1)
 
     def qCurveTo(self, *points):
+        assert len(points) >= 1
         for pt in points[:-1]:
             self._addPoint(pt, 0)
 
         # last point is None if there are no on-curve points
-        if points[-1]:
+        if points[-1] is not None:
             self._addPoint(points[-1], 1)
 
     def closePath(self):
