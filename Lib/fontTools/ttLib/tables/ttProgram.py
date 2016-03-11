@@ -496,6 +496,15 @@ class Program(object):
 
 	__nonzero__ = __bool__
 
+	def __eq__(self, other):
+		if type(self) != type(other):
+			return NotImplemented
+		return self.__dict__ == other.__dict__
+
+	def __ne__(self, other):
+		result = self.__eq__(other)
+		return result if result is NotImplemented else not result
+
 
 def _test():
 	"""

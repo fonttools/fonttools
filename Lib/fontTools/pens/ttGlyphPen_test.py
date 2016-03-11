@@ -68,7 +68,6 @@ class TTGlyphPenTest(unittest.TestCase):
         pen.endPath()
         endPathGlyph = pen.glyph()
 
-        endPathGlyph.program = closePathGlyph.program
         self.assertEqual(closePathGlyph, endPathGlyph)
 
     def test_glyph_errorOnUnendedContour(self):
@@ -105,7 +104,6 @@ class TTGlyphPenTest(unittest.TestCase):
         pen.closePath()
         plainGlyph = pen.glyph()
 
-        plainGlyph.program = compositeGlyph.program
         self.assertEqual(plainGlyph, compositeGlyph)
 
 

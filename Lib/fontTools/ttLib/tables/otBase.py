@@ -345,7 +345,9 @@ class OTTableWriter(object):
 		return hash(self.items)
 
 	def __ne__(self, other):
-		return not self.__eq__(other)
+		result = self.__eq__(other)
+		return result if result is NotImplemented else not result
+
 	def __eq__(self, other):
 		if type(self) != type(other):
 			return NotImplemented
@@ -754,7 +756,9 @@ class BaseTable(object):
 			setattr(self, conv.name, value)
 
 	def __ne__(self, other):
-		return not self.__eq__(other)
+		result = self.__eq__(other)
+		return result if result is NotImplemented else not result
+
 	def __eq__(self, other):
 		if type(self) != type(other):
 			return NotImplemented
@@ -933,7 +937,9 @@ class ValueRecord(object):
 			setattr(self, name, value)
 
 	def __ne__(self, other):
-		return not self.__eq__(other)
+		result = self.__eq__(other)
+		return result if result is NotImplemented else not result
+
 	def __eq__(self, other):
 		if type(self) != type(other):
 			return NotImplemented

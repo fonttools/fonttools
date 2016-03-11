@@ -979,13 +979,14 @@ class Glyph(object):
 					cFlags = cFlags[nextOnCurve:]
 			pen.closePath()
 
-	def __ne__(self, other):
-		return not self.__eq__(other)
 	def __eq__(self, other):
 		if type(self) != type(other):
 			return NotImplemented
 		return self.__dict__ == other.__dict__
 
+	def __ne__(self, other):
+		result = self.__eq__(other)
+		return result if result is NotImplemented else not result
 
 class GlyphComponent(object):
 
@@ -1141,12 +1142,14 @@ class GlyphComponent(object):
 			self.transform = [[scale, 0], [0, scale]]
 		self.flags = safeEval(attrs["flags"])
 
-	def __ne__(self, other):
-		return not self.__eq__(other)
 	def __eq__(self, other):
 		if type(self) != type(other):
 			return NotImplemented
 		return self.__dict__ == other.__dict__
+
+	def __ne__(self, other):
+		result = self.__eq__(other)
+		return result if result is NotImplemented else not result
 
 class GlyphCoordinates(object):
 
@@ -1261,13 +1264,14 @@ class GlyphCoordinates(object):
 			py = x * t[0][1] + y * t[1][1]
 			self[i] = (px, py)
 
-	def __ne__(self, other):
-		return not self.__eq__(other)
 	def __eq__(self, other):
 		if type(self) != type(other):
 			return NotImplemented
 		return self._a == other._a
 
+	def __ne__(self, other):
+		result = self.__eq__(other)
+		return result if result is NotImplemented else not result
 
 def reprflag(flag):
 	bin = ""
