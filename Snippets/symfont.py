@@ -212,7 +212,3 @@ def main(args):
 if __name__ == '__main__':
 	import sys
 	main(sys.argv[1:])
-
-#areag = green(1)
-#area_f = lambdify(areag)
-#print("area", area_f)
