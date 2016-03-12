@@ -338,6 +338,8 @@ class Builder(object):
         self.language_systems = self.get_default_language_systems_()
         self.cur_lookup_ = None
         self.cur_feature_name_ = name
+        self.lookupflag_ = 0
+        self.lookupflag_markFilterSet_ = None
         if name == "aalt":
             self.aalt_location_ = location
 
@@ -346,6 +348,8 @@ class Builder(object):
         self.cur_feature_name_ = None
         self.language_systems = None
         self.cur_lookup_ = None
+        self.lookupflag_ = 0
+        self.lookupflag_markFilterSet_ = None
 
     def start_lookup_block(self, location, name):
         if name in self.named_lookups_:
@@ -359,11 +363,15 @@ class Builder(object):
         self.cur_lookup_name_ = name
         self.named_lookups_[name] = None
         self.cur_lookup_ = None
+        self.lookupflag_ = 0
+        self.lookupflag_markFilterSet_ = None
 
     def end_lookup_block(self):
         assert self.cur_lookup_name_ is not None
         self.cur_lookup_name_ = None
         self.cur_lookup_ = None
+        self.lookupflag_ = 0
+        self.lookupflag_markFilterSet_ = None
 
     def add_lookup_call(self, lookup_name):
         assert lookup_name in self.named_lookups_, lookup_name
