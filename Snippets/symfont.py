@@ -21,7 +21,7 @@ Psymbol = sp.symbols('P')
 P = tuple(sp.symbols('P[:%d][:2]' % (n+1), real=True))
 P = tuple(P[2*i:2*(i+1)] for i in range(len(P) // 2))
 
-# Cubic Berstein basis functions
+# Cubic Bernstein basis functions
 BinomialCoefficient = [(1, 0)]
 for i in range(1, n+1):
 	last = BinomialCoefficient[-1]
@@ -29,14 +29,14 @@ for i in range(1, n+1):
 	BinomialCoefficient.append(this)
 BinomialCoefficient = tuple(tuple(item[:-1]) for item in BinomialCoefficient)
 
-BersteinPolynomial = tuple(
+BernsteinPolynomial = tuple(
 	tuple(c * t**i * (1-t)**(n-i) for i,c in enumerate(coeffs))
 	for n,coeffs in enumerate(BinomialCoefficient))
 
 BezierCurve = tuple(
 	tuple(sum(P[i][j]*berstein for i,berstein in enumerate(bersteins))
 		for j in range(2))
-	for n,bersteins in enumerate(BersteinPolynomial))
+	for n,bersteins in enumerate(BernsteinPolynomial))
 
 def green(f, Bezier=BezierCurve[n]):
 	f1 = sp.integrate(f, y)
