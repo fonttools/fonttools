@@ -303,7 +303,7 @@ class OTTableWriter(object):
 		# For Extension Lookup types, we can
 		# eliminate duplicates only within the tree under the Extension Lookup,
 		# as offsets may exceed 64K even between Extension LookupTable subtables.
-		newTree = hasattr(self, "Extension")
+		isExtension = hasattr(self, "Extension")
 
 		# Certain versions of Uniscribe reject the font if the GSUB/GPOS top-level
 		# arrays (ScriptList, FeatureList, LookupList) point to the same, possibly
@@ -311,18 +311,18 @@ class OTTableWriter(object):
 		# See: https://github.com/behdad/fonttools/issues/518
 		dontShare = hasattr(self, 'DontShare')
 
+		if isExtension:
+			internedTables = {}
+
 		items = self.items
 		for i in range(len(items)):
 			item = items[i]
 			if hasattr(item, "getCountData"):
 				items[i] = item.getCountData()
 			elif hasattr(item, "getData"):
-				if newTree:
-					item._doneWriting({})
-				else:
-					item._doneWriting(internedTables)
-					if not dontShare:
-						items[i] = item = internedTables.setdefault(item, item)
+				item._doneWriting(internedTables)
+				if not dontShare:
+					items[i] = item = internedTables.setdefault(item, item)
 		self.items = tuple(items)
 
 	def _gatherTables(self, tables, extTables, done):
@@ -340,10 +340,14 @@ class OTTableWriter(object):
 		iRange = list(range(numItems))
 		iRange.reverse()
 
-		if hasattr(self, "Extension"):
-			appendExtensions = 1
-		else:
-			appendExtensions = 0
+		isExtension = hasattr(self, "Extension")
+		dontShare = hasattr(self, 'DontShare')
+
+		selfTables = tables
+
+		if isExtension:
+			assert extTables is not None, "Program or XML editing error. Extension subtables cannot contain extensions subtables"
+			tables, extTables, done = extTables, None, {}
 
 		# add Coverage table if it is sorted last.
 		sortCoverageLast = 0
@@ -369,18 +373,13 @@ class OTTableWriter(object):
 				# we've already 'gathered' it above
 				continue
 
-			if appendExtensions:
-				assert extTables is not None, "Program or XML editing error. Extension subtables cannot contain extensions subtables"
-				newDone = {}
-				item._gatherTables(extTables, None, newDone)
-
-			elif item not in done or hasattr(self, 'DontShare'):
+			if dontShare or item not in done:
 				item._gatherTables(tables, extTables, done)
 			else:
-				# We're a new parent of item
+				# Item is already written out by other parent
 				pass
 
-		tables.append(self)
+		selfTables.append(self)
 
 	def getAllData(self):
 		"""Assemble all data, including all subtables."""
