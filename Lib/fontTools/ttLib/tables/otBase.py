@@ -295,13 +295,10 @@ class OTTableWriter(object):
 			return NotImplemented
 		return self.items == other.items
 
-	def _doneWriting(self, internedTables=None):
+	def _doneWriting(self, internedTables):
 		# Convert CountData references to data string items
 		# collapse duplicate table references to a unique entry
 		# "tables" are OTTableWriter objects.
-
-		if internedTables is None:
-			internedTables = {}
 
 		# For Extension Lookup types, we can
 		# eliminate duplicates only within the tree under the Extension Lookup,
@@ -321,14 +318,14 @@ class OTTableWriter(object):
 				items[i] = item.getCountData()
 			elif hasattr(item, "getData"):
 				if newTree:
-					item._doneWriting()
+					item._doneWriting({})
 				else:
 					item._doneWriting(internedTables)
 					if not dontShare:
 						items[i] = item = internedTables.setdefault(item, item)
 		self.items = tuple(items)
 
-	def _gatherTables(self, tables=None, extTables=None, done=None):
+	def _gatherTables(self, tables, extTables, done):
 		# Convert table references in self.items tree to a flat
 		# list of tables in depth-first traversal order.
 		# "tables" are OTTableWriter objects.
@@ -336,10 +333,6 @@ class OTTableWriter(object):
 		# resolve duplicate references to be the last reference in the list of tables.
 		# For extension lookups, duplicate references can be merged only within the
 		# writer tree under the  extension lookup.
-		if tables is None: # init call for first time.
-			tables = []
-			extTables = []
-			done = {}
 
 		done[self] = 1
 
@@ -388,12 +381,15 @@ class OTTableWriter(object):
 				pass
 
 		tables.append(self)
-		return tables, extTables
 
 	def getAllData(self):
 		"""Assemble all data, including all subtables."""
-		self._doneWriting()
-		tables, extTables = self._gatherTables()
+		internedTables = {}
+		self._doneWriting(internedTables)
+		tables = []
+		extTables = []
+		done = {}
+		self._gatherTables(tables, extTables, done)
 		tables.reverse()
 		extTables.reverse()
 		# Gather all data in two passes: the absolute positions of all
