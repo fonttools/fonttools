@@ -700,6 +700,42 @@ def splitLigatureSubst(oldSubTable, newSubTable, overflowRecord):
 	return ok
 
 
+def splitPairPos(oldSubTable, newSubTable, overflowRecord):
+	st = oldSubTable
+	ok = False
+	newSubTable.Format = oldSubTable.Format
+	if oldSubTable.Format == 2 and oldSubTable.Class1Count > 1:
+		for name in 'Class2Count', 'ClassDef2', 'ValueFormat1', 'ValueFormat2':
+			setattr(newSubTable, name, getattr(oldSubTable, name))
+
+		# Move top half of class numbers to new subtable
+
+		newSubTable.Coverage = oldSubTable.Coverage.__class__()
+		newSubTable.ClassDef1 = oldSubTable.ClassDef1.__class__()
+
+		coverage = oldSubTable.Coverage.glyphs
+		classDefs = oldSubTable.ClassDef1.classDefs
+		records = oldSubTable.Class1Record
+
+		oldCount = oldSubTable.Class1Count // 2
+		newGlyphs = set(k for k,v in classDefs.items() if v >= oldCount)
+
+		oldSubTable.Coverage.glyphs = [g for g in coverage if g not in newGlyphs]
+		oldSubTable.ClassDef1.classDefs = {k:v for k,v in classDefs.items() if v < oldCount}
+		oldSubTable.Class1Record = records[:oldCount]
+
+		newSubTable.Coverage.glyphs = [g for g in coverage if g in newGlyphs]
+		newSubTable.ClassDef1.classDefs = {k:(v-oldCount) for k,v in classDefs.items() if v >= oldCount}
+		newSubTable.Class1Record = records[oldCount:]
+
+		oldSubTable.Class1Count = len(oldSubTable.Class1Record)
+		newSubTable.Class1Count = len(newSubTable.Class1Record)
+
+		ok = True
+
+	return ok
+
+
 splitTable = {	'GSUB': {
 #					1: splitSingleSubst,
 #					2: splitMultipleSubst,
@@ -712,7 +748,7 @@ splitTable = {	'GSUB': {
 					},
 				'GPOS': {
 #					1: splitSinglePos,
-#					2: splitPairPos,
+					2: splitPairPos,
 #					3: splitCursivePos,
 #					4: splitMarkBasePos,
 #					5: splitMarkLigPos,
