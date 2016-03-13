@@ -334,7 +334,7 @@ class OTTableWriter(object):
 		# For extension lookups, duplicate references can be merged only within the
 		# writer tree under the  extension lookup.
 
-		done[self] = 1
+		done[id(self)] = True
 
 		numItems = len(self.items)
 		iRange = list(range(numItems))
@@ -358,7 +358,7 @@ class OTTableWriter(object):
 				if hasattr(item, "name") and (item.name == "Coverage"):
 					sortCoverageLast = 1
 					break
-			if item not in done:
+			if id(item) not in done:
 				item._gatherTables(tables, extTables, done)
 			else:
 				# We're a new parent of item
@@ -373,7 +373,7 @@ class OTTableWriter(object):
 				# we've already 'gathered' it above
 				continue
 
-			if dontShare or item not in done:
+			if id(item) not in done:
 				item._gatherTables(tables, extTables, done)
 			else:
 				# Item is already written out by other parent
