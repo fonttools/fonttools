@@ -304,36 +304,6 @@ class OTTableWriter(object):
 						items[i] = packUShort(item.pos - pos)
 					except struct.error:
 						# provide data to fix overflow problem.
-						# If the overflow is to a lookup, or from a lookup to a subtable,
-						# just report the current item.  Otherwise...
-						if self.name not in [ 'LookupList', 'Lookup']:
-							# overflow is within a subTable. Life is more complicated.
-							# If we split the sub-table just before the current item, we may still suffer overflow.
-							# This is because duplicate table merging is done only within an Extension subTable tree;
-							# when we split the subtable in two, some items may no longer be duplicates.
-							# Get worst case by adding up all the item lengths, depth first traversal.
-							# and then report the first item that overflows a short.
-							def getDeepItemLength(table):
-								if hasattr(table, "getDataLength"):
-									length = 0
-									for item in table.items:
-										length = length + getDeepItemLength(item)
-								else:
-									length = len(table)
-								return length
-
-							length = self.getDataLength()
-							if hasattr(self, "sortCoverageLast") and item.name == "Coverage":
-								# Coverage is first in the item list, but last in the table list,
-								# The original overflow is really in the item list. Skip the Coverage
-								# table in the following test.
-								items = items[i+1:]
-
-							for j in range(len(items)):
-								item = items[j]
-								length = length + getDeepItemLength(item)
-								if length > 65535:
-									break
 						overflowErrorRecord = self.getOverflowErrorRecord(item)
 
 						raise OTLOffsetOverflowError(overflowErrorRecord)
