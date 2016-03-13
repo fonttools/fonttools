@@ -247,34 +247,6 @@ class OTTableWriter(object):
 
 	# assembler interface
 
-	def getAllData(self):
-		"""Assemble all data, including all subtables."""
-		self._doneWriting()
-		tables, extTables = self._gatherTables()
-		tables.reverse()
-		extTables.reverse()
-		# Gather all data in two passes: the absolute positions of all
-		# subtable are needed before the actual data can be assembled.
-		pos = 0
-		for table in tables:
-			table.pos = pos
-			pos = pos + table.getDataLength()
-
-		for table in extTables:
-			table.pos = pos
-			pos = pos + table.getDataLength()
-
-		data = []
-		for table in tables:
-			tableData = table.getData()
-			data.append(tableData)
-
-		for table in extTables:
-			tableData = table.getData()
-			data.append(tableData)
-
-		return bytesjoin(data)
-
 	def getDataLength(self):
 		"""Return the length of this table in bytes, without subtables."""
 		l = 0
@@ -417,6 +389,34 @@ class OTTableWriter(object):
 
 		tables.append(self)
 		return tables, extTables
+
+	def getAllData(self):
+		"""Assemble all data, including all subtables."""
+		self._doneWriting()
+		tables, extTables = self._gatherTables()
+		tables.reverse()
+		extTables.reverse()
+		# Gather all data in two passes: the absolute positions of all
+		# subtable are needed before the actual data can be assembled.
+		pos = 0
+		for table in tables:
+			table.pos = pos
+			pos = pos + table.getDataLength()
+
+		for table in extTables:
+			table.pos = pos
+			pos = pos + table.getDataLength()
+
+		data = []
+		for table in tables:
+			tableData = table.getData()
+			data.append(tableData)
+
+		for table in extTables:
+			tableData = table.getData()
+			data.append(tableData)
+
+		return bytesjoin(data)
 
 	# interface for gathering data, as used by table.compile()
 
