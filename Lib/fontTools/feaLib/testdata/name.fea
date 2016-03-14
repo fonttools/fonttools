@@ -1,0 +1,8 @@
+table name {
+  nameid 7 3 "Test7";
+  nameid 8 1 "Test8";
+  nameid 9 3 1 0x0409 "Test9";
+  nameid 10 1 "Test10";
+  nameid 11 1 0 0 "Test11";
+} name;
+

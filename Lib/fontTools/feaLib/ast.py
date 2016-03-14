@@ -575,3 +575,19 @@ class ValueRecordDefinition(Statement):
         Statement.__init__(self, location)
         self.name = name
         self.value = value
+
+
+class NameRecord(Statement):
+    def __init__(self, location, nameID, platformID,
+                 platEncID, langID, string):
+        Statement.__init__(self, location)
+        self.nameID = nameID
+        self.platformID = platformID
+        self.platEncID = platEncID
+        self.langID = langID
+        self.string = string
+
+    def build(self, builder):
+        builder.add_name_record(
+            self.location, self.nameID, self.platformID,
+            self.platEncID, self.langID, self.string)
