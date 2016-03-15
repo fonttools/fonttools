@@ -8,15 +8,19 @@ from fontTools.ttLib.tables import otBase, otTables
 import itertools
 
 
-def addOpenTypeFeatures(featurefile_path, font):
-    builder = Builder(featurefile_path, font)
+def addOpenTypeFeatures(font, featurefile_path=None, featurefile_data=None):
+    # we may have a path but no data, or data but no path
+    assert featurefile_path or featurefile_data
+    # pack this until we yield it the lexer
+    featurefile_path_data = (featurefile_path, featurefile_data)
+    builder = Builder(font, featurefile_path_data)
     builder.build()
 
 
 class Builder(object):
-    def __init__(self, featurefile_path, font):
-        self.featurefile_path = featurefile_path
+    def __init__(self, font, featurefile_path_data):
         self.font = font
+        self.featurefile_path_data = featurefile_path_data
         self.glyphMap = font.getReverseGlyphMap()
         self.default_language_systems_ = set()
         self.script_ = None
@@ -49,7 +53,7 @@ class Builder(object):
         self.markFilterSets_ = {}  # frozenset({"acute", "grave"}) --> 4
 
     def build(self):
-        self.parseTree = Parser(self.featurefile_path).parse()
+        self.parseTree = Parser(self.featurefile_path_data).parse()
         self.parseTree.build(self)
         self.build_feature_aalt_()
         self.build_head()

@@ -166,8 +166,9 @@ class Lexer(object):
 
 
 class IncludingLexer(object):
-    def __init__(self, filename):
-        self.lexers_ = [self.make_lexer_(filename, (filename, 0, 0))]
+    def __init__(self, featurefile):
+        path, data = featurefile
+        self.lexers_ = [self.make_lexer_(data, (path, 0, 0))]
 
     def __iter__(self):
         return self
@@ -202,9 +203,12 @@ class IncludingLexer(object):
         raise StopIteration()
 
     @staticmethod
-    def make_lexer_(filename, location):
-        try:
-            with open(filename, "r", encoding="utf-8") as f:
-                return Lexer(f.read(), filename)
-        except IOError as err:
-            raise FeatureLibError(str(err), location)
+    def make_lexer_(data, location):
+        filename = location[0]
+        if data is None:
+            try:
+                with open(filename, "r", encoding="utf-8") as f:
+                    data = f.read()
+            except IOError as err:
+                raise FeatureLibError(str(err), location)
+        return Lexer(data, filename)
