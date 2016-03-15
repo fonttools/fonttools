@@ -2,6 +2,7 @@ from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
 from fontTools.feaLib.error import FeatureLibError
 from fontTools.feaLib.lexer import Lexer, IncludingLexer
+from fontTools.misc.py23 import *
 import fontTools.feaLib.ast as ast
 import os
 import re
@@ -670,6 +671,7 @@ class Parser(object):
         handler = {
             "GDEF": self.parse_table_GDEF_,
             "head": self.parse_table_head_,
+            "name": self.parse_table_name_,
         }.get(name)
         if handler:
             handler(table)
@@ -711,6 +713,73 @@ class Parser(object):
             else:
                 raise FeatureLibError("Expected FontRevision",
                                       self.cur_token_location_)
+
+    def parse_table_name_(self, table):
+        statements = table.statements
+        while self.next_token_ != "}":
+            self.advance_lexer_()
+            if self.is_cur_keyword_("nameid"):
+                statement = self.parse_nameid_()
+                if statement:
+                    statements.append(statement)
+            else:
+                raise FeatureLibError("Expected nameid",
+                                      self.cur_token_location_)
+
+    def parse_nameid_(self):
+        assert self.cur_token_ == "nameid", self.cur_token_
+        location, nameID = self.cur_token_location_, self.expect_number_()
+        if nameID > 255:
+            raise FeatureLibError("Expected name id < 255",
+                                  self.cur_token_location_)
+        if 1 <= nameID <= 6:
+            # TODO: issue a warning
+            return None
+
+        if self.next_token_type_ == Lexer.NUMBER:
+            platformID = self.expect_number_()
+            if platformID not in (1, 3):
+                raise FeatureLibError("Expected platform id 1 or 3",
+                                      self.cur_token_location_)
+            if self.next_token_type_ == Lexer.NUMBER:
+                platEncID = self.expect_number_()
+                langID = self.expect_number_()
+        else:
+            platformID = 3
+
+        if platformID == 1:   # Macintosh
+            platEncID = 0     # Roman
+            langID = 0        # English
+        else:                 # 3, Windows
+            platEncID = 1     # Unicode
+            langID = 0x0409   # English
+
+        string = self.expect_string_()
+        self.expect_symbol_(";")
+
+        if platformID == 1 and platEncID == 0:
+            string = self.unescape_mac_name_string(string)
+        elif platformID == 3 and platEncID == 1:
+            string = self.unescape_windows_name_string(string)
+
+        return ast.NameRecord(location, nameID, platformID,
+                              platEncID, langID, string)
+
+    def unescape_mac_name_string(self, string):
+        def unescape(match):
+            n = match.group(0)[1:]
+            c = bytechr(int(n, 16)).decode('mac_roman')
+            return c
+
+        return re.sub(r'\\[0-9a-zAZ]{2}', unescape, string)
+
+    def unescape_windows_name_string(self, string):
+        def unescape(match):
+            n = match.group(0)[1:]
+            c = unichr(int(n, 16))
+            return c
+
+        return re.sub(r'\\[0-9a-zAZ]{4}', unescape, string)
 
     def parse_device_(self):
         result = None
@@ -992,6 +1061,12 @@ class Parser(object):
             return self.cur_token_
         raise FeatureLibError("Expected a floating-point number",
                               self.cur_token_location_)
+
+    def expect_string_(self):
+        self.advance_lexer_()
+        if self.cur_token_type_ is Lexer.STRING:
+            return self.cur_token_
+        raise FeatureLibError("Expected a string", self.cur_token_location_)
 
     def advance_lexer_(self):
         self.cur_token_type_, self.cur_token_, self.cur_token_location_ = (

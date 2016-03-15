@@ -37,6 +37,8 @@ class Builder(object):
         self.aalt_alternates_ = {}
         # for table 'head'
         self.fontRevision_ = None  # 2.71
+        # for table 'name'
+        self.names_ = []
         # for table 'GDEF'
         self.attachPoints_ = {}  # "a" --> {3, 7}
         self.ligCaretCoords_ = {}  # "f_f_i" --> {300, 600}
@@ -51,6 +53,7 @@ class Builder(object):
         self.parseTree.build(self)
         self.build_feature_aalt_()
         self.build_head()
+        self.build_name()
         for tag in ('GPOS', 'GSUB'):
             table = self.makeTable(tag)
             if (table.ScriptList.ScriptCount > 0 or
@@ -153,6 +156,16 @@ class Builder(object):
             table.tableVersion = 1.0
             table.created = table.modified = 3406620153  # 2011-12-13 11:22:33
         table.fontRevision = self.fontRevision_
+
+    def build_name(self):
+        if not self.names_:
+            return
+        table = self.font.get("name")
+        if not table:  # this only happens for unit tests
+            table = self.font["name"] = getTableClass("name")()
+        for name in self.names_:
+            nameID, platformID, platEncID, langID, string = name
+            table.setName(string, nameID, platformID, platEncID, langID)
 
     def buildGDEF(self):
         gdef = otTables.GDEF()
@@ -684,6 +697,10 @@ class Builder(object):
     def add_ligatureCaretByPos_(self, location, glyphs, carets):
         for glyph in glyphs:
             self.ligCaretCoords_.setdefault(glyph, set()).update(carets)
+
+    def add_name_record(self, location, nameID, platformID, platEncID,
+                        langID, string):
+        self.names_.append([nameID, platformID, platEncID, langID, string])
 
 
 def makeOpenTypeAnchor(anchor):
