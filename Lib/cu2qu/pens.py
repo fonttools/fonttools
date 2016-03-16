@@ -6,8 +6,8 @@ try:
     from ufoLib.pointPen import AbstractPointPen, BasePointToSegmentPen
     from ufoLib.pointPen import PointToSegmentPen, SegmentToPointPen
 except ImportError:
-    from robofab.pointPen import AbstractPointPen, BasePointToSegmentPen
-    from robofab.pointPen import PointToSegmentPen, SegmentToPointPen
+    from robofab.pens.pointPen import AbstractPointPen, BasePointToSegmentPen
+    from robofab.pens.adapterPens import PointToSegmentPen, SegmentToPointPen
 
 
 class Cu2QuPen(AbstractPen):
