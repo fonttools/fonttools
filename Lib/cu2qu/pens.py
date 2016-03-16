@@ -11,9 +11,18 @@ except ImportError:
 
 
 class Cu2QuPen(AbstractPen):
+    """ A filter pen to convert cubic bezier curves to quadratic b-splines
+    using the FontTools SegmentPen protocol.
+
+    other_pen: another SegmentPen used to draw the transformed outline.
+    max_err: maximum approximation error in font units.
+    reverse_direction: flip the contours' direction but keep starting point.
+    stats: a dictionary counting the point numbers of quadratic segments.
+    ignore_single_points: don't emit contours containing only a single point.
+    """
 
     def __init__(self, other_pen, max_err, reverse_direction=False,
-                 stats=None, ignore_single_points=True):
+                 stats=None, ignore_single_points=False):
         if reverse_direction:
             self.pen = ReverseContourPen(other_pen)
         else:
@@ -91,6 +100,14 @@ class Cu2QuPen(AbstractPen):
 
 
 class Cu2QuPointPen(BasePointToSegmentPen):
+    """ A filter pen to convert cubic bezier curves to quadratic b-splines
+    using the RoboFab PointPen protocol.
+
+    other_point_pen: another PointPen used to draw the transformed outline.
+    max_err: maximum approximation error in font units.
+    reverse_direction: reverse the winding direction of all contours.
+    stats: a dictionary counting the point numbers of quadratic segments.
+    """
 
     def __init__(self, other_point_pen, max_err, reverse_direction=False,
                  stats=None):
@@ -242,6 +259,7 @@ class ReverseContourPointPen(AbstractPointPen):
 
 
 class ReverseContourPen(SegmentToPointPen):
+    """ Same as 'ReverseContourPointPen' but using the SegmentPen protocol. """
 
     def __init__(self, other_pen):
         adapter_point_pen = PointToSegmentPen(other_pen)
