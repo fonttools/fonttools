@@ -51,11 +51,16 @@ class Cu2QuPen(AbstractPen):
         self.current_pt = pt
 
     def qCurveTo(self, *points):
-        assert len(points) >= 1
         assert self.current_pt is not None
-        self._add_moveTo()
-        self.pen.qCurveTo(*points)
-        self.current_pt = points[-1]
+        n = len(points)
+        if n == 1:
+            self.lineTo(points[0])
+        elif n > 1:
+            self._add_moveTo()
+            self.pen.qCurveTo(*points)
+            self.current_pt = points[-1]
+        else:
+            raise AssertionError("illegal qcurve segment point count: %d" % n)
 
     def _curve_to_quadratic(self, pt1, pt2, pt3):
         assert self.current_pt is not None
@@ -67,19 +72,19 @@ class Cu2QuPen(AbstractPen):
         self.qCurveTo(*quadratic[1:])
 
     def curveTo(self, *points):
-        # 'n' is the number of control points
-        n = len(points) - 1
-        assert n >= 0
-        if n == 2:
+        n = len(points)
+        if n == 3:
             # this is the most common case, so we special-case it
             self._curve_to_quadratic(*points)
-        elif n > 2:
+        elif n > 3:
             for segment in decomposeSuperBezierSegment(points):
                 self._curve_to_quadratic(*segment)
-        elif n == 1:
+        elif n == 2:
             self.qCurveTo(*points)
-        elif n == 0:
+        elif n == 1:
             self.lineTo(points[0])
+        else:
+            raise AssertionError("illegal curve segment point count: %d" % n)
 
     def closePath(self):
         assert self.current_pt is not None
