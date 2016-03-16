@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# RoboFab documentation build configuration file, created by
+# ufoLib documentation build configuration file, created by
 # sphinx-quickstart on Wed Oct 19 19:32:35 2011.
 #
 # This file is execfile()d with the current directory set to its containing dir.
@@ -244,7 +244,7 @@ texinfo_documents = [
 # -- Options for Epub output ---------------------------------------------------
 
 # Bibliographic Dublin Core info.
-epub_title = u'RoboFab'
+epub_title = u'ufoLib'
 epub_author = u'Tal Leming, Erik van Blokland, Just van Rossum'
 epub_publisher = u'Tal Leming, Erik van Blokland, Just van Rossum'
 epub_copyright = u'2011, Tal Leming, Erik van Blokland, Just van Rossum'
