@@ -597,13 +597,13 @@ def _writeAdvance(glyphObject, writer):
 		if height == 0:
 		    height = None
 	if width is not None and height is not None:
-		writer.simpletag("advance", width=str(width), height=str(height))
+		writer.simpletag("advance", width=repr(width), height=repr(height))
 		writer.newline()
 	elif width is not None:
-		writer.simpletag("advance", width=str(width))
+		writer.simpletag("advance", width=repr(width))
 		writer.newline()
 	elif height is not None:
-		writer.simpletag("advance", height=str(height))
+		writer.simpletag("advance", height=repr(height))
 		writer.newline()
 
 def _writeUnicodes(glyphObject, writer):
@@ -646,7 +646,7 @@ def _writeImage(glyphObject, writer):
 	for attr, default in _transformationInfo:
 		value = image.get(attr, default)
 		if value != default:
-			attrs.append((attr, str(value)))
+			attrs.append((attr, repr(value)))
 	color = image.get("color")
 	if color is not None:
 		attrs.append(("color", color))
@@ -661,13 +661,13 @@ def _writeGuidelines(glyphObject, writer, identifiers):
 		attrs = []
 		x = guideline.get("x")
 		if x is not None:
-			attrs.append(("x", str(x)))
+			attrs.append(("x", repr(x)))
 		y = guideline.get("y")
 		if y is not None:
-			attrs.append(("y", str(y)))
+			attrs.append(("y", repr(y)))
 		angle = guideline.get("angle")
 		if angle is not None:
-			attrs.append(("angle", str(angle)))
+			attrs.append(("angle", repr(angle)))
 		name = guideline.get("name")
 		if name is not None:
 			attrs.append(("name", name))
@@ -689,9 +689,9 @@ def _writeAnchorsFormat1(pen, anchors):
 	for anchor in anchors:
 		attrs = []
 		x = anchor["x"]
-		attrs.append(("x", str(x)))
+		attrs.append(("x", repr(x)))
 		y = anchor["y"]
-		attrs.append(("y", str(y)))
+		attrs.append(("y", repr(y)))
 		name = anchor.get("name")
 		if name is not None:
 			attrs.append(("name", name))
@@ -706,9 +706,9 @@ def _writeAnchors(glyphObject, writer, identifiers):
 	for anchor in anchors:
 		attrs = []
 		x = anchor["x"]
-		attrs.append(("x", str(x)))
+		attrs.append(("x", repr(x)))
 		y = anchor["y"]
-		attrs.append(("y", str(y)))
+		attrs.append(("y", repr(y)))
 		name = anchor.get("name")
 		if name is not None:
 			attrs.append(("name", name))
@@ -1508,8 +1508,8 @@ class GLIFPointPen(AbstractPointPen):
 			for coord in pt:
 				if not isinstance(coord, (int, float)):
 					raise GlifLibError("coordinates must be int or float")
-			attrs.append(("x", str(pt[0])))
-			attrs.append(("y", str(pt[1])))
+			attrs.append(("x", repr(pt[0])))
+			attrs.append(("y", repr(pt[1])))
 		# segment type
 		if segmentType == "offcurve":
 			segmentType = None
@@ -1553,7 +1553,7 @@ class GLIFPointPen(AbstractPointPen):
 			if not isinstance(value, (int, float)):
 				raise GlifLibError("transformation values must be int or float")
 			if value != default:
-				attrs.append((attr, str(value)))
+				attrs.append((attr, repr(value)))
 		if identifier is not None and self.formatVersion >= 2:
 			if identifier in self.identifiers:
 				raise GlifLibError("identifier used more than once: %s" % identifier)
