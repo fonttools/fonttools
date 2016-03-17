@@ -101,9 +101,9 @@ class Glyph(object):
 		if self.name is not None:
 			text.append("glyph.name = \"%s\"" % self.name)
 		if self.width:
-			text.append("glyph.width = %s" % str(self.width))
+			text.append("glyph.width = %r" % self.width)
 		if self.height:
-			text.append("glyph.height = %s" % str(self.height))
+			text.append("glyph.height = %r" % self.height)
 		if self.unicodes is not None:
 			text.append("glyph.unicodes = [%s]" % ", ".join([str(i) for i in self.unicodes]))
 		if self.note is not None:
@@ -133,7 +133,7 @@ def _dictToString(d):
 		elif isinstance(value, tuple):
 			value = _tupleToString(value)
 		elif isinstance(value, (int, float)):
-			value = str(value)
+			value = repr(value)
 		elif isinstance(value, basestring):
 			value = "\"%s\"" % value
 		text.append("%s : %s" % (key, value))
@@ -151,7 +151,7 @@ def _listToString(l):
 		elif isinstance(value, tuple):
 			value = _tupleToString(value)
 		elif isinstance(value, (int, float)):
-			value = str(value)
+			value = repr(value)
 		elif isinstance(value, basestring):
 			value = "\"%s\"" % value
 		text.append(value)
@@ -169,7 +169,7 @@ def _tupleToString(t):
 		elif isinstance(value, tuple):
 			value = _tupleToString(value)
 		elif isinstance(value, (int, float)):
-			value = str(value)
+			value = repr(value)
 		elif isinstance(value, basestring):
 			value = "\"%s\"" % value
 		text.append(value)
