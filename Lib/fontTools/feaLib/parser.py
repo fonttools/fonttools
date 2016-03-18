@@ -736,6 +736,8 @@ class Parser(object):
             # TODO: issue a warning
             return None
 
+        platEncID = None
+        langID = None
         if self.next_token_type_ == Lexer.NUMBER:
             platformID = self.expect_number_()
             if platformID not in (1, 3):
@@ -747,12 +749,12 @@ class Parser(object):
         else:
             platformID = 3
 
-        if platformID == 1:   # Macintosh
-            platEncID = 0     # Roman
-            langID = 0        # English
-        else:                 # 3, Windows
-            platEncID = 1     # Unicode
-            langID = 0x0409   # English
+        if platformID == 1:                # Macintosh
+            platEncID = platEncID or 0     # Roman
+            langID = langID or 0           # English
+        else:                              # 3, Windows
+            platEncID = platEncID or 1     # Unicode
+            langID = langID or 0x0409      # English
 
         string = self.expect_string_()
         self.expect_symbol_(";")
