@@ -38,6 +38,8 @@ class Builder(object):
         # for 'featureNames'
         self.featureNames_ = []
         self.featureNames_ids_ = {}
+        # for feature 'size'
+        self.size_parameters_ = None
         # for table 'head'
         self.fontRevision_ = None  # 2.71
         # for table 'name'
@@ -169,7 +171,15 @@ class Builder(object):
 
     def buildFeatureParams(self, tag):
         params = None
-        if tag in self.featureNames_:
+        if tag == "size":
+            params = otTables.FeatureParamsSize()
+            params.DesignSize, params.SubfamilyID, params.RangeStart, \
+                    params.RangeEnd = self.size_parameters_
+            if tag in self.featureNames_ids_:
+                params.SubfamilyNameID = self.featureNames_ids_[tag]
+            else:
+                params.SubfamilyNameID = 0
+        elif tag in self.featureNames_:
             assert tag in self.featureNames_ids_
             params = otTables.FeatureParamsStylisticSet()
             params.Version = 0
@@ -293,7 +303,9 @@ class Builder(object):
             # rules will have no lookup_index while building GPOS tables.
             lookup_indices = tuple([l.lookup_index for l in lookups
                                     if l.lookup_index is not None])
-            if len(lookup_indices) == 0:
+
+            size_feature = (tag == "GPOS" and feature_tag == "size")
+            if len(lookup_indices) == 0 and not size_feature:
                 continue
 
             feature_key = (feature_tag, lookup_indices)
@@ -553,6 +565,17 @@ class Builder(object):
 
     def add_featureName(self, location, tag):
         self.featureNames_.append(tag)
+
+    def set_size_parameters(self, location, DesignSize, SubfamilyID,
+                            RangeStart, RangeEnd):
+        if self.cur_feature_name_ != 'size':
+            raise FeatureLibError(
+                "Parameters statements are not allowed "
+                "within \"feature %s\"" % self.cur_feature_name_, location)
+        self.size_parameters_ = [DesignSize, SubfamilyID, RangeStart, RangeEnd]
+        for script, lang in self.language_systems:
+            key = (script, lang, self.cur_feature_name_)
+            self.features_.setdefault(key, [])
 
     def add_ligature_subst(self, location,
                            prefix, glyphs, suffix, replacement, forceChain):

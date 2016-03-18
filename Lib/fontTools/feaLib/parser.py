@@ -663,6 +663,29 @@ class Parser(object):
         self.expect_symbol_(";")
         return ast.SubtableStatement(location)
 
+    def parse_size_parameters_(self):
+        assert self.is_cur_keyword_("parameters")
+        location = self.cur_token_location_
+        DesignSize = self.expect_decipoint_()
+        SubfamilyID = self.expect_number_()
+        RangeStart = 0
+        RangeEnd = 0
+        if self.next_token_type_ in (Lexer.NUMBER, Lexer.FLOAT) or \
+                SubfamilyID != 0:
+            RangeStart = self.expect_decipoint_()
+            RangeEnd = self.expect_decipoint_()
+
+        self.expect_symbol_(";")
+        return ast.SizeParameters(location, DesignSize, SubfamilyID,
+                                  RangeStart, RangeEnd)
+
+    def parse_size_menuname_(self):
+        assert self.is_cur_keyword_("sizemenuname")
+        location = self.cur_token_location_
+        platformID, platEncID, langID, string = self.parse_name_()
+        return ast.FeatureNameStatement(location, "size", platformID,
+                                        platEncID, langID, string)
+
     def parse_table_(self):
         assert self.is_cur_keyword_("table")
         location, name = self.cur_token_location_, self.expect_tag_()
@@ -889,13 +912,15 @@ class Parser(object):
         if tag in ["ss%02d" % i for i in range(1, 20+1)]:
             stylisticset = tag
 
+        size_feature = (tag == "size")
+
         use_extension = False
         if self.next_token_ == "useExtension":
             self.expect_keyword_("useExtension")
             use_extension = True
 
         block = ast.FeatureBlock(location, tag, use_extension)
-        self.parse_block_(block, vertical, stylisticset)
+        self.parse_block_(block, vertical, stylisticset, size_feature)
         return block
 
     def parse_feature_reference_(self):
@@ -938,7 +963,8 @@ class Parser(object):
                                   location)
         return ast.FontRevisionStatement(location, version)
 
-    def parse_block_(self, block, vertical, stylisticset=None):
+    def parse_block_(self, block, vertical, stylisticset=None,
+                     size_feature=False):
         self.expect_symbol_("{")
         for symtab in self.symbol_tables_:
             symtab.enter_scope()
@@ -978,6 +1004,10 @@ class Parser(object):
                 statements.append(self.parse_valuerecord_definition_(vertical))
             elif stylisticset and self.is_cur_keyword_("featureNames"):
                 statements.extend(self.parse_featureNames_(stylisticset))
+            elif size_feature and self.is_cur_keyword_("parameters"):
+                statements.append(self.parse_size_parameters_())
+            elif size_feature and self.is_cur_keyword_("sizemenuname"):
+                statements.append(self.parse_size_menuname_())
             elif self.cur_token_ == ";":
                 continue
             else:
@@ -1096,6 +1126,15 @@ class Parser(object):
             return self.cur_token_
         raise FeatureLibError("Expected a floating-point number",
                               self.cur_token_location_)
+
+    def expect_decipoint_(self):
+        if self.next_token_type_ == Lexer.FLOAT:
+            return self.expect_float_()
+        elif self.next_token_type_ is Lexer.NUMBER:
+            return self.expect_number_() / 10
+        else:
+            raise FeatureLibError("Expected an integer or floating-point number",
+                                  self.cur_token_location_)
 
     def expect_string_(self):
         self.advance_lexer_()
