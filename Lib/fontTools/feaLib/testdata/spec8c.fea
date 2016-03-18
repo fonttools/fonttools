@@ -1,0 +1,11 @@
+ feature ss01 {
+    featureNames {
+         name "Feature description for MS Platform, script Unicode, language English";
+# With no platform ID, script ID, or language ID specified, the implementation assumes (3,1,0x409).
+         name 3 1 0x411 "Feature description for MS Platform, script Unicode, language Japanese";
+         name 1 "Feature description for Apple Platform, script Roman, language unspecified";
+# With only the platform ID specified, the implementation assumes script and language = Latin. For Apple this is (1,0,0).
+         name 1 1 12 "Feature description for Apple Platform, script Japanese, language Japanese";     } ;
+# --- rules for this feature ---
+    sub A by B;
+  } ss01;

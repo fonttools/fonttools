@@ -591,3 +591,8 @@ class NameRecord(Statement):
         builder.add_name_record(
             self.location, self.nameID, self.platformID,
             self.platEncID, self.langID, self.string)
+
+class FeatureNameStatement(NameRecord):
+    def build(self, builder):
+        NameRecord.build(self, builder)
+        builder.add_featureName(self.location, self.nameID)
