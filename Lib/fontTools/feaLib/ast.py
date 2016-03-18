@@ -610,3 +610,14 @@ class SizeParameters(Statement):
     def build(self, builder):
         builder.set_size_parameters(self.location, self.DesignSize,
                 self.SubfamilyID, self.RangeStart, self.RangeEnd)
+
+
+class BaseAxis(Statement):
+    def __init__(self, location, bases, scripts, vertical):
+        Statement.__init__(self, location)
+        self.bases = bases
+        self.scripts = scripts
+        self.vertical = vertical
+
+    def build(self, builder):
+        builder.set_base_axis(self.bases, self.scripts, self.vertical)
