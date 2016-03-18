@@ -116,7 +116,7 @@ class Cu2QuPointPen(BasePointToSegmentPen):
 
     def __init__(self, other_point_pen, max_err, reverse_direction=False,
                  stats=None):
-        super(Cu2QuPointPen, self).__init__()
+        BasePointToSegmentPen.__init__(self)
         if reverse_direction:
             self.pen = ReverseContourPointPen(other_point_pen)
         else:
@@ -269,4 +269,4 @@ class ReverseContourPen(SegmentToPointPen):
     def __init__(self, other_pen):
         adapter_point_pen = PointToSegmentPen(other_pen)
         reverse_point_pen = ReverseContourPointPen(adapter_point_pen)
-        super(ReverseContourPen, self).__init__(reverse_point_pen)
+        SegmentToPointPen.__init__(self, reverse_point_pen)
