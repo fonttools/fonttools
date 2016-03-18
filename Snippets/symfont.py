@@ -1,3 +1,5 @@
+#! /usr/bin/env python
+
 """
 Pen to calculate geometrical glyph statistics.
 
