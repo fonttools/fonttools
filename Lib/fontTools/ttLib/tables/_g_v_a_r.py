@@ -553,22 +553,32 @@ class GlyphVariation(object):
 			pos += 1
 		if numPointsInData == 0:
 			return (range(numPointsInGlyph), pos)
+
 		result = []
 		while len(result) < numPointsInData:
 			runHeader = byteord(data[pos])
 			pos += 1
 			numPointsInRun = (runHeader & POINT_RUN_COUNT_MASK) + 1
 			point = 0
-			if (runHeader & POINTS_ARE_WORDS) == 0:
-				for _ in range(numPointsInRun):
-					point += byteord(data[pos])
-					pos += 1
-					result.append(point)
+			if (runHeader & POINTS_ARE_WORDS) != 0:
+				points = array.array("H")
+				pointsSize = numPointsInRun * 2
 			else:
-				for _ in range(numPointsInRun):
-					point += struct.unpack(">H", data[pos:pos+2])[0]
-					pos += 2
-					result.append(point)
+				points = array.array("B")
+				pointsSize = numPointsInRun
+			points.fromstring(data[pos:pos+pointsSize])
+			if sys.byteorder != "big":
+				points.byteswap()
+
+
+			assert len(points) == numPointsInRun
+			pos += pointsSize
+
+			# Convert relative to absolute, and append
+			for delta in points:
+				point += delta
+				result.append(point)
+
 		if max(result) >= numPointsInGlyph:
 			raise TTLibError("malformed 'gvar' table")
 		return (result, pos)
