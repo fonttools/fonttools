@@ -696,14 +696,19 @@ class GlyphVariation(object):
 			numDeltasInRun = (runHeader & DELTA_RUN_COUNT_MASK) + 1
 			if (runHeader & DELTAS_ARE_ZERO) != 0:
 				result.extend([0] * numDeltasInRun)
-			elif (runHeader & DELTAS_ARE_WORDS) != 0:
-				for _ in range(numDeltasInRun):
-					result.append(struct.unpack(">h", data[pos:pos+2])[0])
-					pos += 2
 			else:
-				for _ in range(numDeltasInRun):
-					result.append(struct.unpack(">b", data[pos:pos+1])[0])
-					pos += 1
+				if (runHeader & DELTAS_ARE_WORDS) != 0:
+					deltas = array.array("h")
+					deltasSize = numDeltasInRun * 2
+				else:
+					deltas = array.array("b")
+					deltasSize = numDeltasInRun
+				deltas.fromstring(data[pos:pos+deltasSize])
+				if sys.byteorder != "big":
+					deltas.byteswap()
+				assert len(deltas) == numDeltasInRun
+				pos += deltasSize
+				result.extend(deltas)
 		assert len(result) == numDeltas
 		return (result, pos)
 
