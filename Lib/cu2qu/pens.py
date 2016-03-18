@@ -141,7 +141,7 @@ class Cu2QuPointPen(BasePointToSegmentPen):
                 if self.stats is not None:
                     n = str(len(quadratic))
                     self.stats[n] = self.stats.get(n, 0) + 1
-                new_points = [(pt, None, None, {}) for pt in quadratic[1:-1]]
+                new_points = [(pt, False, None, {}) for pt in quadratic[1:-1]]
                 new_points.append((on_curve, smooth, name, kwargs))
                 new_segments.append(["qcurve", new_points])
             else:
