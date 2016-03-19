@@ -25,7 +25,7 @@ class Lexer(object):
     CHAR_HEXDIGIT_ = "0123456789ABCDEFabcdef"
     CHAR_LETTER_ = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
     CHAR_NAME_START_ = CHAR_LETTER_ + "_+*:.^~!\\"
-    CHAR_NAME_CONTINUATION_ = CHAR_LETTER_ + CHAR_DIGIT_ + "_.+*:^~!"
+    CHAR_NAME_CONTINUATION_ = CHAR_LETTER_ + CHAR_DIGIT_ + "_.+*:^~!/"
 
     RE_GLYPHCLASS = re.compile(r"^[A-Za-z_0-9.]+$")
 
