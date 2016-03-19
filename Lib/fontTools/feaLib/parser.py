@@ -700,6 +700,7 @@ class Parser(object):
             "head": self.parse_table_head_,
             "name": self.parse_table_name_,
             "BASE": self.parse_table_BASE_,
+            "OS/2": self.parse_table_OS_2_,
         }.get(name)
         if handler:
             handler(table)
@@ -835,6 +836,34 @@ class Parser(object):
                 statements.append(
                         ast.BaseAxis(self.cur_token_location_, vert_bases,
                                      vert_scripts, True))
+            elif self.cur_token_ == ";":
+                continue
+
+    def parse_table_OS_2_(self, table):
+        statements = table.statements
+        numbers = ("FSType", "TypoAscender", "TypoDescender", "TypoLineGap",
+                   "winAscent", "winDescent", "XHeight", "CapHeight",
+                   "WeightClass", "WidthClass", "LowerOpSize", "UpperOpSize")
+        ranges = ("UnicodeRange", "CodePageRange")
+        while self.next_token_ != "}":
+            self.advance_lexer_()
+            if self.cur_token_type_ is Lexer.NAME:
+                key = self.cur_token_.lower()
+                value = None
+                if self.cur_token_ in numbers:
+                    value = self.expect_number_()
+                elif self.is_cur_keyword_("Panose"):
+                    value = []
+                    for i in range(10):
+                        value.append(self.expect_number_())
+                elif self.cur_token_ in ranges:
+                    value = []
+                    while self.next_token_ != ";":
+                         value.append(self.expect_number_())
+                elif self.is_cur_keyword_("Vendor"):
+                    value = self.expect_string_()
+                statements.append(
+                    ast.OS2Field(self.cur_token_location_, key, value))
             elif self.cur_token_ == ";":
                 continue
 

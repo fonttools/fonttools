@@ -621,3 +621,13 @@ class BaseAxis(Statement):
 
     def build(self, builder):
         builder.set_base_axis(self.bases, self.scripts, self.vertical)
+
+
+class OS2Field(Statement):
+    def __init__(self, location, key, value):
+        Statement.__init__(self, location)
+        self.key = key
+        self.value = value
+
+    def build(self, builder):
+        builder.add_os2_field(self.key, self.value)
