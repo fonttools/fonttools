@@ -591,3 +591,22 @@ class NameRecord(Statement):
         builder.add_name_record(
             self.location, self.nameID, self.platformID,
             self.platEncID, self.langID, self.string)
+
+class FeatureNameStatement(NameRecord):
+    def build(self, builder):
+        NameRecord.build(self, builder)
+        builder.add_featureName(self.location, self.nameID)
+
+
+class SizeParameters(Statement):
+    def __init__(self, location, DesignSize, SubfamilyID, RangeStart,
+                 RangeEnd):
+        Statement.__init__(self, location)
+        self.DesignSize = DesignSize
+        self.SubfamilyID = SubfamilyID
+        self.RangeStart = RangeStart
+        self.RangeEnd = RangeEnd
+
+    def build(self, builder):
+        builder.set_size_parameters(self.location, self.DesignSize,
+                self.SubfamilyID, self.RangeStart, self.RangeEnd)

@@ -663,6 +663,29 @@ class Parser(object):
         self.expect_symbol_(";")
         return ast.SubtableStatement(location)
 
+    def parse_size_parameters_(self):
+        assert self.is_cur_keyword_("parameters")
+        location = self.cur_token_location_
+        DesignSize = self.expect_decipoint_()
+        SubfamilyID = self.expect_number_()
+        RangeStart = 0
+        RangeEnd = 0
+        if self.next_token_type_ in (Lexer.NUMBER, Lexer.FLOAT) or \
+                SubfamilyID != 0:
+            RangeStart = self.expect_decipoint_()
+            RangeEnd = self.expect_decipoint_()
+
+        self.expect_symbol_(";")
+        return ast.SizeParameters(location, DesignSize, SubfamilyID,
+                                  RangeStart, RangeEnd)
+
+    def parse_size_menuname_(self):
+        assert self.is_cur_keyword_("sizemenuname")
+        location = self.cur_token_location_
+        platformID, platEncID, langID, string = self.parse_name_()
+        return ast.FeatureNameStatement(location, "size", platformID,
+                                        platEncID, langID, string)
+
     def parse_table_(self):
         assert self.is_cur_keyword_("table")
         location, name = self.cur_token_location_, self.expect_tag_()
@@ -726,16 +749,9 @@ class Parser(object):
                 raise FeatureLibError("Expected nameid",
                                       self.cur_token_location_)
 
-    def parse_nameid_(self):
-        assert self.cur_token_ == "nameid", self.cur_token_
-        location, nameID = self.cur_token_location_, self.expect_number_()
-        if nameID > 255:
-            raise FeatureLibError("Expected name id < 255",
-                                  self.cur_token_location_)
-        if 1 <= nameID <= 6:
-            # TODO: issue a warning
-            return None
-
+    def parse_name_(self):
+        platEncID = None
+        langID = None
         if self.next_token_type_ == Lexer.NUMBER:
             platformID = self.expect_number_()
             if platformID not in (1, 3):
@@ -747,12 +763,12 @@ class Parser(object):
         else:
             platformID = 3
 
-        if platformID == 1:   # Macintosh
-            platEncID = 0     # Roman
-            langID = 0        # English
-        else:                 # 3, Windows
-            platEncID = 1     # Unicode
-            langID = 0x0409   # English
+        if platformID == 1:                # Macintosh
+            platEncID = platEncID or 0     # Roman
+            langID = langID or 0           # English
+        else:                              # 3, Windows
+            platEncID = platEncID or 1     # Unicode
+            langID = langID or 0x0409      # English
 
         string = self.expect_string_()
         self.expect_symbol_(";")
@@ -762,8 +778,21 @@ class Parser(object):
         elif platformID == 3 and platEncID == 1:
             string = self.unescape_windows_name_string(string)
 
-        return ast.NameRecord(location, nameID, platformID,
-                              platEncID, langID, string)
+        return platformID, platEncID, langID, string
+
+    def parse_nameid_(self):
+        assert self.cur_token_ == "nameid", self.cur_token_
+        location, nameID = self.cur_token_location_, self.expect_number_()
+        if nameID > 255:
+            raise FeatureLibError("Expected name id < 255",
+                                  self.cur_token_location_)
+        if 1 <= nameID <= 6:
+            # TODO: issue a warning
+            return None
+
+        platformID, platEncID, langID, string = self.parse_name_()
+        return ast.NameRecord(location, nameID, platformID, platEncID,
+                              langID, string)
 
     def unescape_mac_name_string(self, string):
         def unescape(match):
@@ -879,6 +908,11 @@ class Parser(object):
         location = self.cur_token_location_
         tag = self.expect_tag_()
         vertical = (tag in {"vkrn", "vpal", "vhal", "valt"})
+        stylisticset = None
+        if tag in ["ss%02d" % i for i in range(1, 20+1)]:
+            stylisticset = tag
+
+        size_feature = (tag == "size")
 
         use_extension = False
         if self.next_token_ == "useExtension":
@@ -886,7 +920,7 @@ class Parser(object):
             use_extension = True
 
         block = ast.FeatureBlock(location, tag, use_extension)
-        self.parse_block_(block, vertical)
+        self.parse_block_(block, vertical, stylisticset, size_feature)
         return block
 
     def parse_feature_reference_(self):
@@ -895,6 +929,30 @@ class Parser(object):
         featureName = self.expect_tag_()
         self.expect_symbol_(";")
         return ast.FeatureReferenceStatement(location, featureName)
+
+    def parse_featureNames_(self, tag):
+        assert self.cur_token_ == "featureNames", self.cur_token_
+        self.expect_symbol_("{")
+        for symtab in self.symbol_tables_:
+            symtab.enter_scope()
+
+        statements = []
+        while self.next_token_ != "}":
+            self.expect_keyword_("name")
+            location = self.cur_token_location_
+            platformID, platEncID, langID, string = self.parse_name_()
+            statements.append(
+                    ast.FeatureNameStatement(location, tag, platformID,
+                                             platEncID, langID, string))
+
+        self.expect_symbol_("}")
+
+        for symtab in self.symbol_tables_:
+            symtab.exit_scope()
+
+        self.expect_symbol_(";")
+
+        return statements
 
     def parse_FontRevision_(self):
         assert self.cur_token_ == "FontRevision", self.cur_token_
@@ -905,7 +963,8 @@ class Parser(object):
                                   location)
         return ast.FontRevisionStatement(location, version)
 
-    def parse_block_(self, block, vertical):
+    def parse_block_(self, block, vertical, stylisticset=None,
+                     size_feature=False):
         self.expect_symbol_("{")
         for symtab in self.symbol_tables_:
             symtab.enter_scope()
@@ -943,6 +1002,12 @@ class Parser(object):
                 statements.append(self.parse_subtable_())
             elif self.is_cur_keyword_("valueRecordDef"):
                 statements.append(self.parse_valuerecord_definition_(vertical))
+            elif stylisticset and self.is_cur_keyword_("featureNames"):
+                statements.extend(self.parse_featureNames_(stylisticset))
+            elif size_feature and self.is_cur_keyword_("parameters"):
+                statements.append(self.parse_size_parameters_())
+            elif size_feature and self.is_cur_keyword_("sizemenuname"):
+                statements.append(self.parse_size_menuname_())
             elif self.cur_token_ == ";":
                 continue
             else:
@@ -1061,6 +1126,15 @@ class Parser(object):
             return self.cur_token_
         raise FeatureLibError("Expected a floating-point number",
                               self.cur_token_location_)
+
+    def expect_decipoint_(self):
+        if self.next_token_type_ == Lexer.FLOAT:
+            return self.expect_float_()
+        elif self.next_token_type_ is Lexer.NUMBER:
+            return self.expect_number_() / 10
+        else:
+            raise FeatureLibError("Expected an integer or floating-point number",
+                                  self.cur_token_location_)
 
     def expect_string_(self):
         self.advance_lexer_()

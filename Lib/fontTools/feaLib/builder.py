@@ -35,6 +35,11 @@ class Builder(object):
         self.aalt_features_ = []  # [(location, featureName)*], for 'aalt'
         self.aalt_location_ = None
         self.aalt_alternates_ = {}
+        # for 'featureNames'
+        self.featureNames_ = []
+        self.featureNames_ids_ = {}
+        # for feature 'size'
+        self.size_parameters_ = None
         # for table 'head'
         self.fontRevision_ = None  # 2.71
         # for table 'name'
@@ -157,14 +162,46 @@ class Builder(object):
             table.created = table.modified = 3406620153  # 2011-12-13 11:22:33
         table.fontRevision = self.fontRevision_
 
+    def get_user_name_id(self, table):
+        # Try to find first unused font-specific name id
+        nameIDs = [name.nameID for name in table.names]
+        for user_name_id in range(256, 32767):
+            if user_name_id not in nameIDs:
+                return user_name_id
+
+    def buildFeatureParams(self, tag):
+        params = None
+        if tag == "size":
+            params = otTables.FeatureParamsSize()
+            params.DesignSize, params.SubfamilyID, params.RangeStart, \
+                    params.RangeEnd = self.size_parameters_
+            if tag in self.featureNames_ids_:
+                params.SubfamilyNameID = self.featureNames_ids_[tag]
+            else:
+                params.SubfamilyNameID = 0
+        elif tag in self.featureNames_:
+            assert tag in self.featureNames_ids_
+            params = otTables.FeatureParamsStylisticSet()
+            params.Version = 0
+            params.UINameID = self.featureNames_ids_[tag]
+        return params
+
     def build_name(self):
         if not self.names_:
             return
         table = self.font.get("name")
         if not table:  # this only happens for unit tests
             table = self.font["name"] = getTableClass("name")()
+            table.names = []
         for name in self.names_:
             nameID, platformID, platEncID, langID, string = name
+            if not isinstance(nameID, int):
+                # A featureNames name and nameID is actually the tag
+                tag = nameID
+                if tag not in self.featureNames_ids_:
+                    self.featureNames_ids_[tag] = self.get_user_name_id(table)
+                    assert self.featureNames_ids_[tag] is not None
+                nameID = self.featureNames_ids_[tag]
             table.setName(string, nameID, platformID, platEncID, langID)
 
     def buildGDEF(self):
@@ -266,7 +303,9 @@ class Builder(object):
             # rules will have no lookup_index while building GPOS tables.
             lookup_indices = tuple([l.lookup_index for l in lookups
                                     if l.lookup_index is not None])
-            if len(lookup_indices) == 0:
+
+            size_feature = (tag == "GPOS" and feature_tag == "size")
+            if len(lookup_indices) == 0 and not size_feature:
                 continue
 
             feature_key = (feature_tag, lookup_indices)
@@ -276,7 +315,8 @@ class Builder(object):
                 frec = otTables.FeatureRecord()
                 frec.FeatureTag = feature_tag
                 frec.Feature = otTables.Feature()
-                frec.Feature.FeatureParams = None
+                frec.Feature.FeatureParams = self.buildFeatureParams(
+                                                feature_tag)
                 frec.Feature.LookupListIndex = lookup_indices
                 frec.Feature.LookupCount = len(lookup_indices)
                 table.FeatureList.FeatureRecord.append(frec)
@@ -522,6 +562,20 @@ class Builder(object):
                 'Feature references are only allowed inside "feature aalt"',
                 location)
         self.aalt_features_.append((location, featureName))
+
+    def add_featureName(self, location, tag):
+        self.featureNames_.append(tag)
+
+    def set_size_parameters(self, location, DesignSize, SubfamilyID,
+                            RangeStart, RangeEnd):
+        if self.cur_feature_name_ != 'size':
+            raise FeatureLibError(
+                "Parameters statements are not allowed "
+                "within \"feature %s\"" % self.cur_feature_name_, location)
+        self.size_parameters_ = [DesignSize, SubfamilyID, RangeStart, RangeEnd]
+        for script, lang in self.language_systems:
+            key = (script, lang, self.cur_feature_name_)
+            self.features_.setdefault(key, [])
 
     def add_ligature_subst(self, location,
                            prefix, glyphs, suffix, replacement, forceChain):
