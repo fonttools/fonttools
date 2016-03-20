@@ -695,6 +695,7 @@ class Parser(object):
             "GDEF": self.parse_table_GDEF_,
             "head": self.parse_table_head_,
             "name": self.parse_table_name_,
+            "BASE": self.parse_table_BASE_,
         }.get(name)
         if handler:
             handler(table)
@@ -809,6 +810,52 @@ class Parser(object):
             return c
 
         return re.sub(r'\\[0-9a-zAZ]{4}', unescape, string)
+
+    def parse_table_BASE_(self, table):
+        statements = table.statements
+        while self.next_token_ != "}":
+            self.advance_lexer_()
+            if self.is_cur_keyword_("HorizAxis.BaseTagList"):
+                horiz_bases = self.parse_base_tag_list_()
+            elif self.is_cur_keyword_("HorizAxis.BaseScriptList"):
+                horiz_scripts = self.parse_base_script_list_(len(horiz_bases))
+                statements.append(
+                        ast.BaseAxis(self.cur_token_location_, horiz_bases,
+                                     horiz_scripts, False))
+            elif self.is_cur_keyword_("VertAxis.BaseTagList"):
+                vert_bases = self.parse_base_tag_list_()
+            elif self.is_cur_keyword_("VertAxis.BaseScriptList"):
+                vert_scripts = self.parse_base_script_list_(len(vert_bases))
+                statements.append(
+                        ast.BaseAxis(self.cur_token_location_, vert_bases,
+                                     vert_scripts, True))
+            elif self.cur_token_ == ";":
+                continue
+
+    def parse_base_tag_list_(self):
+        assert self.cur_token_ in ("HorizAxis.BaseTagList",
+                "VertAxis.BaseTagList"), self.cur_token_
+        bases = []
+        while self.next_token_ != ";":
+            bases.append(self.expect_script_tag_())
+        self.expect_symbol_(";")
+        return bases
+
+    def parse_base_script_list_(self, count):
+        assert self.cur_token_ in ("HorizAxis.BaseScriptList",
+                "VertAxis.BaseScriptList"), self.cur_token_
+        scripts = [(self.parse_base_script_record_(count))]
+        while self.next_token_ == ",":
+            self.expect_symbol_(",")
+            scripts.append(self.parse_base_script_record_(count))
+        self.expect_symbol_(";")
+        return scripts
+
+    def parse_base_script_record_(self, count):
+        script_tag = self.expect_script_tag_()
+        base_tag = self.expect_script_tag_()
+        coords = [self.expect_number_() for i in range(count)]
+        return script_tag, base_tag, coords
 
     def parse_device_(self):
         result = None

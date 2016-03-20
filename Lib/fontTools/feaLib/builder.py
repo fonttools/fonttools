@@ -44,6 +44,9 @@ class Builder(object):
         self.fontRevision_ = None  # 2.71
         # for table 'name'
         self.names_ = []
+        # for table 'BASE'
+        self.base_horiz_axis_ = None
+        self.base_vert_axis_ = None
         # for table 'GDEF'
         self.attachPoints_ = {}  # "a" --> {3, 7}
         self.ligCaretCoords_ = {}  # "f_f_i" --> {300, 600}
@@ -73,6 +76,11 @@ class Builder(object):
             self.font["GDEF"] = gdef
         elif "GDEF" in self.font:
             del self.font["GDEF"]
+        base = self.buildBASE()
+        if base:
+            self.font["BASE"] = base
+        elif "BASE" in self.font:
+            del self.font["BASE"]
 
     def get_chained_lookup_(self, location, builder_class):
         result = builder_class(self.font, location)
@@ -203,6 +211,46 @@ class Builder(object):
                     assert self.featureNames_ids_[tag] is not None
                 nameID = self.featureNames_ids_[tag]
             table.setName(string, nameID, platformID, platEncID, langID)
+
+    def buildBASE(self):
+        if not self.base_horiz_axis_ and not self.base_vert_axis_:
+            return None
+        base = otTables.BASE()
+        base.Version = 0x00010000
+        base.HorizAxis = self.buildBASEAxis(self.base_horiz_axis_)
+        base.VertAxis = self.buildBASEAxis(self.base_vert_axis_)
+
+        result = getTableClass("BASE")()
+        result.table = base
+        return result
+
+    def buildBASEAxis(self, axis):
+        if not axis:
+            return
+        bases, scripts = axis
+        axis = otTables.Axis()
+        axis.BaseTagList = otTables.BaseTagList()
+        axis.BaseTagList.BaselineTag = bases
+        axis.BaseTagList.BaseTagCount = len(bases)
+        axis.BaseScriptList = otTables.BaseScriptList()
+        axis.BaseScriptList.BaseScriptRecord = []
+        axis.BaseScriptList.BaseScriptCount = len(scripts)
+        for script in sorted(scripts):
+            record = otTables.BaseScriptRecord()
+            record.BaseScriptTag = script[0]
+            record.BaseScript = otTables.BaseScript()
+            record.BaseScript.BaseLangSysCount = 0
+            record.BaseScript.BaseValues = otTables.BaseValues()
+            record.BaseScript.BaseValues.DefaultIndex = bases.index(script[1])
+            record.BaseScript.BaseValues.BaseCoord = []
+            record.BaseScript.BaseValues.BaseCoordCount = len(script[2])
+            for c in script[2]:
+                coord = otTables.BaseCoord()
+                coord.Format = 1
+                coord.Coordinate = c
+                record.BaseScript.BaseValues.BaseCoord.append(coord)
+            axis.BaseScriptList.BaseScriptRecord.append(record)
+        return axis
 
     def buildGDEF(self):
         gdef = otTables.GDEF()
@@ -565,6 +613,12 @@ class Builder(object):
 
     def add_featureName(self, location, tag):
         self.featureNames_.append(tag)
+
+    def set_base_axis(self, bases, scripts, vertical):
+        if vertical:
+            self.base_vert_axis_ = (bases, scripts)
+        else:
+            self.base_horiz_axis_ = (bases, scripts)
 
     def set_size_parameters(self, location, DesignSize, SubfamilyID,
                             RangeStart, RangeEnd):
