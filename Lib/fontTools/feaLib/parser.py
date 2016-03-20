@@ -9,7 +9,7 @@ import re
 
 
 class Parser(object):
-    def __init__(self, path):
+    def __init__(self, featurefile):
         self.doc_ = ast.FeatureFile()
         self.anchors_ = SymbolTable()
         self.glyphclasses_ = SymbolTable()
@@ -20,7 +20,7 @@ class Parser(object):
         }
         self.next_token_type_, self.next_token_ = (None, None)
         self.next_token_location_ = None
-        self.lexer_ = IncludingLexer(path)
+        self.lexer_ = IncludingLexer(featurefile)
         self.advance_lexer_()
 
     def parse(self):
