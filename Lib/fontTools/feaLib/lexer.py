@@ -187,9 +187,9 @@ class IncludingLexer(object):
                 fname_type, fname_token, fname_location = lexer.next()
                 if fname_type is not Lexer.FILENAME:
                     raise FeatureLibError("Expected file name", fname_location)
-                semi_type, semi_token, semi_location = lexer.next()
-                if semi_type is not Lexer.SYMBOL or semi_token != ";":
-                    raise FeatureLibError("Expected ';'", semi_location)
+                #semi_type, semi_token, semi_location = lexer.next()
+                #if semi_type is not Lexer.SYMBOL or semi_token != ";":
+                #    raise FeatureLibError("Expected ';'", semi_location)
                 curpath, _ = os.path.split(lexer.filename_)
                 path = os.path.join(curpath, fname_token)
                 if len(self.lexers_) >= 5:
