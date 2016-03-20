@@ -15,5 +15,5 @@ inputFontPath = sys.argv[2]
 outputFontPath = sys.argv[3]
 
 font = TTFont(inputFontPath)
-feaLibBuilder.addOpenTypeFeatures(inputFeaturePath, font)
+feaLibBuilder.addOpenTypeFeatures(font, inputFeaturePath)
 font.save(outputFontPath)
