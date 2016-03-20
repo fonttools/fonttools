@@ -167,8 +167,7 @@ class Lexer(object):
 
 class IncludingLexer(object):
     def __init__(self, featurefile):
-        path, data = featurefile
-        self.lexers_ = [self.make_lexer_(data, (path, 0, 0))]
+        self.lexers_ = [self.make_lexer_(featurefile, (featurefile[0], 0, 0))]
 
     def __iter__(self):
         return self
@@ -196,15 +195,15 @@ class IncludingLexer(object):
                 if len(self.lexers_) >= 5:
                     raise FeatureLibError("Too many recursive includes",
                                           fname_location)
-                self.lexers_.append(self.make_lexer_(path, fname_location))
+                self.lexers_.append(self.make_lexer_((path, None), fname_location))
                 continue
             else:
                 return (token_type, token, location)
         raise StopIteration()
 
     @staticmethod
-    def make_lexer_(data, location):
-        filename = location[0]
+    def make_lexer_(featurefile_path_data, location):
+        filename, data = featurefile_path_data
         if data is None:
             try:
                 with open(filename, "r", encoding="utf-8") as f:

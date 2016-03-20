@@ -117,12 +117,12 @@ class BuilderTest(unittest.TestCase):
         with open(path, "w", encoding="utf-8") as outfile:
             outfile.write(featureFile)
         font = makeTTFont()
-        addOpenTypeFeatures(path, font)
+        addOpenTypeFeatures(font, path)
         return font
 
     def check_feature_file(self, name):
         font = makeTTFont()
-        addOpenTypeFeatures(self.getpath("%s.fea" % name), font)
+        addOpenTypeFeatures(font, self.getpath("%s.fea" % name))
         self.expect_ttx(font, self.getpath("%s.ttx" % name))
         # Make sure we can produce binary OpenType tables, not just XML.
         for tag in ('GDEF', 'GSUB', 'GPOS'):
@@ -199,7 +199,7 @@ class BuilderTest(unittest.TestCase):
             "} GDEF;")
 
     def test_languagesystem(self):
-        builder = Builder(None, makeTTFont())
+        builder = Builder(makeTTFont(), (None, None))
         builder.add_language_system(None, 'latn', 'FRA')
         builder.add_language_system(None, 'cyrl', 'RUS')
         builder.start_feature(location=None, name='test')
@@ -213,7 +213,7 @@ class BuilderTest(unittest.TestCase):
             self.build, "languagesystem cyrl RUS; languagesystem cyrl RUS;")
 
     def test_languagesystem_none_specified(self):
-        builder = Builder(None, makeTTFont())
+        builder = Builder(makeTTFont(), (None, None))
         builder.start_feature(location=None, name='test')
         self.assertEqual(builder.language_systems, {('DFLT', 'dflt')})
 
@@ -225,7 +225,7 @@ class BuilderTest(unittest.TestCase):
             self.build, "languagesystem latn TRK; languagesystem DFLT dflt;")
 
     def test_script(self):
-        builder = Builder(None, makeTTFont())
+        builder = Builder(makeTTFont(), (None, None))
         builder.start_feature(location=None, name='test')
         builder.set_script(location=None, script='cyrl')
         self.assertEqual(builder.language_systems, {('cyrl', 'dflt')})
@@ -243,7 +243,7 @@ class BuilderTest(unittest.TestCase):
             self.build, "feature size { script latn; } size;")
 
     def test_language(self):
-        builder = Builder(None, makeTTFont())
+        builder = Builder(makeTTFont(), (None, None))
         builder.add_language_system(None, 'latn', 'FRA ')
         builder.start_feature(location=None, name='test')
         builder.set_script(location=None, script='cyrl')

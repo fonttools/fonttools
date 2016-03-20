@@ -131,7 +131,7 @@ class IncludingLexerTest(unittest.TestCase):
         return os.path.join(path, "testdata", filename)
 
     def test_include(self):
-        lexer = IncludingLexer(self.getpath("include4.fea"))
+        lexer = IncludingLexer((self.getpath("include4.fea"), None))
         result = ['%s %s:%d' % (token, os.path.split(loc[0])[1], loc[1])
                   for _, token, loc in lexer]
         self.assertEqual(result, [
@@ -147,15 +147,15 @@ class IncludingLexerTest(unittest.TestCase):
         ])
 
     def test_include_limit(self):
-        lexer = IncludingLexer(self.getpath("include6.fea"))
+        lexer = IncludingLexer((self.getpath("include6.fea"), None))
         self.assertRaises(FeatureLibError, lambda: list(lexer))
 
     def test_include_self(self):
-        lexer = IncludingLexer(self.getpath("includeself.fea"))
+        lexer = IncludingLexer((self.getpath("includeself.fea"), None))
         self.assertRaises(FeatureLibError, lambda: list(lexer))
 
     def test_include_missing_file(self):
-        lexer = IncludingLexer(self.getpath("includemissingfile.fea"))
+        lexer = IncludingLexer((self.getpath("includemissingfile.fea"), None))
         self.assertRaises(FeatureLibError, lambda: list(lexer))
 
 
