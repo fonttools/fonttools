@@ -222,7 +222,7 @@ class Program(object):
 			self._assemble()
 		return self.bytecode.tostring()
 
-	def getAssembly(self, preserve=False):
+	def getAssembly(self, preserve=True):
 		if not hasattr(self, "assembly"):
 			self._disassemble(preserve=preserve)
 		return self.assembly
