@@ -1,6 +1,6 @@
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
-from fontTools.misc.py23 import UnicodeIO
+from fontTools.misc.py23 import UnicodeIO, tounicode
 from fontTools.feaLib.error import FeatureLibError
 from fontTools.feaLib.parser import Parser
 from fontTools.otlLib import builder as otl
@@ -15,7 +15,7 @@ def addOpenTypeFeatures(font, featurefile):
 
 
 def addOpenTypeFeaturesFromString(font, features, filename=None):
-    featurefile = UnicodeIO(features)
+    featurefile = UnicodeIO(tounicode(features))
     if filename:
         # the directory containing 'filename' is used as the root of relative
         # include paths; if None is provided, the current directory is assumed
