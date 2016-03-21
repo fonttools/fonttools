@@ -4,8 +4,12 @@ from fontTools.feaLib.error import FeatureLibError
 from fontTools.feaLib.lexer import Lexer, IncludingLexer
 from fontTools.misc.py23 import *
 import fontTools.feaLib.ast as ast
+import logging
 import os
 import re
+
+
+log = logging.getLogger(__name__)
 
 
 class Parser(object):
@@ -788,7 +792,9 @@ class Parser(object):
             raise FeatureLibError("Expected name id < 255",
                                   self.cur_token_location_)
         if 1 <= nameID <= 6:
-            # TODO: issue a warning
+            log.warning("Name id %d cannot be set from the feature file. "
+                        "Ignoring record" % nameID)
+            self.parse_name_()  # skip to the next record
             return None
 
         platformID, platEncID, langID, string = self.parse_name_()
