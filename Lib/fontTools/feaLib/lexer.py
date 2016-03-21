@@ -166,8 +166,8 @@ class Lexer(object):
 
 
 class IncludingLexer(object):
-    def __init__(self, featurefile):
-        self.lexers_ = [self.make_lexer_(featurefile, (featurefile[0], 0, 0))]
+    def __init__(self, fea_path_data):
+        self.lexers_ = [self.make_lexer_(fea_path_data, (fea_path_data[0], 0, 0))]
 
     def __iter__(self):
         return self
@@ -202,8 +202,8 @@ class IncludingLexer(object):
         raise StopIteration()
 
     @staticmethod
-    def make_lexer_(featurefile_path_data, location):
-        filename, data = featurefile_path_data
+    def make_lexer_(fea_path_data, location):
+        filename, data = fea_path_data
         if data is None:
             try:
                 with open(filename, "r", encoding="utf-8") as f:
