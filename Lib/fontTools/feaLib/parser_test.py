@@ -1084,7 +1084,7 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(glyphstr(sub.suffix), "Z")
 
     def test_substitute_lookups(self):  # GSUB LookupType 6
-        doc = Parser((self.getpath("spec5fi1.fea"), None)).parse()
+        doc = Parser(self.getpath("spec5fi1.fea")).parse()
         [langsys, ligs, sub, feature] = doc.statements
         self.assertEqual(feature.statements[0].lookups, [ligs, None, sub])
         self.assertEqual(feature.statements[1].lookups, [ligs, None, sub])
@@ -1257,7 +1257,7 @@ class ParserTest(unittest.TestCase):
         path = os.path.join(self.tempdir, "tmp%d.fea" % self.num_tempfiles)
         with open(path, "w", encoding="utf-8") as outfile:
             outfile.write(text)
-        return Parser((path, None)).parse()
+        return Parser(path).parse()
 
     @staticmethod
     def getpath(testfile):

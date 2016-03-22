@@ -1,5 +1,6 @@
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
+from fontTools.misc.py23 import UnicodeIO, tounicode
 from fontTools.feaLib.error import FeatureLibError
 from fontTools.feaLib.parser import Parser
 from fontTools.otlLib import builder as otl
@@ -8,20 +9,24 @@ from fontTools.ttLib.tables import otBase, otTables
 import itertools
 
 
-def addOpenTypeFeatures(font, fea_path=None, fea_data=None):
-    # we may have a path but no data, or data but no path, or both
-    assert fea_path or fea_data, (
-        "At least one of 'fea_path' or 'fea_data' arguments is required")
-    # pack this until we yield it the lexer
-    fea_path_data = (fea_path, fea_data)
-    builder = Builder(font, fea_path_data)
+def addOpenTypeFeatures(font, featurefile):
+    builder = Builder(font, featurefile)
     builder.build()
 
 
+def addOpenTypeFeaturesFromString(font, features, filename=None):
+    featurefile = UnicodeIO(tounicode(features))
+    if filename:
+        # the directory containing 'filename' is used as the root of relative
+        # include paths; if None is provided, the current directory is assumed
+        featurefile.name = filename
+    addOpenTypeFeatures(font, featurefile)
+
+
 class Builder(object):
-    def __init__(self, font, fea_path_data):
+    def __init__(self, font, featurefile):
         self.font = font
-        self.fea_path_data = fea_path_data
+        self.file = featurefile
         self.glyphMap = font.getReverseGlyphMap()
         self.default_language_systems_ = set()
         self.script_ = None
@@ -62,7 +67,7 @@ class Builder(object):
         self.markFilterSets_ = {}  # frozenset({"acute", "grave"}) --> 4
 
     def build(self):
-        self.parseTree = Parser(self.fea_path_data).parse()
+        self.parseTree = Parser(self.file).parse()
         self.parseTree.build(self)
         self.build_feature_aalt_()
         self.build_head()

@@ -166,8 +166,8 @@ class Lexer(object):
 
 
 class IncludingLexer(object):
-    def __init__(self, fea_path_data):
-        self.lexers_ = [self.make_lexer_(fea_path_data, (fea_path_data[0], 0, 0))]
+    def __init__(self, featurefile):
+        self.lexers_ = [self.make_lexer_(featurefile)]
 
     def __iter__(self):
         return self
@@ -190,24 +190,29 @@ class IncludingLexer(object):
                 #semi_type, semi_token, semi_location = lexer.next()
                 #if semi_type is not Lexer.SYMBOL or semi_token != ";":
                 #    raise FeatureLibError("Expected ';'", semi_location)
-                curpath, _ = os.path.split(lexer.filename_)
+                curpath = os.path.dirname(lexer.filename_)
                 path = os.path.join(curpath, fname_token)
                 if len(self.lexers_) >= 5:
                     raise FeatureLibError("Too many recursive includes",
                                           fname_location)
-                self.lexers_.append(self.make_lexer_((path, None), fname_location))
+                self.lexers_.append(self.make_lexer_(path, fname_location))
                 continue
             else:
                 return (token_type, token, location)
         raise StopIteration()
 
     @staticmethod
-    def make_lexer_(fea_path_data, location):
-        filename, data = fea_path_data
-        if data is None:
+    def make_lexer_(file_or_path, location=None):
+        if hasattr(file_or_path, "read"):
+            fileobj, closing = file_or_path, False
+        else:
+            filename, closing = file_or_path, True
             try:
-                with open(filename, "r", encoding="utf-8") as f:
-                    data = f.read()
+                fileobj = open(filename, "r", encoding="utf-8")
             except IOError as err:
                 raise FeatureLibError(str(err), location)
+        data = fileobj.read()
+        filename = fileobj.name if hasattr(fileobj, "name") else "<features>"
+        if closing:
+            fileobj.close()
         return Lexer(data, filename)
