@@ -1,0 +1,24 @@
+table OS/2 {
+   FSType 4;
+   Panose 2 15 0 0 2 2 8 2 9 4;
+   TypoAscender 800;
+   TypoDescender -200; # Note that TypoDescender is negative for descent below the baseline.
+   winAscent 832;
+   winDescent 321; # Note that winDescent is positive for descent below the baseline.
+   UnicodeRange 0   # Basic Latin
+     1   # Latin-1 Supplement
+     9   # Cyrillic
+     55  # CJK Compatibility
+     59  # CJK Unified Ideographs
+     60  # Private Use Area
+     ;
+   CodePageRange  1252    # Latin 1
+   1251    # Cyrillic                           
+   932     # JIS/Japan
+   ;
+   XHeight 400;
+   CapHeight 600;
+   WeightClass 800;
+   WidthClass 3;
+   Vendor "ADBE";
+} OS/2;
