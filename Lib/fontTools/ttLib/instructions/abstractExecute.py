@@ -689,10 +689,6 @@ class Environment(object):
         self.program_stack_pop()
         self.current_instruction_intermediate.append(IR.CopyStatement(IR.ScanType(), value))
 
-    def exec_SCFS(self):
-        self.program_stack_pop_many(2)
-        raise NotImplementedError
-
     def exec_SCVTCI(self):
         self.program_stack_pop()
         raise NotImplementedError
