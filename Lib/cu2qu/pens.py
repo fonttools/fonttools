@@ -140,28 +140,55 @@ class Cu2QuPointPen(BasePointToSegmentPen):
         prev_on_curve = prev_points[-1][0]
         for segment_type, points in segments:
             if segment_type == 'curve':
-                # XXX do we actually need to decomposeSuperBezierSegment?
-                assert len(points) == 3, (
-                    "expected 2 control points, found: %d" % (len(points)-1))
-                on_curve, smooth, name, kwargs = points[-1]
-                bcp1, bcp2 = points[0][0], points[1][0]
-                cubic = [prev_on_curve, bcp1, bcp2, on_curve]
-                quadratic, _ = curve_to_quadratic(cubic, self.max_err)
-                if self.stats is not None:
-                    n = str(len(quadratic))
-                    self.stats[n] = self.stats.get(n, 0) + 1
-                new_points = [(pt, False, None, {}) for pt in quadratic[1:-1]]
-                new_points.append((on_curve, smooth, name, kwargs))
-                new_segments.append(["qcurve", new_points])
+                for sub_points in self._split_super_bezier_segments(points):
+                    on_curve, smooth, name, kwargs = sub_points[-1]
+                    bcp1, bcp2 = sub_points[0][0], sub_points[1][0]
+                    cubic = [prev_on_curve, bcp1, bcp2, on_curve]
+                    quad, _ = curve_to_quadratic(cubic, self.max_err)
+                    if self.stats is not None:
+                        n = str(len(quad))
+                        self.stats[n] = self.stats.get(n, 0) + 1
+                    new_points = [(pt, False, None, {}) for pt in quad[1:-1]]
+                    new_points.append((on_curve, smooth, name, kwargs))
+                    new_segments.append(["qcurve", new_points])
+                    prev_on_curve = sub_points[-1][0]
             else:
                 new_segments.append([segment_type, points])
-            prev_on_curve = points[-1][0]
+                prev_on_curve = points[-1][0]
         if closed:
             # the BasePointToSegmentPen.endPath method that calls _flushContour
             # rotates the point list of closed contours so that they end with
             # the first on-curve point. We restore the original starting point.
             new_segments = new_segments[-1:] + new_segments[:-1]
         self._drawPoints(new_segments)
+
+    def _split_super_bezier_segments(self, points):
+        sub_segments = []
+        # n is the number of control points
+        n = len(points) - 1
+        if n == 2:
+            # a simple bezier curve segment
+            sub_segments.append(points)
+        elif n > 2:
+            # a "super" bezier; decompose it
+            on_curve, smooth, name, kwargs = points[-1]
+            num_sub_segments = n - 1
+            for i, sub_points in enumerate(decomposeSuperBezierSegment([
+                    pt for pt, _, _, _ in points])):
+                new_segment = []
+                for point in sub_points[:-1]:
+                    new_segment.append((point, False, None, {}))
+                if i == (num_sub_segments - 1):
+                    # the last on-curve keeps its original attributes
+                    new_segment.append((on_curve, smooth, name, kwargs))
+                else:
+                    # on-curves of sub-segments are always "smooth"
+                    new_segment.append((sub_points[-1], True, None, {}))
+                sub_segments.append(new_segment)
+        else:
+            raise AssertionError(
+                "expected 2 control points, found: %d" % n)
+        return sub_segments
 
     def _drawPoints(self, segments):
         pen = self.pen
