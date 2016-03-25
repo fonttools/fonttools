@@ -141,7 +141,8 @@ class Cu2QuPointPen(BasePointToSegmentPen):
         for segment_type, points in segments:
             if segment_type == 'curve':
                 # XXX do we actually need to decomposeSuperBezierSegment?
-                assert len(points) == 3
+                assert len(points) == 3, (
+                    "expected 2 control points, found: %d" % (len(points)-1))
                 on_curve, smooth, name, kwargs = points[-1]
                 bcp1, bcp2 = points[0][0], points[1][0]
                 cubic = [prev_on_curve, bcp1, bcp2, on_curve]
@@ -156,7 +157,9 @@ class Cu2QuPointPen(BasePointToSegmentPen):
                 new_segments.append([segment_type, points])
             prev_on_curve = points[-1][0]
         if closed:
-            # restore the original starting point
+            # the BasePointToSegmentPen.endPath method that calls _flushContour
+            # rotates the point list of closed contours so that they end with
+            # the first on-curve point. We restore the original starting point.
             new_segments = new_segments[-1:] + new_segments[:-1]
         self._drawPoints(new_segments)
 
