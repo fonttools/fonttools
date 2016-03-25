@@ -33,25 +33,33 @@ class Cu2QuPen(AbstractPen):
         self.start_pt = None
         self.current_pt = None
 
+    def _check_contour_is_open(self):
+        if self.current_pt is None:
+            raise AssertionError("moveTo is required")
+
+    def _check_contour_is_closed(self):
+        if self.current_pt is not None:
+            raise AssertionError("closePath or endPath is required")
+
     def _add_moveTo(self):
         if self.start_pt is not None:
             self.pen.moveTo(self.start_pt)
             self.start_pt = None
 
     def moveTo(self, pt):
-        assert self.current_pt is None
+        self._check_contour_is_closed()
         self.start_pt = self.current_pt = pt
         if not self.ignore_single_points:
             self._add_moveTo()
 
     def lineTo(self, pt):
-        assert self.current_pt is not None
+        self._check_contour_is_open()
         self._add_moveTo()
         self.pen.lineTo(pt)
         self.current_pt = pt
 
     def qCurveTo(self, *points):
-        assert self.current_pt is not None
+        self._check_contour_is_open()
         n = len(points)
         if n == 1:
             self.lineTo(points[0])
@@ -63,7 +71,6 @@ class Cu2QuPen(AbstractPen):
             raise AssertionError("illegal qcurve segment point count: %d" % n)
 
     def _curve_to_quadratic(self, pt1, pt2, pt3):
-        assert self.current_pt is not None
         curve = (self.current_pt, pt1, pt2, pt3)
         quadratic, _ = curve_to_quadratic(curve, self.max_err)
         if self.stats is not None:
@@ -72,6 +79,7 @@ class Cu2QuPen(AbstractPen):
         self.qCurveTo(*quadratic[1:])
 
     def curveTo(self, *points):
+        self._check_contour_is_open()
         n = len(points)
         if n == 3:
             # this is the most common case, so we special-case it
@@ -87,20 +95,20 @@ class Cu2QuPen(AbstractPen):
             raise AssertionError("illegal curve segment point count: %d" % n)
 
     def closePath(self):
-        assert self.current_pt is not None
+        self._check_contour_is_open()
         if self.start_pt is None:
             # if 'start_pt' is _not_ None, we are ignoring single-point paths
             self.pen.closePath()
         self.current_pt = self.start_pt = None
 
     def endPath(self):
-        assert self.current_pt is not None
+        self._check_contour_is_open()
         if self.start_pt is None:
             self.pen.endPath()
         self.current_pt = self.start_pt = None
 
     def addComponent(self, glyphName, transformation):
-        assert self.current_pt is None
+        self._check_contour_is_closed()
         self.pen.addComponent(glyphName, transformation)
 
 
