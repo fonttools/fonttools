@@ -8,7 +8,7 @@ import unittest
 
 
 class BaseDummyPen(object):
-    """Base class for pens recording the commands their are called with."""
+    """Base class for pens that record the commands they are called with."""
 
     def __init__(self, *args, **kwargs):
         self.commands = []
