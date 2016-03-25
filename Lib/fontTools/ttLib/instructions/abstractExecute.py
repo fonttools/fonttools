@@ -786,8 +786,11 @@ class Environment(object):
         self.current_instruction_intermediate.append(IR.CopyStatement(IR.RoundState(), arg))
 
     def exec_SSW(self):
+        arg_name = self.stack_top_name()
+        data = self.program_stack[-1].data
         self.program_stack_pop()
-        raise NotImplementedError
+        self.graphics_state['singleWidthValue'] = data
+        self.current_instruction_intermediate.append(IR.CopyStatement(IR.SingleWidthValue(), arg_name))
 
     def exec_SSWCI(self):
         self.program_stack_pop()
