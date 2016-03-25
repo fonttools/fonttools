@@ -361,9 +361,9 @@ class ROUNDMethodCall(MethodCallStatement):
         self.methodName = 'ROUND_'+data
 
 class SHPMethodCall(MethodCallStatement):
-    def __init__(self, parameters = [], returnVal=None):
+    def __init__(self, data, parameters = [], returnVal=None):
         super(SHPMethodCall, self).__init__(parameters, returnVal)
-        self.methodName = 'SHP'
+        self.methodName = 'SHP_'+data
 
 class SHPIXMethodCall(MethodCallStatement):
     def __init__(self, parameters = [], returnVal=None):
