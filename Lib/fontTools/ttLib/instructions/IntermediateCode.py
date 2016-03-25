@@ -334,9 +334,9 @@ class MIRPMethodCall(MethodCallStatement):
         self.methodName = 'MIRP'
 
 class GCMethodCall(MethodCallStatement):
-    def __init__(self, parameters = [], returnVal=None):
+    def __init__(self, data, parameters = [], returnVal=None):
         super(GCMethodCall, self).__init__(parameters, returnVal)
-        self.methodName = 'GC'
+        self.methodName = 'GC_'+data
 
 class GETINFOMethodCall(MethodCallStatement):
     def __init__(self, parameters = [], returnVal=None):

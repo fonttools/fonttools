@@ -397,7 +397,7 @@ class Environment(object):
     def exec_GC(self):
         arg = self.program_stack_pop()
         var = self.program_stack_push(dataType.AbstractValue(), False)
-        self.current_instruction_intermediate.append(IR.GCMethodCall([arg],var))
+        self.current_instruction_intermediate.append(IR.GCMethodCall(self.current_instruction.data[0],[arg],var))
     
     def exec_GETINFO(self):
         '''
@@ -735,7 +735,7 @@ class Environment(object):
         self.graphics_state['loop'] = 1
         assert len(self.program_stack) >= loopValue, "IP: stack underflow"
         pts = self.program_stack_pop_many(loopValue)
-        self.current_instruction_intermediate.append(IR.SHPMethodCall(pts))
+        self.current_instruction_intermediate.append(IR.SHPMethodCall(self.current_instruction.data[0], pts))
 
     def exec_SHPIX(self):
         self.program_stack_pop()
