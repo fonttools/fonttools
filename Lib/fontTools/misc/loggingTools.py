@@ -3,7 +3,7 @@ logging package.
 """
 
 from __future__ import print_function, absolute_import
-from fontTools.misc.py23 import basestring
+from fontTools.misc.py23 import *
 import sys
 import logging
 import timeit

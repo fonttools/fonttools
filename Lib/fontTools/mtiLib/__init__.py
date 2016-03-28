@@ -8,7 +8,7 @@
 
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
-from fontTools.misc.py23 import open
+from fontTools.misc.py23 import *
 from fontTools import ttLib
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.tables.otBase import ValueRecord, valueRecordFormatDict

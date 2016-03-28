@@ -1,7 +1,7 @@
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
+from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
-from fontTools.misc.py23 import UnicodeIO, tounicode
 from fontTools.misc.textTools import binary2num, safeEval
 from fontTools.feaLib.error import FeatureLibError
 from fontTools.feaLib.parser import Parser
