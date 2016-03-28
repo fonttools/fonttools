@@ -13,6 +13,9 @@ from fontTools.misc.py23 import *
 import sympy as sp
 import math
 from fontTools.pens.basePen import BasePen
+from fontTools.pens.transformPen import TransformPen
+from fontTools.misc.transform import Scale
+from fontTools.misc.bezierTools import splitCubicAtT
 from functools import partial
 
 n = 3 # Max Bezier degree; 3 for cubic, 2 for quadratic
@@ -71,15 +74,12 @@ def getGreenBezierFuncs(func):
 
 class GreenPen(BasePen):
 
-	def __init__(self, glyphset, func, scale=1):
+	def __init__(self, func, glyphset=None):
 		BasePen.__init__(self, glyphset)
 		self._funcs = getGreenBezierFuncs(func)
-		self._scale = scale
 		self.value = 0
 
 	def _segment(self, *P):
-		scale = self._scale
-		P = tuple((x/scale,y/scale) for x,y in P)
 		self.value += self._funcs[len(P) - 1](P)
 
 	def _moveTo(self, p0):
@@ -97,7 +97,6 @@ class GreenPen(BasePen):
 		p0 = self._getCurrentPoint()
 		self._segment(p0,p1,p2,p3)
 
-
 AreaPen = partial(GreenPen, func=1)
 Moment1XPen = partial(GreenPen, func=x)
 Moment1YPen = partial(GreenPen, func=y)
@@ -105,23 +104,56 @@ Moment2XXPen = partial(GreenPen, func=x*x)
 Moment2YYPen = partial(GreenPen, func=y*y)
 Moment2XYPen = partial(GreenPen, func=x*y)
 
+def distance(p0, p1):
+	return math.hypot(p0[0] - p1[0], p0[1] - p1[1])
+
+class PerimeterPen(BasePen):
+
+	def __init__(self, tolerance=0.005, glyphset=None):
+		BasePen.__init__(self, glyphset)
+		self.value = 0
+		self._mult = 1.+tolerance
+
+	def _moveTo(self, p0):
+		pass
+
+	def _lineTo(self, p1):
+		p0 = self._getCurrentPoint()
+		self.value += distance(p0, p1)
+
+	def _addCubic(self, p0, p1, p2, p3):
+		arch = distance(p0, p3)
+		box = distance(p0, p1) + distance(p1, p2) + distance(p2, p3)
+		if arch * self._mult >= box:
+			self.value += (arch + box) * .5
+		else:
+			for c in splitCubicAtT(p0,p1,p2,p3,.5):
+				self._addCubic(*c)
+
+	def _curveToOne(self, p1, p2, p3):
+		p0 = self._getCurrentPoint()
+		self._addCubic(p0, p1, p2, p3)
+
 class GlyphStatistics(object):
 
-	def __init__(self, glyph, glyphset=None, scale=1):
+	def __init__(self, glyph, transform=None, glyphset=None):
 		self._glyph = glyph
 		self._glyphset = glyphset
-		self._scale = scale
+		self._transform = transform
 
 	def _penAttr(self, attr):
 		internalName = '_'+attr
 		if internalName not in self.__dict__:
 			Pen = globals()[attr+'Pen']
-			pen = Pen(self._glyphset, scale=self._scale)
-			self._glyph.draw(pen)
+			pen = transformer = Pen(glyphset=self._glyphset)
+			if self._transform:
+				transformer = TransformPen(pen, self._transform)
+			self._glyph.draw(transformer)
 			self.__dict__[internalName] = pen.value
 		return self.__dict__[internalName]
 
 	Area = property(partial(_penAttr, attr='Area'))
+	Perimeter = property(partial(_penAttr, attr='Perimeter'))
 	Moment1X = property(partial(_penAttr, attr='Moment1X'))
 	Moment1Y = property(partial(_penAttr, attr='Moment1Y'))
 	Moment2XX = property(partial(_penAttr, attr='Moment2XX'))
@@ -196,7 +228,7 @@ def test(glyphset, upem, glyphs):
 		print()
 		print("glyph:", glyph_name)
 		glyph = glyphset[glyph_name]
-		stats = GlyphStatistics(glyph, glyphset, scale=upem)
+		stats = GlyphStatistics(glyph, transform=Scale(1./upem), glyphset=glyphset)
 		for item in dir(stats):
 			if item[0] == '_': continue
 			print ("%s: %g" % (item, getattr(stats, item)))
