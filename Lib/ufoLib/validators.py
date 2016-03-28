@@ -965,8 +965,7 @@ def kerningValidatorReportPairs(kerning, groups):
 				    (glyph, secondGroup) in kerning and
 				    kerning[(glyph, secondGroup)] != kerning[(first, second)]):
 					errors.append("%s, %s (%d) conflicts with %s, %s (%d)" % (glyph, secondGroup, kerning[glyph, secondGroup], first, second, kerning[first, second]))
-					pairs.append((glyph, secondGroup))
-					pairs.append((first, second))
+					pairs.append(((glyph, secondGroup), (first, second)))
 		# validate glyph + group
 		if secondIsGroup:
 			secondOptions = groups[second]
@@ -976,8 +975,7 @@ def kerningValidatorReportPairs(kerning, groups):
 				    (firstGroup, glyph) in kerning and
 				    kerning[(firstGroup, glyph)] != kerning[(first, second)]):
 					errors.append("%s, %s (%d) conflicts with %s, %s (%d)" % (firstGroup, glyph, kerning[firstGroup, glyph], first, second, kerning[first, second]))
-					pairs.append((firstGroup, glyph))
-					pairs.append((first, second))
+					pairs.append(((firstGroup, glyph), (first, second)))
 	if errors:
 		return False, errors, pairs
 	# fallback
