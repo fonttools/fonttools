@@ -324,7 +324,6 @@ def parseOptions(args):
 	for input in files:
 		if not os.path.isfile(input):
 			raise getopt.GetoptError('File not found: "%s"' % input)
-			continue
 		tp = guessFileType(input)
 		if tp in ("OTF", "TTF", "TTC", "WOFF", "WOFF2"):
 			extension = ".ttx"
@@ -340,7 +339,6 @@ def parseOptions(args):
 			action = ttCompile
 		else:
 			raise getopt.GetoptError('Unknown file type: "%s"' % input)
-			continue
 
 		if options.outputFile:
 			output = options.outputFile
