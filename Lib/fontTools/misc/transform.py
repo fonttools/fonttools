@@ -320,6 +320,27 @@ class Transform(object):
 		"""
 		return hash(self.__affine)
 
+	def __bool__(self):
+		"""Returns True if transform is not identity, False otherwise.
+			>>> bool(Identity)
+			False
+			>>> bool(Transform())
+			False
+			>>> bool(Scale(1.))
+			False
+			>>> bool(Scale(2))
+			True
+			>>> bool(Offset())
+			False
+			>>> bool(Offset(0))
+			False
+			>>> bool(Offset(2))
+			True
+		"""
+		return self.__affine != Identity.__affine
+
+	__nonzero__ = __bool__
+
 	def __repr__(self):
 		return "<%s [%g %g %g %g %g %g]>" % ((self.__class__.__name__,) \
 				+ self.__affine)
