@@ -931,7 +931,7 @@ def kerningValidatorReportPairs(kerning, groups):
 	# search for conflicts
 	errors = []
 	pairs = []
-	for first, second in kerning.keys():
+	for first, second in sorted(kerning.keys()):
 		firstIsGroup = first.startswith("public.kern1.")
 		secondIsGroup = second.startswith("public.kern2.")
 		# skip anything other than glyph + group and group + glyph
