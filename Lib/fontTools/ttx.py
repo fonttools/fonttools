@@ -387,8 +387,7 @@ def main(args=None):
 	except SystemExit:
 		if sys.platform == "win32":
 			waitForKeyPress()
-		else:
-			raise
+		raise
 	except TTLibError as e:
 		log.error(e)
 		sys.exit(1)
