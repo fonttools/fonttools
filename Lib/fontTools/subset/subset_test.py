@@ -100,6 +100,20 @@ class SubsetTest(unittest.TestCase):
         subsetfont = TTFont(subsetpath)
         self.expect_ttx(subsetfont, self.getpath("expect_keep_colr.ttx"), ["GlyphOrder", "hmtx", "glyf", "COLR", "CPAL"])
 
+    def test_subset_gvar(self):
+        _, fontpath = self.compile_font(self.getpath("TestGVAR.ttx"), ".ttf")
+        subsetpath = self.temp_path(".ttf")
+        subset.main([fontpath, "--unicodes=U+002B,U+2212", "--output-file=%s" % subsetpath])
+        subsetfont = TTFont(subsetpath)
+        self.expect_ttx(subsetfont, self.getpath("expect_keep_gvar.ttx"), ["GlyphOrder", "avar", "fvar", "gvar", "name"])
+
+    def test_subset_gvar_notdef_outline(self):
+        _, fontpath = self.compile_font(self.getpath("TestGVAR.ttx"), ".ttf")
+        subsetpath = self.temp_path(".ttf")
+        subset.main([fontpath, "--unicodes=U+0030", "--notdef_outline", "--output-file=%s" % subsetpath])
+        subsetfont = TTFont(subsetpath)
+        self.expect_ttx(subsetfont, self.getpath("expect_keep_gvar_notdef_outline.ttx"), ["GlyphOrder", "avar", "fvar", "gvar", "name"])
+
     def test_subset_math(self):
         _, fontpath = self.compile_font(self.getpath("TestMATH-Regular.ttx"), ".ttf")
         subsetpath = self.temp_path(".ttf")

@@ -1450,7 +1450,7 @@ def prune_features(self):
 
 @_add_method(ttLib.getTableClass('GSUB'),
              ttLib.getTableClass('GPOS'))
-def prune_pre_subset(self, options):
+def prune_pre_subset(self, font, options):
     # Drop undesired features
     if '*' not in options.layout_features:
         self.subset_feature_tags(options.layout_features)
@@ -1584,7 +1584,7 @@ def prune_post_subset(self, options):
                 (table.Version >= 0x00010002/0x10000 and table.MarkGlyphSetsDef))
 
 @_add_method(ttLib.getTableClass('kern'))
-def prune_pre_subset(self, options):
+def prune_pre_subset(self, font, options):
     # Prune unknown kern table types
     self.kernTables = [t for t in self.kernTables if hasattr(t, 'kernTable')]
     return bool(self.kernTables)
@@ -1613,6 +1613,22 @@ def subset_glyphs(self, s):
     self.hdmx = {sz:_dict_subset(l, s.glyphs) for sz,l in self.hdmx.items()}
     return bool(self.hdmx)
 
+@_add_method(ttLib.getTableClass('avar'), ttLib.getTableClass('fvar'))
+def subset_glyphs(self, s):
+    return True
+
+@_add_method(ttLib.getTableClass('gvar'))
+def prune_pre_subset(self, font, options):
+    if options.notdef_glyph and not options.notdef_outline:
+        self.variations[font.glyphOrder[0]] = []
+    return True
+
+@_add_method(ttLib.getTableClass('gvar'))
+def subset_glyphs(self, s):
+    self.variations = _dict_subset(self.variations, s.glyphs)
+    self.glyphCount = len(self.variations)
+    return bool(self.variations)
+
 @_add_method(ttLib.getTableClass('VORG'))
 def subset_glyphs(self, s):
     self.VOriginRecords = {g:v for g,v in self.VOriginRecords.items()
@@ -1621,7 +1637,7 @@ def subset_glyphs(self, s):
     return True    # Never drop; has default metrics
 
 @_add_method(ttLib.getTableClass('post'))
-def prune_pre_subset(self, options):
+def prune_pre_subset(self, font, options):
     if not options.glyph_names:
         self.formatType = 3.0
     return True # Required table
@@ -1784,7 +1800,7 @@ def closure_glyphs(self, s):
         s.glyphs.update(components)
 
 @_add_method(ttLib.getTableClass('glyf'))
-def prune_pre_subset(self, options):
+def prune_pre_subset(self, font, options):
     if options.notdef_glyph and not options.notdef_outline:
         g = self[self.glyphOrder[0]]
         # Yay, easy!
@@ -1813,7 +1829,7 @@ def prune_post_subset(self, options):
     return True
 
 @_add_method(ttLib.getTableClass('CFF '))
-def prune_pre_subset(self, options):
+def prune_pre_subset(self, font, options):
     cff = self.cff
     # CFF table must have one font only
     cff.fontNames = cff.fontNames[:1]
@@ -2278,7 +2294,7 @@ def closure_glyphs(self, s):
         s.unicodes_missing.difference_update(table.cmap)
 
 @_add_method(ttLib.getTableClass('cmap'))
-def prune_pre_subset(self, options):
+def prune_pre_subset(self, font, options):
     if not options.legacy_cmap:
         # Drop non-Unicode / non-Symbol cmaps
         self.tables = [t for t in self.tables if t.isUnicode() or t.isSymbol()]
@@ -2318,14 +2334,14 @@ def subset_glyphs(self, s):
     return True # Required table
 
 @_add_method(ttLib.getTableClass('DSIG'))
-def prune_pre_subset(self, options):
+def prune_pre_subset(self, font, options):
     # Drop all signatures since they will be invalid
     self.usNumSigs = 0
     self.signatureRecords = []
     return True
 
 @_add_method(ttLib.getTableClass('maxp'))
-def prune_pre_subset(self, options):
+def prune_pre_subset(self, font, options):
     if not options.hinting:
         if self.tableVersion == 0x00010000:
             self.maxZones = 1
@@ -2337,9 +2353,14 @@ def prune_pre_subset(self, options):
     return True
 
 @_add_method(ttLib.getTableClass('name'))
-def prune_pre_subset(self, options):
+def prune_pre_subset(self, font, options):
+    nameIDs = set(options.name_IDs)
+    fvar = font.get('fvar')
+    if fvar:
+        nameIDs.update([inst.nameID for inst in fvar.instances])
+        nameIDs.update([axis.nameID for axis in fvar.axes])
     if '*' not in options.name_IDs:
-        self.names = [n for n in self.names if n.nameID in options.name_IDs]
+        self.names = [n for n in self.names if n.nameID in nameIDs]
     if not options.name_legacy:
         # TODO(behdad) Sometimes (eg Apple Color Emoji) there's only a macroman
         # entry for Latin and no Unicode names.
@@ -2391,7 +2412,7 @@ class Options(object):
     _no_subset_tables_default = ['gasp', 'head', 'hhea', 'maxp',
                                  'vhea', 'OS/2', 'loca', 'name', 'cvt',
                                  'fpgm', 'prep', 'VDMX', 'DSIG', 'CPAL']
-    _hinting_tables_default = ['cvt', 'fpgm', 'prep', 'hdmx', 'VDMX']
+    _hinting_tables_default = ['cvar', 'cvt', 'fpgm', 'prep', 'hdmx', 'VDMX']
 
     # Based on HarfBuzz shapers
     _layout_features_groups = {
@@ -2553,10 +2574,7 @@ class Subsetter(object):
         self.glyph_ids_requested.update(gids)
 
     def _prune_pre_subset(self, font):
-
-        for tag in font.keys():
-            if tag == 'GlyphOrder': continue
-
+        for tag in self._sort_tables(font):
             if(tag.strip() in self.options.drop_tables or
                  (tag.strip() in self.options.hinting_tables and not self.options.hinting) or
                  (tag == 'kern' and (not self.options.legacy_kern and 'GPOS' in font))):
@@ -2570,7 +2588,7 @@ class Subsetter(object):
                 with timer("load '%s'" % tag):
                     table = font[tag]
                 with timer("prune '%s'" % tag):
-                    retain = table.prune_pre_subset(self.options)
+                    retain = table.prune_pre_subset(font, self.options)
                 if not retain:
                     log.info("%s pruned to empty; dropped", tag)
                     del font[tag]
@@ -2681,8 +2699,7 @@ class Subsetter(object):
         del self.glyphs
 
     def _subset_glyphs(self, font):
-        for tag in font.keys():
-            if tag == 'GlyphOrder': continue
+        for tag in self._sort_tables(font):
             clazz = ttLib.getTableClass(tag)
 
             if tag.strip() in self.options.no_subset_tables:
@@ -2727,8 +2744,13 @@ class Subsetter(object):
                 else:
                     log.info("%s pruned", tag)
 
-    def subset(self, font):
+    def _sort_tables(self, font):
+        tagOrder = ['fvar', 'avar', 'gvar', 'name', 'glyf']
+        tagOrder = {t: i + 1 for i, t in enumerate(tagOrder)}
+        tags = sorted(font.keys(), key=lambda tag: tagOrder.get(tag, 0))
+        return [t for t in tags if t != 'GlyphOrder']
 
+    def subset(self, font):
         self._prune_pre_subset(font)
         self._closure_glyphs(font)
         self._subset_glyphs(font)
