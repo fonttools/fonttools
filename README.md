@@ -1,12 +1,12 @@
 # cu2qu
 
-This library provides functions which take in RoboFab objects (RFonts or their
-children) and converts any cubic curves to quadratic. The most useful function
-is probably `fonts_to_quadratic`:
+This library provides functions which take in UFO objects (Defcon Fonts or
+Robofab RFonts) and converts any cubic curves to quadratic. The most useful
+function is probably `fonts_to_quadratic`:
 
 ```python
-from robofab.world import OpenFont
-from cu2qu.rf import fonts_to_quadratic
+from defcon import Font
+from cu2qu.ufo import fonts_to_quadratic
 thin_font = OpenFont('MyFont-Thin.ufo')
 bold_font = OpenFont('MyFont-Bold.ufo')
 fonts_to_quadratic([thin_font, bold_font])
@@ -53,5 +53,3 @@ for font in [thin_font, bold_font]:
     fonts_to_quadratic([font], stats=stats)
 # "stats" will report combined statistics for both fonts
 ```
-
-See the source for functions which operate on glyphs and segments.
