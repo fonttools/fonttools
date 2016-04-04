@@ -26,12 +26,10 @@ the resulting splines are interpolation-compatible.
 
 from __future__ import print_function, division, absolute_import
 
-from robofab.objects.objectsRF import RSegment
+from fontTools.pens.basePen import AbstractPen
 from cu2qu import curve_to_quadratic, curves_to_quadratic
 
-__all__ = [
-    'fonts_to_quadratic', 'font_to_quadratic', 'glyph_to_quadratic',
-    'segment_to_quadratic']
+__all__ = ['fonts_to_quadratic', 'font_to_quadratic']
 
 DEFAULT_MAX_ERR = 0.0025
 
@@ -44,6 +42,103 @@ def zip(*args):
         msg = 'Args to zip in cu2qu should have equal lengths: '
         raise ValueError(msg + ' '.join(str(a) for a in args))
     return _zip(*args)
+
+
+class GetSegmentsPen(AbstractPen):
+    """Pen to collect segments into lists of points for conversion."""
+
+    def __init__(self):
+        self._last_pt = None
+        self.segments = []
+
+    def _add_segment(self, tag, *args):
+        self.segments.append((tag, args))
+
+    def moveTo(self, pt):
+        self._add_segment('move', pt)
+        self._last_pt = pt
+
+    def lineTo(self, pt):
+        self._add_segment('line', pt)
+        self._last_pt = pt
+
+    def curveTo(self, *points):
+        self._add_segment('curve', self._last_pt, *points)
+        self._last_pt = points[-1]
+
+    def closePath(self):
+        self._add_segment('close')
+
+    def addComponent(self, glyphName, transformation):
+        self._add_segment('component', glyphName, transformation)
+
+
+def _get_segments(glyph):
+    """Get a glyph's segments as extracted by GetSegmentsPen."""
+
+    pen = GetSegmentsPen()
+    glyph.draw(pen)
+    return pen.segments
+
+
+def _set_segments(glyph, segments):
+    """Draw segments as extracted by GetSegmentsPen back to a glyph."""
+
+    pen = glyph.getPen()
+    for tag, args in segments:
+        if tag == 'move':
+            pen.moveTo(*args)
+        elif tag == 'line':
+            pen.lineTo(*args)
+        elif tag == 'qcurve':
+            pen.qCurveTo(*args[1:])
+        elif tag == 'close':
+            pen.closePath()
+        elif tag == 'component':
+            pen.addComponent(*args)
+        else:
+            raise AssertionError('Unhandled segment type %s' % tag)
+
+
+def _segments_to_quadratic(segments, max_err, stats):
+    """Return quadratic approximations of cubic segments."""
+
+    assert all(s[0] == 'curve' for s in segments), 'Non-cubic given to convert'
+
+    new_points, _ = curves_to_quadratic([s[1] for s in segments], max_err)
+    n = len(new_points[0])
+    assert all(len(s) == n for s in new_points[1:]), 'Converted incompatibly'
+
+    n = str(n)
+    if stats is not None:
+        stats[n] = stats.get(n, 0) + 1
+
+    return [('qcurve', p) for p in new_points]
+
+
+def _fonts_to_quadratic(fonts, max_err, stats):
+    """Do the actual conversion of fonts, after arguments have been set up."""
+
+    for glyphs in zip(*fonts):
+        name = glyphs[0].name
+        assert all(g.name == name for g in glyphs), 'Incompatible fonts'
+
+        segments_by_location = zip(*[_get_segments(g) for g in glyphs])
+        if not any(segments_by_location):
+            continue
+
+        new_segments_by_location = []
+        for segments in segments_by_location:
+            tag = segments[0][0]
+            assert all(s[0] == tag for s in segments[1:]), (
+                'Incompatible glyphs "%s"' % name)
+            if tag == 'curve':
+                segments = _segments_to_quadratic(segments, max_err, stats)
+            new_segments_by_location.append(segments)
+
+        new_segments_by_glyph = zip(*new_segments_by_location)
+        for glyph, new_segments in zip(glyphs, new_segments_by_glyph):
+            _set_segments(glyph, new_segments)
 
 
 def fonts_to_quadratic(fonts, max_err_em=None, max_err=None,
@@ -75,13 +170,7 @@ def fonts_to_quadratic(fonts, max_err_em=None, max_err=None,
     num_fonts = len(fonts)
     assert len(max_errors) == num_fonts
 
-    if num_fonts == 1:
-        font = fonts[0]
-        max_errors = max_errors[0]
-    else:
-        font = FontCollection(fonts)
-    for glyph in font:
-        glyph_to_quadratic(glyph, max_errors, stats)
+    _fonts_to_quadratic(fonts, max_errors, stats)
 
     if dump_stats:
         spline_lengths = stats.keys()
@@ -95,135 +184,3 @@ def font_to_quadratic(font, **kwargs):
     """Convenience wrapper around fonts_to_quadratic, for just one font."""
 
     fonts_to_quadratic([font], **kwargs)
-
-
-def glyph_to_quadratic(glyph, max_err, stats=None):
-    """Convert a glyph's curves to quadratic, in place."""
-
-    for contour in glyph:
-        segments = []
-        for i in range(len(contour)):
-            segment = contour[i]
-            if segment.type == 'curve':
-                segments.append(segment_to_quadratic(
-                    contour, i, max_err, stats))
-            else:
-                segments.append(segment)
-        replace_segments(contour, segments)
-
-
-def segment_to_quadratic(contour, segment_id, max_err, stats=None):
-    """Return a quadratic approximation of a cubic segment."""
-
-    segment = contour[segment_id]
-    if segment.type != 'curve':
-        raise TypeError('Segment type not curve')
-
-    # assumes that a curve type will always be proceeded by another point on the
-    # same contour
-    prev_segment = contour[segment_id - 1]
-    points = points_to_quadratic(prev_segment.points[-1], segment.points[0],
-                                 segment.points[1], segment.points[2], max_err)
-
-    if isinstance(points[0][0], float):  # just one spline
-        n = str(len(points))
-        points = points[1:]
-
-    else:  # collection of splines
-        n = str(len(points[0]))
-        points = [p[1:] for p in points]
-
-    if stats is not None:
-        stats[n] = stats.get(n, 0) + 1
-    return as_quadratic(segment, points)
-
-
-def points_to_quadratic(p0, p1, p2, p3, max_err):
-    """Return a quadratic spline approximating the cubic bezier defined by these
-    points (or collections of points).
-    """
-
-    if hasattr(p0, 'x'):
-        curve = [(float(i.x), float(i.y)) for i in [p0, p1, p2, p3]]
-        return curve_to_quadratic(curve, max_err)[0]
-
-    curves = [[(float(i.x), float(i.y)) for i in p] for p in zip(p0, p1, p2, p3)]
-    return curves_to_quadratic(curves, max_err)[0]
-
-
-def replace_segments(contour, segments):
-    """Replace the segments of a given contour."""
-
-    try:
-        contour.replace_segments(segments)
-        return
-    except AttributeError:
-        pass
-
-    while len(contour):
-        contour.removeSegment(0)
-    for s in segments:
-        contour.appendSegment(s.type, [(p.x, p.y) for p in s.points], s.smooth)
-
-
-def as_quadratic(segment, points):
-    """Return a new segment with given points and type qcurve."""
-
-    try:
-        return segment.as_quadratic(points)
-    except AttributeError:
-        return RSegment('qcurve', points, segment.smooth)
-
-
-class FontCollection:
-    """A collection of fonts, or font components from different fonts.
-
-    Behaves like a single instance of the component, allowing access into
-    multiple fonts simultaneously for purposes of ensuring interpolation
-    compatibility.
-    """
-
-    def __init__(self, fonts):
-        self.init(fonts, GlyphCollection)
-
-    def __getitem__(self, key):
-        return self.children[key]
-
-    def __len__(self):
-        return len(self.children)
-
-    def __str__(self):
-        return str(self.instances)
-
-    def init(self, instances, child_collection_type, get_children=None):
-        self.instances = instances
-        children_by_instance = map(get_children, self.instances)
-        self.children = map(child_collection_type, zip(*children_by_instance))
-
-
-class GlyphCollection(FontCollection):
-    def __init__(self, glyphs):
-        self.init(glyphs, ContourCollection)
-        self.name = glyphs[0].name
-
-
-class ContourCollection(FontCollection):
-    def __init__(self, contours):
-        self.init(contours, SegmentCollection)
-
-    def replace_segments(self, segment_collections):
-        segments_by_contour = zip(*[s.instances for s in segment_collections])
-        for contour, segments in zip(self.instances, segments_by_contour):
-            replace_segments(contour, segments)
-
-
-class SegmentCollection(FontCollection):
-    def __init__(self, segments):
-        self.init(segments, None, lambda s: s.points)
-        self.points = self.children
-        self.type = segments[0].type
-
-    def as_quadratic(self, new_points=None):
-        points = new_points or self.children
-        return SegmentCollection([
-            as_quadratic(s, pts) for s, pts in zip(self.instances, points)])
