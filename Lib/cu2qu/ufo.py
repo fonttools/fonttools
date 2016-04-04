@@ -69,6 +69,9 @@ class GetSegmentsPen(AbstractPen):
     def closePath(self):
         self._add_segment('close')
 
+    def endPath(self):
+        self._add_segment('end')
+
     def addComponent(self, glyphName, transformation):
         self._add_segment('component', glyphName, transformation)
 
@@ -95,10 +98,12 @@ def _set_segments(glyph, segments):
             pen.qCurveTo(*args[1:])
         elif tag == 'close':
             pen.closePath()
+        elif tag == 'end':
+            pen.endPath()
         elif tag == 'component':
             pen.addComponent(*args)
         else:
-            raise AssertionError('Unhandled segment type %s' % tag)
+            raise AssertionError('Unhandled segment type "%s"' % tag)
 
 
 def _segments_to_quadratic(segments, max_err, stats):
