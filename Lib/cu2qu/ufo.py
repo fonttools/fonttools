@@ -84,6 +84,7 @@ def _get_segments(glyph):
 def _set_segments(glyph, segments):
     """Draw segments as extracted by GetSegmentsPen back to a glyph."""
 
+    glyph.clearContours()
     pen = glyph.getPen()
     for tag, args in segments:
         if tag == 'move':
