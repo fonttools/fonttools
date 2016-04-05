@@ -45,26 +45,32 @@ def zip(*args):
 
 
 class GetSegmentsPen(AbstractPen):
-    """Pen to collect segments into lists of points for conversion."""
+    """Pen to collect segments into lists of points for conversion.
+
+    Curves always include their initial on-curve point, so some points are
+    duplicated between segments.
+    """
 
     def __init__(self):
         self._last_pt = None
         self.segments = []
 
     def _add_segment(self, tag, *args):
+        if tag in ['move', 'line', 'qcurve', 'curve']:
+            self._last_pt = args[-1]
         self.segments.append((tag, args))
 
     def moveTo(self, pt):
         self._add_segment('move', pt)
-        self._last_pt = pt
 
     def lineTo(self, pt):
         self._add_segment('line', pt)
-        self._last_pt = pt
+
+    def qCurveTo(self, *points):
+        self._add_segment('qcurve', self._last_pt, *points)
 
     def curveTo(self, *points):
         self._add_segment('curve', self._last_pt, *points)
-        self._last_pt = points[-1]
 
     def closePath(self):
         self._add_segment('close')
