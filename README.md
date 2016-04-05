@@ -7,8 +7,8 @@ function is probably `fonts_to_quadratic`:
 ```python
 from defcon import Font
 from cu2qu.ufo import fonts_to_quadratic
-thin_font = OpenFont('MyFont-Thin.ufo')
-bold_font = OpenFont('MyFont-Bold.ufo')
+thin_font = Font('MyFont-Thin.ufo')
+bold_font = Font('MyFont-Bold.ufo')
 fonts_to_quadratic([thin_font, bold_font])
 ```
 

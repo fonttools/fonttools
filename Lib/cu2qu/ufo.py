@@ -36,12 +36,14 @@ DEFAULT_MAX_ERR = 0.0025
 
 _zip = zip
 def zip(*args):
-    """Ensure each argument to zip has the same length."""
+    """Ensure each argument to zip has the same length. Also make sure a list is
+    returned for python 2/3 compatibility.
+    """
 
     if len(set(len(a) for a in args)) != 1:
         msg = 'Args to zip in cu2qu should have equal lengths: '
         raise ValueError(msg + ' '.join(str(a) for a in args))
-    return _zip(*args)
+    return list(_zip(*args))
 
 
 class GetSegmentsPen(AbstractPen):
@@ -58,7 +60,12 @@ class GetSegmentsPen(AbstractPen):
     def _add_segment(self, tag, *args):
         if tag in ['move', 'line', 'qcurve', 'curve']:
             self._last_pt = args[-1]
-        self.segments.append((tag, args))
+
+        # don't collect ufo2-style anchors
+        if tag in ['close', 'end'] and self.segments[-1][0] == 'move':
+            self.segments.pop()
+        else:
+            self.segments.append((tag, args))
 
     def moveTo(self, pt):
         self._add_segment('move', pt)
@@ -79,7 +86,7 @@ class GetSegmentsPen(AbstractPen):
         self._add_segment('end')
 
     def addComponent(self, glyphName, transformation):
-        self._add_segment('component', glyphName, transformation)
+        pass
 
 
 def _get_segments(glyph):
@@ -106,8 +113,6 @@ def _set_segments(glyph, segments):
             pen.closePath()
         elif tag == 'end':
             pen.endPath()
-        elif tag == 'component':
-            pen.addComponent(*args)
         else:
             raise AssertionError('Unhandled segment type "%s"' % tag)
 
@@ -185,8 +190,7 @@ def fonts_to_quadratic(fonts, max_err_em=None, max_err=None,
     _fonts_to_quadratic(fonts, max_errors, stats)
 
     if dump_stats:
-        spline_lengths = stats.keys()
-        spline_lengths.sort()
+        spline_lengths = sorted(stats.keys())
         print('New spline lengths:\n%s\n' % (
             '\n'.join('%s: %d' % (l, stats[l]) for l in spline_lengths)))
     return stats
