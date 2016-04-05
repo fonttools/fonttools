@@ -60,7 +60,12 @@ class GetSegmentsPen(AbstractPen):
     def _add_segment(self, tag, *args):
         if tag in ['move', 'line', 'qcurve', 'curve']:
             self._last_pt = args[-1]
-        self.segments.append((tag, args))
+
+        # don't collect ufo2-style anchors
+        if tag in ['close', 'end'] and self.segments[-1][0] == 'move':
+            self.segments.pop()
+        else:
+            self.segments.append((tag, args))
 
     def moveTo(self, pt):
         self._add_segment('move', pt)
@@ -81,7 +86,7 @@ class GetSegmentsPen(AbstractPen):
         self._add_segment('end')
 
     def addComponent(self, glyphName, transformation):
-        self._add_segment('component', glyphName, transformation)
+        pass
 
 
 def _get_segments(glyph):
@@ -108,8 +113,6 @@ def _set_segments(glyph, segments):
             pen.closePath()
         elif tag == 'end':
             pen.endPath()
-        elif tag == 'component':
-            pen.addComponent(*args)
         else:
             raise AssertionError('Unhandled segment type "%s"' % tag)
 
