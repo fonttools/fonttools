@@ -36,12 +36,14 @@ DEFAULT_MAX_ERR = 0.0025
 
 _zip = zip
 def zip(*args):
-    """Ensure each argument to zip has the same length."""
+    """Ensure each argument to zip has the same length. Also make sure a list is
+    returned for python 2/3 compatibility.
+    """
 
     if len(set(len(a) for a in args)) != 1:
         msg = 'Args to zip in cu2qu should have equal lengths: '
         raise ValueError(msg + ' '.join(str(a) for a in args))
-    return _zip(*args)
+    return list(_zip(*args))
 
 
 class GetSegmentsPen(AbstractPen):
@@ -185,8 +187,7 @@ def fonts_to_quadratic(fonts, max_err_em=None, max_err=None,
     _fonts_to_quadratic(fonts, max_errors, stats)
 
     if dump_stats:
-        spline_lengths = stats.keys()
-        spline_lengths.sort()
+        spline_lengths = sorted(stats.keys())
         print('New spline lengths:\n%s\n' % (
             '\n'.join('%s: %d' % (l, stats[l]) for l in spline_lengths)))
     return stats
