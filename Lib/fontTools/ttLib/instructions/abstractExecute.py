@@ -709,14 +709,14 @@ class Environment(object):
         self.program_stack_pop_many(2)
         raise NotImplementedError
 
-    def exec_SFVTCA(self):#Set Freedom Vector To Coordinate Axis
+    def exec_SFVTCA(self):
         data = int(self.current_instruction.data[0])
         assert (data is 1 or data is 0)
         if data == 0:
             self.graphics_state['fv'] = (0, 1)
         if data == 1:
             self.graphics_state['fv'] = (1, 0)
-        raise NotImplementedError
+        self.current_instruction_intermediate.append(IR.CopyStatement(IR.FreedomVector(),IR.Constant(data)))
            
     def exec_SFVTL(self):#Set Freedom Vector To Line
         self.program_stack_pop_many(2)
@@ -767,11 +767,9 @@ class Environment(object):
         assert (data is 1 or data is 0)
         if data == 0:
             self.graphics_state['pv'] = (0, 1)
-            self.graphics_state['dv'] = (0, 1)
         if data == 1:
             self.graphics_state['pv'] = (1, 0)
-            self.graphics_state['dv'] = (1, 0)
-        raise NotImplementedError
+        self.current_instruction_intermediate.append(IR.CopyStatement(IR.ProjectionVector(),IR.Constant(data)))
 
     def exec_SPVTL(self):
         self.program_stack_pop_many()
