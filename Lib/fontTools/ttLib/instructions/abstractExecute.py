@@ -877,15 +877,15 @@ class Environment(object):
 
     def exec_SRP0(self):
         arg = self.exec_SRP(0)
-        self.current_instruction_intermediate.append(IR.SRP0MethodCall([arg]))
-    
+        self.current_instruction_intermediate.append(IR.CopyStatement(IR.RP0(), arg))    
+
     def exec_SRP1(self):
         arg = self.exec_SRP(1)
-        self.current_instruction_intermediate.append(IR.SRP1MethodCall([arg]))
+        self.current_instruction_intermediate.append(IR.CopyStatement(IR.RP1(), arg))    
 
     def exec_SRP2(self):
         arg = self.exec_SRP(2)
-        self.current_instruction_intermediate.append(IR.SRP2MethodCall([arg]))
+        self.current_instruction_intermediate.append(IR.CopyStatement(IR.RP2(), arg))    
 
     def exec_SANGW(self):
         self.program_stack_pop()
