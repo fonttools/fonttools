@@ -156,9 +156,11 @@ def classify(list_of_sets, sorted=True):
 	...     [{1, 9, 15}, {4, 5}, {2}], {1: {1, 9, 15}, 2: {2}, 4: {4, 5},
 	...     5: {4, 5}, 9: {1, 9, 15}, 15: {1, 9, 15}})
 	True
-	>>> classify([[1,2,9,15],[2,4,5],[15,5]], sorted=False) == (
-	...     [{1, 9}, {4}, {2}, {5}, {15}], {1: {1, 9}, 2: {2}, 4: {4}, 5: {5},
-	...     9: {1, 9}, 15: {15}})
+	>>> classes, mapping = classify([[1,2,9,15],[2,4,5],[15,5]], sorted=False)
+	>>> set([frozenset(c) for c in classes]) == set(
+	...     [frozenset(s) for s in ({1, 9}, {4}, {2}, {5}, {15})])
+	True
+	>>> mapping == {1: {1, 9}, 2: {2}, 4: {4}, 5: {5}, 9: {1, 9}, 15: {15}}
 	True
 	"""
 	classifier = Classifier(sorted=True)
@@ -167,5 +169,5 @@ def classify(list_of_sets, sorted=True):
 
 
 if __name__ == "__main__":
-	import doctest
+	import sys, doctest
 	sys.exit(doctest.testmod(optionflags=doctest.ELLIPSIS).failed)
