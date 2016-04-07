@@ -3,6 +3,12 @@
 from __future__ import print_function, division, absolute_import
 import sys
 
+
+__all__ = ['basestring', 'unicode', 'unichr', 'byteord', 'bytechr', 'BytesIO',
+		'StringIO', 'UnicodeIO', 'strjoin', 'bytesjoin', 'tobytes', 'tostr',
+		'tounicode', 'Tag', 'open']
+
+
 try:
 	basestring = basestring
 except NameError:
