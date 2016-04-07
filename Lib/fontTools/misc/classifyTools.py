@@ -4,7 +4,7 @@
 from __future__ import print_function, absolute_import
 from fontTools.misc.py23 import *
 
-class Classifier:
+class Classifier(object):
 
 	"""
 	Main Classifier object, used to classify things into similar sets.
