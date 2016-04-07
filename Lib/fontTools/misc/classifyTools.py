@@ -23,7 +23,7 @@ class Classifier:
 		Add a set to the classifier.  Any iterable is accepted.
 		"""
 		if not set_of_things:
-			return;
+			return
 
 		self._dirty = True
 
