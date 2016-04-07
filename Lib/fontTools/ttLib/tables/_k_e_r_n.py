@@ -5,6 +5,7 @@ from fontTools.misc.textTools import safeEval, readHex
 from fontTools.misc.fixedTools import fixedToFloat as fi2fl, floatToFixed as fl2fi
 from . import DefaultTable
 import struct
+import sys
 import array
 import logging
 
