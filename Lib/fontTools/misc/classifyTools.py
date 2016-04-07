@@ -153,7 +153,7 @@ def classify(list_of_sets, sorted=True):
 	>>> classify([[1,2,9,15],[2,4,5],[15,5]], sorted=False)
 	([set([1, 9]), set([4]), set([2]), set([5]), set([15])], {1: set([1, 9]), 2: set([2]), 4: set([4]), 5: set([5]), 9: set([1, 9]), 15: set([15])})
 	"""
-	classifier = Classifier(sorted=sorted)
+	classifier = Classifier(sorted=True)
 	classifier.update(list_of_sets)
 	return classifier.getClasses(), classifier.getMapping()
 
