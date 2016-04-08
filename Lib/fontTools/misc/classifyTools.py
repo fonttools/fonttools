@@ -163,7 +163,7 @@ def classify(list_of_sets, sorted=True):
 	>>> mapping == {1: {1, 9}, 2: {2}, 4: {4}, 5: {5}, 9: {1, 9}, 15: {15}}
 	True
 	"""
-	classifier = Classifier(sorted=True)
+	classifier = Classifier(sorted=sorted)
 	classifier.update(list_of_sets)
 	return classifier.getClasses(), classifier.getMapping()
 
