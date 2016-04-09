@@ -698,6 +698,7 @@ class Parser(object):
         handler = {
             "GDEF": self.parse_table_GDEF_,
             "head": self.parse_table_head_,
+            "hhea": self.parse_table_hhea_,
             "name": self.parse_table_name_,
             "BASE": self.parse_table_BASE_,
             "OS/2": self.parse_table_OS_2_,
@@ -741,6 +742,23 @@ class Parser(object):
                 statements.append(self.parse_FontRevision_())
             else:
                 raise FeatureLibError("Expected FontRevision",
+                                      self.cur_token_location_)
+
+    def parse_table_hhea_(self, table):
+        statements = table.statements
+        fields = ("CaretOffset", "Ascender", "Descender", "LineGap")
+        while self.next_token_ != "}":
+            self.advance_lexer_()
+            if self.cur_token_type_ is Lexer.NAME and self.cur_token_ in fields:
+                key = self.cur_token_.lower()
+                value = self.expect_number_()
+                statements.append(
+                    ast.HheaField(self.cur_token_location_, key, value))
+            elif self.cur_token_ == ";":
+                continue
+            else:
+                raise FeatureLibError("Expected CaretOffset, Ascender, "
+                                      "Descender or LineGap",
                                       self.cur_token_location_)
 
     def parse_table_name_(self, table):

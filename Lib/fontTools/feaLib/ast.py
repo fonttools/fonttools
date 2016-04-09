@@ -631,3 +631,13 @@ class OS2Field(Statement):
 
     def build(self, builder):
         builder.add_os2_field(self.key, self.value)
+
+
+class HheaField(Statement):
+    def __init__(self, location, key, value):
+        Statement.__init__(self, location)
+        self.key = key
+        self.value = value
+
+    def build(self, builder):
+        builder.add_hhea_field(self.key, self.value)

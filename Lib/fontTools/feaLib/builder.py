@@ -69,12 +69,15 @@ class Builder(object):
         self.markFilterSets_ = {}  # frozenset({"acute", "grave"}) --> 4
         # for table 'OS/2'
         self.os2_ = {}
+        # for table 'hhea'
+        self.hhea_ = {}
 
     def build(self):
         self.parseTree = Parser(self.file).parse()
         self.parseTree.build(self)
         self.build_feature_aalt_()
         self.build_head()
+        self.build_hhea()
         self.build_name()
         self.build_OS_2()
         for tag in ('GPOS', 'GSUB'):
@@ -184,6 +187,23 @@ class Builder(object):
             table.tableVersion = 1.0
             table.created = table.modified = 3406620153  # 2011-12-13 11:22:33
         table.fontRevision = self.fontRevision_
+
+    def build_hhea(self):
+        if not self.hhea_:
+            return
+        table = self.font.get("hhea")
+        if not table:  # this only happens for unit tests
+            table = self.font["hhea"] = getTableClass("hhea")()
+            table.decompile(b"\0" * 36, self.font)
+            table.tableVersion = 1.0
+        if "caretoffset" in self.hhea_:
+            table.caretOffset = self.hhea_["caretoffset"]
+        if "ascender" in self.hhea_:
+            table.ascent = self.hhea_["ascender"]
+        if "descender" in self.hhea_:
+            table.descent = self.hhea_["descender"]
+        if "linegap" in self.hhea_:
+            table.lineGap = self.hhea_["linegap"]
 
     def get_user_name_id(self, table):
         # Try to find first unused font-specific name id
@@ -921,6 +941,9 @@ class Builder(object):
 
     def add_os2_field(self, key, value):
         self.os2_[key] = value
+
+    def add_hhea_field(self, key, value):
+        self.hhea_[key] = value
 
 
 def makeOpenTypeAnchor(anchor):
