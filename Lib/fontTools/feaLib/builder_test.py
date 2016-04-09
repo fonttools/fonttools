@@ -57,7 +57,7 @@ class BuilderTest(unittest.TestCase):
         spec5f_ii_1 spec5f_ii_2 spec5f_ii_3 spec5f_ii_4
         spec5h1 spec6b_ii spec6d2 spec6e spec6f
         spec6h_ii spec6h_iii_1 spec6h_iii_3d spec8a spec8b spec8c
-        spec9a spec9b spec9c1 spec9c2 spec9c3 spec9e spec9f
+        spec9a spec9b spec9c1 spec9c2 spec9c3 spec9d spec9e spec9f
         bug453 bug463 bug501 bug502 bug505 bug506 bug509 bug512
         name size size2
     """.split()
@@ -104,7 +104,7 @@ class BuilderTest(unittest.TestCase):
     def expect_ttx(self, font, expected_ttx):
         path = self.temp_path(suffix=".ttx")
         font.saveXML(path, tables=['head', 'name', 'BASE', 'GDEF', 'GSUB',
-                                   'GPOS', 'OS/2'])
+                                   'GPOS', 'OS/2', 'hhea'])
         actual = self.read_ttx(path)
         expected = self.read_ttx(expected_ttx)
         if actual != expected:
