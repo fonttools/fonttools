@@ -702,6 +702,11 @@ def splitPairPos(oldSubTable, newSubTable, overflowRecord):
 		for name in 'Class2Count', 'ClassDef2', 'ValueFormat1', 'ValueFormat2':
 			setattr(newSubTable, name, getattr(oldSubTable, name))
 
+		# The two subtables will still have the same ClassDef2 and the table
+		# sharing will still cause the sharing to overflow.  As such, disable
+		# sharing on the one that is serialized second (that's oldSubTable).
+		oldSubTable.DontShare = True
+
 		# Move top half of class numbers to new subtable
 
 		newSubTable.Coverage = oldSubTable.Coverage.__class__()
