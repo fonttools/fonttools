@@ -1613,10 +1613,6 @@ def subset_glyphs(self, s):
     self.hdmx = {sz:_dict_subset(l, s.glyphs) for sz,l in self.hdmx.items()}
     return bool(self.hdmx)
 
-@_add_method(ttLib.getTableClass('avar'), ttLib.getTableClass('fvar'))
-def subset_glyphs(self, s):
-    return True
-
 @_add_method(ttLib.getTableClass('gvar'))
 def prune_pre_subset(self, font, options):
     if options.notdef_glyph and not options.notdef_outline:
@@ -2409,7 +2405,8 @@ class Options(object):
                             'EBSC', 'SVG', 'PCLT', 'LTSH']
     _drop_tables_default += ['Feat', 'Glat', 'Gloc', 'Silf', 'Sill']  # Graphite
     _drop_tables_default += ['sbix']  # Color
-    _no_subset_tables_default = ['gasp', 'head', 'hhea', 'maxp',
+    _no_subset_tables_default = ['avar', 'fvar',
+                                 'gasp', 'head', 'hhea', 'maxp',
                                  'vhea', 'OS/2', 'loca', 'name', 'cvt',
                                  'fpgm', 'prep', 'VDMX', 'DSIG', 'CPAL']
     _hinting_tables_default = ['cvar', 'cvt', 'fpgm', 'prep', 'hdmx', 'VDMX']
