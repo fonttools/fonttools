@@ -858,7 +858,7 @@ def parseGSUBGPOS(lines, font, tableTag):
 	while lines.peek() is not None:
 		typ = lines.peek()[0].lower()
 		if typ not in fields:
-			log.debug('Skipping', lines.peek())
+			log.debug('Skipping %s', lines.peek())
 			next(lines)
 			continue
 		attr,parser = fields[typ]
