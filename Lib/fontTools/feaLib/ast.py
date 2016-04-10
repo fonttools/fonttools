@@ -564,7 +564,7 @@ class ValueRecord(Expression):
             return "<%s %s %s %s>" % (x, y, xAdvance, yAdvance)
 
         # Last resort is format C.
-        return "<%s %s %s %s %s %s %s %s %s %s>" % (
+        return "<%s %s %s %s %s %s %s %s>" % (
             x, y, xAdvance, yAdvance,
             deviceToString(xPlaDevice), deviceToString(yPlaDevice),
             deviceToString(xAdvDevice), deviceToString(yAdvDevice))
