@@ -98,5 +98,5 @@ def pad(data, size):
 
 
 if __name__ == "__main__":
-	import doctest
+	import doctest, sys
 	sys.exit(doctest.testmod().failed)
