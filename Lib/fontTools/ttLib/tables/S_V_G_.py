@@ -149,8 +149,7 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 	def decompile_format_1(self, data, ttFont):
 		pos = 2
 		self.numEntries = struct.unpack(">H", data[pos:pos+2])[0]
-		pos += 2
-		self.decompileEntryList(data, pos)
+		self.decompileEntryList(data)
 
 	def decompileEntryList(self, data):
 		# data starts with the first entry of the entry list.
