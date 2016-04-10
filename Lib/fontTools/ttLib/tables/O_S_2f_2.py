@@ -463,7 +463,6 @@ _unicodeRangeSets = []
 
 def _getUnicodeRangeSets():
 	# build the sets of codepoints for each unicode range bit, and cache result
-	global _unicodeRangeSets
 	if not _unicodeRangeSets:
 		for bit, blocks in enumerate(OS2_UNICODE_RANGES):
 			rangeset = set()
