@@ -3,14 +3,11 @@
 set -e
 set -x
 
-if [[ "$(uname -s)" == "Darwin" ]]; then
+if [[ "$(uname -s)" == "Darwin" || "${TOXENV}" == "pypy" ]]; then
+    PYENV_ROOT="$HOME/.pyenv"
+    PATH="$PYENV_ROOT/bin:$PATH"
     eval "$(pyenv init -)"
-else
-    if [[ "${TOXENV}" == "pypy" ]]; then
-        PYENV_ROOT="$HOME/.pyenv"
-        PATH="$PYENV_ROOT/bin:$PATH"
-        eval "$(pyenv init -)"
-    fi
 fi
+
 source ~/.venv/bin/activate
 tox
