@@ -106,11 +106,15 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 		self.version = struct.unpack(">H", data[pos:pos+2])[0]
 
 		if self.version == 1:
+			# This is pre-standardization version of the table; and obsolete.  But we decompile it for now.
+			# https://wiki.mozilla.org/SVGOpenTypeFonts
 			self.decompile_format_1(data, ttFont)
 		else:
 			if self.version != 0:
 				log.warning(
 					"Unknown SVG table version '%s'. Decompiling as version 0.", self.version)
+			# This is the standardized version of the table; and current.
+			# https://www.microsoft.com/typography/otspec/svg.htm
 			self.decompile_format_0(data, ttFont)
 
 	def decompile_format_0(self, data, ttFont):
@@ -147,8 +151,7 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 							pos += 4
 
 	def decompile_format_1(self, data, ttFont):
-		pos = 2
-		self.numEntries = struct.unpack(">H", data[pos:pos+2])[0]
+		self.offsetToSVGDocIndex = 2
 		self.decompileEntryList(data)
 
 	def decompileEntryList(self, data):
