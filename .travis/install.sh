@@ -4,16 +4,15 @@ set -e
 set -x
 
 if [[ "$(uname -s)" == 'Darwin' ]]; then
-    brew update || brew update
-    (brew list | grep -q 'pyenv') || brew install pyenv
-    brew outdated pyenv || brew upgrade pyenv
-
-    if which -s pyenv; then
-        eval "$(pyenv init -)"
-    fi
+    # install pyenv from the git repo (quicker than using brew)
+    git clone https://github.com/yyuu/pyenv.git ~/.pyenv
+    PYENV_ROOT="$HOME/.pyenv"
+    PATH="$PYENV_ROOT/bin:$PATH"
+    eval "$(pyenv init -)"
 
     case "${TOXENV}" in
         py27)
+            # install pip on the system python
             curl -O https://bootstrap.pypa.io/get-pip.py
             python get-pip.py --user
             ;;
@@ -26,8 +25,8 @@ if [[ "$(uname -s)" == 'Darwin' ]]; then
             pyenv global 3.4.3
             ;;
         py35)
-            pyenv install 3.5.0
-            pyenv global 3.5.0
+            pyenv install 3.5.1
+            pyenv global 3.5.1
             ;;
         pypy)
             pyenv install pypy-5.0.0
@@ -35,9 +34,9 @@ if [[ "$(uname -s)" == 'Darwin' ]]; then
             ;;
     esac
     pyenv rehash
-    python -m pip install --user virtualenv
+    python -m pip install --user --upgrade pip virtualenv
 else
-    # install pyenv to get latest pypy
+    # on Linux, we only need pyenv to get the latest pypy
     if [[ "${TOXENV}" == "pypy" ]]; then
         git clone https://github.com/yyuu/pyenv.git ~/.pyenv
         PYENV_ROOT="$HOME/.pyenv"
@@ -45,10 +44,12 @@ else
         eval "$(pyenv init -)"
         pyenv install pypy-5.0.0
         pyenv global pypy-5.0.0
+        pyenv rehash
     fi
-    pip install virtualenv
+    pip install --upgrade pip virtualenv
 fi
 
+# activate virtualenv and install test requirements
 python -m virtualenv ~/.venv
 source ~/.venv/bin/activate
 pip install -r dev-requirements.txt
