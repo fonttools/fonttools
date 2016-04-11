@@ -1,5 +1,18 @@
+# Byte-compiled / optimized files
+__pycache__/
+*.py[co]
+
+# Distribution / Packaging
+*.egg-info
 MANIFEST
 build
 dist
-*.pyc
+
+# Unit test / coverage files
+.tox/*
+.cache/
+.coverage
+htmlcov/
+
+# emacs backup files
 *~
