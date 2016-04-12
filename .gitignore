@@ -16,3 +16,6 @@ htmlcov/
 
 # emacs backup files
 *~
+
+# OSX Finder
+.DS_Store
