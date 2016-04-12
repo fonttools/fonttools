@@ -14,7 +14,7 @@
             <LangSys>
               <ReqFeatureIndex value="0"/>
               <!-- FeatureCount=1 -->
-              <FeatureIndex index="0" value="1"/>
+              <FeatureIndex index="0" value="3"/>
             </LangSys>
           </LangSysRecord>
           <LangSysRecord index="1">
@@ -22,16 +22,16 @@
             <LangSys>
               <ReqFeatureIndex value="65535"/>
               <!-- FeatureCount=2 -->
-              <FeatureIndex index="0" value="2"/>
-              <FeatureIndex index="1" value="1"/>
+              <FeatureIndex index="0" value="1"/>
+              <FeatureIndex index="1" value="3"/>
             </LangSys>
           </LangSysRecord>
           <LangSysRecord index="2">
             <LangSysTag value="ITA "/>
             <LangSys>
-              <ReqFeatureIndex value="3"/>
+              <ReqFeatureIndex value="2"/>
               <!-- FeatureCount=1 -->
-              <FeatureIndex index="0" value="1"/>
+              <FeatureIndex index="0" value="3"/>
             </LangSys>
           </LangSysRecord>
         </Script>
@@ -47,24 +47,24 @@
         </Feature>
       </FeatureRecord>
       <FeatureRecord index="1">
-        <FeatureTag value="scmp"/>
-        <Feature>
-          <!-- LookupCount=1 -->
-          <LookupListIndex index="0" value="3"/>
-        </Feature>
-      </FeatureRecord>
-      <FeatureRecord index="2">
         <FeatureTag value="hlig"/>
         <Feature>
           <!-- LookupCount=1 -->
           <LookupListIndex index="0" value="1"/>
         </Feature>
       </FeatureRecord>
-      <FeatureRecord index="3">
+      <FeatureRecord index="2">
         <FeatureTag value="liga"/>
         <Feature>
           <!-- LookupCount=1 -->
           <LookupListIndex index="0" value="2"/>
+        </Feature>
+      </FeatureRecord>
+      <FeatureRecord index="3">
+        <FeatureTag value="scmp"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="3"/>
         </Feature>
       </FeatureRecord>
     </FeatureList>

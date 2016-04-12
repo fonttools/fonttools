@@ -1,0 +1,11 @@
+# https://github.com/behdad/fonttools/issues/568
+
+feature tst1 {
+  script latn;
+  pos T -20;
+} tst1;
+
+feature tst2 {
+  script cyrl;
+  pos T -80;
+} tst2;

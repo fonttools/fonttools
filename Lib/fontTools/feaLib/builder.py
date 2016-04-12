@@ -465,7 +465,10 @@ class Builder(object):
         feature_indices = {}
         required_feature_indices = {}  # ('latn', 'DEU') --> 23
         scripts = {}  # 'latn' --> {'DEU': [23, 24]} for feature #23,24
-        for key, lookups in sorted(self.features_.items()):
+        # Sort the feature table by feature tag:
+        # https://github.com/behdad/fonttools/issues/568
+        sortFeatureTag = lambda f: (f[0][2], f[0][1], f[0][0], f[1])
+        for key, lookups in sorted(self.features_.items(), key=sortFeatureTag):
             script, lang, feature_tag = key
             # l.lookup_index will be None when a lookup is not needed
             # for the table under construction. For example, substitution
