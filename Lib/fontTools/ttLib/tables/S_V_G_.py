@@ -343,7 +343,8 @@ class ColorPalettes(object):
 
 	def fromXML(self, name, attrs, content, ttFont):
 		for element in content:
-			if isinstance(element, type("")):
+			element = element.strip()
+			if not element:
 				continue
 			name, attrib, content = element
 			if name == "colorParamUINameID":
