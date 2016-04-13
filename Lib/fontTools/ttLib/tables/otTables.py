@@ -771,6 +771,11 @@ def fixSubTableOverFlows(ttf, overflowRecord):
 	subIndex = overflowRecord.SubTableIndex
 	subtable = lookup.SubTable[subIndex]
 
+	# First, try not sharing anything for this subtable...
+	if not hasattr(subtable, "DontShare"):
+		subtable.DontShare = True
+		return True
+
 	if hasattr(subtable, 'ExtSubTable'):
 		# We split the subtable of the Extension table, and add a new Extension table
 		# to contain the new subtable.
