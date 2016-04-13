@@ -99,6 +99,9 @@ colorRecord_format_0 = """
 
 class table_S_V_G_(DefaultTable.DefaultTable):
 
+	def __init__(self, object):
+		self.colorPalettes = None
+
 	def decompile(self, data, ttFont):
 		self.docList = None
 		self.colorPalettes = None
@@ -302,10 +305,6 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 
 			writer.endtag("colorPalettes")
 			writer.newline()
-		else:
-			writer.begintag("colorPalettes")
-			writer.endtag("colorPalettes")
-			writer.newline()
 
 	def fromXML(self, name, attrs, content, ttFont):
 		if name == "svgDoc":
@@ -343,7 +342,8 @@ class ColorPalettes(object):
 
 	def fromXML(self, name, attrs, content, ttFont):
 		for element in content:
-			if isinstance(element, type("")):
+			element = element.strip()
+			if not element:
 				continue
 			name, attrib, content = element
 			if name == "colorParamUINameID":
