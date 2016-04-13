@@ -37,7 +37,9 @@ def getMasterLocationsSortKeyFunc(locations, axisOrder=[]):
 			)
 		return key
 
-	return getKey(axisPoints, axisOrder)
+	ret = getKey(axisPoints, axisOrder)
+	ret.axisPoints = axisPoints
+	return ret
 
 
 def sortMasterLocations(locations, axisOrder=[]):
