@@ -36,14 +36,20 @@ if [[ "$(uname -s)" == 'Darwin' ]]; then
     pyenv rehash
     python -m pip install --user --upgrade pip virtualenv
 else
-    # on Linux, we only need pyenv to get the latest pypy
-    if [[ "${TOXENV}" == "pypy" ]]; then
+    # on Linux, we only need pyenv to get the latest pypy and jython
+    if [[ "${TOXENV}" == "pypy" || "${TOXENV}" == "jython" ]]; then
         git clone https://github.com/yyuu/pyenv.git ~/.pyenv
         PYENV_ROOT="$HOME/.pyenv"
         PATH="$PYENV_ROOT/bin:$PATH"
         eval "$(pyenv init -)"
-        pyenv install pypy-5.0.0
-        pyenv global pypy-5.0.0
+
+        if [[ "${TOXENV}" == "pypy" ]]; then
+            pyenv install pypy-5.0.0
+            pyenv global pypy-5.0.0
+        else
+            pyenv install jython-2.7.0
+            pyenv global jython-2.7.0
+        fi
         pyenv rehash
     fi
     pip install --upgrade pip virtualenv

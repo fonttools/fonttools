@@ -3,7 +3,7 @@
 set -e
 set -x
 
-if [[ "$(uname -s)" == "Darwin" || "${TOXENV}" == "pypy" ]]; then
+if [[ "$(uname -s)" == "Darwin" || "${TOXENV}" == "pypy" || "${TOXENV}" == "jython" ]]; then
     PYENV_ROOT="$HOME/.pyenv"
     PATH="$PYENV_ROOT/bin:$PATH"
     eval "$(pyenv init -)"
