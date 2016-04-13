@@ -51,6 +51,72 @@ def sortMasterLocations(locations, axisOrder=[]):
 
 	return sorted(locations, key=getMasterLocationsSortKeyFunc(locations, axisOrder=axisOrder))
 
+class MutatorModel(object):
+
+	def __init__(self, locations, axisOrder=[]):
+		keyFunc = getMasterLocationsSortKeyFunc(locations, axisOrder=axisOrder)
+		axisPoints = keyFunc.axisPoints
+		self.origLocations = locations
+		self.locations = sorted(locations, key=keyFunc)
+		self.origMapping = [self.locations.index(l) for l in self.origLocations]
+		self.mapping = [self.origLocations.index(l) for l in self.locations]
+
+		self._computeMasterSupports(axisPoints)
+
+	@staticmethod
+	def lowerBound(value, lst):
+		if any(v < value for v in lst):
+			return max(v for v in lst if v < value)
+		else:
+			return value
+	@staticmethod
+	def upperBound(value, lst):
+		if any(v > value for v in lst):
+			return min(v for v in lst if v > value)
+		else:
+			return value
+
+	def _computeMasterSupports(self, axisPoints):
+		supports = []
+		for i,loc in enumerate(self.locations):
+			box = {}
+
+			# Account for axisPoints first
+			for axis,values in axisPoints.items():
+				if not axis in loc:
+					continue
+				locV = loc[axis]
+				box[axis] = (self.lowerBound(locV, values), locV, self.upperBound(locV, values))
+
+			locAxes = set(loc.keys())
+			# Walk over previous masters now
+			for j,m in enumerate(self.locations[:i]):
+				# Master with extra axes do not participte
+				if not set(m.keys()).issubset(locAxes):
+					continue
+				# If it's NOT in the current box, it does not participate
+				relevant = True
+				for axis, (lower,_,upper) in box.items():
+					if axis in m and not (lower < m[axis] < upper):
+						relevant = False
+						break
+				if not relevant:
+					continue
+				# Split the box for new master
+				for axis,val in m.items():
+					assert axis in box
+					lower,locV,upper = box[axis]
+					if val < locV:
+						lower = val
+					elif locV < val:
+						upper = val
+					box[axis] = (lower,locV,upper)
+
+			supports.append(box)
+
+		self.supports = supports
+
+
 locations = [
 {'wght':100},
 {'wght':-100},
@@ -73,3 +139,6 @@ assert sortMasterLocations(locations, axisOrder=['wght']) == \
  {u'wdth': 0.3, u'wght': 180},
  {u'wdth': 0.3, u'wght': 120},
  {u'wdth': 0.2, u'wght': 120}]
+model = MutatorModel(locations)
+pprint(model.locations)
+pprint(model.supports)
