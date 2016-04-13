@@ -14,6 +14,7 @@ class MutatorModel(object):
 	"""
 
 	def __init__(self, locations, axisOrder=[]):
+		locations = [{k:v for k,v in loc.items() if v != 0.} for loc in locations]
 		keyFunc = self.getMasterLocationsSortKeyFunc(locations, axisOrder=axisOrder)
 		axisPoints = keyFunc.axisPoints
 		self.locations = locations
@@ -74,7 +75,7 @@ class MutatorModel(object):
 
 	def _computeMasterSupports(self, axisPoints):
 		supports = []
-		offsets = []
+		deltaWeights = []
 		locations = self.sortedLocations
 		for i,loc in enumerate(locations):
 			box = {}
@@ -111,8 +112,8 @@ class MutatorModel(object):
 					box[axis] = (lower,locV,upper)
 			supports.append(box)
 
-			offset = []
-			# Walk over previous masters now, populate offset
+			deltaWeight = []
+			# Walk over previous masters now, populate deltaWeight
 			for j,m in enumerate(locations[:i]):
 				scalar = 1.
 				support = supports[j]
@@ -131,13 +132,15 @@ class MutatorModel(object):
 						scalar *= (v - peak) / (lower - peak)
 					else: # v > peak
 						scalar *= (v - peak) / (upper - peak)
-				offset.append(scalar)
-			offsets.append(offset)
+				deltaWeight.append(-scalar)
+			deltaWeight.append(+1.)
+			deltaWeights.append(deltaWeight)
 
 		mapping = self.reverseMapping
 		self.supports = [supports[mapped] for mapped in mapping]
 		mapping = self.mapping
-		self.offsets = {mapping[i]:{mapping[i]:off for i,off in enumerate(offset) if off != 0.} for i,offset in enumerate(offsets)}
+		self.deltaWeights = {mapping[i]:{mapping[i]:off for i,off in enumerate(deltaWeight) if off != 0.}
+				     for i,deltaWeight in enumerate(deltaWeights)}
 
 	def deltas(self, deltas):
 		return
@@ -169,4 +172,4 @@ assert model.sortedLocations == \
 from pprint import pprint
 pprint(model.locations)
 pprint(model.supports)
-pprint(model.offsets)
+pprint(model.deltaWeights)
