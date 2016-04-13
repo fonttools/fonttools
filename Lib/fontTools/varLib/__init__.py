@@ -16,10 +16,10 @@ class MutatorModel(object):
 	def __init__(self, locations, axisOrder=[]):
 		keyFunc = self.getMasterLocationsSortKeyFunc(locations, axisOrder=axisOrder)
 		axisPoints = keyFunc.axisPoints
-		self.origLocations = locations
-		self.locations = sorted(locations, key=keyFunc)
-		self.origMapping = [self.locations.index(l) for l in self.origLocations]
-		self.mapping = [self.origLocations.index(l) for l in self.locations]
+		self.locations = locations
+		self.sortedLocations = sorted(locations, key=keyFunc)
+		self.mapping = [locations.index(l) for l in self.sortedLocations]
+		self.reverseMapping = [self.sortedLocations.index(l) for l in locations]
 
 		self._computeMasterSupports(axisPoints)
 
@@ -74,7 +74,9 @@ class MutatorModel(object):
 
 	def _computeMasterSupports(self, axisPoints):
 		supports = []
-		for i,loc in enumerate(self.locations):
+		offsets = []
+		locations = self.sortedLocations
+		for i,loc in enumerate(locations):
 			box = {}
 
 			# Account for axisPoints first
@@ -86,7 +88,7 @@ class MutatorModel(object):
 
 			locAxes = set(loc.keys())
 			# Walk over previous masters now
-			for j,m in enumerate(self.locations[:i]):
+			for j,m in enumerate(locations[:i]):
 				# Master with extra axes do not participte
 				if not set(m.keys()).issubset(locAxes):
 					continue
@@ -107,10 +109,38 @@ class MutatorModel(object):
 					elif locV < val:
 						upper = val
 					box[axis] = (lower,locV,upper)
-
 			supports.append(box)
 
-		self.supports = supports
+			offset = []
+			# Walk over previous masters now, populate offset
+			for j,m in enumerate(locations[:i]):
+				scalar = 1.
+				support = supports[j]
+				for axis,v in m.items():
+					lower, peak, upper = support[axis]
+					if axis not in loc:
+						scalar = 0.
+						break
+					v = loc[axis]
+					if v == peak:
+						continue
+					if v <= lower or upper <= v:
+						scalar = 0.
+						break;
+					if v < peak:
+						scalar *= (v - peak) / (lower - peak)
+					else: # v > peak
+						scalar *= (v - peak) / (upper - peak)
+				offset.append(scalar)
+			offsets.append(offset)
+
+		mapping = self.reverseMapping
+		self.supports = [supports[mapped] for mapped in mapping]
+		mapping = self.mapping
+		self.offsets = {mapping[i]:{mapping[i]:off for i,off in enumerate(offset) if off != 0.} for i,offset in enumerate(offsets)}
+
+	def deltas(self, deltas):
+		return
 
 
 locations = [
@@ -120,12 +150,12 @@ locations = [
 {'wdth':+.3},
 {'wght':+120,'wdth':.3},
 {'wght':+120,'wdth':.2},
+{},
 {'wght':+180,'wdth':.3},
 {'wght':+180},
-{},
 ]
 model = MutatorModel(locations, axisOrder=['wght'])
-assert model.locations == \
+assert model.sortedLocations == \
 [{},
  {u'wght': -100},
  {u'wght': -180},
@@ -139,3 +169,4 @@ assert model.locations == \
 from pprint import pprint
 pprint(model.locations)
 pprint(model.supports)
+pprint(model.offsets)
