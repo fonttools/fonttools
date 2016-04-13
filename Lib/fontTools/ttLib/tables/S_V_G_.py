@@ -302,10 +302,6 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 
 			writer.endtag("colorPalettes")
 			writer.newline()
-		else:
-			writer.begintag("colorPalettes")
-			writer.endtag("colorPalettes")
-			writer.newline()
 
 	def fromXML(self, name, attrs, content, ttFont):
 		if name == "svgDoc":
