@@ -12,6 +12,46 @@ class VariationModel(object):
 	"""
 	Locations must be in normalized space.  Ie. base master
 	is at origin (0).
+	>>> locations = [ \
+	{'wght':100}, \
+	{'wght':-100}, \
+	{'wght':-180}, \
+	{'wdth':+.3}, \
+	{'wght':+120,'wdth':.3}, \
+	{'wght':+120,'wdth':.2}, \
+	{}, \
+	{'wght':+180,'wdth':.3}, \
+	{'wght':+180}, \
+	]
+	>>> model = VariationModel(locations, axisOrder=['wght'])
+	>>> assert model.sortedLocations == \
+	[{}, \
+	 {u'wght': -100}, \
+	 {u'wght': -180}, \
+	 {u'wght': 100}, \
+	 {u'wght': 180}, \
+	 {u'wdth': 0.3}, \
+	 {u'wdth': 0.3, u'wght': 180}, \
+	 {u'wdth': 0.3, u'wght': 120}, \
+	 {u'wdth': 0.2, u'wght': 120}, \
+	]
+	>>> assert model.deltaWeights == \
+	{0: {0: 1.0, 6: -1.0}, \
+	 1: {1: 1.0, 6: -1.0}, \
+	 2: {2: 1.0, 6: -1.0}, \
+	 3: {3: 1.0, 6: -1.0}, \
+	 4: {0: -0.25, 3: -1.0, 4: 1.0, 6: -1.0, 7: -0.75, 8: -0.75}, \
+	 5: {0: -0.25, \
+	     3: -0.33333333333333326, \
+	     4: -0.33333333333333326, \
+	     5: 1.0, \
+	     6: -1.0, \
+	     7: -0.24999999999999994, \
+	     8: -0.75}, \
+	 6: {6: 1.0}, \
+	 7: {3: -1.0, 6: -1.0, 7: 1.0, 8: -1.0}, \
+	 8: {6: -1.0, 8: 1.0} \
+	}
 	"""
 
 	def __init__(self, locations, axisOrder=[]):
@@ -143,34 +183,7 @@ class VariationModel(object):
 		self.deltaWeights = {mapping[i]:{mapping[i]:off for i,off in enumerate(deltaWeight) if off != 0.}
 				     for i,deltaWeight in enumerate(deltaWeights)}
 
-	def deltas(self, deltas):
-		return
 
-
-locations = [
-{'wght':100},
-{'wght':-100},
-{'wght':-180},
-{'wdth':+.3},
-{'wght':+120,'wdth':.3},
-{'wght':+120,'wdth':.2},
-{},
-{'wght':+180,'wdth':.3},
-{'wght':+180},
-]
-model = VariationModel(locations, axisOrder=['wght'])
-assert model.sortedLocations == \
-[{},
- {u'wght': -100},
- {u'wght': -180},
- {u'wght': 100},
- {u'wght': 180},
- {u'wdth': 0.3},
- {u'wdth': 0.3, u'wght': 180},
- {u'wdth': 0.3, u'wght': 120},
- {u'wdth': 0.2, u'wght': 120},
-]
-from pprint import pprint
-pprint(model.locations)
-pprint(model.supports)
-pprint(model.deltaWeights)
+if __name__ == "__main__":
+	import doctest, sys
+	sys.exit(doctest.testmod().failed)
