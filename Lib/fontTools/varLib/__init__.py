@@ -5,6 +5,7 @@ from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
 from fontTools.misc.py23 import *
 from fontTools.ttLib.tables import _g_l_y_f as glyf
+import xml.etree.ElementTree as ET
 
 
 class VariationModel(object):
@@ -183,7 +184,66 @@ class VariationModel(object):
 		self.deltaWeights = {mapping[i]:{mapping[i]:off for i,off in enumerate(deltaWeight) if off != 0.}
 				     for i,deltaWeight in enumerate(deltaWeights)}
 
+def _xmlParseLocation(et):
+	loc = {}
+	for dim in et.find('location'):
+		assert dim.tag == 'dimension'
+		name = dim.attrib['name']
+		value = dim.attrib['xvalue']
+		assert name not in loc
+		loc[name] = value
+	return loc
+
+def _designspace_load(et):
+	base_idx = None
+	masters = []
+	ds = et.getroot()
+	for master in ds.find('sources'):
+		name = master.attrib['name']
+		filename = master.attrib['filename']
+		isBase = master.find('info')
+		if isBase is not None:
+			assert base_idx is None
+			base_idx = len(masters)
+		loc = _xmlParseLocation(master)
+		masters.append((filename, loc, name))
+
+	instances = []
+	for instance in ds.find('instances'):
+		name = master.attrib['name']
+		family = instance.attrib['familyname']
+		style = instance.attrib['stylename']
+		filename = instance.attrib['filename']
+		loc = _xmlParseLocation(instance)
+		instances.append((filename, loc, name, family, style))
+
+	return masters, instances, base_idx
+
+def designspace_load(filename):
+	return _designspace_load(ET.parse(filename))
+
+def designspace_loads(string):
+	return _designspace_load(ET.fromstring(string))
+
+def main(args=None):
+
+	import sys
+	if args is None:
+		args = sys.argv[1:]
+
+	(designspace,) = args
+	masters, instances, base_idx = designspace_load(designspace)
+
+	from pprint import pprint
+	pprint(masters)
+	pprint(instances)
+	pprint(base_idx)
+
 
 if __name__ == "__main__":
+	import sys
+	if len(sys.argv) > 1:
+		main()
+		sys.exit(0)
 	import doctest, sys
 	sys.exit(doctest.testmod().failed)
