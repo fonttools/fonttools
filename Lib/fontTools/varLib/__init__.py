@@ -4,6 +4,7 @@ also known as run-time interpolation."""
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
 from fontTools.misc.py23 import *
+from fontTools.ttLib.tables import _g_l_y_f as glyf
 
 
 class MutatorModel(object):
