@@ -7,7 +7,7 @@ from fontTools.misc.py23 import *
 from fontTools.ttLib.tables import _g_l_y_f as glyf
 
 
-class MutatorModel(object):
+class VariationModel(object):
 
 	"""
 	Locations must be in normalized space.  Ie. base master
@@ -158,7 +158,7 @@ locations = [
 {'wght':+180,'wdth':.3},
 {'wght':+180},
 ]
-model = MutatorModel(locations, axisOrder=['wght'])
+model = VariationModel(locations, axisOrder=['wght'])
 assert model.sortedLocations == \
 [{},
  {u'wght': -100},
