@@ -203,7 +203,7 @@ class VariationModel(object):
 			j = self.mapping[i]
 			weights = self.deltaWeights[j]
 			items = [out[idx] * weight for idx,weight in weights.items()]
-			delta = reduce(operator.add, items)
+			delta = reduce(operator.iadd, items)
 			out[j] = delta
 		return out
 
