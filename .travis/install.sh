@@ -36,20 +36,34 @@ if [[ "$(uname -s)" == 'Darwin' ]]; then
     pyenv rehash
     python -m pip install --user --upgrade pip virtualenv
 else
-    # on Linux, we only need pyenv to get the latest pypy
-    if [[ "${TOXENV}" == "pypy" ]]; then
-        git clone https://github.com/yyuu/pyenv.git ~/.pyenv
+    # on Linux, we only need pyenv to get the latest pypy and jython
+    if [[ "${TOXENV}" == "pypy" || "${TOXENV}" == "jython" ]]; then
+        git clone https://github.com/anthrotype/pyenv.git ~/.pyenv
         PYENV_ROOT="$HOME/.pyenv"
         PATH="$PYENV_ROOT/bin:$PATH"
         eval "$(pyenv init -)"
-        pyenv install pypy-5.0.0
-        pyenv global pypy-5.0.0
+
+        if [[ "${TOXENV}" == "pypy" ]]; then
+            pyenv install pypy-5.0.0
+            pyenv global pypy-5.0.0
+        else
+            pyenv install jython-2.7.1b3
+            pyenv global jython-2.7.1b3
+        fi
         pyenv rehash
     fi
-    pip install --upgrade pip virtualenv
+    if [[ "${TOXENV}" == "jython" ]]; then
+        # for jython we just run pytest for now, without virtualenv nor tox.
+        # See: https://github.com/behdad/fonttools/issues/575
+        jython -m pip install pytest
+    else
+        pip install --upgrade pip virtualenv
+    fi
 fi
 
-# activate virtualenv and install test requirements
-python -m virtualenv ~/.venv
-source ~/.venv/bin/activate
-pip install -r dev-requirements.txt
+if [[ "${TOXENV}" != "jython" ]]; then
+    # activate virtualenv and install test requirements
+    python -m virtualenv ~/.venv
+    source ~/.venv/bin/activate
+    pip install -r dev-requirements.txt
+fi
