@@ -38,7 +38,7 @@ if [[ "$(uname -s)" == 'Darwin' ]]; then
 else
     # on Linux, we only need pyenv to get the latest pypy and jython
     if [[ "${TOXENV}" == "pypy" || "${TOXENV}" == "jython" ]]; then
-        git clone https://github.com/anthrotype/pyenv.git ~/.pyenv
+        git clone https://github.com/yyuu/pyenv.git ~/.pyenv
         PYENV_ROOT="$HOME/.pyenv"
         PATH="$PYENV_ROOT/bin:$PATH"
         eval "$(pyenv init -)"
