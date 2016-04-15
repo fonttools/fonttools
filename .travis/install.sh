@@ -47,8 +47,8 @@ else
             pyenv install pypy-5.0.0
             pyenv global pypy-5.0.0
         else
-            pyenv install jython-2.7.0
-            pyenv global jython-2.7.0
+            pyenv install jython-2.7.1b2
+            pyenv global jython-2.7.1b2
         fi
         pyenv rehash
     fi
@@ -58,4 +58,11 @@ fi
 # activate virtualenv and install test requirements
 python -m virtualenv ~/.venv
 source ~/.venv/bin/activate
-pip install -r dev-requirements.txt
+
+if [[ "${TOXENV}" == "jython" ]]; then
+    # using requirements.txt with pip on Jython raises `RuntimeError:
+    # maximum recursion depth exceeded (Java StackOverflowError)`
+    pip install pytest
+else
+    pip install -r dev-requirements.txt
+fi
