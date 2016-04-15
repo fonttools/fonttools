@@ -12,8 +12,6 @@ import operator
 import xml.etree.ElementTree as ET
 import os.path
 
-# TODO remove me
-from pprint import pprint
 
 #
 # Variation space, aka design space, model
@@ -24,6 +22,7 @@ class VariationModel(object):
 	"""
 	Locations must be in normalized space.  Ie. base master
 	is at origin (0).
+	>>> from pprint import pprint
 	>>> locations = [ \
 	{'wght':100}, \
 	{'wght':-100}, \
@@ -36,44 +35,41 @@ class VariationModel(object):
 	{'wght':+180}, \
 	]
 	>>> model = VariationModel(locations, axisOrder=['wght'])
-	>>> assert model.sortedLocations == \
-	[{}, \
-	 {u'wght': -100}, \
-	 {u'wght': -180}, \
-	 {u'wght': 100}, \
-	 {u'wght': 180}, \
-	 {u'wdth': 0.3}, \
-	 {u'wdth': 0.3, u'wght': 180}, \
-	 {u'wdth': 0.3, u'wght': 120}, \
-	 {u'wdth': 0.2, u'wght': 120}, \
-	]
-	>>> assert model.deltaWeights == \
-	{0: {0: 1.0, 6: -1.0}, \
-	 1: {1: 1.0, 6: -1.0}, \
-	 2: {2: 1.0, 6: -1.0}, \
-	 3: {3: 1.0, 6: -1.0}, \
-	 4: {0: -0.25, 3: -1.0, 4: 1.0, 6: -1.0, 7: -0.75, 8: -0.75}, \
-	 5: {0: -0.25, \
-	     3: -0.33333333333333326, \
-	     4: -0.33333333333333326, \
-	     5: 1.0, \
-	     6: -1.0, \
-	     7: -0.24999999999999994, \
-	     8: -0.75}, \
-	 6: {6: 1.0}, \
-	 7: {3: -1.0, 6: -1.0, 7: 1.0, 8: -1.0}, \
-	 8: {6: -1.0, 8: 1.0} \
-	}
+	>>> pprint(model.locations)
+	[{},
+	 {'wght': -100},
+	 {'wght': -180},
+	 {'wght': 100},
+	 {'wght': 180},
+	 {'wdth': 0.3},
+	 {'wdth': 0.3, 'wght': 180},
+	 {'wdth': 0.3, 'wght': 120},
+	 {'wdth': 0.2, 'wght': 120}]
+	>>> pprint(model.deltaWeights)
+	[{},
+	 {0: 1.0},
+	 {0: 1.0},
+	 {0: 1.0},
+	 {0: 1.0},
+	 {0: 1.0},
+	 {0: 1.0, 4: 1.0, 5: 1.0},
+	 {0: 1.0, 3: 0.25, 4: 0.75, 5: 1.0, 6: 0.75},
+	 {0: 1.0,
+	  3: 0.25,
+	  4: 0.75,
+	  5: 0.33333333333333326,
+	  6: 0.24999999999999994,
+	  7: 0.33333333333333326}]
 	"""
 
 	def __init__(self, locations, axisOrder=[]):
 		locations = [{k:v for k,v in loc.items() if v != 0.} for loc in locations]
 		keyFunc = self.getMasterLocationsSortKeyFunc(locations, axisOrder=axisOrder)
 		axisPoints = keyFunc.axisPoints
-		self.locations = locations
-		self.sortedLocations = sorted(locations, key=keyFunc)
-		self.mapping = [locations.index(l) for l in self.sortedLocations]
-		self.reverseMapping = [self.sortedLocations.index(l) for l in locations]
+		self.locations = sorted(locations, key=keyFunc)
+		# TODO Assert that locations are unique.
+		self.mapping = [self.locations.index(l) for l in locations] # Mapping from user's master order to our master order
+		self.reverseMapping = [locations.index(l) for l in self.locations] # Reverse of above
 
 		self._computeMasterSupports(axisPoints)
 
@@ -129,7 +125,7 @@ class VariationModel(object):
 	def _computeMasterSupports(self, axisPoints):
 		supports = []
 		deltaWeights = []
-		locations = self.sortedLocations
+		locations = self.locations
 		for i,loc in enumerate(locations):
 			box = {}
 
@@ -165,7 +161,7 @@ class VariationModel(object):
 					box[axis] = (lower,locV,upper)
 			supports.append(box)
 
-			deltaWeight = []
+			deltaWeight = {}
 			# Walk over previous masters now, populate deltaWeight
 			for j,m in enumerate(locations[:i]):
 				scalar = 1.
@@ -185,26 +181,23 @@ class VariationModel(object):
 						scalar *= (v - peak) / (lower - peak)
 					else: # v > peak
 						scalar *= (v - peak) / (upper - peak)
-				deltaWeight.append(-scalar)
-			deltaWeight.append(+1.)
+				if scalar:
+					deltaWeight[j] = scalar
 			deltaWeights.append(deltaWeight)
 
-		mapping = self.reverseMapping
-		self.supports = [supports[mapped] for mapped in mapping]
-		mapping = self.mapping
-		self.deltaWeights = {mapping[i]:{mapping[i]:off for i,off in enumerate(deltaWeight) if off != 0.}
-				     for i,deltaWeight in enumerate(deltaWeights)}
+		self.supports = supports
+		self.deltaWeights = deltaWeights
 
 	def getDeltas(self, masterValues):
-		count = len(self.mapping)
-		assert len(masterValues) == count
-		out = list(masterValues)
-		for i in range(count):
-			j = self.mapping[i]
-			weights = self.deltaWeights[j]
-			items = [out[idx] * weight for idx,weight in weights.items()]
-			delta = reduce(operator.iadd, items)
-			out[j] = delta
+		count = len(self.locations)
+		assert len(masterValues) == len(self.deltaWeights)
+		mapping = self.reverseMapping
+		out = []
+		for i,weights in enumerate(self.deltaWeights):
+			value = masterValues[mapping[i]]
+			items = [out[j] * weight for j,weight in weights.items()]
+			delta = reduce(operator.isub, items, value)
+			out.append(delta)
 		return out
 
 #
@@ -320,9 +313,6 @@ def _GetCoordinates(font, glyphName):
 
 	return coord, control
 
-def _sub(al, bl):
-	return [(ax-bx,ay-by) for (ax,ay),(bx,by) in zip(al,bl)]
-
 def _add_gvar(font, axes, master_ttfs, master_locs, base_idx):
 
 	# Make copies for modification
@@ -331,8 +321,7 @@ def _add_gvar(font, axes, master_ttfs, master_locs, base_idx):
 
 	axis_tags = axes.keys()
 
-	# Normalize master_locs
-	# https://github.com/behdad/fonttools/issues/313
+	# Normalize master locations. TODO Move to a separate function.
 	for tag,(name,lower,default,upper) in axes.items():
 		for l in master_locs:
 			v = l[tag]
@@ -346,8 +335,7 @@ def _add_gvar(font, axes, master_ttfs, master_locs, base_idx):
 	# Locations are normalized now
 
 	print("Normalized master positions:")
-	from pprint import pprint
-	pprint(master_locs)
+	print(master_locs)
 
 	print("Generating gvar")
 	assert "gvar" not in font
@@ -358,6 +346,8 @@ def _add_gvar(font, axes, master_ttfs, master_locs, base_idx):
 
 	# Assume single-model for now.
 	model = VariationModel(master_locs)
+	model_base_idx = model.mapping[base_idx]
+	assert 0 == model_base_idx
 
 	for glyph in font.getGlyphOrder():
 
@@ -376,7 +366,7 @@ def _add_gvar(font, axes, master_ttfs, master_locs, base_idx):
 		supports = model.supports
 		assert len(deltas) == len(supports)
 		for i,(delta,support) in enumerate(zip(deltas, supports)):
-			if i == base_idx:
+			if i == model_base_idx:
 				continue
 			var = GlyphVariation(support, delta)
 			gvar.variations[glyph].append(var)
@@ -394,6 +384,7 @@ def main(args=None):
 
 	masters, instances, base_idx = designspace_load(designspace_filename)
 
+	from pprint import pprint
 	print("Masters:")
 	pprint(masters)
 	print("Instances:")
@@ -477,6 +468,6 @@ if __name__ == "__main__":
 	import sys
 	if len(sys.argv) > 1:
 		main()
-		sys.exit(0)
+		#sys.exit(0)
 	import doctest, sys
 	sys.exit(doctest.testmod().failed)
