@@ -2,11 +2,18 @@
 also known as run-time interpolation."""
 
 from __future__ import print_function, division, absolute_import
-from __future__ import unicode_literals
 from fontTools.misc.py23 import *
-from fontTools.ttLib.tables import _g_l_y_f as glyf
+from fontTools.ttLib import TTFont
+from fontTools.ttLib.tables._n_a_m_e import NameRecord
+from fontTools.ttLib.tables._f_v_a_r import table__f_v_a_r, Axis, NamedInstance
+from fontTools.ttLib.tables._g_v_a_r import table__g_v_a_r, GlyphVariation
 import xml.etree.ElementTree as ET
+import os.path
 
+
+#
+# Variation space, aka design space, model
+#
 
 class VariationModel(object):
 
@@ -184,12 +191,16 @@ class VariationModel(object):
 		self.deltaWeights = {mapping[i]:{mapping[i]:off for i,off in enumerate(deltaWeight) if off != 0.}
 				     for i,deltaWeight in enumerate(deltaWeights)}
 
+#
+# .designspace routines
+#
+
 def _xmlParseLocation(et):
 	loc = {}
 	for dim in et.find('location'):
 		assert dim.tag == 'dimension'
 		name = dim.attrib['name']
-		value = dim.attrib['xvalue']
+		value = float(dim.attrib['xvalue'])
 		assert name not in loc
 		loc[name] = value
 	return loc
@@ -225,19 +236,245 @@ def designspace_load(filename):
 def designspace_loads(string):
 	return _designspace_load(ET.fromstring(string))
 
+
+#
+# Creation routines
+#
+
+# TODO: Move to name table proper; also, is mac_roman ok for ASCII names?
+def _AddName(font, name):
+	"""(font, "Bold") --> NameRecord"""
+	nameTable = font.get("name")
+	namerec = NameRecord()
+	namerec.nameID = 1 + max([n.nameID for n in nameTable.names] + [256])
+	namerec.string = name.encode("mac_roman")
+	namerec.platformID, namerec.platEncID, namerec.langID = (1, 0, 0)
+	nameTable.names.append(namerec)
+	return namerec
+
+# Move to fvar table proper?
+def _add_fvar(font, axes, instances):
+	assert "fvar" not in font
+	font['fvar'] = fvar = table__f_v_a_r()
+
+	for tag in sorted(axes.keys()):
+		axis = Axis()
+		axis.axisTag = tag
+		name, axis.minValue, axis.defaultValue, axis.maxValue = axes[tag]
+		axis.nameID = _AddName(font, name).nameID
+		fvar.axes.append(axis)
+
+	for name, coordinates in instances:
+		inst = NamedInstance()
+		inst.nameID = _AddName(font, name).nameID
+		inst.coordinates = coordinates
+		fvar.instances.append(inst)
+
+def GetCoordinates(font, glyphName):
+	"""font, glyphName --> glyph coordinates as expected by "gvar" table
+
+	The result includes four "phantom points" for the glyph metrics,
+	as mandated by the "gvar" spec.
+	"""
+	glyphTable = font["glyf"]
+	if glyphName not in glyphTable.glyphs: return None
+	glyph = glyphTable[glyphName]
+	if glyph.isComposite():
+		coord = [c.getComponentInfo()[1][-2:] for c in glyph.components]
+	else:
+		coord = list(glyph.getCoordinates(glyphTable)[0])
+	# Add phantom points for (left, right, top, bottom) positions.
+	horizontalAdvanceWidth, leftSideBearing = font["hmtx"].metrics[glyphName]
+
+	if not hasattr(glyph, 'xMin'):
+		glyph.recalcBounds(glyphTable)
+	leftSideX = glyph.xMin - leftSideBearing
+	rightSideX = leftSideX + horizontalAdvanceWidth
+
+	# XXX these are incorrect.  Load vmtx and fix.
+	topSideY = glyph.yMax
+	bottomSideY = -glyph.yMin
+
+	coord.extend([(leftSideX, 0),
+	              (rightSideX, 0),
+	              (0, topSideY),
+	              (0, bottomSideY)])
+	return coord
+
+def _sub(al, bl):
+	return [(ax-bx,ay-by) for (ax,ay),(bx,by) in zip(al,bl)]
+
+def _add_gvar(out, master_ttfs, locations, origin_idx):
+
+	# Make copies for modification
+	master_ttfs = master_ttfs[:]
+	locations = [l.copy() for l in locations]
+
+	# Move origin to front
+	origin_master   = master_ttfs[origin_idx]
+	origin_location = locations[origin_idx]
+	del master_ttfs[origin_idx], locations[origin_idx]
+	master_ttfs.insert(0, origin_master)
+	locations.insert(0, origin_location)
+	del origin_idx, origin_master, origin_location
+	# Neutral is zero from now on
+
+	axis_tags = locations[0].keys()
+
+	# Normalize locations
+	# https://github.com/behdad/fonttools/issues/313
+	axis_mins = {tag:min(loc[tag] for loc in locations) for tag in axis_tags}
+	axis_maxs = {tag:max(loc[tag] for loc in locations) for tag in axis_tags}
+	axis_defaults = locations[0]
+	for tag in axis_tags:
+		minval,maxval,defaultval = axis_mins[tag],axis_maxs[tag],axis_defaults[tag]
+		for l in locations:
+			v = l[tag]
+			if v == defaultval:
+				v = 0
+			elif v < defaultval:
+				v = (v - defaultval) / (defaultval - minval)
+			else:
+				v = (v - defaultval) / (maxval - defaultval)
+			l[tag] = v
+	del axis_mins, axis_maxs, axis_defaults
+	# Locations are normalized now
+
+	# Find new axis mins and maxs
+	axis_mins = {tag:min(loc[tag] for loc in locations) for tag in axis_tags}
+	axis_maxs = {tag:max(loc[tag] for loc in locations) for tag in axis_tags}
+
+	print("Normalized master positions:")
+	from pprint import pprint
+	pprint(locations)
+
+	assert "gvar" not in out
+	gvar = out["gvar"] = table__g_v_a_r()
+	gvar.version = 1
+	gvar.reserved = 0
+	gvar.variations = {}
+
+	for glyph in out.getGlyphOrder():
+
+		allCoords = [GetCoordinates(m, glyph) for m in master_ttfs]
+		coordsLen = len(allCoords[0])
+		if (any(len(coords) != coordsLen for coords in allCoords)):
+			warnings.warn("glyph %s has not the same number of "
+			              "control points in all masters" % glyph)
+			continue
+
+		gvar.variations[glyph] = []
+
+		# Subtract origin
+		allCoords = [_sub(coords, allCoords[0]) for coords in allCoords]
+
+		# Add deltas for on-axis extremes
+		for tag in axis_tags:
+			for value in (axis_mins[tag], axis_maxs[tag]):
+				if not value: continue
+				loc = locations[0].copy()
+				loc[tag] = value
+				idx = locations.index(loc)
+				loc, coords = locations[idx], allCoords[idx]
+				if not coords:
+					warnings.warn("Glyph not present in a master" + glyph)
+					continue
+
+				# Found master for axis extreme, add delta
+				var = GlyphVariation({tag: (min(value, 0.), value, max(value, 0.))}, coords)
+				gvar.variations[glyph].append(var)
+
 def main(args=None):
 
 	import sys
 	if args is None:
 		args = sys.argv[1:]
 
-	(designspace,) = args
-	masters, instances, base_idx = designspace_load(designspace)
+	(designspace_filename,) = args
+	finder = lambda s: s.replace('master_ufo', 'master_ttf_interpolatable').replace('.ufo', '.ttf')
+	axisMap = None # dict mapping axis id to (axis tag, axis name)
+	outfile = os.path.splitext(designspace_filename)[0] + '-GX.ttf'
+
+	masters, instances, base_idx = designspace_load(designspace_filename)
 
 	from pprint import pprint
+	print("Masters:")
 	pprint(masters)
+	print("Instances:")
 	pprint(instances)
-	pprint(base_idx)
+	print("Index of base master:", base_idx)
+
+	print("Building GX")
+	print("Loading TTF masters")
+	basedir = os.path.dirname(designspace_filename)
+	master_ttfs = [finder(os.path.join(basedir, m[0])) for m in masters]
+	master_fonts = [TTFont(ttf_path) for ttf_path in master_ttfs]
+
+	standard_axis_map = {
+		'weight':  ('wght', 'Weight'),
+		'width':   ('wdth', 'Width'),
+		'slant':   ('slnt', 'Slant'),
+		'optical': ('opsz', 'Optical Size'),
+	}
+
+	axis_map = standard_axis_map
+	if axisMap:
+		axis_map = axis_map.copy()
+		axis_map.update(axisMap)
+
+	# TODO: For weight & width, use OS/2 values and setup 'avar' mapping.
+
+	# Set up master locations
+	master_locs = []
+	instance_locs = []
+	out = []
+	for loc in [m[1] for m in masters+instances]:
+		# Apply modifications for default axes; and apply tags
+		l = {}
+		for axis,value in loc.items():
+			tag,name = axis_map[axis]
+			l[tag] = value
+		out.append(l)
+	master_locs = out[:len(masters)]
+	instance_locs = out[len(masters):]
+
+	axis_tags = set(master_locs[0].keys())
+	assert all(axis_tags == set(m.keys()) for m in master_locs)
+	print("Axis tags:", axis_tags)
+	print("Master positions:")
+	pprint(master_locs)
+
+	# Set up axes
+	axes = {}
+	axis_names = {}
+	for tag,name in axis_map.values():
+		if tag not in axis_tags: continue
+		axis_names[tag] = name
+	for tag in axis_tags:
+		default = master_locs[base_idx][tag]
+		lower = min(m[tag] for m in master_locs)
+		upper = max(m[tag] for m in master_locs)
+		name = axis_names[tag]
+		axes[tag] = (name, lower, default, upper)
+	print("Axes:")
+	pprint(axes)
+
+	# Set up named instances
+	instance_list = []
+	for loc,instance in zip(instance_locs,instances):
+		style = instance[4]
+		instance_list.append((style, loc))
+	# TODO append masters as named-instances as well; needs .designspace change.
+
+	gx = TTFont(master_ttfs[base_idx])
+
+	_add_fvar(gx, axes, instance_list)
+
+	print("Setting up glyph variations")
+	_add_gvar(gx, master_fonts, master_locs, base_idx)
+
+	print("Saving GX font", outfile)
+	gx.save(outfile)
 
 
 if __name__ == "__main__":
