@@ -1,6 +1,23 @@
-"""Module for dealing with 'gvar'-style font variations,
-also known as run-time interpolation."""
+"""
+Module for dealing with 'gvar'-style font variations, also known as run-time
+interpolation.
 
+The ideas here are very similar to MutatorMath.  There is even code to read
+MutatorMath .designspace files.
+
+For now, if you run this file on a designspace file, it tries to find
+ttf-interpolatable files for the masters and build a GX variation font from
+them.  Such ttf-interpolatable and designspace files can be generated from
+a Glyphs source, eg., using noto-source as an example:
+
+  $ fontmake -o ttf-interpolatable -g NotoSansArabic-MM.glyphs
+
+Then you can make a GX font this way:
+
+  $ python fonttools/Lib/fontTools/varLib/__init__.py master_ufo/NotoSansArabic.designspace
+
+API *will* change in near future.
+"""
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont
