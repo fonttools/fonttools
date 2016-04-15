@@ -52,10 +52,18 @@ else
         fi
         pyenv rehash
     fi
-    pip install --upgrade pip virtualenv
+    if [[ "${TOXENV}" == "jython" ]]; then
+        # for jython we just run pytest for now, without virtualenv nor tox.
+        # See: https://github.com/behdad/fonttools/issues/575
+        jython -m pip install pytest
+    else
+        pip install --upgrade pip virtualenv
+    fi
 fi
 
-# activate virtualenv and install test requirements
-python -m virtualenv ~/.venv
-source ~/.venv/bin/activate
-pip install -r dev-requirements.txt
+if [[ "${TOXENV}" != "jython" ]]; then
+    # activate virtualenv and install test requirements
+    python -m virtualenv ~/.venv
+    source ~/.venv/bin/activate
+    pip install -r dev-requirements.txt
+fi
