@@ -38,7 +38,7 @@ if [[ "$(uname -s)" == 'Darwin' ]]; then
 else
     # on Linux, we only need pyenv to get the latest pypy and jython
     if [[ "${TOXENV}" == "pypy" || "${TOXENV}" == "jython" ]]; then
-        git clone https://github.com/yyuu/pyenv.git ~/.pyenv
+        git clone https://github.com/anthrotype/pyenv.git ~/.pyenv
         PYENV_ROOT="$HOME/.pyenv"
         PATH="$PYENV_ROOT/bin:$PATH"
         eval "$(pyenv init -)"
@@ -47,8 +47,8 @@ else
             pyenv install pypy-5.0.0
             pyenv global pypy-5.0.0
         else
-            pyenv install jython-2.7.1b2
-            pyenv global jython-2.7.1b2
+            pyenv install jython-2.7.1b3
+            pyenv global jython-2.7.1b3
         fi
         pyenv rehash
     fi
@@ -58,11 +58,4 @@ fi
 # activate virtualenv and install test requirements
 python -m virtualenv ~/.venv
 source ~/.venv/bin/activate
-
-if [[ "${TOXENV}" == "jython" ]]; then
-    # using requirements.txt with pip on Jython raises `RuntimeError:
-    # maximum recursion depth exceeded (Java StackOverflowError)`
-    pip install pytest
-else
-    pip install -r dev-requirements.txt
-fi
+pip install -r dev-requirements.txt
