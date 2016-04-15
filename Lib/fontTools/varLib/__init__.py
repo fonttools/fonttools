@@ -270,41 +270,44 @@ def _add_fvar(font, axes, instances):
 		inst.coordinates = coordinates
 		fvar.instances.append(inst)
 
-def GetCoordinates(font, glyphName):
+# TODO Move to glyf or gvar table proper
+def _GetCoordinates(font, glyphName):
 	"""font, glyphName --> glyph coordinates as expected by "gvar" table
 
 	The result includes four "phantom points" for the glyph metrics,
 	as mandated by the "gvar" spec.
 	"""
-	glyphTable = font["glyf"]
-	if glyphName not in glyphTable.glyphs: return None
-	glyph = glyphTable[glyphName]
+	glyf = font["glyf"]
+	if glyphName not in glyf.glyphs: return None
+	glyph = glyf[glyphName]
 	if glyph.isComposite():
 		coord = [c.getComponentInfo()[1][-2:] for c in glyph.components]
+		control = [c.glyphName for c in glyph.components]
 	else:
-		coord = list(glyph.getCoordinates(glyphTable)[0])
+		allData = glyph.getCoordinates(glyf)
+		coord = allData[0]
+		control = allData[1:]
+
 	# Add phantom points for (left, right, top, bottom) positions.
 	horizontalAdvanceWidth, leftSideBearing = font["hmtx"].metrics[glyphName]
-
 	if not hasattr(glyph, 'xMin'):
-		glyph.recalcBounds(glyphTable)
+		glyph.recalcBounds(glyf)
 	leftSideX = glyph.xMin - leftSideBearing
 	rightSideX = leftSideX + horizontalAdvanceWidth
-
 	# XXX these are incorrect.  Load vmtx and fix.
 	topSideY = glyph.yMax
 	bottomSideY = -glyph.yMin
-
 	coord.extend([(leftSideX, 0),
 	              (rightSideX, 0),
 	              (0, topSideY),
 	              (0, bottomSideY)])
-	return coord
+
+	return coord, control
 
 def _sub(al, bl):
 	return [(ax-bx,ay-by) for (ax,ay),(bx,by) in zip(al,bl)]
 
-def _add_gvar(out, master_ttfs, locations, origin_idx):
+def _add_gvar(font, axes, master_ttfs, locations, origin_idx):
 
 	# Make copies for modification
 	master_ttfs = master_ttfs[:]
@@ -319,25 +322,20 @@ def _add_gvar(out, master_ttfs, locations, origin_idx):
 	del origin_idx, origin_master, origin_location
 	# Neutral is zero from now on
 
-	axis_tags = locations[0].keys()
+	axis_tags = axes.keys()
 
 	# Normalize locations
 	# https://github.com/behdad/fonttools/issues/313
-	axis_mins = {tag:min(loc[tag] for loc in locations) for tag in axis_tags}
-	axis_maxs = {tag:max(loc[tag] for loc in locations) for tag in axis_tags}
-	axis_defaults = locations[0]
-	for tag in axis_tags:
-		minval,maxval,defaultval = axis_mins[tag],axis_maxs[tag],axis_defaults[tag]
+	for tag,(name,lower,default,upper) in axes.items():
 		for l in locations:
 			v = l[tag]
-			if v == defaultval:
+			if v == default:
 				v = 0
-			elif v < defaultval:
-				v = (v - defaultval) / (defaultval - minval)
+			elif v < default:
+				v = (v - default) / (default - lower)
 			else:
-				v = (v - defaultval) / (maxval - defaultval)
+				v = (v - default) / (upper - default)
 			l[tag] = v
-	del axis_mins, axis_maxs, axis_defaults
 	# Locations are normalized now
 
 	# Find new axis mins and maxs
@@ -348,20 +346,24 @@ def _add_gvar(out, master_ttfs, locations, origin_idx):
 	from pprint import pprint
 	pprint(locations)
 
-	assert "gvar" not in out
-	gvar = out["gvar"] = table__g_v_a_r()
+	print("Generating gvar")
+	assert "gvar" not in font
+	gvar = font["gvar"] = table__g_v_a_r()
 	gvar.version = 1
 	gvar.reserved = 0
 	gvar.variations = {}
 
-	for glyph in out.getGlyphOrder():
+	for glyph in font.getGlyphOrder():
 
-		allCoords = [GetCoordinates(m, glyph) for m in master_ttfs]
-		coordsLen = len(allCoords[0])
-		if (any(len(coords) != coordsLen for coords in allCoords)):
-			warnings.warn("glyph %s has not the same number of "
-			              "control points in all masters" % glyph)
+		# TODO Check control data
+		allData = [_GetCoordinates(m, glyph) for m in master_ttfs]
+		allCoords = [d[0] for d in allData]
+		allControls = [d[1] for d in allData]
+		control = allControls[0]
+		if (any(c != control for c in allControls)):
+			warnings.warn("glyph %s has incompatible masters; skipping" % glyph)
 			continue
+		del allControls
 
 		gvar.variations[glyph] = []
 
@@ -471,7 +473,7 @@ def main(args=None):
 	_add_fvar(gx, axes, instance_list)
 
 	print("Setting up glyph variations")
-	_add_gvar(gx, master_fonts, master_locs, base_idx)
+	_add_gvar(gx, axes, master_fonts, master_locs, base_idx)
 
 	print("Saving GX font", outfile)
 	gx.save(outfile)
