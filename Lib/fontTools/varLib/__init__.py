@@ -6,10 +6,14 @@ from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables._n_a_m_e import NameRecord
 from fontTools.ttLib.tables._f_v_a_r import table__f_v_a_r, Axis, NamedInstance
+from fontTools.ttLib.tables._g_l_y_f import table__g_l_y_f, GlyphCoordinates
 from fontTools.ttLib.tables._g_v_a_r import table__g_v_a_r, GlyphVariation
+import operator
 import xml.etree.ElementTree as ET
 import os.path
 
+# TODO remove me
+from pprint import pprint
 
 #
 # Variation space, aka design space, model
@@ -191,6 +195,18 @@ class VariationModel(object):
 		self.deltaWeights = {mapping[i]:{mapping[i]:off for i,off in enumerate(deltaWeight) if off != 0.}
 				     for i,deltaWeight in enumerate(deltaWeights)}
 
+	def getDeltas(self, masterValues):
+		count = len(self.mapping)
+		assert len(masterValues) == count
+		out = list(masterValues)
+		for i in range(count):
+			j = self.mapping[i]
+			weights = self.deltaWeights[j]
+			items = [out[idx] * weight for idx,weight in weights.items()]
+			delta = reduce(operator.add, items)
+			out[j] = delta
+		return out
+
 #
 # .designspace routines
 #
@@ -281,7 +297,7 @@ def _GetCoordinates(font, glyphName):
 	if glyphName not in glyf.glyphs: return None
 	glyph = glyf[glyphName]
 	if glyph.isComposite():
-		coord = [c.getComponentInfo()[1][-2:] for c in glyph.components]
+		coord = GlyphCoordinates([c.getComponentInfo()[1][-2:] for c in glyph.components])
 		control = [c.glyphName for c in glyph.components]
 	else:
 		allData = glyph.getCoordinates(glyf)
@@ -307,27 +323,18 @@ def _GetCoordinates(font, glyphName):
 def _sub(al, bl):
 	return [(ax-bx,ay-by) for (ax,ay),(bx,by) in zip(al,bl)]
 
-def _add_gvar(font, axes, master_ttfs, locations, origin_idx):
+def _add_gvar(font, axes, master_ttfs, master_locs, base_idx):
 
 	# Make copies for modification
 	master_ttfs = master_ttfs[:]
-	locations = [l.copy() for l in locations]
-
-	# Move origin to front
-	origin_master   = master_ttfs[origin_idx]
-	origin_location = locations[origin_idx]
-	del master_ttfs[origin_idx], locations[origin_idx]
-	master_ttfs.insert(0, origin_master)
-	locations.insert(0, origin_location)
-	del origin_idx, origin_master, origin_location
-	# Neutral is zero from now on
+	master_locs = [l.copy() for l in master_locs]
 
 	axis_tags = axes.keys()
 
-	# Normalize locations
+	# Normalize master_locs
 	# https://github.com/behdad/fonttools/issues/313
 	for tag,(name,lower,default,upper) in axes.items():
-		for l in locations:
+		for l in master_locs:
 			v = l[tag]
 			if v == default:
 				v = 0
@@ -338,13 +345,9 @@ def _add_gvar(font, axes, master_ttfs, locations, origin_idx):
 			l[tag] = v
 	# Locations are normalized now
 
-	# Find new axis mins and maxs
-	axis_mins = {tag:min(loc[tag] for loc in locations) for tag in axis_tags}
-	axis_maxs = {tag:max(loc[tag] for loc in locations) for tag in axis_tags}
-
 	print("Normalized master positions:")
 	from pprint import pprint
-	pprint(locations)
+	pprint(master_locs)
 
 	print("Generating gvar")
 	assert "gvar" not in font
@@ -353,9 +356,11 @@ def _add_gvar(font, axes, master_ttfs, locations, origin_idx):
 	gvar.reserved = 0
 	gvar.variations = {}
 
+	# Assume single-model for now.
+	model = VariationModel(master_locs)
+
 	for glyph in font.getGlyphOrder():
 
-		# TODO Check control data
 		allData = [_GetCoordinates(m, glyph) for m in master_ttfs]
 		allCoords = [d[0] for d in allData]
 		allControls = [d[1] for d in allData]
@@ -367,24 +372,14 @@ def _add_gvar(font, axes, master_ttfs, locations, origin_idx):
 
 		gvar.variations[glyph] = []
 
-		# Subtract origin
-		allCoords = [_sub(coords, allCoords[0]) for coords in allCoords]
-
-		# Add deltas for on-axis extremes
-		for tag in axis_tags:
-			for value in (axis_mins[tag], axis_maxs[tag]):
-				if not value: continue
-				loc = locations[0].copy()
-				loc[tag] = value
-				idx = locations.index(loc)
-				loc, coords = locations[idx], allCoords[idx]
-				if not coords:
-					warnings.warn("Glyph not present in a master" + glyph)
-					continue
-
-				# Found master for axis extreme, add delta
-				var = GlyphVariation({tag: (min(value, 0.), value, max(value, 0.))}, coords)
-				gvar.variations[glyph].append(var)
+		deltas = model.getDeltas(allCoords)
+		supports = model.supports
+		assert len(deltas) == len(supports)
+		for i,(delta,support) in enumerate(zip(deltas, supports)):
+			if i == base_idx:
+				continue
+			var = GlyphVariation(support, delta)
+			gvar.variations[glyph].append(var)
 
 def main(args=None):
 
@@ -399,7 +394,6 @@ def main(args=None):
 
 	masters, instances, base_idx = designspace_load(designspace_filename)
 
-	from pprint import pprint
 	print("Masters:")
 	pprint(masters)
 	print("Instances:")
