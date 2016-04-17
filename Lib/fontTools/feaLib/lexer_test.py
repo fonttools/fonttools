@@ -82,7 +82,9 @@ class LexerTest(unittest.TestCase):
     def test_string(self):
         self.assertEqual(lex('"foo" "bar"'),
                          [(Lexer.STRING, "foo"), (Lexer.STRING, "bar")])
-        self.assertRaises(FeatureLibError, lambda: lex('"foo\n bar"'))
+        self.assertEqual(lex('"foo \nbar\r baz \r\nqux\n\n "'),
+                         [(Lexer.STRING, "foo bar baz qux ")])
+        self.assertRaises(FeatureLibError, lambda: lex('"foo\n bar'))
 
     def test_bad_character(self):
         self.assertRaises(FeatureLibError, lambda: lex("123 \u0001"))
