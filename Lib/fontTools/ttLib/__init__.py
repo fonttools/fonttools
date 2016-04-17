@@ -44,6 +44,7 @@ Dumping 'prep' table...
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.misc.loggingTools import deprecateArgument, deprecateFunction
+import io
 import os
 import sys
 import logging
@@ -175,16 +176,24 @@ class TTFont(object):
 			# assume "file" is a readable file object
 			closeStream = False
 		if not self.lazy:
+			tmp = None
 			# Try mmap()ing it first:
-			try:
-				# TODO: Port to Windows version of mmap's module
-				tmp = _mmap(file.fileno(), 0, flags=mmap.MAP_PRIVATE, prot=mmap.PROT_READ)
-			except mmap.error:
+			if hasattr(file, 'fileno'):
+				try:
+					# TODO: Port to Windows version of mmap's module
+					fno = file.fileno()
+					print(fno)
+					tmp = _mmap(file.fileno(), 0, flags=mmap.MAP_PRIVATE, prot=mmap.PROT_READ)
+					if hasattr(file, 'name'):
+						tmp.name = file.name
+				except io.UnsupportedOperation:
+					pass
+			if tmp is None:
 				# Read into memory and wrap a stream around it to allow overwriting
 				tmp = BytesIO(file.read())
-			if hasattr(file, 'name'):
-				# save reference to input file name
-				tmp.name = file.name
+				if hasattr(file, 'name'):
+					tmp.name = file.name
+
 			if closeStream:
 				file.close()
 			file = tmp
