@@ -400,6 +400,7 @@ def main(args=None):
 	outfile = os.path.splitext(designspace_filename)[0] + '-GX.ttf'
 
 	masters, instances, base_idx = designspace_load(designspace_filename)
+	assert base_idx is not None, "Cannot find 'base' master; Add <info> element to one of the masters in the .designspace document."
 
 	from pprint import pprint
 	print("Masters:")
