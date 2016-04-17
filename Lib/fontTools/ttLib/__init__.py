@@ -47,12 +47,18 @@ from fontTools.misc.loggingTools import deprecateArgument, deprecateFunction
 import os
 import sys
 import logging
+try:
+	import mmap
+	class _mmap(mmap.mmap):
+		# Subclass native type just so we can assign a new attribute ('name') to instances.
+		pass
+except ImportError:
+	pass
 
 
 log = logging.getLogger(__name__)
 
 class TTLibError(Exception): pass
-
 
 class TTFont(object):
 
@@ -169,8 +175,13 @@ class TTFont(object):
 			# assume "file" is a readable file object
 			closeStream = False
 		if not self.lazy:
-			# read input file in memory and wrap a stream around it to allow overwriting
-			tmp = BytesIO(file.read())
+			# Try mmap()ing it first:
+			try:
+				# TODO: Port to Windows version of mmap's module
+				tmp = _mmap(file.fileno(), 0, flags=mmap.MAP_PRIVATE, prot=mmap.PROT_READ)
+			except mmap.error:
+				# Read into memory and wrap a stream around it to allow overwriting
+				tmp = BytesIO(file.read())
 			if hasattr(file, 'name'):
 				# save reference to input file name
 				tmp.name = file.name
