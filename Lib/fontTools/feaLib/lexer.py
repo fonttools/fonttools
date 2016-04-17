@@ -142,10 +142,12 @@ class Lexer(object):
             return (Lexer.SYMBOL, cur_char, location)
         if cur_char == '"':
             self.pos_ += 1
-            self.scan_until_('"\r\n')
+            self.scan_until_('"')
             if self.pos_ < self.text_length_ and self.text_[self.pos_] == '"':
                 self.pos_ += 1
-                return (Lexer.STRING, text[start + 1:self.pos_ - 1], location)
+                # strip newlines embedded within a string
+                string = re.sub("[\r\n]", "", text[start + 1:self.pos_ - 1])
+                return (Lexer.STRING, string, location)
             else:
                 raise FeatureLibError("Expected '\"' to terminate string",
                                       location)
