@@ -26,6 +26,7 @@ from fontTools.ttLib.tables._f_v_a_r import table__f_v_a_r, Axis, NamedInstance
 from fontTools.ttLib.tables._g_l_y_f import table__g_l_y_f, GlyphCoordinates
 from fontTools.ttLib.tables._g_v_a_r import table__g_v_a_r, GlyphVariation
 import operator
+import warnings
 import xml.etree.ElementTree as ET
 import os.path
 
