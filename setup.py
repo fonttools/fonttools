@@ -19,6 +19,10 @@ from setuptools import setup
 setup(
     name='cu2qu',
     version='1.0',
-    packages=['cu2qu'],
-    package_dir={'': 'Lib'}
+    packages=['cu2qu', 'cu2qu.test'],
+    package_dir={'': 'Lib'},
+    test_suite="cu2qu.test",
+    package_data={
+        'cu2qu.test': ['data/*/*.glif', 'data/*/*.plist'],
+    },
 )
