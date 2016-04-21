@@ -19,7 +19,6 @@ import random
 import timeit
 
 MAX_ERR = 5
-MAX_N = 10
 
 SETUP_CODE = '''
 from cu2qu import %s
@@ -35,14 +34,14 @@ def generate_curve():
 
 
 def setup_curve_to_quadratic():
-    return generate_curve(), MAX_ERR, MAX_N
+    return generate_curve(), MAX_ERR
 
 
 def setup_curves_to_quadratic():
     num_curves = 3
     return (
         [generate_curve() for curve in range(num_curves)],
-        [MAX_ERR] * num_curves, MAX_N)
+        [MAX_ERR] * num_curves)
 
 
 def run_test(name):
