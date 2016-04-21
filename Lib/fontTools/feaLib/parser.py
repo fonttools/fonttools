@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 from fontTools.feaLib.error import FeatureLibError
 from fontTools.feaLib.lexer import Lexer, IncludingLexer
 from fontTools.misc.py23 import *
+from collections import OrderedDict
 import fontTools.feaLib.ast as ast
 import logging
 import os
@@ -190,7 +191,7 @@ class Parser(object):
                 return ast.GlyphClassName(self.cur_token_location_, gc)
 
         self.expect_symbol_("[")
-        glyphs = set()
+        glyphs = list()
         location = self.cur_token_location_
         while self.next_token_ != "]":
             if self.next_token_type_ is Lexer.NAME:
@@ -200,11 +201,11 @@ class Parser(object):
                     range_start = glyph
                     self.expect_symbol_("-")
                     range_end = self.expect_glyph_()
-                    glyphs.update(self.make_glyph_range_(range_location,
+                    glyphs.extend(self.make_glyph_range_(range_location,
                                                          range_start,
                                                          range_end))
                 else:
-                    glyphs.add(glyph)
+                    glyphs.append(glyph)
             elif self.next_token_type_ is Lexer.CID:
                 glyph = self.expect_glyph_()
                 if self.next_token_ == "-":
@@ -212,10 +213,10 @@ class Parser(object):
                     range_start = self.cur_token_
                     self.expect_symbol_("-")
                     range_end = self.expect_cid_()
-                    glyphs.update(self.make_cid_range_(range_location,
+                    glyphs.extend(self.make_cid_range_(range_location,
                                                        range_start, range_end))
                 else:
-                    glyphs.add("cid%05d" % self.cur_token_)
+                    glyphs.append("cid%05d" % self.cur_token_)
             elif self.next_token_type_ is Lexer.GLYPHCLASS:
                 self.advance_lexer_()
                 gc = self.glyphclasses_.resolve(self.cur_token_)
@@ -223,7 +224,7 @@ class Parser(object):
                     raise FeatureLibError(
                         "Unknown glyph class @%s" % self.cur_token_,
                         self.cur_token_location_)
-                glyphs.update(gc.glyphSet())
+                glyphs.extend(gc.glyphSet())
             else:
                 raise FeatureLibError(
                     "Expected glyph name, glyph range, "
@@ -592,8 +593,8 @@ class Parser(object):
         # Format C: "substitute [a-d] by [A.sc-D.sc];"
         if (not reverse and len(old) == 1 and len(new) == 1 and
                 num_lookups == 0):
-            glyphs = sorted(list(old[0].glyphSet()))
-            replacements = sorted(list(new[0].glyphSet()))
+            glyphs = list(old[0].glyphSet())
+            replacements = list(new[0].glyphSet())
             if len(replacements) == 1:
                 replacements = replacements * len(glyphs)
             if len(glyphs) != len(replacements):
@@ -601,10 +602,12 @@ class Parser(object):
                     'Expected a glyph class with %d elements after "by", '
                     'but found a glyph class with %d elements' %
                     (len(glyphs), len(replacements)), location)
-            return ast.SingleSubstStatement(location,
-                                            dict(zip(glyphs, replacements)),
-                                            old_prefix, old_suffix,
-                                            forceChain=hasMarks)
+            return ast.SingleSubstStatement(
+                location,
+                OrderedDict(zip(glyphs, replacements)),
+                old_prefix, old_suffix,
+                forceChain=hasMarks
+            )
 
         # GSUB lookup type 2: Multiple substitution.
         # Format: "substitute f_f_i by f f i;"
@@ -1257,18 +1260,18 @@ class Parser(object):
         return ''.join(reversed(list(s)))
 
     def make_cid_range_(self, location, start, limit):
-        """(location, 999, 1001) --> {"cid00999", "cid01000", "cid01001"}"""
-        result = set()
+        """(location, 999, 1001) --> ["cid00999", "cid01000", "cid01001"]"""
+        result = list()
         if start > limit:
             raise FeatureLibError(
                 "Bad range: start should be less than limit", location)
         for cid in range(start, limit + 1):
-            result.add("cid%05d" % cid)
+            result.append("cid%05d" % cid)
         return result
 
     def make_glyph_range_(self, location, start, limit):
-        """(location, "a.sc", "d.sc") --> {"a.sc", "b.sc", "c.sc", "d.sc"}"""
-        result = set()
+        """(location, "a.sc", "d.sc") --> ["a.sc", "b.sc", "c.sc", "d.sc"]"""
+        result = list()
         if len(start) != len(limit):
             raise FeatureLibError(
                 "Bad range: \"%s\" and \"%s\" should have the same length" %
@@ -1292,20 +1295,20 @@ class Parser(object):
         uppercase = re.compile(r'^[A-Z]$')
         if uppercase.match(start_range) and uppercase.match(limit_range):
             for c in range(ord(start_range), ord(limit_range) + 1):
-                result.add("%s%c%s" % (prefix, c, suffix))
+                result.append("%s%c%s" % (prefix, c, suffix))
             return result
 
         lowercase = re.compile(r'^[a-z]$')
         if lowercase.match(start_range) and lowercase.match(limit_range):
             for c in range(ord(start_range), ord(limit_range) + 1):
-                result.add("%s%c%s" % (prefix, c, suffix))
+                result.append("%s%c%s" % (prefix, c, suffix))
             return result
 
         digits = re.compile(r'^[0-9]{1,3}$')
         if digits.match(start_range) and digits.match(limit_range):
             for i in range(int(start_range, 10), int(limit_range, 10) + 1):
                 number = ("000" + str(i))[-len(start_range):]
-                result.add("%s%s%s" % (prefix, number, suffix))
+                result.append("%s%s%s" % (prefix, number, suffix))
             return result
 
         raise FeatureLibError("Bad range: \"%s-%s\"" % (start, limit),

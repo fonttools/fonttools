@@ -901,7 +901,7 @@ class Builder(object):
             if value is None:
                 subs.append(None)
                 continue
-            if not glyphs.isdisjoint(sub.mapping.keys()):
+            if not set(glyphs).isdisjoint(sub.mapping.keys()):
                 sub = self.get_chained_lookup_(location, SinglePosBuilder)
             for glyph in glyphs:
                 sub.add_pos(location, glyph, value)

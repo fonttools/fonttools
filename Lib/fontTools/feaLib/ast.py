@@ -34,7 +34,7 @@ class GlyphName(Expression):
         self.glyph = glyph
 
     def glyphSet(self):
-        return frozenset((self.glyph,))
+        return (self.glyph,)
 
 
 class GlyphClass(Expression):
@@ -44,7 +44,7 @@ class GlyphClass(Expression):
         self.glyphs = glyphs
 
     def glyphSet(self):
-        return frozenset(self.glyphs)
+        return tuple(self.glyphs)
 
 
 class GlyphClassName(Expression):
@@ -55,7 +55,7 @@ class GlyphClassName(Expression):
         self.glyphclass = glyphclass
 
     def glyphSet(self):
-        return frozenset(self.glyphclass.glyphs)
+        return tuple(self.glyphclass.glyphs)
 
 
 class MarkClassName(Expression):
@@ -123,7 +123,7 @@ class GlyphClassDefinition(Statement):
         self.glyphs = glyphs
 
     def glyphSet(self):
-        return frozenset(self.glyphs)
+        return tuple(self.glyphs)
 
 
 class GlyphClassDefStatement(Statement):
@@ -136,11 +136,12 @@ class GlyphClassDefStatement(Statement):
         self.componentGlyphs = componentGlyphs
 
     def build(self, builder):
-        base = self.baseGlyphs.glyphSet() if self.baseGlyphs else set()
-        liga = self.ligatureGlyphs.glyphSet() if self.ligatureGlyphs else set()
-        mark = self.markGlyphs.glyphSet() if self.markGlyphs else set()
+        base = self.baseGlyphs.glyphSet() if self.baseGlyphs else tuple()
+        liga = self.ligatureGlyphs.glyphSet() \
+            if self.ligatureGlyphs else tuple()
+        mark = self.markGlyphs.glyphSet() if self.markGlyphs else tuple()
         comp = (self.componentGlyphs.glyphSet()
-                if self.componentGlyphs else set())
+                if self.componentGlyphs else tuple())
         builder.add_glyphClassDef(self.location, base, liga, mark, comp)
 
 
@@ -169,7 +170,7 @@ class MarkClass(object):
             self.glyphs[glyph] = definition
 
     def glyphSet(self):
-        return frozenset(self.glyphs.keys())
+        return tuple(self.glyphs.keys())
 
 
 class MarkClassDefinition(Statement):
