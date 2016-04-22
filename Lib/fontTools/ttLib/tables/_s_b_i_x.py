@@ -31,8 +31,9 @@ sbixStrikeOffsetFormatSize = sstruct.calcsize(sbixStrikeOffsetFormat)
 
 
 class table__s_b_i_x(DefaultTable.DefaultTable):
-	def __init__(self, tag):
-		self.tableTag = tag
+
+	def __init__(self, tag=None):
+		DefaultTable.DefaultTable.__init__(self, tag)
 		self.version = 1
 		self.flags = 1
 		self.numStrikes = 0
