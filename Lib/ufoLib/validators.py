@@ -889,102 +889,37 @@ def groupsValidator(value):
 # kerning.plist
 # -------------
 
-def kerningValidatorReportPairs(kerning, groups):
+def kerningValidator(data):
 	"""
-	This validates a passed kerning dictionary
-	using the provided groups. The validation
-	checks to make sure that there are no conflicting
-	glyph + group and group + glyph exceptions.
+	Check the validity of the kerning data structure.
+	Version 3+ (though it's backwards compatible with UFO 1 and UFO 2).
 
-	>>> groups = {
-	...     "public.kern1.O" : ["O", "D", "Q"],
-	...     "public.kern2.E" : ["E", "F"]
-	... }
-	>>> kerning = {
-	...     ("public.kern1.O", "public.kern2.E") : -100,
-	...     ("public.kern1.O", "F") : -200,
-	...     ("D", "F") : -300,
-	... }
-	>>> kerningValidatorReportPairs(kerning, groups)[0]
-	True
-	>>> kerning = {
-	...     ("public.kern1.O", "public.kern2.E") : -100,
-	...     ("public.kern1.O", "F") : -200,
-	...     ("Q", "public.kern2.E") : -250,
-	...     ("D", "F") : -300,
-	... }
-	>>> kerningValidatorReportPairs(kerning, groups)[0]
-	False
+	>>> kerning = {"A" : {"B" : 100}}
+	>>> kerningValidator(kerning)
+	(True, None)
+
+	>>> kerning = {"A" : ["B"]}
+	>>> kerningValidator(kerning)
+	(False, 'The kerning data is not in the correct format.')
+
+	>>> kerning = {"A" : {"B" : "100"}}
+	>>> kerningValidator(kerning)
+	(False, 'The kerning data is not in the correct format.')
 	"""
-	# flatten the groups
-	flatFirstGroups = {}
-	flatSecondGroups = {}
-	for groupName, glyphList in list(groups.items()):
-		if not groupName.startswith("public.kern1.") and not groupName.startswith("public.kern2."):
-			continue
-		if groupName.startswith("public.kern1."):
-			d = flatFirstGroups
-		elif groupName.startswith("public.kern2."):
-			d = flatSecondGroups
-		for glyphName in glyphList:
-			d[glyphName] = groupName
-	# search for conflicts
-	errors = []
-	pairs = []
-	for first, second in sorted(kerning.keys()):
-		firstIsGroup = first.startswith("public.kern1.")
-		secondIsGroup = second.startswith("public.kern2.")
-		# skip anything other than glyph + group and group + glyph
-		if firstIsGroup and secondIsGroup:
-			continue
-		if not firstIsGroup and not secondIsGroup:
-			continue
-		# if the first is a glyph and it isn't in a group, skip
-		if not firstIsGroup:
-			if first not in flatFirstGroups:
-				continue
-		# if the second is a glyph and it isn't in a group, skip
-		if not secondIsGroup:
-			if second not in flatSecondGroups:
-				continue
-		# skip unknown things
-		if firstIsGroup and first not in groups:
-			continue
-		if firstIsGroup and second not in flatSecondGroups:
-			continue
-		if secondIsGroup and second not in groups:
-			continue
-		if secondIsGroup and first not in flatFirstGroups:
-			continue
-		# validate group + glyph
-		if firstIsGroup:
-			firstOptions = groups[first]
-			secondGroup = flatSecondGroups[second]
-			for glyph in firstOptions:
-				if ((glyph, second) not in kerning and
-				    (glyph, secondGroup) in kerning and
-				    kerning[(glyph, secondGroup)] != kerning[(first, second)]):
-					errors.append("%s, %s (%d) conflicts with %s, %s (%d)" % (glyph, secondGroup, kerning[glyph, secondGroup], first, second, kerning[first, second]))
-					pairs.append(((glyph, secondGroup), (first, second)))
-		# validate glyph + group
-		if secondIsGroup:
-			secondOptions = groups[second]
-			firstGroup = flatFirstGroups[first]
-			for glyph in secondOptions:
-				if ((first, glyph) not in kerning and
-				    (firstGroup, glyph) in kerning and
-				    kerning[(firstGroup, glyph)] != kerning[(first, second)]):
-					errors.append("%s, %s (%d) conflicts with %s, %s (%d)" % (firstGroup, glyph, kerning[firstGroup, glyph], first, second, kerning[first, second]))
-					pairs.append(((firstGroup, glyph), (first, second)))
-	if errors:
-		return False, errors, pairs
-	# fallback
-	return True, errors, pairs
-
-def kerningValidator(kerning, groups):
-	valid, errors, pairs = kerningValidatorReportPairs(kerning, groups)
-	return valid, errors
-
+	bogusFormatMessage = "The kerning data is not in the correct format."
+	if not isinstance(data, dict):
+		return False, bogusFormatMessage
+	for first, secondDict in list(data.items()):
+		if not isinstance(first, basestring):
+			return False, bogusFormatMessage
+		elif not isinstance(secondDict, dict):
+			return False, bogusFormatMessage
+		for second, value in list(secondDict.items()):
+			if not isinstance(second, basestring):
+				return False, bogusFormatMessage
+			elif not isinstance(value, (int, float)):
+				return False, bogusFormatMessage
+	return True, None
 
 # -------------
 # lib.plist/lib

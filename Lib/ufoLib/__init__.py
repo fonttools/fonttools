@@ -354,31 +354,11 @@ class UFOReader(object):
 
 	def _readKerning(self):
 		data = self._getPlist(KERNING_FILENAME, {})
-		invalidFormatMessage = "kerning.plist is not properly formatted."
-		if not isinstance(data, dict):
-			raise UFOLibError(invalidFormatMessage)
-		for first, secondDict in list(data.items()):
-			if not isinstance(first, basestring):
-				raise UFOLibError(invalidFormatMessage)
-			elif not isinstance(secondDict, dict):
-				raise UFOLibError(invalidFormatMessage)
-			for second, value in list(secondDict.items()):
-				if not isinstance(second, basestring):
-					raise UFOLibError(invalidFormatMessage)
-				elif not isinstance(value, (int, float)):
-					raise UFOLibError(invalidFormatMessage)
 		return data
 
 	def readKerning(self):
 		"""
 		Read kerning.plist. Returns a dict.
-
-		This performs structural validation of the kerning data,
-		but it does not check the validity of the kerning as
-		dictated in the UFO spec. To do that, pass the kerning
-		obtained from this method and the groups obtained from
-		readGroups to the kerningvalidator function in the
-		validators module.
 		"""
 		# handle up conversion
 		if self._formatVersion < 3:
@@ -387,6 +367,9 @@ class UFOReader(object):
 		# normal
 		else:
 			kerningNested = self._readKerning()
+		valid, message = kerningValidator(kerningNested)
+		if not valid:
+			raise UFOLibError(message)
 		# flatten
 		kerning = {}
 		for left in kerningNested:
