@@ -6,7 +6,7 @@ from . import DefaultTable
 
 class table_C_F_F_(DefaultTable.DefaultTable):
 
-	def __init__(self, tag):
+	def __init__(self, tag=None):
 		DefaultTable.DefaultTable.__init__(self, tag)
 		self.cff = cffLib.CFFFontSet()
 		self._gaveGlyphOrder = False
