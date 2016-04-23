@@ -6,7 +6,7 @@ from fontTools.misc.textTools import binary2num, safeEval
 from fontTools.feaLib.error import FeatureLibError
 from fontTools.feaLib.parser import Parser
 from fontTools.otlLib import builder as otl
-from fontTools.ttLib import getTableClass, getTableModule
+from fontTools.ttLib import newTable, getTableModule
 from fontTools.ttLib.tables import otBase, otTables
 import itertools
 
@@ -85,7 +85,7 @@ class Builder(object):
             if (table.ScriptList.ScriptCount > 0 or
                     table.FeatureList.FeatureCount > 0 or
                     table.LookupList.LookupCount > 0):
-                fontTable = self.font[tag] = getTableClass(tag)()
+                fontTable = self.font[tag] = newTable(tag)
                 fontTable.table = table
             elif tag in self.font:
                 del self.font[tag]
@@ -182,7 +182,7 @@ class Builder(object):
             return
         table = self.font.get("head")
         if not table:  # this only happens for unit tests
-            table = self.font["head"] = getTableClass("head")()
+            table = self.font["head"] = newTable("head")
             table.decompile(b"\0" * 54, self.font)
             table.tableVersion = 1.0
             table.created = table.modified = 3406620153  # 2011-12-13 11:22:33
@@ -193,7 +193,7 @@ class Builder(object):
             return
         table = self.font.get("hhea")
         if not table:  # this only happens for unit tests
-            table = self.font["hhea"] = getTableClass("hhea")()
+            table = self.font["hhea"] = newTable("hhea")
             table.decompile(b"\0" * 36, self.font)
             table.tableVersion = 1.0
         if "caretoffset" in self.hhea_:
@@ -234,7 +234,7 @@ class Builder(object):
             return
         table = self.font.get("name")
         if not table:  # this only happens for unit tests
-            table = self.font["name"] = getTableClass("name")()
+            table = self.font["name"] = newTable("name")
             table.names = []
         for name in self.names_:
             nameID, platformID, platEncID, langID, string = name
@@ -252,7 +252,7 @@ class Builder(object):
             return
         table = self.font.get("OS/2")
         if not table:  # this only happens for unit tests
-            table = self.font["OS/2"] = getTableClass("OS/2")()
+            table = self.font["OS/2"] = newTable("OS/2")
             data = b"\0" * sstruct.calcsize(getTableModule("OS/2").OS2_format_0)
             table.decompile(data, self.font)
         version = 0
@@ -341,7 +341,7 @@ class Builder(object):
         base.HorizAxis = self.buildBASEAxis(self.base_horiz_axis_)
         base.VertAxis = self.buildBASEAxis(self.base_vert_axis_)
 
-        result = getTableClass("BASE")()
+        result = newTable("BASE")
         result.table = base
         return result
 
@@ -386,7 +386,7 @@ class Builder(object):
         gdef.Version = 0x00010002 if gdef.MarkGlyphSetsDef else 1.0
         if any((gdef.GlyphClassDef, gdef.AttachList, gdef.LigCaretList,
                 gdef.MarkAttachClassDef, gdef.MarkGlyphSetsDef)):
-            result = getTableClass("GDEF")()
+            result = newTable("GDEF")
             result.table = gdef
             return result
         else:
