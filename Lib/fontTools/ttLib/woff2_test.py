@@ -169,7 +169,7 @@ def normalise_table(font, tag, padding=4):
 			origLocations = font['loca'].locations[:]
 		else:
 			origLocations = []
-		glyfTable = ttLib.getTableClass('glyf')()
+		glyfTable = ttLib.newTable('glyf')
 		glyfTable.decompile(font.getTableData('glyf'), font)
 		glyfTable.padding = padding
 		if tag == 'glyf':
@@ -501,7 +501,7 @@ class WOFF2WriterTest(unittest.TestCase):
 		# version from head.fontRevision
 		fontRevision = self.font['head'].fontRevision
 		versionTuple = tuple(int(i) for i in str(fontRevision).split("."))
-		entry = self.writer.tables['head'] = ttLib.getTableClass('head')()
+		entry = self.writer.tables['head'] = ttLib.newTable('head')
 		entry.data = self.font.getTableData('head')
 		self.assertEqual(versionTuple, self.writer._getVersion())
 		# version from writer.flavorData
@@ -542,7 +542,7 @@ class WOFF2LocaTableTest(unittest.TestCase):
 
 	def setUp(self):
 		self.font = font = ttLib.TTFont(recalcBBoxes=False, recalcTimestamp=False)
-		font['head'] = ttLib.getTableClass('head')
+		font['head'] = ttLib.newTable('head')
 		font['loca'] = WOFF2LocaTable()
 		font['glyf'] = WOFF2GlyfTable()
 
@@ -616,8 +616,8 @@ class WOFF2GlyfTableTest(unittest.TestCase):
 	def setUp(self):
 		self.font = font = ttLib.TTFont(recalcBBoxes=False, recalcTimestamp=False)
 		font.setGlyphOrder(self.glyphOrder)
-		font['head'] = ttLib.getTableClass('head')()
-		font['maxp'] = ttLib.getTableClass('maxp')()
+		font['head'] = ttLib.newTable('head')
+		font['maxp'] = ttLib.newTable('maxp')
 		font['loca'] = WOFF2LocaTable()
 		font['glyf'] = WOFF2GlyfTable()
 		for tag in self.transformedTags:
