@@ -1,6 +1,7 @@
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
 from fontTools.feaLib.error import FeatureLibError
+from collections import OrderedDict
 import itertools
 
 
@@ -155,7 +156,7 @@ class MarkClass(object):
     def __init__(self, name):
         self.name = name
         self.definitions = []
-        self.glyphs = {}  # glyph --> ast.MarkClassDefinitions
+        self.glyphs = OrderedDict()  # glyph --> ast.MarkClassDefinitions
 
     def addDefinition(self, definition):
         assert isinstance(definition, MarkClassDefinition)

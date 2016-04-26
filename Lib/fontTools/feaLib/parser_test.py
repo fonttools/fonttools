@@ -270,7 +270,8 @@ class ParserTest(unittest.TestCase):
             "feature F1 { lookup L { @GLYPHCLASS = [A B C];} L; } F1;"
             "feature F2 { sub @GLYPHCLASS by D; } F2;"
         ).statements
-        self.assertEqual(f2.statements[0].mapping.keys(), ["A", "B", "C"])
+        self.assertEqual(list(f2.statements[0].mapping.keys()),
+                         ["A", "B", "C"])
 
     def test_GlyphClassDef(self):
         doc = self.parse("table GDEF {GlyphClassDef [b],[l],[m],[C c];} GDEF;")
