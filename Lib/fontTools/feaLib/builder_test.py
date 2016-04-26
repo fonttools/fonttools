@@ -58,7 +58,7 @@ class BuilderTest(unittest.TestCase):
         spec5h1 spec6b_ii spec6d2 spec6e spec6f
         spec6h_ii spec6h_iii_1 spec6h_iii_3d spec8a spec8b spec8c
         spec9a spec9b spec9c1 spec9c2 spec9c3 spec9d spec9e spec9f
-        bug453 bug463 bug501 bug502 bug505 bug506 bug509 bug512 bug568
+        bug453 bug463 bug501 bug502 bug504 bug505 bug506 bug509 bug512 bug568
         name size size2
     """.split()
 

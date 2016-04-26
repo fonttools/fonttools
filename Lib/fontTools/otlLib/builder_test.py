@@ -775,9 +775,9 @@ class BuilderTest(unittest.TestCase):
         d0 = builder.buildValue({})
         d8020 = builder.buildValue({"XPlacement": -80, "YPlacement": -20})
         subtable = builder.buildPairPosClassesSubtable({
-            (frozenset("A"), frozenset(["zero"])): (d0, d50),
-            (frozenset("A"), frozenset(["one", "two"])):  (None, d20),
-            (frozenset(["B", "C"]), frozenset(["zero"])): (d8020, d50),
+            (tuple("A",), tuple(["zero"])): (d0, d50),
+            (tuple("A",), tuple(["one", "two"])):  (None, d20),
+            (tuple(["B", "C"]), tuple(["zero"])): (d8020, d50),
         }, self.GLYPHMAP)
         self.maxDiff = None
         self.assertEqual(getXML(subtable.toXML),
