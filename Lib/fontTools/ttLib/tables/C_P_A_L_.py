@@ -28,15 +28,29 @@ class table_C_P_A_L_(DefaultTable.DefaultTable):
 			self.palettes.append(palette)
 
 	def compile(self, ttFont):
-		dataList = [struct.pack(">HHHHL", self.version, self.numPaletteEntries, len(self.palettes), self.numPaletteEntries * len(self.palettes), 12+2*len(self.palettes))]
-		for i in range(len(self.palettes)):
-			dataList.append(struct.pack(">H", i*self.numPaletteEntries))
+		colorRecordIndices, colorRecords = self._compileColorRecords()
+		numColorRecords = len(colorRecords) >> 2
+		offsetToFirstColorRecord = 12 + len(colorRecordIndices)
+		dataList = [struct.pack(">HHHHL", self.version, self.numPaletteEntries, len(self.palettes), numColorRecords, offsetToFirstColorRecord), colorRecordIndices, colorRecords]
+		return bytesjoin(dataList)
+
+	def _compilePalette(self, palette):
+		assert(len(palette) == self.numPaletteEntries)
+		pack = lambda c: struct.pack(">BBBB", c.blue, c.green, c.red, c.alpha)
+		return bytesjoin([pack(color) for color in palette])
+
+	def _compileColorRecords(self):
+		colorRecords, colorRecordIndices, pool = [], [], {}
 		for palette in self.palettes:
-			assert(len(palette) == self.numPaletteEntries)
-			for color in palette:
-				dataList.append(struct.pack(">BBBB", color.blue,color.green,color.red,color.alpha))
-		data = bytesjoin(dataList)
-		return data
+			packedPalette = self._compilePalette(palette)
+			if packedPalette in pool:
+				index = pool[packedPalette]
+			else:
+				index = len(colorRecords)
+				colorRecords.append(packedPalette)
+				pool[packedPalette] = index
+			colorRecordIndices.append(struct.pack(">H", index * self.numPaletteEntries))
+		return bytesjoin(colorRecordIndices), bytesjoin(colorRecords)
 
 	def toXML(self, writer, ttFont):
 		writer.simpletag("version", value=self.version)
