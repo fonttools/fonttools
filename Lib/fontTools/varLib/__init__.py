@@ -35,6 +35,36 @@ import os.path
 # Variation space, aka design space, model
 #
 
+def supportScalar(location, support):
+	"""Returns the scalar multiplier at location, for a master
+	with support.
+	>>> supportScalar({}, {})
+	1.0
+	>>> supportScalar({'wght':.2}, {})
+	1.0
+	>>> supportScalar({'wght':.2}, {'wght':(0,2,3)})
+	0.1
+	>>> supportScalar({'wght':2.5}, {'wght':(0,2,4)})
+	0.75
+	"""
+	scalar = 1.
+	for axis,(lower,peak,upper) in support.items():
+		if axis not in location:
+			scalar = 0.
+			break
+		v = location[axis]
+		if v == peak:
+			continue
+		if v <= lower or upper <= v:
+			scalar = 0.
+			break;
+		if v < peak:
+			scalar *= (v - lower) / (peak - lower)
+		else: # v > peak
+			scalar *= (v - upper) / (peak - upper)
+	return scalar
+
+
 class VariationModel(object):
 
 	"""
@@ -71,13 +101,13 @@ class VariationModel(object):
 	 {0: 1.0},
 	 {0: 1.0},
 	 {0: 1.0, 4: 1.0, 5: 1.0},
-	 {0: 1.0, 3: 0.25, 4: 0.75, 5: 1.0, 6: 0.75},
+	 {0: 1.0, 3: 0.75, 4: 0.25, 5: 1.0, 6: 0.25},
 	 {0: 1.0,
-	  3: 0.25,
-	  4: 0.75,
-	  5: 0.33333333333333326,
-	  6: 0.24999999999999994,
-	  7: 0.33333333333333326}]
+	  3: 0.75,
+	  4: 0.25,
+	  5: 0.6666666666666667,
+	  6: 0.16666666666666669,
+	  7: 0.6666666666666667}]
 	"""
 
 	def __init__(self, locations, axisOrder=[]):
@@ -182,24 +212,7 @@ class VariationModel(object):
 			deltaWeight = {}
 			# Walk over previous masters now, populate deltaWeight
 			for j,m in enumerate(locations[:i]):
-				support = supports[j]
-
-				scalar = 1.
-				for axis,(lower,peak,upper) in support.items():
-					if axis not in loc:
-						scalar = 0.
-						break
-					v = loc[axis]
-					if v == peak:
-						continue
-					if v <= lower or upper <= v:
-						scalar = 0.
-						break;
-					if v < peak:
-						scalar *= (v - peak) / (lower - peak)
-					else: # v > peak
-						scalar *= (v - peak) / (upper - peak)
-
+				scalar = supportScalar(loc, supports[j])
 				if scalar:
 					deltaWeight[j] = scalar
 			deltaWeights.append(deltaWeight)
@@ -213,9 +226,9 @@ class VariationModel(object):
 		mapping = self.reverseMapping
 		out = []
 		for i,weights in enumerate(self.deltaWeights):
-			value = masterValues[mapping[i]]
-			items = [out[j] * weight for j,weight in weights.items()]
-			delta = reduce(operator.isub, items, value)
+			delta = masterValues[mapping[i]]
+			for j,weight in weights.items():
+				delta -= out[j] * weight
 			out.append(delta)
 		return out
 
