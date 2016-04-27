@@ -337,6 +337,7 @@ def _GetCoordinates(font, glyphName):
 	# XXX these are incorrect.  Load vmtx and fix.
 	topSideY = glyph.yMax
 	bottomSideY = -glyph.yMin
+	coord = coord.copy()
 	coord.extend([(leftSideX, 0),
 	              (rightSideX, 0),
 	              (0, topSideY),
