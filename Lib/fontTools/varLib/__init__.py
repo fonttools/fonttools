@@ -182,10 +182,10 @@ class VariationModel(object):
 			deltaWeight = {}
 			# Walk over previous masters now, populate deltaWeight
 			for j,m in enumerate(locations[:i]):
-				scalar = 1.
 				support = supports[j]
-				for axis,v in m.items():
-					lower, peak, upper = support[axis]
+
+				scalar = 1.
+				for axis,(lower,peak,upper) in support.items():
 					if axis not in loc:
 						scalar = 0.
 						break
@@ -199,6 +199,7 @@ class VariationModel(object):
 						scalar *= (v - peak) / (lower - peak)
 					else: # v > peak
 						scalar *= (v - peak) / (upper - peak)
+
 				if scalar:
 					deltaWeight[j] = scalar
 			deltaWeights.append(deltaWeight)
