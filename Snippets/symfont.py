@@ -39,9 +39,9 @@ BernsteinPolynomial = tuple(
 	for n,coeffs in enumerate(BinomialCoefficient))
 
 BezierCurve = tuple(
-	tuple(sum(P[i][j]*berstein for i,berstein in enumerate(bersteins))
+	tuple(sum(P[i][j]*bernstein for i,bernstein in enumerate(bernsteins))
 		for j in range(2))
-	for n,bersteins in enumerate(BernsteinPolynomial))
+	for n,bernsteins in enumerate(BernsteinPolynomial))
 
 def green(f, Bezier=BezierCurve[n]):
 	f1 = sp.integrate(f, y)
