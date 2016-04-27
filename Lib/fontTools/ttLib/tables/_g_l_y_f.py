@@ -1389,6 +1389,7 @@ class GlyphCoordinates(object):
 			self.translate(other)
 			return self
 		if isinstance(other, GlyphCoordinates):
+			if other.isFloat(): self._ensureFloat()
 			other = other._a
 			a = self._a
 			assert len(a) == len(other)
@@ -1413,6 +1414,7 @@ class GlyphCoordinates(object):
 			self.translate((-other[0],-other[1]))
 			return self
 		if isinstance(other, GlyphCoordinates):
+			if other.isFloat(): self._ensureFloat()
 			other = other._a
 			a = self._a
 			assert len(a) == len(other)
