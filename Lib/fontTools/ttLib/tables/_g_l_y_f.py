@@ -1198,12 +1198,17 @@ class GlyphCoordinates(object):
 		if isinstance(k, slice):
 			indices = range(*k.indices(len(self)))
 			# XXX This only works if len(v) == len(indices)
-			# TODO Implement __delitem__
 			for j,i in enumerate(indices):
 				self[i] = v[j]
 			return
 		v = self._checkFloat(v)
 		self._a[2*k],self._a[2*k+1] = v
+
+	def __delitem__(self, i):
+		i = (2*i) % len(self._a)
+		del self._a[i]
+		del self._a[i]
+
 
 	def __repr__(self):
 		return 'GlyphCoordinates(['+','.join(str(c) for c in self)+'])'
