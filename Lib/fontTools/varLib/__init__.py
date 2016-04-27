@@ -321,7 +321,7 @@ def _GetCoordinates(font, glyphName):
 	if glyphName not in glyf.glyphs: return None
 	glyph = glyf[glyphName]
 	if glyph.isComposite():
-		coord = GlyphCoordinates([c.getComponentInfo()[1][-2:] for c in glyph.components])
+		coord = GlyphCoordinates([(c.x,c.y) for c in glyph.components])
 		control = [c.glyphName for c in glyph.components]
 	else:
 		allData = glyph.getCoordinates(glyf)
@@ -344,6 +344,41 @@ def _GetCoordinates(font, glyphName):
 	              (0, bottomSideY)])
 
 	return coord, control
+
+# TODO Move to glyf or gvar table proper
+def _SetCoordinates(font, glyphName, coord):
+	glyf = font["glyf"]
+	assert glyphName in glyf.glyphs
+	glyph = glyf[glyphName]
+
+	# Handle phantom points for (left, right, top, bottom) positions.
+	assert len(coord) >= 4
+	if not hasattr(glyph, 'xMin'):
+		glyph.recalcBounds(glyf)
+	topSideY = glyph.yMax
+	bottomSideY = -glyph.yMin
+	leftSideX = coord[-4][0]
+	rightSideX = coord[-3][0]
+	topSideY = coord[-2][1]
+	bottomSideY = coord[-1][1]
+	horizontalAdvanceWidth = rightSideX - leftSideX
+	leftSideBearing = glyph.xMin - leftSideX
+	# XXX Handle vertical
+	# XXX Remove the round when https://github.com/behdad/fonttools/issues/593 is fixed
+	font["hmtx"].metrics[glyphName] = int(round(horizontalAdvanceWidth)), int(round(leftSideBearing))
+
+	for _ in range(4):
+		del coord[-1]
+
+	if glyph.isComposite():
+		assert len(coord) == len(glyph.components)
+		for p,comp in zip(coord, glyph.components):
+			comp.x,comp.y = p
+	elif glyph.numberOfContours is 0:
+		assert len(coord) == 0
+	else:
+		assert len(coord) == len(glyph.coordinates)
+		glyph.coordinates = coord
 
 def _add_gvar(font, axes, master_ttfs, master_locs, base_idx):
 
