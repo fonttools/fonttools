@@ -683,6 +683,7 @@ def parseContext(self, lines, font, Type, lookupMap=None):
 		rules = []
 		for line in lines:
 			assert line[0].lower() == 'glyph', line[0]
+			while len(line) < 1+c.DataLen: line.append('')
 			seq = tuple(makeGlyphs(stripSplitComma(i)) for i in line[1:1+c.DataLen])
 			recs = parseLookupRecords(line[1+c.DataLen:], c.LookupRecord, lookupMap)
 			rules.append((seq, recs))
@@ -713,6 +714,7 @@ def parseContext(self, lines, font, Type, lookupMap=None):
 		rules = []
 		for line in lines:
 			assert line[0].lower().startswith('class'), line[0]
+			while len(line) < 1+c.DataLen: line.append('')
 			seq = tuple(intSplitComma(i) for i in line[1:1+c.DataLen])
 			recs = parseLookupRecords(line[1+c.DataLen:], c.LookupRecord, lookupMap)
 			rules.append((seq, recs))
@@ -991,12 +993,12 @@ class Tokenizer(object):
 	def __init__(self, f):
 		# TODO BytesIO / StringIO as needed?  also, figure out whether we work on bytes or unicode
 		lines = iter(f)
-		lines = ([s.strip() for s in line.split('\t')] for line in lines)
 		try:
 			self.filename = f.name
 		except:
 			self.filename = None
-		self.lines = lines
+		self.lines = iter(lines)
+		self.line = ''
 		self.lineno = 0
 		self.stoppers = []
 		self.buffer = None
@@ -1006,7 +1008,9 @@ class Tokenizer(object):
 
 	def _next_line(self):
 		self.lineno += 1
-		return next(self.lines)
+		line = self.line = next(self.lines)
+		return [s.strip() for s in line.rstrip().split('\t')]
+
 
 	def _next_nonempty(self):
 		while True:
