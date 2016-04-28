@@ -16,6 +16,7 @@ from fontTools.otlLib import builder as otl
 from contextlib import contextmanager
 from operator import setitem
 import logging
+import warnings
 
 class MtiLibError(Exception): pass
 class ReferenceNotFoundError(MtiLibError): pass
@@ -1009,14 +1010,20 @@ class Tokenizer(object):
 	def _next_line(self):
 		self.lineno += 1
 		line = self.line = next(self.lines)
-		return [s.strip() for s in line.rstrip().split('\t')]
-
+		line = [s.strip() for s in line.split('\t')]
+		if len(line) == 1 and not line[0]:
+			del line[0]
+		if line and not line[-1]:
+			warnings.warn('trailing tab found on line %d: %s' % (self.lineno, self.line))
+			while line and not line[-1]:
+				del line[-1]
+		return line
 
 	def _next_nonempty(self):
 		while True:
 			line = self._next_line()
 			# Skip comments and empty lines
-			if line[0] and (line[0][0] != '%' or line[0] == '% subtable'):
+			if line and line[0] and (line[0][0] != '%' or line[0] == '% subtable'):
 				return line
 
 	def _next_buffered(self):
