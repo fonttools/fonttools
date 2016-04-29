@@ -1070,11 +1070,13 @@ class GlyphComponent(object):
 				data = data + struct.pack(">HH", self.firstPt, self.secondPt)
 				flags = flags | ARG_1_AND_2_ARE_WORDS
 		else:
+			x = int(round(self.x))
+			y = int(round(self.y))
 			flags = flags | ARGS_ARE_XY_VALUES
-			if (-128 <= self.x <= 127) and (-128 <= self.y <= 127):
-				data = data + struct.pack(">bb", self.x, self.y)
+			if (-128 <= x <= 127) and (-128 <= y <= 127):
+				data = data + struct.pack(">bb", x, y)
 			else:
-				data = data + struct.pack(">hh", self.x, self.y)
+				data = data + struct.pack(">hh", x, y)
 				flags = flags | ARG_1_AND_2_ARE_WORDS
 
 		if hasattr(self, "transform"):
