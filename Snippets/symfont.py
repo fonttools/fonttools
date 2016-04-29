@@ -49,7 +49,7 @@ def green(f, Bezier=BezierCurve[n]):
 	return sp.integrate(f2 * sp.diff(Bezier[0], t), (t, 0, 1))
 
 def lambdify(f):
-	return sp.lambdify(Psymbol, f)
+	return sp.lambdify(Psymbol, f, dummify=False)
 
 class BezierFuncs(object):
 
