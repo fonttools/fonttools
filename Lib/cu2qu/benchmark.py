@@ -56,10 +56,10 @@ def run_test(name):
 
 
 def main():
-    random.seed(1)
     run_test('curve_to_quadratic')
     run_test('curves_to_quadratic')
 
 
 if __name__ == '__main__':
+    random.seed(1)
     main()

@@ -16,8 +16,8 @@
 from __future__ import print_function, division, absolute_import
 
 import collections
-import random
 import unittest
+import random
 
 from cu2qu import curve_to_quadratic, curves_to_quadratic
 from cu2qu.benchmark import generate_curve
@@ -31,6 +31,7 @@ class CurveToQuadraticTest(unittest.TestCase):
     def setUpClass(cls):
         """Do the curve conversion ahead of time, and run tests on results."""
 
+        random.seed(1)
         curves = [generate_curve() for i in range(1000)]
 
         cls.single_splines, cls.single_errors = zip(*[
@@ -114,5 +115,4 @@ class CurveToQuadraticTest(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    random.seed(1)
     unittest.main()
