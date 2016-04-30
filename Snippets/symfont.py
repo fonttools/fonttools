@@ -21,7 +21,6 @@ from functools import partial
 n = 3 # Max Bezier degree; 3 for cubic, 2 for quadratic
 
 t, x, y = sp.symbols('t x y', real=True)
-Psymbol = sp.symbols('P')
 
 P = tuple(sp.symbols('P[:%d][:2]' % (n+1), real=True))
 P = tuple(P[2*i:2*(i+1)] for i in range(len(P) // 2))
@@ -49,7 +48,7 @@ def green(f, Bezier=BezierCurve[n]):
 	return sp.integrate(f2 * sp.diff(Bezier[0], t), (t, 0, 1))
 
 def lambdify(f):
-	return sp.lambdify(Psymbol, f)
+	return sp.lambdify('P', f)
 
 class BezierFuncs(object):
 
