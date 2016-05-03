@@ -3,11 +3,14 @@ import shutil
 from io import StringIO, BytesIO, open
 import codecs
 from copy import deepcopy
+from ufoLib.filesystem import FileSystem
 from ufoLib.glifLib import GlyphSet
 from ufoLib.validators import *
 from ufoLib.filenames import userNameToFileName
 from ufoLib.converters import convertUFO1OrUFO2KerningToUFO3Kerning
-from ufoLib.plistlib import readPlist, writePlist
+from ufoLib.plistlibShim import readPlist, writePlist
+from ufoLib.errors import UFOLibError
+
 """
 A library for importing .ufo files and their descendants.
 Refer to http://unifiedfontobject.com for the UFO specification.
@@ -61,7 +64,7 @@ __all__ = [
 ]
 
 
-class UFOLibError(Exception): pass
+
 
 
 # ----------
@@ -118,14 +121,12 @@ def _getPlist(self, fileName, default=None):
 # UFO Reader
 # ----------
 
-class UFOReader(object):
+class UFOReader(FileSystem):
 
 	"""Read the various components of the .ufo."""
 
 	def __init__(self, path):
-		if not os.path.exists(path):
-			raise UFOLibError("The specified UFO doesn't exist.")
-		self._path = path
+		super(UFOReader, self).__init__(path)
 		self.readMetaInfo()
 		self._upConvertedKerningData = None
 
@@ -182,73 +183,13 @@ class UFOReader(object):
 			self._upConvertedKerningData["groups"] = groups
 			self._upConvertedKerningData["groupRenameMaps"] = conversionMaps
 
-	# support methods
-
-	_checkForFile = staticmethod(os.path.exists)
-
-	_getPlist = _getPlist
-
-	def readBytesFromPath(self, path, encoding=None):
-		"""
-		Returns the bytes in the file at the given path.
-		The path must be relative to the UFO path.
-		Returns None if the file does not exist.
-		An encoding may be passed if needed.
-		"""
-		fullPath = os.path.join(self._path, path)
-		if not self._checkForFile(fullPath):
-			return None
-		if os.path.isdir(fullPath):
-			raise UFOLibError("%s is a directory." % path)
-		if encoding:
-			f = open(fullPath, encoding=encoding)
-		else:
-			f = open(fullPath, "rb", encoding=encoding)
-		data = f.read()
-		f.close()
-		return data
-
-	def getReadFileForPath(self, path, encoding=None):
-		"""
-		Returns a file (or file-like) object for the
-		file at the given path. The path must be relative
-		to the UFO path. Returns None if the file does not exist.
-		An encoding may be passed if needed.
-
-		Note: The caller is responsible for closing the open file.
-		"""
-		fullPath = os.path.join(self._path, path)
-		if not self._checkForFile(fullPath):
-			return None
-		if os.path.isdir(fullPath):
-			raise UFOLibError("%s is a directory." % path)
-		if encoding:
-			f = open(fullPath, "rb", encoding=encoding)
-		else:
-			f = open(fullPath, "r")
-		return f
-
-	def getFileModificationTime(self, path):
-		"""
-		Returns the modification time (as reported by os.path.getmtime)
-		for the file at the given path. The path must be relative to
-		the UFO path. Returns None if the file does not exist.
-		"""
-		fullPath = os.path.join(self._path, path)
-		if not self._checkForFile(fullPath):
-			return None
-		return os.path.getmtime(fullPath)
-
 	# metainfo.plist
 
 	def readMetaInfo(self):
 		"""
 		Read metainfo.plist. Only used for internal operations.
 		"""
-		# should there be a blind try/except with a UFOLibError
-		# raised in except here (and elsewhere)? It would be nice to
-		# provide external callers with a single exception to catch.
-		data = self._getPlist(METAINFO_FILENAME)
+		data = self.readPlist(METAINFO_FILENAME)
 		if not isinstance(data, dict):
 			raise UFOLibError("metainfo.plist is not properly formatted.")
 		formatVersion = data["formatVersion"]
@@ -259,7 +200,7 @@ class UFOReader(object):
 	# groups.plist
 
 	def _readGroups(self):
-		return self._getPlist(GROUPS_FILENAME, {})
+		return self.readPlist(GROUPS_FILENAME, {})
 
 	def readGroups(self):
 		"""
@@ -301,7 +242,7 @@ class UFOReader(object):
 	# fontinfo.plist
 
 	def _readInfo(self):
-		data = self._getPlist(FONTINFO_FILENAME, {})
+		data = self.readPlist(FONTINFO_FILENAME, {})
 		if not isinstance(data, dict):
 			raise UFOLibError("fontinfo.plist is not properly formatted.")
 		return data
@@ -353,7 +294,7 @@ class UFOReader(object):
 	# kerning.plist
 
 	def _readKerning(self):
-		data = self._getPlist(KERNING_FILENAME, {})
+		data = self.readPlist(KERNING_FILENAME, {})
 		return data
 
 	def readKerning(self):
@@ -384,7 +325,7 @@ class UFOReader(object):
 		"""
 		Read lib.plist. Returns a dict.
 		"""
-		data = self._getPlist(LIB_FILENAME, {})
+		data = self.readPlist(LIB_FILENAME, {})
 		valid, message = fontLibValidator(data)
 		if not valid:
 			raise UFOLibError(message)
@@ -396,10 +337,9 @@ class UFOReader(object):
 		"""
 		Read features.fea. Returns a string.
 		"""
-		path = os.path.join(self._path, FEATURES_FILENAME)
-		if not self._checkForFile(path):
+		if not self.exists(FEATURES_FILENAME):
 			return ""
-		with open(path, "r") as f:
+		with self.open(FEATURES_FILENAME, "r") as f:
 			text = f.read()
 		return text
 
@@ -413,7 +353,7 @@ class UFOReader(object):
 		if self._formatVersion < 3:
 			return [(DEFAULT_LAYER_NAME, DEFAULT_GLYPHS_DIRNAME)]
 		# read the file on disk
-		contents = self._getPlist(LAYERCONTENTS_FILENAME)
+		contents = self.readPlist(LAYERCONTENTS_FILENAME)
 		valid, error = layerContentsValidator(contents, self._path)
 		if not valid:
 			raise UFOLibError(error)
@@ -456,8 +396,7 @@ class UFOReader(object):
 				break
 		if directory is None:
 			raise UFOLibError("No glyphs directory is mapped to \"%s\"." % layerName)
-		glyphsPath = os.path.join(self._path, directory)
-		return GlyphSet(glyphsPath, ufoFormatVersion=self._formatVersion)
+		return GlyphSet(directory, fileSystem=self, ufoFormatVersion=self._formatVersion)
 
 	def getCharacterMapping(self, layerName=None):
 		"""
@@ -477,35 +416,17 @@ class UFOReader(object):
 
 	# /data
 
-	def getDataDirectoryListing(self, maxDepth=100):
+	def getDataDirectoryListing(self):
 		"""
 		Returns a list of all files in the data directory.
 		The returned paths will be relative to the UFO.
 		This will not list directory names, only file names.
 		Thus, empty directories will be skipped.
-
-		The maxDepth argument sets the maximum number
-		of sub-directories that are allowed.
 		"""
-		path = os.path.join(self._path, DATA_DIRNAME)
-		if not self._checkForFile(path):
+		if not self.exists(DATA_DIRNAME):
 			return []
-		listing = self._getDirectoryListing(path, maxDepth=maxDepth)
-		listing = [os.path.relpath(path, "data") for path in listing]
+		listing = self.listDirectory(path, recurse=True)
 		return listing
-
-	def _getDirectoryListing(self, path, depth=0, maxDepth=100):
-		if depth > maxDepth:
-			raise UFOLibError("Maximum recusion depth reached.")
-		result = []
-		for fileName in os.listdir(path):
-			p = os.path.join(path, fileName)
-			if os.path.isdir(p):
-				result += self._getDirectoryListing(p, depth=depth+1, maxDepth=maxDepth)
-			else:
-				p = os.path.relpath(p, self._path)
-				result.append(p)
-		return result
 
 	def getImageDirectoryListing(self):
 		"""
@@ -515,15 +436,13 @@ class UFOReader(object):
 		"""
 		if self._formatVersion < 3:
 			return []
-		path = os.path.join(self._path, IMAGES_DIRNAME)
-		if not os.path.exists(path):
+		if not self.exists(IMAGES_DIRNAME):
 			return []
-		if not os.path.isdir(path):
+		if not self.isDirectory(IMAGES_DIRNAME):
 			raise UFOLibError("The UFO contains an \"images\" file instead of a directory.")
 		result = []
-		for fileName in os.listdir(path):
-			p = os.path.join(path, fileName)
-			if os.path.isdir(p):
+		for fileName in self.listDirectory(path):
+			if self.isDirectory(fileName):
 				# silently skip this as version control
 				# systems often have hidden directories
 				continue
@@ -538,7 +457,8 @@ class UFOReader(object):
 		"""
 		if self._formatVersion < 3:
 			raise UFOLibError("Reading images is not allowed in UFO %d." % self._formatVersion)
-		data = self.readBytesFromPath(os.path.join(IMAGES_DIRNAME, fileName))
+		path = self.joinPath(IMAGES_DIRNAME, fileName)
+		data = self.readBytesFromPath(path)
 		if data is None:
 			raise UFOLibError("No image file named %s." % fileName)
 		valid, error = pngValidator(data=data)

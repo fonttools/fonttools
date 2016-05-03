@@ -1,0 +1,1 @@
+class UFOLibError(Exception): pass
