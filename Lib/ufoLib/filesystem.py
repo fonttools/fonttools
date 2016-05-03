@@ -1,5 +1,6 @@
 import os
 from io import StringIO
+import zipfile
 from fs.osfs import OSFS
 from fs.zipfs import ZipFS, ZipOpenError
 from ufoLib.plistlibShim import readPlist, writePlist
@@ -13,7 +14,8 @@ except NameError:
 
 class FileSystem(object):
 
-	def __init__(self, path):
+	def __init__(self, path, mode="r"):
+		self._root = None
 		self._path = "<data stream>"
 		if isinstance(path, basestring):
 			self._path = path
@@ -21,15 +23,78 @@ class FileSystem(object):
 				raise UFOLibError("The specified UFO doesn't exist.")
 			if os.path.isdir(path):
 				path = OSFS(path)
+			elif zipfile.is_zipfile(path):
+				path = ZipFS(path, mode=mode, allow_zip_64=True)
+				roots = path.listdir("")
+				if len(roots) > 1:
+					raise UFOLibError("The UFO contains more than one root.")
+				self._root = roots[0]
 			else:
-				try:
-					path = ZipFS(path, mode="r", allow_zip_64=True)
-				except ZipOpenError:
-					raise UFOLibError("The specified UFO is not in a proper format.")
+				raise UFOLibError("The specified UFO is not in a proper format.")
 		self._fs = path
 
 	def close(self):
+		self._fsClose()
+
+	# --------
+	# fs Calls
+	# --------
+
+	"""
+	All actual low-level file system interaction
+	MUST be done through these methods.
+
+	This is necessary because ZIPs will have a
+	top level root directory that packages will
+	not have.
+	"""
+
+	def _fsRootPath(self, path):
+		if self._root is None:
+			return path
+		return self.joinPath(self._root, path)
+
+	def _fsUnRootPath(self, path):
+		if self._root is None:
+			return path
+		return self.relativePath(path, self._root)
+
+	def _fsClose(self):
 		self._fs.close()
+
+	def _fsOpen(self, path, mode="r", encoding=None):
+		path = self._fsRootPath(path)
+		f = self._fs.open(path, mode, encoding=encoding)
+		return f
+
+	def _fsRemove(self, path):
+		path = self._fsRootPath(path)
+		self._fs.remove(path)
+
+	def _fsMakeDirectory(self, path):
+		path = self._fsRootPath(path)
+		self._fs.mkdir(path)
+
+	def _fsRemoveDirectory(self, path):
+		path = self._fsRootPath(path)
+		self._fs.removedir(path)
+
+	def _fsExists(self, path):
+		path = self._fsRootPath(path)
+		return self._fs.exists(path)
+
+	def _fsIsDirectory(self, path):
+		path = self._fsRootPath(path)
+		return self._fs.isdir(path)
+
+	def _fsListDirectory(self, path):
+		path = self._fsRootPath(path)
+		return self._fs.listdir(path)
+
+	def _fsGetFileModificationTime(self, path):
+		path = self._fsRootPath(path)
+		info = self._fs.getinfo(path)
+		return info["modified_time"]
 
 	# -----------------
 	# Path Manipulation
@@ -52,10 +117,10 @@ class FileSystem(object):
 	# ---------
 
 	def exists(self, path):
-		return self._fs.exists(path)
+		return self._fsExists(path)
 
 	def isDirectory(self, path):
-		return self._fs.isdir(path)
+		return self._fsIsDirectory(path)
 
 	def listDirectory(self, path, recurse=False):
 		return self._listDirectory(path, recurse=recurse)
@@ -64,13 +129,17 @@ class FileSystem(object):
 		if depth > maxDepth:
 			raise UFOLibError("Maximum recusion depth reached.")
 		result = []
-		for fileName in self._fs.listdir(path):
+		for fileName in self._fsListDirectory(path):
 			p = self.joinPath(path, fileName)
-			if os.path.isdir(p) and recurse:
+			if self.isDirectory(p) and recurse:
 				result += self._listDirectory(p, recurse=True, depth=depth+1, maxDepth=maxDepth)
 			else:
 				result.append(p)
 		return result
+
+	def makeDirectory(self, path):
+		if not self.exists(path):
+			self._fsMakeDirectory(path)
 
 	# -----------
 	# File Opener
@@ -97,7 +166,7 @@ class FileSystem(object):
 			raise UFOLibError("%s is a directory." % path)
 		if mode in ("w", "wb"):
 			self._buildDirectoryTree(path)
-		f = self._fs.open(path, mode, encoding=encoding)
+		f = self._fsOpen(path, mode, encoding=encoding)
 		return f
 
 	def _buildDirectoryTree(self, path):
@@ -111,8 +180,7 @@ class FileSystem(object):
 		for d in directoryTree:
 			d = self.joinPath(built, d)
 			p = self.joinPath(self._path, d)
-			if not self.exists(p):
-				self._fs.mkdir(p)
+			self.makeDirectory(p)
 			built = d
 
 	# ------------------
@@ -127,8 +195,7 @@ class FileSystem(object):
 		"""
 		if not self.exists(path):
 			return None
-		info = self._fs.getinfo(path)
-		return info["modified_time"]
+		return self._fsGetFileModificationTime(path)
 
 	# --------------
 	# Raw Read/Write
@@ -204,17 +271,17 @@ class FileSystem(object):
 				raise UFOLibError("The file %s does not exist." % path)
 		else:
 			if self.isDirectory(path):
-				self._fs.removedir(path)
+				self._fsRemoveDirectory(path)
 			else:
-				self._fs.remove(path)
+				self._fsRemove(path)
 		directory = self.directoryName(path)
 		self._removeEmptyDirectoriesForPath(directory)
 
 	def _removeEmptyDirectoriesForPath(self, directory):
 		if not self.exists(directory):
 			return
-		if not len(self._fs.listdir(directory)):
-			self._fs.removedir(directory)
+		if not len(self._fsListDirectory(directory)):
+			self._fsRemoveDirectory(directory)
 		else:
 			return
 		directory = self.directoryName(directory)
@@ -256,26 +323,7 @@ if __name__ == "__main__":
 	path = os.path.dirname(path)
 	path = os.path.join(path, "TestData", "TestFont1 (UFO2).ufo")
 
-	import zipfile
-
-	def _packDirectory(z, d, root=""):
-		for i in os.listdir(d):
-			p = os.path.join(d, i)
-			l = os.path.join(root, i)
-			if os.path.isdir(p):
-				_packDirectory(z, p, root=l)
-			else:
-				l = os.path.join(root, i)
-				z.write(p, l)
-
-	p = path + ".zip"
-	if os.path.exists(p):
-		os.remove(p)
-	z = zipfile.ZipFile(p, "w")
-	_packDirectory(z, path)
-	z.close()
-
-	path += ".zip"
+	# path += ".zip"
 
 	reader = UFOReader(path)
 	glyphSet = reader.getGlyphSet()
