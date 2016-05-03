@@ -107,13 +107,13 @@ class GlyphSet(object):
 		extension). The glyphNameToFileName function is called whenever
 		a file name is created for a given glyph name.
 		"""
-		self.dirName = dirName
 		if ufoFormatVersion not in supportedUFOFormatVersions:
 			raise GlifLibError("Unsupported UFO format version: %s" % ufoFormatVersion)
 		if fileSystem is None:
 			fileSystem = FileSystem(dirName)
 			dirName = ""
-		self._fs = fileSystem
+		self.dirName = dirName
+		self.fileSystem = fileSystem
 		self.ufoFormatVersion = ufoFormatVersion
 		if glyphNameToFileNameFunc is None:
 			glyphNameToFileNameFunc = glyphNameToFileName
@@ -126,12 +126,12 @@ class GlyphSet(object):
 		"""
 		Rebuild the contents dict by loading contents.plist.
 		"""
-		contentsPath = self._fs.joinPath(self.dirName, "contents.plist")
-		if not self._fs.exists(contentsPath):
+		contentsPath = self.fileSystem.joinPath(self.dirName, "contents.plist")
+		if not self.fileSystem.exists(contentsPath):
 			# missing, consider the glyphset empty.
 			contents = {}
 		else:
-			contents = self._fs.readPlist(contentsPath)
+			contents = self.fileSystem.readPlist(contentsPath)
 		# validate the contents
 		invalidFormat = False
 		if not isinstance(contents, dict):
@@ -142,7 +142,7 @@ class GlyphSet(object):
 					invalidFormat = True
 				if not isinstance(fileName, basestring):
 					invalidFormat = True
-				elif not self._fs.exists(self._fs.joinPath(self.dirName, fileName)):
+				elif not self.fileSystem.exists(self.fileSystem.joinPath(self.dirName, fileName)):
 					raise GlifLibError("contents.plist references a file that does not exist: %s" % fileName)
 		if invalidFormat:
 			raise GlifLibError("contents.plist is not properly formatted")
@@ -177,10 +177,10 @@ class GlyphSet(object):
 	# layer info
 
 	def readLayerInfo(self, info):
-		path = self._fs.joinPath(self.dirName, LAYERINFO_FILENAME)
-		if not self._fs.exists(path):
+		path = self.fileSystem.joinPath(self.dirName, LAYERINFO_FILENAME)
+		if not self.fileSystem.exists(path):
 			return
-		infoDict = self._fs.readPlist(path)
+		infoDict = self.fileSystem.readPlist(path)
 		if not isinstance(infoDict, dict):
 			raise GlifLibError("layerinfo.plist is not properly formatted.")
 		infoDict = validateLayerInfoVersion3Data(infoDict)
@@ -234,18 +234,18 @@ class GlyphSet(object):
 		fileName = self.contents.get(glyphName)
 		path = None
 		if fileName is not None:
-			path = self._fs.joinPath(self.dirName, fileName)
+			path = self.fileSystem.joinPath(self.dirName, fileName)
 		if glyphName not in self._glifCache:
 			needRead = True
-		elif fileName is not None and self._fs.getFileModificationTime(path) != self._glifCache[glyphName][1]:
+		elif fileName is not None and self.fileSystem.getFileModificationTime(path) != self._glifCache[glyphName][1]:
 			needRead = True
 		if needRead:
 			fileName = self.contents[glyphName]
-			if not self._fs.exists(path):
+			if not self.fileSystem.exists(path):
 				raise KeyError(glyphName)
-			with self._fs.open(path, "rb") as f:
+			with self.fileSystem.open(path, "rb") as f:
 				text = f.read()
-			self._glifCache[glyphName] = (text, self._fs.getFileModificationTime(path))
+			self._glifCache[glyphName] = (text, self.fileSystem.getFileModificationTime(path))
 		return self._glifCache[glyphName][0]
 
 	def getGLIFModificationTime(self, glyphName):
