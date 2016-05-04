@@ -1,5 +1,5 @@
 import os
-from io import StringIO
+from io import StringIO, BytesIO, open
 import zipfile
 from fs.osfs import OSFS
 from fs.zipfs import ZipFS, ZipOpenError
@@ -11,26 +11,57 @@ try:
 except NameError:
 	basestring = str
 
+def sniffFileStructure(path):
+	if zipfile.is_zipfile(path):
+		return "zip"
+	elif os.path.isdir(path):
+		return "package"
+	raise UFOLibError("The specified UFO does not have a known structure.")
+
 
 class FileSystem(object):
 
-	def __init__(self, path, mode="r"):
+	def __init__(self, path, mode="r", structure=None):
+		"""
+		path can be a path or a fs file system object.
+
+		mode can be r or w.
+
+		structure is only applicable in "w" mode. Options:
+		None: existing structure
+		package: package structure
+		zip: zipped package
+
+		mode and structure are both ignored if a
+		fs file system object is given for path.
+		"""
 		self._root = None
 		self._path = "<data stream>"
 		if isinstance(path, basestring):
 			self._path = path
-			if not os.path.exists(path):
-				raise UFOLibError("The specified UFO doesn't exist.")
-			if os.path.isdir(path):
+			if mode == "w":
+				if os.path.exists(path):
+					existingStructure = sniffFileStructure(path)
+					if structure is not None:
+						if structure != existingStructure:
+							raise UFOLibError("A UFO with a different structure already exists at the given path.")
+					else:
+						structure = existingStructure
+			elif mode == "r":
+				if not os.path.exists(path):
+					raise UFOLibError("The specified UFO doesn't exist.")
+				structure = sniffFileStructure(path)
+			if structure == "package":
 				path = OSFS(path)
-			elif zipfile.is_zipfile(path):
-				path = ZipFS(path, mode=mode, allow_zip_64=True)
+			elif structure == "zip":
+				path = ZipFS(path, mode=mode, allow_zip_64=True, encoding="utf8")
 				roots = path.listdir("")
-				if len(roots) > 1:
+				if not roots:
+					self._root = "contents"
+				elif len(roots) > 1:
 					raise UFOLibError("The UFO contains more than one root.")
-				self._root = roots[0]
-			else:
-				raise UFOLibError("The specified UFO is not in a proper format.")
+				else:
+					self._root = roots[0]
 		self._fs = path
 
 	def close(self):
@@ -73,11 +104,20 @@ class FileSystem(object):
 
 	def _fsMakeDirectory(self, path):
 		path = self._fsRootPath(path)
-		self._fs.mkdir(path)
+		self._fs.makedir(path)
 
 	def _fsRemoveDirectory(self, path):
 		path = self._fsRootPath(path)
 		self._fs.removedir(path)
+
+	def _fsMove(self, path1, path2):
+		if self.isDirectory(path1):
+			meth = self._fs.movedir
+		else:
+			meth = self._fs.move
+		path1 = self._fsRootPath(path1)
+		path2 = self._fsRootPath(path2)
+		meth(path1, path2)
 
 	def _fsExists(self, path):
 		path = self._fsRootPath(path)
@@ -179,8 +219,7 @@ class FileSystem(object):
 		built = ""
 		for d in directoryTree:
 			d = self.joinPath(built, d)
-			p = self.joinPath(self._path, d)
-			self.makeDirectory(p)
+			self.makeDirectory(d)
 			built = d
 
 	# ------------------
@@ -223,7 +262,7 @@ class FileSystem(object):
 		"""
 		if encoding:
 			data = StringIO(data).encode(encoding)
-		self._writeFileAtomically(data, fullPath)
+		self._writeFileAtomically(data, path)
 
 	def _writeFileAtomically(self, data, path):
 		"""
@@ -232,7 +271,7 @@ class FileSystem(object):
 		if data matches the data that is already in the file at path.
 		If so, the file is not rewritten so that the modification date
 		is preserved.
-		"""	
+		"""
 		assert isinstance(data, bytes)
 		if self.exists(path):
 			f = self.open(path, "rb")
@@ -288,6 +327,17 @@ class FileSystem(object):
 		if directory:
 			self._removeEmptyDirectoriesForPath(directory)
 
+	# ----
+	# Move
+	# ----
+
+	def move(self, path1, path2):
+		if not self.exists(path1):
+			raise UFOLibError("%s does not exist." % path1)
+		if self.exists(path2):
+			raise UFOLibError("%s already exists." % path2)
+		self._fsMove(path1, path2)
+
 	# --------------
 	# Property Lists
 	# --------------
@@ -315,16 +365,59 @@ class FileSystem(object):
 		except:
 			raise UFOLibError("The file %s could not be read." % fileName)
 
+	def writePlist(self, path, obj):
+		"""
+		Write a property list.
+
+		Do this sort of atomically, making it harder to
+		cause corrupt files, for example when writePlist
+		encounters an error halfway during write. This
+		also checks to see if text matches the text that
+		is already in the file at path. If so, the file
+		is not rewritten so that the modification date
+		is preserved.
+
+		The errors that could be raised during the writing
+		of a plist are unpredictable and/or too large to list,
+		so, a blind try: except: is done. If an exception occurs,
+		a UFOLibError will be raised.
+		"""
+		try:
+			f = BytesIO()
+			writePlist(obj, f)
+			data = f.getvalue()
+		except:
+			raise UFOLibError("The data for the file %s could not be written because it is not properly formatted." % path)
+		self.writeBytesToPath(path, data)
+
 
 if __name__ == "__main__":
-	from ufoLib import UFOReader
+	import shutil
+	from defcon import Font
+
 	path = os.path.dirname(__file__)
 	path = os.path.dirname(path)
 	path = os.path.dirname(path)
 	path = os.path.join(path, "TestData", "TestFont1 (UFO2).ufo")
 
-	# path += ".zip"
+	font = Font(path)
+	print font["A"].bounds
 
-	reader = UFOReader(path)
-	glyphSet = reader.getGlyphSet()
-	print glyphSet.getGLIF("A")
+	path = path.replace(".ufo", " w.ufoz")
+
+	if os.path.exists(path):
+		if os.path.isdir(path):
+			shutil.rmtree(path)
+		else:
+			os.remove(path)
+
+	font.save(path)
+
+	font = Font(path)
+	print font["A"].bounds
+
+	if os.path.exists(path):
+		if os.path.isdir(path):
+			shutil.rmtree(path)
+		else:
+			os.remove(path)

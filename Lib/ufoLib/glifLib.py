@@ -165,14 +165,13 @@ class GlyphSet(object):
 			self._reverseContents = d
 		return self._reverseContents
 
-	# def writeContents(self):
-	# 	"""
-	# 	Write the contents.plist file out to disk. Call this method when
-	# 	you're done writing glyphs.
-	# 	"""
-	# 	contentsPath = os.path.join(self.dirName, "contents.plist")
-	# 	with open(contentsPath, "wb") as f:
-	# 		writePlist(self.contents, f)
+	def writeContents(self):
+		"""
+		Write the contents.plist file out to disk. Call this method when
+		you're done writing glyphs.
+		"""
+		path = self.fileSystem.joinPath(self.dirName, "contents.plist")
+		self.fileSystem.writePlist(path, self.contents)
 
 	# layer info
 
@@ -191,26 +190,25 @@ class GlyphSet(object):
 			except AttributeError:
 				raise GlifLibError("The supplied layer info object does not support setting a necessary attribute (%s)." % attr)
 
-	# def writeLayerInfo(self, info):
-	# 	if self.ufoFormatVersion < 3:
-	# 		raise GlifLibError("layerinfo.plist is not allowed in UFO %d." % self.ufoFormatVersion)
-	# 	# gather data
-	# 	infoData = {}
-	# 	for attr in list(layerInfoVersion3ValueData.keys()):
-	# 		if hasattr(info, attr):
-	# 			try:
-	# 				value = getattr(info, attr)
-	# 			except AttributeError:
-	# 				raise GlifLibError("The supplied info object does not support getting a necessary attribute (%s)." % attr)
-	# 			if value is None:
-	# 				continue
-	# 			infoData[attr] = value
-	# 	# validate
-	# 	infoData = validateLayerInfoVersion3Data(infoData)
-	# 	# write file
-	# 	path = os.path.join(self.dirName, LAYERINFO_FILENAME)
-	# 	with open(path, "wb") as f:
-	# 		writePlist(infoData, f)
+	def writeLayerInfo(self, info):
+		if self.ufoFormatVersion < 3:
+			raise GlifLibError("layerinfo.plist is not allowed in UFO %d." % self.ufoFormatVersion)
+		# gather data
+		infoData = {}
+		for attr in list(layerInfoVersion3ValueData.keys()):
+			if hasattr(info, attr):
+				try:
+					value = getattr(info, attr)
+				except AttributeError:
+					raise GlifLibError("The supplied info object does not support getting a necessary attribute (%s)." % attr)
+				if value is None:
+					continue
+				infoData[attr] = value
+		# validate
+		infoData = validateLayerInfoVersion3Data(infoData)
+		# write file
+		path = self.fileSystem.joinPath(self.dirName, LAYERINFO_FILENAME)
+		self.fileSystem.writePlist(infoData, path)
 
 	# # read caching
 
@@ -302,71 +300,73 @@ class GlyphSet(object):
 			formatVersions = (1, 2)
 		_readGlyphFromTree(tree, glyphObject, pointPen, formatVersions=formatVersions)
 
-	# def writeGlyph(self, glyphName, glyphObject=None, drawPointsFunc=None, formatVersion=None):
-	# 	"""
-	# 	Write a .glif file for 'glyphName' to the glyph set. The
-	# 	'glyphObject' argument can be any kind of object (even None);
-	# 	the writeGlyph() method will attempt to get the following
-	# 	attributes from it:
-	# 		"width"      the advance with of the glyph
-	# 		"height"     the advance height of the glyph
-	# 		"unicodes"   a list of unicode values for this glyph
-	# 		"note"       a string
-	# 		"lib"        a dictionary containing custom data
-	# 		"image"      a dictionary containing image data
-	# 		"guidelines" a list of guideline data dictionaries
-	# 		"anchors"    a list of anchor data dictionaries
+	def writeGlyph(self, glyphName, glyphObject=None, drawPointsFunc=None, formatVersion=None):
+		"""
+		Write a .glif file for 'glyphName' to the glyph set. The
+		'glyphObject' argument can be any kind of object (even None);
+		the writeGlyph() method will attempt to get the following
+		attributes from it:
+			"width"      the advance with of the glyph
+			"height"     the advance height of the glyph
+			"unicodes"   a list of unicode values for this glyph
+			"note"       a string
+			"lib"        a dictionary containing custom data
+			"image"      a dictionary containing image data
+			"guidelines" a list of guideline data dictionaries
+			"anchors"    a list of anchor data dictionaries
 
-	# 	All attributes are optional: if 'glyphObject' doesn't
-	# 	have the attribute, it will simply be skipped.
+		All attributes are optional: if 'glyphObject' doesn't
+		have the attribute, it will simply be skipped.
 
-	# 	To write outline data to the .glif file, writeGlyph() needs
-	# 	a function (any callable object actually) that will take one
-	# 	argument: an object that conforms to the PointPen protocol.
-	# 	The function will be called by writeGlyph(); it has to call the
-	# 	proper PointPen methods to transfer the outline to the .glif file.
+		To write outline data to the .glif file, writeGlyph() needs
+		a function (any callable object actually) that will take one
+		argument: an object that conforms to the PointPen protocol.
+		The function will be called by writeGlyph(); it has to call the
+		proper PointPen methods to transfer the outline to the .glif file.
 
-	# 	The GLIF format version will be chosen based on the ufoFormatVersion
-	# 	passed during the creation of this object. If a particular format
-	# 	version is desired, it can be passed with the formatVersion argument.
-	# 	"""
-	# 	if formatVersion is None:
-	# 		if self.ufoFormatVersion >= 3:
-	# 			formatVersion = 2
-	# 		else:
-	# 			formatVersion = 1
-	# 	else:
-	# 		if formatVersion not in supportedGLIFFormatVersions:
-	# 			raise GlifLibError("Unsupported GLIF format version: %s" % formatVersion)
-	# 		if formatVersion == 2 and self.ufoFormatVersion < 3:
-	# 			raise GlifLibError("Unsupported GLIF format version (%d) for UFO format version %d." % (formatVersion, self.ufoFormatVersion))
-	# 	self._purgeCachedGLIF(glyphName)
-	# 	data = writeGlyphToString(glyphName, glyphObject, drawPointsFunc, formatVersion=formatVersion)
-	# 	fileName = self.contents.get(glyphName)
-	# 	if fileName is None:
-	# 		fileName = self.glyphNameToFileName(glyphName, self)
-	# 		self.contents[glyphName] = fileName
-	# 		if self._reverseContents is not None:
-	# 			self._reverseContents[fileName.lower()] = glyphName
-	# 	path = os.path.join(self.dirName, fileName)
-	# 	if os.path.exists(path):
-	# 		with open(path, "rb") as f:
-	# 			oldData = f.read()
-	# 		if data == oldData:
-	# 			return
-	# 	with open(path, "wb") as f:
-	# 		f.write(tobytes(data, encoding="utf-8"))
+		The GLIF format version will be chosen based on the ufoFormatVersion
+		passed during the creation of this object. If a particular format
+		version is desired, it can be passed with the formatVersion argument.
+		"""
+		if formatVersion is None:
+			if self.ufoFormatVersion >= 3:
+				formatVersion = 2
+			else:
+				formatVersion = 1
+		else:
+			if formatVersion not in supportedGLIFFormatVersions:
+				raise GlifLibError("Unsupported GLIF format version: %s" % formatVersion)
+			if formatVersion == 2 and self.ufoFormatVersion < 3:
+				raise GlifLibError("Unsupported GLIF format version (%d) for UFO format version %d." % (formatVersion, self.ufoFormatVersion))
+		self._purgeCachedGLIF(glyphName)
+		data = writeGlyphToString(glyphName, glyphObject, drawPointsFunc, formatVersion=formatVersion)
+		fileName = self.contents.get(glyphName)
+		if fileName is None:
+			fileName = self.glyphNameToFileName(glyphName, self)
+			self.contents[glyphName] = fileName
+			if self._reverseContents is not None:
+				self._reverseContents[fileName.lower()] = glyphName
+		self.fileSystem.makeDirectory(self.dirName)
+		path = self.fileSystem.joinPath(self.dirName, fileName)
+		if self.fileSystem.exists(path):
+			with self.fileSystem.open(path, "rb") as f:
+				oldData = f.read()
+			if data == oldData:
+				return
+		with self.fileSystem.open(path, "wb") as f:
+			f.write(tobytes(data, encoding="utf-8"))
 
-	# def deleteGlyph(self, glyphName):
-	# 	"""Permanently delete the glyph from the glyph set on disk. Will
-	# 	raise KeyError if the glyph is not present in the glyph set.
-	# 	"""
-	# 	self._purgeCachedGLIF(glyphName)
-	# 	fileName = self.contents[glyphName]
-	# 	os.remove(os.path.join(self.dirName, fileName))
-	# 	if self._reverseContents is not None:
-	# 		del self._reverseContents[self.contents[glyphName].lower()]
-	# 	del self.contents[glyphName]
+	def deleteGlyph(self, glyphName):
+		"""Permanently delete the glyph from the glyph set on disk. Will
+		raise KeyError if the glyph is not present in the glyph set.
+		"""
+		self._purgeCachedGLIF(glyphName)
+		fileName = self.contents[glyphName]
+		path = self.fileSystem.joinPath(self.dirName, fileName)
+		self.fileSystem.remove(path)
+		if self._reverseContents is not None:
+			del self._reverseContents[self.contents[glyphName].lower()]
+		del self.contents[glyphName]
 
 	# dict-like support
 
