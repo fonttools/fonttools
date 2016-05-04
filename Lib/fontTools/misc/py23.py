@@ -6,7 +6,7 @@ import sys
 
 __all__ = ['basestring', 'unicode', 'unichr', 'byteord', 'bytechr', 'BytesIO',
 		'StringIO', 'UnicodeIO', 'strjoin', 'bytesjoin', 'tobytes', 'tostr',
-		'tounicode', 'Tag', 'open']
+		'tounicode', 'Tag', 'open', 'range', 'xrange']
 
 
 try:
@@ -239,6 +239,15 @@ def open(file, mode='r', buffering=-1, encoding=None, errors=None,
 	else:
 		return _io.open(
 			file, mode, buffering, encoding, errors, newline, closefd)
+
+
+# always use iterator whether one uses 'range' (py3) or 'xrange' (py2)
+try:
+	xrange = xrange
+	range = xrange
+except NameError:
+	xrange = range
+	range = range
 
 
 import logging
