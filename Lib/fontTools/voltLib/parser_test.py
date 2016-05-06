@@ -94,9 +94,9 @@ class ParserTest(unittest.TestCase):
         ).statements
         self.assertEqual((def_group.name, def_group.enum),
                          ("aaccented",
-                          ["aacute", "abreve", "acircumflex", "adieresis",
+                          ("aacute", "abreve", "acircumflex", "adieresis",
                            "ae", "agrave", "amacron", "aogonek", "aring",
-                           "atilde"]))
+                           "atilde")))
 
     def test_def_group_groups(self):
         [group1, group2, test_group] = self.parse(
@@ -113,7 +113,7 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(
             (test_group.name, test_group.enum),
             ("TestGroup",
-             [("Group1",), ("Group2",)]))
+             (("Group1",), ("Group2",))))
 
     def test_def_group_groups_not_yet_defined(self):
         [group1, test_group1, test_group2, test_group3, group2] = self.parse(
@@ -136,15 +136,15 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(
             (test_group1.name, test_group1.enum),
             ("TestGroup1",
-             [("Group1", ), ("Group2", )]))
+             (("Group1", ), ("Group2", ))))
         self.assertEqual(
             (test_group2.name, test_group2.enum),
             ("TestGroup2",
-             [("Group2", )]))
+             (("Group2", ), )))
         self.assertEqual(
             (test_group3.name, test_group3.enum),
             ("TestGroup3",
-             [("Group2", ), ("Group1", )]))
+             (("Group2", ), ("Group1", ))))
 
     def test_def_group_groups_undefined(self):
         with self.assertRaisesRegex(
@@ -172,7 +172,7 @@ class ParserTest(unittest.TestCase):
         ).statements
         self.assertEqual((def_group2.name, def_group2.enum),
                          ("KERN_lc_a_2ND",
-                          ["a", ("aaccented", )]))
+                          ("a", ("aaccented", ))))
 
     def test_def_group_range(self):
         [def_group] = self.parse(
@@ -183,7 +183,7 @@ class ParserTest(unittest.TestCase):
         ).statements
         self.assertEqual((def_group.name, def_group.enum),
                          ("KERN_lc_a_2ND",
-                          [("a", "atilde"), "b", ("c", "cdotaccent")]))
+                          (("a", "atilde"), "b", ("c", "cdotaccent"))))
 
     def test_group_duplicate(self):
         self.assertRaisesRegex(
@@ -509,8 +509,8 @@ class ParserTest(unittest.TestCase):
             'END_SUB\n'
             'END_SUBSTITUTION'
         ).statements
-        self.assertEqual((lookup.name, list(lookup.sub.mapping)),
-                         ("smcp", [(["a"], ["a.sc"]), (["b"], ["b.sc"])]))
+        self.assertEqual((lookup.name, list(lookup.sub.mapping.items())),
+                         ("smcp", [(("a",), ("a.sc",)), (("b",), ("b.sc",))]))
 
     def test_substitution_single_in_context(self):
         [group, lookup] = self.parse(
@@ -532,10 +532,10 @@ class ParserTest(unittest.TestCase):
         ).statements
         context = lookup.context[0]
         self.assertEqual(
-            (lookup.name, list(lookup.sub.mapping),
+            (lookup.name, list(lookup.sub.mapping.items()),
              context.ex_or_in, context.left, context.right),
-            ("fracdnom", [(["one"], ["one.dnom"]), (["two"], ["two.dnom"])],
-             "IN_CONTEXT", [[[("Denominators", ), "fraction"]]], [])
+            ("fracdnom", [(("one",), ("one.dnom",)), (("two",), ("two.dnom",))],
+             "IN_CONTEXT", [((("Denominators",), "fraction"),)], [])
         )
 
     def test_substitution_single_in_contexts(self):
@@ -565,8 +565,8 @@ class ParserTest(unittest.TestCase):
              context1.right, context2.ex_or_in,
              context2.left, context2.right),
             ("HebrewCurrency", "IN_CONTEXT", [],
-             [[("Hebrew", )], ["one.Hebr"]], "IN_CONTEXT",
-             [[("Hebrew", )], ["one.Hebr"]], []))
+             [(("Hebrew",),), ("one.Hebr",)], "IN_CONTEXT",
+             [(("Hebrew",),), ("one.Hebr",)], []))
 
     def test_substitution_skip_base(self):
         [group, lookup] = self.parse(
@@ -713,10 +713,11 @@ class ParserTest(unittest.TestCase):
             'END_SUB\n'
             'END_SUBSTITUTION'
         ).statements
-        self.assertEqual((lookup.name, list(lookup.sub.mapping)),
+        self.assertEqual((lookup.name, list(lookup.sub.mapping.items())),
                          ("ccmp",
-                          [(["aacute"], ["a", "acutecomb"]),
-                           (["agrave"], ["a", "gravecomb"])]))
+                          [(("aacute",), ("a", "acutecomb")),
+                           (("agrave",), ("a", "gravecomb"))]
+                          ))
 
     def test_substitution_multiple_to_single(self):
         [lookup] = self.parse(
@@ -733,10 +734,10 @@ class ParserTest(unittest.TestCase):
             'END_SUB\n'
             'END_SUBSTITUTION'
         ).statements
-        self.assertEqual((lookup.name, list(lookup.sub.mapping)),
+        self.assertEqual((lookup.name, list(lookup.sub.mapping.items())),
                          ("liga",
-                          [(["f", "i"], ["f_i"]),
-                           (["f", "t"], ["f_t"])]))
+                          [(("f", "i"), ("f_i",)),
+                           (("f", "t"), ("f_t",))]))
 
     def test_substitution_reverse_chaining_single(self):
         [lookup] = self.parse(
@@ -756,9 +757,9 @@ class ParserTest(unittest.TestCase):
         ).statements
         self.assertEqual(
             (lookup.name, lookup.context[0].right,
-             list(lookup.sub.mapping)),
-            ("numr", [[["fraction", ("zero.numr", "nine.numr")]]],
-             [([("zero", "nine")], [("zero.numr", "nine.numr")])]))
+             list(lookup.sub.mapping.items())),
+            ("numr", [(("fraction", ("zero.numr", "nine.numr")),)],
+             [((("zero", "nine"),), (("zero.numr", "nine.numr"),))]))
 
     # GPOS
     #  ATTACH_CURSIVE
@@ -802,8 +803,8 @@ class ParserTest(unittest.TestCase):
         ).statements
         self.assertEqual(
             (lookup.name, lookup.pos.coverage, lookup.pos.coverage_to),
-            ("anchor_top", ["a", "e"], [(["acutecomb"], "top"),
-                                        (["gravecomb"], "top")])
+            ("anchor_top", ("a", "e"), [(("acutecomb",), "top"),
+                                        (("gravecomb",), "top")])
         )
         self.assertEqual(
             (anchor1.name, anchor1.gid, anchor1.glyph_name, anchor1.component,
@@ -843,7 +844,7 @@ class ParserTest(unittest.TestCase):
             (lookup.name,
              lookup.pos.coverages_exit, lookup.pos.coverages_enter),
             ("SomeLookup",
-             [["a", "b"]], [["c"]])
+             [("a", "b")], [("c",)])
         )
 
     def test_position_adjust_pair(self):
@@ -864,7 +865,7 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(
             (lookup.name, lookup.pos.coverages_1, lookup.pos.coverages_2,
              lookup.pos.adjust_pair),
-            ("kern1", [["A"]], [["V"]],
+            ("kern1", [("A",)], [("V",)],
              {(1, 2): ((-30, None, None, {}, {}, {}),
                        (None, None, None, {}, {}, {})),
               (2, 1): ((-30, None, None, {}, {}, {}),
@@ -889,8 +890,8 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(
             (lookup.name, lookup.pos.adjust_single),
             ("TestLookup",
-             [(["glyph1"], (0, 123, None, {}, {}, {})),
-              (["glyph2"], (0, 456, None, {}, {}, {}))])
+             [(("glyph1",), (0, 123, None, {}, {}, {})),
+              (("glyph2",), (0, 456, None, {}, {}, {}))])
         )
 
     def test_def_anchor(self):
