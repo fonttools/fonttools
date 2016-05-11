@@ -545,8 +545,8 @@ def subset_glyphs(self, s):
         self.PairSetCount = len(self.PairSet)
         return bool(self.PairSetCount)
     elif self.Format == 2:
-        class1_map = self.ClassDef1.subset(s.glyphs, remap=True)
-        class2_map = self.ClassDef2.subset(s.glyphs, remap=True)
+        class1_map = [c for c in self.ClassDef1.subset(s.glyphs, remap=True) if c < self.Class1Count]
+        class2_map = [c for c in self.ClassDef2.subset(s.glyphs, remap=True) if c < self.Class2Count]
         self.Class1Record = [self.Class1Record[i] for i in class1_map]
         for c in self.Class1Record:
             c.Class2Record = [c.Class2Record[i] for i in class2_map]
@@ -570,7 +570,9 @@ def prune_post_subset(self, options):
 def subset_glyphs(self, s):
     if self.Format == 1:
         indices = self.Coverage.subset(s.glyphs)
-        self.EntryExitRecord = [self.EntryExitRecord[i] for i in indices]
+        records = self.EntryExitRecord
+        count = len(records)
+        self.EntryExitRecord = [records[i] for i in indices if i < count]
         self.EntryExitCount = len(self.EntryExitRecord)
         return bool(self.EntryExitCount)
     else:
