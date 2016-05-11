@@ -535,8 +535,7 @@ def subset_glyphs(self, s):
         count = len(pairs)
         self.PairSet = [pairs[i] for i in indices if i < count]
         for p in self.PairSet:
-            p.PairValueRecord = [r for r in p.PairValueRecord
-                                 if r.SecondGlyph in s.glyphs]
+            p.PairValueRecord = [r for r in p.PairValueRecord if r.SecondGlyph in s.glyphs]
             p.PairValueCount = len(p.PairValueRecord)
         # Remove empty pairsets
         indices = [i for i,p in enumerate(self.PairSet) if p.PairValueCount]
@@ -596,12 +595,10 @@ def prune_post_subset(self, options):
 def subset_glyphs(self, s):
     if self.Format == 1:
         mark_indices = self.MarkCoverage.subset(s.glyphs)
-        self.MarkArray.MarkRecord = [self.MarkArray.MarkRecord[i]
-                                     for i in mark_indices]
+        self.MarkArray.MarkRecord = [self.MarkArray.MarkRecord[i] for i in mark_indices]
         self.MarkArray.MarkCount = len(self.MarkArray.MarkRecord)
         base_indices = self.BaseCoverage.subset(s.glyphs)
-        self.BaseArray.BaseRecord = [self.BaseArray.BaseRecord[i]
-                                     for i in base_indices]
+        self.BaseArray.BaseRecord = [self.BaseArray.BaseRecord[i] for i in base_indices]
         self.BaseArray.BaseCount = len(self.BaseArray.BaseRecord)
         # Prune empty classes
         class_indices = _uniq_sort(v.Class for v in self.MarkArray.MarkRecord)
@@ -632,12 +629,10 @@ def prune_post_subset(self, options):
 def subset_glyphs(self, s):
     if self.Format == 1:
         mark_indices = self.MarkCoverage.subset(s.glyphs)
-        self.MarkArray.MarkRecord = [self.MarkArray.MarkRecord[i]
-                                     for i in mark_indices]
+        self.MarkArray.MarkRecord = [self.MarkArray.MarkRecord[i] for i in mark_indices]
         self.MarkArray.MarkCount = len(self.MarkArray.MarkRecord)
         ligature_indices = self.LigatureCoverage.subset(s.glyphs)
-        self.LigatureArray.LigatureAttach = [self.LigatureArray.LigatureAttach[i]
-                                             for i in ligature_indices]
+        self.LigatureArray.LigatureAttach = [self.LigatureArray.LigatureAttach[i] for i in ligature_indices]
         self.LigatureArray.LigatureCount = len(self.LigatureArray.LigatureAttach)
         # Prune empty classes
         class_indices = _uniq_sort(v.Class for v in self.MarkArray.MarkRecord)
@@ -670,12 +665,10 @@ def prune_post_subset(self, options):
 def subset_glyphs(self, s):
     if self.Format == 1:
         mark1_indices = self.Mark1Coverage.subset(s.glyphs)
-        self.Mark1Array.MarkRecord = [self.Mark1Array.MarkRecord[i]
-                                      for i in mark1_indices]
+        self.Mark1Array.MarkRecord = [self.Mark1Array.MarkRecord[i] for i in mark1_indices]
         self.Mark1Array.MarkCount = len(self.Mark1Array.MarkRecord)
         mark2_indices = self.Mark2Coverage.subset(s.glyphs)
-        self.Mark2Array.Mark2Record = [self.Mark2Array.Mark2Record[i]
-                                       for i in mark2_indices]
+        self.Mark2Array.Mark2Record = [self.Mark2Array.Mark2Record[i] for i in mark2_indices]
         self.Mark2Array.MarkCount = len(self.Mark2Array.Mark2Record)
         # Prune empty classes
         class_indices = _uniq_sort(v.Class for v in self.Mark1Array.MarkRecord)
@@ -1538,8 +1531,7 @@ def subset_glyphs(self, s):
     table = self.table
     if table.LigCaretList:
         indices = table.LigCaretList.Coverage.subset(glyphs)
-        table.LigCaretList.LigGlyph = [table.LigCaretList.LigGlyph[i]
-                                       for i in indices]
+        table.LigCaretList.LigGlyph = [table.LigCaretList.LigGlyph[i] for i in indices]
         table.LigCaretList.LigGlyphCount = len(table.LigCaretList.LigGlyph)
     if table.MarkAttachClassDef:
         table.MarkAttachClassDef.classDefs = \
@@ -1553,8 +1545,7 @@ def subset_glyphs(self, s):
         indices = table.AttachList.Coverage.subset(glyphs)
         GlyphCount = table.AttachList.GlyphCount
         table.AttachList.AttachPoint = [table.AttachList.AttachPoint[i]
-                                        for i in indices
-                                        if i < GlyphCount]
+                                        for i in indices if i < GlyphCount]
         table.AttachList.GlyphCount = len(table.AttachList.AttachPoint)
     if hasattr(table, "MarkGlyphSetsDef") and table.MarkGlyphSetsDef:
         for coverage in table.MarkGlyphSetsDef.Coverage:
