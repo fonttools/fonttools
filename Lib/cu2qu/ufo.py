@@ -27,7 +27,9 @@ the resulting splines are interpolation-compatible.
 from __future__ import print_function, division, absolute_import
 
 from fontTools.pens.basePen import AbstractPen
+
 from cu2qu import curve_to_quadratic, curves_to_quadratic
+from cu2qu.pens import ReverseContourPen
 
 __all__ = ['fonts_to_quadratic', 'font_to_quadratic']
 
@@ -97,11 +99,13 @@ def _get_segments(glyph):
     return pen.segments
 
 
-def _set_segments(glyph, segments):
+def _set_segments(glyph, segments, reverse_direction):
     """Draw segments as extracted by GetSegmentsPen back to a glyph."""
 
     glyph.clearContours()
     pen = glyph.getPen()
+    if reverse_direction:
+        pen = ReverseContourPen(pen)
     for tag, args in segments:
         if tag == 'move':
             pen.moveTo(*args)
@@ -133,7 +137,7 @@ def _segments_to_quadratic(segments, max_err, stats):
     return [('qcurve', p) for p in new_points]
 
 
-def _fonts_to_quadratic(fonts, max_err, stats):
+def _fonts_to_quadratic(fonts, max_err, reverse_direction, stats):
     """Do the actual conversion of fonts, after arguments have been set up."""
 
     for glyphs in zip(*fonts):
@@ -155,10 +159,11 @@ def _fonts_to_quadratic(fonts, max_err, stats):
 
         new_segments_by_glyph = zip(*new_segments_by_location)
         for glyph, new_segments in zip(glyphs, new_segments_by_glyph):
-            _set_segments(glyph, new_segments)
+            _set_segments(glyph, new_segments, reverse_direction)
 
 
-def fonts_to_quadratic(fonts, max_err_em=None, max_err=None,
+def fonts_to_quadratic(
+        fonts, max_err_em=None, max_err=None, reverse_direction=False,
         stats=None, dump_stats=False):
     """Convert the curves of a collection of fonts to quadratic.
 
@@ -187,7 +192,7 @@ def fonts_to_quadratic(fonts, max_err_em=None, max_err=None,
     num_fonts = len(fonts)
     assert len(max_errors) == num_fonts
 
-    _fonts_to_quadratic(fonts, max_errors, stats)
+    _fonts_to_quadratic(fonts, max_errors, reverse_direction, stats)
 
     if dump_stats:
         spline_lengths = sorted(stats.keys())
