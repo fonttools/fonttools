@@ -348,7 +348,10 @@ class Timer(object):
 			# the with-statement, exit without logging the time
 			return
 		message = self.formatTime(self.msg, time)
-		self.logger.log(self.level, message)
+		# Allow log handlers to see the individual parts to facilitate things
+		# like a server accumulating aggregate stats.
+		msg_parts = { 'msg': self.msg, 'time': time }
+		self.logger.log(self.level, message, msg_parts)
 
 	def __call__(self, func_or_msg=None, **kwargs):
 		""" If the first argument is a function, return a decorator which runs
