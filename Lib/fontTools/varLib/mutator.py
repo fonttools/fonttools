@@ -23,7 +23,9 @@ def main(args=None):
 	loc = {}
 	for arg in locargs:
 		tag,valstr = arg.split('=')
-		assert len(tag) == 4
+		while len(tag) < 4:
+			tag += ' '
+		assert len(tag) <= 4
 		loc[tag] = float(valstr)
 	print("Location:", loc)
 
@@ -52,6 +54,7 @@ def main(args=None):
 		for var in variations:
 			scalar = supportScalar(loc, var.axes)
 			if not scalar: continue
+			# TODO Do IUP / handle None items
 			coordinates += GlyphCoordinates(var.coordinates) * scalar
 		_SetCoordinates(varfont, glyphname, coordinates)
 
