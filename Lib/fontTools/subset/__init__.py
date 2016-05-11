@@ -512,7 +512,9 @@ def subset_glyphs(self, s):
         return len(self.Coverage.subset(s.glyphs))
     elif self.Format == 2:
         indices = self.Coverage.subset(s.glyphs)
-        self.Value = [self.Value[i] for i in indices]
+        values = self.Value
+        count = len(values)
+        self.Value = [values[i] for i in indices if i < count]
         self.ValueCount = len(self.Value)
         return bool(self.ValueCount)
     else:
@@ -529,7 +531,9 @@ def prune_post_subset(self, options):
 def subset_glyphs(self, s):
     if self.Format == 1:
         indices = self.Coverage.subset(s.glyphs)
-        self.PairSet = [self.PairSet[i] for i in indices]
+        pairs = self.PairSet
+        count = len(pairs)
+        self.PairSet = [pairs[i] for i in indices if i < count]
         for p in self.PairSet:
             p.PairValueRecord = [r for r in p.PairValueRecord
                                  if r.SecondGlyph in s.glyphs]
