@@ -2,12 +2,46 @@ from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools import subset
 from fontTools.ttLib import TTFont
+import contextlib
 import difflib
+import logging
 import os
 import shutil
 import sys
 import tempfile
 import unittest
+
+
+class CapturingLogHandler(logging.Handler):
+  def __init__(self, log_path, level):
+    self.records = []
+    self.level = level
+    self.logger = logging.getLogger(log_path)
+
+  def __enter__(self):
+    self.original_disabled = self.logger.disabled
+    self.original_level = self.logger.level
+
+    self.logger.addHandler(self)
+    self.logger.level = self.level
+    self.logger.disabled = False
+
+    return self
+
+  def __exit__(self, type, value, traceback):
+    self.logger.removeHandler(self)
+    self.logger.level = self.original_level
+    self.logger.disabled = self.logger.disabled
+    return self
+
+  def handle(self, record):
+    self.records.append(record)
+
+  def emit(self, record):
+    pass
+
+  def createLock(self):
+    self.lock = None
 
 
 class SubsetTest(unittest.TestCase):
@@ -147,6 +181,29 @@ class SubsetTest(unittest.TestCase):
         subsetfont = TTFont(subsetpath)
         self.assertTrue("x" in subsetfont['CBDT'].strikeData[0])
         self.assertTrue("y" in subsetfont['CBDT'].strikeData[0])
+
+    def test_timing_publishes_parts(self):
+        _, fontpath = self.compile_font(self.getpath("TestTTF-Regular.ttx"), ".ttf")
+        subsetpath = self.temp_path(".ttf")
+
+        options = subset.Options()
+        options.timing = True
+        subsetter = subset.Subsetter(options)
+        subsetter.populate(text='ABC')
+        font = TTFont(fontpath)
+        with CapturingLogHandler('fontTools.subset.timer', logging.DEBUG) as captor:
+            captor.logger.propagate = False
+            subsetter.subset(font)
+            logs = captor.records
+        captor.logger.propagate = True
+
+        self.assertTrue(len(logs) > 5)
+        self.assertEqual(len(logs), len([l for l in logs if 'msg' in l.args and 'time' in l.args]))
+        # Look for a few things we know should happen
+        self.assertTrue(filter(lambda l: l.args['msg'] == "load 'cmap'", logs))
+        self.assertTrue(filter(lambda l: l.args['msg'] == "subset 'cmap'", logs))
+        self.assertTrue(filter(lambda l: l.args['msg'] == "subset 'glyf'", logs))
+
 
 if __name__ == "__main__":
     unittest.main()
