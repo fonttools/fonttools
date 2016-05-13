@@ -24,7 +24,7 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 		if numberOfMetrics > numGlyphs:
 			numberOfMetrics = numGlyphs # We warn later.
 		if len(data) < 4 * numberOfMetrics:
-			raise ttLib.TTLibError("not enough data in %r table" % self.tableTag)
+			raise ttLib.TTLibError("not enough '%s' table data" % self.tableTag)
 		# Note: advanceWidth is unsigned, but we read/write as signed.
 		metrics = array.array("h", data[:4 * numberOfMetrics])
 		if sys.byteorder != "big":
@@ -37,7 +37,7 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 		if sys.byteorder != "big":
 			sideBearings.byteswap()
 		if data:
-			log.warning("too much 'hmtx'/'vmtx' table data")
+			log.warning("too much '%s' table data" % self.tableTag)
 		self.metrics = {}
 		glyphOrder = ttFont.getGlyphOrder()
 		for i in range(numberOfMetrics):
