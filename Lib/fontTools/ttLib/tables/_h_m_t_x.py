@@ -1,5 +1,6 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
+from fontTools import ttLib
 from fontTools.misc.textTools import safeEval
 from . import DefaultTable
 import sys
@@ -22,6 +23,8 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 		numberOfMetrics = int(getattr(ttFont[self.headerTag], self.numberOfMetricsName))
 		if numberOfMetrics > numGlyphs:
 			numberOfMetrics = numGlyphs # We warn later.
+		if len(data) < 4 * numberOfMetrics:
+			raise ttLib.TTLibError("not enough data in %r table" % self.tableTag)
 		# Note: advanceWidth is unsigned, but we read/write as signed.
 		metrics = array.array("h", data[:4 * numberOfMetrics])
 		if sys.byteorder != "big":
