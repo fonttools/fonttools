@@ -534,7 +534,7 @@ class Environment(object):
 
     def exec_MDRP(self):
         arg = self.program_stack_pop().eval(self.keep_abstract)
-        self.current_instruction_intermediate.append(IR.MDAPMethodCall(self.current_instruction.data[0], [arg]))
+        self.current_instruction_intermediate.append(IR.MDRPMethodCall(self.current_instruction.data[0], [arg]))
 
     def exec_MIAP(self):
         args = self.program_stack_pop_many(2)

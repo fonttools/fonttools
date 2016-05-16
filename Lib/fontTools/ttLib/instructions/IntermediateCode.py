@@ -387,7 +387,7 @@ class MDAPMethodCall(MethodCallStatement):
 
 class MDRPMethodCall(MethodCallStatement):
     def __init__(self, data, parameters = [], returnVal=None):
-        super(MDAPMethodCall, self).__init__(parameters, returnVal)
+        super(MDRPMethodCall, self).__init__(parameters, returnVal)
         self.methodName = 'MDRP_'+data
 
 class MIAPMethodCall(MethodCallStatement):
