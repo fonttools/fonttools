@@ -2339,7 +2339,7 @@ def prune_pre_subset(self, font, options):
         if self.tableVersion == 0x00010000:
             self.maxZones = 1
             self.maxTwilightPoints = 0
-            maxp.maxStorage = 0
+            self.maxStorage = 0
             self.maxFunctionDefs = 0
             self.maxInstructionDefs = 0
             self.maxStackElements = 0
