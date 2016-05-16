@@ -8,7 +8,7 @@ from ufoLib.glifLib import GlyphSet
 from ufoLib.validators import *
 from ufoLib.filenames import userNameToFileName
 from ufoLib.converters import convertUFO1OrUFO2KerningToUFO3Kerning
-from ufoLib.plistlibShim import readPlist, writePlist
+from ufoLib.plistlib import readPlist, writePlist
 from ufoLib.errors import UFOLibError
 
 """

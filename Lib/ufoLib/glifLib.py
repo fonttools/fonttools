@@ -17,7 +17,7 @@ from warnings import warn
 from fontTools.misc.py23 import tobytes, tostr
 from ufoLib.filesystem import FileSystem
 from ufoLib.xmlTreeBuilder import buildTree, stripCharacterData
-from ufoLib.plistlibShim import PlistWriter, readPlist, writePlist
+from ufoLib.plistlib import PlistWriter, readPlist, writePlist
 from ufoLib.pointPen import AbstractPointPen, PointToSegmentPen
 from ufoLib.filenames import userNameToFileName
 from ufoLib.validators import isDictEnough, genericTypeValidator, colorValidator,\

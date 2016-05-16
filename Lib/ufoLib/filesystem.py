@@ -11,7 +11,7 @@ try:
 except ImportError:
 	pass
 
-from ufoLib.plistlibShim import readPlist, writePlist
+from ufoLib.plistlib import readPlist, writePlist
 from ufoLib.errors import UFOLibError
 
 try:

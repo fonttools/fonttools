@@ -1,4 +1,4 @@
-from ufoLib.plistlibShim import PlistParser
+from ufoLib.plistlib import PlistParser
 """
 Small helper module to parse Plist-formatted data from trees as created
 by xmlTreeBuilder.
