@@ -152,7 +152,6 @@ class SubsetTest(unittest.TestCase):
 
     def test_timing_publishes_parts(self):
         _, fontpath = self.compile_font(self.getpath("TestTTF-Regular.ttx"), ".ttf")
-        subsetpath = self.temp_path(".ttf")
 
         options = subset.Options()
         options.timing = True
