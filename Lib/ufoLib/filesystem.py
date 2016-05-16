@@ -1,8 +1,16 @@
 import os
+import shutil
 from io import StringIO, BytesIO, open
 import zipfile
-from fs.osfs import OSFS
-from fs.zipfs import ZipFS, ZipOpenError
+
+haveFS = False
+try:
+	from fs.osfs import OSFS
+	from fs.zipfs import ZipFS, ZipOpenError
+	haveFS = True
+except ImportError:
+	pass
+
 from ufoLib.plistlibShim import readPlist, writePlist
 from ufoLib.errors import UFOLibError
 
@@ -54,6 +62,8 @@ class FileSystem(object):
 			if structure == "package":
 				path = OSFS(path)
 			elif structure == "zip":
+				if not haveFS:
+					raise UFOLibError("The fs module is required for reading and writing UFO ZIP.")
 				path = ZipFS(path, mode=mode, allow_zip_64=True, encoding="utf8")
 				roots = path.listdir("")
 				if not roots:
@@ -389,6 +399,68 @@ class FileSystem(object):
 		except:
 			raise UFOLibError("The data for the file %s could not be written because it is not properly formatted." % path)
 		self.writeBytesToPath(path, data)
+
+
+class _NOFS(object):
+
+	def __init__(self, path):
+		self._path = path
+
+	def _absPath(self, path):
+		return os.path.join(self._path, path)
+
+	def close(self):
+		pass
+
+	def open(self, path, mode, encoding=None):
+		path = self._absPath(path)
+		return open(path, mode=mode, encoding=encoding)
+
+	def remove(self, path):
+		path = self._absPath(path)
+		os.remove(path)
+
+	def makedir(self, path):
+		path = self._absPath(path)
+		os.mkdir(path)
+
+	def removedir(self, path):
+		path = self._absPath(path)
+		shutil.rmtree(path)
+
+	def move(self, path1, path2):
+		path1 = self._absPath(path1)
+		path2 = self._absPath(path2)
+		os.move(path1, path2)
+
+	def movedir(self, path1, path2):
+		path1 = self._absPath(path1)
+		path2 = self._absPath(path2)
+		shutil.move(path1, path2)
+
+	def exists(self, path):
+		path = self._absPath(path)
+		return os.path.exists(path)
+
+	def isdir(self, path):
+		path = self._absPath(path)
+		return os.path.isdir(path)
+
+	def listdir(self, path):
+		path = self._absPath(path)
+		return os.listdir(path)
+
+	def getinfo(self, path):
+		path = self._absPath(path)
+		stat = os.stat(path)
+		info = dict(
+			modified_time=stat.st_mtime
+		)
+		return info
+
+
+if not haveFS:
+	OSFS = _NOFS
 
 
 if __name__ == "__main__":
