@@ -461,35 +461,3 @@ class _NOFS(object):
 
 if not haveFS:
 	OSFS = _NOFS
-
-
-if __name__ == "__main__":
-	import shutil
-	from defcon import Font
-
-	path = os.path.dirname(__file__)
-	path = os.path.dirname(path)
-	path = os.path.dirname(path)
-	path = os.path.join(path, "TestData", "TestFont1 (UFO2).ufo")
-
-	font = Font(path)
-	print font["A"].bounds
-
-	path = path.replace(".ufo", " w.ufoz")
-
-	if os.path.exists(path):
-		if os.path.isdir(path):
-			shutil.rmtree(path)
-		else:
-			os.remove(path)
-
-	font.save(path)
-
-	font = Font(path)
-	print font["A"].bounds
-
-	if os.path.exists(path):
-		if os.path.isdir(path):
-			shutil.rmtree(path)
-		else:
-			os.remove(path)
