@@ -10,3 +10,12 @@ A low-level [UFO] reader and writer.
 [UFO] is a human-readable, XML-based file format that stores font source files.
 
 [UFO]: http://unifiedfontobject.org/
+
+
+UFO 4
+-----
+
+This is a branch in which we are **experimenting** with UFO 4 ideas/support.
+
+- Single file structure (99.9% sure this will be zip)
+- Other stuff.
