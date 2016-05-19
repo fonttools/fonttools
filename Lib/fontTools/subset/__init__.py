@@ -2251,7 +2251,8 @@ def prune_post_subset(self, options):
                 local_subrs = subrs
 
             subrs.items = [subrs.items[i] for i in subrs._used]
-            del subrs.file
+            if hasattr(subrs, 'file'):
+                del subrs.file
             if hasattr(subrs, 'offsets'):
                 del subrs.offsets
 
