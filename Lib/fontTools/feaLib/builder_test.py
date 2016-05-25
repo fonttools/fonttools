@@ -1,6 +1,6 @@
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
-from fontTools.misc.py23 import open
+from fontTools.misc.py23 import *
 from fontTools.feaLib.builder import Builder, addOpenTypeFeatures
 from fontTools.feaLib.builder import LigatureSubstBuilder
 from fontTools.feaLib.error import FeatureLibError
@@ -56,9 +56,10 @@ class BuilderTest(unittest.TestCase):
         spec4h1 spec5d1 spec5d2 spec5fi1 spec5fi2 spec5fi3 spec5fi4
         spec5f_ii_1 spec5f_ii_2 spec5f_ii_3 spec5f_ii_4
         spec5h1 spec6b_ii spec6d2 spec6e spec6f
-        spec6h_ii spec6h_iii_1 spec6h_iii_3d spec8a
-        spec9b spec9c1 spec9c2 spec9c3
-        bug453 bug463 bug501 bug502 bug505 bug506 bug509 bug512
+        spec6h_ii spec6h_iii_1 spec6h_iii_3d spec8a spec8b spec8c
+        spec9a spec9b spec9c1 spec9c2 spec9c3 spec9d spec9e spec9f
+        bug453 bug463 bug501 bug502 bug504 bug505 bug506 bug509 bug512 bug568
+        name size size2
     """.split()
 
     def __init__(self, methodName):
@@ -102,7 +103,8 @@ class BuilderTest(unittest.TestCase):
 
     def expect_ttx(self, font, expected_ttx):
         path = self.temp_path(suffix=".ttx")
-        font.saveXML(path, tables=['head', 'GDEF', 'GSUB', 'GPOS'])
+        font.saveXML(path, tables=['head', 'name', 'BASE', 'GDEF', 'GSUB',
+                                   'GPOS', 'OS/2', 'hhea'])
         actual = self.read_ttx(path)
         expected = self.read_ttx(expected_ttx)
         if actual != expected:
@@ -116,12 +118,12 @@ class BuilderTest(unittest.TestCase):
         with open(path, "w", encoding="utf-8") as outfile:
             outfile.write(featureFile)
         font = makeTTFont()
-        addOpenTypeFeatures(path, font)
+        addOpenTypeFeatures(font, path)
         return font
 
     def check_feature_file(self, name):
         font = makeTTFont()
-        addOpenTypeFeatures(self.getpath("%s.fea" % name), font)
+        addOpenTypeFeatures(font, self.getpath("%s.fea" % name))
         self.expect_ttx(font, self.getpath("%s.ttx" % name))
         # Make sure we can produce binary OpenType tables, not just XML.
         for tag in ('GDEF', 'GSUB', 'GPOS'):
@@ -198,7 +200,7 @@ class BuilderTest(unittest.TestCase):
             "} GDEF;")
 
     def test_languagesystem(self):
-        builder = Builder(None, makeTTFont())
+        builder = Builder(makeTTFont(), (None, None))
         builder.add_language_system(None, 'latn', 'FRA')
         builder.add_language_system(None, 'cyrl', 'RUS')
         builder.start_feature(location=None, name='test')
@@ -212,7 +214,7 @@ class BuilderTest(unittest.TestCase):
             self.build, "languagesystem cyrl RUS; languagesystem cyrl RUS;")
 
     def test_languagesystem_none_specified(self):
-        builder = Builder(None, makeTTFont())
+        builder = Builder(makeTTFont(), (None, None))
         builder.start_feature(location=None, name='test')
         self.assertEqual(builder.language_systems, {('DFLT', 'dflt')})
 
@@ -224,7 +226,7 @@ class BuilderTest(unittest.TestCase):
             self.build, "languagesystem latn TRK; languagesystem DFLT dflt;")
 
     def test_script(self):
-        builder = Builder(None, makeTTFont())
+        builder = Builder(makeTTFont(), (None, None))
         builder.start_feature(location=None, name='test')
         builder.set_script(location=None, script='cyrl')
         self.assertEqual(builder.language_systems, {('cyrl', 'dflt')})
@@ -242,7 +244,7 @@ class BuilderTest(unittest.TestCase):
             self.build, "feature size { script latn; } size;")
 
     def test_language(self):
-        builder = Builder(None, makeTTFont())
+        builder = Builder(makeTTFont(), (None, None))
         builder.add_language_system(None, 'latn', 'FRA ')
         builder.start_feature(location=None, name='test')
         builder.set_script(location=None, script='cyrl')

@@ -8,7 +8,7 @@
 fontTools is a library for manipulating fonts, written in Python. 
 The project includes the TTX tool, that can convert TrueType and OpenType fonts to and from an XML text format, which is also called TTX.
 It supports TrueType, OpenType, AFM and to an extent Type 1 and some Mac-specific formats.
-The project has a [BSD-style open-source licence](LICENSE.txt).  
+The project has a [BSD-style open-source licence](LICENSE).  
 Among other things this means you can use it free of charge. 
 
 ### Installation
@@ -22,7 +22,7 @@ The fresh versions as well as older versions can be downloaded from <http://www.
 
 A package is available in pypi from <https://pypi.python.org/pypi/FontTools>
 
-```
+```sh
 easy_install pip ;
 pip install fonttools ;
 ```
@@ -132,7 +132,7 @@ The fontTools project was started by Just van Rossum in 1999, and was maintained
 In 2008, Paul Wise (pabs3) began helping Just with stability maintenance.
 In 2013 Behdad Esfahbod began a friendly fork, thoroughly reviewing the codebase and making changes at <https://github.com/behdad/fonttools> to add new features and support for new font formats.
 
-### Acknowledgements
+### Acknowledgements
 
 In alphabetical order:
 
@@ -166,7 +166,7 @@ Werner Lemberg,
 Tal Leming,
 Peter Lofting, 
 Cosimo Lupo,
-Project Mashabow,
+Masaya Nakamura,
 Dave Opstad, 
 Laurence Penney, 
 Roozbeh Pournader,
@@ -185,7 +185,7 @@ Paul Wise.
 ### Copyrights
 
 Copyright (c) 1999-2004 Just van Rossum, LettError (just@letterror.com)  
-See [LICENSE.txt](LICENSE.txt) for the full license.
+See [LICENSE](LICENSE) for the full license.
 
 Copyright (c) 2000 BeOpen.com. 
 All Rights Reserved.

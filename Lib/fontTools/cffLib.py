@@ -1614,6 +1614,7 @@ class IndexedStrings(object):
 	def getSID(self, s):
 		if not hasattr(self, "stringMapping"):
 			self.buildStringMapping()
+		s = tostr(s, encoding="latin1")
 		if s in cffStandardStringMapping:
 			SID = cffStandardStringMapping[s]
 		elif s in self.stringMapping:

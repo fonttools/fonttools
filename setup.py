@@ -73,6 +73,7 @@ setup(
 			"fontTools.subset",
 			"fontTools.otlLib",
 			"fontTools.ttLib.tables",
+			"fontTools.varLib",
 		],
 		py_modules = ['sstruct', 'xmlWriter'],
 		package_dir = {'': 'Lib'},

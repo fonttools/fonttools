@@ -41,7 +41,7 @@ FVAR_INSTANCE_FORMAT = """
 class table__f_v_a_r(DefaultTable.DefaultTable):
     dependencies = ["name"]
 
-    def __init__(self, tag="fvar"):
+    def __init__(self, tag=None):
         DefaultTable.DefaultTable.__init__(self, tag)
         self.axes = []
         self.instances = []

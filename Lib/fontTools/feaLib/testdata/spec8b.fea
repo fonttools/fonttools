@@ -1,0 +1,9 @@
+feature size {
+   parameters 100 # design size (decipoints)
+               3  # subfamily identifier
+              80  # range start (exclusive, decipoints)
+             139; # range end (inclusive, decipoints)
+   sizemenuname "Win MinionPro Size Name";
+   sizemenuname 1 "Mac MinionPro Size Name";
+   sizemenuname 1 21 0 "Mac MinionPro Size Name";
+} size;

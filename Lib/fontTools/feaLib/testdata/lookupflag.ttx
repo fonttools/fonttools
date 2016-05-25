@@ -53,7 +53,7 @@
       <FeatureRecord index="0">
         <FeatureTag value="test"/>
         <Feature>
-          <!-- LookupCount=11 -->
+          <!-- LookupCount=12 -->
           <LookupListIndex index="0" value="0"/>
           <LookupListIndex index="1" value="1"/>
           <LookupListIndex index="2" value="2"/>
@@ -65,11 +65,12 @@
           <LookupListIndex index="8" value="8"/>
           <LookupListIndex index="9" value="9"/>
           <LookupListIndex index="10" value="10"/>
+          <LookupListIndex index="11" value="11"/>
         </Feature>
       </FeatureRecord>
     </FeatureList>
     <LookupList>
-      <!-- LookupCount=11 -->
+      <!-- LookupCount=12 -->
       <Lookup index="0">
         <!-- LookupType=1 -->
         <LookupFlag value="1"/>
@@ -204,6 +205,18 @@
           <Value XAdvance="1"/>
         </SinglePos>
         <MarkFilteringSet value="0"/>
+      </Lookup>
+      <Lookup index="11">
+        <!-- LookupType=1 -->
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <SinglePos index="0" Format="1">
+          <Coverage>
+            <Glyph value="L"/>
+          </Coverage>
+          <ValueFormat value="4"/>
+          <Value XAdvance="1"/>
+        </SinglePos>
       </Lookup>
     </LookupList>
   </GPOS>

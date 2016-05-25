@@ -16,15 +16,6 @@ META_HEADER_FORMAT = """
     numDataMaps: L
 """
 
-# According to Apple's spec, the dataMaps entries contain a dataOffset
-# that is documented as "Offset from the beginning of the data section
-# to the data for this tag". However, this is *not* the case with
-# the fonts that Apple ships pre-installed on MacOS X Yosemite 10.10.4,
-# and it also does not reflect how Apple's ftxdumperfuser tool is parsing
-# the 'meta' table (tested ftxdumperfuser build 330, FontToolbox.framework
-# build 187). Instead of what is claimed in the spec, the data maps contain
-# a dataOffset relative to the very beginning of the 'meta' table.
-# The dataOffset field of the 'meta' header apparently gets ignored.
 
 DATA_MAP_FORMAT = """
     > # big endian
@@ -35,7 +26,7 @@ DATA_MAP_FORMAT = """
 
 
 class table__m_e_t_a(DefaultTable.DefaultTable):
-    def __init__(self, tag="meta"):
+    def __init__(self, tag=None):
         DefaultTable.DefaultTable.__init__(self, tag)
         self.data = {}
 

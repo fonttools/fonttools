@@ -1,22 +1,34 @@
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
+from fontTools.misc.py23 import *
+from fontTools.misc import sstruct
+from fontTools.misc.textTools import binary2num, safeEval
 from fontTools.feaLib.error import FeatureLibError
 from fontTools.feaLib.parser import Parser
 from fontTools.otlLib import builder as otl
-from fontTools.ttLib import getTableClass
+from fontTools.ttLib import newTable, getTableModule
 from fontTools.ttLib.tables import otBase, otTables
 import itertools
 
 
-def addOpenTypeFeatures(featurefile_path, font):
-    builder = Builder(featurefile_path, font)
+def addOpenTypeFeatures(font, featurefile):
+    builder = Builder(font, featurefile)
     builder.build()
 
 
+def addOpenTypeFeaturesFromString(font, features, filename=None):
+    featurefile = UnicodeIO(tounicode(features))
+    if filename:
+        # the directory containing 'filename' is used as the root of relative
+        # include paths; if None is provided, the current directory is assumed
+        featurefile.name = filename
+    addOpenTypeFeatures(font, featurefile)
+
+
 class Builder(object):
-    def __init__(self, featurefile_path, font):
-        self.featurefile_path = featurefile_path
+    def __init__(self, font, featurefile):
         self.font = font
+        self.file = featurefile
         self.glyphMap = font.getReverseGlyphMap()
         self.default_language_systems_ = set()
         self.script_ = None
@@ -35,8 +47,18 @@ class Builder(object):
         self.aalt_features_ = []  # [(location, featureName)*], for 'aalt'
         self.aalt_location_ = None
         self.aalt_alternates_ = {}
+        # for 'featureNames'
+        self.featureNames_ = []
+        self.featureNames_ids_ = {}
+        # for feature 'size'
+        self.size_parameters_ = None
         # for table 'head'
         self.fontRevision_ = None  # 2.71
+        # for table 'name'
+        self.names_ = []
+        # for table 'BASE'
+        self.base_horiz_axis_ = None
+        self.base_vert_axis_ = None
         # for table 'GDEF'
         self.attachPoints_ = {}  # "a" --> {3, 7}
         self.ligCaretCoords_ = {}  # "f_f_i" --> {300, 600}
@@ -45,18 +67,25 @@ class Builder(object):
         self.markAttach_ = {}  # "acute" --> (4, (file, line, column))
         self.markAttachClassID_ = {}  # frozenset({"acute", "grave"}) --> 4
         self.markFilterSets_ = {}  # frozenset({"acute", "grave"}) --> 4
+        # for table 'OS/2'
+        self.os2_ = {}
+        # for table 'hhea'
+        self.hhea_ = {}
 
     def build(self):
-        self.parseTree = Parser(self.featurefile_path).parse()
+        self.parseTree = Parser(self.file).parse()
         self.parseTree.build(self)
         self.build_feature_aalt_()
         self.build_head()
+        self.build_hhea()
+        self.build_name()
+        self.build_OS_2()
         for tag in ('GPOS', 'GSUB'):
             table = self.makeTable(tag)
             if (table.ScriptList.ScriptCount > 0 or
                     table.FeatureList.FeatureCount > 0 or
                     table.LookupList.LookupCount > 0):
-                fontTable = self.font[tag] = getTableClass(tag)()
+                fontTable = self.font[tag] = newTable(tag)
                 fontTable.table = table
             elif tag in self.font:
                 del self.font[tag]
@@ -65,6 +94,11 @@ class Builder(object):
             self.font["GDEF"] = gdef
         elif "GDEF" in self.font:
             del self.font["GDEF"]
+        base = self.buildBASE()
+        if base:
+            self.font["BASE"] = base
+        elif "BASE" in self.font:
+            del self.font["BASE"]
 
     def get_chained_lookup_(self, location, builder_class):
         result = builder_class(self.font, location)
@@ -148,11 +182,196 @@ class Builder(object):
             return
         table = self.font.get("head")
         if not table:  # this only happens for unit tests
-            table = self.font["head"] = getTableClass("head")()
+            table = self.font["head"] = newTable("head")
             table.decompile(b"\0" * 54, self.font)
             table.tableVersion = 1.0
             table.created = table.modified = 3406620153  # 2011-12-13 11:22:33
         table.fontRevision = self.fontRevision_
+
+    def build_hhea(self):
+        if not self.hhea_:
+            return
+        table = self.font.get("hhea")
+        if not table:  # this only happens for unit tests
+            table = self.font["hhea"] = newTable("hhea")
+            table.decompile(b"\0" * 36, self.font)
+            table.tableVersion = 1.0
+        if "caretoffset" in self.hhea_:
+            table.caretOffset = self.hhea_["caretoffset"]
+        if "ascender" in self.hhea_:
+            table.ascent = self.hhea_["ascender"]
+        if "descender" in self.hhea_:
+            table.descent = self.hhea_["descender"]
+        if "linegap" in self.hhea_:
+            table.lineGap = self.hhea_["linegap"]
+
+    def get_user_name_id(self, table):
+        # Try to find first unused font-specific name id
+        nameIDs = [name.nameID for name in table.names]
+        for user_name_id in range(256, 32767):
+            if user_name_id not in nameIDs:
+                return user_name_id
+
+    def buildFeatureParams(self, tag):
+        params = None
+        if tag == "size":
+            params = otTables.FeatureParamsSize()
+            params.DesignSize, params.SubfamilyID, params.RangeStart, \
+                    params.RangeEnd = self.size_parameters_
+            if tag in self.featureNames_ids_:
+                params.SubfamilyNameID = self.featureNames_ids_[tag]
+            else:
+                params.SubfamilyNameID = 0
+        elif tag in self.featureNames_:
+            assert tag in self.featureNames_ids_
+            params = otTables.FeatureParamsStylisticSet()
+            params.Version = 0
+            params.UINameID = self.featureNames_ids_[tag]
+        return params
+
+    def build_name(self):
+        if not self.names_:
+            return
+        table = self.font.get("name")
+        if not table:  # this only happens for unit tests
+            table = self.font["name"] = newTable("name")
+            table.names = []
+        for name in self.names_:
+            nameID, platformID, platEncID, langID, string = name
+            if not isinstance(nameID, int):
+                # A featureNames name and nameID is actually the tag
+                tag = nameID
+                if tag not in self.featureNames_ids_:
+                    self.featureNames_ids_[tag] = self.get_user_name_id(table)
+                    assert self.featureNames_ids_[tag] is not None
+                nameID = self.featureNames_ids_[tag]
+            table.setName(string, nameID, platformID, platEncID, langID)
+
+    def build_OS_2(self):
+        if not self.os2_:
+            return
+        table = self.font.get("OS/2")
+        if not table:  # this only happens for unit tests
+            table = self.font["OS/2"] = newTable("OS/2")
+            data = b"\0" * sstruct.calcsize(getTableModule("OS/2").OS2_format_0)
+            table.decompile(data, self.font)
+        version = 0
+        if "fstype" in self.os2_:
+            table.fsType = self.os2_["fstype"]
+        if "panose" in self.os2_:
+            panose = getTableModule("OS/2").Panose()
+            panose.bFamilyType, panose.bSerifStyle, panose.bWeight,\
+                panose.bProportion, panose.bContrast, panose.bStrokeVariation,\
+                panose.bArmStyle, panose.bLetterForm, panose.bMidline, \
+                panose.bXHeight = self.os2_["panose"]
+            table.panose = panose
+        if "typoascender" in self.os2_:
+            table.sTypoAscender = self.os2_["typoascender"]
+        if "typodescender" in self.os2_:
+            table.sTypoDescender = self.os2_["typodescender"]
+        if "typolinegap" in self.os2_:
+            table.sTypoLineGap = self.os2_["typolinegap"]
+        if "winascent" in self.os2_:
+            table.usWinAscent = self.os2_["winascent"]
+        if "windescent" in self.os2_:
+            table.usWinDescent = self.os2_["windescent"]
+        if "vendor" in self.os2_:
+            table.achVendID = safeEval("'''" + self.os2_["vendor"] + "'''")
+        if "weightclass" in self.os2_:
+            table.usWeightClass = self.os2_["weightclass"]
+        if "widthclass" in self.os2_:
+            table.usWidthClass = self.os2_["widthclass"]
+        if "unicoderange" in self.os2_:
+            table.setUnicodeRanges(self.os2_["unicoderange"])
+        if "codepagerange" in self.os2_:
+            pages = self.build_codepages_(self.os2_["codepagerange"])
+            table.ulCodePageRange1, table.ulCodePageRange2 = pages
+            version = 1
+        if "xheight" in self.os2_:
+            table.sxHeight = self.os2_["xheight"]
+            version = 2
+        if "capheight" in self.os2_:
+            table.sCapHeight = self.os2_["capheight"]
+            version = 2
+        if "loweropsize" in self.os2_:
+            table.usLowerOpticalPointSize = self.os2_["loweropsize"]
+            version = 5
+        if "upperopsize" in self.os2_:
+            table.usUpperOpticalPointSize = self.os2_["upperopsize"]
+            version = 5
+        def checkattr(table, attrs):
+            for attr in attrs:
+                if not hasattr(table, attr):
+                    setattr(table, attr, 0)
+        table.version = max(version, table.version)
+        # this only happens for unit tests
+        if version >= 1:
+            checkattr(table, ("ulCodePageRange1", "ulCodePageRange2"))
+        if version >= 2:
+            checkattr(table, ("sxHeight", "sCapHeight", "usDefaultChar",
+                              "usBreakChar", "usMaxContext"))
+        if version >= 5:
+            checkattr(table, ("usLowerOpticalPointSize",
+                              "usUpperOpticalPointSize"))
+
+    def build_codepages_(self, pages):
+        pages2bits = {
+            1252: 0,  1250: 1, 1251: 2, 1253: 3, 1254: 4, 1255: 5, 1256: 6,
+            1257: 7,  1258: 8, 874: 16, 932: 17, 936: 18, 949: 19, 950: 20,
+            1361: 21, 869: 48, 866: 49, 865: 50, 864: 51, 863: 52, 862: 53,
+            861:  54, 860: 55, 857: 56, 855: 57, 852: 58, 775: 59, 737: 60,
+            708:  61, 850: 62, 437: 63,
+        }
+        bits = [pages2bits[p] for p in pages if p in pages2bits]
+        pages = []
+        for i in range(2):
+            pages.append("")
+            for j in range(i * 32, (i + 1) * 32):
+                if j in bits:
+                    pages[i] += "1"
+                else:
+                    pages[i] += "0"
+        return [binary2num(p[::-1]) for p in pages]
+
+    def buildBASE(self):
+        if not self.base_horiz_axis_ and not self.base_vert_axis_:
+            return None
+        base = otTables.BASE()
+        base.Version = 0x00010000
+        base.HorizAxis = self.buildBASEAxis(self.base_horiz_axis_)
+        base.VertAxis = self.buildBASEAxis(self.base_vert_axis_)
+
+        result = newTable("BASE")
+        result.table = base
+        return result
+
+    def buildBASEAxis(self, axis):
+        if not axis:
+            return
+        bases, scripts = axis
+        axis = otTables.Axis()
+        axis.BaseTagList = otTables.BaseTagList()
+        axis.BaseTagList.BaselineTag = bases
+        axis.BaseTagList.BaseTagCount = len(bases)
+        axis.BaseScriptList = otTables.BaseScriptList()
+        axis.BaseScriptList.BaseScriptRecord = []
+        axis.BaseScriptList.BaseScriptCount = len(scripts)
+        for script in sorted(scripts):
+            record = otTables.BaseScriptRecord()
+            record.BaseScriptTag = script[0]
+            record.BaseScript = otTables.BaseScript()
+            record.BaseScript.BaseLangSysCount = 0
+            record.BaseScript.BaseValues = otTables.BaseValues()
+            record.BaseScript.BaseValues.DefaultIndex = bases.index(script[1])
+            record.BaseScript.BaseValues.BaseCoord = []
+            record.BaseScript.BaseValues.BaseCoordCount = len(script[2])
+            for c in script[2]:
+                coord = otTables.BaseCoord()
+                coord.Format = 1
+                coord.Coordinate = c
+                record.BaseScript.BaseValues.BaseCoord.append(coord)
+            axis.BaseScriptList.BaseScriptRecord.append(record)
+        return axis
 
     def buildGDEF(self):
         gdef = otTables.GDEF()
@@ -167,7 +386,7 @@ class Builder(object):
         gdef.Version = 0x00010002 if gdef.MarkGlyphSetsDef else 1.0
         if any((gdef.GlyphClassDef, gdef.AttachList, gdef.LigCaretList,
                 gdef.MarkAttachClassDef, gdef.MarkGlyphSetsDef)):
-            result = getTableClass("GDEF")()
+            result = newTable("GDEF")
             result.table = gdef
             return result
         else:
@@ -246,14 +465,19 @@ class Builder(object):
         feature_indices = {}
         required_feature_indices = {}  # ('latn', 'DEU') --> 23
         scripts = {}  # 'latn' --> {'DEU': [23, 24]} for feature #23,24
-        for key, lookups in sorted(self.features_.items()):
+        # Sort the feature table by feature tag:
+        # https://github.com/behdad/fonttools/issues/568
+        sortFeatureTag = lambda f: (f[0][2], f[0][1], f[0][0], f[1])
+        for key, lookups in sorted(self.features_.items(), key=sortFeatureTag):
             script, lang, feature_tag = key
             # l.lookup_index will be None when a lookup is not needed
             # for the table under construction. For example, substitution
             # rules will have no lookup_index while building GPOS tables.
             lookup_indices = tuple([l.lookup_index for l in lookups
                                     if l.lookup_index is not None])
-            if len(lookup_indices) == 0:
+
+            size_feature = (tag == "GPOS" and feature_tag == "size")
+            if len(lookup_indices) == 0 and not size_feature:
                 continue
 
             feature_key = (feature_tag, lookup_indices)
@@ -263,7 +487,8 @@ class Builder(object):
                 frec = otTables.FeatureRecord()
                 frec.FeatureTag = feature_tag
                 frec.Feature = otTables.Feature()
-                frec.Feature.FeatureParams = None
+                frec.Feature.FeatureParams = self.buildFeatureParams(
+                                                feature_tag)
                 frec.Feature.LookupListIndex = lookup_indices
                 frec.Feature.LookupCount = len(lookup_indices)
                 table.FeatureList.FeatureRecord.append(frec)
@@ -338,6 +563,8 @@ class Builder(object):
         self.language_systems = self.get_default_language_systems_()
         self.cur_lookup_ = None
         self.cur_feature_name_ = name
+        self.lookupflag_ = 0
+        self.lookupflag_markFilterSet_ = None
         if name == "aalt":
             self.aalt_location_ = location
 
@@ -346,6 +573,8 @@ class Builder(object):
         self.cur_feature_name_ = None
         self.language_systems = None
         self.cur_lookup_ = None
+        self.lookupflag_ = 0
+        self.lookupflag_markFilterSet_ = None
 
     def start_lookup_block(self, location, name):
         if name in self.named_lookups_:
@@ -359,11 +588,15 @@ class Builder(object):
         self.cur_lookup_name_ = name
         self.named_lookups_[name] = None
         self.cur_lookup_ = None
+        self.lookupflag_ = 0
+        self.lookupflag_markFilterSet_ = None
 
     def end_lookup_block(self):
         assert self.cur_lookup_name_ is not None
         self.cur_lookup_name_ = None
         self.cur_lookup_ = None
+        self.lookupflag_ = 0
+        self.lookupflag_markFilterSet_ = None
 
     def add_lookup_call(self, lookup_name):
         assert lookup_name in self.named_lookups_, lookup_name
@@ -501,6 +734,26 @@ class Builder(object):
                 'Feature references are only allowed inside "feature aalt"',
                 location)
         self.aalt_features_.append((location, featureName))
+
+    def add_featureName(self, location, tag):
+        self.featureNames_.append(tag)
+
+    def set_base_axis(self, bases, scripts, vertical):
+        if vertical:
+            self.base_vert_axis_ = (bases, scripts)
+        else:
+            self.base_horiz_axis_ = (bases, scripts)
+
+    def set_size_parameters(self, location, DesignSize, SubfamilyID,
+                            RangeStart, RangeEnd):
+        if self.cur_feature_name_ != 'size':
+            raise FeatureLibError(
+                "Parameters statements are not allowed "
+                "within \"feature %s\"" % self.cur_feature_name_, location)
+        self.size_parameters_ = [DesignSize, SubfamilyID, RangeStart, RangeEnd]
+        for script, lang in self.language_systems:
+            key = (script, lang, self.cur_feature_name_)
+            self.features_.setdefault(key, [])
 
     def add_ligature_subst(self, location,
                            prefix, glyphs, suffix, replacement, forceChain):
@@ -648,7 +901,7 @@ class Builder(object):
             if value is None:
                 subs.append(None)
                 continue
-            if not glyphs.isdisjoint(sub.mapping.keys()):
+            if not set(glyphs).isdisjoint(sub.mapping.keys()):
                 sub = self.get_chained_lookup_(location, SinglePosBuilder)
             for glyph in glyphs:
                 sub.add_pos(location, glyph, value)
@@ -684,6 +937,16 @@ class Builder(object):
     def add_ligatureCaretByPos_(self, location, glyphs, carets):
         for glyph in glyphs:
             self.ligCaretCoords_.setdefault(glyph, set()).update(carets)
+
+    def add_name_record(self, location, nameID, platformID, platEncID,
+                        langID, string):
+        self.names_.append([nameID, platformID, platEncID, langID, string])
+
+    def add_os2_field(self, key, value):
+        self.os2_[key] = value
+
+    def add_hhea_field(self, key, value):
+        self.hhea_[key] = value
 
 
 def makeOpenTypeAnchor(anchor):

@@ -1,6 +1,7 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from .DefaultTable import DefaultTable
+import sys
 import array
 import struct
 import logging
@@ -247,34 +248,6 @@ class OTTableWriter(object):
 
 	# assembler interface
 
-	def getAllData(self):
-		"""Assemble all data, including all subtables."""
-		self._doneWriting()
-		tables, extTables = self._gatherTables()
-		tables.reverse()
-		extTables.reverse()
-		# Gather all data in two passes: the absolute positions of all
-		# subtable are needed before the actual data can be assembled.
-		pos = 0
-		for table in tables:
-			table.pos = pos
-			pos = pos + table.getDataLength()
-
-		for table in extTables:
-			table.pos = pos
-			pos = pos + table.getDataLength()
-
-		data = []
-		for table in tables:
-			tableData = table.getData()
-			data.append(tableData)
-
-		for table in extTables:
-			tableData = table.getData()
-			data.append(tableData)
-
-		return bytesjoin(data)
-
 	def getDataLength(self):
 		"""Return the length of this table in bytes, without subtables."""
 		l = 0
@@ -304,36 +277,6 @@ class OTTableWriter(object):
 						items[i] = packUShort(item.pos - pos)
 					except struct.error:
 						# provide data to fix overflow problem.
-						# If the overflow is to a lookup, or from a lookup to a subtable,
-						# just report the current item.  Otherwise...
-						if self.name not in [ 'LookupList', 'Lookup']:
-							# overflow is within a subTable. Life is more complicated.
-							# If we split the sub-table just before the current item, we may still suffer overflow.
-							# This is because duplicate table merging is done only within an Extension subTable tree;
-							# when we split the subtable in two, some items may no longer be duplicates.
-							# Get worst case by adding up all the item lengths, depth first traversal.
-							# and then report the first item that overflows a short.
-							def getDeepItemLength(table):
-								if hasattr(table, "getDataLength"):
-									length = 0
-									for item in table.items:
-										length = length + getDeepItemLength(item)
-								else:
-									length = len(table)
-								return length
-
-							length = self.getDataLength()
-							if hasattr(self, "sortCoverageLast") and item.name == "Coverage":
-								# Coverage is first in the item list, but last in the table list,
-								# The original overflow is really in the item list. Skip the Coverage
-								# table in the following test.
-								items = items[i+1:]
-
-							for j in range(len(items)):
-								item = items[j]
-								length = length + getDeepItemLength(item)
-								if length > 65535:
-									break
 						overflowErrorRecord = self.getOverflowErrorRecord(item)
 
 						raise OTLOffsetOverflowError(overflowErrorRecord)
@@ -345,24 +288,23 @@ class OTTableWriter(object):
 		return hash(self.items)
 
 	def __ne__(self, other):
-		return not self.__eq__(other)
+		result = self.__eq__(other)
+		return result if result is NotImplemented else not result
+
 	def __eq__(self, other):
 		if type(self) != type(other):
 			return NotImplemented
 		return self.items == other.items
 
-	def _doneWriting(self, internedTables=None):
+	def _doneWriting(self, internedTables):
 		# Convert CountData references to data string items
 		# collapse duplicate table references to a unique entry
 		# "tables" are OTTableWriter objects.
 
-		if internedTables is None:
-			internedTables = {}
-
 		# For Extension Lookup types, we can
 		# eliminate duplicates only within the tree under the Extension Lookup,
 		# as offsets may exceed 64K even between Extension LookupTable subtables.
-		newTree = hasattr(self, "Extension")
+		isExtension = hasattr(self, "Extension")
 
 		# Certain versions of Uniscribe reject the font if the GSUB/GPOS top-level
 		# arrays (ScriptList, FeatureList, LookupList) point to the same, possibly
@@ -370,21 +312,21 @@ class OTTableWriter(object):
 		# See: https://github.com/behdad/fonttools/issues/518
 		dontShare = hasattr(self, 'DontShare')
 
+		if isExtension:
+			internedTables = {}
+
 		items = self.items
 		for i in range(len(items)):
 			item = items[i]
 			if hasattr(item, "getCountData"):
 				items[i] = item.getCountData()
 			elif hasattr(item, "getData"):
-				if newTree:
-					item._doneWriting()
-				else:
-					item._doneWriting(internedTables)
-					if not dontShare:
-						items[i] = item = internedTables.setdefault(item, item)
+				item._doneWriting(internedTables)
+				if not dontShare:
+					items[i] = item = internedTables.setdefault(item, item)
 		self.items = tuple(items)
 
-	def _gatherTables(self, tables=None, extTables=None, done=None):
+	def _gatherTables(self, tables, extTables, done):
 		# Convert table references in self.items tree to a flat
 		# list of tables in depth-first traversal order.
 		# "tables" are OTTableWriter objects.
@@ -392,21 +334,21 @@ class OTTableWriter(object):
 		# resolve duplicate references to be the last reference in the list of tables.
 		# For extension lookups, duplicate references can be merged only within the
 		# writer tree under the  extension lookup.
-		if tables is None: # init call for first time.
-			tables = []
-			extTables = []
-			done = {}
 
-		done[self] = 1
+		done[id(self)] = True
 
 		numItems = len(self.items)
 		iRange = list(range(numItems))
 		iRange.reverse()
 
-		if hasattr(self, "Extension"):
-			appendExtensions = 1
-		else:
-			appendExtensions = 0
+		isExtension = hasattr(self, "Extension")
+		dontShare = hasattr(self, 'DontShare')
+
+		selfTables = tables
+
+		if isExtension:
+			assert extTables is not None, "Program or XML editing error. Extension subtables cannot contain extensions subtables"
+			tables, extTables, done = extTables, None, {}
 
 		# add Coverage table if it is sorted last.
 		sortCoverageLast = 0
@@ -417,7 +359,7 @@ class OTTableWriter(object):
 				if hasattr(item, "name") and (item.name == "Coverage"):
 					sortCoverageLast = 1
 					break
-			if item not in done:
+			if id(item) not in done:
 				item._gatherTables(tables, extTables, done)
 			else:
 				# We're a new parent of item
@@ -432,19 +374,45 @@ class OTTableWriter(object):
 				# we've already 'gathered' it above
 				continue
 
-			if appendExtensions:
-				assert extTables is not None, "Program or XML editing error. Extension subtables cannot contain extensions subtables"
-				newDone = {}
-				item._gatherTables(extTables, None, newDone)
-
-			elif item not in done or hasattr(self, 'DontShare'):
+			if id(item) not in done:
 				item._gatherTables(tables, extTables, done)
 			else:
-				# We're a new parent of item
+				# Item is already written out by other parent
 				pass
 
-		tables.append(self)
-		return tables, extTables
+		selfTables.append(self)
+
+	def getAllData(self):
+		"""Assemble all data, including all subtables."""
+		internedTables = {}
+		self._doneWriting(internedTables)
+		tables = []
+		extTables = []
+		done = {}
+		self._gatherTables(tables, extTables, done)
+		tables.reverse()
+		extTables.reverse()
+		# Gather all data in two passes: the absolute positions of all
+		# subtable are needed before the actual data can be assembled.
+		pos = 0
+		for table in tables:
+			table.pos = pos
+			pos = pos + table.getDataLength()
+
+		for table in extTables:
+			table.pos = pos
+			pos = pos + table.getDataLength()
+
+		data = []
+		for table in tables:
+			tableData = table.getData()
+			data.append(tableData)
+
+		for table in extTables:
+			tableData = table.getData()
+			data.append(tableData)
+
+		return bytesjoin(data)
 
 	# interface for gathering data, as used by table.compile()
 
@@ -498,7 +466,7 @@ class OTTableWriter(object):
 	def writeData(self, data):
 		self.items.append(data)
 
-	def	getOverflowErrorRecord(self, item):
+	def getOverflowErrorRecord(self, item):
 		LookupListIndex = SubTableIndex = itemName = itemIndex = None
 		if self.name == 'LookupList':
 			LookupListIndex = item.repeatIndex
@@ -506,7 +474,7 @@ class OTTableWriter(object):
 			LookupListIndex = self.repeatIndex
 			SubTableIndex = item.repeatIndex
 		else:
-			itemName = item.name
+			itemName = getattr(item, 'name', '<none>')
 			if hasattr(item, 'repeatIndex'):
 				itemIndex = item.repeatIndex
 			if self.name == 'SubTable':
@@ -516,10 +484,10 @@ class OTTableWriter(object):
 				LookupListIndex = self.parent.parent.repeatIndex
 				SubTableIndex = self.parent.repeatIndex
 			else: # who knows how far below the SubTable level we are! Climb back up to the nearest subtable.
-				itemName = ".".join([self.name, item.name])
+				itemName = ".".join([self.name, itemName])
 				p1 = self.parent
 				while p1 and p1.name not in ['ExtSubTable', 'SubTable']:
-					itemName = ".".join([p1.name, item.name])
+					itemName = ".".join([p1.name, itemName])
 					p1 = p1.parent
 				if p1:
 					if p1.name == 'ExtSubTable':
@@ -754,7 +722,9 @@ class BaseTable(object):
 			setattr(self, conv.name, value)
 
 	def __ne__(self, other):
-		return not self.__eq__(other)
+		result = self.__eq__(other)
+		return result if result is NotImplemented else not result
+
 	def __eq__(self, other):
 		if type(self) != type(other):
 			return NotImplemented
@@ -933,7 +903,9 @@ class ValueRecord(object):
 			setattr(self, name, value)
 
 	def __ne__(self, other):
-		return not self.__eq__(other)
+		result = self.__eq__(other)
+		return result if result is NotImplemented else not result
+
 	def __eq__(self, other):
 		if type(self) != type(other):
 			return NotImplemented

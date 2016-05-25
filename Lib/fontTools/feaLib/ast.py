@@ -1,6 +1,7 @@
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
 from fontTools.feaLib.error import FeatureLibError
+from collections import OrderedDict
 import itertools
 
 
@@ -34,7 +35,7 @@ class GlyphName(Expression):
         self.glyph = glyph
 
     def glyphSet(self):
-        return frozenset((self.glyph,))
+        return (self.glyph,)
 
 
 class GlyphClass(Expression):
@@ -44,7 +45,7 @@ class GlyphClass(Expression):
         self.glyphs = glyphs
 
     def glyphSet(self):
-        return frozenset(self.glyphs)
+        return tuple(self.glyphs)
 
 
 class GlyphClassName(Expression):
@@ -55,7 +56,7 @@ class GlyphClassName(Expression):
         self.glyphclass = glyphclass
 
     def glyphSet(self):
-        return frozenset(self.glyphclass.glyphs)
+        return tuple(self.glyphclass.glyphs)
 
 
 class MarkClassName(Expression):
@@ -123,7 +124,7 @@ class GlyphClassDefinition(Statement):
         self.glyphs = glyphs
 
     def glyphSet(self):
-        return frozenset(self.glyphs)
+        return tuple(self.glyphs)
 
 
 class GlyphClassDefStatement(Statement):
@@ -136,11 +137,12 @@ class GlyphClassDefStatement(Statement):
         self.componentGlyphs = componentGlyphs
 
     def build(self, builder):
-        base = self.baseGlyphs.glyphSet() if self.baseGlyphs else set()
-        liga = self.ligatureGlyphs.glyphSet() if self.ligatureGlyphs else set()
-        mark = self.markGlyphs.glyphSet() if self.markGlyphs else set()
+        base = self.baseGlyphs.glyphSet() if self.baseGlyphs else tuple()
+        liga = self.ligatureGlyphs.glyphSet() \
+            if self.ligatureGlyphs else tuple()
+        mark = self.markGlyphs.glyphSet() if self.markGlyphs else tuple()
         comp = (self.componentGlyphs.glyphSet()
-                if self.componentGlyphs else set())
+                if self.componentGlyphs else tuple())
         builder.add_glyphClassDef(self.location, base, liga, mark, comp)
 
 
@@ -154,7 +156,7 @@ class MarkClass(object):
     def __init__(self, name):
         self.name = name
         self.definitions = []
-        self.glyphs = {}  # glyph --> ast.MarkClassDefinitions
+        self.glyphs = OrderedDict()  # glyph --> ast.MarkClassDefinitions
 
     def addDefinition(self, definition):
         assert isinstance(definition, MarkClassDefinition)
@@ -169,7 +171,7 @@ class MarkClass(object):
             self.glyphs[glyph] = definition
 
     def glyphSet(self):
-        return frozenset(self.glyphs.keys())
+        return tuple(self.glyphs.keys())
 
 
 class MarkClassDefinition(Statement):
@@ -564,7 +566,7 @@ class ValueRecord(Expression):
             return "<%s %s %s %s>" % (x, y, xAdvance, yAdvance)
 
         # Last resort is format C.
-        return "<%s %s %s %s %s %s %s %s %s %s>" % (
+        return "<%s %s %s %s %s %s %s %s>" % (
             x, y, xAdvance, yAdvance,
             deviceToString(xPlaDevice), deviceToString(yPlaDevice),
             deviceToString(xAdvDevice), deviceToString(yAdvDevice))
@@ -575,3 +577,69 @@ class ValueRecordDefinition(Statement):
         Statement.__init__(self, location)
         self.name = name
         self.value = value
+
+
+class NameRecord(Statement):
+    def __init__(self, location, nameID, platformID,
+                 platEncID, langID, string):
+        Statement.__init__(self, location)
+        self.nameID = nameID
+        self.platformID = platformID
+        self.platEncID = platEncID
+        self.langID = langID
+        self.string = string
+
+    def build(self, builder):
+        builder.add_name_record(
+            self.location, self.nameID, self.platformID,
+            self.platEncID, self.langID, self.string)
+
+class FeatureNameStatement(NameRecord):
+    def build(self, builder):
+        NameRecord.build(self, builder)
+        builder.add_featureName(self.location, self.nameID)
+
+
+class SizeParameters(Statement):
+    def __init__(self, location, DesignSize, SubfamilyID, RangeStart,
+                 RangeEnd):
+        Statement.__init__(self, location)
+        self.DesignSize = DesignSize
+        self.SubfamilyID = SubfamilyID
+        self.RangeStart = RangeStart
+        self.RangeEnd = RangeEnd
+
+    def build(self, builder):
+        builder.set_size_parameters(self.location, self.DesignSize,
+                self.SubfamilyID, self.RangeStart, self.RangeEnd)
+
+
+class BaseAxis(Statement):
+    def __init__(self, location, bases, scripts, vertical):
+        Statement.__init__(self, location)
+        self.bases = bases
+        self.scripts = scripts
+        self.vertical = vertical
+
+    def build(self, builder):
+        builder.set_base_axis(self.bases, self.scripts, self.vertical)
+
+
+class OS2Field(Statement):
+    def __init__(self, location, key, value):
+        Statement.__init__(self, location)
+        self.key = key
+        self.value = value
+
+    def build(self, builder):
+        builder.add_os2_field(self.key, self.value)
+
+
+class HheaField(Statement):
+    def __init__(self, location, key, value):
+        Statement.__init__(self, location)
+        self.key = key
+        self.value = value
+
+    def build(self, builder):
+        builder.add_hhea_field(self.key, self.value)

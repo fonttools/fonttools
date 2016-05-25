@@ -63,6 +63,9 @@ lookup K {
     pos K 1;
 } K;
 
+lookup L {
+    pos L 1;
+} L;
 
 feature test {
     lookup A;
@@ -76,4 +79,5 @@ feature test {
     lookup I;
     lookup J;
     lookup K;
+    lookup L;
 } test;

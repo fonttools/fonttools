@@ -415,7 +415,7 @@
     </MathConstants>
     <MathGlyphInfo>
       <MathItalicsCorrectionInfo>
-        <Coverage>
+        <Coverage Format="1">
           <Glyph value="u1D435"/>
         </Coverage>
         <!-- ItalicsCorrectionCount=1 -->
@@ -424,7 +424,7 @@
         </ItalicsCorrection>
       </MathItalicsCorrectionInfo>
       <MathTopAccentAttachment>
-        <TopAccentCoverage>
+        <TopAccentCoverage Format="1">
           <Glyph value="A"/>
           <Glyph value="uni0302"/>
           <Glyph value="u1D400"/>
@@ -464,14 +464,14 @@
           <Value value="1164"/>
         </TopAccentAttachment>
       </MathTopAccentAttachment>
-      <ExtendedShapeCoverage>
+      <ExtendedShapeCoverage Format="1">
         <Glyph value="parenleft.size1"/>
         <Glyph value="parenleft.size2"/>
         <Glyph value="parenleft.size3"/>
         <Glyph value="parenleft.size4"/>
       </ExtendedShapeCoverage>
       <MathKernInfo>
-        <MathKernCoverage>
+        <MathKernCoverage Format="1">
           <Glyph value="A"/>
           <Glyph value="u1D400"/>
         </MathKernCoverage>
@@ -520,10 +520,10 @@
     </MathGlyphInfo>
     <MathVariants>
       <MinConnectorOverlap value="50"/>
-      <VertGlyphCoverage>
+      <VertGlyphCoverage Format="1">
         <Glyph value="parenleft"/>
       </VertGlyphCoverage>
-      <HorizGlyphCoverage>
+      <HorizGlyphCoverage Format="1">
         <Glyph value="uni0302"/>
       </HorizGlyphCoverage>
       <!-- VertGlyphCount=1 -->

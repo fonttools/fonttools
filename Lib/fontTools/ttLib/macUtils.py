@@ -45,7 +45,7 @@ class SFNTResourceReader(BytesIO):
 		else:
 			rsrc = reader.getIndResource('sfnt', res_name_or_index)
 		if rsrc is None:
-			raise TTLibError("sfnt resource not found: %s" % res_name_or_index)
+			raise ttLib.TTLibError("sfnt resource not found: %s" % res_name_or_index)
 		reader.close()
 		self.rsrc = rsrc
 		super(SFNTResourceReader, self).__init__(rsrc.data)

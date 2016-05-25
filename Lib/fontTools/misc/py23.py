@@ -3,6 +3,16 @@
 from __future__ import print_function, division, absolute_import
 import sys
 
+
+__all__ = ['basestring', 'unicode', 'unichr', 'byteord', 'bytechr', 'BytesIO',
+		'StringIO', 'UnicodeIO', 'strjoin', 'bytesjoin', 'tobytes', 'tostr',
+		'tounicode', 'Tag', 'open', 'range', 'xrange', 'Py23Error']
+
+
+class Py23Error(NotImplementedError):
+	pass
+
+
 try:
 	basestring = basestring
 except NameError:
@@ -233,6 +243,16 @@ def open(file, mode='r', buffering=-1, encoding=None, errors=None,
 	else:
 		return _io.open(
 			file, mode, buffering, encoding, errors, newline, closefd)
+
+
+# always use iterator for 'range' on both py 2 and 3
+try:
+	range = xrange
+except NameError:
+	range = range
+
+def xrange(*args, **kwargs):
+	raise Py23Error("'xrange' is not defined. Use 'range' instead.")
 
 
 import logging

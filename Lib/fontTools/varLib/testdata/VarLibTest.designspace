@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<designspace format="3">
+    <sources>
+        <source filename="VarLibTest-Light.ufo" name="master_1">
+            <lib copy="1"/>
+            <groups copy="1"/>
+            <info copy="1"/>
+            <location>
+                <dimension name="weight" xvalue="0.000000"/>
+            </location>
+        </source>
+        <source filename="VarLibTest-Bold.ufo" name="master_2">
+            <location>
+                <dimension name="weight" xvalue="1.000000"/>
+            </location>
+        </source>
+    </sources>
+    <instances>
+        <instance familyname="VarLibTest" filename="instance/VarLibTest-Medium.ufo" stylename="Medium">
+            <location>
+                <dimension name="weight" xvalue="0.500000"/>
+            </location>
+            <info/>
+            <kerning/>
+        </instance>
+    </instances>
+</designspace>

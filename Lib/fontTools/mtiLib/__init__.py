@@ -3,12 +3,12 @@
 # FontDame-to-FontTools for OpenType Layout tables
 #
 # Source language spec is available at:
-# https://rawgit.com/Monotype/OpenType_Table_Source/master/otl_source.html
+# http://monotype.github.io/OpenType_Table_Source/otl_source.html
 # https://github.com/Monotype/OpenType_Table_Source/
 
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
-from fontTools.misc.py23 import open
+from fontTools.misc.py23 import *
 from fontTools import ttLib
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.tables.otBase import ValueRecord, valueRecordFormatDict
@@ -16,6 +16,7 @@ from fontTools.otlLib import builder as otl
 from contextlib import contextmanager
 from operator import setitem
 import logging
+import warnings
 
 class MtiLibError(Exception): pass
 class ReferenceNotFoundError(MtiLibError): pass
@@ -32,6 +33,7 @@ def makeGlyph(s):
 	elif s[:2] == '# ':
 		return "glyph%.5d" % int(s[2:])
 	assert s.find(' ') < 0, "Space found in glyph name: %s" % s
+	assert s, "Glyph name is empty"
 	return s
 
 def makeGlyphs(l):
@@ -682,6 +684,7 @@ def parseContext(self, lines, font, Type, lookupMap=None):
 		rules = []
 		for line in lines:
 			assert line[0].lower() == 'glyph', line[0]
+			while len(line) < 1+c.DataLen: line.append('')
 			seq = tuple(makeGlyphs(stripSplitComma(i)) for i in line[1:1+c.DataLen])
 			recs = parseLookupRecords(line[1+c.DataLen:], c.LookupRecord, lookupMap)
 			rules.append((seq, recs))
@@ -712,6 +715,7 @@ def parseContext(self, lines, font, Type, lookupMap=None):
 		rules = []
 		for line in lines:
 			assert line[0].lower().startswith('class'), line[0]
+			while len(line) < 1+c.DataLen: line.append('')
 			seq = tuple(intSplitComma(i) for i in line[1:1+c.DataLen])
 			recs = parseLookupRecords(line[1+c.DataLen:], c.LookupRecord, lookupMap)
 			rules.append((seq, recs))
@@ -858,7 +862,7 @@ def parseGSUBGPOS(lines, font, tableTag):
 	while lines.peek() is not None:
 		typ = lines.peek()[0].lower()
 		if typ not in fields:
-			log.debug('Skipping', lines.peek())
+			log.debug('Skipping %s', lines.peek())
 			next(lines)
 			continue
 		attr,parser = fields[typ]
@@ -990,12 +994,12 @@ class Tokenizer(object):
 	def __init__(self, f):
 		# TODO BytesIO / StringIO as needed?  also, figure out whether we work on bytes or unicode
 		lines = iter(f)
-		lines = ([s.strip() for s in line.split('\t')] for line in lines)
 		try:
 			self.filename = f.name
 		except:
 			self.filename = None
-		self.lines = lines
+		self.lines = iter(lines)
+		self.line = ''
 		self.lineno = 0
 		self.stoppers = []
 		self.buffer = None
@@ -1005,13 +1009,21 @@ class Tokenizer(object):
 
 	def _next_line(self):
 		self.lineno += 1
-		return next(self.lines)
+		line = self.line = next(self.lines)
+		line = [s.strip() for s in line.split('\t')]
+		if len(line) == 1 and not line[0]:
+			del line[0]
+		if line and not line[-1]:
+			warnings.warn('trailing tab found on line %d: %s' % (self.lineno, self.line))
+			while line and not line[-1]:
+				del line[-1]
+		return line
 
 	def _next_nonempty(self):
 		while True:
 			line = self._next_line()
 			# Skip comments and empty lines
-			if line[0] and (line[0][0] != '%' or line[0] == '% subtable'):
+			if line and line[0] and (line[0][0] != '%' or line[0] == '% subtable'):
 				return line
 
 	def _next_buffered(self):

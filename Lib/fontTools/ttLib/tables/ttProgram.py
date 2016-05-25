@@ -222,7 +222,7 @@ class Program(object):
 			self._assemble()
 		return self.bytecode.tostring()
 
-	def getAssembly(self, preserve=False):
+	def getAssembly(self, preserve=True):
 		if not hasattr(self, "assembly"):
 			self._disassemble(preserve=preserve)
 		return self.assembly
@@ -495,6 +495,15 @@ class Program(object):
 				(hasattr(self, 'bytecode') and len(self.bytecode) > 0))
 
 	__nonzero__ = __bool__
+
+	def __eq__(self, other):
+		if type(self) != type(other):
+			return NotImplemented
+		return self.__dict__ == other.__dict__
+
+	def __ne__(self, other):
+		result = self.__eq__(other)
+		return result if result is NotImplemented else not result
 
 
 def _test():

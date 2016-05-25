@@ -9,14 +9,7 @@ import unittest
 
 
 # From a real font on MacOS X, but substituted 'bild' tag by 'TEST',
-# and shortened the payload. Note that from the 'meta' spec, one would
-# expect that header.dataOffset is 0x0000001C (pointing to the beginning
-# of the data section) and that dataMap[0].dataOffset should be 0 (relative
-# to the beginning of the data section). However, in the fonts that Apple
-# ships on  MacOS X 10.10.4, dataMap[0].dataOffset is actually relative
-# to the beginning of the 'meta' table, i.e. 0x0000001C again. While the
-# following test data is invalid according to the 'meta' specification,
-# it is reflecting the 'meta' table structure in all Apple-supplied fonts.
+# and shortened the payload.
 META_DATA = deHexStr(
     "00 00 00 01 00 00 00 00 00 00 00 1C 00 00 00 01 "
     "54 45 53 54 00 00 00 1C 00 00 00 04 CA FE BE EF")

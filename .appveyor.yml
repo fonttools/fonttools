@@ -1,53 +1,68 @@
 environment:
+  global:
+    WITH_COMPILER: "cmd /E:ON /V:ON /C .\\.appveyor\\with-compiler.cmd"
   matrix:
-    - PYTHON: "C:\\Python27"
-      PYTHON_VERSION: "2.7.x"
-      PYTHON_ARCH: "32"
+    - JOB: "2.7.11 32-bit"
+      PYTHON_HOME: "C:\\Python27"
       TOXENV: "py27"
+      TOXPYTHON: "C:\\Python27\\python.exe"
 
-    - PYTHON: "C:\\Python34"
-      PYTHON_VERSION: "3.4.x"
-      PYTHON_ARCH: "32"
+    - JOB: "3.4.3 32-bit"
+      PYTHON_HOME: "C:\\Python34"
       TOXENV: "py34"
+      TOXPYTHON: "C:\\Python34\\python.exe"
 
-    - PYTHON: "C:\\Python35"
-      PYTHON_VERSION: "3.5.x"
-      PYTHON_ARCH: "32"
+    - JOB: "3.5.1 32-bit"
+      PYTHON_HOME: "C:\\Python35"
       TOXENV: "py35"
+      TOXPYTHON: "C:\\Python35\\python.exe"
 
-    - PYTHON: "C:\\Python27-x64"
-      PYTHON_VERSION: "2.7.x"
-      PYTHON_ARCH: "64"
+    - JOB: "2.7.11 64-bit"
+      PYTHON_HOME: "C:\\Python27-x64"
       TOXENV: "py27"
+      TOXPYTHON: "C:\\Python27-x64\\python.exe"
 
-    - PYTHON: "C:\\Python34-x64"
-      PYTHON_VERSION: "3.4.x"
-      PYTHON_ARCH: "64"
+    - JOB: "3.4.3 64-bit"
+      PYTHON_HOME: "C:\\Python34-x64"
       TOXENV: "py34"
+      TOXPYTHON: "C:\\Python34-x64\\python.exe"
+      DISTUTILS_USE_SDK: "1"
 
-    - PYTHON: "C:\\Python35-x64"
-      PYTHON_VERSION: "3.5.x"
-      PYTHON_ARCH: "64"
+    - JOB: "3.5.1 64-bit"
+      PYTHON_HOME: "C:\\Python35-x64"
       TOXENV: "py35"
+      TOXPYTHON: "C:\\Python35-x64\\python.exe"
 
 install:
+  # If there is a newer build queued for the same PR, cancel this one.
+  # The AppVeyor 'rollout builds' option is supposed to serve the same
+  # purpose but it is problematic because it tends to cancel builds pushed
+  # directly to master instead of just PR builds (or the converse).
+  # credits: JuliaLang developers.
+  - ps: if ($env:APPVEYOR_PULL_REQUEST_NUMBER -and $env:APPVEYOR_BUILD_NUMBER -ne ((Invoke-RestMethod `
+        https://ci.appveyor.com/api/projects/$env:APPVEYOR_ACCOUNT_NAME/$env:APPVEYOR_PROJECT_SLUG/history?recordsNumber=50).builds | `
+        Where-Object pullRequestId -eq $env:APPVEYOR_PULL_REQUEST_NUMBER)[0].buildNumber) { `
+          throw "There are newer queued builds for this pull request, failing early." }
+
   # Prepend Python to the PATH of this build
-  - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+  - "SET PATH=%PYTHON_HOME%;%PYTHON_HOME%\\Scripts;%PATH%"
 
   # check that we have the expected version and architecture for Python
   - "python --version"
   - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
 
   # upgrade pip to avoid out-of-date warnings
-  - "pip install --disable-pip-version-check --user --upgrade pip"
+  - "python -m pip install --disable-pip-version-check --user --upgrade pip"
+  - "python -m pip --version"
 
   # install the dependencies to run the tests
-  - "pip install -r dev-requirements.txt"
+  - "%WITH_COMPILER% python -m pip install -r dev-requirements.txt"
+ 
 
 build: false
 
 test_script:
-  - "tox"
+  - "%WITH_COMPILER% tox"
 
 notifications:
   - provider: Email

@@ -1,6 +1,6 @@
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
-from fontTools.misc.py23 import open
+from fontTools.misc.py23 import *
 from fontTools.feaLib.error import FeatureLibError
 import re
 import os
@@ -25,7 +25,7 @@ class Lexer(object):
     CHAR_HEXDIGIT_ = "0123456789ABCDEFabcdef"
     CHAR_LETTER_ = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
     CHAR_NAME_START_ = CHAR_LETTER_ + "_+*:.^~!\\"
-    CHAR_NAME_CONTINUATION_ = CHAR_LETTER_ + CHAR_DIGIT_ + "_.+*:^~!"
+    CHAR_NAME_CONTINUATION_ = CHAR_LETTER_ + CHAR_DIGIT_ + "_.+*:^~!/"
 
     RE_GLYPHCLASS = re.compile(r"^[A-Za-z_0-9.]+$")
 
@@ -124,7 +124,7 @@ class Lexer(object):
             return (Lexer.NUMBER, int(text[start:self.pos_], 16), location)
         if cur_char in Lexer.CHAR_DIGIT_:
             self.scan_over_(Lexer.CHAR_DIGIT_)
-            if next_char != ".":
+            if self.pos_ >= limit or text[self.pos_] != ".":
                 return (Lexer.NUMBER, int(text[start:self.pos_], 10), location)
             self.scan_over_(".")
             self.scan_over_(Lexer.CHAR_DIGIT_)
@@ -142,10 +142,12 @@ class Lexer(object):
             return (Lexer.SYMBOL, cur_char, location)
         if cur_char == '"':
             self.pos_ += 1
-            self.scan_until_('"\r\n')
+            self.scan_until_('"')
             if self.pos_ < self.text_length_ and self.text_[self.pos_] == '"':
                 self.pos_ += 1
-                return (Lexer.STRING, text[start + 1:self.pos_ - 1], location)
+                # strip newlines embedded within a string
+                string = re.sub("[\r\n]", "", text[start + 1:self.pos_ - 1])
+                return (Lexer.STRING, string, location)
             else:
                 raise FeatureLibError("Expected '\"' to terminate string",
                                       location)
@@ -166,8 +168,8 @@ class Lexer(object):
 
 
 class IncludingLexer(object):
-    def __init__(self, filename):
-        self.lexers_ = [self.make_lexer_(filename, (filename, 0, 0))]
+    def __init__(self, featurefile):
+        self.lexers_ = [self.make_lexer_(featurefile)]
 
     def __iter__(self):
         return self
@@ -187,10 +189,10 @@ class IncludingLexer(object):
                 fname_type, fname_token, fname_location = lexer.next()
                 if fname_type is not Lexer.FILENAME:
                     raise FeatureLibError("Expected file name", fname_location)
-                semi_type, semi_token, semi_location = lexer.next()
-                if semi_type is not Lexer.SYMBOL or semi_token != ";":
-                    raise FeatureLibError("Expected ';'", semi_location)
-                curpath, _ = os.path.split(lexer.filename_)
+                #semi_type, semi_token, semi_location = lexer.next()
+                #if semi_type is not Lexer.SYMBOL or semi_token != ";":
+                #    raise FeatureLibError("Expected ';'", semi_location)
+                curpath = os.path.dirname(lexer.filename_)
                 path = os.path.join(curpath, fname_token)
                 if len(self.lexers_) >= 5:
                     raise FeatureLibError("Too many recursive includes",
@@ -202,9 +204,17 @@ class IncludingLexer(object):
         raise StopIteration()
 
     @staticmethod
-    def make_lexer_(filename, location):
-        try:
-            with open(filename, "r", encoding="utf-8") as f:
-                return Lexer(f.read(), filename)
-        except IOError as err:
-            raise FeatureLibError(str(err), location)
+    def make_lexer_(file_or_path, location=None):
+        if hasattr(file_or_path, "read"):
+            fileobj, closing = file_or_path, False
+        else:
+            filename, closing = file_or_path, True
+            try:
+                fileobj = open(filename, "r", encoding="utf-8")
+            except IOError as err:
+                raise FeatureLibError(str(err), location)
+        data = fileobj.read()
+        filename = fileobj.name if hasattr(fileobj, "name") else "<features>"
+        if closing:
+            fileobj.close()
+        return Lexer(data, filename)

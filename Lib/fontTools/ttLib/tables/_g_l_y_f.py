@@ -8,6 +8,7 @@ from fontTools.misc.textTools import safeEval, pad
 from fontTools.misc.arrayTools import calcBounds, calcIntBounds, pointInRect
 from fontTools.misc.bezierTools import calcQuadraticBounds
 from fontTools.misc.fixedTools import fixedToFloat as fi2fl, floatToFixed as fl2fi
+from numbers import Number
 from . import DefaultTable
 from . import ttProgram
 import sys
@@ -979,13 +980,14 @@ class Glyph(object):
 					cFlags = cFlags[nextOnCurve:]
 			pen.closePath()
 
-	def __ne__(self, other):
-		return not self.__eq__(other)
 	def __eq__(self, other):
 		if type(self) != type(other):
 			return NotImplemented
 		return self.__dict__ == other.__dict__
 
+	def __ne__(self, other):
+		result = self.__eq__(other)
+		return result if result is NotImplemented else not result
 
 class GlyphComponent(object):
 
@@ -1068,11 +1070,13 @@ class GlyphComponent(object):
 				data = data + struct.pack(">HH", self.firstPt, self.secondPt)
 				flags = flags | ARG_1_AND_2_ARE_WORDS
 		else:
+			x = int(round(self.x))
+			y = int(round(self.y))
 			flags = flags | ARGS_ARE_XY_VALUES
-			if (-128 <= self.x <= 127) and (-128 <= self.y <= 127):
-				data = data + struct.pack(">bb", self.x, self.y)
+			if (-128 <= x <= 127) and (-128 <= y <= 127):
+				data = data + struct.pack(">bb", x, y)
 			else:
-				data = data + struct.pack(">hh", self.x, self.y)
+				data = data + struct.pack(">hh", x, y)
 				flags = flags | ARG_1_AND_2_ARE_WORDS
 
 		if hasattr(self, "transform"):
@@ -1141,12 +1145,14 @@ class GlyphComponent(object):
 			self.transform = [[scale, 0], [0, scale]]
 		self.flags = safeEval(attrs["flags"])
 
-	def __ne__(self, other):
-		return not self.__eq__(other)
 	def __eq__(self, other):
 		if type(self) != type(other):
 			return NotImplemented
 		return self.__dict__ == other.__dict__
+
+	def __ne__(self, other):
+		result = self.__eq__(other)
+		return result if result is NotImplemented else not result
 
 class GlyphCoordinates(object):
 
@@ -1194,12 +1200,17 @@ class GlyphCoordinates(object):
 		if isinstance(k, slice):
 			indices = range(*k.indices(len(self)))
 			# XXX This only works if len(v) == len(indices)
-			# TODO Implement __delitem__
 			for j,i in enumerate(indices):
 				self[i] = v[j]
 			return
 		v = self._checkFloat(v)
 		self._a[2*k],self._a[2*k+1] = v
+
+	def __delitem__(self, i):
+		i = (2*i) % len(self._a)
+		del self._a[i]
+		del self._a[i]
+
 
 	def __repr__(self):
 		return 'GlyphCoordinates(['+','.join(str(c) for c in self)+'])'
@@ -1219,7 +1230,7 @@ class GlyphCoordinates(object):
 		a = array.array("h")
 		for n in self._a:
 			a.append(int(round(n)))
-		self._a = a			
+		self._a = a
 
 	def relativeToAbsolute(self):
 		a = self._a
@@ -1249,6 +1260,16 @@ class GlyphCoordinates(object):
 			a[2*i  ] += x
 			a[2*i+1] += y
 
+	def scale(self, p):
+		"""
+		>>> GlyphCoordinates([(1,2)]).scale((.5,0))
+		"""
+		(x,y) = self._checkFloat(p)
+		a = self._a
+		for i in range(len(a) // 2):
+			a[2*i  ] *= x
+			a[2*i+1] *= y
+
 	def transform(self, t):
 		"""
 		>>> GlyphCoordinates([(1,2)]).transform(((.5,0),(.2,.5)))
@@ -1261,12 +1282,193 @@ class GlyphCoordinates(object):
 			py = x * t[0][1] + y * t[1][1]
 			self[i] = (px, py)
 
-	def __ne__(self, other):
-		return not self.__eq__(other)
 	def __eq__(self, other):
+		"""
+		>>> g = GlyphCoordinates([(1,2)])
+		>>> g2 = GlyphCoordinates([(1.0,2)])
+		>>> g3 = GlyphCoordinates([(1.5,2)])
+		>>> g == g2
+		True
+		>>> g == g3
+		False
+		>>> g2 == g3
+		False
+		"""
 		if type(self) != type(other):
 			return NotImplemented
 		return self._a == other._a
+
+	def __ne__(self, other):
+		"""
+		>>> g = GlyphCoordinates([(1,2)])
+		>>> g2 = GlyphCoordinates([(1.0,2)])
+		>>> g3 = GlyphCoordinates([(1.5,2)])
+		>>> g != g2
+		False
+		>>> g != g3
+		True
+		>>> g2 != g3
+		True
+		"""
+		result = self.__eq__(other)
+		return result if result is NotImplemented else not result
+
+	# Math operations
+
+	def __pos__(self):
+		"""
+		>>> g = GlyphCoordinates([(1,2)])
+		>>> g
+		GlyphCoordinates([(1, 2)])
+		>>> g2 = +g
+		>>> g2
+		GlyphCoordinates([(1, 2)])
+		>>> g2.translate((1,0))
+		>>> g2
+		GlyphCoordinates([(2, 2)])
+		>>> g
+		GlyphCoordinates([(1, 2)])
+		"""
+		return self.copy()
+	def __neg__(self):
+		"""
+		>>> g = GlyphCoordinates([(1,2)])
+		>>> g
+		GlyphCoordinates([(1, 2)])
+		>>> g2 = -g
+		>>> g2
+		GlyphCoordinates([(-1, -2)])
+		>>> g
+		GlyphCoordinates([(1, 2)])
+		"""
+		r = self.copy()
+		a = r._a
+		for i in range(len(a)):
+			a[i] = -a[i]
+		return r
+	def __abs__(self):
+		"""
+		>>> g = GlyphCoordinates([(-1.5,2)])
+		>>> g
+		GlyphCoordinates([(-1.5, 2.0)])
+		>>> g2 = abs(g)
+		>>> g
+		GlyphCoordinates([(-1.5, 2.0)])
+		>>> g2
+		GlyphCoordinates([(1.5, 2.0)])
+		"""
+		r = self.copy()
+		a = r._a
+		for i in range(len(a)):
+			a[i] = abs(a[i])
+		return r
+	def __round__(self):
+		"""
+		Note: This is Python 3 only.  Python 2 does not call __round__.
+		As such, we cannot test this method either. :(
+		"""
+		r = self.copy()
+		r.toInt()
+		return r
+
+	def __add__(self, other): return self.copy().__iadd__(other)
+	def __sub__(self, other): return self.copy().__isub__(other)
+	def __mul__(self, other): return self.copy().__imul__(other)
+	def __truediv__(self, other): return self.copy().__itruediv__(other)
+
+	__radd__ = __add__
+	__rmul__ = __mul__
+	def __rsub__(self, other): return other + (-self)
+
+	def __iadd__(self, other):
+		"""
+		>>> g = GlyphCoordinates([(1,2)])
+		>>> g += (.5,0)
+		>>> g
+		GlyphCoordinates([(1.5, 2.0)])
+		>>> g2 = GlyphCoordinates([(3,4)])
+		>>> g += g2
+		>>> g
+		GlyphCoordinates([(4.5, 6.0)])
+		"""
+		if isinstance(other, tuple):
+			assert len(other) ==  2
+			self.translate(other)
+			return self
+		if isinstance(other, GlyphCoordinates):
+			if other.isFloat(): self._ensureFloat()
+			other = other._a
+			a = self._a
+			assert len(a) == len(other)
+			for i in range(len(a)):
+				a[i] += other[i]
+			return self
+		return NotImplemented
+
+	def __isub__(self, other):
+		"""
+		>>> g = GlyphCoordinates([(1,2)])
+		>>> g -= (.5,0)
+		>>> g
+		GlyphCoordinates([(0.5, 2.0)])
+		>>> g2 = GlyphCoordinates([(3,4)])
+		>>> g -= g2
+		>>> g
+		GlyphCoordinates([(-2.5, -2.0)])
+		"""
+		if isinstance(other, tuple):
+			assert len(other) ==  2
+			self.translate((-other[0],-other[1]))
+			return self
+		if isinstance(other, GlyphCoordinates):
+			if other.isFloat(): self._ensureFloat()
+			other = other._a
+			a = self._a
+			assert len(a) == len(other)
+			for i in range(len(a)):
+				a[i] -= other[i]
+			return self
+		return NotImplemented
+
+	def __imul__(self, other):
+		"""
+		>>> g = GlyphCoordinates([(1,2)])
+		>>> g *= (2,.5)
+		>>> g *= 2
+		>>> g
+		GlyphCoordinates([(4.0, 2.0)])
+		>>> g = GlyphCoordinates([(1,2)])
+		>>> g *= 2
+		>>> g
+		GlyphCoordinates([(2, 4)])
+		"""
+		if isinstance(other, Number):
+			other = (other, other)
+		if isinstance(other, tuple):
+			if other == (1,1):
+				return self
+			assert len(other) ==  2
+			self.scale(other)
+			return self
+		return NotImplemented
+
+	def __itruediv__(self, other):
+		"""
+		>>> g = GlyphCoordinates([(1,3)])
+		>>> g /= (.5,1.5)
+		>>> g /= 2
+		>>> g
+		GlyphCoordinates([(1.0, 1.0)])
+		"""
+		if isinstance(other, Number):
+			other = (other, other)
+		if isinstance(other, tuple):
+			if other == (1,1):
+				return self
+			assert len(other) ==  2
+			self.scale((1./other[0],1./other[1]))
+			return self
+		return NotImplemented
 
 
 def reprflag(flag):
