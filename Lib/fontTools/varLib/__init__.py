@@ -234,6 +234,24 @@ class VariationModel(object):
 			out.append(delta)
 		return out
 
+	def interpolateFromDeltas(self, loc, deltas):
+		v = None
+		supports = model.supports
+		assert len(deltas) == len(supports)
+		for i,(delta,support) in enumerate(zip(deltas, supports)):
+			scalar = supportScalar(loc, support)
+			if not scalar: continue
+			contribution = delta * scalar
+			if i == 0:
+				v = contribution
+			else:
+				v += contribution
+		return v
+
+	def interpolateFromMaster(self, loc, masterValues):
+		deltas = self.getDeltas(masterValues)
+		return self.interpolateFromDeltas(loc, deltas)
+
 #
 # .designspace routines
 #
