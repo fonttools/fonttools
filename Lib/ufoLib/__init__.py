@@ -481,8 +481,16 @@ class UFOWriter(FileSystem):
 			ext = os.path.splitext(path)[-1].lower()
 			if ext == ".ufo":
 				structure = "package"
+			elif ext == ".ufoz":
+				structure = "zip"
 			else:
 				structure = "zip"
+				
+		if isinstance(structure, basestring) and structure == "zip":
+			file, ext = os.path.splitext(path)
+			ext.lower()
+			if ext != ".ufoz":
+				path = file + '.ufoz'
 		# /XXX
 
 		if formatVersion not in supportedUFOFormatVersions:
