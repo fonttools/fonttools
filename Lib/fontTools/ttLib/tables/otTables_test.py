@@ -60,6 +60,14 @@ class SingleSubstTest(unittest.TestCase):
         self.assertEqual(rawTable["Coverage"].glyphs, ["A", "B", "C"])
         self.assertEqual(rawTable["Substitute"], ["c", "b", "a"])
 
+    def test_preWrite_emptyMapping(self):
+        table = otTables.SingleSubst()
+        table.mapping = {}
+        rawTable = table.preWrite(self.font)
+        self.assertEqual(table.Format, 2)
+        self.assertEqual(rawTable["Coverage"].glyphs, [])
+        self.assertEqual(rawTable["Substitute"], [])
+
     def test_toXML2(self):
         writer = XMLWriter(StringIO())
         table = otTables.SingleSubst()
