@@ -60,6 +60,8 @@ class FileSystem(object):
 					raise UFOLibError("The specified UFO doesn't exist.")
 				structure = sniffFileStructure(path)
 			if structure == "package":
+				if mode == "w" and not os.path.exists(path):
+					os.mkdir(path)
 				path = OSFS(path)
 			elif structure == "zip":
 				if not haveFS:
@@ -301,17 +303,10 @@ class FileSystem(object):
 	def remove(self, path):
 		"""
 		Remove the file (or directory) at path. The path
-		must be relative to the UFO. This is only allowed
-		for files in the data and image directories.
+		must be relative to the UFO.
 		"""
-		d = path
-		parts = []
-		while d:
-			d, p = self.splitPath(d)
-			if p:
-				parts.append(p)
-		if parts[-1] not in ("images", "data"):
-			raise UFOLibError("Removing \"%s\" is not legal." % path)
+		if not self.exists(path):
+			return
 		self._removeFileForPath(path, raiseErrorIfMissing=True)
 
 	def _removeFileForPath(self, path, raiseErrorIfMissing=False):
