@@ -11,10 +11,11 @@ in a folder. It offers two ways to read glyph data, and one way to write
 glyph data. See the class doc string for details.
 """
 
+from __future__ import unicode_literals
 import os
 from io import BytesIO, open
 from warnings import warn
-from fontTools.misc.py23 import tobytes, tostr
+from fontTools.misc.py23 import tobytes
 from ufoLib.plistlib import PlistWriter, readPlist, writePlist
 from ufoLib.plistFromETree import readPlistFromTree
 from ufoLib.pointPen import AbstractPointPen, PointToSegmentPen
@@ -584,7 +585,7 @@ def writeGlyphToString(glyphName, glyphObject=None, drawPointsFunc=None, writer=
 	writer.newline()
 	# return the appropriate value
 	if aFile is not None:
-		return tostr(aFile.getvalue())
+		return aFile.getvalue().decode("utf-8")
 	else:
 		return None
 
@@ -622,7 +623,7 @@ def _writeUnicodes(glyphObject, writer):
 		if code in seen:
 			continue
 		seen.add(code)
-		hexCode = hex(code)[2:].upper().rjust(4, "0")
+		hexCode = "%04X" % code
 		writer.simpletag("unicode", hex=hexCode)
 		writer.newline()
 
