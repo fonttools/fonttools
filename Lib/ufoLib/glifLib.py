@@ -11,10 +11,11 @@ in a folder. It offers two ways to read glyph data, and one way to write
 glyph data. See the class doc string for details.
 """
 
+from __future__ import unicode_literals
 import os
 from io import BytesIO, open
 from warnings import warn
-from fontTools.misc.py23 import tobytes, tostr
+from fontTools.misc.py23 import tobytes
 from ufoLib.plistlib import PlistWriter, readPlist, writePlist
 from ufoLib.plistFromETree import readPlistFromTree
 from ufoLib.pointPen import AbstractPointPen, PointToSegmentPen
@@ -584,7 +585,7 @@ def writeGlyphToString(glyphName, glyphObject=None, drawPointsFunc=None, writer=
 	writer.newline()
 	# return the appropriate value
 	if aFile is not None:
-		return tostr(aFile.getvalue())
+		return aFile.getvalue().decode("utf-8")
 	else:
 		return None
 
@@ -622,7 +623,7 @@ def _writeUnicodes(glyphObject, writer):
 		if code in seen:
 			continue
 		seen.add(code)
-		hexCode = hex(code)[2:].upper().rjust(4, "0")
+		hexCode = "%04X" % code
 		writer.simpletag("unicode", hex=hexCode)
 		writer.newline()
 
@@ -807,12 +808,16 @@ def _glifTreeFromFile(aFile):
 	root = ElementTree.parse(aFile).getroot()
 	if root.tag != "glyph":
 		raise GlifLibError("The GLIF is not properly formatted.")
+	if root.text.strip() != '':
+		raise GlifLibError("Invalid GLIF structure.")
 	return root
 
 def _glifTreeFromString(aString):
 	root = ElementTree.fromstring(aString)
 	if root.tag != "glyph":
 		raise GlifLibError("The GLIF is not properly formatted.")
+	if root.text.strip() != '':
+		raise GlifLibError("Invalid GLIF structure.")
 	return root
 
 def _readGlyphFromTree(tree, glyphObject=None, pointPen=None, formatVersions=(1, 2)):
@@ -847,6 +852,8 @@ def _readGlyphFromTreeFormat1(tree, glyphObject=None, pointPen=None):
 				raise GlifLibError("The outline element occurs more than once.")
 			if element.attrib:
 				raise GlifLibError("The outline element contains unknown attributes.")
+			if element.text.strip() != '':
+				raise GlifLibError("Invalid outline structure.")
 			haveSeenOutline = True
 			buildOutlineFormat1(glyphObject, pointPen, element)
 		elif glyphObject is None:
@@ -895,6 +902,8 @@ def _readGlyphFromTreeFormat2(tree, glyphObject=None, pointPen=None):
 				raise GlifLibError("The outline element occurs more than once.")
 			if element.attrib:
 				raise GlifLibError("The outline element contains unknown attributes.")
+			if element.text.strip() != '':
+				raise GlifLibError("Invalid outline structure.")
 			haveSeenOutline = True
 			if pointPen is not None:
 				buildOutlineFormat2(glyphObject, pointPen, element, identifiers)
@@ -1239,8 +1248,9 @@ def _validateAndMassagePointStructures(contour, pointAttributes, openContourOffC
 		# we only care about how many offCurves there are before an onCurve
 		# filter out the trailing offCurves
 		offCurvesCount = len(contour) - 1 - lastOnCurvePoint
-		for element in contour[:-offCurvesCount]:
-			segmentType = element.get("segmentType")
+		stripedContour = contour[:-offCurvesCount] if offCurvesCount else contour
+		for element in stripedContour:
+			segmentType = element.attrib["segmentType"]
 			if segmentType is None:
 				offCurvesCount += 1
 			else:
