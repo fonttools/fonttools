@@ -45,7 +45,7 @@ class TestGLIF2(unittest.TestCase):
 		"""
 		self.assertRaises(GlifLibError, self.glifToPy, glif)
 
-	def testName(self):
+	def testName_legal(self):
 		# legal
 		glif = """
 		<glyph name="a" format="2">
@@ -60,6 +60,8 @@ class TestGLIF2(unittest.TestCase):
 		resultPy = self.glifToPy(glif)
 		self.assertEqual(glif, resultGlif)
 		self.assertEqual(py, resultPy)
+
+	def testName_empty(self):
 		# empty
 		glif = """
 		<glyph name="" format="2">
@@ -72,13 +74,15 @@ class TestGLIF2(unittest.TestCase):
 		"""
 		self.assertRaises(GlifLibError, self.pyToGLIF, py)
 		self.assertRaises(GlifLibError, self.glifToPy, glif)
+
+	def testName_not_a_string(self):
 		# not a string
 		py = """
 		glyph.name = 1
 		"""
 		self.assertRaises(GlifLibError, self.pyToGLIF, py)
 
-	def testFormat(self):
+	def testFormat_legal(self):
 		# legal
 		glif = """
 		<glyph name="a" format="2">
@@ -93,6 +97,8 @@ class TestGLIF2(unittest.TestCase):
 		resultPy = self.glifToPy(glif)
 		self.assertEqual(glif, resultGlif)
 		self.assertEqual(py, resultPy)
+
+	def testFormat_illegal_wrong_number(self):
 		# wrong number
 		glif = """
 		<glyph name="a" format="-1">
@@ -101,6 +107,8 @@ class TestGLIF2(unittest.TestCase):
 		</glyph>
 		"""
 		self.assertRaises(GlifLibError, self.glifToPy, glif)
+
+	def testFormat_illegal_not_int(self):
 		# not an int
 		glif = """
 		<glyph name="a" format="A">
@@ -110,7 +118,7 @@ class TestGLIF2(unittest.TestCase):
 		"""
 		self.assertRaises(GlifLibError, self.glifToPy, glif)
 
-	def testBogusGlyphStructure(self):
+	def testBogusGlyphStructure_unknown_element(self):
 		# unknown element
 		glif = """
 		<glyph name="a" format="2">
@@ -118,6 +126,8 @@ class TestGLIF2(unittest.TestCase):
 		</glyph>
 		"""
 		self.assertRaises(GlifLibError, self.glifToPy, glif)
+
+	def testBogusGlyphStructure_content(self):
 		# content
 		glif = """
 		<glyph name="a" format="2">
@@ -126,7 +136,7 @@ class TestGLIF2(unittest.TestCase):
 		"""
 		self.assertRaises(GlifLibError, self.glifToPy, glif)
 
-	def testAdvance(self):
+	def testAdvance_legal_widht_and_height(self):
 		# legal: width and height
 		glif = """
 		<glyph name="a" format="2">
@@ -144,6 +154,8 @@ class TestGLIF2(unittest.TestCase):
 		resultPy = self.glifToPy(glif)
 		self.assertEqual(glif, resultGlif)
 		self.assertEqual(py, resultPy)
+
+	def testAdvance_legal_width_and_height_floats(self):
 		# legal: width and height floats
 		glif = """
 		<glyph name="a" format="2">
@@ -161,6 +173,8 @@ class TestGLIF2(unittest.TestCase):
 		resultPy = self.glifToPy(glif)
 		self.assertEqual(glif, resultGlif)
 		self.assertEqual(py, resultPy)
+
+	def testAdvance_legal_width(self):
 		# legal: width
 		glif = """
 		<glyph name="a" format="2">
@@ -177,6 +191,8 @@ class TestGLIF2(unittest.TestCase):
 		resultPy = self.glifToPy(glif)
 		self.assertEqual(glif, resultGlif)
 		self.assertEqual(py, resultPy)
+
+	def testAdvance_legal_height(self):
 		# legal: height
 		glif = """
 		<glyph name="a" format="2">
@@ -193,6 +209,8 @@ class TestGLIF2(unittest.TestCase):
 		resultPy = self.glifToPy(glif)
 		self.assertEqual(glif, resultGlif)
 		self.assertEqual(py, resultPy)
+
+	def testAdvance_illegal_width(self):
 		# illegal: not a number
 		glif = """
 		<glyph name="a" format="2">
@@ -207,6 +225,8 @@ class TestGLIF2(unittest.TestCase):
 		"""
 		self.assertRaises(GlifLibError, self.pyToGLIF, py)
 		self.assertRaises(GlifLibError, self.glifToPy, glif)
+
+	def testAdvance_illegal_height(self):
 		glif = """
 		<glyph name="a" format="2">
 			<advance height="a"/>
@@ -221,7 +241,7 @@ class TestGLIF2(unittest.TestCase):
 		self.assertRaises(GlifLibError, self.pyToGLIF, py)
 		self.assertRaises(GlifLibError, self.glifToPy, glif)
 
-	def testUnicodes(self):
+	def testUnicodes_legal(self):
 		# legal
 		glif = """
 		<glyph name="a" format="2">
@@ -238,6 +258,8 @@ class TestGLIF2(unittest.TestCase):
 		resultPy = self.glifToPy(glif)
 		self.assertEqual(glif, resultGlif)
 		self.assertEqual(py, resultPy)
+
+	def testUnicodes_legal_multiple(self):
 		glif = """
 		<glyph name="a" format="2">
 			<unicode hex="0062"/>
@@ -255,6 +277,8 @@ class TestGLIF2(unittest.TestCase):
 		resultPy = self.glifToPy(glif)
 		self.assertEqual(glif, resultGlif)
 		self.assertEqual(py, resultPy)
+
+	def testUnicodes_illegal(self):
 		# illegal
 		glif = """
 		<glyph name="a" format="2">
@@ -327,7 +351,7 @@ class TestGLIF2(unittest.TestCase):
 		self.assertEqual(glif, resultGlif)
 		self.assertEqual(py, resultPy)
 
-	def testGuidelines(self):
+	def testGuidelines_legal(self):
 		# legal
 		glif = """
 		<glyph name="a" format="2">
@@ -350,6 +374,8 @@ class TestGLIF2(unittest.TestCase):
 		resultPy = self.glifToPy(glif)
 		self.assertEqual(glif, resultGlif)
 		self.assertEqual(py, resultPy)
+
+	def testGuidelines_illegal_x(self):
 		# x not an int or float
 		glif = """
 		<glyph name="a" format="2">
@@ -364,6 +390,8 @@ class TestGLIF2(unittest.TestCase):
 		"""
 		self.assertRaises(GlifLibError, self.pyToGLIF, py)
 		self.assertRaises(GlifLibError, self.glifToPy, glif)
+
+	def testGuidelines_illegal_y(self):
 		# y not an int or float
 		glif = """
 		<glyph name="a" format="2">
@@ -378,6 +406,8 @@ class TestGLIF2(unittest.TestCase):
 		"""
 		self.assertRaises(GlifLibError, self.pyToGLIF, py)
 		self.assertRaises(GlifLibError, self.glifToPy, glif)
+
+	def testGuidelines_illegal_angle(self):
 		# angle not an int or float
 		glif = """
 		<glyph name="a" format="2">
@@ -392,6 +422,8 @@ class TestGLIF2(unittest.TestCase):
 		"""
 		self.assertRaises(GlifLibError, self.pyToGLIF, py)
 		self.assertRaises(GlifLibError, self.glifToPy, glif)
+
+	def testGuidelines_illegal_x_missing(self):
 		# x missing
 		glif = """
 		<glyph name="a" format="2">
@@ -406,6 +438,8 @@ class TestGLIF2(unittest.TestCase):
 		"""
 		self.assertRaises(GlifLibError, self.pyToGLIF, py)
 		self.assertRaises(GlifLibError, self.glifToPy, glif)
+
+	def testGuidelines_illegal_y_missing(self):
 		# y missing
 		glif = """
 		<glyph name="a" format="2">
@@ -420,6 +454,8 @@ class TestGLIF2(unittest.TestCase):
 		"""
 		self.assertRaises(GlifLibError, self.pyToGLIF, py)
 		self.assertRaises(GlifLibError, self.glifToPy, glif)
+
+	def testGuidelines_illegal_angle_missing(self):
 		# angle missing
 		glif = """
 		<glyph name="a" format="2">
@@ -434,6 +470,8 @@ class TestGLIF2(unittest.TestCase):
 		"""
 		self.assertRaises(GlifLibError, self.pyToGLIF, py)
 		self.assertRaises(GlifLibError, self.glifToPy, glif)
+
+	def testGuidelines_illegal_angle_out_of_range(self):
 		# angle out of range
 		glif = """
 		<glyph name="a" format="2">
@@ -462,7 +500,7 @@ class TestGLIF2(unittest.TestCase):
 		self.assertRaises(GlifLibError, self.pyToGLIF, py)
 		self.assertRaises(GlifLibError, self.glifToPy, glif)
 
-	def testAnchors(self):
+	def testAnchors_legal(self):
 		# legal
 		glif = """
 		<glyph name="a" format="2">
@@ -480,6 +518,8 @@ class TestGLIF2(unittest.TestCase):
 		resultPy = self.glifToPy(glif)
 		self.assertEqual(glif, resultGlif)
 		self.assertEqual(py, resultPy)
+
+	def testAnchors_illegal_x(self):
 		# x not an int or float
 		glif = """
 		<glyph name="a" format="2">
@@ -494,6 +534,8 @@ class TestGLIF2(unittest.TestCase):
 		"""
 		self.assertRaises(GlifLibError, self.pyToGLIF, py)
 		self.assertRaises(GlifLibError, self.glifToPy, glif)
+
+	def testAnchors_illegal_y(self):
 		# y not an int or float
 		glif = """
 		<glyph name="a" format="2">
@@ -508,6 +550,8 @@ class TestGLIF2(unittest.TestCase):
 		"""
 		self.assertRaises(GlifLibError, self.pyToGLIF, py)
 		self.assertRaises(GlifLibError, self.glifToPy, glif)
+
+	def testAnchors_illegal_x_missing(self):
 		# x missing
 		glif = """
 		<glyph name="a" format="2">
@@ -522,6 +566,8 @@ class TestGLIF2(unittest.TestCase):
 		"""
 		self.assertRaises(GlifLibError, self.pyToGLIF, py)
 		self.assertRaises(GlifLibError, self.glifToPy, glif)
+
+	def testAnchors_illegal_y_missing(self):
 		# y missing
 		glif = """
 		<glyph name="a" format="2">
@@ -537,7 +583,7 @@ class TestGLIF2(unittest.TestCase):
 		self.assertRaises(GlifLibError, self.pyToGLIF, py)
 		self.assertRaises(GlifLibError, self.glifToPy, glif)
 
-	def testImage(self):
+	def testImage_legal(self):
 		# legal
 		glif = """
 		<glyph name="a" format="2">
@@ -554,6 +600,8 @@ class TestGLIF2(unittest.TestCase):
 		resultPy = self.glifToPy(glif)
 		self.assertEqual(glif, resultGlif)
 		self.assertEqual(py, resultPy)
+
+	def testImage_legal_no_color_or_transformation(self):
 		# legal: no color or transformation
 		glif = """
 		<glyph name="a" format="2">
@@ -570,6 +618,8 @@ class TestGLIF2(unittest.TestCase):
 		resultPy = self.glifToPy(glif)
 		self.assertEqual(glif, resultGlif)
 		self.assertEqual(py, resultPy)
+
+	def testImage_illegal_no_file_name(self):
 		# no file name
 		glif = """
 		<glyph name="a" format="2">
@@ -584,6 +634,8 @@ class TestGLIF2(unittest.TestCase):
 		"""
 		self.assertRaises(GlifLibError, self.pyToGLIF, py)
 		self.assertRaises(GlifLibError, self.glifToPy, glif)
+
+	def testImage_bogus_transformation(self):
 		# bogus transformation
 		glif = """
 		<glyph name="a" format="2">
@@ -663,6 +715,8 @@ class TestGLIF2(unittest.TestCase):
 		"""
 		self.assertRaises(GlifLibError, self.pyToGLIF, py)
 		self.assertRaises(GlifLibError, self.glifToPy, glif)
+
+	def testImage_bogus_color(self):
 		# bogus color
 		glif = """
 		<glyph name="a" format="2">
@@ -678,7 +732,7 @@ class TestGLIF2(unittest.TestCase):
 		self.assertRaises(GlifLibError, self.pyToGLIF, py)
 		self.assertRaises(GlifLibError, self.glifToPy, glif)
 
-	def testOutline(self):
+	def testOutline_unknown_element(self):
 		# unknown element
 		glif = """
 		<glyph name="a" format="2">
@@ -688,6 +742,8 @@ class TestGLIF2(unittest.TestCase):
 		</glyph>
 		"""
 		self.assertRaises(GlifLibError, self.glifToPy, glif)
+
+	def testOutline_content(self):
 		# content
 		glif = """
 		<glyph name="a" format="2">
@@ -698,7 +754,7 @@ class TestGLIF2(unittest.TestCase):
 		"""
 		self.assertRaises(GlifLibError, self.glifToPy, glif)
 
-	def testComponent(self):
+	def testComponent_legal(self):
 		# legal
 		glif = """
 		<glyph name="a" format="2">
@@ -715,6 +771,8 @@ class TestGLIF2(unittest.TestCase):
 		resultPy = self.glifToPy(glif)
 		self.assertEqual(glif, resultGlif)
 		self.assertEqual(py, resultPy)
+
+	def testComponent_illegal_no_base(self):
 		# no base
 		glif = """
 		<glyph name="a" format="2">
@@ -724,6 +782,8 @@ class TestGLIF2(unittest.TestCase):
 		</glyph>
 		"""
 		self.assertRaises(GlifLibError, self.glifToPy, glif)
+
+	def testComponent_illegal_bogus_transformation(self):
 		# bogus values in transformation
 		glif = """
 		<glyph name="a" format="2">
@@ -804,7 +864,7 @@ class TestGLIF2(unittest.TestCase):
 		self.assertRaises(GlifLibError, self.pyToGLIF, py)
 		self.assertRaises(GlifLibError, self.glifToPy, glif)
 
-	def testContour(self):
+	def testContour_legal_one_contour(self):
 		# legal: one contour
 		glif = """
 		<glyph name="a" format="2">
@@ -823,6 +883,8 @@ class TestGLIF2(unittest.TestCase):
 		resultPy = self.glifToPy(glif)
 		self.assertEqual(glif, resultGlif)
 		self.assertEqual(py, resultPy)
+
+	def testContour_legal_two_contours(self):
 		# legal: two contours
 		glif = """
 		<glyph name="a" format="2">
@@ -851,6 +913,8 @@ class TestGLIF2(unittest.TestCase):
 		resultPy = self.glifToPy(glif)
 		self.assertEqual(glif, resultGlif)
 		self.assertEqual(py, resultPy)
+
+	def testContour_illegal_unkonwn_element(self):
 		# unknown element
 		glif = """
 		<glyph name="a" format="2">
@@ -882,7 +946,7 @@ class TestGLIF2(unittest.TestCase):
 		self.assertEqual(glif, resultGlif)
 		self.assertEqual(py, resultPy)
 
-	def testPointCoordinates(self):
+	def testPointCoordinates_legal_int(self):
 		# legal: int
 		glif = """
 		<glyph name="a" format="2">
@@ -903,6 +967,8 @@ class TestGLIF2(unittest.TestCase):
 		resultPy = self.glifToPy(glif)
 		self.assertEqual(glif, resultGlif)
 		self.assertEqual(py, resultPy)
+
+	def testPointCoordinates_legal_float(self):
 		# legal: float
 		glif = """
 		<glyph name="a" format="2">
@@ -923,7 +989,9 @@ class TestGLIF2(unittest.TestCase):
 		resultPy = self.glifToPy(glif)
 		self.assertEqual(glif, resultGlif)
 		self.assertEqual(py, resultPy)
-		# legal: int
+
+	def testPointCoordinates_illegal_x(self):
+		# illegal: x as string
 		glif = """
 		<glyph name="a" format="2">
 			<outline>
@@ -941,7 +1009,9 @@ class TestGLIF2(unittest.TestCase):
 		"""
 		self.assertRaises(GlifLibError, self.pyToGLIF, py)
 		self.assertRaises(GlifLibError, self.glifToPy, glif)
-		# legal: int
+
+	def testPointCoordinates_illegal_y(self):
+		# illegal: y as string
 		glif = """
 		<glyph name="a" format="2">
 			<outline>
@@ -1030,7 +1100,7 @@ class TestGLIF2(unittest.TestCase):
 		self.assertRaises(GlifLibError, self.pyToGLIF, py)
 		self.assertRaises(GlifLibError, self.glifToPy, glif)
 
-	def testPointTypeLine(self):
+	def testPointTypeLine_legal(self):
 		# legal
 		glif = """
 		<glyph name="a" format="2">
@@ -1053,6 +1123,8 @@ class TestGLIF2(unittest.TestCase):
 		resultPy = self.glifToPy(glif)
 		self.assertEqual(glif, resultGlif)
 		self.assertEqual(py, resultPy)
+
+	def testPointTypeLine_legal_start_of_contour(self):
 		# legal: start of contour
 		glif = """
 		<glyph name="a" format="2">
@@ -1075,6 +1147,8 @@ class TestGLIF2(unittest.TestCase):
 		resultPy = self.glifToPy(glif)
 		self.assertEqual(glif, resultGlif)
 		self.assertEqual(py, resultPy)
+
+	def testPointTypeLine_legal_smooth(self):
 		# legal: smooth=True
 		glif = """
 		<glyph name="a" format="2">
@@ -1258,7 +1332,7 @@ class TestGLIF2(unittest.TestCase):
 		self.assertRaises(GlifLibError, self.pyToGLIF, py)
 		self.assertRaises(GlifLibError, self.glifToPy, glif)
 
-	def testPointQCurve(self):
+	def testPointQCurve_legal(self):
 		# legal
 		glif = """
 		<glyph name="a" format="2">
@@ -1285,6 +1359,8 @@ class TestGLIF2(unittest.TestCase):
 		resultPy = self.glifToPy(glif)
 		self.assertEqual(glif, resultGlif)
 		self.assertEqual(py, resultPy)
+
+	def testPointQCurve_legal_start_of_contour(self):
 		# legal: start of contour
 		glif = """
 		<glyph name="a" format="2">
@@ -1309,6 +1385,8 @@ class TestGLIF2(unittest.TestCase):
 		resultPy = self.glifToPy(glif)
 		self.assertEqual(glif, resultGlif)
 		self.assertEqual(py, resultPy)
+
+	def testPointQCurve_legal_smooth(self):
 		# legal: smooth=True
 		glif = """
 		<glyph name="a" format="2">
@@ -1335,6 +1413,8 @@ class TestGLIF2(unittest.TestCase):
 		resultPy = self.glifToPy(glif)
 		self.assertEqual(glif, resultGlif)
 		self.assertEqual(py, resultPy)
+
+	def testPointQCurve_legal_no_off_curves(self):
 		# legal: no off-curves
 		glif = """
 		<glyph name="a" format="2">
@@ -1357,6 +1437,8 @@ class TestGLIF2(unittest.TestCase):
 		resultPy = self.glifToPy(glif)
 		self.assertEqual(glif, resultGlif)
 		self.assertEqual(py, resultPy)
+
+	def testPointQCurve_legal_one_off_curve(self):
 		# legal: 1 off-curve
 		glif = """
 		<glyph name="a" format="2">
@@ -1381,6 +1463,8 @@ class TestGLIF2(unittest.TestCase):
 		resultPy = self.glifToPy(glif)
 		self.assertEqual(glif, resultGlif)
 		self.assertEqual(py, resultPy)
+
+	def testPointQCurve_legal_3_off_curves(self):
 		# legal: 3 off-curves
 		glif = """
 		<glyph name="a" format="2">
@@ -1410,7 +1494,7 @@ class TestGLIF2(unittest.TestCase):
 		self.assertEqual(glif, resultGlif)
 		self.assertEqual(py, resultPy)
 
-	def testSpecialCaseQCurve(self):
+	def testSpecialCaseQCurve_legal_no_on_curve(self):
 		# contour with no on curve
 		glif = """
 		<glyph name="a" format="2">
@@ -1612,7 +1696,7 @@ class TestGLIF2(unittest.TestCase):
 		self.assertEqual(glif, resultGlif)
 		self.assertEqual(py, resultPy)
 
-	def testIdentifierConflict(self):
+	def testIdentifierConflict_legal_no_conflict(self):
 		glif = """
 		<glyph name="a" format="2">
 			<guideline x="0" identifier="guideline1"/>
@@ -1654,6 +1738,8 @@ class TestGLIF2(unittest.TestCase):
 		resultPy = self.glifToPy(glif)
 		self.assertEqual(glif, resultGlif)
 		self.assertEqual(py, resultPy)
+
+	def testIdentifierConflict_point_point(self):
 		# point - point
 		glif = """
 		<glyph name="a" format="2">
@@ -1694,46 +1780,8 @@ class TestGLIF2(unittest.TestCase):
 		"""
 		self.assertRaises(GlifLibError, self.pyToGLIF, py)
 		self.assertRaises(GlifLibError, self.glifToPy, glif)
-		# point - point
-		glif = """
-		<glyph name="a" format="2">
-			<guideline x="0" identifier="guideline1"/>
-			<guideline x="0" identifier="guideline2"/>
-			<anchor x="0" y="0" identifier="anchor1"/>
-			<anchor x="0" y="0" identifier="anchor2"/>
-			<outline>
-				<contour identifier="contour1">
-					<point x="1" y="-2" type="move" identifier="point1"/>
-					<point x="1" y="-2" type="line" identifier="point1"/>
-					<point x="1" y="-2" type="curve" identifier="point3"/>
-					<point x="1" y="-2" type="qcurve" identifier="point4"/>
-				</contour>
-				<contour identifier="contour2">
-					<point x="1" y="-2" type="move" identifier="point5"/>
-				</contour>
-				<component base="x" xyScale="1" yxScale="1" xOffset="1" yOffset="1" identifier="component1"/>
-				<component base="x" xyScale="1" yxScale="1" xOffset="1" yOffset="1" identifier="component2"/>
-			</outline>
-		</glyph>
-		"""
-		py = """
-		glyph.name = "a"
-		glyph.guidelines = [{"identifier" : "guideline1", "x" : 0}, {"identifier" : "guideline2", "x" : 0}]
-		glyph.anchors = [{"identifier" : "anchor1", "x" : 0, "y" : 0}, {"identifier" : "anchor2", "x" : 0, "y" : 0}]
-		pointPen.beginPath(**{"identifier" : "contour1"})
-		pointPen.addPoint(*[(1, -2)], **{"identifier" : "point1", "segmentType" : "move", "smooth" : False})
-		pointPen.addPoint(*[(1, -2)], **{"identifier" : "point1", "segmentType" : "line", "smooth" : False})
-		pointPen.addPoint(*[(1, -2)], **{"identifier" : "point3", "segmentType" : "curve", "smooth" : False})
-		pointPen.addPoint(*[(1, -2)], **{"identifier" : "point4", "segmentType" : "qcurve", "smooth" : False})
-		pointPen.endPath()
-		pointPen.beginPath(**{"identifier" : "contour2"})
-		pointPen.addPoint(*[(1, -2)], **{"identifier" : "point5", "segmentType" : "move", "smooth" : False})
-		pointPen.endPath()
-		pointPen.addComponent(*["x", (1, 1, 1, 1, 1, 1)], **{"identifier" : "component1"})
-		pointPen.addComponent(*["x", (1, 1, 1, 1, 1, 1)], **{"identifier" : "component2"})
-		"""
-		self.assertRaises(GlifLibError, self.pyToGLIF, py)
-		self.assertRaises(GlifLibError, self.glifToPy, glif)
+
+	def testIdentifierConflict_point_contour(self):
 		# point - contour
 		glif = """
 		<glyph name="a" format="2">
@@ -1774,6 +1822,8 @@ class TestGLIF2(unittest.TestCase):
 		"""
 		self.assertRaises(GlifLibError, self.pyToGLIF, py)
 		self.assertRaises(GlifLibError, self.glifToPy, glif)
+
+	def testIdentifierConflict_point_component(self):
 		# point - component
 		glif = """
 		<glyph name="a" format="2">
@@ -1814,6 +1864,8 @@ class TestGLIF2(unittest.TestCase):
 		"""
 		self.assertRaises(GlifLibError, self.pyToGLIF, py)
 		self.assertRaises(GlifLibError, self.glifToPy, glif)
+
+	def testIdentifierConflict_point_guideline(self):
 		# point - guideline
 		glif = """
 		<glyph name="a" format="2">
@@ -1854,6 +1906,8 @@ class TestGLIF2(unittest.TestCase):
 		"""
 		self.assertRaises(GlifLibError, self.pyToGLIF, py)
 		self.assertRaises(GlifLibError, self.glifToPy, glif)
+
+	def testIdentifierConflict_point_anchor(self):
 		# point - anchor
 		glif = """
 		<glyph name="a" format="2">
@@ -1894,6 +1948,8 @@ class TestGLIF2(unittest.TestCase):
 		"""
 		self.assertRaises(GlifLibError, self.pyToGLIF, py)
 		self.assertRaises(GlifLibError, self.glifToPy, glif)
+
+	def testIdentifierConflict_contour_contour(self):
 		# contour - contour
 		glif = """
 		<glyph name="a" format="2">
@@ -1934,6 +1990,8 @@ class TestGLIF2(unittest.TestCase):
 		"""
 		self.assertRaises(GlifLibError, self.pyToGLIF, py)
 		self.assertRaises(GlifLibError, self.glifToPy, glif)
+
+	def testIdentifierConflict_contour_component(self):
 		# contour - component
 		glif = """
 		<glyph name="a" format="2">
@@ -1974,6 +2032,8 @@ class TestGLIF2(unittest.TestCase):
 		"""
 		self.assertRaises(GlifLibError, self.pyToGLIF, py)
 		self.assertRaises(GlifLibError, self.glifToPy, glif)
+
+	def testIdentifierConflict_contour_guideline(self):
 		# contour - guideline
 		glif = """
 		<glyph name="a" format="2">
@@ -2014,6 +2074,8 @@ class TestGLIF2(unittest.TestCase):
 		"""
 		self.assertRaises(GlifLibError, self.pyToGLIF, py)
 		self.assertRaises(GlifLibError, self.glifToPy, glif)
+
+	def testIdentifierConflict_contour_anchor(self):
 		# contour - anchor
 		glif = """
 		<glyph name="a" format="2">
@@ -2054,6 +2116,8 @@ class TestGLIF2(unittest.TestCase):
 		"""
 		self.assertRaises(GlifLibError, self.pyToGLIF, py)
 		self.assertRaises(GlifLibError, self.glifToPy, glif)
+
+	def testIdentifierConflict_component_component(self):
 		# component - component
 		glif = """
 		<glyph name="a" format="2">
@@ -2094,6 +2158,8 @@ class TestGLIF2(unittest.TestCase):
 		"""
 		self.assertRaises(GlifLibError, self.pyToGLIF, py)
 		self.assertRaises(GlifLibError, self.glifToPy, glif)
+
+	def testIdentifierConflict_component_guideline(self):
 		# component - guideline
 		glif = """
 		<glyph name="a" format="2">
@@ -2134,6 +2200,8 @@ class TestGLIF2(unittest.TestCase):
 		"""
 		self.assertRaises(GlifLibError, self.pyToGLIF, py)
 		self.assertRaises(GlifLibError, self.glifToPy, glif)
+
+	def testIdentifierConflict_component_anchor(self):
 		# component - anchor
 		glif = """
 		<glyph name="a" format="2">
@@ -2174,6 +2242,8 @@ class TestGLIF2(unittest.TestCase):
 		"""
 		self.assertRaises(GlifLibError, self.pyToGLIF, py)
 		self.assertRaises(GlifLibError, self.glifToPy, glif)
+
+	def testIdentifierConflict_guideline_guideline(self):
 		# guideline - guideline
 		glif = """
 		<glyph name="a" format="2">
@@ -2214,6 +2284,8 @@ class TestGLIF2(unittest.TestCase):
 		"""
 		self.assertRaises(GlifLibError, self.pyToGLIF, py)
 		self.assertRaises(GlifLibError, self.glifToPy, glif)
+
+	def testIdentifierConflict_guideline_anchor(self):
 		# guideline - anchor
 		glif = """
 		<glyph name="a" format="2">
@@ -2254,6 +2326,8 @@ class TestGLIF2(unittest.TestCase):
 		"""
 		self.assertRaises(GlifLibError, self.pyToGLIF, py)
 		self.assertRaises(GlifLibError, self.glifToPy, glif)
+
+	def testIdentifierConflict_anchor_anchor(self):
 		# anchor - anchor
 		glif = """
 		<glyph name="a" format="2">
