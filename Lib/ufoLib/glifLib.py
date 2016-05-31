@@ -1248,8 +1248,9 @@ def _validateAndMassagePointStructures(contour, pointAttributes, openContourOffC
 		# we only care about how many offCurves there are before an onCurve
 		# filter out the trailing offCurves
 		offCurvesCount = len(contour) - 1 - lastOnCurvePoint
-		for element in contour[:-offCurvesCount]:
-			segmentType = element.get("segmentType")
+		stripedContour = contour[:-offCurvesCount] if offCurvesCount else contour
+		for element in stripedContour:
+			segmentType = element.attrib["segmentType"]
 			if segmentType is None:
 				offCurvesCount += 1
 			else:
