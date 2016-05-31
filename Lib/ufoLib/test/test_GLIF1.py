@@ -734,7 +734,7 @@ class TestGLIF1(unittest.TestCase):
 		self.assertEqual(glif, resultGlif)
 		self.assertEqual(py, resultPy)
 
-	def testPointTypeCurve(self):
+	def testPointTypeCurve_legal(self):
 		# legal
 		glif = """
 		<glyph name="a" format="1">
@@ -761,6 +761,8 @@ class TestGLIF1(unittest.TestCase):
 		resultPy = self.glifToPy(glif)
 		self.assertEqual(glif, resultGlif)
 		self.assertEqual(py, resultPy)
+
+	def testPointTypeCurve_legal_start_of_contour(self):
 		# legal: start of contour
 		glif = """
 		<glyph name="a" format="1">
@@ -785,6 +787,8 @@ class TestGLIF1(unittest.TestCase):
 		resultPy = self.glifToPy(glif)
 		self.assertEqual(glif, resultGlif)
 		self.assertEqual(py, resultPy)
+
+	def testPointTypeCurve_legal_smooth(self):
 		# legal: smooth=True
 		glif = """
 		<glyph name="a" format="1">
@@ -811,6 +815,8 @@ class TestGLIF1(unittest.TestCase):
 		resultPy = self.glifToPy(glif)
 		self.assertEqual(glif, resultGlif)
 		self.assertEqual(py, resultPy)
+
+	def testPointTypeCurve_legal_no_off_curves(self):
 		# legal: no off-curves
 		glif = """
 		<glyph name="a" format="1">
@@ -833,6 +839,8 @@ class TestGLIF1(unittest.TestCase):
 		resultPy = self.glifToPy(glif)
 		self.assertEqual(glif, resultGlif)
 		self.assertEqual(py, resultPy)
+
+	def testPointTypeCurve_legal_1_off_curve(self):
 		# legal: 1 off-curve
 		glif = """
 		<glyph name="a" format="1">
@@ -857,6 +865,8 @@ class TestGLIF1(unittest.TestCase):
 		resultPy = self.glifToPy(glif)
 		self.assertEqual(glif, resultGlif)
 		self.assertEqual(py, resultPy)
+
+	def testPointTypeCurve_illegal_3_off_curves(self):
 		# illegal: 3 off-curves
 		glif = """
 		<glyph name="a" format="1">
@@ -884,7 +894,7 @@ class TestGLIF1(unittest.TestCase):
 		self.assertRaises(GlifLibError, self.pyToGLIF, py)
 		self.assertRaises(GlifLibError, self.glifToPy, glif)
 
-	def testPointQCurve(self):
+	def testPointQCurve_legal(self):
 		# legal
 		glif = """
 		<glyph name="a" format="1">
@@ -911,6 +921,8 @@ class TestGLIF1(unittest.TestCase):
 		resultPy = self.glifToPy(glif)
 		self.assertEqual(glif, resultGlif)
 		self.assertEqual(py, resultPy)
+
+	def testPointQCurve_legal_start_of_contour(self):
 		# legal: start of contour
 		glif = """
 		<glyph name="a" format="1">
@@ -935,6 +947,8 @@ class TestGLIF1(unittest.TestCase):
 		resultPy = self.glifToPy(glif)
 		self.assertEqual(glif, resultGlif)
 		self.assertEqual(py, resultPy)
+
+	def testPointQCurve_legal_smooth(self):
 		# legal: smooth=True
 		glif = """
 		<glyph name="a" format="1">
@@ -961,6 +975,8 @@ class TestGLIF1(unittest.TestCase):
 		resultPy = self.glifToPy(glif)
 		self.assertEqual(glif, resultGlif)
 		self.assertEqual(py, resultPy)
+
+	def testPointQCurve_legal_no_off_curves(self):
 		# legal: no off-curves
 		glif = """
 		<glyph name="a" format="1">
@@ -983,6 +999,8 @@ class TestGLIF1(unittest.TestCase):
 		resultPy = self.glifToPy(glif)
 		self.assertEqual(glif, resultGlif)
 		self.assertEqual(py, resultPy)
+
+	def testPointQCurve_legal_one_off_curve(self):
 		# legal: 1 off-curve
 		glif = """
 		<glyph name="a" format="1">
@@ -1007,6 +1025,8 @@ class TestGLIF1(unittest.TestCase):
 		resultPy = self.glifToPy(glif)
 		self.assertEqual(glif, resultGlif)
 		self.assertEqual(py, resultPy)
+
+	def testPointQCurve_legal_3_off_curves(self):
 		# legal: 3 off-curves
 		glif = """
 		<glyph name="a" format="1">
@@ -1064,7 +1084,7 @@ class TestGLIF1(unittest.TestCase):
 		self.assertEqual(glif, resultGlif)
 		self.assertEqual(py, resultPy)
 
-	def testPointTypeOffCurve(self):
+	def testPointTypeOffCurve_legal(self):
 		# legal
 		glif = """
 		<glyph name="a" format="1">
@@ -1091,6 +1111,8 @@ class TestGLIF1(unittest.TestCase):
 		resultPy = self.glifToPy(glif)
 		self.assertEqual(glif, resultGlif)
 		self.assertEqual(py, resultPy)
+
+	def testPointTypeOffCurve_legal_start_of_contour(self):
 		# legal: start of contour
 		glif = """
 		<glyph name="a" format="1">
@@ -1115,6 +1137,8 @@ class TestGLIF1(unittest.TestCase):
 		resultPy = self.glifToPy(glif)
 		self.assertEqual(glif, resultGlif)
 		self.assertEqual(py, resultPy)
+
+	def testPointTypeOffCurve_illegal_before_move(self):
 		# before move
 		glif = """
 		<glyph name="a" format="1">
@@ -1135,6 +1159,8 @@ class TestGLIF1(unittest.TestCase):
 		"""
 		self.assertRaises(GlifLibError, self.pyToGLIF, py)
 		self.assertRaises(GlifLibError, self.glifToPy, glif)
+
+	def testPointTypeOffCurve_illegal_before_line(self):
 		# before line
 		glif = """
 		<glyph name="a" format="1">
@@ -1155,6 +1181,8 @@ class TestGLIF1(unittest.TestCase):
 		"""
 		self.assertRaises(GlifLibError, self.pyToGLIF, py)
 		self.assertRaises(GlifLibError, self.glifToPy, glif)
+
+	def testPointTypeOffCurve_illegal_smooth(self):
 		# smooth=True
 		glif = """
 		<glyph name="a" format="1">
