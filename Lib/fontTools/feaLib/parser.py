@@ -829,7 +829,7 @@ class Parser(object):
             c = bytechr(int(n, 16)).decode('mac_roman')
             return c
 
-        return re.sub(r'\\[0-9a-zAZ]{2}', unescape, string)
+        return re.sub(r'\\[0-9a-fA-F]{2}', unescape, string)
 
     def unescape_windows_name_string(self, string):
         def unescape(match):
@@ -837,7 +837,7 @@ class Parser(object):
             c = unichr(int(n, 16))
             return c
 
-        return re.sub(r'\\[0-9a-zAZ]{4}', unescape, string)
+        return re.sub(r'\\[0-9a-fA-F]{4}', unescape, string)
 
     def parse_table_BASE_(self, table):
         statements = table.statements
