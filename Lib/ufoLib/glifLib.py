@@ -923,14 +923,14 @@ def _readGlyphFromTreeFormat2(tree, glyphObject=None, pointPen=None):
 			except ValueError:
 				raise GlifLibError("Illegal value for hex attribute of unicode element.")
 		elif element.tag == "guideline":
-			if element:
+			if len(element):
 				raise GlifLibError("Unknown children in guideline element.")
 			for attr in ("x", "y", "angle"):
 				if attr in element.attrib:
 					element.attrib[attr] = _number(element.attrib[attr])
 			guidelines.append(element.attrib)
 		elif element.tag == "anchor":
-			if element:
+			if len(element):
 				raise GlifLibError("Unknown children in anchor element.")
 			for attr in ("x", "y"):
 				if attr in element.attrib:
@@ -939,7 +939,7 @@ def _readGlyphFromTreeFormat2(tree, glyphObject=None, pointPen=None):
 		elif element.tag == "image":
 			if haveSeenImage:
 				raise GlifLibError("The image element occurs more than once.")
-			if element:
+			if len(element):
 				raise GlifLibError("Unknown children in image element.")
 			haveSeenImage = True
 			_readImage(glyphObject, element)
@@ -1066,7 +1066,7 @@ def _buildOutlineContourFormat1(pen, contour):
 	if contour.attrib:
 		raise GlifLibError("Unknown attributes in contour element.")
 	pen.beginPath()
-	if contour:
+	if len(contour):
 		_validateAndMassagePointStructures(contour, pointAttributesFormat1, openContourOffCurveLeniency=True)
 		_buildOutlinePointsFormat1(pen, contour)
 	pen.endPath()
@@ -1081,7 +1081,7 @@ def _buildOutlinePointsFormat1(pen, contour):
 		pen.addPoint((x, y), segmentType=segmentType, smooth=smooth, name=name)
 
 def _buildOutlineComponentFormat1(pen, component):
-	if component:
+	if len(component):
 		raise GlifLibError("Unknown child elements of component element.")
 	if set(component.attrib.keys()) - componentAttributesFormat1:
 		raise GlifLibError("Unknown attributes in component element.")
@@ -1124,7 +1124,7 @@ def _buildOutlineContourFormat2(pen, contour, identifiers):
 	except TypeError:
 		pen.beginPath()
 		warn("The beginPath method needs an identifier kwarg. The contour's identifier value has been discarded.", DeprecationWarning)
-	if contour:
+	if len(contour):
 		_validateAndMassagePointStructures(contour, pointAttributesFormat2)
 		_buildOutlinePointsFormat2(pen, contour, identifiers)
 	pen.endPath()
@@ -1150,7 +1150,7 @@ def _buildOutlinePointsFormat2(pen, contour, identifiers):
 			warn("The addPoint method needs an identifier kwarg. The point's identifier value has been discarded.", DeprecationWarning)
 
 def _buildOutlineComponentFormat2(pen, component, identifiers):
-	if component:
+	if len(component):
 		raise GlifLibError("Unknown child elements of component element.")
 	if set(component.attrib.keys()) - componentAttributesFormat2:
 		raise GlifLibError("Unknown attributes in component element.")
@@ -1181,7 +1181,7 @@ def _buildOutlineComponentFormat2(pen, component, identifiers):
 # all formats
 
 def _validateAndMassagePointStructures(contour, pointAttributes, openContourOffCurveLeniency=False):
-	if not contour:
+	if not len(contour):
 		return
 	# store some data for later validation
 	lastOnCurvePoint = None
@@ -1196,7 +1196,7 @@ def _validateAndMassagePointStructures(contour, pointAttributes, openContourOffC
 		if unknownAttributes:
 			raise GlifLibError("Unknown attributes in point element.")
 		# search for unknown children
-		if element:
+		if len(element):
 			raise GlifLibError("Unknown child elements in point element.")
 		# x and y are required
 		x = element.get("x")
