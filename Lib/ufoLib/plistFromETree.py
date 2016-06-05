@@ -24,7 +24,7 @@ class PlistTreeParser(PlistParser):
 		for child in element:
 			self.parseElement(child)
 		# otherwise, parse the leaf's data
-		if not element:
+		if not len(element):
 			# always pass str, not None
 			self.handleData(element.text or "")
 		self.handleEndElement(element.tag)
