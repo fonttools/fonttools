@@ -174,7 +174,7 @@ class SingleSubst(FormatSwitchingBaseTable):
 					break
 		else:
 			if delta is None:
-				# the mapping is empty, better use format 1
+				# the mapping is empty, better use format 2
 				format = 2
 			else:
 				format = 1
