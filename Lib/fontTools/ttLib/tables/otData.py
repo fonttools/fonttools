@@ -837,6 +837,56 @@ otData = [
 	]),
 
 	#
+	# variations
+	#
+	('VarAxis', [
+		('uint16', 'AxisIndex', None, None, ''),
+		('F2Dot14', 'StartCoord', None, None, ''),
+		('F2Dot14', 'PeakCoord', None, None, ''),
+		('F2Dot14', 'EndCoord', None, None, ''),
+	]),
+
+	('VarTuple', [
+		('uint16', 'VarAxisCount', None, None, ''),
+		('struct', 'VarAxis', 'VarAxisCount', 0, ''),
+	]),
+
+	('VarTupleList', [
+		('uint16', 'VarTupleCount', None, None, ''),
+		('LOffset', 'VarTuple', 'VarTupleCount', 0, ''),
+	]),
+
+	('VarItemByteRecord', [
+		('int8', 'deltas', 'VarTupleCount', 0, ''),
+	]),
+	('VarItemShortRecord', [
+		('int16', 'deltas', 'VarTupleCount', 0, ''),
+	]),
+
+	('VarDeltasFormat1', [
+		('uint16', 'Format', None, None, 'Set to 1.'),
+		('uint16', 'ItemCount', None, None, ''),
+		('uint16', 'VarTupleCount', None, None, ''),
+		('uint16', 'VarTupleIndex', 'VarTupleCount', 0, ''),
+		('struct', 'VarItemByteRecord', 'ItemCount', 0, ''),
+	]),
+
+	('VarDeltasFormat2', [
+		('uint16', 'Format', None, None, 'Set to 2.'),
+		('uint16', 'ItemCount', None, None, ''),
+		('uint16', 'VarTupleCount', None, None, ''),
+		('uint16', 'VarTupleIndex', 'VarTupleCount', 0, ''),
+		('struct', 'VarItemShortRecord', 'ItemCount', 0, ''),
+	]),
+
+	('VarStore', [
+		('LOffset', 'VarTupleList', None, None, ''),
+		('uint16', 'Format', None, None, 'Set to 1.'),
+		('uint16', 'VarDeltasCount', None, None, ''),
+		('LOffset', 'VarDeltas', 'VarDeltasCount', 0, ''),
+	]),
+
+	#
 	# math
 	#
 
