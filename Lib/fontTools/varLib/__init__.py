@@ -248,7 +248,7 @@ class VariationModel(object):
 				v += contribution
 		return v
 
-	def interpolateFromMaster(self, loc, masterValues):
+	def interpolateFromMasters(self, loc, masterValues):
 		deltas = self.getDeltas(masterValues)
 		return self.interpolateFromDeltas(loc, deltas)
 
