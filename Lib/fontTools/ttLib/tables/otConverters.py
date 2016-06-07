@@ -178,6 +178,13 @@ class UShort(IntValue):
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		writer.writeUShort(value)
 
+class Int8(IntValue):
+	staticSize = 1
+	def read(self, reader, font, tableDict):
+		return reader.readInt8()
+	def write(self, writer, font, tableDict, value, repeatIndex=None):
+		writer.writeInt8(value)
+
 class UInt8(IntValue):
 	staticSize = 1
 	def read(self, reader, font, tableDict):
@@ -238,6 +245,13 @@ class Fixed(FloatValue):
 		return  fi2fl(reader.readLong(), 16)
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		writer.writeLong(fl2fi(value, 16))
+
+class F2Dot14(FloatValue):
+	staticSize = 2
+	def read(self, reader, font, tableDict):
+		return  fi2fl(reader.readShort(), 14)
+	def write(self, writer, font, tableDict, value, repeatIndex=None):
+		writer.writeShort(fl2fi(value, 14))
 
 class Version(BaseConverter):
 	staticSize = 4
@@ -476,7 +490,9 @@ class DeltaValue(BaseConverter):
 
 converterMapping = {
 	# type		class
+	"int8":		Int8,
 	"int16":	Short,
+	"uint8":	UInt8,
 	"uint8":	UInt8,
 	"uint16":	UShort,
 	"uint24":	UInt24,

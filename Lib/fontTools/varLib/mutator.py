@@ -45,6 +45,7 @@ def main(args=None):
 		else:
 			v = (v - default) / (upper - default)
 		loc[axis.axisTag] = v
+	# Round to F2Dot14
 	# Location is normalized now
 	print("Normalized location:", loc)
 
