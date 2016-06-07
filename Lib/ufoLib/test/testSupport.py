@@ -1,9 +1,8 @@
 """Miscellaneous helpers for our test suite."""
 
-
+from __future__ import unicode_literals
 import sys
 import os
-import types
 import unittest
 
 try:
