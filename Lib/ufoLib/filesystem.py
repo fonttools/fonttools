@@ -153,16 +153,16 @@ class FileSystem(object):
 	# -----------------
 
 	def joinPath(self, *parts):
-		return os.path.join(*parts)
+		return self._fs.path.join(*parts)
 
 	def splitPath(self, path):
-		return os.path.split(path)
+		return self._fs.path.split(path)
 
 	def directoryName(self, path):
-		return self.splitPath(path)[0]
+		return self._fs.path.dirname(path)
 
 	def relativePath(self, path, start):
-		return os.path.relpath(path, start)
+		return self._fs.relativefrom(path, start)
 
 	# ---------
 	# Existence
@@ -403,6 +403,18 @@ class _NOFS(object):
 
 	def _absPath(self, path):
 		return os.path.join(self._path, path)
+
+	def joinPath(self, *parts):
+		return os.path.join(*parts)
+
+	def splitPath(self, path):
+		return os.path.split(path)
+
+	def directoryName(self, path):
+		return os.path.split(path)[0]
+
+	def relativePath(self, path, start):
+		return os.path.relpath(path, start)
 
 	def close(self):
 		pass
