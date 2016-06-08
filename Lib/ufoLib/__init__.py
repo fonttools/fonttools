@@ -1033,66 +1033,6 @@ def writeDataFileAtomically(data, path):
 		f.write(data)
 		f.close()
 
-# ---------------------------
-# Format Conversion Functions
-# ---------------------------
-
-def convertUFOFormatVersion1ToFormatVersion2(inPath, outPath=None):
-	"""
-	Function for converting a version format 1 UFO
-	to version format 2. inPath should be a path
-	to a UFO. outPath is the path where the new UFO
-	should be written. If outPath is not given, the
-	inPath will be used and, therefore, the UFO will
-	be converted in place. Otherwise, if outPath is
-	specified, nothing must exist at that path.
-	"""
-	from warnings import warn
-	warn("convertUFOFormatVersion1ToFormatVersion2 is deprecated.", DeprecationWarning)
-	if outPath is None:
-		outPath = inPath
-	if inPath != outPath and os.path.exists(outPath):
-		raise UFOLibError("A file already exists at %s." % outPath)
-	# use a reader for loading most of the data
-	reader = UFOReader(inPath)
-	if reader.formatVersion == 2:
-		raise UFOLibError("The UFO at %s is already format version 2." % inPath)
-	groups = reader.readGroups()
-	kerning = reader.readKerning()
-	libData = reader.readLib()
-	# read the info data manually and convert
-	infoPath = os.path.join(inPath, FONTINFO_FILENAME)
-	if not os.path.exists(infoPath):
-		infoData = {}
-	else:
-		with open(infoPath, "rb") as f:
-			infoData = readPlist(f)
-	infoData = _convertFontInfoDataVersion1ToVersion2(infoData)
-	# if the paths are the same, only need to change the
-	# fontinfo and meta info files.
-	infoPath = os.path.join(outPath, FONTINFO_FILENAME)
-	if inPath == outPath:
-		metaInfoPath = os.path.join(inPath, METAINFO_FILENAME)
-		metaInfo = dict(
-			creator="org.robofab.ufoLib",
-			formatVersion=2
-		)
-		writePlistAtomically(metaInfo, metaInfoPath)
-		writePlistAtomically(infoData, infoPath)
-	# otherwise write everything.
-	else:
-		writer = UFOWriter(outPath, formatVersion=2)
-		writer.writeGroups(groups)
-		writer.writeKerning(kerning)
-		writer.writeLib(libData)
-		# write the info manually
-		writePlistAtomically(infoData, infoPath)
-		# copy the glyph tree
-		inGlyphs = os.path.join(inPath, DEFAULT_GLYPHS_DIRNAME)
-		outGlyphs = os.path.join(outPath, DEFAULT_GLYPHS_DIRNAME)
-		if os.path.exists(inGlyphs):
-			shutil.copytree(inGlyphs, outGlyphs)
-
 # ----------------------
 # fontinfo.plist Support
 # ----------------------
