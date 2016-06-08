@@ -84,7 +84,7 @@ class GlyphSetTests(unittest.TestCase):
 		def myGlyphNameToFileName(glyphName, glyphSet):
 			return "prefix" + glyphNameToFileName(glyphName, glyphSet)
 		src = GlyphSet(GLYPHSETDIR)
-		dst = GlyphSet(self.dstDir, myGlyphNameToFileName)
+		dst = GlyphSet(self.dstDir, glyphNameToFileNameFunc=myGlyphNameToFileName)
 		for glyphName in src.keys():
 			g = src[glyphName]
 			g.drawPoints(None)  # load attrs
