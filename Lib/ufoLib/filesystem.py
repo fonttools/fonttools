@@ -5,6 +5,7 @@ import zipfile
 
 haveFS = False
 try:
+	import fs
 	from fs.osfs import OSFS
 	from fs.zipfs import ZipFS, ZipOpenError
 	haveFS = True
@@ -153,16 +154,16 @@ class FileSystem(object):
 	# -----------------
 
 	def joinPath(self, *parts):
-		return self._fs.path.join(*parts)
+		return fs.path.join(*parts)
 
 	def splitPath(self, path):
-		return self._fs.path.split(path)
+		return fs.path.split(path)
 
 	def directoryName(self, path):
-		return self._fs.path.dirname(path)
+		return fs.path.dirname(path)
 
 	def relativePath(self, path, start):
-		return self._fs.relativefrom(path, start)
+		return fs.relativefrom(path, start)
 
 	# ---------
 	# Existence
