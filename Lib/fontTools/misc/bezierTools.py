@@ -293,10 +293,14 @@ def solveCubic(a, b, c, d):
     This function returns a list of roots. Note that the returned list
     is neither guaranteed to be sorted nor to contain unique values!
 
+    >>> solveCubic(1, 1, -6, 0)
+    [-3.0, -0.0, 2.0]
     >>> solveCubic(-10.0, -9.0, 48.0, -29.0)
-    [-2.9, 1.0]
+    [-2.9, 1.0, 1.0]
     >>> solveCubic(-9.875, -9.0, 47.625, -28.75)
-    [-2.911392405063291, 1.0]
+    [-2.911392405063, 1.0, 1.0]
+    >>> solveCubic(1.0, -4.5, 6.75, -3.375)
+    [1.5, 1.5, 1.5]
     """
     #
     # adapted from:
@@ -317,7 +321,10 @@ def solveCubic(a, b, c, d):
     R = (2.0*a1*a1*a1 - 9.0*a1*a2 + 27.0*a3)/54.0
     R2_Q3 = R*R - Q*Q*Q
 
-    if R2_Q3 < epsilon:
+    if abs(R) < epsilon and abs(Q) < epsilon:
+        x = -a1/3.0
+        return [x, x, x]
+    elif R2_Q3 < epsilon:
         theta = acos(min(R/sqrt(Q*Q*Q), 1.0))
         rQ2 = -2.0*sqrt(Q)
         a1_3 = a1/3.0
@@ -327,19 +334,21 @@ def solveCubic(a, b, c, d):
         x0, x1, x2 = sorted([x0, x1, x2])
         # Merge roots that are close-enough
         if x1 - x0 < epsilon and x2 - x1 < epsilon:
-            return [round((x0 + x1 + x2) / 3., epsilonDigits)]
+            x0 = x1 = x2 = round((x0 + x1 + x2) / 3., epsilonDigits)
         elif x1 - x0 < epsilon:
-            return [round((x0 + x1) / 2., epsilonDigits), x2]
+            x0 = x1 = round((x0 + x1) / 2., epsilonDigits)
+            x2 = round(x2, epsilonDigits)
         elif x2 - x1 < epsilon:
-            return [x0, round((x1 + x2) / 2., epsilonDigits)]
+            x0 = round(x0, epsilonDigits)
+            x1 = x2 = round((x1 + x2) / 2., epsilonDigits)
         else:
-            return [x0, x1, x2]
+            x0 = round(x0, epsilonDigits)
+            x1 = round(x1, epsilonDigits)
+            x2 = round(x2, epsilonDigits)
+        return [x0, x1, x2]
     else:
-        if Q == 0 and R == 0:
-            x = 0
-        else:
-            x = pow(sqrt(R2_Q3)+abs(R), 1/3.0)
-            x = x + Q/x
+        x = pow(sqrt(R2_Q3)+abs(R), 1/3.0)
+        x = x + Q/x
         if R >= 0.0:
             x = -x
         x = x - a1/3.0
