@@ -176,17 +176,20 @@ class FileSystem(object):
 		return self._fsIsDirectory(path)
 
 	def listDirectory(self, path, recurse=False):
-		return self._listDirectory(path, recurse=recurse)
+		return self._listDirectory(path, recurse=recurse, relativeTo=path)
 
-	def _listDirectory(self, path, recurse=False, depth=0, maxDepth=100):
+	def _listDirectory(self, path, recurse=False, relativeTo=None, depth=0, maxDepth=100):
+		if not relativeTo.endswith("/"):
+			relativeTo += "/"
 		if depth > maxDepth:
 			raise UFOLibError("Maximum recusion depth reached.")
 		result = []
 		for fileName in self._fsListDirectory(path):
 			p = self.joinPath(path, fileName)
 			if self.isDirectory(p) and recurse:
-				result += self._listDirectory(p, recurse=True, depth=depth+1, maxDepth=maxDepth)
+				result += self._listDirectory(p, recurse=True, relativeTo=relativeTo, depth=depth+1, maxDepth=maxDepth)
 			else:
+				p = p[len(relativeTo):]
 				result.append(p)
 		return result
 

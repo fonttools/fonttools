@@ -547,17 +547,36 @@ class UFOWriter(object):
 		in this writer. The paths must be relative. This only
 		works with individual files, not directories.
 		"""
-		print sourcePath, destPath
 		if not isinstance(reader, UFOReader):
 			raise UFOLibError("The reader must be an instance of UFOReader.")
 		if not reader.fileSystem.exists(sourcePath):
 			raise UFOLibError("The reader does not have data located at \"%s\"." % sourcePath)
-		if reader.fileSystem.isDirectory(sourcePath):
-			raise UFOLibError("Directories can not be copied from a reader to a writer.")
 		if self.fileSystem.exists(destPath):
 			raise UFOLibError("A file named \"%s\" already exists." % destPath)
-		data = reader.fileSystem.readBytesFromPath(sourcePath)
-		self.fileSystem.writeBytesToPath(destPath, data)
+		if reader.fileSystem.isDirectory(sourcePath):
+			self._copyDirectoryFromReader(reader, sourcePath, destPath)
+		else:
+			data = reader.fileSystem.readBytesFromPath(sourcePath)
+			self.fileSystem.writeBytesToPath(destPath, data)
+
+	def _copyDirectoryFromReader(self, reader, sourcePath, destPath):
+		# create the destination directory if it doesn't exist
+		if not self.fileSystem.exists(destPath):
+			destDirectory = destPath
+			destTree = []
+			while destDirectory:
+				destDirectory, b = self.fileSystem.splitPath(destDirectory)
+				destTree.insert(0, b)
+			for i, d in enumerate(destTree):
+				p = self.fileSystem.joinPath(*(destTree[:i] + [d]))
+				if not self.fileSystem.exists(p):
+					self.fileSystem.makeDirectory(p)
+		# copy everything in the source directory
+		for fileName in reader.fileSystem.listDirectory(sourcePath):
+			fullSourcePath = self.fileSystem.joinPath(sourcePath, fileName)
+			fullDestPath = self.fileSystem.joinPath(destPath, fileName)
+			self.copyFromReader(reader, fullSourcePath, fullDestPath)
+
 
 	def writeBytesToPath(self, path, data, encoding=None):
 		"""
