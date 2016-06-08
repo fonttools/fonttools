@@ -121,12 +121,12 @@ def _getPlist(self, fileName, default=None):
 # UFO Reader
 # ----------
 
-class UFOReader(FileSystem):
+class UFOReader(object):
 
 	"""Read the various components of the .ufo."""
 
 	def __init__(self, path):
-		super(UFOReader, self).__init__(path)
+		self.fileSystem = FileSystem(path)
 		self.readMetaInfo()
 		self._upConvertedKerningData = None
 
@@ -189,7 +189,7 @@ class UFOReader(FileSystem):
 		"""
 		Read metainfo.plist. Only used for internal operations.
 		"""
-		data = self.readPlist(METAINFO_FILENAME)
+		data = self.fileSystem.readPlist(METAINFO_FILENAME)
 		if not isinstance(data, dict):
 			raise UFOLibError("metainfo.plist is not properly formatted.")
 		formatVersion = data["formatVersion"]
@@ -200,7 +200,7 @@ class UFOReader(FileSystem):
 	# groups.plist
 
 	def _readGroups(self):
-		return self.readPlist(GROUPS_FILENAME, {})
+		return self.fileSystem.readPlist(GROUPS_FILENAME, {})
 
 	def readGroups(self):
 		"""
@@ -242,7 +242,7 @@ class UFOReader(FileSystem):
 	# fontinfo.plist
 
 	def _readInfo(self):
-		data = self.readPlist(FONTINFO_FILENAME, {})
+		data = self.fileSystem.readPlist(FONTINFO_FILENAME, {})
 		if not isinstance(data, dict):
 			raise UFOLibError("fontinfo.plist is not properly formatted.")
 		return data
@@ -294,7 +294,7 @@ class UFOReader(FileSystem):
 	# kerning.plist
 
 	def _readKerning(self):
-		data = self.readPlist(KERNING_FILENAME, {})
+		data = self.fileSystem.readPlist(KERNING_FILENAME, {})
 		return data
 
 	def readKerning(self):
@@ -325,7 +325,7 @@ class UFOReader(FileSystem):
 		"""
 		Read lib.plist. Returns a dict.
 		"""
-		data = self.readPlist(LIB_FILENAME, {})
+		data = self.fileSystem.readPlist(LIB_FILENAME, {})
 		valid, message = fontLibValidator(data)
 		if not valid:
 			raise UFOLibError(message)
@@ -337,9 +337,9 @@ class UFOReader(FileSystem):
 		"""
 		Read features.fea. Returns a string.
 		"""
-		if not self.exists(FEATURES_FILENAME):
+		if not self.fileSystem.exists(FEATURES_FILENAME):
 			return ""
-		with self.open(FEATURES_FILENAME, "r") as f:
+		with self.fileSystem.open(FEATURES_FILENAME, "r") as f:
 			text = f.read()
 		return text
 
@@ -352,7 +352,7 @@ class UFOReader(FileSystem):
 		"""
 		if self._formatVersion < 3:
 			return [(DEFAULT_LAYER_NAME, DEFAULT_GLYPHS_DIRNAME)]
-		contents = self.readPlist(LAYERCONTENTS_FILENAME)
+		contents = self.fileSystem.readPlist(LAYERCONTENTS_FILENAME)
 		valid, error = layerContentsValidator(contents, self._path)
 		if not valid:
 			raise UFOLibError(error)
@@ -395,7 +395,7 @@ class UFOReader(FileSystem):
 				break
 		if directory is None:
 			raise UFOLibError("No glyphs directory is mapped to \"%s\"." % layerName)
-		return GlyphSet(directory, fileSystem=self, ufoFormatVersion=self._formatVersion)
+		return GlyphSet(directory, fileSystem=self.fileSystem, ufoFormatVersion=self._formatVersion)
 
 	def getCharacterMapping(self, layerName=None):
 		"""
@@ -422,9 +422,9 @@ class UFOReader(FileSystem):
 		This will not list directory names, only file names.
 		Thus, empty directories will be skipped.
 		"""
-		if not self.exists(DATA_DIRNAME):
+		if not self.fileSystem.exists(DATA_DIRNAME):
 			return []
-		listing = self.listDirectory(path, recurse=True)
+		listing = self.fileSystem.listDirectory(path, recurse=True)
 		return listing
 
 	def getImageDirectoryListing(self):
@@ -435,16 +435,17 @@ class UFOReader(FileSystem):
 		"""
 		if self._formatVersion < 3:
 			return []
-		if not self.exists(IMAGES_DIRNAME):
+		if not self.fileSystem.exists(IMAGES_DIRNAME):
 			return []
-		if not self.isDirectory(IMAGES_DIRNAME):
+		if not self.fileSystem.isDirectory(IMAGES_DIRNAME):
 			raise UFOLibError("The UFO contains an \"images\" file instead of a directory.")
 		result = []
-		for fileName in self.listDirectory(path):
-			if self.isDirectory(fileName):
+		for fileName in self.fileSystem.listDirectory(path):
+			if self.fileSystem.isDirectory(fileName):
 				# silently skip this as version control
 				# systems often have hidden directories
 				continue
+			# XXX this is sending a path to the validator. that won't work in the abstracted filesystem.
 			valid, error = pngValidator(path=p)
 			if valid:
 				result.append(fileName)
@@ -456,8 +457,8 @@ class UFOReader(FileSystem):
 		"""
 		if self._formatVersion < 3:
 			raise UFOLibError("Reading images is not allowed in UFO %d." % self._formatVersion)
-		path = self.joinPath(IMAGES_DIRNAME, fileName)
-		data = self.readBytesFromPath(path)
+		path = self.fileSystem.joinPath(IMAGES_DIRNAME, fileName)
+		data = self.fileSystem.readBytesFromPath(path)
 		if data is None:
 			raise UFOLibError("No image file named %s." % fileName)
 		valid, error = pngValidator(data=data)
@@ -470,7 +471,7 @@ class UFOReader(FileSystem):
 # ----------
 
 
-class UFOWriter(FileSystem):
+class UFOWriter(object):
 
 	"""Write the various components of the .ufo."""
 
@@ -498,10 +499,10 @@ class UFOWriter(FileSystem):
 		havePreviousFile = False
 		if isinstance(path, basestring) and os.path.exists(path):
 			havePreviousFile = True
-		super(UFOWriter, self).__init__(path, mode="w", structure=structure)
+		self.fileSystem = FileSystem(path, mode="w", structure=structure)
 		previousFormatVersion = None
 		if havePreviousFile:
-			metaInfo = self.readPlist(METAINFO_FILENAME)
+			metaInfo = self.fileSystem.readPlist(METAINFO_FILENAME)
 			previousFormatVersion = metaInfo.get("formatVersion")
 			try:
 				previousFormatVersion = int(previousFormatVersion)
@@ -526,8 +527,7 @@ class UFOWriter(FileSystem):
 		else:
 			# previous < 3
 			# imply the layer contents
-			p = os.path.join(path, DEFAULT_GLYPHS_DIRNAME)
-			if os.path.exists(p):
+			if self.fileSystem.exists(DEFAULT_GLYPHS_DIRNAME):
 				self.layerContents = {DEFAULT_LAYER_NAME : DEFAULT_GLYPHS_DIRNAME}
 		# write the new metainfo
 		self._writeMetaInfo()
@@ -561,10 +561,10 @@ class UFOWriter(FileSystem):
 			raise UFOLibError("The reader does not have data located at \"%s\"." % sourcePath)
 		if reader.isDirectory(sourcePath):
 			raise UFOLibError("Directories can not be copied from a reader to a writer.")
-		if self.exists(destPath):
+		if self.fileSystem.exists(destPath):
 			raise UFOLibError("A file named \"%s\" already exists." % destPath)
-		data = reader.readBytesFromPath(sourcePath)
-		self.writeBytesToPath(data, destPath)
+		data = reader.fileSystem.readBytesFromPath(sourcePath)
+		self.fileSystem.writeBytesToPath(data, destPath)
 
 	# UFO mod time
 
@@ -585,7 +585,7 @@ class UFOWriter(FileSystem):
 			creator=self._fileCreator,
 			formatVersion=self._formatVersion
 		)
-		self.writePlist(METAINFO_FILENAME, metaInfo)
+		self.fileSystem.writePlist(METAINFO_FILENAME, metaInfo)
 
 	# groups.plist
 
@@ -654,9 +654,9 @@ class UFOWriter(FileSystem):
 		for key, value in list(groups.items()):
 			groupsNew[key] = list(value)
 		if groupsNew:
-			self.writePlist(GROUPS_FILENAME, groupsNew)
+			self.fileSystem.writePlist(GROUPS_FILENAME, groupsNew)
 		else:
-			self.remove(GROUPS_FILENAME)
+			self.fileSystem.remove(GROUPS_FILENAME)
 
 	# fontinfo.plist
 
@@ -690,7 +690,7 @@ class UFOWriter(FileSystem):
 			infoData = validateInfoVersion2Data(infoData)
 			infoData = _convertFontInfoDataVersion2ToVersion1(infoData)
 		# write file
-		self.writePlist(FONTINFO_FILENAME, infoData)
+		self.fileSystem.writePlist(FONTINFO_FILENAME, infoData)
 
 	# kerning.plist
 
@@ -736,9 +736,9 @@ class UFOWriter(FileSystem):
 				kerningDict[left] = {}
 			kerningDict[left][right] = value
 		if kerningDict:
-			self.writePlist(KERNING_FILENAME, kerningDict)
+			self.fileSystem.writePlist(KERNING_FILENAME, kerningDict)
 		else:
-			self.remove(KERNING_FILENAME)
+			self.fileSystem.remove(KERNING_FILENAME)
 
 	# lib.plist
 
@@ -751,9 +751,9 @@ class UFOWriter(FileSystem):
 		if not valid:
 			raise UFOLibError(message)
 		if libDict:
-			self.writePlist(LIB_FILENAME, libDict)
+			self.fileSystem.writePlist(LIB_FILENAME, libDict)
 		else:
-			self.remove(LIB_FILENAME)
+			self.fileSystem.remove(LIB_FILENAME)
 
 	# features.fea
 
@@ -766,7 +766,7 @@ class UFOWriter(FileSystem):
 			raise UFOLibError("features.fea is not allowed in UFO Format Version 1.")
 		if not isinstance(features, basestring):
 			raise UFOLibError("The features are not text.")
-		self.writeBytesToPath(FEATURES_FILENAME, features.encode("utf8"))
+		self.fileSystem.writeBytesToPath(FEATURES_FILENAME, features.encode("utf8"))
 
 	# glyph sets & layers
 
@@ -776,7 +776,7 @@ class UFOWriter(FileSystem):
 		are available on disk.
 		"""
 		# read the file on disk
-		raw = self.readPlist(LAYERCONTENTS_FILENAME)
+		raw = self.fileSystem.readPlist(LAYERCONTENTS_FILENAME)
 		contents = {}
 		valid, error = layerContentsValidator(raw, self._path)
 		if not valid:
@@ -805,7 +805,7 @@ class UFOWriter(FileSystem):
 		if set(layerOrder) != set(self.layerContents.keys()):
 			raise UFOLibError("The layer order contents does not match the glyph sets that have been created.")
 		layerContents = [(layerName, self.layerContents[layerName]) for layerName in layerOrder]
-		self.writePlist(LAYERCONTENTS_FILENAME, layerContents)
+		self.fileSystem.writePlist(LAYERCONTENTS_FILENAME, layerContents)
 
 	def _findDirectoryForLayerName(self, layerName):
 		foundDirectory = None
@@ -850,10 +850,10 @@ class UFOWriter(FileSystem):
 			return self._getGlyphSetFormatVersion3(layerName=layerName, defaultLayer=defaultLayer, glyphNameToFileNameFunc=glyphNameToFileNameFunc)
 
 	def _getGlyphSetFormatVersion1(self, glyphNameToFileNameFunc=None):
-		return GlyphSet(DEFAULT_GLYPHS_DIRNAME, fileSystem=self, glyphNameToFileNameFunc=glyphNameToFileNameFunc, ufoFormatVersion=1)
+		return GlyphSet(DEFAULT_GLYPHS_DIRNAME, fileSystem=self.fileSystem, glyphNameToFileNameFunc=glyphNameToFileNameFunc, ufoFormatVersion=1)
 
 	def _getGlyphSetFormatVersion2(self, glyphNameToFileNameFunc=None):
-		return GlyphSet(DEFAULT_GLYPHS_DIRNAME, fileSystem=self, glyphNameToFileNameFunc=glyphNameToFileNameFunc, ufoFormatVersion=2)
+		return GlyphSet(DEFAULT_GLYPHS_DIRNAME, fileSystem=self.fileSystem, glyphNameToFileNameFunc=glyphNameToFileNameFunc, ufoFormatVersion=2)
 
 	def _getGlyphSetFormatVersion3(self, layerName=None, defaultLayer=True, glyphNameToFileNameFunc=None):
 		# if the default flag is on, make sure that the default in the file
@@ -884,11 +884,11 @@ class UFOWriter(FileSystem):
 						raise UFOLibError("The specified layer name is not a Unicode string.")
 				directory = userNameToFileName(layerName, existing=existing, prefix="glyphs.")
 		# make the directory
-		self.makeDirectory(directory)
+		self.fileSystem.makeDirectory(directory)
 		# store the mapping
 		self.layerContents[layerName] = directory
 		# load the glyph set
-		return GlyphSet(directory, fileSystem=self, glyphNameToFileNameFunc=glyphNameToFileNameFunc, ufoFormatVersion=3)
+		return GlyphSet(directory, fileSystem=self.fileSystem, glyphNameToFileNameFunc=glyphNameToFileNameFunc, ufoFormatVersion=3)
 
 	def renameGlyphSet(self, layerName, newLayerName, defaultLayer=False):
 		"""
@@ -929,7 +929,7 @@ class UFOWriter(FileSystem):
 		del self.layerContents[layerName]
 		self.layerContents[newLayerName] = newDirectory
 		# do the file system copy
-		self.move(oldDirectory, newDirectory)
+		self.fileSystem.move(oldDirectory, newDirectory)
 
 	def deleteGlyphSet(self, layerName):
 		"""
@@ -953,8 +953,8 @@ class UFOWriter(FileSystem):
 		valid, error = pngValidator(data=data)
 		if not valid:
 			raise UFOLibError(error)
-		path = self.joinPath(IMAGES_DIRNAME, fileName)
-		self.writeBytesToPath(path, data)
+		path = self.fileSystem.joinPath(IMAGES_DIRNAME, fileName)
+		self.fileSystem.writeBytesToPath(path, data)
 
 	def removeImage(self, fileName):
 		"""
@@ -963,8 +963,8 @@ class UFOWriter(FileSystem):
 		"""
 		if self._formatVersion < 3:
 			raise UFOLibError("Images are not allowed in UFO %d." % self._formatVersion)
-		path = self.joinPath(IMAGES_DIRNAME, fileName)
-		self.remove(path)
+		path = self.fileSystem.joinPath(IMAGES_DIRNAME, fileName)
+		self.fileSystem.remove(path)
 
 	def copyImageFromReader(self, reader, sourceFileName, destFileName):
 		"""
