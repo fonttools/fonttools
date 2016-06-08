@@ -59,8 +59,6 @@ __all__ = [
 	"validateFontInfoVersion3ValueForAttribute",
 	"convertFontInfoValueForAttributeFromVersion1ToVersion2",
 	"convertFontInfoValueForAttributeFromVersion2ToVersion1"
-	# deprecated
-	"convertUFOFormatVersion1ToFormatVersion2"
 ]
 
 
@@ -87,35 +85,6 @@ DEFAULT_LAYER_NAME = "public.default"
 
 supportedUFOFormatVersions = [1, 2, 3]
 
-
-# --------------
-# Shared Methods
-# --------------
-
-def _getPlist(self, fileName, default=None):
-	"""
-	Read a property list relative to the
-	path argument of UFOReader. If the file
-	is missing and default is None a
-	UFOLibError will be raised otherwise
-	default is returned. The errors that
-	could be raised during the reading of
-	a plist are unpredictable and/or too
-	large to list, so, a blind try: except:
-	is done. If an exception occurs, a
-	UFOLibError will be raised.
-	"""
-	path = os.path.join(self._path, fileName)
-	if not os.path.exists(path):
-		if default is not None:
-			return default
-		else:
-			raise UFOLibError("%s is missing in %s. This file is required" % (fileName, self._path))
-	try:
-		with open(path, "rb") as f:
-			return readPlist(f)
-	except:
-		raise UFOLibError("The file %s could not be read." % fileName)
 
 # ----------
 # UFO Reader
@@ -466,10 +435,10 @@ class UFOReader(object):
 			raise UFOLibError(error)
 		return data
 
+
 # ----------
 # UFO Writer
 # ----------
-
 
 class UFOWriter(object):
 
@@ -995,43 +964,6 @@ def makeUFOPath(path):
 	dir, name = os.path.split(path)
 	name = ".".join([".".join(name.split(".")[:-1]), "ufo"])
 	return os.path.join(dir, name)
-
-def writePlistAtomically(obj, path):
-	"""
-	Write a plist for "obj" to "path". Do this sort of atomically,
-	making it harder to cause corrupt files, for example when writePlist
-	encounters an error halfway during write. This also checks to see
-	if text matches the text that is already in the file at path.
-	If so, the file is not rewritten so that the modification date
-	is preserved.
-	"""
-	f = BytesIO()
-	writePlist(obj, f)
-	data = f.getvalue()
-	writeDataFileAtomically(data, path)
-
-def writeDataFileAtomically(data, path):
-	"""
-	Write data into a file at path. Do this sort of atomically
-	making it harder to cause corrupt files. This also checks to see
-	if data matches the data that is already in the file at path.
-	If so, the file is not rewritten so that the modification date
-	is preserved.
-	"""
-	assert isinstance(data, bytes)
-	if os.path.exists(path):
-		f = open(path, "rb")
-		oldData = f.read()
-		f.close()
-		if data == oldData:
-			return
-			# if the data is empty, remove the existing file
-			if not data:
-				os.remove(path)
-	if data:
-		f = open(path, "wb")
-		f.write(data)
-		f.close()
 
 # ----------------------
 # fontinfo.plist Support
