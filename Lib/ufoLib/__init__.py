@@ -547,6 +547,7 @@ class UFOWriter(object):
 		in this writer. The paths must be relative. This only
 		works with individual files, not directories.
 		"""
+		print sourcePath, destPath
 		if not isinstance(reader, UFOReader):
 			raise UFOLibError("The reader must be an instance of UFOReader.")
 		if not reader.fileSystem.exists(sourcePath):
@@ -556,7 +557,7 @@ class UFOWriter(object):
 		if self.fileSystem.exists(destPath):
 			raise UFOLibError("A file named \"%s\" already exists." % destPath)
 		data = reader.fileSystem.readBytesFromPath(sourcePath)
-		self.fileSystem.writeBytesToPath(data, destPath)
+		self.fileSystem.writeBytesToPath(destPath, data)
 
 	def writeBytesToPath(self, path, data, encoding=None):
 		"""
