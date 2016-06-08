@@ -17,7 +17,6 @@ from io import BytesIO, open
 from warnings import warn
 from fontTools.misc.py23 import tobytes
 from ufoLib.filesystem import FileSystem
-from ufoLib.xmlTreeBuilder import buildTree, stripCharacterData
 from ufoLib.plistlib import PlistWriter, readPlist, writePlist
 from ufoLib.plistFromETree import readPlistFromTree
 from ufoLib.pointPen import AbstractPointPen, PointToSegmentPen
