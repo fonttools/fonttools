@@ -260,7 +260,7 @@ class FileSystem(object):
 		Returns None if the file does not exist.
 		An encoding may be passed if needed.
 		"""
-		f = self.open(path, mode="r", encoding=encoding)
+		f = self.open(path, mode="rb", encoding=encoding)
 		if f is None:
 			return None
 		data = f.read()
