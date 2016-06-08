@@ -645,6 +645,7 @@ otData = [
 		('Offset', 'LigCaretList', None, None, 'Offset to list of positioning points for ligature carets-from beginning of GDEF header (may be NULL)'),
 		('Offset', 'MarkAttachClassDef', None, None, 'Offset to class definition table for mark attachment type-from beginning of GDEF header (may be NULL)'),
 		('Offset', 'MarkGlyphSetsDef', None, 'int(round(Version*0x10000)) >= 0x00010002', 'Offset to the table of mark set definitions-from beginning of GDEF header (may be NULL)'),
+		('LOffset', 'VarStore', None, 'int(round(Version*0x10000)) >= 0x00010003', 'Offset to variation store (may be NULL)'),
 	]),
 
 	('AttachList', [
