@@ -369,7 +369,7 @@ class FileSystem(object):
 			with self.open(path, "rb") as f:
 				return readPlist(f)
 		except:
-			raise UFOLibError("The file %s could not be read." % fileName)
+			raise UFOLibError("The file %s could not be read." % path)
 
 	def writePlist(self, path, obj):
 		"""
