@@ -319,13 +319,17 @@ def solveCubic(a, b, c, d):
 
     Q = (a1*a1 - 3.0*a2)/9.0
     R = (2.0*a1*a1*a1 - 9.0*a1*a2 + 27.0*a3)/54.0
+
+    R = 0 if abs(R) < epsilon else R
+    Q = 0 if abs(Q) < epsilon else Q
+
     R2_Q3 = R*R - Q*Q*Q
 
-    if abs(R) < epsilon and abs(Q) < epsilon:
+    if R == 0. and Q == 0.:
         x = -a1/3.0
         return [x, x, x]
-    elif R2_Q3 < epsilon:
-        theta = acos(min(R/sqrt(Q*Q*Q), 1.0))
+    elif R2_Q3 <= epsilon:
+        theta = acos(max(min(R/sqrt(Q*Q*Q), 1.0), -1.0))
         rQ2 = -2.0*sqrt(Q)
         a1_3 = a1/3.0
         x0 = rQ2*cos(theta/3.0) - a1_3
