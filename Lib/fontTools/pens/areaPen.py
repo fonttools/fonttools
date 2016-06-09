@@ -49,7 +49,7 @@ class AreaPen(BasePen):
 		self.value += cubic_curve_area(p0, p1, p2, p3)
 		self.value += polygon_area(p0, p3)
 
-	def _qCurveToOne(self, pt1, pt2):
+	def _qCurveToOne(self, p1, p2):
 		p0 = self._getCurrentPoint()
 		self.value += quadratic_curve_area(p0, p1, p2)
 		self.value += polygon_area(p0, p2)
