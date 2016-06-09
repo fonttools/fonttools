@@ -3,11 +3,6 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.pens.basePen import BasePen
-import math
-
-
-def distance(p0, p1):
-    return math.hypot(p0[0] - p1[0], p0[1] - p1[1])
 
 
 def interpolate(p0, p1, t):
