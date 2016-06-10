@@ -43,7 +43,7 @@ BezierCurve = tuple(
 	for n,bernsteins in enumerate(BernsteinPolynomial))
 
 def green(f, Bezier=BezierCurve[n]):
-	f1 = sp.integrate(f, y)
+	f1 = -sp.integrate(f, y)
 	f2 = f1.replace(y, Bezier[1]).replace(x, Bezier[0])
 	return sp.integrate(f2 * sp.diff(Bezier[0], t), (t, 0, 1))
 
