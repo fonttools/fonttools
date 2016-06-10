@@ -82,6 +82,7 @@ class GreenPen(BasePen):
 		self.value += self._funcs[len(P) - 1](P)
 
 	def _moveTo(self, p0):
+		self.__startPoint = p0
 		self._segment(p0)
 
 	def _lineTo(self, p1):
@@ -95,6 +96,11 @@ class GreenPen(BasePen):
 	def _curveToOne(self, p1, p2, p3):
 		p0 = self._getCurrentPoint()
 		self._segment(p0,p1,p2,p3)
+
+	def _closePath(self):
+		p0 = self._getCurrentPoint()
+		if p0 != self.__startPoint:
+			self._segment(p0,self.__startPoint)
 
 AreaPen = partial(GreenPen, func=1)
 Moment1XPen = partial(GreenPen, func=x)
