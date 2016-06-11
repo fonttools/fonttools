@@ -1039,7 +1039,7 @@ class Executor(object):
         stack_depth_upon_call = len(caller_program_stack)
         stack_used = stack_depth_upon_call - self.environment.minimum_stack_depth
         stack_additional = self.stack_depth() - stack_depth_upon_call
-        self.environment.program_stack = caller_program_stack
+        #self.environment.program_stack = caller_program_stack
         for iter in range(repeats):
             if stack_additional > 0:
                 for i in range(stack_additional):
