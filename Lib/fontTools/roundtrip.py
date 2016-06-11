@@ -235,7 +235,7 @@ def main(args):
     tags = {} 
     current_tag = ""
 
-    if len(args) < 0 or !os.path.isfile(args[0]):
+    if len(args) < 0 or os.path.isfile(args[0]) == False:
         usage()
 
     with open(args[0], "r") as file:
