@@ -236,7 +236,7 @@ class VariationModel(object):
 
 	def interpolateFromDeltas(self, loc, deltas):
 		v = None
-		supports = model.supports
+		supports = self.supports
 		assert len(deltas) == len(supports)
 		for i,(delta,support) in enumerate(zip(deltas, supports)):
 			scalar = supportScalar(loc, support)
