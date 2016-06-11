@@ -1,0 +1,147 @@
+#! /usr/bin/env python
+"""
+usage: runRoundtripTests [options] inputFile
+
+    options:
+    -f NAME folder: get all ttx from folder NAME as input files
+"""
+
+import sys
+import getopt
+import os
+from fontTools.ttLib import TTFont
+from fontTools.misc.captureOutput import captureOutput
+from fontTools import analysis
+from fontTools import roundtrip
+
+def usage():
+    print(__doc__)
+    sys.exit(1)
+
+def makeArgs(*params):
+    args = []
+    for param in params:
+        args.append(param)
+    return args
+
+def get3ac(ttx):
+    filename = "%s.tmp" % ttx
+    args = makeArgs("-pfziG", ttx)
+    with captureOutput() as out:
+        try:
+            analysis.main(args)
+            result = out.getOutput()
+        except:            
+            result = out.getOutput()
+    text_file = open(filename, "w")
+    text_file.write(result)
+    text_file.close()
+    return filename
+
+def getRoundtrip(threeaddr):
+    
+    filename = "roundtrip.tmp"
+    args = makeArgs(threeaddr)
+    result = ""
+    with captureOutput() as out:
+        try:
+            roundtrip.main(args)
+            result = out.getOutput()
+        except:            
+            result = out.getOutput()
+    text_file = open(filename, "w")
+    text_file.write(result)
+    text_file.close()
+    
+    tags = readTempFile(filename)
+    os.remove(filename)
+    return tags
+
+def readTempFile(input):
+    tags = {}
+    current_tag = ""
+
+    with open(input, "r") as file:
+        for nl, line in enumerate(file):
+            if line.isspace():
+                current_tag = ""
+            elif line.startswith('PREP:'):
+                current_tag = 'prep'
+                tags['prep'] = []
+            elif line.startswith('glyf'):
+                current_tag = line[5:-2]
+                tags[current_tag] = []
+            elif current_tag != "":
+                tags[current_tag].append(line[:-1])
+
+    return tags
+
+def getBytecode(ttx):
+    bytecode = {}
+    tt = TTFont()
+    tt.importXML(ttx, quiet=True)
+    glyfs = tt.get('glyf').keys()
+    for glyf in glyfs:
+        try:
+            assembly = tt['glyf'].glyphs[glyf].program.getAssembly()
+            key = "{0}".format(glyf)
+            bytecode[key] = []
+            for instr in assembly:
+                bytecode[key].append(instr)
+        except:
+            pass
+    return bytecode
+
+def runTests(jobs):
+
+    def set_up(job):
+        output = get3ac(job)
+        roundtrip = getRoundtrip(output)
+        bytecode = getBytecode(job)
+        os.remove(output)
+        return bytecode, roundtrip
+
+    for job in jobs:
+
+        bytecode, roundtrip = set_up(job)
+        error = []
+
+        for table in bytecode:
+            try:
+                for b, r in zip(bytecode[table], roundtrip[table]):
+                    assert(b == r)
+            except:
+                error.append(table)
+
+        print("Errors found for font {0}: {1}".format(job, str(len(error))))
+
+def main(args):
+
+    jobs = [] 
+    try:
+        options, files = getopt.getopt(args, "f:",)
+    except getopt.GetoptError:
+        usage()
+
+    for option, value in options:
+        if option == "-f":
+            currentDir = "{0}/{1}".format(os.getcwd(), value)
+            files = []
+            for file in os.listdir(currentDir):
+                files.append("{0}/{1}".format(currentDir, file))
+
+    if not files:
+        usage()
+
+    for input in files:
+        fileformat = input.split('.')[-1]
+        if fileformat == 'ttx':
+            jobs.append(input)
+        else:
+            continue
+
+    runTests(jobs)
+
+if __name__ == '__main__':
+  main(sys.argv[1:])
+

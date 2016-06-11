@@ -334,9 +334,9 @@ class MIRPMethodCall(MethodCallStatement):
         self.methodName = 'MIRP'
 
 class GCMethodCall(MethodCallStatement):
-    def __init__(self, parameters = [], returnVal=None):
+    def __init__(self, data, parameters = [], returnVal=None):
         super(GCMethodCall, self).__init__(parameters, returnVal)
-        self.methodName = 'GC'
+        self.methodName = 'GC_'+data
 
 class GETINFOMethodCall(MethodCallStatement):
     def __init__(self, parameters = [], returnVal=None):
@@ -361,9 +361,9 @@ class ROUNDMethodCall(MethodCallStatement):
         self.methodName = 'ROUND_'+data
 
 class SHPMethodCall(MethodCallStatement):
-    def __init__(self, parameters = [], returnVal=None):
+    def __init__(self, data, parameters = [], returnVal=None):
         super(SHPMethodCall, self).__init__(parameters, returnVal)
-        self.methodName = 'SHP'
+        self.methodName = 'SHP_'+data
 
 class SHPIXMethodCall(MethodCallStatement):
     def __init__(self, parameters = [], returnVal=None):
@@ -387,7 +387,7 @@ class MDAPMethodCall(MethodCallStatement):
 
 class MDRPMethodCall(MethodCallStatement):
     def __init__(self, data, parameters = [], returnVal=None):
-        super(MDAPMethodCall, self).__init__(parameters, returnVal)
+        super(MDRPMethodCall, self).__init__(parameters, returnVal)
         self.methodName = 'MDRP_'+data
 
 class MIAPMethodCall(MethodCallStatement):

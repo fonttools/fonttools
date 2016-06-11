@@ -317,7 +317,12 @@ class Environment(object):
         # index starts from 1
         index = self.program_stack_pop().eval(False)
         new_top = self.program_stack[-index].eval(self.keep_abstract)
-        self.program_stack_push(new_top)
+        self.program_stack_push(new_top, False)
+        
+        var_name = identifierGenerator.generateIdentifier(self.tag, self.stack_depth() + 1)
+        argN_name = identifierGenerator.generateIdentifier(self.tag, self.stack_depth() - (index - 1))
+        self.current_instruction_intermediate.append(IR.CopyStatement(IR.Variable(var_name),
+                                                                      IR.Variable(argN_name)))
 
     def exec_CLEAR(self):#ClearStack
         self.program_stack = []
@@ -397,7 +402,7 @@ class Environment(object):
     def exec_GC(self):
         arg = self.program_stack_pop()
         var = self.program_stack_push(dataType.AbstractValue(), False)
-        self.current_instruction_intermediate.append(IR.GCMethodCall([arg],var))
+        self.current_instruction_intermediate.append(IR.GCMethodCall(self.current_instruction.data[0],[arg],var))
     
     def exec_GETINFO(self):
         '''
@@ -529,7 +534,7 @@ class Environment(object):
 
     def exec_MDRP(self):
         arg = self.program_stack_pop().eval(self.keep_abstract)
-        self.current_instruction_intermediate.append(IR.MDAPMethodCall(self.current_instruction.data[0], [arg]))
+        self.current_instruction_intermediate.append(IR.MDRPMethodCall(self.current_instruction.data[0], [arg]))
 
     def exec_MIAP(self):
         args = self.program_stack_pop_many(2)
@@ -689,10 +694,6 @@ class Environment(object):
         self.program_stack_pop()
         self.current_instruction_intermediate.append(IR.CopyStatement(IR.ScanType(), value))
 
-    def exec_SCFS(self):
-        self.program_stack_pop_many(2)
-        raise NotImplementedError
-
     def exec_SCVTCI(self):
         self.program_stack_pop()
         raise NotImplementedError
@@ -713,14 +714,14 @@ class Environment(object):
         self.program_stack_pop_many(2)
         raise NotImplementedError
 
-    def exec_SFVTCA(self):#Set Freedom Vector To Coordinate Axis
+    def exec_SFVTCA(self):
         data = int(self.current_instruction.data[0])
         assert (data is 1 or data is 0)
         if data == 0:
             self.graphics_state['fv'] = (0, 1)
         if data == 1:
             self.graphics_state['fv'] = (1, 0)
-        raise NotImplementedError
+        self.current_instruction_intermediate.append(IR.CopyStatement(IR.FreedomVector(),IR.Constant(data)))
            
     def exec_SFVTL(self):#Set Freedom Vector To Line
         self.program_stack_pop_many(2)
@@ -739,7 +740,7 @@ class Environment(object):
         self.graphics_state['loop'] = 1
         assert len(self.program_stack) >= loopValue, "IP: stack underflow"
         pts = self.program_stack_pop_many(loopValue)
-        self.current_instruction_intermediate.append(IR.SHPMethodCall(pts))
+        self.current_instruction_intermediate.append(IR.SHPMethodCall(self.current_instruction.data[0], pts))
 
     def exec_SHPIX(self):
         self.program_stack_pop()
@@ -771,11 +772,9 @@ class Environment(object):
         assert (data is 1 or data is 0)
         if data == 0:
             self.graphics_state['pv'] = (0, 1)
-            self.graphics_state['dv'] = (0, 1)
         if data == 1:
             self.graphics_state['pv'] = (1, 0)
-            self.graphics_state['dv'] = (1, 0)
-        raise NotImplementedError
+        self.current_instruction_intermediate.append(IR.CopyStatement(IR.ProjectionVector(),IR.Constant(data)))
 
     def exec_SPVTL(self):
         self.program_stack_pop_many()
@@ -790,8 +789,11 @@ class Environment(object):
         self.current_instruction_intermediate.append(IR.CopyStatement(IR.RoundState(), arg))
 
     def exec_SSW(self):
+        arg_name = self.stack_top_name()
+        data = self.program_stack[-1].data
         self.program_stack_pop()
-        raise NotImplementedError
+        self.graphics_state['singleWidthValue'] = data
+        self.current_instruction_intermediate.append(IR.CopyStatement(IR.SingleWidthValue(), arg_name))
 
     def exec_SSWCI(self):
         self.program_stack_pop()
@@ -878,15 +880,15 @@ class Environment(object):
 
     def exec_SRP0(self):
         arg = self.exec_SRP(0)
-        self.current_instruction_intermediate.append(IR.SRP0MethodCall([arg]))
-    
+        self.current_instruction_intermediate.append(IR.CopyStatement(IR.RP0(), arg))    
+
     def exec_SRP1(self):
         arg = self.exec_SRP(1)
-        self.current_instruction_intermediate.append(IR.SRP1MethodCall([arg]))
+        self.current_instruction_intermediate.append(IR.CopyStatement(IR.RP1(), arg))    
 
     def exec_SRP2(self):
         arg = self.exec_SRP(2)
-        self.current_instruction_intermediate.append(IR.SRP2MethodCall([arg]))
+        self.current_instruction_intermediate.append(IR.CopyStatement(IR.RP2(), arg))    
 
     def exec_SANGW(self):
         self.program_stack_pop()
@@ -1037,7 +1039,7 @@ class Executor(object):
         stack_depth_upon_call = len(caller_program_stack)
         stack_used = stack_depth_upon_call - self.environment.minimum_stack_depth
         stack_additional = self.stack_depth() - stack_depth_upon_call
-        self.environment.program_stack = caller_program_stack
+        #self.environment.program_stack = caller_program_stack
         for iter in range(repeats):
             if stack_additional > 0:
                 for i in range(stack_additional):
