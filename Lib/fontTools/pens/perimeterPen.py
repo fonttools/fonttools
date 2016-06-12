@@ -19,7 +19,7 @@ class PerimeterPen(BasePen):
 		self._mult = 1. + tolerance
 
 	def _moveTo(self, p0):
-		pass
+		self.__startPoint = p0
 
 	def _lineTo(self, p1):
 		p0 = self._getCurrentPoint()
@@ -37,3 +37,8 @@ class PerimeterPen(BasePen):
 	def _curveToOne(self, p1, p2, p3):
 		p0 = self._getCurrentPoint()
 		self._addCubic(p0, p1, p2, p3)
+
+	def _closePath(self):
+		p0 = self._getCurrentPoint()
+		if p0 != self.__startPoint:
+			self.value += distance(p0, self.__startPoint)
