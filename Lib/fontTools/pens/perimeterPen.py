@@ -13,7 +13,7 @@ def distance(p0, p1):
 
 class PerimeterPen(BasePen):
 
-	def __init__(self, tolerance=0.005, glyphset=None):
+	def __init__(self, glyphset=None, tolerance=0.005):
 		BasePen.__init__(self, glyphset)
 		self.value = 0
 		self._mult = 1. + tolerance
