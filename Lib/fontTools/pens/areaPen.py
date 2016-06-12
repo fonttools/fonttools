@@ -5,10 +5,6 @@ from fontTools.misc.py23 import *
 from fontTools.pens.basePen import BasePen
 
 
-def interpolate(p0, p1, t):
-	return (p0[0] * (1 - t) + p1[0] * t, p0[1] * (1 - t) + p1[1] * t)
-
-
 def polygon_area(p0, p1):
 	return -(p1[0] - p0[0]) * (p1[1] + p0[1]) * 0.5
 
@@ -58,4 +54,4 @@ class AreaPen(BasePen):
 	def _closePath(self):
 		p0 = self._getCurrentPoint()
 		if p0 != self.__startPoint:
-			self._lineTo(self.__startPoint)
+			self.value += polygon_area(p0, self.__startPoint)
