@@ -14,9 +14,10 @@ def polygon_area(p0, p1):
 
 
 def quadratic_curve_area(p0, p1, p2):
-	new_p2 = interpolate(p2, p1, 2.0 / 3)
-	new_p1 = interpolate(p0, p1, 2.0 / 3)
-	return cubic_curve_area(p0, new_p1, new_p2, p2)
+	x0, y0 = p0[0], p0[1]
+	x1, y1 = p1[0] - x0, p1[1] - y0
+	x2, y2 = p2[0] - x0, p2[1] - y0
+	return (x1*y2 - x2*y1) / 3
 
 
 def cubic_curve_area(p0, p1, p2, p3):
