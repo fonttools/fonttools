@@ -33,12 +33,12 @@ def cubic_curve_area(p0, p1, p2, p3):
 
 class AreaPen(BasePen):
 
-	def __init__(self, glyphset):
+	def __init__(self, glyphset=None):
 		BasePen.__init__(self, glyphset)
 		self.value = 0
 
 	def _moveTo(self, p0):
-		pass
+		self.__startPoint = p0
 
 	def _lineTo(self, p1):
 		p0 = self._getCurrentPoint()
@@ -53,3 +53,8 @@ class AreaPen(BasePen):
 		p0 = self._getCurrentPoint()
 		self.value += quadratic_curve_area(p0, p1, p2)
 		self.value += polygon_area(p0, p2)
+
+	def _closePath(self):
+		p0 = self._getCurrentPoint()
+		if p0 != self.__startPoint:
+			self._lineTo(self.__startPoint)
