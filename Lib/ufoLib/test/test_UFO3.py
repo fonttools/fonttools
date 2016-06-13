@@ -4379,7 +4379,7 @@ class UFO3ReadLayerInfoTestCase(unittest.TestCase):
 		reader = UFOReader(self.ufoPath)
 		glyphSet = reader.getGlyphSet()
 		info = TestLayerInfoObject()
-		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, info)
+		self.assertRaises(UFOLibError, glyphSet.readLayerInfo, info)
 
 	def testInvalidFormatLayerInfo(self):
 		self.makeUFO()
