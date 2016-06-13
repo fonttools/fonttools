@@ -2662,7 +2662,7 @@ class WriteFontInfoVersion3TestCase(unittest.TestCase):
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataUniqueID = None
 		writer = UFOWriter(self.dstDir, formatVersion=3)
-		writer.writeInfo(TestInfoObject())
+		writer.writeInfo(infoObject)
 		self.tearDownUFO()
 		## not a dict
 		infoObject = self.makeInfoObject()
@@ -2692,7 +2692,7 @@ class WriteFontInfoVersion3TestCase(unittest.TestCase):
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataUniqueID = dict(id="")
 		writer = UFOWriter(self.dstDir, formatVersion=3)
-		writer.writeInfo(TestInfoObject())
+		writer.writeInfo(infoObject)
 		self.tearDownUFO()
 		# woffMetadataVendor
 		## no name
@@ -2711,13 +2711,13 @@ class WriteFontInfoVersion3TestCase(unittest.TestCase):
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataVendor = dict(name="", url="foo")
 		writer = UFOWriter(self.dstDir, formatVersion=3)
-		writer.writeInfo(TestInfoObject())
+		writer.writeInfo(infoObject)
 		self.tearDownUFO()
 		## no URL
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataVendor = dict(name="foo")
 		writer = UFOWriter(self.dstDir, formatVersion=3)
-		writer.writeInfo(TestInfoObject())
+		writer.writeInfo(infoObject)
 		self.tearDownUFO()
 		## url not a string
 		infoObject = self.makeInfoObject()
@@ -2729,18 +2729,18 @@ class WriteFontInfoVersion3TestCase(unittest.TestCase):
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataVendor = dict(name="foo", url="")
 		writer = UFOWriter(self.dstDir, formatVersion=3)
-		writer.writeInfo(TestInfoObject())
+		writer.writeInfo(infoObject)
 		self.tearDownUFO()
 		## have dir
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataVendor = dict(name="foo", url="bar", dir="ltr")
 		writer = UFOWriter(self.dstDir, formatVersion=3)
-		writer.writeInfo(TestInfoObject())
+		writer.writeInfo(infoObject)
 		self.tearDownUFO()
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataVendor = dict(name="foo", url="bar", dir="rtl")
 		writer = UFOWriter(self.dstDir, formatVersion=3)
-		writer.writeInfo(TestInfoObject())
+		writer.writeInfo(infoObject)
 		self.tearDownUFO()
 		## dir not a string
 		infoObject = self.makeInfoObject()
@@ -2758,7 +2758,7 @@ class WriteFontInfoVersion3TestCase(unittest.TestCase):
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataVendor = {"name"  : "foo", "url" : "bar", "class" : "hello"}
 		writer = UFOWriter(self.dstDir, formatVersion=3)
-		writer.writeInfo(TestInfoObject())
+		writer.writeInfo(infoObject)
 		self.tearDownUFO()
 		## class not a string
 		infoObject = self.makeInfoObject()
@@ -2770,7 +2770,7 @@ class WriteFontInfoVersion3TestCase(unittest.TestCase):
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataVendor = {"name"  : "foo", "url" : "bar", "class" : ""}
 		writer = UFOWriter(self.dstDir, formatVersion=3)
-		writer.writeInfo(TestInfoObject())
+		writer.writeInfo(infoObject)
 		self.tearDownUFO()
 		# woffMetadataCredits
 		## no credits attribute
@@ -2855,7 +2855,7 @@ class WriteFontInfoVersion3TestCase(unittest.TestCase):
 		## no url
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataDescription = dict(text=[dict(text="foo")])
-		writer.writeInfo(TestInfoObject())
+		writer.writeInfo(infoObject)
 		self.tearDownUFO()
 		## url not a string
 		infoObject = self.makeInfoObject()
@@ -2928,7 +2928,7 @@ class WriteFontInfoVersion3TestCase(unittest.TestCase):
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataLicense = dict(text=[dict(text="foo")])
 		writer = UFOWriter(self.dstDir, formatVersion=3)
-		writer.writeInfo(TestInfoObject())
+		writer.writeInfo(infoObject)
 		self.tearDownUFO()
 		## url not a string
 		infoObject = self.makeInfoObject()
@@ -2946,7 +2946,7 @@ class WriteFontInfoVersion3TestCase(unittest.TestCase):
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataLicense = dict(url="foo")
 		writer = UFOWriter(self.dstDir, formatVersion=3)
-		writer.writeInfo(TestInfoObject())
+		writer.writeInfo(infoObject)
 		self.tearDownUFO()
 		## text not a list
 		infoObject = self.makeInfoObject()
