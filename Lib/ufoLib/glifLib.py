@@ -214,7 +214,7 @@ class GlyphSet(object):
 		infoData = validateLayerInfoVersion3Data(infoData)
 		# write file
 		path = self.fileSystem.joinPath(self.dirName, LAYERINFO_FILENAME)
-		self.fileSystem.writePlist(infoData, path)
+		self.fileSystem.writePlist(path, infoData)
 
 	# # read caching
 
