@@ -3,8 +3,6 @@ from fontTools.misc.py23 import *
 from fontTools.pens.perimeterPen import PerimeterPen
 import unittest
 
-precision = 8
-
 def draw1_(pen):
     pen.moveTo( (254, 360) )
     pen.lineTo( (771, 367) )
@@ -126,42 +124,42 @@ class PerimeterPenTest(unittest.TestCase):
     def test_PScontour_clockwise_line_first(self):
         pen = PerimeterPen(None)
         draw1_(pen)
-        self.assertEqual(1588.68068486, round(pen.value, precision))
+        self.assertEqual(1589, round(pen.value))
 
     def test_PScontour_counterclockwise_line_last(self):
         pen = PerimeterPen(None)
         draw2_(pen)
-        self.assertEqual(1588.68068486, round(pen.value, precision))
+        self.assertEqual(1589, round(pen.value))
 
     def test_PScontour_clockwise_line_last(self):
         pen = PerimeterPen(None)
         draw3_(pen)
-        self.assertEqual(1588.68068486, round(pen.value, precision))
+        self.assertEqual(1589, round(pen.value))
 
     def test_PScontour_counterclockwise_line_first(self):
         pen = PerimeterPen(None)
         draw4_(pen)
-        self.assertEqual(1588.68068486, round(pen.value, precision))
+        self.assertEqual(1589, round(pen.value))
 
     def test_TTcontour_clockwise_line_first(self):
         pen = PerimeterPen(None)
         draw5_(pen)
-        self.assertEqual(1588.87336417, round(pen.value, precision))
+        self.assertEqual(1589, round(pen.value))
 
     def test_TTcontour_counterclockwise_line_last(self):
         pen = PerimeterPen(None)
         draw6_(pen)
-        self.assertEqual(1588.87336417, round(pen.value, precision))
+        self.assertEqual(1589, round(pen.value))
 
     def test_TTcontour_clockwise_line_last(self):
         pen = PerimeterPen(None)
         draw7_(pen)
-        self.assertEqual(1588.87336417, round(pen.value, precision))
+        self.assertEqual(1589, round(pen.value))
 
     def test_TTcontour_counterclockwise_line_first(self):
         pen = PerimeterPen(None)
         draw8_(pen)
-        self.assertEqual(1588.87336417, round(pen.value, precision))
+        self.assertEqual(1589, round(pen.value))
 
 
 if __name__ == '__main__':
