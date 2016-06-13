@@ -121,7 +121,7 @@ class FileSystem(object):
 
 	def _fsRemoveDirectory(self, path):
 		path = self._fsRootPath(path)
-		self._fs.removedir(path)
+		self._fs.removedir(path, force=True)
 
 	def _fsMove(self, path1, path2):
 		if self.isDirectory(path1):
