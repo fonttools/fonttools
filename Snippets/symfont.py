@@ -47,9 +47,6 @@ def green(f, Bezier=BezierCurve[n]):
 	f2 = f1.replace(y, Bezier[1]).replace(x, Bezier[0])
 	return sp.integrate(f2 * sp.diff(Bezier[0], t), (t, 0, 1))
 
-def lambdify(f):
-	return sp.lambdify('P', f)
-
 class BezierFuncs(object):
 
 	def __init__(self, symfunc):
@@ -58,7 +55,7 @@ class BezierFuncs(object):
 
 	def __getitem__(self, i):
 		if i not in self._bezfuncs:
-			self._bezfuncs[i] = lambdify(green(self._symfunc, Bezier=BezierCurve[i]))
+			self._bezfuncs[i] = sp.lambdify('P', green(self._symfunc, Bezier=BezierCurve[i]))
 		return self._bezfuncs[i]
 
 _BezierFuncs = {}
@@ -245,7 +242,6 @@ def main(args):
 		glyphs = ['e', 'o', 'I', 'slash', 'E', 'zero', 'eight', 'minus', 'equal']
 	from fontTools.ttLib import TTFont
 	font = TTFont(filename)
-	glyphset = font.getGlyphSet()
 	test(font.getGlyphSet(), font['head'].unitsPerEm, glyphs)
 
 if __name__ == '__main__':
