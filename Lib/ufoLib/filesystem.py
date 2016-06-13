@@ -323,7 +323,8 @@ class FileSystem(object):
 			else:
 				self._fsRemove(path)
 		directory = self.directoryName(path)
-		self._removeEmptyDirectoriesForPath(directory)
+		if directory:
+			self._removeEmptyDirectoriesForPath(directory)
 
 	def _removeEmptyDirectoriesForPath(self, directory):
 		if not self.exists(directory):
