@@ -4264,7 +4264,6 @@ class UFO3WriteDataTestCase(unittest.TestCase):
 		self.assertEqual(os.path.exists(os.path.join(self.dstDir, path3)), False)
 		self.assertEqual(os.path.exists(os.path.dirname(os.path.join(self.dstDir, path2))), False)
 		self.assertEqual(os.path.exists(os.path.join(self.dstDir, "data/org.unifiedfontobject.removefile")), False)
-		self.assertRaises(UFOLibError, writer.removeFileForPath, path="metainfo.plist")
 		self.assertRaises(UFOLibError, writer.removeFileForPath, path="data/org.unifiedfontobject.doesNotExist.txt")
 		self.tearDownUFO()
 

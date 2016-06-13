@@ -612,6 +612,8 @@ class UFOWriter(object):
 		Remove the file (or directory) at path. The path
 		must be relative to the UFO.
 		"""
+		if not self.fileSystem.exists(path):
+			raise UFOLibError("%s does not exist." % path)
 		self.fileSystem.remove(path)
 
 	# UFO mod time
