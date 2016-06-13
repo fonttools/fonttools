@@ -2855,6 +2855,7 @@ class WriteFontInfoVersion3TestCase(unittest.TestCase):
 		## no url
 		infoObject = self.makeInfoObject()
 		infoObject.woffMetadataDescription = dict(text=[dict(text="foo")])
+		writer = UFOWriter(self.dstDir, formatVersion=3)
 		writer.writeInfo(infoObject)
 		self.tearDownUFO()
 		## url not a string
