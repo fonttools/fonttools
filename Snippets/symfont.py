@@ -15,6 +15,7 @@ import math
 from fontTools.pens.basePen import BasePen
 from fontTools.pens.transformPen import TransformPen
 from fontTools.pens.perimeterPen import PerimeterPen
+from fontTools.pens.areaPen import AreaPen
 from fontTools.misc.transform import Scale
 from fontTools.misc.bezierTools import splitQuadraticAtT, splitCubicAtT
 from functools import partial
@@ -103,7 +104,7 @@ class GreenPen(BasePen):
 			p1 = self.__startPoint
 			self.value += self._funcs[1]((p0,p1))
 
-AreaPen = partial(GreenPen, func=1)
+#AreaPen = partial(GreenPen, func=1)
 Moment1XPen = partial(GreenPen, func=x)
 Moment1YPen = partial(GreenPen, func=y)
 Moment2XXPen = partial(GreenPen, func=x*x)
