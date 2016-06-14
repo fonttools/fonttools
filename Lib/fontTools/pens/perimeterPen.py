@@ -7,9 +7,16 @@ from fontTools.misc.bezierTools import splitQuadraticAtT, splitCubicAtT
 import math
 
 
-def distance(p0, p1):
+def _distance(p0, p1):
 	return math.hypot(p0[0] - p1[0], p0[1] - p1[1])
-
+def _diff(a, b):
+	return (b[0]-a[0], b[1]-a[1])
+def _dot(a, b):
+	return a[0]*b[0] + a[1]*b[1]
+def _intSecAtan(x):
+	# In : sympy.integrate(sp.sec(sp.atan(x)))
+	# Out: x*sqrt(x**2 + 1)/2 + asinh(x)/2
+	return x * math.sqrt(x**2 + 1)/2 + math.asinh(x)/2
 
 class PerimeterPen(BasePen):
 
@@ -23,28 +30,41 @@ class PerimeterPen(BasePen):
 
 	def _lineTo(self, p1):
 		p0 = self._getCurrentPoint()
-		self.value += distance(p0, p1)
+		self.value += _distance(p0, p1)
 
-	def _addQuadratic(self, p0, p1, p2):
-		arch = distance(p0, p2)
-		box = distance(p0, p1) + distance(p1, p2)
-		if arch * self._mult >= box:
-			self.value += (arch + box) * .5
-		else:
-			for c in splitQuadraticAtT(p0,p1,p2,.25,.5,.75):
-				self._addQuadratic(*c)
+	def _qCurveToOne(self, p1, p2):
+		# Analytical solution to the length of a quadratic bezier.
+		# I'll explain how I arrived at this later.
+		p0 = self._getCurrentPoint()
+		Len = 0
+		d0 = _diff(p0, p1)
+		d1 = _diff(p1, p2)
+		d = _diff(d0, d1)
+		n = (d[1],-d[0])
+		scale = math.hypot(n[0],n[1])
+		if scale == 0.:
+			self._lineTo(p2)
+			return
+		origDist = _dot(n,d0)
+		if origDist == 0.:
+			if _dot(d0,d1) > 0:
+				self._lineTo(p2)
+				return
+			assert 0 # TODO handle cusps
+		x0 = _dot(d,d0) / origDist
+		x1 = _dot(d,d1) / origDist
+		Len = abs(2 * (_intSecAtan(x1) - _intSecAtan(x0)) * origDist / (scale * (x1 - x0)))
+		self.value += Len
+
 	def _addCubic(self, p0, p1, p2, p3):
-		arch = distance(p0, p3)
-		box = distance(p0, p1) + distance(p1, p2) + distance(p2, p3)
+		arch = _distance(p0, p3)
+		box = _distance(p0, p1) + _distance(p1, p2) + _distance(p2, p3)
 		if arch * self._mult >= box:
 			self.value += (arch + box) * .5
 		else:
 			for c in splitCubicAtT(p0,p1,p2,p3,.2,.4,.6,.8):
 				self._addCubic(*c)
 
-	def _qCurveToOne(self, p1, p2):
-		p0 = self._getCurrentPoint()
-		self._addQuadratic(p0, p1, p2)
 	def _curveToOne(self, p1, p2, p3):
 		p0 = self._getCurrentPoint()
 		self._addCubic(p0, p1, p2, p3)
@@ -52,4 +72,4 @@ class PerimeterPen(BasePen):
 	def _closePath(self):
 		p0 = self._getCurrentPoint()
 		if p0 != self.__startPoint:
-			self.value += distance(p0, self.__startPoint)
+			self.value += _distance(p0, self.__startPoint)
