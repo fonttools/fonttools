@@ -76,29 +76,26 @@ class GreenPen(BasePen):
 		self._funcs = getGreenBezierFuncs(func)
 		self.value = 0
 
-	def _segment(self, *P):
-		self.value += self._funcs[len(P) - 1](P)
-
 	def _moveTo(self, p0):
 		self.__startPoint = p0
-		self._segment(p0)
 
 	def _lineTo(self, p1):
 		p0 = self._getCurrentPoint()
-		self._segment(p0,p1)
+		self.value += self._funcs[1]((p0,p1))
 
 	def _qCurveToOne(self, p1, p2):
 		p0 = self._getCurrentPoint()
-		self._segment(p0,p1,p2)
+		self.value += self._funcs[2]((p0,p1,p2))
 
 	def _curveToOne(self, p1, p2, p3):
 		p0 = self._getCurrentPoint()
-		self._segment(p0,p1,p2,p3)
+		self.value += self._funcs[3]((p0,p1,p2,p3))
 
 	def _closePath(self):
 		p0 = self._getCurrentPoint()
 		if p0 != self.__startPoint:
-			self._segment(p0,self.__startPoint)
+			p1 = self.__startPoint
+			self.value += self._funcs[1]((p0,p1))
 
 AreaPen = partial(GreenPen, func=1)
 Moment1XPen = partial(GreenPen, func=x)
