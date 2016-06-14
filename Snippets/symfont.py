@@ -44,7 +44,7 @@ BezierCurve = tuple(
 	for n,bernsteins in enumerate(BernsteinPolynomial))
 
 def green(f, Bezier=BezierCurve[n]):
-	f1 = -sp.integrate(f, y)
+	f1 = -sp.integrate(sp.sympify(f), y)
 	f2 = f1.replace(y, Bezier[1]).replace(x, Bezier[0])
 	return sp.integrate(f2 * sp.diff(Bezier[0], t), (t, 0, 1))
 
@@ -62,12 +62,18 @@ class BezierFuncs(object):
 _BezierFuncs = {}
 
 def getGreenBezierFuncs(func):
-	func = sp.sympify(func)
 	funcstr = str(func)
 	global _BezierFuncs
 	if not funcstr in _BezierFuncs:
 		_BezierFuncs[funcstr] = BezierFuncs(func)
 	return _BezierFuncs[funcstr]
+
+def printCache(func):
+	funcstr = str(func)
+	print("_BezierFuncs['%s'] = [" % funcstr)
+	for i in range(n+1):
+		print('	lambda P:', green(func, Bezier=BezierCurve[i]), ',')
+	print(']')
 
 class GreenPen(BasePen):
 
@@ -104,8 +110,11 @@ Moment2XXPen = partial(GreenPen, func=x*x)
 Moment2YYPen = partial(GreenPen, func=y*y)
 Moment2XYPen = partial(GreenPen, func=x*y)
 
-def distance(p0, p1):
-	return math.hypot(p0[0] - p1[0], p0[1] - p1[1])
+
+
+#
+# Glyph statistics object
+#
 
 class GlyphStatistics(object):
 
