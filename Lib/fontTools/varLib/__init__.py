@@ -494,6 +494,7 @@ def main(args=None):
 		'width':   ('wdth', 'Width'),
 		'slant':   ('slnt', 'Slant'),
 		'optical': ('opsz', 'Optical Size'),
+		'custom':  ('xxxx', 'Custom'),
 	}
 
 	axis_map = standard_axis_map
