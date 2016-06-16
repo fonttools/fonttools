@@ -71,6 +71,34 @@ class PointInsidePenTest(unittest.TestCase):
             "**     ***",
             self.render(draw_qCurves, even_odd=False))
 
+    def test_contour_integers(self):
+        def draw_contour(pen):
+            pen.moveTo( (728, 697) )
+            pen.curveTo( (723, 698) , (718, 699) , (713, 699) )
+            pen.lineTo( (504, 699) )
+            pen.curveTo( (487, 719) , (508, 783) , (556, 783) )
+            pen.lineTo( (718, 783) )
+            pen.curveTo( (739, 783) , (749, 712) , (728, 697) )
+            pen.closePath()
+
+        piPen = PointInsidePen(None, (416, 783)) # this point is outside
+        draw_contour(piPen)
+        self.assertEqual(piPen.getResult(), False)
+
+    def test_contour_decimals(self):
+        def draw_contour(pen):
+            pen.moveTo( (727.546875, 697.0) )
+            pen.curveTo( (722.953125, 697.953125), (718.109375, 698.515625), (712.9375, 698.515625) )
+            pen.lineTo( (504.375, 698.515625) )
+            pen.curveTo( (487.328125, 719.359375), (507.84375, 783.140625), (555.796875, 783.140625) )
+            pen.lineTo( (717.96875, 783.140625) )
+            pen.curveTo( (738.890625, 783.140625), (748.796875, 711.5), (727.546875, 697.0) )
+            pen.closePath()
+
+        piPen = PointInsidePen(None, (416.625, 783.140625)) # this point is outside
+        draw_contour(piPen)
+        self.assertEqual(piPen.getResult(), False)
+
     @staticmethod
     def render(draw_function, even_odd):
         result = BytesIO()
