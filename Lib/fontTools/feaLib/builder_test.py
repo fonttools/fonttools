@@ -254,7 +254,7 @@ class BuilderTest(unittest.TestCase):
         builder.set_language(location=None, language='BGR ',
                              include_default=True, required=False)
         self.assertEqual(builder.language_systems,
-                         {('latn', 'FRA '), ('cyrl', 'BGR ')})
+                         {('cyrl', 'BGR ')})
 
     def test_language_in_aalt_feature(self):
         self.assertRaisesRegex(
