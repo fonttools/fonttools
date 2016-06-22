@@ -614,12 +614,29 @@ class Builder(object):
                 "Language statements are not allowed "
                 "within \"feature %s\"" % self.cur_feature_name_, location)
         self.cur_lookup_ = None
-        if include_default:
+
+        key = (self.script_, language, self.cur_feature_name_)
+        if not include_default:
+            # don't include any lookups added by script DFLT in this feature
+            self.features_[key] = []
+        elif language != 'dflt':
+            # add rules defined between script statement and its first following
+            # language statement to each of its explicitly specified languages:
+            # http://www.adobe.com/devnet/opentype/afdko/topic_feature_file_syntax.html#4.b.ii
+            for other_key, lookups in self.features_.items():
+                if other_key == (key[0], 'dflt', key[2]):
+                    if key[:2] in self.get_default_language_systems_():
+                        lookups = [
+                            l for l in lookups
+                            if l not in self.features_['DFLT', 'dflt', key[2]]]
+                    self.features_.setdefault(key, []).extend(lookups)
+        if self.script_ == 'DFLT':
             langsys = set(self.get_default_language_systems_())
         else:
             langsys = set()
         langsys.add((self.script_, language))
         self.language_systems = frozenset(langsys)
+
         if required:
             key = (self.script_, language)
             if key in self.required_features_:
@@ -679,7 +696,7 @@ class Builder(object):
         self.lookupflag_ = 0
         self.lookupflag_markFilterSet_ = None
         self.set_language(location, "dflt",
-                          include_default=False, required=False)
+                          include_default=True, required=False)
 
     def find_lookup_builders_(self, lookups):
         """Helper for building chain contextual substitutions

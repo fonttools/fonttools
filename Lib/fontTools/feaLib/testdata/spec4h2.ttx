@@ -1,18 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ttFont>
+<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="3.0">
 
   <GSUB>
     <Version value="1.0"/>
     <ScriptList>
-      <!-- ScriptCount=3 -->
+      <!-- ScriptCount=4 -->
       <ScriptRecord index="0">
         <ScriptTag value="DFLT"/>
         <Script>
           <DefaultLangSys>
             <ReqFeatureIndex value="65535"/>
-            <!-- FeatureCount=2 -->
-            <FeatureIndex index="0" value="2"/>
-            <FeatureIndex index="1" value="3"/>
+            <!-- FeatureCount=1 -->
+            <FeatureIndex index="0" value="3"/>
           </DefaultLangSys>
           <!-- LangSysCount=0 -->
         </Script>
@@ -22,61 +21,78 @@
         <Script>
           <DefaultLangSys>
             <ReqFeatureIndex value="65535"/>
-            <!-- FeatureCount=2 -->
-            <FeatureIndex index="0" value="2"/>
-            <FeatureIndex index="1" value="3"/>
+            <!-- FeatureCount=1 -->
+            <FeatureIndex index="0" value="3"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=1 -->
+          <LangSysRecord index="0">
+            <LangSysTag value="SRB "/>
+            <LangSys>
+              <ReqFeatureIndex value="65535"/>
+              <!-- FeatureCount=1 -->
+              <FeatureIndex index="0" value="1"/>
+            </LangSys>
+          </LangSysRecord>
+        </Script>
+      </ScriptRecord>
+      <ScriptRecord index="2">
+        <ScriptTag value="grek"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=1 -->
+            <FeatureIndex index="0" value="3"/>
           </DefaultLangSys>
           <!-- LangSysCount=0 -->
         </Script>
       </ScriptRecord>
-      <ScriptRecord index="2">
+      <ScriptRecord index="3">
         <ScriptTag value="latn"/>
         <Script>
           <DefaultLangSys>
             <ReqFeatureIndex value="65535"/>
-            <!-- FeatureCount=2 -->
-            <FeatureIndex index="0" value="1"/>
-            <FeatureIndex index="1" value="3"/>
+            <!-- FeatureCount=1 -->
+            <FeatureIndex index="0" value="4"/>
           </DefaultLangSys>
           <!-- LangSysCount=2 -->
           <LangSysRecord index="0">
             <LangSysTag value="DEU "/>
             <LangSys>
               <ReqFeatureIndex value="65535"/>
-              <!-- FeatureCount=2 -->
+              <!-- FeatureCount=1 -->
               <FeatureIndex index="0" value="0"/>
-              <FeatureIndex index="1" value="3"/>
             </LangSys>
           </LangSysRecord>
           <LangSysRecord index="1">
             <LangSysTag value="TRK "/>
             <LangSys>
               <ReqFeatureIndex value="65535"/>
-              <!-- FeatureCount=2 -->
-              <FeatureIndex index="0" value="1"/>
-              <FeatureIndex index="1" value="3"/>
+              <!-- FeatureCount=1 -->
+              <FeatureIndex index="0" value="2"/>
             </LangSys>
           </LangSysRecord>
         </Script>
       </ScriptRecord>
     </ScriptList>
     <FeatureList>
-      <!-- FeatureCount=4 -->
+      <!-- FeatureCount=5 -->
       <FeatureRecord index="0">
         <FeatureTag value="liga"/>
         <Feature>
-          <!-- LookupCount=3 -->
-          <LookupListIndex index="0" value="1"/>
-          <LookupListIndex index="1" value="2"/>
-          <LookupListIndex index="2" value="3"/>
+          <!-- LookupCount=4 -->
+          <LookupListIndex index="0" value="0"/>
+          <LookupListIndex index="1" value="1"/>
+          <LookupListIndex index="2" value="2"/>
+          <LookupListIndex index="3" value="3"/>
         </Feature>
       </FeatureRecord>
       <FeatureRecord index="1">
         <FeatureTag value="liga"/>
         <Feature>
-          <!-- LookupCount=2 -->
-          <LookupListIndex index="0" value="1"/>
-          <LookupListIndex index="1" value="2"/>
+          <!-- LookupCount=3 -->
+          <LookupListIndex index="0" value="0"/>
+          <LookupListIndex index="1" value="1"/>
+          <LookupListIndex index="2" value="4"/>
         </Feature>
       </FeatureRecord>
       <FeatureRecord index="2">
@@ -87,47 +103,35 @@
         </Feature>
       </FeatureRecord>
       <FeatureRecord index="3">
-        <FeatureTag value="smcp"/>
+        <FeatureTag value="liga"/>
         <Feature>
-          <!-- LookupCount=1 -->
+          <!-- LookupCount=2 -->
           <LookupListIndex index="0" value="0"/>
+          <LookupListIndex index="1" value="1"/>
+        </Feature>
+      </FeatureRecord>
+      <FeatureRecord index="4">
+        <FeatureTag value="liga"/>
+        <Feature>
+          <!-- LookupCount=3 -->
+          <LookupListIndex index="0" value="0"/>
+          <LookupListIndex index="1" value="1"/>
+          <LookupListIndex index="2" value="2"/>
         </Feature>
       </FeatureRecord>
     </FeatureList>
     <LookupList>
-      <!-- LookupCount=4 -->
+      <!-- LookupCount=5 -->
       <Lookup index="0">
-        <!-- LookupType=1 -->
+        <!-- LookupType=4 -->
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
-        <SingleSubst index="0">
-          <Substitution in="a" out="A.sc"/>
-          <Substitution in="b" out="B.sc"/>
-          <Substitution in="c" out="C.sc"/>
-          <Substitution in="d" out="D.sc"/>
-          <Substitution in="e" out="E.sc"/>
-          <Substitution in="f" out="F.sc"/>
-          <Substitution in="g" out="G.sc"/>
-          <Substitution in="h" out="H.sc"/>
-          <Substitution in="i" out="I.sc"/>
-          <Substitution in="j" out="J.sc"/>
-          <Substitution in="k" out="K.sc"/>
-          <Substitution in="l" out="L.sc"/>
-          <Substitution in="m" out="M.sc"/>
-          <Substitution in="n" out="N.sc"/>
-          <Substitution in="o" out="O.sc"/>
-          <Substitution in="p" out="P.sc"/>
-          <Substitution in="q" out="Q.sc"/>
-          <Substitution in="r" out="R.sc"/>
-          <Substitution in="s" out="S.sc"/>
-          <Substitution in="t" out="T.sc"/>
-          <Substitution in="u" out="U.sc"/>
-          <Substitution in="v" out="V.sc"/>
-          <Substitution in="w" out="W.sc"/>
-          <Substitution in="x" out="X.sc"/>
-          <Substitution in="y" out="Y.sc"/>
-          <Substitution in="z" out="Z.sc"/>
-        </SingleSubst>
+        <LigatureSubst index="0">
+          <LigatureSet glyph="f">
+            <Ligature components="f,i" glyph="f_f_i"/>
+            <Ligature components="i" glyph="f_i"/>
+          </LigatureSet>
+        </LigatureSubst>
       </Lookup>
       <Lookup index="1">
         <!-- LookupType=4 -->
@@ -135,9 +139,8 @@
         <!-- SubTableCount=1 -->
         <LigatureSubst index="0">
           <LigatureSet glyph="f">
+            <Ligature components="f,l" glyph="f_f_l"/>
             <Ligature components="f" glyph="f_f"/>
-            <Ligature components="i" glyph="f_i"/>
-            <Ligature components="l" glyph="f_l"/>
           </LigatureSet>
         </LigatureSubst>
       </Lookup>
@@ -146,9 +149,8 @@
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <LigatureSubst index="0">
-          <LigatureSet glyph="c">
-            <Ligature components="s" glyph="c_s"/>
-            <Ligature components="t" glyph="c_t"/>
+          <LigatureSet glyph="f">
+            <Ligature components="l" glyph="f_l"/>
           </LigatureSet>
         </LigatureSubst>
       </Lookup>
@@ -157,9 +159,18 @@
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <LigatureSubst index="0">
+          <LigatureSet glyph="s">
+            <Ligature components="s" glyph="germandbls"/>
+          </LigatureSet>
+        </LigatureSubst>
+      </Lookup>
+      <Lookup index="4">
+        <!-- LookupType=4 -->
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <LigatureSubst index="0">
           <LigatureSet glyph="c">
-            <Ligature components="h" glyph="c_h"/>
-            <Ligature components="k" glyph="c_k"/>
+            <Ligature components="t" glyph="c_t"/>
           </LigatureSet>
         </LigatureSubst>
       </Lookup>
