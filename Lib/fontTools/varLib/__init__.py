@@ -234,6 +234,24 @@ class VariationModel(object):
 			out.append(delta)
 		return out
 
+	def interpolateFromDeltas(self, loc, deltas):
+		v = None
+		supports = self.supports
+		assert len(deltas) == len(supports)
+		for i,(delta,support) in enumerate(zip(deltas, supports)):
+			scalar = supportScalar(loc, support)
+			if not scalar: continue
+			contribution = delta * scalar
+			if i == 0:
+				v = contribution
+			else:
+				v += contribution
+		return v
+
+	def interpolateFromMasters(self, loc, masterValues):
+		deltas = self.getDeltas(masterValues)
+		return self.interpolateFromDeltas(loc, deltas)
+
 #
 # .designspace routines
 #
@@ -364,11 +382,6 @@ def _SetCoordinates(font, glyphName, coord):
 	rightSideX = coord[-3][0]
 	topSideY = coord[-2][1]
 	bottomSideY = coord[-1][1]
-	horizontalAdvanceWidth = rightSideX - leftSideX
-	leftSideBearing = glyph.xMin - leftSideX
-	# XXX Handle vertical
-	# XXX Remove the round when https://github.com/behdad/fonttools/issues/593 is fixed
-	font["hmtx"].metrics[glyphName] = int(round(horizontalAdvanceWidth)), int(round(leftSideBearing))
 
 	for _ in range(4):
 		del coord[-1]
@@ -382,6 +395,14 @@ def _SetCoordinates(font, glyphName, coord):
 	else:
 		assert len(coord) == len(glyph.coordinates)
 		glyph.coordinates = coord
+
+	glyph.recalcBounds(glyf)
+
+	horizontalAdvanceWidth = rightSideX - leftSideX
+	leftSideBearing = glyph.xMin - leftSideX
+	# XXX Handle vertical
+	# XXX Remove the round when https://github.com/behdad/fonttools/issues/593 is fixed
+	font["hmtx"].metrics[glyphName] = int(round(horizontalAdvanceWidth)), int(round(leftSideBearing))
 
 def _add_gvar(font, axes, master_ttfs, master_locs, base_idx):
 
@@ -473,6 +494,7 @@ def main(args=None):
 		'width':   ('wdth', 'Width'),
 		'slant':   ('slnt', 'Slant'),
 		'optical': ('opsz', 'Optical Size'),
+		'custom':  ('xxxx', 'Custom'),
 	}
 
 	axis_map = standard_axis_map

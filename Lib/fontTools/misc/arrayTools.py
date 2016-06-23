@@ -21,13 +21,9 @@ def calcBounds(array):
 def calcIntBounds(array):
     """Return the integer bounding rectangle of a 2D points array as a
     tuple: (xMin, yMin, xMax, yMax)
+    Values are rounded to closest integer.
     """
-    xMin, yMin, xMax, yMax = calcBounds(array)
-    xMin = int(math.floor(xMin))
-    xMax = int(math.ceil(xMax))
-    yMin = int(math.floor(yMin))
-    yMax = int(math.ceil(yMax))
-    return xMin, yMin, xMax, yMax
+    return tuple(int(round(v)) for v in calcBounds(array))
 
 
 def updateBounds(bounds, p, min=min, max=max):

@@ -173,7 +173,11 @@ class SingleSubst(FormatSwitchingBaseTable):
 			if (inID + delta) % 65536 != outID:
 					break
 		else:
-			format = 1
+			if delta is None:
+				# the mapping is empty, better use format 2
+				format = 2
+			else:
+				format = 1
 
 		rawTable = {}
 		self.Format = format

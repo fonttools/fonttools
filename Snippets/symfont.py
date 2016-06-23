@@ -14,8 +14,10 @@ import sympy as sp
 import math
 from fontTools.pens.basePen import BasePen
 from fontTools.pens.transformPen import TransformPen
+from fontTools.pens.perimeterPen import PerimeterPen
+from fontTools.pens.areaPen import AreaPen
 from fontTools.misc.transform import Scale
-from fontTools.misc.bezierTools import splitCubicAtT
+from fontTools.misc.bezierTools import splitQuadraticAtT, splitCubicAtT
 from functools import partial
 
 n = 3 # Max Bezier degree; 3 for cubic, 2 for quadratic
@@ -43,12 +45,9 @@ BezierCurve = tuple(
 	for n,bernsteins in enumerate(BernsteinPolynomial))
 
 def green(f, Bezier=BezierCurve[n]):
-	f1 = sp.integrate(f, y)
+	f1 = -sp.integrate(sp.sympify(f), y)
 	f2 = f1.replace(y, Bezier[1]).replace(x, Bezier[0])
 	return sp.integrate(f2 * sp.diff(Bezier[0], t), (t, 0, 1))
-
-def lambdify(f):
-	return sp.lambdify('P', f)
 
 class BezierFuncs(object):
 
@@ -58,18 +57,24 @@ class BezierFuncs(object):
 
 	def __getitem__(self, i):
 		if i not in self._bezfuncs:
-			self._bezfuncs[i] = lambdify(green(self._symfunc, Bezier=BezierCurve[i]))
+			self._bezfuncs[i] = sp.lambdify('P', green(self._symfunc, Bezier=BezierCurve[i]))
 		return self._bezfuncs[i]
 
 _BezierFuncs = {}
 
 def getGreenBezierFuncs(func):
-	func = sp.sympify(func)
 	funcstr = str(func)
 	global _BezierFuncs
 	if not funcstr in _BezierFuncs:
 		_BezierFuncs[funcstr] = BezierFuncs(func)
 	return _BezierFuncs[funcstr]
+
+def printCache(func):
+	funcstr = str(func)
+	print("_BezierFuncs['%s'] = [" % funcstr)
+	for i in range(n+1):
+		print('	lambda P:', green(func, Bezier=BezierCurve[i]), ',')
+	print(']')
 
 class GreenPen(BasePen):
 
@@ -78,60 +83,39 @@ class GreenPen(BasePen):
 		self._funcs = getGreenBezierFuncs(func)
 		self.value = 0
 
-	def _segment(self, *P):
-		self.value += self._funcs[len(P) - 1](P)
-
 	def _moveTo(self, p0):
-		self._segment(p0)
+		self.__startPoint = p0
 
 	def _lineTo(self, p1):
 		p0 = self._getCurrentPoint()
-		self._segment(p0,p1)
+		self.value += self._funcs[1]((p0,p1))
 
 	def _qCurveToOne(self, p1, p2):
 		p0 = self._getCurrentPoint()
-		self._segment(p0,p1,p2)
+		self.value += self._funcs[2]((p0,p1,p2))
 
 	def _curveToOne(self, p1, p2, p3):
 		p0 = self._getCurrentPoint()
-		self._segment(p0,p1,p2,p3)
+		self.value += self._funcs[3]((p0,p1,p2,p3))
 
-AreaPen = partial(GreenPen, func=1)
+	def _closePath(self):
+		p0 = self._getCurrentPoint()
+		if p0 != self.__startPoint:
+			p1 = self.__startPoint
+			self.value += self._funcs[1]((p0,p1))
+
+#AreaPen = partial(GreenPen, func=1)
 Moment1XPen = partial(GreenPen, func=x)
 Moment1YPen = partial(GreenPen, func=y)
 Moment2XXPen = partial(GreenPen, func=x*x)
 Moment2YYPen = partial(GreenPen, func=y*y)
 Moment2XYPen = partial(GreenPen, func=x*y)
 
-def distance(p0, p1):
-	return math.hypot(p0[0] - p1[0], p0[1] - p1[1])
 
-class PerimeterPen(BasePen):
 
-	def __init__(self, tolerance=0.005, glyphset=None):
-		BasePen.__init__(self, glyphset)
-		self.value = 0
-		self._mult = 1.+tolerance
-
-	def _moveTo(self, p0):
-		pass
-
-	def _lineTo(self, p1):
-		p0 = self._getCurrentPoint()
-		self.value += distance(p0, p1)
-
-	def _addCubic(self, p0, p1, p2, p3):
-		arch = distance(p0, p3)
-		box = distance(p0, p1) + distance(p1, p2) + distance(p2, p3)
-		if arch * self._mult >= box:
-			self.value += (arch + box) * .5
-		else:
-			for c in splitCubicAtT(p0,p1,p2,p3,.5):
-				self._addCubic(*c)
-
-	def _curveToOne(self, p1, p2, p3):
-		p0 = self._getCurrentPoint()
-		self._addCubic(p0, p1, p2, p3)
+#
+# Glyph statistics object
+#
 
 class GlyphStatistics(object):
 
@@ -239,7 +223,6 @@ def main(args):
 		glyphs = ['e', 'o', 'I', 'slash', 'E', 'zero', 'eight', 'minus', 'equal']
 	from fontTools.ttLib import TTFont
 	font = TTFont(filename)
-	glyphset = font.getGlyphSet()
 	test(font.getGlyphSet(), font['head'].unitsPerEm, glyphs)
 
 if __name__ == '__main__':

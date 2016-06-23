@@ -12,6 +12,7 @@ feature hlig {
 } hlig;
 
 feature liga {
+  script latn;
   language ITA exclude_dflt required;
   sub I T A by I.sc;
 } liga;

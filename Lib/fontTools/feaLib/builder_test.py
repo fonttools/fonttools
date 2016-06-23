@@ -36,7 +36,7 @@ def makeTTFont():
         Q.swash R.swash S.swash T.swash U.swash V.swash W.swash X.swash
         Y.swash Z.swash
         f_l c_h c_k c_s c_t f_f f_f_i f_f_l f_i o_f_f_i s_t f_i.begin
-        a_n_d T_h T_h.swash ydieresis yacute breve
+        a_n_d T_h T_h.swash germandbls ydieresis yacute breve
         grave acute dieresis macron circumflex cedilla umlaut ogonek caron
         damma hamza sukun kasratan lam_meem_jeem noon.final noon.initial
     """.split()
@@ -53,7 +53,7 @@ class BuilderTest(unittest.TestCase):
         lookup lookupflag feature_aalt ignore_pos
         GPOS_1 GPOS_1_zero GPOS_2 GPOS_2b GPOS_3 GPOS_4 GPOS_5 GPOS_6 GPOS_8
         GSUB_2 GSUB_3 GSUB_6 GSUB_8
-        spec4h1 spec5d1 spec5d2 spec5fi1 spec5fi2 spec5fi3 spec5fi4
+        spec4h1 spec4h2 spec5d1 spec5d2 spec5fi1 spec5fi2 spec5fi3 spec5fi4
         spec5f_ii_1 spec5f_ii_2 spec5f_ii_3 spec5f_ii_4
         spec5h1 spec6b_ii spec6d2 spec6e spec6f
         spec6h_ii spec6h_iii_1 spec6h_iii_3d spec8a spec8b spec8c
@@ -254,7 +254,13 @@ class BuilderTest(unittest.TestCase):
         builder.set_language(location=None, language='BGR ',
                              include_default=True, required=False)
         self.assertEqual(builder.language_systems,
-                         {('latn', 'FRA '), ('cyrl', 'BGR ')})
+                         {('cyrl', 'BGR ')})
+        builder.start_feature(location=None, name='test2')
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Need non-DFLT script when using non-dflt language "
+            "\(was: \"FRA \"\)",
+            builder.set_language, None, 'FRA ', True, False)
 
     def test_language_in_aalt_feature(self):
         self.assertRaisesRegex(
@@ -281,6 +287,7 @@ class BuilderTest(unittest.TestCase):
             "    substitute [a-z] by [A.sc-Z.sc];"
             "} scmp;"
             "feature test {"
+            "    script latn;"
             "    language FRA required;"
             "    substitute [a-z] by [A.sc-Z.sc];"
             "} test;")
