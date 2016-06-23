@@ -561,6 +561,7 @@ class Builder(object):
 
     def start_feature(self, location, name):
         self.language_systems = self.get_default_language_systems_()
+        self.script_ = 'DFLT'
         self.cur_lookup_ = None
         self.cur_feature_name_ = name
         self.lookupflag_ = 0
@@ -613,6 +614,9 @@ class Builder(object):
             raise FeatureLibError(
                 "Language statements are not allowed "
                 "within \"feature %s\"" % self.cur_feature_name_, location)
+        if language != 'dflt' and self.script_ == 'DFLT':
+            raise FeatureLibError("Need non-DFLT script when using non-dflt "
+                                  "language (was: \"%s\")" % language, location)
         self.cur_lookup_ = None
 
         key = (self.script_, language, self.cur_feature_name_)
@@ -623,13 +627,12 @@ class Builder(object):
             # add rules defined between script statement and its first following
             # language statement to each of its explicitly specified languages:
             # http://www.adobe.com/devnet/opentype/afdko/topic_feature_file_syntax.html#4.b.ii
-            for other_key, lookups in self.features_.items():
-                if other_key == (key[0], 'dflt', key[2]):
-                    if key[:2] in self.get_default_language_systems_():
-                        lookups = [
-                            l for l in lookups
-                            if l not in self.features_['DFLT', 'dflt', key[2]]]
-                    self.features_.setdefault(key, []).extend(lookups)
+            lookups = self.features_.get((key[0], 'dflt', key[2]))
+            dflt_lookups = self.features_.get(('DFLT', 'dflt', key[2]), [])
+            if lookups:
+                if key[:2] in self.get_default_language_systems_():
+                    lookups = [l for l in lookups if l not in dflt_lookups]
+                self.features_.setdefault(key, []).extend(lookups)
         if self.script_ == 'DFLT':
             langsys = set(self.get_default_language_systems_())
         else:
