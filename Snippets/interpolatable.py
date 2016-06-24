@@ -10,7 +10,7 @@ from fontTools.misc.py23 import *
 
 from fontTools.pens.basePen import BasePen
 from symfont import GlyphStatistics
-from itertools import product
+import itertools
 
 class PerContourOrComponentPen(BasePen):
 	def __init__(self, Pen, glyphset=None):
@@ -64,17 +64,57 @@ class RecordingPen(BasePen):
 		for operator,operands in self.value:
 			getattr(pen, operator)(*operands)
 
-def _dot(v0, v1):
+def _vdiff(v0, v1):
+	return tuple(b-a for a,b in zip(v0,v1))
+def _vlen(vec):
 	v = 0
-	for p,q in zip(v0,v1):
-		v += p*q
+	for x in vec:
+		v += x*x
 	return v
+
+def _matching_cost(G, matching):
+	return sum(G[i][j] for i,j in enumerate(matching))
+
+def min_cost_perfect_bipartite_matching(G):
+	n = len(G)
+	if n <= 8:
+		# brute-force
+		permutations = itertools.permutations(range(n))
+		best = list(next(permutations))
+		best_cost = _matching_cost(G, best)
+		for p in permutations:
+			cost = _matching_cost(G, p)
+			if cost < best_cost:
+				best, best_cost = list(p), cost
+		return best, best_cost
+	else:
+
+		# Set up current matching and inverse
+		matching = list(range(n)) # identity matching
+		matching_cost = _matching_cost(G, matching)
+		reverse = list(matching)
+
+		return matching, matching_cost
+		# TODO implement real matching here
+
+		# Set up cover
+		cover0 = [max(c for c in row) for row in G]
+		cover1 = [0] * n
+		cover_weight = sum(cover0)
+
+		while cover_weight < matching_cost:
+			break
+			NotImplemented
+
+		return matching, matching_cost
+
 
 def test(glyphsets, glyphs=None):
 
 	if glyphs is None:
 		glyphs = glyphsets[0].keys()
 
+	hist = []
 	for glyph_name in glyphs:
 		#print()
 		#print("glyph:", glyph_name, end='')
@@ -95,7 +135,7 @@ def test(glyphsets, glyphs=None):
 				for contour in contourPens:
 					stats = GlyphStatistics(contour, glyphset=glyphset)
 					vector = (
-						#int(stats.Perimeter * .125),
+						int(stats.Perimeter * .125),
 						int(abs(stats.Area) ** .5 * .5),
 						int(stats.MeanX),
 						int(stats.MeanY),
@@ -109,27 +149,32 @@ def test(glyphsets, glyphs=None):
 			# Check each master against the next one in the list.
 			for m0,m1 in zip(allVectors[:-1],allVectors[1:]):
 				assert len(m0) == len(m1)
-				# TODO Implement proper weighted bipartite matching
-				while m0:
-					n = len(m0)
-					weights = [_dot(v0,v1) for v0,v1 in product(m0,m1)]
-					maxWeight = max(weights)
-					arg = weights.index(maxWeight)
-					# Expect it to be on the diagonal
-					row, col = arg // n, arg % n
-					if row != col:
-						print('Glyph has wrong contour/component order', glyph_name)#, m0, m1)
-						break
-					del m0[row], m1[col]
+				if not m0:
+					continue
+				costs = [[_vlen(_vdiff(v0,v1)) for v1 in m1] for v0 in m0]
+				matching, matching_cost = min_cost_perfect_bipartite_matching(costs)
+				if matching != list(range(len(m0))):
+					print('Glyph has wrong contour/component order', glyph_name, matching)#, m0, m1)
+					break
+				upem = 2048
+				item_cost = int(round((matching_cost / len(m0) / len(m0[0])) ** .5 / upem * 100))
+				hist.append(item_cost)
+				threshold = 7
+				if item_cost >= threshold:
+					print('%s: Glyph has very high cost: %d%%' % (glyph_name, item_cost))
 
 
 		except ValueError as e:
 			print(' math error; skipping glyph', e)
+	#for x in hist:
+	#	print(x)
 
 def main(args):
 	filenames = args
 	glyphs = None
 	#glyphs = ['uni08DB', 'uniFD76']
+	#glyphs = ['uni08DE', 'uni0034']
+	#glyphs = ['uni08DE', 'uni0034', 'uni0751', 'uni0753', 'uni0754', 'uni08A4', 'uni08A4.fina', 'uni08A5.fina']
 	from fontTools.ttLib import TTFont
 	fonts = [TTFont(filename) for filename in filenames]
 	glyphsets = [font.getGlyphSet() for font in fonts]
