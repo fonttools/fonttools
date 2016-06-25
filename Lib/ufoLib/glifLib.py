@@ -808,7 +808,7 @@ def _glifTreeFromFile(aFile):
 	root = ElementTree.parse(aFile).getroot()
 	if root.tag != "glyph":
 		raise GlifLibError("The GLIF is not properly formatted.")
-	if root.text.strip() != '':
+	if root.text and root.text.strip() != '':
 		raise GlifLibError("Invalid GLIF structure.")
 	return root
 
@@ -816,7 +816,7 @@ def _glifTreeFromString(aString):
 	root = ElementTree.fromstring(aString)
 	if root.tag != "glyph":
 		raise GlifLibError("The GLIF is not properly formatted.")
-	if root.text.strip() != '':
+	if root.text and root.text.strip() != '':
 		raise GlifLibError("Invalid GLIF structure.")
 	return root
 
@@ -852,7 +852,7 @@ def _readGlyphFromTreeFormat1(tree, glyphObject=None, pointPen=None):
 				raise GlifLibError("The outline element occurs more than once.")
 			if element.attrib:
 				raise GlifLibError("The outline element contains unknown attributes.")
-			if element.text.strip() != '':
+			if element.text and element.text.strip() != '':
 				raise GlifLibError("Invalid outline structure.")
 			haveSeenOutline = True
 			buildOutlineFormat1(glyphObject, pointPen, element)
@@ -902,7 +902,7 @@ def _readGlyphFromTreeFormat2(tree, glyphObject=None, pointPen=None):
 				raise GlifLibError("The outline element occurs more than once.")
 			if element.attrib:
 				raise GlifLibError("The outline element contains unknown attributes.")
-			if element.text.strip() != '':
+			if element.text and element.text.strip() != '':
 				raise GlifLibError("Invalid outline structure.")
 			haveSeenOutline = True
 			if pointPen is not None:
