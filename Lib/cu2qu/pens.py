@@ -193,7 +193,8 @@ class Cu2QuPointPen(BasePointToSegmentPen):
     def _drawPoints(self, segments):
         pen = self.pen
         pen.beginPath()
-        for segment_type, points in segments:
+        last_offcurves = []
+        for i, (segment_type, points) in enumerate(segments):
             if segment_type in ("move", "line"):
                 assert len(points) == 1, (
                     "illegal line segment point count: %d" % len(points))
@@ -202,14 +203,23 @@ class Cu2QuPointPen(BasePointToSegmentPen):
             elif segment_type == "qcurve":
                 assert len(points) >= 2, (
                     "illegal qcurve segment point count: %d" % len(points))
-                for (pt, smooth, name, kwargs) in points[:-1]:
-                    pen.addPoint(pt, None, smooth, name, **kwargs)
+                offcurves = points[:-1]
+                if offcurves:
+                    if i == 0:
+                        # any off-curve points preceding the first on-curve
+                        # will be appended at the end of the contour
+                        last_offcurves = offcurves
+                    else:
+                        for (pt, smooth, name, kwargs) in offcurves:
+                            pen.addPoint(pt, None, smooth, name, **kwargs)
                 pt, smooth, name, kwargs = points[-1]
                 pen.addPoint(pt, segment_type, smooth, name, **kwargs)
             else:
                 # 'curve' segments must have been converted to 'qcurve' by now
                 raise AssertionError(
                     "unexpected segment type: %r" % segment_type)
+        for (pt, smooth, name, kwargs) in last_offcurves:
+            pen.addPoint(pt, None, smooth, name, **kwargs)
         pen.endPath()
 
     def addComponent(self, baseGlyphName, transformation):
