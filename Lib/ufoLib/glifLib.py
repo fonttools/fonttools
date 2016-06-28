@@ -203,7 +203,7 @@ class GlyphSet(object):
 					value = getattr(info, attr)
 				except AttributeError:
 					raise GlifLibError("The supplied info object does not support getting a necessary attribute (%s)." % attr)
-				if value is None:
+				if value is None or (attr == 'lib' and not value):
 					continue
 				infoData[attr] = value
 		# validate
