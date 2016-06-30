@@ -840,7 +840,8 @@ def parseLookup(lines, tableTag, font, lookupMap=None):
 		return None
 	return lookup
 
-def parseGSUBGPOS(lines, font, container, tableTag):
+def parseGSUBGPOS(lines, font, tableTag):
+	container = ttLib.getTableClass(tableTag)()
 	lookupMap = DeferredMapping()
 	featureMap = DeferredMapping()
 	assert tableTag in ('GSUB', 'GPOS')
@@ -889,11 +890,12 @@ def parseGSUBGPOS(lines, font, container, tableTag):
 	if featureMap is not None:
 		featureMap.applyDeferredMappings()
 	container.table = self
+	return container
 
-def parseGSUB(lines, font, container):
-	parseGSUBGPOS(lines, font, container, 'GSUB')
-def parseGPOS(lines, font, container):
-	parseGSUBGPOS(lines, font, container, 'GPOS')
+def parseGSUB(lines, font):
+	return parseGSUBGPOS(lines, font, 'GSUB')
+def parseGPOS(lines, font):
+	return parseGSUBGPOS(lines, font, 'GPOS')
 
 def parseAttachList(lines, font):
 	points = {}
@@ -938,7 +940,8 @@ def parseMarkFilteringSets(lines, font):
 			sets[st].append(glyph)
 	return makeMarkFilteringSets(sets, font)
 
-def parseGDEF(lines, font, container):
+def parseGDEF(lines, font):
+	container = ttLib.getTableClass('GDEF')()
 	log.debug("Parsing GDEF")
 	self = ot.GDEF()
 	fields = {
@@ -968,8 +971,10 @@ def parseGDEF(lines, font, container):
 		setattr(self, attr, parser(lines, font))
 	self.Version = 1.0 if self.MarkGlyphSetsDef is None else 0x00010002
 	container.table = self
+	return container
 
-def parseCmap(lines, font, container):
+def parseCmap(lines, font):
+	container = ttLib.getTableClass('cmap')()
 	log.debug("Parsing cmap")
 	tables = []
 	while lines.peek() is not None:
@@ -989,6 +994,7 @@ def parseCmap(lines, font, container):
 		tables.append(table)
 	container.tableVersion = 0
 	container.tables = tables
+	return container
 
 def parseCmapId(lines, field):
 	line = next(lines)
@@ -1013,13 +1019,12 @@ def parseTable(lines, font, tableTag=None):
 
 	assert tableTag is not None, "Don't know what table to parse and data doesn't specify"
 
-	container = ttLib.getTableClass(tableTag)()
-	{'GSUB': parseGSUB,
-	 'GPOS': parseGPOS,
-	 'GDEF': parseGDEF,
-	 'cmap': parseCmap,
-	}[tableTag](lines, font, container)
-	return container
+	return {
+		'GSUB': parseGSUB,
+		'GPOS': parseGPOS,
+		'GDEF': parseGDEF,
+		'cmap': parseCmap,
+		}[tableTag](lines, font)
 
 class Tokenizer(object):
 
