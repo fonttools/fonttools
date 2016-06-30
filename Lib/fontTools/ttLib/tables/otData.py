@@ -837,11 +837,15 @@ otData = [
 		('Offset', 'Lookup', 'LookupCount', 0, 'Array of offsets to GPOS-type lookup tables-from beginning of JstfMax table-in design order'),
 	]),
 
+
 	#
-	# variations
+	# Variation fonts
 	#
+
+	# VariationStore
+
 	('VarAxis', [
-		('uint16', 'AxisIndex', None, None, ''),
+		('uint16', 'VarAxisID', None, None, ''),
 		('F2Dot14', 'StartCoord', None, None, ''),
 		('F2Dot14', 'PeakCoord', None, None, ''),
 		('F2Dot14', 'EndCoord', None, None, ''),
@@ -869,7 +873,7 @@ otData = [
 		('uint16', 'ItemCount', None, None, ''),
 		('uint16', 'VarTupleCount', None, None, ''),
 		('uint16', 'VarTupleIndex', 'VarTupleCount', 0, ''),
-		('struct', 'VarItemByteRecord', 'ItemCount', 0, ''),
+		('VarItemByteRecord', 'Item', 'ItemCount', 0, ''),
 	]),
 
 	('VarDeltasFormat2', [
@@ -877,15 +881,42 @@ otData = [
 		('uint16', 'ItemCount', None, None, ''),
 		('uint16', 'VarTupleCount', None, None, ''),
 		('uint16', 'VarTupleIndex', 'VarTupleCount', 0, ''),
-		('struct', 'VarItemShortRecord', 'ItemCount', 0, ''),
+		('VarItemShortRecord', 'Item', 'ItemCount', 0, ''),
 	]),
 
 	('VarStore', [
-		('LOffset', 'VarTupleList', None, None, ''),
 		('uint16', 'Format', None, None, 'Set to 1.'),
+		('LOffset', 'VarTupleList', None, None, ''),
 		('uint16', 'VarDeltasCount', None, None, ''),
 		('LOffset', 'VarDeltas', 'VarDeltasCount', 0, ''),
 	]),
+
+	# Variation helpers
+
+	('VarIdxMapFormat1', [
+		('uint16', 'Format', None, None, 'Set to 1.'),
+		('uint16', 'VarIdxCount', None, None, ''),
+		('uint16', 'VarIdx', 'VarIdxCount', 0, ''),
+	]),
+	('VarIdxMapFormat2', [
+		('uint16', 'Format', None, None, 'Set to 2.'),
+		('uint16', 'VarIdxCount', None, None, ''),
+		('uint32', 'VarIdx', 'VarIdxCount', 0, ''),
+	]),
+
+	# Glyph advance variations
+
+	('HVAR', [
+		('Version', 'Version', None, None, 'Version of the HVAR table-initially = 0x00010000'),
+		('LOffset', 'VarIdxMap', None, None, ''),
+		('LOffset', 'VarStore', None, None, ''),
+	]),
+	('VVAR', [
+		('Version', 'Version', None, None, 'Version of the VVAR table-initially = 0x00010000'),
+		('LOffset', 'VarIdxMap', None, None, ''),
+		('LOffset', 'VarStore', None, None, ''),
+	]),
+
 
 	#
 	# math
