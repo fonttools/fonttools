@@ -227,6 +227,13 @@ class GlyphID(SimpleValue):
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		writer.writeUShort(font.getGlyphID(value))
 
+class VarAxisID(SimpleValue):
+	staticSize = 2
+	def read(self, reader, font, tableDict):
+		return font['fvar'].axes[reader.readUShort()]
+	def write(self, writer, font, tableDict, value, repeatIndex=None):
+		writer.writeUShort(font['fvar'].axes.index(value))
+
 class FloatValue(SimpleValue):
 	def xmlRead(self, attrs, content, font):
 		return float(attrs["value"])
