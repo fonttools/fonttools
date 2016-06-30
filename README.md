@@ -71,11 +71,11 @@ These additional options include:
 The following tables are currently supported:
 <!-- begin table list -->
     BASE, CBDT, CBLC, CFF, COLR, CPAL, DSIG, EBDT, EBLC, FFTM, GDEF,
-    GMAP, GPKG, GPOS, GSUB, JSTF, LTSH, MATH, META, OS/2, SING, SVG,
-    TSI0, TSI1, TSI2, TSI3, TSI5, TSIB, TSID, TSIJ, TSIP, TSIS, TSIV,
-    VDMX, VORG, avar, cmap, cvt, feat, fpgm, fvar, gasp, glyf, gvar,
-    hdmx, head, hhea, hmtx, kern, loca, ltag, maxp, meta, name, post,
-    prep, sbix, trak, vhea and vmtx
+    GMAP, GPKG, GPOS, GSUB, HVAR, JSTF, LTSH, MATH, META, OS/2, SING,
+    SVG, TSI0, TSI1, TSI2, TSI3, TSI5, TSIB, TSID, TSIJ, TSIP, TSIS,
+    TSIV, VDMX, VORG, VVAR, avar, cmap, cvt, feat, fpgm, fvar, gasp,
+    glyf, gvar, hdmx, head, hhea, hmtx, kern, loca, ltag, maxp, meta,
+    name, post, prep, sbix, trak, vhea and vmtx
 <!-- end table list -->
 Other tables are dumped as hexadecimal data.
 
