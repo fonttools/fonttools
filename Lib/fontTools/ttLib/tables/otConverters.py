@@ -89,7 +89,7 @@ class BaseConverter(object):
 		self.tableClass = tableClass
 		self.isCount = name.endswith("Count")
 		self.isLookupType = name.endswith("LookupType")
-		self.isPropagated = name in ["ClassCount", "Class2Count", "FeatureTag", "SettingsCount", "AxisCount"]
+		self.isPropagated = name in ["ClassCount", "Class2Count", "FeatureTag", "SettingsCount", "VarTupleCount"]
 
 	def readArray(self, reader, font, tableDict, count):
 		"""Read an array of values from the reader."""
@@ -230,9 +230,19 @@ class GlyphID(SimpleValue):
 class VarAxisID(SimpleValue):
 	staticSize = 2
 	def read(self, reader, font, tableDict):
-		return font['fvar'].axes[reader.readUShort()]
+		idx = reader.readUShort()
+		try:
+			return font['fvar'].axes[idx].axisTag
+		except (KeyError, IndexError):
+			return idx
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
-		writer.writeUShort(font['fvar'].axes.index(value))
+		if not isinstance(value, int):
+			value = tobytes(value)
+			for i,axis in enumerate(font['fvar'].axes):
+				if axis.axisTag == value:
+					value = i
+					break
+		writer.writeUShort(value)
 
 class FloatValue(SimpleValue):
 	def xmlRead(self, attrs, content, font):
@@ -509,9 +519,11 @@ converterMapping = {
 	"GlyphID":	GlyphID,
 	"DeciPoints":	DeciPoints,
 	"Fixed":	Fixed,
+	"F2Dot14":	F2Dot14,
 	"struct":	Struct,
 	"Offset":	Table,
 	"LOffset":	LTable,
 	"ValueRecord":	ValueRecord,
+	"VarAxisID":	VarAxisID,
 	"DeltaValue":	DeltaValue,
 }

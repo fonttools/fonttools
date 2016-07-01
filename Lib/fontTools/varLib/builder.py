@@ -28,22 +28,23 @@ def buildVarTupleList(supports):
 
 def buildVarDeltas(varTupleIndexes, items):
 	self = ot.VarDeltas()
-	self.format = 1 if all(all(128 <= delta <= 127 for delta in item) for item in items) else 2
+	self.Format = 1 if all(all(128 <= delta <= 127 for delta in item) for item in items) else 2
 	self.VarTupleIndex = list(varTupleIndexes)
 	tupleCount = self.VarTupleCount = len(self.VarTupleIndex)
 	records = self.Item = []
 	for item in items:
 		assert len(item) == tupleCount
-		record = ot.VarItemByteRecord() if self.format == 1 else ot.VarItemShortRecord()
-		record.deltas = list(item)
+		record = ot.VarItemByteRecord() if self.Format == 1 else ot.VarItemShortRecord()
+		record.Deltas = list(item)
 		records.append(record)
 	self.ItemCount = len(self.Item)
 	return self
 
-def buildVarStore(varTupleList, varDeltas):
+def buildVarStore(varTupleList, varDeltasList):
 	self = ot.VarStore()
+	self.Format = 1
 	self.VarTupleList = varTupleList
-	self.VarDeltas = varDeltas
+	self.VarDeltas = list(varDeltasList)
 	self.VarDeltasCount = len(self.VarDeltas)
 	return self
 
