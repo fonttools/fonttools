@@ -20,11 +20,12 @@ API *will* change in near future.
 """
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
-from fontTools.ttLib import TTFont
+from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables._n_a_m_e import NameRecord
-from fontTools.ttLib.tables._f_v_a_r import table__f_v_a_r, Axis, NamedInstance
+from fontTools.ttLib.tables._f_v_a_r import Axis, NamedInstance
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
-from fontTools.ttLib.tables._g_v_a_r import table__g_v_a_r, GlyphVariation
+from fontTools.ttLib.tables._g_v_a_r import GlyphVariation
+from fontTools.ttLib.tables import otTables as ot
 from fontTools.varLib import builder
 import warnings
 try:
@@ -317,7 +318,7 @@ def _AddName(font, name):
 # Move to fvar table proper?
 def _add_fvar(font, axes, instances):
 	assert "fvar" not in font
-	font['fvar'] = fvar = table__f_v_a_r()
+	font['fvar'] = fvar = newTable('fvar')
 
 	for tag in sorted(axes.keys()):
 		axis = Axis()
@@ -430,7 +431,7 @@ def _add_gvar(font, axes, master_ttfs, master_locs, base_idx):
 
 	print("Generating gvar")
 	assert "gvar" not in font
-	gvar = font["gvar"] = table__g_v_a_r()
+	gvar = font["gvar"] = newTable('gvar')
 	gvar.version = 1
 	gvar.reserved = 0
 	gvar.variations = {}
@@ -440,27 +441,55 @@ def _add_gvar(font, axes, master_ttfs, master_locs, base_idx):
 	model_base_idx = model.mapping[base_idx]
 	assert 0 == model_base_idx
 
+	hAdvanceDeltas = {}
+
 	for glyph in font.getGlyphOrder():
 
 		allData = [_GetCoordinates(m, glyph) for m in master_ttfs]
 		allCoords = [d[0] for d in allData]
 		allControls = [d[1] for d in allData]
+		allHAdvance = [m["hmtx"].metrics[glyph][0] for m in master_ttfs]
 		control = allControls[0]
 		if (any(c != control for c in allControls)):
 			warnings.warn("glyph %s has incompatible masters; skipping" % glyph)
 			continue
 		del allControls
 
+		# Update gvar
 		gvar.variations[glyph] = []
-
 		deltas = model.getDeltas(allCoords)
 		supports = model.supports
 		assert len(deltas) == len(supports)
-		for i,(delta,support) in enumerate(zip(deltas, supports)):
-			if i == model_base_idx:
-				continue
+		for i,(delta,support) in enumerate(zip(deltas[1:], supports[1:])):
 			var = GlyphVariation(support, delta)
 			gvar.variations[glyph].append(var)
+
+		hAdvanceDeltas[glyph] = tuple(model.getDeltas(allHAdvance)[1:])
+
+	# Build HVAR
+
+	# We only support the direct mapping right now.
+
+	supports = model.supports[1:]
+	varTupleList = builder.buildVarTupleList(supports)
+	varTupleIndexes = list(range(len(supports)))
+	n = len(supports)
+	items = []
+	zeroes = [0]*n
+	for glyphName in font.getGlyphOrder():
+		items.append(hAdvanceDeltas.get(glyphName, zeroes))
+	while items and items[-1] is zeroes:
+		del items[-1]
+	varDeltas = builder.buildVarDeltas(varTupleIndexes, items)
+	varStore = builder.buildVarStore(varTupleList, [varDeltas])
+
+	assert "HVAR" not in font
+	HVAR = font["HVAR"] = newTable('HVAR')
+	hvar = HVAR.table = ot.HVAR()
+	hvar.Version = 1.0
+	hvar.VarIdxMap = None
+	hvar.VarStore = varStore
+
 
 def main(args=None):
 

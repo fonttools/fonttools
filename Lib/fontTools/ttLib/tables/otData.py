@@ -845,7 +845,7 @@ otData = [
 	# VariationStore
 
 	('VarAxis', [
-		('uint16', 'VarAxisID', None, None, ''),
+		('VarAxisID', 'VarAxisID', None, None, ''),
 		('F2Dot14', 'StartCoord', None, None, ''),
 		('F2Dot14', 'PeakCoord', None, None, ''),
 		('F2Dot14', 'EndCoord', None, None, ''),
@@ -862,10 +862,10 @@ otData = [
 	]),
 
 	('VarItemByteRecord', [
-		('int8', 'deltas', 'VarTupleCount', 0, ''),
+		('int8', 'Deltas', 'VarTupleCount', 0, ''),
 	]),
 	('VarItemShortRecord', [
-		('int16', 'deltas', 'VarTupleCount', 0, ''),
+		('int16', 'Deltas', 'VarTupleCount', 0, ''),
 	]),
 
 	('VarDeltasFormat1', [
