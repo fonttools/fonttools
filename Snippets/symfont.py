@@ -46,7 +46,7 @@ BezierCurve = tuple(
 
 def green(f, Bezier=BezierCurve[n]):
 	f1 = -sp.integrate(sp.sympify(f), y)
-	f2 = f1.replace(y, Bezier[1]).replace(x, Bezier[0])
+	f2 = f1.subs({x:Bezier[0], y:Bezier[1]})
 	return sp.integrate(f2 * sp.diff(Bezier[0], t), (t, 0, 1))
 
 class BezierFuncs(object):
