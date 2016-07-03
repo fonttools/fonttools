@@ -24,8 +24,7 @@ n = 3 # Max Bezier degree; 3 for cubic, 2 for quadratic
 
 t, x, y = sp.symbols('t x y', real=True)
 
-P = tuple(sp.symbols('p:%d[:2]' % (n+1), real=True))
-P = tuple(P[2*i:2*(i+1)] for i in range(len(P) // 2))
+P = tuple(zip(*(sp.symbols('%s:%d'%(w,n+1), real=True) for w in 'xy')))
 
 # Cubic Bernstein basis functions
 BinomialCoefficient = [(1, 0)]
@@ -57,7 +56,10 @@ class BezierFuncs(object):
 
 	def __getitem__(self, i):
 		if i not in self._bezfuncs:
-			args = ['p%d'%d for d in range(i+1)]
+			args = []
+			for d in range(i+1):
+				args.append('x%d' % d)
+				args.append('y%d' % d)
 			self._bezfuncs[i] = sp.lambdify(args, green(self._symfunc, Bezier=BezierCurve[i]))
 		return self._bezfuncs[i]
 
@@ -89,21 +91,21 @@ class GreenPen(BasePen):
 
 	def _lineTo(self, p1):
 		p0 = self._getCurrentPoint()
-		self.value += self._funcs[1](p0,p1)
+		self.value += self._funcs[1](p0[0],p0[1],p1[0],p1[1])
 
 	def _qCurveToOne(self, p1, p2):
 		p0 = self._getCurrentPoint()
-		self.value += self._funcs[2](p0,p1,p2)
+		self.value += self._funcs[2](p0[0],p0[1],p1[0],p1[1],p2[0],p2[1])
 
 	def _curveToOne(self, p1, p2, p3):
 		p0 = self._getCurrentPoint()
-		self.value += self._funcs[3](p0,p1,p2,p3)
+		self.value += self._funcs[3](p0[0],p0[1],p1[0],p1[1],p2[0],p2[1],p3[0],p3[1])
 
 	def _closePath(self):
 		p0 = self._getCurrentPoint()
 		if p0 != self.__startPoint:
 			p1 = self.__startPoint
-			self.value += self._funcs[1](p0,p1)
+			self.value += self._funcs[1](p0[0],p0[1],p1[0],p1[1])
 
 #AreaPen = partial(GreenPen, func=1)
 Moment1XPen = partial(GreenPen, func=x)
