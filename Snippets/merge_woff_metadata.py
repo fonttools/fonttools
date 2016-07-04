@@ -27,8 +27,9 @@ def main(args=None):
 
     font = TTFont(infile)
 
-    if font.flavorData is None:
-        font.flavorData = WOFFFlavorData()
+    if font.flavor not in ("woff", "woff2"):
+        print("Input file is not a WOFF or WOFF2 font", file=sys.stderr)
+        return 1
 
     data = font.flavorData
 
