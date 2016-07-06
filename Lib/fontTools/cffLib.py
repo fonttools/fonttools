@@ -547,7 +547,7 @@ class CharStrings(object):
 		else:
 			if hasattr(self, 'fdArray'):
 				if hasattr(self, 'fdSelect'):
-					sel = self.fdSelect[index]  # index is not defined at this point. Read R. ?
+					sel = self.charStrings[name].fdSelectIndex
 				else:
 					raise KeyError("fdSelect array not yet defined.")
 			else:
