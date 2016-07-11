@@ -2,7 +2,7 @@
 User name to file name conversion.
 This was taken form the UFO 3 spec.
 """
-from fontTools.misc.py23 import unicode
+from fontTools.misc.py23 import basestring, unicode
 
 
 illegalCharacters = "\" * + / : < > ? [ \ ] | \0".split(" ")
@@ -68,7 +68,8 @@ def userNameToFileName(userName, existing=[], prefix="", suffix=""):
 	u'alt._con'
 	"""
 	# the incoming name must be a unicode string
-	assert isinstance(userName, unicode), "The value for userName must be a unicode string."
+	if not isinstance(userName, unicode):
+		raise ValueError("The value for userName must be a unicode string.")
 	# establish the prefix and suffix lengths
 	prefixLength = len(prefix)
 	suffixLength = len(suffix)

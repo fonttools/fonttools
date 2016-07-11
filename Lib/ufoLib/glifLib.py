@@ -15,7 +15,7 @@ from __future__ import unicode_literals
 import os
 from io import BytesIO, open
 from warnings import warn
-from fontTools.misc.py23 import tobytes
+from fontTools.misc.py23 import tobytes, unicode
 from ufoLib.plistlib import PlistWriter, readPlist, writePlist
 from ufoLib.plistFromETree import readPlistFromTree
 from ufoLib.pointPen import AbstractPointPen, PointToSegmentPen
@@ -457,9 +457,9 @@ def glyphNameToFileName(glyphName, glyphSet):
 		existing = [name.lower() for name in list(glyphSet.contents.values())]
 	else:
 		existing = []
-	if not isinstance(glyphName, basestring):
+	if not isinstance(glyphName, unicode):
 		try:
-			new = str(glyphName)
+			new = unicode(glyphName)
 			glyphName = new
 		except UnicodeDecodeError:
 			pass

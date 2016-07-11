@@ -3,6 +3,7 @@ import shutil
 from io import StringIO, BytesIO, open
 import codecs
 from copy import deepcopy
+from fontTools.misc.py23 import basestring, unicode
 from ufoLib.glifLib import GlyphSet
 from ufoLib.validators import *
 from ufoLib.filenames import userNameToFileName
@@ -37,11 +38,6 @@ fontinfo.plist values between the possible format versions.
 	convertFontInfoValueForAttributeFromVersion2ToVersion3
 	convertFontInfoValueForAttributeFromVersion3ToVersion2
 """
-
-try:
-	basestring
-except NameError:
-	basestring = str
 
 __all__ = [
 	"makeUFOPath"
@@ -1066,9 +1062,9 @@ class UFOWriter(object):
 				# not caching this could be slightly expensive,
 				# but caching it will be cumbersome
 				existing = [d.lower() for d in list(self.layerContents.values())]
-				if not isinstance(layerName, basestring):
+				if not isinstance(layerName, unicode):
 					try:
-						layerName = str(layerName)
+						layerName = unicode(layerName)
 					except UnicodeDecodeError:
 						raise UFOLibError("The specified layer name is not a Unicode string.")
 				directory = userNameToFileName(layerName, existing=existing, prefix="glyphs.")
