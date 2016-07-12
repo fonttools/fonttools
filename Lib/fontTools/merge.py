@@ -399,7 +399,7 @@ otTables.BaseScriptList.mergeMap = {
 
 otTables.FeatureList.mergeMap = {
 	'FeatureCount': sum,
-	'FeatureRecord': sumLists,
+	'FeatureRecord': lambda lst: sorted(sumLists(lst), key=lambda s: s.FeatureTag),
 }
 
 otTables.LookupList.mergeMap = {
