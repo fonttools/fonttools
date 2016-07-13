@@ -1844,6 +1844,12 @@ def prune_pre_subset(self, font, options):
             else:
                 c.program = ['endchar']
 
+    # Clear useless Encoding
+    for fontname in cff.keys():
+        font = cff[fontname]
+        # https://github.com/behdad/fonttools/issues/620
+        font.Encoding = "StandardEncoding"
+
     return True # bool(cff.fontNames)
 
 @_add_method(ttLib.getTableClass('CFF '))
