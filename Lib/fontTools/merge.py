@@ -359,20 +359,27 @@ ttLib.getTableClass('cvt ').mergeMap = lambda self, lst: first(lst)
 @_add_method(ttLib.getTableClass('cmap'))
 def merge(self, m, tables):
 	# TODO Handle format=14.
-	cmapTables = [(t,fontIdx) for fontIdx,table in enumerate(tables) for t in table.tables if t.isUnicode()]
-	# TODO Better handle format-4 and format-12 coexisting in same font.
-	# TODO Insert both a format-4 and format-12 if needed.
-	module = ttLib.getTableModule('cmap')
-	assert all(t.format in [4, 12] for t,_ in cmapTables)
-	format = max(t.format for t,_ in cmapTables)
-	cmapTable = module.cmap_classes[format](format)
-	cmapTable.cmap = {}
-	cmapTable.platformID = 3
-	cmapTable.platEncID = max(t.platEncID for t,_ in cmapTables)
-	cmapTable.language = 0
-	cmap = cmapTable.cmap
+	# Only merges 4/3/1 and 12/3/10 subtables, ignores all other subtables
+	# If there is a format 12 table for the same font, ignore the format 4 table
+	cmapTables = []
+	for fontIdx,table in enumerate(tables):
+		format4 = None
+		format12 = None
+		for subtable in table.tables:
+			properties = (subtable.format, subtable.platformID, subtable.platEncID)
+			if properties == (4,3,1):
+				format4 = subtable
+			elif properties == (12,3,10):
+				format12 = subtable
+		if format12 is not None:
+			cmapTables.append((format12, fontIdx))
+		elif format4 is not None:
+			cmapTables.append((format4, fontIdx))
+
+	# Build a unicode mapping, then decide which format is needed to store it.
+	cmap = {}
 	for table,fontIdx in cmapTables:
-		# TODO handle duplicates.
+		# handle duplicates
 		for uni,gid in table.cmap.items():
 			oldgid = cmap.get(uni, None)
 			if oldgid is None:
@@ -380,10 +387,34 @@ def merge(self, m, tables):
 			elif oldgid != gid:
 				# Char previously mapped to oldgid, now to gid.
 				# Record, to fix up in GSUB 'locl' later.
-				assert m.duplicateGlyphsPerFont[fontIdx].get(oldgid, gid) == gid
-				m.duplicateGlyphsPerFont[fontIdx][oldgid] = gid
+				if m.duplicateGlyphsPerFont[fontIdx].get(oldgid, gid) == gid:
+					m.duplicateGlyphsPerFont[fontIdx][oldgid] = gid
+				else:
+					# char previously mapped to oldgid but already remapped to a different gid,
+					# save new gid as an alternate
+					# TODO: try harder to save these
+					log.warn("Dropped mapping from codepoint %#06X to glyphId '%s'", uni, gid)
+
+	cmapBmpOnly = {uni: gid for uni,gid in cmap.items() if uni <= 0xFFFF}
+	self.tables = []
+	module = ttLib.getTableModule('cmap')
+	if len(cmapBmpOnly) != len(cmap):
+		# format-12 required.
+		cmapTable = module.cmap_classes[12](12)
+		cmapTable.platformID = 3
+		cmapTable.platEncID = 10
+		cmapTable.language = 0
+		cmapTable.cmap = cmap
+		self.tables.append(cmapTable)
+	# always create format-4
+	cmapTable = module.cmap_classes[4](4)
+	cmapTable.platformID = 3
+	cmapTable.platEncID = 1
+	cmapTable.language = 0
+	cmapTable.cmap = cmapBmpOnly
+	# ordered by platform then encoding
+	self.tables.insert(0, cmapTable)
 	self.tableVersion = 0
-	self.tables = [cmapTable]
 	self.numSubTables = len(self.tables)
 	return self
 
@@ -777,6 +808,7 @@ class Merger(object):
 			with timer("merge '%s'" % tag):
 				tables = [font.get(tag, NotImplemented) for font in fonts]
 
+				log.info("Merging '%s'.", tag)
 				clazz = ttLib.getTableClass(tag)
 				table = clazz(tag).merge(self, tables)
 				# XXX Clean this up and use:  table = mergeObjects(tables)
