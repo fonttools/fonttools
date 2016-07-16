@@ -383,18 +383,19 @@ class GlyphVariationTest(unittest.TestCase):
 		self.assertEqual("01 80 FF FF", hexencode(compilePoints([65535])))
 		self.assertEqual("02 01 09 06", hexencode(compilePoints([9, 15])))
 		self.assertEqual("06 05 07 01 F7 02 01 F2", hexencode(compilePoints([7, 8, 255, 257, 258, 500])))
-		self.assertEqual("03 01 07 01 80 01 F4", hexencode(compilePoints([7, 8, 500])))
-		self.assertEqual("04 01 07 01 81 BE EF 0C 0F", hexencode(compilePoints([7, 8, 0xBEEF, 0xCAFE])))
+		self.assertEqual("03 01 07 01 80 01 EC", hexencode(compilePoints([7, 8, 500])))
+		self.assertEqual("04 01 07 01 81 BE E7 0C 0F", hexencode(compilePoints([7, 8, 0xBEEF, 0xCAFE])))
+		self.maxDiff = None
 		self.assertEqual("81 2C" +  # 300 points (0x12c) in total
 				 " 7F 00" + (127 * " 01") +  # first run, contains 128 points: [0 .. 127]
-				 " 7F 80" + (127 * " 01") +  # second run, contains 128 points: [128 .. 255]
-				 " AB 01 00" + (43 * " 00 01"),  # third run, contains 44 points: [256 .. 299]
+				 " 7F" + (128 * " 01") +  # second run, contains 128 points: [128 .. 255]
+				 " 2B" + (44 * " 01"),  # third run, contains 44 points: [256 .. 299]
 				 hexencode(compilePoints(range(300))))
 		self.assertEqual("81 8F" +  # 399 points (0x18f) in total
 				 " 7F 00" + (127 * " 01") +  # first run, contains 128 points: [0 .. 127]
-				 " 7F 80" + (127 * " 01") +  # second run, contains 128 points: [128 .. 255]
-				 " FF 01 00" + (127 * " 00 01") +  # third run, contains 128 points: [256 .. 383]
-				 " 8E 01 80" + (14 * " 00 01"),  # fourth run, contains 15 points: [384 .. 398]
+				 " 7F" + (128 * " 01") +  # second run, contains 128 points: [128 .. 255]
+				 " 7F" + (128 * " 01") +  # third run, contains 128 points: [256 .. 383]
+				 " 0E" + (15 * " 01"),  # fourth run, contains 15 points: [384 .. 398]
 				 hexencode(compilePoints(range(399))))
 
 	def test_decompilePoints(self):
@@ -419,29 +420,29 @@ class GlyphVariationTest(unittest.TestCase):
 		# 1 point; first run: [65535]; requires words to be treated as unsigned numbers
 		self.assertEqual(([65535], 4), decompilePoints("01 80 FF FF", 0))
 		# 4 points; first run: [7, 8]; second run: [255, 257]. 257 is stored in delta-encoded bytes (0xFF + 2).
-		self.assertEqual(([7, 8, 255, 257], 7), decompilePoints("04 01 07 01 01 FF 02", 0))
+		self.assertEqual(([7, 8, 263, 265], 7), decompilePoints("04 01 07 01 01 FF 02", 0))
 		# combination of all encodings, preceded and followed by 4 bytes of unused data
-		data = "DE AD DE AD 04 01 07 01 81 BE EF 0C 0F DE AD DE AD"
+		data = "DE AD DE AD 04 01 07 01 81 BE E7 0C 0F DE AD DE AD"
 		self.assertEqual(([7, 8, 0xBEEF, 0xCAFE], 13), decompilePoints(data, 4))
 		self.assertSetEqual(set(range(300)), set(decompilePoints(
 		    "81 2C" +  # 300 points (0x12c) in total
 		    " 7F 00" + (127 * " 01") +  # first run, contains 128 points: [0 .. 127]
-		    " 7F 80" + (127 * " 01") +  # second run, contains 128 points: [128 .. 255]
-		    " AB 01 00" + (43 * " 00 01"),  # third run, contains 44 points: [256 .. 299]
+		    " 7F" + (128 * " 01") +  # second run, contains 128 points: [128 .. 255]
+		    " AB" + (44 * " 00 01"),  # third run, contains 44 points: [256 .. 299]
 		    0)[0]))
 		self.assertSetEqual(set(range(399)), set(decompilePoints(
 		    "81 8F" +  # 399 points (0x18f) in total
 		    " 7F 00" + (127 * " 01") +  # first run, contains 128 points: [0 .. 127]
-		    " 7F 80" + (127 * " 01") +  # second run, contains 128 points: [128 .. 255]
-		    " FF 01 00" + (127 * " 00 01") + # third run, contains 128 points: [256 .. 383]
-		    " 8E 01 80" + (14 * " 00 01"),  # fourth run, contains 15 points: [384 .. 398]
+		    " 7F" + (128 * " 01") +  # second run, contains 128 points: [128 .. 255]
+		    " FF" + (128 * " 00 01") + # third run, contains 128 points: [256 .. 383]
+		    " 8E" + (15 * " 00 01"),  # fourth run, contains 15 points: [384 .. 398]
 		    0)[0]))
 
-	def test_decompilePoints_shouldGuardAgainstBadPointNumbers(self):
+	def test_decompilePoints_shouldAcceptBadPointNumbers(self):
 		decompilePoints = GlyphVariation.decompilePoints_
 		# 2 points; first run: [3, 9].
 		numPointsInGlyph = 8
-		self.assertRaises(TTLibError, decompilePoints, numPointsInGlyph, deHexStr("02 01 03 06"), 0)
+		decompilePoints(numPointsInGlyph, deHexStr("02 01 03 06"), 0)
 
 	def test_decompilePoints_roundTrip(self):
 		numPointsInGlyph = 500  # greater than 255, so we also exercise code path for 16-bit encoding
