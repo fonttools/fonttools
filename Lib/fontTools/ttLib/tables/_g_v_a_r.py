@@ -533,6 +533,8 @@ class GlyphVariation(object):
 				if useByteEncoding and (delta > 0xff or delta < 0):
 					# we need to start a new run (which will not use byte encoding)
 					break
+				# TODO This never switches back to a byte-encoding from a short-encoding.
+				# That's suboptimal.
 				if useByteEncoding:
 					run.write(bytechr(delta))
 				else:
