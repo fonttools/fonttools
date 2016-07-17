@@ -18,8 +18,8 @@ __all__ = [
 
 from fontTools.misc.arrayTools import calcBounds
 
-epsilonDigits = 12
-epsilon = 1e-12
+epsilonDigits = 6
+epsilon = 1e-10
 
 
 def calcQuadraticBounds(pt1, pt2, pt3):

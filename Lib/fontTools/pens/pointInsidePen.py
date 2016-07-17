@@ -11,12 +11,6 @@ from fontTools.misc.bezierTools import solveQuadratic, solveCubic
 __all__ = ["PointInsidePen"]
 
 
-# working around floating point errors
-EPSILON = 1e-10
-ONE_PLUS_EPSILON = 1 + EPSILON
-ZERO_MINUS_EPSILON = 0 - EPSILON
-
-
 class PointInsidePen(BasePen):
 
 	"""This pen implements "point inside" testing: to test whether
@@ -123,7 +117,7 @@ class PointInsidePen(BasePen):
 		by = (y3 - y2) * 3.0 - cy
 		ay = y4 - dy - cy - by
 		solutions = sorted(solveCubic(ay, by, cy, dy - y))
-		solutions = [t for t in solutions if ZERO_MINUS_EPSILON <= t <= ONE_PLUS_EPSILON]
+		solutions = [t for t in solutions if -0. <= t <= 1.]
 		if not solutions:
 			return
 
@@ -142,29 +136,30 @@ class PointInsidePen(BasePen):
 			t3 = t2 * t
 
 			direction = 3*ay*t2 + 2*by*t + cy
+			incomingGoingUp = outgoingGoingUp = direction > 0.0
 			if direction == 0.0:
 				direction = 6*ay*t + 2*by
+				outgoingGoingUp = direction > 0.0
+				incomingGoingUp = not outgoingGoingUp
 				if direction == 0.0:
 					direction = ay
-			goingUp = direction > 0.0
+					incomingGoingUp = outgoingGoingUp = direction > 0.0
 
 			xt = ax*t3 + bx*t2 + cx*t + dx
 			if xt < x:
-				above = goingUp
 				continue
 
-			if t == 0.0:
-				if not goingUp:
-					self._addIntersection(goingUp)
+			if t in (0.0, -0.0):
+				if not outgoingGoingUp:
+					self._addIntersection(outgoingGoingUp)
 			elif t == 1.0:
-				if not above:
-					self._addIntersection(goingUp)
+				if incomingGoingUp:
+					self._addIntersection(incomingGoingUp)
 			else:
-				if above != goingUp:
-					self._addIntersection(goingUp)
+				if incomingGoingUp == outgoingGoingUp:
+					self._addIntersection(outgoingGoingUp)
 				#else:
-				#   we're not really intersecting, merely touching the 'top'
-			above = goingUp
+				#   we're not really intersecting, merely touching
 
 	def _qCurveToOne_unfinished(self, bcp, point):
 		# XXX need to finish this, for now doing it through a cubic
