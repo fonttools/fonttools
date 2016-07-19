@@ -135,6 +135,30 @@ class PointInsidePenTest(unittest.TestCase):
         draw_contour(piPen)
         self.assertEqual(piPen.intersectionCount, 0)
 
+    def test_contour2_integers(self):
+        def draw_contour(pen):
+            pen.moveTo( (51, 22) )
+            pen.lineTo( (51, 74) )
+            pen.lineTo( (83, 50) )
+            pen.curveTo( (83, 49) , (82, 48) , (82, 47) )
+            pen.closePath()
+
+        piPen = PointInsidePen(None, (21, 50)) # this point is outside
+        draw_contour(piPen)
+        self.assertEqual(piPen.intersectionCount, 0)
+
+    def test_contour2_decimals(self):
+        def draw_contour(pen):
+            pen.moveTo( (51.25, 21.859375) )
+            pen.lineTo( (51.25, 73.828125) )
+            pen.lineTo( (82.5, 50.0) )
+            pen.curveTo( (82.5, 49.09375) , (82.265625, 48.265625) , (82.234375, 47.375) )
+            pen.closePath()
+
+        piPen = PointInsidePen(None, (21.25, 50.0)) # this point is outside
+        draw_contour(piPen)
+        self.assertEqual(piPen.intersectionCount, 0)
+
 if __name__ == "__main__":
     unittest.main()
 
