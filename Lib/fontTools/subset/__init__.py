@@ -2735,6 +2735,9 @@ class Subsetter(object):
                 new_uniranges = font[tag].recalcUnicodeRanges(font, pruneOnly=True)
                 if old_uniranges != new_uniranges:
                     log.info("%s Unicode ranges pruned: %s", tag, sorted(new_uniranges))
+                # recalculate xAvgCharWidth, fontTools does not recalculate it
+                widths = [m[0] for m in font["hmtx"].metrics.values() if m[0] > 0]
+                font[tag].xAvgCharWidth = int(round(sum(widths) / len(widths)))
             clazz = ttLib.getTableClass(tag)
             if hasattr(clazz, 'prune_post_subset'):
                 with timer("prune '%s'" % tag):
