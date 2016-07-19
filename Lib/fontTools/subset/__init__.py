@@ -303,6 +303,10 @@ Other font-specific options:
       *not* be switched on if an intersection is found.  [default]
   --no-prune-unicode-ranges
       Don't change the 'OS/2 ulUnicodeRange*' bits.
+  --recalc-average-width
+      Update the 'OS/2 xAvgCharWidth' field after subsetting. [default]
+  --no-recalc-average-width
+      Don't change the 'OS/2 xAvgCharWidth' field.
 
 Application options:
   --verbose
@@ -2459,6 +2463,7 @@ class Options(object):
         self.recalc_bounds = False # Recalculate font bounding boxes
         self.recalc_timestamp = False # Recalculate font modified timestamp
         self.prune_unicode_ranges = True  # Clear unused 'ulUnicodeRange' bits
+        self.recalc_average_width = True  # update 'xAvgCharWidth'
         self.canonical_order = None # Order tables as recommended
         self.flavor = None  # May be 'woff' or 'woff2'
         self.with_zopfli = False  # use zopfli instead of zlib for WOFF 1.0
@@ -2735,9 +2740,12 @@ class Subsetter(object):
                 new_uniranges = font[tag].recalcUnicodeRanges(font, pruneOnly=True)
                 if old_uniranges != new_uniranges:
                     log.info("%s Unicode ranges pruned: %s", tag, sorted(new_uniranges))
-                # recalculate xAvgCharWidth, fontTools does not recalculate it
-                widths = [m[0] for m in font["hmtx"].metrics.values() if m[0] > 0]
-                font[tag].xAvgCharWidth = int(round(sum(widths) / len(widths)))
+                if self.options.recalc_average_width:
+                    widths = [m[0] for m in font["hmtx"].metrics.values() if m[0] > 0]
+                    avg_width = int(round(sum(widths) / len(widths)))
+                    if avg_width != font[tag].xAvgCharWidth:
+                        font[tag].xAvgCharWidth = avg_width
+                        log.info("%s xAvgCharWidth updated: %d", tag, avg_width)
             clazz = ttLib.getTableClass(tag)
             if hasattr(clazz, 'prune_post_subset'):
                 with timer("prune '%s'" % tag):
