@@ -304,9 +304,9 @@ Other font-specific options:
   --no-prune-unicode-ranges
       Don't change the 'OS/2 ulUnicodeRange*' bits.
   --recalc-average-width
-      Update the 'OS/2 xAvgCharWidth' field after subsetting. [default]
+      Update the 'OS/2 xAvgCharWidth' field after subsetting.
   --no-recalc-average-width
-      Don't change the 'OS/2 xAvgCharWidth' field.
+      Don't change the 'OS/2 xAvgCharWidth' field. [default]
 
 Application options:
   --verbose
@@ -2463,7 +2463,7 @@ class Options(object):
         self.recalc_bounds = False # Recalculate font bounding boxes
         self.recalc_timestamp = False # Recalculate font modified timestamp
         self.prune_unicode_ranges = True  # Clear unused 'ulUnicodeRange' bits
-        self.recalc_average_width = True  # update 'xAvgCharWidth'
+        self.recalc_average_width = False  # update 'xAvgCharWidth'
         self.canonical_order = None # Order tables as recommended
         self.flavor = None  # May be 'woff' or 'woff2'
         self.with_zopfli = False  # use zopfli instead of zlib for WOFF 1.0
