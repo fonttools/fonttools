@@ -64,35 +64,41 @@ def dot(v1, v2):
     return v1[0] * v2[0] + v1[1] * v2[1]
 
 
-def lerp(a, b, t):
-    """Linearly interpolate between scalars a and b at time t."""
-    return a * (1 - t) + b * t
-
-
 def lerp_pt(p1, p2, t):
     """Linearly interpolate between points p1 and p2 at time t."""
     (x1, y1), (x2, y2) = p1, p2
-    return lerp(x1, x2, t), lerp(y1, y2, t)
+    return x1+t*(x2-x1), y1+t*(y2-y1)
 
 
 def quadratic_bezier_at(p, t):
     """Return the point on a quadratic bezier curve at time t."""
 
     (x1, y1), (x2, y2), (x3, y3) = p
-    return (
-        lerp(lerp(x1, x2, t), lerp(x2, x3, t), t),
-        lerp(lerp(y1, y2, t), lerp(y2, y3, t), t))
+
+    _t = 1-t
+    t2 = t*t
+    _t2 = _t*_t
+    _2_t_t = 2*t*_t
+
+    return (_t2*x1 + _2_t_t*x2 + t2*x3,
+            _t2*y1 + _2_t_t*y2 + t2*y3)
 
 
 def cubic_bezier_at(p, t):
     """Return the point on a cubic bezier curve at time t."""
 
     (x1, y1), (x2, y2), (x3, y3), (x4, y4) = p
-    return (
-        lerp(lerp(lerp(x1, x2, t), lerp(x2, x3, t), t),
-             lerp(lerp(x2, x3, t), lerp(x3, x4, t), t), t),
-        lerp(lerp(lerp(y1, y2, t), lerp(y2, y3, t), t),
-             lerp(lerp(y2, y3, t), lerp(y3, y4, t), t), t))
+
+    _t = 1-t
+    t2 = t*t
+    _t2 = _t*_t
+    t3 = t*t2
+    _t3 = _t*_t2
+    _3_t2_t = 3*t2*_t
+    _3_t_t2 = 3*t*_t2
+
+    return (_t3*x1 + _3_t_t2*x2 + _3_t2_t*x3 + t3*x4,
+            _t3*y1 + _3_t_t2*y2 + _3_t2_t*y3 + t3*y4)
 
 
 def cubic_approx(p, t):
