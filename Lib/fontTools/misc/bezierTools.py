@@ -215,12 +215,14 @@ def _splitQuadraticAtT(a, b, c, *ts):
         t2 = ts[i+1]
         delta = (t2 - t1)
         # calc new a, b and c
-        a1x = ax * delta**2
-        a1y = ay * delta**2
+        delta_2 = delta*delta
+        a1x = ax * delta_2
+        a1y = ay * delta_2
         b1x = (2*ax*t1 + bx) * delta
         b1y = (2*ay*t1 + by) * delta
-        c1x = ax*t1**2 + bx*t1 + cx
-        c1y = ay*t1**2 + by*t1 + cy
+        t1_2 = t1*t1
+        c1x = ax*t1_2 + bx*t1 + cx
+        c1y = ay*t1_2 + by*t1 + cy
 
         pt1, pt2, pt3 = calcQuadraticPoints((a1x, a1y), (b1x, b1y), (c1x, c1y))
         segments.append((pt1, pt2, pt3))
@@ -240,15 +242,21 @@ def _splitCubicAtT(a, b, c, d, *ts):
         t1 = ts[i]
         t2 = ts[i+1]
         delta = (t2 - t1)
+
+        delta_2 = delta*delta
+        delta_3 = delta*delta_2
+        t1_2 = t1*t1
+        t1_3 = t1*t1_2
+
         # calc new a, b, c and d
-        a1x = ax * delta**3
-        a1y = ay * delta**3
-        b1x = (3*ax*t1 + bx) * delta**2
-        b1y = (3*ay*t1 + by) * delta**2
-        c1x = (2*bx*t1 + cx + 3*ax*t1**2) * delta
-        c1y = (2*by*t1 + cy + 3*ay*t1**2) * delta
-        d1x = ax*t1**3 + bx*t1**2 + cx*t1 + dx
-        d1y = ay*t1**3 + by*t1**2 + cy*t1 + dy
+        a1x = ax * delta_3
+        a1y = ay * delta_3
+        b1x = (3*ax*t1 + bx) * delta_2
+        b1y = (3*ay*t1 + by) * delta_2
+        c1x = (2*bx*t1 + cx + 3*ax*t1_2) * delta
+        c1y = (2*by*t1 + cy + 3*ay*t1_2) * delta
+        d1x = ax*t1_3 + bx*t1_2 + cx*t1 + dx
+        d1y = ay*t1_3 + by*t1_2 + cy*t1 + dy
         pt1, pt2, pt3, pt4 = calcCubicPoints((a1x, a1y), (b1x, b1y), (c1x, c1y), (d1x, d1y))
         segments.append((pt1, pt2, pt3, pt4))
     return segments
