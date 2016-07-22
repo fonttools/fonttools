@@ -74,37 +74,6 @@ def mid_pt(p1, p2):
     return ((p1[0]+p2[0])*.5, (p1[1]+p2[1])*.5)
 
 
-def quadratic_bezier_at(p, t):
-    """Return the point on a quadratic bezier curve at time t."""
-
-    (x1, y1), (x2, y2), (x3, y3) = p
-
-    _t = 1-t
-    t2 = t*t
-    _t2 = _t*_t
-    _2_t_t = 2*t*_t
-
-    return (_t2*x1 + _2_t_t*x2 + t2*x3,
-            _t2*y1 + _2_t_t*y2 + t2*y3)
-
-
-def cubic_bezier_at(p, t):
-    """Return the point on a cubic bezier curve at time t."""
-
-    (x1, y1), (x2, y2), (x3, y3), (x4, y4) = p
-
-    _t = 1-t
-    t2 = t*t
-    _t2 = _t*_t
-    t3 = t*t2
-    _t3 = _t*_t2
-    _3_t2_t = 3*t2*_t
-    _3_t_t2 = 3*t*_t2
-
-    return (_t3*x1 + _3_t_t2*x2 + _3_t2_t*x3 + t3*x4,
-            _t3*y1 + _3_t_t2*y2 + _3_t2_t*y3 + t3*y4)
-
-
 def cubic_from_quadratic(p):
     return (p[0], lerp_pt(p[0],p[1],2./3), lerp_pt(p[2],p[1],2./3), p[2])
 
