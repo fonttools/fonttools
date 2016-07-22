@@ -69,6 +69,10 @@ def lerp_pt(p1, p2, t):
     (x1, y1), (x2, y2) = p1, p2
     return x1+t*(x2-x1), y1+t*(y2-y1)
 
+def mid_pt(p1, p2):
+    """Return midpoint between p1 and p2."""
+    return ((p1[0]+p2[0])*.5, (p1[1]+p2[1])*.5)
+
 
 def quadratic_bezier_at(p, t):
     """Return the point on a quadratic bezier curve at time t."""
@@ -101,6 +105,10 @@ def cubic_bezier_at(p, t):
             _t3*y1 + _3_t_t2*y2 + _3_t2_t*y3 + t3*y4)
 
 
+def cubic_from_quadratic(p):
+    return (p[0], lerp_pt(p[0],p[1],2./3), lerp_pt(p[2],p[1],2./3), p[2])
+
+
 def cubic_approx_control(p, t):
     """Approximate a cubic bezier curve with a quadratic one.
        Returns the candidate control point."""
@@ -124,19 +132,55 @@ def calc_intersect(p):
     return translate(c, scale(cd, h))
 
 
-def cubic_approx_spline(p, n):
+def cubic_farthest2(p,tolerance2):
+    (x0, y0), (x1, y1), (x2, y2), (x3, y3) = p
+
+    e0 = x0*x0+y0*y0
+    e3 = x3*x3+y3*y3
+    e = max(e0, e3)
+    if e > tolerance2:
+        return e
+
+    e1 = x1*x1+y1*y1
+    e2 = x2*x2+y2*y2
+    e = max(e1, e2)
+    if e <= tolerance2:
+        return e
+
+    # Split.
+    segments = bezierTools.splitCubicAtT(p[0], p[1], p[2], p[3], .5)
+    return max(cubic_farthest2(s,tolerance2) for s in segments)
+
+
+def cubic_cubic_error2(a,b,tolerance2):
+    return cubic_farthest2((vector(a[0],b[0]),
+                            vector(a[1],b[1]),
+                            vector(a[2],b[2]),
+                            vector(a[3],b[3])), tolerance2)
+
+
+def cubic_quadratic_error2(a,b,tolerance2):
+    return cubic_cubic_error2(a, cubic_from_quadratic(b), tolerance2)
+
+
+def cubic_approx_spline(p, n, tolerance):
     """Approximate a cubic bezier curve with a spline of n quadratics.
 
     Returns None if n is 1 and the cubic's control vectors are parallel, since
     no quadratic exists with this cubic's tangents.
     """
 
+    tolerance2 = tolerance*tolerance
+
     if n == 1:
         try:
             p1 = calc_intersect(p)
         except ValueError:
             return None
-        return [p[0], p1, p[3]]
+        quad = (p[0], p1, p[3])
+        if cubic_quadratic_error2(p, quad, tolerance2) > tolerance2:
+            return None
+        return quad
 
     spline = [p[0]]
     ts = [i / n for i in range(1, n)]
@@ -144,26 +188,19 @@ def cubic_approx_spline(p, n):
     for i in range(len(segments)):
         spline.append(cubic_approx_control(segments[i], i / (n - 1)))
     spline.append(p[3])
+
+    for i in range(1,n+1):
+        if i == 1:
+	    segment = (spline[0],spline[1],mid_pt(spline[1],spline[2]))
+	elif i == n:
+            segment = mid_pt(spline[-3],spline[-2]),spline[-2],spline[-1]
+	else:
+            segment = mid_pt(spline[i-1],spline[i]), spline[i], mid_pt(spline[i],spline[i+1])
+
+        error2 = cubic_quadratic_error2(segments[i-1], segment, tolerance2)
+	if error2 > tolerance2: return None
+
     return spline
-
-
-def curve_spline_dist(bezier, spline):
-    """Max distance between a bezier and quadratic spline at sampled ts."""
-
-    TOTAL_STEPS = 20
-    error = 0
-    n = len(spline) - 2
-    steps = TOTAL_STEPS // n
-    for i in range(1, n + 1):
-        segment = [
-            spline[0] if i == 1 else segment[2],
-            spline[i],
-            spline[i + 1] if i == n else lerp_pt(spline[i], spline[i + 1], 0.5)]
-        for j in range(steps):
-            p1 = cubic_bezier_at(bezier, (j / steps + i - 1) / n)
-            p2 = quadratic_bezier_at(segment, j / steps)
-            error = max(error, dist(p1, p2))
-    return error
 
 
 def curve_to_quadratic(p, max_err):
@@ -175,11 +212,8 @@ def curve_to_quadratic(p, max_err):
 
     spline, error = None, None
     for n in range(1, MAX_N + 1):
-        spline = cubic_approx_spline(p, n)
-        if spline is None:
-            continue
-        error = curve_spline_dist(p, spline)
-        if error <= max_err:
+        spline = cubic_approx_spline(p, n, max_err)
+        if spline is not None:
             break
     else:
         # no break: approximation not found or error exceeds tolerance
@@ -200,11 +234,8 @@ def curves_to_quadratic(curves, max_errors):
     splines = [None] * num_curves
     errors = [None] * num_curves
     for n in range(1, MAX_N + 1):
-        splines = [cubic_approx_spline(c, n) for c in curves]
-        if not all(splines):
-            continue
-        errors = [curve_spline_dist(c, s) for c, s in zip(curves, splines)]
-        if all(err <= max_err for err, max_err in zip(errors, max_errors)):
+        splines = [cubic_approx_spline(c, n, e) for c,e in zip(curves,max_errors)]
+        if all(splines):
             break
     else:
         # no break: raise if any spline is None or error exceeds tolerance
