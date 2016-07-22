@@ -101,12 +101,13 @@ def cubic_bezier_at(p, t):
             _t3*y1 + _3_t_t2*y2 + _3_t2_t*y3 + t3*y4)
 
 
-def cubic_approx(p, t):
-    """Approximate a cubic bezier curve with a quadratic one."""
+def cubic_approx_control(p, t):
+    """Approximate a cubic bezier curve with a quadratic one.
+       Returns the candidate control point."""
 
     p1 = lerp_pt(p[0], p[1], 1.5)
     p2 = lerp_pt(p[3], p[2], 1.5)
-    return p[0], lerp_pt(p1, p2, t), p[3]
+    return lerp_pt(p1, p2, t)
 
 
 def calc_intersect(p):
@@ -141,8 +142,7 @@ def cubic_approx_spline(p, n):
     ts = [i / n for i in range(1, n)]
     segments = bezierTools.splitCubicAtT(p[0], p[1], p[2], p[3], *ts)
     for i in range(len(segments)):
-        segment = cubic_approx(segments[i], i / (n - 1))
-        spline.append(segment[1])
+        spline.append(cubic_approx_control(segments[i], i / (n - 1)))
     spline.append(p[3])
     return spline
 
