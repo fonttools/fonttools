@@ -16,11 +16,53 @@
 from __future__ import print_function, division, absolute_import
 
 from math import hypot
-from fontTools.misc import bezierTools
 
 __all__ = ['curve_to_quadratic', 'curves_to_quadratic']
 
 MAX_N = 100
+
+
+def calcCubicPoints(a, b, c, d):
+    _1 = d
+    _2 = (c / 3.0) + d
+    _3 = (b + c) / 3.0 + _2
+    _4 = a + d + c + b
+    return _1, _2, _3, _4
+
+def _splitCubicAtT(a, b, c, d, *ts):
+    ts = list(ts)
+    ts.insert(0, 0.0)
+    ts.append(1.0)
+    segments = []
+    for i in range(len(ts) - 1):
+        t1 = ts[i]
+        t2 = ts[i+1]
+        delta = (t2 - t1)
+
+        delta_2 = delta*delta
+        delta_3 = delta*delta_2
+        t1_2 = t1*t1
+        t1_3 = t1*t1_2
+
+        # calc new a, b, c and d
+        a1 = a * delta_3
+        b1 = (3*a*t1 + b) * delta_2
+        c1 = (2*b*t1 + c + 3*a*t1_2) * delta
+        d1 = a*t1_3 + b*t1_2 + c*t1 + d
+        pt1, pt2, pt3, pt4 = calcCubicPoints(a1, b1, c1, d1)
+        segments.append((pt1, pt2, pt3, pt4))
+    return segments
+
+def calcCubicParameters(pt1, pt2, pt3, pt4):
+    c = (pt2 -pt1) * 3.0
+    b = (pt3 - pt2) * 3.0 - c
+    d = pt1
+    a = pt4 - d - c - b
+    return a, b, c, d
+
+def splitCubicAtT(pt1, pt2, pt3, pt4, *ts):
+    a, b, c, d = calcCubicParameters(pt1, pt2, pt3, pt4)
+    return _splitCubicAtT(a, b, c, d, *ts)
 
 
 class Cu2QuError(Exception):
@@ -39,92 +81,66 @@ class ApproxNotFoundError(Cu2QuError):
         self.error = error
 
 
-def vector(p1, p2):
-    """Return the vector from p1 to p2."""
-    return p2[0] - p1[0], p2[1] - p1[1]
-
-
-def translate(p, v):
-    """Translate a point by a vector."""
-    return p[0] + v[0], p[1] + v[1]
-
-
-def scale(v, n):
-    """Scale a vector."""
-    return v[0] * n, v[1] * n
-
-
 def dot(v1, v2):
     """Return the dot product of two vectors."""
-    return v1[0] * v2[0] + v1[1] * v2[1]
-
-
-def lerp_pt(p1, p2, t):
-    """Linearly interpolate between points p1 and p2 at time t."""
-    (x1, y1), (x2, y2) = p1, p2
-    return x1+t*(x2-x1), y1+t*(y2-y1)
-
-def mid_pt(p1, p2):
-    """Return midpoint between p1 and p2."""
-    return ((p1[0]+p2[0])*.5, (p1[1]+p2[1])*.5)
+    return v1.real * v2.real + v1.imag * v2.imag
 
 
 def cubic_from_quadratic(p):
-    return (p[0], lerp_pt(p[0],p[1],2./3), lerp_pt(p[2],p[1],2./3), p[2])
+    return (p[0], p[0]+(p[1]-p[0])*(2./3), p[2]+(p[1]-p[2])*(2./3), p[2])
 
 
 def cubic_approx_control(p, t):
     """Approximate a cubic bezier curve with a quadratic one.
        Returns the candidate control point."""
 
-    p1 = lerp_pt(p[0], p[1], 1.5)
-    p2 = lerp_pt(p[3], p[2], 1.5)
-    return lerp_pt(p1, p2, t)
+    p1 = p[0]+(p[1]-p[0])*1.5
+    p2 = p[3]+(p[2]-p[3])*1.5
+    return p1+(p2-p1)*t
 
 
 def calc_intersect(p):
     """Calculate the intersection of ab and cd, given [a, b, c, d]."""
 
     a, b, c, d = p
-    ab = vector(a, b)
-    cd = vector(c, d)
-    p = -ab[1], ab[0]
+    ab = b - a
+    cd = d - c
+    p = ab * 1j
     try:
-        h = dot(p, vector(c, a)) / dot(p, cd)
+        h = dot(p, a - c) / dot(p, cd)
     except ZeroDivisionError:
         raise ValueError('Parallel vectors given to calc_intersect.')
-    return translate(c, scale(cd, h))
+    return c + cd * h
 
 
-def cubic_farthest2(p,tolerance2):
-    (x0, y0), (x1, y1), (x2, y2), (x3, y3) = p
+def cubic_farthest2(p,tolerance):
 
-    e0 = x0*x0+y0*y0
-    e3 = x3*x3+y3*y3
+    e0 = abs(p[0])
+    e3 = abs(p[3])
     e = max(e0, e3)
-    if e > tolerance2:
+    if e > tolerance:
         return e
 
-    e1 = x1*x1+y1*y1
-    e2 = x2*x2+y2*y2
+    e1 = abs(p[1])
+    e2 = abs(p[2])
     e = max(e1, e2)
-    if e <= tolerance2:
+    if e <= tolerance:
         return e
 
     # Split.
-    segments = bezierTools.splitCubicAtT(p[0], p[1], p[2], p[3], .5)
-    return max(cubic_farthest2(s,tolerance2) for s in segments)
+    segments = splitCubicAtT(p[0], p[1], p[2], p[3], .5)
+    return max(cubic_farthest2(s,tolerance) for s in segments)
 
 
-def cubic_cubic_error2(a,b,tolerance2):
-    return cubic_farthest2((vector(a[0],b[0]),
-                            vector(a[1],b[1]),
-                            vector(a[2],b[2]),
-                            vector(a[3],b[3])), tolerance2)
+def cubic_cubic_error(a,b,tolerance):
+    return cubic_farthest2((b[0] - a[0],
+                            b[1] - a[1],
+                            b[2] - a[2],
+                            b[3] - a[3]), tolerance)
 
 
-def cubic_quadratic_error2(a,b,tolerance2):
-    return cubic_cubic_error2(a, cubic_from_quadratic(b), tolerance2)
+def cubic_quadratic_error(a,b,tolerance):
+    return cubic_cubic_error(a, cubic_from_quadratic(b), tolerance)
 
 
 def cubic_approx_spline(p, n, tolerance):
@@ -134,35 +150,33 @@ def cubic_approx_spline(p, n, tolerance):
     no quadratic exists with this cubic's tangents.
     """
 
-    tolerance2 = tolerance*tolerance
-
     if n == 1:
         try:
             p1 = calc_intersect(p)
         except ValueError:
             return None
         quad = (p[0], p1, p[3])
-        if cubic_quadratic_error2(p, quad, tolerance2) > tolerance2:
+        if cubic_quadratic_error(p, quad, tolerance) > tolerance:
             return None
         return quad
 
     spline = [p[0]]
     ts = [i / n for i in range(1, n)]
-    segments = bezierTools.splitCubicAtT(p[0], p[1], p[2], p[3], *ts)
+    segments = splitCubicAtT(p[0], p[1], p[2], p[3], *ts)
     for i in range(len(segments)):
         spline.append(cubic_approx_control(segments[i], i / (n - 1)))
     spline.append(p[3])
 
     for i in range(1,n+1):
         if i == 1:
-	    segment = (spline[0],spline[1],mid_pt(spline[1],spline[2]))
+	    segment = (spline[0],spline[1],(spline[1]+spline[2])*.5)
 	elif i == n:
-            segment = mid_pt(spline[-3],spline[-2]),spline[-2],spline[-1]
+            segment = (spline[-3]+spline[-2])*.5,spline[-2],spline[-1]
 	else:
-            segment = mid_pt(spline[i-1],spline[i]), spline[i], mid_pt(spline[i],spline[i+1])
+            segment = (spline[i-1]+spline[i])*.5, spline[i], (spline[i]+spline[i+1])*.5
 
-        error2 = cubic_quadratic_error2(segments[i-1], segment, tolerance2)
-	if error2 > tolerance2: return None
+        error = cubic_quadratic_error(segments[i-1], segment, tolerance)
+	if error > tolerance: return None
 
     return spline
 
@@ -174,6 +188,7 @@ def curve_to_quadratic(p, max_err):
     with the given parameters.
     """
 
+    p = [complex(*P) for P in p]
     spline, error = None, None
     for n in range(1, MAX_N + 1):
         spline = cubic_approx_spline(p, n, max_err)
@@ -192,6 +207,7 @@ def curves_to_quadratic(curves, max_errors):
     for all curves with the given parameters.
     """
 
+    curves = [[complex(*P) for P in p] for p in curves]
     num_curves = len(curves)
     assert len(max_errors) == num_curves
 
