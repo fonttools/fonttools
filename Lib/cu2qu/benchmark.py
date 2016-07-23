@@ -22,7 +22,7 @@ MAX_ERR = 5
 
 SETUP_CODE = '''
 from cu2qu import %s
-from __main__ import setup_%s
+from cu2qu.benchmark import setup_%s
 args = setup_%s()
 '''
 
