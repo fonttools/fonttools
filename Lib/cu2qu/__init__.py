@@ -113,34 +113,30 @@ def calc_intersect(p):
     return c + cd * h
 
 
-def cubic_farthest2(p,tolerance):
+def cubic_farthest_fit(p,tolerance):
+    """Returns True if the cubic Bezier p entirely lies within a distance
+    tolerance of origin, False otherwise."""
 
-    e0 = abs(p[0])
-    e3 = abs(p[3])
-    e = max(e0, e3)
-    if e > tolerance:
-        return e
+    if abs(p[0]) > tolerance or abs(p[3]) > tolerance:
+        return False
 
-    e1 = abs(p[1])
-    e2 = abs(p[2])
-    e = max(e1, e2)
-    if e <= tolerance:
-        return e
+    if abs(p[1]) <= tolerance and abs(p[2]) <= tolerance:
+        return True
 
     # Split.
-    segments = splitCubicAtT(p[0], p[1], p[2], p[3], .5)
-    return max(cubic_farthest2(s,tolerance) for s in segments)
+    a,b = splitCubicAtT(p[0], p[1], p[2], p[3], .5)
+    return cubic_farthest_fit(a,tolerance) and cubic_farthest_fit(b,tolerance)
 
 
-def cubic_cubic_error(a,b,tolerance):
-    return cubic_farthest2((b[0] - a[0],
-                            b[1] - a[1],
-                            b[2] - a[2],
-                            b[3] - a[3]), tolerance)
+def cubic_cubic_fit(a,b,tolerance):
+    return cubic_farthest_fit((b[0] - a[0],
+                               b[1] - a[1],
+                               b[2] - a[2],
+                               b[3] - a[3]), tolerance)
 
 
-def cubic_quadratic_error(a,b,tolerance):
-    return cubic_cubic_error(a, cubic_from_quadratic(b), tolerance)
+def cubic_quadratic_fit(a,b,tolerance):
+    return cubic_cubic_fit(a, cubic_from_quadratic(b), tolerance)
 
 
 def cubic_approx_spline(p, n, tolerance):
@@ -156,7 +152,7 @@ def cubic_approx_spline(p, n, tolerance):
         except ValueError:
             return None
         quad = (p[0], p1, p[3])
-        if cubic_quadratic_error(p, quad, tolerance) > tolerance:
+        if not cubic_quadratic_fit(p, quad, tolerance):
             return None
         return quad
 
@@ -175,8 +171,8 @@ def cubic_approx_spline(p, n, tolerance):
 	else:
             segment = (spline[i-1]+spline[i])*.5, spline[i], (spline[i]+spline[i+1])*.5
 
-        error = cubic_quadratic_error(segments[i-1], segment, tolerance)
-	if error > tolerance: return None
+        if not cubic_quadratic_fit(segments[i-1], segment, tolerance):
+	    return None
 
     return spline
 
