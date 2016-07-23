@@ -54,11 +54,6 @@ def scale(v, n):
     return v[0] * n, v[1] * n
 
 
-def dist(p1, p2):
-    """Calculate the distance between two points."""
-    return hypot(p1[0] - p2[0], p1[1] - p2[1])
-
-
 def dot(v1, v2):
     """Return the dot product of two vectors."""
     return v1[0] * v2[0] + v1[1] * v2[1]
