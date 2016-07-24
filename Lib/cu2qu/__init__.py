@@ -165,14 +165,14 @@ def cubic_approx_spline(p, n, tolerance):
 
     for i in range(1,n+1):
         if i == 1:
-	    segment = (spline[0],spline[1],(spline[1]+spline[2])*.5)
-	elif i == n:
+            segment = (spline[0],spline[1],(spline[1]+spline[2])*.5)
+        elif i == n:
             segment = (spline[-3]+spline[-2])*.5,spline[-2],spline[-1]
-	else:
+        else:
             segment = (spline[i-1]+spline[i])*.5, spline[i], (spline[i]+spline[i+1])*.5
 
         if not cubic_quadratic_fit(segments[i-1], segment, tolerance):
-	    return None
+            return None
 
     return spline
 
