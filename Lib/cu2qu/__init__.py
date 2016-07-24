@@ -163,8 +163,11 @@ def cubic_approx_spline(p, n, tolerance):
         return quad
 
     spline = [p[0]]
-    ts = [i / n for i in range(1, n)]
-    segments = splitCubicAtT(p[0], p[1], p[2], p[3], *ts)
+    if n == 2:
+        segments = splitCubicIntoTwo(p[0], p[1], p[2], p[3])
+    else:
+        ts = [i / n for i in range(1, n)]
+        segments = splitCubicAtT(p[0], p[1], p[2], p[3], *ts)
     for i in range(len(segments)):
         spline.append(cubic_approx_control(segments[i], i / (n - 1)))
     spline.append(p[3])
