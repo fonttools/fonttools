@@ -64,6 +64,12 @@ def splitCubicAtT(pt1, pt2, pt3, pt4, *ts):
     a, b, c, d = calcCubicParameters(pt1, pt2, pt3, pt4)
     return _splitCubicAtT(a, b, c, d, *ts)
 
+def splitCubicIntoTwo(pt1, pt2, pt3, pt4):
+    mid = (pt1+3*(pt2+pt3)+pt4)*.125
+    deriv3 = (pt4+pt3-pt2-pt1)*.125
+    return ((pt1, (pt1+pt2)*.5, mid-deriv3, mid),
+            (mid, mid+deriv3, (pt3+pt4)*.5, pt4))
+
 
 class Cu2QuError(Exception):
     pass
@@ -124,7 +130,7 @@ def cubic_farthest_fit(p,tolerance):
         return True
 
     # Split.
-    a,b = splitCubicAtT(p[0], p[1], p[2], p[3], .5)
+    a,b = splitCubicIntoTwo(p[0], p[1], p[2], p[3])
     return cubic_farthest_fit(a,tolerance) and cubic_farthest_fit(b,tolerance)
 
 
