@@ -29,25 +29,21 @@ def calcCubicPoints(a, b, c, d):
     _4 = a + d + c + b
     return _1, _2, _3, _4
 
-def _splitCubicAtT(a, b, c, d, *ts):
-    ts = list(ts)
-    ts.insert(0, 0.0)
-    ts.append(1.0)
+def _splitCubicIntoN(a, b, c, d, n):
     segments = []
-    for i in range(len(ts) - 1):
-        t1 = ts[i]
-        t2 = ts[i+1]
-        delta = (t2 - t1)
+    dt = 1./n
+    for i in range(n):
+        t1 = i * dt
 
-        delta_2 = delta*delta
-        delta_3 = delta*delta_2
+        delta_2 = dt*dt
+        delta_3 = dt * delta_2
         t1_2 = t1*t1
         t1_3 = t1*t1_2
 
         # calc new a, b, c and d
         a1 = a * delta_3
         b1 = (3*a*t1 + b) * delta_2
-        c1 = (2*b*t1 + c + 3*a*t1_2) * delta
+        c1 = (2*b*t1 + c + 3*a*t1_2) * dt
         d1 = a*t1_3 + b*t1_2 + c*t1 + d
         pt1, pt2, pt3, pt4 = calcCubicPoints(a1, b1, c1, d1)
         segments.append((pt1, pt2, pt3, pt4))
@@ -60,9 +56,9 @@ def calcCubicParameters(pt1, pt2, pt3, pt4):
     a = pt4 - d - c - b
     return a, b, c, d
 
-def splitCubicAtT(pt1, pt2, pt3, pt4, *ts):
+def splitCubicIntoN(pt1, pt2, pt3, pt4, n):
     a, b, c, d = calcCubicParameters(pt1, pt2, pt3, pt4)
-    return _splitCubicAtT(a, b, c, d, *ts)
+    return _splitCubicIntoN(a, b, c, d, n)
 
 def splitCubicIntoTwo(pt1, pt2, pt3, pt4):
     mid = (pt1+3*(pt2+pt3)+pt4)*.125
@@ -191,8 +187,7 @@ def cubic_approx_spline(p, n, tolerance):
     elif n == 3:
         segments = splitCubicIntoThree(p[0], p[1], p[2], p[3])
     else:
-        ts = [i / n for i in range(1, n)]
-        segments = splitCubicAtT(p[0], p[1], p[2], p[3], *ts)
+        segments = splitCubicIntoN(p[0], p[1], p[2], p[3], n)
     for i in range(len(segments)):
         spline.append(cubic_approx_control(segments[i], i / (n - 1)))
     spline.append(p[3])
