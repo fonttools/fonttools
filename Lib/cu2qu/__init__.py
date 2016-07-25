@@ -78,15 +78,10 @@ class Cu2QuError(Exception):
 
 
 class ApproxNotFoundError(Cu2QuError):
-    def __init__(self, curve, error=None):
-        if error is None:
-            message = "no approximation found: %s" % curve
-        else:
-            message = ("approximation error exceeds max tolerance: %s, "
-                       "error=%g" % (curve, error))
+    def __init__(self, curve):
+        message = "no approximation found: %s" % curve
         super(Cu2QuError, self).__init__(message)
         self.curve = curve
-        self.error = error
 
 
 def dot(v1, v2):
@@ -212,15 +207,15 @@ def curve_to_quadratic(p, max_err):
     """
 
     p = [complex(*P) for P in p]
-    spline, error = None, None
+    spline = None
     for n in range(1, MAX_N + 1):
         spline = cubic_approx_spline(p, n, max_err)
         if spline is not None:
             break
     else:
-        # no break: approximation not found or error exceeds tolerance
-        raise ApproxNotFoundError(p, error)
-    return [(s.real,s.imag) for s in spline], error
+        # no break: approximation not foun
+        raise ApproxNotFoundError(p)
+    return [(s.real,s.imag) for s in spline]
 
 
 def curves_to_quadratic(curves, max_errors):
@@ -235,14 +230,13 @@ def curves_to_quadratic(curves, max_errors):
     assert len(max_errors) == num_curves
 
     splines = [None] * num_curves
-    errors = [None] * num_curves
     for n in range(1, MAX_N + 1):
         splines = [cubic_approx_spline(c, n, e) for c,e in zip(curves,max_errors)]
         if all(splines):
             break
     else:
         # no break: raise if any spline is None or error exceeds tolerance
-        for c, s, error, max_err in zip(curves, splines, errors, max_errors):
-            if s is None or error > max_err:
-                raise ApproxNotFoundError(c, error)
-    return [[(s.real,s.imag) for s in spline] for spline in splines], errors
+        for c, s, max_err in zip(curves, splines,  max_errors):
+            if s is None:
+                raise ApproxNotFoundError(c)
+    return [[(s.real,s.imag) for s in spline] for spline in splines], None
