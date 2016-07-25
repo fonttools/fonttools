@@ -160,13 +160,12 @@ def cubic_approx_spline(p, n, tolerance):
             return None
         p0 = p[0]
         p2 = p[3]
-        quad = p0, p0+(p1-p0)*(2./3), p2+(p1-p2)*(2./3), p2
         if not cubic_farthest_fit(0,
                                   p0+(p1-p0)*(2./3)-p[1],
                                   p2+(p1-p2)*(2./3)-p[2],
                                   0, tolerance):
             return None
-        return quad
+        return p0, p0+(p1-p0)*(2./3), p2+(p1-p2)*(2./3), p2
 
     spline = [p[0]]
     if n == 2:
