@@ -220,7 +220,7 @@ def curve_to_quadratic(p, max_err):
     else:
         # no break: approximation not found or error exceeds tolerance
         raise ApproxNotFoundError(p, error)
-    return spline, error
+    return [(s.real,s.imag) for s in spline], error
 
 
 def curves_to_quadratic(curves, max_errors):
@@ -245,4 +245,4 @@ def curves_to_quadratic(curves, max_errors):
         for c, s, error, max_err in zip(curves, splines, errors, max_errors):
             if s is None or error > max_err:
                 raise ApproxNotFoundError(c, error)
-    return splines, errors
+    return [[(s.real,s.imag) for s in spline] for spline in splines], errors
