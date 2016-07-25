@@ -101,10 +101,6 @@ def dot(v1, v2):
     return v1.real * v2.real + v1.imag * v2.imag
 
 
-def cubic_from_quadratic(p):
-    return (p[0], p[0]+(p[1]-p[0])*(2./3), p[2]+(p[1]-p[2])*(2./3), p[2])
-
-
 def cubic_approx_control(p, t):
     """Approximate a cubic bezier curve with a quadratic one.
        Returns the candidate control point."""
@@ -169,10 +165,6 @@ def cubic_cubic_fit(a,b,tolerance):
                               b[3] - a[3], tolerance)
 
 
-def cubic_quadratic_fit(a,b,tolerance):
-    return cubic_cubic_fit(a, cubic_from_quadratic(b), tolerance)
-
-
 def cubic_approx_spline(p, n, tolerance):
     """Approximate a cubic bezier curve with a spline of n quadratics.
 
@@ -186,7 +178,10 @@ def cubic_approx_spline(p, n, tolerance):
         except ValueError:
             return None
         quad = (p[0], p1, p[3])
-        if not cubic_quadratic_fit(p, quad, tolerance):
+        p0 = p[0]
+        p2 = p[3]
+        quad = p0, p0+(p1-p0)*(2./3), p2+(p1-p2)*(2./3), p2
+        if not cubic_cubic_fit(p, quad, tolerance):
             return None
         return quad
 
@@ -204,13 +199,14 @@ def cubic_approx_spline(p, n, tolerance):
 
     for i in range(1,n+1):
         if i == 1:
-            segment = (spline[0],spline[1],(spline[1]+spline[2])*.5)
+            p0,p1,p2 = (spline[0],spline[1],(spline[1]+spline[2])*.5)
         elif i == n:
-            segment = (spline[-3]+spline[-2])*.5,spline[-2],spline[-1]
+            p0,p1,p2 = (spline[-3]+spline[-2])*.5,spline[-2],spline[-1]
         else:
-            segment = (spline[i-1]+spline[i])*.5, spline[i], (spline[i]+spline[i+1])*.5
+            p0,p1,p2 = (spline[i-1]+spline[i])*.5, spline[i], (spline[i]+spline[i+1])*.5
 
-        if not cubic_quadratic_fit(segments[i-1], segment, tolerance):
+        segment = p0, p0+(p1-p0)*(2./3), p2+(p1-p2)*(2./3), p2
+        if not cubic_cubic_fit(segments[i-1], segment, tolerance):
             return None
 
     return spline
