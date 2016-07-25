@@ -108,7 +108,7 @@ def calc_intersect(p):
     try:
         h = dot(p, a - c) / dot(p, cd)
     except ZeroDivisionError:
-        raise ValueError('Parallel vectors given to calc_intersect.')
+        return None
     return c + cd * h
 
 
@@ -154,9 +154,8 @@ def cubic_approx_spline(p, n, tolerance):
     """
 
     if n == 1:
-        try:
-            qp1 = calc_intersect(p)
-        except ValueError:
+        qp1 = calc_intersect(p)
+        if qp1 is None:
             return None
         p0 = p[0]
         p3 = p[3]
