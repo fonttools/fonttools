@@ -158,7 +158,6 @@ def cubic_approx_spline(p, n, tolerance):
             p1 = calc_intersect(p)
         except ValueError:
             return None
-        quad = (p[0], p1, p[3])
         p0 = p[0]
         p2 = p[3]
         quad = p0, p0+(p1-p0)*(2./3), p2+(p1-p2)*(2./3), p2
