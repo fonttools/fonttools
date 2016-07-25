@@ -146,13 +146,6 @@ def cubic_farthest_fit(pt1,pt2,pt3,pt4,tolerance):
             _cubic_farthest_fit(mid, mid+deriv3, (pt3+pt4)*.5, pt4,tolerance))
 
 
-def cubic_cubic_fit(a,b,tolerance):
-    return cubic_farthest_fit(b[0] - a[0],
-                              b[1] - a[1],
-                              b[2] - a[2],
-                              b[3] - a[3], tolerance)
-
-
 def cubic_approx_spline(p, n, tolerance):
     """Approximate a cubic bezier curve with a spline of n quadratics.
 
@@ -169,7 +162,10 @@ def cubic_approx_spline(p, n, tolerance):
         p0 = p[0]
         p2 = p[3]
         quad = p0, p0+(p1-p0)*(2./3), p2+(p1-p2)*(2./3), p2
-        if not cubic_cubic_fit(p, quad, tolerance):
+        if not cubic_farthest_fit(0,
+                                  p0+(p1-p0)*(2./3)-p[1],
+                                  p2+(p1-p2)*(2./3)-p[2],
+                                  0, tolerance):
             return None
         return quad
 
@@ -192,8 +188,12 @@ def cubic_approx_spline(p, n, tolerance):
         else:
             p0,p1,p2 = (spline[i-1]+spline[i])*.5, spline[i], (spline[i]+spline[i+1])*.5
 
-        segment = p0, p0+(p1-p0)*(2./3), p2+(p1-p2)*(2./3), p2
-        if not cubic_cubic_fit(segments[i-1], segment, tolerance):
+        pt1, pt2, pt3, pt4 = segments[i-1]
+        if not cubic_farthest_fit(p0                - pt1,
+                                  p0+(p1-p0)*(2./3) - pt2,
+                                  p2+(p1-p2)*(2./3) - pt3,
+                                  p2                - pt4,
+                                  tolerance):
             return None
 
     return spline
