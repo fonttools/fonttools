@@ -128,26 +128,45 @@ def calc_intersect(p):
     return c + cd * h
 
 
-def cubic_farthest_fit(p,tolerance):
+def _cubic_farthest_fit(pt1,pt2,pt3,pt4,tolerance):
     """Returns True if the cubic Bezier p entirely lies within a distance
     tolerance of origin, False otherwise."""
 
-    if abs(p[0]) > tolerance or abs(p[3]) > tolerance:
-        return False
-
-    if abs(p[1]) <= tolerance and abs(p[2]) <= tolerance:
+    if abs(pt2) <= tolerance and abs(pt3) <= tolerance:
         return True
 
     # Split.
-    a,b = splitCubicIntoTwo(p[0], p[1], p[2], p[3])
-    return cubic_farthest_fit(a,tolerance) and cubic_farthest_fit(b,tolerance)
+    mid = (pt1+3*(pt2+pt3)+pt4)*.125
+    if abs(mid) > tolerance:
+        return False
+    deriv3 = (pt4+pt3-pt2-pt1)*.125
+    return (_cubic_farthest_fit(pt1, (pt1+pt2)*.5, mid-deriv3, mid,tolerance) and
+            _cubic_farthest_fit(mid, mid+deriv3, (pt3+pt4)*.5, pt4,tolerance))
+
+def cubic_farthest_fit(pt1,pt2,pt3,pt4,tolerance):
+    """Returns True if the cubic Bezier p entirely lies within a distance
+    tolerance of origin, False otherwise."""
+
+    if abs(pt1) > tolerance or abs(pt4) > tolerance:
+        return False
+
+    if abs(pt2) <= tolerance and abs(pt3) <= tolerance:
+        return True
+
+    # Split.
+    mid = (pt1+3*(pt2+pt3)+pt4)*.125
+    if abs(mid) > tolerance:
+        return False
+    deriv3 = (pt4+pt3-pt2-pt1)*.125
+    return (_cubic_farthest_fit(pt1, (pt1+pt2)*.5, mid-deriv3, mid,tolerance) and
+            _cubic_farthest_fit(mid, mid+deriv3, (pt3+pt4)*.5, pt4,tolerance))
 
 
 def cubic_cubic_fit(a,b,tolerance):
-    return cubic_farthest_fit((b[0] - a[0],
-                               b[1] - a[1],
-                               b[2] - a[2],
-                               b[3] - a[3]), tolerance)
+    return cubic_farthest_fit(b[0] - a[0],
+                              b[1] - a[1],
+                              b[2] - a[2],
+                              b[3] - a[3], tolerance)
 
 
 def cubic_quadratic_fit(a,b,tolerance):
