@@ -98,10 +98,9 @@ def cubic_approx_control(p, t):
     return p1+(p2-p1)*t
 
 
-def calc_intersect(p):
-    """Calculate the intersection of ab and cd, given [a, b, c, d]."""
+def calc_intersect(a, b, c, d):
+    """Calculate the intersection of ab and cd, given a, b, c, d."""
 
-    a, b, c, d = p
     ab = b - a
     cd = d - c
     p = ab * 1j
@@ -154,7 +153,7 @@ def cubic_approx_spline(p, n, tolerance):
     """
 
     if n == 1:
-        qp1 = calc_intersect(p)
+        qp1 = calc_intersect(*p)
         if qp1 is None:
             return None
         p0 = p[0]
