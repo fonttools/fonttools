@@ -155,17 +155,19 @@ def cubic_approx_spline(p, n, tolerance):
 
     if n == 1:
         try:
-            p1 = calc_intersect(p)
+            qp1 = calc_intersect(p)
         except ValueError:
             return None
         p0 = p[0]
-        p2 = p[3]
+        p3 = p[3]
+        p1 = p0+(qp1-p0)*(2./3)
+        p2 =  p3+(qp1-p3)*(2./3)
         if not cubic_farthest_fit(0,
-                                  p0+(p1-p0)*(2./3)-p[1],
-                                  p2+(p1-p2)*(2./3)-p[2],
+                                  p1-p[1],
+                                  p2-p[2],
                                   0, tolerance):
             return None
-        return p0, p0+(p1-p0)*(2./3), p2+(p1-p2)*(2./3), p2
+        return p0, p1, p2, p3
 
     spline = [p[0]]
     if n == 2:
