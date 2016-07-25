@@ -29,7 +29,15 @@ def calcCubicPoints(a, b, c, d):
     _4 = a + d + c + b
     return _1, _2, _3, _4
 
-def _splitCubicIntoN(a, b, c, d, n):
+def calcCubicParameters(pt1, pt2, pt3, pt4):
+    c = (pt2 -pt1) * 3.0
+    b = (pt3 - pt2) * 3.0 - c
+    d = pt1
+    a = pt4 - d - c - b
+    return a, b, c, d
+
+def splitCubicIntoN(pt1, pt2, pt3, pt4, n):
+    a, b, c, d = calcCubicParameters(pt1, pt2, pt3, pt4)
     segments = []
     dt = 1./n
     for i in range(n):
@@ -48,17 +56,6 @@ def _splitCubicIntoN(a, b, c, d, n):
         pt1, pt2, pt3, pt4 = calcCubicPoints(a1, b1, c1, d1)
         segments.append((pt1, pt2, pt3, pt4))
     return segments
-
-def calcCubicParameters(pt1, pt2, pt3, pt4):
-    c = (pt2 -pt1) * 3.0
-    b = (pt3 - pt2) * 3.0 - c
-    d = pt1
-    a = pt4 - d - c - b
-    return a, b, c, d
-
-def splitCubicIntoN(pt1, pt2, pt3, pt4, n):
-    a, b, c, d = calcCubicParameters(pt1, pt2, pt3, pt4)
-    return _splitCubicIntoN(a, b, c, d, n)
 
 def splitCubicIntoTwo(pt1, pt2, pt3, pt4):
     mid = (pt1+3*(pt2+pt3)+pt4)*.125
