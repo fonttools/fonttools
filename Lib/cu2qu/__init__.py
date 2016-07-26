@@ -86,7 +86,7 @@ class ApproxNotFoundError(Cu2QuError):
 
 def dot(v1, v2):
     """Return the dot product of two vectors."""
-    return v1.real * v2.real + v1.imag * v2.imag
+    return (v1*v2.conjugate()).real
 
 
 def cubic_approx_control(p, t):
