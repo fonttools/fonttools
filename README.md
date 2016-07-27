@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/googlei18n/cu2qu.svg)](https://travis-ci.org/googlei18n/cu2qu)
+
 # cu2qu
 
 This library provides functions which take in UFO objects (Defcon Fonts or
