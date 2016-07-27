@@ -67,13 +67,13 @@ class CurveToQuadraticTest(unittest.TestCase):
         """
 
         expected = {
-            3: 5,
-            4: 31,
-            5: 74,
-            6: 228,
-            7: 416,
-            8: 242,
-            9: 4}
+            3: 6,
+            4: 26,
+            5: 82,
+            6: 232,
+            7: 360,
+            8: 266,
+            9: 28}
 
         results = collections.defaultdict(int)
         for spline in self.single_splines:
@@ -86,10 +86,10 @@ class CurveToQuadraticTest(unittest.TestCase):
         """Test that conversion results are unchanged for multiple curves."""
 
         expected = {
-            6: 3,
-            7: 34,
-            8: 62,
-            9: 1}
+            6: 11,
+            7: 35,
+            8: 49,
+            9: 5}
 
         results = collections.defaultdict(int)
         for splines in self.compat_splines:
