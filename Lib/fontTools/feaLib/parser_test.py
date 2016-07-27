@@ -1242,6 +1242,8 @@ class ParserTest(unittest.TestCase):
     def test_empty_statement_ignored(self):
         doc = self.parse("feature test {;} test;")
         self.assertFalse(doc.statements[0].statements)
+        doc = self.parse(";;;")
+        self.assertFalse(doc.statements)
 
     def setUp(self):
         self.tempdir = None

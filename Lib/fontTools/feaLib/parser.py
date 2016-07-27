@@ -49,6 +49,8 @@ class Parser(object):
             elif self.is_cur_keyword_("valueRecordDef"):
                 statements.append(
                     self.parse_valuerecord_definition_(vertical=False))
+            elif self.cur_token_type_ is Lexer.SYMBOL and self.cur_token_ == ";":
+                continue
             else:
                 raise FeatureLibError(
                     "Expected feature, languagesystem, lookup, markClass, "
