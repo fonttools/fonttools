@@ -16,6 +16,7 @@
 from __future__ import print_function, division, absolute_import
 
 import collections
+import math
 import unittest
 import random
 
@@ -34,12 +35,18 @@ class CurveToQuadraticTest(unittest.TestCase):
         random.seed(1)
         curves = [generate_curve() for i in range(1000)]
 
-        cls.single_splines, cls.single_errors = zip(*[
-            curve_to_quadratic(c, MAX_ERR) for c in curves])
+        cls.single_splines = [
+            curve_to_quadratic(c, MAX_ERR) for c in curves]
+        cls.single_errors = [
+            cls.curve_spline_dist(c, s)
+            for c, s in zip(curves, cls.single_splines)]
 
-        cls.compat_splines, cls.compat_errors = zip(*[
-            curves_to_quadratic(curves[i:i + 3], [MAX_ERR] * 3)
-            for i in range(0, 300, 3)])
+        curve_groups = [curves[i:i + 3] for i in range(0, 300, 3)]
+        cls.compat_splines = [
+            curves_to_quadratic(c, [MAX_ERR] * 3) for c in curve_groups]
+        cls.compat_errors = [
+            [cls.curve_spline_dist(c, s) for c, s in zip(curve_group, splines)]
+            for curve_group, splines in zip(curve_groups, cls.compat_splines)]
 
         cls.results = []
 
@@ -112,6 +119,60 @@ class CurveToQuadraticTest(unittest.TestCase):
                 results[round(error, 1)] += 1
                 self.assertLessEqual(error, MAX_ERR)
         self.results.append(('compatible errors', results))
+
+    @classmethod
+    def curve_spline_dist(cls, bezier, spline, total_steps=20):
+        """Max distance between a bezier and quadratic spline at sampled points."""
+
+        error = 0
+        n = len(spline) - 2
+        steps = total_steps // n
+        for i in range(0, n - 1):
+            p1 = spline[0] if i == 0 else p3
+            p2 = spline[i + 1]
+            if i < n - 1:
+                p3 = cls.lerp(spline[i + 1], spline[i + 2], 0.5)
+            else:
+                p3 = spline[n + 2]
+            segment = p1, p2, p3
+            for j in range(steps):
+                error = max(error, cls.dist(
+                    cls.cubic_bezier_at(bezier, (j / steps + i) / n),
+                    cls.quadratic_bezier_at(segment, j / steps)))
+        return error
+
+    @classmethod
+    def lerp(cls, p1, p2, t):
+        (x1, y1), (x2, y2) = p1, p2
+        return x1 + (x2 - x1) * t, y1 + (y2 - y1) * t
+
+    @classmethod
+    def dist(cls, p1, p2):
+        (x1, y1), (x2, y2) = p1, p2
+        return math.hypot(x1 - x2, y1 - y2)
+
+    @classmethod
+    def quadratic_bezier_at(cls, b, t):
+        (x1, y1), (x2, y2), (x3, y3) = b
+        _t = 1 - t
+        t2 = t * t
+        _t2 = _t * _t
+        _2_t_t = 2 * t * _t
+        return (_t2 * x1 + _2_t_t * x2 + t2 * x3,
+                _t2 * y1 + _2_t_t * y2 + t2 * y3)
+
+    @classmethod
+    def cubic_bezier_at(cls, b, t):
+        (x1, y1), (x2, y2), (x3, y3), (x4, y4) = b
+        _t = 1 - t
+        t2 = t * t
+        _t2 = _t * _t
+        t3 = t * t2
+        _t3 = _t * _t2
+        _3_t2_t = 3 * t2 * _t
+        _3_t_t2 = 3 * t * _t2
+        return (_t3 * x1 + _3_t_t2 * x2 + _3_t2_t * x3 + t3 * x4,
+                _t3 * y1 + _3_t_t2 * y2 + _3_t2_t * y3 + t3 * y4)
 
 
 if __name__ == '__main__':
