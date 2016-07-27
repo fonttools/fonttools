@@ -206,7 +206,7 @@ def curve_to_quadratic(p, max_err):
         if spline is not None:
             break
     else:
-        # no break: approximation not foun
+        # no break: approximation not found
         raise ApproxNotFoundError(p)
     return [(s.real,s.imag) for s in spline]
 
