@@ -16,11 +16,58 @@
 from __future__ import print_function, division, absolute_import
 
 from math import hypot
-from fontTools.misc import bezierTools
 
 __all__ = ['curve_to_quadratic', 'curves_to_quadratic']
 
 MAX_N = 100
+
+
+def calcCubicPoints(a, b, c, d):
+    _1 = d
+    _2 = (c / 3.0) + d
+    _3 = (b + c) / 3.0 + _2
+    _4 = a + d + c + b
+    return _1, _2, _3, _4
+
+def calcCubicParameters(pt1, pt2, pt3, pt4):
+    c = (pt2 -pt1) * 3.0
+    b = (pt3 - pt2) * 3.0 - c
+    d = pt1
+    a = pt4 - d - c - b
+    return a, b, c, d
+
+def splitCubicIntoN(pt1, pt2, pt3, pt4, n):
+    a, b, c, d = calcCubicParameters(pt1, pt2, pt3, pt4)
+    segments = []
+    dt = 1./n
+    delta_2 = dt*dt
+    delta_3 = dt * delta_2
+    for i in range(n):
+        t1 = i * dt
+        t1_2 = t1*t1
+        t1_3 = t1*t1_2
+        # calc new a, b, c and d
+        a1 = a * delta_3
+        b1 = (3*a*t1 + b) * delta_2
+        c1 = (2*b*t1 + c + 3*a*t1_2) * dt
+        d1 = a*t1_3 + b*t1_2 + c*t1 + d
+        segments.append(calcCubicPoints(a1, b1, c1, d1))
+    return segments
+
+def splitCubicIntoTwo(pt1, pt2, pt3, pt4):
+    mid = (pt1+3*(pt2+pt3)+pt4)*.125
+    deriv3 = (pt4+pt3-pt2-pt1)*.125
+    return ((pt1, (pt1+pt2)*.5, mid-deriv3, mid),
+            (mid, mid+deriv3, (pt3+pt4)*.5, pt4))
+
+def splitCubicIntoThree(pt1, pt2, pt3, pt4, _27=1/27.):
+    mid1 = (pt1*8+pt2*12+pt3*6+pt4)*_27
+    deriv1 = (pt4+pt3*3-pt1*4)*_27
+    mid2 = (pt1+pt2*6+pt3*12+pt4*8)*_27
+    deriv2 = (pt4*4-pt2*3-pt1)*_27
+    return ((pt1, (pt1*2+pt2)/3., mid1-deriv1, mid1),
+            (mid1, mid1+deriv1, mid2-deriv2, mid2),
+            (mid2, mid2+deriv2, (pt3+pt4*2)/3., pt4))
 
 
 class Cu2QuError(Exception):
@@ -28,102 +75,74 @@ class Cu2QuError(Exception):
 
 
 class ApproxNotFoundError(Cu2QuError):
-    def __init__(self, curve, error=None):
-        if error is None:
-            message = "no approximation found: %s" % curve
-        else:
-            message = ("approximation error exceeds max tolerance: %s, "
-                       "error=%g" % (curve, error))
+    def __init__(self, curve):
+        message = "no approximation found: %s" % curve
         super(Cu2QuError, self).__init__(message)
         self.curve = curve
-        self.error = error
-
-
-def vector(p1, p2):
-    """Return the vector from p1 to p2."""
-    return p2[0] - p1[0], p2[1] - p1[1]
-
-
-def translate(p, v):
-    """Translate a point by a vector."""
-    return p[0] + v[0], p[1] + v[1]
-
-
-def scale(v, n):
-    """Scale a vector."""
-    return v[0] * n, v[1] * n
-
-
-def dist(p1, p2):
-    """Calculate the distance between two points."""
-    return hypot(p1[0] - p2[0], p1[1] - p2[1])
 
 
 def dot(v1, v2):
     """Return the dot product of two vectors."""
-    return v1[0] * v2[0] + v1[1] * v2[1]
+    return (v1*v2.conjugate()).real
 
 
-def lerp_pt(p1, p2, t):
-    """Linearly interpolate between points p1 and p2 at time t."""
-    (x1, y1), (x2, y2) = p1, p2
-    return x1+t*(x2-x1), y1+t*(y2-y1)
+def cubic_approx_control(p, t):
+    """Approximate a cubic bezier curve with a quadratic one.
+       Returns the candidate control point."""
+
+    p1 = p[0]+(p[1]-p[0])*1.5
+    p2 = p[3]+(p[2]-p[3])*1.5
+    return p1+(p2-p1)*t
 
 
-def quadratic_bezier_at(p, t):
-    """Return the point on a quadratic bezier curve at time t."""
+def calc_intersect(a, b, c, d):
+    """Calculate the intersection of ab and cd, given a, b, c, d."""
 
-    (x1, y1), (x2, y2), (x3, y3) = p
-
-    _t = 1-t
-    t2 = t*t
-    _t2 = _t*_t
-    _2_t_t = 2*t*_t
-
-    return (_t2*x1 + _2_t_t*x2 + t2*x3,
-            _t2*y1 + _2_t_t*y2 + t2*y3)
-
-
-def cubic_bezier_at(p, t):
-    """Return the point on a cubic bezier curve at time t."""
-
-    (x1, y1), (x2, y2), (x3, y3), (x4, y4) = p
-
-    _t = 1-t
-    t2 = t*t
-    _t2 = _t*_t
-    t3 = t*t2
-    _t3 = _t*_t2
-    _3_t2_t = 3*t2*_t
-    _3_t_t2 = 3*t*_t2
-
-    return (_t3*x1 + _3_t_t2*x2 + _3_t2_t*x3 + t3*x4,
-            _t3*y1 + _3_t_t2*y2 + _3_t2_t*y3 + t3*y4)
-
-
-def cubic_approx(p, t):
-    """Approximate a cubic bezier curve with a quadratic one."""
-
-    p1 = lerp_pt(p[0], p[1], 1.5)
-    p2 = lerp_pt(p[3], p[2], 1.5)
-    return p[0], lerp_pt(p1, p2, t), p[3]
-
-
-def calc_intersect(p):
-    """Calculate the intersection of ab and cd, given [a, b, c, d]."""
-
-    a, b, c, d = p
-    ab = vector(a, b)
-    cd = vector(c, d)
-    p = -ab[1], ab[0]
+    ab = b - a
+    cd = d - c
+    p = ab * 1j
     try:
-        h = dot(p, vector(c, a)) / dot(p, cd)
+        h = dot(p, a - c) / dot(p, cd)
     except ZeroDivisionError:
-        raise ValueError('Parallel vectors given to calc_intersect.')
-    return translate(c, scale(cd, h))
+        return None
+    return c + cd * h
 
 
-def cubic_approx_spline(p, n):
+def _cubic_farthest_fit(pt1,pt2,pt3,pt4,tolerance):
+    """Returns True if the cubic Bezier p entirely lies within a distance
+    tolerance of origin, False otherwise."""
+
+    if abs(pt2) <= tolerance and abs(pt3) <= tolerance:
+        return True
+
+    # Split.
+    mid = (pt1+3*(pt2+pt3)+pt4)*.125
+    if abs(mid) > tolerance:
+        return False
+    deriv3 = (pt4+pt3-pt2-pt1)*.125
+    return (_cubic_farthest_fit(pt1, (pt1+pt2)*.5, mid-deriv3, mid,tolerance) and
+            _cubic_farthest_fit(mid, mid+deriv3, (pt3+pt4)*.5, pt4,tolerance))
+
+def cubic_farthest_fit(pt1,pt2,pt3,pt4,tolerance):
+    """Returns True if the cubic Bezier p entirely lies within a distance
+    tolerance of origin, False otherwise."""
+
+    if abs(pt1) > tolerance or abs(pt4) > tolerance:
+        return False
+
+    if abs(pt2) <= tolerance and abs(pt3) <= tolerance:
+        return True
+
+    # Split.
+    mid = (pt1+3*(pt2+pt3)+pt4)*.125
+    if abs(mid) > tolerance:
+        return False
+    deriv3 = (pt4+pt3-pt2-pt1)*.125
+    return (_cubic_farthest_fit(pt1, (pt1+pt2)*.5, mid-deriv3, mid,tolerance) and
+            _cubic_farthest_fit(mid, mid+deriv3, (pt3+pt4)*.5, pt4,tolerance))
+
+
+def cubic_approx_spline(p, n, tolerance):
     """Approximate a cubic bezier curve with a spline of n quadratics.
 
     Returns None if n is 1 and the cubic's control vectors are parallel, since
@@ -131,39 +150,48 @@ def cubic_approx_spline(p, n):
     """
 
     if n == 1:
-        try:
-            p1 = calc_intersect(p)
-        except ValueError:
+        qp1 = calc_intersect(*p)
+        if qp1 is None:
             return None
-        return [p[0], p1, p[3]]
+        p0 = p[0]
+        p3 = p[3]
+        p1 = p0+(qp1-p0)*(2./3)
+        p2 =  p3+(qp1-p3)*(2./3)
+        if not cubic_farthest_fit(0,
+                                  p1-p[1],
+                                  p2-p[2],
+                                  0, tolerance):
+            return None
+        return p0, p1, p2, p3
 
     spline = [p[0]]
-    ts = [i / n for i in range(1, n)]
-    segments = bezierTools.splitCubicAtT(p[0], p[1], p[2], p[3], *ts)
+    if n == 2:
+        segments = splitCubicIntoTwo(p[0], p[1], p[2], p[3])
+    elif n == 3:
+        segments = splitCubicIntoThree(p[0], p[1], p[2], p[3])
+    else:
+        segments = splitCubicIntoN(p[0], p[1], p[2], p[3], n)
     for i in range(len(segments)):
-        segment = cubic_approx(segments[i], i / (n - 1))
-        spline.append(segment[1])
+        spline.append(cubic_approx_control(segments[i], i / (n - 1)))
     spline.append(p[3])
+
+    for i in range(1,n+1):
+        if i == 1:
+            p0,p1,p2 = (spline[0],spline[1],(spline[1]+spline[2])*.5)
+        elif i == n:
+            p0,p1,p2 = (spline[-3]+spline[-2])*.5,spline[-2],spline[-1]
+        else:
+            p0,p1,p2 = (spline[i-1]+spline[i])*.5, spline[i], (spline[i]+spline[i+1])*.5
+
+        pt1, pt2, pt3, pt4 = segments[i-1]
+        if not cubic_farthest_fit(p0                - pt1,
+                                  p0+(p1-p0)*(2./3) - pt2,
+                                  p2+(p1-p2)*(2./3) - pt3,
+                                  p2                - pt4,
+                                  tolerance):
+            return None
+
     return spline
-
-
-def curve_spline_dist(bezier, spline):
-    """Max distance between a bezier and quadratic spline at sampled ts."""
-
-    TOTAL_STEPS = 20
-    error = 0
-    n = len(spline) - 2
-    steps = TOTAL_STEPS // n
-    for i in range(1, n + 1):
-        segment = [
-            spline[0] if i == 1 else segment[2],
-            spline[i],
-            spline[i + 1] if i == n else lerp_pt(spline[i], spline[i + 1], 0.5)]
-        for j in range(steps):
-            p1 = cubic_bezier_at(bezier, (j / steps + i - 1) / n)
-            p2 = quadratic_bezier_at(segment, j / steps)
-            error = max(error, dist(p1, p2))
-    return error
 
 
 def curve_to_quadratic(p, max_err):
@@ -173,18 +201,16 @@ def curve_to_quadratic(p, max_err):
     with the given parameters.
     """
 
-    spline, error = None, None
+    p = [complex(*P) for P in p]
+    spline = None
     for n in range(1, MAX_N + 1):
-        spline = cubic_approx_spline(p, n)
-        if spline is None:
-            continue
-        error = curve_spline_dist(p, spline)
-        if error <= max_err:
+        spline = cubic_approx_spline(p, n, max_err)
+        if spline is not None:
             break
     else:
-        # no break: approximation not found or error exceeds tolerance
-        raise ApproxNotFoundError(p, error)
-    return spline, error
+        # no break: approximation not foun
+        raise ApproxNotFoundError(p)
+    return [(s.real,s.imag) for s in spline]
 
 
 def curves_to_quadratic(curves, max_errors):
@@ -194,21 +220,18 @@ def curves_to_quadratic(curves, max_errors):
     for all curves with the given parameters.
     """
 
+    curves = [[complex(*P) for P in p] for p in curves]
     num_curves = len(curves)
     assert len(max_errors) == num_curves
 
     splines = [None] * num_curves
-    errors = [None] * num_curves
     for n in range(1, MAX_N + 1):
-        splines = [cubic_approx_spline(c, n) for c in curves]
-        if not all(splines):
-            continue
-        errors = [curve_spline_dist(c, s) for c, s in zip(curves, splines)]
-        if all(err <= max_err for err, max_err in zip(errors, max_errors)):
+        splines = [cubic_approx_spline(c, n, e) for c,e in zip(curves,max_errors)]
+        if all(splines):
             break
     else:
         # no break: raise if any spline is None or error exceeds tolerance
-        for c, s, error, max_err in zip(curves, splines, errors, max_errors):
-            if s is None or error > max_err:
-                raise ApproxNotFoundError(c, error)
-    return splines, errors
+        for c, s, max_err in zip(curves, splines,  max_errors):
+            if s is None:
+                raise ApproxNotFoundError(c)
+    return [[(s.real,s.imag) for s in spline] for spline in splines], None
