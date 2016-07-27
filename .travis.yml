@@ -8,6 +8,7 @@ branches:
 
 install:
   - python setup.py install
+  - pip install git+https://github.com/behdad/fonttools
   - pip install git+https://github.com/unified-font-object/ufoLib
 
 script:
