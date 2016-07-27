@@ -162,7 +162,7 @@ def cubic_approx_spline(p, n, tolerance):
                                   p2-p[2],
                                   0, tolerance):
             return None
-        return p0, p1, p2, p3
+        return p0, qp1, p3
 
     spline = [p[0]]
     if n == 2:
