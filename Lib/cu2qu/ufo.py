@@ -126,7 +126,7 @@ def _segments_to_quadratic(segments, max_err, stats):
 
     assert all(s[0] == 'curve' for s in segments), 'Non-cubic given to convert'
 
-    new_points, _ = curves_to_quadratic([s[1] for s in segments], max_err)
+    new_points = curves_to_quadratic([s[1] for s in segments], max_err)
     n = len(new_points[0])
     assert all(len(s) == n for s in new_points[1:]), 'Converted incompatibly'
 

@@ -234,4 +234,4 @@ def curves_to_quadratic(curves, max_errors):
         for c, s, max_err in zip(curves, splines,  max_errors):
             if s is None:
                 raise ApproxNotFoundError(c)
-    return [[(s.real,s.imag) for s in spline] for spline in splines], None
+    return [[(s.real,s.imag) for s in spline] for spline in splines]
