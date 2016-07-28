@@ -59,13 +59,13 @@ def splitCubicIntoTwo(pt1, pt2, pt3, pt4):
             (mid, mid + deriv3, (pt3 + pt4) * .5, pt4))
 
 def splitCubicIntoThree(pt1, pt2, pt3, pt4, _27=1/27):
-    mid1 = (pt1*8 + pt2*12 + pt3*6 + pt4) * _27
-    deriv1 = (pt4 + pt3*3 - pt1*4) * _27
-    mid2 = (pt1 + pt2*6 + pt3*12 + pt4*8) * _27
-    deriv2 = (pt4*4 - pt2*3 - pt1) * _27
-    return ((pt1, (pt1*2 + pt2) / 3, mid1 - deriv1, mid1),
+    mid1 = (8*pt1 + 12*pt2 + 6*pt3 + pt4) * _27
+    deriv1 = (pt4 + 3*pt3 - 4*pt1) * _27
+    mid2 = (pt1 + 6*pt2 + 12*pt3 + 8*pt4) * _27
+    deriv2 = (4*pt4 - 3*pt2 - pt1) * _27
+    return ((pt1, (2*pt1 + pt2) / 3, mid1 - deriv1, mid1),
             (mid1, mid1 + deriv1, mid2 - deriv2, mid2),
-            (mid2, mid2 + deriv2, (pt3 + pt4*2) / 3, pt4))
+            (mid2, mid2 + deriv2, (pt3 + 2*pt4) / 3, pt4))
 
 
 class Cu2QuError(Exception):
