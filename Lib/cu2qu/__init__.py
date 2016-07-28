@@ -143,8 +143,8 @@ def cubic_farthest_fit(p0, p1, p2, p3, tolerance):
 def cubic_approx_spline(cubic, n, tolerance):
     """Approximate a cubic bezier curve with a spline of n quadratics.
 
-    Returns None if n is 1 and the cubic's control vectors are parallel, since
-    no quadratic exists with this cubic's tangents.
+    Returns None if no quadratic approximation is found at or below the
+    tolerance.
     """
 
     if n == 1:
@@ -193,8 +193,7 @@ def cubic_approx_spline(cubic, n, tolerance):
 
 
 def curve_to_quadratic(curve, max_err):
-    """Return a quadratic spline approximating this cubic bezier, and
-    the error of approximation.
+    """Return a quadratic spline approximating this cubic bezier.
     Raise 'ApproxNotFoundError' if no suitable approximation can be found
     with the given parameters.
     """
@@ -212,8 +211,7 @@ def curve_to_quadratic(curve, max_err):
 
 
 def curves_to_quadratic(curves, max_errors):
-    """Return quadratic splines approximating these cubic beziers, and
-    the respective errors of approximation.
+    """Return quadratic splines approximating these cubic beziers.
     Raise 'ApproxNotFoundError' if no suitable approximation can be found
     for all curves with the given parameters.
     """
@@ -228,7 +226,7 @@ def curves_to_quadratic(curves, max_errors):
         if all(splines):
             break
     else:
-        # no break: raise if any spline is None or error exceeds tolerance
+        # no break: raise if any spline is None
         for c, s in zip(curves, splines):
             if s is None:
                 raise ApproxNotFoundError(c)
