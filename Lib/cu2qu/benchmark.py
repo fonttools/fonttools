@@ -51,16 +51,16 @@ def run_benchmark(
         print('%s with %s:' % (function, setup_suffix))
         setup_func += '_' + setup_suffix
     else:
-        print('%s:' % function)
+        print('%s:' % function, end='')
     results = timeit.repeat(
         '%s(*args)' % function,
         setup=(SETUP_CODE % {
             'benchmark_module': benchmark_module, 'setup_function': setup_func,
             'module': module, 'function': function}),
         repeat=repeat, number=1)
-    print('min: %dus' % (min(results) * 1000000.))
-    print('avg: %dus' % (sum(results) / len(results) * 1000000.))
-    print()
+    print('\tavg=%dus' % (sum(results) / len(results) * 1000000.),
+          '\tmin=%dus' % (min(results) * 1000000.))
+    #print()
 
 
 def main():
