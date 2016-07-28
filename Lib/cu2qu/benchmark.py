@@ -21,9 +21,9 @@ import timeit
 MAX_ERR = 5
 
 SETUP_CODE = '''
-from cu2qu import %s
-from cu2qu.benchmark import setup_%s
-args = setup_%s()
+from %(module)s import %(function)s
+from %(benchmark_module)s import %(setup_function)s
+args = %(setup_function)s()
 '''
 
 
@@ -44,20 +44,28 @@ def setup_curves_to_quadratic():
         [MAX_ERR] * num_curves)
 
 
-def run_test(name):
-    print('%s:' % name)
+def run_benchmark(
+        benchmark_module, module, function, setup_suffix='', repeat=1000):
+    setup_func = 'setup_' + function
+    if setup_suffix:
+        print('%s with %s:' % (function, setup_suffix))
+        setup_func += '_' + setup_suffix
+    else:
+        print('%s:' % function)
     results = timeit.repeat(
-        '%s(*args)' % name,
-        setup=(SETUP_CODE % (name, name, name)),
-        repeat=1000, number=1)
+        '%s(*args)' % function,
+        setup=(SETUP_CODE % {
+            'benchmark_module': benchmark_module, 'setup_function': setup_func,
+            'module': module, 'function': function}),
+        repeat=repeat, number=1)
     print('min: %dus' % (min(results) * 1000000.))
     print('avg: %dus' % (sum(results) / len(results) * 1000000.))
     print()
 
 
 def main():
-    run_test('curve_to_quadratic')
-    run_test('curves_to_quadratic')
+    run_benchmark('cu2qu.benchmark', 'cu2qu', 'curve_to_quadratic')
+    run_benchmark('cu2qu.benchmark', 'cu2qu', 'curves_to_quadratic')
 
 
 if __name__ == '__main__':

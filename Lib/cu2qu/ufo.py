@@ -28,7 +28,7 @@ from __future__ import print_function, division, absolute_import
 
 from fontTools.pens.basePen import AbstractPen
 
-from cu2qu import curve_to_quadratic, curves_to_quadratic
+from cu2qu import curves_to_quadratic
 from cu2qu.pens import ReverseContourPen
 
 __all__ = ['fonts_to_quadratic', 'font_to_quadratic']

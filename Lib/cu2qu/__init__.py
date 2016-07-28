@@ -15,8 +15,6 @@
 
 from __future__ import print_function, division, absolute_import
 
-from math import hypot
-
 __all__ = ['curve_to_quadratic', 'curves_to_quadratic']
 
 MAX_N = 100
@@ -208,7 +206,7 @@ def curve_to_quadratic(p, max_err):
         if spline is not None:
             break
     else:
-        # no break: approximation not foun
+        # no break: approximation not found
         raise ApproxNotFoundError(p)
     return [(s.real,s.imag) for s in spline]
 
@@ -231,7 +229,7 @@ def curves_to_quadratic(curves, max_errors):
             break
     else:
         # no break: raise if any spline is None or error exceeds tolerance
-        for c, s, max_err in zip(curves, splines,  max_errors):
+        for c, s in zip(curves, splines):
             if s is None:
                 raise ApproxNotFoundError(c)
     return [[(s.real,s.imag) for s in spline] for spline in splines]
