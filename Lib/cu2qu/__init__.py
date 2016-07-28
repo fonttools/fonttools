@@ -117,7 +117,8 @@ def cubic_farthest_fit_inside(p0, p1, p2, p3, tolerance):
     tolerance of origin, False otherwise.  Assumes that p0 and p3 do fit
     within tolerance of origin, and just checks the inside of the curve."""
 
-    if abs(p1) <= tolerance and abs(p2) <= tolerance:
+    # First check p2 then p1, as p2 has higher error early on.
+    if abs(p2) <= tolerance and abs(p1) <= tolerance:
         return True
 
     # Split.
@@ -133,7 +134,8 @@ def cubic_farthest_fit(p0, p1, p2, p3, tolerance):
     """Returns True if the cubic Bezier p entirely lies within a distance
     tolerance of origin, False otherwise."""
 
-    if abs(p0) > tolerance or abs(p3) > tolerance:
+    # First check p3 then p0, as p3 has higher error early on.
+    if abs(p3) > tolerance or abs(p0) > tolerance:
         return False
 
     return cubic_farthest_fit_inside(p0, p1, p2, p3, tolerance)
