@@ -30,8 +30,7 @@
 			<point x="416" y="611.5"/>
 			<point x="390.75" y="556"/>
 			<point x="372" y="550" type="qcurve"/>
-			<point x="385.2631578947368" y="532"/>
-			<point x="400.9298245614035" y="523"/>
+			<point x="391.89473684210526" y="523"/>
 			<point x="419" y="523" type="qcurve" smooth="yes"/>
 			<point x="449" y="523"/>
 			<point x="493" y="582"/>
