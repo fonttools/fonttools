@@ -175,7 +175,7 @@ def cubic_approx_spline(cubic, n, tolerance):
 
     for i in range(1, n + 1):
         if i == 1:
-            q0, q1, q2 = (spline[0], spline[1], (spline[1] + spline[2]) * .5)
+            q0, q1, q2 = spline[0], spline[1], (spline[1] + spline[2]) * .5
         elif i == n:
             q0, q1, q2 = (spline[-3] + spline[-2]) * .5, spline[-2], spline[-1]
         else:
