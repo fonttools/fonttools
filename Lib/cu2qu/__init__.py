@@ -79,6 +79,8 @@ def split_cubic_into_two(p0, p1, p2, p3):
 
 
 def split_cubic_into_three(p0, p1, p2, p3, _27=1/27):
+    # we define 1/27 as a keyword argument so that it will only be evaluated
+    # only once but still in the scope of this function
     mid1 = (8*p0 + 12*p1 + 6*p2 + p3) * _27
     deriv1 = (p3 + 3*p2 - 4*p0) * _27
     mid2 = (p0 + 6*p1 + 12*p2 + 8*p3) * _27
@@ -148,10 +150,11 @@ def cubic_farthest_fit(p0, p1, p2, p3, tolerance):
 def cubic_approx_spline(cubic, n, tolerance):
     """Approximate a cubic bezier curve with a spline of n quadratics.
 
-    Returns None if no quadratic approximation is found at or below the
-    tolerance.
+    Returns None if no quadratic approximation is found which lies entirely
+    within a distance `tolerance` from the original curve.
     """
 
+    # special-case single-segment spline using intersection of ab and cd
     if n == 1:
         q1 = calc_intersect(*cubic)
         if q1 is None:
@@ -167,6 +170,7 @@ def cubic_approx_spline(cubic, n, tolerance):
             return None
         return c0, q1, c3
 
+    # calculate the spline of quadratics
     spline = [cubic[0]]
     if n == 2:
         segments = split_cubic_into_two(*cubic)
@@ -178,6 +182,7 @@ def cubic_approx_spline(cubic, n, tolerance):
         spline.append(cubic_approx_control(segments[i], i / (n - 1)))
     spline.append(cubic[3])
 
+    # determine whether the spline is within the tolerance error
     for i in range(1, n + 1):
         if i == 1:
             q0, q1, q2 = spline[0], spline[1], (spline[1] + spline[2]) * .5
