@@ -27,12 +27,14 @@ def calc_cubic_points(a, b, c, d):
     _4 = a + d + c + b
     return _1, _2, _3, _4
 
+
 def calc_cubic_parameters(p0, p1, p2, p3):
     c = (p1 - p0) * 3.0
     b = (p2 - p1) * 3.0 - c
     d = p0
     a = p3 - d - c - b
     return a, b, c, d
+
 
 def split_cubic_into_n(p0, p1, p2, p3, n):
     a, b, c, d = calc_cubic_parameters(p0, p1, p2, p3)
@@ -52,11 +54,13 @@ def split_cubic_into_n(p0, p1, p2, p3, n):
         segments.append(calc_cubic_points(a1, b1, c1, d1))
     return segments
 
+
 def split_cubic_into_two(p0, p1, p2, p3):
     mid = (p0 + 3 * (p1 + p2) + p3) * .125
     deriv3 = (p3 + p2 - p1 - p0) * .125
     return ((p0, (p0 + p1) * .5, mid - deriv3, mid),
             (mid, mid + deriv3, (p2 + p3) * .5, p3))
+
 
 def split_cubic_into_three(p0, p1, p2, p3, _27=1/27):
     mid1 = (8*p0 + 12*p1 + 6*p2 + p3) * _27
@@ -120,6 +124,7 @@ def _cubic_farthest_fit(p0, p1, p2, p3, tolerance):
     deriv3 = (p3 + p2 - p1 - p0) * .125
     return (_cubic_farthest_fit(p0, (p0+p1)*.5, mid-deriv3, mid, tolerance) and
             _cubic_farthest_fit(mid, mid+deriv3, (p2+p3)*.5, p3, tolerance))
+
 
 def cubic_farthest_fit(p0, p1, p2, p3, tolerance):
     """Returns True if the cubic Bezier p entirely lies within a distance
