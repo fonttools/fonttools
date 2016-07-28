@@ -27,15 +27,15 @@ def calc_cubic_points(a, b, c, d):
     _4 = a + d + c + b
     return _1, _2, _3, _4
 
-def calc_cubic_parameters(pt1, pt2, pt3, pt4):
-    c = (pt2 - pt1) * 3.0
-    b = (pt3 - pt2) * 3.0 - c
-    d = pt1
-    a = pt4 - d - c - b
+def calc_cubic_parameters(p0, p1, p2, p3):
+    c = (p1 - p0) * 3.0
+    b = (p2 - p1) * 3.0 - c
+    d = p0
+    a = p3 - d - c - b
     return a, b, c, d
 
-def split_cubic_into_n(pt1, pt2, pt3, pt4, n):
-    a, b, c, d = calc_cubic_parameters(pt1, pt2, pt3, pt4)
+def split_cubic_into_n(p0, p1, p2, p3, n):
+    a, b, c, d = calc_cubic_parameters(p0, p1, p2, p3)
     segments = []
     dt = 1 / n
     delta_2 = dt * dt
@@ -52,20 +52,20 @@ def split_cubic_into_n(pt1, pt2, pt3, pt4, n):
         segments.append(calc_cubic_points(a1, b1, c1, d1))
     return segments
 
-def split_cubic_into_two(pt1, pt2, pt3, pt4):
-    mid = (pt1 + 3 * (pt2 + pt3) + pt4) * .125
-    deriv3 = (pt4 + pt3 - pt2 - pt1) * .125
-    return ((pt1, (pt1 + pt2) * .5, mid - deriv3, mid),
-            (mid, mid + deriv3, (pt3 + pt4) * .5, pt4))
+def split_cubic_into_two(p0, p1, p2, p3):
+    mid = (p0 + 3 * (p1 + p2) + p3) * .125
+    deriv3 = (p3 + p2 - p1 - p0) * .125
+    return ((p0, (p0 + p1) * .5, mid - deriv3, mid),
+            (mid, mid + deriv3, (p2 + p3) * .5, p3))
 
-def split_cubic_into_three(pt1, pt2, pt3, pt4, _27=1/27):
-    mid1 = (8*pt1 + 12*pt2 + 6*pt3 + pt4) * _27
-    deriv1 = (pt4 + 3*pt3 - 4*pt1) * _27
-    mid2 = (pt1 + 6*pt2 + 12*pt3 + 8*pt4) * _27
-    deriv2 = (4*pt4 - 3*pt2 - pt1) * _27
-    return ((pt1, (2*pt1 + pt2) / 3, mid1 - deriv1, mid1),
+def split_cubic_into_three(p0, p1, p2, p3, _27=1/27):
+    mid1 = (8*p0 + 12*p1 + 6*p2 + p3) * _27
+    deriv1 = (p3 + 3*p2 - 4*p0) * _27
+    mid2 = (p0 + 6*p1 + 12*p2 + 8*p3) * _27
+    deriv2 = (4*p3 - 3*p1 - p0) * _27
+    return ((p0, (2*p0 + p1) / 3, mid1 - deriv1, mid1),
             (mid1, mid1 + deriv1, mid2 - deriv2, mid2),
-            (mid2, mid2 + deriv2, (pt3 + 2*pt4) / 3, pt4))
+            (mid2, mid2 + deriv2, (p2 + 2*p3) / 3, p3))
 
 
 class Cu2QuError(Exception):
@@ -106,41 +106,41 @@ def calc_intersect(a, b, c, d):
     return c + cd * h
 
 
-def _cubic_farthest_fit(pt1, pt2, pt3, pt4, tolerance):
+def _cubic_farthest_fit(p0, p1, p2, p3, tolerance):
     """Returns True if the cubic Bezier p entirely lies within a distance
     tolerance of origin, False otherwise."""
 
-    if abs(pt2) <= tolerance and abs(pt3) <= tolerance:
+    if abs(p1) <= tolerance and abs(p2) <= tolerance:
         return True
 
     # Split.
-    mid = (pt1 + 3 * (pt2 + pt3) + pt4) * .125
+    mid = (p0 + 3 * (p1 + p2) + p3) * .125
     if abs(mid) > tolerance:
         return False
-    deriv3 = (pt4 + pt3 - pt2 - pt1) * .125
-    return (_cubic_farthest_fit(pt1, (pt1 + pt2) * .5, mid - deriv3, mid, tolerance) and
-            _cubic_farthest_fit(mid, mid + deriv3, (pt3 + pt4) * .5, pt4, tolerance))
+    deriv3 = (p3 + p2 - p1 - p0) * .125
+    return (_cubic_farthest_fit(p0, (p0 + p1) * .5, mid - deriv3, mid, tolerance) and
+            _cubic_farthest_fit(mid, mid + deriv3, (p2 + p3) * .5, p3, tolerance))
 
-def cubic_farthest_fit(pt1, pt2, pt3, pt4, tolerance):
+def cubic_farthest_fit(p0, p1, p2, p3, tolerance):
     """Returns True if the cubic Bezier p entirely lies within a distance
     tolerance of origin, False otherwise."""
 
-    if abs(pt1) > tolerance or abs(pt4) > tolerance:
+    if abs(p0) > tolerance or abs(p3) > tolerance:
         return False
 
-    if abs(pt2) <= tolerance and abs(pt3) <= tolerance:
+    if abs(p1) <= tolerance and abs(p2) <= tolerance:
         return True
 
     # Split.
-    mid = (pt1 + 3 * (pt2 + pt3) + pt4) * .125
+    mid = (p0 + 3 * (p1 + p2) + p3) * .125
     if abs(mid) > tolerance:
         return False
-    deriv3 = (pt4 + pt3 - pt2 - pt1) * .125
-    return (_cubic_farthest_fit(pt1, (pt1 + pt2) * .5, mid - deriv3, mid, tolerance) and
-            _cubic_farthest_fit(mid, mid + deriv3, (pt3 + pt4) * .5, pt4, tolerance))
+    deriv3 = (p3 + p2 - p1 - p0) * .125
+    return (_cubic_farthest_fit(p0, (p0 + p1) * .5, mid - deriv3, mid, tolerance) and
+            _cubic_farthest_fit(mid, mid + deriv3, (p2 + p3) * .5, p3, tolerance))
 
 
-def cubic_approx_spline(p, n, tolerance):
+def cubic_approx_spline(cubic, n, tolerance):
     """Approximate a cubic bezier curve with a spline of n quadratics.
 
     Returns None if n is 1 and the cubic's control vectors are parallel, since
@@ -148,66 +148,66 @@ def cubic_approx_spline(p, n, tolerance):
     """
 
     if n == 1:
-        qp1 = calc_intersect(*p)
-        if qp1 is None:
+        q1 = calc_intersect(*cubic)
+        if q1 is None:
             return None
-        p0 = p[0]
-        p3 = p[3]
-        p1 = p0 + (qp1 - p0) * (2/3)
-        p2 =  p3 + (qp1 - p3) * (2/3)
+        c0 = cubic[0]
+        c3 = cubic[3]
+        c1 = c0 + (q1 - c0) * (2/3)
+        c2 = c3 + (q1 - c3) * (2/3)
         if not cubic_farthest_fit(0,
-                                  p1 - p[1],
-                                  p2 - p[2],
+                                  c1 - cubic[1],
+                                  c2 - cubic[2],
                                   0, tolerance):
             return None
-        return p0, qp1, p3
+        return c0, q1, c3
 
-    spline = [p[0]]
+    spline = [cubic[0]]
     if n == 2:
-        segments = split_cubic_into_two(p[0], p[1], p[2], p[3])
+        segments = split_cubic_into_two(cubic[0], cubic[1], cubic[2], cubic[3])
     elif n == 3:
-        segments = split_cubic_into_three(p[0], p[1], p[2], p[3])
+        segments = split_cubic_into_three(cubic[0], cubic[1], cubic[2], cubic[3])
     else:
-        segments = split_cubic_into_n(p[0], p[1], p[2], p[3], n)
+        segments = split_cubic_into_n(cubic[0], cubic[1], cubic[2], cubic[3], n)
     for i in range(len(segments)):
         spline.append(cubic_approx_control(segments[i], i / (n - 1)))
-    spline.append(p[3])
+    spline.append(cubic[3])
 
     for i in range(1, n + 1):
         if i == 1:
-            p0, p1, p2 = (spline[0], spline[1], (spline[1] + spline[2]) * .5)
+            q0, q1, q2 = (spline[0], spline[1], (spline[1] + spline[2]) * .5)
         elif i == n:
-            p0, p1, p2 = (spline[-3] + spline[-2]) * .5, spline[-2], spline[-1]
+            q0, q1, q2 = (spline[-3] + spline[-2]) * .5, spline[-2], spline[-1]
         else:
-            p0, p1, p2 = (spline[i - 1] + spline[i]) * .5, spline[i], (spline[i] + spline[i + 1]) * .5
+            q0, q1, q2 = (spline[i - 1] + spline[i]) * .5, spline[i], (spline[i] + spline[i + 1]) * .5
 
-        pt1, pt2, pt3, pt4 = segments[i - 1]
-        if not cubic_farthest_fit(p0                - pt1,
-                                  p0 + (p1 - p0) * (2/3) - pt2,
-                                  p2 + (p1 - p2) * (2/3) - pt3,
-                                  p2                - pt4,
+        c0, c1, c2, c3 = segments[i - 1]
+        if not cubic_farthest_fit(q0                     - c0,
+                                  q0 + (q1 - q0) * (2/3) - c1,
+                                  q2 + (q1 - q2) * (2/3) - c2,
+                                  q2                     - c3,
                                   tolerance):
             return None
 
     return spline
 
 
-def curve_to_quadratic(p, max_err):
+def curve_to_quadratic(curve, max_err):
     """Return a quadratic spline approximating this cubic bezier, and
     the error of approximation.
     Raise 'ApproxNotFoundError' if no suitable approximation can be found
     with the given parameters.
     """
 
-    p = [complex(*P) for P in p]
+    curve = [complex(*p) for p in curve]
     spline = None
     for n in range(1, MAX_N + 1):
-        spline = cubic_approx_spline(p, n, max_err)
+        spline = cubic_approx_spline(curve, n, max_err)
         if spline is not None:
             break
     else:
         # no break: approximation not found
-        raise ApproxNotFoundError(p)
+        raise ApproxNotFoundError(curve)
     return [(s.real, s.imag) for s in spline]
 
 
@@ -218,7 +218,7 @@ def curves_to_quadratic(curves, max_errors):
     for all curves with the given parameters.
     """
 
-    curves = [[complex(*P) for P in p] for p in curves]
+    curves = [[complex(*p) for p in curve] for curve in curves]
     num_curves = len(curves)
     assert len(max_errors) == num_curves
 
