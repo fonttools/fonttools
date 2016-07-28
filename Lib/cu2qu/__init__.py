@@ -20,6 +20,22 @@ __all__ = ['curve_to_quadratic', 'curves_to_quadratic']
 MAX_N = 100
 
 
+class Cu2QuError(Exception):
+    pass
+
+
+class ApproxNotFoundError(Cu2QuError):
+    def __init__(self, curve):
+        message = "no approximation found: %s" % curve
+        super(Cu2QuError, self).__init__(message)
+        self.curve = curve
+
+
+def dot(v1, v2):
+    """Return the dot product of two vectors."""
+    return (v1 * v2.conjugate()).real
+
+
 def calc_cubic_points(a, b, c, d):
     _1 = d
     _2 = (c / 3.0) + d
@@ -70,22 +86,6 @@ def split_cubic_into_three(p0, p1, p2, p3, _27=1/27):
     return ((p0, (2*p0 + p1) / 3, mid1 - deriv1, mid1),
             (mid1, mid1 + deriv1, mid2 - deriv2, mid2),
             (mid2, mid2 + deriv2, (p2 + 2*p3) / 3, p3))
-
-
-class Cu2QuError(Exception):
-    pass
-
-
-class ApproxNotFoundError(Cu2QuError):
-    def __init__(self, curve):
-        message = "no approximation found: %s" % curve
-        super(Cu2QuError, self).__init__(message)
-        self.curve = curve
-
-
-def dot(v1, v2):
-    """Return the dot product of two vectors."""
-    return (v1 * v2.conjugate()).real
 
 
 def cubic_approx_control(p, t):
