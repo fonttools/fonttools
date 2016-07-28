@@ -53,6 +53,12 @@ def calc_cubic_parameters(p0, p1, p2, p3):
 
 
 def split_cubic_into_n(p0, p1, p2, p3, n):
+    # Hand-coded special-cases
+    if n == 2:
+        return split_cubic_into_two(p0, p1, p2, p3)
+    if n == 3:
+        return split_cubic_into_three(p0, p1, p2, p3)
+
     a, b, c, d = calc_cubic_parameters(p0, p1, p2, p3)
     segments = []
     dt = 1 / n
@@ -170,12 +176,7 @@ def cubic_approx_spline(cubic, n, tolerance, _2_3=2/3):
 
     # calculate the spline of quadratics
     spline = [cubic[0]]
-    if n == 2:
-        segments = split_cubic_into_two(*cubic)
-    elif n == 3:
-        segments = split_cubic_into_three(*cubic)
-    else:
-        segments = split_cubic_into_n(cubic[0], cubic[1], cubic[2], cubic[3], n)
+    segments = split_cubic_into_n(cubic[0], cubic[1], cubic[2], cubic[3], n)
     for i in range(len(segments)):
         spline.append(cubic_approx_control(segments[i], i / (n - 1)))
     spline.append(cubic[3])
