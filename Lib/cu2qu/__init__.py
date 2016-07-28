@@ -182,13 +182,12 @@ def cubic_approx_spline(cubic, n, tolerance, _2_3=2/3):
     spline.append(cubic[3])
 
     # determine whether the spline is within the tolerance error
+    q2 = spline[0]
     for i in range(1, n + 1):
-        if i == 1:
-            q0, q1, q2 = spline[0], spline[1], (spline[1] + spline[2]) * .5
-        elif i == n:
-            q0, q1, q2 = q2, spline[-2], spline[-1]
-        else:
+        if i < n:
             q0, q1, q2 = q2, spline[i], (spline[i] + spline[i + 1]) * .5
+        else:
+            q0, q1, q2 = q2, spline[-2], spline[-1]
 
         c0, c1, c2, c3 = segments[i - 1]
         if not cubic_farthest_fit(q0                    - c0,
