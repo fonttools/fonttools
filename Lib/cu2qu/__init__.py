@@ -79,8 +79,8 @@ def split_cubic_into_two(p0, p1, p2, p3):
 
 
 def split_cubic_into_three(p0, p1, p2, p3, _27=1/27):
-    # we define 1/27 as a keyword argument so that it will only be evaluated
-    # only once but still in the scope of this function
+    # we define 1/27 as a keyword argument so that it will be evaluated only
+    # once but still in the scope of this function
     mid1 = (8*p0 + 12*p1 + 6*p2 + p3) * _27
     deriv1 = (p3 + 3*p2 - 4*p0) * _27
     mid2 = (p0 + 6*p1 + 12*p2 + 8*p3) * _27
