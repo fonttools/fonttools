@@ -37,7 +37,7 @@ def calcCubicParameters(pt1, pt2, pt3, pt4):
 def splitCubicIntoN(pt1, pt2, pt3, pt4, n):
     a, b, c, d = calcCubicParameters(pt1, pt2, pt3, pt4)
     segments = []
-    dt = 1./n
+    dt = 1/n
     delta_2 = dt*dt
     delta_3 = dt * delta_2
     for i in range(n):
@@ -58,14 +58,14 @@ def splitCubicIntoTwo(pt1, pt2, pt3, pt4):
     return ((pt1, (pt1+pt2)*.5, mid-deriv3, mid),
             (mid, mid+deriv3, (pt3+pt4)*.5, pt4))
 
-def splitCubicIntoThree(pt1, pt2, pt3, pt4, _27=1/27.):
+def splitCubicIntoThree(pt1, pt2, pt3, pt4, _27=1/27):
     mid1 = (pt1*8+pt2*12+pt3*6+pt4)*_27
     deriv1 = (pt4+pt3*3-pt1*4)*_27
     mid2 = (pt1+pt2*6+pt3*12+pt4*8)*_27
     deriv2 = (pt4*4-pt2*3-pt1)*_27
-    return ((pt1, (pt1*2+pt2)/3., mid1-deriv1, mid1),
+    return ((pt1, (pt1*2+pt2)/3, mid1-deriv1, mid1),
             (mid1, mid1+deriv1, mid2-deriv2, mid2),
-            (mid2, mid2+deriv2, (pt3+pt4*2)/3., pt4))
+            (mid2, mid2+deriv2, (pt3+pt4*2)/3, pt4))
 
 
 class Cu2QuError(Exception):
@@ -153,8 +153,8 @@ def cubic_approx_spline(p, n, tolerance):
             return None
         p0 = p[0]
         p3 = p[3]
-        p1 = p0+(qp1-p0)*(2./3)
-        p2 =  p3+(qp1-p3)*(2./3)
+        p1 = p0+(qp1-p0)*(2/3)
+        p2 =  p3+(qp1-p3)*(2/3)
         if not cubic_farthest_fit(0,
                                   p1-p[1],
                                   p2-p[2],
@@ -183,8 +183,8 @@ def cubic_approx_spline(p, n, tolerance):
 
         pt1, pt2, pt3, pt4 = segments[i-1]
         if not cubic_farthest_fit(p0                - pt1,
-                                  p0+(p1-p0)*(2./3) - pt2,
-                                  p2+(p1-p2)*(2./3) - pt3,
+                                  p0+(p1-p0)*(2/3) - pt2,
+                                  p2+(p1-p2)*(2/3) - pt3,
                                   p2                - pt4,
                                   tolerance):
             return None
