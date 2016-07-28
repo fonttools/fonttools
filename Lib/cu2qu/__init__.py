@@ -118,8 +118,8 @@ def _cubic_farthest_fit(p0, p1, p2, p3, tolerance):
     if abs(mid) > tolerance:
         return False
     deriv3 = (p3 + p2 - p1 - p0) * .125
-    return (_cubic_farthest_fit(p0, (p0 + p1) * .5, mid - deriv3, mid, tolerance) and
-            _cubic_farthest_fit(mid, mid + deriv3, (p2 + p3) * .5, p3, tolerance))
+    return (_cubic_farthest_fit(p0, (p0+p1)*.5, mid-deriv3, mid, tolerance) and
+            _cubic_farthest_fit(mid, mid+deriv3, (p2+p3)*.5, p3, tolerance))
 
 def cubic_farthest_fit(p0, p1, p2, p3, tolerance):
     """Returns True if the cubic Bezier p entirely lies within a distance
@@ -136,8 +136,8 @@ def cubic_farthest_fit(p0, p1, p2, p3, tolerance):
     if abs(mid) > tolerance:
         return False
     deriv3 = (p3 + p2 - p1 - p0) * .125
-    return (_cubic_farthest_fit(p0, (p0 + p1) * .5, mid - deriv3, mid, tolerance) and
-            _cubic_farthest_fit(mid, mid + deriv3, (p2 + p3) * .5, p3, tolerance))
+    return (_cubic_farthest_fit(p0, (p0+p1)*.5, mid-deriv3, mid, tolerance) and
+            _cubic_farthest_fit(mid, mid+deriv3, (p2+p3)*.5, p3, tolerance))
 
 
 def cubic_approx_spline(cubic, n, tolerance):
@@ -164,9 +164,9 @@ def cubic_approx_spline(cubic, n, tolerance):
 
     spline = [cubic[0]]
     if n == 2:
-        segments = split_cubic_into_two(cubic[0], cubic[1], cubic[2], cubic[3])
+        segments = split_cubic_into_two(*cubic)
     elif n == 3:
-        segments = split_cubic_into_three(cubic[0], cubic[1], cubic[2], cubic[3])
+        segments = split_cubic_into_three(*cubic)
     else:
         segments = split_cubic_into_n(cubic[0], cubic[1], cubic[2], cubic[3], n)
     for i in range(len(segments)):
@@ -177,9 +177,9 @@ def cubic_approx_spline(cubic, n, tolerance):
         if i == 1:
             q0, q1, q2 = spline[0], spline[1], (spline[1] + spline[2]) * .5
         elif i == n:
-            q0, q1, q2 = (spline[-3] + spline[-2]) * .5, spline[-2], spline[-1]
+            q0, q1, q2 = q2, spline[-2], spline[-1]
         else:
-            q0, q1, q2 = (spline[i - 1] + spline[i]) * .5, spline[i], (spline[i] + spline[i + 1]) * .5
+            q0, q1, q2 = q2, spline[i], (spline[i] + spline[i + 1]) * .5
 
         c0, c1, c2, c3 = segments[i - 1]
         if not cubic_farthest_fit(q0                     - c0,
@@ -222,7 +222,8 @@ def curves_to_quadratic(curves, max_errors):
 
     splines = [None] * num_curves
     for n in range(1, MAX_N + 1):
-        splines = [cubic_approx_spline(c, n, e) for c, e in zip(curves, max_errors)]
+        splines = [cubic_approx_spline(c, n, e)
+                   for c, e in zip(curves, max_errors)]
         if all(splines):
             break
     else:
