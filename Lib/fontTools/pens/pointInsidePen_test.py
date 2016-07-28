@@ -85,6 +85,66 @@ class PointInsidePenTest(unittest.TestCase):
         return tounicode(result.getvalue())
 
 
+    def test_contour_no_solutions(self):
+        def draw_contour(pen):
+            pen.moveTo( (969, 230) )
+            pen.curveTo( (825, 348) , (715, 184) , (614, 202) )
+            pen.lineTo( (614, 160) )
+            pen.lineTo( (969, 160) )
+            pen.closePath()
+
+        piPen = PointInsidePen(None, (750, 295)) # this point is outside
+        draw_contour(piPen)
+        self.assertEqual(piPen.intersectionCount, 0)
+        self.assertEqual(piPen.getResult(), False)
+
+        piPen = PointInsidePen(None, (835, 190)) # this point is inside
+        draw_contour(piPen)
+        self.assertEqual(piPen.intersectionCount, 1)
+        self.assertEqual(piPen.getResult(), True)
+
+    def test_contour_square_closed(self):
+        def draw_contour(pen):
+            pen.moveTo( (100, 100) )
+            pen.lineTo( (-100, 100) )
+            pen.lineTo( (-100, -100) )
+            pen.lineTo( (100, -100) )
+            pen.closePath()
+
+        piPen = PointInsidePen(None, (0, 0)) # this point is inside
+        draw_contour(piPen)
+        self.assertEqual(piPen.intersectionCount, 1)
+        self.assertEqual(piPen.getResult(), True)
+
+    def test_contour_square_opened(self):
+        def draw_contour(pen):
+            pen.moveTo( (100, 100) )
+            pen.lineTo( (-100, 100) )
+            pen.lineTo( (-100, -100) )
+            pen.lineTo( (100, -100) )
+            # contour not explicitly closed
+
+        piPen = PointInsidePen(None, (0, 0)) # this point is inside
+        draw_contour(piPen)
+        self.assertEqual(piPen.intersectionCount, 0) # value is different from square_closed
+        self.assertEqual(piPen.getResult(), True) # "is inside" still True
+
+    def test_contour_circle(self):
+        def draw_contour(pen):
+            pen.moveTo( (0, 100) )
+            pen.curveTo( (-55, 100) , (-100, 55) , (-100, 0) )
+            pen.curveTo( (-100, -55) , (-55, -100) , (0, -100) )
+            pen.curveTo( (55, -100) , (100, -55) , (100, 0) )
+            pen.curveTo( (100, 55) , (55, 100) , (0, 100) )
+
+        piPen = PointInsidePen(None, (50, 50)) # this point is inside
+        draw_contour(piPen)
+        self.assertEqual(piPen.getResult(), True)
+
+        piPen = PointInsidePen(None, (50, -50)) # this point is inside
+        draw_contour(piPen)
+        self.assertEqual(piPen.getResult(), True)
+
     def test_contour_diamond(self):
         def draw_contour(pen):
             pen.moveTo( (0, 100) )
