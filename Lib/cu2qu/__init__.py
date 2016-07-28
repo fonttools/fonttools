@@ -20,22 +20,22 @@ __all__ = ['curve_to_quadratic', 'curves_to_quadratic']
 MAX_N = 100
 
 
-def calcCubicPoints(a, b, c, d):
+def calc_cubic_points(a, b, c, d):
     _1 = d
     _2 = (c / 3.0) + d
     _3 = (b + c) / 3.0 + _2
     _4 = a + d + c + b
     return _1, _2, _3, _4
 
-def calcCubicParameters(pt1, pt2, pt3, pt4):
+def calc_cubic_parameters(pt1, pt2, pt3, pt4):
     c = (pt2 - pt1) * 3.0
     b = (pt3 - pt2) * 3.0 - c
     d = pt1
     a = pt4 - d - c - b
     return a, b, c, d
 
-def splitCubicIntoN(pt1, pt2, pt3, pt4, n):
-    a, b, c, d = calcCubicParameters(pt1, pt2, pt3, pt4)
+def split_cubic_into_n(pt1, pt2, pt3, pt4, n):
+    a, b, c, d = calc_cubic_parameters(pt1, pt2, pt3, pt4)
     segments = []
     dt = 1 / n
     delta_2 = dt * dt
@@ -49,16 +49,16 @@ def splitCubicIntoN(pt1, pt2, pt3, pt4, n):
         b1 = (3*a*t1 + b) * delta_2
         c1 = (2*b*t1 + c + 3*a*t1_2) * dt
         d1 = a*t1_3 + b*t1_2 + c*t1 + d
-        segments.append(calcCubicPoints(a1, b1, c1, d1))
+        segments.append(calc_cubic_points(a1, b1, c1, d1))
     return segments
 
-def splitCubicIntoTwo(pt1, pt2, pt3, pt4):
+def split_cubic_into_two(pt1, pt2, pt3, pt4):
     mid = (pt1 + 3 * (pt2 + pt3) + pt4) * .125
     deriv3 = (pt4 + pt3 - pt2 - pt1) * .125
     return ((pt1, (pt1 + pt2) * .5, mid - deriv3, mid),
             (mid, mid + deriv3, (pt3 + pt4) * .5, pt4))
 
-def splitCubicIntoThree(pt1, pt2, pt3, pt4, _27=1/27):
+def split_cubic_into_three(pt1, pt2, pt3, pt4, _27=1/27):
     mid1 = (8*pt1 + 12*pt2 + 6*pt3 + pt4) * _27
     deriv1 = (pt4 + 3*pt3 - 4*pt1) * _27
     mid2 = (pt1 + 6*pt2 + 12*pt3 + 8*pt4) * _27
@@ -164,11 +164,11 @@ def cubic_approx_spline(p, n, tolerance):
 
     spline = [p[0]]
     if n == 2:
-        segments = splitCubicIntoTwo(p[0], p[1], p[2], p[3])
+        segments = split_cubic_into_two(p[0], p[1], p[2], p[3])
     elif n == 3:
-        segments = splitCubicIntoThree(p[0], p[1], p[2], p[3])
+        segments = split_cubic_into_three(p[0], p[1], p[2], p[3])
     else:
-        segments = splitCubicIntoN(p[0], p[1], p[2], p[3], n)
+        segments = split_cubic_into_n(p[0], p[1], p[2], p[3], n)
     for i in range(len(segments)):
         spline.append(cubic_approx_control(segments[i], i / (n - 1)))
     spline.append(p[3])
