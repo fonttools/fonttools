@@ -211,12 +211,11 @@ def curve_to_quadratic(curve, max_err):
     for n in range(1, MAX_N + 1):
         spline = cubic_approx_spline(curve, n, max_err)
         if spline is not None:
-            break
-    else:
-        # no break: approximation not found
-        raise ApproxNotFoundError(curve)
+            # done. go home
+            return [(s.real, s.imag) for s in spline]
 
-    return [(s.real, s.imag) for s in spline]
+    raise ApproxNotFoundError(curve)
+
 
 
 def curves_to_quadratic(curves, max_errors):
@@ -237,11 +236,7 @@ def curves_to_quadratic(curves, max_errors):
             splines.append(spline)
         else:
             # done. go home
-            break
-    else:
-        # no break: raise if any spline is None
-        for c, s in zip(curves, splines):
-            if s is None:
-                raise ApproxNotFoundError(c)
+            return [[(s.real, s.imag) for s in spline] for spline in splines]
 
-    return [[(s.real, s.imag) for s in spline] for spline in splines]
+    raise ApproxNotFoundError(curves)
+

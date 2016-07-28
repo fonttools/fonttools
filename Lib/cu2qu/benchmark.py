@@ -48,7 +48,7 @@ def run_benchmark(
         benchmark_module, module, function, setup_suffix='', repeat=1000):
     setup_func = 'setup_' + function
     if setup_suffix:
-        print('%s with %s:' % (function, setup_suffix))
+        print('%s with %s:' % (function, setup_suffix), end='')
         setup_func += '_' + setup_suffix
     else:
         print('%s:' % function, end='')
@@ -60,7 +60,6 @@ def run_benchmark(
         repeat=repeat, number=1)
     print('\tavg=%dus' % (sum(results) / len(results) * 1000000.),
           '\tmin=%dus' % (min(results) * 1000000.))
-    #print()
 
 
 def main():
