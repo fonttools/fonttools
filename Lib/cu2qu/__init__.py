@@ -112,9 +112,10 @@ def calc_intersect(a, b, c, d):
     return c + cd * h
 
 
-def _cubic_farthest_fit(p0, p1, p2, p3, tolerance):
+def cubic_farthest_fit_inside(p0, p1, p2, p3, tolerance):
     """Returns True if the cubic Bezier p entirely lies within a distance
-    tolerance of origin, False otherwise."""
+    tolerance of origin, False otherwise.  Assumes that p0 and p3 do fit
+    within tolerance of origin, and just checks the inside of the curve."""
 
     if abs(p1) <= tolerance and abs(p2) <= tolerance:
         return True
@@ -124,8 +125,8 @@ def _cubic_farthest_fit(p0, p1, p2, p3, tolerance):
     if abs(mid) > tolerance:
         return False
     deriv3 = (p3 + p2 - p1 - p0) * .125
-    return (_cubic_farthest_fit(p0, (p0+p1)*.5, mid-deriv3, mid, tolerance) and
-            _cubic_farthest_fit(mid, mid+deriv3, (p2+p3)*.5, p3, tolerance))
+    return (cubic_farthest_fit_inside(p0, (p0+p1)*.5, mid-deriv3, mid, tolerance) and
+            cubic_farthest_fit_inside(mid, mid+deriv3, (p2+p3)*.5, p3, tolerance))
 
 
 def cubic_farthest_fit(p0, p1, p2, p3, tolerance):
@@ -135,16 +136,7 @@ def cubic_farthest_fit(p0, p1, p2, p3, tolerance):
     if abs(p0) > tolerance or abs(p3) > tolerance:
         return False
 
-    if abs(p1) <= tolerance and abs(p2) <= tolerance:
-        return True
-
-    # Split.
-    mid = (p0 + 3 * (p1 + p2) + p3) * .125
-    if abs(mid) > tolerance:
-        return False
-    deriv3 = (p3 + p2 - p1 - p0) * .125
-    return (_cubic_farthest_fit(p0, (p0+p1)*.5, mid-deriv3, mid, tolerance) and
-            _cubic_farthest_fit(mid, mid+deriv3, (p2+p3)*.5, p3, tolerance))
+    return cubic_farthest_fit_inside(p0, p1, p2, p3, tolerance)
 
 
 def cubic_approx_spline(cubic, n, tolerance, _2_3=2/3):
@@ -165,10 +157,10 @@ def cubic_approx_spline(cubic, n, tolerance, _2_3=2/3):
         c3 = cubic[3]
         c1 = c0 + (q1 - c0) * _2_3
         c2 = c3 + (q1 - c3) * _2_3
-        if not cubic_farthest_fit(0,
-                                  c1 - cubic[1],
-                                  c2 - cubic[2],
-                                  0, tolerance):
+        if not cubic_farthest_fit_inside(0,
+                                         c1 - cubic[1],
+                                         c2 - cubic[2],
+                                         0, tolerance):
             return None
         return c0, q1, c3
 
