@@ -150,8 +150,10 @@ def cubic_approx_spline(cubic, n, tolerance, _2_3=2/3):
     # we define 2/3 as a keyword argument so that it will be evaluated only
     # once but still in the scope of this function
 
-    # special-case single-segment spline using intersection of ab and cd
     if n == 1:
+        # Try the uniq quadratic approximating cubic that maintains
+        # endpoint tangents.
+
         q1 = calc_intersect(*cubic)
         if q1 is None:
             return None
@@ -205,7 +207,7 @@ def curve_to_quadratic(curve, max_err):
     """
 
     curve = [complex(*p) for p in curve]
-    spline = None
+
     for n in range(1, MAX_N + 1):
         spline = cubic_approx_spline(curve, n, max_err)
         if spline is not None:
@@ -213,6 +215,7 @@ def curve_to_quadratic(curve, max_err):
     else:
         # no break: approximation not found
         raise ApproxNotFoundError(curve)
+
     return [(s.real, s.imag) for s in spline]
 
 
@@ -223,18 +226,22 @@ def curves_to_quadratic(curves, max_errors):
     """
 
     curves = [[complex(*p) for p in curve] for curve in curves]
-    num_curves = len(curves)
-    assert len(max_errors) == num_curves
+    assert len(max_errors) == len(curves)
 
-    splines = [None] * num_curves
     for n in range(1, MAX_N + 1):
-        splines = [cubic_approx_spline(c, n, e)
-                   for c, e in zip(curves, max_errors)]
-        if all(splines):
+        splines = []
+        for c, e in zip(curves, max_errors):
+            spline = cubic_approx_spline(c, n, e)
+            if spline is None:
+                break
+            splines.append(spline)
+        else:
+            # done. go home
             break
     else:
         # no break: raise if any spline is None
         for c, s in zip(curves, splines):
             if s is None:
                 raise ApproxNotFoundError(c)
+
     return [[(s.real, s.imag) for s in spline] for spline in splines]
