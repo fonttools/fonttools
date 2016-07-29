@@ -53,6 +53,12 @@ def calc_cubic_parameters(p0, p1, p2, p3):
 
 
 def split_cubic_into_n(p0, p1, p2, p3, n):
+    # Hand-coded special-cases
+    if n == 2:
+        return split_cubic_into_two(p0, p1, p2, p3)
+    if n == 3:
+        return split_cubic_into_three(p0, p1, p2, p3)
+
     a, b, c, d = calc_cubic_parameters(p0, p1, p2, p3)
     segments = []
     dt = 1 / n
@@ -168,34 +174,30 @@ def cubic_approx_spline(cubic, n, tolerance, _2_3=2/3):
             return None
         return c0, q1, c3
 
-    # calculate the spline of quadratics
-    spline = [cubic[0]]
-    if n == 2:
-        segments = split_cubic_into_two(*cubic)
-    elif n == 3:
-        segments = split_cubic_into_three(*cubic)
-    else:
-        segments = split_cubic_into_n(cubic[0], cubic[1], cubic[2], cubic[3], n)
-    for i in range(len(segments)):
-        spline.append(cubic_approx_control(segments[i], i / (n - 1)))
-    spline.append(cubic[3])
+    cubics = split_cubic_into_n(cubic[0], cubic[1], cubic[2], cubic[3], n)
 
-    # determine whether the spline is within the tolerance error
-    for i in range(1, n + 1):
-        if i == 1:
-            q0, q1, q2 = spline[0], spline[1], (spline[1] + spline[2]) * .5
-        elif i == n:
-            q0, q1, q2 = q2, spline[-2], spline[-1]
+    # calculate the spline of quadratics and check errors at the same time.
+    next_q1 = cubic_approx_control(cubics[0], 0)
+    q2 = cubic[0]
+    spline = [cubic[0], next_q1]
+    for i in range(1, n+1):
+        q0 = q2
+        q1 = next_q1
+        if i < n:
+            next_q1 = cubic_approx_control(cubics[i], i / (n-1))
+            spline.append(next_q1)
+            q2 = (q1 + next_q1) * .5
         else:
-            q0, q1, q2 = q2, spline[i], (spline[i] + spline[i + 1]) * .5
+            q2 = cubic[3]
 
-        c0, c1, c2, c3 = segments[i - 1]
+        c0, c1, c2, c3 = cubics[i-1]
         if not cubic_farthest_fit(q0                    - c0,
                                   q0 + (q1 - q0) * _2_3 - c1,
                                   q2 + (q1 - q2) * _2_3 - c2,
                                   q2                    - c3,
                                   tolerance):
             return None
+    spline.append(cubic[3])
 
     return spline
 
