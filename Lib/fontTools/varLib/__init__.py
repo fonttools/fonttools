@@ -376,8 +376,6 @@ def _SetCoordinates(font, glyphName, coord):
 	assert len(coord) >= 4
 	if not hasattr(glyph, 'xMin'):
 		glyph.recalcBounds(glyf)
-	topSideY = glyph.yMax
-	bottomSideY = -glyph.yMin
 	leftSideX = coord[-4][0]
 	rightSideX = coord[-3][0]
 	topSideY = coord[-2][1]
