@@ -342,7 +342,7 @@ def _GetCoordinates(font, glyphName):
 	if glyphName not in glyf.glyphs: return None
 	glyph = glyf[glyphName]
 	if glyph.isComposite():
-		coord = GlyphCoordinates([(c.x,c.y) for c in glyph.components])
+		coord = GlyphCoordinates([(getattr(c, 'x', 0),getattr(c, 'y', 0)) for c in glyph.components])
 		control = [c.glyphName for c in glyph.components]
 	else:
 		allData = glyph.getCoordinates(glyf)
@@ -387,7 +387,8 @@ def _SetCoordinates(font, glyphName, coord):
 	if glyph.isComposite():
 		assert len(coord) == len(glyph.components)
 		for p,comp in zip(coord, glyph.components):
-			comp.x,comp.y = p
+			if hasattr(comp, 'x'):
+				comp.x,comp.y = p
 	elif glyph.numberOfContours is 0:
 		assert len(coord) == 0
 	else:
