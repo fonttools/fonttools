@@ -174,22 +174,22 @@ def cubic_approx_spline(cubic, n, tolerance, _2_3=2/3):
             return None
         return c0, q1, c3
 
+    spline = []
     # calculate the spline of quadratics
-    spline = [cubic[0]]
     segments = split_cubic_into_n(cubic[0], cubic[1], cubic[2], cubic[3], n)
     for i in range(len(segments)):
         spline.append(cubic_approx_control(segments[i], i / (n - 1)))
-    spline.append(cubic[3])
 
     # determine whether the spline is within the tolerance error
-    q2 = spline[0]
-    for i in range(1, n + 1):
-        if i < n:
+    q2 = cubic[0]
+    n_1 = n - 1
+    for i in range(n):
+        if i < n_1:
             q0, q1, q2 = q2, spline[i], (spline[i] + spline[i + 1]) * .5
         else:
-            q0, q1, q2 = q2, spline[-2], spline[-1]
+            q0, q1, q2 = q2, spline[-1], cubic[3]
 
-        c0, c1, c2, c3 = segments[i - 1]
+        c0, c1, c2, c3 = segments[i]
         if not cubic_farthest_fit(q0                    - c0,
                                   q0 + (q1 - q0) * _2_3 - c1,
                                   q2 + (q1 - q2) * _2_3 - c2,
@@ -197,6 +197,8 @@ def cubic_approx_spline(cubic, n, tolerance, _2_3=2/3):
                                   tolerance):
             return None
 
+    spline.insert(0, cubic[0])
+    spline.append(cubic[3])
     return spline
 
 
