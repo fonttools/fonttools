@@ -174,31 +174,31 @@ def cubic_approx_spline(cubic, n, tolerance, _2_3=2/3):
             return None
         return c0, q1, c3
 
-    spline = []
-    # calculate the spline of quadratics
-    segments = split_cubic_into_n(cubic[0], cubic[1], cubic[2], cubic[3], n)
-    for i in range(len(segments)):
-        spline.append(cubic_approx_control(segments[i], i / (n - 1)))
+    cubics = split_cubic_into_n(cubic[0], cubic[1], cubic[2], cubic[3], n)
 
-    # determine whether the spline is within the tolerance error
+    # calculate the spline of quadratics and check errors at the same time.
+    next_q1 = cubic_approx_control(cubics[0], 0)
     q2 = cubic[0]
-    n_1 = n - 1
-    for i in range(n):
-        if i < n_1:
-            q0, q1, q2 = q2, spline[i], (spline[i] + spline[i + 1]) * .5
+    spline = [cubic[0], next_q1]
+    for i in range(1, n+1):
+        q0 = q2
+        q1 = next_q1
+        if i < n:
+            next_q1 = cubic_approx_control(cubics[i], i / (n-1))
+            spline.append(next_q1)
+            q2 = (q1 + next_q1) * .5
         else:
-            q0, q1, q2 = q2, spline[-1], cubic[3]
+            q2 = cubic[3]
 
-        c0, c1, c2, c3 = segments[i]
+        c0, c1, c2, c3 = cubics[i-1]
         if not cubic_farthest_fit(q0                    - c0,
                                   q0 + (q1 - q0) * _2_3 - c1,
                                   q2 + (q1 - q2) * _2_3 - c2,
                                   q2                    - c3,
                                   tolerance):
             return None
-
-    spline.insert(0, cubic[0])
     spline.append(cubic[3])
+
     return spline
 
 
