@@ -152,6 +152,27 @@ def cubic_farthest_fit(p0, p1, p2, p3, tolerance):
     return cubic_farthest_fit_inside(p0, p1, p2, p3, tolerance)
 
 
+def cubic_approx_quadratic(cubic, tolerance, _2_3=2/3):
+    """Return the uniq quadratic approximating cubic that maintains
+    endpoint tangents if that is within tolerance, None otherwise."""
+    # we define 2/3 as a keyword argument so that it will be evaluated only
+    # once but still in the scope of this function
+
+    q1 = calc_intersect(*cubic)
+    if q1 is None:
+        return None
+    c0 = cubic[0]
+    c3 = cubic[3]
+    c1 = c0 + (q1 - c0) * _2_3
+    c2 = c3 + (q1 - c3) * _2_3
+    if not cubic_farthest_fit_inside(0,
+                                     c1 - cubic[1],
+                                     c2 - cubic[2],
+                                     0, tolerance):
+        return None
+    return c0, q1, c3
+
+
 def cubic_approx_spline(cubic, n, tolerance, _2_3=2/3):
     """Approximate a cubic bezier curve with a spline of n quadratics.
 
@@ -162,22 +183,7 @@ def cubic_approx_spline(cubic, n, tolerance, _2_3=2/3):
     # once but still in the scope of this function
 
     if n == 1:
-        # Try the uniq quadratic approximating cubic that maintains
-        # endpoint tangents.
-
-        q1 = calc_intersect(*cubic)
-        if q1 is None:
-            return None
-        c0 = cubic[0]
-        c3 = cubic[3]
-        c1 = c0 + (q1 - c0) * _2_3
-        c2 = c3 + (q1 - c3) * _2_3
-        if not cubic_farthest_fit_inside(0,
-                                         c1 - cubic[1],
-                                         c2 - cubic[2],
-                                         0, tolerance):
-            return None
-        return c0, q1, c3
+        return cubic_approx_quadratic(cubic, tolerance)
 
     cubics = split_cubic_into_n(cubic[0], cubic[1], cubic[2], cubic[3], n)
 
