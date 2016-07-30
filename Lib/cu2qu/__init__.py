@@ -61,6 +61,9 @@ def split_cubic_into_n(p0, p1, p2, p3, n):
     if n == 4:
         a, b = split_cubic_into_two(p0, p1, p2, p3)
         return split_cubic_into_two(*a) + split_cubic_into_two(*b)
+    if n == 6:
+        a, b = split_cubic_into_two(p0, p1, p2, p3)
+        return split_cubic_into_three(*a) + split_cubic_into_three(*b)
 
     a, b, c, d = calc_cubic_parameters(p0, p1, p2, p3)
     segments = []
