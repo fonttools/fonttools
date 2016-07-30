@@ -67,12 +67,11 @@ def split_cubic_into_n(p0, p1, p2, p3, n):
     for i in range(n):
         t1 = i * dt
         t1_2 = t1 * t1
-        t1_3 = t1 * t1_2
         # calc new a, b, c and d
         a1 = a * delta_3
         b1 = (3*a*t1 + b) * delta_2
         c1 = (2*b*t1 + c + 3*a*t1_2) * dt
-        d1 = a*t1_3 + b*t1_2 + c*t1 + d
+        d1 = a*t1*t1_2 + b*t1_2 + c*t1 + d
         segments.append(calc_cubic_points(a1, b1, c1, d1))
     return segments
 
