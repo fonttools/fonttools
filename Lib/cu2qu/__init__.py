@@ -240,14 +240,21 @@ def curves_to_quadratic(curves, max_errors):
     curves = [[complex(*p) for p in curve] for curve in curves]
     assert len(max_errors) == len(curves)
 
-    for n in range(1, MAX_N + 1):
-        splines = []
-        for c, e in zip(curves, max_errors):
-            spline = cubic_approx_spline(c, n, e)
-            if spline is None:
+    l = len(curves)
+    splines = [None] * l
+    last_i = i = 0
+    n = 1
+    while True:
+        spline = cubic_approx_spline(curves[i], n, max_errors[i])
+        if spline is None:
+            if n == MAX_N:
                 break
-            splines.append(spline)
-        else:
+            n += 1
+            last_i = i
+            continue
+        splines[i] = spline
+        i = (i + 1) % l
+        if i == last_i:
             # done. go home
             return [[(s.real, s.imag) for s in spline] for spline in splines]
 
