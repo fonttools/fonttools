@@ -58,6 +58,12 @@ def split_cubic_into_n(p0, p1, p2, p3, n):
         return split_cubic_into_two(p0, p1, p2, p3)
     if n == 3:
         return split_cubic_into_three(p0, p1, p2, p3)
+    if n == 4:
+        a, b = split_cubic_into_two(p0, p1, p2, p3)
+        return split_cubic_into_two(*a) + split_cubic_into_two(*b)
+    if n == 6:
+        a, b = split_cubic_into_two(p0, p1, p2, p3)
+        return split_cubic_into_three(*a) + split_cubic_into_three(*b)
 
     a, b, c, d = calc_cubic_parameters(p0, p1, p2, p3)
     segments = []
@@ -67,12 +73,11 @@ def split_cubic_into_n(p0, p1, p2, p3, n):
     for i in range(n):
         t1 = i * dt
         t1_2 = t1 * t1
-        t1_3 = t1 * t1_2
         # calc new a, b, c and d
         a1 = a * delta_3
         b1 = (3*a*t1 + b) * delta_2
         c1 = (2*b*t1 + c + 3*a*t1_2) * dt
-        d1 = a*t1_3 + b*t1_2 + c*t1 + d
+        d1 = a*t1*t1_2 + b*t1_2 + c*t1 + d
         segments.append(calc_cubic_points(a1, b1, c1, d1))
     return segments
 
@@ -147,6 +152,27 @@ def cubic_farthest_fit(p0, p1, p2, p3, tolerance):
     return cubic_farthest_fit_inside(p0, p1, p2, p3, tolerance)
 
 
+def cubic_approx_quadratic(cubic, tolerance, _2_3=2/3):
+    """Return the uniq quadratic approximating cubic that maintains
+    endpoint tangents if that is within tolerance, None otherwise."""
+    # we define 2/3 as a keyword argument so that it will be evaluated only
+    # once but still in the scope of this function
+
+    q1 = calc_intersect(*cubic)
+    if q1 is None:
+        return None
+    c0 = cubic[0]
+    c3 = cubic[3]
+    c1 = c0 + (q1 - c0) * _2_3
+    c2 = c3 + (q1 - c3) * _2_3
+    if not cubic_farthest_fit_inside(0,
+                                     c1 - cubic[1],
+                                     c2 - cubic[2],
+                                     0, tolerance):
+        return None
+    return c0, q1, c3
+
+
 def cubic_approx_spline(cubic, n, tolerance, _2_3=2/3):
     """Approximate a cubic bezier curve with a spline of n quadratics.
 
@@ -157,22 +183,7 @@ def cubic_approx_spline(cubic, n, tolerance, _2_3=2/3):
     # once but still in the scope of this function
 
     if n == 1:
-        # Try the uniq quadratic approximating cubic that maintains
-        # endpoint tangents.
-
-        q1 = calc_intersect(*cubic)
-        if q1 is None:
-            return None
-        c0 = cubic[0]
-        c3 = cubic[3]
-        c1 = c0 + (q1 - c0) * _2_3
-        c2 = c3 + (q1 - c3) * _2_3
-        if not cubic_farthest_fit_inside(0,
-                                         c1 - cubic[1],
-                                         c2 - cubic[2],
-                                         0, tolerance):
-            return None
-        return c0, q1, c3
+        return cubic_approx_quadratic(cubic, tolerance)
 
     cubics = split_cubic_into_n(cubic[0], cubic[1], cubic[2], cubic[3], n)
 
@@ -229,14 +240,21 @@ def curves_to_quadratic(curves, max_errors):
     curves = [[complex(*p) for p in curve] for curve in curves]
     assert len(max_errors) == len(curves)
 
-    for n in range(1, MAX_N + 1):
-        splines = []
-        for c, e in zip(curves, max_errors):
-            spline = cubic_approx_spline(c, n, e)
-            if spline is None:
+    l = len(curves)
+    splines = [None] * l
+    last_i = i = 0
+    n = 1
+    while True:
+        spline = cubic_approx_spline(curves[i], n, max_errors[i])
+        if spline is None:
+            if n == MAX_N:
                 break
-            splines.append(spline)
-        else:
+            n += 1
+            last_i = i
+            continue
+        splines[i] = spline
+        i = (i + 1) % l
+        if i == last_i:
             # done. go home
             return [[(s.real, s.imag) for s in spline] for spline in splines]
 
