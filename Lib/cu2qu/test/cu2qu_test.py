@@ -67,17 +67,17 @@ class CurveToQuadraticTest(unittest.TestCase):
         """
 
         expected = {
-            3: 6,
-            4: 26,
-            5: 82,
-            6: 232,
-            7: 360,
-            8: 266,
-            9: 28}
+            2: 6,
+            3: 26,
+            4: 82,
+            5: 232,
+            6: 360,
+            7: 266,
+            8: 28}
 
         results = collections.defaultdict(int)
         for spline in self.single_splines:
-            n = len(spline) - 1
+            n = len(spline) - 2
             results[n] += 1
         self.assertEqual(results, expected)
         self.results.append(('single spline lengths', results))
@@ -86,16 +86,16 @@ class CurveToQuadraticTest(unittest.TestCase):
         """Test that conversion results are unchanged for multiple curves."""
 
         expected = {
-            6: 11,
-            7: 35,
-            8: 49,
-            9: 5}
+            5: 11,
+            6: 35,
+            7: 49,
+            8: 5}
 
         results = collections.defaultdict(int)
         for splines in self.compat_splines:
-            n = len(splines[0]) - 1
+            n = len(splines[0]) - 2
             for spline in splines[1:]:
-                self.assertEqual(len(spline) - 1, n,
+                self.assertEqual(len(spline) - 2, n,
                     'Got incompatible conversion results')
             results[n] += 1
         self.assertEqual(results, expected)
