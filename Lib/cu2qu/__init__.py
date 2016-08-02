@@ -52,21 +52,24 @@ def calc_cubic_parameters(p0, p1, p2, p3):
     return a, b, c, d
 
 
-def split_cubic_into_n(p0, p1, p2, p3, n):
+def split_cubic_into_n_iter(p0, p1, p2, p3, n):
     # Hand-coded special-cases
     if n == 2:
-        return split_cubic_into_two(p0, p1, p2, p3)
+        return iter(split_cubic_into_two(p0, p1, p2, p3))
     if n == 3:
-        return split_cubic_into_three(p0, p1, p2, p3)
+        return iter(split_cubic_into_three(p0, p1, p2, p3))
     if n == 4:
         a, b = split_cubic_into_two(p0, p1, p2, p3)
-        return split_cubic_into_two(*a) + split_cubic_into_two(*b)
+        return iter(split_cubic_into_two(*a) + split_cubic_into_two(*b))
     if n == 6:
         a, b = split_cubic_into_two(p0, p1, p2, p3)
-        return split_cubic_into_three(*a) + split_cubic_into_three(*b)
+        return iter(split_cubic_into_three(*a) + split_cubic_into_three(*b))
 
+    return _split_cubic_into_n_gen(p0,p1,p2,p3,n)
+
+
+def _split_cubic_into_n_gen(p0, p1, p2, p3, n):
     a, b, c, d = calc_cubic_parameters(p0, p1, p2, p3)
-    segments = []
     dt = 1 / n
     delta_2 = dt * dt
     delta_3 = dt * delta_2
@@ -78,8 +81,7 @@ def split_cubic_into_n(p0, p1, p2, p3, n):
         b1 = (3*a*t1 + b) * delta_2
         c1 = (2*b*t1 + c + 3*a*t1_2) * dt
         d1 = a*t1*t1_2 + b*t1_2 + c*t1 + d
-        segments.append(calc_cubic_points(a1, b1, c1, d1))
-    return segments
+        yield calc_cubic_points(a1, b1, c1, d1)
 
 
 def split_cubic_into_two(p0, p1, p2, p3):
@@ -141,17 +143,6 @@ def cubic_farthest_fit_inside(p0, p1, p2, p3, tolerance):
             cubic_farthest_fit_inside(mid, mid+deriv3, (p2+p3)*.5, p3, tolerance))
 
 
-def cubic_farthest_fit(p0, p1, p2, p3, tolerance):
-    """Returns True if the cubic Bezier p entirely lies within a distance
-    tolerance of origin, False otherwise."""
-
-    # First check p3 then p0, as p3 has higher error early on.
-    if abs(p3) > tolerance or abs(p0) > tolerance:
-        return False
-
-    return cubic_farthest_fit_inside(p0, p1, p2, p3, tolerance)
-
-
 def cubic_approx_quadratic(cubic, tolerance, _2_3=2/3):
     """Return the uniq quadratic approximating cubic that maintains
     endpoint tangents if that is within tolerance, None otherwise."""
@@ -185,28 +176,40 @@ def cubic_approx_spline(cubic, n, tolerance, _2_3=2/3):
     if n == 1:
         return cubic_approx_quadratic(cubic, tolerance)
 
-    cubics = split_cubic_into_n(cubic[0], cubic[1], cubic[2], cubic[3], n)
+    cubics = split_cubic_into_n_iter(cubic[0], cubic[1], cubic[2], cubic[3], n)
 
     # calculate the spline of quadratics and check errors at the same time.
-    next_q1 = cubic_approx_control(cubics[0], 0)
+    next_cubic = next(cubics)
+    next_q1 = cubic_approx_control(next_cubic, 0)
     q2 = cubic[0]
+    d1 = 0j
     spline = [cubic[0], next_q1]
     for i in range(1, n+1):
+
+        # Current cubic to convert
+        c0, c1, c2, c3 = next_cubic
+
+        # Current quadratic approximation of current cubic
         q0 = q2
         q1 = next_q1
         if i < n:
-            next_q1 = cubic_approx_control(cubics[i], i / (n-1))
+            next_cubic = next(cubics)
+            next_q1 = cubic_approx_control(next_cubic, i / (n-1))
             spline.append(next_q1)
             q2 = (q1 + next_q1) * .5
         else:
-            q2 = cubic[3]
+            q2 = c3
 
-        c0, c1, c2, c3 = cubics[i-1]
-        if not cubic_farthest_fit(q0                    - c0,
-                                  q0 + (q1 - q0) * _2_3 - c1,
-                                  q2 + (q1 - q2) * _2_3 - c2,
-                                  q2                    - c3,
-                                  tolerance):
+        # End-point deltas
+        d0 = d1
+        d1 = q2 - c3
+
+        if (abs(d1) > tolerance or
+            not cubic_farthest_fit_inside(d0,
+                                          q0 + (q1 - q0) * _2_3 - c1,
+                                          q2 + (q1 - q2) * _2_3 - c2,
+                                          d1,
+                                          tolerance)):
             return None
     spline.append(cubic[3])
 
