@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 
 from __future__ import print_function
-import os, sys
 
 # if setuptools is not installed, fall back to distutils
 try:
@@ -20,7 +19,7 @@ import py_compile
 orig_py_compile = py_compile.compile
 
 def doraise_py_compile(file, cfile=None, dfile=None, doraise=False):
-    orig_py_compile(file, cfile=cfile, dfile=dfile, doraise=True)
+	orig_py_compile(file, cfile=cfile, dfile=dfile, doraise=True)
 
 py_compile.compile = doraise_py_compile
 
@@ -49,44 +48,43 @@ TrueType/OpenType fonts to and from an XML-based format.
 """
 
 setup(
-		name = "fonttools",
-		version = "3.0",
-		description = "Tools to manipulate font files",
-		author = "Just van Rossum",
-		author_email = "just@letterror.com",
-		maintainer = "Behdad Esfahbod",
-		maintainer_email = "behdad@behdad.org",
-		url = "http://github.com/behdad/fonttools",
-		license = "OpenSource, BSD-style",
-		platforms = ["Any"],
-		long_description = long_description,
-
-		packages = [
-			"fontTools",
-			"fontTools.encodings",
-			"fontTools.feaLib",
-			"fontTools.misc",
-			"fontTools.mtiLib",
-			"fontTools.pens",
-			"fontTools.ttLib",
-			"fontTools.t1Lib",
-			"fontTools.subset",
-			"fontTools.otlLib",
-			"fontTools.ttLib.tables",
-			"fontTools.varLib",
-		],
-		py_modules = ['sstruct', 'xmlWriter'],
-		package_dir = {'': 'Lib'},
-		extra_path = 'FontTools',
-		data_files = [('share/man/man1', ["Doc/ttx.1"])],
-		scripts = distutils_scripts,
-		entry_points = {
-				'console_scripts': [
-					"ttx = fontTools.ttx:main",
-					"pyftsubset = fontTools.subset:main",
-					"pyftmerge = fontTools.merge:main",
-					"pyftinspect = fontTools.inspect:main"
-				]
-			},
-		**classifiers
-	)
+	name="fonttools",
+	version="3.0",
+	description="Tools to manipulate font files",
+	author="Just van Rossum",
+	author_email="just@letterror.com",
+	maintainer="Behdad Esfahbod",
+	maintainer_email="behdad@behdad.org",
+	url="http://github.com/behdad/fonttools",
+	license="OpenSource, BSD-style",
+	platforms=["Any"],
+	long_description=long_description,
+	packages=[
+		"fontTools",
+		"fontTools.encodings",
+		"fontTools.feaLib",
+		"fontTools.misc",
+		"fontTools.mtiLib",
+		"fontTools.pens",
+		"fontTools.ttLib",
+		"fontTools.t1Lib",
+		"fontTools.subset",
+		"fontTools.otlLib",
+		"fontTools.ttLib.tables",
+		"fontTools.varLib",
+	],
+	py_modules=['sstruct', 'xmlWriter'],
+	package_dir={'': 'Lib'},
+	extra_path='FontTools',
+	data_files=[('share/man/man1', ["Doc/ttx.1"])],
+	scripts=distutils_scripts,
+	entry_points={
+		'console_scripts': [
+			"ttx = fontTools.ttx:main",
+			"pyftsubset = fontTools.subset:main",
+			"pyftmerge = fontTools.merge:main",
+			"pyftinspect = fontTools.inspect:main"
+		]
+	},
+	**classifiers
+)
