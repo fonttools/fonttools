@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 
 from __future__ import print_function
-from setuptools import setup
+from setuptools import setup, find_packages
 
 # Force distutils to use py_compile.compile() function with 'doraise' argument
 # set to True, in order to raise an exception on compilation errors
@@ -49,22 +49,9 @@ setup(
 	license="OpenSource, BSD-style",
 	platforms=["Any"],
 	long_description=long_description,
-	packages=[
-		"fontTools",
-		"fontTools.encodings",
-		"fontTools.feaLib",
-		"fontTools.misc",
-		"fontTools.mtiLib",
-		"fontTools.pens",
-		"fontTools.ttLib",
-		"fontTools.t1Lib",
-		"fontTools.subset",
-		"fontTools.otlLib",
-		"fontTools.ttLib.tables",
-		"fontTools.varLib",
-	],
-	py_modules=['sstruct', 'xmlWriter'],
 	package_dir={'': 'Lib'},
+	packages=find_packages("Lib"),
+	py_modules=['sstruct', 'xmlWriter'],
 	extra_path='FontTools',
 	data_files=[('share/man/man1', ["Doc/ttx.1"])],
 	entry_points={
