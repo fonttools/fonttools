@@ -1,17 +1,7 @@
 #! /usr/bin/env python
 
 from __future__ import print_function
-
-# if setuptools is not installed, fall back to distutils
-try:
-	from setuptools import setup
-except ImportError:
-	from distutils.core import setup
-	distutils_scripts = [
-		"Tools/ttx", "Tools/pyftsubset", "Tools/pyftinspect", "Tools/pyftmerge"]
-else:
-	distutils_scripts = []
-
+from setuptools import setup
 
 # Force distutils to use py_compile.compile() function with 'doraise' argument
 # set to True, in order to raise an exception on compilation errors
@@ -77,7 +67,6 @@ setup(
 	package_dir={'': 'Lib'},
 	extra_path='FontTools',
 	data_files=[('share/man/man1', ["Doc/ttx.1"])],
-	scripts=distutils_scripts,
 	entry_points={
 		'console_scripts': [
 			"ttx = fontTools.ttx:main",
