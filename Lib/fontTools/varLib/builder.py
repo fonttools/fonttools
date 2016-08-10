@@ -52,7 +52,5 @@ def buildVarStore(varTupleList, varDeltasList):
 
 def buildVarIdxMap(varIdxes):
 	self = ot.VarIdxMap()
-	self.VarIdx = varIdxes = list(varIdxes)
-	self.VarIdxCount = len(self.VarIdx)
-	self.Format = 1 if all(x <= 0xFFFF for x in varIdxes) else 2
+	self.mapping = list(varIdxes)
 	return self

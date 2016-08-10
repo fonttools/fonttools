@@ -495,8 +495,9 @@ def _add_HVAR(font, model, master_ttfs):
 	HVAR = font["HVAR"] = newTable('HVAR')
 	hvar = HVAR.table = ot.HVAR()
 	hvar.Version = 1.0
-	hvar.VarIdxMap = None
 	hvar.VarStore = varStore
+
+	#hvar.AdvWidthMap = builder.buildVarIdxMap(mapping)
 
 
 def main(args=None):
