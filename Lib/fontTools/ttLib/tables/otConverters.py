@@ -3,6 +3,7 @@ from fontTools.misc.py23 import *
 from fontTools.misc.textTools import safeEval
 from fontTools.misc.fixedTools import fixedToFloat as fi2fl, floatToFixed as fl2fi
 from .otBase import ValueRecordFactory
+from functools import partial
 import logging
 
 
@@ -30,13 +31,16 @@ def buildConverters(tableSpec, tableNamespace):
 		elif name == "FeatureParams":
 			converterClass = FeatureParams
 		else:
-			if not tp in converterMapping:
+			if not tp in converterMapping and '(' not in tp:
 				tableName = tp
 				converterClass = Struct
 			else:
-				converterClass = converterMapping[tp]
+				converterClass = eval(tp, tableNamespace, converterMapping)
 		tableClass = tableNamespace.get(tableName)
-		conv = converterClass(name, repeat, aux, tableClass)
+		if tableClass is not None:
+			conv = converterClass(name, repeat, aux, tableClass=tableClass)
+		else:
+			conv = converterClass(name, repeat, aux)
 		if name in ["SubTable", "ExtSubTable"]:
 			conv.lookupTypes = tableNamespace['lookupTypes']
 			# also create reverse mapping
@@ -82,7 +86,7 @@ class BaseConverter(object):
 	"""Base class for converter objects. Apart from the constructor, this
 	is an abstract class."""
 
-	def __init__(self, name, repeat, aux, tableClass):
+	def __init__(self, name, repeat, aux, tableClass=None):
 		self.name = name
 		self.repeat = repeat
 		self.aux = aux
@@ -420,7 +424,7 @@ class FeatureParams(Table):
 
 class ValueFormat(IntValue):
 	staticSize = 2
-	def __init__(self, name, repeat, aux, tableClass):
+	def __init__(self, name, repeat, aux, tableClass=None):
 		BaseConverter.__init__(self, name, repeat, aux, tableClass)
 		self.which = "ValueFormat" + ("2" if name[-1] == "2" else "1")
 	def read(self, reader, font, tableDict):
@@ -526,4 +530,7 @@ converterMapping = {
 	"ValueRecord":	ValueRecord,
 	"VarAxisID":	VarAxisID,
 	"DeltaValue":	DeltaValue,
+	# "Template" types
+	"OffsetTo":	lambda C: partial(Table, tableClass=C),
+	"LOffsetTo":	lambda C: partial(LTable, tableClass=C),
 }
