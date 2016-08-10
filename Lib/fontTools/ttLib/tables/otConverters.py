@@ -93,7 +93,7 @@ class BaseConverter(object):
 		self.tableClass = tableClass
 		self.isCount = name.endswith("Count")
 		self.isLookupType = name.endswith("LookupType")
-		self.isPropagated = name in ["ClassCount", "Class2Count", "FeatureTag", "SettingsCount", "VarTupleCount"]
+		self.isPropagated = name in ["ClassCount", "Class2Count", "FeatureTag", "SettingsCount", "VarTupleCount", "MappingCount"]
 
 	def readArray(self, reader, font, tableDict, count):
 		"""Read an array of values from the reader."""
@@ -509,6 +509,55 @@ class DeltaValue(BaseConverter):
 		return safeEval(attrs["value"])
 
 
+class VarIdxMapValue(BaseConverter):
+
+	def read(self, reader, font, tableDict):
+		fmt = tableDict['EntryFormat']
+		nItems = tableDict['MappingCount']
+
+		innerBits = 1 + (fmt & 0x000F)
+		innerMask = (1<<innerBits) - 1
+		outerMask = 0xFFFFFFFF - innerMask
+		outerShift = 16 - innerBits
+
+		entrySize = 1 + ((fmt & 0x0030) >> 4)
+		read = {
+			1: reader.readUInt8,
+			2: reader.readUShort,
+			3: reader.readUInt24,
+			4: reader.readULong,
+		}[entrySize]
+
+		mapping = []
+		for i in range(nItems):
+			raw = read()
+			idx = ((raw & outerMask) << outerShift) | (raw & innerMask)
+			mapping.append(idx)
+
+		return mapping
+
+	def write(self, writer, font, tableDict, value, repeatIndex=None):
+		fmt = tableDict['EntryFormat']
+		mapping = value
+		writer['MappingCount'].setValue(len(mapping))
+
+		innerBits = 1 + (fmt & 0x000F)
+		innerMask = (1<<innerBits) - 1
+		outerShift = 16 - innerBits
+
+		entrySize = 1 + ((fmt & 0x0030) >> 4)
+		write = {
+			1: writer.writeUInt8,
+			2: writer.writeUShort,
+			3: writer.writeUInt24,
+			4: writer.writeULong,
+		}[entrySize]
+
+		for idx in mapping:
+			raw = ((idx & 0xFFFF0000) >> outerShift) | (idx & innerMask)
+			write(raw)
+
+
 converterMapping = {
 	# type		class
 	"int8":		Int8,
@@ -530,6 +579,7 @@ converterMapping = {
 	"ValueRecord":	ValueRecord,
 	"VarAxisID":	VarAxisID,
 	"DeltaValue":	DeltaValue,
+	"VarIdxMapValue":	VarIdxMapValue,
 	# "Template" types
 	"OffsetTo":	lambda C: partial(Table, tableClass=C),
 	"LOffsetTo":	lambda C: partial(LTable, tableClass=C),

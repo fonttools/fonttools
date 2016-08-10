@@ -893,28 +893,28 @@ otData = [
 
 	# Variation helpers
 
-	('VarIdxMapFormat1', [
-		('uint16', 'Format', None, None, 'Set to 1.'),
-		('uint16', 'VarIdxCount', None, None, ''),
-		('uint16', 'VarIdx', 'VarIdxCount', 0, ''),
-	]),
-	('VarIdxMapFormat2', [
-		('uint16', 'Format', None, None, 'Set to 2.'),
-		('uint16', 'VarIdxCount', None, None, ''),
-		('uint32', 'VarIdx', 'VarIdxCount', 0, ''),
+	('VarIdxMap', [
+		('uint16', 'EntryFormat', None, None, ''),
+		('uint16', 'MappingCount', None, None, ''),
+		('VarIdxMapValue', 'mapping', '', 0, 'Array of compressed data'),
 	]),
 
 	# Glyph advance variations
 
 	('HVAR', [
 		('Version', 'Version', None, None, 'Version of the HVAR table-initially = 0x00010000'),
-		('LOffset', 'VarIdxMap', None, None, ''),
 		('LOffset', 'VarStore', None, None, ''),
+		('LOffsetTo(VarIdxMap)', 'AdvWidthMap', None, None, ''),
+		('LOffsetTo(VarIdxMap)', 'LsbMap', None, None, ''),
+		('LOffsetTo(VarIdxMap)', 'RsbMap', None, None, ''),
 	]),
 	('VVAR', [
 		('Version', 'Version', None, None, 'Version of the VVAR table-initially = 0x00010000'),
-		('LOffset', 'VarIdxMap', None, None, ''),
 		('LOffset', 'VarStore', None, None, ''),
+		('LOffsetTo(VarIdxMap)', 'AdvHeightMap', None, None, ''),
+		('LOffsetTo(VarIdxMap)', 'TsbMap', None, None, ''),
+		('LOffsetTo(VarIdxMap)', 'BsbMap', None, None, ''),
+		('LOffsetTo(VarIdxMap)', 'VOrgMap', None, None, 'Vertical origin mapping.'),
 	]),
 
 
