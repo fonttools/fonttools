@@ -479,7 +479,7 @@ def _add_HVAR(font, model, master_ttfs):
 	# We only support the direct mapping right now.
 
 	supports = model.supports[1:]
-	varTupleList = builder.buildVarTupleList(supports)
+	varTupleList = builder.buildVarRegionList(supports)
 	varTupleIndexes = list(range(len(supports)))
 	n = len(supports)
 	items = []
