@@ -405,10 +405,10 @@ def _SetCoordinates(font, glyphName, coord):
 	# XXX Remove the round when https://github.com/behdad/fonttools/issues/593 is fixed
 	font["hmtx"].metrics[glyphName] = int(round(horizontalAdvanceWidth)), int(round(leftSideBearing))
 
-def _add_gvar(font, axes, master_ttfs, master_locs, base_idx):
+
+def _build_model(axes, master_locs, base_idx):
 
 	# Make copies for modification
-	master_ttfs = master_ttfs[:]
 	master_locs = [l.copy() for l in master_locs]
 
 	axis_tags = axes.keys()
@@ -429,6 +429,16 @@ def _add_gvar(font, axes, master_ttfs, master_locs, base_idx):
 	print("Normalized master positions:")
 	print(master_locs)
 
+	# Assume single-model for now.
+	model = VariationModel(master_locs)
+	model_base_idx = model.mapping[base_idx]
+	assert 0 == model_base_idx
+
+	return model
+
+
+def _add_gvar(font, model, master_ttfs):
+
 	print("Generating gvar")
 	assert "gvar" not in font
 	gvar = font["gvar"] = newTable('gvar')
@@ -436,19 +446,11 @@ def _add_gvar(font, axes, master_ttfs, master_locs, base_idx):
 	gvar.reserved = 0
 	gvar.variations = {}
 
-	# Assume single-model for now.
-	model = VariationModel(master_locs)
-	model_base_idx = model.mapping[base_idx]
-	assert 0 == model_base_idx
-
-	hAdvanceDeltas = {}
-
 	for glyph in font.getGlyphOrder():
 
 		allData = [_GetCoordinates(m, glyph) for m in master_ttfs]
 		allCoords = [d[0] for d in allData]
 		allControls = [d[1] for d in allData]
-		allHAdvance = [m["hmtx"].metrics[glyph][0] for m in master_ttfs]
 		control = allControls[0]
 		if (any(c != control for c in allControls)):
 			warnings.warn("glyph %s has incompatible masters; skipping" % glyph)
@@ -464,9 +466,15 @@ def _add_gvar(font, axes, master_ttfs, master_locs, base_idx):
 			var = GlyphVariation(support, delta)
 			gvar.variations[glyph].append(var)
 
-		hAdvanceDeltas[glyph] = tuple(model.getDeltas(allHAdvance)[1:])
+def _add_HVAR(font, model, master_ttfs):
 
-	# Build HVAR
+	print("Generating HVAR")
+
+	hAdvanceDeltas = {}
+	metricses = [m["hmtx"].metrics for m in master_ttfs]
+	for glyph in font.getGlyphOrder():
+		hAdvances = [metrics[glyph][0] for metrics in metricses]
+		hAdvanceDeltas[glyph] = tuple(model.getDeltas(hAdvances)[1:])
 
 	# We only support the direct mapping right now.
 
@@ -579,8 +587,11 @@ def main(args=None):
 
 	_add_fvar(gx, axes, instance_list)
 
-	print("Setting up glyph variations")
-	_add_gvar(gx, axes, master_fonts, master_locs, base_idx)
+	model = _build_model(axes, master_locs, base_idx)
+
+	print("Building variations tables")
+	_add_gvar(gx, model, master_fonts)
+	_add_HVAR(gx, model, master_fonts)
 
 	print("Saving GX font", outfile)
 	gx.save(outfile)
