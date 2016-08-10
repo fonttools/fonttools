@@ -18,8 +18,8 @@ def buildVarTuple(support):
 	self.VarAxisCount = len(self.VarAxis)
 	return self
 
-def buildVarTupleList(supports):
-	self = ot.VarTupleList()
+def buildVarRegionList(supports):
+	self = ot.VarRegionList()
 	self.VarTuple = []
 	for support in supports:
 		self.VarTuple.append(buildVarTuple(support))
@@ -43,7 +43,8 @@ def buildVarDeltas(varTupleIndexes, items):
 def buildVarStore(varTupleList, varDeltasList):
 	self = ot.VarStore()
 	self.Format = 1
-	self.VarTupleList = varTupleList
+	self.Reserved = 0
+	self.VarRegionList = varTupleList
 	self.VarDeltas = list(varDeltasList)
 	self.VarDeltasCount = len(self.VarDeltas)
 	return self

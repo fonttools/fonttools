@@ -856,7 +856,7 @@ otData = [
 		('struct', 'VarAxis', 'VarAxisCount', 0, ''),
 	]),
 
-	('VarTupleList', [
+	('VarRegionList', [
 		('uint16', 'VarTupleCount', None, None, ''),
 		('LOffset', 'VarTuple', 'VarTupleCount', 0, ''),
 	]),
@@ -886,7 +886,8 @@ otData = [
 
 	('VarStore', [
 		('uint16', 'Format', None, None, 'Set to 1.'),
-		('LOffset', 'VarTupleList', None, None, ''),
+		('uint16', 'Reserved', None, None, 'Set to 0.'),
+		('LOffset', 'VarRegionList', None, None, ''),
 		('uint16', 'VarDeltasCount', None, None, ''),
 		('LOffset', 'VarDeltas', 'VarDeltasCount', 0, ''),
 	]),
