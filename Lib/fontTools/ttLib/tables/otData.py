@@ -860,35 +860,20 @@ otData = [
 		('VarRegion', 'Region', 'RegionCount', 0, ''),
 	]),
 
-	('VarItemByteRecord', [
-		('int8', 'Deltas', 'VarRegionCount', 0, ''),
-	]),
-	('VarItemShortRecord', [
-		('int16', 'Deltas', 'VarRegionCount', 0, ''),
-	]),
-
-	('VarDeltasFormat1', [
-		('uint16', 'Format', None, None, 'Set to 1.'),
+	('VarData', [
 		('uint16', 'ItemCount', None, None, ''),
+		('uint16', 'NumShorts', None, None, ''),
 		('uint16', 'VarRegionCount', None, None, ''),
 		('uint16', 'VarRegionIndex', 'VarRegionCount', 0, ''),
-		('VarItemByteRecord', 'Item', 'ItemCount', 0, ''),
-	]),
-
-	('VarDeltasFormat2', [
-		('uint16', 'Format', None, None, 'Set to 2.'),
-		('uint16', 'ItemCount', None, None, ''),
-		('uint16', 'VarRegionCount', None, None, ''),
-		('uint16', 'VarRegionIndex', 'VarRegionCount', 0, ''),
-		('VarItemShortRecord', 'Item', 'ItemCount', 0, ''),
+		('VarDataValue', 'Item', 'ItemCount', 0, ''),
 	]),
 
 	('VarStore', [
 		('uint16', 'Format', None, None, 'Set to 1.'),
 		('uint16', 'Reserved', None, None, 'Set to 0.'),
 		('LOffset', 'VarRegionList', None, None, ''),
-		('uint16', 'VarDeltasCount', None, None, ''),
-		('LOffset', 'VarDeltas', 'VarDeltasCount', 0, ''),
+		('uint16', 'VarDataCount', None, None, ''),
+		('LOffset', 'VarData', 'VarDataCount', 0, ''),
 	]),
 
 	# Variation helpers
