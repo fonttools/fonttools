@@ -6,6 +6,7 @@ converter objects from otConverters.py.
 """
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
+from fontTools.misc.textTools import safeEval
 from .otBase import BaseTable, FormatSwitchingBaseTable
 import operator
 import logging
@@ -131,6 +132,59 @@ class Coverage(FormatSwitchingBaseTable):
 			glyphs = []
 			self.glyphs = glyphs
 		glyphs.append(attrs["value"])
+
+
+class VarIdxMap(BaseTable):
+
+	def postRead(self, rawTable, font):
+		assert (rawTable['EntryFormat'] & 0xFFC0) == 0
+		self.mapping = rawTable['mapping']
+
+	def preWrite(self, font):
+		mapping = getattr(self, "mapping", None)
+		if mapping is None:
+			mapping = self.mapping = []
+		rawTable = { 'mapping': mapping }
+		rawTable['MappingCount'] = len(mapping)
+
+		ored = 0
+		for idx in mapping:
+			ored |= idx
+
+		inner = ored & 0xFFFF
+		innerBits = 0
+		while inner:
+			innerBits += 1
+			inner >>= 1
+		innerBits = max(innerBits, 1)
+		assert innerBits <= 16
+
+		ored >>= (16 - innerBits)
+		if   ored <= 0x000000FF:
+			entrySize = 1
+		elif ored <= 0x0000FFFF:
+			entrySize = 2
+		elif ored <= 0x00FFFFFF:
+			entrySize = 3
+		else:
+			entrySize = 4
+
+		entryFormat = ((entrySize - 1) << 4) | (innerBits - 1)
+
+		rawTable['EntryFormat'] = entryFormat
+		return rawTable
+
+	def toXML2(self, xmlWriter, font):
+		for i, value in enumerate(getattr(self, "mapping", [])):
+			xmlWriter.simpletag("Map", index=i, value=hex(value))
+			xmlWriter.newline()
+
+	def fromXML(self, name, attrs, content, font):
+		mapping = getattr(self, "mapping", None)
+		if mapping is None:
+			mapping = []
+			self.mapping = mapping
+		mapping.append(safeEval(attrs["value"]))
 
 
 class SingleSubst(FormatSwitchingBaseTable):
