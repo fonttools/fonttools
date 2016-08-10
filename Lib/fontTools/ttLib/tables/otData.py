@@ -844,43 +844,42 @@ otData = [
 
 	# VariationStore
 
-	('VarAxis', [
-		('VarAxisID', 'VarAxisID', None, None, ''),
+	('VarRegionAxis', [
 		('F2Dot14', 'StartCoord', None, None, ''),
 		('F2Dot14', 'PeakCoord', None, None, ''),
 		('F2Dot14', 'EndCoord', None, None, ''),
 	]),
 
-	('VarTuple', [
-		('uint16', 'VarAxisCount', None, None, ''),
-		('struct', 'VarAxis', 'VarAxisCount', 0, ''),
+	('VarRegion', [
+		('struct', 'VarRegionAxis', 'RegionAxisCount', 0, ''),
 	]),
 
 	('VarRegionList', [
-		('uint16', 'VarTupleCount', None, None, ''),
-		('LOffset', 'VarTuple', 'VarTupleCount', 0, ''),
+		('uint16', 'RegionAxisCount', None, None, ''),
+		('uint16', 'RegionCount', None, None, ''),
+		('VarRegion', 'Region', 'RegionCount', 0, ''),
 	]),
 
 	('VarItemByteRecord', [
-		('int8', 'Deltas', 'VarTupleCount', 0, ''),
+		('int8', 'Deltas', 'VarRegionCount', 0, ''),
 	]),
 	('VarItemShortRecord', [
-		('int16', 'Deltas', 'VarTupleCount', 0, ''),
+		('int16', 'Deltas', 'VarRegionCount', 0, ''),
 	]),
 
 	('VarDeltasFormat1', [
 		('uint16', 'Format', None, None, 'Set to 1.'),
 		('uint16', 'ItemCount', None, None, ''),
-		('uint16', 'VarTupleCount', None, None, ''),
-		('uint16', 'VarTupleIndex', 'VarTupleCount', 0, ''),
+		('uint16', 'VarRegionCount', None, None, ''),
+		('uint16', 'VarRegionIndex', 'VarRegionCount', 0, ''),
 		('VarItemByteRecord', 'Item', 'ItemCount', 0, ''),
 	]),
 
 	('VarDeltasFormat2', [
 		('uint16', 'Format', None, None, 'Set to 2.'),
 		('uint16', 'ItemCount', None, None, ''),
-		('uint16', 'VarTupleCount', None, None, ''),
-		('uint16', 'VarTupleIndex', 'VarTupleCount', 0, ''),
+		('uint16', 'VarRegionCount', None, None, ''),
+		('uint16', 'VarRegionIndex', 'VarRegionCount', 0, ''),
 		('VarItemShortRecord', 'Item', 'ItemCount', 0, ''),
 	]),
 
