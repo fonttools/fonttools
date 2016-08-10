@@ -35,7 +35,6 @@ def buildVarData(varRegionIndices, items):
 		assert len(item) == regionCount
 		records.append(list(item))
 	self.ItemCount = len(self.Item)
-	self.NumShorts = self.VarRegionCount # XXX
 	return self
 
 def buildVarStore(varTupleList, varDataList):

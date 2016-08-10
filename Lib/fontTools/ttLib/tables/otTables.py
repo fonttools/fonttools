@@ -187,6 +187,22 @@ class VarIdxMap(BaseTable):
 		mapping.append(safeEval(attrs["value"]))
 
 
+class VarData(BaseTable):
+
+	def preWrite(self, font):
+		rawTable = self.__dict__.copy()
+
+		numShorts = 0
+		for item in self.Item:
+			for i in range(len(item) - 1, numShorts - 1, -1):
+				if not (-128 <= item[i] <= 127):
+					numShorts = i + 1
+					break
+
+		rawTable['NumShorts'] = numShorts
+		return rawTable
+
+
 class SingleSubst(FormatSwitchingBaseTable):
 
 	def postRead(self, rawTable, font):
