@@ -26,27 +26,25 @@ def buildVarRegionList(supports, axisTags):
 	self.VarRegionCount = len(self.VarRegion)
 	return self
 
-def buildVarDeltas(varTupleIndexes, items):
-	self = ot.VarDeltas()
-	self.Format = 1 if all(all(128 <= delta <= 127 for delta in item) for item in items) else 2
-	self.VarRegionIndex = list(varTupleIndexes)
-	tupleCount = self.VarRegionCount = len(self.VarRegionIndex)
+def buildVarData(varRegionIndices, items):
+	self = ot.VarData()
+	self.VarRegionIndex = list(varRegionIndices)
+	regionCount = self.VarRegionCount = len(self.VarRegionIndex)
 	records = self.Item = []
 	for item in items:
-		assert len(item) == tupleCount
-		record = ot.VarItemByteRecord() if self.Format == 1 else ot.VarItemShortRecord()
-		record.Deltas = list(item)
-		records.append(record)
+		assert len(item) == regionCount
+		records.append(list(item))
 	self.ItemCount = len(self.Item)
+	self.NumShorts = self.VarRegionCount # XXX
 	return self
 
-def buildVarStore(varTupleList, varDeltasList):
+def buildVarStore(varTupleList, varDataList):
 	self = ot.VarStore()
 	self.Format = 1
 	self.Reserved = 0
 	self.VarRegionList = varTupleList
-	self.VarDeltas = list(varDeltasList)
-	self.VarDeltasCount = len(self.VarDeltas)
+	self.VarData = list(varDataList)
+	self.VarDataCount = len(self.VarData)
 	return self
 
 # Variation helpers
