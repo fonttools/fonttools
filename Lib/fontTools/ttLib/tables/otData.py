@@ -862,7 +862,7 @@ otData = [
 
 	('VarData', [
 		('uint16', 'ItemCount', None, None, ''),
-		('uint16', 'NumShorts', None, None, ''),
+		('uint16', 'NumShorts', None, None, ''), # Automatically computed
 		('uint16', 'VarRegionCount', None, None, ''),
 		('uint16', 'VarRegionIndex', 'VarRegionCount', 0, ''),
 		('VarDataValue', 'Item', 'ItemCount', 0, ''),
@@ -879,8 +879,8 @@ otData = [
 	# Variation helpers
 
 	('VarIdxMap', [
-		('uint16', 'EntryFormat', None, None, ''),
-		('uint16', 'MappingCount', None, None, ''),
+		('uint16', 'EntryFormat', None, None, ''), # Automatically computed
+		('uint16', 'MappingCount', None, None, ''), # Automatically computed
 		('VarIdxMapValue', 'mapping', '', 0, 'Array of compressed data'),
 	]),
 

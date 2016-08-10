@@ -575,8 +575,6 @@ class VarDataValue(BaseConverter):
 
 		return values
 
-
-
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		regionCount = tableDict["VarRegionCount"]
 		shortCount = tableDict["NumShorts"]
