@@ -436,14 +436,15 @@ class OTTableWriter(object):
 		self.items.append(struct.pack(">H", value))
 
 	def writeShort(self, value):
+		assert -32768 <= value < 32768, value
 		self.items.append(struct.pack(">h", value))
 
 	def writeUInt8(self, value):
-		assert 0 <= value < 256
+		assert 0 <= value < 256, value
 		self.items.append(struct.pack(">B", value))
 
 	def writeInt8(self, value):
-		assert -128 <= value < 127
+		assert -128 <= value < 128, value
 		self.items.append(struct.pack(">b", value))
 
 	def writeUInt24(self, value):
