@@ -488,8 +488,8 @@ def _add_HVAR(font, model, master_ttfs, axes):
 		items.append(hAdvanceDeltas.get(glyphName, zeroes))
 	while items and items[-1] is zeroes:
 		del items[-1]
-	varDeltas = builder.buildVarDeltas(varTupleIndexes, items)
-	varStore = builder.buildVarStore(varTupleList, [varDeltas])
+	varData = builder.buildVarData(varTupleIndexes, items)
+	varStore = builder.buildVarStore(varTupleList, [varData])
 
 	assert "HVAR" not in font
 	HVAR = font["HVAR"] = newTable('HVAR')
@@ -591,7 +591,7 @@ def main(args=None):
 	model = _build_model(axes, master_locs, base_idx)
 
 	print("Building variations tables")
-	_add_gvar(gx, model, master_fonts)
+	#_add_gvar(gx, model, master_fonts)
 	_add_HVAR(gx, model, master_fonts, axes)
 
 	print("Saving GX font", outfile)

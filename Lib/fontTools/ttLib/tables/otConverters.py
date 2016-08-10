@@ -558,6 +558,44 @@ class VarIdxMapValue(BaseConverter):
 			write(raw)
 
 
+class VarDataValue(BaseConverter):
+
+	def read(self, reader, font, tableDict):
+		values = []
+
+		regionCount = tableDict["VarRegionCount"]
+		shortCount = tableDict["NumShorts"]
+
+		for i in range(min(regionCount, shortCount)):
+			values.append(reader.readShort())
+		for i in range(min(regionCount, shortCount), regionCount):
+			values.append(reader.readInt8())
+		for i in range(regionCount, shortCount):
+			reader.readInt8()
+
+		return values
+
+
+
+	def write(self, writer, font, tableDict, value, repeatIndex=None):
+		regionCount = tableDict["VarRegionCount"]
+		shortCount = tableDict["NumShorts"]
+
+		for i in range(min(regionCount, shortCount)):
+			writer.writeShort(value[i])
+		for i in range(min(regionCount, shortCount), regionCount):
+			writer.writeInt8(value[i])
+		for i in range(regionCount, shortCount):
+			writer.writeInt8(0)
+
+	def xmlWrite(self, xmlWriter, font, value, name, attrs):
+		xmlWriter.simpletag(name, attrs + [("value", value)])
+		xmlWriter.newline()
+
+	def xmlRead(self, attrs, content, font):
+		return safeEval(attrs["value"])
+
+
 converterMapping = {
 	# type		class
 	"int8":		Int8,
@@ -580,6 +618,7 @@ converterMapping = {
 	"VarAxisID":	VarAxisID,
 	"DeltaValue":	DeltaValue,
 	"VarIdxMapValue":	VarIdxMapValue,
+	"VarDataValue":	VarDataValue,
 	# "Template" types
 	"OffsetTo":	lambda C: partial(Table, tableClass=C),
 	"LOffsetTo":	lambda C: partial(LTable, tableClass=C),
