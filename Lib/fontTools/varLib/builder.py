@@ -4,33 +4,33 @@ from fontTools.ttLib.tables import otTables as ot
 
 # VariationStore
 
-def buildVarAxis(axisTag, axisSupport):
-	self = ot.VarAxis()
-	self.VarAxisID = axisTag
+def buildVarRegionAxis(axisSupport):
+	self = ot.VarRegionAxis()
 	self.StartCoord, self.PeakCoord, self.EndCoord = axisSupport
 	return self
 
-def buildVarTuple(support):
-	self = ot.VarTuple()
-	self.VarAxis = []
-	for axisTag in sorted(support.keys()): # TODO order by axisIdx instead of tag?!
-		self.VarAxis.append(buildVarAxis(axisTag, support[axisTag]))
-	self.VarAxisCount = len(self.VarAxis)
+def buildVarRegion(support, axisTags):
+	self = ot.VarRegion()
+	self.VarRegionAxis = []
+	for tag in axisTags:
+		self.VarRegionAxis.append(buildVarRegionAxis(support.get(tag, (0,0,0))))
+	self.VarRegionAxisCount = len(self.VarRegionAxis)
 	return self
 
-def buildVarRegionList(supports):
+def buildVarRegionList(supports, axisTags):
 	self = ot.VarRegionList()
-	self.VarTuple = []
+	self.AxisCount = len(axisTags)
+	self.VarRegion = []
 	for support in supports:
-		self.VarTuple.append(buildVarTuple(support))
-	self.VarTupleCount = len(self.VarTuple)
+		self.VarRegion.append(buildVarRegion(support, axisTags))
+	self.VarRegionCount = len(self.VarRegion)
 	return self
 
 def buildVarDeltas(varTupleIndexes, items):
 	self = ot.VarDeltas()
 	self.Format = 1 if all(all(128 <= delta <= 127 for delta in item) for item in items) else 2
-	self.VarTupleIndex = list(varTupleIndexes)
-	tupleCount = self.VarTupleCount = len(self.VarTupleIndex)
+	self.VarRegionIndex = list(varTupleIndexes)
+	tupleCount = self.VarRegionCount = len(self.VarRegionIndex)
 	records = self.Item = []
 	for item in items:
 		assert len(item) == tupleCount

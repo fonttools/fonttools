@@ -466,7 +466,7 @@ def _add_gvar(font, model, master_ttfs):
 			var = GlyphVariation(support, delta)
 			gvar.variations[glyph].append(var)
 
-def _add_HVAR(font, model, master_ttfs):
+def _add_HVAR(font, model, master_ttfs, axes):
 
 	print("Generating HVAR")
 
@@ -479,7 +479,7 @@ def _add_HVAR(font, model, master_ttfs):
 	# We only support the direct mapping right now.
 
 	supports = model.supports[1:]
-	varTupleList = builder.buildVarRegionList(supports)
+	varTupleList = builder.buildVarRegionList(supports, axes.keys())
 	varTupleIndexes = list(range(len(supports)))
 	n = len(supports)
 	items = []
@@ -592,7 +592,7 @@ def main(args=None):
 
 	print("Building variations tables")
 	_add_gvar(gx, model, master_fonts)
-	_add_HVAR(gx, model, master_fonts)
+	_add_HVAR(gx, model, master_fonts, axes)
 
 	print("Saving GX font", outfile)
 	gx.save(outfile)
