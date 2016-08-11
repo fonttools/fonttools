@@ -193,11 +193,14 @@ class VarData(BaseTable):
 		rawTable = self.__dict__.copy()
 
 		numShorts = 0
+		count = self.VarRegionCount
 		for item in self.Item:
-			for i in range(len(item) - 1, numShorts - 1, -1):
+			for i in range(count - 1, numShorts - 1, -1):
 				if not (-128 <= item[i] <= 127):
 					numShorts = i + 1
 					break
+			if numShorts == count:
+				break
 
 		rawTable['NumShorts'] = numShorts
 		return rawTable

@@ -488,6 +488,11 @@ def _add_HVAR(font, model, master_ttfs, axes):
 		items.append(hAdvanceDeltas.get(glyphName, zeroes))
 	while items and items[-1] is zeroes:
 		del items[-1]
+
+	# TODO Add indirect mapping to save on duplicates
+	#uniq = set(items)
+	#if (len(items) - len(uniq)) * len(varTupleIndexs)) > len(items) * 2:
+
 	varData = builder.buildVarData(varTupleIndexes, items)
 	varStore = builder.buildVarStore(varTupleList, [varData])
 
