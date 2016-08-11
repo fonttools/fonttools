@@ -40,29 +40,33 @@ class PointInsidePen(BasePen):
 	#   http://graphics.cs.ucdavis.edu/~okreylos/TAship/Spring2000/PointInPolygon.html
 	# I extended the principles outlined on that page to curves.
 
-	def __init__(self, glyphSet, testPoint, evenOdd=0):
+	def __init__(self, glyphSet, testPoint, evenOdd=False):
 		BasePen.__init__(self, glyphSet)
 		self.setTestPoint(testPoint, evenOdd)
 
-	def setTestPoint(self, testPoint, evenOdd=0):
+	def setTestPoint(self, testPoint, evenOdd=False):
 		"""Set the point to test. Call this _before_ the outline gets drawn."""
 		self.testPoint = testPoint
 		self.evenOdd = evenOdd
 		self.firstPoint = None
 		self.intersectionCount = 0
 
-	def getResult(self):
-		"""After the shape has been drawn, getResult() returns True if the test
-		point lies within the (black) shape, and False if it doesn't.
-		"""
+	def getWinding(self):
 		if self.firstPoint is not None:
 			# always make sure the sub paths are closed; the algorithm only works
 			# for closed paths.
 			self.closePath()
+		return self.intersectionCount
+
+	def getResult(self):
+		"""After the shape has been drawn, getResult() returns True if the test
+		point lies within the (black) shape, and False if it doesn't.
+		"""
+		winding = self.getWinding()
 		if self.evenOdd:
-			result = self.intersectionCount % 2
-		else:
-			result = self.intersectionCount
+			result = winding % 2
+		else: # non-zero
+			result = self.intersectionCount != 0
 		return not not result
 
 	def _addIntersection(self, goingUp):

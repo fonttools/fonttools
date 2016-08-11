@@ -95,12 +95,12 @@ class PointInsidePenTest(unittest.TestCase):
 
         piPen = PointInsidePen(None, (750, 295)) # this point is outside
         draw_contour(piPen)
-        self.assertEqual(piPen.intersectionCount, 0)
+        self.assertEqual(piPen.getWinding(), 0)
         self.assertEqual(piPen.getResult(), False)
 
         piPen = PointInsidePen(None, (835, 190)) # this point is inside
         draw_contour(piPen)
-        self.assertEqual(piPen.intersectionCount, 1)
+        self.assertEqual(piPen.getWinding(), 1)
         self.assertEqual(piPen.getResult(), True)
 
     def test_contour_square_closed(self):
@@ -113,7 +113,7 @@ class PointInsidePenTest(unittest.TestCase):
 
         piPen = PointInsidePen(None, (0, 0)) # this point is inside
         draw_contour(piPen)
-        self.assertEqual(piPen.intersectionCount, 1)
+        self.assertEqual(piPen.getWinding(), 1)
         self.assertEqual(piPen.getResult(), True)
 
     def test_contour_square_opened(self):
@@ -126,8 +126,8 @@ class PointInsidePenTest(unittest.TestCase):
 
         piPen = PointInsidePen(None, (0, 0)) # this point is inside
         draw_contour(piPen)
-        self.assertEqual(piPen.intersectionCount, 0) # value is different from square_closed
-        self.assertEqual(piPen.getResult(), True) # "is inside" still True
+        self.assertEqual(piPen.getWinding(), 1)
+        self.assertEqual(piPen.getResult(), True)
 
     def test_contour_circle(self):
         def draw_contour(pen):
@@ -155,19 +155,19 @@ class PointInsidePenTest(unittest.TestCase):
 
         piPen = PointInsidePen(None, (-200, 0)) # this point is outside
         draw_contour(piPen)
-        self.assertEqual(piPen.intersectionCount, 0)
+        self.assertEqual(piPen.getWinding(), 0)
 
         piPen = PointInsidePen(None, (-200, 100)) # this point is outside
         draw_contour(piPen)
-        self.assertEqual(piPen.intersectionCount, 0)
+        self.assertEqual(piPen.getWinding(), 0)
 
         piPen = PointInsidePen(None, (-200, -100)) # this point is outside
         draw_contour(piPen)
-        self.assertEqual(piPen.intersectionCount, 0)
+        self.assertEqual(piPen.getWinding(), 0)
 
         piPen = PointInsidePen(None, (-200, 50)) # this point is outside
         draw_contour(piPen)
-        self.assertEqual(piPen.intersectionCount, 0)
+        self.assertEqual(piPen.getWinding(), 0)
 
     def test_contour_integers(self):
         def draw_contour(pen):
@@ -180,7 +180,7 @@ class PointInsidePenTest(unittest.TestCase):
 
         piPen = PointInsidePen(None, (416, 783)) # this point is outside
         draw_contour(piPen)
-        self.assertEqual(piPen.intersectionCount, 0)
+        self.assertEqual(piPen.getWinding(), 0)
 
     def test_contour_decimals(self):
         def draw_contour(pen):
@@ -193,7 +193,7 @@ class PointInsidePenTest(unittest.TestCase):
 
         piPen = PointInsidePen(None, (416.625, 783.140625)) # this point is outside
         draw_contour(piPen)
-        self.assertEqual(piPen.intersectionCount, 0)
+        self.assertEqual(piPen.getWinding(), 0)
 
     def test_contour2_integers(self):
         def draw_contour(pen):
@@ -205,7 +205,7 @@ class PointInsidePenTest(unittest.TestCase):
 
         piPen = PointInsidePen(None, (21, 50)) # this point is outside
         draw_contour(piPen)
-        self.assertEqual(piPen.intersectionCount, 0)
+        self.assertEqual(piPen.getWinding(), 0)
 
     def test_contour2_decimals(self):
         def draw_contour(pen):
@@ -217,7 +217,7 @@ class PointInsidePenTest(unittest.TestCase):
 
         piPen = PointInsidePen(None, (21.25, 50.0)) # this point is outside
         draw_contour(piPen)
-        self.assertEqual(piPen.intersectionCount, 0)
+        self.assertEqual(piPen.getWinding(), 0)
 
 if __name__ == "__main__":
     unittest.main()
