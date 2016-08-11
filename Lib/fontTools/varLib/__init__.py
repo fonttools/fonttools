@@ -489,9 +489,18 @@ def _add_HVAR(font, model, master_ttfs, axes):
 	while items and items[-1] is zeroes:
 		del items[-1]
 
-	# TODO Add indirect mapping to save on duplicates
-	#uniq = set(items)
-	#if (len(items) - len(uniq)) * len(varTupleIndexs)) > len(items) * 2:
+	advanceMapping = None
+	# Add indirect mapping to save on duplicates
+	uniq = set(items)
+	# TODO Improve heuristic
+	if (len(items) - len(uniq)) * len(varTupleIndexes) > len(items):
+		newItems = sorted(uniq)
+		mapper = {v:i for i,v in enumerate(newItems)}
+		mapping = [mapper[item] for item in items]
+		advanceMapping = builder.buildVarIdxMap(mapping)
+		items = newItems
+		del mapper, mapping, newItems
+	del uniq
 
 	varData = builder.buildVarData(varTupleIndexes, items)
 	varStore = builder.buildVarStore(varTupleList, [varData])
@@ -501,8 +510,8 @@ def _add_HVAR(font, model, master_ttfs, axes):
 	hvar = HVAR.table = ot.HVAR()
 	hvar.Version = 1.0
 	hvar.VarStore = varStore
-
-	#hvar.AdvWidthMap = builder.buildVarIdxMap(mapping)
+	hvar.AdvWidthMap = advanceMapping
+	hvar.LsbMap = hvar.RsbMap = None
 
 
 def main(args=None):

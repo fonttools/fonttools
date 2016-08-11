@@ -159,7 +159,7 @@ class VarIdxMap(BaseTable):
 		innerBits = max(innerBits, 1)
 		assert innerBits <= 16
 
-		ored >>= (16 - innerBits)
+		ored = (ored >> (16-innerBits)) | (ored & ((1<<innerBits)-1))
 		if   ored <= 0x000000FF:
 			entrySize = 1
 		elif ored <= 0x0000FFFF:
@@ -176,7 +176,12 @@ class VarIdxMap(BaseTable):
 
 	def toXML2(self, xmlWriter, font):
 		for i, value in enumerate(getattr(self, "mapping", [])):
-			xmlWriter.simpletag("Map", index=i, value=hex(value))
+			attrs = (
+				('index', i),
+				('outer', value >> 16),
+				('inner', value & 0xFFFF),
+			)
+			xmlWriter.simpletag("Map", attrs)
 			xmlWriter.newline()
 
 	def fromXML(self, name, attrs, content, font):
@@ -184,7 +189,10 @@ class VarIdxMap(BaseTable):
 		if mapping is None:
 			mapping = []
 			self.mapping = mapping
-		mapping.append(safeEval(attrs["value"]))
+		outer = safeEval(attrs['outer'])
+		inner = safeEval(attrs['inner'])
+		assert inner <= 0xFFFF
+		mapping.append((outer << 16) | inner)
 
 
 class VarData(BaseTable):
@@ -193,7 +201,7 @@ class VarData(BaseTable):
 		rawTable = self.__dict__.copy()
 
 		numShorts = 0
-		count = self.VarRegionCount
+		count = len(self.VarRegionIndex)
 		for item in self.Item:
 			for i in range(count - 1, numShorts - 1, -1):
 				if not (-128 <= item[i] <= 127):
