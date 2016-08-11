@@ -187,4 +187,6 @@ class PointInsidePen(BasePen):
 			self.lineTo(self.firstPoint)
 		self.firstPoint = None
 
-	_endPath = _closePath
+	def _endPath(self):
+		"""Insideness is not defined for open contours."""
+		raise NotImplementedError
