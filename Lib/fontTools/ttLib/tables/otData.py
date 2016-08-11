@@ -870,7 +870,6 @@ otData = [
 
 	('VarStore', [
 		('uint16', 'Format', None, None, 'Set to 1.'),
-		('uint16', 'Reserved', None, None, 'Set to 0.'),
 		('LOffset', 'VarRegionList', None, None, ''),
 		('uint16', 'VarDataCount', None, None, ''),
 		('LOffset', 'VarData', 'VarDataCount', 0, ''),
