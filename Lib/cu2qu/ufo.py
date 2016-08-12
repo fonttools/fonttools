@@ -137,29 +137,67 @@ def _segments_to_quadratic(segments, max_err, stats):
     return [('qcurve', p) for p in new_points]
 
 
-def _fonts_to_quadratic(fonts, max_err, reverse_direction, stats):
-    """Do the actual conversion of fonts, after arguments have been set up."""
+def _glyphs_to_quadratic(glyphs, max_err, reverse_direction, stats):
+    """Do the actual conversion of a set of compatible glyphs, after arguments
+    have been set up.
+    Return True if the glyphs were modified, else return False.
+    """
 
-    for glyphs in zip(*fonts):
-        name = glyphs[0].name
-        assert all(g.name == name for g in glyphs), 'Incompatible fonts'
+    glyphs_modified = False
+    name = glyphs[0].name
+    assert all(g.name == name for g in glyphs), 'Incompatible fonts'
 
-        segments_by_location = zip(*[_get_segments(g) for g in glyphs])
-        if not any(segments_by_location):
-            continue
+    segments_by_location = zip(*[_get_segments(g) for g in glyphs])
+    if not any(segments_by_location):
+        return glyphs_modified
 
-        new_segments_by_location = []
-        for segments in segments_by_location:
-            tag = segments[0][0]
-            assert all(s[0] == tag for s in segments[1:]), (
-                'Incompatible glyphs "%s"' % name)
-            if tag == 'curve':
-                segments = _segments_to_quadratic(segments, max_err, stats)
-            new_segments_by_location.append(segments)
+    new_segments_by_location = []
+    for segments in segments_by_location:
+        tag = segments[0][0]
+        assert all(s[0] == tag for s in segments[1:]), (
+            'Incompatible glyphs "%s"' % name)
+        if tag == 'curve':
+            segments = _segments_to_quadratic(segments, max_err, stats)
+            glyphs_modified = True
+        new_segments_by_location.append(segments)
 
+    if glyphs_modified:
         new_segments_by_glyph = zip(*new_segments_by_location)
         for glyph, new_segments in zip(glyphs, new_segments_by_glyph):
             _set_segments(glyph, new_segments, reverse_direction)
+
+    return glyphs_modified
+
+
+def glyphs_to_quadratic(
+        glyphs, max_err=None, reverse_direction=False, stats=None):
+    """Convert the curves of a set of compatible of glyphs to quadratic.
+
+    All curves will be converted to quadratic at once, ensuring interpolation
+    compatibility. If this is not required, calling glyphs_to_quadratic with one
+    glyph at a time may yield slightly more optimized results.
+
+    Return True if glyphs were modified, else return False.
+    """
+    if stats is None:
+        stats = {}
+
+    if not max_err:
+        # assume 1000 is the default UPEM
+        max_err = DEFAULT_MAX_ERR * 1000
+
+    if isinstance(max_err, (list, tuple)):
+        max_errors = max_err
+    else:
+        max_errors = [max_err] * len(glyphs)
+
+    num_glyphs = len(glyphs)
+    assert len(max_errors) == num_glyphs
+
+    modified = _glyphs_to_quadratic(
+        glyphs, max_errors, reverse_direction, stats)
+
+    return modified
 
 
 def fonts_to_quadratic(
@@ -170,6 +208,8 @@ def fonts_to_quadratic(
     All curves will be converted to quadratic at once, ensuring interpolation
     compatibility. If this is not required, calling fonts_to_quadratic with one
     font at a time may yield slightly more optimized results.
+
+    Return True if fonts were modified, else return False.
     """
 
     if stats is None:
@@ -192,16 +232,29 @@ def fonts_to_quadratic(
     num_fonts = len(fonts)
     assert len(max_errors) == num_fonts
 
-    _fonts_to_quadratic(fonts, max_errors, reverse_direction, stats)
+    modified = False
+    for glyphs in zip(*fonts):
+        modified |= _glyphs_to_quadratic(
+            glyphs, max_errors, reverse_direction, stats)
 
-    if dump_stats:
+    if modified and dump_stats:
         spline_lengths = sorted(stats.keys())
         print('New spline lengths:\n%s\n' % (
             '\n'.join('%s: %d' % (l, stats[l]) for l in spline_lengths)))
-    return stats
+    return modified
+
+
+def glyph_to_quadratic(glyph, **kwargs):
+    """Convenience wrapper around glyphs_to_quadratic, for just one glyph.
+    Return True if the glyph was modified, else return False.
+    """
+
+    return glyphs_to_quadratic([glyph], **kwargs)
 
 
 def font_to_quadratic(font, **kwargs):
-    """Convenience wrapper around fonts_to_quadratic, for just one font."""
+    """Convenience wrapper around fonts_to_quadratic, for just one font.
+    Return True if the font was modified, else return False.
+    """
 
-    fonts_to_quadratic([font], **kwargs)
+    return fonts_to_quadratic([font], **kwargs)
