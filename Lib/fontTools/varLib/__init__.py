@@ -497,6 +497,8 @@ def _add_HVAR(font, model, master_ttfs, axes):
 		newItems = sorted(uniq)
 		mapper = {v:i for i,v in enumerate(newItems)}
 		mapping = [mapper[item] for item in items]
+		while len(mapping) > 1 and mapping[-1] == mapping[-2]:
+			del mapping[-1]
 		advanceMapping = builder.buildVarIdxMap(mapping)
 		items = newItems
 		del mapper, mapping, newItems
