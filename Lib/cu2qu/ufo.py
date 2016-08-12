@@ -144,8 +144,6 @@ def _glyphs_to_quadratic(glyphs, max_err, reverse_direction, stats):
     """
 
     glyphs_modified = False
-    name = glyphs[0].name
-    assert all(g.name == name for g in glyphs), 'Incompatible fonts'
 
     segments_by_location = zip(*[_get_segments(g) for g in glyphs])
     if not any(segments_by_location):
@@ -155,7 +153,8 @@ def _glyphs_to_quadratic(glyphs, max_err, reverse_direction, stats):
     for segments in segments_by_location:
         tag = segments[0][0]
         assert all(s[0] == tag for s in segments[1:]), (
-            'Incompatible glyphs "%s"' % name)
+            'Incompatible glyphs: ' + ", ".join(
+                set(repr(g.name) for g in glyphs)))
         if tag == 'curve':
             segments = _segments_to_quadratic(segments, max_err, stats)
             glyphs_modified = True
@@ -234,6 +233,8 @@ def fonts_to_quadratic(
 
     modified = False
     for glyphs in zip(*fonts):
+        name = glyphs[0].name
+        assert all(g.name == name for g in glyphs), 'Incompatible fonts'
         modified |= _glyphs_to_quadratic(
             glyphs, max_errors, reverse_direction, stats)
 
