@@ -1,2 +1,2 @@
 --find-links https://github.com/google/brotli/releases
-brotli==0.4.0
+brotli==0.5.2
