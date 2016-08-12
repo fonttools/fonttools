@@ -607,7 +607,7 @@ def main(args=None):
 	model = _build_model(axes, master_locs, base_idx)
 
 	print("Building variations tables")
-	#_add_gvar(gx, model, master_fonts)
+	_add_gvar(gx, model, master_fonts)
 	_add_HVAR(gx, model, master_fonts, axes)
 
 	print("Saving GX font", outfile)
