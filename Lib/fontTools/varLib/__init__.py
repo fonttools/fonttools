@@ -516,6 +516,45 @@ def _add_HVAR(font, model, master_ttfs, axes):
 	hvar.LsbMap = hvar.RsbMap = None
 
 
+def _all_equal(lst):
+	it = iter(lst)
+	v0 = next(it)
+	for v in it:
+		if v0 != v:
+			return False
+	return True
+
+def buildVarDevTable(store, master_values):
+	if _all_equal(master_values):
+		return None
+	deltas = master_values
+	return builder.buildVarDevTable(0xdeadbeef)
+
+def _merge_OTL(font, model, master_ttfs, axes):
+
+	print("Merging OpenType Layout tables")
+
+	GDEFs = [m['GDEF'].table for m in master_ttfs]
+	GPOSs = [m['GPOS'].table for m in master_ttfs]
+	GSUBs = [m['GSUB'].table for m in master_ttfs]
+
+	GPOS = font['GPOS'].table
+
+	getAnchor = lambda GPOS: GPOS.LookupList.Lookup[4].SubTable[0].MarkArray.MarkRecord[28].MarkAnchor
+	store = None
+	store_builder = None # store, model
+
+	anchors = [getAnchor(G) for G in GPOSs]
+	anchor = getAnchor(GPOS)
+
+	XDeviceTable = buildVarDevTable(store_builder, [a.XCoordinate for a in anchors])
+	YDeviceTable = buildVarDevTable(store_builder, [a.YCoordinate for a in anchors])
+	if XDeviceTable or YDeviceTable:
+		anchor.Format = 3
+		anchor.XDeviceTable = XDeviceTable
+		anchor.YDeviceTable = YDeviceTable
+
+
 def main(args=None):
 
 	import sys
@@ -609,6 +648,7 @@ def main(args=None):
 	print("Building variations tables")
 	_add_gvar(gx, model, master_fonts)
 	_add_HVAR(gx, model, master_fonts, axes)
+	#_merge_OTL(gx, model, master_fonts, axes)
 
 	print("Saving GX font", outfile)
 	gx.save(outfile)
