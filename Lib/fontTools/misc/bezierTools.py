@@ -309,6 +309,10 @@ def solveCubic(a, b, c, d):
     [-2.911392, 1.0, 1.0]
     >>> solveCubic(1.0, -4.5, 6.75, -3.375)
     [1.5, 1.5, 1.5]
+    >>> solveCubic(-12.0, 18.0, -9.0, 1.50023651123)
+    [0.5, 0.5, 0.5]
+    >>> solveCubic(9.0, 0.0, 0.0, -7.62939453125e-05)
+    [-0.0, -0.0, -0.0]
     """
     #
     # adapted from:
@@ -328,15 +332,18 @@ def solveCubic(a, b, c, d):
     Q = (a1*a1 - 3.0*a2)/9.0
     R = (2.0*a1*a1*a1 - 9.0*a1*a2 + 27.0*a3)/54.0
 
-    R = 0 if abs(R) < epsilon else R
-    Q = 0 if abs(Q) < epsilon else Q
+    R2 = R*R
+    Q3 = Q*Q*Q
+    R2 = 0 if R2 < epsilon else R2
+    Q3 = 0 if abs(Q3) < epsilon else Q3
 
-    R2_Q3 = R*R - Q*Q*Q
+    R2_Q3 = R2 - Q3
 
-    if R == 0. and Q == 0.:
+    if R2 == 0. and Q3 == 0.:
         x = round(-a1/3.0, epsilonDigits)
         return [x, x, x]
     elif R2_Q3 <= epsilon:
+        Q3_2 = 1/sqrt(Q*Q*Q)
         theta = acos(max(min(R/sqrt(Q*Q*Q), 1.0), -1.0))
         rQ2 = -2.0*sqrt(Q)
         a1_3 = a1/3.0
