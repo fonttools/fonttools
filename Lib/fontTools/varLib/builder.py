@@ -89,7 +89,7 @@ def buildVarIdxMap(varIdxes):
 
 def buildVarDevTable(varIdx):
 	self = ot.Device()
-	self.DeltaFormat = 0x1000
+	self.DeltaFormat = 0x8000
 	self.StartSize = varIdx >> 16
 	self.EndSize = varIdx & 0xFFFF
 	return self
