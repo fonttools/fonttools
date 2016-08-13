@@ -342,8 +342,9 @@ def solveCubic(a, b, c, d):
     if R2 == 0. and Q3 == 0.:
         x = round(-a1/3.0, epsilonDigits)
         return [x, x, x]
-    elif R2_Q3 <= epsilon:
-        theta = acos(max(min(R/sqrt(Q*Q*Q), 1.0), -1.0))
+    elif R2_Q3 <= epsilon * .5:
+        # The epsilon * .5 above ensures that Q3 is not zero.
+        theta = acos(max(min(R/sqrt(Q3), 1.0), -1.0))
         rQ2 = -2.0*sqrt(Q)
         a1_3 = a1/3.0
         x0 = rQ2*cos(theta/3.0) - a1_3
