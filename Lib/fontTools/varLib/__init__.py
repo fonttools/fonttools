@@ -530,13 +530,17 @@ def buildVarDevTable(store, master_values):
 	deltas = master_values
 	return builder.buildVarDevTable(0xdeadbeef)
 
-def _merge_OTL(font, model, master_ttfs, axes):
+def _merge_OTL(font, model, master_ttfs, axes, base_idx):
 
 	print("Merging OpenType Layout tables")
 
 	GDEFs = [m['GDEF'].table for m in master_ttfs]
 	GPOSs = [m['GPOS'].table for m in master_ttfs]
 	GSUBs = [m['GSUB'].table for m in master_ttfs]
+
+	# Reuse the base font's tables
+	for tag in 'GDEF', 'GPOS', 'GSUB':
+		font[tag] = master_ttfs[base_idx][tag]
 
 	GPOS = font['GPOS'].table
 
@@ -639,6 +643,9 @@ def main(args=None):
 		instance_list.append((style, loc))
 	# TODO append masters as named-instances as well; needs .designspace change.
 
+	# We can use the base font straight, but it's faster to load it again since
+	# then we won't be recompiling the existing ('glyf', 'hmtx', ...) tables.
+	#gx = master_fonts[base_idx]
 	gx = TTFont(master_ttfs[base_idx])
 
 	_add_fvar(gx, axes, instance_list)
@@ -648,7 +655,7 @@ def main(args=None):
 	print("Building variations tables")
 	_add_gvar(gx, model, master_fonts)
 	_add_HVAR(gx, model, master_fonts, axes)
-	#_merge_OTL(gx, model, master_fonts, axes)
+	#_merge_OTL(gx, model, master_fonts, axes, base_idx)
 
 	print("Saving GX font", outfile)
 	gx.save(outfile)
