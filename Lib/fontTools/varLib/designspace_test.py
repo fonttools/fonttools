@@ -1,6 +1,6 @@
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
-from fontTools.varLib import designspace_load
+from fontTools.varLib import designspace
 import os
 import unittest
 
@@ -8,16 +8,19 @@ import unittest
 class DesignspaceTest(unittest.TestCase):
     def test_load(self):
         self.assertEqual(
-            designspace_load(_getpath("VarLibTest.designspace")),
-            (
-                [
-                    ('VarLibTest-Light.ufo', {'weight': 0.0}, 'master_1'),
-                    ('VarLibTest-Bold.ufo', {'weight': 1.0}, 'master_2')
-                ],
-                [('instance/VarLibTest-Medium.ufo', {'weight': 0.5},
-                  'master_2', 'VarLibTest', 'Medium')],
-                0
-            )
+            designspace.load(_getpath("VarLibTest.designspace")),
+                ([{'filename': 'VarLibTest-Light.ufo',
+                   'groups': {'copy': True},
+                   'info': {'copy': True},
+                   'lib': {'copy': True},
+                   'location': {'weight': 0.0},
+                   'name': 'master_1'},
+                  {'filename': 'VarLibTest-Bold.ufo',
+                   'location': {'weight': 1.0},
+                   'name': 'master_2'}],
+                 [{'filename': 'VarLibTest-Bold.ufo',
+                   'location': {'weight': 1.0},
+                   'name': 'master_2'}])
         )
 
 
