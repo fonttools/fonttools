@@ -23,11 +23,9 @@ def main(args=None):
 
 	loc = {}
 	for arg in locargs:
-		tag,valstr = arg.split('=')
-		while len(tag) < 4:
-			tag += ' '
+		tag,val = arg.split('=')
 		assert len(tag) <= 4
-		loc[tag] = float(valstr)
+		loc[tag.ljust(4)] = float(val)
 	print("Location:", loc)
 
 	print("Loading GX font")
