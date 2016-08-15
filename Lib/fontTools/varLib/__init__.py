@@ -188,7 +188,8 @@ def _add_HVAR(font, model, master_ttfs, axes):
 	metricses = [m["hmtx"].metrics for m in master_ttfs]
 	for glyph in font.getGlyphOrder():
 		hAdvances = [metrics[glyph][0] for metrics in metricses]
-		hAdvanceDeltas[glyph] = tuple(model.getDeltas(hAdvances)[1:])
+		# TODO move round somewhere else?
+		hAdvanceDeltas[glyph] = tuple(round(d) for d in model.getDeltas(hAdvances)[1:])
 
 	# We only support the direct mapping right now.
 
