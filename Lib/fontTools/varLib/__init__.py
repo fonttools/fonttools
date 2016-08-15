@@ -3,7 +3,7 @@ Module for dealing with 'gvar'-style font variations, also known as run-time
 interpolation.
 
 The ideas here are very similar to MutatorMath.  There is even code to read
-MutatorMath .designspace files.
+MutatorMath .designspace files in the varLib.designspace module.
 
 For now, if you run this file on a designspace file, it tries to find
 ttf-interpolatable files for the masters and build a GX variation font from
@@ -26,12 +26,8 @@ from fontTools.ttLib.tables._f_v_a_r import Axis, NamedInstance
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
 from fontTools.ttLib.tables._g_v_a_r import GlyphVariation
 from fontTools.ttLib.tables import otTables as ot
-from fontTools.varLib import builder
+from fontTools.varLib import designspace, builder
 import warnings
-try:
-	import xml.etree.cElementTree as ET
-except ImportError:
-	import xml.etree.ElementTree as ET
 import os.path
 
 
@@ -253,51 +249,6 @@ class VariationModel(object):
 	def interpolateFromMasters(self, loc, masterValues):
 		deltas = self.getDeltas(masterValues)
 		return self.interpolateFromDeltas(loc, deltas)
-
-#
-# .designspace routines
-#
-
-def _xmlParseLocation(et):
-	loc = {}
-	for dim in et.find('location'):
-		assert dim.tag == 'dimension'
-		name = dim.attrib['name']
-		value = float(dim.attrib['xvalue'])
-		assert name not in loc
-		loc[name] = value
-	return loc
-
-def _designspace_load(et):
-	base_idx = None
-	masters = []
-	ds = et.getroot()
-	for master in ds.find('sources'):
-		name = master.attrib['name']
-		filename = master.attrib['filename']
-		isBase = master.find('info')
-		if isBase is not None:
-			assert base_idx is None
-			base_idx = len(masters)
-		loc = _xmlParseLocation(master)
-		masters.append((filename, loc, name))
-
-	instances = []
-	for instance in ds.find('instances'):
-		name = master.attrib['name']
-		family = instance.attrib['familyname']
-		style = instance.attrib['stylename']
-		filename = instance.attrib['filename']
-		loc = _xmlParseLocation(instance)
-		instances.append((filename, loc, name, family, style))
-
-	return masters, instances, base_idx
-
-def designspace_load(filename):
-	return _designspace_load(ET.parse(filename))
-
-def designspace_loads(string):
-	return _designspace_load(ET.fromstring(string))
 
 
 #
@@ -573,7 +524,12 @@ def main(args=None):
 	axisMap = None # dict mapping axis id to (axis tag, axis name)
 	outfile = os.path.splitext(designspace_filename)[0] + '-GX.ttf'
 
-	masters, instances, base_idx = designspace_load(designspace_filename)
+	masters, instances = designspace.load(designspace_filename)
+	base_idx = None
+	for i,m in enumerate(masters):
+		if 'info' in m and m['info']['copy']:
+			assert base_idx is None
+			base_idx = i
 	assert base_idx is not None, "Cannot find 'base' master; Add <info> element to one of the masters in the .designspace document."
 
 	from pprint import pprint
@@ -586,7 +542,7 @@ def main(args=None):
 	print("Building GX")
 	print("Loading TTF masters")
 	basedir = os.path.dirname(designspace_filename)
-	master_ttfs = [finder(os.path.join(basedir, m[0])) for m in masters]
+	master_ttfs = [finder(os.path.join(basedir, m['filename'])) for m in masters]
 	master_fonts = [TTFont(ttf_path) for ttf_path in master_ttfs]
 
 	standard_axis_map = {
@@ -608,7 +564,7 @@ def main(args=None):
 	master_locs = []
 	instance_locs = []
 	out = []
-	for loc in [m[1] for m in masters+instances]:
+	for loc in [m['location'] for m in masters+instances]:
 		# Apply modifications for default axes; and apply tags
 		l = {}
 		for axis,value in loc.items():
@@ -642,7 +598,7 @@ def main(args=None):
 	# Set up named instances
 	instance_list = []
 	for loc,instance in zip(instance_locs,instances):
-		style = instance[4]
+		style = instance['stylename']
 		instance_list.append((style, loc))
 	# TODO append masters as named-instances as well; needs .designspace change.
 
