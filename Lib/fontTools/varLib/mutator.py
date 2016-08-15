@@ -7,7 +7,8 @@ from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
-from fontTools.varLib import VariationModel, supportScalar, _GetCoordinates, _SetCoordinates
+from fontTools.varLib import _GetCoordinates, _SetCoordinates
+from fontTools.varLib.models import VariationModel, supportScalar
 import os.path
 
 def main(args=None):
