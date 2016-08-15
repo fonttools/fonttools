@@ -1,6 +1,4 @@
 environment:
-  global:
-    WITH_COMPILER: "cmd /E:ON /V:ON /C .\\.appveyor\\with-compiler.cmd"
   matrix:
     - JOB: "2.7.11 32-bit"
       PYTHON_HOME: "C:\\Python27"
@@ -26,7 +24,6 @@ environment:
       PYTHON_HOME: "C:\\Python34-x64"
       TOXENV: "py34"
       TOXPYTHON: "C:\\Python34-x64\\python.exe"
-      DISTUTILS_USE_SDK: "1"
 
     - JOB: "3.5.1 64-bit"
       PYTHON_HOME: "C:\\Python35-x64"
@@ -56,13 +53,13 @@ install:
   - "python -m pip --version"
 
   # install the dependencies to run the tests
-  - "%WITH_COMPILER% python -m pip install -r dev-requirements.txt"
+  - "python -m pip install -r dev-requirements.txt"
  
 
 build: false
 
 test_script:
-  - "%WITH_COMPILER% tox"
+  - "tox"
 
 notifications:
   - provider: Email
