@@ -8,7 +8,7 @@ from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
 from fontTools.varLib import _GetCoordinates, _SetCoordinates
-from fontTools.varLib.models import VariationModel, supportScalar
+from fontTools.varLib.models import VariationModel, supportScalar, normalizeLocation
 import os.path
 
 def main(args=None):
@@ -34,19 +34,9 @@ def main(args=None):
 	varfont = TTFont(varfilename)
 
 	fvar = varfont['fvar']
-	for axis in fvar.axes:
-		lower, default, upper = axis.minValue, axis.defaultValue, axis.maxValue
-		v = loc.get(axis.axisTag, default)
-		if v < lower: v = lower
-		if v > upper: v = upper
-		if v == default:
-			v = 0
-		elif v < default:
-			v = (v - default) / (default - lower)
-		else:
-			v = (v - default) / (upper - default)
-		loc[axis.axisTag] = v
-	# TODO Round to F2Dot14
+	axes = {a.axisTag:(a.minValue,a.defaultValue,a.maxValue) for a in fvar.axes}
+	# TODO Round to F2Dot14?
+	loc = normalizeLocation(loc, axes)
 	# Location is normalized now
 	print("Normalized location:", loc)
 
