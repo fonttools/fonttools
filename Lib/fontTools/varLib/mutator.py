@@ -13,8 +13,8 @@ import os.path
 
 def main(args=None):
 
-	import sys
 	if args is None:
+		import sys
 		args = sys.argv[1:]
 
 	varfilename = args[0]

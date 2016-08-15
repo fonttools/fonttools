@@ -136,21 +136,6 @@ def _SetCoordinates(font, glyphName, coord):
 	font["hmtx"].metrics[glyphName] = int(round(horizontalAdvanceWidth)), int(round(leftSideBearing))
 
 
-def _build_model(axes, master_locs, base_idx):
-
-	master_locs = [models.normalizeLocation(m, axes) for m in master_locs]
-
-	print("Normalized master positions:")
-	print(master_locs)
-
-	# Assume single-model for now.
-	model = models.VariationModel(master_locs)
-	model_base_idx = model.mapping[base_idx]
-	assert 0 == model_base_idx
-
-	return model
-
-
 def _add_gvar(font, model, master_ttfs):
 
 	print("Generating gvar")
@@ -279,8 +264,8 @@ def _merge_OTL(font, model, master_ttfs, axes, base_idx):
 
 def main(args=None):
 
-	import sys
 	if args is None:
+		import sys
 		args = sys.argv[1:]
 
 	(designspace_filename,) = args
@@ -372,7 +357,14 @@ def main(args=None):
 
 	_add_fvar(gx, axes, axis_names, instance_list)
 
-	model = _build_model(axes, master_locs, base_idx)
+	# Normalize master locations
+	master_locs = [models.normalizeLocation(m, axes) for m in master_locs]
+	print("Normalized master positions:")
+	print(master_locs)
+
+	# Assume single-model for now.
+	model = models.VariationModel(master_locs)
+	assert 0 == model.mapping[base_idx]
 
 	print("Building variations tables")
 	_add_gvar(gx, model, master_fonts)
