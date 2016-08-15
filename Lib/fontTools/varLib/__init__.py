@@ -52,7 +52,7 @@ def _add_fvar(font, axes, axis_names, instances):
 
 	for tag in sorted(axes.keys()):
 		axis = Axis()
-		axis.axisTag = tag
+		axis.axisTag = Tag(tag)
 		axis.minValue, axis.defaultValue, axis.maxValue = axes[tag]
 		axis.nameID = _AddName(font, axis_names[tag]).nameID
 		fvar.axes.append(axis)

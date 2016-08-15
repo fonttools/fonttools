@@ -139,7 +139,7 @@ class Axis(object):
         for tag, _, value in filter(lambda t: type(t) is tuple, content):
             value = ''.join(value)
             if tag == "AxisTag":
-                self.axisTag = value
+                self.axisTag = Tag(value)
             elif tag in ["MinValue", "DefaultValue", "MaxValue", "NameID"]:
                 setattr(self, tag[0].lower() + tag[1:], safeEval(value))
 
