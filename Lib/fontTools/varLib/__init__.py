@@ -545,8 +545,8 @@ def _merge_OTL(font, model, master_ttfs, axes, base_idx):
 	GPOS = font['GPOS'].table
 
 	getAnchor = lambda GPOS: GPOS.LookupList.Lookup[4].SubTable[0].MarkArray.MarkRecord[28].MarkAnchor
-	store = None
-	store_builder = None # store, model
+	store_builder = builder.OnlineVarStoreBuilder(axes.keys())
+	store_builder.setModel(model)
 
 	anchors = [getAnchor(G) for G in GPOSs]
 	anchor = getAnchor(GPOS)
@@ -557,6 +557,9 @@ def _merge_OTL(font, model, master_ttfs, axes, base_idx):
 		anchor.Format = 3
 		anchor.XDeviceTable = XDeviceTable
 		anchor.YDeviceTable = YDeviceTable
+
+	store = store_builder.finish()
+	# TODO insert in GDEF
 
 
 def main(args=None):

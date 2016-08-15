@@ -71,18 +71,40 @@ def buildVarData(varRegionIndices, items, optimize=True):
 	return self
 
 
-def buildVarStore(varTupleList, varDataList):
+def buildVarStore(varRegionList, varDataList):
 	self = ot.VarStore()
 	self.Format = 1
 	self.Reserved = 0
-	self.VarRegionList = varTupleList
+	self.VarRegionList = varRegionList
 	self.VarData = list(varDataList)
 	self.VarDataCount = len(self.VarData)
 	return self
 
+
+class OnlineVarStoreBuilder(object):
+
+	def __init__(self, axisTags):
+		self._regions = buildVarRegionList([], axisTags)
+		self._store = buildVarStore(self._regions, [])
+
+	def setModel(self, model):
+		self._model = model
+		# Store model's regions
+
+	def finish(self, optimize=True):
+		self._regions.VarRegionCount = len(self._regions.VarRegion)
+		self._store.VarDataCount = len(self._store.VarData)
+		for data in self._store.VarData:
+			data.ItemCount = len(data.Item)
+			if optimize:
+				optimizeVarData(data)
+		return self._store
+
+
 # Variation helpers
 
 def buildVarIdxMap(varIdxes):
+	# TODO Change VarIdxMap mapping to hold separate outer,inner indices
 	self = ot.VarIdxMap()
 	self.mapping = list(varIdxes)
 	return self
