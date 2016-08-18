@@ -46,21 +46,21 @@ def _AddName(font, name):
 	return namerec
 
 # Move to fvar table proper?
-def _add_fvar(font, axes, axis_names, instances):
+def _add_fvar(font, axes, instances, axis_map):
 	assert "fvar" not in font
 	font['fvar'] = fvar = newTable('fvar')
 
-	for tag in sorted(axes.keys()):
+	for iden in sorted(axes.keys()):
 		axis = Axis()
-		axis.axisTag = Tag(tag)
-		axis.minValue, axis.defaultValue, axis.maxValue = axes[tag]
-		axis.nameID = _AddName(font, axis_names[tag]).nameID
+		axis.axisTag = Tag(axis_map[iden][0])
+		axis.minValue, axis.defaultValue, axis.maxValue = axes[iden]
+		axis.nameID = _AddName(font, axis_map[iden][1]).nameID
 		fvar.axes.append(axis)
 
 	for name, coordinates in instances:
 		inst = NamedInstance()
 		inst.nameID = _AddName(font, name).nameID
-		inst.coordinates = coordinates
+		inst.coordinates = {axis_map[k][0]:v for k,v in coordinates.items()}
 		fvar.instances.append(inst)
 
 # TODO Move to glyf or gvar table proper
@@ -309,19 +309,8 @@ def main(args=None):
 
 	# TODO: For weight & width, use OS/2 values and setup 'avar' mapping.
 
-	# Set up master locations
-	master_locs = []
-	instance_locs = []
-	out = []
-	for loc in [m['location'] for m in masters+instances]:
-		# Apply modifications for default axes; and apply tags
-		l = {}
-		for axis,value in loc.items():
-			tag,name = axis_map[axis]
-			l[tag] = value
-		out.append(l)
-	master_locs = out[:len(masters)]
-	instance_locs = out[len(masters):]
+	master_locs = [o['location'] for o in masters]
+	instance_locs = [o['location'] for o in instances]
 
 	axis_tags = set(master_locs[0].keys())
 	assert all(axis_tags == set(m.keys()) for m in master_locs)
@@ -331,10 +320,6 @@ def main(args=None):
 
 	# Set up axes
 	axes = {}
-	axis_names = {}
-	for tag,name in axis_map.values():
-		if tag not in axis_tags: continue
-		axis_names[tag] = name
 	for tag in axis_tags:
 		default = master_locs[base_idx][tag]
 		lower = min(m[tag] for m in master_locs)
@@ -355,7 +340,7 @@ def main(args=None):
 	#gx = master_fonts[base_idx]
 	gx = TTFont(master_ttfs[base_idx])
 
-	_add_fvar(gx, axes, axis_names, instance_list)
+	_add_fvar(gx, axes, instance_list, axis_map)
 
 	# Normalize master locations
 	master_locs = [models.normalizeLocation(m, axes) for m in master_locs]
