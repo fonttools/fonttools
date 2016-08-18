@@ -12,9 +12,9 @@ def normalizeLocation(location, axes):
 		if v == default:
 			v = 0
 		elif v < default:
-			v = (v - default) / (default - lower)
+			v = (max(v, lower) - default) / (default - lower)
 		else:
-			v = (v - default) / (upper - default)
+			v = (min(v, upper) - default) / (upper - default)
 		out[tag] = v
 	return out
 
