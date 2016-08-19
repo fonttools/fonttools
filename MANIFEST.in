@@ -1,4 +1,14 @@
+include README.md
 include LICENSE
-include MANIFEST.in
+include NEWS
+include Snippets/*.py
+include Snippets/README.md
 include MetaTools/*.py
 include Lib/fontTools/ttLib/tables/table_API_readme.txt
+
+include *requirements.txt
+include tox.ini
+
+recursive-include Lib/fontTools *testdata/*.ttx *testdata/*.otx *testdata/*.fea
+recursive-include Lib/fontTools *testdata/*.lwfn *testdata/*.pfa *testdata/*.pfb
+recursive-include Lib/fontTools *testdata/*.xml *testdata/*.designspace

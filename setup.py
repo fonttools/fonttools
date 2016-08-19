@@ -53,19 +53,7 @@ setup(
 	packages=find_packages("Lib"),
 	py_modules=['sstruct', 'xmlWriter'],
 	extra_path='FontTools',
-	package_data={
-		'': [
-			# include files used by the test suite
-			'testdata/*.ttx',
-			'testdata/*.otx',
-			'testdata/*.fea',
-			'testdata/*.lwfn',
-			'testdata/*.pfa',
-			'testdata/*.pfb',
-			'testdata/*.xml',
-			'testdata/*.designspace',
-		]
-	},
+	include_package_data=True,
 	entry_points={
 		'console_scripts': [
 			"ttx = fontTools.ttx:main",
