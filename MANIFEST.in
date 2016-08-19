@@ -1,6 +1,5 @@
 include LICENSE
 include MANIFEST.in
 include Doc/ttx.1
-include Doc/ChangeLog
 include MetaTools/*.py
 include Lib/fontTools/ttLib/tables/table_API_readme.txt
