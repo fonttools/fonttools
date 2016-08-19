@@ -53,7 +53,6 @@ setup(
 	packages=find_packages("Lib"),
 	py_modules=['sstruct', 'xmlWriter'],
 	extra_path='FontTools',
-	data_files=[('share/man/man1', ["Doc/ttx.1"])],
 	entry_points={
 		'console_scripts': [
 			"ttx = fontTools.ttx:main",
