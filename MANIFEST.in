@@ -3,6 +3,7 @@ include LICENSE
 include NEWS
 include Snippets/*.py
 include Snippets/README.md
+include Doc/ttx.1
 include MetaTools/*.py
 include Lib/fontTools/ttLib/tables/table_API_readme.txt
 
