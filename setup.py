@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 
 from __future__ import print_function
+import sys
 from setuptools import setup, find_packages
 
 # Force distutils to use py_compile.compile() function with 'doraise' argument
@@ -54,7 +55,9 @@ setup(
 	py_modules=['sstruct', 'xmlWriter'],
 	extra_path='FontTools',
 	include_package_data=True,
-	data_files=[('share/man/man1', ["Doc/ttx.1"])],
+	data_files=[
+		('share/man/man1', ["Doc/ttx.1"])
+	] if sys.platform.startswith('linux') else [],
 	entry_points={
 		'console_scripts': [
 			"ttx = fontTools.ttx:main",
