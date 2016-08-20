@@ -8,6 +8,7 @@ include Lib/fontTools/ttLib/tables/table_API_readme.txt
 
 include *requirements.txt
 include tox.ini
+include run-tests.sh
 
 recursive-include Lib/fontTools testdata/*.ttx testdata/*.otx testdata/*.fea
 recursive-include Lib/fontTools testdata/*.lwfn testdata/*.pfa testdata/*.pfb
