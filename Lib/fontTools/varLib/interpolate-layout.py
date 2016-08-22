@@ -5,6 +5,7 @@ from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables import otTables as ot
+from fontTools.ttLib.tables.DefaultTable import DefaultTable
 from fontTools.varLib import designspace, models, builder
 import os.path
 
@@ -17,42 +18,65 @@ def _all_equal(lst):
 			return False
 	return True
 
-def buildVarDevTable(store, master_values):
-	if _all_equal(master_values):
+def _add_method(*clazzes, **kwargs):
+	"""Returns a decorator function that adds a new method to one or
+	more classes."""
+	allowDefault = kwargs.get('allowDefaultTable', False)
+	def wrapper(method):
+		done = []
+		for clazz in clazzes:
+			if clazz in done: continue # Support multiple names of a clazz
+			done.append(clazz)
+			assert allowDefault or clazz != DefaultTable, 'Oops, table class not found.'
+			assert method.__name__ not in clazz.__dict__, \
+				"Oops, class '%s' has method '%s'." % (clazz.__name__, method.__name__)
+			setattr(clazz, method.__name__, method)
 		return None
-	deltas = master_values
-	return builder.buildVarDevTable(0xdeadbeef)
+	return wrapper
 
-def _merge_OTL(font, model, master_ttfs, axes, base_idx):
+def mergeObjects(self, lst, merger):
+	keys = vars(self).keys()
+	assert all(vars(table).keys() == keys for table in lst)
+	for key in keys:
+		value = getattr(self, key)
+		values = [getattr(table, key) for table in lst]
+		mergeThings(value, values, merger)
+
+def mergeLists(self, lst, merger):
+	count = len(self)
+	assert all(count == len(v) for v in lst), (count, [len(v) for v in lst])
+	for value,values in zip(self, zip(*lst)):
+		mergeThings(value, values, merger)
+
+def mergeThings(self, lst, merger):
+	clazz = type(self)
+	assert all(type(item) == clazz for item in lst), lst
+	mergerFunc = getattr(type(self), 'merge', None)
+	if mergerFunc is None:
+		if hasattr(self, '__dict__'):
+			mergerFunc = mergeObjects
+		elif isinstance(self, list):
+			mergerFunc = mergeLists
+		else:
+			assert all(self == v for v in lst), lst
+			return
+	mergerFunc(self, lst, merger)
+
+@_add_method(ot.Anchor)
+def merge(self, lst, merger):
+	XCoords = [a.XCoordinate for a in lst]
+	YCoords = [a.YCoordinate for a in lst]
+	model = merger.model
+	location = merger.location
+	self.XCoordinate = round(model.interpolateFromMasters(location, XCoords))
+	self.YCoordinate = round(model.interpolateFromMasters(location, YCoords))
+
+def _merge_OTL(font, merger, master_ttfs, axes, base_idx):
 
 	print("Merging OpenType Layout tables")
-
-	GDEFs = [m['GDEF'].table for m in master_ttfs]
-	GPOSs = [m['GPOS'].table for m in master_ttfs]
-	GSUBs = [m['GSUB'].table for m in master_ttfs]
-
-	# Reuse the base font's tables
-	for tag in 'GDEF', 'GPOS', 'GSUB':
-		font[tag] = master_ttfs[base_idx][tag]
-
-	GPOS = font['GPOS'].table
-
-	getAnchor = lambda GPOS: GPOS.LookupList.Lookup[4].SubTable[0].MarkArray.MarkRecord[28].MarkAnchor
-	store_builder = builder.OnlineVarStoreBuilder(axes.keys())
-	store_builder.setModel(model)
-
-	anchors = [getAnchor(G) for G in GPOSs]
-	anchor = getAnchor(GPOS)
-
-	XDeviceTable = buildVarDevTable(store_builder, [a.XCoordinate for a in anchors])
-	YDeviceTable = buildVarDevTable(store_builder, [a.YCoordinate for a in anchors])
-	if XDeviceTable or YDeviceTable:
-		anchor.Format = 3
-		anchor.XDeviceTable = XDeviceTable
-		anchor.YDeviceTable = YDeviceTable
-
-	store = store_builder.finish()
-	# TODO insert in GDEF
+	for tag in ('GPOS',):# 'GDEF', 'GSUB'):
+		print('Merging', tag)
+		mergeThings(font[tag], [m[tag] for m in master_ttfs], merger)
 
 
 def main(args=None):
@@ -126,10 +150,14 @@ def main(args=None):
 	model = models.VariationModel(master_locs)
 	assert 0 == model.mapping[base_idx]
 
-	print("Building variations tables")
-	_merge_OTL(font, model, master_fonts, axes, base_idx)
+	merger = lambda : None
+	merger.model = model
+	merger.location = loc
 
-	print("Saving GX font", outfile)
+	print("Building variations tables")
+	_merge_OTL(font, merger, master_fonts, axes, base_idx)
+
+	print("Saving font", outfile)
 	font.save(outfile)
 
 
