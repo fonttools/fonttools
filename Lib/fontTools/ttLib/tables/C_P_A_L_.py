@@ -179,7 +179,6 @@ class table_C_P_A_L_(DefaultTable.DefaultTable):
 			    ttFont and "name" in ttFont):
 				name = ttFont["name"].getDebugName(paletteLabel)
 				if name is not None:
-					writer.newline()
 					writer.comment(name)
 					writer.newline()
 			assert(len(palette) == self.numPaletteEntries)
