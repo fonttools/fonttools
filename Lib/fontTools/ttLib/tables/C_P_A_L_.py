@@ -179,7 +179,6 @@ class table_C_P_A_L_(DefaultTable.DefaultTable):
 			    ttFont and "name" in ttFont):
 				name = ttFont["name"].getDebugName(paletteLabel)
 				if name is not None:
-					writer.newline()
 					writer.comment(name)
 					writer.newline()
 			assert(len(palette) == self.numPaletteEntries)
@@ -193,6 +192,10 @@ class table_C_P_A_L_(DefaultTable.DefaultTable):
 			for index, label in enumerate(self.paletteEntryLabels):
 				if label:
 					writer.simpletag("label", index=index, value=label)
+					if (self.version > 0 and label and ttFont and "name" in ttFont):
+						name = ttFont["name"].getDebugName(label)
+						if name is not None:
+							writer.comment(name)
 					writer.newline()
 			writer.endtag("paletteEntryLabels")
 			writer.newline()
