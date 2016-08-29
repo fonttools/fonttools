@@ -2902,7 +2902,7 @@ def main(args=None):
             text += g[7:]
             continue
         if g.startswith('--text-file='):
-            text += open(g[12:]).read().replace('\n', '')
+            text += open(g[12:], encoding='utf-8').read().replace('\n', '')
             continue
         if g.startswith('--unicodes='):
             if g[11:] == '*':
