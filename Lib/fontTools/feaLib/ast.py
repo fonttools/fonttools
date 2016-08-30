@@ -94,7 +94,14 @@ class FeatureBlock(Block):
     def build(self, builder):
         # TODO(sascha): Handle use_extension.
         builder.start_feature(self.location, self.name)
+        # language exclude_dflt statements modify builder.features_
+        # limit them to this block with temporary builder.features_
+        features = builder.features_
+        builder.features_ = {}
         Block.build(self, builder)
+        for key, value in builder.features_.items():
+            features.setdefault(key, []).extend(value)
+        builder.features_ = features
         builder.end_feature()
 
 
