@@ -1,0 +1,18 @@
+languagesystem DFLT dflt;
+languagesystem latn dflt;
+languagesystem latn TRK;
+
+feature liga {
+    lookup liga_fl {
+        sub f l by f_l;
+    } liga_fl;
+} liga;
+
+feature liga {
+    lookup liga_fi {
+        sub f i by f_i;
+    } liga_fi;
+
+    script latn;
+    language TRK exclude_dflt;
+} liga;
