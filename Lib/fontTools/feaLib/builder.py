@@ -619,6 +619,12 @@ class Builder(object):
                                   "language (was: \"%s\")" % language, location)
         self.cur_lookup_ = None
 
+        # OpenType Feature File Specification, section 4.b.ii
+        if (self.script_ in ("DFLT", None) and language != "dflt"):
+            raise FeatureLibError(
+                'The DFLT script cannot have any language systems '
+                'other then "dflt".' + repr(self.script_), location)
+
         key = (self.script_, language, self.cur_feature_name_)
         if not include_default:
             # don't include any lookups added by script DFLT in this feature

@@ -292,6 +292,13 @@ class BuilderTest(unittest.TestCase):
             "    substitute [a-z] by [A.sc-Z.sc];"
             "} test;")
 
+    def test_language_without_script(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            'The DFLT script cannot have any language systems '
+            'other then "dflt".',
+            self.build, "feature test { language RUS; } test;")
+
     def test_lookup_already_defined(self):
         self.assertRaisesRegex(
             FeatureLibError,
