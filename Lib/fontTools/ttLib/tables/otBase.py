@@ -466,8 +466,8 @@ class OTTableWriter(object):
 	def writeSubTable(self, subWriter):
 		self.items.append(subWriter)
 
-	def writeCountReference(self, table, name):
-		ref = CountReference(table, name)
+	def writeCountReference(self, table, name, isLongCount = False):
+		ref = CountReference(table, name, isLongCount)
 		self.items.append(ref)
 		return ref
 
@@ -514,9 +514,10 @@ class OTTableWriter(object):
 
 class CountReference(object):
 	"""A reference to a Count value, not a count of references."""
-	def __init__(self, table, name):
+	def __init__(self, table, name, isLongCount = False):
 		self.table = table
 		self.name = name
+		self.isLongCount = isLongCount
 	def setValue(self, value):
 		table = self.table
 		name = self.name
@@ -527,7 +528,11 @@ class CountReference(object):
 	def getCountData(self):
 		v = self.table[self.name]
 		if v is None: v = 0
-		return packUShort(v)
+		if self.isLongCount:
+			ret = packULong(v)
+		else:
+			ret = packUShort(v)
+		return ret
 
 
 def packUShort(value):
@@ -637,7 +642,8 @@ class BaseTable(object):
 					value = []
 				countValue = len(value) - conv.aux
 				if conv.repeat in table:
-					CountReference(table, conv.repeat).setValue(countValue)
+					isLongCount = conv.name in ['FeatureVariationRecord']
+					CountReference(table, conv.repeat, isLongCount).setValue(countValue)
 				else:
 					# conv.repeat is a propagated count
 					writer[conv.repeat].setValue(countValue)
@@ -657,7 +663,7 @@ class BaseTable(object):
 				# table. We will later store it here.
 				# We add a reference: by the time the data is assembled
 				# the Count value will be filled in.
-				ref = writer.writeCountReference(table, conv.name)
+				ref = writer.writeCountReference(table, conv.name, conv.isLongCount)
 				table[conv.name] = None
 				if conv.isPropagated:
 					writer[conv.name] = ref

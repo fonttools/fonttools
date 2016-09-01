@@ -285,6 +285,8 @@ def _designspace_load(et):
 	instances = []
 	for instance in ds.find('instances'):
 		name = master.attrib['name']
+		if 'postscriptfontname' in instance.attrib:
+			name = instance.attrib['postscriptfontname']
 		family = instance.attrib['familyname']
 		style = instance.attrib['stylename']
 		filename = instance.attrib['filename']
@@ -307,12 +309,21 @@ def designspace_loads(string):
 # TODO: Move to name table proper; also, is mac_roman ok for ASCII names?
 def _AddName(font, name):
 	"""(font, "Bold") --> NameRecord"""
+	
 	nameTable = font.get("name")
 	namerec = NameRecord()
-	namerec.nameID = 1 + max([n.nameID for n in nameTable.names] + [256])
+	namerec.nameID = localNameID = 1 + max([n.nameID for n in nameTable.names] + [256])
 	namerec.string = name.encode("mac_roman")
 	namerec.platformID, namerec.platEncID, namerec.langID = (1, 0, 0)
 	nameTable.names.append(namerec)
+
+	namerec = NameRecord()
+	namerec.nameID = localNameID
+	namerec.string = name.encode("utf_16_be")
+	namerec.platformID, namerec.platEncID, namerec.langID = (3, 1, 0x409)
+	nameTable.names.append(namerec)
+
+
 	return namerec
 
 # Move to fvar table proper?
@@ -324,12 +335,13 @@ def _add_fvar(font, axes, instances):
 		axis = Axis()
 		axis.axisTag = tag
 		name, axis.minValue, axis.defaultValue, axis.maxValue = axes[tag]
-		axis.nameID = _AddName(font, name).nameID
+		axis.axisNameID = _AddName(font, name).nameID
 		fvar.axes.append(axis)
 
-	for name, coordinates in instances:
+	for styleName, postscriptName, coordinates in instances:
 		inst = NamedInstance()
-		inst.nameID = _AddName(font, name).nameID
+		inst.subfamilyNameID = _AddName(font, styleName).nameID
+		inst.postscriptNameID = _AddName(font, postscriptName).nameID
 		inst.coordinates = coordinates
 		fvar.instances.append(inst)
 
@@ -513,18 +525,24 @@ def _add_HVAR(font, model, master_ttfs, axes):
 	hvar.AdvWidthMap = advanceMapping
 	hvar.LsbMap = hvar.RsbMap = None
 
+def _add_CFFVarStore(font, model, master_ttfs, axes):
+	print("Generating CFF VarStore")
 
-def main(args=None):
+	# We only support the direct mapping right now.
 
-	import sys
-	if args is None:
-		args = sys.argv[1:]
+	supports = model.supports[1:]
+	varTupleList = builder.buildVarRegionList(supports, axes.keys())
+	varTupleIndexes = list(range(len(supports)))
+	varDeltasCFFV = builder.buildVarData(varTupleIndexes, None)
+	varStoreCFFV = builder.buildVarStore(varTupleList, [varDeltasCFFV])
 
-	(designspace_filename,) = args
-	finder = lambda s: s.replace('master_ufo', 'master_ttf_interpolatable').replace('.ufo', '.ttf')
+	CFFV = font["CFFV"] = newTable('CFFV')
+	cffv = CFFV.table = ot.CFFV()
+	cffv.VarStore = varStoreCFFV
+
+def build(designspace_filename, finder, outfile):
 	axisMap = None # dict mapping axis id to (axis tag, axis name)
-	outfile = os.path.splitext(designspace_filename)[0] + '-GX.ttf'
-
+	cffvData = None
 	masters, instances, base_idx = designspace_load(designspace_filename)
 	assert base_idx is not None, "Cannot find 'base' master; Add <info> element to one of the masters in the .designspace document."
 
@@ -594,8 +612,9 @@ def main(args=None):
 	# Set up named instances
 	instance_list = []
 	for loc,instance in zip(instance_locs,instances):
+		psName = instance[2]
 		style = instance[4]
-		instance_list.append((style, loc))
+		instance_list.append((style, psName, loc))
 	# TODO append masters as named-instances as well; needs .designspace change.
 
 	gx = TTFont(master_ttfs[base_idx])
@@ -607,10 +626,22 @@ def main(args=None):
 	print("Building variations tables")
 	#_add_gvar(gx, model, master_fonts)
 	_add_HVAR(gx, model, master_fonts, axes)
-
-	print("Saving GX font", outfile)
+	if gx.has_key("CFF "):
+		cffvData = _add_CFFVarStore(gx, model, master_fonts, axes)
+	print("Saving variation font", outfile)
 	gx.save(outfile)
+	
+	return master_ttfs, model
+	
+def main(args=None):
 
+	import sys
+	if args is None:
+		args = sys.argv[1:]
+	(designspace_filename,) = args
+	finder = lambda s: s.replace('master_ufo', 'master_ttf_interpolatable').replace('.ufo', '.ttf')
+	outfile = os.path.splitext(designspace_filename)[0] + '-GX.ttf'
+	build(designspace_filename, finder, outfile)
 
 if __name__ == "__main__":
 	import sys

@@ -20,10 +20,10 @@ def buildVarRegion(support, axisTags):
 def buildVarRegionList(supports, axisTags):
 	self = ot.VarRegionList()
 	self.AxisCount = len(axisTags)
-	self.VarRegion = []
+	self.Region = []
 	for support in supports:
-		self.VarRegion.append(buildVarRegion(support, axisTags))
-	self.VarRegionCount = len(self.VarRegion)
+		self.Region.append(buildVarRegion(support, axisTags))
+	self.RegionCount = len(self.Region)
 	return self
 
 
@@ -54,7 +54,6 @@ def optimizeVarData(self):
 	self.VarRegionIndex = _reorderItem(self.VarRegionIndex, narrows)
 	for i in range(self.ItemCount):
 		items[i] = _reorderItem(items[i], narrows)
-
 	return self
 
 def buildVarData(varRegionIndices, items, optimize=True):
@@ -62,19 +61,19 @@ def buildVarData(varRegionIndices, items, optimize=True):
 	self.VarRegionIndex = list(varRegionIndices)
 	regionCount = self.VarRegionCount = len(self.VarRegionIndex)
 	records = self.Item = []
-	for item in items:
-		assert len(item) == regionCount
-		records.append(list(item))
-	self.ItemCount = len(self.Item)
-	if optimize:
-		optimizeVarData(self)
+	if items!= None:
+		for item in items:
+			assert len(item) == regionCount
+			records.append(list(item))
+		self.ItemCount = len(self.Item)
+		if optimize:
+			optimizeVarData(self)
 	return self
 
 
 def buildVarStore(varTupleList, varDataList):
 	self = ot.VarStore()
 	self.Format = 1
-	self.Reserved = 0
 	self.VarRegionList = varTupleList
 	self.VarData = list(varDataList)
 	self.VarDataCount = len(self.VarData)

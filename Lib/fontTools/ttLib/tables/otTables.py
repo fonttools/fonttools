@@ -203,16 +203,76 @@ class VarData(BaseTable):
 		numShorts = 0
 		count = len(self.VarRegionIndex)
 		for item in self.Item:
-			for i in range(count - 1, numShorts - 1, -1):
-				if not (-128 <= item[i] <= 127):
-					numShorts = i + 1
+			if item:
+				for i in range(count - 1, numShorts - 1, -1):
+					if not (-128 <= item[i] <= 127):
+						numShorts = i + 1
+						break
+				if numShorts == count:
 					break
-			if numShorts == count:
-				break
 
 		rawTable['NumShorts'] = numShorts
 		return rawTable
 
+class GSUB(BaseTable):
+
+	def decompile(self, reader, font):
+		self.readFormat(reader)
+		table = {}
+		self.__rawTable = table  # for debugging
+		converters = self.getConverters()
+		for conv in converters:
+			if (conv.name == 'FeatureVariations'):
+				if (table['Version'] == 1.0):
+					#converters.remove(conv)
+					#table[conv.name] = None
+					continue
+				else:
+					# Don't want to get the wrong FeatureParam Reader when processing
+					# Feature tables, if the last FeatureRecord was for 'size'.
+					reader['FeatureTag'] = None
+			table[conv.name] = conv.read(reader, font, table)
+			if conv.isPropagated:
+				reader[conv.name] = table[conv.name]
+
+		self.postRead(table, font)
+
+		del self.__rawTable  # succeeded, get rid of debugging info
+		
+	def compile(self, writer, font):
+		self.ensureDecompiled()
+		table = self.preWrite(font)
+		fvValue = table.get('FeatureVariations')
+		if fvValue:
+			table['Version'] = 1.1
+		else:
+			table['Version'] = 1.0
+		for conv in self.getConverters():
+			value = table.get(conv.name) # TODO Handle defaults instead of defaulting to None!
+			if (not value) and conv.name == 'FeatureVariations':
+				continue
+			try:
+				conv.write(writer, font, table, value)
+			except Exception as e:
+				name = value.__class__.__name__ if value is not None else conv.name
+				e.args = e.args + (name,)
+				raise
+			if conv.isPropagated:
+				writer[conv.name] = value
+
+
+class ConditionTable(BaseTable):
+
+	def toXML(self, xmlWriter, font, attrs=None, name=None):
+		# Avoid writing the Format as an attribute as well as a content element
+		tableName = name if name else self.__class__.__name__
+		if attrs is None:
+			attrs = []
+		xmlWriter.begintag(tableName, attrs)
+		xmlWriter.newline()
+		self.toXML2(xmlWriter, font)
+		xmlWriter.endtag(tableName)
+		xmlWriter.newline()
 
 class SingleSubst(FormatSwitchingBaseTable):
 
