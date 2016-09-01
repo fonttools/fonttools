@@ -6,6 +6,7 @@ otData = [
 	#
 	# common
 	#
+	# type, name, repeat, aux, descr 
 
 	('LookupOrder', []),
 
@@ -443,10 +444,45 @@ otData = [
 	#
 
 	('GSUB', [
-		('Version', 'Version', None, None, 'Version of the GSUB table-initially set to 0x00010000'),
+		('Version', 'Version', None, None, 'Version of the GSUB table-initially set to 0x00010000, or 0x00010000 if supporting FeatureVariations'),
 		('Offset', 'ScriptList', None, None, 'Offset to ScriptList table-from beginning of GSUB table'),
 		('Offset', 'FeatureList', None, None, 'Offset to FeatureList table-from beginning of GSUB table'),
 		('Offset', 'LookupList', None, None, 'Offset to LookupList table-from beginning of GSUB table'),
+		('LOffset', 'FeatureVariations', None, None, 'Offset to FeatureVariations table-from beginning of GSUB table'),
+	]),
+
+	('FeatureVariations', [
+		('uint16', 'Major', None, None, 'Version of the table-initially set to 0x00010000'),
+		('uint16', 'Minor', None, None, 'Version of the table-initially set to 0x00010000'),
+		('uint32', 'FeatureVariationRecordsCount', None, None, 'Number of records in the FeatureVariationRecords array'),
+		('struct', 'FeatureVariationRecord', 'FeatureVariationRecordsCount', 0, 'Array of FeatureVariationRecords'),
+	]),
+
+	('FeatureVariationRecord', [
+		('LOffset', 'ConditionSet', None, None, 'Offset to a ConditionSet table.'),
+		('LOffset', 'FeatureTableSubstitution', None, None, 'Offset to a FeatureTableSubstitution table, from beginning of the FeatureVariations table'),
+	]),
+
+	('ConditionSet', [
+		('uint16', 'ConditionCount', None, None, 'Number of condition tables in the ConditionTable array'),
+		('struct', 'ConditionTable', 'ConditionCount', 0, 'Array of condition tables.'),
+	]),
+
+	('ConditionTable', [
+		('uint16', 'Format', None, None, 'default format'),
+		('uint16', 'AxisIndex', None, None, 'Index for the variation axis within the fvar table, base 0.'),
+		('F2Dot14', 'FilterRangeMinValue', None, None, 'Minimum normalized axis value of the font variation instances that satisfy this condition.'),
+		('F2Dot14', 'FilterRangeMaxValue', None, None, 'Maximum value that satisfies this condition.'),
+	]),
+
+	('FeatureTableSubstitution', [
+		('uint16', 'SubstitutionCount', None, None, 'Number of records in the FeatureVariationRecords array'),
+		('struct', 'FeatureTableSubstitutionRecord', 'SubstitutionCount', 0, 'Array of FeatureTableSubstitutionRecord'),
+	]),
+
+	('FeatureTableSubstitutionRecord', [
+		('uint16', 'FeatureIndex', None, None, 'The feature table index to match.'),
+		('LOffset', 'Feature', None, None, 'Offset to an alternate feature table, from start of the FeatureTableSubstitution table.'),
 	]),
 
 	('SingleSubstFormat1', [
@@ -885,6 +921,9 @@ otData = [
 
 	# Glyph advance variations
 
+	('CFFV', [
+		('VarStore', 'VarStore', None, None, 'CFF variation store'),
+	]),
 	('HVAR', [
 		('Version', 'Version', None, None, 'Version of the HVAR table-initially = 0x00010000'),
 		('LOffset', 'VarStore', None, None, ''),

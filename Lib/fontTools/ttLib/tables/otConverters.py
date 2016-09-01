@@ -22,8 +22,11 @@ def buildConverters(tableSpec, tableNamespace):
 			assert tp == "uint16"
 			converterClass = ValueFormat
 		elif name.endswith("Count") or name.endswith("LookupType"):
-			assert tp == "uint16"
-			converterClass = ComputedUShort
+			assert tp in [ "uint16", "uint32"]
+			if tp == "uint16":
+				converterClass = ComputedUShort
+			else:
+				converterClass = ComputedULong
 		elif name == "SubTable":
 			converterClass = SubTable
 		elif name == "ExtSubTable":
@@ -92,6 +95,7 @@ class BaseConverter(object):
 		self.aux = aux
 		self.tableClass = tableClass
 		self.isCount = name.endswith("Count")
+		self.isLongCount = name in ['FeatureVariationRecordsCount']
 		self.isLookupType = name.endswith("LookupType")
 		self.isPropagated = name in ["ClassCount", "Class2Count", "FeatureTag", "SettingsCount", "VarRegionCount", "MappingCount", "RegionAxisCount"]
 
@@ -204,6 +208,11 @@ class UInt24(IntValue):
 		writer.writeUInt24(value)
 
 class ComputedUShort(UShort):
+	def xmlWrite(self, xmlWriter, font, value, name, attrs):
+		xmlWriter.comment("%s=%s" % (name, value))
+		xmlWriter.newline()
+
+class ComputedULong(ULong):
 	def xmlWrite(self, xmlWriter, font, value, name, attrs):
 		xmlWriter.comment("%s=%s" % (name, value))
 		xmlWriter.newline()
