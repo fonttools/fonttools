@@ -20,10 +20,10 @@ def buildVarRegion(support, axisTags):
 def buildVarRegionList(supports, axisTags):
 	self = ot.VarRegionList()
 	self.AxisCount = len(axisTags)
-	self.VarRegion = []
+	self.Region = []
 	for support in supports:
-		self.VarRegion.append(buildVarRegion(support, axisTags))
-	self.VarRegionCount = len(self.VarRegion)
+		self.Region.append(buildVarRegion(support, axisTags))
+	self.VarRegionCount = len(self.Region)
 	return self
 
 
@@ -92,7 +92,7 @@ class OnlineVarStoreBuilder(object):
 		# Store model's regions
 
 	def finish(self, optimize=True):
-		self._regions.VarRegionCount = len(self._regions.VarRegion)
+		self._regions.VarRegionCount = len(self._regions.Region)
 		self._store.VarDataCount = len(self._store.VarData)
 		for data in self._store.VarData:
 			data.ItemCount = len(data.Item)
