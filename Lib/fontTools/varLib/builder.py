@@ -62,11 +62,12 @@ def buildVarData(varRegionIndices, items, optimize=True):
 	self.VarRegionIndex = list(varRegionIndices)
 	regionCount = self.VarRegionCount = len(self.VarRegionIndex)
 	records = self.Item = []
-	for item in items:
-		assert len(item) == regionCount
-		records.append(list(item))
+	if items:
+		for item in items:
+			assert len(item) == regionCount
+			records.append(list(item))
 	self.ItemCount = len(self.Item)
-	if optimize:
+	if items and optimize:
 		optimizeVarData(self)
 	return self
 
