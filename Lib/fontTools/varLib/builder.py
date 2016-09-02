@@ -74,7 +74,6 @@ def buildVarData(varRegionIndices, items, optimize=True):
 def buildVarStore(varRegionList, varDataList):
 	self = ot.VarStore()
 	self.Format = 1
-	self.Reserved = 0
 	self.VarRegionList = varRegionList
 	self.VarData = list(varDataList)
 	self.VarDataCount = len(self.VarData)
