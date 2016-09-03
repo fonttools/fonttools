@@ -47,6 +47,18 @@ def _AddName(font, name):
 
 # Move to fvar table proper?
 def _add_fvar(font, axes, instances, axis_map):
+	"""
+	Add 'fvar' table to font.
+
+	axes is a dictionary mapping axis-id to axis (min,default,max)
+	coordinate values.
+
+	instances is list of dictionary objects with 'location', 'stylename',
+	and possibly 'postscriptfontname' entries.
+
+	axisMap is dictionary mapping axis-id to (axis-tag, axis-name).
+	"""
+
 	assert "fvar" not in font
 	font['fvar'] = fvar = newTable('fvar')
 
@@ -57,7 +69,10 @@ def _add_fvar(font, axes, instances, axis_map):
 		axis.nameID = _AddName(font, axis_map[iden][1]).nameID
 		fvar.axes.append(axis)
 
-	for name, coordinates in instances:
+	for instance in instances:
+		coordinates = instance['location']
+		name = instance['stylename']
+
 		inst = NamedInstance()
 		inst.nameID = _AddName(font, name).nameID
 		inst.coordinates = {axis_map[k][0]:v for k,v in coordinates.items()}
@@ -270,8 +285,8 @@ def build(designspace_filename, master_finder=lambda s:s, axisMap=None):
 	filename as found in designspace file and map it to master font
 	binary as to be opened (eg. .ttf or .otf).
 
-	If axisMap is set, it should be dictionary mapping axis id to
-	(axis_tag, axis_name).
+	If axisMap is set, it should be dictionary mapping axis-id to
+	(axis-tag, axis-name).
 	"""
 
 	masters, instances = designspace.load(designspace_filename)
@@ -311,7 +326,6 @@ def build(designspace_filename, master_finder=lambda s:s, axisMap=None):
 	# TODO: For weight & width, use OS/2 values and setup 'avar' mapping.
 
 	master_locs = [o['location'] for o in masters]
-	instance_locs = [o['location'] for o in instances]
 
 	axis_tags = set(master_locs[0].keys())
 	assert all(axis_tags == set(m.keys()) for m in master_locs)
@@ -329,19 +343,13 @@ def build(designspace_filename, master_finder=lambda s:s, axisMap=None):
 	print("Axes:")
 	pprint(axes)
 
-	# Set up named instances
-	instance_list = []
-	for loc,instance in zip(instance_locs,instances):
-		style = instance['stylename']
-		instance_list.append((style, loc))
-	# TODO append masters as named-instances as well; needs .designspace change.
-
 	# We can use the base font straight, but it's faster to load it again since
 	# then we won't be recompiling the existing ('glyf', 'hmtx', ...) tables.
 	#gx = master_fonts[base_idx]
 	gx = TTFont(master_ttfs[base_idx])
 
-	_add_fvar(gx, axes, instance_list, axis_map)
+	# TODO append masters as named-instances as well; needs .designspace change.
+	_add_fvar(gx, axes, instances, axis_map)
 
 	# Normalize master locations
 	master_locs = [models.normalizeLocation(m, axes) for m in master_locs]
