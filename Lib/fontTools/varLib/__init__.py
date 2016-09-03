@@ -262,16 +262,17 @@ def _merge_OTL(font, model, master_ttfs, axes, base_idx):
 	# TODO insert in GDEF
 
 
-def main(args=None):
+def build(designspace_filename, master_finder=lambda s:s, axisMap=None):
+	"""
+	Build variation font from a designspace file.
 
-	if args is None:
-		import sys
-		args = sys.argv[1:]
+	If master_finder is set, it should be a callable that takes master
+	filename as found in designspace file and map it to master font
+	binary as to be opened (eg. .ttf or .otf).
 
-	(designspace_filename,) = args
-	finder = lambda s: s.replace('master_ufo', 'master_ttf_interpolatable').replace('.ufo', '.ttf')
-	axisMap = None # dict mapping axis id to (axis tag, axis name)
-	outfile = os.path.splitext(designspace_filename)[0] + '-GX.ttf'
+	If axisMap is set, it should be dictionary mapping axis id to
+	(axis_tag, axis_name).
+	"""
 
 	masters, instances = designspace.load(designspace_filename)
 	base_idx = None
@@ -291,7 +292,7 @@ def main(args=None):
 	print("Building GX")
 	print("Loading TTF masters")
 	basedir = os.path.dirname(designspace_filename)
-	master_ttfs = [finder(os.path.join(basedir, m['filename'])) for m in masters]
+	master_ttfs = [master_finder(os.path.join(basedir, m['filename'])) for m in masters]
 	master_fonts = [TTFont(ttf_path) for ttf_path in master_ttfs]
 
 	standard_axis_map = {
@@ -356,7 +357,22 @@ def main(args=None):
 	_add_HVAR(gx, model, master_fonts, axes)
 	#_merge_OTL(gx, model, master_fonts, axes, base_idx)
 
-	print("Saving GX font", outfile)
+	return gx, model, master_ttfs
+
+
+def main(args=None):
+
+	if args is None:
+		import sys
+		args = sys.argv[1:]
+
+	(designspace_filename,) = args
+	finder = lambda s: s.replace('master_ufo', 'master_ttf_interpolatable').replace('.ufo', '.ttf')
+	outfile = os.path.splitext(designspace_filename)[0] + '-GX.ttf'
+
+	gx, model, master_ttfs = build(designspace_filename, finder)
+
+	print("Saving variation font", outfile)
 	gx.save(outfile)
 
 
