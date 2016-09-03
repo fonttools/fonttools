@@ -37,11 +37,13 @@ import os.path
 # TODO: Move to name table proper; also, is mac_roman ok for ASCII names?
 def _AddName(font, name):
 	"""(font, "Bold") --> NameRecord"""
+	name = tounicode(name)
+
 	nameTable = font.get("name")
 	namerec = NameRecord()
 	namerec.nameID = 1 + max([n.nameID for n in nameTable.names] + [256])
 	namerec.string = name
-	namerec.platformID, namerec.platEncID, namerec.langID = (1, 0, 0)
+	namerec.platformID, namerec.platEncID, namerec.langID = (3, 1, 0x409)
 	nameTable.names.append(namerec)
 	return namerec
 
