@@ -18,9 +18,12 @@ class DesignspaceTest(unittest.TestCase):
                   {'filename': 'VarLibTest-Bold.ufo',
                    'location': {'weight': 1.0},
                    'name': 'master_2'}],
-                 [{'filename': 'VarLibTest-Bold.ufo',
-                   'location': {'weight': 1.0},
-                   'name': 'master_2'}])
+                 [{'filename': 'instance/VarLibTest-Medium.ufo',
+                   'location': {'weight': 0.5},
+                   'familyname': 'VarLibTest',
+                   'stylename': 'Medium',
+                   'info': {},
+                   'kerning': {}}])
         )
 
 

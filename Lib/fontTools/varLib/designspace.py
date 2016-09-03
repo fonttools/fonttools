@@ -38,7 +38,7 @@ def _load(et):
 		masters.append(_loadItem(et))
 
 	instances = []
-	for instance in ds.find('instances'):
+	for et in ds.find('instances'):
 		instances.append(_loadItem(et))
 
 	return masters, instances
