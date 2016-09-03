@@ -29,12 +29,12 @@ FVAR_AXIS_FORMAT = """
     defaultValue:   16.16F
     maxValue:       16.16F
     flags:          H
-    nameID:         H
+    axisNameID:         H
 """
 
 FVAR_INSTANCE_FORMAT = """
     > # big endian
-    nameID:     H
+    subfamilyNameID:     H
     flags:      H
 """
 
@@ -47,6 +47,9 @@ class table__f_v_a_r(DefaultTable.DefaultTable):
         self.instances = []
 
     def compile(self, ttFont):
+        instanceSize = sstruct.calcsize(FVAR_INSTANCE_FORMAT) + (len(self.axes) * 4)
+        if any(instance.postscriptNameID != 0xFFFF for instance in self.instances):
+            instanceSize += 2
         header = {
             "version": 0x00010000,
             "offsetToData": sstruct.calcsize(FVAR_HEADER_FORMAT),
@@ -54,12 +57,12 @@ class table__f_v_a_r(DefaultTable.DefaultTable):
             "axisCount": len(self.axes),
             "axisSize": sstruct.calcsize(FVAR_AXIS_FORMAT),
             "instanceCount": len(self.instances),
-            "instanceSize": sstruct.calcsize(FVAR_INSTANCE_FORMAT) + len(self.axes) * 4
+            "instanceSize": instanceSize,
         }
         result = [sstruct.pack(FVAR_HEADER_FORMAT, header)]
         result.extend([axis.compile() for axis in self.axes])
         axisTags = [axis.axisTag for axis in self.axes]
-        result.extend([instance.compile(axisTags) for instance in self.instances])
+        result.extend([instance.compile(axisTags)[:instanceSize] for instance in self.instances])
         return bytesjoin(result)
 
     def decompile(self, data, ttFont):
@@ -102,7 +105,7 @@ class table__f_v_a_r(DefaultTable.DefaultTable):
 class Axis(object):
     def __init__(self):
         self.axisTag = None
-        self.nameID = 0
+        self.axisNameID = 0
         self.flags = 0  # not exposed in XML because spec defines no values
         self.minValue = -1.0
         self.defaultValue = 0.0
@@ -115,7 +118,7 @@ class Axis(object):
         sstruct.unpack2(FVAR_AXIS_FORMAT, data, self)
 
     def toXML(self, writer, ttFont):
-        name = ttFont["name"].getDebugName(self.nameID)
+        name = ttFont["name"].getDebugName(self.axisNameID)
         if name is not None:
             writer.newline()
             writer.comment(name)
@@ -126,7 +129,7 @@ class Axis(object):
                            ("MinValue", str(self.minValue)),
                            ("DefaultValue", str(self.defaultValue)),
                            ("MaxValue", str(self.maxValue)),
-                           ("NameID", str(self.nameID))]:
+                           ("AxisNameID", str(self.axisNameID))]:
             writer.begintag(tag)
             writer.write(value)
             writer.endtag(tag)
@@ -140,12 +143,13 @@ class Axis(object):
             value = ''.join(value)
             if tag == "AxisTag":
                 self.axisTag = Tag(value)
-            elif tag in ["MinValue", "DefaultValue", "MaxValue", "NameID"]:
+            elif tag in ["MinValue", "DefaultValue", "MaxValue", "AxisNameID"]:
                 setattr(self, tag[0].lower() + tag[1:], safeEval(value))
 
 class NamedInstance(object):
     def __init__(self):
-        self.nameID = 0
+        self.subfamilyNameID = 0
+        self.postscriptNameID = 0xFFFF
         self.flags = 0  # not exposed in XML because spec defines no values
         self.coordinates = {}
 
@@ -154,6 +158,7 @@ class NamedInstance(object):
         for axis in axisTags:
             fixedCoord = floatToFixed(self.coordinates[axis], 16)
             result.append(struct.pack(">l", fixedCoord))
+        result.append(struct.pack(">H", self.postscriptNameID))
         return bytesjoin(result)
 
     def decompile(self, data, axisTags):
@@ -163,14 +168,22 @@ class NamedInstance(object):
             value = struct.unpack(">l", data[pos : pos + 4])[0]
             self.coordinates[axis] = fixedToFloat(value, 16)
             pos += 4
+        if pos + 2 <= len(data):
+          self.postscriptNameID = struct.unpack(">H", data[pos : pos + 2])[0]
+        else:
+          self.postscriptNameID = 0xFFFF
 
     def toXML(self, writer, ttFont):
-        name = ttFont["name"].getDebugName(self.nameID)
+        name = ttFont["name"].getDebugName(self.subfamilyNameID)
         if name is not None:
             writer.newline()
             writer.comment(name)
             writer.newline()
-        writer.begintag("NamedInstance", nameID=self.nameID)
+        if self.postscriptNameID  == 0xFFFF:
+           writer.begintag("NamedInstance", subfamilyNameID=self.subfamilyNameID)
+        else:
+            writer.begintag("NamedInstance", subfamilyNameID=self.subfamilyNameID,
+                            postscriptNameID=self.postscriptNameID, )
         writer.newline()
         for axis in ttFont["fvar"].axes:
             writer.simpletag("coord", axis=axis.axisTag,
@@ -181,7 +194,12 @@ class NamedInstance(object):
 
     def fromXML(self, name, attrs, content, ttFont):
         assert(name == "NamedInstance")
-        self.nameID = safeEval(attrs["nameID"])
+        self.subfamilyNameID = safeEval(attrs["subfamilyNameID"])
+        if "postscriptNameID" in attrs:
+            self.postscriptNameID = safeEval(attrs["postscriptNameID"])
+        else:
+            self.postscriptNameID = 0xFFFF
+
         for tag, elementAttrs, _ in filter(lambda t: type(t) is tuple, content):
             if tag == "coord":
                 self.coordinates[elementAttrs["axis"]] = safeEval(elementAttrs["value"])
