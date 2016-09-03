@@ -68,15 +68,18 @@ def _add_fvar(font, axes, instances, axis_map):
 		axis = Axis()
 		axis.axisTag = Tag(axis_map[iden][0])
 		axis.minValue, axis.defaultValue, axis.maxValue = axes[iden]
-		axis.nameID = _AddName(font, axis_map[iden][1]).nameID
+		axis.axisNameID = _AddName(font, axis_map[iden][1]).nameID
 		fvar.axes.append(axis)
 
 	for instance in instances:
 		coordinates = instance['location']
 		name = instance['stylename']
+		psname = instance.get('postscriptfontname')
 
 		inst = NamedInstance()
-		inst.nameID = _AddName(font, name).nameID
+		inst.subfamilyNameID = _AddName(font, name).nameID
+		if psname:
+			inst.postscriptNamedID = _AddName(font, psname).nameID
 		inst.coordinates = {axis_map[k][0]:v for k,v in coordinates.items()}
 		fvar.instances.append(inst)
 
