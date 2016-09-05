@@ -1576,13 +1576,13 @@ def prune_post_subset(self, options):
         table.MarkGlyphSetsDef and
         not table.MarkGlyphSetsDef.Coverage):
         table.MarkGlyphSetsDef = None
-        if table.Version == 0x00010002/0x10000:
-            table.Version = 1.0
+        if table.Version == 0x00010002:
+            table.Version = 0x00010000
     return bool(table.LigCaretList or
                 table.MarkAttachClassDef or
                 table.GlyphClassDef or
                 table.AttachList or
-                (table.Version >= 0x00010002/0x10000 and table.MarkGlyphSetsDef))
+                (table.Version >= 0x00010002 and table.MarkGlyphSetsDef))
 
 @_add_method(ttLib.getTableClass('kern'))
 def prune_pre_subset(self, font, options):
