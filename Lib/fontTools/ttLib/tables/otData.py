@@ -143,10 +143,11 @@ otData = [
 	#
 
 	('GPOS', [
-		('Version', 'Version', None, None, 'Version of the GPOS table-initially = 0x00010000'),
+		('Version', 'Version', None, None, 'Version of the GPOS table- 0x00010000 or 0x00010001'),
 		('Offset', 'ScriptList', None, None, 'Offset to ScriptList table-from beginning of GPOS table'),
 		('Offset', 'FeatureList', None, None, 'Offset to FeatureList table-from beginning of GPOS table'),
 		('Offset', 'LookupList', None, None, 'Offset to LookupList table-from beginning of GPOS table'),
+		('LOffset', 'FeatureVariations', None, 'Version >= 0x00010001', 'Offset to FeatureVariations table-from beginning of GPOS table'),
 	]),
 
 	('SinglePosFormat1', [
@@ -443,10 +444,11 @@ otData = [
 	#
 
 	('GSUB', [
-		('Version', 'Version', None, None, 'Version of the GSUB table-initially set to 0x00010000'),
+		('Version', 'Version', None, None, 'Version of the GSUB table- 0x00010000 or 0x00010001'),
 		('Offset', 'ScriptList', None, None, 'Offset to ScriptList table-from beginning of GSUB table'),
 		('Offset', 'FeatureList', None, None, 'Offset to FeatureList table-from beginning of GSUB table'),
 		('Offset', 'LookupList', None, None, 'Offset to LookupList table-from beginning of GSUB table'),
+		('LOffset', 'FeatureVariations', None, 'Version >= 0x00010001', 'Offset to FeatureVariations table-from beginning of GSUB table'),
 	]),
 
 	('SingleSubstFormat1', [
@@ -639,7 +641,7 @@ otData = [
 	#
 
 	('GDEF', [
-		('Version', 'Version', None, None, 'Version of the GDEF table-initially 0x00010000'),
+		('Version', 'Version', None, None, 'Version of the GDEF table- 0x00010000, 0x00010002, or 0x00010003'),
 		('Offset', 'GlyphClassDef', None, None, 'Offset to class definition table for glyph type-from beginning of GDEF header (may be NULL)'),
 		('Offset', 'AttachList', None, None, 'Offset to list of glyphs with attachment points-from beginning of GDEF header (may be NULL)'),
 		('Offset', 'LigCaretList', None, None, 'Offset to list of positioning points for ligature carets-from beginning of GDEF header (may be NULL)'),
@@ -841,6 +843,42 @@ otData = [
 	#
 	# Variation fonts
 	#
+
+	# GSUB/GPOS FeatureVariations
+
+	('FeatureVariations', [
+		('Version', 'Version', None, None, 'Version of the table-initially set to 0x00010000'),
+		('uint32', 'FeatureVariationCount', None, None, 'Number of records in the FeatureVariationRecord array'),
+		('struct', 'FeatureVariationRecord', 'FeatureVariationRecord', 0, 'Array of FeatureVariationRecord'),
+	]),
+
+	('FeatureVariationRecord', [
+		('LOffset', 'ConditionSet', None, None, 'Offset to a ConditionSet table.'),
+		('LOffset', 'FeatureTableSubstitution', None, None, 'Offset to a FeatureTableSubstitution table, from beginning of the FeatureVariations table'),
+	]),
+
+	('ConditionSet', [
+		('uint16', 'ConditionCount', None, None, 'Number of condition tables in the ConditionTable array'),
+		('struct', 'ConditionTable', 'ConditionCount', 0, 'Array of condition tables.'),
+	]),
+
+	('ConditionTableFormat1', [
+		('uint16', 'Format', None, None, 'Format, = 1'),
+		('uint16', 'AxisIndex', None, None, 'Index for the variation axis within the fvar table, base 0.'),
+		('F2Dot14', 'FilterRangeMinValue', None, None, 'Minimum normalized axis value of the font variation instances that satisfy this condition.'),
+		('F2Dot14', 'FilterRangeMaxValue', None, None, 'Maximum value that satisfies this condition.'),
+	]),
+
+	('FeatureTableSubstitution', [
+		('Version', 'Version', None, None, 'Version of the table-initially set to 0x00010000'),
+		('uint16', 'SubstitutionCount', None, None, 'Number of records in the FeatureVariationRecords array'),
+		('FeatureTableSubstitutionRecord', 'SubstitutionRecord', 'SubstitutionCount', 0, 'Array of FeatureTableSubstitutionRecord'),
+	]),
+
+	('FeatureTableSubstitutionRecord', [
+		('uint16', 'FeatureIndex', None, None, 'The feature table index to match.'),
+		('LOffset', 'Feature', None, None, 'Offset to an alternate feature table, from start of the FeatureTableSubstitution table.'),
+	]),
 
 	# VariationStore
 
