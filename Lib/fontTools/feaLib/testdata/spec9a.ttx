@@ -2,7 +2,7 @@
 <ttFont>
 
   <BASE>
-    <Version value="1.0"/>
+    <Version value="0x00010000"/>
     <HorizAxis>
       <BaseTagList>
         <!-- BaseTagCount=2 -->

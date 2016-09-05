@@ -5330,7 +5330,7 @@
   </CFF>
 
   <MATH>
-    <Version value="1.0"/>
+    <Version value="0x00010000"/>
     <MathConstants>
       <ScriptPercentScaleDown value="75"/>
       <ScriptScriptPercentScaleDown value="60"/>

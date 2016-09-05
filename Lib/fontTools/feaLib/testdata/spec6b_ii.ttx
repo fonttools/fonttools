@@ -2,7 +2,7 @@
 <ttFont sfntVersion="true" ttLibVersion="3.0">
 
   <GPOS>
-    <Version value="1.0"/>
+    <Version value="0x00010000"/>
     <ScriptList>
       <!-- ScriptCount=1 -->
       <ScriptRecord index="0">

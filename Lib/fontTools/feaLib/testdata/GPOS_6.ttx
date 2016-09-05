@@ -2,7 +2,7 @@
 <ttFont>
 
   <GDEF>
-    <Version value="1.0"/>
+    <Version value="0x00010000"/>
     <GlyphClassDef>
       <ClassDef glyph="acute" class="3"/>
       <ClassDef glyph="caron" class="3"/>
@@ -15,7 +15,7 @@
   </GDEF>
 
   <GPOS>
-    <Version value="1.0"/>
+    <Version value="0x00010000"/>
     <ScriptList>
       <!-- ScriptCount=1 -->
       <ScriptRecord index="0">
