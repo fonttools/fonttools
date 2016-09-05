@@ -466,8 +466,8 @@ class OTTableWriter(object):
 	def writeSubTable(self, subWriter):
 		self.items.append(subWriter)
 
-	def writeCountReference(self, table, name):
-		ref = CountReference(table, name)
+	def writeCountReference(self, table, name, size=2):
+		ref = CountReference(table, name, size=size)
 		self.items.append(ref)
 		return ref
 
@@ -514,9 +514,10 @@ class OTTableWriter(object):
 
 class CountReference(object):
 	"""A reference to a Count value, not a count of references."""
-	def __init__(self, table, name):
+	def __init__(self, table, name, size=None):
 		self.table = table
 		self.name = name
+		self.size = size
 	def setValue(self, value):
 		table = self.table
 		name = self.name
@@ -525,9 +526,10 @@ class CountReference(object):
 		else:
 			assert table[name] == value, (name, table[name], value)
 	def getCountData(self):
+		assert self.size in (2, 4)
 		v = self.table[self.name]
 		if v is None: v = 0
-		return packUShort(v)
+		return packUShort(v) if self.size == 2 else packULong(v)
 
 
 def packUShort(value):
@@ -657,12 +659,12 @@ class BaseTable(object):
 				# table. We will later store it here.
 				# We add a reference: by the time the data is assembled
 				# the Count value will be filled in.
-				ref = writer.writeCountReference(table, conv.name)
+				ref = writer.writeCountReference(table, conv.name, conv.staticSize)
 				table[conv.name] = None
 				if conv.isPropagated:
 					writer[conv.name] = ref
 			elif conv.isLookupType:
-				ref = writer.writeCountReference(table, conv.name)
+				ref = writer.writeCountReference(table, conv.name, conv.staticSize)
 				table[conv.name] = None
 				writer['LookupType'] = ref
 			else:

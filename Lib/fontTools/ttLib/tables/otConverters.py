@@ -22,8 +22,8 @@ def buildConverters(tableSpec, tableNamespace):
 			assert tp == "uint16"
 			converterClass = ValueFormat
 		elif name.endswith("Count") or name.endswith("LookupType"):
-			assert tp == "uint16"
-			converterClass = ComputedUShort
+			assert tp in ("uint16", "uint32")
+			converterClass = ComputedUShort if tp == 'uint16' else ComputedULong
 		elif name == "SubTable":
 			converterClass = SubTable
 		elif name == "ExtSubTable":
@@ -203,10 +203,15 @@ class UInt24(IntValue):
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		writer.writeUInt24(value)
 
-class ComputedUShort(UShort):
+class ComputedInt(IntValue):
 	def xmlWrite(self, xmlWriter, font, value, name, attrs):
 		xmlWriter.comment("%s=%s" % (name, value))
 		xmlWriter.newline()
+
+class ComputedUShort(ComputedInt, UShort):
+	pass
+class ComputedULong(ComputedInt, ULong):
+	pass
 
 class Tag(SimpleValue):
 	staticSize = 4
