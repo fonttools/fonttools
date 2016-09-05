@@ -231,23 +231,6 @@ class GlyphID(SimpleValue):
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		writer.writeUShort(font.getGlyphID(value))
 
-class VarAxisID(SimpleValue):
-	staticSize = 2
-	def read(self, reader, font, tableDict):
-		idx = reader.readUShort()
-		try:
-			return font['fvar'].axes[idx].axisTag
-		except (KeyError, IndexError):
-			return idx
-	def write(self, writer, font, tableDict, value, repeatIndex=None):
-		if not isinstance(value, int):
-			value = tobytes(value)
-			for i,axis in enumerate(font['fvar'].axes):
-				if axis.axisTag == value:
-					value = i
-					break
-		writer.writeUShort(value)
-
 class FloatValue(SimpleValue):
 	def xmlRead(self, attrs, content, font):
 		return float(attrs["value"])
@@ -613,7 +596,6 @@ converterMapping = {
 	"Offset":	Table,
 	"LOffset":	LTable,
 	"ValueRecord":	ValueRecord,
-	"VarAxisID":	VarAxisID,
 	"DeltaValue":	DeltaValue,
 	"VarIdxMapValue":	VarIdxMapValue,
 	"VarDataValue":	VarDataValue,
