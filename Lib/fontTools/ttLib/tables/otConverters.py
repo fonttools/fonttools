@@ -267,27 +267,34 @@ class Version(BaseConverter):
 	def read(self, reader, font, tableDict):
 		value = reader.readLong()
 		assert (value >> 16) == 1, "Unsupported version 0x%08x" % value
-		return  fi2fl(value, 16)
+		return value
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		if value < 0x10000:
-			value = fl2fi(value, 16)
-		value = int(round(value))
+			newValue = self.fromFloat(value)
+			log.warning("Table version value is a float: %g; fix code to use hex instead: %08x", value, newValue)
+			value = newValue
 		assert (value >> 16) == 1, "Unsupported version 0x%08x" % value
 		writer.writeLong(value)
 	def xmlRead(self, attrs, content, font):
 		value = attrs["value"]
-		value = float(int(value, 0)) if value.startswith("0") else float(value)
-		if value >= 0x10000:
-			value = fi2fl(value, 16)
+		value = int(value, 0) if value.startswith("0") else float(value)
+		if value < 0x10000:
+			newValue = self.fromFloat(value)
+			log.warning("Table version value is a float: %g; fix XML to use hex instead: %08x", value, newValue)
+			value = newValue
 		return value
 	def xmlWrite(self, xmlWriter, font, value, name, attrs):
-		if value >= 0x10000:
-			value = fi2fl(value, 16)
-		if value % 1 != 0:
-			# Write as hex
-			value = "0x%08x" % fl2fi(value, 16)
+		if value < 0x10000:
+			newValue = self.fromFloat(value)
+			log.warning("Table version value is a float: %g; fix code to use hex instead: %08x", value, newValue)
+			value = newValue
+		value = "0x%08x" % value
 		xmlWriter.simpletag(name, attrs + [("value", value)])
 		xmlWriter.newline()
+
+	@staticmethod
+	def fromFloat(v):
+		return fl2fi(v, 16)
 
 
 class Struct(BaseConverter):

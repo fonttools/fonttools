@@ -230,7 +230,7 @@ def _add_HVAR(font, model, master_ttfs, axes):
 	assert "HVAR" not in font
 	HVAR = font["HVAR"] = newTable('HVAR')
 	hvar = HVAR.table = ot.HVAR()
-	hvar.Version = 1.0
+	hvar.Version = 0x00010000
 	hvar.VarStore = varStore
 	hvar.AdvWidthMap = advanceMapping
 	hvar.LsbMap = hvar.RsbMap = None
