@@ -10,14 +10,6 @@ from fontTools.varLib import designspace, models, builder
 import os.path
 
 
-def _all_equal(lst):
-	it = iter(lst)
-	v0 = next(it)
-	for v in it:
-		if v0 != v:
-			return False
-	return True
-
 def _add_method(*clazzes, **kwargs):
 	"""Returns a decorator function that adds a new method to one or
 	more classes."""
