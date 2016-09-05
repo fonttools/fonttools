@@ -374,7 +374,7 @@
   </gasp>
 
   <GSUB>
-    <Version value="1.0"/>
+    <Version value="0x00010000"/>
   </GSUB>
 
   <avar>
