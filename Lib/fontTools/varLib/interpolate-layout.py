@@ -42,7 +42,6 @@ def main(args=None):
 	for arg in locargs:
 		tag,val = arg.split('=')
 		loc[tag] = float(val)
-	print("Location:", loc)
 
 	masters, instances = designspace.load(designspace_filename)
 	base_idx = None
@@ -53,8 +52,6 @@ def main(args=None):
 	assert base_idx is not None, "Cannot find 'base' master; Add <info> element to one of the masters in the .designspace document."
 
 	from pprint import pprint
-	print("Masters:")
-	pprint(masters)
 	print("Index of base master:", base_idx)
 
 	print("Building GX")
@@ -70,9 +67,6 @@ def main(args=None):
 
 	axis_tags = set(master_locs[0].keys())
 	assert all(axis_tags == set(m.keys()) for m in master_locs)
-	print("Axis tags:", axis_tags)
-	print("Master positions:")
-	pprint(master_locs)
 
 	# Set up axes
 	axes = {}
@@ -84,14 +78,17 @@ def main(args=None):
 	print("Axes:")
 	pprint(axes)
 
-	loc = models.normalizeLocation(loc, axes)
-	# Location is normalized now
-	print("Normalized location:", loc)
+	print("Location:", loc)
+	print("Master locations:")
+	pprint(master_locs)
 
-	# Normalize master locations
+	# Normalize locations
+	loc = models.normalizeLocation(loc, axes)
 	master_locs = [models.normalizeLocation(m, axes) for m in master_locs]
-	print("Normalized master positions:")
-	print(master_locs)
+
+	print("Normalized location:", loc)
+	print("Normalized master locations:")
+	pprint(master_locs)
 
 	# Assume single-model for now.
 	model = models.VariationModel(master_locs)
