@@ -363,7 +363,8 @@ def build(designspace_filename, master_finder=lambda s:s, axisMap=None):
 	assert 0 == model.mapping[base_idx]
 
 	print("Building variations tables")
-	_add_gvar(gx, model, master_fonts)
+	if 'glyf' in gx:
+		_add_gvar(gx, model, master_fonts)
 	_add_HVAR(gx, model, master_fonts, axes)
 	#_merge_OTL(gx, model, master_fonts, axes, base_idx)
 
