@@ -79,7 +79,7 @@ def _add_fvar(font, axes, instances, axis_map):
 		inst = NamedInstance()
 		inst.subfamilyNameID = _AddName(font, name).nameID
 		if psname:
-			inst.postscriptNamedID = _AddName(font, psname).nameID
+			inst.postscriptNameID = _AddName(font, psname).nameID
 		inst.coordinates = {axis_map[k][0]:v for k,v in coordinates.items()}
 		fvar.instances.append(inst)
 
