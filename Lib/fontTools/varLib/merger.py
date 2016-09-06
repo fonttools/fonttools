@@ -6,60 +6,56 @@ from fontTools.misc.py23 import *
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.tables.DefaultTable import DefaultTable
 
-def _add_method(*clazzes):
-	"""Returns a decorator function that adds a new method to one or
-	more classes."""
-	def wrapper(method):
-		done = []
-		for clazz in clazzes:
-			if clazz in done: continue # Support multiple names of a clazz
-			done.append(clazz)
-			assert method.__name__ not in clazz.__dict__, \
-				"Oops, class '%s' has method '%s'." % (clazz.__name__, method.__name__)
-			setattr(clazz, method.__name__, method)
-		return None
-	return wrapper
+class Merger(object):
 
-def mergeObjects(self, lst, merger):
-	keys = vars(self).keys()
-	assert all(vars(table).keys() == keys for table in lst)
-	for key in keys:
-		value = getattr(self, key)
-		values = [getattr(table, key) for table in lst]
-		mergeThings(value, values, merger)
+	mergers = None
 
-def mergeLists(self, lst, merger):
-	count = len(self)
-	assert all(count == len(v) for v in lst), (count, [len(v) for v in lst])
-	for value,values in zip(self, zip(*lst)):
-		mergeThings(value, values, merger)
+	@classmethod
+	def merger(celf, *clazzes):
+		assert celf != Merger, 'Subclass Merger instead.'
+		if celf.mergers is None:
+			celf.mergers = {}
+		def wrapper(method):
+			assert method.__name__ == 'merge'
+			done = []
+			for clazz in clazzes:
+				if clazz in done: continue # Support multiple names of a clazz
+				done.append(clazz)
+				assert clazz not in celf.mergers, \
+					"Oops, class '%s' has merge function defined already." % (clazz.__name__)
+				celf.mergers[clazz] = method
+			return None
+		return wrapper
 
-def mergeThings(self, lst, merger):
-	clazz = type(self)
-	assert all(type(item) == clazz for item in lst), lst
-	mergerFunc = getattr(type(self), 'merge', None)
-	if mergerFunc is None:
-		if hasattr(self, '__dict__'):
-			mergerFunc = mergeObjects
-		elif isinstance(self, list):
-			mergerFunc = mergeLists
+	def mergeObjects(self, out, lst):
+		keys = vars(out).keys()
+		assert all(vars(table).keys() == keys for table in lst)
+		for key in keys:
+			value = getattr(out, key)
+			values = [getattr(table, key) for table in lst]
+			self.mergeThings(value, values)
+
+	def mergeLists(self, out, lst):
+		count = len(out)
+		assert all(count == len(v) for v in lst), (count, [len(v) for v in lst])
+		for value,values in zip(out, zip(*lst)):
+			self.mergeThings(value, values)
+
+	def mergeThings(self, out, lst):
+		clazz = type(out)
+		assert all(type(item) == clazz for item in lst), lst
+		mergerFunc = self.mergers.get(type(out), None)
+		if mergerFunc is not None:
+			mergerFunc(self, out, lst)
+		elif hasattr(out, '__dict__'):
+			self.mergeObjects(out, lst)
+		elif isinstance(out, list):
+			self.mergeLists(out, lst)
 		else:
-			assert all(self == v for v in lst), lst
-			return
-	mergerFunc(self, lst, merger)
-
-@_add_method(ot.Anchor)
-def merge(self, lst, merger):
-	XCoords = [a.XCoordinate for a in lst]
-	YCoords = [a.YCoordinate for a in lst]
-	model = merger.model
-	location = merger.location
-	self.XCoordinate = round(model.interpolateFromMasters(location, XCoords))
-	self.YCoordinate = round(model.interpolateFromMasters(location, YCoords))
+			assert all(out == v for v in lst), lst
 
 def merge_tables(font, merger, master_ttfs, axes, base_idx, tables):
 
-	print("Merging OpenType Layout tables")
 	for tag in tables:
 		print('Merging', tag)
-		mergeThings(font[tag], [m[tag] for m in master_ttfs], merger)
+		merger.mergeThings(font[tag], [m[tag] for m in master_ttfs])

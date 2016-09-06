@@ -7,14 +7,24 @@ from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.tables.DefaultTable import DefaultTable
 from fontTools.varLib import designspace, models, builder
-from fontTools.varLib.merger import merge_tables
+from fontTools.varLib.merger import merge_tables, Merger
 import os.path
 
-class Merger(object):
+class InstancerMerger(Merger):
 
 	def __init__(self, model, location):
 		self.model = model
 		self.location = location
+
+@InstancerMerger.merger(ot.Anchor)
+def merge(merger, self, lst):
+	XCoords = [a.XCoordinate for a in lst]
+	YCoords = [a.YCoordinate for a in lst]
+	model = merger.model
+	location = merger.location
+	self.XCoordinate = round(model.interpolateFromMasters(location, XCoords))
+	self.YCoordinate = round(model.interpolateFromMasters(location, YCoords))
+
 
 def main(args=None):
 
@@ -87,7 +97,7 @@ def main(args=None):
 	model = models.VariationModel(master_locs)
 	assert 0 == model.mapping[base_idx]
 
-	merger = Merger(model, loc)
+	merger = InstancerMerger(model, loc)
 
 	print("Building variations tables")
 	merge_tables(font, merger, master_fonts, axes, base_idx, ['GPOS'])
