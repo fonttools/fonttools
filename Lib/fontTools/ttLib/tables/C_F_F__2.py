@@ -35,8 +35,6 @@ class table_C_F_F__2(DefaultTable.DefaultTable):
 
 	def setGlyphOrder(self, glyphOrder):
 		pass
-		# XXX
-		#self.cff[self.cff.fontNames[0]].setGlyphOrder(glyphOrder)
 
 	def toXML(self, writer, otFont, progress=None):
 		self.cff.toXML(writer, progress)
