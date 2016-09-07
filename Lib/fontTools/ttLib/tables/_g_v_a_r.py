@@ -427,6 +427,8 @@ class GlyphVariation(object):
 	def compile(self, axisTags, sharedCoordIndices, sharedPoints):
 		tupleData = []
 
+		assert all(tag in axisTags for tag in self.axes.keys()), ("Unknown axis tag found.", self.axes.keys(), axisTags)
+
 		coord = self.compileCoord(axisTags)
 		if coord in sharedCoordIndices:
 			flags = sharedCoordIndices[coord]
