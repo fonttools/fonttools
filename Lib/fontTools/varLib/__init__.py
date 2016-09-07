@@ -79,7 +79,7 @@ def _add_fvar(font, axes, instances, axis_map):
 		inst = NamedInstance()
 		inst.subfamilyNameID = _AddName(font, name).nameID
 		if psname:
-			inst.postscriptNamedID = _AddName(font, psname).nameID
+			inst.postscriptNameID = _AddName(font, psname).nameID
 		inst.coordinates = {axis_map[k][0]:v for k,v in coordinates.items()}
 		fvar.instances.append(inst)
 
@@ -303,10 +303,6 @@ def build(designspace_filename, master_finder=lambda s:s, axisMap=None):
 	assert base_idx is not None, "Cannot find 'base' master; Add <info> element to one of the masters in the .designspace document."
 
 	from pprint import pprint
-	print("Masters:")
-	pprint(masters)
-	print("Instances:")
-	pprint(instances)
 	print("Index of base master:", base_idx)
 
 	print("Building GX")
@@ -334,9 +330,6 @@ def build(designspace_filename, master_finder=lambda s:s, axisMap=None):
 
 	axis_tags = set(master_locs[0].keys())
 	assert all(axis_tags == set(m.keys()) for m in master_locs)
-	print("Axis tags:", axis_tags)
-	print("Master positions:")
-	pprint(master_locs)
 
 	# Set up axes
 	axes = {}
@@ -348,6 +341,9 @@ def build(designspace_filename, master_finder=lambda s:s, axisMap=None):
 	print("Axes:")
 	pprint(axes)
 
+	print("Master locations:")
+	pprint(master_locs)
+
 	# We can use the base font straight, but it's faster to load it again since
 	# then we won't be recompiling the existing ('glyf', 'hmtx', ...) tables.
 	#gx = master_fonts[base_idx]
@@ -358,15 +354,17 @@ def build(designspace_filename, master_finder=lambda s:s, axisMap=None):
 
 	# Normalize master locations
 	master_locs = [models.normalizeLocation(m, axes) for m in master_locs]
-	print("Normalized master positions:")
-	print(master_locs)
+
+	print("Normalized master locations:")
+	pprint(master_locs)
 
 	# Assume single-model for now.
 	model = models.VariationModel(master_locs)
 	assert 0 == model.mapping[base_idx]
 
 	print("Building variations tables")
-	_add_gvar(gx, model, master_fonts)
+	if 'glyf' in gx:
+		_add_gvar(gx, model, master_fonts)
 	_add_HVAR(gx, model, master_fonts, axes)
 	#_merge_OTL(gx, model, master_fonts, axes, base_idx)
 
