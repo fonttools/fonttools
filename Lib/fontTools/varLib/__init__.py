@@ -48,6 +48,7 @@ def _AddName(font, name):
 	return namerec
 
 # Move to fvar table proper?
+# TODO how to provide axis order?
 def _add_fvar(font, axes, instances, axis_map):
 	"""
 	Add 'fvar' table to font.
@@ -64,7 +65,7 @@ def _add_fvar(font, axes, instances, axis_map):
 	assert "fvar" not in font
 	font['fvar'] = fvar = newTable('fvar')
 
-	for iden in sorted(axes.keys()):
+	for iden in sorted(axes.keys(), key=lambda k: axis_map[k][0]):
 		axis = Axis()
 		axis.axisTag = Tag(axis_map[iden][0])
 		axis.minValue, axis.defaultValue, axis.maxValue = axes[iden]
@@ -357,6 +358,10 @@ def build(designspace_filename, master_finder=lambda s:s, axisMap=None):
 
 	print("Normalized master locations:")
 	pprint(master_locs)
+
+	# TODO Clean this up.
+	master_locs = [{axis_map[k][0]:v for k,v in loc.items()} for loc in master_locs]
+	#instance_locs = [{axis_map[k][0]:v for k,v in loc.items()} for loc in instance_locs]
 
 	# Assume single-model for now.
 	model = models.VariationModel(master_locs)
