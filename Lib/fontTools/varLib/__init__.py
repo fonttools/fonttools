@@ -27,6 +27,7 @@ from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
 from fontTools.ttLib.tables._g_v_a_r import GlyphVariation
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.varLib import designspace, models, builder
+from fontTools.varLib.merger import merge_tables, Merger
 import warnings
 import os.path
 
@@ -245,42 +246,44 @@ def _all_equal(lst):
 			return False
 	return True
 
-def buildVarDevTable(store, master_values):
+def buildVarDevTable(store_builder, master_values):
 	if _all_equal(master_values):
 		return None
 	deltas = master_values
 	return builder.buildVarDevTable(0xdeadbeef)
 
-def _merge_OTL(font, model, master_ttfs, axes, base_idx):
+class VariationMerger(Merger):
+
+	def __init__(self, model, axisTags):
+		self.model = model
+		self.store_builder = builder.OnlineVarStoreBuilder(axisTags)
+		self.store_builder.setModel(model)
+
+@VariationMerger.merger(ot.Anchor)
+def merge(merger, self, lst):
+	assert self.Format == 1
+	XDeviceTable = buildVarDevTable(merger.store_builder, [a.XCoordinate for a in lst])
+	YDeviceTable = buildVarDevTable(merger.store_builder, [a.YCoordinate for a in lst])
+	if XDeviceTable or YDeviceTable:
+		self.Format = 3
+		self.XDeviceTable = XDeviceTable
+		self.YDeviceTable = YDeviceTable
+
+def _merge_OTL(font, model, master_fonts, axes, base_idx):
 
 	print("Merging OpenType Layout tables")
 
-	GDEFs = [m['GDEF'].table for m in master_ttfs]
-	GPOSs = [m['GPOS'].table for m in master_ttfs]
-	GSUBs = [m['GSUB'].table for m in master_ttfs]
+	axisTags = [] # XXX
+	merger = VariationMerger(model, axisTags)
 
-	# Reuse the base font's tables
-	for tag in 'GDEF', 'GPOS', 'GSUB':
-		font[tag] = master_ttfs[base_idx][tag]
+	print("Building variations tables")
+	merge_tables(font, merger, master_fonts, axes, base_idx, ['GPOS'])
 
-	GPOS = font['GPOS'].table
-
-	getAnchor = lambda GPOS: GPOS.LookupList.Lookup[4].SubTable[0].MarkArray.MarkRecord[28].MarkAnchor
-	store_builder = builder.OnlineVarStoreBuilder(axes.keys())
-	store_builder.setModel(model)
-
-	anchors = [getAnchor(G) for G in GPOSs]
-	anchor = getAnchor(GPOS)
-
-	XDeviceTable = buildVarDevTable(store_builder, [a.XCoordinate for a in anchors])
-	YDeviceTable = buildVarDevTable(store_builder, [a.YCoordinate for a in anchors])
-	if XDeviceTable or YDeviceTable:
-		anchor.Format = 3
-		anchor.XDeviceTable = XDeviceTable
-		anchor.YDeviceTable = YDeviceTable
-
-	store = store_builder.finish()
-	# TODO insert in GDEF
+	store = merger.store_builder.finish()
+	GDEF = font['GDEF'].table
+	assert GDEF.Version <= 0x00010002
+	GDEF.Version = 0x00010003
+	GDEF.VarStore = store
 
 
 def build(designspace_filename, master_finder=lambda s:s, axisMap=None):
@@ -371,7 +374,7 @@ def build(designspace_filename, master_finder=lambda s:s, axisMap=None):
 	if 'glyf' in gx:
 		_add_gvar(gx, model, master_fonts)
 	_add_HVAR(gx, model, master_fonts, axes)
-	#_merge_OTL(gx, model, master_fonts, axes, base_idx)
+	_merge_OTL(gx, model, master_fonts, axes, base_idx)
 
 	return gx, model, master_ttfs
 
