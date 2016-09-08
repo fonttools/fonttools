@@ -85,6 +85,8 @@ def _add_fvar(font, axes, instances, axis_map):
 		inst.coordinates = {axis_map[k][0]:v for k,v in coordinates.items()}
 		fvar.instances.append(inst)
 
+	return fvar
+
 # TODO Move to glyf or gvar table proper
 def _GetCoordinates(font, glyphName):
 	"""font, glyphName --> glyph coordinates as expected by "gvar" table
@@ -187,7 +189,7 @@ def _add_gvar(font, model, master_ttfs):
 			var = GlyphVariation(support, delta)
 			gvar.variations[glyph].append(var)
 
-def _add_HVAR(font, model, master_ttfs, axes):
+def _add_HVAR(font, model, master_ttfs, axisTags):
 
 	print("Generating HVAR")
 
@@ -201,7 +203,7 @@ def _add_HVAR(font, model, master_ttfs, axes):
 	# We only support the direct mapping right now.
 
 	supports = model.supports[1:]
-	varTupleList = builder.buildVarRegionList(supports, axes.keys())
+	varTupleList = builder.buildVarRegionList(supports, axisTags)
 	varTupleIndexes = list(range(len(supports)))
 	n = len(supports)
 	items = []
@@ -249,8 +251,8 @@ def _all_equal(lst):
 def buildVarDevTable(store_builder, master_values):
 	if _all_equal(master_values):
 		return None
-	deltas = master_values
-	return builder.buildVarDevTable(0xdeadbeef)
+	varIdx = store_builder.storeMasters(master_values)
+	return builder.buildVarDevTable(varIdx)
 
 class VariationMerger(Merger):
 
@@ -269,15 +271,13 @@ def merge(merger, self, lst):
 		self.XDeviceTable = XDeviceTable
 		self.YDeviceTable = YDeviceTable
 
-def _merge_OTL(font, model, master_fonts, axes, base_idx):
+def _merge_OTL(font, model, master_fonts, axisTags, base_idx):
 
 	print("Merging OpenType Layout tables")
 
-	axisTags = [] # XXX
 	merger = VariationMerger(model, axisTags)
 
-	print("Building variations tables")
-	merge_tables(font, merger, master_fonts, axes, base_idx, ['GPOS'])
+	merge_tables(font, merger, master_fonts, axisTags, base_idx, ['GPOS'])
 
 	store = merger.store_builder.finish()
 	GDEF = font['GDEF'].table
@@ -354,7 +354,8 @@ def build(designspace_filename, master_finder=lambda s:s, axisMap=None):
 	gx = TTFont(master_ttfs[base_idx])
 
 	# TODO append masters as named-instances as well; needs .designspace change.
-	_add_fvar(gx, axes, instances, axis_map)
+	fvar = _add_fvar(gx, axes, instances, axis_map)
+
 
 	# Normalize master locations
 	master_locs = [models.normalizeLocation(m, axes) for m in master_locs]
@@ -363,8 +364,11 @@ def build(designspace_filename, master_finder=lambda s:s, axisMap=None):
 	pprint(master_locs)
 
 	# TODO Clean this up.
+	del instances
+	del axes
 	master_locs = [{axis_map[k][0]:v for k,v in loc.items()} for loc in master_locs]
 	#instance_locs = [{axis_map[k][0]:v for k,v in loc.items()} for loc in instance_locs]
+	axisTags = [axis.axisTag for axis in fvar.axes]
 
 	# Assume single-model for now.
 	model = models.VariationModel(master_locs)
@@ -373,8 +377,8 @@ def build(designspace_filename, master_finder=lambda s:s, axisMap=None):
 	print("Building variations tables")
 	if 'glyf' in gx:
 		_add_gvar(gx, model, master_fonts)
-	_add_HVAR(gx, model, master_fonts, axes)
-	_merge_OTL(gx, model, master_fonts, axes, base_idx)
+	_add_HVAR(gx, model, master_fonts, axisTags)
+	_merge_OTL(gx, model, master_fonts, axisTags, base_idx)
 
 	return gx, model, master_ttfs
 
