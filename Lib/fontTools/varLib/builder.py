@@ -10,6 +10,7 @@ def buildVarRegionAxis(axisSupport):
 	return self
 
 def buildVarRegion(support, axisTags):
+	assert all(tag in axisTags for tag in support.keys()), ("Unknown axis tag found.", support, axisTags)
 	self = ot.VarRegion()
 	self.VarRegionAxis = []
 	for tag in axisTags:
@@ -23,7 +24,7 @@ def buildVarRegionList(supports, axisTags):
 	self.Region = []
 	for support in supports:
 		self.Region.append(buildVarRegion(support, axisTags))
-	self.VarRegionCount = len(self.Region)
+	self.RegionCount = len(self.Region)
 	return self
 
 
@@ -81,24 +82,54 @@ def buildVarStore(varRegionList, varDataList):
 	return self
 
 
+def _getLocationKey(loc):
+	return tuple(sorted(loc.items(), key=lambda kv: kv[0]))
+
 class OnlineVarStoreBuilder(object):
 
 	def __init__(self, axisTags):
-		self._regions = buildVarRegionList([], axisTags)
-		self._store = buildVarStore(self._regions, [])
+		self._axisTags = axisTags
+		self._regionMap = {}
+		self._regionList = buildVarRegionList([], axisTags)
+		self._store = buildVarStore(self._regionList, [])
 
 	def setModel(self, model):
 		self._model = model
-		# Store model's regions
+
+		regionMap = self._regionMap
+		regionList = self._regionList
+
+		regions = model.supports[1:]
+		regionIndices = []
+		for region in regions:
+			key = _getLocationKey(region)
+			idx = regionMap.get(key)
+			if idx is None:
+				varRegion = buildVarRegion(region, self._axisTags)
+				idx = regionMap[key] = len(regionList.Region)
+				regionList.Region.append(varRegion)
+			regionIndices.append(idx)
+
+		data = self._data = buildVarData(regionIndices, [], optimize=False)
+		self._outer = len(self._store.VarData)
+		self._store.VarData.append(data)
 
 	def finish(self, optimize=True):
-		self._regions.VarRegionCount = len(self._regions.Region)
+		self._regionList.RegionCount = len(self._regionList.Region)
 		self._store.VarDataCount = len(self._store.VarData)
 		for data in self._store.VarData:
 			data.ItemCount = len(data.Item)
 			if optimize:
 				optimizeVarData(data)
 		return self._store
+
+	def storeMasters(self, master_values):
+		deltas = [int(round(d)) for d in self._model.getDeltas(master_values)[1:]]
+		inner = len(self._data.Item)
+		self._data.Item.append(deltas)
+		# TODO Check for full data array?
+		return (self._outer << 16) + inner
+
 
 
 # Variation helpers
