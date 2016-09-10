@@ -87,6 +87,8 @@ realNibbles = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
 		'.', 'E', 'E-', None, '-']
 realNibblesDict = {v:i for i,v in enumerate(realNibbles)}
 
+maxOpStack = 193
+
 
 class ByteCodeBase(object):
 	pass
@@ -119,6 +121,7 @@ t2Operators = [
 	(10,		'callsubr'),
 	(11,		'return'),
 	(14,		'endchar'),
+	(15,		'vsindex'),
 	(16,		'blend'),
 	(18,		'hstemhm'),
 	(19,		'hintmask'),
@@ -1113,7 +1116,7 @@ class DictDecompiler(ByteCodeBase):
 		self.dict = {}
 
 	def getDict(self):
-		assert len(self.stack) == 0, "non-empty stack"
+		#assert len(self.stack) == 0, "non-empty stack"
 		return self.dict
 
 	def decompile(self, data):
@@ -1127,7 +1130,6 @@ class DictDecompiler(ByteCodeBase):
 			value, index = handler(self, b0, data, index)
 			if value is not None:
 				push(value)
-
 	def pop(self):
 		value = self.stack[-1]
 		del self.stack[-1]
@@ -1140,7 +1142,7 @@ class DictDecompiler(ByteCodeBase):
 
 	def handle_operator(self, operator):
 		operator, argType = operator
-		if isinstance(argType, type(())):
+		if isinstance(argType, tuple):
 			value = ()
 			for i in range(len(argType)-1, -1, -1):
 				arg = argType[i]
@@ -1149,20 +1151,69 @@ class DictDecompiler(ByteCodeBase):
 		else:
 			arghandler = getattr(self, "arg_" + argType)
 			value = arghandler(operator)
-		self.dict[operator] = value
+		if operator == "blend":
+			self.stack.extend(value)
+		else:
+			self.dict[operator] = value
 
 	def arg_number(self, name):
-		return self.pop()
+		if isinstance(self.stack[0], list):
+			out = self.arg_blend_number(self.stack)
+		else:
+			out = self.pop()
+		return out
+		
+	def arg_blend_number(self, name):
+		out = []
+		blendArgs = self.pop()
+		numMasters = len(blendArgs)
+		out.append(blendArgs)
+		out.append("blend")
+		dummy = self.popall()
+		return out
+
 	def arg_SID(self, name):
 		return self.strings[self.pop()]
 	def arg_array(self, name):
 		return self.popall()
+	def arg_blendList(self, name):
+		# The last item on the stack is the number of return values,numValues.
+		
+		# before that we have [numValues: args from first master]
+		# then numValues blend lists, where each blend list is numMasters -1
+		# Total number of values is numValues + (numValues * (numMasters -1)), aka numValues * numMasters.
+		# The number of masters is len(stack) -1)/numReturnValues
+		# reformat list to be numReturnValues tuples, each tuple with nMaster values
+		numReturnValues = self.pop()
+		args = self.popall()
+		numArgs = len(args)
+		numMasters = int(numArgs/numReturnValues)
+		value = [None]*numReturnValues
+		numDeltas = numMasters-1
+		i = 0
+		while i < numReturnValues:
+			blendList = [args[i]]*numMasters
+			value[i] = blendList
+			j = 1
+			while j < numMasters:
+				masterOffset = numReturnValues + (i* numDeltas)
+				mi = masterOffset +(j-1)
+				blendList[j] += args[mi]
+				j += 1
+			i += 1
+		
+		return value
+		
 	def arg_delta(self, name):
+		valueList = self.popall()
 		out = []
-		current = 0
-		for v in self.popall():
-			current = current + v
-			out.append(current)
+		if isinstance(valueList[0], list): # arg_blendList() has already converted these to absolute values.
+			out = valueList
+		else:
+			current = 0
+			for v in valueList:
+				current = current + v
+				out.append(current)
 		return out
 
 
