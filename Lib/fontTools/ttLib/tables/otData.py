@@ -849,7 +849,7 @@ otData = [
 	('FeatureVariations', [
 		('Version', 'Version', None, None, 'Version of the table-initially set to 0x00010000'),
 		('uint32', 'FeatureVariationCount', None, None, 'Number of records in the FeatureVariationRecord array'),
-		('struct', 'FeatureVariationRecord', 'FeatureVariationRecord', 0, 'Array of FeatureVariationRecord'),
+		('struct', 'FeatureVariationRecord', 'FeatureVariationCount', 0, 'Array of FeatureVariationRecord'),
 	]),
 
 	('FeatureVariationRecord', [
