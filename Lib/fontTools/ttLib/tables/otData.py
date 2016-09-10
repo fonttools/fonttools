@@ -853,13 +853,13 @@ otData = [
 	]),
 
 	('FeatureVariationRecord', [
-		('LOffset', 'ConditionSet', None, None, 'Offset to a ConditionSet table.'),
+		('LOffset', 'ConditionSet', None, None, 'Offset to a ConditionSet table, from beginning of the FeatureVariations table.'),
 		('LOffset', 'FeatureTableSubstitution', None, None, 'Offset to a FeatureTableSubstitution table, from beginning of the FeatureVariations table'),
 	]),
 
 	('ConditionSet', [
 		('uint16', 'ConditionCount', None, None, 'Number of condition tables in the ConditionTable array'),
-		('struct', 'ConditionTable', 'ConditionCount', 0, 'Array of condition tables.'),
+		('LOffset', 'ConditionTable', 'ConditionCount', 0, 'Array of condition tables.'),
 	]),
 
 	('ConditionTableFormat1', [
