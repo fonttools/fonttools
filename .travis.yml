@@ -1,14 +1,11 @@
 language: python
-sudo: required
+sudo: false
 python:
   - "2.7"
   - "3.4"
   - "3.5"
-before_install:
-  - git clone --depth=1 https://github.com/behdad/fonttools.git
 install:
-  - cd fonttools; python setup.py install; cd ..
-  - python setup.py install
-script:
-  - python -c "import fontTools"
-  - python setup.py test
+  - pip install --upgrade pip setuptools wheel
+  - pip install tox-travis
+script: tox
+
