@@ -8,4 +8,39 @@ install:
   - pip install --upgrade pip setuptools wheel
   - pip install tox-travis
 script: tox
-
+# after_success:
+#   - pip wheel --no-deps -w dist .
+#   - python setup.py sdist
+# before_deploy:
+#   - export ZIP=$(ls dist/ufoLib*.zip)
+#   - export WHL=$(ls dist/ufoLib*.whl)
+#
+## Replace the encrypted Github api key and PyPI password to enable automatic
+## deployment of wheel and sdist to Github Releases and PyPI on tags.
+#
+# deploy:
+#   # deploy to Github Releases on tags
+#   - provider: releases
+#     api_key:
+#       secure: H2rz0E/GjRrRmvf6EYWv7Fyu+y4qU+InGiYlQ6xoyrjmMFCTYiPNW0ysu8893JFILusfO48zzEix7HcumQXtJU16XYwqft9eiWIGzSlP1krusmpQ0yTnuy9wEQcd7fXLEQDfiVZpJxWpC1TtsuIdDqpSUFcHDg4hlvn1IIh+6HwRP6+M5Mprze087ydBCKkO4CvqR4olC7bkSPorRtqUsiUHlUxYFS+R75a8ghqVQbky7ew9/r90zljCBFwYTPEv9tQ7OxnAQiUaAYojceThsBrNP1lH83tOoqB2FkKr9I5dxi5gqNuUsJHh3QK0V59oQCxU+iVFYfrlIZHTBQ+2caxIeWm2k9RkMXXkbg1LyfpORt+5L+NcFNE4WT0DTlYrKnpW+jrak0LEWaI97+15uHahph3vOJgaZrTFvRQZUJTWCNcji2jGbZg+O3pS1Vtd1xEgJ1TcrkOYLYBMrVOywbuQL4sXofLxH3I5RwAenkgm5TwxtuiNxpUkqlEhzJ+GYwWtfb7/qtcLIK7Xn6cDdsQG6XYQMVt+HpCKgRLlrQC8si6l+jZBEtJ7o4IKeYbtybFCe5H3V0jnRFRyncPPdpBavqJ093Pr7fGLvmZuHl551WRtyPlBN4aMGsqvqUSjwr/TxsX5zZ1tQ4QTN2YTmCdeUO6P/fwTBf5p0F3QFo8=
+#     file:
+#       - "${ZIP}"
+#       - "${WHL}"
+#     skip_cleanup: true
+#     on:
+#       repo: unified-font-object/ufoLib
+#       tags: true
+#       all_branches: true
+#       python: 3.5
+#   # deploy to PyPI on tags
+#   - provider: pypi
+#     server: https://upload.pypi.org/legacy/
+#     on:
+#       repo: unified-font-object/ufoLib
+#       tags: true
+#       all_branches: true
+#       python: 3.5
+#     user: anthrotype
+#     password:
+#       secure: B6rFOTA8ol1kt210q7USDVOzLFWUyMIwdZuaUdejYmUb0CXK6W8kKj0H01yBCgjkhtew9YEQSB62jFiGUOJH9L8JjpJO2RG8cHIIblXQfQ5DXogmcEtsAFotQz0o3UO/SYJaMY917XsPCqw3MTgksd2NWwO7H3YCjaWntN4zZxyTWowGr2Vhbj9s8e+MGMtrZ3Is91AcoXNI7HPj2oVhAtPP5GGpceIP7JlOGdHGUFJKuwJLRKVjEURWXN6ZOQNoxuG6KdkpGtJYCFgRCW65e48WpQs8lts/ByyOMyRItPIPI+K/cPOaIvZ7IUhu9SueBgKcW2YVzQrPzD07N5Lhb4LaKhqgMwpy7oWntnpO0/Xes7bonAoDYKPz7O3O3zl57fy1sVhGXZZNoGUfwyFz1PPecONavRpDQYCMEOq8BcENT86mf0xbAvtmTvBgos8NknmZ35ckUkyrye8t058CwW0yhEO2Pr36XPKoEP9EAiq2YRvINPYnI1T3jTPUUwnc3IAv4zQvPUKWqs2/hEVy8FTCz/0hBgDv2cs4pRcofTzfXSczGMfyuNS3i4n3CHc4FEOYP9MuEWGDC7KF4MVNsBWbh5pkISwhIwNbW1UDept2k+Dmb9XrSoCt5aSvEPJVT3YTA4qTGSUQvhzj1SvXi3s2lh+1WbibEJqNfpdobGg=
+#     distributions: sdist bdist_wheel
