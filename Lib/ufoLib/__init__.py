@@ -1176,10 +1176,12 @@ def makeUFOPath(path):
 	"""
 	Return a .ufo pathname.
 
-	>>> makeUFOPath("/directory/something.ext")
-	'/directory/something.ufo'
-	>>> makeUFOPath("/directory/something.another.thing.ext")
-	'/directory/something.another.thing.ufo'
+	>>> makeUFOPath("directory/something.ext") == (
+	... 	os.path.join('directory', 'something.ufo'))
+	True
+	>>> makeUFOPath("directory/something.another.thing.ext") == (
+	... 	os.path.join('directory', 'something.another.thing.ufo'))
+	True
 	"""
 	dir, name = os.path.split(path)
 	name = ".".join([".".join(name.split(".")[:-1]), "ufo"])
