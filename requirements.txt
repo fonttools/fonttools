@@ -1,0 +1,2 @@
+# TODO(anthrotype): replace it with 'fonttools>=3.1' once it's on PyPI
+https://github.com/behdad/fonttools/archive/7930106740f6f6f25583836c56c6cc593762e779.zip

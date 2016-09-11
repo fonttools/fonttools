@@ -1291,7 +1291,7 @@ def _number(s):
 	1
 	>>> _number("1.0")
 	1.0
-	>>> _number("a")
+	>>> _number("a")  # doctest: +IGNORE_EXCEPTION_DETAIL
 	Traceback (most recent call last):
 	    ...
 	GlifLibError: Could not convert a to an int or float.
