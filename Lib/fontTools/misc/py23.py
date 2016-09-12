@@ -6,7 +6,8 @@ import sys
 
 __all__ = ['basestring', 'unicode', 'unichr', 'byteord', 'bytechr', 'BytesIO',
 		'StringIO', 'UnicodeIO', 'strjoin', 'bytesjoin', 'tobytes', 'tostr',
-		'tounicode', 'Tag', 'open', 'range', 'xrange', 'Py23Error']
+		'tounicode', 'Tag', 'open', 'range', 'xrange', 'round2', 'round3',
+		'Py23Error']
 
 
 class Py23Error(NotImplementedError):
@@ -253,6 +254,87 @@ except NameError:
 
 def xrange(*args, **kwargs):
 	raise Py23Error("'xrange' is not defined. Use 'range' instead.")
+
+
+import decimal as _decimal
+
+
+def round2(number, ndigits=None):
+	"""
+	See Python 2 documentation.
+
+	Rounds a number to a given precision in decimal digits (default
+	0 digits). The result is a floating point number. Values are rounded
+	to the closest multiple of 10 to the power minus ndigits; if two
+	multiples are equally close, rounding is done away from 0.
+
+	ndigits may be negative.
+	"""
+	if ndigits is None:
+		ndigits = 0
+	elif hasattr(ndigits, '__index__'):
+		# any type with an __index__ method should be permitted as
+		# a second argument
+		ndigits = ndigits.__index__()
+
+	if ndigits < 0:
+		exponent = 10 ** (-ndigits)
+		quotient, remainder = divmod(number, exponent)
+		if remainder >= exponent//2 and number >= 0:
+			quotient += 1
+		return float(quotient * exponent)
+	else:
+		exponent = _decimal.Decimal('10') ** (-ndigits)
+
+		d = _decimal.Decimal.from_float(number).quantize(
+			exponent, rounding=_decimal.ROUND_HALF_UP)
+
+		return float(d)
+
+
+def round3(number, ndigits=None):
+	"""
+	See Python 3 documentation: uses Banker's Rounding.
+
+	Delegates to the __round__ method if for some reason this exists.
+
+	If not, rounds a number to a given precision in decimal digits (default
+	0 digits). This returns an int when called with one argument,
+	otherwise the same type as the number. ndigits may be negative.
+
+	ndigits may be negative.
+
+	Derived from python-future:
+	https://github.com/PythonCharmers/python-future/blob/master/src/future/builtins/newround.py
+	"""
+	return_int = False
+	if ndigits is None:
+		return_int = True
+		ndigits = 0
+
+	if hasattr(number, '__round__'):
+		d = number.__round__(ndigits)
+		return int(d) if return_int else float(d)
+
+	if hasattr(ndigits, '__index__'):
+		# any type with an __index__ method should be permitted as
+		# a second argument
+		ndigits = ndigits.__index__()
+
+	if ndigits < 0:
+		exponent = 10 ** (-ndigits)
+		quotient, remainder = divmod(number, exponent)
+		half = exponent//2
+		if remainder > half or (remainder == half and quotient % 2 != 0):
+			quotient += 1
+		d = quotient * exponent
+	else:
+		exponent = _decimal.Decimal('10') ** (-ndigits)
+
+		d = _decimal.Decimal.from_float(number).quantize(
+			exponent, rounding=_decimal.ROUND_HALF_EVEN)
+
+	return int(d) if return_int else float(d)
 
 
 import logging
