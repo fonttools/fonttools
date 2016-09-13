@@ -14,6 +14,10 @@ class Py23Error(NotImplementedError):
 	pass
 
 
+PY3 = sys.version_info[0] == 3
+PY2 = sys.version_info[0] == 2
+
+
 try:
 	basestring = basestring
 except NameError:
@@ -335,6 +339,13 @@ def round3(number, ndigits=None):
 			exponent, rounding=_decimal.ROUND_HALF_EVEN)
 
 	return int(d) if return_int else float(d)
+
+
+if PY2:
+	round = round3
+else:
+	import builtins
+	round = builtins.round
 
 
 import logging
