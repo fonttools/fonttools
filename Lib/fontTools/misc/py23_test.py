@@ -8,6 +8,8 @@ import sys
 import os
 import unittest
 
+from fontTools.misc.py23 import round2, round3
+
 
 PIPE_SCRIPT = """\
 import sys
