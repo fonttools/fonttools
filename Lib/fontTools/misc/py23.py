@@ -7,7 +7,7 @@ import sys
 __all__ = ['basestring', 'unicode', 'unichr', 'byteord', 'bytechr', 'BytesIO',
 		'StringIO', 'UnicodeIO', 'strjoin', 'bytesjoin', 'tobytes', 'tostr',
 		'tounicode', 'Tag', 'open', 'range', 'xrange', 'round2', 'round3',
-		'Py23Error']
+		'round', 'Py23Error']
 
 
 class Py23Error(NotImplementedError):
