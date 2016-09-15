@@ -1,28 +1,53 @@
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
-import fontTools.feaLib.ast as ast
 from fontTools.voltLib.error import VoltLibError
 
 
-class VoltFile(ast.Block):
+class Statement(object):
+    def __init__(self, location):
+        self.location = location
+
+    def build(self, builder):
+        pass
+
+
+class Expression(object):
+    def __init__(self, location):
+        self.location = location
+
+    def build(self, builder):
+        pass
+
+
+class Block(Statement):
+    def __init__(self, location):
+        Statement.__init__(self, location)
+        self.statements = []
+
+    def build(self, builder):
+        for s in self.statements:
+            s.build(builder)
+
+
+class VoltFile(Block):
     def __init__(self):
-        ast.Block.__init__(self, location=None)
+        Block.__init__(self, location=None)
 
 
-class LookupBlock(ast.Block):
+class LookupBlock(Block):
     def __init__(self, location, name):
-        ast.Block.__init__(self, location)
+        Block.__init__(self, location)
         self.name = name
 
     def build(self, builder):
         builder.start_lookup_block(self.location, self.name)
-        ast.Block.build(self, builder)
+        Block.build(self, builder)
         builder.end_lookup_block()
 
 
-class GlyphDefinition(ast.Statement):
+class GlyphDefinition(Statement):
     def __init__(self, location, name, gid, gunicode, gtype, components):
-        ast.Statement.__init__(self, location)
+        Statement.__init__(self, location)
         self.name = name
         self.id = gid
         self.unicode = gunicode
@@ -30,9 +55,9 @@ class GlyphDefinition(ast.Statement):
         self.components = components
 
 
-class GroupDefinition(ast.Statement):
+class GroupDefinition(Statement):
     def __init__(self, location, name, enum):
-        ast.Statement.__init__(self, location)
+        Statement.__init__(self, location)
         self.name = name
         self.enum = enum
         self.glyphs_ = None
@@ -51,20 +76,20 @@ class GroupDefinition(ast.Statement):
         return self.glyphs_
 
 
-class GlyphName(ast.Expression):
+class GlyphName(Expression):
     """A single glyph name, such as cedilla."""
     def __init__(self, location, glyph):
-        ast.Expression.__init__(self, location)
+        Expression.__init__(self, location)
         self.glyph = glyph
 
     def glyphSet(self):
         return frozenset((self.glyph,))
 
 
-class Enum(ast.Expression):
+class Enum(Expression):
     """An enum"""
     def __init__(self, location, enum):
-        ast.Expression.__init__(self, location)
+        Expression.__init__(self, location)
         self.enum = enum
 
     def __iter__(self):
@@ -81,10 +106,10 @@ class Enum(ast.Expression):
         return frozenset(glyphs)
 
 
-class GroupName(ast.Expression):
+class GroupName(Expression):
     """A glyph group"""
     def __init__(self, location, group, parser):
-        ast.Expression.__init__(self, location)
+        Expression.__init__(self, location)
         self.group = group
         self.parser_ = parser
 
@@ -99,10 +124,10 @@ class GroupName(ast.Expression):
                 self.location)
 
 
-class Range(ast.Expression):
+class Range(Expression):
     """A glyph range"""
     def __init__(self, location, start, end, parser):
-        ast.Expression.__init__(self, location)
+        Expression.__init__(self, location)
         self.start = start
         self.end = end
         self.parser = parser
@@ -112,34 +137,34 @@ class Range(ast.Expression):
         return frozenset(glyphs)
 
 
-class ScriptDefinition(ast.Statement):
+class ScriptDefinition(Statement):
     def __init__(self, location, name, tag, langs):
-        ast.Statement.__init__(self, location)
+        Statement.__init__(self, location)
         self.name = name
         self.tag = tag
         self.langs = langs
 
 
-class LangSysDefinition(ast.Statement):
+class LangSysDefinition(Statement):
     def __init__(self, location, name, tag, features):
-        ast.Statement.__init__(self, location)
+        Statement.__init__(self, location)
         self.name = name
         self.tag = tag
         self.features = features
 
 
-class FeatureDefinition(ast.Statement):
+class FeatureDefinition(Statement):
     def __init__(self, location, name, tag, lookups):
-        ast.Statement.__init__(self, location)
+        Statement.__init__(self, location)
         self.name = name
         self.tag = tag
         self.lookups = lookups
 
 
-class LookupDefinition(ast.Statement):
+class LookupDefinition(Statement):
     def __init__(self, location, name, process_base, process_marks, direction,
                  reversal, comments, context, sub, pos):
-        ast.Statement.__init__(self, location)
+        Statement.__init__(self, location)
         self.name = name
         self.process_base = process_base
         self.process_marks = process_marks
@@ -151,9 +176,9 @@ class LookupDefinition(ast.Statement):
         self.pos = pos
 
 
-class SubstitutionDefinition(ast.Statement):
+class SubstitutionDefinition(Statement):
     def __init__(self, location, mapping):
-        ast.Statement.__init__(self, location)
+        Statement.__init__(self, location)
         self.mapping = mapping
 
 
@@ -177,46 +202,46 @@ class SubstitutionReverseChainingSingleDefinition(SubstitutionDefinition):
         SubstitutionDefinition.__init__(self, location, mapping)
 
 
-class PositionAttachDefinition(ast.Statement):
+class PositionAttachDefinition(Statement):
     def __init__(self, location, coverage, coverage_to):
-        ast.Statement.__init__(self, location)
+        Statement.__init__(self, location)
         self.coverage = coverage
         self.coverage_to = coverage_to
 
 
-class PositionAttachCursiveDefinition(ast.Statement):
+class PositionAttachCursiveDefinition(Statement):
     def __init__(self, location, coverages_exit, coverages_enter):
-        ast.Statement.__init__(self, location)
+        Statement.__init__(self, location)
         self.coverages_exit = coverages_exit
         self.coverages_enter = coverages_enter
 
 
-class PositionAdjustPairDefinition(ast.Statement):
+class PositionAdjustPairDefinition(Statement):
     def __init__(self, location, coverages_1, coverages_2, adjust_pair):
-        ast.Statement.__init__(self, location)
+        Statement.__init__(self, location)
         self.coverages_1 = coverages_1
         self.coverages_2 = coverages_2
         self.adjust_pair = adjust_pair
 
 
-class PositionAdjustSingleDefinition(ast.Statement):
+class PositionAdjustSingleDefinition(Statement):
     def __init__(self, location, adjust_single):
-        ast.Statement.__init__(self, location)
+        Statement.__init__(self, location)
         self.adjust_single = adjust_single
 
 
-class ContextDefinition(ast.Statement):
+class ContextDefinition(Statement):
     def __init__(self, location, ex_or_in, left=[], right=[]):
-        ast.Statement.__init__(self, location)
+        Statement.__init__(self, location)
         self.ex_or_in = ex_or_in
         self.left = left
         self.right = right
 
 
-class AnchorDefinition(ast.Statement):
+class AnchorDefinition(Statement):
     def __init__(self, location, name, gid, glyph_name, component, locked,
                  pos):
-        ast.Statement.__init__(self, location)
+        Statement.__init__(self, location)
         self.name = name
         self.gid = gid
         self.glyph_name = glyph_name
@@ -225,8 +250,8 @@ class AnchorDefinition(ast.Statement):
         self.pos = pos
 
 
-class SettingDefinition(ast.Statement):
+class SettingDefinition(Statement):
     def __init__(self, location, name, value):
-        ast.Statement.__init__(self, location)
+        Statement.__init__(self, location)
         self.name = name
         self.value = value
