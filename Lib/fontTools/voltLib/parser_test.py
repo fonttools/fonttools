@@ -84,6 +84,20 @@ class ParserTest(unittest.TestCase):
                           def_glyph.type, def_glyph.components),
                          ("glyph20", 20, None, None, None))
 
+    def test_def_glyph_case_sensitive(self):
+        def_glyphs = self.parse(
+            'DEF_GLYPH "A" ID 3 UNICODE 65 TYPE BASE END_GLYPH\n'
+            'DEF_GLYPH "a" ID 4 UNICODE 97 TYPE BASE END_GLYPH\n'
+        ).statements
+        self.assertEqual((def_glyphs[0].name, def_glyphs[0].id,
+                          def_glyphs[0].unicode, def_glyphs[0].type,
+                          def_glyphs[0].components),
+                         ("A", 3, [0x41], "BASE", None))
+        self.assertEqual((def_glyphs[1].name, def_glyphs[1].id,
+                          def_glyphs[1].unicode, def_glyphs[1].type,
+                          def_glyphs[1].components),
+                         ("a", 4, [0x61], "BASE", None))
+
     def test_def_group_glyphs(self):
         [def_group] = self.parse(
             'DEF_GROUP "aaccented"\n'
