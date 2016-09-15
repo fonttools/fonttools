@@ -632,6 +632,9 @@ class OrderedSymbolTable(SymbolTable):
     def enter_scope(self):
         self.scopes_.append(OrderedDict())
 
+    def resolve(self, name, case_insensitive=False):
+        SymbolTable.resolve(self, name, case_insensitive=case_insensitive)
+
     def range(self, start, end):
         for scope in reversed(self.scopes_):
             if start in scope and end in scope:
