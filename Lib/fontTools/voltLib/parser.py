@@ -2,7 +2,6 @@ from __future__ import (
     print_function, division, absolute_import, unicode_literals)
 from collections import OrderedDict
 import fontTools.voltLib.ast as ast
-import fontTools.feaLib.parser as parser
 from fontTools.voltLib.lexer import Lexer
 from fontTools.voltLib.error import VoltLibError
 from io import open
@@ -601,19 +600,28 @@ class Parser(object):
             self.next_token_type_, self.next_token_ = (None, None)
 
 
-class SymbolTable(parser.SymbolTable):
+class SymbolTable(object):
     def __init__(self):
-        parser.SymbolTable.__init__(self)
+        self.scopes_ = [{}]
+
+    def enter_scope(self):
+        self.scopes_.append({})
+
+    def exit_scope(self):
+        self.scopes_.pop()
+
+    def define(self, name, item):
+        self.scopes_[-1][name] = item
 
     def resolve(self, name, case_insensitive=True):
         for scope in reversed(self.scopes_):
             item = scope.get(name)
             if item:
                 return item
-            if case_insensitive:
-                for key in scope:
-                    if key.lower() == name.lower():
-                        return scope[key]
+        if case_insensitive:
+            for key in scope:
+                if key.lower() == name.lower():
+                    return scope[key]
         return None
 
 
