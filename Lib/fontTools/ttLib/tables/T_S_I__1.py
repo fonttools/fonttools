@@ -66,7 +66,7 @@ class table_T_S_I__1(DefaultTable.DefaultTable):
 				data = data + b"\015"  # align on 2-byte boundaries, fill with return chars.
 			code, name = codes[i]
 			if name in self.extraPrograms:
-				text = tobytes(self.extraPrograms[name])
+				text = tobytes(self.extraPrograms[name], encoding="utf-8")
 			else:
 				text = b""
 			textLength = len(text)
