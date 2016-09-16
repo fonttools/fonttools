@@ -34,6 +34,8 @@ class Parser(object):
             self.advance_lexer_()
             if self.cur_token_type_ is Lexer.GLYPHCLASS:
                 statements.append(self.parse_glyphclass_definition_())
+            elif self.is_cur_keyword_(("anon", "anonymous")):
+                statements.append(self.parse_anonymous_())
             elif self.is_cur_keyword_("anchorDef"):
                 statements.append(self.parse_anchordef_())
             elif self.is_cur_keyword_("languagesystem"):
@@ -122,6 +124,17 @@ class Parser(object):
         anchordef = ast.AnchorDefinition(location, name, x, y, contourpoint)
         self.anchors_.define(name, anchordef)
         return anchordef
+
+    def parse_anonymous_(self):
+        assert self.is_cur_keyword_(("anon", "anonymous"))
+        tag = self.expect_tag_()
+        _, content, location = self.lexer_.scan_anonymous_block(tag)
+        self.advance_lexer_()
+        self.expect_symbol_('}')
+        end_tag = self.expect_tag_()
+        assert tag == end_tag, "bad splitting in Lexer.scan_anonymous_block()"
+        self.expect_symbol_(';')
+        return ast.AnonymousBlock(tag, content, location)
 
     def parse_attach_(self):
         assert self.is_cur_keyword_("Attach")

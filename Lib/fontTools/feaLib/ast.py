@@ -70,6 +70,12 @@ class MarkClassName(Expression):
         return self.markClass.glyphSet()
 
 
+class AnonymousBlock(Statement):
+    def __init__(self, tag, content, location):
+        Statement.__init__(self, location)
+        self.tag, self.content = tag, content
+
+
 class Block(Statement):
     def __init__(self, location):
         Statement.__init__(self, location)
