@@ -189,14 +189,9 @@ def glyphs_to_quadratic(
         max_errors = max_err
     else:
         max_errors = [max_err] * len(glyphs)
+    assert len(max_errors) == len(glyphs)
 
-    num_glyphs = len(glyphs)
-    assert len(max_errors) == num_glyphs
-
-    modified = _glyphs_to_quadratic(
-        glyphs, max_errors, reverse_direction, stats)
-
-    return modified
+    return _glyphs_to_quadratic(glyphs, max_errors, reverse_direction, stats)
 
 
 def fonts_to_quadratic(
@@ -227,9 +222,7 @@ def fonts_to_quadratic(
         max_errors = [max_err] * len(fonts)
     else:
         max_errors = [f.info.unitsPerEm * max_err_em for f in fonts]
-
-    num_fonts = len(fonts)
-    assert len(max_errors) == num_fonts
+    assert len(max_errors) == len(fonts)
 
     modified = False
     for glyphs in zip(*fonts):
