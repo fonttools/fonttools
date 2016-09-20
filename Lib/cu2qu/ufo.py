@@ -226,10 +226,14 @@ def fonts_to_quadratic(
 
     modified = False
     for name in set().union(*(f.keys() for f in fonts)):
-        glyphs = [font[name] for font in fonts if name in font]
-        assert all(g.name == name for g in glyphs), 'Incompatible fonts'
+        glyphs = []
+        my_errors = []
+        for font, error in zip(fonts, max_errors):
+            if name in font:
+                glyphs.append(font[name])
+                my_errors.append(error)
         modified |= _glyphs_to_quadratic(
-            glyphs, max_errors, reverse_direction, stats)
+            glyphs, my_errors, reverse_direction, stats)
 
     if modified and dump_stats:
         spline_lengths = sorted(stats.keys())
