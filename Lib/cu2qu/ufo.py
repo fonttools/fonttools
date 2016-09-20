@@ -225,8 +225,8 @@ def fonts_to_quadratic(
     assert len(max_errors) == len(fonts)
 
     modified = False
-    for glyphs in zip(*fonts):
-        name = glyphs[0].name
+    for name in set().union(*(f.keys() for f in fonts)):
+        glyphs = [font[name] for font in fonts if name in font]
         assert all(g.name == name for g in glyphs), 'Incompatible fonts'
         modified |= _glyphs_to_quadratic(
             glyphs, max_errors, reverse_direction, stats)
