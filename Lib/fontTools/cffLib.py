@@ -155,6 +155,10 @@ class CFFWriter(object):
 		log.log(DEBUG, "CFFWriter.toFile() writing to file.")
 		begin = file.tell()
 		posList = [0]
+		cffOffSize = calcOffSize(lastPosList[-1])
+		headerBytes = self.data[0]
+		headerBytes = headerBytes[:-1] + chr(cffOffSize)
+		self.data[0] = headerBytes
 		for item in self.data:
 			if hasattr(item, "toFile"):
 				item.toFile(file)
@@ -186,43 +190,53 @@ class IndexCompiler(object):
 		return items
 
 	def getOffsets(self):
-		pos = 1
-		offsets = [pos]
-		for item in self.items:
-			if hasattr(item, "getDataLength"):
-				pos = pos + item.getDataLength()
-			else:
-				pos = pos + len(item)
-			offsets.append(pos)
+		# An empty INDEX contains only the count field.
+		if self.items:
+			pos = 1
+			offsets = [pos]
+			for item in self.items:
+				if hasattr(item, "getDataLength"):
+					pos = pos + item.getDataLength()
+				else:
+					pos = pos + len(item)
+				offsets.append(pos)
+		else:
+			offsets = []
 		return offsets
 
 	def getDataLength(self):
-		lastOffset = self.getOffsets()[-1]
-		offSize = calcOffSize(lastOffset)
-		dataLength = (
-			2 +                                # count
-			1 +                                # offSize
-			(len(self.items) + 1) * offSize +  # the offsets
-			lastOffset - 1                     # size of object data
-		)
+		if self.items:
+			lastOffset = self.getOffsets()[-1]
+			offSize = calcOffSize(lastOffset)
+			dataLength = (
+				2 +                                # count
+				1 +                                # offSize
+				(len(self.items) + 1) * offSize +  # the offsets
+				lastOffset - 1                     # size of object data
+			)
+		else:
+			dataLength = 2  # count. For empty INDEX tables, this is the only entry.
+
 		return dataLength
 
 	def toFile(self, file):
 		offsets = self.getOffsets()
 		writeCard16(file, len(self.items))
-		offSize = calcOffSize(offsets[-1])
-		writeCard8(file, offSize)
-		offSize = -offSize
-		pack = struct.pack
-		for offset in offsets:
-			binOffset = pack(">l", offset)[offSize:]
-			assert len(binOffset) == -offSize
-			file.write(binOffset)
-		for item in self.items:
-			if hasattr(item, "toFile"):
-				item.toFile(file)
-			else:
-				file.write(tobytes(item, encoding="latin1"))
+		# An empty INDEX contains only the count field.
+		if self.items:
+			offSize = calcOffSize(offsets[-1])
+			writeCard8(file, offSize)
+			offSize = -offSize
+			pack = struct.pack
+			for offset in offsets:
+				binOffset = pack(">l", offset)[offSize:]
+				assert len(binOffset) == -offSize
+				file.write(binOffset)
+			for item in self.items:
+				if hasattr(item, "toFile"):
+					item.toFile(file)
+				else:
+					file.write(tobytes(item, encoding="latin1"))
 
 
 class IndexedStringsCompiler(IndexCompiler):
