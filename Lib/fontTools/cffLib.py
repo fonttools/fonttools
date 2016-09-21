@@ -79,6 +79,10 @@ class CFFFontSet(object):
 		writer.toFile(file)
 
 	def toXML(self, xmlWriter, progress=None):
+		xmlWriter.simpletag("major", value=self.major)
+		xmlWriter.newline()
+		xmlWriter.simpletag("minor", value=self.minor)
+		xmlWriter.newline()
 		for fontName in self.fontNames:
 			xmlWriter.begintag("CFFFont", name=tostr(fontName))
 			xmlWriter.newline()
