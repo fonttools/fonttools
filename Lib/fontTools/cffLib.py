@@ -447,6 +447,11 @@ class FDArrayIndex(TopDictIndex):
 
 	compilerClass = FDArrayIndexCompiler
 
+	def produceItem(self, index, data, file, offset, size):
+		fontDict = FontDict(self.strings, file, offset, self.GlobalSubrs)
+		fontDict.decompile(data)
+		return fontDict
+
 	def fromXML(self, name, attrs, content):
 		if name != "FontDict":
 			return
@@ -1267,6 +1272,27 @@ topDictOperators = [
 	(17,		'CharStrings',		'number',	None,	CharStringsConverter()),
 ]
 
+fontDictOperators = [
+#	opcode		name			argument type	default	converter
+	(2,		'FullName',		'SID',		None,	None),
+	((12, 38),	'FontName',		'SID',		None,	None),
+	(3,		'FamilyName',		'SID',		None,	None),
+	(4,		'Weight',		'SID',		None,	None),
+	((12, 1),	'isFixedPitch',		'number',	0,	None),
+	((12, 2),	'ItalicAngle',		'number',	0,	None),
+	((12, 3),	'UnderlinePosition',	'number',	None,	None),
+	((12, 4),	'UnderlineThickness',	'number',	50,	None),
+	((12, 6),	'CharstringType',	'number',	2,	None),
+	((12, 7),	'FontMatrix',		'array',	[0.001, 0, 0, 0.001, 0, 0],	None),
+	(5,		'FontBBox',		'array',	[0, 0, 0, 0],	None),
+	(15,		'charset',		'number',	0,	CharsetConverter()),
+	(18,		'Private',	('number', 'number'),	None,	PrivateDictConverter()),
+	((12, 37),	'FDSelect',		'number',	None,	FDSelectConverter()),
+	((12, 36),	'FDArray',		'number',	None,	FDArrayConverter()),
+	(17,		'CharStrings',		'number',	None,	CharStringsConverter()),
+]
+
+
 # Note! FDSelect and FDArray must both preceed CharStrings in the output XML build order,
 # in order for the font to compile back from xml.
 
@@ -1312,11 +1338,14 @@ def addConverters(table):
 
 addConverters(privateDictOperators)
 addConverters(topDictOperators)
+addConverters(fontDictOperators)
 
 
 class TopDictDecompiler(psCharStrings.DictDecompiler):
 	operators = buildOperatorDict(topDictOperators)
 
+class FontDictDecompiler(psCharStrings.DictDecompiler):
+	operators = buildOperatorDict(fontDictOperators)
 
 class PrivateDictDecompiler(psCharStrings.DictDecompiler):
 	operators = buildOperatorDict(privateDictOperators)
@@ -1448,7 +1477,7 @@ class TopDictCompiler(DictCompiler):
 
 class FontDictCompiler(DictCompiler):
 
-	opcodes = buildOpcodeDict(topDictOperators)
+	opcodes = buildOpcodeDict(fontDictOperators)
 
 	def getChildren(self, strings):
 		children = []
@@ -1577,23 +1606,18 @@ class TopDict(BaseDict):
 			i = i + 1
 
 
-class FontDict(BaseDict):
+class FontDict(TopDict):
 
-	defaults = buildDefaults(topDictOperators)
-	converters = buildConverters(topDictOperators)
-	order = buildOrder(topDictOperators)
-	decompilerClass = None
+	defaults = buildDefaults(fontDictOperators)
+	converters = buildConverters(fontDictOperators)
+	order = buildOrder(fontDictOperators)
+	decompilerClass = FontDictDecompiler
 	compilerClass = FontDictCompiler
 
 	def __init__(self, strings=None, file=None, offset=None, GlobalSubrs=None):
-		BaseDict.__init__(self, strings, file, offset)
-		self.GlobalSubrs = GlobalSubrs
-
-	def getGlyphOrder(self):
-		return self.charset
+		TopDict.__init__(self, strings, file, offset)
 
 	def toXML(self, xmlWriter, progress):
-		self.skipNames = ['Encoding']
 		BaseDict.toXML(self, xmlWriter, progress)
 
 
