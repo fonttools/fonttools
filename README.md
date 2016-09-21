@@ -117,6 +117,22 @@ The fontTools python module provides a convenient way to programmatically edit f
 
 A selection of sample python programs is in the [Snippets](https://github.com/behdad/fonttools/blob/master/Snippets/) directory. 
 
+### Testing
+
+You can use [pytest](http://docs.pytest.org/en/latest/) to run the test suite:
+
+```sh
+pip install pytest
+py.test
+```
+
+We also use [tox](https://testrun.org/tox/latest/) to automatically test on different Python versions in isolated virtual environments.
+
+```sh
+pip install -r dev-requirements.txt
+tox
+```
+
 ### Development Community
 
 TTX/FontTools development is ongoing in an active community of developers, that includes professional developers employed at major software corporations and type foundries as well as hobbyists. 

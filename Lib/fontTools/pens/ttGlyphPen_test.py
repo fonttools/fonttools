@@ -106,6 +106,35 @@ class TTGlyphPenTest(unittest.TestCase):
 
         self.assertEqual(plainGlyph, compositeGlyph)
 
+    def test_remove_extra_move_points(self):
+        pen = TTGlyphPen(None)
+        pen.moveTo((0, 0))
+        pen.lineTo((100, 0))
+        pen.qCurveTo((100, 50), (50, 100), (0, 0))
+        pen.closePath()
+        self.assertEqual(len(pen.points), 4)
+        self.assertEqual(pen.points[0], (0, 0))
+
+    def test_keep_move_point(self):
+        pen = TTGlyphPen(None)
+        pen.moveTo((0, 0))
+        pen.lineTo((100, 0))
+        pen.qCurveTo((100, 50), (50, 100), (30, 30))
+        # when last and move pts are different, closePath() implies a lineTo
+        pen.closePath()
+        self.assertEqual(len(pen.points), 5)
+        self.assertEqual(pen.points[0], (0, 0))
+
+    def test_keep_duplicate_end_point(self):
+        pen = TTGlyphPen(None)
+        pen.moveTo((0, 0))
+        pen.lineTo((100, 0))
+        pen.qCurveTo((100, 50), (50, 100), (0, 0))
+        pen.lineTo((0, 0))  # the duplicate point is not removed
+        pen.closePath()
+        self.assertEqual(len(pen.points), 5)
+        self.assertEqual(pen.points[0], (0, 0))
+
 
 class _TestGlyph(object):
     def __init__(self, glyph):

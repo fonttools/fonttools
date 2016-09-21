@@ -114,6 +114,24 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(foo.y, 456)
         self.assertEqual(foo.contourpoint, 5)
 
+    def test_anon(self):
+        anon = self.parse("anon TEST { # a\nfoo\n } TEST; # qux").statements[0]
+        self.assertIsInstance(anon, ast.AnonymousBlock)
+        self.assertEqual(anon.tag, "TEST")
+        self.assertEqual(anon.content, "foo\n ")
+
+    def test_anonymous(self):
+        anon = self.parse("anonymous TEST {\nbar\n} TEST;").statements[0]
+        self.assertIsInstance(anon, ast.AnonymousBlock)
+        self.assertEqual(anon.tag, "TEST")
+        # feature file spec requires passing the final end-of-line
+        self.assertEqual(anon.content, "bar\n")
+
+    def test_anon_missingBrace(self):
+        self.assertRaisesRegex(
+            FeatureLibError, "Expected '} TEST;' to terminate anonymous block",
+            self.parse, "anon TEST { \n no end in sight")
+
     def test_attach(self):
         doc = self.parse("table GDEF {Attach [a e] 2;} GDEF;")
         s = doc.statements[0].statements[0]
@@ -1242,6 +1260,8 @@ class ParserTest(unittest.TestCase):
     def test_empty_statement_ignored(self):
         doc = self.parse("feature test {;} test;")
         self.assertFalse(doc.statements[0].statements)
+        doc = self.parse(";;;")
+        self.assertFalse(doc.statements)
 
     def setUp(self):
         self.tempdir = None

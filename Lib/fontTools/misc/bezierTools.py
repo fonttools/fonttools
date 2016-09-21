@@ -18,8 +18,8 @@ __all__ = [
 
 from fontTools.misc.arrayTools import calcBounds
 
-epsilonDigits = 12
-epsilon = 1e-12
+epsilonDigits = 6
+epsilon = 1e-10
 
 
 def calcQuadraticBounds(pt1, pt2, pt3):
@@ -215,12 +215,14 @@ def _splitQuadraticAtT(a, b, c, *ts):
         t2 = ts[i+1]
         delta = (t2 - t1)
         # calc new a, b and c
-        a1x = ax * delta**2
-        a1y = ay * delta**2
+        delta_2 = delta*delta
+        a1x = ax * delta_2
+        a1y = ay * delta_2
         b1x = (2*ax*t1 + bx) * delta
         b1y = (2*ay*t1 + by) * delta
-        c1x = ax*t1**2 + bx*t1 + cx
-        c1y = ay*t1**2 + by*t1 + cy
+        t1_2 = t1*t1
+        c1x = ax*t1_2 + bx*t1 + cx
+        c1y = ay*t1_2 + by*t1 + cy
 
         pt1, pt2, pt3 = calcQuadraticPoints((a1x, a1y), (b1x, b1y), (c1x, c1y))
         segments.append((pt1, pt2, pt3))
@@ -240,15 +242,21 @@ def _splitCubicAtT(a, b, c, d, *ts):
         t1 = ts[i]
         t2 = ts[i+1]
         delta = (t2 - t1)
+
+        delta_2 = delta*delta
+        delta_3 = delta*delta_2
+        t1_2 = t1*t1
+        t1_3 = t1*t1_2
+
         # calc new a, b, c and d
-        a1x = ax * delta**3
-        a1y = ay * delta**3
-        b1x = (3*ax*t1 + bx) * delta**2
-        b1y = (3*ay*t1 + by) * delta**2
-        c1x = (2*bx*t1 + cx + 3*ax*t1**2) * delta
-        c1y = (2*by*t1 + cy + 3*ay*t1**2) * delta
-        d1x = ax*t1**3 + bx*t1**2 + cx*t1 + dx
-        d1y = ay*t1**3 + by*t1**2 + cy*t1 + dy
+        a1x = ax * delta_3
+        a1y = ay * delta_3
+        b1x = (3*ax*t1 + bx) * delta_2
+        b1y = (3*ay*t1 + by) * delta_2
+        c1x = (2*bx*t1 + cx + 3*ax*t1_2) * delta
+        c1y = (2*by*t1 + cy + 3*ay*t1_2) * delta
+        d1x = ax*t1_3 + bx*t1_2 + cx*t1 + dx
+        d1y = ay*t1_3 + by*t1_2 + cy*t1 + dy
         pt1, pt2, pt3, pt4 = calcCubicPoints((a1x, a1y), (b1x, b1y), (c1x, c1y), (d1x, d1y))
         segments.append((pt1, pt2, pt3, pt4))
     return segments
@@ -298,9 +306,13 @@ def solveCubic(a, b, c, d):
     >>> solveCubic(-10.0, -9.0, 48.0, -29.0)
     [-2.9, 1.0, 1.0]
     >>> solveCubic(-9.875, -9.0, 47.625, -28.75)
-    [-2.911392405063, 1.0, 1.0]
+    [-2.911392, 1.0, 1.0]
     >>> solveCubic(1.0, -4.5, 6.75, -3.375)
     [1.5, 1.5, 1.5]
+    >>> solveCubic(-12.0, 18.0, -9.0, 1.50023651123)
+    [0.5, 0.5, 0.5]
+    >>> solveCubic(9.0, 0.0, 0.0, -7.62939453125e-05)
+    [-0.0, -0.0, -0.0]
     """
     #
     # adapted from:
@@ -320,16 +332,19 @@ def solveCubic(a, b, c, d):
     Q = (a1*a1 - 3.0*a2)/9.0
     R = (2.0*a1*a1*a1 - 9.0*a1*a2 + 27.0*a3)/54.0
 
-    R = 0 if abs(R) < epsilon else R
-    Q = 0 if abs(Q) < epsilon else Q
+    R2 = R*R
+    Q3 = Q*Q*Q
+    R2 = 0 if R2 < epsilon else R2
+    Q3 = 0 if abs(Q3) < epsilon else Q3
 
-    R2_Q3 = R*R - Q*Q*Q
+    R2_Q3 = R2 - Q3
 
-    if R == 0. and Q == 0.:
-        x = -a1/3.0
+    if R2 == 0. and Q3 == 0.:
+        x = round(-a1/3.0, epsilonDigits)
         return [x, x, x]
-    elif R2_Q3 <= epsilon:
-        theta = acos(max(min(R/sqrt(Q*Q*Q), 1.0), -1.0))
+    elif R2_Q3 <= epsilon * .5:
+        # The epsilon * .5 above ensures that Q3 is not zero.
+        theta = acos(max(min(R/sqrt(Q3), 1.0), -1.0))
         rQ2 = -2.0*sqrt(Q)
         a1_3 = a1/3.0
         x0 = rQ2*cos(theta/3.0) - a1_3
@@ -355,7 +370,7 @@ def solveCubic(a, b, c, d):
         x = x + Q/x
         if R >= 0.0:
             x = -x
-        x = x - a1/3.0
+        x = round(x - a1/3.0, epsilonDigits)
         return [x]
 
 

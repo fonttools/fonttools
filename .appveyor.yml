@@ -1,34 +1,31 @@
 environment:
-  global:
-    WITH_COMPILER: "cmd /E:ON /V:ON /C .\\.appveyor\\with-compiler.cmd"
   matrix:
-    - JOB: "2.7.11 32-bit"
+    - JOB: "2.7.12 32-bit"
       PYTHON_HOME: "C:\\Python27"
       TOXENV: "py27"
       TOXPYTHON: "C:\\Python27\\python.exe"
 
-    - JOB: "3.4.3 32-bit"
+    - JOB: "3.4.4 32-bit"
       PYTHON_HOME: "C:\\Python34"
       TOXENV: "py34"
       TOXPYTHON: "C:\\Python34\\python.exe"
 
-    - JOB: "3.5.1 32-bit"
+    - JOB: "3.5.2 32-bit"
       PYTHON_HOME: "C:\\Python35"
       TOXENV: "py35"
       TOXPYTHON: "C:\\Python35\\python.exe"
 
-    - JOB: "2.7.11 64-bit"
+    - JOB: "2.7.12 64-bit"
       PYTHON_HOME: "C:\\Python27-x64"
       TOXENV: "py27"
       TOXPYTHON: "C:\\Python27-x64\\python.exe"
 
-    - JOB: "3.4.3 64-bit"
+    - JOB: "3.4.4 64-bit"
       PYTHON_HOME: "C:\\Python34-x64"
       TOXENV: "py34"
       TOXPYTHON: "C:\\Python34-x64\\python.exe"
-      DISTUTILS_USE_SDK: "1"
 
-    - JOB: "3.5.1 64-bit"
+    - JOB: "3.5.2 64-bit"
       PYTHON_HOME: "C:\\Python35-x64"
       TOXENV: "py35"
       TOXPYTHON: "C:\\Python35-x64\\python.exe"
@@ -56,13 +53,13 @@ install:
   - "python -m pip --version"
 
   # install the dependencies to run the tests
-  - "%WITH_COMPILER% python -m pip install -r dev-requirements.txt"
+  - "python -m pip install -r dev-requirements.txt"
  
 
 build: false
 
 test_script:
-  - "%WITH_COMPILER% tox"
+  - "tox"
 
 notifications:
   - provider: Email

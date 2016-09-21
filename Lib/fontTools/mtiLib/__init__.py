@@ -10,6 +10,7 @@ from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
 from fontTools.misc.py23 import *
 from fontTools import ttLib
+from fontTools.ttLib.tables._c_m_a_p import cmap_classes
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.tables.otBase import ValueRecord, valueRecordFormatDict
 from fontTools.otlLib import builder as otl
@@ -840,6 +841,7 @@ def parseLookup(lines, tableTag, font, lookupMap=None):
 	return lookup
 
 def parseGSUBGPOS(lines, font, tableTag):
+	container = ttLib.getTableClass(tableTag)()
 	lookupMap = DeferredMapping()
 	featureMap = DeferredMapping()
 	assert tableTag in ('GSUB', 'GPOS')
@@ -887,7 +889,8 @@ def parseGSUBGPOS(lines, font, tableTag):
 		lookupMap.applyDeferredMappings()
 	if featureMap is not None:
 		featureMap.applyDeferredMappings()
-	return self
+	container.table = self
+	return container
 
 def parseGSUB(lines, font):
 	return parseGSUBGPOS(lines, font, 'GSUB')
@@ -938,6 +941,7 @@ def parseMarkFilteringSets(lines, font):
 	return makeMarkFilteringSets(sets, font)
 
 def parseGDEF(lines, font):
+	container = ttLib.getTableClass('GDEF')()
 	log.debug("Parsing GDEF")
 	self = ot.GDEF()
 	fields = {
@@ -966,14 +970,48 @@ def parseGDEF(lines, font):
 		assert getattr(self, attr) is None, attr
 		setattr(self, attr, parser(lines, font))
 	self.Version = 1.0 if self.MarkGlyphSetsDef is None else 0x00010002
-	return self
+	container.table = self
+	return container
+
+def parseCmap(lines, font):
+	container = ttLib.getTableClass('cmap')()
+	log.debug("Parsing cmap")
+	tables = []
+	while lines.peek() is not None:
+		lines.expect('cmap subtable %d' % len(tables))
+		platId, encId, fmt, lang = [
+			parseCmapId(lines, field)
+			for field in ('platformID', 'encodingID', 'format', 'language')]
+		table = cmap_classes[fmt](fmt)
+		table.platformID = platId
+		table.platEncID = encId
+		table.language = lang
+		table.cmap = {}
+		line = next(lines)
+		while line[0] != 'end subtable':
+			table.cmap[int(line[0], 16)] = line[1]
+			line = next(lines)
+		tables.append(table)
+	container.tableVersion = 0
+	container.tables = tables
+	return container
+
+def parseCmapId(lines, field):
+	line = next(lines)
+	assert field == line[0]
+	return int(line[1])
 
 def parseTable(lines, font, tableTag=None):
 	log.debug("Parsing table")
 	line = lines.peek()
+	tag = None
 	if line[0].split()[0] == 'FontDame':
+		tag = line[0].split()[1]
+	elif ' '.join(line[0].split()[:3]) == 'Font Chef Table':
+		tag = line[0].split()[3]
+	if tag is not None:
 		next(lines)
-		tag = line[0].split()[1].ljust(4)
+		tag = tag.ljust(4)
 		if tableTag is None:
 			tableTag = tag
 		else:
@@ -981,13 +1019,12 @@ def parseTable(lines, font, tableTag=None):
 
 	assert tableTag is not None, "Don't know what table to parse and data doesn't specify"
 
-	container = ttLib.getTableClass(tableTag)()
-	table = {'GSUB': parseGSUB,
-		 'GPOS': parseGPOS,
-		 'GDEF': parseGDEF,
+	return {
+		'GSUB': parseGSUB,
+		'GPOS': parseGPOS,
+		'GDEF': parseGDEF,
+		'cmap': parseCmap,
 		}[tableTag](lines, font)
-	container.table = table
-	return container
 
 class Tokenizer(object):
 

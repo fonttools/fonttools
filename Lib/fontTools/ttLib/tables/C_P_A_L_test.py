@@ -156,7 +156,8 @@ class CPALTest(unittest.TestCase):
                          '</palette>')
 
     def test_toXML_v1(self):
-        name = FakeNameTable({258: "Spring theme", 259: "Winter theme"})
+        name = FakeNameTable({258: "Spring theme", 259: "Winter theme",
+                              513: "darks", 515: "lights"})
         cpal = newTable('CPAL')
         ttFont = {"name": name, "CPAL": cpal}
         cpal.decompile(CPAL_DATA_V1, ttFont)
@@ -176,9 +177,9 @@ class CPALTest(unittest.TestCase):
                          '  <color index="2" value="#13330037"/>'
                          '</palette>'
                          '<paletteEntryLabels>'
-                         '  <label index="0" value="513"/>'
+                         '  <label index="0" value="513"/><!-- darks -->'
                          '  <label index="1" value="514"/>'
-                         '  <label index="2" value="515"/>'
+                         '  <label index="2" value="515"/><!-- lights -->'
                          '</paletteEntryLabels>')
 
     def test_fromXML_v0(self):

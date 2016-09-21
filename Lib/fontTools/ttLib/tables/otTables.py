@@ -787,7 +787,7 @@ def fixSubTableOverFlows(ttf, overflowRecord):
 		subTableType = subtable.ExtSubTable.__class__.LookupType
 		extSubTable = subtable
 		subtable = extSubTable.ExtSubTable
-		newExtSubTableClass = lookupTypes[overflowRecord.tableType][subtable.__class__.LookupType]
+		newExtSubTableClass = lookupTypes[overflowRecord.tableType][extSubTable.__class__.LookupType]
 		newExtSubTable = newExtSubTableClass()
 		newExtSubTable.Format = extSubTable.Format
 		lookup.SubTable.insert(subIndex + 1, newExtSubTable)

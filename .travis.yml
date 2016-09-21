@@ -8,8 +8,6 @@ matrix:
       env: TOXENV=py27
     - python: 2.7
       env: TOXENV=jython
-    - python: 3.3
-      env: TOXENV=py33
     - python: 3.4
       env: TOXENV=py34
     - python: 3.5
@@ -25,9 +23,6 @@ matrix:
       # this is to test on 10.11 El Capitan which comes with Python 2.7.10
       osx_image: xcode7.3
       env: TOXENV=py27
-    - language: generic
-      os: osx
-      env: TOXENV=py33
     - language: generic
       os: osx
       env: TOXENV=py34
@@ -50,3 +45,14 @@ script:
 notifications:
   irc: "irc.freenode.org##fonts"
   email: fonttools@googlegroups.com
+
+deploy:
+  provider: pypi
+  user: anthrotype
+  password:
+    secure: fQa02lfqw+ESpDbyI61rM+2rEbVIRmzU6wOk6JoukLszREKIx1N3azxnH5gTY6BUTcDZ9HuSiBKFfZylvdHRm+tfhncZJmFBs+xwOtUbnxsZIt7P0UsMKO3WRHAjJd51Ma3KaJrcBIqYBe3FiSb9ZH5dSnDHg5z/vET0S7kufC8=
+  distributions: "sdist bdist_wheel"
+  on:
+    tags: true
+    repo: behdad/fonttools
+    condition: $TOXENV = py35

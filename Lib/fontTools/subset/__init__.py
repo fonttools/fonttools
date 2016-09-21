@@ -303,6 +303,10 @@ Other font-specific options:
       *not* be switched on if an intersection is found.  [default]
   --no-prune-unicode-ranges
       Don't change the 'OS/2 ulUnicodeRange*' bits.
+  --recalc-average-width
+      Update the 'OS/2 xAvgCharWidth' field after subsetting.
+  --no-recalc-average-width
+      Don't change the 'OS/2 xAvgCharWidth' field. [default]
 
 Application options:
   --verbose
@@ -1844,6 +1848,12 @@ def prune_pre_subset(self, font, options):
             else:
                 c.program = ['endchar']
 
+    # Clear useless Encoding
+    for fontname in cff.keys():
+        font = cff[fontname]
+        # https://github.com/behdad/fonttools/issues/620
+        font.Encoding = "StandardEncoding"
+
     return True # bool(cff.fontNames)
 
 @_add_method(ttLib.getTableClass('CFF '))
@@ -2453,6 +2463,7 @@ class Options(object):
         self.recalc_bounds = False # Recalculate font bounding boxes
         self.recalc_timestamp = False # Recalculate font modified timestamp
         self.prune_unicode_ranges = True  # Clear unused 'ulUnicodeRange' bits
+        self.recalc_average_width = False  # update 'xAvgCharWidth'
         self.canonical_order = None # Order tables as recommended
         self.flavor = None  # May be 'woff' or 'woff2'
         self.with_zopfli = False  # use zopfli instead of zlib for WOFF 1.0
@@ -2729,6 +2740,12 @@ class Subsetter(object):
                 new_uniranges = font[tag].recalcUnicodeRanges(font, pruneOnly=True)
                 if old_uniranges != new_uniranges:
                     log.info("%s Unicode ranges pruned: %s", tag, sorted(new_uniranges))
+                if self.options.recalc_average_width:
+                    widths = [m[0] for m in font["hmtx"].metrics.values() if m[0] > 0]
+                    avg_width = int(round(sum(widths) / len(widths)))
+                    if avg_width != font[tag].xAvgCharWidth:
+                        font[tag].xAvgCharWidth = avg_width
+                        log.info("%s xAvgCharWidth updated: %d", tag, avg_width)
             clazz = ttLib.getTableClass(tag)
             if hasattr(clazz, 'prune_post_subset'):
                 with timer("prune '%s'" % tag):
@@ -2885,7 +2902,7 @@ def main(args=None):
             text += g[7:]
             continue
         if g.startswith('--text-file='):
-            text += open(g[12:]).read().replace('\n', '')
+            text += open(g[12:], encoding='utf-8').read().replace('\n', '')
             continue
         if g.startswith('--unicodes='):
             if g[11:] == '*':

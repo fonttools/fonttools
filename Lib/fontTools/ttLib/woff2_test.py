@@ -79,7 +79,7 @@ class WOFF2ReaderTest(unittest.TestCase):
 		header = sstruct.unpack(woff2DirectoryFormat, data)
 		header['totalCompressedSize'] = 0
 		data = sstruct.pack(woff2DirectoryFormat, header)
-		with self.assertRaises(brotli.error):
+		with self.assertRaises((brotli.error, ttLib.TTLibError)):
 			WOFF2Reader(BytesIO(data + self.file.read()))
 
 	def test_incorrect_uncompressed_size(self):
