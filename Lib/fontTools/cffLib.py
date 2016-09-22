@@ -513,7 +513,6 @@ class	FDSelect:
 	def append(self, fdSelectValue):
 		self.gidArray.append(fdSelectValue)
 
-
 class CharStrings(object):
 
 	def __init__(self, file, charset, globalSubrs, private, fdSelect, fdArray):
@@ -523,9 +522,11 @@ class CharStrings(object):
 			for i in range(len(charset)):
 				charStrings[charset[i]] = i
 			self.charStringsAreIndexed = 1
+			# read from OTF file: charStrings.values() are indices into charStringsIndex.
 		else:
 			self.charStrings = {}
-			self.charStringsAreIndexed = 0
+			self.charStringsAreIndexed = 0 
+			# read from ttx file : charStrings.values() are actual charstrings
 			self.globalSubrs = globalSubrs
 			self.private = private
 			if fdSelect is not None:
@@ -829,6 +830,8 @@ class CharsetConverter(object):
 				charset = cffIExpertStrings
 			elif value == 2:
 				charset = cffExpertSubsetStrings
+		if len(charset) != parent.numGlyphs:
+			charset = charset[:parent.numGlyphs]
 		return charset
 
 	def write(self, parent, value):
@@ -866,6 +869,25 @@ class CharsetCompiler(object):
 	def toFile(self, file):
 		file.write(self.data)
 
+def getStdCharSet(charset):
+	# check to see if we can use a predefined charset value.
+	charsetCode = None
+	predefinedCharSets = [
+		(cffISOAdobeStringCount, cffISOAdobeStrings, 0),
+		(cffExpertStringCount, cffIExpertStrings, 1),
+		(cffExpertSubsetStringCount, cffExpertSubsetStrings, 2) ]
+	len_cs = len(charset)
+	for cnt, charList, code in predefinedCharSets:
+		if charsetCode != None:
+			break
+		if len_cs > cnt:
+			continue
+		charsetCode = code
+		for i in range(len_cs):
+			if charset[i] != charList[i]:
+				charsetCode = None
+				break
+	return charsetCode
 
 def getCIDfromName(name, strings):
 	return int(name[3:])
@@ -1441,7 +1463,11 @@ class TopDictCompiler(DictCompiler):
 	def getChildren(self, strings):
 		children = []
 		if hasattr(self.dictObj, "charset") and self.dictObj.charset:
-			children.append(CharsetCompiler(strings, self.dictObj.charset, self))
+			charsetCode = getStdCharSet(self.dictObj.charset)
+			if charsetCode == None:
+				children.append(CharsetCompiler(strings, self.dictObj.charset, self))
+			else:
+				self.rawDict["charset"] = charsetCode
 		if hasattr(self.dictObj, "Encoding"):
 			encoding = self.dictObj.Encoding
 			if not isinstance(encoding, basestring):
@@ -1449,7 +1475,7 @@ class TopDictCompiler(DictCompiler):
 		if hasattr(self.dictObj, "FDSelect"):
 			# I have not yet supported merging a ttx CFF-CID font, as there are interesting
 			# issues about merging the FDArrays. Here I assume that
-			# either the font was read from XML, and teh FDSelect indices are all
+			# either the font was read from XML, and the FDSelect indices are all
 			# in the charstring data, or the FDSelect array is already fully defined.
 			fdSelect = self.dictObj.FDSelect
 			if len(fdSelect) == 0: # probably read in from XML; assume fdIndex in CharString data
