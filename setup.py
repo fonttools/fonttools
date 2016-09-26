@@ -40,7 +40,7 @@ TrueType/OpenType fonts to and from an XML-based format.
 
 setup(
 	name="fonttools",
-	version="3.1.0",
+	use_scm_version=True,
 	description="Tools to manipulate font files",
 	author="Just van Rossum",
 	author_email="just@letterror.com",
@@ -58,6 +58,9 @@ setup(
 	data_files=[
 		('share/man/man1', ["Doc/ttx.1"])
 	] if sys.platform.startswith('linux') else [],
+	setup_requires=[
+		"setuptools_scm>=1.11.1",
+	],
 	entry_points={
 		'console_scripts': [
 			"ttx = fontTools.ttx:main",

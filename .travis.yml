@@ -11,7 +11,9 @@ matrix:
     - python: 3.4
       env: TOXENV=py34
     - python: 3.5
-      env: TOXENV=py35
+      env:
+        - TOXENV=py35
+        - BUILD_DIST=true
     - python: pypy
       env: TOXENV=pypy
     - language: generic

@@ -250,8 +250,12 @@ class TTFont(object):
 		list of tables to dump. The 'skipTables' argument may be a list of tables
 		to skip, but only when the 'tables' argument is false.
 		"""
-		from fontTools import version
+		from fontTools.version import __version__
 		from fontTools.misc import xmlWriter
+
+		# only write the MAJOR.MINOR version in the 'ttLibVersion' attribute of
+		# TTX files' root element (without PATCH or .dev suffixes)
+		version = ".".join(__version__.split('.')[:2])
 
 		if quiet is not None:
 			deprecateArgument("quiet", "configure logging instead")
