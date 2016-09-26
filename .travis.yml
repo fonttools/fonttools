@@ -50,7 +50,7 @@ deploy:
   provider: pypi
   user: anthrotype
   password:
-    secure: fQa02lfqw+ESpDbyI61rM+2rEbVIRmzU6wOk6JoukLszREKIx1N3azxnH5gTY6BUTcDZ9HuSiBKFfZylvdHRm+tfhncZJmFBs+xwOtUbnxsZIt7P0UsMKO3WRHAjJd51Ma3KaJrcBIqYBe3FiSb9ZH5dSnDHg5z/vET0S7kufC8=
+    secure: H/07cptieQgeQYEpAgXtIIZtKsVA6DJ+NeTaVlGi0ut/rCG8Mx9U1daZT1g7jjSVq/ldoNP6QXqelQAFHTDCfyvD3oB6zltHYqs+kRYMtkwfHgoHFK7c5kSdAIPML8eB29W+rp+xcJ2ciFTDoth/Wxps/SjVDe+OgJVnsO2Osgs=
   distributions: "sdist bdist_wheel"
   on:
     tags: true
