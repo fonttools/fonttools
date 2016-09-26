@@ -464,7 +464,11 @@ class FDArrayIndex(TopDictIndex):
 			if isinstance(element, basestring):
 				continue
 			name, attrs, content = element
-			fontDict.fromXML(name, attrs, content)
+			try:
+				fontDict.fromXML(name, attrs, content)
+			except KeyError:
+				"""Since fonttools used to pass a lot of fields that are not relevant in the FDArray FontDict, there are 'ttx' files in the wild that contain all these. These got in the ttx files because fonttools writes explicit values for all the TopDict default values. These are not actually illegal in the context of an FDArray FontDict - you can legally, per spec, put any arbitrary key/value pair in a FontDict - but are useless since current major company CFF interpreters ignore anything but the set listed in this file. So, we just silently skip them. An exception is Weight: this is not used by any interepreter, but some foundries have asked that this be supported in FDArray FontDicts just to preserve information about the design when the font is being inspected."""
+				pass
 		self.append(fontDict)
 
 
@@ -830,7 +834,7 @@ class CharsetConverter(object):
 				charset = cffIExpertStrings
 			elif value == 2:
 				charset = cffExpertSubsetStrings
-		if len(charset) != parent.numGlyphs:
+		if charset and len(charset) != parent.numGlyphs:
 			charset = charset[:parent.numGlyphs]
 		return charset
 
@@ -1300,23 +1304,12 @@ topDictOperators = [
 
 fontDictOperators = [
 #	opcode		name			argument type	default	converter
-	(2,		'FullName',		'SID',		None,	None),
 	((12, 38),	'FontName',		'SID',		None,	None),
-	(3,		'FamilyName',		'SID',		None,	None),
-	(4,		'Weight',		'SID',		None,	None),
-	((12, 1),	'isFixedPitch',		'number',	0,	None),
-	((12, 2),	'ItalicAngle',		'number',	0,	None),
-	((12, 3),	'UnderlinePosition',	'number',	None,	None),
-	((12, 4),	'UnderlineThickness',	'number',	50,	None),
-	((12, 6),	'CharstringType',	'number',	2,	None),
 	((12, 7),	'FontMatrix',		'array',	[0.001, 0, 0, 0.001, 0, 0],	None),
-	(5,		'FontBBox',		'array',	[0, 0, 0, 0],	None),
-	(15,		'charset',		'number',	0,	CharsetConverter()),
+	(4,		'Weight',		'SID',		None,	None),
 	(18,		'Private',	('number', 'number'),	None,	PrivateDictConverter()),
-	((12, 37),	'FDSelect',		'number',	None,	FDSelectConverter()),
-	((12, 36),	'FDArray',		'number',	None,	FDArrayConverter()),
-	(17,		'CharStrings',		'number',	None,	CharStringsConverter()),
 ]
+
 
 
 # Note! FDSelect and FDArray must both preceed CharStrings in the output XML build order,
@@ -1463,7 +1456,10 @@ class TopDictCompiler(DictCompiler):
 	def getChildren(self, strings):
 		children = []
 		if hasattr(self.dictObj, "charset") and self.dictObj.charset:
-			charsetCode = getStdCharSet(self.dictObj.charset)
+			if  hasattr(self.dictObj, "ROS"): # aka isCID
+				charsetCode = None
+			else:
+				charsetCode = getStdCharSet(self.dictObj.charset)
 			if charsetCode == None:
 				children.append(CharsetCompiler(strings, self.dictObj.charset, self))
 			else:
