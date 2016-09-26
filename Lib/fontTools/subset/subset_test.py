@@ -1,7 +1,7 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools import subset
-from fontTools.ttLib import TTFont
+from fontTools.ttLib import TTFont, newTable
 import contextlib
 import difflib
 import logging
@@ -203,6 +203,29 @@ class SubsetTest(unittest.TestCase):
         self.assertTrue(filter(lambda l: l.args['msg'] == "load 'cmap'", logs))
         self.assertTrue(filter(lambda l: l.args['msg'] == "subset 'cmap'", logs))
         self.assertTrue(filter(lambda l: l.args['msg'] == "subset 'glyf'", logs))
+
+    def test_passthrough_tables(self):
+        _, fontpath = self.compile_font(self.getpath("TestTTF-Regular.ttx"), ".ttf")
+        font = TTFont(fontpath)
+        unknown_tag = 'ZZZZ'
+        unknown_table = newTable(unknown_tag)
+        unknown_table.data = b'\0'*10
+        font[unknown_tag] = unknown_table
+        font.save(fontpath)
+
+        subsetpath = self.temp_path(".ttf")
+        subset.main([fontpath, "--output-file=%s" % subsetpath])
+        subsetfont = TTFont(subsetpath)
+
+        # tables we can't subset are dropped by default
+        self.assertFalse(unknown_tag in subsetfont)
+
+        subsetpath = self.temp_path(".ttf")
+        subset.main([fontpath, "--passthrough-tables", "--output-file=%s" % subsetpath])
+        subsetfont = TTFont(subsetpath)
+
+        # unknown tables are kept if --passthrough-tables option is passed
+        self.assertTrue(unknown_tag in subsetfont)
 
 
 if __name__ == "__main__":

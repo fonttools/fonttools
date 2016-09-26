@@ -216,11 +216,17 @@ Font table options:
       they do not need subsetting (ignore the fact that 'loca' is listed
       here): 'gasp', 'head', 'hhea', 'maxp', 'vhea', 'OS/2', 'loca',
       'name', 'cvt ', 'fpgm', 'prep', 'VMDX', 'DSIG' and 'CPAL'.
-      Tables that the tool does not know how to subset and are not specified
-      here will be dropped from the font.
+      By default, tables that the tool does not know how to subset and are not
+      specified here will be dropped from the font, unless --passthrough-tables
+      option is passed.
       Example:
          --no-subset-tables+=FFTM
             * Keep 'FFTM' table in the font by preventing subsetting.
+  --passthrough-tables
+      Do not drop tables that the tool does not know how to subset.
+  --no-passthrough-tables
+      Tables that the tool does not know how to subset and are not specified
+      in --no-subset-tables will be dropped from the font. [default]
   --hinting-tables[-]=<table>[,<table>...]
       Specify (=), add to (+=) or exclude from (-=) the list of font-wide
       hinting tables that will be dropped if --no-hinting is specified,
@@ -2444,6 +2450,7 @@ class Options(object):
 
         self.drop_tables = self._drop_tables_default[:]
         self.no_subset_tables = self._no_subset_tables_default[:]
+        self.passthrough_tables = False  # keep/drop tables we can't subset
         self.hinting_tables = self._hinting_tables_default[:]
         self.legacy_kern = False    # drop 'kern' table if GPOS available
         self.layout_features = self._layout_features_default[:]
@@ -2722,6 +2729,8 @@ class Subsetter(object):
                     del font[tag]
                 else:
                     log.info("%s subsetted", tag)
+            elif self.options.passthrough_tables:
+                log.info("%s NOT subset; don't know how to subset", tag)
             else:
                 log.info("%s NOT subset; don't know how to subset; dropped", tag)
                 del font[tag]
