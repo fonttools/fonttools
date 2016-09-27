@@ -1,7 +1,7 @@
 """\
 usage: ttx [options] inputfile1 [... inputfileN]
 
-    TTX %s -- From OpenType To XML And Back
+    TTX -- From OpenType To XML And Back
 
     If an input file is a TrueType or OpenType font file, it will be
        dumped to an TTX file (an XML-based text format).
@@ -12,7 +12,8 @@ usage: ttx [options] inputfile1 [... inputfileN]
        never overwritten.
 
     General options:
-    -h Help: print this message
+    -h Help: print this message.
+    --version: show version and exit.
     -d <outputfolder> Specify a directory where the output files are
        to be created.
     -o <outputfile> Specify a file to write the output to. A special
@@ -93,12 +94,6 @@ import logging
 
 log = logging.getLogger(__name__)
 
-
-def usage():
-	from fontTools import version
-	print(__doc__ % version)
-
-
 numberAddedRE = re.compile("#\d+$")
 opentypeheaderRE = re.compile('''sfntVersion=['"]OTTO["']''')
 
@@ -144,7 +139,11 @@ class Options(object):
 		for option, value in rawOptions:
 			# general options
 			if option == "-h":
-				usage()
+				print(__doc__)
+				sys.exit(0)
+			elif option == "--version":
+				from fontTools.version import __version__
+				print(__version__)
 				sys.exit(0)
 			elif option == "-d":
 				if not os.path.isdir(value):
@@ -312,7 +311,7 @@ def guessFileType(fileName):
 
 def parseOptions(args):
 	rawOptions, files = getopt.getopt(args, "ld:o:fvqht:x:sim:z:baey:",
-			['unicodedata=', "recalc-timestamp", 'flavor=',
+			['unicodedata=', "recalc-timestamp", 'flavor=', 'version',
 			 'with-zopfli'])
 
 	options = Options(rawOptions, len(files))
@@ -373,8 +372,7 @@ def main(args=None):
 	try:
 		jobs, options = parseOptions(args)
 	except getopt.GetoptError as e:
-		usage()
-		print("ERROR:", e, file=sys.stderr)
+		print("%s\nERROR: %s" % (__doc__, e), file=sys.stderr)
 		sys.exit(2)
 
 	configLogger(level=options.logLevel)

@@ -17,5 +17,12 @@ if [[ "${TOXENV}" == "jython" ]]; then
     jython -m pytest || true
 else
     source ~/.venv/bin/activate
+    if [ "$BUILD_DIST" = true ]; then
+        # Travis by default only clones a 'shallow' repository with --depth=50.
+        # When building the distribution packages, we use git to determine the
+        # package version string (via setuptools_scm), hence we need to fetch
+        # the whole repo, and not just the last 50 commits.
+        git fetch --unshallow
+    fi
     tox
 fi
