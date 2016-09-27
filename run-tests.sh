@@ -22,7 +22,7 @@ done
 
 # Run tests
 if [ -z "$FILTERS" ]; then
-	$PYTHON -m pytest
+	$PYTHON setup.py test
 else
-	$PYTHON -m pytest -k "$FILTERS"
+	$PYTHON setup.py test --addopts="-k \"$FILTERS\""
 fi
