@@ -50,7 +50,7 @@ setup(
 	author_email="just@letterror.com",
 	maintainer="Behdad Esfahbod",
 	maintainer_email="behdad@behdad.org",
-	url="http://github.com/behdad/fonttools",
+	url="http://github.com/fonttools/fonttools",
 	license="OpenSource, BSD-style",
 	platforms=["Any"],
 	long_description=long_description,
