@@ -161,7 +161,7 @@ class CFFWriter(object):
 		posList = [0]
 		cffOffSize = calcOffSize(lastPosList[-1])
 		headerBytes = self.data[0]
-		headerBytes = headerBytes[:-1] + chr(cffOffSize)
+		headerBytes = headerBytes[:-1] + bytechr(cffOffSize)
 		self.data[0] = headerBytes
 		for item in self.data:
 			if hasattr(item, "toFile"):
