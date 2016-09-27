@@ -14,29 +14,33 @@ Among other things this means you can use it free of charge.
 
 ### Installation
 
-FontTools requires Python 2.7, or Python 3.3 or later.
-The fresh versions as well as older versions can be downloaded from <http://www.python.org/download/>
-  
-- Windows: grab the Windows installer, run the full install.
-- Un\*x: follow the build instructions.
-- MacOS: grab the installer, run "Easy Install"
+FontTools requires [Python](http://www.python.org/download/) 2.7, 3.4 or later.
 
-A package is available in pypi from <https://pypi.python.org/pypi/FontTools>
+The package is listed in the Python Package Index (PyPI), so you can install it with [`pip`](https://pip.pypa.io):
 
 ```sh
-easy_install pip ;
-pip install fonttools ;
+pip install fonttools
 ```
 
-For people who want to download and install fontools on your system from source code, run the following commands:
+If you would like to contribute to its development, you can clone the repository from Github, install the package in 'editable' mode and modify the source code in place. We recommend creating a virtual environment, using [`virtualenv`](https://virtualenv.pypa.io) or Python 3 [`venv`](https://docs.python.org/3/library/venv.html) module.
 
 ```sh
-git clone https://github.com/fonttools/fonttools.git ;
-cd fonttools ;
-python setup.py install ;
-```
+# download the source code to 'fonttools' folder
+git clone https://github.com/fonttools/fonttools.git
+cd fonttools
 
-This will install all the modules and command line tools in the right places.
+# create new virtual environment called e.g. 'fonttools-venv', or anything you like
+python -m virtualenv fonttools-venv
+
+# source the `activate` shell script to enter the environment (Un\*x); to exit, just type `deactivate`
+. fonttools-venv/bin/activate
+
+# to activate the virtual environment in Windows `cmd.exe`, do
+fonttools-venv\Scripts\activate.bat
+
+# install in 'editable' mode
+pip install -e .
+```
 
 ### TTX – From OpenType and TrueType to XML and Back
 
