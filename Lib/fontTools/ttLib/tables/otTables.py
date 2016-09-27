@@ -147,6 +147,8 @@ class VarIdxMap(BaseTable):
 		rawTable = { 'mapping': mapping }
 		rawTable['MappingCount'] = len(mapping)
 
+		# TODO Remove this abstraction/optimization and move it varLib.builder?
+
 		ored = 0
 		for idx in mapping:
 			ored |= idx
@@ -199,6 +201,8 @@ class VarData(BaseTable):
 
 	def preWrite(self, font):
 		rawTable = self.__dict__.copy()
+
+		# TODO Remove this abstraction/optimization and move it varLib.builder?
 
 		numShorts = 0
 		count = len(self.VarRegionIndex)
