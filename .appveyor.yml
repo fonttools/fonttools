@@ -64,7 +64,7 @@ test_script:
 notifications:
   - provider: Email
     to:
-      - fonttools@googlegroups.com
+      - fonttools-dev@googlegroups.com
     on_build_success: false
     on_build_failure: true
     on_build_status_changed: true
