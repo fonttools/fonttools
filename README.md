@@ -1,5 +1,5 @@
 [![Travis Build Status](https://travis-ci.org/behdad/fonttools.svg)](https://travis-ci.org/behdad/fonttools)
-[![Appveyor Build Status](https://ci.appveyor.com/api/projects/status/k0sa9nfhkeqc0s3c/branch/master?svg=true)](https://ci.appveyor.com/project/behdad/fonttools/branch/master)
+[![Appveyor Build status](https://ci.appveyor.com/api/projects/status/rs3gxuh97390ok1h/branch/master?svg=true)](https://ci.appveyor.com/project/fonttools/fonttools/branch/master)
 [![Health](https://landscape.io/github/behdad/fonttools/master/landscape.svg?style=flat)](https://landscape.io/github/behdad/fonttools/master)
 [![Coverage Status](https://img.shields.io/coveralls/behdad/fonttools.svg)](https://coveralls.io/r/behdad/fonttools)
 [![PyPI](https://img.shields.io/pypi/v/fonttools.svg?maxAge=2592000)](https://pypi.org/project/FontTools)
