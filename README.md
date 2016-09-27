@@ -124,12 +124,13 @@ A selection of sample python programs is in the [Snippets](https://github.com/fo
 
 ### Testing
 
-You can use [pytest](http://docs.pytest.org/en/latest/) to run the test suite:
+To run the test suite, you can do:
 
 ```sh
-pip install pytest
-py.test
+python setup.py test
 ```
+
+Or if you have [pytest](http://docs.pytest.org/en/latest/), you can run the `pytest` command directly.
 
 We also use [tox](https://testrun.org/tox/latest/) to automatically test on different Python versions in isolated virtual environments.
 
