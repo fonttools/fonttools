@@ -1,3 +1,25 @@
+## TTX/FontTools Version 3.1.1
+
+- Fix 'ttLibVersion' attribute in TTX files still showing '3.0' instead of '3.1'.
+- Use setuptools_scm to manage package versions.
+
+## TTX/FontTools Version 3.1.0
+
+- [feaLib] New library to parse and compile Adobe FDK OpenType Feature files.
+- [mtiLib] New library to parse and compile Monotype 'FontDame' OpenType Layout Tables files.
+- [voltLib] New library to parse Microsoft VOLT project files.
+- [otlLib] New library to work with OpenType Layout tables.
+- [varLib] New library to work with OpenType Font Variations.
+- [pens] Add ttGlyphPen to draw to TrueType glyphs, and t2CharStringPen to draw to Type 2 Charstrings (CFF); add areaPen and perimeterPen.
+- [ttLib.tables] Implement 'meta' and 'trak' tables.
+- [ttx] Add --flavor option for compiling to 'woff' or 'woff2'; add --with-zopfli option to use Zopfli to compress WOFF 1.0 fonts.
+- [subset] Support subsetting 'COLR'/'CPAL' and 'CBDT'/'CBLC' color fonts tables, and 'gvar' table for variation fonts.
+- [Snippets] Add symfont.py, for symbolic font statistics analysis; interpolatable.py, a preliminary script for detecting interpolation errors; {merge,dump}_woff_metadata.py.
+- [classifyTools] Helpers to classify things into classes.
+- [CI] Run tests on Windows, Linux and macOS using Appveyor and Travis CI; check unit test coverage with Coverage.py/Coveralls; automatic deployment to PyPI on tags.
+- [loggingTools] Use Python built-in logging module to print messages.
+- [py23] Make round() behave like Python 3 built-in round(); define round2() and round3().
+
 ## TTX/FontTools Version 3.0
 
 2015-09-01 <https://github.com/behdad/fonttools/commit/58f86f318af8b2f8b553e8cceef678d6ce0017c5>
