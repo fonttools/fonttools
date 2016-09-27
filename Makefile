@@ -1,14 +1,22 @@
 all:
-	./setup.py bdist
+	./setup.py build
 
 dist:
-	./setup.py sdist
+	./setup.py sdist bdist_wheel
 
 install:
-	./setup.py install
+	pip install --ignore-installed .
 
 install-user:
-	./setup.py install --user
+	pip install --ignore-installed --user .
+
+uninstall:
+	pip uninstall --yes fonttools
 
 check: all
 	./run-tests.sh
+
+clean:
+	./setup.py clean --all
+
+.PHONY: all dist install install-user uninstall check clean
