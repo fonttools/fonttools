@@ -52,7 +52,7 @@ before_deploy:
 
 notifications:
   irc: "irc.freenode.org##fonts"
-  email: fonttools@googlegroups.com
+  email: fonttools-dev@googlegroups.com
 
 deploy:
   # deploy to Github Releases on tags
