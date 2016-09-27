@@ -2,7 +2,7 @@
 [![Appveyor Build status](https://ci.appveyor.com/api/projects/status/0f7fmee9as744sl7/branch/master?svg=true)](https://ci.appveyor.com/project/fonttools/fonttools/branch/master)
 [![Health](https://landscape.io/github/behdad/fonttools/master/landscape.svg?style=flat)](https://landscape.io/github/behdad/fonttools/master)
 [![Coverage Status](https://coveralls.io/repos/github/fonttools/fonttools/badge.svg?branch=master)](https://coveralls.io/github/fonttools/fonttools?branch=master)
-[![PyPI](https://img.shields.io/pypi/v/fonttools.svg?maxAge=2592000)](https://pypi.org/project/FontTools)
+[![PyPI](https://img.shields.io/pypi/v/fonttools.svg)](https://pypi.org/project/FontTools)
 
 ### What is this?
 
