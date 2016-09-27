@@ -30,7 +30,7 @@ pip install fonttools ;
 For people who want to download and install fontools on your system from source code, run the following commands:
 
 ```sh
-git clone https://github.com/behdad/fonttools.git ;
+git clone https://github.com/fonttools/fonttools.git ;
 cd fonttools ;
 python setup.py install ;
 ```
@@ -115,7 +115,7 @@ The fontTools python module provides a convenient way to programmatically edit f
 >>>
 ```
 
-A selection of sample python programs is in the [Snippets](https://github.com/behdad/fonttools/blob/master/Snippets/) directory. 
+A selection of sample python programs is in the [Snippets](https://github.com/fonttools/fonttools/blob/master/Snippets/) directory. 
 
 ### Testing
 
@@ -137,7 +137,7 @@ tox
 
 TTX/FontTools development is ongoing in an active community of developers, that includes professional developers employed at major software corporations and type foundries as well as hobbyists. 
 
-Feature requests and bug reports are always welcome at <https://github.com/behdad/fonttools/issues/>
+Feature requests and bug reports are always welcome at <https://github.com/fonttools/fonttools/issues/>
 
 The best place for discussions about TTX from an end-user perspective as well as TTX/FontTools development is the <https://groups.google.com/d/forum/fonttools> mailing list.
 You can also email Behdad privately at <behdad@behdad.org>
