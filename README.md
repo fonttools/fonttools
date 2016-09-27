@@ -48,8 +48,8 @@ Once installed you can use the `ttx` command to convert binary font files (`.otf
 TTX files have a .ttx file extension.
 
 ```sh
-ttx /path/to/font.otf ;
-ttx /path/to/font.ttx ;
+ttx /path/to/font.otf
+ttx /path/to/font.ttx
 ```
 
 The TTX application works can be used in two ways, depending on what platform you run it on:
@@ -103,9 +103,9 @@ Because the order in which glyphs are stored inside the binary font is important
 Commands for inspecting, merging and subsetting fonts are also available:
 
 ```sh
-pyftinspect ;
-pyftmerge ;
-pyftsubset ;
+pyftinspect
+pyftmerge
+pyftsubset
 ```
 
 ### fontTools Python Module
