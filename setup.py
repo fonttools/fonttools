@@ -14,6 +14,10 @@ def doraise_py_compile(file, cfile=None, dfile=None, doraise=False):
 
 py_compile.compile = doraise_py_compile
 
+needs_pytest = {'pytest', 'test'}.intersection(sys.argv)
+pytest_runner = ['pytest_runner'] if needs_pytest else []
+needs_wheel = {'bdist_wheel'}.intersection(sys.argv)
+wheel = ['wheel'] if needs_wheel else []
 
 # Trove classifiers for PyPI
 classifiers = {"classifiers": [
@@ -59,7 +63,10 @@ setup(
 		('share/man/man1', ["Doc/ttx.1"])
 	] if sys.platform.startswith('linux') else [],
 	setup_requires=[
-		"setuptools_scm>=1.11.1",
+			"setuptools_scm>=1.11.1",
+		] + pytest_runner + wheel,
+	tests_require=[
+		'pytest>=2.8',
 	],
 	entry_points={
 		'console_scripts': [
