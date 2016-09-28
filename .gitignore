@@ -5,6 +5,7 @@ __pycache__/
 
 # Distribution / Packaging
 *.egg-info
+*.eggs
 MANIFEST
 build
 dist
