@@ -278,7 +278,7 @@ class TTFont(object):
 			idlefunc = None
 
 		writer = xmlWriter.XMLWriter(fileOrPath, idlefunc=idlefunc)
-		writer.begintag("ttFont", sfntVersion=repr(self.sfntVersion)[1:-1],
+		writer.begintag("ttFont", sfntVersion=repr(tostr(self.sfntVersion))[1:-1],
 				ttLibVersion=version)
 		writer.newline()
 
