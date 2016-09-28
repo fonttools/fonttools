@@ -347,17 +347,12 @@ class CFFTableTest(unittest.TestCase):
         cffData = deHexStr(cffHexData)
         CFF2Table = font['CFF '] = newTable('CFF ')
         CFF2Table.decompile(cffData, font)
-        writer = XMLWriter(BytesIO())
+        writer = XMLWriter(UnicodeIO())
         font['CFF '].toXML(writer, font)
-        xml = writer.file.getvalue().decode("utf-8")
+        xml = writer.file.getvalue()
         # normalize spacing and new-lines, so we can edit the XML without being very careful.
-        xml = re.sub(r"  +", "    ", xml)
-        xml = re.sub(r"[\r\n][\r\n]+", "\r", xml)
         # cffXML does not have the initial xml definition line.
         xml = re.sub(r"\<\?xml[^\r\n]+", "", xml)
-        cffXML = re.sub(r"\t", "    ", cffXML)
-        cffXML = re.sub(r"  +", "    ", cffXML)
-        cffXML = re.sub(r"[\r\n][\r\n]+", "\r", cffXML)
         self.assertEqual(xml, cffXML)
 
     def test_fromXML(self):
