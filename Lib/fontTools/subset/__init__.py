@@ -1582,13 +1582,13 @@ def prune_post_subset(self, options):
         table.MarkGlyphSetsDef and
         not table.MarkGlyphSetsDef.Coverage):
         table.MarkGlyphSetsDef = None
-        if table.Version == 0x00010002/0x10000:
-            table.Version = 1.0
+        if table.Version == 0x00010002:
+            table.Version = 0x00010000
     return bool(table.LigCaretList or
                 table.MarkAttachClassDef or
                 table.GlyphClassDef or
                 table.AttachList or
-                (table.Version >= 0x00010002/0x10000 and table.MarkGlyphSetsDef))
+                (table.Version >= 0x00010002 and table.MarkGlyphSetsDef))
 
 @_add_method(ttLib.getTableClass('kern'))
 def prune_pre_subset(self, font, options):
@@ -2368,8 +2368,10 @@ def prune_pre_subset(self, font, options):
     nameIDs = set(options.name_IDs)
     fvar = font.get('fvar')
     if fvar:
-        nameIDs.update([inst.nameID for inst in fvar.instances])
-        nameIDs.update([axis.nameID for axis in fvar.axes])
+        nameIDs.update([axis.axisNameID for axis in fvar.axes])
+        nameIDs.update([inst.subfamilyNameID for inst in fvar.instances])
+        nameIDs.update([inst.postscriptNameID for inst in fvar.instances
+                        if inst.postscriptNameID != 0xFFFF])
     if '*' not in options.name_IDs:
         self.names = [n for n in self.names if n.nameID in nameIDs]
     if not options.name_legacy:

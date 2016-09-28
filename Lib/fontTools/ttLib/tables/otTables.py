@@ -6,6 +6,7 @@ converter objects from otConverters.py.
 """
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
+from fontTools.misc.textTools import safeEval
 from .otBase import BaseTable, FormatSwitchingBaseTable
 import operator
 import logging
@@ -131,6 +132,91 @@ class Coverage(FormatSwitchingBaseTable):
 			glyphs = []
 			self.glyphs = glyphs
 		glyphs.append(attrs["value"])
+
+
+class VarIdxMap(BaseTable):
+
+	def postRead(self, rawTable, font):
+		assert (rawTable['EntryFormat'] & 0xFFC0) == 0
+		self.mapping = rawTable['mapping']
+
+	def preWrite(self, font):
+		mapping = getattr(self, "mapping", None)
+		if mapping is None:
+			mapping = self.mapping = []
+		rawTable = { 'mapping': mapping }
+		rawTable['MappingCount'] = len(mapping)
+
+		# TODO Remove this abstraction/optimization and move it varLib.builder?
+
+		ored = 0
+		for idx in mapping:
+			ored |= idx
+
+		inner = ored & 0xFFFF
+		innerBits = 0
+		while inner:
+			innerBits += 1
+			inner >>= 1
+		innerBits = max(innerBits, 1)
+		assert innerBits <= 16
+
+		ored = (ored >> (16-innerBits)) | (ored & ((1<<innerBits)-1))
+		if   ored <= 0x000000FF:
+			entrySize = 1
+		elif ored <= 0x0000FFFF:
+			entrySize = 2
+		elif ored <= 0x00FFFFFF:
+			entrySize = 3
+		else:
+			entrySize = 4
+
+		entryFormat = ((entrySize - 1) << 4) | (innerBits - 1)
+
+		rawTable['EntryFormat'] = entryFormat
+		return rawTable
+
+	def toXML2(self, xmlWriter, font):
+		for i, value in enumerate(getattr(self, "mapping", [])):
+			attrs = (
+				('index', i),
+				('outer', value >> 16),
+				('inner', value & 0xFFFF),
+			)
+			xmlWriter.simpletag("Map", attrs)
+			xmlWriter.newline()
+
+	def fromXML(self, name, attrs, content, font):
+		mapping = getattr(self, "mapping", None)
+		if mapping is None:
+			mapping = []
+			self.mapping = mapping
+		outer = safeEval(attrs['outer'])
+		inner = safeEval(attrs['inner'])
+		assert inner <= 0xFFFF
+		mapping.append((outer << 16) | inner)
+
+
+class VarData(BaseTable):
+
+	def preWrite(self, font):
+		rawTable = self.__dict__.copy()
+
+		# TODO Remove this abstraction/optimization and move it varLib.builder?
+
+		numShorts = 0
+		count = len(self.VarRegionIndex)
+		for item in self.Item:
+			assert len(item) == count, ("Item length mismatch", len(item), count)
+			for i in range(count - 1, numShorts - 1, -1):
+				if not (-128 <= item[i] <= 127):
+					numShorts = i + 1
+					break
+			if numShorts == count:
+				break
+
+		rawTable['NumShorts'] = numShorts
+		return rawTable
 
 
 class SingleSubst(FormatSwitchingBaseTable):

@@ -79,6 +79,10 @@ class CFFFontSet(object):
 		writer.toFile(file)
 
 	def toXML(self, xmlWriter, progress=None):
+		xmlWriter.simpletag("major", value=self.major)
+		xmlWriter.newline()
+		xmlWriter.simpletag("minor", value=self.minor)
+		xmlWriter.newline()
 		for fontName in self.fontNames:
 			xmlWriter.begintag("CFFFont", name=tostr(fontName))
 			xmlWriter.newline()
@@ -155,6 +159,10 @@ class CFFWriter(object):
 		log.log(DEBUG, "CFFWriter.toFile() writing to file.")
 		begin = file.tell()
 		posList = [0]
+		cffOffSize = calcOffSize(lastPosList[-1])
+		headerBytes = self.data[0]
+		headerBytes = headerBytes[:-1] + bytechr(cffOffSize)
+		self.data[0] = headerBytes
 		for item in self.data:
 			if hasattr(item, "toFile"):
 				item.toFile(file)
@@ -186,43 +194,53 @@ class IndexCompiler(object):
 		return items
 
 	def getOffsets(self):
-		pos = 1
-		offsets = [pos]
-		for item in self.items:
-			if hasattr(item, "getDataLength"):
-				pos = pos + item.getDataLength()
-			else:
-				pos = pos + len(item)
-			offsets.append(pos)
+		# An empty INDEX contains only the count field.
+		if self.items:
+			pos = 1
+			offsets = [pos]
+			for item in self.items:
+				if hasattr(item, "getDataLength"):
+					pos = pos + item.getDataLength()
+				else:
+					pos = pos + len(item)
+				offsets.append(pos)
+		else:
+			offsets = []
 		return offsets
 
 	def getDataLength(self):
-		lastOffset = self.getOffsets()[-1]
-		offSize = calcOffSize(lastOffset)
-		dataLength = (
-			2 +                                # count
-			1 +                                # offSize
-			(len(self.items) + 1) * offSize +  # the offsets
-			lastOffset - 1                     # size of object data
-		)
+		if self.items:
+			lastOffset = self.getOffsets()[-1]
+			offSize = calcOffSize(lastOffset)
+			dataLength = (
+				2 +                                # count
+				1 +                                # offSize
+				(len(self.items) + 1) * offSize +  # the offsets
+				lastOffset - 1                     # size of object data
+			)
+		else:
+			dataLength = 2  # count. For empty INDEX tables, this is the only entry.
+
 		return dataLength
 
 	def toFile(self, file):
 		offsets = self.getOffsets()
 		writeCard16(file, len(self.items))
-		offSize = calcOffSize(offsets[-1])
-		writeCard8(file, offSize)
-		offSize = -offSize
-		pack = struct.pack
-		for offset in offsets:
-			binOffset = pack(">l", offset)[offSize:]
-			assert len(binOffset) == -offSize
-			file.write(binOffset)
-		for item in self.items:
-			if hasattr(item, "toFile"):
-				item.toFile(file)
-			else:
-				file.write(tobytes(item, encoding="latin1"))
+		# An empty INDEX contains only the count field.
+		if self.items:
+			offSize = calcOffSize(offsets[-1])
+			writeCard8(file, offSize)
+			offSize = -offSize
+			pack = struct.pack
+			for offset in offsets:
+				binOffset = pack(">l", offset)[offSize:]
+				assert len(binOffset) == -offSize
+				file.write(binOffset)
+			for item in self.items:
+				if hasattr(item, "toFile"):
+					item.toFile(file)
+				else:
+					file.write(tobytes(item, encoding="latin1"))
 
 
 class IndexedStringsCompiler(IndexCompiler):
@@ -433,6 +451,11 @@ class FDArrayIndex(TopDictIndex):
 
 	compilerClass = FDArrayIndexCompiler
 
+	def produceItem(self, index, data, file, offset, size):
+		fontDict = FontDict(self.strings, file, offset, self.GlobalSubrs)
+		fontDict.decompile(data)
+		return fontDict
+
 	def fromXML(self, name, attrs, content):
 		if name != "FontDict":
 			return
@@ -441,7 +464,11 @@ class FDArrayIndex(TopDictIndex):
 			if isinstance(element, basestring):
 				continue
 			name, attrs, content = element
-			fontDict.fromXML(name, attrs, content)
+			try:
+				fontDict.fromXML(name, attrs, content)
+			except KeyError:
+				"""Since fonttools used to pass a lot of fields that are not relevant in the FDArray FontDict, there are 'ttx' files in the wild that contain all these. These got in the ttx files because fonttools writes explicit values for all the TopDict default values. These are not actually illegal in the context of an FDArray FontDict - you can legally, per spec, put any arbitrary key/value pair in a FontDict - but are useless since current major company CFF interpreters ignore anything but the set listed in this file. So, we just silently skip them. An exception is Weight: this is not used by any interepreter, but some foundries have asked that this be supported in FDArray FontDicts just to preserve information about the design when the font is being inspected."""
+				pass
 		self.append(fontDict)
 
 
@@ -490,7 +517,6 @@ class	FDSelect:
 	def append(self, fdSelectValue):
 		self.gidArray.append(fdSelectValue)
 
-
 class CharStrings(object):
 
 	def __init__(self, file, charset, globalSubrs, private, fdSelect, fdArray):
@@ -500,9 +526,11 @@ class CharStrings(object):
 			for i in range(len(charset)):
 				charStrings[charset[i]] = i
 			self.charStringsAreIndexed = 1
+			# read from OTF file: charStrings.values() are indices into charStringsIndex.
 		else:
 			self.charStrings = {}
 			self.charStringsAreIndexed = 0
+			# read from ttx file : charStrings.values() are actual charstrings
 			self.globalSubrs = globalSubrs
 			self.private = private
 			if fdSelect is not None:
@@ -806,6 +834,8 @@ class CharsetConverter(object):
 				charset = cffIExpertStrings
 			elif value == 2:
 				charset = cffExpertSubsetStrings
+		if charset and len(charset) != parent.numGlyphs:
+			charset = charset[:parent.numGlyphs]
 		return charset
 
 	def write(self, parent, value):
@@ -843,6 +873,25 @@ class CharsetCompiler(object):
 	def toFile(self, file):
 		file.write(self.data)
 
+def getStdCharSet(charset):
+	# check to see if we can use a predefined charset value.
+	charsetCode = None
+	predefinedCharSets = [
+		(cffISOAdobeStringCount, cffISOAdobeStrings, 0),
+		(cffExpertStringCount, cffIExpertStrings, 1),
+		(cffExpertSubsetStringCount, cffExpertSubsetStrings, 2) ]
+	len_cs = len(charset)
+	for cnt, charList, code in predefinedCharSets:
+		if charsetCode != None:
+			break
+		if len_cs > cnt:
+			continue
+		charsetCode = code
+		for i in range(len_cs):
+			if charset[i] != charList[i]:
+				charsetCode = None
+				break
+	return charsetCode
 
 def getCIDfromName(name, strings):
 	return int(name[3:])
@@ -1253,6 +1302,16 @@ topDictOperators = [
 	(17,		'CharStrings',		'number',	None,	CharStringsConverter()),
 ]
 
+fontDictOperators = [
+#	opcode		name			argument type	default	converter
+	((12, 38),	'FontName',		'SID',		None,	None),
+	((12, 7),	'FontMatrix',		'array',	[0.001, 0, 0, 0.001, 0, 0],	None),
+	(4,		'Weight',		'SID',		None,	None),
+	(18,		'Private',	('number', 'number'),	None,	PrivateDictConverter()),
+]
+
+
+
 # Note! FDSelect and FDArray must both preceed CharStrings in the output XML build order,
 # in order for the font to compile back from xml.
 
@@ -1298,11 +1357,14 @@ def addConverters(table):
 
 addConverters(privateDictOperators)
 addConverters(topDictOperators)
+addConverters(fontDictOperators)
 
 
 class TopDictDecompiler(psCharStrings.DictDecompiler):
 	operators = buildOperatorDict(topDictOperators)
 
+class FontDictDecompiler(psCharStrings.DictDecompiler):
+	operators = buildOperatorDict(fontDictOperators)
 
 class PrivateDictDecompiler(psCharStrings.DictDecompiler):
 	operators = buildOperatorDict(privateDictOperators)
@@ -1394,7 +1456,14 @@ class TopDictCompiler(DictCompiler):
 	def getChildren(self, strings):
 		children = []
 		if hasattr(self.dictObj, "charset") and self.dictObj.charset:
-			children.append(CharsetCompiler(strings, self.dictObj.charset, self))
+			if  hasattr(self.dictObj, "ROS"): # aka isCID
+				charsetCode = None
+			else:
+				charsetCode = getStdCharSet(self.dictObj.charset)
+			if charsetCode == None:
+				children.append(CharsetCompiler(strings, self.dictObj.charset, self))
+			else:
+				self.rawDict["charset"] = charsetCode
 		if hasattr(self.dictObj, "Encoding"):
 			encoding = self.dictObj.Encoding
 			if not isinstance(encoding, basestring):
@@ -1402,7 +1471,7 @@ class TopDictCompiler(DictCompiler):
 		if hasattr(self.dictObj, "FDSelect"):
 			# I have not yet supported merging a ttx CFF-CID font, as there are interesting
 			# issues about merging the FDArrays. Here I assume that
-			# either the font was read from XML, and teh FDSelect indices are all
+			# either the font was read from XML, and the FDSelect indices are all
 			# in the charstring data, or the FDSelect array is already fully defined.
 			fdSelect = self.dictObj.FDSelect
 			if len(fdSelect) == 0: # probably read in from XML; assume fdIndex in CharString data
@@ -1434,7 +1503,7 @@ class TopDictCompiler(DictCompiler):
 
 class FontDictCompiler(DictCompiler):
 
-	opcodes = buildOpcodeDict(topDictOperators)
+	opcodes = buildOpcodeDict(fontDictOperators)
 
 	def getChildren(self, strings):
 		children = []
@@ -1563,23 +1632,18 @@ class TopDict(BaseDict):
 			i = i + 1
 
 
-class FontDict(BaseDict):
+class FontDict(TopDict):
 
-	defaults = buildDefaults(topDictOperators)
-	converters = buildConverters(topDictOperators)
-	order = buildOrder(topDictOperators)
-	decompilerClass = None
+	defaults = buildDefaults(fontDictOperators)
+	converters = buildConverters(fontDictOperators)
+	order = buildOrder(fontDictOperators)
+	decompilerClass = FontDictDecompiler
 	compilerClass = FontDictCompiler
 
 	def __init__(self, strings=None, file=None, offset=None, GlobalSubrs=None):
-		BaseDict.__init__(self, strings, file, offset)
-		self.GlobalSubrs = GlobalSubrs
-
-	def getGlyphOrder(self):
-		return self.charset
+		TopDict.__init__(self, strings, file, offset)
 
 	def toXML(self, xmlWriter, progress):
-		self.skipNames = ['Encoding']
 		BaseDict.toXML(self, xmlWriter, progress)
 
 

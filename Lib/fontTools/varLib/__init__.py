@@ -3,7 +3,7 @@ Module for dealing with 'gvar'-style font variations, also known as run-time
 interpolation.
 
 The ideas here are very similar to MutatorMath.  There is even code to read
-MutatorMath .designspace files.
+MutatorMath .designspace files in the varLib.designspace module.
 
 For now, if you run this file on a designspace file, it tries to find
 ttf-interpolatable files for the masters and build a GX variation font from
@@ -20,283 +20,17 @@ API *will* change in near future.
 """
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
-from fontTools.ttLib import TTFont
+from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables._n_a_m_e import NameRecord
-from fontTools.ttLib.tables._f_v_a_r import table__f_v_a_r, Axis, NamedInstance
+from fontTools.ttLib.tables._f_v_a_r import Axis, NamedInstance
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
-from fontTools.ttLib.tables._g_v_a_r import table__g_v_a_r, GlyphVariation
+from fontTools.ttLib.tables._g_v_a_r import GlyphVariation
+from fontTools.ttLib.tables import otTables as ot
+from fontTools.ttLib.tables import otBase as otBase
+from fontTools.varLib import designspace, models, builder
+from fontTools.varLib.merger import merge_tables, Merger
 import warnings
-try:
-	import xml.etree.cElementTree as ET
-except ImportError:
-	import xml.etree.ElementTree as ET
 import os.path
-
-
-#
-# Variation space, aka design space, model
-#
-
-def supportScalar(location, support):
-	"""Returns the scalar multiplier at location, for a master
-	with support.
-	>>> supportScalar({}, {})
-	1.0
-	>>> supportScalar({'wght':.2}, {})
-	1.0
-	>>> supportScalar({'wght':.2}, {'wght':(0,2,3)})
-	0.1
-	>>> supportScalar({'wght':2.5}, {'wght':(0,2,4)})
-	0.75
-	"""
-	scalar = 1.
-	for axis,(lower,peak,upper) in support.items():
-		if axis not in location:
-			scalar = 0.
-			break
-		v = location[axis]
-		if v == peak:
-			continue
-		if v <= lower or upper <= v:
-			scalar = 0.
-			break;
-		if v < peak:
-			scalar *= (v - lower) / (peak - lower)
-		else: # v > peak
-			scalar *= (v - upper) / (peak - upper)
-	return scalar
-
-
-class VariationModel(object):
-
-	"""
-	Locations must be in normalized space.  Ie. base master
-	is at origin (0).
-	>>> from pprint import pprint
-	>>> locations = [ \
-	{'wght':100}, \
-	{'wght':-100}, \
-	{'wght':-180}, \
-	{'wdth':+.3}, \
-	{'wght':+120,'wdth':.3}, \
-	{'wght':+120,'wdth':.2}, \
-	{}, \
-	{'wght':+180,'wdth':.3}, \
-	{'wght':+180}, \
-	]
-	>>> model = VariationModel(locations, axisOrder=['wght'])
-	>>> pprint(model.locations)
-	[{},
-	 {'wght': -100},
-	 {'wght': -180},
-	 {'wght': 100},
-	 {'wght': 180},
-	 {'wdth': 0.3},
-	 {'wdth': 0.3, 'wght': 180},
-	 {'wdth': 0.3, 'wght': 120},
-	 {'wdth': 0.2, 'wght': 120}]
-	>>> pprint(model.deltaWeights)
-	[{},
-	 {0: 1.0},
-	 {0: 1.0},
-	 {0: 1.0},
-	 {0: 1.0},
-	 {0: 1.0},
-	 {0: 1.0, 4: 1.0, 5: 1.0},
-	 {0: 1.0, 3: 0.75, 4: 0.25, 5: 1.0, 6: 0.25},
-	 {0: 1.0,
-	  3: 0.75,
-	  4: 0.25,
-	  5: 0.6666666666666667,
-	  6: 0.16666666666666669,
-	  7: 0.6666666666666667}]
-	"""
-
-	def __init__(self, locations, axisOrder=[]):
-		locations = [{k:v for k,v in loc.items() if v != 0.} for loc in locations]
-		keyFunc = self.getMasterLocationsSortKeyFunc(locations, axisOrder=axisOrder)
-		axisPoints = keyFunc.axisPoints
-		self.locations = sorted(locations, key=keyFunc)
-		# TODO Assert that locations are unique.
-		self.mapping = [self.locations.index(l) for l in locations] # Mapping from user's master order to our master order
-		self.reverseMapping = [locations.index(l) for l in self.locations] # Reverse of above
-
-		self._computeMasterSupports(axisPoints)
-
-	@staticmethod
-	def getMasterLocationsSortKeyFunc(locations, axisOrder=[]):
-		assert {} in locations, "Base master not found."
-		axisPoints = {}
-		for loc in locations:
-			if len(loc) != 1:
-				continue
-			axis = next(iter(loc))
-			value = loc[axis]
-			if axis not in axisPoints:
-				axisPoints[axis] = {0}
-			assert value not in axisPoints[axis]
-			axisPoints[axis].add(value)
-
-		def getKey(axisPoints, axisOrder):
-			def sign(v):
-				return -1 if v < 0 else +1 if v > 0 else 0
-			def key(loc):
-				rank = len(loc)
-				onPointAxes = [axis for axis,value in loc.items() if value in axisPoints[axis]]
-				orderedAxes = [axis for axis in axisOrder if axis in loc]
-				orderedAxes.extend([axis for axis in sorted(loc.keys()) if axis not in axisOrder])
-				return (
-					rank, # First, order by increasing rank
-					-len(onPointAxes), # Next, by decreasing number of onPoint axes
-					tuple(axisOrder.index(axis) if axis in axisOrder else 0x10000 for axis in orderedAxes), # Next, by known axes
-					tuple(orderedAxes), # Next, by all axes
-					tuple(sign(loc[axis]) for axis in orderedAxes), # Next, by signs of axis values
-					tuple(abs(loc[axis]) for axis in orderedAxes), # Next, by absolute value of axis values
-				)
-			return key
-
-		ret = getKey(axisPoints, axisOrder)
-		ret.axisPoints = axisPoints
-		return ret
-
-	@staticmethod
-	def lowerBound(value, lst):
-		if any(v < value for v in lst):
-			return max(v for v in lst if v < value)
-		else:
-			return value
-	@staticmethod
-	def upperBound(value, lst):
-		if any(v > value for v in lst):
-			return min(v for v in lst if v > value)
-		else:
-			return value
-
-	def _computeMasterSupports(self, axisPoints):
-		supports = []
-		deltaWeights = []
-		locations = self.locations
-		for i,loc in enumerate(locations):
-			box = {}
-
-			# Account for axisPoints first
-			for axis,values in axisPoints.items():
-				if not axis in loc:
-					continue
-				locV = loc[axis]
-				box[axis] = (self.lowerBound(locV, values), locV, self.upperBound(locV, values))
-
-			locAxes = set(loc.keys())
-			# Walk over previous masters now
-			for j,m in enumerate(locations[:i]):
-				# Master with extra axes do not participte
-				if not set(m.keys()).issubset(locAxes):
-					continue
-				# If it's NOT in the current box, it does not participate
-				relevant = True
-				for axis, (lower,_,upper) in box.items():
-					if axis in m and not (lower < m[axis] < upper):
-						relevant = False
-						break
-				if not relevant:
-					continue
-				# Split the box for new master
-				for axis,val in m.items():
-					assert axis in box
-					lower,locV,upper = box[axis]
-					if val < locV:
-						lower = val
-					elif locV < val:
-						upper = val
-					box[axis] = (lower,locV,upper)
-			supports.append(box)
-
-			deltaWeight = {}
-			# Walk over previous masters now, populate deltaWeight
-			for j,m in enumerate(locations[:i]):
-				scalar = supportScalar(loc, supports[j])
-				if scalar:
-					deltaWeight[j] = scalar
-			deltaWeights.append(deltaWeight)
-
-		self.supports = supports
-		self.deltaWeights = deltaWeights
-
-	def getDeltas(self, masterValues):
-		count = len(self.locations)
-		assert len(masterValues) == len(self.deltaWeights)
-		mapping = self.reverseMapping
-		out = []
-		for i,weights in enumerate(self.deltaWeights):
-			delta = masterValues[mapping[i]]
-			for j,weight in weights.items():
-				delta -= out[j] * weight
-			out.append(delta)
-		return out
-
-	def interpolateFromDeltas(self, loc, deltas):
-		v = None
-		supports = self.supports
-		assert len(deltas) == len(supports)
-		for i,(delta,support) in enumerate(zip(deltas, supports)):
-			scalar = supportScalar(loc, support)
-			if not scalar: continue
-			contribution = delta * scalar
-			if i == 0:
-				v = contribution
-			else:
-				v += contribution
-		return v
-
-	def interpolateFromMasters(self, loc, masterValues):
-		deltas = self.getDeltas(masterValues)
-		return self.interpolateFromDeltas(loc, deltas)
-
-#
-# .designspace routines
-#
-
-def _xmlParseLocation(et):
-	loc = {}
-	for dim in et.find('location'):
-		assert dim.tag == 'dimension'
-		name = dim.attrib['name']
-		value = float(dim.attrib['xvalue'])
-		assert name not in loc
-		loc[name] = value
-	return loc
-
-def _designspace_load(et):
-	base_idx = None
-	masters = []
-	ds = et.getroot()
-	for master in ds.find('sources'):
-		name = master.attrib['name']
-		filename = master.attrib['filename']
-		isBase = master.find('info')
-		if isBase is not None:
-			assert base_idx is None
-			base_idx = len(masters)
-		loc = _xmlParseLocation(master)
-		masters.append((filename, loc, name))
-
-	instances = []
-	for instance in ds.find('instances'):
-		name = master.attrib['name']
-		family = instance.attrib['familyname']
-		style = instance.attrib['stylename']
-		filename = instance.attrib['filename']
-		loc = _xmlParseLocation(instance)
-		instances.append((filename, loc, name, family, style))
-
-	return masters, instances, base_idx
-
-def designspace_load(filename):
-	return _designspace_load(ET.parse(filename))
-
-def designspace_loads(string):
-	return _designspace_load(ET.fromstring(string))
-
 
 #
 # Creation routines
@@ -305,31 +39,54 @@ def designspace_loads(string):
 # TODO: Move to name table proper; also, is mac_roman ok for ASCII names?
 def _AddName(font, name):
 	"""(font, "Bold") --> NameRecord"""
+	name = tounicode(name)
+
 	nameTable = font.get("name")
 	namerec = NameRecord()
 	namerec.nameID = 1 + max([n.nameID for n in nameTable.names] + [256])
-	namerec.string = name.encode("mac_roman")
-	namerec.platformID, namerec.platEncID, namerec.langID = (1, 0, 0)
+	namerec.string = name
+	namerec.platformID, namerec.platEncID, namerec.langID = (3, 1, 0x409)
 	nameTable.names.append(namerec)
 	return namerec
 
 # Move to fvar table proper?
-def _add_fvar(font, axes, instances):
-	assert "fvar" not in font
-	font['fvar'] = fvar = table__f_v_a_r()
+# TODO how to provide axis order?
+def _add_fvar(font, axes, instances, axis_map):
+	"""
+	Add 'fvar' table to font.
 
-	for tag in sorted(axes.keys()):
+	axes is a dictionary mapping axis-id to axis (min,default,max)
+	coordinate values.
+
+	instances is list of dictionary objects with 'location', 'stylename',
+	and possibly 'postscriptfontname' entries.
+
+	axisMap is dictionary mapping axis-id to (axis-tag, axis-name).
+	"""
+
+	assert "fvar" not in font
+	font['fvar'] = fvar = newTable('fvar')
+
+	for iden in sorted(axes.keys(), key=lambda k: axis_map[k][0]):
 		axis = Axis()
-		axis.axisTag = tag
-		name, axis.minValue, axis.defaultValue, axis.maxValue = axes[tag]
-		axis.nameID = _AddName(font, name).nameID
+		axis.axisTag = Tag(axis_map[iden][0])
+		axis.minValue, axis.defaultValue, axis.maxValue = axes[iden]
+		axis.axisNameID = _AddName(font, axis_map[iden][1]).nameID
 		fvar.axes.append(axis)
 
-	for name, coordinates in instances:
+	for instance in instances:
+		coordinates = instance['location']
+		name = instance['stylename']
+		psname = instance.get('postscriptfontname')
+
 		inst = NamedInstance()
-		inst.nameID = _AddName(font, name).nameID
-		inst.coordinates = coordinates
+		inst.subfamilyNameID = _AddName(font, name).nameID
+		if psname:
+			inst.postscriptNameID = _AddName(font, psname).nameID
+		inst.coordinates = {axis_map[k][0]:v for k,v in coordinates.items()}
 		fvar.instances.append(inst)
+
+	return fvar
 
 # TODO Move to glyf or gvar table proper
 def _GetCoordinates(font, glyphName):
@@ -403,41 +160,15 @@ def _SetCoordinates(font, glyphName, coord):
 	# XXX Remove the round when https://github.com/behdad/fonttools/issues/593 is fixed
 	font["hmtx"].metrics[glyphName] = int(round(horizontalAdvanceWidth)), int(round(leftSideBearing))
 
-def _add_gvar(font, axes, master_ttfs, master_locs, base_idx):
 
-	# Make copies for modification
-	master_ttfs = master_ttfs[:]
-	master_locs = [l.copy() for l in master_locs]
-
-	axis_tags = axes.keys()
-
-	# Normalize master locations. TODO Move to a separate function.
-	for tag,(name,lower,default,upper) in axes.items():
-		for l in master_locs:
-			v = l[tag]
-			if v == default:
-				v = 0
-			elif v < default:
-				v = (v - default) / (default - lower)
-			else:
-				v = (v - default) / (upper - default)
-			l[tag] = v
-	# Locations are normalized now
-
-	print("Normalized master positions:")
-	print(master_locs)
+def _add_gvar(font, model, master_ttfs):
 
 	print("Generating gvar")
 	assert "gvar" not in font
-	gvar = font["gvar"] = table__g_v_a_r()
+	gvar = font["gvar"] = newTable('gvar')
 	gvar.version = 1
 	gvar.reserved = 0
 	gvar.variations = {}
-
-	# Assume single-model for now.
-	model = VariationModel(master_locs)
-	model_base_idx = model.mapping[base_idx]
-	assert 0 == model_base_idx
 
 	for glyph in font.getGlyphOrder():
 
@@ -450,42 +181,186 @@ def _add_gvar(font, axes, master_ttfs, master_locs, base_idx):
 			continue
 		del allControls
 
+		# Update gvar
 		gvar.variations[glyph] = []
-
 		deltas = model.getDeltas(allCoords)
 		supports = model.supports
 		assert len(deltas) == len(supports)
-		for i,(delta,support) in enumerate(zip(deltas, supports)):
-			if i == model_base_idx:
-				continue
+		for i,(delta,support) in enumerate(zip(deltas[1:], supports[1:])):
 			var = GlyphVariation(support, delta)
 			gvar.variations[glyph].append(var)
 
-def main(args=None):
+def _add_HVAR(font, model, master_ttfs, axisTags):
 
-	import sys
-	if args is None:
-		args = sys.argv[1:]
+	print("Generating HVAR")
 
-	(designspace_filename,) = args
-	finder = lambda s: s.replace('master_ufo', 'master_ttf_interpolatable').replace('.ufo', '.ttf')
-	axisMap = None # dict mapping axis id to (axis tag, axis name)
-	outfile = os.path.splitext(designspace_filename)[0] + '-GX.ttf'
+	hAdvanceDeltas = {}
+	metricses = [m["hmtx"].metrics for m in master_ttfs]
+	for glyph in font.getGlyphOrder():
+		hAdvances = [metrics[glyph][0] for metrics in metricses]
+		# TODO move round somewhere else?
+		hAdvanceDeltas[glyph] = tuple(round(d) for d in model.getDeltas(hAdvances)[1:])
 
-	masters, instances, base_idx = designspace_load(designspace_filename)
+	# We only support the direct mapping right now.
+
+	supports = model.supports[1:]
+	varTupleList = builder.buildVarRegionList(supports, axisTags)
+	varTupleIndexes = list(range(len(supports)))
+	n = len(supports)
+	items = []
+	zeroes = [0]*n
+	for glyphName in font.getGlyphOrder():
+		items.append(hAdvanceDeltas.get(glyphName, zeroes))
+	while items and items[-1] is zeroes:
+		del items[-1]
+
+	advanceMapping = None
+	# Add indirect mapping to save on duplicates
+	uniq = set(items)
+	# TODO Improve heuristic
+	if (len(items) - len(uniq)) * len(varTupleIndexes) > len(items):
+		newItems = sorted(uniq)
+		mapper = {v:i for i,v in enumerate(newItems)}
+		mapping = [mapper[item] for item in items]
+		while len(mapping) > 1 and mapping[-1] == mapping[-2]:
+			del mapping[-1]
+		advanceMapping = builder.buildVarIdxMap(mapping)
+		items = newItems
+		del mapper, mapping, newItems
+	del uniq
+
+	varData = builder.buildVarData(varTupleIndexes, items)
+	varStore = builder.buildVarStore(varTupleList, [varData])
+
+	assert "HVAR" not in font
+	HVAR = font["HVAR"] = newTable('HVAR')
+	hvar = HVAR.table = ot.HVAR()
+	hvar.Version = 0x00010000
+	hvar.VarStore = varStore
+	hvar.AdvWidthMap = advanceMapping
+	hvar.LsbMap = hvar.RsbMap = None
+
+
+def _all_equal(lst):
+	it = iter(lst)
+	v0 = next(it)
+	for v in it:
+		if v0 != v:
+			return False
+	return True
+
+def buildVarDevTable(store_builder, master_values):
+	if _all_equal(master_values):
+		return None
+	varIdx = store_builder.storeMasters(master_values)
+	return builder.buildVarDevTable(varIdx)
+
+class VariationMerger(Merger):
+
+	def __init__(self, model, axisTags):
+		self.model = model
+		self.store_builder = builder.OnlineVarStoreBuilder(axisTags)
+		self.store_builder.setModel(model)
+
+@VariationMerger.merger(ot.Anchor)
+def merge(merger, self, lst):
+	assert self.Format == 1
+	XDeviceTable = buildVarDevTable(merger.store_builder, [a.XCoordinate for a in lst])
+	YDeviceTable = buildVarDevTable(merger.store_builder, [a.YCoordinate for a in lst])
+	if XDeviceTable or YDeviceTable:
+		self.Format = 3
+		self.XDeviceTable = XDeviceTable
+		self.YDeviceTable = YDeviceTable
+
+@VariationMerger.merger(ot.PairPos)
+def merge(merger, self, lst):
+	# We need to interecept the merger processing of the object tree here so
+	# that we can change the PairPos value formats after the ValueRecords are
+	# changed.
+	merger.mergeObjects(self, lst)
+	# Now examine the list of value records, and update to the union of format values.
+	vf1 = self.ValueFormat1
+	vf2 = self.ValueFormat2
+	if self.Format == 1:
+		for pairSet in self.PairSet:
+			for pairValueRecord in pairSet.PairValueRecord:
+				pv1 = pairValueRecord.Value1
+				if pv1 is not None:
+					vf1 |= pv1.getFormat()
+				pv2 = pairValueRecord.Value2
+				if pv2 is not None:
+					vf2 |= pv2.getFormat()
+	elif self.Format == 2:
+		for class1Record in self.Class1Record:
+			for class2Record in class1Record.Class2Record:
+				pv1 = class2Record.Value1
+				if pv1 is not None:
+					vf1 |= pv1.getFormat()
+				pv2 = class2Record.Value2
+				if pv2 is not None:
+					vf2 |= pv2.getFormat()
+	self.ValueFormat1 = vf1
+	self.ValueFormat2 = vf2
+
+@VariationMerger.merger(otBase.ValueRecord)
+def merge(merger, self, lst):
+	for name, tableName in [('XAdvance','XAdvDevice'),
+				('YAdvance','YAdvDevice'),
+				('XPlacement','XPlaDevice'),
+				('YPlacement','YPlaDevice')]:
+
+		if hasattr(self, name):
+			deviceTable = buildVarDevTable(merger.store_builder,
+						       [getattr(a, name) for a in lst])
+			if deviceTable:
+				setattr(self, tableName, deviceTable)
+
+
+def _merge_OTL(font, model, master_fonts, axisTags, base_idx):
+
+	print("Merging OpenType Layout tables")
+	merger = VariationMerger(model, axisTags)
+
+	merge_tables(font, merger, master_fonts, axisTags, base_idx, ['GPOS'])
+	store = merger.store_builder.finish()
+	try:
+		GDEF = font['GDEF'].table
+		assert GDEF.Version <= 0x00010002
+	except KeyError:
+		font['GDEF']= newTable('GDEF')
+		GDEFTable = font["GDEF"] = newTable('GDEF')
+		GDEF = GDEFTable.table = ot.GDEF()
+	GDEF.Version = 0x00010003
+	GDEF.VarStore = store
+
+
+def build(designspace_filename, master_finder=lambda s:s, axisMap=None):
+	"""
+	Build variation font from a designspace file.
+
+	If master_finder is set, it should be a callable that takes master
+	filename as found in designspace file and map it to master font
+	binary as to be opened (eg. .ttf or .otf).
+
+	If axisMap is set, it should be dictionary mapping axis-id to
+	(axis-tag, axis-name).
+	"""
+
+	masters, instances = designspace.load(designspace_filename)
+	base_idx = None
+	for i,m in enumerate(masters):
+		if 'info' in m and m['info']['copy']:
+			assert base_idx is None
+			base_idx = i
 	assert base_idx is not None, "Cannot find 'base' master; Add <info> element to one of the masters in the .designspace document."
 
 	from pprint import pprint
-	print("Masters:")
-	pprint(masters)
-	print("Instances:")
-	pprint(instances)
 	print("Index of base master:", base_idx)
 
 	print("Building GX")
 	print("Loading TTF masters")
 	basedir = os.path.dirname(designspace_filename)
-	master_ttfs = [finder(os.path.join(basedir, m[0])) for m in masters]
+	master_ttfs = [master_finder(os.path.join(basedir, m['filename'])) for m in masters]
 	master_fonts = [TTFont(ttf_path) for ttf_path in master_ttfs]
 
 	standard_axis_map = {
@@ -503,56 +378,72 @@ def main(args=None):
 
 	# TODO: For weight & width, use OS/2 values and setup 'avar' mapping.
 
-	# Set up master locations
-	master_locs = []
-	instance_locs = []
-	out = []
-	for loc in [m[1] for m in masters+instances]:
-		# Apply modifications for default axes; and apply tags
-		l = {}
-		for axis,value in loc.items():
-			tag,name = axis_map[axis]
-			l[tag] = value
-		out.append(l)
-	master_locs = out[:len(masters)]
-	instance_locs = out[len(masters):]
+	master_locs = [o['location'] for o in masters]
 
 	axis_tags = set(master_locs[0].keys())
 	assert all(axis_tags == set(m.keys()) for m in master_locs)
-	print("Axis tags:", axis_tags)
-	print("Master positions:")
-	pprint(master_locs)
 
 	# Set up axes
 	axes = {}
-	axis_names = {}
-	for tag,name in axis_map.values():
-		if tag not in axis_tags: continue
-		axis_names[tag] = name
 	for tag in axis_tags:
 		default = master_locs[base_idx][tag]
 		lower = min(m[tag] for m in master_locs)
 		upper = max(m[tag] for m in master_locs)
-		name = axis_names[tag]
-		axes[tag] = (name, lower, default, upper)
+		axes[tag] = (lower, default, upper)
 	print("Axes:")
 	pprint(axes)
 
-	# Set up named instances
-	instance_list = []
-	for loc,instance in zip(instance_locs,instances):
-		style = instance[4]
-		instance_list.append((style, loc))
-	# TODO append masters as named-instances as well; needs .designspace change.
+	print("Master locations:")
+	pprint(master_locs)
 
+	# We can use the base font straight, but it's faster to load it again since
+	# then we won't be recompiling the existing ('glyf', 'hmtx', ...) tables.
+	#gx = master_fonts[base_idx]
 	gx = TTFont(master_ttfs[base_idx])
 
-	_add_fvar(gx, axes, instance_list)
+	# TODO append masters as named-instances as well; needs .designspace change.
+	fvar = _add_fvar(gx, axes, instances, axis_map)
 
-	print("Setting up glyph variations")
-	_add_gvar(gx, axes, master_fonts, master_locs, base_idx)
 
-	print("Saving GX font", outfile)
+	# Normalize master locations
+	master_locs = [models.normalizeLocation(m, axes) for m in master_locs]
+
+	print("Normalized master locations:")
+	pprint(master_locs)
+
+	# TODO Clean this up.
+	del instances
+	del axes
+	master_locs = [{axis_map[k][0]:v for k,v in loc.items()} for loc in master_locs]
+	#instance_locs = [{axis_map[k][0]:v for k,v in loc.items()} for loc in instance_locs]
+	axisTags = [axis.axisTag for axis in fvar.axes]
+
+	# Assume single-model for now.
+	model = models.VariationModel(master_locs)
+	assert 0 == model.mapping[base_idx]
+
+	print("Building variations tables")
+	if 'glyf' in gx:
+		_add_gvar(gx, model, master_fonts)
+	_add_HVAR(gx, model, master_fonts, axisTags)
+	_merge_OTL(gx, model, master_fonts, axisTags, base_idx)
+
+	return gx, model, master_ttfs
+
+
+def main(args=None):
+
+	if args is None:
+		import sys
+		args = sys.argv[1:]
+
+	(designspace_filename,) = args
+	finder = lambda s: s.replace('master_ufo', 'master_ttf_interpolatable').replace('.ufo', '.ttf')
+	outfile = os.path.splitext(designspace_filename)[0] + '-GX.ttf'
+
+	gx, model, master_ttfs = build(designspace_filename, finder)
+
+	print("Saving variation font", outfile)
 	gx.save(outfile)
 
 

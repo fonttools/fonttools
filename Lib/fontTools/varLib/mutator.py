@@ -7,13 +7,14 @@ from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
-from fontTools.varLib import VariationModel, supportScalar, _GetCoordinates, _SetCoordinates
+from fontTools.varLib import _GetCoordinates, _SetCoordinates
+from fontTools.varLib.models import VariationModel, supportScalar, normalizeLocation
 import os.path
 
 def main(args=None):
 
-	import sys
 	if args is None:
+		import sys
 		args = sys.argv[1:]
 
 	varfilename = args[0]
@@ -22,29 +23,18 @@ def main(args=None):
 
 	loc = {}
 	for arg in locargs:
-		tag,valstr = arg.split('=')
-		while len(tag) < 4:
-			tag += ' '
+		tag,val = arg.split('=')
 		assert len(tag) <= 4
-		loc[tag] = float(valstr)
+		loc[tag.ljust(4)] = float(val)
 	print("Location:", loc)
 
 	print("Loading GX font")
 	varfont = TTFont(varfilename)
 
 	fvar = varfont['fvar']
-	for axis in fvar.axes:
-		lower, default, upper = axis.minValue, axis.defaultValue, axis.maxValue
-		v = loc.get(axis.axisTag, default)
-		if v < lower: v = lower
-		if v > upper: v = upper
-		if v == default:
-			v = 0
-		elif v < default:
-			v = (v - default) / (default - lower)
-		else:
-			v = (v - default) / (upper - default)
-		loc[axis.axisTag] = v
+	axes = {a.axisTag:(a.minValue,a.defaultValue,a.maxValue) for a in fvar.axes}
+	# TODO Round to F2Dot14?
+	loc = normalizeLocation(loc, axes)
 	# Location is normalized now
 	print("Normalized location:", loc)
 

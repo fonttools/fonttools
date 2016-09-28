@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ttFont sfntVersion="OTTO" ttLibVersion="2.5">
+<ttFont sfntVersion="OTTO" ttLibVersion="3.0">
 
   <CFF>
+    <major value="1"/>
+    <minor value="0"/>
     <CFFFont name="TestCID-Regular">
       <ROS Registry="Adobe" Order="Identity" Supplement="0"/>
       <FullName value="Test CID Regular"/>
@@ -25,15 +27,7 @@
       <FDArray>
         <FontDict index="0">
           <FontName value="TestCID-Regular-One"/>
-          <isFixedPitch value="0"/>
-          <ItalicAngle value="0"/>
-          <UnderlineThickness value="50"/>
-          <PaintType value="0"/>
-          <CharstringType value="2"/>
           <FontMatrix value="0.001 0 0 0.001 0 0"/>
-          <FontBBox value="0 0 0 0"/>
-          <StrokeWidth value="0"/>
-          <Encoding name="StandardEncoding"/>
           <Private>
             <BlueValues value="-250 -250 1100 1100"/>
             <BlueScale value="0.039625"/>

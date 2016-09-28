@@ -134,7 +134,7 @@ otData = [
 		('uint16', 'StartSize', None, None, 'Smallest size to correct-in ppem'),
 		('uint16', 'EndSize', None, None, 'Largest size to correct-in ppem'),
 		('uint16', 'DeltaFormat', None, None, 'Format of DeltaValue array data: 1, 2, or 3'),
-		('DeltaValue', 'DeltaValue', '', 0, 'Array of compressed data'),
+		('DeltaValue', 'DeltaValue', '', 'DeltaFormat in (1,2,3)', 'Array of compressed data'),
 	]),
 
 
@@ -143,10 +143,11 @@ otData = [
 	#
 
 	('GPOS', [
-		('Version', 'Version', None, None, 'Version of the GPOS table-initially = 0x00010000'),
+		('Version', 'Version', None, None, 'Version of the GPOS table- 0x00010000 or 0x00010001'),
 		('Offset', 'ScriptList', None, None, 'Offset to ScriptList table-from beginning of GPOS table'),
 		('Offset', 'FeatureList', None, None, 'Offset to FeatureList table-from beginning of GPOS table'),
 		('Offset', 'LookupList', None, None, 'Offset to LookupList table-from beginning of GPOS table'),
+		('LOffset', 'FeatureVariations', None, 'Version >= 0x00010001', 'Offset to FeatureVariations table-from beginning of GPOS table'),
 	]),
 
 	('SinglePosFormat1', [
@@ -443,10 +444,11 @@ otData = [
 	#
 
 	('GSUB', [
-		('Version', 'Version', None, None, 'Version of the GSUB table-initially set to 0x00010000'),
+		('Version', 'Version', None, None, 'Version of the GSUB table- 0x00010000 or 0x00010001'),
 		('Offset', 'ScriptList', None, None, 'Offset to ScriptList table-from beginning of GSUB table'),
 		('Offset', 'FeatureList', None, None, 'Offset to FeatureList table-from beginning of GSUB table'),
 		('Offset', 'LookupList', None, None, 'Offset to LookupList table-from beginning of GSUB table'),
+		('LOffset', 'FeatureVariations', None, 'Version >= 0x00010001', 'Offset to FeatureVariations table-from beginning of GSUB table'),
 	]),
 
 	('SingleSubstFormat1', [
@@ -639,12 +641,13 @@ otData = [
 	#
 
 	('GDEF', [
-		('Version', 'Version', None, None, 'Version of the GDEF table-initially 0x00010000'),
+		('Version', 'Version', None, None, 'Version of the GDEF table- 0x00010000, 0x00010002, or 0x00010003'),
 		('Offset', 'GlyphClassDef', None, None, 'Offset to class definition table for glyph type-from beginning of GDEF header (may be NULL)'),
 		('Offset', 'AttachList', None, None, 'Offset to list of glyphs with attachment points-from beginning of GDEF header (may be NULL)'),
 		('Offset', 'LigCaretList', None, None, 'Offset to list of positioning points for ligature carets-from beginning of GDEF header (may be NULL)'),
 		('Offset', 'MarkAttachClassDef', None, None, 'Offset to class definition table for mark attachment type-from beginning of GDEF header (may be NULL)'),
-		('Offset', 'MarkGlyphSetsDef', None, 'int(round(Version*0x10000)) >= 0x00010002', 'Offset to the table of mark set definitions-from beginning of GDEF header (may be NULL)'),
+		('Offset', 'MarkGlyphSetsDef', None, 'Version >= 0x00010002', 'Offset to the table of mark set definitions-from beginning of GDEF header (may be NULL)'),
+		('LOffset', 'VarStore', None, 'Version >= 0x00010003', 'Offset to variation store (may be NULL)'),
 	]),
 
 	('AttachList', [
@@ -835,6 +838,107 @@ otData = [
 		('uint16', 'LookupCount', None, None, 'Number of lookup Indices for this modification'),
 		('Offset', 'Lookup', 'LookupCount', 0, 'Array of offsets to GPOS-type lookup tables-from beginning of JstfMax table-in design order'),
 	]),
+
+
+	#
+	# Variation fonts
+	#
+
+	# GSUB/GPOS FeatureVariations
+
+	('FeatureVariations', [
+		('Version', 'Version', None, None, 'Version of the table-initially set to 0x00010000'),
+		('uint32', 'FeatureVariationCount', None, None, 'Number of records in the FeatureVariationRecord array'),
+		('struct', 'FeatureVariationRecord', 'FeatureVariationCount', 0, 'Array of FeatureVariationRecord'),
+	]),
+
+	('FeatureVariationRecord', [
+		('LOffset', 'ConditionSet', None, None, 'Offset to a ConditionSet table, from beginning of the FeatureVariations table.'),
+		('LOffset', 'FeatureTableSubstitution', None, None, 'Offset to a FeatureTableSubstitution table, from beginning of the FeatureVariations table'),
+	]),
+
+	('ConditionSet', [
+		('uint16', 'ConditionCount', None, None, 'Number of condition tables in the ConditionTable array'),
+		('LOffset', 'ConditionTable', 'ConditionCount', 0, 'Array of condition tables.'),
+	]),
+
+	('ConditionTableFormat1', [
+		('uint16', 'Format', None, None, 'Format, = 1'),
+		('uint16', 'AxisIndex', None, None, 'Index for the variation axis within the fvar table, base 0.'),
+		('F2Dot14', 'FilterRangeMinValue', None, None, 'Minimum normalized axis value of the font variation instances that satisfy this condition.'),
+		('F2Dot14', 'FilterRangeMaxValue', None, None, 'Maximum value that satisfies this condition.'),
+	]),
+
+	('FeatureTableSubstitution', [
+		('Version', 'Version', None, None, 'Version of the table-initially set to 0x00010000'),
+		('uint16', 'SubstitutionCount', None, None, 'Number of records in the FeatureVariationRecords array'),
+		('FeatureTableSubstitutionRecord', 'SubstitutionRecord', 'SubstitutionCount', 0, 'Array of FeatureTableSubstitutionRecord'),
+	]),
+
+	('FeatureTableSubstitutionRecord', [
+		('uint16', 'FeatureIndex', None, None, 'The feature table index to match.'),
+		('LOffset', 'Feature', None, None, 'Offset to an alternate feature table, from start of the FeatureTableSubstitution table.'),
+	]),
+
+	# VariationStore
+
+	('VarRegionAxis', [
+		('F2Dot14', 'StartCoord', None, None, ''),
+		('F2Dot14', 'PeakCoord', None, None, ''),
+		('F2Dot14', 'EndCoord', None, None, ''),
+	]),
+
+	('VarRegion', [
+		('struct', 'VarRegionAxis', 'RegionAxisCount', 0, ''),
+	]),
+
+	('VarRegionList', [
+		('uint16', 'RegionAxisCount', None, None, ''),
+		('uint16', 'RegionCount', None, None, ''),
+		('VarRegion', 'Region', 'RegionCount', 0, ''),
+	]),
+
+	('VarData', [
+		('uint16', 'ItemCount', None, None, ''),
+		('uint16', 'NumShorts', None, None, ''), # Automatically computed
+		('uint16', 'VarRegionCount', None, None, ''),
+		('uint16', 'VarRegionIndex', 'VarRegionCount', 0, ''),
+		('VarDataValue', 'Item', 'ItemCount', 0, ''),
+	]),
+
+	('VarStore', [
+		('uint16', 'Format', None, None, 'Set to 1.'),
+		('LOffset', 'VarRegionList', None, None, ''),
+		('uint16', 'VarDataCount', None, None, ''),
+		('LOffset', 'VarData', 'VarDataCount', 0, ''),
+	]),
+
+	# Variation helpers
+
+	('VarIdxMap', [
+		('uint16', 'EntryFormat', None, None, ''), # Automatically computed
+		('uint16', 'MappingCount', None, None, ''), # Automatically computed
+		('VarIdxMapValue', 'mapping', '', 0, 'Array of compressed data'),
+	]),
+
+	# Glyph advance variations
+
+	('HVAR', [
+		('Version', 'Version', None, None, 'Version of the HVAR table-initially = 0x00010000'),
+		('LOffset', 'VarStore', None, None, ''),
+		('LOffsetTo(VarIdxMap)', 'AdvWidthMap', None, None, ''),
+		('LOffsetTo(VarIdxMap)', 'LsbMap', None, None, ''),
+		('LOffsetTo(VarIdxMap)', 'RsbMap', None, None, ''),
+	]),
+	('VVAR', [
+		('Version', 'Version', None, None, 'Version of the VVAR table-initially = 0x00010000'),
+		('LOffset', 'VarStore', None, None, ''),
+		('LOffsetTo(VarIdxMap)', 'AdvHeightMap', None, None, ''),
+		('LOffsetTo(VarIdxMap)', 'TsbMap', None, None, ''),
+		('LOffsetTo(VarIdxMap)', 'BsbMap', None, None, ''),
+		('LOffsetTo(VarIdxMap)', 'VOrgMap', None, None, 'Vertical origin mapping.'),
+	]),
+
 
 	#
 	# math

@@ -3,6 +3,7 @@ from fontTools.misc.py23 import *
 from fontTools.misc.textTools import safeEval
 from fontTools.misc.fixedTools import fixedToFloat as fi2fl, floatToFixed as fl2fi
 from .otBase import ValueRecordFactory
+from functools import partial
 import logging
 
 
@@ -21,8 +22,8 @@ def buildConverters(tableSpec, tableNamespace):
 			assert tp == "uint16"
 			converterClass = ValueFormat
 		elif name.endswith("Count") or name.endswith("LookupType"):
-			assert tp == "uint16"
-			converterClass = ComputedUShort
+			assert tp in ("uint16", "uint32")
+			converterClass = ComputedUShort if tp == 'uint16' else ComputedULong
 		elif name == "SubTable":
 			converterClass = SubTable
 		elif name == "ExtSubTable":
@@ -30,13 +31,16 @@ def buildConverters(tableSpec, tableNamespace):
 		elif name == "FeatureParams":
 			converterClass = FeatureParams
 		else:
-			if not tp in converterMapping:
+			if not tp in converterMapping and '(' not in tp:
 				tableName = tp
 				converterClass = Struct
 			else:
-				converterClass = converterMapping[tp]
+				converterClass = eval(tp, tableNamespace, converterMapping)
 		tableClass = tableNamespace.get(tableName)
-		conv = converterClass(name, repeat, aux, tableClass)
+		if tableClass is not None:
+			conv = converterClass(name, repeat, aux, tableClass=tableClass)
+		else:
+			conv = converterClass(name, repeat, aux)
 		if name in ["SubTable", "ExtSubTable"]:
 			conv.lookupTypes = tableNamespace['lookupTypes']
 			# also create reverse mapping
@@ -82,14 +86,14 @@ class BaseConverter(object):
 	"""Base class for converter objects. Apart from the constructor, this
 	is an abstract class."""
 
-	def __init__(self, name, repeat, aux, tableClass):
+	def __init__(self, name, repeat, aux, tableClass=None):
 		self.name = name
 		self.repeat = repeat
 		self.aux = aux
 		self.tableClass = tableClass
 		self.isCount = name.endswith("Count")
 		self.isLookupType = name.endswith("LookupType")
-		self.isPropagated = name in ["ClassCount", "Class2Count", "FeatureTag", "SettingsCount", "AxisCount"]
+		self.isPropagated = name in ["ClassCount", "Class2Count", "FeatureTag", "SettingsCount", "VarRegionCount", "MappingCount", "RegionAxisCount"]
 
 	def readArray(self, reader, font, tableDict, count):
 		"""Read an array of values from the reader."""
@@ -178,6 +182,13 @@ class UShort(IntValue):
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		writer.writeUShort(value)
 
+class Int8(IntValue):
+	staticSize = 1
+	def read(self, reader, font, tableDict):
+		return reader.readInt8()
+	def write(self, writer, font, tableDict, value, repeatIndex=None):
+		writer.writeInt8(value)
+
 class UInt8(IntValue):
 	staticSize = 1
 	def read(self, reader, font, tableDict):
@@ -192,10 +203,15 @@ class UInt24(IntValue):
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		writer.writeUInt24(value)
 
-class ComputedUShort(UShort):
+class ComputedInt(IntValue):
 	def xmlWrite(self, xmlWriter, font, value, name, attrs):
 		xmlWriter.comment("%s=%s" % (name, value))
 		xmlWriter.newline()
+
+class ComputedUShort(ComputedInt, UShort):
+	pass
+class ComputedULong(ComputedInt, ULong):
+	pass
 
 class Tag(SimpleValue):
 	staticSize = 4
@@ -239,32 +255,46 @@ class Fixed(FloatValue):
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		writer.writeLong(fl2fi(value, 16))
 
+class F2Dot14(FloatValue):
+	staticSize = 2
+	def read(self, reader, font, tableDict):
+		return  fi2fl(reader.readShort(), 14)
+	def write(self, writer, font, tableDict, value, repeatIndex=None):
+		writer.writeShort(fl2fi(value, 14))
+
 class Version(BaseConverter):
 	staticSize = 4
 	def read(self, reader, font, tableDict):
 		value = reader.readLong()
 		assert (value >> 16) == 1, "Unsupported version 0x%08x" % value
-		return  fi2fl(value, 16)
+		return value
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		if value < 0x10000:
-			value = fl2fi(value, 16)
-		value = int(round(value))
+			newValue = self.fromFloat(value)
+			log.warning("Table version value is a float: %g; fix code to use hex instead: %08x", value, newValue)
+			value = newValue
 		assert (value >> 16) == 1, "Unsupported version 0x%08x" % value
 		writer.writeLong(value)
 	def xmlRead(self, attrs, content, font):
 		value = attrs["value"]
-		value = float(int(value, 0)) if value.startswith("0") else float(value)
-		if value >= 0x10000:
-			value = fi2fl(value, 16)
+		value = int(value, 0) if value.startswith("0") else float(value)
+		if value < 0x10000:
+			newValue = self.fromFloat(value)
+			log.warning("Table version value is a float: %g; fix XML to use hex instead: %08x", value, newValue)
+			value = newValue
 		return value
 	def xmlWrite(self, xmlWriter, font, value, name, attrs):
-		if value >= 0x10000:
-			value = fi2fl(value, 16)
-		if value % 1 != 0:
-			# Write as hex
-			value = "0x%08x" % fl2fi(value, 16)
+		if value < 0x10000:
+			newValue = self.fromFloat(value)
+			log.warning("Table version value is a float: %g; fix code to use hex instead: %08x", value, newValue)
+			value = newValue
+		value = "0x%08x" % value
 		xmlWriter.simpletag(name, attrs + [("value", value)])
 		xmlWriter.newline()
+
+	@staticmethod
+	def fromFloat(v):
+		return fl2fi(v, 16)
 
 
 class Struct(BaseConverter):
@@ -389,7 +419,7 @@ class FeatureParams(Table):
 
 class ValueFormat(IntValue):
 	staticSize = 2
-	def __init__(self, name, repeat, aux, tableClass):
+	def __init__(self, name, repeat, aux, tableClass=None):
 		BaseConverter.__init__(self, name, repeat, aux, tableClass)
 		self.which = "ValueFormat" + ("2" if name[-1] == "2" else "1")
 	def read(self, reader, font, tableDict):
@@ -474,9 +504,96 @@ class DeltaValue(BaseConverter):
 		return safeEval(attrs["value"])
 
 
+class VarIdxMapValue(BaseConverter):
+
+	def read(self, reader, font, tableDict):
+		fmt = tableDict['EntryFormat']
+		nItems = tableDict['MappingCount']
+
+		innerBits = 1 + (fmt & 0x000F)
+		innerMask = (1<<innerBits) - 1
+		outerMask = 0xFFFFFFFF - innerMask
+		outerShift = 16 - innerBits
+
+		entrySize = 1 + ((fmt & 0x0030) >> 4)
+		read = {
+			1: reader.readUInt8,
+			2: reader.readUShort,
+			3: reader.readUInt24,
+			4: reader.readULong,
+		}[entrySize]
+
+		mapping = []
+		for i in range(nItems):
+			raw = read()
+			idx = ((raw & outerMask) << outerShift) | (raw & innerMask)
+			mapping.append(idx)
+
+		return mapping
+
+	def write(self, writer, font, tableDict, value, repeatIndex=None):
+		fmt = tableDict['EntryFormat']
+		mapping = value
+		writer['MappingCount'].setValue(len(mapping))
+
+		innerBits = 1 + (fmt & 0x000F)
+		innerMask = (1<<innerBits) - 1
+		outerShift = 16 - innerBits
+
+		entrySize = 1 + ((fmt & 0x0030) >> 4)
+		write = {
+			1: writer.writeUInt8,
+			2: writer.writeUShort,
+			3: writer.writeUInt24,
+			4: writer.writeULong,
+		}[entrySize]
+
+		for idx in mapping:
+			raw = ((idx & 0xFFFF0000) >> outerShift) | (idx & innerMask)
+			write(raw)
+
+
+class VarDataValue(BaseConverter):
+
+	def read(self, reader, font, tableDict):
+		values = []
+
+		regionCount = tableDict["VarRegionCount"]
+		shortCount = tableDict["NumShorts"]
+
+		for i in range(min(regionCount, shortCount)):
+			values.append(reader.readShort())
+		for i in range(min(regionCount, shortCount), regionCount):
+			values.append(reader.readInt8())
+		for i in range(regionCount, shortCount):
+			reader.readInt8()
+
+		return values
+
+	def write(self, writer, font, tableDict, value, repeatIndex=None):
+		regionCount = tableDict["VarRegionCount"]
+		shortCount = tableDict["NumShorts"]
+
+		for i in range(min(regionCount, shortCount)):
+			writer.writeShort(value[i])
+		for i in range(min(regionCount, shortCount), regionCount):
+			writer.writeInt8(value[i])
+		for i in range(regionCount, shortCount):
+			writer.writeInt8(0)
+
+	def xmlWrite(self, xmlWriter, font, value, name, attrs):
+		xmlWriter.simpletag(name, attrs + [("value", value)])
+		xmlWriter.newline()
+
+	def xmlRead(self, attrs, content, font):
+		return safeEval(attrs["value"])
+
+
 converterMapping = {
 	# type		class
+	"int8":		Int8,
 	"int16":	Short,
+	"uint8":	UInt8,
 	"uint8":	UInt8,
 	"uint16":	UShort,
 	"uint24":	UInt24,
@@ -486,9 +603,15 @@ converterMapping = {
 	"GlyphID":	GlyphID,
 	"DeciPoints":	DeciPoints,
 	"Fixed":	Fixed,
+	"F2Dot14":	F2Dot14,
 	"struct":	Struct,
 	"Offset":	Table,
 	"LOffset":	LTable,
 	"ValueRecord":	ValueRecord,
 	"DeltaValue":	DeltaValue,
+	"VarIdxMapValue":	VarIdxMapValue,
+	"VarDataValue":	VarDataValue,
+	# "Template" types
+	"OffsetTo":	lambda C: partial(Table, tableClass=C),
+	"LOffsetTo":	lambda C: partial(LTable, tableClass=C),
 }
