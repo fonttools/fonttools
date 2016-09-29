@@ -452,7 +452,7 @@ class Builder(object):
 
     def makeTable(self, tag):
         table = getattr(otTables, tag, None)()
-        table.Version = 1.0
+        table.Version = 0x00010000
         table.ScriptList = otTables.ScriptList()
         table.ScriptList.ScriptRecord = []
         table.FeatureList = otTables.FeatureList()
