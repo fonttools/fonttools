@@ -478,7 +478,17 @@ class WOFFDirectoryEntry(DirectoryEntry):
 
 	format = woffDirectoryEntryFormat
 	formatSize = woffDirectoryEntrySize
-	zlibCompressionLevel = ZLIB_COMPRESSION_LEVEL
+
+	def __init__(self):
+		super(WOFFDirectoryEntry, self).__init__()
+		# With fonttools<=3.1.2, the only way to set a different zlib
+		# compression level for WOFF directory entries was to set the class
+		# attribute 'zlibCompressionLevel'. This is now replaced by a globally
+		# defined `ZLIB_COMPRESSION_LEVEL`, which is also applied when
+		# compressing the metadata. For backward compatibility, we still
+		# use the class attribute if it was already set.
+		if not hasattr(WOFFDirectoryEntry, 'zlibCompressionLevel'):
+			self.zlibCompressionLevel = ZLIB_COMPRESSION_LEVEL
 
 	def decodeData(self, rawData):
 		import zlib
