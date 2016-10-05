@@ -19,6 +19,7 @@ Then you can make a GX font this way:
 API *will* change in near future.
 """
 from __future__ import print_function, division, absolute_import
+from __future__ import unicode_literals
 from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables._n_a_m_e import NameRecord
@@ -35,19 +36,6 @@ import os.path
 #
 # Creation routines
 #
-
-# TODO: Move to name table proper; also, is mac_roman ok for ASCII names?
-def _AddName(font, name):
-	"""(font, "Bold") --> NameRecord"""
-	name = tounicode(name)
-
-	nameTable = font.get("name")
-	namerec = NameRecord()
-	namerec.nameID = 1 + max([n.nameID for n in nameTable.names] + [256])
-	namerec.string = name
-	namerec.platformID, namerec.platEncID, namerec.langID = (3, 1, 0x409)
-	nameTable.names.append(namerec)
-	return namerec
 
 # Move to fvar table proper?
 # TODO how to provide axis order?
@@ -66,23 +54,26 @@ def _add_fvar(font, axes, instances, axis_map):
 
 	assert "fvar" not in font
 	font['fvar'] = fvar = newTable('fvar')
+	nameTable = font['name']
 
 	for iden in sorted(axes.keys(), key=lambda k: axis_map[k][0]):
 		axis = Axis()
 		axis.axisTag = Tag(axis_map[iden][0])
 		axis.minValue, axis.defaultValue, axis.maxValue = axes[iden]
-		axis.axisNameID = _AddName(font, axis_map[iden][1]).nameID
+		axisName = tounicode(axis_map[iden][1])
+		axis.axisNameID = nameTable.addName(axisName)
 		fvar.axes.append(axis)
 
 	for instance in instances:
 		coordinates = instance['location']
-		name = instance['stylename']
+		name = tounicode(instance['stylename'])
 		psname = instance.get('postscriptfontname')
 
 		inst = NamedInstance()
-		inst.subfamilyNameID = _AddName(font, name).nameID
-		if psname:
-			inst.postscriptNameID = _AddName(font, psname).nameID
+		inst.subfamilyNameID = nameTable.addName(name)
+		if psname is not None:
+			psname = tounicode(psname)
+			inst.postscriptNameID = nameTable.addName(psname)
 		inst.coordinates = {axis_map[k][0]:v for k,v in coordinates.items()}
 		fvar.instances.append(inst)
 

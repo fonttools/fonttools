@@ -429,6 +429,41 @@ class ChannelsFilter(logging.Filter):
 		return False
 
 
+class CapturingLogHandler(logging.Handler):
+	def __init__(self, logger, level):
+		self.records = []
+		self.level = logging._checkLevel(level)
+		if isinstance(logger, basestring):
+			self.logger = logging.getLogger(logger)
+		else:
+			self.logger = logger
+
+	def __enter__(self):
+		self.original_disabled = self.logger.disabled
+		self.original_level = self.logger.level
+
+		self.logger.addHandler(self)
+		self.logger.level = self.level
+		self.logger.disabled = False
+
+		return self
+
+	def __exit__(self, type, value, traceback):
+		self.logger.removeHandler(self)
+		self.logger.level = self.original_level
+		self.logger.disabled = self.logger.disabled
+		return self
+
+	def handle(self, record):
+		self.records.append(record)
+
+	def emit(self, record):
+		pass
+
+	def createLock(self):
+		self.lock = None
+
+
 def deprecateArgument(name, msg, category=UserWarning):
 	""" Raise a warning about deprecated function argument 'name'. """
 	warnings.warn(
