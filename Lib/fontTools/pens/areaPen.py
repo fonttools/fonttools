@@ -63,5 +63,9 @@ class AreaPen(BasePen):
 		del self._p0, self._startPoint
 
 	def _endPath(self):
-		"""Area is not defined for open contours."""
-		raise NotImplementedError
+		"""Area is not defined for open contours.
+		Single-point open contours, which often represent anchors, are allowed.
+		"""
+		if self._p0 != self._startPoint:
+			raise NotImplementedError
+		del self._p0, self._startPoint

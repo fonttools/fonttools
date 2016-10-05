@@ -163,6 +163,17 @@ class AreaPenTest(unittest.TestCase):
         draw8_(pen)
         self.assertEqual(104602.791667, round(pen.value, precision))
 
+    def test_openPaths(self):
+        pen = AreaPen()
+        pen.moveTo((0, 0))
+        pen.endPath()
+        self.assertEqual(0, pen.value)
+
+        pen.moveTo((0, 0))
+        pen.lineTo((1, 0))
+        with self.assertRaises(NotImplementedError):
+            pen.endPath()
+
 
 if __name__ == '__main__':
     unittest.main()
