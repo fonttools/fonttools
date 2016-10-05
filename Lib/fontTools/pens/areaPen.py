@@ -66,6 +66,6 @@ class AreaPen(BasePen):
 		"""Area is not defined for open contours.
 		Single-point open contours, which often represent anchors, are allowed.
 		"""
-		if self._p0 != self.startPoint:
+		if self._p0 != self._startPoint:
 			raise NotImplementedError
 		del self._p0, self._startPoint
