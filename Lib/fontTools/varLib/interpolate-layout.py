@@ -5,6 +5,7 @@ from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables import otTables as ot
+from fontTools.ttLib.tables import otBase as otBase
 from fontTools.ttLib.tables.DefaultTable import DefaultTable
 from fontTools.varLib import designspace, models, builder
 from fontTools.varLib.merger import merge_tables, Merger
@@ -24,6 +25,22 @@ def merge(merger, self, lst):
 	location = merger.location
 	self.XCoordinate = round(model.interpolateFromMasters(location, XCoords))
 	self.YCoordinate = round(model.interpolateFromMasters(location, YCoords))
+
+@InstancerMerger.merger(otBase.ValueRecord)
+def merge(merger, self, lst):
+	model = merger.model
+	location = merger.location
+	for name, tableName in [('XAdvance','XAdvDevice'),
+				('YAdvance','YAdvDevice'),
+				('XPlacement','XPlaDevice'),
+				('YPlacement','YPlaDevice')]:
+
+		assert not hasattr(self, tableName)
+
+		if hasattr(self, name):
+			values = [getattr(a, name) for a in lst]
+			value = round(model.interpolateFromMasters(location, values))
+			setattr(self, name, value)
 
 
 def main(args=None):
