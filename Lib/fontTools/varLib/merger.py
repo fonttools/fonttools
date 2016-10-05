@@ -30,10 +30,14 @@ class Merger(object):
 	def mergeObjects(self, out, lst):
 		keys = vars(out).keys()
 		assert all(vars(table).keys() == keys for table in lst)
-		for key in keys:
-			value = getattr(out, key)
-			values = [getattr(table, key) for table in lst]
-			self.mergeThings(value, values)
+		try:
+			for key in keys:
+				value = getattr(out, key)
+				values = [getattr(table, key) for table in lst]
+				self.mergeThings(value, values)
+		except Exception as e:
+			e.args = e.args + ('.'+key,)
+			raise
 
 	def mergeLists(self, out, lst):
 		count = len(out)
@@ -43,16 +47,20 @@ class Merger(object):
 
 	def mergeThings(self, out, lst):
 		clazz = type(out)
-		assert all(type(item) == clazz for item in lst), lst
-		mergerFunc = self.mergers.get(type(out), None)
-		if mergerFunc is not None:
-			mergerFunc(self, out, lst)
-		elif hasattr(out, '__dict__'):
-			self.mergeObjects(out, lst)
-		elif isinstance(out, list):
-			self.mergeLists(out, lst)
-		else:
-			assert all(out == v for v in lst), lst
+		try:
+			assert all(type(item) == clazz for item in lst), lst
+			mergerFunc = self.mergers.get(type(out), None)
+			if mergerFunc is not None:
+				mergerFunc(self, out, lst)
+			elif hasattr(out, '__dict__'):
+				self.mergeObjects(out, lst)
+			elif isinstance(out, list):
+				self.mergeLists(out, lst)
+			else:
+				assert all(out == v for v in lst), lst
+		except Exception as e:
+			e.args = e.args + (clazz.__name__,)
+			raise
 
 def merge_tables(font, merger, master_ttfs, axes, base_idx, tables):
 
