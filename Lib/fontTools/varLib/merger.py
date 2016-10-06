@@ -11,30 +11,39 @@ class Merger(object):
 	mergers = None
 
 	@classmethod
-	def merger(celf, *clazzes):
+	def merger(celf, clazzes, attrs=(None,)):
 		assert celf != Merger, 'Subclass Merger instead.'
 		if celf.mergers is None:
 			celf.mergers = {}
+		if type(clazzes) == type:
+			clazzes = (clazzes,)
+		if type(attrs) == str:
+			attrs = (attrs,)
 		def wrapper(method):
 			assert method.__name__ == 'merge'
 			done = []
 			for clazz in clazzes:
 				if clazz in done: continue # Support multiple names of a clazz
 				done.append(clazz)
-				assert clazz not in celf.mergers, \
-					"Oops, class '%s' has merge function defined already." % (clazz.__name__)
-				celf.mergers[clazz] = method
+				mergers = celf.mergers.setdefault(clazz, {})
+				for attr in attrs:
+					assert attr not in mergers, \
+						"Oops, class '%s' has merge function for '%s' defined already." % (clazz.__name__, attr)
+					mergers[attr] = method
 			return None
 		return wrapper
 
-	def mergeObjects(self, out, lst):
+	def mergeObjects(self, out, lst, _default={}):
 		keys = vars(out).keys()
 		assert all(vars(table).keys() == keys for table in lst)
+		mergers = self.mergers.get(type(out), _default)
+		defaultMerger = mergers.get('*', self.__class__.mergeThings)
 		try:
 			for key in keys:
 				value = getattr(out, key)
 				values = [getattr(table, key) for table in lst]
-				self.mergeThings(value, values)
+				mergerFunc = mergers.get(key, defaultMerger)
+				mergerFunc(self, value, values)
 		except Exception as e:
 			e.args = e.args + ('.'+key,)
 			raise
@@ -45,11 +54,11 @@ class Merger(object):
 		for value,values in zip(out, zip(*lst)):
 			self.mergeThings(value, values)
 
-	def mergeThings(self, out, lst):
+	def mergeThings(self, out, lst, _default={None:None}):
 		clazz = type(out)
 		try:
 			assert all(type(item) == clazz for item in lst), lst
-			mergerFunc = self.mergers.get(type(out), None)
+			mergerFunc = self.mergers.get(type(out), _default).get(None, None)
 			if mergerFunc is not None:
 				mergerFunc(self, out, lst)
 			elif hasattr(out, '__dict__'):
