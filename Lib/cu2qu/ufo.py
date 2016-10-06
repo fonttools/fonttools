@@ -143,7 +143,12 @@ def _glyphs_to_quadratic(glyphs, max_err, reverse_direction, stats):
     Return True if the glyphs were modified, else return False.
     """
 
-    glyphs_modified = False
+    if reverse_direction:
+        # always modify input glyphs if reverse_direction is True
+        glyphs_modified = True
+    else:
+        # only modify input glyphs if they contain any cubic curves
+        glyphs_modified = False
 
     segments_by_location = zip(*[_get_segments(g) for g in glyphs])
     if not any(segments_by_location):
