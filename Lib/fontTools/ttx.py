@@ -142,8 +142,8 @@ class Options(object):
 				print(__doc__)
 				sys.exit(0)
 			elif option == "--version":
-				from fontTools.version import __version__
-				print(__version__)
+				from fontTools import version
+				print(version)
 				sys.exit(0)
 			elif option == "-d":
 				if not os.path.isdir(value):
