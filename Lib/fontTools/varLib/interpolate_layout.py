@@ -43,22 +43,7 @@ def merge(merger, self, lst):
 			setattr(self, name, value)
 
 
-def main(args=None):
-
-	import sys
-	if args is None:
-		args = sys.argv[1:]
-
-	designspace_filename = args[0]
-	locargs = args[1:]
-	outfile = os.path.splitext(designspace_filename)[0] + '-instance.ttf'
-
-	finder = lambda s: s.replace('master_ufo', 'master_ttf_interpolatable').replace('.ufo', '.ttf')
-
-	loc = {}
-	for arg in locargs:
-		tag,val = arg.split('=')
-		loc[tag] = float(val)
+def interpolate_layout(designspace_filename, loc, finder):
 
 	masters, instances = designspace.load(designspace_filename)
 	base_idx = None
@@ -115,7 +100,27 @@ def main(args=None):
 
 	print("Building variations tables")
 	merge_tables(font, merger, master_fonts, axes, base_idx, ['GPOS'])
+	return font
 
+
+def main(args=None):
+
+	import sys
+	if args is None:
+		args = sys.argv[1:]
+
+	designspace_filename = args[0]
+	locargs = args[1:]
+	outfile = os.path.splitext(designspace_filename)[0] + '-instance.ttf'
+
+	finder = lambda s: s.replace('master_ufo', 'master_ttf_interpolatable').replace('.ufo', '.ttf')
+
+	loc = {}
+	for arg in locargs:
+		tag,val = arg.split('=')
+		loc[tag] = float(val)
+
+	font = interpolate_layout(designspace_filename, loc, finder)
 	print("Saving font", outfile)
 	font.save(outfile)
 
