@@ -5,4 +5,13 @@ from fontTools.misc.loggingTools import configLogger
 
 log = logging.getLogger(__name__)
 
-__all__ = ["log", "configLogger"]
+try:
+    from fontTools.version import __version__
+except ImportError:
+    log.warning("The 'version.py' module is missing. "
+                "Make sure FontTools is properly installed.")
+    version = "0.0.0"
+else:
+    version = __version__
+
+__all__ = ["version", "log", "configLogger"]
