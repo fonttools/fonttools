@@ -4,6 +4,7 @@ from fontTools import ttLib
 from fontTools.misc.textTools import safeEval
 from . import DefaultTable
 import sys
+import struct
 import array
 import logging
 
@@ -22,13 +23,14 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 		numGlyphs = ttFont['maxp'].numGlyphs
 		numberOfMetrics = int(getattr(ttFont[self.headerTag], self.numberOfMetricsName))
 		if numberOfMetrics > numGlyphs:
-			numberOfMetrics = numGlyphs # We warn later.
+			numberOfMetrics = numGlyphs  # We warn later.
 		if len(data) < 4 * numberOfMetrics:
 			raise ttLib.TTLibError("not enough '%s' table data" % self.tableTag)
-		# Note: advanceWidth is unsigned, but we read/write as signed.
-		metrics = array.array("h", data[:4 * numberOfMetrics])
-		if sys.byteorder != "big":
-			metrics.byteswap()
+		# Note: advanceWidth is unsigned, but some font editors might
+		# read/write as signed. We can't be sure whether it was a mistake
+		# or not, so we read as unsigned but also issue a warning...
+		longHorMetricFormat = ">" + "Hh"*numberOfMetrics
+		metrics = struct.unpack(longHorMetricFormat, data[:4 * numberOfMetrics])
 		data = data[4 * numberOfMetrics:]
 		numberOfSideBearings = numGlyphs - numberOfMetrics
 		sideBearings = array.array("h", data[:2 * numberOfSideBearings])
@@ -42,7 +44,13 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 		glyphOrder = ttFont.getGlyphOrder()
 		for i in range(numberOfMetrics):
 			glyphName = glyphOrder[i]
-			self.metrics[glyphName] = list(metrics[i*2:i*2+2])
+			advanceWidth, lsb = metrics[i*2:i*2+2]
+			if advanceWidth > 32767:
+				log.warning(
+					"Glyph %r has a huge advance %s (%d); is it intentional or "
+					"an (invalid) negative value?", glyphName, self.advanceName,
+					advanceWidth)
+			self.metrics[glyphName] = [advanceWidth, lsb]
 		lastAdvance = metrics[-2]
 		for i in range(numberOfSideBearings):
 			glyphName = glyphOrder[i + numberOfMetrics]
@@ -63,15 +71,14 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 		additionalMetrics = metrics[lastIndex:]
 		additionalMetrics = [sb for advance, sb in additionalMetrics]
 		metrics = metrics[:lastIndex]
-		setattr(ttFont[self.headerTag], self.numberOfMetricsName, len(metrics))
+		numberOfMetrics = len(metrics)
+		setattr(ttFont[self.headerTag], self.numberOfMetricsName, numberOfMetrics)
 
 		allMetrics = []
 		for item in metrics:
 			allMetrics.extend(item)
-		allMetrics = array.array("h", allMetrics)
-		if sys.byteorder != "big":
-			allMetrics.byteswap()
-		data = allMetrics.tostring()
+		longHorMetricFormat = ">" + "Hh"*numberOfMetrics
+		data = struct.pack(longHorMetricFormat, *allMetrics)
 
 		additionalMetrics = array.array("h", additionalMetrics)
 		if sys.byteorder != "big":
