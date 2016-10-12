@@ -248,7 +248,8 @@ def buildVarDevTable(store_builder, master_values):
 
 class VariationMerger(Merger):
 
-	def __init__(self, model, axisTags):
+	def __init__(self, model, axisTags, font):
+		Merger.__init__(self, font)
 		self.model = model
 		self.store_builder = builder.OnlineVarStoreBuilder(axisTags)
 		self.store_builder.setModel(model)
@@ -302,7 +303,7 @@ def merge(merger, self, lst):
 
 		if hasattr(self, name):
 			deviceTable = buildVarDevTable(merger.store_builder,
-						       [getattr(a, name) for a in lst])
+						       [getattr(a, name, 0) for a in lst])
 			if deviceTable:
 				setattr(self, tableName, deviceTable)
 
@@ -310,7 +311,7 @@ def merge(merger, self, lst):
 def _merge_OTL(font, model, master_fonts, axisTags, base_idx):
 
 	print("Merging OpenType Layout tables")
-	merger = VariationMerger(model, axisTags)
+	merger = VariationMerger(model, axisTags, font)
 
 	merge_tables(font, merger, master_fonts, axisTags, base_idx, ['GPOS'])
 	store = merger.store_builder.finish()

@@ -868,6 +868,12 @@ class ValueRecord(object):
 
 	# see ValueRecordFactory
 
+	def __init__(self, valueFormat=None):
+		if valueFormat is not None:
+			for mask, name, isDevice, signed in valueRecordFormat:
+				if valueFormat & mask:
+					setattr(self, name, None if isDevice else 0)
+
 	def getFormat(self):
 		format = 0
 		for name in self.__dict__.keys():

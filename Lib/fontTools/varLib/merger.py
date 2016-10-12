@@ -10,6 +10,9 @@ class Merger(object):
 
 	mergers = None
 
+	def __init__(self, font=None):
+		self.font = font
+
 	@classmethod
 	def merger(celf, clazzes, attrs=(None,)):
 		assert celf != Merger, 'Subclass Merger instead.'
@@ -33,13 +36,15 @@ class Merger(object):
 			return None
 		return wrapper
 
-	def mergeObjects(self, out, lst, _default={}):
-		keys = vars(out).keys()
-		assert all(vars(table).keys() == keys for table in lst)
+	def mergeObjects(self, out, lst, exclude=(), _default={}):
+		keys = sorted(vars(out).keys())
+		assert all(keys == sorted(vars(v).keys()) for v in lst), \
+			(keys, [sorted(vars(v).keys()) for v in lst])
 		mergers = self.mergers.get(type(out), _default)
 		defaultMerger = mergers.get('*', self.__class__.mergeThings)
 		try:
 			for key in keys:
+				if key in exclude: continue
 				value = getattr(out, key)
 				values = [getattr(table, key) for table in lst]
 				mergerFunc = mergers.get(key, defaultMerger)
