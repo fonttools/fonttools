@@ -158,7 +158,8 @@ class NamedInstance(object):
         for axis in axisTags:
             fixedCoord = floatToFixed(self.coordinates[axis], 16)
             result.append(struct.pack(">l", fixedCoord))
-        result.append(struct.pack(">H", self.postscriptNameID))
+        if self.postscriptNameID != 0xFFFF:
+            result.append(struct.pack(">H", self.postscriptNameID))
         return bytesjoin(result)
 
     def decompile(self, data, axisTags):
@@ -178,6 +179,10 @@ class NamedInstance(object):
         if name is not None:
             writer.newline()
             writer.comment(name)
+            writer.newline()
+        psname = ttFont["name"].getDebugName(self.postscriptNameID)
+        if psname is not None:
+            writer.comment(u"PostScript: " + psname)
             writer.newline()
         if self.postscriptNameID  == 0xFFFF:
            writer.begintag("NamedInstance", subfamilyNameID=self.subfamilyNameID)

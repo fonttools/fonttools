@@ -20,7 +20,11 @@ FVAR_DATA = deHexStr(
 FVAR_AXIS_DATA = deHexStr(
     "6F 70 73 7a ff ff 80 00 00 01 4c cd 00 01 80 00 00 00 01 59")
 
-FVAR_INSTANCE_DATA = deHexStr("01 59 00 00 00 00 b3 33 00 00 80 00 ff ff")
+FVAR_INSTANCE_DATA_WITHOUT_PSNAME = deHexStr(
+    "01 59 00 00 00 00 b3 33 00 00 80 00")
+
+FVAR_INSTANCE_DATA_WITH_PSNAME = (
+    FVAR_INSTANCE_DATA_WITHOUT_PSNAME + deHexStr("02 34"))
 
 
 def xml_lines(writer):
@@ -156,19 +160,55 @@ class AxisTest(unittest.TestCase):
 
 
 class NamedInstanceTest(unittest.TestCase):
-    def test_compile(self):
+    def test_compile_withPostScriptName(self):
+        inst = NamedInstance()
+        inst.subfamilyNameID = 345
+        inst.postscriptNameID = 564
+        inst.coordinates = {"wght": 0.7, "wdth": 0.5}
+        self.assertEqual(FVAR_INSTANCE_DATA_WITH_PSNAME,
+                         inst.compile(["wght", "wdth"]))
+
+    def test_compile_withoutPostScriptName(self):
         inst = NamedInstance()
         inst.subfamilyNameID = 345
         inst.coordinates = {"wght": 0.7, "wdth": 0.5}
-        self.assertEqual(FVAR_INSTANCE_DATA, inst.compile(["wght", "wdth"]))
+        self.assertEqual(FVAR_INSTANCE_DATA_WITHOUT_PSNAME,
+                         inst.compile(["wght", "wdth"]))
 
-    def test_decompile(self):
+    def test_decompile_withPostScriptName(self):
         inst = NamedInstance()
-        inst.decompile(FVAR_INSTANCE_DATA, ["wght", "wdth"])
+        inst.decompile(FVAR_INSTANCE_DATA_WITH_PSNAME, ["wght", "wdth"])
+        self.assertEqual(564, inst.postscriptNameID)
         self.assertEqual(345, inst.subfamilyNameID)
         self.assertEqual({"wght": 0.7, "wdth": 0.5}, inst.coordinates)
 
-    def test_toXML(self):
+    def test_decompile_withoutPostScriptName(self):
+        inst = NamedInstance()
+        inst.decompile(FVAR_INSTANCE_DATA_WITHOUT_PSNAME, ["wght", "wdth"])
+        self.assertEqual(0xFFFF, inst.postscriptNameID)
+        self.assertEqual(345, inst.subfamilyNameID)
+        self.assertEqual({"wght": 0.7, "wdth": 0.5}, inst.coordinates)
+
+    def test_toXML_withPostScriptName(self):
+        font = MakeFont()
+        inst = NamedInstance()
+        inst.subfamilyNameID = AddName(font, "Light Condensed").nameID
+        inst.postscriptNameID = AddName(font, "Test-LightCondensed").nameID
+        inst.coordinates = {"wght": 0.7, "wdth": 0.5}
+        writer = XMLWriter(BytesIO())
+        inst.toXML(writer, font)
+        self.assertEqual([
+            '',
+            '<!-- Light Condensed -->',
+            '<!-- PostScript: Test-LightCondensed -->',
+            '<NamedInstance postscriptNameID="%s" subfamilyNameID="%s">' % (
+                inst.postscriptNameID, inst.subfamilyNameID),
+              '<coord axis="wght" value="0.7"/>',
+              '<coord axis="wdth" value="0.5"/>',
+            '</NamedInstance>'
+        ], xml_lines(writer))
+
+    def test_toXML_withoutPostScriptName(self):
         font = MakeFont()
         inst = NamedInstance()
         inst.subfamilyNameID = AddName(font, "Light Condensed").nameID
@@ -184,7 +224,19 @@ class NamedInstanceTest(unittest.TestCase):
             '</NamedInstance>'
         ], xml_lines(writer))
 
-    def test_fromXML(self):
+    def test_fromXML_withPostScriptName(self):
+        inst = NamedInstance()
+        for name, attrs, content in parseXML(
+                '<NamedInstance postscriptNameID="257" subfamilyNameID="345">'
+                '    <coord axis="wght" value="0.7"/>'
+                '    <coord axis="wdth" value="0.5"/>'
+                '</NamedInstance>'):
+            inst.fromXML(name, attrs, content, ttFont=MakeFont())
+        self.assertEqual(257, inst.postscriptNameID)
+        self.assertEqual(345, inst.subfamilyNameID)
+        self.assertEqual({"wght": 0.7, "wdth": 0.5}, inst.coordinates)
+
+    def test_fromXML_withoutPostScriptName(self):
         inst = NamedInstance()
         for name, attrs, content in parseXML(
                 '<NamedInstance subfamilyNameID="345">'
