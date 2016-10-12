@@ -416,7 +416,7 @@ def build(designspace_filename, master_finder=lambda s:s, axisMap=None):
 	print("Building variations tables")
 	if 'glyf' in gx:
 		_add_gvar(gx, model, master_fonts)
-	_add_HVAR(gx, model, master_fonts, axisTags)
+	#_add_HVAR(gx, model, master_fonts, axisTags)
 	_merge_OTL(gx, model, master_fonts, axisTags, base_idx)
 
 	return gx, model, master_ttfs
