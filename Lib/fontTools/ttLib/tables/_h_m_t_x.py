@@ -18,6 +18,7 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 	advanceName = 'width'
 	sideBearingName = 'lsb'
 	numberOfMetricsName = 'numberOfHMetrics'
+	longMetricFormat = 'Hh'
 
 	def decompile(self, data, ttFont):
 		numGlyphs = ttFont['maxp'].numGlyphs
@@ -29,8 +30,8 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 		# Note: advanceWidth is unsigned, but some font editors might
 		# read/write as signed. We can't be sure whether it was a mistake
 		# or not, so we read as unsigned but also issue a warning...
-		longHorMetricFormat = ">" + "Hh"*numberOfMetrics
-		metrics = struct.unpack(longHorMetricFormat, data[:4 * numberOfMetrics])
+		metricsFmt = ">" + self.longMetricFormat * numberOfMetrics
+		metrics = struct.unpack(metricsFmt, data[:4 * numberOfMetrics])
 		data = data[4 * numberOfMetrics:]
 		numberOfSideBearings = numGlyphs - numberOfMetrics
 		sideBearings = array.array("h", data[:2 * numberOfSideBearings])
@@ -77,8 +78,8 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 		allMetrics = []
 		for item in metrics:
 			allMetrics.extend(item)
-		longHorMetricFormat = ">" + "Hh"*numberOfMetrics
-		data = struct.pack(longHorMetricFormat, *allMetrics)
+		metricsFmt = ">" + self.longMetricFormat * numberOfMetrics
+		data = struct.pack(metricsFmt, *allMetrics)
 
 		additionalMetrics = array.array("h", additionalMetrics)
 		if sys.byteorder != "big":
