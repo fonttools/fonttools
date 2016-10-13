@@ -533,10 +533,10 @@ def writeGlyphToString(glyphName, glyphObject=None, drawPointsFunc=None, writer=
 	"""
 	if writer is None:
 		try:
-			from xmlWriter import XMLWriter
+			from fontTools.misc.xmlWriter import XMLWriter
 		except ImportError:
 			# try the other location
-			from fontTools.misc.xmlWriter import XMLWriter
+			from xmlWriter import XMLWriter
 		aFile = BytesIO()
 		writer = XMLWriter(aFile, encoding="UTF-8")
 	else:
