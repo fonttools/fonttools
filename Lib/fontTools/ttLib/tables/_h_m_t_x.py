@@ -24,7 +24,9 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 		numGlyphs = ttFont['maxp'].numGlyphs
 		numberOfMetrics = int(getattr(ttFont[self.headerTag], self.numberOfMetricsName))
 		if numberOfMetrics > numGlyphs:
-			numberOfMetrics = numGlyphs  # We warn later.
+			log.warning("The %s.%s exceeds the maxp.numGlyphs" % (
+				self.headerTag, self.numberOfMetricsName))
+			numberOfMetrics = numGlyphs
 		if len(data) < 4 * numberOfMetrics:
 			raise ttLib.TTLibError("not enough '%s' table data" % self.tableTag)
 		# Note: advanceWidth is unsigned, but some font editors might
