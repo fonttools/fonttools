@@ -53,11 +53,11 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 					"Glyph %r has a huge advance %s (%d); is it intentional or "
 					"an (invalid) negative value?", glyphName, self.advanceName,
 					advanceWidth)
-			self.metrics[glyphName] = [advanceWidth, lsb]
+			self.metrics[glyphName] = (advanceWidth, lsb)
 		lastAdvance = metrics[-2]
 		for i in range(numberOfSideBearings):
 			glyphName = glyphOrder[i + numberOfMetrics]
-			self.metrics[glyphName] = [lastAdvance, sideBearings[i]]
+			self.metrics[glyphName] = (lastAdvance, sideBearings[i])
 
 	def compile(self, ttFont):
 		metrics = []
@@ -117,8 +117,8 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 		if not hasattr(self, "metrics"):
 			self.metrics = {}
 		if name == "mtx":
-			self.metrics[attrs["name"]] = [safeEval(attrs[self.advanceName]),
-					safeEval(attrs[self.sideBearingName])]
+			self.metrics[attrs["name"]] = (safeEval(attrs[self.advanceName]),
+					safeEval(attrs[self.sideBearingName]))
 
 	def __delitem__(self, glyphName):
 		del self.metrics[glyphName]
@@ -127,4 +127,4 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 		return self.metrics[glyphName]
 
 	def __setitem__(self, glyphName, advance_sb_pair):
-		self.metrics[glyphName] = list(advance_sb_pair)
+		self.metrics[glyphName] = tuple(advance_sb_pair)

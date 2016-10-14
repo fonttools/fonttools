@@ -43,9 +43,9 @@ class HmtxTableTest(unittest.TestCase):
         mtxTable = newTable(self.tag)
         mtxTable.decompile(data, font)
 
-        self.assertEqual(mtxTable['A'], [674, -11])
-        self.assertEqual(mtxTable['B'], [632, 79])
-        self.assertEqual(mtxTable['C'], [710, 54])
+        self.assertEqual(mtxTable['A'], (674, -11))
+        self.assertEqual(mtxTable['B'], (632, 79))
+        self.assertEqual(mtxTable['C'], (710, 54))
 
     def test_decompile_additional_SB(self):
         font = self.makeFont(numGlyphs=4, numberOfMetrics=2)
@@ -56,11 +56,11 @@ class HmtxTableTest(unittest.TestCase):
         mtxTable = newTable(self.tag)
         mtxTable.decompile(data, font)
 
-        self.assertEqual(mtxTable['A'], [674, -11])
-        self.assertEqual(mtxTable['B'], [632, 79])
+        self.assertEqual(mtxTable['A'], (674, -11))
+        self.assertEqual(mtxTable['B'], (632, 79))
         # all following have same width as the previous
-        self.assertEqual(mtxTable['C'], [632, 54])
-        self.assertEqual(mtxTable['D'], [632, -4])
+        self.assertEqual(mtxTable['C'], (632, 54))
+        self.assertEqual(mtxTable['D'], (632, -4))
 
     def test_decompile_not_enough_data(self):
         font = self.makeFont(numGlyphs=1, numberOfMetrics=1)
@@ -112,9 +112,9 @@ class HmtxTableTest(unittest.TestCase):
         font = self.makeFont(numGlyphs=3, numberOfMetrics=4)
         mtxTable = font[self.tag] = newTable(self.tag)
         mtxTable.metrics = {
-            'A': [674, -11],
-            'B': [632, 79],
-            'C': [710, 54],
+            'A': (674, -11),
+            'B': (632, 79),
+            'C': (710, 54),
         }
 
         data = mtxTable.compile(font)
@@ -129,10 +129,10 @@ class HmtxTableTest(unittest.TestCase):
         font = self.makeFont(numGlyphs=4, numberOfMetrics=1)
         mtxTable = font[self.tag] = newTable(self.tag)
         mtxTable.metrics = {
-            'A': [632, -11],
-            'B': [632, 79],
-            'C': [632, 54],
-            'D': [632, -4],
+            'A': (632, -11),
+            'B': (632, 79),
+            'C': (632, 54),
+            'D': (632, -4),
         }
 
         data = mtxTable.compile(font)
@@ -155,7 +155,7 @@ class HmtxTableTest(unittest.TestCase):
     def test_compile_struct_out_of_range(self):
         font = self.makeFont(numGlyphs=1, numberOfMetrics=1)
         mtxTable = font[self.tag] = newTable(self.tag)
-        mtxTable.metrics = {'A': [0xFFFF+1, -0x8001]}
+        mtxTable.metrics = {'A': (0xFFFF+1, -0x8001)}
 
         with self.assertRaises(struct.error):
             mtxTable.compile(font)
@@ -163,7 +163,7 @@ class HmtxTableTest(unittest.TestCase):
     def test_toXML(self):
         font = self.makeFont(numGlyphs=2, numberOfMetrics=2)
         mtxTable = font[self.tag] = newTable(self.tag)
-        mtxTable.metrics = {'B': [632, 79], 'A': [674, -11]}
+        mtxTable.metrics = {'B': (632, 79), 'A': (674, -11)}
 
         self.assertEqual(
             getXML(mtxTable.toXML),
@@ -183,11 +183,11 @@ class HmtxTableTest(unittest.TestCase):
             mtxTable.fromXML(name, attrs, content, ttFont=None)
 
         self.assertEqual(
-            mtxTable.metrics, {'A': [674, -11], 'B': [632, 79]})
+            mtxTable.metrics, {'A': (674, -11), 'B': (632, 79)})
 
     def test_delitem(self):
         mtxTable = newTable(self.tag)
-        mtxTable.metrics = {'A': [0, 0]}
+        mtxTable.metrics = {'A': (0, 0)}
 
         del mtxTable['A']
 
@@ -195,10 +195,10 @@ class HmtxTableTest(unittest.TestCase):
 
     def test_setitem(self):
         mtxTable = newTable(self.tag)
-        mtxTable.metrics = {'A': [674, -11], 'B': [632, 79]}
-        mtxTable['B'] = (0, 0)  # tuple is converted to list
+        mtxTable.metrics = {'A': (674, -11), 'B': (632, 79)}
+        mtxTable['B'] = [0, 0]  # list is converted to tuple
 
-        self.assertEqual(mtxTable.metrics, {'A': [674, -11], 'B': [0, 0]})
+        self.assertEqual(mtxTable.metrics, {'A': (674, -11), 'B': (0, 0)})
 
 
 if __name__ == "__main__":
