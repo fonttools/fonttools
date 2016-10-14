@@ -59,7 +59,7 @@ class SubsetTest(unittest.TestCase):
         expected = self.read_ttx(expected_ttx)
         if actual != expected:
             for line in difflib.unified_diff(
-                    expected, actual, fromfile=path, tofile=expected_ttx):
+                    expected, actual, fromfile=expected_ttx, tofile=path):
                 sys.stdout.write(line)
             self.fail("TTX output is different from expected")
 
@@ -152,7 +152,6 @@ class SubsetTest(unittest.TestCase):
 
     def test_timing_publishes_parts(self):
         _, fontpath = self.compile_font(self.getpath("TestTTF-Regular.ttx"), ".ttf")
-        subsetpath = self.temp_path(".ttf")
 
         options = subset.Options()
         options.timing = True
@@ -194,6 +193,44 @@ class SubsetTest(unittest.TestCase):
 
         # unknown tables are kept if --passthrough-tables option is passed
         self.assertTrue(unknown_tag in subsetfont)
+
+    def test_drop_hints_CFF(self):
+        _, fontpath = self.compile_font(self.getpath("TestOTF-Regular.ttx"), ".otf")
+        subsetpath = self.temp_path(".otf")
+        subset.main([fontpath, "--no-hinting", "--notdef-outline",
+                     "--output-file=%s" % subsetpath, "*"])
+        subsetfont = TTFont(subsetpath)
+        self.expect_ttx(subsetfont, self.getpath(
+            "expect_drop_hints_CFF.ttx"), ["CFF "])
+
+    def test_desubroutinize_CFF(self):
+        _, fontpath = self.compile_font(self.getpath("TestOTF-Regular.ttx"), ".otf")
+        subsetpath = self.temp_path(".otf")
+        subset.main([fontpath, "--desubroutinize", "--notdef-outline",
+                     "--output-file=%s" % subsetpath, "*"])
+        subsetfont = TTFont(subsetpath)
+        self.expect_ttx(subsetfont, self.getpath(
+            "expect_desubroutinize_CFF.ttx"), ["CFF "])
+
+    def test_drop_hints_desubroutinize_CFF(self):
+        _, fontpath = self.compile_font(self.getpath("TestOTF-Regular.ttx"), ".otf")
+        subsetpath = self.temp_path(".otf")
+        subset.main([fontpath, "--no-hinting", "--desubroutinize", "--notdef-outline",
+                     "--output-file=%s" % subsetpath, "*"])
+        subsetfont = TTFont(subsetpath)
+        self.expect_ttx(subsetfont, self.getpath(
+            "expect_drop_hints_desubroutinize_CFF.ttx"), ["CFF "])
+
+    def test_drop_hints_TTF(self):
+        _, fontpath = self.compile_font(self.getpath("TestTTF-Regular.ttx"), ".ttf")
+        subsetpath = self.temp_path(".ttf")
+        subset.main([fontpath, "--no-hinting", "--notdef-outline",
+                     "--output-file=%s" % subsetpath, "*"])
+        subsetfont = TTFont(subsetpath)
+        self.expect_ttx(subsetfont, self.getpath(
+            "expect_drop_hints_TTF.ttx"), ["glyf", "maxp"])
+        for tag in subset.Options().hinting_tables:
+            self.assertTrue(tag not in subsetfont)
 
 
 if __name__ == "__main__":
