@@ -127,4 +127,4 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 		return self.metrics[glyphName]
 
 	def __setitem__(self, glyphName, advance_sb_pair):
-		self.metrics[glyphName] = tuple(advance_sb_pair)
+		self.metrics[glyphName] = list(advance_sb_pair)
