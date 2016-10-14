@@ -110,7 +110,7 @@ class BuilderTest(unittest.TestCase):
         expected = self.read_ttx(expected_ttx)
         if actual != expected:
             for line in difflib.unified_diff(
-                    expected, actual, fromfile=expected_ttx, tofile=path):
+                    expected, actual, fromfile=path, tofile=expected_ttx):
                 sys.stdout.write(line)
             self.fail("TTX output is different from expected")
 
