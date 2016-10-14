@@ -25,8 +25,8 @@ if [[ "$(uname -s)" == 'Darwin' ]]; then
             pyenv global 3.5.2
             ;;
         pypy)
-            pyenv install pypy-5.3.1
-            pyenv global pypy-5.3.1
+            pyenv install pypy-5.4.1
+            pyenv global pypy-5.4.1
             ;;
     esac
     pyenv rehash
@@ -40,8 +40,8 @@ else
         eval "$(pyenv init -)"
 
         if [[ "${TOXENV}" == "pypy" ]]; then
-            pyenv install pypy-5.3.1
-            pyenv global pypy-5.3.1
+            pyenv install pypy-5.4.1
+            pyenv global pypy-5.4.1
         else
             pyenv install jython-2.7.1b3
             pyenv global jython-2.7.1b3
