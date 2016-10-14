@@ -61,8 +61,14 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 
 	def compile(self, ttFont):
 		metrics = []
+		hasNegativeAdvances = False
 		for glyphName in ttFont.getGlyphOrder():
-			metrics.append(self.metrics[glyphName])
+			advanceWidth, sideBearing = self.metrics[glyphName]
+			if advanceWidth < 0:
+				log.error("Glyph %r has negative advance %s" % (
+					glyphName, self.advanceName))
+				hasNegativeAdvances = True
+			metrics.append([advanceWidth, sideBearing])
 		lastAdvance = metrics[-1][0]
 		lastIndex = len(metrics)
 		while metrics[lastIndex-2][0] == lastAdvance:
@@ -81,8 +87,15 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 		for item in metrics:
 			allMetrics.extend(item)
 		metricsFmt = ">" + self.longMetricFormat * numberOfMetrics
-		data = struct.pack(metricsFmt, *allMetrics)
-
+		try:
+			data = struct.pack(metricsFmt, *allMetrics)
+		except struct.error as e:
+			if "out of range" in str(e) and hasNegativeAdvances:
+				raise ttLib.TTLibError(
+					"'%s' table can't contain negative advance %ss"
+					% (self.tableTag, self.advanceName))
+			else:
+				raise
 		additionalMetrics = array.array("h", additionalMetrics)
 		if sys.byteorder != "big":
 			additionalMetrics.byteswap()
