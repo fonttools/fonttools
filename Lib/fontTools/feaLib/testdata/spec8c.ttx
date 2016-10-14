@@ -39,7 +39,7 @@
         <Feature>
           <FeatureParamsStylisticSet>
             <Version value="0"/>
-            <UINameID value="256"/>
+            <UINameID value="256"/>  <!-- Feature description for MS Platform, script Unicode, language English -->
           </FeatureParamsStylisticSet>
           <!-- LookupCount=1 -->
           <LookupListIndex index="0" value="0"/>

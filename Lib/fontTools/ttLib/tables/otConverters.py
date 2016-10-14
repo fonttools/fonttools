@@ -236,6 +236,22 @@ class GlyphID(SimpleValue):
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		writer.writeUShort(font.getGlyphID(value))
 
+
+class NameID(UShort):
+	def xmlWrite(self, xmlWriter, font, value, name, attrs):
+		xmlWriter.simpletag(name, attrs + [("value", value)])
+		nameTable = font.get("name") if font else None
+		if nameTable:
+			name = nameTable.getDebugName(value)
+			xmlWriter.write("  ")
+			if name:
+				xmlWriter.comment(name)
+			else:
+				xmlWriter.comment("missing from name table")
+				log.warning("name id %d missing from name table" % value)
+		xmlWriter.newline()
+
+
 class FloatValue(SimpleValue):
 	def xmlRead(self, attrs, content, font):
 		return float(attrs["value"])
@@ -601,6 +617,7 @@ converterMapping = {
 	"Version":	Version,
 	"Tag":		Tag,
 	"GlyphID":	GlyphID,
+	"NameID":	NameID,
 	"DeciPoints":	DeciPoints,
 	"Fixed":	Fixed,
 	"F2Dot14":	F2Dot14,
