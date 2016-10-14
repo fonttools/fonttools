@@ -37,4 +37,27 @@ class Data():
             self.value = data
         if type(data)==int:
              self.value = data
+
+
+def constructInstructions(program_tag, instructions):
+    thisinstruction = None
+    instructions_list = []
+    def combineInstructionData(instruction,data):
+        instruction.add_data(data)
+    number = 0
+    for instruction in instructions:
+        instructionCons = instructionConstructor(instruction)
+        instruction = instructionCons.getClass()
+
+        if isinstance(instruction, Data):
+            combineInstructionData(thisinstruction,instruction)
+        else:
+            if thisinstruction is not None:
+                thisinstruction.id = program_tag + '.' + str(number)
+                instructions_list.append(thisinstruction)
+                number = number+1
+            thisinstruction = instruction
+
+    instructions_list.append(thisinstruction)
+    return instructions_list
     

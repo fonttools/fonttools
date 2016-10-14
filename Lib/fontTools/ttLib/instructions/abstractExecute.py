@@ -319,7 +319,7 @@ class Environment(object):
         new_top = self.program_stack[-index].eval(self.keep_abstract)
         self.program_stack_push(new_top, False)
         
-        var_name = identifierGenerator.generateIdentifier(self.tag, self.stack_depth() + 1)
+        var_name = identifierGenerator.generateIdentifier(self.tag, self.stack_depth())
         argN_name = identifierGenerator.generateIdentifier(self.tag, self.stack_depth() - (index - 1))
         self.current_instruction_intermediate.append(IR.CopyStatement(IR.Variable(var_name),
                                                                       IR.Variable(argN_name)))
@@ -703,16 +703,16 @@ class Environment(object):
         self.current_instruction_intermediate.append(IR.SDBMethodCall([arg]))
 
     def exec_SDPVTL(self):
-        self.program_stack_pop_many(2)
-        raise NotImplementedError
+        args = self.program_stack_pop_many(2)
+        self.current_instruction_intermediate.append(IR.SDPVTLMethodCall(self.current_instruction.data[0], args))
 
     def exec_SDS(self):
         arg = self.program_stack_pop()
         self.current_instruction_intermediate.append(IR.SDSMethodCall([arg]))
 
     def exec_SFVFS(self):
-        self.program_stack_pop_many(2)
-        raise NotImplementedError
+        args = self.program_stack_pop_many(2)
+        self.current_instruction_intermediate.append(IR.SFVFSMethodCall([arg]))
 
     def exec_SFVTCA(self):
         data = int(self.current_instruction.data[0])
@@ -724,8 +724,8 @@ class Environment(object):
         self.current_instruction_intermediate.append(IR.CopyStatement(IR.FreedomVector(),IR.Constant(data)))
            
     def exec_SFVTL(self):#Set Freedom Vector To Line
-        self.program_stack_pop_many(2)
-        raise NotImplementedError
+        args = self.program_stack_pop_many(2)
+        self.current_instruction_intermediate.append(IR.SDPVTLMethodCall(self.current_instruction.data[0], args))
 
     def exec_SFVTPV(self):#Set Freedom Vector To Projection Vector
         self.graphics_state['fv'] = self.graphics_state['pv']
@@ -832,20 +832,26 @@ class Environment(object):
                                                                       IR.Variable(tmp_name)))
 
     def exec_SZP0(self):
-        self.program_stack_pop()
-        raise NotImplementedError
+        arg = self.program_stack_pop()
+        assert (arg is 1 or arg is 0)
+        self.current_instruction_intermediate.append(IR.CopyStatement(IR.ZP0(), arg))
 
     def exec_SZP1(self):
-        self.program_stack_pop()
-        raise NotImplementedError
+        arg = self.program_stack_pop()
+        assert (arg is 1 or arg is 0)
+        self.current_instruction_intermediate.append(IR.CopyStatement(IR.ZP1(), arg))
 
     def exec_SZP2(self):
-        self.program_stack_pop()
-        raise NotImplementedError
+        arg = self.program_stack_pop()
+        assert (arg is 1 or arg is 0)
+        self.current_instruction_intermediate.append(IR.CopyStatement(IR.ZP2(), arg))
 
     def exec_SZPS(self):
-        self.program_stack_pop()
-        raise NotImplementedError
+        arg = self.program_stack_pop()
+        assert (arg is 1 or arg is 0)
+        self.current_instruction_intermediate.append(IR.CopyStatement(IR.ZP0(), arg))
+        self.current_instruction_intermediate.append(IR.CopyStatement(IR.ZP1(), arg))
+        self.current_instruction_intermediate.append(IR.CopyStatement(IR.ZP2(), arg))
 
     def exec_UTP(self):
         self.program_stack_pop()

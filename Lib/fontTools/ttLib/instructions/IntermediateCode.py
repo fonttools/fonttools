@@ -410,10 +410,25 @@ class SCFSMethodCall(MethodCallStatement):
         super(SCFSMethodCall, self).__init__(parameters, returnVal)
         self.methodName = 'SCFS'
 
+class SDPVTLMethodCall(MethodCallStatement):
+    def __init__(self, data, parameters = [], returnVal=None):
+        super(SDPVTLMethodCall, self).__init__(parameters, returnVal)
+        self.methodName = 'SDPVTL_'+data
+
 class SDSMethodCall(MethodCallStatement):
     def __init__(self, parameters = [], returnVal=None):
         super(SDSMethodCall, self).__init__(parameters, returnVal)
         self.methodName = 'SDS'
+
+class SFVFSMethodCall(MethodCallStatement):
+    def __init__(self, parameters = [], returnVal=None):
+        super(SFVFSMethodCall, self).__init__(parameters, returnVal)
+        self.methodName = 'SFVFS'
+
+class SFVTLMethodCall(MethodCallStatement):
+    def __init__(self, data, parameters = [], returnVal=None):
+        super(SFVTLMethodCall, self).__init__(parameters, returnVal)
+        self.methodName = 'SFVTL_'+data
 
 class SHCMethodCall(MethodCallStatement):
     def __init__(self, data, parameters = [], returnVal=None):
@@ -449,6 +464,21 @@ class SRP2MethodCall(MethodCallStatement):
     def __init__(self, parameters = [], returnVal=None):
         super(SRP2MethodCall, self).__init__(parameters, returnVal)
         self.methodName = 'SRP2'
+
+class SZP0MethodCall(MethodCallStatement):
+    def __init__(self, parameters = [], returnVal=None):
+        super(SZP0MethodCall, self).__init__(parameters, returnVal)
+        self.methodName = 'SZP0'
+
+class SZP1MethodCall(MethodCallStatement):
+    def __init__(self, parameters = [], returnVal=None):
+        super(SZP1MethodCall, self).__init__(parameters, returnVal)
+        self.methodName = 'SZP1'
+
+class SZP2MethodCall(MethodCallStatement):
+    def __init__(self, parameters = [], returnVal=None):
+        super(SZP2MethodCall, self).__init__(parameters, returnVal)
+        self.methodName = 'SZP2'
 
 class AssignmentStatement(dataType.AbstractValue):
     def __init__(self):

@@ -1,0 +1,6 @@
+#! /usr/bin/env python
+
+import sys
+from fontTools import roundtrip
+
+roundtrip.main(sys.argv[1:])

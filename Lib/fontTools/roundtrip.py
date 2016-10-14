@@ -1,15 +1,21 @@
 #! /usr/bin/env python
 """
-usage: roundtrip input
+usage: roundtrip input [fontfile]
 
-    Expected input is a text file containing COI code
-    for some font 
+    input: a text file containing COI code for some font
+    fontfile: original TTF font file for given COI code. If
+              passed, an updated version of the font will
+              be generated using the COI code to build tables
 """
 
 import sys
 import re
 import os
 import copy
+from fontTools.ttLib import TTFont
+from fontTools.ttLib.bytecodeContainer import BytecodeContainer, Program
+from fontTools.ttLib.instructions import instructionConstructor
+from fontTools.ttLib.instructions.instructionConstructor import constructInstructions
 
 def usage():
     print(__doc__)
@@ -49,9 +55,17 @@ class AssignInstruction(object):
         else:
             return False
 
+    def is_assigning_var(self):
+        pattern = re.compile('\$..*')
+        return pattern.match(self.addr2)
+
     def is_function(self):
         pattern = re.compile('..*\(..*\)')
         return pattern.match(self.addr2)
+
+    def is_unary(self):
+        return self.op != "" and self.addr3 == ""
+        
 
 class Instruction(object):
 
@@ -62,6 +76,7 @@ class Instruction(object):
     def __repr__(self):
         return("{0}[{1}], line {2}".format(self.mnemonic, self.data, self.line))
 
+# InstructionInterpreter will translate 
 class InstructionInterpreter(object):
     bytecodeInstructions = [] # contains the translated TTF so far
 
@@ -81,6 +96,7 @@ class InstructionInterpreter(object):
         ("RoundState_HG",        "RTHG[ ]"),
         ("RoundState_UG",        "RUTG[ ]"),
         ("RoundState_DG",        "RTDG[ ]"),
+        ("RoundState_DTG",       "RDTG[ ]"),
         ("Super45(",             "S45ROUND[ ]"),
         ("Super(",               "SROUND[ ]"),
         ("PPEM",                 "MPPEM[ ]"),
@@ -158,13 +174,19 @@ class InstructionInterpreter(object):
                     if instruction.is_function():
                         instr = self.parse_function(instruction.addr2)
                     else:
-                        instr = "PUSH["+instruction.addr2+"]"
+                        if instruction.is_assigning_var():
+                            instr = instruction.__str__()
+                        else:
+                            instr = "PUSH["+instruction.addr2+"]"
                         if instruction_line != self.parse_assignment(instruction_line):
                             instr = self.parse_assignment(instruction_line)
 
                 else:
-                    operator = self.get_binary_op(instruction.op)
-                    instr = operator+"[ ]"
+                    if instruction.is_unary():
+                        instr = instruction.addr2+"[ ]"
+                    else:
+                        operator = self.get_binary_op(instruction.op)
+                        instr = operator+"[ ]"
             else:
 
                 instr = self.parse_assignment(instruction_line)
@@ -184,8 +206,29 @@ class InstructionInterpreter(object):
                     instructions.append(Instruction(mnemonic, data, index))
             return instructions
 
+        def find_assignments():
+            pattern = re.compile('\$..*\$..*')
+            instructions = []
+            sequence = []
+            first_index = -1
+            for index, instr in enumerate(self.bytecodeInstructions):
+                if pattern.match(instr):
+                    addrs = instr.split(" := ")
+                    addr1 = addrs[0].split("_")[-1]
+                    addr2 = addrs[1].split("_")[-1]
+                    sequence.append(int(addr2)-int(addr1))
+                    if first_index < 0:
+                        first_index = index
+                elif sequence:
+                    instructions.append((list(sequence), first_index))
+                    del sequence[:]
+                    first_index = -1
+            return instructions
+
         def merge_PUSH():
             instructions = find_instructions("PUSH")
+            if len(instructions) == 0:
+                return
             data = []
             last_line = instructions[-1].line
             for instr in reversed(instructions):
@@ -207,6 +250,45 @@ class InstructionInterpreter(object):
                         update_stack("SVTCA[{0}]".format(fv.data), fv.line, [])
                         break
 
+        # Merge instructions that push or pop values from the stack.
+        # Each COI instruction is represented by the assigning variable
+        # label number minus the assigned variable label number
+        # e.g. $prep275 = $prep272   ( = -3 )
+        # each instruction generates a different sequence of intengers
+        # which we will find and merge here
+        def merge_OTHER():
+            instructions_groups = find_assignments()
+            for instr_list, index in reversed(instructions_groups):
+                length = len(instr_list)
+                # DUP check
+                if instr_list == [-1]:
+                    update_stack("DUP[ ]", index, [])
+                # CINDEX check
+                elif instr_list[0] < -1 and length == 1:
+                    update_stack("CINDEX[ ]", index, [])
+                # SWAP check
+                elif instr_list == [-1, -1, 2]:
+                        update_stack("SWAP[ ]", index, [])
+                # ROLL check
+                elif instr_list == [-1, -2, 1, 2]:
+                        update_stack("ROLL[ ]", index, [])
+                # MINDEX check
+                else:
+                    # conditions for MINDEX:
+                    # [1, -X, {X times 1 value}, 2]
+                    # where X = len - 2
+                    if (
+                        instr_list[0] == 1 and instr_list[-1] == 2 and
+                        instr_list[1] == (length-2)*(-1) and 
+                        instr_list[2:-1] == [1] * (length-3)
+                        ):
+                        update_stack("MINDEX[ ]", index, [])
+                    else:
+                        # if none of above, either a malformed or unkown instruction
+                        raise ValueError("Unkown or malformed instruction")
+                # remove the instructions left after merge 
+                del self.bytecodeInstructions[index+1:index+1+length]
+
         def update_stack(mnemonic, index, data):
             for d in data:
                 self.bytecodeInstructions.insert(index, d)
@@ -216,6 +298,23 @@ class InstructionInterpreter(object):
 
         merge_PUSH()
         merge_SFVTCA()
+        merge_OTHER()
+
+def save_font(bytecode, fontfile):
+    
+    font_roundtrip = TTFont(fontfile)
+    bytecodeContainer = BytecodeContainer(font_roundtrip)
+    for key in bytecode.keys():
+        # we don't want GS initialize instructions
+        if key == 'prep':
+            del bytecode[key][:17]
+        program_tag = key
+        instruction = constructInstructions(program_tag, bytecode[key])
+        bytecodeContainer.tag_to_programs[program_tag] = Program(instruction)
+    bytecodeContainer.updateTTFont(font_roundtrip)
+    roundtrip_filename = "{0}_roundtrip.ttf".format(fontfile.split(".ttf")[0])
+    font_roundtrip.save(roundtrip_filename)
+    font_roundtrip.close()
 
 def process_tables(tables):
     bytecode = {} 
@@ -234,9 +333,11 @@ def main(args):
 
     tags = {} 
     current_tag = ""
-
-    if len(args) < 0 or os.path.isfile(args[0]) == False:
+    font_file = None
+    if len(args) <= 0 or os.path.isfile(args[0]) == False:
         usage()
+    if len(args) > 1:
+        font_file = args[1]
 
     with open(args[0], "r") as file:
         
@@ -257,6 +358,8 @@ def main(args):
                 tags[current_tag].append(line[:-1])
 
         bytecode = process_tables(tags)
+        if font_file:
+            save_font(bytecode, font_file)
         return bytecode
 
 if __name__ == '__main__':

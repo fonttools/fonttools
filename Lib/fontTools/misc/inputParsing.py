@@ -1,5 +1,6 @@
 import unicodedata
 import urllib2
+import codecs
 from urllib2 import urlopen
 from bs4 import BeautifulSoup
 

@@ -15,11 +15,12 @@ class BytecodeContainer(object):
 
     def constructCVTTable(self, tt):
         self.cvt_table = {}
-        values = tt['cvt '].values
-        key = 0
-        for value in values:
-            self.cvt_table[key] = value
-            key = key + 1
+        if 'cvt ' in tt:
+            values = tt['cvt '].values
+            key = 0
+            for value in values:
+                self.cvt_table[key] = value
+                key = key + 1
     
     def extractProgram(self, tt):
         '''
@@ -199,11 +200,12 @@ class BytecodeContainer(object):
                             stack.extend(reverse_successor)
                         else:
                             stack.extend(top_instr.successors)
-
-                try:
-                    ttFont[table].program.fromAssembly(assembly)
-                except:
-                    ttFont['glyf'].glyphs[table[5:]].program.fromAssembly(assembly)
+                if len(assembly) > 0:
+                    try:
+                        ttFont[table].program.fromAssembly(assembly)
+                    except:
+                        table = table.replace("glyf.", "")
+                        ttFont['glyf'].glyphs[table].program.fromAssembly(assembly)
 
     def print_IR(self, IR):
         for line in IR:
@@ -242,7 +244,7 @@ class Body(object):
             self.instructions = kwargs.get('instructions')
             if len(self.instructions) > 0:
                 self.statement_root = self.constructSuccessorAndPredecessor()
-
+    
     # CFG construction
     def constructSuccessorAndPredecessor(self):
         def is_branch(instruction):

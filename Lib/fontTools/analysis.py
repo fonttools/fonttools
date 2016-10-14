@@ -194,7 +194,8 @@ def process(jobs, options):
             output = "Reduced"+input
             output = makeOutputFileName(output, ".ttf")
             tt.save(output)
-        input.close()
+        if type(input) is file:
+            input.close()
 
 def parseOptions(args):
     try:
