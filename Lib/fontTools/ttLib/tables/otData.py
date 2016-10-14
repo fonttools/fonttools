@@ -841,6 +841,23 @@ otData = [
 
 
 	#
+	# STAT
+	#
+	('STAT', [
+		('Version', 'Version', None, None, 'Version of the table-initially set to 0x00010000'),
+		('uint16', 'DesignAxisRecordSize', None, None, 'Size in bytes of each design axis record'),
+		('uint16', 'DesignAxisCount', None, None, 'Number of design axis records'),
+		('LOffsetToArray(AxisRecord)', 'DesignAxis', None, None, 'Offset in bytes from the beginning of the STAT table to the start of the design axes array'),
+		('uint16', 'AxisValueCount', None, None, 'Number of axis value tables'),
+	]),
+
+	('AxisRecord', [
+		('Tag', 'AxisTag', None, None, 'A tag identifying the axis of design variation'),
+		('uint16', 'AxisNameID', None, None, 'The name ID for entries in the "name" table that provide a display string for this axis'),
+		('uint16', 'AxisOrdering', None, None, 'A value that applications can use to determine primary sorting of face names, or for ordering of descriptors when composing family or face names'),
+	]),
+
+	#
 	# Variation fonts
 	#
 
