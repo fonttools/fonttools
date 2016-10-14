@@ -21,9 +21,6 @@ matrix:
       env: TOXENV=py27
     - language: generic
       os: osx
-      env: TOXENV=py34
-    - language: generic
-      os: osx
       env: TOXENV=py35
     # coveralls is not listed in tox's envlist, but should run in travis
     - python: 3.5
