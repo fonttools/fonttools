@@ -59,23 +59,23 @@ otData = [
 	('FeatureParamsSize', [
 		('DeciPoints', 'DesignSize', None, None, 'The design size in 720/inch units (decipoints).'),
 		('uint16', 'SubfamilyID', None, None, 'Serves as an identifier that associates fonts in a subfamily.'),
-		('uint16', 'SubfamilyNameID', None, None, 'Subfamily NameID.'),
+		('NameID', 'SubfamilyNameID', None, None, 'Subfamily NameID.'),
 		('DeciPoints', 'RangeStart', None, None, 'Small end of recommended usage range (exclusive) in 720/inch units.'),
 		('DeciPoints', 'RangeEnd', None, None, 'Large end of recommended usage range (inclusive) in 720/inch units.'),
 	]),
 
 	('FeatureParamsStylisticSet', [
 		('uint16', 'Version', None, None, 'Set to 0.'),
-		('uint16', 'UINameID', None, None, 'UI NameID.'),
+		('NameID', 'UINameID', None, None, 'UI NameID.'),
 	]),
 
 	('FeatureParamsCharacterVariants', [
 		('uint16', 'Format', None, None, 'Set to 0.'),
-		('uint16', 'FeatUILabelNameID', None, None, 'Feature UI label NameID.'),
-		('uint16', 'FeatUITooltipTextNameID', None, None, 'Feature UI tooltip text NameID.'),
-		('uint16', 'SampleTextNameID', None, None, 'Sample text NameID.'),
+		('NameID', 'FeatUILabelNameID', None, None, 'Feature UI label NameID.'),
+		('NameID', 'FeatUITooltipTextNameID', None, None, 'Feature UI tooltip text NameID.'),
+		('NameID', 'SampleTextNameID', None, None, 'Sample text NameID.'),
 		('uint16', 'NumNamedParameters', None, None, 'Number of named parameters.'),
-		('uint16', 'FirstParamUILabelNameID', None, None, 'First NameID of UI feature parameters.'),
+		('NameID', 'FirstParamUILabelNameID', None, None, 'First NameID of UI feature parameters.'),
 		('uint16', 'CharCount', None, None, 'Count of characters this feature provides glyph variants for.'),
 		('uint24', 'Character', 'CharCount', 0, 'Unicode characters for which this feature provides glyph variants.'),
 	]),
@@ -1114,7 +1114,7 @@ otData = [
 		('uint16', 'SettingsCount', None, None, 'The number of records in the setting name array.'),
 		('LOffset', 'Settings', None, None, 'Offset to setting table for this feature.'),
 		('uint16', 'FeatureFlags', None, None, 'Single-bit flags associated with the feature type.'),
-		('uint16', 'FeatureNameID', None, None, 'The name table index for the feature name.'),
+		('NameID', 'FeatureNameID', None, None, 'The name table index for the feature name.'),
 	]),
 
 	('Settings', [
@@ -1123,7 +1123,7 @@ otData = [
 
 	('Setting', [
 		('uint16', 'SettingValue', None, None, 'The setting.'),
-		('uint16', 'SettingNameID', None, None, 'The name table index for the setting name.'),
+		('NameID', 'SettingNameID', None, None, 'The name table index for the setting name.'),
 	]),
 
 ]
