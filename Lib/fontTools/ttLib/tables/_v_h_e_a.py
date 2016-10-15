@@ -16,7 +16,7 @@ vheaFormat = """
 		yMaxExtent:		h
 		caretSlopeRise:		h
 		caretSlopeRun:		h
-		reserved0:		h
+		caretOffset:		h
 		reserved1:		h
 		reserved2:		h
 		reserved3:		h
@@ -37,6 +37,8 @@ class table__v_h_e_a(DefaultTable.DefaultTable):
 	def compile(self, ttFont):
 		if ttFont.isLoaded('glyf') and ttFont.recalcBBoxes:
 			self.recalc(ttFont)
+		self.tableVersion = fi2ve(self.tableVersion)
+
 		return sstruct.pack(vheaFormat, self)
 
 	def recalc(self, ttFont):
@@ -88,3 +90,12 @@ class table__v_h_e_a(DefaultTable.DefaultTable):
 
 	def fromXML(self, name, attrs, content, ttFont):
 		setattr(self, name, safeEval(attrs["value"]))
+
+	# reserved0 is caretOffset for legacy reasons
+	@property
+	def reserved0(self):
+		return self.caretOffset
+
+	@reserved0.setter
+	def reserved0(self, value):
+		self.caretOffset = value
