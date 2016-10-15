@@ -143,11 +143,12 @@ def _glyphs_to_quadratic(glyphs, max_err, reverse_direction, stats):
     Return True if the glyphs were modified, else return False.
     """
 
-    glyphs_modified = False
-
     segments_by_location = zip(*[_get_segments(g) for g in glyphs])
     if not any(segments_by_location):
-        return glyphs_modified
+        return False
+
+    # always modify input glyphs if reverse_direction is True
+    glyphs_modified = reverse_direction
 
     new_segments_by_location = []
     for segments in segments_by_location:
