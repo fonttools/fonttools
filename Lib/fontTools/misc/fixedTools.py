@@ -3,10 +3,15 @@
 
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
+import logging
+
+log = logging.getLogger(__name__)
 
 __all__ = [
 	"fixedToFloat",
 	"floatToFixed",
+	"fixedToVersion",
+	"versionToFixed",
 ]
 
 def fixedToFloat(value, precisionBits):
@@ -45,3 +50,22 @@ def floatToFixed(value, precisionBits):
 	precisionBits.  Ie. int(round(value * (1<<precisionBits))).
 	"""
 	return int(round(value * (1<<precisionBits)))
+
+
+def ensureVersionIsLong(value):
+	"""Ensure a table version is an unsigned long (unsigned short major,
+	unsigned short minor) instead of a float."""
+	if value < 0x10000:
+		newValue = floatToFixed(value, 16)
+		log.warning(
+			"Table version value is a float: %.4f; "
+			"fix to use hex instead: 0x%08x", value, newValue)
+		value = newValue
+	return value
+
+
+def versionToFixed(value):
+	"""Converts a table version to a fixed"""
+	value = int(value, 0) if value.startswith("0") else float(value)
+	value = ensureVersionIsLong(value)
+	return value
