@@ -1,7 +1,9 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.misc.textTools import safeEval
-from fontTools.misc.fixedTools import fixedToFloat as fi2fl, floatToFixed as fl2fi
+from fontTools.misc.fixedTools import (
+	fixedToFloat as fi2fl, floatToFixed as fl2fi, ensureVersionIsLong as fi2ve,
+	versionToFixed as ve2fi)
 from .otBase import ValueRecordFactory
 from functools import partial
 import logging
@@ -285,25 +287,15 @@ class Version(BaseConverter):
 		assert (value >> 16) == 1, "Unsupported version 0x%08x" % value
 		return value
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
-		if value < 0x10000:
-			newValue = self.fromFloat(value)
-			log.warning("Table version value is a float: %g; fix code to use hex instead: %08x", value, newValue)
-			value = newValue
+		value = fi2ve(value)
 		assert (value >> 16) == 1, "Unsupported version 0x%08x" % value
 		writer.writeLong(value)
 	def xmlRead(self, attrs, content, font):
 		value = attrs["value"]
-		value = int(value, 0) if value.startswith("0") else float(value)
-		if value < 0x10000:
-			newValue = self.fromFloat(value)
-			log.warning("Table version value is a float: %g; fix XML to use hex instead: %08x", value, newValue)
-			value = newValue
+		value = ve2fi(value)
 		return value
 	def xmlWrite(self, xmlWriter, font, value, name, attrs):
-		if value < 0x10000:
-			newValue = self.fromFloat(value)
-			log.warning("Table version value is a float: %g; fix code to use hex instead: %08x", value, newValue)
-			value = newValue
+		value = fi2ve(value)
 		value = "0x%08x" % value
 		xmlWriter.simpletag(name, attrs + [("value", value)])
 		xmlWriter.newline()
