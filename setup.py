@@ -38,9 +38,7 @@ setup_params = dict(
 		'pytest>=3.0.2',
 	],
 	install_requires=[
-		# TODO(anthrotype): un-comment this once fonttools>=3.1 is on PyPI.
-		# In the meantime, pip install -r requirements.txt
-		# "fonttools>=3.1",
+		"fonttools>=3.1.2",
 	],
 	classifiers=[
 		"Development Status :: 4 - Beta",
