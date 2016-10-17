@@ -12,9 +12,8 @@ except NameError:
 
 def getDemoFontPath():
 	"""Return the path to Data/DemoFont.ufo/."""
-	import ufoLib
-	root = os.path.dirname(os.path.dirname(os.path.dirname(ufoLib.__file__)))
-	return os.path.join(root, "Data", "DemoFont.ufo")
+	testdata = os.path.join(os.path.dirname(__file__), "testdata")
+	return os.path.join(testdata, "DemoFont.ufo")
 
 
 def getDemoFontGlyphSetPath():
