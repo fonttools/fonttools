@@ -4,6 +4,7 @@ from fontTools import ttLib
 from fontTools.misc.textTools import safeEval
 from . import DefaultTable
 import sys
+import struct
 import array
 import logging
 
@@ -17,18 +18,22 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 	advanceName = 'width'
 	sideBearingName = 'lsb'
 	numberOfMetricsName = 'numberOfHMetrics'
+	longMetricFormat = 'Hh'
 
 	def decompile(self, data, ttFont):
 		numGlyphs = ttFont['maxp'].numGlyphs
 		numberOfMetrics = int(getattr(ttFont[self.headerTag], self.numberOfMetricsName))
 		if numberOfMetrics > numGlyphs:
-			numberOfMetrics = numGlyphs # We warn later.
+			log.warning("The %s.%s exceeds the maxp.numGlyphs" % (
+				self.headerTag, self.numberOfMetricsName))
+			numberOfMetrics = numGlyphs
 		if len(data) < 4 * numberOfMetrics:
 			raise ttLib.TTLibError("not enough '%s' table data" % self.tableTag)
-		# Note: advanceWidth is unsigned, but we read/write as signed.
-		metrics = array.array("h", data[:4 * numberOfMetrics])
-		if sys.byteorder != "big":
-			metrics.byteswap()
+		# Note: advanceWidth is unsigned, but some font editors might
+		# read/write as signed. We can't be sure whether it was a mistake
+		# or not, so we read as unsigned but also issue a warning...
+		metricsFmt = ">" + self.longMetricFormat * numberOfMetrics
+		metrics = struct.unpack(metricsFmt, data[:4 * numberOfMetrics])
 		data = data[4 * numberOfMetrics:]
 		numberOfSideBearings = numGlyphs - numberOfMetrics
 		sideBearings = array.array("h", data[:2 * numberOfSideBearings])
@@ -42,16 +47,28 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 		glyphOrder = ttFont.getGlyphOrder()
 		for i in range(numberOfMetrics):
 			glyphName = glyphOrder[i]
-			self.metrics[glyphName] = list(metrics[i*2:i*2+2])
+			advanceWidth, lsb = metrics[i*2:i*2+2]
+			if advanceWidth > 32767:
+				log.warning(
+					"Glyph %r has a huge advance %s (%d); is it intentional or "
+					"an (invalid) negative value?", glyphName, self.advanceName,
+					advanceWidth)
+			self.metrics[glyphName] = (advanceWidth, lsb)
 		lastAdvance = metrics[-2]
 		for i in range(numberOfSideBearings):
 			glyphName = glyphOrder[i + numberOfMetrics]
-			self.metrics[glyphName] = [lastAdvance, sideBearings[i]]
+			self.metrics[glyphName] = (lastAdvance, sideBearings[i])
 
 	def compile(self, ttFont):
 		metrics = []
+		hasNegativeAdvances = False
 		for glyphName in ttFont.getGlyphOrder():
-			metrics.append(self.metrics[glyphName])
+			advanceWidth, sideBearing = self.metrics[glyphName]
+			if advanceWidth < 0:
+				log.error("Glyph %r has negative advance %s" % (
+					glyphName, self.advanceName))
+				hasNegativeAdvances = True
+			metrics.append([advanceWidth, sideBearing])
 		lastAdvance = metrics[-1][0]
 		lastIndex = len(metrics)
 		while metrics[lastIndex-2][0] == lastAdvance:
@@ -63,16 +80,22 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 		additionalMetrics = metrics[lastIndex:]
 		additionalMetrics = [sb for advance, sb in additionalMetrics]
 		metrics = metrics[:lastIndex]
-		setattr(ttFont[self.headerTag], self.numberOfMetricsName, len(metrics))
+		numberOfMetrics = len(metrics)
+		setattr(ttFont[self.headerTag], self.numberOfMetricsName, numberOfMetrics)
 
 		allMetrics = []
 		for item in metrics:
 			allMetrics.extend(item)
-		allMetrics = array.array("h", allMetrics)
-		if sys.byteorder != "big":
-			allMetrics.byteswap()
-		data = allMetrics.tostring()
-
+		metricsFmt = ">" + self.longMetricFormat * numberOfMetrics
+		try:
+			data = struct.pack(metricsFmt, *allMetrics)
+		except struct.error as e:
+			if "out of range" in str(e) and hasNegativeAdvances:
+				raise ttLib.TTLibError(
+					"'%s' table can't contain negative advance %ss"
+					% (self.tableTag, self.advanceName))
+			else:
+				raise
 		additionalMetrics = array.array("h", additionalMetrics)
 		if sys.byteorder != "big":
 			additionalMetrics.byteswap()
@@ -94,8 +117,8 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 		if not hasattr(self, "metrics"):
 			self.metrics = {}
 		if name == "mtx":
-			self.metrics[attrs["name"]] = [safeEval(attrs[self.advanceName]),
-					safeEval(attrs[self.sideBearingName])]
+			self.metrics[attrs["name"]] = (safeEval(attrs[self.advanceName]),
+					safeEval(attrs[self.sideBearingName]))
 
 	def __delitem__(self, glyphName):
 		del self.metrics[glyphName]

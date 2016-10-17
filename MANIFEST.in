@@ -13,7 +13,7 @@ include run-tests.sh
 
 recursive-include Lib/fontTools testdata/*.ttx testdata/*.otx testdata/*.fea
 recursive-include Lib/fontTools testdata/*.lwfn testdata/*.pfa testdata/*.pfb
-recursive-include Lib/fontTools testdata/*.xml testdata/*.designspace
+recursive-include Lib/fontTools testdata/*.xml testdata/*.designspace testdata/*.bin
 
 include versioneer.py
 include Lib/fontTools/_version.py
