@@ -30,12 +30,8 @@ class ConversionFunctionsTestCase(unittest.TestCase):
 			shutil.rmtree(path)
 
 	def getFontPath(self, fileName):
-		import ufoLib
-		path = os.path.dirname(ufoLib.__file__)
-		path = os.path.dirname(path)
-		path = os.path.dirname(path)
-		path = os.path.join(path, "TestData", fileName)
-		return path
+		testdata = os.path.join(os.path.dirname(__file__), "testdata")
+		return os.path.join(testdata, fileName)
 
 	def compareFileStructures(self, path1, path2, expectedInfoData, testFeatures):
 		# result

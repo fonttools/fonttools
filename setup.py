@@ -29,6 +29,7 @@ setup_params = dict(
 	long_description=long_description,
 	package_dir={'': 'Lib'},
 	packages=find_packages('Lib'),
+	include_package_data=True,
 	setup_requires=pytest_runner + wheel,
 	tests_require=[
 		'pytest>=3.0.2',
