@@ -71,6 +71,8 @@ class Builder(object):
         self.os2_ = {}
         # for table 'hhea'
         self.hhea_ = {}
+        # for table 'vhea'
+        self.vhea_ = {}
 
     def build(self):
         self.parseTree = Parser(self.file).parse()
@@ -78,6 +80,7 @@ class Builder(object):
         self.build_feature_aalt_()
         self.build_head()
         self.build_hhea()
+        self.build_vhea()
         self.build_name()
         self.build_OS_2()
         for tag in ('GPOS', 'GSUB'):
@@ -204,6 +207,21 @@ class Builder(object):
             table.descent = self.hhea_["descender"]
         if "linegap" in self.hhea_:
             table.lineGap = self.hhea_["linegap"]
+
+    def build_vhea(self):
+        if not self.vhea_:
+            return
+        table = self.font.get("vhea")
+        if not table:  # this only happens for unit tests
+            table = self.font["vhea"] = newTable("vhea")
+            table.decompile(b"\0" * 36, self.font)
+            table.tableVersion = 0x00011000
+        if "verttypoascender" in self.vhea_:
+            table.ascent = self.vhea_["verttypoascender"]
+        if "verttypodescender" in self.vhea_:
+            table.descent = self.vhea_["verttypodescender"]
+        if "verttypolinegap" in self.vhea_:
+            table.lineGap = self.vhea_["verttypolinegap"]
 
     def get_user_name_id(self, table):
         # Try to find first unused font-specific name id
@@ -967,6 +985,9 @@ class Builder(object):
 
     def add_hhea_field(self, key, value):
         self.hhea_[key] = value
+
+    def add_vhea_field(self, key, value):
+        self.vhea_[key] = value
 
 
 def makeOpenTypeAnchor(anchor):

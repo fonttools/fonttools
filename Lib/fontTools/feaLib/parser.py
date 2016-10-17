@@ -717,6 +717,7 @@ class Parser(object):
             "GDEF": self.parse_table_GDEF_,
             "head": self.parse_table_head_,
             "hhea": self.parse_table_hhea_,
+            "vhea": self.parse_table_vhea_,
             "name": self.parse_table_name_,
             "BASE": self.parse_table_BASE_,
             "OS/2": self.parse_table_OS_2_,
@@ -777,6 +778,23 @@ class Parser(object):
             else:
                 raise FeatureLibError("Expected CaretOffset, Ascender, "
                                       "Descender or LineGap",
+                                      self.cur_token_location_)
+
+    def parse_table_vhea_(self, table):
+        statements = table.statements
+        fields = ("VertTypoAscender", "VertTypoDescender", "VertTypoLineGap")
+        while self.next_token_ != "}":
+            self.advance_lexer_()
+            if self.cur_token_type_ is Lexer.NAME and self.cur_token_ in fields:
+                key = self.cur_token_.lower()
+                value = self.expect_number_()
+                statements.append(
+                    ast.VheaField(self.cur_token_location_, key, value))
+            elif self.cur_token_ == ";":
+                continue
+            else:
+                raise FeatureLibError("Expected VertTypoAscender, "
+                                      "VertTypoDescender or VertTypoLineGap",
                                       self.cur_token_location_)
 
     def parse_table_name_(self, table):
