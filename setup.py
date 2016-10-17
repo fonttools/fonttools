@@ -2,16 +2,12 @@
 import sys
 from setuptools import setup, find_packages
 
-try:
-	import fontTools
-except ImportError:
-	print("*** Warning: ufoLib needs FontTools for some operations, see:")
-	print("        https://github.com/behdad/fonttools")
-
 
 long_description = """\
-ufoLib reads and writes Unified Font Object (UFO) files. UFO is a file format
-that stores fonts source files.
+ufoLib reads and writes Unified Font Object (UFO) files.
+UFO is a file format that stores fonts source files.
+
+http://unifiedfontobject.org
 """
 
 needs_pytest = {'pytest', 'test'}.intersection(sys.argv)
@@ -27,7 +23,7 @@ setup_params = dict(
 	author_email="info@robofab.com",
 	maintainer="Just van Rossum, Tal Leming, Erik van Blokland",
 	maintainer_email="info@robofab.com",
-	url="http://unifiedfontobject.org",
+	url="https://github.com/unified-font-object/ufoLib",
 	license="OpenSource, BSD-style",
 	platforms=["Any"],
 	long_description=long_description,
