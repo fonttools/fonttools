@@ -198,7 +198,7 @@ class Builder(object):
         if not table:  # this only happens for unit tests
             table = self.font["hhea"] = newTable("hhea")
             table.decompile(b"\0" * 36, self.font)
-            table.tableVersion = 1.0
+            table.tableVersion = 0x00010000
         if "caretoffset" in self.hhea_:
             table.caretOffset = self.hhea_["caretoffset"]
         if "ascender" in self.hhea_:
