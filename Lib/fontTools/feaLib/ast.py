@@ -656,3 +656,13 @@ class HheaField(Statement):
 
     def build(self, builder):
         builder.add_hhea_field(self.key, self.value)
+
+
+class VheaField(Statement):
+    def __init__(self, location, key, value):
+        Statement.__init__(self, location)
+        self.key = key
+        self.value = value
+
+    def build(self, builder):
+        builder.add_vhea_field(self.key, self.value)
