@@ -17,7 +17,7 @@ wheel = ['wheel'] if needs_wheel else []
 
 setup_params = dict(
 	name="ufoLib",
-	version="2.0.0",
+	version="2.1.0.dev0",
 	description="A low-level UFO reader and writer.",
 	author="Just van Rossum, Tal Leming, Erik van Blokland, others",
 	author_email="info@robofab.com",
