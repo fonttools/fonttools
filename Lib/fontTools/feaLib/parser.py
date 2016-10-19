@@ -1155,9 +1155,10 @@ class Parser(object):
         for symtab in self.symbol_tables_:
             symtab.exit_scope()
 
-        name = self.expect_name_()
-        if name != block.name.strip():
-            raise FeatureLibError("Expected \"%s\"" % block.name.strip(),
+        if self.next_token_ != ";" :
+            name = self.expect_name_()
+            if name != block.name.strip():
+                raise FeatureLibError("Expected \"%s\"" % block.name.strip(),
                                   self.cur_token_location_)
         self.expect_symbol_(";")
 
