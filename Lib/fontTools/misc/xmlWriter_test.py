@@ -106,6 +106,22 @@ class TestXMLWriter(unittest.TestCase):
 			HEADER + b'two lines&#13;\nseparated by Windows line endings',
 			writer.file.getvalue())
 
+	def test_newlinestr(self):
+		header = b'<?xml version="1.0" encoding="UTF-8"?>'
+
+		for nls in (None, '\n', '\r\n', '\r', ''):
+			writer = XMLWriter(BytesIO(), newlinestr=nls)
+			writer.write("hello")
+			writer.newline()
+			writer.write("world")
+			writer.newline()
+
+			linesep = tobytes(os.linesep) if nls is None else tobytes(nls)
+
+			self.assertEqual(
+				header + linesep + b"hello" + linesep + b"world" + linesep,
+				writer.file.getvalue())
+
 
 if __name__ == '__main__':
 	unittest.main()
