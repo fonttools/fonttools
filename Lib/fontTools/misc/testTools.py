@@ -61,9 +61,8 @@ class TestXMLReader_(object):
 
 
 def makeXMLWriter():
-    writer = XMLWriter(BytesIO())
     # don't write OS-specific new lines
-    writer.newlinestr = writer.totype('')
+    writer = XMLWriter(BytesIO(), newlinestr='')
     # erase XML declaration
     writer.file.seek(0)
     writer.file.truncate()
