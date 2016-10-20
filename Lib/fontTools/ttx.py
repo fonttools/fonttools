@@ -61,6 +61,9 @@ usage: ttx [options] inputfile1 [... inputfileN]
        starting from 0.
     --unicodedata <UnicodeData.txt> Use custom database file to write
        character names in the comments of the cmap TTX output.
+    --newline <value> Control how line endings are written in the XML
+       file. It can be 'LF', 'CR', or 'CRLF'. If not specified, the
+       default platform-specific line endings are used.
 
     Compile options:
     -m Merge with TrueType-input-file: specify a TrueType or OpenType
@@ -128,6 +131,7 @@ class Options(object):
 	ignoreDecompileErrors = True
 	bitmapGlyphDataFormat = 'raw'
 	unicodedata = None
+	newlinestr = None
 	recalcTimestamp = False
 	flavor = None
 	useZopfli = False
@@ -189,6 +193,18 @@ class Options(object):
 				self.ignoreDecompileErrors = False
 			elif option == "--unicodedata":
 				self.unicodedata = value
+			elif option == "--newline":
+				validOptions = ('LF', 'CR', 'CRLF')
+				if value == "LF":
+					self.newlinestr = "\n"
+				elif value == "CR":
+					self.newlinestr = "\r"
+				elif value == "CRLF":
+					self.newlinestr = "\r\n"
+				else:
+					raise getopt.GetoptError(
+						"Invalid choice for --newline: %r (choose from %s)"
+						% (value, ", ".join(map(repr, validOptions))))
 			elif option == "--recalc-timestamp":
 				self.recalcTimestamp = True
 			elif option == "--flavor":
@@ -252,7 +268,8 @@ def ttDump(input, output, options):
 			skipTables=options.skipTables,
 			splitTables=options.splitTables,
 			disassembleInstructions=options.disassembleInstructions,
-			bitmapGlyphDataFormat=options.bitmapGlyphDataFormat)
+			bitmapGlyphDataFormat=options.bitmapGlyphDataFormat,
+			newlinestr=options.newlinestr)
 	ttf.close()
 
 
@@ -312,7 +329,7 @@ def guessFileType(fileName):
 def parseOptions(args):
 	rawOptions, files = getopt.getopt(args, "ld:o:fvqht:x:sim:z:baey:",
 			['unicodedata=', "recalc-timestamp", 'flavor=', 'version',
-			 'with-zopfli'])
+			 'with-zopfli', 'newline='])
 
 	options = Options(rawOptions, len(files))
 	jobs = []
