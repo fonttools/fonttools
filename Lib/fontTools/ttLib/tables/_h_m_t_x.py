@@ -78,14 +78,14 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 				lastIndex = 1
 				break
 		additionalMetrics = metrics[lastIndex:]
-		additionalMetrics = [sb for advance, sb in additionalMetrics]
+		additionalMetrics = [int(round(sb)) for _, sb in additionalMetrics]
 		metrics = metrics[:lastIndex]
 		numberOfMetrics = len(metrics)
 		setattr(ttFont[self.headerTag], self.numberOfMetricsName, numberOfMetrics)
 
 		allMetrics = []
-		for item in metrics:
-			allMetrics.extend(item)
+		for advance, sb in metrics:
+			allMetrics.extend([int(round(advance)), int(round(sb))])
 		metricsFmt = ">" + self.longMetricFormat * numberOfMetrics
 		try:
 			data = struct.pack(metricsFmt, *allMetrics)
