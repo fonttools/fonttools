@@ -103,6 +103,8 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 
 	"""the OS/2 table"""
 
+	dependencies = ["head"]
+
 	def decompile(self, data, ttFont):
 		dummy, data = sstruct.unpack2(OS2_format_0, data, self)
 
@@ -125,6 +127,13 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 	def compile(self, ttFont):
 		self.updateFirstAndLastCharIndex(ttFont)
 		panose = self.panose
+		head = ttFont["head"]
+		if self.fsSelection & 1 != head.macStyle & 1<<1:
+			log.warning("fsSelection bit 0 (italic) and "
+				"head table macStyle bit 1 (italic) should match")
+		if self.fsSelection & 1<<5 != head.macStyle & 1:
+			log.warning("fsSelection bit 5 (bold) and "
+				"head table macStyle bit 0 (bold) should match")
 		if (self.fsSelection & 1<<6) and (self.fsSelection & 1 + (1<<5)):
 			log.warning("fsSelection bit 6 (regular) is set, "
 				"bits 0 (italic) and 5 (bold) must be clear")
