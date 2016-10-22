@@ -125,6 +125,9 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 	def compile(self, ttFont):
 		self.updateFirstAndLastCharIndex(ttFont)
 		panose = self.panose
+		if (self.fsSelection & 1<<6) and (self.fsSelection & 1 + (1<<5)):
+			log.warning("fsSelection bit 6 (regular) is set, "
+				"bits 0 (italic) and 5 (bold) must be clear")
 		if self.version < 4 and self.fsSelection & 0b1110000000:
 			log.warning("fsSelection bits 7, 8 and 9 are only defined in "
 				"OS/2 table version 4 and up: version %s", self.version)
