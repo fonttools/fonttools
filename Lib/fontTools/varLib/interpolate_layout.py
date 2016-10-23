@@ -121,10 +121,12 @@ def _Lookup_PairPos_get_effective_value_pair(self, firstGlyph, secondGlyph):
 			pvr = ps.PairValueRecord
 			for rec in pvr: # TODO Speed up
 				if rec.SecondGlyph == secondGlyph:
-					return rec.Value1,rec.Value2
+					return rec
 			continue
 		elif self.Format == 2:
-			raise NotImplementedError
+			klass1 = self.ClassDef1.classDefs.get(firstGlyph, 0)
+			klass2 = self.ClassDef2.classDefs.get(secondGlyph, 0)
+			return self.Class1Record[klass1].Class2Record[klass2]
 		else:
 			assert 0
 	return None
@@ -195,7 +197,7 @@ def merge(merger, self, lst):
 				v.Value1 = otBase.ValueRecord(merger.valueFormat1) if merger.valueFormat1 else None
 				v.Value2 = otBase.ValueRecord(merger.valueFormat2) if merger.valueFormat2 else None
 			else:
-				v.Value1, v.Value2 = vpair
+				v.Value1, v.Value2 = vpair.Value1, vpair.Value2
 			values[j] = v
 	del self._firstGlyph
 
