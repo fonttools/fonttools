@@ -77,7 +77,8 @@ class Builder(object):
         self.python = {}
 
     def build(self):
-        self.parseTree = Parser(self.file).parse()
+        self.parser = Parser(self.file)
+        self.parseTree = self.parser.parse()
         self.parseTree.build(self)
         self.build_feature_aalt_()
         self.build_head()
@@ -1000,6 +1001,11 @@ class Builder(object):
                     'builder' : self
                 }
             exec content in self.python
+
+# Methods to provide capabilities to anon py blocks on builder
+    def parse_string(self, data) :
+        doc = self.parser.parse_string(data)
+        doc.build(self)
 
 
 def makeOpenTypeAnchor(anchor):

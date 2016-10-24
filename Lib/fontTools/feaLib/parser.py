@@ -60,6 +60,15 @@ class Parser(object):
                     self.cur_token_location_)
         return self.doc_
 
+    def parse_string(self, data) :
+        olddoc = self.doc_
+        self.doc_ = ast.FeatureFile()
+        self.lexer_.push_lexer(Lexer(data, "<anon>"))
+        self.advance_lexer_()
+        res = self.parse()
+        self.doc_ = olddoc
+        return res
+
     def parse_anchor_(self):
         self.expect_symbol_("<")
         self.expect_keyword_("anchor")
