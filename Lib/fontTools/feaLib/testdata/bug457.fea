@@ -1,0 +1,5 @@
+@group = [\glyphNameWithBackslash1 \glyphNameWithBackslash2];
+
+feature liga {
+    sub @group by G;
+} liga;

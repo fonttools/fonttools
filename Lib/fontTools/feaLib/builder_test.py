@@ -39,6 +39,7 @@ def makeTTFont():
         a_n_d T_h T_h.swash germandbls ydieresis yacute breve
         grave acute dieresis macron circumflex cedilla umlaut ogonek caron
         damma hamza sukun kasratan lam_meem_jeem noon.final noon.initial
+        \\glyphNameWithBackslash1 \\glyphNameWithBackslash2
     """.split()
     font = TTFont()
     font.setGlyphOrder(glyphs)
@@ -59,7 +60,8 @@ class BuilderTest(unittest.TestCase):
         spec6h_ii spec6h_iii_1 spec6h_iii_3d spec8a spec8b spec8c
         spec9a spec9b spec9c1 spec9c2 spec9c3 spec9d spec9e spec9f spec9g
         spec10
-        bug453 bug463 bug501 bug502 bug504 bug505 bug506 bug509 bug512 bug568
+        bug453 bug457 bug463 bug501 bug502 bug504 bug505 bug506 bug509
+        bug512 bug568
         name size size2 multiple_feature_blocks
     """.split()
 
