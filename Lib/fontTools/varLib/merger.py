@@ -62,7 +62,7 @@ class Merger(object):
 	def mergeThings(self, out, lst, _default={None:None}):
 		clazz = type(out)
 		try:
-			assert all(type(item) == clazz for item in lst), lst
+			assert all(type(item) == clazz for item in lst), (out, lst)
 			mergerFunc = self.mergers.get(type(out), _default).get(None, None)
 			if mergerFunc is not None:
 				mergerFunc(self, out, lst)
@@ -71,7 +71,7 @@ class Merger(object):
 			elif isinstance(out, list):
 				self.mergeLists(out, lst)
 			else:
-				assert all(out == v for v in lst), lst
+				assert all(out == v for v in lst), (out, lst)
 		except Exception as e:
 			e.args = e.args + (clazz.__name__,)
 			raise
