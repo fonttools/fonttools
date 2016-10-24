@@ -206,14 +206,15 @@ class VarData(BaseTable):
 
 		numShorts = 0
 		count = len(self.VarRegionIndex)
-		for item in self.Item:
-			assert len(item) == count, ("Item length mismatch", len(item), count)
-			for i in range(count - 1, numShorts - 1, -1):
-				if not (-128 <= item[i] <= 127):
-					numShorts = i + 1
+		if hasattr(self, 'Item'): # VarData in CFF2 fonts do not have self.Item
+			for item in self.Item:
+				assert len(item) == count, ("Item length mismatch", len(item), count)
+				for i in range(count - 1, numShorts - 1, -1):
+					if not (-128 <= item[i] <= 127):
+						numShorts = i + 1
+						break
+				if numShorts == count:
 					break
-			if numShorts == count:
-				break
 
 		rawTable['NumShorts'] = numShorts
 		return rawTable

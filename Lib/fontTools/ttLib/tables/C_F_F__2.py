@@ -3,7 +3,8 @@ from fontTools.misc.py23 import *
 from fontTools import cffLib
 from . import DefaultTable
 
-class table_C_F_F_(DefaultTable.DefaultTable):
+
+class table_C_F_F__2(DefaultTable.DefaultTable):
 
 	def __init__(self, tag=None):
 		DefaultTable.DefaultTable.__init__(self, tag)
@@ -12,7 +13,7 @@ class table_C_F_F_(DefaultTable.DefaultTable):
 
 	def decompile(self, data, otFont):
 		self.cff.decompile(BytesIO(data), otFont)
-		assert len(self.cff) == 1, "can't deal with multi-font CFF tables."
+		assert len(self.cff) < 2, "can't deal with multi-font CFF tables."
 
 	def compile(self, otFont):
 		f = BytesIO()
@@ -43,4 +44,4 @@ class table_C_F_F_(DefaultTable.DefaultTable):
 	def fromXML(self, name, attrs, content, otFont):
 		if not hasattr(self, "cff"):
 			self.cff = cffLib.CFFFontSet()
-		self.cff.fromXML(name, attrs, content)
+		self.cff.fromXML(name, attrs, content, otFont)
