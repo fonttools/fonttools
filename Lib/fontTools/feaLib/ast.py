@@ -75,6 +75,9 @@ class AnonymousBlock(Statement):
         Statement.__init__(self, location)
         self.tag, self.content = tag, content
 
+    def build(self, builder):
+        builder.process_anon_block(self.content, self.tag)
+
 
 class Block(Statement):
     def __init__(self, location):
