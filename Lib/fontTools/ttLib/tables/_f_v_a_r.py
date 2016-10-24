@@ -48,7 +48,9 @@ class table__f_v_a_r(DefaultTable.DefaultTable):
 
     def compile(self, ttFont):
         instanceSize = sstruct.calcsize(FVAR_INSTANCE_FORMAT) + (len(self.axes) * 4)
-        if any(instance.postscriptNameID != 0xFFFF for instance in self.instances):
+        includePostScriptNames = any(instance.postscriptNameID != 0xFFFF
+                                     for instance in self.instances)
+        if includePostScriptNames:
             instanceSize += 2
         header = {
             "version": 0x00010000,
@@ -62,7 +64,8 @@ class table__f_v_a_r(DefaultTable.DefaultTable):
         result = [sstruct.pack(FVAR_HEADER_FORMAT, header)]
         result.extend([axis.compile() for axis in self.axes])
         axisTags = [axis.axisTag for axis in self.axes]
-        result.extend([instance.compile(axisTags)[:instanceSize] for instance in self.instances])
+        for instance in self.instances:
+            result.append(instance.compile(axisTags, includePostScriptNames))
         return bytesjoin(result)
 
     def decompile(self, data, ttFont):
@@ -153,12 +156,12 @@ class NamedInstance(object):
         self.flags = 0  # not exposed in XML because spec defines no values
         self.coordinates = {}
 
-    def compile(self, axisTags):
+    def compile(self, axisTags, includePostScriptName):
         result = [sstruct.pack(FVAR_INSTANCE_FORMAT, self)]
         for axis in axisTags:
             fixedCoord = floatToFixed(self.coordinates[axis], 16)
             result.append(struct.pack(">l", fixedCoord))
-        if self.postscriptNameID != 0xFFFF:
+        if includePostScriptName:
             result.append(struct.pack(">H", self.postscriptNameID))
         return bytesjoin(result)
 

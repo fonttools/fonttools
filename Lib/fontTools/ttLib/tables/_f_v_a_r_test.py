@@ -166,14 +166,15 @@ class NamedInstanceTest(unittest.TestCase):
         inst.postscriptNameID = 564
         inst.coordinates = {"wght": 0.7, "wdth": 0.5}
         self.assertEqual(FVAR_INSTANCE_DATA_WITH_PSNAME,
-                         inst.compile(["wght", "wdth"]))
+                         inst.compile(["wght", "wdth"], True))
 
     def test_compile_withoutPostScriptName(self):
         inst = NamedInstance()
         inst.subfamilyNameID = 345
+        inst.postscriptNameID = 564
         inst.coordinates = {"wght": 0.7, "wdth": 0.5}
         self.assertEqual(FVAR_INSTANCE_DATA_WITHOUT_PSNAME,
-                         inst.compile(["wght", "wdth"]))
+                         inst.compile(["wght", "wdth"], False))
 
     def test_decompile_withPostScriptName(self):
         inst = NamedInstance()
