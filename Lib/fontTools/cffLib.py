@@ -1057,7 +1057,7 @@ def parseBlendList(s):
 			continue
 		name, attrs, content = element
 		blendList = attrs["value"].split()
-		blendList = map(eval, blendList)
+		blendList = [eval(val) for val in blendList]
 		valueList.append(blendList)
 	if len(valueList) == 1:
 		valueList = valueList[0]
@@ -1069,7 +1069,7 @@ class NumberConverter(SimpleConverter):
 			xmlWriter.begintag(name)
 			xmlWriter.newline()
 			xmlWriter.indent()
-			blendValue = " ".join(map(str, value))
+			blendValue = " ".join([str(val) for val in value])
 			xmlWriter.simpletag(kBlendDictOpName, value=blendValue)
 			xmlWriter.newline()
 			xmlWriter.dedent()
@@ -1094,14 +1094,14 @@ class ArrayConverter(SimpleConverter):
 			xmlWriter.newline()
 			xmlWriter.indent()
 			for valueList in value:
-				blendValue = " ".join(map(str, valueList))
+				blendValue = " ".join([str(val) for val in valueList])
 				xmlWriter.simpletag(kBlendDictOpName, value=blendValue)
 				xmlWriter.newline()
 			xmlWriter.dedent()
 			xmlWriter.endtag(name)
 			xmlWriter.newline()
 		else:
-			value = " ".join(map(str, value))
+			value = " ".join([str(val) for val in value])
 			xmlWriter.simpletag(name, value=value)
 			xmlWriter.newline()
 	def xmlRead(self, name, attrs, content, parent):
@@ -1903,7 +1903,7 @@ class DictCompiler(object):
 			data = [firstNum]
 			for blendNum in blendList[1:]:
 				data.append(blendNum - firstNum)
-			data = map(encodeNumber, data)
+			data = [encodeNumber(val) for val in data]
 			data.append(encodeNumber(1))
 			data.append(bytechr(blendOp))
 			datum = bytesjoin(data)
@@ -1925,7 +1925,13 @@ class DictCompiler(object):
 			out = []
 			last = 0
 			for v in value:
-				out.append(v - last)
+				try:
+					out.append(v - last)
+				except TypeError:
+					print(v,last, type(v), type(last))
+					import pdb
+					pdb.set_trace()
+					print(v,last, type(v), type(last))
 				last = v
 			data = []
 			for num in out:
@@ -1958,7 +1964,7 @@ class DictCompiler(object):
 		for blendList in deltaList:
 			relValueList.extend(blendList)
 		
-		out = map(encodeNumber, relValueList)
+		out = [encodeNumber(val) for val in relValueList]
 		out.append(encodeNumber(numValues))
 		out.append(bytechr(blendOp))
 		return out

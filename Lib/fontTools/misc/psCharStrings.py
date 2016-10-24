@@ -177,7 +177,14 @@ CFF2Operators.extend(
 	(15,		'vsindex'),
 	(16,		'blend'),
 ])
-CFF2Operators.sort()
+
+def sortOps(entry):
+	opCode = entry[0]
+	if isinstance(opCode, int):
+		opCode = (opCode,)
+	return opCode
+
+CFF2Operators.sort(key=sortOps)
 
 def getIntEncoder(format):
 	if format == "cff":
