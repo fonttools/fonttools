@@ -1,0 +1,445 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="OTTO" ttLibVersion="3.1">
+
+  <GlyphOrder>
+    <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
+    <GlyphID id="0" name=".notdef"/>
+    <GlyphID id="1" name="dollar"/>
+    <GlyphID id="2" name="A"/>
+  </GlyphOrder>
+
+  <maxp>
+    <tableVersion value="0x5000"/>
+    <numGlyphs value="3"/>
+  </maxp>
+
+  <name>
+    <namerecord nameID="0" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Copyright \a9 2016 by Unicode Inc.
+    </namerecord>
+    <namerecord nameID="1" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      CFF2 Test
+    </namerecord>
+    <namerecord nameID="2" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Regular
+    </namerecord>
+    <namerecord nameID="3" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      1.016;ADBE;CFF2Test2;ADOBE
+    </namerecord>
+    <namerecord nameID="4" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      CFF2 Test
+    </namerecord>
+    <namerecord nameID="5" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Version 1.016;PS 1.0;hotconv 16.6.51;makeotf.lib2.5.65220 DEVELOPMENT
+    </namerecord>
+    <namerecord nameID="6" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      CFF2Test2
+    </namerecord>
+    <namerecord nameID="9" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Frank Grießhammer
+    </namerecord>
+    <namerecord nameID="14" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      http://scripts.sil.org/OFL
+    </namerecord>
+    <namerecord nameID="0" platformID="3" platEncID="1" langID="0x409">
+      Copyright \00a9 2016 by Unicode Inc.
+    </namerecord>
+    <namerecord nameID="1" platformID="3" platEncID="1" langID="0x409">
+      CFF2 Test
+    </namerecord>
+    <namerecord nameID="2" platformID="3" platEncID="1" langID="0x409">
+      Regular
+    </namerecord>
+    <namerecord nameID="3" platformID="3" platEncID="1" langID="0x409">
+      1.016;ADBE;CFF2Test2;ADOBE
+    </namerecord>
+    <namerecord nameID="4" platformID="3" platEncID="1" langID="0x409">
+      CFF2 Test
+    </namerecord>
+    <namerecord nameID="5" platformID="3" platEncID="1" langID="0x409">
+      Version 1.016;PS 1.0;hotconv 16.6.51;makeotf.lib2.5.65220 DEVELOPMENT
+    </namerecord>
+    <namerecord nameID="6" platformID="3" platEncID="1" langID="0x409">
+      CFF2Test2
+    </namerecord>
+    <namerecord nameID="9" platformID="3" platEncID="1" langID="0x409">
+      Frank Grießhammer
+    </namerecord>
+    <namerecord nameID="14" platformID="3" platEncID="1" langID="0x409">
+      http://scripts.sil.org/OFL
+    </namerecord>
+    <namerecord nameID="256" platformID="3" platEncID="1" langID="0x409">
+      Weight
+    </namerecord>
+    <namerecord nameID="257" platformID="3" platEncID="1" langID="0x409">
+      ExtraLight
+    </namerecord>
+    <namerecord nameID="258" platformID="3" platEncID="1" langID="0x409">
+      SourceSerifPro-ExtraLight
+    </namerecord>
+    <namerecord nameID="259" platformID="3" platEncID="1" langID="0x409">
+      Light
+    </namerecord>
+    <namerecord nameID="260" platformID="3" platEncID="1" langID="0x409">
+      SourceSerifPro-Light
+    </namerecord>
+    <namerecord nameID="261" platformID="3" platEncID="1" langID="0x409">
+      Regular
+    </namerecord>
+    <namerecord nameID="262" platformID="3" platEncID="1" langID="0x409">
+      SourceSerifPro-Regular
+    </namerecord>
+    <namerecord nameID="263" platformID="3" platEncID="1" langID="0x409">
+      Semibold
+    </namerecord>
+    <namerecord nameID="264" platformID="3" platEncID="1" langID="0x409">
+      SourceSerifPro-Semibold
+    </namerecord>
+    <namerecord nameID="265" platformID="3" platEncID="1" langID="0x409">
+      Bold
+    </namerecord>
+    <namerecord nameID="266" platformID="3" platEncID="1" langID="0x409">
+      SourceSerifPro-Bold
+    </namerecord>
+    <namerecord nameID="267" platformID="3" platEncID="1" langID="0x409">
+      Black
+    </namerecord>
+    <namerecord nameID="268" platformID="3" platEncID="1" langID="0x409">
+      SourceSerifPro-Black
+    </namerecord>
+  </name>
+
+  <post>
+    <formatType value="2.0"/>
+    <italicAngle value="0.0"/>
+    <underlinePosition value="-75"/>
+    <underlineThickness value="50"/>
+    <isFixedPitch value="0"/>
+    <minMemType42 value="0"/>
+    <maxMemType42 value="0"/>
+    <minMemType1 value="0"/>
+    <maxMemType1 value="0"/>
+    <psNames>
+      <!-- This file uses unique glyph names based on the information
+           found in the 'post' table. Since these names might not be unique,
+           we have to invent artificial names in case of clashes. In order to
+           be able to retain the original information, we need a name to
+           ps name mapping for those cases where they differ. That's what
+           you see below.
+            -->
+    </psNames>
+    <extraNames>
+      <!-- following are the name that are not taken from the standard Mac glyph order -->
+    </extraNames>
+  </post>
+
+  <CFF2>
+    <major value="2"/>
+    <minor value="0"/>
+    <CFFFont name="CFF2Font">
+      <FontMatrix value="0.001 0 0 0.001 0 0"/>
+      <FDArray>
+        <FontDict index="0">
+          <FontMatrix value="0.001 0 0 0.001 0 0"/>
+          <Private>
+            <BlueValues>
+                <blend value="-20 -20 -20"/>
+                <blend value="20 20 20"/>
+                <blend value="487 472 466"/>
+                <blend value="18 18 18"/>
+                <blend value="11 35 47"/>
+                <blend value="15 15 15"/>
+                <blend value="94 105 106"/>
+                <blend value="15 15 15"/>
+                <blend value="12 10 10"/>
+                <blend value="20 20 20"/>
+                <blend value="39 40 41"/>
+                <blend value="20 20 20"/>
+            </BlueValues>
+            <OtherBlues>
+                <blend value="-232 -250 -255"/>
+                <blend value="10 10 10"/>
+            </OtherBlues>
+            <FamilyBlues value="-20 20 473 18 34 15 104 15 10 20 40 20"/>
+            <FamilyOtherBlues value="-249 10"/>
+            <BlueScale value="0.0375"/>
+            <BlueShift value="7"/>
+            <BlueFuzz value="0"/>
+            <StdHW>
+                <blend value="74 55 26"/>
+            </StdHW>
+            <StdVW>
+                <blend value="190 80 28"/>
+            </StdVW>
+            <StemSnapH>
+                <blend value="60 40 20"/>
+                <blend value="14 15 6"/>
+            </StemSnapH>
+            <StemSnapV>
+                <blend value="190 80 28"/>
+                <blend value="10 10 4"/>
+            </StemSnapV>
+          </Private>
+        </FontDict>
+      </FDArray>
+      <CharStrings>
+        <CharString name=".notdef">
+          80 0 rmoveto
+          80 -20 -55 1 blend
+          0 rlineto
+          400 652 20 55 18 25 2 blend
+          rlineto
+          -80 20 55 1 blend
+          0 rlineto
+          -400 -652 -20 -55 -18 -25 2 blend
+          rlineto
+          480 0 rmoveto
+          -400 652 -20 -55 18 25 2 blend
+          rlineto
+          -80 20 55 1 blend
+          0 rlineto
+          400 -652 20 55 -18 -25 2 blend
+          rlineto
+          80 -20 -55 1 blend
+          0 rlineto
+          -410 60 -10 -45 -10 -38 2 blend
+          rmoveto
+          0 532 38 101 1 blend
+          rlineto
+          340 20 90 1 blend
+          0 rlineto
+          0 -532 -38 -101 1 blend
+          rlineto
+          -340 -20 -90 1 blend
+          0 rlineto
+          -70 -60 10 45 10 38 2 blend
+          rmoveto
+          480 0 rlineto
+          0 652 18 25 1 blend
+          rlineto
+          -480 0 rlineto
+          0 -652 -18 -25 1 blend
+          rlineto
+        </CharString>
+        <CharString name="A">
+          450 71 59 73 -16 -45 2 blend
+          rmoveto
+          -108 -15 -18 -12 0 9 2 blend
+          rlineto
+          0 -56 16 36 1 blend
+          rlineto
+          323 -53 -75 1 blend
+          0 rlineto
+          0 56 -16 -36 1 blend
+          rlineto
+          -130 15 6 16 0 -9 2 blend
+          rlineto
+          -85 65 71 1 blend
+          0 rlineto
+          -336 3 -68 -88 -3 -3 2 blend
+          rmoveto
+          -104 -15 4 17 0 9 2 blend
+          rlineto
+          0 -59 19 39 1 blend
+          rlineto
+          210 20 -12 1 blend
+          0 rlineto
+          0 59 -19 -39 1 blend
+          rlineto
+          -89 15 -21 -8 0 -9 2 blend
+          rlineto
+          -17 -3 3 1 blend
+          0 rlineto
+          366 106 1 3 58 115 2 blend
+          rmoveto
+          -25 63 9 17 -17 -43 2 blend
+          rlineto
+          -270 0 -8 1 blend
+          0 rlineto
+          -17 -63 1 8 17 43 2 blend
+          rlineto
+          312 -10 -17 1 blend
+          0 rlineto
+          -191 472 22 30 -21 -42 2 blend
+          rmoveto
+          -224 -652 -8 2 -18 -25 2 blend
+          rlineto
+          64 -17 -37 1 blend
+          0 rlineto
+          186 583 18 25 11 77 2 blend
+          rlineto
+          -43 -70 20 26 70 60 2 blend
+          rlineto
+          159 -513 42 57 -81 -137 2 blend
+          rlineto
+          201 -108 -167 1 blend
+          0 rlineto
+          -223 652 -7 -6 18 25 2 blend
+          rlineto
+          -120 60 100 1 blend
+          0 rlineto
+        </CharString>
+        <CharString name="dollar">
+          260 35 -12 -15 -2 -30 2 blend
+          rmoveto
+          -65 26 0 1 blend
+          0 -28 11 -49 24 -17 -11 -6 4 3 3 -6 26 4 blend
+          rrcurveto
+          78 -55 -25 -42 19 7 2 blend
+          rlineto
+          -8 85 -9 -20 -9 15 2 blend
+          rlineto
+          -5 52 -22 20 -43 -7 -1 1 -37 0 12 -7 -15 19 32 5 blend
+          0 rrcurveto
+          -26 4 12 1 blend
+          0 -27 -14 -14 -38 13 19 3 7 5 13 18 24 4 blend
+          rrcurveto
+          0 -90 71 -50 139 4 24 3 5 10 -10 -9 -1 -32 -32 5 blend
+          0 rrcurveto
+          163 -27 -72 1 blend
+          0 99 88 -17 -9 -11 -34 2 blend
+          0 108 0 4 1 blend
+          rrcurveto
+          0 107 -56 54 -138 56 -25 -37 15 30 11 12 3 4 -9 1 5 blend
+          rrcurveto
+          -32 13 -6 13 0 -5 2 blend
+          rlineto
+          -63 25 -30 18 -8 -30 -2 14 -10 -12 17 31 4 blend
+          0 48 16 20 1 blend
+          rrcurveto
+          0 63 43 25 61 12 28 14 17 12 23 13 27 4 blend
+          0 rrcurveto
+          42 -12 14 1 blend
+          0 27 -4 52 -24 9 8 -1 -10 -10 -8 7 -26 4 blend
+          rrcurveto
+          -85 47 33 47 -11 0 2 blend
+          rlineto
+          10 -67 7 18 -9 -33 2 blend
+          rlineto
+          11 -75 37 -14 39 1 -5 23 60 -12 -27 0 9 -17 -28 5 blend
+          0 rrcurveto
+          26 -7 -12 1 blend
+          0 29 15 5 41 -12 -21 -5 -8 3 -4 -20 -27 4 blend
+          rrcurveto
+          0 84 -76 52 -129 -6 -24 2 4 -4 9 8 -4 28 45 5 blend
+          0 rrcurveto
+          -158 43 66 1 blend
+          0 -85 -80 2 3 0 29 2 blend
+          0 -103 1 -5 1 blend
+          rrcurveto
+          0 -105 64 -55 117 -49 5 25 -2 -19 1 2 -12 -25 12 7 5 blend
+          rrcurveto
+          31 -13 6 6 0 -4 2 blend
+          rlineto
+          72 -30 28 -21 13 42 0 -22 8 -2 -9 -25 4 blend
+          0 -63 0 -2 1 blend
+          rrcurveto
+          0 -49 -39 -37 -66 -26 -44 -14 -26 -6 -18 -16 -24 4 blend
+          0 rrcurveto
+          65 272 -32 -47 10 46 2 blend
+          rmoveto
+          0 424 11 15 1 blend
+          rlineto
+          -71 31 49 1 blend
+          0 rlineto
+          0 -410 -11 -15 1 blend
+          rlineto
+          71 -31 -49 1 blend
+          -14 rlineto
+          -79 -422 34 59 -8 -16 2 blend
+          rmoveto
+          71 -31 -49 1 blend
+          0 rlineto
+          0 422 8 16 1 blend
+          rlineto
+          -71 31 49 1 blend
+          14 rlineto
+          0 -436 -8 -16 1 blend
+          rlineto
+        </CharString>
+      </CharStrings>
+      <VarStore Format="1">
+        <Format value="1"/>
+        <VarRegionList>
+          <!-- RegionAxisCount=1 -->
+          <!-- RegionCount=2 -->
+          <Region index="0">
+            <VarRegionAxis index="0">
+              <StartCoord value="-1.0"/>
+              <PeakCoord value="-0.5"/>
+              <EndCoord value="0.0"/>
+            </VarRegionAxis>
+          </Region>
+          <Region index="1">
+            <VarRegionAxis index="0">
+              <StartCoord value="-1.0"/>
+              <PeakCoord value="-1.0"/>
+              <EndCoord value="-0.5"/>
+            </VarRegionAxis>
+          </Region>
+        </VarRegionList>
+        <!-- VarDataCount=1 -->
+        <VarData index="0">
+          <!-- ItemCount=0 -->
+          <NumShorts value="0"/>
+          <!-- VarRegionCount=2 -->
+          <VarRegionIndex index="0" value="0"/>
+          <VarRegionIndex index="1" value="1"/>
+        </VarData>
+      </VarStore>
+    </CFFFont>
+
+    <GlobalSubrs>
+      <!-- The 'index' attribute is only for humans; it is ignored when parsed. -->
+    </GlobalSubrs>
+  </CFF2>
+
+  <fvar>
+
+    <!-- Weight -->
+    <Axis>
+      <AxisTag>wght</AxisTag>
+      <MinValue>100.0</MinValue>
+      <DefaultValue>1000.0</DefaultValue>
+      <MaxValue>1000.0</MaxValue>
+      <AxisNameID>256</AxisNameID>
+    </Axis>
+
+    <!-- ExtraLight -->
+    <!-- PostScript: SourceSerifPro-ExtraLight -->
+    <NamedInstance postscriptNameID="258" subfamilyNameID="257">
+      <coord axis="wght" value="100.0"/>
+    </NamedInstance>
+
+    <!-- Light -->
+    <!-- PostScript: SourceSerifPro-Light -->
+    <NamedInstance postscriptNameID="260" subfamilyNameID="259">
+      <coord axis="wght" value="284.0"/>
+    </NamedInstance>
+
+    <!-- Regular -->
+    <!-- PostScript: SourceSerifPro-Regular -->
+    <NamedInstance postscriptNameID="262" subfamilyNameID="261">
+      <coord axis="wght" value="550.0"/>
+    </NamedInstance>
+
+    <!-- Semibold -->
+    <!-- PostScript: SourceSerifPro-Semibold -->
+    <NamedInstance postscriptNameID="264" subfamilyNameID="263">
+      <coord axis="wght" value="715.0"/>
+    </NamedInstance>
+
+    <!-- Bold -->
+    <!-- PostScript: SourceSerifPro-Bold -->
+    <NamedInstance postscriptNameID="266" subfamilyNameID="265">
+      <coord axis="wght" value="875.0"/>
+    </NamedInstance>
+
+    <!-- Black -->
+    <!-- PostScript: SourceSerifPro-Black -->
+    <NamedInstance postscriptNameID="268" subfamilyNameID="267">
+      <coord axis="wght" value="1000.0"/>
+    </NamedInstance>
+  </fvar>
+
+</ttFont>
