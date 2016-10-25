@@ -1201,7 +1201,7 @@ class DictDecompiler(ByteCodeBase):
 		self.dict = {}
 
 	def getDict(self):
-		#assert len(self.stack) == 0, "non-empty stack"
+		assert len(self.stack) == 0, "non-empty stack"
 		return self.dict
 
 	def decompile(self, data):
@@ -1262,31 +1262,34 @@ class DictDecompiler(ByteCodeBase):
 	def arg_array(self, name):
 		return self.popall()
 	def arg_blendList(self, name):
-		# The last item on the stack is the number of return values,numValues.
-		
+		# The last item on the stack is the number of return values, aka numValues.
 		# before that we have [numValues: args from first master]
 		# then numValues blend lists, where each blend list is numMasters -1
-		# Total number of values is numValues + (numValues * (numMasters -1)), aka numValues * numMasters.
-		# The number of masters is len(stack) -1)/numReturnValues
+		# Total number of values is numValues + (numValues * (numMasters -1)), == numValues * numMasters.
 		# reformat list to be numReturnValues tuples, each tuple with nMaster values
 		numReturnValues = self.pop()
 		args = self.popall()
 		numArgs = len(args)
-		numMasters = int(numArgs/numReturnValues)
+		numMasters = self.parent.getNumRegions() # only a PrivateDict has blended ops.
 		value = [None]*numReturnValues
 		numDeltas = numMasters-1
 		i = 0
+		prevVal = 0
+		prevValueList = [0]*numMasters
 		while i < numReturnValues:
-			blendList = [args[i]]*numMasters
+			newVal = args[i] + prevVal
+			blendList = [newVal]*numMasters
+			prevVal = newVal
 			value[i] = blendList
 			j = 1
 			while j < numMasters:
 				masterOffset = numReturnValues + (i* numDeltas)
 				mi = masterOffset +(j-1)
-				blendList[j] += args[mi]
+				delta = args[i] + args[mi]
+				blendList[j]= delta + prevValueList[j]
 				j += 1
+			prevValueList = blendList
 			i += 1
-		
 		return value
 		
 	def arg_delta(self, name):

@@ -1842,6 +1842,10 @@ class PrivateDictDecompiler(psCharStrings.DictDecompiler):
 class PrivateDict2Decompiler(psCharStrings.DictDecompiler):
 	operators = buildOperatorDict(privateDictOperators2)
 
+	def __init__(self, strings, parent):
+		self.parent = parent
+		super(PrivateDict2Decompiler, self).__init__(strings)
+
 class DictCompiler(object):
 
 	def __init__(self, dictObj, strings, parent):
@@ -1925,13 +1929,7 @@ class DictCompiler(object):
 			out = []
 			last = 0
 			for v in value:
-				try:
-					out.append(v - last)
-				except TypeError:
-					print(v,last, type(v), type(last))
-					import pdb
-					pdb.set_trace()
-					print(v,last, type(v), type(last))
+				out.append(v - last)
 				last = v
 			data = []
 			for num in out:
@@ -1945,25 +1943,26 @@ class DictCompiler(object):
 		# We first convert these to relative values from the previous entry.
 		numMasters = len(value[0])
 		numValues = len(value)
-		currentList = numMasters*[0]
 		firstList = [0]*numValues
 		deltaList = [None]*(numValues)
 		i = 0
+		prevValList = numMasters*[0]
 		while i < numValues:
 			masterValList =  value[i]
-			firstVal = firstList[i] = masterValList[0]
+			firstVal = firstList[i] = masterValList[0] - prevValList[0]
 			j = 1
 			deltaEntry = (numMasters-1)*[0]
 			while j < numMasters:
-				deltaEntry[j-1] = masterValList[j] -firstVal 
+				masterValDelta = masterValList[j] - prevValList[j]
+				deltaEntry[j-1] = masterValDelta - firstVal  
 				j += 1
 			deltaList[i] = deltaEntry
 			i +=1
+			prevValList = masterValList
 				
 		relValueList = firstList
 		for blendList in deltaList:
 			relValueList.extend(blendList)
-		
 		out = [encodeNumber(val) for val in relValueList]
 		out.append(encodeNumber(numValues))
 		out.append(bytechr(blendOp))
@@ -2254,6 +2253,13 @@ class PrivateDict2(PrivateDict):
 				vi = 0
 		numRegions = self.vstore.getNumRegions(vi)
 		return numRegions
+
+	def decompile(self, data):
+		log.log(DEBUG, "    length %s is %d", self.__class__.__name__, len(data))
+		dec = self.decompilerClass(self.strings, self)
+		dec.decompile(data)
+		self.rawDict = dec.getDict()
+		self.postDecompile()
 
 class IndexedStrings(object):
 

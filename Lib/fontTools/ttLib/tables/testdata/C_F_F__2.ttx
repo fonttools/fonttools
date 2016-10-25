@@ -144,40 +144,40 @@
           <Private>
             <BlueValues>
                 <blend value="-20 -20 -20"/>
-                <blend value="20 20 20"/>
-                <blend value="487 472 466"/>
-                <blend value="18 18 18"/>
-                <blend value="11 35 47"/>
-                <blend value="15 15 15"/>
-                <blend value="94 105 106"/>
-                <blend value="15 15 15"/>
-                <blend value="12 10 10"/>
-                <blend value="20 20 20"/>
-                <blend value="39 40 41"/>
-                <blend value="20 20 20"/>
+                <blend value="0 0 0"/>
+                <blend value="472 466 487"/>
+                <blend value="490 484 505"/>
+                <blend value="525 531 516"/>
+                <blend value="540 546 531"/>
+                <blend value="645 652 625"/>
+                <blend value="660 667 640"/>
+                <blend value="670 677 652"/>
+                <blend value="690 697 672"/>
+                <blend value="730 738 711"/>
+                <blend value="750 758 731"/>
             </BlueValues>
             <OtherBlues>
-                <blend value="-232 -250 -255"/>
-                <blend value="10 10 10"/>
+                <blend value="-250 -255 -232"/>
+                <blend value="-240 -245 -222"/>
             </OtherBlues>
-            <FamilyBlues value="-20 20 473 18 34 15 104 15 10 20 40 20"/>
-            <FamilyOtherBlues value="-249 10"/>
+            <FamilyBlues value="-20 0 473 491 525 540 644 659 669 689 729 749"/>
+            <FamilyOtherBlues value="-249 -239"/>
             <BlueScale value="0.0375"/>
             <BlueShift value="7"/>
             <BlueFuzz value="0"/>
             <StdHW>
-                <blend value="74 55 26"/>
+                <blend value="55 26 74"/>
             </StdHW>
             <StdVW>
-                <blend value="190 80 28"/>
+                <blend value="80 28 190"/>
             </StdVW>
             <StemSnapH>
-                <blend value="60 40 20"/>
-                <blend value="14 15 6"/>
+                <blend value="40 20 60"/>
+                <blend value="55 26 74"/>
             </StemSnapH>
             <StemSnapV>
-                <blend value="190 80 28"/>
-                <blend value="10 10 4"/>
+                <blend value="80 28 190"/>
+                <blend value="90 32 200"/>
             </StemSnapV>
           </Private>
         </FontDict>

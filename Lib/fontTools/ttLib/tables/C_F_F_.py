@@ -3,6 +3,7 @@ from fontTools.misc.py23 import *
 from fontTools import cffLib
 from . import DefaultTable
 
+
 class table_C_F_F_(DefaultTable.DefaultTable):
 
 	def __init__(self, tag=None):
