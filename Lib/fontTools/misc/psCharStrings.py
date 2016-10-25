@@ -1270,7 +1270,8 @@ class DictDecompiler(ByteCodeBase):
 		numReturnValues = self.pop()
 		args = self.popall()
 		numArgs = len(args)
-		numMasters = self.parent.getNumRegions() # only a PrivateDict has blended ops.
+		vsindex = self.dict.get('vsindex', 0)
+		numMasters = self.parent.getNumRegions(vsindex) # only a PrivateDict has blended ops.
 		value = [None]*numReturnValues
 		numDeltas = numMasters-1
 		i = 0

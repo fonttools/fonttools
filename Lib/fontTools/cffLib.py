@@ -773,7 +773,7 @@ class	VarStoreData(object):
 	def getNumRegions(self, vsIndex):
 		varData = self.otVarStore.VarData[vsIndex]
 		numRegions = varData.VarRegionCount +1 # The VarData VarRegionCount does not include the defautl region; the blend arg list does.
-		return 3
+		return numRegions
 		
 
 class FDSelect:
@@ -1787,7 +1787,7 @@ privateDictOperators = [
 
 privateDictOperators2 = [
 #	opcode		name			argument type	default	converter
-	(22,	"vsindex",		'number',	None,	None), # This is for reading to/from XML: it not written to CFF.
+	(22,	"vsindex",		'number',	None,	None),
 	(blendOp,	kBlendDictOpName,		'blendList',	None,	None), # This is for reading to/from XML: it not written to CFF.
 	(6,		'BlueValues',		'delta',	None,	None),
 	(7,		'OtherBlues',		'delta',	None,	None),
