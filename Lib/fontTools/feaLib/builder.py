@@ -1000,7 +1000,7 @@ class Builder(object):
                     # 'parser' : self.parser,
                     'builder' : self
                 }
-            exec content in self.python
+            exec (content, self.python)
 
 # Methods to provide capabilities to anon py blocks on builder
     def parse_string(self, data) :
