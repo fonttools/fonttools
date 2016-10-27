@@ -36,7 +36,6 @@ class PerimeterPen(BasePen):
 		# Analytical solution to the length of a quadratic bezier.
 		# I'll explain how I arrived at this later.
 		p0 = self._getCurrentPoint()
-		Len = 0
 		d0 = _diff(p0, p1)
 		d1 = _diff(p1, p2)
 		d = _diff(d0, d1)
