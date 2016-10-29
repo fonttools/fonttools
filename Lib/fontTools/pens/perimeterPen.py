@@ -9,10 +9,8 @@ import math
 
 def _distance(p0, p1):
 	return math.hypot(p0[0] - p1[0], p0[1] - p1[1])
-def _diff(a, b):
-	return (b[0]-a[0], b[1]-a[1])
-def _dot(a, b):
-	return a[0]*b[0] + a[1]*b[1]
+def _dot(v1, v2):
+    return (v1 * v2.conjugate()).real
 def _intSecAtan(x):
 	# In : sympy.integrate(sp.sec(sp.atan(x)))
 	# Out: x*sqrt(x**2 + 1)/2 + asinh(x)/2
@@ -36,11 +34,12 @@ class PerimeterPen(BasePen):
 		# Analytical solution to the length of a quadratic bezier.
 		# I'll explain how I arrived at this later.
 		p0 = self._getCurrentPoint()
-		d0 = _diff(p0, p1)
-		d1 = _diff(p1, p2)
-		d = _diff(d0, d1)
-		n = (d[1],-d[0])
-		scale = math.hypot(n[0],n[1])
+		_p1 = complex(*p1)
+		d0 = _p1 - complex(*p0)
+		d1 = complex(*p2) - _p1
+		d = d1 - d0
+		n = d * 1j
+		scale = abs(n)
 		if scale == 0.:
 			self._lineTo(p2)
 			return
