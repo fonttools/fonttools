@@ -148,7 +148,9 @@ def test(glyphsets, glyphs=None):
 
 			# Check each master against the next one in the list.
 			for m0,m1 in zip(allVectors[:-1],allVectors[1:]):
-				assert len(m0) == len(m1)
+				if len(m0) != len(m1):
+					print('Glyphs not compatible!!!!!', glyph_name)
+					continue
 				if not m0:
 					continue
 				costs = [[_vlen(_vdiff(v0,v1)) for v1 in m1] for v0 in m0]
