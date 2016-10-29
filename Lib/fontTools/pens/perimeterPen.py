@@ -16,6 +16,12 @@ def _intSecAtan(x):
 	# Out: x*sqrt(x**2 + 1)/2 + asinh(x)/2
 	return x * math.sqrt(x**2 + 1)/2 + math.asinh(x)/2
 
+def _split_cubic_into_two(p0, p1, p2, p3):
+    mid = (p0 + 3 * (p1 + p2) + p3) * .125
+    deriv3 = (p3 + p2 - p1 - p0) * .125
+    return ((p0, (p0 + p1) * .5, mid - deriv3, mid),
+            (mid, mid + deriv3, (p2 + p3) * .5, p3))
+
 class PerimeterPen(BasePen):
 
 	def __init__(self, glyphset=None, tolerance=0.005):
@@ -55,17 +61,18 @@ class PerimeterPen(BasePen):
 		self.value += Len
 
 	def _addCubic(self, p0, p1, p2, p3):
-		arch = _distance(p0, p3)
-		box = _distance(p0, p1) + _distance(p1, p2) + _distance(p2, p3)
+		arch = abs(p0-p3)
+		box = abs(p0-p1) + abs(p1-p2) + abs(p2-p3)
 		if arch * self._mult >= box:
 			self.value += (arch + box) * .5
 		else:
-			for c in splitCubicAtT(p0,p1,p2,p3,.2,.4,.6,.8):
-				self._addCubic(*c)
+			one,two = _split_cubic_into_two(p0,p1,p2,p3)
+			self._addCubic(*one)
+			self._addCubic(*two)
 
 	def _curveToOne(self, p1, p2, p3):
 		p0 = self._getCurrentPoint()
-		self._addCubic(p0, p1, p2, p3)
+		self._addCubic(complex(*p0), complex(*p1), complex(*p2), complex(*p3))
 
 	def _closePath(self):
 		p0 = self._getCurrentPoint()
