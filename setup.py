@@ -68,6 +68,7 @@ setup(
 	],
 	entry_points={
 		'console_scripts': [
+			"fonttools = fontTools.__main__:main",
 			"ttx = fontTools.ttx:main",
 			"pyftsubset = fontTools.subset:main",
 			"pyftmerge = fontTools.merge:main",
