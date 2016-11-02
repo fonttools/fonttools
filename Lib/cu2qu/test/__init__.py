@@ -3,9 +3,9 @@ try:
     from ufoLib.glifLib import GlyphSet
 except ImportError:
     from robofab.glifLib import GlyphSet
+import pkg_resources
 
-DATADIR = os.path.join(
-    os.path.abspath(os.path.dirname(os.path.realpath(__file__))), 'data')
+DATADIR = pkg_resources.resource_filename('cu2qu.test', 'data')
 CUBIC_GLYPHS = GlyphSet(os.path.join(DATADIR, 'cubic'))
 QUAD_GLYPHS = GlyphSet(os.path.join(DATADIR, 'quadratic'))
 
