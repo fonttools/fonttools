@@ -32,11 +32,8 @@ install:
 script:
   - ./.travis/run.sh
 
-after_success:
-  - ./.travis/after_success.sh
-
 before_deploy:
-  - if [[ $BUILD_DIST == true ]]; then export ZIP=$(ls dist/fonttools*.zip); export WHL=$(ls dist/fonttools*.whl); fi
+  - ./.travis/before_deploy.sh
 
 notifications:
   irc: "irc.freenode.org##fonts"
@@ -47,10 +44,9 @@ deploy:
   - provider: releases
     api_key:
       secure: KEcWhJxMcnKay7wmWJCpg2W5GWHTQ+LaRbqGM11IKGcQuEOFxWuG7W1xjGpVdKPj/MQ+cG0b9hGUFpls1hwseOA1HANMv4xjCgYkuvT1OdpX/KOcZ7gfe/qaovzVxHyP9xwohnHSJMb790t37fmDfFUSROx3iEexIX09LLoDjO8=
-    file:
-      - "${ZIP}"
-      - "${WHL}"
     skip_cleanup: true
+    file_glob: true
+    file: "dist/*"
     on:
       tags: true
       repo: fonttools/fonttools
