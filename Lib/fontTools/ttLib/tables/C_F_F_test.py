@@ -4,6 +4,7 @@ from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
 from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont, newTable
+import re
 import os
 import unittest
 
@@ -15,6 +16,10 @@ CFF_TTX = os.path.join(DATA_DIR, "C_F_F_.ttx")
 CFF_BIN = os.path.join(DATA_DIR, "C_F_F_.bin")
 
 
+def strip_ttLibVersion(string):
+    return re.sub(' ttLibVersion=".*"', '', string)
+
+
 class CFFTableTest(unittest.TestCase):
 
     @classmethod
@@ -22,7 +27,7 @@ class CFFTableTest(unittest.TestCase):
         with open(CFF_BIN, 'rb') as f:
             cls.cffData = f.read()
         with open(CFF_TTX, 'r') as f:
-            cls.cffXML = f.read().splitlines()
+            cls.cffXML = strip_ttLibVersion(f.read()).splitlines()
 
     def test_toXML(self):
         font = TTFont(sfntVersion='OTTO')
@@ -30,7 +35,7 @@ class CFFTableTest(unittest.TestCase):
         cffTable.decompile(self.cffData, font)
         out = UnicodeIO()
         font.saveXML(out)
-        cffXML = out.getvalue().splitlines()
+        cffXML = strip_ttLibVersion(out.getvalue()).splitlines()
         self.assertEqual(cffXML, self.cffXML)
 
     def test_fromXML(self):
