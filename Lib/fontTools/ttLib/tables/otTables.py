@@ -788,7 +788,31 @@ def splitPairPos(oldSubTable, newSubTable, overflowRecord):
 	st = oldSubTable
 	ok = False
 	newSubTable.Format = oldSubTable.Format
-	if oldSubTable.Format == 2 and len(oldSubTable.Class1Record) > 1:
+	if oldSubTable.Format == 1 and len(oldSubTable.PairSet) > 1:
+		for name in 'ValueFormat1', 'ValueFormat2':
+			setattr(newSubTable, name, getattr(oldSubTable, name))
+
+		# Move top half of coverage to new subtable
+
+		newSubTable.Coverage = oldSubTable.Coverage.__class__()
+
+		coverage = oldSubTable.Coverage.glyphs
+		records = oldSubTable.PairSet
+
+		oldCount = len(oldSubTable.PairSet) // 2
+
+		oldSubTable.Coverage.glyphs = coverage[:oldCount]
+		oldSubTable.PairSet = records[:oldCount]
+
+		newSubTable.Coverage.glyphs = coverage[oldCount:]
+		newSubTable.PairSet = records[oldCount:]
+
+		oldSubTable.PairSetCount = len(oldSubTable.PairSet)
+		newSubTable.PairSetCount = len(newSubTable.PairSet)
+
+		ok = True
+
+	elif oldSubTable.Format == 2 and len(oldSubTable.Class1Record) > 1:
 		if not hasattr(oldSubTable, 'Class2Count'):
 			oldSubTable.Class2Count = len(oldSubTable.Class1Record[0].Class2Record)
 		for name in 'Class2Count', 'ClassDef2', 'ValueFormat1', 'ValueFormat2':
