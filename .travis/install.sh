@@ -63,3 +63,9 @@ if [[ "${TOXENV}" != "jython" ]]; then
     source ~/.venv/bin/activate
     pip install -r dev-requirements.txt
 fi
+
+# Travis by default only clones a 'shallow' repository with --depth=50.
+# When building the distribution packages, we use git to determine the
+# package version string (via versioneer), hence we need to fetch the
+# whole repo, and not just the last 50 commits.
+git fetch --unshallow
