@@ -15,6 +15,7 @@
 - [hmtx/vmts] Read advance width/heights as unsigned short (uint16); automatically round float values to integers.
 - [ttLib/xmlWriter] add 'newlinestr=None' keyword argument to `TTFont.saveXML` for overriding os-specific line endings (passed on to `XMLWriter` instances).
 - [versioning] Use versioneer instead of setuptools_scm to dynamically load version info from a git checkout at import time.
+- [feaLib] Support backslash-prefixed glyph names.
 
 ## TTX/FontTools Version 3.1.2
 
