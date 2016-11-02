@@ -34,8 +34,12 @@
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <SingleSubst index="0">
-          <Substitution in="\glyphNameWithBackslash1" out="G"/>
-          <Substitution in="\glyphNameWithBackslash2" out="G"/>
+          <Substitution in="A" out="G"/>
+          <Substitution in="by" out="G"/>
+          <Substitution in="feature" out="G"/>
+          <Substitution in="lookup" out="G"/>
+          <Substitution in="sub" out="G"/>
+          <Substitution in="table" out="G"/>
         </SingleSubst>
       </Lookup>
     </LookupList>

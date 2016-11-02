@@ -1,4 +1,4 @@
-@group = [\glyphNameWithBackslash1 \glyphNameWithBackslash2];
+@group = [\A \sub \lookup \feature \by \table];
 
 feature liga {
     sub @group by G;
