@@ -109,20 +109,23 @@ def min_cost_perfect_bipartite_matching(G):
 		return matching, matching_cost
 
 
-def test(glyphsets, glyphs=None):
+def test(glyphsets, glyphs=None, names=None):
 
+	if names is None:
+		names = glyphsets
 	if glyphs is None:
 		glyphs = glyphsets[0].keys()
 
 	hist = []
 	for glyph_name in glyphs:
 		#print()
-		#print("glyph:", glyph_name, end='')
+		#print(glyph_name)
 
 		try:
 			allVectors = []
 			for glyphset in glyphsets:
 				#print('.', end='')
+				#print()
 				glyph = glyphset[glyph_name]
 
 				perContourPen = PerContourOrComponentPen(RecordingPen, glyphset=glyphset)
@@ -139,35 +142,36 @@ def test(glyphsets, glyphs=None):
 						int(abs(stats.Area) ** .5 * .5),
 						int(stats.MeanX),
 						int(stats.MeanY),
-						#int(stats.StdDevX * 2),
-						#int(stats.StdDevY * 2),
-						#int(stats.Covariance/(stats.StdDevX*stats.StdDevY)**.5),
+						int(stats.StdDevX * 2),
+						int(stats.StdDevY * 2),
+						int(stats.Covariance/(stats.StdDevX*stats.StdDevY)**.5),
 					)
 					contourVectors.append(vector)
 					#print(vector)
 
 			# Check each master against the next one in the list.
-			for m0,m1 in zip(allVectors[:-1],allVectors[1:]):
+			for i,(m0,m1) in enumerate(zip(allVectors[:-1],allVectors[1:])):
 				if len(m0) != len(m1):
-					print('Glyphs not compatible!!!!!', glyph_name)
+					print('%s: %s+%s: Glyphs not compatible!!!!!' % (glyph_name, names[i], names[i+1]))
 					continue
 				if not m0:
 					continue
 				costs = [[_vlen(_vdiff(v0,v1)) for v1 in m1] for v0 in m0]
 				matching, matching_cost = min_cost_perfect_bipartite_matching(costs)
 				if matching != list(range(len(m0))):
-					print('Glyph has wrong contour/component order', glyph_name, matching)#, m0, m1)
+					print('%s: %s+%s: Glyph has wrong contour/component order: %s' % (glyph_name, names[i], names[i+1], matching)) #, m0, m1)
 					break
 				upem = 2048
 				item_cost = int(round((matching_cost / len(m0) / len(m0[0])) ** .5 / upem * 100))
 				hist.append(item_cost)
 				threshold = 7
 				if item_cost >= threshold:
-					print('%s: Glyph has very high cost: %d%%' % (glyph_name, item_cost))
+					print('%s: %s+%s: Glyph has very high cost: %d%%' % (glyph_name, names[i], names[i+1], item_cost))
 
 
 		except ValueError as e:
-			print(' math error; skipping glyph', e)
+			print('%s: math error %s; skipping glyph' % (glyph_name, e))
+			#raise
 	#for x in hist:
 	#	print(x)
 
@@ -177,10 +181,15 @@ def main(args):
 	#glyphs = ['uni08DB', 'uniFD76']
 	#glyphs = ['uni08DE', 'uni0034']
 	#glyphs = ['uni08DE', 'uni0034', 'uni0751', 'uni0753', 'uni0754', 'uni08A4', 'uni08A4.fina', 'uni08A5.fina']
+
+	from os.path import basename
+	names = [basename(filename).rsplit('.', 1)[0] for filename in filenames]
+
 	from fontTools.ttLib import TTFont
 	fonts = [TTFont(filename) for filename in filenames]
+
 	glyphsets = [font.getGlyphSet() for font in fonts]
-	test(glyphsets, glyphs=glyphs)
+	test(glyphsets, glyphs=glyphs, names=names)
 
 if __name__ == '__main__':
 	import sys
