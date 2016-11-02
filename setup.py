@@ -22,7 +22,5 @@ setup(
     packages=['cu2qu', 'cu2qu.test'],
     package_dir={'': 'Lib'},
     test_suite="cu2qu.test",
-    package_data={
-        'cu2qu.test': ['data/*/*.glif', 'data/*/*.plist'],
-    },
+    include_package_data=True,
 )

@@ -18,10 +18,12 @@ from __future__ import print_function, division, absolute_import
 import collections
 import math
 import unittest
-import random
+import os
+import json
 
 from cu2qu import curve_to_quadratic, curves_to_quadratic
-from cu2qu.benchmark import generate_curve
+from cu2qu.test import DATADIR
+
 
 MAX_ERR = 5
 
@@ -31,9 +33,8 @@ class CurveToQuadraticTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """Do the curve conversion ahead of time, and run tests on results."""
-
-        random.seed(1)
-        curves = [generate_curve() for i in range(1000)]
+        with open(os.path.join(DATADIR, "curves.json"), "r") as fp:
+            curves = json.load(fp)
 
         cls.single_splines = [
             curve_to_quadratic(c, MAX_ERR) for c in curves]
