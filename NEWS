@@ -1,3 +1,8 @@
+## TTX/FontTools Version 3.2.1
+
+- [OS/2] fix checking `fsSelection` bits matching `head.macStyle` bits
+- [varLib] added `--build-HVAR` option to generate `HVAR` table for fonts with TrueType outlines. For `CFF2`, it is enabled by default.
+
 ## TTX/FontTools Version 3.2.0
 
 - [varLib] Improve support for OpenType 1.8 Variable Fonts:
