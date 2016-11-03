@@ -32,6 +32,7 @@ from fontTools.varLib import designspace, models, builder
 from fontTools.varLib.merger import merge_tables, Merger
 import warnings
 import os.path
+from argparse import ArgumentParser
 
 #
 # Creation routines
@@ -326,7 +327,7 @@ def _merge_OTL(font, model, master_fonts, axisTags, base_idx):
 	GDEF.VarStore = store
 
 
-def build(designspace_filename, master_finder=lambda s:s, axisMap=None):
+def build(designspace_filename, options, master_finder=lambda s:s, axisMap=None):
 	"""
 	Build variation font from a designspace file.
 
@@ -417,7 +418,7 @@ def build(designspace_filename, master_finder=lambda s:s, axisMap=None):
 	print("Building variations tables")
 	if 'glyf' in gx:
 		_add_gvar(gx, model, master_fonts)
-	if 'glyf' not in gx: # Because of https://github.com/fonttools/fonttools/issues/705
+	if options.buildHVAR or 'glyf' not in gx: # Because of https://github.com/fonttools/fonttools/issues/705
 		_add_HVAR(gx, model, master_fonts, axisTags)
 	_merge_OTL(gx, model, master_fonts, axisTags, base_idx)
 
@@ -426,15 +427,16 @@ def build(designspace_filename, master_finder=lambda s:s, axisMap=None):
 
 def main(args=None):
 
-	if args is None:
-		import sys
-		args = sys.argv[1:]
+	parser = ArgumentParser()
+	parser.add_argument('filenames', nargs='+')
+	parser.add_argument('--buildHVAR', action='store_true')
+	options = parser.parse_args(args)
 
-	(designspace_filename,) = args
+	(designspace_filename,) = options.filenames
 	finder = lambda s: s.replace('master_ufo', 'master_ttf_interpolatable').replace('.ufo', '.ttf')
 	outfile = os.path.splitext(designspace_filename)[0] + '-GX.ttf'
 
-	gx, model, master_ttfs = build(designspace_filename, finder)
+	gx, model, master_ttfs = build(designspace_filename, options, finder)
 
 	print("Saving variation font", outfile)
 	gx.save(outfile)
