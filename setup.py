@@ -13,14 +13,48 @@
 # limitations under the License.
 
 
-from setuptools import setup
+from setuptools import setup, find_packages
+import sys
 
+needs_pytest = {'pytest', 'test'}.intersection(sys.argv)
+pytest_runner = ['pytest_runner'] if needs_pytest else []
+needs_wheel = {'bdist_wheel'}.intersection(sys.argv)
+wheel = ['wheel'] if needs_wheel else []
+
+with open('README.rst', 'r') as f:
+    long_description = f.read()
 
 setup(
     name='cu2qu',
     version='1.0',
-    packages=['cu2qu', 'cu2qu.test'],
+    description='Cubic-to-quadratic bezier curve conversion',
+    author="James Godfrey-Kittle, Behdad Esfahbod",
+    author_email="jamesgk@google.com",
+    url="https://github.com/googlei18n",
+    license="Apache License, Version 2.0",
+    long_description=long_description,
+    packages=find_packages('Lib'),
     package_dir={'': 'Lib'},
-    test_suite="cu2qu.test",
     include_package_data=True,
+    setup_requires=pytest_runner + wheel,
+    tests_require=[
+        'pytest>=2.8',
+    ],
+    install_requires=[
+        "fonttools>=3.1.2",
+        "ufoLib>=2.0.0",
+    ],
+    classifiers=[
+        'Development Status :: 4 - Beta',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: MIT License',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 3',
+        'Topic :: Scientific/Engineering :: Mathematics',
+        'Topic :: Multimedia :: Graphics :: Graphics Conversion',
+        'Topic :: Multimedia :: Graphics :: Editors :: Vector-Based',
+        'Topic :: Software Development :: Libraries :: Python Modules',
+    ],
 )
