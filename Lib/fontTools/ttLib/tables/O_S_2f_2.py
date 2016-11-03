@@ -128,10 +128,10 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 		self.updateFirstAndLastCharIndex(ttFont)
 		panose = self.panose
 		head = ttFont["head"]
-		if self.fsSelection & 1 != head.macStyle & 1<<1:
+		if (self.fsSelection & 1) and not (head.macStyle & 1<<1):
 			log.warning("fsSelection bit 0 (italic) and "
 				"head table macStyle bit 1 (italic) should match")
-		if self.fsSelection & 1<<5 != head.macStyle & 1:
+		if (self.fsSelection & 1<<5) and not (head.macStyle & 1):
 			log.warning("fsSelection bit 5 (bold) and "
 				"head table macStyle bit 0 (bold) should match")
 		if (self.fsSelection & 1<<6) and (self.fsSelection & 1 + (1<<5)):
