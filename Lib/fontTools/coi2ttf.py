@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 """
-usage: roundtrip input [fontfile]
+usage: coi2ttf input [fontfile]
 
     input: a text file containing COI code for some font
     fontfile: original TTF font file for given COI code. If

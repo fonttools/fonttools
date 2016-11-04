@@ -21,7 +21,7 @@ from fontTools.ttLib.bytecodeContainer import BytecodeContainer, Program
 from fontTools.ttLib.instructions import statements, instructionConstructor, abstractExecute
 from fontTools.ttLib.instructions.instructionConstructor import constructInstructions
 from fontTools import analysis
-from fontTools import roundtrip
+from fontTools import coi2ttf
 from fontTools import compare
 
 def usage():
@@ -43,7 +43,7 @@ def load_font(font):
         tt.importXML(font, quiet=True)
     return tt
 
-def runAnalysis(ttx):
+def runTtx2Coi(ttx):
     filename = "%s.tmp" % ttx
     args = makeArgs("-pfziG", ttx)
     with captureOutput() as out:
@@ -57,13 +57,13 @@ def runAnalysis(ttx):
     text_file.close()
     return filename
 
-def runRoundtrip(coi_code):
+def runCoi2Ttx(coi_code):
     
     args = makeArgs(coi_code)
     output = ""
     with captureOutput() as out:
         try:
-            roundtrip.main(args)
+            coi2ttf.main(args)
             output = out.getOutput()
         except:
             output = out.getOutput()
@@ -116,8 +116,8 @@ def extractBytecode(font):
 def runTests(jobs, use_freetype=True):
 
     def set_up(job):
-        coi_code = runAnalysis(job)
-        roundtrip = runRoundtrip(coi_code)
+        coi_code = runTtx2Coi(job)
+        roundtrip = runCoi2Ttx(coi_code)
         bytecode = extractBytecode(job)
         return bytecode, roundtrip
 
@@ -168,12 +168,12 @@ def runTests(jobs, use_freetype=True):
         return passed
 
     for job in jobs:
-        bytecode, roundtrip = set_up(job)
+        toTtx, toCoi = set_up(job)
         if use_freetype:
-            passed = freetype_compare(job, bytecode, roundtrip)
+            passed = freetype_compare(job, toTtx, toCoi)
             print("{0}: {1}".format(job, "OK" if passed is True else "Failed"))
         else:
-            stack_code_compare(bytecode, roundtrip)
+            stack_code_compare(toTtx, toCoi)
 
 def main(args):
 
