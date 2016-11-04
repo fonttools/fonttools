@@ -36,6 +36,19 @@ __all__ = ['fonts_to_quadratic', 'font_to_quadratic']
 DEFAULT_MAX_ERR = 0.0025
 
 
+class IncompatibleGlyphsError(ValueError):
+
+    def __str__(self):
+        return ", ".join(set(repr(glyph.name) for glyph in self.args))
+
+
+class UnequalZipLengthsError(ValueError):
+
+    def __str__(self):
+        return ('Args to zip in cu2qu should have equal lengths: ' +
+                ' '.join(repr(a) for a in self.args))
+
+
 _zip = zip
 def zip(*args):
     """Ensure each argument to zip has the same length. Also make sure a list is
@@ -43,8 +56,7 @@ def zip(*args):
     """
 
     if len(set(len(a) for a in args)) != 1:
-        msg = 'Args to zip in cu2qu should have equal lengths: '
-        raise ValueError(msg + ' '.join(str(a) for a in args))
+        raise UnequalZipLengthsError(*args)
     return list(_zip(*args))
 
 
@@ -140,10 +152,14 @@ def _segments_to_quadratic(segments, max_err, stats):
 def _glyphs_to_quadratic(glyphs, max_err, reverse_direction, stats):
     """Do the actual conversion of a set of compatible glyphs, after arguments
     have been set up.
+
     Return True if the glyphs were modified, else return False.
     """
 
-    segments_by_location = zip(*[_get_segments(g) for g in glyphs])
+    try:
+        segments_by_location = zip(*[_get_segments(g) for g in glyphs])
+    except UnequalZipLengthsError:
+        raise IncompatibleGlyphsError(*glyphs)
     if not any(segments_by_location):
         return False
 
@@ -153,9 +169,8 @@ def _glyphs_to_quadratic(glyphs, max_err, reverse_direction, stats):
     new_segments_by_location = []
     for segments in segments_by_location:
         tag = segments[0][0]
-        assert all(s[0] == tag for s in segments[1:]), (
-            'Incompatible glyphs: ' + ", ".join(
-                set(repr(g.name) for g in glyphs)))
+        if not all(s[0] == tag for s in segments[1:]):
+            raise IncompatibleGlyphsError(*glyphs)
         if tag == 'curve':
             segments = _segments_to_quadratic(segments, max_err, stats)
             glyphs_modified = True
@@ -178,6 +193,8 @@ def glyphs_to_quadratic(
     glyph at a time may yield slightly more optimized results.
 
     Return True if glyphs were modified, else return False.
+
+    Raises IncompatibleGlyphsError if glyphs have non-interpolatable outlines.
     """
     if stats is None:
         stats = {}
@@ -205,6 +222,9 @@ def fonts_to_quadratic(
     font at a time may yield slightly more optimized results.
 
     Return True if fonts were modified, else return False.
+
+    Raises IncompatibleGlyphsError if same-named glyphs from different fonts
+    have non-interpolatable outlines.
     """
 
     if stats is None:
