@@ -7,12 +7,6 @@ class IdentifierGenerator(object):
     def generateIdentifier(self, tag, number):
         return '$' + tag + '_' + str(number)
 
-class DataFlowRegion(object):
-    def __init__(self):
-        self.condition = None
-        self.outRegion = []
-        self.inRegion = None
-
 identifierGenerator = IdentifierGenerator()
 class Environment(object):
     """Abstractly represents the global environment at a single point in time.
