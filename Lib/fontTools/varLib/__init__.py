@@ -382,6 +382,8 @@ def build(designspace_filename, master_finder=lambda s:s, axisMap=None, build_HV
 		default = master_locs[base_idx][tag]
 		lower = min(m[tag] for m in master_locs)
 		upper = max(m[tag] for m in master_locs)
+		if default == lower == upper:
+			continue
 		axes[tag] = (lower, default, upper)
 	print("Axes:")
 	pprint(axes)
