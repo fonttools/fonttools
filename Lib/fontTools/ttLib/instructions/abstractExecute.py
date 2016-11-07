@@ -41,6 +41,7 @@ class Environment(object):
         self.current_instruction = None
         self.current_instruction_intermediate = []
         self.keep_abstract = True
+        self.already_seen_jmpr_targets = {}
 
     def __repr__(self):
         stackVars = []
@@ -469,7 +470,7 @@ class Environment(object):
     def fetch_body_for_tag(self, tag):
         fpgm_prefix = "fpgm_"
         if tag.startswith(fpgm_prefix):
-            fn = int(tag[len(fpgm_prefix):len(tag)-1])
+            fn = int(tag[len(fpgm_prefix):len(tag)])
             return self.bytecodeContainer.function_table[fn].body
         else:
             return self.bytecodeContainer.tag_to_programs[self.tag].body
@@ -491,23 +492,23 @@ class Environment(object):
         if only_succ:
             self.current_instruction.successors = []
         if not target in self.current_instruction.successors:
-            self.current_instruction.successors.append(target)
+            self.already_seen_jmpr_targets.setdefault(self.tag, [])
+            if not target in self.already_seen_jmpr_targets[self.tag]:
+                self.current_instruction.successors.append(target)
+                self.already_seen_jmpr_targets[self.tag].append(target)
+            else:
+                return True
+        return False
 
     def exec_JMPR(self):
         arg = self.program_stack_pop().eval(False)
         assert not isinstance(arg, dataType.AbstractValue)
-        self.adjust_succ_for_relative_jump(arg, True)
-        # todo also emit JMPR etc
+        if self.adjust_succ_for_relative_jump(arg, True):
+            self.current_instruction_intermediate.append(IR.JmpStatement(arg))
     def exec_JROF(self):
-        e = self.program_stack_pop().eval(self.keep_abstract)
-        arg = self.program_stack_pop().eval(False)
-        assert not isinstance(arg, dataType.AbstractValue)
-        self.adjust_succ_for_relative_jump(arg, False)
+        pass
     def exec_JROT(self):
-        e = self.program_stack_pop().eval(self.keep_abstract)
-        arg = self.program_stack_pop().eval(False)
-        assert not isinstance(arg, dataType.AbstractValue)
-        self.adjust_succ_for_relative_jump(arg, False)
+        pass
 
     def exec_LT(self):
         self.binary_operation('LT')
@@ -939,9 +940,9 @@ class Executor(object):
         self.program = None
         self.pc = None
         self.maximum_stack_depth = 0
-        self.conditionBlock = None
         self.call_stack = []
         self.stored_environments = {}
+        self.breadcrumbs = []
         self.if_else = None
         # generated as a side effect:
         self.intermediateCodes = []
@@ -1017,7 +1018,7 @@ class Executor(object):
             succ = self.pc.successors[0]
         self.call_stack.append((callee, succ, self.intermediateCodes,
                                 self.environment.tag, copy.copy(self.environment.program_stack),
-                                self.stored_environments, self.if_else, repeats))
+                                self.stored_environments, self.breadcrumbs, self.if_else, repeats))
         self.if_else = self.If_else_stack([], [], [])
         logger.info("in %s, calling function %d" % (self.environment.tag, callee))
         self.pc = self.bytecodeContainer.function_table[callee].start()
@@ -1036,7 +1037,7 @@ class Executor(object):
             self.bytecodeContainer.IRs[self.environment.tag] = self.intermediateCodes
         self.visited_functions.add(self.environment.tag)
         (callee, self.pc, self.intermediateCodes, self.environment.tag,
-         caller_program_stack, self.stored_environments,
+         caller_program_stack, self.stored_environments, self.breadcrumbs,
          self.if_else, repeats) = self.call_stack.pop()
 
         stack_depth_upon_call = len(caller_program_stack)
@@ -1108,6 +1109,55 @@ class Executor(object):
             elif self.pc.mnemonic == 'LOOPCALL':
                 self.execute_LOOPCALL()
                 continue
+
+            # first, abstractly execute the successor statement (fallthru case)
+            # but leave a breadcrumb reminding us, upon function end, to visit
+            # the other branch.
+
+            # when we collect breadcrumbs, see if we're visiting
+            # new statements or already-visited statements.
+            # if new, just analyze with the stored environment
+            # if already-visited, need to abstractly execute with new env
+            # and see if we need to change anything.
+
+            # when we emit code, fix up the destination.
+            if self.pc.mnemonic == 'JROT' or self.pc.mnemonic == 'JROF':
+                logger.info("polling stored_environments for %s" % (self.pc.id))
+                if self.pc.id in self.stored_environments:
+                    assert false
+                    # TODO convert code below from handling ifs to handling jumps
+                    # logger.warn("jump back to %s", self.pc.id)
+                    # # back at the jmp and ready to traverse next branch...
+                    # top_if = self.if_else.env[-1][0]
+                    # # might want to process block somehow also
+                    # block = self.if_else.IR.pop()
+                    # if top_if.id not in self.stored_environments:
+                    #     logger.warn("STORE %s program state ", top_if.id)
+                    #     self.stored_environments[top_if.id] = [self.environment]
+                    # else:
+                    #     logger.warn("APPEND %s (%s) program state ", top_if.id, top_if)
+                    #     self.stored_environments[top_if.id].append(self.environment)
+                    #     self.stored_environments[top_if.id][0].merge(self.stored_environments[top_if.id][1])
+                    #     self.environment = self.stored_environments[top_if.id][0]
+                    #     self.if_else.env.pop()
+                    #     self.if_else.state.pop()
+                    #     self.appendIntermediateCode([block])
+                else:
+                    # first time round at this JROT/JROF statement...
+                    arg = self.environment.program_stack_pop().eval(False)
+                    e = self.environment.program_stack_pop().eval(self.environment.keep_abstract)
+                    logger.info("executing jrot/jrof for %s, stack height is %d" % (str(e), self.stack_depth()))
+                    assert not isinstance(arg, dataType.AbstractValue)
+                    self.appendIntermediateCode([IR.JROxStatement(self.pc.mnemonic == 'JROT', e, arg)])
+                    self.environment.adjust_succ_for_relative_jump(arg, False)
+                    branch_succ = self.environment.current_instruction.successors[-1]
+
+                    environment_copy = self.environment.make_copy(self.bytecodeContainer)
+                    assert not branch_succ.id in self.stored_environments
+                    # TODO actually we should go through the code first and populate stored_environments
+                    # TODO we should also add a breadcrumb pointing to the other succ
+                    logger.info("putting %s in stored_environments" % (branch_succ.id))
+                    self.stored_environments[branch_succ.id] = [environment_copy]
 
             if self.pc.mnemonic == 'IF':
                 if len(self.if_else.env) > 0 and self.if_else.env[-1][0] == self.pc:

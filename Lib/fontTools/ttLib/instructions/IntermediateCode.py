@@ -542,11 +542,23 @@ class EmptyStatement(object):
     def __repr__(self):
         return "Empty"
 
-class GotoStatement(object):
+class JmpStatement(object):
     def __init__(self, label):
-        self.gotoLabel = label
+        self.jmpLabel = label
     def __repr__(self):
-        return "GOTO "+self.gotoLabel
+        return "JMPR %s" % (self.jmpLabel)
+
+class JROxStatement(object):
+    def __init__(self, onTrue, arg, label):
+        self.onTrue = onTrue
+        self.arg = arg
+        self.jmpLabel = label
+    def __repr__(self):
+        if self.onTrue:
+            op = 'JROT'
+        else:
+            op = 'JROF'
+        return "%s (%s, %s)" % (op, self.arg, self.jmpLabel)
 
 class LabelBlock(object):
     def __init__(self,label):
@@ -585,53 +597,3 @@ class IfElseBlock(object):
                 res_str += (self.nesting_level * 4 * ' ') + str(line) + '\n'
             res_str += (self.nesting_level-1) * 4 * ' ' + '}'
         return res_str
-
-class ConditionalJumpBlock(object):
-    def __init__(self, label, condition = None):
-        self.label = label
-        self.parentBlock = None
-        self.gotoBlock = None
-        self.condition = ""
-        self.statements = []
-        self.mode = 'if' 
-        self.gotoClause = None
-    def appendStatements(self, statements):
-        if self.mode == 'if':
-            self.statements += statements
-        else:
-            if self.gotoBlock == None:
-                self.gotoBlock = LabelBlock(self.label+'E1')
-            self.gotoBlock.statements += statements
-
-    def appendStatement(self, statement):
-        if self.mode == 'if':
-            self.statements.append(statement)
-        else:
-            if self.gotoBlock == None:
-                if self.label!=None:
-                    self.gotoBlock = ConditionalJumpBlock(self.label+'E1')
-                else:
-                    self.gotoBlock = ConditionalJumpBlock('E1')
-            self.gotoBlock.statements.append(statement)
-
-    def setParent(self, parent):
-        self.parentBlock = parent
-
-    def finishBlock(self):
-        if self.gotoBlock == None:
-            self.gotoBlock = ConditionalJumpBlock(self.label+'E1')
-            self.gotoBlock.statements = [EmptyStatement()]
-
-    def __repr__(self):
-        resStr = ""
-        resStr += self.label+':'+'\n'
-        resStr += 'IF'
-        resStr += '('+self.condition+')'
-        resStr += 'GOTO'
-        if self.gotoBlock != None:
-            resStr += str(self.gotoBlock.label)
-        resStr += '\n'
-        for statement in self.statements:
-            resStr += str(statement)+'\n'
-        resStr += str(self.gotoBlock)
-        return resStr
