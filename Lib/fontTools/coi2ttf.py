@@ -347,10 +347,9 @@ def main(args):
             elif line.startswith('PREP:'):
                 current_tag = 'prep'
                 tags['prep'] = []
-            # we ignore function defs for now
-            #elif line.startswith('Function'):
-            #    current_tag = line[:-2] 
-            #    tags[current_tag] = []
+            elif line.startswith('Function'):
+                current_tag = line[:-2]
+                tags[current_tag] = []
             elif line.startswith('glyf'):
                 current_tag = line[:-2]
                 tags[current_tag] = [] 
