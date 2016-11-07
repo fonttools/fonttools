@@ -151,23 +151,15 @@
       PUSH[ ]
       987
       PUSH[ ]
-      5
+      4
       PUSH[ ]
       1
       JROT[ ]
       PUSH[ ]
       8
-      ELSE[ ]
-      PUSH[ ]
-      789
-      PUSH[ ]
-      -3
-      PUSH[ ]
-      1
-      JROF[ ]
+      EIF[ ]
       PUSH[ ]
       9
-      EIF[ ]
       ENDF[ ]
     </assembly>
   </fpgm>

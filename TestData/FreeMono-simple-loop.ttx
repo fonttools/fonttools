@@ -146,28 +146,14 @@
       PUSH[ ]
       0
       FDEF[ ]
+      PUSH[ ]
+      1
       MPPEM[ ]
-      IF[ ]
       PUSH[ ]
-      987
-      PUSH[ ]
-      5
-      PUSH[ ]
-      1
+      -2
       JROT[ ]
-      PUSH[ ]
-      8
-      ELSE[ ]
-      PUSH[ ]
-      789
-      PUSH[ ]
-      -3
-      PUSH[ ]
-      1
-      JROF[ ]
-      PUSH[ ]
-      9
-      EIF[ ]
+      POP[ ]
+      MPPEM[ ]
       ENDF[ ]
     </assembly>
   </fpgm>
