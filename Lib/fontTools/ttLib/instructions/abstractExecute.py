@@ -2,12 +2,14 @@ from fontTools.ttLib.data import dataType
 import logging
 import copy
 import IntermediateCode as IR
-logger = logging.getLogger(" ")
+
 class IdentifierGenerator(object):
     def generateIdentifier(self, tag, number):
         return '$' + tag + '_' + str(number)
 
+logger = logging.getLogger(" ")
 identifierGenerator = IdentifierGenerator()
+
 class Environment(object):
     """Abstractly represents the global environment at a single point in time.
 
@@ -70,7 +72,7 @@ class Environment(object):
     
     def merge(self,environment2):
         '''
-        merge environment2 into this one; used at if-else merge.
+        merge environment2 into this one; used at control-flow (e.g. if-else, jrox) merge.
         '''
         if len(environment2.program_stack)!=len(self.program_stack):
             print "impending assertion failure; here's the mismatched environments"
@@ -269,7 +271,7 @@ class Environment(object):
             self.program_stack_push(item)
 
     # Don't execute any cfg-related instructions
-    # This has the effect of "executing both branches".
+    # This has the effect of "executing both branches" when we hit the EIF and go back to the ELSE
     def exec_IF(self):
         pass
     def exec_EIF(self):
@@ -473,7 +475,8 @@ class Environment(object):
             return self.bytecodeContainer.tag_to_programs[self.tag].body
 
     def adjust_succ_for_relative_jump(self, arg, only_succ):
-        # now we need to find the instructions and set the PC
+        # find the instructions and set the PC
+        # returns True if we broke a cycle
         assert not isinstance(arg, dataType.AbstractValue)
         ins = self.fetch_body_for_tag(self.tag).instructions
         pc = 0
@@ -1007,7 +1010,7 @@ class Executor(object):
 
         self.environment.minimum_stack_depth = self.stack_depth()
         # set call stack & jump
-        # yuck should regularize the CFG to avoid needing this hack
+        # yuck should regularize the CFG with tail nodes to avoid needing this hack
         if (len(self.pc.successors) == 0):
             succ = None
         else:
@@ -1151,11 +1154,11 @@ class Executor(object):
             # multiple succs, store the alternate succ for later
             elif len(self.pc.successors) > 1:
                 self.pc = self.pc.successors[self.if_else.state[-1]]
-                if self.if_else.state[-1]>0 and (self.pc.mnemonic != 'EIF' or self.if_else.state[-1] != 2):
-                    logger.warn("program environment recover to")
+                logger.info("traverse another branch %s->%s", self.pc.id, self.pc.mnemonic)
+                if self.if_else.state[-1] > 0 and (self.pc.mnemonic != 'EIF' or self.if_else.state[-1] != 2):
+                    logger.info("program environment recover to")
                     self.environment = self.if_else.env[-1][1]
                     logger.info(self.environment)
-                logger.info("traverse another branch %s->%s", self.pc.id, self.pc.mnemonic)
                 if self.pc.mnemonic == 'EIF':
                     self.if_else.env.pop()
                     self.if_else.state.pop()
@@ -1168,7 +1171,7 @@ class Executor(object):
                 if len(self.if_else.env) > 0:
                     # return to the closest enclosing IF
                     self.pc = self.if_else.env[-1][0]
-                    logger.info("program pointer back to %s %s", str(self.pc),str(self.pc.id))
+                    logger.info("program pointer back (if) to %s %s", str(self.pc),str(self.pc.id))
                 # reached end of function, but we're still in a call
                 # ie handle RETURN
                 elif len(self.call_stack) > 0:
