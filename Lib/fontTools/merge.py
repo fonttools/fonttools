@@ -513,6 +513,7 @@ def merge(self, m, tables):
 		for script in table.table.ScriptList.ScriptRecord:
 			if script.ScriptTag == 'DFLT': continue # XXX
 			for langsys in [script.Script.DefaultLangSys] + [l.LangSys for l in script.Script.LangSysRecord]:
+				if langsys is None: continue # XXX Create!
 				feature = [featureMap[v] for v in langsys.FeatureIndex if featureMap[v].FeatureTag == 'locl']
 				assert len(feature) <= 1
 				if feature:
