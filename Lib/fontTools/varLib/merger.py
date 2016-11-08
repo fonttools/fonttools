@@ -79,5 +79,6 @@ class Merger(object):
 def merge_tables(font, merger, master_ttfs, axes, base_idx, tables):
 
 	for tag in tables:
+		if tag not in font: continue
 		print('Merging', tag)
 		merger.mergeThings(font[tag], [m[tag] for m in master_ttfs])
