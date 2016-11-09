@@ -58,6 +58,12 @@ class FreedomVector(GraphicsStateVariable):
         self.data = None
         self.identifier = 'GS[freedom_vector]'
 
+class FreedomVectorByComponent(GraphicsStateVariable):
+    def __init__(self, selector):
+        self.data = None
+        self.selector = selector
+        self.identifier = 'GS[freedom_vector_%s]' % self.selector
+
 class DualProjectionVector(GraphicsStateVariable):
     def __init__(self):
         self.data = None

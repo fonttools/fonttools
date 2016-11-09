@@ -433,9 +433,10 @@ class Environment(object):
     def exec_GFV(self):
         op1 = self.graphics_state['fv'][0]
         op2 = self.graphics_state['fv'][1]
-        self.program_stack_push(op1)
-        self.program_stack_push(op2)
-        raise NotImplementedError
+        fv0 = self.program_stack_push(op1)
+        fv1 = self.program_stack_push(op2)
+        self.current_instruction_intermediate.append(IR.CopyStatement(fv0, IR.FreedomVectorByComponent(0)))
+        self.current_instruction_intermediate.append(IR.CopyStatement(fv1, IR.FreedomVectorByComponent(1)))
 
     def exec_GT(self):
         self.binary_operation('GT')
@@ -810,6 +811,7 @@ class Environment(object):
         if data == 1:
             self.graphics_state['pv'] = (1, 0)
             self.graphics_state['fv'] = (1, 0)
+
         self.current_instruction_intermediate.append(IR.CopyStatement(IR.FreedomVector(),IR.Constant(data)))
         self.current_instruction_intermediate.append(IR.CopyStatement(IR.ProjectionVector(),IR.Constant(data)))
 
@@ -846,7 +848,6 @@ class Environment(object):
 
     def exec_SZPS(self):
         arg = self.program_stack_pop()
-        assert (arg is 1 or arg is 0)
         self.current_instruction_intermediate.append(IR.CopyStatement(IR.ZP0(), arg))
         self.current_instruction_intermediate.append(IR.CopyStatement(IR.ZP1(), arg))
         self.current_instruction_intermediate.append(IR.CopyStatement(IR.ZP2(), arg))
@@ -956,7 +957,8 @@ class Executor(object):
         self.intermediateCodes.append(IR.CopyStatement(IR.ScanType(),IR.Constant(0)))
         self.intermediateCodes.append(IR.CopyStatement(IR.SingleWidthCutIn(),IR.Constant(0)))
         self.intermediateCodes.append(IR.CopyStatement(IR.SingleWidthValue(),IR.Constant(0)))
-        self.intermediateCodes.append(IR.CopyStatement(IR.FreedomVector(),IR.Constant(1)))
+        self.intermediateCodes.append(IR.CopyStatement(IR.FreedomVectorByComponent(0),IR.Constant(1)))
+        self.intermediateCodes.append(IR.CopyStatement(IR.FreedomVectorByComponent(1),IR.Constant(1)))
         self.intermediateCodes.append(IR.CopyStatement(IR.ProjectionVector(),IR.Constant(1)))
         self.intermediateCodes.append(IR.CopyStatement(IR.LoopValue(),IR.Constant(1)))
         self.intermediateCodes.append(IR.CopyStatement(IR.InstructControl(IR.Constant(0)),IR.Constant(0)))
@@ -1021,6 +1023,7 @@ class Executor(object):
                                 self.stored_environments, self.breadcrumbs, self.if_else, repeats))
         self.if_else = self.If_else_stack([], [], [])
         logger.info("in %s, calling function %d" % (self.environment.tag, callee))
+        assert callee in self.bytecodeContainer.function_table, "Callee function #%s not defined" % callee
         self.pc = self.bytecodeContainer.function_table[callee].start()
         self.intermediateCodes = []
         self.environment.tag = "fpgm_%s" % callee
