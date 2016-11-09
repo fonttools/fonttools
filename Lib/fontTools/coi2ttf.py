@@ -279,36 +279,46 @@ class InstructionInterpreter(object):
         def merge_OTHER():
             instructions_groups = find_assignments()
             for instr_list, index in reversed(instructions_groups):
-                length = len(instr_list)
-                # DUP check
-                if instr_list == [-1]:
-                    update_stack("DUP[ ]", index, [])
-                # CINDEX check
-                elif instr_list[0] < -1 and length == 1:
-                    update_stack("CINDEX[ ]", index, [])
-                # SWAP check
-                elif instr_list == [-1, -1, 2]:
-                        update_stack("SWAP[ ]", index, [])
-                # ROLL check
-                elif instr_list == [-1, -2, 1, 2]:
-                        update_stack("ROLL[ ]", index, [])
-                # MINDEX check
-                else:
-                    # conditions for MINDEX:
-                    # [1, -X, {X times 1 value}, 2]
-                    # where X = len - 2
-                    if (
-                        instr_list[0] == 1 and instr_list[-1] == 2 and
-                        instr_list[1] == (length-2)*(-1) and 
-                        instr_list[2:-1] == [1] * (length-3)
-                        ):
-                        update_stack("MINDEX[ ]", index, [])
+                currentInstrs = []
+                
+                for instr in reversed(instr_list):
+                    if not currentInstrs:
+                        # DUP check
+                        if instr == -1:
+                            update_stack("DUP[ ]", index, [])
+                        # CINDEX check
+                        elif instr < -1:
+                            update_stack("CINDEX[ ]", index, [])
+                        else:
+                            currentInstrs.append(instr)
                     else:
-                        # if none of above, either a malformed or unkown instruction
-                        raise ValueError("Unkown or malformed instruction")
-                # remove the instructions left after merge 
-                del self.bytecodeInstructions[index+1:index+1+length]
+                        currentInstrs.insert(0, instr)
+                        length = len(currentInstrs)
+                        # MINDEX check
+                        # conditions for MINDEX:
+                        # [1, -X, {X times 1 value}, 2]
+                        # where X = len - 2
+                        if (
+                            currentInstrs[0] == 1 and currentInstrs[-1] == 2 and
+                            currentInstrs[1] == (length-2)*(-1) and
+                            currentInstrs[2:-1] == [1] * (length-3)
+                            ):
+                            # SWAP check (SWAP = MINDEX[] with 2 at top of stack)
+                            if length == 3:
+                                update_stack("SWAP[ ]", index, [])
+                            # ROLL check (ROLL = MINDEX[] with 3 at top of stack)
+                            elif length == 4:
+                                update_stack("ROLL[ ]", index, [])
+                            # MINDEX[] with  x > 3 at top of stack
+                            else:
+                                update_stack("MINDEX[ ]", index, [])
+                            currentInstrs = []
 
+                if currentInstrs:
+                    raise ValueError("Unkown or malformed instruction")
+                # remove the instructions left after merge
+                del self.bytecodeInstructions[index+1:index+1+length]
+                        
         def update_stack(mnemonic, index, data):
             for d in data:
                 self.bytecodeInstructions.insert(index, d)
