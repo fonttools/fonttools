@@ -60,12 +60,20 @@ class AssignInstruction(object):
         return pattern.match(self.addr2)
 
     def is_function(self):
-        pattern = re.compile('..*\(..*\)')
-        return pattern.match(self.addr2)
+        pattern = re.compile(r'.*\(.*\)')
+        return pattern.match(self.addr2 + self.op + self.addr3)
 
     def is_unary(self):
         return self.op != "" and self.addr3 == ""
         
+
+class Function(object):
+    def __init__(self, instr, function = "", param = ""):
+        self.function = function
+        self.param = param
+        self.instr = instr
+    def __repr__(self):
+        return("{0}({1})", self.function, self.param)
 
 class Instruction(object):
 
@@ -79,6 +87,7 @@ class Instruction(object):
 # InstructionInterpreter will translate 
 class InstructionInterpreter(object):
     bytecodeInstructions = [] # contains the translated TTF so far
+    push_template = "PUSH[%s]"
 
     pattern_markers = [
         ("scan_control",         "SCANCTRL[ ]"),
@@ -105,7 +114,9 @@ class InstructionInterpreter(object):
         ("GS[auto_flip] := false","FLIPOFF[ ]"),
         ("GS[rp0]",              "SRP0[ ]"),
         ("GS[rp1]",              "SRP1[ ]"),
-        ("GS[rp2]",              "SRP2[ ]")
+        ("GS[rp2]",              "SRP2[ ]"),
+        ("max(",                 "MAX[ ]"),
+        ("min(",                 "MIN[ ]")
     ]
 
     operators = {
@@ -130,14 +141,20 @@ class InstructionInterpreter(object):
         del self.bytecodeInstructions[:]
 
     def parse_function(self, f):
-        function_name = f.split("(")[0]
+        ff = f.split("(")
+        function_name = ff[0]
         if "_" in function_name:
-            function = function_name.split("_")[0]
-            param = function_name.split("_")[1]
-            instr = function+"["+param+"]"
+            fn = function_name.split("_")[0]
+            p = function_name.split("_")[1]
+            return Function(function = fn,
+                     param = p,
+                     instr = fn + "["+p+"]")
         else:
-            instr = function_name+"[ ]"
-        return instr
+            if (len(ff) > 1):
+                return Function(instr = function_name+"[ ]",
+                                param = ff[1][:-1])
+            else:
+                return Function(instr = function_name+"[ ]")
 
     def parse_assignment(self, line):
         instr = line
@@ -166,35 +183,38 @@ class InstructionInterpreter(object):
         instruction = self.split_line(instruction_line)
 
         if type(instruction) is AssignInstruction:
-
             if instruction.addr1.startswith("$"):
-
                 if instruction.is_simple_assignment():
-
                     if instruction.is_function():
-                        instr = self.parse_function(instruction.addr2)
+                        instr = [self.parse_function(instruction.addr2)]
                     else:
                         if instruction.is_assigning_var():
-                            instr = instruction.__str__()
+                            instr = [instruction.__str__()]
                         else:
-                            instr = "PUSH["+instruction.addr2+"]"
+                            instr = ["PUSH["+instruction.addr2+"]"]
                         if instruction_line != self.parse_assignment(instruction_line):
-                            instr = self.parse_assignment(instruction_line)
-
+                            instr = [self.parse_assignment(instruction_line)]
                 else:
-                    if instruction.is_unary():
-                        instr = instruction.addr2+"[ ]"
+                    if instruction.is_function():
+                         # assume binary op
+                         fn = self.parse_function(instruction.addr2)
+                         op1 = fn.param
+                         op2 = instruction.op[:-1]
+                         # TODO we may not have the right things on the stack
+                         instr = [self.push_template % op1, self.push_template % op2,
+                                  fn.instr.upper()]
+                    elif instruction.is_unary():
+                        instr = [instruction.addr2+"[ ]"]
                     else:
                         operator = self.get_binary_op(instruction.op)
-                        instr = operator+"[ ]"
+                        instr = [operator+"[ ]"]
             else:
-
-                instr = self.parse_assignment(instruction_line)
+                instr = [self.parse_assignment(instruction_line)]
 
         elif type(instruction) is CallInstruction:
-            instr = self.parse_function(instruction.function)
+            instr = [self.parse_function(instruction.function).instr]
 
-        self.bytecodeInstructions.append(instr)
+        self.bytecodeInstructions.extend(instr)
            
     def merge(self):
 
