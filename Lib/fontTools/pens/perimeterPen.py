@@ -51,7 +51,7 @@ class PerimeterPen(BasePen):
 			return
 		origDist = _dot(n,d0)
 		if origDist == 0.:
-			if _dot(d0,d1) > 0:
+			if _dot(d0,d1) >= 0:
 				self._lineTo(p2)
 				return
 			assert 0 # TODO handle cusps
