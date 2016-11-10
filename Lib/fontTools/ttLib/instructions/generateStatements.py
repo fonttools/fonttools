@@ -37,8 +37,6 @@ class root_statement(object):
         return self.pop_num
     def get_push_num(self):
         return self.push_num
-    def set_input(self,data):
-        self.data = data
     def get_result(self):
         return self.data
     def prettyPrint(self):
