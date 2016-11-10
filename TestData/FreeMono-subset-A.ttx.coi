@@ -1,0 +1,155 @@
+PREP:
+GS[auto_flip] := true
+GS[scan_control] := 0
+GS[scan_type] := 0
+GS[single_width_cutin] := 0
+GS[single_width_value] := 0
+GS[freedom_vector_0] := 1
+GS[freedom_vector_1] := 1
+GS[projection_vector] := 1
+GS[loop] := 1
+GS[instruction_control_0] := 0
+GS[instruction_control_1] := 0
+GS[minimum_distance] := 1
+GS[round_state] := RoundState_G
+GS[zp0] := 1
+GS[zp1] := 1
+GS[zp2] := 1
+GS[rp0] := 0
+GS[rp1] := 0
+GS[rp2] := 0
+$prep_1 := 511
+GS[scan_control] := 511
+$prep_1 := 1
+GS[scan_type] := 1
+GS[freedom_vector] := 0
+GS[projection_vector] := 0
+$prep_1 := PPEM_Y
+$prep_2 := 8
+$prep_1 := $prep_2 LT $prep_1
+if ($prep_1) {
+    $prep_1 := 1
+    $prep_2 := 1
+    GS[instruction_control_1] := 1
+}
+$prep_1 := 70
+$prep_2 := 6
+($rv0) := CALL 6()
+if ($rv0) {
+    $prep_2 := 16
+}
+$prep_3 := PPEM_Y
+$prep_4 := 20
+$prep_3 := $prep_4 GT $prep_3
+if ($prep_3) {
+    $prep_2 := 128
+}
+GS[single_width_cutin] := $prep_2
+$prep_2 := 6
+($rv0) := CALL 6()
+$prep_3 := NOT($rv0)
+if ($prep_3) {
+    GS[freedom_vector] := 0
+    GS[projection_vector] := 0
+    $prep_3 := 3
+    $prep_4 := $prep_3
+    $prep_4 := cvt_table[$prep_4]
+    $prep_5 := 3
+    CALL 3($prep_3)
+    cvt_table[arg$1] := $fpgm_3_4
+    GS[freedom_vector] := 1
+    GS[projection_vector] := 1
+    $prep_3 := 4
+    $prep_4 := $prep_3
+    $prep_4 := cvt_table[$prep_4]
+    $prep_5 := 3
+    CALL 3($prep_3)
+    cvt_table[arg$1] := $fpgm_3_4
+}
+$prep_3 := 20
+CALL 20()
+
+Function #0:
+  <not executed, no IR>
+
+Function #1:
+  <not executed, no IR>
+
+Function #2:
+  <not executed, no IR>
+
+Function #3:
+$fpgm_3_4 := ROUND_01(arg$0)
+GS[round_state] := RoundState_G
+$fpgm_3_5 := $fpgm_3_4
+$fpgm_3_6 := 64
+$fpgm_3_5 := $fpgm_3_6 LT $fpgm_3_5
+if ($fpgm_3_5) {
+    $fpgm_3_4 := 64
+}
+
+Function #4:
+  <not executed, no IR>
+
+Function #5:
+  <not executed, no IR>
+
+Function #6:
+$fpgm_6_2 := 34
+$fpgm_6_3 := 1
+$fpgm_6_3 := GETINFO($fpgm_6_3)
+$fpgm_6_2 := $fpgm_6_3 LT $fpgm_6_2
+if ($fpgm_6_2) {
+    $fpgm_6_2 := 32
+    $fpgm_6_2 := GETINFO($fpgm_6_2)
+    $fpgm_6_2 := NOT($fpgm_6_2)
+    $fpgm_6_2 := NOT($fpgm_6_2)
+} else {
+    $fpgm_6_2 := 0
+}
+
+Function #7:
+  <not executed, no IR>
+
+Function #8:
+  <not executed, no IR>
+
+Function #9:
+  <not executed, no IR>
+
+Function #10:
+  <not executed, no IR>
+
+Function #11:
+  <not executed, no IR>
+
+Function #12:
+  <not executed, no IR>
+
+Function #13:
+  <not executed, no IR>
+
+Function #14:
+  <not executed, no IR>
+
+Function #15:
+  <not executed, no IR>
+
+Function #16:
+  <not executed, no IR>
+
+Function #17:
+  <not executed, no IR>
+
+Function #18:
+  <not executed, no IR>
+
+Function #19:
+  <not executed, no IR>
+
+Function #20:
+$fpgm_20_3 := 0
+
+Function #21:
+  <not executed, no IR>
+

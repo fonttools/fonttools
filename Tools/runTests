@@ -195,7 +195,7 @@ def main(args):
             subset.main(args)
         filesAfter = listdir(".") 
  
-        #tries to identifiy a new file created in the current folder
+        #tries to identify a new file created in the current folder
         #if fail, assumes that a file with the same name was already there 
         try:   
             createdFile = [item for item in filesAfter if item not in filesBefore][0] 

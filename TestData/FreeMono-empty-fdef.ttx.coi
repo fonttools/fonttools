@@ -1,0 +1,25 @@
+PREP:
+GS[auto_flip] := true
+GS[scan_control] := 0
+GS[scan_type] := 0
+GS[single_width_cutin] := 0
+GS[single_width_value] := 0
+GS[freedom_vector_0] := 1
+GS[freedom_vector_1] := 1
+GS[projection_vector] := 1
+GS[loop] := 1
+GS[instruction_control_0] := 0
+GS[instruction_control_1] := 0
+GS[minimum_distance] := 1
+GS[round_state] := RoundState_G
+GS[zp0] := 1
+GS[zp1] := 1
+GS[zp2] := 1
+GS[rp0] := 0
+GS[rp1] := 0
+GS[rp2] := 0
+$prep_1 := 0
+
+Function #0:
+  <not executed, no IR>
+
