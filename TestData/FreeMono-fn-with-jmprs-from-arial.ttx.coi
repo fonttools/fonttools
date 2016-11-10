@@ -1,0 +1,106 @@
+PREP:
+GS[auto_flip] := true
+GS[scan_control] := 0
+GS[scan_type] := 0
+GS[single_width_cutin] := 0
+GS[single_width_value] := 0
+GS[freedom_vector_0] := 1
+GS[freedom_vector_1] := 1
+GS[projection_vector] := 1
+GS[loop] := 1
+GS[instruction_control_0] := 0
+GS[instruction_control_1] := 0
+GS[minimum_distance] := 1
+GS[round_state] := RoundState_G
+GS[zp0] := 1
+GS[zp1] := 1
+GS[zp2] := 1
+GS[rp0] := 0
+GS[rp1] := 0
+GS[rp2] := 0
+$prep_1 := 5
+$prep_2 := 7
+$prep_3 := 3
+$prep_4 := 2
+$prep_5 := 0
+CALL 0($prep_3, $prep_2, $prep_1, $prep_0)
+
+Function #0:
+$fpgm_0_5 := $fpgm_0_4
+$fpgm_0_6 := 3
+$fpgm_0_6 := $fpgm_0_4
+$fpgm_0_6 := cvt_table[$fpgm_0_6]
+$fpgm_0_7 := 25
+$fpgm_0_8 := $fpgm_0_7
+$fpgm_0_7 := $fpgm_0_6
+$fpgm_0_6 := $fpgm_0_8
+cvt_table[$fpgm_0_7] := $fpgm_0_6
+$fpgm_0_5 := cvt_table[$fpgm_0_5]
+$fpgm_0_6 := 26
+$fpgm_0_7 := $fpgm_0_6
+$fpgm_0_6 := $fpgm_0_5
+$fpgm_0_5 := $fpgm_0_7
+cvt_table[$fpgm_0_6] := $fpgm_0_5
+$fpgm_0_4 := cvt_table[arg$0]
+$fpgm_0_4 := NEG $fpgm_0_4
+$fpgm_0_5 := $fpgm_0_4
+$fpgm_0_4 := $fpgm_0_3
+$fpgm_0_3 := $fpgm_0_5
+$fpgm_0_4 := cvt_table[arg$1]
+$fpgm_0_5 := $fpgm_0_4
+$fpgm_0_6 := 3
+$fpgm_0_6 := $fpgm_0_4
+$fpgm_0_5 := $fpgm_0_6 + $fpgm_0_5
+$fpgm_0_5 := ROUND_10($fpgm_0_5)
+$fpgm_0_6 := $fpgm_0_5
+$fpgm_0_7 := 9
+$fpgm_0_8 := $fpgm_0_7
+$fpgm_0_7 := $fpgm_0_6
+$fpgm_0_6 := $fpgm_0_8
+storage_area[$fpgm_0_7] := $fpgm_0_6
+$fpgm_0_6 := $fpgm_0_5
+$fpgm_0_5 := $fpgm_0_4
+$fpgm_0_4 := $fpgm_0_6
+$fpgm_0_5 := ROUND_00($fpgm_0_4)
+$fpgm_0_6 := $fpgm_0_5
+$fpgm_0_5 := $fpgm_0_3
+$fpgm_0_3 := $fpgm_0_4
+$fpgm_0_4 := $fpgm_0_6
+$fpgm_0_5 := ROUND_10($fpgm_0_4)
+$fpgm_0_4 := $fpgm_0_5 + $fpgm_0_4
+$fpgm_0_3 := $fpgm_0_4 - $fpgm_0_3
+$fpgm_0_4 := $fpgm_0_3
+$fpgm_0_5 := 26
+$fpgm_0_6 := $fpgm_0_5
+$fpgm_0_5 := $fpgm_0_3
+$fpgm_0_3 := $fpgm_0_4
+$fpgm_0_4 := $fpgm_0_6
+$fpgm_0_6 := 0
+$fpgm_0_5 := $fpgm_0_6 GT $fpgm_0_5
+JROF ($fpgm_0_5, 26)
+$fpgm_0_3 := 26
+$fpgm_0_4 := 26
+$fpgm_0_5 := 64
+$fpgm_0_6 := -32
+$fpgm_0_7 := 26
+$fpgm_0_7 := cvt_table[$fpgm_0_7]
+$fpgm_0_8 := $fpgm_0_7
+$fpgm_0_9 := $fpgm_0_8
+$fpgm_0_8 := $fpgm_0_6
+$fpgm_0_6 := $fpgm_0_7
+$fpgm_0_7 := $fpgm_0_9
+$fpgm_0_7 := $fpgm_0_8 EQ $fpgm_0_7
+if ($fpgm_0_7) {
+    $fpgm_0_7 := $fpgm_0_6
+    $fpgm_0_6 := $fpgm_0_5
+    $fpgm_0_5 := $fpgm_0_7
+    $fpgm_0_6 := 63
+} else {
+    $fpgm_0_7 := $fpgm_0_6
+    $fpgm_0_6 := $fpgm_0_5
+    $fpgm_0_5 := $fpgm_0_7
+}
+$fpgm_0_5 := $fpgm_0_6 - $fpgm_0_5
+cvt_table[$fpgm_0_4] := $fpgm_0_5
+cvt_table[arg$3] := arg$2
+
