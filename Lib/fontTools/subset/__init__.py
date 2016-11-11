@@ -1692,13 +1692,15 @@ def closure_glyphs(self, s):
     glyphs = frozenset(s.glyphs)
     variants = set()
 
-    indices = self.VertGlyphCoverage.intersect(glyphs)
-    for i in indices:
-        variants.update(self.VertGlyphConstruction[i].closure_glyphs(glyphs))
+    if self.VertGlyphCoverage:
+        indices = self.VertGlyphCoverage.intersect(glyphs)
+        for i in indices:
+            variants.update(self.VertGlyphConstruction[i].closure_glyphs(glyphs))
 
-    indices = self.HorizGlyphCoverage.intersect(glyphs)
-    for i in indices:
-        variants.update(self.HorizGlyphConstruction[i].closure_glyphs(glyphs))
+    if self.HorizGlyphCoverage:
+        indices = self.HorizGlyphCoverage.intersect(glyphs)
+        for i in indices:
+            variants.update(self.HorizGlyphConstruction[i].closure_glyphs(glyphs))
 
     s.glyphs.update(variants)
 
@@ -1741,13 +1743,15 @@ def subset_glyphs(self, s):
 
 @_add_method(otTables.MathVariants)
 def subset_glyphs(self, s):
-    indices = self.VertGlyphCoverage.subset(s.glyphs)
-    self.VertGlyphConstruction = [self.VertGlyphConstruction[i] for i in indices]
-    self.VertGlyphCount = len(self.VertGlyphConstruction)
+    if self.VertGlyphCoverage:
+        indices = self.VertGlyphCoverage.subset(s.glyphs)
+        self.VertGlyphConstruction = [self.VertGlyphConstruction[i] for i in indices]
+        self.VertGlyphCount = len(self.VertGlyphConstruction)
 
-    indices = self.HorizGlyphCoverage.subset(s.glyphs)
-    self.HorizGlyphConstruction = [self.HorizGlyphConstruction[i] for i in indices]
-    self.HorizGlyphCount = len(self.HorizGlyphConstruction)
+    if self.HorizGlyphCoverage:
+        indices = self.HorizGlyphCoverage.subset(s.glyphs)
+        self.HorizGlyphConstruction = [self.HorizGlyphConstruction[i] for i in indices]
+        self.HorizGlyphCount = len(self.HorizGlyphConstruction)
 
     return True
 
