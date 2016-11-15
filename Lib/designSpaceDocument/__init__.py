@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
 import os
 import xml.etree.ElementTree as ET
 
@@ -52,10 +53,10 @@ class SimpleDescriptor(object):
         # test if this object contains the same data as the other
         for attr in self._attrs:
             try:
-                # print getattr(self, attr), getattr(other, attr)
+                # print(getattr(self, attr), getattr(other, attr))
                 assert(getattr(self, attr) == getattr(other, attr))
             except AssertionError:
-                print "failed attribute", attr, getattr(self, attr), "!=", getattr(other, attr)
+                print("failed attribute", attr, getattr(self, attr), "!=", getattr(other, attr))
 
 
 class SourceDescriptor(SimpleDescriptor):
@@ -726,6 +727,6 @@ if __name__ == "__main__":
     def _test():
         import doctest
         doctest.testmod()
-        print "done"
+        print("done")
 
     _test()
