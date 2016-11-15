@@ -25,7 +25,7 @@ The DesignSpaceDocument object can be subclassed to work with different objects,
 The object does not do any validation. 
 
 ```python
-from designspaceDocument import DesignSpaceDocument
+from designSpaceDocument import DesignSpaceDocument
 doc = DesignSpaceDocument()
 doc.read("some/path/to/my.designspace")
 doc.axes
@@ -65,7 +65,7 @@ doc.addSource(s1)
 ```
 
 # Instance descriptor object
-* `path`: string. Path to the instance file, which may or may not exist. MutatorMath
+* `path`: string. Path to the instance file, which may or may not exist. MutatorMath.
 * `name`: string. Unique identifier name of the instance, used to identify it if it needs to be referenced from elsewhere in the document. 
 * `location`: dict. Axis values for this source. MutatorMath + Varlib.
 * `familyName`: string. Family name of this instance. MutatorMath + Varlib.
@@ -216,7 +216,21 @@ Example of all axis elements together:
     </axes>
 ```
 
-# 2. `source` element
+# 2. `location` element
+* Defines a coordinate in the design space.
+* Dictionary of axisname: axisvalue
+* Used in `source`, `instance` and `glyph` elements.
+
+# 2.1`dimension` element
+* Child element of `location`
+
+### Attributes
+* `name`: required, string. Name of the axis.
+* `xvalue`: required, number. The value on this axis.
+* `yvalue`: optional, number. Separate value for anisotropic interpolations.
+
+
+# 3. `source` element
 * Defines a single font that contributes to the designspace.
 * Child element of `sources`
 
@@ -226,25 +240,25 @@ Example of all axis elements together:
 * `name`: required, string. A unique name that can be used to identify this font if it needs to be referenced elsewhere.
 * `filename`: required, string. A path to the source file, relative to the root path of this document. The path can be at the same level as the document or lower.
 
-# 2.1 `lib` element
+# 3.1 `lib` element
 * `<lib copy="1" />`
 * Child element of `source`
 * Defines if the instances can inherit the data in the lib of this source.
 * MutatorMath only
 
-# 2.2 `info` element
+# 3.2 `info` element
 * `<info copy="1" />`
 * Child element of `source`
 * Defines if the instances can inherit the non-interpolating font info from this source.
 * MutatorMath only
 
-# 2.3 `features` element
+# 3.3 `features` element
 * `<features copy="1" />`
 * Defines if the instances can inherit opentype feature text from this source.
 * Child element of `source`
 * MutatorMath only
 
-# 2.4 `glyph` element
+# 3.4 `glyph` element
 * Can appear in `source` as well as in `instance` elements.
 * In a `source` element this states if a glyph is to be excluded from the calculation.
 * MutatorMath only
@@ -252,15 +266,7 @@ Example of all axis elements together:
 ### Attributes
 * `<glyph mute="1" name="A"/>`
 * `mute`: optional, number, andts
-
-
-# 2.5.1`dimension` element
-* Child element of `location`
-
-### Attributes
-* `name`: required, string. Name of the axis.
-* `xvalue`: required, number. The value on this axis.
-* `yvalue`: optional, number. Separate value for anisotropic interpolations.
+* MutatorMath only
 
 # Example
 ```xml
@@ -276,7 +282,7 @@ Example of all axis elements together:
    </location>
 </source>
 ```
-# 3. `instance` element
+# 4. `instance` element
 
 * Defines a single font that can be calculated with the designspace.
 * Child element of `instances`
@@ -300,26 +306,54 @@ Example of all axis elements together:
 </location>
 <glyphs>
 	<glyph name="arrow2" />
-   <glyph name="arrow" unicode="0x4d2">
-   <location>
+	<glyph name="arrow" unicode="0x4d2">
+	<location>
    		<dimension name="width" xvalue="100" />
-      	<dimension name="weight" xvalue="120" />
+      		<dimension name="weight" xvalue="120" />
 	</location>
-   <note>A note about this glyph</note>
-   <masters>
-   		<master glyphname="BB" source="master.ufo1">
-		   <location>
-				<dimension name="width" xvalue="20" />
-				<dimension name="weight" xvalue="20" />
-			</location>
+ 	<note>A note about this glyph</note>
+	<masters>
+		<master glyphname="BB" source="master.ufo1">
+		<location>
+			<dimension name="width" xvalue="20" />
+			<dimension name="weight" xvalue="20" />
+		</location>
 		</master>
 	</masters>
 	</glyph>
-   </glyphs>
-   <kerning />
-   <info />
+</glyphs>
+<kerning />
+<info />
 </instance>
 ```
+
+# 4.1 `glyphs` element
+* Container for `glyph` elements.
+* Optional
+* Not needed for Varlib
+
+# 4.2 `glyph` element
+* Child element of `glyphs`
+* May contain a `location` element.
+
+### Attributes
+* `name`: string. The name of the glyph.
+* `unicode`: string. Unicode value for this glyph, in hexadecimal.
+
+# 4.2.1 `note` element
+* String. The value corresponds to glyph.note in UFO.
+
+# 4.2.2 `masters` element
+* Container for `master` elements
+* These `master` elements define an alternative set of glyph masters for this glyph.
+
+# 4.2.2.1 `master` element
+* Defines a single alternative master for this glyph.
+
+### Attributes
+* `glyphname`: the name of the alternate master glyph.
+* `source`: the identifier name of the source this master glyph needs to be loaded from
+
 
 ## Notes on this document
 
