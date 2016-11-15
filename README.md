@@ -5,16 +5,18 @@ DesignSpaceDocument Object
 
 An object to read, write and edit interpolation systems for typefaces.
 
-* Originally written for MutatorMath.
-* Also used in fontTools.varlib.
+* the format was originally written for MutatorMath.
+* the format is now also used in fontTools.varlib.
 * Define sources, axes and instances.
 * Not all values might be required by all applications.
 
 A couple of differences between things that use designspaces:
 
 * Varlib does not support anisotropic interpolations.
+* MutatorMath and Superpolator will extrapolate over the boundaries of the axes. Varlib can not.
+* Varlib requires much less data to define an instance than MutatorMath.
 * The goals of Varlib and MutatorMath are different, so not all attributes are always needed.
-* FDK ?
+* Need to expand the description of FDK use of deisgnspace files.
 
 The DesignSpaceDocument object can read and write .designspace data. It imports the axes, sources and instances to very basic "descriptor" objects that store the data in attributes. Data is added to the document by creating such descriptor objects, filling them with data and then adding them to the document. This makes it easy to integrate this object in different contexts.
 
@@ -114,6 +116,23 @@ a1.tag = "wght"
 a1.labelNames[u'fa-IR'] = u"قطر"
 a1.labelNames[u'en'] = u"Wéíght"
 a1.map = [(0.0, 10.0), (401.0, 66.0), (1000.0, 990.0)]
+```
+
+# Subclassing
+
+The DesignSpaceDocument can take subclassed Reader and Writer objects. This allows you to work with your own descriptors. You could subclass the descriptors. But as long as they have the basic attributes the descriptor does not need to be a subclass. 
+```python
+class MyDocReader(BaseDocReader):
+    axisDescriptorClass = MyAxisDescriptor
+    sourceDescriptorClass = MySourceDescriptor
+    instanceDescriptorClass = MyInstanceDescriptor
+    
+class MyDocWriter(BaseDocWriter):
+    axisDescriptorClass = MyAxisDescriptor
+    sourceDescriptorClass = MySourceDescriptor
+    instanceDescriptorClass = MyInstanceDescriptor
+
+myDoc = DesignSpaceDocument(KeyedDocReader, KeyedDocWriter)
 ```
 
 # Document xml structure
