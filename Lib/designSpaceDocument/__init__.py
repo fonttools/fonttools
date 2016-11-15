@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function
+from __future__ import print_function, unicode_literals
 import os
 import xml.etree.ElementTree as ET
 
@@ -156,7 +156,7 @@ class BaseDocWriter(object):
         if pretty:
             _indent(self.root, whitespace=self._whiteSpace)
         tree = ET.ElementTree(self.root)
-        tree.write(self.path, encoding=u"utf-8", method='xml', xml_declaration=True)
+        tree.write(self.path, encoding="utf-8", method='xml', xml_declaration=True)
 
     def _makeLocationElement(self, locationObject, name=None):
         """ Convert Location dict to a locationElement."""
@@ -197,7 +197,7 @@ class BaseDocWriter(object):
         axisElement.attrib['default'] = str(axisObject.default)
         for languageCode, labelName in axisObject.labelNames.items():
             languageElement = ET.Element('labelName')
-            languageElement.attrib[u'xml:lang'] = languageCode
+            languageElement.attrib['xml:lang'] = languageCode
             languageElement.text = labelName
             axisElement.append(languageElement)
         if axisObject.map:
@@ -617,7 +617,7 @@ class DesignSpaceDocument(object):
 if __name__ == "__main__":
 
     def test():
-        u"""
+        """
         >>> import os
         >>> testDocPath = os.path.join(os.getcwd(), "test.designspace")
         >>> masterPath1 = os.path.join(os.getcwd(), "masters", "masterTest1.ufo")
